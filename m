@@ -1,41 +1,35 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: "Eric D. Mudama" <edmudama@mail.bounceswoosh.org>
 Subject: Re: [PATCH] speed up SATA
-Date: Sun, 28 Mar 2004 23:57:56 -0500
+Date: Sun, 28 Mar 2004 22:24:05 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4067ACD4.7070203@pobox.com>
-References: <4066021A.20308@pobox.com> <200403282030.11743.bzolnier@elka.pw.edu.pl> <20040328183010.GQ24370@suse.de> <200403282045.07246.bzolnier@elka.pw.edu.pl> <406720A7.1050501@pobox.com> <20040329005502.GG3039@dualathlon.random>
+Message-ID: <20040329052405.GG6405@bounceswoosh.org>
+References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <20040328044029.GB1984@bounceswoosh.org> <40667734.8090203@yahoo.com.au> <20040328203357.GB6405@bounceswoosh.org> <20040328205917.GF6405@bounceswoosh.org> <40677C21.7070807@yahoo.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:55434 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262647AbUC2E6L
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Mar 2004 23:58:11 -0500
-In-Reply-To: <20040329005502.GG3039@dualathlon.random>
+Received: from 80-169-17-66.mesanetworks.net ([66.17.169.80]:51890 "EHLO
+	mail.bounceswoosh.org") by vger.kernel.org with ESMTP
+	id S262625AbUC2FX1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Mar 2004 00:23:27 -0500
+Content-Disposition: inline
+In-Reply-To: <40677C21.7070807@yahoo.com.au>
 List-Id: linux-ide@vger.kernel.org
-To: Andrea Arcangeli <andrea@suse.de>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jens Axboe <axboe@suse.de>, William Lee Irwin III <wli@holomorphy.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: "Eric D. Mudama" <edmudama@mail.bounceswoosh.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Andrea Arcangeli wrote:
-> is beneficial at all, and your bootup log showing 32M is all but
-> exciting, I'd be a lot more excited to see 512k there.
+On Mon, Mar 29 at 11:30, Nick Piggin wrote:
+>Well strictly, you send them one after the other. So unless you
+>have something similar to our anticipatory scheduler or plugging
+>mechanism, the drive should attack the first one first, shouldn't
+>it?
 
+If you send 32 commands to our disk at once (TCQ/NCQ) we send 'em all
+to our back-end disk engine as fast as possible.
 
-Just to clarify...   32MB would never ever be reached.  The S/G table 
-limit means requests are limited to 8MB.  VM thresholds and user 
-application use further limit request size.
-
-I think Andrew's point is actually more relevant than examining the size 
-of a single request:
-
-> 	the effect of really big requests will be the same
-> 	as the effect of permitting _more_ requests. 
-
-Thus like the "1,000 disks" example, memory management needs to make 
-sure that an "unreasonable" amount of memory is not being pinned.
-
-	Jeff
+--eric
 
 
+-- 
+Eric D. Mudama
+edmudama@mail.bounceswoosh.org
 
