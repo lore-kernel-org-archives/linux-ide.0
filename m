@@ -1,62 +1,120 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: [PATCH libata-dev-2.6 1/3] Add CHS support
-Date: Sun, 06 Feb 2005 17:02:06 -0500
-Message-ID: <420693DE.4030407@pobox.com>
-References: <006d01c50c11$81003920$a801a8c0@tw.ibm.com> <4205B886.4070005@pobox.com> <42062CB7.2040701@pobox.com> <42063123.6070602@pobox.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Subject: [rfc][patch] ide: fix unneeded LBA48 taskfile registers access
+Date: Sun, 6 Feb 2005 23:54:11 +0100 (CET)
+Message-ID: <Pine.GSO.4.58.0502062348200.2763@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from orb.pobox.com ([207.8.226.5]:33488 "EHLO orb.pobox.com")
-	by vger.kernel.org with ESMTP id S261178AbVBFWCQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Feb 2005 17:02:16 -0500
-In-Reply-To: <42063123.6070602@pobox.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:31730 "EHLO
+	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
+	id S261178AbVBFWzf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 6 Feb 2005 17:55:35 -0500
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:51543 "EHLO
+	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
+	id S199965AbVBFWyS (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 4 others); Sun, 6 Feb 2005 23:54:18 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Albert Lee <albertcc@tw.ibm.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, IDE Linux <linux-ide@vger.kernel.org>, "Mudama, Eric" <eric_mudama@Maxtor.com>
-
-The exact sequence expected by certain pre-ATA4 (or earlier?) drives
-was this:
-
-SRST RESET
-IDENTIFY
-INITIALIZE DRIVE PARAMETERS
-anything else..
-
-Some drives were very specific about that exact sequence.
-
-Nowadays, I don't bother with it for anything new I do,
-as it is obsolete, and may even get rejected by modern drives.
-But for the mainstream Linux ATA support, we should issue it
-for drives which IDENTIFY themselves as conforming to pre-ATAx,
-where the safest value for "x" is probably "4".
-
-Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
-
-Jeff Garzik wrote:
-> Mark Lord wrote:
-> 
->> Jeff Garzik wrote:
->>
->>> 3) In Promise's GPL'd driver for their SATA (w/ PATA) cards, they 
->>> unconditionally execute the INITIALIZE DEVICE PARAMETERS command.  I 
->>> wonder if we should do the same.
->>
->>
->>
->> That command was *necessary* for certain drives at one time,
->> which refused all other commands until they received the IDP one.
-> 
-> 
-> Except IDENTIFY DEVICE, presumably?
-> 
-> Thanks,
-> 
->     Jeff
-> 
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@home-tj.org>
 
 
+[ against ide-dev-2.6 tree, boot tested on LBA48 drive ]
+
+This small patch fixes unneeded writes/reads to LBA48 taskfile registers
+on LBA48 capable disks for following cases:
+
+* Power Management requests
+  (WIN_FLUSH_CACHE[_EXT], WIN_STANDBYNOW1, WIN_IDLEIMMEDIATE commands)
+* special commands (WIN_SPECIFY, WIN_RESTORE, WIN_SETMULT)
+* Host Protected Area support (WIN_READ_NATIVE_MAX, WIN_SET_MAX)
+* /proc/ide/ SMART support (WIN_SMART with SMART_ENABLE,
+  SMART_READ_VALUES and SMART_READ_THRESHOLDS subcommands)
+* write cache enabling/disabling in ide-disk
+  (WIN_SETFEATURES with SETFEATURES_{EN,DIS}_WCACHE)
+* write cache flushing in ide-disk (WIN_FLUSH_CACHE[_EXT])
+* acoustic management in ide-disk
+  (WIN_SETFEATURES with SETFEATURES_{EN,DIS}_AAM)
+* door (un)locking in ide-disk (WIN_DOORLOCK, WIN_DOORUNLOCK)
+* /proc/ide/hd?/identify support (WIN_IDENTIFY)
+
+Patch adds 'unsinged long flags' to ide_task_t and uses ATA_TFLAG_LBA48
+flag (from <linux/ata.h>) to indicate need of accessing LBA48 taskfile
+registers.
+
+diff -Nru a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+--- a/drivers/ide/ide-disk.c	2005-02-06 23:47:44 +01:00
++++ b/drivers/ide/ide-disk.c	2005-02-06 23:47:44 +01:00
+@@ -362,6 +362,9 @@
+ 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_READ_NATIVE_MAX_EXT;
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
+ 	args.handler				= &task_no_data_intr;
++
++	args.flags |= ATA_TFLAG_LBA48;
++
+         /* submit command request */
+         ide_raw_taskfile(drive, &args, NULL);
+
+@@ -431,6 +434,9 @@
+ 	args.hobRegister[IDE_CONTROL_OFFSET_HOB]= (drive->ctl|0x80);
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
+ 	args.handler				= &task_no_data_intr;
++
++	args.flags |= ATA_TFLAG_LBA48;
++
+ 	/* submit command request */
+ 	ide_raw_taskfile(drive, &args, NULL);
+ 	/* if OK, compute maximum address value */
+diff -Nru a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+--- a/drivers/ide/ide-io.c	2005-02-06 23:47:44 +01:00
++++ b/drivers/ide/ide-io.c	2005-02-06 23:47:44 +01:00
+@@ -487,7 +487,7 @@
+ 			args->tfRegister[IDE_SELECT_OFFSET]  = hwif->INB(IDE_SELECT_REG);
+ 			args->tfRegister[IDE_STATUS_OFFSET]  = stat;
+
+-			if (drive->addressing == 1) {
++			if (args->flags & ATA_TFLAG_LBA48) {
+ 				hwif->OUTB(drive->ctl|0x80, IDE_CONTROL_REG);
+ 				args->hobRegister[IDE_FEATURE_OFFSET]	= hwif->INB(IDE_FEATURE_REG);
+ 				args->hobRegister[IDE_NSECTOR_OFFSET]	= hwif->INB(IDE_NSECTOR_REG);
+diff -Nru a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
+--- a/drivers/ide/ide-taskfile.c	2005-02-06 23:47:44 +01:00
++++ b/drivers/ide/ide-taskfile.c	2005-02-06 23:47:44 +01:00
+@@ -101,7 +101,7 @@
+ 	ide_hwif_t *hwif	= HWIF(drive);
+ 	task_struct_t *taskfile	= (task_struct_t *) task->tfRegister;
+ 	hob_struct_t *hobfile	= (hob_struct_t *) task->hobRegister;
+-	u8 HIHI			= (drive->addressing == 1) ? 0xE0 : 0xEF;
++	u8 HIHI			= (task->flags & ATA_TFLAG_LBA48) ? 0xE0 : 0xEF;
+
+ 	/* ALL Command Block Executions SHALL clear nIEN, unless otherwise */
+ 	if (IDE_CONTROL_REG) {
+@@ -110,7 +110,7 @@
+ 	}
+ 	SELECT_MASK(drive, 0);
+
+-	if (drive->addressing == 1) {
++	if (task->flags & ATA_TFLAG_LBA48) {
+ 		hwif->OUTB(hobfile->feature, IDE_FEATURE_REG);
+ 		hwif->OUTB(hobfile->sector_count, IDE_NSECTOR_REG);
+ 		hwif->OUTB(hobfile->sector_number, IDE_SECTOR_REG);
+@@ -577,6 +577,9 @@
+ 	args.tf_out_flags = req_task->out_flags;
+ 	args.data_phase   = req_task->data_phase;
+ 	args.command_type = req_task->req_cmd;
++
++	if (drive->addressing == 1)
++		args.flags |= ATA_TFLAG_LBA48;
+
+ 	drive->io_32bit = 0;
+ 	switch(req_task->data_phase) {
+diff -Nru a/include/linux/ide.h b/include/linux/ide.h
+--- a/include/linux/ide.h	2005-02-06 23:47:44 +01:00
++++ b/include/linux/ide.h	2005-02-06 23:47:44 +01:00
+@@ -1258,6 +1258,7 @@
+  *	struct hd_drive_hob_hdr		hobf;
+  *	hob_struct_t		hobf;
+  */
++	unsigned long		flags;		/* ATA_TFLAG_xxx */
+ 	task_ioreg_t		tfRegister[8];
+ 	task_ioreg_t		hobRegister[8];
+ 	ide_reg_valid_t		tf_out_flags;
