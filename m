@@ -1,84 +1,33 @@
-From: Mike Young <myoung@wildernessvoice.com>
-Subject: 2.6.9 Problem w/ NVDIA and WD SATA Drives
-Date: Wed, 3 Nov 2004 11:11:20 -0800
-Message-ID: <200411031111.20669.myoung@wildernessvoice.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: More IDE hackery
+Date: Wed, 3 Nov 2004 21:17:27 +0100
+Message-ID: <58cb370e041103121750aab62b@mail.gmail.com>
+References: <1099487809.29560.28.camel@localhost.localdomain>
+	 <58cb370e04110309146ad102fc@mail.gmail.com>
+	 <1099501714.29846.71.camel@localhost.localdomain>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wildernessvoice.com ([216.218.172.84]:34315 "HELO
-	wildernessvoice.com") by vger.kernel.org with SMTP id S261847AbUKCULr
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Nov 2004 15:11:47 -0500
-Received: from 66.14.154.112 ([66.14.154.112]) by wildernessvoice.com for <linux-ide@vger.kernel.org>; Wed, 3 Nov 2004 12:11:47 -0800
-Content-Disposition: inline
+Received: from rproxy.gmail.com ([64.233.170.201]:24593 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261835AbUKCUR2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Nov 2004 15:17:28 -0500
+Received: by rproxy.gmail.com with SMTP id i8so151706rne
+        for <linux-ide@vger.kernel.org>; Wed, 03 Nov 2004 12:17:28 -0800 (PST)
+In-Reply-To: <1099501714.29846.71.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+On Wed, 03 Nov 2004 17:08:35 +0000, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> > It won't work unless you modify ide_register_hw().
+> > See ide_register_hw() vs "initializing == 1".
+> 
+> I changed that to allow a fixup to be passed as well. That causes most
+> of the noise changes but I could make that ide_register_hw_with_fixup()
+> to avoid changes elsewhere adding NULL to ide_register_hw calls.  Which
+> would you prefer and I'll go make full patches
 
-I'm trying to bring up the SATA support on an MSI K8N Neo2 Platinum board.  
-I've currently got four WD 250GB SATA drives connected to the four on-board 
-SATA ports.  I'm currently running a stock 2.6.9 kernel.  The drives seem to 
-be getting seen by the controller.  However, I'm definitely unable to fdisk 
-them.  When I check dmesg output, I notice the following (significantly 
-shortened for reader's sake):
-
-Nov  3 11:39:16 expresso kernel: end_request: I/O error, dev sdd, sector 104
-Nov  3 11:39:16 expresso kernel: Buffer I/O error on device sdd, logical block 
-13
-Nov  3 11:39:16 expresso kernel: ata4: status=0x51 { DriveReady SeekComplete 
-Error }
-Nov  3 11:39:16 expresso kernel: ata4: error=0x04 { DriveStatusError }
-Nov  3 11:39:16 expresso kernel: SCSI error : <3 0 0 0> return code = 
-0x8000002
-Nov  3 11:39:16 expresso kernel: Current sdd: sense key Aborted Command
-Nov  3 11:39:16 expresso kernel: end_request: I/O error, dev sdd, sector 112
-Nov  3 11:39:16 expresso kernel: Buffer I/O error on device sdd, logical block 
-14
-Nov  3 11:39:16 expresso kernel: ata4: status=0x51 { DriveReady SeekComplete 
-Error }
-Nov  3 11:39:16 expresso kernel: ata4: error=0x04 { DriveStatusError }
-Nov  3 11:39:16 expresso kernel: SCSI error : <3 0 0 0> return code = 
-0x8000002
-Nov  3 11:39:16 expresso kernel: Current sdd: sense key Aborted Command
-Nov  3 11:39:16 expresso kernel: end_request: I/O error, dev sdd, sector 120
-Nov  3 11:39:16 expresso kernel: Buffer I/O error on device sdd, logical block 
-15
-Nov  3 11:39:16 expresso kernel: ata4: status=0x51 { DriveReady SeekComplete 
-Error }
-Nov  3 11:39:16 expresso kernel: ata4: error=0x04 { DriveStatusError }
-Nov  3 11:39:16 expresso kernel: ata4: status=0x51 { DriveReady SeekComplete 
-Error }
-Nov  3 11:39:16 expresso kernel: ata4: error=0x04 { DriveStatusError }
-Nov  3 11:39:16 expresso kernel: ata4: status=0x51 { DriveReady SeekComplete 
-Error }
-Nov  3 11:39:16 expresso kernel: ata4: error=0x04 { DriveStatusError }
-Nov  3 11:39:16 expresso kernel: ata4: status=0x51 { DriveReady SeekComplete 
-Error }
-Nov  3 11:39:16 expresso kernel: ata4: error=0x04 { DriveStatusError }
-Nov  3 11:39:16 expresso kernel: ata4: status=0x51 { DriveReady SeekComplete 
-Error }
-Nov  3 11:39:16 expresso kernel: ata4: error=0x04 { DriveStatusError }
-Nov  3 11:39:16 expresso kernel: SCSI error : <3 0 0 0> return code = 
-0x8000002
-Nov  3 11:39:16 expresso kernel: Current sdd: sense key Aborted Command
-Nov  3 11:39:16 expresso kernel: end_request: I/O error, dev sdd, sector 0
-Nov  3 11:39:16 expresso kernel: Buffer I/O error on device sdd, logical block 
-0
-
-Working with this nVidia nForce3 Ultra chipset as well as with libata is new 
-for me.  These drives were definitely working for me with another controller 
-and driver set.  However, I definitely want to get this working and any help 
-is greatly appreciated.
-
-I did notice a reference by Jeff to some settings for a Promise controller on 
-another version of the motherboard.  But I'm not sure what settings these are 
-or if they're applicable to the nvidia controller.  It looked like a similar 
-problem, though.
-
-Thanks,
-
--Mike
+Sounds good, please make ide_register_hw_with_fixup().
