@@ -1,127 +1,104 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: [PATCH] ide/serverworks: fix section references
-Date: Thu, 3 Mar 2005 19:49:33 -0800
-Message-ID: <20050303194933.4bb19d69.rddunlap@osdl.org>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: ide-cd question
+Date: Fri, 4 Mar 2005 08:47:35 +0100
+Message-ID: <20050304074734.GB14764@suse.de>
+References: <7A8F92187EF7A249BF847F1BF4903C040AFC6D@ausx2kmpc103.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Received: from fire.osdl.org ([65.172.181.4]:21391 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S262565AbVCDEBg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Mar 2005 23:01:36 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from ns.virtualhost.dk ([195.184.98.160]:730 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262599AbVCDHrk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2005 02:47:40 -0500
+Content-Disposition: inline
+In-Reply-To: <7A8F92187EF7A249BF847F1BF4903C040AFC6D@ausx2kmpc103.aus.amer.dell.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bart <B.Zolnierkiewicz@elka.pw.edu.pl>, akpm <akpm@osdl.org>
-Cc: linux-ide@vger.kernel.org
+To: Stuart_Hayes@Dell.com
+Cc: stuarthayes@austin.rr.com, linux-ide@vger.kernel.org, bzolnier@gmail.com
 
+On Thu, Mar 03 2005, Stuart_Hayes@Dell.com wrote:
+> Jens Axboe wrote:
+> > On Thu, Mar 03 2005, Stuart Hayes wrote:
+> >> I sent in this patch a few weeks ago, and never saw a response... I
+> >> was wondering if there was a problem with it, or if I need to supply
+> >> more info...?  This patch is against 2.6.11-rc3.  It makes sure that
+> >> when
+> >> ide_atapi_error() tries to end a failing ATAPI request after 2 reset
+> >> attempts by calling drive->driver->end_request(), it will really be
+> >> ended. Right now, a request that has a non-null rq->bio will not get
+> >> ended, 
+> >> nor will rq->errors get cleared, so it will get retried forever with
+> >> no more reset attempts.
+> > 
+> > Indeed a problem. Would be nice to switch the ->end_request() to be
+> > byte based like SCSI, would make it cleaner. 
+> > 
+> > But do you really need the !nsectors check? If ->data_len is 0, there
+> > should not be a need to pass a non-zero sector count. 
+> > 
+> 
+> I wondered about the !nsectors check myself.  I copied that code from
+> the cdrom_end_request() function, and I assumed that it must have been
+> there for some reason that wasn't immediately clear to me, so I didn't
+> take it out.  I figured performance in that code path wasn't critical.
+> 
+> I can take it out if that's the only problem!
 
-ide/pci/serverworks:  data structs point to __init text
-  which should be __devinit;
-unless (a) these are going away real soon,
-or (b) this just can't happen, isn't a real problem,
-or (c) other ?
+Lets just keep it, it sure doesn't hurt :)
 
-Error: ./drivers/ide/pci/serverworks.o .data refers to 00000000000001e8 R_X86_64_64       .init.text+0x000000000000020e
-Error: ./drivers/ide/pci/serverworks.o .data refers to 00000000000001f8 R_X86_64_64       .init.text+0x000000000000024c
-Error: ./drivers/ide/pci/serverworks.o .data refers to 0000000000000208 R_X86_64_64       .init.text
-Error: ./drivers/ide/pci/serverworks.o .data refers to 0000000000000248 R_X86_64_64       .init.text+0x000000000000020e
-Error: ./drivers/ide/pci/serverworks.o .data refers to 0000000000000258 R_X86_64_64       .init.text+0x000000000000024c
-Error: ./drivers/ide/pci/serverworks.o .data refers to 0000000000000268 R_X86_64_64       .init.text
-Error: ./drivers/ide/pci/serverworks.o .data refers to 0000000000000270 R_X86_64_64       .init.text+0x0000000000000213
-Error: ./drivers/ide/pci/serverworks.o .data refers to 00000000000002a8 R_X86_64_64       .init.text+0x00000000000001c3
-Error: ./drivers/ide/pci/serverworks.o .data refers to 00000000000002b8 R_X86_64_64       .init.text+0x000000000000024c
-Error: ./drivers/ide/pci/serverworks.o .data refers to 00000000000002c8 R_X86_64_64       .init.text
-Error: ./drivers/ide/pci/serverworks.o .data refers to 00000000000002d0 R_X86_64_64       .init.text+0x0000000000000213
-Error: ./drivers/ide/pci/serverworks.o .data refers to 0000000000000308 R_X86_64_64       .init.text+0x00000000000001c3
-Error: ./drivers/ide/pci/serverworks.o .data refers to 0000000000000318 R_X86_64_64       .init.text+0x000000000000024c
-Error: ./drivers/ide/pci/serverworks.o .data refers to 0000000000000328 R_X86_64_64       .init.text
-Error: ./drivers/ide/pci/serverworks.o .data refers to 0000000000000330 R_X86_64_64       .init.text+0x0000000000000213
+> >> My fingers are crossed that this patch won't be mangled... I seem to
+> >> have a problem with that...
+> > 
+> > No such luck, it's mangled :). Looks like tabs turned to a single
+> > space. 
+> > Maybe you have better luck with attaching the file.
+> 
+> Here's another try at the patch.  This time it is against 2.6.11, and I
+> shortened the comments so I could send it from this email address 
+> without it getting mangled...
+> 
+> 
+> 
+> --- ide-io.c.orig	2005-03-03 10:57:05.468669136 -0500
+> +++ ide-io.c	2005-03-03 11:01:33.982848776 -0500
+> @@ -486,9 +486,21 @@ static ide_startstop_t ide_ata_error(ide
+>  		/* force an abort */
+>  		hwif->OUTB(WIN_IDLEIMMEDIATE, IDE_COMMAND_REG);
+>  
+> -	if (rq->errors >= ERROR_MAX || blk_noretry_request(rq))
+> -		drive->driver->end_request(drive, 0, 0);
+> -	else {
+> +	if (rq->errors >= ERROR_MAX || blk_noretry_request(rq)) {
+> +		/* 
+> +		 * make sure request is fully ended--otherwise bio might
+> get
+> +		 * updated and the command will be retried without
+> +		 * rq->errors getting reset to zero, which could cause
+> us to
+> +		 * get stuckin a loop with infinite retries without any
+> more
+> +		 * reset attempts (borrowed from cdrom_end_request)
+> +		 */
+> +		int nsectors;
+> +		if (blk_pc_request(rq))
+> +			nsectors = (rq->data_len + 511) >> 9;
+> +		if (!nsectors)
+> +			nsectors = 1;
+> +		drive->driver->end_request(drive, 0, nsectors);
 
-Signed-off-by: Randy Dunlap <rddunlap@osdl.org>
+There's still a problem here, you are not initializing nsectors for
+non-pc requests. And your comments wrap :)
 
-diffstat:=
- drivers/ide/pci/serverworks.c |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+        int nsectors = rq->hard_nr_sectors;
 
-diff -Naurp ./drivers/ide/pci/serverworks.c~serverworks_ide_sections ./drivers/ide/pci/serverworks.c
---- ./drivers/ide/pci/serverworks.c~serverworks_ide_sections	2005-03-01 23:37:47.000000000 -0800
-+++ ./drivers/ide/pci/serverworks.c	2005-03-03 19:29:35.000000000 -0800
-@@ -341,7 +341,7 @@ static int svwks_ide_dma_end (ide_drive_
- 	return __ide_dma_end(drive);
- }
- 
--static unsigned int __init init_chipset_svwks (struct pci_dev *dev, const char *name)
-+static unsigned int __devinit init_chipset_svwks (struct pci_dev *dev, const char *name)
- {
- 	unsigned int reg;
- 	u8 btr;
-@@ -442,7 +442,7 @@ static unsigned int __init init_chipset_
- 	return (dev->irq) ? dev->irq : 0;
- }
- 
--static unsigned int __init ata66_svwks_svwks (ide_hwif_t *hwif)
-+static unsigned int __devinit ata66_svwks_svwks (ide_hwif_t *hwif)
- {
- 	return 1;
- }
-@@ -454,7 +454,7 @@ static unsigned int __init ata66_svwks_s
-  * Bit 14 clear = primary IDE channel does not have 80-pin cable.
-  * Bit 14 set   = primary IDE channel has 80-pin cable.
-  */
--static unsigned int __init ata66_svwks_dell (ide_hwif_t *hwif)
-+static unsigned int __devinit ata66_svwks_dell (ide_hwif_t *hwif)
- {
- 	struct pci_dev *dev = hwif->pci_dev;
- 	if (dev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
-@@ -472,7 +472,7 @@ static unsigned int __init ata66_svwks_d
-  *
-  * WARNING: this only works on Alpine hardware!
-  */
--static unsigned int __init ata66_svwks_cobalt (ide_hwif_t *hwif)
-+static unsigned int __devinit ata66_svwks_cobalt (ide_hwif_t *hwif)
- {
- 	struct pci_dev *dev = hwif->pci_dev;
- 	if (dev->subsystem_vendor == PCI_VENDOR_ID_SUN &&
-@@ -483,7 +483,7 @@ static unsigned int __init ata66_svwks_c
- 	return 0;
- }
- 
--static unsigned int __init ata66_svwks (ide_hwif_t *hwif)
-+static unsigned int __devinit ata66_svwks (ide_hwif_t *hwif)
- {
- 	struct pci_dev *dev = hwif->pci_dev;
- 
-@@ -508,7 +508,7 @@ static unsigned int __init ata66_svwks (
- }
- 
- #undef CAN_SW_DMA
--static void __init init_hwif_svwks (ide_hwif_t *hwif)
-+static void __devinit init_hwif_svwks (ide_hwif_t *hwif)
- {
- 	u8 dma_stat = 0;
- 
-@@ -556,7 +556,7 @@ static void __init init_hwif_svwks (ide_
- /*
-  * We allow the BM-DMA driver to only work on enabled interfaces.
-  */
--static void __init init_dma_svwks (ide_hwif_t *hwif, unsigned long dmabase)
-+static void __devinit init_dma_svwks (ide_hwif_t *hwif, unsigned long dmabase)
- {
- 	struct pci_dev *dev = hwif->pci_dev;
- 
-@@ -568,12 +568,12 @@ static void __init init_dma_svwks (ide_h
- 	ide_setup_dma(hwif, dmabase, 8);
- }
- 
--static int __init init_setup_svwks (struct pci_dev *dev, ide_pci_device_t *d)
-+static int __devinit init_setup_svwks (struct pci_dev *dev, ide_pci_device_t *d)
- {
- 	return ide_setup_pci_device(dev, d);
- }
- 
--static int __init init_setup_csb6 (struct pci_dev *dev, ide_pci_device_t *d)
-+static int __devinit init_setup_csb6 (struct pci_dev *dev, ide_pci_device_t *d)
- {
- 	if (!(PCI_FUNC(dev->devfn) & 1)) {
- 		d->bootable = NEVER_BOARD;
+        if (blk_pc_request(rq))
+                nsectors = (rq->data_len + 511) >> 9;
+        if (!nsectors)
+                nsectors = 1;
 
----
+        ...
+
+Can you resend with that fixed up and with a Signed-off-by header?
+
+-- 
+Jens Axboe
+
