@@ -1,45 +1,32 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [RFC: 2.6 patch] IDE: unsexport 3 functions
-Date: Sun, 6 Feb 2005 14:32:01 +0100
-Message-ID: <20050206133201.GO3129@stusta.de>
-References: <20050205024404.GK19408@stusta.de> <58cb370e05020605256b3ea00e@mail.gmail.com>
+From: Johannes Resch <jr@xor.at>
+Subject: Inclusion of patch for Promise SATAII 150 TX4 in mainline 2.6 kernel?
+Date: Sun, 06 Feb 2005 14:39:26 +0100
+Message-ID: <42061E0E.2020302@xor.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:12045 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261240AbVBFNcE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 6 Feb 2005 08:32:04 -0500
-Content-Disposition: inline
-In-Reply-To: <58cb370e05020605256b3ea00e@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from mail.xor.at ([62.99.218.147]:10957 "EHLO merkur.xor.at")
+	by vger.kernel.org with ESMTP id S261243AbVBFNjd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Feb 2005 08:39:33 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-On Sun, Feb 06, 2005 at 02:25:32PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > @@ -161,8 +161,6 @@
-> >         return ide_stopped;
-> >  }
-> > 
-> > -EXPORT_SYMBOL(do_rw_taskfile);
-> > -
-> 
-> Is this patch against -mm or ide-dev-2.6?
+Hi,
 
-This is against -mm.
-But the only changes regarding do_rw_taskfile in -mm come from 
-bk-ide-dev.
+I noticed that 2.6.10 (referring to the changelog, 2.6.11-rc3 as well) 
+has no builtin support for Promise SATAII 150 TX4 yet; a separate patch 
+(http://marc.theaimsgroup.com/?l=linux-ide&m=110426005503319&q=raw) is 
+needed to recognize this hardware.
 
-> do_rw_taskfile() is still needed for ide-disk.c in linus' tree,
-> the other two exports can be removed
+Since the patch seems to work fine and is available for quite some time 
+already, I'm interested if there are plans if and when it will be 
+included in mainline 2.6?
 
-cu
-Adrian
+[Please CC me on replies]
 
--- 
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+Best regards,
+Johannes Resch
 
