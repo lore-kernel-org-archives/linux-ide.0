@@ -1,30 +1,37 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: PCI Constants Update for SATA Driver
-Date: Sun, 27 Feb 2005 15:07:22 -0500
-Message-ID: <20050227200722.GA16996@havoc.gtf.org>
-References: <1109526163.19325.2.camel@forge.intermeta.de> <42220CAA.90702@pobox.com> <1109532002.19325.4.camel@forge.intermeta.de> <4222250C.6060302@pobox.com> <1109534706.19325.6.camel@forge.intermeta.de>
+From: GrantC <grant_nospam@dodo.com.au>
+Subject: Solved: was Re: IDE channels not independent in PIIX4E?
+Date: Mon, 28 Feb 2005 17:25:32 +1100
+Message-ID: <8e3521tlk6q49848ed3ur869eqdqa5s92e@4ax.com>
+References: <07s221pobdf00ogs0cgbg0u2dl6prs4096@4ax.com> <Pine.LNX.4.44.0502271102410.15651-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from atlmail.prod.rxgsys.com ([64.74.124.160]:50585 "EHLO
-	bastet.signetmail.com") by vger.kernel.org with ESMTP
-	id S261321AbVB0UHa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 27 Feb 2005 15:07:30 -0500
-Content-Disposition: inline
-In-Reply-To: <1109534706.19325.6.camel@forge.intermeta.de>
+Content-Transfer-Encoding: 7bit
+Received: from relay01.mail-hub.dodo.com.au ([203.220.32.149]:36019 "EHLO
+	relay01.mail-hub.dodo.com.au") by vger.kernel.org with ESMTP
+	id S261563AbVB1GZn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Feb 2005 01:25:43 -0500
+In-Reply-To: <Pine.LNX.4.44.0502271102410.15651-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Henning Schmiedehausen <hps@intermeta.de>
-Cc: Linux IDE Mailingliste <linux-ide@vger.kernel.org>
+To: Mark Hahn <hahn@physics.mcmaster.ca>
+Cc: linux-ide@vger.kernel.org
 
-On Sun, Feb 27, 2005 at 09:05:06PM +0100, Henning Schmiedehausen wrote:
-> Let me rephrase:
-> 
-> What sense does it make to have PCI_VENDOR_ID and PCI_DEVICE_ID
-> constants if using them is optional/discouraged?
+Recently, Mark Hahn wrote:
 
-Only PCI_DEVICE_ID_xxx is discouraged.  Not PCI_VENDOR_ID_xxx.
+>getting 25 MB/s out of older-generation udma33 controllers isn't bad;
+>I don't remember ever getting better than about 28 out of 33, regardless
+>of which chipset/memory/cpu.
+...
+Thanks Mark.
 
-	Jeff
+Using gcc-2.95.3 instead of gcc-3.3.4 cut kernel compile time 
+for 'time make clean bzImage' from 26 to 16 minutes, everything 
+else the same -- slackware-10.1 install with gcc-2.95.3 from 
+slackware-8.1.  
 
+I knew I lost that ten minutes somewhere last year, just found 
+it by circumnavigating other possibilities :o)
 
+Cheers,
+Grant.
 
