@@ -1,33 +1,40 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: libata PATA support - work items?
-Date: Tue, 04 Jan 2005 18:43:26 -0500
-Message-ID: <41DB2A1E.2020809@pobox.com>
-References: <006301c4ee5c$49e6a230$95714109@tw.ibm.com>	 <311601c9050101111929aef5ba@mail.gmail.com>	 <87f94c3705010312568b48d6e@mail.gmail.com>	 <311601c905010313201d5a02fa@mail.gmail.com> <58cb370e05010314092d421aee@mail.gmail.com>
+Date: Tue, 04 Jan 2005 18:32:17 -0500
+Message-ID: <41DB2781.7000203@pobox.com>
+References: <006301c4ee5c$49e6a230$95714109@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:44430 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262108AbVADXnn
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:52618 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262427AbVADXcg
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Jan 2005 18:43:43 -0500
-In-Reply-To: <58cb370e05010314092d421aee@mail.gmail.com>
+	Tue, 4 Jan 2005 18:32:36 -0500
+In-Reply-To: <006301c4ee5c$49e6a230$95714109@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Eric Mudama <edmudama@gmail.com>, Greg Freemyer <greg.freemyer@gmail.com>, Albert Lee <albertcc@tw.ibm.com>, IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, dan mares <dmares@dmares.com>
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Bartlomiej Zolnierkiewicz wrote:
-> Existing IDE drivers are not going away any time soon (not 2.6.x at least)
-> and if/when this happens we shouldn't drop CHS support completely
-> from the kernel - IMHO it is quite easy to add CHS support to libata.
-> I also agree that libata PATA development should be focused on LBA
-> but I don't see any problem in keeping CHS support around...
+Albert Lee wrote:
+> The following PATA work items were previously collected from the mailing list:
+>     1. ATAPI
+>        1.1 possibly avoid REPORT LUNS for ATAPI devices
+>        1.2 when check condition occurs, automatically request sense inside 
+>             driver, and put that data into the sense buffer.
+>        1.3 make INQUIRY report SCSI version MMC-3 (or later...)
+>        1.4 support strange sector sizes
+>     2. C/H/S addressing; libata currently hardcoded to use LBA
+>     3. add PATA device errata/blacklist info
+>    (Any missing items?)
+> 
+> Need your advice, thanks.
 
+Yes, this seems like an accurate list to me.
 
-I don't think it's a problem to support C/H/S in libata.  libata already 
-has to handle lba28/lba48, CHS would simply be a third instance of the 
-"fill read/write taskfile" code.
+I would probably prioritize #3 as the most important, followed by C/H/S
+support.
 
 	Jeff
 
