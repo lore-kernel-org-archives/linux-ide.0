@@ -1,80 +1,78 @@
-From: "Jeroen Makkinje" <j.makkinje@xs4all.nl>
-Subject: cat /proc/ide/ide1/hdc/identify hangs
-Date: Wed, 10 Sep 2003 15:10:44 +0200 (CEST)
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <7324.80.126.29.72.1063199444.squirrel@webmail.xs4all.nl>
-Reply-To: j.makkinje@xs4all.nl
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] dtc2278.c warning
+Date: Thu, 11 Sep 2003 08:26:21 +0200 (MEST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <Pine.GSO.4.21.0309110824070.1879-100000@vervain.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpzilla3.xs4all.nl ([194.109.127.139]:29457 "EHLO
-	smtpzilla3.xs4all.nl") by vger.kernel.org with ESMTP
-	id S263019AbTIJNKq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Sep 2003 09:10:46 -0400
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
 
-My problem is simple:
+Move dtc2278_release() to kill a warning in the non-modular case
 
-cat /proc/ide/ide1/hdc/identify
-does hang in version linux.2.6.0-test5
-but it does not hang in version
-./linux.2.4.20-4GB that comes default
-with SuSE 8.2.
+--- linux-2.6.0-test5/drivers/ide/legacy/dtc2278.c.orig	Tue Sep  9 10:12:44 2003
++++ linux-2.6.0-test5/drivers/ide/legacy/dtc2278.c	Tue Sep  9 14:15:35 2003
+@@ -134,6 +134,24 @@
+ 	probe_hwif_init(&ide_hwifs[1]);
+ }
+ 
++#ifndef MODULE
++/*
++ * init_dtc2278:
++ *
++ * called by ide.c when parsing command line
++ */
++
++void __init init_dtc2278 (void)
++{
++	probe_dtc2278();
++}
++
++#else
++
++MODULE_AUTHOR("See Local File");
++MODULE_DESCRIPTION("support of DTC-2278 VLB IDE chipsets");
++MODULE_LICENSE("GPL");
++
+ static void dtc2278_release (void)
+ {
+ 	if (ide_hwifs[0].chipset != ide_dtc2278 &&
+@@ -152,24 +170,6 @@
+ 	ide_hwifs[0].mate = NULL;
+ 	ide_hwifs[1].mate = NULL;
+ }
+-
+-#ifndef MODULE
+-/*
+- * init_dtc2278:
+- *
+- * called by ide.c when parsing command line
+- */
+-
+-void __init init_dtc2278 (void)
+-{
+-	probe_dtc2278();
+-}
+-
+-#else
+-
+-MODULE_AUTHOR("See Local File");
+-MODULE_DESCRIPTION("support of DTC-2278 VLB IDE chipsets");
+-MODULE_LICENSE("GPL");
+ 
+ static int __init dtc2278_mod_init(void)
+ {
 
-cat /proc/ide/ide1/hdc/capacity sometimes
-also hangs but not reproducable.
+Gr{oetje,eeting}s,
 
-I have executed the script ./gen_err
-(given below) to generate some information
-while running each of the kernel version.
+						Geert
 
-The output files are put in:
-http://www.xs4all.nl/~makkij/error_report/
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-
-I did remove "hdc=ide-scsi" from
-the grub conf file. This had no effect.
-
-I hope you can assist me. Either to
-fix the problem or to  generate more infor-
-nation.
-
-The original posting is posted to
-linux-ide@vger.kernel.org
-
-I have send a copy to Andi Kleen
-He reported a similar problem
-with subject "taskfile merge breaking suse hwscan"
-
-
-
-==========
-./gen_err:
-==========
-
-#!/bin/bash
-rm -i *
-dmesg > dmesg
-(strace -v cat /proc/ide/ide1/hdc/identify ) &> strace_identify
-(strace -v cat /proc/ide/ide1/hdc/capacity ) &> strace_capacity
-cat /proc/ide/ide1/hdc/driver > driver
-cat /proc/ide/ide1/hdc/media > media
-cat /proc/ide/ide1/hdc/model > model
-cat /proc/ide/ide1/hdc/settings > settings
-sh
-/home/jeroenm/Documents/kernels/linux-2.6.0-test4/scripts/ver_linux
-> ver_linux
-cat /proc/version > version
-cat /proc/cpuinfo > cpuinfo
-cat /proc/modules > modules
-cat /proc/ioports > ioports
-lspci -vvv > lspci
-cat /proc/scsi/scsi > scsi
-cat /boot/grub/menu.lst > bootloader
-cat /proc/ide/sis > sis
-cat /proc/ide/drivers > drivers
-
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
