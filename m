@@ -1,120 +1,171 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: [PATCH 2.6.11+ sata_qstor] libata: sata_qstor cosmetic fixes
-Date: Thu, 24 Feb 2005 10:15:45 -0500
-Message-ID: <421DEFA1.1040601@pobox.com>
-References: <421CE018.5030007@pobox.com> <200502232345.23666.adobriyan@mail.ru> <421D1113.9030502@pobox.com> <421D6442.3030308@pobox.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Subject: [patch ide-dev 3/9] merge LBA28 and LBA48 Host Protected Area support
+ code
+Date: Thu, 24 Feb 2005 15:39:51 +0100 (CET)
+Message-ID: <Pine.GSO.4.58.0502241539100.13534@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050000000208080802030300"
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:41097 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S262386AbVBXPRC
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Feb 2005 10:17:02 -0500
-In-Reply-To: <421D6442.3030308@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:54557 "EHLO
+	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
+	id S50830AbVBXOlx (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 2 others); Thu, 24 Feb 2005 15:41:53 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Alexey Dobriyan <adobriyan@mail.ru>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------050000000208080802030300
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Jeff Garzik wrote:
-> Mark Lord wrote:
-> 
->> Minor patch for new 2.6.xx sata_qstor driver attached,
->> as per Alexey's fine-toothed comb!  :)
->>
->> Signed-off-by: Mark Lord <mlord@pobox.com>
-> 
-> I had to apply this manually, since your mailer "corrupts" the patch by 
-> encoding text/plain as base64.  Please fix your mailer...
-
-Mmm.. first time that's ever happened here.
-It's not the mailer, but the mime-types,
-which must have gotten confused by the ".patch1"
-extension, as opposed to the normal ".patch".
-
-Here it is again, renamed to avoid the faulty mime handling.
-
-Signed-off-by: Mark Lord <mlord@pobox.com>
-
-Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
 
 
---------------050000000208080802030300
-Content-Type: text/x-patch;
- name="sata_qstor-1.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sata_qstor-1.patch"
+* merge idedisk_read_native_max_address()
+  and idedisk_read_native_max_address_ext()
+* merge idedisk_set_max_address()
+  and idedisk_set_max_address_ext()
 
---- linux/drivers/scsi/sata_qstor.c.orig	2005-02-16 20:31:57.000000000 -0500
-+++ linux/drivers/scsi/sata_qstor.c	2005-02-23 18:19:31.000000000 -0500
-@@ -261,11 +261,11 @@
- 		u32 len;
- 
- 		addr = sg_dma_address(sg);
--		*(u64 *)prd = cpu_to_le64(addr);
-+		*(__le64 *)prd = cpu_to_le64(addr);
- 		prd += sizeof(u64);
- 
- 		len = sg_dma_len(sg);
--		*(u32 *)prd = cpu_to_le32(len);
-+		*(__le32 *)prd = cpu_to_le32(len);
- 		prd += sizeof(u64);
- 
- 		VPRINTK("PRD[%u] = (0x%llX, 0x%X)\n", nelem,
-@@ -298,10 +298,10 @@
- 	/* host control block (HCB) */
- 	buf[ 0] = QS_HCB_HDR;
- 	buf[ 1] = hflags;
--	*(u32 *)(&buf[ 4]) = cpu_to_le32(qc->nsect * ATA_SECT_SIZE);
--	*(u32 *)(&buf[ 8]) = cpu_to_le32(qc->n_elem);
-+	*(__le32 *)(&buf[ 4]) = cpu_to_le32(qc->nsect * ATA_SECT_SIZE);
-+	*(__le32 *)(&buf[ 8]) = cpu_to_le32(qc->n_elem);
- 	addr = ((u64)pp->pkt_dma) + QS_CPB_BYTES;
--	*(u64 *)(&buf[16]) = cpu_to_le64(addr);
-+	*(__le64 *)(&buf[16]) = cpu_to_le64(addr);
- 
- 	/* device control block (DCB) */
- 	buf[24] = QS_DCB_HDR;
-@@ -566,10 +566,10 @@
- 	int rc, have_64bit_bus = (bus_info & QS_HPHY_64BIT);
- 
- 	if (have_64bit_bus &&
--	    !pci_set_dma_mask(pdev, 0xffffffffffffffffULL)) {
--		rc = pci_set_consistent_dma_mask(pdev, 0xffffffffffffffffULL);
-+	    !pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
-+		rc = pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
- 		if (rc) {
--			rc = pci_set_consistent_dma_mask(pdev, 0xffffffffULL);
-+			rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
- 			if (rc) {
- 				printk(KERN_ERR DRV_NAME
- 					"(%s): 64-bit DMA enable failed\n",
-@@ -578,14 +578,14 @@
- 			}
- 		}
- 	} else {
--		rc = pci_set_dma_mask(pdev, 0xffffffffULL);
-+		rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
- 		if (rc) {
- 			printk(KERN_ERR DRV_NAME
- 				"(%s): 32-bit DMA enable failed\n",
- 				pci_name(pdev));
- 			return rc;
- 		}
--		rc = pci_set_consistent_dma_mask(pdev, 0xffffffffULL);
-+		rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
- 		if (rc) {
- 			printk(KERN_ERR DRV_NAME
- 				"(%s): 32-bit consistent DMA enable failed\n",
+diff -Nru a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+--- a/drivers/ide/ide-disk.c	2005-02-19 17:22:44 +01:00
++++ b/drivers/ide/ide-disk.c	2005-02-19 17:22:44 +01:00
+@@ -325,32 +325,7 @@
+  * Queries for true maximum capacity of the drive.
+  * Returns maximum LBA address (> 0) of the drive, 0 if failed.
+  */
+-static unsigned long idedisk_read_native_max_address(ide_drive_t *drive)
+-{
+-	ide_task_t args;
+-	struct ata_taskfile *tf = &args.tf;
+-	unsigned long addr = 0;
+-
+-	/* Create IDE/ATA command request structure */
+-	memset(&args, 0, sizeof(ide_task_t));
+-
+-	tf->device	= 0x40;
+-	tf->command	= WIN_READ_NATIVE_MAX;
+-
+-	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
+-	args.handler				= &task_no_data_intr;
+-	/* submit command request */
+-	ide_raw_taskfile(drive, &args, NULL);
+-
+-	/* if OK, compute maximum address value */
+-	if ((tf->command & 1) == 0) {
+-		addr = (u32)ide_tf_get_address(tf);
+-		addr++;	/* since the return value is (maxlba - 1), we add 1 */
+-	}
+-	return addr;
+-}
+-
+-static unsigned long long idedisk_read_native_max_address_ext(ide_drive_t *drive)
++static u64 idedisk_read_native_max_address(ide_drive_t *drive, unsigned int lba48)
+ {
+ 	ide_task_t args;
+ 	struct ata_taskfile *tf = &args.tf;
+@@ -360,13 +335,15 @@
+ 	memset(&args, 0, sizeof(ide_task_t));
 
---------------050000000208080802030300--
+ 	tf->device	= 0x40;
+-	tf->command	= WIN_READ_NATIVE_MAX_EXT;
++	if (lba48) {
++		tf->command = WIN_READ_NATIVE_MAX_EXT;
++		tf->flags |= ATA_TFLAG_LBA48;
++	} else
++		tf->command = WIN_READ_NATIVE_MAX;
+
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
+ 	args.handler				= &task_no_data_intr;
+
+-	tf->flags |= ATA_TFLAG_LBA48;
+-
+         /* submit command request */
+         ide_raw_taskfile(drive, &args, NULL);
+
+@@ -382,35 +359,7 @@
+  * Sets maximum virtual LBA address of the drive.
+  * Returns new maximum virtual LBA address (> 0) or 0 on failure.
+  */
+-static unsigned long idedisk_set_max_address(ide_drive_t *drive, unsigned long addr_req)
+-{
+-	ide_task_t args;
+-	struct ata_taskfile *tf = &args.tf;
+-	unsigned long addr_set = 0;
+-
+-	addr_req--;
+-	/* Create IDE/ATA command request structure */
+-	memset(&args, 0, sizeof(ide_task_t));
+-
+-	tf->lbal	= addr_req;
+-	tf->lbam	= addr_req >> 8;
+-	tf->lbah	= addr_req >> 16;
+-	tf->device	= ((addr_req >> 24) & 0xf) | 0x40;
+-	tf->command	= WIN_SET_MAX;
+-
+-	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
+-	args.handler				= &task_no_data_intr;
+-	/* submit command request */
+-	ide_raw_taskfile(drive, &args, NULL);
+-	/* if OK, read new maximum address value */
+-	if ((tf->command & 1) == 0) {
+-		addr_set = (u32)ide_tf_get_address(tf);
+-		addr_set++;
+-	}
+-	return addr_set;
+-}
+-
+-static unsigned long long idedisk_set_max_address_ext(ide_drive_t *drive, unsigned long long addr_req)
++static u64 idedisk_set_max_address(ide_drive_t *drive, u64 addr_req, unsigned int lba48)
+ {
+ 	ide_task_t args;
+ 	struct ata_taskfile *tf = &args.tf;
+@@ -423,17 +372,22 @@
+ 	tf->lbal	= addr_req;
+ 	tf->lbam	= addr_req >> 8;
+ 	tf->lbah	= addr_req >> 16;
+-	tf->device	= 0x40;
+-	tf->command	= WIN_SET_MAX_EXT;
+-	tf->hob_lbal	= addr_req >> 24;
+-	tf->hob_lbam	= addr_req >> 32;
+-	tf->hob_lbah	= addr_req >> 40;
++	if (lba48) {
++		tf->hob_lbal	= addr_req >> 24;
++		tf->hob_lbam	= addr_req >> 32;
++		tf->hob_lbah	= addr_req >> 40;
++		tf->device	= 0x40;
++		tf->command	= WIN_SET_MAX_EXT;
++
++		tf->flags |= ATA_TFLAG_LBA48;
++	} else {
++		tf->device	= ((addr_req >> 24) & 0xf) | 0x40;
++		tf->command	= WIN_SET_MAX;
++	}
+
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
+ 	args.handler				= &task_no_data_intr;
+
+-	tf->flags |= ATA_TFLAG_LBA48;
+-
+ 	/* submit command request */
+ 	ide_raw_taskfile(drive, &args, NULL);
+ 	/* if OK, compute maximum address value */
+@@ -476,10 +430,8 @@
+ 	int lba48 = idedisk_supports_lba48(drive->id);
+
+ 	capacity = drive->capacity64;
+-	if (lba48)
+-		set_max = idedisk_read_native_max_address_ext(drive);
+-	else
+-		set_max = idedisk_read_native_max_address(drive);
++
++	set_max = idedisk_read_native_max_address(drive, lba48);
+
+ 	if (set_max <= capacity)
+ 		return;
+@@ -491,10 +443,8 @@
+ 			 capacity, sectors_to_MB(capacity),
+ 			 set_max, sectors_to_MB(set_max));
+
+-	if (lba48)
+-		set_max = idedisk_set_max_address_ext(drive, set_max);
+-	else
+-		set_max = idedisk_set_max_address(drive, set_max);
++	set_max = idedisk_set_max_address(drive, set_max, lba48);
++
+ 	if (set_max) {
+ 		drive->capacity64 = set_max;
+ 		printk(KERN_INFO "%s: Host Protected Area disabled.\n",
