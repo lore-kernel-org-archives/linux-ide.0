@@ -1,67 +1,43 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: [RFC][DOC] writing IDE driver guidelines
-Date: Sun, 16 May 2004 21:34:30 +0200
+Subject: Re: strange CONFIG_BLK_DEV_IDECS ifdefs
+Date: Sun, 16 May 2004 21:38:58 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200405162134.30564.bzolnier@elka.pw.edu.pl>
-References: <200405151923.50343.bzolnier@elka.pw.edu.pl> <40A69848.9020304@pobox.com> <20040516010008.GC23743@buici.com>
+Message-ID: <200405162138.58293.bzolnier@elka.pw.edu.pl>
+References: <20040516085224.GA15680@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:20701 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264804AbUEPTcH
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:33502 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264805AbUEPThU
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 May 2004 15:32:07 -0400
-In-Reply-To: <20040516010008.GC23743@buici.com>
+	Sun, 16 May 2004 15:37:20 -0400
+In-Reply-To: <20040516085224.GA15680@infradead.org>
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Marc Singer <elf@buici.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-ide@vger.kernel.org
 
-On Sunday 16 of May 2004 03:00, Marc Singer wrote:
-> On Sat, May 15, 2004 at 06:23:04PM -0400, Jeff Garzik wrote:
-> > Bartlomiej Zolnierkiewicz wrote:
-> > >On Saturday 15 of May 2004 19:34, Jeff Garzik wrote:
-> > >>On Sat, May 15, 2004 at 07:23:50PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > >>>- host drivers should request/release IO resource
-> > >>> themelves and set hwif->mmio to 2
-> > >>
-> > >>Don't you mean, hwif->mmio==2 for MMIO hardware?
-> > >
-> > >It is was historically for MMIO, now it means that driver
-> > >handles IO resource itself (per comment in <linux/ide.h>).
-> >
-> > Maybe then create a constant HOST_IO_RESOURCES (value==2) to make that
-> > more obvious?
+On Sunday 16 of May 2004 10:52, Christoph Hellwig wrote:
+> there's two really strange ifdefs for ide-cs in ide.c:
 >
-> Please allow me to advocate for the naive.
->
-> While I do not in favor of lengthy commented discourses within the
-> code for all of the usual reasons, I do believe that interface
-> documentation is always welcome.  It encourages everyone to learn and
-> follow the rules.  It allows the subsystem maintainer to establish a
-> boundary so that accessing lower-level structures are left alone.
->
-> I'm not talking about a HOWTO as we know it.  Let's look at this mmio
-> flag.  How about writing this at a very minimum.
->
->   	int mmio; /* 0: iommio; <insert appropriate direction */
-> 		  /* 2: custom; driver must reserve & release system resources */
+>  - first ide_unregister is resetting hwif->irq only if
+>    CONFIG_BLK_DEV_IDECS is not set.  This seems really braindead as
+>    apparently the other drivers don't care (otherwise they wouldn't work
+>    with CONFIG_BLK_DEV_IDECS), but OTOH I don't see a way ide-cs would
+>    care for either variant, too - it doesn't touch the hwif anymore
+>    after unregister.
+>  - ide_delay_50ms is not sleeping with CONFIG_BLK_DEV_IDECS.  Andre told
+>    me this was because the pcmcia code didn't allow sleeping in the
+>    probe routine once upon a time - that's not true anymore, in fact
+>    ide-cs is calling schedule_timeout just after calling ide_register
+>    currently..
 
-I think this is good for ide.h
+Yep, I've also noticed these weirdness.
 
-> Certainly, I'd rather see something along the lines of a full
-> description.
->
-> 	int mmio;
-> 	    /* This field controls whether or not the driver blah,
-> 	       blah.  If the driver needs to reserve system resources,
-> 	       e.g. ports of memory, set the value to 2 and blah, blah. */
+> Is there someone with ide-cs hardware to test whether killing the ifdefs
+> makes any difference?
 
-and this is good for documentation file.
-
-> It isn't much, but it goes a long way.
-
-Thanks.
+Anybody?  [ You will get credits in ChangeLog. :-) ]
 
