@@ -1,30 +1,41 @@
-From: "Oliver Korpilla" <Oliver.Korpilla@gmx.de>
-Subject: [SATA] SATA_SIL and ATI SB400 chipset
-Date: Wed, 9 Mar 2005 13:40:10 +0100 (MET)
-Message-ID: <12981.1110372010@www41.gmx.net>
-References: <25661.1110101727@www58.gmx.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Received: from mail.gmx.net ([213.165.64.20]:31169 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S262348AbVCIMkM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2005 07:40:12 -0500
+From: Brett Russ <russb@emc.com>
+Subject: [PATCH libata-2.6] AHCI: fix fatal error int handling
+Date: Wed,  9 Mar 2005 15:57:14 -0500 (EST)
+Message-ID: <20050309205714.DBED014FA3@lns1032.lss.emc.com>
+Received: from mailhub.lss.emc.com ([168.159.2.31]:13016 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S262453AbVCIU5T
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Mar 2005 15:57:19 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello!
+I noticed that the AHCI CI (cmd issue) reg wasn't getting cleared
+after error ints resulting in no further commands being successfully
+issued to the port.  This patch fixes.  All that's really needed is
+the 1's complement but I also removed the disabling/enabling of the
+FIS_RX b/c this isn't spec'd as necessary when handling error ints.
 
-This is my final note about this - this is not a Debian bug, because Debian
-uses 2.6.8 for their AMD64 Sarge install media. But plain vanilla Linux only
-recognizes the SATA controller only starting from 2.6.11 - not even vanilla
-2.6.10 with matching config will work.
+Signed-off-by: Brett Russ <russb@emc.com>
 
-So: With the ATI SB400 chipset use a SATA_SIL driver from > 2.6.11. :)
-
-Thanks and with kind regards,
-Oliver Korpilla
-
--- 
-DSL Komplett von GMX +++ Supergünstig und stressfrei einsteigen!
-AKTION "Kein Einrichtungspreis" nutzen: http://www.gmx.net/de/go/dsl
+===== drivers/scsi/ahci.c 1.17 vs edited =====
+--- 1.17/drivers/scsi/ahci.c	2005-02-24 14:52:41 -05:00
++++ edited/drivers/scsi/ahci.c	2005-03-09 15:30:06 -05:00
+@@ -538,7 +538,7 @@
+ 
+ 	/* stop DMA */
+ 	tmp = readl(port_mmio + PORT_CMD);
+-	tmp &= PORT_CMD_START | PORT_CMD_FIS_RX;
++	tmp &= ~PORT_CMD_START;
+ 	writel(tmp, port_mmio + PORT_CMD);
+ 
+ 	/* wait for engine to stop.  TODO: this could be
+@@ -570,7 +570,7 @@
+ 
+ 	/* re-start DMA */
+ 	tmp = readl(port_mmio + PORT_CMD);
+-	tmp |= PORT_CMD_START | PORT_CMD_FIS_RX;
++	tmp |= PORT_CMD_START;
+ 	writel(tmp, port_mmio + PORT_CMD);
+ 	readl(port_mmio + PORT_CMD); /* flush */
+ 
