@@ -1,61 +1,48 @@
-From: "Prakash K. Cheemplavam" <prakashkc@gmx.de>
-Subject: Re: Data Corruption when both ports of SiI3112 used
-Date: Thu, 16 Dec 2004 18:29:58 +0100
-Message-ID: <41C1C616.9070007@gmx.de>
-References: <41AA2607.2090906@gmx.de>
+From: Enrico Scholz <enrico.scholz@informatik.tu-chemnitz.de>
+Subject: ATIIXP support (SATA, ATA133)
+Date: Fri, 17 Dec 2004 11:01:05 +0100
+Message-ID: <878y7x2qhq.fsf@kosh.ultra.csn.tu-chemnitz.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigEF77824F531723CC7E4B7F0F"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:25505 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261879AbULPRaB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Dec 2004 12:30:01 -0500
-In-Reply-To: <41AA2607.2090906@gmx.de>
+Received: from lana.hrz.tu-chemnitz.de ([134.109.132.3]:30419 "EHLO
+	lana.hrz.tu-chemnitz.de") by vger.kernel.org with ESMTP
+	id S262058AbULQKBH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Dec 2004 05:01:07 -0500
+Received: from ultra.csn.tu-chemnitz.de ([134.109.116.202] helo=mail.ultra.csn.tu-chemnitz.de)
+	by lana.hrz.tu-chemnitz.de with esmtp (TLSv1:AES256-SHA:256)
+	(Exim 4.41)
+	id 1CfEv4-0004Sp-OW
+	for linux-ide@vger.kernel.org; Fri, 17 Dec 2004 11:01:06 +0100
+Received: from kosh.ultra.csn.tu-chemnitz.de ([192.168.5.2])
+	by mail.ultra.csn.tu-chemnitz.de (8.13.1/8.12.11) with ESMTP id iBHA15m3022662
+	for <linux-ide@vger.kernel.org>; Fri, 17 Dec 2004 11:01:05 +0100
+Received: from kosh.ultra.csn.tu-chemnitz.de (localhost [127.0.0.1])
+	by kosh.ultra.csn.tu-chemnitz.de (8.13.1/8.12.10) with ESMTP id iBHA15TM025906
+	for <linux-ide@vger.kernel.org>; Fri, 17 Dec 2004 11:01:05 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigEF77824F531723CC7E4B7F0F
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Hello,
 
-Prakash K. Cheemplavam schrieb:
-> I get some tiny but nevertheless destastrous errors in following 
-> situation. (And no, Jeff, my cables are alright. ;-)
-> 
-> SiI3112A chip on nforce2 board.
-> Samsung 160 GB PATA drive on first connector via PATA->SATA convertor
-> Samsung 80 GB SATA drive on second connector
-> 
-> I copy two ~200MB big tgz archive from sdb to sda. I remount partition 
-> on sda and test files for integrity. Usually at least one of those 
-> fails. (The more files I copy the more files differ in tiny places. 
+are there plans to support newer ATI IXP chipsets? I mean:
 
-I haven't tried on my box yet, but another guy did it and he could 
-reproduce this, and also fix it: It seems to be nforce2 specific issue. 
-In bios you have the option ext-p2p. though bios states that 30us will 
-prevent data corruption on si3112, it is not true. It seems that is must 
-be set to 1ms.
+* PCI 1002:4376 which is an ATA133 controller; this should probably work
+  with the already existing drivers/ide/pci/atiixp.c driver
 
-Is it possible to do this in linux kernel just for safety? I think this 
-is rather crucial...
+* PCI 1002:4379 which is a SATA controller; I verified that it works
+  with the drivers/ide/pci/atiixp.c driver of 2.6.9 also.
 
-Prakash
+* PCI 1002:436E and 1002:437A which are both SATA controller. I saw them
+  in the windoze driver file only and can not tell whether they work
+  with atiixp.c
 
---------------enigEF77824F531723CC7E4B7F0F
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
+Although at least one SATA chipset works with the IDE driver, an own
+driver using libata would be the better solution. Does there exist
+already something which can be tested?
 
-iD8DBQFBwcYZxU2n/+9+t5gRAnHnAKD24dYhKQaVDGl4z/5YFJ4c+RNcjgCg9Ys2
-maxCRTVS0ItvGgZvAwkIYbs=
-=7t9X
------END PGP SIGNATURE-----
 
---------------enigEF77824F531723CC7E4B7F0F--
+
+Enrico
