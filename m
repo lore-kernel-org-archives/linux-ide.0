@@ -1,54 +1,49 @@
 From: Nick Piggin <nickpiggin@yahoo.com.au>
 Subject: Re: [PATCH] speed up SATA
-Date: Sun, 28 Mar 2004 10:15:26 +1000
+Date: Sun, 28 Mar 2004 10:21:04 +1000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4066191E.4040702@yahoo.com.au>
-References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406616EE.80301@pobox.com>
+Message-ID: <40661A70.3090608@yahoo.com.au>
+References: <4066021A.20308@pobox.com>	<40661049.1050004@yahoo.com.au> <20040327160745.7207ff98.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp105.mail.sc5.yahoo.com ([66.163.169.225]:3740 "HELO
-	smtp105.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S262003AbUC1APa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Mar 2004 19:15:30 -0500
-In-Reply-To: <406616EE.80301@pobox.com>
+Received: from smtp017.mail.yahoo.com ([216.136.174.114]:8888 "HELO
+	smtp017.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S262000AbUC1AVH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 27 Mar 2004 19:21:07 -0500
+In-Reply-To: <20040327160745.7207ff98.akpm@osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jeff Garzik wrote:
-> Jeff Garzik wrote:
+Andrew Morton wrote:
+> Nick Piggin <nickpiggin@yahoo.com.au> wrote:
 > 
->> It's up to the sysadmin to choose a disk scheduling policy they like, 
->> which implies that a _scheduler_, not each individual driver, should 
->> place policy limitations on max_sectors.
+>> > 
+>> > With this simple patch, the max request size goes from 128K to 32MB... 
+>> > so you can imagine this will definitely help performance.  Throughput 
+>> > goes up.  Interrupts go down.  Fun for the whole family.
+>> > 
+>>
+>> Hi Jeff,
+>> I think 32MB is too much. You incur latency and lose
+>> scheduling grainularity. I bet returns start diminishing
+>> pretty quickly after 1MB or so.
 > 
 > 
+> As far as interactivity and throughput is concerned, the effect of really
+> big requests will be the same as the effect of permitting _more_ requests. 
+> Namely: more memory can be under readahead or writeback at any particular
+> point in time.
 > 
-> <tangent>
-> 
-> The block layer / scheduler guys should also think about a general (not 
-> SCSI specific) way to tune TCQ tag depth.  That's IMO another policy 
-> decision.
-> 
-> I'm about to add a raft of SATA-2 hardware, all of which are queued. The 
-> standard depth is 32, but one board supports a whopping depth of 256.
-> 
-> Given past discussion on the topic, you probably don't want to queue 256 
-> requests at a time to hardware :)  But the sysadmin should be allowed 
-> to, if they wish...
 
-I think you could limit the number of in-flight requests quite
-easily, even for drivers that do not use the block layer's
-queueing functions.
+Not quite, because a single 32MB write might take what? 500ms to
+complete... and the IO scheduler wants to stop writes after 60ms
+if there are waiting reads.
 
-Aside, you should make 2 or 4 tags the default though: that
-still gives you the pipelining without sacrificing latency
-and usibility.
+And writes will be more likely to be submitted as large requests.
 
-The only area (I think) where large queues outperform the IO
-scheduler are lots of parallel, scattered reads. I think this
-is because the drive can immediately return cached data even
-though it looks like a large seek to the IO scheduler.
-(This is from testing on my single, old SCSI disk though.)
+I think Jeff is right that in theory though, the drivers should
+just export their capabilities, and the block layer or IO scheduler
+should decide on the maximum size to actually use.
