@@ -1,71 +1,101 @@
 From: Tejun Heo <tj@home-tj.org>
-Subject: Re: [PATCH 2.6.11-rc2 25/29] ide: convert REQ_DRIVE_CMD to REQ_DRIVE_TASKFILE
-Date: Wed, 2 Feb 2005 12:15:59 +0900
-Message-ID: <20050202031559.GP1187@htj.dyndns.org>
+Subject: Re: [PATCH 2.6.11-rc2 23/29] ide: map ide_task_ioctl() to ide_taskfile_ioctl()
+Date: Wed, 2 Feb 2005 12:08:13 +0900
+Message-ID: <20050202030813.GH1187@htj.dyndns.org>
 References: <20050202024017.GA621@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from [211.58.254.17] ([211.58.254.17]:35467 "EHLO hemosu.com")
-	by vger.kernel.org with ESMTP id S262274AbVBBDQB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2005 22:16:01 -0500
+Received: from [211.58.254.17] ([211.58.254.17]:13195 "EHLO hemosu.com")
+	by vger.kernel.org with ESMTP id S262253AbVBBDIP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2005 22:08:15 -0500
 Content-Disposition: inline
 In-Reply-To: <20050202024017.GA621@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> 25_ide_taskfile_cmd.patch
+> 23_ide_taskfile_task_ioctl.patch
 > 
-> 	All in-kernel REQ_DRIVE_CMD users except for ide_cmd_ioctl()
-> 	converted to use REQ_DRIVE_TASKFILE.
+> 	ide_task_ioctl() modified to map to ide_taskfile_ioctl().
+> 	This is the last user of REQ_DRIVE_TASK.
 
 
 Signed-off-by: Tejun Heo <tj@home-tj.org>
 
 
-Index: linux-ide-export/drivers/ide/ide-disk.c
+Index: linux-ide-export/drivers/ide/ide-taskfile.c
 ===================================================================
---- linux-ide-export.orig/drivers/ide/ide-disk.c	2005-02-02 10:28:06.527986413 +0900
-+++ linux-ide-export/drivers/ide/ide-disk.c	2005-02-02 10:28:07.204876587 +0900
-@@ -750,7 +750,7 @@ static int set_multcount(ide_drive_t *dr
- 	if (drive->special.b.set_multmode)
- 		return -EBUSY;
- 	ide_init_drive_cmd (&rq);
--	rq.flags = REQ_DRIVE_CMD;
-+	rq.flags = REQ_DRIVE_TASKFILE;
- 	drive->mult_req = arg;
- 	drive->special.b.set_multmode = 1;
- 	(void) ide_do_drive_cmd (drive, &rq, ide_wait);
-Index: linux-ide-export/drivers/ide/ide.c
-===================================================================
---- linux-ide-export.orig/drivers/ide/ide.c	2005-02-02 10:27:14.652402828 +0900
-+++ linux-ide-export/drivers/ide/ide.c	2005-02-02 10:28:07.205876425 +0900
-@@ -1255,6 +1255,7 @@ static int set_pio_mode (ide_drive_t *dr
- 	if (drive->special.b.set_tune)
- 		return -EBUSY;
- 	ide_init_drive_cmd(&rq);
-+	rq.flags = REQ_DRIVE_TASKFILE;
- 	drive->tune_req = (u8) arg;
- 	drive->special.b.set_tune = 1;
- 	(void) ide_do_drive_cmd(drive, &rq, ide_wait);
-@@ -1263,9 +1264,17 @@ static int set_pio_mode (ide_drive_t *dr
+--- linux-ide-export.orig/drivers/ide/ide-taskfile.c	2005-02-02 10:28:06.273027780 +0900
++++ linux-ide-export/drivers/ide/ide-taskfile.c	2005-02-02 10:28:06.751950074 +0900
+@@ -778,30 +778,51 @@ abort:
+ 	return err;
+ }
  
- static int set_xfer_rate (ide_drive_t *drive, int arg)
+-static int ide_wait_cmd_task(ide_drive_t *drive, u8 *buf)
+-{
+-	struct request rq;
+-
+-	ide_init_drive_cmd(&rq);
+-	rq.flags = REQ_DRIVE_TASK;
+-	rq.buffer = buf;
+-	return ide_do_drive_cmd(drive, &rq, ide_wait);
+-}
+-
+-/*
+- * FIXME : this needs to map into at taskfile. <andre@linux-ide.org>
+- */
+ int ide_task_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
  {
--	int err = ide_wait_cmd(drive,
--			WIN_SETFEATURES, (u8) arg,
--			SETFEATURES_XFER, 0, NULL);
-+	ide_task_t args;
-+	int err;
-+
-+	memset(&args, 0, sizeof(args));
-+	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_SETFEATURES;
-+	args.tfRegister[IDE_FEATURE_OFFSET]	= SETFEATURES_XFER;
-+	args.tfRegister[IDE_NSECTOR_OFFSET]	= arg;
-+	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
-+	args.handler				= task_no_data_intr;
-+
-+	err = ide_raw_taskfile(drive, &args, NULL);
+ 	void __user *p = (void __user *)arg;
+-	int err = 0;
+-	u8 args[7], *argbuf = args;
+-	int argsize = 7;
++	u8 args[7];
++	ide_task_request_t task_req;
++	task_ioreg_t *io_ports;
++	mm_segment_t orig_fs;
++	int ret;
  
- 	if (!err && arg) {
- 		ide_set_xfer_rate(drive, (u8) arg);
+ 	if (copy_from_user(args, p, 7))
+ 		return -EFAULT;
+-	err = ide_wait_cmd_task(drive, argbuf);
+-	if (copy_to_user(p, argbuf, argsize))
+-		err = -EFAULT;
+-	return err;
++
++	memset(&task_req, 0, sizeof(task_req));
++	task_req.out_flags.h.taskfile	= IDE_TASKFILE_STD_OUT_FLAGS;
++	task_req.in_flags.h.taskfile	= IDE_TASKFILE_STD_IN_FLAGS;
++
++	io_ports = task_req.io_ports;
++	io_ports[IDE_COMMAND_OFFSET]	= args[0];
++	io_ports[IDE_FEATURE_OFFSET]	= args[1];
++	io_ports[IDE_NSECTOR_OFFSET]	= args[2];
++	io_ports[IDE_SECTOR_OFFSET]	= args[3];
++	io_ports[IDE_LCYL_OFFSET]	= args[4];
++	io_ports[IDE_HCYL_OFFSET]	= args[5];
++	io_ports[IDE_SELECT_OFFSET]	= args[6];
++
++	task_req.req_cmd		= IDE_DRIVE_TASK_NO_DATA;
++	task_req.data_phase		= TASKFILE_NO_DATA;
++
++	orig_fs = get_fs();
++	set_fs(KERNEL_DS);
++
++	ret = ide_taskfile_ioctl(drive, cmd, (unsigned long)&task_req);
++
++	set_fs(orig_fs);
++
++	args[0] = io_ports[IDE_COMMAND_OFFSET];
++	args[1] = io_ports[IDE_FEATURE_OFFSET];
++	args[2] = io_ports[IDE_NSECTOR_OFFSET];
++	args[3] = io_ports[IDE_SECTOR_OFFSET];
++	args[4] = io_ports[IDE_LCYL_OFFSET];
++	args[5] = io_ports[IDE_HCYL_OFFSET];
++	args[6] = io_ports[IDE_SELECT_OFFSET];
++
++	if (copy_to_user(p, args, 7))
++		ret = -EFAULT;
++
++	return ret;
+ }
