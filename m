@@ -1,42 +1,26 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: PATCH: add drive_to_key functions
-Date: Mon, 16 Aug 2004 18:38:18 +0100
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: Re: PATCH: IDE - fix various comments remove never changing ifdef
+Date: Mon, 16 Aug 2004 20:29:43 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1092677889.20838.36.camel@localhost.localdomain>
-References: <20040815145844.GA10778@devserv.devel.redhat.com>
-	 <200408161912.26595.bzolnier@elka.pw.edu.pl>
+Message-ID: <200408162029.43797.bzolnier@elka.pw.edu.pl>
+References: <20040815143546.GA6284@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from the-village.bc.nu ([81.2.110.252]:9445 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S266257AbUHPSkt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Aug 2004 14:40:49 -0400
-In-Reply-To: <200408161912.26595.bzolnier@elka.pw.edu.pl>
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:27267 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S267863AbUHPTGl
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Aug 2004 15:06:41 -0400
+In-Reply-To: <20040815143546.GA6284@devserv.devel.redhat.com>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Alan Cox <alan@redhat.com>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, torvalds@osdl.org
+To: Alan Cox <alan@redhat.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 
-On Llu, 2004-08-16 at 18:12, Bartlomiej Zolnierkiewicz wrote:
-> >  	hwif->atapi_dma = 0;		/* disable all atapi dma */
-> >  	hwif->ultra_mask = 0x80;	/* disable all ultra */
-> >  	hwif->mwdma_mask = 0x80;	/* disable all mwdma */
-> >  	hwif->swdma_mask = 0x80;	/* disable all swdma */
-> >
-> > +	hwif->pci_dev = NULL;
-> > +	hwif->remove = NULL;
-> > +
-> 
-> not needed - memsetting to zero is done earlier
+On Sunday 15 August 2004 16:35, Alan Cox wrote:
+> No code changes in this patch just documenting
 
-Ok fixed in my tree.
-
-> > +EXPORT_SYMBOL_GPL(ide_drive_to_key);
-> 
-> AFAICS ide_drive_[from,to]_key are to be used only from ide-proc.c
-> so EXPORT_SYMBOLs are not needed
-
-Good point I forgot they were linked together. Fixed
-
-
+If you want to remove FANCY_STATUS_DUMPS define please make
+a separate patch and remove it globally.
