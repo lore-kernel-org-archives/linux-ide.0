@@ -1,186 +1,107 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [RFT PATCH] PCI MSI support for AHCI SATA driver
-Date: Thu, 24 Feb 2005 07:45:24 -0500
-Message-ID: <421DCC64.1050407@pobox.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Subject: [patch ide-dev 2/9] add ide_tf_get_address() helper
+Date: Thu, 24 Feb 2005 15:38:14 +0100 (CET)
+Message-ID: <Pine.GSO.4.58.0502241537330.13534@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060706000101000906070100"
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:29414 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262326AbVBXMpk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Feb 2005 07:45:40 -0500
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:51105 "EHLO
+	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
+	id S262359AbVBXOsC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Feb 2005 09:48:02 -0500
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:54557 "EHLO
+	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
+	id S50555AbVBXOkA (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 2 others); Thu, 24 Feb 2005 15:40:00 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------060706000101000906070100
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Any testers wanna give this a shot?  Testing should be easy:
-
-(a) make sure it still works.
-
-(b) cat /proc/interrupts to make sure that MSI is truly activated.
-
-Patch against 2.6.11-rc5.
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
 
---------------060706000101000906070100
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
+* add ide_tf_get_address() helper
+* use it in idedisk_read_native_max_address[_ext]()
+  and idedisk_set_max_address[_ext]()
 
-diff -Nru a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
---- a/drivers/scsi/ahci.c	2005-02-24 07:00:45 -05:00
-+++ b/drivers/scsi/ahci.c	2005-02-24 07:00:45 -05:00
-@@ -152,6 +152,7 @@
- 
- struct ahci_host_priv {
- 	unsigned long		flags;
-+	unsigned int		have_msi; /* is PCI MSI enabled? */
- 	u32			cap;	/* cache of HOST_CAP register */
- 	u32			port_map; /* cache of HOST_PORTS_IMPL reg */
- };
-@@ -181,6 +182,7 @@
- static u8 ahci_check_status(struct ata_port *ap);
- static u8 ahci_check_err(struct ata_port *ap);
- static inline int ahci_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
-+static void ahci_remove_one (struct pci_dev *pdev);
- 
- static Scsi_Host_Template ahci_sht = {
- 	.module			= THIS_MODULE,
-@@ -263,7 +265,7 @@
- 	.name			= DRV_NAME,
- 	.id_table		= ahci_pci_tbl,
- 	.probe			= ahci_init_one,
--	.remove			= ata_pci_remove_one,
-+	.remove			= ahci_remove_one,
- };
- 
- 
-@@ -860,15 +862,19 @@
- }
- 
- /* move to PCI layer, integrate w/ MSI stuff */
--static void pci_enable_intx(struct pci_dev *pdev)
-+static void pci_intx(struct pci_dev *pdev, int enable)
- {
--	u16 pci_command;
-+	u16 pci_command, new;
- 
- 	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
--	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
--		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
-+
-+	if (enable)
-+		new = pci_command & ~PCI_COMMAND_INTX_DISABLE;
-+	else
-+		new = pci_command | PCI_COMMAND_INTX_DISABLE;
-+
-+	if (new != pci_command)
- 		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
--	}
- }
- 
- static void ahci_print_info(struct ata_probe_ent *probe_ent)
-@@ -950,7 +956,7 @@
- 	unsigned long base;
- 	void *mmio_base;
- 	unsigned int board_idx = (unsigned int) ent->driver_data;
--	int pci_dev_busy = 0;
-+	int have_msi, pci_dev_busy = 0;
- 	int rc;
- 
- 	VPRINTK("ENTER\n");
-@@ -968,12 +974,17 @@
- 		goto err_out;
+diff -Nru a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+--- a/drivers/ide/ide-disk.c	2005-02-19 17:22:32 +01:00
++++ b/drivers/ide/ide-disk.c	2005-02-19 17:22:32 +01:00
+@@ -344,8 +344,7 @@
+
+ 	/* if OK, compute maximum address value */
+ 	if ((tf->command & 1) == 0) {
+-		addr = ((tf->device & 0xf) << 24) |
+-		       (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
++		addr = (u32)ide_tf_get_address(tf);
+ 		addr++;	/* since the return value is (maxlba - 1), we add 1 */
  	}
- 
--	pci_enable_intx(pdev);
-+	if (pci_enable_msi(pdev) == 0)
-+		have_msi = 1;
-+	else {
-+		pci_intx(pdev, 1);
-+		have_msi = 0;
-+	}
- 
- 	probe_ent = kmalloc(sizeof(*probe_ent), GFP_KERNEL);
- 	if (probe_ent == NULL) {
- 		rc = -ENOMEM;
--		goto err_out_regions;
-+		goto err_out_msi;
+ 	return addr;
+@@ -373,9 +372,7 @@
+
+ 	/* if OK, compute maximum address value */
+ 	if ((tf->command & 1) == 0) {
+-		u32 high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) | tf->hob_lbal;
+-		u32 low  = (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
+-		addr = ((__u64)high << 24) | low;
++		addr = ide_tf_get_address(tf);
+ 		addr++;	/* since the return value is (maxlba - 1), we add 1 */
  	}
- 
- 	memset(probe_ent, 0, sizeof(*probe_ent));
-@@ -1006,6 +1017,8 @@
- 	probe_ent->mmio_base = mmio_base;
- 	probe_ent->private_data = hpriv;
- 
-+	hpriv->have_msi = have_msi;
-+
- 	/* initialize adapter */
- 	rc = ahci_host_init(probe_ent);
- 	if (rc)
-@@ -1025,7 +1038,11 @@
- 	iounmap(mmio_base);
- err_out_free_ent:
- 	kfree(probe_ent);
--err_out_regions:
-+err_out_msi:
-+	if (have_msi)
-+		pci_disable_msi(pdev);
-+	else
-+		pci_intx(pdev, 0);
- 	pci_release_regions(pdev);
- err_out:
- 	if (!pci_dev_busy)
-@@ -1033,6 +1050,42 @@
- 	return rc;
+ 	return addr;
+@@ -407,8 +404,7 @@
+ 	ide_raw_taskfile(drive, &args, NULL);
+ 	/* if OK, read new maximum address value */
+ 	if ((tf->command & 1) == 0) {
+-		addr_set = ((tf->device & 0xf) << 24) |
+-			   (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
++		addr_set = (u32)ide_tf_get_address(tf);
+ 		addr_set++;
+ 	}
+ 	return addr_set;
+@@ -442,9 +438,7 @@
+ 	ide_raw_taskfile(drive, &args, NULL);
+ 	/* if OK, compute maximum address value */
+ 	if ((tf->command & 1) == 0) {
+-		u32 high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) | tf->hob_lbal;
+-		u32 low  = (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
+-		addr_set = ((__u64)high << 24) | low;
++		addr_set = ide_tf_get_address(tf);
+ 		addr_set++;
+ 	}
+ 	return addr_set;
+diff -Nru a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+--- a/drivers/ide/ide-io.c	2005-02-19 17:22:32 +01:00
++++ b/drivers/ide/ide-io.c	2005-02-19 17:22:32 +01:00
+@@ -317,6 +317,22 @@
+ 	spin_unlock_irqrestore(&ide_lock, flags);
  }
- 
-+static void ahci_remove_one (struct pci_dev *pdev)
+
++u64 ide_tf_get_address(struct ata_taskfile *tf)
 +{
-+	struct device *dev = pci_dev_to_dev(pdev);
-+	struct ata_host_set *host_set = dev_get_drvdata(dev);
-+	struct ahci_host_priv *hpriv = host_set->private_data;
-+	struct ata_port *ap;
-+	unsigned int i;
-+	int have_msi;
++	u32 high, low;
 +
-+	for (i = 0; i < host_set->n_ports; i++) {
-+		ap = host_set->ports[i];
-+
-+		scsi_remove_host(ap->host);
-+	}
-+
-+	have_msi = hpriv->have_msi;
-+	free_irq(host_set->irq, host_set);
-+	host_set->ops->host_stop(host_set);
-+	iounmap(host_set->mmio_base);
-+
-+	for (i = 0; i < host_set->n_ports; i++) {
-+		ap = host_set->ports[i];
-+
-+		ata_scsi_release(ap->host);
-+		scsi_host_put(ap->host);
-+	}
-+
-+	if (have_msi)
-+		pci_disable_msi(pdev);
++	if (tf->flags & ATA_TFLAG_LBA48)
++		high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) | tf->hob_lbal;
 +	else
-+		pci_intx(pdev, 0);
-+	pci_release_regions(pdev);
-+	kfree(host_set);
-+	pci_disable_device(pdev);
-+	dev_set_drvdata(dev, NULL);
++		high = tf->device & 0xf;
++
++	low = (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
++
++	return ((u64)high << 24) | low;
 +}
- 
- static int __init ahci_init(void)
- {
++
++EXPORT_SYMBOL_GPL(ide_tf_get_address);
++
+ /*
+  * FIXME: probably move this somewhere else, name is bad too :)
+  */
+diff -Nru a/include/linux/ide.h b/include/linux/ide.h
+--- a/include/linux/ide.h	2005-02-19 17:22:32 +01:00
++++ b/include/linux/ide.h	2005-02-19 17:22:32 +01:00
+@@ -1189,6 +1189,8 @@
+  */
+ extern void ide_init_drive_cmd (struct request *rq);
 
---------------060706000101000906070100--
++u64 ide_tf_get_address(struct ata_taskfile *);
++
+ /*
+  * this function returns error location sector offset in case of a write error
+  */
