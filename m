@@ -1,36 +1,31 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch][3/9] ide: add ide_sg_init() helper
-Date: Wed, 08 Sep 2004 23:17:53 -0400
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [patch][9/9] block: remove bio walking
+Date: Thu, 9 Sep 2004 09:03:14 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <413FCB61.7060604@pobox.com>
-References: <200409082126.49832.bzolnier@elka.pw.edu.pl>
+Message-ID: <20040909090314.A24950@flint.arm.linux.org.uk>
+References: <200409082127.04331.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:25795 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S269266AbUIIDSH
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Sep 2004 23:18:07 -0400
-In-Reply-To: <200409082126.49832.bzolnier@elka.pw.edu.pl>
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:6417 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S269364AbUIIIDS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Sep 2004 04:03:18 -0400
+Content-Disposition: inline
+In-Reply-To: <200409082127.04331.bzolnier@elka.pw.edu.pl>; from bzolnier@elka.pw.edu.pl on Wed, Sep 08, 2004 at 09:27:04PM +0200
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
-Bartlomiej Zolnierkiewicz wrote:
-> +static inline void ide_sg_init(struct scatterlist *sg, u8 *buf, unsigned int buflen)
-> +{
-> +	memset(sg, 0, sizeof(*sg));
-> +
-> +	sg->page = virt_to_page(buf);
-> +	sg->offset = offset_in_page(buf);
-> +	sg->length = buflen;
-> +}
-> +
+On Wed, Sep 08, 2004 at 09:27:04PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> [patch] block: remove bio walking
+> 
+> IDE driver was the only user of bio walking code.
 
+The MMC driver also uses this.  Please don't remove.
 
-Surely this should be more generic?
-
-	Jeff
-
-
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 PCMCIA      - http://pcmcia.arm.linux.org.uk/
+                 2.6 Serial core
