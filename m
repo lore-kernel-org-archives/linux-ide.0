@@ -1,204 +1,44 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] IDE cleanups for 2.6.4-rc1 (3/3)
-Date: Tue, 2 Mar 2004 22:15:39 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200403022215.39560.bzolnier@elka.pw.edu.pl>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] IDE cleanups for 2.6.4-rc1 (2/3)
+Date: Tue, 02 Mar 2004 18:08:24 -0500
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <404513E8.9010101@pobox.com>
+References: <200403022215.07385.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:55250 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261232AbUCBXIl
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Mar 2004 18:08:41 -0500
+In-Reply-To: <200403022215.07385.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+Bartlomiej Zolnierkiewicz wrote:
+> [IDE] remove ide_cmd_type_parser() logic
+> 
+> Set ide_task_t fields (command_type, handler and prehandler) directly.
+> Remove unused ide_task_t->posthandler and all ide_cmd_type_parser() logic.
+> 
+> ide_cmd_type_parser() was meant to be used for ioctls but
+> ended up checking validity of kernel generated requests (doh!).
+> 
+> Rationale for removal:
+> - it can't be used for existing ioctls (changes the way they work)
+> - kernel shouldn't check validity of (root only) user-space requests
+>   (it can and should be done in user-space)
+> - it wastes CPU cycles on going through parsers
+> - it makes code harder to understand/follow
+>   (now info about request is localized)
 
 
-[IDE] remove IDE_*_OFFSET_HOB and IDE_*_REG_HOB defines
+Without the annoyingly-large 'switch', how do you figure out whether a 
+command is non-data, pio-read, pio-write, dma-read, or dma-write?
 
-They are identical to non _HOB versions (except IDE_CONTROL_OFFSET_HOB).
+	Jeff
 
- linux-2.6.4-rc1-root/drivers/ide/ide-disk.c     |   34 ++++++++++++------------
- linux-2.6.4-rc1-root/drivers/ide/ide-io.c       |   14 ++++-----
- linux-2.6.4-rc1-root/drivers/ide/ide-taskfile.c |   16 +++++------
- linux-2.6.4-rc1-root/include/linux/ide.h        |   19 -------------
- 4 files changed, 32 insertions(+), 51 deletions(-)
 
-diff -puN drivers/ide/ide-disk.c~ide_HOB_cleanup drivers/ide/ide-disk.c
---- linux-2.6.4-rc1/drivers/ide/ide-disk.c~ide_HOB_cleanup	2004-03-02 22:11:08.500833952 +0100
-+++ linux-2.6.4-rc1-root/drivers/ide/ide-disk.c	2004-03-02 22:11:08.521830760 +0100
-@@ -706,11 +706,11 @@ static ide_startstop_t lba_48_rw_disk (i
- 	if (blk_rq_tagged(rq)) {
- 		args.tfRegister[IDE_FEATURE_OFFSET] = sectors;
- 		args.tfRegister[IDE_NSECTOR_OFFSET] = rq->tag << 3;
--		args.hobRegister[IDE_FEATURE_OFFSET_HOB] = sectors >> 8;
--		args.hobRegister[IDE_NSECTOR_OFFSET_HOB] = 0;
-+		args.hobRegister[IDE_FEATURE_OFFSET] = sectors >> 8;
-+		args.hobRegister[IDE_NSECTOR_OFFSET] = 0;
- 	} else {
- 		args.tfRegister[IDE_NSECTOR_OFFSET] = sectors;
--		args.hobRegister[IDE_NSECTOR_OFFSET_HOB] = sectors >> 8;
-+		args.hobRegister[IDE_NSECTOR_OFFSET] = sectors >> 8;
- 	}
- 
- 	args.tfRegister[IDE_SECTOR_OFFSET]	= block;	/* low lba */
-@@ -718,10 +718,10 @@ static ide_startstop_t lba_48_rw_disk (i
- 	args.tfRegister[IDE_HCYL_OFFSET]	= (block>>=8);	/* hi  lba */
- 	args.tfRegister[IDE_SELECT_OFFSET]	= drive->select.all;
- 	args.tfRegister[IDE_COMMAND_OFFSET]	= get_command(drive, rq_data_dir(rq), &args);
--	args.hobRegister[IDE_SECTOR_OFFSET_HOB]	= (block>>=8);	/* low lba */
--	args.hobRegister[IDE_LCYL_OFFSET_HOB]	= (block>>=8);	/* mid lba */
--	args.hobRegister[IDE_HCYL_OFFSET_HOB]	= (block>>=8);	/* hi  lba */
--	args.hobRegister[IDE_SELECT_OFFSET_HOB]	= drive->select.all;
-+	args.hobRegister[IDE_SECTOR_OFFSET]	= (block>>=8);	/* low lba */
-+	args.hobRegister[IDE_LCYL_OFFSET]	= (block>>=8);	/* mid lba */
-+	args.hobRegister[IDE_HCYL_OFFSET]	= (block>>=8);	/* hi  lba */
-+	args.hobRegister[IDE_SELECT_OFFSET]	= drive->select.all;
- 	args.hobRegister[IDE_CONTROL_OFFSET_HOB]= (drive->ctl|0x80);
- 	args.rq					= (struct request *) rq;
- 	rq->special				= (ide_task_t *)&args;
-@@ -963,9 +963,9 @@ static unsigned long long idedisk_read_n
- 
- 	/* if OK, compute maximum address value */
- 	if ((args.tfRegister[IDE_STATUS_OFFSET] & 0x01) == 0) {
--		u32 high = ((args.hobRegister[IDE_HCYL_OFFSET_HOB])<<16) |
--			   ((args.hobRegister[IDE_LCYL_OFFSET_HOB])<<8) |
--  			    (args.hobRegister[IDE_SECTOR_OFFSET_HOB]); 
-+		u32 high = (args.hobRegister[IDE_HCYL_OFFSET] << 16) |
-+			   (args.hobRegister[IDE_LCYL_OFFSET] <<  8) |
-+			    args.hobRegister[IDE_SECTOR_OFFSET];
- 		u32 low  = ((args.tfRegister[IDE_HCYL_OFFSET])<<16) |
- 			   ((args.tfRegister[IDE_LCYL_OFFSET])<<8) |
- 			    (args.tfRegister[IDE_SECTOR_OFFSET]);
-@@ -1021,10 +1021,10 @@ static unsigned long long idedisk_set_ma
- 	args.tfRegister[IDE_HCYL_OFFSET]	= ((addr_req >>= 8) & 0xff);
- 	args.tfRegister[IDE_SELECT_OFFSET]      = 0x40;
- 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_SET_MAX_EXT;
--	args.hobRegister[IDE_SECTOR_OFFSET_HOB]	= ((addr_req >>= 8) & 0xff);
--	args.hobRegister[IDE_LCYL_OFFSET_HOB]	= ((addr_req >>= 8) & 0xff);
--	args.hobRegister[IDE_HCYL_OFFSET_HOB]	= ((addr_req >>= 8) & 0xff);
--	args.hobRegister[IDE_SELECT_OFFSET_HOB]	= 0x40;
-+	args.hobRegister[IDE_SECTOR_OFFSET]	= (addr_req >>= 8) & 0xff;
-+	args.hobRegister[IDE_LCYL_OFFSET]	= (addr_req >>= 8) & 0xff;
-+	args.hobRegister[IDE_HCYL_OFFSET]	= (addr_req >>= 8) & 0xff;
-+	args.hobRegister[IDE_SELECT_OFFSET]	= 0x40;
- 	args.hobRegister[IDE_CONTROL_OFFSET_HOB]= (drive->ctl|0x80);
- 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
- 	args.handler				= &task_no_data_intr;
-@@ -1032,9 +1032,9 @@ static unsigned long long idedisk_set_ma
- 	ide_raw_taskfile(drive, &args, NULL);
- 	/* if OK, compute maximum address value */
- 	if ((args.tfRegister[IDE_STATUS_OFFSET] & 0x01) == 0) {
--		u32 high = ((args.hobRegister[IDE_HCYL_OFFSET_HOB])<<16) |
--			   ((args.hobRegister[IDE_LCYL_OFFSET_HOB])<<8) |
--			    (args.hobRegister[IDE_SECTOR_OFFSET_HOB]);
-+		u32 high = (args.hobRegister[IDE_HCYL_OFFSET] << 16) |
-+			   (args.hobRegister[IDE_LCYL_OFFSET] <<  8) |
-+			    args.hobRegister[IDE_SECTOR_OFFSET];
- 		u32 low  = ((args.tfRegister[IDE_HCYL_OFFSET])<<16) |
- 			   ((args.tfRegister[IDE_LCYL_OFFSET])<<8) |
- 			    (args.tfRegister[IDE_SECTOR_OFFSET]);
-diff -puN drivers/ide/ide-io.c~ide_HOB_cleanup drivers/ide/ide-io.c
---- linux-2.6.4-rc1/drivers/ide/ide-io.c~ide_HOB_cleanup	2004-03-02 22:11:08.503833496 +0100
-+++ linux-2.6.4-rc1-root/drivers/ide/ide-io.c	2004-03-02 22:11:08.522830608 +0100
-@@ -197,7 +197,7 @@ void ide_end_drive_cmd (ide_drive_t *dri
- 			if (args->tf_in_flags.b.data) {
- 				u16 data				= hwif->INW(IDE_DATA_REG);
- 				args->tfRegister[IDE_DATA_OFFSET]	= (data) & 0xFF;
--				args->hobRegister[IDE_DATA_OFFSET_HOB]	= (data >> 8) & 0xFF;
-+				args->hobRegister[IDE_DATA_OFFSET]	= (data >> 8) & 0xFF;
- 			}
- 			args->tfRegister[IDE_ERROR_OFFSET]   = err;
- 			args->tfRegister[IDE_NSECTOR_OFFSET] = hwif->INB(IDE_NSECTOR_REG);
-@@ -208,12 +208,12 @@ void ide_end_drive_cmd (ide_drive_t *dri
- 			args->tfRegister[IDE_STATUS_OFFSET]  = stat;
- 
- 			if (drive->addressing == 1) {
--				hwif->OUTB(drive->ctl|0x80, IDE_CONTROL_REG_HOB);
--				args->hobRegister[IDE_FEATURE_OFFSET_HOB] = hwif->INB(IDE_FEATURE_REG);
--				args->hobRegister[IDE_NSECTOR_OFFSET_HOB] = hwif->INB(IDE_NSECTOR_REG);
--				args->hobRegister[IDE_SECTOR_OFFSET_HOB]  = hwif->INB(IDE_SECTOR_REG);
--				args->hobRegister[IDE_LCYL_OFFSET_HOB]    = hwif->INB(IDE_LCYL_REG);
--				args->hobRegister[IDE_HCYL_OFFSET_HOB]    = hwif->INB(IDE_HCYL_REG);
-+				hwif->OUTB(drive->ctl|0x80, IDE_CONTROL_REG);
-+				args->hobRegister[IDE_FEATURE_OFFSET]	= hwif->INB(IDE_FEATURE_REG);
-+				args->hobRegister[IDE_NSECTOR_OFFSET]	= hwif->INB(IDE_NSECTOR_REG);
-+				args->hobRegister[IDE_SECTOR_OFFSET]	= hwif->INB(IDE_SECTOR_REG);
-+				args->hobRegister[IDE_LCYL_OFFSET]	= hwif->INB(IDE_LCYL_REG);
-+				args->hobRegister[IDE_HCYL_OFFSET]	= hwif->INB(IDE_HCYL_REG);
- 			}
- 		}
- 	} else if (blk_pm_request(rq)) {
-diff -puN drivers/ide/ide-taskfile.c~ide_HOB_cleanup drivers/ide/ide-taskfile.c
---- linux-2.6.4-rc1/drivers/ide/ide-taskfile.c~ide_HOB_cleanup	2004-03-02 22:11:08.513831976 +0100
-+++ linux-2.6.4-rc1-root/drivers/ide/ide-taskfile.c	2004-03-02 22:11:08.524830304 +0100
-@@ -121,13 +121,13 @@ void debug_taskfile (ide_drive_t *drive,
- 	printk("TF.6=x%02x ", args->tfRegister[IDE_SELECT_OFFSET]);
- 	printk("TF.7=x%02x\n", args->tfRegister[IDE_COMMAND_OFFSET]);
- 	printk(KERN_INFO "%s: ", drive->name);
--//	printk("HTF.0=x%02x ", args->hobRegister[IDE_DATA_OFFSET_HOB]);
--	printk("HTF.1=x%02x ", args->hobRegister[IDE_FEATURE_OFFSET_HOB]);
--	printk("HTF.2=x%02x ", args->hobRegister[IDE_NSECTOR_OFFSET_HOB]);
--	printk("HTF.3=x%02x ", args->hobRegister[IDE_SECTOR_OFFSET_HOB]);
--	printk("HTF.4=x%02x ", args->hobRegister[IDE_LCYL_OFFSET_HOB]);
--	printk("HTF.5=x%02x ", args->hobRegister[IDE_HCYL_OFFSET_HOB]);
--	printk("HTF.6=x%02x ", args->hobRegister[IDE_SELECT_OFFSET_HOB]);
-+//	printk("HTF.0=x%02x ", args->hobRegister[IDE_DATA_OFFSET]);
-+	printk("HTF.1=x%02x ", args->hobRegister[IDE_FEATURE_OFFSET]);
-+	printk("HTF.2=x%02x ", args->hobRegister[IDE_NSECTOR_OFFSET]);
-+	printk("HTF.3=x%02x ", args->hobRegister[IDE_SECTOR_OFFSET]);
-+	printk("HTF.4=x%02x ", args->hobRegister[IDE_LCYL_OFFSET]);
-+	printk("HTF.5=x%02x ", args->hobRegister[IDE_HCYL_OFFSET]);
-+	printk("HTF.6=x%02x ", args->hobRegister[IDE_SELECT_OFFSET]);
- 	printk("HTF.7=x%02x\n", args->hobRegister[IDE_CONTROL_OFFSET_HOB]);
- }
- #endif /* CONFIG_IDE_TASK_IOCTL_DEBUG */
-@@ -1018,7 +1018,7 @@ int ide_diag_taskfile (ide_drive_t *driv
- 	 */
- 	if (args->command_type != IDE_DRIVE_TASK_NO_DATA) {
- 		if (data_size == 0)
--			rq.nr_sectors = (args->hobRegister[IDE_NSECTOR_OFFSET_HOB] << 8) | args->tfRegister[IDE_NSECTOR_OFFSET];
-+			rq.nr_sectors = (args->hobRegister[IDE_NSECTOR_OFFSET] << 8) | args->tfRegister[IDE_NSECTOR_OFFSET];
- 		else
- 			rq.nr_sectors = data_size / SECTOR_SIZE;
- 
-diff -puN include/linux/ide.h~ide_HOB_cleanup include/linux/ide.h
---- linux-2.6.4-rc1/include/linux/ide.h~ide_HOB_cleanup	2004-03-02 22:11:08.517831368 +0100
-+++ linux-2.6.4-rc1-root/include/linux/ide.h	2004-03-02 22:11:08.526830000 +0100
-@@ -143,17 +143,8 @@ typedef unsigned char	byte;	/* used ever
- #define IDE_FEATURE_OFFSET	IDE_ERROR_OFFSET
- #define IDE_COMMAND_OFFSET	IDE_STATUS_OFFSET
- 
--#define IDE_DATA_OFFSET_HOB	(0)
--#define IDE_ERROR_OFFSET_HOB	(1)
--#define IDE_NSECTOR_OFFSET_HOB	(2)
--#define IDE_SECTOR_OFFSET_HOB	(3)
--#define IDE_LCYL_OFFSET_HOB	(4)
--#define IDE_HCYL_OFFSET_HOB	(5)
--#define IDE_SELECT_OFFSET_HOB	(6)
- #define IDE_CONTROL_OFFSET_HOB	(7)
- 
--#define IDE_FEATURE_OFFSET_HOB	IDE_ERROR_OFFSET_HOB
--
- #define IDE_DATA_REG		(HWIF(drive)->io_ports[IDE_DATA_OFFSET])
- #define IDE_ERROR_REG		(HWIF(drive)->io_ports[IDE_ERROR_OFFSET])
- #define IDE_NSECTOR_REG		(HWIF(drive)->io_ports[IDE_NSECTOR_OFFSET])
-@@ -165,16 +156,6 @@ typedef unsigned char	byte;	/* used ever
- #define IDE_CONTROL_REG		(HWIF(drive)->io_ports[IDE_CONTROL_OFFSET])
- #define IDE_IRQ_REG		(HWIF(drive)->io_ports[IDE_IRQ_OFFSET])
- 
--#define IDE_DATA_REG_HOB	(HWIF(drive)->io_ports[IDE_DATA_OFFSET])
--#define IDE_ERROR_REG_HOB	(HWIF(drive)->io_ports[IDE_ERROR_OFFSET])
--#define IDE_NSECTOR_REG_HOB	(HWIF(drive)->io_ports[IDE_NSECTOR_OFFSET])
--#define IDE_SECTOR_REG_HOB	(HWIF(drive)->io_ports[IDE_SECTOR_OFFSET])
--#define IDE_LCYL_REG_HOB	(HWIF(drive)->io_ports[IDE_LCYL_OFFSET])
--#define IDE_HCYL_REG_HOB	(HWIF(drive)->io_ports[IDE_HCYL_OFFSET])
--#define IDE_SELECT_REG_HOB	(HWIF(drive)->io_ports[IDE_SELECT_OFFSET])
--#define IDE_STATUS_REG_HOB	(HWIF(drive)->io_ports[IDE_STATUS_OFFSET])
--#define IDE_CONTROL_REG_HOB	(HWIF(drive)->io_ports[IDE_CONTROL_OFFSET])
--
- #define IDE_FEATURE_REG		IDE_ERROR_REG
- #define IDE_COMMAND_REG		IDE_STATUS_REG
- #define IDE_ALTSTATUS_REG	IDE_CONTROL_REG
 
-_
