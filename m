@@ -1,44 +1,36 @@
-From: Mark Lord <lkml@rtr.ca>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
-Date: Tue, 14 Sep 2004 13:51:28 -0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <41472FA0.2090108@rtr.ca>
-References: <41471163.10709@rtr.ca> <414723B0.1090600@pobox.com>
+Date: 14 Sep 2004 14:25:35 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1095186343.2008.29.camel@mulgrave>
+References: <41471163.10709@rtr.ca>  <414723B0.1090600@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:45976 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S269492AbUINRxN
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Sep 2004 13:53:13 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S269694AbUINSiG@vger.kernel.org>
 In-Reply-To: <414723B0.1090600@pobox.com>
-List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Mark Lord <lkml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+List-Id: linux-ide@vger.kernel.org
 
- >In particular, releasing the lock and sleeping would be very wrong
- >in the ->queuecommand and error handling paths
- >(alas...  I would love to sleep in the fine-grained eh hooks)
+On Tue, 2004-09-14 at 13:00, Jeff Garzik wrote:
+> 9) use of do_sleep paradigm is dubious:  you should instead try to keep 
+> your locked code regions as small as possible.  in general, this code 
+> has far too many unlock-doit-lock sections.
+> 
+> Experience has shown that too much unlock-doit-lock leads to bugs and 
+> increases the pain when analyzing your locking.
+> 
+> In particular, releasing the lock and sleeping would be very wrong in 
+> the ->queuecommand and error handling paths (alas...  I would love to 
+> sleep in the fine-grained eh hooks)
 
-Mmm.. definitely no sleeps in queuecommand(), but sleeping seems
-necessary in host_reset_handler() -- the alternative is to just
-busywait inline.. which would really not be good.
+Actually, its only wrong in queuecommand because that can be called in
+softirq context.
 
-Isn't the protocol for the eh host_reset_handler() basically
-just "do the reset, and return whether it worked or not?".
-If so, the driver really has to hang around until the reset
-completes so that correct status can be returned.  This generally
-takes a couple of milliseconds in practice (measured it).
+Sleeping in the eh paths is fine (as long as you drop the locks that the
+EH thread has uselessly taken for you).  Indeed it's often required
+since the return is supposed to tell the eh thread whether the action
+was successful or not.
 
-Is there a better way to do that?
-
-I really would prefer never to have to reset the drives,
-but when they have a queuing error, many of them simply
-won't talk to us again without a reset.  The driver avoids
-the reset as much as it can for other situations, though.
-
-Cheers
--- 
-Mark Lord
-(hdparm keeper & the original "Linux IDE Guy")
+James
