@@ -1,30 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch][0/6] ide: sanitize PIO code, take 2
-Date: Sun, 12 Sep 2004 20:34:48 -0400
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: Via SATA not working here
+Date: Mon, 13 Sep 2004 08:23:23 +0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4144EB28.6070401@pobox.com>
-References: <200409110026.20064.bzolnier@elka.pw.edu.pl>
+Message-ID: <414520BB.3080306@wasp.net.au>
+References: <20040912191542.GO21202@uvt316-2.ruk.cuni.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:41118 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264396AbUIMAfB
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 12 Sep 2004 20:35:01 -0400
-In-Reply-To: <200409110026.20064.bzolnier@elka.pw.edu.pl>
+Received: from wasp.net.au ([203.190.192.17]:6622 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S265910AbUIMEXS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Sep 2004 00:23:18 -0400
+In-Reply-To: <20040912191542.GO21202@uvt316-2.ruk.cuni.cz>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <rmk+lkml@arm.linux.org.uk>
+To: Michal 'hramrach' Suchanek <hramrach@centrum.cz>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> - bugfix: use sg->length instead of sg_dma_len(sg)
->   (found thanks to rmk's concerns)
+Michal 'hramrach' Suchanek wrote:
+> Hello
+> 
+> I got a mainboard with a Via SATA controller, a Maxtor UATA 133 drive,
+> and an Asus SATA dongle (probably a Marvell chip).
+> 
+> When I was installing Linux the SATA controller got detected as IDE and
+> basically worked. I would see occasional messages about DMA timeout
+> while running from the install cd but the installation finished without
+> errors.
+> 
+> After building a 2.6.7 kernel I would get pretty much the same result.
+> I get a few messages about DMA timeout at startup and then it runs. But
+> I found it would eventually lock up with the hdd led shining steadily.
 
-Details?
+Could you try it with a 2.6.5 kernel please? There were some changes made between 2.6.5 and 2.6.7 
+that may well cause issues with HD's attached to dongles. There have been patches created for this 
+by they have not yet made the mainstream kernel.
 
-IIRC this breaks ia64 and/or other platforms?
+I'd be interested to see how that pans out.
 
-	Jeff
-
-
+Regards,
+Brad
