@@ -1,122 +1,43 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] remove unused __ide_dma_retune() and ide_hwif_t->ide_dma_retune
-Date: Tue, 3 Feb 2004 16:56:03 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200402031656.03134.bzolnier@elka.pw.edu.pl>
+Subject: Re: [PATCH] various IDE patches/cleanups
+Date: Tue, 3 Feb 2004 20:41:09 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200402032041.09696.bzolnier@elka.pw.edu.pl>
+References: <20040103152802.6e27f5c5.davmac@ozonline.com.au> <200401061213.39843.bzolnier@elka.pw.edu.pl> <20040130142725.1a408f9e.davmac@ozonline.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:53247 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S266139AbUBCThB
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Feb 2004 14:37:01 -0500
+In-Reply-To: <20040130142725.1a408f9e.davmac@ozonline.com.au>
 Content-Disposition: inline
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Davin McCall <davmac@ozonline.com.au>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-First introduced in 2.3.99-pre3 (added to ide_dmaproc) and never used.
+Hi,
 
- linux-2.6.2-rc3-bk3-root/drivers/ide/ide-dma.c     |   18 ------------------
- linux-2.6.2-rc3-bk3-root/drivers/ide/ide.c         |    1 -
- linux-2.6.2-rc3-bk3-root/drivers/ide/pci/sgiioc4.c |    1 -
- linux-2.6.2-rc3-bk3-root/drivers/ide/ppc/pmac.c    |    1 -
- linux-2.6.2-rc3-bk3-root/include/linux/ide.h       |    3 ---
- 5 files changed, 24 deletions(-)
+On Friday 30 of January 2004 04:27, you wrote:
+> I've been doing some hacking on the IDE layer, just to fix a few issues I
+> noticed going through the code. Due to the complex nature of the code I'm
+> bound to have missed some things and perhaps misunderstood others.
+> Nevertheless I'm posting these patches in the hope that they can be tested
+> on other machines, rejected, or even accepted.
+>
+> Comments and criticisms are welcome.
 
-diff -puN drivers/ide/ide.c~ide_dma_retune_cleanup drivers/ide/ide.c
---- linux-2.6.2-rc3-bk3/drivers/ide/ide.c~ide_dma_retune_cleanup	2004-02-03 15:58:42.869079616 +0100
-+++ linux-2.6.2-rc3-bk3-root/drivers/ide/ide.c	2004-02-03 15:58:42.890076424 +0100
-@@ -846,7 +846,6 @@ void ide_unregister (unsigned int index)
- 	hwif->ide_dma_good_drive	= old_hwif.ide_dma_good_drive;
- 	hwif->ide_dma_count		= old_hwif.ide_dma_count;
- 	hwif->ide_dma_verbose		= old_hwif.ide_dma_verbose;
--	hwif->ide_dma_retune		= old_hwif.ide_dma_retune;
- 	hwif->ide_dma_lostirq		= old_hwif.ide_dma_lostirq;
- 	hwif->ide_dma_timeout		= old_hwif.ide_dma_timeout;
- 	hwif->ide_dma_queued_on		= old_hwif.ide_dma_queued_on;
-diff -puN drivers/ide/ide-dma.c~ide_dma_retune_cleanup drivers/ide/ide-dma.c
---- linux-2.6.2-rc3-bk3/drivers/ide/ide-dma.c~ide_dma_retune_cleanup	2004-02-03 15:58:42.872079160 +0100
-+++ linux-2.6.2-rc3-bk3-root/drivers/ide/ide-dma.c	2004-02-03 15:58:42.892076120 +0100
-@@ -850,22 +850,6 @@ int __ide_dma_verbose (ide_drive_t *driv
- 
- EXPORT_SYMBOL(__ide_dma_verbose);
- 
--/**
-- *	__ide_dma_retune	-	default retune handler
-- *	@drive: drive to retune
-- *
-- *	Default behaviour when we decide to return the IDE DMA setup.
-- *	The default behaviour is "we don't"
-- */
-- 
--int __ide_dma_retune (ide_drive_t *drive)
--{
--	printk(KERN_WARNING "%s: chipset supported call only\n", __FUNCTION__);
--	return 1;
--}
--
--EXPORT_SYMBOL(__ide_dma_retune);
--
- int __ide_dma_lostirq (ide_drive_t *drive)
- {
- 	printk("%s: DMA interrupt recovery\n", drive->name);
-@@ -1104,8 +1088,6 @@ void ide_setup_dma (ide_hwif_t *hwif, un
- 		hwif->ide_dma_verbose = &__ide_dma_verbose;
- 	if (!hwif->ide_dma_timeout)
- 		hwif->ide_dma_timeout = &__ide_dma_timeout;
--	if (!hwif->ide_dma_retune)
--		hwif->ide_dma_retune = &__ide_dma_retune;
- 	if (!hwif->ide_dma_lostirq)
- 		hwif->ide_dma_lostirq = &__ide_dma_lostirq;
- 
-diff -puN drivers/ide/pci/sgiioc4.c~ide_dma_retune_cleanup drivers/ide/pci/sgiioc4.c
---- linux-2.6.2-rc3-bk3/drivers/ide/pci/sgiioc4.c~ide_dma_retune_cleanup	2004-02-03 15:58:42.876078552 +0100
-+++ linux-2.6.2-rc3-bk3-root/drivers/ide/pci/sgiioc4.c	2004-02-03 15:58:42.894075816 +0100
-@@ -653,7 +653,6 @@ ide_init_sgiioc4(ide_hwif_t * hwif)
- 	hwif->ide_dma_good_drive = &__ide_dma_good_drive;
- 	hwif->ide_dma_count = &__ide_dma_count;
- 	hwif->ide_dma_verbose = &sgiioc4_ide_dma_verbose;
--	hwif->ide_dma_retune = &__ide_dma_retune;
- 	hwif->ide_dma_lostirq = &sgiioc4_ide_dma_lostirq;
- 	hwif->ide_dma_timeout = &__ide_dma_timeout;
- 	hwif->INB = &sgiioc4_INB;
-diff -puN drivers/ide/ppc/pmac.c~ide_dma_retune_cleanup drivers/ide/ppc/pmac.c
---- linux-2.6.2-rc3-bk3/drivers/ide/ppc/pmac.c~ide_dma_retune_cleanup	2004-02-03 15:58:42.880077944 +0100
-+++ linux-2.6.2-rc3-bk3-root/drivers/ide/ppc/pmac.c	2004-02-03 15:58:42.895075664 +0100
-@@ -2029,7 +2029,6 @@ pmac_ide_setup_dma(pmac_ide_hwif_t *pmif
- 	hwif->ide_dma_bad_drive = &__ide_dma_bad_drive;
- 	hwif->ide_dma_verbose = &__ide_dma_verbose;
- 	hwif->ide_dma_timeout = &__ide_dma_timeout;
--	hwif->ide_dma_retune = &__ide_dma_retune;
- 	hwif->ide_dma_lostirq = &pmac_ide_dma_lostirq;
- 	hwif->ide_dma_queued_on = &__ide_dma_queued_on;
- 	hwif->ide_dma_queued_off = &__ide_dma_queued_off;
-diff -puN include/linux/ide.h~ide_dma_retune_cleanup include/linux/ide.h
---- linux-2.6.2-rc3-bk3/include/linux/ide.h~ide_dma_retune_cleanup	2004-02-03 15:58:42.883077488 +0100
-+++ linux-2.6.2-rc3-bk3-root/include/linux/ide.h	2004-02-03 15:58:42.898075208 +0100
-@@ -799,7 +799,6 @@ typedef struct ide_dma_ops_s {
- 	int (*ide_dma_good_drive)(ide_drive_t *drive);
- 	int (*ide_dma_count)(ide_drive_t *drive);
- 	int (*ide_dma_verbose)(ide_drive_t *drive);
--	int (*ide_dma_retune)(ide_drive_t *drive);
- 	int (*ide_dma_lostirq)(ide_drive_t *drive);
- 	int (*ide_dma_timeout)(ide_drive_t *drive);
- 	/* dma queued operations */
-@@ -945,7 +944,6 @@ typedef struct hwif_s {
- 	int (*ide_dma_good_drive)(ide_drive_t *drive);
- 	int (*ide_dma_count)(ide_drive_t *drive);
- 	int (*ide_dma_verbose)(ide_drive_t *drive);
--	int (*ide_dma_retune)(ide_drive_t *drive);
- 	int (*ide_dma_lostirq)(ide_drive_t *drive);
- 	int (*ide_dma_timeout)(ide_drive_t *drive);
- 
-@@ -1637,7 +1635,6 @@ extern int __ide_dma_bad_drive(ide_drive
- extern int __ide_dma_good_drive(ide_drive_t *);
- extern int __ide_dma_count(ide_drive_t *);
- extern int __ide_dma_verbose(ide_drive_t *);
--extern int __ide_dma_retune(ide_drive_t *);
- extern int __ide_dma_lostirq(ide_drive_t *);
- extern int __ide_dma_timeout(ide_drive_t *);
- 
+Thanks!  I'm slowly reading through them (yeah, code is really complex).
+Patch 3rd and 5th seems okay, 2nd and 4th need some more checking/thinking.
 
-_
+> The first patch, below, is already included in the -mm tree. The further
+> patches are appearing here for the first time.
+
+It was pushed to Linus and merged.
+
+--bart
+
