@@ -1,33 +1,31 @@
-From: Catalin BOIE <util@deuroconsult.ro>
-Subject: Re: dma_timer_expiry on SATA siimage 3112 under 2.6.0-test1-ac1
-Date: Fri, 18 Jul 2003 09:22:22 +0300 (EEST)
+From: "David S. Miller" <davem@redhat.com>
+Subject: Re: [PATCH] Fix ALi15x3 DMA on sparc64 (maybe others)
+Date: Thu, 17 Jul 2003 23:38:49 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0307180919480.19703@hosting.rdsbv.ro>
-References: <1058389994.3220.20.camel@daedalus.samhome.net> <bf6nb0$c3$1@main.gmane.org>
- <1058466147.3220.62.camel@daedalus.samhome.net> <bf72m5$2p5$1@main.gmane.org>
+Message-ID: <20030717233849.102250cb.davem@redhat.com>
+References: <20030717181410.GI1171@phunnypharm.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from webhosting.rdsbv.ro ([213.157.185.164]:12710 "EHLO
-	hosting.rdsbv.ro") by vger.kernel.org with ESMTP id S271711AbTGRGH2
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Jul 2003 02:07:28 -0400
-In-Reply-To: <bf72m5$2p5$1@main.gmane.org>
+Received: from pizda.ninka.net ([216.101.162.242]:50409 "EHLO pizda.ninka.net")
+	by vger.kernel.org with ESMTP id S271736AbTGRGdp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jul 2003 02:33:45 -0400
+In-Reply-To: <20030717181410.GI1171@phunnypharm.org>
 List-Id: linux-ide@vger.kernel.org
-To: tea4two <tea4two@tin.it>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Ben Collins <bcollins@debian.org>
+Cc: marcelo@conectiva.com.br, alan@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> I can't explain why it's work....
-> I've made a lot of tries and the only way to work at 50.5 Mb/s (for me) is
-> to run: hdparm -d1 -Xudma2 /dev/hde
+On Thu, 17 Jul 2003 14:14:10 -0400
+Ben Collins <bcollins@debian.org> wrote:
 
-Same controler here, same crashes if I enable dma.
-But I found a solution:
-I modified ide-iops.c, function ide_ata66_check to return 0, without
-testing the controller registers.
-I booted and I issue: hdparm -d1 -u1 -Xudma6 /dev/hda and the speed is
-50MB/s, without problems.
+> Attached is a patch that is known to fix atleast the DMA corruption
+> occuring on sparc64 in 2.4.x kernels for ALi15x3 IDE chipsets. I think
+> Alan hinted that someone also reported it fixed a similar problem on
+> alpha.
 
----
-Catalin(ux) BOIE
-catab@deuroconsult.ro
+Marcelo, please apply this.  Not only does it indeed fix
+problems on Sparc64 and Alpha, it also is ACK'd by Alan
+and already present in 2.5.x
+
+Thanks.
