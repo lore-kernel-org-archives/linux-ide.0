@@ -1,109 +1,54 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [BK PATCHES] 2.6.x libata fixes
-Date: Fri, 11 Mar 2005 23:33:48 -0500
-Message-ID: <4232712C.1080901@pobox.com>
+Subject: Re: [PATCH libata-2.6] AHCI: compiler warning fix
+Date: Fri, 11 Mar 2005 23:58:05 -0500
+Message-ID: <423276DD.8060209@pobox.com>
+References: <20050311212108.4BB4514FB1@lns1032.lss.emc.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020801020305050505000708"
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:33988 "EHLO
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:17350 "EHLO
 	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261852AbVCLEeS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Mar 2005 23:34:18 -0500
+	id S261859AbVCLE6U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Mar 2005 23:58:20 -0500
+In-Reply-To: <20050311212108.4BB4514FB1@lns1032.lss.emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Brett Russ <russb@emc.com>
+Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020801020305050505000708
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Brett Russ wrote:
+> This fixes the compile warning below, which seems due to the enum
+> being signed:
+> drivers/scsi/ahci.c:199: warning: overflow in implicit constant
+> conversion
+> 
+> Signed-off-by: Brett Russ <russb@emc.com>
+> 
+> ===== drivers/scsi/ahci.c 1.17 vs edited =====
+> --- 1.17/drivers/scsi/ahci.c	Thu Feb 24 14:52:41 2005
+> +++ edited/drivers/scsi/ahci.c	Wed Mar  9 17:29:36 2005
+> @@ -44,7 +44,6 @@
+>  enum {
+>  	AHCI_PCI_BAR		= 5,
+>  	AHCI_MAX_SG		= 168, /* hardware max is 64K */
+> -	AHCI_DMA_BOUNDARY	= 0xffffffff,
+>  	AHCI_USE_CLUSTERING	= 0,
+>  	AHCI_CMD_SLOT_SZ	= 32 * 32,
+>  	AHCI_RX_FIS_SZ		= 256,
+> @@ -135,6 +134,8 @@
+>  	PORT_CMD_ICC_SLUMBER	= (0x6 << 28), /* Put i/f in slumber state */
+>  };
+>  
+> +#define AHCI_DMA_BOUNDARY	0xffffffff
+
+hmmmm, I think there's a better way to fix this.  A separate enum, and 
+adding the suffix 'UL' to 0xffffffff should work, I would think.
+
+In general, I try to avoid adding #defines of any nature.  It's just as 
+efficient as an enum, and type/symbol information is available to the 
+compiler and debugger when you use an enum.
+
+	Jeff
 
 
---------------020801020305050505000708
-Content-Type: text/plain;
- name="libata.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata.txt"
 
-Please do a
-
-	bk pull bk://gkernel.bkbits.net/libata-2.6
-
-This will update the following files:
-
- drivers/scsi/ahci.c |   15 +++++++++++++--
- 1 files changed, 13 insertions(+), 2 deletions(-)
-
-through these ChangeSets:
-
-Brett Russ:
-  o AHCI: fix fatal error int handling
-
-Jeff Garzik:
-  o [libata ahci] support ->tf_read hook
-
-
---------------020801020305050505000708
-Content-Type: text/x-patch;
- name="libata.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata.patch"
-
-diff -Nru a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
---- a/drivers/scsi/ahci.c	2005-03-11 23:30:59 -05:00
-+++ b/drivers/scsi/ahci.c	2005-03-11 23:30:59 -05:00
-@@ -177,6 +177,7 @@
- static int ahci_port_start(struct ata_port *ap);
- static void ahci_port_stop(struct ata_port *ap);
- static void ahci_host_stop(struct ata_host_set *host_set);
-+static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
- static void ahci_qc_prep(struct ata_queued_cmd *qc);
- static u8 ahci_check_status(struct ata_port *ap);
- static u8 ahci_check_err(struct ata_port *ap);
-@@ -210,6 +211,8 @@
- 	.check_err		= ahci_check_err,
- 	.dev_select		= ata_noop_dev_select,
- 
-+	.tf_read		= ahci_tf_read,
-+
- 	.phy_reset		= ahci_phy_reset,
- 
- 	.qc_prep		= ahci_qc_prep,
-@@ -463,6 +466,14 @@
- 	return (readl(mmio + PORT_TFDATA) >> 8) & 0xFF;
- }
- 
-+static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
-+{
-+	struct ahci_port_priv *pp = ap->private_data;
-+	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
-+
-+	ata_tf_from_fis(d2h_fis, tf);
-+}
-+
- static void ahci_fill_sg(struct ata_queued_cmd *qc)
- {
- 	struct ahci_port_priv *pp = qc->ap->private_data;
-@@ -539,7 +550,7 @@
- 
- 	/* stop DMA */
- 	tmp = readl(port_mmio + PORT_CMD);
--	tmp &= PORT_CMD_START | PORT_CMD_FIS_RX;
-+	tmp &= ~PORT_CMD_START;
- 	writel(tmp, port_mmio + PORT_CMD);
- 
- 	/* wait for engine to stop.  TODO: this could be
-@@ -571,7 +582,7 @@
- 
- 	/* re-start DMA */
- 	tmp = readl(port_mmio + PORT_CMD);
--	tmp |= PORT_CMD_START | PORT_CMD_FIS_RX;
-+	tmp |= PORT_CMD_START;
- 	writel(tmp, port_mmio + PORT_CMD);
- 	readl(port_mmio + PORT_CMD); /* flush */
- 
-
---------------020801020305050505000708--
