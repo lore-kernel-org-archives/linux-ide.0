@@ -1,36 +1,33 @@
-From: qdot@SAFe-mail.net
-Subject: Re: Problem: DMA on PIIX4 controller for LiteON 851S DVDRW Drive
-Date: Mon, 14 Jun 2004 12:13:46 -0400
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] IDE update for 2.6.7-rc3 [1/12]
+Date: Mon, 14 Jun 2004 08:54:58 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <N1-QP6XU55g@SAFe-mail.net>
+Message-ID: <20040614155458.GA25461@kroah.com>
+References: <200406111750.30312.bzolnier@elka.pw.edu.pl> <200406131936.08338.bzolnier@elka.pw.edu.pl> <20040614095835.GA11585@infradead.org> <200406141636.01353.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tapuz.safe-mail.net ([212.68.149.115]:63972 "EHLO
-	tapuz.safe-mail.net") by vger.kernel.org with ESMTP id S263169AbUFNQNs
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jun 2004 12:13:48 -0400
+Received: from mail.kroah.org ([65.200.24.183]:52890 "EHLO perch.kroah.org")
+	by vger.kernel.org with ESMTP id S262208AbUFNQJP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jun 2004 12:09:15 -0400
+Content-Disposition: inline
+In-Reply-To: <200406141636.01353.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: axboe@suse.de
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Jens Axboe <axboe@suse.de>
-> On Mon, Jun 14 2004, qdot@SAFe-mail.net wrote:
-> > Hi
-> > 
-> > Sorry to bother you with such a question but I got into some sort of trouble with DMA settings on PIIX4 controller for LiteON 851S DVDRW Drive on Linux 2.6.6 (vanilla).
-> > 
-> > When dma has been setup (either using bios, boot parameters or hdparm) on first access to drive system ends up with:
-> > 
-> > Jun 14 11:50:10 valkyrie hdc: cdrom_decode_status: status=0x51 { DriveReady SeekCom
-> > plete Error }
-> > Jun 14 11:50:10 valkyrie hdc: cdrom_decode_status: error=0x40LastFailedSense 0x04
+On Mon, Jun 14, 2004 at 04:36:01PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > And even if for this special hardware it's usually not doable there
+> > are things like greg's fake hotplug pci driver.  So a non-__devinit pci
+> > probe method is a bug, please fix them in PCI.
 > 
-> Looks like a hardware error (the sense indicates so), it might just not
-> like dma.
+> Greg, should I add "fake" PCI hotplug support to some IDE
+> drivers just to make fake hotplug PCI driver happy?
 
-Rather not hardware error. Works slowly, but reliably without DMA. Works with DMA on other controllers well. Works on usb-storage enclosure. 
+No, not at all.  The fake hotplug pci driver is for developers.  Do not
+go changing your IDE drivers just to prevent oopses from happening when
+someone uses the fake hotplug pci driver.
 
-Tomasz Mloduchowski
+thanks,
 
+greg k-h
