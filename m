@@ -1,42 +1,40 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: [PATCH] speed up SATA
-Date: Sun, 28 Mar 2004 17:37:13 +0200
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [parisc-linux] [PATCH] asm-parisc/ide.h cleanup (there are no standard ports)
+Date: Sun, 28 Mar 2004 16:48:38 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200403281737.13972.bzolnier@elka.pw.edu.pl>
-References: <4066021A.20308@pobox.com> <40660A3D.3020300@pobox.com> <40667D8D.2030802@stesmi.com>
+Message-ID: <20040328154838.GA26179@parcelfarce.linux.theplanet.co.uk>
+References: <200403241443.43206.bzolnier@elka.pw.edu.pl> <20040327222810.GB24782@colo.lackof.org> <200403280024.57672.bzolnier@elka.pw.edu.pl> <20040327234926.GC24782@colo.lackof.org> <20040328002139.GE750@tausq.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:14749 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261611AbUC1P2I
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:43217 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261918AbUC1Psk
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Mar 2004 10:28:08 -0500
-In-Reply-To: <40667D8D.2030802@stesmi.com>
+	Sun, 28 Mar 2004 10:48:40 -0500
 Content-Disposition: inline
+In-Reply-To: <20040328002139.GE750@tausq.org>
 List-Id: linux-ide@vger.kernel.org
-To: Stefan Smietanowski <stesmi@stesmi.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Randolph Chung <randolph@tausq.org>
+Cc: Grant Grundler <grundler@parisc-linux.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, parisc-linux@parisc-linux.org
 
-On Sunday 28 of March 2004 09:23, Stefan Smietanowski wrote:
-> Hi Jeff.
->
-> >> What will happen when a PATA disk lies behind a Marvel(ous) bridge, as
-> >> in most SATA disks today?
-> >
-> > Larger transfers work fine in PATA, too.
->
-> Correct me if I'm wrong but wasn't the max number of sectors in a
-> transfer limited to 255 instead of 256 because there were buggy
-> drives out there before ? I seem to recall something like that but
-> I could be wrong.
+On Sat, Mar 27, 2004 at 04:21:39PM -0800, Randolph Chung wrote:
+> > I was told offline my hypothetical example is in fact hypothetical.
+> > parisc won't build with IDE unless PCI is defined. I haven't tried.
+> 
+> not exactly. what i meant is, without this patch, if you built pa with
+> ide enabled but pci disabled you will get a compilation error.
+> 
+> i think this patch looks ok too. will commit to our tree and let willy
+> propogate upstream :)
 
-There was 255 sectors limit in IDE driver but it was based only on _one_
-bugreport on _unreliable_ drive (256 sectors causes heavier I/O load).
+I think Bart's patch already made it into Linus' tree ;-)  Whatever;
+I'll push it to Linus after 2.6.5 comes out if it hasn't already made
+it upstream.  Thanks, guys.
 
-AFAIR "the other OS" is using 256 sectors so this value is safe.
-
-Regards,
-Bartlomiej
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
