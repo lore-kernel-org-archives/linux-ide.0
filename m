@@ -1,25 +1,29 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2.6.11-rc2 23/29] ide: map ide_task_ioctl() to ide_taskfile_ioctl()
-Date: Thu, 3 Feb 2005 18:38:19 +0100
-Message-ID: <58cb370e050203093868e1ed76@mail.gmail.com>
-References: <20050202024017.GA621@htj.dyndns.org>
-	 <20050202030813.GH1187@htj.dyndns.org>
-	 <58cb370e050203093726c7cf70@mail.gmail.com>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: libata todo item: retry certain classes of errors
+Date: Thu, 03 Feb 2005 17:16:53 +0000
+Message-ID: <1107450889.14847.148.camel@localhost.localdomain>
+References: <41DE1118.9020209@pobox.com>
+	 <1105106379.17166.325.camel@localhost.localdomain>
+	 <420031D5.9090304@pobox.com>
+	 <1107330670.14787.104.camel@localhost.localdomain>
+	 <42025E3B.8030302@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <58cb370e050203093726c7cf70@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@home-tj.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Received: from clock-tower.bc.nu ([81.2.110.250]:61320 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S263431AbVBCSWZ
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Feb 2005 13:22:25 -0500
+In-Reply-To: <42025E3B.8030302@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Albert Lee <albertcc@tw.ibm.com>, Andy Warner <andyw@pobox.com>
 
-On Thu, 3 Feb 2005 18:37:04 +0100, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
+On Iau, 2005-02-03 at 17:24, Jeff Garzik wrote:
+> > went away" error reports with the IDE layer (and they take forever).
+> 
+> libata does a reset at the beginning of the probe...
 
-> as HDIO_DRIVE_TASKFILE only supports no-data protocol
-> it should be easy to add missing bits here and get rid of calling
-> ide_taskfile_ioctl()
+Thats fine but resets when the drive is error handling get "interesting"
 
-stupid typo: s/HDIO_DRIVE_TASKFILE/HDIO_DRIVE_TASK/
