@@ -1,43 +1,73 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: /dev/hda problem with samsung hd
-Date: Fri, 23 May 2003 02:47:45 +0200 (MET DST)
+From: "Gutko" <gutko@poczta.onet.pl>
+Subject: Still no DMA on boot on S-ATA (Asus A7N8X-deluxe)
+Date: Sun, 25 May 2003 22:06:13 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.SOL.4.30.0305230246490.9066-100000@mion.elka.pw.edu.pl>
-References: <20030522121034.GE812@suse.de>
+Message-ID: <000901c322f9$17eff9f0$928afea9@hal>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:35302 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S262946AbTEWAfC
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 May 2003 20:35:02 -0400
-In-Reply-To: <20030522121034.GE812@suse.de>
+Received: from smtp2.poczta.onet.pl ([213.180.130.30]:36481 "EHLO
+	smtp2.poczta.onet.pl") by vger.kernel.org with ESMTP
+	id S263709AbTEYTwp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 May 2003 15:52:45 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: pacho baratta <pachox@evolinux.it>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+
+Hardware:
+Asus A7N8X -deluxe v1.04 bios 1004
+SI3112A sata chipset
+IBM vancouver2 180GXP pata drive connected to sata trough Asus sata<->pata
+converter
+Kernel 2.4.21-rc3 (and all older 2.4.x with sata support)
+
+Why my hdd is always detected as PIO?
+I can enable udma5 using hdparm, later in rc.local but why it is not working
+on boot?
+
+----------DMESG-----------
+Uniform Multi-Platform E-IDE driver Revision: 7.00beta3-.2.4
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+NFORCE2: IDE controller at PCI slot 00:09.0
+NFORCE2: chipset revision 162
+NFORCE2: not 100% native mode: will probe irqs later
+AMD_IDE: PCI device 10de:0065 (nVidia Corporation) (rev a2) UDMA100
+controller on pci00:09.0
+    ide0: BM-DMA at 0xf000-0xf007, BIOS settings: hda:DMA, hdb:DMA
+    ide1: BM-DMA at 0xf008-0xf00f, BIOS settings: hdc:DMA, hdd:DMA
+SiI3112 Serial ATA: IDE controller at PCI slot 01:0b.0
+SiI3112 Serial ATA: chipset revision 1
+SiI3112 Serial ATA: not 100% native mode: will probe irqs later
+    ide2: MMIO-DMA at 0xe0f54000-0xe0f54007, BIOS settings: hde:pio, hdf:pio
+    ide3: MMIO-DMA at 0xe0f54008-0xe0f5400f, BIOS settings: hdg:pio, hdh:pio
+hdc: LITE-ON LTR-48125S, ATAPI CD/DVD-ROM drive
+hdd: HL-DT-STDVD-ROM GDR8160B, ATAPI CD/DVD-ROM drive
+hde: IC35L180AVV207-1, ATA DISK drive
+hdg: no response (status = 0xfe)
+ide1 at 0x170-0x177,0x376 on irq 15
+ide2 at 0xe0f54080-0xe0f54087,0xe0f5408a on irq 11
+hde: attached ide-disk driver.
+hde: host protected area => 1
+hde: 361882080 sectors (185284 MB) w/7965KiB Cache, CHS=22526/255/63
 
 
-Hi Jens,
-already solved, it was exactly this issue.
---
-Bartlomiej
+------------
+hdparm -i /dev/hde
+dma enabled manually
 
-On Thu, 22 May 2003, Jens Axboe wrote:
+ Model=IC35L180AVV207-1, FwRev=V26OA60F, SerialNo=VNVF01G6G0VZ9D
+ Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs }
+ RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=52
+ BuffType=DualPortCache, BuffSize=7965kB, MaxMultSect=16, MultSect=16
+ CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
+ IORDY=on/off, tPIO={min:240,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio1 pio2 pio3 pio4
+ DMA modes:  mdma0 mdma1 mdma2
+ UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5
+ AdvancedPM=yes: disabled (255) WriteCache=enabled
+ Drive conforms to: ATA/ATAPI-6 T13 1410D revision 3a:  2 3 4 5 6
 
-> On Thu, May 22 2003, pacho baratta wrote:
-> > i'm working with a disk (samsung sv1022d) that my system cannot see. i
-> > have a live cd with kernel 2.4.20 and glibc-2.2.5.
-> >
-> > now when i boot i find in dmesg:
-> >
-> > hda samsung sv1022d my100 ata disk drive
-> > hda: task_no_data_intr 0x51 {DriveRady SeekComplete Error}
-> > hda: task_no_data_intr 0x04 {DriveStatusError}
-> > hda: 1 sectors (0 mb) w/480KiB Cache CHS=1240/255/63
->
-> I fixed this some time ago, the patch is in 2.4.21-rc kernels. So please
-> try 2.4.21-rc2 and see if it works.
->
-> --
-> Jens Axboe
+
 
