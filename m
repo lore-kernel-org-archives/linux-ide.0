@@ -1,42 +1,80 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata-core when not ata_id_use_dmadir despite yes SiliconI
- mage
-Date: Sat, 15 May 2004 12:39:57 -0400
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: SATA ATAPI work in progress
+Date: 15 May 2004 10:43:53 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40A647DD.4020601@pobox.com>
-References: <1084630807.5082.42.camel@patibmrh9> <200405151633.10473.bzolnier@elka.pw.edu.pl> <40A64229.7000600@pobox.com> <200405151838.15898.bzolnier@elka.pw.edu.pl>
+Message-ID: <1084639433.3070.5.camel@patibmrh9>
+References: <1084393233.3999.2.camel@patibmrh9> <40A28BB6.7090204@pobox.com>
+	<1084403654.3196.31.camel@patibmrh9>  <40A3E595.8000003@pobox.com><108455  
+	9	000.4017.52.camel@patibmrh9>  <40A51604.8070208@pobox.com><1084578453.5 3
+		4	 3.	26.camel@patibmrh9><1084579362.3271.5.camel@patibmrh9> <40A5669B.6 0
+	8 	010	8@pobox.com><1084626376.3079.8.camel@patibmrh9> <1084628978.5082.7.
+	ca m	el@patibmrh9><40A636D2.3090205@pobox.com> <1084636180.3083.17.camel@p
+	atibm	rh9><1084636590.3083.25.camel@patibmrh9> <1084637040.3440.5.camel@pat
+	 ibmrh9><40A64638.9060202@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:6814 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264695AbUEOQkM
+Received: from email-out2.iomega.com ([147.178.1.83]:18158 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264701AbUEOQoR
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 May 2004 12:40:12 -0400
-In-Reply-To: <200405151838.15898.bzolnier@elka.pw.edu.pl>
+	Sat, 15 May 2004 12:44:17 -0400
+In-Reply-To: <40A64638.9060202@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Pat LaVarre <p.lavarre@ieee.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Saturday 15 of May 2004 18:15, Jeff Garzik wrote:
->>We can do so for our development here, but a better solution based on
->>released parts will need to be found...
+> > kernel: ata_scsi_dump_cdb: CDB (2:0,0,0) 00 00 00 00 00 00 00 00 00
+> > kernel: ata_scsi_translate: ENTER
+> > kernel: ata2(0): empty request buffer
+> > kernel: ata_scsi_badcmd: ENTER
+> > kernel: ata_scsi_translate: EXIT - badcmd
 > 
+> TEST UNIT READY.  We probably just delete the following check, which 
+> appears to be bogus now.  I can't remember why I put this in here...
 > 
-> Do you know of some way to detect SI 3611CT80 1.4?
+>          if (unlikely(cmd->request_bufflen < 1)) {
+>                  printk(KERN_WARNING "ata%u(%u): empty request buffer\n",
+>                         ap->id, dev->devno);
+>                  goto err_out;
+>          }
 
+Independently I tried omitting that test.  With that test gone, my
+kernel does not crash, but still the open (and thereafter modprobe -r)
+does not complete:
 
-Not right now.
+kernel: ata_scsi_dump_cdb: CDB (2:0,0,0) 00 00 00 00 00 00 00 00 00
+kernel: ata_scsi_translate: ENTER
+kernel: ata_dev_select: ENTER, ata2: device 0, wait 1
+kernel: ata_tf_load_pio: feat 0x0 nsect 0x0 lba 0x0 0x0 0x20
+kernel: ata_tf_load_pio: device 0xA0
+kernel: ata_exec_command_pio: ata2: cmd 0xA0
+kernel: ata_scsi_translate: EXIT
+kernel: atapi_packet_task: busy wait
+kernel: atapi_packet_task: send cdb
+kernel: ata_scsi_error: ENTER
+kernel: ata_eng_timeout: ENTER
+kernel: ata2: unknown timeout, cmd 0xa0 stat 0x51
+kernel: ata_eng_timeout: EXIT
+kernel: ata_scsi_error: EXIT
+kernel: ata_scsi_dump_cdb: CDB (2:0,0,0) 00 00 00 00 00 00 00 00 00
+kernel: ata_scsi_translate: ENTER
+kernel: ata_dev_select: ENTER, ata2: device 0, wait 1
+kernel: ata_tf_load_pio: feat 0x0 nsect 0x0 lba 0x0 0x0 0x20
+kernel: ata_tf_load_pio: device 0xA0
+kernel: ata_exec_command_pio: ata2: cmd 0xA0
+kernel: ata_scsi_translate: EXIT
+kernel: atapi_packet_task: busy wait
+kernel: atapi_packet_task: send cdb
 
-I need to see the full IDENTIFY PACKET DEVICE data to discover a way... 
-  (and I need to write some code before libata dumps the full 
-identify-device page)
+In my ignorance, I'm now trying leaving that test commented out but then
+also trying to teach atapi_xlat to cope if:
 
-Other bridges add an identifying string to the -end- of the ATA device's 
-model name, maybe SiI does too.
+((cmd->sc_data_direction != SCSI_DATA_NONE) &&
+	(cmd->request_bufflen < 1))
 
-	Jeff
+Soon I will give up for this day, sorry to say, real life intrudes.
 
+Pat LaVarre
 
 
