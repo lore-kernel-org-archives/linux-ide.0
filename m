@@ -1,51 +1,96 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SATA issue's
-Date: Wed, 11 Aug 2004 15:26:24 -0400
+Subject: Re: [RFC] IDE/ATA/SATA controller hotplug
+Date: Wed, 11 Aug 2004 15:33:06 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <411A72E0.2010301@pobox.com>
-References: <80c0fd0e040731150713ca0e6c@mail.gmail.com>
+Message-ID: <411A7472.9010606@pobox.com>
+References: <200407272018.i6RKIiYB028210@falcon10.austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:65456 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268011AbUHKT0i
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:10417 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S268012AbUHKTdV
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Aug 2004 15:26:38 -0400
-In-Reply-To: <80c0fd0e040731150713ca0e6c@mail.gmail.com>
+	Wed, 11 Aug 2004 15:33:21 -0400
+In-Reply-To: <200407272018.i6RKIiYB028210@falcon10.austin.ibm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Arvind Autar <arvind.autar@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl
+To: Doug Maxey <dwm@austin.ibm.com>
+Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Arvind Autar wrote:
-> So, here I'm, trying to setup a box.
-> I installed debian sarge with 2.4.25-1-386. It ran fine, but didn't
-> work with my s-ata disk.
+Doug Maxey wrote:
+> On Tue, 27 Jul 2004 11:31:15 EDT, Jeff Garzik wrote:
+>>>  What I would like is input on the general strategy that should be
+>>>  taken to modify the controller/adapter and device stack to:
+>>>
+>>>  1) be first class modules, where all controllers/adapters are
+>>>     capable of being loaded and unloaded.  This is directed mostly at
+>>>     IDE/Southbridge controller/adapter devices.
+>>
+>>this is already the case in IDE and libata
 > 
-> I grabbed 2.6.8-rc2 and 2.6.8-rc1-mm1. Bot gave me the same results.
 > 
-> My ata disk uses Amd74xx Adn the s-ata siimage/sata_sil . The amd74
-> got compiled in as * because that's the disk where linux got
-> installed. siimage/sata_sil got copmiled as a module, I needed the
-> disk to mount my fat32 partition so I could get to mine music files. I
-> booted both kernels both of them started to freeze after a while. So I
-> started to look in the log files and found this: (see attachment)208K
-> Unfortunately I don't have any debugging(?) info from the Amd74xx all
-> I know is that it gives some error about kernel bug at
-> drivers/ide/ide-10.c:112 and it makes my computer probably freeze. I
-> even booted with: 'noirqdebug' but the results I got where
-> 
-> SCSI subsystem initialized
-> ACPI : PCI interrupt 0000:01:0b[A] -> GSI 11(level , low ) -> IRQ 11
-> ata1 : SATA max UDMA / 100 cmd 0xE0B8E080 ctl 0xE0B8E08A bmdma 0xE0B8E000 irq 11
-> ata2 : SATA max UDMA / 100 cmd 0xE0B8E0C0 ctl 0xE0B8E0CA bmdma 0xE0B8E008 irq 11
-> and then there was a freeze
-> 
-> I hope this problem gets solved soon.
+> I would have to differ with you here.  From conversations and fairly
+> (2 or 3 months ago) experience, the IDE core is not capable of being
+> unloaded.
+
+As long as the low-level driver can be unloaded, that's sufficient for 
+hardware- and device-hotplug.
 
 
-Most likely you need to update your BIOS, or boot with "noapic", or boot 
-with "pci=noacpi", or similar.
+>>>  2) extend that support to all child devices; disk, optical,
+>>>     and tape.
+>>
+>>this is already the case in IDE and SCSI
+> 
+> 
+> Educational question, what would I be looking for when grokking code
+> to see this is in place?
+
+Just general refcounting / module support code.
+
+
+>>>  3) be part of mainline.
+>>
+>>this is already the case
+> 
+> 
+> Yes, the drivers are in the mainline.  Just not sure of how many
+> platforms will have non-pluggable controllers that need to have them
+> hot-plugged. :-)
+
+The PCI API is a hotplug API.  Whether the underlying controller is 
+hotpluggable or not is largely irrelevant to low-level drivers.
+
+
+>>>  The items I perceive at the top of the issue list are:
+>>>
+>>>  - The primary platforms for IDE/ATA devices are x86 based, and
+>>>    certainly do not care about having this capability.
+>>
+>>incorrect
+> 
+> 
+> Ok, please delineate.  Working off the assumption that 95+% of the
+> systems that run Linux are x86 based, and have a single partition for
+> the system. In other words, no virtual processors, where each is
+> totally separate from the other.
+
+That's completely irrelevant.  libata and the IDE core work without 
+change on x86 and non-x86 systems.
+
+
+>>>  - Where should this capability go?  Fork a subset of IDE
+>>>    controllers, and put them under the arch specific dir?
+>>>    Or include all devices?
+>>
+>>there is nothing arch-specific about this
+> 
+> 
+> Again, going back to my original premise, that is, which platforms do
+> you foresee needing this capability?  I know that all should have
+> eventually.
+
+All platforms should be considered hotplug.
 
 	Jeff
 
