@@ -1,147 +1,173 @@
-From: "Joel Soete" <soete.joel@tiscali.be>
-Subject: a fix for NS87415 on C3K broken
-Date: Wed, 22 Sep 2004 12:41:21 +0200
+From: Dave <dave.jiang@gmail.com>
+Subject: Re: [PATCH] updates to Vitesse SATA driver
+Date: Wed, 22 Sep 2004 08:59:06 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4150193600000506@mail-7-bnl.tiscali.it>
-References: <200409170243.06449.bzolnier@elka.pw.edu.pl>
+Message-ID: <8746466a0409220859ed0682f@mail.gmail.com>
+References: <8746466a04092114163b3c0618@mail.gmail.com>
+	 <20040922020614.GA148273@sgi.com>
+Reply-To: Dave <dave.jiang@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="========/4150193600000506/mail-7-bnl.tiscali.it"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-7-bnl.tiscali.it ([213.205.33.227]:30258 "EHLO
-	mail-7-bnl.tiscali.it") by vger.kernel.org with ESMTP
-	id S264085AbUIVKll (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Sep 2004 06:41:41 -0400
-In-Reply-To: <200409170243.06449.bzolnier@elka.pw.edu.pl>
+Received: from rproxy.gmail.com ([64.233.170.202]:13658 "EHLO mproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S266183AbUIVP7K (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Sep 2004 11:59:10 -0400
+Received: by mproxy.gmail.com with SMTP id 73so1675334rnk
+        for <linux-ide@vger.kernel.org>; Wed, 22 Sep 2004 08:59:06 -0700 (PDT)
+In-Reply-To: <20040922020614.GA148273@sgi.com>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>, Grant Grundler <grundler@parisc-linux.org>
-Cc: linux-ide@vger.kernel.org, parisc-linux@parisc-linux.org
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
+On Tue, 21 Sep 2004 19:06:14 -0700, Jeremy Higdon <jeremy@sgi.com> wrote:
+> On Tue, Sep 21, 2004 at 02:16:46PM -0700, Dave wrote:
+> > Signed-off-by: Dave Jiang (dave.jiang@gmail.com )
+> > Patch attached, diffed against 2.6.8.1 .
+> >
+> > I was trying to get the Vitesse SATA driver running on XScale platform
+> > and encountered the problem during identify device where when
+> > vsc_intr_mask_update() was called the irq mask register never seem to
+> > change. It seems that on certain XScale platforms doing a writeb() to
+> > a 32bit register (instead of writel()) doesn't seem to do anything.  I
+> > updated the code to do writel() instead so that other platforms
+> > besides IA32 would work.
+> 
+> It actually does work already on IA64.
+> Why would a writeb not work?  All it does is set the appropriate byte
+> selects.  The platform doesn't care what the register size is, and the
+> target (PCI chip) seems to be able to figure it out, so there must be
+> something else wrong.
+> 
+> What is an XScale, btw?
 
---========/4150193600000506/mail-7-bnl.tiscali.it
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-
-Hello Grant, Bartlomiej and *,
-
-I test this patch:
---- arch/parisc/kernel/pci.c.Orig	2004-09-22 09:47:02.000000000 +0200
-+++ arch/parisc/kernel/pci.c	2004-09-22 11:26:02.104187784 +0200
-@@ -146,6 +146,9 @@
- 	return str;
- }
+XScale is a CPU branched off from the ARM family by Intel. Mostly you
+will see them in PDAs. However, there are other XScale platforms that
+are used as network processors or I/O processors.  I probably need to
+do some PCI-X sniffing but all I know currently is that after the
+writeb the mask register remains unchanged. However if I do a writel
+it changes. So currently if I load the driver as it is, I get
+infinitely interrupt calls because the irq isn't masked and the irq
+handler doesn't know what to do with the interrupt. Since this isn't
+really a fast path routine anyhow, wouldn't it be better to make all
+platforms happy?
  
-+/* Used in drivers/pci/quirks.c */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NS, PCI_DEVICE_ID_NS_87415, super=
-io_fixup_pci);
-+
- /*
-  * Called by pci_set_master() - a driver interface.
-  *
---- drivers/parisc/superio.c.Orig	2004-09-22 11:17:53.759427472 +0200
-+++ drivers/parisc/superio.c	2004-09-22 11:27:32.856391352 +0200
-@@ -484,7 +484,6 @@
- 	pci_read_config_byte(pdev, PCI_CLASS_PROG, &prog);
- 	printk("PCI: Enabled native mode for NS87415 (pif=3D0x%x)\n", prog);
- }
--DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NS, PCI_DEVICE_ID_NS_87415, super=
-io_fixup_pci);
+> > After getting that working I noticed that the last_ctl value gets
+> > changed back by the LIBATA core and the Vitesse SATA driver depends on
+> > the previous value in order to unmask the interrupt. So it seems that
+> > there's no need to set/unset the interrupt masks in the first place if
+> > we set the CTL register with ATA_NIEN directly, which I believe is
+> > probably the way LIBATA intended the driver to do. After doing that
+> > everything seems to be working great. So I suppose
+> > vsc_intr_mask_update() is no longer needed probably.
+> 
+> The chip specification says not to set it that way.  Are you using
+> the chip in DPA mode or PCI-IDE mode?  The driver assumes the former.  I
+> don't know why anyone would use the chip in PCI-IDE mode.
+
+Hmmm...I did not see it in the spec. Can you provide the pointer to
+the spec please? Thanks! I am using it in DPA mode. If you are in
+PCI-IDE mode, all registers would reside in different BARs and the
+card wouldn't work anyways with that driver. I copied the section from
+sata_svw.c. And it seems to work just fine. I don't see how the
+previous method would be working. In vsc_sata_tf_load a compare is
+done between the tf->ctl and the ap->last_ctl. However, if I do it
+with the current method, I continue to see ap->last_ctl with ATA_NIEN
+cleared even though the previous value was set. Therefore the driver
+never unmask the IDE interrupt and thus hang.  What happened was, host
+1, dev 0 was probed and was okay. Then it attempted to probe host 1,
+dev 1, which of course does not exist, so at exit, ata_irq_on() was
+called. With that the last_ctl was reset with ATA_NIEN cleared.
+Therefore when the driver does the compare of ctl with last_ctl, it
+sees no difference, and therefore interrupt mask never changed.
  
- /* Because of a defect in Super I/O, all reads of the PCI DMA status 
-  * registers, IDE status register and the IDE select register need to be=
-
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D><=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-That fix the NS87415 pb on my c2k model :)
-Can somebody check it with some c3k model?
-
-And if Ok for all, can somebody ci for me?
-
-Tia,
-    Joel
-
-PS: here attached the diff in case of bad wrapping
-> -- Original Message --
-> From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-> To: Grant Grundler <grundler@parisc-linux.org>
-> Date: Fri, 17 Sep 2004 02:43:06 +0200
-> Cc: linux-ide@vger.kernel.org, parisc-linux@lists.parisc-linux.org
-> Subject: [parisc-linux] Re: NS87415 on C3K broken
 > 
+> > --- linux-2.6.8.1-iop3/drivers/scsi/sata_vsc.c        2004-08-14 03:55:33.000000000 -0700
+> > +++ dj_bktree-2.6.8.1/drivers/scsi/sata_vsc.c 2004-09-17 15:43:12.688212928 -0700
+> > @@ -80,6 +80,7 @@
+> >
+> >  static void vsc_intr_mask_update(struct ata_port *ap, u8 ctl)
+> >  {
+> > +#if 0
+> >       unsigned long mask_addr;
+> >       u8 mask;
+> >
+> > @@ -91,6 +92,26 @@
+> >       else
+> >               mask &= 0x7F;
+> >       writeb(mask, mask_addr);
+> > +#endif
+> > +    u32 mask = 0;
+> > +    u32 regval;
+> > +
+> > +    regval = readl(ap->host_set->mmio_base + VSC_SATA_INT_MASK_OFFSET);
+> > +
+> > +
+> > +    mask = (0x80 << (8 * ap->port_no));
+> > +
+> > +    if(ctl & ATA_NIEN)
+> > +    {
+> > +        mask = ~mask;
+> > +        mask = regval & mask;
+> > +    }
+> > +    else
+> > +    {
+> > +        mask = regval | mask;
+> > +    }
+> > +
+> > +    writel(mask, ap->host_set->mmio_base + VSC_SATA_INT_MASK_OFFSET);
+> >  }
+> >
+> >
+> > @@ -105,8 +126,10 @@
+> >        * However, if ATA_NIEN is changed, then we need to change the interrupt register.
+> >        */
+> >       if ((tf->ctl & ATA_NIEN) != (ap->last_ctl & ATA_NIEN)) {
+> > +        writeb(tf->ctl, ioaddr->ctl_addr);
+> >               ap->last_ctl = tf->ctl;
+> > -             vsc_intr_mask_update(ap, tf->ctl & ATA_NIEN);
+> > +        ata_wait_idle(ap);
+> > +//      vsc_intr_mask_update(ap, tf->ctl & ATA_NIEN);
+> >       }
+> >       if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
+> >               writew(tf->feature | (((u16)tf->hob_feature) << 8), ioaddr->feature_addr);
+> > @@ -330,6 +353,19 @@
+> >
+> >       pci_set_master(pdev);
+> >
+> > +    /* set per port LEDs */
+> > +    {
+> > +        unsigned long mask;
+> > +        unsigned int regval;
+> > +
+> > +        set_bit(28, &mask);
+> > +        mask = ~mask;
+> > +
+> > +        pci_read_config_dword(pdev, 0x98, &regval);
+> > +        regval = regval & mask;
+> > +        pci_write_config_dword(pdev, 0x98, regval);
+> > +    }
+> > +
 > 
-> On Friday 17 September 2004 01:25, Grant Grundler wrote:
-> > > ide_setup_pci_controller()
-> > > 	-> ide_pci_enable()
-> > > 		-> pci_enable_device()
-> > > 
-> > > and ide_setup_pci_controller() is called at the beginning
-> > > of ide_setup_pci_device() before ->init_chipset()
-> > 
-> > Yes - I tracked the pci_enabled_device back to ide_setup_pci_controll=
-er().
-> > But I just realized I had another brainfart: ide_setup_pci_controller=
-()
-> > is not ide_setup_pci_device(). I should stop coding late at night...
+> That's a somewhat wordy way of doing it.  You could just do:
 > 
-> Heh.
+>         pci_read_config_dword(pdev, 0x98, &regval);
+>         regval = regval & ~(1 << 28)
+>         pci_write_config_dword(pdev, 0x98, regval);
 > 
-> > > > Anyway, ns87415 driver has more problems. The patch below adds
-> > > > "init_chipset" entry point and init_chipset_ns87415() calls
-> > > > pci_enable_device() and pci_set_master() before the probe.
-> > > > And my C3k still HPMCs. My guess is more of the code from
-> > > > init_hwif_ns87415() needs to be moved to init_chipset_ns87415().
-> > > > And possible call some special suckyio init routines.
-> > > > I won't be able to touch this for a few days.
-> > > > Anyone else on parisc-linux ml want to take a whack at this?
-> > ...
-> > > Yep, also if they are to stay please move them to ns87415.c
-> > > because using <linux/ide.h> outside drivers/ide is WRONG.
-> > 
-> > they? superio_ide_init_iops() or something else?
+> and since the driver is DPA only, we can just do:
 > 
-> They.
+>         pci_write_config_dword(pdev, 0x98, 0);
 > 
-> > Willy mentioned that as a TODO item and it's on my list.
-> > But I didn't plan on touching that before the HPMC is resolved
-> > or the PCI resource mgt issues are resolved.
+> If anyone ever adds PCI-IDE support, then we're probably before
+> the point that we're trying to select channel 0/1, so I think that's
+> still safe.
 > 
-> OK, thanks.
-> _______________________________________________
-> parisc-linux mailing list
-> parisc-linux@lists.parisc-linux.org
-> http://lists.parisc-linux.org/mailman/listinfo/parisc-linux
-
-
--------------------------------------------------------------------------=
---
-Tiscali ADSL GO, 29,50 Euro/mois pendant toute une ann=E9e, profitez-en..=
-.
-http://reg.tiscali.be/adsl/welcome.asp?lg=3DFR
-
-
-
-
-
---========/4150193600000506/mail-7-bnl.tiscali.it
-Content-Type: application/octet-stream
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="NS87415.diff"
-
-LS0tIGFyY2gvcGFyaXNjL2tlcm5lbC9wY2kuYy5PcmlnCTIwMDQtMDktMjIgMDk6NDc6MDIuMDAw
-MDAwMDAwICswMjAwCisrKyBhcmNoL3BhcmlzYy9rZXJuZWwvcGNpLmMJMjAwNC0wOS0yMiAxMToy
-NjowMi4xMDQxODc3ODQgKzAyMDAKQEAgLTE0Niw2ICsxNDYsOSBAQAogCXJldHVybiBzdHI7CiB9
-CiAKKy8qIFVzZWQgaW4gZHJpdmVycy9wY2kvcXVpcmtzLmMgKi8KK0RFQ0xBUkVfUENJX0ZJWFVQ
-X0hFQURFUihQQ0lfVkVORE9SX0lEX05TLCBQQ0lfREVWSUNFX0lEX05TXzg3NDE1LCBzdXBlcmlv
-X2ZpeHVwX3BjaSk7CisKIC8qCiAgKiBDYWxsZWQgYnkgcGNpX3NldF9tYXN0ZXIoKSAtIGEgZHJp
-dmVyIGludGVyZmFjZS4KICAqCi0tLSBkcml2ZXJzL3BhcmlzYy9zdXBlcmlvLmMuT3JpZwkyMDA0
-LTA5LTIyIDExOjE3OjUzLjc1OTQyNzQ3MiArMDIwMAorKysgZHJpdmVycy9wYXJpc2Mvc3VwZXJp
-by5jCTIwMDQtMDktMjIgMTE6Mjc6MzIuODU2MzkxMzUyICswMjAwCkBAIC00ODQsNyArNDg0LDYg
-QEAKIAlwY2lfcmVhZF9jb25maWdfYnl0ZShwZGV2LCBQQ0lfQ0xBU1NfUFJPRywgJnByb2cpOwog
-CXByaW50aygiUENJOiBFbmFibGVkIG5hdGl2ZSBtb2RlIGZvciBOUzg3NDE1IChwaWY9MHgleClc
-biIsIHByb2cpOwogfQotREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURfTlMs
-IFBDSV9ERVZJQ0VfSURfTlNfODc0MTUsIHN1cGVyaW9fZml4dXBfcGNpKTsKIAogLyogQmVjYXVz
-ZSBvZiBhIGRlZmVjdCBpbiBTdXBlciBJL08sIGFsbCByZWFkcyBvZiB0aGUgUENJIERNQSBzdGF0
-dXMgCiAgKiByZWdpc3RlcnMsIElERSBzdGF0dXMgcmVnaXN0ZXIgYW5kIHRoZSBJREUgc2VsZWN0
-IHJlZ2lzdGVyIG5lZWQgdG8gYmUgCg==
-
---========/4150193600000506/mail-7-bnl.tiscali.it--
+> >       /* FIXME: check ata_device_add return value */
+> >       ata_device_add(probe_ent);
+> >       kfree(probe_ent);
+> 
+> Also, jgarzik is the maintainer of this driver.  I'll cc him.
+> 
+> jeremy
+>
