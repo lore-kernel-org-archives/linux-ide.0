@@ -1,43 +1,54 @@
-From: Nick Piggin <piggin@cyberone.com.au>
-Subject: Re: Processes receive SIGSEGV if TCQ is enabled
-Date: Fri, 31 Oct 2003 18:37:31 +1100
+From: 240231@msn.com
+Subject: The 30 Hour Wonder!              =?ISO-8859-1?Q?=20=19?= 292774032
+Date: Fri, 31 Oct 2003 03:19:05 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <3FA2113B.1020102@cyberone.com.au>
-References: <200310301601.55588.schlicht@uni-mannheim.de> <3FA1943A.7010300@cornell.edu> <3FA1A171.3040807@cyberone.com.au> <200310310828.41598.schlicht@uni-mannheim.de>
+Message-ID: <S263101AbTJaI2C/20031031082802Z+24664@vger.kernel.org>
+Reply-To: 240231@msn.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-03.iinet.net.au ([203.59.3.35]:49577 "HELO
-	mail.iinet.net.au") by vger.kernel.org with SMTP id S263060AbTJaHhf
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 31 Oct 2003 02:37:35 -0500
-In-Reply-To: <200310310828.41598.schlicht@uni-mannheim.de>
+Received: from [200.140.224.8] ([200.140.224.8]:42756 "HELO 200.140.224.8")
+	by vger.kernel.org with SMTP id S263101AbTJaI2C (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Oct 2003 03:28:02 -0500
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Schlichter <schlicht@uni-mannheim.de>
-Cc: Ivan Gyurdiev <ivg2@cornell.edu>, Andrew Morton <akpm@osdl.org>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+Cyalus comes in smaller doses and produces fewer side effects. 
+Cyalus also works much faster than Sildenafil-based medications. 
+In clinical trials, the majority of men who took the drug were able to 
+engage in sexual intercourse within 30 minutes or less. 
+The studies also indicated that Cyalus stays in the system 
+for up to 30 hours. That's 26 hours longer than the traditional 
+Sildenafil-based medications treatment. 
+
+Test results showed that out of 700 participants at least 88 percent of men experienced improvement with their erections. 
+
+More info http://www.hostvy.com/
 
 
 
-Thomas Schlichter wrote:
 
->Hi,
->
->On Friday 31 October 2003 00:40, Nick Piggin wrote:
->
->>Hi,
->>If you're testing IDE TCQ, please try the following patch and use the
->>default io scheduler. It won't fix anything, but it poisons requests
->>so we can sometimes tell if they are being used in the wrong places.
->>I have seen warnings that lead me to believe this might be happening.
->>Its against 2.6.0-test9-mm1. Report any stack traces you see. Thanks.
->>
->
->OK, I tested 2.6.0-test9-mm1 + your patch, but it seems not to print any 
->messages or stack traces, even if many processes are killed after setting TCQ 
->depth to 1.
->
 
-OK well thats good, its not my problem then ;) Thanks.
+
+
+
+
+
+
+
+
+
+
+
+
+
+          
+24C88C6C-10C55E3B-1341780C-3AA93E4D-C5E6975
+          
+3A4B831E-7C8EAFA0-3137018F-63ECC744-34253921
+   
+7A954564-5F7A0D79-476D4135-28A5536F-7ADD4B51
+                
 
 
