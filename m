@@ -1,73 +1,50 @@
-From: <Stuart_Hayes@Dell.com>
-Subject: RE: ide-cd question
-Date: Mon, 7 Feb 2005 11:22:58 -0600
-Message-ID: <7A8F92187EF7A249BF847F1BF4903C04010EE86E@ausx2kmpc103.aus.amer.dell.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:6271 "EHLO
-	ausc60ps301.us.dell.com") by vger.kernel.org with ESMTP
-	id S261210AbVBGRXA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Feb 2005 12:23:00 -0500
-content-class: urn:content-classes:message
+From: Gary Poppitz <poppitzg@iomega.com>
+Subject: Issues with SIS 964 chipset on SATA
+Date: Mon, 7 Feb 2005 12:02:56 -0700
+Message-ID: <E0854782-793A-11D9-A80A-000A95D2AC6A@iomega.com>
+Mime-Version: 1.0 (Apple Message framework v619)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from email-mx1.iomega.com ([147.178.1.72]:47076 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S261248AbVBGTBJ
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Feb 2005 14:01:09 -0500
+Received: from emailmx0.iomega.com (hubble [147.178.1.70])
+	by email.iomega.com (Postfix) with ESMTP id CAC881D11
+	for <linux-ide@vger.kernel.org>; Mon,  7 Feb 2005 12:01:03 -0700 (MST)
+Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
+	by emailmx0.iomega.com (Postfix) with ESMTP id C13D36D4
+	for <linux-ide@vger.kernel.org>; Mon,  7 Feb 2005 19:01:03 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+We tracked down a problem with the 964 chipset with a 0x180 ID code 
+that may save someone on the list some time.
+
+The chip will only transfer multiples of 4 bytes. Anything else will 
+cause it to hang.
+
+Our specific case occurred in cdrom.c in cdrom_get_disc_info.
+
+There the code asks for 2 bytes to get the data length and in our case, 
+got a value of 34 bytes to read.
+
+Both transfers would fail if not rounded up.
 
 
->> If there is a bug, it is in ide_cdrom_driver declaration.
->> .end_request is not set to ide_cdrom_error.
->> 
-> 
-> I wondered about that.  I'll give that a try.
-> 
+The next part that is interesting is that this error caused the process 
+to hang. There was an assertion failure in ata_qc_complete for 
+qc->flags & ATA_QUEUE_ACTIVE.
 
-OK, 2.6.11-rc3 has the same issue.  The function ide_atapi_error() is
-calling
-drive->driver->end_request() when rq->errors exceeds ERROR_MAX, but, for
-a
-CD-ROM, this is calling the default end_request function.  The default
-end
-request function won't end the request in certain cases as described
-below,
-and they can get stuck being retried forever with no more resets
-attempted.
+Again, in our case, when the 2 byte transfer failed, the attempt at the 
+next read would hang the process when it attempted to queue the 
+command. There is wait for lock which never gets satisfied.
 
-It works great if I apply this patch.  I don't know if there's a reason
-that
-the CD-ROM driver has an end_request function but doesn't put it in the
-driver
-struct, or if that was an oversight, but I am assuming it was an
-oversight.
+It may be that this SIS error has uncovered an issue in the Linux code. 
+If anyone who understands the command queueing process would like more 
+trace data, I will try to provide it.
 
-I'd recommend applying this patch if nobody sees any problems with it.
-
-
---- ide-cd.c.orig	2005-02-07 10:56:42.000000000 -0500
-+++ ide-cd.c	2005-02-07 10:57:06.000000000 -0500
-@@ -3301,6 +3301,7 @@ static ide_driver_t ide_cdrom_driver = {
- 	.supports_dsc_overlap	= 1,
- 	.cleanup		= ide_cdrom_cleanup,
- 	.do_request		= ide_do_rw_cdrom,
-+	.end_request		= cdrom_end_request,
- 	.capacity		= ide_cdrom_capacity,
- 	.attach			= ide_cdrom_attach,
- 	.drives			=
-LIST_HEAD_INIT(ide_cdrom_driver.drives),
-
-
-
-> I should have explained this better.  DRIVER(drive)->end_request() is 
-> actually calling default_end_request(), which calls ide_end_reuqest(),
-
-> which ends up calling __ide_end_request().  And that will only end the
-
-> request if end_that_request_first() (in ll_rw_blk.c) returns 0.
-> However, end_that_request_first() returns 1 because rq->bio is not
-NULL 
-> (in the case of GPCMD_GET_CONFIGURATION, anyway).
-> 
-> So, the request isn't ended, but neither is rq->errors cleared.
+Gary Poppitz
+Iomega
 
