@@ -1,57 +1,42 @@
-From: John Bucy <bucy@gloop.org>
-Subject: Re: sata_promise on alpha, Promise SATAII TX4?
-Date: Sat, 12 Feb 2005 23:45:10 -0500
-Message-ID: <20050213044510.GA32569@tellurium.club.cc.cmu.edu>
-References: <1106167255.25628.68.camel@catalepsy.pdl.cmu.edu> <41EEE18E.307@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: PATA drivers in libata?
+Date: Sun, 13 Feb 2005 13:51:37 -0500
+Message-ID: <420FA1B9.6030100@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from SILICON.CLUB.CC.cmu.edu ([128.2.4.170]:5135 "HELO
-	silicon.club.cc.cmu.edu") by vger.kernel.org with SMTP
-	id S261243AbVBMEwb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 12 Feb 2005 23:52:31 -0500
-Content-Disposition: inline
-In-Reply-To: <41EEE18E.307@pobox.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:49552 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261292AbVBMSv6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 13 Feb 2005 13:51:58 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
-
-On Wed, Jan 19, 2005 at 05:39:10PM -0500, Jeff Garzik wrote:
-> John Bucy wrote:
-> >1.  Are Promise SATA cards known to work (or not work) on Alpha-based
-> >systems?
-> 
-> I'm not sure if anybody has tested, but they work just fine.
-> 
-> 
-> >2.  I saw the patch posted here to make sata_promise work for 
-> >the PDC20518/SATAII150TX4 ... what's the experience with this like to
-> >date?  Is it stable?
-> 
-> I'm interested in feedback on this question as well.  The few reports 
-> I've seen just say "it works" and that's about it.
-
-We're starting to get this working now.  We had to get 2.6.11-rc3 to
-fix some alpha problems, apply an additional patch from -bk8 to setup
-dma_mapping_error for alpha and the patch for this card posted here before.  
-
-We immediately noticed that the port mapping seems to be wrong:
-
-Physical Port    Registers as 
-1             -> 4
-2             -> 2
-3             -> 1
-4             -> 3
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>
 
 
-Also, it doesn't seem to be in pci.ids yet.  
+I wanted to open a discussion on libata and PATA.
 
-We'll be doing a lot more testing in the meantime... we'll let you all
-know what we see.
+libata-dev now has two drivers that support PATA, pata_pdc2027x and 
+ata_piix, and the core is getting close (DMA blacklist in, C/H/S support 
+close).
 
+What are the opinions on issues relating to making PATA libata support 
+available in the upstream kernel?  Here's my random list.
 
-thanks!
-john
+* I think CONFIG_IDE should continue to be the default answer for "what 
+driver do I use for PATA?"
 
+* Should there be a config option similar to CONFIG_BLK_DEV_IDE_SATA, 
+called CONFIG_SCSI_ATA_PATA?  A runtime 'pata' module option?  Should we 
+include 'DANGER DANGER conflicts with CONFIG_IDE' in the Kconfig 
+description?
 
+* With ATA passthru (in libata-dev currently), libata supports SMART and 
+the HDIO_CMD/HDIO_TASK generalized ioctls.  Should I care about 
+supporting other ioctls?
+
+* pci_enable_device() issues?
+
+* power management differences?
 
