@@ -1,63 +1,27 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [BUG] sata_via broken by recent libata updates
-Date: Wed, 24 Mar 2004 16:19:58 -0500
+From: Marc Singer <elf@buici.com>
+Subject: So, is there support for IDE devices that have no IRQ?
+Date: Wed, 24 Mar 2004 15:29:05 -0800
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4061FB7E.9000609@pobox.com>
-References: <20040324163340.GD23503@master.mivlgu.local> <4061CEB1.3080600@pobox.com>
+Message-ID: <20040324232905.GA11286@buici.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:55775 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261885AbUCXVUR
+Received: from florence.buici.com ([206.124.142.26]:28576 "HELO
+	florence.buici.com") by vger.kernel.org with SMTP id S262193AbUCXX3H
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Mar 2004 16:20:17 -0500
-In-Reply-To: <4061CEB1.3080600@pobox.com>
+	Wed, 24 Mar 2004 18:29:07 -0500
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Sergey Vlasov <vsu@altlinux.ru>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Sergey Vlasov wrote:
-> 
->> Hello!
->>
->> After updating from 2.4.25-libata1 to 2.4.25-libata9 the sata_via
->> driver stopped working.  The module loads and even seems to detect
->> the presense of drives, but the SCSI-emulation devices are not
->> registered:
-> 
-> [...]
-> 
->> Seems that the problem is caused by changes in the device
->> initialization - calling ata_device_add() from svia_init_one() does
->> not work (at least with the 2.4.x SCSI layer).  The following patch
->> solves the initialization problem:
->>
->> --- kernel-source-2.4.25/drivers/scsi/sata_via.c.sata_via-init-fix    
->> 2004-03-22 14:03:31 +0300
->> +++ kernel-source-2.4.25/drivers/scsi/sata_via.c    2004-03-24 
->> 16:27:50 +0300
->> @@ -264,9 +264,7 @@ static int svia_init_one (struct pci_dev
->>  
->>      pci_set_master(pdev);
->>  
->> -    /* FIXME: check ata_device_add return value */
->> -    ata_device_add(probe_ent);
->> -    kfree(probe_ent);
->> +    ata_add_to_probe_list(probe_ent);
->>  
->>      return 0;
-> 
-> 
-> Ah, indeed.  A bug in the 2.4 backport.  Seems to be present in sata_sis 
-> too.
-> 
-> Thanks for spotting, I just checked in the attached patch.
+I'm getting the impression that there isn't.  I've got a system with
+compact flash and no interrupt line to the device.  Setting the
+hwif->irq value to -1 causes the kernel to crash, though there is a
+IDE_NO_IRQ constant.  I'm good to make this work, but I want to make
+sure that I'm heading in a reasonable direction.
 
+The thing that's confusing me is that I'm not getting an ide0 device
+even though I can see the code probing for drives.
 
-FYI, this fix is in the 2.4.x patch just posted,
-
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.4.25-libata12.patch.bz2
-
+Cheers.
 
