@@ -1,70 +1,42 @@
-From: Anton Starikov <antst@ifm.liu.se>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: new tool:  blktool
-Date: Mon, 16 Aug 2004 00:22:45 +0200
+Date: Sun, 15 Aug 2004 18:40:37 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040816002245.3f73e75a@hantst.kabel.utwente.nl>
-References: <411FD744.2090308@pobox.com>
+Message-ID: <411FE665.60207@pobox.com>
+References: <411FD744.2090308@pobox.com> <20040816002245.3f73e75a@hantst.kabel.utwente.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from utep.el.utwente.nl ([130.89.16.10]:4574 "EHLO
-	utep.el.utwente.nl") by vger.kernel.org with ESMTP id S267185AbUHOWWu
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:52619 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S267205AbUHOWk4
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Aug 2004 18:22:50 -0400
-In-Reply-To: <411FD744.2090308@pobox.com>
+	Sun, 15 Aug 2004 18:40:56 -0400
+In-Reply-To: <20040816002245.3f73e75a@hantst.kabel.utwente.nl>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Anton Starikov <antst@ifm.liu.se>
 Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hm..probably I'm stupid guy, but BTW I wont to ask stupid question which
-I have already for a long time.
+Anton Starikov wrote:
+> Hm..probably I'm stupid guy, but BTW I wont to ask stupid question which
+> I have already for a long time.
+> 
+> I use promise driver from libata. So, drive connected to promise
+> controller is /dev/sdX. hdparm doesn't want to manage parameters of a
+> such drive. I've checked blktool - the same result.
+> So, is it problem of driver (something not implemented yet) or I have to
+> use something different? 
 
-I use promise driver from libata. So, drive connected to promise
-controller is /dev/sdX. hdparm doesn't want to manage parameters of a
-such drive. I've checked blktool - the same result.
-So, is it problem of driver (something not implemented yet) or I have to
-use something different? 
 
-Anton Starikov.
+I'll add that eventually to the driver, but it's a low priority.
 
-On Sun, 15 Aug 2004 17:36:04 -0400
-Jeff Garzik <jgarzik@pobox.com> wrote:
+Higher priority for most users is SMART and hotplug support.
 
-> 
-> I just posted "blktool" on my SF page,
-> 	http://sourceforge.net/projects/gkernel/
-> and in BitKeeper at
-> 	bk://gkernel.bkbits.net/blktool
-> 
-> 
-> blktool aims to be an easier to use, and more generic version of the 
-> existing utility 'hdparm'.  For example,
-> 
-> 	$ hdparm -c1 /dev/hda
-> 		becomes
-> 	$ blktool /dev/hda pio-data 32-bit
-> 
-> 	and
-> 
-> 	$ hdparm -L0 /dev/hda
-> 		becomes
-> 	$ blktool /dev/hda media unlock
-> 
-> The utility is currently still fairly specific to IDE devices (as
-> hdparm is), but that will change in the coming weeks as SCSI, I2O, and
-> possibly some bits of hardware RAID control are added.
-> 
-> The audience for this application, like hdparm, is fairly narrow, 
-> specific to people who tweak their storage devices and _know what they
-> are doing_.  Improper use of this tool, like hdparm, can turn your
-> disk into a doorstop.
-> 
-> 	Jeff
-> 
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide"
-> in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+With SATA, you don't really need to care that much about most of the 
+things that hdparm messes with, such as multiple-mode or transfer mode. 
+  The power management and acoustic stuff is probably the most relevant 
+to modern SATA devices.
+
+	Jeff
+
+
