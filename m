@@ -1,162 +1,249 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] Re: 2.4.22-rc2 ext2 filesystem corruption
-Date: Fri, 31 Oct 2003 19:52:21 +0100
+From: uaca@alumni.uv.es
+Subject: 2.6.0-test9: BUG alim15x3.c
+Date: Sun, 2 Nov 2003 16:09:11 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200310311941.31930.bzolnier@elka.pw.edu.pl>
+Message-ID: <20031102150911.GB14148@pusa.informat.uv.es>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:14047 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S263518AbTJaSsB
+Received: from pusa.informat.uv.es ([147.156.10.98]:44975 "EHLO
+	pusa.informat.uv.es") by vger.kernel.org with ESMTP id S261705AbTKBPJM convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 31 Oct 2003 13:48:01 -0500
+	Sun, 2 Nov 2003 10:09:12 -0500
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Martin Maney <maney@two14.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
 
-[ http://www.ussg.iu.edu/hypermail/linux/kernel/0308.1/1164.html
-  for people seeing this subject for the first time ]
+Hi all
 
-Hi,
+I have an ASUS P5A board with the ALI M5229 IDE controller, the kernel 
+(2.6.0-test9) doesn't recognize the partition table (so it cannot but 
+the root fs of the disk).
 
-Can you try booting with "hdX=autotune" (hdX==your drive) kernel parameter?
-Promise driver is not autotuning PIO modes if (U)DMA modes are going
-to be used, but correct PIO timings are needed even if (U)DMA is used.
+I've tried booting with ide0=nodma,notune with the same results. 
 
-The next thing to try is the attached patch (against 2.4.23-pre9), which
-sanitizes 66MHz clock usage -> now 66MHz clock is "enabled" before starting
-UDMA3/4/5 transfer and "disabled" after finishing such transfer.
-Therefore correct 33MHz timings will be used for non-UDMA3/4/5 operations.
-It also allows using UDMA3/4/5 modes (on a capable drive) even if other
-non-UDMA3/4/5 drive is connected to the same channel.
+Also I tried with not including the alim15x3 driver, also the same results.
 
-thanks,
---bartlomiej
+This problem doesn't happen with a 2.4.17 kernel
 
- drivers/ide/pci/pdc202xx_old.c |   67 ++++++++++++++++++-----------------------
- 1 files changed, 31 insertions(+), 36 deletions(-)
+Information on the system follows, I got this with the usual kernel: 2.4.17
 
-diff -puN drivers/ide/pci/pdc202xx_old.c~ide-pdc_old-66MHz_clock-fix drivers/ide/pci/pdc202xx_old.c
---- linux-2.4.23-pre9/drivers/ide/pci/pdc202xx_old.c~ide-pdc_old-66MHz_clock-fix	2003-10-31 18:42:16.816479376 +0100
-+++ linux-2.4.23-pre9-root/drivers/ide/pci/pdc202xx_old.c	2003-10-31 19:23:28.015799976 +0100
-@@ -359,16 +359,39 @@ static u8 pdc202xx_old_cable_detect (ide
- 	return ((u8)(CIS & mask));
- }
+I'm tring to boot with initramfs so I can check /proc/ide/ali, with no luck...
+I successfully include my own rootfs in the kernel but It tries to mount the
+root from an IDE dive and not the initramfs I included... anybody know how
+to boot from the embedded file system?
+
+suggestions/comments? I'm not sure who is the current mantainer of this
+driver these days...
+
+Thanks in advance
+
+	Ulisses
+
+*******************************************************
+epi:~# lspci -vvv
+*******************************************************
+
+00:00.0 Host bridge: Acer Laboratories Inc. [ALi] M1541 (rev 04)
+	Subsystem: Acer Laboratories Inc. [ALi] ALI M1541 Aladdin V/V+ AGP System Controller
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort+ >SERR- <PERR-
+	Latency: 64
+	Region 0: Memory at e0000000 (32-bit, non-prefetchable) [size=64M]
+	Capabilities: [b0] AGP version 1.0
+		Status: RQ=28 SBA+ 64bit- FW- Rate=x1,x2
+		Command: RQ=0 SBA- AGP- 64bit- FW- Rate=<none>
+
+00:01.0 PCI bridge: Acer Laboratories Inc. [ALi] M1541 PCI to AGP Controller (rev 04) (prog-if 00 [Normal decode])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 64
+	Bus: primary=00, secondary=01, subordinate=01, sec-latency=64
+	I/O behind bridge: 0000d000-0000dfff
+	Memory behind bridge: de000000-dfffffff
+	Prefetchable memory behind bridge: e5f00000-e7ffffff
+	BridgeCtl: Parity- SERR- NoISA- VGA+ MAbort- >Reset- FastB2B-
+
+00:02.0 USB Controller: Acer Laboratories Inc. [ALi] USB 1.1 Controller (rev 03) (prog-if 10 [OHCI])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 0 (20000ns max)
+	Interrupt: pin A routed to IRQ 9
+	Region 0: Memory at dd800000 (32-bit, non-prefetchable) [size=4K]
+
+00:03.0 Bridge: Acer Laboratories Inc. [ALi] M7101 PMU
+	Subsystem: Acer Laboratories Inc. [ALi] ALI M7101 Power Management Controller
+	Control: I/O+ Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+
+00:07.0 ISA bridge: Acer Laboratories Inc. [ALi] M1533 PCI to ISA Bridge [Aladdin IV] (rev c3)
+	Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort+ <MAbort+ >SERR- <PERR-
+	Latency: 0
+
+00:09.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL-8029(AS)
+	Subsystem: Realtek Semiconductor Co., Ltd. RT8029(AS)
+	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Interrupt: pin A routed to IRQ 9
+	Region 0: I/O ports at b800 [size=32]
+
+00:0a.0 Multimedia video controller: Brooktree Corporation Bt848 Video Capture (rev 12)
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 0 (4000ns min, 10000ns max)
+	Interrupt: pin A routed to IRQ 10
+	Region 0: Memory at e5000000 (32-bit, prefetchable) [size=4K]
+
+00:0f.0 IDE interface: Acer Laboratories Inc. [ALi] M5229 IDE (rev c1) (prog-if 8a [Master SecP PriP])
+	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 32 (500ns min, 1000ns max)
+	Interrupt: pin A routed to IRQ 0
+	Region 4: I/O ports at b400 [size=16]
+
+01:00.0 VGA compatible controller: 3Dfx Interactive, Inc. Voodoo 3 (rev 01) (prog-if 00 [VGA])
+	Subsystem: 3Dfx Interactive, Inc. Voodoo3 AGP
+	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR+
+	Interrupt: pin A routed to IRQ 11
+	Region 0: Memory at de000000 (32-bit, non-prefetchable) [size=32M]
+	Region 1: Memory at e6000000 (32-bit, prefetchable) [size=32M]
+	Region 2: I/O ports at d800 [size=256]
+	Expansion ROM at e5ff0000 [disabled] [size=64K]
+	Capabilities: [54] AGP version 1.0
+		Status: RQ=7 SBA+ 64bit+ FW- Rate=x1,x2
+		Command: RQ=0 SBA- AGP- 64bit- FW- Rate=<none>
+	Capabilities: [60] Power Management version 1
+		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+
+****************************************************************
+epi:~# uname -a
+****************************************************************
+
+Linux epi 2.4.17 #14 Fri Apr 19 23:26:02 CEST 2002 i586 unknown
+
+****************************************************************
+epi:~# hdparm -i /dev/hda
+****************************************************************
+
+/dev/hda:
+
+ Model=SAMSUNG SV2044D, FwRev=MM200-52, SerialNo=0228J1FN527449
+ Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs }
+ RawCHS=16383/16/63, TrkSize=34902, SectSize=554, ECCbytes=4
+ BuffType=DualPortCache, BuffSize=472kB, MaxMultSect=16, MultSect=16
+ CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=39862368
+ IORDY=yes, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes: pio0 pio1 pio2 pio3 pio4 
+ DMA modes: mdma0 mdma1 mdma2 udma0 udma1 *udma2 
+ AdvancedPM=no WriteCache=enabled
+ Drive Supports : ATA/ATAPI-4 T13 1153D revision 17 : ATA-1 ATA-2 ATA-3 ATA-4 
+
+*****************************************************************
+epi:~# hdparm -i /dev/hda
+*****************************************************************
+/dev/hda:
+
+non-removable ATA device, with non-removable media
+	Model Number:		SAMSUNG SV2044D                         
+	Serial Number:		0228J1FN527449	Firmware Revision:	MM200-52
+Standards:
+	Used: ATA/ATAPI-4 T13 1153D revision 17 
+	Supported: 1 2 3 4 & some of 5
+Configuration:
+	Logical		max	current
+	cylinders	16383	16383
+	heads		16	16
+	sectors/track	63	63
+	bytes/track:	34902		(obsolete)
+	bytes/sector:	554		(obsolete)
+	current sector capacity: 16514064
+	LBA user addressable sectors = 39862368
+Capabilities:
+	LBA, IORDY(cannot be disabled)
+	Buffer size: 472.0kB	ECC bytes: 4	Queue depth: 1
+	Standby timer values: spec'd by Vendor, no device specific minimum
+	r/w multiple sector transfer: Max = 16	Current = 16
+	DMA: mdma0 mdma1 mdma2 udma0 udma1 *udma2 udma3 udma4 
+	     Cycle time: min=120ns recommended=120ns
+	PIO: pio0 pio1 pio2 pio3 pio4 
+	     Cycle time: no flow control=120ns  IORDY flow control=120ns
+Commands/features:
+	Enabled	Supported:
+	   *	NOP cmd
+	   *	READ BUFFER cmd
+	   *	WRITE BUFFER cmd
+	   *	Host Protected Area feature set
+	   *	DEVICE RESET cmd
+	   *	look-ahead
+	   *	write cache
+	   *	Power Management feature set
+	   *	SMART feature set
+HW reset results:
+	CBLID- above Vih
+	Device num = 1
+
+********************************************************************
+epi:/usr/src/linux/scripts# ./ver_linux
+********************************************************************
+If some fields are empty or look unusual you may have an old version.
+Compare to the current minimal requirements in Documentation/Changes.
  
-+/*
-+ * Set the control register to use the 66MHz system
-+ * clock for UDMA 3/4/5 mode operation when necessary.
-+ *
-+ * It may also be possible to leave the 66MHz clock on
-+ * and readjust the timing parameters.
-+ */
-+
-+static void pdc_old_enable_66MHz_clock(ide_hwif_t *hwif)
-+{
-+	unsigned long clock_reg = hwif->dma_master + 0x11;
-+	u8 clock = hwif->INB(clock_reg);
-+
-+	hwif->OUTB(clock | (hwif->channel ? 0x08 : 0x02), clock_reg);
-+}
-+
-+static void pdc_old_disable_66MHz_clock(ide_hwif_t *hwif)
-+{
-+	unsigned long clock_reg = hwif->dma_master + 0x11;
-+	u8 clock = hwif->INB(clock_reg);
-+
-+	hwif->OUTB(clock & ~(hwif->channel ? 0x08 : 0x02), clock_reg);
-+}
-+
- static int config_chipset_for_dma (ide_drive_t *drive)
- {
- 	struct hd_driveid *id	= drive->id;
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	struct pci_dev *dev	= hwif->pci_dev;
- 	u32 drive_conf		= 0;
--	u8 mask			= hwif->channel ? 0x08 : 0x02;
- 	u8 drive_pci		= 0x60 + (drive->dn << 2);
- 	u8 test1 = 0, test2 = 0, speed = -1;
--	u8 AP = 0, CLKSPD = 0, cable = 0;
-+	u8 AP = 0, cable = 0;
+Linux epi 2.4.17 #14 Fri Apr 19 23:26:02 CEST 2002 i586 unknown
  
- 	u8 ultra_66		= ((id->dma_ultra & 0x0010) ||
- 				   (id->dma_ultra & 0x0008)) ? 1 : 0;
-@@ -392,21 +415,6 @@ static int config_chipset_for_dma (ide_d
- 			BUG();
- 	}
- 
--	CLKSPD = hwif->INB(hwif->dma_master + 0x11);
--
--	/*
--	 * Set the control register to use the 66Mhz system
--	 * clock for UDMA 3/4 mode operation. If one drive on
--	 * a channel is U66 capable but the other isn't we
--	 * fall back to U33 mode. The BIOS INT 13 hooks turn
--	 * the clock on then off for each read/write issued. I don't
--	 * do that here because it would require modifying the
--	 * kernel, separating the fop routines from the kernel or
--	 * somehow hooking the fops calls. It may also be possible to
--	 * leave the 66Mhz clock on and readjust the timing
--	 * parameters.
--	 */
--
- 	if ((ultra_66) && (cable)) {
- #ifdef DEBUG
- 		printk(KERN_DEBUG "ULTRA 66/100/133: %s channel of Ultra 66/100/133 "
-@@ -414,29 +422,12 @@ static int config_chipset_for_dma (ide_d
- 			hwif->channel ? "Secondary" : "Primary");
- 		printk(KERN_DEBUG "         Switching to Ultra33 mode.\n");
- #endif /* DEBUG */
--		/* Primary   : zero out second bit */
--		/* Secondary : zero out fourth bit */
--		hwif->OUTB(CLKSPD & ~mask, (hwif->dma_master + 0x11));
- 		printk(KERN_WARNING "Warning: %s channel requires an 80-pin cable for operation.\n", hwif->channel ? "Secondary":"Primary");
- 		printk(KERN_WARNING "%s reduced to Ultra33 mode.\n", drive->name);
--	} else {
--		if (ultra_66) {
--			/*
--			 * check to make sure drive on same channel
--			 * is u66 capable. Ignore empty slots.
--			 */
--			if (hwif->drives[!(drive->dn%2)].present) {
--				if (hwif->drives[!(drive->dn%2)].id->dma_ultra & 0x0078) {
--					hwif->OUTB(CLKSPD | mask, (hwif->dma_master + 0x11));
--				} else {
--					hwif->OUTB(CLKSPD & ~mask, (hwif->dma_master + 0x11));
--				}
--			} else { /* udma4 drive by itself */
--				hwif->OUTB(CLKSPD | mask, (hwif->dma_master + 0x11));
--			}
--		}
- 	}
- 
-+	pdc_old_disable_66MHz_clock(drive->hwif);
-+
- 	drive_pci = 0x60 + (drive->dn << 2);
- 	pci_read_config_dword(dev, drive_pci, &drive_conf);
- 	if ((drive_conf != 0x004ff304) && (drive_conf != 0x004ff3c4))
-@@ -532,6 +523,8 @@ static int pdc202xx_quirkproc (ide_drive
- 
- static int pdc202xx_old_ide_dma_begin(ide_drive_t *drive)
- {
-+	if (drive->current_speed > XFER_UDMA_2)
-+		pdc_old_enable_66MHz_clock(drive->hwif);
- 	if (drive->addressing == 1) {
- 		struct request *rq	= HWGROUP(drive)->rq;
- 		ide_hwif_t *hwif	= HWIF(drive);
-@@ -565,6 +558,8 @@ static int pdc202xx_old_ide_dma_end(ide_
- 		clock = hwif->INB(high_16 + 0x11);
- 		hwif->OUTB(clock & ~(hwif->channel ? 0x08:0x02), high_16+0x11);
- 	}
-+	if (drive->current_speed > XFER_UDMA_2)
-+		pdc_old_disable_66MHz_clock(drive->hwif);
- 	return __ide_dma_end(drive);
- }
- 
+Gnu C                  2.95.4
+Gnu make               3.79.1
+util-linux             2.11n
+mount                  2.11n
+module-init-tools      found
+e2fsprogs              1.27
+PPP                    2.4.1
+nfs-utils              1.0
+Linux C Library        2.2.5
+Dynamic linker (ldd)   2.2.5
+Procps                 2.0.7
+Net-tools              1.60
+Console-tools          0.2.3
+Sh-utils               2.0.11
+Modules Loaded         
 
-_
+
+***************************************
+epi:/proc/ide# cat ali
+***************************************
+                                Ali M15x3 Chipset.
+                                ------------------
+PCI Clock: 33.
+CD_ROM FIFO:No , CD_ROM DMA:Yes
+FIFO Status: contains 0 Words, runs.
+
+-------------------primary channel-------------------secondary channel---------
+
+channel status:       Off                               Off
+both channels togth:  Yes                               Yes
+Channel state:        OK                                OK            
+Add. Setup Timing:    1T                                1T
+Command Act. Count:   8T                                8T
+Command Rec. Count:   16T                               16T
+
+----------------drive0-----------drive1------------drive0-----------drive1------
+
+DMA enabled:      Yes              No                Yes              No 
+FIFO threshold:    4 Words          4 Words           8 Words          4 Words
+FIFO mode:        FIFO Off         FIFO Off          FIFO On          FIFO Off
+Dt RW act. Cnt     3T               3T                3T               3T
+Dt RW rec. Cnt     1T               1T                1T               1T
+
+-----------------------------------UDMA Timings--------------------------------
+
+UDMA:             OK               OK                OK               OK
+UDMA timings:     2.5T             2.5T              2.5T             2.5T
+
+
+*********************************************************************************
 
