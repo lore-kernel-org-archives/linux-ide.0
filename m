@@ -1,40 +1,42 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: PATCH: straighten out the IDE layer locking and add hotplug
-Date: Mon, 16 Aug 2004 18:36:05 +0100
+Subject: Re: PATCH: add drive_to_key functions
+Date: Mon, 16 Aug 2004 18:38:18 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1092677759.21013.33.camel@localhost.localdomain>
-References: <20040815151346.GA13761@devserv.devel.redhat.com>
-	 <200408161923.19024.bzolnier@elka.pw.edu.pl>
+Message-ID: <1092677889.20838.36.camel@localhost.localdomain>
+References: <20040815145844.GA10778@devserv.devel.redhat.com>
+	 <200408161912.26595.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from the-village.bc.nu ([81.2.110.252]:7909 "EHLO
+Received: from the-village.bc.nu ([81.2.110.252]:9445 "EHLO
 	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S266128AbUHPSib (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Aug 2004 14:38:31 -0400
-In-Reply-To: <200408161923.19024.bzolnier@elka.pw.edu.pl>
+	id S266257AbUHPSkt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Aug 2004 14:40:49 -0400
+In-Reply-To: <200408161912.26595.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 Cc: Alan Cox <alan@redhat.com>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, torvalds@osdl.org
 
-On Llu, 2004-08-16 at 18:23, Bartlomiej Zolnierkiewicz wrote:
-> On Sunday 15 August 2004 17:13, Alan Cox wrote:
-> > There really isnt any sane way to break this patch down because all the
-> > changes are interlinked so closely.
+On Llu, 2004-08-16 at 18:12, Bartlomiej Zolnierkiewicz wrote:
+> >  	hwif->atapi_dma = 0;		/* disable all atapi dma */
+> >  	hwif->ultra_mask = 0x80;	/* disable all ultra */
+> >  	hwif->mwdma_mask = 0x80;	/* disable all mwdma */
+> >  	hwif->swdma_mask = 0x80;	/* disable all swdma */
+> >
+> > +	hwif->pci_dev = NULL;
+> > +	hwif->remove = NULL;
+> > +
 > 
-> at least /proc/ide/hd?/settings:ide-scsi removal and doc fixes are very easy 
-> to separate, I also think that locking fixes should be separated from 
-> hotplugging ones
+> not needed - memsetting to zero is done earlier
 
-I continue to believe splitting the locking and hotplugging ones are
-essentially impossible without inventing a fake never written version.
-The other stuff can probably be done.
+Ok fixed in my tree.
 
-If you can let me know which bits you are going to apply I can work on
-sorting out the rest. In the meantime I'll keep a -ac patch for people
-who want to work on the IDE bits or who need the fixes and driver
-updates.
+> > +EXPORT_SYMBOL_GPL(ide_drive_to_key);
+> 
+> AFAICS ide_drive_[from,to]_key are to be used only from ide-proc.c
+> so EXPORT_SYMBOLs are not needed
 
-Alan
+Good point I forgot they were linked together. Fixed
+
 
