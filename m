@@ -1,34 +1,36 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: [sata] status report, libata-dev queue updated
-Date: Fri, 01 Oct 2004 15:55:52 +0400
+From: Ben Dooks <ben-ide@fluff.org>
+Subject: Re: [PATCH] Simtec BAST (EB2410ITX) / Thorcom VR1000 driver
+Date: Fri, 1 Oct 2004 13:31:35 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <415D45C8.3070207@wasp.net.au>
-References: <20041001045822.GA25784@havoc.gtf.org>
+Message-ID: <20041001123135.GO22627@home.fluff.org>
+References: <20040928145828.GH22627@home.fluff.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:27571 "EHLO wasp.net.au")
-	by vger.kernel.org with ESMTP id S269774AbUJALz0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Oct 2004 07:55:26 -0400
-In-Reply-To: <20041001045822.GA25784@havoc.gtf.org>
+Received: from host-212-158-219-180.bulldogdsl.com ([212.158.219.180]:62652
+	"EHLO aeryn.fluff.org.uk") by vger.kernel.org with ESMTP
+	id S269772AbUJAMbk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 Oct 2004 08:31:40 -0400
+Content-Disposition: inline
+In-Reply-To: <20040928145828.GH22627@home.fluff.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: Ben Dooks <ben-ide@fluff.org>
+Cc: Linux IDE <linux-ide@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Notable updates:
-> * new driver for ULi SATA (formerly ALi)
-> * SMART support via ATA passthru CDB
-> * support for Promise PATA ports
+On Tue, Sep 28, 2004 at 03:58:28PM +0100, Ben Dooks wrote:
+> Patch to provide support for the following two boards:
 > 
-
-<snip>
+> 	- Simtec BAST (EB2410ITX)
+> 	- Thorcom VR1000
 > 
-> Patch:
-> http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.9-rc3-libata-dev1.patch.bz2
-> 
+> Signed-off-by: Ben Dooks <ben@simtec.co.uk>
 
-I'd just like to give this the "two thumbs up". I'm getting great results from the SMART support 
-(Thanks Andy and John!)
+Is the correct way to get an ide driver patch submitted
+to mail linux-ide@vger.kernel.org, or do I need to copy
+in other lists/people as well?
 
-Brad
+thanks,
+-- 
+Ben (ben@fluff.org, http://www.fluff.org/)
+
+  'a smiley only costs 4 bytes'
