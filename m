@@ -1,29 +1,24 @@
-From: James Courtier-Dutton <James@superbug.demon.co.uk>
-Subject: SATA and hdparm
-Date: Tue, 03 Aug 2004 02:22:03 +0100
+From: Andy Warner <andyw@pobox.com>
+Subject: Marvell 88SX[56]0[48]1 libata driver development.
+Date: Tue, 3 Aug 2004 12:05:04 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <410EE8BB.7040508@superbug.demon.co.uk>
+Message-ID: <20040803120504.A31838@florence.linkmargin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anchor-post-33.mail.demon.net ([194.217.242.91]:38661 "EHLO
-	anchor-post-33.mail.demon.net") by vger.kernel.org with ESMTP
-	id S264795AbUHCBWE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Aug 2004 21:22:04 -0400
-Received: from superbug.demon.co.uk ([80.176.146.252] helo=[192.168.1.10])
-	by anchor-post-33.mail.demon.net with esmtp (Exim 3.35 #1)
-	id 1Bro0B-000DfG-0X
-	for linux-ide@vger.kernel.org; Tue, 03 Aug 2004 01:22:03 +0000
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:48637 "EHLO
+	ms-smtp-02.rdc-kc.rr.com") by vger.kernel.org with ESMTP
+	id S266737AbUHCRG5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Aug 2004 13:06:57 -0400
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, jgrazik@pobox.com
 
-When will I be able to use "hdparm -I /dev/sda" and "hdparm -S /dev/sda" 
-and other commands like that?
+I'm looking to hook up with others actively working on
+development of libata support for the Marvell SATA
+chips. I have eval boards, and access to Marvell
+docs/drivers.
+-- 
+andyw@pobox.com
 
-I have Serial ATA drives, and when using them in PATA mode, those hdparm 
-commands worked. Should I use something different when in Serial ATA mode?
-
-Thanks
-
-James
+Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
