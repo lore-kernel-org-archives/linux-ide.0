@@ -1,34 +1,66 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: ide-2.4.20-pre4-ac2.patch
-Date: Fri, 30 Aug 2002 11:43:05 +0200
+From: Jens Axboe <axboe@suse.de>
+Subject: [PATCH] 2.5.34 IDE
+Date: Wed, 11 Sep 2002 10:01:07 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <30345.4663524919$1030697081@news.gmane.org>
-References: <Pine.LNX.4.44.0208300141070.8911-100000@serv>
+Message-ID: <20020911080107.GA6444@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0208300141070.8911-100000@serv>
+Received: from brick.kernel.dk ([195.249.94.204] helo=burns.home.kernel.dk)
+	by virtualhost.dk with esmtp (Exim 3.35 #1)
+	id 17p2R6-0004Qn-00
+	for linux-ide@vger.kernel.org; Wed, 11 Sep 2002 10:01:20 +0200
+Received: from axboe by burns.home.kernel.dk with local (Exim 4.10)
+	id 17p2Qt-0001gY-00
+	for linux-ide@vger.kernel.org; Wed, 11 Sep 2002 10:01:07 +0200
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Roman Zippel <zippel@linux-m68k.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andre Hedrick <andre@linux-ide.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
->> > It's for m68k and ppc Amigas, but I don't think two separate drivers are
->> > needed.
->>
->> So its actually a false divide and dumping them in "legacy" is probably
->> a lot simpler ?
->
->Hmm, somehow I more like "m68k". :)
+----- Forwarded message from Jens Axboe <axboe@suse.de> -----
 
-If it's PPC side is limited to PPC amiga's (APUS), then leave it
-in m68k. PPC Amiga's are really m68k machines with a hacked PPC
-in the CPU slot ;)
+From: Jens Axboe <axboe@suse.de>
+Date: Wed, 11 Sep 2002 10:00:36 +0200
+To: Linux Kernel <linux-kernel@vger.kernel.org>
+Subject: [PATCH] 2.5.34 IDE
 
-Though such problems may come back if we ever decide to support
-the PPC CPU cards for old m68k macs, and if I finally merge the
-support for NuBus pmacs, oh well...
+Hi,
 
-Ben.
+I've updated 2.5 IDE code to match what is currently in 2.4.20-pre5-ac4,
+since is much nicer and better structured. There have also been some
+cleanups along the way, all of which have been passed back to Alan for
+the 2.4 tree.
 
+If you feel adventorous, please try:
+
+*.kernel.org:/pub/linux/kernel/people/axboe/patches/v2.5/2.5.34/ide-2.5.34-4.gz
+
+Note that the patch is _huge_ because it moves files around! I've also
+got this in a bk tree with proper file moving etc (and patch split in a
+million pieces), but that's mainly for Linus to pull (ie its on
+master right now, and I'm not inclined to move it). If someone wants to
+see it though, I can probably put it somewhere public.
+
+If you apply against 2.5.34-BK (instead of 2.5.34 virgin), note that
+some parts are already in. In that case, remove the parts of the diff
+that update:
+
+arch/i386/pci/common.c
+arch/i386/pci/i386.c
+arch/i386/pci/pci.h
+arch/i386/pci/visws.c
+drivers/pci/pci.c
+include/linux/blkdev.h
+include/linux/hdreg.h
+include/linux/pci.h
+include/linux/pci_ids.h
+
+-- 
+Jens Axboe
+
+
+----- End forwarded message -----
+
+-- 
+Jens Axboe
 
