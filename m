@@ -1,65 +1,239 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] obsolete asm/hdreg.h [4/5]
-Date: Thu, 8 Apr 2004 00:23:35 +0200
+Subject: [PATCH] obsolete asm/hdreg.h [2/5]
+Date: Thu, 8 Apr 2004 00:22:30 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200404080023.35285.bzolnier@elka.pw.edu.pl>
+Message-ID: <200404080022.30618.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mion.elka.pw.edu.pl ([194.29.160.35]:49638 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261262AbUDGXyG
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261298AbUDGXyN
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Apr 2004 19:54:06 -0400
+	Wed, 7 Apr 2004 19:54:13 -0400
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: linux-ide@vger.kernel.org
 
 
-[IDE] asm-ia64/ide.h: use unsigned long instead of ide_ioreg_t
+[IDE] add asm-generic/hdreg.h
 
- linux-2.6.5-root/include/asm-ia64/ide.h |   12 +++++-------
- 1 files changed, 5 insertions(+), 7 deletions(-)
+Use it on all archs which define ide_ioreg_t to unsigned long.
 
-diff -puN include/asm-ia64/ide.h~ia64_ide_ioreg_t include/asm-ia64/ide.h
---- linux-2.6.5/include/asm-ia64/ide.h~ia64_ide_ioreg_t	2004-04-06 14:21:09.569520960 +0200
-+++ linux-2.6.5-root/include/asm-ia64/ide.h	2004-04-06 14:23:48.618341864 +0200
-@@ -25,8 +25,7 @@
- # endif
- #endif
- 
--static __inline__ int
--ide_default_irq (ide_ioreg_t base)
-+static inline int ide_default_irq(unsigned long base)
- {
- 	switch (base) {
- 	      case 0x1f0: return isa_irq_to_vector(14);
-@@ -40,8 +39,7 @@ ide_default_irq (ide_ioreg_t base)
- 	}
- }
- 
--static __inline__ ide_ioreg_t
--ide_default_io_base (int index)
-+static inline unsigned long ide_default_io_base(int index)
- {
- 	switch (index) {
- 	      case 0: return 0x1f0;
-@@ -55,10 +53,10 @@ ide_default_io_base (int index)
- 	}
- }
- 
--static __inline__ void
--ide_init_hwif_ports (hw_regs_t *hw, ide_ioreg_t data_port, ide_ioreg_t ctrl_port, int *irq)
-+static inline void ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port,
-+				       unsigned long ctrl_port, int *irq)
- {
--	ide_ioreg_t reg = data_port;
-+	unsigned long reg = data_port;
- 	int i;
- 
- 	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
+ linux-2.6.5-root/include/asm-alpha/hdreg.h   |   13 +------------
+ linux-2.6.5-root/include/asm-arm/hdreg.h     |   14 +-------------
+ linux-2.6.5-root/include/asm-arm26/hdreg.h   |   16 +---------------
+ linux-2.6.5-root/include/asm-generic/hdreg.h |    6 ++++++
+ linux-2.6.5-root/include/asm-mips/hdreg.h    |   17 +----------------
+ linux-2.6.5-root/include/asm-parisc/hdreg.h  |    7 +------
+ linux-2.6.5-root/include/asm-ppc/hdreg.h     |   18 +-----------------
+ linux-2.6.5-root/include/asm-ppc64/hdreg.h   |   23 +----------------------
+ linux-2.6.5-root/include/asm-sh/hdreg.h      |   13 +------------
+ linux-2.6.5-root/include/asm-sparc/hdreg.h   |   14 +-------------
+ linux-2.6.5-root/include/asm-sparc64/hdreg.h |   14 +-------------
+ 11 files changed, 16 insertions(+), 139 deletions(-)
+
+diff -puN include/asm-alpha/hdreg.h~generic_asm_hdreg include/asm-alpha/hdreg.h
+--- linux-2.6.5/include/asm-alpha/hdreg.h~generic_asm_hdreg	2004-04-07 23:56:05.870153960 +0200
++++ linux-2.6.5-root/include/asm-alpha/hdreg.h	2004-04-07 23:56:05.925145600 +0200
+@@ -1,12 +1 @@
+-/*
+- *  linux/include/asm-alpha/hdreg.h
+- *
+- *  Copyright (C) 1994-1996  Linus Torvalds & authors
+- */
+-
+-#ifndef __ASMalpha_HDREG_H
+-#define __ASMalpha_HDREG_H
+-
+-typedef unsigned long ide_ioreg_t;
+-
+-#endif /* __ASMalpha_HDREG_H */
++#include <asm-generic/hdreg.h>
+diff -puN include/asm-arm26/hdreg.h~generic_asm_hdreg include/asm-arm26/hdreg.h
+--- linux-2.6.5/include/asm-arm26/hdreg.h~generic_asm_hdreg	2004-04-07 23:56:05.881152288 +0200
++++ linux-2.6.5-root/include/asm-arm26/hdreg.h	2004-04-07 23:56:05.925145600 +0200
+@@ -1,15 +1 @@
+-/*
+- *  linux/include/asm-arm26/hdreg.h
+- *
+- *  Used by include/linux/ide.h
+- *
+- *  Copyright (C) 1994-1996  Linus Torvalds & authors
+- */
+-
+-#ifndef __ASMARM_HDREG_H
+-#define __ASMARM_HDREG_H
+-
+-typedef unsigned long ide_ioreg_t;
+-
+-#endif /* __ASMARM_HDREG_H */
+-
++#include <asm-generic/hdreg.h>
+diff -puN include/asm-arm/hdreg.h~generic_asm_hdreg include/asm-arm/hdreg.h
+--- linux-2.6.5/include/asm-arm/hdreg.h~generic_asm_hdreg	2004-04-07 23:56:05.884151832 +0200
++++ linux-2.6.5-root/include/asm-arm/hdreg.h	2004-04-07 23:56:05.926145448 +0200
+@@ -1,13 +1 @@
+-/*
+- *  linux/include/asm-arm/hdreg.h
+- *
+- *  Copyright (C) 1994-1996  Linus Torvalds & authors
+- */
+-
+-#ifndef __ASMARM_HDREG_H
+-#define __ASMARM_HDREG_H
+-
+-typedef unsigned long ide_ioreg_t;
+-
+-#endif /* __ASMARM_HDREG_H */
+-
++#include <asm-generic/hdreg.h>
+diff -puN /dev/null include/asm-generic/hdreg.h
+--- /dev/null	2004-01-17 00:25:55.000000000 +0100
++++ linux-2.6.5-root/include/asm-generic/hdreg.h	2004-04-07 23:56:05.926145448 +0200
+@@ -0,0 +1,6 @@
++#ifndef __ASM_GENERIC_HDREG_H
++#define __ASM_GENERIC_HDREG_H
++
++typedef unsigned long ide_ioreg_t;
++
++#endif /* __ASM_GENERIC_HDREG_H */
+diff -puN include/asm-mips/hdreg.h~generic_asm_hdreg include/asm-mips/hdreg.h
+--- linux-2.6.5/include/asm-mips/hdreg.h~generic_asm_hdreg	2004-04-07 23:56:05.889151072 +0200
++++ linux-2.6.5-root/include/asm-mips/hdreg.h	2004-04-07 23:56:05.927145296 +0200
+@@ -1,16 +1 @@
+-/*
+- * This file is subject to the terms and conditions of the GNU General Public
+- * License.  See the file "COPYING" in the main directory of this archive
+- * for more details.
+- *
+- *  This file contains the MIPS architecture specific IDE code.
+- *
+- *  Copyright (C) 1994-1996  Linus Torvalds & authors
+- *  Copyright (C) 2001 Ralf Baechle
+- */
+-#ifndef _ASM_HDREG_H
+-#define _ASM_HDREG_H
+-
+-typedef unsigned long ide_ioreg_t;
+-
+-#endif /* _ASM_HDREG_H */
++#include <asm-generic/hdreg.h>
+diff -puN include/asm-parisc/hdreg.h~generic_asm_hdreg include/asm-parisc/hdreg.h
+--- linux-2.6.5/include/asm-parisc/hdreg.h~generic_asm_hdreg	2004-04-07 23:56:05.892150616 +0200
++++ linux-2.6.5-root/include/asm-parisc/hdreg.h	2004-04-07 23:56:05.928145144 +0200
+@@ -1,6 +1 @@
+-#ifndef _ASM_HDREG_H
+-#define _ASM_HDREG_H
+-
+-typedef unsigned long ide_ioreg_t;
+-
+-#endif
++#include <asm-generic/hdreg.h>
+diff -puN include/asm-ppc64/hdreg.h~generic_asm_hdreg include/asm-ppc64/hdreg.h
+--- linux-2.6.5/include/asm-ppc64/hdreg.h~generic_asm_hdreg	2004-04-07 23:56:05.903148944 +0200
++++ linux-2.6.5-root/include/asm-ppc64/hdreg.h	2004-04-07 23:56:05.928145144 +0200
+@@ -1,22 +1 @@
+-/*
+- *  linux/include/asm-ppc/hdreg.h
+- *
+- *  Copyright (C) 1994-1996  Linus Torvalds & authors
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * as published by the Free Software Foundation; either version
+- * 2 of the License, or (at your option) any later version.
+- */
+-
+-/*
+- *  This file contains the ppc architecture specific IDE code.
+- */
+-
+-#ifndef __ASMPPC64_HDREG_H
+-#define __ASMPPC64_HDREG_H
+-
+-typedef unsigned long ide_ioreg_t;
+-
+-#endif /* __ASMPPC64_HDREG_H */
+-
++#include <asm-generic/hdreg.h>
+diff -puN include/asm-ppc/hdreg.h~generic_asm_hdreg include/asm-ppc/hdreg.h
+--- linux-2.6.5/include/asm-ppc/hdreg.h~generic_asm_hdreg	2004-04-07 23:56:05.909148032 +0200
++++ linux-2.6.5-root/include/asm-ppc/hdreg.h	2004-04-07 23:56:05.929144992 +0200
+@@ -1,17 +1 @@
+-/*
+- *  include/asm-ppc/hdreg.h
+- *
+- *  Copyright (C) 1994-1996  Linus Torvalds & authors
+- */
+-
+-/*
+- *  This file contains the ppc architecture specific IDE code.
+- */
+-
+-#ifndef __ASMPPC_HDREG_H
+-#define __ASMPPC_HDREG_H
+-
+-typedef unsigned long ide_ioreg_t;
+-
+-#endif /* __ASMPPC_HDREG_H */
+-
++#include <asm-generic/hdreg.h>
+diff -puN include/asm-sh/hdreg.h~generic_asm_hdreg include/asm-sh/hdreg.h
+--- linux-2.6.5/include/asm-sh/hdreg.h~generic_asm_hdreg	2004-04-07 23:56:05.913147424 +0200
++++ linux-2.6.5-root/include/asm-sh/hdreg.h	2004-04-07 23:56:05.930144840 +0200
+@@ -1,12 +1 @@
+-/*
+- *  linux/include/asm-sh/hdreg.h
+- *
+- *  Copyright (C) 1994-1996  Linus Torvalds & authors
+- */
+-
+-#ifndef __ASM_SH_HDREG_H
+-#define __ASM_SH_HDREG_H
+-
+-typedef unsigned long ide_ioreg_t;
+-
+-#endif /* __ASM_SH_HDREG_H */
++#include <asm-generic/hdreg.h>
+diff -puN include/asm-sparc64/hdreg.h~generic_asm_hdreg include/asm-sparc64/hdreg.h
+--- linux-2.6.5/include/asm-sparc64/hdreg.h~generic_asm_hdreg	2004-04-07 23:56:05.917146816 +0200
++++ linux-2.6.5-root/include/asm-sparc64/hdreg.h	2004-04-07 23:56:05.930144840 +0200
+@@ -1,13 +1 @@
+-/* $Id: hdreg.h,v 1.1 1999/05/14 07:23:13 davem Exp $
+- * hdreg.h: Ultra/PCI specific IDE glue.
+- *
+- * Copyright (C) 1997  David S. Miller (davem@caip.rutgers.edu)
+- * Copyright (C) 1998  Eddie C. Dost   (ecd@skynet.be)
+- */
+-
+-#ifndef __SPARC64_HDREG_H
+-#define __SPARC64_HDREG_H
+-
+-typedef unsigned long ide_ioreg_t;
+-
+-#endif /* __SPARC64_HDREG_H */
++#include <asm-generic/hdreg.h>
+diff -puN include/asm-sparc/hdreg.h~generic_asm_hdreg include/asm-sparc/hdreg.h
+--- linux-2.6.5/include/asm-sparc/hdreg.h~generic_asm_hdreg	2004-04-07 23:56:05.921146208 +0200
++++ linux-2.6.5-root/include/asm-sparc/hdreg.h	2004-04-07 23:56:05.931144688 +0200
+@@ -1,13 +1 @@
+-/* $Id: hdreg.h,v 1.2 2000/12/05 00:56:36 anton Exp $
+- * hdreg.h: SPARC PCI specific IDE glue.
+- *
+- * Copyright (C) 1997  David S. Miller (davem@caip.rutgers.edu)
+- * Copyright (C) 1998  Eddie C. Dost   (ecd@skynet.be)
+- */
+-
+-#ifndef __SPARC_HDREG_H
+-#define __SPARC_HDREG_H
+-
+-typedef unsigned long ide_ioreg_t;
+-
+-#endif /* __SPARC_HDREG_H */
++#include <asm-generic/hdreg.h>
 
 _
 
