@@ -1,34 +1,26 @@
-From: Hasse Hagen Johansen <hhj@musikcheck.dk>
-Subject: Problem detecting disks on the PATA part of PDC20378
-Date: Tue, 07 Sep 2004 20:39:32 +0200
+From: "Andrew Chew" <AChew@nvidia.com>
+Subject: RE: IDE class driver with SATA controllers
+Date: Tue, 7 Sep 2004 17:21:35 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <413E0064.7040105@musikcheck.dk>
+Message-ID: <DBFABB80F7FD3143A911F9E6CFD477B03F96B2@hqemmail02.nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e81-19-243-105s.easyspeedy.com ([81.19.243.105]:31717 "EHLO
-	hagen-johansen.dk") by vger.kernel.org with ESMTP id S268392AbUIGSjQ
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Sep 2004 14:39:16 -0400
+Received: from hqemgate02.nvidia.com ([216.228.112.145]:26639 "EHLO
+	hqemgate02.nvidia.com") by vger.kernel.org with ESMTP
+	id S268791AbUIHAVn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Sep 2004 20:21:43 -0400
+Content-class: urn:content-classes:message
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi
+> Jeff Garzik wrote:
+> If you want to play, and don't care about lack of ATAPI support (i.e. 
+> just disks), then it is possible today to do this.  #define 
+> ATA_FORCE_PIO and play away :)
 
-I would like to use dmraid to set up my existing Promise fake raid, but 
-it seems that kernel 2.6.8.1 doesn't detect the individual discs on the 
-PDC20378 controller, som I am again out of luck trying to upgrade to the 
-2.6.x kernels.
-
-Is there any plans or fixes to detect PATA discs on this controller, 
-i've seen that people say that the SATA part works fine, but I am pretty 
-stuck right now (I should never have used that fakeraid). I am writing 
-here as I didn't get any info from the severel distribtution lists, and 
-one LUG lists I am on.
-
-Acutally I will just hear if there is any hope in using this controller 
-at all
-
-Best Regards
-Hasse
+I don't see ATA_FORCE_PIO anywhere in the linux-2.6.9-rc1-bk14 tree.  Am
+I looking for the wrong #define?
