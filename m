@@ -1,76 +1,32 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
+From: Lee Revell <rlrevell@joe-job.com>
 Subject: Re: 2.6.11, IDE: Strange scheduling behaviour: high-pri RT process
- not scheduled?
-Date: Wed, 30 Mar 2005 09:41:40 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0503300931350.7542-100000@coffee.psychology.mcmaster.ca>
-References: <AAD6DA242BC63C488511C611BD51F3673231C2@MAILIT.keba.co.at>
+	not scheduled?
+Date: Wed, 30 Mar 2005 15:37:58 -0500
+Message-ID: <1112215078.17365.11.camel@mindpipe>
+References: <Pine.LNX.4.44.0503300931350.7542-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from coriana6.CIS.McMaster.CA ([130.113.128.17]:36591 "EHLO
-	coriana6.cis.mcmaster.ca") by vger.kernel.org with ESMTP
-	id S261917AbVC3OmO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Mar 2005 09:42:14 -0500
-In-Reply-To: <AAD6DA242BC63C488511C611BD51F3673231C2@MAILIT.keba.co.at>
+Received: from viper.oldcity.dca.net ([216.158.38.4]:50886 "HELO
+	viper.oldcity.dca.net") by vger.kernel.org with SMTP
+	id S261175AbVC3UiA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Mar 2005 15:38:00 -0500
+In-Reply-To: <Pine.LNX.4.44.0503300931350.7542-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kus Kusche Klaus <kus@keba.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Mark Hahn <hahn@physics.mcmaster.ca>
+Cc: kus Kusche Klaus <kus@keba.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> I've written a small test program which enables periodic RTC interrupts 
-> at 8192 Hz and then goes into a loop reading /dev/rtc and collecting 
-> timing statistics (using the rdtscl macro).
-
-straightforward test, used for many years in the linux community
-(I claim to have been the first to publish it on lkml ;)
-
-> The test system runs a 2.6.11 kernel (no SMP) on a Pentium3 500 MHz 
-> embedded hardware.
-
-which probably has memory bandwidth of at most a couple hundred MB/s,
-which is really horrible by modern standards.
-
-> However, things break seriously when exercising the CF card in parallel 
-> (e.g. with a dd if=/dev/hda of=/dev/null):
+On Wed, 2005-03-30 at 09:41 -0500, Mark Hahn wrote:
+> >> The test system runs a 2.6.11 kernel (no SMP) on a Pentium3 500 MHz 
+> > embedded hardware.
 > 
-> * The rtc *interrupt handler* is delayed for up to 250 *micro*seconds. 
-> This is very bad for my purpose, but easy to explain: It is roughly the 
-> time needed to transfer 512 Bytes from a CF card which can transfer 2 
-> Mbyte/sec, and obviously, the CPU blocks all interrupts while making pio
-> 
-> transfers. (Why? Is this really necessary?)
+> which probably has memory bandwidth of at most a couple hundred MB/s,
+> which is really horrible by modern standards.
 
-even with -u1, isn't there still a softirq queue that will delay the wakeup
-of your user-space tester?
+What does that have to do with anything?  He said it was an embedded
+system.
 
-> * The *test program* is regularly blocked for 63 *milli*seconds, 
-> sometimes for up to 300 *milli*seconds, which is absolutely
-> unacceptable.
-
-guessing that's VM housekeeping.
-
-> Now the big question:
-> *** Why doesn't my rt test program get *any* CPU for 63 jiffies? ***
-> (the system ticks at 1000 HZ)
-
-because it's user-space.  the 'rt' is a bit of a misnomer - it's merely
-a higher priority, less preemptable job.
-
-> * The dd program obviously gets some CPU regularly (because it copies 2 
-> MB/s, and because no other program could cause the 1 % user CPU load). 
-> The dd runs at normal shell scheduling priority, so it should be 
-> preempted immediately by my test program!
-
-out of curiosity, does running it with "nice -n 19" change anything?
-
-> 2.) Using a realtime-preempt-2.6.12-rc1-V0.7.41-11 kernel with
-> PREEMPT_RT:
->     If my test program runs at rtpri 99, the problem is gone: It is 
->     scheduled within 30 microseconds after the rtc interrupt.
->     If my test program runs at rtpri 1, it still suffers from delays 
->     in the 30 to 300 millisecond range.
-
-so your problem is solved, no?
-
-also, did you try a (plain) preemptable kernel?
+Lee
 
