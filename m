@@ -1,39 +1,61 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: linux-2.4.28 released
-Date: Wed, 24 Nov 2004 15:08:39 -0500
-Message-ID: <41A4EA47.2040304@pobox.com>
-References: <BF571719A4041A478005EF3F08EA6DF062D0B5@pcsmail03.pcs.pc.ome.toshiba.co.jp>
+From: "Mark Klarzynski" <mark.k@computer-design.co.uk>
+Subject: good drive / bad drive  (maxtor topic)
+Date: Wed, 24 Nov 2004 17:36:41 -0000
+Message-ID: <02e101c4d24c$2937d990$4500a8c0@MarkK>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:31666 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262827AbUKXUI7
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Nov 2004 15:08:59 -0500
-In-Reply-To: <BF571719A4041A478005EF3F08EA6DF062D0B5@pcsmail03.pcs.pc.ome.toshiba.co.jp>
+Received: from server6.tcw.telecomplete.net ([213.160.116.7]:5 "EHLO
+	server6.tcw.telecomplete.net") by vger.kernel.org with ESMTP
+	id S262856AbUKXVXn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Nov 2004 16:23:43 -0500
+Received: from host13.cdg.adsl.telecomplete.net ([213.160.101.94] helo=Chris.Domain)
+	by server6.tcw.telecomplete.net with esmtp (Exim 4.34)
+	id 1CX149-0007VO-2U
+	for linux-ide@vger.kernel.org; Wed, 24 Nov 2004 17:36:30 +0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
-Cc: Alan Cox <alan@redhat.com>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Marcelo Tosatti <marcelo@hera.kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Tomita, Haruo wrote:
-> It may be unavoidable one that ata_piix does not work. 
-> But, it is a problem that a DMA transfer does not enable by piix. 
-> Don't you think so?
+In the world of hardware raid we decide that a drive has failed based on
+various criteria, one of which is the obvious 'has the drive responded'
+within a set time.  This set time various depending on the drive, the
+application, the load etc.  This 'timeout' value is realistically
+between 6 and 10 seconds.  There is no real formula, just lots of
+experience. Set it too short and drives will look failed too often, set
+it too long and you risk allowing a suspect drive to continue.
+
+Once we detect a timeout we have to decide what to with it. in SCSI we
+issue a scsi bus rest (hardware reset on the bus).. the reason we do
+this (and all hardware raid manufactures) is because life is just that
+way. drives do lock up.   We issue up to 3 resets, and then fail.  This
+is extremely effective and does exactly what it is supposed to do.
+Often the drive will never cause an issue again. if it is faulty then it
+will escalate and fail.
+
+We have utilised countless sata drives, and timeouts are by far the most
+significant failure we see and as sata (although its hard to tell much
+else on sata).. but it is therefore imperative that the timeout values
+are correct for the drive and the application.
+
+But the point is that we do not see anywhere near the failure rates on
+the Maxtor's that you guys are mentioning.  Also, if we trial sata's on
+different hardware RAID's we see differing failure rates... (i.e. ICP
+come in higher then 3ware, which are higher than the host independent
+raids we have tested and so on)
+
+So I am wondering if it is worth thinking about the timeout values?  And
+what do you do once the drive has timed out?
+
+I am seeing some tremendous work going on in this group and without a
+doubt this community is going to propel MD to enterprise level raid one
+day. so this is honestly meant as constructive and is based on way too
+many years designing raid solutions. i.e. I'm not looking to start an
+argument simply offering some information.
 
 
-This is unavoidable.  Two drivers grabbing the same PCI I/O range is
-dangerous.
 
-Now that libata supports PATA, it would be easier to let libata support
-both SATA and PATA.  Since that is a single driver, it makes DMA easy to
-support for both SATA/PATA.
-
-If libata does this, there needs to be a "ide=disable" or
-"legacy_ide=libata" switch added somewhere, for the cases (most distros)
-where IDE driver is built-in.
-
-	Jeff
 
 
