@@ -1,74 +1,63 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: H8/300 target support patch
-Date: Sat, 28 Feb 2004 18:55:15 +0100
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200402281855.15611.bzolnier@elka.pw.edu.pl>
-References: <m2y8r4naht.wl%ysato@users.sourceforge.jp> <200402262026.51202.bzolnier@elka.pw.edu.pl> <m2brnj3zop.wl%ysato@users.sourceforge.jp>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH/RFT] libata "DMA timeout" fix
+Date: Sat, 28 Feb 2004 14:10:45 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <4040E7B5.4020709@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:23742 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261880AbUB1RsT
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 28 Feb 2004 12:48:19 -0500
-In-Reply-To: <m2brnj3zop.wl%ysato@users.sourceforge.jp>
-Content-Disposition: inline
+Content-Type: multipart/mixed;
+ boundary="------------070400050706040108030905"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+To: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org
 
-On Saturday 28 of February 2004 18:02, Yoshinori Sato wrote:
-> At Thu, 26 Feb 2004 20:26:51 +0100,
->
-> Bartlomiej Zolnierkiewicz wrote:
-> > On Thursday 26 of February 2004 17:46, Yoshinori Sato wrote:
-> > > At Sun, 22 Feb 2004 18:28:18 +0100,
-> > >
-> > > Bartlomiej Zolnierkiewicz wrote:
-> > > > On Sunday 22 of February 2004 18:08, Bartlomiej Zolnierkiewicz wrote:
-> > > > > > I corrected it to initialize it with ide_init_default_hwifs.
-> > > > > > A correction of ide.c becomes needless.
-> > > > >
-> > > > > NO!!!  ide_init_default_hwifs() should DIE!
-> > > > > The same goes for ide_default_{irq,io_base}().
-> > > > >
-> > > > > They are not needed - you have driver(s) for H8/300 IDE
-> > > > > controllers!
-> > > >
-> > > > It should be like that:
-> > > >
-> > > > You should have host drivers for your IDE controllers,
-> > > > not inline functions for ide.c and ide-probe.c.
-> > >
-> > > I tuned to a driver of PC/AT wherever practicable.
-> >
-> > Just because original/legacy PC/AT driver is braindamaged (and dated)
-> > doesn't mean your code should be, does it?  Hiding driver's code into
-> > asm/ide.h causes MAJOR problems for IDE code reorganization.
-> >
-> > > Examination is necessary for a call method of h8300_hwif_iops.
-> >
-> > All ide-iops.c #ifdef-s won't be needed if you separate you driver
-> > properly from asm/ide.h (thus overriding default_hwif_iops() ops
-> > by ones used by your driver).
-> >
-> > Please revert to putting your code into ide/h8300/.
->
-> I did overriding of default_hwif_iops in form to replace obj because
-> it was not possible well.
->
-> It is difference m with linux-2.6.4-rc1.
+This is a multi-part message in MIME format.
+--------------070400050706040108030905
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This change won't be needed if you correct your driver as asked.
-BTW Your patch re-adds recently deleted unplugged_hwif_iops for no reason.
 
-> Do not change asm/ide.h.
+The desired effect of a DMA timeout should be to throw an I/O error, but 
+that doesn't appear to be happening.
 
-Please correct your patch to not abuse asm/ide.h (ide_init_default_hwifs(),
-ide_default_irq() and ide_default_io_base() needs to die).
+Those seeing DMA timeout messages, please test this patch.
 
-Cheers,
-Bartlomiej
+Kernel hacker note:  James B recommended that I implement my own 
+scsi_done() function, which duplicates the real scsi_done() but omits 
+the scsi_delete_timer() call.  This is probably the best long term fix, 
+but doing so involves exporting several currently-private bits of SCSI 
+mid-layer, which I would rather not do.  Probably best to create a 
+__scsi_done() inside the SCSI mid-layer, and call that.
+
+	Jeff, the only user of ->eh_strategy_handler() in any kernel
+
+
+
+
+--------------070400050706040108030905
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+===== drivers/scsi/libata-core.c 1.19 vs edited =====
+--- 1.19/drivers/scsi/libata-core.c	Wed Feb 25 22:41:13 2004
++++ edited/drivers/scsi/libata-core.c	Sat Feb 28 14:03:18 2004
+@@ -2130,6 +2130,14 @@
+ 				cmd->result = SAM_STAT_CHECK_CONDITION;
+ 			else
+ 				ata_to_sense_error(qc);
++
++			/* hack alert! we need this to get past the
++			 * first check in scsi_done().  libata is the
++			 * -only- user of ->eh_strategy_handler() in
++			 * any kernel tree, which exposes some incorrect
++			 * assumptions in the SCSI layer.
++			 */
++			scsi_add_timer(cmd, 2000 * HZ, NULL);
+ 		} else {
+ 			cmd->result = SAM_STAT_GOOD;
+ 		}
+
+--------------070400050706040108030905--
 
