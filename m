@@ -1,41 +1,57 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: CPRM ?? Re: Possibly wrong BIO usage in ide_multwrite
-Date: Sun, 4 Jan 2004 11:42:16 +0100
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040104104216.GC3418@suse.de>
-References: <20040103105721.GA24957@suse.de> <Pine.LNX.4.10.10401031153080.31033-100000@master.linux-ide.org>
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: Re: [PATCH] fix issues with loading PCI ide drivers as modules (linux 2.6.0)
+Date: Sun, 4 Jan 2004 15:47:52 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200401041547.52615.bzolnier@elka.pw.edu.pl>
+References: <20040103152802.6e27f5c5.davmac@ozonline.com.au> <200401040452.17659.bzolnier@elka.pw.edu.pl> <20040104173129.60cde487.davmac@ozonline.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:43169 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S265363AbUADKm3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jan 2004 05:42:29 -0500
+Content-Type: text/plain;
+  charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20040104173129.60cde487.davmac@ozonline.com.au>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.10.10401031153080.31033-100000@master.linux-ide.org>
+To: Davin McCall <davmac@ozonline.com.au>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andre Hedrick <andre@linux-ide.org>
-Cc: Christophe Saout <christophe@saout.de>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, Jan 03 2004, Andre Hedrick wrote:
-> 
-> Jens,
-> 
-> Would that need bleach, detergent, or softener?
-> You should try the mirror as my original concerns were addressed to
+On Sunday 04 of January 2004 07:31, Davin McCall wrote:
+> > > What about this is a solution to these problems:
+> > >  - set hwif->chipset to "ide_generic" instead of leaving it as
+> > > "ide_unknown" (ide-probe.c); - if ide_match_hwif() returns an already
+> > > allocated hwif, do not clobber it in ide_hwif_configure() (setup-pci.c)
+> >
+> > This brakes "idex=base..." parameters for PCI chipsets.
+> > They shouldn't be needed in this case, but...
+>
+> As far as i can see "idex=base.." is broken for PCI chipsets anyway- if the
+> detected PCI base doesn't match the forced one, the PCI will be allocated a
+> seperate hwif (ie as a seperate ideX) anyway. So you can't force the base
+> port of a PCI-chipset controller.
 
-Your 'original concerns' were not original, they are the same crap you
-spout any chance you get. I don't even remember when I last saw an email
-from you with actual content. Maybe I should just get it over and done
-with and finally black list your email.
+Yes, but you can force order.
 
-> Christophe, and there are to many letters in his name for even you to
-> confuse spellings. :-)
+> Do you mean that, if "idex=base..." is give, and the base is correct for
+> the PCI device, then it should work ok? If so it seems the easiest way to
 
-Midly amusing, you talking about spelling.
+Yes.
 
-I dunno why I keep getting suckered into this, it's obvious you're
-looking for these fights. I'll stop taking the bait now.
+> fix it is to introduce another dummy chipset type (lets say
+> "ide_generic_forced") which is set (instead of ide_generic) when "idex=.."
+> is parsed. Then check for this in ide_hwif_configure(). Would also need to
+> modify ide_match_hwif() (so it returns a match for "ide_generic_forced" as
+> well as for "ide_generic") and ide_probe_init() would have to change
+> "ide_generic_force" to "ide_generic" (to handle the case that no PCI
+> chipset took control).
 
--- 
-Jens Axboe
+Ehh, more hwif->chipset crap.
 
+> So we handle these situations:
+> - idex=... specified and no PCI chipset
+> - idex=... specified and PCI chipset present
+> - PCI chipset module loaded after ide initialization complete
+
+Please explain me why to change current behavior.  "takeover" still want be
+possible, so it will be only cosmetic change which complicates code.
+
+--bart
