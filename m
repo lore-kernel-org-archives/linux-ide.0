@@ -1,49 +1,37 @@
-From: Andries Brouwer <aebr@win.tue.nl>
+From: Miles Lane <miles@megapathdsl.net>
 Subject: Re: [PATCH] 2.4 IDE core for 2.5
-Date: Tue, 9 Jul 2002 22:07:11 +0200
+Date: 09 Jul 2002 14:43:12 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20020709200711.GA13401@win.tue.nl>
+Message-ID: <agflsf$oos$2@main.gmane.org>
 References: <20020709102249.GA20870@suse.de>
+	 <200207091313.07199.roy@karlsbakk.net>  <20020709112054.GB9551@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020709102249.GA20870@suse.de>
+In-Reply-To: <20020709112054.GB9551@suse.de>
 List-Id: linux-ide@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Tue, Jul 09, 2002 at 12:22:49PM +0200, Jens Axboe wrote:
+On Tue, 2002-07-09 at 04:20, Jens Axboe wrote:
+> On Tue, Jul 09 2002, Roy Sigurd Karlsbakk wrote:
+> > hi
+> > 
+> > Should I add IDE9[4567] as well, or does these ones include previous IDE 
+> > pathes?
+> 
+> Well, the whole point of this patch set is _not_ to use the 2.5 ide core
+> for now. When configuring your kernel, you get the choice of using
+> 2.4-ide or 2.5-ide. If you choose 2.5-ide, then yes you should add those
+> patches (I guess). If you choose 2.4-ide (which most users of the patch
+> set would do, why else apply it?!), then it doesn't matter.
 
-> I've forward ported the 2.4 IDE core to 2.5.25.
+Thankyou Jens,
 
-Very good!
+It is really quite perturbing to think how much the IDE instability
+has held back development of other features in the unstable kernel.
+The warm reception of your patch speaks volumes.
 
-There are two kinds of objections.
-The minor one is political - you can imagine.
-The major one is technical. You did not port the 2.4 good PIO
-behaviour to 2.5. Bartlomiej already warned about this, so I
-need only confirm:
-
-This afternoon I booted 2.5.25 with your patches and two more,
-one to prevent an oops when shutting down, the other to fix
-ethernet cards detection. Started torturing two disks on
-HPT366. After 3 minutes
-
-	hde: status error: status=0x50 { DriveReady SeekComplete }
-	hde: no DRQ after issuing WRITE
-
-and seven minutes later
-
-	hde: task_out_intr: status=0x51 { DriveReady SeekComplete Error }
-	hde: task_out_intr: error=0x04 { DriveStatusError }
-
-Soon lots of processes were hanging in D. Reboot. e2fsck.
-
-Then booted vanilla 2.4.17. Tortured disks in the same way.
-After several hours all is still perfect. I'll leave this
-for a night, but so far I have never seen these errors on 2.4
-and very often in recent 2.5.
-
-Andries
+	Miles
 
