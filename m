@@ -1,49 +1,31 @@
-From: Peter Chubb <peterc@gelato.unsw.edu.au>
-Subject: Can't disable IDE DMA on 2.6.0-test9 (patch)
-Date: Fri, 21 Nov 2003 10:05:35 +1100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <16317.18623.912339.111750@wombat.disy.cse.unsw.edu.au>
+From: Dennis Bijwaard <bijwaard@home.nl>
+Subject: 2.6.0test10 hangs just after IDE detection
+Date: Wed, 26 Nov 2003 22:54:48 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20031126215448.GA1801@bijwaard.dyns.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Received: From wombat.disy.cse.unsw.edu.au ([129.94.239.42]) (for <akpm@osdl.org>)
-	(for <B.Zolnierkiewicz@elka.pw.edu.pl>)
-	(for <linux-ide@vger.kernel.org>)
-	(for <linux-kernel@vger.kernel.org>) By note With Smtp ;
-	Fri, 21 Nov 2003 10:05:36 +1100
-To: akpm@osdl.org, B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cc76797-a.ensch1.ov.home.nl ([213.51.205.160]:6528 "EHLO
+	jumbo.gronausestraat") by vger.kernel.org with ESMTP
+	id S264294AbTKZVyx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 26 Nov 2003 16:54:53 -0500
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-ide@vger.kernel.org
 
+Hi,
 
-Hi Folks,
-   If you try to disable IDE DMA from Kconfig, you'll end up with an
-undefined symbol, ide_hwif_setup_dma().
+I've been running 2.6.0test9 and earlier without much problems w.r.t.
+IDE. Now with test10 it hangs just after IDE detection. I suspect this 
+is because I have IDEDISK configured as a module because my main drives are 
+all SCSI. I use CONFIG_PREEMPT.
 
-The attached rather ugly patch fixes the problem by defining a dummy
-function.
+This is the last that the kernel reports before it stops (does not react
+to SysRq interupts):
 
-===== setup-pci.c 1.19 vs edited =====
---- 1.19/drivers/ide/setup-pci.c	Sat Oct 18 01:22:22 2003
-+++ edited/setup-pci.c	Wed Nov 19 13:52:25 2003
-@@ -474,6 +474,11 @@
-  *	state
-  */
-  
-+#ifndef CONFIG_BLK_DEV_IDEDMA_PCI
-+static void ide_hwif_setup_dma(struct pci_dev *dev, ide_pci_device_t *d, ide_hwif_t *hwif)
-+{
-+}
-+#else
- static void ide_hwif_setup_dma(struct pci_dev *dev, ide_pci_device_t *d, ide_hwif_t *hwif)
- {
- 	u16 pcicmd;
-@@ -516,6 +521,7 @@
- 		}
- 	}
- }
-+#endif /* CONFIG_BLK_DEV_IDEDMA_PCI*/
- 
- /**
-  *	ide_setup_pci_controller	-	set up IDE PCI
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+-- 
+Kind regards,
+            Dennis Bijwaard
