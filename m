@@ -1,92 +1,68 @@
-From: Dave <dave.jiang@gmail.com>
-Subject: Re: [PATCH] updates to Vitesse SATA driver
-Date: Thu, 23 Sep 2004 15:28:38 -0700
+From: "Joel Soete" <soete.joel@tiscali.be>
+Subject: Re: [parisc-linux] Re: a fix for NS87415 on C3K broken
+Date: Fri, 24 Sep 2004 09:04:25 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <8746466a04092315285ba54b30@mail.gmail.com>
-References: <8746466a04092114163b3c0618@mail.gmail.com>
-	 <20040922020614.GA148273@sgi.com>
-	 <8746466a0409220859ed0682f@mail.gmail.com>
-	 <8746466a04092210094f859468@mail.gmail.com>
-	 <20040922201327.GD151463@sgi.com>
-Reply-To: Dave <dave.jiang@gmail.com>
+Message-ID: <4152E8820000014C@mail-7-bnl.tiscali.it>
+References: <20040923162750.GX22642@tausq.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.197]:31291 "EHLO mproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S267466AbUIWW2m (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Sep 2004 18:28:42 -0400
-Received: by mproxy.gmail.com with SMTP id 73so2108329rnk
-        for <linux-ide@vger.kernel.org>; Thu, 23 Sep 2004 15:28:38 -0700 (PDT)
-In-Reply-To: <20040922201327.GD151463@sgi.com>
+Received: from mail-7-bnl.tiscali.it ([213.205.33.227]:55787 "EHLO
+	mail-7-bnl.tiscali.it") by vger.kernel.org with ESMTP
+	id S267535AbUIXHEf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Sep 2004 03:04:35 -0400
+In-Reply-To: <20040923162750.GX22642@tausq.org>
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>
+To: Randolph Chung <randolph@tausq.org>
+Cc: Grant Grundler <grundler@parisc-linux.org>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>, parisc-linux@parisc-linux.org
 
-On Wed, 22 Sep 2004 13:13:28 -0700, Jeremy Higdon <jeremy@sgi.com> wrote:
-> 
-> 
-> On Wed, Sep 22, 2004 at 10:09:03AM -0700, Dave wrote:
-> > On Wed, 22 Sep 2004 08:59:06 -0700, Dave <dave.jiang@gmail.com > wrote:
-> > > On Tue, 21 Sep 2004 19:06:14 -0700, Jeremy Higdon <jeremy@sgi.com > wrote:
-> > > > On Tue, Sep 21, 2004 at 02:16:46PM -0700, Dave wrote:
-> > > > > After getting that working I noticed that the last_ctl value gets
-> > > > > changed back by the LIBATA core and the Vitesse SATA driver depends on
-> > > > > the previous value in order to unmask the interrupt. So it seems that
-> > > > > there's no need to set/unset the interrupt masks in the first place if
-> > > > > we set the CTL register with ATA_NIEN directly, which I believe is
-> > > > > probably the way LIBATA intended the driver to do. After doing that
-> > > > > everything seems to be working great. So I suppose
-> > > > > vsc_intr_mask_update() is no longer needed probably.
-> > > >
-> > > > The chip specification says not to set it that way.  Are you using
-> > > > the chip in DPA mode or PCI-IDE mode?  The driver assumes the former.  I
-> > > > don't know why anyone would use the chip in PCI-IDE mode.
-> > >
-> > > Hmmm...I did not see it in the spec. Can you provide the pointer to
-> > > the spec please? Thanks! I am using it in DPA mode. If you are in
-> > > PCI-IDE mode, all registers would reside in different BARs and the
-> > > card wouldn't work anyways with that driver. I copied the section from
-> > > sata_svw.c. And it seems to work just fine. I don't see how the
-> > > previous method would be working. In vsc_sata_tf_load a compare is
-> > > done between the tf->ctl and the ap->last_ctl. However, if I do it
-> > > with the current method, I continue to see ap->last_ctl with ATA_NIEN
-> > > cleared even though the previous value was set. Therefore the driver
-> > > never unmask the IDE interrupt and thus hang.  What happened was, host
-> > > 1, dev 0 was probed and was okay. Then it attempted to probe host 1,
-> > > dev 1, which of course does not exist, so at exit, ata_irq_on() was
-> > > called. With that the last_ctl was reset with ATA_NIEN cleared.
-> > > Therefore when the driver does the compare of ctl with last_ctl, it
-> > > sees no difference, and therefore interrupt mask never changed.
-> >
-> > I see what you mean by the spec regarding the ATA_NIEN bit. ATA_NIEN
-> > is reserved bit in DPA mode. I guess it still works. But to do the
-> > things the right way now this becomes a problem since as I mentioned
-> > above, libata-core can change the last_ctl value without the driver's
-> > knowledge. So really we cannot always depend on last_ctl to be the
-> > last_ctl the driver has set. I'm not exactly sure yet why the driver
-> > works on IA in the current state. Everything tells me it shouldn't....
-> > Unless there's something that I'm suppose to configure to force it not
-> > probe device 1 since in SATA there's never device 1?
-> 
-> I can tell you that it works fine on our Altix (IA64 Numa) boxes with
-> 1 - 4 drives attached.  I don't recall exactly how we tell libata that
-> there is only one device per port -- there must be a parameter somewhere :-)
-> I do remember that we had to explicitly tell the IDE layer about that,
-> for the IDE version of the driver in lk2.4.
-> 
-> jeremy
-> 
 
-Jeff, 
-would it make sense in this case to provide a callback from the
-libata-core such that when libata calls the routine to clear/mask the
-interrupt, the driver can also do any fixups that it needs? I would
-think this would help those HBAs that do not support ATA_NIEN as such
-of a case here. True we can perhaps somehow force the driver to not
-scan the second device, but what happens when SATA port expanders come
-out? Will that be an issue then? (Not that I've thought much about
-that....).
+Hello Randolph,
 
--- 
--= Dave =-
+>=20
+> > But when I try to use the ide-cdrom the system carsh with such oops=
+:
+> > Backtrace:
+> >  [<000000001017e0d8>] drain_array_locked+0x98/0x148
+> >  [<000000001017e2c4>] cache_reap+0x13c/0x2b0
+> >  [<000000001015e574>] worker_thread+0x284/0x330
+> >  [<0000000010164714>] kthread+0x12c/0x138
+> >  [<000000001010647c>] ret_from_kernel_thread+0x24/0x38
+>=20
+> maybe this will help:
+> http://marc.theaimsgroup.com/?l=3Dlinux-kernel&m=3D109529103522064&w=3D=
+2
+>
+Thanks for advise, it does the trick  :)
+
+> but we are seeing some of these slab errors with this build that are =
+not
+> cdrom related too... :(
+>
+mmm On the N4k with some 2.6.9-rc2-pa6 release, I lso noticed a crash w=
+ith
+IAOQ refering to free_block () (eventhought that this system loop all t=
+he
+night to make -j4 vmlinux without any pb; I just stop the loop and rest=
+art
+it later and ... panic() ?)
+=20
+> can you try compiling with slab debug (under kernel debugging)?
+>=20
+Of course and btw I will rebuild a 2.6.9-rc2-pa_7_ for the N4k too and =
+a
+32b for a b180 and a chroot disk to test the new Carlos glibc build ;)
+
+Thansk again for all advise,
+    Joel
+
+-----------------------------------------------------------------------=
+----
+Tiscali ADSL GO, 29,50 Euro/mois pendant toute une ann=E9e, profitez-en=
+=2E..
+http://reg.tiscali.be/adsl/welcome.asp?lg=3DFR
+
+
+
+
