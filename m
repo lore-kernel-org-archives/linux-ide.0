@@ -1,64 +1,38 @@
 From: Tejun Heo <tj@home-tj.org>
-Subject: Re: [PATCH 2.6.11-rc2 03/29] ide: cleanup opti621
-Date: Wed, 2 Feb 2005 11:45:38 +0900
-Message-ID: <20050202024538.GD621@htj.dyndns.org>
+Subject: Re: [PATCH 2.6.11-rc2 06/29] ide: IDE_CONTROL_REG cleanup
+Date: Wed, 2 Feb 2005 11:48:30 +0900
+Message-ID: <20050202024830.GG621@htj.dyndns.org>
 References: <20050202024017.GA621@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Received: from [211.58.254.17] ([211.58.254.17]:49289 "EHLO hemosu.com")
+	by vger.kernel.org with ESMTP id S262219AbVBBCsc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2005 21:48:32 -0500
 Content-Disposition: inline
 In-Reply-To: <20050202024017.GA621@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> 03_ide_cleanup_opti621.patch
+> 06_ide_start_request_IDE_CONTROL_REG.patch
 > 
-> 	In drivers/ide/pci/opti612.[hc], init_setup_opt621() is
-> 	declared, defined and referenced but never actullay used.
-> 	Thie patch removes the function.
+> 	Replaced HWIF(drive)->io_ports[IDE_CONTROL_OFFSET] with
+> 	equivalent IDE_CONTROL_REG in ide-io.c.
 
 
-Signed-off-by: Tejun Heo <tj@home-tj.org>                                       
+Signed-off-by: Tejun Heo <tj@home-tj.org>
 
-Index: linux-ide-export/drivers/ide/pci/opti621.c
+
+Index: linux-ide-export/drivers/ide/ide-io.c
 ===================================================================
---- linux-ide-export.orig/drivers/ide/pci/opti621.c	2005-02-02 10:27:16.326131292 +0900
-+++ linux-ide-export/drivers/ide/pci/opti621.c	2005-02-02 10:28:01.947729558 +0900
-@@ -348,11 +348,6 @@ static void __init init_hwif_opti621 (id
- 	hwif->drives[1].autodma = hwif->autodma;
- }
- 
--static int __init init_setup_opti621 (struct pci_dev *dev, ide_pci_device_t *d)
--{
--	return ide_setup_pci_device(dev, d);
--}
--
- static int __devinit opti621_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- {
- 	return ide_setup_pci_device(dev, &opti621_chipsets[id->driver_data]);
-Index: linux-ide-export/drivers/ide/pci/opti621.h
-===================================================================
---- linux-ide-export.orig/drivers/ide/pci/opti621.h	2005-02-02 10:27:16.327131130 +0900
-+++ linux-ide-export/drivers/ide/pci/opti621.h	2005-02-02 10:28:01.948729395 +0900
-@@ -5,13 +5,11 @@
- #include <linux/pci.h>
- #include <linux/ide.h>
- 
--static int init_setup_opti621(struct pci_dev *, ide_pci_device_t *);
- static void init_hwif_opti621(ide_hwif_t *);
- 
- static ide_pci_device_t opti621_chipsets[] __devinitdata = {
- 	{	/* 0 */
- 		.name		= "OPTI621",
--		.init_setup	= init_setup_opti621,
- 		.init_hwif	= init_hwif_opti621,
- 		.channels	= 2,
- 		.autodma	= AUTODMA,
-@@ -19,7 +17,6 @@ static ide_pci_device_t opti621_chipsets
- 		.bootable	= ON_BOARD,
- 	},{	/* 1 */
- 		.name		= "OPTI621X",
--		.init_setup	= init_setup_opti621,
- 		.init_hwif	= init_hwif_opti621,
- 		.channels	= 2,
- 		.autodma	= AUTODMA,
+--- linux-ide-export.orig/drivers/ide/ide-io.c	2005-02-02 10:27:15.996184821 +0900
++++ linux-ide-export/drivers/ide/ide-io.c	2005-02-02 10:28:03.340503581 +0900
+@@ -884,7 +884,7 @@ static ide_startstop_t start_request (id
+ 		if (rc)
+ 			printk(KERN_WARNING "%s: bus not ready on wakeup\n", drive->name);
+ 		SELECT_DRIVE(drive);
+-		HWIF(drive)->OUTB(8, HWIF(drive)->io_ports[IDE_CONTROL_OFFSET]);
++		HWIF(drive)->OUTB(8, IDE_CONTROL_REG);
+ 		rc = ide_wait_not_busy(HWIF(drive), 10000);
+ 		if (rc)
+ 			printk(KERN_WARNING "%s: drive not ready on wakeup\n", drive->name);
