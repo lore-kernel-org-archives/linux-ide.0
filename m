@@ -1,132 +1,159 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: arm-lh7a40x IDE support in 2.6.6
-Date: Fri, 14 May 2004 20:45:51 +0200
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: SATA ATAPI work in progress
+Date: Fri, 14 May 2004 14:55:00 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200405142045.51875.bzolnier@elka.pw.edu.pl>
-References: <200405141840.04401.bzolnier@elka.pw.edu.pl> <20040514172656.GA18884@buici.com>
+Message-ID: <40A51604.8070208@pobox.com>
+References: <1084393233.3999.2.camel@patibmrh9> <40A28BB6.7090204@pobox.com>	<1084403654.3196.31.camel@patibmrh9>  <40A3E595.8000003@pobox.com> <1084559000.4017.52.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:13742 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S262052AbUENSoq
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:18870 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262205AbUENSzP
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 May 2004 14:44:46 -0400
-In-Reply-To: <20040514172656.GA18884@buici.com>
-Content-Disposition: inline
+	Fri, 14 May 2004 14:55:15 -0400
+In-Reply-To: <1084559000.4017.52.camel@patibmrh9>
 List-Id: linux-ide@vger.kernel.org
-To: Marc Singer <elf@buici.com>
-Cc: rmk@arm.linux.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: linux-ide@vger.kernel.org
 
-On Friday 14 of May 2004 19:26, Marc Singer wrote:
-> On Fri, May 14, 2004 at 06:40:04PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > I was just porting my patches killing <asm/arch/ide.h> for
-> > ARM to 2.6.6 when noticed that more work is needed now. :-(
-> >
-> > arch/arm/mach-lh7a40x/ide-lpd7a40x.c
-> > include/asm-arm/arch-lh7a40x/ide.h
-> >
-> > Why it couldn't be done in drivers/ide/arm
-> > (as discussed on linux-ide)?
->
-> Your response took look enough for me to switch to another job.  I
-> haven't yet returned to dealing with this.
+Pat LaVarre wrote:
+> Jeff G:
+> 
+> 
+>>This is important because some AHCI SATA controllers can only transfer
+>>a _single_ DRQ block per disk transaction.  In anticipation of the
+>>demise of PIO, no doubt :)
+> 
+> 
+> Eh?  What's a "disk transaction"?
 
-Yes, it took too long.
+The point when the Host-to-Device Register FIS ("command FIS") is sent 
+to the device, all the DMA / Data FIS's sent, and then the final 
+Device-to-Host Register FIS.
 
-Anyway, pushing non-working code to mainline is a bad thing
-(I can show some proofs for this statement).
+In other words, one ATA taskfile, and the operations that that taskfile 
+generates.
 
-> > Code from <asm/ide.h> is inlined into IDE core code in far too
-> > many interesting places which greatly increasing complexity/insanity
-> > to anybody trying to understand or change it.
-> >
-> > The rule is simple:
-> > 	code outside drivers/ide SHOULDN'T need to know about <linux/ide.h>.
->
-> I am emulating what has come before.  All of my examples look like
-> what I did.
+Therefore, for controllers that are limited to a single DRQ block per 
+disk transaction, the OS driver _must_ limit each ATA taskfile to no 
+more than a DRQ block's worth of sector.  If the ATAPI byte count limit 
+is 8K, then the OS driver must guarantee that a single ATA taskfile does 
+not transfer more than 8K.
 
-Please point me to some (working) code outside drivers/ide
-which knows i.e. something about 'ide_hwif_t' type.
 
-[ you used 'struct ide_hwif_s' in arch-lh7a40x/ide.h to workaround this 8) ]
+> Do we mean to say that some SATA controllers choke over the (rare)
+> device rudeness of an INTRQ for every two bytes of the standard x24 (36)
+> bytes of op x12 (18) Inquiry, for example?
 
-> > WTF everybody wants to be "smart" and abuses it?
-> > [ and then people complain why IDE is so ugly ]
->
-> Where's the model?
+INTRQ is a PATA notion :)
 
-drivers/ide/arm/icside.c
+SATA controllers receive FIS's with an 'I' bit set, indicating the 
+device wishes to assert an interrupt.
 
-My main concerns are:
+[though certainly with bridges often on both sides, INTRQ hasn't gone away]
 
-- ide-lpd7a40x.c should go into drivers/ide/arm/
 
-- you are setting IDE_NO_IRQ in ide_init_hwif_ports() which is used
-  in many places in generic IDE code - anybody wanting to understand
-  interactions with your code + generic code will have serious
-  problems (especially if knows _nothing_ about lpd7a40x)
+>>For an ATA device, we
+>>* write the taskfile, except for command
+>>* set up the DMA engine
+>>* write the command
+>>* write DMA-start bit
+>>
+>>And the functions used by the low-level drivers, ata_bmdma_start_mmio 
+>>and ata_bmdma_start_pio, are hardcoded to use this ordering.  By 
+>>contrast, for ATAPI you should do:
+>>* set up DMA engine
+>>* write entire taskfile, including command
+>>* proceed through state diagram until DRQ==1
+>>* write SCSI CDB
+>>* write DMA-start bit
+> 
+> 
+> Why we care whether we write the taskfile apart from the command before
+> or after DMA engine setup, I do not understand.
 
-- hwif->mmio is set to 2 but resource handling is missed
+Actually, after research I prefer to set up the DMA engine first, then 
+write the taskfile including command, for both cases.
 
-- ide_init_default_hwifs() is OBSOLETE and shouldn't be used
+The latest libata atapi work (2.6.6 + the 5 patches I have posted to 
+linux-ide) does not yet do this.
 
-> > BTW does it even work as IDE polling code is not merged yet?
->
-> Huh?
->
-> aThe solution isn't really that complex.  I need two things.  First, I
-> must override the register-level access routines in order to do a
-> little hardware workaround cha-cha-cha.  There's nothing I can do to
-> fix the hardware.  Second, I need to be able to poll the interface
-> after initiating a command.  IIRC, you said that I missed at least one
-> place where this needed to be done.
 
-Yes, idea isn't complex but spotting all places needing change is.
+>>>+     int bcl = (8 * 0x400); /* PIO "byte count limit" */
+>>
+>>Make this a more obvious "8 * 1024".
+> 
+> 
+> A point of pain for me moving into the world near linux-ide was
+> discovering that `dd` wanted me to say 512 rather than the more familiar
+> and plainly rounded value x200.
 
-> There are also some very important code (hacks) in
->
->   arch/arm/mach-lh7a40x/ide-lpd7a40x.c
->
-> to deal with the fact that I didn't want to touch the SELECT_DRIVE
-> call from the IDE driver.  The problem was that the SELECT_DRIVE call
-> in ide-iops.c does this:
->
->   void SELECT_DRIVE (ide_drive_t *drive)
->   {
-> 	  if (HWIF(drive)->selectproc)
-> 		  HWIF(drive)->selectproc(drive);
-> 	  HWIF(drive)->OUTB(drive->select.all, IDE_SELECT_REG);
->   }
->
->
-> instead of this:
->
->   void SELECT_DRIVE (ide_drive_t *drive)
->   {
-> 	  if (HWIF(drive)->selectproc)
-> 		  HWIF(drive)->selectproc(drive);
-> 	  else
-> 		  HWIF(drive)->OUTB(drive->select.all, IDE_SELECT_REG);
->   }
->
-> The OUTB breaks my interface because I don't really have byte-level
-> access to the resgisters.  So, is selectproc a pre-select procedure or
-> should it be a substitute?
+Using decimal and hexidecimal together is inconsistent, and I feel that 
+1024 reads to a human eye like "1K" much more than 0x400 does.
 
-pre-select but you can change it to be substitute if you need
-(just remember to update all users if you decide to do this)
+And we're shooting clarity and readability here.
 
-IMO it is better to fix it correctly than to do hacks like this
-in lpd7a40x_ide_outb() (which is minor performance hit btw)
 
-> Anyway, that is what I did in a nutshell.  I plan to get back to this
-> in a week or so.  Since Russell King already integrated the lh7a40x
-> code into the kernel, this stuff should be easy to test.
+>>>+     struct ata_taskfile *tf = &qc->tf;
+>>>+     tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+>>>+     tf->protocol = qc->dev->xfer_protocol;
+>>>+     tf->command = ATA_CMD_PACKET; /* often 0xA0 */
+>>
+>>kill the comment, this should be obvious to anyone who reads the
+>>public specs.  That's why we have the constant, after all...
+> 
+> 
+> See below.
+> 
+> 
+>>>+             tf->feature = ATAPI_PKT_DMA; /* often x01 */
+>>
+>>kill the comment
+> 
+> 
+> I understood your objection to: ATA_CMD_PACKET; /* often 0xA0 */
+> to mean I should never tell people what hovering the mouse over an
+> identifier should (but often doesn't) tell them.
+> 
+> Me, I didn't know ATA_CMD_PACKET meant xA0 until I looked it up.  I'm
+> likely to forget again in future.  ATA_CMD_PACKET is a Linux only term,
+> whereas "A0" I find in every source I read, be it xA0 or A0h or 0A0h
+> etc., be the source English, bus traces, machine code hex dumps, ....
 
-That's what I'm talking about - it shouldn't have been integrated. :-)
+You know the value of ATA_CMD_PACKET by looking in the header file.  The 
+constant exists to -remove- the hex number completely from the source 
+code.  The hex number should only be present in the header file, and in 
+the specifications.
 
-Cheers.
+It is -crucial- to long term maintenance that C source code be readable, 
+even to someone who is not very familiar with the intimacies of the ATA 
+protocol and associated hardware.  (I do not claim libata is perfect in 
+this regard, but it is an important goal)
+
+Therefore, regardless of what non-Linux people may do, it is a very 
+conscious decision to avoid putting what we call "magic numbers" in the 
+source code.  Experience has shown using "magic numbers" just isn't 
+scalable.  It's not human-friendly.
+
+
+>>>+     if (dev->class == ATA_DEV_ATAPI) { /* (thus !=
+>>
+>>ATA_DEV_ATAPI_UNSUP) */
+>>
+>>>+             return atapi_xlat;
+>>>+     }
+>>>+
+>>
+>>Remove the extraneous braces ... :)
+> 
+> 
+> Understood to mean do not enclose in { } unless two or more statements
+> appear as part of the then or else of an if.
+
+Correct.
+
+	Jeff
+
+
 
