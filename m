@@ -1,66 +1,49 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: worst via_sata performance
-Date: Thu, 01 Apr 2004 01:13:54 -0500
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] Bogus LBA48 drives
+Date: Thu, 1 Apr 2004 11:06:40 +0200 (MEST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <406BB322.8060509@pobox.com>
-References: <200404010357.57111.jkillius@arcor.de>
+Message-ID: <Pine.GSO.4.58.0404010933190.12148@waterleaf.sonytel.be>
+References: <Pine.GSO.4.58.0403301654300.9765@waterleaf.sonytel.be>
+ <Pine.LNX.4.10.10403300821520.11654-100000@master.linux-ide.org>
+ <20040331183410.GA3796@pclin040.win.tue.nl> <406B14C1.8000708@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:48520 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262721AbUDAGOI
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Apr 2004 01:14:08 -0500
-In-Reply-To: <200404010357.57111.jkillius@arcor.de>
+Received: from witte.sonytel.be ([80.88.33.193]:65434 "EHLO witte.sonytel.be")
+	by vger.kernel.org with ESMTP id S262794AbUDAJHU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Apr 2004 04:07:20 -0500
+In-Reply-To: <406B14C1.8000708@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jan Killius <jkillius@arcor.de>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andries Brouwer <aebr@win.tue.nl>, Andre Hedrick <andre@linux-ide.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Lionel Bergeret <lbergeret@swing.be>, JunHyeok Heo <jhheo@idis.co.kr>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Jan Killius wrote:
-> Hello,
-> I have some problems with the via_sata driver. The performance is really bad. 
-> I'm getting about 20Mb/s which is really slow compared with the generic ide 
-> driver(50 MB/s). Is there any way to speed up it a bit? I use the two discs 
-> together with the drive mapper for raid0 but the performance is bad and not 
-> constant it's stuttering at disc writing to the raid device. Here are some 
-> system information.
-> 
-> 
-> Mainboard: asus k8v se
-> kernel: 2.6.5-rc3-mm3 with 2.6.5-rc3-libata2
-> dmesg:
-> libata version 1.02 loaded.
-> sata_via version 0.20
-> sata_via(0000:00:0f.0): routed to hard irq line 10
-> ata1: SATA max UDMA/133 cmd 0xE800 ctl 0xE402 bmdma 0xD400 irq 10
-> ata2: SATA max UDMA/133 cmd 0xE000 ctl 0xD802 bmdma 0xD408 irq 10
-> ata1: dev 0 cfg 49:2f00 82:74eb 83:7fea 84:4023 85:74e9 86:3e02 87:4023 
-> 88:203f
-> ata1: dev 0 ATA, max UDMA/100, 321672960 sectors (lba48)
-> ata1: dev 0 configured for UDMA/100
-> scsi0 : sata_via
-> ata2: dev 0 cfg 49:2f00 82:74eb 83:7fea 84:4023 85:74e9 86:3e02 87:4023 
-> 88:203f
-> ata2: dev 0 ATA, max UDMA/100, 321672960 sectors (lba48)
-> ata2: dev 0 configured for UDMA/100
-> scsi1 : sata_via
->   Vendor: ATA       Model: HDS722516VLSA80   Rev: 1.02
->   Type:   Direct-Access                      ANSI SCSI revision: 05
-> ata1: dev 0 max request 32MB (lba48)
->   Vendor: ATA       Model: HDS722516VLSA80   Rev: 1.02
->   Type:   Direct-Access                      ANSI SCSI revision: 05
-> ata2: dev 0 max request 32MB (lba48)
+On Wed, 31 Mar 2004, Jeff Garzik wrote:
+> Andries Brouwer wrote:
+> > Hmm. I read in my copy of ATA7:
+> >
+> >  6.16.55 Words (103:100): Maximum user LBA for 48-bit Address feature set
+> >  Words (103:100) contain a value that is one greater than the maximum LBA
+> >  in user accessable space when the 48-bit Addressing feature set is supported.
+> >  The maximum value that shall be placed in this field is 0000FFFFFFFFFFFFh.
+> >  Support of these words is mandatory if the 48-bit Address feature set is supported.
+> >
+> > Do you read differently?
+>
+> The errata is, one needs to check that field for zero, and use the other
+> one if so...
 
-Do things change if you back out the "speed up SATA" patch?
+Which is not sufficient for `my' drives, since I get disk errors if I just use
+the other capacity field and don't disable LBA48 completely.
 
-Also, device information from hdparm, when using the IDE generic driver, 
-would be useful.
+I'll check the ATA specs myself, if I find some time...
 
-Is this in 32-bit or 64-bit mode?
+Gr{oetje,eeting}s,
 
-	Jeff
+						Geert
 
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
