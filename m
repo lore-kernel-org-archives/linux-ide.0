@@ -1,55 +1,53 @@
-From: Doug Maxey <dwm@austin.ibm.com>
-Subject: [RFC/PATCH 3/7] enable honoring write cache setting of IDE drive
-Date: Fri, 28 Jan 2005 12:16:28 -0600
-Message-ID: <200501281816.j0SIGSxq021094@falcon10.austin.ibm.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Marvell 88SX[56]0[48]1 libata progress?
+Date: Fri, 28 Jan 2005 13:20:04 -0500
+Message-ID: <41FA8254.1040505@pobox.com>
+References: <Pine.LNX.4.61.0501281829260.22522-100000@dingo.iwr.uni-heidelberg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:65433 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S262726AbVA1SQc
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Jan 2005 13:16:32 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j0SIGVZ7450532
-	for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 13:16:31 -0500
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0SIGUqw318644
-	for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 11:16:30 -0700
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id j0SIGUir012041
-	for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 11:16:30 -0700
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:48816 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261524AbVA1SUW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Jan 2005 13:20:22 -0500
+In-Reply-To: <Pine.LNX.4.61.0501281829260.22522-100000@dingo.iwr.uni-heidelberg.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Jens Axboe <axboe@suse.de>, Jeff Garzik <jgarzik@pobox.com>, Linux IDE Mailing List <linux-ide@vger.kernel.org>
+To: Bogdan Costescu <bogdan@dingo.iwr.uni-heidelberg.de>
+Cc: linux@horizon.com, linux-ide@vger.kernel.org, andyw@pobox.com
 
+Bogdan Costescu wrote:
+> On Thu, 27 Jan 2005, Jeff Garzik wrote:
+> 
+> 
+>>After that, I'll do a round of driver writing for Marvell and several other 
+>>boards.
+> 
+> 
+> Any tentative time-frame ? I'm also interested due to the presence of 
+> this controller disguised as Adaptec AIC-8110 on my Asus mainboard.
+> 
+> Unfortunately Asus only provides binary drivers for RH 8 & 9 and 
+> equally ancient SuSE kernels on the CD that accompanied the board, so 
+> no hope form there.
+> 
+> I have however found a driver with complete source (no .o files or I
+> have missed them) at:
+> 
+> http://file.abit.com.tw/pub/download/drivers/linux/marvell/mvsata340.zip
+> 
+> It compiled without any problem for the 2.4 kernel of TaoLinux, but
+> the performance is very low: hdparm shows only about 9Mb/s for a WD
+> Raptor disk. I refuse to believe that this is a normal level of
+> performance from this controller, the driver must be at fault...
 
-    - Add documentation for the use of the Kbuild variable
-      BLK_DEV_HDWC.
+That driver has also been rejected...  it's vastly overengineered for 
+what it needs to do, and should not be directly using the SCSI 
+infrastructure (which makes it divergent from other SATA drives, which 
+only indirectly use it) -- which causes incompatibilities down the line.
 
- drivers/ide/Kconfig |   11 +++++++++++
- 1 files changed, 11 insertions(+)
+	Jeff
 
-diff -X /home/dwm/lib/ide-excludes -Nwupar lk-2.6.11-rc2-bk5.a/drivers/ide/Kconfig lk-2.6.11-rc2-bk5.b/drivers/ide/Kconfig
---- lk-2.6.11-rc2-bk5.a/drivers/ide/Kconfig	2004-12-24 15:34:44.000000000 -0600
-+++ lk-2.6.11-rc2-bk5.b/drivers/ide/Kconfig	2005-01-28 11:24:11.224547208 -0600
-@@ -148,6 +148,17 @@ config BLK_DEV_IDEDISK
- 
- 	  If unsure, say Y.
- 
-+config BLK_DEV_HDWC
-+       bool "Use cache settings of the disk"
-+       depends on BLK_DEV_IDEDISK
-+       ---help---
-+       Normally the IDE disk driver forces the use of the drive cache.
-+       This setting allows the kernel to detect and use the write
-+       cache default from the drive.  If you want the kernel to honor
-+       the drive setting for the use of cache, say Y here.
-+
-+       If unsure, say N.
-+
- config IDEDISK_MULTI_MODE
- 	bool "Use multi-mode by default"
- 	depends on BLK_DEV_IDEDISK
 
 
