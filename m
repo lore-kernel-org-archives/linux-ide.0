@@ -1,14 +1,14 @@
 From: "Albert Lee" <albertcc@tw.ibm.com>
-Subject: [PATCH libata-dev-2.6 2/3] Add CHS support
-Date: Sun, 6 Feb 2005 14:05:50 +0800
-Message-ID: <008401c50c11$eae8f480$a801a8c0@tw.ibm.com>
+Subject: [PATCH libata-dev-2.6 3/3] Add CHS support
+Date: Sun, 6 Feb 2005 14:08:17 +0800
+Message-ID: <00a701c50c12$40c4c870$a801a8c0@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0081_01C50C54.F68D78E0"
-Received: from bluehawaii.tikira.net ([61.62.22.51]:41965 "EHLO
+	boundary="----=_NextPart_000_00A4_01C50C55.4E50D180"
+Received: from bluehawaii.tikira.net ([61.62.22.51]:44013 "EHLO
 	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S269942AbVBFGGP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 6 Feb 2005 01:06:15 -0500
+	id S270419AbVBFGIm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 6 Feb 2005 01:08:42 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
@@ -16,7 +16,7 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.co
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0081_01C50C54.F68D78E0
+------=_NextPart_000_00A4_01C50C55.4E50D180
 Content-Type: text/plain;
 	charset="big5"
 Content-Transfer-Encoding: 7bit
@@ -25,262 +25,730 @@ Hi Jeff,
 
   These are the patches for libata CHS support. 
 
-  Attached please find the patch 2/3 against the libata-dev-2.6 tree for your review. Thanks.
+  Attached please find the patch 3/3 against the libata-dev-2.6 tree for your review. Thanks.
 
 Albert
 
 Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-----------------------------------------------------------------------------------------------
---- libata-dev-2.6/drivers/scsi/libata-core.c 2005-02-05 10:41:49.000000000 +0800
-+++ libata-dev-2.6-mod/drivers/scsi/libata-core.c 2005-02-05 13:53:58.000000000 +0800
-@@ -987,7 +987,7 @@
- static void ata_dev_identify(struct ata_port *ap, unsigned int device)
+-----------------------------------------------------------------------------------------
+--- libata-dev-2.6/drivers/scsi/libata-scsi.c 2005-02-05 10:41:49.000000000 +0800
++++ libata-dev-2.6-mod/drivers/scsi/libata-scsi.c 2005-02-05 12:46:26.000000000 +0800
+@@ -689,72 +689,101 @@
+ static unsigned int ata_scsi_verify_xlat(struct ata_queued_cmd *qc, u8 *scsicmd)
  {
-  struct ata_device *dev = &ap->device[device];
-- unsigned int i;
-+ unsigned int major_version;
-  u16 tmp;
-  unsigned long xfer_modes;
-  u8 status;
-@@ -1085,9 +1085,9 @@
-   * common ATA, ATAPI feature tests
-   */
+  struct ata_taskfile *tf = &qc->tf;
++ struct ata_device *dev = qc->dev;
++ unsigned int lba   = tf->flags & ATA_TFLAG_LBA;
+  unsigned int lba48 = tf->flags & ATA_TFLAG_LBA48;
+  u64 dev_sectors = qc->dev->n_sectors;
+- u64 sect = 0;
+- u32 n_sect = 0;
++ u64 block = 0;
++ u32 n_block = 0;
  
-- /* we require LBA and DMA support (bits 8 & 9 of word 49) */
-- if (!ata_id_has_dma(dev->id) || !ata_id_has_lba(dev->id)) {
--  printk(KERN_DEBUG "ata%u: no dma/lba\n", ap->id);
-+ /* we require DMA support (bits 8 of word 49) */
-+ if (!ata_id_has_dma(dev->id)) {
-+  printk(KERN_DEBUG "ata%u: no dma\n", ap->id);
-   goto err_out_nosup;
+  tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+  tf->protocol = ATA_PROT_NODATA;
+- tf->device |= ATA_LBA;
+ 
+  if (scsicmd[0] == VERIFY) {
+-  sect |= ((u64)scsicmd[2]) << 24;
+-  sect |= ((u64)scsicmd[3]) << 16;
+-  sect |= ((u64)scsicmd[4]) << 8;
+-  sect |= ((u64)scsicmd[5]);
++  block |= ((u64)scsicmd[2]) << 24;
++  block |= ((u64)scsicmd[3]) << 16;
++  block |= ((u64)scsicmd[4]) << 8;
++  block |= ((u64)scsicmd[5]);
+ 
+-  n_sect |= ((u32)scsicmd[7]) << 8;
+-  n_sect |= ((u32)scsicmd[8]);
++  n_block |= ((u32)scsicmd[7]) << 8;
++  n_block |= ((u32)scsicmd[8]);
   }
  
-@@ -1107,32 +1107,64 @@
-   if (!ata_id_is_ata(dev->id)) /* sanity check */
-    goto err_out_nosup;
- 
-+  /* get major version */
-   tmp = dev->id[ATA_ID_MAJOR_VER];
--  for (i = 14; i >= 1; i--)
--   if (tmp & (1 << i))
-+  for (major_version = 14; major_version >= 1; major_version--)
-+   if (tmp & (1 << major_version))
-     break;
- 
-   /* we require at least ATA-3 */
--  if (i < 3) {
-+  if (major_version < 3) {
-    printk(KERN_DEBUG "ata%u: no ATA-3\n", ap->id);
-    goto err_out_nosup;
-   }
- 
--  if (ata_id_has_lba48(dev->id)) {
--   dev->flags |= ATA_DFLAG_LBA48;
--   dev->n_sectors = ata_id_u64(dev->id, 100);
--  } else {
--   dev->n_sectors = ata_id_u32(dev->id, 60);
-+  if (ata_id_has_lba(dev->id)) {
-+   dev->flags |= ATA_DFLAG_LBA;
-+
-+   if (ata_id_has_lba48(dev->id)) {
-+    dev->flags |= ATA_DFLAG_LBA48;
-+    dev->n_sectors = ata_id_u64(dev->id, 100);
-+   } else {
-+    dev->n_sectors = ata_id_u32(dev->id, 60);
-+   }
-+
-+   /* print device info to dmesg */
-+   printk(KERN_INFO "ata%u: dev %u ATA-%d, max %s, %Lu sectors:%s\n",
-+          ap->id, device,
-+          major_version,
-+          ata_mode_string(xfer_modes),
-+          (unsigned long long)dev->n_sectors,
-+          dev->flags & ATA_DFLAG_LBA48 ? " LBA48" : " LBA");
-+  } else { 
-+   /* CHS */
-+
-+   /* Default translation */
-+   dev->cylinders = dev->id[1];
-+   dev->heads = dev->id[3];
-+   dev->sectors = dev->id[6];
-+   dev->n_sectors = dev->cylinders * dev->heads * dev->sectors;
-+
-+   if (ata_id_current_chs_valid(dev->id)) {
-+    /* Current CHS translation is valid. */
-+    dev->cylinders = dev->id[54];
-+    dev->heads     = dev->id[55];
-+    dev->sectors   = dev->id[56];
-+    
-+    dev->n_sectors = ata_id_u32(dev->id, 57);
-+   }
-+
-+   /* print device info to dmesg */
-+   printk(KERN_INFO "ata%u: dev %u ATA-%d, max %s, %Lu sectors: CHS %d/%d/%d\n",
-+          ap->id, device,
-+          major_version,
-+          ata_mode_string(xfer_modes),
-+          (unsigned long long)dev->n_sectors,
-+          (int)dev->cylinders, (int)dev->heads, (int)dev->sectors);
-+
-   }
- 
-   ap->host->max_cmd_len = 16;
+  else if (scsicmd[0] == VERIFY_16) {
+-  sect |= ((u64)scsicmd[2]) << 56;
+-  sect |= ((u64)scsicmd[3]) << 48;
+-  sect |= ((u64)scsicmd[4]) << 40;
+-  sect |= ((u64)scsicmd[5]) << 32;
+-  sect |= ((u64)scsicmd[6]) << 24;
+-  sect |= ((u64)scsicmd[7]) << 16;
+-  sect |= ((u64)scsicmd[8]) << 8;
+-  sect |= ((u64)scsicmd[9]);
 -
--  /* print device info to dmesg */
--  printk(KERN_INFO "ata%u: dev %u ATA, max %s, %Lu sectors:%s\n",
--         ap->id, device,
--         ata_mode_string(xfer_modes),
--         (unsigned long long)dev->n_sectors,
--         dev->flags & ATA_DFLAG_LBA48 ? " lba48" : "");
-  }
- 
-  /* ATAPI-specific feature tests */
-@@ -2745,8 +2777,12 @@
- 
-   ata_tf_init(ap, &qc->tf, dev->devno);
- 
--  if (dev->flags & ATA_DFLAG_LBA48)
--   qc->tf.flags |= ATA_TFLAG_LBA48;
-+  if (dev->flags & ATA_DFLAG_LBA) {
-+   qc->tf.flags |= ATA_TFLAG_LBA;
+-  n_sect |= ((u32)scsicmd[10]) << 24;
+-  n_sect |= ((u32)scsicmd[11]) << 16;
+-  n_sect |= ((u32)scsicmd[12]) << 8;
+-  n_sect |= ((u32)scsicmd[13]);
++  block |= ((u64)scsicmd[2]) << 56;
++  block |= ((u64)scsicmd[3]) << 48;
++  block |= ((u64)scsicmd[4]) << 40;
++  block |= ((u64)scsicmd[5]) << 32;
++  block |= ((u64)scsicmd[6]) << 24;
++  block |= ((u64)scsicmd[7]) << 16;
++  block |= ((u64)scsicmd[8]) << 8;
++  block |= ((u64)scsicmd[9]);
 +
-+   if (dev->flags & ATA_DFLAG_LBA48)
-+    qc->tf.flags |= ATA_TFLAG_LBA48;
-+  }
++  n_block |= ((u32)scsicmd[10]) << 24;
++  n_block |= ((u32)scsicmd[11]) << 16;
++  n_block |= ((u32)scsicmd[12]) << 8;
++  n_block |= ((u32)scsicmd[13]);
   }
  
-  return qc;
+  else
+   return 1;
+ 
+- if (!n_sect)
++ if (!n_block)
+   return 1;
+- if (sect >= dev_sectors)
++ if (block >= dev_sectors)
+   return 1;
+- if ((sect + n_sect) > dev_sectors)
++ if ((block + n_block) > dev_sectors)
+   return 1;
+  if (lba48) {
+-  if (n_sect > (64 * 1024))
++  if (n_block > (64 * 1024))
+    return 1;
+  } else {
+-  if (n_sect > 256)
++  if (n_block > 256)
+    return 1;
+  }
+ 
+- if (lba48) {
+-  tf->hob_nsect = (n_sect >> 8) & 0xff;
++ if (lba) {
++  if (lba48) {
++   tf->hob_nsect = (n_block >> 8) & 0xff;
+ 
+-  tf->hob_lbah = (sect >> 40) & 0xff;
+-  tf->hob_lbam = (sect >> 32) & 0xff;
+-  tf->hob_lbal = (sect >> 24) & 0xff;
+- } else
+-  tf->device |= (sect >> 24) & 0xf;
++   tf->hob_lbah = (block >> 40) & 0xff;
++   tf->hob_lbam = (block >> 32) & 0xff;
++   tf->hob_lbal = (block >> 24) & 0xff;
++  } else
++   tf->device |= (block >> 24) & 0xf;
++
++  tf->nsect = n_block & 0xff;
+ 
+- tf->nsect = n_sect & 0xff;
++  tf->lbah = (block >> 16) & 0xff;
++  tf->lbam = (block >> 8) & 0xff;
++  tf->lbal = block & 0xff;
+ 
+- tf->hob_lbah = (sect >> 16) & 0xff;
+- tf->hob_lbam = (sect >> 8) & 0xff;
+- tf->hob_lbal = sect & 0xff;
++  tf->device |= ATA_LBA;
++ } else {
++  /* CHS */
++  u32 sect, head, cyl, track;
++
++  /* Convert LBA to CHS */
++  track = (u32)block / dev->sectors;
++  cyl   = track / dev->heads;
++  head  = track % dev->heads;
++  sect  = (u32)block % dev->sectors + 1;
++
++  DPRINTK("block[%u] track[%u] cyl[%u] head[%u] sect[%u] \n", (u32)block, track, cyl, head, sect);
++  
++  /* Check whether the converted CHS can fit. 
++     Cylinder: 0-65535 
++     Head: 0-15
++     Sector: 1-255*/
++  if ((cyl >> 16) || (head >> 4) || (sect >> 8) || (!sect)) 
++   return 1;
++  
++  tf->nsect = n_block & 0xff; /* Sector count 0 means 256 sectors */
++  tf->lbal = sect;
++  tf->lbam = cyl;
++  tf->lbah = cyl >> 8;
++  tf->device |= head;
++ }
+ 
+  return 0;
+ }
+@@ -782,11 +811,14 @@
+ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc, u8 *scsicmd)
+ {
+  struct ata_taskfile *tf = &qc->tf;
++ struct ata_device *dev = qc->dev;
++ unsigned int lba   = tf->flags & ATA_TFLAG_LBA;
+  unsigned int lba48 = tf->flags & ATA_TFLAG_LBA48;
++ u64 block = 0;
++ u32 n_block = 0;
+ 
+  tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+  tf->protocol = qc->dev->xfer_protocol;
+- tf->device |= ATA_LBA;
+ 
+  if (scsicmd[0] == READ_10 || scsicmd[0] == READ_6 ||
+      scsicmd[0] == READ_16) {
+@@ -796,80 +828,111 @@
+   tf->flags |= ATA_TFLAG_WRITE;
+  }
+ 
++ /* Calculate the SCSI LBA and transfer length. */
+  if (scsicmd[0] == READ_10 || scsicmd[0] == WRITE_10) {
+-  if (lba48) {
+-   tf->hob_nsect = scsicmd[7];
+-   tf->hob_lbal = scsicmd[2];
++  block |= ((u64)scsicmd[2]) << 24;
++  block |= ((u64)scsicmd[3]) << 16;
++  block |= ((u64)scsicmd[4]) << 8;
++  block |= ((u64)scsicmd[5]);
+ 
+-   qc->nsect = ((unsigned int)scsicmd[7] << 8) |
+-     scsicmd[8];
+-  } else {
+-   /* if we don't support LBA48 addressing, the request
+-    * -may- be too large. */
+-   if ((scsicmd[2] & 0xf0) || scsicmd[7])
+-    return 1;
+-
+-   /* stores LBA27:24 in lower 4 bits of device reg */
+-   tf->device |= scsicmd[2];
+-
+-   qc->nsect = scsicmd[8];
+-  }
+-
+-  tf->nsect = scsicmd[8];
+-  tf->lbal = scsicmd[5];
+-  tf->lbam = scsicmd[4];
+-  tf->lbah = scsicmd[3];
++  n_block |= ((u32)scsicmd[7]) << 8;
++  n_block |= ((u32)scsicmd[8]);
+ 
+   VPRINTK("ten-byte command\n");
+-  return 0;
+- }
+-
+- if (scsicmd[0] == READ_6 || scsicmd[0] == WRITE_6) {
+-  qc->nsect = tf->nsect = scsicmd[4];
+-  tf->lbal = scsicmd[3];
+-  tf->lbam = scsicmd[2];
+-  tf->lbah = scsicmd[1] & 0x1f; /* mask out reserved bits */
+-
++ } else if (scsicmd[0] == READ_6 || scsicmd[0] == WRITE_6) {
++  block |= ((u64)scsicmd[2]) << 8;
++  block |= ((u64)scsicmd[3]);
++  n_block |= ((u32)scsicmd[4]);
++ 
+   VPRINTK("six-byte command\n");
+-  return 0;
++ } else if (scsicmd[0] == READ_16 || scsicmd[0] == WRITE_16) {
++  block |= ((u64)scsicmd[2]) << 56;
++  block |= ((u64)scsicmd[3]) << 48;
++  block |= ((u64)scsicmd[4]) << 40;
++  block |= ((u64)scsicmd[5]) << 32;
++  block |= ((u64)scsicmd[6]) << 24;
++  block |= ((u64)scsicmd[7]) << 16;
++  block |= ((u64)scsicmd[8]) << 8;
++  block |= ((u64)scsicmd[9]);
++
++  n_block |= ((u32)scsicmd[10]) << 24;
++  n_block |= ((u32)scsicmd[11]) << 16;
++  n_block |= ((u32)scsicmd[12]) << 8;
++  n_block |= ((u32)scsicmd[13]);
++
++  VPRINTK("sixteen-byte command\n");
++ } else {
++  DPRINTK("no-byte command\n");
++  return 1;
+  }
+ 
+- if (scsicmd[0] == READ_16 || scsicmd[0] == WRITE_16) {
+-  /* rule out impossible LBAs and sector counts */
+-  if (scsicmd[2] || scsicmd[3] || scsicmd[10] || scsicmd[11])
+-   return 1;
++ /* Check and compose ATA command */
++ if (!n_block)
++  /* In ATA, sector count 0 are 256 or 65536 sectors, not 0 sectors. */
++  return 1;
+ 
++ if (lba) {
+   if (lba48) {
+-   tf->hob_nsect = scsicmd[12];
+-   tf->hob_lbal = scsicmd[6];
+-   tf->hob_lbam = scsicmd[5];
+-   tf->hob_lbah = scsicmd[4];
+-
+-   qc->nsect = ((unsigned int)scsicmd[12] << 8) |
+-     scsicmd[13];
+-  } else {
+-   /* once again, filter out impossible non-zero values */
+-   if (scsicmd[4] || scsicmd[5] || scsicmd[12] ||
+-       (scsicmd[6] & 0xf0))
++   /* The request -may- be too large for LBA48. */
++   if ((block >> 48) || (n_block > 65536))
+     return 1;
+ 
+-   /* stores LBA27:24 in lower 4 bits of device reg */
+-   tf->device |= scsicmd[2];
++   tf->hob_nsect = (n_block >> 8) & 0xff;
++
++   tf->hob_lbah = (block >> 40) & 0xff;
++   tf->hob_lbam = (block >> 32) & 0xff;
++   tf->hob_lbal = (block >> 24) & 0xff;
++  } else { 
++   /* LBA28 */
+ 
+-   qc->nsect = scsicmd[13];
++   /* The request -may- be too large for LBA28. */
++   if ((block >> 28) || (n_block > 256))
++    return 1;
++
++   tf->device |= (block >> 24) & 0xf;
+   }
+ 
+-  tf->nsect = scsicmd[13];
+-  tf->lbal = scsicmd[9];
+-  tf->lbam = scsicmd[8];
+-  tf->lbah = scsicmd[7];
++  qc->nsect = n_block;
++  tf->nsect = n_block & 0xff;
+ 
+-  VPRINTK("sixteen-byte command\n");
+-  return 0;
++  tf->lbah = (block >> 16) & 0xff;
++  tf->lbam = (block >> 8) & 0xff;
++  tf->lbal = block & 0xff;
++
++  tf->device |= ATA_LBA;
++ } else { 
++  /* CHS */
++  u32 sect, head, cyl, track;
++
++  /* The request -may- be too large for CHS addressing. */
++  if ((block >> 28) || (n_block > 256))
++   return 1;
++   
++  /* Convert LBA to CHS */
++  track = (u32)block / dev->sectors;
++  cyl   = track / dev->heads;
++  head  = track % dev->heads;
++  sect  = (u32)block % dev->sectors + 1;
++
++  DPRINTK("block[%u] track[%u] cyl[%u] head[%u] sect[%u] \n", 
++   (u32)block, track, cyl, head, sect);
++  
++  /* Check whether the converted CHS can fit. 
++     Cylinder: 0-65535 
++     Head: 0-15
++     Sector: 1-255*/
++  if ((cyl >> 16) || (head >> 4) || (sect >> 8) || (!sect)) 
++   return 1;
++  
++  qc->nsect = n_block;
++  tf->nsect = n_block & 0xff; /* Sector count 0 means 256 sectors */
++  tf->lbal = sect;
++  tf->lbam = cyl;
++  tf->lbah = cyl >> 8;
++  tf->device |= head;
+  }
+ 
+- DPRINTK("no-byte command\n");
+- return 1;
++ return 0;
+ }
+ 
+ static int ata_scsi_qc_complete(struct ata_queued_cmd *qc, u8 drv_stat)
+@@ -1422,10 +1485,20 @@
+ 
+  VPRINTK("ENTER\n");
+ 
+- if (ata_id_has_lba48(args->id))
+-  n_sectors = ata_id_u64(args->id, 100);
+- else
+-  n_sectors = ata_id_u32(args->id, 60);
++ if (ata_id_has_lba(args->id)) {
++  if (ata_id_has_lba48(args->id))
++   n_sectors = ata_id_u64(args->id, 100);
++  else
++   n_sectors = ata_id_u32(args->id, 60);
++ } else {
++  /* CHS default translation */
++  n_sectors = args->id[1] * args->id[3] * args->id[6];
++
++  if (ata_id_current_chs_valid(args->id))
++   /* CHS current translation */
++   n_sectors = ata_id_u32(args->id, 57);
++ }
++
+  n_sectors--;  /* ATA TotalUserSectors - 1 */
+ 
+  tmp = n_sectors; /* note: truncates, if lba48 */
 
-------=_NextPart_000_0081_01C50C54.F68D78E0
+------=_NextPart_000_00A4_01C50C55.4E50D180
 Content-Type: application/octet-stream;
-	name="chs2.diff"
+	name="chs3.diff"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: attachment;
-	filename="chs2.diff"
+	filename="chs3.diff"
 
---- libata-dev-2.6/drivers/scsi/libata-core.c	2005-02-05 =
+--- libata-dev-2.6/drivers/scsi/libata-scsi.c	2005-02-05 =
 10:41:49.000000000 +0800=0A=
-+++ libata-dev-2.6-mod/drivers/scsi/libata-core.c	2005-02-05 =
-13:53:58.000000000 +0800=0A=
-@@ -987,7 +987,7 @@=0A=
- static void ata_dev_identify(struct ata_port *ap, unsigned int device)=0A=
++++ libata-dev-2.6-mod/drivers/scsi/libata-scsi.c	2005-02-05 =
+12:46:26.000000000 +0800=0A=
+@@ -689,72 +689,101 @@=0A=
+ static unsigned int ata_scsi_verify_xlat(struct ata_queued_cmd *qc, u8 =
+*scsicmd)=0A=
  {=0A=
- 	struct ata_device *dev =3D &ap->device[device];=0A=
--	unsigned int i;=0A=
-+	unsigned int major_version;=0A=
- 	u16 tmp;=0A=
- 	unsigned long xfer_modes;=0A=
- 	u8 status;=0A=
-@@ -1085,9 +1085,9 @@=0A=
- 	 * common ATA, ATAPI feature tests=0A=
- 	 */=0A=
+ 	struct ata_taskfile *tf =3D &qc->tf;=0A=
++	struct ata_device *dev =3D qc->dev;=0A=
++	unsigned int lba   =3D tf->flags & ATA_TFLAG_LBA;=0A=
+ 	unsigned int lba48 =3D tf->flags & ATA_TFLAG_LBA48;=0A=
+ 	u64 dev_sectors =3D qc->dev->n_sectors;=0A=
+-	u64 sect =3D 0;=0A=
+-	u32 n_sect =3D 0;=0A=
++	u64 block =3D 0;=0A=
++	u32 n_block =3D 0;=0A=
  =0A=
--	/* we require LBA and DMA support (bits 8 & 9 of word 49) */=0A=
--	if (!ata_id_has_dma(dev->id) || !ata_id_has_lba(dev->id)) {=0A=
--		printk(KERN_DEBUG "ata%u: no dma/lba\n", ap->id);=0A=
-+	/* we require DMA support (bits 8 of word 49) */=0A=
-+	if (!ata_id_has_dma(dev->id)) {=0A=
-+		printk(KERN_DEBUG "ata%u: no dma\n", ap->id);=0A=
- 		goto err_out_nosup;=0A=
+ 	tf->flags |=3D ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;=0A=
+ 	tf->protocol =3D ATA_PROT_NODATA;=0A=
+-	tf->device |=3D ATA_LBA;=0A=
+ =0A=
+ 	if (scsicmd[0] =3D=3D VERIFY) {=0A=
+-		sect |=3D ((u64)scsicmd[2]) << 24;=0A=
+-		sect |=3D ((u64)scsicmd[3]) << 16;=0A=
+-		sect |=3D ((u64)scsicmd[4]) << 8;=0A=
+-		sect |=3D ((u64)scsicmd[5]);=0A=
++		block |=3D ((u64)scsicmd[2]) << 24;=0A=
++		block |=3D ((u64)scsicmd[3]) << 16;=0A=
++		block |=3D ((u64)scsicmd[4]) << 8;=0A=
++		block |=3D ((u64)scsicmd[5]);=0A=
+ =0A=
+-		n_sect |=3D ((u32)scsicmd[7]) << 8;=0A=
+-		n_sect |=3D ((u32)scsicmd[8]);=0A=
++		n_block |=3D ((u32)scsicmd[7]) << 8;=0A=
++		n_block |=3D ((u32)scsicmd[8]);=0A=
  	}=0A=
  =0A=
-@@ -1107,32 +1107,64 @@=0A=
- 		if (!ata_id_is_ata(dev->id))	/* sanity check */=0A=
- 			goto err_out_nosup;=0A=
- =0A=
-+		/* get major version */=0A=
- 		tmp =3D dev->id[ATA_ID_MAJOR_VER];=0A=
--		for (i =3D 14; i >=3D 1; i--)=0A=
--			if (tmp & (1 << i))=0A=
-+		for (major_version =3D 14; major_version >=3D 1; major_version--)=0A=
-+			if (tmp & (1 << major_version))=0A=
- 				break;=0A=
- =0A=
- 		/* we require at least ATA-3 */=0A=
--		if (i < 3) {=0A=
-+		if (major_version < 3) {=0A=
- 			printk(KERN_DEBUG "ata%u: no ATA-3\n", ap->id);=0A=
- 			goto err_out_nosup;=0A=
- 		}=0A=
- =0A=
--		if (ata_id_has_lba48(dev->id)) {=0A=
--			dev->flags |=3D ATA_DFLAG_LBA48;=0A=
--			dev->n_sectors =3D ata_id_u64(dev->id, 100);=0A=
--		} else {=0A=
--			dev->n_sectors =3D ata_id_u32(dev->id, 60);=0A=
-+		if (ata_id_has_lba(dev->id)) {=0A=
-+			dev->flags |=3D ATA_DFLAG_LBA;=0A=
-+=0A=
-+			if (ata_id_has_lba48(dev->id)) {=0A=
-+				dev->flags |=3D ATA_DFLAG_LBA48;=0A=
-+				dev->n_sectors =3D ata_id_u64(dev->id, 100);=0A=
-+			} else {=0A=
-+				dev->n_sectors =3D ata_id_u32(dev->id, 60);=0A=
-+			}=0A=
-+=0A=
-+			/* print device info to dmesg */=0A=
-+			printk(KERN_INFO "ata%u: dev %u ATA-%d, max %s, %Lu sectors:%s\n",=0A=
-+			       ap->id, device,=0A=
-+			       major_version,=0A=
-+			       ata_mode_string(xfer_modes),=0A=
-+			       (unsigned long long)dev->n_sectors,=0A=
-+			       dev->flags & ATA_DFLAG_LBA48 ? " LBA48" : " LBA");=0A=
-+		} else { =0A=
-+			/* CHS */=0A=
-+=0A=
-+			/* Default translation */=0A=
-+			dev->cylinders	=3D dev->id[1];=0A=
-+			dev->heads	=3D dev->id[3];=0A=
-+			dev->sectors	=3D dev->id[6];=0A=
-+			dev->n_sectors	=3D dev->cylinders * dev->heads * dev->sectors;=0A=
-+=0A=
-+			if (ata_id_current_chs_valid(dev->id)) {=0A=
-+				/* Current CHS translation is valid. */=0A=
-+				dev->cylinders =3D dev->id[54];=0A=
-+				dev->heads     =3D dev->id[55];=0A=
-+				dev->sectors   =3D dev->id[56];=0A=
-+				=0A=
-+				dev->n_sectors =3D ata_id_u32(dev->id, 57);=0A=
-+			}=0A=
-+=0A=
-+			/* print device info to dmesg */=0A=
-+			printk(KERN_INFO "ata%u: dev %u ATA-%d, max %s, %Lu sectors: CHS =
-%d/%d/%d\n",=0A=
-+			       ap->id, device,=0A=
-+			       major_version,=0A=
-+			       ata_mode_string(xfer_modes),=0A=
-+			       (unsigned long long)dev->n_sectors,=0A=
-+			       (int)dev->cylinders, (int)dev->heads, (int)dev->sectors);=0A=
-+=0A=
- 		}=0A=
- =0A=
- 		ap->host->max_cmd_len =3D 16;=0A=
+ 	else if (scsicmd[0] =3D=3D VERIFY_16) {=0A=
+-		sect |=3D ((u64)scsicmd[2]) << 56;=0A=
+-		sect |=3D ((u64)scsicmd[3]) << 48;=0A=
+-		sect |=3D ((u64)scsicmd[4]) << 40;=0A=
+-		sect |=3D ((u64)scsicmd[5]) << 32;=0A=
+-		sect |=3D ((u64)scsicmd[6]) << 24;=0A=
+-		sect |=3D ((u64)scsicmd[7]) << 16;=0A=
+-		sect |=3D ((u64)scsicmd[8]) << 8;=0A=
+-		sect |=3D ((u64)scsicmd[9]);=0A=
 -=0A=
--		/* print device info to dmesg */=0A=
--		printk(KERN_INFO "ata%u: dev %u ATA, max %s, %Lu sectors:%s\n",=0A=
--		       ap->id, device,=0A=
--		       ata_mode_string(xfer_modes),=0A=
--		       (unsigned long long)dev->n_sectors,=0A=
--		       dev->flags & ATA_DFLAG_LBA48 ? " lba48" : "");=0A=
- 	}=0A=
- =0A=
- 	/* ATAPI-specific feature tests */=0A=
-@@ -2745,8 +2777,12 @@=0A=
- =0A=
- 		ata_tf_init(ap, &qc->tf, dev->devno);=0A=
- =0A=
--		if (dev->flags & ATA_DFLAG_LBA48)=0A=
--			qc->tf.flags |=3D ATA_TFLAG_LBA48;=0A=
-+		if (dev->flags & ATA_DFLAG_LBA) {=0A=
-+			qc->tf.flags |=3D ATA_TFLAG_LBA;=0A=
+-		n_sect |=3D ((u32)scsicmd[10]) << 24;=0A=
+-		n_sect |=3D ((u32)scsicmd[11]) << 16;=0A=
+-		n_sect |=3D ((u32)scsicmd[12]) << 8;=0A=
+-		n_sect |=3D ((u32)scsicmd[13]);=0A=
++		block |=3D ((u64)scsicmd[2]) << 56;=0A=
++		block |=3D ((u64)scsicmd[3]) << 48;=0A=
++		block |=3D ((u64)scsicmd[4]) << 40;=0A=
++		block |=3D ((u64)scsicmd[5]) << 32;=0A=
++		block |=3D ((u64)scsicmd[6]) << 24;=0A=
++		block |=3D ((u64)scsicmd[7]) << 16;=0A=
++		block |=3D ((u64)scsicmd[8]) << 8;=0A=
++		block |=3D ((u64)scsicmd[9]);=0A=
 +=0A=
-+			if (dev->flags & ATA_DFLAG_LBA48)=0A=
-+				qc->tf.flags |=3D ATA_TFLAG_LBA48;=0A=
-+		}=0A=
++		n_block |=3D ((u32)scsicmd[10]) << 24;=0A=
++		n_block |=3D ((u32)scsicmd[11]) << 16;=0A=
++		n_block |=3D ((u32)scsicmd[12]) << 8;=0A=
++		n_block |=3D ((u32)scsicmd[13]);=0A=
  	}=0A=
  =0A=
- 	return qc;=0A=
+ 	else=0A=
+ 		return 1;=0A=
+ =0A=
+-	if (!n_sect)=0A=
++	if (!n_block)=0A=
+ 		return 1;=0A=
+-	if (sect >=3D dev_sectors)=0A=
++	if (block >=3D dev_sectors)=0A=
+ 		return 1;=0A=
+-	if ((sect + n_sect) > dev_sectors)=0A=
++	if ((block + n_block) > dev_sectors)=0A=
+ 		return 1;=0A=
+ 	if (lba48) {=0A=
+-		if (n_sect > (64 * 1024))=0A=
++		if (n_block > (64 * 1024))=0A=
+ 			return 1;=0A=
+ 	} else {=0A=
+-		if (n_sect > 256)=0A=
++		if (n_block > 256)=0A=
+ 			return 1;=0A=
+ 	}=0A=
+ =0A=
+-	if (lba48) {=0A=
+-		tf->hob_nsect =3D (n_sect >> 8) & 0xff;=0A=
++	if (lba) {=0A=
++		if (lba48) {=0A=
++			tf->hob_nsect =3D (n_block >> 8) & 0xff;=0A=
+ =0A=
+-		tf->hob_lbah =3D (sect >> 40) & 0xff;=0A=
+-		tf->hob_lbam =3D (sect >> 32) & 0xff;=0A=
+-		tf->hob_lbal =3D (sect >> 24) & 0xff;=0A=
+-	} else=0A=
+-		tf->device |=3D (sect >> 24) & 0xf;=0A=
++			tf->hob_lbah =3D (block >> 40) & 0xff;=0A=
++			tf->hob_lbam =3D (block >> 32) & 0xff;=0A=
++			tf->hob_lbal =3D (block >> 24) & 0xff;=0A=
++		} else=0A=
++			tf->device |=3D (block >> 24) & 0xf;=0A=
++=0A=
++		tf->nsect =3D n_block & 0xff;=0A=
+ =0A=
+-	tf->nsect =3D n_sect & 0xff;=0A=
++		tf->lbah =3D (block >> 16) & 0xff;=0A=
++		tf->lbam =3D (block >> 8) & 0xff;=0A=
++		tf->lbal =3D block & 0xff;=0A=
+ =0A=
+-	tf->hob_lbah =3D (sect >> 16) & 0xff;=0A=
+-	tf->hob_lbam =3D (sect >> 8) & 0xff;=0A=
+-	tf->hob_lbal =3D sect & 0xff;=0A=
++		tf->device |=3D ATA_LBA;=0A=
++	} else {=0A=
++		/* CHS */=0A=
++		u32 sect, head, cyl, track;=0A=
++=0A=
++		/* Convert LBA to CHS */=0A=
++		track =3D (u32)block / dev->sectors;=0A=
++		cyl   =3D track / dev->heads;=0A=
++		head  =3D track % dev->heads;=0A=
++		sect  =3D (u32)block % dev->sectors + 1;=0A=
++=0A=
++		DPRINTK("block[%u] track[%u] cyl[%u] head[%u] sect[%u] \n", =
+(u32)block, track, cyl, head, sect);=0A=
++		=0A=
++		/* Check whether the converted CHS can fit. =0A=
++		   Cylinder: 0-65535 =0A=
++		   Head: 0-15=0A=
++		   Sector: 1-255*/=0A=
++		if ((cyl >> 16) || (head >> 4) || (sect >> 8) || (!sect)) =0A=
++			return 1;=0A=
++		=0A=
++		tf->nsect =3D n_block & 0xff; /* Sector count 0 means 256 sectors */=0A=
++		tf->lbal =3D sect;=0A=
++		tf->lbam =3D cyl;=0A=
++		tf->lbah =3D cyl >> 8;=0A=
++		tf->device |=3D head;=0A=
++	}=0A=
+ =0A=
+ 	return 0;=0A=
+ }=0A=
+@@ -782,11 +811,14 @@=0A=
+ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc, u8 =
+*scsicmd)=0A=
+ {=0A=
+ 	struct ata_taskfile *tf =3D &qc->tf;=0A=
++	struct ata_device *dev =3D qc->dev;=0A=
++	unsigned int lba   =3D tf->flags & ATA_TFLAG_LBA;=0A=
+ 	unsigned int lba48 =3D tf->flags & ATA_TFLAG_LBA48;=0A=
++	u64 block =3D 0;=0A=
++	u32 n_block =3D 0;=0A=
+ =0A=
+ 	tf->flags |=3D ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;=0A=
+ 	tf->protocol =3D qc->dev->xfer_protocol;=0A=
+-	tf->device |=3D ATA_LBA;=0A=
+ =0A=
+ 	if (scsicmd[0] =3D=3D READ_10 || scsicmd[0] =3D=3D READ_6 ||=0A=
+ 	    scsicmd[0] =3D=3D READ_16) {=0A=
+@@ -796,80 +828,111 @@=0A=
+ 		tf->flags |=3D ATA_TFLAG_WRITE;=0A=
+ 	}=0A=
+ =0A=
++	/* Calculate the SCSI LBA and transfer length. */=0A=
+ 	if (scsicmd[0] =3D=3D READ_10 || scsicmd[0] =3D=3D WRITE_10) {=0A=
+-		if (lba48) {=0A=
+-			tf->hob_nsect =3D scsicmd[7];=0A=
+-			tf->hob_lbal =3D scsicmd[2];=0A=
++		block |=3D ((u64)scsicmd[2]) << 24;=0A=
++		block |=3D ((u64)scsicmd[3]) << 16;=0A=
++		block |=3D ((u64)scsicmd[4]) << 8;=0A=
++		block |=3D ((u64)scsicmd[5]);=0A=
+ =0A=
+-			qc->nsect =3D ((unsigned int)scsicmd[7] << 8) |=0A=
+-					scsicmd[8];=0A=
+-		} else {=0A=
+-			/* if we don't support LBA48 addressing, the request=0A=
+-			 * -may- be too large. */=0A=
+-			if ((scsicmd[2] & 0xf0) || scsicmd[7])=0A=
+-				return 1;=0A=
+-=0A=
+-			/* stores LBA27:24 in lower 4 bits of device reg */=0A=
+-			tf->device |=3D scsicmd[2];=0A=
+-=0A=
+-			qc->nsect =3D scsicmd[8];=0A=
+-		}=0A=
+-=0A=
+-		tf->nsect =3D scsicmd[8];=0A=
+-		tf->lbal =3D scsicmd[5];=0A=
+-		tf->lbam =3D scsicmd[4];=0A=
+-		tf->lbah =3D scsicmd[3];=0A=
++		n_block |=3D ((u32)scsicmd[7]) << 8;=0A=
++		n_block |=3D ((u32)scsicmd[8]);=0A=
+ =0A=
+ 		VPRINTK("ten-byte command\n");=0A=
+-		return 0;=0A=
+-	}=0A=
+-=0A=
+-	if (scsicmd[0] =3D=3D READ_6 || scsicmd[0] =3D=3D WRITE_6) {=0A=
+-		qc->nsect =3D tf->nsect =3D scsicmd[4];=0A=
+-		tf->lbal =3D scsicmd[3];=0A=
+-		tf->lbam =3D scsicmd[2];=0A=
+-		tf->lbah =3D scsicmd[1] & 0x1f; /* mask out reserved bits */=0A=
+-=0A=
++	} else if (scsicmd[0] =3D=3D READ_6 || scsicmd[0] =3D=3D WRITE_6) {=0A=
++		block |=3D ((u64)scsicmd[2]) << 8;=0A=
++		block |=3D ((u64)scsicmd[3]);=0A=
++		n_block |=3D ((u32)scsicmd[4]);=0A=
++	=0A=
+ 		VPRINTK("six-byte command\n");=0A=
+-		return 0;=0A=
++	} else if (scsicmd[0] =3D=3D READ_16 || scsicmd[0] =3D=3D WRITE_16) {=0A=
++		block |=3D ((u64)scsicmd[2]) << 56;=0A=
++		block |=3D ((u64)scsicmd[3]) << 48;=0A=
++		block |=3D ((u64)scsicmd[4]) << 40;=0A=
++		block |=3D ((u64)scsicmd[5]) << 32;=0A=
++		block |=3D ((u64)scsicmd[6]) << 24;=0A=
++		block |=3D ((u64)scsicmd[7]) << 16;=0A=
++		block |=3D ((u64)scsicmd[8]) << 8;=0A=
++		block |=3D ((u64)scsicmd[9]);=0A=
++=0A=
++		n_block |=3D ((u32)scsicmd[10]) << 24;=0A=
++		n_block |=3D ((u32)scsicmd[11]) << 16;=0A=
++		n_block |=3D ((u32)scsicmd[12]) << 8;=0A=
++		n_block |=3D ((u32)scsicmd[13]);=0A=
++=0A=
++		VPRINTK("sixteen-byte command\n");=0A=
++	} else {=0A=
++		DPRINTK("no-byte command\n");=0A=
++		return 1;=0A=
+ 	}=0A=
+ =0A=
+-	if (scsicmd[0] =3D=3D READ_16 || scsicmd[0] =3D=3D WRITE_16) {=0A=
+-		/* rule out impossible LBAs and sector counts */=0A=
+-		if (scsicmd[2] || scsicmd[3] || scsicmd[10] || scsicmd[11])=0A=
+-			return 1;=0A=
++	/* Check and compose ATA command */=0A=
++	if (!n_block)=0A=
++		/* In ATA, sector count 0 are 256 or 65536 sectors, not 0 sectors. */=0A=
++		return 1;=0A=
+ =0A=
++	if (lba) {=0A=
+ 		if (lba48) {=0A=
+-			tf->hob_nsect =3D scsicmd[12];=0A=
+-			tf->hob_lbal =3D scsicmd[6];=0A=
+-			tf->hob_lbam =3D scsicmd[5];=0A=
+-			tf->hob_lbah =3D scsicmd[4];=0A=
+-=0A=
+-			qc->nsect =3D ((unsigned int)scsicmd[12] << 8) |=0A=
+-					scsicmd[13];=0A=
+-		} else {=0A=
+-			/* once again, filter out impossible non-zero values */=0A=
+-			if (scsicmd[4] || scsicmd[5] || scsicmd[12] ||=0A=
+-			    (scsicmd[6] & 0xf0))=0A=
++			/* The request -may- be too large for LBA48. */=0A=
++			if ((block >> 48) || (n_block > 65536))=0A=
+ 				return 1;=0A=
+ =0A=
+-			/* stores LBA27:24 in lower 4 bits of device reg */=0A=
+-			tf->device |=3D scsicmd[2];=0A=
++			tf->hob_nsect =3D (n_block >> 8) & 0xff;=0A=
++=0A=
++			tf->hob_lbah =3D (block >> 40) & 0xff;=0A=
++			tf->hob_lbam =3D (block >> 32) & 0xff;=0A=
++			tf->hob_lbal =3D (block >> 24) & 0xff;=0A=
++		} else { =0A=
++			/* LBA28 */=0A=
+ =0A=
+-			qc->nsect =3D scsicmd[13];=0A=
++			/* The request -may- be too large for LBA28. */=0A=
++			if ((block >> 28) || (n_block > 256))=0A=
++				return 1;=0A=
++=0A=
++			tf->device |=3D (block >> 24) & 0xf;=0A=
+ 		}=0A=
+ =0A=
+-		tf->nsect =3D scsicmd[13];=0A=
+-		tf->lbal =3D scsicmd[9];=0A=
+-		tf->lbam =3D scsicmd[8];=0A=
+-		tf->lbah =3D scsicmd[7];=0A=
++		qc->nsect =3D n_block;=0A=
++		tf->nsect =3D n_block & 0xff;=0A=
+ =0A=
+-		VPRINTK("sixteen-byte command\n");=0A=
+-		return 0;=0A=
++		tf->lbah =3D (block >> 16) & 0xff;=0A=
++		tf->lbam =3D (block >> 8) & 0xff;=0A=
++		tf->lbal =3D block & 0xff;=0A=
++=0A=
++		tf->device |=3D ATA_LBA;=0A=
++	} else { =0A=
++		/* CHS */=0A=
++		u32 sect, head, cyl, track;=0A=
++=0A=
++		/* The request -may- be too large for CHS addressing. */=0A=
++		if ((block >> 28) || (n_block > 256))=0A=
++			return 1;=0A=
++			=0A=
++		/* Convert LBA to CHS */=0A=
++		track =3D (u32)block / dev->sectors;=0A=
++		cyl   =3D track / dev->heads;=0A=
++		head  =3D track % dev->heads;=0A=
++		sect  =3D (u32)block % dev->sectors + 1;=0A=
++=0A=
++		DPRINTK("block[%u] track[%u] cyl[%u] head[%u] sect[%u] \n", =0A=
++			(u32)block, track, cyl, head, sect);=0A=
++		=0A=
++		/* Check whether the converted CHS can fit. =0A=
++		   Cylinder: 0-65535 =0A=
++		   Head: 0-15=0A=
++		   Sector: 1-255*/=0A=
++		if ((cyl >> 16) || (head >> 4) || (sect >> 8) || (!sect)) =0A=
++			return 1;=0A=
++		=0A=
++		qc->nsect =3D n_block;=0A=
++		tf->nsect =3D n_block & 0xff; /* Sector count 0 means 256 sectors */=0A=
++		tf->lbal =3D sect;=0A=
++		tf->lbam =3D cyl;=0A=
++		tf->lbah =3D cyl >> 8;=0A=
++		tf->device |=3D head;=0A=
+ 	}=0A=
+ =0A=
+-	DPRINTK("no-byte command\n");=0A=
+-	return 1;=0A=
++	return 0;=0A=
+ }=0A=
+ =0A=
+ static int ata_scsi_qc_complete(struct ata_queued_cmd *qc, u8 drv_stat)=0A=
+@@ -1422,10 +1485,20 @@=0A=
+ =0A=
+ 	VPRINTK("ENTER\n");=0A=
+ =0A=
+-	if (ata_id_has_lba48(args->id))=0A=
+-		n_sectors =3D ata_id_u64(args->id, 100);=0A=
+-	else=0A=
+-		n_sectors =3D ata_id_u32(args->id, 60);=0A=
++	if (ata_id_has_lba(args->id)) {=0A=
++		if (ata_id_has_lba48(args->id))=0A=
++			n_sectors =3D ata_id_u64(args->id, 100);=0A=
++		else=0A=
++			n_sectors =3D ata_id_u32(args->id, 60);=0A=
++	} else {=0A=
++		/* CHS default translation */=0A=
++		n_sectors =3D args->id[1] * args->id[3] * args->id[6];=0A=
++=0A=
++		if (ata_id_current_chs_valid(args->id))=0A=
++			/* CHS current translation */=0A=
++			n_sectors =3D ata_id_u32(args->id, 57);=0A=
++	}=0A=
++=0A=
+ 	n_sectors--;		/* ATA TotalUserSectors - 1 */=0A=
+ =0A=
+ 	tmp =3D n_sectors;	/* note: truncates, if lba48 */=0A=
 
-------=_NextPart_000_0081_01C50C54.F68D78E0--
+------=_NextPart_000_00A4_01C50C55.4E50D180--
 
 
