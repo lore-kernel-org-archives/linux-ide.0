@@ -1,49 +1,86 @@
-From: Stefan Smietanowski <stesmi@stesmi.com>
-Subject: Re: Update: Serial ATA support question
-Date: Fri, 02 Apr 2004 19:48:53 +0200
+From: Erik Andersen <andersen@codepoet.org>
+Subject: Re: [sata] libata update
+Date: Fri, 2 Apr 2004 17:45:27 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <406DA785.2000208@stesmi.com>
-References: <200403291444.35962.pat@computer-refuge.org> <200404021002.18869.pat@computer-refuge.org>
+Message-ID: <20040403004527.GA6148@codepoet.org>
+References: <406B31F3.1010702@pobox.com>
+Reply-To: andersen@codepoet.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 1-2-2-1a.has.sth.bostream.se ([82.182.130.86]:11998 "EHLO
-	K-7.stesmi.com") by vger.kernel.org with ESMTP id S264135AbUDBRtK
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Apr 2004 12:49:10 -0500
-In-Reply-To: <200404021002.18869.pat@computer-refuge.org>
+Received: from codepoet.org ([166.70.99.138]:33990 "EHLO codepoet.org")
+	by vger.kernel.org with ESMTP id S261460AbUDCApy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Apr 2004 19:45:54 -0500
+Content-Disposition: inline
+In-Reply-To: <406B31F3.1010702@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Patrick Finnegan <pat@computer-refuge.org>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Hi Patrick.
-
-> So, I've got no response, is there a better place to ask this?
+On Wed Mar 31, 2004 at 04:02:43PM -0500, Jeff Garzik wrote:
 > 
-> On Monday 29 March 2004 14:44, Patrick Finnegan wrote:
-> 
->>So, I'm considering getting some SATA gear to use in a data storage
->>project.  What exactly is the state of hotplug support?  I'm
->>considering a Highpoint Tech Rocket 1540 (HPT374 chipset), and it
->>claims to support Linux as an OS, but I haven't seen anything on
->>mailing lists about use with linux, especially hotswap support.
->>
->>So, is it possible to hotswap these drives, and have the
->>controller/driver detect the new drive?
+> Small update, to fix a couple important 2.4-only bugs:
+> * SMP kernels would lock up during probing
+> * Hardware delays were incorrect, due to HZ=100
 
-Search the archives.
+I have a Soyo P4 motherboard with built in Intel ICH5, Sil, and I have
+"IDE + SATA" enabled in the bios, presumably meaning the ICH5 is in
+combined mode.  I usually boot with my rootfs on a ordinary IDE drive
+(pata on ICH5 ide0), a cdrom (pata on ICH5 ide1) and a sata drive (sata1
+on ICH5), which has all been working nicely.  Many thanks.  :-)  Here is
+what I usually see from the ICH5:
 
-The 1540 isn't really a SATA controller, it's got (as you state
-yourself) a HPT374 PATA controller and (I believe) a Marvel
-PATA<->SATA bridge, hence it's not truly a SATA controller
-and I can't remember if you can hotswap with it but I somehow doubt it.
+    Uniform Multi-Platform E-IDE driver Revision: 7.00beta5-2.4
+    ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+    ICH5: IDE controller at PCI slot 00:1f.1
+    ICH5: chipset revision 2
+    ICH5: not 100% native mode: will probe irqs later
+	ide0: BM-DMA at 0xf000-0xf007, BIOS settings: hda:DMA, hdb:pio
+	ide1: BM-DMA at 0xf008-0xf00f, BIOS settings: hdc:pio, hdd:pio
+    hda: WDC WD2000JB-32EVA0, ATA DISK drive
+    hdc: SONY DVD RW DRU-510A, ATAPI CD/DVD-ROM drive
+    ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+    ide1 at 0x170-0x177,0x376 on irq 15
+    hda: attached ide-disk driver.
+    hda: 390721968 sectors (200049 MB) w/8192KiB Cache, CHS=24321/255/63, UDMA(100)
+    Partition check:
+     hda: hda1 hda2
+    SCSI subsystem driver Revision: 1.00
+    libata version 1.02 loaded.
+    ata_piix version 1.02
+    PCI: Setting latency timer of device 00:1f.2 to 64
+    ata1: SATA max UDMA/133 cmd 0xC000 ctl 0xC402 bmdma 0xD000 irq 18
+    ata2: SATA max UDMA/133 cmd 0xC800 ctl 0xCC02 bmdma 0xD008 irq 18
+    ata1: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003 88:207f
+    ata1: dev 0 ATA, max UDMA/133, 398297088 sectors (lba48)
+    ata1: dev 0 configured for UDMA/133
+    ata2: SATA port has no device.
+    ata2: thread exiting
+    scsi0 : ata_piix
+    scsi1 : ata_piix
+      Vendor: ATA       Model: Maxtor 6Y200M0    Rev: 1.02
+      Type:   Direct-Access                      ANSI SCSI revision: 05
 
-There was a document released a while back by Jeff Garzik (I believe)
-that outlines all drivers and what they supported. Search for that
-in the archives and you'll see.
+Yesterday while doing some testing, I made a CD with the same kernel on
+it as shown above, i.e. latest 2.4.26-rc1 + the current
+2.4.26-rc1-libata3 patch.  I then unplugged the power connector to my
+usual rootfs drive (the WDC WD2000JB on ide0) to make sure I wouldn't
+screw it up ;-).  
 
-Sometimes when people don't answer it's because they already answered it
-before or it's easily finadable in the archives.
+Booting from CD (the SONY on ide1) with only the Maxtor 6Y200M0 (on the
+ICH5 sata1), the libata driver wedged solid on bootup.  After printing
 
-// Stefan
+    ata1: SATA max UDMA/133 cmd 0xC000 ctl 0xC402 bmdma 0xD000 irq 18
+    ata2: SATA max UDMA/133 cmd 0xC800 ctl 0xCC02 bmdma 0xD008 irq 18
+
+the box was dead dead dead.  I can't test this setup with the bios set
+to SATA only, since I don't own any SATA cdrom drives.  Simply plugging
+the WDC WD2000JB on ide0 back in allowed the system to boot normally.
+As nearly as I can tell, one has to have a pata drive installed or the
+ata_piix driver will wedge solid.
+
+ -Erik
+
+--
+Erik B. Andersen             http://codepoet-consulting.com/
+--This message was written using 73% post-consumer electrons--
