@@ -1,44 +1,41 @@
-From: Omkhar Arasaratnam <omkhar@rogers.com>
-Subject: [PATCH] drivers/ide/ide-probe.c MOD_INC/DEC_USE_COUNT fixup
-Date: Mon, 29 Dec 2003 18:16:53 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20031229231653.GA17346@omkhar.ibm.com>
+From: "Nicklas Bondesson" <nicke@nicke.nu>
+Subject: IDE-RAID Drive Performance
+Date: Tue, 30 Dec 2003 11:41:47 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <S265746AbTL3Klr/20031230104147Z+18382@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-To: b.zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kernel-janitors-disucss@lists.sf.net, trivial@rustcorp.com
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from as1-6-4.ld.bonet.se ([194.236.130.199]:896 "HELO mail.nicke.nu")
+	by vger.kernel.org with SMTP id S265746AbTL3Klr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Dec 2003 05:41:47 -0500
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Minor fixup to replace MOD_DEC_USE_COUNT/MOD_INC_USE_COUNT with module_put(THIS_MODULE)
-and try_module_get(THIS_MODULE)
+Hi!
 
-I am new are this so feel free to tell me if I have done something incorrectly.
+I think i'm getting really bad values from my disks. It's two Western
+Digital WD800JB-00DUA3 (Special Edition 8 MB cache) disks connected to a
+Promise TX2000 (PDC20271) card (RAID1 using ataraid).
 
-This is mainly to clean up compiler #warnings since MOD_*_USE_COUNT macros are
-depreciated in 2.6
+The disks are setup with hdparm at boot time:
 
+/sbin/hdparm -X69 -d1 -u1 -m16 -c3 /dev/hda
+/sbin/hdparm -X69 -d1 -u1 -m16 -c3 /dev/hdc
 
---- linux-clean/drivers/ide/ide-probe.c.org	2003-12-29 18:06:21.000000000 -0500
-+++ linux-clean/drivers/ide/ide-probe.c	2003-12-29 15:38:03.000000000 -0500
-@@ -1323,7 +1323,7 @@
- 	unsigned int index;
- 	int probe[MAX_HWIFS];
- 	
--	MOD_INC_USE_COUNT;
-+	try_module_get(THIS_MODULE);
- 	memset(probe, 0, MAX_HWIFS * sizeof(int));
- 	for (index = 0; index < MAX_HWIFS; ++index)
- 		probe[index] = !ide_hwifs[index].present;
-@@ -1350,7 +1350,7 @@
- 	}
- 	if (!ide_probe)
- 		ide_probe = &ideprobe_init;
--	MOD_DEC_USE_COUNT;
-+	module_put(THIS_MODULE);
- 	return 0;
- }
+When running hdparm -tT I get the following:
 
+/dev/hda:
+ Timing buffer-cache reads:   128 MB in  1.13 seconds =113.27 MB/sec
+ Timing buffered disk reads:  64 MB in  2.46 seconds = 26.02 MB/sec
 
-O
+/dev/hdc:
+ Timing buffer-cache reads:   128 MB in  1.13 seconds =113.27 MB/sec
+ Timing buffered disk reads:  64 MB in  2.47 seconds = 25.91 MB/sec
+
+Are these normal values? I don't think so. Please advise.
+
+/Nicke
+
