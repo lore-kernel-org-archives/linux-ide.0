@@ -1,67 +1,113 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/1] build modular usb isd200 with modular ide
-Date: Sun, 24 Oct 2004 14:45:53 +0200
+Subject: icside_dmaintr() in icside.c
+Date: Sun, 24 Oct 2004 15:54:54 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <58cb370e041024054575c09679@mail.gmail.com>
-References: <200410240055.i9O0taCf006206@falcon10.austin.ibm.com>
-	 <20041024100319.GA17183@lst.de>
+Message-ID: <58cb370e041024065467404a38@mail.gmail.com>
 Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.199]:56818 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261464AbUJXMpy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Oct 2004 08:45:54 -0400
-Received: by rproxy.gmail.com with SMTP id 77so338129rnk
-        for <linux-ide@vger.kernel.org>; Sun, 24 Oct 2004 05:45:53 -0700 (PDT)
-In-Reply-To: <20041024100319.GA17183@lst.de>
+Received: from rproxy.gmail.com ([64.233.170.197]:14602 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261501AbUJXNy4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Oct 2004 09:54:56 -0400
+Received: by rproxy.gmail.com with SMTP id 77so339916rnk
+        for <linux-ide@vger.kernel.org>; Sun, 24 Oct 2004 06:54:54 -0700 (PDT)
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Doug Maxey <dwm@austin.ibm.com>, Paul Mackerras <paulus@samba.org>, Greg Kroah-Hartman <greg@kroah.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux IDE Mailing List <linux-ide@vger.kernel.org>, linuxppc64-dev@ozlabs.org
+To: Russell King <rmk+lkml@arm.linux.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-On Sun, 24 Oct 2004 12:03:19 +0200, Christoph Hellwig <hch@lst.de> wrote:
-> On Sat, Oct 23, 2004 at 07:55:36PM -0500, Doug Maxey wrote:
-> >
-> > Name: inline ide_fix_driveid()
-> >
-> > Rationale:
-> >       This is a fix for bugme.osdl 3819.
-> 
-> bugme.osdl.org doesn't know of a bug #3819.
-> 
-> >       With any of the 2.6.9 release flavors (vanilla, mm1, ac3), one
-> >       cannot build the usb isd200 module due to the dependency on
-> >       ide_fix_driveid() being exported from ide-iops.
-> >
-> > Description:
-> >       When building IDE modular, the current ide_fix_driveid() is
-> >       exported from ide-iops.c.  This patch makes the function an inline.
-> 
-> Still doesn't make any sense. ide_fix_driveid is properly exported from
-> ide-iops.c, so you use it from other modules.  The only case that
-> doesn't work is modular ide and builtin usb-storage, and the BLK_DEV_IDE
-> depency should fix that one.
+Hi Russell,
 
-The new ide_fix_driveid function seems buggy,
-ie. it byte-swaps id->max_multsect with id->vendor3.
+* for() loop in icside_dmaintr seems buggy
 
-> If you think that depency is ugly (I do) just copy the routine to
-> isd200.c, it's a) too large to inline but b) just a trivial byteswap
-> that should need much changes over time.
+* what do you think about following patch?
+  (ide-dma is nowadays always build if BLK_DEV_IDEDMA)
 
-The dependency is a bug, <linux/ide.h> is for IDE driver only.
+[ide] icside: use ide_dma_intr()
 
-Doug, if you kill debugging code in isd200.c then only:
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-id->command_set_1
-id->model
-id->fw_rev
-id->capability
-id->lba_capacity
-id->heads
-id->cyls
-id->sectors
-id->command_set_2
-
-need to be byte-swapped.
+diff -Nru a/drivers/ide/arm/icside.c b/drivers/ide/arm/icside.c
+--- a/drivers/ide/arm/icside.c	2004-10-24 15:51:02 +02:00
++++ b/drivers/ide/arm/icside.c	2004-10-24 15:51:02 +02:00
+@@ -392,35 +392,6 @@
+ 	enable_dma(hwif->hw.dma);
+ }
+ 
+-/*
+- * dma_intr() is the handler for disk read/write DMA interrupts
+- */
+-static ide_startstop_t icside_dmaintr(ide_drive_t *drive)
+-{
+-	unsigned int stat;
+-	int dma_stat;
+-
+-	dma_stat = icside_dma_end(drive);
+-	stat = HWIF(drive)->INB(IDE_STATUS_REG);
+-	if (OK_STAT(stat, DRIVE_READY, drive->bad_wstat | DRQ_STAT)) {
+-		if (!dma_stat) {
+-			struct request *rq = HWGROUP(drive)->rq;
+-			int i;
+-
+-			for (i = rq->nr_sectors; i > 0; ) {
+-				i -= rq->current_nr_sectors;
+-				DRIVER(drive)->end_request(drive, 1, rq->nr_sectors);
+-			}
+-
+-			return ide_stopped;
+-		}
+-		printk(KERN_ERR "%s: bad DMA status (dma_stat=%x)\n",
+-		       drive->name, dma_stat);
+-	}
+-
+-	return DRIVER(drive)->error(drive, __FUNCTION__, stat);
+-}
+-
+ static int icside_dma_setup(ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif = HWIF(drive);
+@@ -469,7 +440,7 @@
+ static void icside_dma_exec_cmd(ide_drive_t *drive, u8 command)
+ {
+ 	/* issue cmd to drive */
+-	ide_execute_command(drive, cmd, icside_dmaintr, 2*WAIT_CMD, NULL);
++	ide_execute_command(drive, cmd, ide_dma_intr, 2 * WAIT_CMD, NULL);
+ }
+ 
+ static int icside_dma_test_irq(ide_drive_t *drive)
+diff -Nru a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
+--- a/drivers/ide/ide-dma.c	2004-10-24 15:51:02 +02:00
++++ b/drivers/ide/ide-dma.c	2004-10-24 15:51:02 +02:00
+@@ -162,7 +162,6 @@
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_BLK_DEV_IDEDMA_PCI
+ /**
+  *	ide_dma_intr	-	IDE DMA interrupt handler
+  *	@drive: the drive the interrupt is for
+@@ -192,6 +191,7 @@
+ 
+ EXPORT_SYMBOL_GPL(ide_dma_intr);
+ 
++#ifdef CONFIG_BLK_DEV_IDEDMA_PCI
+ /**
+  *	ide_build_sglist	-	map IDE scatter gather for DMA I/O
+  *	@drive: the drive to build the DMA table for
+diff -Nru a/include/linux/ide.h b/include/linux/ide.h
+--- a/include/linux/ide.h	2004-10-24 15:51:02 +02:00
++++ b/include/linux/ide.h	2004-10-24 15:51:02 +02:00
+@@ -1493,12 +1493,12 @@
+ int __ide_dma_good_drive(ide_drive_t *);
+ int __ide_dma_off(ide_drive_t *);
+ void ide_dma_verbose(ide_drive_t *);
++ide_startstop_t ide_dma_intr(ide_drive_t *);
+ 
+ #ifdef CONFIG_BLK_DEV_IDEDMA_PCI
+ extern int ide_build_sglist(ide_drive_t *, struct request *);
+ extern int ide_build_dmatable(ide_drive_t *, struct request *);
+ extern void ide_destroy_dmatable(ide_drive_t *);
+-extern ide_startstop_t ide_dma_intr(ide_drive_t *);
+ extern int ide_release_dma(ide_hwif_t *);
+ extern void ide_setup_dma(ide_hwif_t *, unsigned long, unsigned int);
