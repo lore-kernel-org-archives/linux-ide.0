@@ -1,34 +1,64 @@
-From: Prarit Bhargava <prarit@sgi.com>
-Subject: Re: [PATCH]: [RFC] Fix error handlnig in hwif-init and sgiioc4 driver
-Date: Tue, 08 Feb 2005 11:49:10 -0500
-Message-ID: <4208ED86.3090601@sgi.com>
-References: <41F79A30.4040900@sgi.com>	 <58cb370e050203064648e81449@mail.gmail.com> <4208C84D.1050104@sgi.com>	 <4208E094.1020403@sgi.com> <58cb370e05020808167016ac0d@mail.gmail.com>
+From: Marcin Kuk <marcin.kuk@gmail.com>
+Subject: toshiba ide - ide dma setting
+Date: Tue, 8 Feb 2005 20:39:22 +0100
+Message-ID: <28d670ae0502081139464d51c@mail.gmail.com>
+Reply-To: Marcin Kuk <marcin.kuk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from mx1.redhat.com ([66.187.233.31]:52395 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S261565AbVBHQt4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2005 11:49:56 -0500
-In-Reply-To: <58cb370e05020808167016ac0d@mail.gmail.com>
+Received: from rproxy.gmail.com ([64.233.170.204]:22700 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261644AbVBHTjX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2005 14:39:23 -0500
+Received: by rproxy.gmail.com with SMTP id z35so943345rne
+        for <linux-ide@vger.kernel.org>; Tue, 08 Feb 2005 11:39:22 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Bartlomiej,
+Hi.
 
-I did a fresh check out of linux-2.6 and diff'd?  That's strange ...
+I have a problem to allow DMA setting to my harddisk.
+I have Toshiba Satellite 320CDT laptop.
 
-Anyhow, how about "Fixes to IDE hwif initialization error handling".
+I found this question in letter's archive:
+http://search.luky.org/linux-kernel.2003/msg35013.html
 
-IMO it better captures what I'm trying to fix :)
+And the answer:
+http://www.ussg.iu.edu/hypermail/linux/kernel/0306.0/0308.html
 
-P.
+This is part of my dmesg from 2.4.26 kernel:
+.........
+Uniform Multi-Platform E-IDE driver Revision: 7.00beta4-2.4
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+hda: TOSHIBA MK4006MAV, ATA DISK drive
+hdc: CD-220EA, ATAPI CD/DVD-ROM drive
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+ide1 at 0x170-0x177,0x376 on irq 15
+hda: attached ide-disk driver.
+hda: host protected area => 1
+hda: 8007552 sectors (4100 MB), CHS=7944/16/63
+hdc: attached ide-cdrom driver.
+hdc: ATAPI 20X CD-ROM drive, 128kB Cache
+Uniform CD-ROM driver Revision: 3.12
+Partition check:
+ hda: [PTBL] [993/128/63] hda1 hda2 hda3 hda4
+............
 
+I know that is problem with bridge used for ide handle.
+I tried a lot of kernels:
+> 2.4.26 and 2.6.10 series.
+Please tell me with patch will solve my problem for 2.6.10 kernel or
+what can I do for enabling DMA?
 
->
->No problem, I can hand-merge this patch but these changes
->need some description, "fix hwif_init() return codes" perhaps?
->
->  
->
+Another question:
+In my bios I can choose two variant for my IDE:
+* Standard IDE
+* Enhanced IDE
+Which should I choose?
+I tried both and I dont's see any difference.
+
+Sorry if my english is poor.
+
+Regards
+
+Marcin Kuk
