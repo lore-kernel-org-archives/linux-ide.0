@@ -1,91 +1,83 @@
-From: <Stuart_Hayes@Dell.com>
-Subject: RE: ide-cd question
-Date: Thu, 3 Mar 2005 11:34:09 -0600
-Message-ID: <7A8F92187EF7A249BF847F1BF4903C040AFC6D@ausx2kmpc103.aus.amer.dell.com>
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: [PATCH] ide/amd74xx: fix section references
+Date: Thu, 3 Mar 2005 19:48:21 -0800
+Message-ID: <20050303194821.55fec933.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:28287 "EHLO
-	ausc60ps301.us.dell.com") by vger.kernel.org with ESMTP
-	id S262547AbVCCReL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Mar 2005 12:34:11 -0500
-content-class: urn:content-classes:message
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Received: from fire.osdl.org ([65.172.181.4]:21647 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S262664AbVCDEBj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Mar 2005 23:01:39 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: axboe@suse.de, stuarthayes@austin.rr.com
-Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
-
-Jens Axboe wrote:
-> On Thu, Mar 03 2005, Stuart Hayes wrote:
->> I sent in this patch a few weeks ago, and never saw a response... I
->> was wondering if there was a problem with it, or if I need to supply
->> more info...?  This patch is against 2.6.11-rc3.  It makes sure that
->> when
->> ide_atapi_error() tries to end a failing ATAPI request after 2 reset
->> attempts by calling drive->driver->end_request(), it will really be
->> ended. Right now, a request that has a non-null rq->bio will not get
->> ended, 
->> nor will rq->errors get cleared, so it will get retried forever with
->> no more reset attempts.
-> 
-> Indeed a problem. Would be nice to switch the ->end_request() to be
-> byte based like SCSI, would make it cleaner. 
-> 
-> But do you really need the !nsectors check? If ->data_len is 0, there
-> should not be a need to pass a non-zero sector count. 
-> 
-
-I wondered about the !nsectors check myself.  I copied that code from
-the cdrom_end_request() function, and I assumed that it must have been
-there for some reason that wasn't immediately clear to me, so I didn't
-take it out.  I figured performance in that code path wasn't critical.
-
-I can take it out if that's the only problem!
-
->> My fingers are crossed that this patch won't be mangled... I seem to
->> have a problem with that...
-> 
-> No such luck, it's mangled :). Looks like tabs turned to a single
-> space. 
-> Maybe you have better luck with attaching the file.
-
-Here's another try at the patch.  This time it is against 2.6.11, and I
-shortened the comments so I could send it from this email address 
-without it getting mangled...
+To: B.Zolnierkiewicz@elka.pw.edu.pl, akpm <akpm@osdl.org>
+Cc: linux-ide@vger.kernel.org, vojtech@suse.cz
 
 
+ide/pci/amd74xx:  data structs point to __init text which should be
+  __devinit;
+unless (a) these are going away real soon,
+or (b) this just can't happen, isn't a real problem,
+or (c) other ?
 
---- ide-io.c.orig	2005-03-03 10:57:05.468669136 -0500
-+++ ide-io.c	2005-03-03 11:01:33.982848776 -0500
-@@ -486,9 +486,21 @@ static ide_startstop_t ide_ata_error(ide
- 		/* force an abort */
- 		hwif->OUTB(WIN_IDLEIMMEDIATE, IDE_COMMAND_REG);
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000004d8 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000004e8 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000538 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000548 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000598 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000005a8 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000005f8 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000608 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000658 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000668 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000006b8 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000006c8 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000718 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000728 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000778 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000788 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000007d8 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000007e8 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000838 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000848 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000898 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000008a8 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000008f8 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000908 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000958 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000968 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000009b8 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000009c8 R_X86_64_64       .init.text
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000a18 R_X86_64_64       .init.text+0x0000000000000106
+Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000a28 R_X86_64_64       .init.text
+
+Signed-off-by: Randy Dunlap <rddunlap@osdl.org>
+
+diffstat:=
+ drivers/ide/pci/amd74xx.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff -Naurp ./drivers/ide/pci/amd74xx.c~ide_amd_sections ./drivers/ide/pci/amd74xx.c
+--- ./drivers/ide/pci/amd74xx.c~ide_amd_sections	2005-03-01 23:38:33.000000000 -0800
++++ ./drivers/ide/pci/amd74xx.c	2005-03-03 15:39:21.000000000 -0800
+@@ -308,7 +308,7 @@ static int amd74xx_ide_dma_check(ide_dri
+  * and initialize its drive independent registers.
+  */
  
--	if (rq->errors >= ERROR_MAX || blk_noretry_request(rq))
--		drive->driver->end_request(drive, 0, 0);
--	else {
-+	if (rq->errors >= ERROR_MAX || blk_noretry_request(rq)) {
-+		/* 
-+		 * make sure request is fully ended--otherwise bio might
-get
-+		 * updated and the command will be retried without
-+		 * rq->errors getting reset to zero, which could cause
-us to
-+		 * get stuckin a loop with infinite retries without any
-more
-+		 * reset attempts (borrowed from cdrom_end_request)
-+		 */
-+		int nsectors;
-+		if (blk_pc_request(rq))
-+			nsectors = (rq->data_len + 511) >> 9;
-+		if (!nsectors)
-+			nsectors = 1;
-+		drive->driver->end_request(drive, 0, nsectors);
-+	} else {
- 		if ((rq->errors & ERROR_RESET) == ERROR_RESET) {
- 			++rq->errors;
- 			return ide_do_reset(drive);
+-static unsigned int __init init_chipset_amd74xx(struct pci_dev *dev, const char *name)
++static unsigned int __devinit init_chipset_amd74xx(struct pci_dev *dev, const char *name)
+ {
+ 	unsigned char t;
+ 	unsigned int u;
+@@ -412,7 +412,7 @@ static unsigned int __init init_chipset_
+ 	return dev->irq;
+ }
+ 
+-static void __init init_hwif_amd74xx(ide_hwif_t *hwif)
++static void __devinit init_hwif_amd74xx(ide_hwif_t *hwif)
+ {
+ 	int i;
+ 
 
 
-
+---
