@@ -1,44 +1,46 @@
-From: Pavel Troller <patrol@sinus.cz>
-Subject: Re: ide-cd in 2.6.10/11: BIG problem with burning audio CDs
-Date: Thu, 3 Feb 2005 12:55:07 +0100
-Message-ID: <20050203115506.GA6949@tangens.sinus.cz>
-References: <20050203085452.GA22995@tangens.sinus.cz> <20050203110547.GU5710@suse.de>
-Reply-To: Pavel Troller <patrol@sinus.cz>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2.6.11-rc2 11/29] ide: add ide_drive_t.sleeping
+Date: Thu, 3 Feb 2005 14:35:35 +0100
+Message-ID: <58cb370e05020305354cbb16ee@mail.gmail.com>
+References: <20050202024017.GA621@htj.dyndns.org>
+	 <20050202025448.GL621@htj.dyndns.org>
+	 <58cb370e05020216476a8f403c@mail.gmail.com>
+	 <20050203113710.GV5710@suse.de>
+	 <58cb370e05020305304e5d504@mail.gmail.com>
+	 <20050203133228.GA2816@suse.de>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from tangens.sinus.cz ([195.39.17.8]:59044 "HELO tangens.sinus.cz")
-	by vger.kernel.org with SMTP id S263452AbVBCLzX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Feb 2005 06:55:23 -0500
-Content-Disposition: inline
-In-Reply-To: <20050203110547.GU5710@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S263310AbVBCNfv@vger.kernel.org>
+In-Reply-To: <20050203133228.GA2816@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>
-Cc: linux-ide@vger.kernel.org, silk@sinus.cz
+Cc: Tejun Heo <tj@home-tj.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-> On Thu, Feb 03 2005, Pavel Troller wrote:
-> >   The problem is that on 2.6.10 and 2.6.11-rc[1-3], burning audio CDs
-> >   consumes so much CPU cycles, that my dual Athlon 1800+ system cannot
-> >   serve the process and cd burner dies of repeated buffer underruns or
-> >   totally crashes, requiring physical reset to revive (no ide bus
-> >   reset is enough).
+On Thu, 3 Feb 2005 14:32:29 +0100, Jens Axboe <axboe@suse.de> wrote:
+> On Thu, Feb 03 2005, Bartlomiej Zolnierkiewicz wrote:
+> > On Thu, 3 Feb 2005 12:37:10 +0100, Jens Axboe <axboe@suse.de> wrote:
+> > > On Thu, Feb 03 2005, Bartlomiej Zolnierkiewicz wrote:
+> > > > On Wed, 2 Feb 2005 11:54:48 +0900, Tejun Heo <tj@home-tj.org> wrote:
+> > > > > > 11_ide_drive_sleeping_fix.patch
+> > > > > >
+> > > > > >       ide_drive_t.sleeping field added.  0 in sleep field used to
+> > > > > >       indicate inactive sleeping but because 0 is a valid jiffy
+> > > > > >       value, though slim, there's a chance that something can go
+> > > > > >       weird.  And while at it, explicit jiffy comparisons are
+> > > > > >       converted to use time_{after|before} macros.
+> > > >
+> > > > Same question as for "add ide_hwgroup_t.polling" patch.
+> > > > AFAICS drive->sleep is either '0' or 'timeout + jiffies' (always > 0)
+> > >
+> > > Hmm, what if jiffies + timeout == 0?
+> >
+> > Hm, jiffies is unsigned and timeout is always > 0
+> > but this is still possible if jiffies + timeout wraps, right?
 > 
-> Try this patch.
-> 
-> ===== drivers/ide/ide-cd.c 1.105 vs edited =====
-> --- 1.105/drivers/ide/ide-cd.c	2005-01-08 06:43:53 +01:00
-> +++ edited/drivers/ide/ide-cd.c	2005-01-09 16:31:53 +01:00
-> @@ -1915,7 +1915,7 @@
->  		/*
->  		 * check if dma is safe
->  		 */
-> -		if ((rq->data_len & mask) || (addr & mask))
-> +		if ((rq->data_len & 3) || (addr & mask))
->  			info->dma = 0;
->  	}
->  
-Hi Jens,
-  many thanks, that's exactly what fixes the problem :-)! Now I can burn on
-the 40x speed as well as with 2.6.7... Great work!
-  So it REALLY was a DMA issue... 
-                             With regards, Pavel Troller
+> Precisely, if jiffies is exactly 'timeout' away from wrapping to 0 it
+> could happen. So I think the fix looks sane.
+
+agreed
