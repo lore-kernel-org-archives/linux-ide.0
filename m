@@ -1,35 +1,32 @@
-From: Jamie Lokier <jamie@shareable.org>
+From: Andrea Arcangeli <andrea@suse.de>
 Subject: Re: [PATCH] speed up SATA
-Date: Mon, 29 Mar 2004 14:03:04 +0100
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040329130304.GE4984@mail.shareable.org>
-References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <20040328044029.GB1984@bounceswoosh.org> <40667734.8090203@yahoo.com.au> <20040328203357.GB6405@bounceswoosh.org> <20040328205917.GF6405@bounceswoosh.org> <40677C21.7070807@yahoo.com.au> <20040329052405.GG6405@bounceswoosh.org>
+Date: Mon, 29 Mar 2004 15:05:54 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040329130554.GI3039@dualathlon.random>
+References: <4066021A.20308@pobox.com> <200403282030.11743.bzolnier@elka.pw.edu.pl> <20040328183010.GQ24370@suse.de> <200403282045.07246.bzolnier@elka.pw.edu.pl> <406720A7.1050501@pobox.com> <20040329005502.GG3039@dualathlon.random> <20040329042912.GI18054@ca-server1.us.oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.shareable.org ([81.29.64.88]:27027 "EHLO
-	mail.shareable.org") by vger.kernel.org with ESMTP id S262910AbUC2NDM
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Mar 2004 08:03:12 -0500
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20040329052405.GG6405@bounceswoosh.org>
+In-Reply-To: <20040329042912.GI18054@ca-server1.us.oracle.com>
+To: Wim Coekaerts <wim.coekaerts@oracle.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jens Axboe <axboe@suse.de>, William Lee Irwin III <wli@holomorphy.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: Nick Piggin <nickpiggin@yahoo.com.au>, "Eric D. Mudama" <edmudama@mail.bounceswoosh.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Eric D. Mudama wrote:
-> On Mon, Mar 29 at 11:30, Nick Piggin wrote:
-> >Well strictly, you send them one after the other. So unless you
-> >have something similar to our anticipatory scheduler or plugging
-> >mechanism, the drive should attack the first one first, shouldn't
-> >it?
+On Sun, Mar 28, 2004 at 08:29:12PM -0800, Wim Coekaerts wrote:
+> > In 2.4 reaching 512k DMA units that helped a lot, but going past 512k
+> > didn't help in my measurements.  1M maybe these days is needed (as Jens
+> > suggested) but >1M still sounds overkill and I completely agree with
+> > Jens about that.
 > 
-> If you send 32 commands to our disk at once (TCQ/NCQ) we send 'em all
-> to our back-end disk engine as fast as possible.
+> at least 1Mb... more than 1mb (I doubt 32mb is really necessarily
+> useful) is nice for flushing contiguous journal data to disk. between
+> 1-8mb in one io.
+> 
+> at least 1mb is good when you have to process massive amounts of data,
+> just read huge chunks of files, we tend to do 1mb. anyway,
+> as you said, at some point it's a bit overkill . I thinkg 1-8mb makes
+> sense. 
 
-Are they sent _at once_, or are they sent in sequence?  If they're
-sent in sequence, even if it's a very rapid sequence, than Nick's
-point still stands.  If you're not attacking the first request which
-arrives, the instant the drive code sees it, you're doing something
-similar to the anticipatory scheduler.
-
--- Jamie
+1M certainly it's reasonable, though for 8M I've my doubt you can
+measure a throughput improvement, can you?
