@@ -1,234 +1,282 @@
-From: berthiaume_wayne@emc.com
-Subject: RE: Bug in IDE controllers when connected to PCI?
-Date: Thu, 13 Mar 2003 09:15:35 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <93F527C91A6ED411AFE10050040665D0049C0830@CORPUSMX1>
+From: lasse <lasse@st0kk.com>
+Subject: Problem upgrading kernel 2.2.x ->2.4.x
+Date: Thu, 13 Mar 2003 20:08:46 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20030313200846.01935d10.lasse@st0kk.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-15"
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: Bart.Theunissen@pandora.be
-Cc: gardiol@libero.it, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Harrison_Richard@emc.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gimli (c213-100-111-32.swipnet.se [213.100.111.32])
+	by gandalf.benka.com (8.12.4/8.12.3) with SMTP id h2DIwHmk025447
+	for <linux-ide@vger.kernel.org>; Thu, 13 Mar 2003 19:58:18 +0100
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-	Native support of the PDC20269 chip did not show up until 2.4.19. If
-I recall native 48LBA appeared in 2.4.16. You could try pulling
-drivers/ide/pdc202xx.c from 2.4.19 and dropping it into 2.4.17 to replace
-the present drivers/ide/pdc202xx.c and giving that a try.
+Hello.
 
-> -----Original Message-----
-> From: Bart Theunissen [mailto:Bart.Theunissen@pandora.be]
-> Sent: Thursday, March 13, 2003 5:23 AM
-> To: Bart Theunissen
-> Cc: gardiol@libero.it; linux-kernel@vger.kernel.org;
-> linux-ide@vger.kernel.org; Harrison_Richard@emc.com;
-> berthiaume_wayne@emc.com
-> Subject: Re: Bug in IDE controllers when connected to PCI?
-> 
-> 
-> Hi,
-> 
-> unfortunately, linux-2.4.17 does not support promise-20269 ;-(
-> 
-> Greetings,
-> 
-> Bart
-> 
-> Bart Theunissen wrote:
-> 
-> > Hi,
-> >
-> > I am experiencing the same problem. The controller is a 
-> promise-20269 
-> > and four disks are attached to it (dma is turned on for all drives)
-> > I get the same error messages on the console (except for the scsi 
-> > message). The message 'seeking beyond end of device' is 
-> also logged to 
-> > console. Additionally, file corruption occurs in files that are 
-> > changed very often (logfiles, database files). It seems that the 
-> > erroneous data in the logfiles comes from other files on the same 
-> > partition (/var). Sometimes it takes up to 12 hours before 
-> corruption 
-> > occurs. The program I am using to test this is a java program that 
-> > does write/read/modify and uses md5 to see if a file was changed 
-> > (corrupted) without accessing the file directly. Sometimes, the 
-> > complete systems crashes (it cannot execute a binary or find a 
-> > library). I encountered this on kernel 2.4.20.
-> >
-> > I am testing 2.4.17 to see if it has the same problem (gardiol said 
-> > this one should be fine).
-> >
-> > What can be the cause of this problem ? If more information 
-> is needed, 
-> > or additional tests are required, let me know.
-> >
-> > Greets,
-> >
-> > Bart
-> >
-> > Willy Gardiol wrote:
-> >
-> >> -----BEGIN PGP SIGNED MESSAGE-----
-> >> Hash: SHA1
-> >>
-> >>
-> >> Hi to all,
-> >> i think i run into a bug in current stable kernel's regarding IDE 
-> >> controllers and PCI.
-> >> Sorry for the long post, but i need some help from you to 
-> investigate 
-> >> this deeper.
-> >>
-> >> I own a CDRW Philips 1610A, here is hdparm -i and -I output:
-> >>
-> >> (hdparm -i)
-> >> /dev/hdf:
-> >> Model=PHILIPS CDRW1610A, FwRev=0.010000, SerialNo=5VO2149DL13692
-> >> Config={ Fixed Removeable DTR<=5Mbs DTR>10Mbs nonMagnetic }
-> >> RawCHS=0/0/0, TrkSize=0, SectSize=0, ECCbytes=0
-> >> BuffType=DualPortCache, BuffSize=128kB, MaxMultSect=0
-> >> (maybe): CurCHS=0/0/0, CurSects=0, LBA=yes, LBAsects=0
-> >> IORDY=yes, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
-> >> PIO modes: pio0 pio1 pio2 pio3 pio4
-> >> DMA modes: sdma0 sdma1 sdma2 mdma0 mdma1 mdma2 udma0 udma1 udma2
-> >> AdvancedPM=no
-> >>
-> >> (hdparm -I)
-> >> /dev/hdf:
-> >> ATAPI CD-ROM, with removable media
-> >>        Model Number:           PHILIPS CDRW1610A
-> >>        Serial Number:          5VO2149DL13692
-> >>        Firmware Revision:      0.010000
-> >> Standards:
-> >> Configuration:
-> >>        DRQ response: 50us.
-> >>        Packet size: 12 bytes
-> >> Capabilities:
-> >>        LBA, IORDY(cannot be disabled)
-> >>        Buffer size: 128.0kB
-> >>        DMA: sdma0 sdma1 sdma2 mdma0 mdma1 *mdma2 udma0 udma1 udma2
-> >>             Cycle time: min=120ns recommended=120ns
-> >>        PIO: pio0 pio1 pio2 pio3 pio4
-> >>             Cycle time: no flow control=120ns  IORDY flow 
-> control=120ns
-> >>
-> >> It works and burns correctly with DMA enabled( hdparm -d1) when 
-> >> connected to the on-board IDE controller, following is 
-> /rpco/pci of it:
-> >>  Bus  0, device   4, function  1:
-> >>    IDE interface: VIA Technologies, Inc. VT82C586B PIPC Bus Master 
-> >> IDE (rev 6).
-> >>      Master Capable.  Latency=32.
-> >>      I/O at 0xd800 [0xd80f].
-> >>
-> >> I also have two different PCI IDE ATA100/133 controllers:
-> >> a Promise Ultra100 TX2 (chip PDC20268)
-> >> a Sil  0680 based RAID ATA133 board
-> >> Here is /proc/pci for the 0680 (the other one is not 
-> conented right now)
-> >>  Bus  0, device  11, function  0:
-> >>    RAID bus controller: CMD Technology Inc PCI0680 (rev 2).
-> >>      IRQ 10.
-> >>      Master Capable.  Latency=32.
-> >>      I/O at 0x9800 [0x9807].
-> >>      I/O at 0x9400 [0x9403].
-> >>      I/O at 0x9000 [0x9007].
-> >>      I/O at 0x8800 [0x8803].
-> >>      I/O at 0x8400 [0x840f].
-> >>      Non-prefetchable 32 bit memory at 0xd4800000 [0xd48000ff].
-> >>
-> >> When connected to any of these two controllers (as hde, 
-> hdf or hdg, 
-> >> not tryed hdh but dont think it changes something) if i enable DMA 
-> >> (hdparm -d1) the kernel hangs when i try to burn: no logs 
-> are written 
-> >> (!) but i managed to get this output (sending all logs to 
-> /dev/tty12):
-> >>
-> >> IDE_DMAPROC: chipset supported IDE_DMA_TIMEOUT only: 14
-> >> hdf: status timeout: status 0xd0 { Busy }
-> >> hdf: drive not ready for command
-> >> vmunix: scsi: aborting command due to timeout: pid 934, scsi0, 
-> >> channel 0, id 0, lun 0 2x2a 00 00 00 00 00 00 1f 00
-> >> IDE_DMAPROC: chipset supported IDE_DMA_TIMEOUT only: 14
-> >> hdf: status timeout: status 0xd0 { Busy }
-> >> hdf: drive not ready for command
-> >> hdf: ATAPI reset complete
-> >> unable to handle kernel null pointer dereference at 
-> virtual address 
-> >> 00018
-> >> (follow a register dump, omitted because i didnt copied it)
-> >> kernel panic: Aieee, killing interrupt handler!
-> >> in interrupt handler - NOT SYNCING
-> >>
-> >> I had to copy this by hand so maybe there are some typo errors.
-> >>
-> >> I also own a DVD reader, also connected to this PCI 
-> controllers which 
-> >> uses UDMA5 (hdparm -d1 -X69) and has different troubles:
-> >> - - with the Promise PCD20268 it causes a kernel panic 
-> when i try to 
-> >> read a dirty CD (which, on the other hand the cdburner 
-> correctly reads)
-> >> - - with the 0680 it reads the same CD without giving ANY 
-> read errors 
-> >> and without hanging the kernel! (but gives many reading 
-> errors with 
-> >> the burner...)
-> >>
-> >> Off course none of this problems had ever been noticed using the 
-> >> motherboard-integrated IDE controllers....
-> >>
-> >> Please note, this troubles appeared first in kernel 
-> 2.4.18, and are 
-> >> reproducing up to 2.4.20 (i have not tryed 2.4.21-preX nor 2.5.x). 
-> >> There where no troubles with any other 2.4.x i tryed 
-> (2.4.7, 2.4.14, 
-> >> 2.4.17 at least)
-> >>
-> >> What do you think of this? Where could be the problem? 
-> what could i 
-> >> do to get more info and solve this problem?
-> >>
-> >> Thanks to all!
-> >>
-> >> - --
-> >> ! Willy Gardiol - gardiol@libero.it
-> >> goemon.polito.it/~gardiol
-> >> Use linux for your freedom.
-> >>
-> >>    Non ho parole, fratelli.    Quaranta paesi bambini    hanno 
-> >> attaccato un asilo        e la chiamano guerra.
-> >>    Gli eserciti più potenti del mondo    hanno attaccato il più 
-> >> straccione.
-> >>
-> >>     Jack Folla ( 8/10/2001 )   
-> >>
-> >> -----BEGIN PGP SIGNATURE-----
-> >> Version: GnuPG v1.2.1 (GNU/Linux)
-> >>
-> >> iD8DBQE+bxgnQ9qolN/zUk4RAlF4AJ431AQ7jTaaxJPugtEQTtimaqWZ7QCgryeJ
-> >> TpRdVaO97yfsr08v8D6lwB0=
-> >> =qUwm
-> >> -----END PGP SIGNATURE-----
-> >>
-> >> -
-> >> To unsubscribe from this list: send the line "unsubscribe 
-> >> linux-kernel" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >> Please read the FAQ at  http://www.tux.org/lkml/
-> >>
-> >>  
-> >>
-> >
-> >
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe 
-> > linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> >
-> 
-> 
+I hope this is the right list.
+Now i have a couple of motorolas cpn 5360's and cpn5300. on the 5300 i have no problems with 2.4 or 2.2 kernels. But i have not been able boot with the 2.4.x kernel, as far as i can understand it looks like a ide problem. 
+Im sorry about the long post.. but i'm not sure i can explan the problem without showing the bootup message.
+
+I hope this information helps to understand what goes wrong.
+
+
+
+--------2.2.20-bootup------
+PhoenixPICOBIOS 4.0 Release 6.0     Copyright 1985-2000 Phoenix Technologies Ltd.All Rights ReservedCPN5360 BIOS 2.0RM01, Copyright 1999-2000 Motorola, Inc.Build Time: 09/12/00 14:45:20     CPU = Intel(R) Mobile Pentium(R) II processor  333 MHzPress <F2> to enter SETUP640K System RAM Passed127M Extended RAM Passed256K Cache SRAM PassedSystem BIOS shadowedVideo BIOS shadowedUMB upper limit segment address: E674Fixed Disk 0: SunDisk SDTB-128                        Fixed Disk 1: IBM-DBCA-206480                                             version 2.2.20 (root@cpn5360) (gcc version 2.95.4 20011002 (Debian prerelease)) #2 Tue Mar 4 13:59:00 CET 2003
+BIOS-provided physical RAM map:
+ BIOS-e820: 0009e000 @ 00000000 (usable)
+ BIOS-e820: 07f00000 @ 00100000 (usable)
+Detected 332505 kHz processor.
+Console: colour VGA+ 80x25
+Calibrating delay loop... 663.55 BogoMIPS
+Memory: 127484k/131072k available (1460k kernel code, 416k reserved, 1588k data, 124k init)
+Dentry hash table entries: 16384 (order 5, 128k)
+Buffer cache hash table entries: 131072 (order 7, 512k)
+Page cache hash table entries: 32768 (order 5, 128k)
+Intel machine check architecture supported.
+Intel machine check reporting enabled on CPU#0.
+256K L2 cache (4 way)
+CPU: L2 Cache: 256K
+CPU: Intel Mobile Pentium II stepping 0a
+Checking 386/387 coupling... OK, FPU using exception 16 error reporting.
+Checking 'hlt' instruction... OK.
+POSIX conformance testing by UNIFIX
+mtrr: v1.35a (19990819) Richard Gooch (rgooch@atnf.csiro.au)
+PCI: PCI BIOS revision 2.10 entry at 0xfd99e
+PCI: Using configuration type 1
+PCI: Probing PCI hardware
+PCI: Enabling I/O for device 00:88
+PCI: Enabling memory for device 00:88
+Linux NET4.0 for Linux 2.2
+Based upon Swansea University Computer Society NET3.039
+NET4: Unix domain sockets 1.0 for Linux NET4.0.
+NET4: Linux TCP/IP 1.0 for NET4.0
+IP Protocols: ICMP, UDP, TCP
+TCP: Hash tables configured (ehash 131072 bhash 65536)
+Starting kswapd v 1.5 
+vga16fb: initializing
+vga16fb: mapped to 0xc00a0000
+Console: switching to colour frame buffer device 80x30
+fb0: VGA16 VGA frame buffer device
+Detected PS/2 Mouse Port.
+Serial driver version 4.27 with<4>keyboard: Timeout - AT keyboard not present?
+keyboard: Timeout - AT keyboard not present?
+ HUB-6 MANY_PORTS MULTIPORT SHARE_IRQ enabled
+ttyS00 at 0x03f8 (irq = 4) is a 16550A
+ttyS01 at 0x02f8 (irq = 3) is a 16550A
+pty: 256 Unix98 ptys configured
+RAM disk driver initialized:  16 RAM disks of 4096K size
+loop: registered device at major 7
+PIIX4: IDE controller on PCI bus 00 dev 39
+PIIX4: not 100% native mode: will probe irqs later
+    ide0: BM-DMA at 0x1440-0x1447, BIOS settings: hda:pio, hdb:DMA
+hda: SunDisk SDTB-128, ATA DISK drive
+hdb: IBM-DBCA-206480, ATA DISK drive
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+hda: SunDisk SDTB-128, 15MB w/1kB Cache, CHS=490/2/32
+hdb: IBM-DBCA-206480, 6194MB w/420kB Cache, CHS=789/255/63, UDMA
+Floppy drive(s): fd0 is 1.44M
+FDC 0 is a post-1991 82077
+aacraid raid driver version, Mar  4 2003
+scsi: <fdomain> Detection failed (no card)
+DC390: 0 adapters found
+scsi : 0 hosts.
+scsi : detected total.
+cpqarray: Sorry, I don't know how to access the SMART Array controller 00000000
+3c59x.c 18Feb01 Donald Becker and others http://www.scyld.com/network/vortex.html
+pcnet32.c: PCI bios is present, checking for devices...
+eepro100.c:v1.09j-t 9/29/99 Donald Becker http://cesdis.gsfc.nasa.gov/linux/drivers/eepro100.html
+eepro100.c: $Revision: 1.20.2.10 $ 2000/05/31 Modified by Andrey V. Savochkin <saw@saw.sw.com.sg> and others
+eepro100.c: VA Linux custom, Dragan Stancevic <visitor@valinux.com> 2000/11/15
+eth0: OEM i82557/i82558 10/100 Ethernet, 00:01:AF:01:BC:2B, IRQ 10.
+  Receiver lock-up bug exists -- enabling work-around.
+  Board assembly 413503-241, Physical connectors present: RJ45
+  Primary interface chip i82555 PHY #1.
+  General self-test: passed.
+  Serial sub-system self-test: passed.
+  Internal registers self-test: passed.
+  ROM checksum self-test: passed (0x04f4518b).
+  Receiver lock-up workaround activated.
+eepro100.c:v1.09j-t 9/29/99 Donald Becker http://cesdis.gsfc.nasa.gov/linux/drivers/eepro100.html
+eepro100.c: $Revision: 1.20.2.10 $ 2000/05/31 Modified by Andrey V. Savochkin <saw@saw.sw.com.sg> and others
+eepro100.c: VA Linux custom, Dragan Stancevic <visitor@valinux.com> 2000/11/15
+via-rhine.c:v1.08b-LK1.0.1 12/14/2000  Written by Donald Becker
+  http://www.scyld.com/network/via-rhine.html
+Partition check:
+ hda:
+ hdb: hdb1 hdb2 hdb4 < hdb5 hdb6 hdb7 >
+VFS: Mounted root (ext2 filesystem) readonly.
+Freeing unused kernel memory: 124k freed
+INIT: version 2.84 booting
+Activating swap.
+Adding Swap: 192772k swap-space (priority -1)
+Checking root file system...
+fsck 1.27 (8-Mar-2002)
+/dev/hdb1: clean, 6891/122880 files, 35373/489951 blocks
+/etc/init.d/rcS: System clock was not updated at this time.
+Calculating module dependencies... done.
+Loading modules: af_packet linear modprobe: Can't locate module linear
+
+Checking all file systems...
+fsck 1.27 (8-Mar-2002)
+/dev/hdb5: clean, 33174/256512 files, 197162/512064 blocks
+Setting kernel variables.
+Mounting local filesystems...
+/dev/hdb5 on /usr type ext2 (rw,errors=remount-ro)
+EXT2-fs warning: mounting unchecked fs, running e2fsck is recommended
+/dev/hdb6 on /var type ext2 (rw)
+Running 0dns-down to make sure resolv.conf is ok...done.
+Cleaning: /etc/network/ifstate.
+Setting up IP spoofing protection: rp_filter.
+Configuring network interfaces: done.
+Starting portmap daemon: portmap.
+
+Setting the System Clock using the Hardware Clock as reference...
+modprobe: modprobe: Can't locate module char-major-10-135
+System Clock set. Local time: Thu Mar 13 19:05:53 CET 2003
+
+Cleaning: /tmp /var/lock /var/run.
+Initializing random number generator... rm: cannot remove `/var/lib/urandom/random-seed': Input/output error
+urandom start: failed.
+done.
+Recovering nvi editor sessions... done.
+INIT: Entering runlevel: 2
+Starting system log daemon: syslogd.
+Starting kernel log daemon: klogd.
+Starting NFS common utilities: statd lockd.
+Setting NIS domainname to: lanparty
+Starting NIS services: ypbind 
+Starting automounter:  /var/autofs/misc /var/autofs/net /homedone.
+Starting internet superserver: inetd.
+Not starting NFS kernel daemon: No exports.
+Starting OpenBSD Secure Shell server: sshd.
+Starting uptime daemon: uptimed.
+Starting X font server: xfs.
+Starting NTP server: ntpd.
+Starting deferred execution scheduler: atd.
+Starting periodic command scheduler: cron.
+Starting X display manager: xdm.
+
+Debian GNU/Linux 3.0 cpn5360 ttyS0
+
+cpn5360 login:
+----------------/2.2.20-boot-up-----
+
+And now the kernel i want to use.
+
+----------------2.4.18-fail---------
+PhoenixPICOBIOS 4.0 Release 6.0     Copyright 1985-2000 Phoenix Technologies Ltd.All Rights ReservedCPN5360 BIOS 2.0RM01, Copyright 1999-2000 Motorola, Inc.Build Time: 09/12/00 14:45:20     CPU = Intel(R) Mobile Pentium(R) II processor  333 MHzPress <F2> to enter SETUP640K System RAM Passed127M Extended RAM Passed256K Cache SRAM PassedSystem BIOS shadowedVideo BIOS shadowedUMB upper limit segment address: E674Fixed Disk 0: SunDisk SDTB-128                        Fixed Disk 1: IBM-DBCA-206480                                              
+BIOS-provided physical RAM map:
+ BIOS-e820: 0000000000000000 - 000000000009ec00 (usable)
+ BIOS-e820: 000000000009ec00 - 00000000000a0000 (reserved)
+ BIOS-e820: 00000000000e6400 - 0000000000100000 (reserved)
+ BIOS-e820: 0000000000100000 - 0000000008000000 (usable)
+ BIOS-e820: 00000000fff80000 - 0000000100000000 (reserved)
+On node 0 totalpages: 32768
+zone(0): 4096 pages.
+zone(1): 28672 pages.
+zone(2): 0 pages.
+Kernel command line: BOOT_IMAGE=2.4 ro root=341 console=ttyS0,38400
+Initializing CPU#0
+Detected 332.507 MHz processor.
+Console: colour VGA+ 80x25
+Calibrating delay loop... 663.55 BogoMIPS
+Memory: 126204k/131072k available (1495k kernel code, 4476k reserved, 441k data, 232k init, 0k highmem)
+Dentry-cache hash table entries: 16384 (order: 5, 131072 bytes)
+Inode-cache hash table entries: 8192 (order: 4, 65536 bytes)
+Mount-cache hash table entries: 2048 (order: 2, 16384 bytes)
+Buffer-cache hash table entries: 8192 (order: 3, 32768 bytes)
+Page-cache hash table entries: 32768 (order: 5, 131072 bytes)
+CPU: L1 I cache: 16K, L1 D cache: 16K
+CPU: L2 cache: 256K
+Intel machine check architecture supported.
+Intel machine check reporting enabled on CPU#0.
+CPU: Intel Mobile Pentium II stepping 0a
+Enabling fast FPU save and restore... done.
+Checking 'hlt' instruction... OK.
+POSIX conformance testing by UNIFIX
+mtrr: v1.40 (20010327) Richard Gooch (rgooch@atnf.csiro.au)
+mtrr: detected mtrr type: Intel
+PCI: PCI BIOS revision 2.10 entry at 0xfd99e, last bus=1
+PCI: Using configuration type 1
+PCI: Probing PCI hardware
+Unknown bridge resource 0: assuming transparent
+Unknown bridge resource 2: assuming transparent
+PCI: Using IRQ router PIIX [8086/7110] at 00:07.0
+PCI: Found IRQ 5 for device 00:11.0
+PCI: Sharing IRQ 5 with 01:00.0
+Limiting direct PCI/PCI transfers.
+isapnp: Scanning for PnP cards...
+isapnp: No Plug & Play device found
+Linux NET4.0 for Linux 2.4
+Based upon Swansea University Computer Society NET3.039
+Initializing RT netlink socket
+apm: BIOS version 1.2 Flags 0x03 (Driver version 1.16)
+Starting kswapd
+Journalled Block Device driver loaded
+devfs: v1.10 (20020120) Richard Gooch (rgooch@atnf.csiro.au)
+devfs: boot_options: 0x0
+udf: registering filesystem
+pty: 256 Unix98 ptys configured
+keyboard: Timeout - AT keyboard not present?(ed)
+keyboard: Timeout - AT keyboard not present?(f4)
+Serial driver version 5.05c (2001-07-08) with MANY_PORTS SHARE_IRQ SERIAL_PCI ISAPNP enabled
+ttyS00 at 0x03f8 (irq = 4) is a 16550A
+ttyS01 at 0x02f8 (irq = 3) is a 16550A
+block: 128 slots per queue, batch=32
+Uniform Multi-Platform E-IDE driver Revision: 6.31
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+PIIX4: IDE controller on PCI bus 00 dev 39
+PIIX4: chipset revision 1
+PIIX4: not 100% native mode: will probe irqs later
+    ide0: BM-DMA at 0x1440-0x1447, BIOS settings: hda:pio, hdb:DMA
+hda: SunDisk SDTB-128, ATA DISK drive
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+hda: 31360 sectors (16 MB) w/1KiB Cache, CHS=490/2/32
+Partition check:
+ /dev/ide/host0/bus0/target0/lun0:
+Floppy drive(s): fd0 is 1.44M
+FDC 0 is a post-1991 82077
+loop: loaded (max 8 devices)
+eepro100.c:v1.09j-t 9/29/99 Donald Becker http://www.scyld.com/network/eepro100.html
+eepro100.c: $Revision: 1.36 $ 2000/11/17 Modified by Andrey V. Savochkin <saw@saw.sw.com.sg> and others
+PCI: Found IRQ 10 for device 00:12.0
+eth0: OEM i82557/i82558 10/100 Ethernet, 00:01:AF:01:BC:2B, IRQ 10.
+  Receiver lock-up bug exists -- enabling work-around.
+  Board assembly 413503-241, Physical connectors present: RJ45
+  Primary interface chip i82555 PHY #1.
+  General self-test: passed.
+  Serial sub-system self-test: passed.
+  Internal registers self-test: passed.
+  ROM checksum self-test: passed (0x04f4518b).
+  Receiver lock-up workaround activated.
+Linux agpgart interface v0.99 (c) Jeff Hartmann
+agpgart: Maximum main memory to use for agp memory: 96M
+agpgart: Detected Intel 440BX chipset
+agpgart: AGP aperture is 64M @ 0xf8000000
+SCSI subsystem driver Revision: 1.00
+request_module[scsi_hostadapter]: Root fs not mounted
+request_module[scsi_hostadapter]: Root fs not mounted
+Linux Kernel Card Services 3.1.22
+  options:  [pci] [cardbus] [pm]
+Intel PCIC probe: not found.
+md: linear personality registered as nr 1
+md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: ... autorun DONE.
+NET4: Linux TCP/IP 1.0 for NET4.0
+IP Protocols: ICMP, UDP, TCP, IGMP
+IP: routing cache hash table of 1024 buckets, 8Kbytes
+TCP: Hash tables configured (established 8192 bind 8192)
+NET4: Unix domain sockets 1.0/SMP for Linux NET4.0.
+ds: no socket drivers loaded!
+VFS: Cannot open root device "341" or 03:41
+Please append a correct "root=" boot option
+Kernel panic: VFS: Unable to mount root fs on 03:41
+--------------/2.4.18-fail 
+
+
+/Lasse
