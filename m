@@ -1,30 +1,64 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH libata-dev-2.6] Issue INITIALIZE DEVICE PARAMETERS for
- CHS only devices
-Date: Fri, 25 Feb 2005 00:40:20 -0500
-Message-ID: <421EBA44.2030409@pobox.com>
-References: <006d01c50c11$81003920$a801a8c0@tw.ibm.com> <42167CDD.50301@pobox.com> <421C6840.7090903@tw.ibm.com> <421C97C1.9090701@pobox.com> <421D3DB1.1090800@tw.ibm.com> <421D41C2.3030909@pobox.com> <421D663B.5050107@tw.ibm.com> <421D679B.7020508@pobox.com> <421D7727.4030408@tw.ibm.com> <421D78A2.8090103@pobox.com> <421D7BD2.7030309@tw.ibm.com> <421D86CA.3010606@pobox.com> <421EB13F.4000503@tw.ibm.com>
+From: GrantC <grant_nospam@dodo.com.au>
+Subject: IDE channels not independent in PIIX4E?
+Date: Fri, 25 Feb 2005 16:47:46 +1100
+Message-ID: <e6dt11lj3pt9v7hl0luqseris0fs2kvr7v@4ax.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:14998 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262615AbVBYFki (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Feb 2005 00:40:38 -0500
-In-Reply-To: <421EB13F.4000503@tw.ibm.com>
+Received: from relay01.mail-hub.dodo.com.au ([203.220.32.149]:63389 "EHLO
+	relay01.mail-hub.dodo.com.au") by vger.kernel.org with ESMTP
+	id S262610AbVBYFry (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Feb 2005 00:47:54 -0500
+Received: from [220.240.117.195] (helo=magpie.mire.mine.nu)
+	by relay01.mail-hub.dodo.com.au with smtp (Exim 3.36 #2)
+	id 1D4YKN-0006hb-00
+	for linux-ide@vger.kernel.org; Fri, 25 Feb 2005 16:47:51 +1100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: Mark Lord <mlord@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, IDE Linux <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-This patch also looked perfect, and also did not apply.  I don't 
-understand this, either.
+Greetings,
 
-I applied this patch manually also.
+I have an old but reliable Intel SE440BX-2 with 440BX and PIIX4E 
+chipset.  120 + 80 GB hard drives on each channel as master, very 
+disappointing md software RAID0 or RAID1 performance.
 
-Thanks much!
+Slackware 10.1 with 2.4.29 or 2.4.30pre2, testing back to 2.4.21.
 
-	Jeff
+One thing I noticed is that if I start a 
 
+  dd if=/dev/zero bs=4k of=/dev/hdX
 
+on each drive, then Ctrl-C stop each, one terminal will wait for 
+the other drive to complete the write before starting its turn 
+to complete the pending write.
+
+It seems that somewhere what I expected to be two parallel data 
+streams are serialised.  As the chipset only does udma33 I was 
+hoping to get an OS performance gain with RAID0.  Box has 512MB
+memory and rarely touches swap.  
+
+Is this a limit of the hardware or did I miss some kernel tuning?
+
+Have benchmarked with tiobench -- that tells me chunk-size has 
+little effect, software RAID costs about 8% CPU, and sequential 
+writes cost roughly 20%, 40% and 60% for ext2, ext3 and reiserfs.
+
+Filesystem sequential read speed improved from 17 to 25 MB/s for 
+RAID0, but no improvement in write speed.
+
+Raw (non-filesystem) dd speeds are about 27MB/s read, 20MB/s write
+to non-RAID partition.  All testing done on same partitions, so 
+no confusion with fast or slow end of drive.  The drives are 
+Seagate 7200.7 series with 2MB cache.  
+
+Any pointers on tuning options appreciated, the Intel datasheets 
+don't really tell me much.  As for reading the kernel source, I 
+have no idea where to start, not much under Docs, and I dunno 
+which or which way to turn the 'knobs'.
+
+Even search terms would be welcome :)
+
+Thanks,
+Grant.
 
