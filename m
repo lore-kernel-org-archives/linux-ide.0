@@ -1,33 +1,22 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: UDMA causes IDE corruption on Shuttle AK32L mobo (VIA KT266A),
-	kernel 2.4.1[89]
-Date: 29 Nov 2002 21:24:38 +0000
+From: "Paresh Sawant" <p.Sawant@zensar.com>
+Subject: struct to be passed to ioctl call for commanf HDIO_DRIVE_CMD
+Date: Wed, 4 Dec 2002 14:40:21 +0530
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1038605078.14232.9.camel@irongate.swansea.linux.org.uk>
-References: <1038600903.2074.2.camel@fox>
+Message-ID: <54670264D99F034EA23CBB7D7A45AE7E5ECE@zenmail1.ind.zensar.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1038600903.2074.2.camel@fox>
+Received: from scanmail.zensar.com (smtpfw.zensar.com [202.54.40.195])
+	by omega.zensar.com (8.9.3+Sun/8.9.3) with SMTP id OAA19799
+	for <linux-ide@vger.kernel.org>; Wed, 4 Dec 2002 14:44:56 -0500 (GMT)
+content-class: urn:content-classes:message
 List-Id: linux-ide@vger.kernel.org
-To: Jim Halfpenny <jimvin@lineone.net>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Fri, 2002-11-29 at 20:15, Jim Halfpenny wrote:
-> I have seen the behaviour using the stock 2.4.18 kernel from Mandrake
-> 8.2. and the 2.4.19 kernel from Mandrake 9.0:
-> Linux version 2.4.19-16mdk (quintela@bi.mandrakesoft.com) (gcc version
-> 3.2 (Mandrake Linux 9.0 3.2-1mdk)) #1 Fri Sep 20 18:15:05 CEST 2002
+Hi 
 
-Vendor kernel reports generally ahould go to the vendor, because the
-vendor kernels are often quite different from the base one.
+	I want to send ATA command to IDE hard disk driver using ioctl with comand "HDIO_DRIVE_CMD", to do raw write to hard disk. Which Struct i should pass to ioctl call as a third argument ?
 
-> There are no log entries in /var/log/messages or /var/log/syslog when
-> these faulty writes take place to indicate that there are any problems
-> but copying a large file and checking it's md5sum shows it to be
-> damaged.
-
-UDMA data transfers are verified by hardware end to end. UDMA showing up
-memory problems is not unknown, but thats only one possibility.
-
+Thanks 
+paresh
