@@ -1,104 +1,109 @@
-From: Konstantin Sobolev <kos@supportwizard.com>
+From: cira <linux@spishack.com>
 Subject: Re: poor sata performance on 2.6
-Date: Fri, 16 Apr 2004 20:59:44 +0400
+Date: Fri, 16 Apr 2004 11:46:36 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200404162059.44465.kos@supportwizard.com>
-References: <200404150236.05894.kos@supportwizard.com> <407F315E.2000809@pobox.com> <200404161748.38958.vda@port.imtp.ilyichevsk.odessa.ua>
-Reply-To: kos@supportwizard.com
+Message-ID: <40801BFC.3090702@spishack.com>
+References: <200404150236.05894.kos@supportwizard.com> <200404152030.51052.vda@port.imtp.ilyichevsk.odessa.ua> <407F315E.2000809@pobox.com> <200404161748.38958.vda@port.imtp.ilyichevsk.odessa.ua>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=koi8-r
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.rol.ru ([194.67.21.9]:49467 "EHLO smtp.rol.ru")
-	by vger.kernel.org with ESMTP id S263425AbUDPQ5I (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Apr 2004 12:57:08 -0400
-Received: from 81.211.110.66.adsl-spb.net.rol.ru ([81.211.110.66]:12160 "EHLO
-	81.211.110.66.adsl-spb.net.rol.ru" smtp-auth: <none> TLS-CIPHER: <none>
-	TLS-PEER-CN1: <none>) by gnome03.net.rol.ru with ESMTP
-	id S17476798AbUDPQ4y convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org> + 1 other);
-	Fri, 16 Apr 2004 20:56:54 +0400
+Received: from c-24-10-136-159.client.comcast.net ([24.10.136.159]:35332 "EHLO
+	chaljin") by vger.kernel.org with ESMTP id S261875AbUDPRqi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Apr 2004 13:46:38 -0400
 In-Reply-To: <200404161748.38958.vda@port.imtp.ilyichevsk.odessa.ua>
-Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Denis Vlasenko <vda@port.imtp.ilyichevsk.odessa.ua>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Justin Cormack <justin@street-vision.com>, Ryan Geoffrey Bourgeois <rgb005@latech.edu>, Kernel mailing list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Kernel mailing list <linux-kernel@vger.kernel.org>
 
-On Friday 16 April 2004 18:48, Denis Vlasenko wrote:
-> > When you mount a filesystem, it changes the default block size (512=
- or
-> > 1024) to the filesystem block size, normally 4096.  This would cert=
-ainly
-> > increase the throughput.
->
+Denis Vlasenko wrote:
+> On Friday 16 April 2004 04:05, Jeff Garzik wrote:
+
+>>It seems like the situation is already resolved, to me.
+>>
+>>When you mount a filesystem, it changes the default block size (512 or
+>>1024) to the filesystem block size, normally 4096.  This would certainly
+>>increase the throughput.
+> 
+> 
 > Yes, this works.
->
+> 
 > But if one uses unpartitioned disk, why does (s)he need to
-> do some blocksize tricks before hdparm starts to measure good perform=
-ance?
-> I think that in this case block layer can coalesce small read request=
-s
+> do some blocksize tricks before hdparm starts to measure good performance?
+> I think that in this case block layer can coalesce small read requests
 > into large ones regardless of block size.
->
-> Konstantin, does dd give you the same behaviour as hdparm?
 
-Sorry, I already partitioned it and put lots of data there.
-But situation is reproducible by removing all /dev/sda entries from fst=
-ab and rebooting. Here are results of my experiments with dd:
+debian unstable
+kernel 2.6.5 with udev
+promise sata150 tx4
+dual seagate ST3120026AS (120GB)
+libata 1.02
+sata_promise 0.91
 
-kos root # bash -c "sleep 10 && killall -3 dd &" && LANG=3DC time dd if=
-=3D/dev/sda of=3D/dev/null ibs=3D512 obs=3D512
-537152+0 records in
-537152+0 records out
-Command terminated by signal 3
-0.23user 3.73system 0:10.07elapsed 39%CPU (0avgtext+0avgdata 0maxreside=
-nt)k
-0inputs+0outputs (0major+121minor)pagefaults 0swaps
+Thank you all!
 
-kos root # hdparm -t /dev/sda
+I use lvm2 with /dev/sda and /dev/sdb as members of my volume group. 
+That means, no partition tables.  The logical volume contains a 
+ReiserFS.  Once the logical volume is mounted the higher transfer rates 
+are seen.
 
-/dev/sda:
- Timing buffered disk reads:   84 MB in  3.07 seconds =3D  27.37 MB/sec
-kos root # bash -c "sleep 10 && killall -3 dd &" && LANG=3DC time dd if=
-=3D/dev/sda of=3D/dev/null ibs=3D4096 obs=3D4096
-71691+0 records in
-71691+0 records out
-Command terminated by signal 3
-0.07user 3.83system 0:10.08elapsed 38%CPU (0avgtext+0avgdata 0maxreside=
-nt)k
-0inputs+0outputs (0major+122minor)pagefaults 0swaps
+22 root@chaljin:/mnt # mount /dev/sdb1 sdb1
+23 root@chaljin:/mnt # mount | grep sdb
 
-kos root # mount /dev/sda2 /wd
-kos root # hdparm -t /dev/sda
+/dev/scsi/host1/bus0/target0/lun0/part1 on /mnt/sdb1 type ext2 (rw)
 
-/dev/sda:
- Timing buffered disk reads:   84 MB in  3.07 seconds =3D  27.38 MB/sec
+24 root@chaljin:/mnt # hdparm -t /dev/sdb
 
-kos root # hdparm -t /dev/sda
+/dev/sdb:
+  Timing buffered disk reads:   32 MB in  3.04 seconds =  10.52 MB/sec
 
-/dev/sda:
- Timing buffered disk reads:  206 MB in  3.02 seconds =3D  68.13 MB/sec
+25 root@chaljin:/mnt # hdparm -t /dev/sdb
 
-kos root # bash -c "sleep 10 && killall -3 dd &" && LANG=3DC time dd if=
-=3D/dev/sda of=3D/dev/null ibs=3D512 obs=3D512
-1402384+0 records in
-1402384+0 records out
-Command terminated by signal 3
-0.54user 2.57system 0:10.02elapsed 31%CPU (0avgtext+0avgdata 0maxreside=
-nt)k
-0inputs+0outputs (0major+121minor)pagefaults 0swaps
+/dev/sdb:
+  Timing buffered disk reads:  166 MB in  3.02 seconds =  54.98 MB/sec
 
-kos root # bash -c "sleep 10 && killall -3 dd &" && LANG=3DC time dd if=
-=3D/dev/sda of=3D/dev/null ibs=3D4096 obs=3D4096
-329705+0 records in
-329705+0 records out
-Command terminated by signal 3
-0.32user 2.43system 0:10.13elapsed 27%CPU (0avgtext+0avgdata 0maxreside=
-nt)k
-0inputs+0outputs (0major+122minor)pagefaults 0swaps
+26 root@chaljin:/mnt # umount /dev/sdb1
 
-It looks like dd behaves similarly to hdparm
+Ah, the change is not stable either.  If I umount the partition it
+reverts to the slower rate.  There is no need to reboot.
 
---=20
-/KoS
-* yas eh d'tahW.	=C0=08=04=C0mih raeh uoy diD				     =20
+ > Konstantin, does dd give you the same behaviour as hdparm?
+ > --
+ > vda
+
+Yes, dd does behave the same as hdparm.
+
+39 root@chaljin:/root # dd bs=512 count=65536 if=/dev/sdb of=/dev/null
+
+65536+0 records in
+65536+0 records out
+33554432 bytes transferred in 3.203750 seconds (10473487 bytes/sec)
+
+40 root@chaljin:/root # cd /mnt
+41 root@chaljin:/mnt # mount /dev/sdb1 sdb1
+42 root@chaljin:/mnt # dd bs=512 count=65536 if=/dev/sdb of=/dev/null
+
+65536+0 records in
+65536+0 records out
+33554432 bytes transferred in 3.184339 seconds (10537330 bytes/sec)
+
+43 root@chaljin:/mnt # dd bs=512 count=65536 if=/dev/sdb of=/dev/null
+
+65536+0 records in
+65536+0 records out
+33554432 bytes transferred in 0.400394 seconds (83803552 bytes/sec)
+
+44 root@chaljin:/mnt # dd bs=512 count=339968 if=/dev/sdb of=/dev/null
+
+339968+0 records in
+339968+0 records out
+174063616 bytes transferred in 2.705558 seconds (64335569 bytes/sec)
+
+45 root@chaljin:/mnt #
+
+If anyone wants further testing just let me know.  I still have one 
+blank disk and one promise sata150 tx4 controller that is not yet in use.
+
+-cira
+
+(I'm on the linux-ide list)
+
