@@ -1,123 +1,257 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: [RFC] pci_get_legacy_ide_irq()
-Date: Tue, 19 Oct 2004 17:04:48 +1000
+From: Doug Maxey <dwm@austin.ibm.com>
+Subject: [PATCH] honor IDE drive write cache settings
+Date: Tue, 19 Oct 2004 11:15:14 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1098169487.15029.58.camel@gaston>
+Message-ID: <200410191615.i9JGFEXI010445@falcon10.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed ;
+	boundary="==_Exmh_-817370000"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:27793 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S268053AbUJSHJq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Oct 2004 03:09:46 -0400
+Received: from pixpat.austin.ibm.com ([192.35.232.241]:59616 "EHLO
+	falcon10.austin.ibm.com") by vger.kernel.org with ESMTP
+	id S269503AbUJSQPU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 Oct 2004 12:15:20 -0400
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: list linux-ide <linux-ide@vger.kernel.org>
+Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>, dwm@maxeymade.com
 
-Hi !
+This is a multipart MIME message.
 
-As discussed earlier, this is a proposed patch that adds the function
-to include/asm-generic/pci.h and ppc64's own pci.h. I also only call
-it from the amd7xxx.c driver for now, I want to let Bart decide if we
-should add a call to it from every driver that don't see an irq when
-we sort-of know what we are doing, or if we could just call it from the
-generic pci-ide code when the controller is in legacy mode ... maybe
-after a probe pass ? (thoug archs like ppc don't do irq probe).
+--==_Exmh_-817370000
+Content-Type: text/plain; charset=us-ascii
 
-The patch also uses NO_IRQ which is currently not defined on a lot of
-archs. This is ok as I'm currently collecting definitions for it and
-will send a patch adding those before this patch gets submited.
 
-This patch adds a pci_get_legacy_ide_irq() function to
-include/asm-generic/pci.h that returns the interrupt to use for a PCI
-IDE controller that is set to "legacy mode". It also adds a ppc64 specific
-implementation that allows the platform code to provide it's own number.
-Finally, it adds a call to this routine to the amd7xxx driver (instead
-of hard coding the numbers) when no interrupt was found.
-I decided to fix individual drivers rather 
+Bart,
 
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+here is a patch that handles drives that come with write cache disabled, 
+both as modular and builtin drivers.
 
-Index: linux-maple/drivers/ide/pci/amd74xx.c
-===================================================================
---- linux-maple.orig/drivers/ide/pci/amd74xx.c	2004-10-19 13:38:08.000000000 +1000
-+++ linux-maple/drivers/ide/pci/amd74xx.c	2004-10-19 17:04:20.243498048 +1000
-@@ -416,8 +416,8 @@
- {
- 	int i;
+++doug
+
+
+--==_Exmh_-817370000
+Content-Type: text/x-patch ; name="honor-write-cache-setting-4.patch"; charset=us-ascii
+Content-Description: honor-write-cache-setting-4.patch
+Content-Disposition: attachment; filename="honor-write-cache-setting-4.patch"
+
+Name: honor ide drive write cache settings
+
+Description:
+	Allows the drive settings of the write cache value to be used
+	as the default setting for the drive.  Also, this enables the
+	hdparm command HDIO_DRIVE_CMD to be intercepted to call
+	ide_write_cache().
+
+	write_cache() has been moved from ide-disk.c, renamed to
+	ide_write_cache() which now lives in ide-io.c.
+
+Rationale:
+	Some new drives come with write cache off.
+	The current driver ignores the default setting, and always
+	enabled write cache. In addition, the toggling of the write
+	cache did not correctly match the barrier operations when
+	changed from command line tools.
+
+Status:
+	Tested on power3 and JS20 ppc64, starting with the default
+	drive settings, then enabling and disabling cache settings via
+	hdparm and blktool, both as modular and builtin driver.
+
+
+Signed-off-by: Doug Maxey <dwm@austin.ibm.com>
+
+ drivers/ide/ide-disk.c     |   46 +++++----------------------------------------
+ drivers/ide/ide-io.c       |   44 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/ide/ide-taskfile.c |    9 ++++++++
+ include/linux/ide.h        |   11 ++++++++++
+
+===== include/linux/ide.h 1.137 vs edited =====
+--- 1.137/include/linux/ide.h	2004-10-01 12:55:47 -05:00
++++ edited/include/linux/ide.h	2004-10-18 16:59:24 -05:00
+@@ -1638,4 +1638,15 @@ extern struct bus_type ide_bus_type;
+ #define ide_id_has_flush_cache_ext(id)	\
+ 	(((id)->cfs_enable_2 & 0x2400) == 0x2400)
  
--	if (!hwif->irq)
--		hwif->irq = hwif->channel ? 15 : 14;
-+	if (hwif->irq == NO_IRQ)
-+		hwif->irq = pci_get_legacy_ide_irq(hwif->pci_dev, hwif->channel);
- 
- 	hwif->autodma = 0;
- 
-Index: linux-maple/include/asm-ppc64/pci.h
-===================================================================
---- linux-maple.orig/include/asm-ppc64/pci.h	2004-10-19 13:37:31.000000000 +1000
-+++ linux-maple/include/asm-ppc64/pci.h	2004-10-19 17:03:43.151545320 +1000
-@@ -13,6 +13,7 @@
- #include <linux/slab.h>
- #include <linux/string.h>
- #include <linux/dma-mapping.h>
-+#include <asm/machdep.h>
- #include <asm/scatterlist.h>
- #include <asm/io.h>
- #include <asm/prom.h>
-@@ -20,6 +21,8 @@
- #define PCIBIOS_MIN_IO		0x1000
- #define PCIBIOS_MIN_MEM		0x10000000
- 
-+struct pci_dev;
++int ide_write_cache(ide_drive_t *drive, int arg);
 +
- #ifdef CONFIG_PPC_ISERIES
- #define pcibios_scan_all_fns(a, b)	0
- #else
-@@ -36,7 +39,13 @@
- 	/* We don't do dynamic PCI IRQ allocation */
++static inline sector_t idedisk_capacity (ide_drive_t *drive) {
++	return drive->capacity64 - drive->sect0;
++}
++
++static inline int ide_drive_has_flush_cache (ide_drive_t *drive) {
++	return ((drive->addressing && (idedisk_capacity (drive) > (1ULL << 28)) &&
++		    (ide_id_has_flush_cache_ext(drive->id))) ||
++		(ide_id_has_flush_cache(drive->id)));
++}
+ #endif /* _IDE_H */
+===== drivers/ide/ide-disk.c 1.96 vs edited =====
+--- 1.96/drivers/ide/ide-disk.c	2004-09-10 10:31:30 -05:00
++++ edited/drivers/ide/ide-disk.c	2004-10-18 18:08:42 -05:00
+@@ -1061,11 +1061,6 @@ static void init_idedisk_capacity (ide_d
+ 	}
  }
  
--struct pci_dev;
-+#define HAVE_ARCH_PCI_GET_LEGACY_IDE_IRQ
-+static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
-+{
-+	if (ppc_md.pci_get_legacy_ide_irq)
-+		return ppc_md.pci_get_legacy_ide_irq(dev, channel);
-+	return channel ? 15 : 14;
-+}
+-static sector_t idedisk_capacity (ide_drive_t *drive)
+-{
+-	return drive->capacity64 - drive->sect0;
+-}
+-
+ static ide_startstop_t idedisk_special (ide_drive_t *drive)
+ {
+ 	special_t *s = &drive->special;
+@@ -1311,29 +1306,6 @@ static int set_nowerr(ide_drive_t *drive
+ 	return 0;
+ }
  
- #define HAVE_ARCH_PCI_MWI 1
- static inline int pcibios_prep_mwi(struct pci_dev *dev)
-Index: linux-maple/include/asm-generic/pci.h
-===================================================================
---- linux-maple.orig/include/asm-generic/pci.h	2004-10-19 13:37:39.000000000 +1000
-+++ linux-maple/include/asm-generic/pci.h	2004-10-19 17:03:43.152545168 +1000
-@@ -24,4 +24,11 @@
+-static int write_cache(ide_drive_t *drive, int arg)
+-{
+-	ide_task_t args;
+-	int err;
+-
+-	if (!ide_id_has_flush_cache(drive->id))
+-		return 1;
+-
+-	memset(&args, 0, sizeof(ide_task_t));
+-	args.tfRegister[IDE_FEATURE_OFFSET]	= (arg) ?
+-			SETFEATURES_EN_WCACHE : SETFEATURES_DIS_WCACHE;
+-	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_SETFEATURES;
+-	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
+-	args.handler				= &task_no_data_intr;
+-
+-	err = ide_raw_taskfile(drive, &args, NULL);
+-	if (err)
+-		return err;
+-
+-	drive->wcache = arg;
+-	return 0;
+-}
+-
+ static int do_idedisk_flushcache (ide_drive_t *drive)
+ {
+ 	ide_task_t args;
+@@ -1395,7 +1367,7 @@ static void idedisk_add_settings(ide_dri
+ 	ide_add_setting(drive,	"multcount",		id ? SETTING_RW : SETTING_READ,			HDIO_GET_MULTCOUNT,	HDIO_SET_MULTCOUNT,	TYPE_BYTE,	0,	id ? id->max_multsect : 0,	1,	1,	&drive->mult_count,		set_multcount);
+ 	ide_add_setting(drive,	"nowerr",		SETTING_RW,					HDIO_GET_NOWERR,	HDIO_SET_NOWERR,	TYPE_BYTE,	0,	1,				1,	1,	&drive->nowerr,			set_nowerr);
+ 	ide_add_setting(drive,	"lun",			SETTING_RW,					-1,			-1,			TYPE_INT,	0,	7,				1,	1,	&drive->lun,			NULL);
+-	ide_add_setting(drive,	"wcache",		SETTING_RW,					HDIO_GET_WCACHE,	HDIO_SET_WCACHE,	TYPE_BYTE,	0,	1,				1,	1,	&drive->wcache,			write_cache);
++	ide_add_setting(drive,	"wcache",		SETTING_RW,					HDIO_GET_WCACHE,	HDIO_SET_WCACHE,	TYPE_BYTE,	0,	1,				1,	1,	&drive->wcache,			ide_write_cache);
+ 	ide_add_setting(drive,	"acoustic",		SETTING_RW,					HDIO_GET_ACOUSTIC,	HDIO_SET_ACOUSTIC,	TYPE_BYTE,	0,	254,				1,	1,	&drive->acoustic,		set_acoustic);
+  	ide_add_setting(drive,	"failures",		SETTING_RW,					-1,			-1,			TYPE_INT,	0,	65535,				1,	1,	&drive->failures,		NULL);
+  	ide_add_setting(drive,	"max_failures",		SETTING_RW,					-1,			-1,			TYPE_INT,	0,	65535,				1,	1,	&drive->max_failures,		NULL);
+@@ -1625,12 +1597,10 @@ static void idedisk_setup (ide_drive_t *
+ 	}
+ 	drive->no_io_32bit = id->dword_io ? 1 : 0;
  
- #define pcibios_scan_all_fns(a, b)	0
+-	/* write cache enabled? */
++	/* Is write cache enabled on the drive? */
+ 	if ((id->csfo & 1) || (id->cfs_enable_1 & (1 << 5)))
+ 		drive->wcache = 1;
  
-+#ifndef HAVE_ARCH_PCI_GET_LEGACY_IDE_IRQ
-+static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
-+{
-+	return channel ? 15 : 14;
-+}
-+#endif /* HAVE_ARCH_PCI_GET_LEGACY_IDE_IRQ */
+-	write_cache(drive, 1);
+-
+ 	/*
+ 	 * We must avoid issuing commands a drive does not understand
+ 	 * or we may crash it. We check flush cache is supported. We also
+@@ -1638,14 +1608,7 @@ static void idedisk_setup (ide_drive_t *
+ 	 * too large. By this time we have trimmed the drive capacity if
+ 	 * LBA48 is not available so we don't need to recheck that.
+ 	 */
+-	barrier = 0;
+-	if (ide_id_has_flush_cache(id))
+-		barrier = 1;
+-	if (drive->addressing == 1) {
+-		/* Can't issue the correct flush ? */
+-		if (capacity > (1ULL << 28) && !ide_id_has_flush_cache_ext(id))
+-			barrier = 0;
+-	}
++	barrier = ide_drive_has_flush_cache (drive);
+ 
+ 	printk(KERN_DEBUG "%s: cache flushes %ssupported\n",
+ 		drive->name, barrier ? "" : "not ");
+@@ -1653,6 +1616,9 @@ static void idedisk_setup (ide_drive_t *
+ 		blk_queue_ordered(drive->queue, 1);
+ 		blk_queue_issue_flush_fn(drive->queue, idedisk_issue_flush);
+ 	}
 +
- #endif
-Index: linux-maple/include/asm-ppc64/machdep.h
-===================================================================
---- linux-maple.orig/include/asm-ppc64/machdep.h	2004-10-19 16:44:18.907474272 +1000
-+++ linux-maple/include/asm-ppc64/machdep.h	2004-10-19 17:03:43.152545168 +1000
-@@ -117,6 +117,9 @@
- 	/* Check availability of legacy devices like i8042 */
- 	int 		(*check_legacy_ioport)(unsigned int baseport);
++	/* honor the write cache setting of the drive. */
++	ide_write_cache(drive, drive->wcache);
+ }
  
-+	/* Get legacy PCI/IDE interrupt mapping */ 
-+	int		(*pci_get_legacy_ide_irq)(struct pci_dev *dev, int channel);
-+	
- };
+ static void ide_cacheflush_p(ide_drive_t *drive)
+===== drivers/ide/ide-io.c 1.30 vs edited =====
+--- 1.30/drivers/ide/ide-io.c	2004-09-23 14:29:34 -05:00
++++ edited/drivers/ide/ide-io.c	2004-10-18 18:11:54 -05:00
+@@ -251,6 +251,50 @@ u64 ide_get_error_location(ide_drive_t *
+ }
+ EXPORT_SYMBOL(ide_get_error_location);
  
- extern struct machdep_calls ppc_md;
++/**
++ * ide_write_cache - sets the write cache of the drive
++ * @drive: target_drive
++ * @arg: 1 to enable write cache, 0 to disable.
++ *
++ * keeps the barrier settings in sync with the write cache settings.
++ *
++ */
++int ide_write_cache(ide_drive_t *drive, int arg)
++{
++	ide_task_t args;
++	int err, barrier;
++
++	/*
++	 * If we have a drive that does not support write cache, do not
++	 * attempt to change the write cache setting.
++	 */
++
++	if (!(drive->id->command_set_1 & (1 << 5)))
++		return -EIO;	/* Would prefer ENXIO for command not supported... */
++
++	barrier = ide_drive_has_flush_cache (drive);
++
++	memset(&args, 0, sizeof(ide_task_t));
++	args.tfRegister[IDE_FEATURE_OFFSET]	= (arg) ?
++			SETFEATURES_EN_WCACHE : SETFEATURES_DIS_WCACHE;
++	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_SETFEATURES;
++	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
++	args.handler				= &task_no_data_intr;
++
++	err = ide_raw_taskfile(drive, &args, NULL);
++	if (err)
++		return err;
++
++	blk_queue_ordered(drive->queue, (arg && barrier));
++
++	printk (KERN_INFO "%s: cache=%d barrier=%d\n", __FUNCTION__, arg, barrier);
++
++	drive->wcache = arg;
++	return 0;
++}
++
++EXPORT_SYMBOL_GPL(ide_write_cache);
++
+ static void ide_complete_barrier(ide_drive_t *drive, struct request *rq,
+ 				 int error)
+ {
+===== drivers/ide/ide-taskfile.c 1.63 vs edited =====
+--- 1.63/drivers/ide/ide-taskfile.c	2004-10-10 10:47:04 -05:00
++++ edited/drivers/ide/ide-taskfile.c	2004-10-18 16:45:55 -05:00
+@@ -727,6 +727,15 @@ int ide_cmd_ioctl (ide_drive_t *drive, u
+ 	if (copy_from_user(args, (void __user *)arg, 4))
+ 		return -EFAULT;
+ 
++	if ((args[2] == SETFEATURES_EN_WCACHE) ||
++	    (args[2] == SETFEATURES_DIS_WCACHE)) {
++		/*
++		 * Call the handler to support settings in the block layer.
++		 */
++		err = ide_write_cache (drive, (args[2] == SETFEATURES_EN_WCACHE));
++		return err;
++	}
++
+ 	memset(&tfargs, 0, sizeof(ide_task_t));
+ 	tfargs.tfRegister[IDE_FEATURE_OFFSET] = args[2];
+ 	tfargs.tfRegister[IDE_NSECTOR_OFFSET] = args[3];
+
+--==_Exmh_-817370000--
 
 
