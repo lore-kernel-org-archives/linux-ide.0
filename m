@@ -1,28 +1,18 @@
-From: "Alfred E. Heggestad" <linuxedmund@home.no>
-Subject: [PATCH] hdreg.h documentation fix
-Date: 05 Mar 2003 12:19:30 +0100
+From: Anders Widman <andewid@tnonline.net>
+Subject: testing
+Date: Thu, 6 Mar 2003 10:14:52 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1046863170.17509.3.camel@tellus>
+Message-ID: <27123262734.20030306101452@tnonline.net>
+Reply-To: Anders Widman <andewid@tnonline.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 192.168.0.98 (Gatak@[192.168.0.98])
+	by www.tnonline.net (8.12.5/8.12.5) with ESMTP id h269RMQQ023812
+	for <linux-ide@vger.kernel.org>; Thu, 6 Mar 2003 10:27:22 +0100
 List-Id: linux-ide@vger.kernel.org
-To: linux ide <linux-ide@vger.kernel.org>
-Cc: linux kernel <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
---- linux-2.5.63_orig/include/linux/hdreg.h	2003-02-24 20:05:31.000000000 +0100
-+++ linux-2.5.63/include/linux/hdreg.h	2003-03-05 00:26:59.000000000 +0100
-@@ -466,8 +466,8 @@
- /*
-  * Structure returned by HDIO_GET_IDENTITY, as per ANSI NCITS ATA6 rev.1b spec.
-  *
-- * If you change something here, please remember to update fix_driveid() in
-- * ide/probe.c.
-+ * If you change something here, please remember to update ide_fix_driveid() in
-+ * ide/ide-iops.c.
-  */
- struct hd_driveid {
- 	unsigned short	config;		/* lots of obsolete bit flags */
 
 
