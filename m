@@ -1,19 +1,36 @@
-From: Michael Buesch <fsdeveloper@yahoo.de>
-Subject: Re: [2.6] system is very slow during disk access
-Date: Wed, 6 Aug 2003 21:31:42 +0200
+From: "Kou, Haofeng" <Haofeng.Kou@idt.com>
+Subject: SI3112
+Date: Wed, 6 Aug 2003 13:22:22 -0700
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200308062131.46017.fsdeveloper@yahoo.de>
-References: <200308062052.10752.fsdeveloper@yahoo.de> <200308062129.26371.frank.vandamme@student.kuleuven.ac.be>
+Message-ID: <C8AEE7623CD92344B097388DA0ABD05C0544E7AA@corpbridge.corp.idt.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <200308062129.26371.frank.vandamme@student.kuleuven.ac.be>
-Content-Description: clearsigned data
-Content-Disposition: inline
-To: Frank Van Damme <frank.vandamme@student.kuleuven.ac.be>
-Cc: linux kernel mailing list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux kernel mailing list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+
+Anyone has make the SI3112 SATA card fully work on the embedded board?
+I have tried the 2.4.21 from kernel.org, the RedHat9.0 and the MIPS
+kernel-2.4.21 from linux-mips.org. But all of them shows:
+
+hda: lost interrupt
+hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+hda: drive not ready for command
+
+Any suggestion or information are welcome!
+
+Thanks!
+
+
+
+-----Original Message-----
+From: Michael Buesch [mailto:fsdeveloper@yahoo.de]
+Sent: Wednesday, August 06, 2003 12:32 PM
+To: Frank Van Damme
+Cc: linux kernel mailing list; linux-ide@vger.kernel.org
+Subject: Re: [2.6] system is very slow during disk access
+
 
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
@@ -61,3 +78,4 @@ iD8DBQE/MVeeoxoigfggmSgRAkVfAJ4/SIBNLy7v4+E5OgA/z4FjMcKFfgCfTF94
 orXbTJpyryLpKXwjzkZoyqU=
 =4jnz
 -----END PGP SIGNATURE-----
+
