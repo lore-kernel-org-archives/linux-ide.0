@@ -1,70 +1,36 @@
-From: Sven Mueller <debian@incase.de>
-Subject: Re: ata_piix installation/device detection problems on Dell server
-Date: Tue, 05 Apr 2005 02:15:49 +0200
-Message-ID: <4251D8B5.4090107@incase.de>
-References: <425188F0.60805@incase.de>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Fwd: [PATCH] typo fix in drivers/scsi/sata_svw.c
+Date: Tue, 5 Apr 2005 10:51:25 +0200
+Message-ID: <200504051051.26321@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.ciphirelabs.net ([217.72.114.64]:44226 "EHLO
-	mx1.ciphirelabs.net") by vger.kernel.org with ESMTP id S261464AbVDEAPy
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Apr 2005 20:15:54 -0400
-In-Reply-To: <425188F0.60805@incase.de>
+Received: from mail.sf-mail.de ([62.27.20.61]:31675 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S261630AbVDEIpd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Apr 2005 04:45:33 -0400
+Received: from bilbo.math.uni-mannheim.de ([::ffff:134.155.88.153])
+	by mail.sf-mail.de (Qsmtpd 0.3) with (RC4-MD5 encrypted) ESMTPS
+	for <linux-ide@vger.kernel.org>; Tue, 05 Apr 2005 10:45:30 +0200
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Debian-Boot <debian-boot@lists.debian.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: benh@kernel.crashing.org
 
-Hi.
+Add missing brace.
 
-> The problem I experienced is as follows:
-> 
-> the ata_piix driver detects PATA and SATA in combined mode (which does 
-> seem correct as far as I can tell). However, only the HD is 
-> detected/registered in the kernel while the CD-ROM remains 
-> undetected/unregistered.
- >
-> I was able to work around this issue by _not_ loading the ata_piix 
-> module at first, but load the generic ide driver module instead. Of 
-> course, that module doesn't detect the SATA part, so I would be able to 
-> access the CD-ROM but not the HD. However, loading ata_piix _after_ the 
-> generic IDE driver notes that the first port is busy (PATA, used by 
-> ide_generic) and only initializes the SATA part. This makes it possible 
-> to access both SATA (HD) and PATA (CD).
+Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
 
-I just found out that libata by default doesn't support PATA devices. 
-This can be changed in include/linux/libata.h (or so) at compile time of 
-the kernel by defining ATA_ENABLE_PATA (it's #undef'ed there by default).
-Since ata_piix blocks the PATA part of the chip(set), it would be good 
-if either that default is changed to enable PATA in libata drivers or 
-that ata_piix doesn't touch the PATA part when ATA_ENABLE_PATA isn't 
-defined (or, preferably, both).
-
-Regarding debian-installer, I guess there are currently three ways to 
-solve this:
-1) Re-compile the kernel with ATA_ENABLE_PATA defined (which is
-    currently only used in ata_piix.c anyway, so it shouldn't have
-    ill side effects)
-2) Document the problem and provide a description of the possible
-    workaround.
-3) Implement the workaround in debian-installer. (Loading the generic
-    IDE driver (ide_generic?) before ata_piix)
-
-I would prefer to see (1), but I assume this will not happen pre-Sarge.
-
-PS: I created a bug report for debian-installer (#303135).
-
-> If anyone wants access to the machine in question, I guess I could 
-> arrange both root and serial console access to it for a limited time. 
-> Will have to check with my boss though. Tell me if you would need that.
-
-The offer still stands.
-
-Regards,
-Sven
-
-> PS: Please Cc me in answers unless you also send a copy to the 
-> debian-boot mailinglist (which I read).
-
+--- linux-2.6.11/drivers/scsi/sata_svw.c	2005-03-21 11:41:58.000000000 +0100
++++ linux-2.6.12-rc1/drivers/scsi/sata_svw.c	2005-03-27 15:50:38.000000000 +0200
+@@ -395,7 +395,7 @@
+ 
+ 	/* Clear a magic bit in SCR1 according to Darwin, those help
+ 	 * some funky seagate drives (though so far, those were already
+-	 * set by the firmware on the machines I had access to
++	 * set by the firmware on the machines I had access to)
+ 	 */
+ 	writel(readl(mmio_base + K2_SATA_SICR1_OFFSET) & ~0x00040000,
+ 	       mmio_base + K2_SATA_SICR1_OFFSET);
