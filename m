@@ -1,198 +1,186 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: [BK PATCHES] ide-2.6 update
-Date: Thu, 24 Feb 2005 12:20:30 +0100 (CET)
-Message-ID: <Pine.GSO.4.58.0502241218470.20590@mion.elka.pw.edu.pl>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [RFT PATCH] PCI MSI support for AHCI SATA driver
+Date: Thu, 24 Feb 2005 07:45:24 -0500
+Message-ID: <421DCC64.1050407@pobox.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:62854 "EHLO
-	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S262232AbVBXL2E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Feb 2005 06:28:04 -0500
+Content-Type: multipart/mixed;
+ boundary="------------060706000101000906070100"
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:29414 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S262326AbVBXMpk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Feb 2005 07:45:40 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
+
+This is a multi-part message in MIME format.
+--------------060706000101000906070100
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Any testers wanna give this a shot?  Testing should be easy:
+
+(a) make sure it still works.
+
+(b) cat /proc/interrupts to make sure that MSI is truly activated.
+
+Patch against 2.6.11-rc5.
 
 
-Hi Linus,
+--------------060706000101000906070100
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
 
-Please do a
-
-	bk pull bk://bart.bkbits.net/ide-2.6
-
-This will update the following files:
-
- drivers/ide/ide-disk.c   |   10 ++++------
- drivers/ide/ide-io.c     |    4 ++--
- drivers/ide/pci/hpt366.c |   29 +++++++++++------------------
- include/linux/ide.h      |    7 +++----
- 4 files changed, 20 insertions(+), 30 deletions(-)
-
-through these ChangeSets:
-
-<bzolnier@trik.(none)> (05/02/24 1.2052)
-   [ide] fix IRQ masking in ide_do_request()
-
-   Revert to previous way of handling masked_irq argument.
-   Reported to fix problems with shared PCI IRQs.
-
-   Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-<bzolnier@trik.(none)> (05/02/24 1.2051)
-   [ide] fix build for built-in hpt366 and modular ide-disk
-
-   * always call __ide_do_rw_disk() in ide_do_rw_disk()
-   * modify ide_hwif_t->rw_disk hook accordingly
-   * update and cleanup hpt372n_rw_disk()
-     (the only user of ide_hwif_t->rw_disk hook)
-   * make __ide_do_rw_disk() static + fix comment
-
-   Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-<rddunlap@osdl.org> (05/02/24 1.2050)
-   [ide] make 1-bit fields unsigned
-
-   It's a bit difficult to have a value and a sign bit in a
-   1-bit field.
-
-   Fix (90) boolean/bitfield sparse warnings:
-   include/linux/ide.h:937:18: warning: dubious one-bit signed bitfield
-   include/linux/ide.h:939:17: warning: dubious one-bit signed bitfield
-
-   Signed-off-by: Randy Dunlap <rddunlap@osdl.org>
-   Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-diff -Nru a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
---- a/drivers/ide/ide-disk.c	2005-02-24 12:05:25 +01:00
-+++ b/drivers/ide/ide-disk.c	2005-02-24 12:05:25 +01:00
-@@ -119,9 +119,8 @@
- /*
-  * __ide_do_rw_disk() issues READ and WRITE commands to a disk,
-  * using LBA if supported, or CHS otherwise, to address sectors.
-- * It also takes care of issuing special DRIVE_CMDs.
-  */
--ide_startstop_t __ide_do_rw_disk (ide_drive_t *drive, struct request *rq, sector_t block)
-+static ide_startstop_t __ide_do_rw_disk(ide_drive_t *drive, struct request *rq, sector_t block)
+diff -Nru a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+--- a/drivers/scsi/ahci.c	2005-02-24 07:00:45 -05:00
++++ b/drivers/scsi/ahci.c	2005-02-24 07:00:45 -05:00
+@@ -152,6 +152,7 @@
+ 
+ struct ahci_host_priv {
+ 	unsigned long		flags;
++	unsigned int		have_msi; /* is PCI MSI enabled? */
+ 	u32			cap;	/* cache of HOST_CAP register */
+ 	u32			port_map; /* cache of HOST_PORTS_IMPL reg */
+ };
+@@ -181,6 +182,7 @@
+ static u8 ahci_check_status(struct ata_port *ap);
+ static u8 ahci_check_err(struct ata_port *ap);
+ static inline int ahci_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
++static void ahci_remove_one (struct pci_dev *pdev);
+ 
+ static Scsi_Host_Template ahci_sht = {
+ 	.module			= THIS_MODULE,
+@@ -263,7 +265,7 @@
+ 	.name			= DRV_NAME,
+ 	.id_table		= ahci_pci_tbl,
+ 	.probe			= ahci_init_one,
+-	.remove			= ata_pci_remove_one,
++	.remove			= ahci_remove_one,
+ };
+ 
+ 
+@@ -860,15 +862,19 @@
+ }
+ 
+ /* move to PCI layer, integrate w/ MSI stuff */
+-static void pci_enable_intx(struct pci_dev *pdev)
++static void pci_intx(struct pci_dev *pdev, int enable)
  {
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	unsigned int dma	= drive->using_dma;
-@@ -256,7 +255,6 @@
- 		return pre_task_out_intr(drive, rq);
+-	u16 pci_command;
++	u16 pci_command, new;
+ 
+ 	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
+-	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
+-		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
++
++	if (enable)
++		new = pci_command & ~PCI_COMMAND_INTX_DISABLE;
++	else
++		new = pci_command | PCI_COMMAND_INTX_DISABLE;
++
++	if (new != pci_command)
+ 		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
+-	}
+ }
+ 
+ static void ahci_print_info(struct ata_probe_ent *probe_ent)
+@@ -950,7 +956,7 @@
+ 	unsigned long base;
+ 	void *mmio_base;
+ 	unsigned int board_idx = (unsigned int) ent->driver_data;
+-	int pci_dev_busy = 0;
++	int have_msi, pci_dev_busy = 0;
+ 	int rc;
+ 
+ 	VPRINTK("ENTER\n");
+@@ -968,12 +974,17 @@
+ 		goto err_out;
  	}
- }
--EXPORT_SYMBOL_GPL(__ide_do_rw_disk);
-
- /*
-  * 268435455  == 137439 MB or 28bit limit
-@@ -281,9 +279,9 @@
- 		 block, rq->nr_sectors, (unsigned long)rq->buffer);
-
- 	if (hwif->rw_disk)
--		return hwif->rw_disk(drive, rq, block);
--	else
--		return __ide_do_rw_disk(drive, rq, block);
-+		hwif->rw_disk(drive, rq);
+ 
+-	pci_enable_intx(pdev);
++	if (pci_enable_msi(pdev) == 0)
++		have_msi = 1;
++	else {
++		pci_intx(pdev, 1);
++		have_msi = 0;
++	}
+ 
+ 	probe_ent = kmalloc(sizeof(*probe_ent), GFP_KERNEL);
+ 	if (probe_ent == NULL) {
+ 		rc = -ENOMEM;
+-		goto err_out_regions;
++		goto err_out_msi;
+ 	}
+ 
+ 	memset(probe_ent, 0, sizeof(*probe_ent));
+@@ -1006,6 +1017,8 @@
+ 	probe_ent->mmio_base = mmio_base;
+ 	probe_ent->private_data = hpriv;
+ 
++	hpriv->have_msi = have_msi;
 +
-+	return __ide_do_rw_disk(drive, rq, block);
+ 	/* initialize adapter */
+ 	rc = ahci_host_init(probe_ent);
+ 	if (rc)
+@@ -1025,7 +1038,11 @@
+ 	iounmap(mmio_base);
+ err_out_free_ent:
+ 	kfree(probe_ent);
+-err_out_regions:
++err_out_msi:
++	if (have_msi)
++		pci_disable_msi(pdev);
++	else
++		pci_intx(pdev, 0);
+ 	pci_release_regions(pdev);
+ err_out:
+ 	if (!pci_dev_busy)
+@@ -1033,6 +1050,42 @@
+ 	return rc;
  }
-
- /*
-diff -Nru a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
---- a/drivers/ide/ide-io.c	2005-02-24 12:05:25 +01:00
-+++ b/drivers/ide/ide-io.c	2005-02-24 12:05:25 +01:00
-@@ -1163,14 +1163,14 @@
- 		 * happens anyway when any interrupt comes in, IDE or otherwise
- 		 *  -- the kernel masks the IRQ while it is being handled.
- 		 */
--		if (hwif->irq != masked_irq)
-+		if (masked_irq != IDE_NO_IRQ && hwif->irq != masked_irq)
- 			disable_irq_nosync(hwif->irq);
- 		spin_unlock(&ide_lock);
- 		local_irq_enable();
- 			/* allow other IRQs while we start this request */
- 		startstop = start_request(drive, rq);
- 		spin_lock_irq(&ide_lock);
--		if (hwif->irq != masked_irq)
-+		if (masked_irq != IDE_NO_IRQ && hwif->irq != masked_irq)
- 			enable_irq(hwif->irq);
- 		if (startstop == ide_stopped)
- 			hwgroup->busy = 0;
-diff -Nru a/drivers/ide/pci/hpt366.c b/drivers/ide/pci/hpt366.c
---- a/drivers/ide/pci/hpt366.c	2005-02-24 12:05:25 +01:00
-+++ b/drivers/ide/pci/hpt366.c	2005-02-24 12:05:25 +01:00
-@@ -1018,32 +1018,25 @@
- }
-
- /**
-- *	hpt372n_rw_disk		-	wrapper for I/O
-+ *	hpt372n_rw_disk		-	prepare for I/O
-  *	@drive: drive for command
-  *	@rq: block request structure
-- *	@block: block number
-- *
-- *	This is called when a disk I/O is issued to the 372N instead
-- *	of the default functionality. We need it because of the clock
-- *	switching
-  *
-+ *	This is called when a disk I/O is issued to the 372N.
-+ *	We need it because of the clock switching.
-  */
--
--static ide_startstop_t hpt372n_rw_disk(ide_drive_t *drive, struct request *rq, sector_t block)
+ 
++static void ahci_remove_one (struct pci_dev *pdev)
++{
++	struct device *dev = pci_dev_to_dev(pdev);
++	struct ata_host_set *host_set = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host_set->private_data;
++	struct ata_port *ap;
++	unsigned int i;
++	int have_msi;
 +
-+static void hpt372n_rw_disk(ide_drive_t *drive, struct request *rq)
++	for (i = 0; i < host_set->n_ports; i++) {
++		ap = host_set->ports[i];
++
++		scsi_remove_host(ap->host);
++	}
++
++	have_msi = hpriv->have_msi;
++	free_irq(host_set->irq, host_set);
++	host_set->ops->host_stop(host_set);
++	iounmap(host_set->mmio_base);
++
++	for (i = 0; i < host_set->n_ports; i++) {
++		ap = host_set->ports[i];
++
++		ata_scsi_release(ap->host);
++		scsi_host_put(ap->host);
++	}
++
++	if (have_msi)
++		pci_disable_msi(pdev);
++	else
++		pci_intx(pdev, 0);
++	pci_release_regions(pdev);
++	kfree(host_set);
++	pci_disable_device(pdev);
++	dev_set_drvdata(dev, NULL);
++}
+ 
+ static int __init ahci_init(void)
  {
-+	ide_hwif_t *hwif = drive->hwif;
- 	int wantclock;
--
--	if(rq_data_dir(rq) == READ)
--		wantclock = 0x21;
--	else
--		wantclock = 0x23;
--
--	if(HWIF(drive)->config_data != wantclock)
--	{
-+
-+	wantclock = rq_data_dir(rq) ? 0x23 : 0x21;
-+
-+	if (hwif->config_data != wantclock) {
- 		hpt372n_set_clock(drive, wantclock);
--		HWIF(drive)->config_data = wantclock;
-+		hwif->config_data = wantclock;
- 	}
--	return __ide_do_rw_disk(drive, rq, block);
- }
 
- /*
-diff -Nru a/include/linux/ide.h b/include/linux/ide.h
---- a/include/linux/ide.h	2005-02-24 12:05:25 +01:00
-+++ b/include/linux/ide.h	2005-02-24 12:05:25 +01:00
-@@ -797,7 +797,7 @@
- 	struct pci_dev  *pci_dev;	/* for pci chipsets */
- 	struct ide_pci_device_s	*cds;	/* chipset device struct */
-
--	ide_startstop_t (*rw_disk)(ide_drive_t *, struct request *, sector_t);
-+	void (*rw_disk)(ide_drive_t *, struct request *);
-
- #if 0
- 	ide_hwif_ops_t	*hwifops;
-@@ -934,9 +934,9 @@
- 		/* BOOL: protects all fields below */
- 	volatile int busy;
- 		/* BOOL: wake us up on timer expiry */
--	int sleeping	: 1;
-+	unsigned int sleeping	: 1;
- 		/* BOOL: polling active & poll_timeout field valid */
--	int polling	: 1;
-+	unsigned int polling	: 1;
- 		/* current drive */
- 	ide_drive_t *drive;
- 		/* ptr to current hwif in linked-list */
-@@ -1318,7 +1318,6 @@
- extern int taskfile_lib_get_identify(ide_drive_t *drive, u8 *);
-
- extern int ide_wait_not_busy(ide_hwif_t *hwif, unsigned long timeout);
--ide_startstop_t __ide_do_rw_disk(ide_drive_t *drive, struct request *rq, sector_t block);
-
- /*
-  * ide_stall_queue() can be used by a drive to give excess bandwidth back
+--------------060706000101000906070100--
