@@ -1,102 +1,64 @@
-From: "Albert Lee" <albertcc@tw.ibm.com>
-Subject: Re: [PATCH/RFC] Port of pdc202xx_new driver to libata
-Date: Thu, 21 Oct 2004 16:36:08 +0800
+From: janitor@sternwelten.at
+Subject: [patch 2/4]  ide-tape: replace schedule_timeout() with 	msleep()
+Date: Thu, 21 Oct 2004 10:41:39 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <001601c4b749$04f49550$7301a8c0@tw.ibm.com>
-References: <00bb01c4b10c$4b2ab330$7301a8c0@tw.ibm.com> <58cb370e04101312321c78f3b8@mail.gmail.com> <416D88FA.1050200@pobox.com> <001901c4b4fd$88204bc0$294bbf09@tw.ibm.com> <4173F6AC.7090409@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Message-ID: <E1CKYVw-0003tT-8g@sputnik>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bluehawaii.tikira.net ([61.62.22.51]:10486 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S270408AbUJUIgi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Oct 2004 04:36:38 -0400
+Received: from baikonur.stro.at ([213.239.196.228]:17329 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S270664AbUJUIlo
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Oct 2004 04:41:44 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, IDE Linux <linux-ide@vger.kernel.org>
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-ide@vger.kernel.org, janitor@sternwelten.at, nacc@us.ibm.com
 
-Hi, Jeff:
 
- Please see my reply below.
-I'll resend the patch according to your review/comments later.
-Thanks for your patience for newbie like me. :-)
+
+
+
+
+
+I would appreciate any comments from the janitor@sternweltens list. This is one (of
+many) cases where I made a decision about replacing
+
+set_current_state(TASK_INTERRUPTIBLE);
+schedule_timeout(some_time);
+
+with
+
+msleep(jiffies_to_msecs(some_time));
+
+msleep() is not exactly the same as the previous code, but I only did
+this replacement where I thought long delays were *desired*. If this is
+not the case here, then just disregard this patch.
 
 Thanks,
-Albert
-
------ Original Message ----- 
-From: "Jeff Garzik" <jgarzik@pobox.com>
-To: "Albert Lee" <albertcc@tw.ibm.com>
-Cc: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>; "IDE Linux"
-<linux-ide@vger.kernel.org>
-Sent: Tuesday, October 19, 2004 1:00 AM
-Subject: Re: [PATCH/RFC] Port of pdc202xx_new driver to libata
+Nish
 
 
-> I'm applying to libata-dev, but won't push this upstream for a while.
->
-> My comments:
->
-> 1) why is ROM enabled?  Normally you don't want to do this.
->
-> +       /* Enable the ROM */
-> +       /*
-> +       if (pdev->resource[PCI_ROM_RESOURCE].start) {
-> +               pci_write_config_dword(pdev, PCI_ROM_ADDRESS,
-> +                       pdev->resource[PCI_ROM_RESOURCE].start |
-> PCI_ROM_ADDRESS
-> _ENABLE);
->
 
-Ported from the original driver blindly. I'll remove this stuff.
+Description: Uses msleep() instead of schedule_timeout() to guarantee
+the task delays at least the desired time amount.
 
->
->
-> 2) why does this quirk exist?  if pata_pdc2027x (libata) will work with
-> this hardware, then remove this code (and quirk) completely.  It is up
-> to the user to choose the correct driver, if multiple drivers will
-> function properly on the hardware.
->
-> +#ifdef PDC_20276_QUIRK
-> +       /*
-> +        * Skip Promise PDC20276 attached to I2O RAID controller
-> +        */
-> +       if ((pdev->device == PCI_DEVICE_ID_PROMISE_20276) &&
-> +           (pdev->bus->self) &&
-> +           (pdev->bus->self->vendor == PCI_VENDOR_ID_INTEL) &&
-> +           ((pdev->bus->self->device == PCI_DEVICE_ID_INTEL_I960) ||
-> +            (pdev->bus->self->device == PCI_DEVICE_ID_INTEL_I960RM))) {
-> +               printk(KERN_INFO DRV_NAME ": Skipping Promise PDC20276 "
-> +                      "attached to I2O RAID controller.\n");
-> +               return -ENODEV;
-> +       }
-> +#endif
->
+Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
+Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
 
-  Ported from the original driver blindly, too.  :-(
-I don't know why the original driver doesn't support it.
-I'll remove it, too.
+---
 
->
->
-> 3) the quirk PDC_20270_QUIRK needs work to conform to current PCI API
-> standards.
->
->
+ linux-2.6.9-max/drivers/ide/ide-tape.c |    3 +--
+ 1 files changed, 1 insertion(+), 2 deletions(-)
 
-  Could this also be removed?
-This is also ported blindly from the original driver. :-(
-It seems to be a bug of DEC21150 PCI south bridge chip,
-but there is no detail about the actual problem.
-(I've searched the archive, but no clue found.)
-
-
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+diff -puN drivers/ide/ide-tape.c~msleep-drivers_ide_ide-tape drivers/ide/ide-tape.c
+--- linux-2.6.9/drivers/ide/ide-tape.c~msleep-drivers_ide_ide-tape	2004-10-21 02:36:01.000000000 +0200
++++ linux-2.6.9-max/drivers/ide/ide-tape.c	2004-10-21 02:36:01.000000000 +0200
+@@ -2854,8 +2854,7 @@ static int idetape_wait_ready(ide_drive_
+ 		} else if (!(tape->sense_key == 2 && tape->asc == 4 &&
+ 			     (tape->ascq == 1 || tape->ascq == 8)))
+ 			return -EIO;
+-		current->state = TASK_INTERRUPTIBLE;
+-  		schedule_timeout(HZ / 10);
++		msleep(100);
+ 	}
+ 	return -EIO;
+ }
+_
