@@ -1,54 +1,54 @@
-From: Brett Russ <russb@emc.com>
-Subject: Re: [PATCH] Re: AHCI: support for tf_read (RFC)
-Date: Mon, 07 Mar 2005 11:43:48 -0500
-Message-ID: <422C84C4.8090103@emc.com>
-References: <20050224232413.4869514FC5@lns1032.lss.emc.com> <421FB272.4030502@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] Some IDE chipsets are architecture-specific
+Date: Mon, 07 Mar 2005 11:58:59 -0500
+Message-ID: <422C8853.3030404@pobox.com>
+References: <20050307152803.GF28741@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from mailhub.lss.emc.com ([168.159.2.31]:36481 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S261848AbVCGQn6
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Mar 2005 11:43:58 -0500
-In-Reply-To: <421FB272.4030502@pobox.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:53126 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261860AbVCGQ7R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Mar 2005 11:59:17 -0500
+In-Reply-To: <20050307152803.GF28741@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, ric@emc.com
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Brett Russ wrote:
+Matthew Wilcox wrote:
+> Mark some chipset support as being for specific architectures.
+> I may have got some wrong, so please double-check.
 > 
->> I coded this because ata_pass_thru_cc() (in the dev branch) and other
->> functions call tf_read() which is supported for most except ahci.
->> I've been unable to test because I'm leaving on vacation and am in a
->> last minute rush but wanted to get this out there for comments.
->>
->> Signed-off-by: Brett Russ <russb@emc.com>
+> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 > 
-> 
-> I checked the attached patch into a local repository, but haven't yet 
-> merged it into libata-dev-2.6, or tested it.
-
-The reason I didn't just use ata_tf_from_fis() was because I didn't 
-think it was valid to overload tf->command with status and tf->feature 
-with error.  It was commented as a host->device FIS translation, where 
-those fields would line up with the properly named tf fields.
-
-As long as the overload is fine then this is certainly simpler than my 
-patch.
-
-BR
-
-<snip>
-
-> +static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
-> +{
-> +	struct ahci_port_priv *pp = ap->private_data;
-> +	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
-> +
-> +	ata_tf_from_fis(d2h_fis, tf);
->  }
+> Index: ./drivers/ide/Kconfig
+> ===================================================================
+> RCS file: /var/cvs/linux-2.6/drivers/ide/Kconfig,v
+> retrieving revision 1.25.2.1
+> diff -u -p -r1.25.2.1 Kconfig
+> --- ./drivers/ide/Kconfig	2 Mar 2005 11:19:06 -0000	1.25.2.1
+> +++ ./drivers/ide/Kconfig	7 Mar 2005 04:49:26 -0000
+> @@ -457,6 +457,7 @@ config BLK_DEV_AEC62XX
 >  
->  static void ahci_fill_sg(struct ata_queued_cmd *qc)
+>  config BLK_DEV_ALI15X3
+>  	tristate "ALI M15x3 chipset support"
+> +	depends on X86
+>  	help
+>  	  This driver ensures (U)DMA support for ALI 1533, 1543 and 1543C
+>  	  onboard chipsets.  It also tests for Simplex mode and enables
+
+these are in alphas, and others I think
+
+
+> @@ -485,6 +486,7 @@ config WDC_ALI15X3
+>  
+>  config BLK_DEV_AMD74XX
+>  	tristate "AMD and nVidia IDE support"
+> +	depends on X86 || PPC
+>  	help
+>  	  This driver adds explicit support for AMD-7xx and AMD-8111 chips
+>  	  and also for the nVidia nForce chip.  This allows the kernel to
+
+x86-64 too I presume
 
