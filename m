@@ -1,87 +1,62 @@
-From: Tejun Heo <tj@home-tj.org>
-Subject: Re: [PATCH 2.6.11-rc2 07/14] ide_pci: Merges it8172.h into it8172.c
-Date: Fri,  4 Feb 2005 16:13:18 +0900 (KST)
-Message-ID: <20050204071318.9595F132656@htj.dyndns.org>
-References: <42032014.1020606@home-tj.org>
-In-Reply-To: <42032014.1020606@home-tj.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH 2.6.11-rc2 11/29] ide: add ide_drive_t.sleeping
+Date: Fri, 4 Feb 2005 09:39:11 +0100
+Message-ID: <20050204083910.GB7299@suse.de>
+References: <20050202024017.GA621@htj.dyndns.org> <20050202025448.GL621@htj.dyndns.org> <58cb370e05020216476a8f403c@mail.gmail.com> <20050203113710.GV5710@suse.de> <58cb370e05020305304e5d504@mail.gmail.com> <20050203133228.GA2816@suse.de> <58cb370e05020305354cbb16ee@mail.gmail.com> <4202A39E.8020004@home-tj.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Received: from ns.virtualhost.dk ([195.184.98.160]:13448 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261210AbVBDIjP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2005 03:39:15 -0500
+Content-Disposition: inline
+In-Reply-To: <4202A39E.8020004@home-tj.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@home-tj.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+On Fri, Feb 04 2005, Tejun Heo wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> >On Thu, 3 Feb 2005 14:32:29 +0100, Jens Axboe <axboe@suse.de> wrote:
+> >
+> >>On Thu, Feb 03 2005, Bartlomiej Zolnierkiewicz wrote:
+> >>
+> >>>On Thu, 3 Feb 2005 12:37:10 +0100, Jens Axboe <axboe@suse.de> wrote:
+> >>>
+> >>>>On Thu, Feb 03 2005, Bartlomiej Zolnierkiewicz wrote:
+> >>>>
+> >>>>>On Wed, 2 Feb 2005 11:54:48 +0900, Tejun Heo <tj@home-tj.org> wrote:
+> >>>>>
+> >>>>>>>11_ide_drive_sleeping_fix.patch
+> >>>>>>>
+> >>>>>>>     ide_drive_t.sleeping field added.  0 in sleep field used to
+> >>>>>>>     indicate inactive sleeping but because 0 is a valid jiffy
+> >>>>>>>     value, though slim, there's a chance that something can go
+> >>>>>>>     weird.  And while at it, explicit jiffy comparisons are
+> >>>>>>>     converted to use time_{after|before} macros.
+> >>>>>
+> >>>>>Same question as for "add ide_hwgroup_t.polling" patch.
+> >>>>>AFAICS drive->sleep is either '0' or 'timeout + jiffies' (always > 0)
+> >>>>
+> >>>>Hmm, what if jiffies + timeout == 0?
+> >>>
+> >>>Hm, jiffies is unsigned and timeout is always > 0
+> >>>but this is still possible if jiffies + timeout wraps, right?
+> >>
+> >>Precisely, if jiffies is exactly 'timeout' away from wrapping to 0 it
+> >>could happen. So I think the fix looks sane.
+> >
+> >
+> >agreed
+> 
+> Actually, jiffies is initialized to INITIAL_JIFFIES which is defined in 
+> such a way that it overflows after 5 min after boot to help finding bugs 
+> related to jiffies wrap.  So, the chance of something weird happening in 
+> the bugs fixed in patches 11 and 12 isn't that exteremely slim.  :-)
 
-07_ide_pci_it8172_merge.patch
+And repeat after 49 days, sure. But the odds of it triggering are still
+extremely slim :)
 
-	Merges ide/pci/it8172.h into it8172.c.
+-- 
+Jens Axboe
 
-
-Signed-off-by: Tejun Heo <tj@home-tj.org>
-
-
-Index: linux-idepci-export/drivers/ide/pci/it8172.c
-===================================================================
---- linux-idepci-export.orig/drivers/ide/pci/it8172.c	2005-02-04 16:07:36.750383827 +0900
-+++ linux-idepci-export/drivers/ide/pci/it8172.c	2005-02-04 16:08:25.574432096 +0900
-@@ -42,8 +42,6 @@
- #include <asm/io.h>
- #include <asm/it8172/it8172_int.h>
- 
--#include "it8172.h"
--
- /*
-  * Prototypes
-  */
-@@ -266,6 +264,18 @@ static void __init init_hwif_it8172 (ide
- 	hwif->drives[1].autodma = hwif->autodma;
- }
- 
-+static ide_pci_device_t it8172_chipsets[] __devinitdata = {
-+	{	/* 0 */
-+		.name		= "IT8172G",
-+		.init_chipset	= init_chipset_it8172,
-+		.init_hwif	= init_hwif_it8172,
-+		.channels	= 2,
-+		.autodma	= AUTODMA,
-+		.enablebits	= {{0x00,0x00,0x00}, {0x40,0x00,0x01}},
-+		.bootable	= ON_BOARD,
-+	}
-+};
-+
- static int __devinit it8172_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- {
-         if ((!(PCI_FUNC(dev->devfn) & 1) ||
-Index: linux-idepci-export/drivers/ide/pci/it8172.h
-===================================================================
---- linux-idepci-export.orig/drivers/ide/pci/it8172.h	2005-02-04 16:07:36.750383827 +0900
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
-@@ -1,31 +0,0 @@
--#ifndef ITE8172G_H
--#define ITE8172G_H
--
--#include <linux/config.h>
--#include <linux/pci.h>
--#include <linux/ide.h>
--
--static u8 it8172_ratemask(ide_drive_t *drive);
--static void it8172_tune_drive(ide_drive_t *drive, u8 pio);
--static u8 it8172_dma_2_pio(u8 xfer_rate);
--static int it8172_tune_chipset(ide_drive_t *drive, u8 xferspeed);
--#ifdef CONFIG_BLK_DEV_IDEDMA
--static int it8172_config_chipset_for_dma(ide_drive_t *drive);
--#endif
--
--static unsigned int init_chipset_it8172(struct pci_dev *, const char *);
--static void init_hwif_it8172(ide_hwif_t *);
--
--static ide_pci_device_t it8172_chipsets[] __devinitdata = {
--	{	/* 0 */
--		.name		= "IT8172G",
--		.init_chipset	= init_chipset_it8172,
--		.init_hwif	= init_hwif_it8172,
--		.channels	= 2,
--		.autodma	= AUTODMA,
--		.enablebits	= {{0x00,0x00,0x00}, {0x40,0x00,0x01}},
--		.bootable	= ON_BOARD,
--	}
--};
--
--#endif /* ITE8172G_H */
