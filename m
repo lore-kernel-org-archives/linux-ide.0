@@ -1,69 +1,52 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH]: resubmitted: Fix erroneous rq->buffer = NULL in ide-io.c:ide_dma_timeout_retry
-Date: Thu, 6 Jan 2005 16:55:56 +0100
-Message-ID: <20050106155552.GQ17821@suse.de>
-References: <41DD5794.6080804@sgi.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: libata PATA support - work items?
+Date: Thu, 06 Jan 2005 21:29:42 +0000
+Message-ID: <1105044491.24187.268.camel@localhost.localdomain>
+References: <006301c4ee5c$49e6a230$95714109@tw.ibm.com>
+	 <41DB2781.7000203@pobox.com>  <005701c4f3ce$37d56140$fb7f4109@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:22735 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262881AbVAFP4M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2005 10:56:12 -0500
-Content-Disposition: inline
-In-Reply-To: <41DD5794.6080804@sgi.com>
+Received: from clock-tower.bc.nu ([81.2.110.250]:39100 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S263157AbVAFWeP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Jan 2005 17:34:15 -0500
+In-Reply-To: <005701c4f3ce$37d56140$fb7f4109@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Prarit Bhargava <prarit@sgi.com>
-Cc: linux-ide@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "\"Bartlomiej Zolnierkiewicz\"" <bzolnier@gmail.com>, "\"IDE Linux\"" <linux-ide@vger.kernel.org>, "\"Doug Maxey\"" <dwm@maxeymade.com>
 
-On Thu, Jan 06 2005, Prarit Bhargava wrote:
-> Colleagues,
-> 
-> Please see discussion related to this patch here,
-> 
-> http://marc.theaimsgroup.com/?l=linux-ide&m=110485007824374&w=2
+On Iau, 2005-01-06 at 08:51, Albert Lee wrote:
+> For the 1st item,
+> - add PATA device errata/blacklist info
+> Is there any detail or draft design idea available?
 
-Acked-by: Jens Axboe <axboe@suse.de>
+There is a fair bit of code in drivers/ide. Most of it is handling drive
+problems that occurred with early DMA drives and it uses the
+model/firmware info in the ident string to match drives that claim to do
+DMA but do not and drives that claim not to but can.
 
-> Thanks,
-> 
-> Prarit.
-> 
-> 
-> --- linux-2.5.orig/drivers/ide/ide-io.c 2005-01-04 15:45:17.000000000 -0500
-> +++ linux-2.5/drivers/ide/ide-io.c      2005-01-04 15:45:27.000000000 -0500
-> @@ -1205,21 +1205,21 @@
->        HWGROUP(drive)->rq = NULL;
-> 
->        rq->errors = 0;
-> 
->        if (!rq->bio)
->                goto out;
-> 
->        rq->sector = rq->bio->bi_sector;
->        rq->current_nr_sectors = bio_iovec(rq->bio)->bv_len >> 9;
->        rq->hard_cur_sectors = rq->current_nr_sectors;
-> -       rq->buffer = NULL;
-> +       rq->buffer = bio_data(rq->bio);
-> out:
->        return ret;
-> }
-> 
-> /**
->  *     ide_timer_expiry        -       handle lack of an IDE interrupt
->  *     @data: timer callback magic (hwgroup)
->  *
->  *     An IDE command has timed out before the expected drive return
->  *     occurred. At this point we attempt to clean up the current
-> 
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+The logic is fairly simple and the database is easily transported or
+shared. It is fairly important because some of these old drives
+corrupted data if used DMA. (see drivers/ide/ide-dma.c)
 
--- 
-Jens Axboe
+For PIO problem drives where there is a need to keep PIO modes chosen
+carefully then ide-lib has a list (ide_pio_blacklist) and the ide-io
+code knows about pio modes and older style EIDE cycle timing reports
+(ide_get_best_pio_mode)
+
+IDE CD has some DMA blacklists for ATAPI but they should be viewed with
+caution as many entries were due to a bug in our atapi implementation
+that was fixed long ago.
+
+> For
+> - C/H/S addressing.
+>  I've an old Segate drive which support CHS-only at hand.
+> Maybe I can work on it first.
+
+That seems the logical start - many of the worst drive errata only apply
+to old CHS drives anyway.
+
 
