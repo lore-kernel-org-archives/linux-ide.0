@@ -1,21 +1,45 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [2.6 patch] IDE: remove WAIT_READY dependency on APM
-Date: Wed, 2 Feb 2005 23:20:00 +0100
-Message-ID: <58cb370e0502021420218a86a5@mail.gmail.com>
-References: <20050131234234.GU21437@stusta.de>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [patch libata-dev-2.6 1/1] libata: sync SMART ioctls with ATA
+ pass thru spec (T10/04-262r7)
+Date: Thu, 03 Feb 2005 09:05:55 +1000
+Message-ID: <42015CD3.60005@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.195]:47034 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262458AbVBBWUA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2005 17:20:00 -0500
-Received: by wproxy.gmail.com with SMTP id 67so146733wri
-        for <linux-ide@vger.kernel.org>; Wed, 02 Feb 2005 14:20:00 -0800 (PST)
-In-Reply-To: <20050131234234.GU21437@stusta.de>
+Received: from borg.st.net.au ([65.23.158.22]:664 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S262818AbVBBXGB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2005 18:06:01 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Morton <akpm@osdl.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: axboe@suse.de
+Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-applied, sorry for the delay
+Jens Axboe wrote:
+<snip>
+ > >
+ > > -/* Temporary values for T10/04-262 until official values are
+ > allocated */
+ > > -#define	ATA_16		      0x85	/* 16-byte pass-thru
+ > [0x85 == unused]*/
+ > -#define	ATA_12		      0xb3	/* 12-byte pass-thru
+ > [0xb3 == obsolete set limits command] */
+ > > +/* Values for T10/04-262r7 */
+ > > +#define	ATA_16		      0x85	/* 16-byte pass-thru */
+ > > +#define	ATA_12		      0xa1	/* 12-byte pass-thru */
+ >
+ > Ehh are you sure that is correct? 0xa1 is the BLANK command, I would
+ > hate to think there would be a collision like that.
+
+That very point came up recently in a MMC meeting:
+http://www.t10.org/ftp/t10/document.05/05-056r0.pdf
+
+To confuse things further "ATA_16" is shown as opcode 0x98
+in the latest draft of SPC-3 (rev 21c 15 January 2005)
+http://www.t10.org/ftp/t10/drafts/spc3/spc3r21c.pdf [annex D.3.1].
+
+Hopefully these matters will be sorted out at the next t10
+meeting in March.
+
+Doug Gilbert
+
