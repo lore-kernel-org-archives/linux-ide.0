@@ -1,43 +1,27 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: strange CONFIG_BLK_DEV_IDECS ifdefs
-Date: Sun, 16 May 2004 21:38:58 +0200
+From: Alan Cox <alan@redhat.com>
+Subject: Re: [RFT][PATCH] ide-disk.c: more write cache fixes
+Date: Sun, 16 May 2004 15:58:11 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200405162138.58293.bzolnier@elka.pw.edu.pl>
-References: <20040516085224.GA15680@infradead.org>
+Message-ID: <20040516195811.GH20505@devserv.devel.redhat.com>
+References: <200405132116.44201.bzolnier@elka.pw.edu.pl> <40A404A5.8070500@keyaccess.nl> <200405140214.08136.bzolnier@elka.pw.edu.pl> <40A4B482.3040706@keyaccess.nl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:33502 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264805AbUEPThU
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 May 2004 15:37:20 -0400
-In-Reply-To: <20040516085224.GA15680@infradead.org>
+Received: from mx1.redhat.com ([66.187.233.31]:7860 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S263159AbUEPT6f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 May 2004 15:58:35 -0400
 Content-Disposition: inline
+In-Reply-To: <40A4B482.3040706@keyaccess.nl>
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-ide@vger.kernel.org
+To: Rene Herman <rene.herman@keyaccess.nl>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@redhat.com>, Andrew Morton <akpm@osdl.org>, "Eric D. Mudama" <edmudama@mail.bounceswoosh.org>, Jens Axboe <axboe@suse.de>
 
-On Sunday 16 of May 2004 10:52, Christoph Hellwig wrote:
-> there's two really strange ifdefs for ide-cs in ide.c:
->
->  - first ide_unregister is resetting hwif->irq only if
->    CONFIG_BLK_DEV_IDECS is not set.  This seems really braindead as
->    apparently the other drivers don't care (otherwise they wouldn't work
->    with CONFIG_BLK_DEV_IDECS), but OTOH I don't see a way ide-cs would
->    care for either variant, too - it doesn't touch the hwif anymore
->    after unregister.
->  - ide_delay_50ms is not sleeping with CONFIG_BLK_DEV_IDECS.  Andre told
->    me this was because the pcmcia code didn't allow sleeping in the
->    probe routine once upon a time - that's not true anymore, in fact
->    ide-cs is calling schedule_timeout just after calling ide_register
->    currently..
+On Fri, May 14, 2004 at 01:58:58PM +0200, Rene Herman wrote:
+> Have again attached a 'rollup' patch against vanilla 2.6.6, including 
+> this, Andrew's SYSTEM_SHUTDOWN split and the quick "don't switch of 
+> spindle if rebooting" hack. Again, just in case anyone finds it useful.
 
-Yep, I've also noticed these weirdness.
+This reintroduces corruption on my thinkpad 600.
 
-> Is there someone with ide-cs hardware to test whether killing the ifdefs
-> makes any difference?
-
-Anybody?  [ You will get credits in ChangeLog. :-) ]
+Alan
 
