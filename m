@@ -1,789 +1,107 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] ARM/ARM26 IDE cleanups
-Date: Sat, 15 May 2004 16:22:09 +0200
+Subject: Re: [PATCH] libata-core when not ata_id_use_dmadir despite yes SiliconI mage
+Date: Sat, 15 May 2004 16:33:10 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200405151621.29291.bzolnier@elka.pw.edu.pl>
+Message-ID: <200405151633.10473.bzolnier@elka.pw.edu.pl>
+References: <1084630807.5082.42.camel@patibmrh9>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:64213 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S262580AbUEOOV3
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:37591 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S262873AbUEOObD
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 May 2004 10:21:29 -0400
+	Sat, 15 May 2004 10:31:03 -0400
+In-Reply-To: <1084630807.5082.42.camel@patibmrh9>
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>, Ian Molton <spyro@f2s.com>
-Cc: Marc Singer <elf@buici.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Pat LaVarre <p.lavarre@ieee.org>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
+On Saturday 15 of May 2004 16:20, Pat LaVarre wrote:
+> > > > Subject: Re: SATA ATAPI work in progress
+> > > > ...
+> > > > I doubt I can use this patch as is.  I believe,
+> > > > because I assembled my drive from components myself,
+> > > > its op xA1 Identify data has not changed,
+> > > > so I will see a misleading 0 False at:
+> > > >
+> > > > #define ata_id_use_dmadir(dev) ((dev)->id[62] & (1 << 15))
+> >
+> > Theory confirmed!
+>
+> Consequently now:
+>
+> In t13.org since the dawn of time, I see the requirement that compliant
+> ATAPI devices tolerate hosts creatively choosing to copy
+> (cmd->sc_data_direction != SCSI_DATA_WRITE) into (ata_taskfile.feature &
+> x04 ATAPI_DMADIR).
+>
+> I see devices constructed with Silicon Image 3611CT80 1.4 require such a
+> courtesy from the host.
+>
+> Therefore I propose that Linux, as host, offer that courtesy always.
 
-Ported to 2.6.6-bk1 and cleaned a bit.
-Needs "add default ARM/ARM26 IDE host driver" patch.
+Makes sense.
 
-- clear hwif->hw in setup-pci.c before using it
+Jeff, if you decide to do this remember to kill ata_id_use_dmadir()
+and ATA_DFLAG_DMADIR completely.  [ I'm sure you will. :-) ]
 
-- fix arch/arm/Kconfig to allow IDE only on platforms supporting it
-
-- introduce IDE_ARCH_NO_DEFAULT_INIT and ide_default_io_ctl() so
-  we can use generic ide_init_hwif_ports() and kill no longer needed
-  <asm-arm/arch-*/ide.h> (leave broken lh7a40x and sa1100 versions)
-
-Cross-compile tested on ARM.
-
- linux-2.6.6-bk1-bzolnier/arch/arm/Kconfig                    |    2 
- linux-2.6.6-bk1-bzolnier/drivers/ide/ide.c                   |    7 -
- linux-2.6.6-bk1-bzolnier/drivers/ide/setup-pci.c             |    7 -
- linux-2.6.6-bk1-bzolnier/include/asm-alpha/ide.h             |    2 
- linux-2.6.6-bk1-bzolnier/include/asm-arm/arch-lh7a40x/ide.h  |    7 -
- linux-2.6.6-bk1-bzolnier/include/asm-arm/ide.h               |   19 ++-
- linux-2.6.6-bk1-bzolnier/include/asm-arm26/ide.h             |   26 -----
- linux-2.6.6-bk1-bzolnier/include/asm-i386/ide.h              |    2 
- linux-2.6.6-bk1-bzolnier/include/asm-ia64/ide.h              |    2 
- linux-2.6.6-bk1-bzolnier/include/asm-mips/mach-generic/ide.h |    2 
- linux-2.6.6-bk1-bzolnier/include/asm-parisc/ide.h            |    1 
- linux-2.6.6-bk1-bzolnier/include/asm-ppc/ide.h               |    2 
- linux-2.6.6-bk1-bzolnier/include/asm-ppc64/ide.h             |    1 
- linux-2.6.6-bk1-bzolnier/include/asm-sh/ide.h                |    2 
- linux-2.6.6-bk1-bzolnier/include/asm-sparc/ide.h             |    2 
- linux-2.6.6-bk1-bzolnier/include/asm-sparc64/ide.h           |    2 
- linux-2.6.6-bk1-bzolnier/include/asm-x86_64/ide.h            |    2 
- linux-2.6.6-bk1-bzolnier/include/linux/ide.h                 |   13 +-
- linux-2.6.6-bk1/include/asm-arm/arch-cl7500/ide.h            |   36 -------
- linux-2.6.6-bk1/include/asm-arm/arch-ebsa110/ide.h           |    1 
- linux-2.6.6-bk1/include/asm-arm/arch-ebsa285/ide.h           |   49 ---------
- linux-2.6.6-bk1/include/asm-arm/arch-iop3xx/ide.h            |   49 ---------
- linux-2.6.6-bk1/include/asm-arm/arch-l7200/ide.h             |   27 -----
- linux-2.6.6-bk1/include/asm-arm/arch-nexuspci/ide.h          |   37 -------
- linux-2.6.6-bk1/include/asm-arm/arch-pxa/ide.h               |   54 -----------
- linux-2.6.6-bk1/include/asm-arm/arch-rpc/ide.h               |   35 -------
- linux-2.6.6-bk1/include/asm-arm/arch-s3c2410/ide.h           |   49 ---------
- linux-2.6.6-bk1/include/asm-arm/arch-shark/ide.h             |   32 ------
- linux-2.6.6-bk1/include/asm-arm/arch-tbox/ide.h              |    3 
- 29 files changed, 49 insertions(+), 424 deletions(-)
-
-diff -puN arch/arm/Kconfig~ide_arch_arm arch/arm/Kconfig
---- linux-2.6.6-bk1/arch/arm/Kconfig~ide_arch_arm	2004-05-15 16:01:25.750228480 +0200
-+++ linux-2.6.6-bk1-bzolnier/arch/arm/Kconfig	2004-05-15 16:01:25.875209480 +0200
-@@ -604,7 +604,9 @@ source "drivers/acorn/block/Kconfig"
- 
- source "net/Kconfig"
- 
-+if ARCH_CLPS7500 || ARCH_IOP3XX || ARCH_L7200 || ARCH_LH7A40X || ARCH_FTVPCI || ARCH_PXA || ARCH_RPC || ARCH_S3C2410 || ARCH_SA1100 || ARCH_SHARK || FOOTBRIDGE
- source "drivers/ide/Kconfig"
-+endif
- 
- source "drivers/scsi/Kconfig"
- 
-diff -puN drivers/ide/ide.c~ide_arch_arm drivers/ide/ide.c
---- linux-2.6.6-bk1/drivers/ide/ide.c~ide_arch_arm	2004-05-15 16:01:25.763226504 +0200
-+++ linux-2.6.6-bk1-bzolnier/drivers/ide/ide.c	2004-05-15 16:01:25.877209176 +0200
-@@ -315,13 +315,6 @@ static void __init init_ide_data (void)
- #endif
- 	}
- 
--/* OBSOLETE: still needed on arm26 and arm */
--#ifdef CONFIG_ARM
--	/* Add default hw interfaces */
--	initializing = 1;
--	ide_init_default_hwifs();
--	initializing = 0;
--#endif
- #ifdef CONFIG_IDE_ARM
- 	ide_arm_init();
- #endif
-diff -puN drivers/ide/setup-pci.c~ide_arch_arm drivers/ide/setup-pci.c
---- linux-2.6.6-bk1/drivers/ide/setup-pci.c~ide_arch_arm	2004-05-15 16:01:25.767225896 +0200
-+++ linux-2.6.6-bk1-bzolnier/drivers/ide/setup-pci.c	2004-05-15 16:01:25.879208872 +0200
-@@ -444,13 +444,12 @@ static ide_hwif_t *ide_hwif_configure(st
- 	}
- 	if ((hwif = ide_match_hwif(base, d->bootable, d->name)) == NULL)
- 		return NULL;	/* no room in ide_hwifs[] */
--	if (hwif->io_ports[IDE_DATA_OFFSET] != base) {
--fixup_address:
-+	if (hwif->io_ports[IDE_DATA_OFFSET] != base ||
-+	    hwif->io_ports[IDE_CONTROL_OFFSET] != (ctl | 2)) {
-+		memset(&hwif->hw, 0, sizeof(hwif->hw));
- 		ide_init_hwif_ports(&hwif->hw, base, (ctl | 2), NULL);
- 		memcpy(hwif->io_ports, hwif->hw.io_ports, sizeof(hwif->io_ports));
- 		hwif->noprobe = !hwif->io_ports[IDE_DATA_OFFSET];
--	} else if (hwif->io_ports[IDE_CONTROL_OFFSET] != (ctl | 2)) {
--		goto fixup_address;
- 	}
- 	hwif->chipset = ide_pci;
- 	hwif->pci_dev = dev;
-diff -puN include/asm-alpha/ide.h~ide_arch_arm include/asm-alpha/ide.h
---- linux-2.6.6-bk1/include/asm-alpha/ide.h~ide_arch_arm	2004-05-15 16:01:25.771225288 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-alpha/ide.h	2004-05-15 16:01:25.879208872 +0200
-@@ -43,6 +43,8 @@ static inline unsigned long ide_default_
- 	}
- }
- 
-+#define ide_default_io_ctl(base)	((base) + 0x206) /* obsolete */
-+
- #ifdef CONFIG_PCI
- #define ide_init_default_irq(base)	(0)
- #else
-diff -puN include/asm-arm26/ide.h~ide_arch_arm include/asm-arm26/ide.h
---- linux-2.6.6-bk1/include/asm-arm26/ide.h~ide_arch_arm	2004-05-15 16:01:25.775224680 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-arm26/ide.h	2004-05-15 16:01:25.880208720 +0200
-@@ -26,34 +26,10 @@
- #define __ide_mm_outsw(port,addr,len)   writesw(port,addr,len)
- #define __ide_mm_outsl(port,addr,len)   writesl(port,addr,len)
- 
--/*
-- * Set up a hw structure for a specified data port, control port and IRQ.
-- * This should follow whatever the default interface uses.
-- */
--static inline void ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port,
--				       unsigned long ctrl_port, int *irq)
--{
--	unsigned long reg = data_port;
--        int i;
--
--        for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
--                hw->io_ports[i] = reg;
--                reg += 1;
--        }
--	hw->io_ports[IDE_CONTROL_OFFSET] = ctrl_port;
--        if (irq)
--                *irq = 0;
--}
--
- #define ide_init_default_irq(base)	(0)
- 
--static inline void ide_init_default_hwifs(void) { ; }
--
--/*
-- * We always use the new IDE port registering,
-- * so these are fixed here.
-- */
- #define ide_default_io_base(i)		(0)
-+#define ide_default_io_ctl(base)	((base) + 0x206) /* obsolete */
- #define ide_default_irq(b)		(0)
- 
- #endif /* __KERNEL__ */
-diff -puN -L include/asm-arm/arch-cl7500/ide.h include/asm-arm/arch-cl7500/ide.h~ide_arch_arm /dev/null
---- linux-2.6.6-bk1/include/asm-arm/arch-cl7500/ide.h
-+++ /dev/null	2004-01-17 00:25:55.000000000 +0100
-@@ -1,36 +0,0 @@
--/*
-- * linux/include/asm-arm/arch-cl7500/ide.h
-- *
-- * Copyright (c) 1997 Russell King
-- *
-- * Modifications:
-- *  29-07-1998	RMK	Major re-work of IDE architecture specific code
-- */
--
--/*
-- * Set up a hw structure for a specified data port, control port and IRQ.
-- * This should follow whatever the default interface uses.
-- */
--static inline void ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port,
--				       unsigned long ctrl_port, int *irq)
--{
--	unsigned long reg = data_port;
--	int i;
--
--	memset(hw, 0, sizeof(*hw));
--
--	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
--		hw->io_ports[i] = reg;
--		reg += 1;
--	}
--	if (ctrl_port) {
--		hw->io_ports[IDE_CONTROL_OFFSET] = ctrl_port;
--	} else {
--		hw->io_ports[IDE_CONTROL_OFFSET] = data_port + 0x206;
--	}
--	if (irq != NULL)
--		*irq = 0;
--	hw->io_ports[IDE_IRQ_OFFSET] = 0;
--}
--
--static inline void ide_init_default_hwifs(void) { ; }
-diff -puN -L include/asm-arm/arch-ebsa110/ide.h include/asm-arm/arch-ebsa110/ide.h~ide_arch_arm /dev/null
---- linux-2.6.6-bk1/include/asm-arm/arch-ebsa110/ide.h
-+++ /dev/null	2004-01-17 00:25:55.000000000 +0100
-@@ -1 +0,0 @@
--/* no ide */
-diff -puN -L include/asm-arm/arch-ebsa285/ide.h include/asm-arm/arch-ebsa285/ide.h~ide_arch_arm /dev/null
---- linux-2.6.6-bk1/include/asm-arm/arch-ebsa285/ide.h
-+++ /dev/null	2004-01-17 00:25:55.000000000 +0100
-@@ -1,49 +0,0 @@
--/*
-- *  linux/include/asm-arm/arch-ebsa285/ide.h
-- *
-- *  Copyright (C) 1998 Russell King
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- *
-- *  Modifications:
-- *   29-07-1998	RMK	Major re-work of IDE architecture specific code
-- */
--#include <asm/irq.h>
--
--/*
-- * Set up a hw structure for a specified data port, control port and IRQ.
-- * This should follow whatever the default interface uses.
-- */
--static inline void ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port,
--				       unsigned long ctrl_port, int *irq)
--{
--	unsigned long reg = data_port;
--	int i;
--
--	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
--		hw->io_ports[i] = reg;
--		reg += 1;
--	}
--	hw->io_ports[IDE_CONTROL_OFFSET] = ctrl_port;
--	if (irq)
--		*irq = 0;
--}
--
--/*
-- * This registers the standard ports for this architecture with the IDE
-- * driver.
-- */
--static __inline__ void ide_init_default_hwifs(void)
--{
--#if 0
--	hw_regs_t hw;
--
--	memset(hw, 0, sizeof(*hw));
--
--	ide_init_hwif_ports(&hw, 0x1f0, 0x3f6, NULL);
--	hw.irq = IRQ_HARDDISK;
--	ide_register_hw(&hw);
--#endif
--}
-diff -puN -L include/asm-arm/arch-iop3xx/ide.h include/asm-arm/arch-iop3xx/ide.h~ide_arch_arm /dev/null
---- linux-2.6.6-bk1/include/asm-arm/arch-iop3xx/ide.h
-+++ /dev/null	2004-01-17 00:25:55.000000000 +0100
-@@ -1,49 +0,0 @@
--/*
-- * include/asm-arm/arch-iop3xx/ide.h
-- *
-- * Generic IDE functions for IOP310 systems
-- *
-- * Author: Deepak Saxena <dsaxena@mvista.com>
-- *
-- * Copyright 2001 MontaVista Software Inc.
-- *
-- * 09/26/2001 - Sharon Baartmans
-- * 	Fixed so it actually works.
-- */
--
--#ifndef _ASM_ARCH_IDE_H_
--#define _ASM_ARCH_IDE_H_
--
--/*
-- * Set up a hw structure for a specified data port, control port and IRQ.
-- * This should follow whatever the default interface uses.
-- */
--static inline void ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port,
--				       unsigned long ctrl_port, int *irq)
--{
--	unsigned long reg = data_port;
--	int i;
--	int regincr = 1;
--
--	memset(hw, 0, sizeof(*hw));
--
--	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
--		hw->io_ports[i] = reg;
--		reg += regincr;
--	}
--
--	hw->io_ports[IDE_CONTROL_OFFSET] = ctrl_port;
--
--	if (irq) *irq = 0;
--}
--
--/*
-- * This registers the standard ports for this architecture with the IDE
-- * driver.
-- */
--static __inline__ void ide_init_default_hwifs(void)
--{
--	/* There are no standard ports */
--}
--
--#endif
-diff -puN -L include/asm-arm/arch-l7200/ide.h include/asm-arm/arch-l7200/ide.h~ide_arch_arm /dev/null
---- linux-2.6.6-bk1/include/asm-arm/arch-l7200/ide.h
-+++ /dev/null	2004-01-17 00:25:55.000000000 +0100
-@@ -1,27 +0,0 @@
--/*
-- * linux/include/asm-arm/arch-l7200/ide.h
-- *
-- * Copyright (c) 2000 Steve Hill (sjhill@cotw.com)
-- *
-- * Changelog:
-- *  03-29-2000	SJH	Created file placeholder
-- */
--#include <asm/irq.h>
--
--/*
-- * Set up a hw structure for a specified data port, control port and IRQ.
-- * This should follow whatever the default interface uses.
-- */
--static inline void ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port,
--				       unsigned long ctrl_port, int *irq)
--{
--}
--
--/*
-- * This registers the standard ports for this architecture with the IDE
-- * driver.
-- */
--static __inline__ void
--ide_init_default_hwifs(void)
--{
--}
-diff -puN include/asm-arm/arch-lh7a40x/ide.h~ide_arch_arm include/asm-arm/arch-lh7a40x/ide.h
---- linux-2.6.6-bk1/include/asm-arm/arch-lh7a40x/ide.h~ide_arch_arm	2004-05-15 16:01:25.798221184 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-arm/arch-lh7a40x/ide.h	2004-05-15 16:01:25.884208112 +0200
-@@ -64,13 +64,6 @@ static __inline__  void ide_init_default
- 	ide_register_hw (&hw, &hwif);
- 	lpd7a40x_hwif_ioops (hwif); /* Override IO routines */
- }
--
--#else
--
--static __inline__ void ide_init_hwif_ports (hw_regs_t *hw, int data_port,
--					    int ctrl_port, int *irq) {}
--static __inline__ void ide_init_default_hwifs (void) {}
--
- #endif
- 
- #endif
-diff -puN -L include/asm-arm/arch-nexuspci/ide.h include/asm-arm/arch-nexuspci/ide.h~ide_arch_arm /dev/null
---- linux-2.6.6-bk1/include/asm-arm/arch-nexuspci/ide.h
-+++ /dev/null	2004-01-17 00:25:55.000000000 +0100
-@@ -1,37 +0,0 @@
--/*
-- * linux/include/asm-arm/arch-nexuspci/ide.h
-- *
-- * Copyright (c) 1998 Russell King
-- *
-- * Modifications:
-- *  29-07-1998	RMK	Major re-work of IDE architecture specific code
-- */
--#include <asm/irq.h>
--
--/*
-- * Set up a hw structure for a specified data port, control port and IRQ.
-- * This should follow whatever the default interface uses.
-- */
--static inline void ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port,
--				       unsigned long ctrl_port, int *irq)
--{
--	unsigned long reg = data_port;
--	int i;
--
--	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
--		hw->io_ports[i] = reg;
--		reg += 1;
--	}
--	hw->io_ports[IDE_CONTROL_OFFSET] = ctrl_port;
--	if (irq)
--		*irq = 0;
--}
--
--/*
-- * This registers the standard ports for this architecture with the IDE
-- * driver.
-- */
--static __inline__ void ide_init_default_hwifs(void)
--{
--	/* There are no standard ports */
--}
-diff -puN -L include/asm-arm/arch-pxa/ide.h include/asm-arm/arch-pxa/ide.h~ide_arch_arm /dev/null
---- linux-2.6.6-bk1/include/asm-arm/arch-pxa/ide.h
-+++ /dev/null	2004-01-17 00:25:55.000000000 +0100
-@@ -1,54 +0,0 @@
--/*
-- * linux/include/asm-arm/arch-pxa/ide.h
-- *
-- * Author:	George Davis
-- * Created:	Jan 10, 2002
-- * Copyright:	MontaVista Software Inc.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- *
-- *
-- * Originally based upon linux/include/asm-arm/arch-sa1100/ide.h
-- *
-- */
--
--#include <asm/irq.h>
--#include <asm/hardware.h>
--#include <asm/mach-types.h>
--
--
--/*
-- * Set up a hw structure for a specified data port, control port and IRQ.
-- * This should follow whatever the default interface uses.
-- */
--static inline void ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port,
--				       unsigned long ctrl_port, int *irq)
--{
--	unsigned long reg = data_port;
--	int i;
--	int regincr = 1;
--
--	memset(hw, 0, sizeof(*hw));
--
--	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
--		hw->io_ports[i] = reg;
--		reg += regincr;
--	}
--
--	hw->io_ports[IDE_CONTROL_OFFSET] = ctrl_port;
--
--	if (irq)
--		*irq = 0;
--}
--
--
--/*
-- * Register the standard ports for this architecture with the IDE driver.
-- */
--static __inline__ void
--ide_init_default_hwifs(void)
--{
--	/* Nothing to declare... */
--}
-diff -puN -L include/asm-arm/arch-rpc/ide.h include/asm-arm/arch-rpc/ide.h~ide_arch_arm /dev/null
---- linux-2.6.6-bk1/include/asm-arm/arch-rpc/ide.h
-+++ /dev/null	2004-01-17 00:25:55.000000000 +0100
-@@ -1,35 +0,0 @@
--/*
-- *  linux/include/asm-arm/arch-rpc/ide.h
-- *
-- *  Copyright (C) 1997 Russell King
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- *
-- *  Modifications:
-- *   29-07-1998	RMK	Major re-work of IDE architecture specific code
-- */
--
--/*
-- * Set up a hw structure for a specified data port, control port and IRQ.
-- * This should follow whatever the default interface uses.
-- */
--static inline void ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port,
--				       unsigned long ctrl_port, int *irq)
--{
--	unsigned long reg = data_port;
--	int i;
--
--	memset(hw, 0, sizeof(*hw));
--
--	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
--		hw->io_ports[i] = reg;
--		reg += 1;
--	}
--	hw->io_ports[IDE_CONTROL_OFFSET] = ctrl_port;
--	if (irq)
--		*irq = 0;
--}
--
--static inline void ide_init_default_hwifs(void) { ; }
-diff -puN -L include/asm-arm/arch-s3c2410/ide.h include/asm-arm/arch-s3c2410/ide.h~ide_arch_arm /dev/null
---- linux-2.6.6-bk1/include/asm-arm/arch-s3c2410/ide.h
-+++ /dev/null	2004-01-17 00:25:55.000000000 +0100
-@@ -1,49 +0,0 @@
--/* linux/include/asm-arm/arch-s3c2410/ide.h
-- *
-- *  Copyright (C) 1997 Russell King
-- *  Copyright (C) 2003 Simtec Electronics
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- *
-- *  Modifications:
-- *   29-07-1998	RMK	Major re-work of IDE architecture specific code
-- *   16-05-2003 BJD	Changed to work with BAST IDE ports
-- *   04-09-2003 BJD	Modifications for V2.6
-- */
--
--#ifndef __ASM_ARCH_IDE_H
--#define __ASM_ARCH_IDE_H
--
--#include <asm/irq.h>
--
--/*
-- * Set up a hw structure for a specified data port, control port and IRQ.
-- * This should follow whatever the default interface uses.
-- */
--
--static inline void ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port,
--				       unsigned long ctrl_port, int *irq)
--{
--	unsigned long reg = data_port;
--	int i;
--
--	memset(hw, 0, sizeof(*hw));
--
--	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
--		hw->io_ports[i] = reg;
--		reg += 1;
--	}
--	hw->io_ports[IDE_CONTROL_OFFSET] = ctrl_port;
--	if (irq)
--		*irq = 0;
--}
--
--/* we initialise our ide devices from the main ide core, due to problems
-- * with doing it in this function
--*/
--
--#define ide_init_default_hwifs() do { } while(0)
--
--#endif /* __ASM_ARCH_IDE_H */
-diff -puN -L include/asm-arm/arch-shark/ide.h include/asm-arm/arch-shark/ide.h~ide_arch_arm /dev/null
---- linux-2.6.6-bk1/include/asm-arm/arch-shark/ide.h
-+++ /dev/null	2004-01-17 00:25:55.000000000 +0100
-@@ -1,32 +0,0 @@
--/*
-- * linux/include/asm-arm/arch-shark/ide.h
-- *
-- * by Alexander Schulz
-- *
-- * derived from:
-- * linux/include/asm-arm/arch-ebsa285/ide.h
-- * Copyright (c) 1998 Russell King
-- */
--
--/*
-- * Set up a hw structure for a specified data port, control port and IRQ.
-- * This should follow whatever the default interface uses.
-- */
--static inline void ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port,
--				       unsigned long ctrl_port, int *irq)
--{
--	unsigned long reg = data_port;
--	int i;
--
--	memset(hw, 0, sizeof(*hw));
--
--	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
--		hw->io_ports[i] = reg;
--		reg += 1;
--	}
--	hw->io_ports[IDE_CONTROL_OFFSET] = ctrl_port;
--	if (irq)
--		*irq = 0;
--}
--
--static inline void ide_init_default_hwifs(void) { ; }
-diff -puN -L include/asm-arm/arch-tbox/ide.h include/asm-arm/arch-tbox/ide.h~ide_arch_arm /dev/null
---- linux-2.6.6-bk1/include/asm-arm/arch-tbox/ide.h
-+++ /dev/null	2004-01-17 00:25:55.000000000 +0100
-@@ -1,3 +0,0 @@
--/*
-- * linux/include/asm-arm/arch-tbox/ide.h
-- */
-diff -puN include/asm-arm/ide.h~ide_arch_arm include/asm-arm/ide.h
---- linux-2.6.6-bk1/include/asm-arm/ide.h~ide_arch_arm	2004-05-15 16:01:25.826216928 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-arm/ide.h	2004-05-15 16:01:25.888207504 +0200
-@@ -17,13 +17,22 @@
- #define MAX_HWIFS	4
- #endif
- 
--#include <asm/arch/ide.h>
-+#if defined(CONFIG_ARCH_LH7A40X) || defined(CONFIG_ARCH_SA1100)
-+# include <asm/arch/ide.h>	/* broken */
-+#endif
- 
--/*
-- * We always use the new IDE port registering,
-- * so these are fixed here.
-- */
- #define ide_default_io_base(i)		(0)
-+
-+#if defined(CONFIG_ARCH_L7200) || defined(CONFIG_ARCH_LH7A40X)
-+# define IDE_ARCH_NO_OBSOLETE_INIT
-+#else
-+# ifdef CONFIG_ARCH_CLPS7500
-+#  define ide_default_io_ctl(base)	((base) + 0x206) /* obsolete */
-+# else
-+#  define ide_default_io_ctl(base)	(0)
-+# endif
-+#endif /* ARCH_L7200 || ARCH_LH7A40X */
-+
- #define ide_default_irq(b)		(0)
- 
- #define ide_init_default_irq(base)	(0)
-diff -puN include/asm-i386/ide.h~ide_arch_arm include/asm-i386/ide.h
---- linux-2.6.6-bk1/include/asm-i386/ide.h~ide_arch_arm	2004-05-15 16:01:25.830216320 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-i386/ide.h	2004-05-15 16:01:25.889207352 +0200
-@@ -85,6 +85,8 @@ static __inline__ void ide_init_hwif_por
- }
- #endif
- 
-+#define ide_default_io_ctl(base)	((base) + 0x206) /* obsolete */
-+
- #ifdef CONFIG_BLK_DEV_IDEPCI
- #define ide_init_default_irq(base)	(0)
- #else
-diff -puN include/asm-ia64/ide.h~ide_arch_arm include/asm-ia64/ide.h
---- linux-2.6.6-bk1/include/asm-ia64/ide.h~ide_arch_arm	2004-05-15 16:01:25.834215712 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-ia64/ide.h	2004-05-15 16:01:25.889207352 +0200
-@@ -53,6 +53,8 @@ static inline unsigned long ide_default_
- 	}
- }
- 
-+#define ide_default_io_ctl(base)	((base) + 0x206) /* obsolete */
-+
- #ifdef CONFIG_PCI
- #define ide_init_default_irq(base)	(0)
- #else
-diff -puN include/asm-mips/mach-generic/ide.h~ide_arch_arm include/asm-mips/mach-generic/ide.h
---- linux-2.6.6-bk1/include/asm-mips/mach-generic/ide.h~ide_arch_arm	2004-05-15 16:01:25.837215256 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-mips/mach-generic/ide.h	2004-05-15 16:01:25.890207200 +0200
-@@ -48,6 +48,8 @@ static inline unsigned long ide_default_
- 	}
- }
- 
-+#define ide_default_io_ctl(base)	((base) + 0x206) /* obsolete */
-+
- #ifdef CONFIG_BLK_DEV_IDEPCI
- #define ide_init_default_irq(base)	(0)
- #else
-diff -puN include/asm-parisc/ide.h~ide_arch_arm include/asm-parisc/ide.h
---- linux-2.6.6-bk1/include/asm-parisc/ide.h~ide_arch_arm	2004-05-15 16:01:25.841214648 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-parisc/ide.h	2004-05-15 16:01:25.891207048 +0200
-@@ -21,6 +21,7 @@
- 
- #define ide_default_irq(base) (0)
- #define ide_default_io_base(index) (0)
-+#define ide_default_io_ctl(base)	((base) + 0x206) /* obsolete */
- 
- #define ide_init_default_irq(base)	(0)
- 
-diff -puN include/asm-ppc64/ide.h~ide_arch_arm include/asm-ppc64/ide.h
---- linux-2.6.6-bk1/include/asm-ppc64/ide.h~ide_arch_arm	2004-05-15 16:01:25.845214040 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-ppc64/ide.h	2004-05-15 16:01:25.891207048 +0200
-@@ -24,6 +24,7 @@
- 
- static inline int ide_default_irq(unsigned long base) { return 0; }
- static inline unsigned long ide_default_io_base(int index) { return 0; }
-+#define ide_default_io_ctl(base)	((base) + 0x206) /* obsolete */
- 
- #define ide_init_default_irq(base)	(0)
- 
-diff -puN include/asm-ppc/ide.h~ide_arch_arm include/asm-ppc/ide.h
---- linux-2.6.6-bk1/include/asm-ppc/ide.h~ide_arch_arm	2004-05-15 16:01:25.849213432 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-ppc/ide.h	2004-05-15 16:01:25.893206744 +0200
-@@ -57,6 +57,8 @@ static __inline__ unsigned long ide_defa
- 	return 0;
- }
- 
-+#define ide_default_io_ctl(base)	((base) + 0x206) /* obsolete */
-+
- #ifdef CONFIG_PCI
- #define ide_init_default_irq(base)	(0)
- #else
-diff -puN include/asm-sh/ide.h~ide_arch_arm include/asm-sh/ide.h
---- linux-2.6.6-bk1/include/asm-sh/ide.h~ide_arch_arm	2004-05-15 16:01:25.853212824 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-sh/ide.h	2004-05-15 16:01:25.893206744 +0200
-@@ -72,6 +72,8 @@ static inline unsigned long ide_default_
- 	}
- }
- 
-+#define ide_default_io_ctl(base)	((base) + 0x206) /* obsolete */
-+
- #ifdef CONFIG_PCI
- #define ide_init_default_irq(base)	(0)
- #else
-diff -puN include/asm-sparc64/ide.h~ide_arch_arm include/asm-sparc64/ide.h
---- linux-2.6.6-bk1/include/asm-sparc64/ide.h~ide_arch_arm	2004-05-15 16:01:25.857212216 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-sparc64/ide.h	2004-05-15 16:01:25.895206440 +0200
-@@ -34,6 +34,8 @@ static __inline__ unsigned long ide_defa
- 	return 0;
- }
- 
-+#define ide_default_io_ctl(base)	((base) + 0x206) /* obsolete */
-+
- #define ide_init_default_irq(base)	(0)
- 
- #define __ide_insl(data_reg, buffer, wcount) \
-diff -puN include/asm-sparc/ide.h~ide_arch_arm include/asm-sparc/ide.h
---- linux-2.6.6-bk1/include/asm-sparc/ide.h~ide_arch_arm	2004-05-15 16:01:25.860211760 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-sparc/ide.h	2004-05-15 16:01:25.895206440 +0200
-@@ -29,6 +29,8 @@ static __inline__ unsigned long ide_defa
- 	return 0;
- }
- 
-+#define ide_default_io_ctl(base)	((base) + 0x206) /* obsolete */
-+
- #define ide_init_default_irq(base)	(0)
- 
- #define __ide_insl(data_reg, buffer, wcount) \
-diff -puN include/asm-x86_64/ide.h~ide_arch_arm include/asm-x86_64/ide.h
---- linux-2.6.6-bk1/include/asm-x86_64/ide.h~ide_arch_arm	2004-05-15 16:01:25.864211152 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/asm-x86_64/ide.h	2004-05-15 16:01:25.896206288 +0200
-@@ -51,6 +51,8 @@ static __inline__ unsigned long ide_defa
- 	}
- }
- 
-+#define ide_default_io_ctl(base)	((base) + 0x206) /* obsolete */
-+
- #ifdef CONFIG_BLK_DEV_IDEPCI
- #define ide_init_default_irq(base)	(0)
- #else
-diff -puN include/linux/ide.h~ide_arch_arm include/linux/ide.h
---- linux-2.6.6-bk1/include/linux/ide.h~ide_arch_arm	2004-05-15 16:01:25.870210240 +0200
-+++ linux-2.6.6-bk1-bzolnier/include/linux/ide.h	2004-05-15 16:01:25.897206136 +0200
-@@ -307,18 +307,20 @@ static inline void ide_std_init_ports(hw
- 
- /*
-  * ide_init_hwif_ports() is OBSOLETE and will be removed in 2.7 series.
-+ * All new ports should define IDE_ARCH_NO_OBSOLETE_INIT in <asm/ide.h>.
-  *
-- * arm26, arm, h8300, m68k, m68knommu (broken) and i386-pc9800 (broken)
-+ * h8300, m68k, m68knommu (broken) and i386-pc9800 (broken)
-  * still have their own versions.
-  */
--#if !defined(CONFIG_ARM) && !defined(CONFIG_H8300) && !defined(CONFIG_M68K)
-+#if !defined(CONFIG_H8300) && !defined(CONFIG_M68K)
-+#ifndef IDE_ARCH_NO_OBSOLETE_INIT
- static inline void ide_init_hwif_ports(hw_regs_t *hw,
- 				       unsigned long io_addr,
- 				       unsigned long ctl_addr,
- 				       int *irq)
- {
- 	if (!ctl_addr)
--		ide_std_init_ports(hw, io_addr, io_addr + 0x206);
-+		ide_std_init_ports(hw, io_addr, ide_default_io_ctl(io_addr));
- 	else
- 		ide_std_init_ports(hw, io_addr, ctl_addr);
- 
-@@ -332,7 +334,10 @@ static inline void ide_init_hwif_ports(h
- 		ppc_ide_md.ide_init_hwif(hw, io_addr, ctl_addr, irq);
- #endif
- }
--#endif /* !ARM && !H8300 && !M68K */
-+#else
-+# define ide_init_hwif_ports(hw, io, ctl, irq)	do {} while (0)
-+#endif /* !IDE_ARCH_NO_OBSOLETE_INIT */
-+#endif /* !H8300 && !M68K */
- 
- /* Currently only m68k, apus and m8xx need it */
- #ifndef IDE_ARCH_ACK_INTR
-
-_
+> Pat LaVarre
+>
+> P.S. Of course I still agree the firmware of devices manufactured with
+> this perhaps excessively transparent SATA/ PATA bridge should set "word"
+> 62 mask x8000 ata_id_use_dmadir, after that proposal in fact becomes a
+> t13.org standard, presuming that standards development process doesn't
+> move or flip that bit.
+>
+> Indeed, after the proposal is standard, I'll argue all PATA devices
+> should set this bit, on the chance that their actual connection with the
+> host is such an extremely transparent SATA/ PATA bridge.
+>
+> But that argument I expect to lose to the fear that some hosts will
+> choose to refuse to speak DMA with devices that set ata_id_use_dmadir,
+> rather than choosing to disclose (cmd->sc_data_direction !=
+> SCSI_DATA_WRITE).
+>
+> P.P.S. In passing in include/linux/, I vote we teach Linux to enum
+> together all the bits of the ata_taskfile.feature parameter of ATA op
+> xA0 ATA_CMD_PACKET.
+>
+> --- o/drivers/scsi/libata-core.c	2004-05-15 07:31:49.000000000 -0600
+> +++ linux-2.6.6-bk1/drivers/scsi/libata-core.c	2004-05-15
+> 07:53:40.520947904 -0600 @@ -1168,8 +1168,10 @@ retry:
+>  		if (ata_id_is_ata(dev))		/* sanity check */
+>  			goto err_out_nosup;
+>
+> -		if (ata_id_use_dmadir(dev))
+> -			dev->flags |= ATA_DFLAG_DMADIR;
+> +		/* share cmd->sc_data_direction with device
+> +		 * even when (!ata_id_use_dmadir(dev)) claims not needed
+> +		 */
+> +		dev->flags |= ATA_DFLAG_DMADIR;
+>
+>  		/* see if 16-byte commands supported */
+>  		tmp = dev->id[0] & 0x3;
+> --- o/include/linux/ata.h	2004-05-15 07:09:33.000000000 -0600
+> +++ linux-2.6.6-bk1/include/linux/ata.h	2004-05-15 07:58:15.181193200 -0600
+> @@ -84,8 +84,6 @@ enum {
+>  	ATA_ERR			= (1 << 0),	/* have an error */
+>  	ATA_SRST		= (1 << 2),	/* software reset */
+>  	ATA_ABORTED		= (1 << 2),	/* command aborted */
+> -	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
+> -						   0=to device, 1=to host */
+>
+>  	/* ATA command block registers */
+>  	ATA_REG_DATA		= 0x00,
+> @@ -136,6 +134,8 @@ enum {
+>
+>  	/* ATAPI stuff */
+>  	ATAPI_PKT_DMA		= (1 << 0),
+> +	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
+> +						   0=to device, 1=to host */
+>
+>  	/* cable types */
+>  	ATA_CBL_NONE		= 0,
 
