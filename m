@@ -1,176 +1,394 @@
-From: "Albert Lee" <albertcc@tw.ibm.com>
-Subject: [PATCH] libata-dev-2.6: pdc2027x timing register fix for 100MHz adapters
-Date: Wed, 2 Feb 2005 17:01:24 +0800
-Message-ID: <003f01c50905$c8090d10$6401a8c0@tw.ibm.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [RFT 2.6.11-rc2-bk10]  libata (SATA) driver update
+Date: Wed, 02 Feb 2005 04:06:45 -0500
+Message-ID: <42009825.7080704@pobox.com>
+Reply-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_003C_01C50948.D3E4A700"
-Received: from bluehawaii.tikira.net ([61.62.22.51]:60396 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S262201AbVBBJCD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Feb 2005 04:02:03 -0500
+ boundary="------------090908020905020001000307"
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:4043 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S262188AbVBBJHC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Feb 2005 04:07:02 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Chew <achew@nvidia.com>
 
 This is a multi-part message in MIME format.
-
-------=_NextPart_000_003C_01C50948.D3E4A700
-Content-Type: text/plain;
-	charset="big5"
+--------------090908020905020001000307
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Hi Jeff,
 
-  I did not get the pdc2027x timing registers right for the 100 MHz adapters.
-For the 100MHz adapters, the hardware will automatically set the timing registers to the correct value.
-No need to set the timing register by software table lookup.
-(The values in the lookup table are for 133Mhz adapters, which are incorrect for 100MHz adapters.)
+Mainly for testing by Promise and nVIDIA users, but also includes a fix 
+for a few lesser-used SCSI commands (that affect all SATA users).
 
-  Attached please find the patch against the libata-dev-2.6 tree for your review. Thanks.
+See attached...
 
-Albert
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-----------------------------------------------------------------------------------------------
---- libata-dev-2.6/drivers/scsi/pata_pdc2027x.c 2005-02-02 16:08:39.000000000 +0800
-+++ libata-dev-2.6-mod/drivers/scsi/pata_pdc2027x.c 2005-02-02 16:17:26.000000000 +0800
-@@ -29,7 +29,7 @@
- #include <asm/io.h>
+
+--------------090908020905020001000307
+Content-Type: text/plain;
+ name="changelog.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="changelog.txt"
+
+BK users:
+
+	bk pull bk://gkernel.bkbits.net/libata-2.6
+
+This will update the following files:
+
+ drivers/scsi/libata-core.c  |   91 ++++++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/libata-scsi.c  |    8 +--
+ drivers/scsi/sata_nv.c      |   45 ++++++++++++++++-----
+ drivers/scsi/sata_promise.c |   12 ++++-
+ 4 files changed, 135 insertions(+), 21 deletions(-)
+
+through these ChangeSets:
+
+Albert Lee:
+  o [libata] SCSI-to-ATA translation fixes
+
+Andrew Chew:
+  o sata_nv: enable generic class support for future NVIDIA SATA
+
+Jeff Garzik:
+  o [libata sata_promise] support Promise SATAII TX2/TX4 cards
+  o [libata] Remove CDROM drive from PATA DMA blacklist
+  o [libata] add DMA blacklist
+
+
+--------------090908020905020001000307
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+--- a/drivers/scsi/libata-core.c	2005-02-02 04:02:11 -05:00
++++ b/drivers/scsi/libata-core.c	2005-02-02 04:02:11 -05:00
+@@ -1700,6 +1700,69 @@
+ 	DPRINTK("EXIT\n");
+ }
  
- #define DRV_NAME "pata_pdc2027x"
--#define DRV_VERSION "0.55"
-+#define DRV_VERSION "0.56"
- #undef PDC_DEBUG
- 
- #ifdef PDC_DEBUG
-@@ -130,7 +130,32 @@
-  .bios_param  = ata_std_bios_param,
- };
- 
--static struct ata_port_operations pdc2027x_pata_ops = {
-+static struct ata_port_operations pdc2027x_pata100_ops = {
-+ .port_disable  = ata_port_disable,
++static void ata_pr_blacklisted(struct ata_port *ap, struct ata_device *dev)
++{
++	printk(KERN_WARNING "ata%u: dev %u is on DMA blacklist, disabling DMA\n",
++		ap->id, dev->devno);
++}
 +
-+ .tf_load  = ata_tf_load,
-+ .tf_read  = ata_tf_read,
-+ .check_status  = ata_check_status,
-+ .exec_command  = ata_exec_command,
-+ .dev_select  = ata_std_dev_select,
-+
-+ .phy_reset  = pdc2027x_phy_reset,   
-+
-+ .check_atapi_dma = pdc2027x_check_atapi_dma,
-+ .bmdma_setup  = ata_bmdma_setup,
-+ .bmdma_start  = ata_bmdma_start,
-+ .qc_prep  = ata_qc_prep,
-+ .qc_issue  = ata_qc_issue_prot,
-+ .eng_timeout  = ata_eng_timeout,
-+
-+ .irq_handler  = ata_interrupt,
-+ .irq_clear  = ata_bmdma_irq_clear,
-+
-+ .port_start  = ata_port_start,
-+ .port_stop  = ata_port_stop,
++static const char * ata_dma_blacklist [] = {
++	"WDC AC11000H",
++	"WDC AC22100H",
++	"WDC AC32500H",
++	"WDC AC33100H",
++	"WDC AC31600H",
++	"WDC AC32100H",
++	"WDC AC23200L",
++	"Compaq CRD-8241B",
++	"CRD-8400B",
++	"CRD-8480B",
++	"CRD-8482B",
++ 	"CRD-84",
++	"SanDisk SDP3B",
++	"SanDisk SDP3B-64",
++	"SANYO CD-ROM CRD",
++	"HITACHI CDR-8",
++	"HITACHI CDR-8335",
++	"HITACHI CDR-8435",
++	"Toshiba CD-ROM XM-6202B",
++	"CD-532E-A",
++	"E-IDE CD-ROM CR-840",
++	"CD-ROM Drive/F5A",
++	"WPI CDD-820",
++	"SAMSUNG CD-ROM SC-148C",
++	"SAMSUNG CD-ROM SC",
++	"SanDisk SDP3B-64",
++	"SAMSUNG CD-ROM SN-124",
++	"ATAPI CD-ROM DRIVE 40X MAXIMUM",
++	"_NEC DV5800A",
 +};
 +
-+static struct ata_port_operations pdc2027x_pata133_ops = {
-  .port_disable  = ata_port_disable,
-  .set_piomode  = pdc2027x_set_piomode,   
-  .set_dmamode  = pdc2027x_set_dmamode,  
-@@ -167,7 +192,7 @@
-   .pio_mask = 0x1f, /* pio0-4 */
-   .mwdma_mask = 0x07, /* mwdma0-2 */
-   .udma_mask = ATA_UDMA5, /* udma0-5 */
--  .port_ops = &pdc2027x_pata_ops,
-+  .port_ops = &pdc2027x_pata100_ops,
-  },
-  /* PDC_UDMA_133 */
-  {
-@@ -177,7 +202,7 @@
-   .pio_mask = 0x1f, /* pio0-4 */
-   .mwdma_mask = 0x07, /* mwdma0-2 */
-   .udma_mask = ATA_UDMA6, /* udma0-6 */
--  .port_ops = &pdc2027x_pata_ops,
-+  .port_ops = &pdc2027x_pata133_ops,
-  },
++static int ata_dma_blacklisted(struct ata_port *ap, struct ata_device *dev)
++{
++	unsigned char model_num[40];
++	char *s;
++	unsigned int len;
++	int i;
++
++	ata_dev_id_string(dev->id, model_num, ATA_ID_PROD_OFS,
++			  sizeof(model_num));
++	s = &model_num[0];
++	len = strnlen(s, sizeof(model_num));
++
++	/* ATAPI specifies that empty space is blank-filled; remove blanks */
++	while ((len > 0) && (s[len - 1] == ' ')) {
++		len--;
++		s[len] = 0;
++	}
++
++	for (i = 0; i < ARRAY_SIZE(ata_dma_blacklist); i++)
++		if (!strncmp(ata_dma_blacklist[i], s, len))
++			return 1;
++
++	return 0;
++}
++
+ static unsigned int ata_get_mode_mask(struct ata_port *ap, int shift)
+ {
+ 	struct ata_device *master, *slave;
+@@ -1712,17 +1775,37 @@
+ 
+ 	if (shift == ATA_SHIFT_UDMA) {
+ 		mask = ap->udma_mask;
+-		if (ata_dev_present(master))
++		if (ata_dev_present(master)) {
+ 			mask &= (master->id[ATA_ID_UDMA_MODES] & 0xff);
+-		if (ata_dev_present(slave))
++			if (ata_dma_blacklisted(ap, master)) {
++				mask = 0;
++				ata_pr_blacklisted(ap, master);
++			}
++		}
++		if (ata_dev_present(slave)) {
+ 			mask &= (slave->id[ATA_ID_UDMA_MODES] & 0xff);
++			if (ata_dma_blacklisted(ap, slave)) {
++				mask = 0;
++				ata_pr_blacklisted(ap, slave);
++			}
++		}
+ 	}
+ 	else if (shift == ATA_SHIFT_MWDMA) {
+ 		mask = ap->mwdma_mask;
+-		if (ata_dev_present(master))
++		if (ata_dev_present(master)) {
+ 			mask &= (master->id[ATA_ID_MWDMA_MODES] & 0x07);
+-		if (ata_dev_present(slave))
++			if (ata_dma_blacklisted(ap, master)) {
++				mask = 0;
++				ata_pr_blacklisted(ap, master);
++			}
++		}
++		if (ata_dev_present(slave)) {
+ 			mask &= (slave->id[ATA_ID_MWDMA_MODES] & 0x07);
++			if (ata_dma_blacklisted(ap, slave)) {
++				mask = 0;
++				ata_pr_blacklisted(ap, slave);
++			}
++		}
+ 	}
+ 	else if (shift == ATA_SHIFT_PIO) {
+ 		mask = ap->pio_mask;
+diff -Nru a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+--- a/drivers/scsi/libata-scsi.c	2005-02-02 04:02:11 -05:00
++++ b/drivers/scsi/libata-scsi.c	2005-02-02 04:02:11 -05:00
+@@ -498,9 +498,9 @@
+ 
+ 	tf->nsect = n_sect & 0xff;
+ 
+-	tf->hob_lbah = (sect >> 16) & 0xff;
+-	tf->hob_lbam = (sect >> 8) & 0xff;
+-	tf->hob_lbal = sect & 0xff;
++	tf->lbah = (sect >> 16) & 0xff;
++	tf->lbam = (sect >> 8) & 0xff;
++	tf->lbal = sect & 0xff;
+ 
+ 	return 0;
+ }
+@@ -600,7 +600,7 @@
+ 				return 1;
+ 
+ 			/* stores LBA27:24 in lower 4 bits of device reg */
+-			tf->device |= scsicmd[2];
++			tf->device |= scsicmd[6];
+ 
+ 			qc->nsect = scsicmd[13];
+ 		}
+diff -Nru a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
+--- a/drivers/scsi/sata_nv.c	2005-02-02 04:02:11 -05:00
++++ b/drivers/scsi/sata_nv.c	2005-02-02 04:02:11 -05:00
+@@ -20,6 +20,10 @@
+  *  If you do not delete the provisions above, a recipient may use your
+  *  version of this file under either the OSL or the GPL.
+  *
++ *  0.06
++ *     - Added generic SATA support by using a pci_device_id that filters on
++ *       the IDE storage class code.
++ *
+  *  0.03
+  *     - Fixed a bug where the hotplug handlers for non-CK804/MCP04 were using
+  *       mmio_base, which is only set for the CK804/MCP04 case.
+@@ -44,7 +48,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME			"sata_nv"
+-#define DRV_VERSION			"0.5"
++#define DRV_VERSION			"0.6"
+ 
+ #define NV_PORTS			2
+ #define NV_PIO_MASK			0x1f
+@@ -108,6 +112,7 @@
+ 
+ enum nv_host_type
+ {
++	GENERIC,
+ 	NFORCE2,
+ 	NFORCE3,
+ 	CK804
+@@ -128,6 +133,9 @@
+ 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, CK804 },
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_SATA2,
+ 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, CK804 },
++	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
++		PCI_ANY_ID, PCI_ANY_ID,
++		PCI_CLASS_STORAGE_IDE<<8, 0xffff00, GENERIC },
+ 	{ 0, } /* terminate list */
  };
  
+@@ -136,7 +144,6 @@
+ struct nv_host_desc
+ {
+ 	enum nv_host_type	host_type;
+-	unsigned long		host_flags;
+ 	void			(*enable_hotplug)(struct ata_probe_ent *probe_ent);
+ 	void			(*disable_hotplug)(struct ata_host_set *host_set);
+ 	void			(*check_hotplug)(struct ata_host_set *host_set);
+@@ -144,21 +151,24 @@
+ };
+ static struct nv_host_desc nv_device_tbl[] = {
+ 	{
++		.host_type	= GENERIC,
++		.enable_hotplug	= NULL,
++		.disable_hotplug= NULL,
++		.check_hotplug	= NULL,
++	},
++	{
+ 		.host_type	= NFORCE2,
+-		.host_flags	= 0x00000000,
+ 		.enable_hotplug	= nv_enable_hotplug,
+ 		.disable_hotplug= nv_disable_hotplug,
+ 		.check_hotplug	= nv_check_hotplug,
+ 	},
+ 	{
+ 		.host_type	= NFORCE3,
+-		.host_flags	= 0x00000000,
+ 		.enable_hotplug	= nv_enable_hotplug,
+ 		.disable_hotplug= nv_disable_hotplug,
+ 		.check_hotplug	= nv_check_hotplug,
+ 	},
+ 	{	.host_type	= CK804,
+-		.host_flags	= NV_HOST_FLAGS_SCR_MMIO,
+ 		.enable_hotplug	= nv_enable_hotplug_ck804,
+ 		.disable_hotplug= nv_disable_hotplug_ck804,
+ 		.check_hotplug	= nv_check_hotplug_ck804,
+@@ -168,6 +178,7 @@
+ struct nv_host
+ {
+ 	struct nv_host_desc	*host_desc;
++	unsigned long		host_flags;
+ };
+ 
+ static struct pci_driver nv_pci_driver = {
+@@ -284,8 +295,8 @@
+ 	if (sc_reg > SCR_CONTROL)
+ 		return 0xffffffffU;
+ 
+-	if (host->host_desc->host_flags & NV_HOST_FLAGS_SCR_MMIO)
+-		return readl(ap->ioaddr.scr_addr + (sc_reg * 4));
++	if (host->host_flags & NV_HOST_FLAGS_SCR_MMIO)
++		return readl((void*)ap->ioaddr.scr_addr + (sc_reg * 4));
+ 	else
+ 		return inl(ap->ioaddr.scr_addr + (sc_reg * 4));
+ }
+@@ -298,8 +309,8 @@
+ 	if (sc_reg > SCR_CONTROL)
+ 		return;
+ 
+-	if (host->host_desc->host_flags & NV_HOST_FLAGS_SCR_MMIO)
+-		writel(val, ap->ioaddr.scr_addr + (sc_reg * 4));
++	if (host->host_flags & NV_HOST_FLAGS_SCR_MMIO)
++		writel(val, (void*)ap->ioaddr.scr_addr + (sc_reg * 4));
+ 	else
+ 		outl(val, ap->ioaddr.scr_addr + (sc_reg * 4));
+ }
+@@ -322,6 +333,14 @@
+ 	struct ata_port_info *ppi;
+ 	struct ata_probe_ent *probe_ent;
+ 	int rc;
++	u32 bar;
++
++        // Make sure this is a SATA controller by counting the number of bars
++        // (NVIDIA SATA controllers will always have six bars).  Otherwise,
++        // it's an IDE controller and we ignore it.
++	for (bar=0; bar<6; bar++)
++		if (pci_resource_start(pdev, bar) == 0)
++			return -ENODEV;
+ 
+ 	if (!printed_version++)
+ 		printk(KERN_DEBUG DRV_NAME " version " DRV_VERSION "\n");
+@@ -352,11 +371,15 @@
+ 	if (!host)
+ 		goto err_out_free_ent;
+ 
++	memset(host, 0, sizeof(struct nv_host));
+ 	host->host_desc = &nv_device_tbl[ent->driver_data];
+ 
+ 	probe_ent->private_data = host;
+ 
+-	if (host->host_desc->host_flags & NV_HOST_FLAGS_SCR_MMIO) {
++	if (pci_resource_flags(pdev, 5) & IORESOURCE_MEM)
++		host->host_flags |= NV_HOST_FLAGS_SCR_MMIO;
++
++	if (host->host_flags & NV_HOST_FLAGS_SCR_MMIO) {
+ 		unsigned long base;
+ 
+ 		probe_ent->mmio_base = ioremap(pci_resource_start(pdev, 5),
+@@ -395,7 +418,7 @@
+ 	return 0;
+ 
+ err_out_iounmap:
+-	if (host->host_desc->host_flags & NV_HOST_FLAGS_SCR_MMIO)
++	if (host->host_flags & NV_HOST_FLAGS_SCR_MMIO)
+ 		iounmap(probe_ent->mmio_base);
+ err_out_free_host:
+ 	kfree(host);
+diff -Nru a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
+--- a/drivers/scsi/sata_promise.c	2005-02-02 04:02:11 -05:00
++++ b/drivers/scsi/sata_promise.c	2005-02-02 04:02:11 -05:00
+@@ -156,10 +156,16 @@
+ 	  board_2037x },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3376, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_2037x },
++	{ PCI_VENDOR_ID_PROMISE, 0x3d75, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_2037x },
++
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3318, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_20319 },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_20319 },
++	{ PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_20319 },
++
+ 	{ }	/* terminate list */
+ };
+ 
+@@ -406,9 +412,11 @@
+ 		return IRQ_NONE;
+ 	}
+ 
+-        spin_lock(&host_set->lock);
++	spin_lock(&host_set->lock);
++
++	writel(mask, mmio_base + PDC_INT_SEQMASK);
+ 
+-        for (i = 0; i < host_set->n_ports; i++) {
++	for (i = 0; i < host_set->n_ports; i++) {
+ 		VPRINTK("port %u\n", i);
+ 		ap = host_set->ports[i];
+ 		tmp = mask & (1 << (i + 1));
 
-------=_NextPart_000_003C_01C50948.D3E4A700
-Content-Type: application/octet-stream;
-	name="pdc2027x_056.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="pdc2027x_056.patch"
-
---- libata-dev-2.6/drivers/scsi/pata_pdc2027x.c	2005-02-02 =
-16:08:39.000000000 +0800=0A=
-+++ libata-dev-2.6-mod/drivers/scsi/pata_pdc2027x.c	2005-02-02 =
-16:17:26.000000000 +0800=0A=
-@@ -29,7 +29,7 @@=0A=
- #include <asm/io.h>=0A=
- =0A=
- #define DRV_NAME	"pata_pdc2027x"=0A=
--#define DRV_VERSION	"0.55"=0A=
-+#define DRV_VERSION	"0.56"=0A=
- #undef PDC_DEBUG=0A=
- =0A=
- #ifdef PDC_DEBUG=0A=
-@@ -130,7 +130,32 @@=0A=
- 	.bios_param		=3D ata_std_bios_param,=0A=
- };=0A=
- =0A=
--static struct ata_port_operations pdc2027x_pata_ops =3D {=0A=
-+static struct ata_port_operations pdc2027x_pata100_ops =3D {=0A=
-+	.port_disable		=3D ata_port_disable,=0A=
-+=0A=
-+	.tf_load		=3D ata_tf_load,=0A=
-+	.tf_read		=3D ata_tf_read,=0A=
-+	.check_status		=3D ata_check_status,=0A=
-+	.exec_command		=3D ata_exec_command,=0A=
-+	.dev_select		=3D ata_std_dev_select,=0A=
-+=0A=
-+	.phy_reset		=3D pdc2027x_phy_reset,   =0A=
-+=0A=
-+	.check_atapi_dma	=3D pdc2027x_check_atapi_dma,=0A=
-+	.bmdma_setup		=3D ata_bmdma_setup,=0A=
-+	.bmdma_start		=3D ata_bmdma_start,=0A=
-+	.qc_prep		=3D ata_qc_prep,=0A=
-+	.qc_issue		=3D ata_qc_issue_prot,=0A=
-+	.eng_timeout		=3D ata_eng_timeout,=0A=
-+=0A=
-+	.irq_handler		=3D ata_interrupt,=0A=
-+	.irq_clear		=3D ata_bmdma_irq_clear,=0A=
-+=0A=
-+	.port_start		=3D ata_port_start,=0A=
-+	.port_stop		=3D ata_port_stop,=0A=
-+};=0A=
-+=0A=
-+static struct ata_port_operations pdc2027x_pata133_ops =3D {=0A=
- 	.port_disable		=3D ata_port_disable,=0A=
- 	.set_piomode		=3D pdc2027x_set_piomode,   =0A=
- 	.set_dmamode		=3D pdc2027x_set_dmamode,  =0A=
-@@ -167,7 +192,7 @@=0A=
- 		.pio_mask	=3D 0x1f, /* pio0-4 */=0A=
- 		.mwdma_mask	=3D 0x07, /* mwdma0-2 */=0A=
- 		.udma_mask	=3D ATA_UDMA5, /* udma0-5 */=0A=
--		.port_ops	=3D &pdc2027x_pata_ops,=0A=
-+		.port_ops	=3D &pdc2027x_pata100_ops,=0A=
- 	},=0A=
- 	/* PDC_UDMA_133 */=0A=
- 	{=0A=
-@@ -177,7 +202,7 @@=0A=
- 		.pio_mask	=3D 0x1f, /* pio0-4 */=0A=
- 		.mwdma_mask	=3D 0x07, /* mwdma0-2 */=0A=
- 		.udma_mask	=3D ATA_UDMA6, /* udma0-6 */=0A=
--		.port_ops	=3D &pdc2027x_pata_ops,=0A=
-+		.port_ops	=3D &pdc2027x_pata133_ops,=0A=
- 	},=0A=
- };=0A=
- =0A=
-
-------=_NextPart_000_003C_01C50948.D3E4A700--
-
-
+--------------090908020905020001000307--
