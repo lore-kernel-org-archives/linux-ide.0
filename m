@@ -1,48 +1,67 @@
-From: James Cloos <cloos@jhcloos.com>
-Subject: Re: [BK PATCHES] ide-2.6 update
-Date: Sun, 24 Oct 2004 13:51:53 -0700
+From: Doug Maxey <dwm@austin.ibm.com>
+Subject: Re: [PATCH 1/1] build modular usb isd200 with modular ide
+Date: Sun, 24 Oct 2004 18:11:12 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <m3u0sjon4m.fsf@lugabout.cloos.reno.nv.us>
-References: <58cb370e04102405081d62bf40@mail.gmail.com>
-	<m3zn2boq1h.fsf@lugabout.cloos.reno.nv.us>
-	<58cb370e04102413156543b72e@mail.gmail.com>
+Message-ID: <200410242311.i9ONBCKp019869@falcon10.austin.ibm.com>
+References: <20041024100319.GA17183@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ore.jhcloos.com ([64.240.156.239]:19210 "EHLO ore.jhcloos.com")
-	by vger.kernel.org with ESMTP id S261605AbUJXUwD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Oct 2004 16:52:03 -0400
-In-Reply-To: <58cb370e04102413156543b72e@mail.gmail.com> (Bartlomiej
- Zolnierkiewicz's message of "Sun, 24 Oct 2004 22:15:26 +0200")
+Received: from pixpat.austin.ibm.com ([192.35.232.241]:60880 "EHLO
+	falcon10.austin.ibm.com") by vger.kernel.org with ESMTP
+	id S261624AbUJXXLf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 24 Oct 2004 19:11:35 -0400
+In-reply-to: <20041024100319.GA17183@lst.de> 
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Paul Mackerras <paulus@samba.org>, Greg Kroah-Hartman <greg@kroah.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux IDE Mailing List <linux-ide@vger.kernel.org>, linuxppc64-dev@ozlabs.org
 
->>>>> "BZ" == Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> writes:
 
-BZ> All these data can be obtained from user-space, no need for
-BZ> bloating sysfs.
+On Sun, 24 Oct 2004 12:03:19 +0200, Christoph Hellwig wrote:
+>On Sat, Oct 23, 2004 at 07:55:36PM -0500, Doug Maxey wrote:
+>> 
+>> Name: inline ide_fix_driveid()
+>> 
+>> Rationale:
+>> 	This is a fix for bugme.osdl 3819.
+>
+>bugme.osdl.org doesn't know of a bug #3819.
 
-Cool.
+Uh Oh.  Should be 3618.  Have no idea where 3819 came from.
 
-BZ> http://home.elka.pw.edu.pl/~bzolnier/atapci/
+>
+>> 	With any of the 2.6.9 release flavors (vanilla, mm1, ac3), one
+>> 	cannot build the usb isd200 module due to the dependency on
+>> 	ide_fix_driveid() being exported from ide-iops.
+>> 
+>> Description:
+>> 	When building IDE modular, the current ide_fix_driveid() is
+>> 	exported from ide-iops.c.  This patch makes the function an inline.
+>
+>Still doesn't make any sense. ide_fix_driveid is properly exported from
+>ide-iops.c, so you use it from other modules.  The only case that
+>doesn't work is modular ide and builtin usb-storage, and the BLK_DEV_IDE 
+>depency should fix that one.
+>
+>If you think that depency is ugly (I do) just copy the routine to
 
-BZ> released > 2 years ago :)
+What happened to common code that may have more uses than originally 
+intended?  Do it right once in one place, and make it available.
 
-BZ> works fine but probably needs some cut'n'paste updates
+>isd200.c, it's a) too large to inline but b) just a trivial byteswap
+>that should need much changes over time.
 
-Now to get the distributions to pick it up.  I've checked gentoo and
-debian (sid); neither has it.
+Except for those few 32 and 64 bit quantities that need word (16 bit) swaps,
+I agree completely.  
 
-BZ> Most of these /proc files were buggy / inaccurate and keeping them
-BZ> had real maintenance cost (hpt366 bug, triflex bug etc.) with
-BZ> absolutely no added gain in debugging problems (raw PCI config
-BZ> gives much more info).
+The points I was trying to make were that  
+1) This is called in only a few places.
+2) it is never on a fast path.
+2) The sequence of the named elements was a little bit much.  Meaning of 
+   the words change, and quite a few of the fields no longer have the 
+   original meaning or definition.
+3) Having a singular (even if somewhat large) inline handles all current (and 
+   future) uses.
 
-I always went their first for a quick overview, but since your
-atapci(8) provides all of that -- and more, of course -- lspci(8)-
-style ubiquity for it is enough. :)
-
--JimC
-
+++doug
 
