@@ -1,23 +1,50 @@
-From: Jim Nelson <james4765@verizon.net>
-Subject: Adaptec 1205SA : does it work properly?
-Date: Sun, 07 Nov 2004 13:23:49 -0500
-Message-ID: <418E6835.5070003@verizon.net>
+From: Alfonso Gazo <agazo@users.berlios.de>
+Subject: Issuing IDE standby command to shutdown disk before poweroff or reboot
+Date: Mon, 08 Nov 2004 17:57:44 +0100
+Message-ID: <418FA588.5050205@users.berlios.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out001pub.verizon.net ([206.46.170.140]:8641 "EHLO
-	out001.verizon.net") by vger.kernel.org with ESMTP id S261232AbUKGSXu
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Nov 2004 13:23:50 -0500
-Received: from [192.168.1.100] ([70.16.226.208]) by out001.verizon.net
-          (InterMail vM.5.01.06.06 201-253-122-130-106-20030910) with ESMTP
-          id <20041107182350.ESBX23519.out001.verizon.net@[192.168.1.100]>
-          for <linux-ide@vger.kernel.org>; Sun, 7 Nov 2004 12:23:50 -0600
+Received: from [147.83.33.10] ([147.83.33.10]:41096 "EHLO roura.ac.upc.es")
+	by vger.kernel.org with ESMTP id S261858AbUKHQ6G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Nov 2004 11:58:06 -0500
+Received: from [147.83.34.212] (dync-34-212.ac.upc.es [147.83.34.212])
+	by roura.ac.upc.es (8.12.8/8.12.8) with ESMTP id iA8Gvpjj000588
+	for <linux-ide@vger.kernel.org>; Mon, 8 Nov 2004 17:57:51 +0100 (MET)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-I'm looking to upgrade my home server, and the only SATA card I an source locally 
-is the Adaptec 1205SA.  Is it working properly in Linux?  The only reference I 
-could find was a note in ~Sep 2003 that it still had a few issues, but then nothing.
+Hi all,
+
+ From some time ago, I've noticed that when rebooting or powering off my 
+laptop, its HDD emits an audible sound like a "clonk". It's the same 
+sound when powering off incorrectly (i.e., after a hang or something 
+like that). I'm using 2.6.8.1 on athlon xp.
+
+My worries come when I read the specs of the hdd vendor (it's an Hitachi 
+80GN family drive):
+
+"The product supports a minimum of 300,000 normal load/unloads. The 
+drive supports a minimum of 20,000 emergency unloads."
+
+The spec states that the emergency unload is caused when the power is 
+cut off for the HDD without previously issuing any of the following IDE 
+commands: (hard reset, standby, standby immediate, sleep), and it causes 
+mechanical stress to heads. I'm not sure if the Linux kernel currently 
+is ussing any of this commands, but I guess no, as I said before.
+
+I think that this issue is solved when halting, as it is possible to use 
+the -h parameter in "halt" command, but this is not possible when 
+rebooting or suspending (with Software Suspend 2 patch). I'm not sure if 
+the drive is doing emergency unloads when shutting down properly the 
+kernel, and even knowing that 20.000 unloads is a good number of 
+unloads, maybe it could be better for the drive to unload the proper way.
+
+Any idea, confirmation, etc. about this?
+
+Regards,
+
+  --
+  Alfonso
