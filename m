@@ -1,63 +1,237 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] libata DMADIR support
-Date: 18 May 2004 17:07:56 -0600
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH] atapi request sense work
+Date: Tue, 18 May 2004 19:48:10 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1084921676.3135.3.camel@patibmrh9>
-References: <1084717146.3576.3.camel@patibmrh9> <40A7F641.3070809@pobox.com>
-	<1084819720.4328.86.camel@patibmrh9>  <40A90D96.2040002@pobox.com><108482 8
-		840.3211.26.camel@patibmrh9>  <40A92F69.6030309@pobox.com><1084831524.3211
-	.67.camel@patibmrh9>  <40A93E85.4010904@pobox.com><1084920024.3191.8.camel@
-	patibmrh9>
+Message-ID: <40AAA0BA.9040307@pobox.com>
+References: <1084717146.3576.3.camel@patibmrh9> <40A7F641.3070809@pobox.com>	<1084819720.4328.86.camel@patibmrh9>  <40A90D96.2040002@pobox.com><108482 8		840.3211.26.camel@patibmrh9>  <40A92F69.6030309@pobox.com><1084831524.3211	.67.camel@patibmrh9>  <40A93E85.4010904@pobox.com> <1084920024.3191.8.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------010402090200040407070902"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:20671 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S263714AbUERXIL
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:41354 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S263588AbUERXsX
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 May 2004 19:08:11 -0400
+	Tue, 18 May 2004 19:48:23 -0400
 In-Reply-To: <1084920024.3191.8.camel@patibmrh9>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Pat LaVarre <p.lavarre@ieee.org>
 
-> a second sample of hardware ...
-> 
-> kernel: ata_exec_command_pio: ata2: cmd 0xA1
-> kernel: ata2: dev 0 cfg 49:0e00 82:4218 83:4000 84:4000 85:4218 86:0000 87:4000 88:0000
-> 
-> Its ata_piix.ko op x12 "INQUIRY" doesn't yet work at all ...
-> 
-> I imagine I'll find I can most concisely make this work by copying into
-> words 49 63 88 the bits of word 62.
+This is a multi-part message in MIME format.
+--------------010402090200040407070902
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Yep.
+I don't necessarily expect this work, but we'll see...
 
-diff -Nurp linux-2.6.6-bk5/drivers/scsi/libata-core.c linux-2.6.6-bk5-pel/drivers/scsi/libata-core.c
---- linux-2.6.6-bk5/drivers/scsi/libata-core.c	2004-05-18 14:20:05.000000000 -0600
-+++ linux-2.6.6-bk5-pel/drivers/scsi/libata-core.c	2004-05-18 16:53:29.000000000 -0600
-@@ -1076,6 +1076,22 @@ retry:
+
+--------------010402090200040407070902
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+===== drivers/scsi/libata-core.c 1.64 vs edited =====
+--- 1.64/drivers/scsi/libata-core.c	Mon May 17 19:39:49 2004
++++ edited/drivers/scsi/libata-core.c	Tue May 18 19:45:10 2004
+@@ -2162,6 +2162,79 @@
+ 	}
+ }
  
- 	ata_irq_on(ap);	/* re-enable interrupts */
- 
-+	/* see DMADIR as a variation on classic UDMA/ MWDMA */
++static void atapi_error(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct ata_taskfile tf;
++	struct scsi_cmnd *cmd = qc->scsicmd;
++	u8 status;
++	u16 len;
++	const u8 request_sense_cdb[16] = {
++		REQUEST_SENSE, 0, 0, 0, SCSI_SENSE_BUFFERSIZE,
++	};
 +
-+#ifdef ATAPI_ENABLE_DMADIR
-+	printk(KERN_DEBUG "ata%u: dev %u cfg "
-+	       "62:%04x\n",
-+	       ap->id, device, dev->id[62]);
-+	if (dev->id[62] & (1 << 15)) { /* 0x8000 DMADIR */
-+		u16 * id = dev->id;
-+		if (id[62] & (1 << 10)) { /* 0x0400 DMA */
-+			id[49] |= (1 << 8);
-+			id[63] |= ((id[62] >> 7) & 0x07); /* 0x0380 MWDMA */
-+			id[88] |= ((id[62] >> 0) & 0x3F); /* 0x007F UDMA */
++	ata_tf_init(ap, &tf, qc->dev->devno);
++	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf.protocol = ATA_PROT_ATAPI;
++	tf.ctl |= ATA_NIEN;
++	tf.lbam = SCSI_SENSE_BUFFERSIZE & 0xff;
++	tf.command = ATA_CMD_PACKET;
++	ata_tf_to_host(ap, &tf);
++
++	if (ata_busy_sleep(ap, ATA_TMOUT_CDB_QUICK, ATA_TMOUT_CDB))
++		goto err_out;
++
++	status = ata_chk_status(ap);
++	if ((status & ATA_DRQ) == 0)
++		goto err_out;
++
++	/* FIXME: mmio-ize */
++	DPRINTK("send cdb\n");
++	outsl(ap->ioaddr.data_addr, request_sense_cdb,
++	      ap->host->max_cmd_len / 4);
++
++	if (ata_busy_sleep(ap, ATA_TMOUT_CDB_QUICK, ATA_TMOUT_CDB))
++		goto err_out;
++
++	status = ata_chk_status(ap);
++	if ((status & ATA_DRQ) == 0)
++		goto err_out;
++
++	ap->ops->tf_read(ap, &tf);
++	len = tf.lbam;
++	len |= ((u16)tf.lbah) << 8;
++
++	if (len % 4)
++		printk(KERN_WARNING "ata%u: odd ATAPI length %u\n",
++		       ap->id, len);
++	memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
++	insl(ap->ioaddr.data_addr, cmd->sense_buffer, len / 4);
++
++	if ((cmd->sense_buffer[0] & 0x7e) != 0x70) {
++		u8 err = ata_chk_err(ap);
++		cmd->sense_buffer[0] = 0xf0;
++		cmd->sense_buffer[2] = err >> 4;
++	}
++
++	if (ata_busy_sleep(ap, ATA_TMOUT_CDB_QUICK, ATA_TMOUT_CDB))
++		goto err_out;
++
++	ata_irq_on(ap);
++
++out:
++	cmd->result = SAM_STAT_CHECK_CONDITION;
++	qc->scsidone(cmd);
++	return;
++
++err_out:
++	ata_irq_on(ap); /* re-enable interrupts */
++	cmd->sense_buffer[0] = 0xf0;
++	cmd->sense_buffer[2] = HARDWARE_ERROR;
++	cmd->sense_buffer[7] = 14 - 8;  /* addnl. sense len. FIXME: correct? */
++	cmd->sense_buffer[12] = 0x8; /* logical unit comm failure */
++	goto out;
++}
++
+ /**
+  *	ata_eng_timeout - Handle timeout of queued command
+  *	@ap: Port on which timed-out command is active
+@@ -2185,6 +2258,7 @@
+ {
+ 	u8 host_stat, drv_stat;
+ 	struct ata_queued_cmd *qc;
++	int check_cond = 0;
+ 
+ 	DPRINTK("ENTER\n");
+ 
+@@ -2195,16 +2269,30 @@
+ 		goto out;
+ 	}
+ 
+-	/* hack alert!  We cannot use the supplied completion
+-	 * function from inside the ->eh_strategy_handler() thread.
+-	 * libata is the only user of ->eh_strategy_handler() in
+-	 * any kernel, so the default scsi_done() assumes it is
+-	 * not being called from the SCSI EH.
+-	 */
+-	qc->scsidone = scsi_finish_command;
++	if (qc->scsicmd) {
++		check_cond = !(qc->scsicmd->eh_eflags & SCSI_EH_CANCEL_CMD);
++
++		/* hack alert!  We cannot use the supplied completion
++		 * function from inside the ->eh_strategy_handler() thread.
++		 * libata is the only user of ->eh_strategy_handler() in
++		 * any kernel, so the default scsi_done() assumes it is
++		 * not being called from the SCSI EH.
++		 */
++		qc->scsidone = scsi_finish_command;
++	}
++
++	/* ATAPI devices */
++	if (qc->dev->class == ATA_DEV_ATAPI) {
++		if (check_cond) {
++			atapi_error(qc);
++			goto out;
 +		}
 +	}
-+#endif
+ 
++	/* ATA devices */
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA:
++	case ATA_PROT_ATAPI_DMA:
+ 		if (ap->flags & ATA_FLAG_MMIO) {
+ 			void *mmio = (void *) ap->ioaddr.bmdma_addr;
+ 			host_stat = readb(mmio + ATA_DMA_STATUS);
+@@ -2217,6 +2305,7 @@
+ 		ata_dma_complete(qc, host_stat);
+ 		break;
+ 
++	case ATA_PROT_ATAPI:
+ 	case ATA_PROT_NODATA:
+ 		drv_stat = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
+ 
+@@ -2317,15 +2406,23 @@
+ 	assert(qc != NULL);	/* ata_qc_from_tag _might_ return NULL */
+ 	assert(qc->flags & ATA_QCFLAG_ACTIVE);
+ 
+-	if (likely(qc->flags & ATA_QCFLAG_SG))
++	if (likely(qc->flags & ATA_QCFLAG_SG)) {
+ 		ata_sg_clean(qc);
++		qc->flags &= ~ATA_QCFLAG_SG;
++	}
+ 
+ 	if (cmd) {
+ 		if (unlikely(drv_stat & (ATA_ERR | ATA_BUSY | ATA_DRQ))) {
+-			if (is_atapi_taskfile(&qc->tf))
++			if (is_atapi_taskfile(&qc->tf)) {
+ 				cmd->result = SAM_STAT_CHECK_CONDITION;
+-			else
+-				ata_to_sense_error(qc);
++				qc->scsidone(cmd);
++				return;
++				/* error handler thread takes
++				 * over from here
++				 */
++			}
 +
- 	/* print device capabilities */
- 	printk(KERN_DEBUG "ata%u: dev %u cfg "
- 	       "49:%04x 82:%04x 83:%04x 84:%04x 85:%04x 86:%04x 87:%04x 88:%04x\n",
++			ata_to_sense_error(qc);
+ 		} else {
+ 			cmd->result = SAM_STAT_GOOD;
+ 		}
+===== drivers/scsi/libata-scsi.c 1.37 vs edited =====
+--- 1.37/drivers/scsi/libata-scsi.c	Mon May 17 19:39:49 2004
++++ edited/drivers/scsi/libata-scsi.c	Tue May 18 19:43:54 2004
+@@ -137,7 +137,7 @@
+ 
+ 	cmd->result = SAM_STAT_CHECK_CONDITION;
+ 
+-	cmd->sense_buffer[0] = 0x70;
++	cmd->sense_buffer[0] = 0xf0;
+ 	cmd->sense_buffer[2] = MEDIUM_ERROR;
+ 	cmd->sense_buffer[7] = 14 - 8;	/* addnl. sense len. FIXME: correct? */
+ 
+@@ -927,7 +927,7 @@
+ 	DPRINTK("ENTER\n");
+ 	cmd->result = SAM_STAT_CHECK_CONDITION;
+ 
+-	cmd->sense_buffer[0] = 0x70;
++	cmd->sense_buffer[0] = 0xf0;
+ 	cmd->sense_buffer[2] = ILLEGAL_REQUEST;
+ 	cmd->sense_buffer[7] = 14 - 8;	/* addnl. sense len. FIXME: correct? */
+ 	cmd->sense_buffer[12] = asc;
+===== drivers/scsi/libata.h 1.15 vs edited =====
+--- 1.15/drivers/scsi/libata.h	Sun May 16 21:33:12 2004
++++ edited/drivers/scsi/libata.h	Tue May 18 19:02:12 2004
+@@ -28,6 +28,10 @@
+ #define DRV_NAME	"libata"
+ #define DRV_VERSION	"1.02"	/* must be exactly four chars */
+ 
++#ifndef SCSI_EH_CANCEL_CMD
++#define SCSI_EH_CANCEL_CMD	0x0001	/* Cancel this cmd */
++#endif /* SCSI_EH_CANCEL_CMD */
++
+ struct ata_scsi_args {
+ 	struct ata_port		*ap;
+ 	struct ata_device	*dev;
 
+--------------010402090200040407070902--
 
