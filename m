@@ -1,132 +1,80 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: ide-io.c, ide_do_request -- race condition?
-Date: Sat, 10 Jul 2004 22:07:19 +0200
+From: Clemens Buchacher <drizzd@aon.at>
+Subject: Re: [patch] MIN/MAX in ide-timing.h
+Date: Sun, 11 Jul 2004 00:43:29 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200407102207.19713.bzolnier@elka.pw.edu.pl>
-References: <40E99531.BDB8D339@verizon.net> <200407072143.07618.bzolnier@elka.pw.edu.pl> <40F04291.434D8AF9@verizon.net>
+Message-ID: <20040710224329.GF1991@moley.homelinux.net>
+References: <20040708181843.GA1370@moley.homelinux.net> <20040710140337.GA1238@ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:52454 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S266364AbUGJUBh
+Received: from L1204P07.dipool.highway.telekom.at ([62.46.214.103]:6910 "EHLO
+	moley.homelinux.net") by vger.kernel.org with ESMTP id S266454AbUGJWmE
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Jul 2004 16:01:37 -0400
-In-Reply-To: <40F04291.434D8AF9@verizon.net>
+	Sat, 10 Jul 2004 18:42:04 -0400
 Content-Disposition: inline
+In-Reply-To: <20040710140337.GA1238@ucw.cz>
 List-Id: linux-ide@vger.kernel.org
-To: "Max T. Woodbury" <max.teneyck.woodbury@verizon.net>
-Cc: linux-ide@vger.kernel.org
+To: Vojtech Pavlik <vojtech@suse.cz>
+Cc: Linux-ide list <linux-ide@vger.kernel.org>, kernel janitors list <kernel-janitors@lists.osdl.org>
 
-On Saturday 10 of July 2004 21:25, Max T. Woodbury wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > Hi,
-> >
-> > On Tuesday 06 of July 2004 00:51, Max T. Woodbury wrote:
-> > > (The fact that the machine runs other OSs without noticeable
-> > > problems is also an indication that the underlying hardware
-> > > is in working order.  Only the system software and disk
-> > > drive changed between the two setups and I have explained
-> > > why I do not think it is the disk drive.)
-> >
-> > disk drive changed?  please explain
->
-> The drives in the Thinkpad 760 are mounted in caddies that can
-> be easily exchanged when the power is off.  I have three drives.
-> One runs the machine as a GPS, the second as a code development
-> Windows box and the third is my Linux code development machine.
-> I'm having a fair amount of trouble getting the Linux setup to do
-> what I want it to do.  Not only did the Linux install flake out,
-> but I still can't get the PCMCIA sockets working, but that's another
-> issue for another list and I haven't quite got enough information
-> on that set of problems to make a request for help useful...  In
-> order to get to the internet with Linux I have to use its docking
-> station.  No such problem with Windoze.  (Yeah, absolutely
-> disgusting but that's what's happening.)
+On Sat, Jul 10, 2004 at 04:03:37PM +0200, Vojtech Pavlik wrote:
+> How about if you used the "min_t" and "max_t" macros inside FIT? That
+> could help get rid of the casts completely (assuming the second and
+> third parameters to FIT are expected to be constants).
 
-Are you sure that 'Linux' disk is okay?
-http://smartmontool.sf.net
+Yes, that's better. It reduces the necessary changes to a minimum.
 
-> > __cli() there is just "paranoia" and it is gone in 2.6 kernels
->
-> That's not quite correct.  There is a check and a BUG() call to assure
-> that interrupts are disabled on entry in the 2.6 code I've seen.  If I
-> understand the new code correctly, you've replaced the single interrupt
-> disable call at the top of this routine by a bunch of similar calls
-> elsewhere before entering this routine.  That would make interrupt latency
-> worse, not better.
 
-This is not correct - __cli() is really just a "paranoia", you may remove
-it if you like and it shouldn't change anything (but we would like to know
-if it changes something ie. fixes fs corruption :-).
+ ide-timing.h |   25 ++++++++++++-------------
+ 1 files changed, 12 insertions(+), 13 deletions(-)
 
-Please take a look at generic_unplug_device() in drivers/block/ll_rw_blk.c:
 
-spin_lock_irq() disables IRQs
-__generic_unplug_device() calls queue->request_fn (ide_do_request)
-spin_unlock_irq() enables IRQs
-
-The only difference between 2.4 and 2.6 is that 2.4 is using
-spin_lock_irqsave() / spin_unlock_irqrestore() variants.
-
-> > > bunch of code has been executing under interrupt lockout when
-> > > there was no need for the lockout.  Not a huge problem, just
-> > > strange.  Also, in 2.6, the lockout has to begin before the
-> > > routine is called which is why I said 2.6 was worse.
-> >
-> > 2.6 is much better - you have one spinlock per block queue while
-> > in 2.4 you have one global spinlock (io_request_lock) for all
-> > block requests.
->
-> Yep.  That's a little courser than the model I was using on the never
-> completed OS design I did in the early 70s, but it is better than the
-> single global lock in 2.4 and way better than the design of many other
-> OSs I've waded into.  Still, you've got a complete interrupt lockout
-> in place at the top of this routine which has two bad effects: 1) the
-> interrupt latency is longer and 2) there is no one place to turn it off
-> any longer.
-
-'lockout' happens earlier both in 2.4 and 2.6 -> generic_unplug_device().
-
-> Thanks.  I was hoping to get your attention, but I did not want to
-> presume on your time, thus the post to linux-ide.  (If you don't
-> mind, linux-kernel is way too noisy.  I subscribed once a good while
-> ago and turned it off because I could not handle the volume of just
-> plain junk that gets posted to that list.  Linus must be some kind of
-> saint if he wades through all of it...)
-
-well, I don't read everything and I guess Linus does the same 8)
-
-> > > I've been going through the linux-ide archives and noticed
-> > > that there have been a number of mystery fs corruption issues
-> > > that just disappeared.  This might be related.  There was also
-> > > a DMA problem that might have been relevant, but I know it does
-> > > not apply in this case since "hdparm" shows DMA turned off by
-> > > default on this machine.
-> >
-> > dmesg output would be helpful, the same goes for lspci output
->
-> That is an important part of this issue.  Nothing shows in dmesg
-> until it is much too late.  The read errors get reported, but no
-> write errors.  There should be a 'pirntk' in 'ide_abort' and
-> 'idedisk_abort' (I may have the routine names wrong, I'm doing
-> this from memory) but there isn't,  (I'll post a patch for that fix
-> if you want.) so I can't tell if the problem is coming down from
-> the upper layers.  I also think there should be a 'printk' associated
-> with the posting of the immediate stop command.  (Again, this is from
-> memory.  I'll post a patch with all this if you want me to.  It will
-> not fix any problems, but might shed light.)
-
-I believe that dmesg/lspci would be useful for me or other people reading
-this because it allows us to know a bit more about this specific hardware
-('Thinkpad 760' is really not enough).
-
-> Still, this is an important problem.  File system corruption is just not
-> something an OS should allow to happen unless the user does something
-> extreme.
-
-Without more info we won't go further in solving this issue.
-
-Bartlomiej
-
+diff -Nur a/drivers/ide/ide-timing.h b/drivers/ide/ide-timing.h
+--- a/drivers/ide/ide-timing.h	2004-07-11 00:27:38 +02:00
++++ b/drivers/ide/ide-timing.h	2004-07-11 00:27:01 +02:00
+@@ -27,6 +27,7 @@
+  * Vojtech Pavlik, Simunkova 1594, Prague 8, 182 00 Czech Republic
+  */
+ 
++#include <linux/kernel.h>
+ #include <linux/hdreg.h>
+ 
+ #define XFER_PIO_5		0x0d
+@@ -96,11 +97,9 @@
+ #define IDE_TIMING_UDMA		0x80
+ #define IDE_TIMING_ALL		0xff
+ 
+-#define MIN(a,b)	((a)<(b)?(a):(b))
+-#define MAX(a,b)	((a)>(b)?(a):(b))
+-#define FIT(v,min,max)	MAX(MIN(v,max),min)
+-#define ENOUGH(v,unit)	(((v)-1)/(unit)+1)
+-#define EZ(v,unit)	((v)?ENOUGH(v,unit):0)
++#define FIT(v,vmin,vmax)	max_t(short,min_t(short,v,vmax),vmin)
++#define ENOUGH(v,unit)		(((v)-1)/(unit)+1)
++#define EZ(v,unit)		((v)?ENOUGH(v,unit):0)
+ 
+ #define XFER_MODE	0xf0
+ #define XFER_UDMA_133	0x48
+@@ -188,14 +187,14 @@
+ 
+ static void ide_timing_merge(struct ide_timing *a, struct ide_timing *b, struct ide_timing *m, unsigned int what)
+ {
+-	if (what & IDE_TIMING_SETUP  ) m->setup   = MAX(a->setup,   b->setup);
+-	if (what & IDE_TIMING_ACT8B  ) m->act8b   = MAX(a->act8b,   b->act8b);
+-	if (what & IDE_TIMING_REC8B  ) m->rec8b   = MAX(a->rec8b,   b->rec8b);
+-	if (what & IDE_TIMING_CYC8B  ) m->cyc8b   = MAX(a->cyc8b,   b->cyc8b);
+-	if (what & IDE_TIMING_ACTIVE ) m->active  = MAX(a->active,  b->active);
+-	if (what & IDE_TIMING_RECOVER) m->recover = MAX(a->recover, b->recover);
+-	if (what & IDE_TIMING_CYCLE  ) m->cycle   = MAX(a->cycle,   b->cycle);
+-	if (what & IDE_TIMING_UDMA   ) m->udma    = MAX(a->udma,    b->udma);
++	if (what & IDE_TIMING_SETUP  ) m->setup   = max(a->setup,   b->setup);
++	if (what & IDE_TIMING_ACT8B  ) m->act8b   = max(a->act8b,   b->act8b);
++	if (what & IDE_TIMING_REC8B  ) m->rec8b   = max(a->rec8b,   b->rec8b);
++	if (what & IDE_TIMING_CYC8B  ) m->cyc8b   = max(a->cyc8b,   b->cyc8b);
++	if (what & IDE_TIMING_ACTIVE ) m->active  = max(a->active,  b->active);
++	if (what & IDE_TIMING_RECOVER) m->recover = max(a->recover, b->recover);
++	if (what & IDE_TIMING_CYCLE  ) m->cycle   = max(a->cycle,   b->cycle);
++	if (what & IDE_TIMING_UDMA   ) m->udma    = max(a->udma,    b->udma);
+ }
+ 
+ static struct ide_timing* ide_timing_find_mode(short speed)
