@@ -1,65 +1,64 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [parisc-linux] Re: a fix for NS87415 on C3K broken
-Date: Wed, 22 Sep 2004 17:53:41 +0100
+From: Dave <dave.jiang@gmail.com>
+Subject: Re: [PATCH] updates to Vitesse SATA driver
+Date: Wed, 22 Sep 2004 10:09:03 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040922165341.GN16153@parcelfarce.linux.theplanet.co.uk>
-References: <200409170243.06449.bzolnier@elka.pw.edu.pl> <4150193600000506@mail-7-bnl.tiscali.it> <20040922163708.GD4766@colo.lackof.org>
+Message-ID: <8746466a04092210094f859468@mail.gmail.com>
+References: <8746466a04092114163b3c0618@mail.gmail.com>
+	 <20040922020614.GA148273@sgi.com>
+	 <8746466a0409220859ed0682f@mail.gmail.com>
+Reply-To: Dave <dave.jiang@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:43941 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266249AbUIVQxn
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Sep 2004 12:53:43 -0400
-Content-Disposition: inline
-In-Reply-To: <20040922163708.GD4766@colo.lackof.org>
+Received: from rproxy.gmail.com ([64.233.170.205]:24144 "EHLO mproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S266349AbUIVRJL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Sep 2004 13:09:11 -0400
+Received: by mproxy.gmail.com with SMTP id 73so1692066rnk
+        for <linux-ide@vger.kernel.org>; Wed, 22 Sep 2004 10:09:04 -0700 (PDT)
+In-Reply-To: <8746466a0409220859ed0682f@mail.gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: Joel Soete <soete.joel@tiscali.be>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>, parisc-linux@parisc-linux.org
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On Wed, Sep 22, 2004 at 10:37:08AM -0600, Grant Grundler wrote:
-> On Wed, Sep 22, 2004 at 12:41:21PM +0200, Joel Soete wrote:
-> > --- arch/parisc/kernel/pci.c.Orig	2004-09-22 09:47:02.000000000 +0200
-> > +++ arch/parisc/kernel/pci.c	2004-09-22 11:26:02.104187784 +0200
-> > +/* Used in drivers/pci/quirks.c */
-> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NS, PCI_DEVICE_ID_NS_87415, superio_fixup_pci);
+On Wed, 22 Sep 2004 08:59:06 -0700, Dave <dave.jiang@gmail.com> wrote:
+> On Tue, 21 Sep 2004 19:06:14 -0700, Jeremy Higdon <jeremy@sgi.com > wrote:
+> > On Tue, Sep 21, 2004 at 02:16:46PM -0700, Dave wrote:
+> > > After getting that working I noticed that the last_ctl value gets
+> > > changed back by the LIBATA core and the Vitesse SATA driver depends on
+> > > the previous value in order to unmask the interrupt. So it seems that
+> > > there's no need to set/unset the interrupt masks in the first place if
+> > > we set the CTL register with ATA_NIEN directly, which I believe is
+> > > probably the way LIBATA intended the driver to do. After doing that
+> > > everything seems to be working great. So I suppose
+> > > vsc_intr_mask_update() is no longer needed probably.
+> >
+> > The chip specification says not to set it that way.  Are you using
+> > the chip in DPA mode or PCI-IDE mode?  The driver assumes the former.  I
+> > don't know why anyone would use the chip in PCI-IDE mode.
 > 
-> Uhm...any clue why this works?
-> The same entry in drivers/parisc/superio.c should work too but it doesn't.
-> I'd rather fix that than just blindly moving it.
+> Hmmm...I did not see it in the spec. Can you provide the pointer to
+> the spec please? Thanks! I am using it in DPA mode. If you are in
+> PCI-IDE mode, all registers would reside in different BARs and the
+> card wouldn't work anyways with that driver. I copied the section from
+> sata_svw.c. And it seems to work just fine. I don't see how the
+> previous method would be working. In vsc_sata_tf_load a compare is
+> done between the tf->ctl and the ap->last_ctl. However, if I do it
+> with the current method, I continue to see ap->last_ctl with ATA_NIEN
+> cleared even though the previous value was set. Therefore the driver
+> never unmask the IDE interrupt and thus hang.  What happened was, host
+> 1, dev 0 was probed and was okay. Then it attempted to probe host 1,
+> dev 1, which of course does not exist, so at exit, ata_irq_on() was
+> called. With that the last_ctl was reset with ATA_NIEN cleared.
+> Therefore when the driver does the compare of ctl with last_ctl, it
+> sees no difference, and therefore interrupt mask never changed.
 
-I think I know.  The define is:
-
-#define DECLARE_PCI_FIXUP_HEADER(vendor, device, hook) \
-        static struct pci_fixup __pci_fixup_##vendor##device##hook __attribute_u
-sed__   \
-        __attribute__((__section__(".pci_fixup_header"))) = { \
-                vendor, device, hook };
-
-Now, that's dealt with by include/asm-generic/vmlinux.lds.h:
-
-#define RODATA                                                          \
-[...]
-        /* PCI quirks */                                                \
-        .pci_fixup        : AT(ADDR(.pci_fixup) - LOAD_OFFSET) {        \
-                VMLINUX_SYMBOL(__start_pci_fixups_header) = .;          \
-                *(.pci_fixup_header)                                    \
-                VMLINUX_SYMBOL(__end_pci_fixups_header) = .;            \
-                VMLINUX_SYMBOL(__start_pci_fixups_final) = .;           \
-                *(.pci_fixup_final)                                     \
-                VMLINUX_SYMBOL(__end_pci_fixups_final) = .;             \
-        }                                                               \
-
-which links them all together.  *However* ... maybe order is important.
-There's a grotty-looking:
-c03f347c d __pci_fixup_PCI_ANY_IDPCI_ANY_IDquirk_ide_bases
-
-which may need to come after our superio quirk?  I'm just testing this theory now ...
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+I see what you mean by the spec regarding the ATA_NIEN bit. ATA_NIEN
+is reserved bit in DPA mode. I guess it still works. But to do the
+things the right way now this becomes a problem since as I mentioned
+above, libata-core can change the last_ctl value without the driver's
+knowledge. So really we cannot always depend on last_ctl to be the
+last_ctl the driver has set. I'm not exactly sure yet why the driver
+works on IA in the current state. Everything tells me it shouldn't....
+Unless there's something that I'm suppose to configure to force it not
+probe device 1 since in SATA there's never device 1?
