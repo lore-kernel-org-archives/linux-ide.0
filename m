@@ -1,32 +1,66 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Erik Mouw <erik@harddisk-recovery.com>
 Subject: Re: Driver retries disk errors.
-Date: Tue, 31 Aug 2004 16:13:54 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1093965233.599.8.camel@localhost.localdomain>
-References: <20040830163931.GA4295@bitwizard.nl>
-	 <1093952715.32684.12.camel@localhost.localdomain>
-	 <20040831135403.GB2854@bitwizard.nl>
-	 <1093961570.597.2.camel@localhost.localdomain>
-	 <20040831155653.GD17261@harddisk-recovery.com>
+Date: Tue, 31 Aug 2004 19:00:16 +0200
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20040831170016.GF17261@harddisk-recovery.com>
+References: <20040830163931.GA4295@bitwizard.nl> <1093952715.32684.12.camel@localhost.localdomain> <20040831135403.GB2854@bitwizard.nl> <1093961570.597.2.camel@localhost.localdomain> <20040831155653.GD17261@harddisk-recovery.com> <1093965233.599.8.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261239AbUHaQQB@vger.kernel.org>
-In-Reply-To: <20040831155653.GD17261@harddisk-recovery.com>
-To: Erik Mouw <erik@harddisk-recovery.com>
-Cc: Rogier Wolff <R.E.Wolff@harddisk-recovery.nl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from users.linvision.com ([62.58.92.114]:32731 "HELO bitwizard.nl")
+	by vger.kernel.org with SMTP id S264531AbUHaRAR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Aug 2004 13:00:17 -0400
+Content-Disposition: inline
+In-Reply-To: <1093965233.599.8.camel@localhost.localdomain>
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Rogier Wolff <R.E.Wolff@harddisk-recovery.nl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Maw, 2004-08-31 at 16:56, Erik Mouw wrote:
-> The SCSI disk driver has been doing a single retry for quite some time
-> and it hasn't really bitten people. Why would the IDE disk driver be
-> different? The only case I can imagine a retry would be OK, is when we
-> get an UDMA CRC error (caused by bad cables).
+On Tue, Aug 31, 2004 at 04:13:54PM +0100, Alan Cox wrote:
+> On Maw, 2004-08-31 at 16:56, Erik Mouw wrote:
+> > The SCSI disk driver has been doing a single retry for quite some time
+> > and it hasn't really bitten people. Why would the IDE disk driver be
+> > different? The only case I can imagine a retry would be OK, is when we
+> > get an UDMA CRC error (caused by bad cables).
+> 
+> Retries also pop up in other less obvious cases and conveniently paper
+> over a wide variety of timeouts, power management quirks and drives just
+> having a random fit. Eight is probably excessive in all cases.
 
-Retries also pop up in other less obvious cases and conveniently paper
-over a wide variety of timeouts, power management quirks and drives just
-having a random fit. Eight is probably excessive in all cases.
+There are indeed all sorts of other retries in various layers, the
+worst one when the kernel tries to read-ahead a couple of blocks on an
+IDE disk(1). You can work around them with raw IO or O_DIRECT.
 
-For non hard disk cases many devices do want and need retry.
+> For non hard disk cases many devices do want and need retry.
 
-Alan
+And many others do not. CompactFlash readers are usually implemented as
+a USB storage device, which on its turn is implemented as a SCSI
+"disk". So far I haven't seen a CompactFlash which could be "fixed" by
+retries.
+
+iSCSI appliances can also make things worse: when the target machine is
+implemented as a simple "pass everything to the real SCSI disk" device,
+it's not really different from a directly connected SCSI disk. However,
+when the iSCSI target interprets the SCSI commands and has its own way
+to deal with bad blocks (i.e.: it retries the blocks), things can get
+very bad when the kernel also uses a couple of retries.
+
+In my experience it would be good if the IDE disk driver would behave
+like the SCSI disk driver: no retries on a bad block. I agree that it
+would be a good idea to make it configurable through the block layer to
+avoid code duplication (blockdev --getretries/--setretries).
+
+
+Erik
+
+(1) Imagine an application doing a linear read on a file with an 8
+block read ahead and the last block being bad. The kernel will try to
+read that bad block 16 times, but because the IDE driver also has 8
+retries, the kernel will try to read that bad block *64* times. It
+usually takes an IDE drive about 2 seconds to figure out a block is
+bad, so the application gets stuck for 2 minutes in that single bad
+block.
+
+-- 
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
