@@ -1,30 +1,46 @@
-From: Gary Poppitz <poppitzg@iomega.com>
-Subject: Secondary port on SiS 965
-Date: Wed, 23 Feb 2005 09:03:59 -0700
-Message-ID: <1fb03f81cef68f29c170efe64abc9d93@iomega.com>
-Mime-Version: 1.0 (Apple Message framework v619.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: Ryan Bourgeois <rgb005@latech.edu>
+Subject: Re: one thing about sata_promise
+Date: Wed, 23 Feb 2005 10:12:11 -0600
+Message-ID: <421CAB5B.80305@latech.edu>
+References: <200502231124.47843.nedco@unacs.bg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from email-mx2.iomega.com ([147.178.1.73]:6074 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S261443AbVBWQBl
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 Feb 2005 11:01:41 -0500
-Received: from emailmx0.iomega.com (hubble [147.178.1.70])
-	by email.iomega.com (Postfix) with ESMTP id 5533015F1
-	for <linux-ide@vger.kernel.org>; Wed, 23 Feb 2005 09:01:41 -0700 (MST)
-Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
-	by emailmx0.iomega.com (Postfix) with ESMTP id 4C6AF6D4
-	for <linux-ide@vger.kernel.org>; Wed, 23 Feb 2005 16:01:41 +0000 (UTC)
+Received: from selene.LaTech.edu ([138.47.18.25]:21965 "EHLO LaTech.edu")
+	by vger.kernel.org with ESMTP id S261436AbVBWQMQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Feb 2005 11:12:16 -0500
+In-Reply-To: <200502231124.47843.nedco@unacs.bg>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: nedco@unacs.bg
+Cc: linux-ide@vger.kernel.org
 
-Has anyone also seen the problem of having a SATAPI device being 
-detected on the secondary port of the SiS 965 chipset?
+I'm sorry, but your English is difficult to understand.  Are you saying 
+you're trying to unplug your hard drive power cables while the system is 
+running?  If so, that is a BAD IDEA.  That will hang your mahine just 
+about every time.  If that's not what you meant, then please clarify.
 
-I am able to run correctly on the primary port but the secondary port 
-says there is no physical device present. Both ports will run our 
-device in Windows XP so this isnt a hardware problem.
+-Ryan
 
-Any clues/solutions for this one?
 
+nedco wrote:
+> Hi,
+> 
+> i try to make same storage with S150 TX4  and is working good
+> until i have same of the hard drives power off i mean unplug power
+> cable.Then linux hangs. Probably you think why i make this. 
+> I have problem with some power cables  and  Linux is hang whitout 
+> error so was difficulty to findout. Then i unplug power of some storage 
+> drive ( not  root  drive :)  )  i think system must be sable write some log 
+> and still responsable. 
+> 
+> Is there some solution.
+> 
+> 10x in advance 
+> Ndko Nedev 
+> nedco@unacs.bg
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
