@@ -1,43 +1,77 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: libata oops 2.6.11-rc4 yesterdays BK
-Date: Mon, 21 Feb 2005 08:27:49 +0400
-Message-ID: <42196345.5040501@wasp.net.au>
-References: <4212CBD6.7020703@wasp.net.au> <42132803.2080701@wasp.net.au> <4213821D.1030203@pobox.com> <4213B2F8.2070800@wasp.net.au> <20050216154033.I10699@florence.linkmargin.com> <42158774.9030406@wasp.net.au> <4216BD10.2070008@wasp.net.au>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: SATAPI timing
+Date: Mon, 21 Feb 2005 08:54:45 +0100
+Message-ID: <20050221075445.GU4056@suse.de>
+References: <83EB8C3C-7142-11D9-B91E-000A95D2AC6A@iomega.com> <41FA7ABF.7080404@pobox.com> <001801c5084b$b5687b60$6401a8c0@tw.ibm.com> <4216CB7E.1030109@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from wasp.net.au ([203.190.192.17]:2499 "EHLO wasp.net.au")
-	by vger.kernel.org with ESMTP id S261790AbVBUE2C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Feb 2005 23:28:02 -0500
-In-Reply-To: <4216BD10.2070008@wasp.net.au>
+Content-Type: text/plain; charset=us-ascii
+Received: from ns.virtualhost.dk ([195.184.98.160]:23782 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261910AbVBUHzL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Feb 2005 02:55:11 -0500
+Content-Disposition: inline
+In-Reply-To: <4216CB7E.1030109@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: Andy Warner <andyw@pobox.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Albert Lee <albertcc@tw.ibm.com>, gp <poppitzg@iomega.com>, linux-ide@vger.kernel.org
 
-Brad Campbell wrote:
-
+On Sat, Feb 19 2005, Jeff Garzik wrote:
+> Albert Lee wrote:
+> >I'm a little confused about what is the "correct behavior" of ATAPI DMA 
+> >INTRQ.
+> >
+> >1. The ATA-4 flowchart and ATA-6 state diagram seems to be inconsistent.
+> >In the ATA-4 flowchart, no wait for INTRQ is specified.
+> >
+> >2. From the ATA-5 errata:
+> >http://www.t13.org/project/e01122r0.pdf
+> >
+> >"...Page 265 through 270 of NCITS 340-2000 clause 9.8 was not properly 
+> >converted from the flow
+> >charts in NCITS 317-1998 to the state diagrams. The state diagrams figures 
+> >33 and 34 and
+> >associated text is modified to indicate that the device interrupts only at 
+> >command completion. "
+> >
+> >Notice the "device interrupts only at command completion." statement.
+> >However, the diagrams in the errata are inconsistent with the above 
+> >statement.
+> >
+> >3. The ide-cd code does not wait for INTRQ before starting BM-DMA
+> >
+> >        /* Arm the interrupt handler. */
+> >        ide_set_handler(drive, handler, rq->timeout, cdrom_timer_expiry);
+> >
+> >        /* ATAPI commands get padded out to 12 bytes minimum */
+> >        cmd_len = COMMAND_SIZE(rq->cmd[0]);
+> >        if (cmd_len < ATAPI_MIN_CDB_BYTES)
+> >            cmd_len = ATAPI_MIN_CDB_BYTES;
+> >
+> >        /* Send the command to the device. */
+> >        HWIF(drive)->atapi_output_bytes(drive, rq->cmd, cmd_len);
+> >
+> >        /* Start the DMA if need be */
+> >        if (info->dma)
+> >            hwif->dma_start(drive);
+> >
+> >        return ide_started;
+> >
+> >4. My CD-ROM drive does not generate INTRQ after it received the command 
+> >packet.
+> >   It only assert DMARQ.
+> >
+> >Maybe the state diagrams in ATA-5 and ATA-6 are incorrect?  Any idea?
 > 
-> Have been unable to hit the bug with SMART disabled (Kernel unchanged). 
-> So...... Pass through (or SMART in particular) is not really safe on UP 
-> either, you just have to work really hard at it to hit the corner cases.
+> 
+> As I mentioned in an earlier email, research seems to indicate the 
+> IDENTIFY PACKET DEVICE word 0, bits 6-5 can be used to indicate INTRQ 
+> will be delivered.  This is consistent with my ATA-4 specification.
+> 
+> Apparently this behavior is obsolete, but we still need to support it.
 
-I tried it last night with the latest and greatest Vanilla BK + libata + libata-dev and really 
-pounded the poor machine hard with very rude bash scripts doing SMART polling from two separate 
-tasks (so randomly I would poll the same drive with two different queries simultaneously) and I 
-could certainly fail drives out of the array, but no oops.
+ide-cd uses those bits to check for interrupt delivery, see
+drq_interrupt in that file.
 
-So yes, SMART is causing timeouts but no longer causing an oops here.
-
-Now I have also replaced the PSU with a much better specced unit, so that may have also been a 
-contributing factor to the oops. (The 12v rail was running on the edge).
-
-If this rebuild this morning gets through then I'll go back to the old kernel that was oopsing and 
-try it again to compare.
-
-Regards,
-Brad
 -- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+Jens Axboe
+
