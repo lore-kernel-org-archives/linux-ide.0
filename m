@@ -1,29 +1,179 @@
 From: Alan Cox <alan@redhat.com>
-Subject: PATCH: restore raw_taskfile in hwif_restore
-Date: Sun, 15 Aug 2004 11:00:52 -0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040815150052.GA11639@devserv.devel.redhat.com>
+Subject: PATCH: switch ide-proc to use the ide_key functionality
+Date: Sun, 15 Aug 2004 11:04:14 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040815150414.GA12181@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:25822 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S266763AbUHOPBt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Aug 2004 11:01:49 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S266764AbUHOPLJ@vger.kernel.org>
 Content-Disposition: inline
-List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
+List-Id: linux-ide@vger.kernel.org
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.8-rc3/drivers/ide/ide.c linux-2.6.8-rc3/drivers/ide/ide.c
---- linux.vanilla-2.6.8-rc3/drivers/ide/ide.c	2004-08-09 15:51:00.000000000 +0100
-+++ linux-2.6.8-rc3/drivers/ide/ide.c	2004-08-12 17:55:05.000000000 +0100
-@@ -618,6 +710,7 @@
- 	hwif->maskproc			= tmp_hwif->maskproc;
- 	hwif->quirkproc			= tmp_hwif->quirkproc;
- 	hwif->busproc			= tmp_hwif->busproc;
-+	hwif->raw_taskfile		= tmp_hwif->raw_taskfile;
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.8-rc3/drivers/ide/ide-proc.c linux-2.6.8-rc3/drivers/ide/ide-proc.c
+--- linux.vanilla-2.6.8-rc3/drivers/ide/ide-proc.c	2004-08-09 15:51:00.000000000 +0100
++++ linux-2.6.8-rc3/drivers/ide/ide-proc.c	2004-08-12 17:26:00.000000000 +0100
+@@ -355,7 +355,7 @@
+ static int proc_ide_read_identify
+ 	(char *page, char **start, off_t off, int count, int *eof, void *data)
+ {
+-	ide_drive_t	*drive = (ide_drive_t *)data;
++	ide_drive_t	*drive = ide_drive_from_key(data);
+ 	int		len = 0, i = 0;
+ 	int		err = 0;
  
- 	hwif->ata_input_data		= tmp_hwif->ata_input_data;
- 	hwif->ata_output_data		= tmp_hwif->ata_output_data;
+@@ -397,11 +397,15 @@
+ static int proc_ide_read_settings
+ 	(char *page, char **start, off_t off, int count, int *eof, void *data)
+ {
+-	ide_drive_t	*drive = (ide_drive_t *) data;
+-	ide_settings_t	*setting = (ide_settings_t *) drive->settings;
++	ide_drive_t	*drive = ide_drive_from_key(data);
++	ide_settings_t	*setting;
+ 	char		*out = page;
+ 	int		len, rc, mul_factor, div_factor;
++	
++	if(drive == NULL)
++		return -EIO;
+ 
++	setting = (ide_settings_t *) drive->settings;
+ 	down(&ide_setting_sem);
+ 	out += sprintf(out, "name\t\t\tvalue\t\tmin\t\tmax\t\tmode\n");
+ 	out += sprintf(out, "----\t\t\t-----\t\t---\t\t---\t\t----\n");
+@@ -431,7 +435,7 @@
+ static int proc_ide_write_settings(struct file *file, const char __user *buffer,
+ 				   unsigned long count, void *data)
+ {
+-	ide_drive_t	*drive = (ide_drive_t *) data;
++	ide_drive_t	*drive = ide_drive_from_key(data);
+ 	char		name[MAX_LEN + 1];
+ 	int		for_real = 0;
+ 	unsigned long	n;
+@@ -440,6 +444,9 @@
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EACCES;
++		
++	if (drive == NULL)
++		return -EIO;
+ 
+ 	if (count >= PAGE_SIZE)
+ 		return -EINVAL;
+@@ -523,9 +530,12 @@
+ int proc_ide_read_capacity
+ 	(char *page, char **start, off_t off, int count, int *eof, void *data)
+ {
+-	ide_drive_t	*drive = (ide_drive_t *) data;
++	ide_drive_t	*drive = ide_drive_from_key(data);
+ 	int		len;
+ 
++	if(drive == NULL)
++		return -EIO;
++		
+ 	len = sprintf(page,"%llu\n",
+ 		      (long long) (DRIVER(drive)->capacity(drive)));
+ 	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
+@@ -534,9 +544,12 @@
+ int proc_ide_read_geometry
+ 	(char *page, char **start, off_t off, int count, int *eof, void *data)
+ {
+-	ide_drive_t	*drive = (ide_drive_t *) data;
++	ide_drive_t	*drive = ide_drive_from_key(data);
+ 	char		*out = page;
+ 	int		len;
++	
++	if(drive == NULL)
++		return -EIO;
+ 
+ 	out += sprintf(out,"physical     %d/%d/%d\n",
+ 			drive->cyl, drive->head, drive->sect);
+@@ -552,10 +565,14 @@
+ static int proc_ide_read_dmodel
+ 	(char *page, char **start, off_t off, int count, int *eof, void *data)
+ {
+-	ide_drive_t	*drive = (ide_drive_t *) data;
+-	struct hd_driveid *id = drive->id;
++	ide_drive_t	*drive = ide_drive_from_key(data);
++	struct hd_driveid *id;
+ 	int		len;
+ 
++	if(drive == NULL)
++		return -EIO;
++
++	id = drive->id;
+ 	len = sprintf(page, "%.40s\n",
+ 		(id && id->model[0]) ? (char *)id->model : "(none)");
+ 	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
+@@ -564,40 +581,30 @@
+ static int proc_ide_read_driver
+ 	(char *page, char **start, off_t off, int count, int *eof, void *data)
+ {
+-	ide_drive_t	*drive = (ide_drive_t *) data;
+-	ide_driver_t	*driver = drive->driver;
++	ide_drive_t	*drive = ide_drive_from_key(data);
++	ide_driver_t	*driver;
+ 	int		len;
+ 
++	if(drive == NULL)
++		return -EIO;
++			
++	driver = drive->driver;
++
+ 	len = sprintf(page, "%s version %s\n",
+ 			driver->name, driver->version);
+ 	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
+ }
+ 
+-static int proc_ide_write_driver
+-	(struct file *file, const char __user *buffer, unsigned long count, void *data)
+-{
+-	ide_drive_t	*drive = (ide_drive_t *) data;
+-	char name[32];
+-
+-	if (!capable(CAP_SYS_ADMIN))
+-		return -EACCES;
+-	if (count > 31)
+-		count = 31;
+-	if (copy_from_user(name, buffer, count))
+-		return -EFAULT;
+-	name[count] = '\0';
+-	if (ide_replace_subdriver(drive, name))
+-		return -EINVAL;
+-	return count;
+-}
+-
+ static int proc_ide_read_media
+ 	(char *page, char **start, off_t off, int count, int *eof, void *data)
+ {
+-	ide_drive_t	*drive = (ide_drive_t *) data;
++	ide_drive_t	*drive = ide_drive_from_key(data);
+ 	const char	*media;
+ 	int		len;
+ 
++	if(drive == NULL)
++		return -EINVAL;
++
+ 	switch (drive->media) {
+ 		case ide_disk:	media = "disk\n";
+ 				break;
+@@ -616,7 +623,7 @@
+ }
+ 
+ static ide_proc_entry_t generic_drive_entries[] = {
+-	{ "driver",	S_IFREG|S_IRUGO,	proc_ide_read_driver,	proc_ide_write_driver },
++	{ "driver",	S_IFREG|S_IRUGO,	proc_ide_read_driver,	NULL },
+ 	{ "identify",	S_IFREG|S_IRUSR,	proc_ide_read_identify,	NULL },
+ 	{ "media",	S_IFREG|S_IRUGO,	proc_ide_read_media,	NULL },
+ 	{ "model",	S_IFREG|S_IRUGO,	proc_ide_read_dmodel,	NULL },
+@@ -668,7 +675,7 @@
+ 
+ 		drive->proc = proc_mkdir(drive->name, parent);
+ 		if (drive->proc)
+-			ide_add_proc_entries(drive->proc, generic_drive_entries, drive);
++			ide_add_proc_entries(drive->proc, generic_drive_entries, ide_drive_to_key(drive));
+ 		sprintf(name,"ide%d/%s", (drive->name[2]-'a')/2, drive->name);
+ 		ent = proc_symlink(drive->name, proc_ide_root, name);
+ 		if (!ent) return;
+
 
 Signed-off-by: Alan Cox <alan@redhat.com>
-
