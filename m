@@ -1,97 +1,37 @@
-From: Denis Vlasenko <vda@port.imtp.ilyichevsk.odessa.ua>
+From: Pavel Machek <pavel@suse.cz>
 Subject: Re: poor sata performance on 2.6
-Date: Thu, 15 Apr 2004 20:30:50 +0300
+Date: Thu, 15 Apr 2004 21:50:53 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200404152030.51052.vda@port.imtp.ilyichevsk.odessa.ua>
-References: <200404150236.05894.kos@supportwizard.com> <1082039593.19568.75.camel@lotte.street-vision.com> <200404151848.05857.kos@supportwizard.com>
+Message-ID: <20040415195053.GP468@openzaurus.ucw.cz>
+References: <200404150236.05894.kos@supportwizard.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="koi8-r"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 168.imtp.Ilyichevsk.Odessa.UA ([195.66.192.168]:60938 "HELO
-	port.imtp.ilyichevsk.odessa.ua") by vger.kernel.org with SMTP
-	id S263059AbUDORbC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Apr 2004 13:31:02 -0400
-In-Reply-To: <200404151848.05857.kos@supportwizard.com>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:50822 "EHLO
+	atrey.karlin.mff.cuni.cz") by vger.kernel.org with ESMTP
+	id S263151AbUDOUjU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Apr 2004 16:39:20 -0400
 Content-Disposition: inline
+In-Reply-To: <200404150236.05894.kos@supportwizard.com>
 List-Id: linux-ide@vger.kernel.org
-To: Konstantin Sobolev <kos@supportwizard.com>, Justin Cormack <justin@street-vision.com>
-Cc: Ryan Geoffrey Bourgeois <rgb005@latech.edu>, Kernel mailing list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Konstantin Sobolev <kos@supportwizard.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thursday 15 April 2004 17:48, Konstantin Sobolev wrote:
-> On Thursday 15 April 2004 18:33, Justin Cormack wrote:
-> > On Thu, 2004-04-15 at 15:26, Konstantin Sobolev wrote:
-> > > On Thursday 15 April 2004 18:00, Justin Cormack wrote:
-> > > > hmm, odd. I get 50MB/s or so from normal (7200, 8MB cache) WD disks,
-> > > > and Seagate from the same controller. Can you send lspci,
-> > > > /proc/interrupts and dmesg...
-> > >
-> > > Attached are files for 2.6.5-mm5 with highmem, ACPI and APIC turned
-> > > off.
-> >
-> > ah. Make a filesystem on it and mount it and try again. I see you have
-> > no partition table and so probably no filesystem. This means the block
-> > size is set to default 512byte not 4k which makes disk operations slow.
-> > Any filesystem should default to block size of 4k, eg ext2.
->
-> Very interesting!
-> created partition table,
-> kos sata # mkfs.ext2 /dev/sda1
-> [..skipped..]
-> kos mnt # cd /
-> kos / # mkdir wd
-> kos / # mount /dev/sda1 /wd
-> kos / # hdparm -t -a8192 /dev/sda
->
-> /dev/sda:
->  setting fs readahead to 8192
->  readahead    = 8192 (on)
->  Timing buffered disk reads:   82 MB in  3.03 seconds =  27.02 MB/sec
->
-> kos / # mount | grep sda
-> /dev/sda1 on /wd type ext2 (rw)
-> kos / # hdparm -t -a8192 /dev/sda
->
-> /dev/sda:
->  setting fs readahead to 8192
->  readahead    = 8192 (on)
->  Timing buffered disk reads:  206 MB in  3.02 seconds =  68.15 MB/sec
-> kos / # hdparm -t -a8192 /dev/sda
->
-> /dev/sda:
->  setting fs readahead to 8192
->  readahead    = 8192 (on)
->  Timing buffered disk reads:  206 MB in  3.02 seconds =  68.18 MB/sec
->
-> So first time it gave the same loosy 27 MB/s and subsequent tests give
-> pretty good 68 MB/s! Why?
+Hi!
 
-Time to CC ide/libata/block layer folks
+> I recently got a new sata disk and must say that it's performace is totally 
+> unacceptable, on both siimage and sata_sil drivers. DMA is turned on.
+...
+> /dev/hde:
+>  Timing buffer-cache reads:   1436 MB in  2.00 seconds = 717.03 MB/sec
+>  Timing buffered disk reads:  100 MB in  3.03 seconds =  32.95 MB/sec
 
-Jeff Garzik <jgarzik@pobox.com>
-	libata man
+33MB/sec "totally unacceptable"? Wow.
 
-IDE DRIVER [GENERAL]
-P:      Bartlomiej Zolnierkiewicz
-M:      B.Zolnierkiewicz@elka.pw.edu.pl
-L:      linux-kernel@vger.kernel.org
-L:      linux-ide@vger.kernel.org
-S:      Maintained
+> * Did you receive a proper socialist education?			      
 
-BLOCK LAYER
-P:      Jens Axboe
-M:      axboe@suse.de
-L:      linux-kernel@vger.kernel.org
-S:      Maintained
+Only half of it ;-)
 
-SIS 5513 IDE CONTROLLER DRIVER
-P:      Lionel Bouton
-M:      Lionel.Bouton@inet6.fr
-W:      http://inet6.dyn.dhs.org/sponsoring/sis5513/index.html
-W:      http://gyver.homeip.net/sis5513/index.html
-S:      Maintained
-
---
-vda
+-- 
+64 bytes from 195.113.31.123: icmp_seq=28 ttl=51 time=448769.1 ms         
 
