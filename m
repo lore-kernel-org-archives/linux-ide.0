@@ -1,99 +1,91 @@
-From: Ryan <rgb005@latech.edu>
-Subject: (unknown)
-Date: Sun, 18 Apr 2004 18:24:45 -0500
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH] Fix for IDE CF card ejection with devfs
+Date: Mon, 19 Apr 2004 00:13:50 -0400 (EDT)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1082330685.40830e3da9c73@webmail.LaTech.edu>
+Message-ID: <Pine.LNX.4.58.0404182344470.5575@portland.hansa.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed; boundary="Boundary_(ID_f7zLm74uQi30fqQYnhSfDQ)"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from selene.LaTech.edu ([138.47.18.25]:44487 "EHLO LaTech.edu")
-	by vger.kernel.org with ESMTP id S264211AbUDRXYr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Apr 2004 19:24:47 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by LaTech.edu (Postfix) with ESMTP id 5114330A060
-	for <linux-ide@vger.kernel.org>; Sun, 18 Apr 2004 18:24:46 -0500 (CDT)
-Received: from LaTech.edu ([127.0.0.1])
- by localhost (selene.latech.edu [127.0.0.1]) (amavisd-new, port 10024)
- with LMTP id 83671-01-17 for <linux-ide@vger.kernel.org>;
- Sun, 18 Apr 2004 18:24:45 -0500 (CDT)
-Received: from localhost (helius.LaTech.edu [138.47.18.18])
-	by LaTech.edu (Postfix) with ESMTP id B60B1309FB5
-	for <linux-ide@vger.kernel.org>; Sun, 18 Apr 2004 18:24:45 -0500 (CDT)
+Received: from cmail.srv.hcvlny.cv.net ([167.206.112.40]:4501 "EHLO
+	cmail.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
+	id S264290AbUDSEPA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Apr 2004 00:15:00 -0400
+Received: from portland.hansa.lan
+ (ool-435328fe.dyn.optonline.net [67.83.40.254]) by cmail.srv.hcvlny.cv.net
+ (iPlanet Messaging Server 5.2 HotFix 1.16 (built May 14 2003))
+ with ESMTP id <0HWE00L59H350T@cmail.srv.hcvlny.cv.net> for
+ linux-ide@vger.kernel.org; Mon, 19 Apr 2004 00:13:53 -0400 (EDT)
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
-> >
-> >Promise's S150 SX4 SATA controller supports hotswap and automatic array
-> >rebuilds.  
-> >
-> Really?  How long has it done that?  The last libata status report I saw
-> from Jeff Garzik said hotswap was still unsupported.  Has that changed?  
-> Do you know if any other interface card's driver supports it yet?  It
-> supports that standard SCSI hot-plug utilities or what?
->
+--Boundary_(ID_f7zLm74uQi30fqQYnhSfDQ)
+Content-type: TEXT/PLAIN; charset=US-ASCII
+Content-transfer-encoding: 7BIT
 
-I said the CARD supports it, not the drivers.  Perhaps I was a bit unclear on
-that.  Currently the SX4 is supported through the sata_promise driver.  It has
-NO support for any controller-level RAID or drive hotswapping.  Jeff Garzik, I
-think, is working on the SX4 driver.  As far as I know, with the SX4, RAID
-rebuilding and hotswapping within an array should be handled at the hardware
-level by the card (at least for RAID5 arrays), but I really don't know that
-much about how it all fits together.  I could very well be wrong.
+Hello!
 
+If I eject and IDE CompactFlash card, I get a stack dump from
+devfs_remove() because ide/host2/bus0/target0/lun0 doesn't exist.  It's
+not a panic, and everything works, but I want to fix it anyway.  I'm using
+Linux 2.6.6-rc1 with devfs enabled.
 
-> >The problem with it is that at the moment there is no driver support
-> >for the SX4's RAID functionality.  So in the meantime I'm using Linux's
-> >software RAID5 on the card.  It's really quite slow (25mb/s) but that's
-> mostly
-> >due to the current driver support, from what I've been told.
-> >  
-> >
-> I run RAID1, I trade space for performance and simplicity.  I run
-> latency sensitive stuff, so RAID1's read performance is what I need.  It
-> lowered average latency 40% and increased seeks/sec by 80% as compared
-> to a single disk setup.  Plus it'll do parallel sequential reads at
-> 100MB/s, if I had sequential access patterns.  It doesn't appear to have
-> any noticeable affect on CPU usage either.
+What happens is ide_release() in drivers/ide/legacy/ide-cs.c calls
+ide_unregister() in drivers/ide/ide.c.  This function calls
+DRIVER(drive)->cleanup for every drive.  Later is goes through the driver
+list again and unregisters with devfs every drive->devfs_name (which
+happens to be ide/host2/bus0/target0/lun0 in my case).
 
->From what Jeff said, drive access is slowed considerably on the SX4 due to how
-the current driver accesses the disk.  And I quote:
+DRIVER(drive)->cleanup is idedisk_cleanup() from drivers/ide/ide-disk.c
+for disks, and the CompactFlash card is treated like a disk.
+idedisk_cleanup() calls del_gendisk() from fs/partitions/check.c, which
+removes ide/host2/bus0/target0/lun0.  This explains why it fails to be
+removed later in ide_unregister().
 
-"SX4 is vastly different.  Each request must bounce through a DIMM, which
-hurts performance.  Further, only one DIMM copy to/from system memory
-can be occuring at any one time, while you can be executing up to 4 ATA
-commands (one for each SATA port) in parallel."  --Jeff Garzik
+Please note that del_gendisk() removes the path from disk->devfs_name.
+It is equal (by value, not by pointer) drive->devfs_name for IDE disks,
+but not for some other devices.  For instance, IDE CD appends "/cd" to the
+end of disk->devfs_name.
 
-So no matter what RAID array I use, I'm greatly limited by the current driver
-design.  Like I said, 25mb/s on a single drive, and I'm geting about 29mb/s for
-the whole array.  I'd expect around an 80mb/s read on the array with the
-"ideal" drivers.  And some more from Jeff:
+Since the equality of drive->devfs_name and disk->devfs_name is specific
+to IDE disks, it's ide-disk.c that should be fixed.  After del_gendisk()
+is called from idedisk_cleanup() drive->devfs_name refers to a
+non-existent directory and should be erased, so that ide_unregister()
+doesn't try to remove that directory again.
 
-"SX4 is really designed for RAID acceleration.  One may to improve
-performance (which I plan to implement) is using the DIMM as a
-write-through cache."
+ide_unregister() only checks for drive->devfs_name[0] being 0, so I
+changed idedisk_cleanup() to set drive->devfs_name[0] to 0.
 
-Drive performance can really be split up into a couple of different areas:
-Disk-level, controller-level, and driver-level.  Some disks are inherently
-faster than others.  Some controllers are better than others at certain things
-(the SX4 is SUPPOSED to be a RAID card, not a simple controller card) and then,
-drivers can either suck or not.  I guess you could say RAID is either
-controller-level, driver-level, or both.
+This fixes the stack dump on CompactFlash card ejection.  The patch is
+attached.
 
-Personally, I have to commend the guys working on the Promise SATA driver(s), I
-think they've done a great job getting this all together.  I'm looking forward
-to seeing an SX4 driver that supports all of the wonderful things the card can
-do.
-
->
-> -ryan
->
-
+An alternative solution would be to append "/disc" to disk->devfs_name for
+disks.  It's potentially a more intrusive change, but if the IDE
+developers prefer it, I'm ready to make another patch.
 
 -- 
-huh?
+Regards,
+Pavel Roskin
 
--------------------------------------------------
-This mail sent through IMP: http://horde.org/imp/
+--Boundary_(ID_f7zLm74uQi30fqQYnhSfDQ)
+Content-id: <Pine.LNX.4.58.0404190013500.5575@portland.hansa.lan>
+Content-type: TEXT/plain; charset=US-ASCII; name=ide-disk-devfs.diff
+Content-transfer-encoding: 7BIT
+Content-disposition: attachment; filename=ide-disk-devfs.diff
+Content-description: 
 
+--- linux.orig/drivers/ide/ide-disk.c
++++ linux/drivers/ide/ide-disk.c
+@@ -1695,6 +1695,7 @@ static int idedisk_cleanup (ide_drive_t 
+ 	if (ide_unregister_subdriver(drive))
+ 		return 1;
+ 	del_gendisk(g);
++	drive->devfs_name[0] = '\0';
+ 	g->fops = ide_fops;
+ 	return 0;
+ }
+
+--Boundary_(ID_f7zLm74uQi30fqQYnhSfDQ)--
