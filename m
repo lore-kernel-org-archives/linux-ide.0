@@ -1,76 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Jamie Lokier <jamie@shareable.org>
 Subject: Re: [PATCH] Poll-based IDE driver
-Date: Wed, 08 Oct 2003 22:47:22 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1065649641.10565.21.camel@dhcp23.swansea.linux.org.uk>
-References: <20030917144120.A11425@in.ibm.com>
-	 <1063806900.12279.47.camel@dhcp23.swansea.linux.org.uk>
-	 <20031008151357.A31976@in.ibm.com>
+Date: Thu, 9 Oct 2003 00:43:40 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20031008234340.GB17019@mail.shareable.org>
+References: <20030917144120.A11425@in.ibm.com> <1063806900.12279.47.camel@dhcp23.swansea.linux.org.uk> <20031008151357.A31976@in.ibm.com> <20031008115051.GD705@redhat.com> <20031008174458.A32517@in.ibm.com> <1065649708.10565.23.camel@dhcp23.swansea.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20031008151357.A31976@in.ibm.com>
-To: vatsa@in.ibm.com
-Cc: lkcd-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.jlokier.co.uk ([81.29.64.88]:50314 "EHLO
+	mail.shareable.org") by vger.kernel.org with ESMTP id S261744AbTJHXoa
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Oct 2003 19:44:30 -0400
+Content-Disposition: inline
+In-Reply-To: <1065649708.10565.23.camel@dhcp23.swansea.linux.org.uk>
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: vatsa@in.ibm.com, Dave Jones <davej@redhat.com>, lkcd-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Mer, 2003-10-08 at 10:43, Srivatsa Vaddagiri wrote:
-> 1. Taking control of the drive
-> 	It is possible that the kernel IDE driver was very _actively_
-> 	using the dump drive when my driver takes over. For ex, there
-> 	may be active DMA requests pending with the drive when 
-> 	my driver takes control ..
+Alan Cox wrote:
+> On Mer, 2003-10-08 at 13:14, Srivatsa Vaddagiri wrote:
+> > Since my code is supposed to run when system is crashing, I would like 
+> > to avoid calling any function in the kernel as far as possible, since 
+> > the kernel and its data structures may be in a inconsistent state 
+> > and/or corrupted.
+> 
+> For x86 udelay is a tiny piece of code - you could easily inline it
 
-In 2.4 we issue one command at a time in 2.6 we may have several TCQ 
-commands queued. You may need to test if the drive is busy, wait and if
-neccessary reset and recover it. If possible avoid the reset because
-that means the drive will need some reconfiguration (see specs)
+No, because that changes the delay.  Things like whether the
+instructions straddle a cache line or page boundary, or ar 4-byte or
+16-byte aligned affect the timing on some x86 CPUs.
 
-> 	Currently all my drive does to take control of the drive
-> 	is to disable drive interrupts (set nIEN bit). It then
-> 	starts issuing PIO WRITE commands to write data to disk.
+udelay must reside at a fixed memory location to get the nearest thing
+to determinism that we know how to get.
 
-Make sure you disable interrupts before using nIEN. Not all older
-devices honour nIEN so you can get suprises
-
-> 	Do I need to do anything else in order to take 
-> 	control of the drive?
-> 	
-> 	Do I need to explicitly program the drive for PIO transfer
-> 	mode before I start issuing it PIO write commands?
-
-The PIO mode on the controller and drive should have been set correctly
-by the base IDE driver at boot time.
-
-> 2. Power Management
-> 	Tackling Sleep state may involve a drive reset followed by 
-> 	reinitializing drive parameters which will make my driver 
-> 	more complex (as I may have to take care of reset sequence of 
-> 	various chipsets separately). For now, I would like my driver 
-> 	not supporting the sleep state.
-
-Makes sense. Many drives seem to come out of sleep state themselves
-anyway. 
- 
-> 3. Shutdown sequence
-> 	You mentioned that I need to follow proper shutdown sequence
-> 	when I am done writing to the drive. Apart from 
-> 	flushing (if the drive supports it) is there anything
-> 	more to the shutdown sequence?
-
-Flush the cache, and place the drive in a suitable standby/sleep state -
-follow the code in ide-disk.c for the way we do it in the main code. 
-
-> 4. Relinquishing control of the drive
-> 	Currently all I am doing to give control back to
-> 	the kernel IDE driver is to re-enable the drive
-> 	interrupts (clear nIEN). 
-> 		
-> 	Is there anything more I need to be taking care of?
-
-Hard question. I think that providing you mark the drive busy, wait
-for the IDE layer to complete any pending commands and restore the state
-afterwards it ought to be possible. Would need a lot of thought and more
-time than I have right now to think about it since getting it wrong
-might lose requests and generate very hard to pin down errors.
+-- Jamie
