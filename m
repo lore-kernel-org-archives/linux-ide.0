@@ -1,91 +1,57 @@
-From: "Adam J. Richter" <adam@yggdrasil.com>
-Subject: [Patch? 2.6.10-rc3-bk17] ata_pci_remove_one used freed memory
-Date: Sat, 25 Dec 2004 16:20:03 +0800
-Message-ID: <200412250820.iBP8K3421640@freya.yggdrasil.com>
+From: P'tit Lu <ptitlu@ptitlu.org>
+Subject: sata optical drive, i865 and 2.6.10
+Date: Mon, 27 Dec 2004 01:25:33 +0100
+Message-ID: <20041227002534.3204436957@irc.ptitlu.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [61.48.52.95] ([61.48.52.95]:61944 "EHLO freya.yggdrasil.com")
-	by vger.kernel.org with ESMTP id S261435AbULYIYP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Dec 2004 03:24:15 -0500
+Received: from ABayonne-102-2-1-3.w217-128.abo.wanadoo.fr ([217.128.71.3]:16769
+	"EHLO irc.ptitlu.org") by vger.kernel.org with ESMTP
+	id S261360AbUL0AZg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Dec 2004 19:25:36 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-	Attempting to unload a serial ATA driver module gave me a kernel
-memory fault.  I think this problem occurs in all configurations, but
-I should mention that my configuration may be slightly unusual in that
-I configured my BIOS not to do IDE emulation with SATA disks, and I don't
-actually have any disks plugged in.
 
-	The problem was that ata_pci_remove_one would call
-scsi_host_put(ap->host), which would free the memory used to hold
-host_set->ports, but host_set->ports was used later in ata_pci_remove_one.
+	Good evening and please excuse my english ;)
+I read that you are the libata maintainer.
 
-	So, the following patch reorders some of the steps in
-ata_pci_remove_one and seems to eliminate the problem, at least to
-the extent that I can unload and reload the module, although I do not
-have a SATA disk handy for testing (I'm expecting one to arrive later
-today).
+i supposed it is ok for sata hard disks, but Santa Claus brought me a
+serial ata dvd burner. Plextor PX712-SA.
+Here are the logs when i boot up :
 
-	The patch actually makes the code four lines shorter, although
-two of those lines come from putting an assignement and variable
-declaration in the same line.  Since the patch is a little hard to
-read, here is a description of the edit steps.
+modprobe ata_piix :
 
-	1. Moved pci_release_regions() to toward the end of the routine
-to facilitate merging the loops before and after it.  Also, I think that
-calls that are good candidates for consolidating into the bus-level code
-in the future (instead of individual drivers) are best put at the beginning
-or end of the driver routines so that it is clearer if there would be
-problems doing such consolidation.
+Dec 26 04:07:42 rabbit kernel: ata_piix version 1.03
+Dec 26 04:07:42 rabbit kernel: PCI: Setting latency timer of device
+0000:00:1f.2 to 64
+Dec 26 04:07:42 rabbit kernel: ata1: SATA max UDMA/133 cmd 0xEC00 ctl
+0xE802 bmdma 0xDC00 irq 18
+Dec 26 04:07:42 rabbit kernel: ata2: SATA max UDMA/133 cmd 0xE400 ctl
+0xE002 bmdma 0xDC08 irq 18
+Dec 26 04:07:42 rabbit kernel: ata1: dev 0 cfg 49:0f00 82:0000 83:0000
+84:0000 85:0000 86:0000 87:0000 88:0407
+Dec 26 04:07:42 rabbit kernel: ata1: dev 0 ATAPI, max UDMA/33
+Dec 26 04:07:42 rabbit kernel: ata1: dev 0 configured for UDMA/33
+Dec 26 04:07:42 rabbit kernel: scsi8 : ata_piix
+Dec 26 04:07:43 rabbit kernel: ata2: SATA port has no device.
+Dec 26 04:07:43 rabbit kernel: scsi9 : ata_piix
 
-	2. Moved the cacluation of ioaddr into the only if-branch that
-uses it.
+And nothing more.
 
-	3. Moved the call to scsi_host_put to after the code that
-checks ATA_FLAG_NO_LEGACY.
+One more info, this is a 2.6.10 kernel and a i865 chipset (ICH5).
 
-                    __     ______________ 
-Adam J. Richter        \ /
-adam@yggdrasil.com      | g g d r a s i l
+It is just a question of time for sata optical drives to be supported ?
+Thanks for all
 
---- linux/drivers/scsi/libata-core.c.orig	2004-12-25 10:08:16.000000000 +0800
-+++ linux/drivers/scsi/libata-core.c	2004-12-25 10:15:45.000000000 +0800
-@@ -3701,32 +3701,28 @@
- 		iounmap(host_set->mmio_base);
- 
- 	for (i = 0; i < host_set->n_ports; i++) {
- 		ap = host_set->ports[i];
- 
- 		ata_scsi_release(ap->host);
--		scsi_host_put(ap->host);
--	}
--
--	pci_release_regions(pdev);
--
--	for (i = 0; i < host_set->n_ports; i++) {
--		struct ata_ioports *ioaddr;
--
--		ap = host_set->ports[i];
--		ioaddr = &ap->ioaddr;
- 
- 		if ((ap->flags & ATA_FLAG_NO_LEGACY) == 0) {
-+			struct ata_ioports *ioaddr = &ap->ioaddr;
-+
- 			if (ioaddr->cmd_addr == 0x1f0)
- 				release_region(0x1f0, 8);
- 			else if (ioaddr->cmd_addr == 0x170)
- 				release_region(0x170, 8);
- 		}
-+
-+		scsi_host_put(ap->host);
- 	}
- 
- 	kfree(host_set);
-+
-+	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
- 	dev_set_drvdata(dev, NULL);
- }
- 
- /* move to PCI subsystem */
- int pci_test_config_bits(struct pci_dev *pdev, struct pci_bits *bits)
+--=20
+The only thing necessary for the triumph of evil is for good men to do
+nothing
+=B7
+P'tit Lu <ptitlu@ptitlu.org>
+http://ptitlu.org
+jabber : P`tit_Lu@jabber.org
+clef publique GnuPG : http://ptitlu.org/download/gpg-ptitlu.asc
+-=B7-
