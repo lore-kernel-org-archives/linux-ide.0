@@ -1,187 +1,105 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: Can't disable IDE DMA on 2.6.0-test9 (patch)
-Date: Mon, 8 Dec 2003 04:00:40 +0100
+From: Gertjan van Wingerde <gwingerde@home.nl>
+Subject: Re: 2.6.0-test11-bart1
+Date: Mon, 8 Dec 2003 20:31:38 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200312080400.40421.bzolnier@elka.pw.edu.pl>
-References: <16317.18623.912339.111750@wombat.disy.cse.unsw.edu.au> <200312080239.58602.bzolnier@elka.pw.edu.pl> <16339.58195.71921.425034@wombat.chubb.wattle.id.au>
+Message-ID: <200312082029.58214.gwingerde@home.nl>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-2"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:25285 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S265309AbTLHC6n
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Dec 2003 21:58:43 -0500
-In-Reply-To: <16339.58195.71921.425034@wombat.chubb.wattle.id.au>
+Received: from smtpq1.home.nl ([213.51.128.196]:44734 "EHLO smtpq1.home.nl")
+	by vger.kernel.org with ESMTP id S261569AbTLHTcf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Dec 2003 14:32:35 -0500
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Peter Chubb <peter@chubb.wattle.id.au>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Monday 08 of December 2003 03:34, Peter Chubb wrote:
-> >>>>> "Bartlomiej" == Bartlomiej Zolnierkiewicz
-> >>>>> <B.Zolnierkiewicz@elka.pw.edu.pl> writes:
+Hi Bart,
+
+I'd like to have my IDE modularisation patch included in this. See the following link for the details.
+
+	http://marc.theaimsgroup.com/?l=linux-kernel&m=107004921520850&w=2
+
+In the current state of the IDE driver none of the modules can be loaded.
+
+Please let me know if you think that this can be handled in a different way.
+
+    Best regards,
+
+        Gertjan.
+
+On 8 december 2003 Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl> wrote:
 >
-> Bartlomiej> On Friday 21 of November 2003 00:05, Peter Chubb wrote:
-> >> Hi Folks,
+>Lets start the ball rolling...
 >
-> Bartlomiej> Hi,
+>If you have problems ide-tape.c, siimage.c or cmd640.c (in PCI mode)
+>you should try this patch.
 >
-> >> If you try to disable IDE DMA from Kconfig, you'll end up with an
-> >> undefined symbol, ide_hwif_setup_dma().
-> >>
-> >> The attached rather ugly patch fixes the problem by defining a
-> >> dummy function.
+>It also contains untested fixes for Promise IDE driver (pdc202xx_old.c),
+>they should be safe but better backup your data first :-), feedback needed.
 >
-> Bartlomiej> Not exactly.  Disable IDE DMA and enable support for every
-> Bartlomiej> PCI chipset.  Now try to compile... welcome to compile
-> Bartlomiej> time hell :-).
+>Workarounds for nForce2 chipset are also included.
 >
-> If you disable IDE_DMA, then the other chipset drivers cannot be
-> enabled --- the config system won't let you.
-> With IDE_DMA disabled and all chipsets disabled, I see:
-
-They cannot be enabled because they don't compile (see below).
-
-> drivers/built-in.o(.text+0x9f8bc): In function `ide_hwif_setup_dma':
-> : undefined reference to `ide_setup_dma'
+>Get it from:
+>ftp://ftp.kernel.org/pub/linux/kernel/people/bart/2.6.0-test11-bart1/
 >
-> And *that's* what my patch was supposed to fix.
-
-Indeed it fixes it perfectly.
-
-However this problem (undefined reference to `ide_setup_dma') was created by
-your previous patch allowing selection of PCI chipsets if IDE DMA is not set
-;-).
-
-I can't apply these patches because they create more problems that they fix.
-
-Here is compile time hell I was talking about (result of both your patches
-applied, IDE DMA disabled and all PCI chipset drivers enabled):
-
-drivers/ide/pci/aec62xx.c: In function `init_dma_aec62xx':
-drivers/ide/pci/aec62xx.c:490: warning: implicit declaration of function `ide_setup_dma'
-drivers/ide/pci/alim15x3.c: In function `ali15x3_dma_write':
-drivers/ide/pci/alim15x3.c:565: warning: implicit declaration of function `__ide_dma_write'
-drivers/ide/pci/alim15x3.c: In function `init_dma_ali15x3':
-drivers/ide/pci/alim15x3.c:846: warning: implicit declaration of function `ide_setup_dma'
-drivers/ide/pci/cmd64x.c: In function `cmd64x_ide_dma_end':
-drivers/ide/pci/cmd64x.c:535: warning: implicit declaration of function `ide_destroy_dmatable'
-drivers/ide/pci/cs5520.c: In function `cs5520_init_setup_dma':
-drivers/ide/pci/cs5520.c:214: warning: implicit declaration of function `ide_setup_dma'
-drivers/ide/pci/sc1200.c: In function `sc1200_ide_dma_end':
-drivers/ide/pci/sc1200.c:333: warning: implicit declaration of function `ide_destroy_dmatable'
-drivers/ide/pci/cy82c693.c: In function `cy82c693_ide_dma_on':
-drivers/ide/pci/cy82c693.c:213: warning: implicit declaration of function `__ide_dma_on'
-drivers/ide/pci/hpt366.c: In function `hpt366_ide_dma_lostirq':
-drivers/ide/pci/hpt366.c:577: warning: implicit declaration of function `__ide_dma_lostirq'
-drivers/ide/pci/hpt366.c: In function `hpt370_ide_dma_begin':
-drivers/ide/pci/hpt366.c:592: warning: implicit declaration of function `__ide_dma_begin'
-drivers/ide/pci/hpt366.c: In function `hpt370_ide_dma_end':
-drivers/ide/pci/hpt366.c:609: warning: implicit declaration of function `__ide_dma_end'
-drivers/ide/pci/hpt366.c: In function `hpt370_ide_dma_timeout':
-drivers/ide/pci/hpt366.c:634: warning: implicit declaration of function `__ide_dma_timeout'
-drivers/ide/pci/hpt366.c: In function `init_dma_hpt366':
-drivers/ide/pci/hpt366.c:1124: warning: implicit declaration of function `ide_setup_dma'
-drivers/ide/pci/ns87415.c: In function `ns87415_ide_dma_end':
-drivers/ide/pci/ns87415.c:101: warning: implicit declaration of function `ide_destroy_dmatable'
-drivers/ide/pci/ns87415.c: In function `ns87415_ide_dma_read':
-drivers/ide/pci/ns87415.c:110: warning: implicit declaration of function `__ide_dma_read'
-drivers/ide/pci/ns87415.c: In function `ns87415_ide_dma_write':
-drivers/ide/pci/ns87415.c:121: warning: implicit declaration of function `__ide_dma_write'
-drivers/ide/pci/ns87415.c: In function `ns87415_ide_dma_check':
-drivers/ide/pci/ns87415.c:132: warning: implicit declaration of function `__ide_dma_check'
-drivers/ide/pci/pdc202xx_old.c: In function `pdc202xx_old_ide_dma_begin':
-drivers/ide/pci/pdc202xx_old.c:556: warning: implicit declaration of function `__ide_dma_begin'
-drivers/ide/pci/pdc202xx_old.c: In function `pdc202xx_old_ide_dma_end':
-drivers/ide/pci/pdc202xx_old.c:572: warning: implicit declaration of function `__ide_dma_end'
-drivers/ide/pci/pdc202xx_old.c: In function `pdc202xx_ide_dma_lostirq':
-drivers/ide/pci/pdc202xx_old.c:603: warning: implicit declaration of function `__ide_dma_lostirq'
-drivers/ide/pci/pdc202xx_old.c: In function `pdc202xx_ide_dma_timeout':
-drivers/ide/pci/pdc202xx_old.c:610: warning: implicit declaration of function `__ide_dma_timeout'
-drivers/ide/pci/pdc202xx_old.c: In function `init_dma_pdc202xx':
-drivers/ide/pci/pdc202xx_old.c:795: warning: implicit declaration of function `ide_setup_dma'
-drivers/ide/pci/pdc202xx_new.c: In function `pdcnew_ide_dma_lostirq':
-drivers/ide/pci/pdc202xx_new.c:437: warning: implicit declaration of function `__ide_dma_lostirq'
-drivers/ide/pci/pdc202xx_new.c: In function `pdcnew_ide_dma_timeout':
-drivers/ide/pci/pdc202xx_new.c:444: warning: implicit declaration of function `__ide_dma_timeout'
-drivers/ide/pci/serverworks.c: In function `svwks_ide_dma_end':
-drivers/ide/pci/serverworks.c:508: warning: implicit declaration of function `__ide_dma_end'
-drivers/ide/pci/serverworks.c: In function `init_dma_svwks':
-drivers/ide/pci/serverworks.c:754: warning: implicit declaration of function `ide_setup_dma'
-drivers/ide/pci/siimage.c: In function `siimage_mmio_ide_dma_count':
-drivers/ide/pci/siimage.c:573: warning: implicit declaration of function `__ide_dma_count'
-drivers/ide/pci/siimage.c: In function `siimage_mmio_ide_dma_verbose':
-drivers/ide/pci/siimage.c:626: warning: implicit declaration of function `__ide_dma_verbose'
-drivers/ide/pci/slc90e66.c: In function `init_hwif_slc90e66':
-drivers/ide/pci/slc90e66.c:331: warning: unused variable `mask'
-drivers/ide/pci/trm290.c: In function `init_hwif_trm290':
-drivers/ide/pci/trm290.c:345: warning: implicit declaration of function `ide_setup_dma'
-drivers/ide/setup-pci.c:176: warning: `ide_get_or_set_dma_base' defined but not used
-drivers/built-in.o(.text+0x54e92): In function `ali15x3_dma_write':
-: undefined reference to `__ide_dma_write'
-drivers/built-in.o(.text+0x572ef): In function `cmd64x_ide_dma_end':
-: undefined reference to `ide_destroy_dmatable'
-drivers/built-in.o(.text+0x573e9): In function `cmd646_1_ide_dma_end':
-: undefined reference to `ide_destroy_dmatable'
-drivers/built-in.o(.text+0x5833f): In function `sc1200_ide_dma_end':
-: undefined reference to `ide_destroy_dmatable'
-drivers/built-in.o(.text+0x589f5): In function `cy82c693_ide_dma_on':
-: undefined reference to `__ide_dma_on'
-drivers/built-in.o(.text+0x59d55): In function `hpt366_ide_dma_lostirq':
-: undefined reference to `__ide_dma_lostirq'
-drivers/built-in.o(.text+0x59dbf): In function `hpt370_ide_dma_begin':
-: undefined reference to `__ide_dma_begin'
-drivers/built-in.o(.text+0x59e25): In function `hpt370_ide_dma_end':
-: undefined reference to `__ide_dma_end'
-drivers/built-in.o(.text+0x59f05): In function `hpt370_ide_dma_timeout':
-: undefined reference to `__ide_dma_timeout'
-drivers/built-in.o(.text+0x59f25): In function `hpt370_ide_dma_lostirq':
-: undefined reference to `__ide_dma_lostirq'
-drivers/built-in.o(.text+0x59fc5): In function `hpt374_ide_dma_end':
-: undefined reference to `__ide_dma_end'
-drivers/built-in.o(.text+0x5a458): In function `ns87415_ide_dma_end':
-: undefined reference to `ide_destroy_dmatable'
-drivers/built-in.o(.text+0x5a491): In function `ns87415_ide_dma_read':
-: undefined reference to `__ide_dma_read'
-drivers/built-in.o(.text+0x5a4d1): In function `ns87415_ide_dma_write':
-: undefined reference to `__ide_dma_write'
-drivers/built-in.o(.text+0x5a511): In function `ns87415_ide_dma_check':
-: undefined reference to `__ide_dma_check'
-drivers/built-in.o(.text+0x5b9ff): In function `pdc202xx_old_ide_dma_begin':
-: undefined reference to `__ide_dma_begin'
-drivers/built-in.o(.text+0x5ba79): In function `pdc202xx_old_ide_dma_end':
-: undefined reference to `__ide_dma_end'
-drivers/built-in.o(.text+0x5bb11): In function `pdc202xx_ide_dma_lostirq':
-: undefined reference to `__ide_dma_lostirq'
-drivers/built-in.o(.text+0x5bb41): In function `pdc202xx_ide_dma_timeout':
-: undefined reference to `__ide_dma_timeout'
-drivers/built-in.o(.text+0x5cc01): In function `pdcnew_ide_dma_lostirq':
-: undefined reference to `__ide_dma_lostirq'
-drivers/built-in.o(.text+0x5cc31): In function `pdcnew_ide_dma_timeout':
-: undefined reference to `__ide_dma_timeout'
-drivers/built-in.o(.text+0x5eb88): In function `svwks_ide_dma_end':
-: undefined reference to `__ide_dma_end'
-drivers/built-in.o(.text+0x5f7b8): In function `siimage_mmio_ide_dma_count':
-: undefined reference to `__ide_dma_count'
-drivers/built-in.o(.text+0x5f8d8): In function `siimage_mmio_ide_dma_verbose':
-: undefined reference to `__ide_dma_verbose'
-drivers/built-in.o(.init.text+0x6c27): In function `init_dma_aec62xx':
-: undefined reference to `ide_setup_dma'
-drivers/built-in.o(.init.text+0x7201): In function `init_dma_ali15x3':
-: undefined reference to `ide_setup_dma'
-drivers/built-in.o(.init.text+0x7b69): In function `cs5520_init_setup_dma':
-: undefined reference to `ide_setup_dma'
-drivers/built-in.o(.init.text+0x8fee): In function `init_dma_hpt366':
-: undefined reference to `ide_setup_dma'
-drivers/built-in.o(.init.text+0x963d): In function `init_dma_pdc202xx':
-: undefined reference to `ide_setup_dma'
-drivers/built-in.o(.init.text+0x9731): more undefined references to `ide_setup_dma' follow
-make: *** [.tmp_vmlinux1] Error 1
-
-Please correct all chipset drivers and then I will apply all patches happily.
-
-thanks,
---bart
+>If you have some patches you think are worth merging just mail me
+>(cleanups are also welcomed).
+>
+>--bart
+>
+>Merged:
+>
+>linux-2.6.0-test11-bk5.patch
+>  -bk snapshot (patch-2.6.0-test11-bk5)
+>
+>extraversion.patch
+>  add -bartX to EXTRAVERSION
+>
+>ide-tape-update.patch
+>  [IDE] ide-tape.c update
+>
+>ide-tape-rq-special.patch
+>  [IDE] ide-tape.c: stop abusing rq->flags
+>
+>ide-siimage-seagate.patch
+>  [IDE] siimage.c: limit requests to 15kB only for Seagate SATA drives
+>
+>ide-siimage-stack-fix.patch
+>  [IDE] siimage.c: fix PIO settings programming
+>
+>ide-siimage-sil3114.patch
+>  [IDE] siimage.c: add very basic support for Silicon Image 3114 SATA
+>
+>ide-cmd640-pci1.patch
+>  [IDE] cmd640.c: fix PCI type1 access
+>
+>ide-pdc_old-pio-fix.patch
+>  [IDE] pdc202xx_old.c: fix PIO autotuning
+>
+>ide-pdc_old-udma66-fix.patch
+>  [IDE] pdc202xx_old.c: fix enabling 66MHz clock for modes > UDMA2
+>
+>ide-pdc_old-66mhz_clock-fix.patch
+>  [IDE] pdc202xx_old.c: sanitize 66MHz clock use
+>
+>nforce2-disconnect-quirk.patch
+>  [x86] fix lockups with APIC support on nForce2
+>
+>nforce2-apic.patch
+>  [x86] do not wrongly override mp_ExtINT IRQ
+>
+>ide-recovery-time.patch
+>  [IDE] remove dead and broken DISK_RECOVERY_TIME support
+>
+>ide-pdc_new-proc.patch
+>  [IDE] pdc202xx_new.c: remove useless /proc/ide/pdcnew
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>Please read the FAQ at  http://www.tux.org/lkml/
 
