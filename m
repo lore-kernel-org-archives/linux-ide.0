@@ -1,62 +1,38 @@
-From: dalgoda@ix.netcom.com (Mike Castle)
-Subject: CMD640 as a module: yes or no?
-Date: Thu, 01 Jul 2004 14:51:48 -0700
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH] ide-taskfile.c fixups/cleanups part #2 [1/9]
+Date: Fri, 2 Jul 2004 14:20:04 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <kkder1x7m2.ln2@thune.mrc-home.org>
+Message-ID: <20040702122004.GC12889@elf.ucw.cz>
+References: <200406301724.05862.bzolnier@elka.pw.edu.pl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from b.mail.sonic.net ([64.142.19.5]:1681 "EHLO b.mail.sonic.net")
-	by vger.kernel.org with ESMTP id S266304AbUGAVvw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jul 2004 17:51:52 -0400
-Received: from thune.mrc-home.org (adsl-209-204-178-126.sonic.net [209.204.178.126])
-	by b.mail.sonic.net (8.12.11/8.12.11) with ESMTP id i61Lpnol016114
-	for <linux-ide@vger.kernel.org>; Thu, 1 Jul 2004 14:51:49 -0700
+Received: from gprs214-141.eurotel.cz ([160.218.214.141]:49036 "EHLO
+	amd.ucw.cz") by vger.kernel.org with ESMTP id S264228AbUGBMXr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jul 2004 08:23:47 -0400
+Content-Disposition: inline
+In-Reply-To: <200406301724.05862.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Hi!
 
-Kernel 2.4.26 still has issues with building IDE as a module if you try to
-also include CMD640.  That is the undefined init_cmd640_vlb problem.
+> diff -puN drivers/ide/ide-taskfile.c~ide_tf_pio_out_fixes drivers/ide/ide-taskfile.c
+> --- linux-2.6.7-bk11/drivers/ide/ide-taskfile.c~ide_tf_pio_out_fixes	2004-06-28 21:15:54.030210376 +0200
+> +++ linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c	2004-06-28 21:15:54.035209616 +0200
+> @@ -409,6 +409,10 @@ ide_startstop_t task_out_intr (ide_drive
+>  	if (!OK_STAT(stat = hwif->INB(IDE_STATUS_REG), DRIVE_READY, drive->bad_wstat)) {
+>  		return DRIVER(drive)->error(drive, "task_out_intr", stat);
+>  	}
+> +
+> +	if (((stat & DRQ_STAT) == 0) ^ !rq->current_nr_sectors)
+> +		return DRIVER(drive)->error(drive, __FUNCTION__, stat);
+> +
 
-I've often seen this trivial patch floating around:
-
-
---- Config.in.orig	2004-04-14 06:05:29.000000000 -0700
-+++ Config.in	2004-07-01 14:06:09.000000000 -0700
-@@ -27,8 +27,8 @@
- 
-    comment 'IDE chipset support/bugfixes'
-    if [ "$CONFIG_BLK_DEV_IDE" != "n" ]; then
--      dep_bool '  CMD640 chipset bugfix/support' CONFIG_BLK_DEV_CMD640 $CONFIG_X86
--      dep_bool '    CMD640 enhanced support' CONFIG_BLK_DEV_CMD640_ENHANCED $CONFIG_BLK_DEV_CMD640
-+      dep_tristate '  CMD640 chipset bugfix/support' CONFIG_BLK_DEV_CMD640 $CONFIG_X86
-+      dep_mbool '    CMD640 enhanced support' CONFIG_BLK_DEV_CMD640_ENHANCED $CONFIG_BLK_DEV_CMD640
-       dep_bool '  ISA-PNP EIDE support' CONFIG_BLK_DEV_ISAPNP $CONFIG_ISAPNP
-       if [ "$CONFIG_PCI" = "y" ]; then
- 	 bool '  PCI IDE chipset support' CONFIG_BLK_DEV_IDEPCI
-
-
-But, Alan Cox, in a message at:
-http://groups.google.com/groups?selm=20030510153020%24418a%40gated-at.bofh.it
-
-Suggests that CMD640 should not be loaded as a module.
-
-Yet at least one distribution (Debian) seems to be using the above patch.
-
-So, I'm trying to get a definitive answer:
-
-Are module IDE and CMD640 support mutually exclusive?  If so, can we get
-it fixed so that if one builds IDE as a module, we can't select CMD640
-and get rid of the unresolved init_cmd640_vlb error?  Also, should we
-yell at said distributions and tell them not to do that?
-
-If it IS supported, than is the above patch sufficient?  If so, can
-we get it in for 2.4.27?  If not, what is sufficient, and can that get
-into 2.4.27?  If it's too hard to do now, can we go back to preventing
-the error for the moment by treating them as mutual exclusive?
-
-Thanks,
-mrc
+Looks pretty close to obfuscated c code contents... Can't you use !=
+or kill ! in second clause and use == or something?
+								Pavel
 -- 
-     Mike Castle      dalgoda@ix.netcom.com      www.netcom.com/~dalgoda/
-    We are all of us living in the shadow of Manhattan.  -- Watchmen
-fatal ("You are in a maze of twisty compiler features, all different"); -- gcc
+People were complaining that M$ turns users into beta-testers...
+...jr ghea gurz vagb qrirybcref, naq gurl frrz gb yvxr vg gung jnl!
