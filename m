@@ -1,40 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata atapi work #2
-Date: Fri, 14 May 2004 11:01:13 -0400
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: arm-lh7a40x IDE support in 2.6.6
+Date: Fri, 14 May 2004 18:40:04 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40A4DF39.8050409@pobox.com>
-References: <40A42218.5040905@pobox.com> <200405141444.21700.bzolnier@elka.pw.edu.pl>
+Message-ID: <200405141840.04401.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38318 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261421AbUENPBc
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:664 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261693AbUENQjW
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 May 2004 11:01:32 -0400
-In-Reply-To: <200405141444.21700.bzolnier@elka.pw.edu.pl>
+	Fri, 14 May 2004 12:39:22 -0400
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: linux-ide@vger.kernel.org, Pat LaVarre <p.lavarre@ieee.org>
-
-Bartlomiej Zolnierkiewicz wrote:
-> Jeff, is this intentional?
-> 
-> @@ -2457,6 +2457,13 @@
->  		queue_work(ata_wq, &ap->pio_task);
->  		break;
->  
-> +	case ATA_PROT_ATAPI:
-> +	case ATA_PROT_ATAPI_DMA:
-> +		ap->ops->tf_load(ap, &qc->tf);	 /* load tf registers */
-> +		ap->ops->bmdma_setup(qc);	    /* set up bmdma */
-> +		queue_work(ata_wq, &ap->packet_task);
-> +		break;
-
-yeah, caught and fixed that...
-
-	Jeff
+To: elf@buici.com, rmk@arm.linux.org.uk
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
+I was just porting my patches killing <asm/arch/ide.h> for
+ARM to 2.6.6 when noticed that more work is needed now. :-(
 
+arch/arm/mach-lh7a40x/ide-lpd7a40x.c
+include/asm-arm/arch-lh7a40x/ide.h
+
+Why it couldn't be done in drivers/ide/arm
+(as discussed on linux-ide)?
+
+Code from <asm/ide.h> is inlined into IDE core code in far too
+many interesting places which greatly increasing complexity/insanity
+to anybody trying to understand or change it.
+
+The rule is simple:
+	code outside drivers/ide SHOULDN'T need to know about <linux/ide.h>.
+
+WTF everybody wants to be "smart" and abuses it?
+[ and then people complain why IDE is so ugly ]
+
+BTW does it even work as IDE polling code is not merged yet?
+
+Bartlomiej
 
