@@ -1,39 +1,43 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] add pci_get_legacy_ide_irq()
-Date: Tue, 26 Oct 2004 19:21:43 +0200
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [BK PATCH] 2.6.x libata bug fix
+Date: Tue, 26 Oct 2004 19:30:26 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <58cb370e041026102135bedcdc@mail.gmail.com>
-References: <1098757431.17904.27.camel@gaston>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Message-ID: <20041026173025.GA15290@suse.de>
+References: <20041026160247.GA23459@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.194]:4624 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261353AbUJZRVo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Oct 2004 13:21:44 -0400
-Received: by wproxy.gmail.com with SMTP id 64so201750wri
-        for <linux-ide@vger.kernel.org>; Tue, 26 Oct 2004 10:21:43 -0700 (PDT)
-In-Reply-To: <1098757431.17904.27.camel@gaston>
+Received: from ns.virtualhost.dk ([195.184.98.160]:36332 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261342AbUJZRbE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Oct 2004 13:31:04 -0400
+Content-Disposition: inline
+In-Reply-To: <20041026160247.GA23459@havoc.gtf.org>
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: list linux-ide <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org
 
-Hi!
-
-On Tue, 26 Oct 2004 12:23:51 +1000, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> Hi Bart !
+On Tue, Oct 26 2004, Jeff Garzik wrote:
 > 
-> This patch, as discussed earlier, adds pci_get_legacy_ide_irq() with a generic
-> implementation and a ppc64 specific one. I only fixed the amd7xxx.c driver for now,
-> I expect people using this interface will slowly fix their drivers (I will fix via
-> soon as I'll need it too, and maybe a few others).
+> When I added ioctl handling, I returned EOPNOTSUPP for the "I didn't
+> recognize that ioctl you wanted to execute" return code.
 > 
-> This version uses "0" as no-irq to be compatible with the rest of IDE. A patch
-> teaching IDE about NO_IRQ is on the work, I'll post a version for comment soon,
-> but it's not simple, so let's do things separately for now, this is more urgent.
->
-> If you are happy with this one, can you please fwd to Linus & Andrew for meging ?
+> The block layer will execute certain ioctl operations IFF the low-level
+> driver returns ENOTTY, signalling to the block layer that that driver
+> does not support the specified ioctl.
+> 
+> The net effect of libata returning EOPNOTSUPP was such that it
+> __broke__ BLSFLSBUF ioctl, simply by implementing ->ioctl.
+> 
+> So, we return the proper return code, and ioctls we don't handle
+> start to work again.  Overall, though, this is a fragile way to do
+> things in the block layer, IMHO.
 
-Sure, patch looks fine.
+Well, it's pretty much the universally accepted way of signalling this
+information, I'm not sure I agree. The crappy part is that EINVAL is so
+wide spread as well.
+
+And EOPNOTSUPP just shows you are a networking whore as well :-)
+
+-- 
+Jens Axboe
+
