@@ -1,41 +1,62 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Which SATA Combos To Consider?
-Date: Thu, 17 Feb 2005 19:52:28 -0500
-Message-ID: <20050218005228.GA1228@havoc.gtf.org>
-References: <4213CD9E.9040703@pobox.com> <20050216174954.K10699@florence.linkmargin.com> <4213DE38.70309@pobox.com> <20050216182040.L10699@florence.linkmargin.com> <421426DB.2000308@pobox.com> <20050217085934.M10699@florence.linkmargin.com> <4214ECE9.7070502@pobox.com> <1108669364.3604.80.camel@vom> <421535F6.80609@latech.edu> <42153A89.2090909@agotnes.com>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: libata oops 2.6.11-rc4 yesterdays BK
+Date: Fri, 18 Feb 2005 10:13:08 +0400
+Message-ID: <42158774.9030406@wasp.net.au>
+References: <4212CBD6.7020703@wasp.net.au> <42132803.2080701@wasp.net.au> <4213821D.1030203@pobox.com> <4213B2F8.2070800@wasp.net.au> <20050216154033.I10699@florence.linkmargin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Received: from atlmail.prod.rxgsys.com ([64.74.124.160]:53650 "EHLO
-	bastet.signetmail.com") by vger.kernel.org with ESMTP
-	id S261280AbVBRAwr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Feb 2005 19:52:47 -0500
-Content-Disposition: inline
-In-Reply-To: <42153A89.2090909@agotnes.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from wasp.net.au ([203.190.192.17]:15591 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S261208AbVBRGNN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2005 01:13:13 -0500
+In-Reply-To: <20050216154033.I10699@florence.linkmargin.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Johny =?iso-8859-1?Q?=C5gotnes?= <johny@agotnes.com>
-Cc: Ryan Bourgeois <rgb005@latech.edu>, Danny Cox <Danny.Cox@ECWeb.com>, Linux IDE List <linux-ide@vger.kernel.org>
+To: Andy Warner <andyw@pobox.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Fri, Feb 18, 2005 at 10:44:57AM +1000, Johny =C5gotnes wrote:
-> Just a quick note on the SX4 Card - I have seen data corruption on=20
-> hard-drives too in the simplest possible setup, so I'd stay clear of=20
-> that card until further notice.
->=20
-> Mine is sitting in a cupboard right now, awaiting 'someone' (me, if I=
-=20
-> get some time to learn low-level kernel drivers) debugging the issue.
->=20
-> Basically, accessing two drives via this card causes corruption, I ha=
-d=20
-> it working ok when I only accessed 1 drive, which is kinda pointless.=
-=2E.
+Andy Warner wrote:
+> Brad Campbell wrote:
+> 
+>>[...]
+>>Actually, I'm not sure without the libata dev patch as that removes SMART support, and I'm not 
+>>convinced that my smartd polling every 20 minutes does not have something to do with it. All I know 
+>>is the older kernel seems to cope. We'll see. 320 minutes left on this rebuild. I expect it will be 
+>>done in the morning if all goes according to plan. (With the 2.6.11 kernel it never survived past 
+>>about 25% rebuilt)
+> 
+> 
+> Can you find time to try it without smartd active ?
+> You report running a uni-processor system, and I have only
+> seen PIO problems with (fast) SMP systems in my testing,
+> but I am forming the opinion that libata-PIO functions
+> are in need of a minor overhaul.
+> 
+> I have seen issues where port activity monopolised
+> data-paths/arbitration inside chipsets such that the
+> PIO operations would appear to time out. Since you're
+> doing a raid rebuild, perhaps the I/O load is causing
+> something similar to occur.
 
-I've not need about to reproduce this in the lab.
+I suspect that is exactly the problem I'm seeing. I can see the smart polling on the drive lights 
+when it occurs. It slows the rebuild quite significantly for that period.
 
-Have you tried switching out RAM and cables?
+I hit the problem using 2.6.10-bk10 also. It's just much harder to hit with that kernel. I'm now 
+trying 2.6.11-rc4 with all the libata patches (the kernel I was using before), but smartd disabled. 
+I have a sneaking suspicion that SMART is the root cause here however I don't see it on the other 
+machine because
+A) I'm using RAID-5 and not 6, thus my CPU usage during a rebuild is a LOT lower
+B) I have more cards/drives in this machine and a RAID-6 rebuild across 15 drives appears to be 
+quite taxing on the hardware.
 
-	Jeff
+Anyway, rebuild started. We will see in 12 hours.
 
+I did note when I get an ata timeout in 2.6.10 it handles it normally. In 2.6.11 it hardlocks the 
+machine. No alt-srq or anything else.
 
-
+Regards,
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
