@@ -1,99 +1,63 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: libata PATA support - work items?
-Date: Tue, 04 Jan 2005 21:42:31 -0500
-Message-ID: <41DB5417.8020608@pobox.com>
-References: <006301c4ee5c$49e6a230$95714109@tw.ibm.com>	 <311601c9050101111929aef5ba@mail.gmail.com>  <41DB299C.3030405@pobox.com> <1104886199.17176.115.camel@localhost.localdomain>
+Date: Wed, 05 Jan 2005 03:43:23 +0000
+Message-ID: <1104893729.24187.135.camel@localhost.localdomain>
+References: <006301c4ee5c$49e6a230$95714109@tw.ibm.com>
+	 <311601c9050101111929aef5ba@mail.gmail.com>  <41DB299C.3030405@pobox.com>
+	 <1104886199.17176.115.camel@localhost.localdomain>
+	 <41DB5417.8020608@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:12187 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262212AbVAECmr
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Jan 2005 21:42:47 -0500
-In-Reply-To: <1104886199.17176.115.camel@localhost.localdomain>
+Received: from clock-tower.bc.nu ([81.2.110.250]:52664 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S262243AbVAEEsD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Jan 2005 23:48:03 -0500
+In-Reply-To: <41DB5417.8020608@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: Eric Mudama <edmudama@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Albert Lee <albertcc@tw.ibm.com>, IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
-Alan Cox wrote:
-> That means
-> - Hotplug (controller and disk)
+On Mer, 2005-01-05 at 02:42, Jeff Garzik wrote:
+> > - IORDY timers (not handled well in drivers/ide but needed)
+> I think I know what this is.
 
-mostly either there, or easy to add
+The SII has support for this in the h/w btw (see the docs). Otherwise
+IDE as a protocol can get stuck if the drive enters rotating doorstop
+mode at the wrong moment.
 
-> - CHS
+> > - Funky Maxtor "LBA48.. maybe" oddments
+> details?
 
-nod
+There are a couple of "yes we do LBA48" "no we don't do this command in
+LBA48" cases with maxtors (Cache flush is one, the stroke stuff triggers
+another)
 
+> > - Missing slave detection
+> 
+> Not missing, master/slave has been working for ages.  Needed for 
+> combined mode, where a SATA device can appear as a slave.
 
-> - "Not quite generic" IDE DMA (eg CS5520)
-> - VDMA (eg CS5520)
+No no - some devices have a master and a slave on them when you detect
+but only one disk attached because they forgot to bother decoding it in
+the adapter (eg some pcmcia with microdrives). This causes bad shit
+especially with hal style automounting.
 
-existing hooks can handle these
+> > - Bandwidth arbiter (not in drivers/ide but needed)
+> interesting
 
+Its effectively serialize I think that is needed but with >1 at a time.
 
-> - IORDY timers (not handled well in drivers/ide but needed)
+> > - Non PCI shared IRQ mess 8(
+> details?
 
-I think I know what this is.
+ISA IRQ lines - two controllers, one IRQ but edge triggered and not
+sharable directly. The core old IDE code actually supports all of this
+and people have run stuff like 6 ISA IDE controllers in a PC.[1]
 
+Alan
+[1] Seek medical advice before trying this at home
 
-> - Funky Maxtor "LBA48.. maybe" oddments
-
-details?
-
-
-> - Missing slave detection
-
-Not missing, master/slave has been working for ages.  Needed for 
-combined mode, where a SATA device can appear as a slave.
-
-
-> - Controller errata hooks (modes, drives, timings, "dont touch during an
-> I/O" etc)
-
-Controller hooks for most situations already exist, for the most part. 
-Device hooks are what is lacking.
-
-
-> - Drive nIEN bugs
-
-ditto above ("device hooks are lacking")
-
-
-> - No nIEN cases
-
-already handled in at least one case (AHCI)
-
-
-> - Drives that don't do some DMA/modes right
-
-easily doable with existing hooks
-
-
-> - Crazy shit "Don't DMA from the page below 640K" (not handled by
-> drivers/ide but an AMD errata
-> 	fixed by using a PS/2 mouse)
-
-heh, interesting
-
-
-> - Serialize (RZ1000, CMD640, some 469, etc)
-
-non-trivial but doable (and planned-for)
-
-
-> - Bandwidth arbiter (not in drivers/ide but needed)
-
-interesting
-
-
-> - Non PCI shared IRQ mess 8(
-
-details?
-
-Thanks,
-
-	Jeff
 
