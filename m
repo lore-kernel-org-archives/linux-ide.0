@@ -1,56 +1,67 @@
-From: "B. M. Shea" <imbshea-spam@yahoo.com>
-Subject: VIA and /dev/sdX <---> /dev/hdX with 2.6
-Date: Wed, 21 Jul 2004 14:24:37 -0500
+From: Magnus Damm <damm@opensource.se>
+Subject: [PATCH] possible typo in ide-disk.c
+Date: Thu, 22 Jul 2004 00:22:12 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40FEC2F5.20605@yahoo.com>
+Message-ID: <1090448532.9480.3.camel@kubu.opensource.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-H8ue9Jc60wc+BPOVIU1t"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp811.mail.sc5.yahoo.com ([66.163.170.81]:38775 "HELO
-	smtp811.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S266604AbUGUT1Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Jul 2004 15:27:16 -0400
+Received: from [213.80.72.10] ([213.80.72.10]:2450 "EHLO kubrik.opensource.se")
+	by vger.kernel.org with ESMTP id S266758AbUGUWQI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jul 2004 18:16:08 -0400
+Received: from [192.168.1.16] (unknown [213.80.72.14])
+	by kubrik.opensource.se (Postfix) with ESMTP id 285B33752C
+	for <linux-ide@vger.kernel.org>; Thu, 22 Jul 2004 00:04:25 +0200 (CEST)
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE Mailing List <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+
+
+--=-H8ue9Jc60wc+BPOVIU1t
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+Hi all,
+
+This sure looks like a typo to me.
+
+/ magnus - not subscribed, please cc.
 
 
 
-Dear LINUX-IDE,
+--=-H8ue9Jc60wc+BPOVIU1t
+Content-Disposition: attachment; filename=linux-2.6.8-rc2-ide_task_no_data_intr_20040722.patch
+Content-Type: text/x-patch; name=linux-2.6.8-rc2-ide_task_no_data_intr_20040722.patch; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-I have burned a new ISO for the Slackware v10 crowd(and a boot disk for 
-that matter) to use SATA. It is simply "libata" patched against 2.4.26 
-(default kernel for Slack v10 install). It automatically installs the 
-kernel with the patch (This and a few minor script changes were really 
-the only changes I made.)
-Anyway, it is working flawlessly unless you have the VIA chipset and 
-start using a 2.6.x kernel. People with VIA (specifically) have been 
-having the device change from /dev/sdX to /dev/hdX. after compiling a 
-new kernel to use VIA as a Low level SCSI driver.
+--- linux-2.6.8-rc2/drivers/ide/ide-disk.c	2004-07-22 00:01:26.000000000 +0200
++++ linux-2.6.8-rc2-ide_task_no_data_intr_20040722/drivers/ide/ide-disk.c	2004-07-22 00:01:57.000000000 +0200
+@@ -1377,25 +1377,25 @@
+ 		args->handler	   = &task_no_data_intr;
+ 		return do_rw_taskfile(drive, args);
+ 
+ 	case idedisk_pm_standby:	/* Suspend step 2 (standby) */
+ 		args->tfRegister[IDE_COMMAND_OFFSET] = WIN_STANDBYNOW1;
+ 		args->command_type = IDE_DRIVE_TASK_NO_DATA;
+ 		args->handler	   = &task_no_data_intr;
+ 		return do_rw_taskfile(drive, args);
+ 
+ 	case idedisk_pm_idle:		/* Resume step 1 (idle) */
+ 		args->tfRegister[IDE_COMMAND_OFFSET] = WIN_IDLEIMMEDIATE;
+ 		args->command_type = IDE_DRIVE_TASK_NO_DATA;
+-		args->handler = task_no_data_intr;
++		args->handler = &task_no_data_intr;
+ 		return do_rw_taskfile(drive, args);
+ 
+ 	case idedisk_pm_restore_dma:	/* Resume step 2 (restore DMA) */
+ 		/*
+ 		 * Right now, all we do is call hwif->ide_dma_check(drive),
+ 		 * we could be smarter and check for current xfer_speed
+ 		 * in struct drive etc...
+ 		 * Also, this step could be implemented as a generic helper
+ 		 * as most subdrivers will use it
+ 		 */
+ 		if ((drive->id->capability & 1) == 0)
+ 			break;
 
-I have examined a couple of their CONFIG's and haven't seen any problems 
-with that. Is this a known 'condition' in these kernels? Jeff do you 
-know anything about this? I know I have written you on this before, but 
-for the life of me, I cannot find any info on this anywhere on the web. 
-Just stuff about what I just described and how people can't seem to fix 
-it. The drives seems to 'work' after being discovered as HD 
-devices...But on other forums I have read they tend to be 'unreliable' - 
-whatever that means. I have told them to try the 'boot: 
-noprobe=/dev/hde' option, but I am not sure if this has let libata 
-discover them as SCSI...(I haven't heard back from anyone yet about 
-this.) Any idea's or have I missed some important information on the 2.6 
-kernel somewhere?
+--=-H8ue9Jc60wc+BPOVIU1t--
 
-Sincerely,
-
-Brady Shea
-
-
-
--- 
--Sig:-
-PGP/GPG Key [Server Lookup]:
-0x06E3769E22BB70A7
-or just go here:
-http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x22BB70A7
--End of Signature-
