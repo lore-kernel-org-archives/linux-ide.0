@@ -1,50 +1,54 @@
-From: maney@two14.net (Martin Maney)
-Subject: Re: [PATCH] Re: 2.4.22-rc2 ext2 filesystem corruption
-Date: Sat, 3 Jan 2004 19:12:22 -0600
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040104011222.GA1433@furrr.two14.net>
-References: <200310311941.31930.bzolnier@elka.pw.edu.pl>
-Reply-To: maney@pobox.com
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: Re: [PATCH] fix issues with loading PCI ide drivers as modules (linux 2.6.0)
+Date: Sun, 4 Jan 2004 02:56:57 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200401040256.57419.bzolnier@elka.pw.edu.pl>
+References: <20040103152802.6e27f5c5.davmac@ozonline.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsl017-022-215.chi1.dsl.speakeasy.net ([69.17.22.215]:20746
-	"EHLO gateway.two14.net") by vger.kernel.org with ESMTP
-	id S264286AbUADBMe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Jan 2004 20:12:34 -0500
+Content-Type: text/plain;
+  charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20040103152802.6e27f5c5.davmac@ozonline.com.au>
 Content-Disposition: inline
-In-Reply-To: <200310311941.31930.bzolnier@elka.pw.edu.pl>
+To: Davin McCall <davmac@ozonline.com.au>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Martin Maney <maney@two14.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Saturday 03 of January 2004 05:28, Davin McCall wrote:
+> Hi,
 
-On Fri, Oct 31, 2003 at 07:52:21PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> 
-> [ http://www.ussg.iu.edu/hypermail/linux/kernel/0308.1/1164.html
->   for people seeing this subject for the first time ]
+Hi,
 
-Sorry the reply is so belated, but by the time this patch came along I
-was feeling like I had been more than a little foolish to test this on
-a live (and very necessary) system as I had been doing.  I've finally
-gotten hardware rearranged so that I can feel safe about this.
+> When loading the piix.ko module (generic IDE support is compiled in) I get
+> error messages- the ports are already in use, the block devices are already
+> registered.
+>
+> The problems seem to be:
+>
+> 1) the hwif structures aren't getting marked as being used if the generic
+> IDE layer is controlling them (->chipset is left as "ide_unknown" instead
+> of "ide_generic")
 
-> Can you try booting with "hdX=autotune" (hdX==your drive) kernel parameter?
+Are you aware that your change brakes "idex=base", "idex=base,ctl"
+and "idex=base,ctl,irq" kernel parameters?  If these parameters are used
+hwif->chipset is also set to ide_generic.  Now if controller is a PCI one
+and PCI IDE support is compiled in hwif->chipset will be set to
+ide_pci_takeover and drives won't be probed.
 
-> The next thing to try is the attached patch (against 2.4.23-pre9), which
-> sanitizes 66MHz clock usage -> now 66MHz clock is "enabled" before starting
+> 2) if the pci module is granted control of an already initialized hwif, the
+> drive probing etc. (including I/O port allocation) is re-run. When it
+> fails, the drives are marked as not-present which doesn't appear to cause
+> any problems but seems dangerous.
 
-Okay, by now I have 2.4.23 installed, and with that version (and booting
-from a drive not connected to the Promise controller, a mirror pair on
-a 3ware controller, in fact) I no longer seem to be able to recreate
-the corruption that was previously so repeatable.  The autotune
-parameter makes no difference: it just works.
+When it fails controller+drives are not being programmed correctly
+(because probe_hwif() returns early).  "takeover" is not supported because
+you need to reprogram controller/drive to do DMA, but probing code
+(which does also reprogramming) can race with actual data transfer.
 
-If this issue is still of interest (ie, it's just by luck that .23
-works), I can do further testing for a while, but the drive that's on
-the Promise will be getting repurposed sooner or later.
+> Patch below fixes this and allows a chipset-specific module to take over
+> the primary IDE interface correctly. Comments welcome.
 
--- 
-Faced with the choice between changing one's mind and proving there is
-no need to do so, almost everyone gets busy on the proof. -- JKG
+I think proper fix is to add IDE generic host driver and make it modular.
 
+--bart
