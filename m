@@ -1,49 +1,38 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [BK PATCHES] ide-2.6 update
-Date: Wed, 27 Oct 2004 16:49:55 +0200
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] Fix pata_pdc2027x incorrect pio_mask and mwdma_mask
+Date: Wed, 27 Oct 2004 10:49:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <58cb370e0410270749f717585@mail.gmail.com>
-References: <58cb370e04102706074c20d6d7@mail.gmail.com>
-	 <20041027133431.GF1127@zip.com.au>
-	 <58cb370e04102706512283405@mail.gmail.com>
-	 <16767.45494.863511.334215@alkaid.it.uu.se>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Message-ID: <417FB590.6020008@pobox.com>
+References: <00e801c4bc10$387e33b0$8c764109@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.197]:29882 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262464AbUJ0Otz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Oct 2004 10:49:55 -0400
-Received: by wproxy.gmail.com with SMTP id 64so326017wri
-        for <linux-ide@vger.kernel.org>; Wed, 27 Oct 2004 07:49:55 -0700 (PDT)
-In-Reply-To: <16767.45494.863511.334215@alkaid.it.uu.se>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:45483 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262469AbUJ0OuE
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Oct 2004 10:50:04 -0400
+In-Reply-To: <00e801c4bc10$387e33b0$8c764109@tw.ibm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@csd.uu.se>
-Cc: CaT <cat@zip.com.au>, torvalds@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: IDE Linux <linux-ide@vger.kernel.org>
 
-On Wed, 27 Oct 2004 16:33:26 +0200, Mikael Pettersson <mikpe@csd.uu.se> wrote:
-> Bartlomiej Zolnierkiewicz writes:
+Albert Lee wrote:
+> Jeff:
 > 
-> 
->  > http://bugme.osdl.org/show_bug.cgi?id=2494
->  >
->  > On Wed, 27 Oct 2004 23:34:31 +1000, CaT <cat@zip.com.au> wrote:
->  > > On Wed, Oct 27, 2004 at 03:07:14PM +0200, Bartlomiej Zolnierkiewicz wrote:
->  > > > <bzolnier@trik.(none)> (04/10/26 1.2192)
->  > > >    [ide] pdc202xx_old: PDC20267 needs the same LBA48 fixup as PDC20265
->  > >
->  > > What would the symptoms of this bug be? I've got a PDC20267 and I'm
->  > > having a few issues transferring from hde to hdh (ie across two ports)
->  > > it seems. My work at duplicating things seems to work best when I do a
->  > > transfer like that rather then going from say, a totall different
->  > > controller to the pdc (hdh) or even from generated input to the pdc (hdh).
-> 
-> I see only one note where someone claims the '67 is affected.
-> What would trigger it? A large disk or just heavy I/O?
-> FWIW, my news server has received, stored, manipulated, and sent >500
-> gigabytes of data using a lowly 20267 add-on card in a 440BX mobo,
-> and has _never_ had any problems, and I/O is sometimes very heavy.
+>   Fix pata_pdc2027x incorrect pio_mask and mwdma_mask for your review.
+> (patch is against the libata-dev-2.6 tree.)
 
-request with number of sectors > 256 on LBA48 capable disk
-(!= large disk)
+patch applied.
+
+
+> Signed-off-by: Albert Lee<albertcc@tw.ibm.com>
+
+In addition to the last email (just sent), I have one further request:
+please add a space between "Albert Lee" and "<albertcc@tw.ibm.com>"
+
+Thanks,
+
+	Jeff
+
+
