@@ -1,64 +1,36 @@
-From: Andre Hedrick <andre@linux-ide.org>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] Bogus LBA48 drives
-Date: Tue, 30 Mar 2004 08:38:37 -0800 (PST)
+Date: Tue, 30 Mar 2004 11:50:51 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10403300821520.11654-100000@master.linux-ide.org>
-References: <Pine.GSO.4.58.0403301654300.9765@waterleaf.sonytel.be>
+Message-ID: <4069A56B.9060609@pobox.com>
+References: <Pine.LNX.4.10.10403300821520.11654-100000@master.linux-ide.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from astound-64-85-224-245.ca.astound.net ([64.85.224.245]:10507
-	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
-	id S263740AbUC3QnU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Mar 2004 11:43:20 -0500
-In-Reply-To: <Pine.GSO.4.58.0403301654300.9765@waterleaf.sonytel.be>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:19910 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S263743AbUC3QvJ
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Mar 2004 11:51:09 -0500
+In-Reply-To: <Pine.LNX.4.10.10403300821520.11654-100000@master.linux-ide.org>
 List-Id: linux-ide@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Lionel Bergeret <lbergeret@swing.be>, JunHyeok Heo <jhheo@idis.co.kr>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Andre Hedrick <andre@linux-ide.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Lionel Bergeret <lbergeret@swing.be>, JunHyeok Heo <jhheo@idis.co.kr>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+
+Andre Hedrick wrote:
+> Actually this issue an errata correction in ATA-6 and changed in ATA-7.
+> 
+> 48-bit command set support is different than capacity.
+> 
+> A fix that address the erratium is prefered, just need to take some time
+> to read it.
+
+Got a URL?
+
+I only see an ATA-6 errata that talks about Packet DMA...
+
+	Jeff
 
 
-Actually this issue an errata correction in ATA-6 and changed in ATA-7.
 
-48-bit command set support is different than capacity.
-
-A fix that address the erratium is prefered, just need to take some time
-to read it.
-
-Cheers,
-
-Andre Hedrick
-LAD Storage Consulting Group
-
-On Tue, 30 Mar 2004, Geert Uytterhoeven wrote:
-
-> 
-> Apparently some IDE drives (e.g. a pile of 80 GB ST380020ACE drives I have
-> access to) advertise to support LBA48, but don't, causing kernels that support
-> LBA48 (i.e. anything newer than 2.4.18, including 2.4.25 and 2.6.4) to fail on
-> them.  Older kernels (including 2.2.20 on the Debian woody CDs) work fine.
-> 
-> One problem with those drives is that the lba_capacity_2 field in their drive
-> identification is set to 0, making the IDE driver think the disk is 0 bytes
-> large. At first I tried modifying the driver to use lba_capacity if
-> lba_capacity_2 is set to 0, but this caused disk errors. So it looks like those
-> drives don't support the increased transfer size of LBA48 neither.
-> 
-> I added a workaround for these drives to both 2.4.25 and 2.6.4. I'll send
-> patches in follow-up emails.
-> 
-> BTW, this problem (incl. a small patch to fix it for 2.4.19, which doesn't work
-> on 2.4.25 anymore) was reported a while ago by JunHyeok Heo, cfr.
-> http://www.cs.helsinki.fi/linux/linux-kernel/2002-42/0312.html
-> 
-> Gr{oetje,eeting}s,
-> 
-> 						Geert
-> 
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-> 
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
-> 							    -- Linus Torvalds
-> 
 
