@@ -1,30 +1,32 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Fw: [Bugme-new] [Bug 1340] New: small FAT32 partitions cannot
- be used properly
-Date: Sun, 12 Oct 2003 12:51:54 -0700
+From: id ol <idol4232003@yahoo.com>
+Subject: PRD Table
+Date: Mon, 13 Oct 2003 10:41:01 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20031012125154.140d67c0.akpm@osdl.org>
-References: <20031010081436.7652c427.akpm@osdl.org>
-	<87llrrty3z.fsf@devron.myhome.or.jp>
-	<3F89400B.5020607@king.net.pl>
-	<87brsm8tg6.fsf@devron.myhome.or.jp>
-	<3F898EEA.6090907@king.net.pl>
-	<87zng6iass.fsf@devron.myhome.or.jp>
+Message-ID: <20031013174101.52992.qmail@web10003.mail.yahoo.com>
+References: <Pine.LNX.4.10.10310082359510.12324-100000@master.linux-ide.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:33771 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263519AbTJLTsu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Oct 2003 15:48:50 -0400
-In-Reply-To: <87zng6iass.fsf@devron.myhome.or.jp>
+Received: from web10003.mail.yahoo.com ([216.136.130.39]:40297 "HELO
+	web10003.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S261928AbTJMRlC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Oct 2003 13:41:02 -0400
+In-Reply-To: <Pine.LNX.4.10.10310082359510.12324-100000@master.linux-ide.org>
 List-Id: linux-ide@vger.kernel.org
-To: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-Cc: newchief@king.net.pl, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
+To: Andre Hedrick <andre@linux-ide.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: vatsa@in.ibm.com, lkcd-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp> wrote:
->
-> Andrew, this looks like IDE bug with PIO-mode. So could you please
->  handle the bugzilla? I don't know about bugzilla.
+Hi all,
 
-I sure will.  Thanks for working on this.
+I am running into some possible DMA-related problems
+with my system.  I am wondering, what is the easiest
+way to make the PRD Table region uncacheable?  I
+appreciate any tips that will point me in the right
+direction.
+
+Thanks!
+
+__________________________________
+Do you Yahoo!?
+The New Yahoo! Shopping - with improved product search
+http://shopping.yahoo.com
