@@ -1,68 +1,71 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [PATCH] updates to Vitesse SATA driver
-Date: Wed, 22 Sep 2004 13:13:28 -0700
+From: Kenneth Johansson <ken@kenjo.org>
+Subject: Annoying DVD and IRQ problem
+Date: Thu, 23 Sep 2004 00:28:43 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040922201327.GD151463@sgi.com>
-References: <8746466a04092114163b3c0618@mail.gmail.com> <20040922020614.GA148273@sgi.com> <8746466a0409220859ed0682f@mail.gmail.com> <8746466a04092210094f859468@mail.gmail.com>
+Message-ID: <1095892123.2779.12.camel@tiger>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:29384 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S266910AbUIVUNj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Sep 2004 16:13:39 -0400
-Content-Disposition: inline
-In-Reply-To: <8746466a04092210094f859468@mail.gmail.com>
+Received: from 1-1-4-20a.ras.sth.bostream.se ([82.182.72.90]:17332 "EHLO
+	garbo.kenjo.org") by vger.kernel.org with ESMTP id S268072AbUIVWae
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Sep 2004 18:30:34 -0400
+Received: from tiger.kenjo.org ([192.168.1.2])
+	by garbo.kenjo.org with esmtp (Exim 3.36 #1 (Debian))
+	id 1CAFbP-0005Kf-00
+	for <linux-ide@vger.kernel.org>; Thu, 23 Sep 2004 00:28:43 +0200
 List-Id: linux-ide@vger.kernel.org
-To: Dave <dave.jiang@gmail.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: linux-ide@vger.kernel.org
 
-On Wed, Sep 22, 2004 at 10:09:03AM -0700, Dave wrote:
-> On Wed, 22 Sep 2004 08:59:06 -0700, Dave <dave.jiang@gmail.com> wrote:
-> > On Tue, 21 Sep 2004 19:06:14 -0700, Jeremy Higdon <jeremy@sgi.com > wrote:
-> > > On Tue, Sep 21, 2004 at 02:16:46PM -0700, Dave wrote:
-> > > > After getting that working I noticed that the last_ctl value gets
-> > > > changed back by the LIBATA core and the Vitesse SATA driver depends on
-> > > > the previous value in order to unmask the interrupt. So it seems that
-> > > > there's no need to set/unset the interrupt masks in the first place if
-> > > > we set the CTL register with ATA_NIEN directly, which I believe is
-> > > > probably the way LIBATA intended the driver to do. After doing that
-> > > > everything seems to be working great. So I suppose
-> > > > vsc_intr_mask_update() is no longer needed probably.
-> > >
-> > > The chip specification says not to set it that way.  Are you using
-> > > the chip in DPA mode or PCI-IDE mode?  The driver assumes the former.  I
-> > > don't know why anyone would use the chip in PCI-IDE mode.
-> > 
-> > Hmmm...I did not see it in the spec. Can you provide the pointer to
-> > the spec please? Thanks! I am using it in DPA mode. If you are in
-> > PCI-IDE mode, all registers would reside in different BARs and the
-> > card wouldn't work anyways with that driver. I copied the section from
-> > sata_svw.c. And it seems to work just fine. I don't see how the
-> > previous method would be working. In vsc_sata_tf_load a compare is
-> > done between the tf->ctl and the ap->last_ctl. However, if I do it
-> > with the current method, I continue to see ap->last_ctl with ATA_NIEN
-> > cleared even though the previous value was set. Therefore the driver
-> > never unmask the IDE interrupt and thus hang.  What happened was, host
-> > 1, dev 0 was probed and was okay. Then it attempted to probe host 1,
-> > dev 1, which of course does not exist, so at exit, ata_irq_on() was
-> > called. With that the last_ctl was reset with ATA_NIEN cleared.
-> > Therefore when the driver does the compare of ctl with last_ctl, it
-> > sees no difference, and therefore interrupt mask never changed.
-> 
-> I see what you mean by the spec regarding the ATA_NIEN bit. ATA_NIEN
-> is reserved bit in DPA mode. I guess it still works. But to do the
-> things the right way now this becomes a problem since as I mentioned
-> above, libata-core can change the last_ctl value without the driver's
-> knowledge. So really we cannot always depend on last_ctl to be the
-> last_ctl the driver has set. I'm not exactly sure yet why the driver
-> works on IA in the current state. Everything tells me it shouldn't....
-> Unless there's something that I'm suppose to configure to force it not
-> probe device 1 since in SATA there's never device 1?
+I have a problem using the DVD drive under kernel 2.6 in all the
+versions I tested(up to 2.6.8.1). Since I do not use the dvd that often
+it has not been a big problem but now I starting to get tired of it. 
 
-I can tell you that it works fine on our Altix (IA64 Numa) boxes with
-1 - 4 drives attached.  I don't recall exactly how we tell libata that
-there is only one device per port -- there must be a parameter somewhere :-)
-I do remember that we had to explicitly tell the IDE layer about that,
-for the IDE version of the driver in lk2.4.
+First is there any valid way for the interrupt rate to drop below 1000 ?
+This is a sample from vmstat during a copy from the dvd drive.
+----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in    cs us sy id wa
+ 2  3      0   3812  21876 591388    0    0  2340 15260  455   230 25 75  0  0
+ 2  3      0   4700  21844 590828    0    0  1288     0  422   133 17 83  0  0
+ 2  4      0   4024  21828 592028    0    0  1288   136  233   121 11 89  0  0
+ 2  1      0   3856  21852 592272    0    0  2712   116  412   232 21 71  0  7
+ 2  2      0   3820  21876 592236    0    0  2736     0  330   214 17 83  0  0
+ 3  3      0   3840  20376 592924    0    0  2468     0  495   332 53 47  0  0
+ 3  3      0   4092  20396 592092    0    0  2612     0  794   257 29 71  0  0
+----
 
-jeremy
+The drive should also do a lot better than 2MB/sec it's spec is 8x for
++/-R and 12X DVD-rom 
+
+During use the mouse pointer sometimes get just crazy for a few seconds
+it seams like X is getting fake mouse and keyboard events. resulting in
+all sort of fun things ranging from the mouse pointer just moving around
+to quiting some program.
+
+It's also not possible to watch tv with tvtime at the same time as the
+dvd is in use due to to many lost frames. 
+
+0000:00:11.1 IDE interface: VIA Technologies, Inc.
+VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06)
+
+cat /proc/interrupts
+           CPU0
+  0:    7232433    IO-APIC-edge  timer
+  1:      11872    IO-APIC-edge  i8042
+  8:          4    IO-APIC-edge  rtc
+  9:          0   IO-APIC-level  acpi
+ 12:     150886    IO-APIC-edge  i8042
+ 15:     169584    IO-APIC-edge  ide1
+ 16:    7325765   IO-APIC-level  eth0, nvidia
+ 17:     205210   IO-APIC-level  libata
+ 18:      75514   IO-APIC-level  EMU10K1
+ 19:       5970   IO-APIC-level  bttv0
+ 21:         78   IO-APIC-level  uhci_hcd, uhci_hcd
+NMI:          0
+LOC:    7242394
+ERR:          0
+MIS:          4
+
+
+
