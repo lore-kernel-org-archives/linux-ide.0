@@ -1,54 +1,165 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] Some IDE chipsets are architecture-specific
-Date: Mon, 07 Mar 2005 11:58:59 -0500
-Message-ID: <422C8853.3030404@pobox.com>
-References: <20050307152803.GF28741@parcelfarce.linux.theplanet.co.uk>
+Subject: [BK PATCHES] 2.6.x libata updates
+Date: Mon, 07 Mar 2005 12:12:04 -0500
+Message-ID: <422C8B64.1020404@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:53126 "EHLO
+Content-Type: multipart/mixed;
+ boundary="------------090805060604010701020900"
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:60810 "EHLO
 	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261860AbVCGQ7R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Mar 2005 11:59:17 -0500
-In-Reply-To: <20050307152803.GF28741@parcelfarce.linux.theplanet.co.uk>
+	id S261310AbVCGRMT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Mar 2005 12:12:19 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Matthew Wilcox wrote:
-> Mark some chipset support as being for specific architectures.
-> I may have got some wrong, so please double-check.
-> 
-> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
-> 
-> Index: ./drivers/ide/Kconfig
-> ===================================================================
-> RCS file: /var/cvs/linux-2.6/drivers/ide/Kconfig,v
-> retrieving revision 1.25.2.1
-> diff -u -p -r1.25.2.1 Kconfig
-> --- ./drivers/ide/Kconfig	2 Mar 2005 11:19:06 -0000	1.25.2.1
-> +++ ./drivers/ide/Kconfig	7 Mar 2005 04:49:26 -0000
-> @@ -457,6 +457,7 @@ config BLK_DEV_AEC62XX
->  
->  config BLK_DEV_ALI15X3
->  	tristate "ALI M15x3 chipset support"
-> +	depends on X86
->  	help
->  	  This driver ensures (U)DMA support for ALI 1533, 1543 and 1543C
->  	  onboard chipsets.  It also tests for Simplex mode and enables
-
-these are in alphas, and others I think
+This is a multi-part message in MIME format.
+--------------090805060604010701020900
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
 
-> @@ -485,6 +486,7 @@ config WDC_ALI15X3
->  
->  config BLK_DEV_AMD74XX
->  	tristate "AMD and nVidia IDE support"
-> +	depends on X86 || PPC
->  	help
->  	  This driver adds explicit support for AMD-7xx and AMD-8111 chips
->  	  and also for the nVidia nForce chip.  This allows the kernel to
+--------------090805060604010701020900
+Content-Type: text/plain;
+ name="changelog.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="changelog.txt"
 
-x86-64 too I presume
+Please do a
 
+	bk pull bk://gkernel.bkbits.net/libata-2.6
+
+This will update the following files:
+
+ drivers/scsi/libata-core.c |   16 ++++++----------
+ drivers/scsi/sata_nv.c     |    6 ++++--
+ drivers/scsi/sata_sil.c    |    2 +-
+ drivers/scsi/sata_svw.c    |    4 ++--
+ drivers/scsi/sata_vsc.c    |    3 ++-
+ 5 files changed, 15 insertions(+), 16 deletions(-)
+
+through these ChangeSets:
+
+Adam J. Richter:
+  o ata_pci_remove_one used freed memory
+
+Adrian Bunk:
+  o drivers/scsi/sata_*: make code static
+
+
+--------------090805060604010701020900
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+--- a/drivers/scsi/libata-core.c	2005-03-07 12:11:31 -05:00
++++ b/drivers/scsi/libata-core.c	2005-03-07 12:11:31 -05:00
+@@ -3884,26 +3884,22 @@
+ 		ap = host_set->ports[i];
+ 
+ 		ata_scsi_release(ap->host);
+-		scsi_host_put(ap->host);
+-	}
+-
+-	pci_release_regions(pdev);
+-
+-	for (i = 0; i < host_set->n_ports; i++) {
+-		struct ata_ioports *ioaddr;
+-
+-		ap = host_set->ports[i];
+-		ioaddr = &ap->ioaddr;
+ 
+ 		if ((ap->flags & ATA_FLAG_NO_LEGACY) == 0) {
++			struct ata_ioports *ioaddr = &ap->ioaddr;
++
+ 			if (ioaddr->cmd_addr == 0x1f0)
+ 				release_region(0x1f0, 8);
+ 			else if (ioaddr->cmd_addr == 0x170)
+ 				release_region(0x170, 8);
+ 		}
++
++		scsi_host_put(ap->host);
+ 	}
+ 
+ 	kfree(host_set);
++
++	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+ 	dev_set_drvdata(dev, NULL);
+ }
+diff -Nru a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
+--- a/drivers/scsi/sata_nv.c	2005-03-07 12:11:31 -05:00
++++ b/drivers/scsi/sata_nv.c	2005-03-07 12:11:31 -05:00
+@@ -99,7 +99,8 @@
+ #define NV_MCP_SATA_CFG_20_SATA_SPACE_EN	0x04
+ 
+ static int nv_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
+-irqreturn_t nv_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
++static irqreturn_t nv_interrupt (int irq, void *dev_instance,
++				 struct pt_regs *regs);
+ static u32 nv_scr_read (struct ata_port *ap, unsigned int sc_reg);
+ static void nv_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
+ static void nv_host_stop (struct ata_host_set *host_set);
+@@ -257,7 +258,8 @@
+ MODULE_DEVICE_TABLE(pci, nv_pci_tbl);
+ MODULE_VERSION(DRV_VERSION);
+ 
+-irqreturn_t nv_interrupt (int irq, void *dev_instance, struct pt_regs *regs)
++static irqreturn_t nv_interrupt (int irq, void *dev_instance,
++				 struct pt_regs *regs)
+ {
+ 	struct ata_host_set *host_set = dev_instance;
+ 	struct nv_host *host = host_set->private_data;
+diff -Nru a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+--- a/drivers/scsi/sata_sil.c	2005-03-07 12:11:31 -05:00
++++ b/drivers/scsi/sata_sil.c	2005-03-07 12:11:31 -05:00
+@@ -78,7 +78,7 @@
+ 
+ 
+ /* TODO firmware versions should be added - eric */
+-struct sil_drivelist {
++static const struct sil_drivelist {
+ 	const char * product;
+ 	unsigned int quirk;
+ } sil_blacklist [] = {
+diff -Nru a/drivers/scsi/sata_svw.c b/drivers/scsi/sata_svw.c
+--- a/drivers/scsi/sata_svw.c	2005-03-07 12:11:31 -05:00
++++ b/drivers/scsi/sata_svw.c	2005-03-07 12:11:31 -05:00
+@@ -156,7 +156,7 @@
+  *	spin_lock_irqsave(host_set lock)
+  */
+ 
+-void k2_bmdma_setup_mmio (struct ata_queued_cmd *qc)
++static void k2_bmdma_setup_mmio (struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	unsigned int rw = (qc->tf.flags & ATA_TFLAG_WRITE);
+@@ -186,7 +186,7 @@
+  *	spin_lock_irqsave(host_set lock)
+  */
+ 
+-void k2_bmdma_start_mmio (struct ata_queued_cmd *qc)
++static void k2_bmdma_start_mmio (struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	void *mmio = (void *) ap->ioaddr.bmdma_addr;
+diff -Nru a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
+--- a/drivers/scsi/sata_vsc.c	2005-03-07 12:11:31 -05:00
++++ b/drivers/scsi/sata_vsc.c	2005-03-07 12:11:31 -05:00
+@@ -155,7 +155,8 @@
+  *
+  * Read the interrupt register and process for the devices that have them pending.
+  */
+-irqreturn_t vsc_sata_interrupt (int irq, void *dev_instance, struct pt_regs *regs)
++static irqreturn_t vsc_sata_interrupt (int irq, void *dev_instance,
++				       struct pt_regs *regs)
+ {
+ 	struct ata_host_set *host_set = dev_instance;
+ 	unsigned int i;
+
+--------------090805060604010701020900--
