@@ -1,143 +1,148 @@
-From: Aron Rubin <arubin@atl.lmco.com>
-Subject: [patch 2.6.1]  Silicon Image 3512 SATA Controller - Tested
-Date: Mon, 12 Jan 2004 09:46:01 -0500
+From: Eric Wong <normalperson@yhbt.net>
+Subject: Re: Success(?) with SiI + Seagate pessimistic fix disabled.
+Date: Mon, 12 Jan 2004 08:14:50 -0800
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4002B329.2040301@atl.lmco.com>
+Message-ID: <20040112161450.GA11636@Mayonaise>
+References: <20040109054800.GA32112@Mayonaise> <20040109090003.GA3032@Mayonaise> <400105E6.6060008@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030005030704040607070402"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [192.35.37.50] ([192.35.37.50]:15556 "EHLO
-	enterprise.atl.lmco.com") by vger.kernel.org with ESMTP
-	id S266222AbUALOqE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Jan 2004 09:46:04 -0500
-Received: from atl.lmco.com (druidia [166.17.245.107])
-	by enterprise.atl.lmco.com (Postfix) with ESMTP id EE5D2C1D3A
-	for <linux-ide@vger.kernel.org>; Mon, 12 Jan 2004 09:46:01 -0500 (EST)
+Received: from user-0c8gj4g.cable.mindspring.com ([24.136.76.144]:16533 "EHLO
+	mayonaise.dyndns.org") by vger.kernel.org with ESMTP
+	id S266198AbUALQOf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Jan 2004 11:14:35 -0500
+Content-Disposition: inline
+In-Reply-To: <400105E6.6060008@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------030005030704040607070402
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Jeff Garzik <jgarzik@pobox.com> wrote:
+> Eric Wong wrote:
+> >Eric Wong <normalperson@yhbt.net> wrote:
+> 
+> Well, if you're motivated, there is a blacklist...
+> 
+> google for "mod15write" and click on the first link.
 
-This patch enables the Silicon Image 3512 SATA Controller and has been
-tested and functioning without any apparent bugs (I do not have a full
-test suite but I am not booting off a device attached to this
-controller). This patch is against the Dave Jones 2.6.1-1.34 kernel
-source rpm.
+Cool.  I found some info on the Maxtor problem as well.  The blacklist
+is ready for the Maxtor fix, but I chickened out and kept the original
+pessimistic fix for those drives for the time being.  Seagates should be
+correct, however.
 
-You may remember I was trying to get help on this chipset before. My
-patch is simply a duplicate of the entries for the 3112 chipset. It did
-not work fully with prior kernels, giving me a "Interrupt Lost" errors.
-Whatever else was done to 2.6.1 had made it happy again. Also I did not
-have to use any special commandline options.
-
-Aron
-
--- 
-
-ssh aron@rubinium.org cat /dev/brain | grep ^work:
-
-Aron Rubin                       Member, Engineering Staff
-Lockheed Martin                  E-Mail: arubin@atl.lmco.com
-Advanced Technology Laboratories Phone:  856.792.9865
-3 Executive Campus               Fax:    856.792.9930
-Cherry Hill, NJ USA 08002        Web:    http://www.atl.lmco.com
-
-
---------------030005030704040607070402
-Content-Type: text/plain;
- name="SiI3512-2004011201.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="SiI3512-2004011201.patch"
-
---- linux-2.6.1-1.34/include/linux/pci_ids.h.orig	2004-01-11 10:30:11.000000000 -0500
-+++ linux-2.6.1-1.34/include/linux/pci_ids.h	2004-01-11 10:44:25.000000000 -0500
-@@ -883,6 +883,7 @@
+--- a/drivers/scsi/sata_sil.c	2004-01-11 22:47:39.000000000 -0800
++++ b/drivers/scsi/sata_sil.c	2004-01-12 01:56:28.231405184 -0800
+@@ -37,6 +37,9 @@
+ #define DRV_NAME	"ata_sil"
+ #define DRV_VERSION	"0.51"
  
- #define PCI_DEVICE_ID_SII_680		0x0680
- #define PCI_DEVICE_ID_SII_3112		0x3112
-+#define PCI_DEVICE_ID_SII_3512		0x3512
- #define PCI_DEVICE_ID_SII_1210SA	0x0240
- 
- #define PCI_VENDOR_ID_VISION		0x1098
---- linux-2.6.1-1.34/drivers/scsi/sata_sil.c.orig	2004-01-11 21:41:36.968803995 -0500
-+++ linux-2.6.1-1.34/drivers/scsi/sata_sil.c	2004-01-11 10:43:09.000000000 -0500
-@@ -39,6 +39,7 @@
- 
++#define SIL_QUIRK_MOD15WRITE	0x01
++#define SIL_QUIRK_UDMA5MAX	0x02
++
  enum {
  	sil_3112		= 0,
-+	sil_3512		= 1,
  
- 	SIL_IDE0_TF		= 0x80,
- 	SIL_IDE0_CTL		= 0x8A,
-@@ -62,6 +63,7 @@
- 
- static struct pci_device_id sil_pci_tbl[] = {
- 	{ 0x1095, 0x3112, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
-+	{ 0x1095, 0x3512, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3512 },
+@@ -65,6 +68,28 @@ static struct pci_device_id sil_pci_tbl[
  	{ }	/* terminate list */
  };
  
-@@ -121,6 +123,15 @@
- 		.udma_mask	= 0x7f,			/* udma0-6; FIXME */
- 		.port_ops	= &sil_ops,
- 	},
-+	/* sil_3512 */
-+	{
-+		.sht		= &sil_sht,
-+		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-+				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
-+		.pio_mask	= 0x03,			/* pio3-4 */
-+		.udma_mask	= 0x7f,			/* udma0-6; FIXME */
-+		.port_ops	= &sil_ops,
-+	},
- };
++
++/* TODO firmware versions should be added - eric */
++struct sil_drivelist {
++	const char * product;
++	unsigned int quirk;
++} sil_blacklist [] = {
++	{ "ST320012AS",		SIL_QUIRK_MOD15WRITE },
++	{ "ST330013AS",		SIL_QUIRK_MOD15WRITE },
++	{ "ST340017AS",		SIL_QUIRK_MOD15WRITE },
++	{ "ST360015AS",		SIL_QUIRK_MOD15WRITE },
++	{ "ST380023AS",		SIL_QUIRK_MOD15WRITE },
++	{ "ST3120023AS",	SIL_QUIRK_MOD15WRITE },
++	{ "ST340014ASL",	SIL_QUIRK_MOD15WRITE },
++	{ "ST360014ASL",	SIL_QUIRK_MOD15WRITE },
++	{ "ST380011ASL",	SIL_QUIRK_MOD15WRITE },
++	{ "ST3120022ASL",	SIL_QUIRK_MOD15WRITE },
++	{ "ST3160021ASL",	SIL_QUIRK_MOD15WRITE },
++	{ "Maxtor 4D060H3                          DAK05GK0",
++		SIL_QUIRK_UDMA5MAX },
++	{ }
++};
++
+ static struct pci_driver sil_pci_driver = {
+ 	.name			= DRV_NAME,
+ 	.id_table		= sil_pci_tbl,
+@@ -182,16 +207,52 @@ static void sil_scr_write (struct ata_po
+  *	information on these errata, I will create a more exhaustive
+  *	list, and apply the fixups to only the specific
+  *	devices/hosts/firmwares that need it.
++ *
++ *	20040111 - Seagate drives affected by the Mod15Write bug are blacklisted
++ *	The Maxtor quirk is in the blacklist, but I'm keeping the original
++ *	pessimistic fix for the following reasons:
++ *	- There seems to be less info on it, only one device gleaned off the
++ *	Windows	driver, maybe only one is affected.  More info would be greatly
++ *	appreciated.
++ *	- But then again UDMA5 is hardly anything to complain about
+  */
+ static void sil_dev_config(struct ata_port *ap, struct ata_device *dev)
+ {
++	unsigned int n, quirks = 0;
++	u32 class_rev = 0;
+ 	const char *s = &dev->product[0];
+ 	unsigned int len = strnlen(s, sizeof(dev->product));
  
- MODULE_AUTHOR("Jeff Garzik");
---- linux-2.6.1-1.34/drivers/ide/pci/siimage.c.orig	2004-01-11 10:14:19.000000000 -0500
-+++ linux-2.6.1-1.34/drivers/ide/pci/siimage.c	2004-01-11 10:44:12.000000000 -0500
-@@ -55,6 +55,7 @@
- 	switch(pdev->device)
- 	{
- 		case PCI_DEVICE_ID_SII_3112:
-+		case PCI_DEVICE_ID_SII_3512:
- 		case PCI_DEVICE_ID_SII_1210SA:
- 			return 1;
- 		case PCI_DEVICE_ID_SII_680:
-@@ -1179,6 +1180,7 @@
- 	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_SII_680,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_SII_3112, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
- 	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_SII_1210SA, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
-+	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_SII_3512, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3},
- 	{ 0, },
- };
++	pci_read_config_dword(ap->host_set->pdev, PCI_CLASS_REVISION, &class_rev);
++	class_rev &= 0xff;
++
+ 	/* ATAPI specifies that empty space is blank-filled; remove blanks */
+ 	while ((len > 0) && (s[len - 1] == ' '))
+ 		len--;
  
---- linux-2.6.1-1.34/drivers/ide/pci/siimage.h.orig	2004-01-11 10:15:21.000000000 -0500
-+++ linux-2.6.1-1.34/drivers/ide/pci/siimage.h	2004-01-11 10:43:41.000000000 -0500
-@@ -82,6 +82,18 @@
- 		.enablebits	= {{0x00,0x00,0x00}, {0x00,0x00,0x00}},
- 		.bootable	= ON_BOARD,
- 		.extra		= 0,
-+	},{	/* 3 */
-+		.vendor		= PCI_VENDOR_ID_CMD,
-+		.device		= PCI_DEVICE_ID_SII_3512,
-+		.name		= "SiI3512 Serial ATA",
-+		.init_chipset	= init_chipset_siimage,
-+		.init_iops	= init_iops_siimage,
-+		.init_hwif	= init_hwif_siimage,
-+		.channels	= 2,
-+		.autodma	= AUTODMA,
-+		.enablebits	= {{0x00,0x00,0x00}, {0x00,0x00,0x00}},
-+		.bootable	= ON_BOARD,
-+		.extra		= 0,
- 	},{
- 		.vendor		= 0,
- 		.device		= 0,
++	for (n = 0; sil_blacklist[n].product; n++) 
++		if ( ( strlen(sil_blacklist[n].product) == len )
++		&& strncmp(sil_blacklist[n].product,s,len) )
++			quirks = sil_blacklist[n].quirk;
++	
++	/* limit requests to 15 sectors */
++	if ( (class_rev <= 0x01) && (quirks & SIL_QUIRK_MOD15WRITE) ) {
++		printk(KERN_INFO "ata%u(%u): applying Seagate errata fix\n",
++		       ap->id, dev->devno);
++		ap->host->max_sectors = 15;
++		ap->host->hostt->max_sectors = 15;
++		return;
++	}
++
++	/* limit to udma5 */
++	/* is this for (class_rev <= 0x01) only, too? */
++	if ( quirks & SIL_QUIRK_UDMA5MAX ) {
++		printk(KERN_INFO "ata%u(%u): applying Maxtor errata fix %s\n",
++		       ap->id, dev->devno, s);
++		ap->udma_mask &= ATA_UDMA5;
++		return;
++	}
++
+ 	/* limit to udma5 */
+ 	if (!memcmp(s, "Maxtor ", 7)) {
+ 		printk(KERN_INFO "ata%u(%u): applying pessimistic Maxtor errata fix\n",
+@@ -199,18 +260,6 @@ static void sil_dev_config(struct ata_po
+ 		ap->udma_mask &= ATA_UDMA5;
+ 		return;
+ 	}
+-
+-	/* limit requests to 15 sectors */
+-	if ((len > 4) && (!memcmp(s, "ST", 2))) {
+-		if ((!memcmp(s + len - 2, "AS", 2)) ||
+-		    (!memcmp(s + len - 3, "ASL", 3))) {
+-			printk(KERN_INFO "ata%u(%u): applying pessimistic Seagate errata fix\n",
+-			       ap->id, dev->devno);
+-			ap->host->max_sectors = 15;
+-			ap->host->hostt->max_sectors = 15;
+-			return;
+-		}
+-	}
+ }
+ 
+ static void sil_set_piomode (struct ata_port *ap, struct ata_device *adev,
 
-
---------------030005030704040607070402--
-
+-- 
+Eric Wong
