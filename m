@@ -1,108 +1,107 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] ide-dma.c: remove unused/obsoleted code for hwif->mmio == 1
-Date: Tue, 16 Mar 2004 23:21:06 +0100
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: [janitor] use kernel min/max (1/2)
+Date: Tue, 16 Mar 2004 16:34:00 -0800
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200403162321.06998.bzolnier@elka.pw.edu.pl>
+Message-ID: <20040316163400.553e96b3.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:56518 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261760AbUCPWOW
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Mar 2004 17:14:22 -0500
-Content-Disposition: inline
+Received: from fw.osdl.org ([65.172.181.6]:64682 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261875AbUCQAiD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Mar 2004 19:38:03 -0500
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: bart <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org
+
+Hi,
+
+Please apply to 2.6.current.
+
+Thanks,
+--
+~Randy
 
 
-[IDE] ide-dma.c: remove unused/obsoleted code for hwif->mmio == 1
+From: Michael Veeck <michael.veeck@gmx.net>
 
-All users of hwif->mmio correctly handle resources themselves
-(hwif->mmio == 2) so remove ide_mmio_dma() and ide_release_mmio_dma().
 
- linux-2.6.5-rc1-root/drivers/ide/ide-dma.c |   47 -----------------------------
- 1 files changed, 1 insertion(+), 46 deletions(-)
+Patch (against 2.6.3) removes unnecessary min/max macros and changes
+calls to use kernel.h macros instead.
 
-diff -puN drivers/ide/ide-dma.c~ide_mmio_dma drivers/ide/ide-dma.c
---- linux-2.6.5-rc1/drivers/ide/ide-dma.c~ide_mmio_dma	2004-03-16 23:10:14.722153232 +0100
-+++ linux-2.6.5-rc1-root/drivers/ide/ide-dma.c	2004-03-16 23:10:14.726152624 +0100
-@@ -883,16 +883,6 @@ int ide_release_dma_engine (ide_hwif_t *
- 	return 1;
- }
+Regards
+Michael
+
+
+---
+
+ linux-264-rc2-kj1-rddunlap/drivers/ide/ide-cd.c   |    8 ++++----
+ linux-264-rc2-kj1-rddunlap/drivers/ide/ide-cd.h   |    2 --
+ linux-264-rc2-kj1-rddunlap/drivers/ide/ide-tape.c |    2 +-
+ 3 files changed, 5 insertions(+), 7 deletions(-)
+
+diff -puN drivers/ide/ide-cd.c~drivers_ide_minmax drivers/ide/ide-cd.c
+--- linux-264-rc2-kj1/drivers/ide/ide-cd.c~drivers_ide_minmax	2004-03-08 16:48:59.000000000 -0800
++++ linux-264-rc2-kj1-rddunlap/drivers/ide/ide-cd.c	2004-03-08 16:48:59.000000000 -0800
+@@ -1012,7 +1012,7 @@ static void cdrom_buffer_sectors (ide_dr
+ 	struct cdrom_info *info = drive->driver_data;
  
--int ide_release_mmio_dma (ide_hwif_t *hwif)
--{
--	if ((hwif->dma_extra) && (hwif->channel == 0))
--		release_mem_region((hwif->dma_base + 16), hwif->dma_extra);
--	release_mem_region(hwif->dma_base, 8);
--	if (hwif->dma_base2)
--		release_mem_region(hwif->dma_base, 8);
--	return 1;
--}
+ 	/* Number of sectors to read into the buffer. */
+-	int sectors_to_buffer = MIN (sectors_to_transfer,
++	int sectors_to_buffer = min_t(int, sectors_to_transfer,
+ 				     (SECTOR_BUFFER_SIZE >> SECTOR_BITS) -
+ 				       info->nsectors_buffered);
+ 
+@@ -1161,7 +1161,7 @@ static ide_startstop_t cdrom_read_intr (
+ 
+ 	/* First, figure out if we need to bit-bucket
+ 	   any of the leading sectors. */
+-	nskip = MIN((int)(rq->current_nr_sectors - bio_cur_sectors(rq->bio)), sectors_to_transfer);
++	nskip = min_t(int, (rq->current_nr_sectors - bio_cur_sectors(rq->bio)), sectors_to_transfer);
+ 
+ 	while (nskip > 0) {
+ 		/* We need to throw away a sector. */
+@@ -1191,7 +1191,7 @@ static ide_startstop_t cdrom_read_intr (
+ 			/* Transfer data to the buffers.
+ 			   Figure out how many sectors we can transfer
+ 			   to the current buffer. */
+-			this_transfer = MIN (sectors_to_transfer,
++			this_transfer = min_t(int, sectors_to_transfer,
+ 					     rq->current_nr_sectors);
+ 
+ 			/* Read this_transfer sectors
+@@ -1907,7 +1907,7 @@ static ide_startstop_t cdrom_write_intr(
+ 		/*
+ 		 * Figure out how many sectors we can transfer
+ 		 */
+-		this_transfer = MIN(sectors_to_transfer,rq->current_nr_sectors);
++		this_transfer = min_t(int, sectors_to_transfer,rq->current_nr_sectors);
+ 
+ 		while (this_transfer > 0) {
+ 			HWIF(drive)->atapi_output_bytes(drive, rq->buffer, SECTOR_SIZE);
+diff -puN drivers/ide/ide-cd.h~drivers_ide_minmax drivers/ide/ide-cd.h
+--- linux-264-rc2-kj1/drivers/ide/ide-cd.h~drivers_ide_minmax	2004-03-08 16:48:59.000000000 -0800
++++ linux-264-rc2-kj1-rddunlap/drivers/ide/ide-cd.h	2004-03-08 16:48:59.000000000 -0800
+@@ -54,8 +54,6 @@
+ 
+ #define BLOCKS_PER_FRAME	(CD_FRAMESIZE / BLOCK_SIZE)
+ 
+-#define MIN(a,b) ((a) < (b) ? (a) : (b))
 -
- int ide_release_iomio_dma (ide_hwif_t *hwif)
- {
- 	if ((hwif->dma_extra) && (hwif->channel == 0))
-@@ -914,8 +904,6 @@ int ide_release_dma (ide_hwif_t *hwif)
- 		return 1;
- 
- 	ide_release_dma_engine(hwif);
--	if (hwif->mmio == 1)
--		return ide_release_mmio_dma(hwif);
- 	return ide_release_iomio_dma(hwif);
- }
- 
-@@ -939,38 +927,6 @@ int ide_allocate_dma_engine (ide_hwif_t 
- 	return 1;
- }
- 
--int ide_mmio_dma (ide_hwif_t *hwif, unsigned long base, unsigned int ports)
--{
--	printk(KERN_INFO "    %s: MMIO-DMA at 0x%08lx-0x%08lx",
--		hwif->name, base, base + ports - 1);
--	if (!request_mem_region(base, ports, hwif->name))
--		goto fail;
--	hwif->dma_base = base;
--	if ((hwif->cds->extra) && (hwif->channel == 0)) {
--		if (!request_region(base+16, hwif->cds->extra, hwif->cds->name))
--			goto release_mem;
--		hwif->dma_extra = hwif->cds->extra;
--	}
--	
--	if(hwif->mate)
--		hwif->dma_master = (hwif->channel) ? hwif->mate->dma_base : base;
--	else
--		hwif->dma_master = base;
--	if (hwif->dma_base2) {
--		if (!request_mem_region(hwif->dma_base2, ports, hwif->name))
--			goto release_io;
--	}
--	return 0;
--
--release_mem:
--	release_mem_region(base, ports);
--release_io:
--	release_region(base+16, hwif->cds->extra);
--fail:
--	printk(" -- Error, MMIO ports already in use.\n");
--	return 1;
--}
--
- int ide_mapped_mmio_dma (ide_hwif_t *hwif, unsigned long base, unsigned int ports)
- {
- 	printk(KERN_INFO "    %s: MMIO-DMA ", hwif->name);
-@@ -1022,8 +978,7 @@ int ide_dma_iobase (ide_hwif_t *hwif, un
- {
- 	if (hwif->mmio == 2)
- 		return ide_mapped_mmio_dma(hwif, base,ports);
--	if (hwif->mmio == 1)
--		return ide_mmio_dma(hwif, base, ports);
-+	BUG_ON(hwif->mmio == 1);
- 	return ide_iomio_dma(hwif, base, ports);
- }
- 
+ /* special command codes for strategy routine. */
+ #define PACKET_COMMAND        4315
+ #define REQUEST_SENSE_COMMAND 4316
+diff -puN drivers/ide/ide-tape.c~drivers_ide_minmax drivers/ide/ide-tape.c
+--- linux-264-rc2-kj1/drivers/ide/ide-tape.c~drivers_ide_minmax	2004-03-08 16:48:59.000000000 -0800
++++ linux-264-rc2-kj1-rddunlap/drivers/ide/ide-tape.c	2004-03-08 16:48:59.000000000 -0800
+@@ -4698,7 +4698,7 @@ static void idetape_setup (ide_drive_t *
+ 	 *	Ensure that the number we got makes sense; limit
+ 	 *	it within IDETAPE_DSC_RW_MIN and IDETAPE_DSC_RW_MAX.
+ 	 */
+-	tape->best_dsc_rw_frequency = max((unsigned long) min(t, (unsigned long) IDETAPE_DSC_RW_MAX), (unsigned long) IDETAPE_DSC_RW_MIN);
++	tape->best_dsc_rw_frequency = max_t(unsigned long, min_t(unsigned long, t, IDETAPE_DSC_RW_MAX), IDETAPE_DSC_RW_MIN);
+ 	printk(KERN_INFO "ide-tape: %s <-> %s: %dKBps, %d*%dkB buffer, "
+ 		"%dkB pipeline, %lums tDSC%s\n",
+ 		drive->name, tape->name, tape->capabilities.speed,
 
 _
-
