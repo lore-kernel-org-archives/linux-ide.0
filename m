@@ -1,62 +1,119 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sil Mod15Write quirk workaround patch for vanilla kernel
- avaialble.
-Date: Fri, 01 Apr 2005 07:51:28 +0900
-Message-ID: <424C7EF0.5000206@gmail.com>
-References: <424C10C3.9080102@gmail.com> <20050331111044.4a3672cd@homer.sarvega.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: info@qsv16.com
+Subject: =?ISO-8859-1?Q?=20=1B$B<d$7$,$j20$N5?= =?ISO-8859-1?Q?.J}$N$=3F$a$K=1B(B?=
+Date: 31 Mar 2005 20:18:32 +0900
+Message-ID: <20050331111832.4556.qmail@mail.qsv16.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.193]:13443 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262043AbVCaWvg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Mar 2005 17:51:36 -0500
-Received: by rproxy.gmail.com with SMTP id j1so506076rnf
-        for <linux-ide@vger.kernel.org>; Thu, 31 Mar 2005 14:51:34 -0800 (PST)
-In-Reply-To: <20050331111044.4a3672cd@homer.sarvega.com>
+Received: from [211.36.37.50] ([211.36.37.50]:59331 "HELO mail.qsv16.com")
+	by vger.kernel.org with SMTP id S262588AbVCaXo2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Mar 2005 18:44:28 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Lash <jkl@sarvega.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, mage@adamant.ua
+To: linux-ide@vger.kernel.org
 
-  Hello, John.
 
-John Lash wrote:
-> On Fri, 01 Apr 2005 00:01:23 +0900
-> Tejun Heo <htejun@gmail.com> wrote:
-> 
-> 
->> Hello, guys.
->>
->> I  generated m16w workaround patch for 2.6.11.6 (by just removing two
->>lines :-) and set up a page regarding m15w quirk and the workaournd.
->>I'm planning on updating m15w patch against the vanilla tree until it
->>gets into the mainline so that impatient users can try out and it gets
->>more testing.
->>
->> http://home-tj.org/m15w
->>
->> Thanks.
->>
->>-- 
->>tejun
->>
-> 
-> 
-> Tejun,
-> 
-> I applied the patch to a clean 2.6.11.6 kernel and got an unresolved
-> symbol error for "ATA_TFLAG_LBA". I tried changing that to "ATA_TFLAG_LBA48" and
-> it compiles and runs.
-> 
-> So far, no problems. Thanks a lot for the patch.
-> 
-> --john
 
-  I'm sorry.  I uploaded the original patch against libata-dev-2.6 tree. 
-  The two BUG_ON() lines should just be removed.  I've uploaded fixed 
-patch.  Thanks for pointing out.
+○゜゜。 ━━━━━━━━━━○ ━━━━━○━━━━━━━━━
 
--- 
-tejun
+゜　ｏ　　　　　　　　　　　　　　　　　。　　　　　　　 ｏ　
 
+ 　 　　 ｏ゜　　‥…━　出　会　い　PC　 ━…‥　　　
+
+　　　 ○　　ｏ　　゜ｏ　　 　　　　　　　　　　　　　　　　
+
+━━━　○　ｏ　━━━━━━━━━━━━━━━━━━━━　○　
+
+
+
+
+
+￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣
+
+　　　　　　　　 本気で逢える　お勧めサイト
+
+┌───────────────────────────┐
+
+　　　　　　　　◆只今ポイント大幅サービス中◆
+
+　　　　　
+
+　　『本気』でヤリたいなら、まずはご近所検索でこちらから
+
+　　　　　↓　↓　↓　↓　↓　↓　↓　↓　↓　↓　↓
+
+　　　http://com.deai-pc.com/?num=5001
+
+
+
+ ●サイト内書き込み紹介
+
+
+
+・ゆき：22歳　『恋人募集』
+
+
+
+今日みたいな日は大好きな人と一緒にいたいなぁ☆ずっと
+
+くっついてイチャイチャするんだぁ♪そんなふうにしてくれる人
+
+探してるヨ！ラブもしたいなぁ〜☆
+
+
+
+
+
+・真奈美：20歳　『遊び相手募集』
+
+
+
+彼氏が本当に欲しいけど・・・そういうの苦手で出会いもないので
+
+困ってます^^;誰かまずは遊んだりできる友達になりたいな☆
+
+今二十歳です♪
+
+
+
+
+
+〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓
+
+
+
+
+
+【出会いサイト】が氾濫しまくってる中、真剣に出会える
+
+相手を探している人が多いのが、我がサイトの特徴ですね。
+
+
+
+女性登録数の多さ”業界NO1”を誇る超人気サイト
+
+こちらからまずはお試し登録からはじめてみてはどうですか？
+
+
+
+　　　　　↓　↓　↓　↓　↓　↓　↓
+
+　　http://com.deai-pc.com/index.php?num=601
+
+
+
+
+
+〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓
+
+
+
+サイト内のやり取りは全て24時間管理のセキュリティと
+
+最新のネット技術によりしっかり保護され漏洩される事はございません。
+
+お客様からの信頼に支えられ運営させて頂いています、自信を持って
+
+お客様の情報をお守り致します。
+
+
+
+提供：de@i PC
