@@ -1,41 +1,32 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Driver retries disk errors.
-Date: Tue, 31 Aug 2004 17:56:53 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040831155653.GD17261@harddisk-recovery.com>
-References: <20040830163931.GA4295@bitwizard.nl> <1093952715.32684.12.camel@localhost.localdomain> <20040831135403.GB2854@bitwizard.nl> <1093961570.597.2.camel@localhost.localdomain>
+Date: Tue, 31 Aug 2004 16:13:54 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1093965233.599.8.camel@localhost.localdomain>
+References: <20040830163931.GA4295@bitwizard.nl>
+	 <1093952715.32684.12.camel@localhost.localdomain>
+	 <20040831135403.GB2854@bitwizard.nl>
+	 <1093961570.597.2.camel@localhost.localdomain>
+	 <20040831155653.GD17261@harddisk-recovery.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from users.linvision.com ([62.58.92.114]:30936 "HELO bitwizard.nl")
-	by vger.kernel.org with SMTP id S268738AbUHaP4y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Aug 2004 11:56:54 -0400
-Content-Disposition: inline
-In-Reply-To: <1093961570.597.2.camel@localhost.localdomain>
-List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261239AbUHaQQB@vger.kernel.org>
+In-Reply-To: <20040831155653.GD17261@harddisk-recovery.com>
+To: Erik Mouw <erik@harddisk-recovery.com>
 Cc: Rogier Wolff <R.E.Wolff@harddisk-recovery.nl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-On Tue, Aug 31, 2004 at 03:12:52PM +0100, Alan Cox wrote:
-> On Maw, 2004-08-31 at 14:54, Rogier Wolff wrote:
-> > How about we set the num-retries to 1, and increase to 8 for
-> > "weird devices" (floppy, MO), and older drives. 
-> 
-> Disagree. I want it robust. If you want to set low retry counts then
-> the user should do so for special cases like forensics.
+On Maw, 2004-08-31 at 16:56, Erik Mouw wrote:
+> The SCSI disk driver has been doing a single retry for quite some time
+> and it hasn't really bitten people. Why would the IDE disk driver be
+> different? The only case I can imagine a retry would be OK, is when we
+> get an UDMA CRC error (caused by bad cables).
 
-The SCSI disk driver has been doing a single retry for quite some time
-and it hasn't really bitten people. Why would the IDE disk driver be
-different? The only case I can imagine a retry would be OK, is when we
-get an UDMA CRC error (caused by bad cables).
+Retries also pop up in other less obvious cases and conveniently paper
+over a wide variety of timeouts, power management quirks and drives just
+having a random fit. Eight is probably excessive in all cases.
 
-(OK, for SCSI drives you have a lot more control about how a drive
-should treat errors, but the kernel will not retry a block when the
-drive reported it's bad.)
+For non hard disk cases many devices do want and need retry.
 
-
-Erik
-
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
+Alan
