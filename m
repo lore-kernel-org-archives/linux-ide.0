@@ -1,47 +1,31 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: SATA ATAPI UDMA - first in Linux
-Date: 14 May 2004 14:19:50 -0600
+From: Leon Woestenberg <leonw@mailcan.com>
+Subject: Re: [PATCH] libata atapi work #5
+Date: Fri, 14 May 2004 22:23:56 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1084565990.3084.36.camel@patibmrh9>
-References: <1084563800.8752.53.camel@patibmrh9><40A52683.8050604@pobox.com>
+Message-ID: <40A52ADC.6060600@mailcan.com>
+References: <1084560167.8752.7.camel@patibmrh9> <40A5195C.2000402@pobox.com>	<1084562845.8752.37.camel@patibmrh9>  <40A5225B.9000907@pobox.com> <1084564801.3084.13.camel@patibmrh9> <40A528FE.8040301@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:5344 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S262585AbUENUUO
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 May 2004 16:20:14 -0400
-In-Reply-To: <40A52683.8050604@pobox.com>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:20432 "EHLO
+	out2.smtp.messagingengine.com") by vger.kernel.org with ESMTP
+	id S262605AbUENUX7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 May 2004 16:23:59 -0400
+In-Reply-To: <40A528FE.8040301@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>
 
-> Windows and Linux have both supported SATA ATAPI -- which implicitly 
-> includes UDMA from looking at the bridges -- for a while now, in various 
->   OS drivers.
+Hello Jeff,
 
-SATA ATAPI PIO I find, easy, yes, immediately available in boot-from-CD
-Linux such as Knoppix.
+Jeff Garzik wrote:
+> All good EE designs are concurrent rather than sequential ;-)
+> 
+> But I'm a computer scientist, what do I know...
+ >
+A rough guess: POSIX Threads :-)
 
-SATA ATA UDMA I have found.
+And yes, that's IE*EE* POSIX Threads ;-)
 
-SATA ATAPI UDMA I have not found.  Not in Linux, not in Windows.
-
-Perhaps I should blame my Silicon Image 3611CT80 1.4 bridge, and buy
-another?
-
-Do we all agree SATA ATAPI UDMA is missing from Linux-2.6.6 `make
-defconfig`?
-
-Can any of us suggest other .config options to try?
-
-> If you have an ICH5 or Silicon Image 3112, I bet you could use your 
-> ATAPI device using the existing Linux IDE driver...
-
-I believe I have ICH5.  I know I have a board labelled "Intel"
-"D865GBF".
-
-Pat LaVarre
-
-
+Leon.
