@@ -1,60 +1,31 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Andrew Morton <akpm@osdl.org>
 Subject: Re: [PATCH] speed up SATA
-Date: Sun, 28 Mar 2004 15:25:55 -0500
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <406734D3.7070501@pobox.com>
-References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406616EE.80301@pobox.com> <40667FAB.2090802@stesmi.com>
+Date: Sun, 28 Mar 2004 12:32:40 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040328123240.4332964e.akpm@osdl.org>
+References: <4066021A.20308@pobox.com>
+	<200403282030.11743.bzolnier@elka.pw.edu.pl>
+	<20040328183010.GQ24370@suse.de>
+	<200403282045.07246.bzolnier@elka.pw.edu.pl>
+	<406720A7.1050501@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:21472 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262453AbUC1U0K
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Mar 2004 15:26:10 -0500
-In-Reply-To: <40667FAB.2090802@stesmi.com>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <406720A7.1050501@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, axboe@suse.de, wli@holomorphy.com, nickpiggin@yahoo.com.au, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stefan Smietanowski <stesmi@stesmi.com>
-Cc: Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Stefan Smietanowski wrote:
-> Hi Jeff.
-> 
->> I'm about to add a raft of SATA-2 hardware, all of which are queued. 
->> The standard depth is 32, but one board supports a whopping depth of 256.
-> 
-> 
-> Speaking of which .. I just read an announcement that someone (of course
-> the name eludes me) announced a DVD Burner that's SATA.
-> 
-> Found it:
-> 
-> http://www.plextor.com/english/news/press/712SA_pr.htm
-> 
-> a) Are there provisions in the SATA (1) SPEC for support of
-> non-disk units?
-> 
-> b) if (strcmp(a, "no"))
->      Do you know anything about it, ie is it SATA1 or 2 or what?
-> 
-> c) Let's ponder one gets a unit like this - is it usable with
-> libata yet?
-> 
-> d) if (strcmp(c, "no"))
->      Will it? :)
+Jeff Garzik <jgarzik@pobox.com> wrote:
+>
+>  I like generic tunables such as "laptop mode" or "low latency" or "high 
+>  throughput".  These sorts of tunables should affect the "automagic" 
+>  calculations.
 
+Not sure.  Things like "low latency" and "high throughput" may need other
+things, such as "seek latency" and "bandwidth" as _inputs_, not as outputs.
 
-SATA ATAPI looks and works just like PATA ATAPI, with one notable 
-exception:  S/ATAPI will include "asynchronous notification", a feature 
-that allows you to eliminate the polling of the cdrom driver that 
-normally occurs.
-
-You can use ATAPI on SATA today, using a PATA->SATA bridge.  In fact 
-that's the only way I can test SATA ATAPI at all, right now.
-
-I hope somebody sends me one of these Plextor devices for testing ;-)
-
-	Jeff
-
-
-
+Such device parameters should have reasonable defaults, and use a userspace
+app which runs a quick seek latency and bandwidth test at mount-time,
+poking the results into sysfs.
