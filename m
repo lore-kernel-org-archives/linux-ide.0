@@ -1,76 +1,77 @@
-From: Brett Russ <russb@emc.com>
-Subject: Re: [PATCH] libata-2.6: verify cmd bug fixes/support
-Date: Wed, 02 Feb 2005 08:19:27 -0500
-Message-ID: <4200D35F.5030200@emc.com>
-References: <42002023.9060606@emc.com> <42004A0C.70809@pobox.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Subject: [patch libata-dev-2.6 1/1] libata: sync SMART ioctls with ATA pass thru spec (T10/04-262r7)
+Date: Wed, 2 Feb 2005 13:37:55 -0500
+Message-ID: <20050202183753.GB17450@tuxdriver.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080301080607060702000201"
-Received: from mailhub.lss.emc.com ([168.159.2.31]:16869 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S262437AbVBBNTc
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Feb 2005 08:19:32 -0500
-Received: from [192.168.1.100] ([10.4.10.126])
-	by mailhub.lss.emc.com (Switch-3.1.6/Switch-3.1.6) with ESMTP id j12DJPv4021023
-	for <linux-ide@vger.kernel.org>; Wed, 2 Feb 2005 08:19:25 -0500 (EST)
-In-Reply-To: <42004A0C.70809@pobox.com>
+Content-Type: text/plain; charset=us-ascii
+Received: from ra.tuxdriver.com ([24.172.12.4]:50961 "EHLO ra.tuxdriver.com")
+	by vger.kernel.org with ESMTP id S262704AbVBBSiH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2005 13:38:07 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: andyw@pobox.com, jgarzik@pobox.com
 
-This is a multi-part message in MIME format.
---------------080301080607060702000201
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Update libata's SMART-related ioctl handlers to match the current
+ATA command pass-through specification (T10/04-262r7).  Also change
+related SCSI op-code definition to match current spec.
 
-Below is a resend of a patch which gets the read verify command working. 
-  I moved the patch to the libata-2.6 tree since that seems to be where 
-Albert's patch ended up, so let's keep them together.  Sending as an 
-attachment to avoid mailer interference.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+Contact w/ spec author (Curtis Stevens @ Western Digital) indicates
+that while a revision 8 of the spec is expected, that it is really
+only a re-formatting of the text to match T10 requirements.  According
+to Stevens, revision 8 is expected to be the last version of the spec.
 
-Signed-off-by: Brett Russ <russb@emc.com>
+ drivers/scsi/libata-scsi.c |    6 ++++--
+ include/scsi/scsi.h        |    6 +++---
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
---------------080301080607060702000201
-Content-Type: text/x-patch;
- name="libata-2.6.10-rc2-verify.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata-2.6.10-rc2-verify.diff"
-
-===== drivers/scsi/libata-scsi.c 1.63 vs edited =====
---- 1.63/drivers/scsi/libata-scsi.c	2005-02-01 22:24:53 -05:00
-+++ edited/drivers/scsi/libata-scsi.c	2005-02-02 08:03:50 -05:00
-@@ -488,13 +488,18 @@
+--- sata-smart-2.6/drivers/scsi/libata-scsi.c.orig	2005-02-01 16:24:01.687622085 -0500
++++ sata-smart-2.6/drivers/scsi/libata-scsi.c	2005-02-01 16:49:18.213876086 -0500
+@@ -109,14 +109,16 @@ int ata_cmd_ioctl(struct scsi_device *sc
+ 			return -ENOMEM;
+ 
+ 		scsi_cmd[1]  = (4 << 1); /* PIO Data-in */
++		scsi_cmd[2]  = 0x0e;     /* no off.line or cc, read from dev,
++		                            block count in sector count field */
+ 		sreq->sr_data_direction = DMA_FROM_DEVICE;
+ 	} else {
+ 		scsi_cmd[1]  = (3 << 1); /* Non-data */
++		/* scsi_cmd[2] is already 0 -- no off.line, cc, or data xfer */
+ 		sreq->sr_data_direction = DMA_NONE;
  	}
  
- 	if (lba48) {
-+		tf->command = ATA_CMD_VERIFY_EXT;
-+
- 		tf->hob_nsect = (n_sect >> 8) & 0xff;
+ 	scsi_cmd[0] = ATA_16;
+-	scsi_cmd[2] = 0x1f;     /* no off.line or cc, yes all registers */
  
- 		tf->hob_lbah = (sect >> 40) & 0xff;
- 		tf->hob_lbam = (sect >> 32) & 0xff;
- 		tf->hob_lbal = (sect >> 24) & 0xff;
--	} else
-+	} else {
-+		tf->command = ATA_CMD_VERIFY;
-+
- 		tf->device |= (sect >> 24) & 0xf;
-+	}
+ 	scsi_cmd[4] = args[2];
+ 	if (args[0] == WIN_SMART) { /* hack -- ide driver does this too... */
+@@ -179,7 +181,7 @@ int ata_task_ioctl(struct scsi_device *s
+ 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
+ 	scsi_cmd[0]  = ATA_16;
+ 	scsi_cmd[1]  = (3 << 1); /* Non-data */
+-	scsi_cmd[2]  = 0x1f;     /* no off.line or cc, yes all registers */
++	/* scsi_cmd[2] is already 0 -- no off.line, cc, or data xfer */
+ 	scsi_cmd[4]  = args[1];
+ 	scsi_cmd[6]  = args[2];
+ 	scsi_cmd[8]  = args[3];
+--- sata-smart-2.6/include/scsi/scsi.h.orig	2005-02-01 16:22:12.390234346 -0500
++++ sata-smart-2.6/include/scsi/scsi.h	2005-02-01 16:23:02.828491161 -0500
+@@ -113,9 +113,9 @@ extern const char *const scsi_device_typ
+ /* values for service action in */
+ #define	SAI_READ_CAPACITY_16  0x10
  
- 	tf->nsect = n_sect & 0xff;
+-/* Temporary values for T10/04-262 until official values are allocated */
+-#define	ATA_16		      0x85	/* 16-byte pass-thru [0x85 == unused]*/
+-#define	ATA_12		      0xb3	/* 12-byte pass-thru [0xb3 == obsolete set limits command] */
++/* Values for T10/04-262r7 */
++#define	ATA_16		      0x85	/* 16-byte pass-thru */
++#define	ATA_12		      0xa1	/* 12-byte pass-thru */
  
-===== include/linux/ata.h 1.21 vs edited =====
---- 1.21/include/linux/ata.h	2004-11-06 13:44:16 -05:00
-+++ edited/include/linux/ata.h	2005-02-02 08:15:49 -05:00
-@@ -123,6 +123,8 @@
- 	ATA_CMD_PIO_WRITE_EXT	= 0x34,
- 	ATA_CMD_SET_FEATURES	= 0xEF,
- 	ATA_CMD_PACKET		= 0xA0,
-+	ATA_CMD_VERIFY		= 0x40,
-+	ATA_CMD_VERIFY_EXT	= 0x42,
- 
- 	/* SETFEATURES stuff */
- 	SETFEATURES_XFER	= 0x03,
-
---------------080301080607060702000201--
+ /*
+  *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
+-- 
+John W. Linville
+linville@tuxdriver.com
