@@ -1,68 +1,62 @@
-From: Joe Harvell <jharvell@dogpad.net>
-Subject: Re: Problems with Promise SATAII TX4
-Date: Thu, 31 Mar 2005 22:34:27 +0200
-Message-ID: <424C5ED3.8010109@dogpad.net>
-References: <20050330001007.GA16954@cebitec.uni-bielefeld.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata_sil Mod15Write quirk workaround patch for vanilla kernel
+ avaialble.
+Date: Fri, 01 Apr 2005 07:51:28 +0900
+Message-ID: <424C7EF0.5000206@gmail.com>
+References: <424C10C3.9080102@gmail.com> <20050331111044.4a3672cd@homer.sarvega.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zcars04e.nortelnetworks.com ([47.129.242.56]:24724 "EHLO
-	zcars04e.nortelnetworks.com") by vger.kernel.org with ESMTP
-	id S261811AbVCaUei (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 31 Mar 2005 15:34:38 -0500
-Received: from zrtpd0jn.us.nortel.com (zrtpd0jn.us.nortel.com [47.140.202.35])
-	by zcars04e.nortelnetworks.com (Switch-2.2.6/Switch-2.2.0) with ESMTP id j2VKYaH05400
-	for <linux-ide@vger.kernel.org>; Thu, 31 Mar 2005 15:34:36 -0500 (EST)
-In-Reply-To: <20050330001007.GA16954@cebitec.uni-bielefeld.de>
+Received: from rproxy.gmail.com ([64.233.170.193]:13443 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262043AbVCaWvg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Mar 2005 17:51:36 -0500
+Received: by rproxy.gmail.com with SMTP id j1so506076rnf
+        for <linux-ide@vger.kernel.org>; Thu, 31 Mar 2005 14:51:34 -0800 (PST)
+In-Reply-To: <20050331111044.4a3672cd@homer.sarvega.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: John Lash <jkl@sarvega.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, mage@adamant.ua
 
-Earlier this month I repeatedly reported a data corruption issue (with
-no trap) with the sata_promise support for this card, but got no
-response whatsoever from the driver author.
+  Hello, John.
 
-I was able to work around this problem only by using Promise's driver,
-but I had to revert from the 2.6 to 2.4 kernel.
+John Lash wrote:
+> On Fri, 01 Apr 2005 00:01:23 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
+> 
+> 
+>> Hello, guys.
+>>
+>> I  generated m16w workaround patch for 2.6.11.6 (by just removing two
+>>lines :-) and set up a page regarding m15w quirk and the workaournd.
+>>I'm planning on updating m15w patch against the vanilla tree until it
+>>gets into the mainline so that impatient users can try out and it gets
+>>more testing.
+>>
+>> http://home-tj.org/m15w
+>>
+>> Thanks.
+>>
+>>-- 
+>>tejun
+>>
+> 
+> 
+> Tejun,
+> 
+> I applied the patch to a clean 2.6.11.6 kernel and got an unresolved
+> symbol error for "ATA_TFLAG_LBA". I tried changing that to "ATA_TFLAG_LBA48" and
+> it compiles and runs.
+> 
+> So far, no problems. Thanks a lot for the patch.
+> 
+> --john
 
-Kim Roland Rasmussen wrote:
+  I'm sorry.  I uploaded the original patch against libata-dev-2.6 tree. 
+  The two BUG_ON() lines should just be removed.  I've uploaded fixed 
+patch.  Thanks for pointing out.
 
->Hi all,
->
->Together with a couple of others I have been bitten by problems with the
->Promise SATAII TX4 controller.
->
->Common to all is that at some point the kernel log contains the "irq
-><SOME NUMBER>: nobody cared!" error message, followed by a call/stack
->trace. This is quickly followed up by a "Disabling IRQ #<SOME NUMBER>"
->which effectively kills the SATA controller and access to the disks.
->
->Although a somewhat unusual request, could I ask somebody to look at
->this
->
->    http://forums.gentoo.org/viewtopic-p-2247734.html
->
->developing thread in the Gentoo Forums. There's simply to much
->information there to repost here.
->
->In my case (posted under <rasmussen>) I temporarily seem to have gotten
->around it by replacing a driver with another of a different brand.
->However, this is not the case for others.
->
->Any idea of what's going on? To me it looks like some interrupt isn't
->cleared or something like that (but I'm just guessing).
->
->Cheers,
->  Kim
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-ide" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->  
->
-
-
+-- 
+tejun
 
