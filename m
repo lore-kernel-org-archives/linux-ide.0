@@ -1,17 +1,21 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: sata_via: ata1 failed to respond
-Date: Thu, 25 Mar 2004 12:03:07 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <406310CB.4010404@pobox.com>
+Date: Thu, 25 Mar 2004 14:52:48 -0500
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <40633890.80009@pobox.com>
 References: <20040325164441.GP1756@master.mivlgu.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:60357 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S263586AbUCYTxC
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Mar 2004 14:53:02 -0500
 In-Reply-To: <20040325164441.GP1756@master.mivlgu.local>
+List-Id: linux-ide@vger.kernel.org
 To: Sergey Vlasov <vsu@altlinux.ru>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 Sergey Vlasov wrote:
 > Hello!
@@ -51,16 +55,15 @@ Sergey Vlasov wrote:
 >  				ATA_FLAG_NO_LEGACY;
 >  	probe_ent->port_ops = &svia_sata_ops;
 >  	probe_ent->n_ports = 2;
-> 
-> Here is the full dmesg output from boot with the above change:
 
 
-Man, you are full of useful bug reports ;-)
+Just FYI, I went ahead and committed this patch, and created -libata14 
+patch (and sent this to Linus).
 
-Thanks much for testing.  It looks like there are still some bugs in my 
-SATA reset routine, since it was hoped that that code works universally.
-
-I'll try to come up with an alternate patch that fixes sata_phy_reset(). 
-  If I fail, we will use your patch as the fallback.
+I would rather the main tree have working code, from which we will then 
+(attempt to) advance.
 
 	Jeff
+
+
+
