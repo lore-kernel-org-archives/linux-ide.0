@@ -1,39 +1,43 @@
-From: Andy Warner <andyw@pobox.com>
-Subject: Re: T10/04-262 ATA pass thru - another patch.
-Date: Tue, 5 Oct 2004 22:23:31 -0500
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: T10/04-262 ATA pass thru - patch.
+Date: Wed, 6 Oct 2004 08:04:11 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20041005222331.F13871@florence.linkmargin.com>
-References: <20041005182049.E13871@florence.linkmargin.com> <4163623F.4030407@pobox.com>
+Message-ID: <20041006060411.GC13631@suse.de>
+References: <20040928001633.A8363@florence.linkmargin.com> <415AFF27.7080906@tteng.com.br> <415AFFBB.8090503@pobox.com> <4162EDA3.1030202@tteng.com.br> <20041005140653.A13393@florence.linkmargin.com> <41631DEC.9090404@pobox.com> <20041005173703.D13871@florence.linkmargin.com> <20041005224146.GA16514@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:50174 "EHLO
-	ms-smtp-02.rdc-kc.rr.com") by vger.kernel.org with ESMTP
-	id S266786AbUJFDZZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Oct 2004 23:25:25 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:47580 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S268095AbUJFGEV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Oct 2004 02:04:21 -0400
 Content-Disposition: inline
-In-Reply-To: <4163623F.4030407@pobox.com>; from jgarzik@pobox.com on Tue, Oct 05, 2004 at 11:10:55PM -0400
+In-Reply-To: <20041005224146.GA16514@havoc.gtf.org>
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andy Warner <andyw@pobox.com>, linux-ide@vger.kernel.org, John Linville <linville@redhat.com>, linville@tuxdriver.com, Pat LaVarre <p.lavarre@ieee.org>, Mark Lord <mlord@pobox.com>
+Cc: Andy Warner <andyw@pobox.com>, "Luciano A. Stertz" <luciano@tteng.com.br>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> [...]
-> Make sure to split up patches into separate emails, and don't combine 
-> e.g. your error register patch with a passthru update patch.
+On Tue, Oct 05 2004, Jeff Garzik wrote:
+> On Tue, Oct 05, 2004 at 05:37:03PM -0500, Andy Warner wrote:
+> > Jeff Garzik wrote:
+> > > [...]
+> > > Probably you were running as root, and Luciano was not (guessing)
+> > 
+> > Yup - but I was only doing it to get around the device
+> > permissions (or so I thought.) Do people think I should
+> > add ATA_16/ATA_12 to the approved list of scsi commands ?
 > 
-> Separate changes go into separate patches.
+> If you do, it's not that simple -- you would need to check the ATA
+> command to see if it was permissible for an unpriveleged user to issue
+> that specific ATA command.
+> 
+> Otherwise, unpriveleged users could fry the hardware, or whatnot.
 
-Ack.
+This is getting more and more horrible...
 
-Apologies.
+ATA_16/ATA_12 should be allowed for read, and there should be a filter
+for tha ta opcode below that. We need the per-genhd loadable command
+filter lists for that.
 
-I was not really sure who the customer is for these: integrators
-or folks trying to test this stuff and not wanting them to have
-to play find-the-missing-patch.
-
-Won't happen again.
 -- 
-andyw@pobox.com
+Jens Axboe
 
-Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
