@@ -1,46 +1,44 @@
-From: "Christopher R. Thompson" <Christoffur050@Verizon.Net>
-Subject: Re: SATA status report updated, dev guide posted
-Date: Mon, 27 Dec 2004 09:16:45 -0800
-Message-ID: <41D0437D.4070508@Verizon.Net>
-References: <41D00A13.5060700@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Sil3114 and Hitachi disks
+Date: Mon, 27 Dec 2004 14:58:56 -0500
+Message-ID: <41D06980.70909@pobox.com>
+References: <Pine.LNX.4.44.0412241621210.16199-100000@kenzo.iwr.uni-heidelberg.de> <Pine.LNX.4.44.0412241822560.16199-100000@kenzo.iwr.uni-heidelberg.de> <20041225044658.GB25088@havoc.gtf.org> <Pine.LNX.4.58.0412271405410.31364@dingo.iwr.uni-heidelberg.de> <20041227133150.GA18020@havoc.gtf.org> <Pine.LNX.4.58.0412271513420.31364@dingo.iwr.uni-heidelberg.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out009pub.verizon.net ([206.46.170.131]:5062 "EHLO
-	out009.verizon.net") by vger.kernel.org with ESMTP id S261931AbUL0RQq
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:35020 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261963AbUL0T7A
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Dec 2004 12:16:46 -0500
+	Mon, 27 Dec 2004 14:59:00 -0500
+In-Reply-To: <Pine.LNX.4.58.0412271513420.31364@dingo.iwr.uni-heidelberg.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <axboe@suse.de>
+To: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>
+Cc: linux-ide@vger.kernel.org
 
-Would anyone care to brief me on issue #1 of the ICH5 status report?
+Bogdan Costescu wrote:
+> On Mon, 27 Dec 2004, Jeff Garzik wrote:
+> 
+> 
+>>RHEL3 is a bit behind the times.
+> 
+> 
+> That's not always a bad thing ;-)
+> 
+> 
+>>In particular it needs one hotfix for all swiotlb platforms
+>>(includes Intel's EM64T).  The next update will have it, but the
+>>current one does not.
+> 
+> 
+> Is there some patch that I can test ? I tried to comb through Red
+> Hat's Bugzilla, but I didn't find anything related.
+> Does this fix exist in vanilla 2.4.29-pre3 ?
 
-http://linux.yyz.us/sata/sata-status.html#ich5
 
-Is this something that a novice like me could track down and fix?
+Yes.
 
-I seem to currently have the ICH5 chip and the probing problem at hand.
+	Jeff
 
-Jeff Garzik wrote:
-
-> A few minor updates to the Linux SATA status reports posted at
->
->     http://linux.yyz.us/sata/
->
-> Most notable is the new 'sata devel resources' page, 
-> http://linux.yyz.us/sata/devel.html which attempts to group key ATA 
-> knowledge in a single location.  Comments and additions are requested. 
-> Also, public links to old SFF docs are requested.
->
->     Jeff
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
