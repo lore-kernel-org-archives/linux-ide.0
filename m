@@ -1,63 +1,54 @@
-From: Nuno Silva <nuno.silva@vgertech.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] speed up SATA
-Date: Sun, 28 Mar 2004 20:52:39 +0100
+Date: Sun, 28 Mar 2004 15:02:28 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40672D07.2060201@vgertech.com>
-References: <4066021A.20308@pobox.com> <20040328175436.GL24370@suse.de> <20040328181223.GA791@holomorphy.com> <200403282030.11743.bzolnier@elka.pw.edu.pl>
+Message-ID: <40672F54.1050703@pobox.com>
+References: <4066021A.20308@pobox.com> <20040328175436.GL24370@suse.de> <20040328181223.GA791@holomorphy.com> <200403282030.11743.bzolnier@elka.pw.edu.pl> <40672D07.2060201@vgertech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from adsl-b3-74-209.telepac.pt ([213.13.74.209]:18311 "EHLO
-	puma-vgertech.no-ip.com") by vger.kernel.org with ESMTP
-	id S262399AbUC1Twf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Mar 2004 14:52:35 -0500
-In-Reply-To: <200403282030.11743.bzolnier@elka.pw.edu.pl>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:29919 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262413AbUC1UCr
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Mar 2004 15:02:47 -0500
+In-Reply-To: <40672D07.2060201@vgertech.com>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: William Lee Irwin III <wli@holomorphy.com>, Jens Axboe <axboe@suse.de>, Jeff Garzik <jgarzik@pobox.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Nuno Silva <nuno.silva@vgertech.com>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, William Lee Irwin III <wli@holomorphy.com>, Jens Axboe <axboe@suse.de>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-Bartlomiej Zolnierkiewicz wrote:
-| On Sunday 28 of March 2004 20:12, William Lee Irwin III wrote:
-|
-|>On Sun, Mar 28, 2004 at 07:54:36PM +0200, Jens Axboe wrote:
-|>
-
-[...]
-
-|>>hardware. I absolutely refuse to put a global block layer 'optimal io
-|>>size' restriction in, since that is the ugliest of policies and without
-|>>having _any_ knowledge of what the hardware can do.
-|>
-|>How about per-device policies and driver hints wrt. optimal io?
-|
-|
-| Yep, user-tunable per-device policies with sane driver defaults.
-|
-
-I think that automagic configuration for the common workload with some
-way (sysfs|proc) to retrieve and set policies is the way to go.
-
-With this kind of control we could have /etc/init.d/io-optimize that
-paused the startup for 10 seconds and tests every device|controller in
-fstab and optimizes according to the .conf file for latency or speed...
-Or a daemon that retrieves statistics and adjusts the policies every minute?
-
-Also, everybody says "do it in userland". This is doing (some of) it in
-userland :)
-
-Regards,
-Nuno Silva
+Nuno Silva wrote:
+> With this kind of control we could have /etc/init.d/io-optimize that
+> paused the startup for 10 seconds and tests every device|controller in
+> fstab and optimizes according to the .conf file for latency or speed...
+> Or a daemon that retrieves statistics and adjusts the policies every 
+> minute?
+> 
+> Also, everybody says "do it in userland". This is doing (some of) it in
+> userland :)
 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+An iotune daemon that sits in userland -- probably mlockall'd into 
+memory -- would be fun.  Like the existing irqbalance daemon that Red 
+Hat (disc: my employer) ships, "iotuned" could run in the background, 
+adjusting policies every so often.  It would be a good place to put some 
+of the more high-level "laptop mode" or "high throughput mode" tunables, 
+so that the user wouldn't have to worry about the minute details of such 
+things.
 
-iD8DBQFAZy0GOPig54MP17wRAmWMAKDT3GKF/Wp/yYDzxyX+YK9kkTuMFgCg5mD3
-HlngYjEwzo/lRAfHn/tnsQg=
-=bC9f
------END PGP SIGNATURE-----
+Just watch the IO statistics and tweak the queue settings...  Gotta make 
+sure the queue settings don't get tweaked beyond what the hardware can 
+do, though.
+
+A good iotune daemon would probably have to pay attention to various VM 
+statistics as well, since the VM is often the one that decides when to 
+start writing out stuff...  such an app could (quite justifiably) 
+mushroom into a io-and-vmtune daemon.
+
+This is a side issue from the topic of finding a decent in-kernel 
+default, of course...
+
+	Jeff
+
+
+
