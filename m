@@ -1,42 +1,47 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: [PATCH] fix issues with loading PCI ide drivers as modules (linux 2.6.0)
-Date: Tue, 6 Jan 2004 12:13:39 +0100
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200401061213.39843.bzolnier@elka.pw.edu.pl>
-References: <20040103152802.6e27f5c5.davmac@ozonline.com.au> <200401051516.03364.bzolnier@elka.pw.edu.pl> <20040106135155.66535c13.davmac@ozonline.com.au>
+From: Christophe Saout <christophe@saout.de>
+Subject: Re: Possibly wrong BIO usage in ide_multwrite
+Date: Tue, 6 Jan 2004 12:33:30 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040106113330.GA5827@leto.cs.pocnet.net>
+References: <1072977507.4170.14.camel@leto.cs.pocnet.net> <200401051808.49010.bzolnier@elka.pw.edu.pl> <20040105225117.GA5841@leto.cs.pocnet.net> <200401060059.52833.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-2"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:51629 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261872AbUAFLKn
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Jan 2004 06:10:43 -0500
-In-Reply-To: <20040106135155.66535c13.davmac@ozonline.com.au>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <200401060059.52833.bzolnier@elka.pw.edu.pl>
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Davin McCall <davmac@ozonline.com.au>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tuesday 06 of January 2004 03:51, Davin McCall wrote:
-> Ok - fourth try! Hopefully I'm getting better.
->
-> On Mon, 5 Jan 2004 15:16:03 +0100
->
-> Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl> wrote:
-> > You don't need to export "initializing" variable from ide.c,
-> > just use "pre_init" variable from setup-pci.c :-).
->
-> Yes - of course.
->
-> But actually I have found an even better solution - "hwif->present" tells
-> us if the hwif is currently being controlled by some chipset driver (that's
-> what it's there for!) so I check that instead.
+On Tue, Jan 06, 2004 at 12:59:52AM +0100, Bartlomiej Zolnierkiewicz wrote:
 
-This is wrong, driver owns hwif before probing for drives
-(when at least one drive is found hwif->present is set to one),
-so hwif entries can be modified even with hwif->present equal to zero.
+> On Monday 05 of January 2004 23:51, Christophe Saout wrote:
+> > Remember? Can bio be NULL somewhere? Or what do you mean? It's our
+> > scratchpad and ide_multwrite never puts a NULL bio on it.
+> 
+> After last sector of the whole transfer is processed ide_multwrite() will set
+> it to NULL.
 
---bart
+No, it doesn't.
 
+                                                                                       
+>			/* end early early we ran out of requests */
+>			if (!bio) {
+>				mcount = 0;
+>			} else {
+>				rq->bio = bio;
+>				rq->nr_cbio_segments = bio_segments(bio);
+>				rq->current_nr_sectors = bio_cur_sectors(bio);
+>				rq->hard_cur_sectors = rq->current_nr_sectors;
+>			}
+
+rq->bio is only set if bio is not NULL.
+
+>  Next IRQ is only ACK of previous datablock, no transfer happens.
+
+You're right, the bi_idx resetting might be redundant but since bio is
+never NULL an additional check is superfluous.
+
+> Move it before the comment.
+
+Ok. I will repost when the issue above is worked out.
