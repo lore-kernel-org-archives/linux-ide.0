@@ -1,28 +1,28 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH  2.6.11-rc4+] sata_qstor: new basic driver for Pacific
- Digital QStor
-Date: Thu, 17 Feb 2005 08:18:45 -0500
-Message-ID: <421499B5.50707@rtr.ca>
-References: <4214313E.5060900@rtr.ca> <42143643.7030706@pobox.com>
+Subject: Re: Issues with SIS 964 chipset on SATA
+Date: Thu, 17 Feb 2005 08:26:07 -0500
+Message-ID: <42149B6F.1000502@rtr.ca>
+References: <E0854782-793A-11D9-A80A-000A95D2AC6A@iomega.com> <4214551C.8030109@pobox.com> <20050217083825.GA8695@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:21421 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S262146AbVBQNTA
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:21677 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S262146AbVBQN0W
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Feb 2005 08:19:00 -0500
-Received: from [10.0.0.3] (ibbm.localnet [10.0.0.3])
-	by mail.rtr.ca (Postfix) with ESMTP id B4C2B830140
-	for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2005 08:18:59 -0500 (EST)
-In-Reply-To: <42143643.7030706@pobox.com>
+	Thu, 17 Feb 2005 08:26:22 -0500
+In-Reply-To: <20050217083825.GA8695@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Gary Poppitz <poppitzg@iomega.com>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Thanks, I'll suck this into the pipeline.
-> 
-> For any comments/changes that arise, please send patches incremental to 
-> this patch.
+Jens Axboe wrote:
+>
+>>It looks like I will need to do a workaround for all SATA ATAPI devices: 
+>> if the transfer is not a multiple of 4 bytes, pad it with an DMA 1-3 
+>>byte DMA segment.
 
-Thanks Jeff!
+Yup, that requirement has existed on most of the hardware
+I've done drivers for, both SATA and a lot of PATA chips too.
+
+Cheers
