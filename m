@@ -1,104 +1,84 @@
-From: "M. Grabert" <xam@cs.ucc.ie>
-Subject: siimage problems on Linux/PA-RISC
-Date: Mon, 8 Dec 2003 23:47:13 +0000 (GMT)
+From: Aron Rubin <arubin@atl.lmco.com>
+Subject: Re: SII 3512 SATA Progress but help still needed
+Date: Tue, 09 Dec 2003 07:23:01 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0312082315170.13596@sal.ucc.ie>
+Message-ID: <3FD5BEA5.9070806@atl.lmco.com>
+References: <3FCF9B07.5020509@atl.lmco.com> <3FD4D88A.3050708@atl.lmco.com> <200312082126.32948.bzolnier@elka.pw.edu.pl> <3FD4E026.2020307@pobox.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from csmail.ucc.ie ([143.239.211.231]:19617 "EHLO csmail.ucc.ie")
-	by vger.kernel.org with ESMTP id S261875AbTLHXrW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Dec 2003 18:47:22 -0500
+Received: from [192.35.37.50] ([192.35.37.50]:4488 "EHLO
+	enterprise.atl.lmco.com") by vger.kernel.org with ESMTP
+	id S265486AbTLIMXM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Dec 2003 07:23:12 -0500
+Received: from atl.lmco.com (druidia [166.17.245.107])
+	by enterprise.atl.lmco.com (Postfix) with ESMTP id 34D98C1C86
+	for <linux-ide@vger.kernel.org>; Tue,  9 Dec 2003 07:23:01 -0500 (EST)
+In-Reply-To: <3FD4E026.2020307@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi,
+Thank you, I did not have a chance to look at this yet but I will soon.
+Interresting that this lost interrupt message seems to apply in more
+cases with the siimage driver. Is it related to differences in the
+architecture (64bit)? I thought it was merely something about dealing
+with the new chipset. Silicon Image has not replied to my email yet but
+I am not sure the 3512 is different from the 3112 other than the design
+for the AMD64 Gigabyte mobo.
 
-I'm having troubles getting a (rather new) SiliconImage PCI IDE
-controller working on Linux/PA-RISC.
+Aron
 
-The original/full error report can be found here:
-http://lists.parisc-linux.org/pipermail/parisc-linux/2003-December/021839.html
-
-Alan suggests it may be more likely a bug in the siimage driver, rather
-than in the PA-RISC specific bits and I may ask here for more help.
-Please also read Alans comments (forwarded) at the end of this mail.
-
-
-A short summary:
-================
-- 2.4.23 (with and without ide=nodma passed as kernel options) produces
-  'hda lost interrupt' messages; /dev/hda is not accessible (read errors)
-
-- 2.6.0-test11 creates a kernel ooops ('Your system ate a SPARC'),
-  passing ide=nodma doesn't change anything
-
-The full bootlogs/.config/System.maps can be found here:
-
-http://www.cs.ucc.ie/~xam/siimage/
-
-
-
-There might be also big-endian issues, as the bootlog reveals. The
-siimage driver in 2.4.23 says:
-
-  hda: TS130220A2, ATA DISK drive
-  hda: 0 sectors (0 MB) w/8KiB Cache, CHS=65343/0/0
-  hda: INVALID GEOMETRY: 0 PHYSICAL HEADS?
-
-and the siimage driver in 2.6.0-test11 also says:
-
-  hda: TS130220A2, ATA DISK drive
-
-
-Whereas a 2.4.23 kernel using the (crappy but working) onboard NS87415 IDE
-controller of the PA-RISC workstation identifies the Seagate hard disk
-correctly as:
-
- hda: ST3120022A, ATA DISK drive
- hda: 234441648 sectors (120034 MB) w/2048KiB Cache, CHS=14593/255/63, (U)DMA
- Partition check:
-   hda: hda1
-
-
-
-Thanks alot in advance for any help,
-  Max
+Jeff Garzik wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+>> I don't know. ;-)
+>>
+>> I have only one idea right now - look what drivers/scsi/libata.c
+>> does for SATA controllers during init and what drivers/ide/ doesn't.
+>>
+>> I am talking about sata_phy_reset() in libata.c.
+> 
+> 
+> libata-core.c :)
+> 
+> Basically for Silicon Image:
+> * use SATA "SCR" (status and control register) to bring device out of 
+> any low-power state it may be in
+> * use SATA SCR to reset SATA bus
+> * do _not_ issue ATA software reset or E.D.D. (90h), as the desired 
+> signature is already in the ATA command block registers
+> * look at the signature, decide ATA or ATAPI
+> * issue IDENTIFY [PACKET] DEVICE
+> * issue SET FEATURES (XFER)
+> 
+> That's the ATA_FLAG_SATA_RESET code path.  If the driver has the flag 
+> ATA_FLAG_SRST, then the first few steps change to:
+> * issue ATA software reset, by flipping SRST bit in Device Control
+> * look at signature[...]
+> 
+> I'm pretty sure drivers/ide/pci/siimage.c already does the 
+> bring-it-out-of-low-power thing, twiddling the SCRs.
+> 
+> (the SCRs are documented in the public SATA spec on www.serialata.org)
+> 
+> In addition, drivers/ide/pci/siimage.c actually does initialize the 
+> hardware a bit more fully than my SII driver does, IIRC...
+> 
+>     Jeff
+> 
+> 
+> 
 
 
+-- 
 
----------- Forwarded message ----------
-Date: Mon, 08 Dec 2003 20:11:09 +0000
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: M. Grabert <xam@cs.ucc.ie>, parisc-linux@lists.parisc-linux.org
-Subject: Re: [parisc-linux] test11-pa2 & serial console on C3k success,
-     siimage problems
+ssh aron@rubinium.org cat /dev/brain | grep ^work:
 
-On Llu, 2003-12-08 at 18:35, Grant Grundler wrote:
-> On Mon, Dec 08, 2003 at 08:20:38AM +0000, M. Grabert wrote:
-> ...
-> > SiI680: 100% native mode on irq 128
-> >     ide0: MMIO-DMA at 0xf4800000-0xf4800007 -- Error, MMIO ports already in use.
-> >     ide1: MMIO-DMA at 0xf4800008-0xf480000f -- Error, MMIO ports already in use.
->
-> Look at the code that prints this line and the error msg.
+Aron Rubin                       Member, Engineering Staff
+Lockheed Martin                  E-Mail: arubin@atl.lmco.com
+Advanced Technology Laboratories Phone:  856.792.9865
+3 Executive Campus               Fax:    856.792.9930
+Cherry Hill, NJ USA 08002        Web:    http://www.atl.lmco.com
 
-This can only occur if critical 2.4 IDE fixes for mmio are missing from
-2.6 or some kind of implementation error is being tripped. Ask
-Bartlomiej why mmio==2 mode ("check by host driver only") isn't
-implemented. Its requited for mmio PCI devices to work properly even on
-x86. That or the SI680/3112 driver in 2.6 is not setting it and the
-kernel code is there but not being used.
 
-That message just can't occur on the proper code.
-
-Background:
-	Drivers use ioremap returns for mmio registers
-	IDE core only knows ioremap data
-	IDE core used to try and reserve the matching physical locations
-
-On x86 it "happens" to work until you have more than about 2.5Gb of RAM
-
-Alan
