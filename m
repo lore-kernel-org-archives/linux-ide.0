@@ -1,41 +1,106 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata todo item: retry certain classes of errors
-Date: Thu, 03 Feb 2005 12:24:11 -0500
-Message-ID: <42025E3B.8030302@pobox.com>
-References: <41DE1118.9020209@pobox.com>	 <1105106379.17166.325.camel@localhost.localdomain>	 <420031D5.9090304@pobox.com> <1107330670.14787.104.camel@localhost.localdomain>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2.6.11-rc2 23/29] ide: map ide_task_ioctl() to ide_taskfile_ioctl()
+Date: Thu, 3 Feb 2005 18:37:04 +0100
+Message-ID: <58cb370e050203093726c7cf70@mail.gmail.com>
+References: <20050202024017.GA621@htj.dyndns.org>
+	 <20050202030813.GH1187@htj.dyndns.org>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:51842 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S263208AbVBCRYe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Feb 2005 12:24:34 -0500
-In-Reply-To: <1107330670.14787.104.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20050202030813.GH1187@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@home-tj.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Albert Lee <albertcc@tw.ibm.com>, Andy Warner <andyw@pobox.com>
 
-Alan Cox wrote:
-> On Mer, 2005-02-02 at 01:50, Jeff Garzik wrote:
+On Wed, 2 Feb 2005 12:08:13 +0900, Tejun Heo <tj@home-tj.org> wrote:
+> > 23_ide_taskfile_task_ioctl.patch
+> >
+> >       ide_task_ioctl() modified to map to ide_taskfile_ioctl().
+> >       This is the last user of REQ_DRIVE_TASK.
+
+ide_task_ioctl() should map to taskfile transport not ide_taskfile_ioctl()
+
+> Signed-off-by: Tejun Heo <tj@home-tj.org>
 > 
->>Alan Cox wrote:
->>
->>>I did actually arrange that all the SCSI errors it faked caused the
->>>right retry behaviour at the SCSI level when I did that. Perhaps I
->>>should have commented that fact.
->>
->>Well the retry needs to e.g. include a bus reset prior to retrying.
+> Index: linux-ide-export/drivers/ide/ide-taskfile.c
+> ===================================================================
+> --- linux-ide-export.orig/drivers/ide/ide-taskfile.c    2005-02-02 10:28:06.273027780 +0900
+> +++ linux-ide-export/drivers/ide/ide-taskfile.c 2005-02-02 10:28:06.751950074 +0900
+> @@ -778,30 +778,51 @@ abort:
+>         return err;
+>  }
 > 
+> -static int ide_wait_cmd_task(ide_drive_t *drive, u8 *buf)
+> -{
+> -       struct request rq;
+> -
+> -       ide_init_drive_cmd(&rq);
+> -       rq.flags = REQ_DRIVE_TASK;
+> -       rq.buffer = buf;
+> -       return ide_do_drive_cmd(drive, &rq, ide_wait);
+> -}
+> -
+> -/*
+> - * FIXME : this needs to map into at taskfile. <andre@linux-ide.org>
+> - */
+>  int ide_task_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
+>  {
+>         void __user *p = (void __user *)arg;
+> -       int err = 0;
+> -       u8 args[7], *argbuf = args;
+> -       int argsize = 7;
+> +       u8 args[7];
+> +       ide_task_request_t task_req;
+> +       task_ioreg_t *io_ports;
+> +       mm_segment_t orig_fs;
+> +       int ret;
 > 
-> Thats possibly true for some situations. You might also want to avoid
-> issuing resets as much as you can because they are a rather good source
-> of "my drive
-> went away" error reports with the IDE layer (and they take forever).
+>         if (copy_from_user(args, p, 7))
+>                 return -EFAULT;
+> -       err = ide_wait_cmd_task(drive, argbuf);
+> -       if (copy_to_user(p, argbuf, argsize))
+> -               err = -EFAULT;
+> -       return err;
+> +
+> +       memset(&task_req, 0, sizeof(task_req));
+> +       task_req.out_flags.h.taskfile   = IDE_TASKFILE_STD_OUT_FLAGS;
+> +       task_req.in_flags.h.taskfile    = IDE_TASKFILE_STD_IN_FLAGS;
+> +
+> +       io_ports = task_req.io_ports;
+> +       io_ports[IDE_COMMAND_OFFSET]    = args[0];
+> +       io_ports[IDE_FEATURE_OFFSET]    = args[1];
+> +       io_ports[IDE_NSECTOR_OFFSET]    = args[2];
+> +       io_ports[IDE_SECTOR_OFFSET]     = args[3];
+> +       io_ports[IDE_LCYL_OFFSET]       = args[4];
+> +       io_ports[IDE_HCYL_OFFSET]       = args[5];
+> +       io_ports[IDE_SELECT_OFFSET]     = args[6];
+> +
+> +       task_req.req_cmd                = IDE_DRIVE_TASK_NO_DATA;
+> +       task_req.data_phase             = TASKFILE_NO_DATA;
+> +
+> +       orig_fs = get_fs();
+> +       set_fs(KERNEL_DS);
+> +
+> +       ret = ide_taskfile_ioctl(drive, cmd, (unsigned long)&task_req);
+> +
+> +       set_fs(orig_fs);
 
-libata does a reset at the beginning of the probe...
+as HDIO_DRIVE_TASKFILE only supports no-data protocol
+it should be easy to add missing bits here and get rid of calling
+ide_taskfile_ioctl()
 
-	Jeff
-
-
-
+> +       args[0] = io_ports[IDE_COMMAND_OFFSET];
+> +       args[1] = io_ports[IDE_FEATURE_OFFSET];
+> +       args[2] = io_ports[IDE_NSECTOR_OFFSET];
+> +       args[3] = io_ports[IDE_SECTOR_OFFSET];
+> +       args[4] = io_ports[IDE_LCYL_OFFSET];
+> +       args[5] = io_ports[IDE_HCYL_OFFSET];
+> +       args[6] = io_ports[IDE_SELECT_OFFSET];
+> +
+> +       if (copy_to_user(p, args, 7))
+> +               ret = -EFAULT;
+> +
+> +       return ret;
+>  }
