@@ -1,32 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: linux 2.6.9 controller order reordered.  was: [Re: linux 2.6.9
-	still having network code problems]
-Date: Tue, 02 Nov 2004 16:40:45 +0000
-Message-ID: <1099413643.24934.1.camel@localhost.localdomain>
-References: <418741EB.3080701@outblaze.com>
-	 <20041102011918.2b453e21.akpm@osdl.org> <4187478A.1040002@outblaze.com>
-	 <20041102014119.1a6096cc.akpm@osdl.org> <41874D93.9000008@outblaze.com>
-	 <20041102020712.18218d47.akpm@osdl.org> <418751B3.8090003@outblaze.com>
-	 <20041102022604.262058c4.akpm@osdl.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2.6.9-libata1-dev1] libata-scsi: hdparm support
+Date: Tue, 2 Nov 2004 22:51:36 +0100
+Message-ID: <58cb370e041102135138f50dac@mail.gmail.com>
+References: <1098487253.28916.12.camel@server.lorenz.priv>
+	 <41838C6E.6050702@pobox.com>
+	 <1099148337.15964.4.camel@server.lorenz.priv>
+	 <4183B2C6.7090500@pobox.com>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:16824 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S261251AbUKBRnt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Nov 2004 12:43:49 -0500
-In-Reply-To: <20041102022604.262058c4.akpm@osdl.org>
+Received: from rproxy.gmail.com ([64.233.170.197]:62264 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261978AbUKBVvr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Nov 2004 16:51:47 -0500
+Received: by rproxy.gmail.com with SMTP id i8so11469rne
+        for <linux-ide@vger.kernel.org>; Tue, 02 Nov 2004 13:51:36 -0800 (PST)
+In-Reply-To: <4183B2C6.7090500@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Christopher Chan <cchan@outblaze.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tobias Lorenz <tobias.lorenz@gmx.net>, linux-ide@vger.kernel.org
 
-On Maw, 2004-11-02 at 10:26, Andrew Morton wrote:
-> Well the problem is that "Wait for ready" thing.  Was that an alanism?
+On Sat, 30 Oct 2004 11:27:02 -0400, Jeff Garzik <jgarzik@pobox.com> wrote:
+> Tobias Lorenz wrote:
+> > Hi,
+> >
+> >
+> >>This patch doesn't apply, since it is prefixed with "> " ...
+> >
+> > You are right... here is a corrected version.
+> >
+> > This patch adds support for transfering drive informations via the
+> > hd_driveid structure to the hdparm utility. At the moment, only
+> > cylinders, sectors, heads, model and firmware version are transfered.
+> 
+> Applied to libata-dev...  I'll need to ponder the correctness a bit
+> more, before pushing upstream.
 
-What are you on about ? The problem is that in the two traces his
-serverworks has moved from ide0 to ide2. 
+Speaking about correctness...
 
-Alan
+HDIO_GET_IDENTIFY returns ID block in CPU order (not LE).
 
+If you decide to add it sooner or later you will need something ala
+ide_fix_driveid() from ide-iops.c (bloat).
+
+Bartlomiej
