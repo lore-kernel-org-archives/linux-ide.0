@@ -1,29 +1,46 @@
 From: Alan Cox <alan@redhat.com>
-Subject: Re: PATCH: header updates for IDE changes
-Date: Mon, 16 Aug 2004 11:26:57 -0400
+Subject: PATCH: deal with further ITE funny, fix a couple of ite8212 errors
+Date: Mon, 16 Aug 2004 11:31:39 -0400
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040816152657.GB10279@devserv.devel.redhat.com>
-References: <20040815145515.GA9993@devserv.devel.redhat.com> <200408161708.04376.bzolnier@elka.pw.edu.pl>
+Message-ID: <20040816153139.GA14715@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S267725AbUHPP2S@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S267743AbUHPPlZ@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200408161708.04376.bzolnier@elka.pw.edu.pl>
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Alan Cox <alan@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Aug 16, 2004 at 05:08:04PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> These changes belong to the patches making actual use of them...
+Further stuff c/o Bryce the wondertester
 
-They just don't split along those lines and compile sanely. I did the entire
-thing as one operation because for a lot of it there are no middle grounds.
 
-> BTW What is the ordering in which your patches should be applied?
-
-Time order of message sending. I guess I should have added a PATCH n of m
-to it but didn't realise in time. While I've split them up for ease of
-understanding its likely a few steps along the way don't yield working
-IDE because of the interdependancies.
-
-Alan
+--- drivers/ide/ide-probe.c~	2004-08-16 16:19:05.830364888 +0100
++++ drivers/ide/ide-probe.c	2004-08-16 16:19:05.831364736 +0100
+@@ -784,6 +784,8 @@
+ 			if(strcmp(hwif->drives[0].id->model, drive->id->model) == 0 &&
+ 			   /* Don't do this for noprobe or non ATA */
+ 			   strcmp(drive->id->model, "UNKNOWN") &&
++			   /* ITE haven't got this figured out either (see the quirk code too) */
++			   !strstr(drive->id->model, "Integrated Technology Express") &&
+ 			   /* And beware of confused Maxtor drives that go "M0000000000" 
+ 			      "The SN# is garbage in the ID block..." [Eric] */
+ 			   strncmp(drive->id->serial_no, "M0000000000000000000", 20) && 
+--- drivers/ide/pci/it8212.c~	2004-08-16 16:22:09.545435952 +0100
++++ drivers/ide/pci/it8212.c	2004-08-16 16:14:23.251323432 +0100
+@@ -78,7 +78,7 @@
+ 
+ struct it8212_dev
+ {
+-	int smart:1,			/* Are we in smart raid mode */
++	unsigned int smart:1,		/* Are we in smart raid mode */
+ 		timing10:1;		/* Rev 0x10 */
+ 	u8	clock_mode;		/* 0, ATA_50 or ATA_66 */
+ 	u8	want[2][2];		/* Mode/Pri log for master slave */
+@@ -652,7 +652,7 @@
+ 		printk(KERN_ERR "it8212: out of memory, falling back to legacy behaviour.\n");
+ 		goto fallback;
+ 	}
+-	memset(idev, 0, sizeof(*idev));
++	memset(idev, 0, sizeof(struct it8212_dev));
+ 	ide_set_hwifdata(hwif, idev);
+ 
+ 	hwif->remove = it8212_memfree;
