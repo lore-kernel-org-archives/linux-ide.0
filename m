@@ -1,74 +1,65 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [BK PATCH] (resend) 2.6.x libata fix
-Date: Wed, 27 Oct 2004 02:26:05 -0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20041027062605.GA15330@havoc.gtf.org>
+Subject: [SATA] libata-dev queue updated
+Date: Wed, 27 Oct 2004 02:52:08 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20041027065208.GA16230@havoc.gtf.org>
+Reply-To: linux-ide@vger.kernel.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.28.190.101]:45530 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S262306AbUJ0G2F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Oct 2004 02:28:05 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262324AbUJ0G4t@vger.kernel.org>
 Content-Disposition: inline
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org
 
 
-Re-sending mainly because I accidentally blew away the upstream tree.
+Nothing new, just updating for recent kernels.
 
-Anyone who keeps a local clone of the libata-2.6 queue, please erase and
-re-clone.  Thanks.
+BK users:
 
+	bk pull bk://gkernel.bkbits.net/libata-dev-2.6
 
+Patch:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.10-rc1-bk5-libata1-dev1.patch.bz2
 
-Please do a
-
-	bk pull bk://gkernel.bkbits.net/libata-2.6
+The libata-dev-2.6 patch requires the libata-2.6 patch, which is
+available at:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.10-rc1-bk5-libata1.patch.bz2
 
 This will update the following files:
 
- drivers/scsi/libata-scsi.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/Kconfig         |    8 
+ drivers/scsi/Makefile        |    1 
+ drivers/scsi/libata-core.c   |   38 +-
+ drivers/scsi/libata-scsi.c   |  395 +++++++++++++++++++++-
+ drivers/scsi/libata.h        |    2 
+ drivers/scsi/pata_pdc2027x.c |  758 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sata_promise.c  |   56 +++
+ include/linux/ata.h          |    1 
+ include/linux/libata.h       |    2 
+ include/scsi/scsi.h          |    3 
+ 10 files changed, 1249 insertions(+), 15 deletions(-)
 
 through these ChangeSets:
 
-<jgarzik@pobox.com> (04/10/26 1.2067.4.2)
-   [libata] use kunmap_atomic() correctly
+<albertcc:tw.ibm.com>:
+  o [libata] add driver for Promise PATA 2027x
 
-diff -Nru a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
---- a/drivers/scsi/libata-scsi.c	2004-10-27 02:24:55 -04:00
-+++ b/drivers/scsi/libata-scsi.c	2004-10-27 02:24:55 -04:00
-@@ -742,13 +742,13 @@
-  *	spin_lock_irqsave(host_set lock)
-  */
- 
--static inline void ata_scsi_rbuf_put(struct scsi_cmnd *cmd)
-+static inline void ata_scsi_rbuf_put(struct scsi_cmnd *cmd, u8 *buf)
- {
- 	if (cmd->use_sg) {
- 		struct scatterlist *sg;
- 
- 		sg = (struct scatterlist *) cmd->request_buffer;
--		kunmap_atomic(sg->page, KM_USER0);
-+		kunmap_atomic(buf - sg->offset, KM_USER0);
- 	}
- }
- 
-@@ -778,7 +778,7 @@
- 	buflen = ata_scsi_rbuf_get(cmd, &rbuf);
- 	memset(rbuf, 0, buflen);
- 	rc = actor(args, rbuf, buflen);
--	ata_scsi_rbuf_put(cmd);
-+	ata_scsi_rbuf_put(cmd, rbuf);
- 
- 	if (rc)
- 		ata_bad_cdb(cmd, args->done);
-@@ -1264,7 +1264,7 @@
- 			buflen = ata_scsi_rbuf_get(cmd, &buf);
- 			buf[2] = 0x5;
- 			buf[3] = (buf[3] & 0xf0) | 2;
--			ata_scsi_rbuf_put(cmd);
-+			ata_scsi_rbuf_put(cmd, buf);
- 		}
- 		cmd->result = SAM_STAT_GOOD;
- 	}
+<andyw:pobox.com>:
+  o [libata scsi] support 12-byte passthru CDB
+  o [libata scsi] passthru CDB check condition processing
+  o T10/04-262 ATA pass thru - patch
+
+<erikbenada:yahoo.ca>:
+  o [libata sata_promise] support PATA ports on SATA controllers
+
+Brad Campbell:
+  o libata basic detection and errata for PATA->SATA bridges
+
+Jeff Garzik:
+  o [libata] fix SATA->PATA bridge detect compile breakage
+  o [libata] use kunmap_atomic() correctly
+  o [libata] fix printk warning
+
+John W. Linville:
+  o libata: SMART support via ATA pass-thru
