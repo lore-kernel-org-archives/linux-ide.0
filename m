@@ -1,61 +1,55 @@
-From: "Maciej W. Rozycki" <macro@ds2.pg.gda.pl>
-Subject: Re: [PATCH] remove dead drivers/ide/ppc/swarm.c
-Date: Wed, 5 May 2004 21:05:10 +0200 (CEST)
+From: "Leon Woestenberg" <leonw@mailcan.com>
+Subject: Marvell 88SX504x 88SX508x SATA host controller drivers?
+Date: Wed, 05 May 2004 22:30:39 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.55.0405052037430.17021@jurand.ds.pg.gda.pl>
-References: <200405040134.22092.bzolnier@elka.pw.edu.pl>
- <Pine.LNX.4.55.0405041621370.32082@jurand.ds.pg.gda.pl>
- <Pine.LNX.4.55.0405051555170.17257@jurand.ds.pg.gda.pl>
- <200405051934.02630.bzolnier@elka.pw.edu.pl>
+Message-ID: <1083789039.12945.185714943@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jurand.ds.pg.gda.pl ([153.19.208.2]:16028 "EHLO
-	jurand.ds.pg.gda.pl") by vger.kernel.org with ESMTP id S264768AbUEETFM
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 May 2004 15:05:12 -0400
-In-Reply-To: <200405051934.02630.bzolnier@elka.pw.edu.pl>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:24762 "EHLO
+	out2.smtp.messagingengine.com") by vger.kernel.org with ESMTP
+	id S264804AbUEEUal (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 May 2004 16:30:41 -0400
+Received: from server2.messagingengine.com (server2.internal [10.202.2.133])
+	by mail.messagingengine.com (Postfix) with ESMTP id 0A5A9B1D430
+	for <linux-ide@vger.kernel.org>; Wed,  5 May 2004 16:30:39 -0400 (EDT)
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Ralf Baechle <ralf@linux-mips.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wed, 5 May 2004, Bartlomiej Zolnierkiewicz wrote:
+Hello,
 
-> > so barring the completely bogus addresses reported (the interface is
-> > decoded at 0x100b0000 and that's MMIO, unrelated to the PCI I/O space -- I
-> > guess fixing it would require a significant update to ide-probe.c and
-> > elsewhere), it looks OK.  This is in a little-endian configuration -- I'll
-> 
-> I suppose these are the addresses after ioremap() so no problem here.
+I am aware of one open-source driver for the Marvell SATA host controller
+series:
 
- Not even that -- the exact calculation leading to the base address
-reported is:
+Marvell 88SX5040/88SX5041/88SX5080/88SX5081
 
-ioremap_nocache(0x100b0000) - ioremap(0xdc000000) + (0x1f0 << 5)
+1 = integrated flash interface
+4 = four-port model
+8 = eight-port model
 
-and is really a workaround for no better way of expressing an address of
-an MMIO IDE interface (0xdc000000 is the base address of the PCI I/O
-space, unswapped).  I see no reason to use virtual addresses for report 
-here.
+It is available here: ftp://ftp.supermicro.com/driver/SATA/DAC_SATA-MV8/
+(source code) and should compile under at least Red Hat kernels.
 
-> > recheck for big endianness once I have appropriate userland installed
-> > (which is likely not very soon).  It shouldn't matter much, though -- I've
-> > checked documentation and I've found out that while the generic bus (the
-> > IDE connector is wired to) is big-endian externally, the internal logic
-> > does swapping if the system is configured for little-endian operation.
-> 
-> IDE bus must be always LE independently of system being LE or BE.
-> 
-> If system is LE this is OK as the internal logic does swapping but in case
-> when system is BE swapping is also needed.
+Are there reports on its proven quality, whether SMART works with
+smartmontools,
+and if/how hotplug/hot-add/hot-swap/hot-remove is handled?
 
- Well, I suppose they have simply swapped bytes at the connector. ;-)  
-This is a guess, though, as I lack docs in this area.  The important bit
-is the endiannes of the generic bus used here never changes.
+I.e. can we run a 4 disk software RAID-5 from this controller and use
+hot-swap
+and SMART reliably?
 
-  Maciej
+Also, I noticed there is no driver yet for the libata framework by Jeff
+Garzik.
+Jeff reported to work on hotswap RSN so maybe a libata driver for Marvell
+is
+the way to go?
 
--- 
-+  Maciej W. Rozycki, Technical University of Gdansk, Poland   +
-+--------------------------------------------------------------+
-+        e-mail: macro@ds2.pg.gda.pl, PGP key available        +
+Given the host controller chip datasheet, would it be hard to add a
+libata driver
+(what are the hurdles to take?)
+
+Regards,
+
+Leon.
