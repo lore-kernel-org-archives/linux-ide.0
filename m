@@ -1,34 +1,31 @@
-From: "J. Ryan Earl" <heretic@clanhk.org>
-Subject: Re: hot plugable?
-Date: Fri, 16 Apr 2004 20:51:57 -0500
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: [PATCH] IDE cleanups/fixups for 2.6.6-rc1 [0/3]
+Date: Sun, 18 Apr 2004 01:55:23 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40808DBD.8060502@clanhk.org>
-References: <pan.2004.04.13.18.37.25.709554@dungeon.inka.de>
+Message-ID: <200404180148.43941.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.clanhk.org ([69.93.101.154]:494 "EHLO mail.clanhk.org")
-	by vger.kernel.org with ESMTP id S262579AbUDQBvk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Apr 2004 21:51:40 -0400
-In-Reply-To: <pan.2004.04.13.18.37.25.709554@dungeon.inka.de>
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:13470 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S263202AbUDRAAY
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 17 Apr 2004 20:00:24 -0400
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Andreas Jellinghaus <aj@dungeon.inka.de>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Andreas Jellinghaus wrote:
 
->Hi is there any ata or sata driver that allows hotplugging with linux?
->
->combined with software raid, could it be configured, so I can replace a
->disk and repair the raid without any reboot necessary?
->  
->
-I don't think libata supports it yet, so you're SOL with most serialATA 
-controllers.
+Hi,
 
-Only certain hardware supports it (ie 3ware), but sometimes hardware 
-performance can be surprising low compared to software RAID solutions.  
-You'd have to test to see which solution worked best for you.
+Three patches:
+- ide.c: split init_hwif_default() out of init_hwif_data()
+- ide_init_default_hwifs() -> ide_init_default_irq()
+- generic ide_init_hwif_ports()
 
--ryan
+Long-term goal is to obsolete <asm/ide.h>...
+
+Bartlomiej
+
