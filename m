@@ -1,28 +1,34 @@
-From: kernel <kernel@nea-fast.com>
-Subject: A little confused - Silicon Image 3112
-Date: Mon, 17 Jan 2005 12:25:57 -0500
-Message-ID: <41EBF525.4090500@nea-fast.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: How do I try libata with a PATA PCI controller?
+Date: Mon, 17 Jan 2005 13:51:15 -0500
+Message-ID: <87f94c37050117105176054565@mail.gmail.com>
+Reply-To: Greg Freemyer <greg.freemyer@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.nea-fast.com ([66.35.146.201]:47310 "EHLO
-	int1.nea-fast.com") by vger.kernel.org with ESMTP id S262343AbVAQRZ5
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 Jan 2005 12:25:57 -0500
-Received: from nea-fast.com (unknown [192.168.1.101])
-	by int1.nea-fast.com (Postfix) with ESMTP id ADDD328058B8
-	for <linux-ide@vger.kernel.org>; Mon, 17 Jan 2005 12:25:56 -0500 (EST)
+Received: from wproxy.gmail.com ([64.233.184.202]:58495 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262588AbVAQSvP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jan 2005 13:51:15 -0500
+Received: by wproxy.gmail.com with SMTP id 67so944326wri
+        for <linux-ide@vger.kernel.org>; Mon, 17 Jan 2005 10:51:15 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: IDE Linux <linux-ide@vger.kernel.org>
 
-I'm wanting to set up a sata raid 1 (non booting) array with a SIL 3112 
-chipset (2.4.28 kernel).  I'm assuming I need to configure the sata 
-driver in and not the MEDLEY driver. Is that correct ? Also, is the 3112 
-a software or hardware raid. drivers/ide/raid/medley.c calls it software 
-raid but is that only if it's set up as an ide device ??
+I have several Adaptec PATA PCI controllers.  (They use SIG
+chips/firmware/driver).
 
-Thanks !
-walt
+Is there a way to use/test them with libata?
 
+In general, should I expect better or worse performance for simple
+commands like "dd if=/dev/zero of=/dev/hdc bs=50k"
+
+I am building a dedicated disk cleaner and will be running a lot of
+dd's in parrellel.  ie. I can currently do 8 with all drives set to
+Master.
+
+Thanks
+Greg
+-- 
+Greg Freemyer
