@@ -1,28 +1,40 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.11-rc3 10/11] ide: make ide_cmd_ioctl() use TASKFILE
-Date: Sun, 27 Feb 2005 02:41:19 -0500
-Message-ID: <4221799F.4050801@pobox.com>
-References: <20050210083808.48E9DD1A@htj.dyndns.org> <20050210083854.BD13DFBD@htj.dyndns.org> <58cb370e050224075040f5c031@mail.gmail.com> <20050227065348.GB27728@htj.dyndns.org>
+Subject: Re: PCI Constants Update for SATA Driver
+Date: Sun, 27 Feb 2005 13:08:42 -0500
+Message-ID: <42220CAA.90702@pobox.com>
+References: <1109526163.19325.2.camel@forge.intermeta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:39302 "EHLO
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38855 "EHLO
 	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261363AbVB0Hli (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 27 Feb 2005 02:41:38 -0500
-In-Reply-To: <20050227065348.GB27728@htj.dyndns.org>
+	id S261489AbVB0SJC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Feb 2005 13:09:02 -0500
+In-Reply-To: <1109526163.19325.2.camel@forge.intermeta.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Henning Schmiedehausen <hps@intermeta.de>
+Cc: Linux IDE Mailingliste <linux-ide@vger.kernel.org>
 
-For what it's worth...
+Henning Schmiedehausen wrote:
+> Hi,
+> 
+> having the various constants in pci_ids.h is a really good thing for
+> grepping through the kernel source. And if they were used, it would be
+> even better (if you e.g. are looking for which driver claims an SIImage
+> 3112 card...). However, the sata_xxx.c files in the drivers/scsi
+> directory are notorious for not using the PCI Ids but just hard coded
+> numbers.
+> 
+> This patch tries to fix this. It is against the 2.6.10 tree from Fedora
+> Core 3 but should apply to a regular 2.6.10 too.
 
-Some vendor-specific commands on PATA devices require -exact- 
-specification of registers in, and registers out.  You never want to 
-read more registers than are flagged.  Ditto for write.
+"Notorious", heh.  This is quite intentional.
+
+PCI device ids are just random numbers that vendors pick out of thin 
+air.  Device id symbolic constants have little value, and creates churn 
+whereby every kernel hacker is patching include/linux/pci_ids.h.
 
 	Jeff
-
 
 
