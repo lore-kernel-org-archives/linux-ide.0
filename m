@@ -1,68 +1,41 @@
-From: hab <hab@hbahr.org>
-Subject: libata patches in 2.6.7bk6 Hang Maxtor on SP bridge
-Date: Mon, 28 Jun 2004 17:07:50 -0500
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: PATCH for disabling write cache on SATA drives
+Date: Mon, 28 Jun 2004 20:12:26 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40E096B6.8090108@hbahr.org>
+Message-ID: <20040629001225.GA23878@havoc.gtf.org>
+References: <1F6D1D1660975A4887628A011443A1BC07734BF9@uswaumsx13medge.med.ge.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060709000700020704010700"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mxsf21.cluster1.charter.net ([209.225.28.221]:52435 "EHLO
-	mxsf21.cluster1.charter.net") by vger.kernel.org with ESMTP
-	id S265266AbUF1W1V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Jun 2004 18:27:21 -0400
-Received: from mxip07.cluster1.charter.net (mxip07a.cluster1.charter.net [209.225.28.137])
-	by mxsf21.cluster1.charter.net (8.12.11/8.12.11) with ESMTP id i5SMRW1o002532
-	for <linux-ide@vger.kernel.org>; Mon, 28 Jun 2004 18:27:32 -0400
+Received: from havoc.gtf.org ([216.162.42.101]:21671 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S265353AbUF2AMe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jun 2004 20:12:34 -0400
+Content-Disposition: inline
+In-Reply-To: <1F6D1D1660975A4887628A011443A1BC07734BF9@uswaumsx13medge.med.ge.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------060709000700020704010700
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Fri, Jun 25, 2004 at 06:21:24PM -0500, Edwards, Scott (MED, Kelly IT Resouces) wrote:
+> 
+> I don't know if this is useful for anyone or if anyone even cares, but just
+> in case someone does, this is the patch I made to disable the write cache on
+> the Serial ATA drives.  It doesn't make the write cache controllable from
+> the user level, it just ALWAYS disables it.  (I tried to make one that could
+> be sent via an ioctl, but there were far too many things that I didn't
+> understand and it didn't work.)  Since I have never done this before I don't
+> know if there is some protocol that I missed, if so I'm sorry.  If there are
+> glaring stupid mistakes (very likely) please let me know.
 
-Sir
-    I resolved problem by baking out scsi portion of patches, athough
-some general configs such as FC2 development still introduce
-the same problem as identified in the attached message.
-Please assist me in resolving this problem.
-Hubert Bahr
+In principle your patch is fine, but I would really like to find a
+better way of allowing the user to do this.
 
---------------060709000700020704010700
-Content-Type: message/rfc822;
- name="Sata-Sil bk6-bk8 hangs Maxtor with S-P bridge"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="Sata-Sil bk6-bk8 hangs Maxtor with S-P bridge"
+My immediate guess would be to use the standard SCSI method of disabling
+write cache, and have that initiate wbcache disable on the SATA side.
 
-Message-ID: <40DDC641.1070403@hbahr.org>
-Date: Sat, 26 Jun 2004 13:53:53 -0500
-From: hab <hab@hbahr.org>
-User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6) Gecko/20040113
-X-Accept-Language: en-us, en
-MIME-Version: 1.0
-To: linux-kernel@vger.kernel.org
-Subject: Sata-Sil bk6-bk8 hangs Maxtor with S-P bridge
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Long term, this would be augmented by an "ATA passthru" opcode or ioctl.
 
-With Bk6 and beyond I recieve a
-command 0x25 Timeout Stat 0x50 host-stat 0x4  and then a hang in init.
-I can cntl alt del to reboot.
-This is with a Maxtor 6y160po  YAR4,  I also have a Maxtor 6y250P0
-
-Earlier in the boot sequence I recieve a screaming interupt message and
-interupt turned off message for the interupt used by the controller.
-
-These work for 2.6.7 and 2.6.7 bk5.
-It works for the ide implementation with the thousands of
-
-sata_error = 0x00000000, watchdog = 0, siimage_mmio_ide_dma_test_irq
-
-messages.
-
-thanks  Hubert
+	Jeff
 
 
---------------060709000700020704010700--
+
