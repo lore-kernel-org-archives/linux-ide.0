@@ -1,32 +1,56 @@
-From: Jens Axboe <axboe@suse.de>
+From: Thomas Schlichter <thomas.schlichter@web.de>
 Subject: Re: Processes receive SIGSEGV if TCQ is enabled
-Date: Fri, 31 Oct 2003 14:00:41 +0100
+Date: Fri, 31 Oct 2003 14:11:55 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20031031130041.GI7314@suse.de>
-References: <200310301601.55588.schlicht@uni-mannheim.de> <200310301848.19065.bzolnier@elka.pw.edu.pl>
+Message-ID: <200310311411.59469.thomas.schlichter@web.de>
+References: <200310301601.55588.schlicht@uni-mannheim.de> <200310301848.19065.bzolnier@elka.pw.edu.pl> <20031031130041.GI7314@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1;
+  boundary="Boundary-02=_f+lo/EhkHgRJTAA";
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:34208 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S263293AbTJaNAk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Oct 2003 08:00:40 -0500
-Content-Disposition: inline
-In-Reply-To: <200310301848.19065.bzolnier@elka.pw.edu.pl>
+Received: from smtp03.web.de ([217.72.192.158]:59153 "EHLO smtp.web.de")
+	by vger.kernel.org with ESMTP id S263270AbTJaNMc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Oct 2003 08:12:32 -0500
+In-Reply-To: <20031031130041.GI7314@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Thomas Schlichter <schlicht@uni-mannheim.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>, Ivan Gyurdiev <ivg2@cornell.edu>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Oct 30 2003, Bartlomiej Zolnierkiewicz wrote:
-> 
-> [ Jens - IDE TCQ maintainer 8) added to cc: ]
 
-Not really (added, that is :)
+--Boundary-02=_f+lo/EhkHgRJTAA
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> Could you also send dmesg output and retry with vanilla -test9?
+On Friday 31 October 2003 14:00, Jens Axboe wrote:
+> It's probably via + tcq, that drive is known good with ide-tcq. At least
+> I've never seen problems with it.
 
-It's probably via + tcq, that drive is known good with ide-tcq. At least
-I've never seen problems with it.
+Maybe it is a problem with via + tcq... so, how to debug?
 
--- 
-Jens Axboe
+@Ivan: Did you also use a via chipset when reporting the problems mentioned=
+ in
+http://www.ussg.iu.edu/hypermail/linux/kernel/0307.2/1655.html ? Beacuse yo=
+ur=20
+point 4) indeed looks very similar to my problems...
 
+  Thomas
+
+--Boundary-02=_f+lo/EhkHgRJTAA
+Content-Type: application/pgp-signature
+Content-Description: signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQA/ol+fYAiN+WRIZzQRAmpEAKCeL6JzglVhctR72P1e7Ks6HOdzvACghgpp
+zc+LwAf4BNfIM8kBV+29tpU=
+=Fm9L
+-----END PGP SIGNATURE-----
+
+--Boundary-02=_f+lo/EhkHgRJTAA--
