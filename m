@@ -1,49 +1,55 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] atapi request sense work
-Date: 26 May 2004 15:49:30 -0600
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] add new nForce IDE/SATA device IDs
+Date: Thu, 27 May 2004 15:38:00 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1085608170.4148.138.camel@patibmrh9>
-References: <1084717146.3576.3.camel@patibmrh9> <40AD7FB2.10506@pobox.com><1
-	 085153750.6103.33.camel@patibmrh9><200405211746.35015.bzolnier@elka.pw.ed
-	u	 .	pl><1085162347.4791.24.camel@patibmrh9><1085170025.3083.91.camel@pati
-	bm	r h9> <40AE79E1.9020005@pobox.com><1085182749.3122.15.camel@patibmrh9> <
-	40AE9493.1040701@pobox.com><1085186021.4510.0.camel@patibmrh9>  <1085188300
-	.3658.18.camel@patibmrh9>
+Message-ID: <40B64398.7090808@pobox.com>
+References: <C064BF1617D93B4B83714E38C4653A6E0AF48248@mail-sc-10.nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:477 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265839AbUEZVtd
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:46308 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S265096AbUE0TiR
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 26 May 2004 17:49:33 -0400
-In-Reply-To: <1085188300.3658.18.camel@patibmrh9>
+	Thu, 27 May 2004 15:38:17 -0400
+In-Reply-To: <C064BF1617D93B4B83714E38C4653A6E0AF48248@mail-sc-10.nvidia.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Brian Lazara <blazara@nvidia.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 
-> To my newbie surprise, I have more good news.  Teaching my -bk8 kernel
-> to clear x04 ATA_DMA_INTR, means my kernel no longer needs my lab hack of
-> the bk8.good.always.patch.
+Brian Lazara wrote:
+> Patches to add device IDs for new nForce IDE and SATA controllers.
+> Rename some of the existing controller names to correctly match released
+> product names.
 > 
-> Failure is ok now, though not yet autosensed.
+> Patches against 2.4.27-pre2 and 2.6.6
 
-Oi, I cannot repeat that result.
+It is difficult to review patches that look like the following... 
+please include the patches include, or attach them as plaintext.
 
-Sorry.  I therefore suspect back then I lost control of my version.
+Three other comments:
 
-I find now that I have to clear unit attentions via the abuse of
-unsolicited sense else { cmd->result = SAM_STAT_CHECK_CONDITION; }
-occurs, which in turn makes my open/ ioctl SG_IO/ close hang, which in
-turn denies me modprobe -r privilege.
-
-In this thread I will continue working auto sense, but for the
-contemporaneous issue of expecting no data I began again from vanilla
-2.6.7-rc1-bk3 at:
-
-Subject: [PATCH] libata SATAPI no data
-http://marc.theaimsgroup.com/?l=linux-ide&m=108560773104910
-
-Pat LaVarre
+1) please CC linux-ide@vger.kernel.org on all IDE/SATA-related patches
+2) Please To: or CC: Bartlomiej (cc'd on this email) on all drivers/ide 
+patches, as he is the IDE maintainer.
+3) Normally we want to add SATA support to libata not drivers/ide.  Do 
+the nVidia SATA chips support SATA SCRs or anything like that?  Why not 
+use libata?
 
 
+Content-Type: application/octet-stream;
+	name="linux-2.4.27-pre2-nforce-ck804-ide.patch"
+Content-Transfer-Encoding: base64
+Content-Description: linux-2.4.27-pre2-nforce-ck804-ide.patch
+Content-Disposition: attachment;
+	filename="linux-2.4.27-pre2-nforce-ck804-ide.patch"
+
+ZGlmZiAtdXByTiAtWCBkb250ZGlmZiBsaW51eC0yLjQuMjctcHJlMi9kcml2ZXJzL2lkZS9wY2kv
+YW1kNzR4eC5jIGxpbnV4LTIuNC4yNy1wcmUyLW5mb3JjZS1jazgwNC1pZGUvZHJpdmVycy9pZGUv
+cGNpL2FtZDc0eHguYwotLS0gbGludXgtMi40LjI3LXByZTIvZHJpdmVycy9pZGUvcGNpL2FtZDc0
+eHguYwkyMDA0LTA0LTE0IDA2OjA1OjI5LjAwMDAwMDAwMCAtMDcwMAorKysgbGludXgtMi40LjI3
+LXByZTItbmZvcmNlLWNrODA0LWlkZS9kcml2ZXJzL2lkZS9wY2kvYW1kNzR4eC5jCTIwMDQtMDUt
+MTcgMTM6Mjc6MzEuMDAwMDAwMDAwIC0wNzAwCkBAIC0xLDcgKzEsOCBAQAogLyoKICAqIFZlcnNp
+b24gMi4xMwogICoKLSAqIEFNRCA3NTUvNzU2Lzc2Ni84MTExIGFuZCBuVmlkaWEgbkZvcmNlLzIv
+MnMvMy8zcyBJREUgZHJpdmVyIGZvciBMaW51eC4KKyAqIEFNRCA3NTUvNzU2Lzc2Ni84MTExIGFu
+ZCBuVmlkaWEgbkZvcmNlLzIvMnMvMy8zcy9DSzgwNC9NQ1AwNCAKKyAqIElERSBkcml2ZXIgZm9y
