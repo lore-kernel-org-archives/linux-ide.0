@@ -1,51 +1,42 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: [PATCH] Unify some Kconfig options
-Date: Mon, 9 Jun 2003 21:43:09 +0100
+From: Andre Hedrick <andre@pyxtechnologies.com>
+Subject: Re: SiI3112 (Adaptec 1210SA): no devices
+Date: Wed, 11 Jun 2003 21:15:54 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20030609204309.GC28581@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <Pine.LNX.4.10.10306112115300.30142-100000@master.linux-ide.org>
+References: <200306052013.h55KDcP12104@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:50655 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261819AbTFIU3a
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Jun 2003 16:29:30 -0400
-Received: from willy by www.linux.org.uk with local (Exim 4.14)
-	id 19PTTx-0001lg-SP
-	for linux-ide@vger.kernel.org; Mon, 09 Jun 2003 21:43:09 +0100
-Content-Disposition: inline
+Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:39179
+	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
+	id S264725AbTFLEPB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Jun 2003 00:15:01 -0400
+In-Reply-To: <200306052013.h55KDcP12104@devserv.devel.redhat.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@redhat.com>
+Cc: Hugo Mills <hugo-lkml@carfax.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 
-This patch allows all architectures to simply include the
-drivers/ide/Kconfig file.  Comments?  It's 40k, so I think sending it
-inline would be deemed 'obnoxious'.  Here's the diffstat instead:
+It is the SiI3112 or SiI3114 behind and Adaptec munge.
 
- arch/alpha/Kconfig     |   60 -------------------------------------------------
- arch/arm/Kconfig       |   51 -----------------------------------------
- arch/cris/Kconfig      |    8 ------
- arch/h8300/Kconfig     |   15 ------------
- arch/i386/Kconfig      |   51 -----------------------------------------
- arch/ia64/Kconfig      |   53 -------------------------------------------
- arch/m68k/Kconfig      |   51 -----------------------------------------
- arch/m68knommu/Kconfig |   15 ------------
- arch/mips/Kconfig      |   52 ------------------------------------------
- arch/mips64/Kconfig    |   51 -----------------------------------------
- arch/parisc/Kconfig    |    6 ----
- arch/ppc/Kconfig       |   48 ---------------------------------------
- arch/ppc64/Kconfig     |   48 ---------------------------------------
- arch/sh/Kconfig        |   51 -----------------------------------------
- arch/sparc/Kconfig     |   50 ----------------------------------------
- arch/sparc64/Kconfig   |   50 ----------------------------------------
- arch/v850/Kconfig      |   10 --------
- arch/x86_64/Kconfig    |   51 -----------------------------------------
- drivers/ide/Kconfig    |   58 +++++++++++++++++++++++++++++++++++++++++++++++
- 19 files changed, 59 insertions(+), 720 deletions(-)
 
-http://ftp.linux.org.uk/pub/linux/willy/patches/ide-Kconfig.diff
+Andre Hedrick
+LAD Storage Consulting Group
 
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+On Thu, 5 Jun 2003, Alan Cox wrote:
+
+> >    I've just taken delivery of a shiny new Adaptec 1210SA Serial-ATA
+> > adapter and a 120Gb Seagate Barracuda native SATA drive. Problem is,
+> > the kernel driver doesn't seem to notice this device on boot --
+> 
+> Its not a PCI identifier I've ever seen before
+> 
+> > 00:0b.0 RAID bus controller: CMD Technology Inc: Unknown device 0240 (rev 02) (prog-if 01)
+> 
+> So its some kind of CMD now SIS device, either an SI680 or SI3112 with a 
+> weird PCI ID
+> 
+> 
+> Does it have any option to put it into non raid mode in its bios ?
+> 
+
