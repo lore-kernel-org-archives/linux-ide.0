@@ -1,29 +1,57 @@
-From: Doug Maxey <dwm@maxeymade.com>
-Subject: PATAPI via libata promise 20275 (was: RFC: moving drivers to a new drivers/ata directory)
-Date: Thu, 21 Oct 2004 12:04:45 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200410211704.i9LH4jMR008268@falcon30.maxeymade.com>
-References: <4176883D.7070905@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [BK PATCH] 2.6.x libata fix
+Date: Thu, 21 Oct 2004 13:48:12 -0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20041021174812.GA21850@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-reply-to: <4176883D.7070905@pobox.com> 
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert CC Lee <albertcc@tw.ibm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from havoc.gtf.org ([69.28.190.101]:55457 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S270769AbUJURsS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Oct 2004 13:48:18 -0400
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-
-Continuing down a somewhat related path,  what is the outlook for PATAPI
-via libata?
-
-There is a high level of interest to have hotplug controllers for ppc64, and 
-the primary (exclusive at this point) application is to drive PATAPI optical.
-
-I know you have indicated that you have some WIP to get there.  I would like 
-to offer any help to reach that goal.
-
-Would you point me to any code available?
-
-++doug
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org
 
 
+Please do a
 
+	bk pull bk://gkernel.bkbits.net/libata-2.6
+
+This will update the following files:
+
+ drivers/scsi/sata_sil.c |    1 +
+ 1 files changed, 1 insertion(+)
+
+through these ChangeSets:
+
+<akpm@osdl.org> (04/10/20 1.2255)
+   [PATCH] sata_sil mod15 quirk with Seagate ST3120026AS
+   
+   From: <stuart@cybertherial.com>
+   
+   Hardware Environment: AMD64, sil3512 controller on m/b.  Harddrive: Seagate
+   120GB ST3120026AS
+   
+   Problem Description: Drive would lock when writing large files, eg video
+   from firewire, audio editing.  Checked dmesg, was obviously the sata drive.
+   
+   Have added the drive to the blacklist in sata_sil.c and the problem seems
+   to have disappeared.
+   
+   Is there a good test to verify that the mod15 bug is really the problem?
+   
+   Signed-off-by: Andrew Morton <akpm@osdl.org>
+
+diff -Nru a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+--- a/drivers/scsi/sata_sil.c	2004-10-21 13:47:46 -04:00
++++ b/drivers/scsi/sata_sil.c	2004-10-21 13:47:46 -04:00
+@@ -87,6 +87,7 @@
+ 	{ "ST380023AS",		SIL_QUIRK_MOD15WRITE },
+ 	{ "ST3120023AS",	SIL_QUIRK_MOD15WRITE },
+ 	{ "ST3160023AS",	SIL_QUIRK_MOD15WRITE },
++	{ "ST3120026AS",	SIL_QUIRK_MOD15WRITE },
+ 	{ "ST340014ASL",	SIL_QUIRK_MOD15WRITE },
+ 	{ "ST360014ASL",	SIL_QUIRK_MOD15WRITE },
+ 	{ "ST380011ASL",	SIL_QUIRK_MOD15WRITE },
