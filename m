@@ -1,55 +1,29 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] ide-taskfile.c fixups/cleanups part #2 [6/9]
-Date: Wed, 30 Jun 2004 17:25:44 +0200
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] ide-taskfile.c fixups/cleanups part #2 [4/9]
+Date: Wed, 30 Jun 2004 11:10:25 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200406301725.44787.bzolnier@elka.pw.edu.pl>
+Message-ID: <1088611825.1921.18.camel@gaston>
+References: <200406301725.05181.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:16053 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S266708AbUF3PZa
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Jun 2004 11:25:30 -0400
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:27627 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S266767AbUF3QNj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jun 2004 12:13:39 -0400
+In-Reply-To: <200406301725.05181.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>
 
+On Wed, 2004-06-30 at 10:25, Bartlomiej Zolnierkiewicz wrote:
+> [PATCH] ide: remove BUSY check from task_in_intr() (CONFIG_IDE_TASKFILE_IO=n)
+> 
+> We shouldn't ever get there if drive is busy and we can't start transfer
+> in this case.  ide-disk.c:read_intr() also doesn't check for BUSY_STAT bit.
 
-[PATCH] ide: pre_task_mulout_intr() cleanup (CONFIG_IDE_TASKFILE_IO=n)
+What if we have a shared interrupt with another device ?
 
-drive_is_ready() reads STATUS register if CONFIG_IDEPCI_SHARE_IRQ is not
-defined and ALTSTATUS register if it is defined.  Therefore drive_is_ready()
-in pre_task_mulout_intr() only makes sense if we can't trust STATUS register
-(because we call ide_wait_stat() which reads STATUS register earlier).
+Ben.
 
-Remove this "workaround" for now as it is not present in ide-disk.c
-and whole multi PIO-out code (CONFIG_IDE_TASKFILE_IO=n) was buggy before.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-
- linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c |    7 -------
- 1 files changed, 7 deletions(-)
-
-diff -puN drivers/ide/ide-taskfile.c~ide_pre_task_mulout_intr drivers/ide/ide-taskfile.c
---- linux-2.6.7-bk11/drivers/ide/ide-taskfile.c~ide_pre_task_mulout_intr	2004-06-28 21:27:32.442035640 +0200
-+++ linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c	2004-06-28 21:27:32.448034728 +0200
-@@ -433,13 +433,6 @@ ide_startstop_t pre_task_mulout_intr (id
- 			drive->addressing ? "MULTWRITE_EXT" : "MULTWRITE");
- 		return startstop;
- 	}
--	if (!(drive_is_ready(drive))) {
--		int i;
--		for (i=0; i<100; i++) {
--			if (drive_is_ready(drive))
--				break;
--		}
--	}
- 
- 	ide_set_handler(drive, &task_mulout_intr, WAIT_WORSTCASE, NULL);
- 	task_buffer_multi_sectors(drive, rq, IDE_PIO_OUT);
-
-_
 
