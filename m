@@ -1,51 +1,111 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2.6.11-rc3 10/11] ide: make ide_cmd_ioctl() use TASKFILE
-Date: Sun, 27 Feb 2005 15:53:48 +0900
-Message-ID: <20050227065348.GB27728@htj.dyndns.org>
-References: <20050210083808.48E9DD1A@htj.dyndns.org> <20050210083854.BD13DFBD@htj.dyndns.org> <58cb370e050224075040f5c031@mail.gmail.com>
+Subject: Re: [patch ide-dev 8/9] make ide_task_ioctl() use REQ_DRIVE_TASKFILE
+Date: Sun, 27 Feb 2005 16:36:09 +0900
+Message-ID: <20050227073608.GA30796@htj.dyndns.org>
+References: <Pine.GSO.4.58.0502241547400.13534@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from wproxy.gmail.com ([64.233.184.195]:4407 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261358AbVB0Gxx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Feb 2005 01:53:53 -0500
-Received: by wproxy.gmail.com with SMTP id 49so513317wri
-        for <linux-ide@vger.kernel.org>; Sat, 26 Feb 2005 22:53:53 -0800 (PST)
+Received: from wproxy.gmail.com ([64.233.184.197]:38700 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261358AbVB0HgN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Feb 2005 02:36:13 -0500
+Received: by wproxy.gmail.com with SMTP id 49so517985wri
+        for <linux-ide@vger.kernel.org>; Sat, 26 Feb 2005 23:36:13 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <58cb370e050224075040f5c031@mail.gmail.com>
+In-Reply-To: <Pine.GSO.4.58.0502241547400.13534@mion.elka.pw.edu.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
  Hello, Bartlomiej.
 
-On Thu, Feb 24, 2005 at 04:50:39PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > +       in_valid->b.status_command      = 1;
-> > +       in_valid->b.error_feature       = 1;
-> > +       in_valid->b.nsector             = 1;
-> 
-> ide_end_drive_cmd() must be fixed first to respect ->tf_in_flags
-> and it must be done *without* affecting HDIO_DRIVE_TASKFILE.
+ This patch should be modified to use flagged taskfile if the
+task_end_request_fix patch isn't applied.  As non-flagged taskfile
+won't return valid result registers, TASK ioctl users won't get the
+correct register output.
 
- Hmmm... does it make any difference other than reading more
-registers?  Are you worried about performance impacts?  Is there
-hardware which acts differently if more registers are read?
-
-> 
-> >  extern int ide_driveid_update(ide_drive_t *);
-> > -extern int ide_ata66_check(ide_drive_t *, ide_task_t *);
-> > +int ide_ata66_check(ide_drive_t *, ide_task_t *);
-> >  extern int ide_config_drive_speed(ide_drive_t *, u8);
-> >  extern u8 eighty_ninty_three (ide_drive_t *);
-> > -extern int set_transfer(ide_drive_t *, ide_task_t *);
-> > +int set_transfer(ide_drive_t *, ide_task_t *);
-> >  extern int taskfile_lib_get_identify(ide_drive_t *drive, u8 *);
-> 
-> leftovers from previous version of the patch
-
- Yeah, sorry.
+ IMHO, this flag-to-get-result-registers thing is way too subtle.  How
+about keeping old behavior by just not copying out register outputs in
+ide_taskfile_ioctl() in applicable cases instead of not reading
+registers when ending commands?  That is, unless there's some
+noticeable performance impacts I'm not aware of.
 
  Thanks.
+
+On Thu, Feb 24, 2005 at 03:48:33PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> 
+> ide_task_ioctl() rewritten to use taskfile transport.
+> This is the last user of REQ_DRIVE_TASK.
+> 
+> bart: ported to recent IDE changes by me
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> diff -Nru a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
+> --- a/drivers/ide/ide-taskfile.c	2005-02-24 15:30:02 +01:00
+> +++ b/drivers/ide/ide-taskfile.c	2005-02-24 15:30:02 +01:00
+> @@ -777,30 +777,42 @@
+>  	return err;
+>  }
+> 
+> -static int ide_wait_cmd_task(ide_drive_t *drive, u8 *buf)
+> -{
+> -	struct request rq;
+> -
+> -	ide_init_drive_cmd(&rq);
+> -	rq.flags = REQ_DRIVE_TASK;
+> -	rq.buffer = buf;
+> -	return ide_do_drive_cmd(drive, &rq, ide_wait);
+> -}
+> -
+> -/*
+> - * FIXME : this needs to map into at taskfile. <andre@linux-ide.org>
+> - */
+> -int ide_task_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
+> +int ide_task_ioctl(ide_drive_t *drive, unsigned int cmd, unsigned long arg)
+>  {
+>  	void __user *p = (void __user *)arg;
+> -	int err = 0;
+> -	u8 args[7], *argbuf = args;
+> -	int argsize = 7;
+> +	int err;
+> +	u8 args[7];
+> +	ide_task_t task;
+> +	struct ata_taskfile *tf = &task.tf;
+> 
+>  	if (copy_from_user(args, p, 7))
+>  		return -EFAULT;
+> -	err = ide_wait_cmd_task(drive, argbuf);
+> -	if (copy_to_user(p, argbuf, argsize))
+> +
+> +	memset(&task, 0, sizeof(task));
+> +
+> +	tf->command	= args[0];
+> +	tf->feature	= args[1];
+> +	tf->nsect	= args[2];
+> +	tf->lbal	= args[3];
+> +	tf->lbam	= args[4];
+> +	tf->lbah	= args[5];
+> +	tf->device	= args[6];
+> +
+> +	task.command_type = IDE_DRIVE_TASK_NO_DATA;
+> +	task.data_phase = TASKFILE_NO_DATA;
+> +	task.handler = &task_no_data_intr;
+> +
+> +	err = ide_diag_taskfile(drive, &task, 0, NULL);
+> +
+> +	args[0] = tf->command;
+> +	args[1] = tf->feature;
+> +	args[2] = tf->nsect;
+> +	args[3] = tf->lbal;
+> +	args[4] = tf->lbam;
+> +	args[5] = tf->lbah;
+> +	args[6] = tf->device;
+> +
+> +	if (copy_to_user(p, args, 7))
+>  		err = -EFAULT;
+>  	return err;
+>  }
 
 -- 
 tejun
