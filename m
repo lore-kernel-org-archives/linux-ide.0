@@ -1,61 +1,31 @@
-From: Andrea Arcangeli <andrea@suse.de>
+From: "Craig I. Hagan" <hagan@cih.com>
 Subject: Re: [PATCH] speed up SATA
-Date: Mon, 29 Mar 2004 15:04:10 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040329130410.GH3039@dualathlon.random>
-References: <4066021A.20308@pobox.com> <200403282030.11743.bzolnier@elka.pw.edu.pl> <20040328183010.GQ24370@suse.de> <200403282045.07246.bzolnier@elka.pw.edu.pl> <406720A7.1050501@pobox.com> <20040329005502.GG3039@dualathlon.random> <40679FE3.3080007@pobox.com>
+Date: Mon, 29 Mar 2004 09:19:11 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.58.0403290918320.12087@svr.cih.com>
+References: <20040328141014.GE24370@suse.de> <40670BD9.9020707@pobox.com>
+ <20040328173508.GI24370@suse.de> <40670FDB.6080409@pobox.com>
+ <20040328175436.GL24370@suse.de> <20040328180809.GB1087@mail.shareable.org>
+  <20040328181502.GO24370@suse.de> <40671FAF.6080501@pobox.com>
+ <20040329080943.GR24370@suse.de> <20040329124147.GC4984@mail.shareable.org>
+  <20040329124421.GB24370@suse.de> <1080565536.3570.4.camel@laptop.fenrus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <40679FE3.3080007@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jens Axboe <axboe@suse.de>, William Lee Irwin III <wli@holomorphy.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from moonshine.cih.com ([204.69.206.3]:26581 "EHLO mail.cih.com")
+	by vger.kernel.org with ESMTP id S263015AbUC2RTM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Mar 2004 12:19:12 -0500
+In-Reply-To: <1080565536.3570.4.camel@laptop.fenrus.com>
 List-Id: linux-ide@vger.kernel.org
+To: Arjan van de Ven <arjanv@redhat.com>
+Cc: Jens Axboe <axboe@suse.de>, Jamie Lokier <jamie@shareable.org>, Jeff Garzik <jgarzik@pobox.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-On Sun, Mar 28, 2004 at 11:02:43PM -0500, Jeff Garzik wrote:
-> My point is there are two maximums:
+> > Might not be a silly thing to experiment with, definitely something that
+> > should be tested (added to list...)
 > 
-> 1) the hardware limit
-> 2) the limit that "makes sense", e.g. 512k or 1M for most
-> 
-> The driver should only care about #1, and should be "told" #2.
-> 
-> A very, very, very minimal implementation could be this:
-> 
-> --- 1.138/include/linux/blkdev.h        Fri Mar 12 04:33:07 2004
-> +++ edited/include/linux/blkdev.h       Sun Mar 28 22:44:15 2004
-> @@ -607,6 +607,24 @@
-> 
->  extern void drive_stat_acct(struct request *, int, int);
-> 
-> +#define BLK_DISK_MAX_SECTORS   2048
-> +#define BLK_FLOPPY_MAX_SECTORS 64
-> 
-> 
-> Hardcoding such a maximum in the driver is inflexible and IMO incorrect.
+> I wonder if the max read size could/should be correlated with the
+> readahead size for such devices... it sounds like a related property at
+> least.
 
-you're complaining the current API and you're arguing long term the
-selection of the dma size for bulk I/O should change and be more
-dynamic, but this doesn't change your patch is still wrong today.
-
-Once you change the API too, then you can set the hardwre limit in your
-driver and relay on the highlevel blkdev code to find the optimal runtime
-dma size for bulk I/O, but today it's your driver that is enforcing a
-runtime bulk dma size, not the maximim limit of the controller, and so
-you should code your patch accordingly.
-
-Probably both VM and I/O scheduler will require an override if we're
-going to set the dma size to 32M anytime in the future (though even that
-isn't obvious, I mean a battery backed ram isn't going to take that a
-long latency to read/write 32M). But that VM/IOscheduler stuff will be
-an "override", the blkdev value you're playing with is a blkdev-only
-thing indipdentent from VM and I/O scheduler, and it's the min dma size
-required to reach bulk I/O performance with minimal cpu overhead and
-that's just an hardware issue that you can measure with an OS w/o VM and
-with an OS w/o I/O scheduler. If it's too big the VM and the I/O
-scheduler may want to reduce it for various reasons, but the decision of
-this value from a blkdev point of view is indipendent from VM and I/O
-scheduler as far as I can tell. VM and I/O scheduler cares about this
-bit only if it's too big because if it's too big it hurts on latency and
-memory pressure.
+I'd like to see that (for areas where this is supported). This would
+make folks with fibre storage much happier.
