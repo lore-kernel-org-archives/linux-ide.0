@@ -1,50 +1,35 @@
-From: Lionel Bouton <Lionel.Bouton@inet6.fr>
-Subject: Re: [PATCH] sis5513 fix for SiS962 chipset
-Date: Mon, 13 Sep 2004 11:23:59 +0200
+From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Subject: Re: [patch][0/6] ide: sanitize PIO code, take 2
+Date: Mon, 13 Sep 2004 14:16:37 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4145672F.7060603@inet6.fr>
-References: <1094826555.7868.186.camel@thomas.tec.linutronix.de> <200409102321.17042.bzolnier@elka.pw.edu.pl> <4142D3AE.5050602@inet6.fr> <200409111802.45628.bzolnier@elka.pw.edu.pl>
+Message-ID: <200409131416.37972.bzolnier@elka.pw.edu.pl>
+References: <200409110026.20064.bzolnier@elka.pw.edu.pl> <4144EB28.6070401@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from www01.ies.inet6.fr ([62.210.153.201]:27584 "EHLO
-	smtp.ies.inet6.fr") by vger.kernel.org with ESMTP id S266474AbUIMJYI
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Sep 2004 05:24:08 -0400
-In-Reply-To: <200409111802.45628.bzolnier@elka.pw.edu.pl>
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:48063 "EHLO
+	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
+	id S267391AbUIMOZn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Sep 2004 10:25:43 -0400
+In-Reply-To: <4144EB28.6070401@pobox.com>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Cc: tglx@linutronix.de, LKML <linux-kernel@vger.kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <rmk+lkml@arm.linux.org.uk>
 
-Bartlomiej Zolnierkiewicz wrote the following on 09/11/2004 06:02 PM :
+On Monday 13 September 2004 02:34, Jeff Garzik wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > - bugfix: use sg->length instead of sg_dma_len(sg)
+> >   (found thanks to rmk's concerns)
+> 
+> Details?
 
->>In fact I think I'm only a speed bumper here. There's so little work to 
->>do on the sis5513 driver now that I don't follow IDE work closely 
->>anymore and must refresh my memories even for such simple patches. I 
->>believe there are people around more fit than me for sis5513 maintenance.
->>    
->>
->
->I'm not aware of any such person...
->
->  
->
+Unlike libata we don't use DMA API for PIO.
 
-Vojtech seemed quite proficient at sis5513.c hacking :-)
+> IIRC this breaks ia64 and/or other platforms?
 
->
->Dedicated maintainers are very useful even for legacy drivers.
->This way the subsystem maintainer doesn't have to worry about
->every fscking driver (less bugs, faster development). :-)
->
->  
->
+No pci_[un]map_sg() so sg->length won't be ever changed.
 
-Ok, if you think a dedicated maintainer is the way to go, I'll continue 
-to review occasional patches. In fact I enjoy doing this from time to 
-time, I was merely worried about not being the best fit for the job anymore.
-
-Regards,
-
-Lionel.
+Bartlomiej
