@@ -1,48 +1,43 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [PATCH] speed up SATA
-Date: Fri, 2 Apr 2004 02:11:08 -0800
+From: Patrick Finnegan <pat@computer-refuge.org>
+Subject: Update: Serial ATA support question
+Date: Fri, 2 Apr 2004 10:02:18 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040402101108.GA752170@sgi.com>
-References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406616EE.80301@pobox.com> <4066191E.4040702@yahoo.com.au> <40662108.40705@pobox.com> <20040328135124.GA32597@mail.shareable.org> <40670A36.3000005@pobox.com> <20040328173623.GA1087@mail.shareable.org>
+Message-ID: <200404021002.18869.pat@computer-refuge.org>
+References: <200403291444.35962.pat@computer-refuge.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:12216 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S263573AbUDBKNS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Apr 2004 05:13:18 -0500
+Received: from 12-222-129-149.client.insightBB.com ([12.222.129.149]:25273
+	"EHLO dualie.purdueriots.com") by vger.kernel.org with ESMTP
+	id S264068AbUDBPCT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Apr 2004 10:02:19 -0500
+Received: from pat by dualie.purdueriots.com with local (Exim 3.36 #1 (Debian))
+	id 1B9QBW-0004EJ-00
+	for <linux-ide@vger.kernel.org>; Fri, 02 Apr 2004 10:02:18 -0500
+In-Reply-To: <200403291444.35962.pat@computer-refuge.org>
 Content-Disposition: inline
-In-Reply-To: <20040328173623.GA1087@mail.shareable.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jamie Lokier <jamie@shareable.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: linux-ide@vger.kernel.org
 
-On Sun, Mar 28, 2004 at 06:36:23PM +0100, Jamie Lokier wrote:
-> 
-> This is what I mean: turn off write cacheing, and performance on PATA
-> drops because of the serialisation and lost inter-command time.
+So, I've got no response, is there a better place to ask this?
 
-Since you have to write the sectors in order (well, you don't have
-to, but the drives all do this), you lose a rev between each write
-when you don't queue commands or have write cacheing.
+On Monday 29 March 2004 14:44, Patrick Finnegan wrote:
+> So, I'm considering getting some SATA gear to use in a data storage
+> project.  What exactly is the state of hotplug support?  I'm
+> considering a Highpoint Tech Rocket 1540 (HPT374 chipset), and it
+> claims to support Linux as an OS, but I haven't seen anything on
+> mailing lists about use with linux, especially hotswap support.
+>
+> So, is it possible to hotswap these drives, and have the
+> controller/driver detect the new drive?
+>
+> Thanks,
+>
+> Pat
 
-> With TCQ-on-write, you can turn off write cacheing and in theory
-> performance doesn't have to drop, is that right?
-
-Correct.  I have proven this to my satisfaction.
-
-
-Regarding request sizes, the main benefit to very large (> 1MB)
-request sizes to disk drives is elimination of the lost revolution
-when write cacheing is disabled and you can't queue back-to-
-back writes.
-
-For hardware RAID, they frequently need 4MB or more to hit
-peak performance.
-
-
-I agree that we don't want a host driver to arbitrarily limit
-I/O size, because it's difficult to predict what may be connected
-to it.  It may be necessary due to deficiencies elsewhere, but
-not desired.
-
-jeremy
+Pat
+-- 
+Purdue University ITAP/RCS        ---  http://www.itap.purdue.edu/rcs/
+The Computer Refuge               ---  http://computer-refuge.org
