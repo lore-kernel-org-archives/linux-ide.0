@@ -1,63 +1,34 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: libata PATA support - work items?
-Date: Wed, 05 Jan 2005 03:43:23 +0000
-Message-ID: <1104893729.24187.135.camel@localhost.localdomain>
-References: <006301c4ee5c$49e6a230$95714109@tw.ibm.com>
-	 <311601c9050101111929aef5ba@mail.gmail.com>  <41DB299C.3030405@pobox.com>
-	 <1104886199.17176.115.camel@localhost.localdomain>
-	 <41DB5417.8020608@pobox.com>
+From: Olaf Hering <olh@suse.de>
+Subject: [PATCH] disable debug in IDE ppc/pmac driver
+Date: Wed, 5 Jan 2005 09:07:40 +0100
+Message-ID: <20050105080740.GA19267@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:52664 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S262243AbVAEEsD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Jan 2005 23:48:03 -0500
-In-Reply-To: <41DB5417.8020608@pobox.com>
+Received: from mail.suse.de ([195.135.220.2]:58286 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S262297AbVAEIHl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jan 2005 03:07:41 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Eric Mudama <edmudama@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Albert Lee <albertcc@tw.ibm.com>, IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@suse.de>
-
-On Mer, 2005-01-05 at 02:42, Jeff Garzik wrote:
-> > - IORDY timers (not handled well in drivers/ide but needed)
-> I think I know what this is.
-
-The SII has support for this in the h/w btw (see the docs). Otherwise
-IDE as a protocol can get stuck if the drive enters rotating doorstop
-mode at the wrong moment.
-
-> > - Funky Maxtor "LBA48.. maybe" oddments
-> details?
-
-There are a couple of "yes we do LBA48" "no we don't do this command in
-LBA48" cases with maxtors (Cache flush is one, the stroke stuff triggers
-another)
-
-> > - Missing slave detection
-> 
-> Not missing, master/slave has been working for ages.  Needed for 
-> combined mode, where a SATA device can appear as a slave.
-
-No no - some devices have a master and a slave on them when you detect
-but only one disk attached because they forgot to bother decoding it in
-the adapter (eg some pcmcia with microdrives). This causes bad shit
-especially with hal style automounting.
-
-> > - Bandwidth arbiter (not in drivers/ide but needed)
-> interesting
-
-Its effectively serialize I think that is needed but with >1 at a time.
-
-> > - Non PCI shared IRQ mess 8(
-> details?
-
-ISA IRQ lines - two controllers, one IRQ but edge triggered and not
-sharable directly. The core old IDE code actually supports all of this
-and people have run stuff like 6 ISA IDE controllers in a PC.[1]
-
-Alan
-[1] Seek medical advice before trying this at home
+To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org
 
 
+Ben did not disagree to hide the 3 additional lines printed when booting
+my ibook with the 'quiet' cmdline option.
+I think these debug printk have no real value for normal operation.
+
+Signed-off-by: Olaf Hering <olh@suse.de>
+
+diff -purNx tags linux-2.6.10.orig/drivers/ide/ppc/pmac.c linux-2.6.10-olh/drivers/ide/ppc/pmac.c
+--- linux-2.6.10.orig/drivers/ide/ppc/pmac.c	2004-12-31 09:29:17.000000000 +0100
++++ linux-2.6.10-olh/drivers/ide/ppc/pmac.c	2004-12-31 10:22:20.000000000 +0100
+@@ -52,7 +52,7 @@
+ 
+ #include "ide-timing.h"
+ 
+-#define IDE_PMAC_DEBUG
++#undef IDE_PMAC_DEBUG
+ 
+ #define DMA_WAIT_TIMEOUT	50
+ 
