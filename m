@@ -1,38 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Pata support on Promise controller under Fedora Core 3
-Date: Wed, 27 Oct 2004 10:08:52 -0400
+From: "J.A. Magallon" <jamagallon@able.es>
+Subject: Re: [BK PATCHES] ide-2.6 update
+Date: Wed, 27 Oct 2004 14:29:23 +0000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <417FABF4.6050008@pobox.com>
-References: <20041027135800.77927.qmail@web88007.mail.re2.yahoo.com>
+Message-ID: <1098887363l.6679l.0l@werewolf.able.es>
+References: <58cb370e04102706074c20d6d7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:43688 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262449AbUJ0OJL
+Received: from smtp09.auna.com ([62.81.186.19]:45042 "EHLO smtp09.retemail.es")
+	by vger.kernel.org with ESMTP id S262459AbUJ0O3Y convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Oct 2004 10:09:11 -0400
-In-Reply-To: <20041027135800.77927.qmail@web88007.mail.re2.yahoo.com>
+	Wed, 27 Oct 2004 10:29:24 -0400
+In-Reply-To: <58cb370e04102706074c20d6d7@mail.gmail.com> (from
+	bzolnier@gmail.com on Wed Oct 27 15:07:14 2004)
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Ericisko <linux2@rogers.com>
-Cc: "James C. Bevier" <jbev@jbsys.com>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Ericisko wrote:
-> James,
+
+On 2004.10.27, Bartlomiej Zolnierkiewicz wrote:
+> Please do a
 > 
-> you have the same controller as me (PDC20378) which
-> has only 1 PATA port. PATA ports support up to 2
-> devices per port, as opposed to SATA ports which
-> support only 1 device per port.
-> There is source code for 2.4 linux driver on Promise
-> web site, you can have a look.
-> Could you send your dmesg output?
+> 	bk pull bk://bart.bkbits.net/ide-2.6
+> 
+> This will update the following files:
 
+Watch your mailer, it is wrapping lines...
+See:
 
-Note that PDC2037x has a "dual master mode", where two PATA devices 
-(master/slave) on the same cable can be made to look like two 
-independent PATA masters, thus giving the illusion that there are two ports.
+http://marc.theaimsgroup.com/?l=linux-ide&m=109888304706759&q=raw
 
-	Jeff
+and search for 'long data_size'.
+
+--
+J.A. Magallon <jamagallon()able!es>     \               Software is like sex:
+werewolf!able!es                         \         It's better when it's free
+Mandrakelinux release 10.1 (Community) for i586
+Linux 2.6.9-jam1 (gcc 3.4.1 (Mandrakelinux 10.1 3.4.1-4mdk)) #4
 
 
