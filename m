@@ -1,66 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [BK PATCH] 2.6.x libata update
-Date: Wed, 12 Jan 2005 01:34:04 -0500
-Message-ID: <41E4C4DC.3070901@pobox.com>
+From: Philip Armstrong <phil@kantaka.co.uk>
+Subject: Re: (fwd) Re: Bug#289770: kernel-image-2.6.10-1-686: 2.6.10 fails to set up DMA on my IBM thinkpad
+Date: Wed, 12 Jan 2005 12:02:45 +0000
+Message-ID: <20050112120245.GA24839@kantaka.co.uk>
+References: <20050111195345.GI2618@stro.at>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060109020200040804000902"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:25480 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261256AbVALGeX
+Received: from dsl-217-155-153-11.zen.co.uk ([217.155.153.11]:2986 "EHLO
+	217.155.153.11") by vger.kernel.org with ESMTP id S261162AbVALMCr
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 12 Jan 2005 01:34:23 -0500
+	Wed, 12 Jan 2005 07:02:47 -0500
+Content-Disposition: inline
+In-Reply-To: <20050111195345.GI2618@stro.at>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: maximilian attems <debian@sternwelten.at>
+Cc: linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, 289770@bugs.debian.org
 
-This is a multi-part message in MIME format.
---------------060109020200040804000902
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Tue, Jan 11, 2005 at 08:53:45PM +0100, maximilian attems wrote:
+> dma on a thinkpad  600E worked for 2.6.8, but didn't since 2.6.9
+> also non working 2.6.10.
+> 
+> -hda: 12594960 sectors (6448 MB) w/460KiB Cache, CHS=13328/15/63, UDMA(33)
+> +hda: 12594960 sectors (6448 MB) w/460KiB Cache, CHS=13328/15/63
+> 
+> could you please look at the following ide dma bug report for piix in
+> debian -> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=289770
+> full dmesg of both 2.6.8 and 2.6.10 are posted there.
 
+Incidentally, this may be the same bug as Debian bug #284558:
 
---------------060109020200040804000902
-Content-Type: text/plain;
- name="changelog.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="changelog.txt"
+  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=284558
 
-Please do a
+which involves more recent PIIX hardware.
 
-	bk pull bk://gkernel.bkbits.net/libata-2.6
+Phil
 
-This will update the following files:
-
- drivers/scsi/sata_sil.c |    2 ++
- 1 files changed, 2 insertions(+)
-
-through these ChangeSets:
-
-<fli@ati.com> (05/01/12 1.2504)
-   [libata sata_sil] support ATI IXP300/IXP400 SATA
-
-
---------------060109020200040804000902
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-diff -Nru a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
---- a/drivers/scsi/sata_sil.c	2005-01-12 01:07:04 -05:00
-+++ b/drivers/scsi/sata_sil.c	2005-01-12 01:07:04 -05:00
-@@ -71,6 +71,8 @@
- 	{ 0x1095, 0x0240, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
- 	{ 0x1095, 0x3512, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
- 	{ 0x1095, 0x3114, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3114 },
-+	{ 0x1002, 0x436e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
-+	{ 0x1002, 0x4379, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
- 	{ }	/* terminate list */
- };
- 
-
---------------060109020200040804000902--
+-- 
+http://www.kantaka.co.uk/ .oOo. public key: http://www.kantaka.co.uk/gpg.txt
