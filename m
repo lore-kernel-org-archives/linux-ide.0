@@ -1,48 +1,58 @@
-From: Citroklar <citroklar@amule.org>
-Subject: Re: Bug or my setup?
-Date: Fri, 29 Oct 2004 02:38:33 +0200
+From: Hitech Recruit <hitech.recruit@gmail.com>
+Subject: [Job] Senior Software Engineer - Linux Kernel (Silicon Valley)
+Date: Thu, 28 Oct 2004 19:40:58 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1099010313.3978.13.camel@first>
-References: <1098986037.4933.6.camel@first> <418153C8.8080800@developers.dk>
-	 <58cb370e041028133252e723c9@mail.gmail.com>
+Message-ID: <c855509804102819402e31f958@mail.gmail.com>
+Reply-To: Hitech Recruit <hitech.recruit@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [82.149.231.169] ([82.149.231.169]:43730 "EHLO
-	nsi16.miniserver.de") by vger.kernel.org with ESMTP id S263212AbUJ2AjI
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Oct 2004 20:39:08 -0400
-Received: from [192.168.0.7] (pd95e6b08.dip.t-dialin.net [217.94.107.8])
-	by nsi16.miniserver.de (nsi16.miniserver.de) with ESMTP id 9BDC58AC1FD
-	for <linux-ide@vger.kernel.org>; Fri, 29 Oct 2004 02:31:32 +0200 (CEST)
-In-Reply-To: <58cb370e041028133252e723c9@mail.gmail.com>
+Received: from wproxy.gmail.com ([64.233.184.195]:7146 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S263138AbUJ2ClA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Oct 2004 22:41:00 -0400
+Received: by wproxy.gmail.com with SMTP id 68so545924wri
+        for <linux-ide@vger.kernel.org>; Thu, 28 Oct 2004 19:40:59 -0700 (PDT)
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-> What bugs are left in 2.6.10-rc1?
-> -
+Hi all,
 
-I recompiled with #define ATA_ENABLE_ATAPI - and got only this:
+We are currently working on an immediate opening for a Linux Kernel
+Engineer in Silicon Valley.  If interested, please reply to
+hitech.recruit@gmail.com .  If not, please pass the word around. Thx.
 
-ata3: command 0xa0 timeout, stat 0xf8 host_stat 0x0
+_________________________________
 
-Drive was not accessible. Then I tried recompiling with #define
-ATA_DEBUG and #define ATA_VERBOSE_DEBUG but the only thing I got are
-millions of message lines rolling over my screen, and the log entries on
-that million lines about ata3 where my DVD is is only one line:
+Senior Software Engineer - Linux Kernel
 
-ata_host_intr: ata3: host_stat 0x0
+Our client is developing best of breed remote office solutions that
+unify multiple services, such as routing, firewall, intrusion
+detection, virtual private networking, and directing and filtering
+content into a single, resilient, and highly manageable platform.
 
-Then, I tried with #define ATA_ENABLE_PATA and #define ATA_ENABLE_DMADIR
-which gave the following: the kernel would boot up finding my SATA
-harddisks and finding the name of the DVD drive! Something new! but then
-it hang with a 0xa0 error on that dvd drive and the kernel didn't boot
-further. I'm sorry there are no logs.
+Furthermore our client's solution meets customer needs for managing
+remote office networks rather than the remote device, while minimizing
+capital and operational expenses in providing high quality broadband
+services to remote sites.
 
-If there's anything I can do in particular, please tell me, but I am new
-to kernel debugging although I have some experience in making it work
-for my setups :)
+Role:
 
-Tobias.
+Currently seeking an accomplished individual to take on a prominent
+role in the development of our embedded Linux platform. They are
+looking for someone with a deep understanding of the Linux kernel and
+internals, is actively involved in the open source development
+community, and can provide effective technical leadership.
 
+This role will suit candidates who enjoy a wide variety of challenges
+and technologies.  Key to success is your motivation, a dynamic
+approach, and desire to see results.
+
+Requirements:
+
+- BSCS 
+- + 8 yrs development experience with 3+ yrs Linux
+- Extensive Linux Kernel experience. Deep expertise in - design,
+implementation & ongoing dev roadmap of Linux Kernel.
+- Design, implement enhancements to kernel & OS features. Evaluate
+system performance on variety h/w platforms under various workloads.
+- Track, evaluate & integrate dev from open source community.
