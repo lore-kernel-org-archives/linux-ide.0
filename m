@@ -1,117 +1,63 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: SATA ATAPI work in progress
-Date: 14 May 2004 18:02:43 -0600
+From: Marc Singer <elf@buici.com>
+Subject: Re: arm-lh7a40x IDE support in 2.6.6
+Date: Fri, 14 May 2004 17:10:28 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1084579362.3271.5.camel@patibmrh9>
-References: <1084393233.3999.2.camel@patibmrh9> <40A28BB6.7090204@pobox.com>
-	<1084403654.3196.31.camel@patibmrh9>  <40A3E595.8000003@pobox.com><108455 9
-	000.4017.52.camel@patibmrh9>  <40A51604.8070208@pobox.com><1084578453.5343.
-	26.camel@patibmrh9>
+Message-ID: <20040515001028.GA9500@buici.com>
+References: <200405141840.04401.bzolnier@elka.pw.edu.pl> <200405150019.46504.bzolnier@elka.pw.edu.pl> <20040514224932.GA8061@buici.com> <200405150126.33153.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="=-dOQL8CzDdMkNezq1RvDR"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:21122 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264668AbUEOADK
+Received: from florence.buici.com ([206.124.142.26]:51337 "HELO
+	florence.buici.com") by vger.kernel.org with SMTP id S264695AbUEOAKb
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 May 2004 20:03:10 -0400
-In-Reply-To: <1084578453.5343.26.camel@patibmrh9>
+	Fri, 14 May 2004 20:10:31 -0400
+Content-Disposition: inline
+In-Reply-To: <200405150126.33153.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: rmk@arm.linux.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Sat, May 15, 2004 at 01:26:33AM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Saturday 15 of May 2004 00:49, Marc Singer wrote:
+> > On Sat, May 15, 2004 at 12:19:46AM +0200, Bartlomiej Zolnierkiewicz wrote:
+> 
+> > > > > > > - you are setting IDE_NO_IRQ in ide_init_hwif_ports() which is
+> > > > > > > used in many places in generic IDE code - anybody wanting to
+> > > > > > > understand interactions with your code + generic code will have
+> > > > > > > serious problems (especially if knows _nothing_ about lpd7a40x)
+> > > > > >
+> > > > > > I don't know what you mean.  I grep for that constant and found it
+> > > > > > nowhere except for ide-io.c and in my code.  It doesn't take much
+> > > > > > to find the references.
+> > > > >
+> > > > > I'm talking about ide_init_hwif_ports() function.
+> > > >
+> > > > Most of the ARM arch's use it.  Perhaps all of them need a good once
+> > > > over.
+> > >
+> > > Since some time I have a patch killing <asm/arch-*/ide.h>. :)
+> >
+> > OK.  That raises an interesting question.  If a) you as the IDE
+> > maintainer want to make a policy change, and b) you have a concrete
+> > action to take, then how do you go about it so that the right thing
+> > (tm) happens?
+> 
+> I posted patch to linux-arm-kernel (rmk, I can't find it in l-a-k archives
+> and I also can't find any mail about it being rejected?) and linux-ide.
+> [ and to affected arch maintainers of course ]
 
---=-dOQL8CzDdMkNezq1RvDR
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+There is a web page for posting kernel patches.  It is most likely to
+receive attention than posting to the mailing list.
 
-> > Applying patch.[12345] in order to linux-2.6.6-bk1/ here yielded:
-> > ...
-> > kernel: ata_tf_load_pio: feat 0x1 nsect 0x0 lba 0x0 0x0 0x0
-> > kernel: ata_tf_load_pio: device 0xA0
-> > kernel: ata_exec_command_pio: ata2: cmd 0xA0
-> > kernel: ata_scsi_translate: EXIT
-> > kernel: atapi_packet_task: busy wait
-> > kernel: atapi_packet_task: send cdb
-> > kernel: ata_scsi_error: ENTER
-> > kernel: ata_eng_timeout: ENTER
-> > kernel: ata2: unknown timeout, cmd 0xa0 stat 0xd0
-> > ...
-> > Next I will try
-> > o x1F1 Features = x05 Dma In and x01 Dma Out because ...
+  <http://www.arm.linux.org.uk/developer/patches/>
 
-Results follow.  Much improved now, yes?
+> > One tack would be to post to the ARM list stating that there is
+> > such-and-such, a new policy, and this requires a change to the
+> > way-things-work (tm).  Then effect a patch that breaks the bad stuff
+> > so that the users of such bad stuff must cope.
+> 
+> It is stable kernel series so I paid 'stable kernel' price
+> and made sure that it shouldn't break anything.
 
-Pat LaVarre
-
-kernel: ata_scsi_dump_cdb: CDB (2:0,0,0) 12 00 00 00 24 00 00 00 46
-kernel: ata_scsi_translate: ENTER
-kernel: ata_sg_setup_one: mapped buffer of 36 bytes for read
-kernel: ata_fill_sg: PRD[0] = (0x49EE54, 0x24)
-kernel: ata_dev_select: ENTER, ata2: device 0, wait 1
-kernel: ata_tf_load_pio: feat 0x5 nsect 0x0 lba 0x0 0x0 0x0
-kernel: ata_tf_load_pio: device 0xA0
-kernel: ata_exec_command_pio: ata2: cmd 0xA0
-kernel: ata_scsi_translate: EXIT
-kernel: atapi_packet_task: busy wait
-kernel: atapi_packet_task: send cdb
-kernel: irq 18: nobody cared!
-kernel: Call Trace:
-kernel:  [<c0107f83>] __report_bad_irq+0x2a/0x8b
-kernel:  [<c010806d>] note_interrupt+0x6f/0x9f
-kernel:  [<c01083a1>] do_IRQ+0x175/0x1a6
-kernel:  [<c0103aae>] default_idle+0x0/0x2d
-kernel:  [<c01065c0>] common_interrupt+0x18/0x20
-kernel:  [<c0103aae>] default_idle+0x0/0x2d
-kernel:  [<c0103ad8>] default_idle+0x2a/0x2d
-kernel:  [<c0103b4c>] cpu_idle+0x37/0x40
-kernel:  [<c044289c>] start_kernel+0x1b1/0x202
-kernel:  [<c0442428>] unknown_bootoption+0x0/0x129
-kernel:
-kernel: handlers:
-kernel: [<df9675a0>] (ata_interrupt+0x0/0x1a5 [libata])
-kernel: Disabling IRQ #18
-kernel: ata_scsi_error: ENTER
-kernel: ata_eng_timeout: ENTER
-kernel: ata2: unknown timeout, cmd 0xa0 stat 0x50
-kernel: ata_sg_clean: unmapping 1 sg elements
-kernel: ata_eng_timeout: EXIT
-kernel: ata_scsi_error: EXIT
-kernel: ata_scsi_dump_cdb: CDB (2:0,0,0) 12 00 00 00 c0 00 00 00 46
-
-diff -Nurp o/drivers/scsi linux-2.6.6-bk1/drivers/scsi/libata-scsi.c
---- o/drivers/scsi/libata-scsi.c	2004-05-14 18:00:22.472765072 -0600
-+++ linux-2.6.6-bk1/drivers/scsi/libata-scsi.c	2004-05-14 17:51:38.000000000 -0600
-@@ -920,6 +920,9 @@ static unsigned int atapi_xlat(struct at
- 		qc->flags |= ATA_QCFLAG_SG; /* data is present; dma-map it */
- 		qc->tf.protocol = ATA_PROT_ATAPI_DMA;
- 		qc->tf.feature |= ATAPI_PKT_DMA;
-+		if (cmd->sc_data_direction != SCSI_DATA_WRITE) {
-+			qc->tf.feature |= 0x04; /* Silicon Image DMADIR */
-+		}
- 	}
- 
- 	return 0;
-
-
---=-dOQL8CzDdMkNezq1RvDR
-Content-Disposition: attachment; filename=pel.patch.6
-Content-Type: text/x-patch; name=pel.patch.6; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-diff -Nurp o/drivers/scsi linux-2.6.6-bk1/drivers/scsi/libata-scsi.c
---- o/drivers/scsi/libata-scsi.c	2004-05-14 18:00:22.472765072 -0600
-+++ linux-2.6.6-bk1/drivers/scsi/libata-scsi.c	2004-05-14 17:51:38.000000000 -0600
-@@ -920,6 +920,9 @@ static unsigned int atapi_xlat(struct at
- 		qc->flags |= ATA_QCFLAG_SG; /* data is present; dma-map it */
- 		qc->tf.protocol = ATA_PROT_ATAPI_DMA;
- 		qc->tf.feature |= ATAPI_PKT_DMA;
-+		if (cmd->sc_data_direction != SCSI_DATA_WRITE) {
-+			qc->tf.feature |= 0x04; /* Silicon Image DMADIR */
-+		}
- 	}
- 
- 	return 0;
-
---=-dOQL8CzDdMkNezq1RvDR--
-
+Fair enough.  We'll start with lh and see if we can get others to
+follow.
