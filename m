@@ -1,25 +1,45 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: SiI3112 (Adaptec 1210SA): no devices
-Date: Thu, 5 Jun 2003 18:07:04 -0400 (EDT)
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: 2.5.70-mm5: sc1200.c compile error if !CONFIG_PROC_FS
+Date: Sat, 7 Jun 2003 16:34:01 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200306052207.h55M74Q26865@devserv.devel.redhat.com>
-References: <20030605211526.GE1542@carfax.org.uk>
+Message-ID: <20030607143401.GN15311@fs.tum.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nat-pool-rdu.redhat.com ([66.187.233.200]:38208 "EHLO
-	devserv.devel.redhat.com") by vger.kernel.org with ESMTP
-	id S264880AbTFEVxg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Jun 2003 17:53:36 -0400
-In-Reply-To: <20030605211526.GE1542@carfax.org.uk> from "Hugo Mills" at Meh 05, 2003 10:15:26 
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:8149 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S261939AbTFGOUc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 7 Jun 2003 10:20:32 -0400
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-Cc: Samuel Flory <sflory@rackable.com>, Hugo Mills <hugo-lkml@carfax.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, andre@linux-ide.org, alan@redhat.com
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-> just couldn't find _any_ other SiI3112 SATA card on the market in this
-> country. I don't run Red Hat or SuSE, and particularly not their
-> kernels -- (I normally run Alan's kernels). Does this mean that I've
-> bought a pig in a poke?
+I'm getting the following compile error in drivers/ide/pci/sc1200.c if 
+!CONFIG_PROC_FS:
 
-If its a standard SI3112 series device with a different device ID then it
-ought to work just by adding the ids to the driver.
+<--  snip  -->
+
+...
+  CC      drivers/ide/pci/sc1200.o
+drivers/ide/pci/sc1200.c: In function `sc1200_config_dma2':
+drivers/ide/pci/sc1200.c:228: warning: implicit declaration of function `sc1200_get_pci_clock'
+drivers/ide/pci/sc1200.c:240: `PCI_CLK_33' undeclared (first use in this function)
+drivers/ide/pci/sc1200.c:240: (Each undeclared identifier is reported only once
+drivers/ide/pci/sc1200.c:240: for each function it appears in.)
+drivers/ide/pci/sc1200.c:241: `PCI_CLK_48' undeclared (first use in this function)
+drivers/ide/pci/sc1200.c:242: `PCI_CLK_66' undeclared (first use in this function)
+make[3]: *** [drivers/ide/pci/sc1200.o] Error 1
+
+<--  snip  -->
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
