@@ -1,32 +1,28 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: RE: SATA (libata) + sg oops in 2.4.28-pre1
-Date: Mon, 21 Feb 2005 09:35:53 -0500
-Message-ID: <002001c51822$a6373dc0$e0019d89@cybernetics.com>
-References: <4217774B.2080206@pobox.com>
-Reply-To: <tonyb@cybernetics.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: sata_sil data corruption
+Date: Mon, 21 Feb 2005 11:17:20 -0500
+Message-ID: <421A0990.7070506@pobox.com>
+References: <Pine.LNX.4.58.0412281319001.5054@rainstorm.org> <421778E4.8060705@pobox.com> <Pine.LNX.4.58.0502211219250.23186@rainstorm.org> <4219A3AD.1000002@comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from cyborg.cybernetics.com ([206.246.200.18]:782 "EHLO
-	cyborg.cybernetics.com") by vger.kernel.org with ESMTP
-	id S261990AbVBUOfp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Feb 2005 09:35:45 -0500
-In-Reply-To: <4217774B.2080206@pobox.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:57293 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S262018AbVBUQRj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Feb 2005 11:17:39 -0500
+In-Reply-To: <4219A3AD.1000002@comcast.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Jeff Garzik' <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Doug McLain <nostar@comcast.net>
+Cc: PALFFY Daniel <dpalffy-lists@rainstorm.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> Tony Battersby wrote:
-> > I get an oops trying to get standard inquiry data from a 
-> SATA disk via
-> > /dev/sg0 in kernel 2.4.28-pre1:
-> 
-> Does this still occur, in 2.4.30-pre1?
+Doug McLain wrote:
+> The sata_sil driver is without a doubt, totally hosed.  I, along with 
 
-I don't have the hardware to test it right now.
+"without a doubt" being defined, of course, as "it works for a lot of 
+people."
 
-Anthony J. Battersby
-Cybernetics
+	Jeff
+
+
 
