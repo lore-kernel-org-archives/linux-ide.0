@@ -1,342 +1,269 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: [patch][2/9] ide: unify taskfile single/multiple PIO code
-Date: Wed, 8 Sep 2004 21:26:46 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200409082126.46361.bzolnier@elka.pw.edu.pl>
+Subject: [patch][9/9] block: remove bio walking
+Date: Wed, 8 Sep 2004 21:27:04 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200409082127.04331.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:14295 "EHLO
-	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S269315AbUIHT2N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Sep 2004 15:28:13 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S269322AbUIHTe0@vger.kernel.org>
 Received: from mion.elka.pw.edu.pl ([194.29.160.35]:56257 "EHLO
 	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
-	id S14869AbUIHTZz (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 1 other); Wed, 8 Sep 2004 21:25:55 +0200
+	id S14931AbUIHT0U (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 2 others); Wed, 8 Sep 2004 21:26:20 +0200
 Content-Disposition: inline
-List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Jens Axboe <axboe@suse.de>
+List-Id: linux-ide@vger.kernel.org
 
 
-[patch] ide: unify taskfile single/multiple PIO code
+[patch] block: remove bio walking
 
-Make the actual use of hwif->data_phase.
+IDE driver was the only user of bio walking code.
+
+I now think that block drivers shouldn't use bios directly.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 ---
 
- linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/ide-disk.c     |    9 
- linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/ide-taskfile.c |  155 ++++-----------
- linux-2.6.9-rc1-bk10-bzolnier/include/linux/ide.h        |    3 
- 3 files changed, 53 insertions(+), 114 deletions(-)
+ linux-2.6.9-rc1-bk10-bzolnier/drivers/block/ll_rw_blk.c |  114 ----------------
+ linux-2.6.9-rc1-bk10-bzolnier/include/linux/blkdev.h    |   36 -----
+ 2 files changed, 5 insertions(+), 145 deletions(-)
 
-diff -puN drivers/ide/ide-disk.c~ide_tf_multi_pio drivers/ide/ide-disk.c
---- linux-2.6.9-rc1-bk10/drivers/ide/ide-disk.c~ide_tf_multi_pio	2004-09-05 19:47:57.977443888 +0200
-+++ linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/ide-disk.c	2004-09-05 19:47:58.000440392 +0200
-@@ -496,27 +496,24 @@ static u8 get_command(ide_drive_t *drive
- 		task->command_type = IDE_DRIVE_TASK_IN;
- 		if (drive->using_dma)
- 			return lba48 ? WIN_READDMA_EXT : WIN_READDMA;
-+		task->handler = &task_in_intr;
- 		if (drive->mult_count) {
- 			task->data_phase = TASKFILE_MULTI_IN;
--			task->handler = &task_mulin_intr;
- 			return lba48 ? WIN_MULTREAD_EXT : WIN_MULTREAD;
- 		}
- 		task->data_phase = TASKFILE_IN;
--		task->handler = &task_in_intr;
- 		return lba48 ? WIN_READ_EXT : WIN_READ;
- 	} else {
- 		task->command_type = IDE_DRIVE_TASK_RAW_WRITE;
- 		if (drive->using_dma)
- 			return lba48 ? WIN_WRITEDMA_EXT : WIN_WRITEDMA;
-+		task->prehandler = &pre_task_out_intr;
-+		task->handler = &task_out_intr;
- 		if (drive->mult_count) {
- 			task->data_phase = TASKFILE_MULTI_OUT;
--			task->prehandler = &pre_task_mulout_intr;
--			task->handler = &task_mulout_intr;
- 			return lba48 ? WIN_MULTWRITE_EXT : WIN_MULTWRITE;
- 		}
- 		task->data_phase = TASKFILE_OUT;
--		task->prehandler = &pre_task_out_intr;
--		task->handler = &task_out_intr;
- 		return lba48 ? WIN_WRITE_EXT : WIN_WRITE;
- 	}
- }
-diff -puN drivers/ide/ide-taskfile.c~ide_tf_multi_pio drivers/ide/ide-taskfile.c
---- linux-2.6.9-rc1-bk10/drivers/ide/ide-taskfile.c~ide_tf_multi_pio	2004-09-05 19:47:57.979443584 +0200
-+++ linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/ide-taskfile.c	2004-09-05 19:47:58.002440088 +0200
-@@ -368,12 +368,44 @@ static u8 wait_drive_not_busy(ide_drive_
- 	return stat;
- }
+diff -puN drivers/block/ll_rw_blk.c~bio_walking drivers/block/ll_rw_blk.c
+--- linux-2.6.9-rc1-bk10/drivers/block/ll_rw_blk.c~bio_walking	2004-09-08 19:59:00.551496200 +0200
++++ linux-2.6.9-rc1-bk10-bzolnier/drivers/block/ll_rw_blk.c	2004-09-08 19:59:00.566493920 +0200
+@@ -2383,9 +2383,7 @@ again:
+ 				break;
  
-+static inline void ide_pio_datablock(ide_drive_t *drive, struct request *rq,
-+				     unsigned int write)
-+{
-+	switch (drive->hwif->data_phase) {
-+	case TASKFILE_MULTI_IN:
-+	case TASKFILE_MULTI_OUT:
-+		task_multi_sectors(drive, rq, write);
-+		break;
-+	default:
-+		task_sectors(drive, rq, 1, write);
-+		break;
-+	}
-+}
-+
- #ifdef CONFIG_IDE_TASKFILE_IO
- static ide_startstop_t task_error(ide_drive_t *drive, struct request *rq,
--				  const char *s, u8 stat, unsigned cur_bad)
-+				  const char *s, u8 stat)
- {
- 	if (rq->bio) {
--		int sectors = rq->hard_nr_sectors - rq->nr_sectors - cur_bad;
-+		int sectors = rq->hard_nr_sectors - rq->nr_sectors;
-+
-+		switch (drive->hwif->data_phase) {
-+		case TASKFILE_IN:
-+			if (rq->nr_sectors)
-+				break;
-+			/* fall through */
-+		case TASKFILE_OUT:
-+			sectors--;
-+			break;
-+		case TASKFILE_MULTI_IN:
-+			if (rq->nr_sectors)
-+				break;
-+			/* fall through */
-+		case TASKFILE_MULTI_OUT:
-+			sectors -= drive->mult_count;
-+		default:
-+			break;
-+		}
+ 			bio->bi_next = req->bio;
+-			req->cbio = req->bio = bio;
+-			req->nr_cbio_segments = bio_segments(bio);
+-			req->nr_cbio_sectors = bio_sectors(bio);
++			req->bio = bio;
  
- 		if (sectors > 0)
- 			drive->driver->end_request(drive, 1, sectors);
-@@ -381,7 +413,7 @@ static ide_startstop_t task_error(ide_dr
- 	return drive->driver->error(drive, s, stat);
- }
- #else
--# define task_error(d, rq, s, stat, cur_bad) drive->driver->error(d, s, stat)
-+# define task_error(d, rq, s, stat) drive->driver->error(d, s, stat)
- #endif
+ 			/*
+ 			 * may not be valid. if the low level driver said
+@@ -2457,11 +2455,9 @@ get_rq:
+ 	req->current_nr_sectors = req->hard_cur_sectors = cur_nr_sectors;
+ 	req->nr_phys_segments = bio_phys_segments(q, bio);
+ 	req->nr_hw_segments = bio_hw_segments(q, bio);
+-	req->nr_cbio_segments = bio_segments(bio);
+-	req->nr_cbio_sectors = bio_sectors(bio);
+ 	req->buffer = bio_data(bio);	/* see ->buffer comment above */
+ 	req->waiting = NULL;
+-	req->cbio = req->bio = req->biotail = bio;
++	req->bio = req->biotail = bio;
+ 	req->rq_disk = bio->bi_bdev->bd_disk;
+ 	req->start_time = jiffies;
  
- static void task_end_request(ide_drive_t *drive, struct request *rq, u8 stat)
-@@ -399,7 +431,7 @@ static void task_end_request(ide_drive_t
- }
+@@ -2642,83 +2638,6 @@ void submit_bio(int rw, struct bio *bio)
  
- /*
-- * Handler for command with PIO data-in phase (Read).
-+ * Handler for command with PIO data-in phase (Read/Read Multiple).
-  */
- ide_startstop_t task_in_intr (ide_drive_t *drive)
- {
-@@ -408,19 +440,19 @@ ide_startstop_t task_in_intr (ide_drive_
+ EXPORT_SYMBOL(submit_bio);
  
- 	if (!OK_STAT(stat, DATA_READY, BAD_R_STAT)) {
- 		if (stat & (ERR_STAT | DRQ_STAT))
--			return task_error(drive, rq, __FUNCTION__, stat, 0);
-+			return task_error(drive, rq, __FUNCTION__, stat);
- 		/* No data yet, so wait for another IRQ. */
- 		ide_set_handler(drive, &task_in_intr, WAIT_WORSTCASE, NULL);
- 		return ide_started;
- 	}
- 
--	task_sectors(drive, rq, 1, IDE_PIO_IN);
-+	ide_pio_datablock(drive, rq, 0);
- 
- 	/* If it was the last datablock check status and finish transfer. */
- 	if (!rq->nr_sectors) {
- 		stat = wait_drive_not_busy(drive);
- 		if (!OK_STAT(stat, 0, BAD_R_STAT))
--			return task_error(drive, rq, __FUNCTION__, stat, 1);
-+			return task_error(drive, rq, __FUNCTION__, stat);
- 		task_end_request(drive, rq, stat);
- 		return ide_stopped;
- 	}
-@@ -433,41 +465,7 @@ ide_startstop_t task_in_intr (ide_drive_
- EXPORT_SYMBOL(task_in_intr);
- 
- /*
-- * Handler for command with PIO data-in phase (Read Multiple).
-- */
--ide_startstop_t task_mulin_intr (ide_drive_t *drive)
+-/**
+- * blk_rq_next_segment
+- * @rq:		the request being processed
+- *
+- * Description:
+- *	Points to the next segment in the request if the current segment
+- *	is complete. Leaves things unchanged if this segment is not over
+- *	or if no more segments are left in this request.
+- *
+- *	Meant to be used for bio traversal during I/O submission
+- *	Does not affect any I/O completions or update completion state
+- *	in the request, and does not modify any bio fields.
+- *
+- *	Decrementing rq->nr_sectors, rq->current_nr_sectors and
+- *	rq->nr_cbio_sectors as data is transferred is the caller's
+- *	responsibility and should be done before calling this routine.
+- **/
+-void blk_rq_next_segment(struct request *rq)
 -{
--	struct request *rq = HWGROUP(drive)->rq;
--	u8 stat = HWIF(drive)->INB(IDE_STATUS_REG);
+-	if (rq->current_nr_sectors > 0)
+-		return;
 -
--	if (!OK_STAT(stat, DATA_READY, BAD_R_STAT)) {
--		if (stat & (ERR_STAT | DRQ_STAT))
--			return task_error(drive, rq, __FUNCTION__, stat, 0);
--		/* No data yet, so wait for another IRQ. */
--		ide_set_handler(drive, &task_mulin_intr, WAIT_WORSTCASE, NULL);
--		return ide_started;
--	}
+-	if (rq->nr_cbio_sectors > 0) {
+-		--rq->nr_cbio_segments;
+-		rq->current_nr_sectors = blk_rq_vec(rq)->bv_len >> 9;
+-	} else {
+-		if ((rq->cbio = rq->cbio->bi_next)) {
+-			rq->nr_cbio_segments = bio_segments(rq->cbio);
+-			rq->nr_cbio_sectors = bio_sectors(rq->cbio);
+- 			rq->current_nr_sectors = bio_cur_sectors(rq->cbio);
+-		}
+- 	}
 -
--	task_multi_sectors(drive, rq, IDE_PIO_IN);
--
--	/* If it was the last datablock check status and finish transfer. */
--	if (!rq->nr_sectors) {
--		stat = wait_drive_not_busy(drive);
--		if (!OK_STAT(stat, 0, BAD_R_STAT))
--			return task_error(drive, rq, __FUNCTION__, stat, drive->mult_count);
--		task_end_request(drive, rq, stat);
--		return ide_stopped;
--	}
--
--	/* Still data left to transfer. */
--	ide_set_handler(drive, &task_mulin_intr, WAIT_WORSTCASE, NULL);
--
--	return ide_started;
+-	/* remember the size of this segment before we start I/O */
+-	rq->hard_cur_sectors = rq->current_nr_sectors;
 -}
--EXPORT_SYMBOL(task_mulin_intr);
+-
+-/**
+- * process_that_request_first	-	process partial request submission
+- * @req:	the request being processed
+- * @nr_sectors:	number of sectors I/O has been submitted on
+- *
+- * Description:
+- *	May be used for processing bio's while submitting I/O without
+- *	signalling completion. Fails if more data is requested than is
+- *	available in the request in which case it doesn't advance any
+- *	pointers.
+- *
+- *	Assumes a request is correctly set up. No sanity checks.
+- *
+- * Return:
+- *	0 - no more data left to submit (not processed)
+- *	1 - data available to submit for this request (processed)
+- **/
+-int process_that_request_first(struct request *req, unsigned int nr_sectors)
+-{
+-	unsigned int nsect;
+-
+-	if (req->nr_sectors < nr_sectors)
+-		return 0;
+-
+-	req->nr_sectors -= nr_sectors;
+-	req->sector += nr_sectors;
+-	while (nr_sectors) {
+-		nsect = min_t(unsigned, req->current_nr_sectors, nr_sectors);
+-		req->current_nr_sectors -= nsect;
+-		nr_sectors -= nsect;
+-		if (req->cbio) {
+-			req->nr_cbio_sectors -= nsect;
+-			blk_rq_next_segment(req);
+-		}
+-	}
+-	return 1;
+-}
+-
+-EXPORT_SYMBOL(process_that_request_first);
+-
+ void blk_recalc_rq_segments(struct request *rq)
+ {
+ 	struct bio *bio, *prevbio = NULL;
+@@ -2754,8 +2673,7 @@ void blk_recalc_rq_sectors(struct reques
+ 		rq->hard_nr_sectors -= nsect;
+ 
+ 		/*
+-		 * Move the I/O submission pointers ahead if required,
+-		 * i.e. for drivers not aware of rq->cbio.
++		 * Move the I/O submission pointers ahead if required.
+ 		 */
+ 		if ((rq->nr_sectors >= rq->hard_nr_sectors) &&
+ 		    (rq->sector <= rq->hard_sector)) {
+@@ -2763,11 +2681,7 @@ void blk_recalc_rq_sectors(struct reques
+ 			rq->nr_sectors = rq->hard_nr_sectors;
+ 			rq->hard_cur_sectors = bio_cur_sectors(rq->bio);
+ 			rq->current_nr_sectors = rq->hard_cur_sectors;
+-			rq->nr_cbio_segments = bio_segments(rq->bio);
+-			rq->nr_cbio_sectors = bio_sectors(rq->bio);
+ 			rq->buffer = bio_data(rq->bio);
+-
+-			rq->cbio = rq->bio;
+ 		}
+ 
+ 		/*
+@@ -2979,33 +2893,13 @@ void blk_rq_bio_prep(request_queue_t *q,
+ 	rq->current_nr_sectors = bio_cur_sectors(bio);
+ 	rq->hard_cur_sectors = rq->current_nr_sectors;
+ 	rq->hard_nr_sectors = rq->nr_sectors = bio_sectors(bio);
+-	rq->nr_cbio_segments = bio_segments(bio);
+-	rq->nr_cbio_sectors = bio_sectors(bio);
+ 	rq->buffer = bio_data(bio);
+ 
+-	rq->cbio = rq->bio = rq->biotail = bio;
++	rq->bio = rq->biotail = bio;
+ }
+ 
+ EXPORT_SYMBOL(blk_rq_bio_prep);
+ 
+-void blk_rq_prep_restart(struct request *rq)
+-{
+-	struct bio *bio;
+-
+-	bio = rq->cbio = rq->bio;
+-	if (bio) {
+-		rq->nr_cbio_segments = bio_segments(bio);
+-		rq->nr_cbio_sectors = bio_sectors(bio);
+-		rq->hard_cur_sectors = bio_cur_sectors(bio);
+-		rq->buffer = bio_data(bio);
+-	}
+-	rq->sector = rq->hard_sector;
+-	rq->nr_sectors = rq->hard_nr_sectors;
+-	rq->current_nr_sectors = rq->hard_cur_sectors;
+-}
+-
+-EXPORT_SYMBOL(blk_rq_prep_restart);
+-
+ int kblockd_schedule_work(struct work_struct *work)
+ {
+ 	return queue_work(kblockd_workqueue, work);
+diff -puN include/linux/blkdev.h~bio_walking include/linux/blkdev.h
+--- linux-2.6.9-rc1-bk10/include/linux/blkdev.h~bio_walking	2004-09-08 19:59:00.553495896 +0200
++++ linux-2.6.9-rc1-bk10-bzolnier/include/linux/blkdev.h	2004-09-08 19:59:00.567493768 +0200
+@@ -107,13 +107,7 @@ struct request {
+ 	/* no. of sectors left to complete in the current segment */
+ 	unsigned int hard_cur_sectors;
+ 
+-	/* no. of segments left to submit in the current bio */
+-	unsigned short nr_cbio_segments;
+-	/* no. of sectors left to submit in the current bio */
+-	unsigned long nr_cbio_sectors;
+-
+-	struct bio *cbio;		/* next bio to submit */
+-	struct bio *bio;		/* next unfinished bio to complete */
++	struct bio *bio;
+ 	struct bio *biotail;
+ 
+ 	void *elevator_private;
+@@ -444,32 +438,6 @@ static inline void blk_clear_queue_full(
+  */
+ #define blk_queue_headactive(q, head_active)
+ 
+-/* current index into bio being processed for submission */
+-#define blk_rq_idx(rq)	((rq)->cbio->bi_vcnt - (rq)->nr_cbio_segments)
+-
+-/* current bio vector being processed */
+-#define blk_rq_vec(rq)	(bio_iovec_idx((rq)->cbio, blk_rq_idx(rq)))
+-
+-/* current offset with respect to start of the segment being submitted */
+-#define blk_rq_offset(rq) \
+-	(((rq)->hard_cur_sectors - (rq)->current_nr_sectors) << 9)
 -
 -/*
-- * Handler for command with PIO data-out phase (Write).
-+ * Handler for command with PIO data-out phase (Write/Write Multiple).
-  */
- ide_startstop_t task_out_intr (ide_drive_t *drive)
- {
-@@ -476,11 +474,11 @@ ide_startstop_t task_out_intr (ide_drive
- 
- 	stat = HWIF(drive)->INB(IDE_STATUS_REG);
- 	if (!OK_STAT(stat, DRIVE_READY, drive->bad_wstat))
--		return task_error(drive, rq, __FUNCTION__, stat, 1);
-+		return task_error(drive, rq, __FUNCTION__, stat);
- 
- 	/* Deal with unexpected ATA data phase. */
- 	if (((stat & DRQ_STAT) == 0) ^ !rq->nr_sectors)
--		return task_error(drive, rq, __FUNCTION__, stat, 1);
-+		return task_error(drive, rq, __FUNCTION__, stat);
- 
- 	if (!rq->nr_sectors) {
- 		task_end_request(drive, rq, stat);
-@@ -488,7 +486,7 @@ ide_startstop_t task_out_intr (ide_drive
- 	}
- 
- 	/* Still data left to transfer. */
--	task_sectors(drive, rq, 1, IDE_PIO_OUT);
-+	ide_pio_datablock(drive, rq, 1);
- 	ide_set_handler(drive, &task_out_intr, WAIT_WORSTCASE, NULL);
- 
- 	return ide_started;
-@@ -502,8 +500,10 @@ ide_startstop_t pre_task_out_intr (ide_d
- 
- 	if (ide_wait_stat(&startstop, drive, DATA_READY,
- 			  drive->bad_wstat, WAIT_DRQ)) {
--		printk(KERN_ERR "%s: no DRQ after issuing WRITE%s\n",
--				drive->name, drive->addressing ? "_EXT" : "");
-+		printk(KERN_ERR "%s: no DRQ after issuing %sWRITE%s\n",
-+				drive->name,
-+				drive->hwif->data_phase ? "MULT" : "",
-+				drive->addressing ? "_EXT" : "");
- 		return startstop;
- 	}
- 
-@@ -511,62 +511,12 @@ ide_startstop_t pre_task_out_intr (ide_d
- 		local_irq_disable();
- 
- 	ide_set_handler(drive, &task_out_intr, WAIT_WORSTCASE, NULL);
--	task_sectors(drive, rq, 1, IDE_PIO_OUT);
-+	ide_pio_datablock(drive, rq, 1);
- 
- 	return ide_started;
- }
- EXPORT_SYMBOL(pre_task_out_intr);
- 
--/*
-- * Handler for command with PIO data-out phase (Write Multiple).
+- * temporarily mapping a (possible) highmem bio (typically for PIO transfer)
 - */
--ide_startstop_t task_mulout_intr (ide_drive_t *drive)
+-
+-/* Assumes rq->cbio != NULL */
+-static inline char * rq_map_buffer(struct request *rq, unsigned long *flags)
 -{
--	struct request *rq = HWGROUP(drive)->rq;
--	u8 stat;
--
--	stat = HWIF(drive)->INB(IDE_STATUS_REG);
--	if (!OK_STAT(stat, DRIVE_READY, drive->bad_wstat))
--		return task_error(drive, rq, __FUNCTION__, stat, drive->mult_count);
--
--	/* Deal with unexpected ATA data phase. */
--	if (((stat & DRQ_STAT) == 0) ^ !rq->nr_sectors)
--		return task_error(drive, rq, __FUNCTION__, stat, drive->mult_count);
--
--	if (!rq->nr_sectors) {
--		task_end_request(drive, rq, stat);
--		return ide_stopped;
--	}
--
--	/* Still data left to transfer. */
--	task_multi_sectors(drive, rq, IDE_PIO_OUT);
--	ide_set_handler(drive, &task_mulout_intr, WAIT_WORSTCASE, NULL);
--
--	return ide_started;
+-	return (__bio_kmap_irq(rq->cbio, blk_rq_idx(rq), flags)
+-		+ blk_rq_offset(rq));
 -}
--EXPORT_SYMBOL(task_mulout_intr);
 -
--ide_startstop_t pre_task_mulout_intr (ide_drive_t *drive, struct request *rq)
+-static inline void rq_unmap_buffer(char *buffer, unsigned long *flags)
 -{
--	ide_startstop_t startstop;
--
--	if (ide_wait_stat(&startstop, drive, DATA_READY,
--			  drive->bad_wstat, WAIT_DRQ)) {
--		printk(KERN_ERR "%s: no DRQ after issuing MULTWRITE%s\n",
--				drive->name, drive->addressing ? "_EXT" : "");
--		return startstop;
--	}
--
--	if (!drive->unmask)
--		local_irq_disable();
--
--	ide_set_handler(drive, &task_mulout_intr, WAIT_WORSTCASE, NULL);
--	task_multi_sectors(drive, rq, IDE_PIO_OUT);
--
--	return ide_started;
+-	__bio_kunmap_irq(buffer, flags);
 -}
--EXPORT_SYMBOL(pre_task_mulout_intr);
 -
- int ide_diag_taskfile (ide_drive_t *drive, ide_task_t *args, unsigned long data_size, u8 *buf)
- {
- 	struct request rq;
-@@ -711,10 +661,7 @@ int ide_taskfile_ioctl (ide_drive_t *dri
- 				err = -EPERM;
- 				goto abort;
- 			}
--			args.prehandler = &pre_task_mulout_intr;
--			args.handler = &task_mulout_intr;
--			err = ide_diag_taskfile(drive, &args, taskout, outbuf);
--			break;
-+			/* fall through */
- 		case TASKFILE_OUT:
- 			args.prehandler = &pre_task_out_intr;
- 			args.handler = &task_out_intr;
-@@ -729,9 +676,7 @@ int ide_taskfile_ioctl (ide_drive_t *dri
- 				err = -EPERM;
- 				goto abort;
- 			}
--			args.handler = &task_mulin_intr;
--			err = ide_diag_taskfile(drive, &args, taskin, inbuf);
--			break;
-+			/* fall through */
- 		case TASKFILE_IN:
- 			args.handler = &task_in_intr;
- 			err = ide_diag_taskfile(drive, &args, taskin, inbuf);
-diff -puN include/linux/ide.h~ide_tf_multi_pio include/linux/ide.h
---- linux-2.6.9-rc1-bk10/include/linux/ide.h~ide_tf_multi_pio	2004-09-05 19:47:57.981443280 +0200
-+++ linux-2.6.9-rc1-bk10-bzolnier/include/linux/ide.h	2004-09-05 19:47:58.004439784 +0200
-@@ -1455,11 +1455,8 @@ extern ide_startstop_t set_geometry_intr
- extern ide_startstop_t recal_intr(ide_drive_t *);
- extern ide_startstop_t task_no_data_intr(ide_drive_t *);
- extern ide_startstop_t task_in_intr(ide_drive_t *);
--extern ide_startstop_t task_mulin_intr(ide_drive_t *);
- extern ide_startstop_t pre_task_out_intr(ide_drive_t *, struct request *);
- extern ide_startstop_t task_out_intr(ide_drive_t *);
--extern ide_startstop_t pre_task_mulout_intr(ide_drive_t *, struct request *);
--extern ide_startstop_t task_mulout_intr(ide_drive_t *);
+ /*
+  * q->prep_rq_fn return values
+  */
+@@ -568,7 +536,6 @@ static inline void blk_run_address_space
+ extern int end_that_request_first(struct request *, int, int);
+ extern int end_that_request_chunk(struct request *, int, int);
+ extern void end_that_request_last(struct request *);
+-extern int process_that_request_first(struct request *, unsigned int);
+ extern void end_request(struct request *req, int uptodate);
  
- extern int ide_raw_taskfile(ide_drive_t *, ide_task_t *, u8 *);
+ /*
+@@ -637,7 +604,6 @@ extern void blk_queue_invalidate_tags(re
+ extern long blk_congestion_wait(int rw, long timeout);
  
+ extern void blk_rq_bio_prep(request_queue_t *, struct request *, struct bio *);
+-extern void blk_rq_prep_restart(struct request *);
+ extern int blkdev_issue_flush(struct block_device *, sector_t *);
+ 
+ #define MAX_PHYS_SEGMENTS 128
 _
