@@ -1,126 +1,28 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide-scsi: DMA alignment bug fixed
-Date: Tue, 9 Nov 2004 12:51:25 +0100
-Message-ID: <58cb370e0411090351e01c953@mail.gmail.com>
-References: <Pine.LNX.4.56.0411082320320.348@fast.tk.local>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Tobias Lorenz <tobias.lorenz@gmx.net>
+Subject: pdc20619, ata_promise
+Date: Wed, 10 Nov 2004 19:21:05 +0100
+Message-ID: <1100110864.809.4.camel@server.lorenz.priv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.206]:64701 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261515AbUKILvZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Nov 2004 06:51:25 -0500
-Received: by rproxy.gmail.com with SMTP id z35so38471rne
-        for <linux-ide@vger.kernel.org>; Tue, 09 Nov 2004 03:51:25 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.56.0411082320320.348@fast.tk.local>
+Received: from imap.gmx.net ([213.165.64.20]:27330 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S262080AbUKJSVJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Nov 2004 13:21:09 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Terry Kyriacopoulos <terryk@echo-on.net>
-Cc: Jens Axboe <axboe@suse.de>, linux-kernel@vger.kernel.org, andre@linux-ide.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Why can't you simply change alignment in ide-scsi to 32 bytes?
+Hi,
 
-On Mon, 8 Nov 2004 23:22:39 -0500 (EST), Terry Kyriacopoulos
-<terryk@echo-on.net> wrote:
-> 
-> 
-> 
-> 
-> On Fri, 5 Nov 2004, Jens Axboe wrote:
-> 
-> > I don't think this is the right way to go. The design of ide-scsi's dma
-> > setup is based on the old buffer_heads, where you can only have a single
-> > page at the time so you need to string them manually. We actually have
-> > kernel helpers for mapping _user_ data to a request, we could add one
-> > for mapping kernel data to a request as well.
-> >
-> > Here's a patch that I did some time ago for mapping a kernel pointer to
-> > a bio. bio_copy_user() would be good inspiration, too. Mapping an sglist
-> > to a new bio should be even simpler and it would clean up the ide-scsi
-> > stuff a lot. It's not exactly pretty.
-> 
-> ...
-> 
-> 
-> 
-> >
-> > +struct bio *bio_map_data(request_queue_t *q, unsigned char *ptr,
-> > +                      unsigned int len, int read)
-> > +{
-> > +
-> > +     unsigned long data = (unsigned long) ptr;
-> > +     unsigned long end = (data + len + PAGE_SIZE - 1) >> PAGE_SHIFT;
-> > +     unsigned long start = data >> PAGE_SHIFT;
-> > +     const int nr_pages = end - start;
-> > +     unsigned int bytes, offset;
-> > +     struct bio *bio;
-> > +     struct page *page;
-> > +     int i;
-> > +
-> > +     if (!len || !nr_pages)
-> > +             return ERR_PTR(-EINVAL);
-> > +
-> > +     bio = bio_alloc(GFP_KERNEL, nr_pages);
-> > +     if (!bio)
-> > +             return ERR_PTR(-ENOMEM);
-> > +
-> > +     for (i = 0; i < nr_pages; i++) {
-> > +             if (len <= 0)
-> > +                     break;
-> > +
-> > +             page = virt_to_page(ptr);
-> > +             offset = offset_in_page(ptr);
-> > +
-> > +             bytes = PAGE_SIZE - offset;
-> > +             if (bytes > len)
-> > +                     bytes = len;
-> > +
-> > +             if (__bio_add_page(q, bio, page, bytes, offset) < bytes)
-> > +                     break;
-> > +
-> > +             len -= bytes;
-> > +             offset = 0;
-> > +             ptr += bytes;
-> > +     }
-> > +
-> > +     bio->bi_end_io = bio_map_data_endio;
-> > +     bio->bi_rw |= (!read << BIO_RW);
-> > +     return bio;
-> > +}
-> > +
-> 
-> This code maps a pointer+length into a bio, but ide-scsi is fed an sglist,
-> just like all low-level SCSI drivers, so this doesn't really help.
-> 
-> Please understand the way I handle misalignment.  Originally I used
-> bounce buffers for the entire transfer if there was any misalignment,
-> but this doesn't give optimal performance.  To maintain security, the
-> bounce buffers must be zeroed before the I/O, otherwise a data scavenger
-> can read potentially sensitive data if a transfer doesn't fully overwrite
-> them.
-> 
-> This is where I got the idea to minimize the size of the extra bounce
-> buffers by using the largest aligned subset of the user area.  If the
-> base isn't aligned, the data must be shifted into place, hence the need
-> for the overlapped copying in 'idescsi_bounce_dma'.  If only the length
-> is misaligned, a small bounce buffer is appended to the bio just for the
-> partial block.  Notice what it does for performance:
-> 
-> - Extra memory allocation is minimized
-> - The user area doesn't need to be zeroed
-> - Copying is limited to the last block if the base is aligned
-> 
-> cdda2wav/cdrecord/cdrdao use buffers much larger than 512 bytes and
-> typically provide base aligned buffers, so this advanced technique
-> really pays off.
-> 
-> Yes, some code is ugly, but the bug it fixes is uglier.
-> 
-> Another goal of mine was to confine the patch to the ide-scsi module.
-> Making changes to high-level SCSI drivers or to IDE services would
-> definitely not be a good approach.
-> 
-> Given the above, the code you presented can't really simplify ide-scsi.
-> (If you have something that maps an sglist to a single contiguous block,
-> I could use it.:-)
+will my pdc20619 support in sata_promise be added ?
+Or is anything left to do ?
+
+I saw that you applied the renamings (s/sata/ata/). Will the module be
+renamed too, as we discussed (sata_promise->ata_promise) ?
+
+Best regards,
+  Toby
+
+
