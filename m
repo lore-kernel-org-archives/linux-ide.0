@@ -1,23 +1,36 @@
-From: Davin McCall <davmac@ozonline.com.au>
-Subject: Re: [PATCH] fix issues with loading PCI ide drivers as modules
- (linux 2.6.0)
-Date: Wed, 7 Jan 2004 00:45:56 +1100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040107004556.333d6fce.davmac@ozonline.com.au>
-References: <20040103152802.6e27f5c5.davmac@ozonline.com.au>
-	<200401051516.03364.bzolnier@elka.pw.edu.pl>
-	<20040106135155.66535c13.davmac@ozonline.com.au>
-	<200401061213.39843.bzolnier@elka.pw.edu.pl>
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: Re: Possibly wrong BIO usage in ide_multwrite
+Date: Tue, 6 Jan 2004 15:38:48 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200401061538.48904.bzolnier@elka.pw.edu.pl>
+References: <1072977507.4170.14.camel@leto.cs.pocnet.net> <200401060059.52833.bzolnier@elka.pw.edu.pl> <20040106113330.GA5827@leto.cs.pocnet.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <200401061213.39843.bzolnier@elka.pw.edu.pl>
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:20172 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264353AbUAFOf7
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Jan 2004 09:35:59 -0500
+In-Reply-To: <20040106113330.GA5827@leto.cs.pocnet.net>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
+To: Christophe Saout <christophe@saout.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hmm. Actually, If I am permitted to change my mind, I do actually prefer this latest patch...
-:-)
+On Tuesday 06 of January 2004 12:33, Christophe Saout wrote:
+> On Tue, Jan 06, 2004 at 12:59:52AM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > On Monday 05 of January 2004 23:51, Christophe Saout wrote:
+> > > Remember? Can bio be NULL somewhere? Or what do you mean? It's our
+> > > scratchpad and ide_multwrite never puts a NULL bio on it.
+> >
+> > After last sector of the whole transfer is processed ide_multwrite() will
+> > set it to NULL.
+>
+> No, it doesn't.
 
-Davin
+Yep, you are right, bio is NULL, but rq->bio is not set...
+
+--bart
+
