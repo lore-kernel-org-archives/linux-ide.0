@@ -1,55 +1,33 @@
-From: Johny A <kernel@agotnes.com>
-Subject: Re: SATA_SX4: data corruption with simultaneous writes
-Date: Thu, 30 Dec 2004 16:34:04 +1000
-Message-ID: <41D3A15C.5050809@agotnes.com>
+From: Eric Mudama <edmudama@gmail.com>
+Subject: Re: libata PATA support - work items?
+Date: Sat, 1 Jan 2005 12:19:20 -0700
+Message-ID: <311601c9050101111929aef5ba@mail.gmail.com>
+References: <006301c4ee5c$49e6a230$95714109@tw.ibm.com>
+Reply-To: Eric Mudama <edmudama@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from munin.agotnes.com ([202.173.149.60]:64384 "EHLO
-	mail.agotnes.com") by vger.kernel.org with ESMTP id S261552AbUL3Gem
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 30 Dec 2004 01:34:42 -0500
+Received: from rproxy.gmail.com ([64.233.170.203]:11312 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261164AbVAATTV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Jan 2005 14:19:21 -0500
+Received: by rproxy.gmail.com with SMTP id j1so15174rnf
+        for <linux-ide@vger.kernel.org>; Sat, 01 Jan 2005 11:19:21 -0800 (PST)
+In-Reply-To: <006301c4ee5c$49e6a230$95714109@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
-Jeff et al,
+On Thu, 30 Dec 2004 18:42:33 +0800, Albert Lee <albertcc@tw.ibm.com> wrote:
+>     2. C/H/S addressing; libata currently hardcoded to use LBA
 
-I found this one on the mailing-list;
-http://marc.theaimsgroup.com/?l=linux-ide&m=109749133709795&w=2
 
-and have the same issues as described there, and also in the previous 
-mails in this thread.
+Are there really people who want to run a newer 2.4 or a 2.6 kernel,
+who have disks that do not support LBA mode?  CHS will never address
+more than 32GB of the drive (unless you use vendor unique
+implementations) and heck, most companies don't even build drives that
+small anymore...  CHS is very messy, LBA is so much simpler.   Can we
+just stick with that?
 
-The difference is, I can reproduce this with the simplest possible setup;
-
-I have an older Asus Mobo with an AMD1.33GHz CPU,
-1 Promise SX4 SATA controller (0000:00:0a.0 RAID bus controller: Promise 
-Technology, Inc.: Unknown device 6622 (rev 01))
-2 Seagate  ST380817AS, Rev: 3.42 (80 GB SATA) disks
-
-Disks each have 1 large partition with ext2 on them.
-
-1. I boot off a Gentoo LiveCD  running 2.6.9
-2. I scp over some 180 MB simultaneously to the two disks across the 
-network, one shell copying to 1 disk only
-3. Unzip the .bz2 and .gz files just copied the files, again 1 shell 
-working on each disk (no cross disk stuff going on at all).
-
-Typically, within a few minutes at most of the unzipping starting I get 
-CRC errors on the files. No errors in dmesg necessarily. Sometimes I get 
-errors unzipping - unmount the drive and run fsck which reports no 
-errors - very insidious!
-
-I'd like the card to work - hey, I got one! and am willing to use my 
-setup for testing of new driver versions. I'm useful with C, but not a 
-kernel hacker, give me pointers to what needs done and I'll get it done, 
-no worries...
-
-Let me know if I can help getting this thing fixed!
-
-Thanks,
-
-Johny A
+--eric
