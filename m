@@ -1,72 +1,69 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: [PATCH] IDE cleanups for 2.6.4-rc1 (2/3)
-Date: Wed, 3 Mar 2004 05:38:10 +0100
+From: Stefan Smietanowski <stesmi@stesmi.com>
+Subject: Known problems with Maxtor 120GB SATA?
+Date: Fri, 05 Mar 2004 15:49:37 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200403030538.10029.bzolnier@elka.pw.edu.pl>
-References: <200403022215.07385.bzolnier@elka.pw.edu.pl> <404513E8.9010101@pobox.com>
+Message-ID: <40489381.6010601@stesmi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:48333 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S262346AbUCCEau
+Received: from 1-2-2-1a.has.sth.bostream.se ([82.182.130.86]:55225 "EHLO
+	K-7.stesmi.com") by vger.kernel.org with ESMTP id S262613AbUCEOth
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Mar 2004 23:30:50 -0500
-In-Reply-To: <404513E8.9010101@pobox.com>
-Content-Disposition: inline
+	Fri, 5 Mar 2004 09:49:37 -0500
+Received: from stesmi.com (deltaflyer.stesmi.com [192.168.1.14])
+	by K-7.stesmi.com (8.12.8/8.12.5) with ESMTP id i25EnaPh001328
+	for <linux-ide@vger.kernel.org>; Fri, 5 Mar 2004 15:49:36 +0100
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wednesday 03 of March 2004 00:08, Jeff Garzik wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > [IDE] remove ide_cmd_type_parser() logic
-> >
-> > Set ide_task_t fields (command_type, handler and prehandler) directly.
-> > Remove unused ide_task_t->posthandler and all ide_cmd_type_parser()
-> > logic.
-> >
-> > ide_cmd_type_parser() was meant to be used for ioctls but
-> > ended up checking validity of kernel generated requests (doh!).
-> >
-> > Rationale for removal:
-> > - it can't be used for existing ioctls (changes the way they work)
-> > - kernel shouldn't check validity of (root only) user-space requests
-> >   (it can and should be done in user-space)
-> > - it wastes CPU cycles on going through parsers
-> > - it makes code harder to understand/follow
-> >   (now info about request is localized)
->
-> Without the annoyingly-large 'switch', how do you figure out whether a
-> command is non-data, pio-read, pio-write, dma-read, or dma-write?
+Hi people.
 
-Using ide_task_t->{command_type, handler}, command_type values:
+Are there any knows problems with Maxtor's line of SATA drives,
+maybe specifical to the 120GB units?
 
-	IDE_DRIVE_TASK_IN - read
-	IDE_DRIVE_TASK_RAW_WRITE - write
-	IDE_DRIVE_TASK_NO_DATA - no data
+I've had 3 (out of 3) die on me in the course of 2 weeks and
+it's feeling spooky.
 
-If handler is NULL we know that command is a DMA one.
+They've been connected to different motherboards but the
+motherboards have had the same SATA chipset, namely the VIA
+8237.
 
-HDIO_DRIVE_TASKFILE gets information about taskfile from user-space in
-ide_task_request_t->{command_type, data_phase}, data_phase can be:
+Motherboards :
+Soyo SY-KT600 (VIA 8237 + SiI 3112A)
+Asus K8V Deluxe (VIA 8237 + Promise 20368)
+MSI K8M (VIA 8237 + Promise 20368).
 
-	TASKFILE_OUT_DMA{Q}
-	TASKFILE_IN_DMA{Q}
-	TASKFILE_MULTI_OUT
-	TASKFILE_OUT
-	TASKFILE_MULTI_IN
-	TASKFILE_IN
-	TASKFILE_NO_DATA
+The machines have run both linux (RH FC1 latest updates with libata
+replaced by latest) and Windows (the included VIA SATA driver)
+and what has happened was that all of a sudden the machines won't
+boot into windows but just reboots after showing the moving
+dots on the screen. Using powermax on the drives have shown
+error XXXS57 on all of them. Most data have been rescuable
+but not all and in two cases a full lowlevel format (in powermax)
+has cured the problem, at least temporarly. The third one
+is currently being formatted.
 
-and this information is translated into ide_task_t->handler.
+Powermax refuses to redognize the drives if they are connected
+to the VIA 8237 controller so all tests using powermax have
+been using the alternate controller on the same board (meaning
+SiI 3112A or Promise 20368).
 
-This is of course non-optimal and driver should be using something like
-ata_taskfile->protocol (as in libata).
+Is there any errata or steps one should take or anything one can do?
 
-Please note that any attempts to verify commands (like this 'switch')
-will fail for future or vendor specific ones.
+Three drives in this sort time feels spooky. The third drive was
+bought just one week ago.
 
-Bartlomiej
+Any more info needed, let me know.
 
+When a drive has failed, running 'badblocks -sv' on the drive
+makes it either a) fail (if on VIA 8237) b) lock up the system
+but the system can be rebooted (if on Promise 20386) or
+c) lock up the system so that it can't even be rebooted,
+linux is dead (a few times on Promise 20386).
+
+Tests have been done in both 32bit mode and 64bit mode.
+
+Same revision kernel with same patches.
+
+// Stefan
