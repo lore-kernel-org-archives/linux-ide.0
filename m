@@ -1,125 +1,191 @@
-From: Prarit Bhargava <prarit@sgi.com>
-Subject: Re: [PATCH]: [RFC] Fix error handlnig in hwif-init and sgiioc4 driver
-Date: Tue, 08 Feb 2005 09:10:21 -0500
-Message-ID: <4208C84D.1050104@sgi.com>
-References: <41F79A30.4040900@sgi.com> <58cb370e050203064648e81449@mail.gmail.com>
+From: Rasmus Melgaard <rme@image.dk>
+Subject: Re: [Fwd: Re: sata_sil problems (lockup at boottime)]
+Date: Tue, 8 Feb 2005 15:39:35 +0100
+Message-ID: <200502081539.35528.rme@image.dk>
+References: <4208483C.2060808@comcast.net> <200502081136.05737.rme@image.dk> <420859A7.2000407@comcast.net>
+Reply-To: rme@image.dk
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060905020006040003060507"
-Received: from mx1.redhat.com ([66.187.233.31]:12216 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S261532AbVBHOLM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2005 09:11:12 -0500
-In-Reply-To: <58cb370e050203064648e81449@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Received: from smarthost3.tiscali.dk ([62.79.79.29]:31951 "EHLO
+	smarthost3.tiscali.dk") by vger.kernel.org with ESMTP
+	id S261539AbVBHOju (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 8 Feb 2005 09:39:50 -0500
+In-Reply-To: <420859A7.2000407@comcast.net>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Doug McLain <nostar@comcast.net>
 Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------060905020006040003060507
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Well I had no problems in windows either! ... try loading bios setup defaults 
+settings or/and upgrade bios.
 
-Thanks for the comments Bartlomiej -- your input is always appreciated.
+/rasmus
 
-Here's a new patch taking into account your comments.  I have updated 
-hwif_init
-to return 0 on success and -errno on failure.
-
-Thanks again,
-
-P.
-
---------------060905020006040003060507
-Content-Type: text/plain;
- name="acpi-ide2.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="acpi-ide2.patch"
-
-Signed-off-by: Prarit Bhargava <prarit@sgi.com>
-
-===== ide-probe.c 1.90 vs edited =====
---- 1.90/drivers/ide/ide-probe.c	2004-12-10 14:12:14 -05:00
-+++ edited/ide-probe.c	2005-02-08 08:22:37 -05:00
-@@ -841,7 +841,10 @@
- 	if (fixup)
- 		fixup(hwif);
- 
--	hwif_init(hwif);
-+	if (hwif_init(hwif) < 0) {
-+		printk("%s: Failed to initialize IDE interface\n", hwif->name);
-+		return -1;
-+	}
- 
- 	if (hwif->present) {
- 		u16 unit = 0;
-@@ -1245,20 +1248,22 @@
- 	int old_irq, unit;
- 
- 	if (!hwif->present)
--		return 0;
-+		return -ENODEV;
- 
- 	if (!hwif->irq) {
- 		if (!(hwif->irq = ide_default_irq(hwif->io_ports[IDE_DATA_OFFSET])))
- 		{
- 			printk("%s: DISABLED, NO IRQ\n", hwif->name);
--			return (hwif->present = 0);
-+			hwif->present = 0;
-+			return -EIO;
- 		}
- 	}
- #ifdef CONFIG_BLK_DEV_HD
- 	if (hwif->irq == HD_IRQ && hwif->io_ports[IDE_DATA_OFFSET] != HD_DATA) {
- 		printk("%s: CANNOT SHARE IRQ WITH OLD "
- 			"HARDDISK DRIVER (hd.c)\n", hwif->name);
--		return (hwif->present = 0);
-+		hwif->present = 0;
-+		return -EIO;
- 	}
- #endif /* CONFIG_BLK_DEV_HD */
- 
-@@ -1266,7 +1271,7 @@
- 	hwif->present = 0;
- 
- 	if (register_blkdev(hwif->major, hwif->name))
--		return 0;
-+		return -EIO;
- 
- 	if (!hwif->sg_max_nents)
- 		hwif->sg_max_nents = PRD_ENTRIES;
-@@ -1305,7 +1310,7 @@
- done:
- 	init_gendisk(hwif);
- 	hwif->present = 1;	/* success */
--	return 1;
-+	return 0;
- 
- out_disks:
- 	for (unit = 0; unit < MAX_DRIVES; unit++) {
-@@ -1315,7 +1320,7 @@
- 	}
- out:
- 	unregister_blkdev(hwif->major, hwif->name);
--	return 0;
-+	return -EIO;
- }
- 
- int ideprobe_init (void)
-
-===== sgiioc4.c 1.22 vs edited =====
---- 1.22/drivers/ide/pci/sgiioc4.c	2005-01-06 20:35:35 -05:00
-+++ edited/sgiioc4.c	2005-02-08 08:54:27 -05:00
-@@ -669,7 +669,8 @@
- 		printk(KERN_INFO "%s: %s Bus-Master DMA disabled\n",
- 		       hwif->name, d->name);
- 
--	probe_hwif_init(hwif);
-+	if (probe_hwif_init(hwif))
-+		return -EIO;
- 
- 	/* Create /proc/ide entries */
- 	create_proc_ide_interfaces(); 
-
---------------060905020006040003060507--
+On Tuesday 08 February 2005 07:18, Doug McLain wrote:
+> In my case the MB is an A7N8X, and that option is nowhere to be found in
+> my bios.  My hardware lockup only occurs in linux, and the drive works
+> fine in windows.  Also, if I load the sil_sata driver with the drive not
+> attatched, it loads fine, as reported by the others as well. Only if the
+> drive is attatched, does a hard lock occur after a modprobe.
+>
+> Thanks anyway
+>
+> Rasmus Melgaard wrote:
+> >Hi,
+> >
+> >I had problems with the sata_sil (pci sil3112) at boot time, the problem
+> > was bios settings for the PCI bus. I disabled 'BYTE MERGE' on my Asus A7V
+> > board and i worked.
+> >
+> >Rasmus
+> >
+> >On Tuesday 08 February 2005 06:03, Doug McLain wrote:
+> >>Any word on this? It's been reported here a few times now.
+> >>
+> >>I am having exactly the same problem, the only difference being the
+> >>model of drive.  Mine is a WD2000.  The sata_sil module loads ok though,
+> >>if the drive is not connected.  If it is connected, hard lock.  Tested
+> >>on 2.4.25, 2.6.9, 2.6.10.
+> >>
+> >>Doug
+> >>
+> >>
+> >>
+> >>
+> >>
+> >>
+> >>
+> >>
+> >>
+> >>Encapsulated message
+> >>
+> >>
+> >>Re: sata_sil problems (lockup at boottime)
+> >>
+> >>
+> >>From:
+> >>Doug McLain <nostar@comcast.net>
+> >>
+> >>
+> >>To:
+> >>Gerald Hopf <gerald.hopf@nv-systems.net>, linux-kernel@vger.kernel.org
+> >>
+> >>
+> >>Date:
+> >>2005-01-10 16:34
+> >>
+> >>Gerald Hopf wrote:
+> >>>Hello everyone,
+> >>>
+> >>>i'm having some really strange problems with the sata_sil driver.
+> >>>
+> >>>My hardware:
+> >>>Asus A7N8X Deluxe Rev 1.x with onboard Sil3112 Controller
+> >>>- Samsung SP1614C SATA Harddrive
+> >>>- for further testing : PATA to SATA Adapter that came with an ABIT
+> >>>Mainboard
+> >>>
+> >>>What i'm trying to accomplish: i'm trying to use this Samsung SATA
+> >>>harddrive in my Linux Fileserver:
+> >>>
+> >>>When the Silicon Image Controller is enabled (it can be disabled by a
+> >>>jumper) and no harddrive is connected, everything boots fine.
+> >>>If i connect a harddrive, i get the following message (exact messages
+> >>>change slightly) while booting:
+> >>>
+> >>>- - - - -  START  - - - - -
+> >>>======================
+> >>>[<c0102716>] common_interrupt+0x1a/0x20
+> >>>[<c0117d70>] __do_softirq+0x30/0x90
+> >>>[<c0104261>] do_softirq+0x41/0x50
+> >>>======================
+> >>>[<c012d0a4>] irq_exit+0x34/0x40
+> >>>[<c0104165>] do_IRQ+9x45/0x60
+> >>>[<c0102716>] common_interrupt+0x1a/0x20
+> >>>[<c010c674>] delay_tsc+0x14/0x20
+> >>>[<c025efd2>] __delay+0x12/0x20
+> >>>[<c02d7290>] ata_pio_complet+0xe0/0x1f0
+> >>>[<c02d7a95>] ata_pio_test+0x95/0xb0
+> >>>[<c01229bc>] worker_thread+0x1cc/0x290
+> >>>[<c02d7a00>] ata_pio_task+0x0/0xb0
+> >>>[<c0110160>] default_wake_function+0x0/0x20
+> >>>[<c0110160>] default_wake_function+0x0/0x20
+> >>>[<c01227f0>] worker_thread+0x0/0x290
+> >>>[<c0126ca5>] kthread+0xa5/0xb0
+> >>>[<c0126c00>] kthread+0x0/0xb0
+> >>>[<c01006f1>] kernel_thread_helper+0x5/0x14
+> >>>handlers:
+> >>>[<c02d82b0>] (ata_interrupt+0x0/0x1c0)
+> >>>Disabling IRQ #11
+> >>>ata: dev 0 ATA, max UDMA/100, 361882080 sectors: lba 48
+> >>>_
+> >>>- - - - -  END - - - - -
+> >>>
+> >>>This happens with both the Samsung SP1614C "native" SATA drive, as well
+> >>>as with an IBM 180GB PATA drive, using a PATA-to-SATA Adapter.
+> >>>So i'm not sure whether this is harddrive dependent, but at least it
+> >>>doesn't look like it...
+> >>>
+> >>>This problem has been there in all of the latest 2.6.X kernel revisions.
+> >>>I'm currently using 2.6.10-rc3 (which came out today), but i've allready
+> >>>had this problem in 2.6.9 and 2.6.8 and probably even 2.6.7 if i
+> >>>remember correctly.
+> >>>
+> >>>I tried quite a lot to get rid of those problems, including:
+> >>>- Flashing a new/different Bios (even with different versions of the
+> >>>Silicon Image SATA Bios part: 4.2.47 and 4.2.50)
+> >>>- Disabling APIC in the Bios, compiling Kernel with or without APIC
+> >>>- Changing the IRQ of the Controller by reserving IRQ#11 in the Bios
+> >>>- Disabling allmost every other onboard device i could, including
+> >>>serial/parallel/usb/firewire/3com lan (and there are no PCI/Addon cards
+> >>>besides an nvidia geforce2mx agp card installed in this pc anyway!)
+> >>>- Connecting drives to both ports
+> >>>
+> >>>I found the following discussions which might be related to what i'm
+> >>>experiencing, but noone seems to have a solution. Some seem to suggest
+> >>>it worked fine till 2.6.5:
+> >>>(The first two seem to be most related, i'm not so sure of the third
+> >>> one) http://www.fedoraforum.org/forum/archive/index.php/t-26543.html
+> >>> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=128180
+> >>>http://www.fedoraforum.org/forum/archive/index.php/t-23028.html
+> >>>
+> >>>Screenshots of the error messages can be found here:
+> >>>http://www.nv-systems.net/pics/lkml/sata_sil1.jpg <-- the one from above
+> >>>http://www.nv-systems.net/pics/lkml/sata_sil2.jpg <-- with samsung
+> >>>instead of ibm
+> >>>http://www.nv-systems.net/pics/lkml/sata_sil3.jpg <-- the screen just
+> >>>before the problem
+> >>>
+> >>>Is there ANYTHING i can do (except buying a promise controller) ?
+> >>>
+> >>>Yours sincerely,
+> >>>                    Gerald
+> >>
+> >>I am having exactly the same problem, the only difference being the
+> >>model of drive.  Mine is a WD2000.  The sata_sil module loads ok though,
+> >>if the drive is not connected.  If it is connected, hard lock.  Tested
+> >>on 2.4.25, 2.6.9, 2.6.10.
+> >>
+> >>Doug
+> >>
+> >>--
+> >>http://nostar.net/
+> >>-
+> >>To unsubscribe from this list: send the line "unsubscribe linux-kernel"
+> >> in the body of a message to majordomo@vger.kernel.org
+> >>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>Please read the FAQ at  http://www.tux.org/lkml/
+> >>
+> >>
+> >>
+> >>
+> >>
+> >>End of encapsulated message
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
