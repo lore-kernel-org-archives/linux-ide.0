@@ -1,64 +1,36 @@
-From: Andreas Dilger <adilger@clusterfs.com>
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 Subject: Re: [PATCH] tiny patch to kill warning in drivers/ide/ide.c
-Date: Tue, 8 Jun 2004 20:33:08 -0600
+Date: Wed, 9 Jun 2004 12:31:20 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040609023308.GC24042@schnapps.adilger.int>
+Message-ID: <200406091231.20049.bzolnier@elka.pw.edu.pl>
 References: <Pine.LNX.4.56.0406090335260.25359@jjulnx.backbone.dif.dk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="m51xatjYGsM+13rf"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moraine.clusterfs.com ([66.246.132.190]:62604 "EHLO
-	moraine.clusterfs.com") by vger.kernel.org with ESMTP
-	id S265508AbUFICdN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 8 Jun 2004 22:33:13 -0400
-Content-Disposition: inline
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:14751 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S265692AbUFIK1a
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Jun 2004 06:27:30 -0400
 In-Reply-To: <Pine.LNX.4.56.0406090335260.25359@jjulnx.backbone.dif.dk>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: Jesper Juhl <juhl-lkml@dif.dk>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-
---m51xatjYGsM+13rf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Jun 09, 2004  03:38 +0200, Jesper Juhl wrote:
+On Wednesday 09 of June 2004 03:38, Jesper Juhl wrote:
+> To kill this warning :
+>
 > drivers/ide/ide.c: In function `ide_unregister_subdriver':
-> drivers/ide/ide.c:2216: warning: implicit declaration of function `pnpide=
-_init'
->=20
+> drivers/ide/ide.c:2216: warning: implicit declaration of function
+> `pnpide_init'
+>
 > I added a simple declaration of pnpide_init to drivers/ide/ide.c
->=20
+>
 > Here's a patch against 2.6.7-rc3 - please consider including it (or if
 > that's not the way to do it, then don't) :)
 
-Better to add the declaration into a header like linux/ide.h that is
-included into both ide.c and ide-pnp.c so that when/if pnpide_init()
-ever changes its prototype you will get a warning during compilation.
+Thanks but the real bug is to call pnpide_init() from
+ide_unregister_subdriver(), I'll push ide-pnp update soon.
 
-The only good reason to have declarations within .c files is for forward
-declarations of functions only used in the same file.
-
-Cheers, Andreas
---
-Andreas Dilger
-http://sourceforge.net/projects/ext2resize/
-http://members.shaw.ca/adilger/                 http://members.shaw.ca/goli=
-nux/
-
-
---m51xatjYGsM+13rf
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
-
-iD8DBQFAxnbkpIg59Q01vtYRAn6OAJ0eCiDJUjHSkzo+idkYA5inQ1k/XACePYbV
-Sxtjoht4t2NCEZpmT66naxs=
-=NRLz
------END PGP SIGNATURE-----
-
---m51xatjYGsM+13rf--
