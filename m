@@ -1,27 +1,40 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: ATA/133 Problems with multiple cards
-Date: Thu, 21 Oct 2004 20:43:32 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <58cb370e041021114374bb749f@mail.gmail.com>
-References: <Pine.LNX.4.44.0410201211481.5805-100000@beast.stev.org>
-	 <200410201623.21321.hpj@urpla.net>
+Subject: Re: PATAPI via libata promise 20275 (was: RFC: moving drivers to a new drivers/ata directory)
+Date: Thu, 21 Oct 2004 20:53:34 +0200
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <58cb370e041021115367c80c55@mail.gmail.com>
+References: <4176883D.7070905@pobox.com>
+	 <200410211704.i9LH4jMR008268@falcon30.maxeymade.com>
 Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S270799AbUJUSwl@vger.kernel.org>
-In-Reply-To: <200410201623.21321.hpj@urpla.net>
-To: Hans-Peter Jansen <hpj@urpla.net>
-Cc: James Stevenson <james@stev.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernelnewbies@nl.linux.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rproxy.gmail.com ([64.233.170.202]:41150 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S270817AbUJUSxh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Oct 2004 14:53:37 -0400
+Received: by rproxy.gmail.com with SMTP id 77so82109rnk
+        for <linux-ide@vger.kernel.org>; Thu, 21 Oct 2004 11:53:34 -0700 (PDT)
+In-Reply-To: <200410211704.i9LH4jMR008268@falcon30.maxeymade.com>
 List-Id: linux-ide@vger.kernel.org
+To: Doug Maxey <dwm@maxeymade.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert CC Lee <albertcc@tw.ibm.com>
 
-On Wed, 20 Oct 2004 16:23:21 +0200, Hans-Peter Jansen <hpj@urpla.net> wrote:
- 
-> Hmm, I'm running 3 TX2/100 (even with different revisions) without
-> big problems here:
+ATAPI is working just fine for me (ata_piix) in both PIO/DMA
+and thanks to Jeff all my ATAPI work is now in -linus tree. :)
+
+Just enable ATA_ENABLE_ATAPI in <linux/libata.h>.
+
+On Thu, 21 Oct 2004 12:04:45 -0500, Doug Maxey <dwm@maxeymade.com> wrote:
+> Continuing down a somewhat related path,  what is the outlook for PATAPI
+> via libata?
 > 
-> 00:09.0 Unknown mass storage controller: Promise Technology, Inc. 20268 (rev 02)
-> 00:0a.0 Unknown mass storage controller: Promise Technology, Inc. 20268 (rev 02)
-> 00:0b.0 Unknown mass storage controller: Promise Technology, Inc. 20268 (rev 01)
- 
-lspci -xxx ?
+> There is a high level of interest to have hotplug controllers for ppc64, and
+> the primary (exclusive at this point) application is to drive PATAPI optical.
+> 
+> I know you have indicated that you have some WIP to get there.  I would like
+> to offer any help to reach that goal.
+> 
+> Would you point me to any code available?
+> 
+> ++doug
