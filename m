@@ -1,49 +1,62 @@
-From: "Catalin(ux aka Dino) BOIE" <util@deuroconsult.ro>
-Subject: Re: Strange vmstat output. 2.6.10 Scheduler?
-Date: Tue, 1 Feb 2005 12:59:11 +0200 (EET)
-Message-ID: <Pine.LNX.4.62.0502011258000.26221@webhosting.rdsbv.ro>
-References: <Pine.LNX.4.62.0502011217320.26221@webhosting.rdsbv.ro>
- <20050201102638.GJ4137@suse.de> <Pine.LNX.4.62.0502011236100.26221@webhosting.rdsbv.ro>
- <20050201104214.GK4137@suse.de> <Pine.LNX.4.62.0502011243270.26221@webhosting.rdsbv.ro>
- <20050201104949.GM4137@suse.de>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: Linux hangs during IDE initialization at boot for 30 sec
+Date: Wed, 02 Feb 2005 10:18:20 +1100
+Message-ID: <1107299901.5624.28.camel@gaston>
+References: <200502011257.40059.brade@informatik.uni-muenchen.de>
+	 <pan.2005.02.01.20.21.46.334334@surrey.ac.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Received: from webhosting.rdsbv.ro ([213.157.185.164]:1962 "EHLO
-	webhosting.rdsbv.ro") by vger.kernel.org with ESMTP id S261983AbVBAK7O
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Feb 2005 05:59:14 -0500
-In-Reply-To: <20050201104949.GM4137@suse.de>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from gate.crashing.org ([63.228.1.57]:26294 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S262163AbVBAXS1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2005 18:18:27 -0500
+In-Reply-To: <pan.2005.02.01.20.21.46.334334@surrey.ac.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: ee21rh@surrey.ac.uk
+Cc: Linux Kernel list <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
 
-I forgot to say that I disabled HT because I saw an improvement.
+On Tue, 2005-02-01 at 20:22 +0000, Richard Hughes wrote:
+> On Tue, 01 Feb 2005 12:57:33 +0100, Michael Brade wrote:
+> 
+> > Hi,
+> > 
+> > since at least kernel 2.6.9 I'm having a problem booting linux - it hangs 
+> > after this
+> > 
+> > Probing IDE interface ide0...
+> > hda: HITACHI_DK23DA-30, ATA DISK drive
+> > elevator: using anticipatory as default io scheduler
+> > ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+> > Probing IDE interface ide1...
+> > hdc: TOSHIBA DVD-ROM SD-R2212, ATAPI CD/DVD-ROM drive
+> > ide1 at 0x170-0x177,0x376 on irq 15
+> > 
+> > After about 30 seconds everything continues fine with
+> > 
+> > hda: max request size: 128KiB
+> > 
+> > I found additional lines in the log just before the line above:
+> 
+> Same here on 2.6.11-rc2-bk3 using a *Toshiba* Satellite Pro A10.
+> 
+> messages can be found here:
+> 
+> http://hughsie.no-ip.com/write/kernel/messages
 
-Also, the cs seems very high:
-  r  b   swpd   free   buff  cache   si   so    bi    bo   in    cs us sy id wa
-  1  2  12416   6048   7040 816592    0    0     0     0 1299   483  2  1 0 97
-  0  2  12416   6016   7040 816592    0    0     0     0 1251   400  3  2 0 95
-  0  1  12416   6008   7040 816616    0    0     0    84 1294   409  1  3 0 96
-  2  1  12416   5500   7040 817372    0    0  1460     8 1240 11636 61 11 0 28
-  0  1  12416   6060   6972 816796    0    0  7620  8420 1260  2327 12  4 0 84
-  0  1  12416   6160   6924 816784    0    0  7512   588 1266  1369 16  5 0 79
-  0  2  12416   5032   6924 817964    0    0  2964   936 1249  1285 14  4 0 82
-  0  3  12416   6176   6992 816628    0    0     0  1552 1256  1187  8  3 0 89
-  0  3  12416   6164   6992 816668    0    0     0  1160 1248  1272  7  1 0 92
-  0  3  12416   6052   6992 816716    0    0     0   876 1242  1278  8  3 0 89
-  0  3  12416   6052   6992 816740    0    0     0  1256 1258  1261  9  2 0 89
-  0  3  12416   6028   6992 816772    0    0     0  1264 1266  1388  7  1 0 92
-  0  3  12416   5980   6992 816772    0    0     0   616 1236   338  1  1 0 98
-  0  4  12416   5028   6996 817900    0    0   844  1472 1250   350  2  2 0 96
-  0  4  12416   6064   6996 816700    0    0  6668   700 1256   514  5  2 0 93
-  0  3  12416   6180   6996 816532    0    0  3252   164 1237   370 10  2 0 88
-  0  3  12416   6116   6996 816532    0    0     0  1120 1267   413  2  2 0 96
-  0  2  12416   6116   6996 816532    0    0     0  1240 1275   395  2  1 0 97
+This looks like bogus HW, or bogus list of IDE interfaces ...
 
-It's normal?
+The IDE layer waits up to 30 seconds for a device to drop it's busy bit,
+which is necessary for some drives that aren't fully initialized yet.
 
----
-Catalin(ux aka Dino) BOIE
-catab at deuroconsult.ro
-http://kernel.umbrella.ro/
+I suspect in your case, it's reading "ff", which indicates either that
+there is no hardware where the kernel tries to probe, or that there is
+bogus IDE interfaces which don't properly have the D7 line pulled low so
+that BUSY appears not set in absence of a drive.
+
+I'm not sure how the list of intefaces is probed on this machine, that's
+probably where the problem is.
+
+Ben.
+
+
