@@ -1,16 +1,16 @@
 From: =?ISO-8859-1?Q?Johny_=C5gotnes?= <johny@agotnes.com>
 Subject: Re: Which SATA Combos To Consider?
-Date: Tue, 22 Feb 2005 09:50:20 +1000
-Message-ID: <421A73BC.9070604@agotnes.com>
+Date: Tue, 22 Feb 2005 09:50:54 +1000
+Message-ID: <421A73DE.6040005@agotnes.com>
 References: <4213CD9E.9040703@pobox.com> <20050216174954.K10699@florence.linkmargin.com> <4213DE38.70309@pobox.com> <20050216182040.L10699@florence.linkmargin.com> <421426DB.2000308@pobox.com> <20050217085934.M10699@florence.linkmargin.com> <4214ECE9.7070502@pobox.com> <1108669364.3604.80.camel@vom> <421535F6.80609@latech.edu> <42153A89.2090909@agotnes.com> <20050218005228.GA1228@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Received: from munin.agotnes.com ([202.173.149.60]:54657 "EHLO
-	mail.agotnes.com") by vger.kernel.org with ESMTP id S262176AbVBUXue
+Received: from munin.agotnes.com ([202.173.149.60]:57473 "EHLO
+	mail.agotnes.com") by vger.kernel.org with ESMTP id S262178AbVBUXvH
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Feb 2005 18:50:34 -0500
+	Mon, 21 Feb 2005 18:51:07 -0500
 In-Reply-To: <20050218005228.GA1228@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
