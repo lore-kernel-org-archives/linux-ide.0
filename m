@@ -1,69 +1,52 @@
-From: Eric Wong <eric@petta-tech.com>
-Subject: Re: Silicon Image 3112 h/w docs available
-Date: Sat, 23 Oct 2004 12:11:25 -0700
+From: Tobias Lorenz <tobias.lorenz@gmx.net>
+Subject: Re: [PATCH 2.6.9-libata1-dev1] libata-scsi: hdparm support
+Date: Sat, 23 Oct 2004 23:59:12 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20041023191125.GJ9119@mail.petta-tech.com>
-References: <41792BC3.9060304@pobox.com>
+Message-ID: <1098568752.8926.16.camel@server.lorenz.priv>
+References: <1098487253.28916.12.camel@server.lorenz.priv>
+	 <58cb370e04102305363da96ebd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wRokNccIwvMzawGl"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 66.238.42.11.ptr.us.xo.net ([66.238.42.11]:40102 "EHLO
-	mail.petta-tech.com") by vger.kernel.org with ESMTP id S261278AbUJWTLc
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 23 Oct 2004 15:11:32 -0400
-Content-Disposition: inline
-In-Reply-To: <41792BC3.9060304@pobox.com>
+Received: from pop.gmx.net ([213.165.64.20]:47285 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261312AbUJWV7P (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Oct 2004 17:59:15 -0400
+In-Reply-To: <58cb370e04102305363da96ebd@mail.gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+
+Hi,
+
+Bartlomiej Zolnierkiewicz wrote:
+> dev->id
+> 
+> HDIO_GET_IDENTITY (as used by 'hdparm -i') should return _original_
+> drive ID (dev->id should be returned) so currently used mode may not
+> be reported correctly.
+
+The used mode isn't reported yet. Only cylinders, sectors, heads, model
+and firmware version are supported by now.
+
+dev is of type ata_device, so dev->id is 
+u16                     id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
+
+Where in dev->id are the model and revision strings encoded ? Here is a comparison:
+ata1: dev 0 cfg 49:2f00 82:74eb 83:4bea 84:4000 85:7469 86:0802 87:4003 88:203f
+ata_dump_id: 49==0x2f00 53==0x0007 63==0x0007 64==0x0003 75==0x001f
+ata_dump_id: 80==0x003c 81==0x0015 82==0x74eb 83==0x4bea 84==0x4000
+ata_dump_id: 88==0x203f 93==0x600b
+
+ata_scsiop_inq_std: ENTER
+  Vendor: ATA Model: IC35L060AVER07-0 Rev: 1.01
+  Type: Direct-Access ANSI SCSI revision: 05 
+
+> 'hdparm -I' should be already supported by current libata-dev tree.
+hdparm -I needs implementations for the HDIO_GET_MULTCOUNT and
+HDIO_GET_IDENTITY commands in ata_scsi_ioctl to report informations.
+Both were not implemented.
+
+Toby
 
 
---wRokNccIwvMzawGl
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Jeff Garzik <jgarzik@pobox.com> wrote:
->=20
-> In order to better support open source developers, Silicon Image has=20
-> been kind enough to give me permission to publicly post the hardware=20
-> documentation for some of their older SATA chipsets on my docs site,=20
-> namely the 3112 in this case:
->=20
-> http://gkernel.sourceforge.net/specs/sii/3112A_SiI-DS-0095-B2.pdf.bz2
->=20
-> This documentation will assist developers in maintaining the=20
-> siimage/sata_sil SATA drivers in the Linux kernel.
->=20
-> So now the 311x joins the ranks of "open hardware".  Thanks, SiI!
-
-Doesn't seem to contain any more info on drives/controllers affected by
-the mod15write quirk.  I'd like to see firmware revisions added to the
-blacklist, and not just model numbers anymore.  I didn't have that
-information when I first implemented the blacklist (model numbers only),
-and it still doesn't seem to be available right now.
-
-I'm rather disappointed that the drive (ST3160023AS) I use has managed
-to get its way onto the blacklist[1].  I'm using rev 3.05 of that drive
-with a 3112 (rev 02), and have been for nearly a year at full speed and
-have never had problems under heavy read/write usage.  Setups affected
-by an uncorrected mod15write bug are corrupted almost immediately, no?
-
---=20
-Eric Wong -- eric@petta-tech.com -- normalperson@yhbt.net
-
---wRokNccIwvMzawGl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
-
-iD8DBQFBeqzdcodMowuNYfcRAhKZAJ9+GEp32Phx+aa9nGndnmE0pSq4fgCfSTq0
-6XCUp3UPHYMJbN8zXLJ52t8=
-=qSH8
------END PGP SIGNATURE-----
-
---wRokNccIwvMzawGl--
