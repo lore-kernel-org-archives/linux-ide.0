@@ -1,55 +1,39 @@
-From: "Leon Woestenberg" <leonw@mailcan.com>
-Subject: Marvell 88SX504x 88SX508x SATA host controller drivers?
-Date: Wed, 05 May 2004 22:30:39 +0200
+From: Vojtech Pavlik <vojtech@suse.cz>
+Subject: Re: Multiple (ICH3) IDE-controllers in a system
+Date: Thu, 6 May 2004 08:45:46 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1083789039.12945.185714943@webmail.messagingengine.com>
+Message-ID: <20040506064546.GA239@ucw.cz>
+References: <200405042213.BLD39867@ms6.netsolmail.com> <200405051716.43909.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:24762 "EHLO
-	out2.smtp.messagingengine.com") by vger.kernel.org with ESMTP
-	id S264804AbUEEUal (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 May 2004 16:30:41 -0400
-Received: from server2.messagingengine.com (server2.internal [10.202.2.133])
-	by mail.messagingengine.com (Postfix) with ESMTP id 0A5A9B1D430
-	for <linux-ide@vger.kernel.org>; Wed,  5 May 2004 16:30:39 -0400 (EDT)
+Received: from twilight.ucw.cz ([81.30.235.3]:1920 "EHLO midnight.ucw.cz")
+	by vger.kernel.org with ESMTP id S261735AbUEFGp5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 May 2004 02:45:57 -0400
 Content-Disposition: inline
+In-Reply-To: <200405051716.43909.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: shai@ftcon.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+On Wed, May 05, 2004 at 05:16:43PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> 
+> Hi Vojtech,
+> 
+> Do I correctly assume that these fixups for Intel chipsets are from you?
 
-I am aware of one open-source driver for the Marvell SATA host controller
-series:
+Yes.
 
-Marvell 88SX5040/88SX5041/88SX5080/88SX5081
+> http://linus.bkbits.net:8080/linux-2.5/cset@3cfbacdfzHvfqp0Sa45QXt9pNn3LNg?nav=index.html|src/|src/arch|src/arch/i386|src/arch/i386/pci|related/arch/i386/pci/fixup.c
+> http://linus.bkbits.net:8080/linux-2.5/cset@3cfcec0fOJreGFyCWkPeT7EWiydYFw?nav=index.html|src/|src/arch|src/arch/i386|src/arch/i386/pci|related/arch/i386/pci/fixup.c
+> 
+> Care to explain why 'trash' fixup is needed in 2.6 but not in 2.4?
 
-1 = integrated flash interface
-4 = four-port model
-8 = eight-port model
+Because 2.4 was never used on the affected machines, where this fixup
+was needed - those machines sere putting nonsense into the BARs. I don't
+recall exactly what model they were, though I remember they were one of
+the first machines with ICH MMIO support.
 
-It is available here: ftp://ftp.supermicro.com/driver/SATA/DAC_SATA-MV8/
-(source code) and should compile under at least Red Hat kernels.
-
-Are there reports on its proven quality, whether SMART works with
-smartmontools,
-and if/how hotplug/hot-add/hot-swap/hot-remove is handled?
-
-I.e. can we run a 4 disk software RAID-5 from this controller and use
-hot-swap
-and SMART reliably?
-
-Also, I noticed there is no driver yet for the libata framework by Jeff
-Garzik.
-Jeff reported to work on hotswap RSN so maybe a libata driver for Marvell
-is
-the way to go?
-
-Given the host controller chip datasheet, would it be hard to add a
-libata driver
-(what are the hurdles to take?)
-
-Regards,
-
-Leon.
+-- 
+Vojtech Pavlik
+SuSE Labs, SuSE CR
