@@ -1,98 +1,89 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [BK PATCHES] 2.4.x libata update
-Date: Thu, 6 Jan 2005 23:38:20 -0500
-Message-ID: <20050107043820.GA11858@havoc.gtf.org>
+Subject: libata-dev queue updated
+Date: Fri, 7 Jan 2005 02:10:32 -0500
+Message-ID: <20050107071032.GA15229@havoc.gtf.org>
+Reply-To: linux-ide@vger.kernel.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([63.115.148.101]:36488 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S261236AbVAGEiW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2005 23:38:22 -0500
+Received: from havoc.gtf.org ([63.115.148.101]:44171 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S261289AbVAGHKd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2005 02:10:33 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
 
-Please do a
+Recent changes:
+* ICH7 support added (via Intel)
+* add DMA blacklist, needed for good PATA support
+* update to latest kernel, 2.6.10-bk9
 
-	bk pull bk://kernel.bkbits.net/jgarzik/libata-upstream-2.4
+
+
+BK users:
+
+	bk pull bk://gkernel.bkbits.net/libata-dev-2.6
+
+Patch:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.10-bk9-libata-dev1.patch.bz2
 
 This will update the following files:
 
- drivers/scsi/ahci.c     |    8 ++++++--
- drivers/scsi/ata_piix.c |   15 +++++++++++++++
- 2 files changed, 21 insertions(+), 2 deletions(-)
+ drivers/pci/quirks.c         |    6 
+ drivers/scsi/Kconfig         |   18 +
+ drivers/scsi/Makefile        |    2 
+ drivers/scsi/ahci.c          |    8 
+ drivers/scsi/ata_adma.c      |  636 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ata_piix.c      |   15 
+ drivers/scsi/libata-core.c   |  128 +++++++
+ drivers/scsi/libata-scsi.c   |  409 +++++++++++++++++++++++++
+ drivers/scsi/libata.h        |    2 
+ drivers/scsi/pata_pdc2027x.c |  694 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sata_promise.c  |   56 +++
+ drivers/scsi/sata_via.c      |  202 +++++++++---
+ include/linux/ata.h          |    1 
+ include/linux/libata.h       |    2 
+ include/scsi/scsi.h          |    3 
+ 15 files changed, 2110 insertions(+), 72 deletions(-)
 
 through these ChangeSets:
 
-<jason.d.gaston@intel.com> (05/01/06 1.1547)
-   [PATCH] SATA support for Intel ICH7
-     
-   Reposting patch with word wrap turned off.  Please let me know if
-   this is still not formated correctly.
-     
-   This patch adds the Intel ICH7 DID's to the ata_piix.c SATA driver, ahci.c SATA
-   AHCI driver and quirks.c for ICH7 SATA support.
-   
-   Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
+<albertcc:tw.ibm.com>:
+  o [libata pdc2027x] fix incorrect pio and mwdma masks
+  o [libata pdc2027x] remove quirks and ROM enable
+  o [libata] add driver for Promise PATA 2027x
 
-diff -Nru a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
---- a/drivers/scsi/ahci.c	2005-01-06 23:37:31 -05:00
-+++ b/drivers/scsi/ahci.c	2005-01-06 23:37:31 -05:00
-@@ -241,9 +241,13 @@
- 
- static struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_INTEL, 0x2652, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
--	  board_ahci },
-+	  board_ahci }, /* ICH6 */
- 	{ PCI_VENDOR_ID_INTEL, 0x2653, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
--	  board_ahci },
-+	  board_ahci }, /* ICH6M */
-+	{ PCI_VENDOR_ID_INTEL, 0x27c1, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+	  board_ahci }, /* ICH7 */
-+	{ PCI_VENDOR_ID_INTEL, 0x27c5, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+	  board_ahci }, /* ICH7M */
- 	{ }	/* terminate list */
- };
- 
-diff -Nru a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
---- a/drivers/scsi/ata_piix.c	2005-01-06 23:37:31 -05:00
-+++ b/drivers/scsi/ata_piix.c	2005-01-06 23:37:31 -05:00
-@@ -60,6 +60,7 @@
- 	piix4_pata		= 2,
- 	ich6_sata		= 3,
- 	ich6_sata_rm		= 4,
-+	ich7_sata		= 5,
- };
- 
- static int piix_init_one (struct pci_dev *pdev,
-@@ -90,6 +91,8 @@
- 	{ 0x8086, 0x2651, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
- 	{ 0x8086, 0x2652, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_rm },
- 	{ 0x8086, 0x2653, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_rm },
-+	{ 0x8086, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich7_sata },
-+	{ 0x8086, 0x27c4, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich7_sata },
- 
- 	{ }	/* terminate list */
- };
-@@ -227,6 +230,18 @@
- 	},
- 
- 	/* ich6_sata_rm */
-+	{
-+		.sht		= &piix_sht,
-+		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
-+				  PIIX_FLAG_COMBINED | PIIX_FLAG_CHECKINTR |
-+				  ATA_FLAG_SLAVE_POSS | PIIX_FLAG_AHCI,
-+		.pio_mask	= 0x1f,	/* pio0-4 */
-+		.mwdma_mask	= 0x07, /* mwdma0-2 */
-+		.udma_mask	= 0x7f,	/* udma0-6 */
-+		.port_ops	= &piix_sata_ops,
-+	},
-+
-+	/* ich7_sata */
- 	{
- 		.sht		= &piix_sht,
- 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
+<andyw:pobox.com>:
+  o [libata scsi] support 12-byte passthru CDB
+  o [libata scsi] passthru CDB check condition processing
+  o T10/04-262 ATA pass thru - patch
+
+<erikbenada:yahoo.ca>:
+  o [libata sata_promise] support PATA ports on SATA controllers
+
+<jason.d.gaston:intel.com>:
+  o SATA support for Intel ICH7
+
+Brad Campbell:
+  o libata basic detection and errata for PATA->SATA bridges
+
+Jeff Garzik:
+  o [libata] add DMA blacklist
+  o [libata] add new driver ata_adma
+  o [libata sata_via] add support for VT6421 SATA
+  o [libata sata_via] minor cleanups
+  o [libata pdc2027x] update for upstream struct device conversion
+  o [libata sata_promise] fix merge bugs
+  o [libata] fix build breakage
+  o [libata] fix SATA->PATA bridge detect compile breakage
+  o [libata] fix printk warning
+
+John W. Linville:
+  o libata: SMART support via ATA pass-thru
+
+Tobias Lorenz:
+  o libata-scsi: get-identity ioctl support
+
