@@ -1,71 +1,113 @@
-From: Sergey Vlasov <vsu@altlinux.ru>
-Subject: [BUG] sata_via broken by recent libata updates
-Date: Wed, 24 Mar 2004 19:33:40 +0300
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [BUG] sata_via broken by recent libata updates
+Date: Wed, 24 Mar 2004 13:08:49 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040324163340.GD23503@master.mivlgu.local>
+Message-ID: <4061CEB1.3080600@pobox.com>
+References: <20040324163340.GD23503@master.mivlgu.local>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="at6+YcpfzWZg/htY"
+Content-Type: multipart/mixed;
+ boundary="------------020706070507060307050105"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mivlgu.ru ([81.18.140.87]:41384 "EHLO master.mivlgu.local")
-	by vger.kernel.org with ESMTP id S263760AbUCXQdn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Mar 2004 11:33:43 -0500
-Content-Disposition: inline
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:32455 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261915AbUCXSJE
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Mar 2004 13:09:04 -0500
+In-Reply-To: <20040324163340.GD23503@master.mivlgu.local>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Sergey Vlasov <vsu@altlinux.ru>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+This is a multi-part message in MIME format.
+--------------020706070507060307050105
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
---at6+YcpfzWZg/htY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Sergey Vlasov wrote:
+> Hello!
+> 
+> After updating from 2.4.25-libata1 to 2.4.25-libata9 the sata_via
+> driver stopped working.  The module loads and even seems to detect
+> the presense of drives, but the SCSI-emulation devices are not
+> registered:
+[...]
+> Seems that the problem is caused by changes in the device
+> initialization - calling ata_device_add() from svia_init_one() does
+> not work (at least with the 2.4.x SCSI layer).  The following patch
+> solves the initialization problem:
+> 
+> --- kernel-source-2.4.25/drivers/scsi/sata_via.c.sata_via-init-fix	2004-03-22 14:03:31 +0300
+> +++ kernel-source-2.4.25/drivers/scsi/sata_via.c	2004-03-24 16:27:50 +0300
+> @@ -264,9 +264,7 @@ static int svia_init_one (struct pci_dev
+>  
+>  	pci_set_master(pdev);
+>  
+> -	/* FIXME: check ata_device_add return value */
+> -	ata_device_add(probe_ent);
+> -	kfree(probe_ent);
+> +	ata_add_to_probe_list(probe_ent);
+>  
+>  	return 0;
 
-Hello!
+Ah, indeed.  A bug in the 2.4 backport.  Seems to be present in sata_sis 
+too.
 
-After updating from 2.4.25-libata1 to 2.4.25-libata9 the sata_via
-driver stopped working.  The module loads and even seems to detect
-the presense of drives, but the SCSI-emulation devices are not
-registered:
+Thanks for spotting, I just checked in the attached patch.
 
-===== messages hand-copied from screen =====
-sata_via (00:0f.0) routed to hard irq line 11
-ata1: SATA max UDMA/133 cmd 0xB800 ctl 0xBC02 bmdma 0xC800 irq 20
-ata2: SATA max UDMA/133 cmd 0xC000 ctl 0xC402 bmdma 0xC808 irq 20
-ata1: dev 0 ATA, max UDMA7, 234493056 sectors (lba48)
-ata2: no device found (phy stat 00000000)
-===== end of messages from sata_via =====
+	Jeff
 
-The machine does not hang - booting fails later, because the root
-device is not accessible.
 
-2.4.25-libata1 worked fine on the same hardware:
 
-===== log from a successful boot ======
-libata version 1.00 loaded.
-sata_via version 0.11
-ata1: SATA max UDMA/133 cmd 0xB800 ctl 0xBC02 bmdma 0xC800 irq 20
-ata2: SATA max UDMA/133 cmd 0xC000 ctl 0xC402 bmdma 0xC808 irq 20
-ata1: dev 0 cfg 49:2f00 82:346b 83:7f01 84:4003 85:3c68 86:3c01 87:4003 88:80ff
-ata1: dev 0 ATA, max UDMA7, 234493056 sectors (lba48)
-ata1: dev 0 configured for UDMA/133
-ATA: abnormal status 0x7F on port 0xC007
-ata2: thread exiting
-scsi0 : sata_via
-scsi1 : sata_via
-  Vendor: ATA       Model: SAMSUNG SP1213C    Rev: 1.00
-  Type:   Direct-Access     ANSI SCSI revision: 05
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-SCSI device sda: 234493056 512-byte hdwr sectors (120060 MB)
-===== end =====
+--------------020706070507060307050105
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
 
-Seems that the problem is caused by changes in the device
-initialization - calling ata_device_add() from svia_init_one() does
-not work (at least with the 2.4.x SCSI layer).  The following patch
-solves the initialization problem:
-
---- kernel-source-2.4.25/drivers/scsi/sata_via.c.sata_via-init-fix	2004-03-22 14:03:31 +0300
-+++ kernel-source-2.4.25/drivers/scsi/sata_via.c	2004-03-24 16:27:50 +0300
-@@ -264,9 +264,7 @@ static int svia_init_one (struct pci_dev
+# This is a BitKeeper generated diff -Nru style patch.
+#
+# ChangeSet
+#   2004/03/24 13:07:52-05:00 jgarzik@redhat.com 
+#   [libata] Fix probing bug in VIA, SiS drivers
+#   
+#   Some 2.6 code leaked into the 2.4 backport.
+#   
+#   Spotted by Sergey Vlasov.
+# 
+# drivers/scsi/sata_via.c
+#   2004/03/24 13:07:50-05:00 jgarzik@redhat.com +1 -3
+#   [libata] Fix probing bug in VIA, SiS drivers
+#   
+#   Some 2.6 code leaked into the 2.4 backport.
+#   
+#   Spotted by Sergey Vlasov.
+# 
+# drivers/scsi/sata_sis.c
+#   2004/03/24 13:07:50-05:00 jgarzik@redhat.com +1 -3
+#   [libata] Fix probing bug in VIA, SiS drivers
+#   
+#   Some 2.6 code leaked into the 2.4 backport.
+#   
+#   Spotted by Sergey Vlasov.
+# 
+diff -Nru a/drivers/scsi/sata_sis.c b/drivers/scsi/sata_sis.c
+--- a/drivers/scsi/sata_sis.c	Wed Mar 24 13:08:01 2004
++++ b/drivers/scsi/sata_sis.c	Wed Mar 24 13:08:01 2004
+@@ -182,9 +182,7 @@
+ 	pci_set_master(pdev);
+ 	pci_enable_intx(pdev);
+ 
+-	/* FIXME: check ata_device_add return value */
+-	ata_device_add(probe_ent);
+-	kfree(probe_ent);
++	ata_add_to_probe_list(probe_ent);
+ 
+ 	return 0;
+ 
+diff -Nru a/drivers/scsi/sata_via.c b/drivers/scsi/sata_via.c
+--- a/drivers/scsi/sata_via.c	Wed Mar 24 13:08:01 2004
++++ b/drivers/scsi/sata_via.c	Wed Mar 24 13:08:01 2004
+@@ -264,9 +264,7 @@
  
  	pci_set_master(pdev);
  
@@ -77,19 +119,5 @@ solves the initialization problem:
  	return 0;
  
 
--- 
-Sergey Vlasov
+--------------020706070507060307050105--
 
---at6+YcpfzWZg/htY
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFAYbhkW82GfkQfsqIRAtQ0AJ0Ry49ITca3Q5YYZilcIoyKQ9KudwCfV3+4
-n+HL8nr+RL9BU3GqpoShIPQ=
-=XUyT
------END PGP SIGNATURE-----
-
---at6+YcpfzWZg/htY--
