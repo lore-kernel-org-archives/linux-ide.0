@@ -1,81 +1,150 @@
-From: Mikael Pettersson <mikpe@csd.uu.se>
-Subject: [PATCH] 2.5.54 fix ide-cd/ide-scsi oopses after module unload
-Date: Sat, 4 Jan 2003 03:35:10 +0100 (MET)
+From: Tom Winkler <tom@qwws.net>
+Subject: poor IDE performance on ASUS P4PE with WD800JB
+Date: Thu, 23 Jan 2003 15:09:22 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200301040235.DAA11671@harpo.it.uu.se>
+Message-ID: <200301231509.22780.tom@qwws.net>
+Reply-To: tom@qwws.net
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, mochel@osdl.org
+To: linux-ide@vger.kernel.org
 
-In 2.5 (the bug's been there since 2.5.42), rmmod:ing a
-modular IDE subdriver like ide-cd or ide-scsi and then
-rebooting causes an oops in device_shutdown(). This is because
-the IDE layer doesn't reset the drive->gendev.driver pointer
-that it previously set up to point to data structures in the
-subdriver module. device_shutdown() sees a non-NULL ->driver,
-dereferences it, and oopses.
+Hi,
 
-The patch below for 2.5.54 fixes two generic bugs related to
-unloading of modular IDE subdrivers, and one specific to ide-scsi:
+I've asked this question in several Newsgroups but nobody was really
+able to answer it. That's why I decided to send it to LKM. Please CC
+me on your replies. Thanks!
 
-1. ata_attach() needs to set drive->gendev.driver = NULL
-   when no specific driver claims the drive. This prevents a
-   drive previously owned by a subdriver module from keeping
-   its ->gendev.driver pointing into that module.
+I've got a question related to ide performance.
+First of all my hardware:
+Mainboard: ASUS P4PE (using onboard IDE but not S-ATA)
+   http://www.asus.com/products/mb/socket478/p4pe/overview.htm
+Harddisk: Western Digital WD800JB
+   http://www.westerndigital.com/products/products.asp?DriveID=32
 
-2. ide_unregister_driver() needs to unregister &driver->gen_driver;
-   this is to balance the corresponding register call in
-   ide_register_driver(). [This part of the patch is originally
-   by Patrick Mochel.]
 
-3. ide-scsi.c abuses ide_driver_t's busy field as a counter
-   while the field in fact is a single-bit boolean. This causes
-   the busyness of the driver to be incorrect while the driver
-   is active. (From my recent patch for 2.4.20-ac2/2.4.21-pre2.)
+Now about the current performance:
 
-With these three fixes modular ide-cd and ide-scsi work quite
-reliably for me in 2.5.54.
+tom@storm:~$ sudo hdparm -tT /dev/hda
+/dev/hda:
+ Timing buffer-cache reads:   128 MB in  0.27 seconds =474.07 MB/sec
+ Timing buffered disk reads:  64 MB in  3.05 seconds = 20.98 MB/sec
 
-/Mikael
+The cache read time is pretty ok but the disk read time is below of
+what I'd have expected. My expectations would have been about 40MB/sec.
 
-diff -ruN linux-2.5.54/drivers/ide/ide.c linux-2.5.54.ide-fixes/drivers/ide/ide.c
---- linux-2.5.54/drivers/ide/ide.c	2003-01-02 14:27:55.000000000 +0100
-+++ linux-2.5.54.ide-fixes/drivers/ide/ide.c	2003-01-04 02:34:02.000000000 +0100
-@@ -1346,6 +1346,7 @@
- 	spin_unlock(&drivers_lock);
- 	spin_lock(&drives_lock);
- 	list_add_tail(&drive->list, &ata_unused);
-+	drive->gendev.driver = NULL;
- 	spin_unlock(&drives_lock);
- 	return 1;
- }
-@@ -2308,6 +2309,8 @@
- 	list_del(&driver->drivers);
- 	spin_unlock(&drivers_lock);
- 
-+	driver_unregister(&driver->gen_driver);
-+
- 	while(!list_empty(&driver->drives)) {
- 		drive = list_entry(driver->drives.next, ide_drive_t, list);
- 		if (driver->cleanup(drive)) {
-diff -ruN linux-2.5.54/drivers/scsi/ide-scsi.c linux-2.5.54.ide-fixes/drivers/scsi/ide-scsi.c
---- linux-2.5.54/drivers/scsi/ide-scsi.c	2002-12-24 13:53:50.000000000 +0100
-+++ linux-2.5.54.ide-fixes/drivers/scsi/ide-scsi.c	2003-01-04 02:34:02.000000000 +0100
-@@ -590,6 +590,7 @@
- 	set_bit(IDESCSI_LOG_CMD, &scsi->log);
- #endif /* IDESCSI_DEBUG_LOG */
- 	idescsi_add_settings(drive);
-+	DRIVER(drive)->busy--;
- }
- 
- static int idescsi_cleanup (ide_drive_t *drive)
-@@ -995,7 +996,7 @@
- 	for (id = 0; id < MAX_HWIFS * MAX_DRIVES; id++) {
- 		drive = idescsi_drives[id];
- 		if (drive)
--			DRIVER(drive)->busy--;
-+			DRIVER(drive)->busy = 0;
- 	}
- 	scsi_unregister   (idescsi_host);
- 	device_unregister(&idescsi_primary);
+Am I wrong with my expectations for this setup?
+I'd really be interested in any suggestion about how I could omptimize
+the system.
+
+
+And here's some more information about the current settings (let me
+know if you need anything else):
+
+tom@storm:~$ sudo hdparm /dev/hda
+/dev/hda:
+ multcount    = 16 (on)
+ I/O support  =  3 (32-bit w/sync)
+ unmaskirq    =  1 (on)
+ using_dma    =  1 (on)
+ keepsettings =  0 (off)
+ nowerr       =  0 (off)
+ readonly     =  0 (off)
+ readahead    = 255 (on)
+ geometry     = 9729/255/63, sectors = 156301488, start = 0
+ busstate     =  1 (on)
+
+
+tom@storm:~$ sudo cat /proc/ide/hda/settings
+name                    value           min             max             mode
+----                    -----           ---             ---             ----
+acoustic                0               0               254             rw
+address                 0               0               2               rw
+bios_cyl                9729            0               65535           rw
+bios_head               255             0               255             rw
+bios_sect               63              0               63              rw
+breada_readahead        255             0               255             rw
+bswap                   0               0               1               r
+current_speed           69              0               69              rw
+failures                0               0               65535           rw
+file_readahead          16384           0               16384           rw
+ide_scsi                0               0               1               rw
+init_speed              69              0               69              rw
+io_32bit                3               0               3               rw
+keepsettings            0               0               1               rw
+lun                     0               0               7               rw
+max_failures            1               0               65535           rw
+max_kb_per_request      255             1               255             rw
+multcount               16              0               16              rw
+nice1                   1               0               1               rw
+nowerr                  0               0               1               rw
+number                  0               0               3               rw
+pio_mode                write-only      0               255             w
+slow                    0               0               1               rw
+unmaskirq               1               0               1               rw
+using_dma               1               0               1               rw
+wcache                  0               0               1               rw
+
+
+tom@storm:~$ sudo hdparm -I /dev/hda
+/dev/hda:
+non-removable ATA device, with non-removable media
+        Model Number:           WDC WD800JB-00CRA1
+        Serial Number:          WD-WMA8E3710419
+        Firmware Revision:      17.07W17
+Standards:
+        Supported: 1 2 3 4 5
+        Likely used: 5
+Configuration:
+        Logical         max     current
+        cylinders       16383   16383
+        heads           16      16
+        sectors/track   63      63
+        bytes/track:    57600           (obsolete)
+        bytes/sector:   600             (obsolete)
+        current sector capacity: 16514064
+        LBA user addressable sectors = 156301488
+Capabilities:
+        LBA, IORDY(can be disabled)
+        Buffer size: 8192.0kB   ECC bytes: 40   Queue depth: 1
+        Standby timer values: spec'd by standard, with device specific minimum
+        r/w multiple sector transfer: Max = 16  Current = 16
+        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
+             Cycle time: min=120ns recommended=120ns
+        PIO: pio0 pio1 pio2 pio3 pio4
+             Cycle time: no flow control=120ns  IORDY flow control=120ns
+Commands/features:
+        Enabled Supported:
+           *    READ BUFFER cmd
+           *    WRITE BUFFER cmd
+           *    Host Protected Area feature set
+           *    look-ahead
+           *    write cache
+           *    Power Management feature set
+                Security Mode feature set
+                SMART feature set
+                SET MAX security extension
+           *    DOWNLOAD MICROCODE cmd
+Security:
+                supported
+        not     enabled
+        not     locked
+        not     frozen
+        not     expired: security count
+        not     supported: enhanced erase
+HW reset results:
+        CBLID- above Vih
+        Device num = 0 determined by the jumper
+Checksum: correct
+
+
+
+A full dmesg dump can be found at http://www.wnk.at/files/dmesg.txt
+
+
+Thanks very much,
+-- 
+Tom Winkler
