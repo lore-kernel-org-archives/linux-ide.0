@@ -1,33 +1,46 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: [PATCH] libata ATA vs SATA detection and workaround.
-Date: Tue, 31 Aug 2004 11:47:22 +0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <41342D0A.9060905@wasp.net.au>
-References: <41320DAF.2060306@wasp.net.au> <41321288.4090403@pobox.com> <413216CC.5080100@wasp.net.au> <4132198B.8000504@pobox.com> <41321F7F.7050300@pobox.com> <41333CDC.5040106@wasp.net.au> <41334058.4050902@wasp.net.au> <413350A2.1000003@pobox.com> <41335723.40907@wasp.net.au> <413357AE.3000009@pobox.com> <41336141.7010407@wasp.net.au> <41336B0E.1090000@pobox.com>
+From: "Prakash K. Cheemplavam" <prakashkc@gmx.de>
+Subject: Re: [patch] libata: add ioctls to support SMART
+Date: Tue, 31 Aug 2004 10:47:38 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <41343B2A.80909@gmx.de>
+References: <200408301531.i7UFVBg29089@ra.tuxdriver.com> <41336824.1040206@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:58595 "EHLO wasp.net.au")
-	by vger.kernel.org with ESMTP id S267324AbUHaHqr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Aug 2004 03:46:47 -0400
-In-Reply-To: <41336B0E.1090000@pobox.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S267528AbUHaIr5@vger.kernel.org>
+In-Reply-To: <41336824.1040206@gmx.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Jeff Garzik wrote:
->>
->> How's this grab you?
-> 
-> 
-> Looks perfect.
-> 
-> Confirm for me that it solves your problem, and I'll push it upstream.
-> 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Well, I have done numerous reboots and beat it hard and it has not failed *yet*. Never say never.
-So yes it works for me.
+Prakash K. Cheemplavam wrote:
+| John W. Linville wrote:
+| | Support for HDIO_DRIVE_CMD and HDIO_DRIVE_TASK in libata.  Useful for
+| | supporting SMART w/ unmodified smartctl and smartd userland binaries.
+~ > I just tried to give it a go with libata from 2.6.9-rc1. I had to fix
+| one rejects but the patching seemed to go fine beside that. Nevertheless
+| after a boot with patched libata I get:
+|
+| smartctl -a /dev/sda
+[snip]
 
-Regards,
-Brad
+| Device does not support SMART
+
+Just wanted
+
+Just wanted to say that smartctl -a -d ata /dev/sda works, as John
+Linville and now Bruce aLlen suggested to try.
+
+Cheers,
+
+Prakash
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.6 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+
+iD8DBQFBNDsqxU2n/+9+t5gRAinMAJ0W6sfKD4LV7uv6X9XUxWeng2dWjQCfVolo
+CXg7ylDp8eb6SI+C4GZz/Bk=
+=N/WZ
+-----END PGP SIGNATURE-----
