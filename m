@@ -1,34 +1,84 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: purpose of resetproc() in struct hwif_s
-Date: Mon, 08 Dec 2003 10:13:07 +1100
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: 2.6.0-test11-bart1
+Date: Mon, 8 Dec 2003 01:38:32 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1070838786.11006.39.camel@gaston>
-References: <20031207074241.GA188106@sgi.com>
+Message-ID: <200312080138.32388.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.86.99.235]:22690 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S264570AbTLGXOS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Dec 2003 18:14:18 -0500
-In-Reply-To: <20031207074241.GA188106@sgi.com>
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:27832 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264796AbTLHAgi
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 7 Dec 2003 19:36:38 -0500
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-> My question is, what should it be doing?  Is turning shutting off
-> DMA and clearing interrupts sufficient if we don't think we need
-> to reset the controller?  Could it be harmful?
+Lets start the ball rolling...
 
-I added this callback a while back because the winbond was switching
-to what seems, according to the (very bad) documentation, some 8
-bits only mode when sensing an ATA reset done via the control reg.
-You don't _have_ to do anything special if your controller don't
-play such tricks, though if you have ways of putting back the controller
-to some sane idle state (in case we reset after a DMA failure), it
-might be wise to do so. 
+If you have problems ide-tape.c, siimage.c or cmd640.c (in PCI mode)
+you should try this patch.
 
-Ben.
+It also contains untested fixes for Promise IDE driver (pdc202xx_old.c),
+they should be safe but better backup your data first :-), feedback needed.
+
+Workarounds for nForce2 chipset are also included.
+
+Get it from:
+ftp://ftp.kernel.org/pub/linux/kernel/people/bart/2.6.0-test11-bart1/
+
+If you have some patches you think are worth merging just mail me
+(cleanups are also welcomed).
+
+--bart
+
+Merged:
+
+linux-2.6.0-test11-bk5.patch
+  -bk snapshot (patch-2.6.0-test11-bk5)
+
+extraversion.patch
+  add -bartX to EXTRAVERSION
+
+ide-tape-update.patch
+  [IDE] ide-tape.c update
+
+ide-tape-rq-special.patch
+  [IDE] ide-tape.c: stop abusing rq->flags
+
+ide-siimage-seagate.patch
+  [IDE] siimage.c: limit requests to 15kB only for Seagate SATA drives
+
+ide-siimage-stack-fix.patch
+  [IDE] siimage.c: fix PIO settings programming
+
+ide-siimage-sil3114.patch
+  [IDE] siimage.c: add very basic support for Silicon Image 3114 SATA
+
+ide-cmd640-pci1.patch
+  [IDE] cmd640.c: fix PCI type1 access
+
+ide-pdc_old-pio-fix.patch
+  [IDE] pdc202xx_old.c: fix PIO autotuning
+
+ide-pdc_old-udma66-fix.patch
+  [IDE] pdc202xx_old.c: fix enabling 66MHz clock for modes > UDMA2
+
+ide-pdc_old-66mhz_clock-fix.patch
+  [IDE] pdc202xx_old.c: sanitize 66MHz clock use
+
+nforce2-disconnect-quirk.patch
+  [x86] fix lockups with APIC support on nForce2
+
+nforce2-apic.patch
+  [x86] do not wrongly override mp_ExtINT IRQ
+
+ide-recovery-time.patch
+  [IDE] remove dead and broken DISK_RECOVERY_TIME support
+
+ide-pdc_new-proc.patch
+  [IDE] pdc202xx_new.c: remove useless /proc/ide/pdcnew
 
