@@ -1,41 +1,35 @@
-From: Andy Warner <andyw@pobox.com>
-Subject: Re: libata oops 2.6.11-rc4 yesterdays BK
-Date: Wed, 16 Feb 2005 15:40:33 -0600
-Message-ID: <20050216154033.I10699@florence.linkmargin.com>
-References: <4212CBD6.7020703@wasp.net.au> <42132803.2080701@wasp.net.au> <4213821D.1030203@pobox.com> <4213B2F8.2070800@wasp.net.au>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: 31244 & sata_vsc & PPC
+Date: Wed, 16 Feb 2005 17:25:22 -0500
+Message-ID: <4213C852.4070105@pobox.com>
+References: <4213996C.4060301@motorola.com> <20050216190821.GA19150@havoc.gtf.org> <4213BADF.8000307@motorola.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:34488 "EHLO
-	ms-smtp-04.rdc-kc.rr.com") by vger.kernel.org with ESMTP
-	id S262082AbVBPVkk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Feb 2005 16:40:40 -0500
-Content-Disposition: inline
-In-Reply-To: <4213B2F8.2070800@wasp.net.au>; from brad@wasp.net.au on Thu, Feb 17, 2005 at 12:54:16AM +0400
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:40083 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S262105AbVBPWZo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Feb 2005 17:25:44 -0500
+In-Reply-To: <4213BADF.8000307@motorola.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Ajit Prem <Ajit.Prem@motorola.com>
+Cc: linux-ide@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>
 
-Brad Campbell wrote:
-> [...]
-> Actually, I'm not sure without the libata dev patch as that removes SMART support, and I'm not 
-> convinced that my smartd polling every 20 minutes does not have something to do with it. All I know 
-> is the older kernel seems to cope. We'll see. 320 minutes left on this rebuild. I expect it will be 
-> done in the morning if all goes according to plan. (With the 2.6.11 kernel it never survived past 
-> about 25% rebuilt)
+Ajit Prem wrote:
+> 
+> As a follow-up to my previous email where
+> I indicated that int_status on entry into
+> vsc_sata_interrupt indicates 0x8300, I
+> put in a crude fix in the vsc_sata_interrupt
+> handler to read the taskfile status register,
+> and to clear the appropriate bits in the
+> SATA SError register, and now things work
+> just fine.
 
-Can you find time to try it without smartd active ?
-You report running a uni-processor system, and I have only
-seen PIO problems with (fast) SMP systems in my testing,
-but I am forming the opinion that libata-PIO functions
-are in need of a minor overhaul.
+Wanna post your crude patch to the list?
 
-I have seen issues where port activity monopolised
-data-paths/arbitration inside chipsets such that the
-PIO operations would appear to time out. Since you're
-doing a raid rebuild, perhaps the I/O load is causing
-something similar to occur.
--- 
-andyw@pobox.com
+	Jeff
 
-Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
+
+
