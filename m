@@ -1,48 +1,50 @@
-From: Yossi Down-Under <fcp@pop.co.za>
-Subject: Re: ide cdrom performance issue
-Date: 08 Oct 2003 17:28:40 +0200
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Re: [PATCH] Poll-based IDE driver
+Date: Wed, 8 Oct 2003 09:36:36 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1065626920.1641.24.camel@server>
-References: <1065375332.1355.9.camel@server>  <20031006073732.GV966@suse.de>
+Message-ID: <Pine.LNX.4.10.10310080935350.7858-100000@master.linux-ide.org>
+References: <20031008115051.GD705@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ctb-mesg4.saix.net ([196.25.240.76]:39653 "EHLO
-	ctb-mesg4.saix.net") by vger.kernel.org with ESMTP id S261660AbTJHP2u
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Oct 2003 11:28:50 -0400
-In-Reply-To: <20031006073732.GV966@suse.de>
+Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:6675 "EHLO
+	master.linux-ide.org") by vger.kernel.org with ESMTP
+	id S261151AbTJHQj0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Oct 2003 12:39:26 -0400
+In-Reply-To: <20031008115051.GD705@redhat.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-ide@vger.kernel.org
+To: Dave Jones <davej@redhat.com>
+Cc: Srivatsa Vaddagiri <vatsa@in.ibm.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, lkcd-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Mon, 2003-10-06 at 09:37, Jens Axboe wrote:
-> On Sun, Oct 05 2003, Yossi Down-Under wrote:
-> > Running RH9 with xcdroast and three recorders each on its own ide
-> > channel configured for ide-scsi. Having trouble with buffer underruns.
-> > Am told by xcdroast author that it is a kernel ide driver issue,
-> > specifically not using dma for transfers and recommended I try a newer
-> > kernel.
-> > 
-> > My question is whether the 2.5.75 kernel is going to improve this
-> > situation before going to the trouble to install it?
+
+Does not matter, priority is to get content to platter and the hell with
+everything else.  The reset button is your friend.
+
+Andre Hedrick
+LAD Storage Consulting Group
+
+On Wed, 8 Oct 2003, Dave Jones wrote:
+
+> On Wed, Oct 08, 2003 at 03:13:57PM +0530, Srivatsa Vaddagiri wrote:
 > 
-> 2.5.75?! That kernel is ancient, you should download 2.6-test6 and give
-> that a try. Note that you should not then use ide-scsi (don't config it
-> in), and you need to give -dev=/dev/hdc as device argument to cdrecord.
-> Replace hdc with whatever is your cd-r drive.
-
-OK, I did this. There must be some new package for module management
-required that is not in RH9 as it failed to load the network module when
-booted so I just compiled it into the kernel instead.
-
-The problem I have now is that without using ide-scsi, xcdroast
-0.98alpha14 doesn't see the drive. Will the ide-scsi driver also gain
-the use of dma transfers or should I go back to the xcdroast author to
-modify the program to use ide drives without scsi emulation?
-
-Thanks,
-
-L. Baker
+>  > /* Wait for at least N usecs (1 clock per cycle, 10GHz processor = 10000) */
+>  > /* ToDo : replace this routine based on loops_per_jiffy?? */
+>  > static inline void dump_udelay(unsigned int num_usec)
+>  > {
+>  > 	volatile unsigned int i;
+>  > 	for (i = 0; i < 10000 * num_usec; i++);
+>  > }
+> 
+> Why not just use udelay() ?  The above code cannot possibly do
+> the right thing on all processors.
+> 
+> 		Dave
+> 
+> -- 
+>  Dave Jones     http://www.codemonkey.org.uk
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
