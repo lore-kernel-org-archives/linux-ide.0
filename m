@@ -1,52 +1,69 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH] fix sata_sil quirk
-Date: Tue, 22 Jun 2004 16:22:33 -0400
+From: Ricky Beam <jfbeam@bluetronic.net>
+Subject: Re: [PATCH] fix sata_sil quirk
+Date: Tue, 22 Jun 2004 16:29:08 -0400 (EDT)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40D89509.6010502@pobox.com>
+Message-ID: <Pine.GSO.4.33.0406221620300.25702-200000@sweetums.bluetronic.net>
+References: <40D89509.6010502@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010603080104080507040708"
+Content-Type: MULTIPART/Mixed; BOUNDARY=------------010603080104080507040708
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:31901 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S265810AbUFVUWs
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 Jun 2004 16:22:48 -0400
+Received: from sweetums.bluetronic.net ([24.199.150.42]:2554 "EHLO
+	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
+	id S266001AbUFVUfK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 Jun 2004 16:35:10 -0400
+In-Reply-To: <40D89509.6010502@pobox.com>
+Content-ID: <Pine.GSO.4.33.0406221620301.25702@sweetums.bluetronic.net>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Ricky Beam <jfbeam@bluetronic.net>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------010603080104080507040708
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Here's my suggested fix...  good catch Ricky.
-
-Yes, unfortunately performance will be dog slow.
-
-Silicon Image 311x is fully SATA compliant -- but it's the only 
-controller that sends odd-sized packets to the SATA device.  That causes 
-no end of problems, including the thing that SIL_QUIRK_MOD15WRITE 
-attempts to work around.
-
-I've got contacts at Silicon Image, and have been meaning to bug them 
-for a "real fix" for a while.  It is rumored that there is a much better 
-fix, which allows full performance while at the same time not killing 
-your SATA drive due to odd-sized SATA frames on the wire.
-
-Unfortunately, at this point in time, we must err on the side of caution 
-and cripple performance, for stability.
-
-	Jeff
-
-
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
 --------------010603080104080507040708
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII; FORMAT=flowed
+Content-ID: <Pine.GSO.4.33.0406221620302.25702@sweetums.bluetronic.net>
+
+On Tue, 22 Jun 2004, Jeff Garzik wrote:
+>Here's my suggested fix...  good catch Ricky.
+
+And I don't even know why I looked at max_sectors :-) (I need more Dew.)
+
+>Yes, unfortunately performance will be dog slow.
+
+Well, at least puppy slow...
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+sda            1811.65         0.00      9629.85          0     577887
+sdb            1807.15         0.00      9629.60          0     577872
+sdc            1807.25         0.00      9629.86          0     577888
+sdd            1807.05         0.00      9629.86          0     577888
+md_d0         14444.64         0.00     48148.84          0    2889412
+md_d0p2        9629.78         0.00     38519.11          0    2311532
+(over 60sec,  8M O_DIRECT accesses, 128 stripes * 16k RAID0)
+
+Without the MOD15 hack, the numbers are 2x higher, but they stop after
+a few minutes :-)
+
+>I've got contacts at Silicon Image, and have been meaning to bug them
+>for a "real fix" for a while.  It is rumored that there is a much better
+>fix, which allows full performance while at the same time not killing
+>your SATA drive due to odd-sized SATA frames on the wire.
+
+Ask them what they do in their driver? (the linux one and the windows one)
+Looking at the linux driver, the mod15 quirk is there, but there doesn't
+appear to be any associated device list. (I've already post the single
+Maxtor device listed.)  FreeBSD detects the stall, resets the chip and
+hopes that clears the problem. (People are not happy about that.)
+
+--Ricky
+
+
+--------------010603080104080507040708
+Content-Type: TEXT/PLAIN; NAME=patch
+Content-ID: <Pine.GSO.4.33.0406221620303.25702@sweetums.bluetronic.net>
+Content-Description: 
+Content-Disposition: INLINE; FILENAME=patch
 
 ===== drivers/scsi/libata-scsi.c 1.39 vs edited =====
 --- 1.39/drivers/scsi/libata-scsi.c	2004-05-12 11:46:21 -04:00
