@@ -1,102 +1,43 @@
-From: Eric Eikenberry <eric.eikenberry@psi.ch>
-Subject: filesystem corruption with sata_sx4 driver
-Date: Fri, 8 Oct 2004 17:24:58 +0200 (CEST)
+From: Andy Warner <andyw@pobox.com>
+Subject: Re: libata & scsi rescan.
+Date: Fri, 8 Oct 2004 10:56:08 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0410081711190.1475-100000@ganymede.psi.ch>
+Message-ID: <20041008105608.A24640@florence.linkmargin.com>
+References: <415DB03E.5090005@pobox.com> <20041004155647.A9589@florence.linkmargin.com> <4161BB01.5080607@pobox.com> <20041006173656.A18221@florence.linkmargin.com> <416496CC.4090105@pobox.com> <20041006214746.A18793@florence.linkmargin.com> <4164B548.7030700@pobox.com> <4164BDD6.6000404@pobox.com> <20041007171457.B21662@florence.linkmargin.com> <4165C263.4080102@pobox.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from psi11.psi.ch ([129.129.190.111]:11013 "HELO psi11.psi.ch")
-	by vger.kernel.org with SMTP id S270015AbUJHPZg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Oct 2004 11:25:36 -0400
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:15316 "EHLO
+	ms-smtp-03.rdc-kc.rr.com") by vger.kernel.org with ESMTP
+	id S270053AbUJHP6E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 8 Oct 2004 11:58:04 -0400
+Content-Disposition: inline
+In-Reply-To: <4165C263.4080102@pobox.com>; from jgarzik@pobox.com on Thu, Oct 07, 2004 at 06:25:39PM -0400
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Doug Ledford <dledford@redhat.com>
 
-Dear Jeff & collaborators,
+Jeff Garzik wrote:
+> [...]
+> These args are wrong.  Consider master/slave configurations.
 
-I am experiencing filesystem corruption with the sata_sx4 driver and
-have accumulated some circumstantial evidence (below) that may permit
-an expert to pinpoint the problem.  Of course, I can't be sure it is
-that driver's problem.
+Can I check that I've got these things right:
 
-Any help would be greatly appreciated.
+ o *ap is a per sata-HBA-port structure ?
+ o each port can have 0, 1 or 2 drives attached ?
+   Though 0 & 1 are the only practical values
+   for current SATA hardware ?
+   Does this become 0 .. n when port expanders
+   enter into the picture ?
+ o struct scsi_device is a per drive structure ?
 
-Many thanks in advance.
+So *ap may need to support an aribrary list of devs,
+just like struct Scsi_host does today ?
 
-Regards,
-Eric
+Since I bring up port expanders, will we still get hot-plug
+notification from the hardware when a downstream drive changes
+state ?
+-- 
+andyw@pobox.com
 
-======================================================================
-System:
-Dual Xeon box from Fujitsu-Siemens
-root=/dev/hda1 (ext3), a separate 120 GB  EIDE disk
-Promise FastTrak S150 SX4 controller configured as 3 x JBOD
-3 MaxTor Max Line plus II 250 GB SATA drives
-	(the 4th one failed - twice!)
-Suse 9.1
-kernel: linux-2.6.9-rc3-mm3
-ext3 -or- ext2 -or- reiser filesystems for tests below
-	(no differences found)
-
-I made sure that the sata_promise driver was not built, because it is
-loaded in preference to the sata_sx4 driver, causing no end of problems.
-
-Our application involves writing thousands of 7.6 MByte files at maximum
-rate.  So, I made a program to simulate this by writing 1,000 such files
-and measuring times.
-
-Under some circumstances, the filesystem becomes corrupted, with the OS
-reporting "wierd" files - strange permissions, crazy sizes (even
-negative), etc.  These could be recovered with fsck.ext3, etc., to give
-intact files.  So, the files themselves are intact.
-
-The 3 disks were each partitoned with 1 partition.
-
-I either mounted the 3 disks individually as /mnt/sda1, /mnt/sdb2, &
-/mnt/sdc1, or configured them as a RAID0 array, or a mixture of the
-two modes.  Results:
-
-RAID0 with 3 disks, /dev/sda1, /dev/sdb1, /dev/sdc1 - array is
-	corrupted after	~200 files.
-RAID0 with 2 disks, /dev/sda1 & /dev/sdb1;  /mnt/sdc1 mounted, but
-	not used - no problem
-RAID0 with 2 disks, /dev/sda1 & /dev/sdb1;  sdc unplugged -
-	corruption after 110 files; kernel freezes
-no raid, just address /mnt/sda1, /mnt/sdb1 and /mnt/sdc1 directly
-	write 1000 files to /mnt/sda1 - no problem
-	write 1000 files to /mnt/sdb1 - no problem
-	write 1000 files to /mnt/sdc1 - no problem
-	write 1000 files to /mnt/sda1 and /mnt/sdb1 at the same time,
-		alternating drives - no problem
-	write 1000 files to /mnt/sda1, /mnt/sdb1 and /mnt/sdc1 at
-		the same time on a round-robin basis - sdc1 (only)
-		is quickly corrupted.
-Even if sdc1 is merely present, but not mounted, sda1 and sdb1 work
-	correctly.
-But, if sdc1 is unplugged, then sdb1 becomes corrupted.
-
-It is as if inode information is not being properly transmitted to the
-the last disk in the array when it is targetted at the same time as
-the other drives; when the last disk is used by itself, no problem.
-
-Would this information lead someone to a fix?  Is it really the
-sata_sx4 driver's problem?
-
-=====================================================================
-
-
--------------------------------------------------------
-Eric F. Eikenberry, Ph. D.
-Swiss Light Source
-Paul Scherrer Institute
-CH-5232 Villigen PSI
-Switzerland
-
-Tel:  +41 56 / 310 51 28
-             / 310 32 05
-Fax:  +41 56 / 310 43 62
-
-E-mail: eric.eikenberry@psi.ch
--------------------------------------------------------
-
+Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
