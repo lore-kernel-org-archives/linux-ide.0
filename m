@@ -1,57 +1,99 @@
-From: Oliver Korpilla <Oliver.Korpilla@gmx.de>
-Subject: SATA/IDE strangeness (ATI chip)
-Date: Thu, 17 Mar 2005 18:55:22 +0100
-Message-ID: <4239C48A.2050608@gmx.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
-Resent-Message-ID: <dPgeXB.A.Vx.thbOCB@murphy>
-List-Post: <mailto:debian-amd64@lists.debian.org>
-List-Help: <mailto:debian-amd64-request@lists.debian.org?subject=help>
-List-Subscribe: <mailto:debian-amd64-request@lists.debian.org?subject=subscribe>
-List-Unsubscribe: <mailto:debian-amd64-request@lists.debian.org?subject=unsubscribe>
-List-Archive: <http://lists.debian.org/debian-amd64/>
-To: debian-amd64@lists.debian.org, linux-ide@vger.kernel.org
+From: Brett Russ <russb@emc.com>
+Subject: [PATCH libata-dev-2.6 00/05] libata: scsi error handling improvements
+Date: Thu, 17 Mar 2005 17:20:01 -0500 (EST)
+Message-ID: <20050317221753.53957EDF@lns1032.lss.emc.com>
+Content-Type: text/plain; charset=US-ASCII
+Received: from mailhub.lss.emc.com ([168.159.2.31]:12668 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S261173AbVCQWUE
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Mar 2005 17:20:04 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: jgarzik@pobox.com
 
-Hello!
+This patch series attempts to clean up the SCSI error handling a bit.
+See comments in below TOC or patch emails.  All of the below have been
+tested in success and error paths through the VERIFY_10 and ATA_16
+commands using the AHCI driver.
 
-On my MSI motherboard there are the following devices:
+IMPORTANT: the patchset below against libata-dev-2.6 relies on the
+recent AHCI driver fixes recently patched into libata-2.6.  I am
+including the two specific patches as 1 and 2 of this series for
+completeness, although of course they should be merged from libata-2.6
+instead.  Therefore, you may ignore these two unless you want to test
+this series now on libata-dev.
 
-0000:00:11.0 IDE interface: ATI Technologies Inc: Unknown device 437a
-0000:00:12.0 IDE interface: ATI Technologies Inc: Unknown device 4379
-0000:00:14.1 IDE interface: ATI Technologies Inc: Unknown device 4376
+[ Start of patch descriptions ]
 
-These are listed in the PCI ID database (not committed yet):
+01_libata_garzik-ahci-tf-read.patch
+	: AHCI tf_read() support
 
-4376	Standard Dual Channel PCI IDE Controller ATI
-4379	ATI 4379 Serial ATA Controller
-437a	ATI 437A Serial ATA Controller
+	(included in libata-2.6) This is Jeff's tf_read() support
+	patch for AHCI.
 
-The 1st SATA controller seems to work with the SATA_SIL driver from
-vanilla 2.6.11 (and none sooner, I tried), and I'm using it that way
-now. Since the Debian Pure64 CD doesn't come with that, it doesn't find
-a HD when trying to install with the CD.
+	Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
 
-I have the following problems:
-------------------------------
-* Though the SATA is configured in IDE mode in BIOS it does not show up
-as IDE within Linux and this does not change when the ATIIXP driver is
-loaded - ide2 is not recognized as a bus with connected devices. My SATA
-HD is listed by the BIOS to be channel 2 master, while CD-ROM on the
-Dual ATA is listed on channel 0, channel 1 is unused, so shouldn't the
-SATA drive show up as /dev/hde or something???
-* How can I tune the ATIIXP driver via parameters or source modification
-so it recognizes the SATA controllers as devices to configure???
-* How can I force ANY IDE driver to recognize these SATA drives in IDE
-mode?
+02_libata_ahci-err-int.patch
+	: AHCI error handling fix
 
-This is a mail regarding this topic I'm confused about. The author seems
-to think, ATIIXP can do the 4379 as well:
+	(included in libata-2.6) Fixes AHCI bits during handling of
+	fatal error int.
 
-http://www.ussg.iu.edu/hypermail/linux/kernel/0412.1/1460.html
+03_libata_update_desc_code.patch
+	: update ATA PT sense desc code
 
-Please let me know if I can provide you with any additional data.
+	Change the ATA pass through sense block descriptor code to
+	0x09 per SAT
 
-Thanks and with kind regards,
-Oliver Korpilla
+04_libata_control_pg_desc_bit.patch
+	: support descriptor sense in ctrl page
+
+	libata must support the descriptor format sense blocks as they
+	are required to properly report results of ATA pass through
+	commands as well as other SCSI commands reporting 48b LBAs.
+	This patch adjusts the control mode page to properly report
+	this.
+
+05_libata_split_ata_to_sense_error.patch
+	: rework how CCs generated
+
+	This patch fixes several bugs as well as reorganizes the way
+	check conditions are generated.  Bugs fixed: 1) in
+	ata_scsi_qc_complete(), ATA_12/16 commands wouldn't call
+	ata_pass_thru_cc() on error status; 2) ata_pass_thru_cc()
+	wouldn't put the SK, ASC, and ASCQ from ata_to_sense_error()
+	in the correct place in the sense block because
+	ata_to_sense_error() was writing a fixed sense block.
+
+	Per the recommendations in the comments, ata_to_sense_error()
+	is now split into 3 parts.  The existing fcn is only used for
+	outputting a sense key/ASC/ASCQ triplicate.  A new function
+	ata_dump_status() was created to print the error info, similar
+	to the ide variety.  A third function ata_gen_fixed_sense()
+	was created to generate a fixed length sense block.  I added
+	the use of the info field for 28b LBAs only.
+	ata_pass_thru_cc() renamed to ata_gen_ata_desc_sense() to
+	match naming convention, presumably to include another
+	descriptor format function in the future (see question 2
+	below).
+
+	Questions:
+
+	1) I made the ata_gen_..._sense() routines read the status
+           register themselves rather than use the drv_stat values
+           that used to be passed in?  These values seemed
+           unreliable/useless since they were often hard coded (see
+           calls to ata_qc_complete() for origins of most drv_stat
+           variables).  Sound ok?
+
+	2) the SAT spec has little about error handling and sense
+           information, sepcifically what descriptor format is valid
+           for use by SAT commands.  I want to use descriptor type 00
+           (information) in my next patch until a spec says
+           differently.  Sound ok?
+
+[ End of patch descriptions ]
+
+BR
+
