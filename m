@@ -1,117 +1,161 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: [patch][3/9] ide: add ide_sg_init() helper
-Date: Wed, 8 Sep 2004 21:26:49 +0200
+Subject: [patch][8/9] ide: unify PIO code
+Date: Wed, 8 Sep 2004 21:27:02 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200409082126.49832.bzolnier@elka.pw.edu.pl>
+Message-ID: <200409082127.02705.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:19415 "EHLO
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:20439 "EHLO
 	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S269321AbUIHT21 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Sep 2004 15:28:27 -0400
+	id S269323AbUIHT2f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Sep 2004 15:28:35 -0400
 Received: from mion.elka.pw.edu.pl ([194.29.160.35]:56257 "EHLO
 	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
-	id S14585AbUIHT0C (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 1 other); Wed, 8 Sep 2004 21:26:02 +0200
+	id S14922AbUIHT0M (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 1 other); Wed, 8 Sep 2004 21:26:12 +0200
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-[patch] ide: add ide_sg_init() helper
+[patch] ide: unify PIO code
+
+Use PIO code from ide-taskfile.c in ide-disk.c so:
+- drive status is checked after PIO read
+- request is failed if invalid data phase
+  is detected during PIO write
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 ---
 
- linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/arm/icside.c |    5 +----
- linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/ide-dma.c    |   10 ++--------
- linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/ppc/pmac.c   |   10 ++--------
- linux-2.6.9-rc1-bk10-bzolnier/include/linux/ide.h      |    9 +++++++++
- 4 files changed, 14 insertions(+), 20 deletions(-)
+ linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/ide-disk.c     |   86 ---------------
+ linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/ide-taskfile.c |    1 
+ 2 files changed, 3 insertions(+), 84 deletions(-)
 
-diff -puN drivers/ide/arm/icside.c~ide_sg_init drivers/ide/arm/icside.c
---- linux-2.6.9-rc1-bk10/drivers/ide/arm/icside.c~ide_sg_init	2004-09-05 19:51:15.566405800 +0200
-+++ linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/arm/icside.c	2004-09-05 19:51:15.581403520 +0200
-@@ -225,10 +225,7 @@ static void icside_build_sglist(ide_driv
- 		else
- 			hwif->sg_dma_direction = DMA_FROM_DEVICE;
+diff -puN drivers/ide/ide-disk.c~ide_pio_unify drivers/ide/ide-disk.c
+--- linux-2.6.9-rc1-bk10/drivers/ide/ide-disk.c~ide_pio_unify	2004-09-08 19:54:39.707150568 +0200
++++ linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/ide-disk.c	2004-09-08 19:56:21.225717400 +0200
+@@ -123,72 +123,6 @@ static int lba_capacity_is_ok (struct hd
+ #ifndef CONFIG_IDE_TASKFILE_IO
  
--		memset(sg, 0, sizeof(*sg));
--		sg->page   = virt_to_page(rq->buffer);
--		sg->offset = offset_in_page(rq->buffer);
--		sg->length = rq->nr_sectors * SECTOR_SIZE;
-+		ide_sg_init(sg, rq->buffer, rq->nr_sectors * SECTOR_SIZE);
- 		nents = 1;
+ /*
+- * read_intr() is the handler for disk read/multread interrupts
+- */
+-static ide_startstop_t read_intr (ide_drive_t *drive)
+-{
+-	ide_hwif_t *hwif	= HWIF(drive);
+-	struct request *rq = hwif->hwgroup->rq;
+-	u8 stat;
+-
+-	/* new way for dealing with premature shared PCI interrupts */
+-	if (!OK_STAT(stat=hwif->INB(IDE_STATUS_REG),DATA_READY,BAD_R_STAT)) {
+-		if (stat & (ERR_STAT|DRQ_STAT)) {
+-			return task_error(drive, rq, __FUNCTION__, stat);
+-		}
+-		/* no data yet, so wait for another interrupt */
+-		ide_set_handler(drive, &read_intr, WAIT_CMD, NULL);
+-		return ide_started;
+-	}
+-
+-	if (drive->mult_count)
+-		ide_pio_multi(drive, 0);
+-	else
+-		ide_pio_sector(drive, 0);
+-	rq->errors = 0;
+-	if (!hwif->nleft) {
+-		ide_end_request(drive, 1, hwif->nsect);
+-		return ide_stopped;
+-	}
+-	ide_set_handler(drive, &read_intr, WAIT_CMD, NULL);
+-	return ide_started;
+-}
+-
+-/*
+- * write_intr() is the handler for disk write/multwrite interrupts
+- */
+-static ide_startstop_t write_intr (ide_drive_t *drive)
+-{
+-	ide_hwgroup_t *hwgroup	= HWGROUP(drive);
+-	ide_hwif_t *hwif	= HWIF(drive);
+-	struct request *rq	= hwgroup->rq;
+-	u8 stat;
+-
+-	if (!OK_STAT(stat = hwif->INB(IDE_STATUS_REG),
+-			DRIVE_READY, drive->bad_wstat)) {
+-		printk("%s: write_intr error1: nr_sectors=%u, stat=0x%02x\n",
+-			drive->name, hwif->nleft, stat);
+-        } else {
+-		if ((hwif->nleft == 0) ^ ((stat & DRQ_STAT) != 0)) {
+-			rq->errors = 0;
+-			if (!hwif->nleft) {
+-				ide_end_request(drive, 1, hwif->nsect);
+-				return ide_stopped;
+-			}
+-			if (drive->mult_count)
+-				ide_pio_multi(drive, 1);
+-			else
+-				ide_pio_sector(drive, 1);
+-			ide_set_handler(drive, &write_intr, WAIT_CMD, NULL);
+-			return ide_started;
+-		}
+-		/* the original code did this here (?) */
+-		return ide_stopped;
+-	}
+-	return task_error(drive, rq, __FUNCTION__, stat);
+-}
+-
+-/*
+  * __ide_do_rw_disk() issues READ and WRITE commands to a disk,
+  * using LBA if supported, or CHS otherwise, to address sectors.
+  * It also takes care of issuing special DRIVE_CMDs.
+@@ -292,11 +226,9 @@ ide_startstop_t __ide_do_rw_disk (ide_dr
+ 			command = lba48 ? WIN_READ_EXT : WIN_READ;
+ 		}
+ 
+-		ide_execute_command(drive, command, &read_intr, WAIT_CMD, NULL);
++		ide_execute_command(drive, command, &task_in_intr, WAIT_CMD, NULL);
+ 		return ide_started;
  	} else {
- 		nents = blk_rq_map_sg(drive->queue, rq, sg);
-diff -puN drivers/ide/ide-dma.c~ide_sg_init drivers/ide/ide-dma.c
---- linux-2.6.9-rc1-bk10/drivers/ide/ide-dma.c~ide_sg_init	2004-09-05 19:51:15.568405496 +0200
-+++ linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/ide-dma.c	2004-09-05 19:51:15.583403216 +0200
-@@ -256,18 +256,12 @@ int ide_raw_build_sglist(ide_drive_t *dr
- #else
- 	while (sector_count > 128) {
- #endif
--		memset(&sg[nents], 0, sizeof(*sg));
--		sg[nents].page = virt_to_page(virt_addr);
--		sg[nents].offset = offset_in_page(virt_addr);
--		sg[nents].length = 128  * SECTOR_SIZE;
-+		ide_sg_init(&sg[nents], virt_addr, 128 * SECTOR_SIZE);
- 		nents++;
- 		virt_addr = virt_addr + (128 * SECTOR_SIZE);
- 		sector_count -= 128;
+-		ide_startstop_t startstop;
+-
+ 		if (drive->mult_count) {
+ 			hwif->data_phase = TASKFILE_MULTI_OUT;
+ 			command = lba48 ? WIN_MULTWRITE_EXT : WIN_MULTWRITE;
+@@ -307,21 +239,7 @@ ide_startstop_t __ide_do_rw_disk (ide_dr
+ 
+ 		hwif->OUTB(command, IDE_COMMAND_REG);
+ 
+-		if (ide_wait_stat(&startstop, drive, DATA_READY,
+-				drive->bad_wstat, WAIT_DRQ)) {
+-			printk(KERN_ERR "%s: no DRQ after issuing %s\n",
+-				drive->name,
+-				drive->mult_count ? "MULTWRITE" : "WRITE");
+-			return startstop;
+-		}
+-		if (!drive->unmask)
+-			local_irq_disable();
+-		ide_set_handler(drive, &write_intr, WAIT_CMD, NULL);
+-		if (drive->mult_count) {
+-			ide_pio_multi(drive, 1);
+-		} else {
+-			ide_pio_sector(drive, 1);
+-		}
++		pre_task_out_intr(drive, rq);
+ 		return ide_started;
  	}
--	memset(&sg[nents], 0, sizeof(*sg));
--	sg[nents].page = virt_to_page(virt_addr);
--	sg[nents].offset = offset_in_page(virt_addr);
--	sg[nents].length =  sector_count  * SECTOR_SIZE;
-+	ide_sg_init(&sg[nents], virt_addr, sector_count * SECTOR_SIZE);
- 	nents++;
+ }
+diff -puN drivers/ide/ide-taskfile.c~ide_pio_unify drivers/ide/ide-taskfile.c
+--- linux-2.6.9-rc1-bk10/drivers/ide/ide-taskfile.c~ide_pio_unify	2004-09-08 19:54:39.709150264 +0200
++++ linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/ide-taskfile.c	2004-09-08 19:54:40.970958440 +0200
+@@ -413,6 +413,7 @@ ide_startstop_t task_in_intr (ide_drive_
+ 	struct request *rq = HWGROUP(drive)->rq;
+ 	u8 stat = hwif->INB(IDE_STATUS_REG);
  
- 	return pci_map_sg(hwif->pci_dev, sg, nents, hwif->sg_dma_direction);
-diff -puN drivers/ide/ppc/pmac.c~ide_sg_init drivers/ide/ppc/pmac.c
---- linux-2.6.9-rc1-bk10/drivers/ide/ppc/pmac.c~ide_sg_init	2004-09-05 19:51:15.570405192 +0200
-+++ linux-2.6.9-rc1-bk10-bzolnier/drivers/ide/ppc/pmac.c	2004-09-05 19:51:15.585402912 +0200
-@@ -1611,18 +1611,12 @@ pmac_ide_raw_build_sglist(ide_drive_t *d
- 		pmif->sg_dma_direction = PCI_DMA_FROMDEVICE;
- 	
- 	if (sector_count > 128) {
--		memset(&sg[nents], 0, sizeof(*sg));
--		sg[nents].page = virt_to_page(virt_addr);
--		sg[nents].offset = offset_in_page(virt_addr);
--		sg[nents].length = 128  * SECTOR_SIZE;
-+		ide_sg_init(&sg[nents], virt_addr, 128 * SECTOR_SIZE);
- 		nents++;
- 		virt_addr = virt_addr + (128 * SECTOR_SIZE);
- 		sector_count -= 128;
- 	}
--	memset(&sg[nents], 0, sizeof(*sg));
--	sg[nents].page = virt_to_page(virt_addr);
--	sg[nents].offset = offset_in_page(virt_addr);
--	sg[nents].length =  sector_count  * SECTOR_SIZE;
-+	ide_sg_init(&sg[nents], virt_addr, sector_count * SECTOR_SIZE);
- 	nents++;
-    
- 	return pci_map_sg(hwif->pci_dev, sg, nents, pmif->sg_dma_direction);
-diff -puN include/linux/ide.h~ide_sg_init include/linux/ide.h
---- linux-2.6.9-rc1-bk10/include/linux/ide.h~ide_sg_init	2004-09-05 19:51:15.573404736 +0200
-+++ linux-2.6.9-rc1-bk10-bzolnier/include/linux/ide.h	2004-09-05 19:51:15.587402608 +0200
-@@ -1567,6 +1567,15 @@ typedef struct ide_pci_device_s {
- extern void ide_setup_pci_device(struct pci_dev *, ide_pci_device_t *);
- extern void ide_setup_pci_devices(struct pci_dev *, struct pci_dev *, ide_pci_device_t *);
- 
-+static inline void ide_sg_init(struct scatterlist *sg, u8 *buf, unsigned int buflen)
-+{
-+	memset(sg, 0, sizeof(*sg));
-+
-+	sg->page = virt_to_page(buf);
-+	sg->offset = offset_in_page(buf);
-+	sg->length = buflen;
-+}
-+
- #define BAD_DMA_DRIVE		0
- #define GOOD_DMA_DRIVE		1
- 
++	/* new way for dealing with premature shared PCI interrupts */
+ 	if (!OK_STAT(stat, DATA_READY, BAD_R_STAT)) {
+ 		if (stat & (ERR_STAT | DRQ_STAT))
+ 			return task_error(drive, rq, __FUNCTION__, stat);
 _
