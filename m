@@ -1,74 +1,37 @@
-From: "Steven Haigh" <netwiz@crc.id.au>
-Subject: Re: Adaptec 1210SA raid issues.
-Date: Sun, 15 Aug 2004 15:11:00 +1000 (EST)
+From: Mikael Pettersson <mikpe@csd.uu.se>
+Subject: Re: PDC20269 problems on PowerMac with 2.4.27 kernel
+Date: Sun, 15 Aug 2004 13:25:03 +0200 (MEST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <44231.210.8.4.34.1092546660.squirrel@210.8.4.34>
-References: <002201c4814c$7e1ace00$128b8ecb@enigma>
-    <64637.210.8.4.34.1092446192.squirrel@210.8.4.34>
-Reply-To: netwiz@crc.id.au
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Message-ID: <200408151125.i7FBP3AJ029047@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw.crc.id.au ([203.142.139.230]:28803 "EHLO zeus.crc.id.au")
-	by vger.kernel.org with ESMTP id S266498AbUHOFLF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Aug 2004 01:11:05 -0400
-Received: from zeus.crc.id.au (localhost.localdomain [127.0.0.1])
-	by zeus.crc.id.au (8.12.10/8.12.10) with ESMTP id i7F5B0p8013267
-	for <linux-ide@vger.kernel.org>; Sun, 15 Aug 2004 15:11:00 +1000
-In-Reply-To: <64637.210.8.4.34.1092446192.squirrel@210.8.4.34>
+Received: from aun.it.uu.se ([130.238.12.36]:29640 "EHLO aun.it.uu.se")
+	by vger.kernel.org with ESMTP id S266582AbUHOLZG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Aug 2004 07:25:06 -0400
+Received: from harpo.it.uu.se (daemon@harpo.it.uu.se [130.238.12.34])
+	by aun.it.uu.se (8.12.11/8.12.10) with ESMTP id i7FBP3to024830
+	for <linux-ide@vger.kernel.org>; Sun, 15 Aug 2004 13:25:03 +0200 (MEST)
+Received: (from mikpe@localhost)
+	by harpo.it.uu.se (8.12.10+Sun/8.12.10) id i7FBP3AJ029047
+	for linux-ide@vger.kernel.org; Sun, 15 Aug 2004 13:25:03 +0200 (MEST)
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Not much more progress playing with this... I know it's software based,
-but I guess what I'm trying to do is to import/convert the adaptec 'raid'
-partition into to something I can access as a usable partition/raid.
+I wrote:
+>I have a PowerMac G3 (beige) upgraded with a 1GHz G4 processor
+>and a PDC20269 (Promise Ultra 133 TX2) IDE PCI controller,
+>which works reliably with the 2.6.8-rc kernels. The controller,
+>disk, and cable also work in an x86 box with both 2.6 and 2.4 kernels.
+>
+>However, with 2.4.27 on the PowerMac I frequently get DMA timeouts
+>while doing heavy I/O operations like a cp -ax from my scsi root
+>to a partition on the PDC20269's disk:
 
-It's a raid 0 - however as it's laid out on the disks at the moment, I
-don't believe I can use the kernel raid to mount/recover/convert/anything
-to it.
+The issue has been resolved. There is an erratum causing
+PPC745x processors to read stale data from non-coherent
+memory mappings. The fix is to enforce coherent mappings:
+2.6.8-rc had that fix but 2.4.27 did not, and that utterly
+broke both the PDC202XX old and new drivers.
 
-[root@zeus root]# fdisk /dev/sda
-Command (m for help): p
+Interestingly, the SYM53C8XX SCSI driver did not break.
 
-Disk /dev/sda: 163.9 GB, 163928604672 bytes
-255 heads, 63 sectors/track, 19929 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot    Start       End    Blocks   Id  System
-/dev/sda1             1     39859 320167386   83  Linux
-
-Command (m for help): q
-
-[root@zeus root]# fdisk /dev/sdb
-Device contains neither a valid DOS partition table, nor Sun, SGI or OSF
-disklabel
-Building a new DOS disklabel. Changes will remain in memory only,
-until you decide to write them. After that, of course, the previous
-content won't be recoverable.
-
-Warning: invalid flag 0x0000 of partition table 4 will be corrected by
-w(rite)
-
-Command (m for help): p
-
-Disk /dev/sdb: 163.9 GB, 163928604672 bytes
-255 heads, 63 sectors/track, 19929 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot    Start       End    Blocks   Id  System
-
-Command (m for help): q
-
-As you can see, SATA disk 1 has a partition that shows as disk size x 2,
-however disk 2 shows as an invalid partition...
-
-With the existing tools, is there a way to make this usable? or is the
-only way to set this up to copy the data off using the Adaptec module, and
-create a new software raid with the kernel raid?
-
--- 
-Signed,
-Steven Haigh
-
-I am root. If you see me laughing, you'd better have a backup.
+/Mikael
