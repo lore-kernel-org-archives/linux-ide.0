@@ -1,41 +1,104 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [BK PATCHES] 2.4.x libata fixes (mostly)
-Date: Wed, 23 Feb 2005 15:22:16 -0500
-Message-ID: <421CE5F8.2070401@pobox.com>
+From: Alexey Dobriyan <adobriyan@mail.ru>
+Subject: Re: [BK PATCHES] 2.6.x libata fixes (mostly)
+Date: Wed, 23 Feb 2005 23:45:23 +0200
+Message-ID: <200502232345.23666.adobriyan@mail.ru>
+References: <421CE018.5030007@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:54729 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261558AbVBWUWb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 Feb 2005 15:22:31 -0500
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <421CE018.5030007@pobox.com>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Lord <mlord@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Description reproduced from 2.6 version at 
-http://marc.theaimsgroup.com/?l=linux-kernel&m=110918919831955&w=2:
+On Wednesday 23 February 2005 21:57, Jeff Garzik wrote:
 
-This BK push includes additional hardware support, but that's only
-because it's (a) obviously low impact and (b) it was in the queue.
+> This BK push includes additional hardware support, but that's only 
+> because it's (a) obviously low impact and (b) it was in the queue.
 
-Far more important are:
+> --- a/drivers/scsi/ahci.c
+> +++ b/drivers/scsi/ahci.c
 
-1) API additions, to fix a severe bug:  advanced drivers such as AHCI
-were directly bitbanging --non-existent-- PCI IDE registers, causing an
-oops, because of function calls buried deep within libata.
+> +static u8 ahci_check_err(struct ata_port *ap)
+> +{
+> +	void *mmio = (void *) ap->ioaddr.cmd_addr;
 
-Solution:  add the necessary hooks that should have existed all along,
-for this functionality.
+void __iomem *
 
+> +	return (readl(mmio + PORT_TFDATA) >> 8) & 0xFF;
 
-2) Fix stomping on active devices, if pci_request_regions() fails.  It
-is rather more urgent for libata than other situations, since we must
-deal with PCI devices that secretly export ISA device regions (legacy
-IDE 0x1f0, 0x170).
+> --- a/drivers/scsi/libata-core.c
+> +++ b/drivers/scsi/libata-core.c
 
+> + *	ata_qc_free - free unused ata_queued_cmd
+> + *	@qc: Command to complete
 
-3) Fix command queue leak, if SCSI->ATA translation fails.
+"Command to free"?
 
+--- /dev/null
++++ b/drivers/scsi/sata_qstor.c
 
+> +	u8 *prd = pp->pkt + QS_CPB_BYTES;
+
+> +	for (nelem = 0; nelem < qc->n_elem; nelem++,sg++) {
+> +		u64 addr;
+> +		u32 len;
+
+> +		addr = sg_dma_address(sg);
+> +		*(u64 *)prd = cpu_to_le64(addr);
+
+*(__le64 *) prd
+
+> +		prd += sizeof(u64);
+
+> +		len = sg_dma_len(sg);
+> +		*(u32 *)prd = cpu_to_le32(len);
+
+*(__le32 *) prd
+
+> +		prd += sizeof(u64);
+
+Should this be "prd += sizeof(u32)"? Looks suspicious.
+
+> +static void qs_qc_prep(struct ata_queued_cmd *qc)
+> +{
+
+> +	*(u32 *)(&buf[ 4]) = cpu_to_le32(qc->nsect * ATA_SECT_SIZE);
+> +	*(u32 *)(&buf[ 8]) = cpu_to_le32(qc->n_elem);
+
+> +	*(u64 *)(&buf[16]) = cpu_to_le64(addr);
+
+__le* again...
+
+> +static void qs_ata_setup_port(struct ata_ioports *port, unsigned long base)
+> +{
+> +	port->cmd_addr		=
+
+> +	port->error_addr	=
+
+> +	port->status_addr	=
+
+> +	port->altstatus_addr	=
+
+Oo-oops...
+
+> +static int qs_set_dma_masks(struct pci_dev *pdev, void __iomem *mmio_base)
+> +{
+
+> +	if (have_64bit_bus &&
+> +	    !pci_set_dma_mask(pdev, 0xffffffffffffffffULL)) {
+> +		rc = pci_set_consistent_dma_mask(pdev, 0xffffffffffffffffULL);
+> +		if (rc) {
+> +			rc = pci_set_consistent_dma_mask(pdev, 0xffffffffULL);
+
+We already have DMA_{32,64}BIT_MASK.
+
+> +	} else {
+> +		rc = pci_set_dma_mask(pdev, 0xffffffffULL);
+
+> +		rc = pci_set_consistent_dma_mask(pdev, 0xffffffffULL);
+
+	Alexey
