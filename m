@@ -1,41 +1,27 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: 2.6.11, IDE: Strange scheduling behaviour: high-pri RT process not scheduled?
-Date: Thu, 31 Mar 2005 13:35:27 +0200
-Message-ID: <20050331113526.GB27731@elte.hu>
-References: <AAD6DA242BC63C488511C611BD51F3673231C2@MAILIT.keba.co.at>
+From: Oliver Korpilla <Oliver.Korpilla@gmx.de>
+Subject: How to obtain documentation?
+Date: Thu, 31 Mar 2005 19:29:18 +0200
+Message-ID: <424C336E.3020804@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.elte.hu ([157.181.151.9]:53155 "EHLO mx2.elte.hu")
-	by vger.kernel.org with ESMTP id S261360AbVCaLfh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Mar 2005 06:35:37 -0500
-Content-Disposition: inline
-In-Reply-To: <AAD6DA242BC63C488511C611BD51F3673231C2@MAILIT.keba.co.at>
+Received: from pop.gmx.de ([213.165.64.20]:44468 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261440AbVCaNfY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Mar 2005 08:35:24 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kus Kusche Klaus <kus@keba.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, Florian Schmidt <mista.tapas@gmx.net>
+To: linux-ide@vger.kernel.org
 
+Hello!
 
-* kus Kusche Klaus <kus@keba.com> wrote:
+Has anybody obtained developer documentation from ATI about their 
+chipsets, like their IDE and SATA controllers?
 
-> I've written a small test program which enables periodic RTC 
-> interrupts at 8192 Hz and then goes into a loop reading /dev/rtc and 
-> collecting timing statistics (using the rdtscl macro).
+Is the ATI IXP IDE code reverse-engineered or written from documentation 
+provided by ATI?
 
-getting /dev/rtc handling right for latency measurement is ... tricky.  
-The method i'm using under PREEMPT_RT is:
+If 2nd, how do you obtain documentation from ATI?
 
- chrt -f 84 -p `pidof 'IRQ 0'`
- chrt -f 95 -p `pidof 'IRQ 8'`
- ./rtc_wakeup -f 1024 -t 100000
-
-you can get rtc_wakeup from:
-
- http://www.affenbande.org/~tapas/wiki/index.php?rtc_wakeup
-
-written by Florian Schmidt.
-
-do you see high latencies even with rtc_wakeup?
-
-	Ingo
+With kind regards,
+Oliver Korpilla
