@@ -1,21 +1,23 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] Small initializer patch for ide-disk.c
-Date: Tue, 21 Dec 2004 16:51:26 -0500
-Message-ID: <41C89ADE.1010403@pobox.com>
+Date: Tue, 21 Dec 2004 16:51:53 -0500
+Message-ID: <41C89AF9.8000600@pobox.com>
 References: <20041221202407.GD2725@artsapartment.org>	<41C88F73.2090606@pobox.com> <20041221133056.6a5a3259.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:18367 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261865AbULUVvd
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:23999 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261867AbULUVv6
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Dec 2004 16:51:33 -0500
+	Tue, 21 Dec 2004 16:51:58 -0500
 In-Reply-To: <20041221133056.6a5a3259.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
-Cc: ahaas@airmail.net, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
+Cc: ahaas@airmail.net, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, John Linville <linville@redhat.com>
+
+(apologies for the duplicate message, if you are seeing this a second time)
 
 Andrew Morton wrote:
 > Jeff Garzik <jgarzik@pobox.com> wrote:
