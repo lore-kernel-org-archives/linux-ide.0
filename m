@@ -1,25 +1,32 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] fix sata_sil quirk
-Date: Tue, 22 Jun 2004 16:41:06 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040622204105.GA19693@havoc.gtf.org>
-References: <40D89509.6010502@pobox.com> <Pine.GSO.4.33.0406221620300.25702-200000@sweetums.bluetronic.net>
+Date: Tue, 22 Jun 2004 18:12:38 -0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <40D8AED6.8050503@pobox.com>
+References: <Pine.GSO.4.33.0406221620300.25702-200000@sweetums.bluetronic.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S265910AbUFVUuF@vger.kernel.org>
-Content-Disposition: inline
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:5537 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266022AbUFVWMy
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 Jun 2004 18:12:54 -0400
 In-Reply-To: <Pine.GSO.4.33.0406221620300.25702-200000@sweetums.bluetronic.net>
+List-Id: linux-ide@vger.kernel.org
 To: Ricky Beam <jfbeam@bluetronic.net>
 Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
-List-Id: linux-ide@vger.kernel.org
 
-On Tue, Jun 22, 2004 at 04:29:08PM -0400, Ricky Beam wrote:
+Ricky Beam wrote:
 > On Tue, 22 Jun 2004, Jeff Garzik wrote:
-> >Here's my suggested fix...  good catch Ricky.
+> 
+>> Here's my suggested fix...  good catch Ricky.
+> 
 > 
 > And I don't even know why I looked at max_sectors :-) (I need more Dew.)
 > 
-> >Yes, unfortunately performance will be dog slow.
+>> Yes, unfortunately performance will be dog slow.
+> 
 > 
 > Well, at least puppy slow...
 > Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
@@ -34,13 +41,17 @@ On Tue, Jun 22, 2004 at 04:29:08PM -0400, Ricky Beam wrote:
 > Without the MOD15 hack, the numbers are 2x higher, but they stop after
 > a few minutes :-)
 
-Stability first!
+Is this with my patch?
+
+If so, I'll go ahead and forward it upstream, since I would certainly 
+like a stabilization fix applied ASAP.
 
 
-> >I've got contacts at Silicon Image, and have been meaning to bug them
-> >for a "real fix" for a while.  It is rumored that there is a much better
-> >fix, which allows full performance while at the same time not killing
-> >your SATA drive due to odd-sized SATA frames on the wire.
+>> I've got contacts at Silicon Image, and have been meaning to bug them
+>> for a "real fix" for a while.  It is rumored that there is a much better
+>> fix, which allows full performance while at the same time not killing
+>> your SATA drive due to odd-sized SATA frames on the wire.
+> 
 > 
 > Ask them what they do in their driver? (the linux one and the windows one)
 > Looking at the linux driver, the mod15 quirk is there, but there doesn't
@@ -48,9 +59,9 @@ Stability first!
 > Maxtor device listed.)  FreeBSD detects the stall, resets the chip and
 > hopes that clears the problem. (People are not happy about that.)
 
-I just poked them.  I'm not satisfied with what any Linux or FreeBSD
-driver does, I want to Get It Right(tm)  :)  I'm willing to bet that
-their Linux driver does mod15 only because they didn't know kernel
-internals that well.
+The full-speed fix requires splitting affected DMA writes into two 
+separate commands, when the sector count matches "sectors % 15 == 1".
 
 	Jeff
+
+
