@@ -1,50 +1,58 @@
-From: Ian Leonard <ian@smallworld.cx>
-Subject: Highpoint hpt370 raid and span disks
-Date: Wed, 14 Jan 2004 10:40:45 +0000
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040114104045.GU3426@dino>
+From: Greg Stark <gsstark@mit.edu>
+Subject: Re: Serial ATA (SATA) for Linux status report
+Date: 14 Jan 2004 17:18:34 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <87hdyyxjgl.fsf@stark.xeocode.com>
+References: <20031203204445.GA26987@gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	Format=Flowed	DelSp=Yes
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta01-svc.ntlworld.com ([62.253.162.41]:42114 "EHLO
-	mta01-svc.ntlworld.com") by vger.kernel.org with ESMTP
-	id S265568AbUANKkr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Jan 2004 05:40:47 -0500
-Received: from dino ([81.103.192.30]) by mta01-svc.ntlworld.com
-          (InterMail vM.4.01.03.37 201-229-121-137-20020806) with ESMTP
-          id <20040114104039.KJVD5044.mta01-svc.ntlworld.com@dino>
-          for <linux-ide@vger.kernel.org>; Wed, 14 Jan 2004 10:40:39 +0000
-Content-Disposition: inline
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20031203204445.GA26987@gtf.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Greetings,
 
-I have tried to get the htpraid.o module working with spanned raid  
-disks with a hpt370 chip (it is a slightly older version). I did this
+Jeff Garzik <jgarzik@pobox.com> writes:
 
-1. Setup the raid in the hpt bios
-2. loaded the hptraid.o module (kernel: 2.4.24)
-3. fdisk /dev/ataraid/d0 and create /dev/ataraid/d0p1
-I note that:
-fdisk shows one partition of 80GB (which is correct because I 		 
-have 2x40GB disks).
-Also /proc/
-4. mke2fs -j /dev/ataraid/d0p1
-5. mount the partition and df shows 80GB.
-6. run a test program that fills up the disk with many 1GB files. At  
-about the 32nd file I see errors from ext3 and also i/0 errors ide  
-controller. The error messages list the hdg device and indicate that  
-they can't find sectors in the second disk.
+> Intel ICH5
+>
+> Issue #2: Excessive interrupts are seen in some configurations.
 
-After a reboot, the raid bios marks the 2nd disk with 'broken span'.
+I guess I'm seeing this problem. I'm trying to get my P4P800 motherboard with
+an ICH5 chipset working completely. So far I've been living without the cdrom
+or DVD players. I see lots of other posts on linux-kernel about the same
+problems:
 
-I see from a previous posting that spanning is supported, so I maybe  
-missing something. Any help appreciated.
-	
---
-Ian Leonard
+Whenever I try to access the cdrom my system becomes unusable. Due to high
+interrupts, typically over 150k/s. I thought libata would help, but I don't
+understand how to use the PATA drive and the cdrom drives while I'm using it.
 
-Please ignore spelling and punctuation - I did.
+The situation is that I have two SATA drives, a PATA drive and two cdrom
+drives (actually one CD burner and one DVD drive). They are 
+
+Primary Master:   PATA Drive
+Secondary Master: CD Burner
+Secondary Slave:  DVD-Rom
+SATA-1:           SATA Drive
+SATA-2:           SATA Drive
+
+I've tried 2.4.23pre4 (no libata), 2.6.1 (IDE drivers), and 2.6.1 (with scsi
+libata drivers) with the following results:
+
+2.4.23pre4: as soon as the cdrom is touched I see bursts of 150k interrupts
+    per second and the system becomes unresponsive momentarily every few
+    seconds.
+
+2.6.1 with regular IDE drivers: same as above except the system feels
+    responsive except for disk i/o. I see printks of "Disabling interrupt #18"
+    and all disk i/o freezes for a few seconds.
+
+2.6.1 with scsi ata_piix driver: the SATA drives show up and work fine but the
+    PATA drive and the cdroms doesn't show up at all. This is true even when I
+    compile with the CONFIG_IDE, CONFIG_BLK_DEV_IDE, and CONFIG_BLK_DEV_IDECD
+    enabled.
+
+
+-- 
+greg
