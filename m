@@ -1,41 +1,36 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] speed up SATA
-Date: Sun, 28 Mar 2004 12:24:06 -0500
+Date: Sun, 28 Mar 2004 12:31:05 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40670A36.3000005@pobox.com>
-References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406616EE.80301@pobox.com> <4066191E.4040702@yahoo.com.au> <40662108.40705@pobox.com> <20040328135124.GA32597@mail.shareable.org>
+Message-ID: <40670BD9.9020707@pobox.com>
+References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406612AA.1090406@yahoo.com.au> <4066156F.1000805@pobox.com> <20040328141014.GE24370@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:22228 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262063AbUC1RYX
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:35796 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262153AbUC1RbS
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Mar 2004 12:24:23 -0500
-In-Reply-To: <20040328135124.GA32597@mail.shareable.org>
+	Sun, 28 Mar 2004 12:31:18 -0500
+In-Reply-To: <20040328141014.GE24370@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: Jamie Lokier <jamie@shareable.org>
+To: Jens Axboe <axboe@suse.de>
 Cc: Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Jamie Lokier wrote:
-> Jeff Garzik wrote:
+Jens Axboe wrote:
+> On Sat, Mar 27 2004, Jeff Garzik wrote:
 > 
->>TCQ-on-write for ATA disks is yummy because you don't really know what 
->>the heck the ATA disk is writing at the present time.  By the time the 
->>Linux disk scheduler gets around to deciding it has a nicely merged and 
->>scheduled set of requests, it may be totally wrong for the disk's IO 
->>scheduler.  TCQ gives the disk a lot more power when the disk integrates 
->>writes into its internal IO scheduling.
+>>I also wouldn't want to lock out any users who wanted to use SATA at 
+>>full speed ;-)
 > 
 > 
-> Does TCQ-on-write allow you to do ordered write commits, as with barriers,
-> but without needing full cache flushes, and still get good performance?
+> And full speed requires 32MB requests?
 
-Nope, TCQ is just a bunch of commands rather than one.  There are no 
-special barrier indicators you can pass down with a command.
+
+Full speed is the SATA driver supporting the hardware maximum.  The 
+block layer and general fragmentation limit things further from there.
 
 	Jeff
-
 
 
 
