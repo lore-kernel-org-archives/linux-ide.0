@@ -1,35 +1,42 @@
-From: Marc Bevand <bevand_m@epita.fr>
-Subject: Re: libata problems with 66Mhz Promise SATA150 TX4
-Date: Wed, 15 Sep 2004 11:02:12 +0200
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
+Date: Wed, 15 Sep 2004 08:35:23 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040915090212.GA3493@hwi.epita.fr>
-References: <m34qm13m8h.fsf@zathras.nivin.org> <41473287.7050101@epita.fr> <20040914191851.A7263@florence.linkmargin.com>
+Message-ID: <4148370B.4070704@rtr.ca>
+References: <41471163.10709@rtr.ca> <414723B0.1090600@pobox.com> <1095186343.2008.29.camel@mulgrave> <4147AB5A.4060804@rtr.ca> <20040915024720.GA23694@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from deliver.epitech.net ([163.5.0.25]:62021 "HELO ideliver")
-	by vger.kernel.org with SMTP id S264261AbUIOJCP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Sep 2004 05:02:15 -0400
-Content-Disposition: inline
-In-Reply-To: <20040914191851.A7263@florence.linkmargin.com>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:39833 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S264953AbUIOMhC
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Sep 2004 08:37:02 -0400
+In-Reply-To: <20040915024720.GA23694@havoc.gtf.org>
 List-Id: linux-ide@vger.kernel.org
-To: Andy Warner <andyw@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <lsml@rtr.ca>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Andy Warner wrote:
-| [...]
-| I'm observing a lower throughput than that, though ~60MB/s; so I'm
-| going to check to see if there is something else throttling
-| performance, below the point of failure.
+I would really like to work on consolidating the ATA code in libata,
+though.  As the name implies, it's a library -- don't feel that your
+driver must conform to the libata driver API in order to make use of all
+its functions.  And feel free to add to it.
 
-Personally, I am using a blocksize of 32k with 'dd' in order to reach
-215 MB/s, and I set the readahead to 256 on all the disks:
+Yes, there are definite code sharing possibilities there to be explored.
+Right now, my first priority is to get support for this hardware
+into the kernel.  This same driver source will also be backported
+to mid-2.4.xx series, both Redhat and generic.
 
-  $ blockdev --setra 256 /dev/sdX
+After that, we can modify some interfaces to reduce the small overlaps
+that may present.
 
-To satisfy my curiosity, could you sent me an excerpt of 'vmstat 1' while
-stressing your disks like this ? Thanks.
+Next revision is due out later today.  It may still have a few warts
+to work out, but I think it is looking much better than before.
 
+Better to have a decent hardware driver within the tree,
+than an unknown vendor-only binary driver outside the tree.
+
+Cheers
 -- 
-Marc Bevand                          http://www.epita.fr/~bevand_m
-Computer Science School EPITA - System, Network and Security Dept.
+Mark Lord
+(hdparm keeper & the original "Linux IDE Guy")
