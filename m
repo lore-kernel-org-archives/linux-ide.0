@@ -1,19 +1,72 @@
-From: "Matos" <Matosdeed@earthlink.net>
-Subject: FWD: Hot and new  You crave to shoot like a film  =?ISO-8859-1?Q?=20star=85?=
-Date: Sat, 24 Jun 2006 13:48:46 +0200
-Message-ID: <96769778409811.6EC0D8F4E1@M07GHK>
+From: Britney <Britney@partlycloudy.com>
+Subject: Oferta de trabajo para usted
+Date: Fri, 25 Jan 2002 16:08:54 +0100
+Message-ID: <DF7DF58A.4559659@partlycloudy.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mna75-1-87-90-15-195.dsl.club-internet.fr ([87.90.15.195]:6414
-	"EHLO LARI.ra3ud9.org") by vger.kernel.org with ESMTP
-	id S933387AbWFXLsp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Jun 2006 07:48:45 -0400
+Received: from dyv64.neoplus.adsl.tpnet.pl ([83.22.133.64]:7689 "HELO
+	huhmail.com") by vger.kernel.org with SMTP id S1750743AbWFXOIM
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 Jun 2006 10:08:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi Look, now it’s possible with this stuff Enjoy multi-orgasms using this powerful thing I am sure it was Come in: http://ihlmail/gal/ms Don’t trust me? Do you wish to increase your volume by up to 500%?
+Hola!.
+
+Este correo electr=C3=B3nico le muestra una oferta de trabajo, que podr=
+=C3=ADa ser interesante a usted.
+
+Gerente financiero situado en su pa=C3=ADs! Trabajo en Internet con bue=
+n sueldo!
+GoldLeader Inc. busca a personas en=C3=A9rgicas y responsables para com=
+pletar el
+puesto de encargado de deudores de media jornada.
+Como encargado de deudores, usted ser=C3=A1 el responsable de procesar =
+y facilitar
+las transferencias de fondos iniciadas por nuestros clientes bajo la su=
+pervisi=C3=B3n del gerente regional.
+
+ Ofrecemos:
+
+- Ventajas buenas (m=C3=A1s de 1000 $ por semana);
+
+- Contrato legal;
+
+ Se precisa puntualidad, capacidades directivas y responsabilidad.
+
+Usted tambi=C3=A9n recibir=C3=A1 instrucciones detalladas para acciones
+subsecuentes de nuestro gerente, con informaci=C3=B3n sobre como recibi=
+r/transferir el dinero.
+
+=20
+1. Ser capaz de comprobar su correo electr=C3=B3nico varias veces por d=
+=C3=ADa
+
+2. Ser capaz de responder a correos electr=C3=B3nico inmediatamente
+
+3. Ser capaz de trabajar horas extra si es necesario
+
+4. Ser responsable y trabajador
+
+5. Hablar ingles
+
+6. Tener m=C3=A1s de 21 a=C3=B1os;
+
+7. Deber=C3=ADa tener una cuenta bancaria personal
+
+Para informaci=C3=B3n adicionales y preguntas sobre el puesto de trabaj=
+o,
+por favor env=C3=ADe sus datos de contacto a  career@goldleader.biz
+
+NO SON VENTAS!!! NO SON LLAMADAS!!!
+USTED NO NECESITA DINERO PARA COMENZAR!!!
+=20
+Gracias por su atencion.
+Con respeto,
+Departamento de personal Goldleader Inc.
+http://www.goldleader.biz
 
