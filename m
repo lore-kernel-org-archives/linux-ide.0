@@ -1,24 +1,27 @@
-From: Andre Hedrick <andre@serialata.org>
-Subject: Linux Serial ATA Driver, late Q3 Release Schedule
-Date: Fri, 31 May 2002 18:00:28 -0700 (PDT)
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: ide-scsi data transfer residuals
+Date: Fri, 5 Jul 2002 10:07:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10205311749380.5846-100000@master.linux-ide.org>
-References: <200205312108.g4VL8kY28197@devserv.devel.redhat.com>
+Message-ID: <000301c2242d$596450f0$e0019d89@cybernetics.com>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200205312108.g4VL8kY28197@devserv.devel.redhat.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@redhat.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, Linus Torvalds <torvalds@transmeta.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
+Hello,
 
-Serial ATA Driver core should be prepared and ready for submission late Q3.
-There are some issues still to be resolved in management layers.
+I am using the scsi-generic and ide-scsi drivers together for low-level
+access to an IDE tape drive (vanilla 2.4.17).  I noticed that the data
+transfer residual in sg_io_hdr_t { int resid; } is always zero.  I assume
+that the residual calculation is just a missing feature from the ide-scsi
+driver.  Does anyone know how hard it is to add it?
 
-Regards,
+Please CC me in any replies.
 
-Andre Hedrick
-Linux Serial ATA Solutions
-LAD Storage Consulting Group
+Thanks,
+Anthony J. Battersby
+Cybernetics
 
