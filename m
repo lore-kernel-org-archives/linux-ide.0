@@ -1,62 +1,52 @@
-From: Alan Cox <alan@redhat.com>
-Subject: PATCH: Make the SCAN_HWIF/UNREGISTER_HWIF stuff private
-Date: Tue, 17 Aug 2004 12:10:36 -0400
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: Linux Serial ATA (SATA) status report
+Date: Tue, 17 Aug 2004 10:30:39 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040817161036.GA22966@devserv.devel.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <C63C080F-F06A-11D8-9368-00039398BB5E@ieee.org>
+Mime-Version: 1.0 (Apple Message framework v619)
+Content-Type: text/plain;
+	charset=US-ASCII;
+	delsp=yes;
+	format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:21705 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S268319AbUHQQLe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2004 12:11:34 -0400
-Content-Disposition: inline
+Received: from email-out1.iomega.com ([147.178.1.82]:50625 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S268336AbUHQQaM
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Aug 2004 12:30:12 -0400
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andreas Jellinghaus <aj@dungeon.inka.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Until we can kill these off here is a simple change that removes the
-pci_dev check and just stops users unloading interfaces not created by
-SCAN_HWIF. That cleans up all the unloading of hotplug device corner
-cases and stops users breaking things by killing live non generic devices.
+// Andreas J:
 
-Not sure what your current code looks like but a variant of the theory should
-apply to any version of the code independantly.
+ > > Date: 2004-07-09 8:17:21
+ > > IIRC Plextor is shipping dvd burners with SATA
+ > > interface.
+ > ...
+ >  
+http://www.plextor.be/products/dvd_recorders/px-712sa.asp?choice=PX 
+-712SA
+ > ...
+ > > Any idea whether or not these will work?
 
---- include/linux/ide.h~	2004-08-17 17:07:53.907433024 +0100
-+++ include/linux/ide.h	2004-08-17 17:07:53.907433024 +0100
-@@ -982,6 +982,7 @@
- 	unsigned	present    : 1;	/* this interface exists logically (ie users) */
- 	unsigned	configured : 1;	/* this hwif exists and is set up (may not be "present") */
- 	unsigned	hold       : 1; /* this interface is always present */
-+	unsigned	user_dev   : 1; /* user ioctl created device */
- 	unsigned	serialized : 1;	/* serialized all channel operation */
- 	unsigned	sharing_irq: 1;	/* 1 = sharing irq with another hwif */
- 	unsigned	reset      : 1;	/* reset after probe */
---- drivers/ide/ide.c~	2004-08-17 17:07:15.589258272 +0100
-+++ drivers/ide/ide.c	2004-08-17 17:07:15.589258272 +0100
-@@ -1796,6 +1796,7 @@
- 		case HDIO_SCAN_HWIF:
- 		{
- 			hw_regs_t hw;
-+			ide_hwif_t *hwif;
- 			int args[3];
- 			if (!capable(CAP_SYS_RAWIO)) return -EACCES;
- 			if (copy_from_user(args, p, 3 * sizeof(int)))
-@@ -1804,15 +1805,16 @@
- 			ide_init_hwif_ports(&hw, (unsigned long) args[0],
- 					    (unsigned long) args[1], NULL);
- 			hw.irq = args[2];
--			if (ide_register_hw(&hw, NULL) == -1)
-+			if (ide_register_hw(&hw, &hwif) == -1)
- 				return -EIO;
-+			hwif->user_dev = 1;
- 			return 0;
- 		}
- 	        case HDIO_UNREGISTER_HWIF:
- 			if (!capable(CAP_SYS_RAWIO)) return -EACCES;
- 			if(arg > MAX_HWIFS || arg < 0)
- 				return -EINVAL;
--			if(ide_hwifs[arg].pci_dev)
-+			if(!ide_hwifs[arg].user_dev)
- 				return -EINVAL;
- 			return ide_unregister_hwif(&ide_hwifs[arg]);
- 		case HDIO_SET_NICE:
+Will Linux find and name a SATAPI device?
+
+Every 2.4 Linux I've tried connects with the SATAPI device I have.   
+Knoppix Linux 2.4, my own kernel, etc.  Seemingly the 2.4 cdrom and  
+ide-cd driver modules connect to SATAPI, same as PATAPI.  But 2.6  
+introduces CONFIG_BLK_IDE_SATA.  drivers/ide/Kconfig explains why.
+
+In my newbie ignorance, me, I think that explanation means to say that,  
+by make defconfig, as yet you don't get SATAPI in 2.6, but you can  
+still ask for it to work as well in 2.6 as in 2.4, except if you do ask  
+for SATAPI you might lose SATAPI anyhow by losing support for the  
+unusual SATA host you have.  However, I'm confident other people here  
+in linux-ide understand this far far better than I.
+
+Pat LaVarre
+http://linux-pel.blog-city.com/read/742498.htm
+
+P.S. What effects the ide-scsi and ide-floppy driver modules might have  
+with SATAPI, I do not know.
+
