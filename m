@@ -1,56 +1,54 @@
-From: "Daniel E. Markle" <syntax@pa.net>
-Subject: [PATCH] sata_sil mod15 quirk with Seagate ST380013AS
-Date: Tue, 01 Feb 2005 00:39:11 -0500
-Message-ID: <41FF15FF.7060503@pa.net>
+From: "Catalin(ux aka Dino) BOIE" <util@deuroconsult.ro>
+Subject: Strange vmstat output. 2.6.10 Scheduler?
+Date: Tue, 1 Feb 2005 12:21:57 +0200 (EET)
+Message-ID: <Pine.LNX.4.62.0502011217320.26221@webhosting.rdsbv.ro>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040708090706090204060802"
-Received: from ashtech.net ([66.59.109.171]:40075 "EHLO mail.ashtech.net")
-	by vger.kernel.org with ESMTP id S261554AbVBAFg1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2005 00:36:27 -0500
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: from webhosting.rdsbv.ro ([213.157.185.164]:19623 "EHLO
+	webhosting.rdsbv.ro") by vger.kernel.org with ESMTP id S261960AbVBAKV7
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Feb 2005 05:21:59 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
+To: linux-kernel@vger.kernel.org
 Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040708090706090204060802
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Hello!
 
-Hardware Environment:
-AMD64, onboard SiI 3114 controller
+I have a weird problem with a server. I use deadline.
+The output of vmstat is:
+  1  1  12312   6064   7580 815432    0    0  5332   456 1263  3119 22  5  0 73
+  0  1  12312   5280   7584 816240    0    0  6204   620 1307  1530 15  4  0 81
+  0  1  12312   6096   7528 815088    0    0  7604  8732 1256  1398  5  8  0 87
+  0  1  12312   6048   7528 815144    0    0     8     8 1243  1440 14  2  0 84
+  0  1  12312   6048   7528 815168    0    0     0     0 1261  1287  8  2  0 90
+  0  2  12312   6040   7584 815184    0    0     0     0 1258  1197  7  2  0 91
+  0  2  12312   6024   7584 815208    0    0     0     0 1265  1309  6  5  0 89
+  0  2  12312   6024   7584 815208    0    0     0   136 1253   365  2  2  0 96
+  0  2  12312   5984   7584 815208    0    0     0     0 1268   413  2  1  0 97
+  0  2  12312   6052   7584 815208    0    0     0     0 1270   375  2  1  0 97
+  1  0  12312   6164   7584 815156    0    0  6188   288 1270  4314 23  5  0 72
+  0  1  12312   5684   7536 815592    0    0  4128  8656 1270  1316 14  3  0 83
+  0  1  12312   5684   7536 815608    0    0     0     0 1258  1251  8  3  0 89
+  0  1  12312   5552   7536 815628    0    0     0     0 1258  1327  8  2  0 90
+  0  1  12312   5552   7536 815644    0    0     0     0 1264  1127  7  2  0 91
+  0  1  12312   5552   7536 815668    0    0     0     2 1258  1225  8  3  0 89
+  0  3  12312   5248   7588 816108    0    0  4340   585 1249  1316  7  3  0 90
+  0  2  12312   5612   7584 815680    0    0  3092   188 1254   411  3  1  0 96
+  0  2  12312   5564   7584 815676    0    0     0     0 1261   259  2  2  0 96
+  0  2  12312   5564   7584 815676    0    0     0     0 1254   348  2  1  0 97
 
-Drive Model:
-Seagate 80GB ST380013AS
+It seems strange because iowait is at 90% but nothing is trasnfered 
+to/from disk. Why is that?
 
-Problem:
-Drive would lock up whenever the disk was used heavily.
+I run postgresql on this server and I'm not satistied by it's speed.
 
-Applied attached patch to add it to the "mod15" blacklist which seems to 
-have fixed the problem.
+Single Pentium IV, IDE disk.
 
---
-Daniel E. Markle
+What can be the problem?
 
---------------040708090706090204060802
-Content-Type: text/x-patch;
- name="20050131-seagate-sata-3114.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="20050131-seagate-sata-3114.diff"
-
-diff -urN linux.orig/drivers/scsi/sata_sil.c linux/drivers/scsi/sata_sil.c
---- linux.orig/drivers/scsi/sata_sil.c	2005-01-31 09:49:03.488652904 -0500
-+++ linux/drivers/scsi/sata_sil.c	2005-01-31 09:52:28.165537288 -0500
-@@ -84,6 +84,7 @@
- 	{ "ST330013AS",		SIL_QUIRK_MOD15WRITE },
- 	{ "ST340017AS",		SIL_QUIRK_MOD15WRITE },
- 	{ "ST360015AS",		SIL_QUIRK_MOD15WRITE },
-+	{ "ST380013AS",		SIL_QUIRK_MOD15WRITE },
- 	{ "ST380023AS",		SIL_QUIRK_MOD15WRITE },
- 	{ "ST3120023AS",	SIL_QUIRK_MOD15WRITE },
- 	{ "ST3160023AS",	SIL_QUIRK_MOD15WRITE },
-
---------------040708090706090204060802--
-
+Thank you very much!
+---
+Catalin(ux aka Dino) BOIE
+catab at deuroconsult.ro
+http://kernel.umbrella.ro/
