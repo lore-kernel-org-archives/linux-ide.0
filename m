@@ -1,111 +1,63 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: [PATCH] libata ATA vs SATA detection and workaround.
-Date: Mon, 30 Aug 2004 18:42:36 +0400
+From: Larry McVoy <lm@bitmover.com>
+Subject: Re: Libata VIA woes continue. Worked around - *wrong*
+Date: Mon, 30 Aug 2004 07:45:52 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <41333CDC.5040106@wasp.net.au>
-References: <41320DAF.2060306@wasp.net.au> <41321288.4090403@pobox.com> <413216CC.5080100@wasp.net.au> <4132198B.8000504@pobox.com> <41321F7F.7050300@pobox.com>
+Message-ID: <20040830144552.GC16320@work.bitmover.com>
+References: <412F3DEA.2070307@wasp.net.au> <41318680.8080102@wasp.net.au> <41318C87.9010806@pobox.com> <4131910B.6020000@wasp.net.au> <41319C1F.6030207@pobox.com> <4131A0C1.3090305@wasp.net.au> <4131A431.8080409@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=_wasp.net.au-17753-1093876919-0001-2"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:48835 "EHLO wasp.net.au")
-	by vger.kernel.org with ESMTP id S268340AbUH3OmD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Aug 2004 10:42:03 -0400
-In-Reply-To: <41321F7F.7050300@pobox.com>
+Received: from ipcop.bitmover.com ([192.132.92.15]:18665 "EHLO
+	work.bitmover.com") by vger.kernel.org with ESMTP id S268472AbUH3Op5
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Aug 2004 10:45:57 -0400
+Content-Disposition: inline
+In-Reply-To: <4131A431.8080409@pobox.com>
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: Brad Campbell <brad@wasp.net.au>, linux-ide@vger.kernel.org, linxu-kernel@vger.kernel.org, Larry McVoy <lm@bitmover.com>, Linus Torvalds <torvalds@osdl.org>
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
-
---=_wasp.net.au-17753-1093876919-0001-2
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Jeff Garzik wrote:
-> Jeff Garzik wrote:
+> Since BK changesets are ordered as a progression, you can also do a 
+> bsearch by clone trees to specific changesets, such as
 > 
->> me either, unless I can figure out a way to detect that a disk is PATA 
->> not SATA.  Nothing is obvious from the specs on www.t13.org, but who 
->> knows.
-> 
-> 
-> According to the Serial ATA docs, IDENTIFY DEVICE word 93 will be zero 
-> if it's Serial ATA.  Who knows if that's true, given the wierd wild 
-> world of ATA devices.
-> 
+> bk changes -rv2.6.6..2.6.7 > /tmp/changes.txt
+> # view changes.txt, pick out cset 1.1587.39.1 as your "top of tree"
+> bk clone -r1.1587.39.1 vanilla-2.6 brad-test-2.6.6-bk
+> # compile and test the kernel in brad-test-2.6.6-bk
 
-I'm assuming here that if the driver uses sata_phy_reset in libata-core then it's actually a SATA 
-controller.
+A couple of comments:
+    - BK changesets are not a linear progression, they are in the form of
+      a graph called a lattice.  Getting a path through there that you can
+      do binary search on is not straightforward.
 
-Patch attached, tested and verified.
-SATA drives (of which I only have one brand) report IDENTIFY DEVICE word 93 as zero, ATA devices 
-behind the bridge (Of which I only have one brand) report at a minimum bit 13 to report an 80 
-conductor cable.
+    - The CVS tree represents one such straight path, get just the ChangeSet
+      file from the CVS tree and do an rlog on it - you are looking for the
+      lines like:
 
-Like I said before, my assumptions are
+      BKrev: 41316382Cxbyp1_yHDX8LmymGot3Ww
 
-A) IDENTIFY DEVICE and the associated Word 93 register have been *Mandatory* at least since ATA-5
+      That rev is the "md5key" of the BK rev and can be used anywhere a BK
+      rev may be used (bk clone -r41316382Cxbyp1_yHDX8LmymGot3Ww ...)
 
-B) ATA-5 maxed out at < udma/100 and did not contain lba48
+    - The biggest time saver is knowing where to look for your bug.  If you
+      knew that the bug was in drivers/scsi/libata-core.c then you could
+      find each changeset which touched that file like so
 
-C) The SATA->PATA bridge looks like an 80 conductor cable and thus on any drive that supports lba48 
-will always present a non-zero value in IDENTIFY DEVICE Word 93.
+      $ bk rset -lv2.6.6 | grep drivers/scsi/libata-core.c
+      drivers/scsi/libata-core.c|1.39
+      $ bk prs -hnd:I: -r1.39.. drivers/scsi/libata-core.c | while read rev
+      do  bk r2c -r$rev drivers/scsi/libata-core.c
+      done
 
-It works here anyway.
-Patch against vanilla 2.6.9-rc1 attached (including your ata.h patch)
+      That will crunch away and spit out (in this case) 63 revs like
 
-Thanks again for all the help. I'll see if I can get some other older ATA drives to test with (I 
-might have to gut all the machines in the office for the weekend)
+      1.1803.1.40
+      1.1803.1.39
+      1.1803.1.38
+      ...
 
-Regards,
-Brad
-
---=_wasp.net.au-17753-1093876919-0001-2
-Content-Type: text/plain; name=diff; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="diff"
-
-diff -ur orig/linux-2.6.0/drivers/scsi/libata-core.c linux-2.6.9-rc1/drivers/scsi/libata-core.c
---- orig/linux-2.6.0/drivers/scsi/libata-core.c	2004-08-30 18:31:31.000000000 +0400
-+++ linux-2.6.9-rc1/drivers/scsi/libata-core.c	2004-08-30 18:22:05.000000000 +0400
-@@ -1152,6 +1152,16 @@
- 			found = 1;
- 			if (ap->ops->dev_config)
- 				ap->ops->dev_config(ap, &ap->device[i]);
-+			/* limit bridge transfers to udma5, 200 sectors */
-+			printk("Value is %u\n",ap->cbl==ATA_CBL_SATA);
-+			if ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(ap->device))) {
-+				printk(KERN_INFO "ata%u(%u): applying bridge limits\n",
-+					ap->id, ap->device->devno);
-+				ap->udma_mask &= ATA_UDMA5;
-+				ap->host->max_sectors = ATA_MAX_SECTORS;
-+				ap->host->hostt->max_sectors = ATA_MAX_SECTORS;
-+				ap->device->flags |= ATA_DFLAG_LOCK_SECTORS;
-+			}
- 		}
- 	}
- 
-@@ -1226,7 +1236,7 @@
- 		ata_port_disable(ap);
- 		return;
- 	}
--
-+	ap->cbl = ATA_CBL_SATA;
- 	ata_bus_reset(ap);
- }
- 
-diff -ur orig/linux-2.6.0/include/linux/ata.h linux-2.6.9-rc1/include/linux/ata.h
---- orig/linux-2.6.0/include/linux/ata.h	2004-08-30 18:31:32.000000000 +0400
-+++ linux-2.6.9-rc1/include/linux/ata.h	2004-08-30 17:56:53.000000000 +0400
-@@ -218,6 +218,7 @@
- };
- 
- #define ata_id_is_ata(dev)	(((dev)->id[0] & (1 << 15)) == 0)
-+#define ata_id_is_sata(dev)	((dev)->id[93] == 0)
- #define ata_id_rahead_enabled(dev) ((dev)->id[85] & (1 << 6))
- #define ata_id_wcache_enabled(dev) ((dev)->id[85] & (1 << 5))
- #define ata_id_has_flush(dev) ((dev)->id[83] & (1 << 12))
-
---=_wasp.net.au-17753-1093876919-0001-2--
+      and a binary search over those revs is likely to be fair more fruitful
+      because the history of that one file is pretty linear.
+-- 
+---
+Larry McVoy                lm at bitmover.com           http://www.bitkeeper.com
