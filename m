@@ -1,52 +1,47 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Subject: Re: How to cleanly setup legacy IDE irq ?
-Date: Mon, 4 Oct 2004 23:35:37 +0200
+Date: Tue, 05 Oct 2004 09:26:07 +1000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200410042335.37109.bzolnier@elka.pw.edu.pl>
-References: <1096602694.11460.29.camel@gaston> <1096851939.9516.53.camel@gaston> <1096852823.9539.61.camel@gaston>
+Message-ID: <1096932367.12123.115.camel@gaston>
+References: <1096602694.11460.29.camel@gaston>
+	 <20041004013305.GA29791@havoc.gtf.org> <1096853636.23141.68.camel@gaston>
+	 <200410042321.54530.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:8889 "EHLO
-	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S268685AbUJDXAv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Oct 2004 19:00:51 -0400
-Received: from hadron.elka.pw.edu.pl ([194.29.160.13]:42010 "EHLO localhost")
-	by higgs.elka.pw.edu.pl with ESMTP id S52567AbUJDXAq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Oct 2004 01:00:46 +0200
-Received: from chello062179088136.chello.pl ([62.179.88.136]:65035 "EHLO
-	[192.168.123.164]" ident: "NO-IDENT-SERVICE[2]" smtp-auth: "bzolnier"
-	TLS-CIPHER: <none> TLS-PEER-CN1: <none>) by mion.elka.pw.edu.pl
-	with ESMTP id S57852AbUJDVd0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org> + 1 other);
-	Mon, 4 Oct 2004 23:33:26 +0200
-In-Reply-To: <1096852823.9539.61.camel@gaston>
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:6024 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S268696AbUJDXbU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Oct 2004 19:31:20 -0400
+In-Reply-To: <200410042321.54530.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Monday 04 October 2004 03:20, Benjamin Herrenschmidt wrote:
-> 
-> > Ugh ? damn, that's a textboot example of crappy code ! You are
-> > putting interrupt routing platform knowledge in non-platform specific
-> > drivers, that is disgusting !
-> 
-> Please, don't take my harsh language to seriously, I missed adding
-> a couple of ;)
->
-> Just to summarize, I totally agree with you that the existing callbacks
-> are ugly and the way of setting up on-board controllers, especially non
-> PCI ones, should be to have proper controller drivers.
+On Tue, 2004-10-05 at 07:21, Bartlomiej Zolnierkiewicz wrote:
 
-OK
- 
-> But as I think I made clear in previous mail, I'm just talking about
-> the specific issue of IRQ routing for PCI controllers set in legacy mode,
-> to avoid cluttering "generic" drivers with all sort of platform ifdef's
-> for something that has really nothing to do with the driver logic itself...  
+> What about controllers in "half native" mode
+> (legacy IRQs but native addressing)?
 
-Maybe indeed cluttering PCI layer or arch includes with
-information needed only by IDE driver is better...
+As far as IRQ routing is concerned, this is legacy mode, the controller
+driver should call that function. But this is not a "standard" state, so
+it would have done by the host controller driver, while the normal
+"legacy" mode is well defined by the progif bits 0x1 and 0x4 and thus
+the function for retreiving the irqs might be called by the generic ide
+pci code no ?
+
+> Your proposal sounds fine but I worry that instead of crappy #ifdefs
+> it will end up having crappy switch (dev->device) statements.
+
+Whatever we will have will be entirely in the arch. It will usually end
+up beeing something like
+
+	if (dev == onboard_ide_dev)
+		return channel ? <chan_1_irq> : <chan_2_irq>;
+	return NO_IRQ;
+
+Since there will be only one of these on board on 99% of the time.
+
+Ben.
+
+
