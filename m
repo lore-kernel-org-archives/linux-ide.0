@@ -1,74 +1,104 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: arm-lh7a40x IDE support in 2.6.6
-Date: Sat, 15 May 2004 02:25:28 +0200
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: SATA ATAPI work in progress
+Date: Fri, 14 May 2004 20:38:51 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200405150225.28051.bzolnier@elka.pw.edu.pl>
-References: <200405141840.04401.bzolnier@elka.pw.edu.pl> <200405150126.33153.bzolnier@elka.pw.edu.pl> <20040515001028.GA9500@buici.com>
+Message-ID: <40A5669B.6080108@pobox.com>
+References: <1084393233.3999.2.camel@patibmrh9> <40A28BB6.7090204@pobox.com>	<1084403654.3196.31.camel@patibmrh9>  <40A3E595.8000003@pobox.com><108455 9	000.4017.52.camel@patibmrh9>  <40A51604.8070208@pobox.com><1084578453.5343.	26.camel@patibmrh9> <1084579362.3271.5.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------090502070405060201040901"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:5599 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S265315AbUEOAXV
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:21452 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264844AbUEOAjG
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 May 2004 20:23:21 -0400
-In-Reply-To: <20040515001028.GA9500@buici.com>
-Content-Disposition: inline
+	Fri, 14 May 2004 20:39:06 -0400
+In-Reply-To: <1084579362.3271.5.camel@patibmrh9>
 List-Id: linux-ide@vger.kernel.org
-To: Marc Singer <elf@buici.com>
-Cc: rmk@arm.linux.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: linux-ide@vger.kernel.org
 
-On Saturday 15 of May 2004 02:10, Marc Singer wrote:
-> On Sat, May 15, 2004 at 01:26:33AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > On Saturday 15 of May 2004 00:49, Marc Singer wrote:
-> > > On Sat, May 15, 2004 at 12:19:46AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > > > > > > > - you are setting IDE_NO_IRQ in ide_init_hwif_ports() which
-> > > > > > > > is used in many places in generic IDE code - anybody wanting
-> > > > > > > > to understand interactions with your code + generic code will
-> > > > > > > > have serious problems (especially if knows _nothing_ about
-> > > > > > > > lpd7a40x)
-> > > > > > >
-> > > > > > > I don't know what you mean.  I grep for that constant and found
-> > > > > > > it nowhere except for ide-io.c and in my code.  It doesn't take
-> > > > > > > much to find the references.
-> > > > > >
-> > > > > > I'm talking about ide_init_hwif_ports() function.
-> > > > >
-> > > > > Most of the ARM arch's use it.  Perhaps all of them need a good
-> > > > > once over.
-> > > >
-> > > > Since some time I have a patch killing <asm/arch-*/ide.h>. :)
-> > >
-> > > OK.  That raises an interesting question.  If a) you as the IDE
-> > > maintainer want to make a policy change, and b) you have a concrete
-> > > action to take, then how do you go about it so that the right thing
-> > > (tm) happens?
-> >
-> > I posted patch to linux-arm-kernel (rmk, I can't find it in l-a-k
-> > archives and I also can't find any mail about it being rejected?) and
-> > linux-ide. [ and to affected arch maintainers of course ]
->
-> There is a web page for posting kernel patches.  It is most likely to
-> receive attention than posting to the mailing list.
->
->   <http://www.arm.linux.org.uk/developer/patches/>
+This is a multi-part message in MIME format.
+--------------090502070405060201040901
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-It is for -rmk tree.
+Pat LaVarre wrote:
+> Results follow.  Much improved now, yes?
 
-> > > One tack would be to post to the ARM list stating that there is
-> > > such-and-such, a new policy, and this requires a change to the
-> > > way-things-work (tm).  Then effect a patch that breaks the bad stuff
-> > > so that the users of such bad stuff must cope.
-> >
-> > It is stable kernel series so I paid 'stable kernel' price
-> > and made sure that it shouldn't break anything.
->
-> Fair enough.  We'll start with lh and see if we can get others to
-> follow.
+Yep, that's definitely a Silicon Image bridge all right :)
 
-lh is non-buildable in the mainline so I shouldn't care about it
-(from kill ide_init_hwif_ports() patch standpoint).
+Here's a better version of the patch you generated.
 
-We will change mainline and others will follow. 8)
+Next thing is to handle ATA_PROT_ATAPI_DMA in ata_host_intr...
+
+	Jeff
+
+
+
+--------------090502070405060201040901
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+===== drivers/scsi/libata-core.c 1.57 vs edited =====
+--- 1.57/drivers/scsi/libata-core.c	Thu May 13 22:45:55 2004
++++ edited/drivers/scsi/libata-core.c	Fri May 14 20:35:23 2004
+@@ -1168,6 +1168,9 @@
+ 		if (ata_id_is_ata(dev))		/* sanity check */
+ 			goto err_out_nosup;
+ 
++		if (ata_id_use_dmadir(dev))
++			dev->flags |= ATA_DFLAG_DMADIR;
++
+ 		/* see if 16-byte commands supported */
+ 		tmp = dev->id[0] & 0x3;
+ 		if (tmp == 1)
+===== drivers/scsi/libata-scsi.c 1.29 vs edited =====
+--- 1.29/drivers/scsi/libata-scsi.c	Thu May 13 22:39:12 2004
++++ edited/drivers/scsi/libata-scsi.c	Fri May 14 20:36:28 2004
+@@ -920,6 +920,9 @@
+ 		qc->flags |= ATA_QCFLAG_SG; /* data is present; dma-map it */
+ 		qc->tf.protocol = ATA_PROT_ATAPI_DMA;
+ 		qc->tf.feature |= ATAPI_PKT_DMA;
++		if ((qc->dev->flags & ATA_DFLAG_DMADIR) &&
++		    (cmd->sc_data_direction != SCSI_DATA_WRITE))
++			qc->tf.feature |= ATAPI_DMADIR;
+ 	}
+ 
+ 	return 0;
+===== include/linux/ata.h 1.5 vs edited =====
+--- 1.5/include/linux/ata.h	Mon May 10 21:49:59 2004
++++ edited/include/linux/ata.h	Fri May 14 20:34:17 2004
+@@ -84,6 +84,8 @@
+ 	ATA_ERR			= (1 << 0),	/* have an error */
+ 	ATA_SRST		= (1 << 2),	/* software reset */
+ 	ATA_ABORTED		= (1 << 2),	/* command aborted */
++	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
++						   0=to device, 1=to host */
+ 
+ 	/* ATA command block registers */
+ 	ATA_REG_DATA		= 0x00,
+@@ -203,6 +205,7 @@
+ #define ata_id_has_wcache(dev)	((dev)->id[82] & (1 << 5))
+ #define ata_id_has_lba(dev)	((dev)->id[49] & (1 << 8))
+ #define ata_id_has_dma(dev)	((dev)->id[49] & (1 << 9))
++#define ata_id_use_dmadir(dev)	((dev)->id[62] & (1 << 15))
+ #define ata_id_u32(dev,n)	\
+ 	(((u32) (dev)->id[(n) + 1] << 16) | ((u32) (dev)->id[(n)]))
+ #define ata_id_u64(dev,n)	\
+===== include/linux/libata.h 1.29 vs edited =====
+--- 1.29/include/linux/libata.h	Thu May 13 22:45:55 2004
++++ edited/include/linux/libata.h	Fri May 14 20:28:37 2004
+@@ -90,6 +90,7 @@
+ 	ATA_DFLAG_MASTER	= (1 << 2), /* is device 0? */
+ 	ATA_DFLAG_WCACHE	= (1 << 3), /* has write cache we can
+ 					     * (hopefully) flush? */
++	ATA_DFLAG_DMADIR	= (1 << 4), /* use DMADIR bit in ATAPI */
+ 
+ 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+ 	ATA_DEV_ATA		= 1,	/* ATA device */
+
+--------------090502070405060201040901--
 
