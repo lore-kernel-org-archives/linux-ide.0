@@ -1,72 +1,422 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: [PATCH] prevent module unloading for legacy IDE chipset drivers
-Date: Mon, 26 Apr 2004 17:54:27 +0200
+From: =?iso-8859-1?q?Robin=20Parker?= <parke1r@yahoo.co.uk>
+Subject: Re: [sata] SiS driver fixes
+Date: Mon, 26 Apr 2004 19:36:04 +0100 (BST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200404261754.27823.bzolnier@elka.pw.edu.pl>
-References: <200404212219.24622.bzolnier@elka.pw.edu.pl> <200404261650.40801.bzolnier@elka.pw.edu.pl> <20040426152345.GE14074@harddisk-recovery.com>
+Message-ID: <20040426183604.44231.qmail@web13004.mail.yahoo.com>
+References: <408C0AC2.7040705@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:23790 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S262766AbUDZPy5
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Apr 2004 11:54:57 -0400
-In-Reply-To: <20040426152345.GE14074@harddisk-recovery.com>
-Content-Disposition: inline
+Received: from web13004.mail.yahoo.com ([216.136.174.14]:23968 "HELO
+	web13004.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S263185AbUDZSgG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Apr 2004 14:36:06 -0400
+In-Reply-To: <408C0AC2.7040705@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Erik Mouw <erik@harddisk-recovery.com>
-Cc: andersen@codepoet.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, uwe.koziolek@gmx.net, parke1r@yahoo.co.uk
 
-On Monday 26 of April 2004 17:23, Erik Mouw wrote:
-> On Mon, Apr 26, 2004 at 04:50:40PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > BTW I think there is a common misunderstanding about libata:
-> >     it will not replace IDE drivers any time soon.
-> >
-> > I want to rewrite+merge current IDE code with libata during 2.7
-> > (and yes, legacy naming and ordering will be preserved!).
-> >
-> > I hope nobody starts rewriting existing IDE drivers for libata and
-> > pushing them upstream -> it will mean maintenance problems much bigger
-> > than OSS+ALSA.
->
-> I don't think it's bad to have two drivers for the same hardware. We've
-> seen that with the USB UHCI host controller, RTL 8139, Intel e100,
+What can I say??  It worked like a charm.
 
-USB and networks drivers are _actively_ developed by _many_ people
-(in comparison to IDE).
+Let me know if there's any specific tests you want me
+to try.
 
-> Adaptec aic7xxx, NCR/Symbios sym53c8x. Having two drivers makes it easy
-> for people to switch. The difference with OSS+ALSA is that the drivers
+Does the driver support RAID yet?? (sorry, couldn't
+resist)
 
-It is much easier to pull out network driver from kernel than IDE driver
-and some people just won't switch until old driver works.
+Many Thanks,
 
-Just think how much effort it took to make people use ide_cd not ide_scsi
-for CD writing and it's nothing compared to make them switch from
-(ordered) /dev/hdX to (random) /dev/sdX.
+Robin
 
-Please remember about device ordering issues and hardcoded 'root=/'.
+ --- Jeff Garzik <jgarzik@pobox.com> wrote: > 
+> Attached is a patch, and the full 2.6.x version of
+> the SiS driver, for 
+> testing.
+> 
+> This should address the problem where people were
+> having their SATA 
+> drives not recognized at probe time.
+> 
+> Any feedback, including "you didn't break anything",
+> would be great, as 
+> I don't have any SiS test hardware up and running.
+> 
+> 
+> > ===== drivers/scsi/sata_sis.c 1.3 vs edited =====
+> --- 1.3/drivers/scsi/sata_sis.c	Thu Apr 22 00:49:04
+> 2004
+> +++ edited/drivers/scsi/sata_sis.c	Sun Apr 25
+> 14:54:20 2004
+> @@ -34,10 +34,18 @@
+>  #include <linux/libata.h>
+>  
+>  #define DRV_NAME	"sata_sis"
+> -#define DRV_VERSION	"0.04"
+> +#define DRV_VERSION	"0.10"
+>  
+>  enum {
+>  	sis_180			= 0,
+> +	SIS_SCR_PCI_BAR		= 5,
+> +
+> +	/* PCI configuration registers */
+> +	SIS_GENCTL		= 0x54, /* IDE General Control
+> register */
+> +
+> +	/* random bits */
+> +	SIS_FLAG_CFGSCR		= (1 << 30),
+> +	GENCTL_IOMAPPED_SCR	= (1 << 26),
+>  };
+>  
+>  static int sis_init_one (struct pci_dev *pdev,
+> const struct pci_device_id *ent);
+> @@ -99,20 +107,62 @@
+>  MODULE_LICENSE("GPL");
+>  MODULE_DEVICE_TABLE(pci, sis_pci_tbl);
+>  
+> +static unsigned int get_scr_cfg_addr(unsigned int
+> port_no, unsigned int sc_reg)
+> +{
+> +	unsigned int addr = 0;
+> +	switch (sc_reg) {
+> +	case SCR_STATUS:
+> +		addr = 0xc0;
+> +		break;
+> +	case SCR_CONTROL:
+> +		addr = 0xc8;
+> +		break;
+> +	default:
+> +		return 0xffffffff;
+> +	}
+> +	if (port_no)
+> +		addr += 0x10;
+> +
+> +	return addr;
+> +}
+> +
+> +static u32 sis_scr_cfg_read (struct ata_port *ap,
+> unsigned int sc_reg)
+> +{
+> +	u32 val;
+> +	unsigned int cfg_addr =
+> get_scr_cfg_addr(ap->port_no, sc_reg);
+> +	if (cfg_addr == 0xffffffff)
+> +		return 0xffffffff;
+> +	pci_read_config_dword(ap->host_set->pdev,
+> cfg_addr, &val);
+> +	return val;
+> +}
+> +
+> +static void sis_scr_cfg_write (struct ata_port *ap,
+> unsigned int sc_reg, u32 val)
+> +{
+> +	unsigned int cfg_addr =
+> get_scr_cfg_addr(ap->port_no, sc_reg);
+> +	if (cfg_addr == 0xffffffff)
+> +		return;
+> +	pci_write_config_dword(ap->host_set->pdev,
+> cfg_addr, val);
+> +}
+>  
+>  static u32 sis_scr_read (struct ata_port *ap,
+> unsigned int sc_reg)
+>  {
+> -	if (sc_reg >= 16)
+> +	if (sc_reg > SCR_CONTROL)
+>  		return 0xffffffffU;
+>  
+> +	if (ap->flags & SIS_FLAG_CFGSCR)
+> +		return sis_scr_cfg_read(ap, sc_reg);
+>  	return inl(ap->ioaddr.scr_addr + (sc_reg * 4));
+>  }
+>  
+>  static void sis_scr_write (struct ata_port *ap,
+> unsigned int sc_reg, u32 val)
+>  {
+> -	if (sc_reg >= 16)
+> +	if (sc_reg > SCR_CONTROL)
+>  		return;
+> -	outl(val, ap->ioaddr.scr_addr + (sc_reg * 4));
+> +
+> +	if (ap->flags & SIS_FLAG_CFGSCR)
+> +		sis_scr_cfg_write(ap, sc_reg, val);
+> +	else
+> +		outl(val, ap->ioaddr.scr_addr + (sc_reg * 4));
+>  }
+>  
+>  /* move to PCI layer, integrate w/ MSI stuff */
+> @@ -131,6 +181,7 @@
+>  {
+>  	struct ata_probe_ent *probe_ent = NULL;
+>  	int rc;
+> +	u32 genctl;
+>  
+>  	rc = pci_enable_device(pdev);
+>  	if (rc)
+> @@ -160,6 +211,23 @@
+>  	probe_ent->sht = &sis_sht;
+>  	probe_ent->host_flags = ATA_FLAG_SATA |
+> ATA_FLAG_SATA_RESET |
+>  				ATA_FLAG_NO_LEGACY;
+> +
+> +	/* check and see if the SCRs are in IO space or
+> PCI cfg space */
+> +	pci_read_config_dword(pdev, SIS_GENCTL, &genctl);
+> +	if ((genctl & GENCTL_IOMAPPED_SCR) == 0)
+> +		probe_ent->host_flags |= SIS_FLAG_CFGSCR;
+> +	
+> +	/* if hardware thinks SCRs are in IO space, but
+> there are
+> +	 * no IO resources assigned, change to PCI cfg
+> space.
+> +	 */
+> +	if ((!(probe_ent->host_flags & SIS_FLAG_CFGSCR))
+> &&
+> +	    ((pci_resource_start(pdev, SIS_SCR_PCI_BAR) ==
+> 0) ||
+> +	     (pci_resource_len(pdev, SIS_SCR_PCI_BAR) <
+> 128))) {
+> +		genctl &= ~GENCTL_IOMAPPED_SCR;
+> +		pci_write_config_dword(pdev, SIS_GENCTL, genctl);
+> +		probe_ent->host_flags |= SIS_FLAG_CFGSCR;
+> +	}
+> +
+>  	probe_ent->pio_mask = 0x03;
+>  	probe_ent->udma_mask = 0x7f;
+>  	probe_ent->port_ops = &sis_ops;
+> @@ -169,14 +237,18 @@
+>  	probe_ent->port[0].ctl_addr =
+>  		pci_resource_start(pdev, 1) | ATA_PCI_CTL_OFS;
+>  	probe_ent->port[0].bmdma_addr =
+> pci_resource_start(pdev, 4);
+> -	probe_ent->port[0].scr_addr =
+> pci_resource_start(pdev, 5);
+> +	if (!(probe_ent->host_flags & SIS_FLAG_CFGSCR))
+> +		probe_ent->port[0].scr_addr =
+> +			pci_resource_start(pdev, SIS_SCR_PCI_BAR);
+>  
+>  	probe_ent->port[1].cmd_addr =
+> pci_resource_start(pdev, 2);
+>  	ata_std_ports(&probe_ent->port[1]);
+>  	probe_ent->port[1].ctl_addr =
+>  		pci_resource_start(pdev, 3) | ATA_PCI_CTL_OFS;
+>  	probe_ent->port[1].bmdma_addr =
+> pci_resource_start(pdev, 4) + 8;
+> -	probe_ent->port[1].scr_addr =
+> pci_resource_start(pdev, 5) + 64;
+> +	if (!(probe_ent->host_flags & SIS_FLAG_CFGSCR))
+> +		probe_ent->port[1].scr_addr =
+> +			pci_resource_start(pdev, SIS_SCR_PCI_BAR) + 64;
+>  
+>  	probe_ent->n_ports = 2;
+>  	probe_ent->irq = pdev->irq;
+> > /*
+>  *  sata_sis.c - Silicon Integrated Systems SATA
+>  *
+>  *  Copyright 2004 Uwe Koziolek
+>  *
+>  *  The contents of this file are subject to the
+> Open
+>  *  Software License version 1.1 that can be found
+> at
+>  *  http://www.opensource.org/licenses/osl-1.1.txt
+> and is included herein
+>  *  by reference.
+>  *
+>  *  Alternatively, the contents of this file may be
+> used under the terms
+>  *  of the GNU General Public License version 2 (the
+> "GPL") as distributed
+>  *  in the kernel source COPYING file, in which case
+> the provisions of
+>  *  the GPL are applicable instead of the above.  If
+> you wish to allow
+>  *  the use of your version of this file only under
+> the terms of the
+>  *  GPL and not to allow others to use your version
+> of this file under
+>  *  the OSL, indicate your decision by deleting the
+> provisions above and
+>  *  replace them with the notice and other
+> provisions required by the GPL.
+>  *  If you do not delete the provisions above, a
+> recipient may use your
+>  *  version of this file under either the OSL or the
+> GPL.
+>  *
+>  */
+> 
+> #include <linux/config.h>
+> #include <linux/kernel.h>
+> #include <linux/module.h>
+> #include <linux/pci.h>
+> #include <linux/init.h>
+> #include <linux/blkdev.h>
+> #include <linux/delay.h>
+> #include <linux/interrupt.h>
+> #include "scsi.h"
+> #include "hosts.h"
+> #include <linux/libata.h>
+> 
+> #define DRV_NAME	"sata_sis"
+> #define DRV_VERSION	"0.10"
+> 
+> enum {
+> 	sis_180			= 0,
+> 	SIS_SCR_PCI_BAR		= 5,
+> 
+> 	/* PCI configuration registers */
+> 	SIS_GENCTL		= 0x54, /* IDE General Control register
+> */
+> 
+> 	/* random bits */
+> 	SIS_FLAG_CFGSCR		= (1 << 30),
+> 	GENCTL_IOMAPPED_SCR	= (1 << 26),
+> };
+> 
+> static int sis_init_one (struct pci_dev *pdev, const
+> struct pci_device_id *ent);
+> static u32 sis_scr_read (struct ata_port *ap,
+> unsigned int sc_reg);
+> static void sis_scr_write (struct ata_port *ap,
+> unsigned int sc_reg, u32 val);
+> 
+> static struct pci_device_id sis_pci_tbl[] = {
+> 	{ PCI_VENDOR_ID_SI, 0x180, PCI_ANY_ID, PCI_ANY_ID,
+> 0, 0, sis_180 },
+> 	{ PCI_VENDOR_ID_SI, 0x181, PCI_ANY_ID, PCI_ANY_ID,
+> 0, 0, sis_180 },
+> 	{ }	/* terminate list */
+> };
+> 
+> 
+> static struct pci_driver sis_pci_driver = {
+> 	.name			= DRV_NAME,
+> 	.id_table		= sis_pci_tbl,
+> 	.probe			= sis_init_one,
+> 	.remove			= ata_pci_remove_one,
+> };
+> 
+> static Scsi_Host_Template sis_sht = {
+> 	.module			= THIS_MODULE,
+> 	.name			= DRV_NAME,
+> 	.queuecommand		= ata_scsi_queuecmd,
+> 	.eh_strategy_handler	= ata_scsi_error,
+> 	.can_queue		= ATA_DEF_QUEUE,
+> 	.this_id		= ATA_SHT_THIS_ID,
+> 	.sg_tablesize		= ATA_MAX_PRD,
+> 	.max_sectors		= ATA_MAX_SECTORS,
+> 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+> 	.emulated		= ATA_SHT_EMULATED,
+> 	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+> 	.proc_name		= DRV_NAME,
+> 	.dma_boundary		= ATA_DMA_BOUNDARY,
+> 	.slave_configure	= ata_scsi_slave_config,
+> 	.bios_param		= ata_std_bios_param,
+> };
+> 
+> static struct ata_port_operations sis_ops = {
+> 	.port_disable		= ata_port_disable,
+> 	.tf_load		= ata_tf_load_pio,
+> 	.tf_read		= ata_tf_read_pio,
+> 	.check_status		= ata_check_status_pio,
+> 	.exec_command		= ata_exec_command_pio,
+> 	.phy_reset		= sata_phy_reset,
+> 	.bmdma_start            = ata_bmdma_start_pio,
+> 	.fill_sg		= ata_fill_sg,
+> 	.eng_timeout		= ata_eng_timeout,
+> 	.irq_handler		= ata_interrupt,
+> 	.scr_read		= sis_scr_read,
+> 	.scr_write		= sis_scr_write,
+> 	.port_start		= ata_port_start,
+> 	.port_stop		= ata_port_stop,
+> };
+> 
+> 
+> MODULE_AUTHOR("Uwe Koziolek");
+> MODULE_DESCRIPTION("low-level driver for Silicon
+> Integratad Systems SATA controller");
+> MODULE_LICENSE("GPL");
+> MODULE_DEVICE_TABLE(pci, sis_pci_tbl);
+> 
+> static unsigned int get_scr_cfg_addr(unsigned int
+> port_no, unsigned int sc_reg)
+> {
+> 	unsigned int addr = 0;
+> 	switch (sc_reg) {
+> 	case SCR_STATUS:
+> 		addr = 0xc0;
+> 		break;
+> 	case SCR_CONTROL:
+> 		addr = 0xc8;
+> 		break;
+> 	default:
+> 		return 0xffffffff;
+> 	}
+> 	if (port_no)
+> 		addr += 0x10;
+> 
+> 	return addr;
+> }
+> 
+> static u32 sis_scr_cfg_read (struct ata_port *ap,
+> unsigned int sc_reg)
+> {
+> 	u32 val;
+> 	unsigned int cfg_addr =
+> get_scr_cfg_addr(ap->port_no, sc_reg);
+> 	if (cfg_addr == 0xffffffff)
+> 		return 0xffffffff;
+> 	pci_read_config_dword(ap->host_set->pdev, cfg_addr,
+> &val);
+> 	return val;
+> }
+> 
+> static void sis_scr_cfg_write (struct ata_port *ap,
+> unsigned int sc_reg, u32 val)
+> {
+> 	unsigned int cfg_addr =
+> get_scr_cfg_addr(ap->port_no, sc_reg);
+> 	if (cfg_addr == 0xffffffff)
+> 		return;
+> 	pci_write_config_dword(ap->host_set->pdev,
+> cfg_addr, val);
+> }
+> 
+> static u32 sis_scr_read (struct ata_port *ap,
+> unsigned int sc_reg)
+> {
+> 	if (sc_reg > SCR_CONTROL)
+> 		return 0xffffffffU;
+> 
+> 	if (ap->flags & SIS_FLAG_CFGSCR)
+> 		return sis_scr_cfg_read(ap, sc_reg);
+> 	return inl(ap->ioaddr.scr_addr + (sc_reg * 4));
+> }
+> 
+> static void sis_scr_write (struct ata_port *ap,
+> unsigned int sc_reg, u32 val)
+> {
+> 	if (sc_reg > SCR_CONTROL)
+> 		return;
+> 
+> 	if (ap->flags & SIS_FLAG_CFGSCR)
+> 		sis_scr_cfg_write(ap, sc_reg, val);
+> 	else
+> 		outl(val, ap->ioaddr.scr_addr + (sc_reg * 4));
+> }
+> 
+> /* move to PCI layer, integrate w/ MSI stuff */
+> static void pci_enable_intx(struct pci_dev *pdev)
+> {
+> 	u16 pci_command;
+> 
+> 
+=== message truncated === 
 
-Not to even mention problems like that SCSI emulation won't some support
-some devices supported by ide_floppy and ide_cd etc.
 
-> I just mentioned have been "developed" in the tree, while ALSA was
-> developed outside the tree.
-
-No, the biggest difference is that subsystem core was also changed in ALSA.
--> OSS emulation in ALSA etc.
-
-> > However writing _new_ libata driver for 'exotic' PATA hardware is OK.
->
-> Is AMD 760/762 (amd74xx driver) considered "exotic"? ;-)
-
-NO! 8)
-
-The main problem is that even with well tested amd74xx driver for libata
-it won't be possible to remove old amd74xx driver so we'll have to maintain
-both for really long time and it won't be funny et all.
-
-Bartlomiej
-
+	
+	
+		
+Chat instantly with your online friends?  Get the
+FREE Yahoo! Messenger http://uk.messenger.yahoo.com/
