@@ -1,52 +1,35 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: "John W. Linville" <linville@tuxdriver.com>
 Subject: Re: [patch] libata: add ioctls to support SMART
-Date: Mon, 30 Aug 2004 13:44:11 -0400
+Date: Mon, 30 Aug 2004 13:51:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4133676B.70800@pobox.com>
-References: <200408301531.i7UFVBg29089@ra.tuxdriver.com> <41336570.8090308@wasp.net.au>
+Message-ID: <41336910.3010907@tuxdriver.com>
+References: <200408301531.i7UFVBg29089@ra.tuxdriver.com> <41336824.1040206@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:55227 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268681AbUH3Roa
+Received: from apollo.tuxdriver.com ([24.172.12.4]:49925 "EHLO
+	ra.tuxdriver.com") by vger.kernel.org with ESMTP id S268728AbUH3RvN
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Aug 2004 13:44:30 -0400
-In-Reply-To: <41336570.8090308@wasp.net.au>
+	Mon, 30 Aug 2004 13:51:13 -0400
+Received: from [127.0.0.1] (localhost.localdomain [127.0.0.1])
+	by ra.tuxdriver.com (8.11.6/8.11.6) with ESMTP id i7UGi3P30249
+	for <linux-ide@vger.kernel.org>; Mon, 30 Aug 2004 12:44:03 -0400
+In-Reply-To: <41336824.1040206@gmx.de>
 List-Id: linux-ide@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: "John W. Linville" <linville@tuxdriver.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Brad Campbell wrote:
-> John W. Linville wrote:
+Prakash K. Cheemplavam wrote:
 > 
->> Support for HDIO_DRIVE_CMD and HDIO_DRIVE_TASK in libata.  Useful for
->> supporting SMART w/ unmodified smartctl and smartd userland binaries.
->>
->> Not happy w/ loop after failed ata_qc_new_init(), but needed because 
->> smartctl
->> and smartd did not retry after failure.  Likely need an option to wait 
->> for
->> available qc?  Also not sure all the error return codes are correct...
->>
-> 
-> YYYYYYYYYYEeeeeeeeeeeeeeeeeeeeeeeeeeehhhhhhhhhhaaaaaaaaaaaaaaaaaaa!!!!!!!!
-> 
-> I know it's a bit kludgy and does not really fit the philosophy of 
-> libata but it works and it lets me keep an eye on my drives *now*.
-> 
-> Although just for good measure I'll probably unmount and stop my raid 
-> arrays before I use it on the disks. Whats it like for locking on a busy 
-> system?
+> I am pretty sure my drive supports SMART. I hope that I understood your
+> post correctly that with this patch it should work.
 
-I wouldn't trust it on a busy system yet -- it submits the command to 
-the device without checking if there is a command already outstanding.
+Prakash,
 
-The patch could _definitely_ corrupt data or lock your hardware, since 
-it bypasses the SCSI mechanism that ensures that only one command is 
-executing at a time.
+You need "-d ata" on the smartctl command line (and in smartd.conf, if
+using smartd) in order for this to work:
 
-	Jeff
+	smartctl -d ata -a /dev/sda
 
-
+John
 
