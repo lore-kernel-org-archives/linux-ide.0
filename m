@@ -1,129 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [BK PATCHES] 2.6.x libata fixes
-Date: Wed, 14 Jul 2004 16:33:33 -0400
+From: "Max T. Woodbury" <max.teneyck.woodbury@verizon.net>
+Subject: Re: ide-io.c, ide_do_request -- race condition?
+Date: Fri, 16 Jul 2004 07:12:10 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040714203333.GA31809@havoc.gtf.org>
+Message-ID: <40F72B6A.6F12F454@verizon.net>
+References: <40F2CFDE.66D28904@verizon.net> <20040712183505.GE26789@bounceswoosh.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([216.162.42.101]:9952 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S263448AbUGNUdg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jul 2004 16:33:36 -0400
-Content-Disposition: inline
+Received: from out002pub.verizon.net ([206.46.170.141]:1763 "EHLO
+	out002.verizon.net") by vger.kernel.org with ESMTP id S266290AbUGPGMO
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Jul 2004 02:12:14 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org
+To: "Eric D. Mudama" <edmudama@bounceswoosh.org>
+Cc: linux-ide@vger.kernel.org
 
+"Eric D. Mudama" wrote:
+> 
+> On Mon, Jul 12 at 13:52, Max T. Woodbury wrote:
+> >Still, why would PIO mode be unsafe?  (I can see slower, but I don't
+> >expect speed from this beast.  Oh well.  Thanks for the pointer.)
+> 
+> PIO has no data integrity check, so bogus cables that glitch the data
+> will not be detected.  Not sure if that is what he was talking about,
+> but is definitely a problem for PIO.
 
-Please do a
+Huh? Unless something major has changed since the last time I looked at
+DMA hardware (and it has been a few years), DMA uses the same transfer
+sequence from the devices point of view as PIO.  The fact that the 
+transfer is under the control of another device rather than a program 
+should be transparent to the target device.  Impedance mismatches,
+reflections and constructive and destructive interference caused by
+cable problems don't care about who's in control of the busses.
 
-	bk pull bk://kernel.bkbits.net/jgarzik/libata-upstream-2.6
+I can see a possible problem with cache consistency causing problems
+with PIO, but there are similar (abet in some sense inverted or
+reversed) problems with DMA.
 
-This will update the following files:
-
- drivers/pci/quirks.c       |   31 ++++++++++++++++++++++++-------
- drivers/scsi/libata-core.c |    6 ++++--
- 2 files changed, 28 insertions(+), 9 deletions(-)
-
-through these ChangeSets:
-
-<jgarzik@pobox.com> (04/07/14 1.1880)
-   [PCI, libata] Fix "combined mode" PCI quirk for ICH6
-   
-   The hardware vendor, in their infinite wisdom, make the combined
-   mode configuration register different between ICH5 and ICH6.
-   
-   Take this into account.
-
-<Sergio.Gelato@astro.su.se> (04/07/14 1.1879)
-   [PATCH] libata: fix kunmap() of incorrect page, in PIO data xfer
-   
-   Obvious bug.  Fixes highmem oops.
-
-diff -Nru a/drivers/pci/quirks.c b/drivers/pci/quirks.c
---- a/drivers/pci/quirks.c	2004-07-14 16:32:30 -04:00
-+++ b/drivers/pci/quirks.c	2004-07-14 16:32:30 -04:00
-@@ -817,6 +817,7 @@
- static void __init quirk_intel_ide_combined(struct pci_dev *pdev)
- {
- 	u8 prog, comb, tmp;
-+	int ich = 0;
- 
- 	/*
- 	 * Narrow down to Intel SATA PCI devices.
-@@ -827,8 +828,12 @@
- 	case 0x24df:
- 	case 0x25a3:
- 	case 0x25b0:
-+		ich = 5;
-+		break;
- 	case 0x2651:
- 	case 0x2652:
-+	case 0x2653:
-+		ich = 6;
- 		break;
- 	default:
- 		/* we do not handle this PCI device */
-@@ -839,13 +844,25 @@
- 	 * Read combined mode register.
- 	 */
- 	pci_read_config_byte(pdev, 0x90, &tmp);	/* combined mode reg */
--	tmp &= 0x6;     /* interesting bits 2:1, PATA primary/secondary */
--	if (tmp == 0x4)		/* bits 10x */
--		comb = (1 << 0);		/* SATA port 0, PATA port 1 */
--	else if (tmp == 0x6)	/* bits 11x */
--		comb = (1 << 2);		/* PATA port 0, SATA port 1 */
--	else
--		return;				/* not in combined mode */
-+
-+	if (ich == 5) {
-+		tmp &= 0x6;  /* interesting bits 2:1, PATA primary/secondary */
-+		if (tmp == 0x4)		/* bits 10x */
-+			comb = (1 << 0);	/* SATA port 0, PATA port 1 */
-+		else if (tmp == 0x6)	/* bits 11x */
-+			comb = (1 << 2);	/* PATA port 0, SATA port 1 */
-+		else
-+			return;			/* not in combined mode */
-+	} else {
-+		WARN_ON(ich != 6);
-+		tmp &= 0x3;  /* interesting bits 1:0 */
-+		if (tmp & (1 << 0))
-+			comb = (1 << 2);	/* PATA port 0, SATA port 1 */
-+		else if (tmp & (1 << 1))
-+			comb = (1 << 0);	/* SATA port 0, PATA port 1 */
-+		else
-+			return;			/* not in combined mode */
-+	}
- 
- 	/*
- 	 * Read programming interface register.
-diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
---- a/drivers/scsi/libata-core.c	2004-07-14 16:32:30 -04:00
-+++ b/drivers/scsi/libata-core.c	2004-07-14 16:32:30 -04:00
-@@ -2029,6 +2029,7 @@
- {
- 	struct ata_queued_cmd *qc;
- 	struct scatterlist *sg;
-+	struct page *page;
- 	unsigned char *buf;
- 	u8 status;
- 
-@@ -2065,7 +2066,8 @@
- 	if (qc->cursect == (qc->nsect - 1))
- 		ap->pio_task_state = PIO_ST_LAST;
- 
--	buf = kmap(sg[qc->cursg].page) +
-+	page = sg[qc->cursg].page;
-+	buf = kmap(page) +
- 	      sg[qc->cursg].offset + (qc->cursg_ofs * ATA_SECT_SIZE);
- 
- 	qc->cursect++;
-@@ -2088,7 +2090,7 @@
- 	else
- 		insl(ap->ioaddr.data_addr, buf, ATA_SECT_DWORDS);
- 
--	kunmap(sg[qc->cursg].page);
-+	kunmap(page);
- }
- 
- static void ata_pio_task(void *_data)
+max
