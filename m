@@ -1,69 +1,104 @@
-From: David Richards <david@industrialstrengthsolutions.com>
-Subject: Re: SiI 3112 & Seagate drivers
-Date: Mon, 14 Mar 2005 10:14:01 -0500
-Message-ID: <4235AA39.7010704@industrialstrengthsolutions.com>
-References: <200503121937.55673.kanniball@zmail.pt> <42345E2A.3070707@industrialstrengthsolutions.com> <200503131834.46433.kanniball@zmail.pt> <423557A9.9090708@gmail.com>
+From: David Meier <droebbel.melta@gmx.de>
+Subject: dma problems with via82cxxx after suspend
+Date: Mon, 14 Mar 2005 18:54:10 +0100
+Message-ID: <1110822850.11750.0.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Received: from lakermmtao08.cox.net ([68.230.240.31]:42957 "EHLO
-	lakermmtao08.cox.net") by vger.kernel.org with ESMTP
-	id S261522AbVCNPCF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Mar 2005 10:02:05 -0500
-In-Reply-To: <423557A9.9090708@gmail.com>
+Received: from mail.gmx.de ([213.165.64.20]:32655 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261659AbVCNRyP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Mar 2005 12:54:15 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Ben Schwartz <yem@mail.utexas.edu>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Thank you much for breaking this down so well.
+I get DMA errors after resuming from suspend (S3).
 
->
->  Hello, Kanniball.
->
->  I've digged lkml previously and what I've found out are
->
->  * It's basically because of faulty SATA implementation of the 
-> affected seagate hard drives combined with standard-compliant but 
-> peculiar behavior of silicon image controllers.
->
->  SATA communicates using packets which is called FIS in SATA 
-> terminology.  When transferring data for read/write, the data can be 
-> tranferred splitted on multiple packets.  The standard doesn't limit 
-> where the data can be splitted, but most controllers split them on 
-> block  (512 byte) boundaries.  Unfortunately, siimage controller 
-> doesn't always split them on block boundaries and some (well, many) 
-> seagate drives depend on packets split on block boundary.  So, that's 
-> where everything goes wrong.
->
->  * Data FIS maximum payload size is 8k, or 16 blocks.  And siimage 
-> controllers doesn't split packets on odd boundaries (maybe not at all) 
-> when data size is equal to or less than 15 blocks.  So, sata_sil 
-> driver sets max_sectors to 15, and the drive never gets to transfer 
-> more than one page at a time.  So, it's dog slow.
->
->  * As the problem occurs only when writing data, we can improve read 
-> performance to normal level, but the current block/libata driver 
-> structure isn't structured to support separate limits on reads/writes 
-> and the developers don't wanna change it because of some faulty hardware.
->
->  * I don't know how Windows drivers handle this but from the past 
-> posts, it seems that Windows driver also has the blacklist.  It would 
-> be nice if someone can verify siimage+seagate read/write performance 
-> on Windows.  And it would be even better if someone with SATA tracer 
-> would investigate how the gruesome-twosome act on Windows.
->
->  * The cleanest way would be some form of firmware updates for either 
-> the siimage controller or seagate drives.  Unfortunately, this doesn't 
-> seem to be feasible; otherwise, they would have come up with it way back.
->
->  * To top it all, both companies keep details regarding above buggy 
-> behavior under strict NDA and continue to sell faulty devices.  Way to 
-> go, Silicon images / Seagate. OTZ
->
->  * It seems that IDE/libata developers contacted both companies in the 
-> past without any positive result, so I doubt they will act any 
-> differently this time.  But, my heart, too, is with you.
->
->  Thanks.
->
+I had switched DMA off before suspending.
+
+Kernel: 2.6.10 (ubuntu, 2.6.10-27), same with 2.6.8.1. Boot Parameters:
+ro nobiospnp noapic pci=usepirqmask; same problem without those.
+
+Hardware: Asus K8V SE Deluxe, Via K8T800 Chipset, via82cxxx loaded or
+compiled in. No errors with a kernel without that module.
+
+
+This is the last dmesg:
+
+hda: DMA disabled
+hdb: DMA disabled
+hdc: DMA disabled
+hdd: DMA disabled
+Stopping tasks: ==============================================|
+Back to C!
+powernow-k8: ph2 null fid transition 0xc
+ACPI: PCI interrupt 0000:00:07.0[A] -> GSI 11 (level, low) -> IRQ 11
+ACPI: PCI interrupt 0000:00:0a.0[A] -> GSI 10 (level, low) -> IRQ 10
+eth1: link down
+ACPI: PCI interrupt 0000:00:0f.0[B] -> GSI 10 (level, low) -> IRQ 10
+ACPI: PCI interrupt 0000:00:0f.1[A] -> GSI 11 (level, low) -> IRQ 11
+Restarting tasks... done
+usb 5-4: USB disconnect, address 3
+VFS: busy inodes on changed media.
+input: AT Translated Set 2 keyboard on isa0060/serio0
+usb 5-4: new high speed USB device using ehci_hcd and address 4
+scsi3 : SCSI emulation for USB Mass Storage devices
+usb-storage: device found at 4
+usb-storage: waiting for device to settle before scanning
+  Vendor: HL-DT-ST  Model: DVDRAM GSA-4163B  Rev: A101
+  Type:   CD-ROM                             ANSI SCSI revision: 00
+sr0: scsi3-mmc drive: 40x/40x writer dvd-ram cd/rw xa/form2 cdda tray
+Attached scsi CD-ROM sr0 at scsi3, channel 0, id 0, lun 0
+Attached scsi generic sg0 at scsi3, channel 0, id 0, lun 0,  type 5
+usb-storage: device scan complete
+hda: dma_timer_expiry: dma status == 0x61
+hda: DMA timeout error
+hda: dma timeout error: status=0x58 { DriveReady SeekComplete
+DataRequest }
+
+ide: failed opcode was: unknown
+hda: status timeout: status=0xd0 { Busy }
+
+ide: failed opcode was: unknown
+hdb: DMA disabled
+hda: drive not ready for command
+ide0: reset: success
+hda: dma_timer_expiry: dma status == 0x21
+hda: DMA timeout error
+hda: dma timeout error: status=0x58 { DriveReady SeekComplete
+DataRequest }
+
+ide: failed opcode was: unknown
+hda: status timeout: status=0xd0 { Busy }
+
+ide: failed opcode was: unknown
+hda: drive not ready for command
+ide0: reset: success
+hda: dma_timer_expiry: dma status == 0x21
+hda: DMA timeout error
+hda: dma timeout error: status=0x58 { DriveReady SeekComplete
+DataRequest }
+
+ide: failed opcode was: unknown
+hda: status timeout: status=0xd0 { Busy }
+
+ide: failed opcode was: unknown
+hda: drive not ready for command
+ide0: reset: success
+hda: dma_timer_expiry: dma status == 0x21
+hda: DMA timeout error
+hda: dma timeout error: status=0x58 { DriveReady SeekComplete
+DataRequest }
+
+ide: failed opcode was: unknown
+hda: status timeout: status=0xd0 { Busy }
+
+ide: failed opcode was: unknown
+hda: drive not ready for command
+ide0: reset: success
+
+
+Thanks
+David
+
 
