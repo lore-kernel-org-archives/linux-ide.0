@@ -1,48 +1,125 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: PCI Constants Update for SATA Driver
-Date: Wed, 02 Mar 2005 12:47:57 +1100
-Message-ID: <1109728077.5610.78.camel@gaston>
-References: <1109526163.19325.2.camel@forge.intermeta.de>
-	 <42220CAA.90702@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [SATA] libata-dev queue updated
+Date: Tue, 01 Mar 2005 21:40:28 -0500
+Message-ID: <4225279C.1070308@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from gate.crashing.org ([63.228.1.57]:45764 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S262136AbVCBBuP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Mar 2005 20:50:15 -0500
-In-Reply-To: <42220CAA.90702@pobox.com>
+Content-Type: multipart/mixed;
+ boundary="------------060608000205000802090203"
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:41645 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S262140AbVCBCkq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Mar 2005 21:40:46 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Henning Schmiedehausen <hps@intermeta.de>, Linux IDE Mailingliste <linux-ide@vger.kernel.org>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Sun, 2005-02-27 at 13:08 -0500, Jeff Garzik wrote:
-> Henning Schmiedehausen wrote:
-> > Hi,
-> > 
-> > having the various constants in pci_ids.h is a really good thing for
-> > grepping through the kernel source. And if they were used, it would be
-> > even better (if you e.g. are looking for which driver claims an SIImage
-> > 3112 card...). However, the sata_xxx.c files in the drivers/scsi
-> > directory are notorious for not using the PCI Ids but just hard coded
-> > numbers.
-> > 
-> > This patch tries to fix this. It is against the 2.6.10 tree from Fedora
-> > Core 3 but should apply to a regular 2.6.10 too.
-> 
-> "Notorious", heh.  This is quite intentional.
-> 
-> PCI device ids are just random numbers that vendors pick out of thin 
-> air.  Device id symbolic constants have little value, and creates churn 
-> whereby every kernel hacker is patching include/linux/pci_ids.h.
+This is a multi-part message in MIME format.
+--------------060608000205000802090203
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I still agree that it's handy to use the constants in pci_ids.h when
-available, I do that for grepping regulary.
+A minor update, mostly to update to the latest kernel.
 
-What I usually do is that I separately send patches updating pci_ids.h
-and driver patches. In some cases, I leave the numeric constant in the
-driver until I'm sure the pci_ids.h patch got in, then eventually fix up
-the driver to use the constant.
+--------------060608000205000802090203
+Content-Type: text/plain;
+ name="changelog.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="changelog.txt"
 
-Ben.
+BK users:
 
+	bk pull bk://gkernel.bkbits.net/libata-dev-2.6
+
+Patch:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.11-rc5-bk4-libata-dev1.patch.bz2
+
+This will update the following files:
+
+ drivers/scsi/Kconfig         |   18 
+ drivers/scsi/Makefile        |    2 
+ drivers/scsi/ahci.c          |  107 ++++-
+ drivers/scsi/ata_adma.c      |  778 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/libata-core.c   |  312 +++++++++--------
+ drivers/scsi/libata-scsi.c   |  701 ++++++++++++++++++++++++++++++++------
+ drivers/scsi/libata.h        |    6 
+ drivers/scsi/pata_pdc2027x.c |  771 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sata_promise.c  |   84 ++++
+ drivers/scsi/sata_qstor.c    |   20 -
+ drivers/scsi/sata_vsc.c      |    4 
+ include/linux/ata.h          |   15 
+ include/linux/libata.h       |   10 
+ include/scsi/scsi.h          |    3 
+ 14 files changed, 2531 insertions(+), 300 deletions(-)
+
+through these ChangeSets:
+
+<andyw:pobox.com>:
+  o [libata scsi] support 12-byte passthru CDB
+  o [libata scsi] passthru CDB check condition processing
+  o T10/04-262 ATA pass thru - patch
+
+<erikbenada:yahoo.ca>:
+  o [libata sata_promise] support PATA ports on SATA controllers
+
+<tklauser:nuerscht.ch>:
+  o drivers/scsi/ahci: Use the DMA_{64,32}BIT_MASK constants
+  o drivers/scsi/sata_vsc: Use the DMA_{64,32}BIT_MASK constants
+
+Adam J. Richter:
+  o ata_pci_remove_one used freed memory
+
+Albert Lee:
+  o [libata] use init-device-params ATA command where needed
+  o [libata] ata_scsi_verify_xlat() fix
+  o pdc2027x timing register fix for 100MHz
+  o [libata] CHS support: add CHS support to ata_scsi_verify_xlat(), ata_scsi_rw_xlat() and ata_scsiop_read_cap().
+  o [libata] CHS support: reorganize read/write translation in ata_scsi_rw_xlat()
+  o [libata] CHS support: rename vars (s/sector/block/) in ata_scsi_verify_xlat()
+  o [libata] CHS support: detect C/H/S at IDENTIFY DEVICE time
+  o [libata] CHS support: add definitions to headers
+  o pdc2027x timing register bug fix
+  o [libata pdc2027x] fix incorrect pio and mwdma masks
+  o [libata pdc2027x] remove quirks and ROM enable
+  o [libata] add driver for Promise PATA 2027x
+
+Brad Campbell:
+  o libata basic detection and errata for PATA->SATA bridges
+
+Jeff Garzik:
+  o [libata ahci] Print out port id on error messages
+  o [libata ahci] support PCI MSI interrupt vector
+  o [libata adma] Add init code, fix CPB submission code
+  o [libata ahci] finish ATAPI support
+  o [libata adma] trivial whitespace cleanup
+  o [libata dma] fix DMA mode config; add some more initialization code
+  o [libata adma] add support for configuring PIO/DMA modes
+  o [libata] turn on ATAPI support
+  o [libata sata_promise] merge Tobias Lorenz' pdc20619 patch, part 2
+  o [libata] small cleanups
+  o [libata] remove unused execute-device-diagnostic reset method
+  o [libata] add new driver ata_adma
+  o [libata pdc2027x] update for upstream struct device conversion
+  o [libata sata_promise] fix merge bugs
+  o [libata] fix build breakage
+  o [libata] fix SATA->PATA bridge detect compile breakage
+  o [libata] fix printk warning
+
+John W. Linville:
+  o libata: update ATA pass thru opcodes
+  o libata: minor style changes in ata_scsi_pass_thru
+  o libata: filter SET_FEATURES - XFER MODE from ATA pass thru
+  o libata: sync SMART ioctls with ATA pass thru spec (T10/04-262r7)
+  o libata: fix command queue leak when xlat_func fails
+  o libata: SMART support via ATA pass-thru
+
+Mark Lord:
+  o [libata qstor] minor update per LKML comments
+
+Tobias Lorenz:
+  o [libata sata_promise] pdc20619 (PATA) support
+  o libata-scsi: get-identity ioctl support
+
+
+--------------060608000205000802090203--
