@@ -1,38 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] Fix pata_pdc2027x incorrect pio_mask and mwdma_mask
-Date: Wed, 27 Oct 2004 10:49:52 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [BK PATCHES] ide-2.6 update
+Date: Wed, 27 Oct 2004 17:07:09 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <417FB590.6020008@pobox.com>
-References: <00e801c4bc10$387e33b0$8c764109@tw.ibm.com>
+Message-ID: <58cb370e0410270807678ba20@mail.gmail.com>
+References: <58cb370e04102706074c20d6d7@mail.gmail.com>
+	 <1098887363l.6679l.0l@werewolf.able.es>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:45483 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262469AbUJ0OuE
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Oct 2004 10:50:04 -0400
-In-Reply-To: <00e801c4bc10$387e33b0$8c764109@tw.ibm.com>
+Received: from wproxy.gmail.com ([64.233.184.199]:34834 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262504AbUJ0PHM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Oct 2004 11:07:12 -0400
+Received: by wproxy.gmail.com with SMTP id 64so328880wri
+        for <linux-ide@vger.kernel.org>; Wed, 27 Oct 2004 08:07:09 -0700 (PDT)
+In-Reply-To: <1098887363l.6679l.0l@werewolf.able.es>
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>
+To: "J.A. Magallon" <jamagallon@able.es>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Albert Lee wrote:
-> Jeff:
+On Wed, 27 Oct 2004 14:29:23 +0000, J.A. Magallon <jamagallon@able.es> wrote:
 > 
->   Fix pata_pdc2027x incorrect pio_mask and mwdma_mask for your review.
-> (patch is against the libata-dev-2.6 tree.)
+> On 2004.10.27, Bartlomiej Zolnierkiewicz wrote:
+> > Please do a
+> >
+> >       bk pull bk://bart.bkbits.net/ide-2.6
+> >
+> > This will update the following files:
+> 
+> Watch your mailer, it is wrapping lines...
+> See:
+> 
+> http://marc.theaimsgroup.com/?l=linux-ide&m=109888304706759&q=raw
+> 
+> and search for 'long data_size'.
 
-patch applied.
+thanks
 
-
-> Signed-off-by: Albert Lee<albertcc@tw.ibm.com>
-
-In addition to the last email (just sent), I have one further request:
-please add a space between "Albert Lee" and "<albertcc@tw.ibm.com>"
-
-Thanks,
-
-	Jeff
-
-
+bye, bye gmail
