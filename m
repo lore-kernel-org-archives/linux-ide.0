@@ -1,100 +1,62 @@
-From: "Albert Lee" <albertcc@tw.ibm.com>
-Subject: Re: SATAPI timing
-Date: Tue, 1 Feb 2005 18:49:27 +0800
-Message-ID: <001801c5084b$b5687b60$6401a8c0@tw.ibm.com>
-References: <83EB8C3C-7142-11D9-B91E-000A95D2AC6A@iomega.com> <41FA7ABF.7080404@pobox.com>
+From: "Catalin(ux aka Dino) BOIE" <util@deuroconsult.ro>
+Subject: Re: Strange vmstat output. 2.6.10 Scheduler?
+Date: Tue, 1 Feb 2005 12:54:39 +0200 (EET)
+Message-ID: <Pine.LNX.4.62.0502011253390.26221@webhosting.rdsbv.ro>
+References: <Pine.LNX.4.62.0502011217320.26221@webhosting.rdsbv.ro>
+ <20050201102638.GJ4137@suse.de> <Pine.LNX.4.62.0502011236100.26221@webhosting.rdsbv.ro>
+ <20050201104214.GK4137@suse.de> <Pine.LNX.4.62.0502011243270.26221@webhosting.rdsbv.ro>
+ <20050201104949.GM4137@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Received: from bluehawaii.tikira.net ([61.62.22.51]:45566 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S261954AbVBAKuK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Feb 2005 05:50:10 -0500
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: from webhosting.rdsbv.ro ([213.157.185.164]:47529 "EHLO
+	webhosting.rdsbv.ro") by vger.kernel.org with ESMTP id S261954AbVBAKym
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Feb 2005 05:54:42 -0500
+In-Reply-To: <20050201104949.GM4137@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, gp <poppitzg@iomega.com>
-Cc: linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> gp wrote:
-> > Jeff
-> > 
-> > I think I may have found an issue in the ATAPI code in the function 
-> > atapi_packet_task.
-> > 
-> >  From my testing with the sata_via driver, I have been getting a timeout 
-> > when sending the first inquiry command.
-> > 
-> > 
-> > Here is the section of code of interest:
-> > 
-> > 
-> >     /* make sure DRQ is set */
-> >     status = ata_chk_status(ap);
-> >     if ((status & (ATA_BUSY | ATA_DRQ)) != ATA_DRQ)
-> >         goto err_out;
-> > 
-> >     /* send SCSI cdb */
-> >     DPRINTK("send cdb\n");
-> >     assert(ap->cdb_len >= 12);
-> >     ata_data_xfer(ap, qc->cdb, ap->cdb_len, 1);
-> > 
-> > ** Wait is needed here to work correctly
-> > DPRINTK("Wait for a bit\n");
-> > 
-> >     /* if we are DMA'ing, irq handler takes over from here */
-> >     if (qc->tf.protocol == ATA_PROT_ATAPI_DMA)
-> >         ap->ops->bmdma_start(qc);        /* initiate bmdma */
-> > 
-> > 
-> > In the test case, the dma transfer is being used. From my perusal of the 
-> > ATA spec in section 9.8, it looks like there needs to be a definite 
-> > state transition before issuing the bmdma_start.
-> 
-> Yeah, it looks like there needs to be an intrq-wait state in there...
-> 
-> Wanna submit a patch?  :)
-> 
+> The vmstat you showed had bi and bo at the same time, so it's not so
+> surprising if bi often suffers if it is seeking all over the map to
+> write out the big chunk submitted.
 
-I'm a little confused about what is the "correct behavior" of ATAPI DMA INTRQ.
+I understand.
 
-1. The ATA-4 flowchart and ATA-6 state diagram seems to be inconsistent.
-In the ATA-4 flowchart, no wait for INTRQ is specified.
+> How does it look with write cache enabled?
+Seems that almost the same:
+  0  1  12416   6068   6908 816292    0    0  1744   156 1276  1327 16  2  0 82
+  0  1  12416   6028   6908 816324    0    0     0     0 1270  1237  8  2  0 90
+  0  1  12416   5988   6908 816324    0    0     0     0 1255   454  2  2  0 96
+  0  2  12416   5956   6952 816324    0    0     0    80 1277   348  2  1  0 97
+  0  2  12416   5944   6952 816324    0    0     0     0 1257   322  2  2  0 96
+  0  2  12416   5960   6952 816324    0    0     0     0 1256   380  2  2  0 96
+procs -----------memory---------- ---swap-- -----io---- --system-- 
+----cpu----
+  r  b   swpd   free   buff  cache   si   so    bi    bo   in    cs us sy id wa
+  1  2  12416   5960   6952 816324    0    0     0     0 1262   337  2  1 0 97
+  0  1  12416   4936   6952 817676    0    0  3400   180 1293  5466 31  6 0 63
+  0  1  12416   5276   6896 817180    0    0  5600  8288 1329  1622 15  4 0 81
+  0  1  12416   5212   6896 817228    0    0     0     0 1245  1237  7  2 0 91
+  0  1  12416   5148   6896 817252    0    0     0     0 1250  1313  7  3 0 90
+  0  1  12416   5152   6896 817284    0    0     0     0 1264  1243  7  2 0 91
+  0  2  12416   5152   6944 817284    0    0     0   104 1257   377  1  4 0 95
+  0  2  12416   5160   6944 817284    0    0     0    44 1250   407  2  1 0 97
+  0  2  12416   5160   6944 817284    0    0     0     0 1265   287  2  0 0 98
+  0  2  12416   5928   6940 816508    0    0   344   336 1272   384  2  3 0 95
+  0  1  12416   5608   6892 817088    0    0  4440   140 1246  5390 24  7 0 69
+  0  1  12416   5584   6848 817140    0    0  7436   612 1268  1707 16  3 0 81
+  0  1  12416   5960   6848 816480    0    0  5900  8156 1300  1428  9  5 0 86
+  0  1  12416   5632   6844 816824    0    0  1528   196 1271  1402 15  3 0 82
 
-2. From the ATA-5 errata:
-http://www.t13.org/project/e01122r0.pdf
+> Not surprising, there's not much the io scheduler can do for you here.
+>
+> -- 
+> Jens Axboe
+>
 
-"...Page 265 through 270 of NCITS 340-2000 clause 9.8 was not properly converted from the flow
-charts in NCITS 317-1998 to the state diagrams. The state diagrams figures 33 and 34 and
-associated text is modified to indicate that the device interrupts only at command completion. "
-
-Notice the "device interrupts only at command completion." statement.
-However, the diagrams in the errata are inconsistent with the above statement.
-
-3. The ide-cd code does not wait for INTRQ before starting BM-DMA
-
-        /* Arm the interrupt handler. */
-        ide_set_handler(drive, handler, rq->timeout, cdrom_timer_expiry);
-
-        /* ATAPI commands get padded out to 12 bytes minimum */
-        cmd_len = COMMAND_SIZE(rq->cmd[0]);
-        if (cmd_len < ATAPI_MIN_CDB_BYTES)
-            cmd_len = ATAPI_MIN_CDB_BYTES;
-
-        /* Send the command to the device. */
-        HWIF(drive)->atapi_output_bytes(drive, rq->cmd, cmd_len);
-
-        /* Start the DMA if need be */
-        if (info->dma)
-            hwif->dma_start(drive);
-
-        return ide_started;
-
-4. My CD-ROM drive does not generate INTRQ after it received the command packet.
-   It only assert DMARQ.
-
-Maybe the state diagrams in ATA-5 and ATA-6 are incorrect?  Any idea?
-
-Albert
-
-
+---
+Catalin(ux aka Dino) BOIE
+catab at deuroconsult.ro
+http://kernel.umbrella.ro/
