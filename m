@@ -1,17 +1,17 @@
 From: Oliver Korpilla <Oliver.Korpilla@gmx.de>
 Subject: SATA/IDE strangeness (ATI chip)
-Date: Thu, 17 Mar 2005 18:47:57 +0100
-Message-ID: <4239C2CD.4050206@gmx.de>
+Date: Thu, 17 Mar 2005 18:55:22 +0100
+Message-ID: <4239C48A.2050608@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Resent-Message-ID: <pAAoTB.A.FYG.PebOCB@murphy>
+Resent-Message-ID: <dPgeXB.A.Vx.thbOCB@murphy>
 List-Post: <mailto:debian-amd64@lists.debian.org>
 List-Help: <mailto:debian-amd64-request@lists.debian.org?subject=help>
 List-Subscribe: <mailto:debian-amd64-request@lists.debian.org?subject=subscribe>
 List-Unsubscribe: <mailto:debian-amd64-request@lists.debian.org?subject=unsubscribe>
 List-Archive: <http://lists.debian.org/debian-amd64/>
-To: debian-amd64@lists.debian.org, linux-ide@kernel.org
+To: debian-amd64@lists.debian.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 Hello!
@@ -28,25 +28,25 @@ These are listed in the PCI ID database (not committed yet):
 4379	ATI 4379 Serial ATA Controller
 437a	ATI 437A Serial ATA Controller
 
-The 1st SATA controller seems to work with the SATA_SIL driver from 
-vanilla 2.6.11 (and none sooner, I tried), and I'm using it that way 
-now. Since the Debian Pure64 CD doesn't come with that, it doesn't find 
+The 1st SATA controller seems to work with the SATA_SIL driver from
+vanilla 2.6.11 (and none sooner, I tried), and I'm using it that way
+now. Since the Debian Pure64 CD doesn't come with that, it doesn't find
 a HD when trying to install with the CD.
 
 I have the following problems:
 ------------------------------
-* Though the SATA is configured in IDE mode in BIOS it does not show up 
-as IDE within Linux and this does not change when the ATIIXP driver is 
-loaded - ide2 is not recognized as a bus with connected devices. My SATA 
-HD is listed by the BIOS to be channel 2 master, while CD-ROM on the 
-Dual ATA is listed on channel 0, channel 1 is unused, so shouldn't the 
+* Though the SATA is configured in IDE mode in BIOS it does not show up
+as IDE within Linux and this does not change when the ATIIXP driver is
+loaded - ide2 is not recognized as a bus with connected devices. My SATA
+HD is listed by the BIOS to be channel 2 master, while CD-ROM on the
+Dual ATA is listed on channel 0, channel 1 is unused, so shouldn't the
 SATA drive show up as /dev/hde or something???
-* How can I tune the ATIIXP driver via parameters or source modification 
+* How can I tune the ATIIXP driver via parameters or source modification
 so it recognizes the SATA controllers as devices to configure???
-* How can I force ANY IDE driver to recognize these SATA drives in IDE 
+* How can I force ANY IDE driver to recognize these SATA drives in IDE
 mode?
 
-This is a mail regarding this topic I'm confused about. The author seems 
+This is a mail regarding this topic I'm confused about. The author seems
 to think, ATIIXP can do the 4379 as well:
 
 http://www.ussg.iu.edu/hypermail/linux/kernel/0412.1/1460.html
