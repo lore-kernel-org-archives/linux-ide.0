@@ -1,94 +1,54 @@
-From: <Stuart_Hayes@Dell.com>
-Subject: RE: ide-cd question
-Date: Thu, 10 Feb 2005 15:46:33 -0600
-Message-ID: <7A8F92187EF7A249BF847F1BF4903C04010EE8A0@ausx2kmpc103.aus.amer.dell.com>
+From: Marcin Kuk <marcin@laptek.servix>
+Subject: Re: (fwd) Re: Bug#289770: kernel-image-2.6.10-1-686: 2.6.10 fails to set up DMA on my IBM thinkpad
+Date: Fri, 11 Feb 2005 07:55:15 +0100
+Message-ID: <20050211065514.GA628@laptek.servix>
+References: <20050111195345.GI2618@stro.at> <20050112120245.GA24839@kantaka.co.uk> <200501121352.33520.bzolnier@elka.pw.edu.pl> <20050210200201.GA28238@kantaka.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:64314 "EHLO
-	ausc60ps301.us.dell.com") by vger.kernel.org with ESMTP
-	id S261640AbVBJVqe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Feb 2005 16:46:34 -0500
-content-class: urn:content-classes:message
+Content-Type: text/plain; charset=iso-8859-2
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.wp.pl ([212.77.101.1]:34987 "EHLO smtp.wp.pl")
+	by vger.kernel.org with ESMTP id S262201AbVBKGzc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Feb 2005 01:55:32 -0500
+Content-Disposition: inline
+In-Reply-To: <20050210200201.GA28238@kantaka.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, bzolnier@gmail.com
+To: Philip Armstrong <phil@kantaka.co.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hayes, Stuart wrote:
->> I'd recommend applying this patch if nobody sees any problems with
->> it. 
->> 
->> 
->> --- ide-cd.c.orig	2005-02-07 10:56:42.000000000 -0500
->> +++ ide-cd.c	2005-02-07 10:57:06.000000000 -0500
->> @@ -3301,6 +3301,7 @@ static ide_driver_t ide_cdrom_driver = { 
->>  	.supports_dsc_overlap	= 1, .cleanup		=
-ide_cdrom_cleanup,
->>  	.do_request		= ide_do_rw_cdrom,
->> +	.end_request		= cdrom_end_request,
->>  	.capacity		= ide_cdrom_capacity,
->>  	.attach			= ide_cdrom_attach,
->>  	.drives			=
->> LIST_HEAD_INIT(ide_cdrom_driver.drives),
->> 
->> 
+On Thu, Feb 10, 2005 at 08:02:01PM +0000, Philip Armstrong wrote:
+> On Wed, Jan 12, 2005 at 01:52:33PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > On Wednesday 12 January 2005 13:02, Philip Armstrong wrote:
+> > > On Tue, Jan 11, 2005 at 08:53:45PM +0100, maximilian attems wrote:
+> > > > dma on a thinkpad  600E worked for 2.6.8, but didn't since 2.6.9
+> > > > also non working 2.6.10.
+> > > > 
+> > > > -hda: 12594960 sectors (6448 MB) w/460KiB Cache, CHS=13328/15/63, UDMA(33)
+> > > > +hda: 12594960 sectors (6448 MB) w/460KiB Cache, CHS=13328/15/63
+> > > > 
+> > > > could you please look at the following ide dma bug report for piix in
+> > > > debian -> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=289770
+> > > > full dmesg of both 2.6.8 and 2.6.10 are posted there.
+> > 
+> > "something" steals resource needed for IDE driver so no DMA
 > 
-> I took the lack of responses to mean that either nobody cared, or the
-> patch was so bad that it wasn't worthy of comment, so I took a closer
-> look at it.  After looking at it more carefully, I suspect that the
-> function cdrom_end_request() was meant to be an internal function,
-> and not the end_request function for the driver (in part because the
-> number of parameters for cdrom_end_request() isn't the same as
-> ide_end_request()!).      
+> Further investigation reveals that turning off CONFIG_PNPBIOS solves
+> the problem.
 > 
-> Here's another patch that fixes the issue I'm seeing, and is less
-> likely to cause any other problems.  This will make sure that
-> requests that are ended in ide_atapi_error() because they failed too
-> many times (even after a couple reset attempts) are completely ended,
-> even if they didn't finish transferring all the data that was
-> expected.     
-> 
-> Please apply if you don't see any problems with it.
-> 
-> Thanks!
-> Stuart
-> 
-> 
-> 
-> --- ide-io.c.orig	2005-02-10 15:23:52.000000000 -0500
-> +++ ide-io.c.new	2005-02-10 15:23:31.000000000 -0500
-> @@ -515,7 +515,18 @@ static ide_startstop_t ide_atapi_error(i
->  		hwif->OUTB(WIN_IDLEIMMEDIATE, IDE_COMMAND_REG);
-> 
->  	if (rq->errors >= ERROR_MAX) {
-> -		drive->driver->end_request(drive, 0, 0);
-> +		/*
-> +		 * make sure request is fully ended--otherwise bio might
-get
-> updated and the +		 * command will be retried without
-rq->errors
-> getting reset to zero, which +		 * could cause us to get
-stuck in a
-> loop with infinite retries without any +		 * more reset
-attempts
-> (borrowed from cdrom_end_request) +		 */
-> +		int nsectors;
-> +		if (blk_pc_request(rq))
-> +			nsectors = (rq->data_len + 511) >> 9;
-> +		if (!nsectors)
-> +			nsectors = 1;
-> +		drive->driver->end_request(drive, 0, nsectors);
->  	} else {
->  		if ((rq->errors & ERROR_RESET) == ERROR_RESET) {
->  			++rq->errors;
+> With PNPBIOS set, the kernel seems to think that the io range is in
+> use regardless of whether quickboot is set in the BIOS or not.
 
+I have Toshiba Satellite 320CDT.
+I compiled 2.6.10 vanilla kernel with CONFIG_PNPBIOS disabled.
+All IDE drivers was compiled into the kernel.
+I can't still enable DMA for my harrddisk.
+This is my earlier crying:
 
-Sorry--this patch is against 2.6.11-rc3.
+http://marc.theaimsgroup.com/?t=110789166000004&r=1&w=2
 
-Also sorry for the mangled patch--I'll resend it from another email
-address
-shortly.
+What can I do?
 
-Thanks
-Stuart
+Best regards
+
+-- 
+Marcin Kuk
