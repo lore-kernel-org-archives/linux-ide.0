@@ -1,31 +1,43 @@
-From: Daniel Brahneborg <daniel.com@wtnord.net>
-Subject: Re: siimage and two nics
-Date: Sun, 28 Dec 2003 15:49:33 +0100
+From: Craig Wilfred Pearce <S2007823@student.rmit.edu.au>
+Subject: ide.c problem in 2.6.0
+Date: Mon, 29 Dec 2003 12:41:24 +1100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20031228154933.A5275@nettis.grimsta>
-References: <20031226085450.A4045@nettis.grimsta> <34449.209.163.161.49.1072444479.squirrel@mail.clanhk.org> <20031226195705.B4045@nettis.grimsta> <3FEBAFA5.8020604@clanhk.org> <20031226232826.A7057@nettis.grimsta> <3FEBCA3C.5000803@clanhk.org> <20031227083050.A8631@nettis.grimsta> <3FECD15B.1010004@clanhk.org>
+Message-ID: <20031229014124.GA12405@cs.rmit.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 212-214-141-209.v-by.wtnord.net ([212.214.141.209]:18565 "EHLO
-	ricercar.mine.nu") by vger.kernel.org with ESMTP id S261522AbTL1Otn
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Dec 2003 09:49:43 -0500
+Received: from voga.its.rmit.edu.au ([131.170.2.8]:20382 "EHLO
+	voga.its.rmit.edu.au") by vger.kernel.org with ESMTP
+	id S262324AbTL2Blf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Dec 2003 20:41:35 -0500
 Content-Disposition: inline
-In-Reply-To: <3FECD15B.1010004@clanhk.org>; from heretic@clanhk.org on Sat, Dec 27, 2003 at 12:24:59AM +0000
 List-Id: linux-ide@vger.kernel.org
-To: "J. Ryan Earl" <heretic@clanhk.org>
-Cc: Daniel Brahneborg <daniel.com@wtnord.net>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-ide@vger.kernel.org
 
-On Sat, Dec 27, 2003 at 12:24:59AM +0000, J. Ryan Earl wrote:
-> I suggest the -mm tree, it includes all the patches for the siimage 
-> driver, plus many more.  It has been stable in my testing.
+Hi there,
 
-I just tried that, but with the same data corruption problem
-as with Linus tree: Writing large files on a raid5 disk causes
-random data corruption.
+Am trying to boot Linux kernel 2.6.0 under Debian testing/unstable with an
+Intel Pentium II BX chipset (no CD-ROM).
 
-I seem to get less DMA problems now though, which is very nice.
+Upon bootup I get several meessages saying:
+hda: dma_intr: status=0x51 { DriveReady SeekComplete error }
+hda: dam_intr: error=0x84 { DriveStatusError Bad CRC }
 
-/Basic
+In the past on Linux 2.4.x it would then say 'ide0: reset success'
+however 2.6.0 just comes to a halt. How can I make the kernel do an ide0 reset so I can continue
+to operate?
 
+Kind regards,
+
+Craig
+
+-- 
+Craig Pearce                                                 .---.
+                                                            /     \
+http://yallara.cs.rmit.edu.au/~crpearce                     \.@-@./
+crpearce@cs.rmit.edu.au                                     /`\_/`\
+RMIT, City Campus   Melbourne, Aus.                        //  _  \\
+ GPG Public Key ID: 29811D6E                              | \     )|_
+                                             Powered by  /`\_`>  <_/ \
+                                                 Debian  \__/'---'\__/
