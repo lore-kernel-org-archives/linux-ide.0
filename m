@@ -1,96 +1,170 @@
-From: Andy Warner <andyw@pobox.com>
-Subject: libata - error register patch.
-Date: Wed, 29 Sep 2004 17:50:11 -0500
+From: Erik Benada <erikbenada@yahoo.ca>
+Subject: [PATCH] PATA port support for PDC2037x
+Date: Wed, 29 Sep 2004 22:30:13 -0400 (EDT)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040929175011.L15041@florence.linkmargin.com>
+Message-ID: <20040930023013.13192.qmail@web60304.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="r5Pyd7+fXNt84Ff3"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:11439 "EHLO
-	ms-smtp-03.rdc-kc.rr.com") by vger.kernel.org with ESMTP
-	id S269196AbUI2WwA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 29 Sep 2004 18:52:00 -0400
-Content-Disposition: inline
+Received: from web60304.mail.yahoo.com ([216.109.118.115]:9902 "HELO
+	web60304.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S268526AbUI3CaO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Sep 2004 22:30:14 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org
 
+Jeff,
 
---r5Pyd7+fXNt84Ff3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+included is patch to add support for PATA port on Promise PDC2037x controllers.
+Patch is against 2.6.8.1 vanilla kernel.
+I tested this patch on my PDC20378 on-board controller with 1 PATA drive attached.
+I didn't do any large testing but my drive was detected properly and I was able to 
+mount and use filesystem on it.
 
-It's entirely possible I'm missing something either
-very obvious, or very subtle, but I think the reading
-of the error register in libata et al is incorrect.
+I tried to minimize changes to libata code. I just added flags for each port to ata_probe_ent
+structure and modified ata_host_init() function. 
 
-Current code only reads the error register when
-in LBA48 mode, and then stores it in tf->hob_feature.
-Attached patch always reads it and stores it
-in tf->feature.
--- 
-andyw@pobox.com
+Promise SATA driver was changed to use new ata_probe_ent->port_flags, check for presence of
+PATA port and pdc_phy_reset will use different reset code for PATA and SATA ports.
 
-Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
+Any comments, suggestions?
 
---r5Pyd7+fXNt84Ff3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=error_patch
+  Erik
 
-diff -ur pre/drivers/scsi/libata-core.c post/drivers/scsi/libata-core.c
---- pre/drivers/scsi/libata-core.c	2004-09-29 17:28:02.128241280 -0500
-+++ post/drivers/scsi/libata-core.c	2004-09-29 17:30:39.849416316 -0500
-@@ -321,10 +321,10 @@
- 	tf->lbam = inb(ioaddr->lbam_addr);
- 	tf->lbah = inb(ioaddr->lbah_addr);
- 	tf->device = inb(ioaddr->device_addr);
-+	tf->feature = inb(ioaddr->error_addr);
+Signed-off-by: Erik Benada <erikbenada@yahoo.ca>
+
+
+diff -uprN -X dontdiff linux-2.6.8.1-vanilla/drivers/scsi/libata-core.c
+linux-2.6.8.1-PATA/drivers/scsi/libata-core.c
+--- linux-2.6.8.1-vanilla/drivers/scsi/libata-core.c	2004-09-29 21:07:05.000000000 -0400
++++ linux-2.6.8.1-PATA/drivers/scsi/libata-core.c	2004-09-27 17:58:28.000000000 -0400
+@@ -2806,6 +2806,7 @@ static void ata_host_init(struct ata_por
+ 	ap->pio_mask = ent->pio_mask;
+ 	ap->udma_mask = ent->udma_mask;
+ 	ap->flags |= ent->host_flags;
++	ap->flags |= ent->port_flags[port_no];
+ 	ap->ops = ent->port_ops;
+ 	ap->cbl = ATA_CBL_NONE;
+ 	ap->device[0].flags = ATA_DFLAG_MASTER;
+diff -uprN -X dontdiff linux-2.6.8.1-vanilla/drivers/scsi/sata_promise.c
+linux-2.6.8.1-PATA/drivers/scsi/sata_promise.c
+--- linux-2.6.8.1-vanilla/drivers/scsi/sata_promise.c	2004-09-29 21:07:05.000000000 -0400
++++ linux-2.6.8.1-PATA/drivers/scsi/sata_promise.c	2004-09-29 21:27:05.102266472 -0400
+@@ -80,6 +80,8 @@ static void pdc_eng_timeout(struct ata_p
+ static int pdc_port_start(struct ata_port *ap);
+ static void pdc_port_stop(struct ata_port *ap);
+ static void pdc_phy_reset(struct ata_port *ap);
++static void pdc_pata_phy_reset(struct ata_port *ap);
++static void pdc_pata_cbl_detect(struct ata_port *ap);
+ static void pdc_qc_prep(struct ata_queued_cmd *qc);
+ static void pdc_tf_load_mmio(struct ata_port *ap, struct ata_taskfile *tf);
+ static void pdc_exec_command_mmio(struct ata_port *ap, struct ata_taskfile *tf);
+@@ -128,7 +130,7 @@ static struct ata_port_info pdc_port_inf
+ 	/* board_2037x */
+ 	{
+ 		.sht		= &pdc_sata_sht,
+-		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
++		.host_flags	= /* ATA_FLAG_SATA | */ ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
+ 		.pio_mask	= 0x03, /* pio3-4 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -243,7 +245,35 @@ static void pdc_reset_port(struct ata_po
+ static void pdc_phy_reset(struct ata_port *ap)
+ {
+ 	pdc_reset_port(ap);
+-	sata_phy_reset(ap);
++	if (ap->flags & ATA_FLAG_SATA)
++		sata_phy_reset(ap);
++	else
++		pdc_pata_phy_reset(ap);
++}
++
++static void pdc_pata_cbl_detect(struct ata_port *ap)
++{
++	u8 tmp;
++	void *mmio = (void *) ap->ioaddr.cmd_addr + PDC_CTLSTAT + 0x03;
++
++	tmp = readb(mmio);
++	
++	if (tmp & 0x01)
++	{
++		ap->cbl = ATA_CBL_PATA40;
++		ap->udma_mask &= ATA_UDMA_MASK_40C;
++	}
++	else
++		ap->cbl = ATA_CBL_PATA80;
++}
++		
++static void pdc_pata_phy_reset(struct ata_port *ap)
++{
++	pdc_pata_cbl_detect(ap);
++
++	ata_port_probe(ap);
++	
++	ata_bus_reset(ap);
+ }
  
- 	if (tf->flags & ATA_TFLAG_LBA48) {
- 		outb(tf->ctl | ATA_HOB, ioaddr->ctl_addr);
--		tf->hob_feature = inb(ioaddr->error_addr);
- 		tf->hob_nsect = inb(ioaddr->nsect_addr);
- 		tf->hob_lbal = inb(ioaddr->lbal_addr);
- 		tf->hob_lbam = inb(ioaddr->lbam_addr);
-@@ -353,10 +353,10 @@
- 	tf->lbam = readb((void __iomem *)ioaddr->lbam_addr);
- 	tf->lbah = readb((void __iomem *)ioaddr->lbah_addr);
- 	tf->device = readb((void __iomem *)ioaddr->device_addr);
-+	tf->feature = readb((void __iomem *)ioaddr->error_addr);
+ static u32 pdc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
+@@ -557,6 +587,7 @@ static int pdc_sata_init_one (struct pci
+ 	void *mmio_base;
+ 	unsigned int board_idx = (unsigned int) ent->driver_data;
+ 	int rc;
++	u8 tmp;
  
- 	if (tf->flags & ATA_TFLAG_LBA48) {
- 		writeb(tf->ctl | ATA_HOB, (void __iomem *) ap->ioaddr.ctl_addr);
--		tf->hob_feature = readb((void __iomem *)ioaddr->error_addr);
- 		tf->hob_nsect = readb((void __iomem *)ioaddr->nsect_addr);
- 		tf->hob_lbal = readb((void __iomem *)ioaddr->lbal_addr);
- 		tf->hob_lbam = readb((void __iomem *)ioaddr->lbam_addr);
-diff -ur pre/drivers/scsi/sata_svw.c post/drivers/scsi/sata_svw.c
---- pre/drivers/scsi/sata_svw.c	2004-09-29 17:32:42.396805890 -0500
-+++ post/drivers/scsi/sata_svw.c	2004-09-29 17:34:39.625030054 -0500
-@@ -138,9 +138,9 @@
- 	lbam = tf->lbam = readw(ioaddr->lbam_addr);
- 	lbah = tf->lbah = readw(ioaddr->lbah_addr);
- 	tf->device = readw(ioaddr->device_addr);
-+	tf->feature = readw(ioaddr->error_addr);
+ 	if (!printed_version++)
+ 		printk(KERN_DEBUG DRV_NAME " version " DRV_VERSION "\n");
+@@ -614,6 +645,9 @@ static int pdc_sata_init_one (struct pci
+ 	probe_ent->port[0].scr_addr = base + 0x400;
+ 	probe_ent->port[1].scr_addr = base + 0x500;
  
- 	if (tf->flags & ATA_TFLAG_LBA48) {
--		tf->hob_feature = readw(ioaddr->error_addr) >> 8;
- 		tf->hob_nsect = nsect >> 8;
- 		tf->hob_lbal = lbal >> 8;
- 		tf->hob_lbam = lbam >> 8;
-diff -ur pre/drivers/scsi/sata_vsc.c post/drivers/scsi/sata_vsc.c
---- pre/drivers/scsi/sata_vsc.c	2004-09-29 17:32:30.539605204 -0500
-+++ post/drivers/scsi/sata_vsc.c	2004-09-29 17:36:36.286359905 -0500
-@@ -139,9 +139,9 @@
- 	lbam = tf->lbam = readw(ioaddr->lbam_addr);
- 	lbah = tf->lbah = readw(ioaddr->lbah_addr);
- 	tf->device = readw(ioaddr->device_addr);
-+	tf->feature = readb(ioaddr->error_addr);
++	probe_ent->port_flags[0] = ATA_FLAG_SATA;
++	probe_ent->port_flags[1] = ATA_FLAG_SATA;
++	
+ 	/* notice 4-port boards */
+ 	switch (board_idx) {
+ 	case board_20319:
+@@ -624,9 +658,25 @@ static int pdc_sata_init_one (struct pci
  
- 	if (tf->flags & ATA_TFLAG_LBA48) {
--		tf->hob_feature = readb(ioaddr->error_addr);
- 		tf->hob_nsect = nsect >> 8;
- 		tf->hob_lbal = lbal >> 8;
- 		tf->hob_lbam = lbam >> 8;
+ 		probe_ent->port[2].scr_addr = base + 0x600;
+ 		probe_ent->port[3].scr_addr = base + 0x700;
++	
++		probe_ent->port_flags[2] = ATA_FLAG_SATA;
++		probe_ent->port_flags[3] = ATA_FLAG_SATA;
+ 		break;
+ 	case board_2037x:
+-       		probe_ent->n_ports = 2;
++		/* Some boards have also PATA port */
++		tmp = readb(base + PDC_FLASH_CTL+1);
++		if (!(tmp & 0x80))
++		{
++			probe_ent->n_ports = 3;
++			
++			pdc_sata_setup_port(&probe_ent->port[2], base + 0x300);
++
++			probe_ent->port_flags[2] = ATA_FLAG_SLAVE_POSS;
++			
++			printk(KERN_INFO DRV_NAME " PATA port found\n");
++		}
++		else
++       			probe_ent->n_ports = 2;
+ 		break;
+ 	default:
+ 		BUG();
+diff -uprN -X dontdiff linux-2.6.8.1-vanilla/include/linux/libata.h
+linux-2.6.8.1-PATA/include/linux/libata.h
+--- linux-2.6.8.1-vanilla/include/linux/libata.h	2004-09-29 21:07:05.000000000 -0400
++++ linux-2.6.8.1-PATA/include/linux/libata.h	2004-09-27 22:36:43.000000000 -0400
+@@ -193,6 +193,7 @@ struct ata_probe_ent {
+ 	unsigned long		irq;
+ 	unsigned int		irq_flags;
+ 	unsigned long		host_flags;
++	unsigned long		port_flags[ATA_MAX_PORTS];
+ 	void			*mmio_base;
+ 	void			*private_data;
+ };
 
---r5Pyd7+fXNt84Ff3--
+
+
+______________________________________________________________________ 
+Post your free ad now! http://personals.yahoo.ca
