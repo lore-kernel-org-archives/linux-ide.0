@@ -1,32 +1,34 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SATA II 150 TX4
-Date: Sun, 14 Nov 2004 19:06:51 -0500
-Message-ID: <4197F31B.7030904@pobox.com>
-References: <1100188388.3127.24.camel@localhost.localdomain>
+Subject: Re: pdc20619, ata_promise
+Date: Sun, 14 Nov 2004 19:08:32 -0500
+Message-ID: <4197F380.6090408@pobox.com>
+References: <1100110864.809.4.camel@server.lorenz.priv>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:32689 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261381AbUKOAHP
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38321 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261385AbUKOAIo
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 14 Nov 2004 19:07:15 -0500
-In-Reply-To: <1100188388.3127.24.camel@localhost.localdomain>
+	Sun, 14 Nov 2004 19:08:44 -0500
+In-Reply-To: <1100110864.809.4.camel@server.lorenz.priv>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ole Barnkob Kaas <obk@futarque.com>
+To: Tobias Lorenz <tobias.lorenz@gmx.net>
 Cc: linux-ide@vger.kernel.org
 
-Ole Barnkob Kaas wrote:
-> Hello,
+Tobias Lorenz wrote:
+> Hi,
 > 
-> I'm stuck with two SATA II 150 TX4 cards. So I was wondering if anyone
-> is developing a driver for that card? Maybe theres some beta or alfa
-> stuff worth testing? Maybe I could help with some hardware for
-> development.
+> will my pdc20619 support in sata_promise be added ?
+> Or is anything left to do ?
+> 
+> I saw that you applied the renamings (s/sata/ata/). Will the module be
+> renamed too, as we discussed (sata_promise->ata_promise) ?
 
-Someone in the linux-ide archives found a ~2 line patch that made 
-sata_promise work with these cards.
+Yes, it will be renamed...  I just need to get off my slacker ass and 
+make the change for 2.4.x (involves renaming to ata_promise.o, then 
+creating sata_promise.o for compatibility)
 
 	Jeff
 
