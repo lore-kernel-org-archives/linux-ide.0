@@ -1,46 +1,65 @@
-From: Ryan Geoffrey Bourgeois <rgb005@latech.edu>
-Subject: Re: poor sata performance on 2.6 - Promise SX4
-Date: Thu, 15 Apr 2004 19:11:30 -0500
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: poor sata performance on 2.6
+Date: Thu, 15 Apr 2004 21:03:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1082074290.407f24b21997c@webmail.LaTech.edu>
+Message-ID: <407F30F5.1070305@pobox.com>
 References: <200404150236.05894.kos@supportwizard.com> <1082001287.407e0787f3c48@webmail.LaTech.edu> <200404151455.36307.kos@supportwizard.com> <1082044297.407eaf894ddda@webmail.LaTech.edu> <407F1C07.6050104@umn.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from selene.LaTech.edu ([138.47.18.25]:31741 "EHLO LaTech.edu")
-	by vger.kernel.org with ESMTP id S261913AbUDPALe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Apr 2004 20:11:34 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:7076 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261205AbUDPBED
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Apr 2004 21:04:03 -0400
 In-Reply-To: <407F1C07.6050104@umn.edu>
 List-Id: linux-ide@vger.kernel.org
 To: Simon Koch <koch0121@umn.edu>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Ryan Geoffrey Bourgeois <rgb005@latech.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> 
+Simon Koch wrote:
+> Ryan Geoffrey Bourgeois wrote:
+>> I do recomend Promise's SATA controller cards.  The kernel drivers are 
+>> excellent
+>> imho.  As well as my onboard Promise TX2, I'm using a thei S150 SX4 RAID5
+
 > What kernel/driver are you using for the S150 SX4?  I couldn't ever get 
 > better than 13MB/sec from it in 2.6.  Of course, the last I tried was 
 > 2.6.3.  I could get 55MB/sec using 2.4 and Promise's partial source 
 > driver, but since my onboard SATA controller works fine in 2.6 I'm just 
 > using that meanwhile.
-> 
-> Thanks,
->     Simon
-> 
 
-The performance isn't that great at the moment.  Poor driver support for the SX4
-right now, as it's kinda the odd card in the lot.  The way it handles its
-hardware RAID is kinda unique from what I've heard.  I'm using the sata_promise
-driver on the 2.6.5 kernel.  In the works is supposed to be a separate driver
-specifically for the SX4, which is the main reason I joined the linux-ide list
-in the first place.  Due to the SX4's unique approach to hardware RAID5, there
-is not yet a driver that supports RAID5 arrays on the controller, and so each
-drive can only be accessed separately.  Thus I'm using Linux's software RAID5
-for my three Western Digital 120gb drives (WD1200JD I think).  I got about
-25mb/s read time on a drive connected to the controller.  It really is below
-par, but it's getting the job done until we get a good driver.
 
--Ryan
+Re-read his message.  He is using TX2, not SX4.
 
--------------------------------------------------
-This mail sent through IMP: http://horde.org/imp/
+SX4 is vastly different.  Each request must bounce through a DIMM, which 
+hurts performance.  Further, only one DIMM copy to/from system memory 
+can be occuring at any one time, while you can be executing up to 4 ATA 
+commands (one for each SATA port) in parallel.
+
+SX4 performance currently suffers because of this bounce through the 
+DIMM.  Two transactions, and two interrupts, are required for each disk 
+transaction.
+
+SX4 is really designed for RAID acceleration.  One may to improve 
+performance (which I plan to implement) is using the DIMM as a 
+write-through cache.
+
+Another way to improve performance on SX4 is to have a special RAID 
+driver which issues RAID1 or RAID5 reads and writes as a single 
+transaction, thus maximizing the potential of the DIMM and cutting in 
+_half_ the PCI bus bandwidth used for writes.  SX4, like other Promise 
+products, can also offload RAID5 XOR calculations onto the hardware.
+
+I _really_ like the SX4 -- it gives the programmer full control over all 
+aspects of RAID operation, while providing useful hardware acceleration 
+where it's needed.  And not getting in the way of the programmer, when 
+it's not needed.
+
+But currently, my libata driver does not use the advanced features, and 
+so there is a performance hit.
+
+	Jeff
+
+
 
