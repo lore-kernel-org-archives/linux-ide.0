@@ -1,42 +1,49 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: H8/300 target support patch
-Date: Tue, 17 Feb 2004 23:55:54 +1100
+From: Alex Bennee <kernel-hacker@bennee.com>
+Subject: Re: Any guides for adding new IDE chipset drivers?
+Date: Tue, 17 Feb 2004 14:27:06 +0000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1077022554.1080.7.camel@gaston>
-References: <m2y8r4naht.wl%ysato@users.sourceforge.jp>
-	 <200402151540.56377.bzolnier@elka.pw.edu.pl>
-	 <m265e7dn02.wl%ysato@users.sourceforge.jp>
-	 <1076969377.1053.62.camel@gaston>
-	 <m2lln2ndnu.wl%ysato@users.sourceforge.jp>
+Message-ID: <1077028026.31892.153.camel@cambridge.braddahead.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:55970 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S266152AbUBQM5c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Feb 2004 07:57:32 -0500
-In-Reply-To: <m2lln2ndnu.wl%ysato@users.sourceforge.jp>
+Received: from nimbus19.internetters.co.uk ([209.61.216.65]:24217 "HELO
+	nimbus19.internetters.co.uk") by vger.kernel.org with SMTP
+	id S266218AbUBQOcX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Feb 2004 09:32:23 -0500
 List-Id: linux-ide@vger.kernel.org
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: linux-ide@vger.kernel.org
+To: Linux Mailing List <linux-kernel@vger.kernel.org>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
+
+On Monday 16 of Febuary 2004 09:40:21 PST, Bart wrote:
+>On Monday 16 of February 2004 18:04, Alex Bennee wrote:
+>
+>> Is there a driver that can be held of as an example of good taste and
+>> the "right" way to implement a chipset driver?
+>
+>Yep.  Please take a look at drivers/ide/arm/icside.c.
+>It is well written, quite simple and has DMA support.
+
+Thanks. I'll base my driver on this one as it does seem quite easy
+to follow. However I'm wondering what the point of the begin/end functions
+are. The dma_read/write functions just seem to call dma_count which starts the
+dma requests going.
+
+Am I missing something here? Is all that required from the higher level a single
+call to dma_read/write or should I be expecting a series of calls to setup a transfer?
 
 
-> > Your IDE bus is flipped backward ? The next one who do that should
-> > lose all rights to do any kind of HW design... Or is it a big endian
-> > platform ? In this case, use normal flipping inw/outw for IOs and
-> > non-flipping for stream IOs (insw/outsw)
-> 
-> This architecture is big endian.
+>If you have any questions/issues feel free to ask
+>on linux-ide@vger.kernel.org mailing list.
 
-A big endian architecture needs the standard inx/outx macros to
-be byteswapped, but _not_ the insw/outsw. That should be all 
-done properly from the standard macros in your asm/io.h, you
-should _not_ have to byteswap normal transfers.
+Hmmm, vger seems to be ignoring my subscribe requests. 
 
-> It was my misunderstanding that did not use asm/io.h.
-> It is the patch which it corrected to use it.
-> h8300/h8_ide_iops.h becomes needless.
+Is the list archived anywhere? None are listed on VGER.
 
-Ben.
 
+-- 
+Alex, homepage: http://www.bennee.com/~alex/
+It is a hard matter, my fellow citizens, to argue with the belly,
+since it has no ears.
+		-- Marcus Porcius Cato
 
