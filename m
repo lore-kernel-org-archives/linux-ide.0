@@ -1,121 +1,57 @@
 From: Brett Russ <russb@emc.com>
-Subject: Re: [PATCH libata-dev-2.6 02/03] libata: create/use ata_dump_status()
-Date: Wed, 23 Mar 2005 15:42:29 -0500 (EST)
-Message-ID: <20050323203514.D82D888C@lns1032.lss.emc.com>
-References: <20050323203514.D62A1893@lns1032.lss.emc.com>
-Content-Type: text/plain; charset=US-ASCII
-Received: from mailhub.lss.emc.com ([168.159.2.31]:27804 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S261269AbVCWUmf
+Subject: [PATCH libata-2.6] AHCI: compiler warning fix
+Date: Wed, 23 Mar 2005 17:01:40 -0500 (EST)
+Message-ID: <20050323220140.1624329937@lns1032.lss.emc.com>
+References: <20050311212108.4BB4514FB1@lns1032.lss.emc.com> <4240FB62.7080208@pobox.com>
+Received: from mailhub.lss.emc.com ([168.159.2.31]:34517 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S261421AbVCWWBv
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 Mar 2005 15:42:35 -0500
-In-Reply-To: <20050323203514.D62A1893@lns1032.lss.emc.com>
+	Wed, 23 Mar 2005 17:01:51 -0500
+In-Reply-To: <4240FB62.7080208@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-02_libata_ata_dump_status.patch
+Jeff,
 
-	This patch introduces the ata_dump_status() function, which
-	for now is called from ata_to_sense_error() only.
+This fixes the compile warning below:
+drivers/scsi/ahci.c:199: warning: overflow in implicit constant
+conversion
+
+This has been sitting in my dir for a while now, sorry for not sending
+it sooner.  It turns out that moving the AHCI_DMA_BOUNDARY to the
+*bottom* of the current enum also works, since by that point the
+compiler can determine that there is no signed data in the enum.
+However, I think your suggestion (implemented below) is cleaner
+because it doesn't rely on luck to keep the current enum unsigned--it
+instead creates a new one intended for unsigned data only.
 
 Signed-off-by: Brett Russ <russb@emc.com>
 
- libata-scsi.c |   76 +++++++++++++++++++++++++++++++++-------------------------
- 1 files changed, 44 insertions(+), 32 deletions(-)
-
-Index: libata-dev-2.6/drivers/scsi/libata-scsi.c
+===== drivers/scsi/ahci.c 1.17 vs edited =====
+Index: libata-2.6/drivers/scsi/ahci.c
 ===================================================================
---- libata-dev-2.6.orig/drivers/scsi/libata-scsi.c	2005-03-23 15:35:09.000000000 -0500
-+++ libata-dev-2.6/drivers/scsi/libata-scsi.c	2005-03-23 15:35:09.000000000 -0500
-@@ -331,6 +331,49 @@ struct ata_queued_cmd *ata_scsi_qc_new(s
- }
+--- libata-2.6.orig/drivers/scsi/ahci.c	2005-03-11 13:57:22.000000000 -0500
++++ libata-2.6/drivers/scsi/ahci.c	2005-03-12 15:35:58.000000000 -0500
+@@ -44,7 +44,6 @@
+ enum {
+ 	AHCI_PCI_BAR		= 5,
+ 	AHCI_MAX_SG		= 168, /* hardware max is 64K */
+-	AHCI_DMA_BOUNDARY	= 0xffffffff,
+ 	AHCI_USE_CLUSTERING	= 0,
+ 	AHCI_CMD_SLOT_SZ	= 32 * 32,
+ 	AHCI_RX_FIS_SZ		= 256,
+@@ -135,6 +134,12 @@
+ 	PORT_CMD_ICC_SLUMBER	= (0x6 << 28), /* Put i/f in slumber state */
+ };
  
- /**
-+ *	ata_dump_status - user friendly display of error info
-+ *	@id: id of the port in question
-+ *	@tf: ptr to filled out taskfile
-+ *
-+ *	Decode and dump the ATA error/status registers for the user so
-+ *	that they have some idea what really happened at the non
-+ *	make-believe layer.
-+ *
-+ *	LOCKING:
-+ *	inherited from caller
++/* This enum is intended to be strictly for unsigned data
 + */
-+void ata_dump_status(unsigned id, u8 stat, u8 err)
-+{
-+	printk(KERN_WARNING "ata%u: status=0x%02x { ", id, stat);
-+	if (stat & ATA_BUSY) {
-+		printk("Busy }\n");	/* Data is not valid in this case */
-+	} else {
-+		if (stat & 0x40)	printk("DriveReady ");
-+		if (stat & 0x20)	printk("DeviceFault ");
-+		if (stat & 0x10)	printk("SeekComplete ");
-+		if (stat & 0x08)	printk("DataRequest ");
-+		if (stat & 0x04)	printk("CorrectedError ");
-+		if (stat & 0x02)	printk("Index ");
-+		if (stat & 0x01)	printk("Error ");
-+		printk("}\n");
++enum {
++	AHCI_DMA_BOUNDARY	= 0xffffffffUL
++};
 +
-+		if (err) {
-+			printk(KERN_WARNING "ata%u: error=0x%02x { ", id, err);
-+			if (err & 0x04)		printk("DriveStatusError ");
-+			if (err & 0x80) {
-+				if (err & 0x04)	printk("BadCRC ");
-+				else		printk("Sector ");
-+			}
-+			if (err & 0x40)		printk("UncorrectableError ");
-+			if (err & 0x10)		printk("SectorIdNotFound ");
-+			if (err & 0x02)		printk("TrackZeroNotFound ");
-+			if (err & 0x01)		printk("AddrMarkNotFound ");
-+			printk("}\n");
-+		}
-+	}
-+}
-+
-+/**
-  *	ata_to_sense_error - convert ATA error to SCSI error
-  *	@qc: Command that we are erroring out
-  *	@drv_stat: value contained in ATA status register
-@@ -400,38 +443,7 @@ void ata_to_sense_error(struct ata_queue
- 	if (drv_stat & ATA_ERR)
- 		err = ata_chk_err(qc->ap);	/* Read the err bits */
- 
--	/* Display the ATA level error info */
--
--	printk(KERN_WARNING "ata%u: status=0x%02x { ", qc->ap->id, drv_stat);
--	if (drv_stat & 0x80) {
--		printk("Busy ");
--		err = 0;	/* Data is not valid in this case */
--	} else {
--		if (drv_stat & 0x40)	printk("DriveReady ");
--		if (drv_stat & 0x20)	printk("DeviceFault ");
--		if (drv_stat & 0x10)	printk("SeekComplete ");
--		if (drv_stat & 0x08)	printk("DataRequest ");
--		if (drv_stat & 0x04)	printk("CorrectedError ");
--		if (drv_stat & 0x02)	printk("Index ");
--		if (drv_stat & 0x01)	printk("Error ");
--	}
--	printk("}\n");
--
--	if (err) {
--		printk(KERN_WARNING "ata%u: error=0x%02x { ", qc->ap->id, err);
--		if (err & 0x04)		printk("DriveStatusError ");
--		if (err & 0x80) {
--			if (err & 0x04)	printk("BadCRC ");
--			else		printk("Sector ");
--		}
--		if (err & 0x40)		printk("UncorrectableError ");
--		if (err & 0x10)		printk("SectorIdNotFound ");
--		if (err & 0x02)		printk("TrackZeroNotFound ");
--		if (err & 0x01)		printk("AddrMarkNotFound ");
--		printk("}\n");
--
--		/* Should we dump sector info here too ?? */
--	}
-+	ata_dump_status(qc->ap->id, drv_stat, err);
- 
- 	/* Look for err */
- 	while (sense_table[i][0] != 0xFF) {
-
+ struct ahci_cmd_hdr {
+ 	u32			opts;
+ 	u32			status;
