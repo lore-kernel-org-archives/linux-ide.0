@@ -1,45 +1,30 @@
-From: "Petr Vandrovec" <VANDROVE@vc.cvut.cz>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] IDE udma_status = 0x76 and 2.5.30...
-Date: Mon, 5 Aug 2002 22:31:20 +0200
+Date: 05 Aug 2002 22:42:20 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <12CB5AF43EE@vcnet.vc.cvut.cz>
+Message-ID: <1028583740.18130.82.camel@irongate.swansea.linux.org.uk>
+References: <Pine.LNX.4.10.10208051249520.11932-100000@master.linux-ide.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.10.10208051249520.11932-100000@master.linux-ide.org>
 List-Id: linux-ide@vger.kernel.org
 To: Andre Hedrick <andre@linux-ide.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On  5 Aug 02 at 13:08, Andre Hedrick wrote:
-> Bit 7: Simplex RO
-> Bit 6: Device 1 DMA Capable RW
-> Bit 5: Device 0 DMA Capable RW
-> Bit 4: Reserved "MUST RETURN ZERO ON READS" !!!     Vendor Write
-> Bit 3: Reserved "MUST RETURN ZERO ON READS" !!!     Vendor Write
-> Bit 2: Bus Master Interrupt STATUS R Clear W
-> Bit 1: Bus Master Error     STATUS R Clear W
-> Bit 0: Bus Master Active    STATUS
-> 
-> Vendor Write, is not a published or listed techincal term.
-> It is me trying to present this clearly enough so that the masses will see
-> how poorly the general understanding of the basics in 2.5.
+On Mon, 2002-08-05 at 21:08, Andre Hedrick wrote:
+> If we examine Table 2-3 of the Retired SFF-8038i rev 1.0 the only document
+> to describe the behaviors of Bus Master IDE Status Register.
+> It is a R/W field.
 
-If you'll bother with reading code, you'll find that dma status
-is reported after:
+Andre - you are assuming the drive vendor follows 8038i and didnt just
+leave the reserved bits random. At that point 0x76 makes reasonable
+sense since its two DMA capable devices + a reserved bit and interrupt
+with bus master error. 
 
-(dma_stat & 7) != 4 ? (0x10 | dma_stat) : 0;
+Which simply means the code is still broken rather than anything truely
+insane is happening. 
 
-Because of same code is used in your 2.4.x ide-dma.c (at least in
-2.4.19-rc5), I'm really happy that now I know that you are really 
-familiar with your code.
+Alan
 
-Code ORs read value with 0x10 to make sure that it reports non-zero
-value when error happens (when chip returs dma_stat == 0x00). And 0x10 
-was choosen because of this bit should be always zero, as you know.
-
-Maybe we should print value after ANDing with 0xEF, but why? Everybody
-can read code when in doubt.
-                                            Petr Vandrovec
-                                            vandrove@vc.cvut.cz
-                                            
