@@ -1,45 +1,79 @@
-From: Andre Tomt <andre@tomt.net>
-Subject: Re: [sata] new driver -- AHCI
-Date: Thu, 29 Apr 2004 16:24:52 +0200
+From: Patrick Wildi <patrick@wildi.com>
+Subject: [RFC][PATCH] 2.4 IDE Serverworks OSB4 DMA patch
+Date: Thu, 29 Apr 2004 12:04:13 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40911034.4040404@tomt.net>
-References: <408C1F41.3060206@pobox.com> <40905997.9020107@tomt.net> <409073B1.1020901@pobox.com>
+Message-ID: <Pine.LNX.4.58.0404291130420.19527@bern.wildisoft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns1.skjellin.no ([80.239.42.66]:54684 "HELO mail.skjellin.no")
-	by vger.kernel.org with SMTP id S264579AbUD2OYy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Apr 2004 10:24:54 -0400
-In-Reply-To: <409073B1.1020901@pobox.com>
+Received: from bern.wildisoft.net ([66.80.62.108]:42769 "EHLO
+	bern.wildisoft.net") by vger.kernel.org with ESMTP id S264840AbUD2TER
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Apr 2004 15:04:17 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: andre@linux-ide.org, B.Zolnierkiewicz@elka.pw.edu.pl
 
-Jeff Garzik wrote:
->> Quick questions:
->>
->> Is the Intel 6300ESB ("Hence Rapids") AHCI based? So far this looks 
->> like ICH6 too me, but I may be mistaken.
-> 
-> The only Hance Rapids stuff I've seen was ICH5-R, but maybe it's carried 
-> forward to the ICH6-R as well.
-> 
-> I don't know, I mainly know the underlying chipsets not the boards they 
-> wind up being shipped on...
+I have been using a OSB4 chipset based system with a CompactFlash
+that supports PIO only and a laptop IBM/Hitachi Travelstar HDD
+that supports UDMA.
+For both drives, the serverworks code misconfigures the drives:
 
-Ahh, ok. I'll try to dig a bit deeper, but finding such details on 
-vendor websites is not always easy. Anyway, the board I'm looking at has 
-a 64bit 66Mhz PCI-X bus & slot (it's a low-end server/workstation board, 
-Intel E7210 Canterwood ES/MCH+6300ESB+FWH chipset), so the controller 
-can easily be replaced with something else without losing out to much on 
-the performance side of things. Like the Marvell, wich is on the PCI-X 
-bus, onboard.
+- for the CF (hooked up as /dev/hda), svwks_config_drive_xfer_rate()
+  will not match any tests (drive->autodma = 0, id->capability = 2,
+  id->field_valid = 1), but the function will then call
+  hwif->ide_dma_on(drive), which it should not do for this drive.
+  This patch moves the enabling of DMA up into the DMA section of
+  the code.
 
->> What about the Marvell 88SX5040 PCI-X SATA Controller?
-> 
-> Coming RSN.  That's my next priority, but I'm not as thrilled because 
-> Marvell isn't an open design like AHCI.  I'm much more happy to promote 
-> AHCI's sane, open design.
+- for the Travelstart HDD, the settings coming into
+  svwks_config_drive_xfer_rate() are: drive->autodma = 32,
+  id->capability = 15, id->field_valid = 7, id->dma_ultra = 0x43f.
+  But as this is an OSB4, the hwif->ultra_mask is set to not support
+  UDMA. Unfortunately in that case svwks_config_drive_xfer_rate()
+  falls through to the end of the function, instead of trying
+  other DMA modes.
+  By adding a jump to try_dma_modes in the case that the drive
+  is UDMA capable but the mask does not allow UDMA, the drive
+  will be setup up for MWDMA.
 
-Sounds like a plan :-)
+The logic in svwks_config_drive_xfer_rate() could probably be
+improved a bit, but I kept the changes to an absolute minium
+to reduce the risk of breakage.
+
+The patch is against 2.4.24, but the file has not changed in
+2.4.25 and 2.4.26.
+
+Patrick
+
+
+--- linux-2.4.24-nam/drivers/ide/pci/serverworks.c.orig	Thu Apr 22 17:31:28 2004
++++ linux-2.4.24-nam/drivers/ide/pci/serverworks.c	Thu Apr 29 11:02:05 2004
+@@ -473,7 +473,9 @@
+ 				int dma = config_chipset_for_dma(drive);
+ 				if ((id->field_valid & 2) && !dma)
+ 					goto try_dma_modes;
+-			}
++			} else
++				/* UDMA disabled by mask, try other DMA modes */
++				goto try_dma_modes;
+ 		} else if (id->field_valid & 2) {
+ try_dma_modes:
+ 			if ((id->dma_mword & hwif->mwdma_mask) ||
+@@ -490,6 +492,7 @@
+ 		} else {
+ 			goto no_dma_set;
+ 		}
++		return hwif->ide_dma_on(drive);
+ 	} else if ((id->capability & 8) || (id->field_valid & 2)) {
+ fast_ata_pio:
+ no_dma_set:
+@@ -497,7 +500,7 @@
+ 		//	hwif->tuneproc(drive, 5);
+ 		return hwif->ide_dma_off_quietly(drive);
+ 	}
+-	return hwif->ide_dma_on(drive);
++	return 0;
+ }
+
+ /* This can go soon */
