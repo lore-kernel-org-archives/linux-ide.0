@@ -1,43 +1,45 @@
-From: Daniel Brahneborg <daniel.com@wtnord.net>
-Subject: Re: Status of Promise drivers?
-Date: Sat, 10 Jan 2004 16:14:29 +0100
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040110161429.B6153@nettis.grimsta>
-References: <20031230200012.C14399@nettis.grimsta> <3FF1CCC1.3050304@pobox.com> <20031230202447.D14399@nettis.grimsta> <3FF1D8AE.2000107@pobox.com> <20031230211826.F14399@nettis.grimsta> <3FF1DF2B.3000501@pobox.com>
+From: maney@two14.net (Martin Maney)
+Subject: Re: [PATCH] Re: 2.4.22-rc2 ext2 filesystem corruption
+Date: Sat, 10 Jan 2004 17:18:40 -0600
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040110231840.GA2528@furrr.two14.net>
+References: <200310311941.31930.bzolnier@elka.pw.edu.pl> <20040104011222.GA1433@furrr.two14.net> <200401040307.48530.bzolnier@elka.pw.edu.pl> <20040108162508.GA4017@furrr.two14.net>
+Reply-To: maney@pobox.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 212-214-141-197.v-by.wtnord.net ([212.214.141.197]:56726 "EHLO
-	ricercar.mine.nu") by vger.kernel.org with ESMTP id S265213AbUAJPOm
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Jan 2004 10:14:42 -0500
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3FF1DF2B.3000501@pobox.com>; from jgarzik@pobox.com on Tue, Dec 30, 2003 at 03:25:15PM -0500
+In-Reply-To: <20040108162508.GA4017@furrr.two14.net>
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: maney@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, Dec 30, 2003 at 03:25:15PM -0500, Jeff Garzik wrote:
-> For VIA SATA, neither IDE nor libata program the chipset 100%, so I'm 
-> not surprised you're seeing failures.  I'm working with VIA to get more 
-> details as we speak.  They've been helpful so far.  I would recommend 
-> sata_via over the generic IDE driver, but that's sorta a toss-up at present.
+On Thu, Jan 08, 2004 at 10:25:08AM -0600, Martin Maney wrote:
+> On Sun, Jan 04, 2004 at 03:07:48AM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > I see nothing in 2.4.23 which can explain this.
+> > Probably if you boot from Promise you will see corruption again.
 
-I've made some tests with 2.6.1 and 2.6.1-mm2.
+> that.  In fact I did *not* observe the corruption when I booted from
+> the Promise, but I didn't have the same file (an XFree86 source
 
-Good news: RAID1 works on two SATA disks with the IDE VIA
-driver (via82cxxx).  At least after a while (see below).
+Okay, color me as having no idea what's going on...
 
-Bug 1: Doing a "modprobe via82cxxx" fails, since it tries to
-aquire ide0 and ide1 even though they are used by other drivers.
-Statically linked, it takes ide2 and ide3, just as it should.
-My ide0 and ide1 are PATA connectors that I'd like to keep
-even though the SATA connectors are activated.  The siimage
-driver behaves correctly here, but only with the -mm2 version.
+Jiggered things around to boot from the drive connected to the Promise
+(hereafter the old drive) again, with a copy of the original test
+object (xfree86_4.2.1.orig.tar.gz from Branden's Debian archives).  It
+still works with 2.4.23.  Rebuilt 2.4.22 (didn't have any of the patches
+around, and I'm 99% sure I tested with 22-final just before giving up
+originally); that works too.  Shutdown and physically removed the 3ware
+card from the machine; dug up the grub boot disk that I'd forgotten I
+would need for this, booted into 2.4.22 again.  Still, it works.
 
-Bug 2: Using the RAID1 array while it is being synced causes
-data corruption.  When the sync is complete, everything seems
-to work fine.
+Maybe it's because the Promise chip knows it's no longer needed?  :-/
 
-/Basic
-
+-- 
+...and of course you must be careful not to overwrite the bounds of
+memory blocks, free a memory block twice, forget to free a memory block,
+use a memory block after it's been freed, use memory that you haven't
+explicitly allocated, etc.  We C++ programmers have developed tricks
+to help us deal with this sort of thing, in much the same way that people
+who suffer severe childhood trauma develop psychological mechanisms to
+insulate themselves from those experiences.  -- Joseph A. Knapka
