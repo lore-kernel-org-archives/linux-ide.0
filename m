@@ -1,38 +1,34 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: "dma_timer_expiry: dma status == 0x64" messages under system load
-Date: Thu,  2 Sep 2004 15:27:51 +0100
+From: Eric Mudama <edmudama@gmail.com>
+Subject: Re: Driver retries disk errors.
+Date: Thu, 2 Sep 2004 10:23:39 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1094135271.41372de7b500d@dsd.homelinux.net>
+Message-ID: <311601c904090209235759c7a2@mail.gmail.com>
+References: <20040830163931.GA4295@bitwizard.nl>
+	 <20040830174632.GA21419@thunk.org>  <41337153.60505@superbug.demon.co.uk> <1093952325.32684.7.camel@localhost.localdomain>
+Reply-To: Eric Mudama <edmudama@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta06-svc.ntlworld.com ([62.253.162.46]:39730 "EHLO
-	mta06-svc.ntlworld.com") by vger.kernel.org with ESMTP
-	id S268288AbUIBODA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Sep 2004 10:03:00 -0400
+Received: from rproxy.gmail.com ([64.233.170.206]:35490 "EHLO mproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S268657AbUIBQXk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Sep 2004 12:23:40 -0400
+Received: by mproxy.gmail.com with SMTP id 76so300315rnl
+        for <linux-ide@vger.kernel.org>; Thu, 02 Sep 2004 09:23:39 -0700 (PDT)
+In-Reply-To: <1093952325.32684.7.camel@localhost.localdomain>
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James Courtier-Dutton <james@superbug.demon.co.uk>, Theodore Ts'o <tytso@mit.edu>, Rogier Wolff <r.e.wolff@harddisk-recovery.nl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Hi,
+On Tue, 31 Aug 2004 12:38:45 +0100, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> Not really as far as I can tell. It isn't a disk any more, its a storage
+> appliance on a funny connector. It already knows a lot about retries
+> internally as well as rewriting blocks with high ECC error
+> count. In fact you actually have to issue a different command to do
+> read/write without retry.
 
-I'm investigating a problem relating to decreased system responsiveness when
-under IDE load. The following messages appear in dmesg multiple times:
+True, but in the later versions of the ATA specification, the retry
+option was depreciated.  I think you'll find virtually every ATA drive
+built today ignores that "suggestion" from the host.
 
-hdb: dma_timer_expiry: dma status == 0x64
-hdb: DMA interrupt recovery
-hdb: lost interrupt
-
-It seems that a patch written by yourself in May 2003 solves the problem:
-http://www.cs.helsinki.fi/linux/linux-kernel/2003-19/1192.html
-... but it is not present in the current kernel.
-
-What is the fate of this patch?
-
-For more info see:
-http://bugs.gentoo.org/show_bug.cgi?id=59751
-http://forums.gentoo.org/viewtopic.php?p=1417524
-
-Thanks,
-Daniel
+--eric
