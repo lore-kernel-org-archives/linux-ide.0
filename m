@@ -1,111 +1,55 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [SATA] libata-dev queue updated
-Date: Tue, 08 Mar 2005 06:20:31 -0500
-Message-ID: <422D8A7F.7030201@pobox.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: PATCH: Allow ATI SATA to use siimage if serial ATA layer is not in
+	use
+Date: Tue, 08 Mar 2005 11:43:29 +0000
+Message-ID: <1110282209.28860.115.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040704050201090809060006"
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:56484 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261990AbVCHLUx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 8 Mar 2005 06:20:53 -0500
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from clock-tower.bc.nu ([81.2.110.250]:21123 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S261975AbVCHLpV
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 8 Mar 2005 06:45:21 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 
-This is a multi-part message in MIME format.
---------------040704050201090809060006
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+The ATI chipset serial ATA is an SI3112 cell. While this is supported by
+the sata layer (you'll need to grep by id because naughty Mr Garzik
+doesn't use the PCI ID defines) the sata layer driver still gives some
+users real problems.
 
-Rediffing against latest kernel.  See attached.
+Alan
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.11/drivers/ide/pci/siimage.c linux-2.6.11/drivers/ide/pci/siimage.c
+--- linux.vanilla-2.6.11/drivers/ide/pci/siimage.c	2005-03-05 15:17:01.000000000 +0000
++++ linux-2.6.11/drivers/ide/pci/siimage.c	2005-03-07 13:18:10.000000000 +0000
+@@ -48,6 +48,8 @@
+ 	{
+ 		case PCI_DEVICE_ID_SII_3112:
+ 		case PCI_DEVICE_ID_SII_1210SA:
++		case PCI_DEVICE_ID_ATI_IXP300_SATA:
++		case PCI_DEVICE_ID_ATI_IXP400_SATA:
+ 			return 1;
+ 		case PCI_DEVICE_ID_SII_680:
+ 			return 0;
+@@ -1088,7 +1090,9 @@
+ static ide_pci_device_t siimage_chipsets[] __devinitdata = {
+ 	/* 0 */ DECLARE_SII_DEV("SiI680"),
+ 	/* 1 */ DECLARE_SII_DEV("SiI3112 Serial ATA"),
+-	/* 2 */ DECLARE_SII_DEV("Adaptec AAR-1210SA")
++	/* 2 */ DECLARE_SII_DEV("Adaptec AAR-1210SA"),
++	/* 3 */ DECLARE_SII_DEV("ATI IXP300"),
++	/* 4 */ DECLARE_SII_DEV("ATI IXP400")
+ };
+ 
+ /**
+@@ -1110,6 +1114,8 @@
+ #ifdef CONFIG_BLK_DEV_IDE_SATA
+ 	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_SII_3112, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
+ 	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_SII_1210SA, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
++	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP300_SATA, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3},
++	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SATA, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4},
+ #endif
+ 	{ 0, },
+ };
 
---------------040704050201090809060006
-Content-Type: text/plain;
- name="libata-dev-2.6.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata-dev-2.6.txt"
-
-BK users:
-
-	bk pull bk://gkernel.bkbits.net/libata-dev-2.6
-
-Patch:
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.11-bk4-libata-dev1.patch.bz2
-
-This will update the following files:
-
- drivers/scsi/Kconfig         |   18 
- drivers/scsi/Makefile        |    2 
- drivers/scsi/ahci.c          |   95 +++--
- drivers/scsi/ata_adma.c      |  778 +++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/libata-core.c   |  296 +++++++++-------
- drivers/scsi/libata-scsi.c   |  701 ++++++++++++++++++++++++++++++++------
- drivers/scsi/libata.h        |    6 
- drivers/scsi/pata_pdc2027x.c |  771 ++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/sata_promise.c  |   84 ++++
- include/linux/ata.h          |   15 
- include/linux/libata.h       |   10 
- include/scsi/scsi.h          |    3 
- 12 files changed, 2507 insertions(+), 272 deletions(-)
-
-through these ChangeSets:
-
-<andyw:pobox.com>:
-  o [libata scsi] support 12-byte passthru CDB
-  o [libata scsi] passthru CDB check condition processing
-  o T10/04-262 ATA pass thru - patch
-
-<erikbenada:yahoo.ca>:
-  o [libata sata_promise] support PATA ports on SATA controllers
-
-Albert Lee:
-  o [libata] use init-device-params ATA command where needed
-  o [libata] ata_scsi_verify_xlat() fix
-  o pdc2027x timing register fix for 100MHz
-  o [libata] CHS support: add CHS support to ata_scsi_verify_xlat(), ata_scsi_rw_xlat() and ata_scsiop_read_cap().
-  o [libata] CHS support: reorganize read/write translation in ata_scsi_rw_xlat()
-  o [libata] CHS support: rename vars (s/sector/block/) in ata_scsi_verify_xlat()
-  o [libata] CHS support: detect C/H/S at IDENTIFY DEVICE time
-  o [libata] CHS support: add definitions to headers
-  o pdc2027x timing register bug fix
-  o [libata pdc2027x] fix incorrect pio and mwdma masks
-  o [libata pdc2027x] remove quirks and ROM enable
-  o [libata] add driver for Promise PATA 2027x
-
-Brad Campbell:
-  o libata basic detection and errata for PATA->SATA bridges
-
-Jeff Garzik:
-  o [libata ahci] support PCI MSI interrupt vector
-  o [libata adma] Add init code, fix CPB submission code
-  o [libata ahci] finish ATAPI support
-  o [libata adma] trivial whitespace cleanup
-  o [libata dma] fix DMA mode config; add some more initialization code
-  o [libata adma] add support for configuring PIO/DMA modes
-  o [libata] turn on ATAPI support
-  o [libata sata_promise] merge Tobias Lorenz' pdc20619 patch, part 2
-  o [libata] small cleanups
-  o [libata] remove unused execute-device-diagnostic reset method
-  o [libata] add new driver ata_adma
-  o [libata pdc2027x] update for upstream struct device conversion
-  o [libata sata_promise] fix merge bugs
-  o [libata] fix build breakage
-  o [libata] fix SATA->PATA bridge detect compile breakage
-  o [libata] fix printk warning
-
-John W. Linville:
-  o libata: update ATA pass thru opcodes
-  o libata: minor style changes in ata_scsi_pass_thru
-  o libata: filter SET_FEATURES - XFER MODE from ATA pass thru
-  o libata: sync SMART ioctls with ATA pass thru spec (T10/04-262r7)
-  o libata: fix command queue leak when xlat_func fails
-  o libata: SMART support via ATA pass-thru
-
-Tobias Lorenz:
-  o [libata sata_promise] pdc20619 (PATA) support
-  o libata-scsi: get-identity ioctl support
-
-
---------------040704050201090809060006--
