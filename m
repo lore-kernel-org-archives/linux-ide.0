@@ -1,50 +1,43 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: Re: [patch][3/9] ide: add ide_sg_init() helper
-Date: Thu, 9 Sep 2004 17:38:03 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040909153803.GF1737@suse.de>
-References: <200409082126.49832.bzolnier@elka.pw.edu.pl> <200409091554.41718.bzolnier@elka.pw.edu.pl> <20040909144705.GD1737@suse.de> <200409091731.23439.bzolnier@elka.pw.edu.pl>
+Subject: Re: [patch][9/9] block: remove bio walking
+Date: Thu, 9 Sep 2004 17:44:53 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040909154453.GG1737@suse.de>
+References: <200409082127.04331.bzolnier@elka.pw.edu.pl> <200409091553.13918.bzolnier@elka.pw.edu.pl> <20040909150444.C6434@flint.arm.linux.org.uk> <200409091628.25304.bzolnier@elka.pw.edu.pl> <20040909155420.D6434@flint.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:48877 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S266006AbUIIPkm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Sep 2004 11:40:42 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S266009AbUIIPs7@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200409091731.23439.bzolnier@elka.pw.edu.pl>
+In-Reply-To: <20040909155420.D6434@flint.arm.linux.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Sep 09 2004, Bartlomiej Zolnierkiewicz wrote:
-> On Thursday 09 September 2004 16:47, Jens Axboe wrote:
-> > On Thu, Sep 09 2004, Bartlomiej Zolnierkiewicz wrote:
-> > > 
-> > > On Thursday 09 September 2004 05:17, Jeff Garzik wrote:
-> > > > Bartlomiej Zolnierkiewicz wrote:
-> > > > > +static inline void ide_sg_init(struct scatterlist *sg, u8 *buf, unsigned int buflen)
-> > > > > +{
-> > > > > +	memset(sg, 0, sizeof(*sg));
-> > > > > +
-> > > > > +	sg->page = virt_to_page(buf);
-> > > > > +	sg->offset = offset_in_page(buf);
-> > > > > +	sg->length = buflen;
-> > > > > +}
-> > > > > +
-> > > > 
-> > > > 
-> > > > Surely this should be more generic?
-> > > 
-> > > Any idea where to put it? linux/blkdev.h?
-> > 
-> > How about asm/scatterlist.h?
+On Thu, Sep 09 2004, Russell King wrote:
+> Essentially, kernel PIO writes data into the page cache, and that action
+> may leave data in the CPU's caches.  Since the kernels mappings may not
+> be coherent with mappings in userspace, data written to the kernel
+> mappings may remain in the data cache, and stale data would be visible
+> to user space.
 > 
-> I would like to avoid duplicating it for every arch
-> as it is not arch specific.
+> There has been talk about using flush_dcache_page() to resolve
+> this issue, but I'm not sure what the outcome was.  Certainly
+> flush_dcache_page() is supposed to be used before the data in the
+> kernels page cache is read or written.
 
-Maybe add linux/scatterlist.h then? It should not be in blkdev.h at
-least, as it really has nothing to do with block devices.
+Have you ever tested bouncing on arm? It seems to be lacking a
+flush_dcache_page() indeed, how does this look?
+
+===== mm/highmem.c 1.51 vs edited =====
+--- 1.51/mm/highmem.c	2004-07-29 06:58:32 +02:00
++++ edited/mm/highmem.c	2004-09-09 17:44:14 +02:00
+@@ -301,6 +301,7 @@
+ 		vfrom = page_address(fromvec->bv_page) + tovec->bv_offset;
+ 
+ 		bounce_copy_vec(tovec, vfrom);
++		flush_dcache_page(tovec->bv_page);
+ 	}
+ }
+ 
 
 -- 
 Jens Axboe
-
