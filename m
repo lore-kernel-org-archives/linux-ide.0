@@ -1,44 +1,50 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: PATCH libata-2.6 4/5] Prevent the device from overrunning the
- buffer in __atapi_pio_bytes()
-Date: Fri, 18 Mar 2005 17:04:09 +0800
-Message-ID: <423A9989.7050008@tw.ibm.com>
-References: <423A8AA4.5040601@tw.ibm.com> <58cb370e0503180031d40b0a3@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide: hdio.txt update
+Date: Fri, 18 Mar 2005 16:23:27 +0100
+Message-ID: <58cb370e050318072312531876@mail.gmail.com>
+References: <20050302235457.GA21352@htj.dyndns.org>
+	 <20050303021638.GA24150@htj.dyndns.org>
+	 <58cb370e05031008307a0163c1@mail.gmail.com>
+	 <20050311062908.GA11552@htj.dyndns.org>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Received: from bluehawaii.tikira.net ([61.62.22.51]:16869 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S261523AbVCRJEj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Mar 2005 04:04:39 -0500
-In-Reply-To: <58cb370e0503180031d40b0a3@mail.gmail.com>
+Received: from wproxy.gmail.com ([64.233.184.202]:13078 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261633AbVCRPXa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Mar 2005 10:23:30 -0500
+Received: by wproxy.gmail.com with SMTP id 69so122159wri
+        for <linux-ide@vger.kernel.org>; Fri, 18 Mar 2005 07:23:27 -0800 (PST)
+In-Reply-To: <20050311062908.GA11552@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Doug Maxey <dwm@maxeymade.com>, Linux IDE <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
- >
- > Bartlomiej Zolnierkiewicz wrote:
->>
->>Problem:
->>   Some bad behaved CD-ROM drives will return more data than ask to.
->>(I have such CD-RW drive and it crashed the kernel.)
+Hi,
+
+On Fri, 11 Mar 2005 15:29:08 +0900, Tejun Heo <htejun@gmail.com> wrote:
+>  Greetings Bartlomiej,
 > 
+>  I've updated the following
 > 
-> These devices are compliant with original ATAPI spec.
+>  * in_flags modification when out_flags != 0 && in_flags == 0
+>  * more than one -> one or more than one
+>  * tf_{in|out}_flags -> {in|out}_flags as tf_* are in-kernel names
 > 
-> Such condition shouldn't be treated as an error
-> - extra data should be read and dumped.
+>  I'll update the taskfile patch series after receiving your comments
+> about the patches.  Also, if you have a big picture for the IDE
+> driver, do you care to spill?  What I have in mind now are
 > 
-> 
-Hi Bart,
+>  1. Completion-based taskfile (no direct ending/error handling of
+>     requests), so that we can use it for specials/rw_disk/eh/etc...
+>  2. Make specials (set_geometry, set_multmode...) more regular.
+>  3. Do error-handling/resetting in a exception handler thread.
+>     Maybe this and #2 should happen together.
 
-For read, we can read and discard the extra data from the device.
-For write, the device is asking for more data than we have.
-Should we supply some dummy data to the device? Or we just stop and return it as error?
+Yep, this is the way to go.
 
+>  So, please let me know what you think.  Updated patch for hdio.txt
+> follows.
 
-Albert
-
-
-
+thanks, applied
