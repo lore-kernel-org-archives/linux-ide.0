@@ -1,197 +1,173 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: [patch 7/8] ide-tape: add basic refcounting
-Date: Sat, 22 Jan 2005 00:22:44 +0100 (CET)
-Message-ID: <Pine.GSO.4.58.0501220022090.28844@mion.elka.pw.edu.pl>
+Subject: [patch 8/8] ide-scsi: add basic refcounting
+Date: Sat, 22 Jan 2005 00:38:42 +0100 (CET)
+Message-ID: <Pine.GSO.4.58.0501220022460.28844@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262602AbVAUXfk@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262589AbVAUXpE@vger.kernel.org>
 Received: from mion.elka.pw.edu.pl ([194.29.160.35]:58069 "EHLO
 	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
-	id S100569AbVAUXWp (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 1 other); Sat, 22 Jan 2005 00:22:45 +0100
+	id S30881AbVAUXin (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 1 other); Sat, 22 Jan 2005 00:38:43 +0100
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 
-Similar changes as for ide-cd.c.
+* pointers to a SCSI host and a drive are added to idescsi_scsi_t
+* pointer to the SCSI host is stored in disk->private_data
+* ide_scsi_{get,put}() is used to {get,put} reference to the SCSI host
 
-diff -Nru a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
---- a/drivers/ide/ide-tape.c	2005-01-21 23:41:25 +01:00
-+++ b/drivers/ide/ide-tape.c	2005-01-21 23:41:25 +01:00
-@@ -781,8 +781,10 @@
-  *	driver due to an interrupt or a timer event is stored in a variable
-  *	of type idetape_tape_t, defined below.
+Unfortunately this is not complete fix for ->open() vs ->cleanup()
+race, there are two TODO items left (as stated by FIXMEs):
+
+* don't use drive->driver_data
+* add driver's private struct gendisk [already DONE]
+
+Last minute note: it seems we can't get rid of drive->driver_data
+because of interactions between ide-scsi and IDE core (no surprise),
+drive->driver_data should be set to NULL when SCSI host object is
+being destroyed - callback from scsi_host_dev_release() is needed.
+
+This will help in fixing another problem - for IDE we need to wait
+until driver is really no longer using the device because we have more
+than 1 driver for the same class of devices (ide-{cd,floppy,tape} vs
+ide-scsi, also there is ide-default hack but it will die soon).
+
+diff -Nru a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
+--- a/drivers/scsi/ide-scsi.c	2005-01-21 23:41:42 +01:00
++++ b/drivers/scsi/ide-scsi.c	2005-01-21 23:41:42 +01:00
+@@ -96,14 +96,39 @@
   */
+ #define IDESCSI_LOG_CMD			0	/* Log SCSI commands */
+
 -typedef struct {
 -	ide_drive_t *drive;
-+typedef struct ide_tape_obj {
-+	ide_drive_t	*drive;
-+	struct kref	kref;
++typedef struct ide_scsi_obj {
++	ide_drive_t		*drive;
++	struct Scsi_Host	*host;
 +
- 	/*
- 	 *	Since a typical character device operation requires more
- 	 *	than one packet command, we provide here enough memory
-@@ -1007,6 +1009,33 @@
-          int debug_level;
- } idetape_tape_t;
+ 	idescsi_pc_t *pc;			/* Current packet command */
+ 	unsigned long flags;			/* Status/Action flags */
+ 	unsigned long transform;		/* SCSI cmd translation layer */
+ 	unsigned long log;			/* log flags */
+ } idescsi_scsi_t;
 
-+static DECLARE_MUTEX(idetape_ref_sem);
++static DECLARE_MUTEX(idescsi_ref_sem);
 +
-+#define to_ide_tape(obj) container_of(obj, struct ide_tape_obj, kref)
++#define ide_scsi_g(disk)	((disk)->private_data)
 +
-+#define ide_tape_g(disk)	((disk)->private_data)
-+
-+static struct ide_tape_obj *ide_tape_get(struct gendisk *disk)
++static struct ide_scsi_obj *ide_scsi_get(struct gendisk *disk)
 +{
-+	struct ide_tape_obj *tape = NULL;
++	struct ide_scsi_obj *scsi = NULL;
 +
-+	down(&idetape_ref_sem);
-+	tape = ide_tape_g(disk);
-+	if (tape)
-+		kref_get(&tape->kref);
-+	up(&idetape_ref_sem);
-+	return tape;
++	down(&idescsi_ref_sem);
++	scsi = ide_scsi_g(disk);
++	if (scsi)
++		scsi_host_get(scsi->host);
++	up(&idescsi_ref_sem);
++	return scsi;
 +}
 +
-+static void ide_tape_release(struct kref *);
-+
-+static void ide_tape_put(struct ide_tape_obj *tape)
++static void ide_scsi_put(struct ide_scsi_obj *scsi)
 +{
-+	down(&idetape_ref_sem);
-+	kref_put(&tape->kref, ide_tape_release);
-+	up(&idetape_ref_sem);
++	down(&idescsi_ref_sem);
++	scsi_host_put(scsi->host);
++	up(&idescsi_ref_sem);
 +}
 +
- /*
-  *	Tape door status
-  */
-@@ -4522,9 +4551,7 @@
- 	int stage_size;
- 	struct sysinfo si;
-
--	memset(tape, 0, sizeof (idetape_tape_t));
- 	spin_lock_init(&tape->spinlock);
--	drive->driver_data = tape;
- 	drive->dsc_overlap = 1;
- #ifdef CONFIG_BLK_DEV_IDEPCI
- 	if (HWIF(drive)->pci_dev != NULL) {
-@@ -4542,7 +4569,6 @@
- 	/* Seagate Travan drives do not support DSC overlap. */
- 	if (strstr(drive->id->model, "Seagate STT3401"))
- 		drive->dsc_overlap = 0;
--	tape->drive = drive;
- 	tape->minor = minor;
- 	tape->name[0] = 'h';
- 	tape->name[1] = 't';
-@@ -4636,13 +4662,25 @@
- 	spin_unlock_irqrestore(&ide_lock, flags);
- 	DRIVER(drive)->busy = 0;
- 	(void) ide_unregister_subdriver(drive);
-+
-+	ide_tape_put(tape);
-+
-+	return 0;
-+}
-+
-+static void ide_tape_release(struct kref *kref)
-+{
-+	struct ide_tape_obj *tape = to_ide_tape(kref);
-+	ide_drive_t *drive = tape->drive;
+ static inline idescsi_scsi_t *scsihost_to_idescsi(struct Scsi_Host *host)
+ {
+ 	return (idescsi_scsi_t*) (&host[1]);
+@@ -693,16 +718,20 @@
+ static int idescsi_cleanup (ide_drive_t *drive)
+ {
+ 	struct Scsi_Host *scsihost = drive->driver_data;
 +	struct gendisk *g = drive->disk;
+
+ 	if (ide_unregister_subdriver(drive))
+ 		return 1;
+-
+-	/* FIXME?: Are these two statements necessary? */
 +
++	/* FIXME: drive->driver_data shouldn't be used */
  	drive->driver_data = NULL;
- 	devfs_remove("%s/mt", drive->devfs_name);
- 	devfs_remove("%s/mtn", drive->devfs_name);
--	devfs_unregister_tape(drive->disk->number);
--	kfree (tape);
 -	drive->disk->fops = ide_fops;
--	return 0;
-+	devfs_unregister_tape(g->number);
++	/* FIXME: add driver's private struct gendisk */
 +	g->private_data = NULL;
 +	g->fops = ide_fops;
-+	kfree(tape);
+
+ 	scsi_remove_host(scsihost);
+-	scsi_host_put(scsihost);
++	ide_scsi_put(scsihost_to_idescsi(scsihost));
++
+ 	return 0;
  }
 
- #ifdef CONFIG_PROC_FS
-@@ -4707,15 +4745,30 @@
+@@ -739,15 +768,30 @@
 
- static int idetape_open(struct inode *inode, struct file *filp)
+ static int idescsi_ide_open(struct inode *inode, struct file *filp)
  {
 -	ide_drive_t *drive = inode->i_bdev->bd_disk->private_data;
 +	struct gendisk *disk = inode->i_bdev->bd_disk;
-+	struct ide_tape_obj *tape;
++	struct ide_scsi_obj *scsi;
 +	ide_drive_t *drive;
 +
-+	if (!(tape = ide_tape_get(disk)))
++	if (!(scsi = ide_scsi_get(disk)))
 +		return -ENXIO;
 +
-+	drive = tape->drive;
++	drive = scsi->drive;
 +
  	drive->usage++;
 +
  	return 0;
  }
 
- static int idetape_release(struct inode *inode, struct file *filp)
+ static int idescsi_ide_release(struct inode *inode, struct file *filp)
  {
 -	ide_drive_t *drive = inode->i_bdev->bd_disk->private_data;
 +	struct gendisk *disk = inode->i_bdev->bd_disk;
-+	struct ide_tape_obj *tape = ide_tape_g(disk);
-+	ide_drive_t *drive = tape->drive;
++	struct ide_scsi_obj *scsi = ide_scsi_g(disk);
++	ide_drive_t *drive = scsi->drive;
 +
  	drive->usage--;
 +
-+	ide_tape_put(tape);
++	ide_scsi_put(scsi);
 +
  	return 0;
  }
 
-@@ -4723,7 +4776,8 @@
+@@ -755,8 +799,8 @@
  			unsigned int cmd, unsigned long arg)
  {
  	struct block_device *bdev = inode->i_bdev;
 -	ide_drive_t *drive = bdev->bd_disk->private_data;
-+	struct ide_tape_obj *tape = ide_tape_g(bdev->bd_disk);
-+	ide_drive_t *drive = tape->drive;
- 	int err = generic_ide_ioctl(drive, file, bdev, cmd, arg);
- 	if (err == -EINVAL)
- 		err = idetape_blkdev_ioctl(drive, cmd, arg);
-@@ -4740,6 +4794,7 @@
- static int idetape_attach (ide_drive_t *drive)
+-	return generic_ide_ioctl(drive, file, bdev, cmd, arg);
++	struct ide_scsi_obj *scsi = ide_scsi_g(bdev->bd_disk);
++	return generic_ide_ioctl(scsi->drive, file, bdev, cmd, arg);
+ }
+
+ static struct block_device_operations idescsi_ops = {
+@@ -1043,6 +1087,7 @@
  {
- 	idetape_tape_t *tape;
+ 	idescsi_scsi_t *idescsi;
+ 	struct Scsi_Host *host;
 +	struct gendisk *g = drive->disk;
- 	int minor;
+ 	static int warned;
+ 	int err;
 
- 	if (!strstr("ide-tape", drive->driver_req))
-@@ -4772,6 +4827,15 @@
- 	}
- 	for (minor = 0; idetape_chrdevs[minor].drive != NULL; minor++)
- 		;
-+
-+	memset(tape, 0, sizeof(*tape));
-+
-+	kref_init(&tape->kref);
-+
-+	tape->drive = drive;
-+
-+	drive->driver_data = tape;
-+
- 	idetape_setup(drive, tape, minor);
- 	idetape_chrdevs[minor].drive = drive;
-
-@@ -4782,8 +4846,10 @@
- 			S_IFCHR | S_IRUGO | S_IWUGO,
- 			"%s/mtn", drive->devfs_name);
-
--	drive->disk->number = devfs_register_tape(drive->devfs_name);
--	drive->disk->fops = &idetape_block_ops;
-+	g->number = devfs_register_tape(drive->devfs_name);
-+	g->fops = &idetape_block_ops;
-+	g->private_data = tape;
-+
- 	return 0;
- failed:
- 	return 1;
+@@ -1071,10 +1116,12 @@
+ 	drive->driver_data = host;
+ 	idescsi = scsihost_to_idescsi(host);
+ 	idescsi->drive = drive;
++	idescsi->host = host;
+ 	err = ide_register_subdriver(drive, &idescsi_driver);
+ 	if (!err) {
+ 		idescsi_setup (drive, idescsi);
+-		drive->disk->fops = &idescsi_ops;
++		g->fops = &idescsi_ops;
++		g->private_data = idescsi;
+ 		err = scsi_add_host(host, &drive->gendev);
+ 		if (!err) {
+ 			scsi_scan_host(host);
