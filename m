@@ -1,74 +1,69 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: SATA/IDE strangeness (ATI chip)
-Date: Fri, 18 Mar 2005 18:01:21 +0100
-Message-ID: <58cb370e05031809012b59157c@mail.gmail.com>
-References: <4239C48A.2050608@gmx.de>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Tobias Klauser <tklauser@nuerscht.ch>
+Subject: [UPDATE PATCH 04/19] drivers/scsi/ahci: Use the DMA_{64, 32}BIT_MASK constants
+Date: Sun, 20 Mar 2005 13:37:47 +0100
+Message-ID: <20050320123747.GD3491@localhost.localdomain>
+References: <20050220165530.GD14375@helium.tklauser.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.192]:31341 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261899AbVCRRBW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Mar 2005 12:01:22 -0500
-Received: by wproxy.gmail.com with SMTP id 67so174499wri
-        for <linux-ide@vger.kernel.org>; Fri, 18 Mar 2005 09:01:21 -0800 (PST)
-In-Reply-To: <4239C48A.2050608@gmx.de>
+Content-Type: text/plain; charset=us-ascii
+Received: from server3.hostpoint.ch ([217.26.52.13]:33809 "EHLO
+	server3.hostpoint.ch") by vger.kernel.org with ESMTP
+	id S261194AbVCTMhy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 20 Mar 2005 07:37:54 -0500
+Content-Disposition: inline
+In-Reply-To: <20050220165530.GD14375@helium.tklauser.home>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Oliver Korpilla <Oliver.Korpilla@gmx.de>
-Cc: debian-amd64@lists.debian.org, linux-ide@vger.kernel.org
+To: kernel-janitors@lists.osdl.org
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hi,
+The previous patch did not compile cleanly on all architectures so
+here's a fixed one.
 
-On Thu, 17 Mar 2005 18:55:22 +0100, Oliver Korpilla
-<Oliver.Korpilla@gmx.de> wrote:
-> Hello!
-> 
-> On my MSI motherboard there are the following devices:
-> 
-> 0000:00:11.0 IDE interface: ATI Technologies Inc: Unknown device 437a
-> 0000:00:12.0 IDE interface: ATI Technologies Inc: Unknown device 4379
-> 0000:00:14.1 IDE interface: ATI Technologies Inc: Unknown device 4376
-> 
-> These are listed in the PCI ID database (not committed yet):
-> 
-> 4376    Standard Dual Channel PCI IDE Controller ATI
-> 4379    ATI 4379 Serial ATA Controller
-> 437a    ATI 437A Serial ATA Controller
-> 
-> The 1st SATA controller seems to work with the SATA_SIL driver from
-> vanilla 2.6.11 (and none sooner, I tried), and I'm using it that way
-> now. Since the Debian Pure64 CD doesn't come with that, it doesn't find
-> a HD when trying to install with the CD.
-> 
-> I have the following problems:
-> ------------------------------
-> * Though the SATA is configured in IDE mode in BIOS it does not show up
-> as IDE within Linux and this does not change when the ATIIXP driver is
-> loaded - ide2 is not recognized as a bus with connected devices. My SATA
-> HD is listed by the BIOS to be channel 2 master, while CD-ROM on the
-> Dual ATA is listed on channel 0, channel 1 is unused, so shouldn't the
-> SATA drive show up as /dev/hde or something???
+Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h when calling
+pci_set_dma_mask() or pci_set_consistent_dma_mask()
+This patch includes dma-mapping.h explicitly because it caused errors
+on some architectures otherwise.
+See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
 
-Linux no longer use legacy/obsolete BIOS ordering/naming.
-You can name /dev nodes however you want using udev.
+Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
 
-> * How can I tune the ATIIXP driver via parameters or source modification
-> so it recognizes the SATA controllers as devices to configure???
-
-What for?
-
-> * How can I force ANY IDE driver to recognize these SATA drives in IDE
-> mode?
-> 
-> This is a mail regarding this topic I'm confused about. The author seems
-> to think, ATIIXP can do the 4379 as well:
-
-It can't (reliably).
-
-> http://www.ussg.iu.edu/hypermail/linux/kernel/0412.1/1460.html
-> 
-> Please let me know if I can provide you with any additional data.
-> 
-> Thanks and with kind regards,
-> Oliver Korpilla
+--- linux-2.6.11.orig/drivers/scsi/ahci.c	2005-03-02 12:50:38.000000000 +0100
++++ linux-2.6.11/drivers/scsi/ahci.c	2005-03-20 13:27:54.000000000 +0100
+@@ -32,6 +32,7 @@
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+ #include <linux/sched.h>
++#include <linux/dma-mapping.h>
+ #include "scsi.h"
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+@@ -766,10 +767,10 @@ static int ahci_host_init(struct ata_pro
+ 
+ 	using_dac = hpriv->cap & HOST_CAP_64;
+ 	if (using_dac &&
+-	    !pci_set_dma_mask(pdev, 0xffffffffffffffffULL)) {
+-		rc = pci_set_consistent_dma_mask(pdev, 0xffffffffffffffffULL);
++	    !pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
++		rc = pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
+ 		if (rc) {
+-			rc = pci_set_consistent_dma_mask(pdev, 0xffffffffULL);
++			rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
+ 			if (rc) {
+ 				printk(KERN_ERR DRV_NAME "(%s): 64-bit DMA enable failed\n",
+ 					pci_name(pdev));
+@@ -779,13 +780,13 @@ static int ahci_host_init(struct ata_pro
+ 
+ 		hpriv->flags |= HOST_CAP_64;
+ 	} else {
+-		rc = pci_set_dma_mask(pdev, 0xffffffffULL);
++		rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
+ 		if (rc) {
+ 			printk(KERN_ERR DRV_NAME "(%s): 32-bit DMA enable failed\n",
+ 				pci_name(pdev));
+ 			return rc;
+ 		}
+-		rc = pci_set_consistent_dma_mask(pdev, 0xffffffffULL);
++		rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
+ 		if (rc) {
+ 			printk(KERN_ERR DRV_NAME "(%s): 32-bit consistent DMA enable failed\n",
+ 				pci_name(pdev));
