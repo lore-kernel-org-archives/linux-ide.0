@@ -1,30 +1,52 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Brad Campbell <brad@wasp.net.au>
 Subject: Re: libata dev_config call order wrong.
-Date: Sun, 29 Aug 2004 19:59:55 +0100
+Date: Mon, 30 Aug 2004 13:12:24 +0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1093805994.28289.4.camel@localhost.localdomain>
-References: <41320DAF.2060306@wasp.net.au> <41321288.4090403@pobox.com>
-	 <413216CC.5080100@wasp.net.au> <4132198B.8000504@pobox.com>
-	 <41321F7F.7050300@pobox.com>
+Message-ID: <4132EF78.9000200@wasp.net.au>
+References: <41320DAF.2060306@wasp.net.au> <41321288.4090403@pobox.com>	 <413216CC.5080100@wasp.net.au> <4132198B.8000504@pobox.com>	 <41321F7F.7050300@pobox.com> <1093805994.28289.4.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from the-village.bc.nu ([81.2.110.252]:29569 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S268296AbUH2UCC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Aug 2004 16:02:02 -0400
-In-Reply-To: <41321F7F.7050300@pobox.com>
+Received: from wasp.net.au ([203.190.192.17]:13754 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S267514AbUH3JLv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Aug 2004 05:11:51 -0400
+In-Reply-To: <1093805994.28289.4.camel@localhost.localdomain>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Brad Campbell <brad@wasp.net.au>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Sul, 2004-08-29 at 19:25, Jeff Garzik wrote:
-> According to the Serial ATA docs, IDENTIFY DEVICE word 93 will be zero 
-> if it's Serial ATA.  Who knows if that's true, given the wierd wild 
-> world of ATA devices.
+Alan Cox wrote:
+> On Sul, 2004-08-29 at 19:25, Jeff Garzik wrote:
+> 
+>>According to the Serial ATA docs, IDENTIFY DEVICE word 93 will be zero 
+>>if it's Serial ATA.  Who knows if that's true, given the wierd wild 
+>>world of ATA devices.
+> 
+> 
+> You need to check if word 93 is valid first. Same with things like the
+> cache control word - its value is only meaningful if the drive says the
+> word is meaningful.
 
-You need to check if word 93 is valid first. Same with things like the
-cache control word - its value is only meaningful if the drive says the
-word is meaningful.
+I'm making some assumptions here based on information I could scrape up off the net.
 
+IDENTIFY DEVICE Word 93 support has been mandatory at least since ATA-5.
+
+ATA-5 did not have lba48 or > udma/66.
+
+SATA->PATA bridge boards support > udma/33 and thus must emulate an 80 conductor cable.
+
+Thus, any device capable of lba48 (and these are the ones that trigger the > 200 sector problem) 
+must (according to the ATA-5 and up standard) support correct use of the IDENTIFY DEVICE word 93 
+register.
+
+Given that the SATA->PATA bridge boards support 80 pin detection, then bit 13 of word 93 must be 
+high on any drive that supports lba48, and given the *current* sata spec states that word 93 must be 
+zero, we should be able to use this detection method.
+
+Now, remember I have been an "ATA researcher" for about 4 hours now, please feel free to belt me 
+with the wet salmon of enlightenment and point out the flaw in my logic. Otherwise, when I get home 
+this evening I'm going to have a crack and getting this working.
+
+Regards,
+Brad
