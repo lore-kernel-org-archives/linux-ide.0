@@ -1,155 +1,89 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] IDE update for 2.6.7-rc3 [11/12]
-Date: Fri, 11 Jun 2004 18:16:10 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200406111816.10369.bzolnier@elka.pw.edu.pl>
+Subject: [PATCH] IDE update for 2.6.7-rc3 [12/12]
+Date: Fri, 11 Jun 2004 18:16:24 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200406111816.24875.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:8089 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264147AbUFKQQP
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Jun 2004 12:16:15 -0400
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S264212AbUFKQTg@vger.kernel.org>
 Content-Disposition: inline
-List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 
-[PATCH] ide: kill task_[un]map_rq()
+[PATCH] ide: check no. of sectors for in/out commands in ide_diag_taskfile()
 
-PIO handlers under CONFIG_IDE_TASKFILE_IO=n are never used for bio
-based requests (rq->bio is always NULL) so we can use rq->buffer
-directly instead of calling ide_[un]map_buffer().
+Make sure that number of sectors != 0 for in/out command before sending
+it to drive.  Remove no longer needed checks from flagged_* PIO handlers.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 
- linux-2.6.7-rc3-bzolnier/drivers/ide/ide-taskfile.c |   25 ++++----------------
- 1 files changed, 5 insertions(+), 20 deletions(-)
+ linux-2.6.7-rc3-bzolnier/drivers/ide/ide-taskfile.c |   21 +++++---------------
+ 1 files changed, 6 insertions(+), 15 deletions(-)
 
-diff -puN drivers/ide/ide-taskfile.c~ide_task_rq_mapping drivers/ide/ide-taskfile.c
---- linux-2.6.7-rc3/drivers/ide/ide-taskfile.c~ide_task_rq_mapping	2004-06-11 16:28:38.227656176 +0200
-+++ linux-2.6.7-rc3-bzolnier/drivers/ide/ide-taskfile.c	2004-06-11 16:29:20.524226120 +0200
-@@ -301,9 +301,6 @@ EXPORT_SYMBOL(task_no_data_intr);
-  */
- #ifndef CONFIG_IDE_TASKFILE_IO
+diff -puN drivers/ide/ide-taskfile.c~ide_task_sectors drivers/ide/ide-taskfile.c
+--- linux-2.6.7-rc3/drivers/ide/ide-taskfile.c~ide_task_sectors	2004-06-11 16:30:34.934913976 +0200
++++ linux-2.6.7-rc3-bzolnier/drivers/ide/ide-taskfile.c	2004-06-11 16:30:34.947912000 +0200
+@@ -846,6 +846,12 @@ int ide_diag_taskfile (ide_drive_t *driv
+ 		else
+ 			rq.nr_sectors = data_size / SECTOR_SIZE;
  
--#define task_map_rq(rq, flags)		ide_map_buffer((rq), (flags))
--#define task_unmap_rq(rq, buf, flags)	ide_unmap_buffer((rq), (buf), (flags))
--
- /*
-  * Handler for command with PIO data-in phase, READ
-  */
-@@ -313,7 +310,6 @@ ide_startstop_t task_in_intr (ide_drive_
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	char *pBuf		= NULL;
- 	u8 stat;
--	unsigned long flags;
- 
- 	if (!OK_STAT(stat = hwif->INB(IDE_STATUS_REG),DATA_READY,BAD_R_STAT)) {
- 		if (stat & (ERR_STAT|DRQ_STAT)) {
-@@ -327,11 +323,10 @@ ide_startstop_t task_in_intr (ide_drive_
- 		}
++		if (!rq.nr_sectors) {
++			printk(KERN_ERR "%s: in/out command without data\n",
++					drive->name);
++			return -EFAULT;
++		}
++
+ 		rq.hard_nr_sectors = rq.nr_sectors;
+ 		rq.hard_cur_sectors = rq.current_nr_sectors = rq.nr_sectors;
  	}
- 
--	pBuf = task_map_rq(rq, &flags);
-+	pBuf = rq->buffer + task_rq_offset(rq);
- 	DTF("Read: %p, rq->current_nr_sectors: %d, stat: %02x\n",
- 		pBuf, (int) rq->current_nr_sectors, stat);
- 	taskfile_input_data(drive, pBuf, SECTOR_WORDS);
--	task_unmap_rq(rq, pBuf, &flags);
- 
- 	/* FIXME: check drive status */
- 	if (--rq->current_nr_sectors <= 0)
-@@ -358,7 +353,6 @@ ide_startstop_t task_mulin_intr (ide_dri
+@@ -1330,9 +1336,6 @@ ide_startstop_t flagged_task_in_intr (id
  	char *pBuf		= NULL;
- 	unsigned int msect	= drive->mult_count;
- 	unsigned int nsect;
--	unsigned long flags;
- 	u8 stat;
+ 	int retries             = 5;
  
- 	if (!OK_STAT(stat = hwif->INB(IDE_STATUS_REG),DATA_READY,BAD_R_STAT)) {
-@@ -375,12 +369,11 @@ ide_startstop_t task_mulin_intr (ide_dri
- 		nsect = rq->current_nr_sectors;
- 		if (nsect > msect)
- 			nsect = msect;
--		pBuf = task_map_rq(rq, &flags);
-+		pBuf = rq->buffer + task_rq_offset(rq);
- 		DTF("Multiread: %p, nsect: %d, msect: %d, " \
- 			" rq->current_nr_sectors: %d\n",
- 			pBuf, nsect, msect, rq->current_nr_sectors);
- 		taskfile_input_data(drive, pBuf, nsect * SECTOR_WORDS);
--		task_unmap_rq(rq, pBuf, &flags);
- 		rq->errors = 0;
- 		rq->current_nr_sectors -= nsect;
- 		msect -= nsect;
-@@ -404,8 +397,6 @@ EXPORT_SYMBOL(task_mulin_intr);
+-	if (rq->current_nr_sectors == 0) 
+-		return DRIVER(drive)->error(drive, "flagged_task_in_intr (no data requested)", stat); 
+-
+ 	if (!OK_STAT(stat, DATA_READY, BAD_R_STAT)) {
+ 		if (stat & ERR_STAT) {
+ 			return DRIVER(drive)->error(drive, "flagged_task_in_intr", stat);
+@@ -1379,9 +1382,6 @@ ide_startstop_t flagged_task_mulin_intr 
+ 	int retries             = 5;
+ 	unsigned int msect, nsect;
+ 
+-	if (rq->current_nr_sectors == 0) 
+-		return DRIVER(drive)->error(drive, "flagged_task_mulin_intr (no data requested)", stat); 
+-
+ 	msect = drive->mult_count;
+ 	if (msect == 0) 
+ 		return DRIVER(drive)->error(drive, "flagged_task_mulin_intr (multimode not set)", stat); 
+@@ -1433,14 +1433,8 @@ ide_startstop_t flagged_task_mulin_intr 
   */
- ide_startstop_t pre_task_out_intr (ide_drive_t *drive, struct request *rq)
+ ide_startstop_t flagged_pre_task_out_intr (ide_drive_t *drive, struct request *rq)
  {
--	char *pBuf		= NULL;
--	unsigned long flags;
+-	ide_hwif_t *hwif	= HWIF(drive);
+-	u8 stat			= hwif->INB(IDE_STATUS_REG);
  	ide_startstop_t startstop;
  
+-	if (!rq->current_nr_sectors) {
+-		return DRIVER(drive)->error(drive, "flagged_pre_task_out_intr (write data not specified)", stat);
+-	}
+-
  	if (ide_wait_stat(&startstop, drive, DATA_READY,
-@@ -416,10 +407,8 @@ ide_startstop_t pre_task_out_intr (ide_d
- 		return startstop;
- 	}
- 	/* For Write_sectors we need to stuff the first sector */
--	pBuf = task_map_rq(rq, &flags);
--	taskfile_output_data(drive, pBuf, SECTOR_WORDS);
-+	taskfile_output_data(drive, rq->buffer + task_rq_offset(rq), SECTOR_WORDS);
- 	rq->current_nr_sectors--;
--	task_unmap_rq(rq, pBuf, &flags);
- 	return ide_started;
- }
+ 			BAD_W_STAT, WAIT_DRQ)) {
+ 		printk(KERN_ERR "%s: No DRQ bit after issuing write command.\n", drive->name);
+@@ -1502,9 +1496,6 @@ ide_startstop_t flagged_pre_task_mulout_
+ 	ide_startstop_t startstop;
+ 	unsigned int msect, nsect;
  
-@@ -435,7 +424,6 @@ ide_startstop_t task_out_intr (ide_drive
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	struct request *rq	= HWGROUP(drive)->rq;
- 	char *pBuf		= NULL;
--	unsigned long flags;
- 	u8 stat;
- 
- 	if (!OK_STAT(stat = hwif->INB(IDE_STATUS_REG), DRIVE_READY, drive->bad_wstat)) {
-@@ -450,11 +438,10 @@ ide_startstop_t task_out_intr (ide_drive
- 			return ide_stopped;
- 	if ((rq->current_nr_sectors==1) ^ (stat & DRQ_STAT)) {
- 		rq = HWGROUP(drive)->rq;
--		pBuf = task_map_rq(rq, &flags);
-+		pBuf = rq->buffer + task_rq_offset(rq);
- 		DTF("write: %p, rq->current_nr_sectors: %d\n",
- 			pBuf, (int) rq->current_nr_sectors);
- 		taskfile_output_data(drive, pBuf, SECTOR_WORDS);
--		task_unmap_rq(rq, pBuf, &flags);
- 		rq->errors = 0;
- 		rq->current_nr_sectors--;
- 	}
-@@ -507,7 +494,6 @@ ide_startstop_t task_mulout_intr (ide_dr
- 	char *pBuf			= NULL;
- 	unsigned int msect		= drive->mult_count;
- 	unsigned int nsect;
--	unsigned long flags;
- 
- 	if (!OK_STAT(stat, DATA_READY, BAD_R_STAT) || !rq->current_nr_sectors) {
- 		if (stat & (ERR_STAT|DRQ_STAT)) {
-@@ -536,13 +522,12 @@ ide_startstop_t task_mulout_intr (ide_dr
- 		nsect = rq->current_nr_sectors;
- 		if (nsect > msect)
- 			nsect = msect;
--		pBuf = task_map_rq(rq, &flags);
-+		pBuf = rq->buffer + task_rq_offset(rq);
- 		DTF("Multiwrite: %p, nsect: %d, msect: %d, " \
- 			"rq->current_nr_sectors: %ld\n",
- 			pBuf, nsect, msect, rq->current_nr_sectors);
- 		msect -= nsect;
- 		taskfile_output_data(drive, pBuf, nsect * SECTOR_WORDS);
--		task_unmap_rq(rq, pBuf, &flags);
- 		rq->current_nr_sectors -= nsect;
- 
- 		/* FIXME: check drive status */
+-	if (!rq->current_nr_sectors) 
+-		return DRIVER(drive)->error(drive, "flagged_pre_task_mulout_intr (write data not specified)", stat);
+-
+ 	msect = drive->mult_count;
+ 	if (msect == 0)
+ 		return DRIVER(drive)->error(drive, "flagged_pre_task_mulout_intr (multimode not set)", stat);
 
 _
-
