@@ -1,94 +1,98 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: [PATCH] atapi request sense work
-Date: 21 May 2004 17:24:21 -0600
+Date: 21 May 2004 18:06:47 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1085181861.3266.11.camel@patibmrh9>
+Message-ID: <1085184407.3289.6.camel@patibmrh9>
 References: <1084717146.3576.3.camel@patibmrh9> <40AD7FB2.10506@pobox.com><1
-	 085153750.6103.33.camel@patibmrh9><200405211746.35015.bzolnier@elka.pw.edu
-	 .	pl><1085162347.4791.24.camel@patibmrh9> <1085170025.3083.91.camel@patibm
-	r h9><40AE79E1.9020005@pobox.com>
+	 085153750.6103.33.camel@patibmrh9><200405211746.35015.bzolnier@elka.pw.ed
+	u	 .	pl><1085162347.4791.24.camel@patibmrh9><1085170025.3083.91.camel@pati
+	bm	r h9> <40AE79E1.9020005@pobox.com><1085182749.3122.15.camel@patibmrh9> <
+	40AE9493.1040701@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:1473 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264622AbUEUXYb
+Received: from email-out2.iomega.com ([147.178.1.83]:5062 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S265014AbUEVAGy
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 May 2004 19:24:31 -0400
-Received: from royntex01.iomegacorp.com (franklin [10.1.1.83])
-	by email.iomega.com (Postfix) with ESMTP id 4D1B31A1E
-	for <linux-ide@vger.kernel.org>; Fri, 21 May 2004 17:24:27 -0600 (MDT)
-In-Reply-To: <40AE79E1.9020005@pobox.com>
+	Fri, 21 May 2004 20:06:54 -0400
+In-Reply-To: <40AE9493.1040701@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-In linux-2.6.6-bk8 plus my bk8.good.always.patch,
+> > kernel: ata_host_intr: BUS_NODATA (drv_stat 0x50)
+> > kernel: irq 18: nobody cared!
+>
+> Can you print out the BMDMA status register (often called 'host_stat' in 
+> the code)?
 
-One way to hang ata-piix.ko is ...
+Thanks for asking.
 
-... for the device to refuse to copy the last bytes of a write.
+> I wonder if that indicates ATA_DMA_INTR for example.
 
-In the example here, we tell the host to expect to copy out x1000 = 4 Ki
-bytes, but we tell the device to agree to copy out only x0001 blocks
-i.e. x800 = 2 Ki bytes.
+I see ending host_stat = (x20 | ATA_DMA_INTR) same for ATA_PROT_ATAPI as
+for ATA_PROT_ATAPI_DMA.  (Next I'll go look to see how hard
+ATA_PROT_ATAPI_DMA works to clear that.)
 
-The "ata2: unknown timeout, cmd 0xa0 stat 0xd0" message suggest we
-didn't end clean, but to confirm that appearance we follow up with a
-standard op x12 "INQUIRY" that indeed does not complete at all.
+Specifically I see:
+
+kernel: atapi_packet_task: busy wait
+kernel: atapi_packet_task: send cdb
+kernel: ata_host_intr: (host_stat 0x24)
+kernel: ata_host_intr: BUS_NODATA (drv_stat 0x50)
+kernel: irq 18: nobody cared!
+
+when I apply the following patch (plus the usual #define's) and then
+retry the no data case.
 
 Pat LaVarre
 
-P.S. This example I logged more carefully, but I first stumbled into
-this with stimulus more like:
-
-plscsi -o xC0 -x "3B 02 00:00:00:00 00 00:24 00" // "WRITE BUFFER" // Do < Ho
-
-// Stimulus:
-
-export PLSCSI='/dev/sg0 -X time 5 0'
-plscsi -o x1000 -x "2A 00 00:00:00:10 00 00:01 00"
-plscsi -i x24 -x "12 00:00:00 24 00"
-Ctrl+C
-sudo modprobe -r ata-piix
-# FATAL: Module ata_piix is in use.
-reboot
-
-// Result:
-
-kernel: ata_scsi_dump_cdb: CDB (2:0,0,0) 2a 00 00 00 00 10 00 00 01
-kernel: ata_scsi_translate: ENTER
-kernel: atapi_xlat: direction: write
-kernel: ata_sg_setup_one: mapped buffer of 4096 bytes for write
-kernel: ata_fill_sg: PRD[0] = (0x133B8000, 0x1000)
-kernel: ata_dev_select: ENTER, ata2: device 0, wait 1
-kernel: ata_tf_load_pio: feat 0x1 nsect 0x0 lba 0x0 0x0 0x0
-kernel: ata_tf_load_pio: device 0xA0
-kernel: ata_exec_command_pio: ata2: cmd 0xA0
-kernel: ata_scsi_translate: EXIT
-kernel: atapi_packet_task: busy wait
-kernel: atapi_packet_task: send cdb
-kernel: ata_scsi_error: ENTER
-kernel: ata_eng_timeout: ENTER
-kernel: ata2: unknown timeout, cmd 0xa0 stat 0xd0
-kernel: ata_sg_clean: unmapping 1 sg elements
-kernel: ata_eng_timeout: EXIT
-kernel: ata_scsi_error: EXIT
-
-kernel: ata_scsi_dump_cdb: CDB (2:0,0,0) 12 00 00 00 24 00 00 00 00
-kernel: ata_scsi_translate: ENTER
-kernel: ata_sg_setup_one: mapped buffer of 36 bytes for read
-kernel: ata_fill_sg: PRD[0] = (0x133B8000, 0x24)
-kernel: ata_dev_select: ENTER, ata2: device 0, wait 1
-kernel: ATA: abnormal status 0xD0 on port 0xE007
-kernel: ATA: abnormal status 0xD0 on port 0xE007
-kernel: ata_tf_load_pio: feat 0x5 nsect 0x0 lba 0x0 0x0 0x0
-kernel: ata_tf_load_pio: device 0xA0
-kernel: ATA: abnormal status 0xD0 on port 0xE007
-kernel: ata_exec_command_pio: ata2: cmd 0xA0
-kernel: ata_scsi_translate: EXIT
-kernel: atapi_packet_task: busy wait
-kernel: ata2 is slow to respond, please be patient
-kernel: ata2 failed to respond (30 secs)
-kernel: ata_sg_clean: unmapping 1 sg elements
+diff -Nurp linux-2.6.6-bk8/drivers/scsi/libata-core.c linux-2.6.6-bk8-pel/drivers/scsi/libata-core.c
+--- linux-2.6.6-bk8/drivers/scsi/libata-core.c	2004-05-21 09:44:22.000000000 -0600
++++ linux-2.6.6-bk8-pel/drivers/scsi/libata-core.c	2004-05-21 17:53:03.000000000 -0600
+@@ -2303,6 +2303,9 @@ void ata_qc_complete(struct ata_queued_c
+ 		ata_sg_clean(qc);
+ 
+ 	if (cmd) {
++#if 1 /* pretend good */ 
++		cmd->result = SAM_STAT_GOOD;
++#else /* FIXME: admit lost write data, stale read data, etc. */
+ 		if (unlikely(drv_stat & (ATA_ERR | ATA_BUSY | ATA_DRQ))) {
+ 			if (is_atapi_taskfile(&qc->tf))
+ 				cmd->result = SAM_STAT_CHECK_CONDITION;
+@@ -2311,6 +2314,7 @@ void ata_qc_complete(struct ata_queued_c
+ 		} else {
+ 			cmd->result = SAM_STAT_GOOD;
+ 		}
++#endif
+ 
+ 		qc->scsidone(cmd);
+ 	}
+@@ -2616,16 +2620,18 @@ inline unsigned int ata_host_intr (struc
+ 	u8 status, host_stat;
+ 	unsigned int handled = 0;
+ 
+-	switch (qc->tf.protocol) {
+-
+-	/* BMDMA completion */
+-	case ATA_PROT_DMA:
+-	case ATA_PROT_ATAPI_DMA:
+ 		if (ap->flags & ATA_FLAG_MMIO) {
+ 			void *mmio = (void *) ap->ioaddr.bmdma_addr;
+ 			host_stat = readb(mmio + ATA_DMA_STATUS);
+ 		} else
+ 			host_stat = inb(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
++		VPRINTK("(host_stat 0x%X)\n", host_stat);
++
++	switch (qc->tf.protocol) {
++
++	/* BMDMA completion */
++	case ATA_PROT_DMA:
++	case ATA_PROT_ATAPI_DMA:
+ 		VPRINTK("BUS_DMA (host_stat 0x%X)\n", host_stat);
+ 
+ 		if (!(host_stat & ATA_DMA_INTR)) {
+diff -Nurp linux-2.6.6-bk8/drivers/scsi/libata-scsi.c linux-2.6.6-bk8-pel/drivers/scsi/libata-scsi.c
 
 
