@@ -1,71 +1,263 @@
-From: Chris Hann <chann94501@yahoo.com>
-Subject: Question about csfo, cache and vendor specific information apparent
- overlap
-Date: Wed, 23 Mar 2005 11:32:26 -0800
-Message-ID: <4241C44A.7010803@yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from [65.115.69.195] ([65.115.69.195]:31395 "EHLO mx.sj.symbol.com")
-	by vger.kernel.org with ESMTP id S261826AbVCWTcf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2005 14:32:35 -0500
-Received: from gwianameserver.sj.symbol.com (gwianameserver.sj.symbol.com [157.235.95.252])
-	by mx.sj.symbol.com (8.12.10/8.12.10) with ESMTP id j2NJNvDq010814
-	for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2005 11:23:57 -0800
+From: Brett Russ <russb@emc.com>
+Subject: Re: [PATCH libata-dev-2.6 01/03] libata: whitespace updates
+Date: Wed, 23 Mar 2005 15:39:29 -0500 (EST)
+Message-ID: <20050323203514.DE0042D8@lns1032.lss.emc.com>
+References: <20050323203514.D62A1893@lns1032.lss.emc.com>
+Content-Type: text/plain; charset=US-ASCII
+Received: from mailhub.lss.emc.com ([168.159.2.31]:7578 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S262909AbVCWUjc
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Mar 2005 15:39:32 -0500
+In-Reply-To: <20050323203514.D62A1893@lns1032.lss.emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide list <linux-ide@vger.kernel.org>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Sorry I'm rather late to the Linux game. I have searched the archive for 
-references to csfo and cache but I have not found anything to explain 
-the issue I am looking at, though there are discussions in the immediate 
-area.
+01_libata_libata-whitespace.patch
 
-If I am referring to outdated information please let me know and I can 
-then get back to my vendor to straighten things out.
+	This patch adjusts some whitespace to bring the format of
+	libata-scsi.c to a consistent state.
 
- From my reading the csfo word has been placed in the first word of the 
-vendor specific area of the IDENTIFY DEVICE information.
+Signed-off-by: Brett Russ <russb@emc.com>
 
-The t13.org document "Mandatory IDENTIFY DEVICE and IDENTIFY PACKET 
-DEVICE fields" defines words 129-159 as vendor specific. The latest 
-release would appear to be  http://www.t13.org/technical/e00159r3.pdf 
-and I have not found any discussion which would render this document 
-obsolete. There are documents relating to modifications in unrelated 
-areas, but I could not find any referring to word 129. Perhaps I'm just 
-not looking in the right place?
+ libata-scsi.c |  112 +++++++++++++++++++++++++---------------------------------
+ 1 files changed, 50 insertions(+), 62 deletions(-)
 
-In include/linux/hdreg.h word 129 is defined as csfo
+Index: libata-dev-2.6/drivers/scsi/libata-scsi.c
+===================================================================
+--- libata-dev-2.6.orig/drivers/scsi/libata-scsi.c	2005-03-23 15:35:08.000000000 -0500
++++ libata-dev-2.6/drivers/scsi/libata-scsi.c	2005-03-23 15:35:09.000000000 -0500
+@@ -397,56 +397,46 @@ void ata_to_sense_error(struct ata_queue
+ 	 *	Is this an error we can process/parse
+ 	 */
+ 
+-	if(drv_stat & ATA_ERR)
+-		/* Read the err bits */
+-		err = ata_chk_err(qc->ap);
++	if (drv_stat & ATA_ERR)
++		err = ata_chk_err(qc->ap);	/* Read the err bits */
+ 
+ 	/* Display the ATA level error info */
+ 
+ 	printk(KERN_WARNING "ata%u: status=0x%02x { ", qc->ap->id, drv_stat);
+-	if(drv_stat & 0x80)
+-	{
++	if (drv_stat & 0x80) {
+ 		printk("Busy ");
+ 		err = 0;	/* Data is not valid in this case */
+-	}
+-	else {
+-		if(drv_stat & 0x40)	printk("DriveReady ");
+-		if(drv_stat & 0x20)	printk("DeviceFault ");
+-		if(drv_stat & 0x10)	printk("SeekComplete ");
+-		if(drv_stat & 0x08)	printk("DataRequest ");
+-		if(drv_stat & 0x04)	printk("CorrectedError ");
+-		if(drv_stat & 0x02)	printk("Index ");
+-		if(drv_stat & 0x01)	printk("Error ");
++	} else {
++		if (drv_stat & 0x40)	printk("DriveReady ");
++		if (drv_stat & 0x20)	printk("DeviceFault ");
++		if (drv_stat & 0x10)	printk("SeekComplete ");
++		if (drv_stat & 0x08)	printk("DataRequest ");
++		if (drv_stat & 0x04)	printk("CorrectedError ");
++		if (drv_stat & 0x02)	printk("Index ");
++		if (drv_stat & 0x01)	printk("Error ");
+ 	}
+ 	printk("}\n");
+ 
+-	if(err)
+-	{
++	if (err) {
+ 		printk(KERN_WARNING "ata%u: error=0x%02x { ", qc->ap->id, err);
+-		if(err & 0x04)		printk("DriveStatusError ");
+-		if(err & 0x80)
+-		{
+-			if(err & 0x04)
+-				printk("BadCRC ");
+-			else
+-				printk("Sector ");
++		if (err & 0x04)		printk("DriveStatusError ");
++		if (err & 0x80) {
++			if (err & 0x04)	printk("BadCRC ");
++			else		printk("Sector ");
+ 		}
+-		if(err & 0x40)		printk("UncorrectableError ");
+-		if(err & 0x10)		printk("SectorIdNotFound ");
+-		if(err & 0x02)		printk("TrackZeroNotFound ");
+-		if(err & 0x01)		printk("AddrMarkNotFound ");
++		if (err & 0x40)		printk("UncorrectableError ");
++		if (err & 0x10)		printk("SectorIdNotFound ");
++		if (err & 0x02)		printk("TrackZeroNotFound ");
++		if (err & 0x01)		printk("AddrMarkNotFound ");
+ 		printk("}\n");
+ 
+ 		/* Should we dump sector info here too ?? */
+ 	}
+ 
+-
+ 	/* Look for err */
+-	while(sense_table[i][0] != 0xFF)
+-	{
++	while (sense_table[i][0] != 0xFF) {
+ 		/* Look for best matches first */
+-		if((sense_table[i][0] & err) == sense_table[i][0])
+-		{
++		if ((sense_table[i][0] & err) == sense_table[i][0]) {
+ 			sb[0] = 0x70;
+ 			sb[2] = sense_table[i][1];
+ 			sb[7] = 0x0a;
+@@ -457,15 +447,13 @@ void ata_to_sense_error(struct ata_queue
+ 		i++;
+ 	}
+ 	/* No immediate match */
+-	if(err)
++	if (err)
+ 		printk(KERN_DEBUG "ata%u: no sense translation for 0x%02x\n", qc->ap->id, err);
+ 
+ 	i = 0;
+ 	/* Fall back to interpreting status bits */
+-	while(stat_table[i][0] != 0xFF)
+-	{
+-		if(stat_table[i][0] & drv_stat)
+-		{
++	while (stat_table[i][0] != 0xFF) {
++		if (stat_table[i][0] & drv_stat) {
+ 			sb[0] = 0x70;
+ 			sb[2] = stat_table[i][1];
+ 			sb[7] = 0x0a;
+@@ -508,7 +496,7 @@ void ata_pass_thru_cc(struct ata_queued_
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+ 	struct ata_taskfile *tf = &qc->tf;
+ 	unsigned char *sb = cmd->sense_buffer;
+-	unsigned char *desc = sb + 8 ;
++	unsigned char *desc = sb + 8;
+ 
+ 	cmd->result = SAM_STAT_CHECK_CONDITION;
+ 
+@@ -520,16 +508,16 @@ void ata_pass_thru_cc(struct ata_queued_
+ 	 * TODO: reorganise better, by splitting ata_to_sense_error()
+ 	 */
+ 	if (unlikely(drv_stat & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ))) {
+-		ata_to_sense_error(qc, drv_stat) ;
++		ata_to_sense_error(qc, drv_stat);
+ 	} else {
+-		sb[3] = sb[2] = sb[1] = 0x00 ;
++		sb[3] = sb[2] = sb[1] = 0x00;
+ 	}
+ 
+ 	/*
+ 	 * Sense data is current and format is
+ 	 * descriptor.
+ 	 */
+-	sb[0] = 0x72 ;
++	sb[0] = 0x72;
+ 
+ 	desc[0] = 0x09;
+ 
+@@ -538,7 +526,7 @@ void ata_pass_thru_cc(struct ata_queued_
+ 	 * Since we only populate descriptor 0, the total
+ 	 * length is the same (fixed) length as descriptor 0.
+ 	 */
+-	desc[1] = sb[7] = 14 ;
++	desc[1] = sb[7] = 14;
+ 
+ 	/*
+ 	 * Read the controller registers.
+@@ -548,25 +536,25 @@ void ata_pass_thru_cc(struct ata_queued_
+ 	/*
+ 	 * Copy registers into sense buffer.
+ 	 */
+-	desc[2] = 0x00 ;
+-	desc[3] = tf->feature ;	/* Note: becomes error register when read. */
+-	desc[5] = tf->nsect ;
+-	desc[7] = tf->lbal ;
+-	desc[9] = tf->lbam ;
+-	desc[11] = tf->lbah ;
+-	desc[12] = tf->device ;
+-	desc[13] = drv_stat ;
++	desc[2] = 0x00;
++	desc[3] = tf->feature;	/* Note: becomes error register when read. */
++	desc[5] = tf->nsect;
++	desc[7] = tf->lbal;
++	desc[9] = tf->lbam;
++	desc[11] = tf->lbah;
++	desc[12] = tf->device;
++	desc[13] = drv_stat;
+ 
+ 	/*
+ 	 * Fill in Extend bit, and the high order bytes
+ 	 * if applicable.
+ 	 */
+ 	if (tf->flags & ATA_TFLAG_LBA48) {
+-		desc[2] |= 0x01 ;
+-		desc[4] = tf->hob_nsect ;
+-		desc[6] = tf->hob_lbal ;
+-		desc[8] = tf->hob_lbam ;
+-		desc[10] = tf->hob_lbah ;
++		desc[2] |= 0x01;
++		desc[4] = tf->hob_nsect;
++		desc[6] = tf->hob_lbal;
++		desc[8] = tf->hob_lbam;
++		desc[10] = tf->hob_lbah;
+ 	}
+ }
+ 
+@@ -957,7 +945,7 @@ static int ata_scsi_qc_complete(struct a
+ 	 */
+ 	if (((cmd->cmnd[0] == ATA_16) || (cmd->cmnd[0] == ATA_12)) &&
+ 						(cmd->cmnd[2] & 0x20)) {
+-		ata_pass_thru_cc(qc, drv_stat) ;
++		ata_pass_thru_cc(qc, drv_stat);
+ 	} else {
+ 		if (unlikely(drv_stat & (ATA_ERR | ATA_BUSY | ATA_DRQ)))
+ 			ata_to_sense_error(qc, drv_stat);
+@@ -1811,9 +1799,9 @@ ata_scsi_pass_thru(struct ata_queued_cmd
+ 			tf->hob_lbal = scsicmd[7];
+ 			tf->hob_lbam = scsicmd[9];
+ 			tf->hob_lbah = scsicmd[11];
+-			tf->flags |= ATA_TFLAG_LBA48 ;
++			tf->flags |= ATA_TFLAG_LBA48;
+ 		} else
+-			tf->flags &= ~ATA_TFLAG_LBA48 ;
++			tf->flags &= ~ATA_TFLAG_LBA48;
+ 
+ 		/*
+ 		 * Always copy low byte, device and command registers.
+@@ -1829,7 +1817,7 @@ ata_scsi_pass_thru(struct ata_queued_cmd
+ 		/*
+ 		 * 12-byte CDB - incapable of extended commands.
+ 		 */
+-		tf->flags &= ~ATA_TFLAG_LBA48 ;
++		tf->flags &= ~ATA_TFLAG_LBA48;
+ 
+ 		tf->feature = scsicmd[3];
+ 		tf->nsect = scsicmd[4];
+@@ -1856,7 +1844,7 @@ ata_scsi_pass_thru(struct ata_queued_cmd
+ 	 * and pass on write indication (used for PIO/DMA
+ 	 * setup.)
+ 	 */
+-	tf->flags |= (ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE) ;
++	tf->flags |= (ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE);
+ 
+ 	if (cmd->sc_data_direction == SCSI_DATA_WRITE)
+ 		tf->flags |= ATA_TFLAG_WRITE;
+@@ -1867,7 +1855,7 @@ ata_scsi_pass_thru(struct ata_queued_cmd
+ 	 * TODO: find out if we need to do more here to
+ 	 *       cover scatter/gather case.
+ 	 */
+-	qc->nsect = cmd->bufflen / ATA_SECT_SIZE ;
++	qc->nsect = cmd->bufflen / ATA_SECT_SIZE;
+ 
+ 	return 0;
+ }
+@@ -1907,7 +1895,7 @@ static inline ata_xlat_func_t ata_get_xl
+ 
+ 	case ATA_12:
+ 	case ATA_16:
+-		return ata_scsi_pass_thru ;
++		return ata_scsi_pass_thru;
+ 	}
+ 
+ 	return NULL;
 
-    unsigned short  csfo;        /*  (word 129)
-                     * current set features options
-                     * 15:4    reserved
-                     *  3:    auto reassign
-                     *  2:    reverting
-                     *  1:    read-look-ahead
-                     *  0:    write cache
-                     */
-
-which is then used to switch cache operations in drivers/ide/ide-disk.c 
-as follows
-
-        /* Cache enabled ? */
-        if (drive->id->csfo & 1)
-            drive->wcache = 1;
-
-
-So that means that the first word of the vendor specific code is being 
-used to select whether cache operations are enabled.
-
-In the particular case of the flash IDE drive I am using that first word 
-is the day number of the date, so for devices built on odd days the 
-cache is enabled and for even days disabled. The device has no cache.
-
-So has my vendor missed the repurposing of word 129? Can anyone point me 
-to documentation which defines it as csfo?
-
-I apologize if this is an ignorant question, but t13.org seem to hold 
-the standards for these drives so that's where I went for information.
-
-Thank you
-Chris
