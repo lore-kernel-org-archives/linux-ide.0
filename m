@@ -1,160 +1,202 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2.6.11-rc3 08/11] ide: remove REQ_DRIVE_TASK handling
-Date: Thu, 10 Feb 2005 17:38:49 +0900 (KST)
-Message-ID: <20050210083844.AD987173@htj.dyndns.org>
+Subject: Re: [PATCH 2.6.11-rc3 10/11] ide: make ide_cmd_ioctl() use TASKFILE
+Date: Thu, 10 Feb 2005 17:38:59 +0900 (KST)
+Message-ID: <20050210083854.BD13DFBD@htj.dyndns.org>
 References: <20050210083808.48E9DD1A@htj.dyndns.org>
-Received: from wproxy.gmail.com ([64.233.184.207]:60887 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262065AbVBJIi7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Feb 2005 03:38:59 -0500
-Received: by wproxy.gmail.com with SMTP id 67so1449833wri
-        for <linux-ide@vger.kernel.org>; Thu, 10 Feb 2005 00:38:58 -0800 (PST)
 In-Reply-To: <20050210083808.48E9DD1A@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+List-Id: linux-ide@vger.kernel.org
 
 
-08_ide_remove_task.patch
+10_ide_taskfile_cmd_ioctl.patch
 
-	Unused REQ_DRIVE_TASK handling removed.
+	ide_cmd_ioctl() rewritten to use taskfile transport.  This is
+	the last user of REQ_DRIVE_CMD.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
- drivers/block/ll_rw_blk.c |    1 
- drivers/ide/ide-io.c      |   48 +++-------------------------------------------
- drivers/ide/ide-lib.c     |    2 -
- include/linux/blkdev.h    |    2 -
- 4 files changed, 5 insertions(+), 48 deletions(-)
+ drivers/ide/ide-taskfile.c |  118 ++++++++++++++++++++++++---------------------
+ include/linux/ide.h        |   12 ----
+ 2 files changed, 67 insertions(+), 63 deletions(-)
 
-Index: linux-ide/drivers/block/ll_rw_blk.c
+Index: linux-ide/drivers/ide/ide-taskfile.c
 ===================================================================
---- linux-ide.orig/drivers/block/ll_rw_blk.c	2005-02-10 17:31:48.393751059 +0900
-+++ linux-ide/drivers/block/ll_rw_blk.c	2005-02-10 17:38:02.165734368 +0900
-@@ -851,7 +851,6 @@ static char *rq_flags[] = {
- 	"REQ_QUIET",
- 	"REQ_SPECIAL",
- 	"REQ_DRIVE_CMD",
--	"REQ_DRIVE_TASK",
- 	"REQ_DRIVE_TASKFILE",
- 	"REQ_PREEMPT",
- 	"REQ_PM_SUSPEND",
-Index: linux-ide/drivers/ide/ide-io.c
-===================================================================
---- linux-ide.orig/drivers/ide/ide-io.c	2005-02-10 17:38:01.746804625 +0900
-+++ linux-ide/drivers/ide/ide-io.c	2005-02-10 17:38:02.162734871 +0900
-@@ -453,20 +453,6 @@ void ide_end_drive_cmd (ide_drive_t *dri
- 			args[1] = err;
- 			args[2] = hwif->INB(IDE_NSECTOR_REG);
- 		}
--	} else if (rq->flags & REQ_DRIVE_TASK) {
--		u8 *args = (u8 *) rq->buffer;
--		if (rq->errors == 0)
--			rq->errors = !OK_STAT(stat,READY_STAT,BAD_STAT);
+--- linux-ide.orig/drivers/ide/ide-taskfile.c	2005-02-10 17:38:01.974766393 +0900
++++ linux-ide/drivers/ide/ide-taskfile.c	2005-02-10 17:38:02.621657912 +0900
+@@ -667,78 +667,90 @@ abort:
+ 	return err;
+ }
+ 
+-int ide_wait_cmd (ide_drive_t *drive, u8 cmd, u8 nsect, u8 feature, u8 sectors, u8 *buf)
++int ide_cmd_ioctl(ide_drive_t *drive, unsigned int cmd, unsigned long arg)
+ {
+-	struct request rq;
+-	u8 buffer[4];
 -
--		if (args) {
--			args[0] = stat;
--			args[1] = err;
--			args[2] = hwif->INB(IDE_NSECTOR_REG);
--			args[3] = hwif->INB(IDE_SECTOR_REG);
--			args[4] = hwif->INB(IDE_LCYL_REG);
--			args[5] = hwif->INB(IDE_HCYL_REG);
--			args[6] = hwif->INB(IDE_SELECT_REG);
--		}
- 	} else if (rq->flags & REQ_DRIVE_TASKFILE) {
- 		ide_task_t *args = (ide_task_t *) rq->special;
- 		if (rq->errors == 0)
-@@ -666,7 +652,7 @@ ide_startstop_t ide_error (ide_drive_t *
- 		return ide_stopped;
+-	if (!buf)
+-		buf = buffer;
+-	memset(buf, 0, 4 + SECTOR_WORDS * 4 * sectors);
+-	ide_init_drive_cmd(&rq);
+-	rq.flags = REQ_DRIVE_CMD;
+-	rq.buffer = buf;
+-	*buf++ = cmd;
+-	*buf++ = nsect;
+-	*buf++ = feature;
+-	*buf++ = sectors;
+-	return ide_do_drive_cmd(drive, &rq, ide_wait);
+-}
+-
+-/*
+- * FIXME : this needs to map into at taskfile. <andre@linux-ide.org>
+- */
+-int ide_cmd_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
+-{
+-	int err = 0;
+-	u8 args[4], *argbuf = args;
+-	u8 xfer_rate = 0;
+-	int argsize = 4;
+-	ide_task_t tfargs;
++	void __user *p = (void __user *)arg;
++	u8 args[4];
++	ide_task_t task;
++	ide_reg_valid_t *out_valid = &task.tf_out_flags;
++	ide_reg_valid_t *in_valid = &task.tf_in_flags;
++	task_ioreg_t *regs = task.tfRegister;
++	void *buf = NULL;
++	int xfer_rate = 0, in_size, err;
  
- 	/* retry only "normal" I/O: */
--	if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASK | REQ_DRIVE_TASKFILE)) {
-+	if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASKFILE)) {
- 		rq->errors = 1;
- 		ide_end_drive_cmd(drive, stat, err);
- 		return ide_stopped;
-@@ -717,7 +703,7 @@ ide_startstop_t ide_abort(ide_drive_t *d
- 		return ide_stopped;
+-	if (NULL == (void *) arg) {
++	if (p == NULL) {
+ 		struct request rq;
+ 		ide_init_drive_cmd(&rq);
+ 		return ide_do_drive_cmd(drive, &rq, ide_wait);
+ 	}
  
- 	/* retry only "normal" I/O: */
--	if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASK | REQ_DRIVE_TASKFILE)) {
-+	if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASKFILE)) {
- 		rq->errors = 1;
- 		ide_end_drive_cmd(drive, BUSY_STAT, 0);
- 		return ide_stopped;
-@@ -945,33 +931,7 @@ static ide_startstop_t execute_drive_cmd
- 		if (args->tf_out_flags.all != 0) 
- 			return flagged_taskfile(drive, args);
- 		return do_rw_taskfile(drive, args);
--	} else if (rq->flags & REQ_DRIVE_TASK) {
--		u8 *args = rq->buffer;
--		u8 sel;
-- 
--		if (!args)
--			goto done;
--#ifdef DEBUG
-- 		printk("%s: DRIVE_TASK_CMD ", drive->name);
-- 		printk("cmd=0x%02x ", args[0]);
-- 		printk("fr=0x%02x ", args[1]);
-- 		printk("ns=0x%02x ", args[2]);
-- 		printk("sc=0x%02x ", args[3]);
-- 		printk("lcyl=0x%02x ", args[4]);
-- 		printk("hcyl=0x%02x ", args[5]);
-- 		printk("sel=0x%02x\n", args[6]);
--#endif
-- 		hwif->OUTB(args[1], IDE_FEATURE_REG);
-- 		hwif->OUTB(args[3], IDE_SECTOR_REG);
-- 		hwif->OUTB(args[4], IDE_LCYL_REG);
-- 		hwif->OUTB(args[5], IDE_HCYL_REG);
-- 		sel = (args[6] & ~0x10);
-- 		if (drive->select.b.unit)
-- 			sel |= 0x10;
-- 		hwif->OUTB(sel, IDE_SELECT_REG);
-- 		ide_cmd(drive, args[0], args[2], &drive_cmd_intr);
-- 		return ide_started;
-- 	} else if (rq->flags & REQ_DRIVE_CMD) {
-+	} else if (rq->flags & REQ_DRIVE_CMD) {
-  		u8 *args = rq->buffer;
+-	if (copy_from_user(args, (void __user *)arg, 4))
++	if (copy_from_user(args, p, 4))
+ 		return -EFAULT;
  
- 		if (!args)
-@@ -1084,7 +1044,7 @@ static ide_startstop_t start_request (id
- 	if (!drive->special.all) {
- 		ide_driver_t *drv;
+-	memset(&tfargs, 0, sizeof(ide_task_t));
+-	tfargs.tfRegister[IDE_FEATURE_OFFSET] = args[2];
+-	tfargs.tfRegister[IDE_NSECTOR_OFFSET] = args[3];
+-	tfargs.tfRegister[IDE_SECTOR_OFFSET]  = args[1];
+-	tfargs.tfRegister[IDE_LCYL_OFFSET]    = 0x00;
+-	tfargs.tfRegister[IDE_HCYL_OFFSET]    = 0x00;
+-	tfargs.tfRegister[IDE_SELECT_OFFSET]  = 0x00;
+-	tfargs.tfRegister[IDE_COMMAND_OFFSET] = args[0];
+-
+-	if (args[3]) {
+-		argsize = 4 + (SECTOR_WORDS * 4 * args[3]);
+-		argbuf = kmalloc(argsize, GFP_KERNEL);
+-		if (argbuf == NULL)
+-			return -ENOMEM;
+-		memcpy(argbuf, args, 4);
+-	}
+-	if (set_transfer(drive, &tfargs)) {
++	memset(&task, 0, sizeof(task));
++
++	out_valid->b.status_command	= 1;
++	out_valid->b.sector		= 1;
++	out_valid->b.error_feature	= 1;
++	out_valid->b.nsector		= 1;
++
++	in_valid->b.status_command	= 1;
++	in_valid->b.error_feature	= 1;
++	in_valid->b.nsector		= 1;
++
++	regs[IDE_COMMAND_OFFSET]	= args[0];
++	regs[IDE_SECTOR_OFFSET]		= args[1];
++	regs[IDE_FEATURE_OFFSET]	= args[2];
++	regs[IDE_NSECTOR_OFFSET]	= args[3];
++
++	if (set_transfer(drive, &task)) {
+ 		xfer_rate = args[1];
+-		if (ide_ata66_check(drive, &tfargs))
+-			goto abort;
++		if (ide_ata66_check(drive, &task))
++			return -EIO;
+ 	}
  
--		if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASK))
-+		if (rq->flags & REQ_DRIVE_CMD)
- 			return execute_drive_cmd(drive, rq);
- 		else if (rq->flags & REQ_DRIVE_TASKFILE)
- 			return execute_drive_cmd(drive, rq);
-Index: linux-ide/drivers/ide/ide-lib.c
+-	err = ide_wait_cmd(drive, args[0], args[1], args[2], args[3], argbuf);
++	/* SMART needs its secret keys in lcyl and hcyl registers. */
++	if (regs[IDE_COMMAND_OFFSET] == WIN_SMART) {
++		out_valid->b.lcyl	= 1;
++		out_valid->b.hcyl	= 1;
++		regs[IDE_LCYL_OFFSET]	= SMART_LCYL_PASS;
++		regs[IDE_HCYL_OFFSET]	= SMART_HCYL_PASS;
++	}
++
++	in_size = 4 * SECTOR_WORDS * regs[IDE_NSECTOR_OFFSET];
++
++	if (!in_size) {
++		task.command_type		= IDE_DRIVE_TASK_NO_DATA;
++		task.data_phase			= TASKFILE_NO_DATA;
++		task.handler			= &task_no_data_intr;
++	} else {
++		task.command_type		= IDE_DRIVE_TASK_IN;
++		task.data_phase			= TASKFILE_IN;
++		task.handler			= &task_in_intr;
++		task.flags		       |= ATA_TFLAG_IO_16BIT;
++
++		if ((buf = kmalloc(in_size, GFP_KERNEL)) == NULL)
++			return -ENOMEM;
++		memset(buf, 0, in_size);	/* paranoia */
++	}
++
++	err = ide_diag_taskfile(drive, &task, in_size, buf);
+ 
+ 	if (!err && xfer_rate) {
+ 		/* active-retuning-calls future */
+ 		ide_set_xfer_rate(drive, xfer_rate);
+ 		ide_driveid_update(drive);
+ 	}
+-abort:
+-	if (copy_to_user((void __user *)arg, argbuf, argsize))
++
++	args[0] = regs[IDE_STATUS_OFFSET];
++	args[1] = regs[IDE_ERROR_OFFSET];
++	args[2] = regs[IDE_NSECTOR_OFFSET];
++	args[3] = 0;
++
++	if (copy_to_user(p, args, 4) || copy_to_user(p + 4, buf, in_size))
+ 		err = -EFAULT;
+-	if (argsize > 4)
+-		kfree(argbuf);
++
++	kfree(buf);
+ 	return err;
+ }
+ 
+Index: linux-ide/include/linux/ide.h
 ===================================================================
---- linux-ide.orig/drivers/ide/ide-lib.c	2005-02-10 17:31:48.393751059 +0900
-+++ linux-ide/drivers/ide/ide-lib.c	2005-02-10 17:38:02.163734703 +0900
-@@ -458,7 +458,7 @@ static void ide_dump_opcode(ide_drive_t 
- 	spin_unlock(&ide_lock);
- 	if (!rq)
- 		return;
--	if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASK)) {
-+	if (rq->flags & REQ_DRIVE_CMD) {
- 		char *args = rq->buffer;
- 		if (args) {
- 			opcode = args[0];
-Index: linux-ide/include/linux/blkdev.h
-===================================================================
---- linux-ide.orig/include/linux/blkdev.h	2005-02-10 17:31:48.393751059 +0900
-+++ linux-ide/include/linux/blkdev.h	2005-02-10 17:38:02.163734703 +0900
-@@ -202,7 +202,6 @@ enum rq_flag_bits {
- 	__REQ_QUIET,		/* don't worry about errors */
- 	__REQ_SPECIAL,		/* driver suplied command */
- 	__REQ_DRIVE_CMD,
--	__REQ_DRIVE_TASK,
- 	__REQ_DRIVE_TASKFILE,
- 	__REQ_PREEMPT,		/* set for "ide_preempt" requests */
- 	__REQ_PM_SUSPEND,	/* suspend request */
-@@ -229,7 +228,6 @@ enum rq_flag_bits {
- #define REQ_QUIET	(1 << __REQ_QUIET)
- #define REQ_SPECIAL	(1 << __REQ_SPECIAL)
- #define REQ_DRIVE_CMD	(1 << __REQ_DRIVE_CMD)
--#define REQ_DRIVE_TASK	(1 << __REQ_DRIVE_TASK)
- #define REQ_DRIVE_TASKFILE	(1 << __REQ_DRIVE_TASKFILE)
- #define REQ_PREEMPT	(1 << __REQ_PREEMPT)
- #define REQ_PM_SUSPEND	(1 << __REQ_PM_SUSPEND)
+--- linux-ide.orig/include/linux/ide.h	2005-02-10 17:38:01.745804793 +0900
++++ linux-ide/include/linux/ide.h	2005-02-10 17:38:02.622657745 +0900
+@@ -1269,14 +1269,6 @@ extern int ide_do_drive_cmd(ide_drive_t 
+  */
+ extern void ide_end_drive_cmd(ide_drive_t *, u8, u8);
+ 
+-/*
+- * Issue ATA command and wait for completion.
+- * Use for implementing commands in kernel
+- *
+- *  (ide_drive_t *drive, u8 cmd, u8 nsect, u8 feature, u8 sectors, u8 *buf)
+- */
+-extern int ide_wait_cmd(ide_drive_t *, u8, u8, u8, u8, u8 *);
+-
+ extern u32 ide_read_24(ide_drive_t *);
+ 
+ extern void SELECT_DRIVE(ide_drive_t *);
+@@ -1314,10 +1306,10 @@ int ide_task_ioctl(ide_drive_t *, unsign
+ extern int system_bus_clock(void);
+ 
+ extern int ide_driveid_update(ide_drive_t *);
+-extern int ide_ata66_check(ide_drive_t *, ide_task_t *);
++int ide_ata66_check(ide_drive_t *, ide_task_t *);
+ extern int ide_config_drive_speed(ide_drive_t *, u8);
+ extern u8 eighty_ninty_three (ide_drive_t *);
+-extern int set_transfer(ide_drive_t *, ide_task_t *);
++int set_transfer(ide_drive_t *, ide_task_t *);
+ extern int taskfile_lib_get_identify(ide_drive_t *drive, u8 *);
+ 
+ extern int ide_wait_not_busy(ide_hwif_t *hwif, unsigned long timeout);
