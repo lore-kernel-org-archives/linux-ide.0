@@ -1,39 +1,28 @@
-From: "Andrew Chew" <achew@nvidia.com>
-Subject: RE: [PATCH 2.6.8-rc2] sata_nv.c
-Date: Tue, 27 Jul 2004 13:26:20 -0700
+From: "J. Ryan Earl" <heretic@clanhk.org>
+Subject: Re: [RFC] IDE/ATA/SATA controller hotplug
+Date: Tue, 27 Jul 2004 15:31:04 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <DBFABB80F7FD3143A911F9E6CFD477B03F95F5@hqemmail02.nvidia.com>
+Message-ID: <4106C998.80905@clanhk.org>
+References: <200407272018.i6RKIiYB028210@falcon10.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate00.nvidia.com ([216.228.112.144]:37905 "EHLO
-	hqemgate00.nvidia.com") by vger.kernel.org with ESMTP
-	id S266613AbUG0U07 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jul 2004 16:26:59 -0400
-Content-class: urn:content-classes:message
+Received: from mail.hardcore-gaming.net ([69.93.101.157]:30359 "EHLO
+	mail.hardcore-gaming.net") by vger.kernel.org with ESMTP
+	id S266622AbUG0UbL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Jul 2004 16:31:11 -0400
+In-Reply-To: <200407272018.i6RKIiYB028210@falcon10.austin.ibm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Doug Maxey <dwm@austin.ibm.com>
+Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Jeff Garzik wrote:
-> 7) don't use host->scr_addr as a sly way to obtain your base address. 
-> Use host_set->mmio_base directly (casting from unsigned long 
-> if it's PIO 
-> rather than MMIO).
+Doug Maxey wrote:
 
-I noticed in libata-core.c's ata_pci_remove_one(), that the
-host_set->mmio_base gets unmapped before calling
-host_set->ops->host_stop(host_set).  The problem is that I want to
-access the registers mapped to host_set->mmio_base in my host_stop
-routine (it's in my host_stop routine that I disable hotplug event
-interrupts).
+>Ok, please delineate.  Working off the assumption that 95+% of the
+>systems that run Linux are x86 based
+>
+Methinks you've forgotten about the embedded market which is mostly 
+non-x86 in which there are tens if not hundreds of millions of devices.
 
-It looks safe to just swap the two calls, so we call
-host_set->ops->host_stop(host_set) before we iounmap
-host_set->mmio_base.  That way, my host_stop routine can still access
-host_set->mmio_base.
-
-However, I don't want to break any architectural model you may have in
-mind.  Can you advise me on the proper approach I should take with this?
+-ryan
