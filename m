@@ -1,113 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH] fix Silicon Image SATA 4-port support
-Date: Wed, 25 Feb 2004 02:27:47 -0500
+From: <mark@harddata.com>
+Subject: Re: Any recommended PATA or SATA chip for kernel 2.6.x ?
+Date: Wed, 25 Feb 2004 01:02:48 -0700 (MST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <403C4E73.9030805@pobox.com>
+Message-ID: <63068.68.151.39.198.1077696168.squirrel@www.harddata.com>
+References: <004c01c3fb66$b7ba9440$9c02a8c0@southa.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080909060405070407040203"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:61405 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262650AbUBYH2A
+Received: from 198.216-123-194-0.interbaun.com ([216.123.194.198]:27871 "EHLO
+	mail.harddata.com") by vger.kernel.org with ESMTP id S262345AbUBYIDP
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Feb 2004 02:28:00 -0500
+	Wed, 25 Feb 2004 03:03:15 -0500
+In-Reply-To: <004c01c3fb66$b7ba9440$9c02a8c0@southa.com>
 List-Id: linux-ide@vger.kernel.org
-To: Linux Kernel <linux-kernel@vger.kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: kylewong@southa.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------080909060405070407040203
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+> Hi,
+>
+> I need to build a six disk IDE md raid-5 with-in a month, Is here anyone
+> and recommed some PATA or SATA chip which is known to be trouble free
+> and kernel 2.6.x friendly?
+>
 
+3ware Escalade Raid controllers are your best bet. They are supported in
+the default kernel and provide web and command line administration tools
+for linux.
 
-Do not be fooled, Silicon Image is still marked CONFIG_BROKEN for a 
-reason...  :)  But this should (hopefully!) get 4-port support going.
+> I found in the market that most PCI IDE card are using "siimage (CMD?),
+> HiPoint and IT8212 chip, are they working well with 2.6.x ?
 
-Testing requested...
+Well when considering SATA last time I checked libata (library used by
+open source SATA drivers) didn't support hotswapping. So really you can't
+build a proper RAID 5 array without that. Some one can correct me if
+Hotswap has now been added.
 
+Some of the proprietary drivers may support hotswap, but I really don't
+know. I know we played with the SIL3112a but never tried hotswap.
 
-
---------------080909060405070407040203
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-===== drivers/scsi/sata_sil.c 1.7 vs edited =====
---- 1.7/drivers/scsi/sata_sil.c	Wed Jan 14 18:34:44 2004
-+++ edited/drivers/scsi/sata_sil.c	Wed Feb 25 02:24:24 2004
-@@ -44,6 +44,11 @@
- 	SIL_SYSCFG		= 0x48,
- 	SIL_MASK_IDE0_INT	= (1 << 22),
- 	SIL_MASK_IDE1_INT	= (1 << 23),
-+	SIL_MASK_IDE2_INT	= (1 << 24),
-+	SIL_MASK_IDE3_INT	= (1 << 25),
-+	SIL_MASK_2PORT		= SIL_MASK_IDE0_INT | SIL_MASK_IDE1_INT,
-+	SIL_MASK_4PORT		= SIL_MASK_2PORT |
-+				  SIL_MASK_IDE2_INT | SIL_MASK_IDE3_INT,
- 
- 	SIL_IDE0_TF		= 0x80,
- 	SIL_IDE0_CTL		= 0x8A,
-@@ -59,6 +64,7 @@
- 	SIL_IDE2_CTL		= 0x28A,
- 	SIL_IDE2_BMDMA		= 0x200,
- 	SIL_IDE2_SCR		= 0x300,
-+	SIL_INTR_STEERING	= (1 << 1),
- 
- 	SIL_IDE3_TF		= 0x2C0,
- 	SIL_IDE3_CTL		= 0x2CA,
-@@ -304,7 +310,7 @@
- 	unsigned long base;
- 	void *mmio_base;
- 	int rc;
--	u32 tmp;
-+	u32 tmp, irq_mask;
- 
- 	if (!printed_version++)
- 		printk(KERN_DEBUG DRV_NAME " version " DRV_VERSION "\n");
-@@ -365,14 +371,6 @@
- 	probe_ent->port[1].scr_addr = base + SIL_IDE1_SCR;
- 	ata_std_ports(&probe_ent->port[1]);
- 
--	/* make sure IDE0/1 interrupts are not masked */
--	tmp = readl(mmio_base + SIL_SYSCFG);
--	if (tmp & (SIL_MASK_IDE0_INT | SIL_MASK_IDE1_INT)) {
--		tmp &= ~(SIL_MASK_IDE0_INT | SIL_MASK_IDE1_INT);
--		writel(tmp, mmio_base + SIL_SYSCFG);
--		readl(mmio_base + SIL_SYSCFG);	/* flush */
--	}
--
- 	if (ent->driver_data == sil_3114) {
- 		probe_ent->port[2].cmd_addr = base + SIL_IDE2_TF;
- 		probe_ent->port[2].ctl_addr = base + SIL_IDE2_CTL;
-@@ -385,6 +383,25 @@
- 		probe_ent->port[3].bmdma_addr = base + SIL_IDE3_BMDMA;
- 		probe_ent->port[3].scr_addr = base + SIL_IDE3_SCR;
- 		ata_std_ports(&probe_ent->port[3]);
-+
-+		irq_mask = SIL_MASK_4PORT;
-+
-+		/* flip the magic "make 4 ports work" bit */
-+		tmp = readl(mmio_base + SIL_IDE2_BMDMA);
-+		if ((tmp & SIL_INTR_STEERING) == 0)
-+			writel(tmp | SIL_INTR_STEERING,
-+			       mmio_base + SIL_IDE2_BMDMA);
-+
-+	} else {
-+		irq_mask = SIL_MASK_2PORT;
-+	}
-+
-+	/* make sure IDE0/1/2/3 interrupts are not masked */
-+	tmp = readl(mmio_base + SIL_SYSCFG);
-+	if (tmp & irq_mask) {
-+		tmp &= ~irq_mask;
-+		writel(tmp, mmio_base + SIL_SYSCFG);
-+		readl(mmio_base + SIL_SYSCFG);	/* flush */
- 	}
- 
- 	pci_set_master(pdev);
-
---------------080909060405070407040203--
 
