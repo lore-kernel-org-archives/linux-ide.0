@@ -1,138 +1,59 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [SATA] libata-dev-2.6 queue updated
-Date: Thu, 03 Mar 2005 04:35:01 -0500
-Message-ID: <4226DA45.90106@pobox.com>
+From: "Stuart Hayes" <stuarthayes@austin.rr.com>
+Subject: Re: ide-cd question
+Date: Thu, 3 Mar 2005 08:27:08 -0600
+Message-ID: <001901c51ffd$1518a210$aeb91942@400sc>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070309040806090208040204"
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:49549 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261764AbVCCJfS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Mar 2005 04:35:18 -0500
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=response
+Content-Transfer-Encoding: 7bit
+Received: from ms-smtp-02.texas.rr.com ([24.93.47.41]:39852 "EHLO
+	ms-smtp-02-eri0.texas.rr.com") by vger.kernel.org with ESMTP
+	id S261755AbVCCO3U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Mar 2005 09:29:20 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org, bzolnier@gmail.com
+Cc: Stuart_Hayes@Dell.com
 
-This is a multi-part message in MIME format.
---------------070309040806090208040204
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+I sent in this patch a few weeks ago, and never saw a response... I was 
+wondering if there was a problem with it, or if I need to supply more 
+info...?  This patch is against 2.6.11-rc3.  It makes sure that when 
+ide_atapi_error() tries to end a failing ATAPI request after 2 reset 
+attempts by calling drive->driver->end_request(), it will really be ended.  
+Right now, a request that has a non-null rq->bio will not get ended, nor 
+will rq->errors get cleared, so it will get retried forever with no more 
+reset attempts.
 
-Added a couple patches, and updated for 2.6.11-release.
+My fingers are crossed that this patch won't be mangled... I seem to have 
+a problem with that...
 
-
---------------070309040806090208040204
-Content-Type: text/plain;
- name="libata-dev-2.6.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata-dev-2.6.txt"
-
-BK users:
-
-	bk pull bk://gkernel.bkbits.net/libata-dev-2.6
-		or
-	bk pull bk://kernel.bkbits.net/jgarzik/libata-dev-2.6
-
-Patch:
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.11-libata-dev1.patch.bz2
+Thanks,
+Stuart
 
 
-This will update the following files:
-
- drivers/scsi/Kconfig         |   18 
- drivers/scsi/Makefile        |    2 
- drivers/scsi/ahci.c          |  107 ++++-
- drivers/scsi/ata_adma.c      |  778 +++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/libata-core.c   |  312 +++++++++--------
- drivers/scsi/libata-scsi.c   |  701 ++++++++++++++++++++++++++++++++------
- drivers/scsi/libata.h        |    6 
- drivers/scsi/pata_pdc2027x.c |  771 ++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/sata_nv.c       |    6 
- drivers/scsi/sata_promise.c  |   84 ++++
- drivers/scsi/sata_qstor.c    |   50 +-
- drivers/scsi/sata_sil.c      |    2 
- drivers/scsi/sata_svw.c      |    4 
- drivers/scsi/sata_vsc.c      |    7 
- include/linux/ata.h          |   15 
- include/linux/libata.h       |   10 
- include/scsi/scsi.h          |    3 
- 17 files changed, 2564 insertions(+), 312 deletions(-)
-
-through these ChangeSets:
-
-<andyw:pobox.com>:
-  o [libata scsi] support 12-byte passthru CDB
-  o [libata scsi] passthru CDB check condition processing
-  o T10/04-262 ATA pass thru - patch
-
-<erikbenada:yahoo.ca>:
-  o [libata sata_promise] support PATA ports on SATA controllers
-
-<liml:rtr.ca>:
-  o sata_qstor: eh_timeout fix
-
-<tklauser:nuerscht.ch>:
-  o drivers/scsi/ahci: Use the DMA_{64,32}BIT_MASK constants
-  o drivers/scsi/sata_vsc: Use the DMA_{64,32}BIT_MASK constants
-
-Adam J. Richter:
-  o ata_pci_remove_one used freed memory
-
-Adrian Bunk:
-  o drivers/scsi/sata_*: make code static
-
-Albert Lee:
-  o [libata] use init-device-params ATA command where needed
-  o [libata] ata_scsi_verify_xlat() fix
-  o pdc2027x timing register fix for 100MHz
-  o [libata] CHS support: add CHS support to ata_scsi_verify_xlat(), ata_scsi_rw_xlat() and ata_scsiop_read_cap().
-  o [libata] CHS support: reorganize read/write translation in ata_scsi_rw_xlat()
-  o [libata] CHS support: rename vars (s/sector/block/) in ata_scsi_verify_xlat()
-  o [libata] CHS support: detect C/H/S at IDENTIFY DEVICE time
-  o [libata] CHS support: add definitions to headers
-  o pdc2027x timing register bug fix
-  o [libata pdc2027x] fix incorrect pio and mwdma masks
-  o [libata pdc2027x] remove quirks and ROM enable
-  o [libata] add driver for Promise PATA 2027x
-
-Brad Campbell:
-  o libata basic detection and errata for PATA->SATA bridges
-
-Jeff Garzik:
-  o [libata ahci] Print out port id on error messages
-  o [libata ahci] support PCI MSI interrupt vector
-  o [libata adma] Add init code, fix CPB submission code
-  o [libata ahci] finish ATAPI support
-  o [libata adma] trivial whitespace cleanup
-  o [libata dma] fix DMA mode config; add some more initialization code
-  o [libata adma] add support for configuring PIO/DMA modes
-  o [libata] turn on ATAPI support
-  o [libata sata_promise] merge Tobias Lorenz' pdc20619 patch, part 2
-  o [libata] small cleanups
-  o [libata] remove unused execute-device-diagnostic reset method
-  o [libata] add new driver ata_adma
-  o [libata pdc2027x] update for upstream struct device conversion
-  o [libata sata_promise] fix merge bugs
-  o [libata] fix build breakage
-  o [libata] fix SATA->PATA bridge detect compile breakage
-  o [libata] fix printk warning
-
-John W. Linville:
-  o libata: update ATA pass thru opcodes
-  o libata: minor style changes in ata_scsi_pass_thru
-  o libata: filter SET_FEATURES - XFER MODE from ATA pass thru
-  o libata: sync SMART ioctls with ATA pass thru spec (T10/04-262r7)
-  o libata: fix command queue leak when xlat_func fails
-  o libata: SMART support via ATA pass-thru
-
-Mark Lord:
-  o [libata qstor] minor update per LKML comments
-
-Tobias Lorenz:
-  o [libata sata_promise] pdc20619 (PATA) support
-  o libata-scsi: get-identity ioctl support
+--- ide-io.c.orig 2005-02-10 15:23:52.000000000 -0500
++++ ide-io.c.new 2005-02-10 15:23:31.000000000 -0500
+@@ -515,7 +515,18 @@ static ide_startstop_t ide_atapi_error(i
+   hwif->OUTB(WIN_IDLEIMMEDIATE, IDE_COMMAND_REG);
+ 
+  if (rq->errors >= ERROR_MAX) {
+-  drive->driver->end_request(drive, 0, 0);
++  /* 
++   * make sure request is fully ended--otherwise bio might get updated and the
++   * command will be retried without rq->errors getting reset to zero, which
++   * could cause us to get stuck in a loop with infinite retries without any 
++   * more reset attempts (borrowed from cdrom_end_request)
++   */
++  int nsectors;
++  if (blk_pc_request(rq))
++   nsectors = (rq->data_len + 511) >> 9;
++  if (!nsectors)
++   nsectors = 1;
++  drive->driver->end_request(drive, 0, nsectors);
+  } else {
+   if ((rq->errors & ERROR_RESET) == ERROR_RESET) {
+    ++rq->errors;
 
 
---------------070309040806090208040204--
