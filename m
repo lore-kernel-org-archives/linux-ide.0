@@ -1,91 +1,41 @@
-From: Hugo Mills <hugo-lkml@carfax.org.uk>
-Subject: [PATCH] siimage.c: two problems in init_hwif_siimage()
-Date: Sun, 15 Jun 2003 16:13:26 +0100
+From: "Adam J. Richter" <adam@yggdrasil.com>
+Subject: 2.5.70-bk12+: ide pio scheduling while atomic
+Date: Tue, 17 Jun 2003 05:21:41 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20030615151326.GI32730@carfax.org.uk>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="STPqjqpCrtky8aYs"
+Message-ID: <200306171221.h5HCLfo02887@adam.yggdrasil.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 81-5-136-19.dsl.eclipse.net.uk ([81.5.136.19]:40358 "EHLO
-	vlad.carfax.org.uk") by vger.kernel.org with ESMTP id S262288AbTFOO7p
+Received: from h-64-105-35-56.SNVACAID.covad.net ([64.105.35.56]:11139 "EHLO
+	adam.yggdrasil.com") by vger.kernel.org with ESMTP id S264682AbTFQMIb
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Jun 2003 10:59:45 -0400
-Content-Disposition: inline
+	Tue, 17 Jun 2003 08:08:31 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
+	In 2.5.70-bk13 (possibly 2.5.70-bk12) through 2.5.71 (haven't
+tried 2.5.72 or 2.5.71-bkN yet),
 
---STPqjqpCrtky8aYs
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+	When I use the vanilla IDE driver (PIO mode, I believe), I
+get a flood of "bad: scheduling while atomic!" messages.  These
+messages also print out a stack trace which basically just shows
+the idle thread calling schedule.  This is true even on the
+very first such message (I've verified this by making the
+kernel go into an infinite loop at that point).
 
-   Alan - 
+	This behavior began in either 2.5.70-bk12 or 2.5.70-bk13 and has
+persisted through 2.5.71.  There were substantial changes to
+drivers/ide in the bk release where this behavior began.  I haven't
+tried the .71-bk releases or 2.5.72.  By the way, I'm building
+2.5.72 now, but may not be able to fiddle with it until tomorrow.
 
-   Two issues with the init_hwif_siimage function in
-drivers/ide/pci/siimage.c:
+	I've tried making some logs of recent acquisitions and
+releases of spinlocks, with results that suggest that I've
+somehow botched my own logging.  While I am continuing to dig
+into this problem, it looks like the time that I'll be able to
+put into it over the next few weeks will be very limited, so
+I thought I ought to at least report it now before the problem
+gets any more stale.
 
-1) is_sata returns 0 or 1, not a PCI_DEVICE_ID_.
-
-2) In the same function, there is:
-
-        if (hwif->pci_dev->device != PCI_DEVICE_ID_SII_3112)
-                hwif->atapi_dma = 1;
-
-   This doesn't initialise the 1210SA in the same way as the 3112. I
-think the line should read:
-
-	if(!is_sata(hwif))
-                hwif->atapi_dma = 1;
-
-   Patches below fix both separately.
-
-   Hugo.
-
-diff -ru --exclude-from patch-help/ignore linux-2.4.21-ac1/drivers/ide/pci/siimage.c linux-test/drivers/ide/pci/siimage.c
---- linux-2.4.21-ac1/drivers/ide/pci/siimage.c	2003-06-15 13:08:58.000000000 +0100
-+++ linux-test/drivers/ide/pci/siimage.c	2003-06-15 13:29:10.000000000 +0100
-@@ -1114,7 +1114,7 @@
- 	hwif->reset_poll = &siimage_reset_poll;
- 	hwif->pre_reset = &siimage_pre_reset;
- 
--	if(is_sata(hwif) == PCI_DEVICE_ID_SII_3112)
-+	if(is_sata(hwif))
- 		hwif->busproc   = &siimage_busproc;
- 
- 	if (!hwif->dma_base) {
-
-
-
-diff -ru --exclude-from patch-help/ignore linux-2.4.21-ac1/drivers/ide/pci/siimage.c linux-test/drivers/ide/pci/siimage.c
---- linux-2.4.21-ac1/drivers/ide/pci/siimage.c	2003-06-15 13:08:58.000000000 +0100
-+++ linux-test/drivers/ide/pci/siimage.c	2003-06-15 13:52:41.000000000 +0100
-@@ -1127,7 +1127,7 @@
- 	hwif->mwdma_mask = 0x07;
- 	hwif->swdma_mask = 0x07;
- 
--	if (hwif->pci_dev->device != PCI_DEVICE_ID_SII_3112)
-+	if (!is_sata(hwif))
- 		hwif->atapi_dma = 1;
- 
- 	hwif->ide_dma_check = &siimage_config_drive_for_dma;
-
-
--- 
-=== Hugo Mills: hugo@... carfax.org.uk | darksatanic.net | lug.org.uk ===
-  PGP key: 1C335860 from wwwkeys.eu.pgp.net or http://www.carfax.org.uk
-        --- Great oxymorons of the world, no. 2: Common Sense ---        
-
---STPqjqpCrtky8aYs
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQE+7I0WssJ7whwzWGARAj4tAKCxBQ0j92Z8oWlTAPK3XRQ6ne0BnQCdFogR
-Sy8Jh2KiZ684RqaYoyfI2Zs=
-=JGo1
------END PGP SIGNATURE-----
-
---STPqjqpCrtky8aYs--
+Adam J. Richter     __     ______________   575 Oroville Road
+adam@yggdrasil.com     \ /                  Miplitas, California 95035
++1 408 309-6081         | g g d r a s i l   United States of America
+                         "Free Software For The Rest Of Us."
