@@ -1,30 +1,21 @@
-From: Andy Warner <andyw@pobox.com>
-Subject: Re: T10/04-262 ATA pass thru - patch.
-Date: Wed, 29 Sep 2004 15:44:20 -0500
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] updates to Vitesse SATA driver
+Date: Wed, 29 Sep 2004 18:19:40 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040929154420.D15041@florence.linkmargin.com>
-References: <20040928001633.A8363@florence.linkmargin.com> <20040928003911.B8363@florence.linkmargin.com> <20040929124954.C26650@tuxdriver.com> <20040929131936.A14759@florence.linkmargin.com> <20040929131250.A30946@tuxdriver.com>
+Message-ID: <415B34FC.8060908@pobox.com>
+References: <8746466a04092114163b3c0618@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:2769 "EHLO
-	ms-smtp-03.rdc-kc.rr.com") by vger.kernel.org with ESMTP
-	id S269024AbUI2Uqe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 29 Sep 2004 16:46:34 -0400
-Content-Disposition: inline
-In-Reply-To: <20040929131250.A30946@tuxdriver.com>; from linville@tuxdriver.com on Wed, Sep 29, 2004 at 01:12:50PM -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:34746 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S269157AbUI2WTy
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Sep 2004 18:19:54 -0400
+In-Reply-To: <8746466a04092114163b3c0618@mail.gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Andy Warner <andyw@pobox.com>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Pat LaVarre <p.lavarre@ieee.org>, Mark Lord <mlord@pobox.com>
+To: Dave <dave.jiang@gmail.com>, jeremy.higdon@sgi.com
+Cc: linux-ide@vger.kernel.org
 
-John W. Linville wrote:
-> [...]
-> > Are you checking this against Rev 3 of the spec ?
-> 
-> Ahh...I don't have the new spec.  Anyway, I guess that confirms it... :-)
+So where did the discussion on this patch land?
 
-And remember revision 4 of the spec is incoming, so it's all got to
-change at least one more time anyway.
--- 
-andyw@pobox.com
-
-Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
