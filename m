@@ -1,381 +1,1235 @@
-From: Clear.Zhang@uli.com.tw
-Subject: [patch] scsi/libata: correct bug for ULi M5281
-Date: Wed, 8 Dec 2004 14:45:40 +0800
-Message-ID: <OF518056F7.FB1438A8-ON48256F64.0024A22B@uli.com.tw>
+From: "Atul Bhouraskar" <atul.bhouraskar@acoustic-technologies.com>
+Subject: PROBLEM: dma timeout errors on reads and large writes (sata_vsc on kernel 2.6.9)
+Date: Thu, 9 Dec 2004 16:48:26 +1100
+Message-ID: <000501c4ddb2$b97cd660$0d65a8c0@SHARK>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	Boundary="0__=C7BBE5F7DFB724BB8f9e8a93df938690918cC7BBE5F7DFB724BB"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from NK210-202-245-3.vdsl.static.apol.com.tw ([210.202.245.3]:30418
-	"EHLO uli.com.tw") by vger.kernel.org with ESMTP id S261715AbULHGp6
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Dec 2004 01:45:58 -0500
-Content-Disposition: inline
+Received: from gizmo07bw.bigpond.com ([144.140.70.42]:1697 "HELO
+	gizmo07bw.bigpond.com") by vger.kernel.org with SMTP
+	id S261159AbULIFu3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Dec 2004 00:50:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, andrebalsa@mailingaddress.org, Peer.Chen@uli.com.tw, Emily.Jiang@uli.com.tw, Eric.Lo@uli.com.tw
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
---0__=C7BBE5F7DFB724BB8f9e8a93df938690918cC7BBE5F7DFB724BB
-Content-transfer-encoding: base64
-Content-type: text/plain; charset=gb2312
+Hi,
+
+I am building a linux-2.6.9 system with 4 250G SATA drives (using the
+intel GD31244 controller).
+I have compiled a monolithic kernel with Vitesse vsc SATA support, ACPI
+and APM have been turned off (see config at end of message).
+The kernel boots up properly and detects all drives correctly (see dmesg
+below).
+I can partition and initialize the drives without any problem (using
+cfdisk and mke2fs).
+I can read and write small files (<100MB) without any problem too.
+
+But when I try to use any of the drives with large files (more than a
+couple of GB), the process invariably hangs with the kernel spewing out
+ATA timeout and other errors (see log below). It usually needs a write
+of more than 5-6GB before it happens, but it usually occurs at around
+50-100MB while reading. It is not possible to kill the hung process,
+though the rest of the system continues to be responsive. Any further
+access (even an 'ls') on *any* of the SATA drives usually instantly
+meets with the same fate.
+
+It can be reproduced in the following way:
 
 
-DQpIaSwgSmVmZg0KDQpUaGUgc2F0YV91bGkgcGF0Y2ggZm9yIG01MjgxIGxvb2tzIGZpbmUsYnV0
-IHNvbWUgb2YgTTUyODEgY2hpcCdzIFBIWQ0KaXMgbm90IHN0YWJsZSBzb21ldGltZSwgc28gaXQg
-bmVlZCBhIHdvcmthcm91bmQgdG8gY29ycmVjdCB0aGUgYnVnLg0KDQpwYXRjaF9NNTI4MXdvcmth
-cm91bmQgaXMganVzdCBmb3IgaXQuDQoNClRoZSBwYXRjaCBpcyBhcHBsaWVkIHRvIGtlcm5lbCAy
-LjYuOS4gUGxlYXNlcyBhcHBseSB0byBuZXcga2VybmVscywgdGhhbmtzDQphIGxvdC4NCg0KU2ln
-bmVkLW9mZi1ieTogQ2xlYXIgWmhhbmcgPENsZWFyLlpoYW5nQHVsaS5jb20udHc+DQoNClRoYW5r
-cyAgICAgICAgICAgICAgICAgICAgICAgIChTZWUgYXR0YWNoZWQgZmlsZTogcGF0Y2hfTTUyODF3
-b3JrYXJvdW5kKQ0KQ2xlYXINCg0KDQoNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDQogICAgICAgICAgICAgICAg
-ICAgICAgSmVmZiBHYXJ6aWsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0K
-ICAgICAgICAgICAgICAgICAgICAgIDxqZ2FyemlrQHBvYm94LmMgICAgICAgICDK1bz+yMujuiBD
-bGVhci5aaGFuZ0B1bGkuY29tLnR3ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICANCiAgICAgICAgICAgICAgICAgICAgICBvbT4gICAgICAgICAgICAgICAg
-ICAgICAgs63LzaO6ICAgUGVlci5DaGVuQHVsaS5jb20udHcsIEVtaWx5LkppYW5nQHVsaS5jb20u
-dHcsIEVyaWMuTG9AdWxpLmNvbS50dyAgICAgICAgDQogICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgINb3zOKjuiAgIFJlOiBbcGF0Y2hdIG5ldC90dWxpcDogQWRk
-IHN1cHBvcnQgZm9yIFVMaSBNNTI2WCAgICAgICAgICAgICAgICAgICAgICAgIA0KICAgICAgICAg
-ICAgICAgICAgICAgIDIwMDQtMTEtMTcgMDU6MTIgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICANCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0KDQoNCg0KVGhlIHBhdGNoIGZv
-cm1hdCBsb29rcyBnb29kLiAgSSB3aWxsIHJldmlldyBhbmQgYXBwbHksIHRoYW5rcy4NCg0KQlRX
-LCBJIGp1c3QgbWVyZ2VkIHN1cHBvcnQgZm9yIDUyODEgU0FUQS4NCg0KVGhlIGVtYWlsIGNvbnRh
-aW5pbmcgdGhpcyBwYXRjaCBpcyBhdHRhY2hlZC4gIFRoaXMgd2lsbCBhcHBlYXIgaW4gTGludXgN
-Cmtlcm5lbCAyLjQuMjkgYW5kIDIuNi4xMS4NCg0KUmVnYXJkcywNCg0KICAgICAgICAgICAgIEpl
-ZmYNCg0KDQoNCg0KLS0tLS3AtNfUIEplZmYgR2FyemlrIDxqZ2FyemlrQHBvYm94LmNvbT4gtcTP
-+8+io6zU2iBUdWUsIDE2IE5vdiAyMDA0DQowMjoyMTozMSAtMDUwMCAtLS0tLQ0KICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0KICDK1bz+yMs6IGxpbnV4LWlk
-ZUB2Z2VyLmtlcm5lbC5vcmcgICAgICAgICAgIA0KICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIA0KICAgILOty806IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5v
-cmcgICAgICAgIA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-IA0KICAgINb3zOI6IFtQQVRDSF0gVUxpIFNBVEEgZml4ZXMsIG5ldyBzdXBwb3J0IA0KICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0KDQoNCg0KQW5vdGhlciBv
-bmUganVzdCBjaGVja2VkIGludG8gbGliYXRhLWRldi0yLjYuDQoNCg0KIGRyaXZlcnMvc2NzaS9z
-YXRhX3VsaS5jIHwgICA1MQ0KKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tDQogMSBmaWxlcyBjaGFuZ2VkLCAyMyBpbnNlcnRpb25zKCspLCAyOCBkZWxldGlv
-bnMoLSkNCg0KdGhyb3VnaCB0aGVzZSBDaGFuZ2VTZXRzOg0KDQo8amdhcnppa0Bwb2JveC5jb20+
-ICgwNC8xMS8xNiAxLjIxNjkpDQogICBbbGliYXRhIHNhdGFfdWxpXSBhZGQgNTI4MSBzdXBwb3J0
-LCBmaXggU0FUQSBwaHkgc2V0dXAgZm9yIG90aGVycw0KDQogICBDb250cmlidXRlZCBieSBQZWVy
-IENoZW4gQCBVTGkgYW5kIHRlc3RlZCBieSBhIHVzZXIuDQoNCmRpZmYgLU5ydSBhL2RyaXZlcnMv
-c2NzaS9zYXRhX3VsaS5jIGIvZHJpdmVycy9zY3NpL3NhdGFfdWxpLmMNCi0tLSBhL2RyaXZlcnMv
-c2NzaS9zYXRhX3VsaS5jICAgICAgICAyMDA0LTExLTE2IDAyOjE5OjU4IC0wNTowMA0KKysrIGIv
-ZHJpdmVycy9zY3NpL3NhdGFfdWxpLmMgICAgICAgIDIwMDQtMTEtMTYgMDI6MTk6NTggLTA1OjAw
-DQpAQCAtMzIsMTYgKzMyLDE4IEBADQogI2luY2x1ZGUgPGxpbnV4L2xpYmF0YS5oPg0KDQogI2Rl
-ZmluZSBEUlZfTkFNRSAgICAgICAgInNhdGFfdWxpIg0KLSNkZWZpbmUgRFJWX1ZFUlNJT04gICAg
-ICAgICAgICIwLjIiDQorI2RlZmluZSBEUlZfVkVSU0lPTiAgICAgICAgICAgIjAuNSINCg0KIGVu
-dW0gew0KICAgICAgICAgICAgIHVsaV81Mjg5ICAgICAgICAgICAgICAgICAgICAgID0gMCwNCiAg
-ICAgICAgICAgICB1bGlfNTI4NyAgICAgICAgICAgICAgICAgICAgICA9IDEsDQorICAgICAgICAg
-ICAgdWxpXzUyODEgICAgICAgICAgICAgICAgICAgICAgPSAyLA0KDQogICAgICAgICAgICAgLyog
-UENJIGNvbmZpZ3VyYXRpb24gcmVnaXN0ZXJzICovDQotICAgICAgICAgICAgVUxJX1NDUl9CQVNF
-ICAgICAgICAgICAgICAgICAgICAgICAgPSAweDkwLCAvKiBzYXRhMCBwaHkgU0NSDQpyZWdpc3Rl
-cnMgKi8NCi0gICAgICAgICAgICBVTElfU0FUQTFfT0ZTICAgICAgICAgICAgICAgICAgICAgICA9
-IDB4MTAsIC8qIG9mZnNldCBmcm9tDQpzYXRhMC0+c2F0YTEgcGh5IHJlZ3MgKi8NCi0NCisgICAg
-ICAgICAgICBVTEk1Mjg3X0JBU0UgICAgICAgICAgICAgICAgICAgICAgICA9IDB4OTAsIC8qIHNh
-dGEwIHBoeSBTQ1INCnJlZ2lzdGVycyAqLw0KKyAgICAgICAgICAgIFVMSTUyODdfT0ZGUyAgICAg
-ICAgICAgICAgICAgICAgICAgID0gMHgxMCwgLyogb2Zmc2V0IGZyb20NCnNhdGEwLT5zYXRhMSBw
-aHkgcmVncyAqLw0KKyAgICAgICAgICAgIFVMSTUyODFfQkFTRSAgICAgICAgICAgICAgICAgICAg
-ICAgID0gMHg2MCwgLyogc2F0YTAgcGh5IFNDUg0KcmVnaXN0ZXJzICovDQorICAgICAgICAgICAg
-VUxJNTI4MV9PRkZTICAgICAgICAgICAgICAgICAgICAgICAgPSAweDYwLCAvKiBvZmZzZXQgZnJv
-bQ0Kc2F0YTAtPnNhdGExIHBoeSByZWdzICovDQogfTsNCg0KIHN0YXRpYyBpbnQgdWxpX2luaXRf
-b25lIChzdHJ1Y3QgcGNpX2RldiAqcGRldiwgY29uc3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQNCipl
-bnQpOw0KQEAgLTUxLDYgKzUzLDcgQEANCiBzdGF0aWMgc3RydWN0IHBjaV9kZXZpY2VfaWQgdWxp
-X3BjaV90YmxbXSA9IHsNCiAgICAgICAgICAgICB7IFBDSV9WRU5ET1JfSURfQUwsIDB4NTI4OSwg
-UENJX0FOWV9JRCwgUENJX0FOWV9JRCwgMCwgMCwNCnVsaV81Mjg5IH0sDQogICAgICAgICAgICAg
-eyBQQ0lfVkVORE9SX0lEX0FMLCAweDUyODcsIFBDSV9BTllfSUQsIFBDSV9BTllfSUQsIDAsIDAs
-DQp1bGlfNTI4NyB9LA0KKyAgICAgICAgICAgIHsgUENJX1ZFTkRPUl9JRF9BTCwgMHg1MjgxLCBQ
-Q0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCAwLCAwLA0KdWxpXzUyODEgfSwNCiAgICAgICAgICAgICB7
-IH0gICAgICAgICAvKiB0ZXJtaW5hdGUgbGlzdCAqLw0KIH07DQoNCkBAIC0xMjUsMzMgKzEyOCwx
-NSBAQA0KIE1PRFVMRV9ERVZJQ0VfVEFCTEUocGNpLCB1bGlfcGNpX3RibCk7DQogTU9EVUxFX1ZF
-UlNJT04oRFJWX1ZFUlNJT04pOw0KDQotc3RhdGljIHVuc2lnbmVkIGludCBnZXRfc2NyX2NmZ19h
-ZGRyKHVuc2lnbmVkIGludCBwb3J0X25vLCB1bnNpZ25lZCBpbnQNCnNjX3JlZykNCitzdGF0aWMg
-dW5zaWduZWQgaW50IGdldF9zY3JfY2ZnX2FkZHIoc3RydWN0IGF0YV9wb3J0ICphcCwgdW5zaWdu
-ZWQgaW50DQpzY19yZWcpDQogew0KLSAgICAgICAgICAgIHVuc2lnbmVkIGludCBhZGRyID0gVUxJ
-X1NDUl9CQVNFICsgKDQgKiBzY19yZWcpOw0KLQ0KLSAgICAgICAgICAgIHN3aXRjaCAocG9ydF9u
-bykgew0KLSAgICAgICAgICAgIGNhc2UgMDoNCi0gICAgICAgICAgICAgICAgICAgICAgICBicmVh
-azsNCi0gICAgICAgICAgICBjYXNlIDE6DQotICAgICAgICAgICAgICAgICAgICAgICAgYWRkciAr
-PSBVTElfU0FUQTFfT0ZTOw0KLSAgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrOw0KLSAgICAg
-ICAgICAgIGNhc2UgMjoNCi0gICAgICAgICAgICAgICAgICAgICAgICBhZGRyICs9IFVMSV9TQVRB
-MV9PRlMqNDsNCi0gICAgICAgICAgICAgICAgICAgICAgICBicmVhazsNCi0gICAgICAgICAgICBj
-YXNlIDM6DQotICAgICAgICAgICAgICAgICAgICAgICAgYWRkciArPSBVTElfU0FUQTFfT0ZTKjU7
-DQotICAgICAgICAgICAgICAgICAgICAgICAgYnJlYWs7DQotICAgICAgICAgICAgZGVmYXVsdDoN
-Ci0gICAgICAgICAgICAgICAgICAgICAgICBCVUcoKTsNCi0gICAgICAgICAgICAgICAgICAgICAg
-ICBicmVhazsNCi0gICAgICAgICAgICB9DQotICAgICAgICAgICAgcmV0dXJuIGFkZHI7DQorICAg
-ICAgICAgICAgcmV0dXJuIGFwLT5pb2FkZHIuc2NyX2FkZHIgKyAoNCAqIHNjX3JlZyk7DQogfQ0K
-DQogc3RhdGljIHUzMiB1bGlfc2NyX2NmZ19yZWFkIChzdHJ1Y3QgYXRhX3BvcnQgKmFwLCB1bnNp
-Z25lZCBpbnQgc2NfcmVnKQ0KIHsNCiAgICAgICAgICAgICBzdHJ1Y3QgcGNpX2RldiAqcGRldiA9
-IHRvX3BjaV9kZXYoYXAtPmhvc3Rfc2V0LT5kZXYpOw0KLSAgICAgICAgICAgIHVuc2lnbmVkIGlu
-dCBjZmdfYWRkciA9IGdldF9zY3JfY2ZnX2FkZHIoYXAtPnBvcnRfbm8sIHNjX3JlZyk7DQorICAg
-ICAgICAgICAgdW5zaWduZWQgaW50IGNmZ19hZGRyID0gZ2V0X3Njcl9jZmdfYWRkcihhcCwgc2Nf
-cmVnKTsNCiAgICAgICAgICAgICB1MzIgdmFsOw0KDQogICAgICAgICAgICAgcGNpX3JlYWRfY29u
-ZmlnX2R3b3JkKHBkZXYsIGNmZ19hZGRyLCAmdmFsKTsNCkBAIC0xNjEsNyArMTQ2LDcgQEANCiBz
-dGF0aWMgdm9pZCB1bGlfc2NyX2NmZ193cml0ZSAoc3RydWN0IGF0YV9wb3J0ICphcCwgdW5zaWdu
-ZWQgaW50IHNjciwgdTMyDQp2YWwpDQogew0KICAgICAgICAgICAgIHN0cnVjdCBwY2lfZGV2ICpw
-ZGV2ID0gdG9fcGNpX2RldihhcC0+aG9zdF9zZXQtPmRldik7DQotICAgICAgICAgICAgdW5zaWdu
-ZWQgaW50IGNmZ19hZGRyID0gZ2V0X3Njcl9jZmdfYWRkcihhcC0+cG9ydF9ubywgc2NyKTsNCisg
-ICAgICAgICAgICB1bnNpZ25lZCBpbnQgY2ZnX2FkZHIgPSBnZXRfc2NyX2NmZ19hZGRyKGFwLCBz
-Y3IpOw0KDQogICAgICAgICAgICAgcGNpX3dyaXRlX2NvbmZpZ19kd29yZChwZGV2LCBjZmdfYWRk
-ciwgdmFsKTsNCiB9DQpAQCAtMjIyLDkgKzIwNywxMSBAQA0KICAgICAgICAgICAgICAgICAgICAg
-ICAgIHJjID0gLUVOT01FTTsNCiAgICAgICAgICAgICAgICAgICAgICAgICBnb3RvIGVycl9vdXRf
-cmVnaW9uczsNCiAgICAgICAgICAgICB9DQotDQorDQogICAgICAgICAgICAgc3dpdGNoIChib2Fy
-ZF9pZHgpIHsNCiAgICAgICAgICAgICBjYXNlIHVsaV81Mjg3Og0KKyAgICAgICAgICAgICAgICAg
-ICAgICAgIHByb2JlX2VudC0+cG9ydFswXS5zY3JfYWRkciA9IFVMSTUyODdfQkFTRTsNCisgICAg
-ICAgICAgICAgICAgICAgICAgICBwcm9iZV9lbnQtPnBvcnRbMV0uc2NyX2FkZHIgPSBVTEk1Mjg3
-X0JBU0UgKw0KVUxJNTI4N19PRkZTOw0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHBy
-b2JlX2VudC0+bl9wb3J0cyA9IDQ7DQoNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBw
-cm9iZV9lbnQtPnBvcnRbMl0uY21kX2FkZHIgPQ0KcGNpX3Jlc291cmNlX3N0YXJ0KHBkZXYsIDAp
-ICsgODsNCkBAIC0yMzIsMTkgKzIxOSwyNyBAQA0KICAgICAgICAgICAgICAgICAgICAgICAgIHBy
-b2JlX2VudC0+cG9ydFsyXS5jdGxfYWRkciA9DQogICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgKHBjaV9yZXNvdXJjZV9zdGFydChwZGV2LCAxKSB8DQpBVEFfUENJX0NUTF9PRlMp
-ICsgNDsNCiAgICAgICAgICAgICAgICAgICAgICAgICBwcm9iZV9lbnQtPnBvcnRbMl0uYm1kbWFf
-YWRkciA9DQpwY2lfcmVzb3VyY2Vfc3RhcnQocGRldiwgNCkgKyAxNjsNCisgICAgICAgICAgICAg
-ICAgICAgICAgICBwcm9iZV9lbnQtPnBvcnRbMl0uc2NyX2FkZHIgPSBVTEk1Mjg3X0JBU0UgKw0K
-VUxJNTI4N19PRkZTKjQ7DQoNCiAgICAgICAgICAgICAgICAgICAgICAgICBwcm9iZV9lbnQtPnBv
-cnRbM10uY21kX2FkZHIgPQ0KcGNpX3Jlc291cmNlX3N0YXJ0KHBkZXYsIDIpICsgODsNCiAgICAg
-ICAgICAgICAgICAgICAgICAgICBwcm9iZV9lbnQtPnBvcnRbM10uYWx0c3RhdHVzX2FkZHIgPQ0K
-ICAgICAgICAgICAgICAgICAgICAgICAgIHByb2JlX2VudC0+cG9ydFszXS5jdGxfYWRkciA9DQog
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKHBjaV9yZXNvdXJjZV9zdGFydChw
-ZGV2LCAzKSB8DQpBVEFfUENJX0NUTF9PRlMpICsgNDsNCiAgICAgICAgICAgICAgICAgICAgICAg
-ICBwcm9iZV9lbnQtPnBvcnRbM10uYm1kbWFfYWRkciA9DQpwY2lfcmVzb3VyY2Vfc3RhcnQocGRl
-diwgNCkgKyAyNDsNCisgICAgICAgICAgICAgICAgICAgICAgICBwcm9iZV9lbnQtPnBvcnRbM10u
-c2NyX2FkZHIgPSBVTEk1Mjg3X0JBU0UgKw0KVUxJNTI4N19PRkZTKjU7DQoNCiAgICAgICAgICAg
-ICAgICAgICAgICAgICBhdGFfc3RkX3BvcnRzKCZwcm9iZV9lbnQtPnBvcnRbMl0pOw0KICAgICAg
-ICAgICAgICAgICAgICAgICAgIGF0YV9zdGRfcG9ydHMoJnByb2JlX2VudC0+cG9ydFszXSk7DQog
-ICAgICAgICAgICAgICAgICAgICAgICAgYnJlYWs7DQoNCiAgICAgICAgICAgICBjYXNlIHVsaV81
-Mjg5Og0KLSAgICAgICAgICAgICAgICAgICAgICAgIC8qIGRvIG5vdGhpbmc7IGF0YV9wY2lfaW5p
-dF9uYXRpdmVfbW9kZSBkaWQgaXQgYWxsDQoqLw0KKyAgICAgICAgICAgICAgICAgICAgICAgIHBy
-b2JlX2VudC0+cG9ydFswXS5zY3JfYWRkciA9IFVMSTUyODdfQkFTRTsNCisgICAgICAgICAgICAg
-ICAgICAgICAgICBwcm9iZV9lbnQtPnBvcnRbMV0uc2NyX2FkZHIgPSBVTEk1Mjg3X0JBU0UgKw0K
-VUxJNTI4N19PRkZTOw0KKyAgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrOw0KKw0KKyAgICAg
-ICAgICAgIGNhc2UgdWxpXzUyODE6DQorICAgICAgICAgICAgICAgICAgICAgICAgcHJvYmVfZW50
-LT5wb3J0WzBdLnNjcl9hZGRyID0gVUxJNTI4MV9CQVNFOw0KKyAgICAgICAgICAgICAgICAgICAg
-ICAgIHByb2JlX2VudC0+cG9ydFsxXS5zY3JfYWRkciA9IFVMSTUyODFfQkFTRSArDQpVTEk1Mjgx
-X09GRlM7DQogICAgICAgICAgICAgICAgICAgICAgICAgYnJlYWs7DQoNCiAgICAgICAgICAgICBk
-ZWZhdWx0Og0KDQoNCg0KDQoNCg==
+[root@sdrs mnt]# cd /tmp
+[root@sdrs tmp]# mkdir sata1
+[root@sdrs tmp]# mount /dev/sdb1 sata1
+[root@sdrs tmp]# dd if=/dev/zero of=sata1/test count=100000
+100000+0 records in
+100000+0 records out
+ [root@sdrs tmp]# dd if=/dev/zero of=sata1/test count=1000000
+1000000+0 records in
+1000000+0 records out
+[root@sdrs tmp]# dd if=/dev/zero of=sata1/test count=10000000
+10000000+0 records in
+10000000+0 records out
+[root@sdrs tmp]# dd if=sata1/test of=/dev/null count=1000
+1000+0 records in
+1000+0 records out
+[root@sdrs tmp]# dd if=sata1/test of=/dev/null count=10000
+10000+0 records in
+10000+0 records out
+[root@sdrs tmp]# dd if=sata1/test of=/dev/null count=100000
+[HANGS]
 
---0__=C7BBE5F7DFB724BB8f9e8a93df938690918cC7BBE5F7DFB724BB
-Content-type: application/octet-stream;
-	name="=?gb2312?B?cGF0Y2hfTTUyODF3b3JrYXJvdW5k?="
-Content-Disposition: attachment; filename="=?gb2312?B?cGF0Y2hfTTUyODF3b3JrYXJvdW5k?="
-Content-Transfer-Encoding: base64
+------------------------------------------------------------------------
+----
 
-ZGlmZiAtdXByTiBsaW51eC0yLjYuOS12YW5pbGxhL2RyaXZlcnMvc2NzaS9saWJhdGEtY29yZS5j
-IGxpbnV4LTIuNi45L2RyaXZlcnMvc2NzaS9saWJhdGEtY29yZS5jCi0tLSBsaW51eC0yLjYuOS12
-YW5pbGxhL2RyaXZlcnMvc2NzaS9saWJhdGEtY29yZS5jCTIwMDQtMTAtMTkgMDU6NTM6MDYuMDAw
-MDAwMDAwICswODAwCisrKyBsaW51eC0yLjYuOS9kcml2ZXJzL3Njc2kvbGliYXRhLWNvcmUuYwky
-MDA0LTEyLTA4IDEzOjQxOjIwLjMwNjUzNzY4OCArMDgwMApAQCAtNDcsNiArNDcsOCBAQAogCiAj
-aW5jbHVkZSAibGliYXRhLmgiCiAKK3U4IGlmdGltZW91dD0wOworCiBzdGF0aWMgdW5zaWduZWQg
-aW50IGF0YV9idXN5X3NsZWVwIChzdHJ1Y3QgYXRhX3BvcnQgKmFwLAogCQkJCSAgICB1bnNpZ25l
-ZCBsb25nIHRtb3V0X3BhdCwKIAkJCSAgICAJICAgIHVuc2lnbmVkIGxvbmcgdG1vdXQpOwpAQCAt
-MjQyMSw2ICsyNDIzLDkgQEAgdm9pZCBhdGFfZW5nX3RpbWVvdXQoc3RydWN0IGF0YV9wb3J0ICph
-cAogCXN0cnVjdCBhdGFfcXVldWVkX2NtZCAqcWM7CiAKIAlEUFJJTlRLKCJFTlRFUlxuIik7CisJ
-CisJLy9hZGQgYnkgY2xlYXIgemhhbmcgMjAwNC8xMi83CisJaWZ0aW1lb3V0PTE7CiAKIAlxYyA9
-IGF0YV9xY19mcm9tX3RhZyhhcCwgYXAtPmFjdGl2ZV90YWcpOwogCWlmICghcWMpIHsKZGlmZiAt
-dXByTiBsaW51eC0yLjYuOS12YW5pbGxhL2RyaXZlcnMvc2NzaS9saWJhdGEtc2NzaS5jIGxpbnV4
-LTIuNi45L2RyaXZlcnMvc2NzaS9saWJhdGEtc2NzaS5jCi0tLSBsaW51eC0yLjYuOS12YW5pbGxh
-L2RyaXZlcnMvc2NzaS9saWJhdGEtc2NzaS5jCTIwMDQtMTAtMTkgMDU6NTM6NTEuMDAwMDAwMDAw
-ICswODAwCisrKyBsaW51eC0yLjYuOS9kcml2ZXJzL3Njc2kvbGliYXRhLXNjc2kuYwkyMDA0LTEy
-LTA4IDEzOjQyOjQxLjMwNTIyNDAxNiArMDgwMApAQCAtMjQsNiArMjQsNyBAQAogCiAjaW5jbHVk
-ZSA8bGludXgva2VybmVsLmg+CiAjaW5jbHVkZSA8bGludXgvYmxrZGV2Lmg+CisjaW5jbHVkZSA8
-bGludXgvcGNpLmg+CiAjaW5jbHVkZSA8bGludXgvc3BpbmxvY2suaD4KICNpbmNsdWRlIDxzY3Np
-L3Njc2kuaD4KICNpbmNsdWRlICJzY3NpLmgiCkBAIC0zMyw2ICszNCwxMSBAQAogCiAjaW5jbHVk
-ZSAibGliYXRhLmgiCiAKKy8vYWRkIGJ5IGNsZWFyIHpoYW5nIDIwMDQvMTIvNworI2RlZmluZSBw
-cmludF9jbGVhcihfeF8pIHByaW50ayBfeF8gCisvLyNkZWZpbmUgcHJpbnRfY2xlYXIoX3hfKSBO
-VUxMCitleHRlcm4gdTggaWZ0aW1lb3V0OworCiB0eXBlZGVmIHVuc2lnbmVkIGludCAoKmF0YV94
-bGF0X2Z1bmNfdCkoc3RydWN0IGF0YV9xdWV1ZWRfY21kICpxYywgdTggKnNjc2ljbWQpOwogc3Rh
-dGljIHZvaWQgYXRhX3Njc2lfc2ltdWxhdGUoc3RydWN0IGF0YV9wb3J0ICphcCwgc3RydWN0IGF0
-YV9kZXZpY2UgKmRldiwKIAkJCSAgICAgIHN0cnVjdCBzY3NpX2NtbmQgKmNtZCwKQEAgLTYyMiwx
-MSArNjI4LDE3NCBAQCBzdGF0aWMgdW5zaWduZWQgaW50IGF0YV9zY3NpX3J3X3hsYXQoc3RyCiBz
-dGF0aWMgaW50IGF0YV9zY3NpX3FjX2NvbXBsZXRlKHN0cnVjdCBhdGFfcXVldWVkX2NtZCAqcWMs
-IHU4IGRydl9zdGF0KQogewogCXN0cnVjdCBzY3NpX2NtbmQgKmNtZCA9IHFjLT5zY3NpY21kOwor
-CQorCS8vIGFkZCBieSBjbGVhciB6aGFuZyAyMDA0LzEyLzcgZm9yIFVMaSBNNTI4MSB3b3JrYXJv
-dWQJCisJaWYocWMtPmFwLT5ob3N0X3NldC0+cGRldi0+dmVuZG9yPT0weDEwYjkgJiYKKwkJcWMt
-PmFwLT5ob3N0X3NldC0+cGRldi0+ZGV2aWNlPT0weDUyODEpCisJeworCQkKKwkJc3RydWN0IHBj
-aV9kZXYgKnBkZXZfbTUyODE9cWMtPmFwLT5ob3N0X3NldC0+cGRldjsKKwkJdTggbTUyODFfcmV2
-aXNpb247CisJCQorCQljbWQtPnJlc3VsdCA9IFNBTV9TVEFUX0dPT0Q7CisJCQkgICAgICAgICAg
-ICAgIAorCQlwY2lfcmVhZF9jb25maWdfYnl0ZShwZGV2X201MjgxLCBQQ0lfUkVWSVNJT05fSUQs
-ICZtNTI4MV9yZXZpc2lvbik7CisJCS8vcHJpbnRrKCJtNTI4MV9yZXZpc2lvbj0weCV4XG4iLG01
-MjgxX3JldmlzaW9uKTsKKwkJLy92ZXJzaW9uIDB4YTAsMHhhMSwweGIxIG5lZWQgd29ya2Fyb3Vk
-CQorCQlpZihtNTI4MV9yZXZpc2lvbj09MHhhMCB8fG01MjgxX3JldmlzaW9uPT0weGExIHx8bTUy
-ODFfcmV2aXNpb249PTB4YjEgKQorCQl7CisJCQl1MTYgZXJyb3JfbTUyODE7CisJCQl1bnNpZ25l
-ZCBsb25nCXNjcl9hZGRyX201MjgxID0gcWMtPmFwLT5pb2FkZHIuc2NyX2FkZHI7CisJCQkKKwkJ
-CXBjaV9yZWFkX2NvbmZpZ193b3JkKHBkZXZfbTUyODEsc2NyX2FkZHJfbTUyODErNiwgJmVycm9y
-X201MjgxKTsKKwkJCQorCQkJaWYgKCB1bmxpa2VseShkcnZfc3RhdCAmIChBVEFfRVJSIHwgQVRB
-X0JVU1kgfCBBVEFfRFJRKSkgJiYgaWZ0aW1lb3V0PT0wLypleHByZXNzIG5vdCB0aW1lb3V0Ki8p
-CisJCQkJYXRhX3RvX3NlbnNlX2Vycm9yKHFjLCBkcnZfc3RhdCk7CisJCQkvL3RpbWUgb3V0IG9y
-IGRyaXZlIHN0YXR1cyBpcyBvawkJCQorCQkJZWxzZSBpZiAoKGVycm9yX201MjgxICYgMHgzZjgp
-IT0wIHx8IGlmdGltZW91dD09MSkgLy90aGUgc3JjIGVycm9yZSBwcmVzZW50CisJCQl7CisJCQkJ
-dTMyIHNjcjRfbTUyODE7CisJCQkJdTggIHJlc2V0X201MjgxLCBzdHVzLCBzY3IwX201MjgxOwor
-CQkJCQorCQkJCXU4IGtrLCBqajsKKyAgICAgICAgICAgICAgCQkJdTggY29tcmVzZXQ9MSwgc29m
-dHJlc2V0PTE7Ly9zdWNjZXNzPTAsIGZhaWw9MQorCQkKKwkJCQlwcmludGsoIlVMaSBzYXRhIGVy
-cm9yOjB4JXhcbiIsZXJyb3JfbTUyODEpOworCQkJCS8vcmVzZXQKKwkJCQkvLyBkbWEgaGF2ZSBi
-ZWVuIGNsb3NlZAorCQkJCS8vX19zYXZlX2ZsYWdzKGZsYWdzX201MjgxKTsKKwkJCQkvL19fY2xp
-KCk7CisJCQkJLy9jb20gcmVzZXQKKwkJCQlmb3Ioa2s9MDtrazwyMDtraysrKQorCQkJCXsKKwkJ
-CQkJcGNpX3JlYWRfY29uZmlnX2J5dGUocGRldl9tNTI4MSxzY3JfYWRkcl9tNTI4MSs4LCZyZXNl
-dF9tNTI4MSk7CisJCQkJCXJlc2V0X201MjgxID0gcmVzZXRfbTUyODEgJiAweGZlOworCQkJCQlw
-Y2lfd3JpdGVfY29uZmlnX2J5dGUocGRldl9tNTI4MSxzY3JfYWRkcl9tNTI4MSs4LHJlc2V0X201
-MjgxKTsKKwkJCQkJcmVzZXRfbTUyODEgPSByZXNldF9tNTI4MSB8IDB4MDE7CisJCQkJCXBjaV93
-cml0ZV9jb25maWdfYnl0ZShwZGV2X201MjgxLHNjcl9hZGRyX201MjgxKzgscmVzZXRfbTUyODEp
-OwkJCisJCQkJCQorCQkJCQkvL2RlbGF5IHR3byBtcworCQkJCQltZGVsYXkoMik7CisJCQkJCQor
-CQkJCQkvL3JlYWxsZXJ0IGFuZCBjbGVhciBlcnJvIGJpdAorCQkJCQlyZXNldF9tNTI4MSA9IHJl
-c2V0X201MjgxICYgMHhmZTsKKwkJICAgICAgICAJCXBjaV93cml0ZV9jb25maWdfYnl0ZShwZGV2
-X201MjgxLHNjcl9hZGRyX201MjgxKzgscmVzZXRfbTUyODEpOworCQkJCQltZGVsYXkoMik7CisJ
-CQkJCQkJCQkJCisJCQkJCXBjaV9yZWFkX2NvbmZpZ19ieXRlKHBkZXZfbTUyODEsc2NyX2FkZHJf
-bTUyODEsJnNjcjBfbTUyODEpOworCQkJCQlwY2lfcmVhZF9jb25maWdfZHdvcmQocGRldl9tNTI4
-MSxzY3JfYWRkcl9tNTI4MSs0LCZzY3I0X201MjgxKTsKKwkJCQkJaWYoc2NyMF9tNTI4MSE9MHgx
-MyB8fChzY3I0X201MjgxICYgMHg1MDAwMCkhPSAweDAwMDUwMDAwICkKKwkJCQkJeworCQkJCQkJ
-cHJpbnRfY2xlYXIoKCJwaHkgcmVzZXQgZmFpbGVkXG4iKSk7CisJCQkJCQlwcmludF9jbGVhcigo
-InNjcjA9MHgleFxuIiwgc2NyMF9tNTI4MSkpOworCQkJCQkJcHJpbnRfY2xlYXIoKCJzY3I0PTB4
-JXhcbiIsIHNjcjRfbTUyODEpKTsKKwkJCQkJCWNvbnRpbnVlOworCQkJCQl9CisJCQkJCWVsc2UK
-KwkJCQkJeworCQkJCQkJLy9wcmludF9jbGVhcigoImNvbSByZXNldCBzdWNjZXNzXG4iKSk7CisJ
-CQkJCQkvL2NsZWFyIGVycm9yIGJpdHMKKwkJCQkJCXBjaV93cml0ZV9jb25maWdfZHdvcmQocGRl
-dl9tNTI4MSxzY3JfYWRkcl9tNTI4MSs0LHNjcjRfbTUyODEpOworCisJCQkJCQljb21yZXNldD0w
-Oy8vc3VjY2VzcworCQkJCQkJYnJlYWs7CisJCQkJCX0KKwkJCQkJCisJCQkJfQorCQkJCQorCQkJ
-CWlmKGNvbXJlc2V0PT0wKQorCQkJCXsKKwkJCQkJLy9zdHVzPSBpbmIocWMtPmFwLT5pb2FkZHIu
-c3RhdHVzX2FkZHIpOy8vIGdldCBkcml2ZSBzdGF0dXMgCisJCQkJCWpqPTA7CisJCQkJCWRvCisJ
-CQkJCXsKKwkJCQkJCW1kZWxheSgyKTsKKwkJCQkJCXN0dXM9IGluYihxYy0+YXAtPmlvYWRkci5z
-dGF0dXNfYWRkcik7Ly8gZ2V0IGRyaXZlIHN0YXR1cyAKKwkJCQkJCWpqKys7CisJCQkJCQlpZihq
-aj49MTUwKQorCQkJCQkJeworCQkJCQkJCWJyZWFrOworCQkJCQkJfQorCQkJCQl9d2hpbGUgKHN0
-dXMhPTB4NTApOworCQkJCQkKKwkJCQkJLy9wcmludF9jbGVhcigoImpqPTB4JXhcbiIsIGpqKSk7
-CisJCQkJCQkJCQkJCisJCQkJCWlmKHN0dXMhPTB4NTAgLyomJiBpZnRpbWVvdXQ9PTEqLykKKwkJ
-CQkJeworCQkJCQkJLy9wcmludF9jbGVhcigoInNvZnQgcmVzZXRcbiIpKTsKKwkJCQkJCWZvcihr
-az0wO2trPDU7a2srKykKKwkJCQkJCXsKKwkJCQkJCQlvdXRiKDB4MDQscWMtPmFwLT5pb2FkZHIu
-Y3RsX2FkZHIpOwkvLyBzZXQgU1JTVCAKKwkJCQkJCQltZGVsYXkoNSk7CQkJLy8gbW9yZSB0aGFu
-IGVub3VnaCB0aW1lIAorCQkJCQkJCW91dGIoMCxxYy0+YXAtPmlvYWRkci5jdGxfYWRkcik7CS8v
-IGNsZWFyIAorCQkJCQkJCWpqPTA7CisJCQkJCQkJZG8KKwkJCQkJCQl7CisJCQkJCQkJCW1kZWxh
-eSgxKTsKKwkJCQkJCQkJc3R1cz0gaW5iKHFjLT5hcC0+aW9hZGRyLnN0YXR1c19hZGRyKTsvLyBn
-ZXQgZHJpdmUgc3RhdHVzIAorCQkJCQkJCQlqaisrOworCQkJCQkJCQlpZihqaj49MTAwKQorCQkJ
-CQkJCQl7CisJCQkJCQkJCQlicmVhazsKKwkJCQkJCQkJfQorCQkJCQkJCX13aGlsZSAoc3R1cyE9
-MHg1MCk7CisKKwkJCQkJCQlpZihzdHVzPT0weDUwKQorCQkJCQkJCXsKKwkJCQkJCQkJc29mdHJl
-c2V0PTA7Ly9zdWNlc3MKKwkJCQkJCQkJYnJlYWs7CisJCQkJCQkJfQorCQkJCQkJCQorCQkJCQkJ
-fQkJCQkJCQorCQkJCQorCQkJCQl9CisJCQkJCWlmKHN0dXM9PTB4NTApCisJCQkJCXsKKwkJCQkJ
-CXNvZnRyZXNldD0wOworCQkJCQl9CisJCQkJCXByaW50X2NsZWFyKCgiVUxpIGRyaXZlIHN0YXR1
-cz0weCV4XG4iLHN0dXMpKTsKKwkJCQkJCisJCQkJfQorCQkJCWlmdGltZW91dD0wOwkJCQorCQkJ
-CS8vX19yZXN0b3JlX2ZsYWdzKGZsYWdzX201MjgxKTsKKwkJCQkKKworCQkJCS8vc2V0IHRoZSBj
-b21tYW5kCisJCQkJLy90cm5zbGF0ZSBlcnJvciBjYW4gYmUgZG9uZSBhY2NvcmluZyB0byBhdGFf
-dG9fc2Vuc2VfZXJyb3IKKwkJCQkJCQorCQkJCWlmKGNvbXJlc2V0PT0xKQorCQkJCXsKKwkJCQkJ
-YXRhX3RvX3NlbnNlX2Vycm9yKHFjLCAweDIwKTsKKwkJCQl9CisJCQkJZWxzZSAKKwkJCQl7CisJ
-CQkJCS8vcHJpbnRfY2xlYXIoKCJ0byBzeXNcbiIpKTsKKwkJCQkJYXRhX3RvX3NlbnNlX2Vycm9y
-KHFjLCAweDEpOwkKKwkJCQl9CisJCQl9CisJCQllbHNlCisJCQl7CisJCQkJY21kLT5yZXN1bHQg
-PSBTQU1fU1RBVF9HT09EOworCQkJfQogCi0JaWYgKHVubGlrZWx5KGRydl9zdGF0ICYgKEFUQV9F
-UlIgfCBBVEFfQlVTWSB8IEFUQV9EUlEpKSkKLQkJYXRhX3RvX3NlbnNlX2Vycm9yKHFjLCBkcnZf
-c3RhdCk7CisJCX0KKwkJZWxzZQorCQl7CisJCQlpZiAodW5saWtlbHkoZHJ2X3N0YXQgJiAoQVRB
-X0VSUiB8IEFUQV9CVVNZIHwgQVRBX0RSUSkpKQorCQkJCWF0YV90b19zZW5zZV9lcnJvcihxYywg
-ZHJ2X3N0YXQpOworCQkJZWxzZQorCQkJCWNtZC0+cmVzdWx0ID0gU0FNX1NUQVRfR09PRDsKKwkJ
-fQorCX0KKwkvL2VuZCBhZGQgYnkgY2xlYXIgemhhbmcgMjAwNC8xMi83CiAJZWxzZQotCQljbWQt
-PnJlc3VsdCA9IFNBTV9TVEFUX0dPT0Q7CisJeworCisJCWlmICh1bmxpa2VseShkcnZfc3RhdCAm
-IChBVEFfRVJSIHwgQVRBX0JVU1kgfCBBVEFfRFJRKSkpCisJCQlhdGFfdG9fc2Vuc2VfZXJyb3Io
-cWMsIGRydl9zdGF0KTsKKwkJZWxzZQorCQkJY21kLT5yZXN1bHQgPSBTQU1fU1RBVF9HT09EOwor
-CX0KIAogCXFjLT5zY3NpZG9uZShjbWQpOwogCkBAIC0xMjQ3LDIyICsxNDE2LDIwOSBAQCB2b2lk
-IGF0YV9zY3NpX2JhZGNtZChzdHJ1Y3Qgc2NzaV9jbW5kICpjCiBzdGF0aWMgaW50IGF0YXBpX3Fj
-X2NvbXBsZXRlKHN0cnVjdCBhdGFfcXVldWVkX2NtZCAqcWMsIHU4IGRydl9zdGF0KQogewogCXN0
-cnVjdCBzY3NpX2NtbmQgKmNtZCA9IHFjLT5zY3NpY21kOworCQorCS8vIGFkZCBieSBjbGVhciB6
-aGFuZyAyMDA0LzEyLzcgZm9yIFVMaSBNNTI4MSB3b3JrYXJvdWQJCisJaWYocWMtPmFwLT5ob3N0
-X3NldC0+cGRldi0+dmVuZG9yPT0weDEwYjkgJiYKKwkJcWMtPmFwLT5ob3N0X3NldC0+cGRldi0+
-ZGV2aWNlPT0weDUyODEpCisJeworCQkKKwkJc3RydWN0IHBjaV9kZXYgKnBkZXZfbTUyODE9cWMt
-PmFwLT5ob3N0X3NldC0+cGRldjsKKwkJdTggbTUyODFfcmV2aXNpb247CisJCQorCQljbWQtPnJl
-c3VsdCA9IFNBTV9TVEFUX0dPT0Q7CisJCQkgICAgICAgICAgICAgIAorCQlwY2lfcmVhZF9jb25m
-aWdfYnl0ZShwZGV2X201MjgxLCBQQ0lfUkVWSVNJT05fSUQsICZtNTI4MV9yZXZpc2lvbik7CisJ
-CS8vcHJpbnRrKCJtNTI4MV9yZXZpc2lvbj0weCV4XG4iLG01MjgxX3JldmlzaW9uKTsKKwkJLy92
-ZXJzaW9uIDB4YTAsMHhhMSwweGIxIG5lZWQgd29ya2Fyb3VkCQorCQlpZihtNTI4MV9yZXZpc2lv
-bj09MHhhMCB8fG01MjgxX3JldmlzaW9uPT0weGExIHx8bTUyODFfcmV2aXNpb249PTB4YjEgKQor
-CQl7CisJCQl1MTYgZXJyb3JfbTUyODE7CisJCQl1bnNpZ25lZCBsb25nCXNjcl9hZGRyX201Mjgx
-ID0gcWMtPmFwLT5pb2FkZHIuc2NyX2FkZHI7CisJCQkKKwkJCXBjaV9yZWFkX2NvbmZpZ193b3Jk
-KHBkZXZfbTUyODEsc2NyX2FkZHJfbTUyODErNiwgJmVycm9yX201MjgxKTsKKwkJCQorCQkJaWYg
-KCB1bmxpa2VseShkcnZfc3RhdCAmIChBVEFfRVJSIHwgQVRBX0JVU1kgfCBBVEFfRFJRKSkgJiYg
-aWZ0aW1lb3V0PT0wLypleHByZXNzIG5vdCB0aW1lb3V0Ki8pCisJCQkJY21kLT5yZXN1bHQgPSBT
-QU1fU1RBVF9DSEVDS19DT05ESVRJT047CisJCQkvL3RpbWUgb3V0IG9yIGRyaXZlIHN0YXR1cyBp
-cyBvawkJCQorCQkJZWxzZSBpZiAoKGVycm9yX201MjgxICYgMHgzZjgpIT0wIHx8IGlmdGltZW91
-dD09MSkgLy90aGUgc3JjIGVycm9yZSBwcmVzZW50CisJCQl7CisJCQkJdTMyIHNjcjRfbTUyODE7
-CisJCQkJdTggIHJlc2V0X201MjgxLCBzdHVzLCBzY3IwX201MjgxOworCQkJCQorCQkJCXU4IGtr
-LCBqajsKKyAgICAgICAgICAgICAgCQkJdTggY29tcmVzZXQ9MSwgc29mdHJlc2V0PTE7Ly9zdWNj
-ZXNzPTAsIGZhaWw9MQorCQkKKwkJCQlwcmludGsoIlVMaSBzYXRhIGVycm9yOjB4JXhcbiIsZXJy
-b3JfbTUyODEpOworCQkJCS8vcmVzZXQKKwkJCQkvLyBkbWEgaGF2ZSBiZWVuIGNsb3NlZAorCQkJ
-CS8vX19zYXZlX2ZsYWdzKGZsYWdzX201MjgxKTsKKwkJCQkvL19fY2xpKCk7CisJCQkJLy9jb20g
-cmVzZXQKKwkJCQlmb3Ioa2s9MDtrazwyMDtraysrKQorCQkJCXsKKwkJCQkJcGNpX3JlYWRfY29u
-ZmlnX2J5dGUocGRldl9tNTI4MSxzY3JfYWRkcl9tNTI4MSs4LCZyZXNldF9tNTI4MSk7CisJCQkJ
-CXJlc2V0X201MjgxID0gcmVzZXRfbTUyODEgJiAweGZlOworCQkJCQlwY2lfd3JpdGVfY29uZmln
-X2J5dGUocGRldl9tNTI4MSxzY3JfYWRkcl9tNTI4MSs4LHJlc2V0X201MjgxKTsKKwkJCQkJcmVz
-ZXRfbTUyODEgPSByZXNldF9tNTI4MSB8IDB4MDE7CisJCQkJCXBjaV93cml0ZV9jb25maWdfYnl0
-ZShwZGV2X201MjgxLHNjcl9hZGRyX201MjgxKzgscmVzZXRfbTUyODEpOwkJCisJCQkJCQorCQkJ
-CQkvL2RlbGF5IHR3byBtcworCQkJCQltZGVsYXkoMik7CisJCQkJCQorCQkJCQkvL3JlYWxsZXJ0
-IGFuZCBjbGVhciBlcnJvIGJpdAorCQkJCQlyZXNldF9tNTI4MSA9IHJlc2V0X201MjgxICYgMHhm
-ZTsKKwkJICAgICAgICAJCXBjaV93cml0ZV9jb25maWdfYnl0ZShwZGV2X201MjgxLHNjcl9hZGRy
-X201MjgxKzgscmVzZXRfbTUyODEpOworCQkJCQltZGVsYXkoMik7CisJCQkJCQkJCQkJCisJCQkJ
-CXBjaV9yZWFkX2NvbmZpZ19ieXRlKHBkZXZfbTUyODEsc2NyX2FkZHJfbTUyODEsJnNjcjBfbTUy
-ODEpOworCQkJCQlwY2lfcmVhZF9jb25maWdfZHdvcmQocGRldl9tNTI4MSxzY3JfYWRkcl9tNTI4
-MSs0LCZzY3I0X201MjgxKTsKKwkJCQkJaWYoc2NyMF9tNTI4MSE9MHgxMyB8fChzY3I0X201Mjgx
-ICYgMHg1MDAwMCkhPSAweDAwMDUwMDAwICkKKwkJCQkJeworCQkJCQkJcHJpbnRfY2xlYXIoKCJw
-aHkgcmVzZXQgZmFpbGVkXG4iKSk7CisJCQkJCQlwcmludF9jbGVhcigoInNjcjA9MHgleFxuIiwg
-c2NyMF9tNTI4MSkpOworCQkJCQkJcHJpbnRfY2xlYXIoKCJzY3I0PTB4JXhcbiIsIHNjcjRfbTUy
-ODEpKTsKKwkJCQkJCWNvbnRpbnVlOworCQkJCQl9CisJCQkJCWVsc2UKKwkJCQkJeworCQkJCQkJ
-Ly9wcmludF9jbGVhcigoImNvbSByZXNldCBzdWNjZXNzXG4iKSk7CisJCQkJCQkvL2NsZWFyIGVy
-cm9yIGJpdHMKKwkJCQkJCXBjaV93cml0ZV9jb25maWdfZHdvcmQocGRldl9tNTI4MSxzY3JfYWRk
-cl9tNTI4MSs0LHNjcjRfbTUyODEpOworCisJCQkJCQljb21yZXNldD0wOy8vc3VjY2VzcworCQkJ
-CQkJYnJlYWs7CisJCQkJCX0KKwkJCQkJCisJCQkJfQorCQkJCQorCQkJCWlmKGNvbXJlc2V0PT0w
-KQorCQkJCXsKKwkJCQkJLy9zdHVzPSBpbmIocWMtPmFwLT5pb2FkZHIuc3RhdHVzX2FkZHIpOy8v
-IGdldCBkcml2ZSBzdGF0dXMgCisJCQkJCWpqPTA7CisJCQkJCWRvCisJCQkJCXsKKwkJCQkJCW1k
-ZWxheSgyKTsKKwkJCQkJCXN0dXM9IGluYihxYy0+YXAtPmlvYWRkci5zdGF0dXNfYWRkcik7Ly8g
-Z2V0IGRyaXZlIHN0YXR1cyAKKwkJCQkJCWpqKys7CisJCQkJCQlpZihqaj49MTUwKQorCQkJCQkJ
-eworCQkJCQkJCWJyZWFrOworCQkJCQkJfQorCQkJCQl9d2hpbGUgKHN0dXMhPTB4NTApOworCQkJ
-CQkKKwkJCQkJLy9wcmludF9jbGVhcigoImpqPTB4JXhcbiIsIGpqKSk7CisJCQkJCQkJCQkJCisJ
-CQkJCWlmKHN0dXMhPTB4NTAgLyomJiBpZnRpbWVvdXQ9PTEqLykKKwkJCQkJeworCQkJCQkJLy9w
-cmludF9jbGVhcigoInNvZnQgcmVzZXRcbiIpKTsKKwkJCQkJCWZvcihraz0wO2trPDU7a2srKykK
-KwkJCQkJCXsKKwkJCQkJCQlvdXRiKDB4MDQscWMtPmFwLT5pb2FkZHIuY3RsX2FkZHIpOwkvLyBz
-ZXQgU1JTVCAKKwkJCQkJCQltZGVsYXkoNSk7CQkJLy8gbW9yZSB0aGFuIGVub3VnaCB0aW1lIAor
-CQkJCQkJCW91dGIoMCxxYy0+YXAtPmlvYWRkci5jdGxfYWRkcik7CS8vIGNsZWFyIAorCQkJCQkJ
-CWpqPTA7CisJCQkJCQkJZG8KKwkJCQkJCQl7CisJCQkJCQkJCW1kZWxheSgxKTsKKwkJCQkJCQkJ
-c3R1cz0gaW5iKHFjLT5hcC0+aW9hZGRyLnN0YXR1c19hZGRyKTsvLyBnZXQgZHJpdmUgc3RhdHVz
-IAorCQkJCQkJCQlqaisrOworCQkJCQkJCQlpZihqaj49MTAwKQorCQkJCQkJCQl7CisJCQkJCQkJ
-CQlicmVhazsKKwkJCQkJCQkJfQorCQkJCQkJCX13aGlsZSAoc3R1cyE9MHg1MCk7CisKKwkJCQkJ
-CQlpZihzdHVzPT0weDUwKQorCQkJCQkJCXsKKwkJCQkJCQkJc29mdHJlc2V0PTA7Ly9zdWNlc3MK
-KwkJCQkJCQkJYnJlYWs7CisJCQkJCQkJfQorCQkJCQkJCQorCQkJCQkJfQkJCQkJCQorCQkJCQor
-CQkJCQl9CisJCQkJCWlmKHN0dXM9PTB4NTApCisJCQkJCXsKKwkJCQkJCXNvZnRyZXNldD0wOwor
-CQkJCQl9CisJCQkJCXByaW50X2NsZWFyKCgiVUxpIGRyaXZlIHN0YXR1cz0weCV4XG4iLHN0dXMp
-KTsKKwkJCQkJCisJCQkJfQorCQkJCWlmdGltZW91dD0wOwkJCQorCQkJCS8vX19yZXN0b3JlX2Zs
-YWdzKGZsYWdzX201MjgxKTsKKwkJCQkKKworCQkJCS8vc2V0IHRoZSBjb21tYW5kCisJCQkJLy90
-cm5zbGF0ZSBlcnJvciBjYW4gYmUgZG9uZSBhY2NvcmluZyB0byBhdGFfdG9fc2Vuc2VfZXJyb3IK
-KwkJCQljbWQtPnJlc3VsdCA9IFNBTV9TVEFUX0NIRUNLX0NPTkRJVElPTjsJCQorCQkJCS8qaWYo
-Y29tcmVzZXQ9PTEpCisJCQkJeworCQkJCQlhdGFfdG9fc2Vuc2VfZXJyb3IocWMsIDB4MjApOwor
-CQkJCX0KKwkJCQllbHNlIAorCQkJCXsKKwkJCQkJLy9wcmludF9jbGVhcigoInRvIHN5c1xuIikp
-OworCQkJCQlhdGFfdG9fc2Vuc2VfZXJyb3IocWMsIDB4MSk7CQorCQkJCX0qLworCQkJfQorCQkJ
-ZWxzZSAKKwkJCXsKKwkJCQl1OCAqc2NzaWNtZCA9IGNtZC0+Y21uZDsKKwkJCisJCQkJaWYgKHNj
-c2ljbWRbMF0gPT0gSU5RVUlSWSkgeworCQkJCQl1OCAqYnVmID0gTlVMTDsKKwkJCQkJdW5zaWdu
-ZWQgaW50IGJ1ZmxlbjsKKwkJCisJCQkJCWJ1ZmxlbiA9IGF0YV9zY3NpX3JidWZfZ2V0KGNtZCwg
-JmJ1Zik7CisJCQkJCWJ1ZlsyXSA9IDB4NTsKKwkJCQkJYnVmWzNdID0gKGJ1ZlszXSAmIDB4ZjAp
-IHwgMjsKKwkJCQkJYXRhX3Njc2lfcmJ1Zl9wdXQoY21kKTsKKwkJCQl9CisJCQkJY21kLT5yZXN1
-bHQgPSBTQU1fU1RBVF9HT09EOworCQkJfQogCi0JaWYgKHVubGlrZWx5KGRydl9zdGF0ICYgKEFU
-QV9FUlIgfCBBVEFfQlVTWSB8IEFUQV9EUlEpKSkKLQkJY21kLT5yZXN1bHQgPSBTQU1fU1RBVF9D
-SEVDS19DT05ESVRJT047Ci0JZWxzZSB7Ci0JCXU4ICpzY3NpY21kID0gY21kLT5jbW5kOworCQl9
-CisJCWVsc2UKKwkJeworCQkJaWYgKHVubGlrZWx5KGRydl9zdGF0ICYgKEFUQV9FUlIgfCBBVEFf
-QlVTWSB8IEFUQV9EUlEpKSkKKwkJCQljbWQtPnJlc3VsdCA9IFNBTV9TVEFUX0NIRUNLX0NPTkRJ
-VElPTjsKKwkJCWVsc2UgeworCQkJCXU4ICpzY3NpY21kID0gY21kLT5jbW5kOworCQkKKwkJCQlp
-ZiAoc2NzaWNtZFswXSA9PSBJTlFVSVJZKSB7CisJCQkJCXU4ICpidWYgPSBOVUxMOworCQkJCQl1
-bnNpZ25lZCBpbnQgYnVmbGVuOworCQkKKwkJCQkJYnVmbGVuID0gYXRhX3Njc2lfcmJ1Zl9nZXQo
-Y21kLCAmYnVmKTsKKwkJCQkJYnVmWzJdID0gMHg1OworCQkJCQlidWZbM10gPSAoYnVmWzNdICYg
-MHhmMCkgfCAyOworCQkJCQlhdGFfc2NzaV9yYnVmX3B1dChjbWQpOworCQkJCX0KKwkJCQljbWQt
-PnJlc3VsdCA9IFNBTV9TVEFUX0dPT0Q7CisJCQl9CisJCX0KKwl9CisJLy9lbmQgYWRkIGJ5IGNs
-ZWFyIHpoYW5nIDIwMDQvMTIvNworCQorCWVsc2UKKwl7CiAKLQkJaWYgKHNjc2ljbWRbMF0gPT0g
-SU5RVUlSWSkgewotCQkJdTggKmJ1ZiA9IE5VTEw7Ci0JCQl1bnNpZ25lZCBpbnQgYnVmbGVuOwot
-Ci0JCQlidWZsZW4gPSBhdGFfc2NzaV9yYnVmX2dldChjbWQsICZidWYpOwotCQkJYnVmWzJdID0g
-MHg1OwotCQkJYnVmWzNdID0gKGJ1ZlszXSAmIDB4ZjApIHwgMjsKLQkJCWF0YV9zY3NpX3JidWZf
-cHV0KGNtZCk7CisJCWlmICh1bmxpa2VseShkcnZfc3RhdCAmIChBVEFfRVJSIHwgQVRBX0JVU1kg
-fCBBVEFfRFJRKSkpCisJCQljbWQtPnJlc3VsdCA9IFNBTV9TVEFUX0NIRUNLX0NPTkRJVElPTjsK
-KwkJZWxzZSB7CisJCQl1OCAqc2NzaWNtZCA9IGNtZC0+Y21uZDsKKwkKKwkJCWlmIChzY3NpY21k
-WzBdID09IElOUVVJUlkpIHsKKwkJCQl1OCAqYnVmID0gTlVMTDsKKwkJCQl1bnNpZ25lZCBpbnQg
-YnVmbGVuOworCQorCQkJCWJ1ZmxlbiA9IGF0YV9zY3NpX3JidWZfZ2V0KGNtZCwgJmJ1Zik7CisJ
-CQkJYnVmWzJdID0gMHg1OworCQkJCWJ1ZlszXSA9IChidWZbM10gJiAweGYwKSB8IDI7CisJCQkJ
-YXRhX3Njc2lfcmJ1Zl9wdXQoY21kKTsKKwkJCX0KKwkJCWNtZC0+cmVzdWx0ID0gU0FNX1NUQVRf
-R09PRDsKIAkJfQotCQljbWQtPnJlc3VsdCA9IFNBTV9TVEFUX0dPT0Q7CiAJfQogCiAJcWMtPnNj
-c2lkb25lKGNtZCk7Cg==
+tail /var/log/messages
 
---0__=C7BBE5F7DFB724BB8f9e8a93df938690918cC7BBE5F7DFB724BB--
+Dec  9 17:19:53 sdrs kernel: ata2: command 0x25 timeout, stat 0xd0
+host_stat 0x6
+0
+Dec  9 17:19:53 sdrs kernel: ata2: status=0xd0 { Busy }
+Dec  9 17:19:53 sdrs kernel: SCSI error : <1 0 0 0> return code =
+0x8000002
+Dec  9 17:19:53 sdrs kernel: EOM Current sdb: sense = 70 58
+Dec  9 17:19:53 sdrs kernel: ASC=26 ASCQ=c0
+Dec  9 17:19:53 sdrs kernel: end_request: I/O error, dev sdb, sector
+195335
+Dec  9 17:19:53 sdrs kernel: ATA: abnormal status 0xD0 on port
+0xF880241C
+Dec  9 17:19:53 sdrs last message repeated 2 times
+.
+.
+.
+------------------------------------------------------------------------
+---
+
+
+What could be happening? I am sure the drives are ok as they are new and
+work well in other systems. Have I forgotten to add something in my
+kernel?
+
+Any help would be appreciated.
+
+
+Atul Bhouraskar.
+
+------------------------------------------------------------------------
+----
+
+dmesg:
+
+Linux version 2.6.9-das (atulb@croc.acoustic-technologies.com.au) (gcc
+version 3.3.2 (Mandrake Linux 10.0 3.3.2-6mdk)) #2 Mon Dec 6 09:10:57
+EST 2004
+BIOS-provided physical RAM map:
+ BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
+ BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
+ BIOS-e820: 00000000000e0000 - 0000000000100000 (reserved)
+ BIOS-e820: 0000000000100000 - 0000000040000000 (usable)
+ BIOS-e820: 00000000fec00000 - 00000000fec81000 (reserved)
+ BIOS-e820: 00000000fee00000 - 00000000fef00000 (reserved)
+ BIOS-e820: 00000000fff80000 - 0000000100000000 (reserved)
+128MB HIGHMEM available.
+896MB LOWMEM available.
+found SMP MP-table at 000ff780
+On node 0 totalpages: 262144
+  DMA zone: 4096 pages, LIFO batch:1
+  Normal zone: 225280 pages, LIFO batch:16
+  HighMem zone: 32768 pages, LIFO batch:8
+DMI not present.
+Intel MultiProcessor Specification v1.1
+    Virtual Wire compatibility mode.
+OEM ID: SBS      Product ID: CR9/VR9      APIC at: 0xFEE00000
+Processor #0 6:9 APIC version 20
+Unknown bustype VME    - ignoring
+I/O APIC #1 Version 32 at 0xFEC00000.
+I/O APIC #2 Version 32 at 0xFEC80000.
+I/O APIC #3 Version 32 at 0xFEC80400.
+Enabling APIC mode:  Flat.  Using 3 I/O APICs
+Processors: 1
+Built 1 zonelists
+Kernel command line: acpi=off ro root=/dev/nfs
+nfsroot=192.168.0.235:/mnt/os-devel/sdrs/rootfs
+configfs=192.168.0.235:/mnt/os-devel/sdrs/configfs
+ip=192.168.0.203:192.168.0.235:192.168.0.254
+config_mount_options=rw,rsize=4096,wsize=4096 verbose=true
+BOOT_IMAGE=os-devel/sdrs/b
+Initializing CPU#0
+PID hash table entries: 4096 (order: 12, 65536 bytes)
+Detected 600.249 MHz processor.
+Using tsc for high-res timesource
+Console: colour VGA+ 80x25
+Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
+Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
+Memory: 1035732k/1048576k available (1964k kernel code, 12228k reserved,
+836k data, 156k init, 131072k highmem)
+Checking if this processor honours the WP bit even in supervisor mode...
+Ok.
+Calibrating delay loop... 1183.74 BogoMIPS (lpj=591872)
+Mount-cache hash table entries: 512 (order: 0, 4096 bytes)
+CPU: After generic identify, caps: a7e9fbbf 00000000 00000000 00000000
+CPU: After vendor identify, caps:  a7e9fbbf 00000000 00000000 00000000
+CPU: L1 I cache: 32K, L1 D cache: 32K
+CPU: L2 cache: 1024K
+CPU: After all inits, caps:        a7e9fbbf 00000000 00000000 00000040
+Intel machine check architecture supported.
+Intel machine check reporting enabled on CPU#0.
+CPU: Intel(R) Pentium(R) M processor 1600MHz stepping 05
+Enabling fast FPU save and restore... done.
+Enabling unmasked SIMD FPU exception support... done.
+Checking 'hlt' instruction... OK.
+ENABLING IO-APIC IRQs
+..TIMER: vector=0x31 pin1=2 pin2=0
+NET: Registered protocol family 16
+PCI: PCI BIOS revision 2.10 entry at 0xf0031, last bus=4
+PCI: Using configuration type 1
+mtrr: v2.0 (20020519)
+SCSI subsystem initialized
+PCI: Probing PCI hardware
+PCI: Probing PCI hardware (bus 00)
+PCI: Ignoring BAR0-3 of IDE controller 0000:00:1f.1
+PCI: Transparent bridge - 0000:00:1e.0
+PCI: Using IRQ router PIIX/ICH [8086/24c0] at 0000:00:1f.0
+PCI->APIC IRQ transform: (B0,I29,P0) -> 16
+PCI->APIC IRQ transform: (B0,I29,P1) -> 19
+PCI->APIC IRQ transform: (B0,I29,P2) -> 18
+PCI->APIC IRQ transform: (B0,I29,P3) -> 23
+PCI->APIC IRQ transform: (B0,I31,P0) -> 18
+PCI->APIC IRQ transform: (B0,I31,P1) -> 17
+PCI->APIC IRQ transform: (B4,I13,P0) -> 52
+PCI->APIC IRQ transform: (B3,I1,P0) -> 24
+PCI->APIC IRQ transform: (B3,I3,P0) -> 28
+PCI->APIC IRQ transform: (B3,I3,P1) -> 29
+PCI->APIC IRQ transform: (B1,I9,P0) -> 21
+Machine check exception polling timer started.
+highmem bounce pool size: 64 pages
+Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
+Real Time Clock Driver v1.12
+hw_random hardware driver 1.0.0 loaded
+Linux agpgart interface v0.100 (c) Dave Jones
+Hangcheck: starting hangcheck timer 0.5.0 (tick is 180 seconds, margin
+is 60 seconds).
+serio: i8042 AUX port at 0x60,0x64 irq 12
+serio: i8042 KBD port at 0x60,0x64 irq 1
+Serial: 8250/16550 driver $Revision: 1.90 $ 8 ports, IRQ sharing
+disabled
+ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
+ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
+RAMDISK driver initialized: 16 RAM disks of 4096K size 1024 blocksize
+loop: loaded (max 8 devices)
+Intel(R) PRO/1000 Network Driver - version 5.3.19-k2
+Copyright (c) 1999-2004 Intel Corporation.
+e1000: eth0: e1000_probe: Intel(R) PRO/1000 Network Connection
+e1000: eth1: e1000_probe: Intel(R) PRO/1000 Network Connection
+Ethernet Channel Bonding Driver: v2.6.0 (January 14, 2004)
+bonding: Warning: either miimon or arp_interval and arp_ip_target module
+parameters must be specified, otherwise bonding will not detect link
+failures! see bonding.txt for details.
+Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+ide: Assuming 33MHz system bus speed for PIO modes; override with
+idebus=xx
+ICH4: IDE controller at PCI slot 0000:00:1f.1
+PCI: Enabling device 0000:00:1f.1 (0005 -> 0007)
+ICH4: chipset revision 1
+ICH4: not 100% native mode: will probe irqs later
+    ide0: BM-DMA at 0xffa0-0xffa7, BIOS settings: hda:pio, hdb:pio
+    ide1: BM-DMA at 0xffa8-0xffaf, BIOS settings: hdc:DMA, hdd:pio
+Probing IDE interface ide0...
+Probing IDE interface ide1...
+hdc: FUJITSU MHT2030AT, ATA DISK drive
+Using anticipatory io scheduler
+ide1 at 0x170-0x177,0x376 on irq 15
+Probing IDE interface ide0...
+Probing IDE interface ide2...
+ide2: Wait for ready failed before probe !
+Probing IDE interface ide3...
+Probing IDE interface ide4...
+ide4: Wait for ready failed before probe !
+Probing IDE interface ide5...
+hdc: max request size: 128KiB
+hdc: 58605120 sectors (30005 MB) w/2048KiB Cache, CHS=58140/16/63,
+UDMA(33)
+hdc: cache flushes supported
+ hdc: hdc1
+libata version 1.02 loaded.
+sata_vsc version 0.01
+ata1: SATA max UDMA/133 cmd 0xF8802200 ctl 0xF8802229 bmdma 0xF8802270
+irq 52
+ata2: SATA max UDMA/133 cmd 0xF8802400 ctl 0xF8802429 bmdma 0xF8802470
+irq 52
+ata3: SATA max UDMA/133 cmd 0xF8802600 ctl 0xF8802629 bmdma 0xF8802670
+irq 52
+ata4: SATA max UDMA/133 cmd 0xF8802800 ctl 0xF8802829 bmdma 0xF8802870
+irq 52
+ata1: dev 0 cfg 49:2f00 82:346b 83:7f61 84:4003 85:3469 86:3c41 87:4003
+88:007f
+ata1: dev 0 ATA, max UDMA/133, 488397168 sectors: lba48
+ata1: dev 0 configured for UDMA/133
+scsi0 : sata_vsc
+ata2: dev 0 cfg 49:2f00 82:346b 83:7f61 84:4003 85:3469 86:3c41 87:4003
+88:007f
+ata2: dev 0 ATA, max UDMA/133, 488397168 sectors: lba48
+ata2: dev 0 configured for UDMA/133
+scsi1 : sata_vsc
+ata3: dev 0 cfg 49:2f00 82:346b 83:7f61 84:4003 85:3469 86:3c41 87:4003
+88:007f
+ata3: dev 0 ATA, max UDMA/133, 488397168 sectors: lba48
+ata3: dev 0 configured for UDMA/133
+scsi2 : sata_vsc
+ata4: dev 0 cfg 49:2f00 82:346b 83:7f61 84:4003 85:3469 86:3c41 87:4003
+88:007f
+ata4: dev 0 ATA, max UDMA/133, 488397168 sectors: lba48
+ata4: dev 0 configured for UDMA/133
+scsi3 : sata_vsc
+  Vendor: ATA       Model: WDC WD2500JD-00H  Rev: 08.0
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: WDC WD2500JD-00H  Rev: 08.0
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: WDC WD2500JD-00H  Rev: 08.0
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: WDC WD2500JD-00H  Rev: 08.0
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
+SCSI device sda: drive cache: write back
+ sda: unknown partition table
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+SCSI device sdb: 488397168 512-byte hdwr sectors (250059 MB)
+SCSI device sdb: drive cache: write back
+ sdb: sdb1
+Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
+SCSI device sdc: 488397168 512-byte hdwr sectors (250059 MB)
+SCSI device sdc: drive cache: write back
+ sdc: sdc1
+Attached scsi disk sdc at scsi2, channel 0, id 0, lun 0
+SCSI device sdd: 488397168 512-byte hdwr sectors (250059 MB)
+SCSI device sdd: drive cache: write back
+ sdd: sdd1
+Attached scsi disk sdd at scsi3, channel 0, id 0, lun 0
+Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
+Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
+Attached scsi generic sg2 at scsi2, channel 0, id 0, lun 0,  type 0
+Attached scsi generic sg3 at scsi3, channel 0, id 0, lun 0,  type 0
+mice: PS/2 mouse device common for all mice
+input: AT Translated Set 2 keyboard on isa0060/serio0
+i2c /dev entries driver
+NET: Registered protocol family 2
+IP: routing cache hash table of 8192 buckets, 64Kbytes
+TCP: Hash tables configured (established 262144 bind 65536)
+NET: Registered protocol family 1
+NET: Registered protocol family 17
+e1000: eth1: e1000_watchdog: NIC Link is Up 1000 Mbps Full Duplex
+Sending DHCP and RARP requests . OK
+IP-Config: Got DHCP answer from 192.168.0.235, my address is
+192.168.0.203
+IP-Config: Complete:
+      device=eth1, addr=192.168.0.203, mask=255.255.255.0,
+gw=192.168.0.254,
+     host=192.168.0.203, domain=acoustic-technologies.com.au,
+nis-domain=(none),
+     bootserver=192.168.0.235, rootserver=192.168.0.235, rootpath=
+Looking up port of RPC 100003/2 on 192.168.0.235
+Looking up port of RPC 100005/1 on 192.168.0.235
+VFS: Mounted root (nfs filesystem) readonly.
+Freeing unused kernel memory: 156k freed
+
+------------------------------------------------------------------------
+
+kernel config:
+#
+# Automatically generated make config: don't edit
+# Linux kernel version: 2.6.9
+# Mon Dec  6 09:06:25 2004
+#
+CONFIG_X86=y
+CONFIG_MMU=y
+CONFIG_UID16=y
+CONFIG_GENERIC_ISA_DMA=y
+CONFIG_GENERIC_IOMAP=y
+
+#
+# Code maturity level options
+#
+CONFIG_EXPERIMENTAL=y
+CONFIG_CLEAN_COMPILE=y
+CONFIG_BROKEN_ON_SMP=y
+
+#
+# General setup
+#
+CONFIG_LOCALVERSION="-das"
+# CONFIG_SWAP is not set
+CONFIG_SYSVIPC=y
+# CONFIG_POSIX_MQUEUE is not set
+# CONFIG_BSD_PROCESS_ACCT is not set
+CONFIG_SYSCTL=y
+# CONFIG_AUDIT is not set
+CONFIG_LOG_BUF_SHIFT=14
+CONFIG_HOTPLUG=y
+CONFIG_IKCONFIG=y
+CONFIG_IKCONFIG_PROC=y
+# CONFIG_EMBEDDED is not set
+CONFIG_KALLSYMS=y
+# CONFIG_KALLSYMS_EXTRA_PASS is not set
+CONFIG_FUTEX=y
+CONFIG_EPOLL=y
+CONFIG_IOSCHED_NOOP=y
+CONFIG_IOSCHED_AS=y
+CONFIG_IOSCHED_DEADLINE=y
+CONFIG_IOSCHED_CFQ=y
+# CONFIG_CC_OPTIMIZE_FOR_SIZE is not set
+CONFIG_SHMEM=y
+# CONFIG_TINY_SHMEM is not set
+
+#
+# Loadable module support
+#
+CONFIG_MODULES=y
+CONFIG_MODULE_UNLOAD=y
+# CONFIG_MODULE_FORCE_UNLOAD is not set
+CONFIG_OBSOLETE_MODPARM=y
+# CONFIG_MODVERSIONS is not set
+# CONFIG_KMOD is not set
+
+#
+# Processor type and features
+#
+CONFIG_X86_PC=y
+# CONFIG_X86_ELAN is not set
+# CONFIG_X86_VOYAGER is not set
+# CONFIG_X86_NUMAQ is not set
+# CONFIG_X86_SUMMIT is not set
+# CONFIG_X86_BIGSMP is not set
+# CONFIG_X86_VISWS is not set
+# CONFIG_X86_GENERICARCH is not set
+# CONFIG_X86_ES7000 is not set
+# CONFIG_M386 is not set
+# CONFIG_M486 is not set
+# CONFIG_M586 is not set
+# CONFIG_M586TSC is not set
+# CONFIG_M586MMX is not set
+# CONFIG_M686 is not set
+# CONFIG_MPENTIUMII is not set
+# CONFIG_MPENTIUMIII is not set
+CONFIG_MPENTIUMM=y
+# CONFIG_MPENTIUM4 is not set
+# CONFIG_MK6 is not set
+# CONFIG_MK7 is not set
+# CONFIG_MK8 is not set
+# CONFIG_MCRUSOE is not set
+# CONFIG_MWINCHIPC6 is not set
+# CONFIG_MWINCHIP2 is not set
+# CONFIG_MWINCHIP3D is not set
+# CONFIG_MCYRIXIII is not set
+# CONFIG_MVIAC3_2 is not set
+# CONFIG_X86_GENERIC is not set
+CONFIG_X86_CMPXCHG=y
+CONFIG_X86_XADD=y
+CONFIG_X86_L1_CACHE_SHIFT=6
+CONFIG_RWSEM_XCHGADD_ALGORITHM=y
+CONFIG_X86_WP_WORKS_OK=y
+CONFIG_X86_INVLPG=y
+CONFIG_X86_BSWAP=y
+CONFIG_X86_POPAD_OK=y
+CONFIG_X86_GOOD_APIC=y
+CONFIG_X86_INTEL_USERCOPY=y
+CONFIG_X86_USE_PPRO_CHECKSUM=y
+CONFIG_HPET_TIMER=y
+# CONFIG_HPET_EMULATE_RTC is not set
+# CONFIG_SMP is not set
+CONFIG_PREEMPT=y
+CONFIG_X86_UP_APIC=y
+CONFIG_X86_UP_IOAPIC=y
+CONFIG_X86_LOCAL_APIC=y
+CONFIG_X86_IO_APIC=y
+CONFIG_X86_TSC=y
+CONFIG_X86_MCE=y
+CONFIG_X86_MCE_NONFATAL=y
+CONFIG_X86_MCE_P4THERMAL=y
+# CONFIG_TOSHIBA is not set
+# CONFIG_I8K is not set
+# CONFIG_MICROCODE is not set
+# CONFIG_X86_MSR is not set
+# CONFIG_X86_CPUID is not set
+
+#
+# Firmware Drivers
+#
+# CONFIG_EDD is not set
+# CONFIG_NOHIGHMEM is not set
+CONFIG_HIGHMEM4G=y
+# CONFIG_HIGHMEM64G is not set
+CONFIG_HIGHMEM=y
+# CONFIG_HIGHPTE is not set
+# CONFIG_MATH_EMULATION is not set
+CONFIG_MTRR=y
+CONFIG_HAVE_DEC_LOCK=y
+# CONFIG_REGPARM is not set
+
+#
+# Power management options (ACPI, APM)
+#
+# CONFIG_PM is not set
+# CONFIG_PM_DEBUG is not set
+
+#
+# ACPI (Advanced Configuration and Power Interface) Support
+#
+# CONFIG_ACPI is not set
+CONFIG_ACPI_BLACKLIST_YEAR=0
+
+#
+# CPU Frequency scaling
+#
+# CONFIG_CPU_FREQ is not set
+
+#
+# Bus options (PCI, PCMCIA, EISA, MCA, ISA)
+#
+CONFIG_PCI=y
+# CONFIG_PCI_GOBIOS is not set
+# CONFIG_PCI_GOMMCONFIG is not set
+# CONFIG_PCI_GODIRECT is not set
+CONFIG_PCI_GOANY=y
+CONFIG_PCI_BIOS=y
+CONFIG_PCI_DIRECT=y
+# CONFIG_PCI_MSI is not set
+# CONFIG_PCI_LEGACY_PROC is not set
+CONFIG_PCI_NAMES=y
+# CONFIG_ISA is not set
+# CONFIG_MCA is not set
+# CONFIG_SCx200 is not set
+
+#
+# PCMCIA/CardBus support
+#
+# CONFIG_PCMCIA is not set
+
+#
+# PCI Hotplug Support
+#
+# CONFIG_HOTPLUG_PCI is not set
+
+#
+# Executable file formats
+#
+CONFIG_BINFMT_ELF=y
+# CONFIG_BINFMT_AOUT is not set
+# CONFIG_BINFMT_MISC is not set
+
+#
+# Device Drivers
+#
+
+#
+# Generic Driver Options
+#
+CONFIG_STANDALONE=y
+CONFIG_PREVENT_FIRMWARE_BUILD=y
+CONFIG_FW_LOADER=y
+
+#
+# Memory Technology Devices (MTD)
+#
+# CONFIG_MTD is not set
+
+#
+# Parallel port support
+#
+# CONFIG_PARPORT is not set
+
+#
+# Plug and Play support
+#
+
+#
+# Block devices
+#
+# CONFIG_BLK_DEV_FD is not set
+# CONFIG_BLK_CPQ_DA is not set
+# CONFIG_BLK_CPQ_CISS_DA is not set
+# CONFIG_BLK_DEV_DAC960 is not set
+# CONFIG_BLK_DEV_UMEM is not set
+CONFIG_BLK_DEV_LOOP=y
+# CONFIG_BLK_DEV_CRYPTOLOOP is not set
+# CONFIG_BLK_DEV_NBD is not set
+# CONFIG_BLK_DEV_SX8 is not set
+CONFIG_BLK_DEV_RAM=y
+CONFIG_BLK_DEV_RAM_SIZE=4096
+CONFIG_BLK_DEV_INITRD=y
+CONFIG_LBD=y
+
+#
+# ATA/ATAPI/MFM/RLL support
+#
+CONFIG_IDE=y
+CONFIG_BLK_DEV_IDE=y
+
+#
+# Please see Documentation/ide.txt for help/info on IDE drives
+#
+# CONFIG_BLK_DEV_IDE_SATA is not set
+# CONFIG_BLK_DEV_HD_IDE is not set
+CONFIG_BLK_DEV_IDEDISK=y
+CONFIG_IDEDISK_MULTI_MODE=y
+# CONFIG_BLK_DEV_IDECD is not set
+# CONFIG_BLK_DEV_IDETAPE is not set
+# CONFIG_BLK_DEV_IDEFLOPPY is not set
+# CONFIG_BLK_DEV_IDESCSI is not set
+# CONFIG_IDE_TASK_IOCTL is not set
+CONFIG_IDE_TASKFILE_IO=y
+
+#
+# IDE chipset support/bugfixes
+#
+CONFIG_IDE_GENERIC=y
+CONFIG_BLK_DEV_CMD640=y
+# CONFIG_BLK_DEV_CMD640_ENHANCED is not set
+CONFIG_BLK_DEV_IDEPCI=y
+CONFIG_IDEPCI_SHARE_IRQ=y
+# CONFIG_BLK_DEV_OFFBOARD is not set
+CONFIG_BLK_DEV_GENERIC=y
+# CONFIG_BLK_DEV_OPTI621 is not set
+# CONFIG_BLK_DEV_RZ1000 is not set
+CONFIG_BLK_DEV_IDEDMA_PCI=y
+# CONFIG_BLK_DEV_IDEDMA_FORCED is not set
+CONFIG_IDEDMA_PCI_AUTO=y
+# CONFIG_IDEDMA_ONLYDISK is not set
+# CONFIG_BLK_DEV_AEC62XX is not set
+# CONFIG_BLK_DEV_ALI15X3 is not set
+# CONFIG_BLK_DEV_AMD74XX is not set
+# CONFIG_BLK_DEV_ATIIXP is not set
+# CONFIG_BLK_DEV_CMD64X is not set
+# CONFIG_BLK_DEV_TRIFLEX is not set
+# CONFIG_BLK_DEV_CY82C693 is not set
+# CONFIG_BLK_DEV_CS5520 is not set
+# CONFIG_BLK_DEV_CS5530 is not set
+# CONFIG_BLK_DEV_HPT34X is not set
+# CONFIG_BLK_DEV_HPT366 is not set
+# CONFIG_BLK_DEV_SC1200 is not set
+CONFIG_BLK_DEV_PIIX=y
+# CONFIG_BLK_DEV_NS87415 is not set
+# CONFIG_BLK_DEV_PDC202XX_OLD is not set
+# CONFIG_BLK_DEV_PDC202XX_NEW is not set
+# CONFIG_BLK_DEV_SVWKS is not set
+# CONFIG_BLK_DEV_SIIMAGE is not set
+# CONFIG_BLK_DEV_SIS5513 is not set
+# CONFIG_BLK_DEV_SLC90E66 is not set
+# CONFIG_BLK_DEV_TRM290 is not set
+CONFIG_BLK_DEV_VIA82CXXX=y
+# CONFIG_IDE_ARM is not set
+CONFIG_BLK_DEV_IDEDMA=y
+# CONFIG_IDEDMA_IVB is not set
+CONFIG_IDEDMA_AUTO=y
+# CONFIG_BLK_DEV_HD is not set
+
+#
+# SCSI device support
+#
+CONFIG_SCSI=y
+CONFIG_SCSI_PROC_FS=y
+
+#
+# SCSI support type (disk, tape, CD-ROM)
+#
+CONFIG_BLK_DEV_SD=y
+# CONFIG_CHR_DEV_ST is not set
+# CONFIG_CHR_DEV_OSST is not set
+# CONFIG_BLK_DEV_SR is not set
+CONFIG_CHR_DEV_SG=y
+
+#
+# Some SCSI devices (e.g. CD jukebox) support multiple LUNs
+#
+# CONFIG_SCSI_MULTI_LUN is not set
+CONFIG_SCSI_CONSTANTS=y
+# CONFIG_SCSI_LOGGING is not set
+
+#
+# SCSI Transport Attributes
+#
+# CONFIG_SCSI_SPI_ATTRS is not set
+# CONFIG_SCSI_FC_ATTRS is not set
+
+#
+# SCSI low-level drivers
+#
+# CONFIG_BLK_DEV_3W_XXXX_RAID is not set
+# CONFIG_SCSI_3W_9XXX is not set
+# CONFIG_SCSI_ACARD is not set
+# CONFIG_SCSI_AACRAID is not set
+# CONFIG_SCSI_AIC7XXX is not set
+# CONFIG_SCSI_AIC7XXX_OLD is not set
+# CONFIG_SCSI_AIC79XX is not set
+# CONFIG_SCSI_DPT_I2O is not set
+# CONFIG_MEGARAID_NEWGEN is not set
+# CONFIG_MEGARAID_LEGACY is not set
+CONFIG_SCSI_SATA=y
+# CONFIG_SCSI_SATA_SVW is not set
+# CONFIG_SCSI_ATA_PIIX is not set
+# CONFIG_SCSI_SATA_NV is not set
+# CONFIG_SCSI_SATA_PROMISE is not set
+# CONFIG_SCSI_SATA_SX4 is not set
+# CONFIG_SCSI_SATA_SIL is not set
+# CONFIG_SCSI_SATA_SIS is not set
+# CONFIG_SCSI_SATA_VIA is not set
+CONFIG_SCSI_SATA_VITESSE=y
+# CONFIG_SCSI_BUSLOGIC is not set
+# CONFIG_SCSI_DMX3191D is not set
+# CONFIG_SCSI_EATA is not set
+# CONFIG_SCSI_EATA_PIO is not set
+# CONFIG_SCSI_FUTURE_DOMAIN is not set
+# CONFIG_SCSI_GDTH is not set
+# CONFIG_SCSI_IPS is not set
+# CONFIG_SCSI_INIA100 is not set
+# CONFIG_SCSI_SYM53C8XX_2 is not set
+# CONFIG_SCSI_IPR is not set
+# CONFIG_SCSI_QLOGIC_ISP is not set
+# CONFIG_SCSI_QLOGIC_FC is not set
+# CONFIG_SCSI_QLOGIC_1280 is not set
+CONFIG_SCSI_QLA2XXX=y
+# CONFIG_SCSI_QLA21XX is not set
+# CONFIG_SCSI_QLA22XX is not set
+# CONFIG_SCSI_QLA2300 is not set
+# CONFIG_SCSI_QLA2322 is not set
+# CONFIG_SCSI_QLA6312 is not set
+# CONFIG_SCSI_QLA6322 is not set
+# CONFIG_SCSI_DC395x is not set
+# CONFIG_SCSI_DC390T is not set
+# CONFIG_SCSI_NSP32 is not set
+# CONFIG_SCSI_DEBUG is not set
+
+#
+# Multi-device support (RAID and LVM)
+#
+# CONFIG_MD is not set
+
+#
+# Fusion MPT device support
+#
+# CONFIG_FUSION is not set
+
+#
+# IEEE 1394 (FireWire) support
+#
+# CONFIG_IEEE1394 is not set
+
+#
+# I2O device support
+#
+# CONFIG_I2O is not set
+
+#
+# Networking support
+#
+CONFIG_NET=y
+
+#
+# Networking options
+#
+CONFIG_PACKET=y
+# CONFIG_PACKET_MMAP is not set
+# CONFIG_NETLINK_DEV is not set
+CONFIG_UNIX=y
+# CONFIG_NET_KEY is not set
+CONFIG_INET=y
+CONFIG_IP_MULTICAST=y
+# CONFIG_IP_ADVANCED_ROUTER is not set
+CONFIG_IP_PNP=y
+CONFIG_IP_PNP_DHCP=y
+CONFIG_IP_PNP_BOOTP=y
+CONFIG_IP_PNP_RARP=y
+# CONFIG_NET_IPIP is not set
+# CONFIG_NET_IPGRE is not set
+# CONFIG_IP_MROUTE is not set
+# CONFIG_ARPD is not set
+# CONFIG_SYN_COOKIES is not set
+# CONFIG_INET_AH is not set
+# CONFIG_INET_ESP is not set
+# CONFIG_INET_IPCOMP is not set
+# CONFIG_INET_TUNNEL is not set
+# CONFIG_IPV6 is not set
+# CONFIG_NETFILTER is not set
+
+#
+# SCTP Configuration (EXPERIMENTAL)
+#
+# CONFIG_IP_SCTP is not set
+# CONFIG_ATM is not set
+# CONFIG_BRIDGE is not set
+# CONFIG_VLAN_8021Q is not set
+# CONFIG_DECNET is not set
+# CONFIG_LLC2 is not set
+# CONFIG_IPX is not set
+# CONFIG_ATALK is not set
+# CONFIG_X25 is not set
+# CONFIG_LAPB is not set
+# CONFIG_NET_DIVERT is not set
+# CONFIG_ECONET is not set
+# CONFIG_WAN_ROUTER is not set
+# CONFIG_NET_HW_FLOWCONTROL is not set
+
+#
+# QoS and/or fair queueing
+#
+# CONFIG_NET_SCHED is not set
+# CONFIG_NET_CLS_ROUTE is not set
+
+#
+# Network testing
+#
+# CONFIG_NET_PKTGEN is not set
+# CONFIG_NETPOLL is not set
+# CONFIG_NET_POLL_CONTROLLER is not set
+# CONFIG_HAMRADIO is not set
+# CONFIG_IRDA is not set
+# CONFIG_BT is not set
+CONFIG_NETDEVICES=y
+CONFIG_DUMMY=y
+CONFIG_BONDING=y
+# CONFIG_EQUALIZER is not set
+# CONFIG_TUN is not set
+
+#
+# ARCnet devices
+#
+# CONFIG_ARCNET is not set
+
+#
+# Ethernet (10 or 100Mbit)
+#
+# CONFIG_NET_ETHERNET is not set
+
+#
+# Ethernet (1000 Mbit)
+#
+# CONFIG_ACENIC is not set
+# CONFIG_DL2K is not set
+CONFIG_E1000=y
+# CONFIG_E1000_NAPI is not set
+# CONFIG_NS83820 is not set
+# CONFIG_HAMACHI is not set
+# CONFIG_YELLOWFIN is not set
+# CONFIG_R8169 is not set
+# CONFIG_SK98LIN is not set
+# CONFIG_TIGON3 is not set
+
+#
+# Ethernet (10000 Mbit)
+#
+# CONFIG_IXGB is not set
+# CONFIG_S2IO is not set
+
+#
+# Token Ring devices
+#
+# CONFIG_TR is not set
+
+#
+# Wireless LAN (non-hamradio)
+#
+# CONFIG_NET_RADIO is not set
+
+#
+# Wan interfaces
+#
+# CONFIG_WAN is not set
+# CONFIG_FDDI is not set
+# CONFIG_HIPPI is not set
+# CONFIG_PPP is not set
+# CONFIG_SLIP is not set
+# CONFIG_NET_FC is not set
+# CONFIG_SHAPER is not set
+# CONFIG_NETCONSOLE is not set
+
+#
+# ISDN subsystem
+#
+# CONFIG_ISDN is not set
+
+#
+# Telephony Support
+#
+# CONFIG_PHONE is not set
+
+#
+# Input device support
+#
+CONFIG_INPUT=y
+
+#
+# Userland interfaces
+#
+CONFIG_INPUT_MOUSEDEV=y
+# CONFIG_INPUT_MOUSEDEV_PSAUX is not set
+CONFIG_INPUT_MOUSEDEV_SCREEN_X=1024
+CONFIG_INPUT_MOUSEDEV_SCREEN_Y=768
+# CONFIG_INPUT_JOYDEV is not set
+# CONFIG_INPUT_TSDEV is not set
+# CONFIG_INPUT_EVDEV is not set
+# CONFIG_INPUT_EVBUG is not set
+
+#
+# Input I/O drivers
+#
+# CONFIG_GAMEPORT is not set
+CONFIG_SOUND_GAMEPORT=y
+CONFIG_SERIO=y
+CONFIG_SERIO_I8042=y
+CONFIG_SERIO_SERPORT=y
+# CONFIG_SERIO_CT82C710 is not set
+CONFIG_SERIO_PCIPS2=y
+# CONFIG_SERIO_RAW is not set
+
+#
+# Input Device Drivers
+#
+CONFIG_INPUT_KEYBOARD=y
+CONFIG_KEYBOARD_ATKBD=y
+# CONFIG_KEYBOARD_SUNKBD is not set
+# CONFIG_KEYBOARD_LKKBD is not set
+# CONFIG_KEYBOARD_XTKBD is not set
+# CONFIG_KEYBOARD_NEWTON is not set
+# CONFIG_INPUT_MOUSE is not set
+# CONFIG_INPUT_JOYSTICK is not set
+# CONFIG_INPUT_TOUCHSCREEN is not set
+# CONFIG_INPUT_MISC is not set
+
+#
+# Character devices
+#
+CONFIG_VT=y
+CONFIG_VT_CONSOLE=y
+CONFIG_HW_CONSOLE=y
+# CONFIG_SERIAL_NONSTANDARD is not set
+
+#
+# Serial drivers
+#
+CONFIG_SERIAL_8250=y
+# CONFIG_SERIAL_8250_CONSOLE is not set
+CONFIG_SERIAL_8250_NR_UARTS=4
+# CONFIG_SERIAL_8250_EXTENDED is not set
+
+#
+# Non-8250 serial port support
+#
+CONFIG_SERIAL_CORE=y
+CONFIG_UNIX98_PTYS=y
+CONFIG_LEGACY_PTYS=y
+CONFIG_LEGACY_PTY_COUNT=256
+
+#
+# IPMI
+#
+# CONFIG_IPMI_HANDLER is not set
+
+#
+# Watchdog Cards
+#
+# CONFIG_WATCHDOG is not set
+CONFIG_HW_RANDOM=y
+# CONFIG_NVRAM is not set
+CONFIG_RTC=y
+# CONFIG_DTLK is not set
+# CONFIG_R3964 is not set
+# CONFIG_APPLICOM is not set
+# CONFIG_SONYPI is not set
+
+#
+# Ftape, the floppy tape device driver
+#
+# CONFIG_FTAPE is not set
+CONFIG_AGP=y
+# CONFIG_AGP_ALI is not set
+# CONFIG_AGP_ATI is not set
+# CONFIG_AGP_AMD is not set
+# CONFIG_AGP_AMD64 is not set
+# CONFIG_AGP_INTEL is not set
+# CONFIG_AGP_INTEL_MCH is not set
+CONFIG_AGP_NVIDIA=y
+# CONFIG_AGP_SIS is not set
+# CONFIG_AGP_SWORKS is not set
+# CONFIG_AGP_VIA is not set
+# CONFIG_AGP_EFFICEON is not set
+# CONFIG_DRM is not set
+# CONFIG_DRM_I830 is not set
+# CONFIG_DRM_I915 is not set
+# CONFIG_MWAVE is not set
+# CONFIG_RAW_DRIVER is not set
+CONFIG_HANGCHECK_TIMER=y
+
+#
+# I2C support
+#
+CONFIG_I2C=y
+CONFIG_I2C_CHARDEV=y
+
+#
+# I2C Algorithms
+#
+CONFIG_I2C_ALGOBIT=y
+CONFIG_I2C_ALGOPCF=y
+CONFIG_I2C_ALGOPCA=y
+
+#
+# I2C Hardware Bus support
+#
+# CONFIG_I2C_ALI1535 is not set
+# CONFIG_I2C_ALI1563 is not set
+# CONFIG_I2C_ALI15X3 is not set
+# CONFIG_I2C_AMD756 is not set
+# CONFIG_I2C_AMD8111 is not set
+CONFIG_I2C_I801=y
+# CONFIG_I2C_I810 is not set
+CONFIG_I2C_ISA=y
+# CONFIG_I2C_NFORCE2 is not set
+# CONFIG_I2C_PARPORT_LIGHT is not set
+# CONFIG_I2C_PIIX4 is not set
+# CONFIG_I2C_PROSAVAGE is not set
+# CONFIG_I2C_SAVAGE4 is not set
+# CONFIG_SCx200_ACB is not set
+# CONFIG_I2C_SIS5595 is not set
+# CONFIG_I2C_SIS630 is not set
+# CONFIG_I2C_SIS96X is not set
+# CONFIG_I2C_VIA is not set
+# CONFIG_I2C_VIAPRO is not set
+# CONFIG_I2C_VOODOO3 is not set
+# CONFIG_I2C_PCA_ISA is not set
+
+#
+# Hardware Sensors Chip support
+#
+CONFIG_I2C_SENSOR=y
+# CONFIG_SENSORS_ADM1021 is not set
+# CONFIG_SENSORS_ADM1025 is not set
+# CONFIG_SENSORS_ADM1031 is not set
+# CONFIG_SENSORS_ASB100 is not set
+# CONFIG_SENSORS_DS1621 is not set
+# CONFIG_SENSORS_FSCHER is not set
+# CONFIG_SENSORS_GL518SM is not set
+# CONFIG_SENSORS_IT87 is not set
+CONFIG_SENSORS_LM75=y
+# CONFIG_SENSORS_LM77 is not set
+# CONFIG_SENSORS_LM78 is not set
+# CONFIG_SENSORS_LM80 is not set
+CONFIG_SENSORS_LM83=y
+# CONFIG_SENSORS_LM85 is not set
+# CONFIG_SENSORS_LM90 is not set
+# CONFIG_SENSORS_MAX1619 is not set
+# CONFIG_SENSORS_SMSC47M1 is not set
+# CONFIG_SENSORS_VIA686A is not set
+# CONFIG_SENSORS_W83781D is not set
+# CONFIG_SENSORS_W83L785TS is not set
+# CONFIG_SENSORS_W83627HF is not set
+
+#
+# Other I2C Chip support
+#
+CONFIG_SENSORS_EEPROM=y
+# CONFIG_SENSORS_PCF8574 is not set
+# CONFIG_SENSORS_PCF8591 is not set
+# CONFIG_SENSORS_RTC8564 is not set
+# CONFIG_I2C_DEBUG_CORE is not set
+# CONFIG_I2C_DEBUG_ALGO is not set
+# CONFIG_I2C_DEBUG_BUS is not set
+# CONFIG_I2C_DEBUG_CHIP is not set
+
+#
+# Dallas's 1-wire bus
+#
+# CONFIG_W1 is not set
+
+#
+# Misc devices
+#
+# CONFIG_IBM_ASM is not set
+
+#
+# Multimedia devices
+#
+# CONFIG_VIDEO_DEV is not set
+
+#
+# Digital Video Broadcasting Devices
+#
+# CONFIG_DVB is not set
+
+#
+# Graphics support
+#
+# CONFIG_FB is not set
+CONFIG_VIDEO_SELECT=y
+
+#
+# Console display driver support
+#
+CONFIG_VGA_CONSOLE=y
+CONFIG_DUMMY_CONSOLE=y
+
+#
+# Sound
+#
+# CONFIG_SOUND is not set
+
+#
+# USB support
+#
+# CONFIG_USB is not set
+
+#
+# USB Gadget Support
+#
+# CONFIG_USB_GADGET is not set
+
+#
+# File systems
+#
+CONFIG_EXT2_FS=y
+# CONFIG_EXT2_FS_XATTR is not set
+CONFIG_EXT3_FS=y
+# CONFIG_EXT3_FS_XATTR is not set
+CONFIG_JBD=y
+# CONFIG_JBD_DEBUG is not set
+# CONFIG_REISERFS_FS is not set
+# CONFIG_JFS_FS is not set
+# CONFIG_XFS_FS is not set
+# CONFIG_MINIX_FS is not set
+# CONFIG_ROMFS_FS is not set
+# CONFIG_QUOTA is not set
+# CONFIG_AUTOFS_FS is not set
+# CONFIG_AUTOFS4_FS is not set
+
+#
+# CD-ROM/DVD Filesystems
+#
+# CONFIG_ISO9660_FS is not set
+# CONFIG_UDF_FS is not set
+
+#
+# DOS/FAT/NT Filesystems
+#
+# CONFIG_MSDOS_FS is not set
+# CONFIG_VFAT_FS is not set
+# CONFIG_NTFS_FS is not set
+
+#
+# Pseudo filesystems
+#
+CONFIG_PROC_FS=y
+CONFIG_PROC_KCORE=y
+CONFIG_SYSFS=y
+# CONFIG_DEVFS_FS is not set
+# CONFIG_DEVPTS_FS_XATTR is not set
+CONFIG_TMPFS=y
+# CONFIG_HUGETLBFS is not set
+# CONFIG_HUGETLB_PAGE is not set
+CONFIG_RAMFS=y
+
+#
+# Miscellaneous filesystems
+#
+# CONFIG_ADFS_FS is not set
+# CONFIG_AFFS_FS is not set
+# CONFIG_HFS_FS is not set
+# CONFIG_HFSPLUS_FS is not set
+# CONFIG_BEFS_FS is not set
+# CONFIG_BFS_FS is not set
+# CONFIG_EFS_FS is not set
+# CONFIG_CRAMFS is not set
+# CONFIG_VXFS_FS is not set
+# CONFIG_HPFS_FS is not set
+# CONFIG_QNX4FS_FS is not set
+# CONFIG_SYSV_FS is not set
+# CONFIG_UFS_FS is not set
+
+#
+# Network File Systems
+#
+CONFIG_NFS_FS=y
+CONFIG_NFS_V3=y
+# CONFIG_NFS_V4 is not set
+# CONFIG_NFS_DIRECTIO is not set
+CONFIG_NFSD=y
+CONFIG_NFSD_V3=y
+# CONFIG_NFSD_V4 is not set
+CONFIG_NFSD_TCP=y
+CONFIG_ROOT_NFS=y
+CONFIG_LOCKD=y
+CONFIG_LOCKD_V4=y
+CONFIG_EXPORTFS=y
+CONFIG_SUNRPC=y
+# CONFIG_RPCSEC_GSS_KRB5 is not set
+# CONFIG_RPCSEC_GSS_SPKM3 is not set
+# CONFIG_SMB_FS is not set
+# CONFIG_CIFS is not set
+# CONFIG_NCP_FS is not set
+# CONFIG_CODA_FS is not set
+# CONFIG_AFS_FS is not set
+
+#
+# Partition Types
+#
+# CONFIG_PARTITION_ADVANCED is not set
+CONFIG_MSDOS_PARTITION=y
+
+#
+# Native Language Support
+#
+CONFIG_NLS=y
+CONFIG_NLS_DEFAULT="iso8859-1"
+CONFIG_NLS_CODEPAGE_437=y
+# CONFIG_NLS_CODEPAGE_737 is not set
+# CONFIG_NLS_CODEPAGE_775 is not set
+# CONFIG_NLS_CODEPAGE_850 is not set
+# CONFIG_NLS_CODEPAGE_852 is not set
+# CONFIG_NLS_CODEPAGE_855 is not set
+# CONFIG_NLS_CODEPAGE_857 is not set
+# CONFIG_NLS_CODEPAGE_860 is not set
+# CONFIG_NLS_CODEPAGE_861 is not set
+# CONFIG_NLS_CODEPAGE_862 is not set
+# CONFIG_NLS_CODEPAGE_863 is not set
+# CONFIG_NLS_CODEPAGE_864 is not set
+# CONFIG_NLS_CODEPAGE_865 is not set
+# CONFIG_NLS_CODEPAGE_866 is not set
+# CONFIG_NLS_CODEPAGE_869 is not set
+# CONFIG_NLS_CODEPAGE_936 is not set
+# CONFIG_NLS_CODEPAGE_950 is not set
+# CONFIG_NLS_CODEPAGE_932 is not set
+# CONFIG_NLS_CODEPAGE_949 is not set
+# CONFIG_NLS_CODEPAGE_874 is not set
+# CONFIG_NLS_ISO8859_8 is not set
+# CONFIG_NLS_CODEPAGE_1250 is not set
+# CONFIG_NLS_CODEPAGE_1251 is not set
+# CONFIG_NLS_ASCII is not set
+CONFIG_NLS_ISO8859_1=y
+# CONFIG_NLS_ISO8859_2 is not set
+# CONFIG_NLS_ISO8859_3 is not set
+# CONFIG_NLS_ISO8859_4 is not set
+# CONFIG_NLS_ISO8859_5 is not set
+# CONFIG_NLS_ISO8859_6 is not set
+# CONFIG_NLS_ISO8859_7 is not set
+# CONFIG_NLS_ISO8859_9 is not set
+# CONFIG_NLS_ISO8859_13 is not set
+# CONFIG_NLS_ISO8859_14 is not set
+# CONFIG_NLS_ISO8859_15 is not set
+# CONFIG_NLS_KOI8_R is not set
+# CONFIG_NLS_KOI8_U is not set
+# CONFIG_NLS_UTF8 is not set
+
+#
+# Profiling support
+#
+# CONFIG_PROFILING is not set
+
+#
+# Kernel hacking
+#
+# CONFIG_DEBUG_KERNEL is not set
+# CONFIG_FRAME_POINTER is not set
+CONFIG_EARLY_PRINTK=y
+# CONFIG_4KSTACKS is not set
+CONFIG_X86_FIND_SMP_CONFIG=y
+CONFIG_X86_MPPARSE=y
+
+#
+# Security options
+#
+# CONFIG_SECURITY is not set
+
+#
+# Cryptographic options
+#
+# CONFIG_CRYPTO is not set
+
+#
+# Library routines
+#
+# CONFIG_CRC_CCITT is not set
+# CONFIG_CRC32 is not set
+# CONFIG_LIBCRC32C is not set
+CONFIG_X86_BIOS_REBOOT=y
+CONFIG_PC=y
+
 
