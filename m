@@ -1,22 +1,55 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] ide-taskfile.c fixups/cleanups part #2 [0/9]
-Date: Wed, 30 Jun 2004 17:23:37 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200406301723.37659.bzolnier@elka.pw.edu.pl>
+Subject: [PATCH] ide-taskfile.c fixups/cleanups part #2 [6/9]
+Date: Wed, 30 Jun 2004 17:25:44 +0200
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200406301725.44787.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S266735AbUF3Pc7@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:16053 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S266708AbUF3PZa
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Jun 2004 11:25:30 -0400
 Content-Disposition: inline
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 
-Hi,
+[PATCH] ide: pre_task_mulout_intr() cleanup (CONFIG_IDE_TASKFILE_IO=n)
 
-Unification of CONFIG_IDE_TASKFILE_IO=y|n and "flagged"
-PIO handlers with a lot of fixes in the process.
+drive_is_ready() reads STATUS register if CONFIG_IDEPCI_SHARE_IRQ is not
+defined and ALTSTATUS register if it is defined.  Therefore drive_is_ready()
+in pre_task_mulout_intr() only makes sense if we can't trust STATUS register
+(because we call ide_wait_stat() which reads STATUS register earlier).
 
-Bartlomiej
+Remove this "workaround" for now as it is not present in ide-disk.c
+and whole multi PIO-out code (CONFIG_IDE_TASKFILE_IO=n) was buggy before.
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+
+ linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c |    7 -------
+ 1 files changed, 7 deletions(-)
+
+diff -puN drivers/ide/ide-taskfile.c~ide_pre_task_mulout_intr drivers/ide/ide-taskfile.c
+--- linux-2.6.7-bk11/drivers/ide/ide-taskfile.c~ide_pre_task_mulout_intr	2004-06-28 21:27:32.442035640 +0200
++++ linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c	2004-06-28 21:27:32.448034728 +0200
+@@ -433,13 +433,6 @@ ide_startstop_t pre_task_mulout_intr (id
+ 			drive->addressing ? "MULTWRITE_EXT" : "MULTWRITE");
+ 		return startstop;
+ 	}
+-	if (!(drive_is_ready(drive))) {
+-		int i;
+-		for (i=0; i<100; i++) {
+-			if (drive_is_ready(drive))
+-				break;
+-		}
+-	}
+ 
+ 	ide_set_handler(drive, &task_mulout_intr, WAIT_WORSTCASE, NULL);
+ 	task_buffer_multi_sectors(drive, rq, IDE_PIO_OUT);
+
+_
+
