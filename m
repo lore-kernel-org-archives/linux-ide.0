@@ -1,40 +1,172 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: Linux hangs during IDE initialization at boot for 30 sec
-Date: Sat, 05 Feb 2005 10:32:35 +1100
-Message-ID: <1107559955.2189.95.camel@gaston>
-References: <200502011257.40059.brade@informatik.uni-muenchen.de>
-	 <200502031358.16827.roffermanns@sysgo.com>
-	 <1107469032.2363.44.camel@gaston>
-	 <200502041122.09390.roffermanns@sysgo.com>
+From: Tejun Heo <tj@home-tj.org>
+Subject: Re: [PATCH REPOST 2.6.11-rc2 14/14] ide_pci: Merges serverworks.h into serverworks.c
+Date: Sat, 5 Feb 2005 09:01:36 +0900
+Message-ID: <20050205000136.GA2420@htj.dyndns.org>
+References: <42032014.1020606@home-tj.org> <20050204071319.0ED0E132703@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from gate.crashing.org ([63.228.1.57]:14563 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S263071AbVBDXdq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2005 18:33:46 -0500
-In-Reply-To: <200502041122.09390.roffermanns@sysgo.com>
+Content-Type: text/plain; charset=us-ascii
+Received: from [211.58.254.17] ([211.58.254.17]:32997 "EHLO hemosu.com")
+	by vger.kernel.org with ESMTP id S261566AbVBEABj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2005 19:01:39 -0500
+Content-Disposition: inline
+In-Reply-To: <20050204071319.0ED0E132703@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rolf Offermanns <roffermanns@sysgo.com>
-Cc: list linux-ide <linux-ide@vger.kernel.org>
+To: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2005-02-04 at 11:22 +0100, Rolf Offermanns wrote:
-> On Thursday 03 February 2005 23:17, Benjamin Herrenschmidt wrote:
-> >
-> > Do not register interfaces that you know aren't populated...
-> >
-> > One thing is, the wait code does explicitely check for a value of 0xff
-> > and exists in this case (assuming this means no HW at all is wired
-> > there). So for some reason, you interface is returning something else,
-> > it would be interesting to "see" what value you are getting.
+ Sorry, the original #14 added back SVWKS_DEBUG_DRIVE_INFO which #13
+removed.  This is the regenerated patch.
 
-> It's 0xff like you guessed in the first reply. As soon, as I connect a drive 
-> (no need to turn it on actually), everything is fine.
+14_ide_pci_serverworks_merge.patch
 
-Well, that's strange then, since the code is explicitely returning
--ENODEV when it encounters that, maybe the caller isn't properly testing
-for the error, I'll have to double check. (Can't today)
-
-Ben.
+	Merges ide/pci/serverworks.h into serverworks.c.
 
 
+Signed-off-by: Tejun Heo <tj@home-tj.org>
+
+
+Index: linux-idepci-export/drivers/ide/pci/serverworks.c
+===================================================================
+--- linux-idepci-export.orig/drivers/ide/pci/serverworks.c	2005-02-05 08:56:34.184740697 +0900
++++ linux-idepci-export/drivers/ide/pci/serverworks.c	2005-02-05 08:57:24.673562622 +0900
+@@ -39,7 +39,18 @@
+ 
+ #include <asm/io.h>
+ 
+-#include "serverworks.h"
++#define SVWKS_CSB5_REVISION_NEW	0x92 /* min PCI_REVISION_ID for UDMA5 (A2.0) */
++#define SVWKS_CSB6_REVISION	0xa0 /* min PCI_REVISION_ID for UDMA4 (A1.0) */
++
++/* Seagate Barracuda ATA IV Family drives in UDMA mode 5
++ * can overrun their FIFOs when used with the CSB5 */
++static const char *svwks_bad_ata100[] = {
++	"ST320011A",
++	"ST340016A",
++	"ST360021A",
++	"ST380021A",
++	NULL
++};
+ 
+ static u8 svwks_revision = 0;
+ static struct pci_dev *isa_dev;
+@@ -582,6 +593,48 @@ static int __init init_setup_csb6 (struc
+ 	return ide_setup_pci_device(dev, d);
+ }
+ 
++/*
++ *	Table of the various serverworks capability blocks
++ */
++
++static ide_pci_device_t serverworks_chipsets[] __devinitdata = {
++	{	/* 0 */
++		.name		= "SvrWks OSB4",
++		.init_setup	= init_setup_svwks,
++		.init_chipset	= init_chipset_svwks,
++		.init_hwif	= init_hwif_svwks,
++		.channels	= 2,
++		.autodma	= AUTODMA,
++		.bootable	= ON_BOARD,
++	},{	/* 1 */
++		.name		= "SvrWks CSB5",
++		.init_setup	= init_setup_svwks,
++		.init_chipset	= init_chipset_svwks,
++		.init_hwif	= init_hwif_svwks,
++		.init_dma	= init_dma_svwks,
++		.channels	= 2,
++		.autodma	= AUTODMA,
++		.bootable	= ON_BOARD,
++	},{	/* 2 */
++		.name		= "SvrWks CSB6",
++		.init_setup	= init_setup_csb6,
++		.init_chipset	= init_chipset_svwks,
++		.init_hwif	= init_hwif_svwks,
++		.init_dma	= init_dma_svwks,
++		.channels	= 2,
++		.autodma	= AUTODMA,
++		.bootable	= ON_BOARD,
++	},{	/* 3 */
++		.name		= "SvrWks CSB6",
++		.init_setup	= init_setup_csb6,
++		.init_chipset	= init_chipset_svwks,
++		.init_hwif	= init_hwif_svwks,
++		.init_dma	= init_dma_svwks,
++		.channels	= 1,	/* 2 */
++		.autodma	= AUTODMA,
++		.bootable	= ON_BOARD,
++	}
++};
+ 
+ /**
+  *	svwks_init_one	-	called when a OSB/CSB is found
+Index: linux-idepci-export/drivers/ide/pci/serverworks.h
+===================================================================
+--- linux-idepci-export.orig/drivers/ide/pci/serverworks.h	2005-02-05 08:57:24.477594365 +0900
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,67 +0,0 @@
+-
+-#ifndef SERVERWORKS_H
+-#define SERVERWORKS_H
+-
+-#include <linux/config.h>
+-#include <linux/pci.h>
+-#include <linux/ide.h>
+-
+-#define SVWKS_CSB5_REVISION_NEW	0x92 /* min PCI_REVISION_ID for UDMA5 (A2.0) */
+-#define SVWKS_CSB6_REVISION	0xa0 /* min PCI_REVISION_ID for UDMA4 (A1.0) */
+-
+-/* Seagate Barracuda ATA IV Family drives in UDMA mode 5
+- * can overrun their FIFOs when used with the CSB5 */
+-static const char *svwks_bad_ata100[] = {
+-	"ST320011A",
+-	"ST340016A",
+-	"ST360021A",
+-	"ST380021A",
+-	NULL
+-};
+-
+-static int init_setup_svwks(struct pci_dev *, ide_pci_device_t *);
+-static int init_setup_csb6(struct pci_dev *, ide_pci_device_t *);
+-static unsigned int init_chipset_svwks(struct pci_dev *, const char *);
+-static void init_hwif_svwks(ide_hwif_t *);
+-static void init_dma_svwks(ide_hwif_t *, unsigned long);
+-
+-static ide_pci_device_t serverworks_chipsets[] __devinitdata = {
+-	{	/* 0 */
+-		.name		= "SvrWks OSB4",
+-		.init_setup	= init_setup_svwks,
+-		.init_chipset	= init_chipset_svwks,
+-		.init_hwif	= init_hwif_svwks,
+-		.channels	= 2,
+-		.autodma	= AUTODMA,
+-		.bootable	= ON_BOARD,
+-	},{	/* 1 */
+-		.name		= "SvrWks CSB5",
+-		.init_setup	= init_setup_svwks,
+-		.init_chipset	= init_chipset_svwks,
+-		.init_hwif	= init_hwif_svwks,
+-		.init_dma	= init_dma_svwks,
+-		.channels	= 2,
+-		.autodma	= AUTODMA,
+-		.bootable	= ON_BOARD,
+-	},{	/* 2 */
+-		.name		= "SvrWks CSB6",
+-		.init_setup	= init_setup_csb6,
+-		.init_chipset	= init_chipset_svwks,
+-		.init_hwif	= init_hwif_svwks,
+-		.init_dma	= init_dma_svwks,
+-		.channels	= 2,
+-		.autodma	= AUTODMA,
+-		.bootable	= ON_BOARD,
+-	},{	/* 3 */
+-		.name		= "SvrWks CSB6",
+-		.init_setup	= init_setup_csb6,
+-		.init_chipset	= init_chipset_svwks,
+-		.init_hwif	= init_hwif_svwks,
+-		.init_dma	= init_dma_svwks,
+-		.channels	= 1,	/* 2 */
+-		.autodma	= AUTODMA,
+-		.bootable	= ON_BOARD,
+-	}
+-};
+-
+-#endif /* SERVERWORKS_H */
