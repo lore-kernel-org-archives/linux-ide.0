@@ -1,35 +1,44 @@
 From: Jens Axboe <axboe@suse.de>
 Subject: Re: [PATCH] speed up SATA
-Date: Sun, 28 Mar 2004 19:31:27 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040328173126.GH24370@suse.de>
-References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406616EE.80301@pobox.com> <4066191E.4040702@yahoo.com.au> <40662108.40705@pobox.com> <20040327170257.24c82915.akpm@osdl.org> <406625D4.7090605@pobox.com> <20040328135907.GC24370@suse.de> <40670B63.8040704@pobox.com>
+Date: Sun, 28 Mar 2004 19:35:08 +0200
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20040328173508.GI24370@suse.de>
+References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406612AA.1090406@yahoo.com.au> <4066156F.1000805@pobox.com> <20040328141014.GE24370@suse.de> <40670BD9.9020707@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:23235 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262238AbUC1RgU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Mar 2004 12:36:20 -0500
 Content-Disposition: inline
-In-Reply-To: <40670B63.8040704@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andrew Morton <akpm@osdl.org>, nickpiggin@yahoo.com.au, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <40670BD9.9020707@pobox.com>
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
 On Sun, Mar 28 2004, Jeff Garzik wrote:
 > Jens Axboe wrote:
 > >On Sat, Mar 27 2004, Jeff Garzik wrote:
 > >
-> >>"IOPs" are what make a lot of storage peeps excited these days, so they 
-> >>are being pushed in a low-latency direction anyway.
+> >>I also wouldn't want to lock out any users who wanted to use SATA at 
+> >>full speed ;-)
 > >
 > >
-> >IOPS says nothing about latency, it's still 100% throughput oriented.
+> >And full speed requires 32MB requests?
 > 
 > 
-> In order to achieve a large IOPs number, one must sent a ton of small 
-> requests.  Per-request latency as well as overall throughput is a factor.
+> Full speed is the SATA driver supporting the hardware maximum.  The 
 
-I don't see how per-request latency is a factor at all, if your metric
-is simply iops/sec. You could infinitely starve lots of requests
-without hurting your io rate, nor throughput.
+Come on Jeff, don't be such a slave to the hardware specifications. Just
+because it's possible to send down 32MB requests doesn't necessarily
+mean it's a super thing to do, nor that it automagically makes 'things
+go faster'. The claim is that back-to-back 1MB requests are every bit as
+fast as a 32MB request (especially if you have a small queue depth, in
+that case there truly should be zero benefit to doing the bigger ones).
+The cut-off point is likely even lower than 1MB, I'm just using that
+figure as a value that is 'pretty big' yet doesn't incur too large
+latencies just because of its size.
 
 -- 
 Jens Axboe
+
