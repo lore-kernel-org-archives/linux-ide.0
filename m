@@ -1,35 +1,25 @@
-From: kiu <kiu@gmx.net>
-Subject: Re: kernel history of ide performance
-Date: Tue, 05 Apr 2005 11:34:57 +0200
-Message-ID: <1112693697.42525bc13a3d4@kiun.homelinux.net>
-References: <1112690797.4252506dd574e@kiun.homelinux.net>  <4252541B.3030209@gmx.de> <58cb370e050405021470f3a851@mail.gmail.com>
+From: Rob Baxter <robb@synergymicro.com>
+Subject: Silicon Image 3124 SATA driver
+Date: Tue, 5 Apr 2005 07:45:41 -0700
+Message-ID: <20050405144541.GA14318@synergymicro.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtprelay02.ispgateway.de ([80.67.18.14]:64458 "EHLO
-	smtprelay02.ispgateway.de") by vger.kernel.org with ESMTP
-	id S261657AbVDEJfF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Apr 2005 05:35:05 -0400
-In-Reply-To: <58cb370e050405021470f3a851@mail.gmail.com>
+Received: from renfield.synergymicro.com ([207.158.54.5]:37787 "EHLO
+	renfield.synergymicro.com") by vger.kernel.org with ESMTP
+	id S261794AbVDEQEI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Apr 2005 12:04:08 -0400
+Received: from SDGEXCH01.SDG.CW.LOCAL ([172.31.1.34])
+	by renfield.synergymicro.com (8.12.10/8.12.10) with ESMTP id j35G47A9018520
+	for <linux-ide@vger.kernel.org>; Tue, 5 Apr 2005 09:04:07 -0700
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: "Oliver.Korpilla@gmx.de" <Oliver.Korpilla@gmx.de>, linux-ide@vger.kernel.org
-
-Quoting Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>:
-
-> On Apr 5, 2005 11:02 AM, Oliver.Korpilla@gmx.de <Oliver.Korpilla@gmx.de>
-
-> > Does this portray the IDE situation or more the situation of the PIIX
-> > chipset - I guess the code isn't changed as much since it should be
-> > rather mature?
-
-> Having scripts at hand would be useful to double check that
-> testing procedure itself is OK.
-
-You asked for it (ptest.tar.gz on the website) dont blame me for the chaos :)
--- 
-kiu
+To: linux-ide@vger.kernel.org
 
 
+I have a Sil 3124 that I would like to try.  Where can I find the patch?
+
+Either a patch for 2.4 or 2.6 will work.
+
+-robb
