@@ -1,60 +1,62 @@
-From: Doug McLain <nostar@comcast.net>
-Subject: Re: sata_sil data corruption
-Date: Mon, 21 Feb 2005 11:47:48 +0000
-Message-ID: <4219CA64.8020402@comcast.net>
-References: <Pine.LNX.4.58.0412281319001.5054@rainstorm.org> <421778E4.8060705@pobox.com> <Pine.LNX.4.58.0502211219250.23186@rainstorm.org> <4219A3AD.1000002@comcast.net> <421A0990.7070506@pobox.com> <4219C543.8030903@comcast.net> <20050221162923.GA29621@havoc.gtf.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Subject: Re: 2.6.11rc4: irq 5, nobody cared
+Date: Mon, 21 Feb 2005 19:43:59 +0100
+Message-ID: <200502211943.59887.bzolnier@elka.pw.edu.pl>
+References: <20050220155600.GD5049@vanheusden.com> <4218C692.9040106@tiscali.de> <20050220180550.GA18606@ime.usp.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from rwcrmhc12.comcast.net ([216.148.227.85]:31177 "EHLO
-	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
-	id S262035AbVBUQrF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Feb 2005 11:47:05 -0500
-In-Reply-To: <20050221162923.GA29621@havoc.gtf.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:4078 "EHLO
+	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
+	id S262071AbVBUSsW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Feb 2005 13:48:22 -0500
+Received: from hadron.elka.pw.edu.pl ([194.29.160.13]:50432 "EHLO localhost")
+	by higgs.elka.pw.edu.pl with ESMTP id S53157AbVBUSmf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org> + 1 other);
+	Mon, 21 Feb 2005 19:42:35 +0100
+Received: from [84.4.156.47] ([84.4.156.47]:35181 "EHLO [192.168.1.4]" ident:
+	"TIMEDOUT" smtp-auth: "bzolnier" TLS-CIPHER: <none> TLS-PEER-CN1: <none>)
+	by mion.elka.pw.edu.pl with ESMTP id S94430AbVBUSko convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org> + 3 others);
+	Mon, 21 Feb 2005 19:40:44 +0100
+In-Reply-To: <20050220180550.GA18606@ime.usp.br>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: PALFFY Daniel <dpalffy-lists@rainstorm.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-
-Jeff Garzik wrote:
-Been there done that, all on this list actually.  Bios upgrade, bios 
-reset, new cable, different drive, correct functionality in windows, and 
-now the drive and cable ahave found their home in my other PC, a kt600 
-board using the sata_via driver, where it works flawlessly.  I'm not 
-even interested in using the sata interface on this machine anymore, but 
-I still try to make an effort whenever possible to contribute byt 
-reporting bugs.  So many people with so many different hardware 
-combinations, sometimes it takes the right combination of 
-hardware/software to reveal a bug.  That being said, if you want to 
-investigate further, I can provide any information you want. If you want 
-to ignore it, thats fine too.  Evidence strongly leans towards a driver 
-bug though.
-
-I also noticed that I get oops now sometimes even with no drive 
-attatched at all
-
-What is a blacklist entry?  A combination of drive/controller that is 
-determined to be incompatable together? I would assume for a drive to 
-make it to a blacklists it would have to be incompatable regardless of 
-OS right?  The drive in question is a WD2000JD
-
-Doug
-> 
-> In this case, the bug _reports_ are hard to find.
-> 
-> Each case with sata_sil is either solved with a BIOS update, a
-> blacklist entry, or new cables.  Just read through bugzilla.kernel.org.
-> 
-> 	Jeff
-> 
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+To: Matthias-Christian Ott <matthias.christian@tiscali.de>
+Cc: =?iso-8859-1?q?Rog=E9rio_Brito?= <rbrito@ime.usp.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 
--- 
-http://nostar.net/
+On Sunday 20 February 2005 19:05, Rog=E9rio Brito wrote:
+> On Feb 20 2005, Matthias-Christian Ott wrote:
+> > Rog=E9rio Brito wrote:
+> > >I am willing to test any patch and configuration (let's call me a
+> > >"guinea pig"), but I don't know what I should do. I have, OTOH,
+> > >reported my problem many times in the past few days. :-(
+> > >
+> > >I will retry sending my message to the list once again, with the
+> > >details (in my case, the message I get is "irq 10: nobody cared!"
+> > >and it is regarding my primary HD on my secondary Promise PDC20265
+> > >controller).
+>=20
+> First of all, Matthias-Christian, thank you very much for your kind
+> answer.
+>=20
+> I have already tried contacting the linux-ide mailing list as a CC to=
+ my
+> earlier messages, but I got no response. I am including some details =
+in
+> this e-mail. I included Bartlomiej in the CC, as he is listed as gene=
+ral
+> IDE maintainer in the MAINTAINERS file.
+
+Hi,
+
+There is no need to cc: me 3x times,
+I'm subscribed to linux-kernel and linux-ide
+so I got your mail 5x times...
+
+If I don't reply it means that I'm busy doing other stuff.
+
+Regards,
+Bartlomiej
