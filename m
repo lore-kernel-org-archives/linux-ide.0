@@ -1,96 +1,108 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: [patch][2/6] ide: always allocate hwif->sg_table
-Date: Sat, 11 Sep 2004 00:26:28 +0200
+Subject: [patch][5/6] ide: merge PIO write/multiwrite code (ide-disk.c)
+Date: Sat, 11 Sep 2004 00:26:40 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200409110026.28497.bzolnier@elka.pw.edu.pl>
+Message-ID: <200409110026.40761.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:22986 "EHLO
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:58314 "EHLO
 	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S268005AbUIJW2A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Sep 2004 18:28:00 -0400
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:59126 "EHLO
+	id S267968AbUIJWcA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Sep 2004 18:32:00 -0400
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:58657 "EHLO
 	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
-	id S52656AbUIJW0F (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 1 other); Sat, 11 Sep 2004 00:26:05 +0200
+	id S52805AbUIJWZw (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 1 other); Sat, 11 Sep 2004 00:25:52 +0200
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-[patch] ide: always allocate hwif->sg_table
+[patch] ide: merge PIO write/multiwrite code (ide-disk.c)
 
-Allocate hwif->sg_table in hwif_init() so it can also be used for PIO.
+Merge multwrite_intr() into write_intr().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 ---
 
- linux-2.6.9-rc1-bk16-bzolnier/drivers/ide/ide-dma.c   |   11 ++---------
- linux-2.6.9-rc1-bk16-bzolnier/drivers/ide/ide-probe.c |    7 +++++++
- linux-2.6.9-rc1-bk16-bzolnier/drivers/ide/ide.c       |    1 +
- 3 files changed, 10 insertions(+), 9 deletions(-)
+ linux-2.6.9-rc1-bk16-bzolnier/drivers/ide/ide-disk.c |   40 ++-----------------
+ 1 files changed, 6 insertions(+), 34 deletions(-)
 
-diff -puN drivers/ide/ide.c~ide_sg_table drivers/ide/ide.c
---- linux-2.6.9-rc1-bk16/drivers/ide/ide.c~ide_sg_table	2004-09-10 23:21:51.188415304 +0200
-+++ linux-2.6.9-rc1-bk16-bzolnier/drivers/ide/ide.c	2004-09-10 23:21:51.200413480 +0200
-@@ -900,6 +900,7 @@ void ide_unregister(unsigned int index)
- 		hwif->drives[i].disk = NULL;
- 		put_disk(disk);
- 	}
-+	kfree(hwif->sg_table);
- 	unregister_blkdev(hwif->major, hwif->name);
- 	spin_lock_irq(&ide_lock);
- 
-diff -puN drivers/ide/ide-dma.c~ide_sg_table drivers/ide/ide-dma.c
---- linux-2.6.9-rc1-bk16/drivers/ide/ide-dma.c~ide_sg_table	2004-09-10 23:21:51.190415000 +0200
-+++ linux-2.6.9-rc1-bk16-bzolnier/drivers/ide/ide-dma.c	2004-09-10 23:21:51.202413176 +0200
-@@ -869,10 +869,6 @@ int ide_release_dma_engine (ide_hwif_t *
- 				    hwif->dmatable_dma);
- 		hwif->dmatable_cpu = NULL;
- 	}
--	if (hwif->sg_table) {
--		kfree(hwif->sg_table);
--		hwif->sg_table = NULL;
--	}
- 	return 1;
+diff -puN drivers/ide/ide-disk.c~ide_multwrite drivers/ide/ide-disk.c
+--- linux-2.6.9-rc1-bk16/drivers/ide/ide-disk.c~ide_multwrite	2004-09-10 23:50:32.208780440 +0200
++++ linux-2.6.9-rc1-bk16-bzolnier/drivers/ide/ide-disk.c	2004-09-10 23:50:32.211779984 +0200
+@@ -155,7 +155,7 @@ static ide_startstop_t read_intr (ide_dr
  }
  
-@@ -905,15 +901,12 @@ int ide_allocate_dma_engine (ide_hwif_t 
- 	hwif->dmatable_cpu = pci_alloc_consistent(hwif->pci_dev,
- 						  PRD_ENTRIES * PRD_BYTES,
- 						  &hwif->dmatable_dma);
--	hwif->sg_table = kmalloc(sizeof(struct scatterlist) * PRD_ENTRIES,
--				GFP_KERNEL);
+ /*
+- * write_intr() is the handler for disk write interrupts
++ * write_intr() is the handler for disk write/multwrite interrupts
+  */
+ static ide_startstop_t write_intr (ide_drive_t *drive)
+ {
+@@ -175,7 +175,10 @@ static ide_startstop_t write_intr (ide_d
+ 				ide_end_request(drive, 1, hwif->nsect);
+ 				return ide_stopped;
+ 			}
+-			ide_pio_sector(drive, 1);
++			if (drive->mult_count)
++				ide_pio_multi(drive, 1);
++			else
++				ide_pio_sector(drive, 1);
+ 			ide_set_handler(drive, &write_intr, WAIT_CMD, NULL);
+ 			return ide_started;
+ 		}
+@@ -186,36 +189,6 @@ static ide_startstop_t write_intr (ide_d
+ }
  
--	if ((hwif->dmatable_cpu) && (hwif->sg_table))
-+	if (hwif->dmatable_cpu)
- 		return 0;
- 
--	printk(KERN_ERR "%s: -- Error, unable to allocate%s%s table(s).\n",
-+	printk(KERN_ERR "%s: -- Error, unable to allocate%s DMA table(s).\n",
- 		(hwif->dmatable_cpu == NULL) ? " CPU" : "",
--		(hwif->sg_table == NULL) ?  " SG DMA" : " DMA",
- 		hwif->cds->name);
- 
- 	ide_release_dma_engine(hwif);
-diff -puN drivers/ide/ide-probe.c~ide_sg_table drivers/ide/ide-probe.c
---- linux-2.6.9-rc1-bk16/drivers/ide/ide-probe.c~ide_sg_table	2004-09-10 23:21:51.192414696 +0200
-+++ linux-2.6.9-rc1-bk16-bzolnier/drivers/ide/ide-probe.c	2004-09-10 23:21:51.204412872 +0200
-@@ -1255,6 +1255,13 @@ static int hwif_init(ide_hwif_t *hwif)
- 	if (register_blkdev(hwif->major, hwif->name))
- 		return 0;
- 
-+	hwif->sg_table = kmalloc(sizeof(struct scatterlist) * PRD_ENTRIES,
-+				 GFP_KERNEL);
-+	if (!hwif->sg_table) {
-+		printk(KERN_ERR "%s: unable to allocate SG table.\n", hwif->name);
-+		goto out;
-+	}
-+
- 	if (alloc_disks(hwif) < 0)
- 		goto out;
- 	
+ /*
+- * multwrite_intr() is the handler for disk multwrite interrupts
+- */
+-static ide_startstop_t multwrite_intr (ide_drive_t *drive)
+-{
+-	ide_hwif_t *hwif	= HWIF(drive);
+-	struct request *rq = hwif->hwgroup->rq;
+-	u8 stat;
+-
+-	stat = hwif->INB(IDE_STATUS_REG);
+-	if (OK_STAT(stat, DRIVE_READY, drive->bad_wstat)) {
+-		if (stat & DRQ_STAT) {
+-			/* The drive wants data. */
+-			if (hwif->nleft) {
+-				ide_pio_multi(drive, 1);
+-				ide_set_handler(drive, &multwrite_intr, WAIT_CMD, NULL);
+-				return ide_started;
+-			}
+-		} else {
+-			if (!hwif->nleft) {	/* all done? */
+-				ide_end_request(drive, 1, hwif->nsect);
+-				return ide_stopped;
+-			}
+-		}
+-		/* the original code did this here (?) */
+-		return ide_stopped;
+-	}
+-	return task_error(drive, rq, __FUNCTION__, stat);
+-}
+-
+-/*
+  * __ide_do_rw_disk() issues READ and WRITE commands to a disk,
+  * using LBA if supported, or CHS otherwise, to address sectors.
+  * It also takes care of issuing special DRIVE_CMDs.
+@@ -350,11 +323,10 @@ ide_startstop_t __ide_do_rw_disk (ide_dr
+ 		}
+ 		if (!drive->unmask)
+ 			local_irq_disable();
++		ide_set_handler(drive, &write_intr, WAIT_CMD, NULL);
+ 		if (drive->mult_count) {
+-			ide_set_handler(drive, &multwrite_intr, WAIT_CMD, NULL);
+ 			ide_pio_multi(drive, 1);
+ 		} else {
+-			ide_set_handler(drive, &write_intr, WAIT_CMD, NULL);
+ 			ide_pio_sector(drive, 1);
+ 		}
+ 		return ide_started;
 _
