@@ -1,48 +1,89 @@
-From: Philip Armstrong <phil@kantaka.co.uk>
-Subject: Re: Bug#289770: kernel-image-2.6.10-1-686: 2.6.10 fails to set up DMA on my IBM thinkpad
-Date: Thu, 10 Feb 2005 20:08:46 +0000
-Message-ID: <20050210200846.GB28238@kantaka.co.uk>
-References: <20050111195345.GI2618@stro.at> <20050112120245.GA24839@kantaka.co.uk> <200501121352.33520.bzolnier@elka.pw.edu.pl>
+From: <Stuart_Hayes@Dell.com>
+Subject: RE: ide-cd question
+Date: Thu, 10 Feb 2005 15:41:46 -0600
+Message-ID: <7A8F92187EF7A249BF847F1BF4903C04010EE89F@ausx2kmpc103.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from dsl-217-155-153-11.zen.co.uk ([217.155.153.11]:61133 "EHLO
-	217.155.153.11") by vger.kernel.org with ESMTP id S261653AbVBJUIr
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Feb 2005 15:08:47 -0500
-Content-Disposition: inline
-In-Reply-To: <200501121352.33520.bzolnier@elka.pw.edu.pl>
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:23843 "EHLO
+	ausc60ps301.us.dell.com") by vger.kernel.org with ESMTP
+	id S261623AbVBJVlv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Feb 2005 16:41:51 -0500
+content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Cc: maximilian attems <debian@sternwelten.at>, linux-ide@vger.kernel.org, 289770@bugs.debian.org
+To: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-On Wed, Jan 12, 2005 at 01:52:33PM +0100, Bartlomiej Zolnierkiewicz wrote:
->Further investigation reveals that turning off CONFIG_PNPBIOS solves
->the problem.
 
-Addendum:
+> 
+> I'd recommend applying this patch if nobody sees any problems with it.
+> 
+> 
+> --- ide-cd.c.orig	2005-02-07 10:56:42.000000000 -0500
+> +++ ide-cd.c	2005-02-07 10:57:06.000000000 -0500
+> @@ -3301,6 +3301,7 @@ static ide_driver_t ide_cdrom_driver = {
+>  	.supports_dsc_overlap	= 1,
+>  	.cleanup		= ide_cdrom_cleanup,
+>  	.do_request		= ide_do_rw_cdrom,
+> +	.end_request		= cdrom_end_request,
+>  	.capacity		= ide_cdrom_capacity,
+>  	.attach			= ide_cdrom_attach,
+>  	.drives			=
+> LIST_HEAD_INIT(ide_cdrom_driver.drives),
+> 
+> 
 
-# diff 2.6.10/ioports nopnp/ioports
-10a11
-> 0100-013f : pcmcia_socket0
-12,13d12
-< 0200-0207 : ns558-pnp
-< 03bc-03be : parport0
-16,17d14
-< 03f8-03ff : serial
-< 04d0-04d1 : pnp 00:0a
-20d16
-< 15e0-15ef : pnp 00:0a
-31c27
-<   fcf8-fcff : pnp 00:1c
----
->   fcf0-fcf7 : ide0
+I took the lack of responses to mean that either nobody cared, or the 
+patch was so bad that it wasn't worthy of comment, so I took a closer 
+look at it.  After looking at it more carefully, I suspect that the 
+function cdrom_end_request() was meant to be an internal function, and 
+not the end_request function for the driver (in part because the 
+number of parameters for cdrom_end_request() isn't the same as 
+ide_end_request()!).
 
-(The nopnp kernel doesn't have the ns558 joystick driver compiled in)
+Here's another patch that fixes the issue I'm seeing, and is less likely
 
-cheers,
+to cause any other problems.  This will make sure that requests that are
 
-Phil
+ended in ide_atapi_error() because they failed too many times (even
+after
+a couple reset attempts) are completely ended, even if they didn't
+finish 
+transferring all the data that was expected.
 
--- 
-http://www.kantaka.co.uk/ .oOo. public key: http://www.kantaka.co.uk/gpg.txt
+Please apply if you don't see any problems with it.
+
+Thanks!
+Stuart
+
+
+
+--- ide-io.c.orig	2005-02-10 15:23:52.000000000 -0500
++++ ide-io.c.new	2005-02-10 15:23:31.000000000 -0500
+@@ -515,7 +515,18 @@ static ide_startstop_t ide_atapi_error(i
+ 		hwif->OUTB(WIN_IDLEIMMEDIATE, IDE_COMMAND_REG);
+ 
+ 	if (rq->errors >= ERROR_MAX) {
+-		drive->driver->end_request(drive, 0, 0);
++		/* 
++		 * make sure request is fully ended--otherwise bio might
+get updated and the
++		 * command will be retried without rq->errors getting
+reset to zero, which
++		 * could cause us to get stuck in a loop with infinite
+retries without any 
++		 * more reset attempts (borrowed from cdrom_end_request)
++		 */
++		int nsectors;
++		if (blk_pc_request(rq))
++			nsectors = (rq->data_len + 511) >> 9;
++		if (!nsectors)
++			nsectors = 1;
++		drive->driver->end_request(drive, 0, nsectors);
+ 	} else {
+ 		if ((rq->errors & ERROR_RESET) == ERROR_RESET) {
+ 			++rq->errors;
+
+
+
