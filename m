@@ -1,99 +1,66 @@
-From: <Stuart_Hayes@Dell.com>
-Subject: RE: ide-cd question
-Date: Fri, 4 Mar 2005 16:37:12 -0600
-Message-ID: <7A8F92187EF7A249BF847F1BF4903C04010EE978@ausx2kmpc103.aus.amer.dell.com>
+From: Greg Felix <gregfelixlkml@gmail.com>
+Subject: [PATCH] ata_piix.c: check PCI sub-class code before AHCI disabling
+Date: Fri, 4 Mar 2005 17:04:55 -0700
+Message-ID: <e16ac85e050304160467045421@mail.gmail.com>
+Reply-To: Greg Felix <gregfelixlkml@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C5210A.B5061A58"
-Received: from ausc60pc101.us.dell.com ([143.166.85.206]:18950 "EHLO
-	ausc60pc101.us.dell.com") by vger.kernel.org with ESMTP
-	id S263148AbVCDWh1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Mar 2005 17:37:27 -0500
-content-class: urn:content-classes:message
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Received: from wproxy.gmail.com ([64.233.184.200]:6964 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S263428AbVCEAE5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2005 19:04:57 -0500
+Received: by wproxy.gmail.com with SMTP id 68so993291wra
+        for <linux-ide@vger.kernel.org>; Fri, 04 Mar 2005 16:04:57 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: axboe@suse.de
-Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com, stuarthayes@austin.rr.com
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-This is a multi-part message in MIME format.
+This patch adds functionality to check the PCI sub-class code of an
+AHCI capable device before disabling AHCI.  It fixes a bug where an
+ICH7 sata controller is being setup by the BIOS as sub-class 1 (ide)
+and the AHCI control registers weren't being initialized, thus causing
+an IO error in piix_disable_ahci().
 
-------_=_NextPart_001_01C5210A.B5061A58
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-
->=20
-> There's still a problem here, you are not initializing nsectors for
-> non-pc requests. And your comments wrap :)=20
->=20
->         int nsectors =3D rq->hard_nr_sectors;
->=20
->         if (blk_pc_request(rq))
->                 nsectors =3D (rq->data_len + 511) >> 9;
->         if (!nsectors)
->                 nsectors =3D 1;
->=20
->         ...
->=20
-> Can you resend with that fixed up and with a Signed-off-by header?
-
-Here it is.  Thanks for all the help.  I'm attaching as a file, too,
-just in case it gets garbled again.
-Stuart
+Thanks,
+Greg Felix
 
 
-Signed-off-by: Stuart Hayes <stuart_hayes@dell.com>
+Signed-off-by: Gregory Felix <greg.felix@gmail.com>
 
---- linux-2.6.11/drivers/ide/ide-io.c.orig	2005-03-04
-16:11:14.000000000 -0500
-+++ linux-2.6.11/drivers/ide/ide-io.c	2005-03-04 16:19:19.000000000
--0500
-@@ -516,7 +516,19 @@ static ide_startstop_t ide_atapi_error(i
- 		hwif->OUTB(WIN_IDLEIMMEDIATE, IDE_COMMAND_REG);
-=20
- 	if (rq->errors >=3D ERROR_MAX) {
--		drive->driver->end_request(drive, 0, 0);
-+		/*=20
-+		 * make sure request is fully ended--otherwise the=20
-+		 * command will be retried without rq->errors getting
-+		 * reset to zero, which could cause us to get stuck
-+		 * in a loop with infinite retries without any more
-+		 * reset attempts
-+		 */
-+		int nsectors =3D rq->hard_nr_sectors;
-+		if (blk_pc_request(rq))
-+			nsectors =3D (rq->data_len + 511) >> 9;
-+		if (!nsectors)
-+			nsectors =3D 1;
-+		drive->driver->end_request(drive, 0, nsectors);
- 	} else {
- 		if ((rq->errors & ERROR_RESET) =3D=3D ERROR_RESET) {
- 			++rq->errors;
+--- drivers/scsi/ata_piix.c.orig        2005-03-04 15:25:48.966846795 -0700
++++ drivers/scsi/ata_piix.c     2005-03-04 15:27:55.942404850 -0700
+@@ -38,6 +38,7 @@ enum {
+        PIIX_IOCFG              = 0x54, /* IDE I/O configuration register */
+        ICH5_PMR                = 0x90, /* port mapping register */
+        ICH5_PCS                = 0x92, /* port control and status */
++       PIIX_SCC                = 0x0A, /* sub-class code register */
 
-------_=_NextPart_001_01C5210A.B5061A58
-Content-Type: application/octet-stream;
-	name="atapi_max_errors_d_2.6.11.patch"
-Content-Transfer-Encoding: base64
-Content-Description: atapi_max_errors_d_2.6.11.patch
-Content-Disposition: attachment;
-	filename="atapi_max_errors_d_2.6.11.patch"
+        PIIX_FLAG_AHCI          = (1 << 28), /* AHCI possible */
+        PIIX_FLAG_CHECKINTR     = (1 << 29), /* make sure PCI INTx enabled */
+@@ -61,6 +62,8 @@ enum {
+        ich6_sata               = 3,
+        ich6_sata_rm            = 4,
+        ich7_sata               = 5,
++
++       PIIX_AHCI_DEVICE        = 6,
+ };
 
-LS0tIGxpbnV4LTIuNi4xMS9kcml2ZXJzL2lkZS9pZGUtaW8uYy5vcmlnCTIwMDUtMDMtMDQgMTY6
-MTE6MTQuMDAwMDAwMDAwIC0wNTAwCisrKyBsaW51eC0yLjYuMTEvZHJpdmVycy9pZGUvaWRlLWlv
-LmMJMjAwNS0wMy0wNCAxNjoxOToxOS4wMDAwMDAwMDAgLTA1MDAKQEAgLTUxNiw3ICs1MTYsMTkg
-QEAgc3RhdGljIGlkZV9zdGFydHN0b3BfdCBpZGVfYXRhcGlfZXJyb3IoaQogCQlod2lmLT5PVVRC
-KFdJTl9JRExFSU1NRURJQVRFLCBJREVfQ09NTUFORF9SRUcpOwogCiAJaWYgKHJxLT5lcnJvcnMg
-Pj0gRVJST1JfTUFYKSB7Ci0JCWRyaXZlLT5kcml2ZXItPmVuZF9yZXF1ZXN0KGRyaXZlLCAwLCAw
-KTsKKwkJLyogCisJCSAqIG1ha2Ugc3VyZSByZXF1ZXN0IGlzIGZ1bGx5IGVuZGVkLS1vdGhlcndp
-c2UgdGhlIAorCQkgKiBjb21tYW5kIHdpbGwgYmUgcmV0cmllZCB3aXRob3V0IHJxLT5lcnJvcnMg
-Z2V0dGluZworCQkgKiByZXNldCB0byB6ZXJvLCB3aGljaCBjb3VsZCBjYXVzZSB1cyB0byBnZXQg
-c3R1Y2sKKwkJICogaW4gYSBsb29wIHdpdGggaW5maW5pdGUgcmV0cmllcyB3aXRob3V0IGFueSBt
-b3JlCisJCSAqIHJlc2V0IGF0dGVtcHRzCisJCSAqLworCQlpbnQgbnNlY3RvcnMgPSBycS0+aGFy
-ZF9ucl9zZWN0b3JzOworCQlpZiAoYmxrX3BjX3JlcXVlc3QocnEpKQorCQkJbnNlY3RvcnMgPSAo
-cnEtPmRhdGFfbGVuICsgNTExKSA+PiA5OworCQlpZiAoIW5zZWN0b3JzKQorCQkJbnNlY3RvcnMg
-PSAxOworCQlkcml2ZS0+ZHJpdmVyLT5lbmRfcmVxdWVzdChkcml2ZSwgMCwgbnNlY3RvcnMpOwog
-CX0gZWxzZSB7CiAJCWlmICgocnEtPmVycm9ycyAmIEVSUk9SX1JFU0VUKSA9PSBFUlJPUl9SRVNF
-VCkgewogCQkJKytycS0+ZXJyb3JzOwo=
+ static int piix_init_one (struct pci_dev *pdev,
+@@ -609,9 +612,13 @@ static int piix_init_one (struct pci_dev
+        port_info[1] = NULL;
 
-------_=_NextPart_001_01C5210A.B5061A58--
+        if (port_info[0]->host_flags & PIIX_FLAG_AHCI) {
+-               int rc = piix_disable_ahci(pdev);
+-               if (rc)
+-                       return rc;
++               u8 tmp;
++               pci_read_config_byte(pdev, PIIX_SCC, &tmp);
++               if (tmp == PIIX_AHCI_DEVICE) {
++                       int rc = piix_disable_ahci(pdev);
++                       if (rc)
++                           return rc;
++               }
+        }
+
+        if (port_info[0]->host_flags & PIIX_FLAG_COMBINED) {
