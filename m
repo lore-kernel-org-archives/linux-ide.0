@@ -1,97 +1,139 @@
-From: Vojtech Pavlik <vojtech@suse.cz>
-Subject: Re: [PATCH] ide/amd74xx: fix section references
-Date: Fri, 4 Mar 2005 09:03:07 +0100
-Message-ID: <20050304080307.GC1646@ucw.cz>
-References: <20050303194821.55fec933.rddunlap@osdl.org>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH ide-2.6 1/3] pdc202xx_new: PLL initialization support
+Date: Fri, 04 Mar 2005 16:14:57 +0800
+Message-ID: <42281901.8000803@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from twilight.ucw.cz ([81.30.235.3]:38038 "EHLO suse.cz")
-	by vger.kernel.org with ESMTP id S262631AbVCDIC0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2005 03:02:26 -0500
-Content-Disposition: inline
-In-Reply-To: <20050303194821.55fec933.rddunlap@osdl.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from bluehawaii.tikira.net ([61.62.22.51]:10214 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S262631AbVCDIPO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Mar 2005 03:15:14 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rddunlap@osdl.org>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, akpm <akpm@osdl.org>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: IDE Linux <linux-ide@vger.kernel.org>
 
-On Thu, Mar 03, 2005 at 07:48:21PM -0800, Randy.Dunlap wrote:
-> 
-> ide/pci/amd74xx:  data structs point to __init text which should be
->   __devinit;
-> unless (a) these are going away real soon,
-> or (b) this just can't happen, isn't a real problem,
-> or (c) other ?
 
-This is a problem in most of the IDE PCI drivers. It is a problem if IDE
-hotplug is to be expected, and shouldn't be causing any immediate harm
-if IDE controllers can't be hotplugged. AMD74xx certainly can't.
+Hi Bart,
 
-However, I believe it's correct to fix that.
+   These are the patches for pdc202xx_new PLL initialization support. It is to fix
+the problem when there are more than two pdc202xx adapters, the on board firmware does
+not initialize the PLL for the 3rd/4th... adapters. As in:
+http://marc.theaimsgroup.com/?l=linux-ide&m=110902518625384&w=2
 
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000004d8 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000004e8 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000538 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000548 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000598 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000005a8 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000005f8 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000608 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000658 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000668 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000006b8 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000006c8 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000718 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000728 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000778 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000788 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000007d8 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000007e8 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000838 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000848 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000898 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000008a8 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000008f8 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000908 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000958 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000968 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000009b8 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 00000000000009c8 R_X86_64_64       .init.text
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000a18 R_X86_64_64       .init.text+0x0000000000000106
-> Error: ./drivers/ide/pci/amd74xx.o .data refers to 0000000000000a28 R_X86_64_64       .init.text
-> 
-> Signed-off-by: Randy Dunlap <rddunlap@osdl.org>
-> 
-> diffstat:=
->  drivers/ide/pci/amd74xx.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff -Naurp ./drivers/ide/pci/amd74xx.c~ide_amd_sections ./drivers/ide/pci/amd74xx.c
-> --- ./drivers/ide/pci/amd74xx.c~ide_amd_sections	2005-03-01 23:38:33.000000000 -0800
-> +++ ./drivers/ide/pci/amd74xx.c	2005-03-03 15:39:21.000000000 -0800
-> @@ -308,7 +308,7 @@ static int amd74xx_ide_dma_check(ide_dri
->   * and initialize its drive independent registers.
->   */
->  
-> -static unsigned int __init init_chipset_amd74xx(struct pci_dev *dev, const char *name)
-> +static unsigned int __devinit init_chipset_amd74xx(struct pci_dev *dev, const char *name)
->  {
->  	unsigned char t;
->  	unsigned int u;
-> @@ -412,7 +412,7 @@ static unsigned int __init init_chipset_
->  	return dev->irq;
->  }
->  
-> -static void __init init_hwif_amd74xx(ide_hwif_t *hwif)
-> +static void __devinit init_hwif_amd74xx(ide_hwif_t *hwif)
->  {
->  	int i;
->  
-> 
-> 
-> ---
-> 
+   Attached please find the patch 1/3 against the ide-2.6 tree for your review. Thanks.
 
--- 
-Vojtech Pavlik
-SuSE Labs, SuSE CR
+Changes:
+1/3: Remove spaces in function declaration and add new lines.
+2/3: Replace the index register macros with functions
+3/3: Add PLL initialization code
+
+Albert
+
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+-----------------------------------------------------------------------------------------------------------
+diff -Nru libata-dev-2.6-1/drivers/ide/pci/pdc202xx_new.c libata-dev-2.6-2/drivers/ide/pci/pdc202xx_new.c
+--- libata-dev-2.6-1/drivers/ide/pci/pdc202xx_new.c	2005-03-03 14:53:07.000000000 +0800
++++ libata-dev-2.6-2/drivers/ide/pci/pdc202xx_new.c	2005-03-03 17:54:56.000000000 +0800
+@@ -77,7 +77,7 @@
+  		set_2regs(0x13,(c));			\
+  	} while(0)
+
+-static u8 pdcnew_ratemask (ide_drive_t *drive)
++static u8 pdcnew_ratemask(ide_drive_t *drive)
+  {
+  	u8 mode;
+
+@@ -96,12 +96,14 @@
+  		default:
+  			return 0;
+  	}
++
+  	if (!eighty_ninty_three(drive))
+  		mode = min(mode, (u8)1);
++
+  	return mode;
+  }
+
+-static int check_in_drive_lists (ide_drive_t *drive, const char **list)
++static int check_in_drive_lists(ide_drive_t *drive, const char **list)
+  {
+  	struct hd_driveid *id = drive->id;
+
+@@ -121,7 +123,7 @@
+  	return 0;
+  }
+
+-static int pdcnew_new_tune_chipset (ide_drive_t *drive, u8 xferspeed)
++static int pdcnew_new_tune_chipset(ide_drive_t *drive, u8 xferspeed)
+  {
+  	ide_hwif_t *hwif	= HWIF(drive);
+  	unsigned long indexreg	= hwif->dma_vendor1;
+@@ -177,12 +179,12 @@
+  	(void)pdcnew_new_tune_chipset(drive, speed);
+  }
+
+-static u8 pdcnew_new_cable_detect (ide_hwif_t *hwif)
++static u8 pdcnew_new_cable_detect(ide_hwif_t *hwif)
+  {
+  	hwif->OUTB(0x0b, hwif->dma_vendor1);
+  	return ((u8)((hwif->INB(hwif->dma_vendor3) & 0x04)));
+  }
+-static int config_chipset_for_dma (ide_drive_t *drive)
++static int config_chipset_for_dma(ide_drive_t *drive)
+  {
+  	struct hd_driveid *id	= drive->id;
+  	ide_hwif_t *hwif	= HWIF(drive);
+@@ -201,6 +203,7 @@
+
+  	if (drive->media != ide_disk)
+  		return 0;
++
+  	if (id->capability & 4) {	/* IORDY_EN & PREFETCH_EN */
+  		hwif->OUTB((0x13 + ((drive->dn%2) ? 0x08 : 0x00)), hwif->dma_vendor1);
+  		hwif->OUTB((hwif->INB(hwif->dma_vendor3)|0x03), hwif->dma_vendor3);
+@@ -217,7 +220,7 @@
+  	return ide_dma_enable(drive);
+  }
+
+-static int pdcnew_config_drive_xfer_rate (ide_drive_t *drive)
++static int pdcnew_config_drive_xfer_rate(ide_drive_t *drive)
+  {
+  	ide_hwif_t *hwif	= HWIF(drive);
+  	struct hd_driveid *id	= drive->id;
+@@ -242,7 +245,7 @@
+  	return 0;
+  }
+
+-static int pdcnew_quirkproc (ide_drive_t *drive)
++static int pdcnew_quirkproc(ide_drive_t *drive)
+  {
+  	return ((int) check_in_drive_lists(drive, pdc_quirk_drives));
+  }
+@@ -261,7 +264,7 @@
+  	return __ide_dma_timeout(drive);
+  }
+
+-static void pdcnew_new_reset (ide_drive_t *drive)
++static void pdcnew_new_reset(ide_drive_t *drive)
+  {
+  	/*
+  	 * Deleted this because it is redundant from the caller.
+@@ -341,10 +344,13 @@
+  	hwif->ide_dma_check = &pdcnew_config_drive_xfer_rate;
+  	hwif->ide_dma_lostirq = &pdcnew_ide_dma_lostirq;
+  	hwif->ide_dma_timeout = &pdcnew_ide_dma_timeout;
++
+  	if (!(hwif->udma_four))
+  		hwif->udma_four = (pdcnew_new_cable_detect(hwif)) ? 0 : 1;
++
+  	if (!noautodma)
+  		hwif->autodma = 1;
++
+  	hwif->drives[0].autodma = hwif->drives[1].autodma = hwif->autodma;
+  #if PDC202_DEBUG_CABLE
+  	printk(KERN_DEBUG "%s: %s-pin cable\n",
+
+
+
