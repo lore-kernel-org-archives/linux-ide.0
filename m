@@ -1,21 +1,28 @@
 From: Stefan <gentoopower@yahoo.de>
 Subject: Re: Kernel 2.6.6 Bug !!!!
-Date: Mon, 10 May 2004 13:25:48 +0200
+Date: Mon, 10 May 2004 13:50:48 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <409F66BC.1080708@yahoo.de>
+Message-ID: <409F6C98.8080301@yahoo.de>
 References: <409F64B7.6050906@yahoo.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp101.mail.sc5.yahoo.com ([216.136.174.139]:50254 "HELO
-	smtp101.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S264634AbUEJLTF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 May 2004 07:19:05 -0400
+Received: from smtp018.mail.yahoo.com ([216.136.174.115]:49818 "HELO
+	smtp018.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S264526AbUEJLoE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 May 2004 07:44:04 -0400
 In-Reply-To: <409F64B7.6050906@yahoo.de>
 List-Id: linux-ide@vger.kernel.org
 To: Stefan <gentoopower@yahoo.de>
 Cc: linux-ide@vger.kernel.org
+
+Update, I had an error in my makefile and didn't notice it until now. I 
+should have tested it with 2.6.5 right after I made the change.
+So my driver works, only the nvidia driver seems broken. I try to find 
+out why.
+
+
 
 Stefan wrote:
 
@@ -59,6 +66,4 @@ Stefan wrote:
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-Ah I just looked at the Makefile, there are a lot of changes in there, 
-could it be that those changes break out of tree module compile?
-Or do we have to make changes to the makefiles of our drivers?
+
