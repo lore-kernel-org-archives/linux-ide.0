@@ -1,214 +1,86 @@
-From: Nick Piggin <piggin@cyberone.com.au>
+From: Thomas Schlichter <schlicht@uni-mannheim.de>
 Subject: Re: Processes receive SIGSEGV if TCQ is enabled
-Date: Fri, 31 Oct 2003 10:40:33 +1100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <3FA1A171.3040807@cyberone.com.au>
-References: <200310301601.55588.schlicht@uni-mannheim.de> <20031030133316.6bd00b4a.akpm@osdl.org> <200310302310.53798.schlicht@uni-mannheim.de> <3FA1943A.7010300@cornell.edu>
+Date: Fri, 31 Oct 2003 08:28:33 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200310310828.41598.schlicht@uni-mannheim.de>
+References: <200310301601.55588.schlicht@uni-mannheim.de> <3FA1943A.7010300@cornell.edu> <3FA1A171.3040807@cyberone.com.au>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060403030406060005000505"
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <3FA1943A.7010300@cornell.edu>
-To: Ivan Gyurdiev <ivg2@cornell.edu>, Thomas Schlichter <schlicht@uni-mannheim.de>
-Cc: Andrew Morton <akpm@osdl.org>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------060403030406060005000505
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: multipart/signed;
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1;
+  boundary="Boundary-02=_p8go/CmIP8D38GM";
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rumms.uni-mannheim.de ([134.155.50.52]:36035 "EHLO
+	rumms.uni-mannheim.de") by vger.kernel.org with ESMTP
+	id S263051AbTJaH3C (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 31 Oct 2003 02:29:02 -0500
+In-Reply-To: <3FA1A171.3040807@cyberone.com.au>
+List-Id: linux-ide@vger.kernel.org
+To: Nick Piggin <piggin@cyberone.com.au>, Ivan Gyurdiev <ivg2@cornell.edu>
+Cc: Andrew Morton <akpm@osdl.org>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+
+
+--Boundary-02=_p8go/CmIP8D38GM
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
 Hi,
-If you're testing IDE TCQ, please try the following patch and use the
-default io scheduler. It won't fix anything, but it poisons requests
-so we can sometimes tell if they are being used in the wrong places.
-I have seen warnings that lead me to believe this might be happening.
-Its against 2.6.0-test9-mm1. Report any stack traces you see. Thanks.
 
-Nick
+On Friday 31 October 2003 00:40, Nick Piggin wrote:
+> Hi,
+> If you're testing IDE TCQ, please try the following patch and use the
+> default io scheduler. It won't fix anything, but it poisons requests
+> so we can sometimes tell if they are being used in the wrong places.
+> I have seen warnings that lead me to believe this might be happening.
+> Its against 2.6.0-test9-mm1. Report any stack traces you see. Thanks.
 
+OK, I tested 2.6.0-test9-mm1 + your patch, but it seems not to print any=20
+messages or stack traces, even if many processes are killed after setting T=
+CQ=20
+depth to 1.
 
---------------060403030406060005000505
-Content-Type: text/plain;
- name="as-req-debug.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="as-req-debug.patch"
+Today, however, I got reiserfs corruption messages in the logs, but=20
+fsck.reiserfs could not find any corruption on the next boot, so I think th=
+is=20
+is not a real corruption but just reading the wrong data...
 
- linux-2.6-npiggin/drivers/block/as-iosched.c |   69 ++++++++++++++++++++-------
- 1 files changed, 53 insertions(+), 16 deletions(-)
+The messages are something like:
 
-diff -puN drivers/block/as-iosched.c~as-req-debug drivers/block/as-iosched.c
---- linux-2.6/drivers/block/as-iosched.c~as-req-debug	2003-10-31 09:42:27.000000000 +1100
-+++ linux-2.6-npiggin/drivers/block/as-iosched.c	2003-10-31 10:33:00.000000000 +1100
-@@ -136,6 +136,10 @@ enum arq_state {
- 				   scheduler */
- 	AS_RQ_DISPATCHED,	/* On the dispatch list. It belongs to the
- 				   driver now */
-+	AS_RQ_PRESCHED,		/* Debug poisoning for requests being used */
-+	AS_RQ_REMOVED,
-+	AS_RQ_MERGED,
-+	AS_RQ_POSTSCHED,	/* when they shouldn't be */
- };
- 
- struct as_rq {
-@@ -897,8 +901,14 @@ static void as_completed_request(request
- 
- 	WARN_ON(!list_empty(&rq->queuelist));
- 
--	if (unlikely(arq->state != AS_RQ_DISPATCHED))
--		return;
-+	if (arq->state == AS_RQ_MERGED)
-+		goto out;
-+
-+	if (arq->state != AS_RQ_REMOVED) {
-+		printk("arq->state %d\n", arq->state);
-+		WARN_ON(1);
-+		goto out;
-+	}
- 
- 	if (ad->changed_batch && ad->nr_dispatched == 1) {
- 		WARN_ON(ad->batch_data_dir == arq->is_sync);
-@@ -926,7 +936,7 @@ static void as_completed_request(request
- 	}
- 
- 	if (!arq->io_context)
--		return;
-+		goto out;
- 
- 	if (ad->io_context == arq->io_context) {
- 		ad->antic_start = jiffies;
-@@ -942,7 +952,7 @@ static void as_completed_request(request
- 
- 	aic = arq->io_context->aic;
- 	if (!aic)
--		return;
-+		goto out;
- 
- 	spin_lock(&aic->lock);
- 	if (arq->is_sync == REQ_SYNC) {
-@@ -952,6 +962,9 @@ static void as_completed_request(request
- 	spin_unlock(&aic->lock);
- 
- 	put_io_context(arq->io_context);
-+
-+out:
-+	arq->state = AS_RQ_POSTSCHED;
- }
- 
- /*
-@@ -1020,14 +1033,14 @@ static void as_remove_request(request_qu
- 	struct as_rq *arq = RQ_DATA(rq);
- 
- 	if (unlikely(arq->state == AS_RQ_NEW))
--		return;
--
--	if (!arq) {
--		WARN_ON(1);
--		return;
--	}
-+		goto out;
- 
- 	if (ON_RB(&arq->rb_node)) {
-+		if (arq->state != AS_RQ_QUEUED) {
-+			printk("arq->state %d\n", arq->state);
-+			WARN_ON(1);
-+			goto out;
-+		}
- 		/*
- 		 * We'll lose the aliased request(s) here. I don't think this
- 		 * will ever happen, but if it does, hopefully someone will
-@@ -1035,8 +1048,16 @@ static void as_remove_request(request_qu
- 		 */
- 		WARN_ON(!list_empty(&rq->queuelist));
- 		as_remove_queued_request(q, rq);
--	} else
-+	} else {
-+		if (arq->state != AS_RQ_DISPATCHED) {
-+			printk("arq->state %d\n", arq->state);
-+			WARN_ON(1);
-+			goto out;
-+		}
- 		as_remove_dispatched_request(q, rq);
-+	}
-+out:
-+	arq->state = AS_RQ_REMOVED;
- }
- 
- /*
-@@ -1276,8 +1297,6 @@ fifo_expired:
- 			ad->new_batch = 1;
- 
- 		ad->changed_batch = 0;
--
--//		arq->request->flags |= REQ_SOFTBARRIER;
- 	}
- 
- 	/*
-@@ -1402,6 +1421,11 @@ static void as_requeue_request(request_q
- 	struct as_rq *arq = RQ_DATA(rq);
- 
- 	if (arq) {
-+		if (arq->state != AS_RQ_REMOVED) {
-+			printk("arq->state %d\n", arq->state);
-+			WARN_ON(1);
-+		}
-+
- 		arq->state = AS_RQ_DISPATCHED;
- 		if (arq->io_context && arq->io_context->aic)
- 			atomic_inc(&arq->io_context->aic->nr_dispatched);
-@@ -1421,12 +1445,18 @@ as_insert_request(request_queue_t *q, st
- 	struct as_data *ad = q->elevator.elevator_data;
- 	struct as_rq *arq = RQ_DATA(rq);
- 
--#if 0
-+ 	if (arq) {
-+ 		if (arq->state != AS_RQ_PRESCHED) {
-+ 			printk("arq->state: %d\n", arq->state);
-+ 			WARN_ON(1);
-+ 		}
-+ 		arq->state = AS_RQ_NEW;
-+ 	}
-+
- 	/* barriers must flush the reorder queue */
- 	if (unlikely(rq->flags & (REQ_SOFTBARRIER | REQ_HARDBARRIER)
- 			&& where == ELEVATOR_INSERT_SORT))
- 		where = ELEVATOR_INSERT_BACK;
--#endif
- 
- 	switch (where) {
- 		case ELEVATOR_INSERT_BACK:
-@@ -1662,6 +1692,8 @@ as_merged_requests(request_queue_t *q, s
- 	 */
- 	as_remove_queued_request(q, next);
- 	put_io_context(anext->io_context);
-+
-+	anext->state = AS_RQ_MERGED;
- }
- 
- /*
-@@ -1694,6 +1726,11 @@ static void as_put_request(request_queue
- 		return;
- 	}
- 
-+	if (arq->state != AS_RQ_POSTSCHED) {
-+		printk("arq->state %d\n", arq->state);
-+		WARN_ON(1);
-+	}
-+
- 	mempool_free(arq, ad->arq_pool);
- 	rq->elevator_private = NULL;
- }
-@@ -1707,7 +1744,7 @@ static int as_set_request(request_queue_
- 		memset(arq, 0, sizeof(*arq));
- 		RB_CLEAR(&arq->rb_node);
- 		arq->request = rq;
--		arq->state = AS_RQ_NEW;
-+		arq->state = AS_RQ_PRESCHED;
- 		arq->io_context = NULL;
- 		INIT_LIST_HEAD(&arq->hash);
- 		arq->on_hash = 0;
+Oct 31 07:57:53 bigboss kernel: is_tree_node: node level 2120 does not matc=
+h=20
+to the expected one 1
+Oct 31 07:57:53 bigboss kernel: vs-5150: search_by_key: invalid format foun=
+d=20
+in block 642544. Fsck?
+Oct 31 07:57:53 bigboss kernel: vs-13070: reiserfs_read_locked_inode: i/o=20
+failure occurred trying to find stat data of [4767268 4767269 0x0 SD]
+Oct 31 07:57:53 bigboss kernel: is_tree_node: node level 2120 does not matc=
+h=20
+to the expected one 1
+Oct 31 07:57:53 bigboss kernel: vs-5150: search_by_key: invalid format foun=
+d=20
+in block 642544. Fsck?
+Oct 31 07:57:53 bigboss kernel: vs-13070: reiserfs_read_locked_inode: i/o=20
+failure occurred trying to find stat data of [4767268 4767269 0x0 SD]
 
-_
+> Nick
 
---------------060403030406060005000505--
+  Thomas
+
+--Boundary-02=_p8go/CmIP8D38GM
+Content-Type: application/pgp-signature
+Content-Description: signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQA/og8pYAiN+WRIZzQRAjU9AKDWqZ9uHgvlRB5wup+92aWgHkC8ygCgv2Wf
+l48zXb3Z5NmOROg9LtNRLQ8=
+=TrB2
+-----END PGP SIGNATURE-----
+
+--Boundary-02=_p8go/CmIP8D38GM--
