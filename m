@@ -1,27 +1,38 @@
-From: Roland Dreier <roland@topspin.com>
-Subject: Re: [PATCH] libata update
-Date: 06 Jan 2004 08:33:39 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <52ekudvxy4.fsf@topspin.com>
-References: <200401041413.20573.marchand@kde.org> <3FFA80BE.2040205@pobox.com>
+From: Daniel Brahneborg <daniel.com@wtnord.net>
+Subject: RAID5 over Serial-ATA success stories?
+Date: Wed, 7 Jan 2004 22:36:57 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20040107223657.A5315@nettis.grimsta>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <3FFA80BE.2040205@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 212-214-141-187.v-by.wtnord.net ([212.214.141.187]:30371 "EHLO
+	ricercar.mine.nu") by vger.kernel.org with ESMTP id S266289AbUAGVhE
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Jan 2004 16:37:04 -0500
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
+To: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi Jeff and others,
+Hi,
 
-On the topic of Silicon Image SATA support, how do things look for
-supporting the SiI 3512?  This chip seems to be pretty common on
-Nforce3 boards.
+I'd like to hear some success stories for RAID5 on Serial-ATA disks.
+Which Serial-ATA card are you using?  Do you get decent performance?
+Is it stable with DMA enabled?  Do you use the 2.4 or 2.6 kernel?
 
-I had a look on the SiI web site and they say the programming
-interface is very close to the 3112.  Unfortunately their data sheets
-don't seem to be freely available so I can't tell how close the
-interface really is (or do the work to add 3512 support myself).
+I know this much:
 
-Thanks,
-  Roland
+It doesn't work with Silicon Image.
+It doesn't work with VIA (yet, anyway).
+It might work with HighPoint.
+It probably works with Promise.
+I don't know if there's a driver for Adaptec.
+
+In case I have to replace my Silicon Image card, what should I replace
+it with?  I'm currently leaning towards Promise TX4 (or TX2 if the VIA
+driver is completed).
+
+Lots of thanks,
+
+/Basic
+
