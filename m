@@ -1,54 +1,52 @@
-From: Enrico Scholz <enrico.scholz@informatik.tu-chemnitz.de>
-Subject: Re: ATIIXP support (SATA, ATA133)
-Date: Mon, 03 Jan 2005 18:53:20 +0100
-Message-ID: <87is6e5rhr.fsf@kosh.ultra.csn.tu-chemnitz.de>
-References: <878y7x2qhq.fsf@kosh.ultra.csn.tu-chemnitz.de>
-	<58cb370e041217034449d1b2a9@mail.gmail.com>
-	<87is6whfv0.fsf@londo.ultra.csn.tu-chemnitz.de>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: libata PATA support - work items?
+Date: Mon, 3 Jan 2005 15:56:58 -0500
+Message-ID: <87f94c3705010312568b48d6e@mail.gmail.com>
+References: <006301c4ee5c$49e6a230$95714109@tw.ibm.com>
+	 <311601c9050101111929aef5ba@mail.gmail.com>
+Reply-To: Greg Freemyer <greg.freemyer@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lana.hrz.tu-chemnitz.de ([134.109.132.3]:29323 "EHLO
-	lana.hrz.tu-chemnitz.de") by vger.kernel.org with ESMTP
-	id S261531AbVACRx2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Jan 2005 12:53:28 -0500
-In-Reply-To: <87is6whfv0.fsf@londo.ultra.csn.tu-chemnitz.de> (Enrico
- Scholz's message of "Mon, 20 Dec 2004 21:30:43 +0100")
+Received: from wproxy.gmail.com ([64.233.184.206]:8807 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261776AbVACU47 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2005 15:56:59 -0500
+Received: by wproxy.gmail.com with SMTP id 36so479160wra
+        for <linux-ide@vger.kernel.org>; Mon, 03 Jan 2005 12:56:59 -0800 (PST)
+In-Reply-To: <311601c9050101111929aef5ba@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Eric Mudama <edmudama@gmail.com>
+Cc: Albert Lee <albertcc@tw.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, dan mares <dmares@dmares.com>
 
-Enrico Scholz <enrico.scholz@informatik.tu-chemnitz.de> writes:
+On Sat, 1 Jan 2005 12:19:20 -0700, Eric Mudama <edmudama@gmail.com> wrote:
+> On Thu, 30 Dec 2004 18:42:33 +0800, Albert Lee <albertcc@tw.ibm.com> wrote:
+> >     2. C/H/S addressing; libata currently hardcoded to use LBA
+> 
+> 
+> Are there really people who want to run a newer 2.4 or a 2.6 kernel,
+> who have disks that do not support LBA mode?  CHS will never address
+> more than 32GB of the drive (unless you use vendor unique
+> implementations) and heck, most companies don't even build drives that
+> small anymore...  CHS is very messy, LBA is so much simpler.   Can we
+> just stick with that?
+> 
+> --eric
 
->>> * PCI 1002:4376 which is an ATA133 controller; this should probably
->>>   work with the already existing drivers/ide/pci/atiixp.c driver
->>
->> Have you tested it?
->
-> Yes, but with mixed results:
->
-> * a harddisk works fine and without problems
->
-> * reading from a DVD/CD-ROM drives with DMA mode gives read-errors
->   (position not reproducible, no single-bit errors). I will have to
->   make further tests to see if it is caused by the drive, the system
->   (see below) or the driver. There are no kernel-messages regarding
->   read-errors. In PIO mode, data are read correctly.
+I may be in the minority, but my company does computer forensics.  We
+routinely connect old drives to Linux boxes and make dd images of
+them.
 
-Ok, I did some testings; here the results:
+We definately need CHS support at some level in the kernel.  If this
+were ever dropped, we would have to quit using Linux for this job.
 
-* things are fine with another CD drive (PLEXTOR CD-R PX-W4824A)
+FYI, there are hundreds if not thousands of companies that provide
+this service.  The current standard for the industry is to perform
+these images from a DOS boot floppy, but using Linux is far superior
+in my mind and there is a small but growing body of professionals
+using Linux for Computer Forensic Imaging.
 
-* the previously mentioned one (LG HL-DT-STDVDRRW GWA-4083B) works after
-  executing
-
-  | hdparm -a 64 /dev/hda
-
-  Any number above 64 makes it fail.
-
-
-
-
-Enrico
-
+Greg
+-- 
+Greg Freemyer
