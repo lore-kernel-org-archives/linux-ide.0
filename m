@@ -1,65 +1,70 @@
-From: David Ford <david+challenge-response@blue-labs.org>
+From: Anton Starikov <antst@ifm.liu.se>
 Subject: Re: new tool:  blktool
-Date: Sun, 15 Aug 2004 18:18:53 -0400
+Date: Mon, 16 Aug 2004 00:22:45 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <411FE14D.2080400@blue-labs.org>
-References: <411FD744.2090308@pobox.com> <1092603321.18410.5.camel@localhost.localdomain> <411FDEA9.2010802@pobox.com>
+Message-ID: <20040816002245.3f73e75a@hantst.kabel.utwente.nl>
+References: <411FD744.2090308@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040806050207070505060506"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wsip-68-99-153-203.ri.ri.cox.net ([68.99.153.203]:22961 "EHLO
-	blue-labs.org") by vger.kernel.org with ESMTP id S267182AbUHOWQu
+Received: from utep.el.utwente.nl ([130.89.16.10]:4574 "EHLO
+	utep.el.utwente.nl") by vger.kernel.org with ESMTP id S267185AbUHOWWu
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Aug 2004 18:16:50 -0400
-In-Reply-To: <411FDEA9.2010802@pobox.com>
+	Sun, 15 Aug 2004 18:22:50 -0400
+In-Reply-To: <411FD744.2090308@pobox.com>
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------040806050207070505060506
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Hm..probably I'm stupid guy, but BTW I wont to ask stupid question which
+I have already for a long time.
 
-[...]
+I use promise driver from libata. So, drive connected to promise
+controller is /dev/sdX. hdparm doesn't want to manage parameters of a
+such drive. I've checked blktool - the same result.
+So, is it problem of driver (something not implemented yet) or I have to
+use something different? 
 
-> Yep, it's more like ethtool(8) or cvs(1) in its syntax.  There is big 
-> difference in usability (for me anyway) between "command [options]..." 
-> and an unordered list of --args.  Especially as the list of commands 
-> grows longer.  It provides more structure.
->
-> Each command can have options, --foo-bar=baz if you like, I suppose.
+Anton Starikov.
 
+On Sun, 15 Aug 2004 17:36:04 -0400
+Jeff Garzik <jgarzik@pobox.com> wrote:
 
-I would rather see --option=xyz than option xyz.  End users are going to 
-be using it in scripts and in the event a parameter becomes "", then it 
-will become --option1= --option2=def instead of option1 option2 def.  I 
-would find it easier to parse, --option= is easy to ignore, option 
-option has to be recognized as an empty option instead of using option 
-as the first option's argument.
-
-Just my opinion,
--david
-
-
---------------040806050207070505060506
-Content-Type: text/x-vcard; charset=utf-8;
- name="david+challenge-response.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="david+challenge-response.vcf"
-
-begin:vcard
-fn:David Ford
-n:Ford;David
-email;internet:david@blue-labs.org
-title:Industrial Geek
-tel;home:Ask please
-tel;cell:(203) 650-3611
-x-mozilla-html:TRUE
-version:2.1
-end:vcard
-
-
---------------040806050207070505060506--
+> 
+> I just posted "blktool" on my SF page,
+> 	http://sourceforge.net/projects/gkernel/
+> and in BitKeeper at
+> 	bk://gkernel.bkbits.net/blktool
+> 
+> 
+> blktool aims to be an easier to use, and more generic version of the 
+> existing utility 'hdparm'.  For example,
+> 
+> 	$ hdparm -c1 /dev/hda
+> 		becomes
+> 	$ blktool /dev/hda pio-data 32-bit
+> 
+> 	and
+> 
+> 	$ hdparm -L0 /dev/hda
+> 		becomes
+> 	$ blktool /dev/hda media unlock
+> 
+> The utility is currently still fairly specific to IDE devices (as
+> hdparm is), but that will change in the coming weeks as SCSI, I2O, and
+> possibly some bits of hardware RAID control are added.
+> 
+> The audience for this application, like hdparm, is fairly narrow, 
+> specific to people who tweak their storage devices and _know what they
+> are doing_.  Improper use of this tool, like hdparm, can turn your
+> disk into a doorstop.
+> 
+> 	Jeff
+> 
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
