@@ -1,30 +1,20 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2.6.11-rc2 10/14] ide_pci: Removes SPLIT_BYTE macro from pdc202xx_old
-Date: Sun, 6 Feb 2005 03:22:57 +0100
-Message-ID: <58cb370e05020518225cb6d29d@mail.gmail.com>
-References: <42032014.1020606@home-tj.org>
-	 <20050204071319.16B3E1326FB@htj.dyndns.org>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] sata_sil mod15 quirk with Seagate ST380013AS
+Date: Sat, 05 Feb 2005 21:29:35 -0500
+Message-ID: <4205810F.7000005@pobox.com>
+References: <41FF15FF.7060503@pa.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.204]:3000 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S269268AbVBFCW6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 Feb 2005 21:22:58 -0500
-Received: by wproxy.gmail.com with SMTP id 67so687318wri
-        for <linux-ide@vger.kernel.org>; Sat, 05 Feb 2005 18:22:58 -0800 (PST)
-In-Reply-To: <20050204071319.16B3E1326FB@htj.dyndns.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:49577 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S269099AbVBFC3v (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 5 Feb 2005 21:29:51 -0500
+In-Reply-To: <41FF15FF.7060503@pa.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@home-tj.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-
-On Fri,  4 Feb 2005 16:13:19 +0900 (KST), Tejun Heo <tj@home-tj.org> wrote:
-> 
-> 10_ide_pci_pdc202xx_old_cleanup.patch
-> 
->         Removes SPLIT_BYTE macro from ide/pci/pdc202xx_old driver.
-> 
-> Signed-off-by: Tejun Heo <tj@home-tj.org>
+To: "Daniel E. Markle" <syntax@pa.net>
+Cc: linux-ide@vger.kernel.org
 
 applied
+
