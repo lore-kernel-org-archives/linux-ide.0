@@ -1,45 +1,47 @@
 From: Brett Russ <russb@emc.com>
-Subject: [PATCH libata-dev-2.6] libata: flush COMRESET write
-Date: Fri, 25 Mar 2005 18:19:07 -0500 (EST)
-Message-ID: <20050325231907.E1D11BADC@lns1032.lss.emc.com>
-Received: from mailhub.lss.emc.com ([168.159.2.31]:42707 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S261843AbVCYXTK
+Subject: Re: hdregs.h puts csfo at word 129 - wrong, that's vendor specific
+Date: Fri, 25 Mar 2005 20:48:21 -0500
+Message-ID: <4244BF65.6070109@emc.com>
+References: <4243693F.9090008@yahoo.com> <42437F78.8090703@pobox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from mailhub.lss.emc.com ([168.159.2.31]:6448 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S261907AbVCZBsZ
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Mar 2005 18:19:10 -0500
+	Fri, 25 Mar 2005 20:48:25 -0500
+In-Reply-To: <42437F78.8090703@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Chris Hann <chann94501@yahoo.com>, linux-ide list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Jeff,
+Jeff Garzik wrote:
+> Chris Hann wrote:
+>> ide-disk.c checks csfo bit 0 to see if the cache is available on a device
+>> hdregs.h maps csfo to word 129 of the Identify Device information
+>> the latest ATA documentation, e00159r3 Mandatory IDENTIFY DEVICE 
+>> information, says words 129-159 are Vendor specific.
+>>
+>> Why is the driver switching on cache operations based on a word that 
+>> has nothing to do with cache?
+> 
+> 
+> Good question...  I would guess that it's some pre-ATA4 legacy magic, 
+> but that's just a guess.
 
-I'm seeing single drives getting stuck in ata_busy_sleep() with these
-log messages on boot:
+I just checked the specs for ATA[134567] (didn't have 2) and all of them 
+show word 129 as vendor specific, as Chris found.
 
-<4>ata2 is slow to respond, please be patient
-<3>ata2 failed to respond (30 secs)
+The code that's in libata-dev shows in idedisk_setup():
 
-One thing I found was the bug fixed below, where the COMRESET wasn't
-getting flushed properly.  This may or may not be the reason, but it
-can't hurt.  I have to keep looking and testing.
+         /* write cache enabled? */
+         if ((id->csfo & 1) || (id->cfs_enable_1 & (1 << 5)))
+                 drive->wcache = 1;
 
-I wanted to also send a separate patch to ensure the port was stopped
-before issuing COMRESET, since this is required by at least the ICH6R,
-but the port_stop() routines seemed too heavy to call from
-__sata_phy_reset() so I'm not sending anything like that yet.
 
-Signed-off-by: Brett Russ <russb@emc.com>
+Bart, what's the point of the csfo bit check?  If it's specific to one 
+non-ATA compliant device shouldn't it be testing something else along 
+with that bit?
 
-Index: libata-dev-2.6/drivers/scsi/libata-core.c
-===================================================================
---- libata-dev-2.6.orig/drivers/scsi/libata-core.c	2005-03-23 16:44:48.000000000 -0500
-+++ libata-dev-2.6/drivers/scsi/libata-core.c	2005-03-25 16:58:22.000000000 -0500
-@@ -1262,7 +1262,7 @@
- 
- 	if (ap->flags & ATA_FLAG_SATA_RESET) {
- 		scr_write(ap, SCR_CONTROL, 0x301); /* issue phy wake/reset */
--		scr_read(ap, SCR_STATUS);	/* dummy read; flush */
-+		scr_read(ap, SCR_CONTROL);	/* dummy read; flush */
- 		udelay(400);			/* FIXME: a guess */
- 	}
- 	scr_write(ap, SCR_CONTROL, 0x300);	/* issue phy wake/clear reset */
+BR
