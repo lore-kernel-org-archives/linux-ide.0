@@ -1,39 +1,36 @@
-From: Alan Cox <alan@redhat.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: IDE hackery: lock fixes and hotplug controller stuff
-Date: Thu, 12 Aug 2004 16:37:54 -0400
+Date: Thu, 12 Aug 2004 20:55:48 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040812203754.GE1087@devserv.devel.redhat.com>
-References: <20040810161911.GA10565@devserv.devel.redhat.com> <200408101916.17489.bzolnier@elka.pw.edu.pl> <20040810182353.GA17364@devserv.devel.redhat.com> <200408121912.35507.bzolnier@elka.pw.edu.pl> <20040812185614.GC866@devserv.devel.redhat.com> <Pine.GSO.4.58.0408122122190.12534@mion.elka.pw.edu.pl>
+Message-ID: <1092340539.22362.11.camel@localhost.localdomain>
+References: <20040810161911.GA10565@devserv.devel.redhat.com>
+	 <200408102148.57602.ianh@iahastie.local.net>
+	 <20040810210630.GA30906@devserv.devel.redhat.com>
+	 <200408110136.06137.ianh@iahastie.local.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:32983 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S268775AbUHLUkR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Aug 2004 16:40:17 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.GSO.4.58.0408122122190.12534@mion.elka.pw.edu.pl>
+Received: from the-village.bc.nu ([81.2.110.252]:44757 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S268670AbUHLU6N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Aug 2004 16:58:13 -0400
+In-Reply-To: <200408110136.06137.ianh@iahastie.local.net>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Alan Cox <alan@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Ian Hastie <ianh@iahastie.clara.net>
+Cc: Alan Cox <alan@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Thu, Aug 12, 2004 at 09:46:56PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> Also aren't you the one who has made "ide-scsi" interface non-functional
-> by introducing ide_setting_sem, he? 8)
-> 
-> http://lkml.org/lkml/2003/2/18/146
+On Mer, 2004-08-11 at 01:36, Ian Hastie wrote:
+> Yes it does.  It's certainly sold as a RAID card and it does have a RAID setup 
+> menu.  I haven't had the opportunity to use it fully as the discs I needed to 
+> use on it were already set up for software RAID.  Maybe I'll have a couple 
+> spare(!) discs to play with if I upgrade to SATA.
 
-Yeah I also removed ide-scsi interface from the -ac patches in 2.4 8)
+Much obliged - I got one from Novatech and I've been doing a bit more
+hammering on it. For non raid configurations but in smart mode my card
+now seems to be working. Its in part dependant on a core IDE change
+however so I'll push the relevant bits to Bart in order.
 
-> > I also have the it8212 working in smart but non raid now. Seems issuing an
-> > LBA 48 cache flush (0xEF) crashes the firmware which is why it died on load
-> > for some users.  To do that I've added hwif->raw_taskfile() so that an
-> > interface can filter commands.
-> 
-> Ouch, they should really fix this in the firmware.
+I've not tried raid yet (case logistics) but will do so very soon.
 
-Agreed. I need to verify its not our fault yet. Either way it'll need to
-stay there because most people have older firmware. One thing I need to
-look at is how to find firmware versions as it seems 1.2 doesnt do LBA48
-
-Alan
 
