@@ -1,79 +1,37 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: Re: 2.6.2-rc2-mm1
-Date: Thu, 29 Jan 2004 01:34:12 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040129003412.GQ3004@fs.tum.de>
-References: <20040127233402.6f5d3497.akpm@osdl.org> <20040128200408.GA23896@suse.de>
+From: Paul Ionescu <paul@acorp.ro>
+Subject: how to rescan IDE bus in kernel 2.6.x
+Date: Fri, 30 Jan 2004 01:36:57 +0200
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <1075419417.1879.349.camel@t40>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040128200408.GA23896@suse.de>
-To: Olaf Hering <olh@suse.de>, B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.dnt.ro ([194.102.255.8]:40636 "EHLO mail.b.astral.ro")
+	by vger.kernel.org with ESMTP id S266524AbUA2Xhx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jan 2004 18:37:53 -0500
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@VGER.KERNEL.ORG
 
-On Wed, Jan 28, 2004 at 09:04:08PM +0100, Olaf Hering wrote:
-> 
-> Here is a patch to fix compilation on ppc32.
->...
-> The ide object files can be found in a subdirectory.
-> 
-> 
-> diff -p -purN linux-2.6.2-rc2-mm1.orig/drivers/ide/Makefile linux-2.6.2-rc2-mm1/drivers/ide/Makefile
-> --- linux-2.6.2-rc2-mm1.orig/drivers/ide/Makefile	2004-01-28 19:30:54.000000000 +0000
-> +++ linux-2.6.2-rc2-mm1/drivers/ide/Makefile	2004-01-28 19:55:41.000000000 +0000
-> @@ -34,9 +34,9 @@ ide-core-$(CONFIG_BLK_DEV_MAC_IDE)	+= ma
->  ide-core-$(CONFIG_BLK_DEV_Q40IDE)	+= q40ide.o
->  
->  # built-in only drivers from ppc/
-> -ide-core-$(CONFIG_BLK_DEV_MPC8xx_IDE)	+= mpc8xx.o
-> -ide-core-$(CONFIG_BLK_DEV_IDE_PMAC)	+= pmac.o
-> -ide-core-$(CONFIG_BLK_DEV_IDE_SWARM)	+= swarm.o
-> +ide-core-$(CONFIG_BLK_DEV_MPC8xx_IDE)	+= ppc/mpc8xx.o
-> +ide-core-$(CONFIG_BLK_DEV_IDE_PMAC)	+= ppc/pmac.o
-> +ide-core-$(CONFIG_BLK_DEV_IDE_SWARM)	+= ppc/swarm.o
->  
->  obj-$(CONFIG_BLK_DEV_IDE)		+= ide-core.o
->  obj-$(CONFIG_IDE_GENERIC)		+= ide-generic.o
->...
+Hello all,
+
+I have an ide-atapi cage for hardisk which is hot swappable (you can
+change the pata hdd while the system is running by powering off the
+cage, pull it, change drive, insert it again, power on the box).
+In kernel 2.4.x I could use hdparm -U before powering off the cage and
+hdparm -R after powering on the cage, and the new hdd was recongnized.
+Or I could even use the idectl script which comes with hdparm for the same purpose.
+This worked also for my IBM thinkpad which has hotswappable CDROM.
+
+With the new 2.6.x kernel, this does not work anymore.
+I have searched lkml and linux-ide list for a solution but I found only pointers for 2.4.x
+kernels.
+
+Is ide rescan supported in 2.6.x kernels and how to do it ?
+I've posted this question on lkml some days ago but I did not received any answer, 
+so I guess this would be the right place to ask next.
+
+Thanks,
+Paul
 
 
-This was fixed in ide-legacy-build-fix.patch up to 2.6.2-rc1-mm2, which 
-was dropped as "merged" in 2.6.2-rc1-mm3.
-
-The same is needed for legacy/, and a complete patch for 
-drivers/ide/Makefile is below.
-
-cu
-Adrian
-
---- linux-2.6.2-rc2-mm1/drivers/ide/Makefile.old	2004-01-29 01:30:27.000000000 +0100
-+++ linux-2.6.2-rc2-mm1/drivers/ide/Makefile	2004-01-29 01:31:09.000000000 +0100
-@@ -26,17 +26,17 @@
- ide-core-$(CONFIG_BLK_DEV_IDEPNP)	+= ide-pnp.o
- 
- # built-in only drivers from legacy/
--ide-core-$(CONFIG_BLK_DEV_IDE_PC9800)	+= pc9800.o
--ide-core-$(CONFIG_BLK_DEV_BUDDHA)	+= buddha.o
--ide-core-$(CONFIG_BLK_DEV_FALCON_IDE)	+= falconide.o
--ide-core-$(CONFIG_BLK_DEV_GAYLE)	+= gayle.o
--ide-core-$(CONFIG_BLK_DEV_MAC_IDE)	+= macide.o
--ide-core-$(CONFIG_BLK_DEV_Q40IDE)	+= q40ide.o
-+ide-core-$(CONFIG_BLK_DEV_IDE_PC9800)	+= legacy/pc9800.o
-+ide-core-$(CONFIG_BLK_DEV_BUDDHA)	+= legacy/buddha.o
-+ide-core-$(CONFIG_BLK_DEV_FALCON_IDE)	+= legacy/falconide.o
-+ide-core-$(CONFIG_BLK_DEV_GAYLE)	+= legacy/gayle.o
-+ide-core-$(CONFIG_BLK_DEV_MAC_IDE)	+= legacy/macide.o
-+ide-core-$(CONFIG_BLK_DEV_Q40IDE)	+= legacy/q40ide.o
- 
- # built-in only drivers from ppc/
--ide-core-$(CONFIG_BLK_DEV_MPC8xx_IDE)	+= mpc8xx.o
--ide-core-$(CONFIG_BLK_DEV_IDE_PMAC)	+= pmac.o
--ide-core-$(CONFIG_BLK_DEV_IDE_SWARM)	+= swarm.o
-+ide-core-$(CONFIG_BLK_DEV_MPC8xx_IDE)	+= ppc/mpc8xx.o
-+ide-core-$(CONFIG_BLK_DEV_IDE_PMAC)	+= ppc/pmac.o
-+ide-core-$(CONFIG_BLK_DEV_IDE_SWARM)	+= ppc/swarm.o
- 
- obj-$(CONFIG_BLK_DEV_IDE)		+= ide-core.o
- obj-$(CONFIG_IDE_GENERIC)		+= ide-generic.o
