@@ -1,36 +1,33 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] Bogus LBA48 drives
-Date: Tue, 30 Mar 2004 11:50:51 -0500
+From: Timothy Miller <miller@techsource.com>
+Subject: Re: [PATCH] speed up SATA
+Date: Tue, 30 Mar 2004 13:05:44 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4069A56B.9060609@pobox.com>
-References: <Pine.LNX.4.10.10403300821520.11654-100000@master.linux-ide.org>
+Message-ID: <4069B6F8.1020506@techsource.com>
+References: <4066021A.20308@pobox.com> <200403282030.11743.bzolnier@elka.pw.edu.pl> <20040328183010.GQ24370@suse.de> <200403282045.07246.bzolnier@elka.pw.edu.pl> <406720A7.1050501@pobox.com> <20040329005502.GG3039@dualathlon.random> <40679FE3.3080007@pobox.com> <20040329130410.GH3039@dualathlon.random> <40687CF0.3040206@pobox.com> <20040330110928.GR24370@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:19910 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263743AbUC3QvJ
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Mar 2004 11:51:09 -0500
-In-Reply-To: <Pine.LNX.4.10.10403300821520.11654-100000@master.linux-ide.org>
+Received: from kinesis.swishmail.com ([209.10.110.86]:26643 "EHLO
+	kinesis.swishmail.com") by vger.kernel.org with ESMTP
+	id S263777AbUC3Rqo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Mar 2004 12:46:44 -0500
+In-Reply-To: <20040330110928.GR24370@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: Andre Hedrick <andre@linux-ide.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Lionel Bergeret <lbergeret@swing.be>, JunHyeok Heo <jhheo@idis.co.kr>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
-
-Andre Hedrick wrote:
-> Actually this issue an errata correction in ATA-6 and changed in ATA-7.
-> 
-> 48-bit command set support is different than capacity.
-> 
-> A fix that address the erratium is prefered, just need to take some time
-> to read it.
-
-Got a URL?
-
-I only see an ATA-6 errata that talks about Packet DMA...
-
-	Jeff
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Andrea Arcangeli <andrea@suse.de>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, William Lee Irwin III <wli@holomorphy.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
 
 
+Jens Axboe wrote:
+
+> - The optimal_sectors calculation is just an average of previous maximum
+>   with current maximum. The scheme has a number of break down points,
+>   for instance writes starving reads will give you a bad read execution
+>   time, further limiting ->optimal_sectors[READ]
+
+
+I did look through your code a bit, but one thing to be concerned with 
+is that going only on max throughput might be fooled by cache hits on 
+the drive.
 
