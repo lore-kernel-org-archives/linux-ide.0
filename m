@@ -1,39 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Issues with SIS 964 chipset on SATA
-Date: Mon, 07 Feb 2005 16:44:33 -0500
-Message-ID: <4207E141.3090808@pobox.com>
-References: <E0854782-793A-11D9-A80A-000A95D2AC6A@iomega.com>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: Inclusion of patch for Promise SATAII 150 TX4 in mainline 2.6
+ kernel?
+Date: Tue, 08 Feb 2005 08:19:00 +0400
+Message-ID: <42083DB4.7050408@wasp.net.au>
+References: <Pine.LNX.4.44.0502071601140.31011-100000@coffee.psychology.mcmaster.ca> <4207DFF4.8010208@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:27586 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261336AbVBGVot (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Feb 2005 16:44:49 -0500
-In-Reply-To: <E0854782-793A-11D9-A80A-000A95D2AC6A@iomega.com>
+Received: from wasp.net.au ([203.190.192.17]:51860 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S261461AbVBHETI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Feb 2005 23:19:08 -0500
+In-Reply-To: <4207DFF4.8010208@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gary Poppitz <poppitzg@iomega.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Hahn <hahn@physics.mcmaster.ca>, linux-ide@vger.kernel.org, Johannes Resch <jr@xor.at>
 
-Gary Poppitz wrote:
-> We tracked down a problem with the 964 chipset with a 0x180 ID code that 
-> may save someone on the list some time.
+Jeff Garzik wrote:
+> Mark Hahn wrote:
 > 
-> The chip will only transfer multiples of 4 bytes. Anything else will 
-> cause it to hang.
+>>
+>> I had good luck with this patch as well.  I think the SATA-SMART patches
+>> should go in too, even if they aren't perfect yet...
+> 
+> 
+> The Promise SATAII patch went in today.
+> 
+> The SMART patches absolutely -should not- go in.  Certain common hdparm 
+> commands can cause data corruption rather than produce expected results.
 
-Interesting, either ULi or SiS set me a needs-to-be-cleaned-up-a-lot fix 
-for this.
+In addition to the bug Andy Warner mentioned previously about the passthrough extensions causing 
+oopses on SMP machines. For basic use on UP they are fine, I have been beating on the for months 
+now, but they still have holes big enough to shoot through if you are not careful.
 
-SATA transport is dword-based, so this is not surprising.
-
-For the SIS (or ULi, I forget) controller, and perhaps others, a 
-workaround needs to be applied.  Suggestions/patches welcome.
-
-We may want to guarantee _DMA_ of 4-byte-aligned chunks, but still only 
-reflect the true amount in ATAPI CDB.
-
-	Jeff
-
-
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
