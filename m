@@ -1,36 +1,29 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: ide-scsi lock
-Date: Thu, 19 Feb 2004 17:27:59 +0100
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: Re: H8/300 target support patch
+Date: Thu, 19 Feb 2004 17:34:49 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040219162759.GV27190@suse.de>
-References: <20040219135311.95851.qmail@web12603.mail.yahoo.com> <4034D46B.4020204@pobox.com>
+Message-ID: <200402191734.49496.bzolnier@elka.pw.edu.pl>
+References: <m2y8r4naht.wl%ysato@users.sourceforge.jp> <1077022554.1080.7.camel@gaston> <m27jyjhwul.wl%ysato@users.sourceforge.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:42421 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S267348AbUBSQ2g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Feb 2004 11:28:36 -0500
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:58865 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S267321AbUBSQ2f
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Feb 2004 11:28:35 -0500
+In-Reply-To: <m27jyjhwul.wl%ysato@users.sourceforge.jp>
 Content-Disposition: inline
-In-Reply-To: <4034D46B.4020204@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Joilnen Leite <pidhash@yahoo.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org
 
-On Thu, Feb 19 2004, Jeff Garzik wrote:
-> Joilnen Leite wrote:
-> >drivers/scsi/ide-scsi.c:897
-> >
-> >spin_lock_irqsave(&ide_lock, flags);
-> >while (HWGROUP(drive)->handler) {
-> >       HWGROUP(drive)->handler = NULL;
-> >       schedule_timeout(1);
-> >}
-> 
-> 
-> Yep, that's definitely a bug.  Good spotting.
 
-It's a known bug, Williams patches fix it. Which reminds me...
+Hi,
 
--- 
-Jens Axboe
+Can you send updated patch?
+I am lost in incremental changes. :-)
+
+Thanks.
 
