@@ -1,43 +1,40 @@
-From: Jesper Juhl <juhl-lkml@dif.dk>
+From: Jesper Juhl <juhl@dif.dk>
 Subject: Re: [PATCH] tiny patch to kill warning in drivers/ide/ide.c
-Date: Wed, 9 Jun 2004 16:37:06 +0200 (CEST)
+Date: Wed, 9 Jun 2004 16:39:00 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0406091632550.26677@jjulnx.backbone.dif.dk>
-References: <20040609023308.GC24042@schnapps.adilger.int>
+Message-ID: <Pine.LNX.4.56.0406091637510.26677@jjulnx.backbone.dif.dk>
+References: <Pine.LNX.4.56.0406090335260.25359@jjulnx.backbone.dif.dk>
+ <200406091231.20049.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dif.dk ([193.138.115.101]:36309 "EHLO mail.dif.dk")
-	by vger.kernel.org with ESMTP id S265644AbUFIOhw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jun 2004 10:37:52 -0400
-In-Reply-To: <20040609023308.GC24042@schnapps.adilger.int>
+Received: from mail.dif.dk ([193.138.115.101]:55765 "EHLO mail.dif.dk")
+	by vger.kernel.org with ESMTP id S266138AbUFIOjo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jun 2004 10:39:44 -0400
+In-Reply-To: <200406091231.20049.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Andreas Dilger <adilger@clusterfs.com>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Andreas Dilger <adilger@clusterfs.com>
 
-On Wed, 9 Jun 2004, Andreas Dilger wrote:
+On Wed, 9 Jun 2004, Bartlomiej Zolnierkiewicz wrote:
 
-> On Jun 09, 2004  03:38 +0200, Jesper Juhl wrote:
+> On Wednesday 09 of June 2004 03:38, Jesper Juhl wrote:
+> > To kill this warning :
+> >
 > > drivers/ide/ide.c: In function `ide_unregister_subdriver':
 > > drivers/ide/ide.c:2216: warning: implicit declaration of function
-> `pnpide_init'
+> > `pnpide_init'
 > >
 > > I added a simple declaration of pnpide_init to drivers/ide/ide.c
 > >
 > > Here's a patch against 2.6.7-rc3 - please consider including it (or if
 > > that's not the way to do it, then don't) :)
-> Better to add the declaration into a header like linux/ide.h that is
-> included into both ide.c and ide-pnp.c so that when/if pnpide_init()
-> ever changes its prototype you will get a warning during compilation.
-> The only good reason to have declarations within .c files is for forward
-> declarations of functions only used in the same file.
+>
+> Thanks but the real bug is to call pnpide_init() from
+> ide_unregister_subdriver(), I'll push ide-pnp update soon.
+>
 
-That makes perfect sense. I actually considered making a header for it,
-but since it would contain only a single declaration I abandoned that - I
-see now that I should have done that in any case to avoid stuff becomming
-out of sync.
-
-Would you like an updated patch ?
+Ok, in that case I will leave it alone and just wait for your update.
 
 
 --
