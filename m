@@ -1,65 +1,85 @@
-From: Rene Herman <rene.herman@keyaccess.nl>
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 Subject: Re: [RFT][PATCH] ide-disk.c: more write cache fixes
-Date: Fri, 14 May 2004 01:28:37 +0200
+Date: Fri, 14 May 2004 02:14:07 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40A404A5.8070500@keyaccess.nl>
-References: <200405132116.44201.bzolnier@elka.pw.edu.pl>
+Message-ID: <200405140214.08136.bzolnier@elka.pw.edu.pl>
+References: <200405132116.44201.bzolnier@elka.pw.edu.pl> <40A404A5.8070500@keyaccess.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpq3.home.nl ([213.51.128.198]:48013 "EHLO smtpq3.home.nl")
-	by vger.kernel.org with ESMTP id S265237AbUEMXaS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 May 2004 19:30:18 -0400
-In-Reply-To: <200405132116.44201.bzolnier@elka.pw.edu.pl>
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:14060 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264208AbUENAOg
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 May 2004 20:14:36 -0400
+In-Reply-To: <40A404A5.8070500@keyaccess.nl>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+To: Rene Herman <rene.herman@keyaccess.nl>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@redhat.com>, Andrew Morton <akpm@osdl.org>, "Eric D. Mudama" <edmudama@mail.bounceswoosh.org>, Jens Axboe <axboe@suse.de>
 
-Bartlomiej Zolnierkiewicz wrote:
+On Friday 14 of May 2004 01:28, Rene Herman wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > Comments, suggestions, complains?
+>
+> Yes, this works to stop it from complaining (on 6Y120P0). It comes up
+> with write cache enabled, and hdparm -W0/-W1 work to disable/enable
+> write cache as evidenced by the tiobench results. Not as evidenced by
+> /proc/ide/hda/settings (drive->wcache) which is always 1 and which will
+> probably confuse more users than just me -- I believe I saw hdparm just
+> pushes a drive command through an ioctl?
 
-> Comments, suggestions, complains?
+Yep, you are right and we shouldn't worry about confusion too much,
+we have similar situation till now (wcache was zero even if enabled).
 
-Yes, this works to stop it from complaining (on 6Y120P0). It comes up 
-with write cache enabled, and hdparm -W0/-W1 work to disable/enable 
-write cache as evidenced by the tiobench results. Not as evidenced by 
-/proc/ide/hda/settings (drive->wcache) which is always 1 and which will 
-probably confuse more users than just me -- I believe I saw hdparm just 
-pushes a drive command through an ioctl?
+> Question though:
+> > @@ -1678,8 +1683,12 @@ static void idedisk_setup (ide_drive_t *
+> >  #endif	/* CONFIG_IDEDISK_MULTI_MODE */
+> >  	}
+> >  	drive->no_io_32bit = id->dword_io ? 1 : 0;
+> > -	if (drive->id->cfs_enable_2 & 0x3000)
+> > -		write_cache(drive, (id->cfs_enable_2 & 0x3000));
+> > +
+> > +	/* write cache enabled? */
+> > +	if ((id->csfo & 1) || (id->cfs_enable_1 & (1 << 5)))
+> > +		drive->wcache = 1;
+> > +
+> > +	write_cache(drive, 1);
+>
+> write_cache() also sets drive->wcache (to the argument, 1 in this case)
+> and you call that unconditionally, so the "if (foo) drive->wcache = 1"
+> seems superfluous. If the idea indeed is to unconditionally enable write
+> cache, it seems just
 
-Question though:
+Please look at write_cache(), it will try to {en,dis}able write cache
+and then set drive->wcache *only* if disk has ATA-6 cache flush bits.
 
-> @@ -1678,8 +1683,12 @@ static void idedisk_setup (ide_drive_t *
->  #endif	/* CONFIG_IDEDISK_MULTI_MODE */
->  	}
->  	drive->no_io_32bit = id->dword_io ? 1 : 0;
-> -	if (drive->id->cfs_enable_2 & 0x3000)
-> -		write_cache(drive, (id->cfs_enable_2 & 0x3000));
-> +
-> +	/* write cache enabled? */
-> +	if ((id->csfo & 1) || (id->cfs_enable_1 & (1 << 5)))
-> +		drive->wcache = 1;
-> +
-> +	write_cache(drive, 1);
+I think that we can change write_cache() to always allow enabling of
+write cache so hdparm can be fixed to use HDIO_{GET,SET}_WCACHE ioctls
+but we should be careful about always enabling write cache in a driver
+(there may be some unknown yet side-effects).
 
-write_cache() also sets drive->wcache (to the argument, 1 in this case) 
-and you call that unconditionally, so the "if (foo) drive->wcache = 1" 
-seems superfluous. If the idea indeed is to unconditionally enable write 
-cache, it seems just
+Whatever we decide we can do this later after this patch is merged.
 
-write_cache(drive, 1);
+> write_cache(drive, 1);
+>
+> would be equivalent. Or if that wasn't the intention, maybe:
+>
+> if (foo)
+> 	write_cache(drive, 1);
+>
+> or if it should in fact be disabled if (!foo):
+>
+> write_cache(drive, (id->csfo & 1) || (id->cfs_enable_1 & (1 << 5)));
+>
+> or ...
+>
+> Ignore me if I completely missed the point, just looks odd.
 
-would be equivalent. Or if that wasn't the intention, maybe:
+:-)
 
-if (foo)
-	write_cache(drive, 1);
+Thanks,
+Bartlomiej
 
-or if it should in fact be disabled if (!foo):
 
-write_cache(drive, (id->csfo & 1) || (id->cfs_enable_1 & (1 << 5)));
-
-or ...
-
-Ignore me if I completely missed the point, just looks odd.
-
-Rene.
