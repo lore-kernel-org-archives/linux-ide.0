@@ -1,42 +1,46 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: PATCH: (Discussion) Stop IDE legacy ISA probes on PCI systems
-Date: Mon, 27 Dec 2004 14:13:45 +0000
-Message-ID: <1104156823.20898.21.camel@localhost.localdomain>
+From: "Christopher R. Thompson" <Christoffur050@Verizon.Net>
+Subject: Re: SATA status report updated, dev guide posted
+Date: Mon, 27 Dec 2004 09:16:45 -0800
+Message-ID: <41D0437D.4070508@Verizon.Net>
+References: <41D00A13.5060700@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:39067 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S261898AbUL0PRo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Dec 2004 10:17:44 -0500
+Received: from out009pub.verizon.net ([206.46.170.131]:5062 "EHLO
+	out009.verizon.net") by vger.kernel.org with ESMTP id S261931AbUL0RQq
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Dec 2004 12:16:46 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <axboe@suse.de>
 
-We don't generally want to poke around legacy ISA ide2..ide5 on a system
-with PCI , it tends to cause long delays. 
+Would anyone care to brief me on issue #1 of the ICH5 status report?
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.10/include/asm-i386/ide.h linux-2.6.10/include/asm-i386/ide.h
---- linux.vanilla-2.6.10/include/asm-i386/ide.h	2004-12-25 21:13:51.000000000 +0000
-+++ linux-2.6.10/include/asm-i386/ide.h	2004-12-26 17:08:27.541915144 +0000
-@@ -44,10 +44,14 @@
- 	switch (index) {
- 		case 0:	return 0x1f0;
- 		case 1:	return 0x170;
--		case 2: return 0x1e8;
--		case 3: return 0x168;
--		case 4: return 0x1e0;
--		case 5: return 0x160;
-+		
-+		if(pci_find_device(PCI_ANY_ID, PCI_ANY_ID, NULL) == NULL) {
-+			case 2: return 0x1e8;
-+			case 3: return 0x168;
-+			case 4: return 0x1e0;
-+			case 5: return 0x160;
-+		}
-+
- 		default:
- 			return 0;
- 	}
+http://linux.yyz.us/sata/sata-status.html#ich5
+
+Is this something that a novice like me could track down and fix?
+
+I seem to currently have the ICH5 chip and the probing problem at hand.
+
+Jeff Garzik wrote:
+
+> A few minor updates to the Linux SATA status reports posted at
+>
+>     http://linux.yyz.us/sata/
+>
+> Most notable is the new 'sata devel resources' page, 
+> http://linux.yyz.us/sata/devel.html which attempts to group key ATA 
+> knowledge in a single location.  Comments and additions are requested. 
+> Also, public links to old SFF docs are requested.
+>
+>     Jeff
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
