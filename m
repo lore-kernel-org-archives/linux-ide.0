@@ -1,121 +1,180 @@
-From: "Richard B. Johnson" <root@chaos.analogic.com>
-Subject: RE: IDE "logical" geometry & partition tables (problem with 2.4 k
- erne l, also seems to apply to 2.6)
-Date: Thu, 23 Oct 2003 11:27:43 -0400 (EDT)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0310231120150.18389@chaos>
-References: <CE41BFEF2481C246A8DE0D2B4DBACF4F128A3C@ausx2kmpc106.aus.amer.dell.com>
-Reply-To: root@chaos.analogic.com
+From: Stuart Hayes <Stuart_Hayes@dell.com>
+Subject: Re: [PATCH] (for ide-tape.c in 2.4.22-ac4) ide-tape.c doesn't work
+ with Seagate Trav
+Date: Thu, 23 Oct 2003 13:59:12 -0500 (CDT)
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0310231347310.4639-100000@humbolt.us.dell.com>
+References: <200310230015.56791.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <CE41BFEF2481C246A8DE0D2B4DBACF4F128A3C@ausx2kmpc106.aus.amer.dell.com>
-To: Stuart_Hayes@Dell.com
-Cc: Andries.Brouwer@cwi.nl, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp3.us.dell.com ([143.166.148.134]:6669 "EHLO
+	smtp3.us.dell.com") by vger.kernel.org with ESMTP id S261664AbTJWS7b
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Oct 2003 14:59:31 -0400
+In-Reply-To: <200310230015.56791.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, 23 Oct 2003 Stuart_Hayes@Dell.com wrote:
+On Wed, 22 Oct 2003, Bartlomiej Zolnierkiewicz wrote:
 
->
-> By "correct", I meant that the geometry matches what the BIOS expects when
-> doing int13 calls.  If the partitions are not set up with this geometry,
-> then an MBR/bootloader that uses CHS to access the drive will not be able to
-> boot.  This problem only came to my attention because of an instance where
-> such an MBR is used.
->
->
->     >> If a partition table is then created on the drive using this
-> geometry,
->     >> the CHS values in the partition table will not be correct.
->
-> > "correct" has no meaning here.
->
->
->
->
-> -----Original Message-----
-> From: Andries.Brouwer@cwi.nl [mailto:Andries.Brouwer@cwi.nl]
-> Sent: Wednesday, October 22, 2003 3:42 PM
-> To: B.Zolnierkiewicz@elka.pw.edu.pl; Hayes, Stuart
-> Cc: Andries.Brouwer@cwi.nl; linux-ide@vger.kernel.org;
-> linux-kernel@vger.kernel.org
-> Subject: Re: IDE "logical" geometry & partition tables (problem with 2.4
-> kerne l, also seems to apply to 2.6)
->
->
->     On Wednesday 22 of October 2003 00:00, Stuart_Hayes@Dell.com wrote:
->
->     > I have discovered a problem with how Linux determines IDE disk
-> "logical"
->     > (BIOS) geometry.
->
-> The concept of logical geometry is slowly vanishing.
->
-> Supporting it is impossible, but there were some attempts,
-> and in the 2.0, 2.2, 2.4, 2.6 series each kernel drops
-> some of the contortions present in previous versions.
->
-> I wrote long stories in http://www.win.tue.nl/~aeb/linux/Large-Disk.html
-> and even more in various replies to questions like this one,
-> but the easiest point of view is "geometry does not exist".
->
->     > If an IDE hard drive has no partition table when Linux is booted,
->     > *and* if the hard drive is on a PCI IDE controller (a controller
->     > that isn't at I/O address 1f0h), *and* if the drive doesn't support
->     > 48-bit addressing, Linux will just use the geometry that is reported
->     > by the drive in with the "identify device" command, rather than
->     > getting the geometry used by the IDE BIOS by doing an int13 function 8
->     > call.
->
-> "Linux will just use" - but roughly speaking Linux never uses the geometry,
-> there is no need for a concept like that. Fortunately, because there is
-> no such thing, so we would have problems if it were actually needed.
->
-> "Roughly speaking": user space can ask for a geometry using HDIO_GETGEO
-> and then gets some random #cyls / #heads / #secs/track. Also - in some
-> cases the "last cylinder" plays a role, and of course nobody knows where
-> that is unless disk size and geometry are given.
->
-> Asking the BIOS is one of the attempts at support. It fails in many ways.
-> One reason is that the correspondence between BIOS devices and kernel
-> devices is unknown - so if we do an INT 13 call for device 0x80, for which
-> device do we get data? hda? hdb? sda?
-> Also, the BIOS may allow us only to inquire about the first two disks.
->
-> Since the kernel does not use this info, and only transmits it to fdisk
-> and LILO, and fdisk and LILO need slightly different information anyway,
-> there is no good reason to keep this code in the kernel.
->
-> Finally, things can be forced on all levels. The kernel has boot parameters
-> telling it what to reply to HDIO_GETGEO. And LILO and fdisk have command
-> parameters that allow the specification of a geometry.
-> And no geometry is needed at all with LILO "linear" or "lba32" and
-> with fdisk on a disk larger than 8 GB.
->
->     > If a partition table is then created on the drive using this geometry,
->     > the CHS values in the partition table will not be correct.
->
-> "correct" has no meaning here.
->
-> "geometry" is not a property of the disk, but of CMOS, BIOS, OS.
->
->     > I would think that the best solution
->
-> But is there a problem?
->
-> Andries
+>=20
+> Patch looks really good, only some minor issues.
+>=20
+> > @@ -316,6 +316,27 @@
+> >=A0=A0 * Ver 1.17c Sep 2003=A0=A0=A0=A0=A0=A0=A0 Stuart Hayes <stuar=
+t_hayes@dell.com>
+> >=A0=A0 *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 Initializ=
+ed "feature" in
+> idetape_issue_packet_command
+> >=A0=A0 *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0=A0 (this =
+was causing lockups on certain systems)
+> > + * Ver 1.18=A0 Sep 2003=A0=A0=A0=A0=A0=A0=A0 Stuart Hayes <stuart_=
+hayes@dell.com>
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 Check drive's=
+ write protect bit, try to return
+> appropriate
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0 errors wh=
+en attempting to write a
+> write-protected tape
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 Moved "idetap=
+e_read_position" call in
+> idetape_chrdev_open
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0 after the=
+ "wait_ready" call
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 Added IDETAPE=
+_MEDIUM_PRESENT flag so driver would
+> know
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0 not to re=
+wind tape after ejecting it
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 Fixed bug wit=
+h ide_abort_pipeline (it was
+> deleting stages
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0 from tape=
+->next_stage to end, instead of from
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0 new_last_=
+stage->next (tape->next_stage was set
+> to NULL
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0 by idetap=
+e_discard_read_pipeline before
+> calling!)
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 Deleted "idet=
+ape_do_end_request"--this was just a
+> copy of
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0 ide_end_r=
+equest
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 Made improvem=
+ents to idetape_wait_ready
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 Added a few c=
+omments here and there
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 Made MTOFFL u=
+nlock tape drive door before
+> attempting to eject
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 Added fixes t=
+o get Seagate STT3401A Travan
+> working:
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0 handle dr=
+ives that don't support 0-length
+> reads/writes
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0 increased=
+ timeout (retension takes ~10 minutes
+> before
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0 irq=
+ is returned)
+> > + *=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0 fixed req=
+uest mode page packet command byte 3
+> >=A0=A0 *
+> >=A0=A0 * Here are some words from the first releases of hd.c, which =
+are
+> quoted
+> >=A0=A0 * in ide.c and apply here as well:
+>=20
+> Please make this a patch comment,
+> so when it is merged into -bk we have patch+changelog.
+>=20
+> > @@ -4230,7 +4267,7 @@
+> >=A0 =A0=A0=A0=A0 idetape_tape_t *tape =3D drive->driver_data;
+> >=A0 =A0=A0=A0=A0 unsigned long flags;
+> >=A0 =A0=A0=A0=A0 int cnt =3D 0, x, position;
+> > -
+> > +
+> >=A0 =A0=A0=A0=A0 /*
+> >=A0 =A0=A0=A0=A0=A0 * Search and wait for the next logical tape bloc=
+k
+> >=A0 =A0=A0=A0=A0=A0 */
+>=20
+> no need for extra tab
+>=20
+> > @@ -5388,6 +5434,8 @@
+> >=A0 =A0=A0=A0=A0 }
+> >=A0 =A0=A0=A0=A0 switch (mt_op) {
+> >=A0 =A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 case MTWEOF:
+> > +=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 if (tape-=
+>drv_write_prot)
+> > +=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=
+=A0=A0=A0=A0 return (-EACCES);
+> >=A0 =A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 idetape=
+_discard_read_pipeline(drive, 1);
+> >=A0 =A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 for (i =
+=3D 0; i < mt_count; i++) {
+> >=A0 =A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=
+=A0=A0=A0=A0 retval =3D idetape_write_filemark(drive);
+>=20
+> return -EACCES;
+>=20
+> > @@ -6322,6 +6408,9 @@
+> >=A0 =A0=A0=A0=A0 tape->max_insert_speed =3D 10000;
+> >=A0 =A0=A0=A0=A0 tape->speed_control =3D 1;
+> >=A0 =A0=A0=A0=A0 *((unsigned short *) &gcw) =3D drive->id->config;
+> > +=A0=A0=A0=A0 /* For now, assume drive supports read/writes of 0 le=
+ngth */
+> > +=A0=A0=A0=A0 set_bit(IDETAPE_READ_0_SUPPORTED,&tape->flags);
+> > +=A0=A0=A0=A0 set_bit(IDETAPE_WRITE_0_SUPPORTED,&tape->flags);
+> >=A0 =A0=A0=A0=A0 if (gcw.drq_type =3D=3D 1)
+> >=A0 =A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0 set_bit(IDETAPE_DRQ_INTERRUPT=
+, &tape->flags);
+>=20
+> If my analysis is correct the only possibility of issuing READ or WRI=
+TE
+> with
+> length 0 is when switching from DSC handshake from completion mode to
+> buffer
+> available mode and these cases are now covered by drive->dsc_overlap
+> check.
+>=20
+> I guess Travan doesn't support DSC, so IDETAPE_{READ, WRITE}_0_SUPPOR=
+TED
+> flags
+> can be removed unless you know about another tape drive which errors =
+on
+> zero
+> length READ/WRITE commands (we should leave comments about Travan of
+> course).
+>=20
+>=20
+> Stuart, could you also forward-port these chances to 2.6.x and test t=
+hem?
+> I don't have any ide-tape drive.
+>=20
+> thanks,
+> --bartlomiej
+>=20
+>=20
+>=20
 
-Geometry is not a property of the disk IFF the disk interface
-accepts random offsets into the device. It doesn't. You end
-up with different "sectors" (blocks) with different lengths
-and boundaries. Many (most) disks will automatically move
-to another head when one runs out of logical sectors, but
-few will seek to another track! Instead, they return partial
-reads or writes that need to be completed. This tends to
-maintain the notion of CHS when, as you pointed out, there
-doesn't really need to be any such.
+Right now the dsc_overlap flag isn't set for this (or any) drive--it's=20
+only set for a couple of controllers that don't support DSC at all.  I=20
+thought it would be better to fail gracefully (and not try 0-length rea=
+ds=20
+or writes anymore) if the drive can't handle them, rather than to just =
+clear=20
+dsc_overlap for a particular drive.  If you don't agree I can change=20
+that to get rid of the flags.
 
-Cheers,
-Dick Johnson
-Penguin : Linux version 2.4.22 on an i686 machine (797.90 BogoMips).
-            Note 96.31% of all statistics are fiction.
+I can do this for 2.6, too, but it may be a few days before I get a cha=
+nce=20
+to do so.
+
+
