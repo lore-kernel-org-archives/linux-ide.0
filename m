@@ -1,40 +1,39 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.8-rc2] sata_nv.c
-Date: Tue, 27 Jul 2004 14:55:28 -0400
+From: "J. Ryan Earl" <heretic@clanhk.org>
+Subject: Re: [RFC] IDE/ATA/SATA controller hotplug
+Date: Tue, 27 Jul 2004 15:14:31 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4106A520.1070604@pobox.com>
-References: <DBFABB80F7FD3143A911F9E6CFD477B03F95F4@hqemmail02.nvidia.com>
+Message-ID: <4106C5B7.9040606@clanhk.org>
+References: <200407191947.i6JJldK1024910@falcon10.austin.ibm.com> <41067543.3090003@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38812 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266558AbUG0Szp
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Jul 2004 14:55:45 -0400
-In-Reply-To: <DBFABB80F7FD3143A911F9E6CFD477B03F95F4@hqemmail02.nvidia.com>
+Received: from mail.hardcore-gaming.net ([69.93.101.157]:5015 "EHLO
+	mail.hardcore-gaming.net") by vger.kernel.org with ESMTP
+	id S266613AbUG0UOf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Jul 2004 16:14:35 -0400
+In-Reply-To: <41067543.3090003@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Chew <achew@nvidia.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Doug Maxey <dwm@austin.ibm.com>, Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Andrew Chew wrote:
-> Jeff Garzik wrote:
-> 
-> 
->>Please fix and resubmit:
->>4) [leak] driver appears to be missing a ->host_free hook, to 
->>free your 
->>nv_host_t structure.
->>
->>+       host = kmalloc(sizeof(nv_host_t), GFP_KERNEL);
-> 
-> 
-> I register a host_stop routine, nv_host_stop(), that frees the host.  Is
-> this not the correct way to free the nv_host?
+Jeff Garzik wrote:
 
-I missed the kfree(), sorry.
+> Why do you think libata is not already hotplug capable, WRT controllers?
 
-	Jeff
+I'm not sure what WRT means, but your last Linux SATA Update did contain:
+
+"Hotplug support
+---------------
+All SATA is hotplug.
+
+libata does not support hotplug... yet.
+
+The following SATA controllers will never support hotplug:
+Intel ICH5, Intel ICH5-R, Intel ICH6 (non-AHCI), Pacific Digital Talon,
+Promise SATA SX4."
+
+-ryan
 
 
 
