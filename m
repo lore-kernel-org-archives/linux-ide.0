@@ -1,79 +1,129 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: dma problems with via82cxxx after suspend
-Date: Fri, 18 Mar 2005 17:27:30 +0100
-Message-ID: <58cb370e05031808273d396562@mail.gmail.com>
-References: <1110822850.11750.0.camel@localhost.localdomain>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: [BK PATCHES] ide-2.6 update
+Date: Fri, 18 Mar 2005 17:22:13 +0100 (CET)
+Message-ID: <Pine.GSO.4.62.0503181703510.24383@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_1130_27294916.1111163250398"
-Received: from wproxy.gmail.com ([64.233.184.205]:27787 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261690AbVCRQ1b (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Mar 2005 11:27:31 -0500
-Received: by wproxy.gmail.com with SMTP id 69so141251wri
-        for <linux-ide@vger.kernel.org>; Fri, 18 Mar 2005 08:27:30 -0800 (PST)
-In-Reply-To: <1110822850.11750.0.camel@localhost.localdomain>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:43155 "EHLO
+	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
+	id S261676AbVCRQ1H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 18 Mar 2005 11:27:07 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Meier <droebbel.melta@gmx.de>
-Cc: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-------=_Part_1130_27294916.1111163250398
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
-On Mon, 14 Mar 2005 18:54:10 +0100, David Meier <droebbel.melta@gmx.de> wrote:
-> I get DMA errors after resuming from suspend (S3).
-> 
-> I had switched DMA off before suspending.
+Hi Linus,
 
-...
+Please do a
 
-This should be fixed in ide-dev-2.6 tree and in -mm series.
-Alternatively you can try attached patch.
+ 	bk pull bk://bart.bkbits.net/ide-2.6
 
-Bartlomiej
+This will update the following files:
 
-------=_Part_1130_27294916.1111163250398
-Content-Type: text/x-patch; name="via.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment; filename="via.patch"
+  Documentation/ioctl/hdio.txt |  179 ++++++++++++++++++++++++++++++++++---------
+  drivers/ide/ide-cd.c         |   99 +++++++++++++++++++----
+  drivers/ide/ide-cd.h         |    2
+  drivers/ide/ide-disk.c       |   96 +++++++++++++++++++++--
+  drivers/ide/ide-floppy.c     |  117 +++++++++++++++++++++-------
+  drivers/ide/ide-tape.c       |  175 +++++++++++++++++++++++++++++++-----------
+  drivers/ide/ide.c            |    3
+  drivers/ide/pci/cs5520.c     |    3
+  drivers/scsi/ide-scsi.c      |   66 +++++++++++++--
+  include/linux/ide.h          |    2
+  include/linux/pci_ids.h      |    1
+  11 files changed, 594 insertions(+), 149 deletions(-)
 
-# This is a BitKeeper generated diff -Nru style patch.
-#
-# ChangeSet
-#   2005/02/03 21:47:18+01:00 bzolnier@trik.(none)=20
-#   [ide] fix via82cxxx resume failure
-#  =20
-#   With David Woodhouse <dwmw2@infradead.org>.
-#  =20
-#   On resume from sleep, via_set_speed() doesn't reinstate the correct
-#   mode, because it thinks the drive is already configured correctly.
-#  =20
-#   Also kill redundant printk, ide_config_drive_speed() warns about errors=
-.
-#=20
-# drivers/ide/pci/via82cxxx.c
-#   2005/02/03 21:47:05+01:00 bzolnier@trik.(none) +2 -5
-#   [ide] fix via82cxxx resume failure
-#=20
-diff -Nru a/drivers/ide/pci/via82cxxx.c b/drivers/ide/pci/via82cxxx.c
---- a/drivers/ide/pci/via82cxxx.c=092005-03-18 17:26:38 +01:00
-+++ b/drivers/ide/pci/via82cxxx.c=092005-03-18 17:26:38 +01:00
-@@ -332,11 +332,8 @@
- =09struct ide_timing t, p;
- =09unsigned int T, UT;
-=20
--=09if (speed !=3D XFER_PIO_SLOW && speed !=3D drive->current_speed)
--=09=09if (ide_config_drive_speed(drive, speed))
--=09=09=09printk(KERN_WARNING "ide%d: Drive %d didn't "
--=09=09=09=09"accept speed setting. Oh, well.\n",
--=09=09=09=09drive->dn >> 1, drive->dn & 1);
-+=09if (speed !=3D XFER_PIO_SLOW)
-+=09=09ide_config_drive_speed(drive, speed);
-=20
- =09T =3D 1000000000 / via_clock;
-=20
+through these ChangeSets:
 
-------=_Part_1130_27294916.1111163250398--
+<bzolnier@trik.(none)> (05/03/18 1.2239)
+    [ide] ide-tape: fix character device ->open() vs ->cleanup() race
+
+    Similar to the same race but for the block device.
+
+    * store pointer to struct ide_tape_obj in idetape_chrdevs[]
+    * rename idetape_chrdevs[] to idetape_devs[] and kill idetape_chrdev_t
+    * add ide_tape_chrdev_get() for getting reference to the tape
+    * store tape pointer in file->private_data and fix all users of it
+    * fix idetape_chrdev_{open,release}() to get/put reference to the tape
+
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<bzolnier@trik.(none)> (05/03/18 1.2238)
+    [ide] ide-scsi: add basic refcounting
+
+    * pointers to a SCSI host and a drive are added to idescsi_scsi_t
+    * pointer to the SCSI host is stored in disk->private_data
+    * ide_scsi_{get,put}() is used to {get,put} reference to the SCSI host
+
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<bzolnier@trik.(none)> (05/03/18 1.2237)
+    [ide] ide-tape: add basic refcounting
+
+    Similar changes as for ide-cd.c.
+
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<bzolnier@trik.(none)> (05/03/18 1.2236)
+    [ide] ide-floppy: add basic refcounting
+
+    Similar changes as for ide-cd.c.
+
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<bzolnier@trik.(none)> (05/03/18 1.2235)
+    [ide] ide-disk: add basic refcounting
+
+    Similar changes as for ide-cd.c (except that struct ide_disk_obj is added).
+
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<bzolnier@trik.(none)> (05/03/18 1.2234)
+    [ide] ide-cd: add basic refcounting
+
+    * based on reference counting in drivers/scsi/{sd,sr}.c
+    * fixes race between ->open() and ->cleanup() (ide_unregister_subdriver()
+      tests for drive->usage != 0 but there is no protection against new users)
+    * struct kref and pointer to a drive are added to struct ide_cdrom_info
+    * pointer to drive's struct ide_cdrom_info is stored in disk->private_data
+    * ide_cd_{get,put}() is used to {get,put} reference to struct ide_cdrom_info
+    * ide_cd_release() is a release method for struct ide_cdrom_info
+
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<bzolnier@trik.(none)> (05/03/18 1.2233)
+    [ide] make ide_generic_ioctl() take ide_drive_t * as an argument
+
+    As a result disk->private_data can be used by device drivers now.
+
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<htejun@gmail.com> (05/03/18 1.2232)
+    [ide] hdio.txt update
+
+    This patch updates Documentation/ioctl/hdio.txt to include more
+    detailed descriptions about HDIO_DRIVE_{CMD|TASK|TASKFILE} ioctls.
+
+    Signed-off-by: Tejun Heo <htejun@gmail.com>
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<tklauser@nuerscht.ch> (05/03/18 1.2231)
+    [ide] drivers/ide/cs5520.c: use the DMA_{64,32}BIT_MASK constants
+
+    Description: Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h
+    when calling pci_set_dma_mask() or pci_set_consistent_dma_mask()
+    See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
+
+    Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<Jason.d.gaston@intel.com> (05/03/18 1.2230)
+    [ide] pci_ids.h correction for Intel ICH7R
+
+    This patch removes an incorrect ICH7R DID in pci_ids.h.
+
+    Signed-off-by: Jason Gaston <Jason.d.gaston@intel.com>
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
