@@ -1,67 +1,60 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] PATA port support for PDC2037x
-Date: Wed, 29 Sep 2004 23:39:22 -0400
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [PATCH] updates to Vitesse SATA driver
+Date: Wed, 29 Sep 2004 21:05:11 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <415B7FEA.2060209@pobox.com>
-References: <20040930023013.13192.qmail@web60304.mail.yahoo.com>
+Message-ID: <20040930040511.GA201009@sgi.com>
+References: <8746466a04092114163b3c0618@mail.gmail.com> <415B34FC.8060908@pobox.com> <8746466a0409291532471417b8@mail.gmail.com> <20040930023428.GA200873@sgi.com> <415B7D53.9020101@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:64204 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268688AbUI3Djf
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 29 Sep 2004 23:39:35 -0400
-In-Reply-To: <20040930023013.13192.qmail@web60304.mail.yahoo.com>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:44231 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S268695AbUI3EFZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Sep 2004 00:05:25 -0400
+Content-Disposition: inline
+In-Reply-To: <415B7D53.9020101@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Erik Benada <erikbenada@yahoo.ca>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Dave <dave.jiang@gmail.com>, jeremy.higdon@sgi.com, linux-ide@vger.kernel.org
 
-Erik Benada wrote:
-> Jeff,
+On Wed, Sep 29, 2004 at 11:28:19PM -0400, Jeff Garzik wrote:
+> >>On Wed, 29 Sep 2004 18:19:40 -0400, Jeff Garzik <jgarzik@pobox.com> wrote:
+> >>
+> >>>So where did the discussion on this patch land?
+> >
+> >
+> >The only part that made sense to me was the LED patch, which should
+> >just be a single line of code.
 > 
-> included is patch to add support for PATA port on Promise PDC2037x controllers.
-> Patch is against 2.6.8.1 vanilla kernel.
-> I tested this patch on my PDC20378 on-board controller with 1 PATA drive attached.
-> I didn't do any large testing but my drive was detected properly and I was able to 
-> mount and use filesystem on it.
+> So maybe you or Dave could be convinced to roll that into a separate 
+> patch, since we have consensus on that item?
+
+Since I'm just as happy without it, I'll let Dave do it  :-)
+
+> >>Obviosly if it is working on IA32 or IA64, this code must be only
+> >>scanning device 0 per port and not device 1. Not sure why it is only
+> >>scanning 1 device on IA platforms, but both on XScale. Either way we
+> >>have a corner case here that should be addressed....
+> >
+> >
+> >Jeff, I don't remember how libata knows how many devices a port
+> >can have.  Which field is it?
 > 
-> I tried to minimize changes to libata code. I just added flags for each port to ata_probe_ent
-> structure and modified ata_host_init() function. 
+> By default it only scans device 0, since SATA is a point-to-point 
+> connection where there is no possibility for more than one device :)
 > 
-> Promise SATA driver was changed to use new ata_probe_ent->port_flags, check for presence of
-> PATA port and pdc_phy_reset will use different reset code for PATA and SATA ports.
+> However, some hardware chooses to emulate master/slave mode.  Use of 
+> this, particularly on Vitesse/Intel, is highly discouraged in favor of 
+> DPA mode.  I would prefer to not support master/slave mode at all.
 > 
-> Any comments, suggestions?
+> Technically speaking, one sets the ATA_FLAG_SLAVE_POSS flag to tell the 
+> libata core to scan for device 1.
+> 
+> If we are talking about Port Multipliers, those aren't supported at all yet.
+> 
+> 	Jeff
 
+So there's something amiss with the XScale, then, it appears.  They
+also were having trouble with byte writes to the interrupt mask
+register.  That also seems to be a problem unique to that platform.
 
-Very nice!
-
-I don't see any bugs in the code...  my main concern is that I 
-definitely want to see host controllers (struct ata_host_set) support 
-multiple ata_port_operations structures.  That would eliminate the need 
-to do
-
-+	if (ap->flags & ATA_FLAG_SATA)
-+		sata_phy_reset(ap);
-+	else
-+		pdc_pata_phy_reset(ap);
-
-and also eliminate a few other roadblocks.
-
-However, implementing such is not a simple as your solution.
-
-I will definitely merge this patch into my libata-dev queue, so that 
-others can download and test it (and/or simply get their PATA port 
-working).  We'll see where it goes from there.   If nobody (including 
-me) implements the ata_port_operations solution I described, then I will 
-probably push this into upstream 2.6.x as an incremental step towards 
-the proper solution.
-
-Thanks,
-
-	Jeff
-
-
-
-
+jeremy
