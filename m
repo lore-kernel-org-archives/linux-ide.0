@@ -1,51 +1,111 @@
-From: "Oliver.Korpilla@gmx.de" <Oliver.Korpilla@gmx.de>
-Subject: Re: [SATA] SATA_SIL and ATI SB400 chipset
-Date: Tue, 08 Mar 2005 12:22:25 +0100
-Message-ID: <422D8AF1.6040107@gmx.de>
-References: <Pine.LNX.4.44.0503071842240.4791-100000@coffee.psychology.mcmaster.ca>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [SATA] libata-dev queue updated
+Date: Tue, 08 Mar 2005 06:20:31 -0500
+Message-ID: <422D8A7F.7030201@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from mail.gmx.de ([213.165.64.20]:52378 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S262004AbVCHLWh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Mar 2005 06:22:37 -0500
-In-Reply-To: <Pine.LNX.4.44.0503071842240.4791-100000@coffee.psychology.mcmaster.ca>
+Content-Type: multipart/mixed;
+ boundary="------------040704050201090809060006"
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:56484 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261990AbVCHLUx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 8 Mar 2005 06:20:53 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Mark Hahn wrote:
->>Problem is, I want to do an install from the Sarge netinstall media to get a
->>full AMD64-compatible install. If I load the SATA_SIL module there, no
-> 
-> so you should get the debian people to fix their bug - 
-> amd64 doesn't use a different sata_sil driver than ia32, of course!
+This is a multi-part message in MIME format.
+--------------040704050201090809060006
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I wasn't implying that - I thought there could be the possibility to 
-override the module probe parameters.
+Rediffing against latest kernel.  See attached.
 
->>being loaded correctly, with the same parameters it recognizes the hardware
->>when booted with kernel 2.6.11.
-> 
-> to me it sounds like your random debian kernel is just broken.
-> in general, no module parameters should ever be needed.
-> 
+--------------040704050201090809060006
+Content-Type: text/plain;
+ name="libata-dev-2.6.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libata-dev-2.6.txt"
 
-That seems to be correct - I did help me out with an PATA drive, made an 
-install, fixed a vanilla 2.6.11 onto it, and all runs perfectly well, 
-except it only seems to scans two of my four SATA ports. But it boots 
-and runs smoothly, so that's nice enough.
+BK users:
 
-So if needed I will produce my own boot disk, that's fine enough! :)
+	bk pull bk://gkernel.bkbits.net/libata-dev-2.6
 
-Do you think my controller is limited to doing a mode of UDMA/100 when 
-the drive reports as UDMA/133 capable, but then is reported with less. 
-Or is this inherent to the SATA_SIL driver?
+Patch:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.11-bk4-libata-dev1.patch.bz2
 
-I guess it's not a bad thing to archive into a Linux list that the 
-RS480M2-IL motherboard's SATA controller works with SATA_SIL driver, as 
-it uses the ATI SB400 Chipset. ;) :)
+This will update the following files:
 
-Thanks and with kind regards,
-Oliver Korpilla
+ drivers/scsi/Kconfig         |   18 
+ drivers/scsi/Makefile        |    2 
+ drivers/scsi/ahci.c          |   95 +++--
+ drivers/scsi/ata_adma.c      |  778 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/libata-core.c   |  296 +++++++++-------
+ drivers/scsi/libata-scsi.c   |  701 ++++++++++++++++++++++++++++++++------
+ drivers/scsi/libata.h        |    6 
+ drivers/scsi/pata_pdc2027x.c |  771 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sata_promise.c  |   84 ++++
+ include/linux/ata.h          |   15 
+ include/linux/libata.h       |   10 
+ include/scsi/scsi.h          |    3 
+ 12 files changed, 2507 insertions(+), 272 deletions(-)
+
+through these ChangeSets:
+
+<andyw:pobox.com>:
+  o [libata scsi] support 12-byte passthru CDB
+  o [libata scsi] passthru CDB check condition processing
+  o T10/04-262 ATA pass thru - patch
+
+<erikbenada:yahoo.ca>:
+  o [libata sata_promise] support PATA ports on SATA controllers
+
+Albert Lee:
+  o [libata] use init-device-params ATA command where needed
+  o [libata] ata_scsi_verify_xlat() fix
+  o pdc2027x timing register fix for 100MHz
+  o [libata] CHS support: add CHS support to ata_scsi_verify_xlat(), ata_scsi_rw_xlat() and ata_scsiop_read_cap().
+  o [libata] CHS support: reorganize read/write translation in ata_scsi_rw_xlat()
+  o [libata] CHS support: rename vars (s/sector/block/) in ata_scsi_verify_xlat()
+  o [libata] CHS support: detect C/H/S at IDENTIFY DEVICE time
+  o [libata] CHS support: add definitions to headers
+  o pdc2027x timing register bug fix
+  o [libata pdc2027x] fix incorrect pio and mwdma masks
+  o [libata pdc2027x] remove quirks and ROM enable
+  o [libata] add driver for Promise PATA 2027x
+
+Brad Campbell:
+  o libata basic detection and errata for PATA->SATA bridges
+
+Jeff Garzik:
+  o [libata ahci] support PCI MSI interrupt vector
+  o [libata adma] Add init code, fix CPB submission code
+  o [libata ahci] finish ATAPI support
+  o [libata adma] trivial whitespace cleanup
+  o [libata dma] fix DMA mode config; add some more initialization code
+  o [libata adma] add support for configuring PIO/DMA modes
+  o [libata] turn on ATAPI support
+  o [libata sata_promise] merge Tobias Lorenz' pdc20619 patch, part 2
+  o [libata] small cleanups
+  o [libata] remove unused execute-device-diagnostic reset method
+  o [libata] add new driver ata_adma
+  o [libata pdc2027x] update for upstream struct device conversion
+  o [libata sata_promise] fix merge bugs
+  o [libata] fix build breakage
+  o [libata] fix SATA->PATA bridge detect compile breakage
+  o [libata] fix printk warning
+
+John W. Linville:
+  o libata: update ATA pass thru opcodes
+  o libata: minor style changes in ata_scsi_pass_thru
+  o libata: filter SET_FEATURES - XFER MODE from ATA pass thru
+  o libata: sync SMART ioctls with ATA pass thru spec (T10/04-262r7)
+  o libata: fix command queue leak when xlat_func fails
+  o libata: SMART support via ATA pass-thru
+
+Tobias Lorenz:
+  o [libata sata_promise] pdc20619 (PATA) support
+  o libata-scsi: get-identity ioctl support
+
+
+--------------040704050201090809060006--
