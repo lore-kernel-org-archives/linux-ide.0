@@ -1,8 +1,8 @@
 From: "Randy.Dunlap" <rddunlap@osdl.org>
 Subject: Re: [PATCH] [STACK] reduce >3k call path in ide
-Date: Wed, 16 Jun 2004 12:52:09 -0700
+Date: Wed, 16 Jun 2004 15:53:17 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040616125209.73724776.rddunlap@osdl.org>
+Message-ID: <20040616155317.68793511.rddunlap@osdl.org>
 References: <20040609122921.GG21168@wohnheim.fh-wedel.de>
 	<20040615163445.6b886383.rddunlap@osdl.org>
 	<200406160911.11985.jolt@tuxbox.org>
@@ -11,37 +11,24 @@ References: <20040609122921.GG21168@wohnheim.fh-wedel.de>
 	<20040616100008.GB2548@wohnheim.fh-wedel.de>
 	<20040616103741.042f8029.rddunlap@osdl.org>
 	<40D0984B.3050405@didntduck.org>
+	<20040616125209.73724776.rddunlap@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:47293 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S264693AbUFPTys (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jun 2004 15:54:48 -0400
-In-Reply-To: <40D0984B.3050405@didntduck.org>
+Received: from fw.osdl.org ([65.172.181.6]:11735 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S266339AbUFPWzl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jun 2004 18:55:41 -0400
+In-Reply-To: <20040616125209.73724776.rddunlap@osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: Brian Gerst <bgerst@didntduck.org>
-Cc: joern@wohnheim.fh-wedel.de, jolt@tuxbox.org, akpm@osdl.org, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-
-On Wed, 16 Jun 2004 14:58:19 -0400 Brian Gerst wrote:
-
-| Randy.Dunlap wrote:
-| > +    tbuf = kmalloc(128 * sizeof(u_short), GFP_KERNEL);
-| > +    if (!tbuf) goto err_kfree;
-| > +    def_cte = kmalloc(sizeof(*def_cte), GFP_KERNEL);
-| > +    if (!def_cte) goto err_kfree;
-| > +    memset(def_cte, 0, sizeof(*def_cte));
-| > +    cfginfo = kmalloc(sizeof(*cfginfo), GFP_KERNEL);
-| > +    if (!cfginfo) goto err_kfree;
-| > +    cisparse = kmalloc(sizeof(*cisparse), GFP_KERNEL);
-| > +    if (!cisparse) goto err_kfree;
-| 
-| This can be condensed into a single kmalloc.  Define a struct that 
-| contains these variables and kmalloc the whole struct in one call.
+To: lkml <linux-kernel@vger.kernel.org>
+Cc: bgerst@didntduck.org, joern@wohnheim.fh-wedel.de, jolt@tuxbox.org, akpm@osdl.org, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
 
 
-OK, how's this one?
-and thanks.
+This version moves the stack structure "stk" inside the ide_config()
+function as an anonymous struct.
+I hope this is the last one.... :)
+
 
 
 Reduce large stack usage in ide_config() by using kmalloc(),
@@ -54,12 +41,12 @@ Signed-off-by: Randy Dunlap <rddunlap@osdl.org>
 
 
 diffstat:=
- drivers/ide/legacy/ide-cs.c |  130 +++++++++++++++++++++++++-------------------
- 1 files changed, 74 insertions(+), 56 deletions(-)
+ drivers/ide/legacy/ide-cs.c |  130 ++++++++++++++++++++++++--------------------
+ 1 files changed, 73 insertions(+), 57 deletions(-)
 
 diff -Naurp ./drivers/ide/legacy/ide-cs.c~idecs_stack ./drivers/ide/legacy/ide-cs.c
 --- ./drivers/ide/legacy/ide-cs.c~idecs_stack	2004-05-09 19:32:53.000000000 -0700
-+++ ./drivers/ide/legacy/ide-cs.c	2004-06-16 11:59:58.728659752 -0700
++++ ./drivers/ide/legacy/ide-cs.c	2004-06-16 13:31:08.285160776 -0700
 @@ -199,6 +199,16 @@ static void ide_detach(dev_link_t *link)
      
  } /* ide_detach */
@@ -77,7 +64,7 @@ diff -Naurp ./drivers/ide/legacy/ide-cs.c~idecs_stack ./drivers/ide/legacy/ide-c
  /*======================================================================
  
      ide_config() is scheduled to run after a CARD_INSERTION event
-@@ -210,84 +220,84 @@ static void ide_detach(dev_link_t *link)
+@@ -210,84 +220,82 @@ static void ide_detach(dev_link_t *link)
  #define CS_CHECK(fn, ret) \
  do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
  
@@ -90,13 +77,7 @@ diff -Naurp ./drivers/ide/legacy/ide-cs.c~idecs_stack ./drivers/ide/legacy/ide-c
 -    hw.chipset = ide_pci;
 -    return ide_register_hw(&hw, NULL);
 -}
-+struct stk {
-+	u_short		buf[128];
-+	cisparse_t	parse;
-+	config_info_t	conf;
-+	cistpl_cftable_entry_t dflt;
-+};
- 
+-
  void ide_config(dev_link_t *link)
  {
      client_handle_t handle = link->handle;
@@ -108,7 +89,12 @@ diff -Naurp ./drivers/ide/legacy/ide-cs.c~idecs_stack ./drivers/ide/legacy/ide-c
 -    cistpl_cftable_entry_t *cfg = &parse.cftable_entry;
 -    cistpl_cftable_entry_t dflt = { 0 };
 -    int i, pass, last_ret, last_fn, hd, is_kme = 0;
-+    struct stk *stk = 0;
++    struct {
++	u_short		buf[128];
++	cisparse_t	parse;
++	config_info_t	conf;
++	cistpl_cftable_entry_t dflt;
++    } *stk = 0;
 +    cistpl_cftable_entry_t *cfg;
 +    int i, pass, last_ret = 0, last_fn = 0, hd, is_kme = 0;
      unsigned long io_base, ctl_base;
@@ -203,7 +189,7 @@ diff -Naurp ./drivers/ide/legacy/ide-cs.c~idecs_stack ./drivers/ide/legacy/ide-c
  	    link->conf.ConfigIndex = cfg->index;
  	    link->io.BasePort1 = io->win[0].base;
  	    link->io.IOAddrLines = io->flags & CISTPL_IO_LINES_MASK;
-@@ -307,23 +317,24 @@ void ide_config(dev_link_t *link)
+@@ -307,23 +315,24 @@ void ide_config(dev_link_t *link)
  		if (pcmcia_request_io(link->handle, &link->io) != 0)
  			goto next_entry;
  		io_base = link->io.BasePort1;
@@ -233,7 +219,7 @@ diff -Naurp ./drivers/ide/legacy/ide-cs.c~idecs_stack ./drivers/ide/legacy/ide-c
      CS_CHECK(RequestIRQ, pcmcia_request_irq(handle, &link->irq));
      CS_CHECK(RequestConfiguration, pcmcia_request_configuration(handle, &link->conf));
  
-@@ -336,25 +347,27 @@ void ide_config(dev_link_t *link)
+@@ -336,25 +345,27 @@ void ide_config(dev_link_t *link)
      outb(0x02, ctl_base);
  
      /* special setup for KXLC005 card */
@@ -266,7 +252,7 @@ diff -Naurp ./drivers/ide/legacy/ide-cs.c~idecs_stack ./drivers/ide/legacy/ide-c
      if (hd < 0) {
  	printk(KERN_NOTICE "ide-cs: ide_register() at 0x%3lx & 0x%3lx"
  	       ", irq %u failed\n", io_base, ctl_base,
-@@ -363,24 +376,29 @@ void ide_config(dev_link_t *link)
+@@ -363,24 +374,29 @@ void ide_config(dev_link_t *link)
      }
  
      info->ndev = 1;
