@@ -1,55 +1,65 @@
-From: Mikael Pettersson <mikpe@csd.uu.se>
-Subject: PDC20269 problems on PowerMac with 2.4.27 kernel
-Date: Wed, 11 Aug 2004 02:14:44 +0200 (MEST)
+From: Ian Hastie <ianh@iahastie.clara.net>
+Subject: Re: IDE hackery: lock fixes and hotplug controller stuff
+Date: Wed, 11 Aug 2004 01:36:05 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200408110014.i7B0Eit6017963@harpo.it.uu.se>
+Message-ID: <200408110136.06137.ianh@iahastie.local.net>
+References: <20040810161911.GA10565@devserv.devel.redhat.com> <200408102148.57602.ianh@iahastie.local.net> <20040810210630.GA30906@devserv.devel.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:53472 "EHLO aun.it.uu.se")
-	by vger.kernel.org with ESMTP id S267836AbUHKAOu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Aug 2004 20:14:50 -0400
+Received: from mra02.ex.eclipse.net.uk ([212.104.129.89]:64947 "EHLO
+	mra02.ex.eclipse.net.uk") by vger.kernel.org with ESMTP
+	id S267851AbUHKAiX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Aug 2004 20:38:23 -0400
+In-Reply-To: <20040810210630.GA30906@devserv.devel.redhat.com>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linuxppc-dev@lists.linuxppc.org
+To: Alan Cox <alan@redhat.com>
+Cc: Ian Hastie <ianh@iahastie.clara.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-I have a PowerMac G3 (beige) upgraded with a 1GHz G4 processor
-and a PDC20269 (Promise Ultra 133 TX2) IDE PCI controller,
-which works reliably with the 2.6.8-rc kernels. The controller,
-disk, and cable also work in an x86 box with both 2.6 and 2.4 kernels.
+On Tuesday 10 Aug 2004 22:06, Alan Cox wrote:
+> On Tue, Aug 10, 2004 at 09:48:57PM +0100, Ian Hastie wrote:
+> > What do those numbers refer to?  Card model numbers?  On ITE's site I can
+> > only see an IT8212F which has RAID and an IT8211F that doesn't.
+>
+> Product rather than chip numbers I think
+>
+> > I got my IT8212F card from Novatech.  A generic card with no obviously
+> > recognisable name and, IMO anyway, quite a reasonable price.  That is
+> > assuming it really does everything that they say it can.
+>
+> Thanks will investigate. I need to see what happens if I turn the
+> firmware bits on with my card and then reboot the microprocessor - see if
+> its just bios crippled
+>
+> > It certainly works quite well in pass through mode. *8)
+>
+> But it has the raid mode stuff ?
 
-However, with 2.4.27 on the PowerMac I frequently get DMA timeouts
-while doing heavy I/O operations like a cp -ax from my scsi root
-to a partition on the PDC20269's disk:
+Yes it does.  It's certainly sold as a RAID card and it does have a RAID setup 
+menu.  I haven't had the opportunity to use it fully as the discs I needed to 
+use on it were already set up for software RAID.  Maybe I'll have a couple 
+spare(!) discs to play with if I upgrade to SATA.
 
-hde: dma_timer_expiry: dma status == 0x20
-hde: timeout waiting for DMA
-PDC202XX: Primary channel reset.
-hde: timeout waiting for DMA
-hde: (__ide_dma_test_irq) called while not waiting
-hde: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+It seems that the operation depends on the firmware, or should that be BIOS, 
+you load onto the card.  There's this from the IT8212 FAQ, 
+http://www.ite.com.tw/faq/it8212.html
 
-hde: drive not ready for command
+1. Could I use IT8212 for CD-ROM? 
+Ans:  IT8212 supports either RAID controller (which supports hard drives
+only) or pure IDE controller (which supports hard drives and CDROM)
+with different BIOS code. Please update your BIOS ROM with ATAPI
+BIOS.
 
-Occasionally I instead get EXT3 meta-data errors, which I suspect
-are caused by data corruption.
+There are certainly two files available
 
-I've compared lspci -vvx on 2.4 and 2.6, but the only difference
-is a ParErr setting on the 53c875 SCSI controller.
+http://www.ite.com.tw/pc/bios_8212Raid-093015-02.zip
 
-There are some differences in /proc/ide/ide2/hde/settings between
-2.4 and 2.6, for multicount and wcache, but I don't know if they're
-relevant. (Manually setting multicount on 2.4 to zero like 2.6 reports
-it leads to immediate data corruption. Weird.)
+and
 
-I've disabled IDEDMA_AUTO and manually lowered the transfer mode to
-udma3 or even udma2, but that doesn't help at all. It does udma4 w/o
-problems in 2.6 kernels.
+http://www.ite.com.tw/pc/bios_8212ATAPI-093015-02.zip
 
-Strangely enough, the card worked better earlier when the box still
-had its original 300MHz CPU. It did throw _one_ error at kernel
-boot-up, but never anything afterwards. Disabling IDEDMA_AUTO
-silenced that error.
-
-Any ideas on what might be causing this? At this point I'm beginning
-to suspect big-endian or timing bugs in pdc202xx_new.c, or a general
-problem with IDE/DMA/PCI in the 2.4.27 kernel on ppc32/pmac.
-
-/Mikael
+-- 
+Ian.
