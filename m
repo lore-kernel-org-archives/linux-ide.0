@@ -1,52 +1,52 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: SATA ATAPI work in progress
-Date: Thu, 13 May 2004 17:25:57 -0400
+Date: 13 May 2004 15:36:26 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40A3E7E5.6060403@pobox.com>
-References: <1084393233.3999.2.camel@patibmrh9> <40A28BB6.7090204@pobox.com> <1084403654.3196.31.camel@patibmrh9> <40A3E595.8000003@pobox.com>
+Message-ID: <1084484186.4524.3.camel@patibmrh9>
+References: <1084393233.3999.2.camel@patibmrh9> <40A28BB6.7090204@pobox.com>
+	<1084403654.3196.31.camel@patibmrh9> <40A3E595.8000003@pobox.com><40A3E7E5.
+	6060403@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:18369 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S265130AbUEMV0K
+Received: from email-out1.iomega.com ([147.178.1.82]:35220 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264161AbUEMVgu
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 May 2004 17:26:10 -0400
-In-Reply-To: <40A3E595.8000003@pobox.com>
+	Thu, 13 May 2004 17:36:50 -0400
+In-Reply-To: <40A3E7E5.6060403@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> For an ATA device, we
-> * write the taskfile, except for command
-> * set up the DMA engine
-> * write the command
-> * write DMA-start bit
+> Are you willing to work 
+
+Yes I want to learn.
+
+I figure I can learn fastest by helping.
+
+> on a separate, pre-requisite patch:
 > 
-> And the functions used by the low-level drivers, ata_bmdma_start_mmio 
-> and ata_bmdma_start_pio, are hardcoded to use this ordering.  By 
-> contrast, for ATAPI you should do:
-> * set up DMA engine
-> * write entire taskfile, including command
-> * proceed through state diagram until DRQ==1
-> * write SCSI CDB
-> * write DMA-start bit
+> We need to split ata_bmdma_start_{pio,mmio} into separate "setup" and 
+> "start" pieces.
+> 
+> This would involve adding a "bmdma_setup" hook to struct 
+> ata_port_operations in include/linux/libata.h, and then doing a simple
+> update of all the SATA drivers, to use the default libata-core 
+> implementations.
 
+Sorry as yet I understand very little of the above.
 
-So...
+Until corrected I will guess I should next:
 
-Are you willing to work on a separate, pre-requisite patch:
+1) Find a spare PATA UDMA HDD, with UDMA mode above 2 to suit the SATA/
+PATA bridge.
 
-We need to split ata_bmdma_start_{pio,mmio} into separate "setup" and 
-"start" pieces.
+2) Connect Linux to SATA/ PATA to PATA UDMA HDD.
 
-This would involve adding a "bmdma_setup" hook to struct 
-ata_port_operations in include/linux/libata.h, and then doing a simple 
-update of all the SATA drivers, to use the default libata-core 
-implementations.
+3) Turn ATA_DEBUG ATA_VERBOSE_DEBUG on in 2.6.6-bk1.
 
-	Jeff
+4) Report back here for next assignment.
 
-
+Pat LaVarre
 
