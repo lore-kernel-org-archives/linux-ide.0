@@ -1,48 +1,62 @@
 From: "John W. Linville" <linville@tuxdriver.com>
-Subject: [patch libata-dev-2.6 3/5] libata: filter SET_FEATURES - XFER MODE from ATA pass thru
-Date: Fri, 18 Feb 2005 15:03:37 -0500
-Message-ID: <20050218200337.GD3197@tuxdriver.com>
-References: <20050218195027.GB3197@tuxdriver.com> <20050218195512.GC3197@tuxdriver.com>
+Subject: [patch libata-dev-2.6 4/5] libata: minor style changes in ata_scsi_pass_thru
+Date: Fri, 18 Feb 2005 15:06:37 -0500
+Message-ID: <20050218200637.GE3197@tuxdriver.com>
+References: <20050218195027.GB3197@tuxdriver.com> <20050218195512.GC3197@tuxdriver.com> <20050218200337.GD3197@tuxdriver.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from ra.tuxdriver.com ([24.172.12.4]:25094 "EHLO ra.tuxdriver.com")
-	by vger.kernel.org with ESMTP id S261468AbVBRUDp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2005 15:03:45 -0500
+Received: from ra.tuxdriver.com ([24.172.12.4]:27398 "EHLO ra.tuxdriver.com")
+	by vger.kernel.org with ESMTP id S261487AbVBRUGt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2005 15:06:49 -0500
 Content-Disposition: inline
-In-Reply-To: <20050218195512.GC3197@tuxdriver.com>
+In-Reply-To: <20050218200337.GD3197@tuxdriver.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com
 
-Filter-out attempts to issue a SET_FEATURES - XFER MODE command
-via the ATA pass thru mechanism.
+Remove some curlies around single-line if statements.
 
 Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
 
- drivers/scsi/libata-scsi.c |   11 +++++++++++
- 1 files changed, 11 insertions(+)
+ drivers/scsi/libata-scsi.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
---- sata-smart-2.6/drivers/scsi/libata-scsi.c.filter	2005-02-17 16:49:51.362715273 -0500
-+++ sata-smart-2.6/drivers/scsi/libata-scsi.c	2005-02-17 16:50:03.907040725 -0500
-@@ -1764,6 +1764,17 @@ ata_scsi_pass_thru(struct ata_queued_cmd
- 	}
+--- sata-smart-2.6/drivers/scsi/libata-scsi.c.style	2005-02-17 16:50:03.907040725 -0500
++++ sata-smart-2.6/drivers/scsi/libata-scsi.c	2005-02-17 16:50:40.819113315 -0500
+@@ -1713,9 +1713,8 @@ ata_scsi_pass_thru(struct ata_queued_cmd
+ 	struct ata_taskfile *tf = &(qc->tf);
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+ 
+-	if ((tf->protocol = ata_scsi_map_proto(scsicmd[1])) == ATA_PROT_UNKNOWN) {
++	if ((tf->protocol = ata_scsi_map_proto(scsicmd[1])) == ATA_PROT_UNKNOWN)
+ 		return 1;
+-	}
  
  	/*
-+	 * Filter SET_FEATURES - XFER MODE command -- otherwise,
-+	 * SET_FEATURES - XFER MODE must be preceded/succeeded
-+	 * by an update to hardware-specific registers for each
-+	 * controller (i.e. the reason for ->set_piomode(),
-+	 * ->set_dmamode(), and ->post_set_mode() hooks).
-+	 */
-+	if ((tf->command == ATA_CMD_SET_FEATURES)
-+	 && (tf->feature == SETFEATURES_XFER))
-+		return 1;
-+
-+	/*
- 	 * Set flags so that all registers will be written,
- 	 * and pass on write indication (used for PIO/DMA
- 	 * setup.)
+ 	 * 12 and 16 byte CDBs use different offsets to
+@@ -1734,9 +1733,8 @@ ata_scsi_pass_thru(struct ata_queued_cmd
+ 			tf->hob_lbam = scsicmd[9];
+ 			tf->hob_lbah = scsicmd[11];
+ 			tf->flags |= ATA_TFLAG_LBA48 ;
+-		} else {
++		} else
+ 			tf->flags &= ~ATA_TFLAG_LBA48 ;
+-		}
+ 
+ 		/*
+ 		 * Always copy low byte, device and command registers.
+@@ -1781,9 +1779,8 @@ ata_scsi_pass_thru(struct ata_queued_cmd
+ 	 */
+ 	tf->flags |= (ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE) ;
+ 
+-	if (cmd->sc_data_direction == SCSI_DATA_WRITE) {
++	if (cmd->sc_data_direction == SCSI_DATA_WRITE)
+ 		tf->flags |= ATA_TFLAG_WRITE;
+-	}
+ 
+ 	/*
+ 	 * Set transfer length.
 -- 
 John W. Linville
 linville@tuxdriver.com
