@@ -1,56 +1,96 @@
-From: Dave <dave.jiang@gmail.com>
-Subject: Re: [PATCH] updates to Vitesse SATA driver
-Date: Wed, 29 Sep 2004 15:32:34 -0700
+From: Andy Warner <andyw@pobox.com>
+Subject: libata - error register patch.
+Date: Wed, 29 Sep 2004 17:50:11 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <8746466a0409291532471417b8@mail.gmail.com>
-References: <8746466a04092114163b3c0618@mail.gmail.com>
-	 <415B34FC.8060908@pobox.com>
-Reply-To: Dave <dave.jiang@gmail.com>
+Message-ID: <20040929175011.L15041@florence.linkmargin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="r5Pyd7+fXNt84Ff3"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.197]:60528 "EHLO mproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S269081AbUI2Wct (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Sep 2004 18:32:49 -0400
-Received: by mproxy.gmail.com with SMTP id 74so135137rnk
-        for <linux-ide@vger.kernel.org>; Wed, 29 Sep 2004 15:32:35 -0700 (PDT)
-In-Reply-To: <415B34FC.8060908@pobox.com>
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:11439 "EHLO
+	ms-smtp-03.rdc-kc.rr.com") by vger.kernel.org with ESMTP
+	id S269196AbUI2WwA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Sep 2004 18:52:00 -0400
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: jeremy.higdon@sgi.com, linux-ide@vger.kernel.org
-
-On Wed, 29 Sep 2004 18:19:40 -0400, Jeff Garzik <jgarzik@pobox.com> wrote:
-> So where did the discussion on this patch land?
-> 
-> 
-
-Jeff,
-
-I believe waiting for you to comment on whether to put in a hook for
-controllers that do not support ATA_NIEN so it can mask/unmask IRQ
-with a fixup.  Even though the spec for this particular SATA
-controller says the bit is reserved, it seems to work just fine. From
-my understanding, the registers are actually on the drives, and the
-ones we write to the HBAs are just shadow registers right? I suppose
-either we can use the "undocumented" reserved bit for ATA_NIEN, or
-provide some sort of special hook in lib_ata core to clear the
-interrupt bit....
-
-Obviosly if it is working on IA32 or IA64, this code must be only
-scanning device 0 per port and not device 1. Not sure why it is only
-scanning 1 device on IA platforms, but both on XScale. Either way we
-have a corner case here that should be addressed....
+Cc: linux-ide@vger.kernel.org
 
 
+--r5Pyd7+fXNt84Ff3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+It's entirely possible I'm missing something either
+very obvious, or very subtle, but I think the reading
+of the error register in libata et al is incorrect.
+
+Current code only reads the error register when
+in LBA48 mode, and then stores it in tf->hob_feature.
+Attached patch always reads it and stores it
+in tf->feature.
 -- 
--= Dave =-
+andyw@pobox.com
 
-Software Engineer - Advanced Development Engineering Team 
-Storage Component Division - Intel Corp. 
-mailto://dave.jiang @ intel
-----
-The views expressed in this email are
-mine alone and do not necessarily 
-reflect the views of my employer
-(Intel Corp.).
+Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
+
+--r5Pyd7+fXNt84Ff3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=error_patch
+
+diff -ur pre/drivers/scsi/libata-core.c post/drivers/scsi/libata-core.c
+--- pre/drivers/scsi/libata-core.c	2004-09-29 17:28:02.128241280 -0500
++++ post/drivers/scsi/libata-core.c	2004-09-29 17:30:39.849416316 -0500
+@@ -321,10 +321,10 @@
+ 	tf->lbam = inb(ioaddr->lbam_addr);
+ 	tf->lbah = inb(ioaddr->lbah_addr);
+ 	tf->device = inb(ioaddr->device_addr);
++	tf->feature = inb(ioaddr->error_addr);
+ 
+ 	if (tf->flags & ATA_TFLAG_LBA48) {
+ 		outb(tf->ctl | ATA_HOB, ioaddr->ctl_addr);
+-		tf->hob_feature = inb(ioaddr->error_addr);
+ 		tf->hob_nsect = inb(ioaddr->nsect_addr);
+ 		tf->hob_lbal = inb(ioaddr->lbal_addr);
+ 		tf->hob_lbam = inb(ioaddr->lbam_addr);
+@@ -353,10 +353,10 @@
+ 	tf->lbam = readb((void __iomem *)ioaddr->lbam_addr);
+ 	tf->lbah = readb((void __iomem *)ioaddr->lbah_addr);
+ 	tf->device = readb((void __iomem *)ioaddr->device_addr);
++	tf->feature = readb((void __iomem *)ioaddr->error_addr);
+ 
+ 	if (tf->flags & ATA_TFLAG_LBA48) {
+ 		writeb(tf->ctl | ATA_HOB, (void __iomem *) ap->ioaddr.ctl_addr);
+-		tf->hob_feature = readb((void __iomem *)ioaddr->error_addr);
+ 		tf->hob_nsect = readb((void __iomem *)ioaddr->nsect_addr);
+ 		tf->hob_lbal = readb((void __iomem *)ioaddr->lbal_addr);
+ 		tf->hob_lbam = readb((void __iomem *)ioaddr->lbam_addr);
+diff -ur pre/drivers/scsi/sata_svw.c post/drivers/scsi/sata_svw.c
+--- pre/drivers/scsi/sata_svw.c	2004-09-29 17:32:42.396805890 -0500
++++ post/drivers/scsi/sata_svw.c	2004-09-29 17:34:39.625030054 -0500
+@@ -138,9 +138,9 @@
+ 	lbam = tf->lbam = readw(ioaddr->lbam_addr);
+ 	lbah = tf->lbah = readw(ioaddr->lbah_addr);
+ 	tf->device = readw(ioaddr->device_addr);
++	tf->feature = readw(ioaddr->error_addr);
+ 
+ 	if (tf->flags & ATA_TFLAG_LBA48) {
+-		tf->hob_feature = readw(ioaddr->error_addr) >> 8;
+ 		tf->hob_nsect = nsect >> 8;
+ 		tf->hob_lbal = lbal >> 8;
+ 		tf->hob_lbam = lbam >> 8;
+diff -ur pre/drivers/scsi/sata_vsc.c post/drivers/scsi/sata_vsc.c
+--- pre/drivers/scsi/sata_vsc.c	2004-09-29 17:32:30.539605204 -0500
++++ post/drivers/scsi/sata_vsc.c	2004-09-29 17:36:36.286359905 -0500
+@@ -139,9 +139,9 @@
+ 	lbam = tf->lbam = readw(ioaddr->lbam_addr);
+ 	lbah = tf->lbah = readw(ioaddr->lbah_addr);
+ 	tf->device = readw(ioaddr->device_addr);
++	tf->feature = readb(ioaddr->error_addr);
+ 
+ 	if (tf->flags & ATA_TFLAG_LBA48) {
+-		tf->hob_feature = readb(ioaddr->error_addr);
+ 		tf->hob_nsect = nsect >> 8;
+ 		tf->hob_lbal = lbal >> 8;
+ 		tf->hob_lbam = lbam >> 8;
+
+--r5Pyd7+fXNt84Ff3--
