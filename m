@@ -1,54 +1,79 @@
-From: Michal 'hramrach' Suchanek <hramrach@centrum.cz>
-Subject: Re: Via SATA not working here
-Date: Tue, 14 Sep 2004 19:54:48 +0200
+From: Marc Bevand <bevand_m@epita.fr>
+Subject: Re: libata problems with 66Mhz Promise SATA150 TX4
+Date: Tue, 14 Sep 2004 20:03:51 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040914175448.GK18257@uvt316-2.ruk.cuni.cz>
-References: <20040912191542.GO21202@uvt316-2.ruk.cuni.cz> <414520BB.3080306@wasp.net.au> <20040914094336.GG18257@uvt316-2.ruk.cuni.cz> <311601c90409140803aaa4d31@mail.gmail.com>
-Reply-To: Michal 'hramrach' Suchanek <hramrach@centrum.cz>
+Message-ID: <41473287.7050101@epita.fr>
+References: <m34qm13m8h.fsf@zathras.nivin.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dec59.ruk.cuni.cz ([195.113.2.17]:56080 "HELO dec59.ruk.cuni.cz")
-	by vger.kernel.org with SMTP id S269612AbUINR5F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Sep 2004 13:57:05 -0400
-Content-Disposition: inline
-In-Reply-To: <311601c90409140803aaa4d31@mail.gmail.com>
+Received: from main.gmane.org ([80.91.229.2]:22424 "EHLO main.gmane.org")
+	by vger.kernel.org with ESMTP id S269672AbUINSLN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Sep 2004 14:11:13 -0400
+Received: from list by main.gmane.org with local (Exim 3.35 #1 (Debian))
+	id 1C7Hlo-0002bd-00
+	for <linux-ide@vger.kernel.org>; Tue, 14 Sep 2004 20:11:12 +0200
+Received: from 213.41.133.51 ([213.41.133.51])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 14 Sep 2004 20:11:11 +0200
+Received: from bevand_m by 213.41.133.51 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 14 Sep 2004 20:11:11 +0200
+In-Reply-To: <m34qm13m8h.fsf@zathras.nivin.org>
 List-Id: linux-ide@vger.kernel.org
-To: Eric Mudama <edmudama@gmail.com>
-Cc: Brad Campbell <brad@wasp.net.au>, f@uvt316-2.ruk.cuni.cz, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tue, Sep 14, 2004 at 09:03:19AM -0600, Eric Mudama wrote:
-> On Tue, 14 Sep 2004 11:43:36 +0200, Michal 'hramrach' Suchanek
-> <hramrach@centrum.cz> wrote:
-> > With 2.6.5 I get the same results.
-> > 
-> > The libata error message:
-> > 
-> > ata1: DMA timeout, stat 0x0
-> > ATA: abnormal status 0xD0 on prot 0xEC07
-> > scsi0: ERROR on channel 0, id0, lin0, CDB: Write (10) 00 01 65 dc e7 00
-> > 00 42 00
-> > Current sda: sense key Medium Error
-> > Additional sense: Write Error - auto reallocation failed
-> > end_request: I/O error, dev sda, sector 23452903
-> > ATA: abnormal status 0xD0 on prot 0xEC07
-> > ATA: abnormal status 0xD0 on prot 0xEC07
-> > ATA: abnormal status 0xD0 on prot 0xEC07
-> > 
-> > Note that the 0xd0 is the same as the ide DMA timeout error.
-> 
-> Not sure how libata queried the additional sense: key/code/qual etc
-> from the drive, since it appears to have gotten a busy timeout.
+Paul Fisher wrote:
+> We're experiencing failures on a Promise SATA150 TX4 when run at 66Mhz
+> on either PCI-X bus on a Tyan S2882 (dual Opteron system).  The
+> problems manifest themselves rather quickly on an SMP-enabled kernel,
+> and it takes a bit longer to kill a non-SMP kernel.
+> [...]
+> The only way we can get a stable system is to run the SATA150 TX4 off
+> the 33Mhz PCI bus.
+> [...]
+> We've tested 2.6.8, 2.6.9-rc1, and 2.6.9-rc1-bk16.
+> [...]
+> CPU 0: Machine Check Exception:                4 Bank 4: b200000000070f0f
 
-imho it did not query it, it is simply bogus. afaict the drive does not
-produce write errors so the code cannot query it whatever it does.
-But i do not know anything about ata or the kernel ata drivers, I did
-not even try to look.
+I have *exactly* the same problem (MCE b200000000070f0f, which indicates
+a watchdog timer timeout), on the same hardware (Promise SATA150 TX4).
+Like you, I get the problem only when using a 66MHz PCI bus (no problem
+at 33MHz). Like you, the stack trace indicate the problem comes from
+the Promise hardware. And like you the watchdog timeout is much harder
+to reproduce with a non-SMP kernel.
 
-Currently I have another drive attached to the sata dongle and neither
-bios nor Linux can see it. Perhaps it is because  the drive is switched
-to slave or it does not like the drive rack.
+Here is a short summary of my config:
+  - Dual Opteron 244
+  - Tyan S2885
+  - 4 x 133MHz/64-bit PCI-X slots
+  - 1 x 33MHz/32-bit PCI slot
+  - Promise SATA150 TX4,
+    running at either 66MHz (PCI-X slot), or 33MHz (PCI slot)
+  - 4 x Seagate 160Go 7200 RPM S-ATA Barracuda 7200.7
 
-Thanks 
+An easy way to reproduce the problem is to run 4 instances of 'dd' reading
+from 4 disks at the same time. It is much harder to reproduce when reading
+from 3 disks, and quasi-impossible to reproduce when reading from 2 disks.
 
-Michal Suchanek
+I have tried kernels 2.6.5 and 2.6.9-rc1 (arch x86_64). I have tried the
+latest BIOS for my motherboard, the latest BIOS for the Promise card, and
+all the PCI-X slots of the motherboard.
+
+It seems the Promise chip has some problems under high-load conditions:
+the throughput I obtain when reading from 4 disks is 100 MB/s (at 33MHz)
+and 215 MB/s (at 66MHz)...
+
+I contacted the Promise support some months ago, but they "did not get
+this issue before", and finally they told me they "do not support 64 bit
+or even PCI-X slots [for this model]" :-/
+
+Actually I would be very interested to know if *anybody* is successfully
+using this card at 66MHz with 3 or 4 disks attached to it.
+
+-- 
+Marc Bevand                          http://www.epita.fr/~bevand_m
+Computer Science School EPITA - System, Network and Security Dept.
+
