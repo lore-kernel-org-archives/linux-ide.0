@@ -1,43 +1,54 @@
-From: Patrick Finnegan <pat@computer-refuge.org>
-Subject: Update: Serial ATA support question
-Date: Fri, 2 Apr 2004 10:02:18 -0500
+From: Jamie Lokier <jamie@shareable.org>
+Subject: Re: [PATCH] speed up SATA
+Date: Fri, 2 Apr 2004 17:11:49 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200404021002.18869.pat@computer-refuge.org>
-References: <200403291444.35962.pat@computer-refuge.org>
+Message-ID: <20040402161149.GA32483@mail.shareable.org>
+References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406616EE.80301@pobox.com> <4066191E.4040702@yahoo.com.au> <40662108.40705@pobox.com> <20040328135124.GA32597@mail.shareable.org> <40670A36.3000005@pobox.com> <20040328173623.GA1087@mail.shareable.org> <20040402101108.GA752170@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 12-222-129-149.client.insightBB.com ([12.222.129.149]:25273
-	"EHLO dualie.purdueriots.com") by vger.kernel.org with ESMTP
-	id S264068AbUDBPCT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Apr 2004 10:02:19 -0500
-Received: from pat by dualie.purdueriots.com with local (Exim 3.36 #1 (Debian))
-	id 1B9QBW-0004EJ-00
-	for <linux-ide@vger.kernel.org>; Fri, 02 Apr 2004 10:02:18 -0500
-In-Reply-To: <200403291444.35962.pat@computer-refuge.org>
+Received: from mail.shareable.org ([81.29.64.88]:62357 "EHLO
+	mail.shareable.org") by vger.kernel.org with ESMTP id S263361AbUDBQQc
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Apr 2004 11:16:32 -0500
 Content-Disposition: inline
+In-Reply-To: <20040402101108.GA752170@sgi.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-So, I've got no response, is there a better place to ask this?
+Jeremy Higdon wrote:
+> > This is what I mean: turn off write cacheing, and performance on PATA
+> > drops because of the serialisation and lost inter-command time.
+> 
+> Since you have to write the sectors in order (well, you don't have
+> to, but the drives all do this), you lose a rev between each write
+> when you don't queue commands or have write cacheing.
 
-On Monday 29 March 2004 14:44, Patrick Finnegan wrote:
-> So, I'm considering getting some SATA gear to use in a data storage
-> project.  What exactly is the state of hotplug support?  I'm
-> considering a Highpoint Tech Rocket 1540 (HPT374 chipset), and it
-> claims to support Linux as an OS, but I haven't seen anything on
-> mailing lists about use with linux, especially hotswap support.
->
-> So, is it possible to hotswap these drives, and have the
-> controller/driver detect the new drive?
->
-> Thanks,
->
-> Pat
+I don't see how the driver can write the sectors out of order, if
+there is no TCQ (we're talking PATA) and every write must be committed
+before it's acknowledged (write cache disabled).
 
-Pat
--- 
-Purdue University ITAP/RCS        ---  http://www.itap.purdue.edu/rcs/
-The Computer Refuge               ---  http://computer-refuge.org
+> > With TCQ-on-write, you can turn off write cacheing and in theory
+> > performance doesn't have to drop, is that right?
+> 
+> Correct.  I have proven this to my satisfaction.
+
+Are you refuting the following assertion by Eric D. Mudama's, based on
+your measurements?  In other words, are ATA's 32 TCQ slots enough to
+eliminate the performance advantage of write cacheing?
+
+Eric D. Mudama <edmudama@mail.bounceswoosh.org> wrote:
+> However, cached writes (queued or unqueued), especially small ones,
+> will have WAY higher ops/sec.  ATA TCQ is limited to 32 choices for
+> the next best operation, but an 8MB buffer doing 4K random-ops could
+> potentially have ~2000 choices for the next thing to do. (assuming
+> perfect cache granularity, etc, etc)
+>
+> At 32 choices, the seek and rotate are still somewhat significant,
+> though way better than unqueued.  With 2000 things to choose from, the
+> drive is never, ever idle.  Seek, land just-in-time, read/write,
+> rinse/repeat.
+
+Thanks,
+-- Jamie
