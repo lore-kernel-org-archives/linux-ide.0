@@ -1,50 +1,54 @@
-From: Ben Dooks <ben@fluff.org>
-Subject: Re: [PATCH] Some IDE chipsets are architecture-specific
-Date: Mon, 7 Mar 2005 15:51:52 +0000
-Message-ID: <20050307155152.GA7789@home.fluff.org>
-References: <20050307152803.GF28741@parcelfarce.linux.theplanet.co.uk> <20050307154755.GA31844@harddisk-recovery.com>
+From: Brett Russ <russb@emc.com>
+Subject: Re: [PATCH] Re: AHCI: support for tf_read (RFC)
+Date: Mon, 07 Mar 2005 11:43:48 -0500
+Message-ID: <422C84C4.8090103@emc.com>
+References: <20050224232413.4869514FC5@lns1032.lss.emc.com> <421FB272.4030502@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from host-212-158-219-180.bulldogdsl.com ([212.158.219.180]:16018
-	"EHLO aeryn.fluff.org.uk") by vger.kernel.org with ESMTP
-	id S261800AbVCGPwZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Mar 2005 10:52:25 -0500
-Content-Disposition: inline
-In-Reply-To: <20050307154755.GA31844@harddisk-recovery.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from mailhub.lss.emc.com ([168.159.2.31]:36481 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S261848AbVCGQn6
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Mar 2005 11:43:58 -0500
+In-Reply-To: <421FB272.4030502@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Erik Mouw <erik@harddisk-recovery.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, ric@emc.com
 
-On Mon, Mar 07, 2005 at 04:47:55PM +0100, Erik Mouw wrote:
-> On Mon, Mar 07, 2005 at 03:28:03PM +0000, Matthew Wilcox wrote:
-> > Mark some chipset support as being for specific architectures.
-> > I may have got some wrong, so please double-check.
-> > 
-> > Signed-off-by: Matthew Wilcox <matthew@wil.cx>
-> > 
-> > Index: ./drivers/ide/Kconfig
-> > ===================================================================
-> > RCS file: /var/cvs/linux-2.6/drivers/ide/Kconfig,v
-> > retrieving revision 1.25.2.1
-> > diff -u -p -r1.25.2.1 Kconfig
-> > --- ./drivers/ide/Kconfig	2 Mar 2005 11:19:06 -0000	1.25.2.1
-> > +++ ./drivers/ide/Kconfig	7 Mar 2005 04:49:26 -0000
-> > @@ -457,6 +457,7 @@ config BLK_DEV_AEC62XX
-> >  
-> >  config BLK_DEV_ALI15X3
-> >  	tristate "ALI M15x3 chipset support"
-> > +	depends on X86
-> >  	help
-> >  	  This driver ensures (U)DMA support for ALI 1533, 1543 and 1543C
-> >  	  onboard chipsets.  It also tests for Simplex mode and enables
+Jeff Garzik wrote:
+> Brett Russ wrote:
 > 
-> AFAIK the ALI 1533 and 1543 are generic PCI southbridges that can be
-> used on any PCI bus, so I wouldn't limit them to X86 only.
+>> I coded this because ata_pass_thru_cc() (in the dev branch) and other
+>> functions call tf_read() which is supported for most except ahci.
+>> I've been unable to test because I'm leaving on vacation and am in a
+>> last minute rush but wanted to get this out there for comments.
+>>
+>> Signed-off-by: Brett Russ <russb@emc.com>
+> 
+> 
+> I checked the attached patch into a local repository, but haven't yet 
+> merged it into libata-dev-2.6, or tested it.
 
-The Simtec (ex Chalice) CATS uses an ALI 1543, and that is an ARM
+The reason I didn't just use ata_tf_from_fis() was because I didn't 
+think it was valid to overload tf->command with status and tf->feature 
+with error.  It was commented as a host->device FIS translation, where 
+those fields would line up with the properly named tf fields.
 
--- 
-Ben (ben@fluff.org, http://www.fluff.org/)
+As long as the overload is fine then this is certainly simpler than my 
+patch.
 
-  'a smiley only costs 4 bytes'
+BR
+
+<snip>
+
+> +static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+> +{
+> +	struct ahci_port_priv *pp = ap->private_data;
+> +	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+> +
+> +	ata_tf_from_fis(d2h_fis, tf);
+>  }
+>  
+>  static void ahci_fill_sg(struct ata_queued_cmd *qc)
+
