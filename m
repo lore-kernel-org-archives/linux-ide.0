@@ -1,184 +1,84 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [BK PATCHES] 2.6.x libata updates
-Date: Wed, 02 Mar 2005 03:29:41 -0500
-Message-ID: <42257975.1010806@pobox.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [patch ide-dev 8/9] make ide_task_ioctl() use REQ_DRIVE_TASKFILE
+Date: Wed, 2 Mar 2005 11:09:02 +0100
+Message-ID: <58cb370e050302020950da588a@mail.gmail.com>
+References: <Pine.GSO.4.58.0502241547400.13534@mion.elka.pw.edu.pl>
+	 <200502271731.29448.bzolnier@elka.pw.edu.pl>
+	 <422337A1.4060806@gmail.com>
+	 <200502281714.55960.bzolnier@elka.pw.edu.pl>
+	 <20050301042116.GA9001@htj.dyndns.org>
+	 <58cb370e05030100424d98c85c@mail.gmail.com>
+	 <20050301092914.GA14007@htj.dyndns.org>
+	 <58cb370e05030101592a46c258@mail.gmail.com>
+	 <42255878.7080908@pobox.com>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030909050502080502040709"
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:24041 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262223AbVCBI34 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Mar 2005 03:29:56 -0500
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Received: from wproxy.gmail.com ([64.233.184.198]:5920 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262252AbVCBKJD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2005 05:09:03 -0500
+Received: by wproxy.gmail.com with SMTP id 68so177495wra
+        for <linux-ide@vger.kernel.org>; Wed, 02 Mar 2005 02:09:02 -0800 (PST)
+In-Reply-To: <42255878.7080908@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------030909050502080502040709
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+On Wed, 02 Mar 2005 01:08:56 -0500, Jeff Garzik <jgarzik@pobox.com> wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > Yes but it seems that you've assumed that ioctl == flagged taskfile
+> > and fs/internal == normal taskfile which is _not_ what I aim for.
+> >
+> > I want fully-flagged taskfile handling like flagged_taskfile() and "hot path"
+> > simpler taskfile handling like do_rw_taskfile() (at least for now - we can
+> > remove "hot path" later) where both can be used for fs/internal/ioctl requests
+> > (depending on the flags).
+> 
+> There is no effective difference in performance between
+> 
+>         writeb()
+>         writeb()
+>         writeb()
+>         writeb()
+> 
+> and
+> 
+>         if (bit 1)
+>                 writeb()
+>         if (bit 2)
+>                 writeb()
+>         if (bit 3)
+>                 writeb()
+>         if (bit 4)
+>                 writeb()
+> 
+> The cost of a repeated bit test on the same unsigned long is _zero_.
+> It's already in L1 cache.  The I/Os are slow, and adding bit tests will
 
-Minor stuff that was pending.
+certainly it is not _zero_ ;-)
 
+I agree that it is negligible compared to the cost of I/O
 
---------------030909050502080502040709
-Content-Type: text/plain;
- name="changelog.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="changelog.txt"
+> not measurably decrease performance.  (this is the reason why I do not
+> object to using ioread32() and iowrite32()...  it just adds a simple test)
+> 
+> Plus, it is better to have a single path for all taskfiles, to ensure
+> that the path is well-tested.
+> 
+> libata's ->tf_load() and ->tf_read() hooks should be updated to use the
+> more fine-grained flags that Tejun is proposing.
+> 
+> Note that on SATA, this is largely irrelevant.  The functions
+> ata_tf_read() and ata_tf_load() should be updated for flagged taskfiles,
+> because these will be used with PATA drivers.
+> 
+> The hooks implemented in individual SATA drivers will not be updated.
+> The reason is that SATA transmits an entire copy of the taskfile to/from
+> the device all at once, in the form of a Frame Information Structure
+> (FIS) -- essentially a SATA packet.
 
-Please do a
+agreed
 
-	bk pull bk://gkernel.bkbits.net/libata-2.6
-
-This will update the following files:
-
- drivers/scsi/ahci.c       |   12 ++++++------
- drivers/scsi/sata_qstor.c |   20 ++++++++++----------
- drivers/scsi/sata_vsc.c   |    4 ++--
- 3 files changed, 18 insertions(+), 18 deletions(-)
-
-through these ChangeSets:
-
-<tklauser:nuerscht.ch>:
-  o drivers/scsi/ahci: Use the DMA_{64,32}BIT_MASK constants
-  o drivers/scsi/sata_vsc: Use the DMA_{64,32}BIT_MASK constants
-
-Jeff Garzik:
-  o [libata ahci] Print out port id on error messages
-
-Mark Lord:
-  o [libata qstor] minor update per LKML comments
-
-
---------------030909050502080502040709
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-diff -Nru a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
---- a/drivers/scsi/ahci.c	2005-03-02 03:28:50 -05:00
-+++ b/drivers/scsi/ahci.c	2005-03-02 03:28:50 -05:00
-@@ -574,7 +574,7 @@
- 	writel(tmp, port_mmio + PORT_CMD);
- 	readl(port_mmio + PORT_CMD); /* flush */
- 
--	printk(KERN_WARNING "ata%u: error occurred, port reset\n", ap->port_no);
-+	printk(KERN_WARNING "ata%u: error occurred, port reset\n", ap->id);
- }
- 
- static void ahci_eng_timeout(struct ata_port *ap)
-@@ -766,10 +766,10 @@
- 
- 	using_dac = hpriv->cap & HOST_CAP_64;
- 	if (using_dac &&
--	    !pci_set_dma_mask(pdev, 0xffffffffffffffffULL)) {
--		rc = pci_set_consistent_dma_mask(pdev, 0xffffffffffffffffULL);
-+	    !pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
-+		rc = pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
- 		if (rc) {
--			rc = pci_set_consistent_dma_mask(pdev, 0xffffffffULL);
-+			rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
- 			if (rc) {
- 				printk(KERN_ERR DRV_NAME "(%s): 64-bit DMA enable failed\n",
- 					pci_name(pdev));
-@@ -779,13 +779,13 @@
- 
- 		hpriv->flags |= HOST_CAP_64;
- 	} else {
--		rc = pci_set_dma_mask(pdev, 0xffffffffULL);
-+		rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
- 		if (rc) {
- 			printk(KERN_ERR DRV_NAME "(%s): 32-bit DMA enable failed\n",
- 				pci_name(pdev));
- 			return rc;
- 		}
--		rc = pci_set_consistent_dma_mask(pdev, 0xffffffffULL);
-+		rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
- 		if (rc) {
- 			printk(KERN_ERR DRV_NAME "(%s): 32-bit consistent DMA enable failed\n",
- 				pci_name(pdev));
-diff -Nru a/drivers/scsi/sata_qstor.c b/drivers/scsi/sata_qstor.c
---- a/drivers/scsi/sata_qstor.c	2005-03-02 03:28:50 -05:00
-+++ b/drivers/scsi/sata_qstor.c	2005-03-02 03:28:50 -05:00
-@@ -261,11 +261,11 @@
- 		u32 len;
- 
- 		addr = sg_dma_address(sg);
--		*(u64 *)prd = cpu_to_le64(addr);
-+		*(__le64 *)prd = cpu_to_le64(addr);
- 		prd += sizeof(u64);
- 
- 		len = sg_dma_len(sg);
--		*(u32 *)prd = cpu_to_le32(len);
-+		*(__le32 *)prd = cpu_to_le32(len);
- 		prd += sizeof(u64);
- 
- 		VPRINTK("PRD[%u] = (0x%llX, 0x%X)\n", nelem,
-@@ -298,10 +298,10 @@
- 	/* host control block (HCB) */
- 	buf[ 0] = QS_HCB_HDR;
- 	buf[ 1] = hflags;
--	*(u32 *)(&buf[ 4]) = cpu_to_le32(qc->nsect * ATA_SECT_SIZE);
--	*(u32 *)(&buf[ 8]) = cpu_to_le32(qc->n_elem);
-+	*(__le32 *)(&buf[ 4]) = cpu_to_le32(qc->nsect * ATA_SECT_SIZE);
-+	*(__le32 *)(&buf[ 8]) = cpu_to_le32(qc->n_elem);
- 	addr = ((u64)pp->pkt_dma) + QS_CPB_BYTES;
--	*(u64 *)(&buf[16]) = cpu_to_le64(addr);
-+	*(__le64 *)(&buf[16]) = cpu_to_le64(addr);
- 
- 	/* device control block (DCB) */
- 	buf[24] = QS_DCB_HDR;
-@@ -566,10 +566,10 @@
- 	int rc, have_64bit_bus = (bus_info & QS_HPHY_64BIT);
- 
- 	if (have_64bit_bus &&
--	    !pci_set_dma_mask(pdev, 0xffffffffffffffffULL)) {
--		rc = pci_set_consistent_dma_mask(pdev, 0xffffffffffffffffULL);
-+	    !pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
-+		rc = pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
- 		if (rc) {
--			rc = pci_set_consistent_dma_mask(pdev, 0xffffffffULL);
-+			rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
- 			if (rc) {
- 				printk(KERN_ERR DRV_NAME
- 					"(%s): 64-bit DMA enable failed\n",
-@@ -578,14 +578,14 @@
- 			}
- 		}
- 	} else {
--		rc = pci_set_dma_mask(pdev, 0xffffffffULL);
-+		rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
- 		if (rc) {
- 			printk(KERN_ERR DRV_NAME
- 				"(%s): 32-bit DMA enable failed\n",
- 				pci_name(pdev));
- 			return rc;
- 		}
--		rc = pci_set_consistent_dma_mask(pdev, 0xffffffffULL);
-+		rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
- 		if (rc) {
- 			printk(KERN_ERR DRV_NAME
- 				"(%s): 32-bit consistent DMA enable failed\n",
-diff -Nru a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
---- a/drivers/scsi/sata_vsc.c	2005-03-02 03:28:50 -05:00
-+++ b/drivers/scsi/sata_vsc.c	2005-03-02 03:28:50 -05:00
-@@ -285,10 +285,10 @@
- 	/*
- 	 * Use 32 bit DMA mask, because 64 bit address support is poor.
- 	 */
--	rc = pci_set_dma_mask(pdev, 0xFFFFFFFFULL);
-+	rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
- 	if (rc)
- 		goto err_out_regions;
--	rc = pci_set_consistent_dma_mask(pdev, 0xFFFFFFFFULL);
-+	rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
- 	if (rc)
- 		goto err_out_regions;
- 
-
---------------030909050502080502040709--
+Tejun, one-path approach for IDE driver is fine with me
