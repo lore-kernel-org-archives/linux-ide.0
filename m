@@ -1,94 +1,77 @@
-From: Tobias Klauser <tklauser@nuerscht.ch>
-Subject: [KJ] Re: [PATCH UPDATE] drivers/ide/cs5520.c : Use the DMA_{64,
-	32}BIT_MASK constants
-Date: Thu, 10 Mar 2005 17:59:24 +0100
-Message-ID: <20050310165924.GA4213@localhost.localdomain>
-References: <20050308133358.GA5311@localhost.localdomain>
-	<58cb370e050310083053a0e495@mail.gmail.com>
+From: Brett Russ <russb@emc.com>
+Subject: Re: [PATCH] Re: AHCI: support for tf_read (RFC)
+Date: Thu, 10 Mar 2005 11:50:56 -0500
+Message-ID: <42307AF0.4030309@emc.com>
+References: <20050224232413.4869514FC5@lns1032.lss.emc.com> <421FB272.4030502@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============77111840491477524=="
-In-Reply-To: <58cb370e050310083053a0e495@mail.gmail.com>
-List-Unsubscribe: <http://lists.osdl.org/mailman/listinfo/kernel-janitors>,
-	<mailto:kernel-janitors-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/kernel-janitors>
-List-Post: <mailto:kernel-janitors@lists.osdl.org>
-List-Help: <mailto:kernel-janitors-request@lists.osdl.org?subject=help>
-List-Subscribe: <http://lists.osdl.org/mailman/listinfo/kernel-janitors>,
-	<mailto:kernel-janitors-request@lists.osdl.org?subject=subscribe>
-Sender: kernel-janitors-bounces@lists.osdl.org
-Errors-To: kernel-janitors-bounces@lists.osdl.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: kernel-janitors@lists.osdl.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from mailhub.lss.emc.com ([168.159.2.31]:51781 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S262744AbVCJQvH
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Mar 2005 11:51:07 -0500
+In-Reply-To: <421FB272.4030502@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, ric@emc.com
 
---===============77111840491477524==
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Jeff Garzik wrote:
+> I checked the attached patch into a local repository, but haven't yet 
+> merged it into libata-dev-2.6, or tested it.
 
-On Thu, Mar 10, 2005 at 05:30:12PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> On Tue, 8 Mar 2005 14:33:58 +0100, Tobias Klauser <tklauser@nuerscht.ch> wrote:
-> > Description: Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h
-> > when calling pci_set_dma_mask() or pci_set_consistent_dma_mask()
-> > See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
+Jeff,
+
+The below works for me in testing.  Can you push into libata-2.6?
+
+Thanks,
+BR
+
+> ------------------------------------------------------------------------
 > 
-> only DMA_32BIT_MASK constant is used in the patch
+> # This is a BitKeeper generated diff -Nru style patch.
+> #
+> # ChangeSet
+> #   2005/02/25 18:18:09-05:00 jgarzik@pobox.com 
+> #   [libata ahci] support ->tf_read hook
+> # 
+> # drivers/scsi/ahci.c
+> #   2005/02/25 18:18:03-05:00 jgarzik@pobox.com +11 -0
+> #   [libata ahci] support ->tf_read hook
+> # 
+> diff -Nru a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+> --- a/drivers/scsi/ahci.c	2005-02-25 18:18:23 -05:00
+> +++ b/drivers/scsi/ahci.c	2005-02-25 18:18:23 -05:00
+> @@ -177,6 +177,7 @@
+>  static int ahci_port_start(struct ata_port *ap);
+>  static void ahci_port_stop(struct ata_port *ap);
+>  static void ahci_host_stop(struct ata_host_set *host_set);
+> +static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+>  static void ahci_qc_prep(struct ata_queued_cmd *qc);
+>  static u8 ahci_check_status(struct ata_port *ap);
+>  static u8 ahci_check_err(struct ata_port *ap);
+> @@ -209,6 +210,8 @@
+>  	.check_err		= ahci_check_err,
+>  	.dev_select		= ata_noop_dev_select,
+>  
+> +	.tf_read		= ahci_tf_read,
+> +
+>  	.phy_reset		= ahci_phy_reset,
+>  
+>  	.qc_prep		= ahci_qc_prep,
+> @@ -460,6 +463,14 @@
+>  	void *mmio = (void *) ap->ioaddr.cmd_addr;
+>  
+>  	return (readl(mmio + PORT_TFDATA) >> 8) & 0xFF;
+> +}
+> +
+> +static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+> +{
+> +	struct ahci_port_priv *pp = ap->private_data;
+> +	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+> +
+> +	ata_tf_from_fis(d2h_fis, tf);
+>  }
+>  
+>  static void ahci_fill_sg(struct ata_queued_cmd *qc)
 
-I just took the same description for all patches of this series. Some of
-them do not include DMA_64BIT_MASK.
-
-> > Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
-> > 
-> > --- linux-2.6.11.orig/drivers/ide/pci/cs5520.c  2005-03-02 12:50:39.000000000 +0100
-> > +++ linux-2.6.11/drivers/ide/pci/cs5520.c       2005-03-03 11:46:46.000000000 +0100
-> > @@ -227,7 +227,7 @@ static int __devinit cs5520_init_one(str
-> >                 return 1;
-> >         }
-> >         pci_set_master(dev);
-> > -       if (pci_set_dma_mask(dev, 0xFFFFFFFF)) {
-> > +       if (pci_set_dma_mask(dev, DMA_32BIT_MASK)) {
-> >                 printk(KERN_WARNING "cs5520: No suitable DMA available.\n");
-> >                 return -ENODEV;
-> >         }
-> 
-> You need to include <linux/dma-mapping.h> explicitly
-> or build will fail for some architectures, i.e. please see:
-> http://linus.bkbits.net:8080/linux-2.5/cset@41d833427yYZzu6TxydNrr5z6f02cg?nav=index.html|src/|src/drivers|src/drivers/ide|related/drivers/ide/setup-pci.c
-
-I only compile-tested this patch on x86 and there it worked. So here's an
-updated patch:
-
-Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
-
---- linux-2.6.11.orig/drivers/ide/pci/cs5520.c	2005-03-02 12:50:39.000000000 +0100
-+++ linux-2.6.11/drivers/ide/pci/cs5520.c	2005-03-10 17:55:23.894909672 +0100
-@@ -51,6 +51,8 @@
- #include <asm/io.h>
- #include <asm/irq.h>
- 
-+#include <linux/dma-mapping.h>
-+
- struct pio_clocks
- {
- 	int address;
-@@ -227,7 +229,7 @@ static int __devinit cs5520_init_one(str
- 		return 1;
- 	}
- 	pci_set_master(dev);
--	if (pci_set_dma_mask(dev, 0xFFFFFFFF)) {
-+	if (pci_set_dma_mask(dev, DMA_32BIT_MASK)) {
- 		printk(KERN_WARNING "cs5520: No suitable DMA available.\n");
- 		return -ENODEV;
- 	}
-
---===============77111840491477524==
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-_______________________________________________
-Kernel-janitors mailing list
-Kernel-janitors@lists.osdl.org
-http://lists.osdl.org/mailman/listinfo/kernel-janitors
-
---===============77111840491477524==--
