@@ -1,52 +1,48 @@
-From: Uwe Koziolek <uwe.koziolek@gmx.net>
-Subject: Serial ATA SIS 964
-Date: Sun, 04 Apr 2004 14:24:05 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1081081444.2384.77.camel@uk2.local>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] QD65xx I/O ports
+Date: Tue, 6 Apr 2004 13:31:55 +0200 (MEST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <Pine.GSO.4.58.0404061330470.4158@waterleaf.sonytel.be>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-on9qFy37JL+rjqhoAka7"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:27334 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S262345AbUDDMYF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Apr 2004 08:24:05 -0400
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Daniela Engert <dani@ngrt.de>, linux-ide@vger.kernel.org
 
 
---=-on9qFy37JL+rjqhoAka7
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+I/O port numbers can be larger than 8-bit on many platforms (this caused a
+warning when {out,in}b() cast reg to a pointer on platforms with memory mapped
+I/O)
 
-Hello Jeff,
+--- linux-2.6.5/drivers/ide/legacy/qd65xx.c.orig	2003-10-09 10:02:47.000000000 +0200
++++ linux-2.6.5/drivers/ide/legacy/qd65xx.c	2004-04-01 13:31:54.000000000 +0200
+@@ -92,7 +92,7 @@
 
-it exists a variant of the serial ATA SIS 180. This variant has the same
-functionality like the SIS 180 but a different PCI ID 0x0181.
-I have no motherboard with that behavior. But I think it is good idea to
-include this PCI ID too into the driver.
-Thanks to Daniela Engert for this information.
+ static int timings[4]={-1,-1,-1,-1}; /* stores current timing for each timer */
 
-regards
+-static void qd_write_reg (u8 content, u8 reg)
++static void qd_write_reg (u8 content, unsigned long reg)
+ {
+ 	unsigned long flags;
 
-Uwe
+@@ -101,7 +101,7 @@
+ 	spin_unlock_irqrestore(&ide_lock, flags);
+ }
 
+-u8 __init qd_read_reg (u8 reg)
++u8 __init qd_read_reg (unsigned long reg)
+ {
+ 	unsigned long flags;
+ 	u8 read;
 
+Gr{oetje,eeting}s,
 
---=-on9qFy37JL+rjqhoAka7
-Content-Disposition: attachment; filename=sata_sis.c.diff
-Content-Type: text/x-patch; name=sata_sis.c.diff; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+						Geert
 
---- sata_sis.c.old	2004-03-21 20:35:03.000000000 +0100
-+++ sata_sis.c	2004-04-04 12:20:51.000000000 +0200
-@@ -46,6 +46,7 @@
- 
- static struct pci_device_id sis_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_180, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
-+	{ PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_181, PCI_ANA_ID, PCI_ANI_ID, 0, 0, sis_180 },
- 	{ }	/* terminate list */
- };
- 
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
---=-on9qFy37JL+rjqhoAka7--
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
