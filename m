@@ -1,56 +1,63 @@
-From: Eric Mudama <edmudama@gmail.com>
-Subject: Re: Kernel 2.6.9 undecoded slave problem, fixed in 2.6.10-rc2-bk8!
-Date: Thu, 2 Dec 2004 14:53:39 -0700
-Message-ID: <311601c904120213533b67ed3a@mail.gmail.com>
-References: <Pine.LNX.4.61.0412020925040.25494@p500>
-Reply-To: Eric Mudama <edmudama@gmail.com>
+From: Eldad Zack <eldad@stoneshaft.ath.cx>
+Subject: kernel boot hang, SATA_VIA compiled without APIC_IO
+Date: Fri, 3 Dec 2004 03:45:42 +0200
+Message-ID: <200412030345.45282.eldad@stoneshaft.ath.cx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: multipart/signed;
+  boundary="nextPart1232455.TYaQ19hRxX";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261776AbULBV4D@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0412020925040.25494@p500>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 212.199.9.99.forward.012.net.il ([212.199.9.99]:41634 "EHLO
+	stoneshaft.ath.cx") by vger.kernel.org with ESMTP id S261838AbULCBre
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Dec 2004 20:47:34 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Um... if it happens on one controller and not another, the bug
-shouldn't be in the drives themselves.  Every Maxtor drive ever made
-has a unique serial number, and the ones people are seeing are
-completely invalid.
+--nextPart1232455.TYaQ19hRxX
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-This issue should be root caused, something is getting stomped on, and
-it may affect more than just the ID of the drive.  I fear that these
-are bandaids covering some underlying issue.
+Hello,
 
---eric
+I've recently got a SATA capable machine (Via chipset) and I've exprienced =
+a=20
+nasty hang at boottime, using kernel 2.6.9.
+After some recompiling different parameters it boiled down to APIC_IO being=
+=20
+not selected (this is a UP machine).
+
+Without APIC_IO selected the system would hang while loading SATA.
+
+I've only tried 2.6.5 to notice it would not hang but would emit messeges a=
+s=20
+"hde: lost interrupt", and eventually go on with the boot, the sata being=20
+unusable.
+
+Out of curiousity, I'd like to know if APIC_IO is absolutly needed when=20
+dealing with SATA, and also, I'd like to help debug this problem so that a=
+=20
+kernel compiled without APIC_IO would at the very least not hang...
 
 
-On Thu, 2 Dec 2004 09:27:20 -0500 (EST), Justin Piszcz
-<jpiszcz@lucidpixels.com> wrote:
-> The interesting part of all of this is that this only occurs when I have
-> the two cdroms on a promise controller, on the same IDE channel, normally
-> I have them both on the motherboard as master and slave.  I wanted to make
-> sure the card worked however, so switched the connection over to the
-> promise board and then I am getting the same error as the guy above,
-> except in my case it is with two identical CDROMS and not hard drives.
-> 
-> The problem occurs with 2.6.9.
-> 
-> -------------------------------------------------------------------------
-> 
-> Update: With 2.6.10-rc2-bk8, it has fixed the problem!
-> 
-> hde: SAMSUNG SC-140B, ATAPI CD/DVD-ROM drive
-> hdf: SAMSUNG SC-140B, ATAPI CD/DVD-ROM drive
-> ide2 at 0xd8f8-0xd8ff,0xd8f2 on irq 11
-> hde: ATAPI 40X CD-ROM drive, 128kB Cache
-> Uniform CD-ROM driver Revision: 3.20
-> hdf: ATAPI 40X CD-ROM drive, 128kB Cache
-> Probing IDE interface ide3...
-> 
-> root@p500b:~# mount /dev/hde /mnt/cd1
-> mount: block device /dev/hde is write-protected, mounting read-only
-> root@p500b:~# mount /dev/hdf /mnt/cd2
-> mount: block device /dev/hdf is write-protected, mounting read-only
-> root@p500b:~#
+=2D-=20
+Eldad Zack <eldad@stoneshaft.ath.cx>
+Key/Fingerprint at pgp.mit.edu, ID 0x96EA0A93
+
+--nextPart1232455.TYaQ19hRxX
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.6 (GNU/Linux)
+
+iD8DBQBBr8VJT+MN7JbqCpMRAsOJAJwPoglNolmGXWavlVgLKUFMtYNk3ACeI8j/
+rMR4m0XN7D47ySbsjzK0QoA=
+=Y35M
+-----END PGP SIGNATURE-----
+
+--nextPart1232455.TYaQ19hRxX--
