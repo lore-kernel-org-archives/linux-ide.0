@@ -1,40 +1,33 @@
-From: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>
-Subject: Re: AIC 8110
-Date: Wed, 19 Jan 2005 21:10:57 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.0501192037110.30872@dingo.iwr.uni-heidelberg.de>
-References: <Pine.LNX.4.44.0501192013300.14873-100000@kenzo.iwr.uni-heidelberg.de>
- <58cb370e050119113410ce3baf@mail.gmail.com>
+From: John Bucy <bucy@gloop.org>
+Subject: sata_promise on alpha, Promise SATAII TX4?
+Date: Wed, 19 Jan 2005 15:40:55 -0500
+Message-ID: <1106167255.25628.68.camel@catalepsy.pdl.cmu.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay.uni-heidelberg.de ([129.206.100.212]:10715 "EHLO
-	relay.uni-heidelberg.de") by vger.kernel.org with ESMTP
-	id S261764AbVASULD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 19 Jan 2005 15:11:03 -0500
-In-Reply-To: <58cb370e050119113410ce3baf@mail.gmail.com>
+Received: from BACHE.ECE.CMU.EDU ([128.2.129.23]:11496 "EHLO bache.ece.cmu.edu")
+	by vger.kernel.org with ESMTP id S261882AbVASUk4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2005 15:40:56 -0500
+Received: from catalepsy.pdl.cmu.edu (CATALEPSY.PDL.CMU.EDU [128.2.134.92])
+	by bache.ece.cmu.edu (Postfix) with ESMTP id 6A1E4AD
+	for <linux-ide@vger.kernel.org>; Wed, 19 Jan 2005 15:40:55 -0500 (EST)
+Received: from bucy by catalepsy.pdl.cmu.edu with local (Exim 4.34)
+	id 1CrMdL-0003YS-8P
+	for linux-ide@vger.kernel.org; Wed, 19 Jan 2005 15:40:55 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wed, 19 Jan 2005, Bartlomiej Zolnierkiewicz wrote:
 
-> Since it is 4xSATA controller I bet that it is based on SiL3114.
-> You can add the PCI ID to drivers/scsi/sata_sil.c and give it a go...
+1.  Are Promise SATA cards known to work (or not work) on Alpha-based
+systems?
 
-Thanks for the suggestion, but I don't have the mainboard yet. I just 
-wanted to check whether this chip is supported, as about the only 
-difference between this Asus mainboard and Tyan Tomcat i7210 is that 
-Tyan uses a real Sil3114 :-)
+2.  I saw the patch posted here to make sata_promise work for 
+the PDC20518/SATAII150TX4 ... what's the experience with this like to
+date?  Is it stable?
 
-I like more the design of the Asus mainboard (better airflow with the 
-case and components that I have), so I will wait a bit with the 
-purchase decision to give more people a chance to reply.
 
--- 
-Bogdan Costescu
 
-IWR - Interdisziplinaeres Zentrum fuer Wissenschaftliches Rechnen
-Universitaet Heidelberg, INF 368, D-69120 Heidelberg, GERMANY
-Telephone: +49 6221 54 8869, Telefax: +49 6221 54 8868
-E-mail: Bogdan.Costescu@IWR.Uni-Heidelberg.De
+thanks
+john
