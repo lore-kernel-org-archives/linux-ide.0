@@ -1,50 +1,38 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2.6.11-rc3 08/11] ide: remove REQ_DRIVE_TASK handling
-Date: Thu, 24 Feb 2005 16:45:07 +0100
-Message-ID: <58cb370e0502240745fcba7a3@mail.gmail.com>
+Subject: Re: [PATCH 2.6.11-rc3 10/11] ide: make ide_cmd_ioctl() use TASKFILE
+Date: Thu, 24 Feb 2005 16:50:39 +0100
+Message-ID: <58cb370e050224075040f5c031@mail.gmail.com>
 References: <20050210083808.48E9DD1A@htj.dyndns.org>
-	 <20050210083844.AD987173@htj.dyndns.org>
+	 <20050210083854.BD13DFBD@htj.dyndns.org>
 Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <20050210083844.AD987173@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Received: from wproxy.gmail.com ([64.233.184.205]:7886 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262404AbVBXPum (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Feb 2005 10:50:42 -0500
+Received: by wproxy.gmail.com with SMTP id 68so208765wra
+        for <linux-ide@vger.kernel.org>; Thu, 24 Feb 2005 07:50:41 -0800 (PST)
+In-Reply-To: <20050210083854.BD13DFBD@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
-List-Id: linux-ide@vger.kernel.org
 
-> @@ -945,33 +931,7 @@ static ide_startstop_t execute_drive_cmd
->                 if (args->tf_out_flags.all != 0)
->                         return flagged_taskfile(drive, args);
->                 return do_rw_taskfile(drive, args);
-> -       } else if (rq->flags & REQ_DRIVE_TASK) {
-> -               u8 *args = rq->buffer;
-> -               u8 sel;
-> -
-> -               if (!args)
-> -                       goto done;
-> -#ifdef DEBUG
-> -               printk("%s: DRIVE_TASK_CMD ", drive->name);
-> -               printk("cmd=0x%02x ", args[0]);
-> -               printk("fr=0x%02x ", args[1]);
-> -               printk("ns=0x%02x ", args[2]);
-> -               printk("sc=0x%02x ", args[3]);
-> -               printk("lcyl=0x%02x ", args[4]);
-> -               printk("hcyl=0x%02x ", args[5]);
-> -               printk("sel=0x%02x\n", args[6]);
-> -#endif
-> -               hwif->OUTB(args[1], IDE_FEATURE_REG);
-> -               hwif->OUTB(args[3], IDE_SECTOR_REG);
-> -               hwif->OUTB(args[4], IDE_LCYL_REG);
-> -               hwif->OUTB(args[5], IDE_HCYL_REG);
-> -               sel = (args[6] & ~0x10);
-> -               if (drive->select.b.unit)
-> -                       sel |= 0x10;
+> +       in_valid->b.status_command      = 1;
+> +       in_valid->b.error_feature       = 1;
+> +       in_valid->b.nsector             = 1;
 
-do_rw_taskfile() always sets LBA bit in Device register for LBA
-capable disks, so converting HDIO_DRIVE_TASK to use taskfile
-transport removes (theoretical?) possibility of sending CHS
-commands to LBA capable disks.
+ide_end_drive_cmd() must be fixed first to respect ->tf_in_flags
+and it must be done *without* affecting HDIO_DRIVE_TASKFILE.
 
-This issue is addressed in my patch series.
+>  extern int ide_driveid_update(ide_drive_t *);
+> -extern int ide_ata66_check(ide_drive_t *, ide_task_t *);
+> +int ide_ata66_check(ide_drive_t *, ide_task_t *);
+>  extern int ide_config_drive_speed(ide_drive_t *, u8);
+>  extern u8 eighty_ninty_three (ide_drive_t *);
+> -extern int set_transfer(ide_drive_t *, ide_task_t *);
+> +int set_transfer(ide_drive_t *, ide_task_t *);
+>  extern int taskfile_lib_get_identify(ide_drive_t *drive, u8 *);
+
+leftovers from previous version of the patch
