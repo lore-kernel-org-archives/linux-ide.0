@@ -1,52 +1,99 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide/amd74xx: fix section references
-Date: Fri, 4 Mar 2005 16:40:30 +0100
-Message-ID: <58cb370e05030407405572aad2@mail.gmail.com>
-References: <20050303194821.55fec933.rddunlap@osdl.org>
-	 <20050304080307.GC1646@ucw.cz>
-	 <58cb370e05030402122a9290b6@mail.gmail.com>
-	 <42287FC0.6060204@osdl.org>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: <Stuart_Hayes@Dell.com>
+Subject: RE: ide-cd question
+Date: Fri, 4 Mar 2005 16:37:12 -0600
+Message-ID: <7A8F92187EF7A249BF847F1BF4903C04010EE978@ausx2kmpc103.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.193]:61576 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262889AbVCDPkb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2005 10:40:31 -0500
-Received: by wproxy.gmail.com with SMTP id 68so873744wra
-        for <linux-ide@vger.kernel.org>; Fri, 04 Mar 2005 07:40:31 -0800 (PST)
-In-Reply-To: <42287FC0.6060204@osdl.org>
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C5210A.B5061A58"
+Received: from ausc60pc101.us.dell.com ([143.166.85.206]:18950 "EHLO
+	ausc60pc101.us.dell.com") by vger.kernel.org with ESMTP
+	id S263148AbVCDWh1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Mar 2005 17:37:27 -0500
+content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rddunlap@osdl.org>
-Cc: Vojtech Pavlik <vojtech@suse.cz>, akpm <akpm@osdl.org>, linux-ide@vger.kernel.org, hch@infradead.org
+To: axboe@suse.de
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com, stuarthayes@austin.rr.com
 
-On Fri, 04 Mar 2005 07:33:20 -0800, Randy.Dunlap <rddunlap@osdl.org> wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > On Fri, 4 Mar 2005 09:03:07 +0100, Vojtech Pavlik <vojtech@suse.cz> wrote:
-> >
-> >>On Thu, Mar 03, 2005 at 07:48:21PM -0800, Randy.Dunlap wrote:
-> >>
-> >>>ide/pci/amd74xx:  data structs point to __init text which should be
-> >>>  __devinit;
-> >>>unless (a) these are going away real soon,
-> >>>or (b) this just can't happen, isn't a real problem,
-> >>>or (c) other ?
-> >>
-> >>This is a problem in most of the IDE PCI drivers. It is a problem if IDE
-> >>hotplug is to be expected, and shouldn't be causing any immediate harm
-> >>if IDE controllers can't be hotplugged. AMD74xx certainly can't.
-> 
-> Yes, I have a list of other offenders, I just wanted to get
-> comments first.
-> 
-> >>However, I believe it's correct to fix that.
-> >
-> >
-> > Some time ago hch made a patch fixing all IDE PCI drivers.
-> > It was queued to be merged after hotplug support is added
-> > but may be merged earlier if needed (to kill sparse warnings?).
-> 
-> So I don't need to fix the remaining offenders, right?
+This is a multi-part message in MIME format.
 
-Yep, I'll apply patch from hch.
+------_=_NextPart_001_01C5210A.B5061A58
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+
+>=20
+> There's still a problem here, you are not initializing nsectors for
+> non-pc requests. And your comments wrap :)=20
+>=20
+>         int nsectors =3D rq->hard_nr_sectors;
+>=20
+>         if (blk_pc_request(rq))
+>                 nsectors =3D (rq->data_len + 511) >> 9;
+>         if (!nsectors)
+>                 nsectors =3D 1;
+>=20
+>         ...
+>=20
+> Can you resend with that fixed up and with a Signed-off-by header?
+
+Here it is.  Thanks for all the help.  I'm attaching as a file, too,
+just in case it gets garbled again.
+Stuart
+
+
+Signed-off-by: Stuart Hayes <stuart_hayes@dell.com>
+
+--- linux-2.6.11/drivers/ide/ide-io.c.orig	2005-03-04
+16:11:14.000000000 -0500
++++ linux-2.6.11/drivers/ide/ide-io.c	2005-03-04 16:19:19.000000000
+-0500
+@@ -516,7 +516,19 @@ static ide_startstop_t ide_atapi_error(i
+ 		hwif->OUTB(WIN_IDLEIMMEDIATE, IDE_COMMAND_REG);
+=20
+ 	if (rq->errors >=3D ERROR_MAX) {
+-		drive->driver->end_request(drive, 0, 0);
++		/*=20
++		 * make sure request is fully ended--otherwise the=20
++		 * command will be retried without rq->errors getting
++		 * reset to zero, which could cause us to get stuck
++		 * in a loop with infinite retries without any more
++		 * reset attempts
++		 */
++		int nsectors =3D rq->hard_nr_sectors;
++		if (blk_pc_request(rq))
++			nsectors =3D (rq->data_len + 511) >> 9;
++		if (!nsectors)
++			nsectors =3D 1;
++		drive->driver->end_request(drive, 0, nsectors);
+ 	} else {
+ 		if ((rq->errors & ERROR_RESET) =3D=3D ERROR_RESET) {
+ 			++rq->errors;
+
+------_=_NextPart_001_01C5210A.B5061A58
+Content-Type: application/octet-stream;
+	name="atapi_max_errors_d_2.6.11.patch"
+Content-Transfer-Encoding: base64
+Content-Description: atapi_max_errors_d_2.6.11.patch
+Content-Disposition: attachment;
+	filename="atapi_max_errors_d_2.6.11.patch"
+
+LS0tIGxpbnV4LTIuNi4xMS9kcml2ZXJzL2lkZS9pZGUtaW8uYy5vcmlnCTIwMDUtMDMtMDQgMTY6
+MTE6MTQuMDAwMDAwMDAwIC0wNTAwCisrKyBsaW51eC0yLjYuMTEvZHJpdmVycy9pZGUvaWRlLWlv
+LmMJMjAwNS0wMy0wNCAxNjoxOToxOS4wMDAwMDAwMDAgLTA1MDAKQEAgLTUxNiw3ICs1MTYsMTkg
+QEAgc3RhdGljIGlkZV9zdGFydHN0b3BfdCBpZGVfYXRhcGlfZXJyb3IoaQogCQlod2lmLT5PVVRC
+KFdJTl9JRExFSU1NRURJQVRFLCBJREVfQ09NTUFORF9SRUcpOwogCiAJaWYgKHJxLT5lcnJvcnMg
+Pj0gRVJST1JfTUFYKSB7Ci0JCWRyaXZlLT5kcml2ZXItPmVuZF9yZXF1ZXN0KGRyaXZlLCAwLCAw
+KTsKKwkJLyogCisJCSAqIG1ha2Ugc3VyZSByZXF1ZXN0IGlzIGZ1bGx5IGVuZGVkLS1vdGhlcndp
+c2UgdGhlIAorCQkgKiBjb21tYW5kIHdpbGwgYmUgcmV0cmllZCB3aXRob3V0IHJxLT5lcnJvcnMg
+Z2V0dGluZworCQkgKiByZXNldCB0byB6ZXJvLCB3aGljaCBjb3VsZCBjYXVzZSB1cyB0byBnZXQg
+c3R1Y2sKKwkJICogaW4gYSBsb29wIHdpdGggaW5maW5pdGUgcmV0cmllcyB3aXRob3V0IGFueSBt
+b3JlCisJCSAqIHJlc2V0IGF0dGVtcHRzCisJCSAqLworCQlpbnQgbnNlY3RvcnMgPSBycS0+aGFy
+ZF9ucl9zZWN0b3JzOworCQlpZiAoYmxrX3BjX3JlcXVlc3QocnEpKQorCQkJbnNlY3RvcnMgPSAo
+cnEtPmRhdGFfbGVuICsgNTExKSA+PiA5OworCQlpZiAoIW5zZWN0b3JzKQorCQkJbnNlY3RvcnMg
+PSAxOworCQlkcml2ZS0+ZHJpdmVyLT5lbmRfcmVxdWVzdChkcml2ZSwgMCwgbnNlY3RvcnMpOwog
+CX0gZWxzZSB7CiAJCWlmICgocnEtPmVycm9ycyAmIEVSUk9SX1JFU0VUKSA9PSBFUlJPUl9SRVNF
+VCkgewogCQkJKytycS0+ZXJyb3JzOwo=
+
+------_=_NextPart_001_01C5210A.B5061A58--
