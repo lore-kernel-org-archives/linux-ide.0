@@ -1,158 +1,51 @@
-From: "Shai Fultheim" <shai@ftcon.com>
-Subject: RE: Multiple (ICH3) IDE-controllers in a system
-Date: Thu, 6 May 2004 14:05:56 -0700
+From: Marc Singer <elf@buici.com>
+Subject: VIA SATA not recognizing drives
+Date: Sat, 8 May 2004 12:31:00 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200405062105.BLI83826@ms6.netsolmail.com>
-References: <200405061918.BLI57844@ms6.netsolmail.com>
-Reply-To: <shai@ftcon.com>
+Message-ID: <20040508193100.GA31122@buici.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_00D1_01C43373.41072760"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omr2.netsolmail.com ([216.168.230.163]:41915 "EHLO
-	omr2.netsolmail.com") by vger.kernel.org with ESMTP id S263024AbUEFVGS
+Received: from florence.buici.com ([206.124.142.26]:25988 "HELO
+	florence.buici.com") by vger.kernel.org with SMTP id S264138AbUEHTb0
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 May 2004 17:06:18 -0400
-In-Reply-To: <200405061918.BLI57844@ms6.netsolmail.com>
+	Sat, 8 May 2004 15:31:26 -0400
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: 'Vojtech Pavlik' <vojtech@suse.cz>, 'Bartlomiej Zolnierkiewicz' <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
+In using a BK pull from linus's tree (Sat May 8) and applying Jeff
+Garzik's Apr 26 patch, I'm not seeing my SATA drives.  I've tried
+several kernel versions, from 2.6.3 up to this patched 2.6.6-rc?
+version. 
 
-------=_NextPart_000_00D1_01C43373.41072760
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+The dmesg's seem to indicate that the driver is loading.
 
-Vojtech and Bartlomiej,
+  Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+  ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+  VP_IDE: IDE controller at PCI slot 0000:00:0f.1
+  VP_IDE: chipset revision 6
+  VP_IDE: not 100% native mode: will probe irqs later
+  VP_IDE: VIA vt8237 (rev 00) IDE UDMA133 controller on pci0000:00:0f.1
+  ide0: BM-DMA at 0xfc00-0xfc07, BIOS settings: hda:DMA, hdb:pio
+  ide1: BM-DMA at 0xfc08-0xfc0f, BIOS settings: hdc:DMA, hdd:pio
+  hda: ST380021A, ATA DISK drive
+  ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+  hdc: TOSHIBA CD-ROM XM-6202B, ATAPI CD/DVD-ROM drive
+  ide1 at 0x170-0x177,0x376 on irq 15
+  hda: max request size: 128KiB
+  hda: 156301488 sectors (80026 MB) w/2048KiB Cache, CHS=65535/16/63, UDMA(100)
+  hda: hda1
+  libata version 1.02 loaded.
+  sata_via version 0.20
+  sata_via(0000:00:0f.0): routed to hard irq line 10
+  ata1: SATA max UDMA/133 cmd 0xEC00 ctl 0xE802 bmdma 0xDC00 irq 10
+  ata2: SATA max UDMA/133 cmd 0xE400 ctl 0xE002 bmdma 0xDC08 irq 10
+  ata1: no device found (phy stat 00000000)
+  ata1: thread exiting
+  scsi0 : sata_via
+  ata2: no device found (phy stat 00000000)
+  ata2: thread exiting
+  scsi1 : sata_via
 
-Attached patch that fix the problem according to (2) below.  Let me know if
-you can apply it.
-
-Thanks. 
-
-
---- linux-2.6.5-mm6.orig/arch/i386/pci/fixup.c  2004-04-29
-05:23:35.000000000 -0700
-+++ linux-2.6.5-mm6/arch/i386/pci/fixup.c       2004-05-07
-01:45:31.000000000 -0700
-@@ -92,6 +92,15 @@
-        int i;
- 
-        /*
-+        * Runs the fixup only for the first IDE controller
-+        * (Shai Fultheim - shai@ftcon.com)
-+        */
-+       static int called = 0;
-+       if (called)
-+               return;
-+       called = 1;
-+
-+       /*
-         * There exist PCI IDE controllers which have utter garbage
-         * in first four base registers. Ignore that.
-         */
-
-
-
---Shai
-
-
------Original Message-----
-From: linux-ide-owner@vger.kernel.org
-[mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Shai Fultheim
-Sent: Thursday, May 06, 2004 12:19
-To: 'Vojtech Pavlik'; 'Bartlomiej Zolnierkiewicz'
-Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: RE: Multiple (ICH3) IDE-controllers in a system
-
-Ok.
-I would suggest one of the followings:
-1. If we can't identify those machine, I would recommend to drop that patch,
-since probably the BIOS is taking care of it nowadays.
-2. If we believe we can't do (1) above, lets have it rest only the first
-controller it is being called for.  This will make any of the other
-controllers usable if their ports are set right.
-
-Any comments?
- 
-
---Shai
-
-
------Original Message-----
-From: linux-ide-owner@vger.kernel.org
-[mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Vojtech Pavlik
-Sent: Wednesday, May 05, 2004 23:46
-To: Bartlomiej Zolnierkiewicz
-Cc: shai@ftcon.com; linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: Re: Multiple (ICH3) IDE-controllers in a system
-
-On Wed, May 05, 2004 at 05:16:43PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> 
-> Hi Vojtech,
-> 
-> Do I correctly assume that these fixups for Intel chipsets are from you?
-
-Yes.
-
->
-http://linus.bkbits.net:8080/linux-2.5/cset@3cfbacdfzHvfqp0Sa45QXt9pNn3LNg?n
-av=index.html|src/|src/arch|src/arch/i386|src/arch/i386/pci|related/arch/i38
-6/pci/fixup.c
->
-http://linus.bkbits.net:8080/linux-2.5/cset@3cfcec0fOJreGFyCWkPeT7EWiydYFw?n
-av=index.html|src/|src/arch|src/arch/i386|src/arch/i386/pci|related/arch/i38
-6/pci/fixup.c
-> 
-> Care to explain why 'trash' fixup is needed in 2.6 but not in 2.4?
-
-Because 2.4 was never used on the affected machines, where this fixup
-was needed - those machines sere putting nonsense into the BARs. I don't
-recall exactly what model they were, though I remember they were one of
-the first machines with ICH MMIO support.
-
--- 
-Vojtech Pavlik
-SuSE Labs, SuSE CR
--
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-------=_NextPart_000_00D1_01C43373.41072760
-Content-Type: application/octet-stream;
-	name="pci-ide-fixup.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="pci-ide-fixup.patch"
-
---- linux-2.6.5-mm6.orig/arch/i386/pci/fixup.c	2004-04-29 =
-05:23:35.000000000 -0700=0A=
-+++ linux-2.6.5-mm6/arch/i386/pci/fixup.c	2004-05-07 01:45:31.000000000 =
--0700=0A=
-@@ -92,6 +92,15 @@=0A=
- 	int i;=0A=
- =0A=
- 	/*=0A=
-+	 * Runs the fixup only for the first IDE controller=0A=
-+	 * (Shai Fultheim - shai@ftcon.com)=0A=
-+	 */=0A=
-+	static int called =3D 0;=0A=
-+	if (called)=0A=
-+		return;=0A=
-+	called =3D 1;=0A=
-+=0A=
-+	/*=0A=
- 	 * There exist PCI IDE controllers which have utter garbage=0A=
- 	 * in first four base registers. Ignore that.=0A=
- 	 */=0A=
-
-------=_NextPart_000_00D1_01C43373.41072760--
-
+Is there something else I should check?
