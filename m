@@ -1,24 +1,24 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] small update for pdc202xx_old driver
-Date: Tue, 2 Mar 2004 20:31:01 +0100
+Subject: [PATCH] update for pdc202xx_old driver
+Date: Tue, 2 Mar 2004 21:54:45 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200403022031.01766.bzolnier@elka.pw.edu.pl>
+Message-ID: <200403022154.45119.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:35476 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261759AbUCBUre
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:40340 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261764AbUCBUrk
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Mar 2004 15:47:34 -0500
+	Tue, 2 Mar 2004 15:47:40 -0500
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
 
-[IDE] small update for pdc202xx_old driver
+[IDE] update for pdc202xx_old driver
 
 - fix bug introduced by my recent fixes
   (do not try to disable 66MHz clock on PDC20246)
