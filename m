@@ -1,30 +1,31 @@
 From: "Christopher R. Thompson" <Christoffur050@Verizon.Net>
-Subject: Re: ICH5 libata with Bios in Compatibility mode
-Date: Wed, 22 Dec 2004 11:58:08 -0800
-Message-ID: <41C9D1D0.7070407@Verizon.Net>
+Subject: Re: ICH5 libata and bios in Native mode Kernel BUG
+Date: Wed, 22 Dec 2004 12:06:00 -0800
+Message-ID: <41C9D3A8.40009@Verizon.Net>
 References: <41C341A4.9010401@Verizon.Net>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------080707080201010504030303"
+ boundary="------------090109060202070308050605"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out010pub.verizon.net ([206.46.170.133]:49109 "EHLO
-	out010.verizon.net") by vger.kernel.org with ESMTP id S262032AbULVT6K
+Received: from out011pub.verizon.net ([206.46.170.135]:20388 "EHLO
+	out011.verizon.net") by vger.kernel.org with ESMTP id S262031AbULVUGF
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Dec 2004 14:58:10 -0500
-Received: from Verizon.Net ([4.27.2.67]) by out010.verizon.net
+	Wed, 22 Dec 2004 15:06:05 -0500
+Received: from Verizon.Net ([4.27.2.67]) by out011.verizon.net
           (InterMail vM.5.01.06.06 201-253-122-130-106-20030910) with ESMTP
-          id <20041222195808.FDUY24714.out010.verizon.net@Verizon.Net>
-          for <linux-ide@vger.kernel.org>; Wed, 22 Dec 2004 13:58:08 -0600
+          id <20041222200600.DEKN4717.out011.verizon.net@Verizon.Net>
+          for <linux-ide@vger.kernel.org>; Wed, 22 Dec 2004 14:06:00 -0600
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------080707080201010504030303
+--------------090109060202070308050605
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Loading scsi modules thusly without any ide modules:
+Loading the modules exactly the same as before.. but with the bios 
+configured in Native mode with "P-ATA+SATA"
 
 echo Installing ide modules
 echo Installing scsi modules
@@ -41,16 +42,14 @@ insmod /lib/ehci-hcd.o
 insmod /lib/usb-uhci.o
 insmod /lib/usb-storage.o
 
-Yields the following syslog (attached as file Kernel-002.log)
+Yields the following syslog w oops
 
-
-
---------------080707080201010504030303
+--------------090109060202070308050605
 Content-Type: text/plain;
- name="Kernel-002.log"
+ name="Kernel-003.log"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="Kernel-002.log"
+ filename="Kernel-003.log"
 
 Linux version 2.4.27 (root@Sharlie.TfJC) (gcc version 3.2 20020903 (Red Hat Linux 8.0 3.2-7)) #33-Christopher R. Thompson Wednesday December 15, 2004
 BIOS-provided physical RAM map:
@@ -93,7 +92,7 @@ BIOS bug, MP table errors detected!...
 Kernel command line: mem=1024mb root=/dev/ram1 rw console=tty0 console=ttyS0,115200n8 idebus=66 hdd=ide-scsi BOOT_IMAGE=bzi2427
 Found and enabled local APIC!
 Initializing CPU#0
-Detected 3198.620 MHz processor.
+Detected 3198.573 MHz processor.
 Console: colour VGA+ 80x25
 Calibrating delay loop... 6383.20 BogoMIPS
 Memory: 1029488k/1048256k available (1099k kernel code, 18380k reserved, 405k data, 108k init, 130752k highmem)
@@ -116,17 +115,16 @@ ESR value before enabling vector: 00000000
 ESR value after enabling vector: 00000000
 Using local APIC timer interrupts.
 calibrating APIC timer ...
-..... CPU clock speed is 3198.4972 MHz.
-..... host bus clock speed is 199.9060 MHz.
-cpu: 0, clocks: 1999060, slice: 999530
-CPU0<T0:1999056,T1:999520,D:6,S:999530,C:1999060>
+..... CPU clock speed is 3198.4944 MHz.
+..... host bus clock speed is 199.9057 MHz.
+cpu: 0, clocks: 1999057, slice: 999528
+CPU0<T0:1999056,T1:999520,D:8,S:999528,C:1999057>
 mtrr: v1.40 (20010327) Richard Gooch (rgooch@atnf.csiro.au)
 mtrr: detected mtrr type: Intel
 PCI: PCI BIOS revision 2.10 entry at 0xf0031, last bus=2
 PCI: Using configuration type 1
 PCI: Probing PCI hardware
 PCI: Probing PCI hardware (bus 00)
-PCI: Ignoring BAR0-3 of IDE controller 00:1f.2
 Transparent bridge - Intel Corp. 82801BA/CA/DB/EB PCI Bridge
 PCI: Using IRQ router PIIX/ICH [8086/24d0] at 00:1f.0
 Linux NET4.0 for Linux 2.4
@@ -185,8 +183,8 @@ Partition check:
 SCSI device sdb: 8386733 512-byte hdwr sectors (4294 MB)
  sdb: sdb1 sdb2
 Installing libata
-ata_piix: combined mode detected
-ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0xFC00 irq 14
+ata1: SATA max UDMA/133 cmd 0xEFA0 ctl 0xEF8E bmdma 0xEF60 irq 11
+ata2: SATA max UDMA/133 cmd 0xEF80 ctl 0xEF8A bmdma 0xEF68 irq 11
 kernel BUG at highmem.c:166!
 invalid operand: 0000
 CPU:    0
@@ -205,5 +203,5 @@ Call Trace:    [<fd85f9bb>] [<c011f04a>] [<c0127b53>] [<c0127a20>] [<c0105000>]
 Code: 0f 0b a6 00 b3 e8 21 c0 05 00 00 80 00 ba a0 ab 2a c0 c1 e8 
  
 
---------------080707080201010504030303--
+--------------090109060202070308050605--
 
