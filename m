@@ -1,70 +1,40 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] Re: 2.5.70-mm5: sc1200.c compile error if !CONFIG_PROC_FS
-Date: Sat, 7 Jun 2003 17:31:28 +0200
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: Re: [PATCH] Re: 2.5.70-mm5: sc1200.c compile error if !CONFIG_PROC_FS
+Date: Sat, 7 Jun 2003 18:07:15 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200306071731.28130.bzolnier@elka.pw.edu.pl>
+Message-ID: <20030607160714.GB3708@fs.tum.de>
+References: <200306071731.28130.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:25553 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S263201AbTFGPR7
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 7 Jun 2003 11:17:59 -0400
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:51923 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S262528AbTFGPxp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 7 Jun 2003 11:53:45 -0400
+Content-Disposition: inline
+In-Reply-To: <200306071731.28130.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@fs.tum.de>
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Sat, Jun 07, 2003 at 05:31:28PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> 
+> Fixed now.
+> --
+> Bartlomiej
+> 
+> [ide] fix compilation of NS SC1x00 driver without procfs
+>...
 
-Fixed now.
---
-Bartlomiej
+Yes, this fixes it.
 
-[ide] fix compilation of NS SC1x00 driver without procfs
+Thanks for your quick reply
+Adrian
 
- drivers/ide/pci/sc1200.c |   22 +++++++++++-----------
- 1 files changed, 11 insertions(+), 11 deletions(-)
+-- 
 
-diff -puN drivers/ide/pci/sc1200.c~ide-sc1200-noprocfs-fix drivers/ide/pci/sc1200.c
---- linux-2.5.70-bk11/drivers/ide/pci/sc1200.c~ide-sc1200-noprocfs-fix	Sat Jun  7 17:15:46 2003
-+++ linux-2.5.70-bk11-root/drivers/ide/pci/sc1200.c	Sat Jun  7 17:22:15 2003
-@@ -32,17 +32,6 @@
- #include "ide_modes.h"
- #include "sc1200.h"
- 
--#define DISPLAY_SC1200_TIMINGS
--
--#if defined(DISPLAY_SC1200_TIMINGS) && defined(CONFIG_PROC_FS)
--#include <linux/stat.h>
--#include <linux/proc_fs.h>
--
--static int sc1200_get_info(char *, char **, off_t, int);
--extern int (*sc1200_display_info)(char *, char **, off_t, int); /* ide-proc.c */
--extern char *ide_media_verbose(ide_drive_t *);
--static u8 sc1200_proc = 0;
--
- #define SC1200_REV_A	0x00
- #define SC1200_REV_B1	0x01
- #define SC1200_REV_B3	0x02
-@@ -81,6 +70,17 @@ static unsigned short sc1200_get_pci_clo
- 	return pci_clock;
- }
- 
-+#define DISPLAY_SC1200_TIMINGS
-+
-+#if defined(DISPLAY_SC1200_TIMINGS) && defined(CONFIG_PROC_FS)
-+#include <linux/stat.h>
-+#include <linux/proc_fs.h>
-+
-+static int sc1200_get_info(char *, char **, off_t, int);
-+extern int (*sc1200_display_info)(char *, char **, off_t, int); /* ide-proc.c */
-+extern char *ide_media_verbose(ide_drive_t *);
-+static u8 sc1200_proc = 0;
-+
- static struct pci_dev *bmide_dev;
- 
- static int sc1200_get_info (char *buffer, char **addr, off_t offset, int count)
-
-_
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
