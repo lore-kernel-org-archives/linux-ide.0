@@ -1,159 +1,169 @@
 From: Tejun Heo <tj@home-tj.org>
-Subject: Re: [PATCH 2.6.11-rc2 12/14] ide_pci: Merges piix.h into piix.c
+Subject: Re: [PATCH 2.6.11-rc2 14/14] ide_pci: Merges serverworks.h into serverworks.c
 Date: Fri,  4 Feb 2005 16:13:19 +0900 (KST)
-Message-ID: <20050204071319.618DB132701@htj.dyndns.org>
+Message-ID: <20050204071319.0ED0E132703@htj.dyndns.org>
 References: <42032014.1020606@home-tj.org>
-Received: from [211.58.254.17] ([211.58.254.17]:44201 "EHLO hemosu.com")
-	by vger.kernel.org with ESMTP id S263397AbVBDHNY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2005 02:13:24 -0500
+Received: from [211.58.254.17] ([211.58.254.17]:45737 "EHLO hemosu.com")
+	by vger.kernel.org with ESMTP id S263313AbVBDHNZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2005 02:13:25 -0500
 In-Reply-To: <42032014.1020606@home-tj.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-12_ide_pci_piix_merge.patch
+14_ide_pci_serverworks_merge.patch
 
-	Merges ide/pci/piix.h into piix.c.
+	Merges ide/pci/serverworks.h into serverworks.c.
 
 
 Signed-off-by: Tejun Heo <tj@home-tj.org>
 
 
-Index: linux-idepci-export/drivers/ide/pci/piix.c
+Index: linux-idepci-export/drivers/ide/pci/serverworks.c
 ===================================================================
---- linux-idepci-export.orig/drivers/ide/pci/piix.c	2005-02-04 16:07:36.404440170 +0900
-+++ linux-idepci-export/drivers/ide/pci/piix.c	2005-02-04 16:08:26.627260629 +0900
-@@ -103,8 +103,6 @@
+--- linux-idepci-export.orig/drivers/ide/pci/serverworks.c	2005-02-04 16:07:36.271461827 +0900
++++ linux-idepci-export/drivers/ide/pci/serverworks.c	2005-02-04 16:08:27.019196797 +0900
+@@ -39,7 +39,20 @@
  
  #include <asm/io.h>
  
--#include "piix.h"
--
- static int no_piix_dma;
+-#include "serverworks.h"
++#undef SVWKS_DEBUG_DRIVE_INFO
++
++#define SVWKS_CSB5_REVISION_NEW	0x92 /* min PCI_REVISION_ID for UDMA5 (A2.0) */
++#define SVWKS_CSB6_REVISION	0xa0 /* min PCI_REVISION_ID for UDMA4 (A1.0) */
++
++/* Seagate Barracuda ATA IV Family drives in UDMA mode 5
++ * can overrun their FIFOs when used with the CSB5 */
++static const char *svwks_bad_ata100[] = {
++	"ST320011A",
++	"ST340016A",
++	"ST360021A",
++	"ST380021A",
++	NULL
++};
  
- /**
-@@ -530,6 +528,56 @@ static void __devinit init_hwif_piix(ide
- 	hwif->drives[0].autodma = hwif->autodma;
+ static u8 svwks_revision = 0;
+ static struct pci_dev *isa_dev;
+@@ -582,6 +595,48 @@ static int __init init_setup_csb6 (struc
+ 	return ide_setup_pci_device(dev, d);
  }
  
 +/*
-+ *	Table of the various PIIX capability blocks
++ *	Table of the various serverworks capability blocks
 + */
 +
-+#define DECLARE_PIIX_DEV(name_str) \
-+	{						\
-+		.name		= name_str,		\
-+		.init_chipset	= init_chipset_piix,	\
-+		.init_hwif	= init_hwif_piix,	\
-+		.channels	= 2,			\
-+		.autodma	= AUTODMA,		\
-+		.enablebits	= {{0x41,0x80,0x80}, {0x43,0x80,0x80}}, \
-+		.bootable	= ON_BOARD,		\
-+	}
-+
-+static ide_pci_device_t piix_pci_info[] __devinitdata = {
-+	/*  0 */ DECLARE_PIIX_DEV("PIIXa"),
-+	/*  1 */ DECLARE_PIIX_DEV("PIIXb"),
-+
-+	{	/* 2 */
-+		.name		= "MPIIX",
-+		.init_hwif	= init_hwif_piix,
++static ide_pci_device_t serverworks_chipsets[] __devinitdata = {
++	{	/* 0 */
++		.name		= "SvrWks OSB4",
++		.init_setup	= init_setup_svwks,
++		.init_chipset	= init_chipset_svwks,
++		.init_hwif	= init_hwif_svwks,
 +		.channels	= 2,
-+		.autodma	= NODMA,
-+		.enablebits	= {{0x6D,0x80,0x80}, {0x6F,0x80,0x80}},
++		.autodma	= AUTODMA,
 +		.bootable	= ON_BOARD,
-+	},
-+
-+	/*  3 */ DECLARE_PIIX_DEV("PIIX3"),
-+	/*  4 */ DECLARE_PIIX_DEV("PIIX4"),
-+	/*  5 */ DECLARE_PIIX_DEV("ICH0"),
-+	/*  6 */ DECLARE_PIIX_DEV("PIIX4"),
-+	/*  7 */ DECLARE_PIIX_DEV("ICH"),
-+	/*  8 */ DECLARE_PIIX_DEV("PIIX4"),
-+	/*  9 */ DECLARE_PIIX_DEV("PIIX4"),
-+	/* 10 */ DECLARE_PIIX_DEV("ICH2"),
-+	/* 11 */ DECLARE_PIIX_DEV("ICH2M"),
-+	/* 12 */ DECLARE_PIIX_DEV("ICH3M"),
-+	/* 13 */ DECLARE_PIIX_DEV("ICH3"),
-+	/* 14 */ DECLARE_PIIX_DEV("ICH4"),
-+	/* 15 */ DECLARE_PIIX_DEV("ICH5"),
-+	/* 16 */ DECLARE_PIIX_DEV("C-ICH"),
-+	/* 17 */ DECLARE_PIIX_DEV("ICH4"),
-+	/* 18 */ DECLARE_PIIX_DEV("ICH5-SATA"),
-+	/* 19 */ DECLARE_PIIX_DEV("ICH5"),
-+	/* 20 */ DECLARE_PIIX_DEV("ICH6"),
-+	/* 21 */ DECLARE_PIIX_DEV("ICH7"),
-+	/* 22 */ DECLARE_PIIX_DEV("ICH4"),
++	},{	/* 1 */
++		.name		= "SvrWks CSB5",
++		.init_setup	= init_setup_svwks,
++		.init_chipset	= init_chipset_svwks,
++		.init_hwif	= init_hwif_svwks,
++		.init_dma	= init_dma_svwks,
++		.channels	= 2,
++		.autodma	= AUTODMA,
++		.bootable	= ON_BOARD,
++	},{	/* 2 */
++		.name		= "SvrWks CSB6",
++		.init_setup	= init_setup_csb6,
++		.init_chipset	= init_chipset_svwks,
++		.init_hwif	= init_hwif_svwks,
++		.init_dma	= init_dma_svwks,
++		.channels	= 2,
++		.autodma	= AUTODMA,
++		.bootable	= ON_BOARD,
++	},{	/* 3 */
++		.name		= "SvrWks CSB6",
++		.init_setup	= init_setup_csb6,
++		.init_chipset	= init_chipset_svwks,
++		.init_hwif	= init_hwif_svwks,
++		.init_dma	= init_dma_svwks,
++		.channels	= 1,	/* 2 */
++		.autodma	= AUTODMA,
++		.bootable	= ON_BOARD,
++	}
 +};
-+
+ 
  /**
-  *	piix_init_one	-	called when a PIIX is found
-  *	@dev: the piix device
-Index: linux-idepci-export/drivers/ide/pci/piix.h
+  *	svwks_init_one	-	called when a OSB/CSB is found
+Index: linux-idepci-export/drivers/ide/pci/serverworks.h
 ===================================================================
---- linux-idepci-export.orig/drivers/ide/pci/piix.h	2005-02-04 16:07:36.404440170 +0900
+--- linux-idepci-export.orig/drivers/ide/pci/serverworks.h	2005-02-04 16:08:26.831227410 +0900
 +++ /dev/null	1970-01-01 00:00:00.000000000 +0000
-@@ -1,62 +0,0 @@
--#ifndef PIIX_H
--#define PIIX_H
+@@ -1,67 +0,0 @@
+-
+-#ifndef SERVERWORKS_H
+-#define SERVERWORKS_H
 -
 -#include <linux/config.h>
 -#include <linux/pci.h>
 -#include <linux/ide.h>
 -
--static unsigned int __devinit init_chipset_piix(struct pci_dev *, const char *);
--static void init_hwif_piix(ide_hwif_t *);
+-#define SVWKS_CSB5_REVISION_NEW	0x92 /* min PCI_REVISION_ID for UDMA5 (A2.0) */
+-#define SVWKS_CSB6_REVISION	0xa0 /* min PCI_REVISION_ID for UDMA4 (A1.0) */
 -
--#define DECLARE_PIIX_DEV(name_str) \
--	{						\
--		.name		= name_str,		\
--		.init_chipset	= init_chipset_piix,	\
--		.init_hwif	= init_hwif_piix,	\
--		.channels	= 2,			\
--		.autodma	= AUTODMA,		\
--		.enablebits	= {{0x41,0x80,0x80}, {0x43,0x80,0x80}}, \
--		.bootable	= ON_BOARD,		\
--	}
--
--/*
-- *	Table of the various PIIX capability blocks
-- *
-- */
-- 
--static ide_pci_device_t piix_pci_info[] __devinitdata = {
--	/*  0 */ DECLARE_PIIX_DEV("PIIXa"),
--	/*  1 */ DECLARE_PIIX_DEV("PIIXb"),
--
--	{	/* 2 */
--		.name		= "MPIIX",
--		.init_hwif	= init_hwif_piix,
--		.channels	= 2,
--		.autodma	= NODMA,
--		.enablebits	= {{0x6D,0x80,0x80}, {0x6F,0x80,0x80}},
--		.bootable	= ON_BOARD,
--	},
--
--	/*  3 */ DECLARE_PIIX_DEV("PIIX3"),
--	/*  4 */ DECLARE_PIIX_DEV("PIIX4"),
--	/*  5 */ DECLARE_PIIX_DEV("ICH0"),
--	/*  6 */ DECLARE_PIIX_DEV("PIIX4"),
--	/*  7 */ DECLARE_PIIX_DEV("ICH"),
--	/*  8 */ DECLARE_PIIX_DEV("PIIX4"),
--	/*  9 */ DECLARE_PIIX_DEV("PIIX4"),
--	/* 10 */ DECLARE_PIIX_DEV("ICH2"),
--	/* 11 */ DECLARE_PIIX_DEV("ICH2M"),
--	/* 12 */ DECLARE_PIIX_DEV("ICH3M"),
--	/* 13 */ DECLARE_PIIX_DEV("ICH3"),
--	/* 14 */ DECLARE_PIIX_DEV("ICH4"),
--	/* 15 */ DECLARE_PIIX_DEV("ICH5"),
--	/* 16 */ DECLARE_PIIX_DEV("C-ICH"),
--	/* 17 */ DECLARE_PIIX_DEV("ICH4"),
--	/* 18 */ DECLARE_PIIX_DEV("ICH5-SATA"),
--	/* 19 */ DECLARE_PIIX_DEV("ICH5"),
--	/* 20 */ DECLARE_PIIX_DEV("ICH6"),
--	/* 21 */ DECLARE_PIIX_DEV("ICH7"),
--	/* 22 */ DECLARE_PIIX_DEV("ICH4"),
+-/* Seagate Barracuda ATA IV Family drives in UDMA mode 5
+- * can overrun their FIFOs when used with the CSB5 */
+-static const char *svwks_bad_ata100[] = {
+-	"ST320011A",
+-	"ST340016A",
+-	"ST360021A",
+-	"ST380021A",
+-	NULL
 -};
 -
--#endif /* PIIX_H */
+-static int init_setup_svwks(struct pci_dev *, ide_pci_device_t *);
+-static int init_setup_csb6(struct pci_dev *, ide_pci_device_t *);
+-static unsigned int init_chipset_svwks(struct pci_dev *, const char *);
+-static void init_hwif_svwks(ide_hwif_t *);
+-static void init_dma_svwks(ide_hwif_t *, unsigned long);
+-
+-static ide_pci_device_t serverworks_chipsets[] __devinitdata = {
+-	{	/* 0 */
+-		.name		= "SvrWks OSB4",
+-		.init_setup	= init_setup_svwks,
+-		.init_chipset	= init_chipset_svwks,
+-		.init_hwif	= init_hwif_svwks,
+-		.channels	= 2,
+-		.autodma	= AUTODMA,
+-		.bootable	= ON_BOARD,
+-	},{	/* 1 */
+-		.name		= "SvrWks CSB5",
+-		.init_setup	= init_setup_svwks,
+-		.init_chipset	= init_chipset_svwks,
+-		.init_hwif	= init_hwif_svwks,
+-		.init_dma	= init_dma_svwks,
+-		.channels	= 2,
+-		.autodma	= AUTODMA,
+-		.bootable	= ON_BOARD,
+-	},{	/* 2 */
+-		.name		= "SvrWks CSB6",
+-		.init_setup	= init_setup_csb6,
+-		.init_chipset	= init_chipset_svwks,
+-		.init_hwif	= init_hwif_svwks,
+-		.init_dma	= init_dma_svwks,
+-		.channels	= 2,
+-		.autodma	= AUTODMA,
+-		.bootable	= ON_BOARD,
+-	},{	/* 3 */
+-		.name		= "SvrWks CSB6",
+-		.init_setup	= init_setup_csb6,
+-		.init_chipset	= init_chipset_svwks,
+-		.init_hwif	= init_hwif_svwks,
+-		.init_dma	= init_dma_svwks,
+-		.channels	= 1,	/* 2 */
+-		.autodma	= AUTODMA,
+-		.bootable	= ON_BOARD,
+-	}
+-};
+-
+-#endif /* SERVERWORKS_H */
