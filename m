@@ -1,58 +1,46 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH] Bogus LBA48 drives
-Date: Tue, 30 Mar 2004 17:28:12 +0200 (MEST)
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.58.0403301726540.9767@waterleaf.sonytel.be>
-References: <Pine.GSO.4.58.0403301654300.9765@waterleaf.sonytel.be>
+From: Timothy Miller <miller@techsource.com>
+Subject: Re: [PATCH] speed up SATA
+Date: Tue, 30 Mar 2004 10:54:43 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <40699843.7030005@techsource.com>
+References: <4066021A.20308@pobox.com> <200403282030.11743.bzolnier@elka.pw.edu.pl> <20040328183010.GQ24370@suse.de> <200403282045.07246.bzolnier@elka.pw.edu.pl> <406720A7.1050501@pobox.com> <20040329005502.GG3039@dualathlon.random> <40679FE3.3080007@pobox.com> <20040329130410.GH3039@dualathlon.random> <40687CF0.3040206@pobox.com> <20040330110928.GR24370@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from witte.sonytel.be ([80.88.33.193]:62686 "EHLO witte.sonytel.be")
-	by vger.kernel.org with ESMTP id S263721AbUC3P2U (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Mar 2004 10:28:20 -0500
-In-Reply-To: <Pine.GSO.4.58.0403301654300.9765@waterleaf.sonytel.be>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20040330110928.GR24370@suse.de>
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Andrea Arcangeli <andrea@suse.de>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, William Lee Irwin III <wli@holomorphy.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-15?Q?Andr=E9_Hedrick?= <andre@linux-ide.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Lionel Bergeret <lbergeret@swing.be>, JunHyeok Heo <jhheo@idis.co.kr>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Tue, 30 Mar 2004, Geert Uytterhoeven wrote:
-> Apparently some IDE drives (e.g. a pile of 80 GB ST380020ACE drives I have
-> access to) advertise to support LBA48, but don't, causing kernels that support
-> LBA48 (i.e. anything newer than 2.4.18, including 2.4.25 and 2.6.4) to fail on
-> them.  Older kernels (including 2.2.20 on the Debian woody CDs) work fine.
->
-> One problem with those drives is that the lba_capacity_2 field in their drive
-> identification is set to 0, making the IDE driver think the disk is 0 bytes
-> large. At first I tried modifying the driver to use lba_capacity if
-> lba_capacity_2 is set to 0, but this caused disk errors. So it looks like those
-> drives don't support the increased transfer size of LBA48 neither.
->
-> I added a workaround for these drives to both 2.4.25 and 2.6.4. I'll send
-> patches in follow-up emails.
 
-Patch for 2.6.4 (and 2.6.5-rc3):
-  - Check for lba_capacity_2 being non-zero in idedisk_supports_lba48()
 
---- linux-2.6.4/drivers/ide/ide-disk.c.orig	2004-03-12 12:02:53.000000000 +0100
-+++ linux-2.6.4/drivers/ide/ide-disk.c	2004-03-26 13:54:39.000000000 +0100
-@@ -1058,7 +1058,8 @@
-  */
- static inline int idedisk_supports_lba48(const struct hd_driveid *id)
- {
--	return (id->command_set_2 & 0x0400) && (id->cfs_enable_2 & 0x0400);
-+	return (id->command_set_2 & 0x0400) && (id->cfs_enable_2 & 0x0400)
-+	       && id->lba_capacity_2;
- }
+Jens Axboe wrote:
 
- static inline void idedisk_check_hpa(ide_drive_t *drive)
+> 
+> 
+> Here's a quickly done patch that attempts to adjust the value based on a
+> previous range of completed requests. It changes ->max_sectors to be a
+> hardware limit, adding ->optimal_sectors to be our max issued io target.
+> It is split on READ and WRITE. The target is to keep request execution
+> time under BLK_IORATE_TARGET, which is 50ms in this patch. read-ahead
+> max window is kept within a single request in size.
+> 
+[snip]
 
-Gr{oetje,eeting}s,
+Awesome patch!
 
-						Geert
+One question I have is about how you are determining optimal request 
+size.  You are basing this on the _maximum_ performance of the device, 
+but there could be huge differences between min and max performance. 
+Would it be better to compute optimal based on worst-case performance? 
+Or averaged over time?
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Idealy, we'd have a running average where one hit of worst-case will 
+have an impact, but if that happens only once, it'll drop out of the 
+average, and best-case events will be considered but tempered as well.
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+If we're going for real-time, then we want to avoid any latency over 
+50ms.  In that case, we'd want to go based on worst-case, although it 
+would still be good to let, say, an occasional hardware glitch which had 
+slow response to not have permanent impact.
