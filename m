@@ -1,24 +1,28 @@
-From: James Courtier-Dutton <James@superbug.demon.co.uk>
-Subject: hdparm -S  with SATA drives.
-Date: Wed, 16 Mar 2005 23:14:24 +0000
-Message-ID: <4238BDD0.6020400@superbug.demon.co.uk>
+From: John Yau <jyau.linux@gmail.com>
+Subject: Silicon Image Bios Detection
+Date: Thu, 17 Mar 2005 00:24:35 -0500
+Message-ID: <111a57ba05031621245bb44626@mail.gmail.com>
+Reply-To: John Yau <jyau.linux@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Received: from anchor-post-32.mail.demon.net ([194.217.242.90]:11282 "EHLO
-	anchor-post-32.mail.demon.net") by vger.kernel.org with ESMTP
-	id S262881AbVCPXOz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Mar 2005 18:14:55 -0500
-Received: from superbug.demon.co.uk ([80.176.146.252] helo=[192.168.1.10])
-	by anchor-post-32.mail.demon.net with esmtp (Exim 4.42)
-	id 1DBhil-0004HA-7y
-	for linux-ide@vger.kernel.org; Wed, 16 Mar 2005 23:14:35 +0000
+Received: from wproxy.gmail.com ([64.233.184.207]:40237 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261834AbVCQFYg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Mar 2005 00:24:36 -0500
+Received: by wproxy.gmail.com with SMTP id 37so144050wra
+        for <linux-ide@vger.kernel.org>; Wed, 16 Mar 2005 21:24:35 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Can one use the following command with libata yet?
+Hi all,
 
-hdparm -S 240 /dev/sda
+Recently via a RAID bios upgrade to 4.3.53 I got my Seagate drive to
+play nicely with my Silicon Image 3512 chip with the black list in
+sata_sil.c disabled.  I was looking into producing a patch for
+sata_sil.c that detected the bios version number and applied the MOD15
+write work around selectively.  Anyone have any leads on how I can get
+the version number of the Silicon Image RAID bios?
 
-James
+
+John Yau
