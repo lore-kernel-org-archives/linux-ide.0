@@ -1,65 +1,95 @@
-From: Russell Howe <rhowe@wiss.co.uk>
-Subject: Poor IDE cable causing a kernel lockup (PIIX)?
-Date: Tue, 23 Mar 2004 22:37:36 +0000
+From: Sergey Vlasov <vsu@altlinux.ru>
+Subject: [BUG] sata_via broken by recent libata updates
+Date: Wed, 24 Mar 2004 19:33:40 +0300
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040323223735.GA30677@xiao.rsnet>
+Message-ID: <20040324163340.GD23503@master.mivlgu.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="at6+YcpfzWZg/htY"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.nildram.co.uk ([195.112.4.54]:41988 "EHLO
-	smtp.nildram.co.uk") by vger.kernel.org with ESMTP id S262890AbUCWWlZ
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 Mar 2004 17:41:25 -0500
-Received: from doufu (doufu.siksai.co.uk [82.133.8.9])
-	by smtp.nildram.co.uk (Postfix) with ESMTP id D3E7D250687
-	for <linux-ide@vger.kernel.org>; Tue, 23 Mar 2004 22:37:32 +0000 (GMT)
-Received: from xiao.rsnet ([192.168.1.2] ident=mail)
-	by doufu with esmtp (Exim 4.30)
-	id 1B5uWe-0007zh-EZ
-	for linux-ide@vger.kernel.org; Tue, 23 Mar 2004 22:37:36 +0000
-Received: from rhowe by xiao.rsnet with local (Exim 3.36 #1 (Debian))
-	id 1B5uWe-0007z3-00
-	for <linux-ide@vger.kernel.org>; Tue, 23 Mar 2004 22:37:36 +0000
+Received: from mivlgu.ru ([81.18.140.87]:41384 "EHLO master.mivlgu.local")
+	by vger.kernel.org with ESMTP id S263760AbUCXQdn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Mar 2004 11:33:43 -0500
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Before you go and read all of the following, I should probably
-ask: Is the kernel/IDE driver expected to cope with CRC errors caused
-by what appears to be bad cabling?
 
-After getting a few (~70) entries like the following from the kernel,
-the NMI watchdog takes over and locks the system up with a backtrace:
+--at6+YcpfzWZg/htY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Mar 17 20:54:12 xiao kernel: hdc: dma_intr: status=0x51 { DriveReady SeekComplete Error }
-Mar 17 20:54:12 xiao kernel: hdc: dma_intr: error=0x84 { DriveStatusError BadCRC }
+Hello!
 
-I'm quite willing to blame the rather long, rounded cable this drive is
-attached to (although no complaints about hdd, also on the same cable)
+After updating from 2.4.25-libata1 to 2.4.25-libata9 the sata_via
+driver stopped working.  The module loads and even seems to detect
+the presense of drives, but the SCSI-emulation devices are not
+registered:
 
-The drive itself is a Seagate:
-hdc: ST380021A, ATA DISK drive
+===== messages hand-copied from screen =====
+sata_via (00:0f.0) routed to hard irq line 11
+ata1: SATA max UDMA/133 cmd 0xB800 ctl 0xBC02 bmdma 0xC800 irq 20
+ata2: SATA max UDMA/133 cmd 0xC000 ctl 0xC402 bmdma 0xC808 irq 20
+ata1: dev 0 ATA, max UDMA7, 234493056 sectors (lba48)
+ata2: no device found (phy stat 00000000)
+===== end of messages from sata_via =====
 
-The controller is the onboard 440BX on an Abit BP6, running two Celeron
-300A's with all clock speeds set to what they should be.
+The machine does not hang - booting fails later, because the root
+device is not accessible.
 
-A copy of the bootup log is at:
-http://siksai.co.uk/~rhowe/bootup.txt
+2.4.25-libata1 worked fine on the same hardware:
 
-Output of smartctl -a /dev/hdc is at:
-http://siksai.co.uk/~rhowe/smart-hdc.txt
+===== log from a successful boot ======
+libata version 1.00 loaded.
+sata_via version 0.11
+ata1: SATA max UDMA/133 cmd 0xB800 ctl 0xBC02 bmdma 0xC800 irq 20
+ata2: SATA max UDMA/133 cmd 0xC000 ctl 0xC402 bmdma 0xC808 irq 20
+ata1: dev 0 cfg 49:2f00 82:346b 83:7f01 84:4003 85:3c68 86:3c01 87:4003 88:80ff
+ata1: dev 0 ATA, max UDMA7, 234493056 sectors (lba48)
+ata1: dev 0 configured for UDMA/133
+ATA: abnormal status 0x7F on port 0xC007
+ata2: thread exiting
+scsi0 : sata_via
+scsi1 : sata_via
+  Vendor: ATA       Model: SAMSUNG SP1213C    Rev: 1.00
+  Type:   Direct-Access     ANSI SCSI revision: 05
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+SCSI device sda: 234493056 512-byte hdwr sectors (120060 MB)
+===== end =====
 
-(currently running a SMART self test to see if the drive thinks it has
-problems)
+Seems that the problem is caused by changes in the device
+initialization - calling ata_device_add() from svia_init_one() does
+not work (at least with the 2.4.x SCSI layer).  The following patch
+solves the initialization problem:
 
-I have two slightly different kernel traces which I had to copy down
-onto paper, so if they will be of any use, I can type them in. I'll be
-hooking this box up with a serial console pretty soon, although I'll
-need a new kernel build for that (note the broken serial support :)
-
-The machine is just my home NFS server, so reboots and new kernels
-aren't a problem.
+--- kernel-source-2.4.25/drivers/scsi/sata_via.c.sata_via-init-fix	2004-03-22 14:03:31 +0300
++++ kernel-source-2.4.25/drivers/scsi/sata_via.c	2004-03-24 16:27:50 +0300
+@@ -264,9 +264,7 @@ static int svia_init_one (struct pci_dev
+ 
+ 	pci_set_master(pdev);
+ 
+-	/* FIXME: check ata_device_add return value */
+-	ata_device_add(probe_ent);
+-	kfree(probe_ent);
++	ata_add_to_probe_list(probe_ent);
+ 
+ 	return 0;
+ 
 
 -- 
-Russell Howe     | Why be just another cog in the machine,
-rhowe@wiss.co.uk | when you can be the spanner in the works?
+Sergey Vlasov
+
+--at6+YcpfzWZg/htY
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAYbhkW82GfkQfsqIRAtQ0AJ0Ry49ITca3Q5YYZilcIoyKQ9KudwCfV3+4
+n+HL8nr+RL9BU3GqpoShIPQ=
+=XUyT
+-----END PGP SIGNATURE-----
+
+--at6+YcpfzWZg/htY--
