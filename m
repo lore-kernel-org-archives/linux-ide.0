@@ -1,42 +1,78 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] speed up SATA
-Date: Sat, 27 Mar 2004 18:11:57 -0500
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: Re: [parisc-linux] [PATCH] asm-parisc/ide.h cleanup (there are no standard ports)
+Date: Sun, 28 Mar 2004 00:24:57 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40660A3D.3020300@pobox.com>
-References: <4066021A.20308@pobox.com> <40660877.3090302@stesmi.com>
+Message-ID: <200403280024.57672.bzolnier@elka.pw.edu.pl>
+References: <200403241443.43206.bzolnier@elka.pw.edu.pl> <20040327222810.GB24782@colo.lackof.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:8115 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261925AbUC0XMQ
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:4776 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S262052AbUC0XP7
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Mar 2004 18:12:16 -0500
-In-Reply-To: <40660877.3090302@stesmi.com>
+	Sat, 27 Mar 2004 18:15:59 -0500
+In-Reply-To: <20040327222810.GB24782@colo.lackof.org>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Stefan Smietanowski <stesmi@stesmi.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Grant Grundler <grundler@parisc-linux.org>
+Cc: parisc-linux@parisc-linux.org, linux-ide@vger.kernel.org
 
-Stefan Smietanowski wrote:
-> What will happen when a PATA disk lies behind a Marvel(ous) bridge, as
-> in most SATA disks today?
+On Saturday 27 of March 2004 23:28, Grant Grundler wrote:
+> On Wed, Mar 24, 2004 at 02:43:43PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > Hi,
+> >
+> > Is this patch correct?
+>
+> It's not necessary.
 
-Larger transfers work fine in PATA, too.
+Well, I know but I have other cleanups incremental to this one. :-)
 
-WRT bridges, it is generally the best idea to limit to UDMA/100 (udma), 
-but larger transfers are OK.
+> > Regards,
+> > Bartlomiej
+> >
+> >  linux-2.6.5-rc2-bk3-root/include/asm-parisc/ide.h |   15 ++-------------
+> >  1 files changed, 2 insertions(+), 13 deletions(-)
+> >
+> > diff -puN include/asm-parisc/ide.h~parisc_no_default_ide_ports
+> > include/asm-parisc/ide.h ---
+> > linux-2.6.5-rc2-bk3/include/asm-parisc/ide.h~parisc_no_default_ide_ports	
+> >2004-03-24 14:39:06.293991064 +0100 +++
+> > linux-2.6.5-rc2-bk3-root/include/asm-parisc/ide.h	2004-03-24
+> > 14:39:33.400870192 +0100 @@ -41,19 +41,8 @@ static __inline__ void
+> > ide_init_hwif_por
+> >  	hw->io_ports[IDE_IRQ_OFFSET] = 0;
+> >  }
+> >
+> > -static __inline__ void ide_init_default_hwifs(void)
+> > -{
+> > -#ifndef CONFIG_PCI
+> > -	hw_regs_t hw;
+> > -	int index;
+> > -
+> > -	for(index = 0; index < MAX_HWIFS; index++) {
+> > -		ide_init_hwif_ports(&hw, ide_default_io_base(index), 0, NULL);
+> > -		hw.irq = ide_default_irq(ide_default_io_base(index));
+> > -		ide_register_hw(&hw);
+> > -	}
+> > -#endif
+> > -}
+> > +/* There are no standard ports. */
+> > +static inline void ide_init_default_hwifs(void)	{ ; }
+>
+> Note the "ifndef CONFIG_PCI" - we only support IDE behind PCI to date.
+> ie this function already is "empty" for parisc since PCI must be enabled
 
+It is also NOP for #ifdef CONFIG_PCI (that is the reason for this patch BTW)
+since both ide_default_io_base() and ide_default_irq() are defined as '0'.
 
-> Is large transfers mandatory in the LBA48 spec and is LBA48 really
-> mandatory in SATA?
+> when IDE is enabled. Hypothetically someone could add an IDE card
+> to a parisc EISA bus (eg 725), not define PCI, and then run the IDE
+> in PIO mode since DMA is still kaputt behind our EISA IOMMU.
 
-Yes and no, in that order :)  SATA doesn't mandate lba48, but it is 
-highly unlikely that you will see SATA disk without lba48.
+That would require (at least) passing "ide=base[,ctl,[irq]]" kernel parameter.
 
-Regardless, libata supports what the drive supports.  Older disks still 
-work just fine.
-
-	Jeff
-
-
+Regards,
+Bartlomiej
 
