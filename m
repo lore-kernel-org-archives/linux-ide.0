@@ -1,26 +1,71 @@
-From: viro@parcelfarce.linux.theplanet.co.uk
-Subject: [FIX] Re: 2.5.70-bk[56] breaks disk partitioning with multiple IDE disks
-Date: Mon, 2 Jun 2003 00:53:33 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030601235333.GN9502@parcelfarce.linux.theplanet.co.uk>
-References: <200306012259.h51Mx2i14095@freya.yggdrasil.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200306012259.h51Mx2i14095@freya.yggdrasil.com>
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Adam J. Richter" <adam@yggdrasil.com>
+From: "Adam J. Richter" <adam@yggdrasil.com>
+Subject: Re: 2.5.70-bk[56] breaks disk partitioning with multiple IDE disks
+Date: Sun, 1 Jun 2003 17:45:09 -0700
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200306020045.h520j9v15291@freya.yggdrasil.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h-64-105-35-138.SNVACAID.covad.net ([64.105.35.138]:18304 "EHLO
+	freya.yggdrasil.com") by vger.kernel.org with ESMTP id S264774AbTFBAbU
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 1 Jun 2003 20:31:20 -0400
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Sun, Jun 01, 2003 at 03:59:02PM -0700, Adam J. Richter wrote:
-> 	Disk partition under linux-2.5.70-bk[56] systems with two
-> IDE disks is broken.  Under these kernels, the first disk gets
-> the partitioning of the second disk.  Reverting drivers/ide/ide.c
-> to the 2.5.70-bk4 version makes the problem go away.
+	To add to my own posting, here is a patch to 2.5.70-bk6
+that reverts only the changes that replaced ata_unused with
+idedeault_driver.drives.  This change makes bk6 work for me with
+multiple IDE disk drives present.
 
-vi drivers/ide/ide.c -c'/drive->list.*driver->drives/s/list_add/&_tail/|x'
+	I have tried a number of smaller changes to stock
+2.5.70-bk6/drivers/ide/ide.c, but, I have not yet found a change
+simpler than this that works.
 
-Now that we use idedefault_driver.drives instead of ata_unused, the order
-of drives on the driver->drives becomes significant; note that when we added
-to ata_unused, we had done that to the end of list.
+Adam J. Richter     __     ______________   575 Oroville Road
+adam@yggdrasil.com     \ /                  Miplitas, California 95035
++1 408 309-6081         | g g d r a s i l   United States of America
+                         "Free Software For The Rest Of Us."
+
+
+--- linux-2.5.70-bk6/drivers/ide/ide.c	2003-06-01 12:01:28.000000000 -0700
++++ linux/drivers/ide/ide.c	2003-06-01 16:52:28.000000000 -0700
+@@ -462,6 +462,7 @@
+ 	return -ENXIO;
+ }
+ 
++static LIST_HEAD(ata_unused);
+ static spinlock_t drives_lock = SPIN_LOCK_UNLOCKED;
+ static spinlock_t drivers_lock = SPIN_LOCK_UNLOCKED;
+ static LIST_HEAD(drivers);
+@@ -1436,6 +1437,9 @@
+ 	spin_unlock(&drivers_lock);
+ 	if(idedefault_driver.attach(drive) != 0)
+ 		panic("ide: default attach failed");
++	spin_lock(&drives_lock);
++	list_add_tail(&drive->list, &ata_unused);
++	spin_unlock(&drives_lock);
+ 	return 1;
+ }
+ 
+@@ -2379,8 +2383,8 @@
+ 	spin_unlock_irqrestore(&ide_lock, flags);
+ 	spin_lock(&drives_lock);
+ 	list_del_init(&drive->list);
++	list_add(&drive->list, &drive->driver->drives);
+ 	spin_unlock(&drives_lock);
+-	/* drive will be added to &idedefault_driver->drives in ata_attach() */
+ 	return 0;
+ }
+ 
+@@ -2403,9 +2407,9 @@
+ 	list_add(&driver->drivers, &drivers);
+ 	spin_unlock(&drivers_lock);
+ 
+-	INIT_LIST_HEAD(&list);
+ 	spin_lock(&drives_lock);
+-	list_splice_init(&idedefault_driver.drives, &list);
++	INIT_LIST_HEAD(&list);
++	list_splice_init(&ata_unused, &list);
+ 	spin_unlock(&drives_lock);
+ 
+ 	list_for_each_safe(list_loop, tmp_storage, &list) {
