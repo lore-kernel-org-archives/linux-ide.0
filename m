@@ -1,50 +1,36 @@
 From: domen@coderock.org
-Subject: [patch 2/6] Replace pci_find_device with pci_dev_present
-Date: Sun, 06 Mar 2005 11:42:06 +0100
-Message-ID: <20050306104207.6C1A61F1F0@trashy.coderock.org>
-Received: from coderock.org ([193.77.147.115]:29098 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S261370AbVCFKmM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Mar 2005 05:42:12 -0500
+Subject: [patch 4/6] drivers/ide/*: convert to pci_register_driver
+Date: Sun, 06 Mar 2005 11:42:13 +0100
+Message-ID: <20050306104214.56FE71F203@trashy.coderock.org>
+Received: from coderock.org ([193.77.147.115]:32682 "EHLO trashy.coderock.org")
+	by vger.kernel.org with ESMTP id S261375AbVCFKmT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Mar 2005 05:42:19 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org, domen@coderock.org, hannal@us.ibm.com, janitor@sternwelten.at
+Cc: linux-ide@vger.kernel.org, domen@coderock.org, c.lucas@ifrance.com
 
 
+convert from pci_module_init to pci_register_driver
 
-
-The dev returned from pci_find_device was not used so it can be replaced
-with pci_dev_present. Has been compile tested.
-
-Hanna Linder
-IBM Linux Technology Center
-
-Signed-off-by: Hanna Linder <hannal@us.ibm.com>
-Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
+Signed-off-by: Christophe Lucas <c.lucas@ifrance.com>
 Signed-off-by: Domen Puncer <domen@coderock.org>
 ---
 
 
- kj-domen/drivers/ide/pci/alim15x3.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletion(-)
+ kj-domen/drivers/ide/setup-pci.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/ide/pci/alim15x3.c~pci_dev_present-drivers_ide_pci_alim15x3 drivers/ide/pci/alim15x3.c
---- kj/drivers/ide/pci/alim15x3.c~pci_dev_present-drivers_ide_pci_alim15x3	2005-03-05 16:09:42.000000000 +0100
-+++ kj-domen/drivers/ide/pci/alim15x3.c	2005-03-05 16:09:42.000000000 +0100
-@@ -876,9 +876,14 @@ static ide_pci_device_t ali15x3_chipset 
-  
- static int __devinit alim15x3_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+diff -puN drivers/ide/setup-pci.c~pci_register_driver-drivers_ide drivers/ide/setup-pci.c
+--- kj/drivers/ide/setup-pci.c~pci_register_driver-drivers_ide	2005-03-05 16:12:20.000000000 +0100
++++ kj-domen/drivers/ide/setup-pci.c	2005-03-05 16:12:20.000000000 +0100
+@@ -803,7 +803,7 @@ static LIST_HEAD(ide_pci_drivers);
+ int ide_pci_register_driver(struct pci_driver *driver)
  {
-+	static struct pci_device_id ati_rs100[] = {
-+		{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS100) },
-+		{ },
-+	};
-+
- 	ide_pci_device_t *d = &ali15x3_chipset;
- 
--	if(pci_find_device(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS100, NULL))
-+	if(pci_dev_present(ati_rs100))
- 		printk(KERN_ERR "Warning: ATI Radeon IGP Northbridge is not yet fully tested.\n");
- 
- #if defined(CONFIG_SPARC64)
+ 	if(!pre_init)
+-		return pci_module_init(driver);
++		return pci_register_driver(driver);
+ 	list_add_tail(&driver->node, &ide_pci_drivers);
+ 	return 0;
+ }
 _
