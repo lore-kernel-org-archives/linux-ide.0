@@ -1,54 +1,109 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: sata_via + VT8237 RAID 0 array of 2 s-ata drives
-Date: Fri, 11 Mar 2005 23:24:04 -0500
-Message-ID: <42326EE4.2080102@pobox.com>
-References: <29362.1110450136@www25.gmx.net>
+Subject: [BK PATCHES] 2.6.x libata fixes
+Date: Fri, 11 Mar 2005 23:33:48 -0500
+Message-ID: <4232712C.1080901@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:57027 "EHLO
+Content-Type: multipart/mixed;
+ boundary="------------020801020305050505000708"
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:33988 "EHLO
 	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261830AbVCLEYh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Mar 2005 23:24:37 -0500
-In-Reply-To: <29362.1110450136@www25.gmx.net>
+	id S261852AbVCLEeS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Mar 2005 23:34:18 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: chris.bu@gmx.net
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-chris.bu@gmx.net wrote:
-> Hi Jeff,
-> 
-> a quick question about libata + sata_via V1.10 as included in the most
-> recent kernel 2.6.11.2:
-> 
-> I have a MSI KT6V (MS-7021) mainboard with VIA VT-8237 Southbridge and want
-> to connect two S-ATA hard disk drives. Both drives should run in a RAID 0
-> array, which is to be configured through the S-ATA RAID BIOS on the main
-> board.
-> 
-> Is it possible that the sata_via driver recognizes the existence of the
-> array and treats it as one drive under LINUX? As far as I've learned, the
-> VT-8237 is not a real hardware RAID solution and needs some software support
-> from the OS, too. Again, is it possible to do this, or does the driver only
-> support seperate s-ata channels, no matter what is configured in the S-ATA
-> RAID BIOS? If the BIOS configured RAID volumes are not supported at all (any
-> plans for the near future?) what would you recommend to do instead to
-> provide fast and efficient RAID 0 striping for both s-ata drives (to double
-> the r/w data rate).
-> 
-> Are there any other limitations with the current sata_via driver concerning
-> VT8237 with two S-ATA drives?
-
-The sata_via driver will always just recognize each disk, not the RAID.
-
-If you want to use the BIOS RAID, you have to use the "device mapper" 
-with the "dmraid" utility.  But its recommended that you use the Linux 
-"md" RAID.  Under Linux, the BIOS RAID is just a poorly-supported format 
-that duplicates the better-tested Linux md raid.
-
-http://linux.yyz.us/sata/faq-sata-raid.html#dmraid
-
-	Jeff
+This is a multi-part message in MIME format.
+--------------020801020305050505000708
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
 
+--------------020801020305050505000708
+Content-Type: text/plain;
+ name="libata.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libata.txt"
+
+Please do a
+
+	bk pull bk://gkernel.bkbits.net/libata-2.6
+
+This will update the following files:
+
+ drivers/scsi/ahci.c |   15 +++++++++++++--
+ 1 files changed, 13 insertions(+), 2 deletions(-)
+
+through these ChangeSets:
+
+Brett Russ:
+  o AHCI: fix fatal error int handling
+
+Jeff Garzik:
+  o [libata ahci] support ->tf_read hook
+
+
+--------------020801020305050505000708
+Content-Type: text/x-patch;
+ name="libata.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libata.patch"
+
+diff -Nru a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+--- a/drivers/scsi/ahci.c	2005-03-11 23:30:59 -05:00
++++ b/drivers/scsi/ahci.c	2005-03-11 23:30:59 -05:00
+@@ -177,6 +177,7 @@
+ static int ahci_port_start(struct ata_port *ap);
+ static void ahci_port_stop(struct ata_port *ap);
+ static void ahci_host_stop(struct ata_host_set *host_set);
++static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+ static void ahci_qc_prep(struct ata_queued_cmd *qc);
+ static u8 ahci_check_status(struct ata_port *ap);
+ static u8 ahci_check_err(struct ata_port *ap);
+@@ -210,6 +211,8 @@
+ 	.check_err		= ahci_check_err,
+ 	.dev_select		= ata_noop_dev_select,
+ 
++	.tf_read		= ahci_tf_read,
++
+ 	.phy_reset		= ahci_phy_reset,
+ 
+ 	.qc_prep		= ahci_qc_prep,
+@@ -463,6 +466,14 @@
+ 	return (readl(mmio + PORT_TFDATA) >> 8) & 0xFF;
+ }
+ 
++static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
++{
++	struct ahci_port_priv *pp = ap->private_data;
++	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
++
++	ata_tf_from_fis(d2h_fis, tf);
++}
++
+ static void ahci_fill_sg(struct ata_queued_cmd *qc)
+ {
+ 	struct ahci_port_priv *pp = qc->ap->private_data;
+@@ -539,7 +550,7 @@
+ 
+ 	/* stop DMA */
+ 	tmp = readl(port_mmio + PORT_CMD);
+-	tmp &= PORT_CMD_START | PORT_CMD_FIS_RX;
++	tmp &= ~PORT_CMD_START;
+ 	writel(tmp, port_mmio + PORT_CMD);
+ 
+ 	/* wait for engine to stop.  TODO: this could be
+@@ -571,7 +582,7 @@
+ 
+ 	/* re-start DMA */
+ 	tmp = readl(port_mmio + PORT_CMD);
+-	tmp |= PORT_CMD_START | PORT_CMD_FIS_RX;
++	tmp |= PORT_CMD_START;
+ 	writel(tmp, port_mmio + PORT_CMD);
+ 	readl(port_mmio + PORT_CMD); /* flush */
+ 
+
+--------------020801020305050505000708--
