@@ -1,52 +1,49 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: Linux Serial ATA (SATA) status report
-Date: Tue, 17 Aug 2004 10:30:39 -0600
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: sata media errors not propagated? (was Re: sata_via issue)
+Date: Tue, 17 Aug 2004 20:40:47 +0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <C63C080F-F06A-11D8-9368-00039398BB5E@ieee.org>
-Mime-Version: 1.0 (Apple Message framework v619)
-Content-Type: text/plain;
-	charset=US-ASCII;
-	delsp=yes;
-	format=flowed
+Message-ID: <4122350F.3040700@wasp.net.au>
+References: <1092741447.1581.33.camel@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:50625 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S268336AbUHQQaM
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Aug 2004 12:30:12 -0400
+Received: from wasp.net.au ([203.190.192.17]:24520 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S266376AbUHQQkS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2004 12:40:18 -0400
+In-Reply-To: <1092741447.1581.33.camel@localhost>
 List-Id: linux-ide@vger.kernel.org
-To: Andreas Jellinghaus <aj@dungeon.inka.de>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-// Andreas J:
+Kevin Shanahan wrote:
 
- > > Date: 2004-07-09 8:17:21
- > > IIRC Plextor is shipping dvd burners with SATA
- > > interface.
- > ...
- >  
-http://www.plextor.be/products/dvd_recorders/px-712sa.asp?choice=PX 
--712SA
- > ...
- > > Any idea whether or not these will work?
+I have done about 15 re-compiles now with increasing numbers of printk's added and have got this far.
 
-Will Linux find and name a SATAPI device?
+scsi -> libata to ata_queued_cmd
 
-Every 2.4 Linux I've tried connects with the SATAPI device I have.   
-Knoppix Linux 2.4, my own kernel, etc.  Seemingly the 2.4 cdrom and  
-ide-cd driver modules connect to SATAPI, same as PATAPI.  But 2.6  
-introduces CONFIG_BLK_IDE_SATA.  drivers/ide/Kconfig explains why.
+> 
+> Buffer I/O error on device sdb2, logical block 7281
+> ata2: command 0x25 timeout, stat 0x59 host_stat 0x1
+> scsi1: ERROR on channel 0, id 0, lun 0, CDB: 0x28 00 00 03 29 f0 00 00 ec 00 
+> Current sdb: sense = 70  3
+> ASC=11 ASCQ= 4
+> Raw sense data:0x70 0x00 0x03 0x00 0x00 0x00 0x00 0x06 0x00 0x00 0x00 0x00 0x11 0x04 
+> end_request: I/O error, dev sdb, sector 207344
 
-In my newbie ignorance, me, I think that explanation means to say that,  
-by make defconfig, as yet you don't get SATAPI in 2.6, but you can  
-still ask for it to work as well in 2.6 as in 2.4, except if you do ask  
-for SATAPI you might lose SATAPI anyhow by losing support for the  
-unusual SATA host you have.  However, I'm confident other people here  
-in linux-ide understand this far far better than I.
+Here the libata layer passes the error back to scsi and everyone is happy. (uses ata_scsi_qc_complete)
 
-Pat LaVarre
-http://linux-pel.blog-city.com/read/742498.htm
+> 
+> Then always ends with the following:
 
-P.S. What effects the ide-scsi and ide-floppy driver modules might have  
-with SATAPI, I do not know.
+About here, scsi passes a command down to libata, ata_queued_cmd which causes the next 3 messages.
+libata never errors out here and completes the request so it all falls in a heap.
+I'm going out to dinner, I'll see if I can trace it further later tonight.
 
+> ATA: abnormal status 0x59 on port 0xB807
+> ATA: abnormal status 0x59 on port 0xB807
+> ATA: abnormal status 0x59 on port 0xB807
+
+Not much help, but closing in.
+
+Regards,
+Brad
