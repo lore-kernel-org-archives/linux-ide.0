@@ -1,1487 +1,3038 @@
-From: jtlayton@poochiereds.net (Jeff Layton)
-Subject: sata_nv - ata1 failed to respond
-Date: Wed, 18 Aug 2004 08:20:13 -0400
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [sata] libata queue updated
+Date: Wed, 18 Aug 2004 09:32:43 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040818122013.GH24169@poochiereds.net>
+Message-ID: <41235A7B.30105@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="liOOAslEiF7prFVr"
+Content-Type: multipart/mixed;
+ boundary="------------060300040007010701090509"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [24.25.9.103] ([24.25.9.103]:59841 "EHLO
-	ms-smtp-04-eri0.southeast.rr.com") by vger.kernel.org with ESMTP
-	id S266115AbUHRMUs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Aug 2004 08:20:48 -0400
-Received: from mail.poochiereds.net (rdu26-93-067.nc.rr.com [66.26.93.67])
-	by ms-smtp-04-eri0.southeast.rr.com (8.12.10/8.12.7) with ESMTP id i7ICKYSG001060
-	for <linux-ide@vger.kernel.org>; Wed, 18 Aug 2004 08:20:35 -0400 (EDT)
-Received: from localhost (localhost [127.0.0.1])
-	by mail.poochiereds.net (Postfix) with ESMTP id 18C5710E65
-	for <linux-ide@vger.kernel.org>; Wed, 18 Aug 2004 08:20:14 -0400 (EDT)
-Received: from mail.poochiereds.net ([127.0.0.1])
-	by localhost (salusa [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 06452-03 for <linux-ide@vger.kernel.org>;
-	Wed, 18 Aug 2004 08:20:13 -0400 (EDT)
-Content-Disposition: inline
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:22249 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266175AbUHRNdD
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Aug 2004 09:33:03 -0400
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-
---liOOAslEiF7prFVr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-I seem to be unable to get the the nv_sata driver to work in my machine.
-When I try to use it, I get the following messages on the console when
-the kernel tries to detect the disk:
-
-  ata1 is slow to respond, please be patient
-  ata1 failed to respond (30 secs)
-
-The same hardware works fine, however, with the sata-enabled AMD74XX IDE
-driver. I've tried the stock 2.6.8.1 kernel, and the same kernel with
-the jgarzick libata patch set from 2004/08/14.
-
-
-Hardware info:
-
-Epox 8K3ADJ Motherboard (nForce3 250Gb)
-Athlon64 3000+
-Seagate ST3200822AS Hard Drive
-
-I've attached my kernel config to this email.
-
-Is there something I'm doing wrong here? Also, I'm willing to test
-patches if you can provide them.
-
-Thanks,
-Jeff
-
-
---liOOAslEiF7prFVr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="config-2.6.8.1b"
-
-#
-# Automatically generated make config: don't edit
-#
-CONFIG_X86_64=y
-CONFIG_64BIT=y
-CONFIG_X86=y
-CONFIG_MMU=y
-CONFIG_RWSEM_GENERIC_SPINLOCK=y
-CONFIG_X86_CMPXCHG=y
-CONFIG_EARLY_PRINTK=y
-CONFIG_HPET_TIMER=y
-CONFIG_HPET_EMULATE_RTC=y
-CONFIG_GENERIC_ISA_DMA=y
-
-#
-# Code maturity level options
-#
-CONFIG_EXPERIMENTAL=y
-CONFIG_CLEAN_COMPILE=y
-CONFIG_BROKEN_ON_SMP=y
-
-#
-# General setup
-#
-CONFIG_SWAP=y
-CONFIG_SYSVIPC=y
-CONFIG_POSIX_MQUEUE=y
-CONFIG_BSD_PROCESS_ACCT=y
-CONFIG_BSD_PROCESS_ACCT_V3=y
-CONFIG_SYSCTL=y
-CONFIG_AUDIT=y
-CONFIG_AUDITSYSCALL=y
-CONFIG_LOG_BUF_SHIFT=14
-CONFIG_HOTPLUG=y
-CONFIG_IKCONFIG=y
-CONFIG_IKCONFIG_PROC=y
-# CONFIG_EMBEDDED is not set
-CONFIG_KALLSYMS=y
-# CONFIG_KALLSYMS_EXTRA_PASS is not set
-CONFIG_FUTEX=y
-CONFIG_EPOLL=y
-CONFIG_IOSCHED_NOOP=y
-CONFIG_IOSCHED_AS=y
-CONFIG_IOSCHED_DEADLINE=y
-CONFIG_IOSCHED_CFQ=y
-# CONFIG_CC_OPTIMIZE_FOR_SIZE is not set
-
-#
-# Loadable module support
-#
-CONFIG_MODULES=y
-CONFIG_MODULE_UNLOAD=y
-CONFIG_MODULE_FORCE_UNLOAD=y
-CONFIG_OBSOLETE_MODPARM=y
-CONFIG_MODVERSIONS=y
-CONFIG_KMOD=y
-
-#
-# Processor type and features
-#
-CONFIG_MK8=y
-# CONFIG_MPSC is not set
-# CONFIG_GENERIC_CPU is not set
-CONFIG_X86_L1_CACHE_BYTES=64
-CONFIG_X86_L1_CACHE_SHIFT=6
-CONFIG_X86_TSC=y
-CONFIG_X86_GOOD_APIC=y
-CONFIG_MICROCODE=m
-CONFIG_X86_MSR=m
-CONFIG_X86_CPUID=m
-CONFIG_X86_IO_APIC=y
-CONFIG_X86_LOCAL_APIC=y
-CONFIG_MTRR=y
-# CONFIG_SMP is not set
-CONFIG_PREEMPT=y
-CONFIG_GART_IOMMU=y
-CONFIG_SWIOTLB=y
-CONFIG_X86_MCE=y
-
-#
-# Power management options
-#
-CONFIG_PM=y
-# CONFIG_SOFTWARE_SUSPEND is not set
-
-#
-# ACPI (Advanced Configuration and Power Interface) Support
-#
-CONFIG_ACPI=y
-CONFIG_ACPI_BOOT=y
-CONFIG_ACPI_INTERPRETER=y
-# CONFIG_ACPI_SLEEP is not set
-CONFIG_ACPI_AC=m
-CONFIG_ACPI_BATTERY=m
-CONFIG_ACPI_BUTTON=m
-CONFIG_ACPI_FAN=m
-CONFIG_ACPI_PROCESSOR=m
-CONFIG_ACPI_THERMAL=m
-# CONFIG_ACPI_ASUS is not set
-# CONFIG_ACPI_TOSHIBA is not set
-# CONFIG_ACPI_DEBUG is not set
-CONFIG_ACPI_BUS=y
-CONFIG_ACPI_EC=y
-CONFIG_ACPI_POWER=y
-CONFIG_ACPI_PCI=y
-CONFIG_ACPI_SYSTEM=y
-
-#
-# CPU Frequency scaling
-#
-CONFIG_CPU_FREQ=y
-CONFIG_CPU_FREQ_PROC_INTF=m
-CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y
-# CONFIG_CPU_FREQ_DEFAULT_GOV_USERSPACE is not set
-CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
-CONFIG_CPU_FREQ_GOV_POWERSAVE=m
-CONFIG_CPU_FREQ_GOV_USERSPACE=m
-# CONFIG_CPU_FREQ_24_API is not set
-CONFIG_CPU_FREQ_TABLE=m
-
-#
-# CPUFreq processor drivers
-#
-CONFIG_X86_POWERNOW_K8=m
-
-#
-# Bus options (PCI etc.)
-#
-CONFIG_PCI=y
-CONFIG_PCI_DIRECT=y
-CONFIG_PCI_MMCONFIG=y
-# CONFIG_PCI_MSI is not set
-CONFIG_PCI_LEGACY_PROC=y
-CONFIG_PCI_NAMES=y
-
-#
-# PCMCIA/CardBus support
-#
-# CONFIG_PCMCIA is not set
-
-#
-# PCI Hotplug Support
-#
-# CONFIG_HOTPLUG_PCI is not set
-
-#
-# Executable file formats / Emulations
-#
-CONFIG_BINFMT_ELF=y
-CONFIG_BINFMT_MISC=m
-CONFIG_IA32_EMULATION=y
-CONFIG_IA32_AOUT=y
-CONFIG_COMPAT=y
-CONFIG_SYSVIPC_COMPAT=y
-CONFIG_UID16=y
-
-#
-# Device Drivers
-#
-
-#
-# Generic Driver Options
-#
-CONFIG_STANDALONE=y
-CONFIG_PREVENT_FIRMWARE_BUILD=y
-CONFIG_FW_LOADER=m
-
-#
-# Memory Technology Devices (MTD)
-#
-# CONFIG_MTD is not set
-
-#
-# Parallel port support
-#
-CONFIG_PARPORT=m
-CONFIG_PARPORT_PC=m
-CONFIG_PARPORT_PC_CML1=m
-CONFIG_PARPORT_SERIAL=m
-CONFIG_PARPORT_PC_FIFO=y
-# CONFIG_PARPORT_PC_SUPERIO is not set
-# CONFIG_PARPORT_OTHER is not set
-CONFIG_PARPORT_1284=y
-
-#
-# Plug and Play support
-#
-
-#
-# Block devices
-#
-CONFIG_BLK_DEV_FD=m
-# CONFIG_PARIDE is not set
-# CONFIG_BLK_CPQ_DA is not set
-# CONFIG_BLK_CPQ_CISS_DA is not set
-# CONFIG_BLK_DEV_DAC960 is not set
-# CONFIG_BLK_DEV_UMEM is not set
-CONFIG_BLK_DEV_LOOP=m
-CONFIG_BLK_DEV_CRYPTOLOOP=m
-CONFIG_BLK_DEV_NBD=m
-# CONFIG_BLK_DEV_SX8 is not set
-CONFIG_BLK_DEV_RAM=y
-CONFIG_BLK_DEV_RAM_SIZE=8192
-CONFIG_BLK_DEV_INITRD=y
-# CONFIG_LBD is not set
-
-#
-# ATA/ATAPI/MFM/RLL support
-#
-CONFIG_IDE=m
-CONFIG_BLK_DEV_IDE=m
-
-#
-# Please see Documentation/ide.txt for help/info on IDE drives
-#
-CONFIG_BLK_DEV_IDE_SATA=y
-# CONFIG_BLK_DEV_HD_IDE is not set
-CONFIG_BLK_DEV_IDEDISK=m
-# CONFIG_IDEDISK_MULTI_MODE is not set
-CONFIG_BLK_DEV_IDECD=m
-# CONFIG_BLK_DEV_IDETAPE is not set
-# CONFIG_BLK_DEV_IDEFLOPPY is not set
-CONFIG_BLK_DEV_IDESCSI=m
-# CONFIG_IDE_TASK_IOCTL is not set
-CONFIG_IDE_TASKFILE_IO=y
-
-#
-# IDE chipset support/bugfixes
-#
-CONFIG_IDE_GENERIC=m
-# CONFIG_BLK_DEV_CMD640 is not set
-CONFIG_BLK_DEV_IDEPCI=y
-CONFIG_IDEPCI_SHARE_IRQ=y
-# CONFIG_BLK_DEV_OFFBOARD is not set
-CONFIG_BLK_DEV_GENERIC=m
-# CONFIG_BLK_DEV_OPTI621 is not set
-# CONFIG_BLK_DEV_RZ1000 is not set
-CONFIG_BLK_DEV_IDEDMA_PCI=y
-# CONFIG_BLK_DEV_IDEDMA_FORCED is not set
-CONFIG_IDEDMA_PCI_AUTO=y
-# CONFIG_IDEDMA_ONLYDISK is not set
-CONFIG_BLK_DEV_ADMA=y
-# CONFIG_BLK_DEV_AEC62XX is not set
-# CONFIG_BLK_DEV_ALI15X3 is not set
-CONFIG_BLK_DEV_AMD74XX=m
-# CONFIG_BLK_DEV_ATIIXP is not set
-# CONFIG_BLK_DEV_CMD64X is not set
-# CONFIG_BLK_DEV_TRIFLEX is not set
-# CONFIG_BLK_DEV_CY82C693 is not set
-# CONFIG_BLK_DEV_CS5520 is not set
-# CONFIG_BLK_DEV_CS5530 is not set
-# CONFIG_BLK_DEV_HPT34X is not set
-# CONFIG_BLK_DEV_HPT366 is not set
-# CONFIG_BLK_DEV_SC1200 is not set
-# CONFIG_BLK_DEV_PIIX is not set
-# CONFIG_BLK_DEV_NS87415 is not set
-# CONFIG_BLK_DEV_PDC202XX_OLD is not set
-# CONFIG_BLK_DEV_PDC202XX_NEW is not set
-# CONFIG_BLK_DEV_SVWKS is not set
-# CONFIG_BLK_DEV_SIIMAGE is not set
-# CONFIG_BLK_DEV_SIS5513 is not set
-# CONFIG_BLK_DEV_SLC90E66 is not set
-# CONFIG_BLK_DEV_TRM290 is not set
-# CONFIG_BLK_DEV_VIA82CXXX is not set
-# CONFIG_IDE_ARM is not set
-CONFIG_BLK_DEV_IDEDMA=y
-# CONFIG_IDEDMA_IVB is not set
-CONFIG_IDEDMA_AUTO=y
-# CONFIG_BLK_DEV_HD is not set
-
-#
-# SCSI device support
-#
-CONFIG_SCSI=y
-CONFIG_SCSI_PROC_FS=y
-
-#
-# SCSI support type (disk, tape, CD-ROM)
-#
-CONFIG_BLK_DEV_SD=y
-CONFIG_CHR_DEV_ST=m
-# CONFIG_CHR_DEV_OSST is not set
-CONFIG_BLK_DEV_SR=m
-# CONFIG_BLK_DEV_SR_VENDOR is not set
-CONFIG_CHR_DEV_SG=m
-
-#
-# Some SCSI devices (e.g. CD jukebox) support multiple LUNs
-#
-# CONFIG_SCSI_MULTI_LUN is not set
-CONFIG_SCSI_CONSTANTS=y
-CONFIG_SCSI_LOGGING=y
-
-#
-# SCSI Transport Attributes
-#
-CONFIG_SCSI_SPI_ATTRS=m
-CONFIG_SCSI_FC_ATTRS=m
-
-#
-# SCSI low-level drivers
-#
-# CONFIG_BLK_DEV_3W_XXXX_RAID is not set
-# CONFIG_SCSI_3W_9XXX is not set
-# CONFIG_SCSI_ACARD is not set
-# CONFIG_SCSI_AACRAID is not set
-# CONFIG_SCSI_AIC7XXX is not set
-# CONFIG_SCSI_AIC7XXX_OLD is not set
-# CONFIG_SCSI_AIC79XX is not set
-# CONFIG_SCSI_MEGARAID is not set
-CONFIG_SCSI_SATA=y
-# CONFIG_SCSI_SATA_SVW is not set
-# CONFIG_SCSI_ATA_PIIX is not set
-CONFIG_SCSI_SATA_NV=y
-# CONFIG_SCSI_SATA_PROMISE is not set
-# CONFIG_SCSI_SATA_SX4 is not set
-# CONFIG_SCSI_SATA_SIL is not set
-# CONFIG_SCSI_SATA_SIS is not set
-# CONFIG_SCSI_SATA_VIA is not set
-# CONFIG_SCSI_SATA_VITESSE is not set
-# CONFIG_SCSI_BUSLOGIC is not set
-# CONFIG_SCSI_DMX3191D is not set
-# CONFIG_SCSI_EATA is not set
-# CONFIG_SCSI_EATA_PIO is not set
-# CONFIG_SCSI_FUTURE_DOMAIN is not set
-# CONFIG_SCSI_GDTH is not set
-# CONFIG_SCSI_IPS is not set
-# CONFIG_SCSI_INIA100 is not set
-# CONFIG_SCSI_PPA is not set
-# CONFIG_SCSI_IMM is not set
-# CONFIG_SCSI_SYM53C8XX_2 is not set
-# CONFIG_SCSI_IPR is not set
-# CONFIG_SCSI_QLOGIC_ISP is not set
-# CONFIG_SCSI_QLOGIC_FC is not set
-# CONFIG_SCSI_QLOGIC_1280 is not set
-CONFIG_SCSI_QLA2XXX=y
-# CONFIG_SCSI_QLA21XX is not set
-# CONFIG_SCSI_QLA22XX is not set
-# CONFIG_SCSI_QLA2300 is not set
-# CONFIG_SCSI_QLA2322 is not set
-# CONFIG_SCSI_QLA6312 is not set
-# CONFIG_SCSI_QLA6322 is not set
-# CONFIG_SCSI_DC395x is not set
-# CONFIG_SCSI_DC390T is not set
-# CONFIG_SCSI_DEBUG is not set
-
-#
-# Multi-device support (RAID and LVM)
-#
-CONFIG_MD=y
-CONFIG_BLK_DEV_MD=m
-CONFIG_MD_LINEAR=m
-CONFIG_MD_RAID0=m
-CONFIG_MD_RAID1=m
-CONFIG_MD_RAID5=m
-CONFIG_MD_RAID6=m
-CONFIG_MD_MULTIPATH=m
-CONFIG_BLK_DEV_DM=y
-CONFIG_DM_CRYPT=m
-CONFIG_DM_SNAPSHOT=m
-CONFIG_DM_MIRROR=m
-CONFIG_DM_ZERO=m
-
-#
-# Fusion MPT device support
-#
-# CONFIG_FUSION is not set
-
-#
-# IEEE 1394 (FireWire) support
-#
-CONFIG_IEEE1394=m
-
-#
-# Subsystem Options
-#
-# CONFIG_IEEE1394_VERBOSEDEBUG is not set
-CONFIG_IEEE1394_OUI_DB=y
-CONFIG_IEEE1394_EXTRA_CONFIG_ROMS=y
-CONFIG_IEEE1394_CONFIG_ROM_IP1394=y
-
-#
-# Device Drivers
-#
-CONFIG_IEEE1394_PCILYNX=m
-CONFIG_IEEE1394_OHCI1394=m
-
-#
-# Protocol Drivers
-#
-CONFIG_IEEE1394_VIDEO1394=m
-CONFIG_IEEE1394_SBP2=m
-# CONFIG_IEEE1394_SBP2_PHYS_DMA is not set
-CONFIG_IEEE1394_ETH1394=m
-CONFIG_IEEE1394_DV1394=m
-CONFIG_IEEE1394_RAWIO=m
-CONFIG_IEEE1394_CMP=m
-CONFIG_IEEE1394_AMDTP=m
-
-#
-# I2O device support
-#
-CONFIG_I2O=m
-CONFIG_I2O_CONFIG=m
-CONFIG_I2O_BLOCK=m
-CONFIG_I2O_SCSI=m
-CONFIG_I2O_PROC=m
-
-#
-# Networking support
-#
-CONFIG_NET=y
-
-#
-# Networking options
-#
-CONFIG_PACKET=m
-CONFIG_PACKET_MMAP=y
-CONFIG_NETLINK_DEV=m
-CONFIG_UNIX=m
-CONFIG_NET_KEY=m
-CONFIG_INET=y
-CONFIG_IP_MULTICAST=y
-CONFIG_IP_ADVANCED_ROUTER=y
-# CONFIG_IP_MULTIPLE_TABLES is not set
-# CONFIG_IP_ROUTE_MULTIPATH is not set
-# CONFIG_IP_ROUTE_TOS is not set
-# CONFIG_IP_ROUTE_VERBOSE is not set
-# CONFIG_IP_PNP is not set
-CONFIG_NET_IPIP=m
-# CONFIG_NET_IPGRE is not set
-# CONFIG_IP_MROUTE is not set
-# CONFIG_ARPD is not set
-# CONFIG_SYN_COOKIES is not set
-CONFIG_INET_AH=m
-CONFIG_INET_ESP=m
-CONFIG_INET_IPCOMP=m
-# CONFIG_IPV6 is not set
-# CONFIG_NETFILTER is not set
-CONFIG_XFRM=y
-CONFIG_XFRM_USER=m
-
-#
-# SCTP Configuration (EXPERIMENTAL)
-#
-CONFIG_IP_SCTP=m
-# CONFIG_SCTP_DBG_MSG is not set
-# CONFIG_SCTP_DBG_OBJCNT is not set
-# CONFIG_SCTP_HMAC_NONE is not set
-# CONFIG_SCTP_HMAC_SHA1 is not set
-CONFIG_SCTP_HMAC_MD5=y
-# CONFIG_ATM is not set
-# CONFIG_BRIDGE is not set
-# CONFIG_VLAN_8021Q is not set
-# CONFIG_DECNET is not set
-# CONFIG_LLC2 is not set
-# CONFIG_IPX is not set
-# CONFIG_ATALK is not set
-# CONFIG_X25 is not set
-# CONFIG_LAPB is not set
-# CONFIG_NET_DIVERT is not set
-# CONFIG_ECONET is not set
-# CONFIG_WAN_ROUTER is not set
-# CONFIG_NET_HW_FLOWCONTROL is not set
-
-#
-# QoS and/or fair queueing
-#
-# CONFIG_NET_SCHED is not set
-# CONFIG_NET_CLS_ROUTE is not set
-
-#
-# Network testing
-#
-# CONFIG_NET_PKTGEN is not set
-# CONFIG_NETPOLL is not set
-# CONFIG_NET_POLL_CONTROLLER is not set
-# CONFIG_HAMRADIO is not set
-# CONFIG_IRDA is not set
-# CONFIG_BT is not set
-CONFIG_NETDEVICES=y
-CONFIG_DUMMY=m
-# CONFIG_BONDING is not set
-# CONFIG_EQUALIZER is not set
-CONFIG_TUN=m
-# CONFIG_ETHERTAP is not set
-
-#
-# ARCnet devices
-#
-# CONFIG_ARCNET is not set
-
-#
-# Ethernet (10 or 100Mbit)
-#
-CONFIG_NET_ETHERNET=y
-CONFIG_MII=m
-# CONFIG_HAPPYMEAL is not set
-# CONFIG_SUNGEM is not set
-CONFIG_NET_VENDOR_3COM=y
-CONFIG_VORTEX=m
-# CONFIG_TYPHOON is not set
-
-#
-# Tulip family network device support
-#
-CONFIG_NET_TULIP=y
-# CONFIG_DE2104X is not set
-CONFIG_TULIP=m
-# CONFIG_TULIP_MWI is not set
-# CONFIG_TULIP_MMIO is not set
-# CONFIG_TULIP_NAPI is not set
-# CONFIG_DE4X5 is not set
-# CONFIG_WINBOND_840 is not set
-# CONFIG_DM9102 is not set
-# CONFIG_HP100 is not set
-CONFIG_NET_PCI=y
-# CONFIG_PCNET32 is not set
-# CONFIG_AMD8111_ETH is not set
-# CONFIG_ADAPTEC_STARFIRE is not set
-# CONFIG_B44 is not set
-CONFIG_FORCEDETH=m
-# CONFIG_DGRS is not set
-# CONFIG_EEPRO100 is not set
-# CONFIG_E100 is not set
-# CONFIG_FEALNX is not set
-# CONFIG_NATSEMI is not set
-# CONFIG_NE2K_PCI is not set
-# CONFIG_8139CP is not set
-# CONFIG_8139TOO is not set
-# CONFIG_SIS900 is not set
-# CONFIG_EPIC100 is not set
-# CONFIG_SUNDANCE is not set
-# CONFIG_VIA_RHINE is not set
-# CONFIG_VIA_VELOCITY is not set
-
-#
-# Ethernet (1000 Mbit)
-#
-# CONFIG_ACENIC is not set
-# CONFIG_DL2K is not set
-# CONFIG_E1000 is not set
-# CONFIG_NS83820 is not set
-# CONFIG_HAMACHI is not set
-# CONFIG_YELLOWFIN is not set
-# CONFIG_R8169 is not set
-# CONFIG_SK98LIN is not set
-# CONFIG_TIGON3 is not set
-
-#
-# Ethernet (10000 Mbit)
-#
-# CONFIG_IXGB is not set
-# CONFIG_S2IO is not set
-
-#
-# Token Ring devices
-#
-# CONFIG_TR is not set
-
-#
-# Wireless LAN (non-hamradio)
-#
-# CONFIG_NET_RADIO is not set
-
-#
-# Wan interfaces
-#
-# CONFIG_WAN is not set
-# CONFIG_FDDI is not set
-# CONFIG_HIPPI is not set
-# CONFIG_PLIP is not set
-CONFIG_PPP=m
-# CONFIG_PPP_MULTILINK is not set
-# CONFIG_PPP_FILTER is not set
-CONFIG_PPP_ASYNC=m
-# CONFIG_PPP_SYNC_TTY is not set
-CONFIG_PPP_DEFLATE=m
-CONFIG_PPP_BSDCOMP=m
-# CONFIG_PPPOE is not set
-# CONFIG_SLIP is not set
-# CONFIG_NET_FC is not set
-# CONFIG_SHAPER is not set
-# CONFIG_NETCONSOLE is not set
-
-#
-# ISDN subsystem
-#
-# CONFIG_ISDN is not set
-
-#
-# Telephony Support
-#
-# CONFIG_PHONE is not set
-
-#
-# Input device support
-#
-CONFIG_INPUT=y
-
-#
-# Userland interfaces
-#
-CONFIG_INPUT_MOUSEDEV=y
-CONFIG_INPUT_MOUSEDEV_PSAUX=y
-CONFIG_INPUT_MOUSEDEV_SCREEN_X=1024
-CONFIG_INPUT_MOUSEDEV_SCREEN_Y=768
-CONFIG_INPUT_JOYDEV=m
-# CONFIG_INPUT_TSDEV is not set
-CONFIG_INPUT_EVDEV=m
-# CONFIG_INPUT_EVBUG is not set
-
-#
-# Input I/O drivers
-#
-CONFIG_GAMEPORT=m
-CONFIG_SOUND_GAMEPORT=m
-CONFIG_GAMEPORT_NS558=m
-# CONFIG_GAMEPORT_L4 is not set
-CONFIG_GAMEPORT_EMU10K1=m
-# CONFIG_GAMEPORT_VORTEX is not set
-# CONFIG_GAMEPORT_FM801 is not set
-# CONFIG_GAMEPORT_CS461x is not set
-CONFIG_SERIO=y
-CONFIG_SERIO_I8042=y
-CONFIG_SERIO_SERPORT=m
-# CONFIG_SERIO_CT82C710 is not set
-# CONFIG_SERIO_PARKBD is not set
-# CONFIG_SERIO_PCIPS2 is not set
-
-#
-# Input Device Drivers
-#
-CONFIG_INPUT_KEYBOARD=y
-CONFIG_KEYBOARD_ATKBD=y
-# CONFIG_KEYBOARD_SUNKBD is not set
-# CONFIG_KEYBOARD_LKKBD is not set
-# CONFIG_KEYBOARD_XTKBD is not set
-# CONFIG_KEYBOARD_NEWTON is not set
-CONFIG_INPUT_MOUSE=y
-CONFIG_MOUSE_PS2=m
-# CONFIG_MOUSE_SERIAL is not set
-# CONFIG_MOUSE_VSXXXAA is not set
-CONFIG_INPUT_JOYSTICK=y
-# CONFIG_JOYSTICK_ANALOG is not set
-# CONFIG_JOYSTICK_A3D is not set
-# CONFIG_JOYSTICK_ADI is not set
-# CONFIG_JOYSTICK_COBRA is not set
-# CONFIG_JOYSTICK_GF2K is not set
-# CONFIG_JOYSTICK_GRIP is not set
-# CONFIG_JOYSTICK_GRIP_MP is not set
-# CONFIG_JOYSTICK_GUILLEMOT is not set
-# CONFIG_JOYSTICK_INTERACT is not set
-CONFIG_JOYSTICK_SIDEWINDER=m
-# CONFIG_JOYSTICK_TMDC is not set
-# CONFIG_JOYSTICK_IFORCE is not set
-# CONFIG_JOYSTICK_WARRIOR is not set
-# CONFIG_JOYSTICK_MAGELLAN is not set
-# CONFIG_JOYSTICK_SPACEORB is not set
-# CONFIG_JOYSTICK_SPACEBALL is not set
-# CONFIG_JOYSTICK_STINGER is not set
-# CONFIG_JOYSTICK_TWIDDLER is not set
-# CONFIG_JOYSTICK_DB9 is not set
-# CONFIG_JOYSTICK_GAMECON is not set
-# CONFIG_JOYSTICK_TURBOGRAFX is not set
-# CONFIG_INPUT_JOYDUMP is not set
-# CONFIG_INPUT_TOUCHSCREEN is not set
-CONFIG_INPUT_MISC=y
-CONFIG_INPUT_PCSPKR=m
-CONFIG_INPUT_UINPUT=m
-
-#
-# Character devices
-#
-CONFIG_VT=y
-CONFIG_VT_CONSOLE=y
-CONFIG_HW_CONSOLE=y
-# CONFIG_SERIAL_NONSTANDARD is not set
-
-#
-# Serial drivers
-#
-CONFIG_SERIAL_8250=y
-CONFIG_SERIAL_8250_CONSOLE=y
-# CONFIG_SERIAL_8250_ACPI is not set
-CONFIG_SERIAL_8250_NR_UARTS=4
-# CONFIG_SERIAL_8250_EXTENDED is not set
-
-#
-# Non-8250 serial port support
-#
-CONFIG_SERIAL_CORE=y
-CONFIG_SERIAL_CORE_CONSOLE=y
-CONFIG_UNIX98_PTYS=y
-CONFIG_LEGACY_PTYS=y
-CONFIG_LEGACY_PTY_COUNT=256
-CONFIG_PRINTER=m
-# CONFIG_LP_CONSOLE is not set
-CONFIG_PPDEV=m
-# CONFIG_TIPAR is not set
-# CONFIG_QIC02_TAPE is not set
-
-#
-# IPMI
-#
-CONFIG_IPMI_HANDLER=m
-# CONFIG_IPMI_PANIC_EVENT is not set
-CONFIG_IPMI_DEVICE_INTERFACE=m
-CONFIG_IPMI_SI=m
-CONFIG_IPMI_WATCHDOG=m
-
-#
-# Watchdog Cards
-#
-CONFIG_WATCHDOG=y
-# CONFIG_WATCHDOG_NOWAYOUT is not set
-
-#
-# Watchdog Device Drivers
-#
-CONFIG_SOFT_WATCHDOG=m
-# CONFIG_ACQUIRE_WDT is not set
-# CONFIG_ADVANTECH_WDT is not set
-# CONFIG_ALIM1535_WDT is not set
-# CONFIG_ALIM7101_WDT is not set
-# CONFIG_SC520_WDT is not set
-# CONFIG_EUROTECH_WDT is not set
-# CONFIG_IB700_WDT is not set
-# CONFIG_WAFER_WDT is not set
-# CONFIG_I8XX_TCO is not set
-# CONFIG_SC1200_WDT is not set
-# CONFIG_SCx200_WDT is not set
-# CONFIG_60XX_WDT is not set
-# CONFIG_CPU5_WDT is not set
-# CONFIG_W83627HF_WDT is not set
-# CONFIG_W83877F_WDT is not set
-# CONFIG_MACHZ_WDT is not set
-
-#
-# PCI-based Watchdog Cards
-#
-# CONFIG_PCIPCWATCHDOG is not set
-# CONFIG_WDTPCI is not set
-
-#
-# USB-based Watchdog Cards
-#
-# CONFIG_USBPCWATCHDOG is not set
-CONFIG_HW_RANDOM=m
-CONFIG_NVRAM=m
-CONFIG_RTC=y
-# CONFIG_DTLK is not set
-# CONFIG_R3964 is not set
-# CONFIG_APPLICOM is not set
-
-#
-# Ftape, the floppy tape device driver
-#
-# CONFIG_FTAPE is not set
-CONFIG_AGP=y
-CONFIG_AGP_AMD64=y
-# CONFIG_AGP_INTEL_MCH is not set
-# CONFIG_DRM is not set
-# CONFIG_MWAVE is not set
-# CONFIG_RAW_DRIVER is not set
-CONFIG_HPET=y
-# CONFIG_HPET_RTC_IRQ is not set
-CONFIG_HPET_MMAP=y
-CONFIG_HANGCHECK_TIMER=m
-
-#
-# I2C support
-#
-CONFIG_I2C=m
-CONFIG_I2C_CHARDEV=m
-
-#
-# I2C Algorithms
-#
-CONFIG_I2C_ALGOBIT=m
-CONFIG_I2C_ALGOPCF=m
-
-#
-# I2C Hardware Bus support
-#
-# CONFIG_I2C_ALI1535 is not set
-# CONFIG_I2C_ALI1563 is not set
-# CONFIG_I2C_ALI15X3 is not set
-# CONFIG_I2C_AMD756 is not set
-# CONFIG_I2C_AMD8111 is not set
-# CONFIG_I2C_I801 is not set
-# CONFIG_I2C_I810 is not set
-# CONFIG_I2C_ISA is not set
-CONFIG_I2C_NFORCE2=m
-# CONFIG_I2C_PARPORT is not set
-# CONFIG_I2C_PARPORT_LIGHT is not set
-# CONFIG_I2C_PROSAVAGE is not set
-# CONFIG_I2C_SAVAGE4 is not set
-# CONFIG_SCx200_ACB is not set
-# CONFIG_I2C_SIS5595 is not set
-# CONFIG_I2C_SIS630 is not set
-# CONFIG_I2C_SIS96X is not set
-# CONFIG_I2C_VIA is not set
-# CONFIG_I2C_VIAPRO is not set
-# CONFIG_I2C_VOODOO3 is not set
-
-#
-# Hardware Sensors Chip support
-#
-CONFIG_I2C_SENSOR=m
-CONFIG_SENSORS_ADM1021=m
-# CONFIG_SENSORS_ADM1025 is not set
-# CONFIG_SENSORS_ADM1031 is not set
-CONFIG_SENSORS_ASB100=m
-CONFIG_SENSORS_DS1621=m
-CONFIG_SENSORS_FSCHER=m
-CONFIG_SENSORS_GL518SM=m
-CONFIG_SENSORS_IT87=m
-CONFIG_SENSORS_LM75=m
-# CONFIG_SENSORS_LM77 is not set
-CONFIG_SENSORS_LM78=m
-CONFIG_SENSORS_LM80=m
-CONFIG_SENSORS_LM83=m
-CONFIG_SENSORS_LM85=m
-CONFIG_SENSORS_LM90=m
-CONFIG_SENSORS_MAX1619=m
-# CONFIG_SENSORS_VIA686A is not set
-CONFIG_SENSORS_W83781D=m
-CONFIG_SENSORS_W83L785TS=m
-CONFIG_SENSORS_W83627HF=m
-
-#
-# Other I2C Chip support
-#
-CONFIG_SENSORS_EEPROM=m
-CONFIG_SENSORS_PCF8574=m
-CONFIG_SENSORS_PCF8591=m
-CONFIG_SENSORS_RTC8564=m
-# CONFIG_I2C_DEBUG_CORE is not set
-# CONFIG_I2C_DEBUG_ALGO is not set
-# CONFIG_I2C_DEBUG_BUS is not set
-# CONFIG_I2C_DEBUG_CHIP is not set
-
-#
-# Dallas's 1-wire bus
-#
-# CONFIG_W1 is not set
-
-#
-# Misc devices
-#
-# CONFIG_IBM_ASM is not set
-
-#
-# Multimedia devices
-#
-CONFIG_VIDEO_DEV=m
-
-#
-# Video For Linux
-#
-
-#
-# Video Adapters
-#
-# CONFIG_VIDEO_BT848 is not set
-# CONFIG_VIDEO_BWQCAM is not set
-# CONFIG_VIDEO_CQCAM is not set
-# CONFIG_VIDEO_W9966 is not set
-# CONFIG_VIDEO_CPIA is not set
-# CONFIG_VIDEO_SAA5246A is not set
-# CONFIG_VIDEO_SAA5249 is not set
-# CONFIG_TUNER_3036 is not set
-# CONFIG_VIDEO_STRADIS is not set
-# CONFIG_VIDEO_ZORAN is not set
-# CONFIG_VIDEO_SAA7134 is not set
-# CONFIG_VIDEO_MXB is not set
-# CONFIG_VIDEO_DPC is not set
-# CONFIG_VIDEO_HEXIUM_ORION is not set
-# CONFIG_VIDEO_HEXIUM_GEMINI is not set
-# CONFIG_VIDEO_CX88 is not set
-# CONFIG_VIDEO_OVCAMCHIP is not set
-
-#
-# Radio Adapters
-#
-# CONFIG_RADIO_GEMTEK_PCI is not set
-# CONFIG_RADIO_MAXIRADIO is not set
-# CONFIG_RADIO_MAESTRO is not set
-
-#
-# Digital Video Broadcasting Devices
-#
-# CONFIG_DVB is not set
-
-#
-# Graphics support
-#
-# CONFIG_FB is not set
-CONFIG_VIDEO_SELECT=y
-
-#
-# Console display driver support
-#
-CONFIG_VGA_CONSOLE=y
-# CONFIG_MDA_CONSOLE is not set
-CONFIG_DUMMY_CONSOLE=y
-
-#
-# Sound
-#
-CONFIG_SOUND=m
-
-#
-# Advanced Linux Sound Architecture
-#
-CONFIG_SND=m
-CONFIG_SND_TIMER=m
-CONFIG_SND_PCM=m
-CONFIG_SND_HWDEP=m
-CONFIG_SND_RAWMIDI=m
-CONFIG_SND_SEQUENCER=m
-CONFIG_SND_SEQ_DUMMY=m
-CONFIG_SND_OSSEMUL=y
-CONFIG_SND_MIXER_OSS=m
-CONFIG_SND_PCM_OSS=m
-CONFIG_SND_SEQUENCER_OSS=y
-CONFIG_SND_BIT32_EMUL=m
-CONFIG_SND_RTCTIMER=m
-# CONFIG_SND_VERBOSE_PRINTK is not set
-# CONFIG_SND_DEBUG is not set
-
-#
-# Generic devices
-#
-CONFIG_SND_MPU401_UART=m
-CONFIG_SND_DUMMY=m
-CONFIG_SND_VIRMIDI=m
-CONFIG_SND_MTPAV=m
-CONFIG_SND_SERIAL_U16550=m
-CONFIG_SND_MPU401=m
-
-#
-# PCI devices
-#
-CONFIG_SND_AC97_CODEC=m
-# CONFIG_SND_ALI5451 is not set
-# CONFIG_SND_ATIIXP is not set
-# CONFIG_SND_AU8810 is not set
-# CONFIG_SND_AU8820 is not set
-# CONFIG_SND_AU8830 is not set
-# CONFIG_SND_AZT3328 is not set
-# CONFIG_SND_BT87X is not set
-# CONFIG_SND_CS46XX is not set
-# CONFIG_SND_CS4281 is not set
-CONFIG_SND_EMU10K1=m
-# CONFIG_SND_KORG1212 is not set
-# CONFIG_SND_MIXART is not set
-# CONFIG_SND_NM256 is not set
-# CONFIG_SND_RME32 is not set
-# CONFIG_SND_RME96 is not set
-# CONFIG_SND_RME9652 is not set
-# CONFIG_SND_HDSP is not set
-# CONFIG_SND_TRIDENT is not set
-# CONFIG_SND_YMFPCI is not set
-# CONFIG_SND_ALS4000 is not set
-# CONFIG_SND_CMIPCI is not set
-# CONFIG_SND_ENS1370 is not set
-# CONFIG_SND_ENS1371 is not set
-# CONFIG_SND_ES1938 is not set
-# CONFIG_SND_ES1968 is not set
-# CONFIG_SND_MAESTRO3 is not set
-# CONFIG_SND_FM801 is not set
-# CONFIG_SND_ICE1712 is not set
-# CONFIG_SND_ICE1724 is not set
-# CONFIG_SND_INTEL8X0 is not set
-# CONFIG_SND_INTEL8X0M is not set
-# CONFIG_SND_SONICVIBES is not set
-# CONFIG_SND_VIA82XX is not set
-# CONFIG_SND_VX222 is not set
-
-#
-# ALSA USB devices
-#
-# CONFIG_SND_USB_AUDIO is not set
-
-#
-# Open Sound System
-#
-# CONFIG_SOUND_PRIME is not set
-
-#
-# USB support
-#
-CONFIG_USB=y
-# CONFIG_USB_DEBUG is not set
-
-#
-# Miscellaneous USB options
-#
-CONFIG_USB_DEVICEFS=y
-CONFIG_USB_BANDWIDTH=y
-# CONFIG_USB_DYNAMIC_MINORS is not set
-
-#
-# USB Host Controller Drivers
-#
-CONFIG_USB_EHCI_HCD=m
-# CONFIG_USB_EHCI_SPLIT_ISO is not set
-# CONFIG_USB_EHCI_ROOT_HUB_TT is not set
-CONFIG_USB_OHCI_HCD=m
-CONFIG_USB_UHCI_HCD=m
-
-#
-# USB Device Class drivers
-#
-CONFIG_USB_AUDIO=m
-# CONFIG_USB_BLUETOOTH_TTY is not set
-CONFIG_USB_MIDI=m
-CONFIG_USB_ACM=m
-CONFIG_USB_PRINTER=m
-CONFIG_USB_STORAGE=m
-# CONFIG_USB_STORAGE_DEBUG is not set
-# CONFIG_USB_STORAGE_RW_DETECT is not set
-CONFIG_USB_STORAGE_DATAFAB=y
-CONFIG_USB_STORAGE_FREECOM=y
-CONFIG_USB_STORAGE_ISD200=y
-CONFIG_USB_STORAGE_DPCM=y
-CONFIG_USB_STORAGE_HP8200e=y
-CONFIG_USB_STORAGE_SDDR09=y
-CONFIG_USB_STORAGE_SDDR55=y
-CONFIG_USB_STORAGE_JUMPSHOT=y
-
-#
-# USB Human Interface Devices (HID)
-#
-CONFIG_USB_HID=m
-CONFIG_USB_HIDINPUT=y
-# CONFIG_HID_FF is not set
-CONFIG_USB_HIDDEV=y
-
-#
-# USB HID Boot Protocol drivers
-#
-CONFIG_USB_KBD=m
-CONFIG_USB_MOUSE=m
-CONFIG_USB_AIPTEK=m
-CONFIG_USB_WACOM=m
-CONFIG_USB_KBTAB=m
-CONFIG_USB_POWERMATE=m
-CONFIG_USB_MTOUCH=m
-CONFIG_USB_EGALAX=m
-CONFIG_USB_XPAD=m
-CONFIG_USB_ATI_REMOTE=m
-
-#
-# USB Imaging devices
-#
-CONFIG_USB_MDC800=m
-CONFIG_USB_MICROTEK=m
-CONFIG_USB_HPUSBSCSI=m
-
-#
-# USB Multimedia devices
-#
-# CONFIG_USB_DABUSB is not set
-CONFIG_USB_VICAM=m
-CONFIG_USB_DSBR=m
-CONFIG_USB_IBMCAM=m
-CONFIG_USB_KONICAWC=m
-CONFIG_USB_OV511=m
-CONFIG_USB_PWC=m
-CONFIG_USB_SE401=m
-# CONFIG_USB_SN9C102 is not set
-CONFIG_USB_STV680=m
-
-#
-# USB Network adaptors
-#
-CONFIG_USB_CATC=m
-CONFIG_USB_KAWETH=m
-CONFIG_USB_PEGASUS=m
-CONFIG_USB_RTL8150=m
-CONFIG_USB_USBNET=m
-
-#
-# USB Host-to-Host Cables
-#
-CONFIG_USB_ALI_M5632=y
-CONFIG_USB_AN2720=y
-CONFIG_USB_BELKIN=y
-CONFIG_USB_GENESYS=y
-CONFIG_USB_NET1080=y
-CONFIG_USB_PL2301=y
-
-#
-# Intelligent USB Devices/Gadgets
-#
-CONFIG_USB_ARMLINUX=y
-CONFIG_USB_EPSON2888=y
-CONFIG_USB_ZAURUS=y
-CONFIG_USB_CDCETHER=y
-
-#
-# USB Network Adapters
-#
-CONFIG_USB_AX8817X=y
-
-#
-# USB port drivers
-#
-CONFIG_USB_USS720=m
-
-#
-# USB Serial Converter support
-#
-CONFIG_USB_SERIAL=m
-CONFIG_USB_SERIAL_GENERIC=y
-CONFIG_USB_SERIAL_BELKIN=m
-# CONFIG_USB_SERIAL_WHITEHEAT is not set
-CONFIG_USB_SERIAL_DIGI_ACCELEPORT=m
-CONFIG_USB_SERIAL_EMPEG=m
-CONFIG_USB_SERIAL_FTDI_SIO=m
-CONFIG_USB_SERIAL_VISOR=m
-CONFIG_USB_SERIAL_IPAQ=m
-CONFIG_USB_SERIAL_IR=m
-CONFIG_USB_SERIAL_EDGEPORT=m
-CONFIG_USB_SERIAL_EDGEPORT_TI=m
-CONFIG_USB_SERIAL_KEYSPAN_PDA=m
-CONFIG_USB_SERIAL_KEYSPAN=m
-# CONFIG_USB_SERIAL_KEYSPAN_MPR is not set
-# CONFIG_USB_SERIAL_KEYSPAN_USA28 is not set
-# CONFIG_USB_SERIAL_KEYSPAN_USA28X is not set
-# CONFIG_USB_SERIAL_KEYSPAN_USA28XA is not set
-# CONFIG_USB_SERIAL_KEYSPAN_USA28XB is not set
-# CONFIG_USB_SERIAL_KEYSPAN_USA19 is not set
-# CONFIG_USB_SERIAL_KEYSPAN_USA18X is not set
-# CONFIG_USB_SERIAL_KEYSPAN_USA19W is not set
-# CONFIG_USB_SERIAL_KEYSPAN_USA19QW is not set
-# CONFIG_USB_SERIAL_KEYSPAN_USA19QI is not set
-# CONFIG_USB_SERIAL_KEYSPAN_USA49W is not set
-# CONFIG_USB_SERIAL_KEYSPAN_USA49WLC is not set
-CONFIG_USB_SERIAL_KLSI=m
-CONFIG_USB_SERIAL_KOBIL_SCT=m
-CONFIG_USB_SERIAL_MCT_U232=m
-CONFIG_USB_SERIAL_PL2303=m
-CONFIG_USB_SERIAL_SAFE=m
-# CONFIG_USB_SERIAL_SAFE_PADDED is not set
-CONFIG_USB_SERIAL_CYBERJACK=m
-CONFIG_USB_SERIAL_XIRCOM=m
-CONFIG_USB_SERIAL_OMNINET=m
-CONFIG_USB_EZUSB=y
-
-#
-# USB Miscellaneous drivers
-#
-# CONFIG_USB_EMI62 is not set
-# CONFIG_USB_EMI26 is not set
-CONFIG_USB_TIGL=m
-CONFIG_USB_AUERSWALD=m
-CONFIG_USB_RIO500=m
-CONFIG_USB_LEGOTOWER=m
-CONFIG_USB_LCD=m
-CONFIG_USB_LED=m
-CONFIG_USB_CYTHERM=m
-CONFIG_USB_PHIDGETSERVO=m
-CONFIG_USB_TEST=m
-
-#
-# USB Gadget Support
-#
-CONFIG_USB_GADGET=m
-CONFIG_USB_GADGET_NET2280=y
-CONFIG_USB_NET2280=m
-# CONFIG_USB_GADGET_PXA2XX is not set
-# CONFIG_USB_GADGET_GOKU is not set
-# CONFIG_USB_GADGET_SA1100 is not set
-# CONFIG_USB_GADGET_DUMMY_HCD is not set
-CONFIG_USB_GADGET_DUALSPEED=y
-CONFIG_USB_ZERO=m
-CONFIG_USB_ETH=m
-CONFIG_USB_ETH_RNDIS=y
-CONFIG_USB_GADGETFS=m
-CONFIG_USB_FILE_STORAGE=m
-# CONFIG_USB_FILE_STORAGE_TEST is not set
-CONFIG_USB_G_SERIAL=m
-
-#
-# Firmware Drivers
-#
-CONFIG_EDD=m
-
-#
-# File systems
-#
-CONFIG_EXT2_FS=y
-CONFIG_EXT2_FS_XATTR=y
-CONFIG_EXT2_FS_POSIX_ACL=y
-CONFIG_EXT2_FS_SECURITY=y
-CONFIG_EXT3_FS=m
-CONFIG_EXT3_FS_XATTR=y
-CONFIG_EXT3_FS_POSIX_ACL=y
-CONFIG_EXT3_FS_SECURITY=y
-CONFIG_JBD=m
-# CONFIG_JBD_DEBUG is not set
-CONFIG_FS_MBCACHE=y
-CONFIG_REISERFS_FS=y
-# CONFIG_REISERFS_CHECK is not set
-# CONFIG_REISERFS_PROC_INFO is not set
-CONFIG_REISERFS_FS_XATTR=y
-CONFIG_REISERFS_FS_POSIX_ACL=y
-CONFIG_REISERFS_FS_SECURITY=y
-CONFIG_JFS_FS=m
-CONFIG_JFS_POSIX_ACL=y
-# CONFIG_JFS_DEBUG is not set
-CONFIG_JFS_STATISTICS=y
-CONFIG_FS_POSIX_ACL=y
-CONFIG_XFS_FS=m
-CONFIG_XFS_RT=y
-CONFIG_XFS_QUOTA=y
-CONFIG_XFS_SECURITY=y
-CONFIG_XFS_POSIX_ACL=y
-# CONFIG_MINIX_FS is not set
-CONFIG_ROMFS_FS=m
-# CONFIG_QUOTA is not set
-CONFIG_QUOTACTL=y
-# CONFIG_AUTOFS_FS is not set
-# CONFIG_AUTOFS4_FS is not set
-
-#
-# CD-ROM/DVD Filesystems
-#
-CONFIG_ISO9660_FS=m
-CONFIG_JOLIET=y
-CONFIG_ZISOFS=y
-CONFIG_ZISOFS_FS=m
-CONFIG_UDF_FS=m
-CONFIG_UDF_NLS=y
-
-#
-# DOS/FAT/NT Filesystems
-#
-CONFIG_FAT_FS=m
-CONFIG_MSDOS_FS=m
-CONFIG_VFAT_FS=m
-CONFIG_FAT_DEFAULT_CODEPAGE=437
-CONFIG_FAT_DEFAULT_IOCHARSET="iso8859-1"
-CONFIG_NTFS_FS=m
-# CONFIG_NTFS_DEBUG is not set
-CONFIG_NTFS_RW=y
-
-#
-# Pseudo filesystems
-#
-CONFIG_PROC_FS=y
-CONFIG_PROC_KCORE=y
-CONFIG_SYSFS=y
-# CONFIG_DEVFS_FS is not set
-CONFIG_DEVPTS_FS_XATTR=y
-CONFIG_DEVPTS_FS_SECURITY=y
-CONFIG_TMPFS=y
-# CONFIG_HUGETLBFS is not set
-# CONFIG_HUGETLB_PAGE is not set
-CONFIG_RAMFS=y
-
-#
-# Miscellaneous filesystems
-#
-# CONFIG_ADFS_FS is not set
-# CONFIG_AFFS_FS is not set
-# CONFIG_HFS_FS is not set
-# CONFIG_HFSPLUS_FS is not set
-# CONFIG_BEFS_FS is not set
-# CONFIG_BFS_FS is not set
-# CONFIG_EFS_FS is not set
-CONFIG_CRAMFS=y
-# CONFIG_VXFS_FS is not set
-# CONFIG_HPFS_FS is not set
-# CONFIG_QNX4FS_FS is not set
-# CONFIG_SYSV_FS is not set
-# CONFIG_UFS_FS is not set
-
-#
-# Network File Systems
-#
-CONFIG_NFS_FS=m
-CONFIG_NFS_V3=y
-CONFIG_NFS_V4=y
-CONFIG_NFS_DIRECTIO=y
-CONFIG_NFSD=m
-CONFIG_NFSD_V3=y
-CONFIG_NFSD_V4=y
-CONFIG_NFSD_TCP=y
-CONFIG_LOCKD=m
-CONFIG_LOCKD_V4=y
-CONFIG_EXPORTFS=m
-CONFIG_SUNRPC=m
-CONFIG_SUNRPC_GSS=m
-CONFIG_RPCSEC_GSS_KRB5=m
-CONFIG_SMB_FS=m
-# CONFIG_SMB_NLS_DEFAULT is not set
-# CONFIG_CIFS is not set
-# CONFIG_NCP_FS is not set
-# CONFIG_CODA_FS is not set
-# CONFIG_AFS_FS is not set
-
-#
-# Partition Types
-#
-CONFIG_PARTITION_ADVANCED=y
-# CONFIG_ACORN_PARTITION is not set
-# CONFIG_OSF_PARTITION is not set
-# CONFIG_AMIGA_PARTITION is not set
-# CONFIG_ATARI_PARTITION is not set
-# CONFIG_MAC_PARTITION is not set
-CONFIG_MSDOS_PARTITION=y
-# CONFIG_BSD_DISKLABEL is not set
-# CONFIG_MINIX_SUBPARTITION is not set
-# CONFIG_SOLARIS_X86_PARTITION is not set
-# CONFIG_UNIXWARE_DISKLABEL is not set
-CONFIG_LDM_PARTITION=y
-# CONFIG_LDM_DEBUG is not set
-# CONFIG_SGI_PARTITION is not set
-# CONFIG_ULTRIX_PARTITION is not set
-# CONFIG_SUN_PARTITION is not set
-# CONFIG_EFI_PARTITION is not set
-
-#
-# Native Language Support
-#
-CONFIG_NLS=y
-CONFIG_NLS_DEFAULT="cp437"
-CONFIG_NLS_CODEPAGE_437=m
-CONFIG_NLS_CODEPAGE_737=m
-CONFIG_NLS_CODEPAGE_775=m
-CONFIG_NLS_CODEPAGE_850=m
-CONFIG_NLS_CODEPAGE_852=m
-CONFIG_NLS_CODEPAGE_855=m
-CONFIG_NLS_CODEPAGE_857=m
-CONFIG_NLS_CODEPAGE_860=m
-CONFIG_NLS_CODEPAGE_861=m
-CONFIG_NLS_CODEPAGE_862=m
-CONFIG_NLS_CODEPAGE_863=m
-CONFIG_NLS_CODEPAGE_864=m
-CONFIG_NLS_CODEPAGE_865=m
-CONFIG_NLS_CODEPAGE_866=m
-CONFIG_NLS_CODEPAGE_869=m
-CONFIG_NLS_CODEPAGE_936=m
-CONFIG_NLS_CODEPAGE_950=m
-CONFIG_NLS_CODEPAGE_932=m
-CONFIG_NLS_CODEPAGE_949=m
-CONFIG_NLS_CODEPAGE_874=m
-CONFIG_NLS_ISO8859_8=m
-CONFIG_NLS_CODEPAGE_1250=m
-CONFIG_NLS_CODEPAGE_1251=m
-# CONFIG_NLS_ASCII is not set
-CONFIG_NLS_ISO8859_1=m
-CONFIG_NLS_ISO8859_2=m
-CONFIG_NLS_ISO8859_3=m
-CONFIG_NLS_ISO8859_4=m
-CONFIG_NLS_ISO8859_5=m
-CONFIG_NLS_ISO8859_6=m
-CONFIG_NLS_ISO8859_7=m
-CONFIG_NLS_ISO8859_9=m
-CONFIG_NLS_ISO8859_13=m
-CONFIG_NLS_ISO8859_14=m
-CONFIG_NLS_ISO8859_15=m
-CONFIG_NLS_KOI8_R=m
-CONFIG_NLS_KOI8_U=m
-CONFIG_NLS_UTF8=m
-
-#
-# Profiling support
-#
-CONFIG_PROFILING=y
-CONFIG_OPROFILE=m
-
-#
-# Kernel hacking
-#
-# CONFIG_DEBUG_KERNEL is not set
-CONFIG_MAGIC_SYSRQ=y
-# CONFIG_FRAME_POINTER is not set
-
-#
-# Security options
-#
-# CONFIG_SECURITY is not set
-
-#
-# Cryptographic options
-#
-CONFIG_CRYPTO=y
-CONFIG_CRYPTO_HMAC=y
-CONFIG_CRYPTO_NULL=m
-CONFIG_CRYPTO_MD4=m
-CONFIG_CRYPTO_MD5=y
-CONFIG_CRYPTO_SHA1=m
-CONFIG_CRYPTO_SHA256=m
-CONFIG_CRYPTO_SHA512=m
-CONFIG_CRYPTO_DES=m
-CONFIG_CRYPTO_BLOWFISH=m
-CONFIG_CRYPTO_TWOFISH=m
-CONFIG_CRYPTO_SERPENT=m
-CONFIG_CRYPTO_AES=m
-CONFIG_CRYPTO_CAST5=m
-CONFIG_CRYPTO_CAST6=m
-# CONFIG_CRYPTO_TEA is not set
-CONFIG_CRYPTO_ARC4=m
-# CONFIG_CRYPTO_KHAZAD is not set
-CONFIG_CRYPTO_DEFLATE=m
-CONFIG_CRYPTO_MICHAEL_MIC=m
-CONFIG_CRYPTO_CRC32C=m
-CONFIG_CRYPTO_TEST=m
-
-#
-# Library routines
-#
-CONFIG_CRC_CCITT=m
-CONFIG_CRC32=m
-CONFIG_LIBCRC32C=m
-CONFIG_ZLIB_INFLATE=y
-CONFIG_ZLIB_DEFLATE=m
-
---liOOAslEiF7prFVr--
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+
+This is a multi-part message in MIME format.
+--------------060300040007010701090509
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+
+
+BK users:
+         bk pull bk://gkernel.bkbits.net/libata-2.6
+
+Patch:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/patchkits/2.6/2.6.8.1-libata2.patch.bz2
+
+
+
+--------------060300040007010701090509
+Content-Type: text/plain;
+ name="changelog.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="changelog.txt"
+
+
+This will update the following files:
+
+ drivers/scsi/ata_piix.c     |  148 ++++++--
+ drivers/scsi/libata-core.c  |  759 +++++++++++++++++++++++++++-----------------
+ drivers/scsi/libata-scsi.c  |  426 +++++++++++++++++++++---
+ drivers/scsi/libata.h       |    3 
+ drivers/scsi/sata_nv.c      |    3 
+ drivers/scsi/sata_promise.c |   78 +---
+ drivers/scsi/sata_sil.c     |   10 
+ drivers/scsi/sata_sis.c     |    6 
+ drivers/scsi/sata_svw.c     |    3 
+ drivers/scsi/sata_sx4.c     |  166 +++++----
+ drivers/scsi/sata_via.c     |    2 
+ drivers/scsi/sata_vsc.c     |    2 
+ include/linux/ata.h         |   31 +
+ include/linux/libata.h      |   43 +-
+ include/scsi/scsi.h         |    1 
+ 15 files changed, 1169 insertions(+), 512 deletions(-)
+
+through these ChangeSets:
+
+Alan Cox:
+  o [libata] improve translation of ATA errors to SCSI sense codes
+
+Andrew Morton:
+  o libata build fix
+
+Douglas Gilbert:
+  o [libata] fix INQUIRY handling
+
+Jeff Garzik:
+  o [ata] remove 'packed' attributed from struct ata_prd
+  o [libata] fix error recovery reference count
+  o [libata] add ioctl infrastructure
+  o [libata] ATAPI PIO data xfer
+  o [libata] fix PIO data xfer on big endian
+  o [libata] support commands SYNCHRONIZE CACHE, VERIFY, VERIFY(16)
+  o [libata] (cosmetic) minimize diff with 2.4.x libata
+  o [libata] ATAPI work - cdb len, new taskfile protocol, cleanups
+  o [libata] flags cleanup
+  o [libata ata_piix] make sure AHCI is disabled, if h/w is used by this driver
+  o [PCI, libata] Fix "combined mode" PCI quirk for ICH6
+  o [libata] ATAPI work - PIO xfer, completion function
+  o [libata] update IDENTIFY DEVICE path to use ata_queued_cmd
+  o [libata] pio/dma flag bug fix, and cleanup
+  o [libata sata_sx4] deliver non-data taskfiles using Promise packet format
+  o [libata sata_promise] convert to using packets for non-data taskfiles
+  o [libata] transfer mode bug fixes and type cleanup
+  o [libata] convert set-xfer-mode operation to use ata_queued_cmd
+  o [libata] fix completion bug, better debug output
+  o [libata] transfer mode cleanup
+
+diff -Nru a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
+--- a/drivers/scsi/ata_piix.c	2004-08-18 03:11:44 -04:00
++++ b/drivers/scsi/ata_piix.c	2004-08-18 03:11:44 -04:00
+@@ -39,6 +39,7 @@
+ 	ICH5_PMR		= 0x90, /* port mapping register */
+ 	ICH5_PCS		= 0x92,	/* port control and status */
+ 
++	PIIX_FLAG_AHCI		= (1 << 28), /* AHCI possible */
+ 	PIIX_FLAG_CHECKINTR	= (1 << 29), /* make sure PCI INTx enabled */
+ 	PIIX_FLAG_COMBINED	= (1 << 30), /* combined mode possible */
+ 
+@@ -58,6 +59,7 @@
+ 	ich5_sata		= 1,
+ 	piix4_pata		= 2,
+ 	ich6_sata		= 3,
++	ich6_sata_rm		= 4,
+ };
+ 
+ static int piix_init_one (struct pci_dev *pdev,
+@@ -65,10 +67,8 @@
+ 
+ static void piix_pata_phy_reset(struct ata_port *ap);
+ static void piix_sata_phy_reset(struct ata_port *ap);
+-static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev,
+-			      unsigned int pio);
+-static void piix_set_udmamode (struct ata_port *ap, struct ata_device *adev,
+-			       unsigned int udma);
++static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev);
++static void piix_set_dmamode (struct ata_port *ap, struct ata_device *adev);
+ 
+ static unsigned int in_module_init = 1;
+ 
+@@ -87,13 +87,9 @@
+ 	{ 0x8086, 0x24df, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_sata },
+ 	{ 0x8086, 0x25a3, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_sata },
+ 	{ 0x8086, 0x25b0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_sata },
+-
+-	/* ICH6 operates in two modes, "looks-like-ICH5" mode,
+-	 * and enhanced mode, with queueing and other fancy stuff.
+-	 * This is distinguished by PCI class code.
+-	 */
+ 	{ 0x8086, 0x2651, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
+-	{ 0x8086, 0x2652, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
++	{ 0x8086, 0x2652, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_rm },
++	{ 0x8086, 0x2653, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_rm },
+ 
+ 	{ }	/* terminate list */
+ };
+@@ -108,6 +104,7 @@
+ static Scsi_Host_Template piix_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
++	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+@@ -126,7 +123,7 @@
+ static struct ata_port_operations piix_pata_ops = {
+ 	.port_disable		= ata_port_disable,
+ 	.set_piomode		= piix_set_piomode,
+-	.set_udmamode		= piix_set_udmamode,
++	.set_dmamode		= piix_set_dmamode,
+ 
+ 	.tf_load		= ata_tf_load_pio,
+ 	.tf_read		= ata_tf_read_pio,
+@@ -151,8 +148,6 @@
+ 
+ static struct ata_port_operations piix_sata_ops = {
+ 	.port_disable		= ata_port_disable,
+-	.set_piomode		= piix_set_piomode,
+-	.set_udmamode		= piix_set_udmamode,
+ 
+ 	.tf_load		= ata_tf_load_pio,
+ 	.tf_read		= ata_tf_read_pio,
+@@ -181,7 +176,12 @@
+ 		.sht		= &piix_sht,
+ 		.host_flags	= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST |
+ 				  PIIX_FLAG_CHECKINTR,
+-		.pio_mask	= 0x03,	/* pio3-4 */
++		.pio_mask	= 0x1f,	/* pio0-4 */
++#if 0
++		.mwdma_mask	= 0x06, /* mwdma1-2 */
++#else
++		.mwdma_mask	= 0x00, /* mwdma broken */
++#endif
+ 		.udma_mask	= ATA_UDMA_MASK_40C, /* FIXME: cbl det */
+ 		.port_ops	= &piix_pata_ops,
+ 	},
+@@ -191,8 +191,9 @@
+ 		.sht		= &piix_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
+ 				  PIIX_FLAG_COMBINED | PIIX_FLAG_CHECKINTR,
+-		.pio_mask	= 0x03,	/* pio3-4 */
+-		.udma_mask	= 0x7f,	/* udma0-6 ; FIXME */
++		.pio_mask	= 0x1f,	/* pio0-4 */
++		.mwdma_mask	= 0x07, /* mwdma0-2 */
++		.udma_mask	= 0x7f,	/* udma0-6 */
+ 		.port_ops	= &piix_sata_ops,
+ 	},
+ 
+@@ -200,7 +201,12 @@
+ 	{
+ 		.sht		= &piix_sht,
+ 		.host_flags	= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
+-		.pio_mask	= 0x03, /* pio3-4 */
++		.pio_mask	= 0x1f,	/* pio0-4 */
++#if 0
++		.mwdma_mask	= 0x06, /* mwdma1-2 */
++#else
++		.mwdma_mask	= 0x00, /* mwdma broken */
++#endif
+ 		.udma_mask	= ATA_UDMA_MASK_40C, /* FIXME: cbl det */
+ 		.port_ops	= &piix_pata_ops,
+ 	},
+@@ -211,8 +217,21 @@
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
+ 				  PIIX_FLAG_COMBINED | PIIX_FLAG_CHECKINTR |
+ 				  ATA_FLAG_SLAVE_POSS,
+-		.pio_mask	= 0x03,	/* pio3-4 */
+-		.udma_mask	= 0x7f,	/* udma0-6 ; FIXME */
++		.pio_mask	= 0x1f,	/* pio0-4 */
++		.mwdma_mask	= 0x07, /* mwdma0-2 */
++		.udma_mask	= 0x7f,	/* udma0-6 */
++		.port_ops	= &piix_sata_ops,
++	},
++
++	/* ich6_sata_rm */
++	{
++		.sht		= &piix_sht,
++		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
++				  PIIX_FLAG_COMBINED | PIIX_FLAG_CHECKINTR |
++				  ATA_FLAG_SLAVE_POSS | PIIX_FLAG_AHCI,
++		.pio_mask	= 0x1f,	/* pio0-4 */
++		.mwdma_mask	= 0x07, /* mwdma0-2 */
++		.udma_mask	= 0x7f,	/* udma0-6 */
+ 		.port_ops	= &piix_sata_ops,
+ 	},
+ };
+@@ -368,11 +387,11 @@
+  *	None (inherited from caller).
+  */
+ 
+-static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev,
+-			      unsigned int pio)
++static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev)
+ {
++	unsigned int pio	= adev->pio_mode;
+ 	struct pci_dev *dev	= ap->host_set->pdev;
+-	unsigned int is_slave	= (adev->flags & ATA_DFLAG_MASTER) ? 0 : 1;
++	unsigned int is_slave	= (adev->devno != 0);
+ 	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
+ 	unsigned int slave_port	= 0x44;
+ 	u16 master_data;
+@@ -409,7 +428,7 @@
+ }
+ 
+ /**
+- *	piix_set_udmamode - Initialize host controller PATA PIO timings
++ *	piix_set_dmamode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+  *	@adev: um
+  *	@udma: udma mode, 0 - 6
+@@ -420,9 +439,9 @@
+  *	None (inherited from caller).
+  */
+ 
+-static void piix_set_udmamode (struct ata_port *ap, struct ata_device *adev,
+-			      unsigned int udma)
++static void piix_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ {
++	unsigned int udma	= adev->dma_mode; /* FIXME: MWDMA too */
+ 	struct pci_dev *dev	= ap->host_set->pdev;
+ 	u8 maslave		= ap->port_no ? 0x42 : 0x40;
+ 	u8 speed		= udma;
+@@ -452,25 +471,38 @@
+ 		case XFER_UDMA_3:
+ 		case XFER_UDMA_1:	u_speed = 1 << (drive_dn * 4); break;
+ 		case XFER_UDMA_0:	u_speed = 0 << (drive_dn * 4); break;
++		case XFER_MW_DMA_2:
++		case XFER_MW_DMA_1:	break;
+ 		default:
+ 			BUG();
+ 			return;
+ 	}
+ 
+-	if (!(reg48 & u_flag))
+-		pci_write_config_byte(dev, 0x48, reg48 | u_flag);
+-	if (speed == XFER_UDMA_5) {
+-		pci_write_config_byte(dev, 0x55, (u8) reg55|w_flag);
++	if (speed >= XFER_UDMA_0) {
++		if (!(reg48 & u_flag))
++			pci_write_config_byte(dev, 0x48, reg48 | u_flag);
++		if (speed == XFER_UDMA_5) {
++			pci_write_config_byte(dev, 0x55, (u8) reg55|w_flag);
++		} else {
++			pci_write_config_byte(dev, 0x55, (u8) reg55 & ~w_flag);
++		}
++		if ((reg4a & a_speed) != u_speed)
++			pci_write_config_word(dev, 0x4a, (reg4a & ~a_speed) | u_speed);
++		if (speed > XFER_UDMA_2) {
++			if (!(reg54 & v_flag))
++				pci_write_config_byte(dev, 0x54, reg54 | v_flag);
++		} else
++			pci_write_config_byte(dev, 0x54, reg54 & ~v_flag);
+ 	} else {
+-		pci_write_config_byte(dev, 0x55, (u8) reg55 & ~w_flag);
++		if (reg48 & u_flag)
++			pci_write_config_byte(dev, 0x48, reg48 & ~u_flag);
++		if (reg4a & a_speed)
++			pci_write_config_word(dev, 0x4a, reg4a & ~a_speed);
++		if (reg54 & v_flag)
++			pci_write_config_byte(dev, 0x54, reg54 & ~v_flag);
++		if (reg55 & w_flag)
++			pci_write_config_byte(dev, 0x55, (u8) reg55 & ~w_flag);
+ 	}
+-	if ((reg4a & a_speed) != u_speed)
+-		pci_write_config_word(dev, 0x4a, (reg4a & ~a_speed) | u_speed);
+-	if (speed > XFER_UDMA_2) {
+-		if (!(reg54 & v_flag))
+-			pci_write_config_byte(dev, 0x54, reg54 | v_flag);
+-	} else
+-		pci_write_config_byte(dev, 0x54, reg54 & ~v_flag);
+ }
+ 
+ /* move to PCI layer, integrate w/ MSI stuff */
+@@ -485,6 +517,42 @@
+ 	}
+ }
+ 
++#define AHCI_PCI_BAR 5
++#define AHCI_GLOBAL_CTL 0x04
++#define AHCI_ENABLE (1 << 31)
++static int piix_disable_ahci(struct pci_dev *pdev)
++{
++	void *mmio;
++	unsigned long addr;
++	u32 tmp;
++	int rc = 0;
++
++	/* BUG: pci_enable_device has not yet been called.  This
++	 * works because this device is usually set up by BIOS.
++	 */
++
++	addr = pci_resource_start(pdev, AHCI_PCI_BAR);
++	if (!addr || !pci_resource_len(pdev, AHCI_PCI_BAR))
++		return 0;
++	
++	mmio = ioremap(addr, 64);
++	if (!mmio)
++		return -ENOMEM;
++	
++	tmp = readl(mmio + AHCI_GLOBAL_CTL);
++	if (tmp & AHCI_ENABLE) {
++		tmp &= ~AHCI_ENABLE;
++		writel(tmp, mmio + AHCI_GLOBAL_CTL);
++
++		tmp = readl(mmio + AHCI_GLOBAL_CTL);
++		if (tmp & AHCI_ENABLE)
++			rc = -EIO;
++	}
++	
++	iounmap(mmio);
++	return rc;
++}
++
+ /**
+  *	piix_init_one - Register PIIX ATA PCI device with kernel services
+  *	@pdev: PCI device to register
+@@ -516,6 +584,12 @@
+ 
+ 	port_info[0] = &piix_port_info[ent->driver_data];
+ 	port_info[1] = NULL;
++
++	if (port_info[0]->host_flags & PIIX_FLAG_AHCI) {
++		int rc = piix_disable_ahci(pdev);
++		if (rc)
++			return rc;
++	}
+ 
+ 	if (port_info[0]->host_flags & PIIX_FLAG_COMBINED) {
+ 		u8 tmp;
+diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+--- a/drivers/scsi/libata-core.c	2004-08-18 03:11:44 -04:00
++++ b/drivers/scsi/libata-core.c	2004-08-18 03:11:44 -04:00
+@@ -43,6 +43,7 @@
+ #include <linux/libata.h>
+ #include <asm/io.h>
+ #include <asm/semaphore.h>
++#include <asm/byteorder.h>
+ 
+ #include "libata.h"
+ 
+@@ -50,11 +51,14 @@
+ 				    unsigned long tmout_pat,
+ 			    	    unsigned long tmout);
+ static void __ata_dev_select (struct ata_port *ap, unsigned int device);
+-static void ata_host_set_pio(struct ata_port *ap);
+-static void ata_host_set_udma(struct ata_port *ap);
+-static void ata_dev_set_pio(struct ata_port *ap, unsigned int device);
+-static void ata_dev_set_udma(struct ata_port *ap, unsigned int device);
+ static void ata_set_mode(struct ata_port *ap);
++static void ata_dev_set_xfermode(struct ata_port *ap, struct ata_device *dev);
++static unsigned int ata_get_mode_mask(struct ata_port *ap, int shift);
++static int fgb(u32 bitmap);
++static int ata_choose_xfer_mode(struct ata_port *ap,
++				u8 *xfer_mode_out,
++				unsigned int *xfer_shift_out);
++static int ata_qc_complete_noop(struct ata_queued_cmd *qc, u8 drv_stat);
+ 
+ static unsigned int ata_unique_id = 1;
+ static struct workqueue_struct *ata_wq;
+@@ -524,7 +528,7 @@
+ 	dev->write_cmd = (cmd >> 8) & 0xff;
+ }
+ 
+-static const char * udma_str[] = {
++static const char * xfer_mode_str[] = {
+ 	"UDMA/16",
+ 	"UDMA/25",
+ 	"UDMA/33",
+@@ -533,6 +537,14 @@
+ 	"UDMA/100",
+ 	"UDMA/133",
+ 	"UDMA7",
++	"MWDMA0",
++	"MWDMA1",
++	"MWDMA2",
++	"PIO0",
++	"PIO1",
++	"PIO2",
++	"PIO3",
++	"PIO4",
+ };
+ 
+ /**
+@@ -550,16 +562,24 @@
+  *	@udma_mask, or the constant C string "<n/a>".
+  */
+ 
+-static const char *ata_udma_string(unsigned int udma_mask)
++static const char *ata_mode_string(unsigned int mask)
+ {
+ 	int i;
+ 
+-	for (i = 7; i >= 0; i--) {
+-		if (udma_mask & (1 << i))
+-			return udma_str[i];
+-	}
++	for (i = 7; i >= 0; i--)
++		if (mask & (1 << i))
++			goto out;
++	for (i = ATA_SHIFT_MWDMA + 2; i >= ATA_SHIFT_MWDMA; i--)
++		if (mask & (1 << i))
++			goto out;
++	for (i = ATA_SHIFT_PIO + 4; i >= ATA_SHIFT_PIO; i--)
++		if (mask & (1 << i))
++			goto out;
+ 
+ 	return "<n/a>";
++
++out:
++	return xfer_mode_str[i];
+ }
+ 
+ /**
+@@ -930,10 +950,14 @@
+ {
+ 	struct ata_device *dev = &ap->device[device];
+ 	unsigned int i;
+-	u16 tmp, udma_modes;
++	u16 tmp;
++	unsigned long xfer_modes;
+ 	u8 status;
+-	struct ata_taskfile tf;
+ 	unsigned int using_edd;
++	DECLARE_COMPLETION(wait);
++	struct ata_queued_cmd *qc;
++	unsigned long flags;
++	int rc;
+ 
+ 	if (!ata_dev_present(dev)) {
+ 		DPRINTK("ENTER/EXIT (host %u, dev %u) -- nodev\n",
+@@ -953,27 +977,34 @@
+ 
+ 	ata_dev_select(ap, device, 1, 1); /* select device 0/1 */
+ 
+-retry:
+-	ata_tf_init(ap, &tf, device);
+-	tf.ctl |= ATA_NIEN;
+-	tf.protocol = ATA_PROT_PIO;
++	qc = ata_qc_new_init(ap, dev);
++	BUG_ON(qc == NULL);
++
++	ata_sg_init_one(qc, dev->id, sizeof(dev->id));
++	qc->pci_dma_dir = PCI_DMA_FROMDEVICE;
++	qc->tf.protocol = ATA_PROT_PIO;
++	qc->nsect = 1;
+ 
++retry:
+ 	if (dev->class == ATA_DEV_ATA) {
+-		tf.command = ATA_CMD_ID_ATA;
++		qc->tf.command = ATA_CMD_ID_ATA;
+ 		DPRINTK("do ATA identify\n");
+ 	} else {
+-		tf.command = ATA_CMD_ID_ATAPI;
++		qc->tf.command = ATA_CMD_ID_ATAPI;
+ 		DPRINTK("do ATAPI identify\n");
+ 	}
+ 
+-	ata_tf_to_host(ap, &tf);
++	qc->waiting = &wait;
++	qc->complete_fn = ata_qc_complete_noop;
+ 
+-	/* crazy ATAPI devices... */
+-	if (dev->class == ATA_DEV_ATAPI)
+-		msleep(150);
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	rc = ata_qc_issue(qc);
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+ 
+-	if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT))
++	if (rc)
+ 		goto err_out;
++	else
++		wait_for_completion(&wait);
+ 
+ 	status = ata_chk_status(ap);
+ 	if (status & ATA_ERR) {
+@@ -988,44 +1019,21 @@
+ 		 * ATA software reset (SRST, the default) does not appear
+ 		 * to have this problem.
+ 		 */
+-		if ((using_edd) && (tf.command == ATA_CMD_ID_ATA)) {
++		if ((using_edd) && (qc->tf.command == ATA_CMD_ID_ATA)) {
+ 			u8 err = ata_chk_err(ap);
+ 			if (err & ATA_ABORTED) {
+ 				dev->class = ATA_DEV_ATAPI;
++				qc->cursg = 0;
++				qc->cursg_ofs = 0;
++				qc->cursect = 0;
++				qc->nsect = 1;
+ 				goto retry;
+ 			}
+ 		}
+ 		goto err_out;
+ 	}
+ 
+-	/* make sure we have BSY=0, DRQ=1 */
+-	if ((status & ATA_DRQ) == 0) {
+-		printk(KERN_WARNING "ata%u: dev %u (ATA%s?) not returning id page (0x%x)\n",
+-		       ap->id, device,
+-		       dev->class == ATA_DEV_ATA ? "" : "PI",
+-		       status);
+-		goto err_out;
+-	}
+-
+-	/* read IDENTIFY [X] DEVICE page */
+-	if (ap->flags & ATA_FLAG_MMIO) {
+-		for (i = 0; i < ATA_ID_WORDS; i++)
+-			dev->id[i] = readw((void *)ap->ioaddr.data_addr);
+-	} else
+-		for (i = 0; i < ATA_ID_WORDS; i++)
+-			dev->id[i] = inw(ap->ioaddr.data_addr);
+-
+-	/* wait for host_idle */
+-	status = ata_wait_idle(ap);
+-	if (status & (ATA_BUSY | ATA_DRQ)) {
+-		printk(KERN_WARNING "ata%u: dev %u (ATA%s?) error after id page (0x%x)\n",
+-		       ap->id, device,
+-		       dev->class == ATA_DEV_ATA ? "" : "PI",
+-		       status);
+-		goto err_out;
+-	}
+-
+-	ata_irq_on(ap);	/* re-enable interrupts */
++	swap_buf_le16(dev->id, ATA_ID_WORDS);
+ 
+ 	/* print device capabilities */
+ 	printk(KERN_DEBUG "ata%u: dev %u cfg "
+@@ -1045,12 +1053,13 @@
+ 		goto err_out_nosup;
+ 	}
+ 
+-	/* we require UDMA support */
+-	udma_modes =
+-	tmp = dev->id[ATA_ID_UDMA_MODES];
+-	if ((tmp & 0xff) == 0) {
+-		printk(KERN_DEBUG "ata%u: no udma\n", ap->id);
+-		goto err_out_nosup;
++	/* quick-n-dirty find max transfer mode; for printk only */
++	xfer_modes = dev->id[ATA_ID_UDMA_MODES];
++	if (!xfer_modes)
++		xfer_modes = (dev->id[ATA_ID_MWDMA_MODES]) << ATA_SHIFT_MWDMA;
++	if (!xfer_modes) {
++		xfer_modes = (dev->id[ATA_ID_PIO_MODES]) << (ATA_SHIFT_PIO + 3);
++		xfer_modes |= (0x7 << ATA_SHIFT_PIO);
+ 	}
+ 
+ 	ata_dump_id(dev);
+@@ -1083,7 +1092,7 @@
+ 		/* print device info to dmesg */
+ 		printk(KERN_INFO "ata%u: dev %u ATA, max %s, %Lu sectors:%s\n",
+ 		       ap->id, device,
+-		       ata_udma_string(udma_modes),
++		       ata_mode_string(xfer_modes),
+ 		       (unsigned long long)dev->n_sectors,
+ 		       dev->flags & ATA_DFLAG_LBA48 ? " lba48" : "");
+ 	}
+@@ -1093,15 +1102,18 @@
+ 		if (ata_id_is_ata(dev))		/* sanity check */
+ 			goto err_out_nosup;
+ 
+-		/* see if 16-byte commands supported */
+-		tmp = dev->id[0] & 0x3;
+-		if (tmp == 1)
+-			ap->host->max_cmd_len = 16;
++		rc = atapi_cdb_len(dev->id);
++		if ((rc < 12) || (rc > ATAPI_CDB_LEN)) {
++			printk(KERN_WARNING "ata%u: unsupported CDB len\n", ap->id);
++			goto err_out_nosup;
++		}
++		ap->cdb_len = (unsigned int) rc;
++		ap->host->max_cmd_len = (unsigned char) ap->cdb_len;
+ 
+ 		/* print device info to dmesg */
+ 		printk(KERN_INFO "ata%u: dev %u ATAPI, max %s\n",
+ 		       ap->id, device,
+-		       ata_udma_string(udma_modes));
++		       ata_mode_string(xfer_modes));
+ 	}
+ 
+ 	DPRINTK("EXIT, drv_stat = 0x%x\n", ata_chk_status(ap));
+@@ -1232,6 +1244,101 @@
+ 	ap->flags |= ATA_FLAG_PORT_DISABLED;
+ }
+ 
++static struct {
++	unsigned int shift;
++	u8 base;
++} xfer_mode_classes[] = {
++	{ ATA_SHIFT_UDMA,	XFER_UDMA_0 },
++	{ ATA_SHIFT_MWDMA,	XFER_MW_DMA_0 },
++	{ ATA_SHIFT_PIO,	XFER_PIO_0 },
++};
++
++static inline u8 base_from_shift(unsigned int shift)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(xfer_mode_classes); i++)
++		if (xfer_mode_classes[i].shift == shift)
++			return xfer_mode_classes[i].base;
++
++	return 0xff;
++}
++
++static void ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
++{
++	int ofs, idx;
++	u8 base;
++
++	if (!ata_dev_present(dev) || (ap->flags & ATA_FLAG_PORT_DISABLED))
++		return;
++
++	if (dev->xfer_shift == ATA_SHIFT_PIO)
++		dev->flags |= ATA_DFLAG_PIO;
++
++	ata_dev_set_xfermode(ap, dev);
++
++	base = base_from_shift(dev->xfer_shift);
++	ofs = dev->xfer_mode - base;
++	idx = ofs + dev->xfer_shift;
++	WARN_ON(idx >= ARRAY_SIZE(xfer_mode_str));
++
++	DPRINTK("idx=%d xfer_shift=%u, xfer_mode=0x%x, base=0x%x, offset=%d\n",
++		idx, dev->xfer_shift, (int)dev->xfer_mode, (int)base, ofs);
++
++	printk(KERN_INFO "ata%u: dev %u configured for %s\n",
++		ap->id, dev->devno, xfer_mode_str[idx]);
++}
++
++static int ata_host_set_pio(struct ata_port *ap)
++{
++	unsigned int mask;
++	int x, i;
++	u8 base, xfer_mode;
++
++	mask = ata_get_mode_mask(ap, ATA_SHIFT_PIO);
++	x = fgb(mask);
++	if (x < 0) {
++		printk(KERN_WARNING "ata%u: no PIO support\n", ap->id);
++		return -1;
++	}
++
++	base = base_from_shift(ATA_SHIFT_PIO);
++	xfer_mode = base + x;
++
++	DPRINTK("base 0x%x xfer_mode 0x%x mask 0x%x x %d\n",
++		(int)base, (int)xfer_mode, mask, x);
++
++	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++		struct ata_device *dev = &ap->device[i];
++		if (ata_dev_present(dev)) {
++			dev->pio_mode = xfer_mode;
++			dev->xfer_mode = xfer_mode;
++			dev->xfer_shift = ATA_SHIFT_PIO;
++			if (ap->ops->set_piomode)
++				ap->ops->set_piomode(ap, dev);
++		}
++	}
++
++	return 0;
++}
++
++static void ata_host_set_dma(struct ata_port *ap, u8 xfer_mode,
++			    unsigned int xfer_shift)
++{
++	int i;
++
++	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++		struct ata_device *dev = &ap->device[i];
++		if (ata_dev_present(dev)) {
++			dev->dma_mode = xfer_mode;
++			dev->xfer_mode = xfer_mode;
++			dev->xfer_shift = xfer_shift;
++			if (ap->ops->set_dmamode)
++				ap->ops->set_dmamode(ap, dev);
++		}
++	}
++}
++
+ /**
+  *	ata_set_mode - Program timings and issue SET FEATURES - XFER
+  *	@ap: port on which timings will be programmed
+@@ -1241,29 +1348,28 @@
+  */
+ static void ata_set_mode(struct ata_port *ap)
+ {
+-	unsigned int force_pio, i;
+-
+-	ata_host_set_pio(ap);
+-	if (ap->flags & ATA_FLAG_PORT_DISABLED)
+-		return;
++	unsigned int i, xfer_shift;
++	u8 xfer_mode;
++	int rc;
+ 
+-	ata_host_set_udma(ap);
+-	if (ap->flags & ATA_FLAG_PORT_DISABLED)
+-		return;
++	/* step 1: always set host PIO timings */
++	rc = ata_host_set_pio(ap);
++	if (rc)
++		goto err_out;
+ 
+-#ifdef ATA_FORCE_PIO
+-	force_pio = 1;
+-#else
+-	force_pio = 0;
+-#endif
++	/* step 2: choose the best data xfer mode */
++	xfer_mode = xfer_shift = 0;
++	rc = ata_choose_xfer_mode(ap, &xfer_mode, &xfer_shift);
++	if (rc)
++		goto err_out;
+ 
+-	if (force_pio) {
+-		ata_dev_set_pio(ap, 0);
+-		ata_dev_set_pio(ap, 1);
+-	} else {
+-		ata_dev_set_udma(ap, 0);
+-		ata_dev_set_udma(ap, 1);
+-	}
++	/* step 3: if that xfer mode isn't PIO, set host DMA timings */
++	if (xfer_shift != ATA_SHIFT_PIO)
++		ata_host_set_dma(ap, xfer_mode, xfer_shift);
++
++	/* step 4: update devices' xfer mode */
++	ata_dev_set_mode(ap, &ap->device[0]);
++	ata_dev_set_mode(ap, &ap->device[1]);
+ 
+ 	if (ap->flags & ATA_FLAG_PORT_DISABLED)
+ 		return;
+@@ -1275,6 +1381,11 @@
+ 		struct ata_device *dev = &ap->device[i];
+ 		ata_dev_set_protocol(dev);
+ 	}
++
++	return;
++
++err_out:
++	ata_port_disable(ap);
+ }
+ 
+ /**
+@@ -1536,116 +1647,102 @@
+ 	DPRINTK("EXIT\n");
+ }
+ 
+-/**
+- *	ata_host_set_pio -
+- *	@ap:
+- *
+- *	LOCKING:
+- */
+-
+-static void ata_host_set_pio(struct ata_port *ap)
++static unsigned int ata_get_mode_mask(struct ata_port *ap, int shift)
+ {
+ 	struct ata_device *master, *slave;
+-	unsigned int pio, i;
+-	u16 mask;
++	unsigned int mask;
+ 
+ 	master = &ap->device[0];
+ 	slave = &ap->device[1];
+ 
+ 	assert (ata_dev_present(master) || ata_dev_present(slave));
+ 
+-	mask = ap->pio_mask;
+-	if (ata_dev_present(master))
+-		mask &= (master->id[ATA_ID_PIO_MODES] & 0x03);
+-	if (ata_dev_present(slave))
+-		mask &= (slave->id[ATA_ID_PIO_MODES] & 0x03);
+-
+-	/* require pio mode 3 or 4 support for host and all devices */
+-	if (mask == 0) {
+-		printk(KERN_WARNING "ata%u: no PIO3/4 support, ignoring\n",
+-		       ap->id);
+-		goto err_out;
++	if (shift == ATA_SHIFT_UDMA) {
++		mask = ap->udma_mask;
++		if (ata_dev_present(master))
++			mask &= (master->id[ATA_ID_UDMA_MODES] & 0xff);
++		if (ata_dev_present(slave))
++			mask &= (slave->id[ATA_ID_UDMA_MODES] & 0xff);
++	}
++	else if (shift == ATA_SHIFT_MWDMA) {
++		mask = ap->mwdma_mask;
++		if (ata_dev_present(master))
++			mask &= (master->id[ATA_ID_MWDMA_MODES] & 0x07);
++		if (ata_dev_present(slave))
++			mask &= (slave->id[ATA_ID_MWDMA_MODES] & 0x07);
++	}
++	else if (shift == ATA_SHIFT_PIO) {
++		mask = ap->pio_mask;
++		if (ata_dev_present(master)) {
++			/* spec doesn't return explicit support for
++			 * PIO0-2, so we fake it
++			 */
++			u16 tmp_mode = master->id[ATA_ID_PIO_MODES] & 0x03;
++			tmp_mode <<= 3;
++			tmp_mode |= 0x7;
++			mask &= tmp_mode;
++		}
++		if (ata_dev_present(slave)) {
++			/* spec doesn't return explicit support for
++			 * PIO0-2, so we fake it
++			 */
++			u16 tmp_mode = slave->id[ATA_ID_PIO_MODES] & 0x03;
++			tmp_mode <<= 3;
++			tmp_mode |= 0x7;
++			mask &= tmp_mode;
++		}
++	}
++	else {
++		mask = 0xffffffff; /* shut up compiler warning */
++		BUG();
+ 	}
+ 
+-	pio = (mask & ATA_ID_PIO4) ? 4 : 3;
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		if (ata_dev_present(&ap->device[i])) {
+-			ap->device[i].pio_mode = (pio == 3) ?
+-				XFER_PIO_3 : XFER_PIO_4;
+-			if (ap->ops->set_piomode)
+-				ap->ops->set_piomode(ap, &ap->device[i], pio);
+-		}
++	return mask;
++}
+ 
+-	return;
++/* find greatest bit */
++static int fgb(u32 bitmap)
++{
++	unsigned int i;
++	int x = -1;
+ 
+-err_out:
+-	ap->ops->port_disable(ap);
++	for (i = 0; i < 32; i++)
++		if (bitmap & (1 << i))
++			x = i;
++
++	return x;
+ }
+ 
+ /**
+- *	ata_host_set_udma -
++ *	ata_choose_xfer_mode -
+  *	@ap:
+  *
+  *	LOCKING:
++ *
++ *	RETURNS:
++ *	Zero on success, negative on error.
+  */
+ 
+-static void ata_host_set_udma(struct ata_port *ap)
+-{
+-	struct ata_device *master, *slave;
+-	u16 mask;
+-	unsigned int i, j;
+-	int udma_mode = -1;
+-
+-	master = &ap->device[0];
+-	slave = &ap->device[1];
+-
+-	assert (ata_dev_present(master) || ata_dev_present(slave));
+-	assert ((ap->flags & ATA_FLAG_PORT_DISABLED) == 0);
+-
+-	DPRINTK("udma masks: host 0x%X, master 0x%X, slave 0x%X\n",
+-		ap->udma_mask,
+-		(!ata_dev_present(master)) ? 0xff :
+-			(master->id[ATA_ID_UDMA_MODES] & 0xff),
+-		(!ata_dev_present(slave)) ? 0xff :
+-			(slave->id[ATA_ID_UDMA_MODES] & 0xff));
+-
+-	mask = ap->udma_mask;
+-	if (ata_dev_present(master))
+-		mask &= (master->id[ATA_ID_UDMA_MODES] & 0xff);
+-	if (ata_dev_present(slave))
+-		mask &= (slave->id[ATA_ID_UDMA_MODES] & 0xff);
+-
+-	i = XFER_UDMA_7;
+-	while (i >= XFER_UDMA_0) {
+-		j = i - XFER_UDMA_0;
+-		DPRINTK("mask 0x%X i 0x%X j %u\n", mask, i, j);
+-		if (mask & (1 << j)) {
+-			udma_mode = i;
+-			break;
++static int ata_choose_xfer_mode(struct ata_port *ap,
++				u8 *xfer_mode_out,
++				unsigned int *xfer_shift_out)
++{
++	unsigned int mask, shift;
++	int x, i;
++
++	for (i = 0; i < ARRAY_SIZE(xfer_mode_classes); i++) {
++		shift = xfer_mode_classes[i].shift;
++		mask = ata_get_mode_mask(ap, shift);
++
++		x = fgb(mask);
++		if (x >= 0) {
++			*xfer_mode_out = xfer_mode_classes[i].base + x;
++			*xfer_shift_out = shift;
++			return 0;
+ 		}
+-
+-		i--;
+ 	}
+ 
+-	/* require udma for host and all attached devices */
+-	if (udma_mode < 0) {
+-		printk(KERN_WARNING "ata%u: no UltraDMA support, ignoring\n",
+-		       ap->id);
+-		goto err_out;
+-	}
+-
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		if (ata_dev_present(&ap->device[i])) {
+-			ap->device[i].udma_mode = udma_mode;
+-			if (ap->ops->set_udmamode)
+-				ap->ops->set_udmamode(ap, &ap->device[i],
+-						      udma_mode);
+-		}
+-
+-	return;
+-
+-err_out:
+-	ap->ops->port_disable(ap);
++	return -1;
+ }
+ 
+ /**
+@@ -1658,89 +1755,39 @@
+ 
+ static void ata_dev_set_xfermode(struct ata_port *ap, struct ata_device *dev)
+ {
+-	struct ata_taskfile tf;
++	DECLARE_COMPLETION(wait);
++	struct ata_queued_cmd *qc;
++	int rc;
++	unsigned long flags;
+ 
+ 	/* set up set-features taskfile */
+ 	DPRINTK("set features - xfer mode\n");
+-	ata_tf_init(ap, &tf, dev->devno);
+-	tf.ctl |= ATA_NIEN;
+-	tf.command = ATA_CMD_SET_FEATURES;
+-	tf.feature = SETFEATURES_XFER;
+-	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+-	tf.protocol = ATA_PROT_NODATA;
+-	if (dev->flags & ATA_DFLAG_PIO)
+-		tf.nsect = dev->pio_mode;
+-	else
+-		tf.nsect = dev->udma_mode;
+ 
+-	/* do bus reset */
+-	ata_tf_to_host(ap, &tf);
++	qc = ata_qc_new_init(ap, dev);
++	BUG_ON(qc == NULL);
+ 
+-	/* crazy ATAPI devices... */
+-	if (dev->class == ATA_DEV_ATAPI)
+-		msleep(150);
++	qc->tf.command = ATA_CMD_SET_FEATURES;
++	qc->tf.feature = SETFEATURES_XFER;
++	qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	qc->tf.protocol = ATA_PROT_NODATA;
++	qc->tf.nsect = dev->xfer_mode;
+ 
+-	ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
++	qc->waiting = &wait;
++	qc->complete_fn = ata_qc_complete_noop;
+ 
+-	ata_irq_on(ap);	/* re-enable interrupts */
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	rc = ata_qc_issue(qc);
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+ 
+-	ata_wait_idle(ap);
++	if (rc)
++		ata_port_disable(ap);
++	else
++		wait_for_completion(&wait);
+ 
+ 	DPRINTK("EXIT\n");
+ }
+ 
+ /**
+- *	ata_dev_set_udma - Set ATA device's transfer mode to Ultra DMA
+- *	@ap: Port associated with device @dev
+- *	@device: Device whose mode will be set
+- *
+- *	LOCKING:
+- */
+-
+-static void ata_dev_set_udma(struct ata_port *ap, unsigned int device)
+-{
+-	struct ata_device *dev = &ap->device[device];
+-
+-	if (!ata_dev_present(dev) || (ap->flags & ATA_FLAG_PORT_DISABLED))
+-		return;
+-
+-	ata_dev_set_xfermode(ap, dev);
+-
+-	assert((dev->udma_mode >= XFER_UDMA_0) &&
+-	       (dev->udma_mode <= XFER_UDMA_7));
+-	printk(KERN_INFO "ata%u: dev %u configured for %s\n",
+-	       ap->id, device,
+-	       udma_str[dev->udma_mode - XFER_UDMA_0]);
+-}
+-
+-/**
+- *	ata_dev_set_pio - Set ATA device's transfer mode to PIO
+- *	@ap: Port associated with device @dev
+- *	@device: Device whose mode will be set
+- *
+- *	LOCKING:
+- */
+-
+-static void ata_dev_set_pio(struct ata_port *ap, unsigned int device)
+-{
+-	struct ata_device *dev = &ap->device[device];
+-
+-	if (!ata_dev_present(dev) || (ap->flags & ATA_FLAG_PORT_DISABLED))
+-		return;
+-
+-	/* force PIO mode */
+-	dev->flags |= ATA_DFLAG_PIO;
+-
+-	ata_dev_set_xfermode(ap, dev);
+-
+-	assert((dev->pio_mode >= XFER_PIO_3) &&
+-	       (dev->pio_mode <= XFER_PIO_4));
+-	printk(KERN_INFO "ata%u: dev %u configured for PIO%c\n",
+-	       ap->id, device,
+-	       dev->pio_mode == 3 ? '3' : '4');
+-}
+-
+-/**
+  *	ata_sg_clean -
+  *	@qc:
+  *
+@@ -2003,7 +2050,7 @@
+ 	}
+ 
+ 	drv_stat = ata_wait_idle(ap);
+-	if (drv_stat & (ATA_BUSY | ATA_DRQ)) {
++	if (!ata_ok(drv_stat)) {
+ 		ap->pio_task_state = PIO_ST_ERR;
+ 		return;
+ 	}
+@@ -2018,6 +2065,128 @@
+ 	ata_qc_complete(qc, drv_stat);
+ }
+ 
++void swap_buf_le16(u16 *buf, unsigned int buf_words)
++{
++#ifdef __BIG_ENDIAN
++	unsigned int i;
++
++	for (i = 0; i < buf_words; i++)
++		buf[i] = le16_to_cpu(buf[i]);
++#endif /* __BIG_ENDIAN */
++}
++
++static void ata_mmio_data_xfer(struct ata_port *ap, unsigned char *buf,
++			       unsigned int buflen, int write_data)
++{
++	unsigned int i;
++	unsigned int words = buflen >> 1;
++	u16 *buf16 = (u16 *) buf;
++	void *mmio = (void *)ap->ioaddr.data_addr;
++
++	if (write_data) {
++		for (i = 0; i < words; i++)
++			writew(le16_to_cpu(buf16[i]), mmio);
++	} else {
++		for (i = 0; i < words; i++)
++			buf16[i] = cpu_to_le16(readw(mmio));
++	}
++}
++
++static void ata_pio_data_xfer(struct ata_port *ap, unsigned char *buf,
++			      unsigned int buflen, int write_data)
++{
++	unsigned int dwords = buflen >> 1;
++
++	if (write_data)
++		outsw(ap->ioaddr.data_addr, buf, dwords);
++	else
++		insw(ap->ioaddr.data_addr, buf, dwords);
++}
++
++static void ata_data_xfer(struct ata_port *ap, unsigned char *buf,
++			  unsigned int buflen, int do_write)
++{
++	if (ap->flags & ATA_FLAG_MMIO)
++		ata_mmio_data_xfer(ap, buf, buflen, do_write);
++	else
++		ata_pio_data_xfer(ap, buf, buflen, do_write);
++}
++
++static void ata_pio_sector(struct ata_queued_cmd *qc)
++{
++	int do_write = (qc->tf.flags & ATA_TFLAG_WRITE);
++	struct scatterlist *sg = qc->sg;
++	struct ata_port *ap = qc->ap;
++	struct page *page;
++	unsigned char *buf;
++
++	if (qc->cursect == (qc->nsect - 1))
++		ap->pio_task_state = PIO_ST_LAST;
++
++	page = sg[qc->cursg].page;
++	buf = kmap(page) +
++	      sg[qc->cursg].offset + (qc->cursg_ofs * ATA_SECT_SIZE);
++
++	qc->cursect++;
++	qc->cursg_ofs++;
++
++	if ((qc->cursg_ofs * ATA_SECT_SIZE) == sg_dma_len(&sg[qc->cursg])) {
++		qc->cursg++;
++		qc->cursg_ofs = 0;
++	}
++
++	DPRINTK("data %s, drv_stat 0x%X\n",
++		qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read",
++		status);
++
++	/* do the actual data transfer */
++	do_write = (qc->tf.flags & ATA_TFLAG_WRITE);
++	ata_data_xfer(ap, buf, ATA_SECT_SIZE, do_write);
++
++	kunmap(page);
++}
++
++static void atapi_pio_sector(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct ata_device *dev = qc->dev;
++	unsigned int i, ireason, bc_lo, bc_hi, bytes;
++	int i_write, do_write = (qc->tf.flags & ATA_TFLAG_WRITE) ? 1 : 0;
++
++	ap->ops->tf_read(ap, &qc->tf);
++	ireason = qc->tf.nsect;
++	bc_lo = qc->tf.lbam;
++	bc_hi = qc->tf.lbah;
++	bytes = (bc_hi << 8) | bc_lo;
++
++	/* shall be cleared to zero, indicating xfer of data */
++	if (ireason & (1 << 0))
++		goto err_out;
++	
++	/* make sure transfer direction matches expected */
++	i_write = ((ireason & (1 << 1)) == 0) ? 1 : 0;
++	if (do_write != i_write)
++		goto err_out;
++
++	/* make sure byte count is multiple of sector size; not
++	* required by standard (warning! warning!), but IDE driver
++	* does this to simplify things a bit.  We are lazy, and
++	* follow suit.
++	*/
++	if (bytes & (ATA_SECT_SIZE - 1))
++		goto err_out;
++
++	for (i = 0; i < (bytes >> 9); i++)
++		ata_pio_sector(qc);
++	
++	return;
++
++err_out:
++	printk(KERN_INFO "ata%u: dev %u: ATAPI check failed\n",
++	      ap->id, dev->devno);
++	ap->pio_task_state = PIO_ST_ERR;
++}
++
+ /**
+  *	ata_pio_sector -
+  *	@ap:
+@@ -2025,12 +2194,9 @@
+  *	LOCKING:
+  */
+ 
+-static void ata_pio_sector(struct ata_port *ap)
++static void ata_pio_block(struct ata_port *ap)
+ {
+ 	struct ata_queued_cmd *qc;
+-	struct scatterlist *sg;
+-	struct page *page;
+-	unsigned char *buf;
+ 	u8 status;
+ 
+ 	/*
+@@ -2061,36 +2227,29 @@
+ 	qc = ata_qc_from_tag(ap, ap->active_tag);
+ 	assert(qc != NULL);
+ 
+-	sg = qc->sg;
+-
+-	if (qc->cursect == (qc->nsect - 1))
+-		ap->pio_task_state = PIO_ST_LAST;
++	if (is_atapi_taskfile(&qc->tf))
++		atapi_pio_sector(qc);
++	else
++		ata_pio_sector(qc);
++}
+ 
+-	page = sg[qc->cursg].page;
+-	buf = kmap(page) +
+-	      sg[qc->cursg].offset + (qc->cursg_ofs * ATA_SECT_SIZE);
++static void ata_pio_error(struct ata_port *ap)
++{
++	struct ata_queued_cmd *qc;
++	u8 drv_stat;
+ 
+-	qc->cursect++;
+-	qc->cursg_ofs++;
++	qc = ata_qc_from_tag(ap, ap->active_tag);
++	assert(qc != NULL);
+ 
+-	if (qc->flags & ATA_QCFLAG_SG)
+-		if ((qc->cursg_ofs * ATA_SECT_SIZE) == sg_dma_len(&sg[qc->cursg])) {
+-			qc->cursg++;
+-			qc->cursg_ofs = 0;
+-		}
++	drv_stat = ata_chk_status(ap);
++	printk(KERN_WARNING "ata%u: PIO error, drv_stat 0x%x\n",
++	       ap->id, drv_stat);
+ 
+-	DPRINTK("data %s, drv_stat 0x%X\n",
+-		qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read",
+-		status);
++	ap->pio_task_state = PIO_ST_IDLE;
+ 
+-	/* do the actual data transfer */
+-	/* FIXME: mmio-ize */
+-	if (qc->tf.flags & ATA_TFLAG_WRITE)
+-		outsl(ap->ioaddr.data_addr, buf, ATA_SECT_DWORDS);
+-	else
+-		insl(ap->ioaddr.data_addr, buf, ATA_SECT_DWORDS);
++	ata_irq_on(ap);
+ 
+-	kunmap(page);
++	ata_qc_complete(qc, drv_stat | ATA_ERR);
+ }
+ 
+ static void ata_pio_task(void *_data)
+@@ -2100,7 +2259,7 @@
+ 
+ 	switch (ap->pio_task_state) {
+ 	case PIO_ST:
+-		ata_pio_sector(ap);
++		ata_pio_block(ap);
+ 		break;
+ 
+ 	case PIO_ST_LAST:
+@@ -2113,15 +2272,8 @@
+ 		break;
+ 
+ 	case PIO_ST_TMOUT:
+-		printk(KERN_ERR "ata%d: FIXME: PIO_ST_TMOUT\n", /* FIXME */
+-		       ap->id);
+-		timeout = 11 * HZ;
+-		break;
+-
+ 	case PIO_ST_ERR:
+-		printk(KERN_ERR "ata%d: FIXME: PIO_ST_ERR\n", /* FIXME */
+-		       ap->id);
+-		timeout = 11 * HZ;
++		ata_pio_error(ap);
+ 		break;
+ 	}
+ 
+@@ -2180,7 +2332,6 @@
+ 
+ 		/* fall through */
+ 
+-	case ATA_PROT_NODATA:
+ 	default:
+ 		ata_altstatus(ap);
+ 		drv_stat = ata_chk_status(ap);
+@@ -2287,8 +2438,6 @@
+ 
+ 		ata_tf_init(ap, &qc->tf, dev->devno);
+ 
+-		if (likely((dev->flags & ATA_DFLAG_PIO) == 0))
+-			qc->flags |= ATA_QCFLAG_DMA;
+ 		if (dev->flags & ATA_DFLAG_LBA48)
+ 			qc->tf.flags |= ATA_TFLAG_LBA48;
+ 	}
+@@ -2296,6 +2445,11 @@
+ 	return qc;
+ }
+ 
++static int ata_qc_complete_noop(struct ata_queued_cmd *qc, u8 drv_stat)
++{
++	return 0;
++}
++
+ /**
+  *	ata_qc_complete - Complete an active ATA command
+  *	@qc: Command to complete
+@@ -2335,11 +2489,16 @@
+ 		do_clear = 1;
+ 	}
+ 
+-	if (qc->waiting)
+-		complete(qc->waiting);
++	if (qc->waiting) {
++		struct completion *waiting = qc->waiting;
++		qc->waiting = NULL;
++		complete(waiting);
++	}
+ 
+ 	if (likely(do_clear))
+ 		clear_bit(tag, &ap->qactive);
++
++	VPRINTK("EXIT\n");
+ }
+ 
+ /**
+@@ -2422,6 +2581,12 @@
+ 		break;
+ 
+ 	case ATA_PROT_ATAPI:
++		ata_qc_set_polling(qc);
++		ata_tf_to_host_nolock(ap, &qc->tf);
++		queue_work(ata_wq, &ap->packet_task);
++		break;
++
++	case ATA_PROT_ATAPI_NODATA:
+ 		ata_tf_to_host_nolock(ap, &qc->tf);
+ 		queue_work(ata_wq, &ap->packet_task);
+ 		break;
+@@ -2581,7 +2746,7 @@
+ 	case ATA_PROT_ATAPI:
+ 		/* check status of DMA engine */
+ 		host_stat = ata_bmdma_status(ap);
+-		VPRINTK("BUS_DMA (host_stat 0x%X)\n", host_stat);
++		VPRINTK("ata%u: host_stat 0x%X\n", ap->id, host_stat);
+ 
+ 		/* if it's not our irq... */
+ 		if (!(host_stat & ATA_DMA_INTR))
+@@ -2592,6 +2757,7 @@
+ 
+ 		/* fall through */
+ 
++	case ATA_PROT_ATAPI_NODATA:
+ 	case ATA_PROT_NODATA:
+ 		/* check altstatus */
+ 		status = ata_altstatus(ap);
+@@ -2602,7 +2768,8 @@
+ 		status = ata_chk_status(ap);
+ 		if (unlikely(status & ATA_BUSY))
+ 			goto idle_irq;
+-		DPRINTK("BUS_NODATA (dev_stat 0x%X)\n", status);
++		DPRINTK("ata%u: protocol %d (dev_stat 0x%X)\n",
++			ap->id, qc->tf.protocol, status);
+ 
+ 		/* ack bmdma irq events */
+ 		ata_bmdma_ack_irq(ap);
+@@ -2701,21 +2868,20 @@
+ 
+ 	/* make sure DRQ is set */
+ 	status = ata_chk_status(ap);
+-	if ((status & ATA_DRQ) == 0)
++	if ((status & (ATA_BUSY | ATA_DRQ)) != ATA_DRQ)
+ 		goto err_out;
+ 
+ 	/* send SCSI cdb */
+-	/* FIXME: mmio-ize */
+ 	DPRINTK("send cdb\n");
+-	outsl(ap->ioaddr.data_addr,
+-	      qc->scsicmd->cmnd, ap->host->max_cmd_len / 4);
++	assert(ap->cdb_len >= 12);
++	ata_data_xfer(ap, qc->cdb, ap->cdb_len, 1);
+ 
+ 	/* if we are DMA'ing, irq handler takes over from here */
+ 	if (qc->tf.protocol == ATA_PROT_ATAPI_DMA)
+ 		ap->ops->bmdma_start(qc);	    /* initiate bmdma */
+ 
+ 	/* non-data commands are also handled via irq */
+-	else if (qc->scsicmd->sc_data_direction == SCSI_DATA_NONE) {
++	else if (qc->tf.protocol == ATA_PROT_ATAPI_NODATA) {
+ 		/* do nothing */
+ 	}
+ 
+@@ -2804,11 +2970,11 @@
+ 	ap->host_set = host_set;
+ 	ap->port_no = port_no;
+ 	ap->pio_mask = ent->pio_mask;
++	ap->mwdma_mask = ent->mwdma_mask;
+ 	ap->udma_mask = ent->udma_mask;
+ 	ap->flags |= ent->host_flags;
+ 	ap->ops = ent->port_ops;
+ 	ap->cbl = ATA_CBL_NONE;
+-	ap->device[0].flags = ATA_DFLAG_MASTER;
+ 	ap->active_tag = ATA_TAG_POISON;
+ 	ap->last_ctl = 0xFF;
+ 
+@@ -2901,19 +3067,23 @@
+ 	/* register each port bound to this device */
+ 	for (i = 0; i < ent->n_ports; i++) {
+ 		struct ata_port *ap;
++		unsigned long xfer_mode_mask;
+ 
+ 		ap = ata_host_add(ent, host_set, i);
+ 		if (!ap)
+ 			goto err_out;
+ 
+ 		host_set->ports[i] = ap;
++		xfer_mode_mask =(ap->udma_mask << ATA_SHIFT_UDMA) |
++				(ap->mwdma_mask << ATA_SHIFT_MWDMA) |
++				(ap->pio_mask << ATA_SHIFT_PIO);
+ 
+ 		/* print per-port info to dmesg */
+ 		printk(KERN_INFO "ata%u: %cATA max %s cmd 0x%lX ctl 0x%lX "
+ 				 "bmdma 0x%lX irq %lu\n",
+ 			ap->id,
+ 			ap->flags & ATA_FLAG_SATA ? 'S' : 'P',
+-			ata_udma_string(ent->udma_mask),
++			ata_mode_string(xfer_mode_mask),
+ 	       		ap->ioaddr.cmd_addr,
+ 	       		ap->ioaddr.ctl_addr,
+ 	       		ap->ioaddr.bmdma_addr,
+@@ -3152,6 +3322,7 @@
+ 	probe_ent->sht = port0->sht;
+ 	probe_ent->host_flags = port0->host_flags;
+ 	probe_ent->pio_mask = port0->pio_mask;
++	probe_ent->mwdma_mask = port0->mwdma_mask;
+ 	probe_ent->udma_mask = port0->udma_mask;
+ 	probe_ent->port_ops = port0->port_ops;
+ 
+@@ -3174,6 +3345,7 @@
+ 		probe_ent2->sht = port1->sht;
+ 		probe_ent2->host_flags = port1->host_flags;
+ 		probe_ent2->pio_mask = port1->pio_mask;
++		probe_ent2->mwdma_mask = port1->mwdma_mask;
+ 		probe_ent2->udma_mask = port1->udma_mask;
+ 		probe_ent2->port_ops = port1->port_ops;
+ 	} else {
+@@ -3388,6 +3560,7 @@
+ EXPORT_SYMBOL_GPL(ata_port_disable);
+ EXPORT_SYMBOL_GPL(ata_pci_init_one);
+ EXPORT_SYMBOL_GPL(ata_pci_remove_one);
++EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
+ EXPORT_SYMBOL_GPL(ata_scsi_queuecmd);
+ EXPORT_SYMBOL_GPL(ata_scsi_error);
+ EXPORT_SYMBOL_GPL(ata_scsi_slave_config);
+diff -Nru a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+--- a/drivers/scsi/libata-scsi.c	2004-08-18 03:11:44 -04:00
++++ b/drivers/scsi/libata-scsi.c	2004-08-18 03:11:44 -04:00
+@@ -29,6 +29,7 @@
+ #include "scsi.h"
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
++#include <asm/uaccess.h>
+ 
+ #include "libata.h"
+ 
+@@ -36,6 +37,8 @@
+ static void ata_scsi_simulate(struct ata_port *ap, struct ata_device *dev,
+ 			      struct scsi_cmnd *cmd,
+ 			      void (*done)(struct scsi_cmnd *));
++static struct ata_device *
++ata_scsi_find_dev(struct ata_port *ap, struct scsi_device *scsidev);
+ 
+ 
+ /**
+@@ -67,6 +70,43 @@
+ 	return 0;
+ }
+ 
++int ata_scsi_ioctl(struct scsi_device *scsidev, int cmd, void __user *arg)
++{
++	struct ata_port *ap;
++	struct ata_device *dev;
++	int val = -EINVAL, rc = -EINVAL;
++
++	ap = (struct ata_port *) &scsidev->host->hostdata[0];
++	if (!ap)
++		goto out;
++
++	dev = ata_scsi_find_dev(ap, scsidev);
++	if (!dev) {
++		rc = -ENODEV;
++		goto out;
++	}
++
++	switch (cmd) {
++	case ATA_IOC_GET_IO32:
++		val = 0;
++		if (copy_to_user(arg, &val, 1))
++			return -EFAULT;
++		return 0;
++
++	case ATA_IOC_SET_IO32:
++		val = (long) arg;
++		if (val != 0)
++			return -EINVAL;
++		return 0;
++
++	default:
++		rc = -EOPNOTSUPP;
++		break;
++	}
++
++out:
++	return rc;
++}
+ 
+ /**
+  *	ata_scsi_qc_new - acquire new ata_queued_cmd reference
+@@ -120,34 +160,158 @@
+  *	ata_to_sense_error - convert ATA error to SCSI error
+  *	@qc: Command that we are erroring out
+  *
+- *	Converts an ATA error into a SCSI error.
+- *
+- *	Right now, this routine is laughably primitive.  We
+- *	don't even examine what ATA told us, we just look at
+- *	the command data direction, and return a fatal SCSI
+- *	sense error based on that.
++ *	Converts an ATA error into a SCSI error. While we are at it
++ *	we decode and dump the ATA error for the user so that they
++ *	have some idea what really happened at the non make-believe
++ *	layer.
+  *
+  *	LOCKING:
+  *	spin_lock_irqsave(host_set lock)
+  */
+ 
+-void ata_to_sense_error(struct ata_queued_cmd *qc)
++void ata_to_sense_error(struct ata_queued_cmd *qc, u8 drv_stat)
+ {
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
++	u8 err = 0;
++	unsigned char *sb = cmd->sense_buffer;
++	/* Based on the 3ware driver translation table */
++	static unsigned char sense_table[][4] = {
++		/* BBD|ECC|ID|MAR */
++		{0xd1, 		ABORTED_COMMAND, 0x00, 0x00}, 	// Device busy                  Aborted command
++		/* BBD|ECC|ID */
++		{0xd0,  	ABORTED_COMMAND, 0x00, 0x00}, 	// Device busy                  Aborted command
++		/* ECC|MC|MARK */
++		{0x61, 		HARDWARE_ERROR, 0x00, 0x00}, 	// Device fault                 Hardware error
++		/* ICRC|ABRT */		/* NB: ICRC & !ABRT is BBD */
++		{0x84, 		ABORTED_COMMAND, 0x47, 0x00}, 	// Data CRC error               SCSI parity error
++		/* MC|ID|ABRT|TRK0|MARK */
++		{0x37, 		NOT_READY, 0x04, 0x00}, 	// Unit offline                 Not ready
++		/* MCR|MARK */
++		{0x09, 		NOT_READY, 0x04, 0x00}, 	// Unrecovered disk error       Not ready
++		/*  Bad address mark */
++		{0x01, 		MEDIUM_ERROR, 0x13, 0x00}, 	// Address mark not found       Address mark not found for data field
++		/* TRK0 */
++		{0x02, 		HARDWARE_ERROR, 0x00, 0x00}, 	// Track 0 not found		  Hardware error
++		/* Abort & !ICRC */
++		{0x04, 		ABORTED_COMMAND, 0x00, 0x00}, 	// Aborted command              Aborted command
++		/* Media change request */
++		{0x08, 		NOT_READY, 0x04, 0x00}, 	// Media change request	  FIXME: faking offline
++		/* SRV */
++		{0x10, 		ABORTED_COMMAND, 0x14, 0x00}, 	// ID not found                 Recorded entity not found
++		/* Media change */
++		{0x08,  	NOT_READY, 0x04, 0x00}, 	// Media change		  FIXME: faking offline
++		/* ECC */
++		{0x40, 		MEDIUM_ERROR, 0x11, 0x04}, 	// Uncorrectable ECC error      Unrecovered read error
++		/* BBD - block marked bad */
++		{0x80, 		MEDIUM_ERROR, 0x11, 0x04}, 	// Block marked bad		  Medium error, unrecovered read error
++		{0xFF, 0xFF, 0xFF, 0xFF}, // END mark 
++	};
++	static unsigned char stat_table[][4] = {
++		/* Must be first because BUSY means no other bits valid */
++		{0x80, 		ABORTED_COMMAND, 0x47, 0x00},	// Busy, fake parity for now
++		{0x20, 		HARDWARE_ERROR,  0x00, 0x00}, 	// Device fault
++		{0x08, 		ABORTED_COMMAND, 0x47, 0x00},	// Timed out in xfer, fake parity for now
++		{0x04, 		RECOVERED_ERROR, 0x11, 0x00},	// Recovered ECC error	  Medium error, recovered
++		{0xFF, 0xFF, 0xFF, 0xFF}, // END mark 
++	};
++	int i = 0;
+ 
+ 	cmd->result = SAM_STAT_CHECK_CONDITION;
+-
+-	cmd->sense_buffer[0] = 0x70;
+-	cmd->sense_buffer[2] = MEDIUM_ERROR;
+-	cmd->sense_buffer[7] = 14 - 8;	/* addnl. sense len. FIXME: correct? */
+-
++	
++	/*
++	 *	Is this an error we can process/parse
++	 */
++	 
++	if(drv_stat & ATA_ERR)
++		/* Read the err bits */
++		err = ata_chk_err(qc->ap);
++
++	/* Display the ATA level error info */
++	
++	printk(KERN_WARNING "ata%u: status=0x%02x { ", qc->ap->id, drv_stat);
++	if(drv_stat & 0x80)
++	{
++		printk("Busy ");
++		err = 0;	/* Data is not valid in this case */
++	}
++	else {
++		if(drv_stat & 0x40)	printk("DriveReady ");
++		if(drv_stat & 0x20)	printk("DeviceFault ");
++		if(drv_stat & 0x10)	printk("SeekComplete ");
++		if(drv_stat & 0x08)	printk("DataRequest ");
++		if(drv_stat & 0x04)	printk("CorrectedError ");
++		if(drv_stat & 0x02)	printk("Index ");
++		if(drv_stat & 0x01)	printk("Error ");
++	}
++	printk("}\n");
++	
++	if(err)
++	{
++		printk(KERN_WARNING "ata%u: error=0x%02x { ", qc->ap->id, err);
++		if(err & 0x04)		printk("DriveStatusError ");
++		if(err & 0x80)
++		{
++			if(err & 0x04)
++				printk("BadCRC ");
++			else
++				printk("Sector ");
++		}
++		if(err & 0x40)		printk("UncorrectableError ");
++		if(err & 0x10)		printk("SectorIdNotFound ");
++		if(err & 0x02)		printk("TrackZeroNotFound ");
++		if(err & 0x01)		printk("AddrMarkNotFound ");
++		printk("}\n");
++		
++		/* Should we dump sector info here too ?? */
++	}
++		
++	
++	/* Look for err */
++	while(sense_table[i][0] != 0xFF)
++	{
++		/* Look for best matches first */
++		if((sense_table[i][0] & err) == sense_table[i][0])
++		{
++			sb[0] = 0x70;
++			sb[2] = sense_table[i][1];
++			sb[7] = 0x0a;
++			sb[12] = sense_table[i][2];
++			sb[13] = sense_table[i][3];
++			return;
++		}
++		i++;
++	}
++	/* No immediate match */
++	if(err)
++		printk(KERN_DEBUG "ata%u: no sense translation for 0x%02x\n", qc->ap->id, err);
++	
++	/* Fall back to interpreting status bits */
++	while(stat_table[i][0] != 0xFF)
++	{
++		if(stat_table[i][0] & drv_stat)
++		{
++			sb[0] = 0x70;
++			sb[2] = stat_table[i][1];
++			sb[7] = 0x0a;
++			sb[12] = stat_table[i][2];
++			sb[13] = stat_table[i][3];
++			return;
++		}
++		i++;
++	}
++	/* No error ?? */
++	printk(KERN_ERR "ata%u: called with no error (%02X)!\n", qc->ap->id, drv_stat);
+ 	/* additional-sense-code[-qualifier] */
++	
++	sb[0] = 0x70;
++	sb[2] = MEDIUM_ERROR;
++	sb[7] = 0x0A;
+ 	if (cmd->sc_data_direction == SCSI_DATA_READ) {
+-		cmd->sense_buffer[12] = 0x11; /* "unrecovered read error" */
+-		cmd->sense_buffer[13] = 0x04;
++		sb[12] = 0x11; /* "unrecovered read error" */
++		sb[13] = 0x04;
+ 	} else {
+-		cmd->sense_buffer[12] = 0x0C; /* "write error -             */
+-		cmd->sense_buffer[13] = 0x02; /*  auto-reallocation failed" */
++		sb[12] = 0x0C; /* "write error -             */
++		sb[13] = 0x02; /*  auto-reallocation failed" */
+ 	}
+ }
+ 
+@@ -214,11 +378,135 @@
+ 	ap = (struct ata_port *) &host->hostdata[0];
+ 	ap->ops->eng_timeout(ap);
+ 
++	/* TODO: this is per-command; when queueing is supported
++	 * this code will either change or move to a more
++	 * appropriate place
++	 */
++	host->host_failed--;
++
+ 	DPRINTK("EXIT\n");
+ 	return 0;
+ }
+ 
+ /**
++ *	ata_scsi_flush_xlat - Translate SCSI SYNCHRONIZE CACHE command
++ *	@qc: Storage for translated ATA taskfile
++ *	@scsicmd: SCSI command to translate (ignored)
++ *
++ *	Sets up an ATA taskfile to issue FLUSH CACHE or
++ *	FLUSH CACHE EXT.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ *
++ *	RETURNS:
++ *	Zero on success, non-zero on error.
++ */
++
++static unsigned int ata_scsi_flush_xlat(struct ata_queued_cmd *qc, u8 *scsicmd)
++{
++	struct ata_taskfile *tf = &qc->tf;
++
++	tf->flags |= ATA_TFLAG_DEVICE;
++	tf->protocol = ATA_PROT_NODATA;
++
++	if ((tf->flags & ATA_TFLAG_LBA48) &&
++	    (ata_id_has_flush_ext(qc->dev)))
++		tf->command = ATA_CMD_FLUSH_EXT;
++	else
++		tf->command = ATA_CMD_FLUSH;
++
++	return 0;
++}
++
++/**
++ *	ata_scsi_verify_xlat - Translate SCSI VERIFY command into an ATA one
++ *	@qc: Storage for translated ATA taskfile
++ *	@scsicmd: SCSI command to translate
++ *
++ *	Converts SCSI VERIFY command to an ATA READ VERIFY command.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ *
++ *	RETURNS:
++ *	Zero on success, non-zero on error.
++ */
++
++static unsigned int ata_scsi_verify_xlat(struct ata_queued_cmd *qc, u8 *scsicmd)
++{
++	struct ata_taskfile *tf = &qc->tf;
++	unsigned int lba48 = tf->flags & ATA_TFLAG_LBA48;
++	u64 dev_sectors = qc->dev->n_sectors;
++	u64 sect = 0;
++	u32 n_sect = 0;
++
++	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf->protocol = ATA_PROT_NODATA;
++	tf->device |= ATA_LBA;
++
++	if (scsicmd[0] == VERIFY) {
++		sect |= ((u64)scsicmd[2]) << 24;
++		sect |= ((u64)scsicmd[3]) << 16;
++		sect |= ((u64)scsicmd[4]) << 8;
++		sect |= ((u64)scsicmd[5]);
++
++		n_sect |= ((u32)scsicmd[7]) << 8;
++		n_sect |= ((u32)scsicmd[8]);
++	}
++
++	else if (scsicmd[0] == VERIFY_16) {
++		sect |= ((u64)scsicmd[2]) << 56;
++		sect |= ((u64)scsicmd[3]) << 48;
++		sect |= ((u64)scsicmd[4]) << 40;
++		sect |= ((u64)scsicmd[5]) << 32;
++		sect |= ((u64)scsicmd[6]) << 24;
++		sect |= ((u64)scsicmd[7]) << 16;
++		sect |= ((u64)scsicmd[8]) << 8;
++		sect |= ((u64)scsicmd[9]);
++
++		n_sect |= ((u32)scsicmd[10]) << 24;
++		n_sect |= ((u32)scsicmd[11]) << 16;
++		n_sect |= ((u32)scsicmd[12]) << 8;
++		n_sect |= ((u32)scsicmd[13]);
++	}
++
++	else
++		return 1;
++
++	if (!n_sect)
++		return 1;
++	if (sect >= dev_sectors)
++		return 1;
++	if ((sect + n_sect) > dev_sectors)
++		return 1;
++	if (lba48) {
++		if (n_sect > (64 * 1024))
++			return 1;
++	} else {
++		if (n_sect > 256)
++			return 1;
++	}
++
++	if (lba48) {
++		tf->hob_nsect = (n_sect >> 8) & 0xff;
++
++		tf->hob_lbah = (sect >> 40) & 0xff;
++		tf->hob_lbam = (sect >> 32) & 0xff;
++		tf->hob_lbal = (sect >> 24) & 0xff;
++	} else
++		tf->device |= (sect >> 24) & 0xf;
++
++	tf->nsect = n_sect & 0xff;
++
++	tf->hob_lbah = (sect >> 16) & 0xff;
++	tf->hob_lbam = (sect >> 8) & 0xff;
++	tf->hob_lbal = sect & 0xff;
++
++	return 0;
++}
++
++/**
+  *	ata_scsi_rw_xlat - Translate SCSI r/w command into an ATA one
+  *	@qc: Storage for translated ATA taskfile
+  *	@scsicmd: SCSI command to translate
+@@ -244,10 +532,6 @@
+ 	unsigned int lba48 = tf->flags & ATA_TFLAG_LBA48;
+ 
+ 	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+-	tf->hob_nsect = 0;
+-	tf->hob_lbal = 0;
+-	tf->hob_lbam = 0;
+-	tf->hob_lbah = 0;
+ 	tf->protocol = qc->dev->xfer_protocol;
+ 	tf->device |= ATA_LBA;
+ 
+@@ -339,14 +623,10 @@
+ {
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+ 
+-	if (unlikely(drv_stat & (ATA_ERR | ATA_BUSY | ATA_DRQ))) {
+-		if (is_atapi_taskfile(&qc->tf))
+-			cmd->result = SAM_STAT_CHECK_CONDITION;
+-		else
+-			ata_to_sense_error(qc);
+-	} else {
++	if (unlikely(drv_stat & (ATA_ERR | ATA_BUSY | ATA_DRQ)))
++		ata_to_sense_error(qc, drv_stat);
++	else
+ 		cmd->result = SAM_STAT_GOOD;
+-	}
+ 
+ 	qc->scsidone(cmd);
+ 
+@@ -534,7 +814,7 @@
+ 		0,
+ 		0x5,	/* claim SPC-3 version compatibility */
+ 		2,
+-		96 - 4
++		95 - 4
+ 	};
+ 
+ 	/* set scsi removeable (RMB) bit per ata bit */
+@@ -545,7 +825,7 @@
+ 
+ 	memcpy(rbuf, hdr, sizeof(hdr));
+ 
+-	if (buflen > 36) {
++	if (buflen > 35) {
+ 		memcpy(&rbuf[8], "ATA     ", 8);
+ 		ata_dev_id_string(dev, &rbuf[16], ATA_ID_PROD_OFS, 16);
+ 		ata_dev_id_string(dev, &rbuf[32], ATA_ID_FW_REV_OFS, 4);
+@@ -964,6 +1244,31 @@
+ 	done(cmd);
+ }
+ 
++static int atapi_qc_complete(struct ata_queued_cmd *qc, u8 drv_stat)
++{
++	struct scsi_cmnd *cmd = qc->scsicmd;
++
++	if (unlikely(drv_stat & (ATA_ERR | ATA_BUSY | ATA_DRQ)))
++		cmd->result = SAM_STAT_CHECK_CONDITION;
++	else {
++		u8 *scsicmd = cmd->cmnd;
++
++		if (scsicmd[0] == INQUIRY) {
++			u8 *buf = NULL;
++			unsigned int buflen;
++
++			buflen = ata_scsi_rbuf_get(cmd, &buf);
++			buf[2] = 0x5;
++			buf[3] = (buf[3] & 0xf0) | 2;
++			ata_scsi_rbuf_put(cmd);
++		}
++		cmd->result = SAM_STAT_GOOD;
++	}
++
++	qc->scsidone(cmd);
++
++	return 0;
++}
+ /**
+  *	atapi_xlat - Initialize PACKET taskfile
+  *	@qc: command structure to be initialized
+@@ -979,6 +1284,13 @@
+ static unsigned int atapi_xlat(struct ata_queued_cmd *qc, u8 *scsicmd)
+ {
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
++	struct ata_device *dev = qc->dev;
++	int using_pio = (dev->flags & ATA_DFLAG_PIO);
++	int nodata = (cmd->sc_data_direction == SCSI_DATA_NONE);
++
++	memcpy(&qc->cdb, scsicmd, qc->ap->cdb_len);
++
++	qc->complete_fn = atapi_qc_complete;
+ 
+ 	qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	if (cmd->sc_data_direction == SCSI_DATA_WRITE) {
+@@ -988,19 +1300,18 @@
+ 
+ 	qc->tf.command = ATA_CMD_PACKET;
+ 
+-	/* no data - interrupt-driven */
+-	if (cmd->sc_data_direction == SCSI_DATA_NONE)
+-		qc->tf.protocol = ATA_PROT_ATAPI;
+-
+-	/* PIO data xfer - polling */
+-	else if ((qc->flags & ATA_QCFLAG_DMA) == 0) {
+-		ata_qc_set_polling(qc);
+-		qc->tf.protocol = ATA_PROT_ATAPI;
++	/* no data, or PIO data xfer */
++	if (using_pio || nodata) {
++		if (nodata)
++			qc->tf.protocol = ATA_PROT_ATAPI_NODATA;
++		else
++			qc->tf.protocol = ATA_PROT_ATAPI;
+ 		qc->tf.lbam = (8 * 1024) & 0xff;
+ 		qc->tf.lbah = (8 * 1024) >> 8;
++	}
+ 
+-	/* DMA data xfer - interrupt-driven */
+-	} else {
++	/* DMA data xfer */
++	else {
+ 		qc->tf.protocol = ATA_PROT_ATAPI_DMA;
+ 		qc->tf.feature |= ATAPI_PKT_DMA;
+ 
+@@ -1031,19 +1342,19 @@
+  *	Associated ATA device, or %NULL if not found.
+  */
+ 
+-static inline struct ata_device *
+-ata_scsi_find_dev(struct ata_port *ap, struct scsi_cmnd *cmd)
++static struct ata_device *
++ata_scsi_find_dev(struct ata_port *ap, struct scsi_device *scsidev)
+ {
+ 	struct ata_device *dev;
+ 
+ 	/* skip commands not addressed to targets we simulate */
+-	if (likely(cmd->device->id < ATA_MAX_DEVICES))
+-		dev = &ap->device[cmd->device->id];
++	if (likely(scsidev->id < ATA_MAX_DEVICES))
++		dev = &ap->device[scsidev->id];
+ 	else
+ 		return NULL;
+ 
+-	if (unlikely((cmd->device->channel != 0) ||
+-		     (cmd->device->lun != 0)))
++	if (unlikely((scsidev->channel != 0) ||
++		     (scsidev->lun != 0)))
+ 		return NULL;
+ 
+ 	if (unlikely(!ata_dev_present(dev)))
+@@ -1059,6 +1370,7 @@
+ 
+ /**
+  *	ata_get_xlat_func - check if SCSI to ATA translation is possible
++ *	@dev: ATA device
+  *	@cmd: SCSI command opcode to consider
+  *
+  *	Look up the SCSI command given, and determine whether the
+@@ -1068,7 +1380,7 @@
+  *	Pointer to translation function if possible, %NULL if not.
+  */
+ 
+-static inline ata_xlat_func_t ata_get_xlat_func(u8 cmd)
++static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
+ {
+ 	switch (cmd) {
+ 	case READ_6:
+@@ -1079,6 +1391,15 @@
+ 	case WRITE_10:
+ 	case WRITE_16:
+ 		return ata_scsi_rw_xlat;
++
++	case SYNCHRONIZE_CACHE:
++		if (ata_try_flush_cache(dev))
++			return ata_scsi_flush_xlat;
++		break;
++
++	case VERIFY:
++	case VERIFY_16:
++		return ata_scsi_verify_xlat;
+ 	}
+ 
+ 	return NULL;
+@@ -1096,11 +1417,12 @@
+ 				     struct scsi_cmnd *cmd)
+ {
+ #ifdef ATA_DEBUG
++	struct scsi_device *scsidev = cmd->device;
+ 	u8 *scsicmd = cmd->cmnd;
+ 
+ 	DPRINTK("CDB (%u:%d,%d,%d) %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+ 		ap->id,
+-		cmd->device->channel, cmd->device->id, cmd->device->lun,
++		scsidev->channel, scsidev->id, scsidev->lun,
+ 		scsicmd[0], scsicmd[1], scsicmd[2], scsicmd[3],
+ 		scsicmd[4], scsicmd[5], scsicmd[6], scsicmd[7],
+ 		scsicmd[8]);
+@@ -1130,12 +1452,13 @@
+ {
+ 	struct ata_port *ap;
+ 	struct ata_device *dev;
++	struct scsi_device *scsidev = cmd->device;
+ 
+-	ap = (struct ata_port *) &cmd->device->host->hostdata[0];
++	ap = (struct ata_port *) &scsidev->host->hostdata[0];
+ 
+ 	ata_scsi_dump_cdb(ap, cmd);
+ 
+-	dev = ata_scsi_find_dev(ap, cmd);
++	dev = ata_scsi_find_dev(ap, scsidev);
+ 	if (unlikely(!dev)) {
+ 		cmd->result = (DID_BAD_TARGET << 16);
+ 		done(cmd);
+@@ -1143,7 +1466,8 @@
+ 	}
+ 
+ 	if (dev->class == ATA_DEV_ATA) {
+-		ata_xlat_func_t xlat_func = ata_get_xlat_func(cmd->cmnd[0]);
++		ata_xlat_func_t xlat_func = ata_get_xlat_func(dev,
++							      cmd->cmnd[0]);
+ 
+ 		if (xlat_func)
+ 			ata_scsi_translate(ap, dev, cmd, done, xlat_func);
+@@ -1184,7 +1508,7 @@
+ 
+ 	switch(scsicmd[0]) {
+ 		/* no-op's, complete with success */
+-		case SYNCHRONIZE_CACHE:		/* FIXME: temporary */
++		case SYNCHRONIZE_CACHE:
+ 		case REZERO_UNIT:
+ 		case SEEK_6:
+ 		case SEEK_10:
+diff -Nru a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+--- a/drivers/scsi/libata.h	2004-08-18 03:11:44 -04:00
++++ b/drivers/scsi/libata.h	2004-08-18 03:11:44 -04:00
+@@ -42,10 +42,11 @@
+ extern void ata_dev_select(struct ata_port *ap, unsigned int device,
+                            unsigned int wait, unsigned int can_sleep);
+ extern void ata_tf_to_host_nolock(struct ata_port *ap, struct ata_taskfile *tf);
++extern void swap_buf_le16(u16 *buf, unsigned int buf_words);
+ 
+ 
+ /* libata-scsi.c */
+-extern void ata_to_sense_error(struct ata_queued_cmd *qc);
++extern void ata_to_sense_error(struct ata_queued_cmd *qc, u8 drv_stat);
+ extern int ata_scsi_error(struct Scsi_Host *host);
+ extern unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf,
+ 			       unsigned int buflen);
+diff -Nru a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
+--- a/drivers/scsi/sata_nv.c	2004-08-18 03:11:44 -04:00
++++ b/drivers/scsi/sata_nv.c	2004-08-18 03:11:44 -04:00
+@@ -44,6 +44,7 @@
+ 
+ #define NV_PORTS			2
+ #define NV_PIO_MASK			0x1f
++#define NV_MWDMA_MASK			0x07
+ #define NV_UDMA_MASK			0x7f
+ #define NV_PORT0_BMDMA_REG_OFFSET	0x00
+ #define NV_PORT1_BMDMA_REG_OFFSET	0x08
+@@ -177,6 +178,7 @@
+ static Scsi_Host_Template nv_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
++	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+@@ -343,6 +345,7 @@
+ 	probe_ent->irq = pdev->irq;
+ 	probe_ent->irq_flags = SA_SHIRQ;
+ 	probe_ent->pio_mask = NV_PIO_MASK;
++	probe_ent->mwdma_mask = NV_MWDMA_MASK;
+ 	probe_ent->udma_mask = NV_UDMA_MASK;
+ 
+ 	probe_ent->port[0].cmd_addr = pci_resource_start(pdev, 0);
+diff -Nru a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
+--- a/drivers/scsi/sata_promise.c	2004-08-18 03:11:44 -04:00
++++ b/drivers/scsi/sata_promise.c	2004-08-18 03:11:44 -04:00
+@@ -74,7 +74,6 @@
+ static u32 pdc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg);
+ static void pdc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
+ static int pdc_sata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
+-static void pdc_dma_start(struct ata_queued_cmd *qc);
+ static irqreturn_t pdc_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
+ static void pdc_eng_timeout(struct ata_port *ap);
+ static int pdc_port_start(struct ata_port *ap);
+@@ -83,14 +82,13 @@
+ static void pdc_qc_prep(struct ata_queued_cmd *qc);
+ static void pdc_tf_load_mmio(struct ata_port *ap, struct ata_taskfile *tf);
+ static void pdc_exec_command_mmio(struct ata_port *ap, struct ata_taskfile *tf);
+-static inline void pdc_dma_complete (struct ata_port *ap,
+-                                     struct ata_queued_cmd *qc, int have_err);
+ static void pdc_irq_clear(struct ata_port *ap);
+ static int pdc_qc_issue_prot(struct ata_queued_cmd *qc);
+ 
+ static Scsi_Host_Template pdc_sata_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
++	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+@@ -130,7 +128,8 @@
+ 		.sht		= &pdc_sata_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
+-		.pio_mask	= 0x03, /* pio3-4 */
++		.pio_mask	= 0x1f, /* pio0-4 */
++		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+ 		.port_ops	= &pdc_sata_ops,
+ 	},
+@@ -140,7 +139,8 @@
+ 		.sht		= &pdc_sata_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
+-		.pio_mask	= 0x03, /* pio3-4 */
++		.pio_mask	= 0x1f, /* pio0-4 */
++		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+ 		.port_ops	= &pdc_sata_ops,
+ 	},
+@@ -269,26 +269,26 @@
+ 
+ 	VPRINTK("ENTER\n");
+ 
+-	ata_qc_prep(qc);
+-
+-	i = pdc_pkt_header(&qc->tf, qc->ap->prd_dma,  qc->dev->devno, pp->pkt);
++	switch (qc->tf.protocol) {
++	case ATA_PROT_DMA:
++		ata_qc_prep(qc);
++		/* fall through */
+ 
+-	if (qc->tf.flags & ATA_TFLAG_LBA48)
+-		i = pdc_prep_lba48(&qc->tf, pp->pkt, i);
+-	else
+-		i = pdc_prep_lba28(&qc->tf, pp->pkt, i);
++	case ATA_PROT_NODATA:
++		i = pdc_pkt_header(&qc->tf, qc->ap->prd_dma,
++				   qc->dev->devno, pp->pkt);
+ 
+-	pdc_pkt_footer(&qc->tf, pp->pkt, i);
+-}
++		if (qc->tf.flags & ATA_TFLAG_LBA48)
++			i = pdc_prep_lba48(&qc->tf, pp->pkt, i);
++		else
++			i = pdc_prep_lba28(&qc->tf, pp->pkt, i);
+ 
+-static inline void pdc_dma_complete (struct ata_port *ap,
+-                                     struct ata_queued_cmd *qc,
+-				     int have_err)
+-{
+-	u8 err_bit = have_err ? ATA_ERR : 0;
++		pdc_pkt_footer(&qc->tf, pp->pkt, i);
++		break;
+ 
+-	/* get drive status; clear intr; complete txn */
+-	ata_qc_complete(qc, ata_wait_idle(ap) | err_bit);
++	default:
++		break;
++	}
+ }
+ 
+ static void pdc_eng_timeout(struct ata_port *ap)
+@@ -315,17 +315,9 @@
+ 
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA:
+-		printk(KERN_ERR "ata%u: DMA timeout\n", ap->id);
+-		ata_qc_complete(qc, ata_wait_idle(ap) | ATA_ERR);
+-		break;
+-
+ 	case ATA_PROT_NODATA:
+-		drv_stat = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
+-
+-		printk(KERN_ERR "ata%u: command 0x%x timeout, stat 0x%x\n",
+-		       ap->id, qc->tf.command, drv_stat);
+-
+-		ata_qc_complete(qc, drv_stat);
++		printk(KERN_ERR "ata%u: command timeout\n", ap->id);
++		ata_qc_complete(qc, ata_wait_idle(ap) | ATA_ERR);
+ 		break;
+ 
+ 	default:
+@@ -358,13 +350,8 @@
+ 
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA:
+-		pdc_dma_complete(ap, qc, have_err);
+-		handled = 1;
+-		break;
+-
+-	case ATA_PROT_NODATA:   /* command completion, but no data xfer */
+-		status = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
+-		DPRINTK("BUS_NODATA (drv_stat 0x%X)\n", status);
++	case ATA_PROT_NODATA:
++		status = ata_wait_idle(ap);
+ 		if (have_err)
+ 			status |= ATA_ERR;
+ 		ata_qc_complete(qc, status);
+@@ -440,7 +427,7 @@
+ 	return IRQ_RETVAL(handled);
+ }
+ 
+-static inline void pdc_dma_start(struct ata_queued_cmd *qc)
++static inline void pdc_packet_start(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	struct pdc_port_priv *pp = ap->private_data;
+@@ -462,7 +449,8 @@
+ {
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA:
+-		pdc_dma_start(qc);
++	case ATA_PROT_NODATA:
++		pdc_packet_start(qc);
+ 		return 0;
+ 
+ 	case ATA_PROT_ATAPI_DMA:
+@@ -478,14 +466,16 @@
+ 
+ static void pdc_tf_load_mmio(struct ata_port *ap, struct ata_taskfile *tf)
+ {
+-	WARN_ON (tf->protocol == ATA_PROT_DMA);
++	WARN_ON (tf->protocol == ATA_PROT_DMA ||
++		 tf->protocol == ATA_PROT_NODATA);
+ 	ata_tf_load_mmio(ap, tf);
+ }
+ 
+ 
+ static void pdc_exec_command_mmio(struct ata_port *ap, struct ata_taskfile *tf)
+ {
+-	WARN_ON (tf->protocol == ATA_PROT_DMA);
++	WARN_ON (tf->protocol == ATA_PROT_DMA ||
++		 tf->protocol == ATA_PROT_NODATA);
+ 	ata_exec_command_mmio(ap, tf);
+ }
+ 
+@@ -539,8 +529,7 @@
+ 	writel(tmp, mmio + PDC_TBG_MODE);
+ 
+ 	readl(mmio + PDC_TBG_MODE);	/* flush */
+-	set_current_state(TASK_UNINTERRUPTIBLE);
+-	schedule_timeout(msecs_to_jiffies(10) + 1);
++	msleep(10);
+ 
+ 	/* adjust slew rate control register. */
+ 	tmp = readl(mmio + PDC_SLEW_CTL);
+@@ -601,6 +590,7 @@
+ 	probe_ent->sht		= pdc_port_info[board_idx].sht;
+ 	probe_ent->host_flags	= pdc_port_info[board_idx].host_flags;
+ 	probe_ent->pio_mask	= pdc_port_info[board_idx].pio_mask;
++	probe_ent->mwdma_mask	= pdc_port_info[board_idx].mwdma_mask;
+ 	probe_ent->udma_mask	= pdc_port_info[board_idx].udma_mask;
+ 	probe_ent->port_ops	= pdc_port_info[board_idx].port_ops;
+ 
+diff -Nru a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+--- a/drivers/scsi/sata_sil.c	2004-08-18 03:11:44 -04:00
++++ b/drivers/scsi/sata_sil.c	2004-08-18 03:11:44 -04:00
+@@ -6,7 +6,7 @@
+  *		    on emails.
+  *
+  *  Copyright 2003 Red Hat, Inc.
+- *  Copyright 2003 Benjamin Herrenschmidt <benh@kernel.crashing.org>
++ *  Copyright 2003 Benjamin Herrenschmidt
+  *
+  *  The contents of this file are subject to the Open
+  *  Software License version 1.1 that can be found at
+@@ -106,6 +106,7 @@
+ static Scsi_Host_Template sil_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
++	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+@@ -149,7 +150,8 @@
+ 		.sht		= &sil_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
+-		.pio_mask	= 0x03,			/* pio3-4 */
++		.pio_mask	= 0x1f,			/* pio0-4 */
++		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+ 		.udma_mask	= 0x3f,			/* udma0-5 */
+ 		.port_ops	= &sil_ops,
+ 	}, /* sil_3114 */
+@@ -157,7 +159,8 @@
+ 		.sht		= &sil_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
+-		.pio_mask	= 0x03,			/* pio3-4 */
++		.pio_mask	= 0x1f,			/* pio0-4 */
++		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+ 		.udma_mask	= 0x3f,			/* udma0-5 */
+ 		.port_ops	= &sil_ops,
+ 	},
+@@ -363,6 +366,7 @@
+ 	probe_ent->sht = sil_port_info[ent->driver_data].sht;
+ 	probe_ent->n_ports = (ent->driver_data == sil_3114) ? 4 : 2;
+ 	probe_ent->pio_mask = sil_port_info[ent->driver_data].pio_mask;
++	probe_ent->mwdma_mask = sil_port_info[ent->driver_data].mwdma_mask;
+ 	probe_ent->udma_mask = sil_port_info[ent->driver_data].udma_mask;
+        	probe_ent->irq = pdev->irq;
+        	probe_ent->irq_flags = SA_SHIRQ;
+diff -Nru a/drivers/scsi/sata_sis.c b/drivers/scsi/sata_sis.c
+--- a/drivers/scsi/sata_sis.c	2004-08-18 03:11:44 -04:00
++++ b/drivers/scsi/sata_sis.c	2004-08-18 03:11:44 -04:00
+@@ -76,6 +76,7 @@
+ static Scsi_Host_Template sis_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
++	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+@@ -230,7 +231,8 @@
+ 		probe_ent->host_flags |= SIS_FLAG_CFGSCR;
+ 	}
+ 
+-	probe_ent->pio_mask = 0x03;
++	probe_ent->pio_mask = 0x1f;
++	probe_ent->mwdma_mask = 0x7;
+ 	probe_ent->udma_mask = 0x7f;
+ 	probe_ent->port_ops = &sis_ops;
+ 
+@@ -284,6 +286,6 @@
+ 	pci_unregister_driver(&sis_pci_driver);
+ }
+ 
+-
+ module_init(sis_init);
+ module_exit(sis_exit);
++
+diff -Nru a/drivers/scsi/sata_svw.c b/drivers/scsi/sata_svw.c
+--- a/drivers/scsi/sata_svw.c	2004-08-18 03:11:44 -04:00
++++ b/drivers/scsi/sata_svw.c	2004-08-18 03:11:44 -04:00
+@@ -205,6 +205,7 @@
+ static Scsi_Host_Template k2_sata_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
++	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+@@ -343,6 +344,7 @@
+ 	 * if we don't fill these
+ 	 */
+ 	probe_ent->pio_mask = 0x1f;
++	probe_ent->mwdma_mask = 0x7;
+ 	probe_ent->udma_mask = 0x7f;
+ 
+ 	/* We have 4 ports per PCI function */
+@@ -387,6 +389,7 @@
+ {
+ 	return pci_module_init(&k2_sata_pci_driver);
+ }
++
+ 
+ static void __exit k2_sata_exit(void)
+ {
+diff -Nru a/drivers/scsi/sata_sx4.c b/drivers/scsi/sata_sx4.c
+--- a/drivers/scsi/sata_sx4.c	2004-08-18 03:11:44 -04:00
++++ b/drivers/scsi/sata_sx4.c	2004-08-18 03:11:44 -04:00
+@@ -146,8 +146,6 @@
+ 
+ 
+ static int pdc_sata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
+-static void pdc20621_dma_setup(struct ata_queued_cmd *qc);
+-static void pdc20621_dma_start(struct ata_queued_cmd *qc);
+ static irqreturn_t pdc20621_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
+ static void pdc_eng_timeout(struct ata_port *ap);
+ static void pdc_20621_phy_reset (struct ata_port *ap);
+@@ -157,8 +155,6 @@
+ static void pdc_tf_load_mmio(struct ata_port *ap, struct ata_taskfile *tf);
+ static void pdc_exec_command_mmio(struct ata_port *ap, struct ata_taskfile *tf);
+ static void pdc20621_host_stop(struct ata_host_set *host_set);
+-static inline void pdc_dma_complete (struct ata_port *ap,
+-                                     struct ata_queued_cmd *qc, int have_err);
+ static unsigned int pdc20621_dimm_init(struct ata_probe_ent *pe);
+ static int pdc20621_detect_dimm(struct ata_probe_ent *pe);
+ static unsigned int pdc20621_i2c_read(struct ata_probe_ent *pe, 
+@@ -172,11 +168,13 @@
+ static void pdc20621_put_to_dimm(struct ata_probe_ent *pe, 
+ 				 void *psource, u32 offset, u32 size);
+ static void pdc20621_irq_clear(struct ata_port *ap);
++static int pdc20621_qc_issue_prot(struct ata_queued_cmd *qc);
+ 
+ 
+ static Scsi_Host_Template pdc_sata_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
++	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+@@ -199,10 +197,8 @@
+ 	.check_status		= ata_check_status_mmio,
+ 	.exec_command		= pdc_exec_command_mmio,
+ 	.phy_reset		= pdc_20621_phy_reset,
+-	.bmdma_setup            = pdc20621_dma_setup,
+-	.bmdma_start            = pdc20621_dma_start,
+ 	.qc_prep		= pdc20621_qc_prep,
+-	.qc_issue		= ata_qc_issue_prot,
++	.qc_issue		= pdc20621_qc_issue_prot,
+ 	.eng_timeout		= pdc_eng_timeout,
+ 	.irq_handler		= pdc20621_interrupt,
+ 	.irq_clear		= pdc20621_irq_clear,
+@@ -217,7 +213,8 @@
+ 		.sht		= &pdc_sata_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
+-		.pio_mask	= 0x03, /* pio3-4 */
++		.pio_mask	= 0x1f, /* pio0-4 */
++		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+ 		.port_ops	= &pdc_20621_ops,
+ 	},
+@@ -377,7 +374,10 @@
+ 
+ 	/* dimm dma S/G, and next-pkt */
+ 	dw = i >> 2;
+-	buf32[dw] = cpu_to_le32(dimm_sg);
++	if (tf->protocol == ATA_PROT_NODATA)
++		buf32[dw] = 0;
++	else
++		buf32[dw] = cpu_to_le32(dimm_sg);
+ 	buf32[dw + 1] = 0;
+ 	i += 8;
+ 
+@@ -437,7 +437,7 @@
+ 		buf32[dw + 3]);
+ }
+ 
+-static void pdc20621_qc_prep(struct ata_queued_cmd *qc)
++static void pdc20621_dma_prep(struct ata_queued_cmd *qc)
+ {
+ 	struct scatterlist *sg = qc->sg;
+ 	struct ata_port *ap = qc->ap;
+@@ -449,8 +449,7 @@
+ 	unsigned int i, last, idx, total_len = 0, sgt_len;
+ 	u32 *buf = (u32 *) &pp->dimm_buf[PDC_DIMM_HEADER_SZ];
+ 
+-	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
+-		return;
++	assert(qc->flags & ATA_QCFLAG_DMAMAP);
+ 
+ 	VPRINTK("ata%u: ENTER\n", ap->id);
+ 
+@@ -501,6 +500,56 @@
+ 	VPRINTK("ata pkt buf ofs %u, prd size %u, mmio copied\n", i, sgt_len);
+ }
+ 
++static void pdc20621_nodata_prep(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct pdc_port_priv *pp = ap->private_data;
++	void *mmio = ap->host_set->mmio_base;
++	struct pdc_host_priv *hpriv = ap->host_set->private_data;
++	void *dimm_mmio = hpriv->dimm_mmio;
++	unsigned int portno = ap->port_no;
++	unsigned int i;
++
++	VPRINTK("ata%u: ENTER\n", ap->id);
++
++	/* hard-code chip #0 */
++	mmio += PDC_CHIP0_OFS;
++
++	i = pdc20621_ata_pkt(&qc->tf, qc->dev->devno, &pp->dimm_buf[0], portno);
++
++	if (qc->tf.flags & ATA_TFLAG_LBA48)
++		i = pdc_prep_lba48(&qc->tf, &pp->dimm_buf[0], i);
++	else
++		i = pdc_prep_lba28(&qc->tf, &pp->dimm_buf[0], i);
++
++	pdc_pkt_footer(&qc->tf, &pp->dimm_buf[0], i);
++
++	/* copy three S/G tables and two packets to DIMM MMIO window */
++	memcpy_toio(dimm_mmio + (portno * PDC_DIMM_WINDOW_STEP),
++		    &pp->dimm_buf, PDC_DIMM_HEADER_SZ);
++
++	/* force host FIFO dump */
++	writel(0x00000001, mmio + PDC_20621_GENERAL_CTL);
++
++	readl(dimm_mmio);	/* MMIO PCI posting flush */
++
++	VPRINTK("ata pkt buf ofs %u, prd size %u, mmio copied\n", i, sgt_len);
++}
++
++static void pdc20621_qc_prep(struct ata_queued_cmd *qc)
++{
++	switch (qc->tf.protocol) {
++	case ATA_PROT_DMA:
++		pdc20621_dma_prep(qc);
++		break;
++	case ATA_PROT_NODATA:
++		pdc20621_nodata_prep(qc);
++		break;
++	default:
++		break;
++	}
++}
++
+ static void __pdc20621_push_hdma(struct ata_queued_cmd *qc,
+ 				 unsigned int seq,
+ 				 u32 pkt_ofs)
+@@ -576,13 +625,7 @@
+ static inline void pdc20621_dump_hdma(struct ata_queued_cmd *qc) { }
+ #endif /* ATA_VERBOSE_DEBUG */
+ 
+-static void pdc20621_dma_setup(struct ata_queued_cmd *qc)
+-{
+-	/* nothing for now.  later, we will call standard
+-	 * code in libata-core for ATAPI here */
+-}
+-
+-static void pdc20621_dma_start(struct ata_queued_cmd *qc)
++static void pdc20621_packet_start(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	struct ata_host_set *host_set = ap->host_set;
+@@ -590,24 +633,21 @@
+ 	void *mmio = host_set->mmio_base;
+ 	unsigned int rw = (qc->tf.flags & ATA_TFLAG_WRITE);
+ 	u8 seq = (u8) (port_no + 1);
+-	unsigned int doing_hdma = 0, port_ofs;
++	unsigned int port_ofs;
+ 
+ 	/* hard-code chip #0 */
+ 	mmio += PDC_CHIP0_OFS;
+ 
+ 	VPRINTK("ata%u: ENTER\n", ap->id);
+ 
++	wmb();			/* flush PRD, pkt writes */
++
+ 	port_ofs = PDC_20621_DIMM_BASE + (PDC_DIMM_WINDOW_STEP * port_no);
+ 
+ 	/* if writing, we (1) DMA to DIMM, then (2) do ATA command */
+-	if (rw) {
+-		doing_hdma = 1;
++	if (rw && qc->tf.protocol == ATA_PROT_DMA) {
+ 		seq += 4;
+-	}
+ 
+-	wmb();			/* flush PRD, pkt writes */
+-
+-	if (doing_hdma) {
+ 		pdc20621_dump_hdma(qc);
+ 		pdc20621_push_hdma(qc, seq, port_ofs + PDC_DIMM_HOST_PKT);
+ 		VPRINTK("queued ofs 0x%x (%u), seq %u\n",
+@@ -628,6 +668,25 @@
+ 	}
+ }
+ 
++static int pdc20621_qc_issue_prot(struct ata_queued_cmd *qc)
++{
++	switch (qc->tf.protocol) {
++	case ATA_PROT_DMA:
++	case ATA_PROT_NODATA:
++		pdc20621_packet_start(qc);
++		return 0;
++
++	case ATA_PROT_ATAPI_DMA:
++		BUG();
++		break;
++
++	default:
++		break;
++	}
++
++	return ata_qc_issue_prot(qc);
++}
++
+ static inline unsigned int pdc20621_host_intr( struct ata_port *ap,
+                                           struct ata_queued_cmd *qc,
+ 					  unsigned int doing_hdma,
+@@ -648,7 +707,8 @@
+ 		if (doing_hdma) {
+ 			VPRINTK("ata%u: read hdma, 0x%x 0x%x\n", ap->id,
+ 				readl(mmio + 0x104), readl(mmio + PDC_HDMA_CTLSTAT));
+-			pdc_dma_complete(ap, qc, 0);
++			/* get drive status; clear intr; complete txn */
++			ata_qc_complete(qc, ata_wait_idle(ap));
+ 			pdc20621_pop_hdma(qc);
+ 		}
+ 
+@@ -685,7 +745,8 @@
+ 		else {
+ 			VPRINTK("ata%u: write ata, 0x%x 0x%x\n", ap->id,
+ 				readl(mmio + 0x104), readl(mmio + PDC_HDMA_CTLSTAT));
+-			pdc_dma_complete(ap, qc, 0);
++			/* get drive status; clear intr; complete txn */
++			ata_qc_complete(qc, ata_wait_idle(ap));
+ 			pdc20621_pop_hdma(qc);
+ 		}
+ 		handled = 1;
+@@ -779,16 +840,6 @@
+ 	return IRQ_RETVAL(handled);
+ }
+ 
+-static inline void pdc_dma_complete (struct ata_port *ap,
+-                                     struct ata_queued_cmd *qc,
+-				     int have_err)
+-{
+-	u8 err_bit = have_err ? ATA_ERR : 0;
+-
+-	/* get drive status; clear intr; complete txn */
+-	ata_qc_complete(qc, ata_wait_idle(ap) | err_bit);
+-}
+-
+ static void pdc_eng_timeout(struct ata_port *ap)
+ {
+ 	u8 drv_stat;
+@@ -813,17 +864,9 @@
+ 
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA:
+-		printk(KERN_ERR "ata%u: DMA timeout\n", ap->id);
+-		ata_qc_complete(qc, ata_wait_idle(ap) | ATA_ERR);
+-		break;
+-
+ 	case ATA_PROT_NODATA:
+-		drv_stat = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
+-
+-		printk(KERN_ERR "ata%u: command 0x%x timeout, stat 0x%x\n",
+-		       ap->id, qc->tf.command, drv_stat);
+-
+-		ata_qc_complete(qc, drv_stat);
++		printk(KERN_ERR "ata%u: command timeout\n", ap->id);
++		ata_qc_complete(qc, ata_wait_idle(ap) | ATA_ERR);
+ 		break;
+ 
+ 	default:
+@@ -842,15 +885,17 @@
+ 
+ static void pdc_tf_load_mmio(struct ata_port *ap, struct ata_taskfile *tf)
+ {
+-	if (tf->protocol != ATA_PROT_DMA)
+-		ata_tf_load_mmio(ap, tf);
++	WARN_ON (tf->protocol == ATA_PROT_DMA ||
++		 tf->protocol == ATA_PROT_NODATA);
++	ata_tf_load_mmio(ap, tf);
+ }
+ 
+ 
+ static void pdc_exec_command_mmio(struct ata_port *ap, struct ata_taskfile *tf)
+ {
+-	if (tf->protocol != ATA_PROT_DMA)
+-		ata_exec_command_mmio(ap, tf);
++	WARN_ON (tf->protocol == ATA_PROT_DMA ||
++		 tf->protocol == ATA_PROT_NODATA);
++	ata_exec_command_mmio(ap, tf);
+ }
+ 
+ 
+@@ -1384,6 +1429,7 @@
+ 	probe_ent->sht		= pdc_port_info[board_idx].sht;
+ 	probe_ent->host_flags	= pdc_port_info[board_idx].host_flags;
+ 	probe_ent->pio_mask	= pdc_port_info[board_idx].pio_mask;
++	probe_ent->mwdma_mask	= pdc_port_info[board_idx].mwdma_mask;
+ 	probe_ent->udma_mask	= pdc_port_info[board_idx].udma_mask;
+ 	probe_ent->port_ops	= pdc_port_info[board_idx].port_ops;
+ 
+@@ -1394,21 +1440,11 @@
+ 	probe_ent->private_data = hpriv;
+ 	base += PDC_CHIP0_OFS;
+ 
++	probe_ent->n_ports = 4;
+ 	pdc_sata_setup_port(&probe_ent->port[0], base + 0x200);
+ 	pdc_sata_setup_port(&probe_ent->port[1], base + 0x280);
+-
+-	/* notice 4-port boards */
+-	switch (board_idx) {
+-	case board_20621:
+-       		probe_ent->n_ports = 4;
+-
+-		pdc_sata_setup_port(&probe_ent->port[2], base + 0x300);
+-		pdc_sata_setup_port(&probe_ent->port[3], base + 0x380);
+-		break;
+-	default:
+-		BUG();
+-		break;
+-	}
++	pdc_sata_setup_port(&probe_ent->port[2], base + 0x300);
++	pdc_sata_setup_port(&probe_ent->port[3], base + 0x380);
+ 
+ 	pci_set_master(pdev);
+ 
+diff -Nru a/drivers/scsi/sata_via.c b/drivers/scsi/sata_via.c
+--- a/drivers/scsi/sata_via.c	2004-08-18 03:11:44 -04:00
++++ b/drivers/scsi/sata_via.c	2004-08-18 03:11:44 -04:00
+@@ -81,6 +81,7 @@
+ static Scsi_Host_Template svia_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
++	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+@@ -214,6 +215,7 @@
+ 	probe_ent->irq = pdev->irq;
+ 	probe_ent->irq_flags = SA_SHIRQ;
+ 	probe_ent->pio_mask = 0x1f;
++	probe_ent->mwdma_mask = 0x07;
+ 	probe_ent->udma_mask = 0x7f;
+ 
+ 	probe_ent->port[0].cmd_addr = pci_resource_start(pdev, 0);
+diff -Nru a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
+--- a/drivers/scsi/sata_vsc.c	2004-08-18 03:11:44 -04:00
++++ b/drivers/scsi/sata_vsc.c	2004-08-18 03:11:44 -04:00
+@@ -190,6 +190,7 @@
+ static Scsi_Host_Template vsc_sata_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
++	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+@@ -320,6 +321,7 @@
+ 	 * if we don't fill these
+ 	 */
+ 	probe_ent->pio_mask = 0x1f;
++	probe_ent->mwdma_mask = 0x07;
+ 	probe_ent->udma_mask = 0x7f;
+ 
+ 	/* We have 4 ports per PCI function */
+diff -Nru a/include/linux/ata.h b/include/linux/ata.h
+--- a/include/linux/ata.h	2004-08-18 03:11:44 -04:00
++++ b/include/linux/ata.h	2004-08-18 03:11:44 -04:00
+@@ -42,6 +42,7 @@
+ 	ATA_ID_SERNO_OFS	= 10,
+ 	ATA_ID_MAJOR_VER	= 80,
+ 	ATA_ID_PIO_MODES	= 64,
++	ATA_ID_MWDMA_MODES	= 63,
+ 	ATA_ID_UDMA_MODES	= 88,
+ 	ATA_ID_PIO4		= (1 << 1),
+ 
+@@ -133,13 +134,20 @@
+ 	XFER_UDMA_2		= 0x42,
+ 	XFER_UDMA_1		= 0x41,
+ 	XFER_UDMA_0		= 0x40,
++	XFER_MW_DMA_2		= 0x22,
++	XFER_MW_DMA_1		= 0x21,
++	XFER_MW_DMA_0		= 0x20,
+ 	XFER_PIO_4		= 0x0C,
+ 	XFER_PIO_3		= 0x0B,
++	XFER_PIO_2		= 0x0A,
++	XFER_PIO_1		= 0x09,
++	XFER_PIO_0		= 0x08,
+ 
+ 	/* ATAPI stuff */
+ 	ATAPI_PKT_DMA		= (1 << 0),
+ 	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
+ 						   0=to device, 1=to host */
++	ATAPI_CDB_LEN		= 16,
+ 
+ 	/* cable types */
+ 	ATA_CBL_NONE		= 0,
+@@ -169,16 +177,22 @@
+ 	ATA_PROT_PIO,		/* PIO single sector */
+ 	ATA_PROT_PIO_MULT,	/* PIO multiple sector */
+ 	ATA_PROT_DMA,		/* DMA */
+-	ATA_PROT_ATAPI,		/* packet command */
++	ATA_PROT_ATAPI,		/* packet command, PIO data xfer*/
++	ATA_PROT_ATAPI_NODATA,	/* packet command, no data */
+ 	ATA_PROT_ATAPI_DMA,	/* packet command with special DMA sauce */
+ };
+ 
++enum ata_ioctls {
++	ATA_IOC_GET_IO32	= 0x309,
++	ATA_IOC_SET_IO32	= 0x324,
++};
++
+ /* core structures */
+ 
+ struct ata_prd {
+ 	u32			addr;
+ 	u32			flags_len;
+-} __attribute__((packed));
++};
+ 
+ struct ata_taskfile {
+ 	unsigned long		flags;		/* ATA_TFLAG_xxx */
+@@ -206,6 +220,8 @@
+ #define ata_id_is_ata(dev)	(((dev)->id[0] & (1 << 15)) == 0)
+ #define ata_id_rahead_enabled(dev) ((dev)->id[85] & (1 << 6))
+ #define ata_id_wcache_enabled(dev) ((dev)->id[85] & (1 << 5))
++#define ata_id_has_flush(dev) ((dev)->id[83] & (1 << 12))
++#define ata_id_has_flush_ext(dev) ((dev)->id[83] & (1 << 13))
+ #define ata_id_has_lba48(dev)	((dev)->id[83] & (1 << 10))
+ #define ata_id_has_wcache(dev)	((dev)->id[82] & (1 << 5))
+ #define ata_id_has_pm(dev)	((dev)->id[82] & (1 << 3))
+@@ -220,9 +236,20 @@
+ 	  ((u64) dev->id[(n) + 1] << 16) |	\
+ 	  ((u64) dev->id[(n) + 0]) )
+ 
++static inline int atapi_cdb_len(u16 *dev_id)
++{
++	u16 tmp = dev_id[0] & 0x3;
++	switch (tmp) {
++	case 0:		return 12;
++	case 1:		return 16;
++	default:	return -1;
++	}
++}
++
+ static inline int is_atapi_taskfile(struct ata_taskfile *tf)
+ {
+ 	return (tf->protocol == ATA_PROT_ATAPI) ||
++	       (tf->protocol == ATA_PROT_ATAPI_NODATA) ||
+ 	       (tf->protocol == ATA_PROT_ATAPI_DMA);
+ }
+ 
+diff -Nru a/include/linux/libata.h b/include/linux/libata.h
+--- a/include/linux/libata.h	2004-08-18 03:11:44 -04:00
++++ b/include/linux/libata.h	2004-08-18 03:11:44 -04:00
+@@ -32,7 +32,6 @@
+ /*
+  * compile-time options
+  */
+-#undef ATA_FORCE_PIO		/* do not configure or use DMA */
+ #undef ATA_DEBUG		/* debugging output */
+ #undef ATA_VERBOSE_DEBUG	/* yet more debugging output */
+ #undef ATA_IRQ_TRAP		/* define to ack screaming irqs */
+@@ -88,10 +87,7 @@
+ 	/* struct ata_device stuff */
+ 	ATA_DFLAG_LBA48		= (1 << 0), /* device supports LBA48 */
+ 	ATA_DFLAG_PIO		= (1 << 1), /* device currently in PIO mode */
+-	ATA_DFLAG_MASTER	= (1 << 2), /* is device 0? */
+-	ATA_DFLAG_WCACHE	= (1 << 3), /* has write cache we can
+-					     * (hopefully) flush? */
+-	ATA_DFLAG_LOCK_SECTORS	= (1 << 4), /* don't adjust max_sectors */
++	ATA_DFLAG_LOCK_SECTORS	= (1 << 2), /* don't adjust max_sectors */
+ 
+ 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+ 	ATA_DEV_ATA		= 1,	/* ATA device */
+@@ -111,7 +107,6 @@
+ 	ATA_FLAG_SATA_RESET	= (1 << 7), /* use COMRESET */
+ 
+ 	ATA_QCFLAG_ACTIVE	= (1 << 1), /* cmd not yet ack'd to scsi lyer */
+-	ATA_QCFLAG_DMA		= (1 << 2), /* data delivered via DMA */
+ 	ATA_QCFLAG_SG		= (1 << 3), /* have s/g table? */
+ 	ATA_QCFLAG_SINGLE	= (1 << 4), /* no s/g, just a single buffer */
+ 	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG | ATA_QCFLAG_SINGLE,
+@@ -140,6 +135,13 @@
+ 	PORT_UNKNOWN		= 0,
+ 	PORT_ENABLED		= 1,
+ 	PORT_DISABLED		= 2,
++
++	/* encoding various smaller bitmaps into a single
++	 * unsigned long bitmap
++	 */
++	ATA_SHIFT_UDMA		= 0,
++	ATA_SHIFT_MWDMA		= 8,
++	ATA_SHIFT_PIO		= 11,
+ };
+ 
+ enum pio_task_states {
+@@ -188,6 +190,7 @@
+ 	struct ata_ioports	port[ATA_MAX_PORTS];
+ 	unsigned int		n_ports;
+ 	unsigned int		pio_mask;
++	unsigned int		mwdma_mask;
+ 	unsigned int		udma_mask;
+ 	unsigned int		legacy_mode;
+ 	unsigned long		irq;
+@@ -215,6 +218,9 @@
+ 	struct scsi_cmnd	*scsicmd;
+ 	void			(*scsidone)(struct scsi_cmnd *);
+ 
++	struct ata_taskfile	tf;
++	u8			cdb[ATAPI_CDB_LEN];
++
+ 	unsigned long		flags;		/* ATA_QCFLAG_xxx */
+ 	unsigned int		tag;
+ 	unsigned int		n_elem;
+@@ -226,7 +232,6 @@
+ 	unsigned int		cursg;
+ 	unsigned int		cursg_ofs;
+ 
+-	struct ata_taskfile	tf;
+ 	struct scatterlist	sgent;
+ 	void			*buf_virt;
+ 
+@@ -251,8 +256,10 @@
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+ 	unsigned int		devno;		/* 0 or 1 */
+ 	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
+-	unsigned int		pio_mode;
+-	unsigned int		udma_mode;
++	u8			pio_mode;
++	u8			dma_mode;
++	u8			xfer_mode;
++	unsigned int		xfer_shift;	/* ATA_SHIFT_xxx */
+ 
+ 	/* cache info about current transfer mode */
+ 	u8			xfer_protocol;	/* taskfile xfer protocol */
+@@ -277,8 +284,10 @@
+ 	unsigned int		bus_state;
+ 	unsigned int		port_state;
+ 	unsigned int		pio_mask;
++	unsigned int		mwdma_mask;
+ 	unsigned int		udma_mask;
+ 	unsigned int		cbl;	/* cable type; ATA_CBL_xxx */
++	unsigned int		cdb_len;
+ 
+ 	struct ata_device	device[ATA_MAX_DEVICES];
+ 
+@@ -303,10 +312,8 @@
+ 
+ 	void (*dev_config) (struct ata_port *, struct ata_device *);
+ 
+-	void (*set_piomode) (struct ata_port *, struct ata_device *,
+-			     unsigned int);
+-	void (*set_udmamode) (struct ata_port *, struct ata_device *,
+-			     unsigned int);
++	void (*set_piomode) (struct ata_port *, struct ata_device *);
++	void (*set_dmamode) (struct ata_port *, struct ata_device *);
+ 
+ 	void (*tf_load) (struct ata_port *ap, struct ata_taskfile *tf);
+ 	void (*tf_read) (struct ata_port *ap, struct ata_taskfile *tf);
+@@ -342,6 +349,7 @@
+ 	Scsi_Host_Template	*sht;
+ 	unsigned long		host_flags;
+ 	unsigned long		pio_mask;
++	unsigned long		mwdma_mask;
+ 	unsigned long		udma_mask;
+ 	struct ata_port_operations	*port_ops;
+ };
+@@ -363,6 +371,7 @@
+ extern void ata_pci_remove_one (struct pci_dev *pdev);
+ extern int ata_device_add(struct ata_probe_ent *ent);
+ extern int ata_scsi_detect(Scsi_Host_Template *sht);
++extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
+ extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
+ extern int ata_scsi_error(struct Scsi_Host *host);
+ extern int ata_scsi_release(struct Scsi_Host *host);
+@@ -472,7 +481,6 @@
+ 
+ static inline void ata_qc_set_polling(struct ata_queued_cmd *qc)
+ {
+-	qc->flags &= ~ATA_QCFLAG_DMA;
+ 	qc->tf.ctl |= ATA_NIEN;
+ }
+ 
+@@ -598,6 +606,13 @@
+ 	} else
+ 		host_stat = inb(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
+ 	return host_stat;
++}
++
++static inline int ata_try_flush_cache(struct ata_device *dev)
++{
++	return ata_id_wcache_enabled(dev) ||
++	       ata_id_has_flush(dev) ||
++	       ata_id_has_flush_ext(dev);
+ }
+ 
+ #endif /* __LINUX_LIBATA_H__ */
+diff -Nru a/include/scsi/scsi.h b/include/scsi/scsi.h
+--- a/include/scsi/scsi.h	2004-08-18 03:11:44 -04:00
++++ b/include/scsi/scsi.h	2004-08-18 03:11:44 -04:00
+@@ -108,6 +108,7 @@
+ #define WRITE_LONG_2          0xea
+ #define READ_16               0x88
+ #define WRITE_16              0x8a
++#define VERIFY_16	      0x8f
+ #define SERVICE_ACTION_IN     0x9e
+ /* values for service action in */
+ #define	SAI_READ_CAPACITY_16  0x10
+
+--------------060300040007010701090509--
