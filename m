@@ -1,17 +1,17 @@
 From: "Jeroen Makkinje" <j.makkinje@xs4all.nl>
 Subject: cat /proc/ide/ide1/hdc/identify hangs
-Date: Wed, 10 Sep 2003 15:11:06 +0200 (CEST)
+Date: Wed, 10 Sep 2003 15:10:44 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <13755.80.126.29.72.1063199466.squirrel@webmail.xs4all.nl>
+Message-ID: <7324.80.126.29.72.1063199444.squirrel@webmail.xs4all.nl>
 Reply-To: j.makkinje@xs4all.nl
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpzilla5.xs4all.nl ([194.109.127.141]:19217 "EHLO
-	smtpzilla5.xs4all.nl") by vger.kernel.org with ESMTP
-	id S263094AbTIJNLI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Sep 2003 09:11:08 -0400
+Received: from smtpzilla3.xs4all.nl ([194.109.127.139]:29457 "EHLO
+	smtpzilla3.xs4all.nl") by vger.kernel.org with ESMTP
+	id S263019AbTIJNKq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Sep 2003 09:10:46 -0400
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
