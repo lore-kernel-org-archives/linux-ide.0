@@ -1,49 +1,94 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: PATCH: ALI15x3, 200GB HD, dma broken, no_lba48_dma
-Date: Thu, 10 Mar 2005 17:30:57 +0100
-Message-ID: <58cb370e0503100830533f54b9@mail.gmail.com>
-References: <Pine.LNX.4.60.0503042332240.1782@thelonious.dnsalias.com>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Tobias Klauser <tklauser@nuerscht.ch>
+Subject: [KJ] Re: [PATCH UPDATE] drivers/ide/cs5520.c : Use the DMA_{64,
+	32}BIT_MASK constants
+Date: Thu, 10 Mar 2005 17:59:24 +0100
+Message-ID: <20050310165924.GA4213@localhost.localdomain>
+References: <20050308133358.GA5311@localhost.localdomain>
+	<58cb370e050310083053a0e495@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.200]:13082 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262718AbVCJQbF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2005 11:31:05 -0500
-Received: by wproxy.gmail.com with SMTP id 68so816058wra
-        for <linux-ide@vger.kernel.org>; Thu, 10 Mar 2005 08:30:57 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.60.0503042332240.1782@thelonious.dnsalias.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============77111840491477524=="
+In-Reply-To: <58cb370e050310083053a0e495@mail.gmail.com>
+List-Unsubscribe: <http://lists.osdl.org/mailman/listinfo/kernel-janitors>,
+	<mailto:kernel-janitors-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/kernel-janitors>
+List-Post: <mailto:kernel-janitors@lists.osdl.org>
+List-Help: <mailto:kernel-janitors-request@lists.osdl.org?subject=help>
+List-Subscribe: <http://lists.osdl.org/mailman/listinfo/kernel-janitors>,
+	<mailto:kernel-janitors-request@lists.osdl.org?subject=subscribe>
+Sender: kernel-janitors-bounces@lists.osdl.org
+Errors-To: kernel-janitors-bounces@lists.osdl.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: kernel-janitors@lists.osdl.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bram Verweij <bram.verweij@wanadoo.nl>
-Cc: linux-ide@vger.kernel.org
 
-good catch, I overlooked lba48 flag when introducing no_lba48_dma
+--===============77111840491477524==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-I slightly modified your patch:
+On Thu, Mar 10, 2005 at 05:30:12PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> On Tue, 8 Mar 2005 14:33:58 +0100, Tobias Klauser <tklauser@nuerscht.ch> wrote:
+> > Description: Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h
+> > when calling pci_set_dma_mask() or pci_set_consistent_dma_mask()
+> > See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
+> 
+> only DMA_32BIT_MASK constant is used in the patch
 
-diff -Nru a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
---- a/drivers/ide/ide-disk.c	2005-03-10 16:07:50 +01:00
-+++ b/drivers/ide/ide-disk.c	2005-03-10 16:07:50 +01:00
-@@ -168,6 +168,8 @@
- 	if (hwif->no_lba48_dma && lba48 && dma) {
- 		if (block + rq->nr_sectors > 1ULL << 28)
- 			dma = 0;
-+		else
-+			lba48 = 0;
+I just took the same description for all patches of this series. Some of
+them do not include DMA_64BIT_MASK.
+
+> > Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
+> > 
+> > --- linux-2.6.11.orig/drivers/ide/pci/cs5520.c  2005-03-02 12:50:39.000000000 +0100
+> > +++ linux-2.6.11/drivers/ide/pci/cs5520.c       2005-03-03 11:46:46.000000000 +0100
+> > @@ -227,7 +227,7 @@ static int __devinit cs5520_init_one(str
+> >                 return 1;
+> >         }
+> >         pci_set_master(dev);
+> > -       if (pci_set_dma_mask(dev, 0xFFFFFFFF)) {
+> > +       if (pci_set_dma_mask(dev, DMA_32BIT_MASK)) {
+> >                 printk(KERN_WARNING "cs5520: No suitable DMA available.\n");
+> >                 return -ENODEV;
+> >         }
+> 
+> You need to include <linux/dma-mapping.h> explicitly
+> or build will fail for some architectures, i.e. please see:
+> http://linus.bkbits.net:8080/linux-2.5/cset@41d833427yYZzu6TxydNrr5z6f02cg?nav=index.html|src/|src/drivers|src/drivers/ide|related/drivers/ide/setup-pci.c
+
+I only compile-tested this patch on x86 and there it worked. So here's an
+updated patch:
+
+Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
+
+--- linux-2.6.11.orig/drivers/ide/pci/cs5520.c	2005-03-02 12:50:39.000000000 +0100
++++ linux-2.6.11/drivers/ide/pci/cs5520.c	2005-03-10 17:55:23.894909672 +0100
+@@ -51,6 +51,8 @@
+ #include <asm/io.h>
+ #include <asm/irq.h>
+ 
++#include <linux/dma-mapping.h>
++
+ struct pio_clocks
+ {
+ 	int address;
+@@ -227,7 +229,7 @@ static int __devinit cs5520_init_one(str
+ 		return 1;
  	}
- 
- 	if (!dma) {
-@@ -181,7 +183,7 @@
- 	/* FIXME: SELECT_MASK(drive, 0) ? */
- 
- 	if (drive->select.b.lba) {
--		if (drive->addressing == 1) {
-+		if (lba48) {
- 			task_ioreg_t tasklets[10];
- 
- 			pr_debug("%s: LBA=0x%012llx\n", drive->name, block);
+ 	pci_set_master(dev);
+-	if (pci_set_dma_mask(dev, 0xFFFFFFFF)) {
++	if (pci_set_dma_mask(dev, DMA_32BIT_MASK)) {
+ 		printk(KERN_WARNING "cs5520: No suitable DMA available.\n");
+ 		return -ENODEV;
+ 	}
 
-and applied it, thanks
+--===============77111840491477524==
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Bartlomiej
+_______________________________________________
+Kernel-janitors mailing list
+Kernel-janitors@lists.osdl.org
+http://lists.osdl.org/mailman/listinfo/kernel-janitors
+
+--===============77111840491477524==--
