@@ -1,68 +1,57 @@
-From: Tobias Lorenz <tobias.lorenz@gmx.net>
-Subject: [PATCH 2.6.9-libata1-dev1] libata-scsi: hdparm support
-Date: Sat, 23 Oct 2004 01:20:53 +0200
+From: Brad Campbell <brad@wasp.net.au>
+Subject: sata_promise performance observations
+Date: Sat, 23 Oct 2004 12:36:54 +0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1098487253.28916.12.camel@server.lorenz.priv>
+Message-ID: <417A1826.5010502@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:44459 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S269200AbUJVXUo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Oct 2004 19:20:44 -0400
+Received: from wasp.net.au ([203.190.192.17]:23494 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S267170AbUJWIgd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Oct 2004 04:36:33 -0400
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: linux-ide@vger.kernel.org
 
-Hi,
+G'day all,
 
-this patch adds support for transfering drive informations via the
-hd_driveid structure to the hdparm utility. At the moment, only
-cylinders, sectors, heads, model and firmware version are transfered.
+Interesting observation with 3 SATA150TX4 cards and 10 Maxtor Maxline-II 250GB SATA drives.
 
-Our intention was to display the supported and the used UDMA mode(s),
-but we didn't find the correct structures yet to get these infos...
+If I run a concurrent dd if=/dev/sda > /dev/null and dd if=/dev/sdb > /dev/null I get the expected 
+115MB/s transfer rates in vmstat.
 
-Signed-off-by: Tobias Lorenz <tobias.lorenz@gmx.net>
+If I do a dd if=/dev/sda > /dev/null and dd if=/dev/sde > /dev/null I get about 80MB/s
 
-> --- a/drivers/scsi/libata-scsi.c        2004-10-20 22:07:50.000000000 +0200
-> +++ b/drivers/scsi/libata-scsi.c        2004-10-20 19:25:15.000000000 +0200
-> @@ -215,6 +215,17 @@
->         struct ata_port *ap;
->         struct ata_device *dev;
->         int val = -EINVAL, rc = -EINVAL;
-> +       struct hd_driveid drv_id = {
-> +               .cyls           = 0,
-> +               .sectors        = 0,
-> +               .heads          = 0,
-> +               .fw_rev         = "",
-> +               .model          = "",
-> +               .cur_cyls       = 0,
-> +               .cur_heads      = 0,
-> +               .cur_sectors    = 0,
-> +       };
-> +       int geom[3];
-> 
->         ap = (struct ata_port *) &scsidev->host->hostdata[0];
->         if (!ap)
-> @@ -249,7 +260,25 @@
->                         return -EACCES;
->                 return ata_task_ioctl(scsidev, arg);
-> 
-> +       case HDIO_GET_IDENTITY:
-> +               ata_std_bios_param(scsidev, NULL, dev->n_sectors, geom);
-> +               drv_id.cur_heads        = drv_id.heads          = geom[0];
-> +               drv_id.cur_sectors      = drv_id.sectors        = geom[1];
-> +               drv_id.cur_cyls         = drv_id.cyls           = geom[2];
-> +               strncpy((char *) &drv_id.model, scsidev->model, sizeof(drv_id.model));
-> +               strncpy((char *) &drv_id.fw_rev, scsidev->rev, sizeof(drv_id.fw_rev));
-> +               if(copy_to_user((char *) arg, (char *) &drv_id,
-> +                                sizeof(drv_id)))
-> +                       return(-EFAULT);
-> +               return 0;
-> +
->         default:
->                 rc = -EOPNOTSUPP;
->                 break;
->         }
+sda, sde & sdi I get
+procs -----------memory---------- ---swap-- -----io---- --system-- ----cpu----
+
+  3  0  22540   2560 463908   5320    0    0 85294    16 1102   761 11 88  0  1
+  3  1  22540   1480 464852   5320    0    0 86493    25  987   512 13 86  0  0
+  2  2  22540   2176 464304   5268    0    0 86774    18 1091   721 12 87  0  1
+  2  2  22540   1488 464860   5368    0    0 85562    18  921   416 13 87  0  0
 
 
+When streaming from drives not on the same controller, I lose about 30mb/s transfer rate. In fact, 
+it seems to max out at about 86MB/s no matter what combination of drives I use if I stream from more 
+than one controller.
+
+However, if I use sda, sbb & sdc I get
+
+procs -----------memory---------- ---swap-- -----io---- --system-- ----cpu----
+
+  0  3  22512   1768 464448   5304    0    0 121661    18 1257   566  9 59  0 32
+  0  3  22512   1536 464696   5316    0    0 122903    14 1262   578 10 59  0 31
+  0  3  22512   2112 464228   5268    0    0 121655    14 1255   578  9 60  0 32
+
+How bizzare. I have latency set to 32 on all controllers, but I have tried as low as 8 and as high 
+as 128 to no avail.
+
+I have readahead set to 4096 on all devices.
+
+Anyone have any ideas?
+
+Not that this is an issue for me (I'm only using it as a fileserver over GB eth so its not like 
+100MB/s is actually required, just an interesting observation)
+
+Regards,
+Brad
