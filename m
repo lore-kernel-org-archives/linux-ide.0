@@ -1,67 +1,41 @@
-From: Ajit Prem <Ajit.Prem@motorola.com>
-Subject: Re: 31244 & sata_vsc & PPC
-Date: Wed, 16 Feb 2005 14:27:59 -0700
-Message-ID: <4213BADF.8000307@motorola.com>
-References: <4213996C.4060301@motorola.com> <20050216190821.GA19150@havoc.gtf.org>
+From: Andy Warner <andyw@pobox.com>
+Subject: Re: libata oops 2.6.11-rc4 yesterdays BK
+Date: Wed, 16 Feb 2005 15:40:33 -0600
+Message-ID: <20050216154033.I10699@florence.linkmargin.com>
+References: <4212CBD6.7020703@wasp.net.au> <42132803.2080701@wasp.net.au> <4213821D.1030203@pobox.com> <4213B2F8.2070800@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from motgate2.mot.com ([144.189.100.101]:41166 "EHLO
-	motgate2.mot.com") by vger.kernel.org with ESMTP id S262087AbVBPV2V
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Feb 2005 16:28:21 -0500
-In-Reply-To: <20050216190821.GA19150@havoc.gtf.org>
+Content-Type: text/plain; charset=us-ascii
+Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:34488 "EHLO
+	ms-smtp-04.rdc-kc.rr.com") by vger.kernel.org with ESMTP
+	id S262082AbVBPVkk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Feb 2005 16:40:40 -0500
+Content-Disposition: inline
+In-Reply-To: <4213B2F8.2070800@wasp.net.au>; from brad@wasp.net.au on Thu, Feb 17, 2005 at 12:54:16AM +0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>
+To: Brad Campbell <brad@wasp.net.au>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
+Brad Campbell wrote:
+> [...]
+> Actually, I'm not sure without the libata dev patch as that removes SMART support, and I'm not 
+> convinced that my smartd polling every 20 minutes does not have something to do with it. All I know 
+> is the older kernel seems to cope. We'll see. 320 minutes left on this rebuild. I expect it will be 
+> done in the morning if all goes according to plan. (With the 2.6.11 kernel it never survived past 
+> about 25% rebuilt)
 
-As a follow-up to my previous email where
-I indicated that int_status on entry into
-vsc_sata_interrupt indicates 0x8300, I
-put in a crude fix in the vsc_sata_interrupt
-handler to read the taskfile status register,
-and to clear the appropriate bits in the
-SATA SError register, and now things work
-just fine.
+Can you find time to try it without smartd active ?
+You report running a uni-processor system, and I have only
+seen PIO problems with (fast) SMP systems in my testing,
+but I am forming the opinion that libata-PIO functions
+are in need of a minor overhaul.
 
-Thank you very much for your help.
+I have seen issues where port activity monopolised
+data-paths/arbitration inside chipsets such that the
+PIO operations would appear to time out. Since you're
+doing a raid rebuild, perhaps the I/O load is causing
+something similar to occur.
+-- 
+andyw@pobox.com
 
-AP
-
-
-Jeff Garzik wrote:
-
->On Wed, Feb 16, 2005 at 12:05:16PM -0700, Ajit Prem wrote:
->  
->
->>The email archives indicate that sata_vsc worked
->>on a 31244 in a Dell Powervault once the
->>kernel included the following configuration:
->>
->>Processor type and features -> Local APIC support on uniprocessors
->>Processor type and features -> IO-APIC support on uniprocessors
->>General setup -> Power Management support -> ACPI Support
->>
->>Trying to use sata_vsc on a 31244 in a PPC board
->>results in the same problem as other users had on
->>an X86 board configured without ACPI support - interrupts
->>come in too early to vsc_sata_interrupt, the interrupt
->>doesn't get cleared, and the kernel finally disables the irq.
->>What should one do to get sata_vsc/libata to work on a PPC board?
->>    
->>
->
->Ultimately I wonder if sata_vsc is masking/clearing all interrupt
->conditions during startup.
->
->There might also be a problem with PIO polling.
->
->	Jeff
->
->
->
->  
->
-
+Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
