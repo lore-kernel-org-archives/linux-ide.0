@@ -1,39 +1,143 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Success(?) with SiI + Seagate pessimistic fix disabled.
-Date: Sun, 11 Jan 2004 03:14:30 -0500
+From: Aron Rubin <arubin@atl.lmco.com>
+Subject: [patch 2.6.1]  Silicon Image 3512 SATA Controller - Tested
+Date: Mon, 12 Jan 2004 09:46:01 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <400105E6.6060008@pobox.com>
-References: <20040109054800.GA32112@Mayonaise> <20040109090003.GA3032@Mayonaise>
+Message-ID: <4002B329.2040301@atl.lmco.com>
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------030005030704040607070402"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [192.35.37.50] ([192.35.37.50]:15556 "EHLO
+	enterprise.atl.lmco.com") by vger.kernel.org with ESMTP
+	id S266222AbUALOqE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Jan 2004 09:46:04 -0500
+Received: from atl.lmco.com (druidia [166.17.245.107])
+	by enterprise.atl.lmco.com (Postfix) with ESMTP id EE5D2C1D3A
+	for <linux-ide@vger.kernel.org>; Mon, 12 Jan 2004 09:46:01 -0500 (EST)
+List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------030005030704040607070402
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:27782 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S265802AbUAKIO4
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 11 Jan 2004 03:14:56 -0500
-In-Reply-To: <20040109090003.GA3032@Mayonaise>
-List-Id: linux-ide@vger.kernel.org
-To: Eric Wong <normalperson@yhbt.net>
-Cc: linux-ide@vger.kernel.org
 
-Eric Wong wrote:
-> Eric Wong <normalperson@yhbt.net> wrote:
-> <snip success story>
-> 
-> I'm not feeling any more pessimistic than usual at the moment, so I
-> might as well start a one item whitelist.  It works for me, but more
-> testing is always a good thing.
-> 
-> On a related note, I couldn't find a way to get the firmware revision
-> from hdparm or dmesg when using libata.
-> 
-> --- a/drivers/scsi/sata_sil.c
-> +++ b/drivers/scsi/sata_sil.c
+This patch enables the Silicon Image 3512 SATA Controller and has been
+tested and functioning without any apparent bugs (I do not have a full
+test suite but I am not booting off a device attached to this
+controller). This patch is against the Dave Jones 2.6.1-1.34 kernel
+source rpm.
+
+You may remember I was trying to get help on this chipset before. My
+patch is simply a duplicate of the entries for the 3112 chipset. It did
+not work fully with prior kernels, giving me a "Interrupt Lost" errors.
+Whatever else was done to 2.6.1 had made it happy again. Also I did not
+have to use any special commandline options.
+
+Aron
+
+-- 
+
+ssh aron@rubinium.org cat /dev/brain | grep ^work:
+
+Aron Rubin                       Member, Engineering Staff
+Lockheed Martin                  E-Mail: arubin@atl.lmco.com
+Advanced Technology Laboratories Phone:  856.792.9865
+3 Executive Campus               Fax:    856.792.9930
+Cherry Hill, NJ USA 08002        Web:    http://www.atl.lmco.com
 
 
-Well, if you're motivated, there is a blacklist...
+--------------030005030704040607070402
+Content-Type: text/plain;
+ name="SiI3512-2004011201.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="SiI3512-2004011201.patch"
 
-google for "mod15write" and click on the first link.
+--- linux-2.6.1-1.34/include/linux/pci_ids.h.orig	2004-01-11 10:30:11.000000000 -0500
++++ linux-2.6.1-1.34/include/linux/pci_ids.h	2004-01-11 10:44:25.000000000 -0500
+@@ -883,6 +883,7 @@
+ 
+ #define PCI_DEVICE_ID_SII_680		0x0680
+ #define PCI_DEVICE_ID_SII_3112		0x3112
++#define PCI_DEVICE_ID_SII_3512		0x3512
+ #define PCI_DEVICE_ID_SII_1210SA	0x0240
+ 
+ #define PCI_VENDOR_ID_VISION		0x1098
+--- linux-2.6.1-1.34/drivers/scsi/sata_sil.c.orig	2004-01-11 21:41:36.968803995 -0500
++++ linux-2.6.1-1.34/drivers/scsi/sata_sil.c	2004-01-11 10:43:09.000000000 -0500
+@@ -39,6 +39,7 @@
+ 
+ enum {
+ 	sil_3112		= 0,
++	sil_3512		= 1,
+ 
+ 	SIL_IDE0_TF		= 0x80,
+ 	SIL_IDE0_CTL		= 0x8A,
+@@ -62,6 +63,7 @@
+ 
+ static struct pci_device_id sil_pci_tbl[] = {
+ 	{ 0x1095, 0x3112, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
++	{ 0x1095, 0x3512, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3512 },
+ 	{ }	/* terminate list */
+ };
+ 
+@@ -121,6 +123,15 @@
+ 		.udma_mask	= 0x7f,			/* udma0-6; FIXME */
+ 		.port_ops	= &sil_ops,
+ 	},
++	/* sil_3512 */
++	{
++		.sht		= &sil_sht,
++		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
++				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
++		.pio_mask	= 0x03,			/* pio3-4 */
++		.udma_mask	= 0x7f,			/* udma0-6; FIXME */
++		.port_ops	= &sil_ops,
++	},
+ };
+ 
+ MODULE_AUTHOR("Jeff Garzik");
+--- linux-2.6.1-1.34/drivers/ide/pci/siimage.c.orig	2004-01-11 10:14:19.000000000 -0500
++++ linux-2.6.1-1.34/drivers/ide/pci/siimage.c	2004-01-11 10:44:12.000000000 -0500
+@@ -55,6 +55,7 @@
+ 	switch(pdev->device)
+ 	{
+ 		case PCI_DEVICE_ID_SII_3112:
++		case PCI_DEVICE_ID_SII_3512:
+ 		case PCI_DEVICE_ID_SII_1210SA:
+ 			return 1;
+ 		case PCI_DEVICE_ID_SII_680:
+@@ -1179,6 +1180,7 @@
+ 	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_SII_680,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+ 	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_SII_3112, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
+ 	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_SII_1210SA, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
++	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_SII_3512, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3},
+ 	{ 0, },
+ };
+ 
+--- linux-2.6.1-1.34/drivers/ide/pci/siimage.h.orig	2004-01-11 10:15:21.000000000 -0500
++++ linux-2.6.1-1.34/drivers/ide/pci/siimage.h	2004-01-11 10:43:41.000000000 -0500
+@@ -82,6 +82,18 @@
+ 		.enablebits	= {{0x00,0x00,0x00}, {0x00,0x00,0x00}},
+ 		.bootable	= ON_BOARD,
+ 		.extra		= 0,
++	},{	/* 3 */
++		.vendor		= PCI_VENDOR_ID_CMD,
++		.device		= PCI_DEVICE_ID_SII_3512,
++		.name		= "SiI3512 Serial ATA",
++		.init_chipset	= init_chipset_siimage,
++		.init_iops	= init_iops_siimage,
++		.init_hwif	= init_hwif_siimage,
++		.channels	= 2,
++		.autodma	= AUTODMA,
++		.enablebits	= {{0x00,0x00,0x00}, {0x00,0x00,0x00}},
++		.bootable	= ON_BOARD,
++		.extra		= 0,
+ 	},{
+ 		.vendor		= 0,
+ 		.device		= 0,
 
+
+--------------030005030704040607070402--
 
