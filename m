@@ -1,42 +1,54 @@
-From: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [patch libata-dev-2.6 1/1] libata: sync SMART ioctls with ATA pass thru spec (T10/04-262r7)
-Date: Wed, 2 Feb 2005 13:59:22 -0500
-Message-ID: <20050202185922.GD17450@tuxdriver.com>
-References: <20050202183753.GB17450@tuxdriver.com> <20050202185121.GX11484@suse.de>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: SATA NCQ
+Date: Wed, 02 Feb 2005 14:30:22 -0500
+Message-ID: <42012A4E.1020100@pobox.com>
+References: <000401c50957$0e9d4600$3805040a@internal.synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from ra.tuxdriver.com ([24.172.12.4]:59153 "EHLO ra.tuxdriver.com")
-	by vger.kernel.org with ESMTP id S262547AbVBBS7f (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2005 13:59:35 -0500
-Content-Disposition: inline
-In-Reply-To: <20050202185121.GX11484@suse.de>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38092 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S262747AbVBBTag (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Feb 2005 14:30:36 -0500
+In-Reply-To: <000401c50957$0e9d4600$3805040a@internal.synopsys.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, andyw@pobox.com, jgarzik@pobox.com, Curtis.Stevens@WDC.com
+To: Mat.Loikkanen@synopsys.com
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Wed, Feb 02, 2005 at 07:51:22PM +0100, Jens Axboe wrote:
-> On Wed, Feb 02 2005, John W. Linville wrote:
-
-> > -/* Temporary values for T10/04-262 until official values are allocated */
-> > -#define	ATA_16		      0x85	/* 16-byte pass-thru [0x85 == unused]*/
-> > -#define	ATA_12		      0xb3	/* 12-byte pass-thru [0xb3 == obsolete set limits command] */
-> > +/* Values for T10/04-262r7 */
-> > +#define	ATA_16		      0x85	/* 16-byte pass-thru */
-> > +#define	ATA_12		      0xa1	/* 12-byte pass-thru */
+Mat Loikkanen wrote:
+> Jeff-
 > 
-> Ehh are you sure that is correct? 0xa1 is the BLANK command, I would
-> hate to think there would be a collision like that.
+> Any word on when Native Command Queueing will be supported by Libata?  I see
+> in your status report there's a dependency on drives being available.  As it
+[snip, due to mailing list]
+> implemented over in Windows?) ... I'd be available to work on adding NCQ
+> support to Libata, but my unfamiliarity with the SCSI layer's workings may
+> be a big hurdle.  What do you think?
 
-Well, I'm sure that is what is in T10/04-262r7 in Table 1 on Page 1.
-The spec is available here:
 
-	http://www.t10.org/ftp/t10/document.04/04-262r7.pdf
+(cc'd to linux-ide, for others' information)
 
-Previous versions of the spec did not specify a value.  As to whether
-or not the current spec is in error, hopefully Curtis can elablorate?
+Well, you also need a controller that does DMA and NCQ, not just a 
+drive.  NCQ is basically a handshaking protocol between the controller 
+and drive, letting the drive tell the controller when to DMA <x> sectors 
+from outstanding ATA command <y>.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+No hard date on NCQ availability, and you are welcome (encouraged!) to 
+contribute NCQ support.
+
+Adding NCQ support is
+(a) telling the SCSI layer our queue depth
+(b) handling more than one command outstanding at a time (libata should 
+be mostly ready for this, already)
+(c) error handling
+
+(c) is the hardest part.  Getting working NCQ is easy ('a' and 'b'), but 
+making sure you recover correctly from errors is the biggest part of the 
+task.
+
+That said...   patches are always welcome!
+
+	Jeff
+
+
