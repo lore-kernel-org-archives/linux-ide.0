@@ -1,108 +1,151 @@
-From: uaca@alumni.uv.es
-Subject: Re: IDE-RAID Drive Performance
-Date: Tue, 30 Dec 2003 14:18:54 +0100
+From: "Nicklas Bondesson" <nicke@nicke.nu>
+Subject: RE: IDE-RAID Drive Performance
+Date: Tue, 30 Dec 2003 16:04:59 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20031230131854.GB15816@pusa.informat.uv.es>
+Message-ID: <S265814AbTL3PE7/20031230150459Z+18521@vger.kernel.org>
+References: <20031230111206.1335.qmail@webmaildomini2.aruba.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pusa.informat.uv.es ([147.156.10.98]:63874 "EHLO
-	pusa.informat.uv.es") by vger.kernel.org with ESMTP id S265788AbTL3NSz
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Dec 2003 08:18:55 -0500
-Content-Disposition: inline
+Received: from as1-6-4.ld.bonet.se ([194.236.130.199]:3968 "HELO mail.nicke.nu")
+	by vger.kernel.org with SMTP id S265814AbTL3PE7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Dec 2003 10:04:59 -0500
+In-Reply-To: <20031230111206.1335.qmail@webmaildomini2.aruba.it>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: 'Willy Gardiol' <willy@gardiol.org>
+Cc: linux-ide@vger.kernel.org
 
-On Tue, Dec 30, 2003 at 11:41:47AM +0100, Nicklas Bondesson wrote:
-> Hi!
->=20
-> I think i'm getting really bad values from my disks. It's two Western
-> Digital WD800JB-00DUA3 (Special Edition 8 MB cache) disks connected t=
-o a
-> Promise TX2000 (PDC20271) card (RAID1 using ataraid).
+This is what I get using bonnie:
 
-I think I have the same/similar drive, my results
+Is this correct 46.48 MB / sec ?
 
-(after trying to flush disk cache by doing a find /)
+gollum:~# bonnie -s 800 -u root
+Using uid:0, gid:0.
+Writing with putc()...done
+Writing intelligently...done
+Rewriting...done
+Reading with getc()...done
+Reading intelligently...done
+start 'em...done...done...done...
+Create files in sequential order...done.
+Stat files in sequential order...done.
+Delete files in sequential order...done.
+Create files in random order...done.
+Stat files in random order...done.
+Delete files in random order...done.
+Version 1.02b       ------Sequential Output------ --Sequential Input-
+--Random-
+                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec
+%CP
+gollum         800M  4648  98 19443  37  8422  14  4859  94 24766  17 282.8
+2
+                    ------Sequential Create------ --------Random
+Create--------
+                    -Create-- --Read--- -Delete-- -Create-- --Read---
+-Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec
+%CP
+                 16   306  99 +++++ +++ 20985  99   319  99 +++++ +++  1683
+97
+gollum,800M,4648,98,19443,37,8422,14,4859,94,24766,17,282.8,2,16,306,99,++++
++,++
++,20985,99,319,99,+++++,+++,1683,97 
 
-root@agapito:~# hdparm -t /dev/hda
-
-/dev/hda:
- Timing buffered disk reads:  124 MB in  3.03 seconds =3D  40.92 MB/sec
-
-(without pause)
-root@agapito:~# hdparm -t /dev/hda
-
-/dev/hda:
- Timing buffered disk reads:  132 MB in  3.01 seconds =3D  43.86 MB/sec
-root@agapito:~# hdparm -i /dev/hda
-
-/dev/hda:
-
- Model=3DWDC WD800JB-00CRA1, FwRev=3D17.07W17, SerialNo=3DWD-WMA8E45198=
-60
- Config=3D{ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs FmtGa=
-pReq }
- RawCHS=3D16383/16/63, TrkSize=3D57600, SectSize=3D600, ECCbytes=3D40
- BuffType=3DDualPortCache, BuffSize=3D8192kB, MaxMultSect=3D16, MultSec=
-t=3D16
- CurCHS=3D4047/16/255, CurSects=3D16511760, LBA=3Dyes, LBAsects=3D15630=
-1488
- IORDY=3Don/off, tPIO=3D{min:120,w/IORDY:120}, tDMA=3D{min:120,rec:120}
- PIO modes:  pio0 pio1 pio2 pio3 pio4
- DMA modes:  mdma0 mdma1 mdma2
- UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5
- AdvancedPM=3Dno WriteCache=3Denabled
- Drive conforms to: device does not report version:
-
- * signifies the current active mode
+-----Original Message-----
+From: linux-ide-owner@vger.kernel.org
+[mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Willy Gardiol
+Sent: den 30 december 2003 12:12
+To: Nicklas Bondesson
+Cc: linux-ide@vger.kernel.org
+Subject: Re: IDE-RAID Drive Performance
 
 
-my kernel: 2.6.0-test11
-my chipset: sis-735
+Check you are using 80pin cables... but -X69 would fail if not.
+PCI bus should not be to blame for this, unless your is overloaded (?) like
+heavy network traffic (fast or gigabit ethernet) may steal PCI cycles, but i
+have never seen this happen in pc's... 
 
-looking at your test results I believe hdparm is reading to few data to=
- make
-the benchmark
+Maybe check your card is not sharing an IRQ, move into another slot, try
+some fixed allocation from BIOS to avoid this...
+But i whouldnt expect too much from this on the speed side (just in case
+some troubles with IRQ sharing). 
 
-	Ulisses
+Are you using the new pdc driver? The new one is the one supporting newer
+chipsets like the 20271, i do not know which chip your promise has. 
 
->=20
-> The disks are setup with hdparm at boot time:
->=20
-> /sbin/hdparm -X69 -d1 -u1 -m16 -c3 /dev/hda
-> /sbin/hdparm -X69 -d1 -u1 -m16 -c3 /dev/hdc
->=20
-> When running hdparm -tT I get the following:
->=20
-> /dev/hda:
->  Timing buffer-cache reads:   128 MB in  1.13 seconds =3D113.27 MB/se=
-c
->  Timing buffered disk reads:  64 MB in  2.46 seconds =3D 26.02 MB/sec
->=20
-> /dev/hdc:
->  Timing buffer-cache reads:   128 MB in  1.13 seconds =3D113.27 MB/se=
-c
->  Timing buffered disk reads:  64 MB in  2.47 seconds =3D 25.91 MB/sec
->=20
-> Are these normal values? I don't think so. Please advise.
->=20
+Try Bonnie to get some real on-the-road measurement from ypur filesystems...
+
+that is the REAL speed you can get from your disks. 
+
+
+Nicklas Bondesson Scrive: 
+
+> Ok, so you currently don't have any suggestions on this? Could it be a 
+> slow PCI slot causing the poor performance? It's an ASUS P2B (rev 
+> 1.04) motherboard with PCI 2.1 enabled in BIOS.
+> 
 > /Nicke
->=20
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> -----Original Message-----
+> From: Willy Gardiol [mailto:willy@gardiol.org]
+> Sent: den 30 december 2003 11:58
+> To: Nicklas Bondesson
+> Cc: linux-ide@vger.kernel.org
+> Subject: Re: IDE-RAID Drive Performance
+> 
+> 
+> Every experience i had with Promise controllers AND linux 2.4.xx where 
+> xx is
+>> 17 has given me troubles both on x86 and sparc architecture with DMA
+> enabled.  
+> 
+> But i do not have enough time to troubleshoot this and i never got 
+> much attention here probably because i do not have any ooops or more 
+> specific data to report!
+> 
+> Besides that, my maxtor 40gb (dont remember model right now) does 
+> about 40mb/sec instead of yours 25.
+> 
+> Nicklas Bondesson Scrive:  
+> 
+>> Hi!  
+>> 
+>> I think i'm getting really bad values from my disks. It's two Western 
+>> Digital WD800JB-00DUA3 (Special Edition 8 MB cache) disks connected 
+>> to a Promise TX2000 (PDC20271) card (RAID1 using ataraid).
+>> 
+>> The disks are setup with hdparm at boot time:  
+>> 
+>> /sbin/hdparm -X69 -d1 -u1 -m16 -c3 /dev/hda /sbin/hdparm -X69 -d1 -u1
+>> -m16 -c3 /dev/hdc
+>> 
+>> When running hdparm -tT I get the following:  
+>> 
+>> /dev/hda:
+>>  Timing buffer-cache reads:   128 MB in  1.13 seconds =113.27 MB/sec
+>>  Timing buffered disk reads:  64 MB in  2.46 seconds = 26.02 MB/sec
+>> 
+>> /dev/hdc:
+>>  Timing buffer-cache reads:   128 MB in  1.13 seconds =113.27 MB/sec
+>>  Timing buffered disk reads:  64 MB in  2.47 seconds = 25.91 MB/sec
+>> 
+>> Are these normal values? I don't think so. Please advise.  
+>> 
+>> /Nicke
+>> 
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-ide" 
+>> in the body of a message to majordomo@vger.kernel.org More majordomo 
+>> info at  http://vger.kernel.org/majordomo-info.html
+>   
+> 
+ 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in the
+body of a message to majordomo@vger.kernel.org More majordomo info at
+http://vger.kernel.org/majordomo-info.html
 
---=20
-                Debian GNU/Linux: a dream come true
------------------------------------------------------------------------=
-------
-"Computers are useless. They can only give answers."            Pablo P=
-icasso
-
---->	Visita http://www.valux.org/ para saber acerca de la	<---
---->	Asociaci=F3n Valenciana de Usuarios de Linux		<---
