@@ -1,19 +1,19 @@
 From: ck <x@dsl.pipex.com>
 Subject: Stack Trace - problem ide? - system running ok?
-Date: Tue, 10 Feb 2004 08:28:14 +0000
+Date: Tue, 10 Feb 2004 08:39:28 +0000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4028961E.2040308@dsl.pipex.com>
+Message-ID: <402898C0.2020900@dsl.pipex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shockwave.systems.pipex.net ([62.241.160.9]:51373 "EHLO
-	shockwave.systems.pipex.net") by vger.kernel.org with ESMTP
-	id S265764AbUBJI2j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Feb 2004 03:28:39 -0500
+Received: from pengo.systems.pipex.net ([62.241.160.193]:17553 "EHLO
+	pengo.systems.pipex.net") by vger.kernel.org with ESMTP
+	id S265695AbUBJIjw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Feb 2004 03:39:52 -0500
 Received: from dsl.pipex.com (81-86-177-253.dsl.pipex.com [81.86.177.253])
-	by shockwave.systems.pipex.net (Postfix) with ESMTP id E865D1C000C3
-	for <linux-ide@vger.kernel.org>; Tue, 10 Feb 2004 08:28:35 +0000 (GMT)
+	by pengo.systems.pipex.net (Postfix) with ESMTP id 982DF4C001BB
+	for <linux-ide@vger.kernel.org>; Tue, 10 Feb 2004 08:39:49 +0000 (GMT)
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
@@ -31,17 +31,17 @@ dmesg
 ieee1394: Host added: ID:BUS[0-00:1023]  GUID[00023c00200018fd]
 Badness in kobject_get at lib/kobject.c:431
 Call Trace:
- [<c0241b8d>] kobject_get+0x4d/0x50
- [<c028c768>] get_device+0x18/0x30
- [<c028d3eb>] bus_for_each_dev+0x6b/0xd0
- [<f8eadadd>] nodemgr_node_probe+0x4d/0x130 [ieee1394]
- [<f8ead9a0>] nodemgr_probe_ne_cb+0x0/0x90 [ieee1394]
- [<f8eadf48>] nodemgr_host_thread+0x188/0x1b0 [ieee1394]
- [<f8eaddc0>] nodemgr_host_thread+0x0/0x1b0 [ieee1394]
- [<c0106ea9>] kernel_thread_helper+0x5/0xc
+  [<c0241b8d>] kobject_get+0x4d/0x50
+  [<c028c768>] get_device+0x18/0x30
+  [<c028d3eb>] bus_for_each_dev+0x6b/0xd0
+  [<f8eadadd>] nodemgr_node_probe+0x4d/0x130 [ieee1394]
+  [<f8ead9a0>] nodemgr_probe_ne_cb+0x0/0x90 [ieee1394]
+  [<f8eadf48>] nodemgr_host_thread+0x188/0x1b0 [ieee1394]
+  [<f8eaddc0>] nodemgr_host_thread+0x0/0x1b0 [ieee1394]
+  [<c0106ea9>] kernel_thread_helper+0x5/0xc
 
 Unable to handle kernel paging request at virtual address b828ec83
- printing eip:
+  printing eip:
 b828ec83
 *pde = 00000000
 Oops: 0000 [#1]
@@ -55,21 +55,21 @@ ds: 007b   es: 007b   ss: 0068
 Process knodemgrd_0 (pid: 3442, threadinfo=f7504000 task=f7d2a6b0)
 Stack: c0241c28 f8eba388 f8eba364 f8eba36c f8eba2c0 f74c6c44 c028d408 
 f8eba388
-       f7505f9c f8eba30c 00000000 f74c6c3c f7505f9c f76077d8 f7505f9c 
+        f7505f9c f8eba30c 00000000 f74c6c3c f7505f9c f76077d8 f7505f9c 
 f8eadadd
-       f8eba2c0 f74c6c3c f7505f9c f8ead9a0 f75f8000 f76077d8 f75f8000 
+        f8eba2c0 f74c6c3c f7505f9c f8ead9a0 f75f8000 f76077d8 f75f8000 
 f76077d8
 Call Trace:
- [<c0241c28>] kobject_cleanup+0x98/0xa0
- [<c028d408>] bus_for_each_dev+0x88/0xd0
- [<f8eadadd>] nodemgr_node_probe+0x4d/0x130 [ieee1394]
- [<f8ead9a0>] nodemgr_probe_ne_cb+0x0/0x90 [ieee1394]
- [<f8eadf48>] nodemgr_host_thread+0x188/0x1b0 [ieee1394]
- [<f8eaddc0>] nodemgr_host_thread+0x0/0x1b0 [ieee1394]
- [<c0106ea9>] kernel_thread_helper+0x5/0xc
+  [<c0241c28>] kobject_cleanup+0x98/0xa0
+  [<c028d408>] bus_for_each_dev+0x88/0xd0
+  [<f8eadadd>] nodemgr_node_probe+0x4d/0x130 [ieee1394]
+  [<f8ead9a0>] nodemgr_probe_ne_cb+0x0/0x90 [ieee1394]
+  [<f8eadf48>] nodemgr_host_thread+0x188/0x1b0 [ieee1394]
+  [<f8eaddc0>] nodemgr_host_thread+0x0/0x1b0 [ieee1394]
+  [<c0106ea9>] kernel_thread_helper+0x5/0xc
 
 Code:  Bad EIP value.
- <6>eth0: link up, 100Mbps, full-duplex, lpa 0x45E1
+  <6>eth0: link up, 100Mbps, full-duplex, lpa 0x45E1
 
 -------------------------------------
 [6.]
@@ -92,11 +92,11 @@ b8520a43 A __crc_auth_unix_add_addr
 root@diogenis linux-2.6.3-rc2 # dmesg | ksymoops -v vmlinux -m System.map
 -------------------------------------
 ksymoops 2.4.9 on i686 2.6.3-rc2.  Options used
-     -v vmlinux (specified)
-     -k /proc/ksyms (default)
-     -l /proc/modules (default)
-     -o /lib/modules/2.6.3-rc2/ (default)
-     -m System.map (specified)
+      -v vmlinux (specified)
+      -k /proc/ksyms (default)
+      -l /proc/modules (default)
+      -o /lib/modules/2.6.3-rc2/ (default)
+      -m System.map (specified)
 
 Error (regular_file): read_ksyms stat /proc/ksyms failed
 ksymoops: No such file or directory
@@ -105,14 +105,14 @@ No ksyms, skipping lsmod
 Machine check exception polling timer started.
 8139too Fast Ethernet driver 0.9.27
 Call Trace:
- [<c0241b8d>] kobject_get+0x4d/0x50
- [<c028c768>] get_device+0x18/0x30
- [<c028d3eb>] bus_for_each_dev+0x6b/0xd0
- [<f8eadadd>] nodemgr_node_probe+0x4d/0x130 [ieee1394]
- [<f8ead9a0>] nodemgr_probe_ne_cb+0x0/0x90 [ieee1394]
- [<f8eadf48>] nodemgr_host_thread+0x188/0x1b0 [ieee1394]
- [<f8eaddc0>] nodemgr_host_thread+0x0/0x1b0 [ieee1394]
- [<c0106ea9>] kernel_thread_helper+0x5/0xc
+  [<c0241b8d>] kobject_get+0x4d/0x50
+  [<c028c768>] get_device+0x18/0x30
+  [<c028d3eb>] bus_for_each_dev+0x6b/0xd0
+  [<f8eadadd>] nodemgr_node_probe+0x4d/0x130 [ieee1394]
+  [<f8ead9a0>] nodemgr_probe_ne_cb+0x0/0x90 [ieee1394]
+  [<f8eadf48>] nodemgr_host_thread+0x188/0x1b0 [ieee1394]
+  [<f8eaddc0>] nodemgr_host_thread+0x0/0x1b0 [ieee1394]
+  [<c0106ea9>] kernel_thread_helper+0x5/0xc
 Unable to handle kernel paging request at virtual address b828ec83
 b828ec83
 *pde = 00000000
@@ -126,18 +126,18 @@ esi: f8ead3a0   edi: 00000000   ebp: f8eac070   esp: f7505f40
 ds: 007b   es: 007b   ss: 0068
 Stack: c0241c28 f8eba388 f8eba364 f8eba36c f8eba2c0 f74c6c44 c028d408 
 f8eba388
-       f7505f9c f8eba30c 00000000 f74c6c3c f7505f9c f76077d8 f7505f9c 
+        f7505f9c f8eba30c 00000000 f74c6c3c f7505f9c f76077d8 f7505f9c 
 f8eadadd
-       f8eba2c0 f74c6c3c f7505f9c f8ead9a0 f75f8000 f76077d8 f75f8000 
+        f8eba2c0 f74c6c3c f7505f9c f8ead9a0 f75f8000 f76077d8 f75f8000 
 f76077d8
 Call Trace:
- [<c0241c28>] kobject_cleanup+0x98/0xa0
- [<c028d408>] bus_for_each_dev+0x88/0xd0
- [<f8eadadd>] nodemgr_node_probe+0x4d/0x130 [ieee1394]
- [<f8ead9a0>] nodemgr_probe_ne_cb+0x0/0x90 [ieee1394]
- [<f8eadf48>] nodemgr_host_thread+0x188/0x1b0 [ieee1394]
- [<f8eaddc0>] nodemgr_host_thread+0x0/0x1b0 [ieee1394]
- [<c0106ea9>] kernel_thread_helper+0x5/0xc
+  [<c0241c28>] kobject_cleanup+0x98/0xa0
+  [<c028d408>] bus_for_each_dev+0x88/0xd0
+  [<f8eadadd>] nodemgr_node_probe+0x4d/0x130 [ieee1394]
+  [<f8ead9a0>] nodemgr_probe_ne_cb+0x0/0x90 [ieee1394]
+  [<f8eadf48>] nodemgr_host_thread+0x188/0x1b0 [ieee1394]
+  [<f8eaddc0>] nodemgr_host_thread+0x0/0x1b0 [ieee1394]
+  [<c0106ea9>] kernel_thread_helper+0x5/0xc
 Code:  Bad EIP value.
 
 
@@ -313,52 +313,52 @@ root@diogenis linux-2.6.3-rc2 # cat /proc/ioports
 03f8-03ff : serial
 0cf8-0cff : PCI conf1
 1000-10ff : 0000:00:0b.0
-  1000-10ff : 8139too
+   1000-10ff : 8139too
 1400-141f : 0000:00:0c.0
-  1400-141f : EMU10K1
+   1400-141f : EMU10K1
 1430-143f : 0000:00:08.0
-  1430-1437 : ide2
-  1438-143f : ide3
+   1430-1437 : ide2
+   1438-143f : ide3
 1440-1443 : 0000:00:00.0
 1444-1447 : 0000:00:08.0
-  1446-1446 : ide3
+   1446-1446 : ide3
 1448-144f : 0000:00:08.0
-  1448-144f : ide3
+   1448-144f : ide3
 1450-1453 : 0000:00:08.0
-  1452-1452 : ide2
+   1452-1452 : ide2
 1458-145f : 0000:00:08.0
-  1458-145f : ide2
+   1458-145f : ide2
 1460-1467 : 0000:00:0c.1
-  1460-1467 : emu10k1-gp
+   1460-1467 : emu10k1-gp
 f000-f00f : 0000:00:07.1
-  f000-f007 : ide0
-  f008-f00f : ide1
+   f000-f007 : ide0
+   f008-f00f : ide1
 
 root@diogenis linux-2.6.3-rc2 # cat /proc/iomem
 00000000-0009f7ff : System RAM
 0009f800-0009ffff : reserved
 000a0000-000bffff : Video RAM area
 000dc000-000dcfff : 0000:00:07.4
-  000dc000-000dcfff : ohci_hcd
+   000dc000-000dcfff : ohci_hcd
 000e0000-000effff : Extension ROM
 000f0000-000fffff : System ROM
 00100000-3ffeffff : System RAM
-  00100000-0034431a : Kernel code
-  0034431b-0042013f : Kernel data
+   00100000-0034431a : Kernel code
+   0034431b-0042013f : Kernel data
 3fff0000-3ffffbff : ACPI Tables
 3ffffc00-3fffffff : ACPI Non-volatile Storage
 e8000000-e8003fff : 0000:00:08.0
 e8004000-e8007fff : 0000:00:0c.2
 e8009000-e80097ff : 0000:00:0c.2
-  e8009000-e80097ff : ohci1394
+   e8009000-e80097ff : ohci1394
 e8009800-e80098ff : 0000:00:0b.0
-  e8009800-e80098ff : 8139too
+   e8009800-e80098ff : 8139too
 e9000000-e9ffffff : PCI Bus #01
-  e9000000-e9ffffff : 0000:01:05.0
+   e9000000-e9ffffff : 0000:01:05.0
 ea000000-ea000fff : 0000:00:00.0
 ec000000-efffffff : 0000:00:00.0
 f0000000-f7ffffff : PCI Bus #01
-  f0000000-f7ffffff : 0000:01:05.0
+   f0000000-f7ffffff : 0000:01:05.0
 fec00000-fec0ffff : reserved
 fee00000-fee00fff : reserved
 fff80000-ffffffff : reserved
@@ -369,166 +369,165 @@ root@diogenis linux-2.6.3-rc2 # lspci -vvv
 ------------------------------------------
 00:00.0 Host bridge: Advanced Micro Devices [AMD] AMD-760 MP [IGD4-2P] 
 System Controller (rev 11)
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
 ParErr- Stepping- SERR- FastB2B-
-        Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort+ >SERR- <PERR-
-        Latency: 64
-        Region 0: Memory at ec000000 (32-bit, prefetchable) [size=64M]
-        Region 1: Memory at ea000000 (32-bit, prefetchable) [size=4K]
-        Region 2: I/O ports at 1440 [disabled] [size=4]
-        Capabilities: [a0] AGP version 2.0
-                Status: RQ=16 Iso- ArqSz=0 Cal=0 SBA+ ITACoh- GART64- 
+         Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium 
+ >TAbort- <TAbort- <MAbort+ >SERR- <PERR-
+         Latency: 64
+         Region 0: Memory at ec000000 (32-bit, prefetchable) [size=64M]
+         Region 1: Memory at ea000000 (32-bit, prefetchable) [size=4K]
+         Region 2: I/O ports at 1440 [disabled] [size=4]
+         Capabilities: [a0] AGP version 2.0
+                 Status: RQ=16 Iso- ArqSz=0 Cal=0 SBA+ ITACoh- GART64- 
 HTrans- 64bit- FW+ AGP3- Rate=x1,x2,x4
-                Command: RQ=1 ArqSz=0 Cal=0 SBA+ AGP+ GART64- 64bit- FW- 
-Rate=x4
+                 Command: RQ=1 ArqSz=0 Cal=0 SBA+ AGP+ GART64- 64bit- 
+FW- Rate=x4
 
 00:01.0 PCI bridge: Advanced Micro Devices [AMD] AMD-760 MP [IGD4-2P] 
 AGP Bridge (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
 ParErr- Stepping- SERR- FastB2B-
-        Status: Cap- 66Mhz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 99
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=68
-        I/O behind bridge: 0000f000-00000fff
-        Memory behind bridge: e9000000-e9ffffff
-        Prefetchable memory behind bridge: f0000000-f7ffffff
-        BridgeCtl: Parity- SERR- NoISA+ VGA+ MAbort- >Reset- FastB2B-
+         Status: Cap- 66Mhz+ UDF- FastB2B- ParErr- DEVSEL=medium 
+ >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+         Latency: 99
+         Bus: primary=00, secondary=01, subordinate=01, sec-latency=68
+         I/O behind bridge: 0000f000-00000fff
+         Memory behind bridge: e9000000-e9ffffff
+         Prefetchable memory behind bridge: f0000000-f7ffffff
+         BridgeCtl: Parity- SERR- NoISA+ VGA+ MAbort- >Reset- FastB2B-
 
 00:07.0 ISA bridge: Advanced Micro Devices [AMD] AMD-766 [ViperPlus] ISA 
 (rev 02)
-        Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- 
+         Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- 
 ParErr- Stepping- SERR- FastB2B-
-        Status: Cap- 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 0
+         Status: Cap- 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium 
+ >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+         Latency: 0
 
 00:07.1 IDE interface: Advanced Micro Devices [AMD] AMD-766 [ViperPlus] 
 IDE (rev 01) (prog-if 8a [Master SecP PriP])
-        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+         Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- 
 ParErr- Stepping- SERR- FastB2B-
-        Status: Cap- 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 64
-        Region 4: I/O ports at f000 [size=16]
+         Status: Cap- 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium 
+ >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+         Latency: 64
+         Region 4: I/O ports at f000 [size=16]
 
 00:07.3 Bridge: Advanced Micro Devices [AMD] AMD-766 [ViperPlus] ACPI 
 (rev 01)
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- 
+         Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- 
 ParErr- Stepping- SERR- FastB2B-
-        Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
+         Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium 
+ >TAbort- <TAbort- <MAbort- >SERR- <PERR-
 
 00:07.4 USB Controller: Advanced Micro Devices [AMD] AMD-766 [ViperPlus] 
 USB (rev 07) (prog-if 10 [OHCI])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- 
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- 
 ParErr- Stepping- SERR- FastB2B-
-        Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 16 (20000ns max)
-        Interrupt: pin D routed to IRQ 19
-        Region 0: Memory at 000dc000 (32-bit, non-prefetchable) [size=4K]
+         Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium 
+ >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+         Latency: 16 (20000ns max)
+         Interrupt: pin D routed to IRQ 19
+         Region 0: Memory at 000dc000 (32-bit, non-prefetchable) [size=4K]
 
 00:08.0 Unknown mass storage controller: Promise Technology, Inc. 20268 
 (rev 02) (prog-if 85)
-        Subsystem: Promise Technology, Inc. Ultra100TX2
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+         Subsystem: Promise Technology, Inc. Ultra100TX2
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
 ParErr- Stepping- SERR- FastB2B-
-        Status: Cap+ 66Mhz+ UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- 
+         Status: Cap+ 66Mhz+ UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- 
 <TAbort- <MAbort- >SERR- <PERR-
-        Latency: 64 (1000ns min, 4500ns max), cache line size 10
-        Interrupt: pin A routed to IRQ 16
-        Region 0: I/O ports at 1458 [size=8]
-        Region 1: I/O ports at 1450 [size=4]
-        Region 2: I/O ports at 1448 [size=8]
-        Region 3: I/O ports at 1444 [size=4]
-        Region 4: I/O ports at 1430 [size=16]
-        Region 5: Memory at e8000000 (32-bit, non-prefetchable) [size=16K]
-        Expansion ROM at <unassigned> [disabled] [size=16K]
-        Capabilities: [60] Power Management version 1
-                Flags: PMEClk- DSI+ D1+ D2- AuxCurrent=0mA 
+         Latency: 64 (1000ns min, 4500ns max), cache line size 10
+         Interrupt: pin A routed to IRQ 16
+         Region 0: I/O ports at 1458 [size=8]
+         Region 1: I/O ports at 1450 [size=4]
+         Region 2: I/O ports at 1448 [size=8]
+         Region 3: I/O ports at 1444 [size=4]
+         Region 4: I/O ports at 1430 [size=16]
+         Region 5: Memory at e8000000 (32-bit, non-prefetchable) [size=16K]
+         Expansion ROM at <unassigned> [disabled] [size=16K]
+         Capabilities: [60] Power Management version 1
+                 Flags: PMEClk- DSI+ D1+ D2- AuxCurrent=0mA 
 PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 
 00:0b.0 Ethernet controller: Realtek Semiconductor Co., Ltd. 
 RTL-8139/8139C/8139C+ (rev 10)
-        Subsystem: Realtek Semiconductor Co., Ltd. RT8139
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+         Subsystem: Realtek Semiconductor Co., Ltd. RT8139
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
 ParErr- Stepping- SERR- FastB2B-
-        Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 64 (8000ns min, 16000ns max)
-        Interrupt: pin A routed to IRQ 19
-        Region 0: I/O ports at 1000 [size=256]
-        Region 1: Memory at e8009800 (32-bit, non-prefetchable) [size=256]
-        Expansion ROM at <unassigned> [disabled] [size=64K]
+         Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium 
+ >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+         Latency: 64 (8000ns min, 16000ns max)
+         Interrupt: pin A routed to IRQ 19
+         Region 0: I/O ports at 1000 [size=256]
+         Region 1: Memory at e8009800 (32-bit, non-prefetchable) [size=256]
+         Expansion ROM at <unassigned> [disabled] [size=64K]
 
 00:0c.0 Multimedia audio controller: Creative Labs SB Audigy (rev 03)
-        Subsystem: Creative Labs SB0090 Audigy Player
-        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+         Subsystem: Creative Labs SB0090 Audigy Player
+         Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- 
 ParErr- Stepping- SERR- FastB2B-
-        Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 64 (500ns min, 5000ns max)
-        Interrupt: pin A routed to IRQ 16
-        Region 0: I/O ports at 1400 [size=32]
-        Capabilities: [dc] Power Management version 2
-                Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA 
+         Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium 
+ >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+         Latency: 64 (500ns min, 5000ns max)
+         Interrupt: pin A routed to IRQ 16
+         Region 0: I/O ports at 1400 [size=32]
+         Capabilities: [dc] Power Management version 2
+                 Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA 
 PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 
 00:0c.1 Input device controller: Creative Labs SB Audigy MIDI/Game port 
 (rev 03)
-        Subsystem: Creative Labs SB Audigy MIDI/Game Port
-        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+         Subsystem: Creative Labs SB Audigy MIDI/Game Port
+         Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- 
 ParErr- Stepping- SERR- FastB2B-
-        Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 64
-        Region 0: I/O ports at 1460 [size=8]
-        Capabilities: [dc] Power Management version 2
-                Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA 
+         Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium 
+ >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+         Latency: 64
+         Region 0: I/O ports at 1460 [size=8]
+         Capabilities: [dc] Power Management version 2
+                 Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA 
 PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 
 00:0c.2 FireWire (IEEE 1394): Creative Labs SB Audigy FireWire Port 
 (prog-if 10 [OHCI])
-        Subsystem: Creative Labs SB Audigy FireWire Port
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- 
+         Subsystem: Creative Labs SB Audigy FireWire Port
+         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- 
 ParErr- Stepping- SERR- FastB2B-
-        Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 64 (500ns min, 1000ns max), cache line size 10
-        Interrupt: pin B routed to IRQ 17
-        Region 0: Memory at e8009000 (32-bit, non-prefetchable) [size=2K]
-        Region 1: Memory at e8004000 (32-bit, non-prefetchable) [size=16K]
-        Capabilities: [44] Power Management version 2
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA 
+         Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium 
+ >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+         Latency: 64 (500ns min, 1000ns max), cache line size 10
+         Interrupt: pin B routed to IRQ 17
+         Region 0: Memory at e8009000 (32-bit, non-prefetchable) [size=2K]
+         Region 1: Memory at e8004000 (32-bit, non-prefetchable) [size=16K]
+         Capabilities: [44] Power Management version 2
+                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA 
 PME(D0+,D1+,D2+,D3hot+,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME+
+                 Status: D0 PME-Enable- DSel=0 DScale=0 PME+
 
 01:05.0 VGA compatible controller: nVidia Corporation NV11DDR [GeForce2 
 MX 100 DDR/200 DDR] (rev b2) (prog-if 00 [VGA])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
 ParErr- Stepping- SERR- FastB2B-
-        Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 64 (1250ns min, 250ns max)
-        Interrupt: pin A routed to IRQ 18
-        Region 0: Memory at e9000000 (32-bit, non-prefetchable) [size=16M]
-        Region 1: Memory at f0000000 (32-bit, prefetchable) [size=128M]
-        Expansion ROM at <unassigned> [disabled] [size=64K]
-        Capabilities: [60] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
+         Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium 
+ >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+         Latency: 64 (1250ns min, 250ns max)
+         Interrupt: pin A routed to IRQ 18
+         Region 0: Memory at e9000000 (32-bit, non-prefetchable) [size=16M]
+         Region 1: Memory at f0000000 (32-bit, prefetchable) [size=128M]
+         Expansion ROM at <unassigned> [disabled] [size=64K]
+         Capabilities: [60] Power Management version 2
+                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
 PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [44] AGP version 2.0
-                Status: RQ=32 Iso- ArqSz=0 Cal=0 SBA- ITACoh- GART64- 
+                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+         Capabilities: [44] AGP version 2.0
+                 Status: RQ=32 Iso- ArqSz=0 Cal=0 SBA- ITACoh- GART64- 
 HTrans- 64bit- FW+ AGP3- Rate=x1,x2,x4
-                Command: RQ=1 ArqSz=0 Cal=0 SBA- AGP- GART64- 64bit- FW- 
-Rate=<none>
+                 Command: RQ=1 ArqSz=0 Cal=0 SBA- AGP- GART64- 64bit- 
+FW- Rate=<none>
 ------------------------------------
 [7.6.] no scsi
 -----------------------------------
-
