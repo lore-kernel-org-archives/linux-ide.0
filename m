@@ -1,37 +1,45 @@
-From: tho@doma.ballum.wikaba.com
-Subject: kernel panic in ide_init_queue (if tagged command queueing
-	is configured)
-Date: Wed, 20 Nov 2002 15:35:37 -0800
+From: =?ISO-8859-1?Q?Yann_Le_Doar=E9?= <yledoare@free.fr>
+Subject: new option : ide-scsi only for CD-writers ?
+Date: Mon, 25 Nov 2002 09:43:36 +0000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <E18EeNd-0007ni-00@doma.ballum>
-Reply-To: gthomsen@sbcglobal.net
+Message-ID: <3DE1F0C8.6070404@free.fr>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1;
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from localhost
-	([127.0.0.1] helo=doma.ballum.wikaba.com ident=foobar)
-	by doma.ballum with esmtp (Exim 3.35 #1 (Debian))
-	id 18EeNd-0007ni-00
-	for <linux-ide@vger.kernel.org>; Wed, 20 Nov 2002 15:35:37 -0800
+Received: from mel-rta8.wanadoo.fr (193.252.19.79) by mel-rto4.wanadoo.fr (6.5.007)
+        id 3DDA133F003B02F0 for linux-ide@vger.kernel.org; Mon, 25 Nov 2002 11:20:01 +0100
+Received: from free.fr (193.250.155.94) by mel-rta8.wanadoo.fr (6.5.007)
+        id 3DD0D42700779771 for linux-ide@vger.kernel.org; Mon, 25 Nov 2002 11:20:01 +0100
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Hi,
+Hi !
 
-the 2.5.4x (for x in {4,7,8} verified) panics in ide_init_queue on my
-IBM ThinkPad X21 (2662XXK) with 20GB TravelStar (IC25N020ATCS04-0) if
- CONFIG_BLK_DEV_IDE_TCQ is set.
+I have a project : http://linuxconsole.free.fr where I am using Linux t=
+o=20
+boot on CD then use mutimedia apps & games.
 
-Should the laptop/harddisk on a blacklist or is that feature _that_
-experimental?
+Options (ex networks, games prefs & backups) can be saved by burning ne=
+w=20
+session on CD.
 
-Please let me know, if I can provide more information to help solve
-this issue (which is minor, _if_ it is documented).
+My problem is :  with ATAPI CD-writers, there are not other choices tha=
+n=20
+precise where is the CD-writer at boot prompt, ie which device uses SCS=
+I=20
+emulation (/dev/hddb, /dev/hdc or /dev/hdd).
 
-cheers
-    Guenther
+It would be better if automaticaly only the CD-Writer had  ide-scsi=20
+module enabled.
 
-PS: Please e-mail me directly, as I do not frequent this list.
-PS2: Oops, I almost sent the System map, but that beast is 0.5MB
-uncompressed. I'm sure not everyone on the list wants that ;-}
+So my question : is it a good idea to make a new option for ide module=20
+that use "ide-scsi" only with CD-writers devices ?
 
-#text/plain; name="2.5.47-panic" [reg dump / stack trace] /home/tho/2.5.47-panic
+(I could write a patch)
+
+Thanks.
+
+Yann Le Doar=E9, France
+
 
