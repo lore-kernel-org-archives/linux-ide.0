@@ -1,63 +1,68 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SATA ATAPI work in progress
-Date: Sat, 15 May 2004 12:32:56 -0400
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: Re: [PATCH] libata-core when not ata_id_use_dmadir despite yes SiliconI mage
+Date: Sat, 15 May 2004 18:38:15 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40A64638.9060202@pobox.com>
-References: <1084393233.3999.2.camel@patibmrh9> <40A28BB6.7090204@pobox.com>	<1084403654.3196.31.camel@patibmrh9>  <40A3E595.8000003@pobox.com><108455  	9	000.4017.52.camel@patibmrh9>  <40A51604.8070208@pobox.com><1084578453.5 3	4	 3.	26.camel@patibmrh9><1084579362.3271.5.camel@patibmrh9> <40A5669B.608 	010	8@pobox.com><1084626376.3079.8.camel@patibmrh9> <1084628978.5082.7.ca m	el@patibmrh9><40A636D2.3090205@pobox.com>  <1084636180.3083.17.camel@patibm	rh9><1084636590.3083.25.camel@patibmrh9> <1084637040.3440.5.camel@patibmrh9>
+Message-ID: <200405151838.15898.bzolnier@elka.pw.edu.pl>
+References: <1084630807.5082.42.camel@patibmrh9> <200405151633.10473.bzolnier@elka.pw.edu.pl> <40A64229.7000600@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:59549 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264682AbUEOQdI
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:23022 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264683AbUEOQg2
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 May 2004 12:33:08 -0400
-In-Reply-To: <1084637040.3440.5.camel@patibmrh9>
+	Sat, 15 May 2004 12:36:28 -0400
+In-Reply-To: <40A64229.7000600@pobox.com>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Pat LaVarre <p.lavarre@ieee.org>, linux-ide@vger.kernel.org
 
-Pat LaVarre wrote:
-> kernel: ata_scsi_dump_cdb: CDB (2:0,0,0) 00 00 00 00 00 00 00 00 00
-> kernel: ata_scsi_translate: ENTER
-> kernel: ata2(0): empty request buffer
-> kernel: ata_scsi_badcmd: ENTER
-> kernel: ata_scsi_translate: EXIT - badcmd
+On Saturday 15 of May 2004 18:15, Jeff Garzik wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > On Saturday 15 of May 2004 16:20, Pat LaVarre wrote:
+> >>>>>Subject: Re: SATA ATAPI work in progress
+> >>>>>...
+> >>>>>I doubt I can use this patch as is.  I believe,
+> >>>>>because I assembled my drive from components myself,
+> >>>>>its op xA1 Identify data has not changed,
+> >>>>>so I will see a misleading 0 False at:
+> >>>>>
+> >>>>>#define ata_id_use_dmadir(dev) ((dev)->id[62] & (1 << 15))
+> >>>
+> >>>Theory confirmed!
+> >>
+> >>Consequently now:
+> >>
+> >>In t13.org since the dawn of time, I see the requirement that compliant
+> >>ATAPI devices tolerate hosts creatively choosing to copy
+> >>(cmd->sc_data_direction != SCSI_DATA_WRITE) into (ata_taskfile.feature &
+> >>x04 ATAPI_DMADIR).
+> >>
+> >>I see devices constructed with Silicon Image 3611CT80 1.4 require such a
+> >>courtesy from the host.
+> >>
+> >>Therefore I propose that Linux, as host, offer that courtesy always.
+> >
+> > Makes sense.
+> >
+> > Jeff, if you decide to do this remember to kill ata_id_use_dmadir()
+> > and ATA_DFLAG_DMADIR completely.  [ I'm sure you will. :-) ]
+>
+> According to ATA/ATAPI7,
+>
+> 	A device that does not support the DMADIR feature may abort a
+> 	command if the DMADIR bit is set to 1.
+>
+> And this language makes sense, since it is unknown what all those cheap
+> old ATAPI devices will do.  It's too risky to simply set this bit for
+> all ATAPI devices, without lots of testing.
 
-TEST UNIT READY.  We probably just delete the following check, which 
-appears to be bogus now.  I can't remember why I put this in here...
+OK
 
-         if (unlikely(cmd->request_bufflen < 1)) {
-                 printk(KERN_WARNING "ata%u(%u): empty request buffer\n",
-                        ap->id, dev->devno);
-                 goto err_out;
-         }
+> We can do so for our development here, but a better solution based on
+> released parts will need to be found...
 
-
-> kernel: ata_scsi_dump_cdb: CDB (2:0,0,0) 5a 00 2a 00 00 00 00 00 80
-> kernel: ata_scsi_translate: ENTER
-> kernel: ata_sg_setup_one: mapped buffer of 128 bytes for read
-> kernel: ata_fill_sg: PRD[0] = (0x46EE00, 0x80)
-> kernel: ata_dev_select: ENTER, ata2: device 0, wait 1
-> kernel: ata_tf_load_pio: feat 0x5 nsect 0x0 lba 0x0 0x0 0x0
-> kernel: ata_tf_load_pio: device 0xA0
-> kernel: ata_exec_command_pio: ata2: cmd 0xA0
-> kernel: ata_scsi_translate: EXIT
-> kernel: atapi_packet_task: busy wait
-> kernel: atapi_packet_task: send cdb
-> kernel: ata_host_intr: BUS_DMA (host_stat 0x25)
-> kernel: ata_dma_complete: ENTER
-> kernel: ata_dma_complete: host 2, host_stat==0x25, drv_stat==0x51
-
-MODE SENSE 10.
-
-We see from drv_stat==0x51 that the device is signalling 'CHECK 
-CONDITION', so we need to issue a REQUEST SENSE at this point.
-
-Seems like we are pretty close.  Once I add the code to issue a REQUEST 
-SENSE, I bet things start working.
-
-	Jeff
-
-
+Do you know of some way to detect SI 3611CT80 1.4?
 
