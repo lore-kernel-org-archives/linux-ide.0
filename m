@@ -1,116 +1,40 @@
-From: James Stevenson <james@stev.org>
-Subject: Re: ATA/133 Problems with multiple cards
-Date: Sun, 17 Oct 2004 18:45:29 +0100 (BST)
+From: linux@horizon.com
+Subject: Re: Who is working on the Marvell SATA Chipset?
+Date: 18 Oct 2004 05:06:57 -0000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0410171837280.22150-100000@beast.stev.org>
-References: <58cb370e04101707456aa41970@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <20041018050657.27810.qmail@science.horizon.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jstevenson.plus.com ([212.159.71.212]:33923 "EHLO
-	beast.stev.org") by vger.kernel.org with ESMTP id S269205AbUJQRMk
+Received: from science.horizon.com ([192.35.100.1]:63032 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S265477AbUJRFG6
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 17 Oct 2004 13:12:40 -0400
-In-Reply-To: <58cb370e04101707456aa41970@mail.gmail.com>
+	Mon, 18 Oct 2004 01:06:58 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Ian Pilcher <i.pilcher@comcast.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernelnewbies@nl.linux.org, James Stevenson <james@stev.org>
+To: linux-ide@vger.kernel.org
 
-On Sun, 17 Oct 2004, Bartlomiej Zolnierkiewicz wrote:
+> I would love to be buying the 8 port pci-x marvells for nas boxes where 
+> we're doing JBOD or software raid.
 
-> > i did actually kind of get the card's working together but ran into
-> > another problem.
-> > 
-> > when i boot with ide=nodma and then turn on dma manually on all the other
-> > cards / board chipset etc... they all function fine
-> > 
-> > then i can only turn the dma up to ATA/100 if i set it to ata/133 it will
-> > cause the errors. I assume this is something todo with the promise bois
-> > not setting up the 3rd card at boot time. It only shows drive listing for
-> > 2 of the 3 cards.
-> 
-> There were very similar problems reported in the past and they were
-> fixed by replacing power supply with a better one.
+Me too, but I'm really trying to get hardware with NCQ support.  Some of
+the Seagate 7200.7 series (the ST3xxx8xxAS drives, to be precise; look
+for the 8 in the part number) support NCQ, are reasonably priced, and
+have 5-year warranties.  So that part's easy.
 
-I dont beleave the power supply to be a problem here. Since the problem
-is local to just this 1 card. No matter where i place it on the pci bus
-or swap it with the other promise cards the 3rd promise card on the bus 
-always fails. I have placed this also below / above a network card + scsi 
-card in the same machine. A volt meter on the power supply is giving 
-correct results. If the power supply was to be failing under load would 
-this not leed to more unpredictable lockups ?
+My problem is finding an *88SX6040*-based adapter card.
+All the ones I can find (the SuperMicro DAC-SATA-MV8 and the
+Highpoint RocketRaid 1820A) are non-NCQ 88SX5040 designs.
 
-eg running both commands at the same time.
-cat /dev/zero > /dev/hdi
-cat /dev/zero > /dev/hdk
-will not cause a lockup
+Even if the software support isn't there now, it's nice to buy
+future-proof hardware, and NCQ should help a file or database server
+a lot.
 
-cat /dev/zero > /dev/hdm
-cat /dev/zero > /dev/hdo
+So at the moment I'm waiting for the Promise SATAII150 SX8 to come
+available, but I'm open to other suggestions.
 
-will always cause a lockup with as soon as the disks start writing.
-I have tried with all combinations of the disks / cables.
+(Note that the Marvell binary driver poperly designed as a Marvell-
+supplied chipset access library and and source-supplied device driver
+wrapper.  So it shouldn't be too brittle in the face of kernel changes.)
 
-running a single command cat /dev/zero > /dev/hdm will not cause a lockup
-nor will the other command. Only when they are both running together will
-it cause a problem. I can even run
-cat /dev/zero > /dev/hdi
-cat /dev/zero > /dev/hdk
-cat /dev/zero > /dev/hdm
-together without causing a lockup.
-hdi and hdk are located on the 2nd promise card. hdm hdo are on the 3rd 
-card.
- 
-> Also you shouldn't need to use "ide=nodma" and play with hdparm,
-> driver should tune the best mode available.  If this doesn't work then
-> something needs fixing.
+Anyway, does anyone have any suggestions for a PCI-X 8-port SATA controller
+with NCQ support?
 
-> You can find out if BIOS/driver configures cards correctly by
-> comparing PCI config space (lspci -xxx) for working/non-working
-> controller.
-
-The output of the 3 cards matches except for the memory address.
- 
-
-	James
-
-> > Unfortunatly this generated another problem.
-> > When read from both drives at the same time it functions normally and
-> > see resonable performance. When i attempt to write to both drives it will
-> > cause the machine to lockup.
-> > 
-> >         James
-> > 
-> > 
-> > 
-> > On Thu, 14 Oct 2004, Bartlomiej Zolnierkiewicz wrote:
-> > 
-> > > On Thu, 14 Oct 2004 13:12:42 -0500, Ian Pilcher <i.pilcher@comcast.net> wrote:
-> > > > James Stevenson wrote:
-> > > > >
-> > > > > i seem to have run into an annoying problem with a machine which has
-> > > > > 3 promise ata/133 card the PDC20269 type.
-> > > > >
-> > > >
-> > > > ....
-> > > >
-> > > > >
-> > > > > Does anyone have an explenation of why this can happen ?
-> > >
-> > > * check power supply
-> > > * compare PCI config space of the "failing" controller to the one which
-> > >   is "working" (assuming that identical devices are connected to each),
-> > >   maybe firmware/driver forgets to setup some settings
-> > >
-> > > > Promise cards don't support more than two per machine.  If you can get a
-> > > > third card to work in PIO mode, consider it an added (but unsupported)
-> > > > bonus.
-> > >
-> > > AFAIR people have been running 4-5 cards just fine
-
--- 
---------------------------
-Mobile: +44 07779080838
-http://www.stev.org
-  6:30pm  up 1 day,  3:12,  2 users,  load average: 0.07, 0.03, 0.00
-
+Thanks!
