@@ -1,68 +1,75 @@
-From: Jarno Paananen <jpaana@s2.org>
-Subject: Re: Promise 579 with current(?) libata in libata-dev-2.6 queue
-Date: Mon, 25 Oct 2004 20:56:00 +0300
+From: Eric Mudama <edmudama@gmail.com>
+Subject: Re: sata_promise performance observations
+Date: Mon, 25 Oct 2004 11:55:28 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <m3d5z6iswf.fsf@kalahari.s2.org>
-References: <m3sm8ljkco.fsf@kalahari.s2.org> <417023B6.9070900@pobox.com>
+Message-ID: <311601c904102510555d7c0810@mail.gmail.com>
+References: <417A1826.5010502@wasp.net.au>
+Reply-To: Eric Mudama <edmudama@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.org ([195.197.64.39]:919 "EHLO kalahari.s2.org")
-	by vger.kernel.org with ESMTP id S261239AbUJYR4E (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Oct 2004 13:56:04 -0400
-In-Reply-To: <417023B6.9070900@pobox.com> (Jeff Garzik's message of "Fri, 15
- Oct 2004 15:23:34 -0400")
+Received: from rproxy.gmail.com ([64.233.170.192]:61124 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261233AbUJYRzc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Oct 2004 13:55:32 -0400
+Received: by rproxy.gmail.com with SMTP id 77so457460rnk
+        for <linux-ide@vger.kernel.org>; Mon, 25 Oct 2004 10:55:28 -0700 (PDT)
+In-Reply-To: <417A1826.5010502@wasp.net.au>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Brad Campbell <brad@wasp.net.au>
 Cc: linux-ide@vger.kernel.org
 
-Hi again,
+arbitration between the multiple PCI cards?  A single card that
+doesn't have to compete for PCI resources would, in theory, be
+faster...
 
-also the PATA port seems to work fine:
-
-libata version 1.02 loaded.
-sata_promise version 1.00
-ACPI: PCI interrupt 0000:00:0d.0[A] -> GSI 17 (level, low) -> IRQ 169
-sata_promise PATA port found
-ata1: SATA max UDMA/133 cmd 0xF8812200 ctl 0xF8812238 bmdma 0x0 irq 169
-ata2: SATA max UDMA/133 cmd 0xF8812280 ctl 0xF88122B8 bmdma 0x0 irq 169
-ata3: PATA max UDMA/133 cmd 0xF8812300 ctl 0xF8812338 bmdma 0x0 irq 169
-ata1: dev 0 cfg 49:2f00 82:7c69 83:4f09 84:4003 85:7c69 86:0e01 87:4003 88:407f
-ata1: dev 0 ATA, max UDMA/133, 240121728 sectors: lba48
-ata1(0): applying bridge limits
-ata1: dev 0 configured for UDMA/100
-scsi1 : sata_promise
-ata2: dev 0 cfg 49:2f00 82:346b 83:7f01 84:4003 85:3c69 86:3c01 87:4003 88:203f
-ata2: dev 0 ATA, max UDMA/100, 312581808 sectors: lba48
-ata2(0): applying bridge limits
-ata2: dev 0 configured for UDMA/100
-scsi2 : sata_promise
-ata3: dev 0 cfg 49:2f00 82:7c69 83:4309 84:4000 85:7c69 86:0201 87:4000 88:203f
-ata3: dev 0 ATA, max UDMA/100, 160086528 sectors:
-ata3: dev 0 configured for UDMA/100
-scsi3 : sata_promise
-  Vendor: ATA       Model: Maxtor 4G120J6    Rev: GAK8
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-  Vendor: ATA       Model: SAMSUNG SV1604N   Rev: TR10
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-  Vendor: ATA       Model: Maxtor 98196H8    Rev: ZAH8
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sda: 71833096 512-byte hdwr sectors (36779 MB)
-SCSI device sda: drive cache: write back
- sda: sda1 sda2 sda3 < sda5 sda6 sda7 >
-Attached scsi disk sda at scsi0, channel 0, id 3, lun 0
-SCSI device sdb: 240121728 512-byte hdwr sectors (122942 MB)
-SCSI device sdb: drive cache: write back
- sdb: sdb1 < sdb5 sdb6 sdb7 >
-Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
-SCSI device sdc: 312581808 512-byte hdwr sectors (160042 MB)
-SCSI device sdc: drive cache: write back
- sdc: sdc1 sdc2 < sdc5 >
-Attached scsi disk sdc at scsi2, channel 0, id 0, lun 0
-SCSI device sdd: 160086528 512-byte hdwr sectors (81964 MB)
-SCSI device sdd: drive cache: write back
- sdd: sdd1 < sdd5 sdd6 sdd7 >
-Attached scsi disk sdd at scsi3, channel 0, id 0, lun 0
+(Don't know much about this chunk of hardware, 'tis only a guess)
 
 
-// Jarno
+On Sat, 23 Oct 2004 12:36:54 +0400, Brad Campbell <brad@wasp.net.au> wrote:
+> G'day all,
+> 
+> Interesting observation with 3 SATA150TX4 cards and 10 Maxtor Maxline-II 250GB SATA drives.
+> 
+> If I run a concurrent dd if=/dev/sda > /dev/null and dd if=/dev/sdb > /dev/null I get the expected
+> 115MB/s transfer rates in vmstat.
+> 
+> If I do a dd if=/dev/sda > /dev/null and dd if=/dev/sde > /dev/null I get about 80MB/s
+> 
+> sda, sde & sdi I get
+> procs -----------memory---------- ---swap-- -----io---- --system-- ----cpu----
+> 
+>   3  0  22540   2560 463908   5320    0    0 85294    16 1102   761 11 88  0  1
+>   3  1  22540   1480 464852   5320    0    0 86493    25  987   512 13 86  0  0
+>   2  2  22540   2176 464304   5268    0    0 86774    18 1091   721 12 87  0  1
+>   2  2  22540   1488 464860   5368    0    0 85562    18  921   416 13 87  0  0
+> 
+> When streaming from drives not on the same controller, I lose about 30mb/s transfer rate. In fact,
+> it seems to max out at about 86MB/s no matter what combination of drives I use if I stream from more
+> than one controller.
+> 
+> However, if I use sda, sbb & sdc I get
+> 
+> procs -----------memory---------- ---swap-- -----io---- --system-- ----cpu----
+> 
+>   0  3  22512   1768 464448   5304    0    0 121661    18 1257   566  9 59  0 32
+>   0  3  22512   1536 464696   5316    0    0 122903    14 1262   578 10 59  0 31
+>   0  3  22512   2112 464228   5268    0    0 121655    14 1255   578  9 60  0 32
+> 
+> How bizzare. I have latency set to 32 on all controllers, but I have tried as low as 8 and as high
+> as 128 to no avail.
+> 
+> I have readahead set to 4096 on all devices.
+> 
+> Anyone have any ideas?
+> 
+> Not that this is an issue for me (I'm only using it as a fileserver over GB eth so its not like
+> 100MB/s is actually required, just an interesting observation)
+> 
+> Regards,
+> Brad
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
