@@ -1,48 +1,34 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [BK PATCH] 2.6.x libata build fix
-Date: Sun, 14 Nov 2004 05:24:02 -0500
-Message-ID: <20041114102402.GA31550@havoc.gtf.org>
+Subject: Re: SATA II 150 TX4
+Date: Sun, 14 Nov 2004 19:06:51 -0500
+Message-ID: <4197F31B.7030904@pobox.com>
+References: <1100188388.3127.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.28.190.101]:21407 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S261279AbUKNKZP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Nov 2004 05:25:15 -0500
-Content-Disposition: inline
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:32689 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261381AbUKOAHP
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 14 Nov 2004 19:07:15 -0500
+In-Reply-To: <1100188388.3127.24.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-ide@vger.kernel.org, hch@infradead.org
+To: Ole Barnkob Kaas <obk@futarque.com>
+Cc: linux-ide@vger.kernel.org
+
+Ole Barnkob Kaas wrote:
+> Hello,
+> 
+> I'm stuck with two SATA II 150 TX4 cards. So I was wondering if anyone
+> is developing a driver for that card? Maybe theres some beta or alfa
+> stuff worth testing? Maybe I could help with some hardware for
+> development.
+
+Someone in the linux-ide archives found a ~2 line patch that made 
+sata_promise work with these cards.
+
+	Jeff
 
 
-Please do a
 
-	bk pull bk://gkernel.bkbits.net/libata-2.6
-
-This will update the following files:
-
- drivers/scsi/sata_svw.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-through these ChangeSets:
-
-<hch@lst.de> (04/11/14 1.2138)
-   [PATCH] fix sata_svw compile
-   
-   Current BK doesn't compile with the G5 defconfig because the last
-   libata updated missed to change sata_svw to the new conventions.
-   
-   Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
-
-diff -Nru a/drivers/scsi/sata_svw.c b/drivers/scsi/sata_svw.c
---- a/drivers/scsi/sata_svw.c	2004-11-14 05:23:31 -05:00
-+++ b/drivers/scsi/sata_svw.c	2004-11-14 05:23:31 -05:00
-@@ -245,7 +245,7 @@
- 		return 0;
- 
- 	/* Find the OF node for the PCI device proper */
--	np = pci_device_to_OF_node(ap->host_set->pdev);
-+	np = pci_device_to_OF_node(to_pci_dev(ap->host_set->dev));
- 	if (np == NULL)
- 		return 0;
- 
