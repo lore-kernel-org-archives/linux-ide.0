@@ -1,60 +1,82 @@
-From: mru@kth.se (=?iso-8859-1?q?M=E5ns_Rullg=E5rd?=)
+From: Daniel Brahneborg <basic@wtnord.net>
 Subject: Re: RAID5 over Serial-ATA success stories?
-Date: Wed, 07 Jan 2004 22:56:32 +0100
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <yw1xn08z8ltb.fsf@ford.guide>
-References: <20040107223657.A5315@nettis.grimsta>
+Date: Thu, 8 Jan 2004 08:57:11 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20040108085711.A2500@nettis.grimsta>
+References: <20040107223657.A5315@nettis.grimsta> <yw1xn08z8ltb.fsf@ford.guide>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 212-214-141-205.v-by.wtnord.net ([212.214.141.205]:27776 "EHLO
+	ricercar.mine.nu") by vger.kernel.org with ESMTP id S263723AbUAHH50
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Jan 2004 02:57:26 -0500
+Content-Disposition: inline
+In-Reply-To: <yw1xn08z8ltb.fsf@ford.guide>; from mru@kth.se on Wed, Jan 07, 2004 at 10:56:32PM +0100
 List-Id: linux-ide@vger.kernel.org
+To: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mru@kth.se>
+Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 
-Daniel Brahneborg <daniel.com@wtnord.net> writes:
+Thanks for the feedback, it's very valuable to me.
 
-> Hi,
->
-> I'd like to hear some success stories for RAID5 on Serial-ATA disks.
-> Which Serial-ATA card are you using?  Do you get decent performance?
-> Is it stable with DMA enabled?  Do you use the 2.4 or 2.6 kernel?
->
-> I know this much:
->
-> It doesn't work with Silicon Image.
+On Wed, Jan 07, 2004 at 10:56:32PM +0100, M=E5ns Rullg=E5rd wrote:
+> Daniel Brahneborg <daniel.com@wtnord.net> writes:
+>=20
+> > I'd like to hear some success stories for RAID5 on Serial-ATA disks=
+=2E
+> > Which Serial-ATA card are you using?  Do you get decent performance=
+?
+> > Is it stable with DMA enabled?  Do you use the 2.4 or 2.6 kernel?
+> >
+> > I know this much:
+> >
+> > It doesn't work with Silicon Image.
+>=20
+> What doesn't work?  There are drivers, at least in 2.6.  Raid should
+> care about what sort of disks you use.
 
-What doesn't work?  There are drivers, at least in 2.6.  Raid should
-care about what sort of disks you use.
+When using it for normal disks e2fsck reports bad blocks all
+over the disk. When used for RAID, I get corrupted data.  Not
+much, maybe every second time for a file of 500MB.
+This is with the IDE driver.  With the SCSI driver, my computer
+completely freezes when I activate my second network card (as I
+reported earlier, unfortunately still without a solution).
+RAID might work with that driver, but unless the network card
+problem is solved, that doesn't help me.
 
-> It doesn't work with VIA (yet, anyway).
-> It might work with HighPoint.
+> > It doesn't work with VIA (yet, anyway).
+> > It might work with HighPoint.
+>=20
+> I've run RAID5 on a Highpoint RocketRAID 1540.  I used ATA disks with
+> SATA converters, though.  Works with both 2.4 and 2.6.
 
-I've run RAID5 on a Highpoint RocketRAID 1540.  I used ATA disks with
-SATA converters, though.  Works with both 2.4 and 2.6.
+Sounds good to hear.  It's the second cheapest card for me.
 
-> It probably works with Promise.
-> I don't know if there's a driver for Adaptec.
+> > It probably works with Promise.
+> > I don't know if there's a driver for Adaptec.
+>=20
+> Which Adaptec card?  The 12xx cards are fakeraid, but are supported a=
+s
+> normal cards.  The 24xx cards are true hardware RAID cards.  Linux
+> drivers exist for these, too.
 
-Which Adaptec card?  The 12xx cards are fakeraid, but are supported as
-normal cards.  The 24xx cards are true hardware RAID cards.  Linux
-drivers exist for these, too.
+It's the 12xx cards that I'm looking at. I don't want hardware
+RAID, since hardware RAID5 costs an infinite amount of money.
 
-> In case I have to replace my Silicon Image card, what should I replac=
-e
-> it with?  I'm currently leaning towards Promise TX4 (or TX2 if the VI=
-A
-> driver is completed).
+> > In case I have to replace my Silicon Image card, what should I repl=
+ace
+> > it with?  I'm currently leaning towards Promise TX4 (or TX2 if the =
+VIA
+> > driver is completed).
+>=20
+> I stay as far away as I can from Promise and VIA.  Anything is usuall=
+y
+> better than those two.
 
-I stay as far away as I can from Promise and VIA.  Anything is usually
-better than those two.
+Why the warning about Promise?  The reason I want the VIA
+driver to work is that I've got two VIA connectors on the
+motherboard, so I only need a 2 port SATA card.
 
---=20
-M=E5ns Rullg=E5rd
-mru@kth.se
+/Basic
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
