@@ -1,67 +1,135 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH libata-dev-2.6] ata_scsi_verify_xlat() fix
-Date: Fri, 25 Feb 2005 12:58:22 +0800
-Message-ID: <421EB06E.5040504@tw.ibm.com>
-References: <421D7E5A.80702@tw.ibm.com> <421D85C2.6050103@pobox.com>
+Subject: Re: [PATCH libata-dev-2.6] Issue INITIALIZE DEVICE PARAMETERS for
+ CHS only devices
+Date: Fri, 25 Feb 2005 13:01:51 +0800
+Message-ID: <421EB13F.4000503@tw.ibm.com>
+References: <006d01c50c11$81003920$a801a8c0@tw.ibm.com> <42167CDD.50301@pobox.com> <421C6840.7090903@tw.ibm.com> <421C97C1.9090701@pobox.com> <421D3DB1.1090800@tw.ibm.com> <421D41C2.3030909@pobox.com> <421D663B.5050107@tw.ibm.com> <421D679B.7020508@pobox.com> <421D7727.4030408@tw.ibm.com> <421D78A2.8090103@pobox.com> <421D7BD2.7030309@tw.ibm.com> <421D86CA.3010606@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from bluehawaii.tikira.net ([61.62.22.51]:41965 "EHLO
+Received: from bluehawaii.tikira.net ([61.62.22.51]:63471 "EHLO
 	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S262485AbVBYE6b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Feb 2005 23:58:31 -0500
-In-Reply-To: <421D85C2.6050103@pobox.com>
+	id S262494AbVBYFCU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Feb 2005 00:02:20 -0500
+In-Reply-To: <421D86CA.3010606@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>
+Cc: Mark Lord <mlord@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, IDE Linux <linux-ide@vger.kernel.org>
 
 
 
-Jeff Garzik wrote:
 > 
-> Patch looks OK, but does not appear to be diff'd against
+> This patch similarly fails to apply:
 > 
->     linux-2.6.11-rc4 + CHS support patches
-> 
-> When I try to apply your patch, I get
-> 
-> drivers/scsi/libata-scsi.c 1.68: 1661 lines
-> drivers/scsi/libata-scsi.c 1.68 -> 1.69: 1661 lines
-> 2 out of 2 hunks FAILED -- saving rejects to file 
-> drivers/scsi/libata-scsi.c.rej
-> 
-> 
+
 Jeff,
 
-Thanks for the explanation.
 
-I've rediff'ed the patch against 2.6.11-rc5 + C/H/S patches.
+   Rediff'ed against 2.6.11-rc5 + C/H/S patches.
 Attached please find the revised patch for your review.
 
 Albert
 
 Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
 ============================================================================================
---- linux-2.6.11-rc5-chs/drivers/scsi/libata-scsi.c	2005-02-25 11:48:23.000000000 +0800
-+++ linux-2.6.11-rc5-mod/drivers/scsi/libata-scsi.c	2005-02-25 12:40:05.000000000 +0800
-@@ -529,6 +529,7 @@
-  		if ((cyl >> 16) || (head >> 4) || (sect >> 8) || (!sect))
-  			return 1;
-  		
-+		tf->command = ATA_CMD_VERIFY;
-  		tf->nsect = n_block & 0xff; /* Sector count 0 means 256 sectors */
-  		tf->lbal = sect;
-  		tf->lbam = cyl;
-@@ -619,7 +620,7 @@
+--- linux-2.6.11-rc5-chs/include/linux/ata.h	2005-02-25 11:49:46.000000000 +0800
++++ linux-2.6.11-rc5-mod/include/linux/ata.h	2005-02-25 12:30:57.000000000 +0800
+@@ -125,6 +125,7 @@
+  	ATA_CMD_PACKET		= 0xA0,
+  	ATA_CMD_VERIFY		= 0x40,
+  	ATA_CMD_VERIFY_EXT	= 0x42,
++	ATA_CMD_INIT_DEV_PARAMS	= 0x91,
 
-  	/* Check and compose ATA command */
-  	if (!n_block)
--		/* In ATA, sector count 0 are 256 or 65536 sectors, not 0 sectors. */
-+		/* In ATA, sector count 0 means 256 or 65536 sectors, not 0 sectors. */
-  		return 1;
+  	/* SETFEATURES stuff */
+  	SETFEATURES_XFER	= 0x03,
+--- linux-2.6.11-rc5-chs/drivers/scsi/libata-core.c	2005-02-25 11:48:23.000000000 +0800
++++ linux-2.6.11-rc5-mod/drivers/scsi/libata-core.c	2005-02-25 12:35:33.000000000 +0800
+@@ -52,6 +52,7 @@
+  static unsigned int ata_busy_sleep (struct ata_port *ap,
+  				    unsigned long tmout_pat,
+  			    	    unsigned long tmout);
++static void ata_dev_init_params(struct ata_port *ap, struct ata_device *dev);
+  static void ata_set_mode(struct ata_port *ap);
+  static void ata_dev_set_xfermode(struct ata_port *ap, struct ata_device *dev);
+  static unsigned int ata_get_mode_mask(struct ata_port *ap, int shift);
+@@ -1134,11 +1135,16 @@
+  			if (tmp & (1 << major_version))
+  				break;
 
-  	if (lba) {
+-		/* we require at least ATA-3 */
+-		if (major_version < 3) {
+-			printk(KERN_DEBUG "ata%u: no ATA-3\n", ap->id);
+-			goto err_out_nosup;
+-		}
++		/*
++		 * The exact sequence expected by certain pre-ATA4 drives is:
++		 * SRST RESET
++		 * IDENTIFY
++		 * INITIALIZE DEVICE PARAMETERS
++		 * anything else..
++		 * Some drives were very specific about that exact sequence.
++		 */
++		if (major_version < 4 || (!ata_id_has_lba(dev->id)))
++			ata_dev_init_params(ap, dev);
+
+  		if (ata_id_has_lba(dev->id)) {
+  			dev->flags |= ATA_DFLAG_LBA;
+@@ -1979,6 +1985,54 @@
+  }
+
+  /**
++ *	ata_dev_init_params - Issue INIT DEV PARAMS command
++ *	@ap: Port associated with device @dev
++ *	@dev: Device to which command will be sent
++ *
++ *	LOCKING:
++ */
++
++static void ata_dev_init_params(struct ata_port *ap, struct ata_device *dev)
++{
++	DECLARE_COMPLETION(wait);
++	struct ata_queued_cmd *qc;
++	int rc;
++	unsigned long flags;
++	u16 sectors = dev->id[6];
++	u16 heads   = dev->id[3];
++
++	/* Number of sectors per track 1-255. Number of heads 1-16 */
++	if (sectors < 1 || sectors > 255 || heads < 1 || heads > 16)
++		return;
++
++	/* set up init dev params taskfile */
++	DPRINTK("init dev params \n");
++
++	qc = ata_qc_new_init(ap, dev);
++	BUG_ON(qc == NULL);
++
++	qc->tf.command = ATA_CMD_INIT_DEV_PARAMS;
++	qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	qc->tf.protocol = ATA_PROT_NODATA;
++	qc->tf.nsect = sectors;
++	qc->tf.device |= (heads - 1) & 0x0f; /* max head = number of heads - 1 */
++
++	qc->waiting = &wait;
++	qc->complete_fn = ata_qc_complete_noop;
++
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	rc = ata_qc_issue(qc);
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++
++	if (rc)
++		ata_port_disable(ap);
++	else
++		wait_for_completion(&wait);
++
++	DPRINTK("EXIT\n");
++}
++
++/**
+   *	ata_sg_clean -
+   *	@qc:
+   *
 
 
 
