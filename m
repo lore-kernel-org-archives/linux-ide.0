@@ -1,102 +1,66 @@
-From: Daniel Brahneborg <basic@wtnord.net>
+From: "A.J.Dawson" <A.J.Dawson@Bradford.ac.uk>
 Subject: Re: RAID5 over Serial-ATA success stories?
-Date: Thu, 8 Jan 2004 09:27:44 +0100
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040108092744.B2500@nettis.grimsta>
-References: <20040107223657.A5315@nettis.grimsta> <yw1xn08z8ltb.fsf@ford.guide> <20040108085711.A2500@nettis.grimsta> <yw1x65fm984p.fsf@ford.guide>
+Date: Thu, 8 Jan 2004 11:48:43 +0000 (GMT Standard Time)
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <Pine.WNT.4.44.0401081137060.2020-100000@ender>
+References: <20040108085711.A2500@nettis.grimsta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yw1x65fm984p.fsf@ford.guide>; from mru@kth.se on Thu, Jan 08, 2004 at 09:06:46AM +0100
-To: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mru@kth.se>
-Cc: Daniel Brahneborg <basic@wtnord.net>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hydrogen.cen.brad.ac.uk ([143.53.238.3]:41092 "EHLO
+	hydrogen.cen.brad.ac.uk") by vger.kernel.org with ESMTP
+	id S264361AbUAHLu7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Jan 2004 06:50:59 -0500
+In-Reply-To: <20040108085711.A2500@nettis.grimsta>
 List-Id: linux-ide@vger.kernel.org
+To: Daniel Brahneborg <basic@wtnord.net>
+Cc: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mru@kth.se>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Jan 08, 2004 at 09:06:46AM +0100, M=E5ns Rullg=E5rd wrote:
-> Daniel Brahneborg <basic@wtnord.net> writes:
-> >> > It doesn't work with Silicon Image.
-> >>=20
-> >> What doesn't work?  There are drivers, at least in 2.6.  Raid shou=
-ld
-> >> care about what sort of disks you use.
-> >
-> > When using it for normal disks e2fsck reports bad blocks all
-> > over the disk. When used for RAID, I get corrupted data.  Not
-> > much, maybe every second time for a file of 500MB.
-> > This is with the IDE driver.  With the SCSI driver, my computer
-> > completely freezes when I activate my second network card (as I
-> > reported earlier, unfortunately still without a solution).
-> > RAID might work with that driver, but unless the network card
-> > problem is solved, that doesn't help me.
->=20
-> That sounds rather odd.  Have you reported this to the appropriate
-> places?
+On Thu, 8 Jan 2004, Daniel Brahneborg wrote:
 
-I emailed the persons in the MAINTAINERS file that seemed
-relevant (Jeff Garzik, mainly).  I don't really know where
-else to go, I'm afraid.
+> > Which Adaptec card?  The 12xx cards are fakeraid, but are supported as
+> > normal cards.  The 24xx cards are true hardware RAID cards.  Linux
+> > drivers exist for these, too.
 
-> >> > It doesn't work with VIA (yet, anyway).
-> >> > It might work with HighPoint.
-> >>=20
-> >> I've run RAID5 on a Highpoint RocketRAID 1540.  I used ATA disks w=
-ith
-> >> SATA converters, though.  Works with both 2.4 and 2.6.
-> >
-> > Sounds good to hear.  It's the second cheapest card for me.
->=20
-> Beware that several people have reported some rather strange problems
-> with the Highpoint cards.  You should get a deal to take it back if i=
-t
-> doesn't work.
+I've used a couple of the 2400A cards for a while under Linux (SuSE 8.2)
+with mixed results - one works fine in RAID 5 mode (4x 120Gb disks),
+though it is very slow (typical sustained transfer on about 10Mb/s).  The
+other is a completely different story.  It keeps dropping disks from the
+array that subsequently test out to be perfectly okay.  It also has a
+nasty habit of not letting me rebuild the array even after putting a new
+disk in.  I get a 'missing component' error that even Adaptec seem to know
+nothing about (well, they've not bothered answering any of my e-mails
+about it*).  This means that I have to rebuild the array again from
+scratch (build + verify = a complete day) and then restore the data from
+backup.  Out of four disks that have been dropped from the array recently,
+three tested fine.  On more than one occasion it has also given me a
+double disk failure within a couple of hours, not enough time to complete
+the rebuild for the first drive before the second one 'fails'.  Again,
+drives subsequently tested out fine.
 
-I buy most things from komplett.se, they're nice with returns.
+The end result is that I got so fed up with it happening that I took the
+card out and dropped it into a drawer.  I've replaced it with a couple of
+software mirroed 250Gb drives which (so far) seem to be working fine and
+give me a lot fewer headaches!
 
-> >> > I don't know if there's a driver for Adaptec.
-> >>=20
-> >> Which Adaptec card?  The 12xx cards are fakeraid, but are supporte=
-d as
-> >> normal cards.  The 24xx cards are true hardware RAID cards.  Linux
-> >> drivers exist for these, too.
-> >
-> > It's the 12xx cards that I'm looking at. I don't want hardware
-> > RAID, since hardware RAID5 costs an infinite amount of money.
->=20
-> Not really.  The Adaptec 24xx cards cost about the same as the disks
-> you attach to them.  I ordered one from a while ago, but the shop wen=
-t
-> bankrupt before I got it, or at least their web site disappeared and
-> they stopped answering mail or phone calls.
+I'd not recommend this card to *anyone* any more.
 
-The Adaptec card I found would cost $250, which is about $200
-more than I can spend on it.  If I can't get RAID5 to work I'd
-rather buy more disks and do RAID10.
+* I'm pretty annoyed with Adaptec about this one - I've not even had a 'we
+don't know the answer' e-mail from them.  I've tried eveything that I
+could think of including replacing all of the cables, updating the
+firmware on the drives (WD), hard resetting the 2400A, updating the
+firmware and SMOR (twice) and replacing the cache memory.  I've
+told Adaptec about everything that I have tried and they have not
+even had the courtesy to reply to me.
 
-> >> > In case I have to replace my Silicon Image card, what should I r=
-eplace
-> >> > it with?  I'm currently leaning towards Promise TX4 (or TX2 if t=
-he VIA
-> >> > driver is completed).
-> >>=20
-> >> I stay as far away as I can from Promise and VIA.  Anything is usu=
-ally
-> >> better than those two.
-> >
-> > Why the warning about Promise?
->=20
-> I've had some bad experience with them, that's all.  They appear to b=
-e
-> incompatible with Alpha machines, but probably work better in PCs.
+Anyone at Adaptec care to comment?
 
-I have a PC, so I'm hoping for the best.  I'll still make sure
-that I can return it if it fails.
+Regards
 
-/Basic
+Dr. Andy Dawson
+A.J.Dawson@Bradford.ac.uk
+http://www.mossie.org
+http://www.museum-explorer.org.uk
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ Never attribute to malice that which is adequately explained by stupidity.
+
