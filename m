@@ -1,67 +1,36 @@
-From: Doug Maxey <dwm@austin.ibm.com>
-Subject: Re: [PATCH 1/1] build modular usb isd200 with modular ide
-Date: Sun, 24 Oct 2004 18:11:12 -0500
+From: Marc Bevand <bevand_m@epita.fr>
+Subject: Re: (SOLVED) Generic bug/race in the IDE/SATA code ?
+Date: Mon, 25 Oct 2004 01:58:05 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200410242311.i9ONBCKp019869@falcon10.austin.ibm.com>
-References: <20041024100319.GA17183@lst.de>
+Message-ID: <20041024235805.GA19584@iah.epita.fr>
+References: <20041020122917.GA6896@iah.epita.fr> <m36551gd82.fsf@zathras.nivin.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pixpat.austin.ibm.com ([192.35.232.241]:60880 "EHLO
-	falcon10.austin.ibm.com") by vger.kernel.org with ESMTP
-	id S261624AbUJXXLf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 24 Oct 2004 19:11:35 -0400
-In-reply-to: <20041024100319.GA17183@lst.de> 
+Received: from deliver.epitech.net ([163.5.0.25]:55842 "HELO
+	ideliver.epitech.net") by vger.kernel.org with SMTP id S261628AbUJXX6S
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 24 Oct 2004 19:58:18 -0400
+Content-Disposition: inline
+In-Reply-To: <m36551gd82.fsf@zathras.nivin.org>
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Paul Mackerras <paulus@samba.org>, Greg Kroah-Hartman <greg@kroah.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux IDE Mailing List <linux-ide@vger.kernel.org>, linuxppc64-dev@ozlabs.org
+To: Paul Fisher <rao@gnu.org>
+Cc: linux-ide@vger.kernel.org, corvus@gnu.org
 
+Paul Fisher wrote:
+| Marc Bevand <bevand_m@epita.fr> writes:
+| 
+| > Paul: can you try 2.6.9 and confirm this ?
+| 
+| Can't confirm.  Same problems with 2.6.9.  
 
-On Sun, 24 Oct 2004 12:03:19 +0200, Christoph Hellwig wrote:
->On Sat, Oct 23, 2004 at 07:55:36PM -0500, Doug Maxey wrote:
->> 
->> Name: inline ide_fix_driveid()
->> 
->> Rationale:
->> 	This is a fix for bugme.osdl 3819.
->
->bugme.osdl.org doesn't know of a bug #3819.
+I double-checked my system, and I was wrong: actually I can
+reproduce the watchdog timeout with 2.6.9, like you (I inadver-
+tently left a maxcpus=1 boot param in my grub.conf).
 
-Uh Oh.  Should be 3618.  Have no idea where 3819 came from.
+The fact that a non-SMP kernel (or SMP with maxcpus=1) does
+reduce the probability of watchdog timeouts looks suspicious...
 
->
->> 	With any of the 2.6.9 release flavors (vanilla, mm1, ac3), one
->> 	cannot build the usb isd200 module due to the dependency on
->> 	ide_fix_driveid() being exported from ide-iops.
->> 
->> Description:
->> 	When building IDE modular, the current ide_fix_driveid() is
->> 	exported from ide-iops.c.  This patch makes the function an inline.
->
->Still doesn't make any sense. ide_fix_driveid is properly exported from
->ide-iops.c, so you use it from other modules.  The only case that
->doesn't work is modular ide and builtin usb-storage, and the BLK_DEV_IDE 
->depency should fix that one.
->
->If you think that depency is ugly (I do) just copy the routine to
-
-What happened to common code that may have more uses than originally 
-intended?  Do it right once in one place, and make it available.
-
->isd200.c, it's a) too large to inline but b) just a trivial byteswap
->that should need much changes over time.
-
-Except for those few 32 and 64 bit quantities that need word (16 bit) swaps,
-I agree completely.  
-
-The points I was trying to make were that  
-1) This is called in only a few places.
-2) it is never on a fast path.
-2) The sequence of the named elements was a little bit much.  Meaning of 
-   the words change, and quite a few of the fields no longer have the 
-   original meaning or definition.
-3) Having a singular (even if somewhat large) inline handles all current (and 
-   future) uses.
-
-++doug
-
+-- 
+Marc Bevand                          http://www.epita.fr/~bevand_m
+Computer Science School EPITA - System, Network and Security Dept.
