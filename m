@@ -1,57 +1,42 @@
-From: Mark Cooke <mpc@jts.homeip.net>
-Subject: Re: 2.4.26rc1 / HPT 374 / RAID = data read corruption with disks
-	onprimary channels.
-Date: Wed, 31 Mar 2004 16:01:12 +0100
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: [PATCH] Bogus LBA48 drives
+Date: Wed, 31 Mar 2004 20:34:10 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1080745272.20830.13.camel@pc24.sr.bham.ac.uk>
-References: <1080677057.11947.83.camel@sage.kitchen>
-	 <63171.194.237.142.24.1080716884.squirrel@ncircle.nullnet.fi>
+Message-ID: <20040331183410.GA3796@pclin040.win.tue.nl>
+References: <Pine.GSO.4.58.0403301654300.9765@waterleaf.sonytel.be> <Pine.LNX.4.10.10403300821520.11654-100000@master.linux-ide.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out6.blueyonder.co.uk ([195.188.213.9]:39126 "EHLO
-	smtp-out6.blueyonder.co.uk") by vger.kernel.org with ESMTP
-	id S261988AbUCaPBW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Mar 2004 10:01:22 -0500
-In-Reply-To: <63171.194.237.142.24.1080716884.squirrel@ncircle.nullnet.fi>
+Received: from kweetal.tue.nl ([131.155.3.6]:12810 "EHLO kweetal.tue.nl")
+	by vger.kernel.org with ESMTP id S262046AbUCaSeU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Mar 2004 13:34:20 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.10.10403300821520.11654-100000@master.linux-ide.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tomi Orava <tomimo+linux-ide@ncircle.nullnet.fi>
-Cc: linux-ide@vger.kernel.org, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+To: Andre Hedrick <andre@linux-ide.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Lionel Bergeret <lbergeret@swing.be>, JunHyeok Heo <jhheo@idis.co.kr>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Dear Tomi, all,
+Geert Uytterhoeven wrote:
 
-This patch appears to have cured the problems I was having.  5 loops
-over a 2GB file have shown no errors in copying or differing checksums.
+>> Apparently some IDE drives (e.g. a pile of 80 GB ST380020ACE drives I have
+>> access to) advertise to support LBA48, but don't.
+>> One problem with those drives is that the lba_capacity_2 field in their drive
+>> identification is set to 0.
 
-The only difference in testing is that I am logged in remotely, rather
-than from X on the server itself, though it will be a few more hours
-before I am in front of the machine again.
 
-Thanks for the patch Andre/Tomi.  It has seemingly cured the silent disk
-corruption I was seeing.
+Andre Hedrick replies:
 
-Marcelo - I'd certainly recommend this patch for 2.4.*.  2.4.26rc1 was
-giving random 4-byte corruptions for me without it.
-
-http://marc.theaimsgroup.com/?l=linux-ide&m=108071690505910&w=2
-
-Mark
-
-On Wed, 2004-03-31 at 08:08, Tomi Orava wrote:
-> > Hi all,
-> >
-> > I've been having some trouble with an Abit IT7 machine.  It is a
-> > pentium-4 machine, 1GB ram (passes days of all-test memtest86), 80GB
-> > seagate on the ICH4 as the system disk.  4 x 160GB seagates, one on each
-> > channel of the HPT374.
+> Actually this issue an errata correction in ATA-6 and changed in ATA-7.
 > 
-> It seems that 2.4.26rc1 doesn't still contain the HPT374 patch which
-> fixes at least some DMA-problems with that ide-chip. Perhaps you'd like
-> to retest after aplying the patch Andre Hedrick posted on this list a
-> short while ago ? I'm not saying it will fix your problems, but its worth
-> trying.
-> 
-> Regards,
-> Tomi Orava
+> 48-bit command set support is different than capacity.
 
+
+Hmm. I read in my copy of ATA7:
+
+ 6.16.55 Words (103:100): Maximum user LBA for 48-bit Address feature set
+ Words (103:100) contain a value that is one greater than the maximum LBA
+ in user accessable space when the 48-bit Addressing feature set is supported.
+ The maximum value that shall be placed in this field is 0000FFFFFFFFFFFFh.
+ Support of these words is mandatory if the 48-bit Address feature set is supported.
+
+Do you read differently?
