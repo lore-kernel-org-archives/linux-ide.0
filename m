@@ -1,57 +1,29 @@
-From: "Luciano A. Stertz" <luciano@tteng.com.br>
+From: "John W. Linville" <linville@tuxdriver.com>
 Subject: Re: T10/04-262 ATA pass thru - patch.
-Date: Wed, 29 Sep 2004 16:38:50 -0300
+Date: Wed, 29 Sep 2004 14:55:11 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <415B0F4A.5040104@tteng.com.br>
-References: <20040928001633.A8363@florence.linkmargin.com> <415AFF27.7080906@tteng.com.br> <415AFFBB.8090503@pobox.com> <415B0D9A.5080204@tteng.com.br>
+Message-ID: <20040929145511.A32699@tuxdriver.com>
+References: <20040928001633.A8363@florence.linkmargin.com> <415AFF27.7080906@tteng.com.br> <415AFFBB.8090503@pobox.com> <415B0D9A.5080204@tteng.com.br> <415B0F4A.5040104@tteng.com.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 200-203-041-086.paemt7002.e.brasiltelecom.net.br ([200.203.41.86]:19278
-	"EHLO einstein.tteng.com.br") by vger.kernel.org with ESMTP
-	id S268892AbUI2Te2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 29 Sep 2004 15:34:28 -0400
-In-Reply-To: <415B0D9A.5080204@tteng.com.br>
+Received: from ra.tuxdriver.com ([24.172.12.4]:21514 "EHLO ra.tuxdriver.com")
+	by vger.kernel.org with ESMTP id S268955AbUI2UIc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Sep 2004 16:08:32 -0400
+Received: (from linville@localhost)
+	by ra.tuxdriver.com (8.11.6/8.11.6) id i8TItBM32736
+	for linux-ide@vger.kernel.org; Wed, 29 Sep 2004 14:55:11 -0400
+Content-Disposition: inline
+In-Reply-To: <415B0F4A.5040104@tteng.com.br>; from luciano@tteng.com.br on Wed, Sep 29, 2004 at 04:38:50PM -0300
 List-Id: linux-ide@vger.kernel.org
-To: "Luciano A. Stertz" <luciano@tteng.com.br>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Luciano A. Stertz wrote:
-> Jeff Garzik wrote:
-> 
->> Luciano A. Stertz wrote:
->>
->>>
->>>     Just trying to understand the SATA SMART problem as a whole. With 
->>> your patch, it's possible to send ATA commands that are encapsulated 
->>> in CDBs, right? If so, to enable sending direct ATA commands to a 
->>> SATA device, one has to create a ioctl that receives the command and 
->>> creates a CDB from it, as John Linville did a few weeks ago. This way 
->>> a user-space application (e.g. smartmontools) can use this ioctl to 
->>> send ATA commands. Am I right?
->>
->>
->>
->> No.  SCSI "send CDB" ioctls have existed for years.
->>
->> The ioctls John added are merely for compatibility with existing IDE 
->> utilities.
-> 
->     Hmm, didn't know that. Do you mean that I can already send ATA 
-> commands to SATA devices? Where can I find information about these ioctls?
-	Ok, I guess now I got it. It was already possible to create and send 
-CDB, Andy's patch will 'decode' it so that it can be an ATA command.
+On Wed, Sep 29, 2004 at 04:38:50PM -0300, Luciano A. Stertz wrote:
+> Luciano A. Stertz wrote:
+> 	Ok, I guess now I got it. It was already possible to create and send 
+> CDB, Andy's patch will 'decode' it so that it can be an ATA command.
 
-> 
->     Thanks again,
->     Luciano
-> 
-
-
+Ding, ding, ding! :-)
 -- 
-Luciano A. Stertz
-luciano@tteng.com.br
-T&T Engenheiros Associados Ltda
-http://www.tteng.com.br
-Fone/Fax (51) 3224 8425
+John W. Linville
+linville@tuxdriver.com
