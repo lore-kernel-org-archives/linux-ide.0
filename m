@@ -1,129 +1,89 @@
-From: "Tomi Orava" <Tomi.Orava@ncircle.nullnet.fi>
-Subject: hpt366.c-2.4.23.patch fixes HPT374 ide/dma problems!
-Date: Thu, 11 Mar 2004 09:39:52 +0200 (EET)
+From: Thomas Themel <themel@iwoars.net>
+Subject: PDC202XX_OLD regression between 2.6 and 2.4
+Date: Thu, 11 Mar 2004 20:01:00 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40715.194.237.142.24.1078990792.squirrel@ncircle.nullnet.fi>
+Message-ID: <20040311190100.GV19928@iwoars.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;boundary="----=_20040311093952_73863"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ncircle.nullnet.fi ([81.17.200.207]:63448 "EHLO
-	ncircle.nullnet.fi") by vger.kernel.org with ESMTP id S262987AbUCKHj4
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 Mar 2004 02:39:56 -0500
+Received: from iwoars.net ([217.160.110.113]:33029 "HELO iwoars.net")
+	by vger.kernel.org with SMTP id S261440AbUCKTBA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2004 14:01:00 -0500
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl
 
-------=_20040311093952_73863
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8bit
+Hi,
 
+I'm currently trying to set up a system that contains a Promise 20267
+controller, and it seems that DMA on that controller causes problems in
+2.6. 
 
-Hi everybody,
+My test case consists of simply creating an empty ext3 file system and
+running bonnie++ on it. In 2.4.25, this works as expected. In 2.6.3-rc4,
+however, it breaks after a few seconds:
 
-I have been testing the patch below from Andre Hendrick
-for a couple of weeks now with two different machines
-and it seems that this patch really fixes the DMA problems
-some users (including me) have been suffering with kernel
-HPT374-driver in the past (2.4.2x & 2.6.x).
+Mar 11 17:27:19 sophokles kernel: hdg: dma_timer_expiry: dma status == 0x60
+Mar 11 17:27:19 sophokles kernel: hdg: DMA timeout retry
+Mar 11 17:27:19 sophokles kernel: PDC202XX: Secondary channel reset.
+Mar 11 17:27:19 sophokles kernel: PDC202XX: Primary channel reset.
+Mar 11 17:27:19 sophokles kernel: hdg: timeout waiting for DMA
+Mar 11 17:27:40 sophokles kernel: hdg: dma_timer_expiry: dma status == 0x60
+Mar 11 17:27:40 sophokles kernel: hdg: DMA timeout retry
+Mar 11 17:27:40 sophokles kernel: PDC202XX: Secondary channel reset.
+Mar 11 17:27:40 sophokles kernel: PDC202XX: Primary channel reset.
+Mar 11 17:27:40 sophokles kernel: hdg: timeout waiting for DMA
+Mar 11 17:28:02 sophokles kernel: hdg: dma_timer_expiry: dma status == 0x60
+Mar 11 17:28:02 sophokles kernel: hdg: DMA timeout retry
+Mar 11 17:28:02 sophokles kernel: PDC202XX: Secondary channel reset.
+Mar 11 17:28:02 sophokles kernel: PDC202XX: Primary channel reset.
+Mar 11 17:28:02 sophokles kernel: hdg: timeout waiting for DMA
+Mar 11 17:28:22 sophokles kernel: hdg: dma_timer_expiry: dma status == 0x60
+Mar 11 17:28:22 sophokles kernel: hdg: DMA timeout retry
+Mar 11 17:28:22 sophokles kernel: PDC202XX: Secondary channel reset.
+Mar 11 17:28:22 sophokles kernel: PDC202XX: Primary channel reset.
+Mar 11 17:28:22 sophokles kernel: hdg: timeout waiting for DMA
 
-The hardware used in the tests are:
-Epox 8K9A3+ (integrated HPT374-chip)
-and
-Epox 4PCA3+ (integrated HPT374-chip)
+Other information:
 
-The machines seem to run without any IDE-related problems
-after this patch even with 4-disks & heavy I/O-traffic.
-Please, consider migrating this patch into the official kernel.
+hdparm output is slightly different between 2.4 and 2.6 (hda is an
+identical drive on a vt8233a controller on the motherboard) - 
 
-Regards,
-Tomi Orava
+sophokles:~# diff -Nrua 2.4.25/ 2.6.4-rc3/
+diff -Nrua 2.4.25/hda 2.6.4-rc3/hda
+--- 2.4.25/hda  2004-03-11 19:48:29.000000000 +0100
++++ 2.6.4-rc3/hda       2004-03-11 19:52:28.000000000 +0100
+@@ -6,5 +6,5 @@
+  using_dma    =  1 (on)
+  keepsettings =  0 (off)
+  readonly     =  0 (off)
+- readahead    =  8 (on)
+- geometry     = 14593/255/63, sectors = 234441648, start = 0
++ readahead    = 256 (on)
++ geometry     = 16383/255/63, sectors = 234441648, start = 0
+diff -Nrua 2.4.25/hdg 2.6.4-rc3/hdg
+--- 2.4.25/hdg  2004-03-11 19:48:32.000000000 +0100
++++ 2.6.4-rc3/hdg       2004-03-11 19:52:31.000000000 +0100
+@@ -6,5 +6,5 @@
+  using_dma    =  1 (on)
+  keepsettings =  0 (off)
+  readonly     =  0 (off)
+- readahead    =  8 (on)
+- geometry     = 14593/255/63, sectors = 234441648, start = 0
++ readahead    = 256 (on)
++ geometry     = 16383/255/63, sectors = 234441648, start = 0
 
+I am a bit confused by the geometry changes, but they can hardly
+cause the problem since hda works nicely under 2.6.
 
----------------------------- Original Message ----------------------------
-Subject: hpt366.c-2.4.23.patch
-From:    "Andre Hedrick" <andre@linux-ide.org>
-Date:    Fri, February 6, 2004 11:24
-To:      linux-kernel@vger.kernel.org
---------------------------------------------------------------------------
+Can I do anything to narrow this down, is there a way to get more
+debugging output? 
 
+PS: Is there an archive of this mailing list somewhere?
 
-For those suffering highpoint errors.
-
-Cheers,
-
-Andre Hedrick
-LAD Storage Consulting Group
-
-
-------=_20040311093952_73863
-Content-Type: text/plain; name="hpt366.c-2.4.23.patch"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment; filename="hpt366.c-2.4.23.patch"
-
---- linux-2.4.23.orig/drivers/ide/pci/hpt366.c	Mon Aug 25 04:44:41 2003
-+++ linux-2.4.23/drivers/ide/pci/hpt366.c	Fri Jan  9 21:44:48 2004
-@@ -1,7 +1,7 @@
- /*
-  * linux/drivers/ide/pci/hpt366.c		Version 0.36	April 25, 2003
-  *
-- * Copyright (C) 1999-2002		Andre Hedrick <andre@linux-ide.org>
-+ * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
-  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-  * Portions Copyright (C) 2003		Red Hat Inc
-  *
-@@ -668,6 +668,35 @@
- 	return __ide_dma_lostirq(drive);
- }
- 
-+/* returns 1 if dma irq issued, 0 otherwise */
-+static int hpt374_ide_dma_test_irq (ide_drive_t *drive)
-+{
-+		        
-+	ide_hwif_t *hwif	= HWIF(drive);
-+	u16 bfifo		= 0;
-+	u8 reginfo		= hwif->channel ? 0x56 : 0x52;
-+	u8 dma_stat		= 0;
-+
-+	pci_read_config_word(hwif->pci_dev, reginfo, &bfifo);
-+	if (bfifo & 0x1FF) {
-+//		printk("%s: %d bytes in FIFO\n", drive->name, bfifo);
-+		return 0;
-+	}
-+
-+	dma_stat = hwif->INB(hwif->dma_status);
-+	/* return 1 if INTR asserted */
-+	if ((dma_stat & 4) == 4)
-+		return 1;
-+
-+	if (!drive->waiting_for_dma)
-+		printk(KERN_WARNING "%s: (%s) called while not waiting\n",
-+				drive->name, __FUNCTION__);
-+#if 0
-+	drive->waiting_for_dma++;
-+#endif
-+	return 0;
-+}
-+
- static int hpt374_ide_dma_end (ide_drive_t *drive)
- {
- 	struct pci_dev *dev	= HWIF(drive)->pci_dev;
-@@ -1245,11 +1274,13 @@
- 		hwif->udma_four = ((ata66 & regmask) ? 0 : 1);
- 	hwif->ide_dma_check = &hpt366_config_drive_xfer_rate;
- 
--	if (hpt_minimum_revision(dev,8))
-+	if (hpt_minimum_revision(dev,8)) {
-+		hwif->ide_dma_test_irq = &hpt374_ide_dma_test_irq;
- 		hwif->ide_dma_end = &hpt374_ide_dma_end;
--	else if (hpt_minimum_revision(dev,5))
-+	} else if (hpt_minimum_revision(dev,5)) {
-+		hwif->ide_dma_test_irq = &hpt374_ide_dma_test_irq;
- 		hwif->ide_dma_end = &hpt374_ide_dma_end;
--	else if (hpt_minimum_revision(dev,3)) {
-+	} else if (hpt_minimum_revision(dev,3)) {
- 		hwif->ide_dma_begin = &hpt370_ide_dma_begin;
- 		hwif->ide_dma_end = &hpt370_ide_dma_end;
- 		hwif->ide_dma_timeout = &hpt370_ide_dma_timeout;
-------=_20040311093952_73863--
-
+ciao,
+-- 
+[*Thomas  Themel*]  While differing widely in the various little bits we know,
+[extended contact]  in our infinite ignorance we are all equal. 
+[info provided in]
+[*message header*]      - Karl Popper
