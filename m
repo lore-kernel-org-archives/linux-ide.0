@@ -1,49 +1,107 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: Re: [PATCH] IDE update for 2.6.7-rc3 [4/12]
-Date: Fri, 11 Jun 2004 15:06:39 -0400
+From: "Paul Gimpelj" <pgimpelj@sympatico.ca>
+Subject: Re: {linux-ide] ide errors redhat 9.0 install
+Date: Fri, 11 Jun 2004 15:32:26 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040611190639.GC12953@linux-sh.org>
-References: <200406111755.02325.bzolnier@elka.pw.edu.pl> <20040611181106.GB12953@linux-sh.org> <200406112047.58373.bzolnier@elka.pw.edu.pl>
+Message-ID: <00b301c44fea$ead73350$13f9e2d1@zoom>
+References: <1086616777.3649.10.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="/e2eDi0V/xtL+Mc8"
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.golden.net ([199.166.210.31]:48145 "EHLO smtp.golden.net")
-	by vger.kernel.org with ESMTP id S264308AbUFKTGq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jun 2004 15:06:46 -0400
-Content-Disposition: inline
-In-Reply-To: <200406112047.58373.bzolnier@elka.pw.edu.pl>
+Received: from tomts22.bellnexxia.net ([209.226.175.184]:1182 "EHLO
+	tomts22-srv.bellnexxia.net") by vger.kernel.org with ESMTP
+	id S264397AbUFKXyp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Jun 2004 19:54:45 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: linux-ide@vger.kernel.org
+
+Thanks Pat LaVarre.
+
+I have the book undocumented pc.
+
+I just installed xp over 98 and immediately it started to send out syn
+packets over the internet.
+I found it was msblaster.exe worm. I did an ida on it and  i t appears to
+jump down deep into the hardware layer. and revectors the dma, irq, ports
+etc.
+I am very suprised that in a secure operating system like xp that this is
+possible.
+I don't know how i got it, perhaps from email or so called rpc buffer overun
+.
+But I would like to prevent it happening again. .
+
+these links are very helpful.  for this and device drivers , ide,  for
+linux.
+thanks.
+
+regards,
+paul
 
 
---/e2eDi0V/xtL+Mc8
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, Jun 11, 2004 at 08:47:58PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > sh will be making use of this as well for multiple drivers. Obviously we
-> > can make this local to each driver though if that's going to be the
-> > preferred approach.
->=20
-> Currently it is used only by icside for storing DMA number
-> from struct expansion_card.  What is the usage pattern on sh?
->=20
-It's used for the DMA channel number, or NO_DMA for falling back on PIO.
 
 
---/e2eDi0V/xtL+Mc8
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+----- Original Message -----
+From: "Pat LaVarre" <p.lavarre@ieee.org>
+To: <linux-ide@vger.kernel.org>
+Sent: Monday, June 07, 2004 9:59 AM
+Subject: Re: {linux-ide] ide errors redhat 9.0 install
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
 
-iD8DBQFAygK/1K+teJFxZ9wRAo5/AJ9d4y1zuog97m4ciypCQ+KklQpHlwCeItLz
-Np+jqgKo6t6QveIxDfnxTkw=
-=5cl0
------END PGP SIGNATURE-----
+> > List:       linux-ide
+> > Subject:    {linux-ide]  ide errors redhat 9.0 install
+> > From:       "Paul Gimpelj" <pgi...()sym...>
+> > Date:       2004-06-04 3:59:37
+> > ...
+> > open source documentation on ... bus mastering ...
+>
+> When I last googled in 2004-03, I found:
+>
+> /* Design references include these Three sets:
+>  *
+>  * 1) ATAPI CDB's:
+>  *
+>  *      bleeding edge: (mmc 5 not yet available)
+>  *      last stable: http://www.t10.org/ftp/t10/drafts/mmc4/mmc4r02g.pdf
+>  *      oldest original: http://www.bswd.com/sff8020i.pdf
+>  *
+>  * 2) ATAPI I/O:
+>  *
+>  *      last stable: http://www.t13.org/docs2002/d1410r3b.pdf (ATA/PI
+6.3b)
+>  *      oldest original: (again sff 8020i, see above)
+>  *
+>  * 3) PC I/O:
+>  *
+>  *      http://developer.intel.com/design/chipsets/datashts/
+>  *      http://www.ctyme.com/intr/int.htm
+>  *      http://lxr.linux.no/source/include/linux/pci_ids.h
+>  *
+http://www.google.com/search?q=intel+corporation+pci.exe+version+2.2
+>  *
+>  *      Intel ICH5 25251601.pdf
+>  *
+>  *      "Undocumented PC"
+>  *      http://www.amazon.com/exec/obidos/ASIN/0201622777
+>  *
+>  *              "Chapter 7" "Interrupt Vector Table"
+>  *                      esp. IRQ 2 9 14 15
+>  *
+>  *              "Chapter 17" "Interrupt Control and NMI"
+>  *
+>  *      "PCI System Architecture", Third Edition, 1995 MindShare
+>  *      http://www.amazon.com/exec/obidos/ASIN/0201409933
+>  *      http://www.amazon.com/exec/obidos/ASIN/0201309742
+>  *
+>  *      !!FIXME: Find doc to say PIC IRR falls when INTRQ falls.
+>  */
+>
+> Pat LaVarre
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---/e2eDi0V/xtL+Mc8--
