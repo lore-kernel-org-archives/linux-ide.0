@@ -1,57 +1,71 @@
-From: Jure =?UTF-8?Q?Pe=C3=A8ar?= <pegasus@nerv.eu.org>
-Subject: Re: [chrisc@terminalarrogance.com: RE: Bug#258500: Installer fails
- to recognise SiI3112 hw RAID array]
-Date: Mon, 19 Jul 2004 00:21:18 +0200
+From: Doug Maxey <dwm@austin.ibm.com>
+Subject: [RFC] IDE/ATA/SATA controller hotplug
+Date: Mon, 19 Jul 2004 14:47:39 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040719002118.3a3a134c.pegasus@nerv.eu.org>
-References: <20040718210453.GO26350@triplehelix.org>
+Message-ID: <200407191947.i6JJldK1024910@falcon10.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from feather2.animeslovenija.org ([193.77.122.70]:7852 "EHLO
-	mail.animeslovenija.org") by vger.kernel.org with ESMTP
-	id S264538AbUGRWQ3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 18 Jul 2004 18:16:29 -0400
-Received: from localhost (disko [192.168.200.4])
-	by mail.animeslovenija.org (8.7.6/8.7.6) with ESMTP id CCB7D9BE0
-	for <linux-ide@vger.kernel.org>; Mon, 19 Jul 2004 00:16:34 +0200 (CEST)
-Received: from mail.animeslovenija.org ([192.168.200.3])
- by localhost (disko [192.168.200.4]) (amavisd-new, port 10024) with LMTP
- id 31834-03-3 for <linux-ide@vger.kernel.org>;
- Mon, 19 Jul 2004 00:16:30 +0200 (CEST)
-Received: from moonlight.pecar.org (jarse [193.95.219.68])
-	by mail.animeslovenija.org (8.7.6/8.7.6) with ESMTP id 637529BD9
-	for <linux-ide@vger.kernel.org>; Mon, 19 Jul 2004 00:16:33 +0200 (CEST)
-In-Reply-To: <20040718210453.GO26350@triplehelix.org>
+Received: from pixpat.austin.ibm.com ([192.35.232.241]:51735 "EHLO
+	falcon10.austin.ibm.com") by vger.kernel.org with ESMTP
+	id S265212AbUGSTro (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Jul 2004 15:47:44 -0400
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-On Sun, 18 Jul 2004 14:04:53 -0700
-linux-ide-owner@vger.kernel.org wrote:
-
-> Hello SATA people,
->=20
-> Here's a message from Chris Carr who tried to get his Silicon Image
-> "RAID" adapter working during his test of the Debian Installer. Is
-> there any chance of being able to enumerate the adapter's RAID
-> configuration in Linux-space? Is the support already implemented
-> (excuse my ignorance if it already is)? Are there plans to do so
-> at all in the future?
->=20
-> The Debian Installer currently uses kernel version 2.6.7 and 2.4.26 w=
-ith
-> SATA support patches.
+To: Linux IDE Mailing List <linux-ide@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
 
-There's a tool being developed to handle these kind of 'raids':
+Howdy!
 
-http://people.redhat.com/~heinzm/sw/dmraid/
+  This note went out originally to a semi-internal list, but after
+  several comments, posting it here...
 
-It should handle SilImage (aka Medley) raid arrays just fine via device
-mapper.
+  As we chug along here in PPC64 land, we (meaning IBM internal) have
+  been given a requirement to make all devices on our new DLPAR
+  (POWER5 and later) systems be hotplug capable.  This includes ALL
+  PCI devices on the system, even those that are soldered on the
+  motherboard.
+
+  This raises some interesting issues when dealing with IDE devices.
+
+  I realize there is considerable work under way (hi Bart :) to clean
+  up the 2.6 trees.  This hotplug work would be another delta on top
+  of that work.
+
+  The changes could also possibly affect the libata work, as that
+  could also be touched by work on the attached devices themselves.
+
+  What I would like is input on the general strategy that should be
+  taken to modify the controller/adapter and device stack to:
+
+  1) be first class modules, where all controllers/adapters are
+     capable of being loaded and unloaded.  This is directed mostly at
+     IDE/Southbridge controller/adapter devices.
+
+  2) extend that support to all child devices; disk, optical,
+     and tape.
+
+  3) be part of mainline.
+
+  The items I perceive at the top of the issue list are:
+
+  - The primary platforms for IDE/ATA devices are x86 based, and
+    certainly do not care about having this capability.
+
+  - Assuming the capability is added, what rework would be acceptable
+    for block devices?
+
+  - Where should this capability go?  Fork a subset of IDE
+    controllers, and put them under the arch specific dir?
+    Or include all devices?
+
+  - should we work to the goal of having the capability for all
+    platforms, and all IDE devices?
+
+++doug
 
 
---=20
 
-Jure Pe=E8ar
+
+
+
