@@ -1,43 +1,44 @@
-From: Craig Wilfred Pearce <S2007823@student.rmit.edu.au>
-Subject: ide.c problem in 2.6.0
-Date: Mon, 29 Dec 2003 12:41:24 +1100
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20031229014124.GA12405@cs.rmit.edu.au>
+From: Omkhar Arasaratnam <omkhar@rogers.com>
+Subject: [PATCH] drivers/ide/ide-probe.c MOD_INC/DEC_USE_COUNT fixup
+Date: Mon, 29 Dec 2003 18:16:53 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20031229231653.GA17346@omkhar.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from voga.its.rmit.edu.au ([131.170.2.8]:20382 "EHLO
-	voga.its.rmit.edu.au") by vger.kernel.org with ESMTP
-	id S262324AbTL2Blf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Dec 2003 20:41:35 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
+To: b.zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kernel-janitors-disucss@lists.sf.net, trivial@rustcorp.com
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org
 
-Hi there,
+Minor fixup to replace MOD_DEC_USE_COUNT/MOD_INC_USE_COUNT with module_put(THIS_MODULE)
+and try_module_get(THIS_MODULE)
 
-Am trying to boot Linux kernel 2.6.0 under Debian testing/unstable with an
-Intel Pentium II BX chipset (no CD-ROM).
+I am new are this so feel free to tell me if I have done something incorrectly.
 
-Upon bootup I get several meessages saying:
-hda: dma_intr: status=0x51 { DriveReady SeekComplete error }
-hda: dam_intr: error=0x84 { DriveStatusError Bad CRC }
+This is mainly to clean up compiler #warnings since MOD_*_USE_COUNT macros are
+depreciated in 2.6
 
-In the past on Linux 2.4.x it would then say 'ide0: reset success'
-however 2.6.0 just comes to a halt. How can I make the kernel do an ide0 reset so I can continue
-to operate?
 
-Kind regards,
+--- linux-clean/drivers/ide/ide-probe.c.org	2003-12-29 18:06:21.000000000 -0500
++++ linux-clean/drivers/ide/ide-probe.c	2003-12-29 15:38:03.000000000 -0500
+@@ -1323,7 +1323,7 @@
+ 	unsigned int index;
+ 	int probe[MAX_HWIFS];
+ 	
+-	MOD_INC_USE_COUNT;
++	try_module_get(THIS_MODULE);
+ 	memset(probe, 0, MAX_HWIFS * sizeof(int));
+ 	for (index = 0; index < MAX_HWIFS; ++index)
+ 		probe[index] = !ide_hwifs[index].present;
+@@ -1350,7 +1350,7 @@
+ 	}
+ 	if (!ide_probe)
+ 		ide_probe = &ideprobe_init;
+-	MOD_DEC_USE_COUNT;
++	module_put(THIS_MODULE);
+ 	return 0;
+ }
 
-Craig
 
--- 
-Craig Pearce                                                 .---.
-                                                            /     \
-http://yallara.cs.rmit.edu.au/~crpearce                     \.@-@./
-crpearce@cs.rmit.edu.au                                     /`\_/`\
-RMIT, City Campus   Melbourne, Aus.                        //  _  \\
- GPG Public Key ID: 29811D6E                              | \     )|_
-                                             Powered by  /`\_`>  <_/ \
-                                                 Debian  \__/'---'\__/
+O
