@@ -1,64 +1,93 @@
-From: Dave <dave.jiang@gmail.com>
-Subject: Re: [PATCH] updates to Vitesse SATA driver
-Date: Wed, 22 Sep 2004 10:09:03 -0700
+From: "Joel Soete" <soete.joel@tiscali.be>
+Subject: Re: a fix for NS87415 on C3K broken
+Date: Wed, 22 Sep 2004 19:21:08 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <8746466a04092210094f859468@mail.gmail.com>
-References: <8746466a04092114163b3c0618@mail.gmail.com>
-	 <20040922020614.GA148273@sgi.com>
-	 <8746466a0409220859ed0682f@mail.gmail.com>
-Reply-To: Dave <dave.jiang@gmail.com>
+Message-ID: <41501936000007AF@mail-7-bnl.tiscali.it>
+References: <20040922163708.GD4766@colo.lackof.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.205]:24144 "EHLO mproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S266349AbUIVRJL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Sep 2004 13:09:11 -0400
-Received: by mproxy.gmail.com with SMTP id 73so1692066rnk
-        for <linux-ide@vger.kernel.org>; Wed, 22 Sep 2004 10:09:04 -0700 (PDT)
-In-Reply-To: <8746466a0409220859ed0682f@mail.gmail.com>
+Received: from mail-7-bnl.tiscali.it ([213.205.33.227]:11611 "EHLO
+	mail-7-bnl.tiscali.it") by vger.kernel.org with ESMTP
+	id S266486AbUIVRVY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Sep 2004 13:21:24 -0400
+In-Reply-To: <20040922163708.GD4766@colo.lackof.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>, Grant Grundler <grundler@parisc-linux.org>, linux-ide@vger.kernel.org, parisc-linux@parisc-linux.org
 
-On Wed, 22 Sep 2004 08:59:06 -0700, Dave <dave.jiang@gmail.com> wrote:
-> On Tue, 21 Sep 2004 19:06:14 -0700, Jeremy Higdon <jeremy@sgi.com > wrote:
-> > On Tue, Sep 21, 2004 at 02:16:46PM -0700, Dave wrote:
-> > > After getting that working I noticed that the last_ctl value gets
-> > > changed back by the LIBATA core and the Vitesse SATA driver depends on
-> > > the previous value in order to unmask the interrupt. So it seems that
-> > > there's no need to set/unset the interrupt masks in the first place if
-> > > we set the CTL register with ATA_NIEN directly, which I believe is
-> > > probably the way LIBATA intended the driver to do. After doing that
-> > > everything seems to be working great. So I suppose
-> > > vsc_intr_mask_update() is no longer needed probably.
+
+Hello Grant,
+
+> On Wed, Sep 22, 2004 at 12:41:21PM +0200, Joel Soete wrote:
+> > Hello Grant, Bartlomiej and *,
 > >
-> > The chip specification says not to set it that way.  Are you using
-> > the chip in DPA mode or PCI-IDE mode?  The driver assumes the former.  I
-> > don't know why anyone would use the chip in PCI-IDE mode.
-> 
-> Hmmm...I did not see it in the spec. Can you provide the pointer to
-> the spec please? Thanks! I am using it in DPA mode. If you are in
-> PCI-IDE mode, all registers would reside in different BARs and the
-> card wouldn't work anyways with that driver. I copied the section from
-> sata_svw.c. And it seems to work just fine. I don't see how the
-> previous method would be working. In vsc_sata_tf_load a compare is
-> done between the tf->ctl and the ap->last_ctl. However, if I do it
-> with the current method, I continue to see ap->last_ctl with ATA_NIEN
-> cleared even though the previous value was set. Therefore the driver
-> never unmask the IDE interrupt and thus hang.  What happened was, host
-> 1, dev 0 was probed and was okay. Then it attempted to probe host 1,
-> dev 1, which of course does not exist, so at exit, ata_irq_on() was
-> called. With that the last_ctl was reset with ATA_NIEN cleared.
-> Therefore when the driver does the compare of ctl with last_ctl, it
-> sees no difference, and therefore interrupt mask never changed.
+> > I test this patch:
+> > --- arch/parisc/kernel/pci.c.Orig	2004-09-22 09:47:02.000000000 +02=
+00
+> > +++ arch/parisc/kernel/pci.c	2004-09-22 11:26:02.104187784 +0200
+> > @@ -146,6 +146,9 @@
+> >  	return str;
+> >  }
+> >=20
+> > +/* Used in drivers/pci/quirks.c */
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NS, PCI_DEVICE_ID_NS_87415,
+superio_fixup_pci);
+>=20
+> Uhm...any clue why this works?
+No more clue sorry; I just notived that boot message of 2.6.8.1-pa7:
+lba version TR4.0 (0x5) found at 0xfffffffffed30000
+PCI: Enabled native mode for NS87415 (pif=3D0x8f)
 
-I see what you mean by the spec regarding the ATA_NIEN bit. ATA_NIEN
-is reserved bit in DPA mode. I guess it still works. But to do the
-things the right way now this becomes a problem since as I mentioned
-above, libata-core can change the last_ctl value without the driver's
-knowledge. So really we cannot always depend on last_ctl to be the
-last_ctl the driver has set. I'm not exactly sure yet why the driver
-works on IA in the current state. Everything tells me it shouldn't....
-Unless there's something that I'm suppose to configure to force it not
-probe device 1 since in SATA there's never device 1?
+became with 2.6.9-rc2:
+lba version TR4.0 (0x5) found at 0xfffffffffed30000
+PCI: Ignoring BAR0-3 of IDE controller 0000:00:0e.0
+PCI: Enabled native mode for NS87415 (pif=3D0x8f)
+
+(so PCI: Enabled native mode for NS87415 precede by a weird 'ignoring .=
+=2E.
+IDE controler)
+
+I so just try to move back the pcibios_fixups initialisation at its pre=
+vious
+place and the message ''ignoring ... IDE controler" disapear ?)
+=20
+> The same entry in drivers/parisc/superio.c should work too but it doe=
+sn't.
+> I'd rather fix that than just blindly moving it.
+>=20
+no pb
+
+> > That fix the NS87415 pb on my c2k model :)
+> > Can somebody check it with some c3k model?
+>=20
+> I expect c3k also to work. I'm not going to test it.
+>=20
+>=20
+> BTW, I've prepared a patch which moves IDE knowledge
+> out of superio.c driver and into drivers/ide/pci/ns87415.c.
+> I've not submitted it yet because I haven't successfully tested it
+> and it still contains debug printk's.
+> It builds and anyone curious is welcome to look at it:
+>     ftp://ftp.parisc-linux.org/patches/diff-2.6.9-rc2-ns87415_suckyio=
+_cleanup-01
+>=20
+I will also try it :)
+
+> Moving the DECLARE_PCI_FIXUP_HEADER() around is probably the clue
+> I needed to resolve this.
+>=20
+I am curious to find an expalnation too.
+
+Thanks,
+    Joel
+
+-----------------------------------------------------------------------=
+----
+Tiscali ADSL GO, 29,50 Euro/mois pendant toute une ann=E9e, profitez-en=
+=2E..
+http://reg.tiscali.be/adsl/welcome.asp?lg=3DFR
+
+
+
+
