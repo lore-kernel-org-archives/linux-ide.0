@@ -1,33 +1,36 @@
-From: Greg KH <greg@kroah.com>
+From: Herbert Xu <herbert@gondor.apana.org.au>
 Subject: Re: [PATCH] IDE update for 2.6.7-rc3 [1/12]
-Date: Mon, 14 Jun 2004 08:54:58 -0700
+Date: Tue, 15 Jun 2004 07:29:39 +1000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040614155458.GA25461@kroah.com>
-References: <200406111750.30312.bzolnier@elka.pw.edu.pl> <200406131936.08338.bzolnier@elka.pw.edu.pl> <20040614095835.GA11585@infradead.org> <200406141636.01353.bzolnier@elka.pw.edu.pl>
+Message-ID: <20040614212939.GA19812@gondor.apana.org.au>
+References: <E1BZQSC-0006vd-00@gondolin.me.apana.org.au> <200406132001.44262.bzolnier@elka.pw.edu.pl> <20040613221840.GA31354@gondor.apana.org.au> <200406141637.27492.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kroah.org ([65.200.24.183]:52890 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S262208AbUFNQJP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jun 2004 12:09:15 -0400
+Received: from arnor.apana.org.au ([203.14.152.115]:38925 "EHLO
+	arnor.apana.org.au") by vger.kernel.org with ESMTP id S264443AbUFNVaG
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Jun 2004 17:30:06 -0400
 Content-Disposition: inline
-In-Reply-To: <200406141636.01353.bzolnier@elka.pw.edu.pl>
+In-Reply-To: <200406141637.27492.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 14, 2004 at 04:36:01PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > And even if for this special hardware it's usually not doable there
-> > are things like greg's fake hotplug pci driver.  So a non-__devinit pci
-> > probe method is a bug, please fix them in PCI.
+On Mon, Jun 14, 2004 at 04:37:27PM +0200, Bartlomiej Zolnierkiewicz wrote:
 > 
-> Greg, should I add "fake" PCI hotplug support to some IDE
-> drivers just to make fake hotplug PCI driver happy?
+> I'm lost now, so what is your change exactly supposed to do?
 
-No, not at all.  The fake hotplug pci driver is for developers.  Do not
-go changing your IDE drivers just to prevent oopses from happening when
-someone uses the fake hotplug pci driver.
+The change is only effective when IDE is built as a module.  It allows
+you the option to have the same probing order as if IDE was built-in.
 
-thanks,
+Without the patch it always probes the device as soon as each PCI driver
+is loaded.  And you can still do that as long as ide-generic is loaded
+before the PCI drivers.
 
-greg k-h
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email:  Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
