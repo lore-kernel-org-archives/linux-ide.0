@@ -1,156 +1,89 @@
-From: Julien Didron <jdidron@tripnotik.dyndns.org>
-Subject: [Fwd: Re : Kernel 2.6.1 - SiI 3112 & Asus MBoard & WD Raptor cause
- complete hang with DMA and heavy load]
-Date: Tue, 16 Mar 2004 13:31:42 +0100
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: [PATCH] remove no longer needed AMIGA/MAC hacks from IDE resource handling code
+Date: Tue, 16 Mar 2004 23:20:19 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4056F3AE.5020709@tripnotik.dyndns.org>
+Message-ID: <200403162320.19774.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from alesia-4-82-66-59-64.fbx.proxad.net ([82.66.59.64]:41634 "HELO
-	rooter.tripnotik.fr") by vger.kernel.org with SMTP id S261419AbUCPLg6
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:56518 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261745AbUCPWNY
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Mar 2004 06:36:58 -0500
+	Tue, 16 Mar 2004 17:13:24 -0500
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-I thought I might CC you as this could be of some help to you list :o)
-I'm not subscribed to this list though, and anyway I'm not a developper, 
-just a user in desperate need of a stable box ;o)
-
-Cheers
-
-Julien
-
--------- Original Message --------
-Subject: 	Re : Kernel 2.6.1 - SiI 3112 & Asus MBoard & WD Raptor cause 
-complete hang with DMA and heavy load
-Date: 	Tue, 16 Mar 2004 13:18:27 +0100
-From: 	Julien Didron <jdidron@tripnotik.dyndns.org>
-To: 	linux-kernel@vger.kernel.org
-CC: 	joe.rutledge@oxtel.com
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-ide@vger.kernel.org
 
 
-Hi,
+Hi Geert,
 
-   Joe rutledge (see message below) and I had the same problem with 
-what we thougth was the SiI3112 chipset (Box would hang under heavy disc 
-access load). It in fact was caused by the Nforce2 chipset. Resolution 
-of this thread is done by applying the patch below for 2.6.4 (should 
-work for -mm2 and -bk4 too : nforce2-no-disconnect-quirk.patch) :
-  
---- linux-2.6.4-orig/arch/i386/pci/fixup.c      2004-03-11 
-03:55:36.000000000 +0100
-+++ linux-2.6.4/arch/i386/pci/fixup.c   2004-03-16 13:12:25.706569480 +0100
-@@ -187,6 +187,22 @@
-               dev->transparent = 1;
-}
+Now when you've fixed macide.c what do you think about this patch?
 
-+/*
-+ * Halt Disconnect and Stop Grant Disconnect (bit 4 at offset 0x6F)
-+ * must be disabled when APIC is used (or lockups will happen).
-+ */
-+static void __devinit pci_fixup_nforce2_disconnect(struct pci_dev *d)
-+{
-+       u8 t;
-+
-+       pci_read_config_byte(d, 0x6F, &t);
-+       if (t & 0x10) {
-+               printk(KERN_INFO "PCI: disabling nForce2 Halt Disconnect"
-+                                " and Stop Grant Disconnect\n");
-+               pci_write_config_byte(d, 0x6F, (t & 0xef));
-+       }
-+}
-+
-struct pci_fixup pcibios_fixups[] = {
-       {
-               .pass           = PCI_FIXUP_HEADER,
-@@ -290,5 +306,11 @@
-               .device         = PCI_ANY_ID,
-               .hook           = pci_fixup_transparent_bridge
-       },
-+        {
-+               .pass           = PCI_FIXUP_HEADER,
-+               .vendor         = PCI_VENDOR_ID_NVIDIA,
-+               .device         = PCI_DEVICE_ID_NVIDIA_NFORCE2,
-+               .hook           = pci_fixup_nforce2_disconnect
-+        },
-       { .pass = 0 }
-};
-
-Thanks to the guys for this post on the forum : 
-http://forums.gentoo.org/viewtopic.php?t=140343&highlight=a7n8x
-Hope this helps someone ;o)
-
-PS : My configuration is now working flawlessly, using libata and 
-sata_sil, I haven't tested it with the siimage.c driver ...
-
-Julien
-
->Hello everyone,
->
->Initially using a Seagate SATA drive I was experiencing random lockups, 
->no kernel
->panic just a complete hang. Having read about issues with DMA and some 
->Seagates
->I replaced the drive with a Western Digital Raptor. However I still see 
->the same
->lockups. I've tried a variety of options to hdparm (based around -X70 
->-d1) none
->of them making any difference to stability. I then swapped to the libata 
->driver
->expecting this to be more solid. It does appear to last a little longer 
->than the
->IDE driver but the same problems manifest themselves. I then found that 
->there
->were potentially some problems with the Asus board and shared interrupt 
->lines to
->the SiI3112 so I upgraded the BIOS to the most recent version (1007). 
->This has
->made no difference whatsoever. I also read that APIC and ACPI support could
->exascerbate this problem so I removed them from the kernel and disabled 
->them in
->the BIOS. This has given better stability but still not to the point of 
->a usable
->system. This is a desktop system and it will become locked if any heavy 
->disk
->access is done. At the moment I'm running in PIO mode as this is the 
->only stable
->way of handling the disk. I'm not doing any RAID and have no need to. 
->Merely a boot
->of my 2.6.1/2.6.0/2.4.24 system to runlevel 1 and then running bonnie++ 
->-u nobody
->will guarantee a hang before all the write checks have been completed.
->
->Asus A7N8X Deluxe (nforce2) BIOS V1007, AMD Athlon XP (Barton) 2800+, 
->1GB DDR
->RAM (2 x 512 as Dual Channel), WD Raptor 36G SATA HD, Asus GeForce FX 5600
->(256MB), Lite-On 52x CDRW, DVD-ROM. Fresh Gentoo build optimised for 
->Athlon-XP
->(GCC 3.2.3 -march athlon-xp).
->
->2.6.1 kernel patched for forcedeth and nvidia graphics card. APIC & ACPI 
->support
->removed from kernel and turned off in BIOS. Both the IDE and libata 
->drivers have
->been built into the kernel at separate times. It makes no difference 
->what other
->applications are running.
->
->I'm not on the list so a copy of anything posted would be much appreciated.
->
->Thanks in advance to everyone working on the kernel - excellent stuff, 
->it's been
->my working environment for years and a happy one at that!
->
->Joe
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->Please read the FAQ at  http://www.tux.org/lkml/
+Regards,
+Bartlomiej
 
 
+[IDE] remove no longer needed AMIGA/MAC hacks from resource handling code
+
+Nowadays buddha.c, gayle.c and macide.c handle resources themselves.
+
+ linux-2.6.5-rc1-root/drivers/ide/ide.c |   22 ++--------------------
+ 1 files changed, 2 insertions(+), 20 deletions(-)
+
+diff -puN drivers/ide/ide.c~ide_resource_cleanup drivers/ide/ide.c
+--- linux-2.6.5-rc1/drivers/ide/ide.c~ide_resource_cleanup	2004-03-16 22:48:38.304238712 +0100
++++ linux-2.6.5-rc1-root/drivers/ide/ide.c	2004-03-16 23:03:50.592549808 +0100
+@@ -518,11 +518,6 @@ int ide_hwif_request_regions(ide_hwif_t 
+ 	addr = hwif->io_ports[IDE_CONTROL_OFFSET];
+ 	if (addr && !hwif_request_region(hwif, addr, 1))
+ 		goto control_region_busy;
+-#if defined(CONFIG_AMIGA) || defined(CONFIG_MAC)
+-	addr = hwif->io_ports[IDE_IRQ_OFFSET];
+-	if (addr && !hwif_request_region(hwif, addr, 1))
+-		goto irq_region_busy;
+-#endif /* (CONFIG_AMIGA) || (CONFIG_MAC) */
+ 	hwif->straight8 = 0;
+ 	addr = hwif->io_ports[IDE_DATA_OFFSET];
+ 	if ((addr | 7) == hwif->io_ports[IDE_STATUS_OFFSET]) {
+@@ -542,12 +537,6 @@ int ide_hwif_request_regions(ide_hwif_t 
+ 	return 0;
+ 
+ data_region_busy:
+-#if defined(CONFIG_AMIGA) || defined(CONFIG_MAC)
+-	addr = hwif->io_ports[IDE_IRQ_OFFSET];
+-	if (addr)
+-		hwif_release_region(addr, 1);
+-irq_region_busy:
+-#endif /* (CONFIG_AMIGA) || (CONFIG_MAC) */
+ 	addr = hwif->io_ports[IDE_CONTROL_OFFSET];
+ 	if (addr)
+ 		hwif_release_region(addr, 1);
+@@ -577,20 +566,13 @@ void ide_hwif_release_regions(ide_hwif_t
+ 		return;
+ 	if (hwif->io_ports[IDE_CONTROL_OFFSET])
+ 		hwif_release_region(hwif->io_ports[IDE_CONTROL_OFFSET], 1);
+-#if defined(CONFIG_AMIGA) || defined(CONFIG_MAC)
+-	if (hwif->io_ports[IDE_IRQ_OFFSET])
+-		hwif_release_region(hwif->io_ports[IDE_IRQ_OFFSET], 1);
+-#endif /* (CONFIG_AMIGA) || (CONFIG_MAC) */
+-
+ 	if (hwif->straight8) {
+ 		hwif_release_region(hwif->io_ports[IDE_DATA_OFFSET], 8);
+ 		return;
+ 	}
+-	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
+-		if (hwif->io_ports[i]) {
++	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++)
++		if (hwif->io_ports[i])
+ 			hwif_release_region(hwif->io_ports[i], 1);
+-		}
+-	}
+ }
+ 
+ EXPORT_SYMBOL(ide_hwif_release_regions);
+
+_
 
