@@ -1,117 +1,27 @@
-From: Andre Hedrick <andre@linux-ide.org>
-Subject: Re: [PATCH] IDE udma_status = 0x76 and 2.5.30...
-Date: Mon, 5 Aug 2002 14:19:28 -0700 (PDT)
+From: Jens Axboe <axboe@suse.de>
+Subject: [patch] 2.4-ide updated
+Date: Fri, 16 Aug 2002 15:17:59 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10208051416510.11932-100000@master.linux-ide.org>
-References: <Pine.LNX.4.10.10208051335540.11932-100000@master.linux-ide.org>
+Message-ID: <20020816131759.GR2475@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.10.10208051335540.11932-100000@master.linux-ide.org>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Petr Vandrovec <VANDROVE@vc.cvut.cz>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org
 
+Hi,
 
-Try
+I've updated the 2.4-ide stuff to 2.5.31, get it here:
 
-dma_timer_expiry()
- 
-if ((dma_stat & 0x18) == 0x18) /* BUSY Stupid Early Timer !! */
-	return WAIT_CMD;
+*.kernel.org/pub/linux/kernel/people/axboe/patches/v2.5/2.5.31
 
-That will expand the dma_timer_expiry timeout to give the hardware a
-chance to complete; however, if ya'll have successfully goat screwed the
-EOT you die in a LOOP.
+2.4-ide-all-1 has it all, and there are 7 other patches that do it
+incrementally.
 
-On Mon, 5 Aug 2002, Andre Hedrick wrote:
+Just a quick post, I'm going on a two week holiday. Enjoy.
 
-> 
-> Petr,
-> 
-> Funny reading the code of udma_status in pcidma.c I see nothing that can
-> report the contents of busmaster register undoctored.  Only udma_stop
-> returns a binary state or that is all it can do.
-> 
-> Your point about about code familiarity is a lark.
-> 
-> On Mon, 5 Aug 2002, Petr Vandrovec wrote:
-> 
-> > Code ORs read value with 0x10 to make sure that it reports non-zero
-> > value when error happens (when chip returs dma_stat == 0x00). And 0x10
-> > was choosen because of this bit should be always zero, as you know.
-> 
-> The only time known when it returns a non 0xE7 maskable value or the inner
-> bits are set, is when you poke the dma engine when it is BUSY and/or EOT
-> has not occurred.  So clearly you have broken the EOT checks because
-> clearly it is not needed in broken host drivers.
-> 
-> Now, to hand you a clue bat!
-> 
-> I have observed this in the port forward into 2.5 also, and have seen
-> dma_status return on a simplex setup with 0xFF.  Now given that I have
-> correct EOT checks, and from a brief overview of 2.5 can not tell if
-> they are exist anymore, it can only mean that events are outside the model
-> of the DMA State Machine.
-> 
-> The result is if the inner two bits on the top and bottom nibbles are set,
-> the damn thing is busy and code is wrong on the calling events.
-> 
-> 
-> Cheers,
-> 
-> Andre Hedrick
-> LAD Storage Consulting Group
-> 
-> On Mon, 5 Aug 2002, Petr Vandrovec wrote:
-> 
-> > On  5 Aug 02 at 13:08, Andre Hedrick wrote:
-> > > Bit 7: Simplex RO
-> > > Bit 6: Device 1 DMA Capable RW
-> > > Bit 5: Device 0 DMA Capable RW
-> > > Bit 4: Reserved "MUST RETURN ZERO ON READS" !!!     Vendor Write
-> > > Bit 3: Reserved "MUST RETURN ZERO ON READS" !!!     Vendor Write
-> > > Bit 2: Bus Master Interrupt STATUS R Clear W
-> > > Bit 1: Bus Master Error     STATUS R Clear W
-> > > Bit 0: Bus Master Active    STATUS
-> > > 
-> > > Vendor Write, is not a published or listed techincal term.
-> > > It is me trying to present this clearly enough so that the masses will see
-> > > how poorly the general understanding of the basics in 2.5.
-> > 
-> > If you'll bother with reading code, you'll find that dma status
-> > is reported after:
-> > 
-> > (dma_stat & 7) != 4 ? (0x10 | dma_stat) : 0;
-> > 
-> > Because of same code is used in your 2.4.x ide-dma.c (at least in
-> > 2.4.19-rc5), I'm really happy that now I know that you are really 
-> > familiar with your code.
-> > 
-> > Code ORs read value with 0x10 to make sure that it reports non-zero
-> > value when error happens (when chip returs dma_stat == 0x00). And 0x10 
-> > was choosen because of this bit should be always zero, as you know.
-> > 
-> > Maybe we should print value after ANDing with 0xEF, but why? Everybody
-> > can read code when in doubt.
-> >                                             Petr Vandrovec
-> >                                             vandrove@vc.cvut.cz
-> >                                             
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> >
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-
-Andre Hedrick
-LAD Storage Consulting Group
+-- 
+Jens Axboe
 
