@@ -1,21 +1,88 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH} sata_nv: enable generic class support for future NVIDIA
- SATA controllers
-Date: Tue, 01 Feb 2005 22:15:44 -0500
-Message-ID: <420045E0.90903@pobox.com>
-References: <41F03C78.2080707@nvidia.com>
+From: Tejun Heo <tj@home-tj.org>
+Subject: Re: [PATCH 2.6.11-rc2 28/29] ide: ide_init_drive_cmd() now defaults to REQ_DRIVE_TASKFILE
+Date: Wed, 2 Feb 2005 12:11:55 +0900
+Message-ID: <20050202031155.GM1187@htj.dyndns.org>
+References: <20050202024017.GA621@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:3974 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262263AbVBBDP7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Feb 2005 22:15:59 -0500
-In-Reply-To: <41F03C78.2080707@nvidia.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20050202024017.GA621@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: achew <achew@nvidia.com>
-Cc: linux-ide@vger.kernel.org
 
-looks good, applied, sorry for the delay.
+> 28_ide_taskfile_init_drive_cmd.patch
+> 
+> 	ide_init_drive_cmd() now initializes rq->flags to
+> 	REQ_DRIVE_TASKFILE.
 
+
+Signed-off-by: Tejun Heo <tj@home-tj.org>
+
+
+Index: linux-ide-export/drivers/ide/ide-disk.c
+===================================================================
+--- linux-ide-export.orig/drivers/ide/ide-disk.c	2005-02-02 10:28:07.204876587 +0900
++++ linux-ide-export/drivers/ide/ide-disk.c	2005-02-02 10:28:07.852771465 +0900
+@@ -750,7 +750,6 @@ static int set_multcount(ide_drive_t *dr
+ 	if (drive->special.b.set_multmode)
+ 		return -EBUSY;
+ 	ide_init_drive_cmd (&rq);
+-	rq.flags = REQ_DRIVE_TASKFILE;
+ 	drive->mult_req = arg;
+ 	drive->special.b.set_multmode = 1;
+ 	(void) ide_do_drive_cmd (drive, &rq, ide_wait);
+Index: linux-ide-export/drivers/ide/ide-io.c
+===================================================================
+--- linux-ide-export.orig/drivers/ide/ide-io.c	2005-02-02 10:28:07.650804235 +0900
++++ linux-ide-export/drivers/ide/ide-io.c	2005-02-02 10:28:07.853771303 +0900
+@@ -75,7 +75,7 @@ static struct request *ide_queue_flush_c
+ 	}
+ 
+ 	ide_init_drive_cmd(flush_rq);
+-	flush_rq->flags = REQ_DRIVE_TASKFILE | REQ_STARTED;
++	flush_rq->flags |= REQ_STARTED;
+ 	flush_rq->nr_sectors = rq->nr_sectors;
+ 	flush_rq->special = args;
+ 	HWGROUP(drive)->flush_real_rq = rq;
+@@ -1401,7 +1401,7 @@ irqreturn_t ide_intr (int irq, void *dev
+ void ide_init_drive_cmd (struct request *rq)
+ {
+ 	memset(rq, 0, sizeof(*rq));
+-	rq->flags = REQ_DRIVE_CMD;
++	rq->flags = REQ_DRIVE_TASKFILE;
+ 	rq->ref_count = 1;
+ }
+ 
+Index: linux-ide-export/drivers/ide/ide-taskfile.c
+===================================================================
+--- linux-ide-export.orig/drivers/ide/ide-taskfile.c	2005-02-02 10:28:07.407843655 +0900
++++ linux-ide-export/drivers/ide/ide-taskfile.c	2005-02-02 10:28:07.854771141 +0900
+@@ -515,7 +515,6 @@ static int ide_diag_taskfile(ide_drive_t
+ 	struct request rq;
+ 
+ 	ide_init_drive_cmd(&rq);
+-	rq.flags = REQ_DRIVE_TASKFILE;
+ 	rq.buffer = buf;
+ 
+ 	/*
+@@ -716,7 +715,6 @@ int ide_cmd_ioctl (ide_drive_t *drive, u
+ 	if ((void *)arg == NULL) {
+ 		struct request rq;
+ 		ide_init_drive_cmd(&rq);
+-		rq.flags = REQ_DRIVE_TASKFILE;
+ 		return ide_do_drive_cmd(drive, &rq, ide_wait);
+ 	}
+ 
+Index: linux-ide-export/drivers/ide/ide.c
+===================================================================
+--- linux-ide-export.orig/drivers/ide/ide.c	2005-02-02 10:28:07.205876425 +0900
++++ linux-ide-export/drivers/ide/ide.c	2005-02-02 10:28:07.855770979 +0900
+@@ -1255,7 +1255,6 @@ static int set_pio_mode (ide_drive_t *dr
+ 	if (drive->special.b.set_tune)
+ 		return -EBUSY;
+ 	ide_init_drive_cmd(&rq);
+-	rq.flags = REQ_DRIVE_TASKFILE;
+ 	drive->tune_req = (u8) arg;
+ 	drive->special.b.set_tune = 1;
+ 	(void) ide_do_drive_cmd(drive, &rq, ide_wait);
