@@ -1,43 +1,38 @@
-From: "J. Ryan Earl" <heretic@clanhk.org>
-Subject: Re: Status of the sata_sil driver for the VT8237
-Date: Sat, 27 Mar 2004 21:47:48 -0600
+From: "Eric D. Mudama" <edmudama@mail.bounceswoosh.org>
+Subject: Re: [PATCH] speed up SATA
+Date: Sat, 27 Mar 2004 21:40:29 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40664AE4.8010003@clanhk.org>
-References: <4066342B.4080105@clanhk.org> <406643A8.2050808@pobox.com>
+Message-ID: <20040328044029.GB1984@bounceswoosh.org>
+References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.clanhk.org ([69.93.101.154]:36526 "EHLO mail.clanhk.org")
-	by vger.kernel.org with ESMTP id S262077AbUC1Drl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Mar 2004 22:47:41 -0500
-In-Reply-To: <406643A8.2050808@pobox.com>
+Received: from 80-169-17-66.mesanetworks.net ([66.17.169.80]:11438 "EHLO
+	mail.bounceswoosh.org") by vger.kernel.org with ESMTP
+	id S262100AbUC1Ej6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 27 Mar 2004 23:39:58 -0500
+Content-Disposition: inline
+In-Reply-To: <40661049.1050004@yahoo.com.au>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Jeff Garzik wrote:
+On Sun, Mar 28 at  9:37, Nick Piggin wrote:
+>I think 32MB is too much. You incur latency and lose
+>scheduling grainularity. I bet returns start diminishing
+>pretty quickly after 1MB or so.
 
-> J. Ryan Earl wrote:
->
->> I was wondering, what is the state of the sata_sil driver for the VIA 
->> VT8237 southbridge (ie the one used commonly on their K8T 
->> motherboards).  Is this still beta?  Any known problems with it?
->
->
-> Well prior to the most recent version, calling it "beta" was putting 
-> it kindly.  I would call it broken :) which was why it was marked with 
-> CONFIG_BROKEN...
->
-> As of the most recent 2.6.5-rc2-bk snapshots, libata and sata_sil 
-> should be pretty happy with each other.
+32-MB requests are the best for raw throughput.
 
-I meant sata_via, I dunno why I said sata_sil; Freudian typo.  I was 
-thinking of the current sii3112 I use, which has been stable and 
-blazingly fast for awhile with the IDE driver--and a little little patch 
-I keep applying.  I'm looking to upgrade a server with 2 Raptors in it 
-to an A64 running 64-bit Linux of course.  I wanna get the HDs off the 
-PCI bus and onto the VT8237 southbridge.  I was wondering if the driver 
-for -that southbridge- was still considered beta.
+~15ms to land at your target location, then pure 50-60MB/sec for the .5
+seconds it takes to finish the operation. (media limited at that point)
 
--ryan
+Sure, there's more latency, but I guess that is application dependant.
+
+--eric
+
+
+-- 
+Eric D. Mudama
+edmudama@mail.bounceswoosh.org
+
