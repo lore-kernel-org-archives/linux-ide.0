@@ -1,34 +1,46 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: SCSI to ATA translation fix
-Date: Tue, 01 Feb 2005 22:26:08 -0500
-Message-ID: <42004850.1090502@pobox.com>
-References: <007101c5045b$b8ec0de0$6401a8c0@tw.ibm.com>
+From: Tejun Heo <tj@home-tj.org>
+Subject: Re: [PATCH 2.6.11-rc2 08/29] ide: do_identify() string termination fix
+Date: Wed, 2 Feb 2005 12:14:17 +0900
+Message-ID: <20050202031417.GO1187@htj.dyndns.org>
+References: <20050202024017.GA621@htj.dyndns.org> <20050202025020.GI621@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:39814 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262294AbVBBD0a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Feb 2005 22:26:30 -0500
-In-Reply-To: <007101c5045b$b8ec0de0$6401a8c0@tw.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+Received: from [211.58.254.17] ([211.58.254.17]:27019 "EHLO hemosu.com")
+	by vger.kernel.org with ESMTP id S262259AbVBBDOS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2005 22:14:18 -0500
+Content-Disposition: inline
+In-Reply-To: <20050202025020.GI621@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, IDE Linux <linux-ide@vger.kernel.org>
+To: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Albert Lee wrote:
-> Hi Jeff,
+ Sorry, this is the same 08 patch with the correct subject line.
+
+> 08_ide_do_identify_model_string_termination.patch
 > 
-> Attached please find the patch against libata-2.6 for your review.
-> 
-> Changes:
->   #1. ata_scsi_rw_xlat():  
->     Fix  incorrect SCSI to ATA translation for 16 bytes SCSI Read/Write commands. 
->    (Already submitted in the previous patch. Merged with change #2 and resubmitted again.)
-> 
->   #2. Fix ata_scsi_verify_xlat():
->     Fix incorrect tf->hob_lbax translation.
-
-applied
+> 	Terminates id->model string before invoking strstr() in
+> 	do_identify().
 
 
+Signed-off-by: Tejun Heo <tj@home-tj.org>
+
+
+Index: linux-ide-export/drivers/ide/ide-probe.c
+===================================================================
+--- linux-ide-export.orig/drivers/ide/ide-probe.c	2005-02-02 10:27:15.858207205 +0900
++++ linux-ide-export/drivers/ide/ide-probe.c	2005-02-02 10:28:03.719442099 +0900
+@@ -165,11 +165,12 @@ static inline void do_identify (ide_driv
+ 	ide_fixstring(id->fw_rev,    sizeof(id->fw_rev),    bswap);
+ 	ide_fixstring(id->serial_no, sizeof(id->serial_no), bswap);
+ 
++	/* we depend on this a lot! */
++	id->model[sizeof(id->model)-1] = '\0';
++
+ 	if (strstr(id->model, "E X A B Y T E N E S T"))
+ 		goto err_misc;
+ 
+-	/* we depend on this a lot! */
+-	id->model[sizeof(id->model)-1] = '\0';
+ 	printk("%s: %s, ", drive->name, id->model);
+ 	drive->present = 1;
+ 	drive->dead = 0;
