@@ -1,66 +1,50 @@
-From: "Oliver Korpilla" <Oliver.Korpilla@gmx.de>
-Subject: [SATA] SATA_SIL and ATI SB400 chipset
-Date: Sun, 6 Mar 2005 10:35:27 +0100 (MET)
-Message-ID: <25661.1110101727@www58.gmx.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Received: from mail.gmx.net ([213.165.64.20]:32701 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261285AbVCFJf3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Mar 2005 04:35:29 -0500
+From: domen@coderock.org
+Subject: [patch 1/6] ide/ide-cs: replace schedule_timeout() with msleep()
+Date: Sun, 06 Mar 2005 11:42:03 +0100
+Message-ID: <20050306104203.057601F1F0@trashy.coderock.org>
+Received: from coderock.org ([193.77.147.115]:26538 "EHLO trashy.coderock.org")
+	by vger.kernel.org with ESMTP id S261367AbVCFKmI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Mar 2005 05:42:08 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-ide@vger.kernel.org, domen@coderock.org, nacc@us.ibm.com, janitor@sternwelten.at
 
-Hello!
 
-I'm sorry to bug you like this, but I have a problem I hope you can help me
-find about your SATA_SIL driver.
 
-I have a brandnew computer for a project and its components aren't even
-listed with names in lspci. AMD64 3500+, MSI RS480M2 with ATI RS480+SB400
-controllers, 2GB 2.5 Dual DDR400 3200 RAM, Seagate 250 GB SATA drive with
-NCQ, ... I guess you get it's rather new (we were allowed to spend a state
-grant on it, so it isn't mine, I'm just building/configuring it for my
-office).
 
-The Debian AMD64 port netinstall doesn't recognize the disk, even if in IDE
-controller mode in the BIOS and even when the SATA_SIL is modprobed into the
-kernel.
 
-But I've hooked a IDE-ATA harddrive with a Sarge install for i386 to it,
-compiled a kernel 2.6.11 for it, and loaded your SATA_SIL driver for it,
-which probed the device and allowed me to use it. It's working perfectly as
-my 1st SCSI drive this way, and I compiled your driver into my kernel and it
-boots perfectly from SATA.
+Uses msleep() in place of schedule_timeout()
+to guarantee the task delays as expected.
 
-Problem is, I want to do an install from the Sarge netinstall media to get a
-full AMD64-compatible install. If I load the SATA_SIL module there, no
-probing happens and my SATA drive isn't recognized, even if I modprobe the
-module on the shell.
+Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
+Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
+Signed-off-by: Domen Puncer <domen@coderock.org>
+---
 
-Problem seems to be that the simplified busybox version or something similar
-of modprobe is used, which doesn't match modprobe's behaviour. But I guess
-by giving the right parameters on loading your module I could force it into
-being loaded correctly, with the same parameters it recognizes the hardware
-when booted with kernel 2.6.11.
 
-Do you agree?
+ kj-domen/drivers/ide/legacy/ide-cs.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Do you think, I could force your module into recognizing the hardware with
-module parameters??
-
-It would be very kind of you to help me out on this and I'd be very
-grateful, especially since it works already so fine with 2.6.11 hack. But I
-have several of this boxes to install, and I want them to run x86-64 native,
-not i386 from another box' harddrive...
-
-I'm not on the list, so could you CC: me if you answer.
-
-Thanks and with kind regards,
-Oliver Korpilla
-
--- 
-SMS bei wichtigen e-mails und Ihre Gedanken sind frei ...
-Alle Infos zur SMS-Benachrichtigung: http://www.gmx.net/de/go/sms
+diff -puN drivers/ide/legacy/ide-cs.c~msleep-drivers_ide_ide-cs drivers/ide/legacy/ide-cs.c
+--- kj/drivers/ide/legacy/ide-cs.c~msleep-drivers_ide_ide-cs	2005-03-05 16:09:13.000000000 +0100
++++ kj-domen/drivers/ide/legacy/ide-cs.c	2005-03-05 16:09:13.000000000 +0100
+@@ -43,6 +43,7 @@
+ #include <linux/ide.h>
+ #include <linux/hdreg.h>
+ #include <linux/major.h>
++#include <linux/delay.h>
+ #include <asm/io.h>
+ #include <asm/system.h>
+ 
+@@ -346,8 +347,7 @@ static void ide_config(dev_link_t *link)
+ 		break;
+ 	    }
+ 	}
+-	__set_current_state(TASK_UNINTERRUPTIBLE);
+-	schedule_timeout(HZ/10);
++	msleep(100);
+     }
+ 
+     if (hd < 0) {
+_
