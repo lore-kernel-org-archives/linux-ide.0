@@ -1,100 +1,78 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+From: Marc Singer <elf@buici.com>
 Subject: Re: arm-lh7a40x IDE support in 2.6.6
-Date: Sat, 15 May 2004 00:19:46 +0200
+Date: Fri, 14 May 2004 15:49:32 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200405150019.46504.bzolnier@elka.pw.edu.pl>
-References: <200405141840.04401.bzolnier@elka.pw.edu.pl> <200405142323.19115.bzolnier@elka.pw.edu.pl> <20040514213332.GA12414@buici.com>
+Message-ID: <20040514224932.GA8061@buici.com>
+References: <200405141840.04401.bzolnier@elka.pw.edu.pl> <200405142323.19115.bzolnier@elka.pw.edu.pl> <20040514213332.GA12414@buici.com> <200405150019.46504.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:12753 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S263019AbUENWUe
+Received: from florence.buici.com ([206.124.142.26]:40073 "HELO
+	florence.buici.com") by vger.kernel.org with SMTP id S263093AbUENWth
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 May 2004 18:20:34 -0400
-In-Reply-To: <20040514213332.GA12414@buici.com>
+	Fri, 14 May 2004 18:49:37 -0400
 Content-Disposition: inline
+In-Reply-To: <200405150019.46504.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Marc Singer <elf@buici.com>
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 Cc: rmk@arm.linux.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Friday 14 of May 2004 23:33, Marc Singer wrote:
-
-> > > Listen.  It is not my intention to be clever.  All I want to do is get
-> > > things working and to not break other people's code.  I'm certain that
-> > > most people are working with the same assumptions.  Aside from some
-> > > naive snippets I've see promulgated, the bulk of the kernel work I've
-> > > see is sane given limited information.  Certainly, once one
-> > > understands a sybsystem completely then the quality rises.  I hope
-> > > you'll admit that the IDE code is overly intricate.
+On Sat, May 15, 2004 at 12:19:46AM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > The most helpful thing to do is to a) provide best-practice examples,
+> > and b) to include some documentation.  I'm not talking about anything
+> > extensive, but statements like
 > >
-> > With changes like this nobody will ever be able to understand
-> > IDE subsystem completely. ;-)
->
-> I get the feeling that you're blaming me and others for making the IDE
-> code a mess.  Might I suggest that this isn't a very productive tack?
-
-Yep, sorry.
-
-> The most helpful thing to do is to a) provide best-practice examples,
-> and b) to include some documentation.  I'm not talking about anything
-> extensive, but statements like
->
->   "All references to linux/ide.h must reside in the ide tree."
->
-> Are pretty darn helpful.
-
-OK, will do (this can take a while).  Can I ask you to review it later?
-I think your comments will be very valuable.
-
-> > > > - you are setting IDE_NO_IRQ in ide_init_hwif_ports() which is used
-> > > >   in many places in generic IDE code - anybody wanting to understand
-> > > >   interactions with your code + generic code will have serious
-> > > >   problems (especially if knows _nothing_ about lpd7a40x)
-> > >
-> > > I don't know what you mean.  I grep for that constant and found it
-> > > nowhere except for ide-io.c and in my code.  It doesn't take much to
-> > > find the references.
+> >   "All references to linux/ide.h must reside in the ide tree."
 > >
-> > I'm talking about ide_init_hwif_ports() function.
->
-> Most of the ARM arch's use it.  Perhaps all of them need a good once
-> over.
+> > Are pretty darn helpful.
+> 
+> OK, will do (this can take a while).  Can I ask you to review it later?
+> I think your comments will be very valuable.
 
-Since some time I have a patch killing <asm/arch-*/ide.h>. :)
+It would be a pleasure.
 
-> > > > > The OUTB breaks my interface because I don't really have byte-level
-> > > > > access to the resgisters.  So, is selectproc a pre-select procedure
-> > > > > or should it be a substitute?
+> > > > > - you are setting IDE_NO_IRQ in ide_init_hwif_ports() which is used
+> > > > >   in many places in generic IDE code - anybody wanting to understand
+> > > > >   interactions with your code + generic code will have serious
+> > > > >   problems (especially if knows _nothing_ about lpd7a40x)
 > > > >
-> > > > pre-select but you can change it to be substitute if you need
-> > > > (just remember to update all users if you decide to do this)
+> > > > I don't know what you mean.  I grep for that constant and found it
+> > > > nowhere except for ide-io.c and in my code.  It doesn't take much to
+> > > > find the references.
 > > >
-> > > I'll have to search the kernel to see what uses it.  Maybe the better
-> > > way would be to define a new select proc that *is* a substitute.
+> > > I'm talking about ide_init_hwif_ports() function.
 > >
-> > Nope.
->
-> So then we break anyone who is using the selectproc as a pre-select
-> proc?  I don't understand what you mean here.  There are several
-> drivers that use this function.  How do you propose that we provide
-> both types of behavior with one entry point?
+> > Most of the ARM arch's use it.  Perhaps all of them need a good once
+> > over.
+> 
+> Since some time I have a patch killing <asm/arch-*/ide.h>. :)
 
-You can add last line of SELECT_DRIVE() to all ->selectproc()
-implementations and add 'else' to SELECT_DRIVE().
+OK.  That raises an interesting question.  If a) you as the IDE
+maintainer want to make a policy change, and b) you have a concrete
+action to take, then how do you go about it so that the right thing
+(tm) happens?
 
-> > > of the core code is fine.  It is that core code that is necessary to
-> > > make the test possible.
-> >
-> > Stuff in arch-lh7a40x/ide.h is really a driver code but
-> > abuses subsystem code instead - that's my complain.
->
-> Right.  We agree.  I am talking about the core code.  Not the ide
-> code.  The core is what supports the CPU.
+One tack would be to post to the ARM list stating that there is
+such-and-such, a new policy, and this requires a change to the
+way-things-work (tm).  Then effect a patch that breaks the bad stuff
+so that the users of such bad stuff must cope.
 
-Good.
+For example, the patch could edit each of the arm ide files so that
+they don't compile when IDE is enabled.  This wouldn't clobber the
+files as much as make them useless until the such-and-such policy is
+followed.
 
-Cheers,
-Bartlomiej
+> > So then we break anyone who is using the selectproc as a pre-select
+> > proc?  I don't understand what you mean here.  There are several
+> > drivers that use this function.  How do you propose that we provide
+> > both types of behavior with one entry point?
+> 
+> You can add last line of SELECT_DRIVE() to all ->selectproc()
+> implementations and add 'else' to SELECT_DRIVE().
 
+Ah.  I see where you're going.  I can do that.  I cannot test it, but
+I can do it.
+
+BTW, thanks for you help and input.
+
+Cheers.
