@@ -1,37 +1,45 @@
-From: Alan Cox <alan@redhat.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Subject: Re: PATCH: IDE - do spin up for all platforms
-Date: Mon, 9 Aug 2004 11:25:21 -0400
+Date: Tue, 10 Aug 2004 08:10:38 +1000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040809152521.GA28543@devserv.devel.redhat.com>
-References: <20040809143902.GA16025@devserv.devel.redhat.com> <411790DE.7010503@pobox.com>
+Message-ID: <1092089438.14102.48.camel@gaston>
+References: <20040809143902.GA16025@devserv.devel.redhat.com>
+	 <411790DE.7010503@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37866 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S266643AbUHIP0V (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Aug 2004 11:26:21 -0400
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:33491 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S267307AbUHIWNl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Aug 2004 18:13:41 -0400
 In-Reply-To: <411790DE.7010503@pobox.com>
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Alan Cox <alan@redhat.com>, linux-ide@vger.kernel.org, akpm@osdl.org
+Cc: Alan Cox <alan@redhat.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-On Mon, Aug 09, 2004 at 10:57:34AM -0400, Jeff Garzik wrote:
+On Tue, 2004-08-10 at 00:57, Jeff Garzik wrote:
+
 > It needs to check for "status != 0x7f" which is the standard "no device 
 > here" return status.
 
-It checks for BUSY_STAT
+Nope, it waits for BSY to go down
 
 > But worse than that, status can return 0xFF for "no hardware there", in 
 > which case this routine will hang the boot for 35 seconds.
 
-It already handles the case where 0xFF is returned, has done for years
-because people get this wrong and also because hardware going missing tends
-to return 0xFF (eg PCMCIA cards).
+My original version did, let me check.. yes, the current code does that
+too, check ide_wait_not_busy. Note that this is a workaround for broken
+hardware as the spec clearly says that D7 should be pulled low so that
+no drive returns 0x7f (BSY clear). However, there is a significant
+amount of HW with this bug...
 
-So the code already does everything you comment on
+> Note also that libata code does this:
+> * wait 7 seconds
+> * printk("it's taking a long time, be patient")
+> * wait ~30 seconds
 
-0x7F will return from the wait (BUSY_STAT clear)
-0xFF will return with an error
+That could be a good idea. Patch welcome :)
+
+Ben.
 
 
