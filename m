@@ -1,40 +1,35 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [sata] Promise PATA port on PDC2037x SATA
-Date: Thu, 25 Mar 2004 20:37:07 -0500
+From: "Albert Lee" <albertcc@tw.ibm.com>
+Subject: Where to download 2.6.5-rc2-bk6 for libata?
+Date: Fri, 26 Mar 2004 10:17:25 +0800
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40638943.9010206@pobox.com>
+Message-ID: <00b001c412d8$7b9a1d30$6401a8c0@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="big5"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:27612 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263856AbUCZBhV
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Mar 2004 20:37:21 -0500
+Received: from adsl-sta-tpe-62-22-51.so-net.net.tw ([61.62.22.51]:36844 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S263843AbUCZCR0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Mar 2004 21:17:26 -0500
+Received: from alt40p (localhost.localdomain [127.0.0.1])
+	by bluehawaii.tikira.net (8.12.8/8.12.8) with SMTP id i2Q2GsFk020511
+	for <linux-ide@vger.kernel.org>; Fri, 26 Mar 2004 10:16:55 +0800
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>
 
+Hi,
 
-Anybody wanna give this a quick test?  It doesn't actually _do_ anything 
-yet, except attempt to detect the PATA port.
+  I wanna give a try to libata on my box.
 
-Latest libata...
+The patch "2.6.5-rc2-bk6-libata1.patch.gz"  from
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/
+seems applies to bk kernel. 
 
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.4.25-libata14.patch.bz2
+  Where can I download the 2.6.5-rc2-bk6 kernel source?
 
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.5-rc2-bk6-libata1.patch.bz2
-
-BitKeeper repositories:
-	http://gkernel.bkbits.net/libata-2.[46]
-
-The latter 2.6 patch applies to the current BK tree, will be -bk6 when 
-that snapshot is generated tonight.  It _should_ apply to earlier 
-2.6.5-rc2, but applying to earlier kernels you -may- need to 
-s/pci_dma_mapping_error/pci_dma_error/, or completely remove the 
-pci_dma_[mapping_]error() check.
-
-	Jeff
+Thanks,
+Albert Lee
 
 
 
