@@ -1,37 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: libata todo item: retry certain classes of errors
-Date: Fri, 07 Jan 2005 14:49:41 +0000
-Message-ID: <1105106379.17166.325.camel@localhost.localdomain>
-References: <41DE1118.9020209@pobox.com>
+From: "Kyle Wong" <kylewong@southa.com>
+Subject: Confused, libata NCQ supported or not?
+Date: Sat, 8 Jan 2005 18:02:25 +0800
+Message-ID: <001701c4f569$27d8b020$9d02a8c0@southa.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="big5"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:20673 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S261473AbVAGPzB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Jan 2005 10:55:01 -0500
-In-Reply-To: <41DE1118.9020209@pobox.com>
+Received: from [152.101.81.89] ([152.101.81.89]:30414 "HELO southa.com")
+	by vger.kernel.org with SMTP id S261957AbVAHJxO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Jan 2005 04:53:14 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Albert Lee <albertcc@tw.ibm.com>, Andy Warner <andyw@pobox.com>
+To: linux-ide@vger.kernel.org
 
-On Gwe, 2005-01-07 at 04:33, Jeff Garzik wrote:
-> libata error handling is still of the "stupid simple" variety.  While 
-> that makes it easy to verify, it also means that we don't always recover 
->   from some situations.
-> 
-> Right now, libata simply returns an error back to the SCSI layer.
+Hi,
 
-I did actually arrange that all the SCSI errors it faked caused the
-right retry behaviour at the SCSI level when I did that. Perhaps I
-should have commented that fact.
+I'm planning to buy several NCQ enabled harddisks for software RAID purpose.
+>From http://linux.yyz.us/sata/sata-status.html#ahci, I got:
 
-> For DMA, PCI and SATA bus errors, we need to reset the hardware and 
-> retry the command.
+"AHCI (Intel ICH[67] currently)
+Summary: Full NCQ support, full SATA control including hotplug and PM.
+libata driver status: Production."
 
-And for PATA at least possibly also change mode and restore settings.
+however, at http://linux.yyz.us/sata/software-status.html
 
-Alan
+"Even though some SATA host controllers on the market already support
+command queueing (a.k.a. "TCQ"), libata does not yet support it."
+
+"Queueing will be enabled in libata soon, but to do so requires a long
+stretch of testing on a large variety of controllers and drives. This is
+very time-intensive, and is the largest part of this task."
+
+So .... does libata can do NCQ or not now?
+
+Kyle
+
 
