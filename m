@@ -1,76 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SATA ATAPI UDMA - first in Linux
-Date: Fri, 14 May 2004 16:35:53 -0400
+From: Leon Woestenberg <leonw@mailcan.com>
+Subject: IDE layer adoptations that *fake* a failing drive?
+Date: Fri, 14 May 2004 22:50:31 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40A52DA9.6040200@pobox.com>
-References: <1084563800.8752.53.camel@patibmrh9><40A52683.8050604@pobox.com> <1084565990.3084.36.camel@patibmrh9>
+Message-ID: <40A53117.1020305@mailcan.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:46273 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262766AbUENUgF
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 May 2004 16:36:05 -0400
-In-Reply-To: <1084565990.3084.36.camel@patibmrh9>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:16865 "EHLO
+	out2.smtp.messagingengine.com") by vger.kernel.org with ESMTP
+	id S262766AbUENUue (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 May 2004 16:50:34 -0400
+Received: from mailcan.com (t-indiv3-100.athome.tue.nl [131.155.240.100])
+	by www.fastmail.fm (Postfix) with ESMTP id 0F839B7A30C
+	for <linux-ide@vger.kernel.org>; Fri, 14 May 2004 16:50:31 -0400 (EDT)
 List-Id: linux-ide@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Pat LaVarre wrote:
-> Perhaps I should blame my Silicon Image 3611CT80 1.4 bridge, and buy
-> another?
+Hello,
 
-This is very possible.
+I wondered if anyone here is aware of code that sits between the IDE
+software layer and the storage device, that emulates a failing disk in 
+one way or another.
 
-Silicon Image has introduced an addition to ATA called the "DMADIR" bit. 
-  Their bridges require this bit in order to use DMA.
+I.e. for example, write multiple re-tries with time-outs, checksum
+errors, failing to complete read/writes to medium etc.
 
-If your OS driver does not know about DMADIR (read: most OS drivers), 
-then it will fall back _unconditionally_ to PIO.
+ From my networking stuff, I know there are network simulators that you
+can provoke to simulate all kind of network traffic abnormalities, such
+as congestion, dupes, lost packets, bursting.
 
-Try a Marvell bridge, maybe.
+I have access to only a limited number of really bad disks, and want to
+do stress tests against fully automatically managed software RAID arrays
+under Linux (except for the part where you have to physically swap 
+defect disks :-)
 
+Ciao,
 
-> Do we all agree SATA ATAPI UDMA is missing from Linux-2.6.6 `make
-> defconfig`?
-
-No.  No need for new options, if you are using the IDE driver.
-
-Once libata ATAPI support is working, it can simply be turned on.  No 
-need for a config option there, either.
-
-
-> Can any of us suggest other .config options to try?
-
-CONFIG_BLK_DEV_IDEDISK=y
-# CONFIG_IDEDISK_MULTI_MODE is not set
-CONFIG_IDEDISK_STROKE=y
-CONFIG_BLK_DEV_IDECD=y
-# CONFIG_BLK_DEV_IDETAPE is not set
-# CONFIG_BLK_DEV_IDEFLOPPY is not set
-# CONFIG_BLK_DEV_IDESCSI is not set
-CONFIG_IDE_TASK_IOCTL=y
-CONFIG_IDE_TASKFILE_IO=y
-
-#
-# IDE chipset support/bugfixes
-#
-# CONFIG_IDE_GENERIC is not set
-# CONFIG_BLK_DEV_CMD640 is not set
-CONFIG_BLK_DEV_IDEPCI=y
-CONFIG_IDEPCI_SHARE_IRQ=y
-# CONFIG_BLK_DEV_OFFBOARD is not set
-CONFIG_BLK_DEV_GENERIC=y
-# CONFIG_BLK_DEV_OPTI621 is not set
-# CONFIG_BLK_DEV_RZ1000 is not set
-CONFIG_BLK_DEV_IDEDMA_PCI=y
-# CONFIG_BLK_DEV_IDEDMA_FORCED is not set
-CONFIG_IDEDMA_PCI_AUTO=y
-# CONFIG_IDEDMA_ONLYDISK is not set
-CONFIG_BLK_DEV_ADMA=y
-
-
-# CONFIG_SCSI_SATA is not set
-
-
+Leon.
