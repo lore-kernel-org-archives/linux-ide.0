@@ -1,78 +1,70 @@
-From: Ricky Beam <jfbeam@bluetronic.net>
-Subject: [BK-Patch] ST3160023AS needs mod15
-Date: Fri, 2 Jul 2004 11:50:55 -0400 (EDT)
+From: Tigran Aivazian <tigran@veritas.com>
+Subject: Re: question about SATA and IDE DVD/CD drives.
+Date: Fri, 2 Jul 2004 16:56:44 +0100 (BST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.33.0407021149400.25702-100000@sweetums.bluetronic.net>
+Message-ID: <Pine.LNX.4.44.0407021656110.2190-100000@einstein.homenet>
+References: <40E5857E.2030308@superbug.demon.co.uk>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sweetums.bluetronic.net ([24.199.150.42]:35546 "EHLO
-	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
-	id S264649AbUGBP6F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jul 2004 11:58:05 -0400
+Received: from colossus.systems.pipex.net ([62.241.160.73]:2201 "EHLO
+	colossus.systems.pipex.net") by vger.kernel.org with ESMTP
+	id S264656AbUGBP6J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Jul 2004 11:58:09 -0400
+In-Reply-To: <40E5857E.2030308@superbug.demon.co.uk>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: James Courtier-Dutton <James@superbug.demon.co.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-This BitKeeper patch contains the following changesets:
-1.1414
+Ok, thanks, chaps, I'll try again now and see if the solution you propose
+works. I'll let you know in either case.
 
-# This is a BitKeeper patch.  What follows are the unified diffs for the
-# set of deltas contained in the patch.  The rest of the patch, the part
-# that BitKeeper cares about, is below these diffs.
-# User:	jfbeam
-# Host:	troz.com
-# Root:	/opt/kernel/src/bk-linux-2.6
+Kind regards
+Tigran
 
-#
-#--- 1.27/drivers/scsi/sata_sil.c	2004-06-22 20:42:10 -04:00
-#+++ 1.28/drivers/scsi/sata_sil.c	2004-07-02 11:42:45 -04:00
-#@@ -86,6 +86,7 @@
-# 	{ "ST360015AS",		SIL_QUIRK_MOD15WRITE },
-# 	{ "ST380023AS",		SIL_QUIRK_MOD15WRITE },
-# 	{ "ST3120023AS",	SIL_QUIRK_MOD15WRITE },
-#+	{ "ST3160023AS",	SIL_QUIRK_MOD15WRITE },
-# 	{ "ST340014ASL",	SIL_QUIRK_MOD15WRITE },
-# 	{ "ST360014ASL",	SIL_QUIRK_MOD15WRITE },
-# 	{ "ST380011ASL",	SIL_QUIRK_MOD15WRITE },
-#
+On Fri, 2 Jul 2004, James Courtier-Dutton wrote:
 
-# Diff checksum=b1066f06
-
-
-# Patch vers:	1.3
-# Patch type:	REGULAR
-
-== ChangeSet ==
-torvalds@athlon.transmeta.com|ChangeSet|20020205173056|16047|c1d11a41ed024864
-jfbeam@spacemeat.troz.com|ChangeSet|20040702041255|33131
-D 1.1414 04/07/02 11:42:52-04:00 jfbeam@troz.com +1 -0
-B torvalds@athlon.transmeta.com|ChangeSet|20020205173056|16047|c1d11a41ed024864
-C
-c [PATCH] sata_sil: Add ST3160023AS for mod15
-c
-c Signed-off-by: Ricky Beam <jfbeam@troz.com>
-K 32905
-P ChangeSet
-------------------------------------------------
-
-0a0
-> jgarzik@redhat.com|drivers/scsi/sata_sil.c|20031021232136|13432|e65affa611eb11bd jfbeam@troz.com|drivers/scsi/sata_sil.c|20040702154245|50292
-
-== drivers/scsi/sata_sil.c ==
-jgarzik@redhat.com|drivers/scsi/sata_sil.c|20031021232136|13432|e65affa611eb11bd
-jgarzik@pobox.com|drivers/scsi/sata_sil.c|20040623004210|47591
-D 1.28 04/07/02 11:42:45-04:00 jfbeam@troz.com +1 -0
-B torvalds@athlon.transmeta.com|ChangeSet|20020205173056|16047|c1d11a41ed024864
-C
-c add ST3160023AS to blacklist
-K 50292
-O -rw-rw-r--
-P drivers/scsi/sata_sil.c
-------------------------------------------------
-
-I88 1
-	{ "ST3160023AS",	SIL_QUIRK_MOD15WRITE },
-
-# Patch checksum=52314a1b
+> Jeff Garzik wrote:
+> > Tigran Aivazian wrote:
+> > 
+> >> Hi Jeff,
+> >>
+> >> I was a bit confused with the "SATA vs IDE" thing recently, namely the 
+> >> fact that if I compile _both_ IDE and SATA support into the kernel 
+> >> then IDE takes over and SATA gets a "busy" error, and as a result I 
+> >> get 3M/sec performance instead of 56M/sec.
+> >>
+> >> Now, realizing this error I have reconfigured the kernel to NOT 
+> >> include ide and ONLY include SATA plus chipset-specific ata_piix.c (I 
+> >> have ICH6 device 2652). However, now the new problem is that I can't 
+> >> see the IDE DVD-ROM drive anymore. Here is dmesg:
+> > 
+> > [...]
+> > 
+> >> As you see, sda is there, but where is my DVD drive gone?
+> > 
+> > 
+> > I am guessing that your DVD drive is connected to a PATA bus, but you 
+> > disabled the PATA driver (CONFIG_IDE) completely.
+> > 
+> > Enable CONFIG_IDE, and disable CONFIG_BLK_DEV_IDE_SATA, and that will 
+> > fix things I bet.
+> > 
+> >     Jeff
+> > 
+> > 
+> 
+> For some strange reason, you need the PATA HD driver compiled into the 
+> kernel, together with the SATA driver compiled into the kernel.
+> Then SATA takes the HDs, and the PATA HD driver is used to identify the 
+> DVD drive, and thus you can then load the PATA CD module, or the 
+> IDE-SCSI module to access the DVD drives.
+> 
+> I have a ICH5 chipset, so I had exactly the same problems as you.
+> The strange bit is needing the PATA HD driver compiled into the kernel, 
+> even though you only need PATA CD/DVD drivers.
+> 
+> Cheers
+> James
+> 
 
