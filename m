@@ -1,28 +1,48 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH/RFC] ata_set_mode() to send SET FEATURES first
-Date: Sat, 13 Nov 2004 20:23:51 -0500
-Message-ID: <4196B3A7.1020303@pobox.com>
-References: <004701c4c8bb$640d2880$6801a8c0@tw.ibm.com>
+Subject: [BK PATCH] 2.6.x libata build fix
+Date: Sun, 14 Nov 2004 05:24:02 -0500
+Message-ID: <20041114102402.GA31550@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:36287 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261227AbUKNBYE
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 Nov 2004 20:24:04 -0500
-In-Reply-To: <004701c4c8bb$640d2880$6801a8c0@tw.ibm.com>
+Received: from havoc.gtf.org ([69.28.190.101]:21407 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S261279AbUKNKZP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Nov 2004 05:25:15 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>
-
-I basically agree with Doug, but for a different reason.
-
-If the hardware is setting an incorrect timing value, then the solution
-is to disable that hardware feature, and manually set the timings.
-
-	Jeff
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, hch@infradead.org
 
 
+Please do a
 
+	bk pull bk://gkernel.bkbits.net/libata-2.6
+
+This will update the following files:
+
+ drivers/scsi/sata_svw.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+through these ChangeSets:
+
+<hch@lst.de> (04/11/14 1.2138)
+   [PATCH] fix sata_svw compile
+   
+   Current BK doesn't compile with the G5 defconfig because the last
+   libata updated missed to change sata_svw to the new conventions.
+   
+   Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
+
+diff -Nru a/drivers/scsi/sata_svw.c b/drivers/scsi/sata_svw.c
+--- a/drivers/scsi/sata_svw.c	2004-11-14 05:23:31 -05:00
++++ b/drivers/scsi/sata_svw.c	2004-11-14 05:23:31 -05:00
+@@ -245,7 +245,7 @@
+ 		return 0;
+ 
+ 	/* Find the OF node for the PCI device proper */
+-	np = pci_device_to_OF_node(ap->host_set->pdev);
++	np = pci_device_to_OF_node(to_pci_dev(ap->host_set->dev));
+ 	if (np == NULL)
+ 		return 0;
+ 
