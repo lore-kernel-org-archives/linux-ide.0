@@ -1,78 +1,75 @@
-From: "Albert Lee" <albertcc@tw.ibm.com>
-Subject: libata-dev-2.6 ATAPI interrupt lost problem with pdc2027x under UDMA mode
-Date: Tue, 16 Nov 2004 17:03:55 +0800
-Message-ID: <006601c4cbbb$369788c0$6801a8c0@tw.ibm.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [BUG] Kernel disables DMA on RICOH CD-R/RW
+Date: Tue, 16 Nov 2004 14:01:10 +0100
+Message-ID: <58cb370e04111605019fc1df8@mail.gmail.com>
+References: <20041116124656.82075.qmail@web52601.mail.yahoo.com>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="big5"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bluehawaii.tikira.net ([61.62.22.51]:46830 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S261946AbUKPJEU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Nov 2004 04:04:20 -0500
+Received: from wproxy.gmail.com ([64.233.184.203]:33327 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261972AbUKPNBL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Nov 2004 08:01:11 -0500
+Received: by wproxy.gmail.com with SMTP id 58so573717wri
+        for <linux-ide@vger.kernel.org>; Tue, 16 Nov 2004 05:01:10 -0800 (PST)
+In-Reply-To: <20041116124656.82075.qmail@web52601.mail.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: Doug Maxey <dwm@maxeymade.com>, IDE Linux <linux-ide@vger.kernel.org>
+To: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hi,
-  I am testing ATAPI device with libata-dev.2.6 code and the pdc2027x driver.
+On Tue, 16 Nov 2004 23:46:56 +1100 (EST), Srihari Vijayaraghavan
+<sriharivijayaraghavan@yahoo.com.au> wrote:
+> As of 2.6.9-rc4 (I have verified this to be case all
+> the way up to 2.6.10-rc2), kernel displays this
+> message:
+> 
+> Uniform Multi-Platform E-IDE driver Revision:
+> 7.00alpha2
+> ide: Assuming 33MHz system bus speed for PIO modes;
+> override with idebus=xx
+> VP_IDE: IDE controller at PCI slot 0000:00:0f.1
+> ACPI: PCI interrupt 0000:00:0f.1[A] -> GSI 20 (level,
+> low) -> IRQ 20
+> VP_IDE: chipset revision 6
+> VP_IDE: not 100% native mode: will probe irqs later
+> VP_IDE: VIA vt8237 (rev 00) IDE UDMA133 controller on
+> pci0000:00:0f.1
+>     ide0: BM-DMA at 0xcc00-0xcc07, BIOS settings:
+> hda:DMA, hdb:pio
+>     ide1: BM-DMA at 0xcc08-0xcc0f, BIOS settings:
+> hdc:DMA, hdd:DMA
+> Probing IDE interface ide0...
+> hda: ST3120026A, ATA DISK drive
+> Using anticipatory io scheduler
+> ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+> Probing IDE interface ide1...
+> hdc: Pioneer DVD-ROM ATAPIModel DVD-113 0113, ATAPI
+> CD/DVD-ROM drive
+> hdd: RICOH CD-R/RW MP7083A, ATAPI CD/DVD-ROM drive
+> hdd: Disabling (U)DMA for RICOH CD-R/RW MP7083A
+> (blacklisted)
+> 
+> The kernel disables DMA on the CD-R/RW (/dev/hdd) and
+> of course it would not let me enable it manually
+> either. Up until 2.6.9-rc3 the drive worked in DMA
+> mode just fine.
+> 
+> (I have been using this drive for more than 4 years. I
+> have used it under 2.2.x, 2.4.x, >=2.5.50 in DMA mode
+> just fine. Although I have changed everything else in
+> the computer in those long years: CPU, M/B, RAM, HDD
+> etc., save this great CD-R/RW drive, which has been
+> working fine.)
+> 
+> So the question is: why?
+> (And what can I do to enable DMA again?)
 
-Environment:
-- pdc20275 on the MSI P4HS-4 mainboard
-- Maxtor 6Y080L0 as primary dev0
-- Seagate ST380011A as primary dev1
-- Asus CRW-5232AS as secondard dev0
+Previously VIA IDE driver ignored DMA blacklists completely
+(which was of course wrong), it was fixed.
 
-The following are the results:
+Probably this drive should be removed from the blacklist.
+Does anybody remember why was it added there?
 
-1. All the harddisk drives works fine with either PIO or DMA
-2. For the ATAPI device, READ and other commands works fine with ATAPI UDMA protocol.
-   However, when REQUEST_SENSE / MODE_SENSE is issued to the CD-RW drive with
-   ATAPI DMA protocol, the interrupt is lost. 
-3. All commands, including REQUEST_SENSE/MODE_SENSE, work fine with ATAPI PIO protocol.
-4. PIIX and the same Asus drive work fine, both UDMA and PIO.
-
-For the problem of lost interrupt, I've checked the pdc2027x global control register (which shows 
-the status of INTRQ and DMARQ directly), the Asus drive already report INTRQ and 
-said UDMA completed.  However, pdc20275 does not report interrupt and said DMA on going.
-
-Any clue or idea for this problem? Thanks.
-Albert
-=============================================================
-(dmesg log attached)
-ata_scsi_dump_cdb: CDB (2:0,0,0) 12 00 00 00 60 00 20 00 00
-atapi_xlat: nodata[0]
-ata_sg_setup_one: mapped buffer of 96 bytes for read
-ata_exec_command_pio: ata2: cmd 0xA0
-atapi_packet_task: busy wait
-atapi_packet_task: send cdb
-ata_host_intr: ata2: protocol 7 (dev_stat 0x50)        => "inquiry" is successful
-ata_sg_clean: unmapping 1 sg elements
-  Vendor: ASUS      Model: CRW-5232AS        Rev: 1.02
-  Type:   CD-ROM                             ANSI SCSI revision: 05
-ata_scsi_dump_cdb: CDB (2:0,0,0) 00 00 00 00 00 00 00 00 00
-ata_exec_command_pio: ata2: cmd 0xA0
-atapi_packet_task: busy wait
-atapi_packet_task: send cdb
-ata_host_intr: ata2: protocol 6 (dev_stat 0x50)   => "test unit ready" is successful
-ata_scsi_dump_cdb: CDB (2:0,0,0) 5a 00 2a 00 00 00 00 00 80  => "mode sense" fails 
-atapi_xlat: nodata[0]
-ata_sg_setup_one: mapped buffer of 128 bytes for read
-ata_exec_command_pio: ata2: cmd 0xA0
-atapi_packet_task: busy wait
-atapi_packet_task: send cdb
-ata_scsi_error: ENTER                 => Promise pdc2027x timeout here. Interrupt lost. (PIIX works.)
-ata_eng_timeout: ENTER
-ata_qc_timeout: ENTER
-ata2: command 0xa0 timeout, stat 0x50 host_stat 0x1  => Device: OK, host: DMA on going.
-ata_sg_clean: unmapping 1 sg elements
-ata_qc_timeout: EXIT
-ata_eng_timeout: EXIT
-ata_scsi_error: EXIT
-sr0: scsi3-mmc drive: 0x/0x caddy 
-=> should be   sr0: scsi3-mmc drive: 52x/52x writer cd/rw xa/form2 cdda tray
-Uniform CD-ROM driver Revision: 3.20
-
-
+Bartlomiej
