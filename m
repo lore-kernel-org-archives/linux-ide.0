@@ -1,41 +1,48 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] fix Silicon Image SATA 4-port support
-Date: Wed, 25 Feb 2004 14:36:38 -0500
+From: Mike Fedyk <mfedyk@matchmail.com>
+Subject: Re: Any recommended PATA or SATA chip for kernel 2.6.x ?
+Date: Wed, 25 Feb 2004 11:50:05 -0800
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <403CF946.2080708@pobox.com>
-References: <403C4E73.9030805@pobox.com> <403C8EDC.1030905@stesmi.com>
+Message-ID: <403CFC6D.9080602@matchmail.com>
+References: <004c01c3fb66$b7ba9440$9c02a8c0@southa.com> <20040225174404.GA662@merlin.emma.line.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:36287 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261277AbUBYTgw
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Feb 2004 14:36:52 -0500
-In-Reply-To: <403C8EDC.1030905@stesmi.com>
+Received: from mta4.rcsntx.swbell.net ([151.164.30.28]:12795 "EHLO
+	mta4.rcsntx.swbell.net") by vger.kernel.org with ESMTP
+	id S261456AbUBYTu1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Feb 2004 14:50:27 -0500
+In-Reply-To: <20040225174404.GA662@merlin.emma.line.org>
 List-Id: linux-ide@vger.kernel.org
-To: Stefan Smietanowski <stesmi@stesmi.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Matthias Andree <matthias.andree@gmx.de>
+Cc: Kyle Wong <kylewong@southa.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Stefan Smietanowski wrote:
-> Hi Jeff.
-> 
->> Do not be fooled, Silicon Image is still marked CONFIG_BROKEN for a 
->> reason...  :)  But this should (hopefully!) get 4-port support going.
->>
->> Testing requested...
+Matthias Andree wrote:
+> On Wed, 25 Feb 2004, Kyle Wong wrote:
 > 
 > 
-> Care to elaborate on what's left to do until you're satisfied with it?
+>>I found in the market that most PCI IDE card are using "siimage (CMD?),
+>>HiPoint and IT8212 chip, are they working well with 2.6.x ?
 > 
-> And are the issues general (all chips) or specific to some chips?
 
+Hi!
 
-Just specific to Silicon Image, which is the only thing marked 
-CONFIG_BROKEN.  It needs to acknowledge more interrupts than it 
-currently does.
+> 
+> http://kerneltrap.org/node/view/1787
 
-	Jeff
+Any newer info from Jeff?
 
+A lot can happen in three months... :-D
 
+> 
+> http://www.freebsd.org/cgi/cvsweb.cgi/src/sys/dev/ata/ata-chipset.c?only_with_tag=MAIN#rev1.50
+> 
+> http://docs.freebsd.org/cgi/mid.cgi?402F88AB.8010003
+> http://docs.freebsd.org/cgi/mid.cgi?200311262104.hAQL4ICN024652
+> http://docs.freebsd.org/cgi/mid.cgi?40250AF7.3010804
+> http://docs.freebsd.org/cgi/mid.cgi?4022B5EF.4030807
+> http://docs.freebsd.org/cgi/mid.cgi?4023BF1C.6020008
 
+OK, I'll be sure to avoid the SiI3112A based boards.
+
+Mike
