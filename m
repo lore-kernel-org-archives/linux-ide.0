@@ -1,16 +1,16 @@
 From: Marc Singer <elf@buici.com>
 Subject: Re: overriding ioops
-Date: Sat, 5 Jun 2004 15:14:54 -0700
+Date: Sat, 5 Jun 2004 15:25:35 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040605221454.GC15933@buici.com>
+Message-ID: <20040605222535.GB16309@buici.com>
 References: <20040605201953.GA14917@buici.com> <200406052242.19060.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from florence.buici.com ([206.124.142.26]:29079 "HELO
-	florence.buici.com") by vger.kernel.org with SMTP id S262100AbUFEWOz
+Received: from florence.buici.com ([206.124.142.26]:30359 "HELO
+	florence.buici.com") by vger.kernel.org with SMTP id S262106AbUFEWZg
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 5 Jun 2004 18:14:55 -0400
+	Sat, 5 Jun 2004 18:25:36 -0400
 Content-Disposition: inline
 In-Reply-To: <200406052242.19060.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
@@ -25,11 +25,6 @@ On Sat, Jun 05, 2004 at 10:42:19PM +0200, Bartlomiej Zolnierkiewicz wrote:
 > 
 > No, arch specific code shouldn't touch generic one.
 > Your host driver should take care of this.
-
-I apologize for the redundant question.  After I send the first
-message, I couldn't find it in my sent folder so I thought I might
-have deleted it.
-
 > 
 > If you need some changes in generic code please describe them
 > and I'll try to fix/enhance it.
@@ -37,9 +32,7 @@ have deleted it.
 > [ I know about polling but this is really non trivial change as i.e.
 >   we have 4 versions of IDE PIO code (!) - I'm cleaning this mess now. ]
 
-OK.  I'll implement something for now and wait for you to get a handle
-on it before submitting a patch.
-
-> 
-> Thanks,
-> Bartlomiej
+I wonder if we're talking about the same thing.  My platform does not
+have DMA nor does it have an IRQ.  PIO, as I understand it, refers to
+programmed IO and not to polling proper.  Do you intend to support
+polling?
