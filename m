@@ -1,58 +1,87 @@
-From: Stephen Atkins <atkinss@shaw.ca>
-Subject: sata_sil with seagate st3120026as
-Date: Fri, 23 Jul 2004 08:06:41 -0600
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <LPEKIDCKCKICKJCIGCBLMEIACBAA.atkinss@shaw.ca>
+From: maximilian attems <janitor@sternwelten.at>
+Subject: [patch-kj] MIN/MAX removal in ide-timing.h
+Date: Fri, 23 Jul 2004 16:54:26 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040723145425.GK1795@stro.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:19654 "EHLO
-	pd5mo2so.prod.shaw.ca") by vger.kernel.org with ESMTP
-	id S267748AbUGWOSr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Jul 2004 10:18:47 -0400
-Received: from pd2mr7so.prod.shaw.ca (pd2mr7so-qfe3.prod.shaw.ca [10.0.141.10])
- by l-daemon (iPlanet Messaging Server 5.2 HotFix 1.18 (built Jul 28 2003))
- with ESMTP id <0I1B00AAF5S3P6@l-daemon> for linux-ide@vger.kernel.org; Fri,
- 23 Jul 2004 08:04:51 -0600 (MDT)
-Received: from pn2ml2so.prod.shaw.ca ([10.0.121.146])
- by pd2mr7so.prod.shaw.ca (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar
- 15 2004)) with ESMTP id <0I1B00IFM5S3SCA0@pd2mr7so.prod.shaw.ca> for
- linux-ide@vger.kernel.org; Fri, 23 Jul 2004 08:04:51 -0600 (MDT)
-Received: from calt04 ([68.144.48.230])
- by l-daemon (iPlanet Messaging Server 5.2 HotFix 1.18 (built Jul 28 2003))
- with SMTP id <0I1B00GIF5S2G7@l-daemon> for linux-ide@vger.kernel.org; Fri,
- 23 Jul 2004 08:04:51 -0600 (MDT)
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S267774AbUGWOyn@vger.kernel.org>
+Content-Disposition: inline
+To: linux-ide@vger.kernel.org
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
 
-Hello.  I've been poking around in the sata_sil.c file because I saw a message
-at one time about the Seagate drives and how some of them need to be in the
-sil_blacklist.  Any way I've been trying to get this driver to work under the
-2.6 kernel (it seems find in 2.4.26 but ivtv doesn't like that version).  Any
-way this is the error I received from the kernel when I was trying to access the
-drive.
 
-ata1: DMA timeout 0x58 on port 0xE0851087
-scsi0: Error on channel 0, id 0, lun 0, CDB: 0x2a 00 0b bd a8 a4 00 04 00 00
-current sda: sense=70 3
-ASC= c ASCQ= 2
-Raw sense data: 0x70 0x00 0x03 0x00 0x00 0x00 0x00 0x06 0x00 0x00 0x00 0x00 0x0c
-0x02
-end_request: I/O error, dev sda, sector 191735972
+I replaced the custom MIN/MAX macros with the type safe min/max macros
+from linux/kernel.h.
 
-A bit of info on my hardware:
-MoBo: Gigabyte GA-7N400 Pro2 (Dual DDR400, intel8x0 sound, r8169 lan, sil3512A,
-Gigaraid IDE, IDE nForce2)
-HD: 6G regular IDE, 120G Seagate SATA ST3120026AS, DVDROM
-Memory: 512M DDR 2100 (w 256M sticks) not useing dual channel
-TV Cards: 1 PVR-250 model 980, 1 Leadtek winfast TV2000 XP Deluxe
-Network: On board r8169 and wireless 802.11abg (used madwifi drivers)
-Video: GForce 5200 (using 6106 drivers from nVidia)
+On Sat, Jul 10, 2004 at 04:03:37PM +0200, Vojtech Pavlik wrote:
+> How about if you used the "min_t" and "max_t" macros inside FIT? That
+> could help get rid of the casts completely (assuming the second and
+> third parameters to FIT are expected to be constants).
 
-Not sure what else you might need.  Just let me know if there is and I'll do my
-best to supply it.
+Yes, that's better. It reduces the necessary changes to a minimum.
 
-Stephen Atkins
+patch applies cleanly to 2.6.8-rc2
 
+From: Clemens Buchacher <drizzd@aon.at>
+Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
+
+
+
+---
+
+ linux-2.6.7-bk20-max/drivers/ide/ide-timing.h |   25 ++++++++++++-------------
+ 1 files changed, 12 insertions(+), 13 deletions(-)
+
+diff -puN drivers/ide/ide-timing.h~min-max-ide_ide-timing.h drivers/ide/ide-timing.h
+--- linux-2.6.7-bk20/drivers/ide/ide-timing.h~min-max-ide_ide-timing.h	2004-07-11 15:07:01.000000000 +0200
++++ linux-2.6.7-bk20-max/drivers/ide/ide-timing.h	2004-07-11 15:07:01.000000000 +0200
+@@ -27,6 +27,7 @@
+  * Vojtech Pavlik, Simunkova 1594, Prague 8, 182 00 Czech Republic
+  */
+ 
++#include <linux/kernel.h>
+ #include <linux/hdreg.h>
+ 
+ #define XFER_PIO_5		0x0d
+@@ -96,11 +97,9 @@ static struct ide_timing ide_timing[] = 
+ #define IDE_TIMING_UDMA		0x80
+ #define IDE_TIMING_ALL		0xff
+ 
+-#define MIN(a,b)	((a)<(b)?(a):(b))
+-#define MAX(a,b)	((a)>(b)?(a):(b))
+-#define FIT(v,min,max)	MAX(MIN(v,max),min)
+-#define ENOUGH(v,unit)	(((v)-1)/(unit)+1)
+-#define EZ(v,unit)	((v)?ENOUGH(v,unit):0)
++#define FIT(v,vmin,vmax)	max_t(short,min_t(short,v,vmax),vmin)
++#define ENOUGH(v,unit)		(((v)-1)/(unit)+1)
++#define EZ(v,unit)		((v)?ENOUGH(v,unit):0)
+ 
+ #define XFER_MODE	0xf0
+ #define XFER_UDMA_133	0x48
+@@ -188,14 +187,14 @@ static void ide_timing_quantize(struct i
+ 
+ static void ide_timing_merge(struct ide_timing *a, struct ide_timing *b, struct ide_timing *m, unsigned int what)
+ {
+-	if (what & IDE_TIMING_SETUP  ) m->setup   = MAX(a->setup,   b->setup);
+-	if (what & IDE_TIMING_ACT8B  ) m->act8b   = MAX(a->act8b,   b->act8b);
+-	if (what & IDE_TIMING_REC8B  ) m->rec8b   = MAX(a->rec8b,   b->rec8b);
+-	if (what & IDE_TIMING_CYC8B  ) m->cyc8b   = MAX(a->cyc8b,   b->cyc8b);
+-	if (what & IDE_TIMING_ACTIVE ) m->active  = MAX(a->active,  b->active);
+-	if (what & IDE_TIMING_RECOVER) m->recover = MAX(a->recover, b->recover);
+-	if (what & IDE_TIMING_CYCLE  ) m->cycle   = MAX(a->cycle,   b->cycle);
+-	if (what & IDE_TIMING_UDMA   ) m->udma    = MAX(a->udma,    b->udma);
++	if (what & IDE_TIMING_SETUP  ) m->setup   = max(a->setup,   b->setup);
++	if (what & IDE_TIMING_ACT8B  ) m->act8b   = max(a->act8b,   b->act8b);
++	if (what & IDE_TIMING_REC8B  ) m->rec8b   = max(a->rec8b,   b->rec8b);
++	if (what & IDE_TIMING_CYC8B  ) m->cyc8b   = max(a->cyc8b,   b->cyc8b);
++	if (what & IDE_TIMING_ACTIVE ) m->active  = max(a->active,  b->active);
++	if (what & IDE_TIMING_RECOVER) m->recover = max(a->recover, b->recover);
++	if (what & IDE_TIMING_CYCLE  ) m->cycle   = max(a->cycle,   b->cycle);
++	if (what & IDE_TIMING_UDMA   ) m->udma    = max(a->udma,    b->udma);
+ }
+ 
+ static struct ide_timing* ide_timing_find_mode(short speed)
+
+_
