@@ -1,33 +1,33 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: no help text for BLK_DEV_GENERIC
-Date: Wed, 19 Jan 2005 05:35:45 +0100
-Message-ID: <20050119043545.GJ1841@stusta.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] fix wrong __init usage in IDE PCI drivers
+Date: Wed, 19 Jan 2005 12:42:19 +0100
+Message-ID: <20050119114219.GA10965@lst.de>
+References: <20050109131959.GA20622@lst.de> <58cb370e05011417376956cfcb@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:48655 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261565AbVASEft (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Jan 2005 23:35:49 -0500
+Received: from verein.lst.de ([213.95.11.210]:52180 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261695AbVASLm1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2005 06:42:27 -0500
 Content-Disposition: inline
+In-Reply-To: <58cb370e05011417376956cfcb@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
 
-Hi Bartlomiej,
+On Sat, Jan 15, 2005 at 02:37:36AM +0100, Bartlomiej Zolnierkiewicz wrote:
+> On Sun, 9 Jan 2005 14:19:59 +0100, Christoph Hellwig <hch@lst.de> wrote:
+> > PCI probe routines (and funcions called by them) must use __devinit
+> > as they can be called from PCI hotplug operations.
+> > 
+> > While most of the drivers touched in the patch are for hardware that's
+> > soldered on mainboards we now have a fake PCI HP driver that allows
+> > hot remove / replug for them which they need to handle.
+> 
+> Ugh... I really hate (lack of) flexibility of CONFIG_HOTPLUG...
+> 
+> Shouldn't we have __fakedev{init,exit} ?
 
-neither 2.4 nor 2.6 contain a help text for the the option 
-BLK_DEV_GENERIC. Could you provide a text with a short description and 
-an "If unsure say y/n." advice?
-
-TIA
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+This really gets a little too complex.  We also tended to trade a tiny
+bit of vasted memory over complexity all the time in Linux's past..
