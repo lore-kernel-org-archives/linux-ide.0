@@ -1,118 +1,96 @@
-From: scotlandlotteryclaim@terra.com.mx
-Subject: NOTICE OF CLAIM
-Date: Fri, 21 Jan 2005 07:43:48 -0800
-Message-ID: <41E5B2290001095C@occmta04a.terra.com.mx>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [BK PATCHES] ide-dev-2.6 update
+Date: Fri, 21 Jan 2005 21:02:39 +0100
+Message-ID: <58cb370e0501211202372c9b1b@mail.gmail.com>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from occmta04a.terra.com.mx ([200.53.64.60]:9710 "EHLO
-	emailcluster.terra.com.mx") by vger.kernel.org with ESMTP
-	id S262395AbVAUPxg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jan 2005 10:53:36 -0500
+Received: from wproxy.gmail.com ([64.233.184.202]:34080 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262491AbVAUUCk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jan 2005 15:02:40 -0500
+Received: by wproxy.gmail.com with SMTP id 68so32116wra
+        for <linux-ide@vger.kernel.org>; Fri, 21 Jan 2005 12:02:39 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: scotlandlotteryclaim@terra.com.mx
+To: linux-ide <linux-ide@vger.kernel.org>
+Cc: lkml <linux-kernel@vger.kernel.org>
 
-SCOTLAND INTERNATIONAL LOTTERY PROMOTIONS.
-NOVEMBER/DECEMBER YEAR ENDING DRAW.
-=46S.9081- EDINBURGH- SCOTLAND.=20
+Hi,
 
+ide-dev-2.6 tree has been resurrected.  It now contains first bunch
+of fixes needed for converting IDE device drivers to driver-model.
 
-Attn.
-Entry No.STL/19051663/SLT.=20
+NOTE: If you have a local copy of the tree please re-clone it, thanks.
 
-RE:Your Scotland Lottery Winning Claim Notice.
+BK users:
 
-We are pleased to inform you, today the 21th of January, 2005. The resu=
-lt
-of the long awaited draw of the November/December year ending 2004 Scot=
-land
-international lottery draw promo, held on the 10th of December,2004.
+	bk pull bk://bart.bkbits.net/ide-dev-2.6
 
-Your were entered as a dependent participant with entry No.STL/19051663=
-/SLT
-on batch No. GY/19KC, your email address attached to Ticket No.01200366=
-980010
-that draw the lucky number which automatically qualified and! won in th=
-e
-first category of group 4. With participating entries standing at 125,0=
-00,000.00
-(One Hundred and Twenty-Five Million people) that were selected in the =
-multi-computer
-ballot system, from names and email users across the globe.
+This will update the following files:
 
-Consequently, you have been approved for a cash prize claim totaling th=
-e
-sum of 500,000.00 (Five Hundred Thousand Euros) in credit to claim file
-No.AR500/1281/05. This is from a total cash prize claim of 50,000,000.0=
-0
-(Fifty Million Euros) shared among 100 winners in the final category.
-Your claim is drawn in the Africa/Oceania Regional Claim Center alongsi=
-de
-three other lucky winners in group 4 and the regional claim officer is =
-Sir
-Matrem Andrew Woodgate.You are requested, to contact your regional clai=
-m
-officer with a copy of this winning notice, with the following:
+ drivers/ide/Kconfig            |    8 -
+ drivers/ide/ide-cd.c           |   42 --------
+ drivers/ide/ide-default.c      |    7 -
+ drivers/ide/ide-disk.c         |  194 -----------------------------------------
+ drivers/ide/ide-floppy.c       |    1 
+ drivers/ide/ide-io.c           |  159 ++++++++++++++++++++++++++++++++-
+ drivers/ide/ide-iops.c         |   20 ++++
+ drivers/ide/ide-probe.c        |   62 ++++++++++++-
+ drivers/ide/ide-tape.c         |   18 +--
+ drivers/ide/ide-taskfile.c     |    6 -
+ drivers/ide/ide.c              |   26 -----
+ drivers/ide/pci/pdc202xx_new.h |    6 -
+ drivers/ide/pci/pdc202xx_old.h |   17 ---
+ drivers/ide/setup-pci.c        |   15 ---
+ drivers/scsi/ide-scsi.c        |    1 
+ include/linux/ide.h            |    6 -
+ 16 files changed, 243 insertions(+), 345 deletions(-)
 
-(i). A valid ID ( In form of an international passport or a state drive=
-r
-license.
-(ii).And a letter of Introduction.
+through these ChangeSets:
 
-You will be required to appear in person at the lotto paying house in t=
-he
-UK for your cash prize collect ion or provide verifiable banking detail=
-s
-for claim transfer or a valid postal details for cheque as the case may
-be, two weeks from the date of this winning notice.
+<bzolnier@trik.(none)> (05/01/21 1.2142)
+   [ide] kill ide_driver_t->pre_reset
+   
+   Add ide_drive_t->post_reset flag and use it to signal post reset
+   condition to the ide-tape driver (the only user of ->pre_reset).
 
-The Scotland Lotto board been mindful of the wide surge of Internet sca=
-m
-and other ill Internet practices, in conjunction with the Scotland inte=
-lligence
-bureau request all documents verified. While the lotto board reserve th=
-e
-legal right to void any claim not followed by due process and in accord=
-ance
-with stipulated rules.
+<bzolnier@trik.(none)> (05/01/21 1.2141)
+   [ide] fix some rare ide-default vs ide-disk races
+   
+   Some rare races between ide-default and ide-disk are possible, i.e.:
+   * ide-default is used, I/O request is triggered (ie. /proc/ide/hd?/identify),
+     drive->special is cleared silently (so CHS is not initialized properly),
+     ide-disk is loaded and fails if drive uses CHS
+   * ide-disk is used, drive is resetted, ide-disk is unloaded, ide-default
+     takes control over drive and on the first I/O request silently clears
+    drive->special without restoring settings
+   
+   Fix them by moving idedisk_{special,pre_reset}() and company to IDE core.
 
-You may contact your regional claim office as indicated below:
-Sir Matrem Andrew Woodgate  ( matremwoodgate@yahoo.it) Tel. + 234 80 35=
-72
-0497.
-=46inally, should you have any change in address/contact you are requir=
-ed
-to inform your regional claim officer earliest.
+<bzolnier@trik.(none)> (05/01/21 1.2140)
+   [ide] generic Power Management for IDE devices
+   
+   Move PM code from ide-cd.c and ide-disk.c to IDE core so:
+   * PM is supported for other ATAPI devices (floppy, tape)
+   * PM is supported even if specific driver is not loaded
 
-Congratulations! from our staff and thank you for been part of the Scot=
-land
-Lotto program.
+<bzolnier@trik.(none)> (05/01/21 1.2139)
+   [ide] fix drive->ready_stat for ATAPI
+   
+   ATAPI devices ignore DRDY bit so drive->ready_stat must be set to zero.
+   It is currently done by device drivers (including ide-default fake driver)
+   but for PMAC driver it is too late as wait_for_ready() may be called during
+   probe: probe_hwif()->pmac_ide_dma_check()->pmac_ide_{mdma,udma}_enable()->
+   ->pmac_ide_do_setfeature()->wait_for_ready().
+   
+   Fixup drive->ready_stat just after detecting ATAPI device.
 
-Yours sincerely,
-
-Mrs. Jane Allan Smith.
-Head of Promotions,
-Scotland Lotto.
-
-Warning! THIS LOTTO WINNING NOTICE IS STRICTLY FOR THE RECIPIENT OF THI=
-S
-MAILBOX ONLY, IF YOU BU ANY MEANS NOT THE OWNER OF THIS BOX PLEASE CONT=
-ACT
-OUR HOME OFFICE OR Mrs. Jane Allan Smith.
-
-
-_______________________________________________________________________=
-____
-Con Terra MAIL obtienes 6MB de espacio adem=E1s de bloqueo ANTISPAM
-http://terramail.terra.com.mx/TerraMail/
-Acceso a Internet 3 x 1, desde =A1$179 pesos al mes!=20
-http://www.terra.com.mx/acceso/suscribete/
-Encuentra los mejores productos y precios increibles!!
-Aprovecha nuestra promoci=F3n a 12 pagos sin intereses con Banamex y Ba=
-ncomer
-http://www.decompras.com/
-
-
-
+<bzolnier@trik.(none)> (05/01/21 1.2138)
+   [ide] ignore BIOS enable bits for Promise controllers
+   
+   Since there are no Promise binary drivers for 2.6.x kernels:
+   * ignore BIOS enable bits completely
+   * remove CONFIG_PDC202XX_FORCE
+   * kill IDEPCI_FLAG_FORCE_PDC hack
