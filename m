@@ -1,134 +1,328 @@
-From: Grant Grundler <grundler@parisc-linux.org>
-Subject: NS87415 on C3K broken
-Date: Thu, 16 Sep 2004 10:17:49 -0600
+From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Subject: [patch] ide: kill /proc/ide/ide?/config
+Date: Fri, 17 Sep 2004 00:01:02 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040916161749.GA17660@colo.lackof.org>
+Message-ID: <200409170001.02057.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from colo.lackof.org ([198.49.126.79]:18393 "EHLO colo.lackof.org")
-	by vger.kernel.org with ESMTP id S268486AbUIPQRz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Sep 2004 12:17:55 -0400
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:7582 "EHLO
+	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
+	id S268004AbUIPWH1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Sep 2004 18:07:27 -0400
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:40918 "EHLO
+	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
+	id S14333AbUIPV7p (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 1 other); Thu, 16 Sep 2004 23:59:45 +0200
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: parisc-linux@lists.parisc-linux.org
-Cc: linux-ide@vger.kernel.org
-
-Hi,
-Willy pointed out the 2.6.9-rc2 NS87415 driver for C3000 machine
-(uses SuckyIO IDE) is causing HPMC (system crash). This was not
-a problem with 2.6.8.1.
-But while trying to fix MMIO resource management problems, I ran
-into this when testing on C3000.
-
-The HPMC stack trace looks like this:
-	ide_inb
-	ide_wait_not_busy
-	wait_hwif_ready
-	probe_hwif
-	probe_hwif_init
-	ide_setup_pci_device
-	ns87415_init_one
-	ide_scan_pcidev
-	ide_scan_pcibus
-	ide_init
-	do_initcalls
-
-Changes to ide-probe.c cause this HPMC.
-wait_hwif_ready() is inside #ifdef CONFIG_PPC in 2.6.8.1 and the
-ifdef/endif was removed in 2.6.9-rcX. The result is inb() is invoked
-*BEFORE* ide_setup_pci_device() (indirectly) calls pci_enabled_device() or
-pci_set_master(). This is broken because IDE controllers NOT enabled
-by firmware will simply not respond to inb() (even if the system
-doesn't crash like on parisc).
-
-I'm a wimp. I don't dare to restructure IDE init sequence.
-Anyone less of a wimp?
-Or are IDE pci drivers required to call pci_enable_device()
-in their (mostly non-extistent) init_chipset entry point?
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Anyway, ns87415 driver has more problems. The patch below adds
-"init_chipset" entry point and init_chipset_ns87415() calls
-pci_enable_device() and pci_set_master() before the probe.
-And my C3k still HPMCs. My guess is more of the code from
-init_hwif_ns87415() needs to be moved to init_chipset_ns87415().
-And possible call some special suckyio init routines.
-I won't be able to touch this for a few days.
-Anyone else on parisc-linux ml want to take a whack at this?
+I'm going to send this to Andrew.
+Comments, complaints, threats? :-)
 
-BTW, normally a PCI Master Abort to IO Port space to should NOT fail.
-But on parisc is does because the chipset will go "fatal" on
-any Master Abort - special hacks enable config space to work.
-I strongly prefere not to add those hacks to IO Port space
-accessor functions since it's normally not a problem.
-And while inconvenient, this behavior does expose programming
-problems like the one above.
-
-
-thanks,
-grant
-
-
-Index: drivers/ide/pci/ns87415.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/ide/pci/ns87415.c,v
-retrieving revision 1.17
-diff -u -p -r1.17 ns87415.c
---- drivers/ide/pci/ns87415.c	13 Sep 2004 15:23:04 -0000	1.17
-+++ drivers/ide/pci/ns87415.c	16 Sep 2004 15:06:06 -0000
-@@ -133,8 +133,29 @@ static int ns87415_ide_dma_check (ide_dr
- 	return __ide_dma_check(drive);
- }
+[patch] ide: kill /proc/ide/ide?/config
  
-+static unsigned int __devinit init_chipset_ns87415(struct pci_dev *dev, const char *name)
-+{
-+	unsigned short w;
-+printk("init_chipset_ns87415(%s,%s)\n", dev->slot_name, name);
-+
-+	pci_enable_device(dev);
-+	pci_set_master(dev);
-+
-+(void) pci_read_config_word(dev, PCI_COMMAND, &w);
-+printk("	cmd 0x%x\n", w);
-+
-+	if ((w & PCI_COMMAND_IO) == 0) {
-+		w |= PCI_COMMAND_IO;
-+		(void) pci_write_config_word(dev, PCI_COMMAND, w);
-+printk("	enabling IO space\n");
-+	}
-+	return 0;
-+}
-+
-+
- static void __init init_iops_ns87415(ide_hwif_t *hwif)
+I first wanted to deprecate it but after discovering that:
+- writes to PCI config space are non-functional since 2.4.21
+- reads of full PCI config space are allowed for normal users
+I think that there we are better off removing it immediately.
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+---
+
+ linux-2.6.9-rc1-bk18-bzolnier/drivers/ide/ide-proc.c |  257 -------------------
+ 1 files changed, 257 deletions(-)
+
+diff -puN drivers/ide/ide-proc.c~ide_proc_config drivers/ide/ide-proc.c
+--- linux-2.6.9-rc1-bk18/drivers/ide/ide-proc.c~ide_proc_config	2004-09-16 22:56:43.457198888 +0200
++++ linux-2.6.9-rc1-bk18-bzolnier/drivers/ide/ide-proc.c	2004-09-16 23:08:33.763215960 +0200
+@@ -8,37 +8,6 @@
+ /*
+  * This is the /proc/ide/ filesystem implementation.
+  *
+- * The major reason this exists is to provide sufficient access
+- * to driver and config data, such that user-mode programs can
+- * be developed to handle chipset tuning for most PCI interfaces.
+- * This should provide better utilities, and less kernel bloat.
+- *
+- * The entire pci config space for a PCI interface chipset can be
+- * retrieved by just reading it.  e.g.    "cat /proc/ide3/config"
+- *
+- * To modify registers *safely*, do something like:
+- *   echo "P40:88" >/proc/ide/ide3/config
+- * That expression writes 0x88 to pci config register 0x40
+- * on the chip which controls ide3.  Multiple tuples can be issued,
+- * and the writes will be completed as an atomic set:
+- *   echo "P40:88 P41:35 P42:00 P43:00" >/proc/ide/ide3/config
+- *
+- * All numbers must be specified using pairs of ascii hex digits.
+- * It is important to note that these writes will be performed
+- * after waiting for the IDE controller (both interfaces)
+- * to be completely idle, to ensure no corruption of I/O in progress.
+- *
+- * Non-PCI registers can also be written, using "R" in place of "P"
+- * in the above examples.  The size of the port transfer is determined
+- * by the number of pairs of hex digits given for the data.  If a two
+- * digit value is given, the write will be a byte operation; if four
+- * digits are used, the write will be performed as a 16-bit operation;
+- * and if eight digits are specified, a 32-bit "dword" write will be
+- * performed.  Odd numbers of digits are not permitted.
+- *
+- * If there is an error *anywhere* in the string of registers/data
+- * then *none* of the writes will be performed.
+- *
+  * Drive/Driver settings can be retrieved by reading the drive's
+  * "settings" files.  e.g.    "cat /proc/ide0/hda/settings"
+  * To write a new value "val" into a specific setting "name", use:
+@@ -51,10 +20,6 @@
+  * returned data as 256 16-bit words.  The "hdparm" utility will
+  * be updated someday soon to use this mechanism.
+  *
+- * Feel free to develop and distribute fancy GUI configuration
+- * utilities for your favorite PCI chipsets.  I'll be working on
+- * one for the Promise 20246 someday soon.  -ml
+- *
+  */
+ 
+ #include <linux/config.h>
+@@ -74,227 +39,6 @@
+ 
+ #include <asm/io.h>
+ 
+-static int proc_ide_write_config(struct file *file, const char __user *buffer,
+-				 unsigned long count, void *data)
+-{
+-	ide_hwif_t	*hwif = (ide_hwif_t *)data;
+-	ide_hwgroup_t *mygroup = (ide_hwgroup_t *)(hwif->hwgroup);
+-	ide_hwgroup_t *mategroup = NULL;
+-	unsigned long timeout;
+-	unsigned long flags;
+-	const char *start = NULL, *msg = NULL;
+-	struct entry { u32 val; u16 reg; u8 size; u8 pci; } *prog, *q, *r;
+-	int want_pci = 0;
+-	char *buf, *s;
+-	int err;
+-
+-	if (hwif->mate && hwif->mate->hwgroup)
+-		mategroup = (ide_hwgroup_t *)(hwif->mate->hwgroup);
+-
+-	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+-		return -EACCES;
+-
+-	if (count >= PAGE_SIZE)
+-		return -EINVAL;
+-
+-	s = buf = (char *)__get_free_page(GFP_USER);
+-	if (!buf)
+-		return -ENOMEM;
+-
+-	err = -ENOMEM;
+-	q = prog = (struct entry *)__get_free_page(GFP_USER);
+-	if (!prog)
+-		goto out;
+-
+-	err = -EFAULT;
+-	if (copy_from_user(buf, buffer, count))
+-		goto out1;
+-
+-	buf[count] = '\0';
+-
+-	while (isspace(*s))
+-		s++;
+-
+-	while (*s) {
+-		char *p;
+-		int digits;
+-
+-		start = s;
+-
+-		if ((char *)(q + 1) > (char *)prog + PAGE_SIZE) {
+-			msg = "too many entries";
+-			goto parse_error;
+-		}
+-
+-		switch (*s++) {
+-			case 'R':	q->pci = 0;
+-					break;
+-			case 'P':	q->pci = 1;
+-					want_pci = 1;
+-					break;
+-			default:	msg = "expected 'R' or 'P'";
+-					goto parse_error;
+-		}
+-
+-		q->reg = simple_strtoul(s, &p, 16);
+-		digits = p - s;
+-		if (!digits || digits > 4 || (q->pci && q->reg > 0xff)) {
+-			msg = "bad/missing register number";
+-			goto parse_error;
+-		}
+-		if (*p++ != ':') {
+-			msg = "missing ':'";
+-			goto parse_error;
+-		}
+-		q->val = simple_strtoul(p, &s, 16);
+-		digits = s - p;
+-		if (digits != 2 && digits != 4 && digits != 8) {
+-			msg = "bad data, 2/4/8 digits required";
+-			goto parse_error;
+-		}
+-		q->size = digits / 2;
+-
+-		if (q->pci) {
+-#ifdef CONFIG_BLK_DEV_IDEPCI
+-			if (q->reg & (q->size - 1)) {
+-				msg = "misaligned access";
+-				goto parse_error;
+-			}
+-#else
+-			msg = "not a PCI device";
+-			goto parse_error;
+-#endif	/* CONFIG_BLK_DEV_IDEPCI */
+-		}
+-
+-		q++;
+-
+-		if (*s && !isspace(*s++)) {
+-			msg = "expected whitespace after data";
+-			goto parse_error;
+-		}
+-		while (isspace(*s))
+-			s++;
+-	}
+-
+-	/*
+-	 * What follows below is fucking insane, even for IDE people.
+-	 * For now I've dealt with the obvious problems on the parsing
+-	 * side, but IMNSHO we should simply remove the write access
+-	 * to /proc/ide/.../config, killing that FPOS completely.
+-	 */
+-
+-	err = -EBUSY;
+-	timeout = jiffies + (3 * HZ);
+-	spin_lock_irqsave(&ide_lock, flags);
+-	while (mygroup->busy ||
+-	       (mategroup && mategroup->busy)) {
+-		spin_unlock_irqrestore(&ide_lock, flags);
+-		if (time_after(jiffies, timeout)) {
+-			printk("/proc/ide/%s/config: channel(s) busy, cannot write\n", hwif->name);
+-			goto out1;
+-		}
+-		spin_lock_irqsave(&ide_lock, flags);
+-	}
+-
+-#ifdef CONFIG_BLK_DEV_IDEPCI
+-	if (want_pci && (!hwif->pci_dev || hwif->pci_dev->vendor)) {
+-		spin_unlock_irqrestore(&ide_lock, flags);
+-		printk("proc_ide: PCI registers not accessible for %s\n",
+-			hwif->name);
+-		err = -EINVAL;
+-		goto out1;
+-	}
+-#endif	/* CONFIG_BLK_DEV_IDEPCI */
+-
+-	for (r = prog; r < q; r++) {
+-		unsigned int reg = r->reg, val = r->val;
+-		if (r->pci) {
+-#ifdef CONFIG_BLK_DEV_IDEPCI
+-			int rc = 0;
+-			struct pci_dev *dev = hwif->pci_dev;
+-			switch (q->size) {
+-				case 1:	msg = "byte";
+-					rc = pci_write_config_byte(dev, reg, val);
+-					break;
+-				case 2:	msg = "word";
+-					rc = pci_write_config_word(dev, reg, val);
+-					break;
+-				case 4:	msg = "dword";
+-					rc = pci_write_config_dword(dev, reg, val);
+-					break;
+-			}
+-			if (rc) {
+-				spin_unlock_irqrestore(&ide_lock, flags);
+-				printk("proc_ide_write_config: error writing %s at bus %02x dev %02x reg 0x%x value 0x%x\n",
+-					msg, dev->bus->number, dev->devfn, reg, val);
+-				printk("proc_ide_write_config: error %d\n", rc);
+-				err = -EIO;
+-				goto out1;
+-			}
+-#endif	/* CONFIG_BLK_DEV_IDEPCI */
+-		} else {	/* not pci */
+-			switch (r->size) {
+-				case 1:	hwif->OUTB(val, reg);
+-					break;
+-				case 2:	hwif->OUTW(val, reg);
+-					break;
+-				case 4:	hwif->OUTL(val, reg);
+-					break;
+-			}
+-		}
+-	}
+-	spin_unlock_irqrestore(&ide_lock, flags);
+-	err = count;
+-out1:
+-	free_page((unsigned long)prog);
+-out:
+-	free_page((unsigned long)buf);
+-	return err;
+-
+-parse_error:
+-	printk("parse error\n");
+-	printk("proc_ide: error: %s: '%s'\n", msg, start);
+-	err = -EINVAL;
+-	goto out1;
+-}
+-
+-static int proc_ide_read_config
+-	(char *page, char **start, off_t off, int count, int *eof, void *data)
+-{
+-	char		*out = page;
+-	int		len;
+-
+-#ifdef CONFIG_BLK_DEV_IDEPCI
+-	ide_hwif_t	*hwif = (ide_hwif_t *)data;
+-	struct pci_dev	*dev = hwif->pci_dev;
+-	if ((hwif->pci_dev && hwif->pci_dev->vendor) && dev && dev->bus) {
+-		int reg = 0;
+-
+-		out += sprintf(out, "pci bus %02x device %02x vendor %04x "
+-				"device %04x channel %d\n",
+-			dev->bus->number, dev->devfn,
+-			hwif->pci_dev->vendor, hwif->pci_dev->device,
+-			hwif->channel);
+-		do {
+-			u8 val;
+-			int rc = pci_read_config_byte(dev, reg, &val);
+-			if (rc) {
+-				printk("proc_ide_read_config: error %d reading"
+-					" bus %02x dev %02x reg 0x%02x\n",
+-					rc, dev->bus->number, dev->devfn, reg);
+-				out += sprintf(out, "??%c",
+-					(++reg & 0xf) ? ' ' : '\n');
+-			} else
+-				out += sprintf(out, "%02x%c",
+-					val, (++reg & 0xf) ? ' ' : '\n');
+-		} while (reg < 0x100);
+-	} else
+-#endif	/* CONFIG_BLK_DEV_IDEPCI */
+-		out += sprintf(out, "(none)\n");
+-	len = out - page;
+-	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
+-}
+-
+ static int proc_ide_read_imodel
+ 	(char *page, char **start, off_t off, int count, int *eof, void *data)
  {
-+printk("init_iops_ns87415(%s)\n", hwif->pci_dev->slot_name);
- #ifdef CONFIG_SUPERIO
- 	superio_ide_init_iops(hwif);
- #endif
-@@ -150,12 +171,14 @@ static void __init init_hwif_ns87415 (id
- 	u8 stat;
- #endif
+@@ -701,7 +445,6 @@ void destroy_proc_ide_drives(ide_hwif_t 
  
-+printk("init_hwif_ns87415(%s)\n", hwif->pci_dev->slot_name);
- 	hwif->autodma = 0;
- 	hwif->selectproc = &ns87415_selectproc;
- 
-+#if 0
- 	/* Set a good latency timer and cache line size value. */
- 	(void) pci_write_config_byte(dev, PCI_LATENCY_TIMER, 64);
--	/* FIXME: use pci_set_master() to ensure good latency timer value */
-+#endif
- 
- 	/*
- 	 * We cannot probe for IRQ: both ports share common IRQ on INTA.
-@@ -227,6 +250,8 @@ static void __init init_hwif_ns87415 (id
- 
- static ide_pci_device_t ns87415_chipset __devinitdata = {
- 	.name		= "NS87415",
-+	.init_chipset	= init_chipset_ns87415,
-+	.init_iops	= init_iops_ns87415,
- 	.init_hwif	= init_hwif_ns87415,
- 	.channels	= 2,
- 	.autodma	= AUTODMA,
+ static ide_proc_entry_t hwif_entries[] = {
+ 	{ "channel",	S_IFREG|S_IRUGO,	proc_ide_read_channel,	NULL },
+-	{ "config",	S_IFREG|S_IRUGO|S_IWUSR,proc_ide_read_config,	proc_ide_write_config },
+ 	{ "mate",	S_IFREG|S_IRUGO,	proc_ide_read_mate,	NULL },
+ 	{ "model",	S_IFREG|S_IRUGO,	proc_ide_read_imodel,	NULL },
+ 	{ NULL,	0, NULL, NULL }
+_
