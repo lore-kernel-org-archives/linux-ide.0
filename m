@@ -1,35 +1,41 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] obsolete asm/hdreg.h [1/5]
-Date: Thu, 8 Apr 2004 00:22:04 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200404080022.04693.bzolnier@elka.pw.edu.pl>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] obsolete asm/hdreg.h [3/5]
+Date: Thu, 8 Apr 2004 10:49:55 +0200 (MEST)
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <Pine.GSO.4.58.0404081048270.9729@waterleaf.sonytel.be>
+References: <200404080023.04460.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from witte.sonytel.be ([80.88.33.193]:42165 "EHLO witte.sonytel.be")
+	by vger.kernel.org with ESMTP id S264211AbUDHIt5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Apr 2004 04:49:57 -0400
+In-Reply-To: <200404080023.04460.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
+On Thu, 8 Apr 2004, Bartlomiej Zolnierkiewicz wrote:
+> [IDE] asm/ide.h: ide_ioreg_t cleanup
+>
+> ide_ioreg_t is deprecated and hasn't been used by IDE driver for some time.
+> Use unsigned long directly on alpha, arm26, arm, mips, parisc, ppc64 and sh.
+>
+> asm-ia64/ide.h (ide_ioreg_t is unsigned short) and asm-m68knommu/ide.h
+> (broken - ide_ioreg_t is not defined) are the only users of ide_ioreg_t left.
 
-[IDE] asm-arm26/hdreg.h: use unsigned long for ide_ioreg_t
+Why do you consider asm-m68knommu/ide.h broken?
 
- linux-2.6.5-root/include/asm-arm26/hdreg.h |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+It just includes <asm-m68k/hdreg.h>, which is definitely not broken since it's
+happily (albeit very slowly) running apt-get upgrade right now ;-)
 
-diff -puN include/asm-arm26/hdreg.h~arm26_ide_ioreg_t include/asm-arm26/hdreg.h
---- linux-2.6.5/include/asm-arm26/hdreg.h~arm26_ide_ioreg_t	2004-04-06 00:23:04.039180016 +0200
-+++ linux-2.6.5-root/include/asm-arm26/hdreg.h	2004-04-06 00:23:16.078349784 +0200
-@@ -9,7 +9,7 @@
- #ifndef __ASMARM_HDREG_H
- #define __ASMARM_HDREG_H
- 
--typedef unsigned int ide_ioreg_t;
-+typedef unsigned long ide_ioreg_t;
- 
- #endif /* __ASMARM_HDREG_H */
- 
+Gr{oetje,eeting}s,
 
-_
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
