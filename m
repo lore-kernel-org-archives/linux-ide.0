@@ -1,174 +1,227 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] remove dead drivers/ide/ppc/swarm.c
-Date: Tue, 4 May 2004 01:34:22 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200405040134.22092.bzolnier@elka.pw.edu.pl>
+Subject: [PATCH] remove dead PC9800 IDE support
+Date: Tue, 4 May 2004 01:35:14 +0200
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200405040135.14688.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S264161AbUECXgI@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:11661 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264155AbUECXfk
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 May 2004 19:35:40 -0400
 Content-Disposition: inline
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, "Randy.Dunlap" <rddunlap@osdl.org>
 
 
-This driver was merged in 2.5.32 but depends on <asm/sibyte/swarm_ide.h>
-which hasn't been merged in 2.5.  Additionally it is a MIPS specific driver
-so it should be in drivers/ide/mips/ if somebody ever decides to re-add it.
+It was added in 2.5.66 but PC9800 subarch is still non-buildable.
+Also this is one big hack and only half-merged.
 
- linux-2.6.6-rc3-bk2-bzolnier/drivers/ide/Kconfig  |    4 
- linux-2.6.6-rc3-bk2-bzolnier/drivers/ide/Makefile |    1 
- linux-2.6.6-rc3-bk2-bzolnier/drivers/ide/ide.c    |    6 -
- linux-2.6.6-rc3-bk2/drivers/ide/ppc/swarm.c       |  101 ----------------------
- 4 files changed, 112 deletions(-)
+ linux-2.6.6-rc3-bk2-bzolnier/drivers/ide/Makefile   |    1 
+ linux-2.6.6-rc3-bk2-bzolnier/drivers/ide/ide-proc.c |    1 
+ linux-2.6.6-rc3-bk2-bzolnier/include/asm-i386/ide.h |   34 --------
+ linux-2.6.6-rc3-bk2-bzolnier/include/linux/ide.h    |    5 -
+ linux-2.6.6-rc3-bk2/drivers/ide/legacy/pc9800.c     |   84 --------------------
+ 5 files changed, 2 insertions(+), 123 deletions(-)
 
-diff -puN drivers/ide/ide.c~ide_swarm drivers/ide/ide.c
---- linux-2.6.6-rc3-bk2/drivers/ide/ide.c~ide_swarm	2004-05-04 01:32:48.841860272 +0200
-+++ linux-2.6.6-rc3-bk2-bzolnier/drivers/ide/ide.c	2004-05-04 01:32:48.861857232 +0200
-@@ -2090,12 +2090,6 @@ static void __init probe_for_hwifs (void
- 		pmac_ide_probe();
+diff -puN drivers/ide/ide-proc.c~ide_pc9800 drivers/ide/ide-proc.c
+--- linux-2.6.6-rc3-bk2/drivers/ide/ide-proc.c~ide_pc9800	2004-05-04 01:32:52.138359128 +0200
++++ linux-2.6.6-rc3-bk2-bzolnier/drivers/ide/ide-proc.c	2004-05-04 01:32:52.161355632 +0200
+@@ -352,7 +352,6 @@ static int proc_ide_read_imodel
+ 		case ide_cy82c693:	name = "cy82c693";	break;
+ 		case ide_4drives:	name = "4drives";	break;
+ 		case ide_pmac:		name = "mac-io";	break;
+-		case ide_pc9800:	name = "pc9800";	break;
+ 		default:		name = "(unknown)";	break;
  	}
- #endif /* CONFIG_BLK_DEV_IDE_PMAC */
--#ifdef CONFIG_BLK_DEV_IDE_SWARM
--	{
--		extern void swarm_ide_probe(void);
--		swarm_ide_probe();
--	}
--#endif /* CONFIG_BLK_DEV_IDE_SWARM */
- #ifdef CONFIG_BLK_DEV_GAYLE
- 	{
- 		extern void gayle_init(void);
-diff -puN drivers/ide/Kconfig~ide_swarm drivers/ide/Kconfig
---- linux-2.6.6-rc3-bk2/drivers/ide/Kconfig~ide_swarm	2004-05-04 01:32:48.848859208 +0200
-+++ linux-2.6.6-rc3-bk2-bzolnier/drivers/ide/Kconfig	2004-05-04 01:32:48.863856928 +0200
-@@ -851,10 +851,6 @@ config BLK_DEV_IDEDMA_PMAC_AUTO
- 	  hardware may have caused damage.  Saying Y should be safe on all
- 	  Apple machines.
- 
--config BLK_DEV_IDE_SWARM
--	bool "SWARM onboard IDE support"
--	depends on SIBYTE_SWARM
--
- config BLK_DEV_IDE_ICSIDE
- 	tristate "ICS IDE interface support"
- 	depends on ARM && ARCH_ACORN
-diff -puN drivers/ide/Makefile~ide_swarm drivers/ide/Makefile
---- linux-2.6.6-rc3-bk2/drivers/ide/Makefile~ide_swarm	2004-05-04 01:32:48.853858448 +0200
-+++ linux-2.6.6-rc3-bk2-bzolnier/drivers/ide/Makefile	2004-05-04 01:32:48.864856776 +0200
-@@ -36,7 +36,6 @@ ide-core-$(CONFIG_BLK_DEV_Q40IDE)	+= leg
- # built-in only drivers from ppc/
- ide-core-$(CONFIG_BLK_DEV_MPC8xx_IDE)	+= ppc/mpc8xx.o
- ide-core-$(CONFIG_BLK_DEV_IDE_PMAC)	+= ppc/pmac.o
--ide-core-$(CONFIG_BLK_DEV_IDE_SWARM)	+= ppc/swarm.o
- 
- obj-$(CONFIG_BLK_DEV_IDE)		+= ide-core.o
- obj-$(CONFIG_IDE_GENERIC)		+= ide-generic.o
-diff -puN -L drivers/ide/ppc/swarm.c drivers/ide/ppc/swarm.c~ide_swarm /dev/null
---- linux-2.6.6-rc3-bk2/drivers/ide/ppc/swarm.c
+ 	len = sprintf(page, "%s\n", name);
+diff -puN -L drivers/ide/legacy/pc9800.c drivers/ide/legacy/pc9800.c~ide_pc9800 /dev/null
+--- linux-2.6.6-rc3-bk2/drivers/ide/legacy/pc9800.c
 +++ /dev/null	2004-01-17 00:25:55.000000000 +0100
-@@ -1,101 +0,0 @@
+@@ -1,84 +0,0 @@
 -/*
-- * Copyright (C) 2001 Broadcom Corporation
+- *  ide_pc9800.c
 - *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- * 
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+- *  Copyright (C) 1997-2000  Linux/98 project,
+- *			     Kyoto University Microcomputer Club.
 - */
 -
--/*  Derived loosely from ide-pmac.c, so:
-- *  
-- *  Copyright (C) 1998 Paul Mackerras.
-- *  Copyright (C) 1995-1998 Mark Lord
-- */
 -#include <linux/config.h>
--#include <linux/types.h>
 -#include <linux/kernel.h>
--#include <linux/sched.h>
--#include <linux/init.h>
--#include <linux/delay.h>
+-#include <linux/ioport.h>
 -#include <linux/ide.h>
--#include <asm/irq.h>
+-#include <linux/init.h>
+-
 -#include <asm/io.h>
--#include <asm/sibyte/sb1250_int.h>
+-#include <asm/pc9800.h>
 -
--#define __IDE_SWARM_C
+-#define PC9800_IDE_BANKSELECT	0x432
 -
--#include <asm/sibyte/swarm_ide.h>
+-#undef PC9800_IDE_DEBUG
 -
--void __init swarm_ide_probe(void)
+-static void pc9800_select(ide_drive_t *drive)
 -{
--	int i;
--	ide_hwif_t *hwif;
--	/* 
--	 * Find the first untaken slot in hwifs 
--	 */
--	for (i = 0; i < MAX_HWIFS; i++) {
--		if (!ide_hwifs[i].io_ports[IDE_DATA_OFFSET]) {
--			break;
--		}
--	}
--	if (i == MAX_HWIFS) {
--		printk("No space for SWARM onboard IDE driver in ide_hwifs[].  Not enabled.\n");
+-#ifdef PC9800_IDE_DEBUG
+-	byte old;
+-
+-	/* Too noisy: */
+-	/* printk(KERN_DEBUG "pc9800_select(%s)\n", drive->name); */
+-
+-	outb(0x80, PC9800_IDE_BANKSELECT);
+-	old = inb(PC9800_IDE_BANKSELECT);
+-	if (old != HWIF(drive)->index)
+-		printk(KERN_DEBUG "ide-pc9800: switching bank #%d -> #%d\n",
+-			old, HWIF(drive)->index);
+-#endif
+-	outb(HWIF(drive)->index, PC9800_IDE_BANKSELECT);
+-}
+-
+-void __init ide_probe_for_pc9800(void)
+-{
+-	u8 saved_bank;
+-
+-	if (!PC9800_9821_P() /* || !PC9821_IDEIF_DOUBLE_P() */)
+-		return;
+-
+-	if (!request_region(PC9800_IDE_BANKSELECT, 1, "ide0/1 bank")) {
+-		printk(KERN_ERR
+-			"ide: bank select port (%#x) is already occupied!\n",
+-			PC9800_IDE_BANKSELECT);
 -		return;
 -	}
 -
--	/* Set up our stuff */
--	hwif = &ide_hwifs[i];
--	hwif->hw.io_ports[IDE_DATA_OFFSET]    = SWARM_IDE_REG(0x1f0);
--	hwif->hw.io_ports[IDE_ERROR_OFFSET]   = SWARM_IDE_REG(0x1f1);
--	hwif->hw.io_ports[IDE_NSECTOR_OFFSET] = SWARM_IDE_REG(0x1f2);
--	hwif->hw.io_ports[IDE_SECTOR_OFFSET]  = SWARM_IDE_REG(0x1f3);
--	hwif->hw.io_ports[IDE_LCYL_OFFSET]    = SWARM_IDE_REG(0x1f4);
--	hwif->hw.io_ports[IDE_HCYL_OFFSET]    = SWARM_IDE_REG(0x1f5);
--	hwif->hw.io_ports[IDE_SELECT_OFFSET]  = SWARM_IDE_REG(0x1f6);
--	hwif->hw.io_ports[IDE_STATUS_OFFSET]  = SWARM_IDE_REG(0x1f7);
--	hwif->hw.io_ports[IDE_CONTROL_OFFSET] = SWARM_IDE_REG(0x3f6);
--	hwif->hw.io_ports[IDE_IRQ_OFFSET]     = SWARM_IDE_REG(0x3f7);
--//	hwif->hw->ack_intr                    = swarm_ide_ack_intr;
--	hwif->hw.irq                          = SWARM_IDE_INT;
--#if 0
--	hwif->iops                            = swarm_iops;
--#else
--	hwif->OUTB      = hwif->OUTBP         = swarm_outb;
--	hwif->OUTW      = hwif->OUTWP         = swarm_outw;
--	hwif->OUTL      = hwif->OUTLP         = swarm_outl;
--	hwif->OUTSW     = hwif->OUTSWP        = swarm_outsw;
--	hwif->OUTSL     = hwif->OUTSLP        = swarm_outsl;
--	hwif->INB       = hwif->INBP          = swarm_inb;
--	hwif->INW       = hwif->INWP          = swarm_inw;
--	hwif->INL       = hwif->INLP          = swarm_inl;
--	hwif->INSW      = hwif->INSWP         = swarm_insw;
--	hwif->INSL      = hwif->INSLP         = swarm_insl;
--#endif
--#if 0
--	hwif->pioops                          = swarm_pio_ops;
--#else
--	hwif->ata_input_data                  = swarm_ata_input_data;
--	hwif->ata_output_data                 = swarm_ata_output_data;
--	hwif->atapi_input_bytes               = swarm_atapi_input_bytes;
--	hwif->atapi_output_bytes              = swarm_atapi_output_bytes;
--#endif
--	memcpy(hwif->io_ports, hwif->hw.io_ports, sizeof(hwif->io_ports));
--	hwif->irq                             = hwif->hw.irq;
--	printk("SWARM onboard IDE configured as device %i\n", i);
+-	/* Do actual probing. */
+-	if ((saved_bank = inb(PC9800_IDE_BANKSELECT)) == (u8) ~0
+-	    || (outb(saved_bank ^ 1, PC9800_IDE_BANKSELECT),
+-		/* Next outb is dummy for reading status. */
+-		outb(0x80, PC9800_IDE_BANKSELECT),
+-		inb(PC9800_IDE_BANKSELECT) != (saved_bank ^ 1))) {
+-		printk(KERN_INFO
+-			"ide: pc9800 type bank selecting port not found\n");
+-		release_region(PC9800_IDE_BANKSELECT, 1);
+-		return;
+-	}
 -
--#ifndef HWIF_PROBE_CLASSIC_METHOD
--	probe_hwif_init(hwif->index);
--#endif /* HWIF_PROBE_CLASSIC_METHOD */
+-	/* Restore original value, just in case. */
+-	outb(saved_bank, PC9800_IDE_BANKSELECT);
 -
+-	/* These ports are reseved by IDE I/F.  */
+-	if (!request_region(0x430, 1, "ide") ||
+-	    !request_region(0x435, 1, "ide")) {
+-		printk(KERN_WARNING
+-			"ide: IO port 0x430 and 0x435 are reserved for IDE"
+-			" the card using these ports may not work\n");
+-	}
+-
+-	if (ide_hwifs[0].io_ports[IDE_DATA_OFFSET] == HD_DATA &&
+-	    ide_hwifs[1].io_ports[IDE_DATA_OFFSET] == HD_DATA) {
+-		ide_hwifs[0].chipset = ide_pc9800;
+-		ide_hwifs[0].mate = &ide_hwifs[1];
+-		ide_hwifs[0].selectproc = pc9800_select;
+-		ide_hwifs[1].chipset = ide_pc9800;
+-		ide_hwifs[1].mate = &ide_hwifs[0];
+-		ide_hwifs[1].selectproc = pc9800_select;
+-	}
 -}
+diff -puN drivers/ide/Makefile~ide_pc9800 drivers/ide/Makefile
+--- linux-2.6.6-rc3-bk2/drivers/ide/Makefile~ide_pc9800	2004-05-04 01:32:52.148357608 +0200
++++ linux-2.6.6-rc3-bk2-bzolnier/drivers/ide/Makefile	2004-05-04 01:32:52.162355480 +0200
+@@ -26,7 +26,6 @@ ide-core-$(CONFIG_PROC_FS)		+= ide-proc.
+ ide-core-$(CONFIG_BLK_DEV_IDEPNP)	+= ide-pnp.o
+ 
+ # built-in only drivers from legacy/
+-ide-core-$(CONFIG_BLK_DEV_IDE_PC9800)	+= legacy/pc9800.o
+ ide-core-$(CONFIG_BLK_DEV_BUDDHA)	+= legacy/buddha.o
+ ide-core-$(CONFIG_BLK_DEV_FALCON_IDE)	+= legacy/falconide.o
+ ide-core-$(CONFIG_BLK_DEV_GAYLE)	+= legacy/gayle.o
+diff -puN include/asm-i386/ide.h~ide_pc9800 include/asm-i386/ide.h
+--- linux-2.6.6-rc3-bk2/include/asm-i386/ide.h~ide_pc9800	2004-05-04 01:32:52.152357000 +0200
++++ linux-2.6.6-rc3-bk2-bzolnier/include/asm-i386/ide.h	2004-05-04 01:32:52.164355176 +0200
+@@ -26,9 +26,6 @@
+ static __inline__ int ide_default_irq(unsigned long base)
+ {
+ 	switch (base) {
+-#ifdef CONFIG_X86_PC9800
+-		case 0x640: return 9;
+-#endif
+ 		case 0x1f0: return 14;
+ 		case 0x170: return 15;
+ 		case 0x1e8: return 11;
+@@ -43,48 +40,17 @@ static __inline__ int ide_default_irq(un
+ static __inline__ unsigned long ide_default_io_base(int index)
+ {
+ 	switch (index) {
+-#ifdef CONFIG_X86_PC9800
+-		case 0:
+-		case 1:	return 0x640;
+-#else
+ 		case 0:	return 0x1f0;
+ 		case 1:	return 0x170;
+ 		case 2: return 0x1e8;
+ 		case 3: return 0x168;
+ 		case 4: return 0x1e0;
+ 		case 5: return 0x160;
+-#endif
+ 		default:
+ 			return 0;
+ 	}
+ }
+ 
+-#ifdef CONFIG_X86_PC9800
+-static __inline__ void ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port,
+-	 unsigned long ctrl_port, int *irq)
+-{
+-	unsigned long reg = data_port;
+-	int i;
 -
+-	unsigned long increment = data_port == 0x640 ? 2 : 1;
+-
+-	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
+-		hw->io_ports[i] = reg;
+-		reg += increment;
+-	}
+-	if (ctrl_port) {
+-		hw->io_ports[IDE_CONTROL_OFFSET] = ctrl_port;
+-	} else if (data_port == 0x640) {
+-		hw->io_ports[IDE_CONTROL_OFFSET] = 0x74c;
+-	} else {
+-		hw->io_ports[IDE_CONTROL_OFFSET] = hw->io_ports[IDE_DATA_OFFSET] + 0x206;
+-	}
+-	if (irq != NULL)
+-		*irq = 0;
+-	hw->io_ports[IDE_IRQ_OFFSET] = 0;
+-}
+-#endif
+-
+ #ifdef CONFIG_BLK_DEV_IDEPCI
+ #define ide_init_default_irq(base)	(0)
+ #else
+diff -puN include/linux/ide.h~ide_pc9800 include/linux/ide.h
+--- linux-2.6.6-rc3-bk2/include/linux/ide.h~ide_pc9800	2004-05-04 01:32:52.156356392 +0200
++++ linux-2.6.6-rc3-bk2-bzolnier/include/linux/ide.h	2004-05-04 01:32:52.166354872 +0200
+@@ -255,7 +255,7 @@ typedef enum {	ide_unknown,	ide_generic,
+ 		ide_pdc4030,	ide_rz1000,	ide_trm290,
+ 		ide_cmd646,	ide_cy82c693,	ide_4drives,
+ 		ide_pmac,	ide_etrax100,	ide_acorn,
+-		ide_pc9800,	ide_forced
++		ide_forced
+ } hwif_chipset_t;
+ 
+ /*
+@@ -308,8 +308,7 @@ static inline void ide_std_init_ports(hw
+ /*
+  * ide_init_hwif_ports() is OBSOLETE and will be removed in 2.7 series.
+  *
+- * arm26, arm, h8300, m68k, m68knommu (broken) and i386-pc9800 (broken)
+- * still have their own versions.
++ * arm{26}, h8300, m68k and m68knommu (broken) still have their own versions.
+  */
+ #if !defined(CONFIG_ARM) && !defined(CONFIG_H8300) && !defined(CONFIG_M68K)
+ static inline void ide_init_hwif_ports(hw_regs_t *hw,
 
 _
+
