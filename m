@@ -1,49 +1,46 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata oops 2.6.11-rc4 yesterdays BK
-Date: Wed, 16 Feb 2005 17:47:58 -0500
-Message-ID: <4213CD9E.9040703@pobox.com>
-References: <4212CBD6.7020703@wasp.net.au> <42132803.2080701@wasp.net.au> <4213821D.1030203@pobox.com> <4213B2F8.2070800@wasp.net.au> <20050216154033.I10699@florence.linkmargin.com>
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: [PATCH] ide: make 1-bit fields unsigned
+Date: Wed, 16 Feb 2005 15:49:28 -0800
+Message-ID: <20050216154928.0cf7c1ec.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:59035 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262107AbVBPWsN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Feb 2005 17:48:13 -0500
-In-Reply-To: <20050216154033.I10699@florence.linkmargin.com>
+Received: from fire.osdl.org ([65.172.181.4]:38629 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S262139AbVBPXth (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2005 18:49:37 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andy Warner <andyw@pobox.com>
-Cc: Brad Campbell <brad@wasp.net.au>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl
 
-Andy Warner wrote:
-> Brad Campbell wrote:
-> 
->>[...]
->>Actually, I'm not sure without the libata dev patch as that removes SMART support, and I'm not 
->>convinced that my smartd polling every 20 minutes does not have something to do with it. All I know 
->>is the older kernel seems to cope. We'll see. 320 minutes left on this rebuild. I expect it will be 
->>done in the morning if all goes according to plan. (With the 2.6.11 kernel it never survived past 
->>about 25% rebuilt)
-> 
-> 
-> Can you find time to try it without smartd active ?
-> You report running a uni-processor system, and I have only
-> seen PIO problems with (fast) SMP systems in my testing,
-> but I am forming the opinion that libata-PIO functions
-> are in need of a minor overhaul.
-> 
-> I have seen issues where port activity monopolised
-> data-paths/arbitration inside chipsets such that the
-> PIO operations would appear to time out. Since you're
-> doing a raid rebuild, perhaps the I/O load is causing
-> something similar to occur.
+It's a bit difficult to have a value and a sign bit in a
+1-bit field.
 
-Does the PIO code deviate from the ATA/ATAPI-[4567] host state machine 
-somehow?
+Fix (90) boolean/bitfield sparse warnings:
+include/linux/ide.h:937:18: warning: dubious one-bit signed bitfield
+include/linux/ide.h:939:17: warning: dubious one-bit signed bitfield
 
-Or is it just that newer SATA-emulating-PATA chips have trouble with it?
+Signed-off-by: Randy Dunlap <rddunlap@osdl.org>
 
-	Jeff
+diffstat:=
+ include/linux/ide.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff -Naurp ./include/linux/ide.h~ide_bool ./include/linux/ide.h
+--- ./include/linux/ide.h~ide_bool	2005-02-15 13:48:46.615266448 -0800
++++ ./include/linux/ide.h	2005-02-15 20:07:17.682659408 -0800
+@@ -934,9 +934,9 @@ typedef struct hwgroup_s {
+ 		/* BOOL: protects all fields below */
+ 	volatile int busy;
+ 		/* BOOL: wake us up on timer expiry */
+-	int sleeping	: 1;
++	unsigned int sleeping	: 1;
+ 		/* BOOL: polling active & poll_timeout field valid */
+-	int polling	: 1;
++	unsigned int polling	: 1;
+ 		/* current drive */
+ 	ide_drive_t *drive;
+ 		/* ptr to current hwif in linked-list */
 
 
+---
