@@ -1,89 +1,82 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: libata & scsi error handling
-Date: Wed, 18 Aug 2004 11:04:43 +0400
+From: "Klavs Klavsen" <kl@vsen.dk>
+Subject: Re: 2.6 kernel panic - when cf-card inserted
+Date: Wed, 18 Aug 2004 09:09:34 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4122FF8B.5070509@wasp.net.au>
-References: <4122771A.4070203@wasp.net.au> <4122BA04.3070705@pobox.com>
+Message-ID: <32939.10.0.0.51.1092812974.squirrel@10.0.0.51>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:45281 "EHLO wasp.net.au")
-	by vger.kernel.org with ESMTP id S262106AbUHRHEQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Aug 2004 03:04:16 -0400
-In-Reply-To: <4122BA04.3070705@pobox.com>
+Received: from 213.237.54.63.adsl.suoe.worldonline.dk ([213.237.54.63]:40359
+	"EHLO www.vsen.dk") by vger.kernel.org with ESMTP id S262605AbUHRHJi
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Aug 2004 03:09:38 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by www.vsen.dk (Postfix) with ESMTP id 8907EBCA8
+	for <linux-ide@vger.kernel.org>; Wed, 18 Aug 2004 09:09:36 +0200 (CEST)
+Received: from www.enableit.dk (localhost.localdomain [127.0.0.1])
+	by www.vsen.dk (Postfix) with ESMTP id D4454BC9C
+	for <linux-ide@vger.kernel.org>; Wed, 18 Aug 2004 09:09:34 +0200 (CEST)
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
+Hi guys,
 
-> 
-> It is highly likely that your patch is doing the right thing.  Doug 
-> Ledford, 2.4.x SCSI maintainer, pointed out to me recently that my 2.4.x 
-> error handling code MUST update a couple variables, otherwise error 
-> handling would hang as you see.  The reason is that scsi_unjam_host(), 
-> on both 2.4.x and 2.6.x, is the only ->eh_strategy_handler until libata 
-> came along.
-> 
-> So, it is likely that there are a few details the scsi_unjam_host() 
-> performs, that needs to do too.
+I will ofcourse help anyway I can to debug - but am I the only one with a
+builtin cd-card reader that makes every 2.6 kernel panic everytime I just
+insert a CF-card?
 
-Possibly stupid question time. (What I know about the SCSI stack could be written on the back of a 
-matchbox)
+p.s. I'm not subscribed to the list - I follow it via the MARC archives,
+so I might answer a little late :)
 
-I'm a little concerned about this bit here. (This is the end of the first command and then the 
-timeout related to it).
+--- description of problem
+Hi Guys,
 
+posted my problem in the kernel bugzilla (
+http://bugme.osdl.org/show_bug.cgi?id=3058 ) , but was told to go here.
 
-Aug 18 01:54:48 srv kernel: ata_dev_select: ENTER, ata13: device 0, wait 1
-Aug 18 01:54:48 srv kernel: ata_tf_load_pio: hob: feat 0x0 nsect 0x0, lba 0x0 0x0 0x0
-Aug 18 01:54:48 srv kernel: ata_tf_load_pio: feat 0x0 nsect 0x80 lba 0x0 0x0 0x0
-Aug 18 01:54:48 srv kernel: ata_tf_load_pio: device 0xE0
-Aug 18 01:54:48 srv kernel: ata_exec_command_pio: ata13: cmd 0x25
-Aug 18 01:54:48 srv kernel: ata_scsi_translate: EXIT
-Aug 18 01:54:48 srv kernel: scsi_dispatch_cmd out
-Aug 18 00:43:41 srv kernel: scsi_times_out
-Aug 18 00:43:41 srv kernel: scsi_eh_scmd_add
+My problem is as follows:
+Distribution: Gentoo Linux
+Hardware Environment: IBM Thinkpad X30
+Software Environment: pcmcia-cs-3.2.7
+Kernel-ver: 2.6.6 (with vserver-1.9.1) and 2.6.7-mm6
+Problem Description:
+When I insert my CF-card in my builtin CF-card reader - the kernel panics
+immediately with the message:
+Kernel panic: ide: default attach failed
 
-Here the scmd that failed gets added to a list.
+I just compiled a 2.6.7-mm6 - and have exact same problem.
 
-         list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
+Steps to reproduce:
+Insert CF-card in cf-reader.
 
-Because scsi_eh_finish_cmd never runs it will never get removed from the list. Am I missing something?
+You can see my Kernel-config (for both kernels - except for a make
+oldconfig ran with default answer for all) here:
+http://vsen.dk/files/tpx30-lnx26-kernel-config
 
-Aug 18 00:43:41 srv kernel: scsi_eh_scmd_after return 0
-Aug 18 00:43:41 srv kernel: host_busy 1, host_failed 1
-Aug 18 00:43:41 srv kernel: scsi_times_out out
-Aug 18 00:43:41 srv kernel: wake eh_strategy_handler
-Aug 18 00:43:41 srv kernel: hit eh_strategy_handler
-Aug 18 00:43:41 srv kernel: eh_strategy_handler 1
-Aug 18 00:43:41 srv kernel: ata_scsi_error: ENTER
-Aug 18 00:43:41 srv kernel: ata_eng_timeout: ENTER
-Aug 18 00:43:41 srv kernel: ata_qc_timeout: ENTER
-Aug 18 00:43:41 srv kernel: ata13: command 0x25 timeout, stat 0xd0 host_stat 0x1
-Aug 18 00:43:41 srv kernel: ata_sg_clean: unmapping 128 sg elements
-Aug 18 00:43:41 srv kernel: scsi_device_unbusy
-Aug 18 00:43:41 srv kernel: host_busy 0, host_failed 1
-Aug 18 00:43:41 srv kernel: scsi12: ERROR on channel 0, id 0, lun 0, CDB: Read (10) 00 00 00 00 00 
-00 00 80 00
-Aug 18 00:43:41 srv kernel: Current sda: sense key Medium Error
-Aug 18 00:43:41 srv kernel: Additional sense: Unrecovered read error - auto reallocate failed
-Aug 18 00:43:41 srv kernel: end_request: I/O error, dev sda, sector 0
-Aug 18 00:43:41 srv kernel: Buffer I/O error on device sda, logical block 0
-Aug 18 00:43:41 srv kernel: ata_qc_timeout: EXIT
-Aug 18 00:43:41 srv kernel: ata_eng_timeout: EXIT
-Aug 18 00:43:41 srv kernel: ata_scsi_error: EXIT
-Aug 18 00:43:41 srv kernel: eh_strategy_handler 2
-Aug 18 00:43:41 srv kernel: eh_strategy_handler 3
-Aug 18 00:43:41 srv kernel: scsi_dispatch_cmd
-Aug 18 00:43:41 srv kernel: Add Timer
-Aug 18 00:43:41 srv kernel: After Add Timer
-Aug 18 01:55:14 srv kernel: ata_scsi_dump_cdb: CDB (13:0,0,0) 28 00 00 00 00 01 00 00 7f
-Aug 18 01:55:14 srv kernel: ata_scsi_translate: ENTER
-Aug 18 01:55:14 srv kernel: ata_scsi_rw_xlat: ten-byte command
-Aug 18 01:55:14 srv kernel: ata_sg_setup: ENTER, ata13
-Aug 18 01:55:14 srv kernel: ata_sg_setup: 127 sg elements mapped
+Any ideas what is up here? I'd like to be able to use my cf-card :) It
+works fine in 2.4 (the last time I checked atleast - don't have a 2.4
+kernel on this machine at all).
 
+-- 
 Regards,
-Brad
+Klavs Klavsen, GSEC, klavs@EnableIT.dk, http://www.EnableIT.dk
+Open Source Server, Security and Network Consulting
+Phone: +45 3284 4372 Mobile: +45 2342 4372
+PGP: 7E063C62/2873 188C 968E 600D D8F8  B8DA 3D3A 0B79 7E06 3C62
+
+See our CMS Hosting Service at http://www.VirkPaaNettet.dk
+
+"Open Source Software - Sometimes you get more than you paid for."
+
+
+
+-- 
+Regards,
+Klavs Klavsen, GSEC - kl@vsen.dk - http://www.vsen.dk
+PGP: 7E063C62/2873 188C 968E 600D D8F8  B8DA 3D3A 0B79 7E06 3C62
+See our managed CMS Hosting Service at http://www.VirkPaaNettet.dk
+
+"Those who do not understand Unix are condemned to reinvent it, poorly."
+  --Henry Spencer
+
