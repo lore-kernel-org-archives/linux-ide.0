@@ -1,43 +1,44 @@
-From: Tod Crabtree <zinowejys@alemail.com>
-Subject: A custom Logo that expresses your company! (593811620)
-Date: Fri, 11 Mar 2005 15:21:52 +0000
-Message-ID: <70558974226.6814095257761@dial-99.r3.mtmscy.infoave.net>
-Reply-To: Tod Crabtree <zinowejys@alemail.com>
+From: Kanniball <kanniball@zmail.pt>
+Subject: SiI 3112 & Seagate drivers
+Date: Sat, 12 Mar 2005 19:37:55 +0000
+Message-ID: <200503121937.55673.kanniball@zmail.pt>
+Reply-To: kanniball@zmail.pt
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1252
-Content-Transfer-Encoding: 8bit
-Received: from dial-99.r3.mtmscy.infoave.net ([216.228.54.99]:53769 "EHLO
-	dial-99.r3.mtmscy.infoave.net") by vger.kernel.org with ESMTP
-	id S261576AbVCLFVn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 12 Mar 2005 00:21:43 -0500
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Received: from [81.92.212.1] ([81.92.212.1]:49169 "EHLO zmail.pt")
+	by vger.kernel.org with ESMTP id S261988AbVCLR6c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Mar 2005 12:58:32 -0500
+Received: from 80.172.45.50
+	by zmail.pt
+	(Cipher SSLv3:RC4-MD5:128) (MDaemon.PRO.v6.8.4.R)
+	with ESMTP id 32-md50000000002.tmp
+	for <linux-ide@vger.kernel.org>; Sat, 12 Mar 2005 17:56:26 +0000
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ia64@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Our art team creates a custom logo for you, based on your needs.  
+Hi!
+First off all excuse me for bugging you with this, but I can't accept paying 
+for something that I only can use at 20% by the manufacter's fault.
+So what I'm asking here is for help me to make pressure with the manufactures 
+in order to get a good answer (fix).
+For that I would like to have some tecnical details about the faults on both 
+sides, Sata controller and disk drive.
+I know other people with the same situation, so maybe we can all make 
+pressure :)
 
+Sorry for the nature of this mail, and let me know if I can't make public your 
+answer.
 
+Thanks for any inconvenience and for your attention.
 
-Years of experience have taught us how to create a logo that makes a statement that is unique to you. 
+Regards,
 
- In a professional manner we learn about your image and how you would like the world to perceive you and your company.
-With this in formation we then create a logo that is not only unique but reflects the purpose of you and your company. 
- 
-For value and a logo that reflects your image, take a few minutes and visit Try Logos!
-http://www.try-logos-design.com/
+Paulo Fidalgo
+-- 
+Jabber ID: kanniball@jabber80.com
 
-
-
- 
-S incerely       
-Logo Design Team 
-
-
-
-
-
-
-
------
-{UNSUBSCRIBE_PREFIX}
-http://www.try-logos-design.com/uns.php
