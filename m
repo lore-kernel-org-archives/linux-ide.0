@@ -1,41 +1,122 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: [PATCH] prevent module unloading for legacy IDE chipset drivers
-Date: Thu, 22 Apr 2004 16:35:12 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200404221635.12490.bzolnier@elka.pw.edu.pl>
-References: <200404212219.24622.bzolnier@elka.pw.edu.pl> <200404220250.15078.bzolnier@elka.pw.edu.pl> <20040422103355.GC15176@harddisk-recovery.com>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: [PATCH 2.6] Generic IDE support for Toshiba Piccolo PCI IDE chips
+ (2.6)
+Date: Thu, 22 Apr 2004 17:05:50 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <4087ED5E.9070808@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S264088AbUDVOgm@vger.kernel.org>
-In-Reply-To: <20040422103355.GC15176@harddisk-recovery.com>
-Content-Disposition: inline
-To: Erik Mouw <erik@harddisk-recovery.com>
-Cc: andersen@codepoet.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------040103080406030303070303"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cpc2-hitc2-5-0-cust191.lutn.cable.ntl.com ([81.99.81.191]:40649
+	"EHLO zog.reactivated.net") by vger.kernel.org with ESMTP
+	id S264188AbUDVQDZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 22 Apr 2004 12:03:25 -0400
 List-Id: linux-ide@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, b.w.schofield@durham.ac.uk, eguaj@free.fr
 
-On Thursday 22 of April 2004 12:33, Erik Mouw wrote:
-> On Thu, Apr 22, 2004 at 02:50:15AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > On Thursday 22 of April 2004 02:41, Erik Andersen wrote:
-> > > Out of curiosity, what would be needed to make it safe to unload
-> > > all ide modules from a system with a scsi rootfs?
-> >
-> > It doesn't matter - you still may end up unloading modules which are in
-> > use.
->
-> FWIW, with the old IDE code I've been unloading IDE modules for years
-> without a single problem.
+This is a multi-part message in MIME format.
+--------------040103080406030303070303
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-IDE chipset drivers were made 'modular' in 2.4.21
-(release date 13-Jun-2003) and this complicated things
+Adds Toshiba IDE chips to the list supported by the generic IDE driver.
+The 2.4 tree already contained an entry for product:0x0102, this patch
+adds that entry to 2.6 as well as two new ones (0x0103 and 0x0105).
+This then allows DMA to be enabled on disks.
 
-> What makes IDE sufficiently different from SCSI that we can't unload
-> IDE host drivers?
+For more info, see:
+http://www.uwsg.iu.edu/hypermail/linux/kernel/0401.1/0150.html
+http://www.uwsg.iu.edu/hypermail/linux/kernel/0402.0/0129.html
+(it appears that Ben's patch never appeared, and Jerome's got lost)
 
-- no reference counting
-- lack of release() method
-- insufficient locking
+Against 2.6.6-rc2
 
-Cheers,
-Bartlomiej
+Please apply,
+
+Daniel
+
+--------------040103080406030303070303
+Content-Type: text/plain;
+ name="2.6.6-rc2-toshiba-generic-ide.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="2.6.6-rc2-toshiba-generic-ide.patch"
+
+Generic IDE support for Toshiba Piccolo PCI IDE chips (2.6)
+
+diff -uprN linux-2.6.6-rc2/drivers/ide/pci/generic.c linux-dsd/drivers/ide/pci/generic.c
+--- linux-2.6.6-rc2/drivers/ide/pci/generic.c	2004-04-22 16:07:11.135196296 +0100
++++ linux-dsd/drivers/ide/pci/generic.c	2004-04-22 16:11:28.758031672 +0100
+@@ -132,6 +132,9 @@ static struct pci_device_id generic_pci_
+ 	{ PCI_VENDOR_ID_VIA,    PCI_DEVICE_ID_VIA_82C561,          PCI_ANY_ID, PCI_ANY_ID, 0, 0, 7},
+ 	{ PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558,         PCI_ANY_ID, PCI_ANY_ID, 0, 0, 8},
+ 	{ PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8237_SATA,	   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 9},
++	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO,     PCI_ANY_ID, PCI_ANY_ID, 0, 0, 10},
++	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 11},
++	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 12},
+ 	{ 0, },
+ };
+ MODULE_DEVICE_TABLE(pci, generic_pci_tbl);
+diff -uprN linux-2.6.6-rc2/drivers/ide/pci/generic.h linux-dsd/drivers/ide/pci/generic.h
+--- linux-2.6.6-rc2/drivers/ide/pci/generic.h	2004-04-22 16:07:11.139195688 +0100
++++ linux-dsd/drivers/ide/pci/generic.h	2004-04-22 16:11:28.765030608 +0100
+@@ -129,6 +129,42 @@ static ide_pci_device_t generic_chipsets
+ 		.enablebits	= {{0x00,0x00,0x00}, {0x00,0x00,0x00}},
+ 		.bootable	= OFF_BOARD,
+ 		.extra		= 0,
++	},{ /* 10 */
++		.vendor		= PCI_VENDOR_ID_TOSHIBA,
++		.device		= PCI_DEVICE_ID_TOSHIBA_PICCOLO,
++		.name 		= "Piccolo0102",
++		.init_chipset	= init_chipset_generic,
++		.init_iops	= NULL,
++		.init_hwif	= init_hwif_generic,
++		.channels	= 2,
++		.autodma	= NOAUTODMA,
++		.enablebits	= {{0x00,0x00,0x00}, {0x00,0x00,0x00}},
++		.bootable	= ON_BOARD,
++		.extra		= 0,
++	},{ /* 11 */
++		.vendor		= PCI_VENDOR_ID_TOSHIBA,
++		.device		= PCI_DEVICE_ID_TOSHIBA_PICCOLO_1,
++		.name 		= "Piccolo0103",
++		.init_chipset	= init_chipset_generic,
++		.init_iops	= NULL,
++		.init_hwif	= init_hwif_generic,
++		.channels	= 2,
++		.autodma	= NOAUTODMA,
++		.enablebits	= {{0x00,0x00,0x00}, {0x00,0x00,0x00}},
++		.bootable	= ON_BOARD,
++		.extra		= 0,
++	},{ /* 12 */
++		.vendor		= PCI_VENDOR_ID_TOSHIBA,
++		.device		= PCI_DEVICE_ID_TOSHIBA_PICCOLO_2,
++		.name 		= "Piccolo0105",
++		.init_chipset	= init_chipset_generic,
++		.init_iops	= NULL,
++		.init_hwif	= init_hwif_generic,
++		.channels	= 2,
++		.autodma	= NOAUTODMA,
++		.enablebits	= {{0x00,0x00,0x00}, {0x00,0x00,0x00}},
++		.bootable	= ON_BOARD,
++		.extra		= 0,
+ 	},{
+ 		.vendor		= 0,
+ 		.device		= 0,
+diff -uprN linux-2.6.6-rc2/include/linux/pci_ids.h linux-dsd/include/linux/pci_ids.h
+--- linux-2.6.6-rc2/include/linux/pci_ids.h	2004-04-22 16:09:38.000000000 +0100
++++ linux-dsd/include/linux/pci_ids.h	2004-04-22 16:11:28.779028480 +0100
+@@ -1383,6 +1383,9 @@
+ #define PCI_DEVICE_ID_SBE_WANXL400	0x0104
+ 
+ #define PCI_VENDOR_ID_TOSHIBA		0x1179
++#define PCI_DEVICE_ID_TOSHIBA_PICCOLO	0x0102
++#define PCI_DEVICE_ID_TOSHIBA_PICCOLO_1	0x0103
++#define PCI_DEVICE_ID_TOSHIBA_PICCOLO_2	0x0105
+ #define PCI_DEVICE_ID_TOSHIBA_601	0x0601
+ #define PCI_DEVICE_ID_TOSHIBA_TOPIC95	0x060a
+ #define PCI_DEVICE_ID_TOSHIBA_TOPIC95_A 0x0603
+
+--------------040103080406030303070303--
