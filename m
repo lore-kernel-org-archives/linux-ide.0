@@ -1,68 +1,100 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: libata PATA support - work items?
-Date: Mon, 3 Jan 2005 23:09:36 +0100
-Message-ID: <58cb370e05010314092d421aee@mail.gmail.com>
-References: <006301c4ee5c$49e6a230$95714109@tw.ibm.com>
-	 <311601c9050101111929aef5ba@mail.gmail.com>
-	 <87f94c3705010312568b48d6e@mail.gmail.com>
-	 <311601c905010313201d5a02fa@mail.gmail.com>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Prarit Bhargava <prarit@sgi.com>
+Subject: [PATCH]: Fix erroneous rq->buffer = NULL in ide-io.c:ide_dma_timeout_retry
+Date: Tue, 04 Jan 2005 09:47:25 -0500
+Message-ID: <41DAAC7D.7060002@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.196]:43234 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261926AbVACWJj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2005 17:09:39 -0500
-Received: by wproxy.gmail.com with SMTP id 69so57854wri
-        for <linux-ide@vger.kernel.org>; Mon, 03 Jan 2005 14:09:36 -0800 (PST)
-In-Reply-To: <311601c905010313201d5a02fa@mail.gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:58259 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S261662AbVADOr2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2005 09:47:28 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.12.11/8.12.11) with ESMTP id j04ElRc9009083
+	for <linux-ide@vger.kernel.org>; Tue, 4 Jan 2005 09:47:27 -0500
+Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
+	by int-mx1.corp.redhat.com (8.11.6/8.11.6) with ESMTP id j04ElRr05416
+	for <linux-ide@vger.kernel.org>; Tue, 4 Jan 2005 09:47:27 -0500
+Received: from [172.16.83.37] (dhcp83-37.boston.redhat.com [172.16.83.37])
+	by mail.boston.redhat.com (8.12.8/8.12.8) with ESMTP id j04ElPf7011376
+	for <linux-ide@vger.kernel.org>; Tue, 4 Jan 2005 09:47:25 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Eric Mudama <edmudama@gmail.com>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, Albert Lee <albertcc@tw.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, dan mares <dmares@dmares.com>
+To: linux-ide@vger.kernel.org
 
-Hi,
+Hello,
 
-On Mon, 3 Jan 2005 14:20:40 -0700, Eric Mudama <edmudama@gmail.com> wrote:
-> On Mon, 3 Jan 2005 15:56:58 -0500, Greg Freemyer
-> <greg.freemyer@gmail.com> wrote:
-> > I may be in the minority, but my company does computer forensics.  We
-> > routinely connect old drives to Linux boxes and make dd images of
-> > them.
-> >
-> > We definately need CHS support at some level in the kernel.  If this
-> > were ever dropped, we would have to quit using Linux for this job.
-> >
-> > FYI, there are hundreds if not thousands of companies that provide
-> > this service.  The current standard for the industry is to perform
-> > these images from a DOS boot floppy, but using Linux is far superior
-> > in my mind and there is a small but growing body of professionals
-> > using Linux for Computer Forensic Imaging.
-> 
-> Would it be a problem to keep any of the existing 2.4 or non-libata
-> 2.6 systems around?  Since you're doing it now, I wouldn't expect it
-> to be a problem to keep them running so you can continue connecting to
-> very old hard drives.
-> 
-> I'm simply trying to say that it'd be nice if future libata stayed
-> focused on non-CHS mode stuff, since CHS has been obsolete from the
-> ATA specifications for years.  Revision 5 of the ATA-3 specification,
-> 6 October 1995, made LBA support mandatory for all disk drives
-> claiming support of that level of the spec.  Over 9 years ago.
-> 
-> Obviously, forensics and data recovery are cases where you might be
-> working with 9+ year old hard drive, but for that I would think we can
-> keep the existing PATA drivers around if maintaining an older system
-> wasn't an option, for those who need it.
-> 
-> Would that work?
+I have found an IDE bug in the IDE DMA timeout function,
+ide-io.c: ide_dma_timeout_retry erroneously sets the first_rq->buffer = 
+NULL.
 
-Existing IDE drivers are not going away any time soon (not 2.6.x at least)
-and if/when this happens we shouldn't drop CHS support completely
-from the kernel - IMHO it is quite easy to add CHS support to libata.
-I also agree that libata PATA development should be focused on LBA
-but I don't see any problem in keeping CHS support around...
+ide_dma_timeout_retry will be called whenever a command is issued, times 
+out,
+and the drive is waiting for DMA.  The function, ide_dma_timeout_retry,
+un-busies the hardware group and attempts to clean up the current request.
+As part of this cleanup the current failed first_rq->buffer is set to NULL.
 
-Cheers,
-Bartlomiej
+However, as part of this retry process first_rq is retried up to 3 times in
+PIO mode (with DMA off).
+
+During the retry, ide-cd.c: cdrom_start_read is called, which in turn
+calls, restore_request.  restore_request references first_rq->buffer 
+(which is
+NULL) in order to calculate hard_cur_sectors, hard_nr_sectors, etc.
+
+ie) All of these values will be bogus because of the first_rq->buffer = 
+NULL.
+
+This request will fail and the IDE core will enter error handling.  IDE
+core generates a new request, sense_rq, in order to request sense.  Attached
+this request is a back pointer to the original first_rq request.
+
+        ie) sense_rq->buffer = first_rq
+
+Eventually ide-cd.c:cdrom_end_request is called on sense_rq, and
+then ide-io.c:ide_end_dequeued_request is called on first_rq.  Note
+that ide_end_dequeued_request is called with the bogus values from first_rq.
+
+The return value essentially depends on the return value of
+ll_rw_blk.c:__end_that_request_first.  The arguements to this function 
+include
+nr_sectors, which as noted above, is bogus.
+
+This leads to a return of 1 from ll_rw_blk.c:__end_that_request_first
+which eventually leads to an erroneous call to BUG() in
+ide-cd.c:cdrom_end_request.
+
+I have forced this issue to occur by modifying code to effectively DMA
+timeout on CDROM accesses on i686 and ia64 platforms.  I hit the bug
+100% of the time.
+
+It appears that the modification should be to rid the ide-io.c code of
+the rq->buffer = NULL call.
+
+Patch is based off of latest BK linux-2.5 as of 2005-01-04 09:00.
+
+--- linux-2.5.orig/drivers/ide/ide-io.c 2005-01-04 09:31:45.000000000 -0500
++++ linux-2.5/drivers/ide/ide-io.c      2005-01-04 09:32:23.000000000 -0500
+@@ -1205,21 +1205,20 @@
+        HWGROUP(drive)->rq = NULL;
+
+        rq->errors = 0;
+
+        if (!rq->bio)
+                goto out;
+
+        rq->sector = rq->bio->bi_sector;
+        rq->current_nr_sectors = bio_iovec(rq->bio)->bv_len >> 9;
+        rq->hard_cur_sectors = rq->current_nr_sectors;
+-       rq->buffer = NULL;
+ out:
+        return ret;
+ }
+
+ /**
+  *     ide_timer_expiry        -       handle lack of an IDE interrupt
+  *     @data: timer callback magic (hwgroup)
+  *
+  *     An IDE command has timed out before the expected drive return
+  *     occurred. At this point we attempt to clean up the current
+
