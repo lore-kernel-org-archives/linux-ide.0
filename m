@@ -1,40 +1,53 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: when limited to a single DRQ block per disk transaction
-Date: Fri, 14 May 2004 15:50:16 -0400
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: arm-lh7a40x IDE support in 2.6.6
+Date: Fri, 14 May 2004 20:52:12 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40A522F8.2080904@pobox.com>
-References: <1084393233.3999.2.camel@patibmrh9> <40A28BB6.7090204@pobox.com>	<1084403654.3196.31.camel@patibmrh9>  <40A3E595.8000003@pobox.com><108455 9	000.4017.52.camel@patibmrh9>  <40A51604.8070208@pobox.com> <1084563455.8752.49.camel@patibmrh9>
+Message-ID: <20040514205212.A19539@flint.arm.linux.org.uk>
+References: <200405141840.04401.bzolnier@elka.pw.edu.pl> <20040514172656.GA18884@buici.com> <200405142045.51875.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:21696 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262388AbUENTu2
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 May 2004 15:50:28 -0400
-In-Reply-To: <1084563455.8752.49.camel@patibmrh9>
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:50448 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S262406AbUENTwQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 May 2004 15:52:16 -0400
+Content-Disposition: inline
+In-Reply-To: <200405142045.51875.bzolnier@elka.pw.edu.pl>; from B.Zolnierkiewicz@elka.pw.edu.pl on Fri, May 14, 2004 at 08:45:51PM +0200
 List-Id: linux-ide@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Marc Singer <elf@buici.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Pat LaVarre wrote:
-> Please can you say which controllers exhibit this limitation?
+On Fri, May 14, 2004 at 08:45:51PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Friday 14 of May 2004 19:26, Marc Singer wrote:
+> > On Fri, May 14, 2004 at 06:40:04PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > > I was just porting my patches killing <asm/arch/ide.h> for
+> > > ARM to 2.6.6 when noticed that more work is needed now. :-(
+> > >
+> > > arch/arm/mach-lh7a40x/ide-lpd7a40x.c
+> > > include/asm-arm/arch-lh7a40x/ide.h
+> > >
+> > > Why it couldn't be done in drivers/ide/arm
+> > > (as discussed on linux-ide)?
+> >
+> > Your response took look enough for me to switch to another job.  I
+> > haven't yet returned to dealing with this.
+> 
+> Yes, it took too long.
+> 
+> Anyway, pushing non-working code to mainline is a bad thing
+> (I can show some proofs for this statement).
 
-AHCI.
+It was a necessary step.  To get around this, we're going to ask people
+to submit new machine support on a file by file basis, and that's just
+not practical, and you can't expect me to be able to track _every_
+_single_ fscking change to the kernel, and pick up every one in a
+review.
 
-PIO is being deprecated...  future ATA will be DMA-only.
+There will always be a delay between changes happening between two people
+and we have to live with it.  Not everyone works on Linus' latest kernel.
 
-
-> Do we mean to be discussing a limit of one PATA DRQ INTRQ per CDB?
-
-Correct.
-
-If DRQ block size is 16 sectors, then each CDB is limited to a maximum 
-of 16 sectors.
-
-This limit does not apply to DMA.  Only to PIO, PIO multi, and ATAPI PIO.
-
-	Jeff
-
-
-
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 PCMCIA      - http://pcmcia.arm.linux.org.uk/
+                 2.6 Serial core
