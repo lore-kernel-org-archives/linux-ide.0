@@ -1,35 +1,59 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: [PATCH 2.6.11-rc3 01/11] ide: task_end_request() fix
-Date: Wed, 2 Mar 2005 17:07:36 +0100
-Message-ID: <58cb370e05030208077189e7@mail.gmail.com>
+Date: Wed, 2 Mar 2005 17:15:00 +0100
+Message-ID: <58cb370e050302081532b21cd@mail.gmail.com>
 References: <20050210083808.48E9DD1A@htj.dyndns.org>
 	 <20050210083809.63BF53E6@htj.dyndns.org>
 	 <58cb370e05022407587e86f8ad@mail.gmail.com>
 	 <20050227064922.GA27728@htj.dyndns.org>
 	 <58cb370e050301063069799c75@mail.gmail.com>
-	 <42255582.4050204@pobox.com>
+	 <20050301164952.GA22499@htj.dyndns.org>
 Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.193]:46448 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262337AbVCBQHo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2005 11:07:44 -0500
-Received: by wproxy.gmail.com with SMTP id 68so255319wra
-        for <linux-ide@vger.kernel.org>; Wed, 02 Mar 2005 08:07:43 -0800 (PST)
-In-Reply-To: <42255582.4050204@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20050301164952.GA22499@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-On Wed, 02 Mar 2005 00:56:18 -0500, Jeff Garzik <jgarzik@pobox.com> wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > If somebody implements SG_IO ioctl and SCSI command pass-through
-> > from libata for IDE driver (and add possibility for discrete taskfiles), we can
-> > just deprecate HDIO_DRIVE_TASKFILE, forget about it and some time later
-> > remove this FPOS.
+On Wed, 2 Mar 2005 01:49:52 +0900, Tejun Heo <htejun@gmail.com> wrote:
+>  Hello, Bartlomiej.
 > 
-> Can you explain what you mean by "add possibility for discrete taskfiles"?
+> On Tue, Mar 01, 2005 at 03:30:32PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > On Sun, 27 Feb 2005 15:49:22 +0900, Tejun Heo <htejun@gmail.com> wrote:
+> > >
+> > >  Taskfile DMA path is still broken.  Also calling ide_end_request()
+> > > will work there, but IMHO it's just cleaner to finish special commands
+> > > inside ide_end_drive_cmd().  Currently,
+> >
+> > I agree but please note that your patch makes *all* taskfile registers to
+> > be exposed through HDIO_DRIVE_TASKFILE regardless of ->rf_in_flags
+> > (and obviously later you can't revert this change).
+> >
+> > >  * Successful flagged taskfile                  -> ide_end_drive_cmd()
+> > >  * All other successful non-DMA special cmds    -> ide_end_request()
+> > >  * Successful DMA taskfile                      -> segfault
+> >
+> > Have you tested it?  Why would it segfault?
+> >
+> 
+>  It's the same reason why PIO taskfiles were broken.  rq->rq_disk is
+> NULL for taskfile requests.
+> 
+> ide_startstop_t ide_dma_intr (ide_drive_t *drive)
+> {
+> ...
+>                         printk("**HERE0***\n");
+>                         drv = *(ide_driver_t **)rq->rq_disk->private_data;;
+>                         printk("**HERE1***\n");
+>                         drv->end_request(drive, 1, rq->nr_sectors);
+>                         return ide_stopped;
+> ...
+> }
 
-I mean flagged taskfiles.
+Arghh, indeed I forgot about HDIO_DRIVE_TASKFILE here.
+
+Could you fix to check if (drv == NULL) and call
+ide_end_request() it the condition is true?
