@@ -1,31 +1,48 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] atapi request sense work
-Date: Fri, 21 May 2004 00:04:02 -0400
+From: <tzalezak@centrum.cz>
+Subject: HPT370 driver speed under 2.6.x
+Date: Fri, 21 May 2004 16:11:13 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40AD7FB2.10506@pobox.com>
-References: <1084717146.3576.3.camel@patibmrh9> <40A7F641.3070809@pobox.com>	 <1084819720.4328.86.camel@patibmrh9>  <40A90D96.2040002@pobox.com><108482 	 8		840.3211.26.camel@patibmrh9>  <40A92F69.6030309@pobox.com><1084831524.3	2 11	.67.camel@patibmrh9>  <40A93E85.4010904@pobox.com> <1084920024.3191.8.	ca mel@patibmrh9> <40AAA0BA.9040307@pobox.com> <8A55CC7D-A9E7-11D8-B31E-003	065635034@ieee.org> <6AC5FDFB-AACA-11D8-8B8A-003065635034@ieee.org> <6E36A1	1B-AACB-11D8-8B8A-003065635034@ieee.org> <A6CE2F32-AAD3-11D8-8B8A-003065635034@ieee.org>
+Message-ID: <20040521141119Z1599538-576+65214@mail.centrum.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:10188 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264866AbUEUEJL
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 May 2004 00:09:11 -0400
-In-Reply-To: <A6CE2F32-AAD3-11D8-8B8A-003065635034@ieee.org>
+Received: from mail1.centrum.cz ([213.29.7.233]:22733 "EHLO mail1.centrum.cz")
+	by vger.kernel.org with ESMTP id S265887AbUEUOLe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 May 2004 10:11:34 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Thanks for continuing to poke at this.  FYI, I'm saving your results, 
-but probably won't have time to "think" about ATAPI again for a week or 
-so.  Need to spend some time getting new SATA controllers working.
+Dear Linux IDE driver developers,
 
-Keep posting, though, I'm still listening.
+I have found that my HPT370 RAID controller runs quite slow. Two hard d=
+rives are connected to it and I've measured speed approx. 20 MB/s for 2=
+0 GB Western Digital  Caviar WD200BB and 33 MB/s for 120 GB Seagete ST3=
+120026A. These problems occur only with 2.6.x kernels, however, kernels=
+ 2.4.2x are OK (approx. 30 and 50 MB/s). I've used hdparm and also some=
+thing like "time dd if=3D/dev/hda of=3D/dev/null bs=3D1M count=3D128" a=
+s a benchmark.
 
-Thanks,
+The rest of my hw configuration is:
 
-	Jeff
+Pentium II 400 MHz
+Motherboard QDI BrillianX-1S (with last available BIOS update)
+256 MB SDRAM (64+128+64) at 100 MHz
+NVidia RIVA TNT2 ULTRA 32 MB
+Sound Blaster AWE64
+Realtek 8139 100Mb network interface (sold as "Nettox")
+One ancient hard drive WD Caviar 21200 (1.2 GB) and two hard drives men=
+tioned above
+High-Point HPT370 controller (sold as "Kouwell KW-571A")
+
+I hope you could help me somehow.
+
+Tom=E1=B9 Z=E1le=BE=E1k
+
+--------------------
+P=F8=EDjemn=FD design. P=F8=EDjemn=ECj=B9=ED cena! SE T105 ji=BE od 577=
+ K=E8. http://user.centrum.cz/redir.php?url=3Dhttp://www.oskarmobil.cz/=
+handsets/handset.php
 
 
 
