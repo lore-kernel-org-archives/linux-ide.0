@@ -1,93 +1,54 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: libata-dev queue updated
-Date: Thu, 2 Dec 2004 03:29:30 -0500
-Message-ID: <20041202082930.GA7512@havoc.gtf.org>
-Reply-To: linux-ide@vger.kernel.org
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: page fault scalability patch V12 [0/7]: Overview
+	and	performance tests
+Date: Thu, 02 Dec 2004 22:16:24 +1100
+Message-ID: <1101986184.14597.75.camel@gaston>
+References: <Pine.LNX.4.44.0411221457240.2970-100000@localhost.localdomain>
+	 <Pine.LNX.4.58.0411221343410.22895@schroedinger.engr.sgi.com>
+	 <Pine.LNX.4.58.0411221419440.20993@ppc970.osdl.org>
+	 <Pine.LNX.4.58.0411221424580.22895@schroedinger.engr.sgi.com>
+	 <Pine.LNX.4.58.0411221429050.20993@ppc970.osdl.org>
+	 <Pine.LNX.4.58.0412011539170.5721@schroedinger.engr.sgi.com>
+	 <Pine.LNX.4.58.0412011608500.22796@ppc970.osdl.org>
+	 <41AEB44D.2040805@pobox.com> <20041201223441.3820fbc0.akpm@osdl.org>
+	 <41AEBD95.7030804@pobox.com> <1101971149.5593.64.camel@gaston>
+	 <41AEC021.8040000@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.28.190.101]:45213 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S261444AbULBIeK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Dec 2004 03:34:10 -0500
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:4268 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S261581AbULBLRb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Dec 2004 06:17:31 -0500
+In-Reply-To: <41AEC021.8040000@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
 
+On Thu, 2004-12-02 at 02:11 -0500, Jeff Garzik wrote:
+> Benjamin Herrenschmidt wrote:
+> > They may not end up in order if they are stores (the stores to the
+> > taskfile may be out of order vs; the loads/stores to/from the data
+> > register) unless you have a spinlock protecting both or a full sync (on
+> > ppc), but then, I don't know the ordering things on x86_64. This could
+> > certainly be a problem on ppc & ppc64 too.
+> 
+> 
+> Is synchronization beyond in[bwl] needed, do you think?
 
-I just updated libata-dev queue in BitKeeper, to the latest upstream kernel.
+Yes, when potentially hop'ing between CPUs, definitely.
 
-No patch yet, I'll post in a day or two.  You can generate your own
-patch using Documentation/BK-usage/gcapatch script in the kernel tree.
+> This specific problem is only on Intel ICHx AFAICS, which is PIO not 
+> MMIO and x86-only.  I presumed insw() by its very nature already has 
+> synchronization, but perhaps not...
 
-Here's a summary of the stuff sitting in this testing queue:
-* new driver ata_adma (Pacific Digital PATA and SATA)
-* new hardware ULi 5281 supported in sata_uli driver
-* new hardware VT6421 SATA supported in sata_via driver
-* support for PATA ports on Promise SATA cards
-* support for newer Promise PATA cards
-* ATA passthru (read: SMART support)
-* other minor stuff
+Hrm... on "pure" x86, I would expect so at the HW level, not sure about
+x86_64... but there would be definitely an issue on ppc with your
+scheme. You need at least a full barrier before you trigger the
+workqueue. That may not be the problem you are facing now, but it would
+become one.
 
-BK users:
+Ben.
 
-	bk pull bk://gkernel.bkbits.net/libata-dev-2.6
-
-This will update the following files:
-
- Documentation/DocBook/libata.tmpl |  192 ++++++++++
- drivers/scsi/Kconfig              |   18 
- drivers/scsi/Makefile             |    2 
- drivers/scsi/ahci.c               |    5 
- drivers/scsi/ata_adma.c           |  636 ++++++++++++++++++++++++++++++++++
- drivers/scsi/libata-core.c        |   48 ++
- drivers/scsi/libata-scsi.c        |  413 ++++++++++++++++++++++
- drivers/scsi/libata.h             |    2 
- drivers/scsi/pata_pdc2027x.c      |  694 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/sata_promise.c       |   56 ++-
- drivers/scsi/sata_uli.c           |   51 +-
- drivers/scsi/sata_via.c           |  202 ++++++++---
- include/linux/ata.h               |    1 
- include/linux/libata.h            |    2 
- include/scsi/scsi.h               |    3 
- 15 files changed, 2221 insertions(+), 104 deletions(-)
-
-through these ChangeSets:
-
-<albertcc:tw.ibm.com>:
-  o [libata pdc2027x] fix incorrect pio and mwdma masks
-  o [libata pdc2027x] remove quirks and ROM enable
-  o [libata] add driver for Promise PATA 2027x
-
-<andyw:pobox.com>:
-  o [libata scsi] support 12-byte passthru CDB
-  o [libata scsi] passthru CDB check condition processing
-  o T10/04-262 ATA pass thru - patch
-
-<erikbenada:yahoo.ca>:
-  o [libata sata_promise] support PATA ports on SATA controllers
-
-Brad Campbell:
-  o libata basic detection and errata for PATA->SATA bridges
-
-Jeff Garzik:
-  o [libata docs] add chapter on libata driver API
-  o [libata] add new driver ata_adma
-  o [libata ahci] minor fixes
-  o [libata sata_uli] add 5281 support, fix SATA phy setup for others
-  o [libata sata_via] add support for VT6421 SATA
-  o [libata sata_via] minor cleanups
-  o [libata] fix DocBook bugs
-  o [libata pdc2027x] update for upstream struct device conversion
-  o [libata sata_promise] fix merge bugs
-  o [libata] fix build breakage
-  o [libata] fix SATA->PATA bridge detect compile breakage
-  o [libata] fix printk warning
-
-John W. Linville:
-  o libata: SMART support via ATA pass-thru
-
-Tobias Lorenz:
-  o libata-scsi: get-identity ioctl support
 
