@@ -1,34 +1,70 @@
-From: "Eric D. Mudama" <edmudama@bounceswoosh.org>
-Subject: Re: ide-io.c, ide_do_request -- race condition?
-Date: Mon, 12 Jul 2004 12:35:05 -0600
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [PATCH] fix cdrom mt rainier probe
+Date: 13 Jul 2004 11:57:09 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040712183505.GE26789@bounceswoosh.org>
-References: <40F2CFDE.66D28904@verizon.net>
+Message-ID: <1089741428.3806.3.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 80-169-17-66.mesanetworks.net ([66.17.169.80]:681 "EHLO
-	mail.bounceswoosh.org") by vger.kernel.org with ESMTP
-	id S261605AbUGLSeV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Jul 2004 14:34:21 -0400
-Content-Disposition: inline
-In-Reply-To: <40F2CFDE.66D28904@verizon.net>
+Received: from email-out1.iomega.com ([147.178.1.82]:9364 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263769AbUGMR5M
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 13 Jul 2004 13:57:12 -0400
 List-Id: linux-ide@vger.kernel.org
-To: "Max T. Woodbury" <max.teneyck.woodbury@verizon.net>
+To: Jens Axboe <axboe@suse.de>
 Cc: linux-ide@vger.kernel.org
 
-On Mon, Jul 12 at 13:52, Max T. Woodbury wrote:
->Still, why would PIO mode be unsafe?  (I can see slower, but I don't
->expect speed from this beast.  Oh well.  Thanks for the pointer.)
+Jens A:
 
-PIO has no data integrity check, so bogus cables that glitch the data
-will not be detected.  Not sure if that is what he was talking about,
-but is definitely a problem for PIO.
+--- http://www.kernel.org/pub/linux/kernel/v2.6/testing/ChangeLog-2.6.8-rc1
+--- ...
+[PATCH] fix cdrom mt rainier probe
 
---eric
+Mt rainier probe must be deferred to media load time, since it requires a
+valid media (the drive may present a different capability based on what
+media is loaded). This fixes that for ide-cd and sr.
+...
+---
 
+Looks like something broke in deciding disc rewritable or not?
 
--- 
-Eric D. Mudama
-edmudama@mail.bounceswoosh.org
+Only for /dev/hdd PATAPI, not for /dev/scd0 USB?
+
+I see again we have rewritable by ioctl does not imply rewritable by dd
+and mount.  I'll blog my exploration outside, then report back if I come
+to understand more, but specifically so far I've seen:
+
+$ uname -srm
+Linux 2.6.7 i686
+$ sudo rrd scan
+/dev/scd0 is Iomega RRD 74.B rw
+/dev/hdd is Iomega RRD 74.B rw
+$
+$ sudo dd of=/dev/scd0 bs=64K count=1 if=/dev/zero
+1+0 records in
+1+0 records out
+$ sudo dd of=/dev/hdd bs=64K count=1 if=/dev/zero
+1+0 records in
+1+0 records out
+$
+
+$ uname -srm
+Linux 2.6.8-rc1 i686
+$ sudo rrd scan
+/dev/scd0 is Iomega RRD 74.B rw
+/dev/hdd is Iomega RRD 74.B rw
+$
+$ sudo dd of=/dev/scd0 bs=64K count=1 if=/dev/zero
+1+0 records in
+1+0 records out
+$ sudo dd of=/dev/hdd bs=64K count=1 if=/dev/zero
+dd: writing `/dev/hdd': Operation not permitted
+1+0 records in
+0+0 records out
+$
+
+Pat LaVarre
+http://linux-pel.blog-city.com/read/728344.htm
+
 
