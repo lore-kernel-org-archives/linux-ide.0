@@ -1,42 +1,43 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] speed up SATA
-Date: Sat, 27 Mar 2004 19:06:06 -0500
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <406616EE.80301@pobox.com>
-References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com>
+Date: Sat, 27 Mar 2004 19:08:44 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <4066178C.5020605@pobox.com>
+References: <4066021A.20308@pobox.com> <40660FEC.8080703@pobox.com> <406610EA.4010607@pobox.com> <200403280113.58555.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:20149 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261979AbUC1AGT
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Mar 2004 19:06:19 -0500
-In-Reply-To: <406611CA.3050804@pobox.com>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <200403280113.58555.bzolnier@elka.pw.edu.pl>
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Stefan Smietanowski <stesmi@stesmi.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: Nick Piggin <nickpiggin@yahoo.com.au>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Jeff Garzik wrote:
-> It's up to the sysadmin to choose a disk scheduling policy they like, 
-> which implies that a _scheduler_, not each individual driver, should 
-> place policy limitations on max_sectors.
+Bartlomiej Zolnierkiewicz wrote:
+> On Sunday 28 of March 2004 00:40, Jeff Garzik wrote:
+> 
+>>Jeff Garzik wrote:
+>>
+>>>That's the main limitation on request size right now...  libata limits
+>>>S/G table entries to 128[1], so a perfectly aligned, fully merged
+>>
+>>    ...
+>>
+>>[1] because even though the block layer properly splits on segment
+>>boundaries, pci_map_sg() may violate those boundaries (James B and
+>>others are working on fixing this).  So...  for right now the driver
+>>must check the s/g entry boundaries after DMA mapping, and split them
+>>(again) if necessary.  IDE does this in ide_build_dmatable().
+> 
+> 
+> You are right but small clarification is needed: code in ide_build_dmatable()
+> predates segment boundary support in block layer (IDE never relied on it).
 
+Agreed...  I'm saying it's still needed.
 
-<tangent>
-
-The block layer / scheduler guys should also think about a general (not 
-SCSI specific) way to tune TCQ tag depth.  That's IMO another policy 
-decision.
-
-I'm about to add a raft of SATA-2 hardware, all of which are queued. 
-The standard depth is 32, but one board supports a whopping depth of 256.
-
-Given past discussion on the topic, you probably don't want to queue 256 
-requests at a time to hardware :)  But the sysadmin should be allowed 
-to, if they wish...
+When the iommu layer knows about the boundaries it should respect, that 
+code can be removed from libata and drivers/ide, IMO...  But also 
+double-check and make sure IDE driver supports the worst case, by 
+limiting to 128 PRD entries, not 256.
 
 	Jeff
-
-
-
