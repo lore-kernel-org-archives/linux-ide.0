@@ -1,14 +1,14 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH ide-2.6 2/3] pdc202xx_new: PLL initialization support
-Date: Fri, 04 Mar 2005 16:21:12 +0800
-Message-ID: <42281A78.8030406@tw.ibm.com>
+Subject: [PATCH ide-2.6 3/3] pdc202xx_new: PLL initialization support
+Date: Fri, 04 Mar 2005 16:24:10 +0800
+Message-ID: <42281B2A.8060005@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from bluehawaii.tikira.net ([61.62.22.51]:9704 "EHLO
+Received: from bluehawaii.tikira.net ([61.62.22.51]:31718 "EHLO
 	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S262619AbVCDIVU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Mar 2005 03:21:20 -0500
+	id S262623AbVCDIYP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Mar 2005 03:24:15 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
@@ -17,237 +17,344 @@ Cc: Linux IDE <linux-ide@vger.kernel.org>
 
 Hi Bart,
 
-   Attached please find the patch 2/3 against the ide-2.6 tree for your review. Thanks.
+   Attached please find the patch 3/3 against the ide-2.6 tree for your review. Thanks.
 
 Changes:
-2/3: Replace the index register macros with functions
+3/3: Add PLL initialization code
 
 Albert
 
 Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-----------------------------------------------------------------------------------------------------------
-diff -Nru libata-dev-2.6-2/drivers/ide/pci/pdc202xx_new.c libata-dev-2.6-3/drivers/ide/pci/pdc202xx_new.c
---- libata-dev-2.6-2/drivers/ide/pci/pdc202xx_new.c	2005-03-03 17:54:56.000000000 +0800
-+++ libata-dev-2.6-3/drivers/ide/pci/pdc202xx_new.c	2005-03-04 15:22:38.000000000 +0800
-@@ -38,6 +38,13 @@
+-----------------------------------------------------------------------------------------------------------
+diff -Nru libata-dev-2.6-3/drivers/ide/pci/pdc202xx_new.c libata-dev-2.6-pll/drivers/ide/pci/pdc202xx_new.c
+--- libata-dev-2.6-3/drivers/ide/pci/pdc202xx_new.c	2005-03-04 15:22:38.000000000 +0800
++++ libata-dev-2.6-pll/drivers/ide/pci/pdc202xx_new.c	2005-03-04 15:48:09.000000000 +0800
+@@ -32,6 +32,9 @@
+  #include <asm/io.h>
+  #include <asm/irq.h>
+
++#define DRV_NAME	"pdc202xx_new"
++#define DRV_VERSION	"0.50"
++
+  #ifdef CONFIG_PPC_PMAC
+  #include <asm/prom.h>
+  #include <asm/pci-bridge.h>
+@@ -46,6 +49,11 @@
+  #define PDPRINTK(fmt, args...)
   #endif
 
-  #define PDC202_DEBUG_CABLE	0
-+#undef PDC_DEBUG
++enum {
++	PDC_100_MHZ         = 100000000,
++	PDC_133_MHZ         = 133333333,
++};
 +
-+#ifdef PDC_DEBUG
-+#define PDPRINTK(fmt, args...) printk(KERN_DEBUG "%s: " fmt, __FUNCTION__, ## args)
-+#else
-+#define PDPRINTK(fmt, args...)
-+#endif
-
   const static char *pdc_quirk_drives[] = {
   	"QUANTUM FIREBALLlct08 08",
-@@ -51,31 +58,71 @@
-  	NULL
-  };
+  	"QUANTUM FIREBALLP KA6.4",
+@@ -124,11 +132,11 @@
+  	PDPRINTK("Set index reg%X[%X] \n", index, value);
+  }
 
--#define set_2regs(a, b)					\
--	do {						\
--		hwif->OUTB((a + adj), indexreg);	\
--		hwif->OUTB(b, datareg);			\
--	} while(0)
--
--#define set_ultra(a, b, c)				\
--	do {						\
--		set_2regs(0x10,(a));			\
--		set_2regs(0x11,(b));			\
--		set_2regs(0x12,(c));			\
--	} while(0)
--
--#define set_ata2(a, b)					\
--	do {						\
--		set_2regs(0x0e,(a));			\
--		set_2regs(0x0f,(b));			\
--	} while(0)
--
--#define set_pio(a, b, c)				\
--	do { 						\
--		set_2regs(0x0c,(a));			\
--		set_2regs(0x0d,(b));			\
--		set_2regs(0x13,(c));			\
--	} while(0)
-+/*
-+ * ATA Timing Tables based on 133MHz controller clock.
-+ * These tables are only used when the controller is in 133MHz clock.
-+ * If the controller is in 100MHz clock, the ASIC hardware will
-+ * set the timing registers automatically when "set feature" command
-+ * is issued to the device. However, if the controller clock is 133MHz,
-+ * the following tables must be used.
-+ */
-+static struct pdcnew_pio_timing {
-+	u8 value0, value1, value2;
-+} pdcnew_pio_timing_tbl [] = {
-+	{ 0xfb, 0x2b, 0xac }, /* PIO mode 0, IORDY off, Prefetch off */
-+	{ 0x46, 0x29, 0xa4 }, /* PIO mode 1, IORDY off, Prefetch off */
-+	{ 0x23, 0x26, 0x64 }, /* PIO mode 2, IORDY on,  Prefetch off */
-+	{ 0x27, 0x0d, 0x35 }, /* PIO mode 3, IORDY on,  Prefetch off */
-+	{ 0x23, 0x09, 0x25 }, /* PIO mode 4, IORDY on,  Prefetch off */
-+};
-+
-+static struct pdcnew_mdma_timing {
-+	u8 value0, value1;
-+} pdcnew_mdma_timing_tbl [] = {
-+	{ 0xdf, 0x5f }, /* MDMA mode 0 */
-+	{ 0x6b, 0x27 }, /* MDMA mode 1 */
-+	{ 0x69, 0x25 }, /* MDMA mode 2 */
-+};
-+
-+static struct pdcnew_udma_timing {
-+	u8 value0, value1, value2;
-+} pdcnew_udma_timing_tbl [] = {
-+	{ 0x4a, 0x0f, 0xd5 }, /* UDMA mode 0 */
-+	{ 0x3a, 0x0a, 0xd0 }, /* UDMA mode 1 */
-+	{ 0x2a, 0x07, 0xcd }, /* UDMA mode 2 */
-+	{ 0x1a, 0x05, 0xcd }, /* UDMA mode 3 */
-+	{ 0x1a, 0x03, 0xcd }, /* UDMA mode 4 */
-+	{ 0x1a, 0x02, 0xcb }, /* UDMA mode 5 */
-+	{ 0x1a, 0x01, 0xcb }, /* UDMA mode 6 */
-+};
-+
-+/**
-+ * pdc_get_indexed_reg - Get pdc202xx indexed register
-+ * @hwif: Port to which the indexed register is set
-+ * @index: index of the indexed register
-+ */
-+static u8 pdc_get_indexed_reg(ide_hwif_t *hwif, u8 index)
-+{
-+	u8 tmp8;
-+
-+	hwif->OUTB(index, hwif->dma_base + 1);
-+	tmp8 = hwif->INB(hwif->dma_base + 3);
-+
-+	PDPRINTK("Get index reg%X[%X] \n", index, tmp8);
-+	return tmp8;
+-static u8 pdcnew_ratemask(ide_drive_t *drive)
++static u8 pdcnew_chip_clock(struct pci_dev *pdev)
+  {
+  	u8 mode;
+
+-	switch(HWIF(drive)->pci_dev->device) {
++	switch(pdev->device) {
+  		case PCI_DEVICE_ID_PROMISE_20277:
+  		case PCI_DEVICE_ID_PROMISE_20276:
+  		case PCI_DEVICE_ID_PROMISE_20275:
+@@ -144,6 +152,13 @@
+  			return 0;
+  	}
+
++	return mode;
 +}
 +
-+/**
-+ * pdc_set_indexed_reg - Set pdc202xx indexed register
-+ * @hwif: Port to which the indexed register is read
-+ * @index: index of the indexed register
-+ */
-+static void pdc_set_indexed_reg(ide_hwif_t *hwif, u8 index, u8 value)
++static u8 pdcnew_ratemask(ide_drive_t *drive)
 +{
-+	hwif->OUTB(index, hwif->dma_base + 1);
-+	hwif->OUTB(value, hwif->dma_base + 3);
-+	PDPRINTK("Set index reg%X[%X] \n", index, value);
-+}
++	u8 mode = pdcnew_chip_clock(HWIF(drive)->pci_dev);
++
+  	if (!eighty_ninty_three(drive))
+  		mode = min(mode, (u8)1);
 
-  static u8 pdcnew_ratemask(ide_drive_t *drive)
-  {
-@@ -126,36 +173,52 @@
-  static int pdcnew_new_tune_chipset(ide_drive_t *drive, u8 xferspeed)
-  {
-  	ide_hwif_t *hwif	= HWIF(drive);
--	unsigned long indexreg	= hwif->dma_vendor1;
--	unsigned long datareg	= hwif->dma_vendor3;
--	u8 thold		= 0x10;
-  	u8 adj			= (drive->dn%2) ? 0x08 : 0x00;
-  	u8 speed		= ide_rate_filter(pdcnew_ratemask(drive), xferspeed);
-+	unsigned int mode;
+@@ -218,7 +233,7 @@
+  			break;
 
-  	if (speed == XFER_UDMA_2) {
--		hwif->OUTB((thold + adj), indexreg);
--		hwif->OUTB((hwif->INB(datareg) & 0x7f), datareg);
--	}
-+		u8 tmp8;
-+
-+		tmp8 = pdc_get_indexed_reg(hwif, 0x10 + adj);
-+		pdc_set_indexed_reg(hwif, 0x10 + adj, tmp8 & 0x7f);
-+	} else if (speed == XFER_UDMA_7)
-+		speed = XFER_UDMA_6;
-+
-+	mode = speed & 0x07;
-
-  	switch (speed) {
--		case XFER_UDMA_7:
--			speed = XFER_UDMA_6;
--		case XFER_UDMA_6:	set_ultra(0x1a, 0x01, 0xcb); break;
--		case XFER_UDMA_5:	set_ultra(0x1a, 0x02, 0xcb); break;
--		case XFER_UDMA_4:	set_ultra(0x1a, 0x03, 0xcd); break;
--		case XFER_UDMA_3:	set_ultra(0x1a, 0x05, 0xcd); break;
--		case XFER_UDMA_2:	set_ultra(0x2a, 0x07, 0xcd); break;
--		case XFER_UDMA_1:	set_ultra(0x3a, 0x0a, 0xd0); break;
--		case XFER_UDMA_0:	set_ultra(0x4a, 0x0f, 0xd5); break;
--		case XFER_MW_DMA_2:	set_ata2(0x69, 0x25); break;
--		case XFER_MW_DMA_1:	set_ata2(0x6b, 0x27); break;
--		case XFER_MW_DMA_0:	set_ata2(0xdf, 0x5f); break;
--		case XFER_PIO_4:	set_pio(0x23, 0x09, 0x25); break;
--		case XFER_PIO_3:	set_pio(0x27, 0x0d, 0x35); break;
--		case XFER_PIO_2:	set_pio(0x23, 0x26, 0x64); break;
--		case XFER_PIO_1:	set_pio(0x46, 0x29, 0xa4); break;
--		case XFER_PIO_0:	set_pio(0xfb, 0x2b, 0xac); break;
-+		case XFER_UDMA_6:
-+		case XFER_UDMA_5:
-+		case XFER_UDMA_4:
-+		case XFER_UDMA_3:
-+		case XFER_UDMA_2:
-+		case XFER_UDMA_1:
-+		case XFER_UDMA_0:
-+			pdc_set_indexed_reg(hwif, 0x10 + adj, pdcnew_udma_timing_tbl[mode].value0);
-+			pdc_set_indexed_reg(hwif, 0x11 + adj, pdcnew_udma_timing_tbl[mode].value1);
-+			pdc_set_indexed_reg(hwif, 0x12 + adj, pdcnew_udma_timing_tbl[mode].value2);
-+			break;
-+
-+		case XFER_MW_DMA_2:
-+		case XFER_MW_DMA_1:
-+		case XFER_MW_DMA_0:
-+			pdc_set_indexed_reg(hwif, 0x0e + adj, pdcnew_mdma_timing_tbl[mode].value0);
-+			pdc_set_indexed_reg(hwif, 0x0f + adj, pdcnew_mdma_timing_tbl[mode].value1);
-+			break;
-+
-+		case XFER_PIO_4:
-+		case XFER_PIO_3:
-+		case XFER_PIO_2:
-+		case XFER_PIO_1:
-+		case XFER_PIO_0:
-+			pdc_set_indexed_reg(hwif, 0x0c + adj, pdcnew_pio_timing_tbl[mode].value0);
-+			pdc_set_indexed_reg(hwif, 0x0d + adj, pdcnew_pio_timing_tbl[mode].value1);
-+			pdc_set_indexed_reg(hwif, 0x13 + adj, pdcnew_pio_timing_tbl[mode].value2);
-+			break;
-+
   		default:
-+			printk(KERN_ERR ": Unknown speed %d ignored\n", speed);
+-			printk(KERN_ERR ": Unknown speed %d ignored\n", speed);
++			printk(KERN_ERR DRV_NAME ": Unknown speed %d ignored\n", speed);
   			;
   	}
 
-@@ -181,8 +244,7 @@
-
-  static u8 pdcnew_new_cable_detect(ide_hwif_t *hwif)
-  {
--	hwif->OUTB(0x0b, hwif->dma_vendor1);
--	return ((u8)((hwif->INB(hwif->dma_vendor3) & 0x04)));
-+	return pdc_get_indexed_reg(hwif, 0x0b) & 0x04;
+@@ -333,16 +348,233 @@
+  	/*
+  	 * Deleted this because it is redundant from the caller.
+  	 */
+-	printk(KERN_WARNING "PDC202XX: %s channel reset.\n",
++	printk(KERN_WARNING DRV_NAME ": %s channel reset.\n",
+  		HWIF(drive)->channel ? "Secondary" : "Primary");
   }
-  static int config_chipset_for_dma(ide_drive_t *drive)
-  {
-@@ -190,7 +252,6 @@
-  	ide_hwif_t *hwif	= HWIF(drive);
-  	u8 speed		= -1;
-  	u8 cable;
--
-  	u8 ultra_66		= ((id->dma_ultra & 0x0010) ||
-  				   (id->dma_ultra & 0x0008)) ? 1 : 0;
 
-@@ -205,8 +266,11 @@
-  		return 0;
-
-  	if (id->capability & 4) {	/* IORDY_EN & PREFETCH_EN */
--		hwif->OUTB((0x13 + ((drive->dn%2) ? 0x08 : 0x00)), hwif->dma_vendor1);
--		hwif->OUTB((hwif->INB(hwif->dma_vendor3)|0x03), hwif->dma_vendor3);
-+		u8 adj = (drive->dn%2) ? 0x08 : 0x00;
-+		u8 tmp8;
++/**
++ * adjust_pll - Adjust the PLL input clock in Hz.
++ *
++ * @pdc_controller: controller specific information
++ * @probe_ent: For the port address
++ * @pll_clock: The input of PLL in HZ
++ */
++static void pdc_adjust_pll(unsigned long dma_base, long pll_clock, long pout_required)
++{
++	unsigned long port1_dma_base = dma_base + 8;
 +
-+		tmp8 = pdc_get_indexed_reg(hwif, 0x13 + adj);
-+		pdc_set_indexed_reg(hwif, 0x13 + adj, tmp8 | 0x03);
-  	}
++	u8 pll_ctl0, pll_ctl1;
++	long pll_clock_khz = pll_clock / 1000;
++	long ratio = pout_required / pll_clock_khz;
++	int F, R;
++	
++
++	/* Sanity check */
++	if (unlikely(pll_clock_khz < 5000L || pll_clock_khz > 70000L)) {
++		printk(KERN_ERR DRV_NAME ": Invalid PLL input clock %ldkHz, give up!\n", pll_clock_khz);
++		return;
++	}
++
++#ifdef PDC_DEBUG
++	PDPRINTK("pout_required is %ld\n", pout_required);
++
++	/* Show the current clock value of PLL control register
++	 * (maybe already configured by the firmware)
++	 */
++	outb(0x02, port1_dma_base + 0x01);
++	pll_ctl0 = inb(port1_dma_base + 0x03);
++	outb(0x03, port1_dma_base + 0x01);
++	pll_ctl1 = inb(port1_dma_base + 0x03);
++
++	PDPRINTK("pll_ctl[%X][%X]\n", pll_ctl0, pll_ctl1);
++#endif
++
++	/*
++	 * Calculate the ratio of F, R and OD
++	 * POUT = (F + 2) / (( R + 2) * NO)
++	 */
++	if (ratio < 8600L) { // 8.6x
++		/* Using NO = 0x01, R = 0x0D */
++		R = 0x0d;
++	} else if (ratio < 12900L) { // 12.9x
++		/* Using NO = 0x01, R = 0x08 */
++		R = 0x08;
++	} else if (ratio < 16100L) { // 16.1x
++		/* Using NO = 0x01, R = 0x06 */
++		R = 0x06;
++	} else if (ratio < 64000L) { // 64x
++		R = 0x00;
++	} else {
++		/* Invalid ratio */
++		printk(KERN_ERR DRV_NAME ": Invalid ratio %ld, give up!\n", ratio);
++		return;
++	}
++
++	F = (ratio * (R+2)) / 1000 - 2;
++
++	if (unlikely(F < 0 || F > 127)) {
++		/* Invalid F */
++		printk(KERN_ERR DRV_NAME ": F[%d] invalid!\n", F);
++		return;
++	}
++
++	PDPRINTK("F[%d] R[%d] ratio*1000[%ld]\n", F, R, ratio);
++
++	pll_ctl0 = (u8) F;
++	pll_ctl1 = (u8) R;
++
++	PDPRINTK("Writing pll_ctl[%X][%X]\n", pll_ctl0, pll_ctl1);
++
++	outb(0x02,     port1_dma_base + 0x01);
++	outb(pll_ctl0, port1_dma_base + 0x03);
++	outb(0x03,     port1_dma_base + 0x01);
++	outb(pll_ctl1, port1_dma_base + 0x03);
++
++	/* Wait the PLL circuit to be stable */
++	mdelay(30);
++
++#ifdef PDC_DEBUG
++	/*
++	 *  Show the current clock value of PLL control register
++	 * (maybe configured by the firmware)
++	 */
++	outb(0x02, port1_dma_base + 0x01);
++	pll_ctl0 = inb(port1_dma_base + 0x03);
++	outb(0x03, port1_dma_base + 0x01);
++	pll_ctl1 = inb(port1_dma_base + 0x03);
++
++	PDPRINTK("pll_ctl[%X][%X]\n", pll_ctl0, pll_ctl1);
++#endif
++
++	return;
++}
++
++/**
++ * detect_pll_input_clock - Detect the PLL input clock in Hz.
++ * @dma_base: for the port address
++ * Ex. 16949000 on 33MHz PCI bus for pdc20275.
++ *     Half of the PCI clock.
++ */
++static long pdc_detect_pll_input_clock(unsigned long dma_base)
++{
++	unsigned long port0_dma_base = dma_base;
++	unsigned long port1_dma_base = dma_base + 8;
++
++	u8 scr1;
++	unsigned long ctr0;
++	unsigned long ctr1;
++	unsigned long ctr2 = 0;
++	unsigned long ctr3 = 0;
++
++	unsigned long start_count, end_count;
++	long pll_clock;
++
++	/* Read current counter value */
++	outb(0x20, port0_dma_base + 0x01);
++	ctr0 = inb(port0_dma_base + 0x03);
++	outb(0x21, port0_dma_base + 0x01);
++	ctr1 = inb(port0_dma_base + 0x03);
++	
++	outb(0x20, port1_dma_base + 0x01);
++	ctr2 = inb(port1_dma_base + 0x03);
++	outb(0x21, port1_dma_base + 0x01);
++	ctr3 = inb(port1_dma_base + 0x03);
++
++	start_count = (ctr3 << 23 ) | (ctr2 << 15) | (ctr1 << 8) | ctr0;
++
++	PDPRINTK("ctr0[%lX] ctr1[%lX] ctr2 [%lX] ctr3 [%lX]\n", ctr0, ctr1, ctr2, ctr3);
++
++	/* Start the test mode */
++	outb(0x01, port0_dma_base + 0x01);
++	scr1 = inb(port0_dma_base + 0x03);
++	PDPRINTK("scr1[%X]\n", scr1);
++	outb(scr1 | 0x40, port0_dma_base + 0x03);
++
++	/* Let the counter run for 1000 us. */
++	udelay(1000);
++
++	/* Read the counter values again */
++	outb(0x20, port0_dma_base + 0x01);
++	ctr0 = inb(port0_dma_base + 0x03);
++	outb(0x21, port0_dma_base + 0x01);
++	ctr1 = inb(port0_dma_base + 0x03);
++	
++	outb(0x20, port1_dma_base + 0x01);
++	ctr2 = inb(port1_dma_base + 0x03);
++	outb(0x21, port1_dma_base + 0x01);
++	ctr3 = inb(port1_dma_base + 0x03);
++
++	end_count = (ctr3 << 23 ) | (ctr2 << 15) | (ctr1 << 8) | ctr0;
++
++	PDPRINTK("ctr0[%lX] ctr1[%lX] ctr2 [%lX] ctr3 [%lX]\n", ctr0, ctr1, ctr2, ctr3);
++
++	/* Stop the test mode */
++	outb(0x01, port0_dma_base + 0x01);
++	scr1 = inb(port0_dma_base + 0x03);
++	PDPRINTK("scr1[%X]\n", scr1);
++	outb(scr1 & 0xBF, port0_dma_base + 0x03);
++
++	/* calculate the input clock in Hz */
++	pll_clock = (long) ((start_count - end_count) * 1000);
++
++	PDPRINTK("start[%lu] end[%lu] \n", start_count, end_count);
++	PDPRINTK("PLL input clock[%ld]Hz\n", pll_clock);
++
++	return pll_clock;
++}
++
++/**
++ * pdc_hardware_init - Initialize the hardware.
++ * @pdev: instance of pci_dev found
++ * @pdc_controller: controller specific information
++ * @pe:  for the port address
++ */
++static int pdc_hardware_init(struct pci_dev *pdev)
++{
++	unsigned long dma_base;
++	u8 mode;
++	long pout_required = 0;
++	long pll_clock;
++
++	/* Get dma_base */
++	dma_base = pci_resource_start(pdev, 4);
++	if (!dma_base) {
++		printk(KERN_ERR DRV_NAME ": dma_base is invalid\n");
++		return -1;
++	}
++
++	/* Calculate pout_required */
++	mode = pdcnew_chip_clock(pdev);
++
++	if (mode == 4)
++		pout_required =  PDC_133_MHZ;
++	else if (mode == 3)
++		pout_required =  PDC_100_MHZ;
++
++	/*
++	 * Detect PLL input clock rate.
++	 * On some system, where PCI bus is running at non-standard clock rate.
++	 * Ex. 25MHz or 40MHz, we have to adjust the cycle_time.
++	 * The pdc20275 controller employs PLL circuit to help correct timing registers setting.
++	 */
++	pll_clock = pdc_detect_pll_input_clock(dma_base);
++
++	if(pll_clock < 0) /* counter overflow? Try again. */
++		pll_clock = pdc_detect_pll_input_clock(dma_base);
++
++	PDPRINTK("PLL input clock %ld kHz\n", pll_clock/1000);
++
++	/* Adjust PLL control register */
++	pdc_adjust_pll(dma_base, pll_clock, pout_required);
++
++	return 0;
++}
++
+  #ifdef CONFIG_PPC_PMAC
+  static void __devinit apple_kiwi_init(struct pci_dev *pdev)
+  {
+  	struct device_node *np = pci_device_to_OF_node(pdev);
+  	unsigned int class_rev = 0;
+-	void __iomem *mmio;
+  	u8 conf;
 
-  	speed = ide_dma_speed(drive, pdcnew_ratemask(drive));
+  	if (np == NULL || !device_is_compatible(np, "kiwi-root"))
+@@ -356,22 +588,7 @@
+  		pci_read_config_byte(pdev, 0x40, &conf);
+  		pci_write_config_byte(pdev, 0x40, conf | 0x01);
+  	}
+-	mmio = ioremap(pci_resource_start(pdev, 5),
+-				      pci_resource_len(pdev, 5));
+-
+-	/* Setup some PLL stuffs */
+-	switch (pdev->device) {
+-	case PCI_DEVICE_ID_PROMISE_20270:
+-		writew(0x0d2b, mmio + 0x1202);
+-		mdelay(30);
+-		break;
+-	case PCI_DEVICE_ID_PROMISE_20271:
+-		writew(0x0826, mmio + 0x1202);
+-		mdelay(30);
+-		break;
+-	}
+
+-	iounmap(mmio);
+  }
+  #endif /* CONFIG_PPC_PMAC */
+
+@@ -387,6 +604,7 @@
+  #ifdef CONFIG_PPC_PMAC
+  	apple_kiwi_init(dev);
+  #endif
++	pdc_hardware_init(dev);
+
+  	return dev->irq;
+  }
 
 
 
