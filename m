@@ -1,53 +1,59 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+From: Christophe Saout <christophe@saout.de>
 Subject: Re: Possibly wrong BIO usage in ide_multwrite
-Date: Mon, 5 Jan 2004 17:47:45 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200401051747.45039.bzolnier@elka.pw.edu.pl>
-References: <1072977507.4170.14.camel@leto.cs.pocnet.net> <200401032302.32914.bzolnier@elka.pw.edu.pl> <20040105040337.GB6393@leto.cs.pocnet.net>
+Date: Mon, 05 Jan 2004 17:48:15 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <1073321295.7121.8.camel@leto.cs.pocnet.net>
+References: <1072977507.4170.14.camel@leto.cs.pocnet.net>
+	 <200401032302.32914.bzolnier@elka.pw.edu.pl>
+	 <1073237458.6069.31.camel@leto.cs.pocnet.net>
+	 <200401051712.41695.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-2"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20040105040337.GB6393@leto.cs.pocnet.net>
-Content-Disposition: inline
-To: Christophe Saout <christophe@saout.de>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from websrv.werbeagentur-aufwind.de ([213.239.197.241]:2237 "EHLO
+	mail.werbeagentur-aufwind.de") by vger.kernel.org with ESMTP
+	id S265163AbUAEQs3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 5 Jan 2004 11:48:29 -0500
+In-Reply-To: <200401051712.41695.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Monday 05 of January 2004 05:03, Christophe Saout wrote:
-> Hi again,
->
-> here another experiment.
->
-> I have started moving the code over to using the cbio mechanism. I
-> have only touched ide-disk.c though, I'm not sure about ide-taskfile.c.
+Am Mo, den 05.01.2004 schrieb Bartlomiej Zolnierkiewicz um 17:12:
 
-Patch looks nice but I wonder if it is worth doing
-(this code should die ASAP).
+> > The IDE_TASKFILE_IO gets things right (from my point of view) and is
+> > also much cleaner. (I would personally vote for dropping the non
+> > TASKFILE_IO code, it would make my problem go away :D - why is it still
+> > marked as experimental BTW? I've been using it since it was introduced,
+> > without any problems)
+> 
+> There are still some issues to be resolved:
+> - hangs during reading /proc/ide/<cdrom>/identify on some drives
+>   (workaround is now known thanks to debugging done by Andi+BenH+Andre)
+> - unexplained fs corruption on x86-64 with AMD IDE chipsets
+>   (the real showstopper)
+> - somebody needs to test taskfile code on old Promise PDC4030 controller
+>   (low priority)
 
-> The modifications work here with and without multmode and with all kinds
-> of bios. Haven't been able to test error conditions since I don't have
-> broken hardware. ;-)
+Unexplained corruptions. Coder's nightmare. ;) Yes, that's always really
+bad. Unfortunately I don't have such a machine so I can't help trying to
+nail it down.
 
-Hehe... you can try to break it ;-).
+> > Perhaps I can think of something else. It's really tricky...
+> 
+> I would like to remove non CONFIG_IDE_TASKFILE_IO paths in 2.6.x
+> (after issues are resolved) instead of trying to fix them.
 
-> I also didn't touch ide-taskfile.c which has most probably also been
-> broken by the ide_map_buffer change. And I stumbled across the code
+Sure, we agree on that point. I think everyone does.
 
-Yep.
+BTW, I've found a not too complicated workaround for my particular
+original problem so the bi_idx issue isn't a showstopper for my
+device-mapper target. But apart from that the rewinding bi_idx to zero
+thing still gives me headaches just being there. A small non-invasive
+workaround won't make it much worse, it's hopefully going to die anyway.
 
-> calling end_request with a null sector count, ide_end_request will then
-> take hard_nr_sectors which will end the whole request even if only one
-> bio was finished, huh? Am I missing something here?
+Thanks for being patient with me. :-)
+(and not raising new paranoia theories ;-))
 
-No, it is used mainly to fail requests.
 
-This hack should be later removed with care
-(there is some strange comment about locking).
-
-> And when is bio == NULL in ide_map_buffer? Where can this happen?
-
-In taskfile code - special requests are not bio baked (taskfile ioctl).
-
---bart
