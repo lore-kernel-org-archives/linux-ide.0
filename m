@@ -1,54 +1,47 @@
-From: Eric Mudama <edmudama@gmail.com>
-Subject: Re: Via SATA not working here
-Date: Tue, 14 Sep 2004 09:03:19 -0600
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <311601c90409140803aaa4d31@mail.gmail.com>
-References: <20040912191542.GO21202@uvt316-2.ruk.cuni.cz>
-	 <414520BB.3080306@wasp.net.au>
-	 <20040914094336.GG18257@uvt316-2.ruk.cuni.cz>
-Reply-To: Eric Mudama <edmudama@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
+Date: Tue, 14 Sep 2004 13:33:45 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040914173345.GA16946@havoc.gtf.org>
+References: <41471163.10709@rtr.ca> <414723B0.1090600@pobox.com> <41472A1A.6020105@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.207]:62157 "EHLO mproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S269380AbUINPDa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Sep 2004 11:03:30 -0400
-Received: by mproxy.gmail.com with SMTP id 77so24549rnl
-        for <linux-ide@vger.kernel.org>; Tue, 14 Sep 2004 08:03:20 -0700 (PDT)
-In-Reply-To: <20040914094336.GG18257@uvt316-2.ruk.cuni.cz>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S269474AbUINRh6@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <41472A1A.6020105@rtr.ca>
+To: Mark Lord <lkml@rtr.ca>
+Cc: linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
-To: Michal 'hramrach' Suchanek <hramrach@centrum.cz>
-Cc: Brad Campbell <brad@wasp.net.au>, f@uvt316-2.ruk.cuni.cz, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Tue, 14 Sep 2004 11:43:36 +0200, Michal 'hramrach' Suchanek
-<hramrach@centrum.cz> wrote:
-> With 2.6.5 I get the same results.
+On Tue, Sep 14, 2004 at 01:27:54PM -0400, Mark Lord wrote:
+> Here's a question for you:  like all of the other RAID drivers,
+> this one needs an interface to a userland RAID management GUI.
 > 
-> The libata error message:
+> The usual method for this is to create a fake character device driver,
+> and use that as the interface to userland.  This is commonly done,
+> but is it the best way to handle such?  A /proc/ or /sys/ interface
+> could achieve similar goals, but without the need of a fake device.
 > 
-> ata1: DMA timeout, stat 0x0
-> ATA: abnormal status 0xD0 on prot 0xEC07
-> scsi0: ERROR on channel 0, id0, lin0, CDB: Write (10) 00 01 65 dc e7 00
-> 00 42 00
-> Current sda: sense key Medium Error
-> Additional sense: Write Error - auto reallocation failed
-> end_request: I/O error, dev sda, sector 23452903
-> ATA: abnormal status 0xD0 on prot 0xEC07
-> ATA: abnormal status 0xD0 on prot 0xEC07
-> ATA: abnormal status 0xD0 on prot 0xEC07
-> 
-> Note that the 0xd0 is the same as the ide DMA timeout error.
+> We can go either way with this one, so lets hear some opinions on it.
 
-Not sure how libata queried the additional sense: key/code/qual etc
-from the drive, since it appears to have gotten a busy timeout.
+Well,
 
-FYI, 0xD0 is simply a 0x50 status (ready/seek complete) + the busy
-bit, which is automatically set most by hardware upon receipt of a new
-command.  In SATA, this is often set internally in a shadow task file
-register, and has nothing to do with physical "registers" on the drive
-itself.
+* if the userland interface is 100% sending cdbs or taskfiles, then I
+would prefer that Jens Axboe's "bsg" be used.  Its a chardev interface
+for sending/receiving commands to a request queue.
 
-Can someone quickie translate that CDB for me into its ATA command?
+* otherwise, I would pick either chrdev or sysfs.  if you gotta support
+2.4, I guess that means chrdev.
 
---eric
+
+> For the rest, this driver has been around (vendor driver) since before
+> libata became usable, and certainly before libata existed in 2.4.xx.
+> The driver will eventuall need to compile and run in 2.4.20,
+> for customers using old Redhat kernels.   It's not there yet,
+> but if it were to lean more heavily on 2.6.xx stuff,
+> then that will be more difficult to achieve.
+
+libata and all its drivers work on RHEL2.1 (2.4.9), and someone is
+even crazy enough to be porting libata to 2.2.x ;-)
+
+	Jeff
