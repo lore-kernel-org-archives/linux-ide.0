@@ -1,54 +1,65 @@
-From: Denis Vlasenko <vda@port.imtp.ilyichevsk.odessa.ua>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: [PATCH] speed up SATA
-Date: Mon, 29 Mar 2004 09:32:30 +0200
+Date: Mon, 29 Mar 2004 10:09:45 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200403290932.30246.vda@port.imtp.ilyichevsk.odessa.ua>
-References: <4066021A.20308@pobox.com> <20040329005502.GG3039@dualathlon.random> <20040329042912.GI18054@ca-server1.us.oracle.com>
+Message-ID: <20040329080943.GR24370@suse.de>
+References: <406612AA.1090406@yahoo.com.au> <4066156F.1000805@pobox.com> <20040328141014.GE24370@suse.de> <40670BD9.9020707@pobox.com> <20040328173508.GI24370@suse.de> <40670FDB.6080409@pobox.com> <20040328175436.GL24370@suse.de> <20040328180809.GB1087@mail.shareable.org> <20040328181502.GO24370@suse.de> <40671FAF.6080501@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 168.imtp.Ilyichevsk.Odessa.UA ([195.66.192.168]:58384 "HELO
-	port.imtp.ilyichevsk.odessa.ua") by vger.kernel.org with SMTP
-	id S262728AbUC2Hfp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Mar 2004 02:35:45 -0500
-In-Reply-To: <20040329042912.GI18054@ca-server1.us.oracle.com>
+Received: from ns.virtualhost.dk ([195.184.98.160]:51853 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262744AbUC2IK3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Mar 2004 03:10:29 -0500
+Content-Disposition: inline
+In-Reply-To: <40671FAF.6080501@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Wim Coekaerts <wim.coekaerts@oracle.com>, Andrea Arcangeli <andrea@suse.de>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jens Axboe <axboe@suse.de>, William Lee Irwin III <wli@holomorphy.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Jamie Lokier <jamie@shareable.org>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-On Monday 29 March 2004 06:29, Wim Coekaerts wrote:
-> > In 2.4 reaching 512k DMA units that helped a lot, but going past 512k
-> > didn't help in my measurements.  1M maybe these days is needed (as Jens
-> > suggested) but >1M still sounds overkill and I completely agree with
-> > Jens about that.
->
-> at least 1Mb... more than 1mb (I doubt 32mb is really necessarily
-> useful) is nice for flushing contiguous journal data to disk. between
-> 1-8mb in one io.
->
-> at least 1mb is good when you have to process massive amounts of data,
-> just read huge chunks of files, we tend to do 1mb. anyway,
-> as you said, at some point it's a bit overkill . I thinkg 1-8mb makes
-> sense.
+On Sun, Mar 28 2004, Jeff Garzik wrote:
+> >The driver may not know exactly, but it does know a ball park figure.
+> >You know if you are driving floppy (sucky transfer and latency), hard
+> >drive, cdrom (decent transfer, sucky seeks), etc.
+> 
+> Agreed.  Really we have two types of information:
+> * the device's hard limit
+> * the default limit that should be applied to that class of devices
+> 
+> I would much rather do something like
+> 
+> 	blk_queue_set_class(q, CLASS_DISK)
+> 
+> and have that default per-class policy
+> 
+> 	switch (class) {
+> 	case CLASS_DISK:
+> 	q->max_sectors = min(q->max_sectors, CLASS_DISK_MAX_SECTORS);
+> 	...
 
-It makes sense *today*. Do you want to return to this discussion
-ad infinitum?
+Oh god no, I was afraid you'd come up with something like this :-). I'm
+quite sure this will lead to an unmaintainable mess, as more and various
+different classes are introduced. Don't try to model something that you
+really cannot model.
 
-Andrea is right, block layer can be coded to detect such a (per-device)
-request size increasing which does not give you any more throughput,
-or increasing which hurts your latency too much, and stick with it.
+> than hardcode the limit in the driver.  That's easy and quick.  That's a 
+> minimal solution that gives me what I want -- don't hardcode generic 
+> limits in the driver -- while IMO giving you what you want, a sane limit 
+> in an easy way.
+> 
+> Right now we are hardcoding the same per-class limits into each floppy 
+> driver, each disk driver, etc.  At the very least devices that act the 
+> same way should all be using the same tunable, whether it's a 
+> compile-time tunable (CLASS_xxx_MAX_SECTORS) or a runtime tunable.
+> 
+> Long term, the IO scheduler and the VM should really be figuring out the 
+> best request size, from zero to <hardware limit>.
 
-More detailed:
+Lets leave it like it is, and try and tweak latencies dynamically. Could
+be used to limit tcq depth, not just request sizes solving two problems
+at once. I already have a tiny bit of keeping this accounting to do
+proper unplugs (right now it just looks at missing requests from the
+pool, doesn't work on tcq).
 
-1. size = 1 sector
-2  measure throughput and latency
-3. size *= 2
-4. measure new_throughput and new_latency
-5. if(new_throughput<=throughput*1.01 || new_latency>50ms) break
-6. throughput = new_throughput; latency = new_latency; goto 3
-
-Real code will have admin overrides (start from N sectors,
-never go higher than M sectors etc), but you got the idea.
 -- 
-vda
+Jens Axboe
+
