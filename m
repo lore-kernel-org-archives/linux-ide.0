@@ -1,40 +1,28 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: Promise IDE controller crashes 2.4.22
-Date: Mon, 01 Dec 2003 10:31:15 +1100
+From: "Ryan Earl" <heretic@clanhk.org>
+Subject: siimage.c -serious- error fixed.  Performance/stability issues
+     resolved.
+Date: Tue, 2 Dec 2003 04:36:20 -0600 (CST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1070235074.658.58.camel@gaston>
-References: <20031129.140802.28395.1074931@webmail05.lax.untd.com>
+Message-ID: <62925.67.101.15.58.1070361380.squirrel@mail.clanhk.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.86.99.235]:10709 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262119AbTK3Xbz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 30 Nov 2003 18:31:55 -0500
-In-Reply-To: <20031129.140802.28395.1074931@webmail05.lax.untd.com>
+Received: from palace.clanhk.org ([64.5.48.96]:39399 "EHLO mail.clanhk.org")
+	by vger.kernel.org with ESMTP id S261776AbTLBKkW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Dec 2003 05:40:22 -0500
 List-Id: linux-ide@vger.kernel.org
-To: beolach@juno.com
-Cc: jgoerzen@complete.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sun, 2003-11-30 at 09:07, beolach@juno.com wrote:
-> I recently had a very similar problem to this on my computer with a
-> Promise Ultra133TX2 (PDC20269) addon card.  In my case I had a Western
-> Digital drive attached to the PDC20269 that would have major filesystem
-> corruption when DMA was enabled during the boot process.  Interestingly,
-> if I disabled DMA during boot, and then enabled it after boot with
-> hdparm, the drive worked OK.  Also, if I moved the drive to my
-> mainboard's IDE controller, it would work.  It seemed to be a
-> combination of my drive & IDE controller, because the IDE controller
-> works fine with other drives, and the WD hard drive worked fine with
-> another IDE controller.  I replaced the drive (20 GB) with a 120 GB
-> Maxtor drive, and haven't had any problem since.
+Hello,
 
-Did you have something on the "other" channel ?
+Let me preface this by saying I'm new to the list and that I hope this is
+the right place for this message.  I run a production server that utilizes
+the Silicon Image 3112A SerialATA interface.  After doing research and
+reading back through the kernel logs I saw there was a stability issue
+being worked around by turning the request buffer down to 15KBytes from
+128KByte.  While this fixed some symptoms to the problem, it did not fix
+the problem and resulted in horrible perforance especially in terms of CPU
+utilization.
 
-Andre seems to imply that the Promise chip may trigger interesting
-bugs if you do things like SET_FEATURE on one channel while another
-is doing DMA, kind of things that may well happen during boot
-
-Ben.
 
