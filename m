@@ -1,37 +1,124 @@
-From: Nick Piggin <nickpiggin@yahoo.com.au>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] speed up SATA
-Date: Mon, 29 Mar 2004 11:30:09 +1000
+Date: Sun, 28 Mar 2004 23:02:43 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40677C21.7070807@yahoo.com.au>
-References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <20040328044029.GB1984@bounceswoosh.org> <40667734.8090203@yahoo.com.au> <20040328203357.GB6405@bounceswoosh.org> <20040328205917.GF6405@bounceswoosh.org>
+Message-ID: <40679FE3.3080007@pobox.com>
+References: <4066021A.20308@pobox.com> <200403282030.11743.bzolnier@elka.pw.edu.pl> <20040328183010.GQ24370@suse.de> <200403282045.07246.bzolnier@elka.pw.edu.pl> <406720A7.1050501@pobox.com> <20040329005502.GG3039@dualathlon.random>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp018.mail.yahoo.com ([216.136.174.115]:51864 "HELO
-	smtp018.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S262536AbUC2BaM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Mar 2004 20:30:12 -0500
-In-Reply-To: <20040328205917.GF6405@bounceswoosh.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:4745 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262597AbUC2EEE
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Mar 2004 23:04:04 -0500
+In-Reply-To: <20040329005502.GG3039@dualathlon.random>
 List-Id: linux-ide@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@mail.bounceswoosh.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Andrea Arcangeli <andrea@suse.de>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jens Axboe <axboe@suse.de>, William Lee Irwin III <wli@holomorphy.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Eric D. Mudama wrote:
+Andrea Arcangeli wrote:
+> On Sun, Mar 28, 2004 at 01:59:51PM -0500, Jeff Garzik wrote:
+> 
+>>Bartlomiej Zolnierkiewicz wrote:
+>>
+>>>On Sunday 28 of March 2004 20:30, Jens Axboe wrote:
+>>>
+>>>>Making something user tunable is usually not the best idea, if you can
+>>>>deduct these things automagically instead. So whether this is the best
+>>>>idea, depends on which way you want to go.
+>>>
+>>>
+>>>I think it's the best idea for now, long-term we are better with automagic.
+>>
+>>
+>>Mostly agreed:
+>>
+>>Like I mentioned in the last message, the IO scheduler and the VM should 
+> 
+> 
+> this is not an I/O scheduler or VM issue.
 
->
-> Er, forgot about the queue depth of only 2...
->
-> Even in that case, you'll more than likely still get better throughput
-> with a single 32-MB command...  If you send a pair of queued commands
-> down, and the 2nd one is chosen, there's no reason that the first one
-> won't get starved until the very end of the request, which would have
-> bad latency on that command.
->
+This involves the interaction of three:  blkdev layer, IO scheduler, and VM.
 
-Well strictly, you send them one after the other. So unless you
-have something similar to our anticipatory scheduler or plugging
-mechanism, the drive should attack the first one first, shouldn't
-it?
+VM:  initiates most of the writeback, and is often the main initiator of 
+large requests.  The VM thresholds also serve to keep request size 
+manageable.  See e.g.
+http://marc.theaimsgroup.com/?l=linux-kernel&m=108043321326801&w=2
+
+IO scheduler:  the place to make the decision about whether the request 
+latency is meeting expectations, etc.  It should be straightforward to 
+use a windowing algorithm to slowly increase the request size until (a) 
+latency limits are reached, (b) hardware limits are reached, or (c) VM 
+thresholds are reached.
+
+Ultimately there must be some -global- management of I/O, otherwise VM 
+cannot survive, e.g. 128k requests on 1000 disks :)
+
+
+> the max size of a request is something that should be set internally to
+> the blkdev layer (at a lower level than the I/O scheduler or the VM
+> layer).
+
+Yes, I agree.
+
+My point is there are two maximums:
+
+1) the hardware limit
+2) the limit that "makes sense", e.g. 512k or 1M for most
+
+The driver should only care about #1, and should be "told" #2.
+
+A very, very, very minimal implementation could be this:
+
+--- 1.138/include/linux/blkdev.h        Fri Mar 12 04:33:07 2004
++++ edited/include/linux/blkdev.h       Sun Mar 28 22:44:15 2004
+@@ -607,6 +607,24 @@
+
+  extern void drive_stat_acct(struct request *, int, int);
+
++#define BLK_DISK_MAX_SECTORS   2048
++#define BLK_FLOPPY_MAX_SECTORS 64
+
+
+Hardcoding such a maximum in the driver is inflexible and IMO incorrect.
+
+
+> If one day things will change and the harddisk will require 32M large
+> DMA transactions to keep up with the speed of the disk, the thing should
+> be still solved during disk discovery inside the blkdev layer. The
+
+32M is probably too large, but 1M is probably too small for:
+a RAID array with 33 disks, that presents itself as a single SATA disk.
+solid-state storage:  battery-backed RAM.
+
+These things like bigger requests, and were designed to solve a lot of 
+the latency problems in hardware.
+
+
+> "automagic" suggestions discussed by Jamie and Jens should be just
+> benchmarks internal to the blkdev layer, trying to read contigously
+> first with 1M then 2M then 4M etc..  until the speed difference goes
+> below 1% or whatever similar "autotune" algorithm.
+
+Yes, agreed.
+
+My main goal is to -not- worry about this in the low-level driver.   If 
+you and Jens think 1M requests are maximum for disks, then put that in 
+the _blkdev_ layer not my driver :)
+
+Long term, I would like to see something like
+
+--- 1.138/include/linux/blkdev.h        Fri Mar 12 04:33:07 2004
++++ edited/include/linux/blkdev.h       Sun Mar 28 23:01:42 2004
+@@ -337,7 +337,8 @@
+          */
+         unsigned long           nr_requests;    /* Max # of requests */
+
+-       unsigned short          max_sectors;
++       unsigned short          max_sectors;    /* blk layer-chosen */
++       unsigned short          max_hw_sectors; /* hardware limit */
+         unsigned short          max_phys_segments;
+         unsigned short          max_hw_segments;
 
 
