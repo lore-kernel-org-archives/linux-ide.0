@@ -1,34 +1,46 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] libata atapi work #5
-Date: 14 May 2004 14:00:01 -0600
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: SATA ATAPI UDMA - first in Linux
+Date: Fri, 14 May 2004 16:05:23 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1084564801.3084.13.camel@patibmrh9>
-References: <1084560167.8752.7.camel@patibmrh9> <40A5195C.2000402@pobox.com>
-	<1084562845.8752.37.camel@patibmrh9>  <40A5225B.9000907@pobox.com>
+Message-ID: <40A52683.8050604@pobox.com>
+References: <1084563800.8752.53.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:41428 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S262425AbUENUA1
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:3521 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262459AbUENUFg
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 May 2004 16:00:27 -0400
-In-Reply-To: <40A5225B.9000907@pobox.com>
+	Fri, 14 May 2004 16:05:36 -0400
+In-Reply-To: <1084563800.8752.53.camel@patibmrh9>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Pat LaVarre <p.lavarre@ieee.org>
 Cc: linux-ide@vger.kernel.org
 
-Jeff G:
+Pat LaVarre wrote:
+> Google etc. tells me noone on Earth has yet massively distributed a host
+> that speaks SATA ATAPI UDMA.
+> 
+> SATA ATAPI I find.
+> SATA UDMA I find.
+> ATAPI UDMA I find.
+> 
+> SATA ATAPI UDMA I do not find.
+> 
+> Not yet in Linux, Mac OS X, Windows, etc.
+> 
+> If you know different, please speak up, else I'll believe the SATA ATAPI
+> UDMA Linux work now happening here will be the first such public work.
 
-> an open IP core 
-> compliant to the AHCI specification:
-> http://www.intel.com/technology/serialata/pdf/rev1_0.pdf
 
-Does the web now offer PCI chip designs in open source?
+Windows and Linux have both supported SATA ATAPI -- which implicitly 
+includes UDMA from looking at the bridges -- for a while now, in various 
+  OS drivers.
 
-1987..1990 or so I did register-transfer-level chip design (a la
-Verilog).  I naturally prefer concurrent designs over sequential.
+If you have an ICH5 or Silicon Image 3112, I bet you could use your 
+ATAPI device using the existing Linux IDE driver...
 
-Pat LaVarre
+	Jeff
+
 
 
