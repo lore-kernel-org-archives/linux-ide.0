@@ -1,83 +1,138 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH ide-dev-2.6] ide: ide_dma_intr oops fix
-Date: Thu, 3 Mar 2005 09:20:10 +0100
-Message-ID: <20050303082010.GF19505@suse.de>
-References: <20050303030318.GA25410@htj.dyndns.org> <20050303064925.GB19505@suse.de> <4226B54E.6020709@gmail.com> <58cb370e050303000478119a22@mail.gmail.com> <20050303080519.GE19505@suse.de> <58cb370e05030300145c554abe@mail.gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [SATA] libata-dev-2.6 queue updated
+Date: Thu, 03 Mar 2005 04:35:01 -0500
+Message-ID: <4226DA45.90106@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from ns.virtualhost.dk ([195.184.98.160]:37553 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261581AbVCCIUN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Mar 2005 03:20:13 -0500
-Content-Disposition: inline
-In-Reply-To: <58cb370e05030300145c554abe@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------070309040806090208040204"
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:49549 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261764AbVCCJfS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Mar 2005 04:35:18 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Thu, Mar 03 2005, Bartlomiej Zolnierkiewicz wrote:
-> On Thu, 3 Mar 2005 09:05:19 +0100, Jens Axboe <axboe@suse.de> wrote:
-> > On Thu, Mar 03 2005, Bartlomiej Zolnierkiewicz wrote:
-> > > On Thu, 03 Mar 2005 15:57:18 +0900, Tejun Heo <htejun@gmail.com> wrote:
-> > > >   Hello, Jens.
-> > > >
-> > > > Jens Axboe wrote:
-> > > > > On Thu, Mar 03 2005, Tejun Heo wrote:
-> > > > >
-> > > > >> Hello, Bartlomiej.
-> > > > >>
-> > > > >> This patch fixes ide_dma_intr() oops which occurs for TASKFILE ioctl
-> > > > >>using DMA dataphses.  This is against the latest ide-dev-2.6 tree +
-> > > > >>all your recent 9 patches.
-> > > > >>
-> > > > >> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> > > > >>
-> > > > >>Index: linux-taskfile-ng/drivers/ide/ide-dma.c
-> > > > >>===================================================================
-> > > > >>--- linux-taskfile-ng.orig/drivers/ide/ide-dma.c      2005-03-03 11:59:16.485582413 +0900
-> > > > >>+++ linux-taskfile-ng/drivers/ide/ide-dma.c   2005-03-03 12:00:07.753376048 +0900
-> > > > >>@@ -175,10 +175,14 @@ ide_startstop_t ide_dma_intr (ide_drive_
-> > > > >>      if (OK_STAT(stat,DRIVE_READY,drive->bad_wstat|DRQ_STAT)) {
-> > > > >>              if (!dma_stat) {
-> > > > >>                      struct request *rq = HWGROUP(drive)->rq;
-> > > > >>-                     ide_driver_t *drv;
-> > > > >>
-> > > > >>-                     drv = *(ide_driver_t **)rq->rq_disk->private_data;;
-> > > > >>-                     drv->end_request(drive, 1, rq->nr_sectors);
-> > > > >>+                     if (rq->rq_disk) {
-> > > > >>+                             ide_driver_t *drv;
-> > > > >>+
-> > > > >>+                             drv = *(ide_driver_t **)rq->rq_disk->private_data;;
-> > > > >>+                             drv->end_request(drive, 1, rq->nr_sectors);
-> > > > >>+                     } else
-> > > > >>+                             ide_end_request(drive, 1, rq->nr_sectors);
-> > > > >>                      return ide_stopped;
-> > > > >>              }
-> > > > >>              printk(KERN_ERR "%s: dma_intr: bad DMA status (dma_stat=%x)\n",
-> > > > >
-> > > > > Why not just set rq_disk for taskfile requests as well, seems a lot
-> > > > > cleaner than special casing the end_request handling.
-> > > >
-> > > >   Just because other places were fixed this way and the whole drive
-> > > > command issue/completion codes are just about to be restructured.  Above
-> > > > code will go away soon.  Please consider it a quick fix.
-> > > >
-> > > >   Thanks.
-> > >
-> > > Because struct gendisk is now allocated by device drivers (like in SCSI
-> > > subsystem) rq_disk can't be set for REQ_DRIVE_TASKFILE requests
-> > > (for some requests it can be set but better to keep it consistent).
-> > 
-> > Seems cleaner to store the driver in the drive structure then, no
-> > special casing needed.
-> 
-> This can't be done *correctly* with driver model support, that is why
-> SCSI does the same trick.  There were three incremental patch series,
-> all sent to linux-{ide,kernel} (all patches except the final one are
-> now in ide-dev-2.6), to convert IDE device drivers to driver model.
+This is a multi-part message in MIME format.
+--------------070309040806090208040204
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Ok, I guess we'll have to live with it then.
+Added a couple patches, and updated for 2.6.11-release.
 
--- 
-Jens Axboe
 
+--------------070309040806090208040204
+Content-Type: text/plain;
+ name="libata-dev-2.6.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libata-dev-2.6.txt"
+
+BK users:
+
+	bk pull bk://gkernel.bkbits.net/libata-dev-2.6
+		or
+	bk pull bk://kernel.bkbits.net/jgarzik/libata-dev-2.6
+
+Patch:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.11-libata-dev1.patch.bz2
+
+
+This will update the following files:
+
+ drivers/scsi/Kconfig         |   18 
+ drivers/scsi/Makefile        |    2 
+ drivers/scsi/ahci.c          |  107 ++++-
+ drivers/scsi/ata_adma.c      |  778 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/libata-core.c   |  312 +++++++++--------
+ drivers/scsi/libata-scsi.c   |  701 ++++++++++++++++++++++++++++++++------
+ drivers/scsi/libata.h        |    6 
+ drivers/scsi/pata_pdc2027x.c |  771 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sata_nv.c       |    6 
+ drivers/scsi/sata_promise.c  |   84 ++++
+ drivers/scsi/sata_qstor.c    |   50 +-
+ drivers/scsi/sata_sil.c      |    2 
+ drivers/scsi/sata_svw.c      |    4 
+ drivers/scsi/sata_vsc.c      |    7 
+ include/linux/ata.h          |   15 
+ include/linux/libata.h       |   10 
+ include/scsi/scsi.h          |    3 
+ 17 files changed, 2564 insertions(+), 312 deletions(-)
+
+through these ChangeSets:
+
+<andyw:pobox.com>:
+  o [libata scsi] support 12-byte passthru CDB
+  o [libata scsi] passthru CDB check condition processing
+  o T10/04-262 ATA pass thru - patch
+
+<erikbenada:yahoo.ca>:
+  o [libata sata_promise] support PATA ports on SATA controllers
+
+<liml:rtr.ca>:
+  o sata_qstor: eh_timeout fix
+
+<tklauser:nuerscht.ch>:
+  o drivers/scsi/ahci: Use the DMA_{64,32}BIT_MASK constants
+  o drivers/scsi/sata_vsc: Use the DMA_{64,32}BIT_MASK constants
+
+Adam J. Richter:
+  o ata_pci_remove_one used freed memory
+
+Adrian Bunk:
+  o drivers/scsi/sata_*: make code static
+
+Albert Lee:
+  o [libata] use init-device-params ATA command where needed
+  o [libata] ata_scsi_verify_xlat() fix
+  o pdc2027x timing register fix for 100MHz
+  o [libata] CHS support: add CHS support to ata_scsi_verify_xlat(), ata_scsi_rw_xlat() and ata_scsiop_read_cap().
+  o [libata] CHS support: reorganize read/write translation in ata_scsi_rw_xlat()
+  o [libata] CHS support: rename vars (s/sector/block/) in ata_scsi_verify_xlat()
+  o [libata] CHS support: detect C/H/S at IDENTIFY DEVICE time
+  o [libata] CHS support: add definitions to headers
+  o pdc2027x timing register bug fix
+  o [libata pdc2027x] fix incorrect pio and mwdma masks
+  o [libata pdc2027x] remove quirks and ROM enable
+  o [libata] add driver for Promise PATA 2027x
+
+Brad Campbell:
+  o libata basic detection and errata for PATA->SATA bridges
+
+Jeff Garzik:
+  o [libata ahci] Print out port id on error messages
+  o [libata ahci] support PCI MSI interrupt vector
+  o [libata adma] Add init code, fix CPB submission code
+  o [libata ahci] finish ATAPI support
+  o [libata adma] trivial whitespace cleanup
+  o [libata dma] fix DMA mode config; add some more initialization code
+  o [libata adma] add support for configuring PIO/DMA modes
+  o [libata] turn on ATAPI support
+  o [libata sata_promise] merge Tobias Lorenz' pdc20619 patch, part 2
+  o [libata] small cleanups
+  o [libata] remove unused execute-device-diagnostic reset method
+  o [libata] add new driver ata_adma
+  o [libata pdc2027x] update for upstream struct device conversion
+  o [libata sata_promise] fix merge bugs
+  o [libata] fix build breakage
+  o [libata] fix SATA->PATA bridge detect compile breakage
+  o [libata] fix printk warning
+
+John W. Linville:
+  o libata: update ATA pass thru opcodes
+  o libata: minor style changes in ata_scsi_pass_thru
+  o libata: filter SET_FEATURES - XFER MODE from ATA pass thru
+  o libata: sync SMART ioctls with ATA pass thru spec (T10/04-262r7)
+  o libata: fix command queue leak when xlat_func fails
+  o libata: SMART support via ATA pass-thru
+
+Mark Lord:
+  o [libata qstor] minor update per LKML comments
+
+Tobias Lorenz:
+  o [libata sata_promise] pdc20619 (PATA) support
+  o libata-scsi: get-identity ioctl support
+
+
+--------------070309040806090208040204--
