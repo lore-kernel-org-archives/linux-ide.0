@@ -1,63 +1,54 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: [announce] plscsi in Linux
-Date: 21 May 2004 13:46:55 -0600
+Subject: Re: [announce] plscsi in Linux
+Date: 21 May 2004 14:01:17 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1085168815.3083.43.camel@patibmrh9>
+Message-ID: <1085169677.3083.79.camel@patibmrh9>
+References: <1085168815.3083.43.camel@patibmrh9>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:53448 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S266017AbUEUTrH
+Received: from email-out2.iomega.com ([147.178.1.83]:23456 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S265947AbUEUUB0
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 May 2004 15:47:07 -0400
+	Fri, 21 May 2004 16:01:26 -0400
+In-Reply-To: <1085168815.3083.43.camel@patibmrh9>
 List-Id: linux-ide@vger.kernel.org
 To: dwm@austin.ibm.com
 Cc: linux-ide@vger.kernel.org
 
-> Re: [PATCH] atapi request sense work
-> ...
-> 'plscsi'.  Where would one find this tool?
+> > 'plscsi'.  Where would one find this tool?
+> 
+> http://members.aol.com/plscsi/linux/plscsi.tar.gz
 
-http://members.aol.com/plscsi/linux/plscsi.tar.gz
+A noisy list of known bugs in plscsi is:
 
-ends the depressingly noisy web trail:
+Subject: plscsi issues
+http://plavarre.blog-city.com/read/579210.htm
 
-http://www.google.com/search?btnI=lucky&q=plscsi
-http://members.aol.com/plscsi/
-http://members.aol.com/plscsi/linux/
+Without the noise, that signal for Linux today includes:
 
-There you will find,
+1) FIXME: Parse the device name to default to O_NONBLOCK for /dev/scd$v
+/dev/hd$v despite defaulting to O_RDWR | O_NONBLOCK for /dev/sg$n.
 
-plscsi (Programming Language, SCSI) is a tool, conceptually trivial,
-actually complex, typed by me (Pat LaVarre) with help from many, but not
-yet offered among the sg utils of linux-scsi/ Douglas Gilbert.
+2) FIXME: Search more than just /dev/sg* to build the `plscsi -w` list
+of connected devices.
 
-I wrote plscsi to make { open(); ioctl(); close(); exit(); }
-interactive, taking the SCSI CDB in hex from the command line and
-streaming the binary data in/ out thru stdout or stdin.  Relevant ioctl
-in Linux include CDROM_SEND_PACKET and SG_IO.
+3) FIXME: Add ioctl CDROM_SEND_PACKET to coexist with ioctl SG_IO,
+mostly for the sake of ide-cd DVD/CD in Linux 2.4.
 
-Such an interactive tweak turns out to be exactly what you need, for
-example, to make linux-2.6.6-bk8 SATAPI read/write.
+4) FIXME: Port back to Linux the master source last released as
+http://members.aol.com/plscsi/mac/gcsmac.tar.gz
 
-A tutorial is http://members.aol.com/plscsi/tutorial/
-
-Linux-style source is http://members.aol.com/plscsi/mac/gcsmac.tar.gz
-
-http://plavarre.blog-city.com/read/542134.htm
-is me arguing that a C interpreter would do a better job.
-
-Among the folk of linux-ide I trust we have no need of the disclaimer:
-
-Learning to use a tool like PLScsi will probably remind you of the need
-to backup often. If you won't enjoy that lesson, then please don't pick
-up the tool. Potential side effects include kernel panics, destroyed
-discs, destroyed devices, and even imperceptibly subtle forms of data
-corruption. Storage devices differ from modems first by being designed
-to record your mistakes permanently, and second by defining some
-commands or sequences of commands to mean self-destruct.
+5) FIXME: Rename the .cpp to .c by removing the inline declarations from
+all the source except the Windows port.
 
 Pat LaVarre
+
+P.S. All the noise I've collected on SCSI pass through might be
+reachable thru:
+
+Subject: SCSI pass thru
+http://plavarre.blog-city.com/read/614076.htm
 
 
