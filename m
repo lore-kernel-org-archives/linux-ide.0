@@ -1,81 +1,52 @@
-From: Brad Campbell <brad@wasp.net.au>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] libata ATA vs SATA detection and workaround.
-Date: Mon, 30 Aug 2004 18:57:28 +0400
+Date: Mon, 30 Aug 2004 12:06:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <41334058.4050902@wasp.net.au>
-References: <41320DAF.2060306@wasp.net.au> <41321288.4090403@pobox.com> <413216CC.5080100@wasp.net.au> <4132198B.8000504@pobox.com> <41321F7F.7050300@pobox.com> <41333CDC.5040106@wasp.net.au>
+Message-ID: <413350A2.1000003@pobox.com>
+References: <41320DAF.2060306@wasp.net.au> <41321288.4090403@pobox.com> <413216CC.5080100@wasp.net.au> <4132198B.8000504@pobox.com> <41321F7F.7050300@pobox.com> <41333CDC.5040106@wasp.net.au> <41334058.4050902@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=_wasp.net.au-21256-1093877811-0001-2"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:13252 "EHLO wasp.net.au")
-	by vger.kernel.org with ESMTP id S268476AbUH3O46 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Aug 2004 10:56:58 -0400
-In-Reply-To: <41333CDC.5040106@wasp.net.au>
-List-Id: linux-ide@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
-
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
-
---=_wasp.net.au-21256-1093877811-0001-2
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:64645 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S268526AbUH3QHP
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Aug 2004 12:07:15 -0400
+In-Reply-To: <41334058.4050902@wasp.net.au>
+List-Id: linux-ide@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
 Brad Campbell wrote:
-> 
-> It works here anyway.
-> Patch against vanilla 2.6.9-rc1 attached (including your ata.h patch)
-> 
+> +			/* limit bridge transfers to udma5, 200 sectors */
+> +			if ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(ap->device))) {
+> +				printk(KERN_INFO "ata%u(%u): applying bridge limits\n",
+> +					ap->id, ap->device->devno);
+> +				ap->udma_mask &= ATA_UDMA5;
+> +				ap->host->max_sectors = ATA_MAX_SECTORS;
+> +				ap->host->hostt->max_sectors = ATA_MAX_SECTORS;
+> +				ap->device->flags |= ATA_DFLAG_LOCK_SECTORS;
+> +			}
+>  			if (ap->ops->dev_config)
+>  				ap->ops->dev_config(ap, &ap->device[i]);
 
-Lets try this one that won't undo the work that the sata_sil Seagate/Maxtor blacklist does!
 
-Regards,
-Brad.
+Close!  Please move the entire quoted section, including the two lines 
+of code calling ->dev_config(), into a new function 'ata_dev_config'. 
+Export it (bottom of libata-core.c) and prototype it (libata.h) as well.
 
---=_wasp.net.au-21256-1093877811-0001-2
-Content-Type: text/plain; name=diff2; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="diff2"
+I'm still pondering what Alan was hinting at, a bit.  You (Brad) are 
+correct in pointing out that this code should only trigger for the 
+correct situations (lba48, etc.) which are only present on modern 
+drives, but...  there is still a chance that word 93 will be zero on 
+some weird (probably non-compliant) device.
 
-diff -ur orig/linux/drivers/scsi/libata-core.c linux-2.6.9-rc1/drivers/scsi/libata-core.c
---- orig/linux/drivers/scsi/libata-core.c	2004-08-30 18:52:54.000000000 +0400
-+++ linux-2.6.9-rc1/drivers/scsi/libata-core.c	2004-08-30 18:53:42.000000000 +0400
-@@ -1150,6 +1150,15 @@
- 		ata_dev_identify(ap, i);
- 		if (ata_dev_present(&ap->device[i])) {
- 			found = 1;
-+			/* limit bridge transfers to udma5, 200 sectors */
-+			if ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(ap->device))) {
-+				printk(KERN_INFO "ata%u(%u): applying bridge limits\n",
-+					ap->id, ap->device->devno);
-+				ap->udma_mask &= ATA_UDMA5;
-+				ap->host->max_sectors = ATA_MAX_SECTORS;
-+				ap->host->hostt->max_sectors = ATA_MAX_SECTORS;
-+				ap->device->flags |= ATA_DFLAG_LOCK_SECTORS;
-+			}
- 			if (ap->ops->dev_config)
- 				ap->ops->dev_config(ap, &ap->device[i]);
- 		}
-@@ -1226,7 +1235,7 @@
- 		ata_port_disable(ap);
- 		return;
- 	}
--
-+	ap->cbl = ATA_CBL_SATA;
- 	ata_bus_reset(ap);
- }
- 
-diff -ur orig/linux/include/linux/ata.h linux-2.6.9-rc1/include/linux/ata.h
---- orig/linux/include/linux/ata.h	2004-08-30 18:52:54.000000000 +0400
-+++ linux-2.6.9-rc1/include/linux/ata.h	2004-08-30 18:42:41.000000000 +0400
-@@ -218,6 +218,7 @@
- };
- 
- #define ata_id_is_ata(dev)	(((dev)->id[0] & (1 << 15)) == 0)
-+#define ata_id_is_sata(dev)	((dev)->id[93] == 0)
- #define ata_id_rahead_enabled(dev) ((dev)->id[85] & (1 << 6))
- #define ata_id_wcache_enabled(dev) ((dev)->id[85] & (1 << 5))
- #define ata_id_has_flush(dev) ((dev)->id[83] & (1 << 12))
+However, Alan's comment is actually more relevant for unrelated sections 
+of libata.  Whenever we test a feature bit in words 82-87, we should 
+check for "word != 0 && word != 0xffff" which is how one knows the word 
+is implemented.  There are no feature bits indicating that feature bits 
+exist :)
 
---=_wasp.net.au-21256-1093877811-0001-2--
+	Jeff
+
+
