@@ -1,44 +1,39 @@
 From: "Christopher R. Thompson" <Christoffur050@Verizon.Net>
-Subject: Re: ICH5 ide modules in BOIS Compatibilty mode
-Date: Wed, 22 Dec 2004 11:51:04 -0800
-Message-ID: <41C9D028.9070506@Verizon.Net>
+Subject: Re: ICH5 libata with Bios in Compatibility mode
+Date: Wed, 22 Dec 2004 11:58:08 -0800
+Message-ID: <41C9D1D0.7070407@Verizon.Net>
 References: <41C341A4.9010401@Verizon.Net>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------090904090401010109050803"
+ boundary="------------080707080201010504030303"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out004pub.verizon.net ([206.46.170.142]:37792 "EHLO
-	out004.verizon.net") by vger.kernel.org with ESMTP id S262028AbULVTvF
+Received: from out010pub.verizon.net ([206.46.170.133]:49109 "EHLO
+	out010.verizon.net") by vger.kernel.org with ESMTP id S262032AbULVT6K
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Dec 2004 14:51:05 -0500
-Received: from Verizon.Net ([4.27.2.67]) by out004.verizon.net
+	Wed, 22 Dec 2004 14:58:10 -0500
+Received: from Verizon.Net ([4.27.2.67]) by out010.verizon.net
           (InterMail vM.5.01.06.06 201-253-122-130-106-20030910) with ESMTP
-          id <20041222195104.CZMK8290.out004.verizon.net@Verizon.Net>
-          for <linux-ide@vger.kernel.org>; Wed, 22 Dec 2004 13:51:04 -0600
+          id <20041222195808.FDUY24714.out010.verizon.net@Verizon.Net>
+          for <linux-ide@vger.kernel.org>; Wed, 22 Dec 2004 13:58:08 -0600
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------090904090401010109050803
+--------------080707080201010504030303
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
-The responses to my questions have been overwhelming... So I guess I'll 
-debug it myself.
-
-Here is the syslog (attached file Kernel-001.log) when loading just the 
-ide modules thusly:
+Loading scsi modules thusly without any ide modules:
 
 echo Installing ide modules
-insmod /lib/ide-core.o
-insmod /lib/ide-disk.o
-insmod /lib/piix.o
-insmod /lib/ide-detect.o
 echo Installing scsi modules
 insmod /lib/scsi_mod.o
 insmod /lib/sd_mod.o
 insmod /lib/aic7xxx.o
+echo Installing libata
+insmod /lib/libata.o
+insmod /lib/ata_piix.o
 insmod /lib/ide-scsi.o
 echo Installing usb modules
 insmod /lib/usbcore.o
@@ -46,36 +41,16 @@ insmod /lib/ehci-hcd.o
 insmod /lib/usb-uhci.o
 insmod /lib/usb-storage.o
 
-Note that kernel parameters idebus=66 and hdd=ide-scsi are not applied 
-and that "ide0: ports already in use".
-
-Cannot probe hda or hdb
-
-...
-Christopher R. Thompson wrote:
-
-Forget it.
-
--- 
-
-Christopher R. Thompson
-Student of Mechanical Engineering
-California State Polytechnic University, Pomona
-home: http://www.csupomona.edu/~cthompson1/
-
-Email: mailto:Christoffur050@Verizon.SPAM
-Note the Anti-SSSpppaaammm Mailing address...
-"Net" will work better than "SPAM" if
-you really want to send a message to me.
+Yields the following syslog (attached as file Kernel-002.log)
 
 
 
---------------090904090401010109050803
+--------------080707080201010504030303
 Content-Type: text/plain;
- name="Kernel-001.log"
+ name="Kernel-002.log"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="Kernel-001.log"
+ filename="Kernel-002.log"
 
 Linux version 2.4.27 (root@Sharlie.TfJC) (gcc version 3.2 20020903 (Red Hat Linux 8.0 3.2-7)) #33-Christopher R. Thompson Wednesday December 15, 2004
 BIOS-provided physical RAM map:
@@ -115,7 +90,7 @@ Enabling APIC mode: Flat.	Using 1 I/O APICs
 SMP mptable: no processors registered!
 BIOS bug, MP table errors detected!...
 ... disabling SMP support. (tell your hw vendor)
-Kernel command line: mem=1024mb root=/dev/hda3 rw console=ttyS0,115200n8 console=tty0 idebus=66 hdd=ide-scsi BOOT_IMAGE=bzi2427
+Kernel command line: mem=1024mb root=/dev/ram1 rw console=tty0 console=ttyS0,115200n8 idebus=66 hdd=ide-scsi BOOT_IMAGE=bzi2427
 Found and enabled local APIC!
 Initializing CPU#0
 Detected 3198.620 MHz processor.
@@ -141,10 +116,10 @@ ESR value before enabling vector: 00000000
 ESR value after enabling vector: 00000000
 Using local APIC timer interrupts.
 calibrating APIC timer ...
-..... CPU clock speed is 3198.4964 MHz.
-..... host bus clock speed is 199.9059 MHz.
-cpu: 0, clocks: 1999059, slice: 999529
-CPU0<T0:1999056,T1:999520,D:7,S:999529,C:1999059>
+..... CPU clock speed is 3198.4972 MHz.
+..... host bus clock speed is 199.9060 MHz.
+cpu: 0, clocks: 1999060, slice: 999530
+CPU0<T0:1999056,T1:999520,D:6,S:999530,C:1999060>
 mtrr: v1.40 (20010327) Richard Gooch (rgooch@atnf.csiro.au)
 mtrr: detected mtrr type: Intel
 PCI: PCI BIOS revision 2.10 entry at 0xf0031, last bus=2
@@ -182,13 +157,11 @@ NET4: Unix domain sockets 1.0/SMP for Linux NET4.0.
 RAMDISK: Compressed image found at block 0
 Freeing initrd memory: 4089k freed
 VFS: Mounted root (ext2 filesystem).
-Uniform Multi-Platform E-IDE driver Revision: 7.00beta4-2.4
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-ide0: ports already in use, skipping probe
-hdc: Maxtor 4R120L4, ATA DISK drive
-hdd: GENERIC DVD DUAL 4XMax, ATAPI CD/DVD-ROM drive
-ide1 at 0x170-0x177,0x376 on irq 15
-SCSI subsystem driver Revision: 1.00
+Red Hat nash version 3.4.28 starting
+Mounting /SCSI subsystem driver Revision: 1.00
+proc filesystem
+Installing ide modules
+Installing scsi modules
 scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
         <Adaptec 2940A Ultra SCSI adapter>
         aic7860: Ultra Single Channel A, SCSI Id=7, 3/253 SCBs
@@ -211,47 +184,26 @@ Partition check:
  sda: sda1 sda2 sda3
 SCSI device sdb: 8386733 512-byte hdwr sectors (4294 MB)
  sdb: sdb1 sdb2
-hdd: attached ide-scsi driver.
-scsi1 : SCSI host adapter emulation for IDE ATAPI devices
-  Vendor: GENERIC   Model: DVD DUAL 4XMax    Rev: 2.17
-  Type:   CD-ROM                             ANSI SCSI revision: 02
-usb.c: registered new driver usbdevfs
-usb.c: registered new driver hub
-ehci_hcd 00:1d.7: Intel Corp. 82801EB USB2
-ehci_hcd 00:1d.7: irq 5, pci mem fd8a5800
-usb.c: new USB bus registered, assigned bus number 1
-ehci_hcd 00:1d.7: enabled 64bit PCI DMA
-ehci_hcd 00:1d.7: USB 2.0 enabled, EHCI 1.00, driver 2003-Dec-29/2.4
-hub.c: USB hub found
-hub.c: 8 ports detected
-usb-uhci.c: $Revision: 1.275 $ time 10:01:42 Dec 21 2004
-usb-uhci.c: High bandwidth mode enabled
-usb-uhci.c: USB UHCI at I/O 0xeec0, IRQ 10
-usb-uhci.c: Detected 2 ports
-usb.c: new USB bus registered, assigned bus number 2
-hub.c: USB hub found
-hub.c: 2 ports detected
-usb-uhci.c: USB UHCI at I/O 0xef00, IRQ 5
-usb-uhci.c: Detected 2 ports
-usb.c: new USB bus registered, assigned bus number 3
-hub.c: USB hub found
-hub.c: 2 ports detected
-usb-uhci.c: USB UHCI at I/O 0xef20, IRQ 5
-usb-uhci.c: Detected 2 ports
-usb.c: new USB bus registered, assigned bus number 4
-hub.c: USB hub found
-hub.c: 2 ports detected
-usb-uhci.c: USB UHCI at I/O 0xef40, IRQ 10
-usb-uhci.c: Detected 2 ports
-usb.c: new USB bus registered, assigned bus number 5
-hub.c: USB hub found
-hub.c: 2 ports detected
-usb-uhci.c: v1.275:USB Universal Host Controller Interface driver
-Initializing USB Mass Storage driver...
-usb.c: registered new driver usb-storage
-USB Mass Storage support registered.
-Freeing unused kernel memory: 108k freed
-Kernel panic: No init found.  Try passing init= option to kernel.
+Installing libata
+ata_piix: combined mode detected
+ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0xFC00 irq 14
+kernel BUG at highmem.c:166!
+invalid operand: 0000
+CPU:    0
+EIP:    0010:[<c0139aa8>]    Not tainted
+EFLAGS: 00010246
+eax: 00000000   ebx: f71b1078   ecx: 00000000   edx: f71b1570
+esi: 00000000   edi: 00000000   ebp: c1c34000   esp: c1c35f68
+ds: 0018   es: 0018   ss: 0018
+Process keventd (pid: 2, stackpage=c1c35000)
+Stack: f71b1078 fd85f9bb f71b1078 c1c35f84 c1c35f84 c011f04a f71b1078 f71b15c4 
+       f71b15c4 c1c34560 c1c34570 c0127b53 c023a090 c1c35fb0 00000000 c1c34560 
+       c1c34570 c1c34000 00000001 00000000 0000001b 00010000 00000000 00000700 
+Call Trace:    [<fd85f9bb>] [<c011f04a>] [<c0127b53>] [<c0127a20>] [<c0105000>]
+  [<c010733e>] [<c0127a20>]
 
---------------090904090401010109050803--
+Code: 0f 0b a6 00 b3 e8 21 c0 05 00 00 80 00 ba a0 ab 2a c0 c1 e8 
+ 
+
+--------------080707080201010504030303--
 
