@@ -1,42 +1,36 @@
-From: "J. Ryan Earl" <heretic@clanhk.org>
-Subject: Re: Serial ATA (SATA) for Linux status report
-Date: Tue, 9 Dec 2003 13:59:24 -0600
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200312091359.24546.heretic@clanhk.org>
-References: <20031203204445.GA26987@gtf.org>
-Reply-To: heretic@clanhk.org
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: Re: [PATCH] Silicon image 3114 SATA link (really basic support)
+Date: Tue, 9 Dec 2003 21:14:47 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200312092114.47241.bzolnier@elka.pw.edu.pl>
+References: <20031203204445.GA26987@gtf.org> <3FD612E2.90607@atl.lmco.com> <200312091954.28224.marchand@kde.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20031203204445.GA26987@gtf.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:2703 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S266084AbTLIUNL
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Dec 2003 15:13:11 -0500
+In-Reply-To: <200312091954.28224.marchand@kde.org>
 Content-Disposition: inline
-To: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mickael Marchand <marchand@kde.org>
+Cc: Aron Rubin <arubin@atl.lmco.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wednesday 03 December 2003 02:44 pm, Jeff Garzik wrote:
-> Queueing support
-> 3) "Native Command Queueing" -- both host and drive cooperate in the
-> queueing and execution of drive commands.  This should provide the
-> highest performance and lowest latency of all three options.
 
-Has anyone gotten their hands on any Silicon Image 3124 hardware?  It was 
-announced 3 months ago and supports PCI-X plus it's designed to support 
-whatever the final SATA 2.0 spec ends up being.  Full NCQ support.
+On Tuesday 09 of December 2003 19:54, Mickael Marchand wrote:
 
-http://www.siliconimage.com/products/sii3124.asp
+> the attached patch makes _both_ drivers work (whereas the previous one made
+> only the libata one working)
 
-> Hotplug support
-> ---------------
-> All SATA is hotplug.
->
-> libata does not support hotplug... yet.
+Great!  Now I know it is really working.
 
-Hot-Plug seems like one of the most universally supported features.  What will 
-it take to get it working?  And what will it take to get it working on 2.4?  
-Is that a major feature we'll just have to wait for in libata?
+I've already corrected your previous patch and included it in -bart1 patch:
+http://www.kernel.org/pub/linux/kernel/people/bart/2.6.0-test11-bart1/broken-out/ide-siimage-sil3114.patch
 
-I personally need hot-swap on production servers.
+Yes, I forgot to send you corrected patch, sorry. :-)
 
--ryan
+--bart
+
