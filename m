@@ -1,59 +1,102 @@
-From: viro@parcelfarce.linux.theplanet.co.uk
-Subject: Re: Linux v2.6.9... (compile stats)
-Date: Thu, 21 Oct 2004 05:35:57 +0100
+From: "Albert Lee" <albertcc@tw.ibm.com>
+Subject: Re: [PATCH/RFC] Port of pdc202xx_new driver to libata
+Date: Thu, 21 Oct 2004 16:36:08 +0800
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20041021043557.GK23987@parcelfarce.linux.theplanet.co.uk>
-References: <1098196575.4320.0.camel@cherrybomb.pdx.osdl.net> <20041019161834.GA23821@one-eyed-alien.net> <1098310286.3381.5.camel@cherrybomb.pdx.osdl.net> <20041020224106.GM23987@parcelfarce.linux.theplanet.co.uk> <Pine.LNX.4.58.0410201710370.2317@ppc970.osdl.org> <41770307.5060304@pobox.com> <20041021015522.GH23987@parcelfarce.linux.theplanet.co.uk> <41771813.8090204@pobox.com> <20041021022442.GI23987@parcelfarce.linux.theplanet.co.uk> <417720D6.1030908@pobox.com>
+Message-ID: <001601c4b749$04f49550$7301a8c0@tw.ibm.com>
+References: <00bb01c4b10c$4b2ab330$7301a8c0@tw.ibm.com> <58cb370e04101312321c78f3b8@mail.gmail.com> <416D88FA.1050200@pobox.com> <001901c4b4fd$88204bc0$294bbf09@tw.ibm.com> <4173F6AC.7090409@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:11714 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S270557AbUJUEgF
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Oct 2004 00:36:05 -0400
-Content-Disposition: inline
-In-Reply-To: <417720D6.1030908@pobox.com>
+Received: from bluehawaii.tikira.net ([61.62.22.51]:10486 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S270408AbUJUIgi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Oct 2004 04:36:38 -0400
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, John Cherry <cherry@osdl.org>, Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, IDE Linux <linux-ide@vger.kernel.org>
 
-On Wed, Oct 20, 2004 at 10:37:10PM -0400, Jeff Garzik wrote:
-> viro@parcelfarce.linux.theplanet.co.uk wrote:
-> >IDGI.  Why do you insist on releasing these guys in library code?  Even
-> 
-> Because there are two distinct and separate models of port mapping/usage:
-> 
-> 1) A bunch of separate IO address spaces (PIO).  The "mapping" is 
-> currently done in ata_pci_init_native_mode() and ata_pci_init_legacy_mode()
-> 
-> 2) One single linear address space (MMIO).  The mapping is done in the 
-> low-level driver.
-> 
-> #1 is in the library because the logic is duplicated _precisely_, across 
-> multiple host controllers, according to a hardware specification.
-> 
-> Thus, if the mapping is done in the library core, so should the unmapping.
+Hi, Jeff:
 
-Not really.  You are making the case for having a helper that would unmap
-for case 1 and having it in the library, just as we do for mapping in that
-case.  What you have is different, though - it's a single function that does
-entire ->remove() for all (AFAICS) SATA drivers.
+ Please see my reply below.
+I'll resend the patch according to your review/comments later.
+Thanks for your patience for newbie like me. :-)
 
-And that's where the problem is - decision on releasing resource should belong
-to the driver; sure, it can and should use library helper, just as it did
-when it was grabbing these resources.
+Thanks,
+Albert
 
-Note, BTW, that current ata_pci_remove_one() is begging for trouble - for
-one thing, it does iounmap() before we get to ata_scsi_release(), i.e.
-ata_host_remove(), i.e. ->port_stop().   And the first look at the drivers
-that provide ->port_stop() shows that ahci_port_stop() does readl()/writel()
-on the ->mmio_base.  Oops...
+----- Original Message ----- 
+From: "Jeff Garzik" <jgarzik@pobox.com>
+To: "Albert Lee" <albertcc@tw.ibm.com>
+Cc: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>; "IDE Linux"
+<linux-ide@vger.kernel.org>
+Sent: Tuesday, October 19, 2004 1:00 AM
+Subject: Re: [PATCH/RFC] Port of pdc202xx_new driver to libata
 
-free_irq() also looks fishy, BTW.  How about moving all that group past the
-point where you are done with individual ports and merging it (and any other
-unmapping we might want to do) into a single callback?  Depending on whether
-->host_stop() is really needed early we might use ->host_stop for that...
 
-Comments?
+> I'm applying to libata-dev, but won't push this upstream for a while.
+>
+> My comments:
+>
+> 1) why is ROM enabled?  Normally you don't want to do this.
+>
+> +       /* Enable the ROM */
+> +       /*
+> +       if (pdev->resource[PCI_ROM_RESOURCE].start) {
+> +               pci_write_config_dword(pdev, PCI_ROM_ADDRESS,
+> +                       pdev->resource[PCI_ROM_RESOURCE].start |
+> PCI_ROM_ADDRESS
+> _ENABLE);
+>
 
+Ported from the original driver blindly. I'll remove this stuff.
+
+>
+>
+> 2) why does this quirk exist?  if pata_pdc2027x (libata) will work with
+> this hardware, then remove this code (and quirk) completely.  It is up
+> to the user to choose the correct driver, if multiple drivers will
+> function properly on the hardware.
+>
+> +#ifdef PDC_20276_QUIRK
+> +       /*
+> +        * Skip Promise PDC20276 attached to I2O RAID controller
+> +        */
+> +       if ((pdev->device == PCI_DEVICE_ID_PROMISE_20276) &&
+> +           (pdev->bus->self) &&
+> +           (pdev->bus->self->vendor == PCI_VENDOR_ID_INTEL) &&
+> +           ((pdev->bus->self->device == PCI_DEVICE_ID_INTEL_I960) ||
+> +            (pdev->bus->self->device == PCI_DEVICE_ID_INTEL_I960RM))) {
+> +               printk(KERN_INFO DRV_NAME ": Skipping Promise PDC20276 "
+> +                      "attached to I2O RAID controller.\n");
+> +               return -ENODEV;
+> +       }
+> +#endif
+>
+
+  Ported from the original driver blindly, too.  :-(
+I don't know why the original driver doesn't support it.
+I'll remove it, too.
+
+>
+>
+> 3) the quirk PDC_20270_QUIRK needs work to conform to current PCI API
+> standards.
+>
+>
+
+  Could this also be removed?
+This is also ported blindly from the original driver. :-(
+It seems to be a bug of DEC21150 PCI south bridge chip,
+but there is no detail about the actual problem.
+(I've searched the archive, but no clue found.)
+
+
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
