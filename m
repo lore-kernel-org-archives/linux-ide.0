@@ -1,89 +1,112 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] IDE update for 2.6.7-rc3 [12/12]
-Date: Fri, 11 Jun 2004 18:16:24 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200406111816.24875.bzolnier@elka.pw.edu.pl>
+Subject: [PATCH] IDE update for 2.6.7-rc3 [6/12]
+Date: Fri, 11 Jun 2004 18:18:17 +0200
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200406111759.12066.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S264212AbUFKQTg@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:8089 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264134AbUFKQQN
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Jun 2004 12:16:13 -0400
 Content-Disposition: inline
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, andre@linux-ide.org
 
 
-[PATCH] ide: check no. of sectors for in/out commands in ide_diag_taskfile()
+Could somebody explain why ALTERNATE_STATE_DIAGRAM_MULTI_OUT was needed?
 
-Make sure that number of sectors != 0 for in/out command before sending
-it to drive.  Remove no longer needed checks from flagged_* PIO handlers.
+[PATCH] ide: remove ALTERNATE_STATE_DIAGRAM_MULTI_OUT from ide-taskfile.c
+
+First introduced in 2.4.19/2.5.3 as ALTSTAT_SCREW_UP, never used.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 
- linux-2.6.7-rc3-bzolnier/drivers/ide/ide-taskfile.c |   21 +++++---------------
- 1 files changed, 6 insertions(+), 15 deletions(-)
+ linux-2.6.7-rc3-bzolnier/drivers/ide/ide-taskfile.c |   38 --------------------
+ 1 files changed, 38 deletions(-)
 
-diff -puN drivers/ide/ide-taskfile.c~ide_task_sectors drivers/ide/ide-taskfile.c
---- linux-2.6.7-rc3/drivers/ide/ide-taskfile.c~ide_task_sectors	2004-06-11 16:30:34.934913976 +0200
-+++ linux-2.6.7-rc3-bzolnier/drivers/ide/ide-taskfile.c	2004-06-11 16:30:34.947912000 +0200
-@@ -846,6 +846,12 @@ int ide_diag_taskfile (ide_drive_t *driv
- 		else
- 			rq.nr_sectors = data_size / SECTOR_SIZE;
+diff -puN drivers/ide/ide-taskfile.c~ide_alt_pio_mulout drivers/ide/ide-taskfile.c
+--- linux-2.6.7-rc3/drivers/ide/ide-taskfile.c~ide_alt_pio_mulout	2004-06-10 23:00:18.900409664 +0200
++++ linux-2.6.7-rc3-bzolnier/drivers/ide/ide-taskfile.c	2004-06-10 23:00:18.907408600 +0200
+@@ -503,18 +503,8 @@ ide_startstop_t task_out_intr (ide_drive
  
-+		if (!rq.nr_sectors) {
-+			printk(KERN_ERR "%s: in/out command without data\n",
-+					drive->name);
-+			return -EFAULT;
-+		}
-+
- 		rq.hard_nr_sectors = rq.nr_sectors;
- 		rq.hard_cur_sectors = rq.current_nr_sectors = rq.nr_sectors;
- 	}
-@@ -1330,9 +1336,6 @@ ide_startstop_t flagged_task_in_intr (id
- 	char *pBuf		= NULL;
- 	int retries             = 5;
+ EXPORT_SYMBOL(task_out_intr);
  
--	if (rq->current_nr_sectors == 0) 
--		return DRIVER(drive)->error(drive, "flagged_task_in_intr (no data requested)", stat); 
+-#undef ALTERNATE_STATE_DIAGRAM_MULTI_OUT
 -
- 	if (!OK_STAT(stat, DATA_READY, BAD_R_STAT)) {
- 		if (stat & ERR_STAT) {
- 			return DRIVER(drive)->error(drive, "flagged_task_in_intr", stat);
-@@ -1379,9 +1382,6 @@ ide_startstop_t flagged_task_mulin_intr 
- 	int retries             = 5;
- 	unsigned int msect, nsect;
- 
--	if (rq->current_nr_sectors == 0) 
--		return DRIVER(drive)->error(drive, "flagged_task_mulin_intr (no data requested)", stat); 
--
- 	msect = drive->mult_count;
- 	if (msect == 0) 
- 		return DRIVER(drive)->error(drive, "flagged_task_mulin_intr (multimode not set)", stat); 
-@@ -1433,14 +1433,8 @@ ide_startstop_t flagged_task_mulin_intr 
-  */
- ide_startstop_t flagged_pre_task_out_intr (ide_drive_t *drive, struct request *rq)
+ ide_startstop_t pre_task_mulout_intr (ide_drive_t *drive, struct request *rq)
  {
--	ide_hwif_t *hwif	= HWIF(drive);
--	u8 stat			= hwif->INB(IDE_STATUS_REG);
+-#ifdef ALTERNATE_STATE_DIAGRAM_MULTI_OUT
+-	ide_hwif_t *hwif		= HWIF(drive);
+-	char *pBuf			= NULL;
+-	unsigned int nsect = 0, msect	= drive->mult_count;
+-        u8 stat;
+-	unsigned long flags;
+-#endif /* ALTERNATE_STATE_DIAGRAM_MULTI_OUT */
+-
+ 	ide_task_t *args = rq->special;
  	ide_startstop_t startstop;
  
--	if (!rq->current_nr_sectors) {
--		return DRIVER(drive)->error(drive, "flagged_pre_task_out_intr (write data not specified)", stat);
--	}
+@@ -525,31 +515,6 @@ ide_startstop_t pre_task_mulout_intr (id
+ 			drive->addressing ? "MULTWRITE_EXT" : "MULTWRITE");
+ 		return startstop;
+ 	}
+-#ifdef ALTERNATE_STATE_DIAGRAM_MULTI_OUT
 -
- 	if (ide_wait_stat(&startstop, drive, DATA_READY,
- 			BAD_W_STAT, WAIT_DRQ)) {
- 		printk(KERN_ERR "%s: No DRQ bit after issuing write command.\n", drive->name);
-@@ -1502,9 +1496,6 @@ ide_startstop_t flagged_pre_task_mulout_
- 	ide_startstop_t startstop;
- 	unsigned int msect, nsect;
+-	do {
+-		nsect = rq->current_nr_sectors;
+-		if (nsect > msect)
+-			nsect = msect;
+-		pBuf = task_map_rq(rq, &flags);
+-		DTF("Pre-Multiwrite: %p, nsect: %d, msect: %d, " \
+-			"rq->current_nr_sectors: %ld\n",
+-			pBuf, nsect, msect, rq->current_nr_sectors);
+-		msect -= nsect;
+-		taskfile_output_data(drive, pBuf, nsect * SECTOR_WORDS);
+-		task_unmap_rq(rq, pBuf, &flags);
+-		rq->current_nr_sectors -= nsect;
+-		if (!rq->current_nr_sectors) {
+-			if (!DRIVER(drive)->end_request(drive, 1, 0))
+-				if (!rq->bio) {
+-					stat = hwif->INB(IDE_STATUS_REG);
+-					return ide_stopped;
+-				}
+-		}
+-	} while (msect);
+-	rq->errors = 0;
+-	return ide_started;
+-#else /* ! ALTERNATE_STATE_DIAGRAM_MULTI_OUT */
+ 	if (!(drive_is_ready(drive))) {
+ 		int i;
+ 		for (i=0; i<100; i++) {
+@@ -563,7 +528,6 @@ ide_startstop_t pre_task_mulout_intr (id
+ 	 * move the DATA-TRANSFER T-Bar as BSY != 0. <andre@linux-ide.org>
+ 	 */
+ 	return args->handler(drive);
+-#endif /* ALTERNATE_STATE_DIAGRAM_MULTI_OUT */
+ }
  
--	if (!rq->current_nr_sectors) 
--		return DRIVER(drive)->error(drive, "flagged_pre_task_mulout_intr (write data not specified)", stat);
--
- 	msect = drive->mult_count;
- 	if (msect == 0)
- 		return DRIVER(drive)->error(drive, "flagged_pre_task_mulout_intr (multimode not set)", stat);
+ EXPORT_SYMBOL(pre_task_mulout_intr);
+@@ -632,7 +596,6 @@ ide_startstop_t task_mulout_intr (ide_dr
+ 		return ide_started;
+ 	}
+ 
+-#ifndef ALTERNATE_STATE_DIAGRAM_MULTI_OUT
+ 	if (HWGROUP(drive)->handler != NULL) {
+ 		unsigned long lflags;
+ 		spin_lock_irqsave(&ide_lock, lflags);
+@@ -640,7 +603,6 @@ ide_startstop_t task_mulout_intr (ide_dr
+ 		del_timer(&HWGROUP(drive)->timer);
+ 		spin_unlock_irqrestore(&ide_lock, lflags);
+ 	}
+-#endif /* ALTERNATE_STATE_DIAGRAM_MULTI_OUT */
+ 
+ 	do {
+ 		nsect = rq->current_nr_sectors;
 
 _
+
