@@ -1,41 +1,36 @@
-From: Ian Hastie <ianh@iahastie.clara.net>
+From: Alan Cox <alan@redhat.com>
 Subject: Re: IDE hackery: lock fixes and hotplug controller stuff
-Date: Tue, 10 Aug 2004 21:48:57 +0100
+Date: Tue, 10 Aug 2004 17:06:30 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200408102148.57602.ianh@iahastie.local.net>
-References: <20040810161911.GA10565@devserv.devel.redhat.com>
+Message-ID: <20040810210630.GA30906@devserv.devel.redhat.com>
+References: <20040810161911.GA10565@devserv.devel.redhat.com> <200408102148.57602.ianh@iahastie.local.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mra04.ex.eclipse.net.uk ([212.104.129.139]:30141 "EHLO
-	mra04.ex.eclipse.net.uk") by vger.kernel.org with ESMTP
-	id S267726AbUHJUtC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Aug 2004 16:49:02 -0400
-In-Reply-To: <20040810161911.GA10565@devserv.devel.redhat.com>
+Received: from mx1.redhat.com ([66.187.233.31]:62173 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S267708AbUHJVHW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Aug 2004 17:07:22 -0400
 Content-Disposition: inline
+In-Reply-To: <200408102148.57602.ianh@iahastie.local.net>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Ian Hastie <ianh@iahastie.clara.net>
+Cc: Alan Cox <alan@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tuesday 10 Aug 2004 17:19, Alan Cox wrote:
-> -=A0=A0=A0=A0=A0=A0=A0IT8212 driver. Still needs work for non pass th=
-rough. Alas
-> =A0=A0=A0=A0=A0=A0=A0=A0I had to give the 8212D back so only have 821=
-2H now (without
-> =A0=A0=A0=A0=A0=A0=A0=A0the raid stuff)
+On Tue, Aug 10, 2004 at 09:48:57PM +0100, Ian Hastie wrote:
+> What do those numbers refer to?  Card model numbers?  On ITE's site I can only 
+> see an IT8212F which has RAID and an IT8211F that doesn't.
 
-What do those numbers refer to?  Card model numbers?  On ITE's site I c=
-an only=20
-see an IT8212F which has RAID and an IT8211F that doesn't.
+Product rather than chip numbers I think
 
-I got my IT8212F card from Novatech.  A generic card with no obviously=20
-recognisable name and, IMO anyway, quite a reasonable price.  That is=20
-assuming it really does everything that they say it can.
+> I got my IT8212F card from Novatech.  A generic card with no obviously 
+> recognisable name and, IMO anyway, quite a reasonable price.  That is 
+> assuming it really does everything that they say it can.
 
-http://www.novatech.co.uk/novatech/specpage.html?NOV-ATA133
+Thanks will investigate. I need to see what happens if I turn the 
+firmware bits on with my card and then reboot the microprocessor - see if its
+just bios crippled
 
-It certainly works quite well in pass through mode. *8)
-=20
---=20
-Ian.
+> It certainly works quite well in pass through mode. *8)
+
+But it has the raid mode stuff ?
+
