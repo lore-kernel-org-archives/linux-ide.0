@@ -1,45 +1,70 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: 2.5.70-mm5: sc1200.c compile error if !CONFIG_PROC_FS
-Date: Sat, 7 Jun 2003 16:34:01 +0200
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: [PATCH] Re: 2.5.70-mm5: sc1200.c compile error if !CONFIG_PROC_FS
+Date: Sat, 7 Jun 2003 17:31:28 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20030607143401.GN15311@fs.tum.de>
+Message-ID: <200306071731.28130.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:8149 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S261939AbTFGOUc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 7 Jun 2003 10:20:32 -0400
-Content-Disposition: inline
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:25553 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S263201AbTFGPR7
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 7 Jun 2003 11:17:59 -0400
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I'm getting the following compile error in drivers/ide/pci/sc1200.c if 
-!CONFIG_PROC_FS:
 
-<--  snip  -->
+Fixed now.
+--
+Bartlomiej
 
-...
-  CC      drivers/ide/pci/sc1200.o
-drivers/ide/pci/sc1200.c: In function `sc1200_config_dma2':
-drivers/ide/pci/sc1200.c:228: warning: implicit declaration of function `sc1200_get_pci_clock'
-drivers/ide/pci/sc1200.c:240: `PCI_CLK_33' undeclared (first use in this function)
-drivers/ide/pci/sc1200.c:240: (Each undeclared identifier is reported only once
-drivers/ide/pci/sc1200.c:240: for each function it appears in.)
-drivers/ide/pci/sc1200.c:241: `PCI_CLK_48' undeclared (first use in this function)
-drivers/ide/pci/sc1200.c:242: `PCI_CLK_66' undeclared (first use in this function)
-make[3]: *** [drivers/ide/pci/sc1200.o] Error 1
+[ide] fix compilation of NS SC1x00 driver without procfs
 
-<--  snip  -->
+ drivers/ide/pci/sc1200.c |   22 +++++++++++-----------
+ 1 files changed, 11 insertions(+), 11 deletions(-)
 
-cu
-Adrian
+diff -puN drivers/ide/pci/sc1200.c~ide-sc1200-noprocfs-fix drivers/ide/pci/sc1200.c
+--- linux-2.5.70-bk11/drivers/ide/pci/sc1200.c~ide-sc1200-noprocfs-fix	Sat Jun  7 17:15:46 2003
++++ linux-2.5.70-bk11-root/drivers/ide/pci/sc1200.c	Sat Jun  7 17:22:15 2003
+@@ -32,17 +32,6 @@
+ #include "ide_modes.h"
+ #include "sc1200.h"
+ 
+-#define DISPLAY_SC1200_TIMINGS
+-
+-#if defined(DISPLAY_SC1200_TIMINGS) && defined(CONFIG_PROC_FS)
+-#include <linux/stat.h>
+-#include <linux/proc_fs.h>
+-
+-static int sc1200_get_info(char *, char **, off_t, int);
+-extern int (*sc1200_display_info)(char *, char **, off_t, int); /* ide-proc.c */
+-extern char *ide_media_verbose(ide_drive_t *);
+-static u8 sc1200_proc = 0;
+-
+ #define SC1200_REV_A	0x00
+ #define SC1200_REV_B1	0x01
+ #define SC1200_REV_B3	0x02
+@@ -81,6 +70,17 @@ static unsigned short sc1200_get_pci_clo
+ 	return pci_clock;
+ }
+ 
++#define DISPLAY_SC1200_TIMINGS
++
++#if defined(DISPLAY_SC1200_TIMINGS) && defined(CONFIG_PROC_FS)
++#include <linux/stat.h>
++#include <linux/proc_fs.h>
++
++static int sc1200_get_info(char *, char **, off_t, int);
++extern int (*sc1200_display_info)(char *, char **, off_t, int); /* ide-proc.c */
++extern char *ide_media_verbose(ide_drive_t *);
++static u8 sc1200_proc = 0;
++
+ static struct pci_dev *bmide_dev;
+ 
+ static int sc1200_get_info (char *buffer, char **addr, off_t offset, int count)
 
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+_
 
