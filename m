@@ -1,90 +1,105 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2.6.11-rc3 01/11] ide: task_end_request() fix
-Date: Thu, 10 Feb 2005 17:38:14 +0900 (KST)
-Message-ID: <20050210083809.63BF53E6@htj.dyndns.org>
+Subject: Re: [PATCH 2.6.11-rc3 05/11] ide: fixes io_32bit race in ide_taskfile_ioctl()
+Date: Thu, 10 Feb 2005 17:38:34 +0900 (KST)
+Message-ID: <20050210083829.8739C4AB@htj.dyndns.org>
 References: <20050210083808.48E9DD1A@htj.dyndns.org>
-Received: from wproxy.gmail.com ([64.233.184.203]:46291 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262053AbVBJIiW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Feb 2005 03:38:22 -0500
-Received: by wproxy.gmail.com with SMTP id 68so76908wri
-        for <linux-ide@vger.kernel.org>; Thu, 10 Feb 2005 00:38:22 -0800 (PST)
+Received: from wproxy.gmail.com ([64.233.184.204]:18902 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262059AbVBJIio (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Feb 2005 03:38:44 -0500
+Received: by wproxy.gmail.com with SMTP id 36so227988wri
+        for <linux-ide@vger.kernel.org>; Thu, 10 Feb 2005 00:38:43 -0800 (PST)
 In-Reply-To: <20050210083808.48E9DD1A@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
 
-01_ide_task_end_request_fix.patch
+05_ide_ATA_TFLAG_IO_16BIT.patch
 
-	task_end_request() modified to always call ide_end_drive_cmd()
-	for taskfile requests.  Previously, ide_end_drive_cmd() was
-	called only when task->tf_out_flags.all was set.  Also,
-	ide_dma_intr() is modified to use task_end_request().
+	In ide_taskfile_ioctl(), there was a race condition involving
+	drive->io_32bit.  It was cleared and restored during ioctl
+	requests but there was no synchronization with other requests.
+	So, other requests could execute with the altered io_32bit
+	setting or updated drive->io_32bit could be overwritten by
+	ide_taskfile_ioctl().
 
-	* fixes taskfile ioctl oops bug which was caused by referencing
-	  NULL rq->rq_disk of taskfile requests.
-	* enables TASKFILE ioctls to get valid register outputs on
-	  successful completion.
+	This patch adds ATA_TFLAG_IO_16BIT flag to indicate to
+	ide_pio_datablock() that 16bit IO is needed regardless of
+	drive->io_32bit settting.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
- drivers/ide/ide-dma.c      |    5 +----
- drivers/ide/ide-taskfile.c |   12 ++++--------
- include/linux/ide.h        |    1 +
- 3 files changed, 6 insertions(+), 12 deletions(-)
+ drivers/ide/ide-taskfile.c |   14 ++++++++++----
+ include/linux/ata.h        |    1 +
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
-Index: linux-ide/drivers/ide/ide-dma.c
-===================================================================
---- linux-ide.orig/drivers/ide/ide-dma.c	2005-02-10 17:31:48.917654643 +0900
-+++ linux-ide/drivers/ide/ide-dma.c	2005-02-10 17:38:00.033092056 +0900
-@@ -175,10 +175,7 @@ ide_startstop_t ide_dma_intr (ide_drive_
- 	if (OK_STAT(stat,DRIVE_READY,drive->bad_wstat|DRQ_STAT)) {
- 		if (!dma_stat) {
- 			struct request *rq = HWGROUP(drive)->rq;
--			ide_driver_t *drv;
--
--			drv = *(ide_driver_t **)rq->rq_disk->private_data;;
--			drv->end_request(drive, 1, rq->nr_sectors);
-+			task_end_request(drive, rq, stat);
- 			return ide_stopped;
- 		}
- 		printk(KERN_ERR "%s: dma_intr: bad DMA status (dma_stat=%x)\n", 
 Index: linux-ide/drivers/ide/ide-taskfile.c
 ===================================================================
---- linux-ide.orig/drivers/ide/ide-taskfile.c	2005-02-10 17:31:48.917654643 +0900
-+++ linux-ide/drivers/ide/ide-taskfile.c	2005-02-10 17:38:00.042090547 +0900
-@@ -364,18 +364,14 @@ static ide_startstop_t task_error(ide_dr
- 	return ide_error(drive, s, stat);
+--- linux-ide.orig/drivers/ide/ide-taskfile.c	2005-02-10 17:38:01.172900876 +0900
++++ linux-ide/drivers/ide/ide-taskfile.c	2005-02-10 17:38:01.539839336 +0900
+@@ -315,8 +315,15 @@ static void ide_pio_multi(ide_drive_t *d
+ static inline void ide_pio_datablock(ide_drive_t *drive, struct request *rq,
+ 				     unsigned int write)
+ {
++	int saved_io_32bit = drive->io_32bit;
++
+ 	if (rq->bio)	/* fs request */
+ 		rq->errors = 0;
++	if (rq->flags & REQ_DRIVE_TASKFILE) {
++		ide_task_t *task = rq->special;
++		if (task->flags & ATA_TFLAG_IO_16BIT)
++			drive->io_32bit = 0;
++	}
+ 
+ 	switch (drive->hwif->data_phase) {
+ 	case TASKFILE_MULTI_IN:
+@@ -327,6 +334,8 @@ static inline void ide_pio_datablock(ide
+ 		ide_pio_sector(drive, write);
+ 		break;
+ 	}
++
++	drive->io_32bit = saved_io_32bit;
  }
  
--static void task_end_request(ide_drive_t *drive, struct request *rq, u8 stat)
-+void task_end_request(ide_drive_t *drive, struct request *rq, u8 stat)
- {
- 	ide_driver_t *drv;
+ static ide_startstop_t task_error(ide_drive_t *drive, struct request *rq,
+@@ -520,7 +529,6 @@ int ide_taskfile_ioctl (ide_drive_t *dri
+ 	int tasksize		= sizeof(struct ide_task_request_s);
+ 	int taskin		= 0;
+ 	int taskout		= 0;
+-	u8 io_32bit		= drive->io_32bit;
+ 	char __user *buf = (char __user *)arg;
  
- 	if (rq->flags & REQ_DRIVE_TASKFILE) {
--		ide_task_t *task = rq->special;
+ //	printk("IDE Taskfile ...\n");
+@@ -573,10 +581,10 @@ int ide_taskfile_ioctl (ide_drive_t *dri
+ 	args.data_phase   = req_task->data_phase;
+ 	args.command_type = req_task->req_cmd;
+ 
++	args.flags = ATA_TFLAG_IO_16BIT;
+ 	if (drive->addressing == 1)
+ 		args.flags |= ATA_TFLAG_LBA48;
+ 
+-	drive->io_32bit = 0;
+ 	switch(req_task->data_phase) {
+ 		case TASKFILE_OUT_DMAQ:
+ 		case TASKFILE_OUT_DMA:
+@@ -656,8 +664,6 @@ abort:
+ 
+ //	printk("IDE Taskfile ioctl ended. rc = %i\n", err);
+ 
+-	drive->io_32bit = io_32bit;
 -
--		if (task->tf_out_flags.all) {
--			u8 err = drive->hwif->INB(IDE_ERROR_REG);
--			ide_end_drive_cmd(drive, stat, err);
--			return;
--		}
-+		u8 err = drive->hwif->INB(IDE_ERROR_REG);
-+		ide_end_drive_cmd(drive, stat, err);
-+		return;
- 	}
+ 	return err;
+ }
  
- 	drv = *(ide_driver_t **)rq->rq_disk->private_data;
-Index: linux-ide/include/linux/ide.h
+Index: linux-ide/include/linux/ata.h
 ===================================================================
---- linux-ide.orig/include/linux/ide.h	2005-02-10 17:31:48.917654643 +0900
-+++ linux-ide/include/linux/ide.h	2005-02-10 17:38:00.044090212 +0900
-@@ -1290,6 +1290,7 @@ extern ide_startstop_t do_rw_taskfile(id
-  */
- extern ide_startstop_t flagged_taskfile(ide_drive_t *, ide_task_t *);
+--- linux-ide.orig/include/linux/ata.h	2005-02-10 17:31:48.610711131 +0900
++++ linux-ide/include/linux/ata.h	2005-02-10 17:38:01.540839168 +0900
+@@ -174,6 +174,7 @@ enum {
+ 	ATA_TFLAG_ISADDR	= (1 << 1), /* enable r/w to nsect/lba regs */
+ 	ATA_TFLAG_DEVICE	= (1 << 2), /* enable r/w to device reg */
+ 	ATA_TFLAG_WRITE		= (1 << 3), /* data dir: host->dev==1 (write) */
++	ATA_TFLAG_IO_16BIT	= (1 << 4), /* force 16bit pio */
+ };
  
-+void task_end_request(ide_drive_t *, struct request *, u8);
- extern ide_startstop_t set_multmode_intr(ide_drive_t *);
- extern ide_startstop_t set_geometry_intr(ide_drive_t *);
- extern ide_startstop_t recal_intr(ide_drive_t *);
+ enum ata_tf_protocols {
