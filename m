@@ -1,37 +1,61 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Linux hangs during IDE initialization at boot for 30 sec
-Date: Thu, 03 Feb 2005 10:03:07 +0000
-Message-ID: <1107332790.14787.118.camel@localhost.localdomain>
-References: <200502011257.40059.brade@informatik.uni-muenchen.de>
-	 <pan.2005.02.01.20.21.46.334334@surrey.ac.uk>
-	 <1107299901.5624.28.camel@gaston>
+Subject: Re: [PATCH 2.6.11-rc2 0/29] ide: driver updates
+Date: Thu, 03 Feb 2005 10:03:14 +0000
+Message-ID: <1107341195.14787.122.camel@localhost.localdomain>
+References: <20050202024017.GA621@htj.dyndns.org>
+	 <42008FFF.1080904@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Received: from clock-tower.bc.nu ([81.2.110.250]:62852 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S263006AbVBCLII
+Received: from clock-tower.bc.nu ([81.2.110.250]:63876 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S263014AbVBCLIN
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Feb 2005 06:08:08 -0500
-In-Reply-To: <1107299901.5624.28.camel@gaston>
+	Thu, 3 Feb 2005 06:08:13 -0500
+In-Reply-To: <42008FFF.1080904@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: ee21rh@surrey.ac.uk, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <tj@home-tj.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Maw, 2005-02-01 at 23:18, Benjamin Herrenschmidt wrote:
-> On Tue, 2005-02-01 at 20:22 +0000, Richard Hughes wrote:
-> > On Tue, 01 Feb 2005 12:57:33 +0100, Michael Brade wrote:
-> I suspect in your case, it's reading "ff", which indicates either that
-> there is no hardware where the kernel tries to probe, or that there is
-> bogus IDE interfaces which don't properly have the D7 line pulled low so
-> that BUSY appears not set in absence of a drive.
+On Mer, 2005-02-02 at 08:31, Jeff Garzik wrote:
+> > 	Merges drivers/ide/pci/*.h files into their corresponding *.c
+> > 	files.  Rationales are
+> > 	1. There's no reason to separate pci drivers into header and
+> > 	   body.  No header file is shared and they're simple enough.
+> > 	2. struct pde_pci_device_t *_chipsets[] are _defined_ in the
+> > 	   header files.  That isn't the custom and there's no good
+> > 	   reason to do differently in these drivers.
+> > 	3. Tracking changelogs shows that the bugs fixed by 00 and 01
+> > 	   are introduced during mass-updating ide pci drivers by
+> > 	   forgetting to update *.h files.
 > 
-> I'm not sure how the list of intefaces is probed on this machine, that's
-> probably where the problem is.
+> Personally, I agree.  However, I would ask Alan for his rationale before 
+> applying this...
 
-Known, fixed
+Historically they were split so they stayed split. SCSI has mostly (c/o
+hch) switched away from that and it seems sensible for IDE to do so.
 
-There is a patch that allows probing for ISA ide4,5,6 etc only if there
-is
-no PCI bus
+> 
+> > 07_ide_reg_valid_t_endian_fix.patch
+> > 
+> > 	ide_reg_valid_t contains bitfield flags but doesn't reverse
+> > 	bit orders using __*_ENDIAN_BITFIELD macros.  And constants
+> > 	for ide_reg_valid_t, IDE_{TASKFILE|HOB}_STD_{IN|OUT}_FLAGS,
+> > 	are defined as byte values which are correct only on
+> > 	little-endian machines.  This patch defines reversed constants
+> > 	and .h byte union structure to make things correct on big
+> > 	endian machines.  The only code which uses above macros is in
+> > 	flagged_taskfile() and the code is currently unused, so this
+> > 	patch doesn't change any behavior.  (The code will get used in
+> > 	later patches.)
+> 
+> doesn't this "fix" change behavior on existing big endian machines?
+
+My question too, remember that there is I/O byte order swizzling afoot
+in 
+the I/O macros.
+
+
+
+Generally looks good IMHO.
 
