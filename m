@@ -1,34 +1,51 @@
-From: Eric Mudama <edmudama@gmail.com>
-Subject: Re: Driver retries disk errors.
-Date: Thu, 2 Sep 2004 10:23:39 -0600
+From: Ravi Pratap M <ravi@ximian.com>
+Subject: libata AHCI support for Intel ICH6RW
+Date: Fri, 03 Sep 2004 00:09:56 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <311601c904090209235759c7a2@mail.gmail.com>
-References: <20040830163931.GA4295@bitwizard.nl>
-	 <20040830174632.GA21419@thunk.org>  <41337153.60505@superbug.demon.co.uk> <1093952325.32684.7.camel@localhost.localdomain>
-Reply-To: Eric Mudama <edmudama@gmail.com>
+Message-ID: <1094184596.16175.3.camel@unicorn.rpratap.homelinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.206]:35490 "EHLO mproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S268657AbUIBQXk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Sep 2004 12:23:40 -0400
-Received: by mproxy.gmail.com with SMTP id 76so300315rnl
-        for <linux-ide@vger.kernel.org>; Thu, 02 Sep 2004 09:23:39 -0700 (PDT)
-In-Reply-To: <1093952325.32684.7.camel@localhost.localdomain>
+Received: from itse122.itsnpt.com ([64.209.119.122]:47799 "EHLO
+	unicorn.rpratap.homelinux.org") by vger.kernel.org with ESMTP
+	id S269013AbUICEMW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 3 Sep 2004 00:12:22 -0400
+Received: from [127.0.0.1] (localhost.localdomain [127.0.0.1])
+	by unicorn.rpratap.homelinux.org (8.12.11/8.12.11) with ESMTP id i8349uUB016213
+	for <linux-ide@vger.kernel.org>; Fri, 3 Sep 2004 00:09:58 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: James Courtier-Dutton <james@superbug.demon.co.uk>, Theodore Ts'o <tytso@mit.edu>, Rogier Wolff <r.e.wolff@harddisk-recovery.nl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tue, 31 Aug 2004 12:38:45 +0100, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> Not really as far as I can tell. It isn't a disk any more, its a storage
-> appliance on a funny connector. It already knows a lot about retries
-> internally as well as rewriting blocks with high ECC error
-> count. In fact you actually have to issue a different command to do
-> read/write without retry.
+Hi guys,
 
-True, but in the later versions of the ATA specification, the retry
-option was depreciated.  I think you'll find virtually every ATA drive
-built today ignores that "suggestion" from the host.
+My Dell Dimension 8400 machine has the latest Intel ICH6RW controller
+and I am running kernel 2.6.8.1. I was under the impression that
+libata's ata_piix driver now supports AHCI mode but when I set the BIOS
+to that setting, the kernel doesn't see anything.
 
---eric
+
+Has the AHCI driver not fully been integrated into mainline libata ? I
+downloaded the latest prepatch kernel but I still don't see any AHCI
+driver (I found an ahci.c that you posted to linux-kernel sometime in
+April 2004 but that is missing from the main linux kernel source tree
+that I have downloaded here).
+
+
+I would like to help with testing / further development of this driver
+but I was unsure of what was going on. 
+
+
+I made sure that my kernel (Fedora Core 2) had the drivers compiled in
+(as modules, IIRC) - is there something I am doing wrong ?
+
+
+Ravi.
+
+
+-- 
+Ravi Pratap M <ravi at ximian dot com>
+Selective perfectionist, incorrigible programmer
+http://primates.ximian.com/~ravi
+
+
