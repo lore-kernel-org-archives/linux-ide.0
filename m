@@ -1,54 +1,58 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: page fault scalability patch V12 [0/7]: Overview
-	and	performance tests
-Date: Thu, 02 Dec 2004 22:16:24 +1100
-Message-ID: <1101986184.14597.75.camel@gaston>
-References: <Pine.LNX.4.44.0411221457240.2970-100000@localhost.localdomain>
-	 <Pine.LNX.4.58.0411221343410.22895@schroedinger.engr.sgi.com>
-	 <Pine.LNX.4.58.0411221419440.20993@ppc970.osdl.org>
-	 <Pine.LNX.4.58.0411221424580.22895@schroedinger.engr.sgi.com>
-	 <Pine.LNX.4.58.0411221429050.20993@ppc970.osdl.org>
-	 <Pine.LNX.4.58.0412011539170.5721@schroedinger.engr.sgi.com>
-	 <Pine.LNX.4.58.0412011608500.22796@ppc970.osdl.org>
-	 <41AEB44D.2040805@pobox.com> <20041201223441.3820fbc0.akpm@osdl.org>
-	 <41AEBD95.7030804@pobox.com> <1101971149.5593.64.camel@gaston>
-	 <41AEC021.8040000@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: Use ATAPI PIO mode for specific request buffer
+ sizes
+Date: Thu, 02 Dec 2004 06:21:08 -0500
+Message-ID: <41AEFAA4.80907@pobox.com>
+References: <00ce01c4d6b8$d222d080$bc604109@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:4268 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S261581AbULBLRb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Dec 2004 06:17:31 -0500
-In-Reply-To: <41AEC021.8040000@pobox.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:25035 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261584AbULBLVX
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Dec 2004 06:21:23 -0500
+In-Reply-To: <00ce01c4d6b8$d222d080$bc604109@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
+To: Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
-On Thu, 2004-12-02 at 02:11 -0500, Jeff Garzik wrote:
-> Benjamin Herrenschmidt wrote:
-> > They may not end up in order if they are stores (the stores to the
-> > taskfile may be out of order vs; the loads/stores to/from the data
-> > register) unless you have a spinlock protecting both or a full sync (on
-> > ppc), but then, I don't know the ordering things on x86_64. This could
-> > certainly be a problem on ppc & ppc64 too.
+Albert Lee wrote:
+> Hi, Jeff:
 > 
+>   After some testing, it seems that some PATA host adapter (ex. pdc20275) cannot 
+> work reliably with specific request buffer sizes under ATAPI DMA mode.
 > 
-> Is synchronization beyond in[bwl] needed, do you think?
+> Detailed test result:
+> 4096, 2048, 1024, 512, 256: OK
+> 384, 257, 255, 128, 96, 64, 32:  failed (irq lost)
+> 
+>   It seems multiple of 256 bytes are the safe ATAPI DMA buffer sizes to use.
+> 
+> Attached please find the patch against libata-dev-2.6 for your review.
+> Two changes:
+> 1. Use ATAPI PIO mode for ATAPI REQUEST_SENSE
+> 2. Use ATAPI PIO mode for specific SCSI commands issued to ATAPI device that
+>     buffer_size % 256 != 0.
+> 
+>   Since for most commands, buffer_size % 256 is 0,  this patch
+> won't introduce big impact to the performance of libata (hopefully).
+>   
+>   Tested OK on on my machine with pdc20275 and ASUS CD-RW drive.
 
-Yes, when potentially hop'ing between CPUs, definitely.
+hmmmmmmm.
 
-> This specific problem is only on Intel ICHx AFAICS, which is PIO not 
-> MMIO and x86-only.  I presumed insw() by its very nature already has 
-> synchronization, but perhaps not...
+Your change #1 makes perfect sense, and I agree it is the safer (and 
+more simple) route.
 
-Hrm... on "pure" x86, I would expect so at the HW level, not sure about
-x86_64... but there would be definitely an issue on ppc with your
-scheme. You need at least a full barrier before you trigger the
-workqueue. That may not be the problem you are facing now, but it would
-become one.
+I must ponder change #2 some more (after some sleep :)).  In particular, 
+I am concerned that making change #2 across all controllers will hurt 
+performance on the commands whose data length is not purely sector-sized 
+chunks.
 
-Ben.
+Would you mind splitting up change #1 and #2 into separate patches?
+
+	Jeff
 
 
