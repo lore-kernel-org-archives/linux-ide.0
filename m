@@ -1,231 +1,223 @@
-From: Willy Gardiol <gardiol@libero.it>
+From: Bart Theunissen <Bart.Theunissen@pandora.be>
 Subject: Re: Bug in IDE controllers when connected to PCI?
-Date: Tue, 31 Dec 2002 09:31:15 +0100
+Date: Thu, 13 Mar 2003 11:23:01 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200212310931.20646.gardiol@libero.it>
-References: <200303121221.11335.gardiol@libero.it> <200303121313.h2CDDmu29857@Port.imtp.ilyichevsk.odessa.ua>
-Reply-To: gardiol@libero.it
+Message-ID: <3E705C05.7060603@pandora.be>
+References: <200303121221.11335.gardiol@libero.it> <3E6F25EB.7000904@pandora.be>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_UXVE+Kzdi+OlNcM"
+Content-Type: text/plain; charset=ISO-8859-15;
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200303121313.h2CDDmu29857@Port.imtp.ilyichevsk.odessa.ua>
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by eos.telenet-ops.be (Postfix) with SMTP id 5FB301FF4D
+	for <linux-ide@vger.kernel.org>; Thu, 13 Mar 2003 11:23:06 +0100 (CET)
+Received: from jupiter.universe (C38288DC.kabel.telenet.be [195.130.136.220])
+	by eos.telenet-ops.be (Postfix) with SMTP id B57031FF39
+	for <linux-ide@vger.kernel.org>; Thu, 13 Mar 2003 11:23:04 +0100 (CET)
+In-Reply-To: <3E6F25EB.7000904@pandora.be>
 List-Id: linux-ide@vger.kernel.org
-To: vda@port.imtp.ilyichevsk.odessa.ua
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Bart Theunissen <Bart.Theunissen@pandora.be>
+Cc: gardiol@libero.it, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Harrison_Richard@emc.com, berthiaume_wayne@emc.com
 
+Hi,
 
---Boundary-00=_UXVE+Kzdi+OlNcM
-Content-Type: Text/Plain;
-  charset="koi8-r"
-Content-Transfer-Encoding: quoted-printable
-Content-Description: clearsigned data
-Content-Disposition: inline
+unfortunately, linux-2.4.17 does not support promise-20269 ;-(
 
-=2D----BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Greetings,
 
+Bart
 
-> Although it will take some time, please write down
-> oops (or hook up a serial console and catch it on second box),
-> decode it with ksymoops and send to lkml and to IDE folks, most
-> notably Alan. This will give them much more info.
-> --
-> vda
+Bart Theunissen wrote:
 
-I did it, and now have the oops decoded.
-To who must i send it, besides this list and Alan?
+> Hi,
+>
+> I am experiencing the same problem. The controller is a promise-20269=
+=20
+> and four disks are attached to it (dma is turned on for all drives)
+> I get the same error messages on the console (except for the scsi=20
+> message). The message 'seeking beyond end of device' is also logged t=
+o=20
+> console. Additionally, file corruption occurs in files that are=20
+> changed very often (logfiles, database files). It seems that the=20
+> erroneous data in the logfiles comes from other files on the same=20
+> partition (/var). Sometimes it takes up to 12 hours before corruption=
+=20
+> occurs. The program I am using to test this is a java program that=20
+> does write/read/modify and uses md5 to see if a file was changed=20
+> (corrupted) without accessing the file directly. Sometimes, the=20
+> complete systems crashes (it cannot execute a binary or find a=20
+> library). I encountered this on kernel 2.4.20.
+>
+> I am testing 2.4.17 to see if it has the same problem (gardiol said=20
+> this one should be fine).
+>
+> What can be the cause of this problem ? If more information is needed=
+,=20
+> or additional tests are required, let me know.
+>
+> Greets,
+>
+> Bart
+>
+> Willy Gardiol wrote:
+>
+>> -----BEGIN PGP SIGNED MESSAGE-----
+>> Hash: SHA1
+>>
+>>
+>> Hi to all,
+>> i think i run into a bug in current stable kernel's regarding IDE=20
+>> controllers and PCI.
+>> Sorry for the long post, but i need some help from you to investigat=
+e=20
+>> this deeper.
+>>
+>> I own a CDRW Philips 1610A, here is hdparm -i and -I output:
+>>
+>> (hdparm -i)
+>> /dev/hdf:
+>> Model=3DPHILIPS CDRW1610A, FwRev=3D0.010000, SerialNo=3D5VO2149DL136=
+92
+>> Config=3D{ Fixed Removeable DTR<=3D5Mbs DTR>10Mbs nonMagnetic }
+>> RawCHS=3D0/0/0, TrkSize=3D0, SectSize=3D0, ECCbytes=3D0
+>> BuffType=3DDualPortCache, BuffSize=3D128kB, MaxMultSect=3D0
+>> (maybe): CurCHS=3D0/0/0, CurSects=3D0, LBA=3Dyes, LBAsects=3D0
+>> IORDY=3Dyes, tPIO=3D{min:120,w/IORDY:120}, tDMA=3D{min:120,rec:120}
+>> PIO modes: pio0 pio1 pio2 pio3 pio4
+>> DMA modes: sdma0 sdma1 sdma2 mdma0 mdma1 mdma2 udma0 udma1 udma2
+>> AdvancedPM=3Dno
+>>
+>> (hdparm -I)
+>> /dev/hdf:
+>> ATAPI CD-ROM, with removable media
+>>        Model Number:           PHILIPS CDRW1610A
+>>        Serial Number:          5VO2149DL13692
+>>        Firmware Revision:      0.010000
+>> Standards:
+>> Configuration:
+>>        DRQ response: 50us.
+>>        Packet size: 12 bytes
+>> Capabilities:
+>>        LBA, IORDY(cannot be disabled)
+>>        Buffer size: 128.0kB
+>>        DMA: sdma0 sdma1 sdma2 mdma0 mdma1 *mdma2 udma0 udma1 udma2
+>>             Cycle time: min=3D120ns recommended=3D120ns
+>>        PIO: pio0 pio1 pio2 pio3 pio4
+>>             Cycle time: no flow control=3D120ns  IORDY flow control=3D=
+120ns
+>>
+>> It works and burns correctly with DMA enabled( hdparm -d1) when=20
+>> connected to the on-board IDE controller, following is /rpco/pci of =
+it:
+>>  Bus  0, device   4, function  1:
+>>    IDE interface: VIA Technologies, Inc. VT82C586B PIPC Bus Master=20
+>> IDE (rev 6).
+>>      Master Capable.  Latency=3D32.
+>>      I/O at 0xd800 [0xd80f].
+>>
+>> I also have two different PCI IDE ATA100/133 controllers:
+>> a Promise Ultra100 TX2 (chip PDC20268)
+>> a Sil  0680 based RAID ATA133 board
+>> Here is /proc/pci for the 0680 (the other one is not conented right =
+now)
+>>  Bus  0, device  11, function  0:
+>>    RAID bus controller: CMD Technology Inc PCI0680 (rev 2).
+>>      IRQ 10.
+>>      Master Capable.  Latency=3D32.
+>>      I/O at 0x9800 [0x9807].
+>>      I/O at 0x9400 [0x9403].
+>>      I/O at 0x9000 [0x9007].
+>>      I/O at 0x8800 [0x8803].
+>>      I/O at 0x8400 [0x840f].
+>>      Non-prefetchable 32 bit memory at 0xd4800000 [0xd48000ff].
+>>
+>> When connected to any of these two controllers (as hde, hdf or hdg,=20
+>> not tryed hdh but dont think it changes something) if i enable DMA=20
+>> (hdparm -d1) the kernel hangs when i try to burn: no logs are writte=
+n=20
+>> (!) but i managed to get this output (sending all logs to /dev/tty12=
+):
+>>
+>> IDE_DMAPROC: chipset supported IDE_DMA_TIMEOUT only: 14
+>> hdf: status timeout: status 0xd0 { Busy }
+>> hdf: drive not ready for command
+>> vmunix: scsi: aborting command due to timeout: pid 934, scsi0,=20
+>> channel 0, id 0, lun 0 2x2a 00 00 00 00 00 00 1f 00
+>> IDE_DMAPROC: chipset supported IDE_DMA_TIMEOUT only: 14
+>> hdf: status timeout: status 0xd0 { Busy }
+>> hdf: drive not ready for command
+>> hdf: ATAPI reset complete
+>> unable to handle kernel null pointer dereference at virtual address=20
+>> 00018
+>> (follow a register dump, omitted because i didnt copied it)
+>> kernel panic: Aieee, killing interrupt handler!
+>> in interrupt handler - NOT SYNCING
+>>
+>> I had to copy this by hand so maybe there are some typo errors.
+>>
+>> I also own a DVD reader, also connected to this PCI controllers whic=
+h=20
+>> uses UDMA5 (hdparm -d1 -X69) and has different troubles:
+>> - - with the Promise PCD20268 it causes a kernel panic when i try to=
+=20
+>> read a dirty CD (which, on the other hand the cdburner correctly rea=
+ds)
+>> - - with the 0680 it reads the same CD without giving ANY read error=
+s=20
+>> and without hanging the kernel! (but gives many reading errors with=20
+>> the burner...)
+>>
+>> Off course none of this problems had ever been noticed using the=20
+>> motherboard-integrated IDE controllers....
+>>
+>> Please note, this troubles appeared first in kernel 2.4.18, and are=20
+>> reproducing up to 2.4.20 (i have not tryed 2.4.21-preX nor 2.5.x).=20
+>> There where no troubles with any other 2.4.x i tryed (2.4.7, 2.4.14,=
+=20
+>> 2.4.17 at least)
+>>
+>> What do you think of this? Where could be the problem? what could i=20
+>> do to get more info and solve this problem?
+>>
+>> Thanks to all!
+>>
+>> - --
+>> ! Willy Gardiol - gardiol@libero.it
+>> goemon.polito.it/~gardiol
+>> Use linux for your freedom.
+>>
+>>    Non ho parole, fratelli.    Quaranta paesi bambini    hanno=20
+>> attaccato un asilo        e la chiamano guerra.
+>>    Gli eserciti pi=F9 potenti del mondo    hanno attaccato il pi=F9=20
+>> straccione.
+>>
+>>     Jack Folla ( 8/10/2001 )  =20
+>>
+>> -----BEGIN PGP SIGNATURE-----
+>> Version: GnuPG v1.2.1 (GNU/Linux)
+>>
+>> iD8DBQE+bxgnQ9qolN/zUk4RAlF4AJ431AQ7jTaaxJPugtEQTtimaqWZ7QCgryeJ
+>> TpRdVaO97yfsr08v8D6lwB0=3D
+>> =3DqUwm
+>> -----END PGP SIGNATURE-----
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe=20
+>> linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+>>
+>> =20
+>>
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe=20
+> linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
 
-Attached, there are two oops decoded, these oops occours when i try to enab=
-le=20
-DMA and burn with my burner only when connected to a PCI IDE controller
-(others also reports DMA data corruption on similar configuration)
-
-
-
-=2D --=20
-
-!=20
- Willy Gardiol - gardiol@libero.it
- goemon.polito.it/~gardiol
- Use linux for your freedom.
-
-   "Tutti hanno dei pregiudizi, solo=20
-    che i nostri sono giusti."
-
-      Stefano Bagnasco  (2002)
-
-=2D----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQE+EVXYQ9qolN/zUk4RAotlAJ9lBIWXVw8TtveX+IqLS0YGG7DD3wCghIyP
-Tha6BbnxKZMj1Opjj46oRzo=3D
-=3DOR+7
-=2D----END PGP SIGNATURE-----
-
---Boundary-00=_UXVE+Kzdi+OlNcM
-Content-Type: text/x-log;
-  charset="koi8-r";
-  name="ide-ops1.log"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="ide-ops1.log"
-
-ksymoops 2.4.5 on i686 2.4.20.  Options used
-     -V (default)
-     -k /proc/ksyms (default)
-     -l /proc/modules (default)
-     -o /lib/modules/2.4.20/ (default)
-     -m /usr/src/linux/System.map (default)
-
-Warning: You did not tell me where to find symbol information.  I will
-assume that the log matches the kernel and modules that are running
-right now and I'll use the default options above for symbol resolution.
-If the current kernel and/or modules do not match the log, you can get
-more accurate output by telling me the kernel version and where to find
-map, modules, ksyms etc.  ksymoops -h explains the options.
-
-cpu: 0, clocks: 2018139, slice: 1009069
-Unable to handle kernel NULL pointer dereference at virtual address 00000018
-c02093eb
-*pde = 00000000
-Oops: 0000
-CPU:    0
-EIP:    0010:[<c02093eb>]    Tainted: PF
-Using defaults from ksymoops -t elf32-i386 -a i386
-EFLAGS: 00210282
-eax: c15d6dc0   ebx: c0348428   ecx: dfaab240   edx: dfaab240
-esi: 00000000   edi: c0348428   ebp: 00000000   esp: d9415e40
-ds: 0018   es: 0018   ss: 0018
-Process gkrellm (pid: 614, stackpage=d9415000)
-Stack: c01e783c 000003e8 c15d0d80 c0108aae c15d6dc0 00000000 00000040 c0348428 
-       c03482a8 c01e7c2a c0348428 00000000 00000000 00000088 000001f4 00000000 
-       c03482a8 dfaab240 00000000 00000018 c0348428 c15f3280 c03482a8 dfaab240 
-Call Trace:    [<c01e783c>] [<c0108aae>] [<c01e7c2a>] [<c01e7e25>] [<c01e810b>]
-  [<c01e8020>] [<c01236fe>] [<c011fb02>] [<c011fa16>] [<c011f854>] [<c0108aae>]
-  [<c010b018>] [<c0150a11>] [<c0139d5a>] [<c0139dee>] [<c0107373>]
-Code: 8b 56 18 89 70 04 8b 46 1c 8b 7e 0c c7 46 10 00 00 00 00 89 
-
-
->>EIP; c02093eb <idescsi_issue_pc+1b/1b0>   <=====
-
->>eax; c15d6dc0 <_end+128484c/204c0a8c>
->>ebx; c0348428 <ide_hwifs+808/20a8>
->>ecx; dfaab240 <_end+1f758ccc/204c0a8c>
->>edx; dfaab240 <_end+1f758ccc/204c0a8c>
->>edi; c0348428 <ide_hwifs+808/20a8>
->>esp; d9415e40 <_end+190c38cc/204c0a8c>
-
-Trace; c01e783c <ide_wait_stat+bc/130>
-Trace; c0108aae <do_IRQ+9e/a0>
-Trace; c01e7c2a <start_request+1ba/260>
-Trace; c01e7e25 <ide_do_request+c5/1c0>
-Trace; c01e810b <ide_timer_expiry+eb/1c0>
-Trace; c01e8020 <ide_timer_expiry+0/1c0>
-Trace; c01236fe <run_timer_list+ee/170>
-Trace; c011fb02 <bh_action+22/40>
-Trace; c011fa16 <tasklet_hi_action+46/70>
-Trace; c011f854 <do_softirq+94/a0>
-Trace; c0108aae <do_IRQ+9e/a0>
-Trace; c010b018 <call_do_IRQ+5/d>
-Trace; c0150a11 <dnotify_flush+21/a0>
-Trace; c0139d5a <filp_close+3a/80>
-Trace; c0139dee <sys_close+4e/60>
-Trace; c0107373 <system_call+33/38>
-
-Code;  c02093eb <idescsi_issue_pc+1b/1b0>
-00000000 <_EIP>:
-Code;  c02093eb <idescsi_issue_pc+1b/1b0>   <=====
-   0:   8b 56 18                  mov    0x18(%esi),%edx   <=====
-Code;  c02093ee <idescsi_issue_pc+1e/1b0>
-   3:   89 70 04                  mov    %esi,0x4(%eax)
-Code;  c02093f1 <idescsi_issue_pc+21/1b0>
-   6:   8b 46 1c                  mov    0x1c(%esi),%eax
-Code;  c02093f4 <idescsi_issue_pc+24/1b0>
-   9:   8b 7e 0c                  mov    0xc(%esi),%edi
-Code;  c02093f7 <idescsi_issue_pc+27/1b0>
-   c:   c7 46 10 00 00 00 00      movl   $0x0,0x10(%esi)
-Code;  c02093fe <idescsi_issue_pc+2e/1b0>
-  13:   89 00                     mov    %eax,(%eax)
-
- <0>Kernel panic: Aiee, killing interrupt handler!
-
-1 warning issued.  Results may not be reliable.
-
---Boundary-00=_UXVE+Kzdi+OlNcM
-Content-Type: text/x-log;
-  charset="koi8-r";
-  name="ide-ops2.log"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="ide-ops2.log"
-
-cpu: 0, clocks: 2018136, slice: 1009068
-cpu: 0, clocks: 2017929, slice: 1008964
-Unable to handle kernel NULL pointer dereference at virtual address 00000018
-c02093eb
-*pde = 00000000
-Oops: 0000
-CPU:    0
-EIP:    0010:[<c02093eb>]    Tainted: PF
-Using defaults from ksymoops -t elf32-i386 -a i386
-EFLAGS: 00013286
-eax: c15d6dc0   ebx: c0348428   ecx: dc756f40   edx: dc756f40
-esi: 00000000   edi: c0348428   ebp: 00000000   esp: c0301e90
-ds: 0018   es: 0018   ss: 0018
-Process swapper (pid: 0, stackpage=c0301000)
-Stack: c01e783c 000003e8 da246b40 c0108aae c15d6dc0 00000000 00000040 c0348428 
-       c03482a8 c01e7c2a c0348428 00000000 00000000 00000088 000001f4 00000000 
-       c03482a8 dc756f40 00000000 00000018 c0348428 c15f3280 c03482a8 dc756f40 
-Call Trace:    [<c01e783c>] [<c0108aae>] [<c01e7c2a>] [<c01e7e25>] [<c01e810b>]
-  [<c01e8020>] [<c01236fe>] [<c011fb02>] [<c011fa16>] [<c011f854>] [<c0108aae>]
-  [<c0105360>] [<c010b018>] [<c0105360>] [<c0105383>] [<c01053f2>] [<c0105000>]
-Code: 8b 56 18 89 70 04 8b 46 1c 8b 7e 0c c7 46 10 00 00 00 00 89 
-
-
->>EIP; c02093eb <idescsi_issue_pc+1b/1b0>   <=====
-
->>eax; c15d6dc0 <_end+128484c/204c0a8c>
->>ebx; c0348428 <ide_hwifs+808/20a8>
->>ecx; dc756f40 <_end+1c4049cc/204c0a8c>
->>edx; dc756f40 <_end+1c4049cc/204c0a8c>
->>edi; c0348428 <ide_hwifs+808/20a8>
->>esp; c0301e90 <init_task_union+1e90/2000>
-
-Trace; c01e783c <ide_wait_stat+bc/130>
-Trace; c0108aae <do_IRQ+9e/a0>
-Trace; c01e7c2a <start_request+1ba/260>
-Trace; c01e7e25 <ide_do_request+c5/1c0>
-Trace; c01e810b <ide_timer_expiry+eb/1c0>
-Trace; c01e8020 <ide_timer_expiry+0/1c0>
-Trace; c01236fe <run_timer_list+ee/170>
-Trace; c011fb02 <bh_action+22/40>
-Trace; c011fa16 <tasklet_hi_action+46/70>
-Trace; c011f854 <do_softirq+94/a0>
-Trace; c0108aae <do_IRQ+9e/a0>
-Trace; c0105360 <default_idle+0/30>
-Trace; c010b018 <call_do_IRQ+5/d>
-Trace; c0105360 <default_idle+0/30>
-Trace; c0105383 <default_idle+23/30>
-Trace; c01053f2 <cpu_idle+42/60>
-Trace; c0105000 <_stext+0/0>
-
-Code;  c02093eb <idescsi_issue_pc+1b/1b0>
-00000000 <_EIP>:
-Code;  c02093eb <idescsi_issue_pc+1b/1b0>   <=====
-   0:   8b 56 18                  mov    0x18(%esi),%edx   <=====
-Code;  c02093ee <idescsi_issue_pc+1e/1b0>
-   3:   89 70 04                  mov    %esi,0x4(%eax)
-Code;  c02093f1 <idescsi_issue_pc+21/1b0>
-   6:   8b 46 1c                  mov    0x1c(%esi),%eax
-Code;  c02093f4 <idescsi_issue_pc+24/1b0>
-   9:   8b 7e 0c                  mov    0xc(%esi),%edi
-Code;  c02093f7 <idescsi_issue_pc+27/1b0>
-   c:   c7 46 10 00 00 00 00      movl   $0x0,0x10(%esi)
-Code;  c02093fe <idescsi_issue_pc+2e/1b0>
-  13:   89 00                     mov    %eax,(%eax)
-
- <0>Kernel panic: Aiee, killing interrupt handler!
-
-1 warning issued.  Results may not be reliable.
-
---Boundary-00=_UXVE+Kzdi+OlNcM--
 
