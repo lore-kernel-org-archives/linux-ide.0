@@ -1,26 +1,31 @@
 From: "Winstel, Drew" <DWinstel@Miltope.com>
-Subject: RE: PDC20269: Limit on number of controllers?
-Date: Tue, 22 Feb 2005 14:29:17 -0600
-Message-ID: <66F9227F7417874C8DB3CEB057727417044F99@MILEX0.Miltope.local>
+Subject: resend: attachment from previous message
+Date: Tue, 22 Feb 2005 15:27:17 -0600
+Message-ID: <66F9227F7417874C8DB3CEB057727417044F9A@MILEX0.Miltope.local>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C5191D.2E8CDB3A"
-Received: from firewall.miltope.com ([208.12.184.221]:34255 "EHLO
-	mail.Miltope.com") by vger.kernel.org with ESMTP id S261233AbVBVU3U
+	boundary="----_=_NextPart_001_01C51925.48EE7A80"
+Received: from firewall.miltope.com ([208.12.184.221]:26613 "EHLO
+	mail.Miltope.com") by vger.kernel.org with ESMTP id S261254AbVBVV1S
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 Feb 2005 15:29:20 -0500
+	Tue, 22 Feb 2005 16:27:18 -0500
 Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>
+To: "Linux-Ide (E-mail)" <linux-ide@vger.kernel.org>
 
 This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C5191D.2E8CDB3A
+------_=_NextPart_001_01C51925.48EE7A80
 Content-Type: text/plain;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+
+My apologies go out to anyone whose email server=20
+rejected my previous email due to my attachment not=20
+having an extension.
+
+Here's the text of the body again for reference:
 
 Albert,
 
@@ -45,13 +50,13 @@ Thanks again,
 
 Drew
 
-------_=_NextPart_001_01C5191D.2E8CDB3A
-Content-Type: application/octet-stream;
-	name="dmesg"
+------_=_NextPart_001_01C51925.48EE7A80
+Content-Type: text/plain;
+	name="dmesgoutput.txt"
 Content-Transfer-Encoding: base64
-Content-Description: dmesg
+Content-Description: dmesgoutput.txt
 Content-Disposition: attachment;
-	filename="dmesg"
+	filename="dmesgoutput.txt"
 
 TGludXggdmVyc2lvbiAyLjYuMTAgKHJvb3RAdmV0czYubG9jYWxkb21haW4pIChnY2MgdmVyc2lv
 biAzLjIuMyAyMDAzMDUwMiAoUmVkIEhhdCBMaW51eCAzLjIuMy0yMCkpICMyIFR1ZSBGZWIgMjIg
@@ -624,4 +629,4 @@ YXJ0aW5nLiAgQ29tbWl0IGludGVydmFsIDUgc2Vjb25kcwpFWFQzIEZTIG9uIGhkYTUsIGludGVy
 bmFsIGpvdXJuYWwKRVhUMy1mczogbW91bnRlZCBmaWxlc3lzdGVtIHdpdGggb3JkZXJlZCBkYXRh
 IG1vZGUuCg==
 
-------_=_NextPart_001_01C5191D.2E8CDB3A--
+------_=_NextPart_001_01C51925.48EE7A80--
