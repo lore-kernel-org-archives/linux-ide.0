@@ -1,44 +1,52 @@
-From: Jamie Lokier <jamie@shareable.org>
-Subject: Re: [PATCH] speed up SATA
-Date: Sat, 3 Apr 2004 14:49:14 +0100
+From: Uwe Koziolek <uwe.koziolek@gmx.net>
+Subject: Serial ATA SIS 964
+Date: Sun, 04 Apr 2004 14:24:05 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040403134914.GC4706@mail.shareable.org>
-References: <406611CA.3050804@pobox.com> <406616EE.80301@pobox.com> <4066191E.4040702@yahoo.com.au> <40662108.40705@pobox.com> <20040328135124.GA32597@mail.shareable.org> <40670A36.3000005@pobox.com> <20040328173623.GA1087@mail.shareable.org> <20040402101108.GA752170@sgi.com> <20040402161149.GA32483@mail.shareable.org> <20040403104826.GA737325@sgi.com>
+Message-ID: <1081081444.2384.77.camel@uk2.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="=-on9qFy37JL+rjqhoAka7"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.shareable.org ([81.29.64.88]:45718 "EHLO
-	mail.shareable.org") by vger.kernel.org with ESMTP id S261748AbUDCNtf
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Apr 2004 08:49:35 -0500
-Content-Disposition: inline
-In-Reply-To: <20040403104826.GA737325@sgi.com>
+Received: from pop.gmx.de ([213.165.64.20]:27334 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S262345AbUDDMYF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Apr 2004 08:24:05 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Daniela Engert <dani@ngrt.de>, linux-ide@vger.kernel.org
 
-Jeremy Higdon wrote:
-> > Are you refuting the following assertion by Eric D. Mudama's, based on
-> > your measurements?  In other words, are ATA's 32 TCQ slots enough to
-> > eliminate the performance advantage of write cacheing?
-> 
-> I must apologize.  I had thought the context was SCSI, but now I
-> see that it is linux-ide.  So please disregard comments about command
-> queueing.
 
-We're talking about _with_ TCQ, on serial ATA (SATA) where TCQ is common,
-and deliberately disabling the write cache so that TCQ completions
-indicate when the data is written.
+--=-on9qFy37JL+rjqhoAka7
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-If your measurements indicate that 32 queue slots is adequate with
-SCSI drives to eliminate the overhead of disabling write cacheing,
-then that's valuable information.  The drives are basically the same
-after all.
+Hello Jeff,
 
-> If you have write cache disabled and no TCQ (latter is common,
-> former may or may not be), you want to write as big a chunk as you can.
+it exists a variant of the serial ATA SIS 180. This variant has the same
+functionality like the SIS 180 but a different PCI ID 0x0181.
+I have no motherboard with that behavior. But I think it is good idea to
+include this PCI ID too into the driver.
+Thanks to Daniela Engert for this information.
 
-That's a handy insight too.  Personally I hadn't thought about large
-requests reducing the rotation latency with write cache disabled.
+regards
 
--- Jamie
+Uwe
+
+
+
+--=-on9qFy37JL+rjqhoAka7
+Content-Disposition: attachment; filename=sata_sis.c.diff
+Content-Type: text/x-patch; name=sata_sis.c.diff; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
+
+--- sata_sis.c.old	2004-03-21 20:35:03.000000000 +0100
++++ sata_sis.c	2004-04-04 12:20:51.000000000 +0200
+@@ -46,6 +46,7 @@
+ 
+ static struct pci_device_id sis_pci_tbl[] = {
+ 	{ PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_180, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
++	{ PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_181, PCI_ANA_ID, PCI_ANI_ID, 0, 0, sis_180 },
+ 	{ }	/* terminate list */
+ };
+ 
+
+--=-on9qFy37JL+rjqhoAka7--
+
