@@ -1,44 +1,54 @@
-From: Andy Warner <andyw@pobox.com>
-Subject: Re: libata - error register patch.
-Date: Mon, 4 Oct 2004 16:44:30 -0500
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: libata badness
+Date: Tue, 5 Oct 2004 08:47:15 +1000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20041004164430.A9775@florence.linkmargin.com>
-References: <20040929175011.L15041@florence.linkmargin.com> <4161BFDD.1070509@pobox.com>
+Message-ID: <16737.54003.419130.575839@cse.unsw.edu.au>
+References: <Pine.LNX.4.60-041.0410040656001.2350@unix48.andrew.cmu.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:37598 "EHLO
-	ms-smtp-04.rdc-kc.rr.com") by vger.kernel.org with ESMTP
-	id S268677AbUJDVqU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Oct 2004 17:46:20 -0400
-Content-Disposition: inline
-In-Reply-To: <4161BFDD.1070509@pobox.com>; from jgarzik@pobox.com on Mon, Oct 04, 2004 at 05:25:49PM -0400
+Received: from note.orchestra.cse.unsw.EDU.AU ([129.94.242.24]:49793 "EHLO
+	note.orchestra.cse.unsw.EDU.AU") by vger.kernel.org with ESMTP
+	id S268591AbUJDWr1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Oct 2004 18:47:27 -0400
+In-Reply-To: message from William Knop on Monday October 4
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andy Warner <andyw@pobox.com>, linux-ide@vger.kernel.org
+To: William Knop <wknop@andrew.cmu.edu>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> [...]
-> I'm still thinking about this one.
-> 
-> I need to check and see the behavior of this register, as we have a 
-> separate ata_chk_err() as well.
+On Monday October 4, wknop@andrew.cmu.edu wrote:
+> CPU:    0
+> EIP:    0060:[<229e4d8c>]    Not tainted
+> EFLAGS: 00010206   (2.6.8-1.521)
+> EIP is at handle_stripe+0x29a/0x1407 [raid5]
+> eax: 00000001   ebx: 00000000   ecx: 00915cb8   edx: 21f7e1c0
+> esi: 1ccbd118   edi: 21f7e1c0   ebp: 01000000   esp: 1d300f28
+> ds: 007b   es: 007b   ss: 0068
+> Process md0_raid5 (pid: 2626, threadinfo=1d300000 task=1d317970)
+> Stack: 2283eb57 20db8000 21f7e1c0 21c30288 1ccbd204 20db8000 00000001 
+> 1ccbd158
+>         00000002 00000000 00000000 00000001 00000000 00000000 00000001 
+> 00000000
+>         00000001 00000001 00000000 00000003 1ccbd0ac 21f7e1c0 1ccbd0ac 
+> 21f76c00
+> Call Trace:
+>   [<2283eb57>] ata_scsi_queuecmd+0xbe/0xc7 [libata]
+>   [<229e6b1c>] raid5d+0x1ce/0x2f8 [raid5]
+>   [<0228f5d2>] md_thread+0x227/0x256
+>   [<0211be05>] autoremove_wake_function+0x0/0x2d
+>   [<0211be05>] autoremove_wake_function+0x0/0x2d
+>   [<0228f3ab>] md_thread+0x0/0x256
+>   [<021041d9>] kernel_thread_helper+0x5/0xb
+> Code: 8b 55 04 83 c1 08 8b 45 00 83 d3 00 39 da 72 0e 0f 87 e0 01
 
-I think the existing behaviour is odd.
+This code starts:
 
-I can see a case for either removing any read of the error
-register in ata_tf_read_xxx() and relying solely on ata_chk_err()
-or going with my patch.
+   0:   8b 55 04                  mov    0x4(%ebp),%edx
+   3:   83 c1 08                  add    $0x8,%ecx
 
-I can's see any case for leaving it as it is - I can find no
-code that uses tf->hob_feature after calling ata_tf_read_xxx().
+and as %ebp is 01000000, this oopses.  
+It looks very much like a single-bit memory error (as has already been
+suggested as a possibility).
 
-Looks to me like a cut and paste error from way back that got
-mashed by LBA48 support.
-
-Reads of the error register are not destructive (at least
-according to the specs.)
--- 
-andyw@pobox.com
-
-Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
+NeilBrown
