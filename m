@@ -1,23 +1,29 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: sata optical drive, i865 and 2.6.10
-Date: Sun, 26 Dec 2004 19:45:47 -0500
-Message-ID: <41CF5B3B.5060008@pobox.com>
-References: <20041227002534.3204436957@irc.ptitlu.org>
+Subject: SATA status report updated, dev guide posted
+Date: Mon, 27 Dec 2004 08:11:47 -0500
+Message-ID: <41D00A13.5060700@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:35208 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261462AbUL0Apz
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:36828 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261886AbUL0NMC
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Dec 2004 19:45:55 -0500
-In-Reply-To: <20041227002534.3204436957@irc.ptitlu.org>
+	Mon, 27 Dec 2004 08:12:02 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: P'tit Lu <ptitlu@ptitlu.org>
-Cc: linux-ide@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <axboe@suse.de>
 
-#define this, at the top of include/linux/libata.h:
+A few minor updates to the Linux SATA status reports posted at
 
-#undef ATA_ENABLE_ATAPI         /* define to enable ATAPI support */
+	http://linux.yyz.us/sata/
+
+Most notable is the new 'sata devel resources' page, 
+http://linux.yyz.us/sata/devel.html which attempts to group key ATA 
+knowledge in a single location.  Comments and additions are requested. 
+Also, public links to old SFF docs are requested.
+
+	Jeff
+
 
