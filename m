@@ -1,78 +1,46 @@
-From: Marc Singer <elf@buici.com>
-Subject: Re: arm-lh7a40x IDE support in 2.6.6
-Date: Fri, 14 May 2004 15:49:32 -0700
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: IDE layer adoptations that *fake* a failing drive?
+Date: 14 May 2004 17:17:24 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040514224932.GA8061@buici.com>
-References: <200405141840.04401.bzolnier@elka.pw.edu.pl> <200405142323.19115.bzolnier@elka.pw.edu.pl> <20040514213332.GA12414@buici.com> <200405150019.46504.bzolnier@elka.pw.edu.pl>
+Message-ID: <1084576644.3084.92.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from florence.buici.com ([206.124.142.26]:40073 "HELO
-	florence.buici.com") by vger.kernel.org with SMTP id S263093AbUENWth
+Received: from email-out2.iomega.com ([147.178.1.83]:27633 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264579AbUENXRt
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 May 2004 18:49:37 -0400
-Content-Disposition: inline
-In-Reply-To: <200405150019.46504.bzolnier@elka.pw.edu.pl>
+	Fri, 14 May 2004 19:17:49 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: rmk@arm.linux.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Leon Woestenberg <leonw@mailcan.com>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, May 15, 2004 at 12:19:46AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > The most helpful thing to do is to a) provide best-practice examples,
-> > and b) to include some documentation.  I'm not talking about anything
-> > extensive, but statements like
-> >
-> >   "All references to linux/ide.h must reside in the ide tree."
-> >
-> > Are pretty darn helpful.
-> 
-> OK, will do (this can take a while).  Can I ask you to review it later?
-> I think your comments will be very valuable.
+> code that sits between the IDE software layer and
+> the storage device, that emulates a failing disk
+> in one way or another.
 
-It would be a pleasure.
+I guess you want intermittent and unreliable failure ... else you could
+swap in an ATAPI drive, since ATAPI protocol by definition looks like a
+dead ATA drive.
 
-> > > > > - you are setting IDE_NO_IRQ in ide_init_hwif_ports() which is used
-> > > > >   in many places in generic IDE code - anybody wanting to understand
-> > > > >   interactions with your code + generic code will have serious
-> > > > >   problems (especially if knows _nothing_ about lpd7a40x)
-> > > >
-> > > > I don't know what you mean.  I grep for that constant and found it
-> > > > nowhere except for ide-io.c and in my code.  It doesn't take much to
-> > > > find the references.
-> > >
-> > > I'm talking about ide_init_hwif_ports() function.
-> >
-> > Most of the ARM arch's use it.  Perhaps all of them need a good once
-> > over.
-> 
-> Since some time I have a patch killing <asm/arch-*/ide.h>. :)
+Like you, I want to eject errors and timeouts, please post back here
+what you find.  Meanwhile, three thoughts:
 
-OK.  That raises an interesting question.  If a) you as the IDE
-maintainer want to make a policy change, and b) you have a concrete
-action to take, then how do you go about it so that the right thing
-(tm) happens?
+1) Read errors
 
-One tack would be to post to the ARM list stating that there is
-such-and-such, a new policy, and this requires a change to the
-way-things-work (tm).  Then effect a patch that breaks the bad stuff
-so that the users of such bad stuff must cope.
+Via ATA pass thru you can force a read error, if your drive supports the
+write/ read long legacy of ATA 2 for that purpose.
 
-For example, the patch could edit each of the arm ide files so that
-they don't compile when IDE is enabled.  This wouldn't clobber the
-files as much as make them useless until the such-and-such policy is
-followed.
+2) No-data timeouts
 
-> > So then we break anyone who is using the selectproc as a pre-select
-> > proc?  I don't understand what you mean here.  There are several
-> > drivers that use this function.  How do you propose that we provide
-> > both types of behavior with one entry point?
-> 
-> You can add last line of SELECT_DRIVE() to all ->selectproc()
-> implementations and add 'else' to SELECT_DRIVE().
+Via 48-bit lba ATA you can force a slow timeout by asking to verify
+xFFFF lba's = 32 MiB = (1 << (16+9)) bytes, at 512 = x200 = (1 << 9)
+bytes/lba, if you drive actually does verify blocks when asked.
 
-Ah.  I see where you're going.  I can do that.  I cannot test it, but
-I can do it.
+3) Write errors, data timeouts, etc.
 
-BTW, thanks for you help and input.
+Tough, without customarily proprietary knowledge of the drive.
 
-Cheers.
+Pat LaVarre
+
+
