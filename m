@@ -1,45 +1,49 @@
-From: Tobias Rittweiler <inkognito.anonym@uni.de>
-Subject: Re[3]: [PATCH] 2.4 IDE core for 2.5
-Date: Tue, 9 Jul 2002 15:31:23 +0200
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: [PATCH] 2.4 IDE core for 2.5
+Date: Tue, 9 Jul 2002 22:07:11 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <ageon2$dhh$2@main.gmane.org>
-References: <20020709102249.GA20870@suse.de> <01742490.20020709144349@uni.de>
- <20020709125412.GB1940@suse.de>
-Reply-To: Tobias Rittweiler <inkognito.anonym@uni.de>
+Message-ID: <20020709200711.GA13401@win.tue.nl>
+References: <20020709102249.GA20870@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20020709125412.GB1940@suse.de>
+Content-Disposition: inline
+In-Reply-To: <20020709102249.GA20870@suse.de>
 List-Id: linux-ide@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>
 Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Hello Jens,
+On Tue, Jul 09, 2002 at 12:22:49PM +0200, Jens Axboe wrote:
 
-Tuesday, July 9, 2002, 2:54:12 PM, you wrote:
+> I've forward ported the 2.4 IDE core to 2.5.25.
 
-JA> Try doing something ala
+Very good!
 
-JA> #ifdef CONFIG_IDE_25
-JA> #include <linux/ide.h>  /* IDE xlate */
-JA> #else
-JA> #include <linux/ide24.h>
-JA> #endif
+There are two kinds of objections.
+The minor one is political - you can imagine.
+The major one is technical. You did not port the 2.4 good PIO
+behaviour to 2.5. Bartlomiej already warned about this, so I
+need only confirm:
 
-JA> instead of including ide.h directly in fs/partitions/msdos.c
+This afternoon I booted 2.5.25 with your patches and two more,
+one to prevent an oops when shutting down, the other to fix
+ethernet cards detection. Started torturing two disks on
+HPT366. After 3 minutes
 
-Just a minute ago I booted and wanted to take your hint, but before
-this I tried `make bzImage' again (no idea why, just for fun) and
-it compiled! This results from the fact that I booted the new
-kernel with the new IDE core including.
+	hde: status error: status=0x50 { DriveReady SeekComplete }
+	hde: no DRQ after issuing WRITE
 
-Yes, it works now. Thanks anyway, I'm sure you'll interpret this
-happening rightly.
+and seven minutes later
 
--- 
-cheers,
-  Tobias
+	hde: task_out_intr: status=0x51 { DriveReady SeekComplete Error }
+	hde: task_out_intr: error=0x04 { DriveStatusError }
 
-http://freebits.org
+Soon lots of processes were hanging in D. Reboot. e2fsck.
+
+Then booted vanilla 2.4.17. Tortured disks in the same way.
+After several hours all is still perfect. I'll leave this
+for a night, but so far I have never seen these errors on 2.4
+and very often in recent 2.5.
+
+Andries
 
