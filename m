@@ -1,52 +1,20 @@
-From: Tobias Klauser <tklauser@nuerscht.ch>
-Subject: [UPDATE PATCH 19/19] drivers/scsi/sata_vsc: Use the DMA_32BIT_MASK constant
-Date: Sun, 20 Mar 2005 14:23:33 +0100
-Message-ID: <20050320132333.GS3491@localhost.localdomain>
-References: <20050220171331.GT14375@helium.tklauser.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from server3.hostpoint.ch ([217.26.52.13]:62223 "EHLO
-	server3.hostpoint.ch") by vger.kernel.org with ESMTP
-	id S262166AbVCTNXk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 20 Mar 2005 08:23:40 -0500
-Content-Disposition: inline
-In-Reply-To: <20050220171331.GT14375@helium.tklauser.home>
+From: info@qsv11.com
+Subject: =?ISO-8859-1?Q?=20=1B$BBp5^JX!JBh0l9?= =?ISO-8859-1?Q?f!K=1B(B?=
+Date: 21 Mar 2005 14:30:35 +0900
+Message-ID: <20050321053035.26791.qmail@mail.qsv11.com>
+Received: from [211.36.37.41] ([211.36.37.41]:58019 "HELO mail.qsv11.com")
+	by vger.kernel.org with SMTP id S261695AbVCUIvC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Mar 2005 03:51:02 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kernel-janitors@lists.osdl.org
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-The previous patch did not compile cleanly on all architectures so
-here's a fixed one.
+当サイトのご利用は全て無料（男女共￥0円）
+やっぱり出逢うならご近所で気軽に話し合えるメール・エ○チフレンドがいいですよ
+ね。当サイトは全国地域別の市町村単位で近くの友達探しができます。
+http://loves.qsv20.com/
+男性、女性共にプライバシー保護重視で、不必要な時の新着メールの一時停止や、特
+定の
+送信者からの受け取り拒否、掲示板書込みをすぐに最新発言に更新する
+※只今の時間より、ご近所異性の写真＆動画(裏)情報を大量公開しております。
 
-Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h when calling
-pci_set_dma_mask() or pci_set_consistent_dma_mask()
-This patch includes dma-mapping.h explicitly because it caused errors
-on some architectures otherwise.
-See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
-
-Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
-
---- linux-2.6.11.orig/drivers/scsi/sata_vsc.c	2005-03-02 12:50:38.000000000 +0100
-+++ linux-2.6.11/drivers/scsi/sata_vsc.c	2005-03-20 13:27:54.000000000 +0100
-@@ -21,6 +21,7 @@
- #include <linux/blkdev.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-+#include <linux/dma-mapping.h>
- #include "scsi.h"
- #include <scsi/scsi_host.h>
- #include <linux/libata.h>
-@@ -285,10 +286,10 @@ static int __devinit vsc_sata_init_one (
- 	/*
- 	 * Use 32 bit DMA mask, because 64 bit address support is poor.
- 	 */
--	rc = pci_set_dma_mask(pdev, 0xFFFFFFFFULL);
-+	rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
- 	if (rc)
- 		goto err_out_regions;
--	rc = pci_set_consistent_dma_mask(pdev, 0xFFFFFFFFULL);
-+	rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
- 	if (rc)
- 		goto err_out_regions;
- 
