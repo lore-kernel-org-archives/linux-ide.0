@@ -1,44 +1,36 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH  2.6.11-rc4+] sata_qstor: new basic driver for Pacific
- Digital QStor
-Date: Thu, 17 Feb 2005 01:14:27 -0500
-Message-ID: <42143643.7030706@pobox.com>
-References: <4214313E.5060900@rtr.ca>
+Subject: Re: Issues with SIS 964 chipset on SATA
+Date: Thu, 17 Feb 2005 03:26:04 -0500
+Message-ID: <4214551C.8030109@pobox.com>
+References: <E0854782-793A-11D9-A80A-000A95D2AC6A@iomega.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:10452 "EHLO
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:52971 "EHLO
 	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262067AbVBQGOp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Feb 2005 01:14:45 -0500
-In-Reply-To: <4214313E.5060900@rtr.ca>
+	id S262182AbVBQI0Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Feb 2005 03:26:24 -0500
+In-Reply-To: <E0854782-793A-11D9-A80A-000A95D2AC6A@iomega.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lsml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Gary Poppitz <poppitzg@iomega.com>
+Cc: linux-ide@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
-Mark Lord wrote:
-> This is a new basic libata SATA driver
-> for the Pacific Digital QStor SATA/RAID card.
+Gary Poppitz wrote:
+> We tracked down a problem with the 964 chipset with a 0x180 ID code that 
+> may save someone on the list some time.
 > 
-> It features ordinary per-drive SATA with single-request DMA
-> for R/W commands, and PIO for everything else.
-> 
-> It currently does not implement any of the hardware RAID support,
-> nor hot-plug, nor the tagged/native command-queuing features.
-> 
-> On the other hand, it is small and simple as a result.
-> 
-> Patch is against 2.6.11-rc4 + minor libata updates from Jeff.
-> 
-> Signed-off-by: Mark Lord <mlord@pobox.com>
+> The chip will only transfer multiples of 4 bytes. Anything else will 
+> cause it to hang.
 
-Thanks, I'll suck this into the pipeline.
 
-For any comments/changes that arise, please send patches incremental to 
-this patch.
+After further research, this is popping up on a number of chips (and 
+worked around in several vendor drivers).
+
+It looks like I will need to do a workaround for all SATA ATAPI devices: 
+  if the transfer is not a multiple of 4 bytes, pad it with an DMA 1-3 
+byte DMA segment.
 
 	Jeff
-
 
 
