@@ -1,53 +1,39 @@
-From: Chuck Ebbert <76306.1226@compuserve.com>
-Subject: Re: [patch ide-dev 6/9] check capacity in
-  ide_task_init_flush()
-Date: Fri, 4 Mar 2005 03:52:57 -0500
-Message-ID: <200503040355_MC3-1-979D-F1DF@compuserve.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide/amd74xx: fix section references
+Date: Fri, 4 Mar 2005 11:12:32 +0100
+Message-ID: <58cb370e05030402122a9290b6@mail.gmail.com>
+References: <20050303194821.55fec933.rddunlap@osdl.org>
+	 <20050304080307.GC1646@ucw.cz>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	 charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from siaag2aa.compuserve.com ([149.174.40.131]:50384 "EHLO
-	siaag2aa.compuserve.com") by vger.kernel.org with ESMTP
-	id S262693AbVCDIzu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Mar 2005 03:55:50 -0500
-Content-Disposition: inline
+Received: from wproxy.gmail.com ([64.233.184.195]:36479 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261342AbVCDKMc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2005 05:12:32 -0500
+Received: by wproxy.gmail.com with SMTP id 68so809453wra
+        for <linux-ide@vger.kernel.org>; Fri, 04 Mar 2005 02:12:32 -0800 (PST)
+In-Reply-To: <20050304080307.GC1646@ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: Vojtech Pavlik <vojtech@suse.cz>
+Cc: "Randy.Dunlap" <rddunlap@osdl.org>, B.Zolnierkiewicz@elka.pw.edu.pl, akpm <akpm@osdl.org>, linux-ide@vger.kernel.org
 
-On Thu, 24 Feb 2005 at 15:44:34, Bartlomiej Zolnierkiewicz wrote:
-
-> --- a/drivers/ide/ide-io.c    2005-02-23 20:58:16 +01:00
-> +++ b/drivers/ide/ide-io.c    2005-02-23 20:58:16 +01:00
-> @@ -61,7 +61,8 @@
+On Fri, 4 Mar 2005 09:03:07 +0100, Vojtech Pavlik <vojtech@suse.cz> wrote:
+> On Thu, Mar 03, 2005 at 07:48:21PM -0800, Randy.Dunlap wrote:
+> >
+> > ide/pci/amd74xx:  data structs point to __init text which should be
+> >   __devinit;
+> > unless (a) these are going away real soon,
+> > or (b) this just can't happen, isn't a real problem,
+> > or (c) other ?
 > 
->       memset(task, 0, sizeof(*task));
+> This is a problem in most of the IDE PCI drivers. It is a problem if IDE
+> hotplug is to be expected, and shouldn't be causing any immediate harm
+> if IDE controllers can't be hotplugged. AMD74xx certainly can't.
 > 
-> -     if (ide_id_has_flush_cache_ext(drive->id)) {
-> +     if (ide_id_has_flush_cache_ext(drive->id) &&
-> +         (drive->capacity64 >= (1UL << 28))) {
-                               ^^
------------------------------->||
+> However, I believe it's correct to fix that.
 
->               tf->command = WIN_FLUSH_CACHE_EXT;
->               tf->flags |= ATA_TFLAG_LBA48;
->       } else
-
-  Shouldn't that be ">" ???
-
-  Either that or this code from ide-disk is wrong:
-
-        /* limit drive capacity to 137GB if LBA48 cannot be used */
-        if (drive->addressing == 0 && drive->capacity64 > 1ULL << 28) {
-                printk(KERN_WARNING "%s: cannot use LBA48 - full capacity "
-                       "%llu sectors (%llu MB)\n",
-                       drive->name, (unsigned long long)drive->capacity64,
-                       sectors_to_MB(drive->capacity64));
-                drive->capacity64 = 1ULL << 28;
-        }
-
-
---
-Chuck
+Some time ago hch made a patch fixing all IDE PCI drivers.
+It was queued to be merged after hotplug support is added
+but may be merged earlier if needed (to kill sparse warnings?).
