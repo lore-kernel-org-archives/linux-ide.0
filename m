@@ -1,36 +1,55 @@
-From: "J. Ryan Earl" <heretic@clanhk.org>
-Subject: Re: sata_via - too slow
-Date: Sat, 07 Aug 2004 01:24:07 -0600
+From: Alan Cox <alan@redhat.com>
+Subject: PATCH: IDE - do spin up for all platforms
+Date: Mon, 9 Aug 2004 10:39:02 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <41148397.400@clanhk.org>
-References: <410E2E9C.8020606@scssoft.com> <410EC673.1090506@clanhk.org> <410EBE89.9000008@scssoft.com>
+Message-ID: <20040809143902.GA16025@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.hardcore-gaming.net ([69.93.101.157]:19117 "EHLO
-	mail.hardcore-gaming.net") by vger.kernel.org with ESMTP
-	id S266289AbUHGGYM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 7 Aug 2004 02:24:12 -0400
-In-Reply-To: <410EBE89.9000008@scssoft.com>
+Received: from mx1.redhat.com ([66.187.233.31]:36298 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S266684AbUHIOj4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Aug 2004 10:39:56 -0400
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Petr Sebor <petr@scssoft.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, akpm@osdl.org
 
-Petr Sebor wrote:
+This was put in for PPC specifically and defined in the 2.4 tree to be
+paranoid about breaking stuff. The actual wait for hwif spin up is however
+perfectly correct for all drives. In the normal PC case the PC BIOS has done
+this but with other embedded boxes and with things like LinuxBIOS it may not
+have done. Thus it should always be done.
 
->> What motherboard is this?  The MSI FAR2 whatever?
->
->
-> It is MSI Master2-FAR.. sorry for not mentioning that.
-
-Really?  Do you have APIC working?  I haven't gotten onboard IDE to work 
-without DMA timeouts when APIC is enabled on the KT800 MB I have, but 
-it's UP so I can live without it.  The current buglist said it's fixed 
-for -some- motherboards.  I would suggest you ask about this on the 
-x86_64.org list, you're more likely to find an answer there.
-
-Sorry for the slow reply, had to beat Doom3 before I could move on with 
-my life.
-
--ryan
+--- drivers/ide/ide-probe.c~	2004-08-09 15:36:13.109053400 +0100
++++ drivers/ide/ide-probe.c	2004-08-09 15:36:13.109053400 +0100
+@@ -635,7 +635,6 @@
+ 	device_register(&hwif->gendev);
+ }
+ 
+-#ifdef CONFIG_PPC
+ static int wait_hwif_ready(ide_hwif_t *hwif)
+ {
+ 	int rc;
+@@ -671,7 +670,6 @@
+ 	
+ 	return rc;
+ }
+-#endif
+ 
+ /*
+  * This routine only knows how to look for drive units 0 and 1
+@@ -717,7 +715,6 @@
+ 
+ 	local_irq_set(flags);
+ 
+-#ifdef CONFIG_PPC
+ 	/* This is needed on some PPCs and a bunch of BIOS-less embedded
+ 	 * platforms. Typical cases are:
+ 	 * 
+@@ -739,7 +736,6 @@
+ 	 */
+ 	if (wait_hwif_ready(hwif))
+ 		printk(KERN_WARNING "%s: Wait for ready failed before probe !\n", hwif->name);
+-#endif /* CONFIG_PPC */
+ 
+ 	/*
+ 	 * Second drive should only exist if first drive was found,
