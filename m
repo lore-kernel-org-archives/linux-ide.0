@@ -1,96 +1,41 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC] IDE/ATA/SATA controller hotplug
-Date: Wed, 11 Aug 2004 15:33:06 -0400
+Subject: Re: sata_sil with seagate st3120026as
+Date: Wed, 11 Aug 2004 15:34:39 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <411A7472.9010606@pobox.com>
-References: <200407272018.i6RKIiYB028210@falcon10.austin.ibm.com>
+Message-ID: <411A74CF.7040502@pobox.com>
+References: <LPEKIDCKCKICKJCIGCBLMEIACBAA.atkinss@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:10417 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268012AbUHKTdV
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:14769 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S268053AbUHKTey
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Aug 2004 15:33:21 -0400
-In-Reply-To: <200407272018.i6RKIiYB028210@falcon10.austin.ibm.com>
+	Wed, 11 Aug 2004 15:34:54 -0400
+In-Reply-To: <LPEKIDCKCKICKJCIGCBLMEIACBAA.atkinss@shaw.ca>
 List-Id: linux-ide@vger.kernel.org
-To: Doug Maxey <dwm@austin.ibm.com>
-Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Stephen Atkins <atkinss@shaw.ca>
+Cc: linux-ide@vger.kernel.org
 
-Doug Maxey wrote:
-> On Tue, 27 Jul 2004 11:31:15 EDT, Jeff Garzik wrote:
->>>  What I would like is input on the general strategy that should be
->>>  taken to modify the controller/adapter and device stack to:
->>>
->>>  1) be first class modules, where all controllers/adapters are
->>>     capable of being loaded and unloaded.  This is directed mostly at
->>>     IDE/Southbridge controller/adapter devices.
->>
->>this is already the case in IDE and libata
+Stephen Atkins wrote:
+> Hello.  I've been poking around in the sata_sil.c file because I saw a message
+> at one time about the Seagate drives and how some of them need to be in the
+> sil_blacklist.  Any way I've been trying to get this driver to work under the
+> 2.6 kernel (it seems find in 2.4.26 but ivtv doesn't like that version).  Any
+> way this is the error I received from the kernel when I was trying to access the
+> drive.
 > 
-> 
-> I would have to differ with you here.  From conversations and fairly
-> (2 or 3 months ago) experience, the IDE core is not capable of being
-> unloaded.
-
-As long as the low-level driver can be unloaded, that's sufficient for 
-hardware- and device-hotplug.
-
-
->>>  2) extend that support to all child devices; disk, optical,
->>>     and tape.
->>
->>this is already the case in IDE and SCSI
-> 
-> 
-> Educational question, what would I be looking for when grokking code
-> to see this is in place?
-
-Just general refcounting / module support code.
+> ata1: DMA timeout 0x58 on port 0xE0851087
+> scsi0: Error on channel 0, id 0, lun 0, CDB: 0x2a 00 0b bd a8 a4 00 04 00 00
+> current sda: sense=70 3
+> ASC= c ASCQ= 2
+> Raw sense data: 0x70 0x00 0x03 0x00 0x00 0x00 0x00 0x06 0x00 0x00 0x00 0x00 0x0c
+> 0x02
+> end_request: I/O error, dev sda, sector 191735972
 
 
->>>  3) be part of mainline.
->>
->>this is already the case
-> 
-> 
-> Yes, the drivers are in the mainline.  Just not sure of how many
-> platforms will have non-pluggable controllers that need to have them
-> hot-plugged. :-)
-
-The PCI API is a hotplug API.  Whether the underlying controller is 
-hotpluggable or not is largely irrelevant to low-level drivers.
-
-
->>>  The items I perceive at the top of the issue list are:
->>>
->>>  - The primary platforms for IDE/ATA devices are x86 based, and
->>>    certainly do not care about having this capability.
->>
->>incorrect
-> 
-> 
-> Ok, please delineate.  Working off the assumption that 95+% of the
-> systems that run Linux are x86 based, and have a single partition for
-> the system. In other words, no virtual processors, where each is
-> totally separate from the other.
-
-That's completely irrelevant.  libata and the IDE core work without 
-change on x86 and non-x86 systems.
-
-
->>>  - Where should this capability go?  Fork a subset of IDE
->>>    controllers, and put them under the arch specific dir?
->>>    Or include all devices?
->>
->>there is nothing arch-specific about this
-> 
-> 
-> Again, going back to my original premise, that is, which platforms do
-> you foresee needing this capability?  I know that all should have
-> eventually.
-
-All platforms should be considered hotplug.
+Most likely you need to update your BIOS, or boot with 'noapic', or boot 
+with 'pci=noacpi', etc.
 
 	Jeff
 
