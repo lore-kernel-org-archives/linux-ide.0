@@ -1,77 +1,176 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata-dev-2.6: verify cmd bug fixes/support
-Date: Tue, 01 Feb 2005 22:33:32 -0500
-Message-ID: <42004A0C.70809@pobox.com>
-References: <42002023.9060606@emc.com>
+From: Tejun Heo <tj@home-tj.org>
+Subject: Re: [PATCH 2.6.11-rc2 29/29] ide: make data_phase explicit in NO_DATA cases
+Date: Wed, 2 Feb 2005 12:12:38 +0900
+Message-ID: <20050202031238.GN1187@htj.dyndns.org>
+References: <20050202024017.GA621@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:903 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262254AbVBBDdx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Feb 2005 22:33:53 -0500
-In-Reply-To: <42002023.9060606@emc.com>
+Content-Type: text/plain; charset=us-ascii
+Received: from [211.58.254.17] ([211.58.254.17]:23947 "EHLO hemosu.com")
+	by vger.kernel.org with ESMTP id S262212AbVBBDMk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2005 22:12:40 -0500
+Content-Disposition: inline
+In-Reply-To: <20050202024017.GA621@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brett Russ <russb@emc.com>
-Cc: linux-ide@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Brett Russ wrote:
-> Below find a patch which gets the read verify command working.  Note 
-> that in order to get this 100% working one also needs to apply Albert 
-> Lee's patch:
-> http://article.gmane.org/gmane.linux.ide/2798
-> to libata* before or after this.  I've stripped out his portion of the 
-> changes because I can't sign off on his work.
+> 29_ide_explicit_TASKFILE_NO_DATA.patch
 > 
-> This work was verified using a SATA bus analyzer and the sg_verify 
-> utility which sends VERIFY_10.  Should libata support VERIFY_12?
-
-Unless there is some major application which needs _12 variants, I would 
-prefer to avoid implementing them.
-
-I want libata-scsi.c to be compatible with the upcoming T10 "SAT" 
-specification, but I also wish to avoid translations which are rarely 
-used (keeps the code small).
+> 	Make data_phase explicit in NO_DATA cases.
 
 
-> ===== drivers/scsi/libata-scsi.c 1.68 vs edited =====
-> --- 1.68/drivers/scsi/libata-scsi.c     2004-12-29 02:35:53 -05:00
-> +++ edited/drivers/scsi/libata-scsi.c   2005-02-01 19:26:55 -05:00
-> @@ -741,13 +741,18 @@
->         }
-> 
->         if (lba48) {
-> +               tf->command = ATA_CMD_VERIFY_EXT;
-> +
->                 tf->hob_nsect = (n_sect >> 8) & 0xff;
-> 
->                 tf->hob_lbah = (sect >> 40) & 0xff;
->                 tf->hob_lbam = (sect >> 32) & 0xff;
->                 tf->hob_lbal = (sect >> 24) & 0xff;
-> -       } else
-> +       } else {
-> +               tf->command = ATA_CMD_VERIFY;
-> +
->                 tf->device |= (sect >> 24) & 0xf;
-> +       }
-> 
->         tf->nsect = n_sect & 0xff;
-> 
-> ===== include/linux/ata.h 1.20 vs edited =====
-> --- 1.20/include/linux/ata.h    2004-11-14 03:21:22 -05:00
-> +++ edited/include/linux/ata.h  2005-02-01 16:28:09 -05:00
-> @@ -123,6 +123,9 @@
->         ATA_CMD_PIO_WRITE_EXT   = 0x34,
->         ATA_CMD_SET_FEATURES    = 0xEF,
->         ATA_CMD_PACKET          = 0xA0,
-> +       ATA_CMD_VERIFY          = 0x40,
-> +       ATA_CMD_VERIFY_EXT      = 0x42,
-
-Your patch looks good, and I tried to apply it, but apparently your 
-mailer turned all tabs into spaces.  Can you resend?
-
-	Jeff
+Signed-off-by: Tejun Heo <tj@home-tj.org>
 
 
-
+Index: linux-ide-export/drivers/ide/ide-disk.c
+===================================================================
+--- linux-ide-export.orig/drivers/ide/ide-disk.c	2005-02-02 10:28:07.852771465 +0900
++++ linux-ide-export/drivers/ide/ide-disk.c	2005-02-02 10:28:08.121727827 +0900
+@@ -300,6 +300,7 @@ static unsigned long idedisk_read_native
+ 	args.tfRegister[IDE_SELECT_OFFSET]	= 0x40;
+ 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_READ_NATIVE_MAX;
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
++	args.data_phase				= TASKFILE_NO_DATA;
+ 	args.handler				= &task_no_data_intr;
+ 	/* submit command request */
+ 	ide_raw_taskfile(drive, &args, NULL);
+@@ -326,6 +327,7 @@ static unsigned long long idedisk_read_n
+ 	args.tfRegister[IDE_SELECT_OFFSET]	= 0x40;
+ 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_READ_NATIVE_MAX_EXT;
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
++	args.data_phase				= TASKFILE_NO_DATA;
+ 	args.handler				= &task_no_data_intr;
+         /* submit command request */
+         ide_raw_taskfile(drive, &args, NULL);
+@@ -362,6 +364,7 @@ static unsigned long idedisk_set_max_add
+ 	args.tfRegister[IDE_SELECT_OFFSET]	= ((addr_req >> 24) & 0x0f) | 0x40;
+ 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_SET_MAX;
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
++	args.data_phase				= TASKFILE_NO_DATA;
+ 	args.handler				= &task_no_data_intr;
+ 	/* submit command request */
+ 	ide_raw_taskfile(drive, &args, NULL);
+@@ -395,6 +398,7 @@ static unsigned long long idedisk_set_ma
+ 	args.hobRegister[IDE_SELECT_OFFSET]	= 0x40;
+ 	args.hobRegister[IDE_CONTROL_OFFSET_HOB]= (drive->ctl|0x80);
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
++	args.data_phase				= TASKFILE_NO_DATA;
+ 	args.handler				= &task_no_data_intr;
+ 	/* submit command request */
+ 	ide_raw_taskfile(drive, &args, NULL);
+@@ -534,6 +538,7 @@ static ide_startstop_t idedisk_special (
+ 			args.tfRegister[IDE_SELECT_OFFSET]  = ((drive->head-1)|drive->select.all)&0xBF;
+ 			args.tfRegister[IDE_COMMAND_OFFSET] = WIN_SPECIFY;
+ 			args.command_type = IDE_DRIVE_TASK_NO_DATA;
++			args.data_phase   = TASKFILE_NO_DATA;
+ 			args.handler	  = &set_geometry_intr;
+ 			do_taskfile(drive, &args);
+ 		}
+@@ -545,6 +550,7 @@ static ide_startstop_t idedisk_special (
+ 			args.tfRegister[IDE_NSECTOR_OFFSET] = drive->sect;
+ 			args.tfRegister[IDE_COMMAND_OFFSET] = WIN_RESTORE;
+ 			args.command_type = IDE_DRIVE_TASK_NO_DATA;
++			args.data_phase   = TASKFILE_NO_DATA;
+ 			args.handler	  = &recal_intr;
+ 			do_taskfile(drive, &args);
+ 		}
+@@ -558,6 +564,7 @@ static ide_startstop_t idedisk_special (
+ 			args.tfRegister[IDE_NSECTOR_OFFSET] = drive->mult_req;
+ 			args.tfRegister[IDE_COMMAND_OFFSET] = WIN_SETMULT;
+ 			args.command_type = IDE_DRIVE_TASK_NO_DATA;
++			args.data_phase   = TASKFILE_NO_DATA;
+ 			args.handler	  = &set_multmode_intr;
+ 			do_taskfile(drive, &args);
+ 		}
+@@ -597,6 +604,7 @@ static int smart_enable(ide_drive_t *dri
+ 	args.tfRegister[IDE_HCYL_OFFSET]	= SMART_HCYL_PASS;
+ 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_SMART;
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
++	args.data_phase				= TASKFILE_NO_DATA;
+ 	args.handler				= &task_no_data_intr;
+ 	return ide_raw_taskfile(drive, &args, NULL);
+ }
+@@ -720,6 +728,7 @@ static int idedisk_issue_flush(request_q
+ 		args.tfRegister[IDE_COMMAND_OFFSET] = WIN_FLUSH_CACHE;
+ 
+ 	args.command_type = IDE_DRIVE_TASK_NO_DATA;
++	args.data_phase = TASKFILE_NO_DATA;
+ 	args.handler = task_no_data_intr;
+ 
+ 	rq = blk_get_request(q, WRITE, __GFP_WAIT);
+@@ -779,6 +788,7 @@ static int write_cache(ide_drive_t *driv
+ 			SETFEATURES_EN_WCACHE : SETFEATURES_DIS_WCACHE;
+ 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_SETFEATURES;
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
++	args.data_phase				= TASKFILE_NO_DATA;
+ 	args.handler				= &task_no_data_intr;
+ 
+ 	err = ide_raw_taskfile(drive, &args, NULL);
+@@ -799,6 +809,7 @@ static int do_idedisk_flushcache (ide_dr
+ 	else
+ 		args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_FLUSH_CACHE;
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
++	args.data_phase				= TASKFILE_NO_DATA;
+ 	args.handler				= &task_no_data_intr;
+ 	return ide_raw_taskfile(drive, &args, NULL);
+ }
+@@ -813,6 +824,7 @@ static int set_acoustic (ide_drive_t *dr
+ 	args.tfRegister[IDE_NSECTOR_OFFSET]	= arg;
+ 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_SETFEATURES;
+ 	args.command_type = IDE_DRIVE_TASK_NO_DATA;
++	args.data_phase   = TASKFILE_NO_DATA;
+ 	args.handler	  = &task_no_data_intr;
+ 	ide_raw_taskfile(drive, &args, NULL);
+ 	drive->acoustic = arg;
+@@ -906,19 +918,22 @@ static ide_startstop_t idedisk_start_pow
+ 		else
+ 			args->tfRegister[IDE_COMMAND_OFFSET] = WIN_FLUSH_CACHE;
+ 		args->command_type = IDE_DRIVE_TASK_NO_DATA;
++		args->data_phase   = TASKFILE_NO_DATA;
+ 		args->handler	   = &task_no_data_intr;
+ 		return do_taskfile(drive, args);
+ 
+ 	case idedisk_pm_standby:	/* Suspend step 2 (standby) */
+ 		args->tfRegister[IDE_COMMAND_OFFSET] = WIN_STANDBYNOW1;
+ 		args->command_type = IDE_DRIVE_TASK_NO_DATA;
++		args->data_phase   = TASKFILE_NO_DATA;
+ 		args->handler	   = &task_no_data_intr;
+ 		return do_taskfile(drive, args);
+ 
+ 	case idedisk_pm_idle:		/* Resume step 1 (idle) */
+ 		args->tfRegister[IDE_COMMAND_OFFSET] = WIN_IDLEIMMEDIATE;
+ 		args->command_type = IDE_DRIVE_TASK_NO_DATA;
+-		args->handler = task_no_data_intr;
++		args->data_phase   = TASKFILE_NO_DATA;
++		args->handler      = task_no_data_intr;
+ 		return do_taskfile(drive, args);
+ 
+ 	case idedisk_pm_restore_dma:	/* Resume step 2 (restore DMA) */
+@@ -1195,6 +1210,7 @@ static int idedisk_open(struct inode *in
+ 		memset(&args, 0, sizeof(ide_task_t));
+ 		args.tfRegister[IDE_COMMAND_OFFSET] = WIN_DOORLOCK;
+ 		args.command_type = IDE_DRIVE_TASK_NO_DATA;
++		args.data_phase   = TASKFILE_NO_DATA;
+ 		args.handler	  = &task_no_data_intr;
+ 		check_disk_change(inode->i_bdev);
+ 		/*
+@@ -1218,6 +1234,7 @@ static int idedisk_release(struct inode 
+ 		memset(&args, 0, sizeof(ide_task_t));
+ 		args.tfRegister[IDE_COMMAND_OFFSET] = WIN_DOORUNLOCK;
+ 		args.command_type = IDE_DRIVE_TASK_NO_DATA;
++		args.data_phase   = TASKFILE_NO_DATA;
+ 		args.handler	  = &task_no_data_intr;
+ 		if (drive->doorlocking && ide_raw_taskfile(drive, &args, NULL))
+ 			drive->doorlocking = 0;
+Index: linux-ide-export/drivers/ide/ide.c
+===================================================================
+--- linux-ide-export.orig/drivers/ide/ide.c	2005-02-02 10:28:07.855770979 +0900
++++ linux-ide-export/drivers/ide/ide.c	2005-02-02 10:28:08.122727665 +0900
+@@ -1271,6 +1271,7 @@ static int set_xfer_rate (ide_drive_t *d
+ 	args.tfRegister[IDE_FEATURE_OFFSET]	= SETFEATURES_XFER;
+ 	args.tfRegister[IDE_NSECTOR_OFFSET]	= arg;
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
++	args.data_phase				= TASKFILE_NO_DATA;
+ 	args.handler				= task_no_data_intr;
+ 
+ 	err = ide_raw_taskfile(drive, &args, NULL);
