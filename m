@@ -1,69 +1,74 @@
 From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] dtc2278.c warning
-Date: Thu, 11 Sep 2003 08:26:21 +0200 (MEST)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.21.0309110824070.1879-100000@vervain.sonytel.be>
+Subject: [PATCH] umc8672.c warning
+Date: Thu, 11 Sep 2003 08:27:37 +0200 (MEST)
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <Pine.GSO.4.21.0309110826250.1879-100000@vervain.sonytel.be>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail2.sonytel.be ([195.0.45.172]:47071 "EHLO witte.sonytel.be")
+	by vger.kernel.org with ESMTP id S266144AbTIKG1k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Sep 2003 02:27:40 -0400
+List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>
-List-Id: linux-ide@vger.kernel.org
 
 
 Move dtc2278_release() to kill a warning in the non-modular case
 
---- linux-2.6.0-test5/drivers/ide/legacy/dtc2278.c.orig	Tue Sep  9 10:12:44 2003
-+++ linux-2.6.0-test5/drivers/ide/legacy/dtc2278.c	Tue Sep  9 14:15:35 2003
-@@ -134,6 +134,24 @@
- 	probe_hwif_init(&ide_hwifs[1]);
+--- linux-2.6.0-test5/drivers/ide/legacy/umc8672.c.orig	Tue Sep  9 10:12:44 2003
++++ linux-2.6.0-test5/drivers/ide/legacy/umc8672.c	Tue Sep  9 14:18:28 2003
+@@ -160,6 +160,25 @@
+ 	return 0;
  }
  
 +#ifndef MODULE
 +/*
-+ * init_dtc2278:
++ * init_umc8672:
 + *
 + * called by ide.c when parsing command line
 + */
 +
-+void __init init_dtc2278 (void)
++void __init init_umc8672 (void)
 +{
-+	probe_dtc2278();
++	if (probe_umc8672())
++		printk(KERN_ERR "init_umc8672: umc8672 controller not found.\n");
 +}
 +
 +#else
 +
-+MODULE_AUTHOR("See Local File");
-+MODULE_DESCRIPTION("support of DTC-2278 VLB IDE chipsets");
++MODULE_AUTHOR("Wolfram Podien");
++MODULE_DESCRIPTION("Support for UMC 8672 IDE chipset");
 +MODULE_LICENSE("GPL");
 +
- static void dtc2278_release (void)
+ static void umc8672_release (void)
  {
- 	if (ide_hwifs[0].chipset != ide_dtc2278 &&
-@@ -152,24 +170,6 @@
- 	ide_hwifs[0].mate = NULL;
- 	ide_hwifs[1].mate = NULL;
+ 	unsigned long flags;
+@@ -185,25 +204,6 @@
+ 	release_region(0x108, 2);
+ 	local_irq_restore(flags);
  }
 -
 -#ifndef MODULE
 -/*
-- * init_dtc2278:
+- * init_umc8672:
 - *
 - * called by ide.c when parsing command line
 - */
 -
--void __init init_dtc2278 (void)
+-void __init init_umc8672 (void)
 -{
--	probe_dtc2278();
+-	if (probe_umc8672())
+-		printk(KERN_ERR "init_umc8672: umc8672 controller not found.\n");
 -}
 -
 -#else
 -
--MODULE_AUTHOR("See Local File");
--MODULE_DESCRIPTION("support of DTC-2278 VLB IDE chipsets");
+-MODULE_AUTHOR("Wolfram Podien");
+-MODULE_DESCRIPTION("Support for UMC 8672 IDE chipset");
 -MODULE_LICENSE("GPL");
  
- static int __init dtc2278_mod_init(void)
+ static int __init umc8672_mod_init(void)
  {
 
 Gr{oetje,eeting}s,
@@ -76,3 +81,4 @@ Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 In personal conversations with technical people, I call myself a hacker. But
 when I'm talking to journalists I just say "programmer" or something like that.
 							    -- Linus Torvalds
+
