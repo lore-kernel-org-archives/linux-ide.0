@@ -1,96 +1,108 @@
-From: "Willy Gardiol" <willy@gardiol.org>
+From: uaca@alumni.uv.es
 Subject: Re: IDE-RAID Drive Performance
-Date: Tue, 30 Dec 2003 12:12:06 +0100
+Date: Tue, 30 Dec 2003 14:18:54 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20031230111206.1335.qmail@webmaildomini2.aruba.it>
+Message-ID: <20031230131854.GB15816@pusa.informat.uv.es>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [62.149.128.211] ([62.149.128.211]:55968 "HELO
-	webmaildomini2.aruba.it") by vger.kernel.org with SMTP
-	id S265742AbTL3LMJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Dec 2003 06:12:09 -0500
+Received: from pusa.informat.uv.es ([147.156.10.98]:63874 "EHLO
+	pusa.informat.uv.es") by vger.kernel.org with ESMTP id S265788AbTL3NSz
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Dec 2003 08:18:55 -0500
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Nicklas Bondesson <nicke@nicke.nu>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+On Tue, Dec 30, 2003 at 11:41:47AM +0100, Nicklas Bondesson wrote:
+> Hi!
+>=20
+> I think i'm getting really bad values from my disks. It's two Western
+> Digital WD800JB-00DUA3 (Special Edition 8 MB cache) disks connected t=
+o a
+> Promise TX2000 (PDC20271) card (RAID1 using ataraid).
+
+I think I have the same/similar drive, my results
+
+(after trying to flush disk cache by doing a find /)
+
+root@agapito:~# hdparm -t /dev/hda
+
+/dev/hda:
+ Timing buffered disk reads:  124 MB in  3.03 seconds =3D  40.92 MB/sec
+
+(without pause)
+root@agapito:~# hdparm -t /dev/hda
+
+/dev/hda:
+ Timing buffered disk reads:  132 MB in  3.01 seconds =3D  43.86 MB/sec
+root@agapito:~# hdparm -i /dev/hda
+
+/dev/hda:
+
+ Model=3DWDC WD800JB-00CRA1, FwRev=3D17.07W17, SerialNo=3DWD-WMA8E45198=
+60
+ Config=3D{ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs FmtGa=
+pReq }
+ RawCHS=3D16383/16/63, TrkSize=3D57600, SectSize=3D600, ECCbytes=3D40
+ BuffType=3DDualPortCache, BuffSize=3D8192kB, MaxMultSect=3D16, MultSec=
+t=3D16
+ CurCHS=3D4047/16/255, CurSects=3D16511760, LBA=3Dyes, LBAsects=3D15630=
+1488
+ IORDY=3Don/off, tPIO=3D{min:120,w/IORDY:120}, tDMA=3D{min:120,rec:120}
+ PIO modes:  pio0 pio1 pio2 pio3 pio4
+ DMA modes:  mdma0 mdma1 mdma2
+ UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5
+ AdvancedPM=3Dno WriteCache=3Denabled
+ Drive conforms to: device does not report version:
+
+ * signifies the current active mode
 
 
-Check you are using 80pin cables... but -X69 would fail if not.
-PCI bus should not be to blame for this, unless your is overloaded (?) like 
-heavy network traffic (fast or gigabit ethernet) may steal PCI cycles, but i 
-have never seen this happen in pc's... 
+my kernel: 2.6.0-test11
+my chipset: sis-735
 
-Maybe check your card is not sharing an IRQ, move into another slot, try 
-some fixed allocation from BIOS to avoid this...
-But i whouldnt expect too much from this on the speed side (just in case 
-some troubles with IRQ sharing). 
+looking at your test results I believe hdparm is reading to few data to=
+ make
+the benchmark
 
-Are you using the new pdc driver? The new one is the one supporting newer 
-chipsets like the 20271, i do not know which chip your promise has. 
+	Ulisses
 
-Try Bonnie to get some real on-the-road measurement from ypur filesystems... 
-that is the REAL speed you can get from your disks. 
+>=20
+> The disks are setup with hdparm at boot time:
+>=20
+> /sbin/hdparm -X69 -d1 -u1 -m16 -c3 /dev/hda
+> /sbin/hdparm -X69 -d1 -u1 -m16 -c3 /dev/hdc
+>=20
+> When running hdparm -tT I get the following:
+>=20
+> /dev/hda:
+>  Timing buffer-cache reads:   128 MB in  1.13 seconds =3D113.27 MB/se=
+c
+>  Timing buffered disk reads:  64 MB in  2.46 seconds =3D 26.02 MB/sec
+>=20
+> /dev/hdc:
+>  Timing buffer-cache reads:   128 MB in  1.13 seconds =3D113.27 MB/se=
+c
+>  Timing buffered disk reads:  64 MB in  2.47 seconds =3D 25.91 MB/sec
+>=20
+> Are these normal values? I don't think so. Please advise.
+>=20
+> /Nicke
+>=20
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+--=20
+                Debian GNU/Linux: a dream come true
+-----------------------------------------------------------------------=
+------
+"Computers are useless. They can only give answers."            Pablo P=
+icasso
 
-Nicklas Bondesson Scrive: 
-
-> Ok, so you currently don't have any suggestions on this? Could it be a slow
-> PCI slot causing the poor performance? It's an ASUS P2B (rev 1.04)
-> motherboard with PCI 2.1 enabled in BIOS. 
-> 
-> /Nicke  
-> 
-> -----Original Message-----
-> From: Willy Gardiol [mailto:willy@gardiol.org] 
-> Sent: den 30 december 2003 11:58
-> To: Nicklas Bondesson
-> Cc: linux-ide@vger.kernel.org
-> Subject: Re: IDE-RAID Drive Performance 
-> 
-> 
-> Every experience i had with Promise controllers AND linux 2.4.xx where xx is
->> 17 has given me troubles both on x86 and sparc architecture with DMA
-> enabled.  
-> 
-> But i do not have enough time to troubleshoot this and i never got much
-> attention here probably because i do not have any ooops or more specific
-> data to report!  
-> 
-> Besides that, my maxtor 40gb (dont remember model right now) does about
-> 40mb/sec instead of yours 25.  
-> 
-> Nicklas Bondesson Scrive:  
-> 
->> Hi!  
->> 
->> I think i'm getting really bad values from my disks. It's two Western 
->> Digital WD800JB-00DUA3 (Special Edition 8 MB cache) disks connected to 
->> a Promise TX2000 (PDC20271) card (RAID1 using ataraid). 
->> 
->> The disks are setup with hdparm at boot time:  
->> 
->> /sbin/hdparm -X69 -d1 -u1 -m16 -c3 /dev/hda /sbin/hdparm -X69 -d1 -u1 
->> -m16 -c3 /dev/hdc 
->> 
->> When running hdparm -tT I get the following:  
->> 
->> /dev/hda:
->>  Timing buffer-cache reads:   128 MB in  1.13 seconds =113.27 MB/sec
->>  Timing buffered disk reads:  64 MB in  2.46 seconds = 26.02 MB/sec 
->> 
->> /dev/hdc:
->>  Timing buffer-cache reads:   128 MB in  1.13 seconds =113.27 MB/sec
->>  Timing buffered disk reads:  64 MB in  2.47 seconds = 25.91 MB/sec 
->> 
->> Are these normal values? I don't think so. Please advise.  
->> 
->> /Nicke 
->> 
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-ide" 
->> in the body of a message to majordomo@vger.kernel.org More majordomo 
->> info at  http://vger.kernel.org/majordomo-info.html
->   
-> 
- 
+--->	Visita http://www.valux.org/ para saber acerca de la	<---
+--->	Asociaci=F3n Valenciana de Usuarios de Linux		<---
