@@ -1,22 +1,22 @@
 From: Prakash Punnoor <prakashp@arcor.de>
-Subject: 2.6.11-rc5: sata_sil schows drive twice...
-Date: Mon, 28 Feb 2005 17:47:17 +0100
-Message-ID: <42234B15.3060301@arcor.de>
+Subject: 2.6.11-rc5: sata_sil shows drive twice...
+Date: Mon, 28 Feb 2005 17:47:24 +0100
+Message-ID: <42234B1C.1080500@arcor.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
  protocol="application/pgp-signature";
- boundary="------------enigD2CF7011D9D756CE2F2A6DF2"
-Received: from mail-in-04.arcor-online.net ([151.189.21.44]:44214 "EHLO
-	mail-in-04.arcor-online.net") by vger.kernel.org with ESMTP
-	id S261684AbVB1Qqm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Feb 2005 11:46:42 -0500
+ boundary="------------enig9B0D2A627EF7DA39908A26D7"
+Received: from mail-in-08.arcor-online.net ([151.189.21.48]:34001 "EHLO
+	mail-in-08.arcor-online.net") by vger.kernel.org with ESMTP
+	id S261685AbVB1Qqs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Feb 2005 11:46:48 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigD2CF7011D9D756CE2F2A6DF2
+--------------enig9B0D2A627EF7DA39908A26D7
 Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 
@@ -128,7 +128,7 @@ Prakash Punnoor
 
 formerly known as Prakash K. Cheemplavam
 
---------------enigD2CF7011D9D756CE2F2A6DF2
+--------------enig9B0D2A627EF7DA39908A26D7
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
@@ -136,9 +136,9 @@ Content-Disposition: attachment; filename="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.0 (GNU/Linux)
 
-iD8DBQFCI0sVxU2n/+9+t5gRAkOmAJwPCzVAUXT+TPdYOCWhqa7CGagTtACgmowe
-T/B+e6q+SIdYia3ARB315Lo=
-=ElYx
+iD8DBQFCI0scxU2n/+9+t5gRApRzAJ4oO6wgn0oADkjZmWKrN/KliJQD8QCgjrXy
+/r+Qrn9etPIMWSyFH09sKkY=
+=3A0Z
 -----END PGP SIGNATURE-----
 
---------------enigD2CF7011D9D756CE2F2A6DF2--
+--------------enig9B0D2A627EF7DA39908A26D7--
