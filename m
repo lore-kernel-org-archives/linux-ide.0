@@ -1,39 +1,44 @@
-From: =?iso-8859-1?q?Lars_Tobias_B=F8rsting?= <larstobi@itea.ntnu.no>
-Subject: Re: SATA II 150 TX4
-Date: Thu, 11 Nov 2004 17:41:45 +0100
-Message-ID: <8jfy8h8s5h2.fsf@panter.stud.ntnu.no>
-References: <1100188388.3127.24.camel@localhost.localdomain>
+From: Mark Gross <mgross@linux.intel.com>
+Subject: Re: Wanted: small number of crazy highpoint IDE  (HPT366-372N/374) controller owners
+Date: Thu, 11 Nov 2004 10:23:29 -0800
+Message-ID: <200411111023.29336.mgross@linux.intel.com>
+References: <1100111436.20556.15.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from merke.itea.ntnu.no ([129.241.7.61]:62406 "EHLO
-	merke.itea.ntnu.no") by vger.kernel.org with ESMTP id S262295AbUKKQlr
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 Nov 2004 11:41:47 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by merke.itea.ntnu.no (Postfix) with ESMTP id 0A11413C6C0
-	for <linux-ide@vger.kernel.org>; Thu, 11 Nov 2004 17:41:46 +0100 (CET)
-Received: from panter.stud.ntnu.no (panter.stud.ntnu.no [129.241.56.186])
-	by merke.itea.ntnu.no (Postfix) with ESMTP
-	for <linux-ide@vger.kernel.org>; Thu, 11 Nov 2004 17:41:45 +0100 (CET)
-In-Reply-To: <1100188388.3127.24.camel@localhost.localdomain> (Ole Barnkob
- Kaas's message of "Thu, 11 Nov 2004 16:53:08 +0100")
+Received: from fmr06.intel.com ([134.134.136.7]:15817 "EHLO
+	caduceus.jf.intel.com") by vger.kernel.org with ESMTP
+	id S262347AbUKKSaI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 Nov 2004 13:30:08 -0500
+In-Reply-To: <1100111436.20556.15.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE Mailing List <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: markgross@thegnar.org
 
-Ole Barnkob Kaas <obk@futarque.com> writes:
+On Wednesday 10 November 2004 10:30, Alan Cox wrote:
+> I've been debugging and chasing down various HPT IDE problems. I've done
+> some cleanups, fixed the PLL tune and little bits like that. These are
+> the kind of changes that turn your disk into a random number generator
+> if they go wrong but OTOH the HPT372N crashes should be fixed.
+>
+> Now it needs some testers...
+>
+> Alan
+>
 
-> I'm stuck with two SATA II 150 TX4 cards. So I was wondering if anyon=
-e
-> is developing a driver for that card? Maybe theres some beta or alfa
-> stuff worth testing? Maybe I could help with some hardware for
-> development.
+I have a retiered BP6 at home I could try to bring up this weekend.  The only 
+problem is that I haven't been able to boot a 2.6 kernel from the HPT 366 
+attached drive it as the device id's seem to have been shuffeled about on me.  
+hdd goes to something else or so i thought before I gave up on the thing.
 
-Promise is providing open source drivers for this card. Check them out
-on their website.
+I could put 2 IDE's in it one on the 366 and one on the chipset IDE 
+controllers to get the thing to boot up.
 
---=20
-Lars Tobias B=F8rsting
+just let me know.
+
+--mgross
 
