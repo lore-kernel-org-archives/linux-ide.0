@@ -1,41 +1,29 @@
-From: Anton Starikov <antst@ifm.liu.se>
+From: Mark Lord <lkml@rtr.ca>
 Subject: Re: new tool:  blktool
-Date: Mon, 16 Aug 2004 01:00:22 +0200
+Date: Sun, 15 Aug 2004 19:27:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040816010022.04af15df@hantst.kabel.utwente.nl>
+Message-ID: <411FF170.9070700@rtr.ca>
 References: <411FD744.2090308@pobox.com>
-	<20040816002245.3f73e75a@hantst.kabel.utwente.nl>
-	<411FE665.60207@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from utep.el.utwente.nl ([130.89.16.10]:52449 "EHLO
-	utep.el.utwente.nl") by vger.kernel.org with ESMTP id S267218AbUHOXA1
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:41396 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S267243AbUHOX3B
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Aug 2004 19:00:27 -0400
-Received: from hantst.kabel.utwente.nl (hantst.kabel.utwente.nl [130.89.204.129])
-	by utep.el.utwente.nl (8.12.10/8.12.10) with SMTP id i7FN0Ju7029199
-	for <linux-ide@vger.kernel.org>; Mon, 16 Aug 2004 01:00:19 +0200
-In-Reply-To: <411FE665.60207@pobox.com>
+	Sun, 15 Aug 2004 19:29:01 -0400
+In-Reply-To: <411FD744.2090308@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Sun, 15 Aug 2004 18:40:37 -0400
-Jeff Garzik <jgarzik@pobox.com> wrote:
+hdparm works for some SCSI devices already, and support for
+more is already on the way.  I imagine I can have it handle
+whatever new ioctls() are being provided from libata as well.
 
-> I'll add that eventually to the driver, but it's a low priority.
-> 
-> Higher priority for most users is SMART and hotplug support.
-Agree, that's more important.
+Care to point me at them?
 
-> With SATA, you don't really need to care that much about most of the 
-> things that hdparm messes with, such as multiple-mode or transfer
-> mode. 
->   The power management and acoustic stuff is probably the most
->   relevant 
-> to modern SATA devices.
-
-Exactly, I miss power management, especially at summer :)
-
-Anton.
+Thanks
+-- 
+Mark Lord
+(hdparm keeper & the original "Linux IDE Guy")
