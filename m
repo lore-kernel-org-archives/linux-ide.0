@@ -1,38 +1,148 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.8.1] sata_nv.c
-Date: Sat, 28 Aug 2004 19:30:55 -0400
+Subject: [BK PATCHES] 2.6.x libata fixes
+Date: Sat, 28 Aug 2004 21:07:26 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <413115AF.4010306@pobox.com>
-References: <4125106A.2020903@nvidia.com>
+Message-ID: <20040829010726.GA16869@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:58779 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268129AbUH1XbH
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 28 Aug 2004 19:31:07 -0400
-In-Reply-To: <4125106A.2020903@nvidia.com>
+Received: from havoc.gtf.org ([216.162.42.101]:36843 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S267351AbUH2BH2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Aug 2004 21:07:28 -0400
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: achew <achew@nvidia.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-
-achew wrote:
-> This patch fixes a problem introduced when CK804 support was added.  
-> mmio_base can only be set in the CK804 case,
-> else libata will attempt to iounmap mmio_base, which isn't iomapped for 
-> the non-CK804 case.  Still need the bar 5
-> address, so steal from host_set->ports[0]->ioaddr.scr_addr.  Jeff, let 
-> me know if this is a bad thing to do.
-
-applied.
-
-PLEASE use a descriptive subject line.
-
-The email subject, after stripping '\[.*]', becomes a one-line summary 
-of the change, and is directly injected into the BK changelog.
-
-	Jeff
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org
 
 
+Please do a
 
+	bk pull bk://gkernel.bkbits.net/libata-2.6
+
+This will update the following files:
+
+ drivers/scsi/libata-core.c |    8 ++++----
+ drivers/scsi/sata_nv.c     |   20 ++++++++++++--------
+ 2 files changed, 16 insertions(+), 12 deletions(-)
+
+through these ChangeSets:
+
+<achew@nvidia.com> (04/08/28 1.1913)
+   [PATCH] sata_nv: fix CK804 support
+   
+   This patch fixes a problem introduced when CK804 support was added.  mmio_base can only be set in the CK804 case,
+   else libata will attempt to iounmap mmio_base, which isn't iomapped for the non-CK804 case.  Still need the bar 5
+   address, so steal from host_set->ports[0]->ioaddr.scr_addr.  Jeff, let me know if this is a bad thing to do.
+
+<jeremy@sgi.com> (04/08/28 1.1912)
+   [PATCH] Fix DMA boundary overflow bug
+   
+   We seem to have found an overflow problem in libata-core.c.
+   We were trying to DMA to the address range 0xffff8000-0xffffbfff.
+   
+   In the original version of the code, given that address and
+   count (0xffff8000 and 0x4000), the variable "boundary" would be
+   set to 0, causing len to be set to 0x8000 (which is greater than
+   sg_len).  Then at the bottom of the loop, sg_len would be set
+   to 0xffffc000 (0x4000 - 0x8000), which would then cause the
+   loop never to terminate (until much of memory was scribbled
+   over or the kernel died).
+   
+   The code below should be functionally identical, but not be
+   subject to the same overflow problem (boundary needs to be a
+   u33).
+   
+   Signed-off-by: jeremy@sgi.com
+   
+   ===== drivers/scsi/libata-core.c 1.94 vs edited =====
+
+diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+--- a/drivers/scsi/libata-core.c	2004-08-28 21:06:41 -04:00
++++ b/drivers/scsi/libata-core.c	2004-08-28 21:06:41 -04:00
+@@ -1836,7 +1836,7 @@
+ 
+ 	idx = 0;
+ 	for (nelem = qc->n_elem; nelem; nelem--,sg++) {
+-		u32 addr, boundary;
++		u32 addr, offset;
+ 		u32 sg_len, len;
+ 
+ 		/* determine if physical DMA addr spans 64K boundary.
+@@ -1847,10 +1847,10 @@
+ 		sg_len = sg_dma_len(sg);
+ 
+ 		while (sg_len) {
+-			boundary = (addr & ~0xffff) + (0xffff + 1);
++			offset = addr & 0xffff;
+ 			len = sg_len;
+-			if ((addr + sg_len) > boundary)
+-				len = boundary - addr;
++			if ((offset + sg_len) > 0x10000)
++				len = 0x10000 - offset;
+ 
+ 			ap->prd[idx].addr = cpu_to_le32(addr);
+ 			ap->prd[idx].flags_len = cpu_to_le32(len & 0xffff);
+diff -Nru a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
+--- a/drivers/scsi/sata_nv.c	2004-08-28 21:06:41 -04:00
++++ b/drivers/scsi/sata_nv.c	2004-08-28 21:06:41 -04:00
+@@ -20,6 +20,10 @@
+  *  If you do not delete the provisions above, a recipient may use your
+  *  version of this file under either the OSL or the GPL.
+  *
++ *  0.03
++ *     - Fixed a bug where the hotplug handlers for non-CK804/MCP04 were using
++ *       mmio_base, which is only set for the CK804/MCP04 case.
++ *
+  *  0.02
+  *     - Added support for CK804 SATA controller.
+  *
+@@ -40,7 +44,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME			"sata_nv"
+-#define DRV_VERSION			"0.02"
++#define DRV_VERSION			"0.03"
+ 
+ #define NV_PORTS			2
+ #define NV_PIO_MASK			0x1f
+@@ -422,33 +426,33 @@
+ 	u8 intr_mask;
+ 
+ 	outb(NV_INT_STATUS_HOTPLUG,
+-		(unsigned long)probe_ent->mmio_base + NV_INT_STATUS);
++		probe_ent->port[0].scr_addr + NV_INT_STATUS);
+ 
+-	intr_mask = inb((unsigned long)probe_ent->mmio_base + NV_INT_ENABLE);
++	intr_mask = inb(probe_ent->port[0].scr_addr + NV_INT_ENABLE);
+ 	intr_mask |= NV_INT_ENABLE_HOTPLUG;
+ 
+-	outb(intr_mask, (unsigned long)probe_ent->mmio_base + NV_INT_ENABLE);
++	outb(intr_mask, probe_ent->port[0].scr_addr + NV_INT_ENABLE);
+ }
+ 
+ static void nv_disable_hotplug(struct ata_host_set *host_set)
+ {
+ 	u8 intr_mask;
+ 
+-	intr_mask = inb((unsigned long)host_set->mmio_base + NV_INT_ENABLE);
++	intr_mask = inb(host_set->ports[0]->ioaddr.scr_addr + NV_INT_ENABLE);
+ 
+ 	intr_mask &= ~(NV_INT_ENABLE_HOTPLUG);
+ 
+-	outb(intr_mask, (unsigned long)host_set->mmio_base + NV_INT_ENABLE);
++	outb(intr_mask, host_set->ports[0]->ioaddr.scr_addr + NV_INT_ENABLE);
+ }
+ 
+ static void nv_check_hotplug(struct ata_host_set *host_set)
+ {
+ 	u8 intr_status;
+ 
+-	intr_status = inb((unsigned long)host_set->mmio_base + NV_INT_STATUS);
++	intr_status = inb(host_set->ports[0]->ioaddr.scr_addr + NV_INT_STATUS);
+ 
+ 	// Clear interrupt status.
+-	outb(0xff, (unsigned long)host_set->mmio_base + NV_INT_STATUS);
++	outb(0xff, host_set->ports[0]->ioaddr.scr_addr + NV_INT_STATUS);
+ 
+ 	if (intr_status & NV_INT_STATUS_HOTPLUG) {
+ 		if (intr_status & NV_INT_STATUS_PDEV_ADDED)
