@@ -1,46 +1,28 @@
 From: Alan Cox <alan@redhat.com>
-Subject: PATCH: deal with further ITE funny, fix a couple of ite8212 errors
-Date: Mon, 16 Aug 2004 11:31:39 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040816153139.GA14715@devserv.devel.redhat.com>
+Subject: Re: PATCH: fixup incomplete ident blocks on ITE raid volumes
+Date: Mon, 16 Aug 2004 11:28:16 -0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20040816152816.GD10279@devserv.devel.redhat.com>
+References: <20040815144527.GA7983@devserv.devel.redhat.com> <200408161716.35922.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S267743AbUHPPlZ@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:50922 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S267783AbUHPP3Q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Aug 2004 11:29:16 -0400
 Content-Disposition: inline
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
+In-Reply-To: <200408161716.35922.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Alan Cox <alan@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 
-Further stuff c/o Bryce the wondertester
+On Mon, Aug 16, 2004 at 05:16:35PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> This should be part of ITE driver patch and be compiled only when ITE driver 
+> is going to be used or even better - there should be new callback for that.
 
+Nice theory but doesn't work that way. The ITE drive will do this even if
+you don't have the ITE driver compiled in because it'll be seen as the
+mainboard legacy controller (or generic) in some systems.
 
---- drivers/ide/ide-probe.c~	2004-08-16 16:19:05.830364888 +0100
-+++ drivers/ide/ide-probe.c	2004-08-16 16:19:05.831364736 +0100
-@@ -784,6 +784,8 @@
- 			if(strcmp(hwif->drives[0].id->model, drive->id->model) == 0 &&
- 			   /* Don't do this for noprobe or non ATA */
- 			   strcmp(drive->id->model, "UNKNOWN") &&
-+			   /* ITE haven't got this figured out either (see the quirk code too) */
-+			   !strstr(drive->id->model, "Integrated Technology Express") &&
- 			   /* And beware of confused Maxtor drives that go "M0000000000" 
- 			      "The SN# is garbage in the ID block..." [Eric] */
- 			   strncmp(drive->id->serial_no, "M0000000000000000000", 20) && 
---- drivers/ide/pci/it8212.c~	2004-08-16 16:22:09.545435952 +0100
-+++ drivers/ide/pci/it8212.c	2004-08-16 16:14:23.251323432 +0100
-@@ -78,7 +78,7 @@
- 
- struct it8212_dev
- {
--	int smart:1,			/* Are we in smart raid mode */
-+	unsigned int smart:1,		/* Are we in smart raid mode */
- 		timing10:1;		/* Rev 0x10 */
- 	u8	clock_mode;		/* 0, ATA_50 or ATA_66 */
- 	u8	want[2][2];		/* Mode/Pri log for master slave */
-@@ -652,7 +652,7 @@
- 		printk(KERN_ERR "it8212: out of memory, falling back to legacy behaviour.\n");
- 		goto fallback;
- 	}
--	memset(idev, 0, sizeof(*idev));
-+	memset(idev, 0, sizeof(struct it8212_dev));
- 	ide_set_hwifdata(hwif, idev);
- 
- 	hwif->remove = it8212_memfree;
+Alan
+
