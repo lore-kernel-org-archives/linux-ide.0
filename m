@@ -1,53 +1,74 @@
-From: "J. Ryan Earl" <heretic@clanhk.org>
-Subject: Re: Linux SATA RAID FAQ
-Date: Sat, 14 Aug 2004 16:28:33 -0600
+From: "Steven Haigh" <netwiz@crc.id.au>
+Subject: Re: Adaptec 1210SA raid issues.
+Date: Sun, 15 Aug 2004 15:11:00 +1000 (EST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <411E9211.8090108@clanhk.org>
-References: <411B0F45.8070500@pobox.com>	 <20040812113413.GA19252@alpha.home.local>  <411D5D70.9070909@clanhk.org> <1092496912.27156.6.camel@localhost.localdomain>
+Message-ID: <44231.210.8.4.34.1092546660.squirrel@210.8.4.34>
+References: <002201c4814c$7e1ace00$128b8ecb@enigma>
+    <64637.210.8.4.34.1092446192.squirrel@210.8.4.34>
+Reply-To: netwiz@crc.id.au
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ms-smtp-05.texas.rr.com ([24.93.47.44]:48568 "EHLO
-	ms-smtp-05-eri0.texas.rr.com") by vger.kernel.org with ESMTP
-	id S266169AbUHNV2e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 14 Aug 2004 17:28:34 -0400
-In-Reply-To: <1092496912.27156.6.camel@localhost.localdomain>
+Received: from gw.crc.id.au ([203.142.139.230]:28803 "EHLO zeus.crc.id.au")
+	by vger.kernel.org with ESMTP id S266498AbUHOFLF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Aug 2004 01:11:05 -0400
+Received: from zeus.crc.id.au (localhost.localdomain [127.0.0.1])
+	by zeus.crc.id.au (8.12.10/8.12.10) with ESMTP id i7F5B0p8013267
+	for <linux-ide@vger.kernel.org>; Sun, 15 Aug 2004 15:11:00 +1000
+In-Reply-To: <64637.210.8.4.34.1092446192.squirrel@210.8.4.34>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Willy Tarreau <willy@w.ods.org>, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
+Not much more progress playing with this... I know it's software based,
+but I guess what I'm trying to do is to import/convert the adaptec 'raid'
+partition into to something I can access as a usable partition/raid.
 
->Be cautious what you measure. One of he problems until you reach PCI-X
->is PCI bandwidth. Thus software md5 can look good but the moment its
->combined with other PCI activity goes down the pan entirely.
->  
->
-Right, which is why you'd think hardware based RAID would fair better, 
-the parity information or mirror'd writes would only require one 
-transfer/transaction across the PCI bus.  However, when benchmarking a 
-3Ware 4-port ide raid controller (7000) we saw 40-50MB/sec read/write on 
-4x160GB drives raid5.  With md raid5 (same controller, HDs, FS, etc)  we 
-saw 100MB/sec read, 60MB/sec write.  This was using max 15% CPU on a 
-2.4GHz Pentium4, with a 32bit/33MHz PCI bus.
+It's a raid 0 - however as it's laid out on the disks at the moment, I
+don't believe I can use the kernel raid to mount/recover/convert/anything
+to it.
 
->  
->
->>When the libata Marvell drivers come out, you'll have a cheap upgrade 
->>path for PCI-X boards if you want fast md raid: 
->>    
->>
->
->Agreed. PCI-X will change a lot of this for boxes that are not very
->cpu/memory limited.
->  
->
- From the testing I've done, interconnect bandwidth has always been the 
-limiting factor for the md driver.  Using cheap ($~230) PCI-X 
-motherboards--http://www.supermicro.com/products/motherboard/P4/E7210/P4SCT+.cfm--with 
-dedicated gigE channels, you can make high density/price and 
-performance/price NAS type appliances with no bottlenecks.  For <$3K you 
-can build a 2TB NAS server that'll keep a 250MB/s gigE link saturated.
+[root@zeus root]# fdisk /dev/sda
+Command (m for help): p
 
--ryan
+Disk /dev/sda: 163.9 GB, 163928604672 bytes
+255 heads, 63 sectors/track, 19929 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot    Start       End    Blocks   Id  System
+/dev/sda1             1     39859 320167386   83  Linux
+
+Command (m for help): q
+
+[root@zeus root]# fdisk /dev/sdb
+Device contains neither a valid DOS partition table, nor Sun, SGI or OSF
+disklabel
+Building a new DOS disklabel. Changes will remain in memory only,
+until you decide to write them. After that, of course, the previous
+content won't be recoverable.
+
+Warning: invalid flag 0x0000 of partition table 4 will be corrected by
+w(rite)
+
+Command (m for help): p
+
+Disk /dev/sdb: 163.9 GB, 163928604672 bytes
+255 heads, 63 sectors/track, 19929 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot    Start       End    Blocks   Id  System
+
+Command (m for help): q
+
+As you can see, SATA disk 1 has a partition that shows as disk size x 2,
+however disk 2 shows as an invalid partition...
+
+With the existing tools, is there a way to make this usable? or is the
+only way to set this up to copy the data off using the Adaptec module, and
+create a new software raid with the kernel raid?
+
+-- 
+Signed,
+Steven Haigh
+
+I am root. If you see me laughing, you'd better have a backup.
