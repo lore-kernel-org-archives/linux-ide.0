@@ -1,62 +1,37 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH 2.6.11-rc2 11/29] ide: add ide_drive_t.sleeping
-Date: Fri, 4 Feb 2005 09:39:11 +0100
-Message-ID: <20050204083910.GB7299@suse.de>
-References: <20050202024017.GA621@htj.dyndns.org> <20050202025448.GL621@htj.dyndns.org> <58cb370e05020216476a8f403c@mail.gmail.com> <20050203113710.GV5710@suse.de> <58cb370e05020305304e5d504@mail.gmail.com> <20050203133228.GA2816@suse.de> <58cb370e05020305354cbb16ee@mail.gmail.com> <4202A39E.8020004@home-tj.org>
+From: Rolf Offermanns <roffermanns@sysgo.com>
+Subject: Re: Linux hangs during IDE initialization at boot for 30 sec
+Date: Fri, 4 Feb 2005 11:22:09 +0100
+Message-ID: <200502041122.09390.roffermanns@sysgo.com>
+References: <200502011257.40059.brade@informatik.uni-muenchen.de> <200502031358.16827.roffermanns@sysgo.com> <1107469032.2363.44.camel@gaston>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from ns.virtualhost.dk ([195.184.98.160]:13448 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261210AbVBDIjP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2005 03:39:15 -0500
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Received: from [62.8.134.5] ([62.8.134.5]:23240 "EHLO mailgate2.sysgo.com")
+	by vger.kernel.org with ESMTP id S261660AbVBDKWM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2005 05:22:12 -0500
+In-Reply-To: <1107469032.2363.44.camel@gaston>
 Content-Disposition: inline
-In-Reply-To: <4202A39E.8020004@home-tj.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@home-tj.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: list linux-ide <linux-ide@vger.kernel.org>
 
-On Fri, Feb 04 2005, Tejun Heo wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> >On Thu, 3 Feb 2005 14:32:29 +0100, Jens Axboe <axboe@suse.de> wrote:
-> >
-> >>On Thu, Feb 03 2005, Bartlomiej Zolnierkiewicz wrote:
-> >>
-> >>>On Thu, 3 Feb 2005 12:37:10 +0100, Jens Axboe <axboe@suse.de> wrote:
-> >>>
-> >>>>On Thu, Feb 03 2005, Bartlomiej Zolnierkiewicz wrote:
-> >>>>
-> >>>>>On Wed, 2 Feb 2005 11:54:48 +0900, Tejun Heo <tj@home-tj.org> wrote:
-> >>>>>
-> >>>>>>>11_ide_drive_sleeping_fix.patch
-> >>>>>>>
-> >>>>>>>     ide_drive_t.sleeping field added.  0 in sleep field used to
-> >>>>>>>     indicate inactive sleeping but because 0 is a valid jiffy
-> >>>>>>>     value, though slim, there's a chance that something can go
-> >>>>>>>     weird.  And while at it, explicit jiffy comparisons are
-> >>>>>>>     converted to use time_{after|before} macros.
-> >>>>>
-> >>>>>Same question as for "add ide_hwgroup_t.polling" patch.
-> >>>>>AFAICS drive->sleep is either '0' or 'timeout + jiffies' (always > 0)
-> >>>>
-> >>>>Hmm, what if jiffies + timeout == 0?
-> >>>
-> >>>Hm, jiffies is unsigned and timeout is always > 0
-> >>>but this is still possible if jiffies + timeout wraps, right?
-> >>
-> >>Precisely, if jiffies is exactly 'timeout' away from wrapping to 0 it
-> >>could happen. So I think the fix looks sane.
-> >
-> >
-> >agreed
-> 
-> Actually, jiffies is initialized to INITIAL_JIFFIES which is defined in 
-> such a way that it overflows after 5 min after boot to help finding bugs 
-> related to jiffies wrap.  So, the chance of something weird happening in 
-> the bugs fixed in patches 11 and 12 isn't that exteremely slim.  :-)
+On Thursday 03 February 2005 23:17, Benjamin Herrenschmidt wrote:
+>
+> Do not register interfaces that you know aren't populated...
+>
+> One thing is, the wait code does explicitely check for a value of 0xff
+> and exists in this case (assuming this means no HW at all is wired
+> there). So for some reason, you interface is returning something else,
+> it would be interesting to "see" what value you are getting.
+It's 0xff like you guessed in the first reply. As soon, as I connect a drive 
+(no need to turn it on actually), everything is fine.
 
-And repeat after 49 days, sure. But the odds of it triggering are still
-extremely slim :)
-
+-Rolf
 -- 
-Jens Axboe
+Rolf Offermanns <roffermanns@sysgo.com>
+SYSGO AG     Tel.: +49-6136-9948-0
+Am Pfaffenstein 14   Fax: +49-6136-9948-10
+55270 Klein-Winternheim  http://www.sysgo.com
 
