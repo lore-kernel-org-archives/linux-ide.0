@@ -1,43 +1,49 @@
-From: Tomas Szepe <szepe@pinerecords.com>
-Subject: Re: [PATCH] Re: [TRIVIAL] kill surplus menu in IDE Kconfig
-Date: Thu, 31 Jul 2003 11:03:52 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20030731090352.GH12849@louise.pinerecords.com>
-References: <20030730055725.GG4279@louise.pinerecords.com> <Pine.SOL.4.30.0307301823210.8913-100000@mion.elka.pw.edu.pl>
+From: Michael Buesch <fsdeveloper@yahoo.de>
+Subject: [2.6] system is very slow during disk access
+Date: Wed, 6 Aug 2003 20:51:55 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200308062052.10752.fsdeveloper@yahoo.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from louise.pinerecords.com ([213.168.176.16]:19868 "EHLO
-	louise.pinerecords.com") by vger.kernel.org with ESMTP
-	id S268737AbTGaJEC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 31 Jul 2003 05:04:02 -0400
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Description: clearsigned data
 Content-Disposition: inline
-In-Reply-To: <Pine.SOL.4.30.0307301823210.8913-100000@mion.elka.pw.edu.pl>
+To: linux kernel mailing list <linux-kernel@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Roman Zippel <zippel@linux-m68k.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> > > [B.Zolnierkiewicz@elka.pw.edu.pl]
-> >
-> > > - kill CONFIG_BLK_DEV_PDC202XX
-> >
-> > How do you mean?
-> 
-> It is not needed anymore.
-> We have now CONFIG_BLK_DEV_PDC202XX_OLD and CONFIG_BLK_DEV_PDC202XX_NEW.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Oh, I was under the impression that this was already done.
+Hi.
 
-> > > Does it sound sane?  If so I will later post patches for you review.
-> >
-> > Sounds good.  I can generate these patches if you're interested.
-> 
-> Patches are at:
-> http://home.elka.pw.edu.pl/~bzolnier/ide-Kconfig/
-> 
-> They are against 2.6.0-test2.
+I have massive problems with linux-2.6.0-test2.
+When some process writes something to disk, it's very hard
+to go on working with the system.
 
-Looks ok to me too.
+Some test-szenario:
+$ dd if=/dev/zero of=./test.file
 
--- 
-Tomas Szepe <szepe@pinerecords.com>
+While dd is running, xmms skips playing every now and then
+and the mouse is near to be unusable. The Mouse-cursor
+behaves some kind of very lazy and some times it jumps
+from one point on the display to another.
+When I stop disk-access, it works again quite fine.
+
+Would be cool, if you could give me some point to start
+for tracking this down.
+
+Please CC me, as I'm not subscribed to linux-ide. Thanks.
+- -- 
+Regards Michael Buesch  [ http://www.8ung.at/tuxsoft ]
+Penguin on this machine:  Linux 2.6.0-test2 - i386
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQE/MU5XoxoigfggmSgRAjksAJsEfEP7chsGZLTkwNHK00Qn83UCbwCghgc+
+8fXS+vHuygb4xhj0CwlQBV4=
+=Cr38
+-----END PGP SIGNATURE-----
