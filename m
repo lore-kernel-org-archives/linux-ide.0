@@ -1,72 +1,124 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] ide-taskfile.c fixups/cleanups [2/11]
-Date: Sat, 19 Jun 2004 18:08:27 +0200
+Subject: [PATCH] ide-taskfile.c fixups/cleanups [7/11]
+Date: Sat, 19 Jun 2004 18:12:53 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200406191808.27138.bzolnier@elka.pw.edu.pl>
+Message-ID: <200406191812.53190.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:5028 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264305AbUFSQPp
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:7076 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264251AbUFSQPy
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 Jun 2004 12:15:45 -0400
+	Sat, 19 Jun 2004 12:15:54 -0400
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
 
-[PATCH] ide: end request fix for CONFIG_IDE_TASKFILE_IO=y PIO handlers
+[PATCH] ide: add task_multi_sectors() to ide-taskfile.c
 
-ide_end_drive_cmd() should only be called for "flagged" taskfiles
-which have separate PIO handlers so use driver->end_request() instead.
+Move common code from task_mulin_intr() and task_mulout_intr()
+(CONFIG_IDE_TASKFILE_IO=y) to a task_multi_sectors() helper.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 
- linux-2.6.7-bzolnier/drivers/ide/ide-taskfile.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ linux-2.6.7-bzolnier/drivers/ide/ide-taskfile.c |   53 +++++++++---------------
+ 1 files changed, 22 insertions(+), 31 deletions(-)
 
-diff -puN drivers/ide/ide-taskfile.c~ide_tf_end_fix drivers/ide/ide-taskfile.c
---- linux-2.6.7/drivers/ide/ide-taskfile.c~ide_tf_end_fix	2004-06-19 02:41:30.203064168 +0200
-+++ linux-2.6.7-bzolnier/drivers/ide/ide-taskfile.c	2004-06-19 02:41:30.207063560 +0200
-@@ -586,7 +586,7 @@ check_status:
- 			return ide_stopped;
- 	/* Complete rq->buffer based request (ioctls). */
- 	if (!rq->bio && !rq->nr_sectors) {
--		ide_end_drive_cmd(drive, stat, HWIF(drive)->INB(IDE_ERROR_REG));
-+		DRIVER(drive)->end_request(drive, 1, 0);
+diff -puN drivers/ide/ide-taskfile.c~ide_tf_multi_sectors drivers/ide/ide-taskfile.c
+--- linux-2.6.7/drivers/ide/ide-taskfile.c~ide_tf_multi_sectors	2004-06-19 02:58:28.592245480 +0200
++++ linux-2.6.7-bzolnier/drivers/ide/ide-taskfile.c	2004-06-19 02:58:41.830233000 +0200
+@@ -512,6 +512,26 @@ EXPORT_SYMBOL(task_mulout_intr);
+ 
+ #else /* !CONFIG_IDE_TASKFILE_IO */
+ 
++static inline void task_multi_sectors(ide_drive_t *drive,
++				      struct request *rq, int rw)
++{
++	unsigned int nsect, msect = drive->mult_count;
++
++	rq->errors = 0;
++	do {
++		nsect = rq->current_nr_sectors;
++		if (nsect > msect)
++			nsect = msect;
++
++		task_sectors(drive, rq, nsect, rw);
++
++		if (!rq->nr_sectors)
++			msect = 0;
++		else
++			msect -= nsect;
++	} while (msect);
++}
++
+ static u8 wait_drive_not_busy(ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif = HWIF(drive);
+@@ -585,8 +605,6 @@ EXPORT_SYMBOL(task_in_intr);
+ ide_startstop_t task_mulin_intr (ide_drive_t *drive)
+ {
+ 	struct request *rq = HWGROUP(drive)->rq;
+-	unsigned int msect = drive->mult_count;
+-	unsigned int nsect;
+ 	u8 stat = HWIF(drive)->INB(IDE_STATUS_REG);
+ 
+ 	if (!OK_STAT(stat, DATA_READY, BAD_R_STAT)) {
+@@ -610,19 +628,7 @@ finish_rq:
  		return ide_stopped;
  	}
  
-@@ -637,7 +637,7 @@ check_status:
- 			return ide_stopped;
- 	/* Complete rq->buffer based request (ioctls). */
- 	if (!rq->bio && !rq->nr_sectors) {
--		ide_end_drive_cmd(drive, stat, HWIF(drive)->INB(IDE_ERROR_REG));
-+		DRIVER(drive)->end_request(drive, 1, 0);
- 		return ide_stopped;
- 	}
+-	rq->errors = 0;
+-	do {
+-		nsect = rq->current_nr_sectors;
+-		if (nsect > msect)
+-			nsect = msect;
+-
+-		task_sectors(drive, rq, nsect, IDE_PIO_IN);
+-
+-		if (!rq->nr_sectors)
+-			msect = 0;
+-		else
+-			msect -= nsect;
+-	} while (msect);
++	task_multi_sectors(drive, rq, IDE_PIO_IN);
  
-@@ -703,7 +703,7 @@ ide_startstop_t task_out_intr (ide_drive
- 			return ide_stopped;
- 	/* Complete rq->buffer based request (ioctls). */
- 	if (!rq->bio && !rq->nr_sectors) {
--		ide_end_drive_cmd(drive, stat, HWIF(drive)->INB(IDE_ERROR_REG));
-+		DRIVER(drive)->end_request(drive, 1, 0);
- 		return ide_stopped;
- 	}
+ 	/* If it was the last datablock check status and finish transfer. */
+ 	if (!rq->nr_sectors) {
+@@ -712,8 +718,6 @@ EXPORT_SYMBOL(pre_task_out_intr);
+ ide_startstop_t task_mulout_intr (ide_drive_t *drive)
+ {
+ 	struct request *rq = HWGROUP(drive)->rq;
+-	unsigned int msect = drive->mult_count;
+-	unsigned int nsect;
+ 	u8 stat;
  
-@@ -772,7 +772,7 @@ ide_startstop_t task_mulout_intr (ide_dr
- 			return ide_stopped;
- 	/* Complete rq->buffer based request (ioctls). */
- 	if (!rq->bio && !rq->nr_sectors) {
--		ide_end_drive_cmd(drive, stat, HWIF(drive)->INB(IDE_ERROR_REG));
-+		DRIVER(drive)->end_request(drive, 1, 0);
- 		return ide_stopped;
- 	}
+ 	stat = HWIF(drive)->INB(IDE_STATUS_REG);
+@@ -748,20 +752,7 @@ ide_startstop_t task_mulout_intr (ide_dr
  
+ 	/* Still data left to transfer. */
+ 	ide_set_handler(drive, &task_mulout_intr, WAIT_WORSTCASE, NULL);
+-
+-	rq->errors = 0;
+-	do {
+-		nsect = rq->current_nr_sectors;
+-		if (nsect > msect)
+-			nsect = msect;
+-
+-		task_sectors(drive, rq, nsect, IDE_PIO_OUT);
+-
+-		if (!rq->nr_sectors)
+-			msect = 0;
+-		else
+-			msect -= nsect;
+-	} while (msect);
++	task_multi_sectors(drive, rq, IDE_PIO_OUT);
+ 
+ 	return ide_started;
+ }
 
 _
 
