@@ -1,44 +1,26 @@
-From: Gary Poppitz <poppitzg@iomega.com>
-Subject: new sata_sis.c file
-Date: Mon, 28 Feb 2005 08:31:08 -0700
-Message-ID: <1834e00e828e13c6c43b5dd98fd1f4c6@iomega.com>
-Mime-Version: 1.0 (Apple Message framework v619.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] Re: 2.6.11-rc4 libata-core (irq 30: nobody cared!)
+Date: Mon, 28 Feb 2005 11:10:33 -0500
+Message-ID: <42234279.6030004@rtr.ca>
+References: <20050224015859.55191.qmail@web40910.mail.yahoo.com> <421D3D33.9060707@pobox.com> <20050226193255.GA6256@ime.usp.br> <4220D9DE.10904@pobox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from email-mx1.iomega.com ([147.178.1.72]:40078 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S261655AbVB1QDL
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:52371 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S261668AbVB1QLx
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Feb 2005 11:03:11 -0500
-Received: from emailmx0.iomega.com (hubble [147.178.1.70])
-	by email.iomega.com (Postfix) with ESMTP id 8B4A519A0
-	for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2005 09:03:10 -0700 (MST)
-Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
-	by emailmx0.iomega.com (Postfix) with ESMTP id 7FFE56D5
-	for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2005 16:03:10 +0000 (UTC)
+	Mon, 28 Feb 2005 11:11:53 -0500
+In-Reply-To: <4220D9DE.10904@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Looks like SIS updated their sata_sis.c file but did not bother to  
-update its revision level. Jeff, would you add this to the current dev  
-build?
+ >"irq XX: nobody cared" is a screaming interrupt situation, which could have 1001 causes.
 
+Speaking of which.  The 3ware drivers appear to have a bug
+in their handling of this.  They *always* report "handled=1"
+from their interrupt routines, regardless of whether it was
+their hardware or not that was signalling for attention.
 
-
-Begin forwarded message:
-
-> From: "Dan Greve" <grevedan@hotmail.com>
-> Date: February 25, 2005 9:59:52 AM MST
-> To: poppitzg@iomega.com, linux-ide@vger.kernel.org
-> Subject: RE: Secondary port on SiS 965
->
-> I've been successful in using both ports on the 965L rev 01  
-> controller, currently running a 2.6.11-rc3 patched kernel.  What  
-> version of sata_sis.c are you using?
->
-> I'm using the latest sata_sis.c (v 0.5) driver from SIS available at
->
-> http://download.sis.com/download_step2.php? 
-> id=155881&agree=1&country=USA
->
-
+Cheers
