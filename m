@@ -1,39 +1,38 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: libata badness
-Date: Tue, 05 Oct 2004 08:49:37 +0400
+From: Erik Mouw <erik@harddisk-recovery.com>
+Subject: Re: 137 GB limit?
+Date: Tue, 5 Oct 2004 09:44:35 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <416227E1.8020306@wasp.net.au>
-References: <Pine.LNX.4.60-041.0410040656001.2350@unix48.andrew.cmu.edu> <16737.54003.419130.575839@cse.unsw.edu.au> <Pine.LNX.4.60-041.0410042301510.22333@unix47.andrew.cmu.edu>
+Message-ID: <20041005074435.GA22634@harddisk-recovery.com>
+References: <4161BED1.7040401@tteng.com.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:58550 "EHLO wasp.net.au")
-	by vger.kernel.org with ESMTP id S268771AbUJEEtC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Oct 2004 00:49:02 -0400
-In-Reply-To: <Pine.LNX.4.60-041.0410042301510.22333@unix47.andrew.cmu.edu>
+Received: from users.linvision.com ([62.58.92.114]:426 "HELO bitwizard.nl")
+	by vger.kernel.org with SMTP id S268892AbUJEHog (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Oct 2004 03:44:36 -0400
+Content-Disposition: inline
+In-Reply-To: <4161BED1.7040401@tteng.com.br>
 List-Id: linux-ide@vger.kernel.org
-To: William Knop <wknop@andrew.cmu.edu>
-Cc: Neil Brown <neilb@cse.unsw.edu.au>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: "Luciano A. Stertz" <luciano@tteng.com.br>
+Cc: linux-ide@vger.kernel.org
 
-William Knop wrote:
-> 
->> This code starts:
->>
->>   0:   8b 55 04                  mov    0x4(%ebp),%edx
->>   3:   83 c1 08                  add    $0x8,%ecx
->>
->> and as %ebp is 01000000, this oopses.
->> It looks very much like a single-bit memory error (as has already been
->> suggested as a possibility).
-> 
-> 
-> Oh my. So, I ran memcheck again for a few hours, and it checked out 
-> fine. Just in case, though, I bought a replacement stick of ram. Well, 
-> the oopses went away, so it must have been the ram.
+On Mon, Oct 04, 2004 at 06:21:21PM -0300, Luciano A. Stertz wrote:
+> 	Does Linux already support hard disks higher than 137 Gb? I guess 
+> 	so.
 
-For future reference, I have had errors show up after 24-36 hours of memtest86. I usually find that 
-if it passes 48 hours of testing then things are looking pretty reliable. A couple of hours is 
-usually too small a sample to rely on.
+Yes it does.
 
-Brad
+> In this case, can someone give me an idea of when was this feature 
+> officially merged in the kernel? I'm running an old 2.4.20 kernel and 
+> wonder whether it supports newer HDs.
+
+IIRC support was merged in 2.4.19. I remember I needed to use Andre
+Hedrick's IDE patch for 2.4.18 to address the 160GB Maxtor drives we
+used at that time, but 2.4.19 ran out of the box.
+
+
+Erik
+
+-- 
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
