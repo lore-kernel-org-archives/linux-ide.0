@@ -1,63 +1,43 @@
-From: "Prakash K. Cheemplavam" <prakashkc@gmx.de>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [patch] libata: add ioctls to support SMART
-Date: Mon, 30 Aug 2004 19:47:16 +0200
+Date: Mon, 30 Aug 2004 13:58:00 -0400
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <41336824.1040206@gmx.de>
-References: <200408301531.i7UFVBg29089@ra.tuxdriver.com>
+Message-ID: <41336AA8.1070401@pobox.com>
+References: <200408301531.i7UFVBg29089@ra.tuxdriver.com> <413361BF.8020805@pobox.com> <20040830124225.A4358@florence.linkmargin.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S268746AbUH3Rvl@vger.kernel.org>
-In-Reply-To: <200408301531.i7UFVBg29089@ra.tuxdriver.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S268723AbUH3SEP@vger.kernel.org>
+In-Reply-To: <20040830124225.A4358@florence.linkmargin.com>
+To: Andy Warner <andyw@pobox.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Andy Warner wrote:
+> Jeff Garzik wrote:
+> 
+>>[...]
+>>That implies, then, that you would add code to libata-scsi.c that 
+>>translates the ATA-passthru SCSI command into an ATA command using the 
+>>ata_scsi_translate() infrastructure.
+> 
+> 
+> Speaking of which - I'm working on this and want to find like
+> minded people playing in the libata-scsi.c/04-262r<n>.pdf
+> sandbox, and collaborate with them.
+> 
+> If you're one of these people, ping me off list and we
+> can pool our efforts.
 
-John W. Linville wrote:
-| Support for HDIO_DRIVE_CMD and HDIO_DRIVE_TASK in libata.  Useful for
-| supporting SMART w/ unmodified smartctl and smartd userland binaries.
-|
-| Not happy w/ loop after failed ata_qc_new_init(), but needed because
-smartctl
-| and smartd did not retry after failure.  Likely need an option to wait for
-| available qc?  Also not sure all the error return codes are correct...
+I am trying convince someone to do it for me, since I'm working on new 
+controller support ATM ;-)
 
-Hi,
+It shouldn't be hard -- just a new function "ata_scsi_passthru_xlat" 
+that translates the 04-262r<n>.pdf opcode into struct ata_taskfile. 
+That's all that's needed for Step One.
 
-I just tried to give it a go with libata from 2.6.9-rc1. I had to fix
-one rejects but the patching seemed to go fine beside that. Nevertheless
-after a boot with patched libata I get:
+John mentioned he might look at it...  but why don't you guys (and 
+everyone else interested) just work publicly on linux-ide?  Share the 
+knowledge and patches :)
 
-smartctl -a /dev/sda
-smartctl version 5.30 Copyright (C) 2002-4 Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
-
-Device: ATA      SAMSUNG SP1614N  Version: TM10
-Serial number: 0735J1FW702444
-Device type: disk
-Local Time is: Mon Aug 30 19:44:23 2004 CEST
-Device does not support SMART
-
-Device does not support Error Counter logging
-
-[GLTSD (Global Logging Target Save Disable) set. Enable Save with '-S on']
-Device does not support Self Test logging
-
-
-I am pretty sure my drive supports SMART. I hope that I understood your
-post correctly that with this patch it should work.
-
-Cheers,
-
-Prakash
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
-
-iD8DBQFBM2gkxU2n/+9+t5gRAh1ZAJ0T1/zurwQZg7ddQx4X2aS5x8UMIgCg0hra
-3D+Bhyp5MKpLVGdh7WIdPYA=
-=Axdm
------END PGP SIGNATURE-----
+	Jeff
