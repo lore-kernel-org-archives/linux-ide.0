@@ -1,39 +1,50 @@
 From: domen@coderock.org
-Subject: [patch 3/6] Resend: drivers/ide/pci/cs5520.c fix return code value
-Date: Sun, 06 Mar 2005 11:42:10 +0100
-Message-ID: <20050306104210.C3D331F203@trashy.coderock.org>
-Received: from coderock.org ([193.77.147.115]:30634 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S261373AbVCFKmQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Mar 2005 05:42:16 -0500
+Subject: [patch 2/6] Replace pci_find_device with pci_dev_present
+Date: Sun, 06 Mar 2005 11:42:06 +0100
+Message-ID: <20050306104207.6C1A61F1F0@trashy.coderock.org>
+Received: from coderock.org ([193.77.147.115]:29098 "EHLO trashy.coderock.org")
+	by vger.kernel.org with ESMTP id S261370AbVCFKmM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Mar 2005 05:42:12 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org, domen@coderock.org, amitg@calsoftinc.com, gud@eth.net
+Cc: linux-ide@vger.kernel.org, domen@coderock.org, hannal@us.ibm.com, janitor@sternwelten.at
 
 
 
-The patch follows from the suggestions by AC and Felipe W Damasio for fixing the return codes from IDE drivers.
 
-Do consider applying.
+The dev returned from pci_find_device was not used so it can be replaced
+with pci_dev_present. Has been compile tested.
 
-Signed-off-by: Amit Gud <gud@eth.net>
+Hanna Linder
+IBM Linux Technology Center
+
+Signed-off-by: Hanna Linder <hannal@us.ibm.com>
+Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
 Signed-off-by: Domen Puncer <domen@coderock.org>
 ---
 
 
- kj-domen/drivers/ide/pci/cs5520.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ kj-domen/drivers/ide/pci/alim15x3.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletion(-)
 
-diff -puN drivers/ide/pci/cs5520.c~return_code-drivers_ide_pci_cs5520 drivers/ide/pci/cs5520.c
---- kj/drivers/ide/pci/cs5520.c~return_code-drivers_ide_pci_cs5520	2005-03-05 16:11:10.000000000 +0100
-+++ kj-domen/drivers/ide/pci/cs5520.c	2005-03-05 16:11:10.000000000 +0100
-@@ -224,7 +224,7 @@ static int __devinit cs5520_init_one(str
- 	if(pci_enable_device_bars(dev, 1<<2))
- 	{
- 		printk(KERN_WARNING "%s: Unable to enable 55x0.\n", d->name);
--		return 1;
-+		return -ENODEV;
- 	}
- 	pci_set_master(dev);
- 	if (pci_set_dma_mask(dev, 0xFFFFFFFF)) {
+diff -puN drivers/ide/pci/alim15x3.c~pci_dev_present-drivers_ide_pci_alim15x3 drivers/ide/pci/alim15x3.c
+--- kj/drivers/ide/pci/alim15x3.c~pci_dev_present-drivers_ide_pci_alim15x3	2005-03-05 16:09:42.000000000 +0100
++++ kj-domen/drivers/ide/pci/alim15x3.c	2005-03-05 16:09:42.000000000 +0100
+@@ -876,9 +876,14 @@ static ide_pci_device_t ali15x3_chipset 
+  
+ static int __devinit alim15x3_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ {
++	static struct pci_device_id ati_rs100[] = {
++		{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS100) },
++		{ },
++	};
++
+ 	ide_pci_device_t *d = &ali15x3_chipset;
+ 
+-	if(pci_find_device(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS100, NULL))
++	if(pci_dev_present(ati_rs100))
+ 		printk(KERN_ERR "Warning: ATI Radeon IGP Northbridge is not yet fully tested.\n");
+ 
+ #if defined(CONFIG_SPARC64)
 _
