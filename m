@@ -1,63 +1,35 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] speed up SATA
-Date: Sun, 28 Mar 2004 12:48:11 -0500
+Date: Sun, 28 Mar 2004 12:49:19 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40670FDB.6080409@pobox.com>
-References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406612AA.1090406@yahoo.com.au> <4066156F.1000805@pobox.com> <20040328141014.GE24370@suse.de> <40670BD9.9020707@pobox.com> <20040328173508.GI24370@suse.de>
+Message-ID: <4067101F.9030606@pobox.com>
+References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406616EE.80301@pobox.com> <4066191E.4040702@yahoo.com.au> <40662108.40705@pobox.com> <20040328135124.GA32597@mail.shareable.org> <40670A36.3000005@pobox.com> <20040328174013.GJ24370@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:9173 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262271AbUC1RsZ
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:11733 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262292AbUC1Rtc
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Mar 2004 12:48:25 -0500
-In-Reply-To: <20040328173508.GI24370@suse.de>
+	Sun, 28 Mar 2004 12:49:32 -0500
+In-Reply-To: <20040328174013.GJ24370@suse.de>
 List-Id: linux-ide@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>
-Cc: Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+Cc: Jamie Lokier <jamie@shareable.org>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
 Jens Axboe wrote:
-> On Sun, Mar 28 2004, Jeff Garzik wrote:
-> 
->>Jens Axboe wrote:
->>
->>>On Sat, Mar 27 2004, Jeff Garzik wrote:
->>>
->>>
->>>>I also wouldn't want to lock out any users who wanted to use SATA at 
->>>>full speed ;-)
->>>
->>>
->>>And full speed requires 32MB requests?
->>
->>
->>Full speed is the SATA driver supporting the hardware maximum.  The 
-> 
-> 
-> Come on Jeff, don't be such a slave to the hardware specifications. Just
-> because it's possible to send down 32MB requests doesn't necessarily
-> mean it's a super thing to do, nor that it automagically makes 'things
-> go faster'. The claim is that back-to-back 1MB requests are every bit as
-> fast as a 32MB request (especially if you have a small queue depth, in
-> that case there truly should be zero benefit to doing the bigger ones).
-> The cut-off point is likely even lower than 1MB, I'm just using that
-> figure as a value that is 'pretty big' yet doesn't incur too large
-> latencies just because of its size.
+> What would be nice (and I seem to recall that Andre also pushed for
+> this) would be the FUA bit doubling as an ordered tag indicator when
+> using TCQ. It's one of those things that keep ATA squarely outside of
+> the big machine uses. That other OS had a differing opinion of what to
+> do with that, so...
 
+Preach on, brother Jens :)
 
-For me this is a policy issue.
+I agree completely.  Or, the ATA guys could use SCSI's ordered tags / 
+linked commands.
 
-I agree that huge requst hurt latency.  I just disagree that the 
-_driver_ should artificially lower its maximums to fit a guess about 
-what the best request size should be.
-
-If there needs to be an overall limit on per-size size, do it at the 
-block layer.  It's not scalable to hardcode that limit into every 
-driver.  That's not the driver's job.  The driver just exports the 
-hardware limits, nothing more.
-
-A limit is fine.  I support that.  An artificial limit in the driver is not.
+Regardless, there's ATA dain bramage that needs fixing...  Sigh.
 
 	Jeff
 
