@@ -1,217 +1,268 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] remove CONFIG_IDEDMA_PCI_WIP
-Date: Wed, 4 Feb 2004 02:35:42 +0100
+Subject: [PATCH] [IDE] remove ide_dma_queued_* ops from ide_hwif_t
+Date: Tue, 3 Feb 2004 21:15:35 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200402040235.42640.bzolnier@elka.pw.edu.pl>
+Message-ID: <200402032115.35868.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:56029 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264437AbUBDBbV
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:5621 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S265964AbUBDEpE
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Feb 2004 20:31:21 -0500
+	Tue, 3 Feb 2004 23:45:04 -0500
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-[PATCH] remove CONFIG_IDEDMA_PCI_WIP
+Jens, could you take a look?
 
-Fix CONFIG_HPT34X_AUTODMA to depend directly on CONFIG_EXPERIMENTAL
-and finally remove CONFIG_IDEDMA_PCI_WIP.
+--bart
 
- linux-2.6.2-rc3-bk3-root/arch/alpha/defconfig                 |    1 
- linux-2.6.2-rc3-bk3-root/arch/arm/configs/iq80321_defconfig   |    1 
- linux-2.6.2-rc3-bk3-root/arch/arm/configs/netwinder_defconfig |    1 
- linux-2.6.2-rc3-bk3-root/arch/i386/defconfig                  |    1 
- linux-2.6.2-rc3-bk3-root/arch/ia64/configs/generic_defconfig  |    1 
- linux-2.6.2-rc3-bk3-root/arch/ia64/configs/sn2_defconfig      |    1 
- linux-2.6.2-rc3-bk3-root/arch/ia64/defconfig                  |    1 
- linux-2.6.2-rc3-bk3-root/arch/mips/defconfig-lasat200         |    1 
- linux-2.6.2-rc3-bk3-root/arch/ppc/configs/common_defconfig    |    1 
- linux-2.6.2-rc3-bk3-root/arch/ppc/configs/pmac_defconfig      |    1 
- linux-2.6.2-rc3-bk3-root/arch/ppc/defconfig                   |    1 
- linux-2.6.2-rc3-bk3-root/arch/sparc64/defconfig               |    1 
- linux-2.6.2-rc3-bk3-root/arch/x86_64/defconfig                |    1 
- linux-2.6.2-rc3-bk3-root/drivers/ide/Kconfig                  |   14 +---------
- 14 files changed, 2 insertions(+), 25 deletions(-)
+TCQ code is host independent so remove redundant ide_dma_queued_* ops from
+ide_hwif_t.  If we ever decide to bring back TCQ support this will fix OOPS
+in ide-disk driver with CONFIG_BLK_DEV_IDE_TCQ_DEFAULT=y and icside/sgiioc4
+host drivers (it will also enable TCQ support for these host drivers).
 
-diff -puN arch/alpha/defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup arch/alpha/defconfig
---- linux-2.6.2-rc3-bk3/arch/alpha/defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:45:57.635462808 +0100
-+++ linux-2.6.2-rc3-bk3-root/arch/alpha/defconfig	2004-02-04 01:46:02.909661008 +0100
-@@ -155,7 +155,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
- CONFIG_IDEDMA_PCI_AUTO=y
- # CONFIG_IDEDMA_ONLYDISK is not set
- CONFIG_BLK_DEV_IDEDMA=y
--# CONFIG_IDEDMA_PCI_WIP is not set
- CONFIG_BLK_DEV_ADMA=y
- # CONFIG_BLK_DEV_AEC62XX is not set
- CONFIG_BLK_DEV_ALI15X3=y
-diff -puN arch/arm/configs/iq80321_defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup arch/arm/configs/iq80321_defconfig
---- linux-2.6.2-rc3-bk3/arch/arm/configs/iq80321_defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:49:23.846114024 +0100
-+++ linux-2.6.2-rc3-bk3-root/arch/arm/configs/iq80321_defconfig	2004-02-04 01:49:42.927213256 +0100
-@@ -441,7 +441,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
- CONFIG_IDEDMA_PCI_AUTO=y
- # CONFIG_IDEDMA_ONLYDISK is not set
- CONFIG_BLK_DEV_IDEDMA=y
--# CONFIG_IDEDMA_PCI_WIP is not set
- CONFIG_BLK_DEV_ADMA=y
- # CONFIG_BLK_DEV_AEC62XX is not set
- # CONFIG_BLK_DEV_ALI15X3 is not set
-diff -puN arch/arm/configs/netwinder_defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup arch/arm/configs/netwinder_defconfig
---- linux-2.6.2-rc3-bk3/arch/arm/configs/netwinder_defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:49:13.997611224 +0100
-+++ linux-2.6.2-rc3-bk3-root/arch/arm/configs/netwinder_defconfig	2004-02-04 01:49:36.174239864 +0100
-@@ -439,7 +439,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
- # CONFIG_BLK_DEV_IDEDMA_FORCED is not set
- CONFIG_IDEDMA_PCI_AUTO=y
- # CONFIG_IDEDMA_ONLYDISK is not set
--# CONFIG_IDEDMA_PCI_WIP is not set
- CONFIG_BLK_DEV_ADMA=y
- # CONFIG_BLK_DEV_AEC62XX is not set
- # CONFIG_BLK_DEV_ALI15X3 is not set
-diff -puN arch/i386/defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup arch/i386/defconfig
---- linux-2.6.2-rc3-bk3/arch/i386/defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:47:58.320115952 +0100
-+++ linux-2.6.2-rc3-bk3-root/arch/i386/defconfig	2004-02-04 01:48:04.903115184 +0100
-@@ -274,7 +274,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
- # CONFIG_BLK_DEV_IDEDMA_FORCED is not set
- CONFIG_IDEDMA_PCI_AUTO=y
- # CONFIG_IDEDMA_ONLYDISK is not set
--# CONFIG_IDEDMA_PCI_WIP is not set
- CONFIG_BLK_DEV_ADMA=y
- # CONFIG_BLK_DEV_AEC62XX is not set
- # CONFIG_BLK_DEV_ALI15X3 is not set
-diff -puN arch/ia64/configs/generic_defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup arch/ia64/configs/generic_defconfig
---- linux-2.6.2-rc3-bk3/arch/ia64/configs/generic_defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:47:25.238145176 +0100
-+++ linux-2.6.2-rc3-bk3-root/arch/ia64/configs/generic_defconfig	2004-02-04 01:47:33.532884184 +0100
-@@ -191,7 +191,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
- # CONFIG_BLK_DEV_IDEDMA_FORCED is not set
- CONFIG_IDEDMA_PCI_AUTO=y
- # CONFIG_IDEDMA_ONLYDISK is not set
--# CONFIG_IDEDMA_PCI_WIP is not set
- CONFIG_BLK_DEV_ADMA=y
- # CONFIG_BLK_DEV_AEC62XX is not set
- # CONFIG_BLK_DEV_ALI15X3 is not set
-diff -puN arch/ia64/configs/sn2_defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup arch/ia64/configs/sn2_defconfig
---- linux-2.6.2-rc3-bk3/arch/ia64/configs/sn2_defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:47:20.866809720 +0100
-+++ linux-2.6.2-rc3-bk3-root/arch/ia64/configs/sn2_defconfig	2004-02-04 01:47:37.030352488 +0100
-@@ -170,7 +170,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
- # CONFIG_BLK_DEV_IDEDMA_FORCED is not set
- CONFIG_IDEDMA_PCI_AUTO=y
- # CONFIG_IDEDMA_ONLYDISK is not set
--# CONFIG_IDEDMA_PCI_WIP is not set
- CONFIG_BLK_DEV_ADMA=y
- # CONFIG_BLK_DEV_AEC62XX is not set
- # CONFIG_BLK_DEV_ALI15X3 is not set
-diff -puN arch/ia64/defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup arch/ia64/defconfig
---- linux-2.6.2-rc3-bk3/arch/ia64/defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:46:50.696396320 +0100
-+++ linux-2.6.2-rc3-bk3-root/arch/ia64/defconfig	2004-02-04 01:46:59.326084408 +0100
-@@ -188,7 +188,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
- # CONFIG_BLK_DEV_IDEDMA_FORCED is not set
- CONFIG_IDEDMA_PCI_AUTO=y
- # CONFIG_IDEDMA_ONLYDISK is not set
--# CONFIG_IDEDMA_PCI_WIP is not set
- CONFIG_BLK_DEV_ADMA=y
- # CONFIG_BLK_DEV_AEC62XX is not set
- # CONFIG_BLK_DEV_ALI15X3 is not set
-diff -puN arch/mips/defconfig-lasat200~CONFIG_IDEDMA_PCI_WIP_cleanup arch/mips/defconfig-lasat200
---- linux-2.6.2-rc3-bk3/arch/mips/defconfig-lasat200~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:46:25.297257576 +0100
-+++ linux-2.6.2-rc3-bk3-root/arch/mips/defconfig-lasat200	2004-02-04 01:46:36.529550008 +0100
-@@ -254,7 +254,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
- CONFIG_IDEDMA_PCI_AUTO=y
- # CONFIG_IDEDMA_ONLYDISK is not set
- CONFIG_BLK_DEV_IDEDMA=y
--# CONFIG_IDEDMA_PCI_WIP is not set
- CONFIG_BLK_DEV_ADMA=y
- # CONFIG_BLK_DEV_AEC62XX is not set
- # CONFIG_BLK_DEV_ALI15X3 is not set
-diff -puN arch/ppc/configs/common_defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup arch/ppc/configs/common_defconfig
---- linux-2.6.2-rc3-bk3/arch/ppc/configs/common_defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:48:40.960633608 +0100
-+++ linux-2.6.2-rc3-bk3-root/arch/ppc/configs/common_defconfig	2004-02-04 01:48:53.836676152 +0100
-@@ -210,7 +210,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
- # CONFIG_BLK_DEV_IDEDMA_FORCED is not set
- CONFIG_IDEDMA_PCI_AUTO=y
- # CONFIG_IDEDMA_ONLYDISK is not set
--# CONFIG_IDEDMA_PCI_WIP is not set
- CONFIG_BLK_DEV_ADMA=y
- # CONFIG_BLK_DEV_AEC62XX is not set
- # CONFIG_BLK_DEV_ALI15X3 is not set
-diff -puN arch/ppc/configs/pmac_defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup arch/ppc/configs/pmac_defconfig
---- linux-2.6.2-rc3-bk3/arch/ppc/configs/pmac_defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:48:44.436105256 +0100
-+++ linux-2.6.2-rc3-bk3-root/arch/ppc/configs/pmac_defconfig	2004-02-04 01:48:58.916903840 +0100
-@@ -217,7 +217,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
- # CONFIG_BLK_DEV_IDEDMA_FORCED is not set
- CONFIG_IDEDMA_PCI_AUTO=y
- # CONFIG_IDEDMA_ONLYDISK is not set
--# CONFIG_IDEDMA_PCI_WIP is not set
- CONFIG_BLK_DEV_ADMA=y
- # CONFIG_BLK_DEV_AEC62XX is not set
- # CONFIG_BLK_DEV_ALI15X3 is not set
-diff -puN arch/ppc/defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup arch/ppc/defconfig
---- linux-2.6.2-rc3-bk3/arch/ppc/defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:48:19.273930488 +0100
-+++ linux-2.6.2-rc3-bk3-root/arch/ppc/defconfig	2004-02-04 01:48:26.437841408 +0100
-@@ -218,7 +218,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
- # CONFIG_BLK_DEV_IDEDMA_FORCED is not set
- CONFIG_IDEDMA_PCI_AUTO=y
- # CONFIG_IDEDMA_ONLYDISK is not set
--# CONFIG_IDEDMA_PCI_WIP is not set
- CONFIG_BLK_DEV_ADMA=y
- # CONFIG_BLK_DEV_AEC62XX is not set
- # CONFIG_BLK_DEV_ALI15X3 is not set
-diff -puN arch/sparc64/defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup arch/sparc64/defconfig
---- linux-2.6.2-rc3-bk3/arch/sparc64/defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:45:28.861837064 +0100
-+++ linux-2.6.2-rc3-bk3-root/arch/sparc64/defconfig	2004-02-04 01:45:37.420535944 +0100
-@@ -242,7 +242,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
- # CONFIG_BLK_DEV_IDEDMA_FORCED is not set
- CONFIG_IDEDMA_PCI_AUTO=y
- CONFIG_IDEDMA_ONLYDISK=y
--# CONFIG_IDEDMA_PCI_WIP is not set
- CONFIG_BLK_DEV_ADMA=y
- # CONFIG_BLK_DEV_AEC62XX is not set
- CONFIG_BLK_DEV_ALI15X3=y
-diff -puN arch/x86_64/defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup arch/x86_64/defconfig
---- linux-2.6.2-rc3-bk3/arch/x86_64/defconfig~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:44:39.027413048 +0100
-+++ linux-2.6.2-rc3-bk3-root/arch/x86_64/defconfig	2004-02-04 01:44:58.528448440 +0100
-@@ -191,7 +191,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
- # CONFIG_BLK_DEV_IDEDMA_FORCED is not set
- CONFIG_IDEDMA_PCI_AUTO=y
- # CONFIG_IDEDMA_ONLYDISK is not set
--# CONFIG_IDEDMA_PCI_WIP is not set
- CONFIG_BLK_DEV_ADMA=y
- # CONFIG_BLK_DEV_AEC62XX is not set
- # CONFIG_BLK_DEV_ALI15X3 is not set
-diff -puN drivers/ide/Kconfig~CONFIG_IDEDMA_PCI_WIP_cleanup drivers/ide/Kconfig
---- linux-2.6.2-rc3-bk3/drivers/ide/Kconfig~CONFIG_IDEDMA_PCI_WIP_cleanup	2004-02-04 01:39:30.896256104 +0100
-+++ linux-2.6.2-rc3-bk3-root/drivers/ide/Kconfig	2004-02-04 01:40:45.188961896 +0100
-@@ -511,16 +511,6 @@ config IDEDMA_ONLYDISK
+ linux-2.6.2-rc3-bk3-root/drivers/ide/ide-disk.c     |   20 +++++++----------
+ linux-2.6.2-rc3-bk3-root/drivers/ide/ide-dma.c      |   23 ++------------------
+ linux-2.6.2-rc3-bk3-root/drivers/ide/ide-taskfile.c |    6 +++--
+ linux-2.6.2-rc3-bk3-root/drivers/ide/ide-tcq.c      |    4 +--
+ linux-2.6.2-rc3-bk3-root/drivers/ide/ide.c          |    7 ------
+ linux-2.6.2-rc3-bk3-root/drivers/ide/ppc/pmac.c     |    7 ------
+ linux-2.6.2-rc3-bk3-root/include/linux/ide.h        |   23 --------------------
+ 7 files changed, 18 insertions(+), 72 deletions(-)
+
+diff -puN drivers/ide/ide.c~ide_dma_queued_cleanup drivers/ide/ide.c
+--- linux-2.6.2-rc3-bk3/drivers/ide/ide.c~ide_dma_queued_cleanup	2004-02-03 18:59:54.082285872 +0100
++++ linux-2.6.2-rc3-bk3-root/drivers/ide/ide.c	2004-02-03 19:00:18.410587408 +0100
+@@ -848,13 +848,6 @@ void ide_unregister (unsigned int index)
+ 	hwif->ide_dma_verbose		= old_hwif.ide_dma_verbose;
+ 	hwif->ide_dma_lostirq		= old_hwif.ide_dma_lostirq;
+ 	hwif->ide_dma_timeout		= old_hwif.ide_dma_timeout;
+-	hwif->ide_dma_queued_on		= old_hwif.ide_dma_queued_on;
+-	hwif->ide_dma_queued_off	= old_hwif.ide_dma_queued_off;
+-#ifdef CONFIG_BLK_DEV_IDE_TCQ
+-	hwif->ide_dma_queued_read	= old_hwif.ide_dma_queued_read;
+-	hwif->ide_dma_queued_write	= old_hwif.ide_dma_queued_write;
+-	hwif->ide_dma_queued_start	= old_hwif.ide_dma_queued_start;
+-#endif
+ #endif
  
- 	  Generally say N here.
+ #if 0
+diff -puN drivers/ide/ide-disk.c~ide_dma_queued_cleanup drivers/ide/ide-disk.c
+--- linux-2.6.2-rc3-bk3/drivers/ide/ide-disk.c~ide_dma_queued_cleanup	2004-02-03 19:02:05.932241632 +0100
++++ linux-2.6.2-rc3-bk3-root/drivers/ide/ide-disk.c	2004-02-03 20:02:29.251413392 +0100
+@@ -470,9 +470,10 @@ ide_startstop_t __ide_do_rw_disk (ide_dr
+ 	}
  
--config IDEDMA_PCI_WIP
--	bool "ATA Work(s) In Progress (EXPERIMENTAL)"
--	depends on EXPERIMENTAL
--	help
--	  If you enable this you will be able to use and test highly
--	  developmental projects. If you say N, the configurator will
--	  simply skip those options.
+ 	if (rq_data_dir(rq) == READ) {
++#ifdef CONFIG_BLK_DEV_IDE_TCQ
+ 		if (blk_rq_tagged(rq))
+-			return hwif->ide_dma_queued_read(drive);
 -
--	  It is SAFEST to say N to this question.
--
- config BLK_DEV_ADMA
- 	bool
- 	depends on PCI && BLK_DEV_IDEPCI
-@@ -619,8 +609,8 @@ config BLK_DEV_HPT34X
- 	  DVD II drives, by the manufacturer.
++			return __ide_dma_queued_read(drive);
++#endif
+ 		if (drive->using_dma && !hwif->ide_dma_read(drive))
+ 			return ide_started;
  
- config HPT34X_AUTODMA
--	bool "HPT34X AUTODMA support (WIP)"
--	depends on BLK_DEV_HPT34X && IDEDMA_PCI_WIP
-+	bool "HPT34X AUTODMA support (EXPERIMENTAL)"
-+	depends on BLK_DEV_HPT34X && EXPERIMENTAL
- 	help
- 	  This is a dangerous thing to attempt currently! Please read the
- 	  comments at the top of <file:drivers/ide/pci/hpt34x.c>.  If you say Y
+@@ -483,10 +484,10 @@ ide_startstop_t __ide_do_rw_disk (ide_dr
+ 		return ide_started;
+ 	} else if (rq_data_dir(rq) == WRITE) {
+ 		ide_startstop_t startstop;
+-
++#ifdef CONFIG_BLK_DEV_IDE_TCQ
+ 		if (blk_rq_tagged(rq))
+-			return hwif->ide_dma_queued_write(drive);
+-
++			return __ide_dma_queued_write(drive);
++#endif
+ 		if (drive->using_dma && !(HWIF(drive)->ide_dma_write(drive)))
+ 			return ide_started;
+ 
+@@ -1400,13 +1401,10 @@ static int set_acoustic (ide_drive_t *dr
+ #ifdef CONFIG_BLK_DEV_IDE_TCQ
+ static int set_using_tcq(ide_drive_t *drive, int arg)
+ {
+-	ide_hwif_t *hwif = HWIF(drive);
+ 	int ret;
+ 
+ 	if (!drive->driver)
+ 		return -EPERM;
+-	if (!hwif->ide_dma_queued_on || !hwif->ide_dma_queued_off)
+-		return -ENXIO;
+ 	if (arg == drive->queue_depth && drive->using_tcq)
+ 		return 0;
+ 
+@@ -1420,9 +1418,9 @@ static int set_using_tcq(ide_drive_t *dr
+ 	}
+ 
+ 	if (arg)
+-		ret = HWIF(drive)->ide_dma_queued_on(drive);
++		ret = __ide_dma_queued_on(drive);
+ 	else
+-		ret = HWIF(drive)->ide_dma_queued_off(drive);
++		ret = __ide_dma_queued_off(drive);
+ 
+ 	return ret ? -EIO : 0;
+ }
+@@ -1673,7 +1671,7 @@ static void idedisk_setup (ide_drive_t *
+ 
+ #ifdef CONFIG_BLK_DEV_IDE_TCQ_DEFAULT
+ 	if (drive->using_dma)
+-		HWIF(drive)->ide_dma_queued_on(drive);
++		__ide_dma_queued_on(drive);
+ #endif
+ }
+ 
+diff -puN drivers/ide/ide-dma.c~ide_dma_queued_cleanup drivers/ide/ide-dma.c
+--- linux-2.6.2-rc3-bk3/drivers/ide/ide-dma.c~ide_dma_queued_cleanup	2004-02-03 19:02:07.698973048 +0100
++++ linux-2.6.2-rc3-bk3-root/drivers/ide/ide-dma.c	2004-02-03 19:05:34.933468616 +0100
+@@ -512,9 +512,9 @@ int __ide_dma_off_quietly (ide_drive_t *
+ 
+ 	if (HWIF(drive)->ide_dma_host_off(drive))
+ 		return 1;
+-
+-	HWIF(drive)->ide_dma_queued_off(drive);
+-
++#ifdef CONFIG_BLK_DEV_IDE_TCQ
++	__ide_dma_queued_off(drive);
++#endif
+ 	return 0;
+ }
+ 
+@@ -1091,23 +1091,6 @@ void ide_setup_dma (ide_hwif_t *hwif, un
+ 	if (!hwif->ide_dma_lostirq)
+ 		hwif->ide_dma_lostirq = &__ide_dma_lostirq;
+ 
+-	/*
+-	 * dma queued ops. if tcq isn't set, queued on and off are just
+-	 * dummy functions. cuts down on ifdef hell
+-	 */
+-	if (!hwif->ide_dma_queued_on)
+-		hwif->ide_dma_queued_on = __ide_dma_queued_on;
+-	if (!hwif->ide_dma_queued_off)
+-		hwif->ide_dma_queued_off = __ide_dma_queued_off;
+-#ifdef CONFIG_BLK_DEV_IDE_TCQ
+-	if (!hwif->ide_dma_queued_read)
+-		hwif->ide_dma_queued_read = __ide_dma_queued_read;
+-	if (!hwif->ide_dma_queued_write)
+-		hwif->ide_dma_queued_write = __ide_dma_queued_write;
+-	if (!hwif->ide_dma_queued_start)
+-		hwif->ide_dma_queued_start = __ide_dma_queued_start;
+-#endif
+-
+ 	if (hwif->chipset != ide_trm290) {
+ 		u8 dma_stat = hwif->INB(hwif->dma_status);
+ 		printk(", BIOS settings: %s:%s, %s:%s",
+diff -puN drivers/ide/ide-taskfile.c~ide_dma_queued_cleanup drivers/ide/ide-taskfile.c
+--- linux-2.6.2-rc3-bk3/drivers/ide/ide-taskfile.c~ide_dma_queued_cleanup	2004-02-03 19:13:13.781713080 +0100
++++ linux-2.6.2-rc3-bk3-root/drivers/ide/ide-taskfile.c	2004-02-03 19:14:23.821065480 +0100
+@@ -200,12 +200,14 @@ ide_startstop_t do_rw_taskfile (ide_driv
+ 			if (!hwif->ide_dma_read(drive))
+ 				return ide_started;
+ 			break;
++#ifdef CONFIG_BLK_DEV_IDE_TCQ
+ 		case WIN_READDMA_QUEUED:
+ 		case WIN_READDMA_QUEUED_EXT:
+-			return hwif->ide_dma_queued_read(drive);
++			return __ide_dma_queued_read(drive);
+ 		case WIN_WRITEDMA_QUEUED:
+ 		case WIN_WRITEDMA_QUEUED_EXT:
+-			return hwif->ide_dma_queued_write(drive);
++			return __ide_dma_queued_write(drive);
++#endif
+ 		default:
+ 			if (task->handler == NULL)
+ 				return ide_stopped;
+diff -puN drivers/ide/ide-tcq.c~ide_dma_queued_cleanup drivers/ide/ide-tcq.c
+--- linux-2.6.2-rc3-bk3/drivers/ide/ide-tcq.c~ide_dma_queued_cleanup	2004-02-03 19:55:43.775055168 +0100
++++ linux-2.6.2-rc3-bk3-root/drivers/ide/ide-tcq.c	2004-02-03 19:58:10.079813464 +0100
+@@ -353,7 +353,7 @@ ide_startstop_t ide_service(ide_drive_t 
+ 		 */
+ 		TCQ_PRINTK("ide_service: starting command, stat=%x\n", stat);
+ 		spin_unlock_irqrestore(&ide_lock, flags);
+-		return HWIF(drive)->ide_dma_queued_start(drive);
++		return __ide_dma_queued_start(drive);
+ 	}
+ 
+ 	printk(KERN_ERR "ide_service: missing request for tag %d\n", tag);
+@@ -729,7 +729,7 @@ static ide_startstop_t ide_dma_queued_rw
+ 	feat = hwif->INB(IDE_NSECTOR_REG);
+ 	if (!(feat & REL)) {
+ 		TCQ_PRINTK("IMMED in queued_start, feat=%x\n", feat);
+-		return hwif->ide_dma_queued_start(drive);
++		return __ide_dma_queued_start(drive);
+ 	}
+ 
+ 	/*
+diff -puN drivers/ide/ppc/pmac.c~ide_dma_queued_cleanup drivers/ide/ppc/pmac.c
+--- linux-2.6.2-rc3-bk3/drivers/ide/ppc/pmac.c~ide_dma_queued_cleanup	2004-02-03 19:06:49.960062840 +0100
++++ linux-2.6.2-rc3-bk3-root/drivers/ide/ppc/pmac.c	2004-02-03 19:07:08.131300392 +0100
+@@ -2030,13 +2030,6 @@ pmac_ide_setup_dma(pmac_ide_hwif_t *pmif
+ 	hwif->ide_dma_verbose = &__ide_dma_verbose;
+ 	hwif->ide_dma_timeout = &__ide_dma_timeout;
+ 	hwif->ide_dma_lostirq = &pmac_ide_dma_lostirq;
+-	hwif->ide_dma_queued_on = &__ide_dma_queued_on;
+-	hwif->ide_dma_queued_off = &__ide_dma_queued_off;
+-#ifdef CONFIG_BLK_DEV_IDE_TCQ
+-	hwif->ide_dma_queued_read = __ide_dma_queued_read;
+-	hwif->ide_dma_queued_write = __ide_dma_queued_write;
+-	hwif->ide_dma_queued_start = __ide_dma_queued_start;
+-#endif
+ 
+ #ifdef CONFIG_BLK_DEV_IDEDMA_PMAC_AUTO
+ 	if (!noautodma)
+diff -puN include/linux/ide.h~ide_dma_queued_cleanup include/linux/ide.h
+--- linux-2.6.2-rc3-bk3/include/linux/ide.h~ide_dma_queued_cleanup	2004-02-03 19:07:26.979435040 +0100
++++ linux-2.6.2-rc3-bk3-root/include/linux/ide.h	2004-02-03 19:12:36.290412624 +0100
+@@ -801,12 +801,6 @@ typedef struct ide_dma_ops_s {
+ 	int (*ide_dma_verbose)(ide_drive_t *drive);
+ 	int (*ide_dma_lostirq)(ide_drive_t *drive);
+ 	int (*ide_dma_timeout)(ide_drive_t *drive);
+-	/* dma queued operations */
+-	int (*ide_dma_queued_on)(ide_drive_t *drive);
+-	int (*ide_dma_queued_off)(ide_drive_t *drive);
+-	ide_startstop_t (*ide_dma_queued_read)(ide_drive_t *drive);
+-	ide_startstop_t (*ide_dma_queued_write)(ide_drive_t *drive);
+-	ide_startstop_t (*ide_dma_queued_start)(ide_drive_t *drive);
+ } ide_dma_ops_t;
+ 
+ /*
+@@ -947,13 +941,6 @@ typedef struct hwif_s {
+ 	int (*ide_dma_lostirq)(ide_drive_t *drive);
+ 	int (*ide_dma_timeout)(ide_drive_t *drive);
+ 
+-	/* dma queued operations */
+-	int (*ide_dma_queued_on)(ide_drive_t *drive);
+-	int (*ide_dma_queued_off)(ide_drive_t *drive);
+-	ide_startstop_t (*ide_dma_queued_read)(ide_drive_t *drive);
+-	ide_startstop_t (*ide_dma_queued_write)(ide_drive_t *drive);
+-	ide_startstop_t (*ide_dma_queued_start)(ide_drive_t *drive);
+-
+ 	void (*OUTB)(u8 addr, unsigned long port);
+ 	void (*OUTBSYNC)(ide_drive_t *drive, u8 addr, unsigned long port);
+ 	void (*OUTW)(u16 addr, unsigned long port);
+@@ -1644,16 +1631,6 @@ extern int __ide_dma_queued_off(ide_driv
+ extern ide_startstop_t __ide_dma_queued_read(ide_drive_t *drive);
+ extern ide_startstop_t __ide_dma_queued_write(ide_drive_t *drive);
+ extern ide_startstop_t __ide_dma_queued_start(ide_drive_t *drive);
+-#else
+-static inline int __ide_dma_queued_on(ide_drive_t *drive)
+-{
+-	return 1;
+-}
+-
+-static inline int __ide_dma_queued_off(ide_drive_t *drive)
+-{
+-	return 1;
+-}
+ #endif
+ 
+ #else
 
 _
 
