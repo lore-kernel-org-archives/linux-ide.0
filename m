@@ -1,43 +1,39 @@
-From: "J.A. Magallon" <jamagallon@able.es>
+From: Mikael Pettersson <mikpe@csd.uu.se>
 Subject: Re: [BK PATCHES] ide-2.6 update
-Date: Wed, 27 Oct 2004 14:29:23 +0000
+Date: Wed, 27 Oct 2004 16:33:26 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1098887363l.6679l.0l@werewolf.able.es>
+Message-ID: <16767.45494.863511.334215@alkaid.it.uu.se>
 References: <58cb370e04102706074c20d6d7@mail.gmail.com>
+	<20041027133431.GF1127@zip.com.au>
+	<58cb370e04102706512283405@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp09.auna.com ([62.81.186.19]:45042 "EHLO smtp09.retemail.es")
-	by vger.kernel.org with ESMTP id S262459AbUJ0O3Y convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Oct 2004 10:29:24 -0400
-In-Reply-To: <58cb370e04102706074c20d6d7@mail.gmail.com> (from
-	bzolnier@gmail.com on Wed Oct 27 15:07:14 2004)
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:49335 "EHLO aun.it.uu.se")
+	by vger.kernel.org with ESMTP id S262461AbUJ0Odm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Oct 2004 10:33:42 -0400
+In-Reply-To: <58cb370e04102706512283405@mail.gmail.com>
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: CaT <cat@zip.com.au>, torvalds@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Bartlomiej Zolnierkiewicz writes:
+ > http://bugme.osdl.org/show_bug.cgi?id=2494
+ > 
+ > On Wed, 27 Oct 2004 23:34:31 +1000, CaT <cat@zip.com.au> wrote:
+ > > On Wed, Oct 27, 2004 at 03:07:14PM +0200, Bartlomiej Zolnierkiewicz wrote:
+ > > > <bzolnier@trik.(none)> (04/10/26 1.2192)
+ > > >    [ide] pdc202xx_old: PDC20267 needs the same LBA48 fixup as PDC20265
+ > > 
+ > > What would the symptoms of this bug be? I've got a PDC20267 and I'm
+ > > having a few issues transferring from hde to hdh (ie across two ports)
+ > > it seems. My work at duplicating things seems to work best when I do a
+ > > transfer like that rather then going from say, a totall different
+ > > controller to the pdc (hdh) or even from generated input to the pdc (hdh).
 
-On 2004.10.27, Bartlomiej Zolnierkiewicz wrote:
-> Please do a
-> 
-> 	bk pull bk://bart.bkbits.net/ide-2.6
-> 
-> This will update the following files:
-
-Watch your mailer, it is wrapping lines...
-See:
-
-http://marc.theaimsgroup.com/?l=linux-ide&m=109888304706759&q=raw
-
-and search for 'long data_size'.
-
---
-J.A. Magallon <jamagallon()able!es>     \               Software is like sex:
-werewolf!able!es                         \         It's better when it's free
-Mandrakelinux release 10.1 (Community) for i586
-Linux 2.6.9-jam1 (gcc 3.4.1 (Mandrakelinux 10.1 3.4.1-4mdk)) #4
-
-
+I see only one note where someone claims the '67 is affected.
+What would trigger it? A large disk or just heavy I/O?
+FWIW, my news server has received, stored, manipulated, and sent >500
+gigabytes of data using a lowly 20267 add-on card in a 440BX mobo,
+and has _never_ had any problems, and I/O is sometimes very heavy.
