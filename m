@@ -1,80 +1,36 @@
-From: Hugo Mills <hugo-lkml@carfax.org.uk>
+From: Alan Cox <alan@redhat.com>
 Subject: Re: [PATCH][RFC] Add support for Adaptec 1210SA (was: Re: SiI3112 (Adaptec 1210SA): no devices)
-Date: Sun, 8 Jun 2003 22:45:04 +0100
+Date: Sun, 8 Jun 2003 19:24:17 -0400 (EDT)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20030608214504.GA5754@carfax.org.uk>
-References: <20030607175637.GA1266@carfax.org.uk> <200306071802.h57I2Yb07842@devserv.devel.redhat.com>
+Message-ID: <200306082324.h58NOHI18294@devserv.devel.redhat.com>
+References: <20030608214504.GA5754@carfax.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 81-5-136-19.dsl.eclipse.net.uk ([81.5.136.19]:34693 "EHLO
-	vlad.carfax.org.uk") by vger.kernel.org with ESMTP id S263915AbTFHVbm
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 8 Jun 2003 17:31:42 -0400
-Content-Disposition: inline
-In-Reply-To: <200306071802.h57I2Yb07842@devserv.devel.redhat.com>
-List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: Samuel Flory <sflory@rackable.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, andre@linux-ide.org
-
-
---82I3+IH0IqGh5yIs
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nat-pool-rdu.redhat.com ([66.187.233.200]:25654 "EHLO
+	devserv.devel.redhat.com") by vger.kernel.org with ESMTP
+	id S264060AbTFHXKo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 8 Jun 2003 19:10:44 -0400
+In-Reply-To: <20030608214504.GA5754@carfax.org.uk> from "Hugo Mills" at Meh 08, 2003 10:45:04 
+List-Id: linux-ide@vger.kernel.org
+To: Hugo Mills <hugo-lkml@carfax.org.uk>
+Cc: Alan Cox <alan@redhat.com>, Samuel Flory <sflory@rackable.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, andre@linux-ide.org
 
-On Sat, Jun 07, 2003 at 02:02:34PM -0400, Alan Cox wrote:
-> >    I've assumed that it's exactly like a SiI3112 in making these
-> > changes. The kernel now recognises the device, and I can (e.g.) run
-> > cfdisk. However, any read or write on the disk causes huge delays, and
-> > these:
+> > Its clearly clos in that it works in PIO although DMA is failing
 > 
-> Its clearly clos in that it works in PIO although DMA is failing
+>    Given that there appear to be problems with DMA in the plain SiI
+> driver, would it be worth my while waiting until those are sorted out
+> before continuing?
 
-   Given that there appear to be problems with DMA in the plain SiI
-driver, would it be worth my while waiting until those are sorted out
-before continuing?
+I'll fold the patch in anyway, maybe set to pio by default
 
-> >    I don't have the knowledge to determine whether this is similar to
-> > the SiI3112 problems people have been having elsewhere, or if it's a
-> 
-> It is
+>    What would be the next steps in getting this thing working?  Should
+> I try to obtain the board/chip specifications from Adaptec? Or start
+> poking stuff into arbitrary registers? :)
 
-   That's good to know.
-
-> >  Model=ST3120026AS, FwRev=3.05, SerialNo=3JT059GT
-> 
-> According to the info I have that drive should be working ok
-
-   I recall Andre Hedrick commenting apparently disparagingly on the
-80Gb version of the Seagate drives[1], although I don't get the errors
-seen in that post.
-
-> This is a very good starting point anyway
-
-   What would be the next steps in getting this thing working?  Should
-I try to obtain the board/chip specifications from Adaptec? Or start
-poking stuff into arbitrary registers? :)
-
-   Hugo.
-
-[1] http://marc.theaimsgroup.com/?l=linux-kernel&m=105013509721375&w=2
-
--- 
-=== Hugo Mills: hugo@... carfax.org.uk | darksatanic.net | lug.org.uk ===
-  PGP key: 1C335860 from wwwkeys.eu.pgp.net or http://www.carfax.org.uk
-              --- The future isn't what it used to be. ---               
-
---82I3+IH0IqGh5yIs
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQE+465gssJ7whwzWGARAo2qAJ9TiFEqwquk3IbLkytmu57pH9cCOQCgskdI
-0Z3CCQ18CVIk5EC41FP2pRo=
-=rnSA
------END PGP SIGNATURE-----
-
---82I3+IH0IqGh5yIs--
+Given it seems its an SI chip I suspect SI are the right people here
+if we need to bug someone. I would be very suprised if this is anything
+but an SI3112. Its expensive to fab a chip so you dont fab special ones
+for people. You might print a different logo or change the PCI ID in
+the external serial eeprom but no more.
