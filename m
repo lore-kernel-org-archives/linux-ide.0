@@ -1,39 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: how to enable write back cache on SATA drive?
-Date: Fri, 03 Sep 2004 07:50:09 -0400
+From: Brett Russ <russb@emc.com>
+Subject: Re: libata AHCI support for Intel ICH6RW
+Date: Fri, 03 Sep 2004 08:03:03 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <41385A71.5090600@pobox.com>
-References: <ch39av$75s$1@sea.gmane.org>
+Message-ID: <ch9mg8$mih$1@sea.gmane.org>
+References: <1094184596.16175.3.camel@unicorn.rpratap.homelinux.org> <41385A18.5020103@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:18316 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S269631AbUICLuV
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 3 Sep 2004 07:50:21 -0400
-In-Reply-To: <ch39av$75s$1@sea.gmane.org>
+Received: from main.gmane.org ([80.91.224.249]:28569 "EHLO main.gmane.org")
+	by vger.kernel.org with ESMTP id S269648AbUICMCV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Sep 2004 08:02:21 -0400
+Received: from list by main.gmane.org with local (Exim 3.35 #1 (Debian))
+	id 1C3Cln-00027O-00
+	for <linux-ide@vger.kernel.org>; Fri, 03 Sep 2004 14:02:19 +0200
+Received: from pseudo-nat-129.isus.emc.com ([128.221.197.129])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Fri, 03 Sep 2004 14:02:19 +0200
+Received: from russb by pseudo-nat-129.isus.emc.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Fri, 03 Sep 2004 14:02:19 +0200
+In-Reply-To: <41385A18.5020103@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Brett Russ <russb@emc.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Brett Russ wrote:
-> A coworker is trying to get this done to no avail.  He's tried hdparm, 
-> blktool, sginfo, and scsiinfo without luck--drives appear in write 
-> through cache mode and performance testing confirms.  I've not been 
-> directly involved but need to see progress.  I had the most hope for 
-> blktool but that failed with "BLKFLSBUF: Operation not supported"
+Jeff Garzik wrote:
+> Nothing new to add beyond that of
+> http://linux.yyz.us/sata/sata-status.html
 > 
-> Devices are Maxtor 250G connected to ICH6R in Enhanced non-AHCI mode 
-> using Garzik's 2.6.8.1 libata bk kernel tree (last sync'd ~20040820).
-> 
-> See results of some commands below...all snippets from emails to me.
+> AHCI _should_ be going in any day now (well, after Labor Day vacation), 
+> so it will appear RSN.
 
+Jeff,
 
-At present, you cannot turn on wcache, if your drives boot up with 
-wcache off.  When SMART support is added, the ability to turn this 
-on/off will be added at the same time.
+Where you say:
+"Preliminary driver with full AHCI support now exists, and is being 
+integrated into libata mainline."
 
-	Jeff
+I assumed you meant that it exists in your libata-2.6 kernel and was 
+going to be integrated into Linus' soon.  If this is true, my report 
+deals with your kernel not mainline as in Ravi's case.
 
+If I don't have the kernel with full AHCI support, can I get and test 
+it?  If I do have it, it seems like a bug in either BIOS, ata_piix, or 
+libata, no?
+
+Thanks
+BR
 
