@@ -1,53 +1,51 @@
-From: Chuck Ebbert <76306.1226@compuserve.com>
-Subject: Re: [PATCH 2.6.11-rc2 02/04] ide: __ide_do_rw_disk()
-  rewritten ide_write_taskfil
-Date: Fri, 11 Feb 2005 20:55:18 -0500
-Message-ID: <200502112058_MC3-1-95CC-5FF2@compuserve.com>
+From: Vojtech Pavlik <vojtech@suse.cz>
+Subject: Re: [PATCH] ide-timing.h: make the timing from the IDE device work
+Date: Sat, 12 Feb 2005 10:22:29 +0100
+Message-ID: <20050212092229.GB2297@ucw.cz>
+References: <004001c485c0$fe5031a0$6401a8c0@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	 charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Received: from siaag1ae.compuserve.com ([149.174.40.7]:2184 "EHLO
-	siaag1ae.compuserve.com") by vger.kernel.org with ESMTP
-	id S261970AbVBLB7V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Feb 2005 20:59:21 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from twilight.ucw.cz ([81.30.235.3]:26279 "EHLO suse.cz")
+	by vger.kernel.org with ESMTP id S262302AbVBLJV6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Feb 2005 04:21:58 -0500
 Content-Disposition: inline
+In-Reply-To: <004001c485c0$fe5031a0$6401a8c0@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: Albert Lee <albertlee@tikira.net>, linux-ide@vger.kernel.org
 
-On Sun,  6 Feb 2005 at 20:26:55 +0900, Tejun Heo wrote:
+On Thu, Aug 19, 2004 at 03:48:57PM +0800, Albert Lee wrote:
 
-> +     if (drive->using_dma &&
-> +         !(hwif->no_lba48_dma && block + rq->nr_sectors > 1ULL << 28)) {
-> +             /* DMA */
-> +             if (hwif->dma_setup(drive))
-> +                     goto fallback_to_pio;
-> +             if (rq_data_dir(rq) == READ) {
-> +                     command = lba48 ? WIN_READDMA_EXT : WIN_READDMA;
-> +                     if (drive->vdma)
-> +                             command = lba48 ? WIN_READ_EXT : WIN_READ;
-> +             } else {
-> +                     command = lba48 ? WIN_WRITEDMA_EXT : WIN_WRITEDMA;
-> +                     if (drive->vdma)
-> +                             command = lba48 ? WIN_WRITE_EXT : WIN_WRITE;
->               }
-> -             /* fallback to PIO */
-> -             ide_init_sg_cmd(drive, rq);
-> +             hwif->dma_exec_cmd(drive, command);
-> +             hwif->dma_start(drive);
-> +             return ide_started;
->       }
+> ide-timing.h patch: make the timing from the IDE device work.
+> 
+> Albert Lee
 
+Bartolomiej, we indeed need this patch, otherwise EIDE timings the drive
+supplies to us are completely ignored in the code.
 
-  Should that be "block + rq->nr_sectors >= 1ULL << 28"?
+> --- linux-2.6.6\drivers\ide\ide-timing.h.ori 2004-05-10 10:32:28.000000000
+> +0800
+> +++ linux-2.6.6\drivers\ide\ide-timing.h 2004-08-19 13:01:17.117860800 +0800
+> @@ -220,6 +220,7 @@
+>   if (!(s = ide_timing_find_mode(speed)))
+>    return -EINVAL;
+> 
+> + memcpy(t, s, sizeof(*t));
+>  /*
+>   * If the drive is an EIDE drive, it can tell us it needs extended
+>   * PIO/MWDMA cycle timing.
+> @@ -248,7 +249,7 @@
+>   * Convert the timing to bus clock counts.
+>   */
+> 
+> - ide_timing_quantize(s, t, T, UT);
+> + ide_timing_quantize(t, t, T, UT);
+> 
+>  /*
+>   * Even in DMA/UDMA modes we still use PIO access for IDENTIFY, S.M.A.R.T
+> 
 
-  Legal sector numbers for LBA28 range from 0 thru (1 << 28 - 1).
-
-  LBA28 _capacities_ range from 1 thru (1 << 28) sectors.
-
-  And why is it using 1ULL some places and 1UL in others in the ide driver?
-
---
-Chuck
+-- 
+Vojtech Pavlik
+SuSE Labs, SuSE CR
