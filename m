@@ -1,117 +1,205 @@
-From: Oliver Bausinger <bausi@bausi.org>
-Subject: Re: sata_sil problems (lockup at boottime)
-Date: Sun, 5 Dec 2004 17:38:14 +0100
-Message-ID: <200412051738.14819.bausi@bausi.org>
-References: <41B2499E.1080905@nv-systems.net> <200412050908.33124.bausi@bausi.org> <58cb370e04120508104243799a@mail.gmail.com>
+From: "Albert Lee" <albertcc@tw.ibm.com>
+Subject: [PATCH] libata PIO error handling fix
+Date: Mon, 6 Dec 2004 16:46:05 +0800
+Message-ID: <00bc01c4db70$07599cf0$a3564109@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_00B9_01C4DBB3.13E043F0"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from everest.mathematik.uni-tuebingen.de ([134.2.62.220]:3043 "EHLO
-	everest.mathematik.uni-tuebingen.de") by vger.kernel.org with ESMTP
-	id S261264AbULEQiq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 5 Dec 2004 11:38:46 -0500
-In-Reply-To: <58cb370e04120508104243799a@mail.gmail.com>
-Content-Disposition: inline
+Received: from bluehawaii.tikira.net ([61.62.22.51]:48875 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S261400AbULFIqR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Dec 2004 03:46:17 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Gerald Hopf <gerald.hopf@nv-systems.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Doug Maxey <dwm@maxeymade.com>, IDE Linux <linux-ide@vger.kernel.org>
 
-On Sunday 05 December 2004 17:10, Bartlomiej Zolnierkiewicz wrote:
-> On Sun, 5 Dec 2004 09:08:32 +0100, Oliver Bausinger <bausi@bausi.org> wrote:
-> > Hi,
-> >
-> > On Sunday 05 December 2004 00:34, you wrote:
-> > > Hello everyone,
-> > >
-> > > i'm having some really strange problems with the sata_sil driver.
-> > >
-> > > My hardware:
-> > > Asus A7N8X Deluxe Rev 1.x with onboard Sil3112 Controller
-> > > - Samsung SP1614C SATA Harddrive
-> > > - for further testing : PATA to SATA Adapter that came with an ABIT
-> > > Mainboard
-> >
-> > I have the same problem with this hardware. The harddisk is a SAMSUNG
-> > SP1614C again and the controller is this one:
-> >
-> > 0000:00:0a.0 Unknown mass storage controller: Silicon Image, Inc.
-> > (formerly CMD Technology Inc) SiI 3112 [SATALink/SATARaid] Serial ATA
-> > Controller (rev 01)
-> >         Subsystem: Silicon Image, Inc. (formerly CMD Technology Inc) SiI
-> > 3112 [SATALink/SATARaid] Serial ATA Controller
-> >         Flags: bus master, 66MHz, medium devsel, latency 32, IRQ 5
-> >         I/O ports at a000 [size=8]
-> >         I/O ports at 9800 [size=4]
-> >         I/O ports at 9400 [size=8]
-> >         I/O ports at 9000 [size=4]
-> >         I/O ports at 8800 [size=16]
-> >         Memory at e2000000 (32-bit, non-prefetchable)
-> >
-> > Trying to insert the sata_sil module on 2.6.{7,8,9,10-rc3} gives
-> >
-> > libata version 1.10 loaded.
-> > sata_sil version 0.8
-> > PCI: Found IRQ 5 for device 0000:00:0a.0
-> > ata1: SATA max UDMA/100 cmd 0xD0800080 ctl 0xD080008A bmdma 0xD0800000
-> > irq 5 ata2: SATA max UDMA/100 cmd 0xD08000C0 ctl 0xD08000CA bmdma
-> > 0xD0800008 irq 5 irq 5: nobody cared!
-> >  [<c012e5aa>] __report_bad_irq+0x2a/0x90
-> >  [<c012df60>] handle_IRQ_event+0x30/0x70
-> >  [<c012e69c>] note_interrupt+0x6c/0xd0
-> >  [<c012e0d0>] __do_IRQ+0x130/0x160
-> >  [<c01042b9>] do_IRQ+0x19/0x30
-> >  [<c0102896>] common_interrupt+0x1a/0x20
-> >  [<c0117ab0>] __do_softirq+0x30/0x90
-> >  [<c0117b36>] do_softirq+0x26/0x30
-> >  [<c012df24>] irq_exit+0x34/0x40
-> >  [<c01042be>] do_IRQ+0x1e/0x30
-> >  [<c0102896>] common_interrupt+0x1a/0x20
-> >  [<c01005f0>] default_idle+0x0/0x30
-> >  [<c0100613>] default_idle+0x23/0x30
-> >  [<c010068a>] cpu_idle+0x3a/0x60
-> >  [<c032678d>] start_kernel+0x16d/0x1b0
-> >  [<c0326360>] unknown_bootoption+0x0/0x1b0
-> > handlers:
-> > [<d0962490>] (ata_interrupt+0x0/0x1c0 [libata])
-> > Disabling IRQ #5
-> > ata1: dev 0 cfg 49:2f00 82:346b 83:7f01 84:4003 85:3c68 86:3c01 87:4003
-> > 88:20ff
-> > ata1: dev 0 ATA, max UDMA7, 312581808 sectors: lba48
->
-> Looks like some other device is using the same IRQ
-> (it is not handled correctly and gets disabled).
->
+This is a multi-part message in MIME format.
 
-No, IRQ 5 is unshared if I understand correctly. Look here:
+------=_NextPart_000_00B9_01C4DBB3.13E043F0
+Content-Type: text/plain;
+	charset="big5"
+Content-Transfer-Encoding: 7bit
 
-root@camino:~# lspci -v |grep IRQ
-        Flags: bus master, medium devsel, latency 32, IRQ 9
-        Flags: bus master, medium devsel, latency 32, IRQ 9
-        Flags: medium devsel, IRQ 9
-        Flags: bus master, slow devsel, latency 32, IRQ 9
-        Flags: bus master, 66MHz, medium devsel, latency 32, IRQ 5
-        Flags: bus master, medium devsel, latency 32, IRQ 11
-        Flags: bus master, medium devsel, latency 32, IRQ 10
-        Flags: bus master, medium devsel, latency 64, IRQ 11
+Hi, Jeff:
 
-Only the SiI 3112 uses IRQ 5.
+  I tried to burn CD-RW with libata-dev-2.6 and cdrecord:
+1. ATAPI DMA mode - test OK
+2. ATAPI PIO mode - test failed when cdrecord finishes burning and issues MODE_SELECT to the device.
 
-> > [The other possible thing to do is to use the siimage driver in
-> > drivers/ide, but this one stopped working with 2.6.8 and further. The
-> > siimage driver works quite good with 2.6.7, so this is another proof for
-> > no hardware problems]
->
-> Please try narrowing problem down to specific 2.6.7-bk snapshot.  Thanks.
+  After checking the log, it shows that MODE_SELECT causes ata_pio_complete() to return error.
+However, the error is not handled by ata_pio_task().
 
-Forget this. My config was broken as I didn't enable CONFIG_BLK_DEV_IDE_SATA.
-That's why siimage loaded but did nothing.
-I'm currently running 2.6.10-rc3 with siimage and it works.
+Attached please find the patch for ata_pio_task() error handling for your review.
+(The patch is against the libata-dev-2.6 tree. )
 
-If I really were a hardware problem with interrupt handling, the siimage 
-driver should be broken as well? But it's not.
+Changes in the patch:
+1. End the PIO task when PIO_ST_IDLE state is entered
+2. End the PIO task after PIO_ST_TMOUT and PIO_ST_ERR state handled by ata_pio_error()
+3. Remove the first "if" statement to handle the error condition returned from 
+  ata_pio_block(), ata_pio_complete() and ata_pio_poll().
 
-Greetings,
-Bausi
+  Change #2  is not necessary since ata_pio_error() will put the cmd to  PIO_ST_IDLE state
+after the error condition is handled. The change just saves a function call to queue_work().
+
+Tested OK on on my machine with pdc20275 and ASUS CD-RW drive.
+
+Albert
+
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+------------------------------------------------------------------------------------
+diff -Nru libata-dev-2.6-ori/drivers/scsi/libata-core.c libata-dev-2.6/drivers/scsi/libata-core.c
+--- libata-dev-2.6-ori/drivers/scsi/libata-core.c 2004-11-30 12:52:28.000000000 +0800
++++ libata-dev-2.6/drivers/scsi/libata-core.c 2004-12-02 18:57:48.719220063 +0800
+@@ -2399,6 +2399,9 @@
+  unsigned long timeout = 0;
+ 
+  switch (ap->pio_task_state) {
++ case PIO_ST_IDLE:
++  return;
++
+  case PIO_ST:
+   ata_pio_block(ap);
+   break;
+@@ -2415,18 +2418,14 @@
+  case PIO_ST_TMOUT:
+  case PIO_ST_ERR:
+   ata_pio_error(ap);
+-  break;
++  return;
+  }
+ 
+- if ((ap->pio_task_state != PIO_ST_IDLE) &&
+-     (ap->pio_task_state != PIO_ST_TMOUT) &&
+-     (ap->pio_task_state != PIO_ST_ERR)) {
+-  if (timeout)
+-   queue_delayed_work(ata_wq, &ap->pio_task,
+-        timeout);
+-  else
+-   queue_work(ata_wq, &ap->pio_task);
+- }
++ if (timeout)
++  queue_delayed_work(ata_wq, &ap->pio_task,
++       timeout);
++ else
++  queue_work(ata_wq, &ap->pio_task);
+ }
+ 
+ static void atapi_request_sense(struct ata_port *ap, struct ata_device *dev,
+------=_NextPart_000_00B9_01C4DBB3.13E043F0
+Content-Type: application/octet-stream;
+	name="ata_pio_task.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="ata_pio_task.patch"
+
+diff -Nru libata-dev-2.6-ori/drivers/scsi/libata-core.c =
+libata-dev-2.6/drivers/scsi/libata-core.c=0A=
+--- libata-dev-2.6-ori/drivers/scsi/libata-core.c	2004-11-30 =
+12:52:28.000000000 +0800=0A=
++++ libata-dev-2.6/drivers/scsi/libata-core.c	2004-12-02 =
+18:57:48.719220063 +0800=0A=
+@@ -2399,6 +2399,9 @@=0A=
+ 	unsigned long timeout =3D 0;=0A=
+ =0A=
+ 	switch (ap->pio_task_state) {=0A=
++	case PIO_ST_IDLE:=0A=
++		return;=0A=
++=0A=
+ 	case PIO_ST:=0A=
+ 		ata_pio_block(ap);=0A=
+ 		break;=0A=
+@@ -2415,18 +2418,14 @@=0A=
+ 	case PIO_ST_TMOUT:=0A=
+ 	case PIO_ST_ERR:=0A=
+ 		ata_pio_error(ap);=0A=
+-		break;=0A=
++		return;=0A=
+ 	}=0A=
+ =0A=
+-	if ((ap->pio_task_state !=3D PIO_ST_IDLE) &&=0A=
+-	    (ap->pio_task_state !=3D PIO_ST_TMOUT) &&=0A=
+-	    (ap->pio_task_state !=3D PIO_ST_ERR)) {=0A=
+-		if (timeout)=0A=
+-			queue_delayed_work(ata_wq, &ap->pio_task,=0A=
+-					   timeout);=0A=
+-		else=0A=
+-			queue_work(ata_wq, &ap->pio_task);=0A=
+-	}=0A=
++	if (timeout)=0A=
++		queue_delayed_work(ata_wq, &ap->pio_task,=0A=
++				   timeout);=0A=
++	else=0A=
++		queue_work(ata_wq, &ap->pio_task);=0A=
+ }=0A=
+ =0A=
+ static void atapi_request_sense(struct ata_port *ap, struct ata_device =
+*dev,=0A=
+
+------=_NextPart_000_00B9_01C4DBB3.13E043F0
+Content-Type: application/octet-stream;
+	name="ata_pio_complete.log"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="ata_pio_complete.log"
+
+Dec  2 15:42:54 p4ht-s kernel: ata_scsi_dump_cdb: CDB (1:0,0,0) 35 00 00 =
+00 00 00 00 00 00=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_scsi_translate: ENTER=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_dev_select: ENTER, ata1: device 0, =
+wait 1=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_tf_load_pio: feat 0x0 nsect 0x0 lba =
+0x0 0x0 0x20=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_tf_load_pio: device 0xA0=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_exec_command_pio: ata1: cmd 0xA0=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_scsi_translate: EXIT=0A=
+Dec  2 15:42:54 p4ht-s kernel: atapi_packet_task: busy wait=0A=
+Dec  2 15:42:54 p4ht-s kernel: atapi_packet_task: send cdb=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_host_intr: ata1: protocol 6 (dev_stat =
+0x50)=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_qc_complete: EXIT=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_scsi_dump_cdb: CDB (1:0,0,0) 00 00 00 =
+00 00 00 00 00 00=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_scsi_translate: ENTER=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_dev_select: ENTER, ata1: device 0, =
+wait 1=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_tf_load_pio: feat 0x0 nsect 0x0 lba =
+0x0 0x0 0x20=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_tf_load_pio: device 0xA0=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_exec_command_pio: ata1: cmd 0xA0=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_scsi_translate: EXIT=0A=
+Dec  2 15:42:54 p4ht-s kernel: atapi_packet_task: busy wait=0A=
+Dec  2 15:42:54 p4ht-s kernel: atapi_packet_task: send cdb=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_host_intr: ata1: protocol 6 (dev_stat =
+0x50)=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_qc_complete: EXIT=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_scsi_dump_cdb: CDB (1:0,0,0) 55 10 00 =
+00 00 00 00 00 10=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_scsi_translate: ENTER=0A=
+Dec  2 15:42:54 p4ht-s kernel: atapi_xlat: direction: write=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_sg_setup: ENTER, ata1=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_sg_setup: 1 sg elements mapped=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_fill_sg: PRD[0] =3D (0x10922000, 0x10)=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_dev_select: ENTER, ata1: device 0, =
+wait 1=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_tf_load_pio: feat 0x0 nsect 0x0 lba =
+0x0 0x0 0x20=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_tf_load_pio: device 0xA0=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_exec_command_pio: ata1: cmd 0xA0=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_scsi_translate: EXIT=0A=
+Dec  2 15:42:54 p4ht-s kernel: atapi_packet_task: busy wait=0A=
+Dec  2 15:42:54 p4ht-s kernel: atapi_packet_task: send cdb=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_pio_task: pio_task_state: 4=0A=
+Dec  2 15:42:54 p4ht-s kernel: __atapi_pio_bytes: 16 bytes data write=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_pio_task: Exit=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_pio_task: pio_task_state: 5=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_pio_complete: Enter=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_pio_complete: Exit with dev error, =
+drv_stat [51] =0A=
+                               <=3D ata_pio_task exits without handling =
+error from ata_pio_complete=0A=
+Dec  2 15:42:54 p4ht-s kernel: ata_pio_task: Exit   =0A=
+ =0A=
+
+------=_NextPart_000_00B9_01C4DBB3.13E043F0--
+
