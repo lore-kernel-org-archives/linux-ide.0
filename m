@@ -1,142 +1,101 @@
-From: "Albert Lee" <albertcc@tw.ibm.com>
-Subject: Re: [PATCH] libata: Use ATAPI PIO mode for specific request buffer sizes
-Date: Fri, 3 Dec 2004 15:18:04 +0800
-Message-ID: <002701c4d908$40740e90$be4d4109@tw.ibm.com>
-References: <00ce01c4d6b8$d222d080$bc604109@tw.ibm.com> <41AEFAA4.80907@pobox.com>
+From: Gerald Hopf <gerald.hopf@nv-systems.net>
+Subject: sata_sil problems (lockup at boottime)
+Date: Sun, 05 Dec 2004 00:34:54 +0100
+Message-ID: <41B2499E.1080905@nv-systems.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0024_01C4D94B.48F1B070"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bluehawaii.tikira.net ([61.62.22.51]:9714 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S261813AbULCHT2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 3 Dec 2004 02:19:28 -0500
+Received: from nv-systems.net ([62.75.252.178]:49280 "EHLO mail.nv-systems.net")
+	by vger.kernel.org with ESMTP id S261192AbULDXe5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Dec 2004 18:34:57 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
+To: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
+Hello everyone,
 
-------=_NextPart_000_0024_01C4D94B.48F1B070
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+i'm having some really strange problems with the sata_sil driver.
 
-Hi, Jeff:
+My hardware:
+Asus A7N8X Deluxe Rev 1.x with onboard Sil3112 Controller
+- Samsung SP1614C SATA Harddrive
+- for further testing : PATA to SATA Adapter that came with an ABIT
+Mainboard
 
-> > ..
-> > Two changes:
-> > 1. Use ATAPI PIO mode for ATAPI REQUEST_SENSE
-> > 2. Use ATAPI PIO mode for specific SCSI commands issued to ATAPI device that
-> >     buffer_size % 256 != 0.
-> > 
-> >   Since for most commands, buffer_size % 256 is 0,  this patch
-> > won't introduce big impact to the performance of libata (hopefully).
-> >   
-> >   Tested OK on on my machine with pdc20275 and ASUS CD-RW drive.
-> 
-> hmmmmmmm.
-> 
-> Your change #1 makes perfect sense, and I agree it is the safer (and 
-> more simple) route.
-> 
-> I must ponder change #2 some more (after some sleep :)).  In particular, 
-> I am concerned that making change #2 across all controllers will hurt 
-> performance on the commands whose data length is not purely sector-sized 
-> chunks.
-> 
-> Would you mind splitting up change #1 and #2 into separate patches?
-> 
+What i'm trying to accomplish: i'm trying to use this Samsung SATA
+harddrive in my Linux Fileserver:
 
-  Attached please find the request sense patch for change #1 (the patch is against 
-libata-dev-2.6 tree).
+When the Silicon Image Controller is enabled (it can be disabled by a
+jumper) and no harddrive is connected, everything boots fine.
+If i connect a harddrive, i get the following message (exact messages
+change slightly) while booting:
 
-  For change #2, agreed the previous patch is problematic since it will impact all 
-adapters and the buffer_size % 256 rule might also fail for other host adapters. 
+- - - - -  START  - - - - -
+======================
+[<c0102716>] common_interrupt+0x1a/0x20
+[<c0117d70>] __do_softirq+0x30/0x90
+[<c0104261>] do_softirq+0x41/0x50
+======================
+[<c012d0a4>] irq_exit+0x34/0x40
+[<c0104165>] do_IRQ+9x45/0x60
+[<c0102716>] common_interrupt+0x1a/0x20
+[<c010c674>] delay_tsc+0x14/0x20
+[<c025efd2>] __delay+0x12/0x20
+[<c02d7290>] ata_pio_complet+0xe0/0x1f0
+[<c02d7a95>] ata_pio_test+0x95/0xb0
+[<c01229bc>] worker_thread+0x1cc/0x290
+[<c02d7a00>] ata_pio_task+0x0/0xb0
+[<c0110160>] default_wake_function+0x0/0x20
+[<c0110160>] default_wake_function+0x0/0x20
+[<c01227f0>] worker_thread+0x0/0x290
+[<c0126ca5>] kthread+0xa5/0xb0
+[<c0126c00>] kthread+0x0/0xb0
+[<c01006f1>] kernel_thread_helper+0x5/0x14
+handlers:
+[<c02d82b0>] (ata_interrupt+0x0/0x1c0)
+Disabling IRQ #11
+ata: dev 0 ATA, max UDMA/100, 361882080 sectors: lba 48
+_
+- - - - -  END - - - - -
 
-  How about let LLD provide a callback function such that libata core
-can ask the LLD: "Which protocol do you like this command to be processed? " or
-"Can this command be processed in ATAPI DMA mode reliably? " 
-when the the command is received?
+This happens with both the Samsung SP1614C "native" SATA drive, as well
+as with an IBM 180GB PATA drive, using a PATA-to-SATA Adapter.
+So i'm not sure whether this is harddrive dependent, but at least it
+doesn't look like it...
 
-Albert
+This problem has been there in all of the latest 2.6.X kernel revisions.
+I'm currently using 2.6.10-rc3 (which came out today), but i've allready
+had this problem in 2.6.9 and 2.6.8 and probably even 2.6.7 if i
+remember correctly.
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
------------------------------------------------------------------------------------------------------------
-diff -Nru libata-dev-2.6-ori/drivers/scsi/libata-core.c libata-dev-2.6/drivers/scsi/libata-core.c
---- libata-dev-2.6-ori/drivers/scsi/libata-core.c 2004-11-30 12:52:28.000000000 +0800
-+++ libata-dev-2.6/drivers/scsi/libata-core.c 2004-11-30 13:49:36.000000000 +0800
-@@ -2435,7 +2435,6 @@
-  DECLARE_COMPLETION(wait);
-  struct ata_queued_cmd *qc;
-  unsigned long flags;
-- int using_pio = dev->flags & ATA_DFLAG_PIO;
-  int rc;
- 
-  DPRINTK("ATAPI request sense\n");
-@@ -2456,16 +2455,10 @@
-  qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-  qc->tf.command = ATA_CMD_PACKET;
- 
-- if (using_pio) {
--  qc->tf.protocol = ATA_PROT_ATAPI;
--  qc->tf.lbam = (8 * 1024) & 0xff;
--  qc->tf.lbah = (8 * 1024) >> 8;
--
--  qc->nbytes = SCSI_SENSE_BUFFERSIZE;
-- } else {
--  qc->tf.protocol = ATA_PROT_ATAPI_DMA;
--  qc->tf.feature |= ATAPI_PKT_DMA;
-- }
-+ qc->tf.protocol = ATA_PROT_ATAPI;
-+ qc->tf.lbam = (8 * 1024) & 0xff;
-+ qc->tf.lbah = (8 * 1024) >> 8;
-+ qc->nbytes = SCSI_SENSE_BUFFERSIZE;
- 
-  qc->waiting = &wait;
-  qc->complete_fn = ata_qc_complete_noop;
+I tried quite a lot to get rid of those problems, including:
+- Flashing a new/different Bios (even with different versions of the
+Silicon Image SATA Bios part: 4.2.47 and 4.2.50)
+- Disabling APIC in the Bios, compiling Kernel with or without APIC
+- Changing the IRQ of the Controller by reserving IRQ#11 in the Bios
+- Disabling allmost every other onboard device i could, including
+serial/parallel/usb/firewire/3com lan (and there are no PCI/Addon cards
+besides an nvidia geforce2mx agp card installed in this pc anyway!)
+- Connecting drives to both ports
 
+I found the following discussions which might be related to what i'm
+experiencing, but noone seems to have a solution. Some seem to suggest
+it worked fine till 2.6.5:
+(The first two seem to be most related, i'm not so sure of the third one)
+http://www.fedoraforum.org/forum/archive/index.php/t-26543.html
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=128180
+http://www.fedoraforum.org/forum/archive/index.php/t-23028.html
 
-------=_NextPart_000_0024_01C4D94B.48F1B070
-Content-Type: application/octet-stream;
-	name="request_sense.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="request_sense.patch"
+Screenshots of the error messages can be found here:
+http://www.nv-systems.net/pics/lkml/sata_sil1.jpg <-- the one from above
+http://www.nv-systems.net/pics/lkml/sata_sil2.jpg <-- with samsung
+instead of ibm
+http://www.nv-systems.net/pics/lkml/sata_sil3.jpg <-- the screen just
+before the problem
 
-diff -Nru libata-dev-2.6-ori/drivers/scsi/libata-core.c libata-dev-2.6/drivers/scsi/libata-core.c
---- libata-dev-2.6-ori/drivers/scsi/libata-core.c	2004-11-30 12:52:28.000000000 +0800
-+++ libata-dev-2.6/drivers/scsi/libata-core.c	2004-11-30 13:49:36.000000000 +0800
-@@ -2435,7 +2435,6 @@
- 	DECLARE_COMPLETION(wait);
- 	struct ata_queued_cmd *qc;
- 	unsigned long flags;
--	int using_pio = dev->flags & ATA_DFLAG_PIO;
- 	int rc;
- 
- 	DPRINTK("ATAPI request sense\n");
-@@ -2456,16 +2455,10 @@
- 	qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
- 	qc->tf.command = ATA_CMD_PACKET;
- 
--	if (using_pio) {
--		qc->tf.protocol = ATA_PROT_ATAPI;
--		qc->tf.lbam = (8 * 1024) & 0xff;
--		qc->tf.lbah = (8 * 1024) >> 8;
--
--		qc->nbytes = SCSI_SENSE_BUFFERSIZE;
--	} else {
--		qc->tf.protocol = ATA_PROT_ATAPI_DMA;
--		qc->tf.feature |= ATAPI_PKT_DMA;
--	}
-+	qc->tf.protocol = ATA_PROT_ATAPI;
-+	qc->tf.lbam = (8 * 1024) & 0xff;
-+	qc->tf.lbah = (8 * 1024) >> 8;
-+	qc->nbytes = SCSI_SENSE_BUFFERSIZE;
- 
- 	qc->waiting = &wait;
- 	qc->complete_fn = ata_qc_complete_noop;
+Is there ANYTHING i can do (except buying a promise controller) ?
 
-------=_NextPart_000_0024_01C4D94B.48F1B070--
+Yours sincerely,
+                     Gerald
 
