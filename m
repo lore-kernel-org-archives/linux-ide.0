@@ -1,36 +1,38 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: ide cdrom performance issue
-Date: Mon, 6 Oct 2003 09:37:32 +0200
+From: linuxcompilerdd <linuxcompiler@yahoo.es>
+Subject: Hello, I need some help please
+Date: 07 Oct 2003 18:35:48 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20031006073732.GV966@suse.de>
-References: <1065375332.1355.9.camel@server>
+Message-ID: <1065544026.4385.4.camel@skynet.gml>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:14232 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262781AbTJFHhm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Oct 2003 03:37:42 -0400
-Content-Disposition: inline
-In-Reply-To: <1065375332.1355.9.camel@server>
+Received: from smtp017.mail.yahoo.com ([216.136.174.114]:49034 "HELO
+	smtp017.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S262896AbTJGVbW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Oct 2003 17:31:22 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Yossi Down-Under <fcp@pop.co.za>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sun, Oct 05 2003, Yossi Down-Under wrote:
-> Running RH9 with xcdroast and three recorders each on its own ide
-> channel configured for ide-scsi. Having trouble with buffer underruns.
-> Am told by xcdroast author that it is a kernel ide driver issue,
-> specifically not using dma for transfers and recommended I try a newer
-> kernel.
-> 
-> My question is whether the 2.5.75 kernel is going to improve this
-> situation before going to the trouble to install it?
 
-2.5.75?! That kernel is ancient, you should download 2.6-test6 and give
-that a try. Note that you should not then use ide-scsi (don't config it
-in), and you need to give -dev=/dev/hdc as device argument to cdrecord.
-Replace hdc with whatever is your cd-r drive.
+Hello,
 
--- 
-Jens Axboe
+I have a problem booting the kernel.
+Now i am using kernel 2.4.20 and it is working nice but when I try to boot
+2.5.xx I obtain this error:
+VFS:cannot open root device "hdb5" or hdb5
+
+After working on it, now I am sure that the problem is on the hard disk because
+I have an AWARD 4.51 and my hdb is an 60Gb disk so I use the STROKE from SEAGATE 
+to use it.
+I don`t have any problem on 2.x.xx but I cannot boot on it now.
+I have booted the same kernel that displayed the error in other system and
+it booted perfectly, so the problem resides on the hdb.
+
+I wish you could help me resolving it, maybe a patch for the drive...
+
+I hope your answer.
+Thank u
+
+Guille
 
