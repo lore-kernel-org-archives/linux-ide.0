@@ -1,79 +1,63 @@
-From: David Sims <dpsims@virtualdave.com>
-Subject: Re: 31244 & sata_vsc.c & Dell Powervault
-Date: Fri, 4 Feb 2005 08:24:48 -0600 (CST)
-Message-ID: <Pine.LNX.4.21.0502040810050.22258-100000@ernie.virtualdave.com>
-References: <4203756F.5010109@scannet.dk>
+From: <Stuart_Hayes@Dell.com>
+Subject: RE: ide-cd question
+Date: Fri, 4 Feb 2005 10:21:33 -0600
+Message-ID: <7A8F92187EF7A249BF847F1BF4903C040AFC4F@ausx2kmpc103.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from ernie.virtualdave.com ([198.216.116.246]:11022 "EHLO
-	ernie.virtualdave.com") by vger.kernel.org with ESMTP
-	id S264613AbVBDOY6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Feb 2005 09:24:58 -0500
-In-Reply-To: <4203756F.5010109@scannet.dk>
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
+Received: from ausc60pc101.us.dell.com ([143.166.85.206]:1066 "EHLO
+	ausc60pc101.us.dell.com") by vger.kernel.org with ESMTP
+	id S264965AbVBDQVj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2005 11:21:39 -0500
+content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: A/S ScanNet - Dan Faerch <dan@scannet.dk>
+To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org
 
-Hi,
-
-YES!! You must build a kernel with (at least) the following options:
-
-Processor type and features -> Local APIC support on uniprocessors
-Processor type and features -> IO-APIC support on uniprocessors
-General setup -> Power Management support -> ACPI Support
-
-and I have successfully built and run a monolithic kernel with the
-following options selected:
-
-Network device support -> Ethernet (1000 Mbit) -> Intel(R) PRO/1000
-Gigabit Ethernet support
-
-and of course:
-
-SCSI support -> SCSI low-level drivers -> Serial ATA (SATA) support ->
-sata_vsc
-
-I have successfully used both the 2.4.29 kernel tree for this as well as
-the 2.6.10 kernel tree... The magic is in the PCI interrupt steering of
-the APIC and IO-APIC... But these two really aren't doing their things
-unless you have APCI enabled and working.... Once you have got it going
-the right way, you can look in /proc/interrupts and see:
-
-root@dell:/proc# more interrupts
-           CPU0
-  0:   21934005    IO-APIC-edge  timer
-  1:          2    IO-APIC-edge  keyboard
-  8:          1    IO-APIC-edge  rtc
-  9:          0   IO-APIC-level  acpi
- 18:     197698   IO-APIC-level  eth0
- 22:         14   IO-APIC-level  aic7xxx
- 25:      79029   IO-APIC-level  libata
-NMI:          0
-LOC:   21932615
-ERR:          0
-MIS:          0
-
-                   ^^^^^^ This tells you that IO-APIC is steering the
-interrupts also, note the interrupt 18, 22, and 25... Usually you only see
-PIC interrupts to 15.... This is what made it work....
-
-Regards and best of luck.
-
-Dave Sims
-***************************************************************************
-On Fri, 4 Feb 2005, A/S ScanNet - Dan Faerch wrote:
-
-> Hia..
+Bartlomiej Zolnierkiewicz wrote:
+> On Thu, 3 Feb 2005 14:34:42 -0600, Stuart_Hayes@dell.com
+> <Stuart_Hayes@dell.com> wrote: 
+>> 
+>> Why does ide-cd use "DRIVER(drive)->end_request()" instead of
+>> "cdrom_end_request()" in the function ide_cdrom_error when it wants
+>> to end a request that's exceeded ERROR_MAX errors?  (See code below.)
 > 
-> I saw your mailings on the linux-ide mailinglist today, and just wanted 
-> to ask if you found a solution..
-> Im sitting with the same smelly powervault and with no working driver 
-> ;). Did you find out anything else (that is not in your mailings to the 
-> linux-ide list)
+> Please always give the kernel version you are referring to.
+> ide_cdrom_error() is gone in 2.6.11-rc2.
 > 
+
+I was looking at 2.6.10, sorry about that.  I'll have a look at
+2.6.11-rc2.
+
+> If there is a bug, it is in ide_cdrom_driver declaration.
+> .end_request is not set to ide_cdrom_error.
 > 
-> Regards
-> - Dan Faerch
+
+I wondered about that.  I'll give that a try.
+
+>> With certain requests (GET_CONFIGURATION (0x46), in particular),
+>> DRIVER(drive)->end_request() is not actually ending the request,
+>> because rq->bio is not NULL--but it also is not clearing rq->errors,
+>> so this request ends up getting retried forever, but no more resets
+>> are attempted because rq->errors has exceeded ERROR_MAX.
 > 
+> I don't get this, maybe I'm looking at the wrong kernel version?
+> 
+> Bartlomiej
+
+I should have explained this better.  DRIVER(drive)->end_request() is
+actually calling default_end_request(), which calls ide_end_reuqest(),
+which ends up calling __ide_end_request().  And that will only end
+the request if end_that_request_first() (in ll_rw_blk.c) returns 0.
+However, end_that_request_first() returns 1 because rq->bio is not
+NULL (in the case of GPCMD_GET_CONFIGURATION, anyway).
+
+So, the request isn't ended, but neither is rq->errors cleared.
+
+Anyway, I'll have a look at 2.6.11-rc2.  Thanks for the response!
+
+
+
 
