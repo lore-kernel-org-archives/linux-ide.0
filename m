@@ -1,42 +1,47 @@
-From: Russell King <rmk@arm.linux.org.uk>
-Subject: Re: icside_dmaintr() in icside.c
-Date: Sat, 20 Nov 2004 13:08:18 +0000
-Message-ID: <20041120130817.B13550@flint.arm.linux.org.uk>
-References: <58cb370e041024065467404a38@mail.gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: linux-2.4.28 released
+Date: Sun, 21 Nov 2004 10:22:33 +0100 (MET)
+Message-ID: <Pine.GSO.4.61.0411211021550.19680@waterleaf.sonytel.be>
+References: <BF571719A4041A478005EF3F08EA6DF05EB481@pcsmail03.pcs.pc.ome.toshiba.co.jp>
+ <20041118111235.GA26216@logos.cnet> <20041119134832.GA9552@havoc.gtf.org>
+ <20041119135452.GA10422@devserv.devel.redhat.com> <419E0644.909@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:3592 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S261339AbUKTNI1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 20 Nov 2004 08:08:27 -0500
-Content-Disposition: inline
-In-Reply-To: <58cb370e041024065467404a38@mail.gmail.com>; from bzolnier@gmail.com on Sun, Oct 24, 2004 at 03:54:54PM +0200
+Received: from witte.sonytel.be ([80.88.33.193]:47076 "EHLO witte.sonytel.be")
+	by vger.kernel.org with ESMTP id S262940AbUKUJXG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Nov 2004 04:23:06 -0500
+In-Reply-To: <419E0644.909@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Alan Cox <alan@redhat.com>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>, "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>, Marcelo Tosatti <marcelo@hera.kernel.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Sun, Oct 24, 2004 at 03:54:54PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> Hi Russell,
+On Fri, 19 Nov 2004, Jeff Garzik wrote:
+> Alan Cox wrote:
+> > On Fri, Nov 19, 2004 at 08:48:32AM -0500, Jeff Garzik wrote:
+> > > PATA and SATA (DMA doesn't work for PATA, in split-driver configuration),
+> > > and there is no split-driver to worry about.
+> > > 
+> > > I think there may need to be some code to prevent the IDE driver from
+> > > claiming the legacy ISA ports.
+> > 
+> > Its called "request_resource". If you want the resource claim it. IDE will
+> > be a good citizen.
 > 
-> * for() loop in icside_dmaintr seems buggy
-> 
-> * what do you think about following patch?
->   (ide-dma is nowadays always build if BLK_DEV_IDEDMA)
-> 
-> [ide] icside: use ide_dma_intr()
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> That's what the quirk does.  libata still needs to find out who obtained the
+> resource, not blindly grab it (and fail).
 
-Looks fine.  I'd have liked to have done it this way initially, but
-I seem to remember there were objections to using ide_dma_intr at
-the time ("it's for PCI only").
+If libata would be initialized before IDE, it could grab the resource during
+probing.
 
-Please push upstream if not already done so.
+Gr{oetje,eeting}s,
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 PCMCIA      - http://pcmcia.arm.linux.org.uk/
-                 2.6 Serial core
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
