@@ -1,82 +1,56 @@
-From: Eric Mudama <edmudama@gmail.com>
-Subject: Re: DriveReady SeekComplete Error - thinkpad T41p
-Date: Tue, 25 Jan 2005 13:26:44 -0700
-Message-ID: <311601c905012512261520357f@mail.gmail.com>
-References: <200501250829.49755.ruben@hotheads.de>
-Reply-To: Eric Mudama <edmudama@gmail.com>
+From: "Eric Vaughan" <Vaughan@iomega.com>
+Subject: SiS 964 hang during mount
+Date: Tue, 25 Jan 2005 15:32:35 -0700
+Message-ID: <C815CE4647F1E64B894D8E0C171943F54883D4@royntex01.iomegacorp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.196]:22337 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262113AbVAYU0r (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jan 2005 15:26:47 -0500
-Received: by rproxy.gmail.com with SMTP id z35so649991rne
-        for <linux-ide@vger.kernel.org>; Tue, 25 Jan 2005 12:26:44 -0800 (PST)
-In-Reply-To: <200501250829.49755.ruben@hotheads.de>
+Received: from email-mx1.iomega.com ([147.178.1.72]:1195 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S262207AbVAYWcj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Jan 2005 17:32:39 -0500
+Received: from emailmx0.iomega.com (hubble [147.178.1.70])
+	by email.iomega.com (Postfix) with ESMTP id 5044C19D9
+	for <linux-ide@vger.kernel.org>; Tue, 25 Jan 2005 15:32:35 -0700 (MST)
+Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
+	by emailmx0.iomega.com (Postfix) with ESMTP id 401366E1
+	for <linux-ide@vger.kernel.org>; Tue, 25 Jan 2005 22:32:35 +0000 (UTC)
+content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ruben Jenster <ruben@hotheads.de>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tue, 25 Jan 2005 08:29:49 +0100, Ruben Jenster <ruben@hotheads.de> wrote:
-> Hi,
-> 
-> I get the following error on a thinkpad T41p from kernel 2.6.10 to 2.6.11-rc2.
-> It doesn't matter whether multimode is enabled or not.
-> 
-> > hda: max request size: 128KiB
-> > hda: Host Protected Area detected.
-> >         current capacity is 109170031 sectors (55895 MB)
-> >         native  capacity is 117210240 sectors (60011 MB)
-> > hda: task_no_data_intr: status=0x51 { DriveReady SeekComplete Error }
-> > hda: task_no_data_intr: error=0x04 { DriveStatusError }
-> > ide: failed opcode was: 0xf9
-> > hda: 109170031 sectors (55895 MB) w/7877KiB Cache, CHS=65535/16/63,
-> UDMA(100)
-> > hda: cache flushes supported
-> >  hda: hda1 hda2 hda3 < hda5 hda6 hda7 >
+Hi, 
+  I have a Serial ATAPI disk drive attached to an SiS 964 SATA
+controller.  I have ATA_ENABLE_ATAPI #defined in libata.h.  This is
+2.6.10, by the way.  When I mount the device, it hangs.  I turned on
+verbose debugging, and just before the hang, I get an assertion failure
+in libata-core.c, line 2675, where it is asserting that qc->flags
+contain the ATA_QCFLAG_ACTIVE flag.  Here's a little context around the
+failure:
 
-It refused a "set max address" command.  Here's a snippet of text from
-a relatively modern ATA draft spec:
+ata_scsi_error: ENTER
+ata_eng_timeout: ENTER
+ata_qc_timeout: ENTER
+ata_host_intr: ata5: host_stat 0x4
+ata_host_intr: ata5: protocol 7 (dev_stat 0x50)
+ata_sg_cleanup: unmapping 1 sg elements
+ata_qc_complete: EXIT
+ata5: command 0xa0 timeout, stat 0x50 host_stat 0x1
+Assertion failed! Qc->flags &
+ATA_QCFLAG_ACTIVE,drivers/scsi/libata-core.c,ata_qc_complete,line=2675
+ata_qc_complete: EXIT
+ata_qc_timeou: EXIT
+ata_eng_timeout: EXIT
+ata_scsi_error: EXIT
 
---------
+I'm working on a way to get all the output from the environment I'm
+using.  Do you need more?  Or is this enough info?  Is the assertion
+failure even relevant?  Let me know if there's anything else I can do to
+help you resolve this issue.
 
-After successful command completion, all read and write access
-attempts to addresses greater than specified by the successful SET MAX
-ADDRESS command shall be rejected with an ID Not Found error (see
-clause 6.3.4). IDENTIFY DEVICE data words (61:60) shall reflect the
-maximum address set with this command.
-
-If the 48-bit Address feature set is supported, the value placed in
-IDENTIFY DEVICE data words (103:100) shall be the same as the value
-placed in words (61:60).
-
-Hosts shall not issue more than one non-volatile SET MAX ADDRESS or
-SET MAX ADDRESS EXT command after a power-on or hardware reset.
-Devices should report an IDNF error upon receiving a second
-non-volatile SET MAX ADDRESS command after a power-on or hardware
-reset.
-
-The contents of IDENTIFY DEVICE data words and the max address shall
-not be changed if a SET MAX ADDRESS command fails.
-
-After a successful SET MAX ADDRESS command using a new maximum LBA the
-content of all IDENTIFY DEVICE data words shall comply with 4.2.1 and
-the content of words (61:60) shall be equal to the new Maximum LBA +
-1.
-
-A successful READ NATIVE MAX ADDRESS command shall immediately precede
-a SET MAX ADDRESS  command.
-
-This command is mandatory for devices that implement the Host
-Protected Area feature set. This command shall not be implemented if
-the Removable feature set is implemented.
-
---------
-
-My first guess is that the drive is refusing an attempt to set it to
-use its full capacity.  Can you send the identify block? 
-(/proc/ide/hda/identify or something like that)
-
---eric
+Thanks,
+J. Eric Vaughan
+Iomega Corporation
