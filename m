@@ -1,40 +1,33 @@
-From: Vladimir Stavrinov <vs@inist.ru>
-Subject: hardware raid with sata_promise
-Date: Wed, 2 Jun 2004 15:09:45 +0400
+From: "Jim B" <jim@jbsys.com>
+Subject: SATA Promise driver
+Date: Wed, 2 Jun 2004 11:25:31 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040602110945.GE6278@svi.inist.ru>
+Message-ID: <007101c448ce$fd2cc8d0$0a01a8c0@jbsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=koi8-r
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from svi.inist.ru ([195.54.196.230]:12212 "EHLO svi.inist.ru")
-	by vger.kernel.org with ESMTP id S261862AbUFBLQI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jun 2004 07:16:08 -0400
-Received: from vs by svi.inist.ru with local (Exim 4.34)
-	id 1BVTj4-00069i-99
-	for linux-ide@vger.kernel.org; Wed, 02 Jun 2004 15:16:06 +0400
-Content-Disposition: inline
+Received: from 24-117-200-54.cpe.cableone.net ([24.117.200.54]:64437 "EHLO
+	hipeak.jbsys.com") by vger.kernel.org with ESMTP id S262488AbUFBS1v
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Jun 2004 14:27:51 -0400
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Hi Jeff!
+ Jeff
 
-The main question is in subject: does the driver sata_promise
-will support hardware raid?
+I have a K8V SE Deluxe MoBo with a Promise FastTrack 378 controller.  It can be
+used as a RAID or extended IDE controller by sellecting the proper BIOS setting.
+I have tried the RAID setting and used ft3xx.o driver (from Promise) in FC1 2.4
+kernels to use the two 160 GB IDE disks.  I currently have it set to extended
+IDE.  I use the pdc-ultra.o driver (from Promise) in FC1 2.4 kernels for this
+mode.  I installed FC2 x86_64 version to another partition on the standard IDE
+disk.  It boots and works, except it will not see the PATA drives on the Promise
+controller.  It says there are no drives present.  Does the SATA_Promise module
+support this controller in either of these modes?  Am I doing something wrong?
+Is it because I am using IDE drives instead of SATA drivers?
 
-I have 2 sata drives attached to pdc20319 and configured as raid
-level 1 (mirror) in it's bios. I should use kernel 2.4.26 with
-driver ft3xx to get hardware raid work. I want to use kernel
-2.6.6, but the driver sata_promise see 2 (sda and sdb) drives
-instead 1 raid array (sda), that mean it don't support raid. I
-read somewhere recommendation to use Linux software raid instead
-promise hardware raid, because it is better. I don't think so. I
-prefer hardware raid. 
+Jim
 
-Do You plan to add raid support to sata_promise?
-
--- 
-
-*****************************
-****  Vladimir Stavrinov  ***
-*******  vs@inist.ru  *******
-*****************************
