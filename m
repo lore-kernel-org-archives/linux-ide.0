@@ -1,55 +1,49 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+From: "Maciej W. Rozycki" <macro@ds2.pg.gda.pl>
 Subject: Re: [PATCH] remove dead drivers/ide/ppc/swarm.c
-Date: Tue, 4 May 2004 15:10:41 +0200
+Date: Tue, 4 May 2004 16:21:28 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200405041510.41731.bzolnier@elka.pw.edu.pl>
-References: <200405040134.22092.bzolnier@elka.pw.edu.pl> <200405041428.50592.bzolnier@elka.pw.edu.pl> <20040504124349.GA15664@linux-mips.org>
+Message-ID: <Pine.LNX.4.55.0405041452090.32082@jurand.ds.pg.gda.pl>
+References: <200405040134.22092.bzolnier@elka.pw.edu.pl>
+ <20040504111902.GA14240@linux-mips.org> <200405041428.50592.bzolnier@elka.pw.edu.pl>
+ <20040504124349.GA15664@linux-mips.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:19864 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264337AbUEDNOG
+Received: from jurand.ds.pg.gda.pl ([153.19.208.2]:61092 "EHLO
+	jurand.ds.pg.gda.pl") by vger.kernel.org with ESMTP id S263611AbUEDOVa
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 May 2004 09:14:06 -0400
+	Tue, 4 May 2004 10:21:30 -0400
 In-Reply-To: <20040504124349.GA15664@linux-mips.org>
-Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, macro@ds2.pg.gda.pl
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tuesday 04 of May 2004 14:43, Ralf Baechle wrote:
-> On Tue, May 04, 2004 at 02:28:50PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > It is not integrated into -mm (2.6.6-rc3-mm1) yet so I couldn't see it.
-> > [ Please cc: me on IDE patches. ]
->
-> Will do.
+On Tue, 4 May 2004, Ralf Baechle wrote:
 
-Thanks.
-
-> > If it looks the same as in linux-mips CVS it won't work because I've
-> > killed ide_init_default_hwifs() recently (except ARM but patch is
-> > pending).
-> >
-> > Sorry, this is what you get when using hacks. 8)
-> >
 > > While at swarm.c ...
-> >
+> > 
 > > > * Boards with SiByte processors so far have supported IDE devices via
 > > > * the Generic Bus, PCI bus, and built-in PCMCIA interface.  In all
 > > > * cases, byte-swapping must be avoided for these devices (whereas
 > > > * other PCI devices, for example, will require swapping).
-> >
+> > 
 > > Why does byte-swapping must be avoided for PCI IDE
 > > but not for other PCI devices?
->
+> 
 > Simply a result of the way the IDE bus is hooked up to the generic bus of
 > the Sibyte chip.  I'd have to research details if you're interested ...
 
-The basic question is whether disk used on SiByte can be read i.e. on x86.
-If not than we may have serious problems with some special commands with
-current implementation (similar problem as on Atari Q40/Q60).
+ I suppose the comment is incorrect, at least for the PCI bus (the two
+other kinds of attachments use GPIO, so they may well be
+endian-independent).  The PCI and HT I/O space accesses are done via the
+non-swapping address space, so data will appear as swapped in the
+big-endian configuration of the system.
 
-Bartlomiej
+ I had a brief discussion on the hack last Summer with the author of the
+code, but had no time to dig more deeply into it.  Now the author is gone,
+but I'll have a look at it.  Don't hold your breath, though.
 
+-- 
++  Maciej W. Rozycki, Technical University of Gdansk, Poland   +
++--------------------------------------------------------------+
++        e-mail: macro@ds2.pg.gda.pl, PGP key available        +
