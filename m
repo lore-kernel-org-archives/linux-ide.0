@@ -1,20 +1,19 @@
 From: "Gutko" <gutko@poczta.onet.pl>
 Subject: Still no DMA on boot on S-ATA (Asus A7N8X-deluxe)
-Date: Sun, 25 May 2003 22:06:13 +0200
+Date: Sun, 25 May 2003 22:10:28 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <000901c322f9$17eff9f0$928afea9@hal>
+Message-ID: <003101c322f9$b0082230$928afea9@hal>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.poczta.onet.pl ([213.180.130.30]:36481 "EHLO
+Received: from smtp2.poczta.onet.pl ([213.180.130.30]:23194 "EHLO
 	smtp2.poczta.onet.pl") by vger.kernel.org with ESMTP
-	id S263709AbTEYTwp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 May 2003 15:52:45 -0400
+	id S263722AbTEYT5F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 May 2003 15:57:05 -0400
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 
 Hardware:
 Asus A7N8X -deluxe v1.04 bios 1004
