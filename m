@@ -1,69 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SATA causing hard freeze on 2.6.6
-Date: Sun, 16 May 2004 08:18:24 -0400
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [PATCH] libata update 20040515-1
+Date: 16 May 2004 07:31:26 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40A75C10.1030402@pobox.com>
-References: <40A75BF3.7040403@gentoo.org>
+Message-ID: <1084714286.3259.5.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:25811 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263589AbUEPMSi
+Received: from email-out2.iomega.com ([147.178.1.83]:21125 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263607AbUEPNbs
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 May 2004 08:18:38 -0400
-In-Reply-To: <40A75BF3.7040403@gentoo.org>
+	Sun, 16 May 2004 09:31:48 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
-Daniel Drake wrote:
-> Hi,
-> 
-> Since an IDE-->SATA converter was included with my motherboard, I 
-> decided to start playing with SATA.
-> 
-> The converter unit plugs into the IDE port of a hard disk, and you can 
-> then connect a SATA lead from that to a SATA port on the motherboard.
-> 
-> The hard disk I am using is a Seagate ST380011A.
-> The motherboard is an Abit NF7-S 2.0 (nforce2), which has the following 
-> SATA controller:
-> 0000:01:0b.0 RAID bus controller: Silicon Image, Inc. (formerly CMD 
-> Technology Inc) Silicon Image Serial ATARaid Controller [ CMD/Sil 
-> 3112/3112A ] (rev 02)
-> 
-> Under 2.6.6, the entire system freezes under disk activity. It starts 
-> booting ok, but then freezes, usually when loading modules. Booting with 
-> "init=/bin/bash" allows me to get to a console, but soon after I start 
-> using the disk, the entire system freezes. I also tried 2.6.6-mm2 with 
-> the same problems.
-> Plugging back into IDE, and booting the same kernel works with no problems.
-> 
-> FWIW, my SATA experiences aren't much better with other kernels. When 
-> booting 2.4.25 from a CD, I can mount my SATA disk but I get lots of 
-> messages, such as:
-> hde: sata_error = 0x00000000, watchdog = 0, siimage_mmio_ide_dma_test_irq
-> ide2(33,7):Removing [4428992 4467719 0x0 SD]..<4>hde: sata_error = 
-> 0x00000000, watchdog = 0, siimage_mmio_ide_dma_test_irq
-> done
-> ide2(33,7):There were 1 uncompleted unlinks/truncates. Completed
-> hde: sata_error = 0x00000000, watchdog = 0, siimage_mmio_ide_dma_test_irq
-> hde: sata_error = 0x00000000, watchdog = 0, siimage_mmio_ide_dma_test_irq
-> 
-> Booting 2.6.5 from a cd and mounting the drive gives the same errors. 
-> However, in both cases, reading and writing appears to be working (but I 
-> unmounted quickly both times incase the errors might be damaging the 
-> disk..)
-> 
-> Anything I could try?
+> The attached patch ... sent to Linus
+> earlier day, and should appear upstream
+> vaguely soon.
+>
+> Patches should be
+> based off of 2.6.6-bk + this patch.
 
-What is the behavior of libata?
+I believe this patch was applied to create 2.6.6-bk3, because its -R
+reverse applies clean there.
 
-CONFIG_SCSI_SATA, CONFIG_SCSI_SATA_SIL
+I will therefore begin again from -bk3.  -bk1 and -bk2 are not easy
+options for me, because this patch does not apply clean there. 
+Hopefully the -bk2 *NULL of ata_qc_issue_prot I saw is gone, else I'll
+have to solve that before I can progress in -bk3.
 
-	Jeff
+Pat LaVarre
 
-
+$ cd linux-2.6.6-bk3/
+$ patch --dry-run -R -p1 <~/20040515-1.patch
+patching file drivers/scsi/ata_piix.c
+patching file drivers/scsi/libata-core.c
+patching file drivers/scsi/libata-scsi.c
+patching file drivers/scsi/libata.h
+patching file drivers/scsi/sata_promise.c
+patching file drivers/scsi/sata_sil.c
+patching file drivers/scsi/sata_sis.c
+patching file drivers/scsi/sata_svw.c
+patching file drivers/scsi/sata_sx4.c
+patching file drivers/scsi/sata_via.c
+patching file drivers/scsi/sata_vsc.c
+patching file include/linux/libata.h
+$
 
 
