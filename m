@@ -1,399 +1,184 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] ide-taskfile.c fixups/cleanups part #2 [9/9]
-Date: Wed, 30 Jun 2004 17:26:52 +0200
+Subject: [PATCH] ide-taskfile.c fixups/cleanups part #2 [7/9]
+Date: Wed, 30 Jun 2004 17:26:18 +0200
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200406301726.52076.bzolnier@elka.pw.edu.pl>
+Message-ID: <200406301726.18688.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S266701AbUF3PdB@vger.kernel.org>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S266707AbUF3PdB@vger.kernel.org>
 Content-Disposition: inline
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 
-[PATCH] ide: use "normal" handlers for "flagged" taskfiles (ide-taskfile.c)
+[PATCH] ide: no partial completions for PIO (CONFIG_IDE_TASKFILE_IO=y)
 
-This fixes following issues for PIO-in:
-- shared PCI IRQs handling
-- fail request if the last status is bad
-and PIO-out:
-- set hwgroup->handler/timer in prehandlers
-- handle drive->unmask in prehandlers
-- check for !rq->nr_sectors and DRQ_STAT bit set
-- use drive->bad_wstat instead of BAD_W_STAT
+Don't do partial completions but instead acknowledge already transferred
+sectors with verified good status on error.  This allows us to complete
+"good" sectors to block layer even if bio they belong to wasn't finished
+and simplifies code.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 
- linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c |  286 +------------------
- 1 files changed, 30 insertions(+), 256 deletions(-)
+ linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c |   84 ++++++-------------
+ 1 files changed, 28 insertions(+), 56 deletions(-)
 
-diff -puN drivers/ide/ide-taskfile.c~ide_no_flagged_pio drivers/ide/ide-taskfile.c
---- linux-2.6.7-bk11/drivers/ide/ide-taskfile.c~ide_no_flagged_pio	2004-06-28 21:30:00.484529760 +0200
-+++ linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c	2004-06-28 21:30:00.492528544 +0200
-@@ -383,6 +383,20 @@ static ide_startstop_t task_error(ide_dr
- # define task_error(d, rq, s, stat, cur_bad) drive->driver->error(d, s, stat)
- #endif
+diff -puN drivers/ide/ide-taskfile.c~ide_tf_no_partial drivers/ide/ide-taskfile.c
+--- linux-2.6.7-bk11/drivers/ide/ide-taskfile.c~ide_tf_no_partial	2004-06-28 21:27:54.872625672 +0200
++++ linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c	2004-06-28 21:27:54.878624760 +0200
+@@ -532,6 +532,18 @@ static u8 wait_drive_not_busy(ide_drive_
+ 	return stat;
+ }
  
-+static void task_end_request(ide_drive_t *drive, struct request *rq, u8 stat)
++static ide_startstop_t task_error(ide_drive_t *drive, struct request *rq,
++				  const char *s, u8 stat, unsigned cur_bad)
 +{
-+	if (rq->flags & REQ_DRIVE_TASKFILE) {
-+		ide_task_t *task = rq->special;
++	if (rq->bio) {
++		int sectors = rq->hard_nr_sectors - rq->nr_sectors - cur_bad;
 +
-+		if (task->tf_out_flags.all) {
-+			u8 err = drive->hwif->INB(IDE_ERROR_REG);
-+			ide_end_drive_cmd(drive, stat, err);
-+			return;
-+		}
++		if (sectors > 0)
++			drive->driver->end_request(drive, 1, sectors);
 +	}
-+	drive->driver->end_request(drive, 1, rq->hard_nr_sectors);
++	return drive->driver->error(drive, s, stat);
 +}
 +
  /*
   * Handler for command with PIO data-in phase (Read).
   */
-@@ -406,7 +420,7 @@ ide_startstop_t task_in_intr (ide_drive_
- 		stat = wait_drive_not_busy(drive);
- 		if (!OK_STAT(stat, 0, BAD_R_STAT))
- 			return task_error(drive, rq, __FUNCTION__, stat, 1);
--		drive->driver->end_request(drive, 1, rq->hard_nr_sectors);
-+		task_end_request(drive, rq, stat);
- 		return ide_stopped;
+@@ -542,24 +554,11 @@ ide_startstop_t task_in_intr (ide_drive_
+ 
+ 	if (!OK_STAT(stat, DATA_READY, BAD_R_STAT)) {
+ 		if (stat & (ERR_STAT | DRQ_STAT))
+-			return DRIVER(drive)->error(drive, __FUNCTION__, stat);
++			return task_error(drive, rq, __FUNCTION__, stat, 0);
+ 		/* BUSY_STAT: No data yet, so wait for another IRQ. */
+ 		ide_set_handler(drive, &task_in_intr, WAIT_WORSTCASE, NULL);
+ 		return ide_started;
  	}
- 
-@@ -440,7 +454,7 @@ ide_startstop_t task_mulin_intr (ide_dri
- 		stat = wait_drive_not_busy(drive);
- 		if (!OK_STAT(stat, 0, BAD_R_STAT))
- 			return task_error(drive, rq, __FUNCTION__, stat, drive->mult_count);
--		drive->driver->end_request(drive, 1, rq->hard_nr_sectors);
-+		task_end_request(drive, rq, stat);
- 		return ide_stopped;
- 	}
- 
-@@ -468,7 +482,7 @@ ide_startstop_t task_out_intr (ide_drive
- 		return task_error(drive, rq, __FUNCTION__, stat, 1);
- 
- 	if (!rq->nr_sectors) {
--		drive->driver->end_request(drive, 1, rq->hard_nr_sectors);
-+		task_end_request(drive, rq, stat);
- 		return ide_stopped;
- 	}
- 
-@@ -519,7 +533,7 @@ ide_startstop_t task_mulout_intr (ide_dr
- 		return task_error(drive, rq, __FUNCTION__, stat, drive->mult_count);
- 
- 	if (!rq->nr_sectors) {
--		drive->driver->end_request(drive, 1, rq->hard_nr_sectors);
-+		task_end_request(drive, rq, stat);
- 		return ide_stopped;
- 	}
- 
-@@ -598,13 +612,6 @@ EXPORT_SYMBOL(ide_raw_taskfile);
- #define MAX_DMA		(256*SECTOR_WORDS)
- 
- ide_startstop_t flagged_taskfile(ide_drive_t *, ide_task_t *);
--ide_startstop_t flagged_task_no_data_intr(ide_drive_t *);
--ide_startstop_t flagged_task_in_intr(ide_drive_t *);
--ide_startstop_t flagged_task_mulin_intr(ide_drive_t *);
--ide_startstop_t flagged_pre_task_out_intr(ide_drive_t *, struct request *);
--ide_startstop_t flagged_task_out_intr(ide_drive_t *);
--ide_startstop_t flagged_pre_task_mulout_intr(ide_drive_t *, struct request *);
--ide_startstop_t flagged_task_mulout_intr(ide_drive_t *);
- 
- int ide_taskfile_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
- {
-@@ -703,23 +710,13 @@ int ide_taskfile_ioctl (ide_drive_t *dri
- 				err = -EPERM;
- 				goto abort;
- 			}
--			if (args.tf_out_flags.all != 0) {
--				args.prehandler = &flagged_pre_task_mulout_intr;
--				args.handler = &flagged_task_mulout_intr;
--			} else {
--				args.prehandler = &pre_task_mulout_intr;
--				args.handler = &task_mulout_intr;
--			}
-+			args.prehandler = &pre_task_mulout_intr;
-+			args.handler = &task_mulout_intr;
- 			err = ide_diag_taskfile(drive, &args, taskout, outbuf);
- 			break;
- 		case TASKFILE_OUT:
--			if (args.tf_out_flags.all != 0) {
--				args.prehandler = &flagged_pre_task_out_intr;
--				args.handler    = &flagged_task_out_intr;
--			} else {
--				args.prehandler = &pre_task_out_intr;
--				args.handler = &task_out_intr;
--			}
-+			args.prehandler = &pre_task_out_intr;
-+			args.handler = &task_out_intr;
- 			err = ide_diag_taskfile(drive, &args, taskout, outbuf);
- 			break;
- 		case TASKFILE_MULTI_IN:
-@@ -731,27 +728,15 @@ int ide_taskfile_ioctl (ide_drive_t *dri
- 				err = -EPERM;
- 				goto abort;
- 			}
--			if (args.tf_out_flags.all != 0) {
--				args.handler = &flagged_task_mulin_intr;
--			} else {
--				args.handler = &task_mulin_intr;
--			}
-+			args.handler = &task_mulin_intr;
- 			err = ide_diag_taskfile(drive, &args, taskin, inbuf);
- 			break;
- 		case TASKFILE_IN:
--			if (args.tf_out_flags.all != 0) {
--				args.handler = &flagged_task_in_intr;
--			} else {
--				args.handler = &task_in_intr;
--			}
-+			args.handler = &task_in_intr;
- 			err = ide_diag_taskfile(drive, &args, taskin, inbuf);
- 			break;
- 		case TASKFILE_NO_DATA:
--			if (args.tf_out_flags.all != 0) {
--				args.handler = &flagged_task_no_data_intr;
--			} else {
--				args.handler = &task_no_data_intr;
--			}
-+			args.handler = &task_no_data_intr;
- 			err = ide_diag_taskfile(drive, &args, 0, NULL);
- 			break;
- 		default:
-@@ -1024,226 +1009,15 @@ ide_startstop_t flagged_taskfile (ide_dr
- 				return ide_stopped;
- 
- 			/* Issue the command */
-+			if (task->prehandler) {
-+				hwif->OUTBSYNC(drive, taskfile->command, IDE_COMMAND_REG);
-+				ndelay(400);	/* FIXME */
-+				return task->prehandler(drive, task->rq);
-+			}
- 			ide_execute_command(drive, taskfile->command, task->handler, WAIT_WORSTCASE, NULL);
--			if (task->prehandler != NULL)
--				return task->prehandler(drive, HWGROUP(drive)->rq);
- 	}
- 
- 	return ide_started;
- }
- 
- EXPORT_SYMBOL(flagged_taskfile);
--
--ide_startstop_t flagged_task_no_data_intr (ide_drive_t *drive)
--{
--	ide_hwif_t *hwif = HWIF(drive);
--	u8 stat;
--
--	local_irq_enable();
--
--	if (!OK_STAT(stat = hwif->INB(IDE_STATUS_REG), READY_STAT, BAD_STAT)) {
--		if (stat & ERR_STAT) {
--			return DRIVER(drive)->error(drive, "flagged_task_no_data_intr", stat);
--		}
--		/*
--		 * (ks) Unexpected ATA data phase detected.
--		 * This should not happen. But, it can !
--		 * I am not sure, which function is best to clean up
--		 * this situation.  I choose: ide_error(...)
--		 */
-- 		return DRIVER(drive)->error(drive, "flagged_task_no_data_intr (unexpected phase)", stat); 
--	}
--
--	ide_end_drive_cmd(drive, stat, hwif->INB(IDE_ERROR_REG));
--
--	return ide_stopped;
--}
--
--/*
-- * Handler for command with PIO data-in phase
-- */
--ide_startstop_t flagged_task_in_intr (ide_drive_t *drive)
--{
--	ide_hwif_t *hwif	= HWIF(drive);
--	u8 stat			= hwif->INB(IDE_STATUS_REG);
--	struct request *rq	= HWGROUP(drive)->rq;
--	int retries             = 5;
--
--	if (!OK_STAT(stat, DATA_READY, BAD_R_STAT)) {
--		if (stat & ERR_STAT) {
--			return DRIVER(drive)->error(drive, "flagged_task_in_intr", stat);
--		}
--		/*
--		 * (ks) Unexpected ATA data phase detected.
--		 * This should not happen. But, it can !
--		 * I am not sure, which function is best to clean up
--		 * this situation.  I choose: ide_error(...)
--		 */
--		return DRIVER(drive)->error(drive, "flagged_task_in_intr (unexpected data phase)", stat); 
--	}
--
--	task_buffer_sectors(drive, rq, 1, IDE_PIO_IN);
--
--	if (rq->current_nr_sectors) {
--		/*
--                 * (ks) We don't know which command was executed. 
--		 * So, we wait the 'WORSTCASE' value.
--                 */
--		ide_set_handler(drive, &flagged_task_in_intr,  WAIT_WORSTCASE, NULL);
--		return ide_started;
--	}
+-finish_rq:
 -	/*
--	 * (ks) Last sector was transfered, wait until drive is ready. 
--	 * This can take up to 10 usec. We willl wait max 50 us.
+-	 * Complete previously submitted bios (if any).
+-	 * Status was already verifyied.
 -	 */
--	while (((stat = hwif->INB(IDE_STATUS_REG)) & BUSY_STAT) && retries--)
--		udelay(10);
--	ide_end_drive_cmd (drive, stat, hwif->INB(IDE_ERROR_REG));
--
--	return ide_stopped;
--}
--
--ide_startstop_t flagged_task_mulin_intr (ide_drive_t *drive)
--{
--	ide_hwif_t *hwif	= HWIF(drive);
--	u8 stat			= hwif->INB(IDE_STATUS_REG);
--	struct request *rq	= HWGROUP(drive)->rq;
--	int retries             = 5;
--
--	if (!OK_STAT(stat, DATA_READY, BAD_R_STAT)) {
--		if (stat & ERR_STAT) {
--			return DRIVER(drive)->error(drive, "flagged_task_mulin_intr", stat);
--		}
--		/*
--		 * (ks) Unexpected ATA data phase detected.
--		 * This should not happen. But, it can !
--		 * I am not sure, which function is best to clean up
--		 * this situation.  I choose: ide_error(...)
--		 */
--		return DRIVER(drive)->error(drive, "flagged_task_mulin_intr (unexpected data phase)", stat); 
--	}
--
--	task_buffer_multi_sectors(drive, rq, IDE_PIO_IN);
--
--	if (rq->current_nr_sectors != 0) {
--		/*
--                 * (ks) We don't know which command was executed. 
--		 * So, we wait the 'WORSTCASE' value.
--                 */
--		ide_set_handler(drive, &flagged_task_mulin_intr,  WAIT_WORSTCASE, NULL);
--		return ide_started;
--	}
--
--	/*
--	 * (ks) Last sector was transfered, wait until drive is ready. 
--	 * This can take up to 10 usec. We willl wait max 50 us.
--	 */
--	while (((stat = hwif->INB(IDE_STATUS_REG)) & BUSY_STAT) && retries--)
--		udelay(10);
--	ide_end_drive_cmd (drive, stat, hwif->INB(IDE_ERROR_REG));
--
--	return ide_stopped;
--}
--
--/*
-- * Pre handler for command with PIO data-out phase
-- */
--ide_startstop_t flagged_pre_task_out_intr (ide_drive_t *drive, struct request *rq)
--{
--	ide_startstop_t startstop;
--
--	if (ide_wait_stat(&startstop, drive, DATA_READY,
--			BAD_W_STAT, WAIT_DRQ)) {
--		printk(KERN_ERR "%s: No DRQ bit after issuing write command.\n", drive->name);
--		return startstop;
--	}
--
--	task_buffer_sectors(drive, rq, 1, IDE_PIO_OUT);
--
--	return ide_started;
--}
--
--ide_startstop_t flagged_task_out_intr (ide_drive_t *drive)
--{
--	ide_hwif_t *hwif	= HWIF(drive);
--	u8 stat			= hwif->INB(IDE_STATUS_REG);
--	struct request *rq	= HWGROUP(drive)->rq;
--
--	if (!OK_STAT(stat, DRIVE_READY, BAD_W_STAT)) 
--		return DRIVER(drive)->error(drive, "flagged_task_out_intr", stat);
--	
--	if (!rq->current_nr_sectors) { 
--		ide_end_drive_cmd (drive, stat, hwif->INB(IDE_ERROR_REG));
+-	while (rq->bio != rq->cbio)
+-		if (!DRIVER(drive)->end_request(drive, 1, bio_sectors(rq->bio)))
+-			return ide_stopped;
+-	/* Complete rq->buffer based request (ioctls). */
+-	if (!rq->bio && !rq->nr_sectors) {
+-		DRIVER(drive)->end_request(drive, 1, 0);
 -		return ide_stopped;
 -	}
--
--	if (!OK_STAT(stat, DATA_READY, BAD_W_STAT)) {
--		/*
--		 * (ks) Unexpected ATA data phase detected.
--		 * This should not happen. But, it can !
--		 * I am not sure, which function is best to clean up
--		 * this situation.  I choose: ide_error(...)
--		 */
--		return DRIVER(drive)->error(drive, "flagged_task_out_intr (unexpected data phase)", stat); 
--	}
--
--	task_buffer_sectors(drive, rq, 1, IDE_PIO_OUT);
--
+ 
+ 	task_sectors(drive, rq, 1, IDE_PIO_IN);
+ 
+@@ -567,8 +566,9 @@ finish_rq:
+ 	if (!rq->nr_sectors) {
+ 		stat = wait_drive_not_busy(drive);
+ 		if (!OK_STAT(stat, 0, BAD_R_STAT))
+-			return DRIVER(drive)->error(drive, __FUNCTION__, stat);
+-		goto finish_rq;
++			return task_error(drive, rq, __FUNCTION__, stat, 1);
++		drive->driver->end_request(drive, 1, rq->hard_nr_sectors);
++		return ide_stopped;
+ 	}
+ 
+ 	/* Still data left to transfer. */
+@@ -588,24 +588,11 @@ ide_startstop_t task_mulin_intr (ide_dri
+ 
+ 	if (!OK_STAT(stat, DATA_READY, BAD_R_STAT)) {
+ 		if (stat & (ERR_STAT | DRQ_STAT))
+-			return DRIVER(drive)->error(drive, __FUNCTION__, stat);
++			return task_error(drive, rq, __FUNCTION__, stat, 0);
+ 		/* BUSY_STAT: No data yet, so wait for another IRQ. */
+ 		ide_set_handler(drive, &task_mulin_intr, WAIT_WORSTCASE, NULL);
+ 		return ide_started;
+ 	}
+-finish_rq:
 -	/*
--	 * (ks) We don't know which command was executed. 
--	 * So, we wait the 'WORSTCASE' value.
+-	 * Complete previously submitted bios (if any).
+-	 * Status was already verifyied.
 -	 */
--	ide_set_handler(drive, &flagged_task_out_intr, WAIT_WORSTCASE, NULL);
--
--	return ide_started;
--}
--
--ide_startstop_t flagged_pre_task_mulout_intr (ide_drive_t *drive, struct request *rq)
--{
--	ide_startstop_t startstop;
--
--	if (ide_wait_stat(&startstop, drive, DATA_READY,
--			BAD_W_STAT, WAIT_DRQ)) {
--		printk(KERN_ERR "%s: No DRQ bit after issuing write command.\n", drive->name);
--		return startstop;
--	}
--
--	task_buffer_multi_sectors(drive, rq, IDE_PIO_OUT);
--
--	return ide_started;
--}
--
--ide_startstop_t flagged_task_mulout_intr (ide_drive_t *drive)
--{
--	ide_hwif_t *hwif	= HWIF(drive);
--	u8 stat			= hwif->INB(IDE_STATUS_REG);
--	struct request *rq	= HWGROUP(drive)->rq;
--
--	if (!OK_STAT(stat, DRIVE_READY, BAD_W_STAT)) 
--		return DRIVER(drive)->error(drive, "flagged_task_mulout_intr", stat);
--	
--	if (!rq->current_nr_sectors) { 
--		ide_end_drive_cmd (drive, stat, hwif->INB(IDE_ERROR_REG));
+-	while (rq->bio != rq->cbio)
+-		if (!DRIVER(drive)->end_request(drive, 1, bio_sectors(rq->bio)))
+-			return ide_stopped;
+-	/* Complete rq->buffer based request (ioctls). */
+-	if (!rq->bio && !rq->nr_sectors) {
+-		DRIVER(drive)->end_request(drive, 1, 0);
 -		return ide_stopped;
 -	}
--
--	if (!OK_STAT(stat, DATA_READY, BAD_W_STAT)) {
--		/*
--		 * (ks) Unexpected ATA data phase detected.
--		 * This should not happen. But, it can !
--		 * I am not sure, which function is best to clean up
--		 * this situation.  I choose: ide_error(...)
--		 */
--		return DRIVER(drive)->error(drive, "flagged_task_mulout_intr (unexpected data phase)", stat); 
--	}
--
--	task_buffer_multi_sectors(drive, rq, IDE_PIO_OUT);
--
--	/*
--	 * (ks) We don't know which command was executed. 
--	 * So, we wait the 'WORSTCASE' value.
+ 
+ 	task_multi_sectors(drive, rq, IDE_PIO_IN);
+ 
+@@ -613,8 +600,9 @@ finish_rq:
+ 	if (!rq->nr_sectors) {
+ 		stat = wait_drive_not_busy(drive);
+ 		if (!OK_STAT(stat, 0, BAD_R_STAT))
+-			return DRIVER(drive)->error(drive, __FUNCTION__, stat);
+-		goto finish_rq;
++			return task_error(drive, rq, __FUNCTION__, stat, drive->mult_count);
++		drive->driver->end_request(drive, 1, rq->hard_nr_sectors);
++		return ide_stopped;
+ 	}
+ 
+ 	/* Still data left to transfer. */
+@@ -634,23 +622,15 @@ ide_startstop_t task_out_intr (ide_drive
+ 
+ 	stat = HWIF(drive)->INB(IDE_STATUS_REG);
+ 	if (!OK_STAT(stat, DRIVE_READY, drive->bad_wstat))
+-		return DRIVER(drive)->error(drive, __FUNCTION__, stat);
++		return task_error(drive, rq, __FUNCTION__, stat, 1);
+ 
+ 	/* Deal with unexpected ATA data phase. */
+ 	if ((!(stat & DATA_READY) && rq->nr_sectors) ||
+ 	    ((stat & DATA_READY) && !rq->nr_sectors))
+-		return DRIVER(drive)->error(drive, __FUNCTION__, stat);
++		return task_error(drive, rq, __FUNCTION__, stat, 1);
+ 
+-	/* 
+-	 * Complete previously submitted bios (if any).
+-	 * Status was already verifyied.
 -	 */
--	ide_set_handler(drive, &flagged_task_mulout_intr, WAIT_WORSTCASE, NULL);
--
--	return ide_started;
--}
+-	while (rq->bio != rq->cbio)
+-		if (!DRIVER(drive)->end_request(drive, 1, bio_sectors(rq->bio)))
+-			return ide_stopped;
+-	/* Complete rq->buffer based request (ioctls). */
+-	if (!rq->bio && !rq->nr_sectors) {
+-		DRIVER(drive)->end_request(drive, 1, 0);
++	if (!rq->nr_sectors) {
++		drive->driver->end_request(drive, 1, rq->hard_nr_sectors);
+ 		return ide_stopped;
+ 	}
+ 
+@@ -694,23 +674,15 @@ ide_startstop_t task_mulout_intr (ide_dr
+ 
+ 	stat = HWIF(drive)->INB(IDE_STATUS_REG);
+ 	if (!OK_STAT(stat, DRIVE_READY, drive->bad_wstat))
+-		return DRIVER(drive)->error(drive, __FUNCTION__, stat);
++		return task_error(drive, rq, __FUNCTION__, stat, drive->mult_count);
+ 
+ 	/* Deal with unexpected ATA data phase. */
+ 	if ((!(stat & DATA_READY) && rq->nr_sectors) ||
+ 	    ((stat & DATA_READY) && !rq->nr_sectors))
+-		return DRIVER(drive)->error(drive, __FUNCTION__, stat);
++		return task_error(drive, rq, __FUNCTION__, stat, drive->mult_count);
+ 
+-	/* 
+-	 * Complete previously submitted bios (if any).
+-	 * Status was already verifyied.
+-	 */
+-	while (rq->bio != rq->cbio)
+-		if (!DRIVER(drive)->end_request(drive, 1, bio_sectors(rq->bio)))
+-			return ide_stopped;
+-	/* Complete rq->buffer based request (ioctls). */
+-	if (!rq->bio && !rq->nr_sectors) {
+-		DRIVER(drive)->end_request(drive, 1, 0);
++	if (!rq->nr_sectors) {
++		drive->driver->end_request(drive, 1, rq->hard_nr_sectors);
+ 		return ide_stopped;
+ 	}
+ 
 
 _
