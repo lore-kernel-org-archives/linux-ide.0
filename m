@@ -1,56 +1,31 @@
-From: Ben Dooks <ben-linux@fluff.org>
-Subject: [PATCH] Kconfig for VR1000 machine driver selection
-Date: Fri, 18 Feb 2005 11:00:24 +0000
-Message-ID: <20050218110024.GA16612@home.fluff.org>
+From: Francois Payette <francoisp@netmosphere.net>
+Subject: Re: SATA150TX4 atat1:command timeout
+Date: Fri, 18 Feb 2005 11:40:52 -0500
+Message-ID: <42161A94.1020404@netmosphere.net>
+References: <42111B02.4010805@netmosphere.net> <4211279C.5070205@pobox.com> <421360ED.2040505@netmosphere.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="qDbXVdCdHGoSgWSk"
-Received: from host-212-158-219-180.bulldogdsl.com ([212.158.219.180]:50056
-	"EHLO aeryn.fluff.org.uk") by vger.kernel.org with ESMTP
-	id S261319AbVBRLA2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Feb 2005 06:00:28 -0500
-Content-Disposition: inline
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from 65.18.135.ptr ([65.18.135.81]:28330 "EHLO isecurit.com")
+	by vger.kernel.org with ESMTP id S261399AbVBRQkO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2005 11:40:14 -0500
+In-Reply-To: <421360ED.2040505@netmosphere.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: patch-out@fluff.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Eric Mudama <edmudama@gmail.com>
 
+It seems that the locking problem we were experiencing was related to 
+the disparities of drives in a raid 0 array; when we replaced the 
+6Y200M0 with another 6B200S0 the problem never reappeared even after 1.8 
+TB of io. Thanks a buch to Eric for pointing out the differences; the 
+promise card and/or driver must have a problem with the bridge chip on 
+that drive when interfacing with another drive that does not have that 
+chip. We also tested for performance improvements with
 
---qDbXVdCdHGoSgWSk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+writel(tmp, mmio + PDC_TBG_MODE);
 
-Fix the use of CONFIG_MACH_VR1000, which was missing an
-trailing zero from the configuration variable, so never
-being shown if only the VR1000 was selected
+commented out from pdc_host_init, but it does not cause a significant 
+difference when benchmarked with bonnie++.
 
-Signed-off-by: Ben Dooks <ben-linux@fluff.org>
-
---- linux-2.6.11-rc4/drivers/ide/Kconfig	2005-01-04 10:57:49.000000000 +0000
-+++ linux-2.6.11-rc4-bjd8/drivers/ide/Kconfig	2005-02-18 10:54:21.000000000 +0000
-@@ -812,7 +812,7 @@
- 
- config BLK_DEV_IDE_BAST
- 	tristate "Simtec BAST / Thorcom VR1000 IDE support"
--	depends on ARM && (ARCH_BAST || MACH_VR100)
-+	depends on ARM && (ARCH_BAST || MACH_VR1000)
- 	help
- 	  Say Y here if you want to support the onboard IDE channels on the
- 	  Simtec BAST or the Thorcom VR1000
-
---qDbXVdCdHGoSgWSk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="ide-kconfig-vr1000.patch"
-
---- linux-2.6.11-rc4/drivers/ide/Kconfig	2005-01-04 10:57:49.000000000 +0000
-+++ linux-2.6.11-rc4-bjd8/drivers/ide/Kconfig	2005-02-18 10:54:21.000000000 +0000
-@@ -812,7 +812,7 @@
- 
- config BLK_DEV_IDE_BAST
- 	tristate "Simtec BAST / Thorcom VR1000 IDE support"
--	depends on ARM && (ARCH_BAST || MACH_VR100)
-+	depends on ARM && (ARCH_BAST || MACH_VR1000)
- 	help
- 	  Say Y here if you want to support the onboard IDE channels on the
- 	  Simtec BAST or the Thorcom VR1000
-
---qDbXVdCdHGoSgWSk--
+Thanks for your help,
+Francois
