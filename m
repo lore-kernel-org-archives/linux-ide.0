@@ -1,89 +1,37 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: libata-dev queue updated
-Date: Fri, 7 Jan 2005 02:10:32 -0500
-Message-ID: <20050107071032.GA15229@havoc.gtf.org>
-Reply-To: linux-ide@vger.kernel.org
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: libata todo item: retry certain classes of errors
+Date: Fri, 07 Jan 2005 14:49:41 +0000
+Message-ID: <1105106379.17166.325.camel@localhost.localdomain>
+References: <41DE1118.9020209@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([63.115.148.101]:44171 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S261289AbVAGHKd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2005 02:10:33 -0500
-Content-Disposition: inline
+Received: from clock-tower.bc.nu ([81.2.110.250]:20673 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S261473AbVAGPzB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Jan 2005 10:55:01 -0500
+In-Reply-To: <41DE1118.9020209@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Albert Lee <albertcc@tw.ibm.com>, Andy Warner <andyw@pobox.com>
 
+On Gwe, 2005-01-07 at 04:33, Jeff Garzik wrote:
+> libata error handling is still of the "stupid simple" variety.  While 
+> that makes it easy to verify, it also means that we don't always recover 
+>   from some situations.
+> 
+> Right now, libata simply returns an error back to the SCSI layer.
 
-Recent changes:
-* ICH7 support added (via Intel)
-* add DMA blacklist, needed for good PATA support
-* update to latest kernel, 2.6.10-bk9
+I did actually arrange that all the SCSI errors it faked caused the
+right retry behaviour at the SCSI level when I did that. Perhaps I
+should have commented that fact.
 
+> For DMA, PCI and SATA bus errors, we need to reset the hardware and 
+> retry the command.
 
+And for PATA at least possibly also change mode and restore settings.
 
-BK users:
-
-	bk pull bk://gkernel.bkbits.net/libata-dev-2.6
-
-Patch:
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.10-bk9-libata-dev1.patch.bz2
-
-This will update the following files:
-
- drivers/pci/quirks.c         |    6 
- drivers/scsi/Kconfig         |   18 +
- drivers/scsi/Makefile        |    2 
- drivers/scsi/ahci.c          |    8 
- drivers/scsi/ata_adma.c      |  636 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ata_piix.c      |   15 
- drivers/scsi/libata-core.c   |  128 +++++++
- drivers/scsi/libata-scsi.c   |  409 +++++++++++++++++++++++++
- drivers/scsi/libata.h        |    2 
- drivers/scsi/pata_pdc2027x.c |  694 +++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/sata_promise.c  |   56 +++
- drivers/scsi/sata_via.c      |  202 +++++++++---
- include/linux/ata.h          |    1 
- include/linux/libata.h       |    2 
- include/scsi/scsi.h          |    3 
- 15 files changed, 2110 insertions(+), 72 deletions(-)
-
-through these ChangeSets:
-
-<albertcc:tw.ibm.com>:
-  o [libata pdc2027x] fix incorrect pio and mwdma masks
-  o [libata pdc2027x] remove quirks and ROM enable
-  o [libata] add driver for Promise PATA 2027x
-
-<andyw:pobox.com>:
-  o [libata scsi] support 12-byte passthru CDB
-  o [libata scsi] passthru CDB check condition processing
-  o T10/04-262 ATA pass thru - patch
-
-<erikbenada:yahoo.ca>:
-  o [libata sata_promise] support PATA ports on SATA controllers
-
-<jason.d.gaston:intel.com>:
-  o SATA support for Intel ICH7
-
-Brad Campbell:
-  o libata basic detection and errata for PATA->SATA bridges
-
-Jeff Garzik:
-  o [libata] add DMA blacklist
-  o [libata] add new driver ata_adma
-  o [libata sata_via] add support for VT6421 SATA
-  o [libata sata_via] minor cleanups
-  o [libata pdc2027x] update for upstream struct device conversion
-  o [libata sata_promise] fix merge bugs
-  o [libata] fix build breakage
-  o [libata] fix SATA->PATA bridge detect compile breakage
-  o [libata] fix printk warning
-
-John W. Linville:
-  o libata: SMART support via ATA pass-thru
-
-Tobias Lorenz:
-  o libata-scsi: get-identity ioctl support
+Alan
 
