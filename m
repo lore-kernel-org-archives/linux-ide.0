@@ -1,36 +1,37 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: H8/300 target support patch
-Date: Sun, 22 Feb 2004 18:28:18 +0100
+From: Uwe Koziolek <uwe.koziolek@gmx.net>
+Subject: Serial ATA SIS 964
+Date: Mon, 23 Feb 2004 11:20:02 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200402221828.18830.bzolnier@elka.pw.edu.pl>
-References: <m2y8r4naht.wl%ysato@users.sourceforge.jp> <m2llmv9iwi.wl%ysato@users.sourceforge.jp> <200402221808.06615.bzolnier@elka.pw.edu.pl>
+Message-ID: <1077531578.681.21.camel@uk2.local>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:41470 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261703AbUBVRVr
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Feb 2004 12:21:47 -0500
-In-Reply-To: <200402221808.06615.bzolnier@elka.pw.edu.pl>
-Content-Disposition: inline
+Received: from mail.gmx.net ([213.165.64.20]:15341 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261903AbUBWKTf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Feb 2004 05:19:35 -0500
 List-Id: linux-ide@vger.kernel.org
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sunday 22 of February 2004 18:08, Bartlomiej Zolnierkiewicz wrote:
+Hello,
 
-> > I corrected it to initialize it with ide_init_default_hwifs.
-> > A correction of ide.c becomes needless.
->
-> NO!!!  ide_init_default_hwifs() should DIE!
-> The same goes for ide_default_{irq,io_base}().
->
-> They are not needed - you have driver(s) for H8/300 IDE controllers!
+i have written a driver for the SIS 180 Controller (included into SIS964
+Southbridge), Motherboard is K7S8XE+.
+The Driver is libata-based, running under Kernel 2.6.3
 
-It should be like that:
+The driver works with programmed IO without problems.
+My Problem:
+The busmuster dma does not works. I think i must do some special
+initialization like the SIS 5513 driver, but i dont have any information
+about this chip.
 
-You should have host drivers for your IDE controllers,
-not inline functions for ide.c and ide-probe.c.
+any idea?
+
+with best regards
+
+Uwe Koziolek
+
+
+
+
 
