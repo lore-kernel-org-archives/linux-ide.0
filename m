@@ -1,61 +1,34 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH/RFC] Port of pdc202xx_new driver to libata
-Date: Wed, 13 Oct 2004 22:16:35 +0200
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: libata vs ATAPI
+Date: Thu, 14 Oct 2004 09:13:13 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <58cb370e04101313161223717f@mail.gmail.com>
-References: <00bb01c4b10c$4b2ab330$7301a8c0@tw.ibm.com>
-	 <58cb370e04101312321c78f3b8@mail.gmail.com>
-	 <416D88FA.1050200@pobox.com>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Message-ID: <20041014071313.GF1454@suse.de>
+References: <58cb370e04101213215ce9a23c@mail.gmail.com> <416C438C.4010902@pobox.com> <58cb370e0410121417591ecff0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.207]:61924 "EHLO mproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S269789AbUJMUQg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Oct 2004 16:16:36 -0400
-Received: by mproxy.gmail.com with SMTP id 77so16750rnk
-        for <linux-ide@vger.kernel.org>; Wed, 13 Oct 2004 13:16:35 -0700 (PDT)
-In-Reply-To: <416D88FA.1050200@pobox.com>
+Received: from ns.virtualhost.dk ([195.184.98.160]:19094 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S269983AbUJNHPQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Oct 2004 03:15:16 -0400
+Content-Disposition: inline
+In-Reply-To: <58cb370e0410121417591ecff0@mail.gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Albert Lee <albertcc@tw.ibm.com>, IDE Linux <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-On Wed, 13 Oct 2004 15:58:50 -0400, Jeff Garzik <jgarzik@pobox.com> wrote:
-
-> >>My question is, in the current kernel, the IDE subsystem drives PATA chips
-> >>and libata drives SATA chips. Will PATA driver like this be accepted into
-> >>libata?
-> >
-> >
-> > My opinion is: yes but not now, final answer is of course left to Jeff.
+On Tue, Oct 12 2004, Bartlomiej Zolnierkiewicz wrote:
+> > libata enables DMA at the maximum level supported by both the device and
+> > host controller.  I definitely want to do this by default.
 > 
-> With the progress currently being made, I think my preference would be
-> to start collecting PATA drivers such this in my libata-dev queue.
+> Me too but I suppose that there are many devices which don't like it
+> (otherwise restrictions in ide-cd and ide-scsi make no sense).
 > 
-> I would not send these PATA drivers upstream until the PATA to-do items
-> are complete (see other email), but it would be nice to have a central
-> location (both BK and patch on kernel.org) for developers and users to
-> mess with PATA support.
+> Jens?
 
-I was going to start libata-pata-2.6 (from libata-dev-2.6)
-but this sounds even better :)
+There's no precedens for doing > 128KiB on ATAPI in Linux. Recently Pat
+at Iomega tested 512/1024KiB requests and it worked fine. So if the
+device works, we should be golden...
 
-and lets ignore /dev/hda vs /dev/sda issue completely
-for now in hope that udev will fix this for us etc. :)
+-- 
+Jens Axboe
 
-> My own comments:
-> 
-> >> obj-$(CONFIG_SCSI_ATA_PIIX) += libata.o ata_piix.o
-> >>> +obj-$(CONFIG_SCSI_PATA_PDC_NEW) += libata.o pata_pdc202xx_new.o
-> >
-> >
-> > why not jus pata_pdc_new? or pata_pdc_27x?
-> 
-> I would prefer to eliminate the "_new" suffix.  Other than that I don't
-> really care.  If I had written the driver, I would have named it
-> pata_pdc202xx I suppose.
-
-There is a high chance that somebody will also port
-pdc202xx_old driver to libata so pata_pdc202xx will
-be confusing.
