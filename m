@@ -1,31 +1,34 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH] IDE update for 2.6.7-rc3 [4/12]
-Date: Sun, 13 Jun 2004 10:58:59 -0500
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: Re: [PATCH] IDE update for 2.6.7-rc3 [1/12]
+Date: Sun, 13 Jun 2004 19:36:08 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1087142338.8210.178.camel@gaston>
-References: <200406111755.02325.bzolnier@elka.pw.edu.pl>
-	 <20040611181106.GB12953@linux-sh.org>
-	 <200406112047.58373.bzolnier@elka.pw.edu.pl>
-	 <20040611190639.GC12953@linux-sh.org>
+Message-ID: <200406131936.08338.bzolnier@elka.pw.edu.pl>
+References: <200406111750.30312.bzolnier@elka.pw.edu.pl> <20040612103453.GB26482@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:45250 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S265198AbUFMQEb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Jun 2004 12:04:31 -0400
-In-Reply-To: <20040611190639.GC12953@linux-sh.org>
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:41924 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S265232AbUFMRcF
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 13 Jun 2004 13:32:05 -0400
+In-Reply-To: <20040612103453.GB26482@infradead.org>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Paul Mundt <lethal@linux-sh.org>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>, Russell King <rmk@arm.linux.org.uk>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Saturday 12 of June 2004 12:34, Christoph Hellwig wrote:
+> On Fri, Jun 11, 2004 at 05:50:30PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > Probably some drivers are still missed because I changed only
+> > these drivers that I knew that there are PCI cards using them.
+> >
+> > If you know about PCI cards using other drivers please speak up.
+>
+> IMHO the PCI ->probe methods should always be __devinit.  It's rather
+> hard to make sure they're never every hotplugged in any way, especially
+> with the dynamic id adding via sysfs thing.
 
-> It's used for the DMA channel number, or NO_DMA for falling back on PIO.
-
-It is a chipset/platform specific information and has no meaning outside
-of the chipset driver, thus it should be in the chipset local state data
-structures and not in the common one.
-
-Ben.
-
+I generally agree but IMO it makes no sense for i.e. piix.c.
 
