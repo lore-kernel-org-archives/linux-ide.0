@@ -1,28 +1,68 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.11-rc3 01/11] ide: task_end_request() fix
-Date: Wed, 02 Mar 2005 00:56:18 -0500
-Message-ID: <42255582.4050204@pobox.com>
-References: <20050210083808.48E9DD1A@htj.dyndns.org>	 <20050210083809.63BF53E6@htj.dyndns.org>	 <58cb370e05022407587e86f8ad@mail.gmail.com>	 <20050227064922.GA27728@htj.dyndns.org> <58cb370e050301063069799c75@mail.gmail.com>
+Subject: Re: [patch ide-dev 8/9] make ide_task_ioctl() use REQ_DRIVE_TASKFILE
+Date: Wed, 02 Mar 2005 01:08:56 -0500
+Message-ID: <42255878.7080908@pobox.com>
+References: <Pine.GSO.4.58.0502241547400.13534@mion.elka.pw.edu.pl>	 <200502271731.29448.bzolnier@elka.pw.edu.pl>	 <422337A1.4060806@gmail.com>	 <200502281714.55960.bzolnier@elka.pw.edu.pl>	 <20050301042116.GA9001@htj.dyndns.org>	 <58cb370e05030100424d98c85c@mail.gmail.com>	 <20050301092914.GA14007@htj.dyndns.org> <58cb370e05030101592a46c258@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:24515 "EHLO
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:5060 "EHLO
 	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262190AbVCBF4e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Mar 2005 00:56:34 -0500
-In-Reply-To: <58cb370e050301063069799c75@mail.gmail.com>
+	id S262190AbVCBGJL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Mar 2005 01:09:11 -0500
+In-Reply-To: <58cb370e05030101592a46c258@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
-> If somebody implements SG_IO ioctl and SCSI command pass-through
-> from libata for IDE driver (and add possibility for discrete taskfiles), we can
-> just deprecate HDIO_DRIVE_TASKFILE, forget about it and some time later
-> remove this FPOS.
+> Yes but it seems that you've assumed that ioctl == flagged taskfile
+> and fs/internal == normal taskfile which is _not_ what I aim for.
+> 
+> I want fully-flagged taskfile handling like flagged_taskfile() and "hot path"
+> simpler taskfile handling like do_rw_taskfile() (at least for now - we can
+> remove "hot path" later) where both can be used for fs/internal/ioctl requests
+> (depending on the flags).
 
-Can you explain what you mean by "add possibility for discrete taskfiles"?
+
+There is no effective difference in performance between
+
+	writeb()
+	writeb()
+	writeb()
+	writeb()
+
+and
+
+	if (bit 1)
+		writeb()
+	if (bit 2)
+		writeb()
+	if (bit 3)
+		writeb()
+	if (bit 4)
+		writeb()
+
+The cost of a repeated bit test on the same unsigned long is _zero_. 
+It's already in L1 cache.  The I/Os are slow, and adding bit tests will 
+not measurably decrease performance.  (this is the reason why I do not 
+object to using ioread32() and iowrite32()...  it just adds a simple test)
+
+Plus, it is better to have a single path for all taskfiles, to ensure 
+that the path is well-tested.
+
+libata's ->tf_load() and ->tf_read() hooks should be updated to use the 
+more fine-grained flags that Tejun is proposing.
+
+Note that on SATA, this is largely irrelevant.  The functions 
+ata_tf_read() and ata_tf_load() should be updated for flagged taskfiles, 
+because these will be used with PATA drivers.
+
+The hooks implemented in individual SATA drivers will not be updated. 
+The reason is that SATA transmits an entire copy of the taskfile to/from 
+the device all at once, in the form of a Frame Information Structure 
+(FIS) -- essentially a SATA packet.
 
 	Jeff
 
