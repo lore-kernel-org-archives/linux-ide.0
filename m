@@ -1,33 +1,42 @@
-From: Ricky Beam <jfbeam@bluetronic.net>
-Subject: Re: [PATCH] fix sata_sil quirk
-Date: Wed, 23 Jun 2004 02:34:35 -0400 (EDT)
+From: Symantec_AntiVirus_for_SMTP_Gateways@amcc.com
+Subject: =?utf-8?B?UG9saWN5IFZpb2xhdGlvbm==?=
+Date: Wed, 23 Jun 2004 06:13:08 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.33.0406230230010.25702-100000@sweetums.bluetronic.net>
-References: <40D8FE55.3030008@pobox.com>
+Message-ID: <S265470AbUFWNNN/20040623131313Z+136@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sweetums.bluetronic.net ([24.199.150.42]:56062 "EHLO
-	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
-	id S266126AbUFWGkj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 Jun 2004 02:40:39 -0400
-In-Reply-To: <40D8FE55.3030008@pobox.com>
+Received: from mail-in.amcc.com ([192.195.69.150]:9226 "HELO mail-in.amcc.com")
+	by vger.kernel.org with SMTP id S265470AbUFWNNN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jun 2004 09:13:13 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Paul Jakma <paul@clubi.ie>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Tue, 22 Jun 2004, Jeff Garzik wrote:
->Nope, my patch only enables ATA_DFLAG_LOCK_SECTORS for devices flagged
->with SIL_QUIRK_MOD15WRITE:
-...
+The following message sent by this account has violated system policy:
 
-That list needs a:
-         { "ST3160023AS",        SIL_QUIRK_MOD15WRITE },
-as well.
+From: linux-ide@vger.kernel.org
+To: linuxraid@amcc.com
+Date: Wed, 23 Jun 2004 06:13:06 -0700
+Subject: Re: Question
 
---Ricky
 
-PS: I've completed 23 cycles of zeroing a 40G section of RAID0 space without
-    error.
+The following violations were detected:
+
+--- Scan information follows ---
+
+Virus Name: W32.Netsky.P@mm!enc
+File Attachment: M2004062306130616500.mes
+Attachment Status: infected
+
+Virus Name: W32.Netsky.P@mm
+File Attachment: sample01.txt                                                                   .pif
+Attachment Status: deleted
+
+--- File name Block information follows ---
+
+File Attachment: M2004062306130616500.mes/sample01.txt                                                                   .pif
+Matching file name: *.pif
+
+
 
 
