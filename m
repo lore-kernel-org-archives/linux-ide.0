@@ -1,80 +1,45 @@
-From: =?iso-8859-1?Q?J=F6rn?= Engel <joern@wohnheim.fh-wedel.de>
-Subject: [STACK] >3k call path in ide
-Date: Wed, 9 Jun 2004 14:29:21 +0200
+From: Jesper Juhl <juhl-lkml@dif.dk>
+Subject: Re: [PATCH] tiny patch to kill warning in drivers/ide/ide.c
+Date: Wed, 9 Jun 2004 16:37:06 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040609122921.GG21168@wohnheim.fh-wedel.de>
+Message-ID: <Pine.LNX.4.56.0406091632550.26677@jjulnx.backbone.dif.dk>
+References: <20040609023308.GC24042@schnapps.adilger.int>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.fh-wedel.de ([213.39.232.194]:8849 "EHLO mail.fh-wedel.de")
-	by vger.kernel.org with ESMTP id S265756AbUFIM3R (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jun 2004 08:29:17 -0400
-Content-Disposition: inline
+Received: from mail.dif.dk ([193.138.115.101]:36309 "EHLO mail.dif.dk")
+	by vger.kernel.org with ESMTP id S265644AbUFIOhw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jun 2004 10:37:52 -0400
+In-Reply-To: <20040609023308.GC24042@schnapps.adilger.int>
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Andreas Dilger <adilger@clusterfs.com>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Bartlomiej, can you put ide_config on a diet?
+On Wed, 9 Jun 2004, Andreas Dilger wrote:
 
-stackframes for call path too long (3052):
-    size  function
-       0  client_reg_t->event_handler
-    1168  ide_config
-      12  ide_register_hw
-      44  ide_unregister
-      12  ide_unregister_subdriver
-       0  pnpide_init
-       0  pnp_register_driver
-       0  driver_register
-      20  bus_add_driver
-      16  driver_attach
-      72  tty_register_device
-       0  class_simple_device_add
-       0  class_device_register
-      16  class_device_add
-       0  kobject_add
-       0  kobject_hotplug
-     132  call_usermodehelper
-      80  wait_for_completion
-      84  schedule
-      16  __put_task_struct
-      20  audit_free
-      36  audit_log_start
-      16  __kmalloc
-       0  __get_free_pages
-      28  __alloc_pages
-     284  try_to_free_pages
-       0  out_of_memory
-       0  mmput
-      16  exit_aio
-       0  __put_ioctx
-      16  do_munmap
-       0  split_vma
-      36  vma_adjust
-       0  fput
-       0  __fput
-       0  locks_remove_flock
-      12  panic
-       0  sys_sync
-       0  sync_inodes
-     308  sync_inodes_sb
-       0  do_writepages
-     128  mpage_writepages
-       4  write_boundary_block
-       0  ll_rw_block
-      28  submit_bh
-       0  bio_alloc
-      88  mempool_alloc
-     256  wakeup_bdflush
-      20  pdflush_operation
-       0  printk
-       0  preempt_schedule
-      84  schedule
+> On Jun 09, 2004  03:38 +0200, Jesper Juhl wrote:
+> > drivers/ide/ide.c: In function `ide_unregister_subdriver':
+> > drivers/ide/ide.c:2216: warning: implicit declaration of function
+> `pnpide_init'
+> >
+> > I added a simple declaration of pnpide_init to drivers/ide/ide.c
+> >
+> > Here's a patch against 2.6.7-rc3 - please consider including it (or if
+> > that's not the way to do it, then don't) :)
+> Better to add the declaration into a header like linux/ide.h that is
+> included into both ide.c and ide-pnp.c so that when/if pnpide_init()
+> ever changes its prototype you will get a warning during compilation.
+> The only good reason to have declarations within .c files is for forward
+> declarations of functions only used in the same file.
 
-J=F6rn
+That makes perfect sense. I actually considered making a header for it,
+but since it would contain only a single declaration I abandoned that - I
+see now that I should have done that in any case to avoid stuff becomming
+out of sync.
 
---=20
-When you close your hand, you own nothing. When you open it up, you
-own the whole world.
--- Li Mu Bai in Tiger & Dragon
+Would you like an updated patch ?
+
+
+--
+Jesper Juhl <juhl@dif.dk>
+
