@@ -1,62 +1,61 @@
 From: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>
 Subject: Re: Sil3114 and Hitachi disks
-Date: Fri, 24 Dec 2004 18:20:18 +0100 (CET)
-Message-ID: <Pine.LNX.4.44.0412241621210.16199-100000@kenzo.iwr.uni-heidelberg.de>
-References: <Pine.LNX.4.44.0412231608150.10539-100000@kenzo.iwr.uni-heidelberg.de>
+Date: Fri, 24 Dec 2004 18:49:42 +0100 (CET)
+Message-ID: <Pine.LNX.4.44.0412241822560.16199-100000@kenzo.iwr.uni-heidelberg.de>
+References: <Pine.LNX.4.44.0412241621210.16199-100000@kenzo.iwr.uni-heidelberg.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay.uni-heidelberg.de ([129.206.100.212]:7923 "EHLO
+Received: from relay.uni-heidelberg.de ([129.206.100.212]:43908 "EHLO
 	relay.uni-heidelberg.de") by vger.kernel.org with ESMTP
-	id S261413AbULXRUV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 24 Dec 2004 12:20:21 -0500
+	id S261404AbULXRtp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 24 Dec 2004 12:49:45 -0500
 Received: from mail.iwr.uni-heidelberg.de (mail.iwr.uni-heidelberg.de [129.206.104.30])
-	by relay.uni-heidelberg.de (8.12.10/8.12.10) with ESMTP id iBOHKhfK004251
-	for <linux-ide@vger.kernel.org>; Fri, 24 Dec 2004 18:20:44 +0100 (MET)
-Received: from kenzo.iwr.uni-heidelberg.de (IDENT:CCna4PoBrwXr3bLJoViCxFIZSrwzL3IA@kenzo.iwr.uni-heidelberg.de [129.206.120.29])
-	by mail.iwr.uni-heidelberg.de (8.12.11/8.12.11) with ESMTP id iBOHKJhU025957
-	for <linux-ide@vger.kernel.org>; Fri, 24 Dec 2004 18:20:19 +0100 (MET)
+	by relay.uni-heidelberg.de (8.12.10/8.12.10) with ESMTP id iBOHo7fK008960
+	for <linux-ide@vger.kernel.org>; Fri, 24 Dec 2004 18:50:07 +0100 (MET)
+Received: from kenzo.iwr.uni-heidelberg.de (IDENT:Bdu8udlg4Si0aKf5W+o0GD8cRzTPrsj7@kenzo.iwr.uni-heidelberg.de [129.206.120.29])
+	by mail.iwr.uni-heidelberg.de (8.12.11/8.12.11) with ESMTP id iBOHngFM026218
+	for <linux-ide@vger.kernel.org>; Fri, 24 Dec 2004 18:49:42 +0100 (MET)
 Received: from kenzo.iwr.uni-heidelberg.de (localhost.localdomain [127.0.0.1])
-	by kenzo.iwr.uni-heidelberg.de (8.12.11/8.12.11) with ESMTP id iBOHKJUH017035
-	for <linux-ide@vger.kernel.org>; Fri, 24 Dec 2004 18:20:19 +0100
+	by kenzo.iwr.uni-heidelberg.de (8.12.11/8.12.11) with ESMTP id iBOHng1s017097
+	for <linux-ide@vger.kernel.org>; Fri, 24 Dec 2004 18:49:42 +0100
 Received: from localhost (bogdan@localhost)
-	by kenzo.iwr.uni-heidelberg.de (8.12.11/8.12.11/Submit) with ESMTP id iBOHKJp3017031
-	for <linux-ide@vger.kernel.org>; Fri, 24 Dec 2004 18:20:19 +0100
-In-Reply-To: <Pine.LNX.4.44.0412231608150.10539-100000@kenzo.iwr.uni-heidelberg.de>
+	by kenzo.iwr.uni-heidelberg.de (8.12.11/8.12.11/Submit) with ESMTP id iBOHngjR017093
+	for <linux-ide@vger.kernel.org>; Fri, 24 Dec 2004 18:49:42 +0100
+In-Reply-To: <Pine.LNX.4.44.0412241621210.16199-100000@kenzo.iwr.uni-heidelberg.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-On Thu, 23 Dec 2004, Bogdan Costescu wrote:
+On Fri, 24 Dec 2004, Bogdan Costescu wrote:
 
-> I see some data corruption with a Sil3114 controller and some Hitachi
-> disks and I wanted to ask if I'm the only one ( =if I have some broken
-> disks...)
+> - the combination of x86_64 kernel, sata_sil and the Hitachi disks is
+> not good; the corruption seems to appear while writting to disk.  
 
-More data:
-- using a UP or a SMP x86_64 kernel doesn't make any difference.
-- adding this model of Hitachi disks to the blacklist of sata_sil in 
-the same way as the Seagate disks (mod15 bug) reduces the speed, but 
-does not fix the misbehaviour, when using the x86_64 kernel.
-- the Hitachi disks behave well if connected to a standalone Sil3114 
-controller in a 32-bit computer running a SMP athlon kernel.
-- the Hitachi disks behave well if I use the original hardware setup 
-(dual Opteron), but run the SMP athlon kernel and 32-bit userland.
-- when moving a disk with a corrupted FS (checked with e2fsck -n) from 
-a x86_64 kernel to an athlon kernel, the corruption is still found by 
-e2fsck. When moving a disk with a non-corrupted FS from an athlon 
-kernel to x86_64, e2fsck does not find any problem.
+I've gotten some more inspiration just after I sent the message...
 
-So, I come to the following conclusions:
-- my Hitachi disks are not broken, therefore my suggestion of 
-blacklisting is unfounded.
-- the combination of x86_64 kernel, sata_sil and the Hitachi disks is
-not good; the corruption seems to appear while writting to disk.  
-Unfortunately, I don't have any other SATA disks with lba48, so I
-can't test if this is a more general lba48 problem or restricted to
-this specific Hitachi model.
+The Sil3114 appears on the PCI bus as a 32-bit 66MHz device, therefore
+it should use IOMMU with >4Gb RAM. Booting the x86_64 kernel with
+"mem=2048m" makes the corruption go away; the difference is that the
+IOMMU is automatically disabled by the kernel:
 
-Please let me know if I can provide more data for fixing this.
+PCI-DMA: Disabling IOMMU.
+
+With 8Gb, there is an error related to IOMMU:
+
+Checking aperture...
+CPU 0: aperture @ 1ee0000000 size 32768 KB
+Your BIOS doesn't leave a aperture memory hole
+Please enable the IOMMU option in the BIOS setup
+Mapping aperture over 65536 KB of RAM @ 8000000
+
+The IOMMU was indeed disabled in BIOS. I enabled it and gave the
+aperture several sizes, but the IOMMU message from the kernel is the
+same. Checking back logs backups, I have always obtained this message
+related to IOMMU, while the non-lba48 Maxtor disk worked fine for
+several months and still works.
+
+So, is there any link between IOMMU and lba48 ?
 
 -- 
 Bogdan Costescu
