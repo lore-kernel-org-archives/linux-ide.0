@@ -1,94 +1,119 @@
 From: Alan Cox <alan@redhat.com>
-Subject: PATCH: header updates for IDE changes
-Date: Sun, 15 Aug 2004 10:55:15 -0400
+Subject: PATCH: add drive_to_key functions
+Date: Sun, 15 Aug 2004 10:58:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040815145515.GA9993@devserv.devel.redhat.com>
+Message-ID: <20040815145844.GA10778@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:18396 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S266758AbUHOO4H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Aug 2004 10:56:07 -0400
+Received: from mx1.redhat.com ([66.187.233.31]:43997 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S266756AbUHOO7m (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Aug 2004 10:59:42 -0400
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 
-Add a "key" (generation) field to the ide taks object so that we can fix
-the crash when you unload a pcmcia ide device (and later other pci hotplug 
-devices etc) while having a proc file accessed
-
-Add a remove function to be called on unload by later patches
-Add a raw_taskfile function to allow drives to do command filters
-Add configured bit so that we can differentiate currently ambigious interface
-	states when unloading.
-Add a prototype for ide_diag_taskfile (for raw_taskfile users)
-Add prototypes for the ide key functions (code changes in next patch)
+Clear new remove field
+Clear pci_dev field on init
+Add functions that allow us to keep persistent (reasonably so anyway) keys
+	not pointers to drive objects in the /proc file. Worst case is you
+	reload the driver 64K times and get the new data not an error.
+Clean up ide_system_bus_speed docs
 
 
-
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.8-rc3/include/linux/ide.h linux-2.6.8-rc3/include/linux/ide.h
---- linux.vanilla-2.6.8-rc3/include/linux/ide.h	2004-08-09 15:50:59.000000000 +0100
-+++ linux-2.6.8-rc3/include/linux/ide.h	2004-08-12 16:45:17.000000000 +0100
-@@ -849,12 +849,14 @@
- #define IDE_CHIPSET_IS_PCI(c)	((IDE_CHIPSET_PCI_MASK >> (c)) & 1)
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.8-rc3/drivers/ide/ide.c linux-2.6.8-rc3/drivers/ide/ide.c
+--- linux.vanilla-2.6.8-rc3/drivers/ide/ide.c	2004-08-09 15:51:00.000000000 +0100
++++ linux-2.6.8-rc3/drivers/ide/ide.c	2004-08-12 17:55:05.000000000 +0100
+@@ -219,12 +219,15 @@
+ 	hwif->name[3]	= '0' + index;
  
- struct ide_pci_device_s;
-+struct ide_task_s;
- 
- typedef struct hwif_s {
- 	struct hwif_s *next;		/* for linked-list in ide_hwgroup_t */
- 	struct hwif_s *mate;		/* other hwif from same PCI chip */
- 	struct hwgroup_s *hwgroup;	/* actually (ide_hwgroup_t *) */
- 	struct proc_dir_entry *proc;	/* /proc/ide/ directory entry */
-+	u16		key;		/* /proc persistent keying */
- 
- 	char name[6];			/* name of interface, eg. "ide0" */
- 
-@@ -909,10 +911,10 @@
- 	int	(*quirkproc)(ide_drive_t *);
- 	/* driver soft-power interface */
- 	int	(*busproc)(ide_drive_t *, int);
--//	/* host rate limiter */
--//	u8	(*ratemask)(ide_drive_t *);
--//	/* device rate limiter */
--//	u8	(*ratefilter)(ide_drive_t *, u8);
-+	/* hwif remove hook, called on unload/pci remove paths*/
-+	void	(*remove)(struct hwif_s *);
-+	/* allow command filter/control */
-+	int	(*raw_taskfile)(ide_drive_t *, struct ide_task_s *, u8 *);
- #endif
- 
- #if 0
-@@ -980,7 +982,8 @@
- 	unsigned long	select_data;	/* for use by chipset-specific code */
- 
- 	unsigned	noprobe    : 1;	/* don't probe for this interface */
--	unsigned	present    : 1;	/* this interface exists */
-+	unsigned	present    : 1;	/* this interface exists logically (ie users) */
-+	unsigned	configured : 1;	/* this hwif exists and is set up (may not be "present") */
- 	unsigned	hold       : 1; /* this interface is always present */
- 	unsigned	serialized : 1;	/* serialized all channel operation */
- 	unsigned	sharing_irq: 1;	/* 1 = sharing irq with another hwif */
-@@ -1082,6 +1085,9 @@
- extern int ide_write_setting(ide_drive_t *drive, ide_settings_t *setting, int val);
- extern void ide_add_generic_settings(ide_drive_t *drive);
- 
-+extern void *ide_drive_to_key(ide_drive_t *drive);
-+extern ide_drive_t *ide_drive_from_key(void *);
-+
- /*
-  * /proc/ide interface
-  */
-@@ -1452,8 +1458,8 @@
- extern ide_startstop_t pre_task_mulout_intr(ide_drive_t *, struct request *);
- extern ide_startstop_t task_mulout_intr(ide_drive_t *);
- 
-+extern int ide_diag_taskfile(ide_drive_t *, ide_task_t *, unsigned long, u8 *);
- extern int ide_raw_taskfile(ide_drive_t *, ide_task_t *, u8 *);
+ 	hwif->bus_state	= BUSSTATE_ON;
 -
- int ide_taskfile_ioctl(ide_drive_t *, unsigned int, unsigned long);
- int ide_cmd_ioctl(ide_drive_t *, unsigned int, unsigned long);
- int ide_task_ioctl(ide_drive_t *, unsigned int, unsigned long);
++	
+ 	hwif->atapi_dma = 0;		/* disable all atapi dma */ 
+ 	hwif->ultra_mask = 0x80;	/* disable all ultra */
+ 	hwif->mwdma_mask = 0x80;	/* disable all mwdma */
+ 	hwif->swdma_mask = 0x80;	/* disable all swdma */
+ 
++	hwif->pci_dev = NULL;
++	hwif->remove = NULL;
++	
+ 	sema_init(&hwif->gendev_rel_sem, 0);
+ 
+ 	default_hwif_iops(hwif);
+@@ -321,12 +324,67 @@
+ }
+ 
+ /*
+- * ide_system_bus_speed() returns what we think is the system VESA/PCI
+- * bus speed (in MHz).  This is used for calculating interface PIO timings.
+- * The default is 40 for known PCI systems, 50 otherwise.
+- * The "idebus=xx" parameter can be used to override this value.
+- * The actual value to be used is computed/displayed the first time through.
++ *	ide_drive_from_key	-	turn key into drive
++ *	@kval: persistent key
++ *
++ *	Convert a key into a drive. Currently the key is packed as
++ *	[keyval] << 16 | hwif << 8 | drive_num. Caller must hold 
++ *	ide_settings_sem for the duration of the returned reference
++ */
++
++ide_drive_t *ide_drive_from_key(void *kval)
++{
++	unsigned long key = (unsigned long) kval;
++	int idx = (key >> 8) & 0xFF;
++	int drive = key & 3;
++	ide_hwif_t *hwif = &ide_hwifs[idx];
++	ide_drive_t *ret;
++	
++	key >>= 16;
++
++	if(hwif->configured == 0 || hwif->present == 0 || hwif->drives[drive].dead || hwif->key != key)
++		ret = NULL;
++	else
++		ret = &ide_hwifs[idx].drives[drive];
++		
++	return ret;
++}
++
++EXPORT_SYMBOL_GPL(ide_drive_from_key);
++
++/*
++ *	ide_drive_to_key	-	turn drive to persistent key
++ *	@drive: drive to use
++ *
++ *	Convert drive into a key. Currently the key is packed as
++ *	[keyval] << 16 | hwif << 8 | drive_num. Caller must hold 
++ *	ide_settings_sem for the duration of the returned reference
+  */
++
++void *ide_drive_to_key(ide_drive_t *drive)
++{
++	ide_hwif_t *hwif = HWIF(drive);
++	unsigned long val;
++	
++	val = (hwif->index << 8) | (hwif->key << 16) | drive->select.b.unit;
++	return (void *)val;
++}
++
++EXPORT_SYMBOL_GPL(ide_drive_to_key);
++		
++/**
++ *	ide_system_bus_speed	-	guess bus speed
++ *
++ *	ide_system_bus_speed() returns what we think is the system VESA/PCI
++ *	bus speed (in MHz).  This is used for calculating interface PIO timings.
++ *	The default is 40 for known PCI systems, 50 otherwise.
++ *	The "idebus=xx" parameter can be used to override this value.
++ *	The actual value to be used is computed/displayed the first time
++ *	through. Drivers should only use this as a last resort.
++ *
++ *	Returns a guessed speed in Mhz
++ */
++
+ int ide_system_bus_speed (void)
+ {
+ 	if (!system_bus_speed) {
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
