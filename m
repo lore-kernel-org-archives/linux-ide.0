@@ -1,44 +1,36 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] (IDE) restore access to low order LBA following error
-Date: Fri, 06 Aug 2004 13:06:03 -0400
+From: "J. Ryan Earl" <heretic@clanhk.org>
+Subject: Re: sata_via - too slow
+Date: Sat, 07 Aug 2004 01:24:07 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4113BA7B.20405@pobox.com>
-References: <200408061623.i76GNfDa016095@falcon10.austin.ibm.com>
+Message-ID: <41148397.400@clanhk.org>
+References: <410E2E9C.8020606@scssoft.com> <410EC673.1090506@clanhk.org> <410EBE89.9000008@scssoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38313 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268192AbUHFRNp
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 Aug 2004 13:13:45 -0400
-In-Reply-To: <200408061623.i76GNfDa016095@falcon10.austin.ibm.com>
+Received: from mail.hardcore-gaming.net ([69.93.101.157]:19117 "EHLO
+	mail.hardcore-gaming.net") by vger.kernel.org with ESMTP
+	id S266289AbUHGGYM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 7 Aug 2004 02:24:12 -0400
+In-Reply-To: <410EBE89.9000008@scssoft.com>
 List-Id: linux-ide@vger.kernel.org
-To: Doug Maxey <dwm@austin.ibm.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Brett Russ <russb@emc.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+To: Petr Sebor <petr@scssoft.com>
+Cc: linux-ide@vger.kernel.org
 
-Doug Maxey wrote:
-> On Thu, 05 Aug 2004 21:45:59 EDT, Jeff Garzik wrote:
-> 
->>ATAPI works too.....  assuming your CD/DVD drive never encounters a 
->>CHECK CONDITION requiring REQUEST SENSE to be issued...  ;-)
-> 
-> 
->   Heh.  Where should one start looking to get this enabled?  I have to
->   admit that I have given the code only a few minutes viewing.
+Petr Sebor wrote:
 
-top of include/linux/libata.h:
+>> What motherboard is this?  The MSI FAR2 whatever?
+>
+>
+> It is MSI Master2-FAR.. sorry for not mentioning that.
 
-/*
-  * compile-time options
-  */
-#undef ATA_FORCE_PIO            /* do not configure or use DMA */
-#undef ATA_DEBUG                /* debugging output */
-#undef ATA_VERBOSE_DEBUG        /* yet more debugging output */
-#undef ATA_IRQ_TRAP             /* define to ack screaming irqs */
-#undef ATA_NDEBUG               /* define to disable quick runtime checks */
-#undef ATA_ENABLE_ATAPI         /* define to enable ATAPI support */
-#undef ATA_ENABLE_PATA          /* define to enable PATA support in some
-                                  * low-level drivers */
-#undef ATAPI_ENABLE_DMADIR      /* enables ATAPI DMADIR bridge support */
+Really?  Do you have APIC working?  I haven't gotten onboard IDE to work 
+without DMA timeouts when APIC is enabled on the KT800 MB I have, but 
+it's UP so I can live without it.  The current buglist said it's fixed 
+for -some- motherboards.  I would suggest you ask about this on the 
+x86_64.org list, you're more likely to find an answer there.
 
+Sorry for the slow reply, had to beat Doom3 before I could move on with 
+my life.
+
+-ryan
