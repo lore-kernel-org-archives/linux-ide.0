@@ -1,55 +1,97 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: libata PATA support - work items?
-Date: Fri, 7 Jan 2005 00:07:34 +0100
-Message-ID: <58cb370e050106150743d6271f@mail.gmail.com>
-References: <006301c4ee5c$49e6a230$95714109@tw.ibm.com>
-	 <41DB2781.7000203@pobox.com>
-	 <005701c4f3ce$37d56140$fb7f4109@tw.ibm.com>
-	 <1105044491.24187.268.camel@localhost.localdomain>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: page fault scalability patch V12 [0/7]: Overview and performance
+ tests
+Date: Thu, 06 Jan 2005 18:40:40 -0500
+Message-ID: <41DDCC78.9080201@pobox.com>
+References: <Pine.LNX.4.44.0411221457240.2970-100000@localhost.localdomain> <Pine.LNX.4.58.0411221343410.22895@schroedinger.engr.sgi.com> <Pine.LNX.4.58.0411221419440.20993@ppc970.osdl.org> <Pine.LNX.4.58.0411221424580.22895@schroedinger.engr.sgi.com> <Pine.LNX.4.58.0411221429050.20993@ppc970.osdl.org> <Pine.LNX.4.58.0412011539170.5721@schroedinger.engr.sgi.com> <Pine.LNX.4.58.0412011608500.22796@ppc970.osdl.org> <41AEB44D.2040805@pobox.com> <20041201223441.3820fbc0.akpm@osdl.org> <41AEBD95.7030804@pobox.com> <20041202083030.A30927@florence.linkmargin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.203]:38924 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S263102AbVAFXHg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2005 18:07:36 -0500
-Received: by wproxy.gmail.com with SMTP id 67so159981wri
-        for <linux-ide@vger.kernel.org>; Thu, 06 Jan 2005 15:07:34 -0800 (PST)
-In-Reply-To: <1105044491.24187.268.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S263201AbVAFXuW@vger.kernel.org>
+In-Reply-To: <20041202083030.A30927@florence.linkmargin.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andy Warner <andyw@pobox.com>
+Cc: Andrew Morton <akpm@osdl.org>, torvalds@osdl.org, benh@kernel.crashing.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Albert Lee <albertcc@tw.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
-On Thu, 06 Jan 2005 21:29:42 +0000, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> On Iau, 2005-01-06 at 08:51, Albert Lee wrote:
-> > For the 1st item,
-> > - add PATA device errata/blacklist info
-> > Is there any detail or draft design idea available?
+Andy Warner wrote:
+> Jeff Garzik wrote:
 > 
-> There is a fair bit of code in drivers/ide. Most of it is handling drive
-> problems that occurred with early DMA drives and it uses the
-> model/firmware info in the ident string to match drives that claim to do
-> DMA but do not and drives that claim not to but can.
+>>[...]
+>>I am currently chasing a 2.6.8->2.6.9 SATA regression, which causes 
+>>ata_piix (Intel ICH5/6/7) to not-find some SATA devices on x86-64 SMP, 
+>>but works on UP.  Potentially related to >=4GB of RAM.
+>>
+>>
+>>
+>>Details, in case anyone is interested:
+>>Unless my code is screwed up (certainly possible), PIO data-in [using 
+>>the insw() call] seems to return all zeroes on a true-blue SMP machine, 
+>>for the identify-device command.  When this happens, libata (correctly) 
+>>detects a bad id page and bails.  (problem doesn't show up on single CPU 
+>>w/ HT)
 > 
-> The logic is fairly simple and the database is easily transported or
-> shared. It is fairly important because some of these old drives
-> corrupted data if used DMA. (see drivers/ide/ide-dma.c)
 > 
-> For PIO problem drives where there is a need to keep PIO modes chosen
-> carefully then ide-lib has a list (ide_pio_blacklist) and the ide-io
-> code knows about pio modes and older style EIDE cycle timing reports
-> (ide_get_best_pio_mode)
+> Ah, I might have been here recently, with the pass-thru stuff.
+> 
+> What I saw was that in an SMP machine:
+> 
+> 1. queue_work() can result in the work running (on another
+>    CPU) instantly.
+> 
+> 2. Having one CPU beat on PIO registers reading data from one port
+>    would significantly alter the timing of the CMD->BSY->DRQ sequence
+>    used in PIO. This behaviour was far worse for competing ports
+>    within one chip, which I put down to arbitration problems.
+> 
+> 3. CPU utilisation would go through the roof. Effectively the
+>    entire pio_task state machine reduced to a busy spin loop.
+> 
+> 4. The state machine needed some tweaks, especially in error
+>    handling cases.
+> 
+> I made some changes, which effectively solved the problem for promise
+> TX4-150 cards, and was going to test the results on other chipsets
+> next week before speaking up. Specifically, I have seen some
+> issues with SiI 3114 cards.
+> 
+> I was trying to explore using interrupts instead of polling state
+> but for some reason, I was not getting them for PIO data operations,
+> or I misunderstand the spec, after removing ata_qc_set_polling() - again
+> I saw a difference in behaviour between the Promise & SiI cards
+> here.
+> 
+> I'm about to go offline for 3 days, and hadn't prepared for this
+> yet. The best I can do is provide a patch (attached) that applies
+> against 2.6.9. It also seems to apply against libata-2.6, but
+> barfs a bit against libata-dev-2.6.
+> 
+> The changes boil down to these:
+> 
+> 1. Minor changes in how status/error regs are read.
+>    Including attempts to use altstatus, while I was
+>    exploring interrupts.
+> 
+> 2. State machine logic changes.
+> 
+> 3. Replace calls to queue_work() with queue_delayed_work()
+>    to stop SMP machines going crazy.
+> 
+> With these changes, on a platform consisting of 2.6.9 and
+> Promise TX4-150 cards, I can move terabytes of parallel
+> PIO data, without error.
+> 
+> My gut says that the PIO mechanism should be overhauled, I
+> composed a "how much should we pay for this muffler" email
+> to linux-ide at least twice while working on this, but never
+> sent it - wanting to send a solution in rather than just
+> making more comments from the peanut gallery.
+> 
+> I'll pick up the thread on this next week, when I'm back online.
+> I hope this helps.
 
-There was some rumor (?) that this blacklist was created on CMD640
-controller programmed with wrong timings...
+Please let me know if you still have problems?
 
-BTW ide_get_best_pio_mode(), it is really misleading
-(i.e. recent PIO tuning bug in it821x.c).
+The PIO SMP problems seem to be fixed here.
 
-> IDE CD has some DMA blacklists for ATAPI but they should be viewed with
-> caution as many entries were due to a bug in our atapi implementation
-> that was fixed long ago.
-
-There is only a common DMA blacklist in ide-dma.c.
+	Jeff
