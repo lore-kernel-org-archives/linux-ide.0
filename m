@@ -1,54 +1,54 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: [announce] plscsi in Linux
-Date: 21 May 2004 14:01:17 -0600
+Date: 21 May 2004 14:05:26 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1085169677.3083.79.camel@patibmrh9>
-References: <1085168815.3083.43.camel@patibmrh9>
+Message-ID: <1085169926.3083.89.camel@patibmrh9>
+References: <1085168815.3083.43.camel@patibmrh9><1085169677.3083.79.camel@pa
+	tibmrh9>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:23456 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265947AbUEUUB0
+Received: from email-out1.iomega.com ([147.178.1.82]:19916 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S265857AbUEUUFf
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 May 2004 16:01:26 -0400
-In-Reply-To: <1085168815.3083.43.camel@patibmrh9>
+	Fri, 21 May 2004 16:05:35 -0400
+In-Reply-To: <1085169677.3083.79.camel@patibmrh9>
 List-Id: linux-ide@vger.kernel.org
 To: dwm@austin.ibm.com
 Cc: linux-ide@vger.kernel.org
 
-> > 'plscsi'.  Where would one find this tool?
-> 
-> http://members.aol.com/plscsi/linux/plscsi.tar.gz
+Someone once said if you ask me the time I will first help you build a
+clock and then I may remember to tell you the time.
 
-A noisy list of known bugs in plscsi is:
+> .. conceptually trivial, actually complex,
+> ...
+> http://plavarre.blog-city.com/read/542134.htm
+> is me arguing that a C interpreter would do a better job ...
+> ... 
+> A tutorial is http://members.aol.com/plscsi/tutorial/
+> ...
+> 4) FIXME: Port back to Linux the master source last released as
+> http://members.aol.com/plscsi/mac/gcsmac.tar.gz
 
-Subject: plscsi issues
-http://plavarre.blog-city.com/read/579210.htm
+plscsi development most recently stalled for lack of conversation over
+how to express the C-struct-like idea of consciously misaligning struct/
+cdb/ sense/ data.
 
-Without the noise, that signal for Linux today includes:
+As yet, the master Mac source is good only for writing short Mac OS X
+demoes in the style of http://members.aol.com/plscsi/tools/gccscsi/
 
-1) FIXME: Parse the device name to default to O_NONBLOCK for /dev/scd$v
-/dev/hd$v despite defaulting to O_RDWR | O_NONBLOCK for /dev/sg$n.
+The Mac PLScsi source is NOT yet merged with the command line parser.
 
-2) FIXME: Search more than just /dev/sg* to build the `plscsi -w` list
-of connected devices.
+> Subject: pldd issues
+> http://plavarre.blog-city.com/read/596492.htm
+> Subject: gccscsi issues
+> http://plavarre.blog-city.com/read/617727.htm
 
-3) FIXME: Add ioctl CDROM_SEND_PACKET to coexist with ioctl SG_IO,
-mostly for the sake of ide-cd DVD/CD in Linux 2.4.
-
-4) FIXME: Port back to Linux the master source last released as
-http://members.aol.com/plscsi/mac/gcsmac.tar.gz
-
-5) FIXME: Rename the .cpp to .c by removing the inline declarations from
-all the source except the Windows port.
+The Mac PLScsi source is NOT yet ported back to Linux, even though the o
+0 not implied after y/ n/ yn bug of Linux gccscsi is fixed in the Mac
+source.
 
 Pat LaVarre
-
-P.S. All the noise I've collected on SCSI pass through might be
-reachable thru:
-
-Subject: SCSI pass thru
-http://plavarre.blog-city.com/read/614076.htm
 
 
