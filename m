@@ -1,32 +1,29 @@
-From: Pavel Machek <pavel@suse.cz>
+From: Jamie Lokier <jamie@shareable.org>
 Subject: Re: [PATCH] speed up SATA
-Date: Mon, 29 Mar 2004 13:42:10 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040329114210.GF1453@openzaurus.ucw.cz>
-References: <4066021A.20308@pobox.com> <40660877.3090302@stesmi.com> <200403280032.22180.bzolnier@elka.pw.edu.pl> <40660FEC.8080703@pobox.com>
+Date: Mon, 29 Mar 2004 13:41:47 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20040329124147.GC4984@mail.shareable.org>
+References: <4066156F.1000805@pobox.com> <20040328141014.GE24370@suse.de> <40670BD9.9020707@pobox.com> <20040328173508.GI24370@suse.de> <40670FDB.6080409@pobox.com> <20040328175436.GL24370@suse.de> <20040328180809.GB1087@mail.shareable.org> <20040328181502.GO24370@suse.de> <40671FAF.6080501@pobox.com> <20040329080943.GR24370@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.shareable.org ([81.29.64.88]:23443 "EHLO
+	mail.shareable.org") by vger.kernel.org with ESMTP id S262909AbUC2MmO
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Mar 2004 07:42:14 -0500
 Content-Disposition: inline
-In-Reply-To: <40660FEC.8080703@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Stefan Smietanowski <stesmi@stesmi.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+In-Reply-To: <20040329080943.GR24370@suse.de>
 List-Id: linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Hi!
+Jens Axboe wrote:
+> Could be used to limit tcq depth, not just request sizes solving two
+> problems at once. I already have a tiny bit of keeping this
+> accounting to do proper unplugs (right now it just looks at missing
+> requests from the pool, doesn't work on tcq).
 
-> >What about latency?
-...
-> merged transfer will top out at 8MB.  You don't see that unless 
-> you're on a totally quiet machine with tons of free, contiguous 
-> pages.  So in practice it winds up being much smaller, the more 
-> loaded the system gets (and pagecache gets fragmented).
-> 
-> Latency definitely changes for the default case, but remember that a 
-> lot of that is writeback, or streaming writes.  Latency-sensitive 
-> applications already know how to send small or no-wait I/Os, because 
+Does it make sense to allow different numbers of outstanding TCQ-reads
+and TCQ-writes?
 
-Well, waiting second for read because 32MB write is being done
-will not be fun...
--- 
-64 bytes from 195.113.31.123: icmp_seq=28 ttl=51 time=448769.1 ms         
+-- Jamie
