@@ -1,50 +1,39 @@
-From: Alfonso Gazo <agazo@users.berlios.de>
-Subject: Issuing IDE standby command to shutdown disk before poweroff or reboot
-Date: Mon, 08 Nov 2004 17:57:44 +0100
-Message-ID: <418FA588.5050205@users.berlios.de>
+From: "Dario Oliva" <doliva@arcoide.com>
+Subject: Removable ide media drive
+Date: Mon, 8 Nov 2004 12:48:22 -0500
+Message-ID: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAAROcsBjpda0STrtuFqqmVycKAAAAQAAAAeQ3FrZXT4EOb5fbvCME5cQEAAAAA@arcoide.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [147.83.33.10] ([147.83.33.10]:41096 "EHLO roura.ac.upc.es")
-	by vger.kernel.org with ESMTP id S261858AbUKHQ6G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Nov 2004 11:58:06 -0500
-Received: from [147.83.34.212] (dync-34-212.ac.upc.es [147.83.34.212])
-	by roura.ac.upc.es (8.12.8/8.12.8) with ESMTP id iA8Gvpjj000588
-	for <linux-ide@vger.kernel.org>; Mon, 8 Nov 2004 17:57:51 +0100 (MET)
+Received: from mail4.atl.registeredsite.com ([64.224.219.78]:24461 "EHLO
+	mail4.atl.registeredsite.com") by vger.kernel.org with ESMTP
+	id S261963AbUKHRsl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Nov 2004 12:48:41 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: 'Bartlomiej Zolnierkiewicz' <bzolnier@gmail.com>
+Cc: Garet Cammer <gcammer@duplidisk.com>, Linux Ide List <linux-ide@vger.kernel.org>
 
-Hi all,
+Hello Bart.  
 
- From some time ago, I've noticed that when rebooting or powering off my 
-laptop, its HDD emits an audible sound like a "clonk". It's the same 
-sound when powering off incorrectly (i.e., after a hang or something 
-like that). I'm using 2.6.8.1 on athlon xp.
+We are the people that were having a problem with the removable IDE device
+that is not working properly, trying to read from media that is not present.
+As you recommended I filled out a bug report at http://bugme.osdl.com, bug #
+3593, and I also posted it to the linux-ide mailing list.  We are very
+anxious to know if there has been any progress or interest in looking into
+this issue. Any information you can tell me will be useful. 
 
-My worries come when I read the specs of the hdd vendor (it's an Hitachi 
-80GN family drive):
+Thanks.
 
-"The product supports a minimum of 300,000 normal load/unloads. The 
-drive supports a minimum of 20,000 emergency unloads."
 
-The spec states that the emergency unload is caused when the power is 
-cut off for the HDD without previously issuing any of the following IDE 
-commands: (hard reset, standby, standby immediate, sleep), and it causes 
-mechanical stress to heads. I'm not sure if the Linux kernel currently 
-is ussing any of this commands, but I guess no, as I said before.
+Dario Oliva
+Linux Software Engineer
+Arco Data Protection Systems
+doliva@arcoide.com 
+1-954-925-2688 ext. 31
+ 
 
-I think that this issue is solved when halting, as it is possible to use 
-the -h parameter in "halt" command, but this is not possible when 
-rebooting or suspending (with Software Suspend 2 patch). I'm not sure if 
-the drive is doing emergency unloads when shutting down properly the 
-kernel, and even knowing that 20.000 unloads is a good number of 
-unloads, maybe it could be better for the drive to unload the proper way.
 
-Any idea, confirmation, etc. about this?
 
-Regards,
-
-  --
-  Alfonso
