@@ -1,42 +1,45 @@
 From: Jens Axboe <axboe@suse.de>
 Subject: Re: [PATCH] 2.4 IDE core for 2.5
-Date: Tue, 9 Jul 2002 14:54:12 +0200
+Date: Tue, 9 Jul 2002 14:56:56 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20020709125412.GB1940@suse.de>
-References: <20020709102249.GA20870@suse.de> <01742490.20020709144349@uni.de>
+Message-ID: <20020709125656.GC1940@suse.de>
+References: <Pine.SOL.3.96.1020709114618.20865B-100000@libra.cus.cam.ac.uk> <Pine.SOL.4.30.0207091447560.15575-100000@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <01742490.20020709144349@uni.de>
+In-Reply-To: <Pine.SOL.4.30.0207091447560.15575-100000@mion.elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Tobias Rittweiler <inkognito.anonym@uni.de>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Anton Altaparmakov <aia21@cantab.net>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Tue, Jul 09 2002, Tobias Rittweiler wrote:
-> Hello Jens,
+On Tue, Jul 09 2002, Bartlomiej Zolnierkiewicz wrote:
 > 
-> Tuesday, July 9, 2002, 12:22:49 PM, you wrote:
+> On Tue, 9 Jul 2002, Anton Altaparmakov wrote:
 > 
-> JA> *.kernel.org://pub/linux/kernel/people/axboe/patches/v2.5/2.5.25/
+> > On Tue, 9 Jul 2002, Jens Axboe wrote:
+> > > I've forward ported the 2.4 IDE core (well 2.4.19-pre10-ac2 to be exact)
+> > > to 2.5.25. It consists of 7 separate patches:
+> >
+> > Fantastic! Seeing that the patches are bitkeeper generated, would it be
+> > possible for you to make a repository available with the patches? (on
+> > bkbits perhaps?) Would make it a lot easier for us bitkeeper users just to
+> > pull from your repository... Especially once you update the patches...
 > 
-> After downloading each of the 7 .gz-patches, applying them without any
-> complains, I started to compile the new bzImage, but I got an error
-> in relation to the FAT support. By switching this support off
-> everything'll compile without any further problem though, and I can
-> boot from this image even.. :-)
+> Okay, tired of fantastic ;-)
+> This forward port has still broken PIO transfer on errors and really
+> borken multi PIO writes, all due to buffer_head -> bio transition in 2.5.
 
-Try doing something ala
+As I wrote in the initial posting, yes multi pio is broken _for multi
+page bio's_. Where does 2.5 break pio transfers on error? If you are
+talking about a 2.4 code base error, then I don't care, you need to tell
+someone else :-)
 
-#ifdef CONFIG_IDE_25
-#include <linux/ide.h>  /* IDE xlate */
-#else
-#include <linux/ide24.h>
-#endif
+> Jens, you would better spend your time on enhancing block layer to
+> allow me fixing them cleanly...
 
-instead of including ide.h directly in fs/partitions/msdos.c
-
-Yeah it's ugly, but it should fix it for now.
+I'll fix the bio support issue for pio multi write, it's in the next
+version.
 
 -- 
 Jens Axboe
