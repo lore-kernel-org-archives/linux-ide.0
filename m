@@ -1,44 +1,52 @@
-From: Alex Bennee <kernel-hacker@bennee.com>
-Subject: Why do I see reads when writing to the disk?
-Date: Thu, 26 Feb 2004 19:23:56 +0000
+From: Phil Thompson <phil@riverbankcomputing.co.uk>
+Subject: Re: [PATCH] ATI IXP IDE support (was: Re: Support for ATI IXP150 Southbridge)
+Date: Thu, 26 Feb 2004 21:57:03 +0000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1077823436.2789.51.camel@cambridge.braddahead.com>
+Message-ID: <200402262157.03480.phil@riverbankcomputing.co.uk>
+References: <200402232123.43989.phil@riverbankcomputing.co.uk> <200402241808.22246.phil@riverbankcomputing.co.uk> <200402252108.37225.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nimbus19.internetters.co.uk ([209.61.216.65]:58845 "HELO
-	nimbus19.internetters.co.uk") by vger.kernel.org with SMTP
-	id S262930AbUBZTa4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Feb 2004 14:30:56 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by cambridge.braddahead.com (Postfix) with ESMTP id 5A3BE1C201
-	for <linux-ide@vger.kernel.org>; Thu, 26 Feb 2004 19:23:57 +0000 (GMT)
+Received: from river-bank.demon.co.uk ([62.49.20.162]:297 "EHLO
+	badger.river-bank.demon.co.uk") by vger.kernel.org with ESMTP
+	id S261168AbUBZV7u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Feb 2004 16:59:50 -0500
+In-Reply-To: <200402252108.37225.bzolnier@elka.pw.edu.pl>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Matthew Tippett <mtippett@ati.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi,
+On Wednesday 25 February 2004 20:08, Bartlomiej Zolnierkiewicz wrote:
+> On Tuesday 24 of February 2004 19:08, Phil Thompson wrote:
+> > On Monday 23 February 2004 22:54, Bartlomiej Zolnierkiewicz wrote:
+> > > On Monday 23 of February 2004 22:23, Phil Thompson wrote:
+> > > > Is anybody working on support for the ATI IXP150 Southbridge?
+> > > > Particularly the IDE and USB devices.
+> > >
+> > > IDE support should be added soon (thanks to ATI).
+> > >
+> > > --bart
+> >
+> > Great - is there someone I can contact to volunteer to help with testing?
+>
+> You can find experimental (I have not tested it!) driver for 2.6.3 kernel
+> at:
+> http://www.kernel.org/pub/linux/kernel/people/bart/atiixp_ide/atiixp_ide-2.
+>6.3-1.patch
+>
+> It was written by Hui Yu <hyu@ati.com>, additional fixes/cleanups by me.
+>
+> Thanks,
+> --bart
 
-I've been adding DMA support to my IDE driver. I've gotten DMA Read
-working fine but I've been having problems getting DMA writes working.
-In the process of debugging I've noticed what seems like odd behaviour.
+Ok, it's installed and seems to be working fine so far. It's a server that's 
+still being built so it won't get heavily used yet, but it wouldn't be too 
+much of a problem if it got trashed.
 
-I'm doing writes straight to the disk with a:
+Is there any particular testing you'd like me to do - or just shout if I get 
+problems?
 
-dd if=testfile of=/dev/hda
-
-testfile resides on NFS, nothing is mounted on disks yet.
-
-However I see 8 dma_read operations before the dma_write operation. Why
-is this? Am I missing some subtle point with the system cache or
-something?
-
-Please cc any responses to me as I don't seem to be able to subscribe to
-the ide list.
-
-Cheers,
-
--- 
-Alex, homepage: http://www.bennee.com/~alex/
-He who laughs last -- missed the punch line.
-
+Phil
