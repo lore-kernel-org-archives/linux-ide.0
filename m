@@ -1,46 +1,75 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: SiI 3112 & Seagate drivers
-Date: Sun, 13 Mar 2005 14:57:16 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0503131430290.22027-100000@coffee.psychology.mcmaster.ca>
-References: <200503121937.55673.kanniball@zmail.pt>
+Date: Mon, 14 Mar 2005 18:21:45 +0900
+Message-ID: <423557A9.9090708@gmail.com>
+References: <200503121937.55673.kanniball@zmail.pt> <42345E2A.3070707@industrialstrengthsolutions.com> <200503131834.46433.kanniball@zmail.pt>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from sigma957.CIS.McMaster.CA ([130.113.64.83]:52408 "EHLO
-	sigma957.cis.mcmaster.ca") by vger.kernel.org with ESMTP
-	id S261441AbVCMT5n (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 13 Mar 2005 14:57:43 -0500
-In-Reply-To: <200503121937.55673.kanniball@zmail.pt>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from wproxy.gmail.com ([64.233.184.206]:61206 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262078AbVCNJVv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Mar 2005 04:21:51 -0500
+Received: by wproxy.gmail.com with SMTP id 68so1806616wra
+        for <linux-ide@vger.kernel.org>; Mon, 14 Mar 2005 01:21:51 -0800 (PST)
+In-Reply-To: <200503131834.46433.kanniball@zmail.pt>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kanniball <kanniball@zmail.pt>
-Cc: linux-ide@vger.kernel.org
+To: kanniball@zmail.pt
+Cc: david@industrialstrengthsolutions.com, linux-ide@vger.kernel.org
 
-> First off all excuse me for bugging you with this, but I can't accept paying 
-> for something that I only can use at 20% by the manufacter's fault.
+Kanniball wrote:
+> Well let's see if we can get the tecnical info...
+> This is a very annoying problem... so please "devs" give us the info we need, 
+> and we'll try to do your best
 
-you can't accept that vendors sometime ship broken products?
-I admire your idealism.
+  Hello, Kanniball.
 
-> For that I would like to have some tecnical details about the faults on both 
-> sides, Sata controller and disk drive.
+  I've digged lkml previously and what I've found out are
 
-some Seagate drives cannot handle >15 sector IO through some SiI controllers.
-you could have found out that much by reading the (very clear) kernel code.
-that's what I did.
+  * It's basically because of faulty SATA implementation of the affected 
+seagate hard drives combined with standard-compliant but peculiar 
+behavior of silicon image controllers.
 
-you also could have spent a few minutes googling:
-here's an old patch (which didn't seem to survive to enter Linus's kernel):
-http://linux.derkeiler.com/Mailing-Lists/Kernel/2004-03/3481.html
-http://linux.derkeiler.com/Mailing-Lists/Kernel/2004-03/3534.html
+  SATA communicates using packets which is called FIS in SATA 
+terminology.  When transferring data for read/write, the data can be 
+tranferred splitted on multiple packets.  The standard doesn't limit 
+where the data can be splitted, but most controllers split them on block 
+  (512 byte) boundaries.  Unfortunately, siimage controller doesn't 
+always split them on block boundaries and some (well, many) seagate 
+drives depend on packets split on block boundary.  So, that's where 
+everything goes wrong.
 
-and something written in Hedrick-ese that seems to say that the 
-current mod15 fix is kind of harsh:
-http://linux.derkeiler.com/Mailing-Lists/Kernel/2003-12/5225.html
-but maybe that's a different issue.
+  * Data FIS maximum payload size is 8k, or 16 blocks.  And siimage 
+controllers doesn't split packets on odd boundaries (maybe not at all) 
+when data size is equal to or less than 15 blocks.  So, sata_sil driver 
+sets max_sectors to 15, and the drive never gets to transfer more than 
+one page at a time.  So, it's dog slow.
 
-this implies that the problem is odd-sized packets:
-http://www.thisishull.net/archive/index.php/t-23170.html
-which might mean the hint about splitting makes sense.
+  * As the problem occurs only when writing data, we can improve read 
+performance to normal level, but the current block/libata driver 
+structure isn't structured to support separate limits on reads/writes 
+and the developers don't wanna change it because of some faulty hardware.
 
-do you really care, though?  a sata controller costs $20/channel.
+  * I don't know how Windows drivers handle this but from the past 
+posts, it seems that Windows driver also has the blacklist.  It would be 
+nice if someone can verify siimage+seagate read/write performance on 
+Windows.  And it would be even better if someone with SATA tracer would 
+investigate how the gruesome-twosome act on Windows.
+
+  * The cleanest way would be some form of firmware updates for either 
+the siimage controller or seagate drives.  Unfortunately, this doesn't 
+seem to be feasible; otherwise, they would have come up with it way back.
+
+  * To top it all, both companies keep details regarding above buggy 
+behavior under strict NDA and continue to sell faulty devices.  Way to 
+go, Silicon images / Seagate. OTZ
+
+  * It seems that IDE/libata developers contacted both companies in the 
+past without any positive result, so I doubt they will act any 
+differently this time.  But, my heart, too, is with you.
+
+  Thanks.
+
+-- 
+tejun
 
