@@ -1,35 +1,31 @@
-From: "John W. Linville" <linville@tuxdriver.com>
+From: Andy Warner <andyw@pobox.com>
 Subject: Re: [patch] libata: add ioctls to support SMART
-Date: Mon, 30 Aug 2004 13:51:12 -0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <41336910.3010907@tuxdriver.com>
-References: <200408301531.i7UFVBg29089@ra.tuxdriver.com> <41336824.1040206@gmx.de>
+Date: Mon, 30 Aug 2004 12:42:25 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040830124225.A4358@florence.linkmargin.com>
+References: <200408301531.i7UFVBg29089@ra.tuxdriver.com> <413361BF.8020805@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from apollo.tuxdriver.com ([24.172.12.4]:49925 "EHLO
-	ra.tuxdriver.com") by vger.kernel.org with ESMTP id S268728AbUH3RvN
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Aug 2004 13:51:13 -0400
-Received: from [127.0.0.1] (localhost.localdomain [127.0.0.1])
-	by ra.tuxdriver.com (8.11.6/8.11.6) with ESMTP id i7UGi3P30249
-	for <linux-ide@vger.kernel.org>; Mon, 30 Aug 2004 12:44:03 -0400
-In-Reply-To: <41336824.1040206@gmx.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S268708AbUH3Rvt@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <413361BF.8020805@pobox.com>; from jgarzik@pobox.com on Mon, Aug 30, 2004 at 01:19:59PM -0400
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Prakash K. Cheemplavam wrote:
-> 
-> I am pretty sure my drive supports SMART. I hope that I understood your
-> post correctly that with this patch it should work.
+Jeff Garzik wrote:
+> [...]
+> That implies, then, that you would add code to libata-scsi.c that 
+> translates the ATA-passthru SCSI command into an ATA command using the 
+> ata_scsi_translate() infrastructure.
 
-Prakash,
+Speaking of which - I'm working on this and want to find like
+minded people playing in the libata-scsi.c/04-262r<n>.pdf
+sandbox, and collaborate with them.
 
-You need "-d ata" on the smartctl command line (and in smartd.conf, if
-using smartd) in order for this to work:
+If you're one of these people, ping me off list and we
+can pool our efforts.
+-- 
+andyw@pobox.com
 
-	smartctl -d ata -a /dev/sda
-
-John
-
+Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
