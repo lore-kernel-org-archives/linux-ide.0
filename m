@@ -1,37 +1,47 @@
-From: "Andrew Chew" <achew@nvidia.com>
-Subject: IDE class driver with SATA controllers
-Date: Tue, 31 Aug 2004 14:03:41 -0700
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <DBFABB80F7FD3143A911F9E6CFD477B03F969B@hqemmail02.nvidia.com>
+From: Christer Weinigel <christer@weinigel.se>
+Subject: Re: Driver retries disk errors.
+Date: 01 Sep 2004 00:55:40 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <m3isay9atv.fsf@zoo.weinigel.se>
+References: <20040830163931.GA4295@bitwizard.nl>
+	<1093952715.32684.12.camel@localhost.localdomain>
+	<20040831135403.GB2854@bitwizard.nl>
+	<1093961570.597.2.camel@localhost.localdomain>
+	<20040831155653.GD17261@harddisk-recovery.com>
+	<1093965233.599.8.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate02.nvidia.com ([216.228.112.145]:25869 "EHLO
-	hqemgate02.nvidia.com") by vger.kernel.org with ESMTP
-	id S269176AbUHaVDr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Aug 2004 17:03:47 -0400
-Content-class: urn:content-classes:message
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S268648AbUHaXBc@vger.kernel.org>
+In-Reply-To: <1093965233.599.8.camel@localhost.localdomain>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Erik Mouw <erik@harddisk-recovery.com>, Rogier Wolff <R.E.Wolff@harddisk-recovery.nl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: jgarzik@pobox.com, B.Zolnierkiewicz@elka.pw.edu.pl
 
-In my perusal of the kernel code, I noticed that the IDE subsystem
-handles IDE controllers at legacy IO ports if no other driver claims
-them (albeit without DMA support).  I was wondering if it could be
-extended to support SATA controllers 
-that aren't mapped to legacy I/O ports.
+Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
 
-I'm aware of the idex=base,ctl,irq kernel option, but I can't seem to
-get this to work with my SATA controller (using ide6=base,ctl,irq).
+> Retries also pop up in other less obvious cases and conveniently paper
+> over a wide variety of timeouts, power management quirks and drives just
+> having a random fit. Eight is probably excessive in all cases.
+> 
+> For non hard disk cases many devices do want and need retry.
 
-The reason I'm asking is because it would seem like a good thing to have
-SATA controllers that are broadly compatible with IDE to be usable
-without having to modify the core kernel drivers.  This would at least
-allow a user to perform a Linux install on a SATA drive even if that
-kernel doesn't have explicit support for the SATA controller.  A
-kernel/driver update can then take place after the install.
+For ripping CDs I'd prefer if the application could control retries
+and not default to what the CD player prefers.
 
-Also, are there plans for libata to take over the IDE class driver
-functionality in the future?
+I have a CD, KLF -- Ultra Rare Tracks, and unfortunately someone I
+borrowed it to managed to literally stomp on it, so the record has a
+lot of scratches.  I would very much like to rip as much as possible
+of this CD so that I can at least listen to part of it, but every time
+I have tried the CD player just gets stuck in an endless retry loop.
+
+The same thing happens when trying to rip a "copy controlled" CD,
+which is also pretty irritating since this means that I can't rip my
+Teddybears Stockholm CD and put the songs on my iPod.
+
+  /Christer
+
+-- 
+"Just how much can I get away with and still go to heaven?"
+
+Freelance consultant specializing in device driver programming for Linux 
+Christer Weinigel <christer@weinigel.se>  http://www.weinigel.se
