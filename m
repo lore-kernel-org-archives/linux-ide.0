@@ -1,31 +1,30 @@
-From: Anton Altaparmakov <aia21@cantab.net>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: [PATCH] 2.4 IDE core for 2.5
-Date: Tue, 9 Jul 2002 11:48:38 +0100 (BST)
+Date: Tue, 9 Jul 2002 12:49:35 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.SOL.3.96.1020709114618.20865B-100000@libra.cus.cam.ac.uk>
-References: <20020709102249.GA20870@suse.de>
+Message-ID: <20020709104935.GB20870@suse.de>
+References: <20020709102249.GA20870@suse.de> <Pine.SOL.3.96.1020709114618.20865B-100000@libra.cus.cam.ac.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20020709102249.GA20870@suse.de>
+Content-Disposition: inline
+In-Reply-To: <Pine.SOL.3.96.1020709114618.20865B-100000@libra.cus.cam.ac.uk>
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
+To: Anton Altaparmakov <aia21@cantab.net>
 Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Tue, 9 Jul 2002, Jens Axboe wrote:
-> I've forward ported the 2.4 IDE core (well 2.4.19-pre10-ac2 to be exact)
-> to 2.5.25. It consists of 7 separate patches:
+On Tue, Jul 09 2002, Anton Altaparmakov wrote:
+> On Tue, 9 Jul 2002, Jens Axboe wrote:
+> > I've forward ported the 2.4 IDE core (well 2.4.19-pre10-ac2 to be exact)
+> > to 2.5.25. It consists of 7 separate patches:
+> 
+> Fantastic! Seeing that the patches are bitkeeper generated, would it be
+> possible for you to make a repository available with the patches? (on
+> bkbits perhaps?) Would make it a lot easier for us bitkeeper users just to
+> pull from your repository... Especially once you update the patches...
 
-Fantastic! Seeing that the patches are bitkeeper generated, would it be
-possible for you to make a repository available with the patches? (on
-bkbits perhaps?) Would make it a lot easier for us bitkeeper users just to
-pull from your repository... Especially once you update the patches...
+Yes they are from a bk tree here, I'll set one up on bkbits...
 
-Best regards,
-
-	Anton
 -- 
-Anton Altaparmakov <aia21 at cantab.net> (replace at with @)
-Linux NTFS maintainer / IRC: #ntfs on irc.openprojects.net
-WWW: http://linux-ntfs.sf.net/ & http://www-stu.christs.cam.ac.uk/~aia21/
+Jens Axboe
 
