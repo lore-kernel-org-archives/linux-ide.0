@@ -1,47 +1,50 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: linux-2.4.28 released
-Date: Sun, 21 Nov 2004 10:22:33 +0100 (MET)
-Message-ID: <Pine.GSO.4.61.0411211021550.19680@waterleaf.sonytel.be>
-References: <BF571719A4041A478005EF3F08EA6DF05EB481@pcsmail03.pcs.pc.ome.toshiba.co.jp>
- <20041118111235.GA26216@logos.cnet> <20041119134832.GA9552@havoc.gtf.org>
- <20041119135452.GA10422@devserv.devel.redhat.com> <419E0644.909@pobox.com>
+From: "Gerry Rozema" <gerryr@rozeware.bc.ca>
+Subject: [PATCH 2.6.9] libata:  Add another drive to the blacklist for SIL_QUIRK_MOD15WRITE
+Date: Sun, 21 Nov 2004 04:35:42 -0800
+Message-ID: <IJEHJPPHAHEBOOMNBBIHGECPGKAA.gerryr@rozeware.bc.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from witte.sonytel.be ([80.88.33.193]:47076 "EHLO witte.sonytel.be")
-	by vger.kernel.org with ESMTP id S262940AbUKUJXG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Nov 2004 04:23:06 -0500
-In-Reply-To: <419E0644.909@pobox.com>
+Received: from mail2.divebc.com ([64.246.48.85]:39887 "EHLO www.ibtalk.net")
+	by vger.kernel.org with ESMTP id S261705AbUKUMfp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Nov 2004 07:35:45 -0500
+Received: from mail.divebc.com (S01060080c77cb685.vc.shawcable.net [24.85.33.80])
+	by www.ibtalk.net (8.11.6/8.11.6) with ESMTP id iALDFiB15981
+	for <linux-ide@vger.kernel.org>; Sun, 21 Nov 2004 07:15:44 -0600
+Received: from antigua (S01060050bab3486f.vc.shawcable.net [24.85.58.167])
+	by mail.divebc.com (Postfix) with SMTP id 2ACAEB34016
+	for <linux-ide@vger.kernel.org>; Sun, 21 Nov 2004 04:40:22 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Alan Cox <alan@redhat.com>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>, "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>, Marcelo Tosatti <marcelo@hera.kernel.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Fri, 19 Nov 2004, Jeff Garzik wrote:
-> Alan Cox wrote:
-> > On Fri, Nov 19, 2004 at 08:48:32AM -0500, Jeff Garzik wrote:
-> > > PATA and SATA (DMA doesn't work for PATA, in split-driver configuration),
-> > > and there is no split-driver to worry about.
-> > > 
-> > > I think there may need to be some code to prevent the IDE driver from
-> > > claiming the legacy ISA ports.
-> > 
-> > Its called "request_resource". If you want the resource claim it. IDE will
-> > be a good citizen.
-> 
-> That's what the quirk does.  libata still needs to find out who obtained the
-> resource, not blindly grab it (and fail).
+Add a western digital 200 gig drive to the blacklist for
+SIL_QUIRK_MOD15WRITE
 
-If libata would be initialized before IDE, it could grab the resource during
-probing.
+I just finished building a raid with 3 new WD drives, and the
+Silicon Image 3114 4 port controller.  I had data corruption problems
+even before I was finished installing onto the new system.  This patch
+corrected that, and it's been running reliably under heavy read/write
+load for a few days now.
 
-Gr{oetje,eeting}s,
+Signed-off-by:  Gerry Rozema <gerryr@rozeware.bc.ca>
 
-						Geert
+----
+diff -Naur a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+--- a/drivers/scsi/sata_sil.c	2004-11-18 20:08:05.000000000 -0800
++++ b/drivers/scsi/sata_sil.c	2004-11-18 19:47:15.000000000 -0800
+@@ -92,6 +92,7 @@
+ 	{ "ST380011ASL",	SIL_QUIRK_MOD15WRITE },
+ 	{ "ST3120022ASL",	SIL_QUIRK_MOD15WRITE },
+ 	{ "ST3160021ASL",	SIL_QUIRK_MOD15WRITE },
++	{ "WDC WD2000JD-00H",	SIL_QUIRK_MOD15WRITE },
+ 	{ "Maxtor 4D060H3",	SIL_QUIRK_UDMA5MAX },
+ 	{ }
+ };
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+----
+
+
