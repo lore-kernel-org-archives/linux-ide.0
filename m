@@ -1,70 +1,47 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [BK PATCHES] 2.6.x ATA build fix
-Date: Sat, 6 Nov 2004 15:25:14 -0500
-Message-ID: <20041106202514.GA5788@havoc.gtf.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Adam J. Richter" <adam@yggdrasil.com>
+Subject: [Trivial patch] include <asm/types.h> in <linux/ata.h>
+Date: Sun, 7 Nov 2004 13:30:27 -0800
+Message-ID: <200411072130.iA7LURb27362@freya.yggdrasil.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.28.190.101]:20411 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S261462AbUKFUZX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 6 Nov 2004 15:25:23 -0500
-Content-Disposition: inline
+Received: from [61.48.52.243] ([61.48.52.243]:20967 "EHLO freya.yggdrasil.com")
+	by vger.kernel.org with ESMTP id S261538AbUKGFgA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Nov 2004 00:36:00 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org
 
+	linux-2.6.10-rc1-bk16 has a new compilation error not
+present in -bk15.  The problem comes from include/linux/ata.h
+using u8, u32, etc. without #include'ing <asm/types.h> to
+define all types.
 
-Mainly a build fix from Meelios(sp?).
+	I believe that having almost all #include files pull in
+their own dependencies minimizes changes that are needed to
+other files as those dependencies change, making more efficient
+use of developers' time when they use these header files and
+allowing #include lists in source files to include just what
+is referenced directly.  I think the trade-off of some getting
+away with not #include'ing some headers that they directly use
+(because they are pulled in by other headers) worth it, in that,
+at least this way, the header lists are shorter, making problems
+easier to spot.
 
-Please do a
+	Also, is there some reason that ata_taskfile.flags
+is unsigned long, instead of u32?
 
-	bk pull bk://gkernel.bkbits.net/libata-2.6
+                    __     ______________ 
+Adam J. Richter        \ /
+adam@yggdrasil.com      | g g d r a s i l
 
-This will update the following files:
-
- include/linux/ata.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-through these ChangeSets:
-
-<jgarzik@pobox.com> (04/11/06 1.2473)
-   Remove silly comment from linux/ata.h.
-   
-   XFER_xxx is not necessarily "legacy IDE 'stuff'"
-
-<mroos@linux.ee> (04/11/06 1.2472)
-   [PATCH] ata.h undefined types in USB
-   
-   This is todays BK on a x86:
-   
-     CC [M]  drivers/usb/storage/freecom.o
-   In file included from include/linux/hdreg.h:4,
-                    from drivers/usb/storage/freecom.c:32:
-   include/linux/ata.h:197: error: parse error before "u32"
-   ...
-   and so on for tens of lines.
-   
-   Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
-
-diff -Nru a/include/linux/ata.h b/include/linux/ata.h
---- a/include/linux/ata.h	2004-11-06 14:17:52 -05:00
-+++ b/include/linux/ata.h	2004-11-06 14:17:52 -05:00
+--- linux-2.6.10-rc1-bk16/include/linux/ata.h	2004-11-07 10:58:00.000000000 -0800
++++ linux/include/linux/ata.h	2004-11-07 13:16:41.000000000 -0800
 @@ -24,6 +24,8 @@
  #ifndef __LINUX_ATA_H__
  #define __LINUX_ATA_H__
  
-+#include <linux/types.h>
++#include <asm/types.h>
 +
  /* defines only for the constants which don't work well as enums */
  #define ATA_DMA_BOUNDARY	0xffffUL
  #define ATA_DMA_MASK		0xffffffffULL
-@@ -140,8 +142,6 @@
- 	XFER_PIO_2		= 0x0A,
- 	XFER_PIO_1		= 0x09,
- 	XFER_PIO_0		= 0x08,
--
--	/* legacy IDE 'stuff' */
- 	XFER_SW_DMA_2		= 0x12,
- 	XFER_SW_DMA_1		= 0x11,
- 	XFER_SW_DMA_0		= 0x10,
