@@ -1,59 +1,57 @@
-From: Kevin Shanahan <kmshanah@ucwb.org.au>
-Subject: Re: libata & scsi error handling
-Date: Thu, 19 Aug 2004 21:19:14 +0930
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1092916153.2279.17.camel@localhost>
-References: <4122771A.4070203@wasp.net.au>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: new tool:  blktool
+Date: Thu, 19 Aug 2004 11:03:17 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <4124C135.7050200@rtr.ca>
+References: <411FD744.2090308@pobox.com> <411FF170.9070700@rtr.ca> <411FF37E.7070001@pobox.com> <41201DCA.2090204@rtr.ca> <4120E693.8070700@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.ucwb.org.au ([202.45.120.126]:28168 "EHLO mail.ucwb.org.au")
-	by vger.kernel.org with ESMTP id S265706AbUHSLrV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2004 07:47:21 -0400
-Received: from [192.168.2.52] (unknown [192.168.2.52])
-	by mail.ucwb.org.au (Postfix) with ESMTP id 6F03212B66
-	for <linux-ide@vger.kernel.org>; Thu, 19 Aug 2004 21:17:02 +0930 (CST)
-In-Reply-To: <4122771A.4070203@wasp.net.au>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S266479AbUHSPJB@vger.kernel.org>
+In-Reply-To: <4120E693.8070700@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-On Wed, 2004-08-18 at 06:52, Brad Campbell wrote:
-> brad@srv:/usr/src$ diff -u temp/linux-2.6.8.1/drivers/scsi/libata-scsi.c 
-> linux-2.6.8.1/drivers/scsi/libata-scsi.c
-> --- temp/linux-2.6.8.1/drivers/scsi/libata-scsi.c       2004-08-14 14:55:19.000000000 +0400
-> +++ linux-2.6.8.1/drivers/scsi/libata-scsi.c    2004-08-18 01:04:11.000000000 +0400
-> @@ -213,6 +213,7 @@
+>> But HDIO_DRIVE_CMD is rather easy to implement as well,
+>> and perhaps both should be there for an overlap.
+>>
+>> Especially since the former is in rather widespread use right now.
+>> Yup, it's missing a separate data-phase parameter,
+>> and lots of taskfile stuff, but it's configured by default
+>> into every kernel (the same is not true for taskfile support),
+>> and there's really only a few limited cases of it being used
+>> for non-data commands:  IDENTIFY, SMART, and the odd READ/WRITE
+>> SECTOR (pio, single sector).
 > 
->          ap = (struct ata_port *) &host->hostdata[0];
->          ap->ops->eng_timeout(ap);
-> +       host->host_failed--;
 > 
->          DPRINTK("EXIT\n");
->          return 0;
+> If HDIO_DRIVE_CMD was easy to do, I would have already done it.  I agree 
+> with you that supporting it has benefits, but you are ignoring the 
+> obstacles:
 
-Thanks for this Brad - great detective work 8)
+"Ignoring"?  Hardly.  I even listed a few of them above.
+But in practice, HDIO_DRIVE_CMD only requires support for a very
+limited set of commands.  It was never intended for arbitrary
+command acceptance.  And it's not like Joe User can abuse it,
+since it requires SYSADMIN and RAWIO capabilities to execute.
 
-This got me going again, so the reads do make progress. I'm looking at
-what's happening with my dd_rescue trying to read from the disk and it
-seems a little strange.
+The command subset that accounts for just about all uses of it today is:
 
-ptrace shows dd_rescue is calling pread to read 512 bytes from a sector
-aligned locations. For each pread call I can see, syslog shows the sata
-driver attempting to read several sectors (difficult to count, but it's
-probably between 8 and 32 - maybe this is readahead?).
+SET_FEATURES, SMART, IDENTIFY, READ_SECTOR, WRITE_SECTOR.
+Period.
 
-Even if the request was longer than one sector, is there any reason not
-to abort the entire read request once an unreadable sector is
-encountered? pread will just end up returning -1 anyway.
+Pretty easy to support those, especially in SATA.
+I know, since I've just taken a couple of hours and added it
+to my SATA/RAID driver (a queuing controller with tag support).
 
-Do other disk drivers (libata, ide or others) behave the same way?
+For more generic interface, Curtis's document looks rather good.
+But for backward compatibility with existing tools like the
+smartmontools and hdparm, all that is needed is a limited subset
+of HDIO_DRIVE_CMD (for the opcodes listed above) and also
+the closely related HDIO_DRIVE_TASK ioctl for some of the SMART
+commands (all non-data).
 
-I ask because it has now taken approximately 24 hours for dd_rescue to
-read ~250 (bad) sectors from this disk (I hope I'm not getting too far
-off topic).
-
-Thanks,
-Kevin.
-
-
+Cheers
+-- 
+Mark Lord
+(hdparm keeper & the original "Linux IDE Guy")
