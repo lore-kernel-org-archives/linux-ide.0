@@ -1,44 +1,45 @@
-From: Jens Axboe <axboe@suse.de>
+From: Jamie Lokier <jamie@shareable.org>
 Subject: Re: [PATCH] speed up SATA
-Date: Sun, 28 Mar 2004 19:35:08 +0200
+Date: Sun, 28 Mar 2004 18:36:23 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040328173508.GI24370@suse.de>
-References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406612AA.1090406@yahoo.com.au> <4066156F.1000805@pobox.com> <20040328141014.GE24370@suse.de> <40670BD9.9020707@pobox.com>
+Message-ID: <20040328173623.GA1087@mail.shareable.org>
+References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406616EE.80301@pobox.com> <4066191E.4040702@yahoo.com.au> <40662108.40705@pobox.com> <20040328135124.GA32597@mail.shareable.org> <40670A36.3000005@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:23235 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262238AbUC1RgU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Mar 2004 12:36:20 -0500
+Received: from mail.shareable.org ([81.29.64.88]:59794 "EHLO
+	mail.shareable.org") by vger.kernel.org with ESMTP id S262244AbUC1Rge
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Mar 2004 12:36:34 -0500
 Content-Disposition: inline
-In-Reply-To: <40670BD9.9020707@pobox.com>
+In-Reply-To: <40670A36.3000005@pobox.com>
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-On Sun, Mar 28 2004, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >On Sat, Mar 27 2004, Jeff Garzik wrote:
-> >
-> >>I also wouldn't want to lock out any users who wanted to use SATA at 
-> >>full speed ;-)
-> >
-> >
-> >And full speed requires 32MB requests?
+Jeff Garzik wrote:
+> >Does TCQ-on-write allow you to do ordered write commits, as with barriers,
+> >but without needing full cache flushes, and still get good performance?
 > 
-> 
-> Full speed is the SATA driver supporting the hardware maximum.  The 
+> Nope, TCQ is just a bunch of commands rather than one.  There are no 
+> special barrier indicators you can pass down with a command.
 
-Come on Jeff, don't be such a slave to the hardware specifications. Just
-because it's possible to send down 32MB requests doesn't necessarily
-mean it's a super thing to do, nor that it automagically makes 'things
-go faster'. The claim is that back-to-back 1MB requests are every bit as
-fast as a 32MB request (especially if you have a small queue depth, in
-that case there truly should be zero benefit to doing the bigger ones).
-The cut-off point is likely even lower than 1MB, I'm just using that
-figure as a value that is 'pretty big' yet doesn't incur too large
-latencies just because of its size.
+I meant without barrier indicators (although that would've been nice).
 
--- 
-Jens Axboe
+This is what I mean: turn off write cacheing, and performance on PATA
+drops because of the serialisation and lost inter-command time.
 
+With TCQ-on-write, you can turn off write cacheing and in theory
+performance doesn't have to drop, is that right?
+
+In addition, you can implement ordered writes by waiting until
+"before" writes in a partial order are completed prior to sending
+"after" writes to the drive.  Meanwhile, because of the TCQ, other
+read and write transactions can continue to take place, even if the
+disk takes a long time to commit those writes that you're waiting on.
+
+I'm wondering if that sort of strategy gives good performance with
+TCQ-on-write drives, so that full-cache-flush barrier commands aren't
+useful.
+
+-- Jamie
