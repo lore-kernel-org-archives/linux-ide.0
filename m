@@ -1,59 +1,164 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2.6.11-rc2 25/29] ide: convert REQ_DRIVE_CMD to REQ_DRIVE_TASKFILE
-Date: Fri, 4 Feb 2005 02:40:02 +0100
-Message-ID: <58cb370e0502031740141468d4@mail.gmail.com>
+Subject: Re: [PATCH 2.6.11-rc2 22/29] ide: convert REQ_DRIVE_TASK to REQ_DRIVE_TASKFILE
+Date: Fri, 4 Feb 2005 02:50:10 +0100
+Message-ID: <58cb370e05020317506522b62f@mail.gmail.com>
 References: <20050202024017.GA621@htj.dyndns.org>
-	 <20050202031559.GP1187@htj.dyndns.org>
-	 <58cb370e05020309464a106816@mail.gmail.com>
-	 <4202CA95.6030801@home-tj.org>
+	 <20050202030727.GG1187@htj.dyndns.org>
+	 <58cb370e05020309307cb8fada@mail.gmail.com>
+	 <4202C7BF.8080305@home-tj.org>
 Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.207]:21706 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262558AbVBDBkn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Feb 2005 20:40:43 -0500
-Received: by wproxy.gmail.com with SMTP id 67so395158wri
-        for <linux-ide@vger.kernel.org>; Thu, 03 Feb 2005 17:40:39 -0800 (PST)
-In-Reply-To: <4202CA95.6030801@home-tj.org>
+Received: from wproxy.gmail.com ([64.233.184.196]:4887 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S263264AbVBDBuO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Feb 2005 20:50:14 -0500
+Received: by wproxy.gmail.com with SMTP id 67so396597wri
+        for <linux-ide@vger.kernel.org>; Thu, 03 Feb 2005 17:50:11 -0800 (PST)
+In-Reply-To: <4202C7BF.8080305@home-tj.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@home-tj.org>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, 04 Feb 2005 10:06:29 +0900, Tejun Heo <tj@home-tj.org> wrote:
-> Hello,
+On Fri, 04 Feb 2005 09:54:23 +0900, Tejun Heo <tj@home-tj.org> wrote:
+> Hello again, Bartlomiej.
 > 
 > Bartlomiej Zolnierkiewicz wrote:
-> > On Wed, 2 Feb 2005 12:15:59 +0900, Tejun Heo <tj@home-tj.org> wrote:
+> > On Wed, 2 Feb 2005 12:07:27 +0900, Tejun Heo <tj@home-tj.org> wrote:
 > >
-> >>>25_ide_taskfile_cmd.patch
+> >>>22_ide_taskfile_flush.patch
 > >>>
-> >>>      All in-kernel REQ_DRIVE_CMD users except for ide_cmd_ioctl()
-> >>>      converted to use REQ_DRIVE_TASKFILE.
-> >>
-> >>Signed-off-by: Tejun Heo <tj@home-tj.org>
-> >>
-> >>Index: linux-ide-export/drivers/ide/ide-disk.c
-> >>===================================================================
-> >>--- linux-ide-export.orig/drivers/ide/ide-disk.c        2005-02-02 10:28:06.527986413 +0900
-> >>+++ linux-ide-export/drivers/ide/ide-disk.c     2005-02-02 10:28:07.204876587 +0900
-> >>@@ -750,7 +750,7 @@ static int set_multcount(ide_drive_t *dr
-> >>        if (drive->special.b.set_multmode)
-> >>                return -EBUSY;
-> >>        ide_init_drive_cmd (&rq);
-> >>-       rq.flags = REQ_DRIVE_CMD;
-> >>+       rq.flags = REQ_DRIVE_TASKFILE;
+> >>>      All REQ_DRIVE_TASK users except ide_task_ioctl() converted
+> >>>      to use REQ_DRIVE_TASKFILE.
+> >>>      1. idedisk_issue_flush() converted to use REQ_DRIVE_TASKFILE.
+> >>>         This and the changes in ide_get_error_location() remove a
+> >>>         possible race condition between ide_get_error_location()
+> >>>         and other requests.
 > >
 > >
-> > Please instead fix ide_init_drive_cmd() to set REQ_DRIVE_TASKFILE
-> > and add set REQ_DRIVE_CMD only in ide_cmd_ioctl().
+> > What race condition?
+> 
+> The old ide_get_error_location() acceses hardware registers after the
+> flush request is finished, so the registers could have been crobbered by
+> other on-going or finished requests.
+
+yep, you are right
+
+> >>@@ -80,7 +62,8 @@ static void ide_fill_flush_cmd(ide_drive
+> >> static struct request *ide_queue_flush_cmd(ide_drive_t *drive,
+> >>                                           struct request *rq, int post)
+> >> {
+> >>-       struct request *flush_rq = &HWGROUP(drive)->wrq;
+> >>+       struct request *flush_rq = &HWGROUP(drive)->flush_rq;
+> >>+       ide_task_t *args = &HWGROUP(drive)->flush_args;
+> >
+> >
+> > please don't use HWGROUP() macro,
+> > just use drive->hwif->hwgroup directly
 > >
 > 
-> This is done in patch #28.  If you don't like the ordering of the
-> patches, I can change the orders but I don't think that improves
-> anything.  This order is as good as the other order.
+> I think I'll leave the code like above here and make another patch which
+> removes all uses of HWGROUP() and HWGROUP() itself.  What do you think
+> about that?
 
-Actually no - if you change this then patch #28 becomes NOP.
+I prefer gradual changes because IMHO such global find'n'replace
+changes have high noise ratio and are bad for maintainability
+(also most of the code it would touch need some other fixes anyway).
 
-So please do it, thanks.
+> >>@@ -930,6 +930,39 @@ typedef ide_startstop_t (ide_pre_handler
+> >> typedef ide_startstop_t (ide_handler_t)(ide_drive_t *);
+> >> typedef int (ide_expiry_t)(ide_drive_t *);
+> >>
+> >>+typedef struct ide_task_s {
+> >>+/*
+> >>+ *     struct hd_drive_task_hdr        tf;
+> >>+ *     task_struct_t           tf;
+> >>+ *     struct hd_drive_hob_hdr         hobf;
+> >>+ *     hob_struct_t            hobf;
+> >>+ */
+> >>+       task_ioreg_t            tfRegister[8];
+> >>+       task_ioreg_t            hobRegister[8];
+> >>+       ide_reg_valid_t         tf_out_flags;
+> >>+       ide_reg_valid_t         tf_in_flags;
+> >>+       int                     data_phase;
+> >>+       int                     command_type;
+> >>+       ide_pre_handler_t       *prehandler;
+> >>+       ide_handler_t           *handler;
+> >>+       struct request          *rq;            /* copy of request */
+> >>+       void                    *special;       /* valid_t generally */
+> >>+} ide_task_t;
+> >
+> >
+> > please don't move this around,
+> > adding struct ide_task_s; should do the trick
+> >
+> 
+> No, I added ide_task_t flush_args to hwgroup_t not a pointer to
+> ide_task_t, so the definition of ide_task_t has to come before the
+> definition of hwgroup_t.
+
+OK
+
+> >
+> >>+typedef struct pkt_task_s {
+> >>+/*
+> >>+ *     struct hd_drive_task_hdr        pktf;
+> >>+ *     task_struct_t           pktf;
+> >>+ *     u8                      pkcdb[12];
+> >>+ */
+> >>+       task_ioreg_t            tfRegister[8];
+> >>+       int                     data_phase;
+> >>+       int                     command_type;
+> >>+       ide_handler_t           *handler;
+> >>+       struct request          *rq;            /* copy of request */
+> >>+       void                    *special;
+> >>+} pkt_task_t;
+> >
+> >
+> > there is no need to move pkt_task_t around
+> > (moreover no code uses it currently)
+> >
+> 
+> And it seemd kind of lonely after ide_task_t moved upward. :-)  How
+> about modifying this patch such that it moves only the ide_task_t and
+> adding another patch to kill pkt_task_t?
+
+sounds good
+
+> >
+> >> typedef struct hwgroup_s {
+> >>                /* irq handler, if active */
+> >>        ide_startstop_t (*handler)(ide_drive_t *);
+> >>@@ -955,8 +988,12 @@ typedef struct hwgroup_s {
+> >>        struct request *rq;
+> >>                /* failsafe timer */
+> >>        struct timer_list timer;
+> >>-               /* local copy of current write rq */
+> >>-       struct request wrq;
+> >>+               /* rq used for flushing */
+> >>+       struct request flush_rq;
+> >>+               /* task used for flushing */
+> >>+       ide_task_t flush_args;
+> >>+               /* real_rq for flushing */
+> >>+       struct request *flush_real_rq;
+> >>                /* timeout value during long polls */
+> >>        unsigned long poll_timeout;
+> >>                /* queried upon timeouts */
+> >>@@ -1203,7 +1240,7 @@ extern void ide_init_drive_cmd (struct r
+> >> /*
+> >>  * this function returns error location sector offset in case of a write error
+> >>  */
+> >>-extern u64 ide_get_error_location(ide_drive_t *, char *);
+> >>+extern u64 ide_get_error_location(ide_drive_t *, ide_task_t *);
+> >
+> >
+> > extern is not needed
+> >
+> 
+> Yeah, it isn't needed.  I was trying to be conformant with other
+> declarations in the file.  I'll leave above line as it is now and write
+> another patch to remove all extern's in front of function prototypes in
+> ide drivers.  What do you think?
+
+I think the same as for HWGROUP() change - better to do it gradually.
