@@ -1,33 +1,34 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Problem with Promise SATA-II 150 TX4 Controller (rev 2) [105a:3d18]
-Date: Sat, 05 Feb 2005 23:51:29 -0500
-Message-ID: <4205A251.5050805@pobox.com>
-References: <m3zmzy492i.fsf@reason.gnu-hamburg> <m3pt0u45l9.fsf@reason.gnu-hamburg>
+Subject: Re: [PATCH 2.4.29] libata: fix ata_piix on ICH6R in RAID mode
+Date: Sun, 06 Feb 2005 00:06:59 -0500
+Message-ID: <4205A5F3.9050804@pobox.com>
+References: <87d5vjtzf5.fsf@yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:2737 "EHLO
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:53937 "EHLO
 	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S269793AbVBFEvn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 5 Feb 2005 23:51:43 -0500
-In-Reply-To: <m3pt0u45l9.fsf@reason.gnu-hamburg>
+	id S262165AbVBFFHT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 6 Feb 2005 00:07:19 -0500
+In-Reply-To: <87d5vjtzf5.fsf@yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Georg C. F. Greve" <greve@gnu.org>
-Cc: linux-ide@vger.kernel.org, rick@linuxmafia.com
+To: Martins Krikis <mkrikis@yahoo.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Georg C. F. Greve wrote:
-> [update]
-> 
-> After some more investigation, I stumbled upon the thread that dealt
-> with the Promise 579 in October 2004, which contained a similar
-> situation and error message with the proposed fix at
-> 
->  http://marc.theaimsgroup.com/?l=linux-ide&m=109814647928388&w=2
+Martins Krikis wrote:
+> --- linux-2.4.29/drivers/scsi/libata-core.c	2005-01-25 20:55:41.000000000 -0500
+> +++ linux-2.4.29-iswraid/drivers/scsi/libata-core.c	2005-02-01 20:23:51.000000000 -0500
+> @@ -3597,7 +3597,8 @@ int ata_pci_init_one (struct pci_dev *pd
+>  	else
+>  		port[1] = port[0];
+>  
+> -	if ((port[0]->host_flags & ATA_FLAG_NO_LEGACY) == 0) {
+> +	if ((port[0]->host_flags & ATA_FLAG_NO_LEGACY) == 0
+> +	    && (pdev->class >> 8) == PCI_CLASS_STORAGE_IDE) {
+>  		/* TODO: support transitioning to native mode? */
+>  		pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp8);
+>  		mask = (1 << 2) | (1 << 0);
 
-a version of this patch will be appearing in the upstream kernel soon.
-
-	Jeff
-
-
+applied
 
