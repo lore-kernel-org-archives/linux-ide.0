@@ -1,52 +1,75 @@
-From: Joel Jaeggli <joelja@darkwing.uoregon.edu>
-Subject: Re: Who is working on the Marvell SATA Chipset?
-Date: Tue, 12 Oct 2004 13:38:38 -0700 (PDT)
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: libata vs ATAPI
+Date: Tue, 12 Oct 2004 16:50:20 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.61.0410121331280.11010@twin.uoregon.edu>
-References: <416C2BD6.10802@inostor.com> <416C3378.6000001@pobox.com>
- <20041012152404.A14245@florence.linkmargin.com>
+Message-ID: <416C438C.4010902@pobox.com>
+References: <58cb370e04101213215ce9a23c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from darkwing.uoregon.edu ([128.223.142.13]:19329 "EHLO
-	darkwing.uoregon.edu") by vger.kernel.org with ESMTP
-	id S267745AbUJLUin (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 12 Oct 2004 16:38:43 -0400
-In-Reply-To: <20041012152404.A14245@florence.linkmargin.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:47537 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S267807AbUJLUuo
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 Oct 2004 16:50:44 -0400
+In-Reply-To: <58cb370e04101213215ce9a23c@mail.gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Andy Warner <andyw@pobox.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Tom Dickson <tdickson@inostor.com>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Linux IDE <linux-ide@vger.kernel.org>
 
-On Tue, 12 Oct 2004, Andy Warner wrote:
+Bartlomiej Zolnierkiewicz wrote:
+> Hi Jeff,
+> 
+> Is libata currently supposed to work with ATAPI
+> (I know about lack of REQUEST_SENSE support)?
+> 
+> With ATA_ENABLE_ATAPI defined INQUIRY seems to succeed for my
+> TOSHIBA ODD-DVD SD-R6372 but empty info is printed by SCSI layer.
 
-> Jeff Garzik wrote:
->> Tom Dickson wrote:
->>> -----BEGIN PGP SIGNED MESSAGE-----
->>> Hash: SHA1
->>>
->>> Who is in charge of the "in progress" driver for the Marvell 88SX5040?
->>
->> I have a skeleton driver locally, need to get on to finishing it.
->
-> Marvell also have drivers for 2.4 and 2.6, but they are under NDA
-> etc etc, and ignore libata (they also pre-date libata), so if
-> you have hardware that you _must_ get working; they might be
-> a useful stopgap.
->
-> I'll repeat my eagerness to test anything for the 88SX50xx or 88SX60xx,
-> regardless of how primitive it is. My benchmarking with the Marvell
-> driver shows the throughput to be excellent.
-
-I would love to be buying the 8 port pci-x marvells for nas boxes where 
-we're doing JBOD or software raid.
-
-http://www.supermicro.com/products/accessories/addon/DAC-SATA-MV8.cfm
-
-which is running around $110 at this point.
+I get this too
 
 
--- 
--------------------------------------------------------------------------- 
-Joel Jaeggli  	       Unix Consulting 	       joelja@darkwing.uoregon.edu 
-GPG Key Fingerprint:     5C6E 0104 BAF0 40B0 5BD3 C38B F000 35AB B67F 56B2
+> Then REPORT_LUNS errors out (dev_stat = 0x51)...
+
+This doesn't surprise me, I bet that many ATAPI devices might not like 
+REPORT LUNS
+
+
+> I've noticed that DMA is used by default for all packet commands
+> which doesn't seem to be wise thing to do so I disabled it.
+
+DMA is _never_ used for packet commands, only for packet data.
+
+libata enables DMA at the maximum level supported by both the device and 
+host controller.  I definitely want to do this by default.
+
+
+> Unfortunately it doesn't help because atapi_pio_sector() assumes
+> transfer length to be % SECTOR_SIZE and transfer length for INQUIRY
+> is mere 36 bytes so this fails.
+
+Yes, you are welcome to fix this assumption.  :)
+
+> Also ATAPI-SCSI emulation is still missing in libata-scsi.c.
+
+I wish to minimize the emulation.  That means no read/write emulation, 
+just modify INQUIRY to report MMC, and do auto-sense (as it is presented 
+to the SCSI layer).
+
+
+> I'm sure you know more about what needs to be done.
+> Could you make some nice, detailed TODO? :-)
+
+Pat LaVarre had IOmega ATAPI devices working, once he hand-hacked 
+REQUEST SENSE.  As for to-do list, I think this email covers it.  Here's 
+a summary...
+
+* possibly avoid REPORT LUNS for ATAPI devices
+* when check condition occurs, automatically request sense inside 
+driver, and put that data into the sense buffer
+* make INQUIRY report SCSI version MMC-3 (or later...)
+* support strange sector sizes
+
+	Jeff
+
 
