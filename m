@@ -1,37 +1,38 @@
-From: Joilnen Leite <pidhash@yahoo.com>
-Subject: ide-scsi lock
-Date: Thu, 19 Feb 2004 05:53:11 -0800 (PST)
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040219135311.95851.qmail@web12603.mail.yahoo.com>
+From: "Richard B. Johnson" <root@chaos.analogic.com>
+Subject: Re: your mail
+Date: Thu, 19 Feb 2004 09:12:02 -0500 (EST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.53.0402190907470.30108@chaos>
+References: <20040219135212.34779.qmail@web12607.mail.yahoo.com>
+Reply-To: root@chaos.analogic.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web12603.mail.yahoo.com ([216.136.173.226]:31394 "HELO
-	web12603.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S267215AbUBSNxO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Feb 2004 08:53:14 -0500
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20040219135212.34779.qmail@web12607.mail.yahoo.com>
+To: Joilnen Leite <pidhash@yahoo.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
 
-excuse me friends shcedule_timeout(1) is not a problem
-for spin_lock_irqsave ?
+On Thu, 19 Feb 2004, Joilnen Leite wrote:
 
+> excuse me friends shcedule_timeout(1) is not a problem
+> for spin_lock_irqsave ?
+>
+> drivers/scsi/ide-scsi.c:897
+>
+> spin_lock_irqsave(&ide_lock, flags);
+> while (HWGROUP(drive)->handler) {
+>        HWGROUP(drive)->handler = NULL;
+>        schedule_timeout(1);
+> }
+>
+> pub 1024D/5139533E Joilnen Batista Leite
+> F565 BD0B 1A39 390D 827E 03E5 0CD4 0F20 5139 533E
 
+What kernel version?  It is very bad. You can't sleep with
+a spin-lock being held!
 
-drivers/scsi/ide-scsi.c:897
-
-spin_lock_irqsave(&ide_lock, flags);
-while (HWGROUP(drive)->handler) {
-       HWGROUP(drive)->handler = NULL;
-       schedule_timeout(1);
-}
-
-pub 1024D/5139533E Joilnen Batista Leite 
-F565 BD0B 1A39 390D 827E 03E5 0CD4 0F20 5139 533E
-
-
-__________________________________
-Do you Yahoo!?
-Yahoo! Mail SpamGuard - Read only the mail you want.
-http://antispam.yahoo.com/tools
+Cheers,
+Dick Johnson
+Penguin : Linux version 2.4.24 on an Intel Pentium III machine (797.90 BogoMips).
+            Note 96.31% of all statistics are fiction.
