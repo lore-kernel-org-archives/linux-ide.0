@@ -1,118 +1,34 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [BK PATCHES] ide-2.6 update
-Date: Thu, 10 Mar 2005 18:45:55 +0100 (CET)
-Message-ID: <Pine.GSO.4.62.0503101842190.594@mion.elka.pw.edu.pl>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Gary Poppitz <poppitzg@iomega.com>
+Subject: More SIL 3112 intrigue
+Date: Thu, 10 Mar 2005 11:09:54 -0700
+Message-ID: <f18da98a12644f676a04edf0ff38962e@iomega.com>
+Mime-Version: 1.0 (Apple Message framework v619.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from email-mx1.iomega.com ([147.178.1.72]:6554 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S262778AbVCJSG7
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Mar 2005 13:06:59 -0500
+Received: from emailmx0.iomega.com (hubble [147.178.1.70])
+	by email.iomega.com (Postfix) with ESMTP id 248921823
+	for <linux-ide@vger.kernel.org>; Thu, 10 Mar 2005 11:06:51 -0700 (MST)
+Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
+	by emailmx0.iomega.com (Postfix) with ESMTP id 189626D7
+	for <linux-ide@vger.kernel.org>; Thu, 10 Mar 2005 18:06:51 +0000 (UTC)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
+As you might remember, the 3112 was giving us grief by sending a flood 
+of interrupts when doing the IDENTIFY ATAPI  DEVICE (0xA1) command.
 
-Hi Linus,
+This was on a rev 1,1 chip.
 
-Please do a
+When we tried a rev 1.21 chip, the problem was  corrected.
 
- 	bk pull bk://bart.bkbits.net/ide-2.6
+Now it appears that even the rev 1.21 chip will flood us with 
+interrupts when doing the
+IDENTIFY ATA  DEVICE (0xEC) command.
 
-This will update the following files:
+Im getting to not like Silicon Image.
 
-  drivers/ide/Kconfig        |    1
-  drivers/ide/ide-cd.c       |   58 ++++--------
-  drivers/ide/ide-default.c  |   17 ++-
-  drivers/ide/ide-disk.c     |  213 +++------------------------------------------
-  drivers/ide/ide-floppy.c   |   15 ++-
-  drivers/ide/ide-io.c       |  169 ++++++++++++++++++++++++++++++++++-
-  drivers/ide/ide-iops.c     |   20 ++++
-  drivers/ide/ide-probe.c    |   62 ++++++++++++-
-  drivers/ide/ide-proc.c     |    8 -
-  drivers/ide/ide-tape.c     |   21 +---
-  drivers/ide/ide-taskfile.c |    6 -
-  drivers/ide/ide.c          |   80 ----------------
-  drivers/scsi/ide-scsi.c    |   11 ++
-  include/linux/ide.h        |    6 -
-  14 files changed, 329 insertions(+), 358 deletions(-)
-
-through these ChangeSets:
-
-<bzolnier@trik.(none)> (05/03/10 1.2016)
-    [ide] kill setup_driver_defaults()
-
-    * move default_do_request() to ide-default.c
-    * fix drivers to set ide_driver_t->{do_request,end_request,error,abort}
-    * kill setup_driver_defaults()
-
-    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-<bzolnier@trik.(none)> (05/03/10 1.2015)
-    [ide] kill ide_driver_t->capacity
-
-    * add private /proc/ide/hd?/capacity handlers to ide-{cd,disk,floppy}.c
-    * use generic proc_ide_read_capacity() for ide-{scsi,tape}.c
-    * kill ->capacity, default_capacity() and generic_subdriver_entries[]
-
-    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-<bzolnier@trik.(none)> (05/03/10 1.2014)
-    [ide] kill ide_driver_t->pre_reset
-
-    Add ide_drive_t->post_reset flag and use it to signal post reset
-    condition to the ide-tape driver (the only user of ->pre_reset).
-
-    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-<bzolnier@trik.(none)> (05/03/10 1.2013)
-    [ide] fix some rare ide-default vs ide-disk races
-
-    Some rare races between ide-default and ide-disk are possible, i.e.:
-    * ide-default is used, I/O request is triggered (ie. /proc/ide/hd?/identify),
-      drive->special is cleared silently (so CHS is not initialized properly),
-      ide-disk is loaded and fails if drive uses CHS
-    * ide-disk is used, drive is resetted, ide-disk is unloaded, ide-default
-      takes control over drive and on the first I/O request silently clears
-      drive->special without restoring settings
-
-    Fix them by moving idedisk_{special,pre_reset}() and company to IDE core.
-
-    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-<bzolnier@trik.(none)> (05/03/10 1.2012)
-    [ide] generic Power Management for IDE devices
-
-    Move PM code from ide-cd.c and ide-disk.c to IDE core so:
-    * PM is supported for other ATAPI devices (floppy, tape)
-    * PM is supported even if specific driver is not loaded
-
-    Also s/HWIF(drive)/drive->hwif/ while at it.
-
-    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-<bzolnier@trik.(none)> (05/03/10 1.2011)
-    [ide] fix drive->ready_stat for ATAPI
-
-    ATAPI devices ignore DRDY bit so drive->ready_stat must be set to zero.
-    It is currently done by device drivers (including ide-default fake driver)
-    but for PMAC driver it is too late as wait_for_ready() may be called during
-    probe: probe_hwif()->pmac_ide_dma_check()->pmac_ide_{mdma,udma}_enable()->
-    ->pmac_ide_do_setfeature()->wait_for_ready().
-
-    Fixup drive->ready_stat just after detecting ATAPI device.
-
-    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-<bram.verweij@wanadoo.nl> (05/03/10 1.2010)
-    [ide] fix DMA support for LBA48 disks on ALi15x3 (revs < 0xC5)
-
-    From: Bram Verweij <bram.verweij@wanadoo.nl>
-
-    The problem seems to be that ide-disk.c tries to use PIO mode for
-    blocks > 137 GB (which is good), and LBA48 + DMA for blocks <= 137GB
-    (which is known to be a problem, i.e., this is why the no_lba48_dma
-    field was introduced in the first place).  Attached is a small patch
-    that makes ide-disk.c use PIO mode for blocks > 137 GB, and LBA28 DMA
-    (instead of LBA48 DMA) for blocks <= 137 GB.
-
-    bart: argh, I forgot about 'lba48' flag; patch slightly modified by me
-
-    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
