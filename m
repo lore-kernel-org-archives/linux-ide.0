@@ -1,139 +1,113 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: linux 2.6.9 controller order reordered.  was: [Re: linux 2.6.9
- still having network code problems]
-Date: Tue, 2 Nov 2004 02:26:04 -0800
-Message-ID: <20041102022604.262058c4.akpm@osdl.org>
-References: <418741EB.3080701@outblaze.com>
-	<20041102011918.2b453e21.akpm@osdl.org>
-	<4187478A.1040002@outblaze.com>
-	<20041102014119.1a6096cc.akpm@osdl.org>
-	<41874D93.9000008@outblaze.com>
-	<20041102020712.18218d47.akpm@osdl.org>
-	<418751B3.8090003@outblaze.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [BK PATCH] 2.6.x libata highmem fix
+Date: Tue, 2 Nov 2004 08:17:12 -0500
+Message-ID: <20041102131712.GA9445@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:35271 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261932AbUKBJ1z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Nov 2004 04:27:55 -0500
-In-Reply-To: <418751B3.8090003@outblaze.com>
+Received: from havoc.gtf.org ([69.28.190.101]:1490 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S261652AbUKBNRP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Nov 2004 08:17:15 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christopher Chan <cchan@outblaze.com>
-Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org
 
-Christopher Chan <cchan@outblaze.com> wrote:
->
-> >>Hardware: Tyan mb with Serverworks chipset and onboard Promise controller.
-> >>	The two disks on promise channel since Serverworks does not support ATA100
-> >>
-> >>FC2 Installation will recognise the disks as hde and hdg
-> >>fstab is accordingly setup as so for swap (everything else are md)
-> >>
-> >>Changing to a 2.6.9 kernel that has the promise driver compiled in will 
-> >>change the disks to hda and hdc.
-> > 
-> > 
-> > Could you send the dmesg output so we can see the probing activity?
-> > 
-> 
-> With FC2 2.6.8-1.521smp
-> 
-> ~~~~~~~~~~~~~~~~~~~~~~~~
-> Oct 14 11:34:50 spf5-3 kernel: RAMDISK driver initialized: 16 RAM disks 
-> of 16384K size 1024 blocksize
-> Oct 14 11:34:50 spf5-3 kernel: Uniform Multi-Platform E-IDE driver 
-> Revision: 7.00alpha2
-> Oct 14 11:34:50 spf5-3 kernel: ide: Assuming 33MHz system bus speed for 
-> PIO modes; override with idebus=xx
-> Oct 14 11:34:50 spf5-3 nfslock: rpc.statd startup succeeded
-> Oct 14 11:34:50 spf5-3 kernel: PDC20267: IDE controller at PCI slot 
-> 0000:00:03.0
-> Oct 14 11:34:50 spf5-3 kernel: PDC20267: chipset revision 2
-> Oct 14 11:34:50 spf5-3 kernel: PDC20267: ROM enabled at 0xfead0000
-> Oct 14 11:34:50 spf5-3 kernel: PDC20267: 100%% native mode on irq 161
-> Oct 14 11:34:50 spf5-3 kernel: PDC20267: (U)DMA Burst Bit ENABLED 
-> Primary MASTER Mode Secondary MASTER Mode.
-> Oct 14 11:34:50 spf5-3 kernel:     ide2: BM-DMA at 0xdf00-0xdf07, BIOS 
-> settings: hde:pio, hdf:pio
-> Oct 14 11:34:50 spf5-3 kernel:     ide3: BM-DMA at 0xdf08-0xdf0f, BIOS 
-> settings: hdg:pio, hdh:pio
-> Oct 14 11:34:50 spf5-3 kernel: hde: Maxtor 5T040H4, ATA DISK drive
-> Oct 14 11:34:50 spf5-3 kernel: Using deadline io scheduler
-> Oct 14 11:34:50 spf5-3 kernel: ide2 at 0xdfe0-0xdfe7,0xdfae on irq 161
-> Oct 14 11:34:50 spf5-3 kernel: hdg: Maxtor 5T040H4, ATA DISK drive
-> Oct 14 11:34:50 spf5-3 kernel: ide3 at 0xdfa0-0xdfa7,0xdfaa on irq 161
-> Oct 14 11:34:50 spf5-3 kernel: SvrWks OSB4: IDE controller at PCI slot 
-> 0000:00:0f.1
-> Oct 14 11:34:50 spf5-3 kernel: PCI: Enabling device 0000:00:0f.1 (0000 
-> -> 0001)
-> Oct 14 11:34:50 spf5-3 kernel: SvrWks OSB4: chipset revision 0
-> Oct 14 11:34:50 spf5-3 kernel: SvrWks OSB4: not 100%% native mode: will 
-> probe irqs later
-> Oct 14 11:34:50 spf5-3 kernel:     ide0: BM-DMA at 0xffa0-0xffa7, BIOS 
-> settings: hda:pio, hdb:pio
-> Oct 14 11:34:50 spf5-3 kernel:     ide1: BM-DMA at 0xffa8-0xffaf, BIOS 
-> settings: hdc:pio, hdd:pio
-> Oct 14 11:34:50 spf5-3 kernel: hde: max request size: 128KiB
-> Oct 14 11:34:50 spf5-3 kernel: hde: 80043264 sectors (40982 MB) 
-> w/2048KiB Cache, CHS=65535/16/63, UDMA(100)
-> Oct 14 11:34:50 spf5-3 kernel:  hde: hde1 hde2 hde3 hde4 < hde5 >
-> Oct 14 11:34:50 spf5-3 kernel: hdg: max request size: 128KiB
-> Oct 14 11:34:50 spf5-3 kernel: hdg: 80043264 sectors (40982 MB) 
-> w/2048KiB Cache, CHS=65535/16/63, UDMA(100)
-> Oct 14 11:34:50 spf5-3 kernel:  hdg: hdg1 hdg2 hdg3 hdg4 < hdg5 >
-> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> With 2.6.9
-> 
-> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> Using deadline io scheduler
-> Floppy drive(s): fd0 is 1.44M
-> FDC 0 is a post-1991 82077
-> RAMDISK driver initialized: 16 RAM disks of 4096K size 1024 blocksize
-> Compaq SMART2 Driver (v 2.6.0)
-> HP CISS Driver (v 2.6.2)
-> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-> PDC20267: IDE controller at PCI slot 0000:00:03.0
-> PDC20267: chipset revision 2
-> PDC20267: ROM enabled at 0xfead0000
-> PDC20267: 100% native mode on irq 31
-> PDC20267: (U)DMA Burst Bit ENABLED Primary MASTER Mode Secondary MASTER 
-> Mode.
->      ide0: BM-DMA at 0xdf00-0xdf07, BIOS settings: hda:pio, hdb:pio
->      ide1: BM-DMA at 0xdf08-0xdf0f, BIOS settings: hdc:pio, hdd:pio
-> Probing IDE interface ide0...
-> hda: Maxtor 5T040H4, ATA DISK drive
-> ide0 at 0xdfe0-0xdfe7,0xdfae on irq 31
-> Probing IDE interface ide1...
-> hdc: Maxtor 5T040H4, ATA DISK drive
-> ide1 at 0xdfa0-0xdfa7,0xdfaa on irq 31
-> SvrWks OSB4: IDE controller at PCI slot 0000:00:0f.1
-> PCI: Enabling device 0000:00:0f.1 (0000 -> 0001)
-> SvrWks OSB4: chipset revision 0
-> SvrWks OSB4: not 100% native mode: will probe irqs later
->      ide2: BM-DMA at 0xffa0-0xffa7, BIOS settings: hde:pio, hdf:pio
->      ide3: BM-DMA at 0xffa8-0xffaf, BIOS settings: hdg:pio, hdh:pio
-> Probing IDE interface ide2...
-> Probing IDE interface ide3...
-> Probing IDE interface ide2...
-> Probing IDE interface ide3...
-> Probing IDE interface ide4...
-> ide4: Wait for ready failed before probe !
-> Probing IDE interface ide5...
-> ide5: Wait for ready failed before probe !
-> hda: max request size: 128KiB
-> hda: 80043264 sectors (40982 MB) w/2048KiB Cache, CHS=65535/16/63, UDMA(100)
-> hda: cache flushes not supported
->   hda: hda1 hda2 hda3 hda4 < hda5 >
-> hdc: max request size: 128KiB
-> hdc: 80043264 sectors (40982 MB) w/2048KiB Cache, CHS=65535/16/63, UDMA(100)
-> hdc: cache flushes not supported
->   hdc: hdc1 hdc2 hdc3 hdc4 < hdc5 >
-> 
-> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Well the problem is that "Wait for ready" thing.  Was that an alanism?
+Uses the new nth_page() to fix highmem bug, a la IDE's fix.
 
+Thanks Bart.  Tested with CONFIG_HIGHMEM but not >4GB.
+
+Please do a
+
+	bk pull bk://gkernel.bkbits.net/libata-2.6
+
+This will update the following files:
+
+ drivers/scsi/libata-core.c |   30 +++++++++++++++++++++++++-----
+ 1 files changed, 25 insertions(+), 5 deletions(-)
+
+through these ChangeSets:
+
+<bzolnier@elka.pw.edu.pl> (04/11/02 1.2462)
+   [PATCH] libata PIO bugfix
+   
+   Untested but based on working IDE fix.
+   
+   We need to kmap()/kunmap() the current page
+   not the first page of the scatterlist segment.
+   
+   Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+   Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
+
+diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+--- a/drivers/scsi/libata-core.c	2004-11-02 08:15:17 -05:00
++++ b/drivers/scsi/libata-core.c	2004-11-02 08:15:17 -05:00
+@@ -2169,14 +2169,20 @@
+ 	struct scatterlist *sg = qc->sg;
+ 	struct ata_port *ap = qc->ap;
+ 	struct page *page;
++	unsigned int offset;
+ 	unsigned char *buf;
+ 
+ 	if (qc->cursect == (qc->nsect - 1))
+ 		ap->pio_task_state = PIO_ST_LAST;
+ 
+ 	page = sg[qc->cursg].page;
+-	buf = kmap(page) +
+-	      sg[qc->cursg].offset + (qc->cursg_ofs * ATA_SECT_SIZE);
++	offset = sg[qc->cursg].offset + qc->cursg_ofs * ATA_SECT_SIZE;
++
++	/* get the current page and offset */
++	page = nth_page(page, (offset >> PAGE_SHIFT));
++	offset %= PAGE_SIZE;
++
++	buf = kmap(page) + offset;
+ 
+ 	qc->cursect++;
+ 	qc->cursg_ofs++;
+@@ -2202,17 +2208,28 @@
+ 	struct ata_port *ap = qc->ap;
+ 	struct page *page;
+ 	unsigned char *buf;
+-	unsigned int count;
++	unsigned int offset, count;
+ 
+ 	if (qc->curbytes == qc->nbytes - bytes)
+ 		ap->pio_task_state = PIO_ST_LAST;
+ 
+ next_sg:
+ 	sg = &qc->sg[qc->cursg];
++
++next_page:
+ 	page = sg->page;
++	offset = sg->offset + qc->cursg_ofs;
++
++	/* get the current page and offset */
++	page = nth_page(page, (offset >> PAGE_SHIFT));
++	offset %= PAGE_SIZE;
+ 
+ 	count = min(sg_dma_len(sg) - qc->cursg_ofs, bytes);
+-	buf = kmap(page) + sg->offset + qc->cursg_ofs;
++
++	/* don't cross page boundaries */
++	count = min(count, (unsigned int)PAGE_SIZE - offset);
++
++	buf = kmap(page) + offset;
+ 
+ 	bytes -= count;
+ 	qc->curbytes += count;
+@@ -2230,8 +2247,11 @@
+ 
+ 	kunmap(page);
+ 
+-	if (bytes)
++	if (bytes) {
++		if (qc->cursg_ofs < sg_dma_len(sg))
++			goto next_page;
+ 		goto next_sg;
++	}
+ }
+ 
+ static void atapi_pio_bytes(struct ata_queued_cmd *qc)
