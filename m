@@ -1,36 +1,40 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
-Date: 14 Sep 2004 14:25:35 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1095186343.2008.29.camel@mulgrave>
-References: <41471163.10709@rtr.ca>  <414723B0.1090600@pobox.com>
+Date: 14 Sep 2004 14:51:19 -0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <1095187885.2007.33.camel@mulgrave>
+References: <41471163.10709@rtr.ca> <414723B0.1090600@pobox.com>
+	<1095186343.2008.29.camel@mulgrave>  <20040914183502.GA23277@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S269694AbUINSiG@vger.kernel.org>
-In-Reply-To: <414723B0.1090600@pobox.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:29366 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S269382AbUINSve (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Sep 2004 14:51:34 -0400
+In-Reply-To: <20040914183502.GA23277@havoc.gtf.org>
+List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: Mark Lord <lkml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
-List-Id: linux-ide@vger.kernel.org
 
-On Tue, 2004-09-14 at 13:00, Jeff Garzik wrote:
-> 9) use of do_sleep paradigm is dubious:  you should instead try to keep 
-> your locked code regions as small as possible.  in general, this code 
-> has far too many unlock-doit-lock sections.
-> 
-> Experience has shown that too much unlock-doit-lock leads to bugs and 
-> increases the pain when analyzing your locking.
-> 
-> In particular, releasing the lock and sleeping would be very wrong in 
-> the ->queuecommand and error handling paths (alas...  I would love to 
-> sleep in the fine-grained eh hooks)
+On Tue, 2004-09-14 at 14:35, Jeff Garzik wrote:
+> The lock is taken in the SCSI layer with spin_lock_irqsave(), but the
+> low-level driver cannot perform the exact opposite,
+> spin_unlock_irqrestore().  The best they can do is spin_lock_irq(),
+> which isnt 100% the same.
 
-Actually, its only wrong in queuecommand because that can be called in
-softirq context.
+That's what they do if you look.
 
-Sleeping in the eh paths is fine (as long as you drop the locks that the
-EH thread has uselessly taken for you).  Indeed it's often required
-since the return is supposed to tell the eh thread whether the action
-was successful or not.
+The eh_ stubs are only called from the eh_ thread, so it's safe to
+enable interrupts as well.
+
+The business of the mid-layer taking the locks is an annoying holdover
+from the "drivers don't need to do locking" mentality.  Unfortunately
+most drivers now simply drop the locks immediately they begin an eh_
+entry point and reacquire them just prior to returning ... which makes
+all the eh code look messy.
 
 James
+
+
