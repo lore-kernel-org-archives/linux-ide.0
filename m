@@ -1,51 +1,74 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: kernel 2.6.3 hdparm : HDIO_SET_DMA failed: Operation not permitted
-Date: Fri, 5 Mar 2004 18:26:16 +0100
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200403051826.16650.bzolnier@elka.pw.edu.pl>
-References: <1078506007.2210.84.camel@tanna>
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: [PATCH] remove dead ATAPI multi-lun support (used for ide-scsi)
+Date: Sun, 7 Mar 2004 08:49:05 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040307134905.GK29509@serve.riede.org>
+References: <200402202247.02345.bzolnier@elka.pw.edu.pl>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:14731 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261964AbUCERSz
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 5 Mar 2004 12:18:55 -0500
-In-Reply-To: <1078506007.2210.84.camel@tanna>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <200402202247.02345.bzolnier@elka.pw.edu.pl> (from B.Zolnierkiewicz@elka.pw.edu.pl on Fri, Feb 20, 2004 at 16:47:02 -0500)
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?iso-8859-15?q?Fran=E7ois=20Chenais?= <francois@chenais.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Friday 05 of March 2004 18:00, Fran=E7ois Chenais wrote:
-> Hello,
+On 2004.02.20 16:47, Bartlomiej Zolnierkiewicz wrote:
+> 
+> [IDE] remove dead ATAPI multi-lun support (used for ide-scsi)
+> 
+> ChangeSet@1.889.69.2 03-01-23 14:51:03-05:00  adam@yggdrasil.com
+> |  The following changes to ide-scsi.c are a recovery of the
+> | changes that I had in ide-scsi.c in the stock kernel's before
+> | Martin Dalecki's IDE tree was reverted and a few other changes.
+> ...
+> 
+> broke it.
+> 
+> Before this change drive->id->last_id & 0x7 was used as shost->max_lun
+> and "hdXlun=" kernel parameter could be used to override it.
+> 
+> It was needed probably only for some rare ATAPI PD-CD drives
+> (http://www.geocrawler.com/archives/3/58/1999/11/50/2877161/).
+> 
+> However it was far from optimal:
+> - people played with "hdXlun=" and then complained about multiple instances
+>   of the same device (most ATAPI drives respond to each LUN)
+> - probably some devices return 7 not 0 in id->last_id (=> 7 x same device)
+> 
+> This patch cleans things up, multi-lun will be fixed if needed in ide-scsi.
+> I think that this may work but can't verify it:
+> 
+> 	if (id->last_lun && id->last_lun != 7)
+> 		shost->max_lun = id->last_lun + 1;
+> 	else
+> 		shost->max_lun = 1;
 
-Hi,
+I have verified that this works with my PD/CD drive, the patch to ide-scsi.c
+that I suggest (against linux-2.6.4-rc1-mm2) is below.
 
-> Since I use kernel 2.6.3, my disk has very low performance
-> If I do nothing during about 30 sec, the system takes about 3 sec bef=
-ore
-> reaction because the disk seems awakened.
->
-> So I asked around me how to tune it using hdparm but
-> i have the following errors when setting on dma (logs bellow).
->
-> Some persons around me have the same feeling of lowest performances.
->
->
-> Perhaps my kernel .config has some bad values because I have no
-> experience in disk tuning (see attached file).
->
-> I use
->    - debian sid on a NEC VERSA L320 laptop with a 'home built' kernel=
-=2E
->    - preemptive mode
->    - ACPI
+Thanks, Willem Riede.
 
-CONFIG_BLK_DEV_PIIX is not set in your .config and due to the fact
-that NEC VERSA L320 has Intel IDE chipset you need to set it to 'y'.
-
-Regards,
-Bartlomiej
+--- m0/drivers/scsi/ide-scsi.c	2004-03-05 19:54:33.000000000 -0500
++++ m1/drivers/scsi/ide-scsi.c	2004-03-06 14:49:47.000000000 -0500
+@@ -1148,7 +1148,16 @@
+ 		return 1;
+ 
+ 	host->max_id = 1;
+-	host->max_lun = 1;
++
++#if IDESCSI_DEBUG_LOG
++	if (drive->id->last_lun)
++		printk(KERN_NOTICE "%s: id->last_lun=%u\n", drive->name, drive->id->last_lun);
++#endif
++	if ((drive->id->last_lun & 0x7) != 7)
++		host->max_lun = (drive->id->last_lun & 0x7) + 1;
++	else
++		host->max_lun = 1;
++
+ 	drive->driver_data = host;
+ 	idescsi = scsihost_to_idescsi(host);
+ 	idescsi->drive = drive;
 
