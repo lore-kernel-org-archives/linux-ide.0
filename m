@@ -1,59 +1,28 @@
-From: "Andrew Chew" <achew@nvidia.com>
-Subject: RE: [PATCH 2.6.8-rc2] sata_nv.c
-Date: Thu, 5 Aug 2004 15:06:27 -0700
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] (IDE) restore access to low order LBA following error
+Date: Thu, 05 Aug 2004 19:13:34 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <DBFABB80F7FD3143A911F9E6CFD477B03F9623@hqemmail02.nvidia.com>
+Message-ID: <4112BF1E.9070404@pobox.com>
+References: <41126458.1050203@emc.com> <1091724300.8043.58.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C47B38.74B70D1B"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate02.nvidia.com ([216.228.112.145]:24585 "EHLO
-	hqemgate02.nvidia.com") by vger.kernel.org with ESMTP
-	id S268003AbUHEWGe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Aug 2004 18:06:34 -0400
-Content-class: urn:content-classes:message
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:19375 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S267752AbUHEXN4
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Aug 2004 19:13:56 -0400
+In-Reply-To: <1091724300.8043.58.camel@localhost.localdomain>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Brett Russ <russb@emc.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 
-This is a multi-part message in MIME format.
+Alan Cox wrote:
+> Once Jeff has MWDMA and ATAPI in the new SATA/ATA driver he wrote then
+> migration might be an even better option. It'll certainly be easier to
+> do a lot of things right with the newest SATA code than with the current
+> IDE layer.
 
-------_=_NextPart_001_01C47B38.74B70D1B
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
 
-> Andrew Chew wrote:
-> > A minor change to libata-core.c needs to accompany this=20
-> patch.  This=20
-> > is in regards to the function ata_pci_remove_one(), where the
-> > host_set->ops->host_stop(host_set) needs to occur before the=20
-> > iounmap(host_set->mmio_base).  This is because sata_nv's host_stop=20
-> > callback needs access to the iomapped region.
+BTW MWDMA is already done and checked in :)
 
-Jeff Garzik wrote:
-> Do you want to send a separate patch for this?  I don't see=20
-> that change=20
-> in the attached patch.
-
-Attached patch.
-
-------_=_NextPart_001_01C47B38.74B70D1B
-Content-Type: application/octet-stream;
-	name="libata-core_2-6.diff"
-Content-Transfer-Encoding: base64
-Content-Description: libata-core_2-6.diff
-Content-Disposition: attachment;
-	filename="libata-core_2-6.diff"
-
-LS0tIGxpbnV4LTIuNi44LXJjMi9kcml2ZXJzL3Njc2kvbGliYXRhLWNvcmUuYwkyMDA0LTA4LTA1
-IDE0OjE3OjMwLjAwMDAwMDAwMCAtMDcwMAorKysgbGludXgvZHJpdmVycy9zY3NpL2xpYmF0YS1j
-b3JlLmMJMjAwNC0wNy0yNyAxNDo0MjowNi4wMDAwMDAwMDAgLTA3MDAKQEAgLTMyNTEsMTAgKzMy
-NTEsMTAgQEAKIAl9CiAKIAlmcmVlX2lycShob3N0X3NldC0+aXJxLCBob3N0X3NldCk7Ci0JaWYg
-KGhvc3Rfc2V0LT5tbWlvX2Jhc2UpCi0JCWlvdW5tYXAoaG9zdF9zZXQtPm1taW9fYmFzZSk7CiAJ
-aWYgKGhvc3Rfc2V0LT5vcHMtPmhvc3Rfc3RvcCkKIAkJaG9zdF9zZXQtPm9wcy0+aG9zdF9zdG9w
-KGhvc3Rfc2V0KTsKKwlpZiAoaG9zdF9zZXQtPm1taW9fYmFzZSkKKwkJaW91bm1hcChob3N0X3Nl
-dC0+bW1pb19iYXNlKTsKIAogCWZvciAoaSA9IDA7IGkgPCBob3N0X3NldC0+bl9wb3J0czsgaSsr
-KSB7CiAJCWFwID0gaG9zdF9zZXQtPnBvcnRzW2ldOwo=
-
-------_=_NextPart_001_01C47B38.74B70D1B--
