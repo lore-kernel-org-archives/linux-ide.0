@@ -1,52 +1,53 @@
-From: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: T10/04-262 ATA pass thru - patch.
-Date: Wed, 29 Sep 2004 13:20:30 -0400
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: IDE Hotswap
+Date: Wed, 29 Sep 2004 18:46:23 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040929132030.B30946@tuxdriver.com>
-References: <20040928001633.A8363@florence.linkmargin.com> <415AFF27.7080906@tteng.com.br>
+Message-ID: <1096479982.15905.71.camel@localhost.localdomain>
+References: <8CCBDD5583C50E4196F012E79439B45C069657DB@atl-ms1.megatrends.com>
+	 <200409291408.55211.bzolnier@elka.pw.edu.pl>
+	 <1096468515.15905.43.camel@localhost.localdomain>
+	 <200409292020.25192.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([24.172.12.4]:55561 "EHLO ra.tuxdriver.com")
-	by vger.kernel.org with ESMTP id S268798AbUI2Sdu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Sep 2004 14:33:50 -0400
-Received: (from linville@localhost)
-	by ra.tuxdriver.com (8.11.6/8.11.6) id i8THKVf31384
-	for linux-ide@vger.kernel.org; Wed, 29 Sep 2004 13:20:31 -0400
-Content-Disposition: inline
-In-Reply-To: <415AFF27.7080906@tteng.com.br>; from luciano@tteng.com.br on Wed, Sep 29, 2004 at 03:29:59PM -0300
+Received: from clock-tower.bc.nu ([81.2.110.250]:58762 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S268834AbUI2Sth (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Sep 2004 14:49:37 -0400
+In-Reply-To: <200409292020.25192.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Cc: Suresh Grandhi <Sureshg@ami.com>, "'linux-ide@vger.kernel.org'" <linux-ide@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
-On Wed, Sep 29, 2004 at 03:29:59PM -0300, Luciano A. Stertz wrote:
-> 	If I understand it correctly, the kernel receives an ATA command, 
-> creates a CDB, gets the ATA command from the CDB and issues it.
-> 	It's a nice workaround, but user space software will still have to be 
-> aware that the target device appears as SCSI but isn't in fact a SCSI 
-> device... I guess that the ideal situation would be:
-> 	1. The user space program sends SCSI commands to the device, without 
-> even have to worry if it's really a SCSI device;
-> 	2. The kernel issues equivalent ATA commands and fills in the requested 
-> data.
+On Mer, 2004-09-29 at 19:20, Bartlomiej Zolnierkiewicz wrote:
+> > Doesn't occur in the 2.4 situation or the 2.6 stuff with the locking in
+> > the 2.6.8.1-ac patch.
+> 
+> I will verify this in a few days, I have some real work to do first.
 
-Actually, I think you have it a little bit backwards.
+2.6 is the important stuff sure.
 
-Andy's patch would allow someone who knows the SCSI device is actually
-an ATA device to send the device an ATA command through the SCSI
-infrastructure (e.g using sg).
+> > > - double unlock obvious mistake
+> > Details ?
+> 
+> 2003/08/16 alan               | 	/* Drive shutdown sequence done */
+> 2003/08/16 alan               | 	/* Prevent new opens ?? */
+> 2003/08/16 alan               | 	spin_unlock_irqrestore(&io_request_lock, flags);
+> 2003/08/16 alan               | 	/*
+> 2003/08/16 alan               | 	 * Flush kernel side caches, and dump the /proc files
+> 2003/08/16 alan               | 	 */
+> 2003/08/16 alan               | 	spin_unlock_irqrestore(&io_request_lock, flags);
+> 
 
-My patch will allow the SATA devices to accept the traditional
-SMART-related ioctls (HDIO_DRIVE_CMD and HDIO_DRIVE_TASK).  The
-information from those ioctls will be translated to an ATA pass-thru
-SCSI command.  Andy's patch will then allow these commands to execute.
+Thanks. I'll go over this when I dig out the one little bit 2.4.2x needs
+for hotplug to behave right with hard disks that I should get to
+Marcelo.
 
-As before, the smart commands will need an option to tell them to treat
-the drives like ATA drives rather than SCSI drives, but the unmodified
-binaries will still work.
+> OK BKL protects us against i.e. concurrent HDIO_GETGEO
+> and hotplug ioctl.  There is however no protection for controller
+> hotplug.
 
-Does that clear things up?
+Agreed.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+
