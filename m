@@ -1,50 +1,178 @@
-From: Aron Rubin <arubin@atl.lmco.com>
-Subject: Re: SII 3512+Seagate on Athlon64 system
-Date: Wed, 03 Dec 2003 07:43:01 -0500
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Serial ATA (SATA) for Linux status report
+Date: Wed, 3 Dec 2003 15:44:46 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <3FCDDA55.8000608@atl.lmco.com>
-References: <3FCD07C4.7090205@atl.lmco.com>
+Message-ID: <20031203204445.GA26987@gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [192.35.37.50] ([192.35.37.50]:31185 "EHLO
-	enterprise.atl.lmco.com") by vger.kernel.org with ESMTP
-	id S264505AbTLCMnM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Dec 2003 07:43:12 -0500
-In-Reply-To: <3FCD07C4.7090205@atl.lmco.com>
+Received: from havoc.gtf.org ([63.247.75.124]:37808 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S261188AbTLCUor (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Dec 2003 15:44:47 -0500
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Aron Rubin <aron.rubin@lmco.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Justin M. Forbes" <64bit_fedora@comcast.net>, Andre Hedrick <andre@linux-ide.org>
-
-Ryan Earl's patch did not fix this particular problem, so I am back to 
-needing help. Does slow but correct comms with an occational "hda: lost 
-interrupt" (about four total while talking to the drive) indicate that I 
-should be looking into something specific?
-
-Aron
-
-Aron Rubin wrote:
-> SATA controller SII 3512 not recognized by driver. It looks like SII 
-> 3512 is almost identical to 3112 interface. I copy/paste/alterred all 
-> code in ide/pci/siimage.[ch] with "3112" in it to "3512". It seems about 
-> 95% functional. Need help with remaining 5%, related to very, very, slow 
-> controller comms during init with occational "Interrupt Lost" messages. 
-> Seems like comms are out of sync and then resync over and over. Other 
-> than that all drive info comes over. Ryan Earl's patch may fix, I would 
-> be suprised if it was that simple though. I will try later today.
-> 
-> Aron
-> 
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
--- 
 
-ssh aron@rubinium.org cat /dev/brain | grep ^work:
 
-Aron Rubin                       Member, Engineering Staff
-Lockheed Martin                  E-Mail: arubin@atl.lmco.com
-Advanced Technology Laboratories Phone:  856.792.9865
-3 Executive Campus               Fax:    856.792.9930
-Cherry Hill, NJ USA 08002        Web:    http://www.atl.lmco.com
+Editor's preface:  This is clearly a first draft, only covering the
+basics.  In order for this document to be effective, I request that
+users and developers send me (or post) their SATA driver questions and
+issues.  I will do my best to address them here.
+
+
+Serial ATA (SATA) for Linux
+status report
+Dec 3, 2003
+
+
+Hardware support
+================
+
+
+Intel ICH5
+----------
+Summary:  No TCQ.  Looks like a PATA controller, but with a few added,
+non-standard SATA port controls.
+
+libata driver status:  Production, but see issue #2, #3.
+
+drivers/ide driver status:  Production, but see issue #1, #2.
+
+
+Issue #1:  Depending on BIOS settings, IDE driver may lock up computer
+when probing drives.
+
+Issue #2:  Excessive interrupts are seen in some configurations.
+
+Issue #3:  "Enhanced mode" or "SATA-only mode" may need to be set in BIOS.
+
+
+Intel ICH6 ("AHCI")
+-------------------
+Summary:  Per-device queues, full SATA control including hotplug
+and PM.
+
+libata driver status:  In development.
+
+
+Promise
+-------
+Summary:  Per-host queues on all controllers.  Full SATA control
+including hotplug and PM on all but one controller.
+
+libata driver status:  Beta.
+
+
+Silicon Image 3112
+------------------
+Summary:  No TCQ.  Looks like a PATA controller, but with full SATA
+control including hotplug and PM.
+
+libata driver status:  Alpha.
+
+drivers/ide driver status:  Production, but see issue #4.
+
+Issue #4:  Need to have the most recent fixes posted to lkml, for stable
+operation and full performance (where possible).
+
+
+Broadcom/ServerWorks/Apple
+--------------------------
+Summary:  Huge per-device queues, full SATA control including hotplug
+and PM.
+
+libata driver status:  Beta.
+
+
+VIA
+---
+Summary:  No TCQ.  Looks like a PATA controller, but with full SATA
+control including hotplug and PM.
+
+libata driver status:  Beta.
+
+
+
+
+Software support
+================
+
+
+Basic Serial ATA support
+------------------------
+The "ATA host state machine", the core of the entire driver, is
+considered production-stable.
+
+The error handling is _very_ simple, but at this stage that is an
+advantage.  Error handling code anywhere is inevitably both complex and
+sorely under-tested.  libata error handling is intentionally simple.
+Positives:  Easy to review and verify correctness.  Never data
+corruption.  Negatives:  if an error occurs, libata will simply send
+the error back the block layer.  There are limited retries by the block
+layer, depending on the type of error, but there is never a bus reset.
+
+Or in other words:  "it's better to stop talking to the disk than
+compound existing problems with further problems."
+
+As Serial ATA matures, and host- and device-side errata become apparent,
+the error handling will be slowly refined.  I am planning to work with a
+few (kind!) disk vendors, to obtain special drives/firmwares that allow
+me to inject faults, and otherwise exercise error handling code.
+
+
+
+Queueing support
+----------------
+Even though some SATA host controllers on the market already support
+command queueing (a.k.a. "TCQ"), libata does not yet support it.
+
+However, libata was designed from the ground-up to support queueing, so
+I need only change a few lines of code, and write two functions, to
+enable this behavior.
+
+Queueing will be enabled in libata soon, but to do so requires a long
+stretch of testing on a large variety of controllers and drives.  This
+is very time-intensive, and is the largest part of this task.
+
+
+Tangent:  Host-based queueing and Native Command Queueing
+
+Queueing is the process of sending multiple commands to a single device,
+without waiting for prior commands to finish.  This increases
+performance and reduces latency.  There are three types of queueing in
+the ATA world:
+
+1) "legacy TCQ" -- some PATA devices support this.  Just ignore it,
+it's going away.
+
+2) "host-based TCQ" -- the host controller supports a queue of drive
+commands, whether or not the drive supports it.
+
+3) "Native Command Queueing" -- both host and drive cooperate in the
+queueing and execution of drive commands.  This should provide the
+highest performance and lowest latency of all three options.
+
+
+#1 is support by drivers/ide _only_.  libata will not support this.
+#2 will soon be supported by libata.
+#3 will be supported by libata when hardware is available from drive
+manufacturers.
+
+
+Hotplug support
+---------------
+All SATA is hotplug.
+
+libata does not support hotplug... yet.
+
+
+
+Power Management support
+------------------------
+Over and above the power management specified in the ATA/ATAPI
+specification, one can aggressively control the power consumption of
+SATA hosts, the SATA bus, and the SATA device.
+
 
