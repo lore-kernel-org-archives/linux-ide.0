@@ -1,39 +1,30 @@
-From: Joseph Harvell <jharvell@dogpad.net>
-Subject: corruption problem with 2.6.10 patch for Promise SATAII TX4
-Date: Tue, 08 Mar 2005 08:58:07 -0600
-Message-ID: <422DBD7F.9030500@dogpad.net>
+From: "Oliver Korpilla" <Oliver.Korpilla@gmx.de>
+Subject: [SATA] SATA_SIL and ATI SB400 chipset
+Date: Wed, 9 Mar 2005 13:40:10 +0100 (MET)
+Message-ID: <12981.1110372010@www41.gmx.net>
+References: <25661.1110101727@www58.gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Received: from dingo.dogpad.net ([65.70.180.33]:10115 "EHLO dingo.dogpad.net")
-	by vger.kernel.org with ESMTP id S261389AbVCHPAU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Mar 2005 10:00:20 -0500
+Received: from mail.gmx.net ([213.165.64.20]:31169 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S262348AbVCIMkM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2005 07:40:12 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: greve@fsfeurope.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-A couple of months ago I grabbed Georg's patch from his 2004.12.28 post to linux-ide
-(http://marc.theaimsgroup.com/?l=linux-ide&m=110426005503319&w=2).  I partitioned the disk,
-created logical volumes and filesystems and copied my OS into it from a utility boot environment.
+Hello!
 
-This all worked just fine, but when I started my first kernel build, the ext3 filesystem code
-in the kernel found an inconsistency and remounted the filesystem read only.  When I ran e2fsck,
-it found errors.  I copied out the data, re-created the filesystem and copied back in.  As soon as I
-tried to build the kernel again the same thing happened again.  I tried several times and
-could never get a clean build.  I also think I remember seeing complaints in syslog about some of
-the other filesystems.
+This is my final note about this - this is not a Debian bug, because Debian
+uses 2.6.8 for their AMD64 Sarge install media. But plain vanilla Linux only
+recognizes the SATA controller only starting from 2.6.11 - not even vanilla
+2.6.10 with matching config will work.
 
-I ended up downgrading the kernel to the latest 2.4 and am currently using the Promise driver
-(source code version since I'm running Gentoo).
+So: With the ATI SB400 chipset use a SATA_SIL driver from > 2.6.11. :)
 
-If Jeff's recent contribution to the 2.6.11 kernel is based on this driver, I think others may have
-similar problems.  In my case I had a copy of all my data to revert to.  But if the error had taken
-much longer to manifest I probably would not have had the backup anymore.
+Thanks and with kind regards,
+Oliver Korpilla
 
-I wonder if Promise would give permission for someone to port their driver to 2.6 and include it in
-the official kernel source tree?  I made a feeble attempt to port it (mostly integrating with kbuild),
-but I saw a traceback when the module loaded and I decided not to go any further.
-
----
-Joe Harvell
-
+-- 
+DSL Komplett von GMX +++ Supergünstig und stressfrei einsteigen!
+AKTION "Kein Einrichtungspreis" nutzen: http://www.gmx.net/de/go/dsl
