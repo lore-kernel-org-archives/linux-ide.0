@@ -1,75 +1,121 @@
-From: Coywolf Qi Hunt <coywolf@gmail.com>
-Subject: Re: PATCH: (Discussion) Stop IDE legacy ISA probes on PCI systems
-Date: Tue, 28 Dec 2004 11:58:01 +0800
-Message-ID: <2cd57c90041227195893509d3@mail.gmail.com>
-References: <1104156823.20898.21.camel@localhost.localdomain>
-	 <y2a7jn34f4h.fsf@cartman.at.fivegeeks.net>
-	 <Pine.LNX.4.58.0412271629270.2353@ppc970.osdl.org>
-Reply-To: Coywolf Qi Hunt <coywolf@gmail.com>
+From: PALFFY Daniel <dpalffy-lists@rainstorm.org>
+Subject: sata_sil data corruption
+Date: Tue, 28 Dec 2004 14:17:00 +0100 (CET)
+Message-ID: <Pine.LNX.4.58.0412281319001.5054@rainstorm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.200]:15933 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262058AbUL1D6C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Dec 2004 22:58:02 -0500
-Received: by rproxy.gmail.com with SMTP id 40so190433rnz
-        for <linux-ide@vger.kernel.org>; Mon, 27 Dec 2004 19:58:01 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.58.0412271629270.2353@ppc970.osdl.org>
+Received: from rainstorm.omikk.bme.hu ([152.66.114.242]:62981 "EHLO
+	rainstorm.org") by vger.kernel.org with ESMTP id S261175AbUL1NRM
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Dec 2004 08:17:12 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Adam Sampson <azz@us-lot.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-
-This should solve the problem. 
-
-              coywolf
+To: linux-kernel@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
 
---- linux-2.6.10/include/asm-i386/ide.h 2004-10-19 05:53:13.000000000 +0800
-+++ linux-2.6.10-cy/include/asm-i386/ide.h      2004-12-28
-11:45:38.000000000 +0800
-@@ -44,13 +44,18 @@ static __inline__ unsigned long ide_defa
-        switch (index) {
-                case 0: return 0x1f0;
-                case 1: return 0x170;
--               case 2: return 0x1e8;
--               case 3: return 0x168;
--               case 4: return 0x1e0;
--               case 5: return 0x160;
--               default:
--                       return 0;
-        }
-+
-+       if (pci_find_device(PCI_ANY_ID, PCI_ANY_ID, NULL) == NULL) {
-+               switch (index) {
-+                       case 2: return 0x1e8;
-+                       case 3: return 0x168;
-+                       case 4: return 0x1e0;
-+                       case 5: return 0x160;
-+               }
-+       }
-+
-+       return 0;
- }
+Hi,
 
- #define IDE_ARCH_OBSOLETE_INIT
+I'm trying to set up a machine with a si3112a controller (lspci: 1095:3112
+(rev 01) Subsystem: 1095:6112, cheap PCI card) and a ST3200822AS Rev:
+3.01 disk and I see continuous silent data corruption while reading the
+disk. Writing seems to be ok. I have 2.6.10-ac1 built with conservative
+options (UP, no PREEMPT, 8k stack, no regparm). After seeing problems I
+tried to blacklist my drive to do MOD15, but it didn't help.
+
+Finally I did
+
+    unsigned long long i = 0;
+    while (write(1, &i, sizeof(i)) != -1) i++;
+
+to the only primary partition while running sata_sil. Reading it back with
+
+    unsigned long long i=0, j;
+    while (read(0, &j, sizeof(i)) == sizeof(i)) {
+        if (j != i) fprintf(stderr, "diff at %llx: read: %llx\n", i, j);
+        i++;
+    }
+
+gives similar results, but always different:
+diff at 5efff: read: 5ef24
+diff at 7ffff: read: 7ff08
+diff at 8ffff: read: 8ff51
+diff at 97fff: read: 97f00
+diff at affff: read: aff00
+diff at bffff: read: bffac
+diff at dffff: read: dff00
+diff at efffe: read: eff00
+diff at effff: read: eff00
+diff at fffbf: read: fffff
+and so on.
+
+Reading back the same data with the ide siimage driver worked for at least
+500MB without corrupted data, but dma doesn't work with that driver, this
+is logged on about the first read attempt:
+
+hde: dma_intr: bad DMA status (dma_stat=76)
+hde: dma_intr: status=0x50 { DriveReady SeekComplete }
+
+ide: failed opcode was: unknown
+hde: DMA disabled
+ide2: reset phy, status=0x00000113, siimage_reset
+ide2: reset: success
+
+The machine is an old Compaq Prosignia 200, with a p2 300 and
+0000:00:00.0 Host bridge: Intel Corp. 440FX - 82441FX PMC [Natoma] (rev 02)
+chipset. Relevant parts from dmesg:
+
+sata_sil:
+
+libata version 1.10 loaded.
+sata_sil version 0.8
+ata1: SATA max UDMA/100 cmd 0xC886A080 ctl 0xC886A08A bmdma 0xC886A000 irq 10
+ata2: SATA max UDMA/100 cmd 0xC886A0C0 ctl 0xC886A0CA bmdma 0xC886A008 irq 10
+ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003 88:207f
+ata1: dev 0 ATA, max UDMA/133, 390721968 sectors: lba48
+ata1(0): applying Seagate errata fix
+ata1: dev 0 configured for UDMA/100
+scsi1 : sata_sil
+ata2: no device found (phy stat 00000000)
+scsi2 : sata_sil
+  Vendor: ATA       Model: ST3200822AS       Rev: 3.01
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
+SCSI device sdb: drive cache: write back
+
+siimage:
+
+SiI3112 Serial ATA: IDE controller at PCI slot 0000:00:0a.0
+SiI3112 Serial ATA: chipset revision 1
+SiI3112 Serial ATA: 100% native mode on irq 10
+    ide2: MMIO-DMA , BIOS settings: hde:DMA, hdf:DMA
+    ide3: MMIO-DMA , BIOS settings: hdg:pio, hdh:pio
+Probing IDE interface ide2...
+hde: ST3200822AS, ATA DISK drive
+hde: applying pessimistic Seagate errata fix
+ide2 at 0xc886a080-0xc886a087,0xc886a08a on irq 10
+hde: max request size: 7KiB
+hde: 390721968 sectors (200049 MB) w/8192KiB Cache, CHS=24321/255/63
+hde: cache flushes supported
+ hde:<3>hde: dma_intr: bad DMA status (dma_stat=76)
+hde: dma_intr: status=0x50 { DriveReady SeekComplete }
+
+ide: failed opcode was: unknown
+ hde1
+Probing IDE interface ide3...
+hdg: no response (status = 0xfe)
+hde: dma_intr: bad DMA status (dma_stat=76)
+hde: dma_intr: status=0x50 { DriveReady SeekComplete }
+
+ide: failed opcode was: unknown
 
 
-On Mon, 27 Dec 2004 16:29:52 -0800 (PST), Linus Torvalds
-<torvalds@osdl.org> wrote:
-> 
-> 
-> On Mon, 27 Dec 2004, Adam Sampson wrote:
-> >
-> > I don't think that code will have the intended effect, unless your
-> > GCC has some funny ideas about switch statements...
-> 
-> Indeed. That if-statement is unreachable and has no effect.
-> 
->                 Linus
-> -
+Any ideas how to fix this? Please tell me if you need more information.
 
--- 
-Coywolf Qi Hunt
-Homepage http://sosdg.org/~coywolf/
+Thanks in advance
+
+--
+Daniel
+			...and Linux for all.
+
