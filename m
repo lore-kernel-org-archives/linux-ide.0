@@ -1,46 +1,70 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] re-fix sata_sil quirk (w/ description)
-Date: Tue, 22 Jun 2004 22:11:47 -0400
+From: Paul Jakma <paul@clubi.ie>
+Subject: Re: [PATCH] fix sata_sil quirk
+Date: Wed, 23 Jun 2004 04:24:49 +0100 (IST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40D8E6E3.6090006@pobox.com>
-References: <Pine.GSO.4.33.0406222107080.25702-200000@sweetums.bluetronic.net>
+Message-ID: <Pine.LNX.4.60.0406230421220.2702@fogarty.jakma.org>
+References: <40D89509.6010502@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:19635 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266058AbUFWCMD
+Received: from hibernia.jakma.org ([212.17.55.49]:14473 "EHLO
+	hibernia.jakma.org") by vger.kernel.org with ESMTP id S266092AbUFWDZE
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 Jun 2004 22:12:03 -0400
-In-Reply-To: <Pine.GSO.4.33.0406222107080.25702-200000@sweetums.bluetronic.net>
+	Tue, 22 Jun 2004 23:25:04 -0400
+In-Reply-To: <40D89509.6010502@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Ricky Beam <jfbeam@bluetronic.net>
-Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Ricky Beam <jfbeam@bluetronic.net>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Ricky Beam wrote:
-> On Tue, 22 Jun 2004, Jeff Garzik wrote:
-> 
->> The patch itself is unchanged, but I have checked it in with a detailed
->> technical description, including my rationale.
-> 
-> ...
-> 
-> #   ... This means that the affected SATA drives will see
-> #   decreased performance, but set of affected drives is small and will
-> #   never grow larger.
-> 
-> Actually, the set of affected drives is about 1/3rd of the SATA drive
-> market: all current model Seagate drives. (Maxtor and WD being the other
-> thirds.)  My money says their new 400G monster will have the exact same
-> problems.
-> 
-> I'm using ST3160023AS drives (3 FW 3.18, 1 FW 3.05.) I'd include their
-> manufacture date, but they're rather busy right now so I cannot pull them
-> out.
+On Tue, 22 Jun 2004, Jeff Garzik wrote:
 
-Seagate claims they fixed the problem, so I doubt it...
+> Here's my suggested fix...  good catch Ricky.
+>
+> Yes, unfortunately performance will be dog slow.
+>
+> Silicon Image 311x is fully SATA compliant -- but it's the only controller 
+> that sends odd-sized packets to the SATA device.  That causes no end of 
+> problems, including the thing that SIL_QUIRK_MOD15WRITE attempts to work 
+> around.
 
-	Jeff
+As an extra data point, i have:
 
+# cat /proc/scsi/scsi
+Attached devices:
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD1600JD-00G Rev: 02.0
+   Type:   Direct-Access                    ANSI SCSI revision: 05
+Host: scsi1 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD1600JD-00G Rev: 02.0
+   Type:   Direct-Access                    ANSI SCSI revision: 05
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD1600JD-00G Rev: 02.0
+   Type:   Direct-Access                    ANSI SCSI revision: 05
 
+# lspci  | grep Sil
+00:09.0 RAID bus controller: Silicon Image, Inc. (formerly CMD 
+Technology Inc) Silicon Image Serial ATARaid Controller [ CMD/Sil
+3112/3112A ] (rev 02)
+00:0a.0 RAID bus controller: Silicon Image, Inc. (formerly CMD 
+Technology Inc) Silicon Image Serial ATARaid Controller
+[ CMD/Sil 3112/3112A ] (rev 02)
 
+# modinfo sata_sil
+author:         Jeff Garzik
+description:    low-level driver for Silicon Image SATA controller
+license:        GPL
+vermagic:       2.6.6-1.397.root K6 REGPARM gcc-3.3
+
+And am not having (touch wood) any stability problems using these 
+disks with linux md RAID1 and RAID5. Though, they're in a K6-II 350, 
+so performance is slow anyway. (i get about 25MB/s absolute max 
+reading from a RAID-5 array).
+
+  > 	 Jeff
+
+regards,
+-- 
+Paul Jakma	paul@clubi.ie	paul@jakma.org	Key ID: 64A2FF6A
+ 	warning: do not ever send email to spam@dishone.st
+Fortune:
+A bird in the hand makes it awfully hard to blow your nose.
