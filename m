@@ -1,82 +1,65 @@
-From: Jens Axboe <axboe@suse.de>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] speed up SATA
-Date: Sun, 28 Mar 2004 19:45:44 +0200
+Date: Sun, 28 Mar 2004 12:48:11 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040328174543.GK24370@suse.de>
-References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <20040328140807.GD24370@suse.de> <40670D7B.5070506@pobox.com>
+Message-ID: <40670FDB.6080409@pobox.com>
+References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406612AA.1090406@yahoo.com.au> <4066156F.1000805@pobox.com> <20040328141014.GE24370@suse.de> <40670BD9.9020707@pobox.com> <20040328173508.GI24370@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:13510 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262265AbUC1Rpt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Mar 2004 12:45:49 -0500
-Content-Disposition: inline
-In-Reply-To: <40670D7B.5070506@pobox.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:9173 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262271AbUC1RsZ
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Mar 2004 12:48:25 -0500
+In-Reply-To: <20040328173508.GI24370@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Jens Axboe <axboe@suse.de>
 Cc: Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-On Sun, Mar 28 2004, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >On Sat, Mar 27 2004, Jeff Garzik wrote:
-> >
-> >>Nick Piggin wrote:
-> >>
-> >>>I think 32MB is too much. You incur latency and lose
-> >>>scheduling grainularity. I bet returns start diminishing
-> >>>pretty quickly after 1MB or so.
-> >>
-> >>See my reply to Bart.
-> >>
-> >>Also, it is not the driver's responsibility to do anything but export 
-> >>the hardware maximums.
-> >
-> >
-> >The problem is that what the 'reasonable size' is depends highly on the
-> >hardware. The 32MB doesn't make any sense to me for SATA (or for
-> >anything else, for that matter). Back-to-back 1MB requests (this is the
-> >default I chose for PATA) should be practially identical for throughput,
-> >and loads better for optimizing latencies. You cannot do much with 32MB
-> >requests wrt latency...
-> >
-> >So you could change ->max_sectors to be 'max allowable io, hardware
-> >limitation' and add ->optimal_sectors to be 'best sized io'. I don't see
-> >tha it buys you anything, since you'd be going for optimal_sectors all
-> >the time anyways.
-> >
-> >Additionally, a single bio cannot currently be bigger than 256 pages
-> >(ie 1MB request on 4k page). This _could_ be increased of course, but
-> >not beyond making ->bio_io_vec be bigger than a page. It's already
-> >bigger than that on x86 in fact, if you use 64-bit dma_addr_t. For
-> >32-bit dma_addr_t 256 entries fit a page perfectly. Merging can get you
-> >bigger requests of course.
-> >
-> >In summary, there needs to be some extremely good numbers and arguments
-> >for changing any of this, so far I don't see anything except people
-> >drooling over sending 32MB requests.
+Jens Axboe wrote:
+> On Sun, Mar 28 2004, Jeff Garzik wrote:
 > 
-> I think you're way too stuck on the 32MB number.  Other limitations 
-> already limit that further.
+>>Jens Axboe wrote:
+>>
+>>>On Sat, Mar 27 2004, Jeff Garzik wrote:
+>>>
+>>>
+>>>>I also wouldn't want to lock out any users who wanted to use SATA at 
+>>>>full speed ;-)
+>>>
+>>>
+>>>And full speed requires 32MB requests?
+>>
+>>
+>>Full speed is the SATA driver supporting the hardware maximum.  The 
+> 
+> 
+> Come on Jeff, don't be such a slave to the hardware specifications. Just
+> because it's possible to send down 32MB requests doesn't necessarily
+> mean it's a super thing to do, nor that it automagically makes 'things
+> go faster'. The claim is that back-to-back 1MB requests are every bit as
+> fast as a 32MB request (especially if you have a small queue depth, in
+> that case there truly should be zero benefit to doing the bigger ones).
+> The cut-off point is likely even lower than 1MB, I'm just using that
+> figure as a value that is 'pretty big' yet doesn't incur too large
+> latencies just because of its size.
 
-Of course I am, this is what you are proposing as the 'optimal io size'
-for SATA. I already explain that ->max_sectors is more of a 'best io
-size' not 'hardware limit' setting. So if you set that to 32MB, then
-that is what you are indicating.
 
-> If and when the upper layers pass down such requests, my driver can
-> handle that.  For today, various external limitations and factors --
-> such as what you describe above -- mean the driver won't be getting
-> anywhere near 32MB requests.  And my driver can handle that just fine
-> too.
+For me this is a policy issue.
 
-In that light, I don't think your change makes any sense whatsoever. You
-have a different understanding of what max_sectors member does, that's
-basically the heart of the discussion.
+I agree that huge requst hurt latency.  I just disagree that the 
+_driver_ should artificially lower its maximums to fit a guess about 
+what the best request size should be.
 
-I don't think it would be too hard to send down a 32MB request if you
-just bypass the file system, in fact I would have thought you would have
-benched this long before proposing such a modification.
+If there needs to be an overall limit on per-size size, do it at the 
+block layer.  It's not scalable to hardcode that limit into every 
+driver.  That's not the driver's job.  The driver just exports the 
+hardware limits, nothing more.
 
--- 
-Jens Axboe
+A limit is fine.  I support that.  An artificial limit in the driver is not.
+
+	Jeff
+
+
 
