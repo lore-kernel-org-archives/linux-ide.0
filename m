@@ -1,176 +1,41 @@
 From: Tejun Heo <tj@home-tj.org>
-Subject: Re: [PATCH 2.6.11-rc2 29/29] ide: make data_phase explicit in NO_DATA cases
-Date: Wed, 2 Feb 2005 12:12:38 +0900
-Message-ID: <20050202031238.GN1187@htj.dyndns.org>
+Subject: Re: [PATCH 2.6.11-rc2 15/29] ide: flagged_taskfile() data byte order fix
+Date: Wed, 2 Feb 2005 11:58:10 +0900
+Message-ID: <20050202025810.GP621@htj.dyndns.org>
 References: <20050202024017.GA621@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from [211.58.254.17] ([211.58.254.17]:23947 "EHLO hemosu.com")
-	by vger.kernel.org with ESMTP id S262212AbVBBDMk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2005 22:12:40 -0500
 Content-Disposition: inline
 In-Reply-To: <20050202024017.GA621@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-> 29_ide_explicit_TASKFILE_NO_DATA.patch
+> 15_ide_flagged_taskfile_data_byte_order_fix.patch
 > 
-> 	Make data_phase explicit in NO_DATA cases.
+> 	In flagged_taskfile(), when writing data register,
+> 	taskfile->data goes to the lower byte and hobfile->data goes
+> 	to the upper byte on little endian machines and the opposite
+> 	happens on big endian machines.  This patch make
+> 	taskfile->data always go to the lower byte regardless of
+> 	endianess.
 
 
 Signed-off-by: Tejun Heo <tj@home-tj.org>
 
 
-Index: linux-ide-export/drivers/ide/ide-disk.c
+Index: linux-ide-export/drivers/ide/ide-taskfile.c
 ===================================================================
---- linux-ide-export.orig/drivers/ide/ide-disk.c	2005-02-02 10:28:07.852771465 +0900
-+++ linux-ide-export/drivers/ide/ide-disk.c	2005-02-02 10:28:08.121727827 +0900
-@@ -300,6 +300,7 @@ static unsigned long idedisk_read_native
- 	args.tfRegister[IDE_SELECT_OFFSET]	= 0x40;
- 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_READ_NATIVE_MAX;
- 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
-+	args.data_phase				= TASKFILE_NO_DATA;
- 	args.handler				= &task_no_data_intr;
- 	/* submit command request */
- 	ide_raw_taskfile(drive, &args, NULL);
-@@ -326,6 +327,7 @@ static unsigned long long idedisk_read_n
- 	args.tfRegister[IDE_SELECT_OFFSET]	= 0x40;
- 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_READ_NATIVE_MAX_EXT;
- 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
-+	args.data_phase				= TASKFILE_NO_DATA;
- 	args.handler				= &task_no_data_intr;
-         /* submit command request */
-         ide_raw_taskfile(drive, &args, NULL);
-@@ -362,6 +364,7 @@ static unsigned long idedisk_set_max_add
- 	args.tfRegister[IDE_SELECT_OFFSET]	= ((addr_req >> 24) & 0x0f) | 0x40;
- 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_SET_MAX;
- 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
-+	args.data_phase				= TASKFILE_NO_DATA;
- 	args.handler				= &task_no_data_intr;
- 	/* submit command request */
- 	ide_raw_taskfile(drive, &args, NULL);
-@@ -395,6 +398,7 @@ static unsigned long long idedisk_set_ma
- 	args.hobRegister[IDE_SELECT_OFFSET]	= 0x40;
- 	args.hobRegister[IDE_CONTROL_OFFSET_HOB]= (drive->ctl|0x80);
- 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
-+	args.data_phase				= TASKFILE_NO_DATA;
- 	args.handler				= &task_no_data_intr;
- 	/* submit command request */
- 	ide_raw_taskfile(drive, &args, NULL);
-@@ -534,6 +538,7 @@ static ide_startstop_t idedisk_special (
- 			args.tfRegister[IDE_SELECT_OFFSET]  = ((drive->head-1)|drive->select.all)&0xBF;
- 			args.tfRegister[IDE_COMMAND_OFFSET] = WIN_SPECIFY;
- 			args.command_type = IDE_DRIVE_TASK_NO_DATA;
-+			args.data_phase   = TASKFILE_NO_DATA;
- 			args.handler	  = &set_geometry_intr;
- 			do_taskfile(drive, &args);
- 		}
-@@ -545,6 +550,7 @@ static ide_startstop_t idedisk_special (
- 			args.tfRegister[IDE_NSECTOR_OFFSET] = drive->sect;
- 			args.tfRegister[IDE_COMMAND_OFFSET] = WIN_RESTORE;
- 			args.command_type = IDE_DRIVE_TASK_NO_DATA;
-+			args.data_phase   = TASKFILE_NO_DATA;
- 			args.handler	  = &recal_intr;
- 			do_taskfile(drive, &args);
- 		}
-@@ -558,6 +564,7 @@ static ide_startstop_t idedisk_special (
- 			args.tfRegister[IDE_NSECTOR_OFFSET] = drive->mult_req;
- 			args.tfRegister[IDE_COMMAND_OFFSET] = WIN_SETMULT;
- 			args.command_type = IDE_DRIVE_TASK_NO_DATA;
-+			args.data_phase   = TASKFILE_NO_DATA;
- 			args.handler	  = &set_multmode_intr;
- 			do_taskfile(drive, &args);
- 		}
-@@ -597,6 +604,7 @@ static int smart_enable(ide_drive_t *dri
- 	args.tfRegister[IDE_HCYL_OFFSET]	= SMART_HCYL_PASS;
- 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_SMART;
- 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
-+	args.data_phase				= TASKFILE_NO_DATA;
- 	args.handler				= &task_no_data_intr;
- 	return ide_raw_taskfile(drive, &args, NULL);
- }
-@@ -720,6 +728,7 @@ static int idedisk_issue_flush(request_q
- 		args.tfRegister[IDE_COMMAND_OFFSET] = WIN_FLUSH_CACHE;
+--- linux-ide-export.orig/drivers/ide/ide-taskfile.c	2005-02-02 10:28:03.518474705 +0900
++++ linux-ide-export/drivers/ide/ide-taskfile.c	2005-02-02 10:28:05.093219204 +0900
+@@ -823,7 +823,9 @@ ide_startstop_t flagged_taskfile (ide_dr
  
- 	args.command_type = IDE_DRIVE_TASK_NO_DATA;
-+	args.data_phase = TASKFILE_NO_DATA;
- 	args.handler = task_no_data_intr;
+ 	if (task->tf_out_flags.b.data) {
+ 		u16 data =  taskfile->data + (hobfile->data << 8);
+-		hwif->OUTW(data, IDE_DATA_REG);
++		/* We want hobfile->data to go to the upper address,
++		   so the cpu_to_le16(). - tj */
++		hwif->OUTW(cpu_to_le16(data), IDE_DATA_REG);
+ 	}
  
- 	rq = blk_get_request(q, WRITE, __GFP_WAIT);
-@@ -779,6 +788,7 @@ static int write_cache(ide_drive_t *driv
- 			SETFEATURES_EN_WCACHE : SETFEATURES_DIS_WCACHE;
- 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_SETFEATURES;
- 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
-+	args.data_phase				= TASKFILE_NO_DATA;
- 	args.handler				= &task_no_data_intr;
- 
- 	err = ide_raw_taskfile(drive, &args, NULL);
-@@ -799,6 +809,7 @@ static int do_idedisk_flushcache (ide_dr
- 	else
- 		args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_FLUSH_CACHE;
- 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
-+	args.data_phase				= TASKFILE_NO_DATA;
- 	args.handler				= &task_no_data_intr;
- 	return ide_raw_taskfile(drive, &args, NULL);
- }
-@@ -813,6 +824,7 @@ static int set_acoustic (ide_drive_t *dr
- 	args.tfRegister[IDE_NSECTOR_OFFSET]	= arg;
- 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_SETFEATURES;
- 	args.command_type = IDE_DRIVE_TASK_NO_DATA;
-+	args.data_phase   = TASKFILE_NO_DATA;
- 	args.handler	  = &task_no_data_intr;
- 	ide_raw_taskfile(drive, &args, NULL);
- 	drive->acoustic = arg;
-@@ -906,19 +918,22 @@ static ide_startstop_t idedisk_start_pow
- 		else
- 			args->tfRegister[IDE_COMMAND_OFFSET] = WIN_FLUSH_CACHE;
- 		args->command_type = IDE_DRIVE_TASK_NO_DATA;
-+		args->data_phase   = TASKFILE_NO_DATA;
- 		args->handler	   = &task_no_data_intr;
- 		return do_taskfile(drive, args);
- 
- 	case idedisk_pm_standby:	/* Suspend step 2 (standby) */
- 		args->tfRegister[IDE_COMMAND_OFFSET] = WIN_STANDBYNOW1;
- 		args->command_type = IDE_DRIVE_TASK_NO_DATA;
-+		args->data_phase   = TASKFILE_NO_DATA;
- 		args->handler	   = &task_no_data_intr;
- 		return do_taskfile(drive, args);
- 
- 	case idedisk_pm_idle:		/* Resume step 1 (idle) */
- 		args->tfRegister[IDE_COMMAND_OFFSET] = WIN_IDLEIMMEDIATE;
- 		args->command_type = IDE_DRIVE_TASK_NO_DATA;
--		args->handler = task_no_data_intr;
-+		args->data_phase   = TASKFILE_NO_DATA;
-+		args->handler      = task_no_data_intr;
- 		return do_taskfile(drive, args);
- 
- 	case idedisk_pm_restore_dma:	/* Resume step 2 (restore DMA) */
-@@ -1195,6 +1210,7 @@ static int idedisk_open(struct inode *in
- 		memset(&args, 0, sizeof(ide_task_t));
- 		args.tfRegister[IDE_COMMAND_OFFSET] = WIN_DOORLOCK;
- 		args.command_type = IDE_DRIVE_TASK_NO_DATA;
-+		args.data_phase   = TASKFILE_NO_DATA;
- 		args.handler	  = &task_no_data_intr;
- 		check_disk_change(inode->i_bdev);
- 		/*
-@@ -1218,6 +1234,7 @@ static int idedisk_release(struct inode 
- 		memset(&args, 0, sizeof(ide_task_t));
- 		args.tfRegister[IDE_COMMAND_OFFSET] = WIN_DOORUNLOCK;
- 		args.command_type = IDE_DRIVE_TASK_NO_DATA;
-+		args.data_phase   = TASKFILE_NO_DATA;
- 		args.handler	  = &task_no_data_intr;
- 		if (drive->doorlocking && ide_raw_taskfile(drive, &args, NULL))
- 			drive->doorlocking = 0;
-Index: linux-ide-export/drivers/ide/ide.c
-===================================================================
---- linux-ide-export.orig/drivers/ide/ide.c	2005-02-02 10:28:07.855770979 +0900
-+++ linux-ide-export/drivers/ide/ide.c	2005-02-02 10:28:08.122727665 +0900
-@@ -1271,6 +1271,7 @@ static int set_xfer_rate (ide_drive_t *d
- 	args.tfRegister[IDE_FEATURE_OFFSET]	= SETFEATURES_XFER;
- 	args.tfRegister[IDE_NSECTOR_OFFSET]	= arg;
- 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
-+	args.data_phase				= TASKFILE_NO_DATA;
- 	args.handler				= task_no_data_intr;
- 
- 	err = ide_raw_taskfile(drive, &args, NULL);
+ 	/* (ks) send hob registers first */
