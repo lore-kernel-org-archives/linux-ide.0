@@ -1,79 +1,61 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+From: "Maciej W. Rozycki" <macro@ds2.pg.gda.pl>
 Subject: Re: [PATCH] remove dead drivers/ide/ppc/swarm.c
-Date: Wed, 5 May 2004 19:34:02 +0200
+Date: Wed, 5 May 2004 21:05:10 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200405051934.02630.bzolnier@elka.pw.edu.pl>
-References: <200405040134.22092.bzolnier@elka.pw.edu.pl> <Pine.LNX.4.55.0405041621370.32082@jurand.ds.pg.gda.pl> <Pine.LNX.4.55.0405051555170.17257@jurand.ds.pg.gda.pl>
+Message-ID: <Pine.LNX.4.55.0405052037430.17021@jurand.ds.pg.gda.pl>
+References: <200405040134.22092.bzolnier@elka.pw.edu.pl>
+ <Pine.LNX.4.55.0405041621370.32082@jurand.ds.pg.gda.pl>
+ <Pine.LNX.4.55.0405051555170.17257@jurand.ds.pg.gda.pl>
+ <200405051934.02630.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:28351 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264754AbUEESWv
+Received: from jurand.ds.pg.gda.pl ([153.19.208.2]:16028 "EHLO
+	jurand.ds.pg.gda.pl") by vger.kernel.org with ESMTP id S264768AbUEETFM
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 May 2004 14:22:51 -0400
-In-Reply-To: <Pine.LNX.4.55.0405051555170.17257@jurand.ds.pg.gda.pl>
-Content-Disposition: inline
+	Wed, 5 May 2004 15:05:12 -0400
+In-Reply-To: <200405051934.02630.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: "Maciej W. Rozycki" <macro@ds2.pg.gda.pl>
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 Cc: Ralf Baechle <ralf@linux-mips.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wednesday 05 of May 2004 17:36, Maciej W. Rozycki wrote:
-> On Tue, 4 May 2004, Maciej W. Rozycki wrote:
-> > > The basic question is whether disk used on SiByte can be read i.e. on
-> > > x86. If not than we may have serious problems with some special
-> > > commands with current implementation (similar problem as on Atari
-> > > Q40/Q60).
-> >
-> >  I can check the GPIO attachment with 2.4 (which should behave the same
-> > way here).  I don't have a PCI IDE board.
->
->  Here is the result:
->
-> Uniform Multi-Platform E-IDE driver Revision: 7.00beta4-2.4
-> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-> SiByte onboard IDE configured as device 0
-> hda: ST310211A, ATA DISK drive
-> ide0 at 0xffffffff340b3e00-0xffffffff340b3e07,0xffffffff340b7ec0 on irq 36
-> hda: attached ide-disk driver.
-> hda: host protected area => 1
-> hda: 19541088 sectors (10005 MB) w/1024KiB Cache, CHS=19386/16/63
-> Partition check:
->  hda:
-> [...]
-> # dd if=/dev/hda bs=512 count=1 2>/dev/null | od -Ax -tx1
-> 000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> *
-> 0001f0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 55 aa
-> 000200
->
-> so barring the completely bogus addresses reported (the interface is
-> decoded at 0x100b0000 and that's MMIO, unrelated to the PCI I/O space -- I
-> guess fixing it would require a significant update to ide-probe.c and
-> elsewhere), it looks OK.  This is in a little-endian configuration -- I'll
+On Wed, 5 May 2004, Bartlomiej Zolnierkiewicz wrote:
 
-I suppose these are the addresses after ioremap() so no problem here.
+> > so barring the completely bogus addresses reported (the interface is
+> > decoded at 0x100b0000 and that's MMIO, unrelated to the PCI I/O space -- I
+> > guess fixing it would require a significant update to ide-probe.c and
+> > elsewhere), it looks OK.  This is in a little-endian configuration -- I'll
+> 
+> I suppose these are the addresses after ioremap() so no problem here.
 
-> recheck for big endianness once I have appropriate userland installed
-> (which is likely not very soon).  It shouldn't matter much, though -- I've
-> checked documentation and I've found out that while the generic bus (the
-> IDE connector is wired to) is big-endian externally, the internal logic
-> does swapping if the system is configured for little-endian operation.
+ Not even that -- the exact calculation leading to the base address
+reported is:
 
-IDE bus must be always LE independently of system being LE or BE.
+ioremap_nocache(0x100b0000) - ioremap(0xdc000000) + (0x1f0 << 5)
 
-If system is LE this is OK as the internal logic does swapping but in case
-when system is BE swapping is also needed.
+and is really a workaround for no better way of expressing an address of
+an MMIO IDE interface (0xdc000000 is the base address of the PCI I/O
+space, unswapped).  I see no reason to use virtual addresses for report 
+here.
 
->  FYI, the interface is currently fixed at PIO3, but perhaps it could get
-> improved to handle other speeds.  Bus-master DMA is unsupported, but
-> perhaps one of the data movers could get engaged for a third-party DMA
-> support.  The generic bus is clocked at 100MHz, so faster operation is
-> possible, at least in theory.
+> > recheck for big endianness once I have appropriate userland installed
+> > (which is likely not very soon).  It shouldn't matter much, though -- I've
+> > checked documentation and I've found out that while the generic bus (the
+> > IDE connector is wired to) is big-endian externally, the internal logic
+> > does swapping if the system is configured for little-endian operation.
+> 
+> IDE bus must be always LE independently of system being LE or BE.
+> 
+> If system is LE this is OK as the internal logic does swapping but in case
+> when system is BE swapping is also needed.
 
-:-)
+ Well, I suppose they have simply swapped bytes at the connector. ;-)  
+This is a guess, though, as I lack docs in this area.  The important bit
+is the endiannes of the generic bus used here never changes.
 
-Thanks,
-Bartlomiej
+  Maciej
 
+-- 
++  Maciej W. Rozycki, Technical University of Gdansk, Poland   +
++--------------------------------------------------------------+
++        e-mail: macro@ds2.pg.gda.pl, PGP key available        +
