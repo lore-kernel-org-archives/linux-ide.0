@@ -1,68 +1,51 @@
-From: Anton Starikov <A.Starikov@utwente.nl>
-Subject: Re: sata_promise pata connector
-Date: Fri, 20 Aug 2004 06:07:53 +0200
+From: Carlo Scarfoglio <mi2332@mclink.it>
+Subject: SiI3112 and data corruption
+Date: Sat, 21 Aug 2004 13:35:50 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040820060753.5025d889@tncms14.tnw.utwente.nl>
-References: <20040820031344.GB22682@netnation.com>
+Message-ID: <41273396.5050304@mclink.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from utep.el.utwente.nl ([130.89.16.10]:32402 "EHLO
-	utep.el.utwente.nl") by vger.kernel.org with ESMTP id S266905AbUHTEIZ
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Aug 2004 00:08:25 -0400
-In-Reply-To: <20040820031344.GB22682@netnation.com>
+Received: from mail7.mclink.it ([195.110.128.94]:31758 "EHLO mail7.mclink.it")
+	by vger.kernel.org with ESMTP id S265031AbUHULW4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Aug 2004 07:22:56 -0400
+Received: from [213.155.203.170] (hwadsl-pool-213-155-203-170.telvia.it [213.155.203.170] (may be forged))
+	by mail7.mclink.it (8.12.6p2/8.12.3) with ESMTP id i7LBMsHE071942
+	for <linux-ide@vger.kernel.org>; Sat, 21 Aug 2004 13:22:54 +0200 (CEST)
+	(envelope-from mi2332@mclink.it)
 List-Id: linux-ide@vger.kernel.org
-To: Simon Kirby <sim@netnation.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-I even wanted to port original driver from promise to 2.6 kernel...but
-because at that time it was one of the moments when pata port "is coming
-soon", I decided to not spent time for useless thing :)
-Later my PATA drive which was connected  to this port has died , so I
-have lost interest and migrate to 2.6 kernel without any problems :)
+I already posted a few days ago on the kernel mailing list, but received
+no answer, with the exception of few concerned users.
+In short: when copying large files (> 400) MB from the Maxtor SATA disk
+on a channel of the SiI3112 controller on my motherboard
+(NForce2) to a Seagate ST3200822AS disk on the other channel,
+copied files are corrupted.
+Strange thing is, smaller files are not affected, copying from the
+Seagate to the Maxtor is OK and from other PATA disks on the
+NForce2 controller or from a ramdisk to the Seagate is OK as
+well.  Seagate to Seagate is fine.
 
-I don't know how it is going now, but...
-I still can do it. 
+I tested kernel 2.6.7 with IDE driver, kernel 2.6.8.1 libata driver
+with SATA patch Aug 18 applied, kernel 2.6.4 IDE driver from
+the SuSE 9.1 DVD distro, 2.4.20 on Morphix cd.
+I switched channels without effect.
+I assume that the disk is healthy (it is brand new, well cooled,
+passes the Seagate tests).
 
-Jeff, has it sense to port that damn driver finally or not?
+Yesterday I tried two more things:
+- I added the disk to the blacklist, no change,
+- I increased the ata_pause value in libata.h
+from 400 to 600 and this improved things a bit.
+450 MB files copied with few or no errors. With
+a value of 1000 I can sometimes copy 512MB files
+without errors.
+The Reiserfs fs on the Seagate gets corrupted too
+after a dozen runs of copy/compare.
 
-Anton.
+More details about my system can be found in
+my previous post.
 
-
-On Thu, 19 Aug 2004 20:13:44 -0700
-Simon Kirby <sim@netnation.com> wrote:
-
-> [ Resend as the last didn't seem to appear on the list... ]
-> 
-> I've seen it brought up a few times and I believe one email where you
-> mention trying it -- what's involved in getting the PATA connector of
-> certain Promise SATA chips working?  I'd be willing to hack, test, and
-> help in general.
-> 
-> Thanks,
-> 
-> Simon-
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide"
-> in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-On Thu, 19 Aug 2004 20:13:44 -0700
-Simon Kirby <sim@netnation.com> wrote:
-
-> [ Resend as the last didn't seem to appear on the list... ]
-> 
-> I've seen it brought up a few times and I believe one email where you
-> mention trying it -- what's involved in getting the PATA connector of
-> certain Promise SATA chips working?  I'd be willing to hack, test, and
-> help in general.
-> 
-> Thanks,
-> 
-> Simon-
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide"
-> in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Carlo Scarfoglio
