@@ -1,35 +1,37 @@
-From: Rob Hughes <rob@robhughes.com>
-Subject: sata_sil performance
-Date: Sun, 28 Nov 2004 16:19:36 -0600
-Message-ID: <1101680376.5337.5.camel@kahuna-ws.robhughes.com>
+From: Vahid Modiri <va_modiri@yahoo.com>
+Subject: Raid Problem
+Date: Mon, 29 Nov 2004 23:28:25 -0800 (PST)
+Message-ID: <20041130072825.20114.qmail@web51002.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sccrmhc13.comcast.net ([204.127.202.64]:40397 "EHLO
-	sccrmhc13.comcast.net") by vger.kernel.org with ESMTP
-	id S261189AbUK1WTm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Nov 2004 17:19:42 -0500
+Received: from web51002.mail.yahoo.com ([206.190.38.133]:50863 "HELO
+	web51002.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S261991AbUK3H23 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Nov 2004 02:28:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Jeff,
+Dear sir,
+After compiling 2.6.6 or higher version of kernel in
+Mandrake 10 and considering the SATA_SIS module (for
+SIS180 raid controller) on it , I could not find the
+related striped disk device (Raid 0) after loading the
+module on kernel.
+After modprobing the SATA_SIS , an empty /dev/SCSI
+directory is created.
+Is there any point I didn't consider , or how can I
+find the raid device?
+Any help would be appreciated
+Yours
+Vahid Modiri
+Member of Technical support or IRIB
 
-I can understand why you did what you did looking through the code, but
-my drive, a Seagate ST3120026AS, does not need this fix. Further,
-performance has gone from 50-60 Mbit transfers to 14-15 Mbit transfers
-between the 2.6.8 and 2.6.9 kernels. And as a side not, hdparm is
-reporting "HDIO_GET_MULTCOUNT failed: Inappropriate ioctl for device"
-when doing either -I or -i as of this kernel version.
 
-If you're already working on a patch for this, I'd be happy to test it.
-Also, it should be noted that I'm running FC3, so I'm not sure how much
-that will play into this.
-
-Regards,
-Rob
-
--- 
-Rob Hughes <rob@robhughes.com>
+	
+		
+__________________________________ 
+Do you Yahoo!? 
+Yahoo! Mail - You care about security. So do we. 
+http://promotions.yahoo.com/new_mail
