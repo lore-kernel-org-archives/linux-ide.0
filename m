@@ -1,29 +1,23 @@
-From: Linus Torvalds <torvalds@transmeta.com>
-Subject: Re: [FIX] Re: 2.5.70-bk[56] breaks disk partitioning with multiple
- IDE disks
-Date: Sun, 1 Jun 2003 18:49:41 -0700 (PDT)
+From: "Adam J. Richter" <adam@yggdrasil.com>
+Subject: Re: [FIX] Re: 2.5.70-bk[56] breaks disk partitioning with multiple IDE disks
+Date: Sun, 1 Jun 2003 18:59:03 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0306011849050.16521-100000@home.transmeta.com>
-References: <20030601235333.GN9502@parcelfarce.linux.theplanet.co.uk>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <200306020159.h521x3T13476@freya.yggdrasil.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from neon-gw-l3.transmeta.com ([63.209.4.196]:516 "EHLO
-	neon-gw.transmeta.com") by vger.kernel.org with ESMTP
-	id S264781AbTFBBgo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 1 Jun 2003 21:36:44 -0400
-In-Reply-To: <20030601235333.GN9502@parcelfarce.linux.theplanet.co.uk>
+Received: from h-64-105-35-138.SNVACAID.covad.net ([64.105.35.138]:1664 "EHLO
+	freya.yggdrasil.com") by vger.kernel.org with ESMTP id S264783AbTFBBpL
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 1 Jun 2003 21:45:11 -0400
 List-Id: linux-ide@vger.kernel.org
 To: viro@parcelfarce.linux.theplanet.co.uk
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Adam J. Richter" <adam@yggdrasil.com>
-
+Cc: linux-ide@vger.kernel.org
 
 On Mon, 2 Jun 2003 viro@parcelfarce.linux.theplanet.co.uk wrote:
-> 
 > vi drivers/ide/ide.c -c'/drive->list.*driver->drives/s/list_add/&_tail/|x'
 
-Mind sending me a patch? There's only so much I like doing with vi 
-scripts, and this went over my threshold.
+	Your change worked for me.  Thanks!
 
-		Linus
-
+Adam J. Richter     __     ______________   575 Oroville Road
+adam@yggdrasil.com     \ /                  Miplitas, California 95035
++1 408 309-6081         | g g d r a s i l   United States of America
+                         "Free Software For The Rest Of Us."
