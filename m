@@ -1,40 +1,112 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: PATAPI via libata promise 20275 (was: RFC: moving drivers to a new drivers/ata directory)
-Date: Thu, 21 Oct 2004 20:53:34 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <58cb370e041021115367c80c55@mail.gmail.com>
-References: <4176883D.7070905@pobox.com>
-	 <200410211704.i9LH4jMR008268@falcon30.maxeymade.com>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Hans-Peter Jansen <hpj@urpla.net>
+Subject: Re: ATA/133 Problems with multiple cards
+Date: Thu, 21 Oct 2004 22:00:35 +0200
+Sender: kernelnewbies-bounce@nl.linux.org
+Message-ID: <200410212200.35037.hpj@urpla.net>
+References: <Pine.LNX.4.44.0410201211481.5805-100000@beast.stev.org> <200410201623.21321.hpj@urpla.net> <58cb370e041021114374bb749f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.202]:41150 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S270817AbUJUSxh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Oct 2004 14:53:37 -0400
-Received: by rproxy.gmail.com with SMTP id 77so82109rnk
-        for <linux-ide@vger.kernel.org>; Thu, 21 Oct 2004 11:53:34 -0700 (PDT)
-In-Reply-To: <200410211704.i9LH4jMR008268@falcon30.maxeymade.com>
+Return-path: <kernelnewbies-bounce@nl.linux.org>
+In-Reply-To: <58cb370e041021114374bb749f@mail.gmail.com>
+Content-Disposition: inline
+Errors-to: kernelnewbies-bounce@nl.linux.org
+List-help: <mailto:ecartis@nl.linux.org?Subject=help>
+List-unsubscribe: <mailto:kernelnewbies-request@nl.linux.org?Subject=unsubscribe>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:kernelnewbies-request@nl.linux.org?Subject=subscribe>
+List-owner: <mailto:ecartis-owner@nl.linux.org>
+List-post: <mailto:kernelnewbies@nl.linux.org>
+List-archive: <http://mail.nl.linux.org/kernelnewbies/>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: James Stevenson <james@stev.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernelnewbies@nl.linux.org
 List-Id: linux-ide@vger.kernel.org
-To: Doug Maxey <dwm@maxeymade.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert CC Lee <albertcc@tw.ibm.com>
 
-ATAPI is working just fine for me (ata_piix) in both PIO/DMA
-and thanks to Jeff all my ATAPI work is now in -linus tree. :)
+On Thursday 21 October 2004 20:43, Bartlomiej Zolnierkiewicz wrote:
+> On Wed, 20 Oct 2004 16:23:21 +0200, Hans-Peter Jansen 
+<hpj@urpla.net> wrote:
+> > Hmm, I'm running 3 TX2/100 (even with different revisions)
+> > without big problems here:
+> >
+> > 00:09.0 Unknown mass storage controller: Promise Technology, Inc.
+> > 20268 (rev 02) 00:0a.0 Unknown mass storage controller: Promise
+> > Technology, Inc. 20268 (rev 02) 00:0b.0 Unknown mass storage
+> > controller: Promise Technology, Inc. 20268 (rev 01)
+>
+> lspci -xxx ?
 
-Just enable ATA_ENABLE_ATAPI in <linux/libata.h>.
+With pleasure. Let me know, if I can provide anything else useful.
+BTW, Bart, I suspect James' problem is, that his system is running in 
+pic mode, while mine is in apic mode.
 
-On Thu, 21 Oct 2004 12:04:45 -0500, Doug Maxey <dwm@maxeymade.com> wrote:
-> Continuing down a somewhat related path,  what is the outlook for PATAPI
-> via libata?
-> 
-> There is a high level of interest to have hotplug controllers for ppc64, and
-> the primary (exclusive at this point) application is to drive PATAPI optical.
-> 
-> I know you have indicated that you have some WIP to get there.  I would like
-> to offer any help to reach that goal.
-> 
-> Would you point me to any code available?
-> 
-> ++doug
+00:09.0 Unknown mass storage controller: Promise Technology, Inc. 
+20268 (rev 02)
+00: 5a 10 68 4d 07 00 30 04 02 85 80 01 08 40 00 00
+10: 01 ec 00 00 01 e8 00 00 01 e4 00 00 01 e0 00 00
+20: 01 dc 00 00 00 c0 ff df 00 00 00 00 5a 10 68 4d
+30: 01 00 fe df 60 00 00 00 00 00 00 00 0a 01 04 12
+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 01 00 21 02 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+00:0a.0 Unknown mass storage controller: Promise Technology, Inc. 
+20268 (rev 02)
+00: 5a 10 68 4d 07 00 30 04 02 85 80 01 08 40 00 00
+10: 01 c4 00 00 01 c0 00 00 01 bc 00 00 01 b8 00 00
+20: 01 b4 00 00 00 80 ff df 00 00 00 00 5a 10 68 4d
+30: 01 00 fd df 60 00 00 00 00 00 00 00 09 01 04 12
+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 01 00 21 02 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+00:0b.0 Unknown mass storage controller: Promise Technology, Inc. 
+20268 (rev 01)
+00: 5a 10 68 4d 07 00 30 04 01 85 80 01 08 40 00 00
+10: 01 b0 00 00 01 ac 00 00 01 a8 00 00 01 a4 00 00
+20: 01 a0 00 00 00 40 ff df 00 00 00 00 5a 10 68 4d
+30: 01 00 fb df 60 00 00 00 00 00 00 00 05 01 04 12
+40: 80 80 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 01 00 01 02 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+
+
+> -
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-kernel" in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
+
+--
+Kernelnewbies: Help each other learn about the Linux kernel.
+Archive:       http://mail.nl.linux.org/kernelnewbies/
+FAQ:           http://kernelnewbies.org/faq/
