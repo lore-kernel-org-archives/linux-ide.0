@@ -1,46 +1,35 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH,RFT] VIA SATA driver update
-Date: Fri, 19 Mar 2004 11:38:22 -0500
+Subject: Re: Fw: SiS 964 SerialATA developers anywhere?
+Date: Fri, 19 Mar 2004 12:28:12 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <405B21FE.4010609@pobox.com>
-References: <405828DB.7060005@pobox.com> <200403171236.21145.tvrtko@croadria.com>
+Message-ID: <405B2DAC.8030903@pobox.com>
+References: <003001c40d3b$dd275330$2200a8c0@glowworm>	 <405A2B4A.9090001@pobox.com> <1079720801.3147.7.camel@uk2.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:15042 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263017AbUCSQif
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:62403 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S263044AbUCSR20
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Mar 2004 11:38:35 -0500
-In-Reply-To: <200403171236.21145.tvrtko@croadria.com>
+	Fri, 19 Mar 2004 12:28:26 -0500
+In-Reply-To: <1079720801.3147.7.camel@uk2.local>
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-2?Q?=22Tvrtko_A=2E_Ur=B9ulin=22?= <tvrtko@croadria.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Uwe Koziolek <uwe.koziolek@gmx.net>
+Cc: Zero10 <damouse@zero10.demon.co.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Tvrtko A. Ur=B9ulin wrote:
-> libata version 1.01 loaded.
-> sata_via version 0.20
-> sata_via(0000:00:0f.0): routed to hard irq line 11
-> ata1: SATA max UDMA/133 cmd 0xB400 ctl 0xB802 bmdma 0xC400 irq 11
-> ata2: SATA max UDMA/133 cmd 0xBC00 ctl 0xC002 bmdma 0xC408 irq 11
-> ata1 is slow to respond, please be patient
-> ata1 failed to respond (30 secs)
-> ata1: thread exiting
-> scsi0 : sata_via
-> ata2: no device found (phy stat 00000000)
-> ata2: thread exiting
-> scsi1 : sata_via
->=20
-> This is the same behavior I get ever since 2.6.1 when I started testi=
-ng 2.6=20
-> seried. It also doesn't work under 2.6 with IDE generic support for=20
-> VIA8237SATA (irq timeout, dma timeout)
+Uwe Koziolek wrote:
+> Hello,
+> 
+> i have found the problem (reset PCI_COMMAND_INTX_DISABLE), but the
+> source must be cleaned, and some tests must be executed before i submit
+> the source. 
 
-Ok...
+Ah yes, that makes sense.
 
-Does enabling SMP (CONFIG_SMP) fix things for you?
-(Note, this should work fine even on a uniprocessor machine)
+
+> Who will check in the source?.
+
+I will, just email me the driver you have tested...
 
 	Jeff
 
