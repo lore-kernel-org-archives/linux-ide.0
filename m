@@ -1,83 +1,68 @@
-From: George Georgalis <george@galis.org>
-Subject: Re: SATA_SIL works with 2.6.7-bk8 seagate drive, but oops
-Date: Sun, 27 Jun 2004 22:12:53 -0400
+From: hab <hab@hbahr.org>
+Subject: libata patches in 2.6.7bk6 Hang Maxtor on SP bridge
+Date: Mon, 28 Jun 2004 17:07:50 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040628021253.GA30798@trot.local>
-References: <20040624155919.GA16422@trot.local> <Pine.GSO.4.33.0406241442430.25702-100000@sweetums.bluetronic.net> <20040625213433.GB6502@trot.local> <Pine.LNX.4.58.0406251602140.1844@ppc970.osdl.org>
+Message-ID: <40E096B6.8090108@hbahr.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------060709000700020704010700"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ool-44c1e325.dyn.optonline.net ([68.193.227.37]:9113 "HELO
-	dyn.galis.org") by vger.kernel.org with SMTP id S264635AbUF1CMx
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 27 Jun 2004 22:12:53 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0406251602140.1844@ppc970.osdl.org>
+Received: from mxsf21.cluster1.charter.net ([209.225.28.221]:52435 "EHLO
+	mxsf21.cluster1.charter.net") by vger.kernel.org with ESMTP
+	id S265266AbUF1W1V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Jun 2004 18:27:21 -0400
+Received: from mxip07.cluster1.charter.net (mxip07a.cluster1.charter.net [209.225.28.137])
+	by mxsf21.cluster1.charter.net (8.12.11/8.12.11) with ESMTP id i5SMRW1o002532
+	for <linux-ide@vger.kernel.org>; Mon, 28 Jun 2004 18:27:32 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Linux Kernel Mail List <linux-kernel@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Fri, Jun 25, 2004 at 04:16:03PM -0700, Linus Torvalds wrote:
->That's "p->pids[PIDTYPE_PID].pidptr", and it looks like "p" is NULL.
->
->That in turn _shouldn't_ happen, since that comes from 
->
->       struct task_struct *task = proc_task(inode);
->
->and proc_task() should always be non-NULL for any /proc file that has one 
->of the pid-based dentry ops. 
+This is a multi-part message in MIME format.
+--------------060709000700020704010700
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
->On Fri, 25 Jun 2004, George Georgalis wrote:
->> ATM, ps also seg faults, here is a corresponding oops,
->
->Same problem. One of your existing /proc/<xxx>/ directories has a NULL 
->"task" pointer, and that really shouldn't happen.
+Sir
+    I resolved problem by baking out scsi portion of patches, athough
+some general configs such as FC2 development still introduce
+the same problem as identified in the attached message.
+Please assist me in resolving this problem.
+Hubert Bahr
 
-The first thing I noticed when reading sata_sil.c was readl() and
-writel() calls.  Thinking that meant "read/write line" I guessed it
-could invoke a sectors = 15 hardware issue with some data, and went to
-see exactly what it means.
+--------------060709000700020704010700
+Content-Type: message/rfc822;
+ name="Sata-Sil bk6-bk8 hangs Maxtor with S-P bridge"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="Sata-Sil bk6-bk8 hangs Maxtor with S-P bridge"
 
-I haven't determined which include/asm-*/io.h is used for
-MCYRIXIII/MVIAC3, but my best guess is include/asm-i386/io.h
+Message-ID: <40DDC641.1070403@hbahr.org>
+Date: Sat, 26 Jun 2004 13:53:53 -0500
+From: hab <hab@hbahr.org>
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6) Gecko/20040113
+X-Accept-Language: en-us, en
+MIME-Version: 1.0
+To: linux-kernel@vger.kernel.org
+Subject: Sata-Sil bk6-bk8 hangs Maxtor with S-P bridge
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-#define readl(addr) (*(volatile unsigned int *) (addr))
-#define writel(b,addr) (*(volatile unsigned int *) (addr) = (b))
+With Bk6 and beyond I recieve a
+command 0x25 Timeout Stat 0x50 host-stat 0x4  and then a hang in init.
+I can cntl alt del to reboot.
+This is with a Maxtor 6y160po  YAR4,  I also have a Maxtor 6y250P0
 
-then I find volatile in a driver example from
-http://publications.gbdirect.co.uk/c_book/chapter8/const_and_volatile.html
-Which describes how volatile is used to peek hardware status.
+Earlier in the boot sequence I recieve a screaming interupt message and
+interupt turned off message for the interupt used by the controller.
 
-but, in sata_sil.c, sil_scr_write does
+These work for 2.6.7 and 2.6.7 bk5.
+It works for the ide implementation with the thousands of
 
-                writel(val, mmio);
+sata_error = 0x00000000, watchdog = 0, siimage_mmio_ide_dma_test_irq
 
-volatile is used for data, not status! I can't glean this construct
-(when the data runs out it's null and the loop ends?). Was going to say
-if hardware caused status to turn up null that could be checked and
-assigned before being used...
+messages.
 
- On Sun, Jun 27, 2004 at 10:39:08AM -0700, Linus Torvalds wrote:
- >So I stand by the rule: we should make _code_ have the access rules, and
- >the data itself should never be volatile. And yes, jiffies breaks that
- >rule, but hey, that's not something I'm proud of.
-
-So sata_sil.c is using the wrong construct or am I not reading it right?
-
->Hmm. I do worry that maybe it's the SATA thing that has written NULL 
->somewhere, since the /proc code never clears that field once it is set 
->(and it would always be set by the code that creates the inode in the 
->first place). 
-
-Might it come from reiserfs? I didn't mkfs again after the last sata 
-device block(s). I'll be doing some more experimentation, how would I
-'find' the null in proc? can I detect that in user space? 
-
-// George
+thanks  Hubert
 
 
--- 
-George Georgalis, Architect and administrator, Linux services. IXOYE
-http://galis.org/george/  cell:646-331-2027  mailto:george@galis.org
-Key fingerprint = 5415 2738 61CF 6AE1 E9A7  9EF0 0186 503B 9831 1631
-
+--------------060709000700020704010700--
