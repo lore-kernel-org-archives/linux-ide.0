@@ -1,73 +1,136 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: new tool:  blktool
-Date: Mon, 16 Aug 2004 12:53:39 -0400
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: Re: PATCH: add drive_to_key functions
+Date: Mon, 16 Aug 2004 19:12:26 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4120E693.8070700@pobox.com>
-References: <411FD744.2090308@pobox.com> <411FF170.9070700@rtr.ca> <411FF37E.7070001@pobox.com> <41201DCA.2090204@rtr.ca>
+Message-ID: <200408161912.26595.bzolnier@elka.pw.edu.pl>
+References: <20040815145844.GA10778@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:22252 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S267751AbUHPQxx
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:11507 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S267804AbUHPRSE
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Aug 2004 12:53:53 -0400
-In-Reply-To: <41201DCA.2090204@rtr.ca>
+	Mon, 16 Aug 2004 13:18:04 -0400
+In-Reply-To: <20040815145844.GA10778@devserv.devel.redhat.com>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@redhat.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 
-Mark Lord wrote:
->  > http://www.t10.org/ftp/t10/document.04/04-262r1.pdf
-> 
-> Ahh.. my buddie Curtis has been busy of late, I see.
-> 
-> I'll implement this in hdparm and the SATA/RAID driver
-> that I'm working on.  Will you (Jeff) do the same in libata?
+On Sunday 15 August 2004 16:58, Alan Cox wrote:
+> Clear new remove field
+> Clear pci_dev field on init
+> Add functions that allow us to keep persistent (reasonably so anyway) keys
+> 	not pointers to drive objects in the /proc file. Worst case is you
+> 	reload the driver 64K times and get the new data not an error.
+> Clean up ide_system_bus_speed docs
+>
+>
+> diff -u --new-file --recursive --exclude-from /usr/src/exclude
+> linux.vanilla-2.6.8-rc3/drivers/ide/ide.c linux-2.6.8-rc3/drivers/ide/ide.c
+> --- linux.vanilla-2.6.8-rc3/drivers/ide/ide.c	2004-08-09 15:51:00.000000000
+> +0100 +++ linux-2.6.8-rc3/drivers/ide/ide.c	2004-08-12 17:55:05.000000000
+> +0100 @@ -219,12 +219,15 @@
+>  	hwif->name[3]	= '0' + index;
+>
+>  	hwif->bus_state	= BUSSTATE_ON;
+> -
+> +
 
-I plan on providing _some_ way of executing arbitrary taskfiles, 
-possibly more than one way.  I haven't decided upon the best route. 
-Since T10 took my command protocol suggestions into account in the above 
-proposal, implementing that would be an efficient route to the 
-arbitrary-taskfiles feature.
+whitespace damage
 
+>  	hwif->atapi_dma = 0;		/* disable all atapi dma */
+>  	hwif->ultra_mask = 0x80;	/* disable all ultra */
+>  	hwif->mwdma_mask = 0x80;	/* disable all mwdma */
+>  	hwif->swdma_mask = 0x80;	/* disable all swdma */
+>
+> +	hwif->pci_dev = NULL;
+> +	hwif->remove = NULL;
+> +
 
-> But HDIO_DRIVE_CMD is rather easy to implement as well,
-> and perhaps both should be there for an overlap.
-> 
-> Especially since the former is in rather widespread use right now.
-> Yup, it's missing a separate data-phase parameter,
-> and lots of taskfile stuff, but it's configured by default
-> into every kernel (the same is not true for taskfile support),
-> and there's really only a few limited cases of it being used
-> for non-data commands:  IDENTIFY, SMART, and the odd READ/WRITE
-> SECTOR (pio, single sector).
+not needed - memsetting to zero is done earlier
 
-If HDIO_DRIVE_CMD was easy to do, I would have already done it.  I agree 
-with you that supporting it has benefits, but you are ignoring the 
-obstacles:
+>  	sema_init(&hwif->gendev_rel_sem, 0);
+>
+>  	default_hwif_iops(hwif);
+> @@ -321,12 +324,67 @@
+>  }
+>
+>  /*
+> - * ide_system_bus_speed() returns what we think is the system VESA/PCI
+> - * bus speed (in MHz).  This is used for calculating interface PIO
+> timings. - * The default is 40 for known PCI systems, 50 otherwise.
+> - * The "idebus=xx" parameter can be used to override this value.
+> - * The actual value to be used is computed/displayed the first time
+> through. + *	ide_drive_from_key	-	turn key into drive
+> + *	@kval: persistent key
+> + *
+> + *	Convert a key into a drive. Currently the key is packed as
+> + *	[keyval] << 16 | hwif << 8 | drive_num. Caller must hold
+> + *	ide_settings_sem for the duration of the returned reference
+> + */
+> +
+> +ide_drive_t *ide_drive_from_key(void *kval)
+> +{
+> +	unsigned long key = (unsigned long) kval;
+> +	int idx = (key >> 8) & 0xFF;
+> +	int drive = key & 3;
+> +	ide_hwif_t *hwif = &ide_hwifs[idx];
+> +	ide_drive_t *ret;
+> +
+> +	key >>= 16;
+> +
+> +	if(hwif->configured == 0 || hwif->present == 0 ||
+> hwif->drives[drive].dead || hwif->key != key) +		ret = NULL;
+> +	else
+> +		ret = &ide_hwifs[idx].drives[drive];
+> +
+> +	return ret;
+> +}
+> +
+> +EXPORT_SYMBOL_GPL(ide_drive_from_key);
+> +
+> +/*
+> + *	ide_drive_to_key	-	turn drive to persistent key
+> + *	@drive: drive to use
+> + *
+> + *	Convert drive into a key. Currently the key is packed as
+> + *	[keyval] << 16 | hwif << 8 | drive_num. Caller must hold
+> + *	ide_settings_sem for the duration of the returned reference
+>   */
+> +
+> +void *ide_drive_to_key(ide_drive_t *drive)
+> +{
+> +	ide_hwif_t *hwif = HWIF(drive);
+> +	unsigned long val;
+> +
+> +	val = (hwif->index << 8) | (hwif->key << 16) | drive->select.b.unit;
+> +	return (void *)val;
+> +}
+> +
+> +EXPORT_SYMBOL_GPL(ide_drive_to_key);
 
-* without taskfile protocol, it is _impossible_ to execute some vendor 
-reserved commands
-* without taskfile protocol, and without a lookup table, it is 
-impossible to distinguish between [non-data | data-in | data-out] on 
-some controllers.  Current IDE driver does "execute and pray we can 
-guess from controller behavior" which definitely won't work in a lot of 
-situations.
+AFAICS ide_drive_[from,to]_key are to be used only from ide-proc.c
+so EXPORT_SYMBOLs are not needed
 
-Modern SATA controllers need to set up the DMA engine beforehand -- for 
-the entire transfer -- including for PIO data xfer commands.
+> +/**
+> + *	ide_system_bus_speed	-	guess bus speed
+> + *
+> + *	ide_system_bus_speed() returns what we think is the system VESA/PCI
+> + *	bus speed (in MHz).  This is used for calculating interface PIO
+> timings. + *	The default is 40 for known PCI systems, 50 otherwise.
+> + *	The "idebus=xx" parameter can be used to override this value.
+> + *	The actual value to be used is computed/displayed the first time
+> + *	through. Drivers should only use this as a last resort.
+> + *
+> + *	Returns a guessed speed in Mhz
+> + */
+> +
+>  int ide_system_bus_speed (void)
+>  {
+>  	if (!system_bus_speed) {
+>
 
-HDIO_DRIVE_CMD tells me nothing about data direction or taskfile 
-protocol.  It forces you to guess :(
-
-libata is designed to be flexible enough to execute the full breadth of 
-the ATA command set on whatever host controller you pick -- PCI PATA, 
-paride, SATA, ATA-over-ethernet, or whatever zany technology you choose. 
-  But all that flexibility demands a bit more from the software side of 
-things, command protocol in this case.  That's why I the T10 04-262r1 
-proposal spec.
-
-	Jeff
-
-
+This change belongs to "ide DocBook fixes" patch.
