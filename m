@@ -1,58 +1,31 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [RFC: 2.6 patch] IDE: unsexport 3 functions
-Date: Sat, 5 Feb 2005 03:44:04 +0100
-Message-ID: <20050205024404.GK19408@stusta.de>
+From: Tejun Heo <tj@home-tj.org>
+Subject: Re: [PATCH 2.6.11-rc2] ide: driver updates (phase 2)
+Date: Sat, 05 Feb 2005 18:53:10 +0900
+Message-ID: <42049786.2060505@home-tj.org>
+References: <20050205021502.GA17767@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:20996 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S265512AbVBECoI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Feb 2005 21:44:08 -0500
-Content-Disposition: inline
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from [211.58.254.17] ([211.58.254.17]:8080 "EHLO hemosu.com")
+	by vger.kernel.org with ESMTP id S265546AbVBEJxR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 Feb 2005 04:53:17 -0500
+In-Reply-To: <20050205021502.GA17767@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@home-tj.org>
+Cc: bzolnier@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-The patch removes three unneeded EXPORT_SYMBOL's.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+  Oops, I accidentally put ", ," in the To: line of all the mails which 
+contain patches, and they don't show up on the lkml.  I'll post the 
+patches again.
 
----
+  Bartlomiej, if you got the first set of patches, please ignore them. 
+The contents are identical, so if you've already reviewed them, you 
+don't have to verify the new set.  I'm really sorry.  As I've been 
+making quite a few mistakes during mailing patches manually, I've 
+written a script to do it, but I still manage to make mistakes. :-(
 
- drivers/ide/ide-iops.c     |    4 ----
- drivers/ide/ide-taskfile.c |    2 --
- 2 files changed, 6 deletions(-)
-
---- linux-2.6.11-rc3-mm1-full/drivers/ide/ide-iops.c.old	2005-02-05 02:54:15.000000000 +0100
-+++ linux-2.6.11-rc3-mm1-full/drivers/ide/ide-iops.c	2005-02-05 02:55:21.000000000 +0100
-@@ -104,8 +104,6 @@
- 	hwif->INSL	= ide_insl;
- }
- 
--EXPORT_SYMBOL(default_hwif_iops);
--
- /*
-  *	MMIO operations, typically used for SATA controllers
-  */
-@@ -329,8 +327,6 @@
- 	hwif->atapi_output_bytes	= atapi_output_bytes;
- }
- 
--EXPORT_SYMBOL(default_hwif_transport);
--
- /*
-  * Beginning of Taskfile OPCODE Library and feature sets.
-  */
---- linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c.old	2005-02-05 02:57:03.000000000 +0100
-+++ linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c	2005-02-05 02:57:12.000000000 +0100
-@@ -161,8 +161,6 @@
- 	return ide_stopped;
- }
- 
--EXPORT_SYMBOL(do_rw_taskfile);
--
- /*
-  * set_multmode_intr() is invoked on completion of a WIN_SETMULT cmd.
-  */
+-- 
+tejun
 
