@@ -1,46 +1,34 @@
-From: Ryan Bourgeois <rgb005@latech.edu>
-Subject: Re: one thing about sata_promise
-Date: Wed, 23 Feb 2005 10:12:11 -0600
-Message-ID: <421CAB5B.80305@latech.edu>
-References: <200502231124.47843.nedco@unacs.bg>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH libata-dev-2.6] Issue INITIALIZE DEVICE PARAMETERS for CHS only devices
+Date: Wed, 23 Feb 2005 17:50:00 +0100
+Message-ID: <58cb370e050223085039cb0731@mail.gmail.com>
+References: <006d01c50c11$81003920$a801a8c0@tw.ibm.com>
+	 <42167CDD.50301@pobox.com> <421C6840.7090903@tw.ibm.com>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from selene.LaTech.edu ([138.47.18.25]:21965 "EHLO LaTech.edu")
-	by vger.kernel.org with ESMTP id S261436AbVBWQMQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Feb 2005 11:12:16 -0500
-In-Reply-To: <200502231124.47843.nedco@unacs.bg>
+Received: from wproxy.gmail.com ([64.233.184.206]:28834 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261500AbVBWQuD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Feb 2005 11:50:03 -0500
+Received: by wproxy.gmail.com with SMTP id 68so1613522wra
+        for <linux-ide@vger.kernel.org>; Wed, 23 Feb 2005 08:50:03 -0800 (PST)
+In-Reply-To: <421C6840.7090903@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: nedco@unacs.bg
-Cc: linux-ide@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Doug Maxey <dwm@maxeymade.com>, IDE Linux <linux-ide@vger.kernel.org>, Mark Lord <mlord@pobox.com>
 
-I'm sorry, but your English is difficult to understand.  Are you saying 
-you're trying to unplug your hard drive power cables while the system is 
-running?  If so, that is a BAD IDEA.  That will hang your mahine just 
-about every time.  If that's not what you meant, then please clarify.
+Hi,
 
--Ryan
+[ generic comment about PATA support in libata, yes wrong thread 8) ]
 
+I think that at one point libata and IDE drivers should be merged.
+Yes, this is doable and I plan to prove it soon (this shouldn't be so
+hard nowadays :-).  I really don't want to have two PATA drivers in
+the tree with subtle differences (i.e. CHS handling) when one would
+work in some cases (i.e. 4 Promise controllers) and the second one
+in other cases (i.e. ATAPI support).  I'm sure you get the point.
 
-nedco wrote:
-> Hi,
-> 
-> i try to make same storage with S150 TX4  and is working good
-> until i have same of the hard drives power off i mean unplug power
-> cable.Then linux hangs. Probably you think why i make this. 
-> I have problem with some power cables  and  Linux is hang whitout 
-> error so was difficulty to findout. Then i unplug power of some storage 
-> drive ( not  root  drive :)  )  i think system must be sable write some log 
-> and still responsable. 
-> 
-> Is there some solution.
-> 
-> 10x in advance 
-> Ndko Nedev 
-> nedco@unacs.bg
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+Bartlomiej
