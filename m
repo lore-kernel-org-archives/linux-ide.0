@@ -1,68 +1,51 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+From: Meelis Roos <mroos@linux.ee>
 Subject: Re: [2.4 IDE PATCH] SanDisk is flash (fwd)
-Date: Tue, 13 Apr 2004 22:12:11 +0200
+Date: Wed, 14 Apr 2004 11:31:28 +0300 (EEST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200404132212.11481.bzolnier@elka.pw.edu.pl>
-References: <20040413195344.GA523@fs.tum.de>
+Message-ID: <Pine.GSO.4.44.0404141115010.28974-100000@math.ut.ee>
+References: <200404132212.11481.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:47769 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S263730AbUDMUNY
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Apr 2004 16:13:24 -0400
-In-Reply-To: <20040413195344.GA523@fs.tum.de>
-Content-Disposition: inline
+Received: from math.ut.ee ([193.40.5.125]:35819 "EHLO math.ut.ee")
+	by vger.kernel.org with ESMTP id S263985AbUDNIo2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Apr 2004 04:44:28 -0400
+In-Reply-To: <200404132212.11481.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@fs.tum.de>, Meelis Roos <mroos@linux.ee>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Adrian Bunk <bunk@fs.tum.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tuesday 13 of April 2004 21:53, Adrian Bunk wrote:
-> The patch forwarded below by Meelis Roos was already included in
-> 2.4.26-rc. It does apply against 2.6, too, so I assume it should also be
-> added there?
+> Some time ago I sent mail to Meelis asking if this patch is really necessary.
 
-Some time ago I sent mail to Meelis asking if this patch is really necessary.
-No answer yet.
+Oops, it must have been our university's mail server havein breakfast of
+my mail again :(
 
-> cu
-> Adrian
->
->
-> ----- Forwarded message from Meelis Roos <mroos@linux.ee> -----
->
-> Date:	Thu, 1 Apr 2004 21:26:13 +0300 (EEST)
-> From: Meelis Roos <mroos@linux.ee>
-> To: Linux Kernel list <linux-kernel@vger.kernel.org>
-> Subject: [2.4 IDE PATCH] SanDisk is flash
->
-> This is self-explanatory - former SunDisk renamed itself to SanDisk and
-> now there are flash disks with both names.
+> Does this mean that CF test fail or that SunDisk is SanDisk now?
 
-Please excuse me but I am dumb... ;-)
+Just that SunDisk is now SanDisk. The patch was developed in 2.4 to
+quieten flash disk detection messages. The important part was about host
+protected area detection that is already different in 2.6 (*). In
+addition, the name change was noticed and fixed. It resulted in
+different display (not ATA but CFA) and told the ide layer that the disk
+does not have door locking but I don't know whether it actually changes
+some important behaviour.
 
-Does this mean that CF test fail or that SunDisk is SanDisk now?
+> id->config == 0x848a test was introduced in kernel 2.3.27 _after_
+> SunDisk model name test and if id->config == 0x848a test fails
+> comment to drive_is_flashcard() needs fixing.
 
-id->config == 0x848a test was introduced in kernel 2.3.27 _after_
-SunDisk model name test and if id->config == 0x848a test fails
-comment to drive_is_flashcard() needs fixing.
+I don't have the hardware currently at hand but I can let people who
+have test it. I only know for sure that it changes the display of "ATA"
+to "CFA" in 2.4.22 where the patch was developed. This was before the
+patch:
+hda: SanDisk SDP3B-64, ATA DISK drive
 
-> ===== drivers/ide/ide-probe.c 1.21 vs edited =====
-> --- 1.21/drivers/ide/ide-probe.c	Mon Nov 24 00:05:18 2003
-> +++ edited/drivers/ide/ide-probe.c	Thu Apr  1 21:15:22 2004
-> @@ -102,7 +102,8 @@
->  		if (id->config == 0x848a) return 1;	/* CompactFlash */
->  		if (!strncmp(id->model, "KODAK ATA_FLASH", 15)	/* Kodak */
->
->  		 || !strncmp(id->model, "Hitachi CV", 10)	/* Hitachi */
->
-> -		 || !strncmp(id->model, "SunDisk SDCFB", 13)	/* SunDisk */
-> +		 || !strncmp(id->model, "SunDisk SDCFB", 13)	/* old SanDisk */
-> +		 || !strncmp(id->model, "SanDisk SDCFB", 13)	/* SanDisk */
->
->  		 || !strncmp(id->model, "HAGIWARA HPC", 12)	/* Hagiwara */
->  		 || !strncmp(id->model, "LEXAR ATA_FLASH", 15)	/* Lexar */
->  		 || !strncmp(id->model, "ATA_FLASH", 9))	/* Simple Tech */
+(*) The host protected area fix for 2.4 was to do
+idedisk_read_native_max_address(drive) only when
+idedisk_supports_host_protected_area(drive) was true. By my quick look
+it seemed that 2.6 already does this check in init_idedisk_capacity()
+and 2.6 does not need the other patch - am I right here?
+
+-- 
+Meelis Roos (mroos@linux.ee)
 
