@@ -1,71 +1,58 @@
-From: Brett Russ <russb@emc.com>
-Subject: [PATCH] bug fix to restore access to low order LBA
-Date: Thu, 22 Jul 2004 19:30:12 -0400
+From: Stephen Atkins <atkinss@shaw.ca>
+Subject: sata_sil with seagate st3120026as
+Date: Fri, 23 Jul 2004 08:06:41 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <41004E04.6050407@emc.com>
+Message-ID: <LPEKIDCKCKICKJCIGCBLMEIACBAA.atkinss@shaw.ca>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070307000100030109030901"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailhub.emc.com ([168.159.2.31]:58439 "EHLO mailhub.lss.emc.com")
-	by vger.kernel.org with ESMTP id S267300AbUGVXdX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jul 2004 19:33:23 -0400
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:19654 "EHLO
+	pd5mo2so.prod.shaw.ca") by vger.kernel.org with ESMTP
+	id S267748AbUGWOSr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Jul 2004 10:18:47 -0400
+Received: from pd2mr7so.prod.shaw.ca (pd2mr7so-qfe3.prod.shaw.ca [10.0.141.10])
+ by l-daemon (iPlanet Messaging Server 5.2 HotFix 1.18 (built Jul 28 2003))
+ with ESMTP id <0I1B00AAF5S3P6@l-daemon> for linux-ide@vger.kernel.org; Fri,
+ 23 Jul 2004 08:04:51 -0600 (MDT)
+Received: from pn2ml2so.prod.shaw.ca ([10.0.121.146])
+ by pd2mr7so.prod.shaw.ca (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar
+ 15 2004)) with ESMTP id <0I1B00IFM5S3SCA0@pd2mr7so.prod.shaw.ca> for
+ linux-ide@vger.kernel.org; Fri, 23 Jul 2004 08:04:51 -0600 (MDT)
+Received: from calt04 ([68.144.48.230])
+ by l-daemon (iPlanet Messaging Server 5.2 HotFix 1.18 (built Jul 28 2003))
+ with SMTP id <0I1B00GIF5S2G7@l-daemon> for linux-ide@vger.kernel.org; Fri,
+ 23 Jul 2004 08:04:51 -0600 (MDT)
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------070307000100030109030901
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Hello.  I've been poking around in the sata_sil.c file because I saw a message
+at one time about the Seagate drives and how some of them need to be in the
+sil_blacklist.  Any way I've been trying to get this driver to work under the
+2.6 kernel (it seems find in 2.4.26 but ivtv doesn't like that version).  Any
+way this is the error I received from the kernel when I was trying to access the
+drive.
 
-I discovered this after running a custom kernel with support for ATA 
-read verify command, when I encountered sector errors and saw them 
-reported in syslog and on an ATA analyzer but when I tried to read the 
-LBA registers I got zero... problem was this one liner, which applies to 
-2.6.8-rc2 as well as 2.6.7, and I've also included a 2.4.26 version.
+ata1: DMA timeout 0x58 on port 0xE0851087
+scsi0: Error on channel 0, id 0, lun 0, CDB: 0x2a 00 0b bd a8 a4 00 04 00 00
+current sda: sense=70 3
+ASC= c ASCQ= 2
+Raw sense data: 0x70 0x00 0x03 0x00 0x00 0x00 0x00 0x06 0x00 0x00 0x00 0x00 0x0c
+0x02
+end_request: I/O error, dev sda, sector 191735972
 
-Thanks,
-BR
+A bit of info on my hardware:
+MoBo: Gigabyte GA-7N400 Pro2 (Dual DDR400, intel8x0 sound, r8169 lan, sil3512A,
+Gigaraid IDE, IDE nForce2)
+HD: 6G regular IDE, 120G Seagate SATA ST3120026AS, DVDROM
+Memory: 512M DDR 2100 (w 256M sticks) not useing dual channel
+TV Cards: 1 PVR-250 model 980, 1 Leadtek winfast TV2000 XP Deluxe
+Network: On board r8169 and wireless 802.11abg (used madwifi drivers)
+Video: GForce 5200 (using 6106 drivers from nVidia)
 
---------------070307000100030109030901
-Content-Type: text/plain;
- name="2.4.26-ide-restore-low.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="2.4.26-ide-restore-low.diff"
+Not sure what else you might need.  Just let me know if there is and I'll do my
+best to supply it.
 
---- linux-2.4.26/drivers/ide/ide.c	2004-02-18 08:36:31.000000000 -0500
-+++ linux-2.4.26-ide-restore-low/drivers/ide/ide.c	2004-07-22 19:17:23.000000000 -0400
-@@ -409,6 +409,9 @@
- 					u32 low = read_24(drive);
- 					hwif->OUTB(drive->ctl|0x80, IDE_CONTROL_REG);
- 					high = read_24(drive);
-+					/* Restore access to low order LBA */
-+					OUT_BYTE(drive->ctl&0x7F,
-+						 IDE_CONTROL_REG);
- 
- 					sectors = ((u64)high << 24) | low;
- 					printk(", LBAsect=%llu, high=%d, low=%d",
+Stephen Atkins
 
---------------070307000100030109030901
-Content-Type: text/plain;
- name="2.6.7-ide-restore-low.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="2.6.7-ide-restore-low.diff"
-
---- linux-2.6.7/drivers/ide/ide.c	2004-06-16 01:19:03.000000000 -0400
-+++ linux-2.6.7-ide-restore-low/drivers/ide/ide.c	2004-07-22 19:20:59.000000000 -0400
-@@ -409,6 +409,9 @@
- 					u32 low = ide_read_24(drive);
- 					hwif->OUTB(drive->ctl|0x80, IDE_CONTROL_REG);
- 					high = ide_read_24(drive);
-+					/* Restore access to low order LBA */
-+					hwif->OUTB(drive->ctl&0x7F, 
-+						   IDE_CONTROL_REG);
- 
- 					sectors = ((u64)high << 24) | low;
- 					printk(", LBAsect=%llu, high=%d, low=%d",
-
---------------070307000100030109030901--
