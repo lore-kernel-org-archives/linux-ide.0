@@ -1,33 +1,45 @@
-From: Jens Axboe <axboe@suse.de>
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 Subject: Re: [PATCH] 2.4 IDE core for 2.5
-Date: Tue, 9 Jul 2002 14:48:27 +0200
+Date: Tue, 9 Jul 2002 14:52:14 +0200 (MET DST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <agem8c$7oq$2@main.gmane.org>
-References: <20020709102249.GA20870@suse.de> <01742490.20020709144349@uni.de>
+Message-ID: <Pine.SOL.4.30.0207091447560.15575-100000@mion.elka.pw.edu.pl>
+References: <Pine.SOL.3.96.1020709114618.20865B-100000@libra.cus.cam.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <01742490.20020709144349@uni.de>
+In-Reply-To: <Pine.SOL.3.96.1020709114618.20865B-100000@libra.cus.cam.ac.uk>
 List-Id: linux-ide@vger.kernel.org
-To: Tobias Rittweiler <inkognito.anonym@uni.de>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Anton Altaparmakov <aia21@cantab.net>
+Cc: Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Tue, Jul 09 2002, Tobias Rittweiler wrote:
-> Hello Jens,
-> 
-> Tuesday, July 9, 2002, 12:22:49 PM, you wrote:
-> 
-> JA> *.kernel.org://pub/linux/kernel/people/axboe/patches/v2.5/2.5.25/
-> 
-> After downloading each of the 7 .gz-patches, applying them without any
-> complains, I started to compile the new bzImage, but I got an error
-> in relation to the FAT support. By switching this support off
-> everything'll compile without any further problem though, and I can
-> boot from this image even.. :-)
 
-Please send me your full .config, I'll fix this in the next version.
+On Tue, 9 Jul 2002, Anton Altaparmakov wrote:
 
--- 
-Jens Axboe
+> On Tue, 9 Jul 2002, Jens Axboe wrote:
+> > I've forward ported the 2.4 IDE core (well 2.4.19-pre10-ac2 to be exact)
+> > to 2.5.25. It consists of 7 separate patches:
+>
+> Fantastic! Seeing that the patches are bitkeeper generated, would it be
+> possible for you to make a repository available with the patches? (on
+> bkbits perhaps?) Would make it a lot easier for us bitkeeper users just to
+> pull from your repository... Especially once you update the patches...
+
+Okay, tired of fantastic ;-)
+This forward port has still broken PIO transfer on errors and really
+borken multi PIO writes, all due to buffer_head -> bio transition in 2.5.
+
+Jens, you would better spend your time on enhancing block layer to
+allow me fixing them cleanly...
+
+Regards
+--
+Bartlomiej
+
+> Best regards,
+>
+> 	Anton
+> --
+> Anton Altaparmakov <aia21 at cantab.net> (replace at with @)
+> Linux NTFS maintainer / IRC: #ntfs on irc.openprojects.net
+> WWW: http://linux-ntfs.sf.net/ & http://www-stu.christs.cam.ac.uk/~aia21/
 
