@@ -1,74 +1,53 @@
-From: Oliver Bausinger <bausi@bausi.org>
-Subject: SIL 3114 problem
-Date: Sun, 21 Nov 2004 18:38:42 +0100
-Message-ID: <200411211838.42292.bausi@bausi.org>
-Reply-To: bausi@bausi.org
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: PATCH (for comment): ide-cd possible race in PIO mode
+Date: Mon, 22 Nov 2004 08:58:02 +0100
+Message-ID: <20041122075802.GL26240@suse.de>
+References: <1100697589.32677.3.camel@localhost.localdomain> <20041117153706.GH26240@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from everest.mathematik.uni-tuebingen.de ([134.2.62.220]:10372 "EHLO
-	everest.mathematik.uni-tuebingen.de") by vger.kernel.org with ESMTP
-	id S261710AbUKURjI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 21 Nov 2004 12:39:08 -0500
-Received: from everest.mathematik.uni-tuebingen.de (p509183ED.dip0.t-ipconnect.de [80.145.131.237])
-	by everest.mathematik.uni-tuebingen.de (Postfix) with ESMTP id 379A14B422
-	for <linux-ide@vger.kernel.org>; Sun, 21 Nov 2004 18:39:06 +0100 (CET)
+Received: from ns.virtualhost.dk ([195.184.98.160]:13235 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261967AbUKVH6a (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Nov 2004 02:58:30 -0500
 Content-Disposition: inline
+In-Reply-To: <20041117153706.GH26240@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Hi,
+On Wed, Nov 17 2004, Jens Axboe wrote:
+> On Wed, Nov 17 2004, Alan Cox wrote:
+> > Working on tracing down Fedora bug #115458
+> > (https://bugzilla.redhat.com/bugzilla/process_bug.cgi) I found what
+> > appears to be a race between the IDE CD driver and the hardware status.
+> > It doesn't appear to explain the bug at all but it does look like a bug
+> > of itself
+> > 
+> > When we issue an ide command the status bits don't become valid for
+> > 400nS. In the DMA case ide_execute_command handles this but in the PIO
+> > case we don't do the needed locking, use OUTBSYNC to avoid posting or
+> > delay. This means that in some situations we can execute the command
+> > handler in PIO mode before the command status bits are valid and the
+> > handler may read and act wrongly.
+> > 
+> > --- drivers/ide/ide-cd.c~	2004-11-17 14:08:42.950485320 +0000
+> > +++ drivers/ide/ide-cd.c	2004-11-17 14:08:42.951485168 +0000
+> > @@ -897,7 +897,10 @@
+> >  		return ide_started;
+> >  	} else {
+> >  		/* packet command */
+> > -		HWIF(drive)->OUTB(WIN_PACKETCMD, IDE_COMMAND_REG);
+> > +		spin_lock_irqsave(&ide_lock, flags);
+> > +		HWIF(drive)->OUTBSYNC(WIN_PACKETCMD, IDE_COMMAND_REG);
+> > +		ndelay(400);
+> > +		spin_unlock_irqsave(&ide_lock, flags);
+> >  		return (*handler) (drive);
+> >  	}
 
-I have strange problems with a SATA controller and harddisk.
+btw alan, have you attempted to compile this? It averages 2 errors out
+of 4 lines :)
 
-Controller: Silicon Image SATA 3114 RAID
-Harddisk: SAMSUNG SP1614C
+-- 
+Jens Axboe
 
-The controller and disk get recognized, partitioned and formatted with ext3 
-(or reiserfs) without problems.
-
-I previously described a writing problem in   
-http://bugme.osdl.org/show_bug.cgi?id=3751 
-where - when trying to write on the disk - ext3 aborted.
-
-This problem can no longer be reproduced with 2.6.10-rc2-bk6 which I'm 
-currenty running.
-
-Writing to a partition seems to work, but when I fsck.ext3 it (same for reiser 
-and ext2) afterwards, I always get some kind of coruption like this:
-
-root@ubuntu:~ # fsck.ext3 -f /dev/sda2
-e2fsck 1.35 (28-Feb-2004)
-Pass 1: Checking inodes, blocks, and sizes
-Pass 2: Checking directory structure
-Pass 3: Checking directory connectivity
-Pass 4: Checking reference counts
-Pass 5: Checking group summary information
-Block bitmap differences:  +(555012--555013) +(653315--653317) 
-+(1603588--1603589) +1636356 +(1669123--1669125)
-Fix<y>? yes
-
-/dev/sda2: ***** FILE SYSTEM WAS MODIFIED *****
-/dev/sda2: 140632/977280 files (0.2% non-contiguous), 890219/1953905 blocks
-
-Running fsck again results in similar output. (Also similar happens with 
-reiserfs)
-
-When trying to put the root partition on the SATA disk random programs started 
-to segfault as it doesn't seem to read correctly from the disk.
-
-As none of this is reproducable on the IDE disks I'm working from it seems 
-like a driver problem to me.
-
-I tried to put the harddisk on the sil_blacklist for SIL_QUIRK_MOD15WRITE
-in sata_sil.c which resulted in ext3 aborting the same way as described
-in http://bugme.osdl.org/show_bug.cgi?id=3751 even with 2.6.10-rc2-bk6.
-
-So, if anyone could help me or give me further debugging hints, I'd be 
-thankful.
-
-Greetings
-Bausi
