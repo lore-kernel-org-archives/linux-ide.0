@@ -1,32 +1,45 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: libata vs ATAPI
-Date: Fri, 15 Oct 2004 15:13:39 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20041015131339.GA1517@suse.de>
-References: <58cb370e04101213215ce9a23c@mail.gmail.com> <416C438C.4010902@pobox.com> <58cb370e0410121417591ecff0@mail.gmail.com> <20041012212225.GA2625@havoc.gtf.org> <58cb370e0410121436749e2bfb@mail.gmail.com> <416C5093.7050304@pobox.com>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: RFC: moving drivers to a new drivers/ata directory
+Date: Fri, 15 Oct 2004 10:00:38 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <416FE616.8060100@us.ibm.com>
+References: <416F5757.8000306@pobox.com> <416F8C39.6010804@torque.net>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:65198 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S267421AbUJONPz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Oct 2004 09:15:55 -0400
-Content-Disposition: inline
-In-Reply-To: <416C5093.7050304@pobox.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <416F8C39.6010804@torque.net>
+To: dougg@torque.net
+Cc: Jeff Garzik <jgarzik@pobox.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-On Tue, Oct 12 2004, Jeff Garzik wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> >INQUIRY is done in PIO in ide-scsi and it works for this device
+Douglas Gilbert wrote:
+> Jeff Garzik wrote:
 > 
-> I wouldn't mind doing non-read/write commands with PIO.  As long as the 
-> "fast path" commands are done via DMA...
+>>
+>> Eventually I would like to move libata, and a few non-libata driver 
+>> like 3ware, to drivers/ata.  It would appear in the makefile (and link 
+>> order) _after_ drivers/ide and drivers/scsi.
+>>
+>> Comments/objections?
+> 
+> 
+> A comment: if SAS HBAs ever get installed on motherboards then
+> it won't be obvious to the average user which susbsystem they
+> should configure (i.e. ATA/SATA or SCSI/SAS). In both cases an
+> internal SATA disk could be connected via a SATA cable to a
+> plug on the motherboard.
 
-If by non-read/write you mean non-READ_X/WRITE_X, then I disagree very
-much. You just made cd ripping unbearable. SG_IO will use dma on ide-cd
-whenever possible right now.
+I don't think it matters if the HBA is on the motherboard or not. Since
+SAS can support attaching SATA and SATA/ATAPI devices via STP, we could
+certainly end up with HBAs that support both SAS and SATA devices. Where
+would such a driver exist? If libata moves into the ata directory, it seems
+like it would be more difficult for a single LLD to support both SAS and SATA.
+
 
 -- 
-Jens Axboe
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
