@@ -1,30 +1,81 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata-scsi.c: ata_scsi_simulate question
-Date: Wed, 23 Feb 2005 17:41:32 -0500
-Message-ID: <20050223224132.GA11163@havoc.gtf.org>
-References: <66F9227F7417874C8DB3CEB057727417044FA2@MILEX0.Miltope.local>
+From: Mark Lord <mlord@pobox.com>
+Subject: [PATCH 2.6.11+ sata_qstor] libata: sata_qstor cosmetic fixes
+Date: Wed, 23 Feb 2005 18:26:11 -0500
+Message-ID: <421D1113.9030502@pobox.com>
+References: <421CE018.5030007@pobox.com> <200502232345.23666.adobriyan@mail.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from atlmail.prod.rxgsys.com ([64.74.124.160]:58271 "EHLO
-	bastet.signetmail.com") by vger.kernel.org with ESMTP
-	id S261626AbVBWWln (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 Feb 2005 17:41:43 -0500
-Content-Disposition: inline
-In-Reply-To: <66F9227F7417874C8DB3CEB057727417044FA2@MILEX0.Miltope.local>
+Content-Type: multipart/mixed;
+ boundary="------------020009050004030100040401"
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:44936 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S261676AbVBWX1Y
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Feb 2005 18:27:24 -0500
+In-Reply-To: <200502232345.23666.adobriyan@mail.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Winstel, Drew" <DWinstel@Miltope.com>
-Cc: "Linux-Ide (E-mail)" <linux-ide@vger.kernel.org>
+To: Alexey Dobriyan <adobriyan@mail.ru>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Feb 23, 2005 at 04:35:11PM -0600, Winstel, Drew wrote:
-> I noticed that in libata-scsi.c, the ata_scsi_simulate() 
-> function calls for the SCSI commands SEEK_6 and SEEK_10 
-> are being simulated instead of being translated to the 
-> ATA SEEK command (0x70).  Why is this being done?
+This is a multi-part message in MIME format.
+--------------020009050004030100040401
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-That's what the SCSI T10 SAT standard specifies.
+Minor patch for new 2.6.xx sata_qstor driver attached,
+as per Alexey's fine-toothed comb!  :)
 
-	Jeff
+Signed-off-by: Mark Lord <mlord@pobox.com>
+
+Cheers
+-- 
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
 
 
+--------------020009050004030100040401
+Content-Type: text/plain;
+ name="sata_qstor.patch1"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="sata_qstor.patch1"
 
+LS0tIGxpbnV4L2RyaXZlcnMvc2NzaS9zYXRhX3FzdG9yLmMub3JpZwkyMDA1LTAyLTE2IDIw
+OjMxOjU3LjAwMDAwMDAwMCAtMDUwMAorKysgbGludXgvZHJpdmVycy9zY3NpL3NhdGFfcXN0
+b3IuYwkyMDA1LTAyLTIzIDE4OjE5OjMxLjAwMDAwMDAwMCAtMDUwMApAQCAtMjYxLDExICsy
+NjEsMTEgQEAKIAkJdTMyIGxlbjsKIAogCQlhZGRyID0gc2dfZG1hX2FkZHJlc3Moc2cpOwot
+CQkqKHU2NCAqKXByZCA9IGNwdV90b19sZTY0KGFkZHIpOworCQkqKF9fbGU2NCAqKXByZCA9
+IGNwdV90b19sZTY0KGFkZHIpOwogCQlwcmQgKz0gc2l6ZW9mKHU2NCk7CiAKIAkJbGVuID0g
+c2dfZG1hX2xlbihzZyk7Ci0JCSoodTMyICopcHJkID0gY3B1X3RvX2xlMzIobGVuKTsKKwkJ
+KihfX2xlMzIgKilwcmQgPSBjcHVfdG9fbGUzMihsZW4pOwogCQlwcmQgKz0gc2l6ZW9mKHU2
+NCk7CiAKIAkJVlBSSU5USygiUFJEWyV1XSA9ICgweCVsbFgsIDB4JVgpXG4iLCBuZWxlbSwK
+QEAgLTI5OCwxMCArMjk4LDEwIEBACiAJLyogaG9zdCBjb250cm9sIGJsb2NrIChIQ0IpICov
+CiAJYnVmWyAwXSA9IFFTX0hDQl9IRFI7CiAJYnVmWyAxXSA9IGhmbGFnczsKLQkqKHUzMiAq
+KSgmYnVmWyA0XSkgPSBjcHVfdG9fbGUzMihxYy0+bnNlY3QgKiBBVEFfU0VDVF9TSVpFKTsK
+LQkqKHUzMiAqKSgmYnVmWyA4XSkgPSBjcHVfdG9fbGUzMihxYy0+bl9lbGVtKTsKKwkqKF9f
+bGUzMiAqKSgmYnVmWyA0XSkgPSBjcHVfdG9fbGUzMihxYy0+bnNlY3QgKiBBVEFfU0VDVF9T
+SVpFKTsKKwkqKF9fbGUzMiAqKSgmYnVmWyA4XSkgPSBjcHVfdG9fbGUzMihxYy0+bl9lbGVt
+KTsKIAlhZGRyID0gKCh1NjQpcHAtPnBrdF9kbWEpICsgUVNfQ1BCX0JZVEVTOwotCSoodTY0
+ICopKCZidWZbMTZdKSA9IGNwdV90b19sZTY0KGFkZHIpOworCSooX19sZTY0ICopKCZidWZb
+MTZdKSA9IGNwdV90b19sZTY0KGFkZHIpOwogCiAJLyogZGV2aWNlIGNvbnRyb2wgYmxvY2sg
+KERDQikgKi8KIAlidWZbMjRdID0gUVNfRENCX0hEUjsKQEAgLTU2NiwxMCArNTY2LDEwIEBA
+CiAJaW50IHJjLCBoYXZlXzY0Yml0X2J1cyA9IChidXNfaW5mbyAmIFFTX0hQSFlfNjRCSVQp
+OwogCiAJaWYgKGhhdmVfNjRiaXRfYnVzICYmCi0JICAgICFwY2lfc2V0X2RtYV9tYXNrKHBk
+ZXYsIDB4ZmZmZmZmZmZmZmZmZmZmZlVMTCkpIHsKLQkJcmMgPSBwY2lfc2V0X2NvbnNpc3Rl
+bnRfZG1hX21hc2socGRldiwgMHhmZmZmZmZmZmZmZmZmZmZmVUxMKTsKKwkgICAgIXBjaV9z
+ZXRfZG1hX21hc2socGRldiwgRE1BXzY0QklUX01BU0spKSB7CisJCXJjID0gcGNpX3NldF9j
+b25zaXN0ZW50X2RtYV9tYXNrKHBkZXYsIERNQV82NEJJVF9NQVNLKTsKIAkJaWYgKHJjKSB7
+Ci0JCQlyYyA9IHBjaV9zZXRfY29uc2lzdGVudF9kbWFfbWFzayhwZGV2LCAweGZmZmZmZmZm
+VUxMKTsKKwkJCXJjID0gcGNpX3NldF9jb25zaXN0ZW50X2RtYV9tYXNrKHBkZXYsIERNQV8z
+MkJJVF9NQVNLKTsKIAkJCWlmIChyYykgewogCQkJCXByaW50ayhLRVJOX0VSUiBEUlZfTkFN
+RQogCQkJCQkiKCVzKTogNjQtYml0IERNQSBlbmFibGUgZmFpbGVkXG4iLApAQCAtNTc4LDE0
+ICs1NzgsMTQgQEAKIAkJCX0KIAkJfQogCX0gZWxzZSB7Ci0JCXJjID0gcGNpX3NldF9kbWFf
+bWFzayhwZGV2LCAweGZmZmZmZmZmVUxMKTsKKwkJcmMgPSBwY2lfc2V0X2RtYV9tYXNrKHBk
+ZXYsIERNQV8zMkJJVF9NQVNLKTsKIAkJaWYgKHJjKSB7CiAJCQlwcmludGsoS0VSTl9FUlIg
+RFJWX05BTUUKIAkJCQkiKCVzKTogMzItYml0IERNQSBlbmFibGUgZmFpbGVkXG4iLAogCQkJ
+CXBjaV9uYW1lKHBkZXYpKTsKIAkJCXJldHVybiByYzsKIAkJfQotCQlyYyA9IHBjaV9zZXRf
+Y29uc2lzdGVudF9kbWFfbWFzayhwZGV2LCAweGZmZmZmZmZmVUxMKTsKKwkJcmMgPSBwY2lf
+c2V0X2NvbnNpc3RlbnRfZG1hX21hc2socGRldiwgRE1BXzMyQklUX01BU0spOwogCQlpZiAo
+cmMpIHsKIAkJCXByaW50ayhLRVJOX0VSUiBEUlZfTkFNRQogCQkJCSIoJXMpOiAzMi1iaXQg
+Y29uc2lzdGVudCBETUEgZW5hYmxlIGZhaWxlZFxuIiwK
+--------------020009050004030100040401--
