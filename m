@@ -1,50 +1,58 @@
-From: "Luiz Fernando N. Capitulino" <lcapitulino@terra.com.br>
-Subject: Re: [Kernel-janitors] [patch] MIN/MAX in ide-timing.h
-Date: Sat, 10 Jul 2004 10:55:29 -0300
+From: "Arve Knudsen" <aknuds-1@broadpark.no>
+Subject: Re: System freeze when transferring large files (libata)
+Date: Sat, 10 Jul 2004 18:52:45 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040710105529.22e81954.lcapitulino@terra.com.br>
-References: <20040708181843.GA1370@moley.homelinux.net>
+Message-ID: <opsaxk57cgfmr65f@mail.broadpark.no>
+References: <opsavn7spjfmr65f@mail.broadpark.no> <opsaxaq20rfmr65f@mail.broadpark.no> <40EFEAE4.3060201@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed	delsp=yes
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from loncoche.terra.com.br ([200.154.55.229]:15525 "EHLO
-	loncoche.terra.com.br") by vger.kernel.org with ESMTP
-	id S266252AbUGJODc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Jul 2004 10:03:32 -0400
-In-Reply-To: <20040708181843.GA1370@moley.homelinux.net>
+Received: from mail.broadpark.no ([217.13.4.2]:52950 "EHLO mail.broadpark.no")
+	by vger.kernel.org with ESMTP id S266296AbUGJQvR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Jul 2004 12:51:17 -0400
+In-Reply-To: <40EFEAE4.3060201@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Clemens Buchacher <drizzd@aon.at>
-Cc: vojtech@suse.cz, linux-ide@vger.kernel.org, kernel-janitors@lists.osdl.org, lcapitulino@prefeitura.sp.gov.br
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
+On Sat, 10 Jul 2004 09:11:00 -0400, Jeff Garzik <jgarzik@pobox.com> wrote:
 
- Hello Clemens,
+> Arve Knudsen wrote:
+>> I thought I'd add that this is on an Asus A7N8X-X motherboard, and the   
+>> filesystem is ext3.
+>>  On Fri, 09 Jul 2004 18:03:18 +0200, Arve Knudsen  
+>> <aknuds-1@broadpark.no>  wrote:
+>>
+>>> I've been having this problem lately when transferring large amounts  
+>>> of  data to my Maxtor DiamondMax Plus 9 SATA 120GB drive, which is  
+>>> connected  to a Promise SATA150 TX2 Plus controller. It happened once  
+>>> with an -mm  kernel, but I figured it was probably down to instability  
+>>> in the -mm  patchset. However it just happened to me again with a  
+>>> vanilla 2.6.6  kernel, when untarring a backup. The system froze  
+>>> completely, I couldn't  even use alt+sysrq+b to reboot. Are there any  
+>>> known issues with the  Promise driver that can lead to such lockups?  
+>>> I've recently run a disc  check which found no problems (it wasn't  
+>>> Maxtor's own though, but  Seagate's as the Maxtor tools won't work  
+>>> with the controller).
+>
+>
+> No known bugs at least.  Promise seems to be more stable than most, in  
+> fact.
+>
+> Maybe you have an intermittent problem with your SATA cables.
 
- The patch seems right to me, but I have some comments:
+I've reproduced the error after untarring approximately 1.7GB to the  
+Maxtor disk (after adding noapic and nolapic to my kernel parameters, as  
+suggested by Patrick Dreker), but I was able to untar 12GB to my Seagate  
+disk (the main drive) successfully on the same controller. I will try to  
+swap cables/ports later, and see if writing to the Maxtor still hangs.
 
-Em Thu, 8 Jul 2004 20:18:43 +0200
-Clemens Buchacher <drizzd@aon.at> screveu:
+Question: Is it possible to have the kernel abort an i/o operation which  
+is obviously stuck, so that a possible disk problem doesn't cause the  
+whole system to hang?
 
-| # This is a BitKeeper generated diff -Nru style patch.
+Thanks
 
-[...]
-
- 
-| -#define MIN(a,b)	        ((a)<(b)?(a):(b))
-| -#define MAX(a,b)	        ((a)>(b)?(a):(b))
-| -#define FIT(v,min,max)	MAX(MIN(v,max),min)
-| -#define ENOUGH(v,unit)	(((v)-1)/(unit)+1)
-| -#define EZ(v,unit)	        ((v)?ENOUGH(v,unit):0)
-| +#define FIT(v,vmin,vmax)	max(min(v,vmax),vmin)
-| +#define ENOUGH(v,unit)	(((v)-1)/(unit)+1)
-| +#define EZ(v,unit)		((v)?ENOUGH(v,unit):0)
-
- Did you changed something in ENOUGH and EZ ?
-
- Maybe we can try to make it inlined functions, thus maybe is possible to
-solve the warning problem.
-
-PS: Try to send your patches in the body of the e-mail.
-
--- 
-Luiz Fernando
+Arve Knudsen
