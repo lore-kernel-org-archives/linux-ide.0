@@ -1,77 +1,57 @@
-From: <Stuart_Hayes@Dell.com>
-Subject: RE: ide-cd question
-Date: Thu, 17 Mar 2005 10:17:58 -0600
-Message-ID: <7A8F92187EF7A249BF847F1BF4903C04010EEA2A@ausx2kmpc103.aus.amer.dell.com>
+From: Oliver Korpilla <Oliver.Korpilla@gmx.de>
+Subject: SATA/IDE strangeness (ATI chip)
+Date: Thu, 17 Mar 2005 18:47:57 +0100
+Message-ID: <4239C2CD.4050206@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:11895 "EHLO
-	ausc60ps301.us.dell.com") by vger.kernel.org with ESMTP
-	id S261937AbVCQQSA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Mar 2005 11:18:00 -0500
-Content-class: urn:content-classes:message
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
+Resent-Message-ID: <pAAoTB.A.FYG.PebOCB@murphy>
+List-Post: <mailto:debian-amd64@lists.debian.org>
+List-Help: <mailto:debian-amd64-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-amd64-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-amd64-request@lists.debian.org?subject=unsubscribe>
+List-Archive: <http://lists.debian.org/debian-amd64/>
+To: debian-amd64@lists.debian.org, linux-ide@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: stuarthayes@austin.rr.com, axboe@suse.de, linux-ide@vger.kernel.org
 
-Jens Axboe wrote:
-> On Fri, Mar 04 2005, Stuart_Hayes@Dell.com wrote:
->> 
->>> 
->>> There's still a problem here, you are not initializing nsectors for
->>> non-pc requests. And your comments wrap :)
->>> 
->>>         int nsectors = rq->hard_nr_sectors;
->>> 
->>>         if (blk_pc_request(rq))
->>>                 nsectors = (rq->data_len + 511) >> 9;         if
->>>                 (!nsectors) nsectors = 1;
->>> 
->>>         ...
->>> 
->>> Can you resend with that fixed up and with a Signed-off-by header?
->> 
->> Here it is.  Thanks for all the help.  I'm attaching as a file, too,
->> just in case it gets garbled again.
->> Stuart
->> 
->> 
->> Signed-off-by: Stuart Hayes <stuart_hayes@dell.com>
->> 
->> --- linux-2.6.11/drivers/ide/ide-io.c.orig	2005-03-04
->> 16:11:14.000000000 -0500 +++
->> linux-2.6.11/drivers/ide/ide-io.c	2005-03-04 16:19:19.000000000
->>  		-0500 @@ -516,7 +516,19 @@ static ide_startstop_t
->> ide_atapi_error(i hwif->OUTB(WIN_IDLEIMMEDIATE, IDE_COMMAND_REG); 
->> 
->>  	if (rq->errors >= ERROR_MAX) {
->> -		drive->driver->end_request(drive, 0, 0);
->> +		/*
->> +		 * make sure request is fully ended--otherwise the
->> +		 * command will be retried without rq->errors getting
->> +		 * reset to zero, which could cause us to get stuck
->> +		 * in a loop with infinite retries without any more +
-* reset
->> attempts +		 */
->> +		int nsectors = rq->hard_nr_sectors;
->> +		if (blk_pc_request(rq))
->> +			nsectors = (rq->data_len + 511) >> 9;
->> +		if (!nsectors)
->> +			nsectors = 1;
->> +		drive->driver->end_request(drive, 0, nsectors);
->>  	} else {
->>  		if ((rq->errors & ERROR_RESET) == ERROR_RESET) {
->>  			++rq->errors;
-> 
-> Looks good, Bart care to pick this up?
-> 
-> Signed-off-by: Jens Axboe <axboe@suse.de>
+Hello!
 
-Bart--
+On my MSI motherboard there are the following devices:
 
-Is there a chance you might pick this up, or is there a problem with it?
+0000:00:11.0 IDE interface: ATI Technologies Inc: Unknown device 437a
+0000:00:12.0 IDE interface: ATI Technologies Inc: Unknown device 4379
+0000:00:14.1 IDE interface: ATI Technologies Inc: Unknown device 4376
 
-Thanks
-Stuart
+These are listed in the PCI ID database (not committed yet):
+
+4376	Standard Dual Channel PCI IDE Controller ATI
+4379	ATI 4379 Serial ATA Controller
+437a	ATI 437A Serial ATA Controller
+
+The 1st SATA controller seems to work with the SATA_SIL driver from 
+vanilla 2.6.11 (and none sooner, I tried), and I'm using it that way 
+now. Since the Debian Pure64 CD doesn't come with that, it doesn't find 
+a HD when trying to install with the CD.
+
+I have the following problems:
+------------------------------
+* Though the SATA is configured in IDE mode in BIOS it does not show up 
+as IDE within Linux and this does not change when the ATIIXP driver is 
+loaded - ide2 is not recognized as a bus with connected devices. My SATA 
+HD is listed by the BIOS to be channel 2 master, while CD-ROM on the 
+Dual ATA is listed on channel 0, channel 1 is unused, so shouldn't the 
+SATA drive show up as /dev/hde or something???
+* How can I tune the ATIIXP driver via parameters or source modification 
+so it recognizes the SATA controllers as devices to configure???
+* How can I force ANY IDE driver to recognize these SATA drives in IDE 
+mode?
+
+This is a mail regarding this topic I'm confused about. The author seems 
+to think, ATIIXP can do the 4379 as well:
+
+http://www.ussg.iu.edu/hypermail/linux/kernel/0412.1/1460.html
+
+Please let me know if I can provide you with any additional data.
+
+Thanks and with kind regards,
+Oliver Korpilla
