@@ -1,39 +1,126 @@
-From: "Dario Oliva" <doliva@arcoide.com>
-Subject: Removable ide media drive
-Date: Mon, 8 Nov 2004 12:48:22 -0500
-Message-ID: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAAROcsBjpda0STrtuFqqmVycKAAAAQAAAAeQ3FrZXT4EOb5fbvCME5cQEAAAAA@arcoide.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide-scsi: DMA alignment bug fixed
+Date: Tue, 9 Nov 2004 12:51:25 +0100
+Message-ID: <58cb370e0411090351e01c953@mail.gmail.com>
+References: <Pine.LNX.4.56.0411082320320.348@fast.tk.local>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail4.atl.registeredsite.com ([64.224.219.78]:24461 "EHLO
-	mail4.atl.registeredsite.com") by vger.kernel.org with ESMTP
-	id S261963AbUKHRsl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Nov 2004 12:48:41 -0500
+Received: from rproxy.gmail.com ([64.233.170.206]:64701 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261515AbUKILvZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Nov 2004 06:51:25 -0500
+Received: by rproxy.gmail.com with SMTP id z35so38471rne
+        for <linux-ide@vger.kernel.org>; Tue, 09 Nov 2004 03:51:25 -0800 (PST)
+In-Reply-To: <Pine.LNX.4.56.0411082320320.348@fast.tk.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Bartlomiej Zolnierkiewicz' <bzolnier@gmail.com>
-Cc: Garet Cammer <gcammer@duplidisk.com>, Linux Ide List <linux-ide@vger.kernel.org>
+To: Terry Kyriacopoulos <terryk@echo-on.net>
+Cc: Jens Axboe <axboe@suse.de>, linux-kernel@vger.kernel.org, andre@linux-ide.org, linux-ide@vger.kernel.org
 
-Hello Bart.  
+Why can't you simply change alignment in ide-scsi to 32 bytes?
 
-We are the people that were having a problem with the removable IDE device
-that is not working properly, trying to read from media that is not present.
-As you recommended I filled out a bug report at http://bugme.osdl.com, bug #
-3593, and I also posted it to the linux-ide mailing list.  We are very
-anxious to know if there has been any progress or interest in looking into
-this issue. Any information you can tell me will be useful. 
-
-Thanks.
-
-
-Dario Oliva
-Linux Software Engineer
-Arco Data Protection Systems
-doliva@arcoide.com 
-1-954-925-2688 ext. 31
- 
-
-
-
+On Mon, 8 Nov 2004 23:22:39 -0500 (EST), Terry Kyriacopoulos
+<terryk@echo-on.net> wrote:
+> 
+> 
+> 
+> 
+> On Fri, 5 Nov 2004, Jens Axboe wrote:
+> 
+> > I don't think this is the right way to go. The design of ide-scsi's dma
+> > setup is based on the old buffer_heads, where you can only have a single
+> > page at the time so you need to string them manually. We actually have
+> > kernel helpers for mapping _user_ data to a request, we could add one
+> > for mapping kernel data to a request as well.
+> >
+> > Here's a patch that I did some time ago for mapping a kernel pointer to
+> > a bio. bio_copy_user() would be good inspiration, too. Mapping an sglist
+> > to a new bio should be even simpler and it would clean up the ide-scsi
+> > stuff a lot. It's not exactly pretty.
+> 
+> ...
+> 
+> 
+> 
+> >
+> > +struct bio *bio_map_data(request_queue_t *q, unsigned char *ptr,
+> > +                      unsigned int len, int read)
+> > +{
+> > +
+> > +     unsigned long data = (unsigned long) ptr;
+> > +     unsigned long end = (data + len + PAGE_SIZE - 1) >> PAGE_SHIFT;
+> > +     unsigned long start = data >> PAGE_SHIFT;
+> > +     const int nr_pages = end - start;
+> > +     unsigned int bytes, offset;
+> > +     struct bio *bio;
+> > +     struct page *page;
+> > +     int i;
+> > +
+> > +     if (!len || !nr_pages)
+> > +             return ERR_PTR(-EINVAL);
+> > +
+> > +     bio = bio_alloc(GFP_KERNEL, nr_pages);
+> > +     if (!bio)
+> > +             return ERR_PTR(-ENOMEM);
+> > +
+> > +     for (i = 0; i < nr_pages; i++) {
+> > +             if (len <= 0)
+> > +                     break;
+> > +
+> > +             page = virt_to_page(ptr);
+> > +             offset = offset_in_page(ptr);
+> > +
+> > +             bytes = PAGE_SIZE - offset;
+> > +             if (bytes > len)
+> > +                     bytes = len;
+> > +
+> > +             if (__bio_add_page(q, bio, page, bytes, offset) < bytes)
+> > +                     break;
+> > +
+> > +             len -= bytes;
+> > +             offset = 0;
+> > +             ptr += bytes;
+> > +     }
+> > +
+> > +     bio->bi_end_io = bio_map_data_endio;
+> > +     bio->bi_rw |= (!read << BIO_RW);
+> > +     return bio;
+> > +}
+> > +
+> 
+> This code maps a pointer+length into a bio, but ide-scsi is fed an sglist,
+> just like all low-level SCSI drivers, so this doesn't really help.
+> 
+> Please understand the way I handle misalignment.  Originally I used
+> bounce buffers for the entire transfer if there was any misalignment,
+> but this doesn't give optimal performance.  To maintain security, the
+> bounce buffers must be zeroed before the I/O, otherwise a data scavenger
+> can read potentially sensitive data if a transfer doesn't fully overwrite
+> them.
+> 
+> This is where I got the idea to minimize the size of the extra bounce
+> buffers by using the largest aligned subset of the user area.  If the
+> base isn't aligned, the data must be shifted into place, hence the need
+> for the overlapped copying in 'idescsi_bounce_dma'.  If only the length
+> is misaligned, a small bounce buffer is appended to the bio just for the
+> partial block.  Notice what it does for performance:
+> 
+> - Extra memory allocation is minimized
+> - The user area doesn't need to be zeroed
+> - Copying is limited to the last block if the base is aligned
+> 
+> cdda2wav/cdrecord/cdrdao use buffers much larger than 512 bytes and
+> typically provide base aligned buffers, so this advanced technique
+> really pays off.
+> 
+> Yes, some code is ugly, but the bug it fixes is uglier.
+> 
+> Another goal of mine was to confine the patch to the ide-scsi module.
+> Making changes to high-level SCSI drivers or to IDE services would
+> definitely not be a good approach.
+> 
+> Given the above, the code you presented can't really simplify ide-scsi.
+> (If you have something that maps an sglist to a single contiguous block,
+> I could use it.:-)
