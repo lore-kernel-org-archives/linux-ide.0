@@ -1,54 +1,124 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH] remove PCI dependence from libata
-Date: Fri, 12 Nov 2004 19:10:16 -0500
-Message-ID: <419550E8.5080404@pobox.com>
-References: <006e01c4c069$dea08f60$4205040a@internal.synopsys.com>
+Subject: [BK PATCHES] 2.6.x libata updates
+Date: Sat, 13 Nov 2004 15:53:46 -0500
+Message-ID: <20041113205346.GA29761@havoc.gtf.org>
+Reply-To: linux-ide@vger.kernel.org
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090802070108080604060102"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:20925 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262772AbUKMAKc
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Nov 2004 19:10:32 -0500
-In-Reply-To: <006e01c4c069$dea08f60$4205040a@internal.synopsys.com>
+Received: from havoc.gtf.org ([69.28.190.101]:55176 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S261168AbUKMUxu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Nov 2004 15:53:50 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mat.Loikkanen@synopsys.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------090802070108080604060102
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Here's what I just checked in, to libata-2.6, libata-2.4, and 
-libata-upstream-2.4 queues.
+Please do a
 
+	bk pull bk://gkernel.bkbits.net/libata-2.6
 
+This will update the following files:
 
---------------090802070108080604060102
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
+ drivers/scsi/Kconfig        |   14 ++++----
+ drivers/scsi/ahci.c         |   16 ++++-----
+ drivers/scsi/ata_piix.c     |   16 +++++----
+ drivers/scsi/libata-core.c  |   71 ++++++++++++++++++++++++--------------------
+ drivers/scsi/libata-scsi.c  |    2 -
+ drivers/scsi/libata.h       |    2 -
+ drivers/scsi/sata_nv.c      |   13 ++++----
+ drivers/scsi/sata_promise.c |   13 ++++----
+ drivers/scsi/sata_sil.c     |    5 +--
+ drivers/scsi/sata_sis.c     |    9 +++--
+ drivers/scsi/sata_svw.c     |    5 +--
+ drivers/scsi/sata_sx4.c     |   13 ++++----
+ drivers/scsi/sata_uli.c     |    9 +++--
+ drivers/scsi/sata_via.c     |    3 +
+ drivers/scsi/sata_vsc.c     |    5 +--
+ include/linux/libata.h      |   44 ++++++++++++++++++---------
+ 16 files changed, 141 insertions(+), 99 deletions(-)
 
-#
-# ChangeSet
-#   2004/11/12 19:01:32-05:00 jgarzik@pobox.com 
-#   [libata] remove dependence on PCI
-#   
-#   Most of this work was done by "Mat Loikkanen" <Mat.Loikkanen@synopsys.com>.
-#   
-#   * use struct device rather than struct pci_dev
-#   * use generic DMA routines (dma_xxx) and generic struct device
-#     routines (dev_xxx)
-#   * isolate PCI-specific helpers inside CONFIG_PCI
-# 
+through these ChangeSets:
+
+<jgarzik@pobox.com> (04/11/13 1.2095)
+   [libata] bump versions, add MODULE_VERSION() tags
+   
+   Also remove dep on CONFIG_EXPERIMENTAL for libata itself,
+   and several libata drivers.
+
+<jgarzik@pobox.com> (04/11/12 1.2094)
+   [libata] remove dependence on PCI
+   
+   Most of this work was done by "Mat Loikkanen" <Mat.Loikkanen@synopsys.com>.
+   
+   * use struct device rather than struct pci_dev
+   * use generic DMA routines (dma_xxx) and generic struct device
+     routines (dev_xxx)
+   * isolate PCI-specific helpers inside CONFIG_PCI
+
+diff -Nru a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+--- a/drivers/scsi/Kconfig	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/Kconfig	2004-11-13 15:52:21 -05:00
+@@ -399,7 +399,7 @@
+ 
+ config SCSI_SATA
+ 	bool "Serial ATA (SATA) support"
+-	depends on SCSI && EXPERIMENTAL
++	depends on SCSI
+ 	help
+ 	  This driver family supports Serial ATA host controllers
+ 	  and devices.
+@@ -408,15 +408,15 @@
+ 
+ config SCSI_SATA_AHCI
+ 	tristate "AHCI SATA support"
+-	depends on SCSI_SATA && PCI && EXPERIMENTAL
++	depends on SCSI_SATA && PCI
+ 	help
+ 	  This option enables support for AHCI Serial ATA.
+ 
+ 	  If unsure, say N.
+ 
+ config SCSI_SATA_SVW
+-	tristate "ServerWorks Frodo / Apple K2 SATA support (EXPERIMENTAL)"
+-	depends on SCSI_SATA && PCI && EXPERIMENTAL
++	tristate "ServerWorks Frodo / Apple K2 SATA support"
++	depends on SCSI_SATA && PCI
+ 	help
+ 	  This option enables support for Broadcom/Serverworks/Apple K2
+ 	  SATA support.
+@@ -467,7 +467,7 @@
+ 
+ config SCSI_SATA_SIS
+ 	tristate "SiS 964/180 SATA support"
+-	depends on SCSI_SATA && PCI
++	depends on SCSI_SATA && PCI && EXPERIMENTAL
+ 	help
+ 	  This option enables support for SiS Serial ATA 964/180.
+ 
+@@ -483,7 +483,7 @@
+ 
+ config SCSI_SATA_VIA
+ 	tristate "VIA SATA support"
+-	depends on SCSI_SATA && PCI && EXPERIMENTAL
++	depends on SCSI_SATA && PCI
+ 	help
+ 	  This option enables support for VIA Serial ATA.
+ 
+@@ -491,7 +491,7 @@
+ 
+ config SCSI_SATA_VITESSE
+ 	tristate "VITESSE VSC-7174 SATA support"
+-	depends on SCSI_SATA && PCI && EXPERIMENTAL
++	depends on SCSI_SATA && PCI
+ 	help
+ 	  This option enables support for Vitesse VSC7174 Serial ATA.
+ 
 diff -Nru a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
---- a/drivers/scsi/ahci.c	2004-11-12 19:08:53 -05:00
-+++ b/drivers/scsi/ahci.c	2004-11-12 19:08:53 -05:00
+--- a/drivers/scsi/ahci.c	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/ahci.c	2004-11-13 15:52:21 -05:00
 @@ -270,7 +270,7 @@
  
  static int ahci_port_start(struct ata_port *ap)
@@ -115,9 +185,26 @@ diff -Nru a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
  
  	mmio_base = ioremap(pci_resource_start(pdev, AHCI_PCI_BAR),
 diff -Nru a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
---- a/drivers/scsi/ata_piix.c	2004-11-12 19:08:53 -05:00
-+++ b/drivers/scsi/ata_piix.c	2004-11-12 19:08:53 -05:00
-@@ -260,7 +260,7 @@
+--- a/drivers/scsi/ata_piix.c	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/ata_piix.c	2004-11-13 15:52:21 -05:00
+@@ -32,7 +32,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"ata_piix"
+-#define DRV_VERSION	"1.02"
++#define DRV_VERSION	"1.03"
+ 
+ enum {
+ 	PIIX_IOCFG		= 0x54, /* IDE I/O configuration register */
+@@ -247,6 +247,7 @@
+ MODULE_DESCRIPTION("SCSI low-level driver for Intel PIIX/ICH ATA controllers");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, piix_pci_tbl);
++MODULE_VERSION(DRV_VERSION);
+ 
+ /**
+  *	piix_pata_cbl_detect - Probe host controller cable detect info
+@@ -260,7 +261,7 @@
   */
  static void piix_pata_cbl_detect(struct ata_port *ap)
  {
@@ -126,7 +213,7 @@ diff -Nru a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
  	u8 tmp, mask;
  
  	/* no 80c support in host controller? */
-@@ -293,8 +293,9 @@
+@@ -293,8 +294,9 @@
  
  static void piix_pata_phy_reset(struct ata_port *ap)
  {
@@ -138,7 +225,7 @@ diff -Nru a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
  		ata_port_disable(ap);
  		printk(KERN_INFO "ata%u: port disabled. ignoring.\n", ap->id);
  		return;
-@@ -322,7 +323,7 @@
+@@ -322,7 +324,7 @@
   */
  static int piix_sata_probe (struct ata_port *ap)
  {
@@ -147,7 +234,7 @@ diff -Nru a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
  	int combined = (ap->flags & ATA_FLAG_SLAVE_POSS);
  	int orig_mask, mask, i;
  	u8 pcs;
-@@ -392,7 +393,7 @@
+@@ -392,7 +394,7 @@
  static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev)
  {
  	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
@@ -156,7 +243,7 @@ diff -Nru a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
  	unsigned int is_slave	= (adev->devno != 0);
  	unsigned int master_port= ap->hard_port_no ? 0x42 : 0x40;
  	unsigned int slave_port	= 0x44;
-@@ -444,7 +445,7 @@
+@@ -444,7 +446,7 @@
  static void piix_set_dmamode (struct ata_port *ap, struct ata_device *adev)
  {
  	unsigned int udma	= adev->dma_mode; /* FIXME: MWDMA too */
@@ -166,9 +253,17 @@ diff -Nru a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
  	u8 speed		= udma;
  	unsigned int drive_dn	= (ap->hard_port_no ? 2 : 0) + adev->devno;
 diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
---- a/drivers/scsi/libata-core.c	2004-11-12 19:08:53 -05:00
-+++ b/drivers/scsi/libata-core.c	2004-11-12 19:08:53 -05:00
-@@ -1017,7 +1017,7 @@
+--- a/drivers/scsi/libata-core.c	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/libata-core.c	2004-11-13 15:52:21 -05:00
+@@ -67,6 +67,7 @@
+ MODULE_AUTHOR("Jeff Garzik");
+ MODULE_DESCRIPTION("Library module for ATA devices");
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(DRV_VERSION);
+ 
+ /**
+  *	ata_tf_load - send taskfile registers to host controller
+@@ -1017,7 +1018,7 @@
  	BUG_ON(qc == NULL);
  
  	ata_sg_init_one(qc, dev->id, sizeof(dev->id));
@@ -177,7 +272,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  	qc->tf.protocol = ATA_PROT_PIO;
  	qc->nsect = 1;
  
-@@ -1849,7 +1849,7 @@
+@@ -1849,7 +1850,7 @@
  {
  	struct ata_port *ap = qc->ap;
  	struct scatterlist *sg = qc->sg;
@@ -186,7 +281,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  
  	assert(qc->flags & ATA_QCFLAG_DMAMAP);
  	assert(sg != NULL);
-@@ -1860,9 +1860,9 @@
+@@ -1860,9 +1861,9 @@
  	DPRINTK("unmapping %u sg elements\n", qc->n_elem);
  
  	if (qc->flags & ATA_QCFLAG_SG)
@@ -198,7 +293,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  				 sg_dma_len(&sg[0]), dir);
  
  	qc->flags &= ~ATA_QCFLAG_DMAMAP;
-@@ -1973,13 +1973,13 @@
+@@ -1973,13 +1974,13 @@
  static int ata_sg_setup_one(struct ata_queued_cmd *qc)
  {
  	struct ata_port *ap = qc->ap;
@@ -215,7 +310,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  		return -1;
  
  	sg_dma_address(sg) = dma_address;
-@@ -2010,8 +2010,8 @@
+@@ -2010,8 +2011,8 @@
  	VPRINTK("ENTER, ata%u\n", ap->id);
  	assert(qc->flags & ATA_QCFLAG_SG);
  
@@ -226,7 +321,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  	if (n_elem < 1)
  		return -1;
  
-@@ -2416,7 +2416,7 @@
+@@ -2416,7 +2417,7 @@
  	memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
  
  	ata_sg_init_one(qc, cmd->sense_buffer, sizeof(cmd->sense_buffer));
@@ -235,7 +330,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  
  	memset(&qc->cdb, 0, sizeof(ap->cdb_len));
  	qc->cdb[0] = REQUEST_SENSE;
-@@ -3104,9 +3104,9 @@
+@@ -3104,9 +3105,9 @@
  
  int ata_port_start (struct ata_port *ap)
  {
@@ -247,7 +342,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  	if (!ap->prd)
  		return -ENOMEM;
  
-@@ -3117,9 +3117,9 @@
+@@ -3117,9 +3118,9 @@
  
  void ata_port_stop (struct ata_port *ap)
  {
@@ -259,7 +354,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  }
  
  /**
-@@ -3165,7 +3165,7 @@
+@@ -3165,7 +3166,7 @@
  	host->max_channel = 1;
  	host->unique_id = ata_unique_id++;
  	host->max_cmd_len = 12;
@@ -268,7 +363,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  	scsi_assign_lock(host, &host_set->lock);
  
  	ap->flags = ATA_FLAG_PORT_DISABLED;
-@@ -3252,7 +3252,7 @@
+@@ -3252,7 +3253,7 @@
  int ata_device_add(struct ata_probe_ent *ent)
  {
  	unsigned int count = 0, i;
@@ -277,7 +372,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  	struct ata_host_set *host_set;
  
  	DPRINTK("ENTER\n");
-@@ -3264,7 +3264,7 @@
+@@ -3264,7 +3265,7 @@
  	memset(host_set, 0, sizeof(struct ata_host_set) + (ent->n_ports * sizeof(void *)));
  	spin_lock_init(&host_set->lock);
  
@@ -286,7 +381,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  	host_set->n_ports = ent->n_ports;
  	host_set->irq = ent->irq;
  	host_set->mmio_base = ent->mmio_base;
-@@ -3332,7 +3332,7 @@
+@@ -3332,7 +3333,7 @@
  			 */
  		}
  
@@ -295,7 +390,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  		if (rc) {
  			printk(KERN_ERR "ata%u: scsi_add_host failed\n",
  			       ap->id);
-@@ -3352,7 +3352,7 @@
+@@ -3352,7 +3353,7 @@
  		scsi_scan_host(ap->host);
  	}
  
@@ -304,7 +399,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  
  	VPRINTK("EXIT, returning %u\n", ent->n_ports);
  	return ent->n_ports; /* success */
-@@ -3413,7 +3413,7 @@
+@@ -3413,7 +3414,7 @@
  }
  
  static struct ata_probe_ent *
@@ -313,7 +408,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  {
  	struct ata_probe_ent *probe_ent;
  	int i;
-@@ -3421,7 +3421,7 @@
+@@ -3421,7 +3422,7 @@
  	probe_ent = kmalloc(sizeof(*probe_ent) * n, GFP_KERNEL);
  	if (!probe_ent) {
  		printk(KERN_ERR DRV_NAME "(%s): out of memory\n",
@@ -322,7 +417,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  		return NULL;
  	}
  
-@@ -3429,7 +3429,7 @@
+@@ -3429,7 +3430,7 @@
  
  	for (i = 0; i < n; i++) {
  		INIT_LIST_HEAD(&probe_ent[i].node);
@@ -331,7 +426,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  
  		probe_ent[i].sht = port[i]->sht;
  		probe_ent[i].host_flags = port[i]->host_flags;
-@@ -3443,10 +3443,12 @@
+@@ -3443,10 +3444,12 @@
  	return probe_ent;
  }
  
@@ -345,7 +440,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  	if (!probe_ent)
  		return NULL;
  
-@@ -3475,7 +3477,8 @@
+@@ -3475,7 +3478,8 @@
  struct ata_probe_ent *
  ata_pci_init_legacy_mode(struct pci_dev *pdev, struct ata_port_info **port)
  {
@@ -355,7 +450,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  	if (!probe_ent)
  		return NULL;
  
-@@ -3651,7 +3654,8 @@
+@@ -3651,7 +3655,8 @@
  
  void ata_pci_remove_one (struct pci_dev *pdev)
  {
@@ -365,7 +460,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  	struct ata_port *ap;
  	unsigned int i;
  
-@@ -3692,7 +3696,7 @@
+@@ -3692,7 +3697,7 @@
  
  	kfree(host_set);
  	pci_disable_device(pdev);
@@ -374,7 +469,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  }
  
  /* move to PCI subsystem */
-@@ -3728,6 +3732,7 @@
+@@ -3728,6 +3733,7 @@
  
  	return (tmp == bits->val) ? 1 : 0;
  }
@@ -382,7 +477,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  
  
  /**
-@@ -3764,7 +3769,6 @@
+@@ -3764,7 +3770,6 @@
   * Do not depend on ABI/API stability.
   */
  
@@ -390,7 +485,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  EXPORT_SYMBOL_GPL(ata_std_bios_param);
  EXPORT_SYMBOL_GPL(ata_std_ports);
  EXPORT_SYMBOL_GPL(ata_device_add);
-@@ -3779,8 +3783,6 @@
+@@ -3779,8 +3784,6 @@
  EXPORT_SYMBOL_GPL(ata_std_dev_select);
  EXPORT_SYMBOL_GPL(ata_tf_to_fis);
  EXPORT_SYMBOL_GPL(ata_tf_from_fis);
@@ -399,7 +494,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  EXPORT_SYMBOL_GPL(ata_check_status);
  EXPORT_SYMBOL_GPL(ata_exec_command);
  EXPORT_SYMBOL_GPL(ata_port_start);
-@@ -3795,8 +3797,6 @@
+@@ -3795,8 +3798,6 @@
  EXPORT_SYMBOL_GPL(__sata_phy_reset);
  EXPORT_SYMBOL_GPL(ata_bus_reset);
  EXPORT_SYMBOL_GPL(ata_port_disable);
@@ -408,7 +503,7 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
  EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
  EXPORT_SYMBOL_GPL(ata_scsi_queuecmd);
  EXPORT_SYMBOL_GPL(ata_scsi_error);
-@@ -3806,3 +3806,11 @@
+@@ -3806,3 +3807,11 @@
  EXPORT_SYMBOL_GPL(ata_dev_classify);
  EXPORT_SYMBOL_GPL(ata_dev_id_string);
  EXPORT_SYMBOL_GPL(ata_scsi_simulate);
@@ -421,8 +516,8 @@ diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
 +EXPORT_SYMBOL_GPL(ata_pci_remove_one);
 +#endif /* CONFIG_PCI */
 diff -Nru a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
---- a/drivers/scsi/libata-scsi.c	2004-11-12 19:08:53 -05:00
-+++ b/drivers/scsi/libata-scsi.c	2004-11-12 19:08:53 -05:00
+--- a/drivers/scsi/libata-scsi.c	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/libata-scsi.c	2004-11-13 15:52:21 -05:00
 @@ -678,7 +678,7 @@
  			ata_sg_init_one(qc, cmd->request_buffer,
  					cmd->request_bufflen);
@@ -432,10 +527,39 @@ diff -Nru a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
  	}
  
  	qc->complete_fn = ata_scsi_qc_complete;
+diff -Nru a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+--- a/drivers/scsi/libata.h	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/libata.h	2004-11-13 15:52:21 -05:00
+@@ -26,7 +26,7 @@
+ #define __LIBATA_H__
+ 
+ #define DRV_NAME	"libata"
+-#define DRV_VERSION	"1.02"	/* must be exactly four chars */
++#define DRV_VERSION	"1.10"	/* must be exactly four chars */
+ 
+ struct ata_scsi_args {
+ 	u16			*id;
 diff -Nru a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
---- a/drivers/scsi/sata_nv.c	2004-11-12 19:08:53 -05:00
-+++ b/drivers/scsi/sata_nv.c	2004-11-12 19:08:53 -05:00
-@@ -454,12 +454,13 @@
+--- a/drivers/scsi/sata_nv.c	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/sata_nv.c	2004-11-13 15:52:21 -05:00
+@@ -44,7 +44,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME			"sata_nv"
+-#define DRV_VERSION			"0.03"
++#define DRV_VERSION			"0.5"
+ 
+ #define NV_PORTS			2
+ #define NV_PIO_MASK			0x1f
+@@ -234,6 +234,7 @@
+ MODULE_DESCRIPTION("low-level driver for NVIDIA nForce SATA controller");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, nv_pci_tbl);
++MODULE_VERSION(DRV_VERSION);
+ 
+ irqreturn_t nv_interrupt (int irq, void *dev_instance, struct pt_regs *regs)
+ {
+@@ -454,12 +455,13 @@
  
  static void nv_enable_hotplug_ck804(struct ata_probe_ent *probe_ent)
  {
@@ -451,7 +575,7 @@ diff -Nru a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
  
  	writeb(NV_INT_STATUS_HOTPLUG, probe_ent->mmio_base + NV_INT_STATUS_CK804);
  
-@@ -471,6 +472,7 @@
+@@ -471,6 +473,7 @@
  
  static void nv_disable_hotplug_ck804(struct ata_host_set *host_set)
  {
@@ -459,7 +583,7 @@ diff -Nru a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
  	u8 intr_mask;
  	u8 regval;
  
-@@ -480,9 +482,9 @@
+@@ -480,9 +483,9 @@
  
  	writeb(intr_mask, host_set->mmio_base + NV_INT_ENABLE_CK804);
  
@@ -472,8 +596,17 @@ diff -Nru a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
  
  static void nv_check_hotplug_ck804(struct ata_host_set *host_set)
 diff -Nru a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
---- a/drivers/scsi/sata_promise.c	2004-11-12 19:08:53 -05:00
-+++ b/drivers/scsi/sata_promise.c	2004-11-12 19:08:53 -05:00
+--- a/drivers/scsi/sata_promise.c	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/sata_promise.c	2004-11-13 15:52:21 -05:00
+@@ -40,7 +40,7 @@
+ #include "sata_promise.h"
+ 
+ #define DRV_NAME	"sata_promise"
+-#define DRV_VERSION	"1.00"
++#define DRV_VERSION	"1.01"
+ 
+ 
+ enum {
 @@ -174,7 +174,7 @@
  
  static int pdc_port_start(struct ata_port *ap)
@@ -515,10 +648,35 @@ diff -Nru a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
  	INIT_LIST_HEAD(&probe_ent->node);
  
  	mmio_base = ioremap(pci_resource_start(pdev, 3),
+@@ -661,6 +661,7 @@
+ MODULE_DESCRIPTION("Promise SATA TX2/TX4 low-level driver");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, pdc_ata_pci_tbl);
++MODULE_VERSION(DRV_VERSION);
+ 
+ module_init(pdc_ata_init);
+ module_exit(pdc_ata_exit);
 diff -Nru a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
---- a/drivers/scsi/sata_sil.c	2004-11-12 19:08:53 -05:00
-+++ b/drivers/scsi/sata_sil.c	2004-11-12 19:08:53 -05:00
-@@ -363,7 +363,7 @@
+--- a/drivers/scsi/sata_sil.c	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/sata_sil.c	2004-11-13 15:52:21 -05:00
+@@ -38,7 +38,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"sata_sil"
+-#define DRV_VERSION	"0.54"
++#define DRV_VERSION	"0.8"
+ 
+ enum {
+ 	sil_3112		= 0,
+@@ -190,6 +190,7 @@
+ MODULE_DESCRIPTION("low-level driver for Silicon Image SATA controller");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, sil_pci_tbl);
++MODULE_VERSION(DRV_VERSION);
+ 
+ static void sil_post_set_mode (struct ata_port *ap)
+ {
+@@ -363,7 +364,7 @@
  
  	memset(probe_ent, 0, sizeof(*probe_ent));
  	INIT_LIST_HEAD(&probe_ent->node);
@@ -528,9 +686,26 @@ diff -Nru a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
  	probe_ent->sht = sil_port_info[ent->driver_data].sht;
  	probe_ent->n_ports = (ent->driver_data == sil_3114) ? 4 : 2;
 diff -Nru a/drivers/scsi/sata_sis.c b/drivers/scsi/sata_sis.c
---- a/drivers/scsi/sata_sis.c	2004-11-12 19:08:53 -05:00
-+++ b/drivers/scsi/sata_sis.c	2004-11-12 19:08:53 -05:00
-@@ -140,22 +140,24 @@
+--- a/drivers/scsi/sata_sis.c	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/sata_sis.c	2004-11-13 15:52:21 -05:00
+@@ -38,7 +38,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"sata_sis"
+-#define DRV_VERSION	"0.10"
++#define DRV_VERSION	"0.5"
+ 
+ enum {
+ 	sis_180			= 0,
+@@ -128,6 +128,7 @@
+ MODULE_DESCRIPTION("low-level driver for Silicon Integratad Systems SATA controller");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, sis_pci_tbl);
++MODULE_VERSION(DRV_VERSION);
+ 
+ static unsigned int get_scr_cfg_addr(unsigned int port_no, unsigned int sc_reg)
+ {
+@@ -140,22 +141,24 @@
  
  static u32 sis_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg)
  {
@@ -558,8 +733,17 @@ diff -Nru a/drivers/scsi/sata_sis.c b/drivers/scsi/sata_sis.c
  
  static u32 sis_scr_read (struct ata_port *ap, unsigned int sc_reg)
 diff -Nru a/drivers/scsi/sata_svw.c b/drivers/scsi/sata_svw.c
---- a/drivers/scsi/sata_svw.c	2004-11-12 19:08:53 -05:00
-+++ b/drivers/scsi/sata_svw.c	2004-11-12 19:08:53 -05:00
+--- a/drivers/scsi/sata_svw.c	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/sata_svw.c	2004-11-13 15:52:21 -05:00
+@@ -49,7 +49,7 @@
+ #endif /* CONFIG_PPC_OF */
+ 
+ #define DRV_NAME	"sata_svw"
+-#define DRV_VERSION	"1.04"
++#define DRV_VERSION	"1.05"
+ 
+ /* Taskfile registers offsets */
+ #define K2_SATA_TF_CMD_OFFSET		0x00
 @@ -376,7 +376,7 @@
  	}
  
@@ -569,9 +753,26 @@ diff -Nru a/drivers/scsi/sata_svw.c b/drivers/scsi/sata_svw.c
  	INIT_LIST_HEAD(&probe_ent->node);
  
  	mmio_base = ioremap(pci_resource_start(pdev, 5),
+@@ -470,6 +470,7 @@
+ MODULE_DESCRIPTION("low-level driver for K2 SATA controller");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, k2_sata_pci_tbl);
++MODULE_VERSION(DRV_VERSION);
+ 
+ module_init(k2_sata_init);
+ module_exit(k2_sata_exit);
 diff -Nru a/drivers/scsi/sata_sx4.c b/drivers/scsi/sata_sx4.c
---- a/drivers/scsi/sata_sx4.c	2004-11-12 19:08:53 -05:00
-+++ b/drivers/scsi/sata_sx4.c	2004-11-12 19:08:53 -05:00
+--- a/drivers/scsi/sata_sx4.c	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/sata_sx4.c	2004-11-13 15:52:21 -05:00
+@@ -40,7 +40,7 @@
+ #include "sata_promise.h"
+ 
+ #define DRV_NAME	"sata_sx4"
+-#define DRV_VERSION	"0.50"
++#define DRV_VERSION	"0.7"
+ 
+ 
+ enum {
 @@ -248,7 +248,7 @@
  
  static int pdc_port_start(struct ata_port *ap)
@@ -613,10 +814,35 @@ diff -Nru a/drivers/scsi/sata_sx4.c b/drivers/scsi/sata_sx4.c
  	INIT_LIST_HEAD(&probe_ent->node);
  
  	mmio_base = ioremap(pci_resource_start(pdev, 3),
+@@ -1492,6 +1492,7 @@
+ MODULE_DESCRIPTION("Promise SATA low-level driver");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, pdc_sata_pci_tbl);
++MODULE_VERSION(DRV_VERSION);
+ 
+ module_init(pdc_sata_init);
+ module_exit(pdc_sata_exit);
 diff -Nru a/drivers/scsi/sata_uli.c b/drivers/scsi/sata_uli.c
---- a/drivers/scsi/sata_uli.c	2004-11-12 19:08:53 -05:00
-+++ b/drivers/scsi/sata_uli.c	2004-11-12 19:08:53 -05:00
-@@ -149,18 +149,20 @@
+--- a/drivers/scsi/sata_uli.c	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/sata_uli.c	2004-11-13 15:52:21 -05:00
+@@ -32,7 +32,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"sata_uli"
+-#define DRV_VERSION	"0.11"
++#define DRV_VERSION	"0.2"
+ 
+ enum {
+ 	uli_5289		= 0,
+@@ -123,6 +123,7 @@
+ MODULE_DESCRIPTION("low-level driver for ULi Electronics SATA controller");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, uli_pci_tbl);
++MODULE_VERSION(DRV_VERSION);
+ 
+ static unsigned int get_scr_cfg_addr(unsigned int port_no, unsigned int sc_reg)
+ {
+@@ -149,18 +150,20 @@
  
  static u32 uli_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg)
  {
@@ -639,9 +865,38 @@ diff -Nru a/drivers/scsi/sata_uli.c b/drivers/scsi/sata_uli.c
  }
  
  static u32 uli_scr_read (struct ata_port *ap, unsigned int sc_reg)
+diff -Nru a/drivers/scsi/sata_via.c b/drivers/scsi/sata_via.c
+--- a/drivers/scsi/sata_via.c	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/sata_via.c	2004-11-13 15:52:21 -05:00
+@@ -38,7 +38,7 @@
+ #include <asm/io.h>
+ 
+ #define DRV_NAME	"sata_via"
+-#define DRV_VERSION	"0.20"
++#define DRV_VERSION	"1.0"
+ 
+ enum {
+ 	via_sata		= 0,
+@@ -138,6 +138,7 @@
+ MODULE_DESCRIPTION("SCSI low-level driver for VIA SATA controllers");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, svia_pci_tbl);
++MODULE_VERSION(DRV_VERSION);
+ 
+ static u32 svia_scr_read (struct ata_port *ap, unsigned int sc_reg)
+ {
 diff -Nru a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
---- a/drivers/scsi/sata_vsc.c	2004-11-12 19:08:53 -05:00
-+++ b/drivers/scsi/sata_vsc.c	2004-11-12 19:08:53 -05:00
+--- a/drivers/scsi/sata_vsc.c	2004-11-13 15:52:21 -05:00
++++ b/drivers/scsi/sata_vsc.c	2004-11-13 15:52:21 -05:00
+@@ -26,7 +26,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"sata_vsc"
+-#define DRV_VERSION	"0.01"
++#define DRV_VERSION	"1.0"
+ 
+ /* Interrupt register offsets (from chip base address) */
+ #define VSC_SATA_INT_STAT_OFFSET	0x00
 @@ -293,7 +293,7 @@
  		goto err_out_regions;
  	}
@@ -651,9 +906,17 @@ diff -Nru a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
  	INIT_LIST_HEAD(&probe_ent->node);
  
  	mmio_base = ioremap(pci_resource_start(pdev, 0),
+@@ -393,6 +393,7 @@
+ MODULE_DESCRIPTION("low-level driver for Vitesse VSC7174 SATA controller");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, vsc_sata_pci_tbl);
++MODULE_VERSION(DRV_VERSION);
+ 
+ module_init(vsc_sata_init);
+ module_exit(vsc_sata_exit);
 diff -Nru a/include/linux/libata.h b/include/linux/libata.h
---- a/include/linux/libata.h	2004-11-12 19:08:53 -05:00
-+++ b/include/linux/libata.h	2004-11-12 19:08:53 -05:00
+--- a/include/linux/libata.h	2004-11-13 15:52:21 -05:00
++++ b/include/linux/libata.h	2004-11-13 15:52:21 -05:00
 @@ -25,6 +25,7 @@
  
  #include <linux/delay.h>
@@ -771,5 +1034,3 @@ diff -Nru a/include/linux/libata.h b/include/linux/libata.h
  
  static inline unsigned int ata_tag_valid(unsigned int tag)
  {
-
---------------090802070108080604060102--
