@@ -1,64 +1,40 @@
-From: solicitorfrank@netscape.net
-Subject: Investment Capital
-Date: Sat, 19 Feb 2005 14:54:28 -0500
-Message-ID: <494AF8A0.7193060A.84B15562__48414.0685912736$1108843065$gmane$org@netscape.net>
+From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Subject: [patch ide] fix ide_get_error_location() for LBA28
+Date: Sun, 20 Feb 2005 12:34:14 +0100 (CET)
+Message-ID: <Pine.GSO.4.58.0502201230250.5252@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Received: from imo-d02.mx.aol.com ([205.188.157.34]:52968 "EHLO
-	imo-d02.mx.aol.com") by vger.kernel.org with ESMTP id S261779AbVBST7h
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 Feb 2005 14:59:37 -0500
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:33250 "EHLO
+	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
+	id S261816AbVBTLo1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 20 Feb 2005 06:44:27 -0500
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:61785 "EHLO
+	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
+	id S29879AbVBTLe0 (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 2 others); Sun, 20 Feb 2005 12:34:26 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: axboe@suse.de
 
-Re: Investment Capital.
 
-Your contact has been gotten from after a search for a
-person whom we can jointly invest Trust in and also
-solicit a Honourable partnership with.
+Higher bits (16-23) of the address were ignored
 
-I represent a client and my client has interest to do
-business relative to investments in your country in
-areas related to agriculture or any business of your
-choice, to initiate a proper and structured
-relationship:
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Please let me know what your response will be to an
-offer to receive the investment funds :
-
-1. The said fund amounts to Ten Million Pounds sterling.
- 
-2.The said fund will be transferred to you in same
-state.
-
-3.The fund is intended to be invested through your
-agency in the purchase of facilities and
-assets, for the said purposes within your country.
-
-4. This transaction will result in you being paid a
-commission of 10% off the investment capital and 
-another 10% of after annual tax income.
-
-5.The fund owners desire absolute confidentiality and
-professionalism in the handling of this matter as the 
-people involved are top government officials.
-Please respond urgently and if you do not intend to 
-help, i will respect your privacy and stop contacting
-you.
-
-Sincerely.
-
-Solicitor. Frank West
-
-NB: Please reply to: solicitorfrank@netscape.net
-
-__________________________________________________________________
-Switch to Netscape Internet Service.
-As low as $9.95 a month -- Sign up today at http://isp.netscape.com/register
-
-Netscape. Just the Net You Need.
-
-New! Netscape Toolbar for Internet Explorer
-Search from anywhere on the Web and block those annoying pop-ups.
-Download now at http://channels.netscape.com/ns/search/install.jsp
+diff -Nru a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+--- a/drivers/ide/ide-io.c	2005-02-19 17:38:53 +01:00
++++ b/drivers/ide/ide-io.c	2005-02-19 17:38:53 +01:00
+@@ -238,9 +238,10 @@
+ 		high = ide_read_24(drive);
+ 	} else {
+ 		u8 cur = HWIF(drive)->INB(IDE_SELECT_REG);
+-		if (cur & 0x40)
++		if (cur & 0x40) {
++			high = cur & 0xf;
+ 			low = (hcyl << 16) | (lcyl << 8) | sect;
+-		else {
++		} else {
+ 			low = hcyl * drive->head * drive->sect;
+ 			low += lcyl * drive->sect;
+ 			low += sect - 1;
