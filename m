@@ -1,110 +1,147 @@
-From: Daniel Egger <de@axiros.com>
-Subject: Re: Booting from SATA disables IDE?
-Date: Fri, 1 Apr 2005 22:35:42 +0200
-Message-ID: <b930a665dd861ac1b6c8f87c1df63e30@axiros.com>
-References: <1921eeb1e202db77fdccb439f85ac532@axiros.com> <424D7F01.1060204@pobox.com>
-Mime-Version: 1.0 (Apple Message framework v619.2)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-15-936556965"
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: [BK PATCHES] ide-2.6 update
+Date: Sat, 2 Apr 2005 17:22:19 +0200 (CEST)
+Message-ID: <Pine.GSO.4.62.0504021718270.24415@mion.elka.pw.edu.pl>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 213-239-212-8.clients.your-server.de ([213.239.212.8]:8673 "EHLO
-	live1.axiros.com") by vger.kernel.org with ESMTP id S262890AbVDAUgO
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Apr 2005 15:36:14 -0500
-In-Reply-To: <424D7F01.1060204@pobox.com>
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:8700 "EHLO
+	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
+	id S261559AbVDBPXh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 2 Apr 2005 10:23:37 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
---Apple-Mail-15-936556965
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Hi Linus,
 
-On 01.04.2005, at 19:04, Jeff Garzik wrote:
+short ChangeLog:
+* ide-default pseudo-driver is gone
+* VIA resume failure is fixed
 
-> Well, sata_via never touches the VIA PATA side of things.  Probably a 
-> config or BIOS error, or similar.
+Bartlomiej
 
-So I though but since since the device is visible on the PCI
-bus at all times that strikes me a bit odd.
+Please do a
 
-> Where's the IDE driver output?
+ 	bk pull bk://bart.bkbits.net/ide-2.6
 
-...
-Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-ide: Assuming 33MHz system bus speed for PIO modes; override with 
-idebus=xx
-vesafb: probe of vesafb0 failed with error -6
-NET: Registered protocol family 1
-SCSI subsystem initialized
-libata version 1.10 loaded.
-sata_via version 1.0
-ACPI: PCI interrupt 0000:00:0f.0[B] -> GSI 20 (level, low) -> IRQ 169
-sata_via(0000:00:0f.0): routed to hard irq line 11
-...
+This will update the following files:
 
-That's all.
+  drivers/ide/ide-default.c   |   76 ---------------------------
+  drivers/ide/Makefile        |    3 -
+  drivers/ide/ide-cd.c        |   71 ++++++++++++++++---------
+  drivers/ide/ide-cd.h        |    2
+  drivers/ide/ide-disk.c      |   30 ++++++++--
+  drivers/ide/ide-dma.c       |    8 ++
+  drivers/ide/ide-floppy.c    |   48 ++++++++++++-----
+  drivers/ide/ide-io.c        |   46 ++++++++++++----
+  drivers/ide/ide-probe.c     |  122 +++++++++++++++++++++++---------------------
+  drivers/ide/ide-proc.c      |   12 +---
+  drivers/ide/ide-tape.c      |   41 ++++++++++++--
+  drivers/ide/ide-taskfile.c  |   11 ++-
+  drivers/ide/ide.c           |   86 ++++++++++++-------------------
+  drivers/ide/pci/via82cxxx.c |    7 --
+  drivers/scsi/ide-scsi.c     |   44 ++++++++++++---
+  include/linux/ide.h         |    6 +-
+  16 files changed, 338 insertions(+), 275 deletions(-)
 
-One thing is pretty strange though which would support your
-guess with the BIOS problem: I modified the Debian initrd
-system to forcefully load the via82cxxx module before the
-libata and sata_via driver but it still does not work, so
-at least it doesn't seem to be the order in which the drivers
-are loaded.
+through these ChangeSets:
 
-One other thing I find somewhat irritating is that the driver
-and the PCI setup disagree about the IRQ assignment:
+<bzolnier@trik.(none)> (05/04/02 1.2351)
+    [ide] fix via82cxxx resume failure
 
-0000:00:0f.1 IDE interface: VIA Technologies, Inc. 
-VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06) 
-(prog-if 8a [Master SecP PriP])
-         Subsystem: Unknown device 1849:0571
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
-ParErr- Stepping- SERR- FastB2B-
-         Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium 
- >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-         Latency: 32
-         Interrupt: pin A routed to IRQ 255
-         Region 4: I/O ports at fc00 [size=16]
-         Capabilities: [c0] Power Management version 2
-                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+    With David Woodhouse <dwmw2@infradead.org>.
 
-egger@karin:~$ cat /proc/interrupts
-            CPU0
-   0:   18784226    IO-APIC-edge  timer
-   1:        256    IO-APIC-edge  i8042
-   8:          1    IO-APIC-edge  rtc
-   9:          0   IO-APIC-level  acpi
-169:      19176   IO-APIC-level  libata
-177:       9373   IO-APIC-level  eth0
-185:       1291   IO-APIC-level  eth1
-193:      39017   IO-APIC-level  eth2
-201:          2   IO-APIC-level  ohci1394
-209:        532   IO-APIC-level  uhci_hcd, uhci_hcd, uhci_hcd, 
-uhci_hcd, ehci_hcd
-217:          0   IO-APIC-level  via82cxxx
+    On resume from sleep, via_set_speed() doesn't reinstate the correct
+    mode, because it thinks the drive is already configured correctly.
 
-Servus,
-       Daniel
+    Also kill redundant printk, ide_config_drive_speed() warns about errors.
 
---Apple-Mail-15-936556965
-content-type: application/pgp-signature; x-mac-type=70674453;
-	name=PGP.sig
-content-description: This is a digitally signed message part
-content-disposition: inline; filename=PGP.sig
-content-transfer-encoding: 7bit
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (Darwin)
+<bzolnier@trik.(none)> (05/04/02 1.2350)
+    [ide] kill ide-default
 
-iD8DBQFCTbCfchlzsq9KoIYRAvHXAKDFKiEj5yONrXWUn10GWFQJUDn14ACfRwZk
-hpRi+TBoT2zNz+hJuiVRl/g=
-=eDae
------END PGP SIGNATURE-----
+    * add ide_drives list to list devices without a driver
+    * add __ide_add_setting() and use it for adding no auto remove entries
+    * kill ide-default pseudo-driver
 
---Apple-Mail-15-936556965--
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<bzolnier@trik.(none)> (05/04/02 1.2349)
+    [ide] get driver from rq->rq_disk->private_data
+
+    * add ide_driver_t * to device drivers objects
+    * set it to point at driver's ide_driver_t
+    * store address of this entry in disk->private_data
+    * fix ide_{cd,disk,floppy,tape,scsi}_g accordingly
+    * use rq->rq_disk->private_data instead of drive->driver
+      to obtain driver (this allows us to kill ide-default)
+
+    ide_dma_intr() OOPS fixed by Tejun Heo <htejun@gmail.com>.
+
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<bzolnier@trik.(none)> (05/04/02 1.2348)
+    [ide] kill ide_drive_t->disk
+
+    * move ->disk from ide_drive_t to driver specific objects
+    * make drivers allocate struct gendisk and setup rq->rq_disk
+      (there is no need to do this for REQ_DRIVE_TASKFILE requests)
+    * add ide_init_disk() helper and kill alloc_disks() in ide-probe.c
+    * kill no longer needed ide_open() and ide_fops[] in ide.c
+
+    ide_init_disk() fixed by Andrew Morton <akpm@osdl.org>.
+
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<bzolnier@trik.(none)> (05/04/02 1.2347)
+    [ide] add ide_{un}register_region()
+
+    Add ide_{un}register_region() and fix ide-{tape,scsi}.c to register
+    block device number ranges.  In ata_probe() only probe for modules.
+
+    Behavior is unchanged because:
+    * if driver is already loaded and attached to drive ata_probe()
+      is not called et all
+    * if driver is loaded by ata_probe() it will register new number range
+      for a drive and this range will be found by kobj_lookup()
+
+    If this is not clear please read http://lwn.net/Articles/25711/
+    and see drivers/base/map.c.
+
+    This patch makes it possible to move drive->disk allocation from
+    ide-probe.c to device drivers.
+
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<bzolnier@trik.(none)> (05/04/02 1.2346)
+    [ide] destroy_proc_ide_device() cleanup
+
+    When this function is called device is already unbinded from a
+    driver so there are no driver /proc entries to remove.
+
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<bzolnier@trik.(none)> (05/04/02 1.2345)
+    [ide] drive->dsc_overlap fix
+
+    drive->dsc_overlap is supported only by ide-{cd,tape} drivers.
+    Add missing clearing of ->dsc_overlap to ide_{cd,tape}_release()
+    and move ->dsc_overlap setup from ide_register_subdriver() to
+    ide_cdrom_setup() (ide-tape enables it unconditionally).
+
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+<bzolnier@trik.(none)> (05/04/02 1.2344)
+    [ide] drive->nice1 fix
+
+    It is drive's property independent of the driver being used so move
+    drive->nice1 setup from ide_register_subdriver() to probe_hwif() in
+    ide-probe.c.  As a result changing a driver which controls the drive
+    no longer affects this flag.
+
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
