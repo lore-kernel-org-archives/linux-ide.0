@@ -1,46 +1,55 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2.6.11-rc2 11/29] ide: add ide_drive_t.sleeping
-Date: Thu, 3 Feb 2005 14:35:35 +0100
-Message-ID: <58cb370e05020305354cbb16ee@mail.gmail.com>
-References: <20050202024017.GA621@htj.dyndns.org>
-	 <20050202025448.GL621@htj.dyndns.org>
-	 <58cb370e05020216476a8f403c@mail.gmail.com>
-	 <20050203113710.GV5710@suse.de>
-	 <58cb370e05020305304e5d504@mail.gmail.com>
-	 <20050203133228.GA2816@suse.de>
+Subject: Re: [PATCH] add missing space to printk in ide_allocate_dma_engine
+Date: Thu, 3 Feb 2005 16:00:32 +0100
+Message-ID: <58cb370e05020307007ef4e70a@mail.gmail.com>
+References: <20050202203652.GA14615@suse.de>
+	 <58cb370e0502021527529bcfe2@mail.gmail.com>
+	 <58cb370e0502021529666adec2@mail.gmail.com>
+	 <20050202233603.GA15890@suse.de>
+	 <58cb370e050202154128e397fc@mail.gmail.com>
 Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S263310AbVBCNfv@vger.kernel.org>
-In-Reply-To: <20050203133228.GA2816@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Tejun Heo <tj@home-tj.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wproxy.gmail.com ([64.233.184.196]:17521 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S263544AbVBCPAh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Feb 2005 10:00:37 -0500
+Received: by wproxy.gmail.com with SMTP id 67so267250wri
+        for <linux-ide@vger.kernel.org>; Thu, 03 Feb 2005 07:00:33 -0800 (PST)
+In-Reply-To: <58cb370e050202154128e397fc@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Olaf Hering <olh@suse.de>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, 3 Feb 2005 14:32:29 +0100, Jens Axboe <axboe@suse.de> wrote:
-> On Thu, Feb 03 2005, Bartlomiej Zolnierkiewicz wrote:
-> > On Thu, 3 Feb 2005 12:37:10 +0100, Jens Axboe <axboe@suse.de> wrote:
-> > > On Thu, Feb 03 2005, Bartlomiej Zolnierkiewicz wrote:
-> > > > On Wed, 2 Feb 2005 11:54:48 +0900, Tejun Heo <tj@home-tj.org> wrote:
-> > > > > > 11_ide_drive_sleeping_fix.patch
-> > > > > >
-> > > > > >       ide_drive_t.sleeping field added.  0 in sleep field used to
-> > > > > >       indicate inactive sleeping but because 0 is a valid jiffy
-> > > > > >       value, though slim, there's a chance that something can go
-> > > > > >       weird.  And while at it, explicit jiffy comparisons are
-> > > > > >       converted to use time_{after|before} macros.
-> > > >
-> > > > Same question as for "add ide_hwgroup_t.polling" patch.
-> > > > AFAICS drive->sleep is either '0' or 'timeout + jiffies' (always > 0)
-> > >
-> > > Hmm, what if jiffies + timeout == 0?
+On Thu, 3 Feb 2005 00:41:38 +0100, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> On Thu, 3 Feb 2005 00:36:03 +0100, Olaf Hering <olh@suse.de> wrote:
+> >  On Thu, Feb 03, Bartlomiej Zolnierkiewicz wrote:
 > >
-> > Hm, jiffies is unsigned and timeout is always > 0
-> > but this is still possible if jiffies + timeout wraps, right?
+> > > On Thu, 3 Feb 2005 00:27:34 +0100, Bartlomiej Zolnierkiewicz
+> > > <bzolnier@gmail.com> wrote:
+> > > > applied
+> > >
+> > > and reversed, missing space is here: " CPU"
+> >
+> > This was my oops:
+> >
+> > Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+> > ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+> > W82C105: IDE controller at PCI slot 0000:00:03.1
+> > W82C105: chipset revision 5
+> > W82C105: 100% native mode on irq 102
+> >     ide0: BM-DMA at 0xf040-0xf047<3> CPU: -- Error, unable to allocateW82C105 DMA table(s).
+> >     ide1: BM-DMA at 0xf048-0xf04f<3> CPU: -- Error, unable to allocateW82C105 DMA table(s).
+> > hda: HL-DT-ST CD-ROM GCR-8480B, ATAPI CD/DVD-ROM drive
+> > Oops: Kernel access of bad area, sig: 11 [#1]
+> > SMP NR_CPUS=128 NUMA PSERIES
 > 
-> Precisely, if jiffies is exactly 'timeout' away from wrapping to 0 it
-> could happen. So I think the fix looks sane.
+> Indeed there is a bug but a different one:
+> printk() parameters are interchanged.
 
-agreed
+Fix will be in the next ide-2.6 update (today).
+
+Thanks.
