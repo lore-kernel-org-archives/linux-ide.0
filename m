@@ -1,32 +1,57 @@
-From: Andrea Arcangeli <andrea@suse.de>
+From: Arjan van de Ven <arjanv@redhat.com>
 Subject: Re: [PATCH] speed up SATA
-Date: Mon, 29 Mar 2004 15:05:54 +0200
+Date: Mon, 29 Mar 2004 15:05:36 +0200
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040329130554.GI3039@dualathlon.random>
-References: <4066021A.20308@pobox.com> <200403282030.11743.bzolnier@elka.pw.edu.pl> <20040328183010.GQ24370@suse.de> <200403282045.07246.bzolnier@elka.pw.edu.pl> <406720A7.1050501@pobox.com> <20040329005502.GG3039@dualathlon.random> <20040329042912.GI18054@ca-server1.us.oracle.com>
+Message-ID: <1080565536.3570.4.camel@laptop.fenrus.com>
+References: <20040328141014.GE24370@suse.de> <40670BD9.9020707@pobox.com>
+	 <20040328173508.GI24370@suse.de> <40670FDB.6080409@pobox.com>
+	 <20040328175436.GL24370@suse.de> <20040328180809.GB1087@mail.shareable.org>
+	 <20040328181502.GO24370@suse.de> <40671FAF.6080501@pobox.com>
+	 <20040329080943.GR24370@suse.de> <20040329124147.GC4984@mail.shareable.org>
+	 <20040329124421.GB24370@suse.de>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cYoVA754xhfK+5m8VQcf"
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040329042912.GI18054@ca-server1.us.oracle.com>
-To: Wim Coekaerts <wim.coekaerts@oracle.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jens Axboe <axboe@suse.de>, William Lee Irwin III <wli@holomorphy.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+In-Reply-To: <20040329124421.GB24370@suse.de>
+To: Jens Axboe <axboe@suse.de>
+Cc: Jamie Lokier <jamie@shareable.org>, Jeff Garzik <jgarzik@pobox.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Sun, Mar 28, 2004 at 08:29:12PM -0800, Wim Coekaerts wrote:
-> > In 2.4 reaching 512k DMA units that helped a lot, but going past 512k
-> > didn't help in my measurements.  1M maybe these days is needed (as Jens
-> > suggested) but >1M still sounds overkill and I completely agree with
-> > Jens about that.
-> 
-> at least 1Mb... more than 1mb (I doubt 32mb is really necessarily
-> useful) is nice for flushing contiguous journal data to disk. between
-> 1-8mb in one io.
-> 
-> at least 1mb is good when you have to process massive amounts of data,
-> just read huge chunks of files, we tend to do 1mb. anyway,
-> as you said, at some point it's a bit overkill . I thinkg 1-8mb makes
-> sense. 
 
-1M certainly it's reasonable, though for 8M I've my doubt you can
-measure a throughput improvement, can you?
+--=-cYoVA754xhfK+5m8VQcf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2004-03-29 at 14:44, Jens Axboe wrote:
+> On Mon, Mar 29 2004, Jamie Lokier wrote:
+> > Jens Axboe wrote:
+> > > Could be used to limit tcq depth, not just request sizes solving two
+> > > problems at once. I already have a tiny bit of keeping this
+> > > accounting to do proper unplugs (right now it just looks at missing
+> > > requests from the pool, doesn't work on tcq).
+> >=20
+> > Does it make sense to allow different numbers of outstanding TCQ-reads
+> > and TCQ-writes?
+>=20
+> Might not be a silly thing to experiment with, definitely something that
+> should be tested (added to list...)
+
+I wonder if the max read size could/should be correlated with the
+readahead size for such devices... it sounds like a related property at
+least.
+
+
+--=-cYoVA754xhfK+5m8VQcf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQBAaB8gxULwo51rQBIRAgMVAJ4jkvXMA4+8AkWhOYybId0Tc38SwACdHbwO
+HVQEyycBOfSJwbjIAPmnXgc=
+=jQbt
+-----END PGP SIGNATURE-----
+
+--=-cYoVA754xhfK+5m8VQcf--
