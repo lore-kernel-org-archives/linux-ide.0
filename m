@@ -1,42 +1,32 @@
-From: Jens Axboe <axboe@suse.de>
+From: Erik Andersen <andersen@codepoet.org>
 Subject: Re: [PATCH] 2.4 IDE core for 2.5
-Date: Tue, 9 Jul 2002 12:53:52 +0200
+Date: Tue, 9 Jul 2002 05:11:53 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20020709105352.GC20870@suse.de>
-References: <20020709102249.GA20870@suse.de> <Pine.SOL.3.96.1020709114618.20865B-100000@libra.cus.cam.ac.uk> <20020709104935.GB20870@suse.de> <20020709125135.A7885@ucw.cz>
+Message-ID: <20020709111153.GA18133@codepoet.org>
+References: <20020709102249.GA20870@suse.de>
+Reply-To: andersen@codepoet.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20020709125135.A7885@ucw.cz>
+In-Reply-To: <20020709102249.GA20870@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: Vojtech Pavlik <vojtech@suse.cz>
-Cc: Anton Altaparmakov <aia21@cantab.net>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Tue, Jul 09 2002, Vojtech Pavlik wrote:
-> On Tue, Jul 09, 2002 at 12:49:35PM +0200, Jens Axboe wrote:
+On Tue Jul 09, 2002 at 12:22:49PM +0200, Jens Axboe wrote:
+> Hi,
 > 
-> > On Tue, Jul 09 2002, Anton Altaparmakov wrote:
-> > > On Tue, 9 Jul 2002, Jens Axboe wrote:
-> > > > I've forward ported the 2.4 IDE core (well 2.4.19-pre10-ac2 to be exact)
-> > > > to 2.5.25. It consists of 7 separate patches:
-> > > 
-> > > Fantastic! Seeing that the patches are bitkeeper generated, would it be
-> > > possible for you to make a repository available with the patches? (on
-> > > bkbits perhaps?) Would make it a lot easier for us bitkeeper users just to
-> > > pull from your repository... Especially once you update the patches...
-> > 
-> > Yes they are from a bk tree here, I'll set one up on bkbits...
-> 
-> Cool, thanks. I guess I also will make a lot of use of those patches.
-> I need to be debugging input now, not IDE. ;) 
+> I've forward ported the 2.4 IDE core (well 2.4.19-pre10-ac2 to be exact)
+> to 2.5.25. It consists of 7 separate patches:
 
-Let me add that I've only tested on x86 right now, other archs should
-"just work" with a few changes to include/asm/ide.h (see the changes in
-15_24-misc-bits-1).
+Wonderful!  Thus far, 2.5.x has been far too scary to try.
+This patch is a sufficient safety blanket that I'm now willing
+to give it a try, and I'm sure thats also the case for many
+others.  2.5.x just became far more accessible.  Thanks!
 
-Enjoy :-)
+ -Erik
 
--- 
-Jens Axboe
-
+--
+Erik B. Andersen             http://codepoet-consulting.com/
+--This message was written using 73% post-consumer electrons--
