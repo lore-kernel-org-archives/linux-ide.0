@@ -1,98 +1,102 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] libata DMADIR support
-Date: 16 May 2004 08:19:06 -0600
+Subject: Re: [PATCH] libata atapi work #2.1
+Date: 16 May 2004 09:39:52 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1084717146.3576.3.camel@patibmrh9>
+Message-ID: <1084721991.3085.6.camel@patibmrh9>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:43402 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S263612AbUEPOT1
+Received: from email-out2.iomega.com ([147.178.1.83]:32147 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263640AbUEPPkK
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 May 2004 10:19:27 -0400
+	Sun, 16 May 2004 11:40:10 -0400
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
 Jeff G:
 
-I've now slowly and awkwardly synced as the following tty log of patch
-and a #define patch of my own show.  Therefore I ask:
+> Subject: Re: SATA ATAPI work in progress
+> Date: 2004-05-15 16:32:56
+> ...
+> Seems like we are pretty close.  Once I add
+> the code to issue a REQUEST SENSE, I bet
+> things start working.
 
-Have you considered an include/linux/libata.h approach like:
+I agree!  I'm delighted to report,
 
-+ #undef ATA_FORCE_DMADIR /* give Si DMADIR to all SATA ATAPI DMA */
+I now see SATA stream up past 1.5 GB/min via ioctl SG_IO read & write of
+the disc blocks, after I apply together all four of the patches you
+first posted as:
 
-+ #include <linux/ata.h>
-+ #ifdef ATA_FORCE_DMADIR
-+ #undef ata_id_use_dmadir
-+ #define ata_id_use_dmadir(dev) 1
-+ #endif
+> Subject: [PATCH] libata update 20040515-1
+> Subject: [PATCH] libata atapi work #2.1
+> Subject: [PATCH] libata DMADIR support
+> Subject: [PATCH] Re: SATA ATAPI work in progress
 
-I'll save time in the end if I volunteer to write such a patch, after
-you reply to say you would consider such a patch, if in fact you would.
+Heads up, I was myself slow to appreciate:
+
+Yes still in -bk3 after patch.2.1 we need to apply that fourth patch
+i.e. what I had termed patch.7 i.e. ata_host_intr += ATA_PROT_ATAPI_DMA.
+
+> Once I add the code to issue a REQUEST SENSE, ...
+
+Also, of course, to avoid dying for the lack of auto sense, I have to
+duck all errors.
+
+Once I died by mistyping an LBA, off by one nybble.  Repeatedly I die
+except when I remember to clear the x 6 29 Reset and x 6 28 GoneReady
+unit attentions, via an abuse which works here i.e. repeatedly
+unsolicited "REQUEST SENSE".  I notice in particular that, with this
+device, modprobe seemingly provokes x 6 29 Reset.
 
 Pat LaVarre
 
-$ cd linux-2.6.6-bk3/
+
+$ # demo of 1.5 GB/min, in or out
 $
-$ patch --dry-run -p1 <~/patch.2.1
-patching file drivers/scsi/libata-core.c
-patching file drivers/scsi/libata-scsi.c
-$ patch --dry-run -p1 <~/patch.dmadir
-patching file drivers/scsi/libata-core.c
-patching file drivers/scsi/libata-scsi.c
-patching file include/linux/ata.h
-patching file include/linux/libata.h
+$ plscsi /dev/sg0 -i x12 -x "03 00:00:00 12 00"
+$ plscsi /dev/sg0 -i x12 -x "03 00:00:00 12 00"
 $
-$ patch -p1 <~/patch.2.1
-patching file drivers/scsi/libata-core.c
-patching file drivers/scsi/libata-scsi.c
-$ patch -p1 <~/patch.dmadir
-patching file drivers/scsi/libata-core.c
-patching file drivers/scsi/libata-scsi.c
-Hunk #1 succeeded at 927 (offset 7 lines).
-patching file include/linux/ata.h
-patching file include/linux/libata.h
+$ time pldd of if=/dev/sg0 bs=64k sbs=2k skip=0 count=1600
+ 
+real    0m4.134s
+user    0m0.002s
+sys     0m0.155s
+$
+$ dc -e '64 1024 * 1600 * 4.134 / p 60 * p'
+25364683
+1521880980
+$
+$ time pldd of=/dev/sg0 if bs=64k sbs=2k seek=0 count=1600
+ 
+real    0m4.125s
+user    0m0.001s
+sys     0m0.150s
+$
+$ dc -e '64 1024 * 1600 * 4.125 / p 60 * p'
+25420024
+1525201440
 $
 
-diff -Nurp o/include/linux/ata.h linux-2.6.6-bk3-pel/include/linux/ata.h
---- o/include/linux/ata.h	2004-05-16 08:06:04.000000000 -0600
-+++ linux-2.6.6-bk3-pel/include/linux/ata.h	2004-05-16
-08:09:04.473768304 -0600
-@@ -205,7 +205,7 @@ struct ata_taskfile {
- #define ata_id_has_wcache(dev)	((dev)->id[82] & (1 << 5))
- #define ata_id_has_lba(dev)	((dev)->id[49] & (1 << 8))
- #define ata_id_has_dma(dev)	((dev)->id[49] & (1 << 9))
--#define ata_id_use_dmadir(dev)	((dev)->id[62] & (1 << 15))
-+#define ata_id_use_dmadir(dev)	1 /* ((dev)->id[62] & (1 << 15)) */
- #define ata_id_u32(dev,n)	\
- 	(((u32) (dev)->id[(n) + 1] << 16) | ((u32) (dev)->id[(n)]))
- #define ata_id_u64(dev,n)	\
-diff -Nurp o/include/linux/libata.h
-linux-2.6.6-bk3-pel/include/linux/libata.h
---- o/include/linux/libata.h	2004-05-16 08:06:23.000000000 -0600
-+++ linux-2.6.6-bk3-pel/include/linux/libata.h	2004-05-16
-08:09:22.811980472 -0600
-@@ -33,11 +33,11 @@
-  * compile-time options
-  */
- #undef ATA_FORCE_PIO		/* do not configure or use DMA */
--#undef ATA_DEBUG		/* debugging output */
--#undef ATA_VERBOSE_DEBUG	/* yet more debugging output */
-+#define ATA_DEBUG		/* debugging output */
-+#define ATA_VERBOSE_DEBUG	/* yet more debugging output */
- #undef ATA_IRQ_TRAP		/* define to ack screaming irqs */
- #undef ATA_NDEBUG		/* define to disable quick runtime checks */
--#undef ATA_ENABLE_ATAPI		/* define to enable ATAPI support */
-+#define ATA_ENABLE_ATAPI		/* define to enable ATAPI support */
- #undef ATA_ENABLE_PATA		/* define to enable PATA support in some
- 				 * low-level drivers */
- 
-diff -Nurp o/drivers/scsi/libata-core.c
-linux-2.6.6-bk3-pel/drivers/scsi/libata-core.c
-diff -Nurp o/drivers/scsi/libata-scsi.c
-linux-2.6.6-bk3-pel/drivers/scsi/libata-scsi.c
+
+$ # demo of reset implicit in modprobe
+$
+$ plscsi /dev/sg0 -i x12 -x "03 00:00:00 12 00" -v
+x 00000000 03 00:00:00 12 00 .. .. .. .. .. .. .. .. .. .. "C@@@R@"
+x 00000000 70:00:00:00 00:00:00:18 00:00:00:00 00:00:00:00 "p@@@@@@X@@@@@@@@"
+x 00000010 00:00 .. .. .. .. .. .. .. .. .. .. .. .. .. .. "@@"
+// 0 = plscsi.main exit int
+$
+$ sudo modprobe -r ata-piix
+$ sudo modprobe ata-piix
+$
+$ plscsi /dev/sg0 -i x12 -x "03 00:00:00 12 00" -v
+x 00000000 03 00:00:00 12 00 .. .. .. .. .. .. .. .. .. .. "C@@@R@"
+x 00000000 70:00:06:00 00:00:00:18 00:00:00:00 29:00:00:00 "p@F@@@@X@@@@)@@@"
+x 00000010 00:00 .. .. .. .. .. .. .. .. .. .. .. .. .. .. "@@"
+// 0 = plscsi.main exit int
+$
 
 
