@@ -1,50 +1,34 @@
-From: "Dan Greve" <grevedan@hotmail.com>
-Subject: RE: Secondary port on SiS 965
-Date: Fri, 25 Feb 2005 11:59:52 -0500
-Message-ID: <BAY102-F40C8D3EEA70029ADE9E4A9C7650@phx.gbl>
-References: <1fb03f81cef68f29c170efe64abc9d93@iomega.com>
+From: "Winstel, Drew" <DWinstel@Miltope.com>
+Subject: RE: PDC20269: Limit on number of controllers?
+Date: Fri, 25 Feb 2005 11:06:26 -0600
+Message-ID: <66F9227F7417874C8DB3CEB057727417044FAC@MILEX0.Miltope.local>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
-Received: from bay102-f40.bay102.hotmail.com ([64.4.61.50]:44685 "EHLO
-	hotmail.com") by vger.kernel.org with ESMTP id S262749AbVBYRAQ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Received: from firewall.miltope.com ([208.12.184.221]:18384 "EHLO
+	smtp.miltope.com") by vger.kernel.org with ESMTP id S262746AbVBYRG3 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Feb 2005 12:00:16 -0500
-In-Reply-To: <1fb03f81cef68f29c170efe64abc9d93@iomega.com>
+	Fri, 25 Feb 2005 12:06:29 -0500
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: poppitzg@iomega.com, linux-ide@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: IDE Linux <linux-ide@vger.kernel.org>
 
-I've been successful in using both ports on the 965L rev 01 controller, 
-currently running a 2.6.11-rc3 patched kernel.  What version of sata_sis.c 
-are you using?
+>   The 2.6.11-rc4 needs .bmdma_stop and .bmdma_status to be defined.
+>Attached please find the debug patch with the needed hooks. Thanks.
 
-I'm using the latest sata_sis.c (v 0.5) driver from SIS available at
+The patch did not apply cleanly (only the actual pata_promise driver 
+would patch) against 2.6.10, so I hand-patched both 2.6.10 and 
+2.6.11-rc4-bk9, and both drivers appear to work quite well.
 
-http://download.sis.com/download_step2.php?id=155881&agree=1&country=USA
+ATAPI appears to be working in rc4 with my SONY DDU-1621 DVD-ROM drive 
+and a SUSE 9.2 DVD.  
 
-Bug reporting going on at
+Is there anything you would like me to test?  I currently have 6 hard 
+drives, the aforementioned DVD, and a SATA drive hooked up to the on-
+board Silicon Image 3512.  
 
-http://bugme.osdl.org/show_bug.cgi?id=4192
+Thanks,
 
--- dan greve
-
->From: Gary Poppitz <poppitzg@iomega.com>
->To: linux-ide@vger.kernel.org
->Subject: Secondary port on SiS 965
->Date: Wed, 23 Feb 2005 09:03:59 -0700
->
->Has anyone also seen the problem of having a SATAPI device being detected 
->on the secondary port of the SiS 965 chipset?
->
->I am able to run correctly on the primary port but the secondary port says 
->there is no physical device present. Both ports will run our device in 
->Windows XP so this isnt a hardware problem.
->
->Any clues/solutions for this one?
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-ide" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+Drew
