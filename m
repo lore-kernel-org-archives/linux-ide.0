@@ -1,31 +1,33 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: [BK-Patch] ST3160023AS needs mod15
-Date: Fri, 2 Jul 2004 18:48:37 +0200
+From: Tigran Aivazian <tigran@veritas.com>
+Subject: Re: question about SATA and IDE DVD/CD drives.
+Date: Fri, 2 Jul 2004 17:56:24 +0100 (BST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200407021848.37222.bzolnier@elka.pw.edu.pl>
-References: <Pine.GSO.4.33.0407021149400.25702-100000@sweetums.bluetronic.net> <40E58BE9.7090000@superbug.demon.co.uk>
+Message-ID: <Pine.LNX.4.44.0407021745400.2190-100000@einstein.homenet>
+References: <40E5817D.4000408@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:60601 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264717AbUGBQn0
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jul 2004 12:43:26 -0400
-In-Reply-To: <40E58BE9.7090000@superbug.demon.co.uk>
-Content-Disposition: inline
+Received: from pengo.systems.pipex.net ([62.241.160.193]:29384 "EHLO
+	pengo.systems.pipex.net") by vger.kernel.org with ESMTP
+	id S264726AbUGBQ5s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Jul 2004 12:57:48 -0400
+In-Reply-To: <40E5817D.4000408@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: James Courtier-Dutton <James@superbug.demon.co.uk>, Ricky Beam <jfbeam@bluetronic.net>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-On Friday 02 of July 2004 18:23, James Courtier-Dutton wrote:
+On Fri, 2 Jul 2004, Jeff Garzik wrote:
+> Enable CONFIG_IDE, and disable CONFIG_BLK_DEV_IDE_SATA, and that will 
+> fix things I bet.
 
-> What does SIL_QUIRK_MOD15WRITE do?
-> I have used ST3160023AS for a long time now without any problems in
-> kernel 2.6.x
+Tried this as well on the latest snapshot (2.6.7-bk9) and it failed as 
+well. Namely, SATA disk works fine but IDE subsystem doesn't see the DVD 
+drive.
 
-Do you have Silicon Image controller?  Are you using sata_sil driver?
+Are you sure that I only need to enable CONFIG_IDE and not some of the
+other IDE options (disk, cdrom, chipset-specific etc)?
 
-If not this issue+patch doesn't affect you.
+Kind regards
+Tigran
+
 
