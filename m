@@ -1,56 +1,41 @@
-From: Thomas Schlichter <thomas.schlichter@web.de>
+From: Ivan Gyurdiev <ivg2@cornell.edu>
 Subject: Re: Processes receive SIGSEGV if TCQ is enabled
-Date: Fri, 31 Oct 2003 14:11:55 +0100
+Date: Fri, 31 Oct 2003 09:44:55 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200310311411.59469.thomas.schlichter@web.de>
-References: <200310301601.55588.schlicht@uni-mannheim.de> <200310301848.19065.bzolnier@elka.pw.edu.pl> <20031031130041.GI7314@suse.de>
+Message-ID: <3FA27567.6080705@cornell.edu>
+References: <200310301601.55588.schlicht@uni-mannheim.de> <200310301848.19065.bzolnier@elka.pw.edu.pl> <20031031130041.GI7314@suse.de> <200310311411.59469.thomas.schlichter@web.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1;
-  boundary="Boundary-02=_f+lo/EhkHgRJTAA";
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp03.web.de ([217.72.192.158]:59153 "EHLO smtp.web.de")
-	by vger.kernel.org with ESMTP id S263270AbTJaNMc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Oct 2003 08:12:32 -0500
-In-Reply-To: <20031031130041.GI7314@suse.de>
+Received: from postoffice9.mail.cornell.edu ([132.236.56.39]:21498 "EHLO
+	postoffice9.mail.cornell.edu") by vger.kernel.org with ESMTP
+	id S263312AbTJaOjN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 31 Oct 2003 09:39:13 -0500
+In-Reply-To: <200310311411.59469.thomas.schlichter@web.de>
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>, Ivan Gyurdiev <ivg2@cornell.edu>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Thomas Schlichter <thomas.schlichter@web.de>
+Cc: Jens Axboe <axboe@suse.de>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+
+Thomas Schlichter wrote:
+> On Friday 31 October 2003 14:00, Jens Axboe wrote:
+> 
+>>It's probably via + tcq, that drive is known good with ide-tcq. At least
+>>I've never seen problems with it.
+> 
+> 
+> Maybe it is a problem with via + tcq... so, how to debug?
+> 
+> @Ivan: Did you also use a via chipset when reporting the problems mentioned in
+> http://www.ussg.iu.edu/hypermail/linux/kernel/0307.2/1655.html ? Beacuse your 
+> point 4) indeed looks very similar to my problems...
+> 
+>   Thomas
 
 
---Boundary-02=_f+lo/EhkHgRJTAA
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Yes - VIA chipset.
 
-On Friday 31 October 2003 14:00, Jens Axboe wrote:
-> It's probably via + tcq, that drive is known good with ide-tcq. At least
-> I've never seen problems with it.
+00:11.1 IDE interface: VIA Technologies, Inc. 
+VT82C586A/B/VT82C686/A/B/VT8233/A/C/VT8235 PIPC Bus Master IDE (rev 06)
 
-Maybe it is a problem with via + tcq... so, how to debug?
 
-@Ivan: Did you also use a via chipset when reporting the problems mentioned=
- in
-http://www.ussg.iu.edu/hypermail/linux/kernel/0307.2/1655.html ? Beacuse yo=
-ur=20
-point 4) indeed looks very similar to my problems...
-
-  Thomas
-
---Boundary-02=_f+lo/EhkHgRJTAA
-Content-Type: application/pgp-signature
-Content-Description: signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQA/ol+fYAiN+WRIZzQRAmpEAKCeL6JzglVhctR72P1e7Ks6HOdzvACghgpp
-zc+LwAf4BNfIM8kBV+29tpU=
-=Fm9L
------END PGP SIGNATURE-----
-
---Boundary-02=_f+lo/EhkHgRJTAA--
