@@ -1,52 +1,62 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] drivers/ide/Kconfig: make PDC4030 VLB IDE support dependent on X86
-Date: Tue, 20 Apr 2004 23:14:47 +0200
+From: Russell King <rmk@arm.linux.org.uk>
+Subject: Re: [PATCH] ARM{26} IDE cleanups
+Date: Tue, 20 Apr 2004 23:33:23 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200404202313.52512.bzolnier@elka.pw.edu.pl>
+Message-ID: <20040420233323.F16428@flint.arm.linux.org.uk>
+References: <200404202335.59291.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:19358 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264539AbUDTVPg
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Apr 2004 17:15:36 -0400
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:15630 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S264544AbUDTWd1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Apr 2004 18:33:27 -0400
 Content-Disposition: inline
+In-Reply-To: <200404202335.59291.bzolnier@elka.pw.edu.pl>; from B.Zolnierkiewicz@elka.pw.edu.pl on Tue, Apr 20, 2004 at 11:35:59PM +0200
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Ian Molton <spyro@f2s.com>, linux-ide@vger.kernel.org
 
+On Tue, Apr 20, 2004 at 11:35:59PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> This patch is incremental to the
+> "sanitize ARM26 A5K and ARM CLPS7500/RPC/Shark IDE support" patch.
+> 
+> I tried to fix SA1100 IDE support but I failed. :-)
+> 
+> It seems it is broken since 2.5.16 when PCMCIA_IO_0_BASE define
+> was removed from <asm-arm/arch-sa1100/hardware.h>.
 
-Also add FIXME about improper ide_init_hwif_ports() usage to pdc4030.c.
+Ok, this is something which either needs dropping or fixing in a
+sane way (to use ioremap + mmio).
 
- linux-2.6.6-rc1-bk5-bzolnier/drivers/ide/Kconfig          |    2 +-
- linux-2.6.6-rc1-bk5-bzolnier/drivers/ide/legacy/pdc4030.c |    1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+> - Fix arch/arm/Kconfig to allow IDE only on platforms supporting it.
 
-diff -puN drivers/ide/Kconfig~pdc4030_x86 drivers/ide/Kconfig
---- linux-2.6.6-rc1-bk5/drivers/ide/Kconfig~pdc4030_x86	2004-04-20 22:05:39.977020112 +0200
-+++ linux-2.6.6-rc1-bk5-bzolnier/drivers/ide/Kconfig	2004-04-20 22:06:45.065125216 +0200
-@@ -1062,7 +1062,7 @@ config BLK_DEV_HT6560B
- 
- config BLK_DEV_PDC4030
- 	tristate "PROMISE DC4030 support (EXPERIMENTAL)"
--	depends on BLK_DEV_IDEDISK && EXPERIMENTAL
-+	depends on X86 && BLK_DEV_IDEDISK && EXPERIMENTAL
- 	help
- 	  This driver provides support for the secondary IDE interface and
- 	  cache of the original Promise IDE chipsets, e.g. DC4030 and DC5030.
-diff -puN drivers/ide/legacy/pdc4030.c~pdc4030_x86 drivers/ide/legacy/pdc4030.c
---- linux-2.6.6-rc1-bk5/drivers/ide/legacy/pdc4030.c~pdc4030_x86	2004-04-20 22:05:44.844280176 +0200
-+++ linux-2.6.6-rc1-bk5-bzolnier/drivers/ide/legacy/pdc4030.c	2004-04-20 22:08:09.484291552 +0200
-@@ -242,6 +242,7 @@ int __init setup_pdc4030(ide_hwif_t *hwi
- #ifdef DEBUG
- 		printk(KERN_DEBUG "pdc4030: Shifting i/f %d values to i/f %d\n",i-1,i);
- #endif /* DEBUG */
-+		/* FIXME: this screws already used hwifs */
- 		ide_init_hwif_ports(&h->hw, (h-1)->io_ports[IDE_DATA_OFFSET], 0, NULL);
- 		memcpy(h->io_ports, h->hw.io_ports, sizeof(h->io_ports));
- 		h->noprobe = (h-1)->noprobe;
+I'd rather not start doing this with IDE.  I've recently killed it on
+the sound stuff because it was becoming silly.  Consider that we have
+516 machine types registered and you'll realise that one line containing
+even 32 identifiers in Kconfig is rather unmaintainable.
 
-_
+> - Remove no longer needed ide_init_default_hwifs() call from ide.c.
 
+Good.
+
+> - Use generic ide_init_hwif_ports() on ARM26 and ARM.  Some platforms were
+>   clearing hw in ide_init_hwif_ports() - it makes sense only in setup-pci.c
+>   as all other users that can be build on ARM clear hw themselves.
+> 
+> - Kill <asm-arm/arch-*/ide.h> (except broken <asm-arm/arch-sa1100/ide.h>).
+
+How are you handling the different register increments between the
+machines?  Some have registers placed at +4 offsets, others +1.
+Others even +32.
+
+I don't see any provision for this.  Sure, the majority  have used
+increments of one, but SA1100 doesn't, and I can see PXA being the
+same - and this is the why architectures were given control over
+the address initialisation.
+
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 PCMCIA      - http://pcmcia.arm.linux.org.uk/
+                 2.6 Serial core
