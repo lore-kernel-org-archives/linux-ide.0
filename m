@@ -1,24 +1,25 @@
-From: "David S. Miller" <davem@redhat.com>
-Subject: (unknown)
-Date: Thu, 12 Dec 2002 21:24:51 -0800 (PST)
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: 2.5.51 ide module problem (fwd)
+Date: 13 Dec 2002 10:42:46 +0000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20021212.212451.126729818.davem@redhat.com>
-References: <54670264D99F034EA23CBB7D7A45AE7E5EE0@zenmail1.ind.zensar.com>
+Message-ID: <1039776166.25121.15.camel@irongate.swansea.linux.org.uk>
+References: <20021213013637.4F2652C0ED@lists.samba.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <54670264D99F034EA23CBB7D7A45AE7E5EE0@zenmail1.ind.zensar.com>
+In-Reply-To: <20021213013637.4F2652C0ED@lists.samba.org>
 List-Id: linux-ide@vger.kernel.org
-To: p.Sawant@zensar.com
-Cc: linux-ide@vger.kernel.org
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Jeff Chua <jchua@fedex.com>, "Adam J. Richter" <adam@yggdrasil.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>, axboe@suse.de, linux-ide@vger.kernel.org, Patrick Mochel <mochel@osdl.org>
 
-   From: "Paresh Sawant" <p.Sawant@zensar.com>
-   Date: Fri, 13 Dec 2002 10:32:07 +0530
+On Fri, 2002-12-13 at 01:35, Rusty Russell wrote:
+> Also, my stress_modules script gave the following warning then oops
+> from ide-cd on 2.5.51 SMP x86 (IDE is built-in):
 
-   unsubscribe linux-ide
+Yes. This mysteriously stsrted happening. I don't know if its now
+trapping a long standing IDE bug or its of the other changes people did
+to IDE to make it actually follow the devices model properly. I've got a
+slightly similar looking 2.4 bug to chase down which makes me suspect
+the former.
 
-You should't send unsubscribe requests to the mailing list,
-what makes you think this will work?
-
-Regardless, I've removed you manually.
