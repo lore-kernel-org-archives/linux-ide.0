@@ -1,230 +1,261 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: [patch 4/8] ide-cd: add basic refcounting
-Date: Sat, 22 Jan 2005 00:20:53 +0100 (CET)
-Message-ID: <Pine.GSO.4.58.0501220020200.28844@mion.elka.pw.edu.pl>
+Subject: [patch 1/8] kill ide_driver_t->capacity
+Date: Sat, 22 Jan 2005 00:18:37 +0100 (CET)
+Message-ID: <Pine.GSO.4.58.0501220017500.28844@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:62382 "EHLO
 	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S262589AbVAUXXT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 Jan 2005 18:23:19 -0500
+	id S262585AbVAUXXP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 21 Jan 2005 18:23:15 -0500
 Received: from mion.elka.pw.edu.pl ([194.29.160.35]:58069 "EHLO
 	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
-	id S99817AbVAUXUx (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 1 other); Sat, 22 Jan 2005 00:20:53 +0100
+	id S51919AbVAUXSi (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 1 other); Sat, 22 Jan 2005 00:18:38 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
 
-* based on reference counting in drivers/scsi/{sd,sr}.c
-* fixes race between ->open() and ->cleanup() (ide_unregister_subdriver()
-  tests for drive->usage != 0 but there is no protection against new users)
-* struct kref and pointer to a drive are added to struct ide_cdrom_info
-* pointer to drive's struct ide_cdrom_info is stored in disk->private_data
-* ide_cd_{get,put}() is used to {get,put} reference to struct ide_cdrom_info
-* ide_cd_release() is a release method for struct ide_cdrom_info
+* add private /proc/ide/hd?/capacity handlers to ide-{cd,disk,floppy}.c
+* use generic proc_ide_read_capacity() for ide-{scsi,tape}.c
+* kill ->capacity, default_capacity() and generic_subdriver_entries[]
 
 diff -Nru a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
---- a/drivers/ide/ide-cd.c	2005-01-21 23:40:52 +01:00
-+++ b/drivers/ide/ide-cd.c	2005-01-21 23:40:52 +01:00
-@@ -324,6 +324,33 @@
-
- #include "ide-cd.h"
-
-+static DECLARE_MUTEX(idecd_ref_sem);
-+
-+#define to_ide_cd(obj) container_of(obj, struct cdrom_info, kref)
-+
-+#define ide_cd_g(disk)	((disk)->private_data)
-+
-+static struct cdrom_info *ide_cd_get(struct gendisk *disk)
-+{
-+	struct cdrom_info *cd = NULL;
-+
-+	down(&idecd_ref_sem);
-+	cd = ide_cd_g(disk);
-+	if (cd)
-+		kref_get(&cd->kref);
-+	up(&idecd_ref_sem);
-+	return cd;
-+}
-+
-+static void ide_cd_release(struct kref *);
-+
-+static void ide_cd_put(struct cdrom_info *cd)
-+{
-+	down(&idecd_ref_sem);
-+	kref_put(&cd->kref, ide_cd_release);
-+	up(&idecd_ref_sem);
-+}
-+
- /****************************************************************************
-  * Generic packet command support and error handling routines.
-  */
-@@ -3225,14 +3252,27 @@
- int ide_cdrom_cleanup(ide_drive_t *drive)
- {
- 	struct cdrom_info *info = drive->driver_data;
--	struct cdrom_device_info *devinfo = &info->devinfo;
--	struct gendisk *g = drive->disk;
-
- 	if (ide_unregister_subdriver(drive)) {
- 		printk(KERN_ERR "%s: %s: failed to ide_unregister_subdriver\n",
- 			__FUNCTION__, drive->name);
- 		return 1;
- 	}
-+
-+	del_gendisk(drive->disk);
-+
-+	ide_cd_put(info);
-+
-+	return 0;
-+}
-+
-+static void ide_cd_release(struct kref *kref)
-+{
-+	struct cdrom_info *info = to_ide_cd(kref);
-+	struct cdrom_device_info *devinfo = &info->devinfo;
-+	ide_drive_t *drive = info->drive;
-+	struct gendisk *g = drive->disk;
-+
- 	if (info->buffer != NULL)
- 		kfree(info->buffer);
- 	if (info->toc != NULL)
-@@ -3240,13 +3280,13 @@
- 	if (info->changer_info != NULL)
- 		kfree(info->changer_info);
- 	if (devinfo->handle == drive && unregister_cdrom(devinfo))
--		printk(KERN_ERR "%s: ide_cdrom_cleanup failed to unregister device from the cdrom driver.\n", drive->name);
--	kfree(info);
-+		printk(KERN_ERR "%s: %s failed to unregister device from the cdrom "
-+				"driver.\n", __FUNCTION__, drive->name);
- 	drive->driver_data = NULL;
- 	blk_queue_prep_rq(drive->queue, NULL);
--	del_gendisk(g);
-+	g->private_data = NULL;
- 	g->fops = ide_fops;
--	return 0;
-+	kfree(info);
- }
+--- a/drivers/ide/ide-cd.c	2005-01-21 22:23:17 +01:00
++++ b/drivers/ide/ide-cd.c	2005-01-21 22:23:17 +01:00
+@@ -3251,6 +3251,25 @@
 
  static int ide_cdrom_attach (ide_drive_t *drive);
-@@ -3289,9 +3329,16 @@
 
- static int idecd_open(struct inode * inode, struct file * file)
- {
--	ide_drive_t *drive = inode->i_bdev->bd_disk->private_data;
--	struct cdrom_info *info = drive->driver_data;
-+	struct gendisk *disk = inode->i_bdev->bd_disk;
-+	struct cdrom_info *info;
-+	ide_drive_t *drive;
- 	int rc = -ENOMEM;
++#ifdef CONFIG_PROC_FS
++static int proc_idecd_read_capacity
++	(char *page, char **start, off_t off, int count, int *eof, void *data)
++{
++	ide_drive_t*drive = (ide_drive_t *)data;
++	int len;
 +
-+	if (!(info = ide_cd_get(disk)))
-+		return -ENXIO;
++	len = sprintf(page,"%llu\n", (long long)ide_cdrom_capacity(drive));
++	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
++}
 +
-+	drive = info->drive;
++static ide_proc_entry_t idecd_proc[] = {
++	{ "capacity", S_IFREG|S_IRUGO, proc_idecd_read_capacity, NULL },
++	{ NULL, 0, NULL, NULL }
++};
++#else
++# define idecd_proc	NULL
++#endif
 +
- 	drive->usage++;
-
- 	if (!info->buffer)
-@@ -3299,16 +3346,24 @@
- 					GFP_KERNEL|__GFP_REPEAT);
-         if (!info->buffer || (rc = cdrom_open(&info->devinfo, inode, file)))
- 		drive->usage--;
-+
-+	if (rc < 0)
-+		ide_cd_put(info);
-+
- 	return rc;
+ static ide_driver_t ide_cdrom_driver = {
+ 	.owner			= THIS_MODULE,
+ 	.name			= "ide-cdrom",
+@@ -3260,7 +3279,7 @@
+ 	.supports_dsc_overlap	= 1,
+ 	.cleanup		= ide_cdrom_cleanup,
+ 	.do_request		= ide_do_rw_cdrom,
+-	.capacity		= ide_cdrom_capacity,
++	.proc			= idecd_proc,
+ 	.attach			= ide_cdrom_attach,
+ 	.drives			= LIST_HEAD_INIT(ide_cdrom_driver.drives),
+ };
+diff -Nru a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+--- a/drivers/ide/ide-disk.c	2005-01-21 22:23:17 +01:00
++++ b/drivers/ide/ide-disk.c	2005-01-21 22:23:17 +01:00
+@@ -580,6 +580,16 @@
+ 	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
  }
 
- static int idecd_release(struct inode * inode, struct file * file)
++static int proc_idedisk_read_capacity
++	(char *page, char **start, off_t off, int count, int *eof, void *data)
++{
++	ide_drive_t*drive = (ide_drive_t *)data;
++	int len;
++
++	len = sprintf(page,"%llu\n", (long long)idedisk_capacity(drive));
++	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
++}
++
+ static int proc_idedisk_read_smart_thresholds
+ 	(char *page, char **start, off_t off, int count, int *eof, void *data)
  {
--	ide_drive_t *drive = inode->i_bdev->bd_disk->private_data;
--	struct cdrom_info *info = drive->driver_data;
-+	struct gendisk *disk = inode->i_bdev->bd_disk;
-+	struct cdrom_info *info = ide_cd_g(disk);
-+	ide_drive_t *drive = info->drive;
+@@ -620,6 +630,7 @@
 
- 	cdrom_release (&info->devinfo, file);
- 	drive->usage--;
+ static ide_proc_entry_t idedisk_proc[] = {
+ 	{ "cache",		S_IFREG|S_IRUGO,	proc_idedisk_read_cache,		NULL },
++	{ "capacity",		S_IFREG|S_IRUGO,	proc_idedisk_read_capacity,		NULL },
+ 	{ "geometry",		S_IFREG|S_IRUGO,	proc_ide_read_geometry,			NULL },
+ 	{ "smart_values",	S_IFREG|S_IRUSR,	proc_idedisk_read_smart_values,		NULL },
+ 	{ "smart_thresholds",	S_IFREG|S_IRUSR,	proc_idedisk_read_smart_thresholds,	NULL },
+@@ -985,7 +996,6 @@
+ 	.supports_dsc_overlap	= 0,
+ 	.cleanup		= idedisk_cleanup,
+ 	.do_request		= ide_do_rw_disk,
+-	.capacity		= idedisk_capacity,
+ 	.proc			= idedisk_proc,
+ 	.attach			= idedisk_attach,
+ 	.drives			= LIST_HEAD_INIT(idedisk_driver.drives),
+diff -Nru a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+--- a/drivers/ide/ide-floppy.c	2005-01-21 22:23:17 +01:00
++++ b/drivers/ide/ide-floppy.c	2005-01-21 22:23:17 +01:00
+@@ -1847,7 +1847,18 @@
+
+ #ifdef CONFIG_PROC_FS
+
++static int proc_idefloppy_read_capacity
++	(char *page, char **start, off_t off, int count, int *eof, void *data)
++{
++	ide_drive_t*drive = (ide_drive_t *)data;
++	int len;
 +
-+	ide_cd_put(info);
++	len = sprintf(page,"%llu\n", (long long)idefloppy_capacity(drive));
++	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
++}
 +
- 	return 0;
+ static ide_proc_entry_t idefloppy_proc[] = {
++	{ "capacity",	S_IFREG|S_IRUGO,	proc_idefloppy_read_capacity, NULL },
+ 	{ "geometry",	S_IFREG|S_IRUGO,	proc_ide_read_geometry,	NULL },
+ 	{ NULL, 0, NULL, NULL }
+ };
+@@ -1873,7 +1884,6 @@
+ 	.cleanup		= idefloppy_cleanup,
+ 	.do_request		= idefloppy_do_request,
+ 	.end_request		= idefloppy_do_end_request,
+-	.capacity		= idefloppy_capacity,
+ 	.proc			= idefloppy_proc,
+ 	.attach			= idefloppy_attach,
+ 	.drives			= LIST_HEAD_INIT(idefloppy_driver.drives),
+diff -Nru a/drivers/ide/ide-proc.c b/drivers/ide/ide-proc.c
+--- a/drivers/ide/ide-proc.c	2005-01-21 22:23:17 +01:00
++++ b/drivers/ide/ide-proc.c	2005-01-21 22:23:17 +01:00
+@@ -269,13 +269,11 @@
+ int proc_ide_read_capacity
+ 	(char *page, char **start, off_t off, int count, int *eof, void *data)
+ {
+-	ide_drive_t	*drive = (ide_drive_t *) data;
+-	int		len;
+-
+-	len = sprintf(page,"%llu\n",
+-		      (long long) (DRIVER(drive)->capacity(drive)));
++	int len = sprintf(page,"%llu\n", (long long)0x7fffffff);
+ 	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
+ }
++
++EXPORT_SYMBOL_GPL(proc_ide_read_capacity);
+
+ int proc_ide_read_geometry
+ 	(char *page, char **start, off_t off, int count, int *eof, void *data)
+diff -Nru a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+--- a/drivers/ide/ide-tape.c	2005-01-21 22:23:17 +01:00
++++ b/drivers/ide/ide-tape.c	2005-01-21 22:23:17 +01:00
+@@ -4660,6 +4660,7 @@
  }
 
-@@ -3316,27 +3371,27 @@
- 			unsigned int cmd, unsigned long arg)
- {
- 	struct block_device *bdev = inode->i_bdev;
--	ide_drive_t *drive = bdev->bd_disk->private_data;
--	int err = generic_ide_ioctl(drive, file, bdev, cmd, arg);
--	if (err == -EINVAL) {
--		struct cdrom_info *info = drive->driver_data;
-+	struct cdrom_info *info = ide_cd_g(bdev->bd_disk);
-+	int err;
-+
-+	err  = generic_ide_ioctl(info->drive, file, bdev, cmd, arg);
-+	if (err == -EINVAL)
- 		err = cdrom_ioctl(file, &info->devinfo, inode, cmd, arg);
--	}
-+
- 	return err;
+ static ide_proc_entry_t idetape_proc[] = {
++	{ "capacity",	S_IFREG|S_IRUGO,	proc_ide_read_capacity, NULL },
+ 	{ "name",	S_IFREG|S_IRUGO,	proc_idetape_read_name,	NULL },
+ 	{ NULL, 0, NULL, NULL }
+ };
+diff -Nru a/drivers/ide/ide.c b/drivers/ide/ide.c
+--- a/drivers/ide/ide.c	2005-01-21 22:23:17 +01:00
++++ b/drivers/ide/ide.c	2005-01-21 22:23:17 +01:00
+@@ -413,11 +413,6 @@
+
+ #ifdef CONFIG_PROC_FS
+ struct proc_dir_entry *proc_ide_root;
+-
+-ide_proc_entry_t generic_subdriver_entries[] = {
+-	{ "capacity",	S_IFREG|S_IRUGO,	proc_ide_read_capacity,	NULL },
+-	{ NULL, 0, NULL, NULL }
+-};
+ #endif
+
+ static struct resource* hwif_request_region(ide_hwif_t *hwif,
+@@ -2037,11 +2032,6 @@
+ 	return __ide_error(drive, rq, stat, err);
  }
 
- static int idecd_media_changed(struct gendisk *disk)
+-static sector_t default_capacity (ide_drive_t *drive)
+-{
+-	return 0x7fffffff;
+-}
+-
+ static ide_startstop_t default_abort(ide_drive_t *drive, struct request *rq)
  {
--	ide_drive_t *drive = disk->private_data;
--	struct cdrom_info *info = drive->driver_data;
-+	struct cdrom_info *info = ide_cd_g(disk);
- 	return cdrom_media_changed(&info->devinfo);
+ 	return __ide_abort(drive, rq);
+@@ -2055,7 +2045,6 @@
+ 	if (d->end_request == NULL)	d->end_request = default_end_request;
+ 	if (d->error == NULL)		d->error = default_error;
+ 	if (d->abort == NULL)		d->abort = default_abort;
+-	if (d->capacity == NULL)	d->capacity = default_capacity;
  }
 
- static int idecd_revalidate_disk(struct gendisk *disk)
- {
--	ide_drive_t *drive = disk->private_data;
-+	struct cdrom_info *info = ide_cd_g(disk);
- 	struct request_sense sense;
--	cdrom_read_toc(drive, &sense);
-+	cdrom_read_toc(info->drive, &sense);
- 	return  0;
- }
-
-@@ -3390,7 +3445,12 @@
- 		goto failed;
+ int ide_register_subdriver(ide_drive_t *drive, ide_driver_t *driver)
+@@ -2083,10 +2072,8 @@
+ 		drive->nice1 = 1;
  	}
- 	memset(info, 0, sizeof (struct cdrom_info));
-+
-+	kref_init(&info->kref);
-+
-+	info->drive = drive;
- 	drive->driver_data = info;
-+
- 	DRIVER(drive)->busy++;
- 	g->minors = 1;
- 	snprintf(g->devfs_name, sizeof(g->devfs_name),
-@@ -3417,6 +3477,7 @@
-
- 	cdrom_read_toc(drive, &sense);
- 	g->fops = &idecd_ops;
-+	g->private_data = info;
- 	g->flags |= GENHD_FL_REMOVABLE;
- 	add_disk(g);
+ #ifdef CONFIG_PROC_FS
+-	if (drive->driver != &idedefault_driver) {
+-		ide_add_proc_entries(drive->proc, generic_subdriver_entries, drive);
++	if (drive->driver != &idedefault_driver)
+ 		ide_add_proc_entries(drive->proc, driver->proc, drive);
+-	}
+ #endif
  	return 0;
-diff -Nru a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
---- a/drivers/ide/ide-cd.h	2005-01-21 23:40:52 +01:00
-+++ b/drivers/ide/ide-cd.h	2005-01-21 23:40:52 +01:00
-@@ -460,6 +460,8 @@
+ }
+@@ -2120,7 +2107,6 @@
+ 	}
+ #ifdef CONFIG_PROC_FS
+ 	ide_remove_proc_entries(drive->proc, DRIVER(drive)->proc);
+-	ide_remove_proc_entries(drive->proc, generic_subdriver_entries);
+ #endif
+ 	auto_remove_settings(drive);
+ 	drive->driver = &idedefault_driver;
+diff -Nru a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
+--- a/drivers/scsi/ide-scsi.c	2005-01-21 22:23:17 +01:00
++++ b/drivers/scsi/ide-scsi.c	2005-01-21 22:23:17 +01:00
+@@ -708,6 +708,15 @@
 
- /* Extra per-device info for cdrom drives. */
- struct cdrom_info {
-+	ide_drive_t	*drive;
-+	struct kref	kref;
+ static int idescsi_attach(ide_drive_t *drive);
 
- 	/* Buffer for table of contents.  NULL if we haven't allocated
- 	   a TOC buffer for this device yet. */
++#ifdef CONFIG_PROC_FS
++static ide_proc_entry_t idescsi_proc[] = {
++	{ "capacity", S_IFREG|S_IRUGO, proc_ide_read_capacity, NULL },
++	{ NULL, 0, NULL, NULL }
++};
++#else
++# define idescsi_proc	NULL
++#endif
++
+ /*
+  *	IDE subdriver functions, registered with ide.c
+  */
+@@ -718,6 +727,7 @@
+ 	.media			= ide_scsi,
+ 	.busy			= 0,
+ 	.supports_dsc_overlap	= 0,
++	.proc			= idescsi_proc,
+ 	.attach			= idescsi_attach,
+ 	.cleanup		= idescsi_cleanup,
+ 	.do_request		= idescsi_do_request,
+diff -Nru a/include/linux/ide.h b/include/linux/ide.h
+--- a/include/linux/ide.h	2005-01-21 22:23:17 +01:00
++++ b/include/linux/ide.h	2005-01-21 22:23:17 +01:00
+@@ -1100,7 +1100,6 @@
+ 	ide_startstop_t	(*error)(ide_drive_t *, struct request *rq, u8, u8);
+ 	ide_startstop_t	(*abort)(ide_drive_t *, struct request *rq);
+ 	int		(*ioctl)(ide_drive_t *, struct inode *, struct file *, unsigned int, unsigned long);
+-	sector_t	(*capacity)(ide_drive_t *);
+ 	ide_proc_entry_t	*proc;
+ 	int		(*attach)(ide_drive_t *);
+ 	void		(*ata_prebuilder)(ide_drive_t *);
+@@ -1358,7 +1357,6 @@
+ extern void ide_init_subdrivers(void);
+
+ extern struct block_device_operations ide_fops[];
+-extern ide_proc_entry_t generic_subdriver_entries[];
+
+ extern int ata_attach(ide_drive_t *);
+
