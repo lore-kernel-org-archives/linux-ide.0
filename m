@@ -1,45 +1,42 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: PATCH: IDE - do spin up for all platforms
-Date: Tue, 10 Aug 2004 08:10:38 +1000
+From: Frank-Michael Fischer <fmfischer@gmx.net>
+Subject: ATA burner problem under 2.6
+Date: Tue, 10 Aug 2004 09:53:57 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1092089438.14102.48.camel@gaston>
-References: <20040809143902.GA16025@devserv.devel.redhat.com>
-	 <411790DE.7010503@pobox.com>
+Message-ID: <41187F15.4040706@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:33491 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S267307AbUHIWNl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Aug 2004 18:13:41 -0400
-In-Reply-To: <411790DE.7010503@pobox.com>
+Received: from pop.gmx.de ([213.165.64.20]:29356 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261500AbUHJHyF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Aug 2004 03:54:05 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Alan Cox <alan@redhat.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: linux-ide@vger.kernel.org
+Cc: celestar <celestar@t-online.de>
 
-On Tue, 2004-08-10 at 00:57, Jeff Garzik wrote:
+when using kernel 2.6.5 the following command on any DVD:
 
-> It needs to check for "status != 0x7f" which is the standard "no device 
-> here" return status.
+dd if=/dev/hdc of=test.iso bs=2048
 
-Nope, it waits for BSY to go down
+uses almost 6 times as much system time compared to:
 
-> But worse than that, status can return 0xFF for "no hardware there", in 
-> which case this routine will hang the boot for 35 seconds.
+dd if=/dev/sr0 of=test.iso bs=2048 under 2.4.21 (ide-scsi, identical 
+hardware)
 
-My original version did, let me check.. yes, the current code does that
-too, check ide_wait_not_busy. Note that this is a workaround for broken
-hardware as the spec clearly says that D7 should be pulled low so that
-no drive returns 0x7f (BSY clear). However, there is a significant
-amount of HW with this bug...
+Moreover: when repeating the 2.6.5 dd command a couple of times the 
+system comes to a complete lockup, with no logged error messages 
+whatsoever. This never happens under 2.4.21. But I can reproduce this 
+behaviour on another PC.
 
-> Note also that libata code does this:
-> * wait 7 seconds
-> * printk("it's taking a long time, be patient")
-> * wait ~30 seconds
+Another related problem:
 
-That could be a good idea. Patch welcome :)
+When ripping an audio CD under 2.4.21 I get perfect results using cdrdao 
+with --paranioa-mode 0. Ripping the same CD under 2.6.5 requires 
+--paranioa-mode 3.
 
-Ben.
+Is this a known bug of 2.6 kernels?
 
+Regards,
+
+Frank-Michael Fischer
 
