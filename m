@@ -1,187 +1,197 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: [patch 2/8] kill setup_driver_defaults()
-Date: Sat, 22 Jan 2005 00:19:41 +0100 (CET)
-Message-ID: <Pine.GSO.4.58.0501220019090.28844@mion.elka.pw.edu.pl>
+Subject: [patch 7/8] ide-tape: add basic refcounting
+Date: Sat, 22 Jan 2005 00:22:44 +0100 (CET)
+Message-ID: <Pine.GSO.4.58.0501220022090.28844@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262595AbVAUX3J@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262602AbVAUXfk@vger.kernel.org>
 Received: from mion.elka.pw.edu.pl ([194.29.160.35]:58069 "EHLO
 	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
-	id S53234AbVAUXTm (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 1 other); Sat, 22 Jan 2005 00:19:42 +0100
+	id S100569AbVAUXWp (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 1 other); Sat, 22 Jan 2005 00:22:45 +0100
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 
-* move default_do_request() to ide-default.c
-* fix drivers to set ide_driver_t->{do_request,end_request,error,abort}
-* kill setup_driver_defaults()
+Similar changes as for ide-cd.c.
 
-diff -Nru a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
---- a/drivers/ide/ide-cd.c	2005-01-21 22:27:18 +01:00
-+++ b/drivers/ide/ide-cd.c	2005-01-21 22:27:18 +01:00
-@@ -3279,6 +3279,9 @@
- 	.supports_dsc_overlap	= 1,
- 	.cleanup		= ide_cdrom_cleanup,
- 	.do_request		= ide_do_rw_cdrom,
-+	.end_request		= ide_end_request,
-+	.error			= __ide_error,
-+	.abort			= __ide_abort,
- 	.proc			= idecd_proc,
- 	.attach			= ide_cdrom_attach,
- 	.drives			= LIST_HEAD_INIT(ide_cdrom_driver.drives),
-diff -Nru a/drivers/ide/ide-default.c b/drivers/ide/ide-default.c
---- a/drivers/ide/ide-default.c	2005-01-21 22:27:18 +01:00
-+++ b/drivers/ide/ide-default.c	2005-01-21 22:27:18 +01:00
-@@ -38,6 +38,12 @@
+diff -Nru a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+--- a/drivers/ide/ide-tape.c	2005-01-21 23:41:25 +01:00
++++ b/drivers/ide/ide-tape.c	2005-01-21 23:41:25 +01:00
+@@ -781,8 +781,10 @@
+  *	driver due to an interrupt or a timer event is stored in a variable
+  *	of type idetape_tape_t, defined below.
+  */
+-typedef struct {
+-	ide_drive_t *drive;
++typedef struct ide_tape_obj {
++	ide_drive_t	*drive;
++	struct kref	kref;
++
+ 	/*
+ 	 *	Since a typical character device operation requires more
+ 	 *	than one packet command, we provide here enough memory
+@@ -1007,6 +1009,33 @@
+          int debug_level;
+ } idetape_tape_t;
 
- static int idedefault_attach(ide_drive_t *drive);
-
-+static ide_startstop_t idedefault_do_request(ide_drive_t *drive, struct request *rq, sector_t block)
++static DECLARE_MUTEX(idetape_ref_sem);
++
++#define to_ide_tape(obj) container_of(obj, struct ide_tape_obj, kref)
++
++#define ide_tape_g(disk)	((disk)->private_data)
++
++static struct ide_tape_obj *ide_tape_get(struct gendisk *disk)
 +{
-+	ide_end_request(drive, 0, 0);
-+	return ide_stopped;
++	struct ide_tape_obj *tape = NULL;
++
++	down(&idetape_ref_sem);
++	tape = ide_tape_g(disk);
++	if (tape)
++		kref_get(&tape->kref);
++	up(&idetape_ref_sem);
++	return tape;
++}
++
++static void ide_tape_release(struct kref *);
++
++static void ide_tape_put(struct ide_tape_obj *tape)
++{
++	down(&idetape_ref_sem);
++	kref_put(&tape->kref, ide_tape_release);
++	up(&idetape_ref_sem);
 +}
 +
  /*
-  *	IDE subdriver functions, registered with ide.c
+  *	Tape door status
   */
-@@ -47,6 +53,10 @@
- 	.version	=	IDEDEFAULT_VERSION,
- 	.attach		=	idedefault_attach,
- 	.cleanup	=	ide_unregister_subdriver,
-+	.do_request	=	idedefault_do_request,
-+	.end_request	=	ide_end_request,
-+	.error		=	__ide_error,
-+	.abort		=	__ide_abort,
- 	.drives		=	LIST_HEAD_INIT(idedefault_driver.drives)
- };
+@@ -4522,9 +4551,7 @@
+ 	int stage_size;
+ 	struct sysinfo si;
 
-diff -Nru a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
---- a/drivers/ide/ide-disk.c	2005-01-21 22:27:18 +01:00
-+++ b/drivers/ide/ide-disk.c	2005-01-21 22:27:18 +01:00
-@@ -996,6 +996,9 @@
- 	.supports_dsc_overlap	= 0,
- 	.cleanup		= idedisk_cleanup,
- 	.do_request		= ide_do_rw_disk,
-+	.end_request		= ide_end_request,
-+	.error			= __ide_error,
-+	.abort			= __ide_abort,
- 	.proc			= idedisk_proc,
- 	.attach			= idedisk_attach,
- 	.drives			= LIST_HEAD_INIT(idedisk_driver.drives),
-diff -Nru a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
---- a/drivers/ide/ide-floppy.c	2005-01-21 22:27:18 +01:00
-+++ b/drivers/ide/ide-floppy.c	2005-01-21 22:27:18 +01:00
-@@ -1884,6 +1884,8 @@
- 	.cleanup		= idefloppy_cleanup,
- 	.do_request		= idefloppy_do_request,
- 	.end_request		= idefloppy_do_end_request,
-+	.error			= __ide_error,
-+	.abort			= __ide_abort,
- 	.proc			= idefloppy_proc,
- 	.attach			= idefloppy_attach,
- 	.drives			= LIST_HEAD_INIT(idefloppy_driver.drives),
-diff -Nru a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
---- a/drivers/ide/ide-io.c	2005-01-21 22:27:18 +01:00
-+++ b/drivers/ide/ide-io.c	2005-01-21 22:27:18 +01:00
-@@ -622,6 +622,8 @@
- 	return ide_atapi_error(drive, rq, stat, err);
- }
-
-+EXPORT_SYMBOL_GPL(__ide_error);
+-	memset(tape, 0, sizeof (idetape_tape_t));
+ 	spin_lock_init(&tape->spinlock);
+-	drive->driver_data = tape;
+ 	drive->dsc_overlap = 1;
+ #ifdef CONFIG_BLK_DEV_IDEPCI
+ 	if (HWIF(drive)->pci_dev != NULL) {
+@@ -4542,7 +4569,6 @@
+ 	/* Seagate Travan drives do not support DSC overlap. */
+ 	if (strstr(drive->id->model, "Seagate STT3401"))
+ 		drive->dsc_overlap = 0;
+-	tape->drive = drive;
+ 	tape->minor = minor;
+ 	tape->name[0] = 'h';
+ 	tape->name[1] = 't';
+@@ -4636,13 +4662,25 @@
+ 	spin_unlock_irqrestore(&ide_lock, flags);
+ 	DRIVER(drive)->busy = 0;
+ 	(void) ide_unregister_subdriver(drive);
 +
- /**
-  *	ide_error	-	handle an error on the IDE
-  *	@drive: drive the error occurred on
-@@ -665,6 +667,8 @@
- 	DRIVER(drive)->end_request(drive, 0, 0);
- 	return ide_stopped;
- }
++	ide_tape_put(tape);
 +
-+EXPORT_SYMBOL_GPL(__ide_abort);
-
- /**
-  *	ide_abort	-	abort pending IDE operatins
-diff -Nru a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
---- a/drivers/ide/ide-tape.c	2005-01-21 22:27:18 +01:00
-+++ b/drivers/ide/ide-tape.c	2005-01-21 22:27:18 +01:00
-@@ -4686,6 +4686,8 @@
- 	.cleanup		= idetape_cleanup,
- 	.do_request		= idetape_do_request,
- 	.end_request		= idetape_end_request,
-+	.error			= __ide_error,
-+	.abort			= __ide_abort,
- 	.proc			= idetape_proc,
- 	.attach			= idetape_attach,
- 	.drives			= LIST_HEAD_INIT(idetape_driver.drives),
-diff -Nru a/drivers/ide/ide.c b/drivers/ide/ide.c
---- a/drivers/ide/ide.c	2005-01-21 22:27:18 +01:00
-+++ b/drivers/ide/ide.c	2005-01-21 22:27:18 +01:00
-@@ -197,7 +197,6 @@
- EXPORT_SYMBOL(ide_hwifs);
-
- extern ide_driver_t idedefault_driver;
--static void setup_driver_defaults(ide_driver_t *driver);
-
- /*
-  * Do not even *think* about calling this!
-@@ -301,8 +300,6 @@
- 		return;		/* already initialized */
- 	magic_cookie = 0;
-
--	setup_driver_defaults(&idedefault_driver);
--
- 	/* Initialise all interface structures */
- 	for (index = 0; index < MAX_HWIFS; ++index) {
- 		hwif = &ide_hwifs[index];
-@@ -2015,38 +2012,6 @@
- #endif
++	return 0;
++}
++
++static void ide_tape_release(struct kref *kref)
++{
++	struct ide_tape_obj *tape = to_ide_tape(kref);
++	ide_drive_t *drive = tape->drive;
++	struct gendisk *g = drive->disk;
++
+ 	drive->driver_data = NULL;
+ 	devfs_remove("%s/mt", drive->devfs_name);
+ 	devfs_remove("%s/mtn", drive->devfs_name);
+-	devfs_unregister_tape(drive->disk->number);
+-	kfree (tape);
+-	drive->disk->fops = ide_fops;
+-	return 0;
++	devfs_unregister_tape(g->number);
++	g->private_data = NULL;
++	g->fops = ide_fops;
++	kfree(tape);
  }
 
--static ide_startstop_t default_do_request (ide_drive_t *drive, struct request *rq, sector_t block)
--{
--	ide_end_request(drive, 0, 0);
--	return ide_stopped;
--}
--
--static int default_end_request (ide_drive_t *drive, int uptodate, int nr_sects)
--{
--	return ide_end_request(drive, uptodate, nr_sects);
--}
--
--static ide_startstop_t
--default_error(ide_drive_t *drive, struct request *rq, u8 stat, u8 err)
--{
--	return __ide_error(drive, rq, stat, err);
--}
--
--static ide_startstop_t default_abort(ide_drive_t *drive, struct request *rq)
--{
--	return __ide_abort(drive, rq);
--}
--
--static void setup_driver_defaults (ide_driver_t *d)
--{
--	BUG_ON(d->attach == NULL || d->cleanup == NULL);
--
--	if (d->do_request == NULL)	d->do_request = default_do_request;
--	if (d->end_request == NULL)	d->end_request = default_end_request;
--	if (d->error == NULL)		d->error = default_error;
--	if (d->abort == NULL)		d->abort = default_abort;
--}
--
- int ide_register_subdriver(ide_drive_t *drive, ide_driver_t *driver)
+ #ifdef CONFIG_PROC_FS
+@@ -4707,15 +4745,30 @@
+
+ static int idetape_open(struct inode *inode, struct file *filp)
  {
- 	unsigned long flags;
-@@ -2144,8 +2109,6 @@
- 	struct list_head list;
- 	struct list_head *list_loop;
- 	struct list_head *tmp_storage;
--
--	setup_driver_defaults(driver);
+-	ide_drive_t *drive = inode->i_bdev->bd_disk->private_data;
++	struct gendisk *disk = inode->i_bdev->bd_disk;
++	struct ide_tape_obj *tape;
++	ide_drive_t *drive;
++
++	if (!(tape = ide_tape_get(disk)))
++		return -ENXIO;
++
++	drive = tape->drive;
++
+ 	drive->usage++;
++
+ 	return 0;
+ }
 
- 	spin_lock(&drivers_lock);
- 	list_add(&driver->drivers, &drivers);
+ static int idetape_release(struct inode *inode, struct file *filp)
+ {
+-	ide_drive_t *drive = inode->i_bdev->bd_disk->private_data;
++	struct gendisk *disk = inode->i_bdev->bd_disk;
++	struct ide_tape_obj *tape = ide_tape_g(disk);
++	ide_drive_t *drive = tape->drive;
++
+ 	drive->usage--;
++
++	ide_tape_put(tape);
++
+ 	return 0;
+ }
+
+@@ -4723,7 +4776,8 @@
+ 			unsigned int cmd, unsigned long arg)
+ {
+ 	struct block_device *bdev = inode->i_bdev;
+-	ide_drive_t *drive = bdev->bd_disk->private_data;
++	struct ide_tape_obj *tape = ide_tape_g(bdev->bd_disk);
++	ide_drive_t *drive = tape->drive;
+ 	int err = generic_ide_ioctl(drive, file, bdev, cmd, arg);
+ 	if (err == -EINVAL)
+ 		err = idetape_blkdev_ioctl(drive, cmd, arg);
+@@ -4740,6 +4794,7 @@
+ static int idetape_attach (ide_drive_t *drive)
+ {
+ 	idetape_tape_t *tape;
++	struct gendisk *g = drive->disk;
+ 	int minor;
+
+ 	if (!strstr("ide-tape", drive->driver_req))
+@@ -4772,6 +4827,15 @@
+ 	}
+ 	for (minor = 0; idetape_chrdevs[minor].drive != NULL; minor++)
+ 		;
++
++	memset(tape, 0, sizeof(*tape));
++
++	kref_init(&tape->kref);
++
++	tape->drive = drive;
++
++	drive->driver_data = tape;
++
+ 	idetape_setup(drive, tape, minor);
+ 	idetape_chrdevs[minor].drive = drive;
+
+@@ -4782,8 +4846,10 @@
+ 			S_IFCHR | S_IRUGO | S_IWUGO,
+ 			"%s/mtn", drive->devfs_name);
+
+-	drive->disk->number = devfs_register_tape(drive->devfs_name);
+-	drive->disk->fops = &idetape_block_ops;
++	g->number = devfs_register_tape(drive->devfs_name);
++	g->fops = &idetape_block_ops;
++	g->private_data = tape;
++
+ 	return 0;
+ failed:
+ 	return 1;
