@@ -1,41 +1,62 @@
 From: Alan Cox <alan@redhat.com>
-Subject: Re: PATCH: straighten out the IDE layer locking and add hotplug
-Date: Tue, 17 Aug 2004 11:33:26 -0400
+Subject: PATCH: Make the SCAN_HWIF/UNREGISTER_HWIF stuff private
+Date: Tue, 17 Aug 2004 12:10:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040817153326.GA31746@devserv.devel.redhat.com>
-References: <20040815151346.GA13761@devserv.devel.redhat.com> <200408171630.07979.bzolnier@elka.pw.edu.pl> <20040817144604.GA30778@devserv.devel.redhat.com> <200408171705.43974.bzolnier@elka.pw.edu.pl>
+Message-ID: <20040817161036.GA22966@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:25264 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S268301AbUHQPe1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2004 11:34:27 -0400
+Received: from mx1.redhat.com ([66.187.233.31]:21705 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S268319AbUHQQLe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2004 12:11:34 -0400
 Content-Disposition: inline
-In-Reply-To: <200408171705.43974.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Alan Cox <alan@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Aug 17, 2004 at 05:05:43PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > You can't unload them in 2.4.
-> Really?  That would simplify a lot of considerations...
+Until we can kill these off here is a simple change that removes the
+pci_dev check and just stops users unloading interfaces not created by
+SCAN_HWIF. That cleans up all the unloading of hotplug device corner
+cases and stops users breaking things by killing live non generic devices.
 
-I wanted to make that work but it proved too interesting in handing the
-drive back to legacy
+Not sure what your current code looks like but a variant of the theory should
+apply to any version of the code independantly.
 
-> > We can do it the 2.4-ac way - that works with the locking I think. What
-> if you are talking about abusing HDIO_SCAN_HWIF then HELL NO
-
-No I'm talking about the 2.4-ac way - using the bus state stuff which is
-currently useless.
-
-> > might be nicer if it works out is to follow the shutdown/suspend code
-> > approach so that we actually queue the "unplug" into the command stream.
-> 
-> and we are back to lack of sysfs integration
-
-Not really. We don't need sysfs to queue a series of command phases and then
-drop the drive.
-
-Alan
-
+--- include/linux/ide.h~	2004-08-17 17:07:53.907433024 +0100
++++ include/linux/ide.h	2004-08-17 17:07:53.907433024 +0100
+@@ -982,6 +982,7 @@
+ 	unsigned	present    : 1;	/* this interface exists logically (ie users) */
+ 	unsigned	configured : 1;	/* this hwif exists and is set up (may not be "present") */
+ 	unsigned	hold       : 1; /* this interface is always present */
++	unsigned	user_dev   : 1; /* user ioctl created device */
+ 	unsigned	serialized : 1;	/* serialized all channel operation */
+ 	unsigned	sharing_irq: 1;	/* 1 = sharing irq with another hwif */
+ 	unsigned	reset      : 1;	/* reset after probe */
+--- drivers/ide/ide.c~	2004-08-17 17:07:15.589258272 +0100
++++ drivers/ide/ide.c	2004-08-17 17:07:15.589258272 +0100
+@@ -1796,6 +1796,7 @@
+ 		case HDIO_SCAN_HWIF:
+ 		{
+ 			hw_regs_t hw;
++			ide_hwif_t *hwif;
+ 			int args[3];
+ 			if (!capable(CAP_SYS_RAWIO)) return -EACCES;
+ 			if (copy_from_user(args, p, 3 * sizeof(int)))
+@@ -1804,15 +1805,16 @@
+ 			ide_init_hwif_ports(&hw, (unsigned long) args[0],
+ 					    (unsigned long) args[1], NULL);
+ 			hw.irq = args[2];
+-			if (ide_register_hw(&hw, NULL) == -1)
++			if (ide_register_hw(&hw, &hwif) == -1)
+ 				return -EIO;
++			hwif->user_dev = 1;
+ 			return 0;
+ 		}
+ 	        case HDIO_UNREGISTER_HWIF:
+ 			if (!capable(CAP_SYS_RAWIO)) return -EACCES;
+ 			if(arg > MAX_HWIFS || arg < 0)
+ 				return -EINVAL;
+-			if(ide_hwifs[arg].pci_dev)
++			if(!ide_hwifs[arg].user_dev)
+ 				return -EINVAL;
+ 			return ide_unregister_hwif(&ide_hwifs[arg]);
+ 		case HDIO_SET_NICE:
