@@ -1,57 +1,48 @@
-From: "Max T. Woodbury" <max.teneyck.woodbury@verizon.net>
-Subject: Thinkpad 760ED configuration problems
-Date: Fri, 23 Jul 2004 15:56:10 +0100
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: SATAPI status
+Date: 23 Jul 2004 10:58:45 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4100E0BA.1050562B@verizon.net>
+Message-ID: <1090601924.4850.6.camel@patibmrh9>
+References: <2429743E-DBFD-11D8-A213-00039398BB5E@ieee.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out001pub.verizon.net ([206.46.170.140]:43142 "EHLO
-	out001.verizon.net") by vger.kernel.org with ESMTP id S267775AbUGWO4P
+Received: from email-out1.iomega.com ([147.178.1.82]:59605 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S267841AbUGWQ67
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Jul 2004 10:56:15 -0400
+	Fri, 23 Jul 2004 12:58:59 -0400
+Received: from royntex01.iomegacorp.com (edison [10.1.1.82])
+	by email.iomega.com (Postfix) with ESMTP id 8DF9226CF
+	for <linux-ide@vger.kernel.org>; Fri, 23 Jul 2004 10:58:58 -0600 (MDT)
+In-Reply-To: <2429743E-DBFD-11D8-A213-00039398BB5E@ieee.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-laptop@vger.kernel.org, linux-thinkpad@linux-thinkpad.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-I have a Thinkpad 760 ED. (Model 9546-U3A, BIOS HZET72WW 08/07/99)
+Sanity check failed.  Specifically,
 
-There is fairly strong evidence that the BIOS on this machine is not
-setting up the PCI configuration registers to the standard Linux 
-expects.  For example, a temporary patch suggested by Bartlomiej 
-Zolnierkiewicz on the linux-ide list ended up crashing the 2.6.7 
-kernel during init and there are messages about unassigned IRQs and
-DMA addresses in the log.
+> http://marc.theaimsgroup.com/?l=linux-ide&m=109051413922708
+> Subject: Re: Linux Serial ATA (SATA) status report
+> Date: 2004-07-22 16:35:28
 
-I suspect that the correct way to fix this problem is to have a
-routine redo the PCI configuration fairly early in the kernel setup 
-sequence, but I'm not sure exactly where/when to put it.  It should be 
-done after the CPU and memory are setup, but before PCI setup ends.  
-I suspect that it should be done at the beginning of the PCI setup 
-process.  There is a whole bunch of stuff in 'quirks' that seems to be
-similar but I've only skimmed that code so far.  Does this belong there?
-If so, which list has people who fiddle with PCI on it?
+Easiest for me to try first was plugging an unreleased SATAPI device
+into:
 
-I'm also not sure how to detect when this correction is needed. I
-suspect that the revision number of some BIOS component would be
-key to determining if this should be done, but I have no idea
-how to get that information.  It is probably covered by some
-standard specification, but I've been looking for a couple weeks
-and I don't think I've found the correct specification yet. (I
-did find a new load of specifications yesterday and haven't finished
-reading them, thus the 'think'.)  Suggestions on where this might
-be documented would be appreciated.
+Linux 2.6.8-rc1-bk6 i686
 
-Finally, the actual configuration information is stored someplace.
-I suspect that it is in the cmos memory.  The kernel-module-thinkpad
-project has a module in it that provides access to this information,
-but I suspect a NIH problem and that there are other standard ways to
-get at the information.  Aside from that, there is the question of
-which cmos bytes control which part of the configuration process.
-Again, I suspect that I can dig this out of other peoples projects,
-particularly the tpctl project, but a more original source might be
-more appropriate.  Again, advice on where to look would be appreciated.
+After defining ATA_ENABLE_ATAPI ATA_DEBUG ATA_VERBOSE_DEBUG in
+include/linux/libata.h, then still I saw the disappointing:
 
-If nothing else, I can RE the BIOS, but I'd really like to avoid that.
+kernel: ata_bus_reset: ENTER, host 2, port 1
+kernel: ata_bus_softreset: ata2: bus reset via SRST
+kernel: ATA: abnormal status 0x80 on port 0xE007
+kernel: ata_bus_reset: EXIT
 
-max@mtew.isa-geek.net
+I guess next I'll fall back to trying an old device, and if need be an
+old kernel, to reestablish a base line.  Til I have an interesting
+question or patch to share, I may remember to blog how life goes to
+http://linux-pel.blog-city.com/read/742498.htm
+
+Pat LaVarre
+
+
