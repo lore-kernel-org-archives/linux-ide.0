@@ -1,61 +1,34 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2.6.11-rc2 0/29] ide: driver updates
-Date: Thu, 03 Feb 2005 10:03:14 +0000
-Message-ID: <1107341195.14787.122.camel@localhost.localdomain>
-References: <20050202024017.GA621@htj.dyndns.org>
-	 <42008FFF.1080904@pobox.com>
+Subject: Re: libata todo item: retry certain classes of errors
+Date: Thu, 03 Feb 2005 10:02:29 +0000
+Message-ID: <1107330670.14787.104.camel@localhost.localdomain>
+References: <41DE1118.9020209@pobox.com>
+	 <1105106379.17166.325.camel@localhost.localdomain>
+	 <420031D5.9090304@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Received: from clock-tower.bc.nu ([81.2.110.250]:63876 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S263014AbVBCLIN
+Received: from clock-tower.bc.nu ([81.2.110.250]:56452 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S262967AbVBCLHr
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Feb 2005 06:08:13 -0500
-In-Reply-To: <42008FFF.1080904@pobox.com>
+	Thu, 3 Feb 2005 06:07:47 -0500
+In-Reply-To: <420031D5.9090304@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <tj@home-tj.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Albert Lee <albertcc@tw.ibm.com>, Andy Warner <andyw@pobox.com>
 
-On Mer, 2005-02-02 at 08:31, Jeff Garzik wrote:
-> > 	Merges drivers/ide/pci/*.h files into their corresponding *.c
-> > 	files.  Rationales are
-> > 	1. There's no reason to separate pci drivers into header and
-> > 	   body.  No header file is shared and they're simple enough.
-> > 	2. struct pde_pci_device_t *_chipsets[] are _defined_ in the
-> > 	   header files.  That isn't the custom and there's no good
-> > 	   reason to do differently in these drivers.
-> > 	3. Tracking changelogs shows that the bugs fixed by 00 and 01
-> > 	   are introduced during mass-updating ide pci drivers by
-> > 	   forgetting to update *.h files.
+On Mer, 2005-02-02 at 01:50, Jeff Garzik wrote:
+> Alan Cox wrote:
+> > I did actually arrange that all the SCSI errors it faked caused the
+> > right retry behaviour at the SCSI level when I did that. Perhaps I
+> > should have commented that fact.
 > 
-> Personally, I agree.  However, I would ask Alan for his rationale before 
-> applying this...
+> Well the retry needs to e.g. include a bus reset prior to retrying.
 
-Historically they were split so they stayed split. SCSI has mostly (c/o
-hch) switched away from that and it seems sensible for IDE to do so.
+Thats possibly true for some situations. You might also want to avoid
+issuing resets as much as you can because they are a rather good source
+of "my drive
+went away" error reports with the IDE layer (and they take forever).
 
-> 
-> > 07_ide_reg_valid_t_endian_fix.patch
-> > 
-> > 	ide_reg_valid_t contains bitfield flags but doesn't reverse
-> > 	bit orders using __*_ENDIAN_BITFIELD macros.  And constants
-> > 	for ide_reg_valid_t, IDE_{TASKFILE|HOB}_STD_{IN|OUT}_FLAGS,
-> > 	are defined as byte values which are correct only on
-> > 	little-endian machines.  This patch defines reversed constants
-> > 	and .h byte union structure to make things correct on big
-> > 	endian machines.  The only code which uses above macros is in
-> > 	flagged_taskfile() and the code is currently unused, so this
-> > 	patch doesn't change any behavior.  (The code will get used in
-> > 	later patches.)
-> 
-> doesn't this "fix" change behavior on existing big endian machines?
-
-My question too, remember that there is I/O byte order swizzling afoot
-in 
-the I/O macros.
-
-
-
-Generally looks good IMHO.
 
