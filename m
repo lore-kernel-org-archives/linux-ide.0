@@ -1,53 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: IDE Hotswap
-Date: Wed, 29 Sep 2004 18:46:23 +0100
+From: "Luciano A. Stertz" <luciano@tteng.com.br>
+Subject: Re: T10/04-262 ATA pass thru - patch.
+Date: Wed, 29 Sep 2004 16:31:38 -0300
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1096479982.15905.71.camel@localhost.localdomain>
-References: <8CCBDD5583C50E4196F012E79439B45C069657DB@atl-ms1.megatrends.com>
-	 <200409291408.55211.bzolnier@elka.pw.edu.pl>
-	 <1096468515.15905.43.camel@localhost.localdomain>
-	 <200409292020.25192.bzolnier@elka.pw.edu.pl>
+Message-ID: <415B0D9A.5080204@tteng.com.br>
+References: <20040928001633.A8363@florence.linkmargin.com> <415AFF27.7080906@tteng.com.br> <415AFFBB.8090503@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:58762 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S268834AbUI2Sth (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 29 Sep 2004 14:49:37 -0400
-In-Reply-To: <200409292020.25192.bzolnier@elka.pw.edu.pl>
+Received: from 200-203-041-086.paemt7002.e.brasiltelecom.net.br ([200.203.41.86]:61771
+	"EHLO einstein.tteng.com.br") by vger.kernel.org with ESMTP
+	id S267720AbUI2T1S (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Sep 2004 15:27:18 -0400
+In-Reply-To: <415AFFBB.8090503@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Cc: Suresh Grandhi <Sureshg@ami.com>, "'linux-ide@vger.kernel.org'" <linux-ide@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-On Mer, 2004-09-29 at 19:20, Bartlomiej Zolnierkiewicz wrote:
-> > Doesn't occur in the 2.4 situation or the 2.6 stuff with the locking in
-> > the 2.6.8.1-ac patch.
+Jeff Garzik wrote:
+> Luciano A. Stertz wrote:
 > 
-> I will verify this in a few days, I have some real work to do first.
-
-2.6 is the important stuff sure.
-
-> > > - double unlock obvious mistake
-> > Details ?
+>>
+>>     Just trying to understand the SATA SMART problem as a whole. With 
+>> your patch, it's possible to send ATA commands that are encapsulated 
+>> in CDBs, right? If so, to enable sending direct ATA commands to a SATA 
+>> device, one has to create a ioctl that receives the command and 
+>> creates a CDB from it, as John Linville did a few weeks ago. This way 
+>> a user-space application (e.g. smartmontools) can use this ioctl to 
+>> send ATA commands. Am I right?
 > 
-> 2003/08/16 alan               | 	/* Drive shutdown sequence done */
-> 2003/08/16 alan               | 	/* Prevent new opens ?? */
-> 2003/08/16 alan               | 	spin_unlock_irqrestore(&io_request_lock, flags);
-> 2003/08/16 alan               | 	/*
-> 2003/08/16 alan               | 	 * Flush kernel side caches, and dump the /proc files
-> 2003/08/16 alan               | 	 */
-> 2003/08/16 alan               | 	spin_unlock_irqrestore(&io_request_lock, flags);
 > 
+> No.  SCSI "send CDB" ioctls have existed for years.
+> 
+> The ioctls John added are merely for compatibility with existing IDE 
+> utilities.
+	Hmm, didn't know that. Do you mean that I can already send ATA commands 
+to SATA devices? Where can I find information about these ioctls?
 
-Thanks. I'll go over this when I dig out the one little bit 2.4.2x needs
-for hotplug to behave right with hard disks that I should get to
-Marcelo.
+	Thanks again,
+	Luciano
 
-> OK BKL protects us against i.e. concurrent HDIO_GETGEO
-> and hotplug ioctl.  There is however no protection for controller
-> hotplug.
-
-Agreed.
-
-
+-- 
+Luciano A. Stertz
+luciano@tteng.com.br
+T&T Engenheiros Associados Ltda
+http://www.tteng.com.br
+Fone/Fax (51) 3224 8425
