@@ -1,85 +1,325 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: [RFT][PATCH] ide-disk.c: more write cache fixes
-Date: Fri, 14 May 2004 02:14:07 +0200
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH] libata atapi work #1
+Date: Thu, 13 May 2004 21:33:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200405140214.08136.bzolnier@elka.pw.edu.pl>
-References: <200405132116.44201.bzolnier@elka.pw.edu.pl> <40A404A5.8070500@keyaccess.nl>
+Message-ID: <40A42206.8070405@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------030205030900090006090804"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:14060 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264208AbUENAOg
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:61649 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264352AbUENBeN
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 May 2004 20:14:36 -0400
-In-Reply-To: <40A404A5.8070500@keyaccess.nl>
-Content-Disposition: inline
+	Thu, 13 May 2004 21:34:13 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Rene Herman <rene.herman@keyaccess.nl>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@redhat.com>, Andrew Morton <akpm@osdl.org>, "Eric D. Mudama" <edmudama@mail.bounceswoosh.org>, Jens Axboe <axboe@suse.de>
+To: linux-ide@vger.kernel.org
+Cc: Pat LaVarre <p.lavarre@ieee.org>
 
-On Friday 14 of May 2004 01:28, Rene Herman wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > Comments, suggestions, complains?
->
-> Yes, this works to stop it from complaining (on 6Y120P0). It comes up
-> with write cache enabled, and hdparm -W0/-W1 work to disable/enable
-> write cache as evidenced by the tiobench results. Not as evidenced by
-> /proc/ide/hda/settings (drive->wcache) which is always 1 and which will
-> probably confuse more users than just me -- I believe I saw hdparm just
-> pushes a drive command through an ioctl?
+This is a multi-part message in MIME format.
+--------------030205030900090006090804
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Yep, you are right and we shouldn't worry about confusion too much,
-we have similar situation till now (wcache was zero even if enabled).
 
-> Question though:
-> > @@ -1678,8 +1683,12 @@ static void idedisk_setup (ide_drive_t *
-> >  #endif	/* CONFIG_IDEDISK_MULTI_MODE */
-> >  	}
-> >  	drive->no_io_32bit = id->dword_io ? 1 : 0;
-> > -	if (drive->id->cfs_enable_2 & 0x3000)
-> > -		write_cache(drive, (id->cfs_enable_2 & 0x3000));
-> > +
-> > +	/* write cache enabled? */
-> > +	if ((id->csfo & 1) || (id->cfs_enable_1 & (1 << 5)))
-> > +		drive->wcache = 1;
-> > +
-> > +	write_cache(drive, 1);
->
-> write_cache() also sets drive->wcache (to the argument, 1 in this case)
-> and you call that unconditionally, so the "if (foo) drive->wcache = 1"
-> seems superfluous. If the idea indeed is to unconditionally enable write
-> cache, it seems just
+While it was fresh on the brain, I messed around with it a bit.
 
-Please look at write_cache(), it will try to {en,dis}able write cache
-and then set drive->wcache *only* if disk has ATA-6 cache flush bits.
+Pat, I hope you don't take offense.  Working with you got me thinking 
+about how to transform libata, which was very helpful.
 
-I think that we can change write_cache() to always allow enabling of
-write cache so hdparm can be fixed to use HDIO_{GET,SET}_WCACHE ioctls
-but we should be careful about always enabling write cache in a driver
-(there may be some unknown yet side-effects).
+There will probably be at least one more patch coming, fixing up the 
+atapi protocol completion code.
 
-Whatever we decide we can do this later after this patch is merged.
+	Jeff
 
-> write_cache(drive, 1);
->
-> would be equivalent. Or if that wasn't the intention, maybe:
->
-> if (foo)
-> 	write_cache(drive, 1);
->
-> or if it should in fact be disabled if (!foo):
->
-> write_cache(drive, (id->csfo & 1) || (id->cfs_enable_1 & (1 << 5)));
->
-> or ...
->
-> Ignore me if I completely missed the point, just looks odd.
 
-:-)
 
-Thanks,
-Bartlomiej
 
+--------------030205030900090006090804
+Content-Type: text/plain;
+ name="patch.1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch.1"
+
+# This is a BitKeeper generated diff -Nru style patch.
+#
+# ChangeSet
+#   2004/05/13 20:35:48-04:00 jgarzik@redhat.com 
+#   [libata] add new ->bmdma_setup hook
+#   
+#   In order to support some new taskfile protocols, particularly ATAPI,
+#   the setup-and-start-DMA hook needs to be split into its component
+#   pieces, 'setup' and 'start'.
+#   
+#   For PCI IDE-style controllers, most of the code is moved into the
+#   'setup' portion, with the 'start' portion only flipping a single
+#   bit in hardware.
+# 
+diff -Nru a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
+--- a/drivers/scsi/ata_piix.c	Thu May 13 21:28:09 2004
++++ b/drivers/scsi/ata_piix.c	Thu May 13 21:28:09 2004
+@@ -136,6 +136,7 @@
+ 
+ 	.phy_reset		= piix_pata_phy_reset,
+ 
++	.bmdma_setup		= ata_bmdma_setup_pio,
+ 	.bmdma_start		= ata_bmdma_start_pio,
+ 	.fill_sg		= ata_fill_sg,
+ 	.eng_timeout		= ata_eng_timeout,
+@@ -158,6 +159,7 @@
+ 
+ 	.phy_reset		= piix_sata_phy_reset,
+ 
++	.bmdma_setup		= ata_bmdma_setup_pio,
+ 	.bmdma_start		= ata_bmdma_start_pio,
+ 	.fill_sg		= ata_fill_sg,
+ 	.eng_timeout		= ata_eng_timeout,
+diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+--- a/drivers/scsi/libata-core.c	Thu May 13 21:28:09 2004
++++ b/drivers/scsi/libata-core.c	Thu May 13 21:28:09 2004
+@@ -2445,6 +2445,7 @@
+ 
+ 	case ATA_PROT_DMA:
+ 		ap->ops->tf_load(ap, &qc->tf);	 /* load tf registers */
++		ap->ops->bmdma_setup(qc);	    /* initiate bmdma */
+ 		ap->ops->bmdma_start(qc);	    /* initiate bmdma */
+ 		break;
+ 
+@@ -2465,14 +2466,14 @@
+ }
+ 
+ /**
+- *	ata_bmdma_start_mmio -
+- *	@qc:
++ *	ata_bmdma_setup_mmio - Set up PCI IDE BMDMA transaction (MMIO)
++ *	@qc: Info associated with this ATA transaction.
+  *
+  *	LOCKING:
+  *	spin_lock_irqsave(host_set lock)
+  */
+ 
+-void ata_bmdma_start_mmio (struct ata_queued_cmd *qc)
++void ata_bmdma_setup_mmio (struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	unsigned int rw = (qc->tf.flags & ATA_TFLAG_WRITE);
+@@ -2496,8 +2497,24 @@
+ 
+ 	/* issue r/w command */
+ 	ap->ops->exec_command(ap, &qc->tf);
++}
++
++/**
++ *	ata_bmdma_start_mmio - Start a PCI IDE BMDMA transaction (MMIO)
++ *	@qc: Info associated with this ATA transaction.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ */
++
++void ata_bmdma_start_mmio (struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	void *mmio = (void *) ap->ioaddr.bmdma_addr;
++	u8 dmactl;
+ 
+ 	/* start host DMA transaction */
++	dmactl = readb(mmio + ATA_DMA_CMD);
+ 	writeb(dmactl | ATA_DMA_START, mmio + ATA_DMA_CMD);
+ 
+ 	/* Strictly, one may wish to issue a readb() here, to
+@@ -2514,14 +2531,14 @@
+ }
+ 
+ /**
+- *	ata_bmdma_start_pio -
+- *	@qc:
++ *	ata_bmdma_setup_pio - Set up PCI IDE BMDMA transaction (PIO)
++ *	@qc: Info associated with this ATA transaction.
+  *
+  *	LOCKING:
+  *	spin_lock_irqsave(host_set lock)
+  */
+ 
+-void ata_bmdma_start_pio (struct ata_queued_cmd *qc)
++void ata_bmdma_setup_pio (struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	unsigned int rw = (qc->tf.flags & ATA_TFLAG_WRITE);
+@@ -2544,8 +2561,23 @@
+ 
+ 	/* issue r/w command */
+ 	ap->ops->exec_command(ap, &qc->tf);
++}
++
++/**
++ *	ata_bmdma_start_pio - Start a PCI IDE BMDMA transaction (PIO)
++ *	@qc: Info associated with this ATA transaction.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ */
++
++void ata_bmdma_start_pio (struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	u8 dmactl;
+ 
+ 	/* start host DMA transaction */
++	dmactl = inb(ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
+ 	outb(dmactl | ATA_DMA_START,
+ 	     ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
+ }
+@@ -3475,7 +3507,9 @@
+ EXPORT_SYMBOL_GPL(ata_port_stop);
+ EXPORT_SYMBOL_GPL(ata_interrupt);
+ EXPORT_SYMBOL_GPL(ata_fill_sg);
++EXPORT_SYMBOL_GPL(ata_bmdma_setup_pio);
+ EXPORT_SYMBOL_GPL(ata_bmdma_start_pio);
++EXPORT_SYMBOL_GPL(ata_bmdma_setup_mmio);
+ EXPORT_SYMBOL_GPL(ata_bmdma_start_mmio);
+ EXPORT_SYMBOL_GPL(ata_port_probe);
+ EXPORT_SYMBOL_GPL(sata_phy_reset);
+diff -Nru a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
+--- a/drivers/scsi/sata_promise.c	Thu May 13 21:28:09 2004
++++ b/drivers/scsi/sata_promise.c	Thu May 13 21:28:09 2004
+@@ -74,6 +74,7 @@
+ static u32 pdc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg);
+ static void pdc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
+ static int pdc_sata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
++static void pdc_dma_setup(struct ata_queued_cmd *qc);
+ static void pdc_dma_start(struct ata_queued_cmd *qc);
+ static irqreturn_t pdc_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
+ static void pdc_eng_timeout(struct ata_port *ap);
+@@ -111,6 +112,7 @@
+ 	.check_status		= ata_check_status_mmio,
+ 	.exec_command		= pdc_exec_command_mmio,
+ 	.phy_reset		= pdc_phy_reset,
++	.bmdma_setup            = pdc_dma_setup,
+ 	.bmdma_start            = pdc_dma_start,
+ 	.fill_sg		= pdc_fill_sg,
+ 	.eng_timeout		= pdc_eng_timeout,
+@@ -429,6 +431,12 @@
+ 	VPRINTK("EXIT\n");
+ 
+ 	return IRQ_RETVAL(handled);
++}
++
++static void pdc_dma_setup(struct ata_queued_cmd *qc)
++{
++	/* nothing for now.  later, we will call standard
++	 * code in libata-core for ATAPI here */
+ }
+ 
+ static void pdc_dma_start(struct ata_queued_cmd *qc)
+diff -Nru a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+--- a/drivers/scsi/sata_sil.c	Thu May 13 21:28:09 2004
++++ b/drivers/scsi/sata_sil.c	Thu May 13 21:28:09 2004
+@@ -129,6 +129,7 @@
+ 	.exec_command		= ata_exec_command_mmio,
+ 	.phy_reset		= sata_phy_reset,
+ 	.post_set_mode		= sil_post_set_mode,
++	.bmdma_setup            = ata_bmdma_setup_mmio,
+ 	.bmdma_start            = ata_bmdma_start_mmio,
+ 	.fill_sg		= ata_fill_sg,
+ 	.eng_timeout		= ata_eng_timeout,
+diff -Nru a/drivers/scsi/sata_sis.c b/drivers/scsi/sata_sis.c
+--- a/drivers/scsi/sata_sis.c	Thu May 13 21:28:09 2004
++++ b/drivers/scsi/sata_sis.c	Thu May 13 21:28:09 2004
+@@ -98,6 +98,7 @@
+ 	.check_status		= ata_check_status_pio,
+ 	.exec_command		= ata_exec_command_pio,
+ 	.phy_reset		= sata_phy_reset,
++	.bmdma_setup            = ata_bmdma_setup_pio,
+ 	.bmdma_start            = ata_bmdma_start_pio,
+ 	.fill_sg		= ata_fill_sg,
+ 	.eng_timeout		= ata_eng_timeout,
+diff -Nru a/drivers/scsi/sata_svw.c b/drivers/scsi/sata_svw.c
+--- a/drivers/scsi/sata_svw.c	Thu May 13 21:28:09 2004
++++ b/drivers/scsi/sata_svw.c	Thu May 13 21:28:09 2004
+@@ -231,6 +231,7 @@
+ 	.check_status		= k2_stat_check_status,
+ 	.exec_command		= ata_exec_command_mmio,
+ 	.phy_reset		= sata_phy_reset,
++	.bmdma_setup            = ata_bmdma_setup_mmio,
+ 	.bmdma_start            = ata_bmdma_start_mmio,
+ 	.fill_sg		= ata_fill_sg,
+ 	.eng_timeout		= ata_eng_timeout,
+diff -Nru a/drivers/scsi/sata_sx4.c b/drivers/scsi/sata_sx4.c
+--- a/drivers/scsi/sata_sx4.c	Thu May 13 21:28:09 2004
++++ b/drivers/scsi/sata_sx4.c	Thu May 13 21:28:09 2004
+@@ -146,6 +146,7 @@
+ 
+ 
+ static int pdc_sata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
++static void pdc20621_dma_setup(struct ata_queued_cmd *qc);
+ static void pdc20621_dma_start(struct ata_queued_cmd *qc);
+ static irqreturn_t pdc20621_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
+ static void pdc_eng_timeout(struct ata_port *ap);
+@@ -197,6 +198,7 @@
+ 	.check_status		= ata_check_status_mmio,
+ 	.exec_command		= pdc_exec_command_mmio,
+ 	.phy_reset		= pdc_20621_phy_reset,
++	.bmdma_setup            = pdc20621_dma_setup,
+ 	.bmdma_start            = pdc20621_dma_start,
+ 	.fill_sg		= pdc20621_fill_sg,
+ 	.eng_timeout		= pdc_eng_timeout,
+@@ -567,6 +569,12 @@
+ #else
+ static inline void pdc20621_dump_hdma(struct ata_queued_cmd *qc) { }
+ #endif /* ATA_VERBOSE_DEBUG */
++
++static void pdc20621_dma_setup(struct ata_queued_cmd *qc)
++{
++	/* nothing for now.  later, we will call standard
++	 * code in libata-core for ATAPI here */
++}
+ 
+ static void pdc20621_dma_start(struct ata_queued_cmd *qc)
+ {
+diff -Nru a/drivers/scsi/sata_via.c b/drivers/scsi/sata_via.c
+--- a/drivers/scsi/sata_via.c	Thu May 13 21:28:09 2004
++++ b/drivers/scsi/sata_via.c	Thu May 13 21:28:09 2004
+@@ -106,6 +106,7 @@
+ 
+ 	.phy_reset		= sata_phy_reset,
+ 
++	.bmdma_setup            = ata_bmdma_setup_pio,
+ 	.bmdma_start            = ata_bmdma_start_pio,
+ 	.fill_sg		= ata_fill_sg,
+ 	.eng_timeout		= ata_eng_timeout,
+diff -Nru a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
+--- a/drivers/scsi/sata_vsc.c	Thu May 13 21:28:09 2004
++++ b/drivers/scsi/sata_vsc.c	Thu May 13 21:28:09 2004
+@@ -213,6 +213,7 @@
+ 	.exec_command		= ata_exec_command_mmio,
+ 	.check_status		= ata_check_status_mmio,
+ 	.phy_reset		= sata_phy_reset,
++	.bmdma_setup            = ata_bmdma_setup_mmio,
+ 	.bmdma_start            = ata_bmdma_start_mmio,
+ 	.fill_sg		= ata_fill_sg,
+ 	.eng_timeout		= ata_eng_timeout,
+diff -Nru a/include/linux/libata.h b/include/linux/libata.h
+--- a/include/linux/libata.h	Thu May 13 21:28:09 2004
++++ b/include/linux/libata.h	Thu May 13 21:28:09 2004
+@@ -335,6 +335,7 @@
+ 	void (*phy_reset) (struct ata_port *ap);
+ 	void (*post_set_mode) (struct ata_port *ap);
+ 
++	void (*bmdma_setup) (struct ata_queued_cmd *qc);
+ 	void (*bmdma_start) (struct ata_queued_cmd *qc);
+ 	void (*fill_sg) (struct ata_queued_cmd *qc);
+ 	void (*eng_timeout) (struct ata_port *ap);
+@@ -397,7 +398,9 @@
+ extern void ata_port_stop (struct ata_port *ap);
+ extern irqreturn_t ata_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
+ extern void ata_fill_sg(struct ata_queued_cmd *qc);
++extern void ata_bmdma_setup_mmio (struct ata_queued_cmd *qc);
+ extern void ata_bmdma_start_mmio (struct ata_queued_cmd *qc);
++extern void ata_bmdma_setup_pio (struct ata_queued_cmd *qc);
+ extern void ata_bmdma_start_pio (struct ata_queued_cmd *qc);
+ extern int pci_test_config_bits(struct pci_dev *pdev, struct pci_bits *bits);
+ extern void ata_qc_complete(struct ata_queued_cmd *qc, u8 drv_stat, unsigned int done_late);
+
+--------------030205030900090006090804--
 
