@@ -1,47 +1,72 @@
-From: "Luciano A. Stertz" <luciano@tteng.com.br>
+From: Andy Warner <andyw@pobox.com>
 Subject: Re: T10/04-262 ATA pass thru - patch.
-Date: Tue, 05 Oct 2004 15:53:23 -0300
+Date: Tue, 5 Oct 2004 14:06:53 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4162EDA3.1030202@tteng.com.br>
-References: <20040928001633.A8363@florence.linkmargin.com> <415AFF27.7080906@tteng.com.br> <415AFFBB.8090503@pobox.com>
+Message-ID: <20041005140653.A13393@florence.linkmargin.com>
+References: <20040928001633.A8363@florence.linkmargin.com> <415AFF27.7080906@tteng.com.br> <415AFFBB.8090503@pobox.com> <4162EDA3.1030202@tteng.com.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 200-203-041-086.paemt7002.e.brasiltelecom.net.br ([200.203.41.86]:117
-	"EHLO einstein.tteng.com.br") by vger.kernel.org with ESMTP
-	id S264668AbUJESru (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Oct 2004 14:47:50 -0400
-In-Reply-To: <415AFFBB.8090503@pobox.com>
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:47332 "EHLO
+	ms-smtp-02.rdc-kc.rr.com") by vger.kernel.org with ESMTP
+	id S261239AbUJETI4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Oct 2004 15:08:56 -0400
+Content-Disposition: inline
+In-Reply-To: <4162EDA3.1030202@tteng.com.br>; from luciano@tteng.com.br on Tue, Oct 05, 2004 at 03:53:23PM -0300
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Andy Warner <andyw@pobox.com>
+To: "Luciano A. Stertz" <luciano@tteng.com.br>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Andy Warner <andyw@pobox.com>
 
-Jeff Garzik wrote:
-> Luciano A. Stertz wrote:
-> 
->>
->>     Just trying to understand the SATA SMART problem as a whole. With 
->> your patch, it's possible to send ATA commands that are encapsulated 
->> in CDBs, right? If so, to enable sending direct ATA commands to a SATA 
->> device, one has to create a ioctl that receives the command and 
->> creates a CDB from it, as John Linville did a few weeks ago. This way 
->> a user-space application (e.g. smartmontools) can use this ioctl to 
->> send ATA commands. Am I right?
-> 
-> 
-> No.  SCSI "send CDB" ioctls have existed for years.
-	Am I supposed to be able to run any ATA command from user-space now, 
-then? Let's say I want to run a IDENTIFY DEVICE, how can I do that? I 
-tried SG_IO, but sg_allow_access blocks my request since the 'ATA_16' 
-command isn't recognized yet. Is there another way?
+Luciano A. Stertz wrote:
+> [...]
+> 	Am I supposed to be able to run any ATA command from user-space now, 
+> then? Let's say I want to run a IDENTIFY DEVICE, how can I do that? I 
+> tried SG_IO, but sg_allow_access blocks my request since the 'ATA_16' 
+> command isn't recognized yet. Is there another way?
 
-	Thanks again,
-		Luciano
+I am using SG_IO to issue arbitrary ATA commands. Unfortunately
+I can't share that customer code with you, sorry. But have
+faith that you can do it. I've not had sg_allow_access()
+get in my way doing this - I'll find out why not and report
+back; I did not modify sg.c.
+
+Until then, here's the result of an Identify Device (0xec) command:
+
+$ sudo sg_ata sg=/dev/sg5 cmd=0xec buff=1b dev=0x00 style=2 swab=1
+     0: 0x0C5A,0x3FFF,0xC837,0x0010,0x0000,0x0000,0x003F,0x0000: .Z?..7.......?..
+     8: 0x0000,0x0000,0x334A,0x5331,0x435A,0x5351,0x2020,0x2020: ....3JS1CZSQ    
+    16: 0x2020,0x2020,0x2020,0x2020,0x0000,0x4000,0x0004,0x332E:         ..@...3.
+    24: 0x3137,0x2020,0x2020,0x5354,0x3331,0x3630,0x3032,0x3341: 17    ST3160023A
+    32: 0x5320,0x2020,0x2020,0x2020,0x2020,0x2020,0x2020,0x2020: S               
+    40: 0x2020,0x2020,0x2020,0x2020,0x2020,0x2020,0x2020,0x8010:               ..
+    48: 0x0000,0x2F00,0x0000,0x0200,0x0200,0x0007,0x3FFF,0x0010: ../.........?...
+    56: 0x003F,0xFC10,0x00FB,0x0010,0xFFFF,0x0FFF,0x0000,0x0007: .?..............
+    64: 0x0003,0x0078,0x0078,0x00F0,0x0078,0x0000,0x0000,0x0000: ...x.x...x......
+    72: 0x0000,0x0000,0x0000,0x0000,0x0002,0x0000,0x0000,0x0000: ................
+    80: 0x007E,0x001B,0x3069,0x7C01,0x4003,0x3069,0x3C01,0x4003: .~..0i|.@.0i<.@.
+    88: 0x203F,0x0000,0x0000,0xFEFE,0x0000,0x0000,0xFE00,0x0000:  ?..............
+    96: 0x0000,0x0000,0x0000,0x0000,0x9EB0,0x12A1,0x0000,0x0000: ................
+   104: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   112: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   120: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   128: 0x0000,0x9EB0,0x12A1,0x9EB0,0x12A1,0x2020,0x0002,0x42B6: ..........  ..B.
+   136: 0x8000,0x008A,0x3C06,0x3C0A,0xFFFF,0x07C6,0x0100,0x0800: ....<.<.........
+   144: 0x0FF0,0x1000,0x0002,0x0030,0x0000,0x0000,0x0000,0xFE06: .......0........
+   152: 0x0000,0x0002,0x0050,0x008A,0x954F,0x0000,0x0023,0x000B: .....P...O...#..
+   160: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   168: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   176: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   184: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   192: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   200: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   208: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   216: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   224: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   232: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   240: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000: ................
+   248: 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0xC8A5: ................
 
 -- 
-Luciano A. Stertz
-luciano@tteng.com.br
-T&T Engenheiros Associados Ltda
-http://www.tteng.com.br
-Fone/Fax (51) 3224 8425
+andyw@pobox.com
+
+Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
