@@ -1,43 +1,62 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: [PATCH] various IDE patches/cleanups
-Date: Tue, 3 Feb 2004 20:41:09 +0100
+Subject: [PATCH] remove dead CONFIG_IDEDMA_NEW_DRIVE_LISTINGS
+Date: Wed, 4 Feb 2004 02:35:09 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200402032041.09696.bzolnier@elka.pw.edu.pl>
-References: <20040103152802.6e27f5c5.davmac@ozonline.com.au> <200401061213.39843.bzolnier@elka.pw.edu.pl> <20040130142725.1a408f9e.davmac@ozonline.com.au>
+Message-ID: <200402040235.09215.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-2"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:53247 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S266139AbUBCThB
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:56029 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S266209AbUBDBbl
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Feb 2004 14:37:01 -0500
-In-Reply-To: <20040130142725.1a408f9e.davmac@ozonline.com.au>
+	Tue, 3 Feb 2004 20:31:41 -0500
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Davin McCall <davmac@ozonline.com.au>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
 
-Hi,
+[PATCH] remove dead CONFIG_IDEDMA_NEW_DRIVE_LISTINGS
 
-On Friday 30 of January 2004 04:27, you wrote:
-> I've been doing some hacking on the IDE layer, just to fix a few issues I
-> noticed going through the code. Due to the complex nature of the code I'm
-> bound to have missed some things and perhaps misunderstood others.
-> Nevertheless I'm posting these patches in the hope that they can be tested
-> on other machines, rejected, or even accepted.
->
-> Comments and criticisms are welcome.
+Leftover after switch to IDE DMA Model-Firmware blacklist in kernel 2.5.63.
 
-Thanks!  I'm slowly reading through them (yeah, code is really complex).
-Patch 3rd and 5th seems okay, 2nd and 4th need some more checking/thinking.
+ linux-2.6.2-rc3-bk3-root/arch/arm/configs/footbridge_defconfig |    1 
+ linux-2.6.2-rc3-bk3-root/drivers/ide/Kconfig                   |   11 ----------
+ 2 files changed, 12 deletions(-)
 
-> The first patch, below, is already included in the -mm tree. The further
-> patches are appearing here for the first time.
+diff -puN arch/arm/configs/footbridge_defconfig~CONFIG_IDEDMA_NEW_DRIVE_LISTINGS_cleanup arch/arm/configs/footbridge_defconfig
+--- linux-2.6.2-rc3-bk3/arch/arm/configs/footbridge_defconfig~CONFIG_IDEDMA_NEW_DRIVE_LISTINGS_cleanup	2004-02-04 01:21:44.930307560 +0100
++++ linux-2.6.2-rc3-bk3-root/arch/arm/configs/footbridge_defconfig	2004-02-04 01:21:59.000000000 +0100
+@@ -399,7 +399,6 @@ CONFIG_BLK_DEV_IDEDMA_PCI=y
+ CONFIG_BLK_DEV_OFFBOARD=y
+ CONFIG_IDEDMA_PCI_AUTO=y
+ CONFIG_BLK_DEV_IDEDMA=y
+-# CONFIG_IDEDMA_NEW_DRIVE_LISTINGS is not set
+ # CONFIG_BLK_DEV_AEC62XX is not set
+ # CONFIG_AEC62XX_TUNING is not set
+ # CONFIG_BLK_DEV_ALI15X3 is not set
+diff -puN drivers/ide/Kconfig~CONFIG_IDEDMA_NEW_DRIVE_LISTINGS_cleanup drivers/ide/Kconfig
+--- linux-2.6.2-rc3-bk3/drivers/ide/Kconfig~CONFIG_IDEDMA_NEW_DRIVE_LISTINGS_cleanup	2004-02-04 01:17:57.000000000 +0100
++++ linux-2.6.2-rc3-bk3-root/drivers/ide/Kconfig	2004-02-04 01:18:40.000000000 +0100
+@@ -521,17 +521,6 @@ config IDEDMA_PCI_WIP
+ 
+ 	  It is SAFEST to say N to this question.
+ 
+-config IDEDMA_NEW_DRIVE_LISTINGS
+-	bool "Good-Bad DMA Model-Firmware (WIP)"
+-	depends on IDEDMA_PCI_WIP
+-	help
+-	  If you say Y here, the model and firmware revision of your drive
+-	  will be compared against a blacklist of buggy drives that claim to
+-	  be (U)DMA capable but aren't. This is a blanket on/off test with no
+-	  speed limit options.
+-
+-	  If in doubt, say N.
+-
+ config BLK_DEV_ADMA
+ 	bool
+ 	depends on PCI && BLK_DEV_IDEPCI
 
-It was pushed to Linus and merged.
-
---bart
+_
 
