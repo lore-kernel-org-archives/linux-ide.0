@@ -1,57 +1,32 @@
-From: Brett Russ <russb@emc.com>
-Subject: [PATCH libata-2.6] AHCI: compiler warning fix
-Date: Wed, 23 Mar 2005 17:01:40 -0500 (EST)
-Message-ID: <20050323220140.1624329937@lns1032.lss.emc.com>
-References: <20050311212108.4BB4514FB1@lns1032.lss.emc.com> <4240FB62.7080208@pobox.com>
-Received: from mailhub.lss.emc.com ([168.159.2.31]:34517 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S261421AbVCWWBv
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 Mar 2005 17:01:51 -0500
-In-Reply-To: <4240FB62.7080208@pobox.com>
+From: Edward Falk <efalk@google.com>
+Subject: Re: [PATCH] Silicon Image 3124 / 3132 basic SATA driver
+Date: Wed, 23 Mar 2005 16:23:34 -0800
+Message-ID: <42420886.7050102@google.com>
+References: <4241C57C.9050305@pobox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from 216-239-45-4.google.com ([216.239.45.4]:45911 "EHLO
+	216-239-45-4.google.com") by vger.kernel.org with ESMTP
+	id S262112AbVCXAXk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Mar 2005 19:23:40 -0500
+Received: from [172.24.65.188] (peregrine.corp.google.com [172.24.65.188])
+	(authenticated bits=0)
+	by stewie.corp.google.com (8.13.3/8.13.3) with ESMTP id j2O0NYdE012095
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2005 16:23:34 -0800
+In-Reply-To: <4241C57C.9050305@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Jeff,
+Hi there; perfect timing.  I just this minute got off the phone with 
+SiI.  Have you had time to look at the patch yet and try it out?
 
-This fixes the compile warning below:
-drivers/scsi/ahci.c:199: warning: overflow in implicit constant
-conversion
+I have a 3124 on my desk somewhere, so I'll be checking it out this week 
+if I'm lucky.
 
-This has been sitting in my dir for a while now, sorry for not sending
-it sooner.  It turns out that moving the AHCI_DMA_BOUNDARY to the
-*bottom* of the current enum also works, since by that point the
-compiler can determine that there is no signed data in the enum.
-However, I think your suggestion (implemented below) is cleaner
-because it doesn't rely on luck to keep the current enum unsigned--it
-instead creates a new one intended for unsigned data only.
+Word is that the patch does *not* support the port multipliers, but SiI 
+is sending me the docs so if they don't add support, maybe I can.
 
-Signed-off-by: Brett Russ <russb@emc.com>
-
-===== drivers/scsi/ahci.c 1.17 vs edited =====
-Index: libata-2.6/drivers/scsi/ahci.c
-===================================================================
---- libata-2.6.orig/drivers/scsi/ahci.c	2005-03-11 13:57:22.000000000 -0500
-+++ libata-2.6/drivers/scsi/ahci.c	2005-03-12 15:35:58.000000000 -0500
-@@ -44,7 +44,6 @@
- enum {
- 	AHCI_PCI_BAR		= 5,
- 	AHCI_MAX_SG		= 168, /* hardware max is 64K */
--	AHCI_DMA_BOUNDARY	= 0xffffffff,
- 	AHCI_USE_CLUSTERING	= 0,
- 	AHCI_CMD_SLOT_SZ	= 32 * 32,
- 	AHCI_RX_FIS_SZ		= 256,
-@@ -135,6 +134,12 @@
- 	PORT_CMD_ICC_SLUMBER	= (0x6 << 28), /* Put i/f in slumber state */
- };
- 
-+/* This enum is intended to be strictly for unsigned data
-+ */
-+enum {
-+	AHCI_DMA_BOUNDARY	= 0xffffffffUL
-+};
-+
- struct ahci_cmd_hdr {
- 	u32			opts;
- 	u32			status;
+	-ed falk
