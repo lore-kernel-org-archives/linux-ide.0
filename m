@@ -1,37 +1,50 @@
-From: Konstantin Sobolev <kos@supportwizard.com>
+From: Simon Koch <koch0121@umn.edu>
 Subject: Re: poor sata performance on 2.6
-Date: Fri, 16 Apr 2004 01:13:10 +0400
+Date: Thu, 15 Apr 2004 18:34:31 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200404160113.10553.kos@supportwizard.com>
-References: <200404150236.05894.kos@supportwizard.com> <20040415195053.GP468@openzaurus.ucw.cz>
-Reply-To: kos@supportwizard.com
+Message-ID: <407F1C07.6050104@umn.edu>
+References: <200404150236.05894.kos@supportwizard.com> <1082001287.407e0787f3c48@webmail.LaTech.edu> <200404151455.36307.kos@supportwizard.com> <1082044297.407eaf894ddda@webmail.LaTech.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.rol.ru ([194.67.21.9]:25940 "EHLO smtp.rol.ru")
-	by vger.kernel.org with ESMTP id S263574AbUDOVK1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Apr 2004 17:10:27 -0400
-Received: from 81.211.110.66.adsl-spb.net.rol.ru ([81.211.110.66]:41366 "EHLO
-	81.211.110.66.adsl-spb.net.rol.ru" smtp-auth: <none> TLS-CIPHER: <none>
-	TLS-PEER-CN1: <none>) by gnome03.net.rol.ru with ESMTP
-	id S17476630AbUDOVKY (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 1 other); Fri, 16 Apr 2004 01:10:24 +0400
-In-Reply-To: <20040415195053.GP468@openzaurus.ucw.cz>
-Content-Disposition: inline
+Received: from mhub-m6.tc.umn.edu ([160.94.23.36]:22459 "EHLO
+	mhub-m6.tc.umn.edu") by vger.kernel.org with ESMTP id S261981AbUDOXeg
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Apr 2004 19:34:36 -0400
+In-Reply-To: <1082044297.407eaf894ddda@webmail.LaTech.edu>
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@suse.cz>
+To: Ryan Geoffrey Bourgeois <rgb005@latech.edu>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thursday 15 April 2004 23:50, Pavel Machek wrote:
-> > /dev/hde:
-> >  Timing buffer-cache reads:   1436 MB in  2.00 seconds = 717.03 MB/sec
-> >  Timing buffered disk reads:  100 MB in  3.03 seconds =  32.95 MB/sec
+Ryan Geoffrey Bourgeois wrote:
+
+>>I'm almost ready to buy separate controller, but all that I could find nearby
+>>
+>>are based on the same Silicon Image chipset
+>>
+>>    
+>>
 >
-> 33MB/sec "totally unacceptable"? Wow.
-well.. taking into account it's price and final 68MB/sec I've got after 
-following Justin's advice.. :)
--- 
-/KoS
-* Jeez, if you love Honkus...					      
+>I do recomend Promise's SATA controller cards.  The kernel drivers are excellent
+>imho.  As well as my onboard Promise TX2, I'm using a thei S150 SX4 RAID5
+>capable controller in my file server.  A controlle ard should be easy enough to
+>finnd online.  I shop at NewEgg.com.  Good prices, highly rcommended.
+>
+>I'm gonna take a look at your .config as soon as I get back to my own computer.
+>
+>Cheers.
+>-Ryan
+>
+>-------------------------------------------------
+>This mail sent through IMP: http://horde.org/imp/
+>
+
+What kernel/driver are you using for the S150 SX4?  I couldn't ever get 
+better than 13MB/sec from it in 2.6.  Of course, the last I tried was 
+2.6.3.  I could get 55MB/sec using 2.4 and Promise's partial source 
+driver, but since my onboard SATA controller works fine in 2.6 I'm just 
+using that meanwhile.
+
+Thanks,
+    Simon
