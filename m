@@ -1,39 +1,49 @@
-From: Doug Maxey <dwm@maxeymade.com>
-Subject: hdparm write cache settings
-Date: Fri, 15 Oct 2004 14:48:20 -0500
+From: Andy Warner <andyw@pobox.com>
+Subject: RFC: hotplug & libata.
+Date: Fri, 15 Oct 2004 15:16:56 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200410151948.i9FJmKMR019895@falcon30.maxeymade.com>
+Message-ID: <20041015151656.A26160@florence.linkmargin.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:12006 "EHLO
-	falcon30.maxeymade.com") by vger.kernel.org with ESMTP
-	id S268342AbUJOTsX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Oct 2004 15:48:23 -0400
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:53411 "EHLO
+	ms-smtp-02.rdc-kc.rr.com") by vger.kernel.org with ESMTP
+	id S267653AbUJOUSl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Oct 2004 16:18:41 -0400
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
+I've spent time over the last 10 days or so working
+through hotplug issues with libata and am coming round
+to the position that the current __init/probe mechanism
+may need some reorganisation for hotplug to work well.
 
-Mark,
+I can currently (mostly) hotplug SATA drives that were
+present at __init/probe all day long; but things
+are less good for drives which were not present
+at __init/probe.
 
-I have been tweaking the idedisk_setup() and write_cache() to handle
-drives with write cache disabled by default and the barrier settings on
-changes between WC enabled and disabled.
+If it's not there at __init/probe time, the groundwork
+isn't in place to add devices later without some fairly
+nasty & repetitious code. I keep coming back to a model
+where the host adapter ports are initialised, then the
+initial drive scan & addition is effectively a hot-plug
+event (either automatic or forced, depending on hardware
+capabilities.)
 
-Bart has pointed out in offline mail, and testing has confirmed, that 
-HDIO_DRIVE_CMD is used, which bypasses the settings parameter lookup 
-in generic_ide_ioctl() of the drive settings enabled in ide_add_settings().  
+Unfortunately, I fear that any impending PATA/libata
+train-wreck may conflict with this, due to the behaviour
+of some (many) of the PATA chipsets out there (e.g.
+misbehaving seriously when no active devices are attached
+to the bus etc.)
 
-Is it reasonable that a change could be made to enable the use of
-HDIO_SET_WCACHE in hdparm?
+Anyone have thoughts/advice to share on this concept? I think
+the re-org may be quite intrusive, and I don't want to waste
+cycles on something that "would never work with PATA, because
+of blah, blah, blah.."
+-- 
+andyw@pobox.com
 
-Or should I be looking to intercept the call and do The Right Thing
-(TM:) in the ide driver?
-
-
-++doug
-
-
-
-
+Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
