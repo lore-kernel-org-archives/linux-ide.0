@@ -1,110 +1,91 @@
-From: Peer.Chen@uli.com.tw
-Subject: [patch] scsi/ahci: Add support for ULi M5287
-Date: Mon, 20 Dec 2004 18:37:25 +0800
-Message-ID: <OFFB59EB4E.1CCBBD25-ON48256F70.003999B0@uli.com.tw>
+From: pbern@pbern.biz
+Subject: sata_sil && segate NCQ -- oops
+Date: Mon, 20 Dec 2004 19:48:51 +0100 (CET)
+Message-ID: <Pine.LNX.4.58L.0412201940570.10960@farma.pbern.biz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: MULTIPART/MIXED; BOUNDARY="928029439-1214154498-1103568531=:10960"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from NK210-202-245-3.vdsl.static.apol.com.tw ([210.202.245.3]:46288
-	"EHLO uli.com.tw") by vger.kernel.org with ESMTP id S261298AbULTKh6
+Received: from yv154.internetdsl.tpnet.pl ([80.55.255.154]:38660 "EHLO
+	farma.pbern.biz") by vger.kernel.org with ESMTP id S261589AbULTRs0
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Dec 2004 05:37:58 -0500
+	Mon, 20 Dec 2004 12:48:26 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, andrebalsa@mailingaddress.org, Clear.Zhang@uli.com.tw, Emily.Jiang@uli.com.tw, Eric.Lo@uli.com.tw
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Hi,Jeff
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
-We add the support for ULi's AHCI controller M5287 in drivers/scsi/ahci.c,
-This patch is applied to kernel 2.6.10-rc3. Please apply to new kernels.
+--928029439-1214154498-1103568531=:10960
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 
-Signed-off-by: Peer Chen <peer.chen@uli.com.tw>
+I have problem with this devices
+Segate ST3300831AS
+Segate ST3160827AS
 
-Thanks
+i attached log, i`ll test all patch from You...
 
-Best Regards
-Peer
+Pozdrawiam
+Pawel Bernadowski
+GG 3377, email kontakt@pbern.biz
+--928029439-1214154498-1103568531=:10960
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name=syslog
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.58L.0412201948510.10960@farma.pbern.biz>
+Content-Description: 
+Content-Disposition: attachment; filename=syslog
 
---- linux-2.6.10-rc3/drivers/scsi/ahci.c.orig   2004-12-11
-03:14:17.170955840 +0800
-+++ linux-2.6.10-rc3/drivers/scsi/ahci.c  2004-12-11 03:31:40.979272856
-+0800
-@@ -241,6 +241,8 @@ static struct pci_device_id ahci_pci_tbl
-        board_ahci },
-      { PCI_VENDOR_ID_INTEL, 0x2653, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-        board_ahci },
-+     { PCI_VENDOR_ID_AL, 0x5287, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+       board_ahci },
-      { }   /* terminate list */
- };
+DQpEZWMgMjAgMTk6Mzc6NDggcGxkbWFjaGluZSBrZXJuZWw6IGxpYmF0YSB2
+ZXJzaW9uIDEuMTAgbG9hZGVkLg0KRGVjIDIwIDE5OjM3OjQ4IHBsZG1hY2hp
+bmUga2VybmVsOiBzYXRhX3NpbCB2ZXJzaW9uIDAuOA0KRGVjIDIwIDE5OjM3
+OjQ4IHBsZG1hY2hpbmUga2VybmVsOiBQQ0k6IEZvdW5kIElSUSAxMSBmb3Ig
+ZGV2aWNlIDAwMDA6MDI6MDMuMA0KRGVjIDIwIDE5OjM3OjQ4IHBsZG1hY2hp
+bmUga2VybmVsOiBQQ0k6IFNoYXJpbmcgSVJRIDExIHdpdGggMDAwMDowMDox
+Zi4yDQpEZWMgMjAgMTk6Mzc6NDggcGxkbWFjaGluZSBrZXJuZWw6IGF0YTE6
+IFNBVEEgbWF4IFVETUEvMTAwIGNtZCAweEQwOEZDMDgwIGN0bCAweEQwOEZD
+MDhBIGJtZG1hIDB4RDA4RkMwMDAgaXJxIDExDQpEZWMgMjAgMTk6Mzc6NDgg
+cGxkbWFjaGluZSBrZXJuZWw6IGF0YTI6IFNBVEEgbWF4IFVETUEvMTAwIGNt
+ZCAweEQwOEZDMEMwIGN0bCAweEQwOEZDMENBIGJtZG1hIDB4RDA4RkMwMDgg
+aXJxIDExDQpEZWMgMjAgMTk6Mzc6NDkgcGxkbWFjaGluZSBrZXJuZWw6IGly
+cSAxMTogbm9ib2R5IGNhcmVkIQ0KRGVjIDIwIDE5OjM3OjQ5IHBsZG1hY2hp
+bmUga2VybmVsOiBbPGMwMTMyMGZhPl0gX19yZXBvcnRfYmFkX2lycSsweDJh
+LzB4OGYNCkRlYyAyMCAxOTozNzo0OSBwbGRtYWNoaW5lIGtlcm5lbDogWzxj
+MDEzMWFmMT5dIGhhbmRsZV9JUlFfZXZlbnQrMHgyZS8weDY0DQpEZWMgMjAg
+MTk6Mzc6NDkgcGxkbWFjaGluZSBrZXJuZWw6IFs8YzAxMzIxZTg+XSBub3Rl
+X2ludGVycnVwdCsweDZmLzB4OWYNCkRlYyAyMCAxOTozNzo0OSBwbGRtYWNo
+aW5lIGtlcm5lbDogWzxjMDEzMWM1Mj5dIF9fZG9fSVJRKzB4MTJiLzB4MTJk
+DQpEZWMgMjAgMTk6Mzc6NDkgcGxkbWFjaGluZSBrZXJuZWw6IFs8YzAxMDRh
+MmE+XSBkb19JUlErMHg0Ni8weDZhDQpEZWMgMjAgMTk6Mzc6NDkgcGxkbWFj
+aGluZSBrZXJuZWw6ID09PT09PT09PT09PT09PT09PT09PT09DQpEZWMgMjAg
+MTk6Mzc6NDkgcGxkbWFjaGluZSBrZXJuZWw6IFs8YzAxMDMwODI+XSBjb21t
+b25faW50ZXJydXB0KzB4MWEvMHgyMA0KRGVjIDIwIDE5OjM3OjQ5IHBsZG1h
+Y2hpbmUga2VybmVsOiBbPGMwMTFiZmNkPl0gX19kb19zb2Z0aXJxKzB4NDkv
+MHhjNg0KRGVjIDIwIDE5OjM3OjQ5IHBsZG1hY2hpbmUga2VybmVsOiBbPGMw
+MTA0YjM1Pl0gZG9fc29mdGlycSsweDRhLzB4NTkNCkRlYyAyMCAxOTozNzo0
+OSBwbGRtYWNoaW5lIGtlcm5lbDogPT09PT09PT09PT09PT09PT09PT09PT0N
+CkRlYyAyMCAxOTozNzo0OSBwbGRtYWNoaW5lIGtlcm5lbDogWzxjMDEzMWFj
+MT5dIGlycV9leGl0KzB4M2EvMHgzYw0KRGVjIDIwIDE5OjM3OjQ5IHBsZG1h
+Y2hpbmUga2VybmVsOiBbPGMwMTA0YTMxPl0gZG9fSVJRKzB4NGQvMHg2YQ0K
+RGVjIDIwIDE5OjM3OjQ5IHBsZG1hY2hpbmUga2VybmVsOiBbPGMwMTAzMDgy
+Pl0gY29tbW9uX2ludGVycnVwdCsweDFhLzB4MjANCkRlYyAyMCAxOTozNzo0
+OSBwbGRtYWNoaW5lIGtlcm5lbDogWzxjMDEwMDY5ZT5dIGRlZmF1bHRfaWRs
+ZSsweDAvMHgyYw0KRGVjIDIwIDE5OjM3OjQ5IHBsZG1hY2hpbmUga2VybmVs
+OiBbPGMwMTAwNmM3Pl0gZGVmYXVsdF9pZGxlKzB4MjkvMHgyYw0KRGVjIDIw
+IDE5OjM3OjQ5IHBsZG1hY2hpbmUga2VybmVsOiBbPGMwMTAwNzNjPl0gY3B1
+X2lkbGUrMHgzZi8weDU4DQpEZWMgMjAgMTk6Mzc6NDkgcGxkbWFjaGluZSBr
+ZXJuZWw6IFs8YzAzM2E4OTQ+XSBzdGFydF9rZXJuZWwrMHgxNDcvMHgxNjAN
+CkRlYyAyMCAxOTozNzo0OSBwbGRtYWNoaW5lIGtlcm5lbDogWzxjMDMzYTMz
+Nj5dIHVua25vd25fYm9vdG9wdGlvbisweDAvMHgxYWINCkRlYyAyMCAxOToz
+Nzo0OSBwbGRtYWNoaW5lIGtlcm5lbDogaGFuZGxlcnM6DQpEZWMgMjAgMTk6
+Mzc6NDkgcGxkbWFjaGluZSBrZXJuZWw6IFs8ZDA5MTgxOTA+XSAoYXRhX2lu
+dGVycnVwdCsweDAvMHgxYTIgW2xpYmF0YV0pDQpEZWMgMjAgMTk6Mzc6NDkg
+cGxkbWFjaGluZSBrZXJuZWw6IERpc2FibGluZyBJUlEgIzExDQpEZWMgMjAg
+MTk6Mzc6NDkgcGxkbWFjaGluZSBrZXJuZWw6IGF0YTE6IGRldiAwIGNmZyA0
+OToyZjAwIDgyOjM0NmIgODM6N2QwMSA4NDo0MDAzIDg1OjM0NjkgODY6M2Mw
+MSA4Nzo0MDAzIDg4OjIwN2YNCkRlYyAyMCAxOTozNzo0OSBwbGRtYWNoaW5l
+IGtlcm5lbDogYXRhMTogZGV2IDAgQVRBLCBtYXggVURNQS8xMzMsIDMxMjU4
+MTgwOCBzZWN0b3JzOiBsYmE0OA0K
 
-@@ -555,7 +557,6 @@ static void ahci_intr_error(struct ata_p
-            writel(0x300, port_mmio + PORT_SCR_CTL);
-            readl(port_mmio + PORT_SCR_CTL); /* flush */
-      }
--
-      /* re-start DMA */
-      tmp = readl(port_mmio + PORT_CMD);
-      tmp |= PORT_CMD_START | PORT_CMD_FIS_RX;
-@@ -711,12 +712,29 @@ static int ahci_host_init(struct ata_pro
-      unsigned int i, j, using_dac;
-      int rc;
-      void __iomem *port_mmio;
-+     u8 rev_id;        //peer add for m5287 rev 02h
-
-+     pci_read_config_byte(pdev, PCI_REVISION_ID, &rev_id);
-      cap_save = readl(mmio + HOST_CAP);
-      cap_save &= ( (1<<28) | (1<<17) );
-      cap_save |= (1 << 27);
-
-      /* global controller reset */
-+//peer add for m5287 rev 02h
-+     if(pdev->vendor==PCI_VENDOR_ID_AL && pdev->device==0x5287 && rev_id
-==0x02)
-+     {
-+           tmp = readl(mmio + HOST_CTL);
-+           writel(tmp & ~HOST_RESET, mmio + HOST_CTL);
-+           readl(mmio + HOST_CTL); /* flush */
-+           writel(tmp | HOST_RESET, mmio + HOST_CTL);
-+           readl(mmio + HOST_CTL); /* flush */
-+           writel(tmp & ~HOST_RESET, mmio + HOST_CTL);
-+           readl(mmio + HOST_CTL); /* flush */
-+
-+     }
-+//peer add end
-+     else
-+     {
-      tmp = readl(mmio + HOST_CTL);
-      if ((tmp & HOST_RESET) == 0) {
-            writel(tmp | HOST_RESET, mmio + HOST_CTL);
-@@ -735,6 +753,7 @@ static int ahci_host_init(struct ata_pro
-            return -EIO;
-      }
-
-+     }
-      writel(HOST_AHCI_EN, mmio + HOST_CTL);
-      (void) readl(mmio + HOST_CTL);      /* flush */
-      writel(cap_save, mmio + HOST_CAP);
-@@ -796,6 +815,18 @@ static int ahci_host_init(struct ata_pro
-            /* make sure port is not active */
-            tmp = readl(port_mmio + PORT_CMD);
-            VPRINTK("PORT_CMD 0x%x\n", tmp);
-+//peer add for m5287 rev 02h
-+           if(pdev->vendor==PCI_VENDOR_ID_AL && pdev->device==0x5287 &&
-rev_id==0x02)
-+           {
-+                 //set start bit then issue comreset when initialize
-+                 writel((tmp|PORT_CMD_START), port_mmio + PORT_CMD);
-+                 writel(0x01, port_mmio + PORT_SCR_CTL);
-+                 readl(port_mmio + PORT_SCR_CTL); /* flush */
-+                 msleep(1);
-+                 writel(0x0, port_mmio + PORT_SCR_CTL);
-+                 readl(port_mmio + PORT_SCR_CTL); /* flush */
-+           }
-+//peer add end
-            if (tmp & (PORT_CMD_LIST_ON | PORT_CMD_FIS_ON |
-                     PORT_CMD_FIS_RX | PORT_CMD_START)) {
-                  tmp &= ~(PORT_CMD_LIST_ON | PORT_CMD_FIS_ON |
-
-
+--928029439-1214154498-1103568531=:10960--
