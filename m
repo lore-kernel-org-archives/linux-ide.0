@@ -1,71 +1,174 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: [patch 3/9] drive->dsc_overlap fix
-Date: Fri, 4 Feb 2005 03:49:35 +0100 (CET)
-Message-ID: <Pine.GSO.4.58.0502040348560.4393@mion.elka.pw.edu.pl>
+Subject: [patch 5/9] add ide_{un}register_region()
+Date: Fri, 4 Feb 2005 03:50:56 +0100 (CET)
+Message-ID: <Pine.GSO.4.58.0502040350060.4393@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:28340 "EHLO
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:37812 "EHLO
 	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S263223AbVBDCxa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Feb 2005 21:53:30 -0500
+	id S263230AbVBDCx7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Feb 2005 21:53:59 -0500
 Received: from mion.elka.pw.edu.pl ([194.29.160.35]:58435 "EHLO
 	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
-	id S103871AbVBDCth (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 1 other); Fri, 4 Feb 2005 03:49:37 +0100
+	id S103958AbVBDCu5 (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 1 other); Fri, 4 Feb 2005 03:50:57 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-drive->dsc_overlap is supported only by ide-{cd,tape} drivers.
-Add missing clearing of ->dsc_overlap to ide_{cd,tape}_release()
-and move ->dsc_overlap setup from ide_register_subdriver() to
-ide_cdrom_setup() (ide-tape enables it unconditionally).
+Add ide_{un}register_region() and fix ide-{tape,scsi}.c to register
+block device number ranges.  In ata_probe() only probe for modules.
 
-diff -Nru a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
---- a/drivers/ide/ide-cd.c	2005-02-04 03:31:14 +01:00
-+++ b/drivers/ide/ide-cd.c	2005-02-04 03:31:14 +01:00
-@@ -3219,6 +3219,9 @@
- 	 */
- 	blk_queue_hardsect_size(drive->queue, CD_FRAMESIZE);
+Behavior is unchanged because:
+* if driver is already loaded and attached to drive ata_probe()
+  is not called et all
+* if driver is loaded by ata_probe() it will register new number range
+  for a drive and this range will be found by kobj_lookup()
 
-+	if (drive->autotune == IDE_TUNE_DEFAULT ||
-+	    drive->autotune == IDE_TUNE_AUTO)
-+		drive->dsc_overlap = (drive->next != drive);
- #if 0
- 	drive->dsc_overlap = (HWIF(drive)->no_dsc) ? 0 : 1;
- 	if (HWIF(drive)->no_dsc) {
-@@ -3282,6 +3285,7 @@
- 	if (devinfo->handle == drive && unregister_cdrom(devinfo))
- 		printk(KERN_ERR "%s: %s failed to unregister device from the cdrom "
- 				"driver.\n", __FUNCTION__, drive->name);
-+	drive->dsc_overlap = 0;
- 	drive->driver_data = NULL;
- 	blk_queue_prep_rq(drive->queue, NULL);
- 	g->private_data = NULL;
-diff -Nru a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
---- a/drivers/ide/ide-tape.c	2005-02-04 03:31:14 +01:00
-+++ b/drivers/ide/ide-tape.c	2005-02-04 03:31:14 +01:00
-@@ -4691,6 +4691,7 @@
- 	ide_drive_t *drive = tape->drive;
- 	struct gendisk *g = drive->disk;
+If this is not clear please read http://lwn.net/Articles/25711/
+and see drivers/base/map.c.
 
-+	drive->dsc_overlap = 0;
- 	drive->driver_data = NULL;
- 	devfs_remove("%s/mt", drive->devfs_name);
- 	devfs_remove("%s/mtn", drive->devfs_name);
-diff -Nru a/drivers/ide/ide.c b/drivers/ide/ide.c
---- a/drivers/ide/ide.c	2005-02-04 03:31:14 +01:00
-+++ b/drivers/ide/ide.c	2005-02-04 03:31:14 +01:00
-@@ -2029,11 +2029,6 @@
- 	list_add_tail(&drive->list, &driver->drives);
- 	spin_unlock(&drives_lock);
- //	printk(KERN_INFO "%s: attached %s driver.\n", drive->name, driver->name);
--	if ((drive->autotune == IDE_TUNE_DEFAULT) ||
--		(drive->autotune == IDE_TUNE_AUTO)) {
--		/* DMA timings and setup moved to ide-probe.c */
--		drive->dsc_overlap = (drive->next != drive && driver->supports_dsc_overlap);
+This patch makes it possible to move drive->disk allocation from
+ide-probe.c to device drivers.
+
+diff -Nru a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+--- a/drivers/ide/ide-probe.c	2005-02-04 03:31:35 +01:00
++++ b/drivers/ide/ide-probe.c	2005-02-04 03:31:35 +01:00
+@@ -1214,8 +1214,6 @@
+ 	return 0;
+ }
+
+-extern ide_driver_t idedefault_driver;
+-
+ static struct kobject *ata_probe(dev_t dev, int *part, void *data)
+ {
+ 	ide_hwif_t *hwif = data;
+@@ -1223,23 +1221,52 @@
+ 	ide_drive_t *drive = &hwif->drives[unit];
+ 	if (!drive->present)
+ 		return NULL;
+-	if (drive->driver == &idedefault_driver) {
+-		if (drive->media == ide_disk)
+-			(void) request_module("ide-disk");
+-		if (drive->scsi)
+-			(void) request_module("ide-scsi");
+-		if (drive->media == ide_cdrom || drive->media == ide_optical)
+-			(void) request_module("ide-cd");
+-		if (drive->media == ide_tape)
+-			(void) request_module("ide-tape");
+-		if (drive->media == ide_floppy)
+-			(void) request_module("ide-floppy");
 -	}
- #ifdef CONFIG_PROC_FS
- 	if (drive->driver != &idedefault_driver)
- 		ide_add_proc_entries(drive->proc, driver->proc, drive);
+-	if (drive->driver == &idedefault_driver)
+-		return NULL;
++
++	if (drive->media == ide_disk)
++		request_module("ide-disk");
++	if (drive->scsi)
++		request_module("ide-scsi");
++	if (drive->media == ide_cdrom || drive->media == ide_optical)
++		request_module("ide-cd");
++	if (drive->media == ide_tape)
++		request_module("ide-tape");
++	if (drive->media == ide_floppy)
++		request_module("ide-floppy");
++
++	return NULL;
++}
++
++static struct kobject *exact_match(dev_t dev, int *part, void *data)
++{
++	struct gendisk *p = data;
+ 	*part &= (1 << PARTN_BITS) - 1;
+-	return get_disk(drive->disk);
++	return &p->kobj;
+ }
++
++static int exact_lock(dev_t dev, void *data)
++{
++	struct gendisk *p = data;
++
++	if (!get_disk(p))
++		return -1;
++	return 0;
++}
++
++void ide_register_region(struct gendisk *disk)
++{
++	blk_register_region(MKDEV(disk->major, disk->first_minor),
++			    disk->minors, NULL, exact_match, exact_lock, disk);
++}
++
++EXPORT_SYMBOL_GPL(ide_register_region);
++
++void ide_unregister_region(struct gendisk *disk)
++{
++	blk_unregister_region(MKDEV(disk->major, disk->first_minor),
++			      disk->minors);
++}
++
++EXPORT_SYMBOL_GPL(ide_unregister_region);
+
+ static int alloc_disks(ide_hwif_t *hwif)
+ {
+diff -Nru a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+--- a/drivers/ide/ide-tape.c	2005-02-04 03:31:35 +01:00
++++ b/drivers/ide/ide-tape.c	2005-02-04 03:31:35 +01:00
+@@ -4680,6 +4680,8 @@
+ 	DRIVER(drive)->busy = 0;
+ 	(void) ide_unregister_subdriver(drive);
+
++	ide_unregister_region(drive->disk);
++
+ 	ide_tape_put(tape);
+
+ 	return 0;
+@@ -4871,6 +4873,7 @@
+ 	g->number = devfs_register_tape(drive->devfs_name);
+ 	g->fops = &idetape_block_ops;
+ 	g->private_data = tape;
++	ide_register_region(g);
+
+ 	return 0;
+ failed:
+diff -Nru a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
+--- a/drivers/scsi/ide-scsi.c	2005-02-04 03:31:35 +01:00
++++ b/drivers/scsi/ide-scsi.c	2005-02-04 03:31:35 +01:00
+@@ -723,6 +723,8 @@
+ 	if (ide_unregister_subdriver(drive))
+ 		return 1;
+
++	ide_unregister_region(g);
++
+ 	/* FIXME: drive->driver_data shouldn't be used */
+ 	drive->driver_data = NULL;
+ 	/* FIXME: add driver's private struct gendisk */
+@@ -1122,12 +1124,14 @@
+ 		idescsi_setup (drive, idescsi);
+ 		g->fops = &idescsi_ops;
+ 		g->private_data = idescsi;
++		ide_register_region(g);
+ 		err = scsi_add_host(host, &drive->gendev);
+ 		if (!err) {
+ 			scsi_scan_host(host);
+ 			return 0;
+ 		}
+ 		/* fall through on error */
++		ide_unregister_region(g);
+ 		ide_unregister_subdriver(drive);
+ 	}
+
+diff -Nru a/include/linux/ide.h b/include/linux/ide.h
+--- a/include/linux/ide.h	2005-02-04 03:31:35 +01:00
++++ b/include/linux/ide.h	2005-02-04 03:31:35 +01:00
+@@ -1456,6 +1456,9 @@
+ extern void ide_hwif_release_regions(ide_hwif_t* hwif);
+ extern void ide_unregister (unsigned int index);
+
++void ide_register_region(struct gendisk *);
++void ide_unregister_region(struct gendisk *);
++
+ void ide_undecoded_slave(ide_hwif_t *);
+
+ int probe_hwif_init_with_fixup(ide_hwif_t *, void (*)(ide_hwif_t *));
