@@ -1,58 +1,58 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: ata_piix and combined mode
-Date: Mon, 22 Mar 2004 13:06:38 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <405F2B2E.6080001@pobox.com>
-References: <20040322132336.GA12460@cistron.nl>
+Subject: Re: ata_piix and combined mode
+Date: Mon, 22 Mar 2004 13:15:40 -0500
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <405F2D4C.9010506@pobox.com>
+References: <20040322132336.GA12460@cistron.nl> <405F2B2E.6080001@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20040322132336.GA12460@cistron.nl>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:44261 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262165AbUCVSPx
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 22 Mar 2004 13:15:53 -0500
+In-Reply-To: <405F2B2E.6080001@pobox.com>
+List-Id: linux-ide@vger.kernel.org
 To: Miquel van Smoorenburg <miquels@cistron.nl>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-List-Id: linux-ide@vger.kernel.org
 
-Yeah, combined mode is not recommended.  The device presences for 
-slave-only is a bit off, and also because it often massively impacts 
-PATA speed and/or stability.
+Jeff Garzik wrote:
+>     c) hardware pretends that SATA0/1 are master/slave.
+>     This last introduces nastiness into most drivers, since sata
+>     is _really_ point-to-point.  Faking non-PTP this way leads
+>     to a disconnect, because you must now map master to
+>     port 0 or 1, and slave to the other port (yes ordering
+>     is dynamic too).
 
-There are a few simple things you can do though, which would fix your 
-problem.  Here is a summary, interested in working on it?  :)  (or 
-anyone else listening)
+Just to be more clear, the assignment (routing) of PATA and SATA ports 
+on the ICH5 too dynamic for its own good.  You must deal with
 
-struct ata_port::port_no is only accurate in native mode, where all PCI 
-BAR resources and PCI irq are active.  combined mode is a subset of 
-legacy mode, where
-	a) port 0 and port 1 IO ports are standard IDE ISA register blks
-	b) irqs are standard legacy 14 and 15, and not shared
-	c) hardware pretends that SATA0/1 are master/slave.
-	This last introduces nastiness into most drivers, since sata
-	is _really_ point-to-point.  Faking non-PTP this way leads
-	to a disconnect, because you must now map master to
-	port 0 or 1, and slave to the other port (yes ordering
-	is dynamic too).
+* PATA and SATA on separate PCI devices (as it should be)
+* PATA and SATA on the same PCI device, where
+	c0 == pata0 master (master), pata1 master (slave)
+	c1 == sata0 (master), sata1 (master)
+     or
+	c0 == pata0 master (master), pata1 master (slave)
+	c1 == sata1 (master), sata0 (master)
 
-1) short term, probably want to create a "hard_port_no" field in 
-ata_port, and make that reflect the true SATA hardware port number. 
-Then use that in the disable/enable stuff in ata_piix.c.
+the ICH6 follows the horror of combined mode, where c0 or c1 might be 
+sata ports 0/2 or 1/3 (it has 4 sata ports rather than ICH5's 2).  and 
+PATA might be c0 or c1.
 
-2) module unload disables the SATA port, but module load does not 
-attempt to enable the SATA port.  so modprobe+rmmod+modprobe will 
-results in sata ports being disabled.  instead, enable each sata port 
-(which causes the right SATA phy stuff to happen silently), wait a bit, 
-check for device presences, then disable the port if no device.
+(c0 == ata channel zero, c1 == ata channel one)
 
-3) long term, since combined mode combines PATA and SATA into the same 
-PCI device, under the SATA PCI id, libata can drive the PATA port as 
-well.  libata must do this anyway, for Promise, where the PATA port is 
-even more tightly integrated with the SATA ports.
+Sigh.
 
-The blocker on #3 is debugging the existing ATAPI code.  Once that's 
-working, PATA support can be turned on -- for the cases that need it.  I 
-still want 99% of PATA handled in drivers/ide...
+Although not with libata, with other drivers I belive that combined mode 
+is fundamentally flawed.  Pretending a SATA device is a PATA device 
+eliminates SATA-specific knowledge, such as avoiding soft-reset (SRST) 
+on certain SATA devices, since they will lock up on probe.
 
-Even longer term, we just need to beat hardware vendors over the head 
-about combining PATA and SATA into the same PCI device.
+I always recommend that users avoid combined mode when their 
+configuration permits.
 
 	Jeff
+
+
+
