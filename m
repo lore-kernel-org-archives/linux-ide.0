@@ -1,57 +1,27 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [BK PATCH] 2.6.x libata fix
-Date: Thu, 21 Oct 2004 13:48:12 -0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20041021174812.GA21850@havoc.gtf.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: ATA/133 Problems with multiple cards
+Date: Thu, 21 Oct 2004 20:43:32 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <58cb370e041021114374bb749f@mail.gmail.com>
+References: <Pine.LNX.4.44.0410201211481.5805-100000@beast.stev.org>
+	 <200410201623.21321.hpj@urpla.net>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.28.190.101]:55457 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S270769AbUJURsS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Oct 2004 13:48:18 -0400
-Content-Disposition: inline
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S270799AbUJUSwl@vger.kernel.org>
+In-Reply-To: <200410201623.21321.hpj@urpla.net>
+To: Hans-Peter Jansen <hpj@urpla.net>
+Cc: James Stevenson <james@stev.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernelnewbies@nl.linux.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-ide@vger.kernel.org
 
-
-Please do a
-
-	bk pull bk://gkernel.bkbits.net/libata-2.6
-
-This will update the following files:
-
- drivers/scsi/sata_sil.c |    1 +
- 1 files changed, 1 insertion(+)
-
-through these ChangeSets:
-
-<akpm@osdl.org> (04/10/20 1.2255)
-   [PATCH] sata_sil mod15 quirk with Seagate ST3120026AS
-   
-   From: <stuart@cybertherial.com>
-   
-   Hardware Environment: AMD64, sil3512 controller on m/b.  Harddrive: Seagate
-   120GB ST3120026AS
-   
-   Problem Description: Drive would lock when writing large files, eg video
-   from firewire, audio editing.  Checked dmesg, was obviously the sata drive.
-   
-   Have added the drive to the blacklist in sata_sil.c and the problem seems
-   to have disappeared.
-   
-   Is there a good test to verify that the mod15 bug is really the problem?
-   
-   Signed-off-by: Andrew Morton <akpm@osdl.org>
-
-diff -Nru a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
---- a/drivers/scsi/sata_sil.c	2004-10-21 13:47:46 -04:00
-+++ b/drivers/scsi/sata_sil.c	2004-10-21 13:47:46 -04:00
-@@ -87,6 +87,7 @@
- 	{ "ST380023AS",		SIL_QUIRK_MOD15WRITE },
- 	{ "ST3120023AS",	SIL_QUIRK_MOD15WRITE },
- 	{ "ST3160023AS",	SIL_QUIRK_MOD15WRITE },
-+	{ "ST3120026AS",	SIL_QUIRK_MOD15WRITE },
- 	{ "ST340014ASL",	SIL_QUIRK_MOD15WRITE },
- 	{ "ST360014ASL",	SIL_QUIRK_MOD15WRITE },
- 	{ "ST380011ASL",	SIL_QUIRK_MOD15WRITE },
+On Wed, 20 Oct 2004 16:23:21 +0200, Hans-Peter Jansen <hpj@urpla.net> wrote:
+ 
+> Hmm, I'm running 3 TX2/100 (even with different revisions) without
+> big problems here:
+> 
+> 00:09.0 Unknown mass storage controller: Promise Technology, Inc. 20268 (rev 02)
+> 00:0a.0 Unknown mass storage controller: Promise Technology, Inc. 20268 (rev 02)
+> 00:0b.0 Unknown mass storage controller: Promise Technology, Inc. 20268 (rev 01)
+ 
+lspci -xxx ?
