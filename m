@@ -1,53 +1,105 @@
-From: "i.t consulting" <i_t@thum.ath.cx>
-Subject: libata's VIA SATA still fails
-Date: Thu, 29 Jul 2004 10:55:10 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4108BB6E.9070801@thum.ath.cx>
-References: <4103F79C.1010508@thum.ath.cx>
+From: Vojtech Pavlik <vojtech@suse.cz>
+Subject: [Kernel-janitors] Re: [patch] MIN/MAX in ide-timing.h
+Date: Thu, 29 Jul 2004 16:48:09 +0200
+Sender: kernel-janitors-bounces@lists.osdl.org
+Message-ID: <20040729144809.GP19452@ucw.cz>
+References: <20040708181843.GA1370@moley.homelinux.net>
+	<20040710140337.GA1238@ucw.cz>
+	<20040710224329.GF1991@moley.homelinux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 213-172-119-022.dsl.aktivanet.de ([213.172.119.22]:35393 "EHLO
-	it97.dyndns.org") by vger.kernel.org with ESMTP id S267317AbUG2Iyt
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jul 2004 04:54:49 -0400
-Received: from thum.ath.cx (ithum@localhost.it97.dyndns.org [IPv6:::1])
-	by it97.dyndns.org (8.13.0/8.13.0) with ESMTP id i6T8sqXl018154
-	for <linux-ide@vger.kernel.org>; Thu, 29 Jul 2004 10:54:53 +0200 (CEST)
-In-Reply-To: <4103F79C.1010508@thum.ath.cx>
+Content-Type: multipart/mixed; boundary="===============34516330995913869=="
+Return-path: <kernel-janitors-bounces@lists.osdl.org>
+In-Reply-To: <20040710224329.GF1991@moley.homelinux.net>
+List-Unsubscribe: <http://lists.osdl.org/mailman/listinfo/kernel-janitors>,
+	<mailto:kernel-janitors-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/kernel-janitors>
+List-Post: <mailto:kernel-janitors@lists.osdl.org>
+List-Help: <mailto:kernel-janitors-request@lists.osdl.org?subject=help>
+List-Subscribe: <http://lists.osdl.org/mailman/listinfo/kernel-janitors>,
+	<mailto:kernel-janitors-request@lists.osdl.org?subject=subscribe>
+Errors-To: kernel-janitors-bounces@lists.osdl.org
+To: Clemens Buchacher <drizzd@aon.at>, B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: Linux-ide list <linux-ide@vger.kernel.org>, kernel janitors list <kernel-janitors@lists.osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
+--===============34516330995913869==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-  hi,
+On Sun, Jul 11, 2004 at 12:43:29AM +0200, Clemens Buchacher wrote:
 
-  I've decided to drop you a note that
-  libata's VIA SATA still fails for me on
-  a MSI motherboard (KT6 delta)
-  for booting
-  - fedora core 2 boot cdrom
-  - yoper 2.6.7-5 boot cdrom
-  and
-  compiling a gentoo kernel 2.6.7-mm6
-  but starts successfully with a gentoo livecd kernel 2.6.0-gss
+> On Sat, Jul 10, 2004 at 04:03:37PM +0200, Vojtech Pavlik wrote:
+> > How about if you used the "min_t" and "max_t" macros inside FIT? That
+> > could help get rid of the casts completely (assuming the second and
+> > third parameters to FIT are expected to be constants).
+> 
+> Yes, that's better. It reduces the necessary changes to a minimum.
 
-(means: libsata is not working for over 6 months!)
-the sata drivers are successfully loading,
-but then,
-the partitions on the sata discs are not recognized fiurthermore;
-there is a
-lost interrupt !
+Bartolomiej, please apply this patch. Thanks.
 
-  Regards
-  i.t
+diff -Nur a/drivers/ide/ide-timing.h b/drivers/ide/ide-timing.h
+--- a/drivers/ide/ide-timing.h	2004-07-11 00:27:38 +02:00
++++ b/drivers/ide/ide-timing.h	2004-07-11 00:27:01 +02:00
+@@ -27,6 +27,7 @@
+  * Vojtech Pavlik, Simunkova 1594, Prague 8, 182 00 Czech Republic
+  */
+ 
++#include <linux/kernel.h>
+ #include <linux/hdreg.h>
+ 
+ #define XFER_PIO_5		0x0d
+@@ -96,11 +97,9 @@
+ #define IDE_TIMING_UDMA		0x80
+ #define IDE_TIMING_ALL		0xff
+ 
+-#define MIN(a,b)	((a)<(b)?(a):(b))
+-#define MAX(a,b)	((a)>(b)?(a):(b))
+-#define FIT(v,min,max)	MAX(MIN(v,max),min)
+-#define ENOUGH(v,unit)	(((v)-1)/(unit)+1)
+-#define EZ(v,unit)	((v)?ENOUGH(v,unit):0)
++#define FIT(v,vmin,vmax)	max_t(short,min_t(short,v,vmax),vmin)
++#define ENOUGH(v,unit)		(((v)-1)/(unit)+1)
++#define EZ(v,unit)		((v)?ENOUGH(v,unit):0)
+ 
+ #define XFER_MODE	0xf0
+ #define XFER_UDMA_133	0x48
+@@ -188,14 +187,14 @@
+ 
+ static void ide_timing_merge(struct ide_timing *a, struct ide_timing *b, struct ide_timing *m, unsigned int what)
+ {
+-	if (what & IDE_TIMING_SETUP  ) m->setup   = MAX(a->setup,   b->setup);
+-	if (what & IDE_TIMING_ACT8B  ) m->act8b   = MAX(a->act8b,   b->act8b);
+-	if (what & IDE_TIMING_REC8B  ) m->rec8b   = MAX(a->rec8b,   b->rec8b);
+-	if (what & IDE_TIMING_CYC8B  ) m->cyc8b   = MAX(a->cyc8b,   b->cyc8b);
+-	if (what & IDE_TIMING_ACTIVE ) m->active  = MAX(a->active,  b->active);
+-	if (what & IDE_TIMING_RECOVER) m->recover = MAX(a->recover, b->recover);
+-	if (what & IDE_TIMING_CYCLE  ) m->cycle   = MAX(a->cycle,   b->cycle);
+-	if (what & IDE_TIMING_UDMA   ) m->udma    = MAX(a->udma,    b->udma);
++	if (what & IDE_TIMING_SETUP  ) m->setup   = max(a->setup,   b->setup);
++	if (what & IDE_TIMING_ACT8B  ) m->act8b   = max(a->act8b,   b->act8b);
++	if (what & IDE_TIMING_REC8B  ) m->rec8b   = max(a->rec8b,   b->rec8b);
++	if (what & IDE_TIMING_CYC8B  ) m->cyc8b   = max(a->cyc8b,   b->cyc8b);
++	if (what & IDE_TIMING_ACTIVE ) m->active  = max(a->active,  b->active);
++	if (what & IDE_TIMING_RECOVER) m->recover = max(a->recover, b->recover);
++	if (what & IDE_TIMING_CYCLE  ) m->cycle   = max(a->cycle,   b->cycle);
++	if (what & IDE_TIMING_UDMA   ) m->udma    = max(a->udma,    b->udma);
+ }
+ 
+ static struct ide_timing* ide_timing_find_mode(short speed)
 
--- 
-  . ___
-  |  |  Irmund     Thum
-  |  |  +49 6374 992542
-        +49 173 7405882
-http://thum.ath.cx
-     i.t-security4u
-     Friedhofstr. 9
-   67685 Weilerbach
+--  
+Vojtech Pavlik
+SuSE Labs, SuSE CR
+
+--===============34516330995913869==
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+_______________________________________________
+Kernel-janitors mailing list
+Kernel-janitors@lists.osdl.org
+http://lists.osdl.org/mailman/listinfo/kernel-janitors
+
+--===============34516330995913869==--
