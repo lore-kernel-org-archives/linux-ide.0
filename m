@@ -1,112 +1,28 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch ide-dev 8/9] make ide_task_ioctl() use REQ_DRIVE_TASKFILE
-Date: Sun, 27 Feb 2005 16:36:09 +0900
-Message-ID: <20050227073608.GA30796@htj.dyndns.org>
-References: <Pine.GSO.4.58.0502241547400.13534@mion.elka.pw.edu.pl>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2.6.11-rc3 10/11] ide: make ide_cmd_ioctl() use TASKFILE
+Date: Sun, 27 Feb 2005 02:41:19 -0500
+Message-ID: <4221799F.4050801@pobox.com>
+References: <20050210083808.48E9DD1A@htj.dyndns.org> <20050210083854.BD13DFBD@htj.dyndns.org> <58cb370e050224075040f5c031@mail.gmail.com> <20050227065348.GB27728@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from wproxy.gmail.com ([64.233.184.197]:38700 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261358AbVB0HgN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Feb 2005 02:36:13 -0500
-Received: by wproxy.gmail.com with SMTP id 49so517985wri
-        for <linux-ide@vger.kernel.org>; Sat, 26 Feb 2005 23:36:13 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <Pine.GSO.4.58.0502241547400.13534@mion.elka.pw.edu.pl>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:39302 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261363AbVB0Hli (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Feb 2005 02:41:38 -0500
+In-Reply-To: <20050227065348.GB27728@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
- Hello, Bartlomiej.
+For what it's worth...
 
- This patch should be modified to use flagged taskfile if the
-task_end_request_fix patch isn't applied.  As non-flagged taskfile
-won't return valid result registers, TASK ioctl users won't get the
-correct register output.
+Some vendor-specific commands on PATA devices require -exact- 
+specification of registers in, and registers out.  You never want to 
+read more registers than are flagged.  Ditto for write.
 
- IMHO, this flag-to-get-result-registers thing is way too subtle.  How
-about keeping old behavior by just not copying out register outputs in
-ide_taskfile_ioctl() in applicable cases instead of not reading
-registers when ending commands?  That is, unless there's some
-noticeable performance impacts I'm not aware of.
+	Jeff
 
- Thanks.
 
-On Thu, Feb 24, 2005 at 03:48:33PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> 
-> ide_task_ioctl() rewritten to use taskfile transport.
-> This is the last user of REQ_DRIVE_TASK.
-> 
-> bart: ported to recent IDE changes by me
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> diff -Nru a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
-> --- a/drivers/ide/ide-taskfile.c	2005-02-24 15:30:02 +01:00
-> +++ b/drivers/ide/ide-taskfile.c	2005-02-24 15:30:02 +01:00
-> @@ -777,30 +777,42 @@
->  	return err;
->  }
-> 
-> -static int ide_wait_cmd_task(ide_drive_t *drive, u8 *buf)
-> -{
-> -	struct request rq;
-> -
-> -	ide_init_drive_cmd(&rq);
-> -	rq.flags = REQ_DRIVE_TASK;
-> -	rq.buffer = buf;
-> -	return ide_do_drive_cmd(drive, &rq, ide_wait);
-> -}
-> -
-> -/*
-> - * FIXME : this needs to map into at taskfile. <andre@linux-ide.org>
-> - */
-> -int ide_task_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
-> +int ide_task_ioctl(ide_drive_t *drive, unsigned int cmd, unsigned long arg)
->  {
->  	void __user *p = (void __user *)arg;
-> -	int err = 0;
-> -	u8 args[7], *argbuf = args;
-> -	int argsize = 7;
-> +	int err;
-> +	u8 args[7];
-> +	ide_task_t task;
-> +	struct ata_taskfile *tf = &task.tf;
-> 
->  	if (copy_from_user(args, p, 7))
->  		return -EFAULT;
-> -	err = ide_wait_cmd_task(drive, argbuf);
-> -	if (copy_to_user(p, argbuf, argsize))
-> +
-> +	memset(&task, 0, sizeof(task));
-> +
-> +	tf->command	= args[0];
-> +	tf->feature	= args[1];
-> +	tf->nsect	= args[2];
-> +	tf->lbal	= args[3];
-> +	tf->lbam	= args[4];
-> +	tf->lbah	= args[5];
-> +	tf->device	= args[6];
-> +
-> +	task.command_type = IDE_DRIVE_TASK_NO_DATA;
-> +	task.data_phase = TASKFILE_NO_DATA;
-> +	task.handler = &task_no_data_intr;
-> +
-> +	err = ide_diag_taskfile(drive, &task, 0, NULL);
-> +
-> +	args[0] = tf->command;
-> +	args[1] = tf->feature;
-> +	args[2] = tf->nsect;
-> +	args[3] = tf->lbal;
-> +	args[4] = tf->lbam;
-> +	args[5] = tf->lbah;
-> +	args[6] = tf->device;
-> +
-> +	if (copy_to_user(p, args, 7))
->  		err = -EFAULT;
->  	return err;
->  }
-
--- 
-tejun
 
