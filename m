@@ -1,87 +1,87 @@
 From: janitor@sternwelten.at
-Subject: [patch 1/5]  MIN/MAX in ide-timing.h
-Date: Thu, 02 Sep 2004 01:19:18 +0200
+Subject: [patch 2/5]  ide-cd: replace schedule_timeout() with 	msleep()
+Date: Thu, 02 Sep 2004 01:19:23 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <E1C2eNq-0003bW-Bu@sputnik>
+Message-ID: <E1C2eNv-0003cG-Sd@sputnik>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:51390 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S268026AbUIAXTT
+Received: from baikonur.stro.at ([213.239.196.228]:64439 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S268082AbUIAXTY
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Sep 2004 19:19:19 -0400
+	Wed, 1 Sep 2004 19:19:24 -0400
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: B.Zolnierkiewicz@elka.pw.edu.pl, alan@redhat.com, janitor@sternwelten.at
 
 
 
-I replaced the custom MIN/MAX macros with the type safe min/max macros
-from linux/kernel.h.
 
-On Sat, Jul 10, 2004 at 04:03:37PM +0200, Vojtech Pavlik wrote:
-> How about if you used the "min_t" and "max_t" macros inside FIT? That
-> could help get rid of the casts completely (assuming the second and
-> third parameters to FIT are expected to be constants).
 
-Yes, that's better. It reduces the necessary changes to a minimum.
 
+
+I would appreciate any comments from the janitor@sternweltens list. This is one (of
+many) cases where I made a decision about replacing
+
+set_current_state(TASK_INTERRUPTIBLE);
+schedule_timeout(some_time);
+
+with
+
+msleep(jiffies_to_msecs(some_time));
+
+msleep() is not exactly the same as the previous code, but I only did
+this replacement where I thought long delays were *desired*. If this is
+not the case here, then just disregard this patch. I think in this case,
+though, because of the while() loop, this was the desired effect.
+
+Thanks,
+Nish
+
+
+
+Description: Replace cdrom_sleep() with msleep() and remove
+cdrom_sleep() definition.
+
+Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
 Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
-
 
 
 
 ---
 
- linux-2.6.9-rc1-bk7-max/drivers/ide/ide-timing.h |   25 +++++++++++------------
- 1 files changed, 12 insertions(+), 13 deletions(-)
+ linux-2.6.9-rc1-bk7-max/drivers/ide/ide-cd.c |   15 +--------------
+ 1 files changed, 1 insertion(+), 14 deletions(-)
 
-diff -puN drivers/ide/ide-timing.h~min-max-ide_ide-timing.h drivers/ide/ide-timing.h
---- linux-2.6.9-rc1-bk7/drivers/ide/ide-timing.h~min-max-ide_ide-timing.h	2004-09-01 19:34:21.000000000 +0200
-+++ linux-2.6.9-rc1-bk7-max/drivers/ide/ide-timing.h	2004-09-01 19:34:21.000000000 +0200
-@@ -27,6 +27,7 @@
-  * Vojtech Pavlik, Simunkova 1594, Prague 8, 182 00 Czech Republic
-  */
- 
-+#include <linux/kernel.h>
- #include <linux/hdreg.h>
- 
- #define XFER_PIO_5		0x0d
-@@ -96,11 +97,9 @@ static struct ide_timing ide_timing[] = 
- #define IDE_TIMING_UDMA		0x80
- #define IDE_TIMING_ALL		0xff
- 
--#define MIN(a,b)	((a)<(b)?(a):(b))
--#define MAX(a,b)	((a)>(b)?(a):(b))
--#define FIT(v,min,max)	MAX(MIN(v,max),min)
--#define ENOUGH(v,unit)	(((v)-1)/(unit)+1)
--#define EZ(v,unit)	((v)?ENOUGH(v,unit):0)
-+#define FIT(v,vmin,vmax)	max_t(short,min_t(short,v,vmax),vmin)
-+#define ENOUGH(v,unit)		(((v)-1)/(unit)+1)
-+#define EZ(v,unit)		((v)?ENOUGH(v,unit):0)
- 
- #define XFER_MODE	0xf0
- #define XFER_UDMA_133	0x48
-@@ -188,14 +187,14 @@ static void ide_timing_quantize(struct i
- 
- static void ide_timing_merge(struct ide_timing *a, struct ide_timing *b, struct ide_timing *m, unsigned int what)
- {
--	if (what & IDE_TIMING_SETUP  ) m->setup   = MAX(a->setup,   b->setup);
--	if (what & IDE_TIMING_ACT8B  ) m->act8b   = MAX(a->act8b,   b->act8b);
--	if (what & IDE_TIMING_REC8B  ) m->rec8b   = MAX(a->rec8b,   b->rec8b);
--	if (what & IDE_TIMING_CYC8B  ) m->cyc8b   = MAX(a->cyc8b,   b->cyc8b);
--	if (what & IDE_TIMING_ACTIVE ) m->active  = MAX(a->active,  b->active);
--	if (what & IDE_TIMING_RECOVER) m->recover = MAX(a->recover, b->recover);
--	if (what & IDE_TIMING_CYCLE  ) m->cycle   = MAX(a->cycle,   b->cycle);
--	if (what & IDE_TIMING_UDMA   ) m->udma    = MAX(a->udma,    b->udma);
-+	if (what & IDE_TIMING_SETUP  ) m->setup   = max(a->setup,   b->setup);
-+	if (what & IDE_TIMING_ACT8B  ) m->act8b   = max(a->act8b,   b->act8b);
-+	if (what & IDE_TIMING_REC8B  ) m->rec8b   = max(a->rec8b,   b->rec8b);
-+	if (what & IDE_TIMING_CYC8B  ) m->cyc8b   = max(a->cyc8b,   b->cyc8b);
-+	if (what & IDE_TIMING_ACTIVE ) m->active  = max(a->active,  b->active);
-+	if (what & IDE_TIMING_RECOVER) m->recover = max(a->recover, b->recover);
-+	if (what & IDE_TIMING_CYCLE  ) m->cycle   = max(a->cycle,   b->cycle);
-+	if (what & IDE_TIMING_UDMA   ) m->udma    = max(a->udma,    b->udma);
+diff -puN drivers/ide/ide-cd.c~msleep-drivers_ide_ide-cd drivers/ide/ide-cd.c
+--- linux-2.6.9-rc1-bk7/drivers/ide/ide-cd.c~msleep-drivers_ide_ide-cd	2004-09-01 19:34:48.000000000 +0200
++++ linux-2.6.9-rc1-bk7-max/drivers/ide/ide-cd.c	2004-09-01 19:34:48.000000000 +0200
+@@ -1519,19 +1519,6 @@ static ide_startstop_t cdrom_do_packet_c
  }
  
- static struct ide_timing* ide_timing_find_mode(short speed)
+ 
+-/* Sleep for TIME jiffies.
+-   Not to be called from an interrupt handler. */
+-static
+-void cdrom_sleep (int time)
+-{
+-	int sleep = time;
+-
+-	do {
+-		set_current_state(TASK_INTERRUPTIBLE);
+-		sleep = schedule_timeout(sleep);
+-	} while (sleep);
+-}
+-
+ static
+ int cdrom_queue_packet_command(ide_drive_t *drive, struct request *rq)
+ {
+@@ -1566,7 +1553,7 @@ int cdrom_queue_packet_command(ide_drive
+ 				/* The drive is in the process of loading
+ 				   a disk.  Retry, but wait a little to give
+ 				   the drive time to complete the load. */
+-				cdrom_sleep(2 * HZ);
++				msleep(2000);
+ 			} else {
+ 				/* Otherwise, don't retry. */
+ 				retries = 0;
 
 _
