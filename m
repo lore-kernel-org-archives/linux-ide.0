@@ -1,472 +1,72 @@
-From: "Albert Lee" <albertcc@tw.ibm.com>
-Subject: Re: [PATCH libata-dev-2.6 1/3] Add CHS support
-Date: Mon, 14 Feb 2005 19:23:50 +0800
-Message-ID: <00a101c51287$ac4c65a0$6401a8c0@tw.ibm.com>
-References: <006d01c50c11$81003920$a801a8c0@tw.ibm.com> <4205B886.4070005@pobox.com> <007f01c51285$a3612450$6401a8c0@tw.ibm.com> <008e01c51286$d2f8b740$6401a8c0@tw.ibm.com>
+From: Francois Payette <francoisp@netmosphere.net>
+Subject: SATA150TX4 atat1:command timeout
+Date: Mon, 14 Feb 2005 16:41:22 -0500
+Message-ID: <42111B02.4010805@netmosphere.net>
+Reply-To: francoisp@netmosphere.net
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_009E_01C512CA.B680B830"
-Received: from bluehawaii.tikira.net ([61.62.22.51]:38898 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S261414AbVBNLY2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Feb 2005 06:24:28 -0500
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from 65.18.135.ptr ([65.18.135.81]:35241 "EHLO isecurit.com")
+	by vger.kernel.org with ESMTP id S261540AbVBNVkr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Feb 2005 16:40:47 -0500
+Received: from eliza.isecurit.net (modemcable026.47-81-70.mc.videotron.ca [70.81.47.26])
+	(authenticated)
+	by isecurit.com (8.11.6/8.11.6) with ESMTP id j1ELUIe24134
+	for <linux-ide@vger.kernel.org>; Mon, 14 Feb 2005 16:30:18 -0500
+Received: from [192.168.0.7] (dice.isecurit.net [192.168.0.7])
+	by eliza.isecurit.net (Postfix) with ESMTP id 2CCF0AF79B
+	for <linux-ide@vger.kernel.org>; Sun, 13 Feb 2005 12:59:29 -0500 (EST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, IDE Linux <linux-ide@vger.kernel.org>, "Mudama, Eric" <eric_mudama@Maxtor.com>, Mark Lord <mlord@pobox.com>
+To: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
+Hi,
 
-------=_NextPart_000_009E_01C512CA.B680B830
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+We have reported earlier a strange bug at bugzilla.kernel.org (#4106 
+<http://bugzilla.kernel.org/show_bug.cgi?id=4106>): in our setup of a 
+20318 (the SATA150 TX4, not the fastrack one) we are systematically 
+getting ata1: command timeout after copying between 200 and 600GB of 
+data through the controller. Our setup is with 4 maxtor 6Y200M0, 2 of 
+them in raid 0, and the other 2 in a LV group over a raid 0 md array. 
+When copying from one array to the other one repeatedly,  the machines 
+freezes once out out of every 2 copy. We changed the drive order, but we 
+still got the msg ata1 command timeout. We swapped the order of the 
+cables, and still got ata1 command timeout. We got a few kernel panics 
+with spin locks, but since finding this forum we added the line
 
-> 2) Patch #3 needs to be split up into three patches:
->   a) rename variables (s/sector/block/),
->   b) reorganize read/write translation
->   c) add CHS support
-> 
+writel(mask, mmio_base + PDC_INT_SEQMASK);
 
-Patch 3-3: 
- - add CHS support to ata_scsi_verify_xlat(), ata_scsi_rw_xlat() and ata_scsiop_read_cap().
+to pdc_interrupt, and that one was gone.
 
-Albert
+We have kernel 2.6.10-753 (fc3) with all relevant patches to the sata 
+stuff, the last of which is the one Bartlomiej Zolnierkiewicz posted on 
+06/02/2005. 
+http://marc.theaimsgroup.com/?l=linux-ide&m=110769875419863&w=2 
+<http://marc.theaimsgroup.com/?l=linux-ide&m=110769875419863&w=2>
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-------------------------------------------------------------------
---- libata-dev-2.6/drivers/scsi/libata-scsi.c 2005-02-14 17:18:22.000000000 +0800
-+++ libata-dev-2.6-mod/drivers/scsi/libata-scsi.c 2005-02-14 17:25:43.000000000 +0800
-@@ -689,6 +689,8 @@
- static unsigned int ata_scsi_verify_xlat(struct ata_queued_cmd *qc, u8 *scsicmd)
- {
-  struct ata_taskfile *tf = &qc->tf;
-+ struct ata_device *dev = qc->dev;
-+ unsigned int lba   = tf->flags & ATA_TFLAG_LBA;
-  unsigned int lba48 = tf->flags & ATA_TFLAG_LBA48;
-  u64 dev_sectors = qc->dev->n_sectors;
-  u64 block = 0;
-@@ -696,7 +698,6 @@
- 
-  tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-  tf->protocol = ATA_PROT_NODATA;
-- tf->device |= ATA_LBA;
- 
-  if (scsicmd[0] == VERIFY) {
-   block |= ((u64)scsicmd[2]) << 24;
-@@ -741,25 +742,53 @@
-    return 1;
-  }
- 
-- if (lba48) {
--  tf->command = ATA_CMD_VERIFY_EXT;
-+ if (lba) {
-+  if (lba48) {
-+   tf->command = ATA_CMD_VERIFY_EXT;
-+
-+   tf->hob_nsect = (n_block >> 8) & 0xff;
-+
-+   tf->hob_lbah = (block >> 40) & 0xff;
-+   tf->hob_lbam = (block >> 32) & 0xff;
-+   tf->hob_lbal = (block >> 24) & 0xff;
-+  } else {
-+   tf->command = ATA_CMD_VERIFY;
- 
--  tf->hob_nsect = (n_block >> 8) & 0xff;
-+   tf->device |= (block >> 24) & 0xf;
-+  }
- 
--  tf->hob_lbah = (block >> 40) & 0xff;
--  tf->hob_lbam = (block >> 32) & 0xff;
--  tf->hob_lbal = (block >> 24) & 0xff;
-- } else {
--  tf->command = ATA_CMD_VERIFY;
-+  tf->nsect = n_block & 0xff;
- 
--  tf->device |= (block >> 24) & 0xf;
-- }
-+  tf->lbah = (block >> 16) & 0xff;
-+  tf->lbam = (block >> 8) & 0xff;
-+  tf->lbal = block & 0xff;
- 
-- tf->nsect = n_block & 0xff;
-+  tf->device |= ATA_LBA;
-+ } else {
-+  /* CHS */
-+  u32 sect, head, cyl, track;
- 
-- tf->lbah = (block >> 16) & 0xff;
-- tf->lbam = (block >> 8) & 0xff;
-- tf->lbal = block & 0xff;
-+  /* Convert LBA to CHS */
-+  track = (u32)block / dev->sectors;
-+  cyl   = track / dev->heads;
-+  head  = track % dev->heads;
-+  sect  = (u32)block % dev->sectors + 1;
-+
-+  DPRINTK("block[%u] track[%u] cyl[%u] head[%u] sect[%u] \n", (u32)block, track, cyl, head, sect);
-+  
-+  /* Check whether the converted CHS can fit. 
-+     Cylinder: 0-65535 
-+     Head: 0-15
-+     Sector: 1-255*/
-+  if ((cyl >> 16) || (head >> 4) || (sect >> 8) || (!sect)) 
-+   return 1;
-+  
-+  tf->nsect = n_block & 0xff; /* Sector count 0 means 256 sectors */
-+  tf->lbal = sect;
-+  tf->lbam = cyl;
-+  tf->lbah = cyl >> 8;
-+  tf->device |= head;
-+ }
- 
-  return 0;
- }
-@@ -787,6 +816,8 @@
- static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc, u8 *scsicmd)
- {
-  struct ata_taskfile *tf = &qc->tf;
-+ struct ata_device *dev = qc->dev;
-+ unsigned int lba   = tf->flags & ATA_TFLAG_LBA;
-  unsigned int lba48 = tf->flags & ATA_TFLAG_LBA48;
-  u64 block = 0;
-  u32 n_block = 0;
-@@ -845,34 +876,66 @@
-   /* In ATA, sector count 0 are 256 or 65536 sectors, not 0 sectors. */
-   return 1;
- 
-- if (lba48) {
--  /* The request -may- be too large for LBA48. */
--  if ((block >> 48) || (n_block > 65536))
--   return 1;
-+ if (lba) {
-+  if (lba48) {
-+   /* The request -may- be too large for LBA48. */
-+   if ((block >> 48) || (n_block > 65536))
-+    return 1;
-+
-+   tf->hob_nsect = (n_block >> 8) & 0xff;
-+
-+   tf->hob_lbah = (block >> 40) & 0xff;
-+   tf->hob_lbam = (block >> 32) & 0xff;
-+   tf->hob_lbal = (block >> 24) & 0xff;
-+  } else { 
-+   /* LBA28 */
-+
-+   /* The request -may- be too large for LBA28. */
-+   if ((block >> 28) || (n_block > 256))
-+    return 1;
-+
-+   tf->device |= (block >> 24) & 0xf;
-+  }
-+ 
-+  qc->nsect = n_block;
-+  tf->nsect = n_block & 0xff;
- 
--  tf->hob_nsect = (n_block >> 8) & 0xff;
-+  tf->lbah = (block >> 16) & 0xff;
-+  tf->lbam = (block >> 8) & 0xff;
-+  tf->lbal = block & 0xff;
- 
--  tf->hob_lbah = (block >> 40) & 0xff;
--  tf->hob_lbam = (block >> 32) & 0xff;
--  tf->hob_lbal = (block >> 24) & 0xff;
-+  tf->device |= ATA_LBA;
-  } else { 
--  /* LBA28 */
-+  /* CHS */
-+  u32 sect, head, cyl, track;
- 
--  /* The request -may- be too large for LBA28. */
-+  /* The request -may- be too large for CHS addressing. */
-   if ((block >> 28) || (n_block > 256))
-    return 1;
--
--  tf->device |= (block >> 24) & 0xf;
-+   
-+  /* Convert LBA to CHS */
-+  track = (u32)block / dev->sectors;
-+  cyl   = track / dev->heads;
-+  head  = track % dev->heads;
-+  sect  = (u32)block % dev->sectors + 1;
-+
-+  DPRINTK("block[%u] track[%u] cyl[%u] head[%u] sect[%u] \n", 
-+   (u32)block, track, cyl, head, sect);
-+  
-+  /* Check whether the converted CHS can fit. 
-+     Cylinder: 0-65535 
-+     Head: 0-15
-+     Sector: 1-255*/
-+  if ((cyl >> 16) || (head >> 4) || (sect >> 8) || (!sect)) 
-+   return 1;
-+  
-+  qc->nsect = n_block;
-+  tf->nsect = n_block & 0xff; /* Sector count 0 means 256 sectors */
-+  tf->lbal = sect;
-+  tf->lbam = cyl;
-+  tf->lbah = cyl >> 8;
-+  tf->device |= head;
-  }
-- 
-- qc->nsect = n_block;
-- tf->nsect = n_block & 0xff;
--
-- tf->lbah = (block >> 16) & 0xff;
-- tf->lbam = (block >> 8) & 0xff;
-- tf->lbal = block & 0xff;
--
-- tf->device |= ATA_LBA;
- 
-  return 0;
- }
-@@ -1427,10 +1490,20 @@
- 
-  VPRINTK("ENTER\n");
- 
-- if (ata_id_has_lba48(args->id))
--  n_sectors = ata_id_u64(args->id, 100);
-- else
--  n_sectors = ata_id_u32(args->id, 60);
-+ if (ata_id_has_lba(args->id)) {
-+  if (ata_id_has_lba48(args->id))
-+   n_sectors = ata_id_u64(args->id, 100);
-+  else
-+   n_sectors = ata_id_u32(args->id, 60);
-+ } else {
-+  /* CHS default translation */
-+  n_sectors = args->id[1] * args->id[3] * args->id[6];
-+
-+  if (ata_id_current_chs_valid(args->id))
-+   /* CHS current translation */
-+   n_sectors = ata_id_u32(args->id, 57);
-+ }
-+
-  n_sectors--;  /* ATA TotalUserSectors - 1 */
- 
-  tmp = n_sectors; /* note: truncates, if lba48 */
+After commenting out the line
+    /* reduce TBG clock to 133 Mhz. */
+    /*tmp = readl(mmio + PDC_TBG_MODE); */
+    tmp &= ~0x30000; /* clear bit 17, 16*/
+    tmp |= 0x10000;  /* set bit 17:16 = 0:1 */
+    /*writel(tmp, mmio + PDC_TBG_MODE); */
 
-------=_NextPart_000_009E_01C512CA.B680B830
-Content-Type: application/octet-stream;
-	name="chs3-3.diff"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="chs3-3.diff"
+in pdc_host_init (total shot in the dark) the setup seems more stable, 
+we have now gone through 3 cycles of stress test (600GB of copying) and 
+have not seen the crash.
 
---- libata-dev-2.6/drivers/scsi/libata-scsi.c	2005-02-14 =
-17:18:22.000000000 +0800=0A=
-+++ libata-dev-2.6-mod/drivers/scsi/libata-scsi.c	2005-02-14 =
-17:25:43.000000000 +0800=0A=
-@@ -689,6 +689,8 @@=0A=
- static unsigned int ata_scsi_verify_xlat(struct ata_queued_cmd *qc, u8 =
-*scsicmd)=0A=
- {=0A=
- 	struct ata_taskfile *tf =3D &qc->tf;=0A=
-+	struct ata_device *dev =3D qc->dev;=0A=
-+	unsigned int lba   =3D tf->flags & ATA_TFLAG_LBA;=0A=
- 	unsigned int lba48 =3D tf->flags & ATA_TFLAG_LBA48;=0A=
- 	u64 dev_sectors =3D qc->dev->n_sectors;=0A=
- 	u64 block =3D 0;=0A=
-@@ -696,7 +698,6 @@=0A=
- =0A=
- 	tf->flags |=3D ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;=0A=
- 	tf->protocol =3D ATA_PROT_NODATA;=0A=
--	tf->device |=3D ATA_LBA;=0A=
- =0A=
- 	if (scsicmd[0] =3D=3D VERIFY) {=0A=
- 		block |=3D ((u64)scsicmd[2]) << 24;=0A=
-@@ -741,25 +742,53 @@=0A=
- 			return 1;=0A=
- 	}=0A=
- =0A=
--	if (lba48) {=0A=
--		tf->command =3D ATA_CMD_VERIFY_EXT;=0A=
-+	if (lba) {=0A=
-+		if (lba48) {=0A=
-+			tf->command =3D ATA_CMD_VERIFY_EXT;=0A=
-+=0A=
-+			tf->hob_nsect =3D (n_block >> 8) & 0xff;=0A=
-+=0A=
-+			tf->hob_lbah =3D (block >> 40) & 0xff;=0A=
-+			tf->hob_lbam =3D (block >> 32) & 0xff;=0A=
-+			tf->hob_lbal =3D (block >> 24) & 0xff;=0A=
-+		} else {=0A=
-+			tf->command =3D ATA_CMD_VERIFY;=0A=
- =0A=
--		tf->hob_nsect =3D (n_block >> 8) & 0xff;=0A=
-+			tf->device |=3D (block >> 24) & 0xf;=0A=
-+		}=0A=
- =0A=
--		tf->hob_lbah =3D (block >> 40) & 0xff;=0A=
--		tf->hob_lbam =3D (block >> 32) & 0xff;=0A=
--		tf->hob_lbal =3D (block >> 24) & 0xff;=0A=
--	} else {=0A=
--		tf->command =3D ATA_CMD_VERIFY;=0A=
-+		tf->nsect =3D n_block & 0xff;=0A=
- =0A=
--		tf->device |=3D (block >> 24) & 0xf;=0A=
--	}=0A=
-+		tf->lbah =3D (block >> 16) & 0xff;=0A=
-+		tf->lbam =3D (block >> 8) & 0xff;=0A=
-+		tf->lbal =3D block & 0xff;=0A=
- =0A=
--	tf->nsect =3D n_block & 0xff;=0A=
-+		tf->device |=3D ATA_LBA;=0A=
-+	} else {=0A=
-+		/* CHS */=0A=
-+		u32 sect, head, cyl, track;=0A=
- =0A=
--	tf->lbah =3D (block >> 16) & 0xff;=0A=
--	tf->lbam =3D (block >> 8) & 0xff;=0A=
--	tf->lbal =3D block & 0xff;=0A=
-+		/* Convert LBA to CHS */=0A=
-+		track =3D (u32)block / dev->sectors;=0A=
-+		cyl   =3D track / dev->heads;=0A=
-+		head  =3D track % dev->heads;=0A=
-+		sect  =3D (u32)block % dev->sectors + 1;=0A=
-+=0A=
-+		DPRINTK("block[%u] track[%u] cyl[%u] head[%u] sect[%u] \n", =
-(u32)block, track, cyl, head, sect);=0A=
-+		=0A=
-+		/* Check whether the converted CHS can fit. =0A=
-+		   Cylinder: 0-65535 =0A=
-+		   Head: 0-15=0A=
-+		   Sector: 1-255*/=0A=
-+		if ((cyl >> 16) || (head >> 4) || (sect >> 8) || (!sect)) =0A=
-+			return 1;=0A=
-+		=0A=
-+		tf->nsect =3D n_block & 0xff; /* Sector count 0 means 256 sectors */=0A=
-+		tf->lbal =3D sect;=0A=
-+		tf->lbam =3D cyl;=0A=
-+		tf->lbah =3D cyl >> 8;=0A=
-+		tf->device |=3D head;=0A=
-+	}=0A=
- =0A=
- 	return 0;=0A=
- }=0A=
-@@ -787,6 +816,8 @@=0A=
- static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc, u8 =
-*scsicmd)=0A=
- {=0A=
- 	struct ata_taskfile *tf =3D &qc->tf;=0A=
-+	struct ata_device *dev =3D qc->dev;=0A=
-+	unsigned int lba   =3D tf->flags & ATA_TFLAG_LBA;=0A=
- 	unsigned int lba48 =3D tf->flags & ATA_TFLAG_LBA48;=0A=
- 	u64 block =3D 0;=0A=
- 	u32 n_block =3D 0;=0A=
-@@ -845,34 +876,66 @@=0A=
- 		/* In ATA, sector count 0 are 256 or 65536 sectors, not 0 sectors. */=0A=
- 		return 1;=0A=
- =0A=
--	if (lba48) {=0A=
--		/* The request -may- be too large for LBA48. */=0A=
--		if ((block >> 48) || (n_block > 65536))=0A=
--			return 1;=0A=
-+	if (lba) {=0A=
-+		if (lba48) {=0A=
-+			/* The request -may- be too large for LBA48. */=0A=
-+			if ((block >> 48) || (n_block > 65536))=0A=
-+				return 1;=0A=
-+=0A=
-+			tf->hob_nsect =3D (n_block >> 8) & 0xff;=0A=
-+=0A=
-+			tf->hob_lbah =3D (block >> 40) & 0xff;=0A=
-+			tf->hob_lbam =3D (block >> 32) & 0xff;=0A=
-+			tf->hob_lbal =3D (block >> 24) & 0xff;=0A=
-+		} else { =0A=
-+			/* LBA28 */=0A=
-+=0A=
-+			/* The request -may- be too large for LBA28. */=0A=
-+			if ((block >> 28) || (n_block > 256))=0A=
-+				return 1;=0A=
-+=0A=
-+			tf->device |=3D (block >> 24) & 0xf;=0A=
-+		}=0A=
-+	=0A=
-+		qc->nsect =3D n_block;=0A=
-+		tf->nsect =3D n_block & 0xff;=0A=
- =0A=
--		tf->hob_nsect =3D (n_block >> 8) & 0xff;=0A=
-+		tf->lbah =3D (block >> 16) & 0xff;=0A=
-+		tf->lbam =3D (block >> 8) & 0xff;=0A=
-+		tf->lbal =3D block & 0xff;=0A=
- =0A=
--		tf->hob_lbah =3D (block >> 40) & 0xff;=0A=
--		tf->hob_lbam =3D (block >> 32) & 0xff;=0A=
--		tf->hob_lbal =3D (block >> 24) & 0xff;=0A=
-+		tf->device |=3D ATA_LBA;=0A=
- 	} else { =0A=
--		/* LBA28 */=0A=
-+		/* CHS */=0A=
-+		u32 sect, head, cyl, track;=0A=
- =0A=
--		/* The request -may- be too large for LBA28. */=0A=
-+		/* The request -may- be too large for CHS addressing. */=0A=
- 		if ((block >> 28) || (n_block > 256))=0A=
- 			return 1;=0A=
--=0A=
--		tf->device |=3D (block >> 24) & 0xf;=0A=
-+			=0A=
-+		/* Convert LBA to CHS */=0A=
-+		track =3D (u32)block / dev->sectors;=0A=
-+		cyl   =3D track / dev->heads;=0A=
-+		head  =3D track % dev->heads;=0A=
-+		sect  =3D (u32)block % dev->sectors + 1;=0A=
-+=0A=
-+		DPRINTK("block[%u] track[%u] cyl[%u] head[%u] sect[%u] \n", =0A=
-+			(u32)block, track, cyl, head, sect);=0A=
-+		=0A=
-+		/* Check whether the converted CHS can fit. =0A=
-+		   Cylinder: 0-65535 =0A=
-+		   Head: 0-15=0A=
-+		   Sector: 1-255*/=0A=
-+		if ((cyl >> 16) || (head >> 4) || (sect >> 8) || (!sect)) =0A=
-+			return 1;=0A=
-+		=0A=
-+		qc->nsect =3D n_block;=0A=
-+		tf->nsect =3D n_block & 0xff; /* Sector count 0 means 256 sectors */=0A=
-+		tf->lbal =3D sect;=0A=
-+		tf->lbam =3D cyl;=0A=
-+		tf->lbah =3D cyl >> 8;=0A=
-+		tf->device |=3D head;=0A=
- 	}=0A=
--	=0A=
--	qc->nsect =3D n_block;=0A=
--	tf->nsect =3D n_block & 0xff;=0A=
--=0A=
--	tf->lbah =3D (block >> 16) & 0xff;=0A=
--	tf->lbam =3D (block >> 8) & 0xff;=0A=
--	tf->lbal =3D block & 0xff;=0A=
--=0A=
--	tf->device |=3D ATA_LBA;=0A=
- =0A=
- 	return 0;=0A=
- }=0A=
-@@ -1427,10 +1490,20 @@=0A=
- =0A=
- 	VPRINTK("ENTER\n");=0A=
- =0A=
--	if (ata_id_has_lba48(args->id))=0A=
--		n_sectors =3D ata_id_u64(args->id, 100);=0A=
--	else=0A=
--		n_sectors =3D ata_id_u32(args->id, 60);=0A=
-+	if (ata_id_has_lba(args->id)) {=0A=
-+		if (ata_id_has_lba48(args->id))=0A=
-+			n_sectors =3D ata_id_u64(args->id, 100);=0A=
-+		else=0A=
-+			n_sectors =3D ata_id_u32(args->id, 60);=0A=
-+	} else {=0A=
-+		/* CHS default translation */=0A=
-+		n_sectors =3D args->id[1] * args->id[3] * args->id[6];=0A=
-+=0A=
-+		if (ata_id_current_chs_valid(args->id))=0A=
-+			/* CHS current translation */=0A=
-+			n_sectors =3D ata_id_u32(args->id, 57);=0A=
-+	}=0A=
-+=0A=
- 	n_sectors--;		/* ATA TotalUserSectors - 1 */=0A=
- =0A=
- 	tmp =3D n_sectors;	/* note: truncates, if lba48 */=0A=
+Earlier we tried the same stress test with ATA_DEBUG and 
+ATA_VERBOSE_DEBUG defined, the error did not occur  maybe because of it 
+was slowed down with all the output)?
 
-------=_NextPart_000_009E_01C512CA.B680B830--
+Later we tried  commenting out the line that sets bmr burst 
+(PDC_FLASH_CTL) and slew rate (PDC_SLEW_CTL) in pdc_host_init, and that 
+slowed the setup to half it's orignal speed, but in that case the 
+problem did not show up.
 
+We outputted the command timeout and it's  0x35 (ATA_CMD_WRITE_EXT) 
+protocol is 4 (ATA_PROT_DMA).
 
+Any ideas?
+TIA,
+Francois Payette
