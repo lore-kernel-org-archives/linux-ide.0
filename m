@@ -1,42 +1,37 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: ide-cd in 2.6.10/11: BIG problem with burning audio CDs
-Date: Thu, 3 Feb 2005 12:05:48 +0100
-Message-ID: <20050203110547.GU5710@suse.de>
-References: <20050203085452.GA22995@tangens.sinus.cz>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Linux hangs during IDE initialization at boot for 30 sec
+Date: Thu, 03 Feb 2005 10:03:07 +0000
+Message-ID: <1107332790.14787.118.camel@localhost.localdomain>
+References: <200502011257.40059.brade@informatik.uni-muenchen.de>
+	 <pan.2005.02.01.20.21.46.334334@surrey.ac.uk>
+	 <1107299901.5624.28.camel@gaston>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from ns.virtualhost.dk ([195.184.98.160]:44444 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262632AbVBCLF6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Feb 2005 06:05:58 -0500
-Content-Disposition: inline
-In-Reply-To: <20050203085452.GA22995@tangens.sinus.cz>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from clock-tower.bc.nu ([81.2.110.250]:62852 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S263006AbVBCLII
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Feb 2005 06:08:08 -0500
+In-Reply-To: <1107299901.5624.28.camel@gaston>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Troller <patrol@sinus.cz>
-Cc: linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: ee21rh@surrey.ac.uk, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
 
-On Thu, Feb 03 2005, Pavel Troller wrote:
->   The problem is that on 2.6.10 and 2.6.11-rc[1-3], burning audio CDs
->   consumes so much CPU cycles, that my dual Athlon 1800+ system cannot
->   serve the process and cd burner dies of repeated buffer underruns or
->   totally crashes, requiring physical reset to revive (no ide bus
->   reset is enough).
+On Maw, 2005-02-01 at 23:18, Benjamin Herrenschmidt wrote:
+> On Tue, 2005-02-01 at 20:22 +0000, Richard Hughes wrote:
+> > On Tue, 01 Feb 2005 12:57:33 +0100, Michael Brade wrote:
+> I suspect in your case, it's reading "ff", which indicates either that
+> there is no hardware where the kernel tries to probe, or that there is
+> bogus IDE interfaces which don't properly have the D7 line pulled low so
+> that BUSY appears not set in absence of a drive.
+> 
+> I'm not sure how the list of intefaces is probed on this machine, that's
+> probably where the problem is.
 
-Try this patch.
+Known, fixed
 
-===== drivers/ide/ide-cd.c 1.105 vs edited =====
---- 1.105/drivers/ide/ide-cd.c	2005-01-08 06:43:53 +01:00
-+++ edited/drivers/ide/ide-cd.c	2005-01-09 16:31:53 +01:00
-@@ -1915,7 +1915,7 @@
- 		/*
- 		 * check if dma is safe
- 		 */
--		if ((rq->data_len & mask) || (addr & mask))
-+		if ((rq->data_len & 3) || (addr & mask))
- 			info->dma = 0;
- 	}
- 
-
--- 
-Jens Axboe
+There is a patch that allows probing for ISA ide4,5,6 etc only if there
+is
+no PCI bus
 
