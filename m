@@ -1,51 +1,61 @@
-From: Vojtech Pavlik <vojtech@suse.cz>
-Subject: Re: [PATCH] ide-timing.h: make the timing from the IDE device work
-Date: Sat, 12 Feb 2005 10:22:29 +0100
-Message-ID: <20050212092229.GB2297@ucw.cz>
-References: <004001c485c0$fe5031a0$6401a8c0@tw.ibm.com>
+From: "Stuart Hayes" <stuarthayes@austin.rr.com>
+Subject: Re: ide-cd question
+Date: Sat, 12 Feb 2005 11:21:20 -0600
+Message-ID: <000801c51127$44f0ddc0$aeb91942@400sc>
+References: <7A8F92187EF7A249BF847F1BF4903C04010EE8A6@ausx2kmpc103.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from twilight.ucw.cz ([81.30.235.3]:26279 "EHLO suse.cz")
-	by vger.kernel.org with ESMTP id S262302AbVBLJV6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Feb 2005 04:21:58 -0500
-Content-Disposition: inline
-In-Reply-To: <004001c485c0$fe5031a0$6401a8c0@tw.ibm.com>
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
+Received: from ms-smtp-04.texas.rr.com ([24.93.47.43]:41386 "EHLO
+	ms-smtp-04.texas.rr.com") by vger.kernel.org with ESMTP
+	id S261163AbVBLRV3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 12 Feb 2005 12:21:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: Albert Lee <albertlee@tikira.net>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, bzolnier@gmail.com
+Cc: Stuart_Hayes@Dell.com
 
-On Thu, Aug 19, 2004 at 03:48:57PM +0800, Albert Lee wrote:
+> Sorry--this patch is against 2.6.11-rc3.
+>
+> Also sorry for the mangled patch--I'll resend it from another email
+> address shortly.
+>
+> Thanks
+> Stuart
 
-> ide-timing.h patch: make the timing from the IDE device work.
-> 
-> Albert Lee
+OK, here's that patch again--hopefully not mangled this time.
+Thanks,
+Stuart
 
-Bartolomiej, we indeed need this patch, otherwise EIDE timings the drive
-supplies to us are completely ignored in the code.
 
-> --- linux-2.6.6\drivers\ide\ide-timing.h.ori 2004-05-10 10:32:28.000000000
-> +0800
-> +++ linux-2.6.6\drivers\ide\ide-timing.h 2004-08-19 13:01:17.117860800 +0800
-> @@ -220,6 +220,7 @@
->   if (!(s = ide_timing_find_mode(speed)))
->    return -EINVAL;
-> 
-> + memcpy(t, s, sizeof(*t));
->  /*
->   * If the drive is an EIDE drive, it can tell us it needs extended
->   * PIO/MWDMA cycle timing.
-> @@ -248,7 +249,7 @@
->   * Convert the timing to bus clock counts.
->   */
-> 
-> - ide_timing_quantize(s, t, T, UT);
-> + ide_timing_quantize(t, t, T, UT);
-> 
->  /*
->   * Even in DMA/UDMA modes we still use PIO access for IDENTIFY, S.M.A.R.T
-> 
+--- ide-io.c.orig 2005-02-10 15:23:52.000000000 -0500
++++ ide-io.c.new 2005-02-10 15:23:31.000000000 -0500
+@@ -515,7 +515,18 @@ static ide_startstop_t ide_atapi_error(i
+   hwif->OUTB(WIN_IDLEIMMEDIATE, IDE_COMMAND_REG);
 
--- 
-Vojtech Pavlik
-SuSE Labs, SuSE CR
+  if (rq->errors >= ERROR_MAX) {
+-  drive->driver->end_request(drive, 0, 0);
++  /*
++   * make sure request is fully ended--otherwise bio might get updated and 
+the
++   * command will be retried without rq->errors getting reset to zero, 
+which
++   * could cause us to get stuck in a loop with infinite retries without 
+any
++   * more reset attempts (borrowed from cdrom_end_request)
++   */
++  int nsectors;
++  if (blk_pc_request(rq))
++   nsectors = (rq->data_len + 511) >> 9;
++  if (!nsectors)
++   nsectors = 1;
++  drive->driver->end_request(drive, 0, nsectors);
+  } else {
+   if ((rq->errors & ERROR_RESET) == ERROR_RESET) {
+    ++rq->errors;
+
+
+
