@@ -1,29 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata patches in 2.6.7bk6 Hang Maxtor on SP bridge
-Date: Tue, 29 Jun 2004 04:25:14 -0400
+From: Symantec_AntiVirus_for_SMTP_Gateways@amcc.com
+Subject: =?utf-8?B?UG9saWN5IFZpb2xhdGlvbm==?=
+Date: Tue, 29 Jun 2004 05:39:52 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040629082514.GB19267@havoc.gtf.org>
-References: <40E096B6.8090108@hbahr.org>
+Message-ID: <S265778AbUF2PYP/20040629152415Z+146@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([216.162.42.101]:41399 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S265540AbUF2IZv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jun 2004 04:25:51 -0400
-Content-Disposition: inline
-In-Reply-To: <40E096B6.8090108@hbahr.org>
+Received: from mail-in.amcc.com ([192.195.69.150]:46606 "HELO mail-in.amcc.com")
+	by vger.kernel.org with SMTP id S265778AbUF2PYP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jun 2004 11:24:15 -0400
 List-Id: linux-ide@vger.kernel.org
-To: hab <hab@hbahr.org>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Mon, Jun 28, 2004 at 05:07:50PM -0500, hab wrote:
-> Sir
->    I resolved problem by baking out scsi portion of patches, athough
-> some general configs such as FC2 development still introduce
-> the same problem as identified in the attached message.
+The following message sent by this account has violated system policy: This is a suspected Spam or Virus
 
-Use sata_sil not siimage.  And certainly not _both_ drivers.
+From: linux-ide@vger.kernel.org
+To: linux@3ware.com
+Date: Mon, 28 Jun 2004 06:45:51 -0700
+Subject: Re: Order
 
-	Jeff
+
+The following violations were detected:
+
+--- Scan information follows ---
+
+Virus Name: W32.Netsky.P@mm!enc
+File Attachment: M2004062806455113357.mes
+Attachment Status: infected
+
+Virus Name: W32.Netsky.P@mm
+File Attachment: details05_linux.txt                                                                   .exe
+Attachment Status: deleted
+
+--- File name Block information follows ---
+
+File Attachment: M2004062806455113357.mes/details05_linux.txt                                                                   .exe
+Matching file name: *.exe
+
+
 
 
