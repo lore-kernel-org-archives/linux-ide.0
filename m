@@ -1,320 +1,264 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: [patch 8/9] kill ide-default
-Date: Fri, 4 Feb 2005 03:53:32 +0100 (CET)
-Message-ID: <Pine.GSO.4.58.0502040352530.4393@mion.elka.pw.edu.pl>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2.6.11-rc2 26/29] ide: map ide_cmd_ioctl() to ide_taskfile_ioctl()
+Date: Thu, 3 Feb 2005 18:54:05 +0100
+Message-ID: <58cb370e050203095417fed306@mail.gmail.com>
+References: <20050202024017.GA621@htj.dyndns.org>
+	 <20050202031037.GK1187@htj.dyndns.org>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:36278 "EHLO
-	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S263118AbVBDDLd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Feb 2005 22:11:33 -0500
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:58435 "EHLO
-	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
-	id S103870AbVBDCxd (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 1 other); Fri, 4 Feb 2005 03:53:33 +0100
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Received: from zeus.kernel.org ([204.152.189.113]:53980 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S277118AbVBDErs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Feb 2005 23:47:48 -0500
+Received: from wproxy.gmail.com (wproxy.gmail.com [64.233.184.204])
+	by zeus.kernel.org (8.12.11/8.11.6) with ESMTP id j13Htjt4011211
+	for <linux-ide@vger.kernel.org>; Thu, 3 Feb 2005 09:55:50 -0800
+Received: by wproxy.gmail.com with SMTP id 67so312304wri
+        for <linux-ide@vger.kernel.org>; Thu, 03 Feb 2005 09:54:06 -0800 (PST)
+In-Reply-To: <20050202031037.GK1187@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@home-tj.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+On Wed, 2 Feb 2005 12:10:37 +0900, Tejun Heo <tj@home-tj.org> wrote:
+> > 26_ide_taskfile_cmd_ioctl.patch
+> >
+> >       ide_cmd_ioctl() converted to use ide_taskfile_ioctl().  This
+> >       is the last user of REQ_DRIVE_CMD.
 
-* add ide_drives list to list devices without a driver
-* add __ide_add_setting() and use it for adding no auto remove entries
-* kill ide-default pseudo-driver
+ide_cmd_ioctl() needs to map to taskfile transport not ide_taskfile_ioctl()
 
-diff -Nru a/drivers/ide/Makefile b/drivers/ide/Makefile
---- a/drivers/ide/Makefile	2005-02-04 03:32:17 +01:00
-+++ b/drivers/ide/Makefile	2005-02-04 03:32:17 +01:00
-@@ -13,8 +13,7 @@
+> Index: linux-ide-export/drivers/ide/ide-iops.c
+> ===================================================================
+> --- linux-ide-export.orig/drivers/ide/ide-iops.c        2005-02-02 10:28:04.466320918 +0900
+> +++ linux-ide-export/drivers/ide/ide-iops.c     2005-02-02 10:28:07.406843817 +0900
+> @@ -648,11 +648,11 @@ u8 eighty_ninty_three (ide_drive_t *driv
+> 
+>  EXPORT_SYMBOL(eighty_ninty_three);
+> 
+> -int ide_ata66_check (ide_drive_t *drive, ide_task_t *args)
+> +int ide_ata66_check (ide_drive_t *drive, task_ioreg_t *regs)
 
- obj-$(CONFIG_BLK_DEV_IDE)		+= pci/
+nitpick: int ide_ata66_check()
 
--ide-core-y += ide.o ide-default.o ide-io.o ide-iops.o ide-lib.o ide-probe.o \
--	ide-taskfile.o
-+ide-core-y += ide.o ide-io.o ide-iops.o ide-lib.o ide-probe.o ide-taskfile.o
+>  {
+> -       if ((args->tfRegister[IDE_COMMAND_OFFSET] == WIN_SETFEATURES) &&
+> -           (args->tfRegister[IDE_SECTOR_OFFSET] > XFER_UDMA_2) &&
+> -           (args->tfRegister[IDE_FEATURE_OFFSET] == SETFEATURES_XFER)) {
+> +       if ((regs[IDE_COMMAND_OFFSET] == WIN_SETFEATURES) &&
+> +           (regs[IDE_SECTOR_OFFSET] > XFER_UDMA_2) &&
+> +           (regs[IDE_FEATURE_OFFSET] == SETFEATURES_XFER)) {
 
- ide-core-$(CONFIG_BLK_DEV_CMD640)	+= pci/cmd640.o
+nitpick: please drop brackets
 
-diff -Nru a/drivers/ide/ide-default.c b/drivers/ide/ide-default.c
---- a/drivers/ide/ide-default.c	2005-02-04 03:32:17 +01:00
-+++ /dev/null	Wed Dec 31 16:00:00 196900
-@@ -1,76 +0,0 @@
--/*
-- *	ide-default		-	Driver for unbound ide devices
-- *
-- *	This provides a clean way to bind a device to default operations
-- *	by having an actual driver class that rather than special casing
-- *	"no driver" all over the IDE code
-- *
-- *	Copyright (C) 2003, Red Hat <alan@redhat.com>
-- */
--
--#include <linux/config.h>
--#include <linux/module.h>
--#include <linux/types.h>
--#include <linux/string.h>
--#include <linux/kernel.h>
--#include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/interrupt.h>
--#include <linux/major.h>
--#include <linux/errno.h>
--#include <linux/genhd.h>
--#include <linux/slab.h>
--#include <linux/cdrom.h>
--#include <linux/ide.h>
--#include <linux/bitops.h>
--
--#include <asm/byteorder.h>
--#include <asm/irq.h>
--#include <asm/uaccess.h>
--#include <asm/io.h>
--#include <asm/unaligned.h>
--
--#define IDEDEFAULT_VERSION	"0.9.newide"
--/*
-- *	Driver initialization.
-- */
--
--static int idedefault_attach(ide_drive_t *drive);
--
--static ide_startstop_t idedefault_do_request(ide_drive_t *drive, struct request *rq, sector_t block)
--{
--	ide_end_request(drive, 0, 0);
--	return ide_stopped;
--}
--
--/*
-- *	IDE subdriver functions, registered with ide.c
-- */
--
--ide_driver_t idedefault_driver = {
--	.name		=	"ide-default",
--	.version	=	IDEDEFAULT_VERSION,
--	.attach		=	idedefault_attach,
--	.cleanup	=	ide_unregister_subdriver,
--	.do_request	=	idedefault_do_request,
--	.end_request	=	ide_end_request,
--	.error		=	__ide_error,
--	.abort		=	__ide_abort,
--	.drives		=	LIST_HEAD_INIT(idedefault_driver.drives)
--};
--
--static int idedefault_attach (ide_drive_t *drive)
--{
--	if (ide_register_subdriver(drive, &idedefault_driver)) {
--		printk(KERN_ERR "ide-default: %s: Failed to register the "
--			"driver with ide.c\n", drive->name);
--		return 1;
--	}
--
--	return 0;
--}
--
--MODULE_DESCRIPTION("IDE Default Driver");
--
--MODULE_LICENSE("GPL");
-diff -Nru a/drivers/ide/ide-proc.c b/drivers/ide/ide-proc.c
---- a/drivers/ide/ide-proc.c	2005-02-04 03:32:17 +01:00
-+++ b/drivers/ide/ide-proc.c	2005-02-04 03:32:17 +01:00
-@@ -107,8 +107,6 @@
- 	if (drive) {
- 		unsigned short *val = (unsigned short *) page;
+>  #ifndef CONFIG_IDEDMA_IVB
+>                 if ((drive->id->hw_config & 0x6000) == 0) {
+>  #else /* !CONFIG_IDEDMA_IVB */
+> @@ -678,11 +678,11 @@ int ide_ata66_check (ide_drive_t *drive,
+>   * 1 : Safe to update drive->id DMA registers.
+>   * 0 : OOPs not allowed.
+>   */
+> -int set_transfer (ide_drive_t *drive, ide_task_t *args)
+> +int set_transfer (ide_drive_t *drive, task_ioreg_t *regs)
 
--		BUG_ON(!drive->driver);
--
- 		err = taskfile_lib_get_identify(drive, page);
- 		if (!err) {
- 			char *out = ((char *)page) + (SECTOR_WORDS * 4);
-@@ -312,8 +310,11 @@
- 	ide_driver_t	*driver = drive->driver;
- 	int		len;
+nitpick: int set_transfer()
 
--	len = sprintf(page, "%s version %s\n",
--			driver->name, driver->version);
-+	if (driver) {
-+		len = sprintf(page, "%s version %s\n",
-+				driver->name, driver->version);
-+	} else
-+		len = sprintf(page, "ide-default version 0.9.newide\n");
- 	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
- }
+>  {
+> -       if ((args->tfRegister[IDE_COMMAND_OFFSET] == WIN_SETFEATURES) &&
+> -           (args->tfRegister[IDE_SECTOR_OFFSET] >= XFER_SW_DMA_0) &&
+> -           (args->tfRegister[IDE_FEATURE_OFFSET] == SETFEATURES_XFER) &&
+> +       if ((regs[IDE_COMMAND_OFFSET] == WIN_SETFEATURES) &&
+> +           (regs[IDE_SECTOR_OFFSET] >= XFER_SW_DMA_0) &&
+> +           (regs[IDE_FEATURE_OFFSET] == SETFEATURES_XFER) &&
 
-diff -Nru a/drivers/ide/ide.c b/drivers/ide/ide.c
---- a/drivers/ide/ide.c	2005-02-04 03:32:17 +01:00
-+++ b/drivers/ide/ide.c	2005-02-04 03:32:17 +01:00
-@@ -196,7 +196,7 @@
+nitpick: brackets
 
- EXPORT_SYMBOL(ide_hwifs);
+>             (drive->id->dma_ultra ||
+>              drive->id->dma_mword ||
+>              drive->id->dma_1word))
+> Index: linux-ide-export/drivers/ide/ide-taskfile.c
+> ===================================================================
+> --- linux-ide-export.orig/drivers/ide/ide-taskfile.c    2005-02-02 10:28:06.751950074 +0900
+> +++ linux-ide-export/drivers/ide/ide-taskfile.c 2005-02-02 10:28:07.407843655 +0900
+> @@ -704,78 +704,90 @@ abort:
+>         return err;
+>  }
+> 
+> -int ide_wait_cmd (ide_drive_t *drive, u8 cmd, u8 nsect, u8 feature, u8 sectors, u8 *buf)
+> -{
+> -       struct request rq;
+> -       u8 buffer[4];
+> -
+> -       if (!buf)
+> -               buf = buffer;
+> -       memset(buf, 0, 4 + SECTOR_WORDS * 4 * sectors);
+> -       ide_init_drive_cmd(&rq);
+> -       rq.buffer = buf;
+> -       *buf++ = cmd;
+> -       *buf++ = nsect;
+> -       *buf++ = feature;
+> -       *buf++ = sectors;
+> -       return ide_do_drive_cmd(drive, &rq, ide_wait);
+> -}
+> -
+> -/*
+> - * FIXME : this needs to map into at taskfile. <andre@linux-ide.org>
+> - */
+>  int ide_cmd_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
+>  {
+> -       int err = 0;
+> -       u8 args[4], *argbuf = args;
+> +       u8 args[4];
+> +       ide_task_request_t *task_req;
+> +       task_ioreg_t *io_ports;
+>         u8 xfer_rate = 0;
+> -       int argsize = 4;
+> -       ide_task_t tfargs;
+> +       mm_segment_t orig_fs;
+> +       int in_size, ret;
+> 
+> -       if (NULL == (void *) arg) {
+> +       if ((void *)arg == NULL) {
+>                 struct request rq;
+>                 ide_init_drive_cmd(&rq);
+> +               rq.flags = REQ_DRIVE_TASKFILE;
+>                 return ide_do_drive_cmd(drive, &rq, ide_wait);
+>         }
+> 
+>         if (copy_from_user(args, (void __user *)arg, 4))
+>                 return -EFAULT;
+> 
+> -       memset(&tfargs, 0, sizeof(ide_task_t));
+> -       tfargs.tfRegister[IDE_FEATURE_OFFSET] = args[2];
+> -       tfargs.tfRegister[IDE_NSECTOR_OFFSET] = args[3];
+> -       tfargs.tfRegister[IDE_SECTOR_OFFSET]  = args[1];
+> -       tfargs.tfRegister[IDE_LCYL_OFFSET]    = 0x00;
+> -       tfargs.tfRegister[IDE_HCYL_OFFSET]    = 0x00;
+> -       tfargs.tfRegister[IDE_SELECT_OFFSET]  = 0x00;
+> -       tfargs.tfRegister[IDE_COMMAND_OFFSET] = args[0];
+> -
+> -       if (args[3]) {
+> -               argsize = 4 + (SECTOR_WORDS * 4 * args[3]);
+> -               argbuf = kmalloc(argsize, GFP_KERNEL);
+> -               if (argbuf == NULL)
+> -                       return -ENOMEM;
+> -               memcpy(argbuf, args, 4);
+> +       in_size = 4 * SECTOR_WORDS * args[3];
+> +
+> +       task_req = kmalloc(sizeof(*task_req) + in_size, GFP_KERNEL);
+> +       if (task_req == NULL)
+> +               return -ENOMEM;
+> +
+> +       memset(task_req, 0, sizeof(*task_req) + in_size);
+> +
+> +       task_req->out_flags.b.status_command    = 1;
+> +       task_req->out_flags.b.sector            = 1;
+> +       task_req->out_flags.b.error_feature     = 1;
+> +       task_req->out_flags.b.nsector           = 1;
+> +
+> +       task_req->in_flags.b.status_command     = 1;
+> +       task_req->in_flags.b.error_feature      = 1;
+> +       task_req->in_flags.b.nsector            = 1;
+> +
+> +       io_ports = task_req->io_ports;
+> +       io_ports[IDE_COMMAND_OFFSET]            = args[0];
+> +       io_ports[IDE_SECTOR_OFFSET]             = args[1];
+> +       io_ports[IDE_FEATURE_OFFSET]            = args[2];
+> +       io_ports[IDE_NSECTOR_OFFSET]            = args[3];
 
--extern ide_driver_t idedefault_driver;
-+static struct list_head ide_drives = LIST_HEAD_INIT(ide_drives);
+Please handle WIN_SMART hack here (see execute_drive_cmd()),
+your next patch just kills it - it can break legacy applications.
 
- /*
-  * Do not even *think* about calling this!
-@@ -245,7 +245,6 @@
- 		drive->max_failures		= IDE_DEFAULT_MAX_FAILURES;
- 		drive->using_dma		= 0;
- 		drive->is_flash			= 0;
--		drive->driver			= &idedefault_driver;
- 		drive->vdma			= 0;
- 		INIT_LIST_HEAD(&drive->list);
- 		sema_init(&drive->gendev_rel_sem, 0);
-@@ -917,7 +916,7 @@
- DECLARE_MUTEX(ide_setting_sem);
+> +       if (in_size) {
+> +               task_req->req_cmd               = IDE_DRIVE_TASK_IN;
+> +               task_req->data_phase            = TASKFILE_IN;
+> +               task_req->in_size               = in_size;
+> +       } else {
+> +               task_req->req_cmd               = IDE_DRIVE_TASK_NO_DATA;
+> +               task_req->data_phase            = TASKFILE_NO_DATA;
+>         }
+> -       if (set_transfer(drive, &tfargs)) {
+> +
+> +       if (set_transfer(drive, io_ports)) {
+>                 xfer_rate = args[1];
+> -               if (ide_ata66_check(drive, &tfargs))
+> +               if (ide_ata66_check(drive, io_ports)) {
+> +                       ret = -EIO;
+>                         goto abort;
+> +               }
+>         }
+> 
+> -       err = ide_wait_cmd(drive, args[0], args[1], args[2], args[3], argbuf);
+> +       orig_fs = get_fs();
+> +       set_fs(KERNEL_DS);
+> 
+> -       if (!err && xfer_rate) {
+> +       ret = ide_taskfile_ioctl(drive, cmd, (unsigned long)task_req);
+> +
+> +       set_fs(orig_fs);
 
- /**
-- *	ide_add_setting	-	add an ide setting option
-+ *	__ide_add_setting	-	add an ide setting option
-  *	@drive: drive to use
-  *	@name: setting name
-  *	@rw: true if the function is read write
-@@ -930,6 +929,7 @@
-  *	@div_factor: divison scale
-  *	@data: private data field
-  *	@set: setting
-+ *	@auto_remove: setting auto removal flag
-  *
-  *	Removes the setting named from the device if it is present.
-  *	The function takes the settings_lock to protect against
-@@ -941,8 +941,8 @@
-  *	a driver is attached we assume the driver settings are auto
-  *	remove.
-  */
--
--int ide_add_setting (ide_drive_t *drive, const char *name, int rw, int read_ioctl, int write_ioctl, int data_type, int min, int max, int mul_factor, int div_factor, void *data, ide_procset_t *set)
-+
-+static int __ide_add_setting(ide_drive_t *drive, const char *name, int rw, int read_ioctl, int write_ioctl, int data_type, int min, int max, int mul_factor, int div_factor, void *data, ide_procset_t *set, int auto_remove)
- {
- 	ide_settings_t **p = (ide_settings_t **) &drive->settings, *setting = NULL;
+as ide_cmd_ioctl() only handles no-data and PIO-in protocols it should
+be easy to add missing bits here and get rid of calling ide_taskfile_ioctl()
 
-@@ -967,7 +967,7 @@
- 	setting->set = set;
+> +       if (!ret && xfer_rate) {
+>                 /* active-retuning-calls future */
+>                 ide_set_xfer_rate(drive, xfer_rate);
+>                 ide_driveid_update(drive);
+>         }
+> +
+> +       args[0] = io_ports[IDE_STATUS_OFFSET];
+> +       args[1] = io_ports[IDE_ERROR_OFFSET];
+> +       args[2] = io_ports[IDE_NSECTOR_OFFSET];
+> +       args[3] = 0;
+> +
+> +       if (copy_to_user((void __user *)arg, args, 4) ||
+> +           copy_to_user((void __user *)arg + 4,
+> +                        (void *)task_req + sizeof(*task_req), in_size))
+> +               ret = -EFAULT;
+>  abort:
+> -       if (copy_to_user((void __user *)arg, argbuf, argsize))
+> -               err = -EFAULT;
+> -       if (argsize > 4)
+> -               kfree(argbuf);
+> -       return err;
+> +       kfree(task_req);
+> +       return ret;
+>  }
+> 
+>  int ide_task_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
+> Index: linux-ide-export/include/linux/ide.h
+> ===================================================================
+> --- linux-ide-export.orig/include/linux/ide.h   2005-02-02 10:28:06.529986088 +0900
+> +++ linux-ide-export/include/linux/ide.h        2005-02-02 10:28:07.408843493 +0900
+> @@ -1289,14 +1289,6 @@ extern int ide_do_drive_cmd(ide_drive_t
+>   */
+>  extern void ide_end_drive_cmd(ide_drive_t *, u8, u8);
+> 
+> -/*
+> - * Issue ATA command and wait for completion.
+> - * Use for implementing commands in kernel
+> - *
+> - *  (ide_drive_t *drive, u8 cmd, u8 nsect, u8 feature, u8 sectors, u8 *buf)
+> - */
+> -extern int ide_wait_cmd(ide_drive_t *, u8, u8, u8, u8, u8 *);
+> -
+>  extern u32 ide_read_24(ide_drive_t *);
+> 
+>  extern void SELECT_DRIVE(ide_drive_t *);
+> @@ -1334,10 +1326,10 @@ int ide_task_ioctl(ide_drive_t *, unsign
+>  extern int system_bus_clock(void);
+> 
+>  extern int ide_driveid_update(ide_drive_t *);
+> -extern int ide_ata66_check(ide_drive_t *, ide_task_t *);
+> +extern int ide_ata66_check(ide_drive_t *, task_ioreg_t *);
+>  extern int ide_config_drive_speed(ide_drive_t *, u8);
+>  extern u8 eighty_ninty_three (ide_drive_t *);
+> -extern int set_transfer(ide_drive_t *, ide_task_t *);
+> +extern int set_transfer(ide_drive_t *, task_ioreg_t *);
+>  extern int taskfile_lib_get_identify(ide_drive_t *drive, u8 *);
 
- 	setting->next = *p;
--	if (drive->driver != &idedefault_driver)
-+	if (auto_remove)
- 		setting->auto_remove = 1;
- 	*p = setting;
- 	up(&ide_setting_sem);
-@@ -979,6 +979,11 @@
- 	return -1;
- }
+extern-s are not needed
 
-+int ide_add_setting(ide_drive_t *drive, const char *name, int rw, int read_ioctl, int write_ioctl, int data_type, int min, int max, int mul_factor, int div_factor, void *data, ide_procset_t *set)
-+{
-+	return __ide_add_setting(drive, name, rw, read_ioctl, write_ioctl, data_type, min, max, mul_factor, div_factor, data, set, 1);
-+}
-+
- EXPORT_SYMBOL(ide_add_setting);
-
- /**
-@@ -1268,17 +1273,17 @@
- void ide_add_generic_settings (ide_drive_t *drive)
- {
- /*
-- *			drive	setting name		read/write access				read ioctl		write ioctl		data type	min	max				mul_factor	div_factor	data pointer			set function
-+ *			  drive		setting name		read/write access				read ioctl		write ioctl		data type	min	max				mul_factor	div_factor	data pointer			set function
-  */
--	ide_add_setting(drive,	"io_32bit",		drive->no_io_32bit ? SETTING_READ : SETTING_RW,	HDIO_GET_32BIT,		HDIO_SET_32BIT,		TYPE_BYTE,	0,	1 + (SUPPORT_VLB_SYNC << 1),	1,		1,		&drive->io_32bit,		set_io_32bit);
--	ide_add_setting(drive,	"keepsettings",		SETTING_RW,					HDIO_GET_KEEPSETTINGS,	HDIO_SET_KEEPSETTINGS,	TYPE_BYTE,	0,	1,				1,		1,		&drive->keep_settings,		NULL);
--	ide_add_setting(drive,	"nice1",		SETTING_RW,					-1,			-1,			TYPE_BYTE,	0,	1,				1,		1,		&drive->nice1,			NULL);
--	ide_add_setting(drive,	"pio_mode",		SETTING_WRITE,					-1,			HDIO_SET_PIO_MODE,	TYPE_BYTE,	0,	255,				1,		1,		NULL,				set_pio_mode);
--	ide_add_setting(drive,	"unmaskirq",		drive->no_unmask ? SETTING_READ : SETTING_RW,	HDIO_GET_UNMASKINTR,	HDIO_SET_UNMASKINTR,	TYPE_BYTE,	0,	1,				1,		1,		&drive->unmask,			NULL);
--	ide_add_setting(drive,	"using_dma",		SETTING_RW,					HDIO_GET_DMA,		HDIO_SET_DMA,		TYPE_BYTE,	0,	1,				1,		1,		&drive->using_dma,		set_using_dma);
--	ide_add_setting(drive,	"init_speed",		SETTING_RW,					-1,			-1,			TYPE_BYTE,	0,	70,				1,		1,		&drive->init_speed,		NULL);
--	ide_add_setting(drive,	"current_speed",	SETTING_RW,					-1,			-1,			TYPE_BYTE,	0,	70,				1,		1,		&drive->current_speed,		set_xfer_rate);
--	ide_add_setting(drive,	"number",		SETTING_RW,					-1,			-1,			TYPE_BYTE,	0,	3,				1,		1,		&drive->dn,			NULL);
-+	__ide_add_setting(drive,	"io_32bit",		drive->no_io_32bit ? SETTING_READ : SETTING_RW,	HDIO_GET_32BIT,		HDIO_SET_32BIT,		TYPE_BYTE,	0,	1 + (SUPPORT_VLB_SYNC << 1),	1,		1,		&drive->io_32bit,		set_io_32bit,	0);
-+	__ide_add_setting(drive,	"keepsettings",		SETTING_RW,					HDIO_GET_KEEPSETTINGS,	HDIO_SET_KEEPSETTINGS,	TYPE_BYTE,	0,	1,				1,		1,		&drive->keep_settings,		NULL,		0);
-+	__ide_add_setting(drive,	"nice1",		SETTING_RW,					-1,			-1,			TYPE_BYTE,	0,	1,				1,		1,		&drive->nice1,			NULL,		0);
-+	__ide_add_setting(drive,	"pio_mode",		SETTING_WRITE,					-1,			HDIO_SET_PIO_MODE,	TYPE_BYTE,	0,	255,				1,		1,		NULL,				set_pio_mode,	0);
-+	__ide_add_setting(drive,	"unmaskirq",		drive->no_unmask ? SETTING_READ : SETTING_RW,	HDIO_GET_UNMASKINTR,	HDIO_SET_UNMASKINTR,	TYPE_BYTE,	0,	1,				1,		1,		&drive->unmask,			NULL,		0);
-+	__ide_add_setting(drive,	"using_dma",		SETTING_RW,					HDIO_GET_DMA,		HDIO_SET_DMA,		TYPE_BYTE,	0,	1,				1,		1,		&drive->using_dma,		set_using_dma,	0);
-+	__ide_add_setting(drive,	"init_speed",		SETTING_RW,					-1,			-1,			TYPE_BYTE,	0,	70,				1,		1,		&drive->init_speed,		NULL,		0);
-+	__ide_add_setting(drive,	"current_speed",	SETTING_RW,					-1,			-1,			TYPE_BYTE,	0,	70,				1,		1,		&drive->current_speed,		set_xfer_rate,	0);
-+	__ide_add_setting(drive,	"number",		SETTING_RW,					-1,			-1,			TYPE_BYTE,	0,	3,				1,		1,		&drive->dn,			NULL,		0);
- }
-
- /**
-@@ -1316,7 +1321,7 @@
- 	} else {
- 		drive->driver_req[0] = 0;
- 	}
--	if (DRIVER(drive)!= &idedefault_driver && !strcmp(DRIVER(drive)->name, driver))
-+	if (drive->driver && !strcmp(drive->driver->name, driver))
- 		return 0;
- abort:
- 	return 1;
-@@ -1355,9 +1360,9 @@
- 		spin_lock(&drivers_lock);
- 		module_put(driver->owner);
- 	}
--	drive->gendev.driver = &idedefault_driver.gen_driver;
-+	drive->gendev.driver = NULL;
- 	spin_unlock(&drivers_lock);
--	if(idedefault_driver.attach(drive) != 0)
-+	if (ide_register_subdriver(drive, NULL))
- 		panic("ide: default attach failed");
- 	return 1;
- }
-@@ -2007,10 +2012,8 @@
- {
- 	unsigned long flags;
-
--	BUG_ON(!drive->driver);
--
- 	spin_lock_irqsave(&ide_lock, flags);
--	if (!drive->present || drive->driver != &idedefault_driver ||
-+	if (!drive->present || drive->driver != NULL ||
- 	    drive->usage || drive->dead) {
- 		spin_unlock_irqrestore(&ide_lock, flags);
- 		return 1;
-@@ -2018,11 +2021,11 @@
- 	drive->driver = driver;
- 	spin_unlock_irqrestore(&ide_lock, flags);
- 	spin_lock(&drives_lock);
--	list_add_tail(&drive->list, &driver->drives);
-+	list_add_tail(&drive->list, driver ? &driver->drives : &ide_drives);
- 	spin_unlock(&drives_lock);
- //	printk(KERN_INFO "%s: attached %s driver.\n", drive->name, driver->name);
- #ifdef CONFIG_PROC_FS
--	if (drive->driver != &idedefault_driver)
-+	if (driver)
- 		ide_add_proc_entries(drive->proc, driver->proc, drive);
- #endif
- 	return 0;
-@@ -2050,7 +2053,7 @@
-
- 	down(&ide_setting_sem);
- 	spin_lock_irqsave(&ide_lock, flags);
--	if (drive->usage || drive->driver == &idedefault_driver || DRIVER(drive)->busy) {
-+	if (drive->usage || drive->driver == NULL || DRIVER(drive)->busy) {
- 		spin_unlock_irqrestore(&ide_lock, flags);
- 		up(&ide_setting_sem);
- 		return 1;
-@@ -2059,13 +2062,13 @@
- 	ide_remove_proc_entries(drive->proc, DRIVER(drive)->proc);
- #endif
- 	auto_remove_settings(drive);
--	drive->driver = &idedefault_driver;
-+	drive->driver = NULL;
- 	spin_unlock_irqrestore(&ide_lock, flags);
- 	up(&ide_setting_sem);
- 	spin_lock(&drives_lock);
- 	list_del_init(&drive->list);
- 	spin_unlock(&drives_lock);
--	/* drive will be added to &idedefault_driver->drives in ata_attach() */
-+	/* drive will be added to &ide_drives in ata_attach() */
- 	return 0;
- }
-
-@@ -2101,7 +2104,7 @@
-
- 	INIT_LIST_HEAD(&list);
- 	spin_lock(&drives_lock);
--	list_splice_init(&idedefault_driver.drives, &list);
-+	list_splice_init(&ide_drives, &list);
- 	spin_unlock(&drives_lock);
-
- 	list_for_each_safe(list_loop, tmp_storage, &list) {
+>  extern int ide_wait_not_busy(ide_hwif_t *hwif, unsigned long timeout);
