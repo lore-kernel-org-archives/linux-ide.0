@@ -1,114 +1,28 @@
-From: Igor =?iso-8859-2?Q?Lon=E8arevi=E6?= <anubis@IgorLoncarevic.com>
-Subject: kernel BUG at kernel/timer.c:155!
-Date: 24 Feb 2003 23:17:50 +0100
+From: "Alfred E. Heggestad" <linuxedmund@home.no>
+Subject: [PATCH] hdreg.h documentation fix
+Date: 05 Mar 2003 12:19:30 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1046125070.847.6.camel@anubis.bl.gozostudios.com>
+Message-ID: <1046863170.17509.3.camel@tellus>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: axboe@suse.de
+To: linux ide <linux-ide@vger.kernel.org>
+Cc: linux kernel <linux-kernel@vger.kernel.org>
 
-Hi,
+--- linux-2.5.63_orig/include/linux/hdreg.h	2003-02-24 20:05:31.000000000 +0100
++++ linux-2.5.63/include/linux/hdreg.h	2003-03-05 00:26:59.000000000 +0100
+@@ -466,8 +466,8 @@
+ /*
+  * Structure returned by HDIO_GET_IDENTITY, as per ANSI NCITS ATA6 rev.1b spec.
+  *
+- * If you change something here, please remember to update fix_driveid() in
+- * ide/probe.c.
++ * If you change something here, please remember to update ide_fix_driveid() in
++ * ide/ide-iops.c.
+  */
+ struct hd_driveid {
+ 	unsigned short	config;		/* lots of obsolete bit flags */
 
-Kernel: all 2.5.x, including latest (2.5.63)
-Bug: cannot use CD Writer on development kernels
-
-Part of dmesg:
-
-scsi0 : SCSI host adapter emulation for IDE ATAPI devices
-  Vendor: TEAC      Model: CD-W524E          Rev: 1.0A
-  Type:   CD-ROM                             ANSI SCSI revision: 02
-sr0: scsi3-mmc drive: 40x/40x writer cd/rw xa/form2 cdda tray
-Uniform CD-ROM driver Revision: 3.12
-Attached scsi CD-ROM sr0 at scsi0, channel 0, id 0, lun 0
-
-
-When trying to access CD Writer I have:
-
-
-hdd: lost interrupt
-hdd: status error: status=0x20 { DeviceFault }
-ide-scsi: Strange, packet command initiated yet DRQ isn't asserted
-hdd: ATAPI reset complete
-ide-scsi: abort called for 0
-bad: scheduling while atomic!
-Call Trace: [<c0115643>]  [<c0108136>]  [<c01156b0>]  [<c010834c>] 
-[<c0213dca>]  [<c0213400>]  [<c0219499>]  [<c021298f>]  [<c02127e0>] 
-[<c02127c0>]  [<c0212ab5>]  [<c0212c14>]  [<c0213916>]  [<c0213a14>] 
-[<c0213960>]  [<c0107129>]
-bad: scheduling while atomic!
-Call Trace: [<c0115643>]  [<c0108136>]  [<c01156b0>]  [<c010834c>] 
-[<c0213dca>]  [<c0213400>]  [<c0219499>]  [<c021298f>]  [<c02127e0>] 
-[<c02127c0>]  [<c0212ab5>]  [<c0212c14>]  [<c0213916>]  [<c0213a14>] 
-[<c0213960>]  [<c0107129>]
-bad: scheduling while atomic!
-Call Trace: [<c0115643>]  [<c0108136>]  [<c01156b0>]  [<c010834c>] 
-[<c0213dca>]  [<c0213400>]  [<c0219499>]  [<c021298f>]  [<c02127e0>] 
-[<c02127c0>]  [<c0212ab5>]  [<c0212c14>]  [<c0213916>]  [<c0213a14>] 
-[<c0213960>]  [<c0107129>]
-bad: scheduling while atomic!
-Call Trace: [<c0115643>]  [<c0108136>]  [<c01156b0>]  [<c010834c>] 
-[<c0213dca>]  [<c0213400>]  [<c0219499>]  [<c021298f>]  [<c02127e0>] 
-[<c02127c0>]  [<c0212ab5>]  [<c0212c14>]  [<c0213916>]  [<c0213a14>] 
-[<c0213960>]  [<c0107129>]
-bad: scheduling while atomic!
-Call Trace: [<c0115643>]  [<c0108136>]  [<c01156b0>]  [<c010834c>] 
-[<c0213dca>]  [<c0213400>]  [<c0219499>]  [<c021298f>]  [<c02127e0>] 
-[<c02127c0>]  [<c0212ab5>]  [<c0212c14>]  [<c0213916>]  [<c0213a14>] 
-[<c0213960>]  [<c0107129>]
-bad: scheduling while atomic!
-Call Trace: [<c0115643>]  [<c0108136>]  [<c01156b0>]  [<c010834c>] 
-[<c0213dca>]  [<c0213400>]  [<c0219499>]  [<c021298f>]  [<c02127e0>] 
-[<c02127c0>]  [<c0212ab5>]  [<c0212c14>]  [<c0213916>]  [<c0213a14>] 
-[<c0213960>]  [<c0107129>]
-bad: scheduling while atomic!
-Call Trace: [<c0115643>]  [<c0108136>]  [<c01156b0>]  [<c010834c>] 
-[<c0213dca>]  [<c0213400>]  [<c0219499>]  [<c021298f>]  [<c02127e0>] 
-[<c02127c0>]  [<c0212ab5>]  [<c0212c14>]  [<c0213916>]  [<c0213a14>] 
-[<c0213960>]  [<c0107129>]
-bad: scheduling while atomic!
-Call Trace: [<c0115643>]  [<c0108136>]  [<c01156b0>]  [<c010834c>] 
-[<c0213dca>]  [<c0213400>]  [<c0219499>]  [<c021298f>]  [<c02127e0>] 
-[<c02127c0>]  [<c0212ab5>]  [<c0212c14>]  [<c0213916>]  [<c0213a14>] 
-[<c0213960>]  [<c0107129>]
-ide-scsi: reset called for 0
-bad: scheduling while atomic!
-Call Trace: [<c0115643>]  [<c0120b9f>]  [<c011960d>]  [<c0120b30>] 
-[<c0218600>]  [<c02195b1>]  [<c02194b0>]  [<c0212ed2>]  [<c0212f76>] 
-[<c02137cb>]  [<c0213956>]  [<c0213a14>]  [<c0213960>]  [<c0107129>]  
-------------[ cut here ]------------
-kernel BUG at kernel/timer.c:155!
-invalid operand: 0000
-CPU:    0
-EIP:    0060:[<c0120183>]    Not tainted
-EFLAGS: 00010002
-eax: 00000001   ebx: dfe2ed80   ecx: c02cd3e0   edx: c0358b08
-esi: dfd24000   edi: dfe2eda4   ebp: c01fb600   esp: dfd25ea0
-ds: 007b   es: 007b   ss: 0068
-Process scsi_eh_0 (pid: 8, threadinfo=dfd24000 task=dfdcac80)
-Stack: c011960d 0000000a dfe2ed80 dfd24000 00000096 c01fb4fe dfe2eda4
-c0107129
-       00026264 c010983f 00000000 00000032 00000000 c0358b08 c0358b08
-00000000
-       c01fbbed c0358b08 c01fb600 00000032 00000000 dfe2ed80 00000086
-00000000
-Call Trace: [<c011960d>]  [<c01fb4fe>]  [<c0107129>]  [<c010983f>] 
-[<c01fbbed>]  [<c01fb600>]  [<c01fbc42>]  [<c021958a>]  [<c02194b0>] 
-[<c0212ed2>]  [<c0212f76>]  [<c02137cb>]  [<c0213956>]  [<c0213a14>] 
-[<c0213960>]  [<c0107129>]
-Code: 0f 0b 9b 00 78 18 2a c0 eb 90 90 89 f6 83 ec 14 31 c0 89 7c
- <6>note: scsi_eh_0[8] exited with preempt_count 3
-hdd: ATAPI reset complete
-
-
-
-
-Regards,
-Igor
-
-
-Is knowledge knowable? If not, how do we know that?
 
