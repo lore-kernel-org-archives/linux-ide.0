@@ -1,28 +1,30 @@
-From: John Yau <jyau.linux@gmail.com>
-Subject: Silicon Image Bios Detection
-Date: Thu, 17 Mar 2005 00:24:35 -0500
-Message-ID: <111a57ba05031621245bb44626@mail.gmail.com>
-Reply-To: John Yau <jyau.linux@gmail.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: hdparm -S  with SATA drives.
+Date: Thu, 17 Mar 2005 09:18:00 -0500
+Message-ID: <20050317141759.GB10371@tuxdriver.com>
+References: <4238BDD0.6020400@superbug.demon.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.207]:40237 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261834AbVCQFYg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Mar 2005 00:24:36 -0500
-Received: by wproxy.gmail.com with SMTP id 37so144050wra
-        for <linux-ide@vger.kernel.org>; Wed, 16 Mar 2005 21:24:35 -0800 (PST)
+Content-Type: text/plain; charset=us-ascii
+Received: from ra.tuxdriver.com ([24.172.12.4]:59918 "EHLO ra.tuxdriver.com")
+	by vger.kernel.org with ESMTP id S261922AbVCQOSK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Mar 2005 09:18:10 -0500
+Content-Disposition: inline
+In-Reply-To: <4238BDD0.6020400@superbug.demon.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: James Courtier-Dutton <James@superbug.demon.co.uk>
+Cc: linux-ide@vger.kernel.org
 
-Hi all,
+On Wed, Mar 16, 2005 at 11:14:24PM +0000, James Courtier-Dutton wrote:
+> Can one use the following command with libata yet?
+> 
+> hdparm -S 240 /dev/sda
 
-Recently via a RAID bios upgrade to 4.3.53 I got my Seagate drive to
-play nicely with my Silicon Image 3512 chip with the black list in
-sata_sil.c disabled.  I was looking into producing a patch for
-sata_sil.c that detected the bios version number and applied the MOD15
-write work around selectively.  Anyone have any leads on how I can get
-the version number of the Silicon Image RAID bios?
+I haven't tried it, but it MIGHT work w/ the libata-dev-2.6 kernel.
 
+YMMV... :-)
 
-John Yau
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
