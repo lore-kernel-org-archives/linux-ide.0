@@ -1,17 +1,17 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: Re: [patch ide-dev 4/9] add ide_task_init_flush() helper
-Date: Sun, 27 Feb 2005 17:23:02 +0100
-Message-ID: <200502271723.02313.bzolnier@elka.pw.edu.pl>
-References: <Pine.GSO.4.58.0502241540250.13534@mion.elka.pw.edu.pl> <20050227045637.GC25723@htj.dyndns.org>
+Subject: Re: [patch ide-dev 8/9] make ide_task_ioctl() use REQ_DRIVE_TASKFILE
+Date: Sun, 27 Feb 2005 17:31:29 +0100
+Message-ID: <200502271731.29448.bzolnier@elka.pw.edu.pl>
+References: <Pine.GSO.4.58.0502241547400.13534@mion.elka.pw.edu.pl> <20050227073608.GA30796@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:56462 "EHLO
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:57230 "EHLO
 	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S261591AbVB1Nd4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Feb 2005 08:33:56 -0500
-In-Reply-To: <20050227045637.GC25723@htj.dyndns.org>
+	id S261595AbVB1NeA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Feb 2005 08:34:00 -0500
+In-Reply-To: <20050227073608.GA30796@htj.dyndns.org>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -19,14 +19,24 @@ To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Hi,
-
-On Sunday 27 February 2005 05:56, Tejun Heo wrote:
->  Hello,
+On Sunday 27 February 2005 08:36, Tejun Heo wrote:
+>  Hello, Bartlomiej.
 > 
->  Just one minor thing.  Doesn't moving ide_task_s upward belong to
-> patch #7?
+>  This patch should be modified to use flagged taskfile if the
+> task_end_request_fix patch isn't applied.  As non-flagged taskfile
+> won't return valid result registers, TASK ioctl users won't get the
+> correct register output.
 
-It is needed for ide_task_init_flush() prototype.
+Nope, it works just fine because REQ_DRIVE_TASK used only
+no-data protocol, please check task_no_data_intr().
 
-> > +void ide_task_init_flush(ide_drive_t *, ide_task_t *);
+>  IMHO, this flag-to-get-result-registers thing is way too subtle.  How
+> about keeping old behavior by just not copying out register outputs in
+> ide_taskfile_ioctl() in applicable cases instead of not reading
+> registers when ending commands?  That is, unless there's some
+> noticeable performance impacts I'm not aware of.
+
+This would miss whole point of not _reading_ these registers (IO is slow).
+IMHO new flags denoting {in,out} registers should be added (to <linux/ata.h>
+to share them with libata) so new code can be sane and old flags would map
+on new flags when needed.
