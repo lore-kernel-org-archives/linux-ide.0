@@ -1,244 +1,149 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: Re: PATCH: allow ide-generic users to ask it to capture unknown devices
-Date: Fri, 5 Nov 2004 22:56:27 +0100
-Message-ID: <200411052256.27303.bzolnier@elka.pw.edu.pl>
-References: <1099671737.5556.32.camel@localhost.localdomain>
+Subject: Re: PATCH: Basics of per controller fixup
+Date: Fri, 5 Nov 2004 23:00:17 +0100
+Message-ID: <200411052300.17155.bzolnier@elka.pw.edu.pl>
+References: <1099672171.5630.42.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:17613 "EHLO
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:35021 "EHLO
 	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S261213AbUKEVxe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 5 Nov 2004 16:53:34 -0500
-Received: from hadron.elka.pw.edu.pl ([194.29.160.13]:40535 "EHLO localhost")
-	by higgs.elka.pw.edu.pl with ESMTP id S54071AbUKEVx1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Nov 2004 22:53:27 +0100
-Received: from chello062179088136.chello.pl ([62.179.88.136]:63335 "EHLO
+	id S261180AbUKEV5i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 Nov 2004 16:57:38 -0500
+Received: from hadron.elka.pw.edu.pl ([194.29.160.13]:40582 "EHLO localhost")
+	by higgs.elka.pw.edu.pl with ESMTP id S52975AbUKEV5h (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Nov 2004 22:57:37 +0100
+Received: from chello062179088136.chello.pl ([62.179.88.136]:63365 "EHLO
 	[192.168.123.164]" ident: "NO-IDENT-SERVICE[2]" smtp-auth: "bzolnier"
 	TLS-CIPHER: <none> TLS-PEER-CN1: <none>) by mion.elka.pw.edu.pl
-	with ESMTP id S100730AbUKEVvz (ORCPT
+	with ESMTP id S60274AbUKEVzp (ORCPT
 	<rfc822;linux-ide@vger.kernel.org> + 1 other);
-	Fri, 5 Nov 2004 22:51:55 +0100
-In-Reply-To: <1099671737.5556.32.camel@localhost.localdomain>
+	Fri, 5 Nov 2004 22:55:45 +0100
+In-Reply-To: <1099672171.5630.42.camel@localhost.localdomain>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-ide@vger.kernel.org
 
+On Friday 05 November 2004 17:29, Alan Cox wrote:
+> We add probe_hwif_init_with_fixup (seperate naming as requested by
+> Bartlomiej). This runs a fixup on present interfaces before attaching
+> the drives. The existing API is maintained as a call to the new API.
+> 
+> The sometimes troublesome undecoded slave detector is moved to its own
+> function and exported so that ide-cs and the upcoming delkin_cb can both
+> use it (along with any arch specific cf/pcmcia drivers I don't know
+> about).
 
-ide-generic is drivers/ide/ide-generic
-please don't use this name wrt to pci/generic.c
+* does delkin_cb need it?
+* shouldn't this fixup be applied for CF devices?
+* arch specific drivers shouldn't need this fixup
+  (they can claim no slave decoding to IDE layer)
 
-On Friday 05 November 2004 17:22, Alan Cox wrote:
-> Most of this patch is neccessary noise to make the generic entry "id 0" so
-> that the code is clean and won't need touching each time an identifier is
-> aded.
+> The non-relevant checks for this scenario (M00000 and ITE RAID) are
+> removed.
 
-Why can't generic entry be just added at id 14 in generic_chipsets table?
+* this of course doesn't apply to -bk (not a problem though)
+* also ITE RAID check is not present in vanilla tree and this patch
 
-What is the exact purpose of this patch?
-
-AFAICS this option allows users to use generic code for unknown/unsupported
-devices which can result in unpredictable results (hangs, data corruptions).
-
-[ I don't want any bugreports from users of this option. ]
-
-> diff --exclude-from /usr/src/exclude -u --new-file --recursive linux.vanilla-2.6.10rc1/drivers/ide/pci/generic.c linux-2.6.10rc1/drivers/ide/pci/generic.c
-> --- linux.vanilla-2.6.10rc1/drivers/ide/pci/generic.c	2004-11-05 15:34:47.000000000 +0000
-> +++ linux-2.6.10rc1/drivers/ide/pci/generic.c	2004-11-05 16:08:02.000000000 +0000
-> @@ -41,6 +41,17 @@
->  
->  #include "generic.h"
->  
-> +static int ide_generic_all;		/* Set to claim all devices */
-> +
-> +static int __init ide_generic_all_on(char *unused)
-> +{
-> +	ide_generic_all = 1;
-> +	printk(KERN_INFO "IDE generic will claim all unknown PCI IDE storage controllers.\n");
-> +	return 1;
-> +}
-> +
-> +__setup("all-generic-ide", ide_generic_all_on);
-> +
->  static unsigned int __init init_chipset_generic (struct pci_dev *dev, const char *name)
->  {
->  	return 0;
-> @@ -96,6 +107,11 @@
->  {
->  	ide_pci_device_t *d = &generic_chipsets[id->driver_data];
->  	u16 command;
-> +	
-> +	/* Don't use the generic entry unless instructed to do so */
-> +	if (id->driver_data == 0)
-> +		if(ide_generic_all == 0)
-> +			return 1;
->  
->  	if (dev->vendor == PCI_VENDOR_ID_UMC &&
->  	    dev->device == PCI_DEVICE_ID_UMC_UM8886A &&
-> @@ -108,8 +124,7 @@
->  		return 1;
->  
->  	pci_read_config_word(dev, PCI_COMMAND, &command);
-> -	if(!(command & PCI_COMMAND_IO))
-> -	{
-> +	if(!(command & PCI_COMMAND_IO)) {
->  		printk(KERN_INFO "Skipping disabled %s IDE controller.\n", d->name);
->  		return 1; 
->  	}
-> @@ -118,21 +133,23 @@
+> diff --exclude-from /usr/src/exclude -u --new-file --recursive linux.vanilla-2.6.10rc1/drivers/ide/ide-probe.c linux-2.6.10rc1/drivers/ide/ide-probe.c
+> --- linux.vanilla-2.6.10rc1/drivers/ide/ide-probe.c	2004-11-05 15:42:15.000000000 +0000
+> +++ linux-2.6.10rc1/drivers/ide/ide-probe.c	2004-11-05 16:26:39.000000000 +0000
+> @@ -652,6 +652,39 @@
+>  	return rc;
 >  }
 >  
->  static struct pci_device_id generic_pci_tbl[] = {
-> -	{ PCI_VENDOR_ID_NS,     PCI_DEVICE_ID_NS_87410,            PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-> -	{ PCI_VENDOR_ID_PCTECH, PCI_DEVICE_ID_PCTECH_SAMURAI_IDE,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
-> -	{ PCI_VENDOR_ID_HOLTEK, PCI_DEVICE_ID_HOLTEK_6565,         PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
-> -	{ PCI_VENDOR_ID_UMC,    PCI_DEVICE_ID_UMC_UM8673F,         PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3},
-> -	{ PCI_VENDOR_ID_UMC,    PCI_DEVICE_ID_UMC_UM8886A,         PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4},
-> -	{ PCI_VENDOR_ID_UMC,    PCI_DEVICE_ID_UMC_UM8886BF,        PCI_ANY_ID, PCI_ANY_ID, 0, 0, 5},
-> -	{ PCI_VENDOR_ID_HINT,   PCI_DEVICE_ID_HINT_VXPROII_IDE,    PCI_ANY_ID, PCI_ANY_ID, 0, 0, 6},
-> -	{ PCI_VENDOR_ID_VIA,    PCI_DEVICE_ID_VIA_82C561,          PCI_ANY_ID, PCI_ANY_ID, 0, 0, 7},
-> -	{ PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558,         PCI_ANY_ID, PCI_ANY_ID, 0, 0, 8},
-> +	{ PCI_VENDOR_ID_NS,     PCI_DEVICE_ID_NS_87410,            PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
-> +	{ PCI_VENDOR_ID_PCTECH, PCI_DEVICE_ID_PCTECH_SAMURAI_IDE,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
-> +	{ PCI_VENDOR_ID_HOLTEK, PCI_DEVICE_ID_HOLTEK_6565,         PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3},
-> +	{ PCI_VENDOR_ID_UMC,    PCI_DEVICE_ID_UMC_UM8673F,         PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4},
-> +	{ PCI_VENDOR_ID_UMC,    PCI_DEVICE_ID_UMC_UM8886A,         PCI_ANY_ID, PCI_ANY_ID, 0, 0, 5},
-> +	{ PCI_VENDOR_ID_UMC,    PCI_DEVICE_ID_UMC_UM8886BF,        PCI_ANY_ID, PCI_ANY_ID, 0, 0, 6},
-> +	{ PCI_VENDOR_ID_HINT,   PCI_DEVICE_ID_HINT_VXPROII_IDE,    PCI_ANY_ID, PCI_ANY_ID, 0, 0, 7},
-> +	{ PCI_VENDOR_ID_VIA,    PCI_DEVICE_ID_VIA_82C561,          PCI_ANY_ID, PCI_ANY_ID, 0, 0, 8},
-> +	{ PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558,         PCI_ANY_ID, PCI_ANY_ID, 0, 0, 9},
->  #ifdef CONFIG_BLK_DEV_IDE_SATA
-> -	{ PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8237_SATA,	   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 9},
-> +	{ PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8237_SATA,	   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 10},
->  #endif
-> -	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO,     PCI_ANY_ID, PCI_ANY_ID, 0, 0, 10},
-> -	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 11},
-> -	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 12},
-> +	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO,     PCI_ANY_ID, PCI_ANY_ID, 0, 0, 11},
-> +	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 12},
-> +	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 13},
-> +	/* Must come last. If you add entries adjust this table appropriately and the init_one code */
-> +	{ PCI_ANY_ID,		PCI_ANY_ID,			   PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL, 0},
->  	{ 0, },
->  };
->  MODULE_DEVICE_TABLE(pci, generic_pci_tbl);
-> diff --exclude-from /usr/src/exclude -u --new-file --recursive linux.vanilla-2.6.10rc1/drivers/ide/pci/generic.h linux-2.6.10rc1/drivers/ide/pci/generic.h
-> --- linux.vanilla-2.6.10rc1/drivers/ide/pci/generic.h	2004-11-05 15:34:47.000000000 +0000
-> +++ linux-2.6.10rc1/drivers/ide/pci/generic.h	2004-11-05 16:08:02.000000000 +0000
-> @@ -10,6 +10,13 @@
+> +/**
+> + *	ide_undecoded_slave	-	look for bad CF adapters
+> + *	@hwif: interface
+> + *
+> + *	Analyse the drives on the interface and attempt to decide if we
+> + *	have the same drive viewed twice. This occurs with crap CF adapters
+> + *	and PCMCIA sometimes.
+> + */
+> +
+> +void ide_undecoded_slave(ide_hwif_t *hwif) 
+> +{
+> +	ide_drive_t *drive0 = &hwif->drives[0];
+> +	ide_drive_t *drive1 = &hwif->drives[1];
+> +	
+> +	if (drive0->present == 0 || drive1->present == 0)
+> +			return;
+> +		
+> +	/* If the models don't match they are not the same product */	
+> +	if (strcmp(drive0->id->model, drive1->id->model))
+> +		return;
+> +	/* Serial numbers do not match */
+> +	if(strncmp(drive0->id->serial_no, drive1->id->serial_no, 20))
+> +		return;
+> +	/* No serial number, thankfully very rare for CF */
+> +	if (drive0->id->serial_no[0] == 0)
+> +		return;
+> +	/* Appears to be an IDE flash adapter with decode bugs */
+> +	printk(KERN_WARNING "ide-probe: ignoring undecoded slave\n");
+> +	drive1->present = 0;
+> +}
+> +
+> +EXPORT_SYMBOL(ide_undecoded_slave);
+> +
+>  /*
+>   * This routine only knows how to look for drive units 0 and 1
+>   * on an interface, so any setting of MAX_DRIVES > 2 won't work here.
+> @@ -723,18 +756,6 @@
+>  		ide_drive_t *drive = &hwif->drives[unit];
+>  		drive->dn = (hwif->channel ? 2 : 0) + unit;
+>  		(void) probe_for_drive(drive);
+> -		if (drive->present && hwif->present && unit == 1) {
+> -			if (strcmp(hwif->drives[0].id->model, drive->id->model) == 0 &&
+> -			    /* Don't do this for noprobe or non ATA */
+> -			    strcmp(drive->id->model, "UNKNOWN") &&
+> -			    /* And beware of confused Maxtor drives that go "M0000000000"
+> -			      "The SN# is garbage in the ID block..." [Eric] */
+> -			    strncmp(drive->id->serial_no, "M0000000000000000000", 20) &&
+> -			    strncmp(hwif->drives[0].id->serial_no, drive->id->serial_no, 20) == 0) {
+> -				printk(KERN_WARNING "ide-probe: ignoring undecoded slave\n");
+> -				drive->present = 0;
+> -			}
+> -		}
+>  		if (drive->present && !hwif->present) {
+>  			hwif->present = 1;
+>  			if (hwif->chipset != ide_4drives ||
+> @@ -808,13 +829,18 @@
+>  }
 >  
->  static ide_pci_device_t generic_chipsets[] __devinitdata = {
->  	{	/* 0 */
-> +		.name		= "Unknown",
-> +		.init_chipset	= init_chipset_generic,
-> +		.init_hwif	= init_hwif_generic,
-> +		.channels	= 2,
-> +		.autodma	= AUTODMA,
-> +		.bootable	= ON_BOARD,
-> +	},{	/* 1 */
->  		.name		= "NS87410",
->  		.init_chipset	= init_chipset_generic,
->  		.init_hwif	= init_hwif_generic,
-> @@ -17,84 +24,84 @@
->  		.autodma	= AUTODMA,
->  		.enablebits	= {{0x43,0x08,0x08}, {0x47,0x08,0x08}},
->  		.bootable	= ON_BOARD,
-> -        },{	/* 1 */
-> +        },{	/* 2 */
->  		.name		= "SAMURAI",
->  		.init_chipset	= init_chipset_generic,
->  		.init_hwif	= init_hwif_generic,
->  		.channels	= 2,
->  		.autodma	= AUTODMA,
->  		.bootable	= ON_BOARD,
-> -	},{	/* 2 */
-> +	},{	/* 3 */
->  		.name		= "HT6565",
->  		.init_chipset	= init_chipset_generic,
->  		.init_hwif	= init_hwif_generic,
->  		.channels	= 2,
->  		.autodma	= AUTODMA,
->  		.bootable	= ON_BOARD,
-> -	},{	/* 3 */
-> +	},{	/* 4 */
->  		.name		= "UM8673F",
->  		.init_chipset	= init_chipset_generic,
->  		.init_hwif	= init_hwif_generic,
->  		.channels	= 2,
->  		.autodma	= NODMA,
->  		.bootable	= ON_BOARD,
-> -	},{	/* 4 */
-> +	},{	/* 5 */
->  		.name		= "UM8886A",
->  		.init_chipset	= init_chipset_generic,
->  		.init_hwif	= init_hwif_generic,
->  		.channels	= 2,
->  		.autodma	= NODMA,
->  		.bootable	= ON_BOARD,
-> -	},{	/* 5 */
-> +	},{	/* 6 */
->  		.name		= "UM8886BF",
->  		.init_chipset	= init_chipset_generic,
->  		.init_hwif	= init_hwif_generic,
->  		.channels	= 2,
->  		.autodma	= NODMA,
->  		.bootable	= ON_BOARD,
-> -	},{	/* 6 */
-> +	},{	/* 7 */
->  		.name		= "HINT_IDE",
->  		.init_chipset	= init_chipset_generic,
->  		.init_hwif	= init_hwif_generic,
->  		.channels	= 2,
->  		.autodma	= AUTODMA,
->  		.bootable	= ON_BOARD,
-> -	},{	/* 7 */
-> +	},{	/* 8 */
->  		.name		= "VIA_IDE",
->  		.init_chipset	= init_chipset_generic,
->  		.init_hwif	= init_hwif_generic,
->  		.channels	= 2,
->  		.autodma	= NOAUTODMA,
->  		.bootable	= ON_BOARD,
-> -	},{	/* 8 */
-> +	},{	/* 9 */
->  		.name		= "OPTI621V",
->  		.init_chipset	= init_chipset_generic,
->  		.init_hwif	= init_hwif_generic,
->  		.channels	= 2,
->  		.autodma	= NOAUTODMA,
->  		.bootable	= ON_BOARD,
-> -	},{	/* 9 */
-> +	},{	/* 10 */
->  		.name		= "VIA8237SATA",
->  		.init_chipset	= init_chipset_generic,
->  		.init_hwif	= init_hwif_generic,
->  		.channels	= 2,
->  		.autodma	= AUTODMA,
->  		.bootable	= OFF_BOARD,
-> -	},{ /* 10 */
-> +	},{	/* 11 */
->  		.name 		= "Piccolo0102",
->  		.init_chipset	= init_chipset_generic,
->  		.init_hwif	= init_hwif_generic,
->  		.channels	= 2,
->  		.autodma	= NOAUTODMA,
->  		.bootable	= ON_BOARD,
-> -	},{ /* 11 */
-> +	},{	/* 12 */
->  		.name 		= "Piccolo0103",
->  		.init_chipset	= init_chipset_generic,
->  		.init_hwif	= init_hwif_generic,
->  		.channels	= 2,
->  		.autodma	= NOAUTODMA,
->  		.bootable	= ON_BOARD,
-> -	},{ /* 12 */
-> +	},{	/* 13 */
->  		.name 		= "Piccolo0105",
->  		.init_chipset	= init_chipset_generic,
->  		.init_hwif	= init_hwif_generic,
+>  static int hwif_init(ide_hwif_t *hwif);
+> -int probe_hwif_init (ide_hwif_t *hwif)
+> +
+> +int probe_hwif_init_with_fixup(ide_hwif_t *hwif, void (*fixup)(ide_hwif_t *hwif))
+>  {
+>  	probe_hwif(hwif);
+>  	hwif_init(hwif);
+>  
+>  	if (hwif->present) {
+>  		u16 unit = 0;
+> +
+> +		if(fixup != NULL)
+> +			fixup(hwif);
+> +			
+>  		for (unit = 0; unit < MAX_DRIVES; ++unit) {
+>  			ide_drive_t *drive = &hwif->drives[unit];
+>  			/* For now don't attach absent drives, we may
+> @@ -828,6 +854,13 @@
+>  	return 0;
+>  }
+>  
+> +EXPORT_SYMBOL(probe_hwif_init_with_fixup);
+> +
+> +int probe_hwif_init(ide_hwif_t *hwif)
+> +{
+> +	return probe_hwif_init_with_fixup(hwif, NULL);
+> +}
+> +
+>  EXPORT_SYMBOL(probe_hwif_init);
+>  
+>  #if MAX_HWIFS > 1
 > 
 > 
