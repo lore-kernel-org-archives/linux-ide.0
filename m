@@ -1,90 +1,67 @@
-From: "Martin Peschke3" <MPESCHKE@de.ibm.com>
-Subject: Re: ide-scsi data transfer residuals
-Date: Mon, 8 Jul 2002 18:17:26 +0200
+From: Jens Axboe <axboe@suse.de>
+Subject: [PATCH] 2.4 IDE core for 2.5
+Date: Tue, 9 Jul 2002 12:22:49 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <agce18$2v6$2@main.gmane.org>
+Message-ID: <20020709102249.GA20870@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: tonyb@cybernetics.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-
+To: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
 Hi,
 
-unfortunately the residual count is not used by high level
-SCSI drivers like sd and sr to recover partial data transfers,
-as far as I can see. That's dangerous.
+I've forward ported the 2.4 IDE core (well 2.4.19-pre10-ac2 to be exact)
+to 2.5.25. It consists of 7 separate patches:
 
-Mit freundlichen Gr=FC=DFen / with kind regards
+00_25ide-compile-1
+	Fix 2.5 IDE compilation problem with ide_fix_driveid()
 
-Martin Peschke
+05_25pci-ids-1
+	Add missing 2.4 IDE adapter pci ids
 
-IBM Deutschland Entwicklung GmbH
-Linux for eServer Development
-Phone: +49-(0)7031-16-2349
+10_24ide-core-1
+	Add 2.4 IDE core, modified for 2.5 changes
 
+15_24-misc-bits-1
+	various bits and pieces to make 2.4 IDE core work
 
-Douglas Gilbert <dougg@torque.net>@vger.kernel.org on 07/06/2002 04:10:=
-01
-AM
+20_split-ide-config-1
+	Split 2.4 and 2.5 IDE configuration
 
-Please respond to Douglas Gilbert <dougg@torque.net>
+25_ide-build-1
+	allow 2.4 and 2.5 ide to be built
 
-Sent by:    linux-scsi-owner@vger.kernel.org
+30_ide-scsi-1
+	Add 2.4 ide-scsi version (note that 2.5 with 2.4 ide calls it
+	ide-scsi24.o currently, I'll take patches to rectify that).
 
+Find them all here:
 
-To:    tonyb@cybernetics.com
-cc:    linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-Subject:    Re: ide-scsi data transfer residuals
+*.kernel.org://pub/linux/kernel/people/axboe/patches/v2.5/2.5.25/
 
+So why did I do this? Well, I needed stable IDE for 2.5 testing and it
+was/is clear that 2.5 just isn't quite there yet. I intend to maintain
+this patch set until I deem 2.5 IDE stable enough (in code) that I'm
+willing to spend time on that instead. So the life span of this patch
+depends heavily on that. That said, I know of others who would like to
+be able to test 2.5 and not having to worry too much about the
+state-of-the-day of the IDE core. This patch set may be useful to them
+as well.
 
+Also some notes on why I _didn't_ do this. I didn't do it because I
+think Martin is a jerk or because 2.5 IDE is forever doomed. I didn't do
+this because Andre twisted my arm. I didn't do this because of some
+hidden agenda.
 
-Tony Battersby wrote:
->
-> Hello,
->
-> I am using the scsi-generic and ide-scsi drivers together for low-lev=
-el
-> access to an IDE tape drive (vanilla 2.4.17).  I noticed that the dat=
-a
-> transfer residual in sg_io_hdr_t { int resid; } is always zero.  I as=
-sume
-> that the residual calculation is just a missing feature from the ide-=
-scsi
-> driver.  Does anyone know how hard it is to add it?
+That said, the patch works for me here. I've ripped out ide-tape and
+ide-floppy (frankly, I don't think it's worth my time updating these),
+but apart from that I think it's 2.4 feature complete. PIO multi count
+breaks for multi page bio's, if you intend to use that you should change
+MPAGE_BIO_MAX_SIZE as noted in fs/mpage.c. I'll fix that in the next
+iteration.
 
-Tony,
-Support for the residual count is optional. A inaccurate
-survey shows these adapter drivers support it:
-  advansys
-  aha152x
-  aic7xxx_old  (but not the newer aic7xxx)
-  dc395x_trm
-  scsiiom
-  sym53c8xx
-  sym53c8xx_2
-
-I do not know how the ide-scsi driver would get the information.
-However here is the calculation it should do:
-  Scsi_Cmnd::resid =3D Scsi_Cmnd::bufflen - <actual_bytes_transferred>
-
-Of the drivers that support "resid" most given a scatter
-gather list will use the sum of the element lengths instead
-of bufflen. Unfortunately that sum can be larger the bufflen
-due to padding and alignment requirements of the most backward
-DMA engines out there (I was burnt by the aha1542 ISA card).
-IOW HBA driver writers, please use bufflen. Perhaps the CAM
-name of "dxfer_len" would be clearer for this field.
-
-Doug Gilbert
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+-- 
+Jens Axboe
 
