@@ -1,420 +1,126 @@
-From: Art Haas <ahaas@neosoft.com>
-Subject: [PATCH] C99 designated initializers for drivers/ide
-Date: Mon, 7 Oct 2002 18:02:02 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021007230202.GQ9856@debian>
+From: Jan Dittmer <jan@jandittmer.de>
+Subject: harddisk corruption with 2.5.41bk and tcq enabled
+Date: Sat, 12 Oct 2002 10:50:01 +0200
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200210121050.01471.jan@jandittmer.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@transmeta.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Hi.
+Hi,
 
-Here's a set of patches that switch drivers/ide to use C99 designated
-initializers. The patches are all against 2.5.41.
+recent tcp additions seem to corrupt harddisk. X/KDE doesn't start up anymore 
+and 'mount' was broken after reboot. (Debian/unstable, ext3 fs) No Problem 
+with clean 2.5.41. Will try 2.5.42 now. You need any more information?
 
-Art Haas
+jan
 
+Here goes dmesg/config output:
 
---- linux-2.5.41/drivers/ide/ide-cd.c.old	2002-10-07 15:45:27.000000000 -0500
-+++ linux-2.5.41/drivers/ide/ide-cd.c	2002-10-07 15:52:36.000000000 -0500
-@@ -2563,26 +2563,26 @@
-  * Device initialization.
-  */
- static struct cdrom_device_ops ide_cdrom_dops = {
--	open:			ide_cdrom_open_real,
--	release:		ide_cdrom_release_real,
--	drive_status:		ide_cdrom_drive_status,
--	media_changed:		ide_cdrom_check_media_change_real,
--	tray_move:		ide_cdrom_tray_move,
--	lock_door:		ide_cdrom_lock_door,
--	select_speed:		ide_cdrom_select_speed,
--	get_last_session:	ide_cdrom_get_last_session,
--	get_mcn:		ide_cdrom_get_mcn,
--	reset:			ide_cdrom_reset,
--	audio_ioctl:		ide_cdrom_audio_ioctl,
--	dev_ioctl:		ide_cdrom_dev_ioctl,
--	capability:		CDC_CLOSE_TRAY | CDC_OPEN_TRAY | CDC_LOCK |
-+	.open			= ide_cdrom_open_real,
-+	.release		= ide_cdrom_release_real,
-+	.drive_status		= ide_cdrom_drive_status,
-+	.media_changed		= ide_cdrom_check_media_change_real,
-+	.tray_move		= ide_cdrom_tray_move,
-+	.lock_door		= ide_cdrom_lock_door,
-+	.select_speed		= ide_cdrom_select_speed,
-+	.get_last_session	= ide_cdrom_get_last_session,
-+	.get_mcn		= ide_cdrom_get_mcn,
-+	.reset			= ide_cdrom_reset,
-+	.audio_ioctl		= ide_cdrom_audio_ioctl,
-+	.dev_ioctl		= ide_cdrom_dev_ioctl,
-+	.capability		= CDC_CLOSE_TRAY | CDC_OPEN_TRAY | CDC_LOCK |
- 				CDC_SELECT_SPEED | CDC_SELECT_DISC |
- 				CDC_MULTI_SESSION | CDC_MCN |
- 				CDC_MEDIA_CHANGED | CDC_PLAY_AUDIO | CDC_RESET |
- 				CDC_IOCTLS | CDC_DRIVE_STATUS | CDC_CD_R |
- 				CDC_CD_RW | CDC_DVD | CDC_DVD_R| CDC_DVD_RAM |
- 				CDC_GENERIC_PACKET,
--	generic_packet:		ide_cdrom_packet,
-+	.generic_packet		= ide_cdrom_packet,
- };
- 
- static int ide_cdrom_register (ide_drive_t *drive, int nslots)
-@@ -3048,39 +3048,39 @@
- static int ide_cdrom_attach (ide_drive_t *drive);
- 
- static ide_driver_t ide_cdrom_driver = {
--	owner:			THIS_MODULE,
--	name:			"ide-cdrom",
--	version:		IDECD_VERSION,
--	media:			ide_cdrom,
--	busy:			0,
-+	.owner			= THIS_MODULE,
-+	.name			= "ide-cdrom",
-+	.version		= IDECD_VERSION,
-+	.media			= ide_cdrom,
-+	.busy			= 0,
- #ifdef CONFIG_IDEDMA_ONLYDISK
--	supports_dma:		0,
-+	.supports_dma		= 0,
- #else
--	supports_dma:		1,
-+	.supports_dma		= 1,
- #endif
--	supports_dsc_overlap:	1,
--	cleanup:		ide_cdrom_cleanup,
--	standby:		NULL,
--	suspend:		NULL,
--	resume:			NULL,
--	flushcache:		NULL,
--	do_request:		ide_do_rw_cdrom,
--	end_request:		NULL,
--	sense:			ide_cdrom_dump_status,
--	error:			ide_cdrom_error,
--	ioctl:			ide_cdrom_ioctl,
--	open:			ide_cdrom_open,
--	release:		ide_cdrom_release,
--	media_change:		ide_cdrom_check_media_change,
--	revalidate:		ide_cdrom_revalidate,
--	pre_reset:		NULL,
--	capacity:		ide_cdrom_capacity,
--	special:		NULL,
--	proc:			NULL,
--	attach:			ide_cdrom_attach,
--	ata_prebuilder:		NULL,
--	atapi_prebuilder:	NULL,
--	drives:			LIST_HEAD_INIT(ide_cdrom_driver.drives),
-+	.supports_dsc_overlap	= 1,
-+	.cleanup		= ide_cdrom_cleanup,
-+	.standby		= NULL,
-+	.suspend		= NULL,
-+	.resume			= NULL,
-+	.flushcache		= NULL,
-+	.do_request		= ide_do_rw_cdrom,
-+	.end_request		= NULL,
-+	.sense			= ide_cdrom_dump_status,
-+	.error			= ide_cdrom_error,
-+	.ioctl			= ide_cdrom_ioctl,
-+	.open			= ide_cdrom_open,
-+	.release		= ide_cdrom_release,
-+	.media_change		= ide_cdrom_check_media_change,
-+	.revalidate		= ide_cdrom_revalidate,
-+	.pre_reset		= NULL,
-+	.capacity		= ide_cdrom_capacity,
-+	.special		= NULL,
-+	.proc			= NULL,
-+	.attach			= ide_cdrom_attach,
-+	.ata_prebuilder		= NULL,
-+	.atapi_prebuilder	= NULL,
-+	.drives			= LIST_HEAD_INIT(ide_cdrom_driver.drives),
- };
- 
- /* options */
---- linux-2.5.41/drivers/ide/ide-disk.c.old	2002-10-07 15:45:27.000000000 -0500
-+++ linux-2.5.41/drivers/ide/ide-disk.c	2002-10-07 15:52:36.000000000 -0500
-@@ -1709,35 +1709,35 @@
-  *      IDE subdriver functions, registered with ide.c
-  */
- static ide_driver_t idedisk_driver = {
--	owner:			THIS_MODULE,
--	name:			"ide-disk",
--	version:		IDEDISK_VERSION,
--	media:			ide_disk,
--	busy:			0,
--	supports_dma:		1,
--	supports_dsc_overlap:	0,
--	cleanup:		idedisk_cleanup,
--	standby:		do_idedisk_standby,
--	suspend:		do_idedisk_suspend,
--	resume:			do_idedisk_resume,
--	flushcache:		do_idedisk_flushcache,
--	do_request:		do_rw_disk,
--	end_request:		NULL,
--	sense:			idedisk_dump_status,
--	error:			idedisk_error,
--	ioctl:			idedisk_ioctl,
--	open:			idedisk_open,
--	release:		idedisk_release,
--	media_change:		idedisk_media_change,
--	revalidate:		idedisk_revalidate,
--	pre_reset:		idedisk_pre_reset,
--	capacity:		idedisk_capacity,
--	special:		idedisk_special,
--	proc:			idedisk_proc,
--	attach:			idedisk_attach,
--	ata_prebuilder:		NULL,
--	atapi_prebuilder:	NULL,
--	drives:			LIST_HEAD_INIT(idedisk_driver.drives),
-+	.owner			= THIS_MODULE,
-+	.name			= "ide-disk",
-+	.version		= IDEDISK_VERSION,
-+	.media			= ide_disk,
-+	.busy			= 0,
-+	.supports_dma		= 1,
-+	.supports_dsc_overlap	= 0,
-+	.cleanup		= idedisk_cleanup,
-+	.standby		= do_idedisk_standby,
-+	.suspend		= do_idedisk_suspend,
-+	.resume			= do_idedisk_resume,
-+	.flushcache		= do_idedisk_flushcache,
-+	.do_request		= do_rw_disk,
-+	.end_request		= NULL,
-+	.sense			= idedisk_dump_status,
-+	.error			= idedisk_error,
-+	.ioctl			= idedisk_ioctl,
-+	.open			= idedisk_open,
-+	.release		= idedisk_release,
-+	.media_change		= idedisk_media_change,
-+	.revalidate		= idedisk_revalidate,
-+	.pre_reset		= idedisk_pre_reset,
-+	.capacity		= idedisk_capacity,
-+	.special		= idedisk_special,
-+	.proc			= idedisk_proc,
-+	.attach			= idedisk_attach,
-+	.ata_prebuilder		= NULL,
-+	.atapi_prebuilder	= NULL,
-+	.drives			= LIST_HEAD_INIT(idedisk_driver.drives),
- };
- 
- MODULE_DESCRIPTION("ATA DISK Driver");
---- linux-2.5.41/drivers/ide/ide-floppy.c.old	2002-09-22 11:22:20.000000000 -0500
-+++ linux-2.5.41/drivers/ide/ide-floppy.c	2002-10-07 15:52:37.000000000 -0500
-@@ -2042,39 +2042,39 @@
-  *	IDE subdriver functions, registered with ide.c
-  */
- static ide_driver_t idefloppy_driver = {
--	owner:			THIS_MODULE,
--	name:			"ide-floppy",
--	version:		IDEFLOPPY_VERSION,
--	media:			ide_floppy,
--	busy:			0,
-+	.owner			= THIS_MODULE,
-+	.name			= "ide-floppy",
-+	.version		= IDEFLOPPY_VERSION,
-+	.media			= ide_floppy,
-+	.busy			= 0,
- #ifdef CONFIG_IDEDMA_ONLYDISK
--	supports_dma:		0,
-+	.supports_dma		= 0,
- #else
--	supports_dma:		1,
-+	.supports_dma		= 1,
- #endif
--	supports_dsc_overlap:	0,
--	cleanup:		idefloppy_cleanup,
--	standby:		NULL,
--	suspend:		NULL,
--	resume:			NULL,
--	flushcache:		NULL,
--	do_request:		idefloppy_do_request,
--	end_request:		idefloppy_do_end_request,
--	sense:			NULL,
--	error:			NULL,
--	ioctl:			idefloppy_ioctl,
--	open:			idefloppy_open,
--	release:		idefloppy_release,
--	media_change:		idefloppy_media_change,
--	revalidate:		idefloppy_revalidate,
--	pre_reset:		NULL,
--	capacity:		idefloppy_capacity,
--	special:		NULL,
--	proc:			idefloppy_proc,
--	attach:			idefloppy_attach,
--	ata_prebuilder:		NULL,
--	atapi_prebuilder:	NULL,
--	drives:			LIST_HEAD_INIT(idefloppy_driver.drives),
-+	.supports_dsc_overlap	= 0,
-+	.cleanup		= idefloppy_cleanup,
-+	.standby		= NULL,
-+	.suspend		= NULL,
-+	.resume			= NULL,
-+	.flushcache		= NULL,
-+	.do_request		= idefloppy_do_request,
-+	.end_request		= idefloppy_do_end_request,
-+	.sense			= NULL,
-+	.error			= NULL,
-+	.ioctl			= idefloppy_ioctl,
-+	.open			= idefloppy_open,
-+	.release		= idefloppy_release,
-+	.media_change		= idefloppy_media_change,
-+	.revalidate		= idefloppy_revalidate,
-+	.pre_reset		= NULL,
-+	.capacity		= idefloppy_capacity,
-+	.special		= NULL,
-+	.proc			= idefloppy_proc,
-+	.attach			= idefloppy_attach,
-+	.ata_prebuilder		= NULL,
-+	.atapi_prebuilder	= NULL,
-+	.drives			= LIST_HEAD_INIT(idefloppy_driver.drives),
- };
- 
- static int idefloppy_attach (ide_drive_t *drive)
---- linux-2.5.41/drivers/ide/ide-proc.c.old	2002-09-20 12:36:42.000000000 -0500
-+++ linux-2.5.41/drivers/ide/ide-proc.c	2002-10-07 15:52:37.000000000 -0500
-@@ -851,10 +851,10 @@
- 	return seq_open(file, &ide_drivers_op);
- }
- static struct file_operations ide_drivers_operations = {
--	open:		ide_drivers_open,
--	read:		seq_read,
--	llseek:		seq_lseek,
--	release:	seq_release,
-+	.open		= ide_drivers_open,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+	.release	= seq_release,
- };
- 
- void proc_ide_create(void)
---- linux-2.5.41/drivers/ide/ide-tape.c.old	2002-09-16 09:33:58.000000000 -0500
-+++ linux-2.5.41/drivers/ide/ide-tape.c	2002-10-07 15:52:36.000000000 -0500
-@@ -6184,51 +6184,51 @@
-  *	IDE subdriver functions, registered with ide.c
-  */
- static ide_driver_t idetape_driver = {
--	owner:			THIS_MODULE,
--	name:			"ide-tape",
--	version:		IDETAPE_VERSION,
--	media:			ide_tape,
--	busy:			1,
-+	.owner			= THIS_MODULE,
-+	.name			= "ide-tape",
-+	.version		= IDETAPE_VERSION,
-+	.media			= ide_tape,
-+	.busy			= 1,
- #ifdef CONFIG_IDEDMA_ONLYDISK
--	supports_dma:		0,
-+	.supports_dma		= 0,
- #else
--	supports_dma:		1,
-+	.supports_dma		= 1,
- #endif
--	supports_dsc_overlap: 	1,
--	cleanup:		idetape_cleanup,
--	standby:		NULL,
--	suspend:		NULL,
--	resume:			NULL,
--	flushcache:		NULL,
--	do_request:		idetape_do_request,
--	end_request:		idetape_end_request,
--	sense:			NULL,
--	error:			NULL,
--	ioctl:			idetape_blkdev_ioctl,
--	open:			idetape_blkdev_open,
--	release:		idetape_blkdev_release,
--	media_change:		NULL,
--	revalidate:		NULL,
--	pre_reset:		idetape_pre_reset,
--	capacity:		NULL,
--	special:		NULL,
--	proc:			idetape_proc,
--	attach:			idetape_attach,
--	ata_prebuilder:		NULL,
--	atapi_prebuilder:	NULL,
--	drives:			LIST_HEAD_INIT(idetape_driver.drives),
-+	.supports_dsc_overlap 	= 1,
-+	.cleanup		= idetape_cleanup,
-+	.standby		= NULL,
-+	.suspend		= NULL,
-+	.resume			= NULL,
-+	.flushcache		= NULL,
-+	.do_request		= idetape_do_request,
-+	.end_request		= idetape_end_request,
-+	.sense			= NULL,
-+	.error			= NULL,
-+	.ioctl			= idetape_blkdev_ioctl,
-+	.open			= idetape_blkdev_open,
-+	.release		= idetape_blkdev_release,
-+	.media_change		= NULL,
-+	.revalidate		= NULL,
-+	.pre_reset		= idetape_pre_reset,
-+	.capacity		= NULL,
-+	.special		= NULL,
-+	.proc			= idetape_proc,
-+	.attach			= idetape_attach,
-+	.ata_prebuilder		= NULL,
-+	.atapi_prebuilder	= NULL,
-+	.drives			= LIST_HEAD_INIT(idetape_driver.drives),
- };
- 
- /*
-  *	Our character device supporting functions, passed to register_chrdev.
-  */
- static struct file_operations idetape_fops = {
--	owner:		THIS_MODULE,
--	read:		idetape_chrdev_read,
--	write:		idetape_chrdev_write,
--	ioctl:		idetape_chrdev_ioctl,
--	open:		idetape_chrdev_open,
--	release:	idetape_chrdev_release,
-+	.owner		= THIS_MODULE,
-+	.read		= idetape_chrdev_read,
-+	.write		= idetape_chrdev_write,
-+	.ioctl		= idetape_chrdev_ioctl,
-+	.open		= idetape_chrdev_open,
-+	.release	= idetape_chrdev_release,
- };
- 
- static int idetape_attach (ide_drive_t *drive)
---- linux-2.5.41/drivers/ide/ide.c.old	2002-10-07 15:45:28.000000000 -0500
-+++ linux-2.5.41/drivers/ide/ide.c	2002-10-07 15:52:36.000000000 -0500
-@@ -1689,10 +1689,10 @@
- 	return 0;
- }
- struct seq_operations ide_drivers_op = {
--	start:	m_start,
--	next:	m_next,
--	stop:	m_stop,
--	show:	show_driver
-+	.start	= m_start,
-+	.next	= m_next,
-+	.stop	= m_stop,
-+	.show	= show_driver
- };
- 
- #ifdef CONFIG_PROC_FS
-@@ -3446,12 +3446,12 @@
- EXPORT_SYMBOL(ide_unregister_driver);
- 
- struct block_device_operations ide_fops[] = {{
--	owner:			THIS_MODULE,
--	open:			ide_open,
--	release:		ide_release,
--	ioctl:			ide_ioctl,
--	check_media_change:	ide_check_media_change,
--	revalidate:		ide_revalidate_disk
-+	.owner			= THIS_MODULE,
-+	.open			= ide_open,
-+	.release		= ide_release,
-+	.ioctl			= ide_ioctl,
-+	.check_media_change	= ide_check_media_change,
-+	.revalidate		= ide_revalidate_disk
- }};
- 
- EXPORT_SYMBOL(ide_fops);
--- 
-They that can give up essential liberty to obtain a little temporary safety
-deserve neither liberty nor safety.
- -- Benjamin Franklin, Historical Review of Pennsylvania, 1759
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+VP_IDE: IDE controller at PCI slot 00:07.1
+VP_IDE: chipset revision 6
+VP_IDE: not 100% native mode: will probe irqs later
+VP_IDE: VIA vt82c686b (rev 40) IDE UDMA100 controller on pci00:07.1
+    ide0: BM-DMA at 0x9000-0x9007, BIOS settings: hda:DMA, hdb:pio
+    ide1: BM-DMA at 0x9008-0x900f, BIOS settings: hdc:DMA, hdd:DMA
+hda: IC35L060AVVA07-0, ATA DISK drive
+hda: DMA disabled
+hda: bad special flag: 0x03
+hda: tagged command queueing enabled, command queue depth 8
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+hdc: SONY CD-RW CRX175E2, ATAPI CD/DVD-ROM drive
+hdd: Pioneer DVD-ROM ATAPIModel DVD-104S 012, ATAPI CD/DVD-ROM drive
+hdc: DMA disabled
+hdd: DMA disabled
+ide1 at 0x170-0x177,0x376 on irq 15
+hda: host protected area => 1
+hda: 120103200 sectors (61493 MB) w/1863KiB Cache, CHS=7476/255/63, UDMA(100)
+ /dev/ide/host0/bus0/target0/lun0: p1 p2 p3 p4 < p5 p6 >
+ide-cd: passing drive hdc to ide-scsi emulation.
+hdd: ATAPI DVD-ROM drive, 512kB Cache, UDMA(33)
+Uniform CD-ROM driver Revision: 3.12
+SCSI subsystem driver Revision: 1.00
+scsi0 : SCSI host adapter emulation for IDE ATAPI devices
+  Vendor: SONY      Model: CD-RW  CRX175E2   Rev: S002
+  Type:   CD-ROM                             ANSI SCSI revision: 02
+Attached scsi CD-ROM sr0 at scsi0, channel 0, id 0, lun 0
+sr0: scsi3-mmc drive: 40x/40x writer cd/rw xa/form2 cdda tray
+
+[...]
+
+attempt to access beyond end of device
+ide0(3,2): rw=0, want=1076371720, limit=19535040
+attempt to access beyond end of device
+ide0(3,2): rw=0, want=1076261672, limit=19535040
+attempt to access beyond end of device
+ide0(3,2): rw=0, want=1076240168, limit=19535040
+attempt to access beyond end of device
+ide0(3,2): rw=0, want=1076243240, limit=19535040
+attempt to access beyond end of device
+ide0(3,2): rw=0, want=1076335080, limit=19535040
+attempt to access beyond end of device
+ide0(3,2): rw=0, want=1076262568, limit=19535040
+attempt to access beyond end of device
+ide0(3,2): rw=0, want=1076262568, limit=19535040
+attempt to access beyond end of device
+ide0(3,2): rw=0, want=1076262568, limit=19535040
+
+.config:
+#
+# IDE chipset support/bugfixes
+#
+# CONFIG_BLK_DEV_CMD640 is not set
+# CONFIG_BLK_DEV_CMD640_ENHANCED is not set
+# CONFIG_BLK_DEV_ISAPNP is not set
+CONFIG_BLK_DEV_IDEPCI=y
+# CONFIG_BLK_DEV_GENERIC is not set
+CONFIG_IDEPCI_SHARE_IRQ=y
+CONFIG_BLK_DEV_IDEDMA_PCI=y
+CONFIG_BLK_DEV_IDE_TCQ=y
+CONFIG_BLK_DEV_IDE_TCQ_DEFAULT=y
+CONFIG_BLK_DEV_IDE_TCQ_DEPTH=8
+# CONFIG_BLK_DEV_OFFBOARD is not set
+CONFIG_BLK_DEV_IDEDMA_FORCED=y
+CONFIG_IDEDMA_PCI_AUTO=y
+# CONFIG_IDEDMA_ONLYDISK is not set
+CONFIG_BLK_DEV_IDEDMA=y
+CONFIG_IDEDMA_PCI_WIP=y
+CONFIG_IDEDMA_NEW_DRIVE_LISTINGS=y
+CONFIG_BLK_DEV_ADMA=y
+# CONFIG_BLK_DEV_AEC62XX is not set
+# CONFIG_BLK_DEV_ALI15X3 is not set
+# CONFIG_WDC_ALI15X3 is not set
+# CONFIG_BLK_DEV_AMD74XX is not set
+# CONFIG_AMD74XX_OVERRIDE is not set
+# CONFIG_BLK_DEV_CMD64X is not set
+# CONFIG_BLK_DEV_CY82C693 is not set
+# CONFIG_BLK_DEV_CS5530 is not set
+# CONFIG_BLK_DEV_HPT34X is not set
+# CONFIG_HPT34X_AUTODMA is not set
+# CONFIG_BLK_DEV_HPT366 is not set
+# CONFIG_BLK_DEV_PIIX is not set
+# CONFIG_BLK_DEV_NFORCE is not set
+# CONFIG_BLK_DEV_NS87415 is not set
+# CONFIG_BLK_DEV_OPTI621 is not set
+# CONFIG_BLK_DEV_PDC202XX_OLD is not set
+# CONFIG_PDC202XX_BURST is not set
+# CONFIG_BLK_DEV_PDC202XX_NEW is not set
+# CONFIG_PDC202XX_FORCE is not set
+# CONFIG_BLK_DEV_RZ1000 is not set
+# CONFIG_BLK_DEV_SVWKS is not set
+# CONFIG_BLK_DEV_SIIMAGE is not set
+# CONFIG_BLK_DEV_SIS5513 is not set
+# CONFIG_BLK_DEV_SLC90E66 is not set
+# CONFIG_BLK_DEV_TRM290 is not set
+CONFIG_BLK_DEV_VIA82CXXX=y
+# CONFIG_IDE_CHIPSETS is not set
+CONFIG_IDEDMA_AUTO=y
+# CONFIG_IDEDMA_IVB is not set
+# CONFIG_DMA_NONPCI is not set
+CONFIG_BLK_DEV_IDE_MODES=y
