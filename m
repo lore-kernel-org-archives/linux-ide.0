@@ -1,31 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: PROBLEM: ICH7 SATA drive not detected.
-Date: Fri, 25 Feb 2005 23:35:18 -0500
-Message-ID: <421FFC86.7090802@pobox.com>
-References: <e16ac85e050225153649939bed@mail.gmail.com>	 <421FBC0B.5070004@pobox.com> <e16ac85e05022517024beb5b38@mail.gmail.com>
+From: =?iso-8859-1?Q?Rog=E9rio?= Brito <rbrito@ime.usp.br>
+Subject: Re: [PATCH] Re: 2.6.11-rc4 libata-core (irq 30: nobody cared!)
+Date: Sat, 26 Feb 2005 16:32:55 -0300
+Message-ID: <20050226193255.GA6256@ime.usp.br>
+References: <20050224015859.55191.qmail@web40910.mail.yahoo.com> <421D3D33.9060707@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:63367 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261158AbVBZEfh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Feb 2005 23:35:37 -0500
-In-Reply-To: <e16ac85e05022517024beb5b38@mail.gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Received: from smtpout5.uol.com.br ([200.221.4.196]:205 "EHLO smtp.uol.com.br")
+	by vger.kernel.org with ESMTP id S261246AbVBZTc5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Feb 2005 14:32:57 -0500
+Received: from dumont.rtb.ath.cx (unknown [200.221.104.251])
+	by scorpion5.uol.com.br (Postfix) with ESMTP id DF17C7A4D
+	for <linux-ide@vger.kernel.org>; Sat, 26 Feb 2005 16:32:56 -0300 (BRT)
+Content-Disposition: inline
+In-Reply-To: <421D3D33.9060707@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Felix <gregfelixlkml@gmail.com>
-Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Brian Kuschak <bkuschak@yahoo.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Comment out the function call to piix_disable_ahci() and see what happens.
+On Feb 23 2005, Jeff Garzik wrote:
+> Does this patch do anything useful?
+> 	Jeff
+(...)
 
-         if (port_info[0]->host_flags & PIIX_FLAG_AHCI) {
-                 int rc = piix_disable_ahci(pdev);
-                 if (rc)
-                         return rc;
-         }
+The patch you posted seems to only affect people using SATA, right?
 
-Regards,
-
-	Jeff
+BTW, just for clarity I'm seeing the message in a PATA environment (on
+i386) and Brian is seeing his problem with a SATA device on ppc.
 
 
+Thanks, Rog=E9rio Brito.
+
+--=20
+=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D
+  Rog=E9rio Brito - rbrito@ime.usp.br - http://www.ime.usp.br/~rbrito
+=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D
