@@ -1,121 +1,126 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: [patch 1/4] fix drive->ready_stat for ATAPI
-Date: Sun, 16 Jan 2005 02:11:41 +0100 (CET)
-Message-ID: <Pine.GSO.4.58.0501160207290.29887@mion.elka.pw.edu.pl>
+Subject: [patch 4/4] kill ide_driver_t->pre_reset
+Date: Sun, 16 Jan 2005 02:14:31 +0100 (CET)
+Message-ID: <Pine.GSO.4.58.0501160214030.29887@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:37521 "EHLO
 	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S262375AbVAPBVC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 Jan 2005 20:21:02 -0500
-Received: from hadron.elka.pw.edu.pl ([194.29.160.13]:35851 "EHLO localhost")
-	by higgs.elka.pw.edu.pl with ESMTP id S198704AbVAPBRU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Jan 2005 02:17:20 +0100
+	id S262378AbVAPBVD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 15 Jan 2005 20:21:03 -0500
+Received: from hadron.elka.pw.edu.pl ([194.29.160.13]:35840 "EHLO localhost")
+	by higgs.elka.pw.edu.pl with ESMTP id S198804AbVAPBPi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Jan 2005 02:15:38 +0100
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5])
+ by localhost (hadron [194.29.160.13]) (amavisd-new, port 251) with ESMTP
+ id 12366-01-9 for <linux-ide@vger.kernel.org>;
+ Sun, 16 Jan 2005 02:15:36 +0100 (CET)
 Received: from mion.elka.pw.edu.pl ([194.29.160.35]:33140 "EHLO
 	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
-	id S198721AbVAPBLr (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 1 other); Sun, 16 Jan 2005 02:11:47 +0100
+	id S198664AbVAPBOc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 16 Jan 2005 02:14:32 +0100
+Received: (from localhost user: 'bzolnier', uid#10472) by mion.elka.pw.edu.pl
+	with ESMTP id S366819AbVAPBOc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Jan 2005 02:14:32 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
 
-Hi,
+Add ide_drive_t->post_reset flag and use it to signal post reset
+condition to the ide-tape driver (only user of ide_driver_t->pre_reset).
 
-ATAPI devices ignore DRDY bit so drive->ready_stat must be set to zero.
-It is currently done by device drivers (including ide-default fake driver)
-but for PMAC driver it is too late as wait_for_ready() may be called during
-probe: probe_hwif()->pmac_ide_dma_check()->pmac_ide_{mdma,udma}_enable()->
-->pmac_ide_do_setfeature()->wait_for_ready().  Set correct drive->ready_stat
-just after detecting ATAPI device.
+diff -Nru a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
+--- a/drivers/ide/ide-iops.c	2005-01-15 14:17:55 +01:00
++++ b/drivers/ide/ide-iops.c	2005-01-15 14:17:55 +01:00
+@@ -1132,7 +1132,7 @@
+ 	if (drive->media == ide_disk)
+ 		ide_disk_pre_reset(drive);
+ 	else
+-		drive->driver->pre_reset(drive);
++		drive->post_reset = 1;
 
-Bartlomiej
-
-diff -Nru a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
---- a/drivers/ide/ide-cd.c	2005-01-15 14:02:36 +01:00
-+++ b/drivers/ide/ide-cd.c	2005-01-15 14:02:36 +01:00
-@@ -3088,7 +3088,6 @@
- 		drive->queue->unplug_delay = 1;
-
- 	drive->special.all	= 0;
--	drive->ready_stat	= 0;
-
- 	CDROM_STATE_FLAGS(drive)->media_changed = 1;
- 	CDROM_STATE_FLAGS(drive)->toc_valid     = 0;
-diff -Nru a/drivers/ide/ide-default.c b/drivers/ide/ide-default.c
---- a/drivers/ide/ide-default.c	2005-01-15 14:02:36 +01:00
-+++ b/drivers/ide/ide-default.c	2005-01-15 14:02:36 +01:00
-@@ -57,13 +57,6 @@
- 			"driver with ide.c\n", drive->name);
- 		return 1;
- 	}
--
--	/* For the sake of the request layer, we must make sure we have a
--	 * correct ready_stat value, that is 0 for ATAPI devices or we will
--	 * fail any request like Power Management
--	 */
--	if (drive->media != ide_disk)
--		drive->ready_stat = 0;
-
- 	return 0;
- }
-diff -Nru a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
---- a/drivers/ide/ide-floppy.c	2005-01-15 14:02:36 +01:00
-+++ b/drivers/ide/ide-floppy.c	2005-01-15 14:02:36 +01:00
-@@ -1793,7 +1793,6 @@
-
- 	*((u16 *) &gcw) = drive->id->config;
- 	drive->driver_data = floppy;
--	drive->ready_stat = 0;
- 	memset(floppy, 0, sizeof(idefloppy_floppy_t));
- 	floppy->drive = drive;
- 	floppy->pc = floppy->pc_stack;
-diff -Nru a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
---- a/drivers/ide/ide-probe.c	2005-01-15 14:02:36 +01:00
-+++ b/drivers/ide/ide-probe.c	2005-01-15 14:02:36 +01:00
-@@ -221,6 +221,8 @@
- 		}
- 		printk (" drive\n");
- 		drive->media = type;
-+		/* an ATAPI device ignores DRDY */
-+		drive->ready_stat = 0;
- 		return;
- 	}
-
+ 	if (!drive->keep_settings) {
+ 		if (drive->using_dma) {
 diff -Nru a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
---- a/drivers/ide/ide-tape.c	2005-01-15 14:02:36 +01:00
-+++ b/drivers/ide/ide-tape.c	2005-01-15 14:02:36 +01:00
-@@ -4530,8 +4530,6 @@
- 	memset(tape, 0, sizeof (idetape_tape_t));
- 	spin_lock_init(&tape->spinlock);
- 	drive->driver_data = tape;
--	/* An ATAPI device ignores DRDY */
--	drive->ready_stat = 0;
- 	drive->dsc_overlap = 1;
- #ifdef CONFIG_BLK_DEV_IDEPCI
- 	if (HWIF(drive)->pci_dev != NULL) {
+--- a/drivers/ide/ide-tape.c	2005-01-15 14:17:55 +01:00
++++ b/drivers/ide/ide-tape.c	2005-01-15 14:17:55 +01:00
+@@ -2428,6 +2428,11 @@
+ 	if (!drive->dsc_overlap && !(rq->cmd[0] & REQ_IDETAPE_PC2))
+ 		set_bit(IDETAPE_IGNORE_DSC, &tape->flags);
+
++	if (drive->post_reset == 1) {
++		set_bit(IDETAPE_IGNORE_DSC, &tape->flags);
++		drive->post_reset = 0;
++	}
++
+ 	if (tape->tape_still_time > 100 && tape->tape_still_time < 200)
+ 		tape->measure_insert_time = 1;
+ 	if (time_after(jiffies, tape->insert_time))
+@@ -3558,16 +3563,6 @@
+ }
+
+ /*
+- *	idetape_pre_reset is called before an ATAPI/ATA software reset.
+- */
+-static void idetape_pre_reset (ide_drive_t *drive)
+-{
+-	idetape_tape_t *tape = drive->driver_data;
+-	if (tape != NULL)
+-		set_bit(IDETAPE_IGNORE_DSC, &tape->flags);
+-}
+-
+-/*
+  *	idetape_space_over_filemarks is now a bit more complicated than just
+  *	passing the command to the tape since we may have crossed some
+  *	filemarks during our pipelined read-ahead mode.
+@@ -4690,7 +4685,6 @@
+ 	.cleanup		= idetape_cleanup,
+ 	.do_request		= idetape_do_request,
+ 	.end_request		= idetape_end_request,
+-	.pre_reset		= idetape_pre_reset,
+ 	.proc			= idetape_proc,
+ 	.attach			= idetape_attach,
+ 	.drives			= LIST_HEAD_INIT(idetape_driver.drives),
 diff -Nru a/drivers/ide/ide.c b/drivers/ide/ide.c
---- a/drivers/ide/ide.c	2005-01-15 14:02:36 +01:00
-+++ b/drivers/ide/ide.c	2005-01-15 14:02:36 +01:00
-@@ -1747,6 +1747,8 @@
- 			case -4: /* "cdrom" */
- 				drive->present = 1;
- 				drive->media = ide_cdrom;
-+				/* an ATAPI device ignores DRDY */
-+				drive->ready_stat = 0;
- 				hwif->noprobe = 0;
- 				goto done;
- 			case -5: /* "serialize" */
-diff -Nru a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
---- a/drivers/scsi/ide-scsi.c	2005-01-15 14:02:36 +01:00
-+++ b/drivers/scsi/ide-scsi.c	2005-01-15 14:02:36 +01:00
-@@ -679,7 +679,6 @@
- static void idescsi_setup (ide_drive_t *drive, idescsi_scsi_t *scsi)
+--- a/drivers/ide/ide.c	2005-01-15 14:17:55 +01:00
++++ b/drivers/ide/ide.c	2005-01-15 14:17:55 +01:00
+@@ -2037,10 +2037,6 @@
+ 	return __ide_error(drive, rq, stat, err);
+ }
+
+-static void default_pre_reset (ide_drive_t *drive)
+-{
+-}
+-
+ static sector_t default_capacity (ide_drive_t *drive)
  {
- 	DRIVER(drive)->busy++;
--	drive->ready_stat = 0;
- 	if (drive->id && (drive->id->config & 0x0060) == 0x20)
- 		set_bit (IDESCSI_DRQ_INTERRUPT, &scsi->flags);
- 	set_bit(IDESCSI_TRANSFORM, &scsi->transform);
+ 	return 0x7fffffff;
+@@ -2059,7 +2055,6 @@
+ 	if (d->end_request == NULL)	d->end_request = default_end_request;
+ 	if (d->error == NULL)		d->error = default_error;
+ 	if (d->abort == NULL)		d->abort = default_abort;
+-	if (d->pre_reset == NULL)	d->pre_reset = default_pre_reset;
+ 	if (d->capacity == NULL)	d->capacity = default_capacity;
+ }
+
+diff -Nru a/include/linux/ide.h b/include/linux/ide.h
+--- a/include/linux/ide.h	2005-01-15 14:17:55 +01:00
++++ b/include/linux/ide.h	2005-01-15 14:17:55 +01:00
+@@ -721,6 +721,7 @@
+ 					 *  3=64-bit
+ 					 */
+ 	unsigned scsi		: 1;	/* 0=default, 1=ide-scsi emulation */
++	unsigned post_reset	: 1;
+
+         u8	quirk_list;	/* considered quirky, set for a specific host */
+         u8	init_speed;	/* transfer rate set at boot */
+@@ -1099,7 +1100,6 @@
+ 	ide_startstop_t	(*error)(ide_drive_t *, struct request *rq, u8, u8);
+ 	ide_startstop_t	(*abort)(ide_drive_t *, struct request *rq);
+ 	int		(*ioctl)(ide_drive_t *, struct inode *, struct file *, unsigned int, unsigned long);
+-	void		(*pre_reset)(ide_drive_t *);
+ 	sector_t	(*capacity)(ide_drive_t *);
+ 	ide_proc_entry_t	*proc;
+ 	int		(*attach)(ide_drive_t *);
