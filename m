@@ -1,47 +1,37 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] libata atapi work #2.1
-Date: 17 May 2004 19:48:34 -0600
+From: Daniel Drake <dsd@gentoo.org>
+Subject: Re: SATA causing hard freeze on 2.6.6
+Date: Tue, 18 May 2004 11:56:22 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1084844914.3211.182.camel@patibmrh9>
-References: <1084721991.3085.6.camel@patibmrh9> <40A7F757.9020200@pobox.com>
-	<1084805767.3083.10.camel@patibmrh9>
+Message-ID: <40A9EBD6.8010309@gentoo.org>
+References: <40A75BF3.7040403@gentoo.org> <40A75C10.1030402@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:22255 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S261610AbUERBsv
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 May 2004 21:48:51 -0400
-Received: from royntex01.iomegacorp.com (edison [10.1.1.82])
-	by email.iomega.com (Postfix) with ESMTP id B37A01A1F
-	for <linux-ide@vger.kernel.org>; Mon, 17 May 2004 19:48:50 -0600 (MDT)
-In-Reply-To: <1084805767.3083.10.camel@patibmrh9>
+Received: from cpc5-hitc2-5-0-cust152.lutn.cable.ntl.com ([82.0.115.152]:52383
+	"EHLO zog.reactivated.net") by vger.kernel.org with ESMTP
+	id S262175AbUERJpx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 18 May 2004 05:45:53 -0400
+In-Reply-To: <40A75C10.1030402@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-> > on the SCSI end of ATAPI ...
-> > * issue REQUEST SENSE, to simulate an
-> > auto-sensing scsi device
-> ...
-> I will have to discover how to auto sense only after a plain failure,
-> not inappropriately after a timeout.
-> ...
-> I will try to create a desired inference of ATAPI op x03 "REQUEST SENSE"
-> to immediately follow the failing command, after the pattern of the
-> existing inference of ATA op xA1 "IDENTIFY".
+Jeff Garzik wrote:
+> What is the behavior of libata?
+> 
+> CONFIG_SCSI_SATA, CONFIG_SCSI_SATA_SIL
 
-Sorry, no good.
+Ah, I had not made the link that those siimage_mmio_ide_dma_test_irq were 
+being caused by a different driver. But I had been trying libata with the 
+2.6.6 kernel that I originally mentioned, and was getting the lockups.
 
-That won't work well til after someone finishes the "(TODO: investigate
-using standard PIO-IN paths)" of ata_dev_identify of
-drivers/scsi/libata-core.c to replace the "we hand-code it here" found
-there now.
+Strangely, I started getting those lockups this morning while on IDE. I 
+investigated the problem a bit further, and it turned out that a problematic 
+SB Live was messing up the system (I had my suspicions on this card already). 
+After removing that, I was able to boot up into IDE again. Just now, I plugged 
+the SATA converter back in, and I'm now booted up on SATA with no problems at all.
 
-Also ATA folk might resist adding a for-them-unused { u8 sense[0x100]; }
-member to the (struct ata_port), by way of analogy with the { u16
-id[ATA_ID_WORDS]; } now found there in include/linux/libata.h.
+Sorry for the noise :)
 
-Pat LaVarre
-
-
+Daniel
