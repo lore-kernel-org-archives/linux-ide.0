@@ -1,38 +1,97 @@
-From: Ryan Geoffrey Bourgeois <rgb005@latech.edu>
+From: Denis Vlasenko <vda@port.imtp.ilyichevsk.odessa.ua>
 Subject: Re: poor sata performance on 2.6
-Date: Thu, 15 Apr 2004 10:51:37 -0500
+Date: Thu, 15 Apr 2004 20:30:50 +0300
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1082044297.407eaf894ddda@webmail.LaTech.edu>
-References: <200404150236.05894.kos@supportwizard.com> <1082001287.407e0787f3c48@webmail.LaTech.edu> <200404151455.36307.kos@supportwizard.com>
+Message-ID: <200404152030.51052.vda@port.imtp.ilyichevsk.odessa.ua>
+References: <200404150236.05894.kos@supportwizard.com> <1082039593.19568.75.camel@lotte.street-vision.com> <200404151848.05857.kos@supportwizard.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="koi8-r"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from selene.LaTech.edu ([138.47.18.25]:4076 "EHLO LaTech.edu")
-	by vger.kernel.org with ESMTP id S264319AbUDOPvm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Apr 2004 11:51:42 -0400
-In-Reply-To: <200404151455.36307.kos@supportwizard.com>
+Received: from 168.imtp.Ilyichevsk.Odessa.UA ([195.66.192.168]:60938 "HELO
+	port.imtp.ilyichevsk.odessa.ua") by vger.kernel.org with SMTP
+	id S263059AbUDORbC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Apr 2004 13:31:02 -0400
+In-Reply-To: <200404151848.05857.kos@supportwizard.com>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: kos@supportwizard.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Konstantin Sobolev <kos@supportwizard.com>, Justin Cormack <justin@street-vision.com>
+Cc: Ryan Geoffrey Bourgeois <rgb005@latech.edu>, Kernel mailing list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
+On Thursday 15 April 2004 17:48, Konstantin Sobolev wrote:
+> On Thursday 15 April 2004 18:33, Justin Cormack wrote:
+> > On Thu, 2004-04-15 at 15:26, Konstantin Sobolev wrote:
+> > > On Thursday 15 April 2004 18:00, Justin Cormack wrote:
+> > > > hmm, odd. I get 50MB/s or so from normal (7200, 8MB cache) WD disks,
+> > > > and Seagate from the same controller. Can you send lspci,
+> > > > /proc/interrupts and dmesg...
+> > >
+> > > Attached are files for 2.6.5-mm5 with highmem, ACPI and APIC turned
+> > > off.
+> >
+> > ah. Make a filesystem on it and mount it and try again. I see you have
+> > no partition table and so probably no filesystem. This means the block
+> > size is set to default 512byte not 4k which makes disk operations slow.
+> > Any filesystem should default to block size of 4k, eg ext2.
+>
+> Very interesting!
+> created partition table,
+> kos sata # mkfs.ext2 /dev/sda1
+> [..skipped..]
+> kos mnt # cd /
+> kos / # mkdir wd
+> kos / # mount /dev/sda1 /wd
+> kos / # hdparm -t -a8192 /dev/sda
+>
+> /dev/sda:
+>  setting fs readahead to 8192
+>  readahead    = 8192 (on)
+>  Timing buffered disk reads:   82 MB in  3.03 seconds =  27.02 MB/sec
+>
+> kos / # mount | grep sda
+> /dev/sda1 on /wd type ext2 (rw)
+> kos / # hdparm -t -a8192 /dev/sda
+>
+> /dev/sda:
+>  setting fs readahead to 8192
+>  readahead    = 8192 (on)
+>  Timing buffered disk reads:  206 MB in  3.02 seconds =  68.15 MB/sec
+> kos / # hdparm -t -a8192 /dev/sda
+>
+> /dev/sda:
+>  setting fs readahead to 8192
+>  readahead    = 8192 (on)
+>  Timing buffered disk reads:  206 MB in  3.02 seconds =  68.18 MB/sec
+>
+> So first time it gave the same loosy 27 MB/s and subsequent tests give
+> pretty good 68 MB/s! Why?
 
-> 
-> I'm almost ready to buy separate controller, but all that I could find nearby
-> 
-> are based on the same Silicon Image chipset
-> 
+Time to CC ide/libata/block layer folks
 
-I do recomend Promise's SATA controller cards.  The kernel drivers are excellent
-imho.  As well as my onboard Promise TX2, I'm using a thei S150 SX4 RAID5
-capable controller in my file server.  A controlle ard should be easy enough to
-finnd online.  I shop at NewEgg.com.  Good prices, highly rcommended.
+Jeff Garzik <jgarzik@pobox.com>
+	libata man
 
-I'm gonna take a look at your .config as soon as I get back to my own computer.
+IDE DRIVER [GENERAL]
+P:      Bartlomiej Zolnierkiewicz
+M:      B.Zolnierkiewicz@elka.pw.edu.pl
+L:      linux-kernel@vger.kernel.org
+L:      linux-ide@vger.kernel.org
+S:      Maintained
 
-Cheers.
--Ryan
+BLOCK LAYER
+P:      Jens Axboe
+M:      axboe@suse.de
+L:      linux-kernel@vger.kernel.org
+S:      Maintained
 
--------------------------------------------------
-This mail sent through IMP: http://horde.org/imp/
+SIS 5513 IDE CONTROLLER DRIVER
+P:      Lionel Bouton
+M:      Lionel.Bouton@inet6.fr
+W:      http://inet6.dyn.dhs.org/sponsoring/sis5513/index.html
+W:      http://gyver.homeip.net/sis5513/index.html
+S:      Maintained
+
+--
+vda
 
