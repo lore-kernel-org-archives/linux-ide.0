@@ -1,33 +1,46 @@
-From: "Catalin(ux aka Dino) BOIE" <util@deuroconsult.ro>
-Subject: RE: Strange vmstat output. 2.6.10 Scheduler?
-Date: Tue, 1 Feb 2005 12:48:09 +0200 (EET)
-Message-ID: <Pine.LNX.4.62.0502011247420.26221@webhosting.rdsbv.ro>
-References: <20050201103414.F195184008@server1.navynet.it>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Strange vmstat output. 2.6.10 Scheduler?
+Date: Tue, 1 Feb 2005 11:49:49 +0100
+Message-ID: <20050201104949.GM4137@suse.de>
+References: <Pine.LNX.4.62.0502011217320.26221@webhosting.rdsbv.ro> <20050201102638.GJ4137@suse.de> <Pine.LNX.4.62.0502011236100.26221@webhosting.rdsbv.ro> <20050201104214.GK4137@suse.de> <Pine.LNX.4.62.0502011243270.26221@webhosting.rdsbv.ro>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Received: from webhosting.rdsbv.ro ([213.157.185.164]:10921 "EHLO
-	webhosting.rdsbv.ro") by vger.kernel.org with ESMTP id S261922AbVBAKsN
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Feb 2005 05:48:13 -0500
-In-Reply-To: <20050201103414.F195184008@server1.navynet.it>
+Content-Type: text/plain; charset=us-ascii
+Received: from ns.virtualhost.dk ([195.184.98.160]:36241 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261979AbVBAKty (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2005 05:49:54 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.62.0502011243270.26221@webhosting.rdsbv.ro>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Massimo Cetra <mcetra@navynet.it>
+To: "Catalin(ux aka Dino) BOIE" <util@deuroconsult.ro>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> I have noticed it several months ago.
-> Maybe this thread could be useful for you.
-> http://www.ussg.iu.edu/hypermail/linux/kernel/0408.2/1758.html
->
-> According to my tests, 2.4 with -lck still performs better than 2.6, so I
-> use 2.4 on production DB servers with any DB.
->
-> Massimo
+On Tue, Feb 01 2005, Catalin(ux aka Dino) BOIE wrote:
+> >Well then that is why, the writes are taking quite a while to reach the
+> >platter. Nothing is wrong, the drive is just slow :-)
+> >
+> >-- 
+> >Jens Axboe
+> 
+> I don't know what to say because sometimes works really good.
+> bi=20000.
 
-Thanks!
-But seems that the thread is not finished... ;)
+The vmstat you showed had bi and bo at the same time, so it's not so
+surprising if bi often suffers if it is seeking all over the map to
+write out the big chunk submitted.
 
----
-Catalin(ux aka Dino) BOIE
-catab at deuroconsult.ro
-http://kernel.umbrella.ro/
+How does it look with write cache enabled?
+
+> I'm fighting with this problem for 1 month now and I realy tried to 
+> resolve the problem.
+
+If postgres uses fsync() properly, you should be safe with write cache
+enabled.
+
+> P.S. I tried also with cfq and see no improvement.
+
+Not surprising, there's not much the io scheduler can do for you here.
+
+-- 
+Jens Axboe
+
