@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] trivial IDE cleanups for 2.6.5-rc2-bk3 (2/4)
-Date: Tue, 23 Mar 2004 19:40:11 +0100
+Subject: [PATCH] trivial IDE cleanups for 2.6.5-rc2-bk3 (1/4)
+Date: Tue, 23 Mar 2004 19:39:55 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200403231940.11978.bzolnier@elka.pw.edu.pl>
+Message-ID: <200403231939.55223.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mion.elka.pw.edu.pl ([194.29.160.35]:64430 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S262796AbUCWSdD
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S262797AbUCWSdD
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Tue, 23 Mar 2004 13:33:03 -0500
 Content-Disposition: inline
@@ -17,50 +17,98 @@ List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 
-[IDE] remove unused CONFIG_BLK_DEV_TIVO
+[IDE] ide.c: remove unused code for hwif->mmio == 1
 
-TiVo IDE support was never merged only this option was (in 2.4.0-test2), sigh.
+ linux-2.6.5-rc2-bk3-root/drivers/ide/ide.c   |   26 +++++++++-----------------
+ linux-2.6.5-rc2-bk3-root/include/linux/ide.h |    2 +-
+ 2 files changed, 10 insertions(+), 18 deletions(-)
 
- linux-2.6.5-rc2-bk3-root/arch/sh/configs/defconfig-adx    |    1 -
- linux-2.6.5-rc2-bk3-root/arch/sh/configs/defconfig-cqreek |    1 -
- linux-2.6.5-rc2-bk3-root/drivers/ide/Kconfig              |    3 ---
- 3 files changed, 5 deletions(-)
-
-diff -puN arch/sh/configs/defconfig-adx~ide_blk_dev_tivo arch/sh/configs/defconfig-adx
---- linux-2.6.5-rc2-bk3/arch/sh/configs/defconfig-adx~ide_blk_dev_tivo	2004-03-23 19:18:41.313684248 +0100
-+++ linux-2.6.5-rc2-bk3-root/arch/sh/configs/defconfig-adx	2004-03-23 19:18:41.324682576 +0100
-@@ -135,7 +135,6 @@ CONFIG_BLK_DEV_IDEDISK=y
- # CONFIG_BLK_DEV_IDEDISK_SEAGATE is not set
- # CONFIG_BLK_DEV_IDEDISK_WD is not set
- # CONFIG_BLK_DEV_COMMERIAL is not set
--# CONFIG_BLK_DEV_TIVO is not set
- # CONFIG_BLK_DEV_IDECS is not set
- # CONFIG_BLK_DEV_IDECD is not set
- # CONFIG_BLK_DEV_IDETAPE is not set
-diff -puN arch/sh/configs/defconfig-cqreek~ide_blk_dev_tivo arch/sh/configs/defconfig-cqreek
---- linux-2.6.5-rc2-bk3/arch/sh/configs/defconfig-cqreek~ide_blk_dev_tivo	2004-03-23 19:18:41.317683640 +0100
-+++ linux-2.6.5-rc2-bk3-root/arch/sh/configs/defconfig-cqreek	2004-03-23 19:18:41.325682424 +0100
-@@ -133,7 +133,6 @@ CONFIG_BLK_DEV_IDEDISK=y
- # CONFIG_BLK_DEV_IDEDISK_SEAGATE is not set
- # CONFIG_BLK_DEV_IDEDISK_WD is not set
- # CONFIG_BLK_DEV_COMMERIAL is not set
--# CONFIG_BLK_DEV_TIVO is not set
- # CONFIG_BLK_DEV_IDECS is not set
- # CONFIG_BLK_DEV_IDECD is not set
- # CONFIG_BLK_DEV_IDETAPE is not set
-diff -puN drivers/ide/Kconfig~ide_blk_dev_tivo drivers/ide/Kconfig
---- linux-2.6.5-rc2-bk3/drivers/ide/Kconfig~ide_blk_dev_tivo	2004-03-23 19:18:41.321683032 +0100
-+++ linux-2.6.5-rc2-bk3-root/drivers/ide/Kconfig	2004-03-23 19:18:41.326682272 +0100
-@@ -1114,9 +1114,6 @@ config IDEDMA_IVB
- config IDEDMA_AUTO
- 	def_bool IDEDMA_PCI_AUTO || BLK_DEV_IDEDMA_PMAC_AUTO || IDEDMA_ICS_AUTO
- 
--config DMA_NONPCI
--	def_bool BLK_DEV_TIVO
+diff -puN drivers/ide/ide.c~ide_mmio_cleanup drivers/ide/ide.c
+--- linux-2.6.5-rc2-bk3/drivers/ide/ide.c~ide_mmio_cleanup	2004-03-23 19:18:37.952195272 +0100
++++ linux-2.6.5-rc2-bk3-root/drivers/ide/ide.c	2004-03-23 19:18:37.963193600 +0100
+@@ -482,23 +482,14 @@ ide_proc_entry_t generic_subdriver_entri
+ static struct resource* hwif_request_region(ide_hwif_t *hwif,
+ 					    unsigned long addr, int num)
+ {
+-	struct resource *res;
 -
- endif
+-	if (hwif->mmio)
+-		res = request_mem_region(addr, num, hwif->name);
+-	else
+-		res = request_region(addr, num, hwif->name);
++	struct resource *res = request_region(addr, num, hwif->name);
  
- config BLK_DEV_HD_ONLY
+ 	if (!res)
+-		printk(KERN_ERR "%s: %s resource 0x%lX-0x%lX not free.\n",
+-				hwif->name, hwif->mmio ? "MMIO" : "I/O",
+-				addr, addr+num-1);
++		printk(KERN_ERR "%s: I/O resource 0x%lX-0x%lX not free.\n",
++				hwif->name, addr, addr+num-1);
+ 	return res;
+ }
+ 
+-#define hwif_release_region(addr, num) \
+-	((hwif->mmio) ? release_mem_region((addr),(num)) : release_region((addr),(num)))
+-
+ /**
+  *	ide_hwif_request_regions - request resources for IDE
+  *	@hwif: interface to use
+@@ -515,6 +506,7 @@ int ide_hwif_request_regions(ide_hwif_t 
+ 
+ 	if (hwif->mmio == 2)
+ 		return 0;
++	BUG_ON(hwif->mmio == 1);
+ 	addr = hwif->io_ports[IDE_CONTROL_OFFSET];
+ 	if (addr && !hwif_request_region(hwif, addr, 1))
+ 		goto control_region_busy;
+@@ -530,7 +522,7 @@ int ide_hwif_request_regions(ide_hwif_t 
+ 		addr = hwif->io_ports[i];
+ 		if (!hwif_request_region(hwif, addr, 1)) {
+ 			while (--i)
+-				hwif_release_region(addr, 1);
++				release_region(addr, 1);
+ 			goto data_region_busy;
+ 		}
+ 	}
+@@ -539,7 +531,7 @@ int ide_hwif_request_regions(ide_hwif_t 
+ data_region_busy:
+ 	addr = hwif->io_ports[IDE_CONTROL_OFFSET];
+ 	if (addr)
+-		hwif_release_region(addr, 1);
++		release_region(addr, 1);
+ control_region_busy:
+ 	/* If any errors are return, we drop the hwif interface. */
+ 	return -EBUSY;
+@@ -565,14 +557,14 @@ void ide_hwif_release_regions(ide_hwif_t
+ 	if (hwif->mmio == 2)
+ 		return;
+ 	if (hwif->io_ports[IDE_CONTROL_OFFSET])
+-		hwif_release_region(hwif->io_ports[IDE_CONTROL_OFFSET], 1);
++		release_region(hwif->io_ports[IDE_CONTROL_OFFSET], 1);
+ 	if (hwif->straight8) {
+-		hwif_release_region(hwif->io_ports[IDE_DATA_OFFSET], 8);
++		release_region(hwif->io_ports[IDE_DATA_OFFSET], 8);
+ 		return;
+ 	}
+ 	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++)
+ 		if (hwif->io_ports[i])
+-			hwif_release_region(hwif->io_ports[i], 1);
++			release_region(hwif->io_ports[i], 1);
+ }
+ 
+ EXPORT_SYMBOL(ide_hwif_release_regions);
+diff -puN include/linux/ide.h~ide_mmio_cleanup include/linux/ide.h
+--- linux-2.6.5-rc2-bk3/include/linux/ide.h~ide_mmio_cleanup	2004-03-23 19:18:37.958194360 +0100
++++ linux-2.6.5-rc2-bk3-root/include/linux/ide.h	2004-03-23 19:18:37.967192992 +0100
+@@ -932,7 +932,7 @@ typedef struct hwif_s {
+ 	int sg_dma_direction;		/* dma transfer direction */
+ 	int sg_dma_active;		/* is it in use */
+ 
+-	int		mmio;		/* hosts iomio (0), mmio (1) or custom (2) select */
++	int		mmio;		/* hosts iomio (0) or custom (2) select */
+ 	int		rqsize;		/* max sectors per request */
+ 	int		irq;		/* our irq number */
+ 
 
 _
 
