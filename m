@@ -1,65 +1,46 @@
 From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Subject: Re: PATA drivers in libata?
-Date: Thu, 17 Feb 2005 12:11:48 +1100
-Message-ID: <1108602708.5382.9.camel@gaston>
+Date: Thu, 17 Feb 2005 12:13:43 +1100
+Message-ID: <1108602823.5382.11.camel@gaston>
 References: <420FA1B9.6030100@pobox.com>
+	 <1108334326.19353.20.camel@localhost.localdomain>
+	 <420FEDE6.20904@pobox.com>
+	 <1108405679.23533.20.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Received: from gate.crashing.org ([63.228.1.57]:3229 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S262067AbVBQBMP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2005 20:12:15 -0500
-In-Reply-To: <420FA1B9.6030100@pobox.com>
+Received: from gate.crashing.org ([63.228.1.57]:6813 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S262185AbVBQBOM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2005 20:14:12 -0500
+In-Reply-To: <1108405679.23533.20.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Albert Lee <albertcc@tw.ibm.com>
 
-On Sun, 2005-02-13 at 13:51 -0500, Jeff Garzik wrote:
-> I wanted to open a discussion on libata and PATA.
+On Mon, 2005-02-14 at 20:42 +0000, Alan Cox wrote:
+> On Llu, 2005-02-14 at 00:16, Jeff Garzik wrote:
+> > Error handling is -very- stupid simple right now:  if we get an error, 
+> > report that error in the struct request [based on your ATA -> SCSI sense 
+> > conversion] back to upper layer.
+> > 
+> > It needs to be fleshed out into separate host bus / ATA bus / device 
+> > errors, and handled accordingly.
 > 
-> libata-dev now has two drivers that support PATA, pata_pdc2027x and 
-> ata_piix, and the core is getting close (DMA blacklist in, C/H/S support 
-> close).
+> Thats a barrier to real PATA IDE I guess then. We see a lot of cable
+> errors and speed change downs and not all are caused by misdetecting
+> 80wire cables.
 > 
-> What are the opinions on issues relating to making PATA libata support 
-> available in the upstream kernel?  Here's my random list.
-> 
-> * I think CONFIG_IDE should continue to be the default answer for "what 
-> driver do I use for PATA?"
+> The current IDE layer does speed changes synchronously outside the state
+> machine which makes a nasty mess when your error handling interrupt
+> state wants to speed change.
 
-Yes.
-
-> * Should there be a config option similar to CONFIG_BLK_DEV_IDE_SATA, 
-> called CONFIG_SCSI_ATA_PATA?  A runtime 'pata' module option?  Should we 
-> include 'DANGER DANGER conflicts with CONFIG_IDE' in the Kconfig 
-> description?
-
-Eventually... I'm thinking I may port the "macio" IDE to libata one day,
-but for now, I still need both drivers/ide for it and libata for SATA.
-
-> * With ATA passthru (in libata-dev currently), libata supports SMART and 
-> the HDIO_CMD/HDIO_TASK generalized ioctls.  Should I care about 
-> supporting other ioctls?
-> 
-> * pci_enable_device() issues?
-> 
-> * power management differences?
-
-Well, libata doesn't have power management proper at all for now. In
-fact, I need to do something at the generic SCSI level similar to what I
-did for drivers/ide, that is turning the PM callbacks into requests down
-the queues etc... but I don't have any SCSI or libata HW that can power
-manage at the moment, so I didn't quite bother yet.
-
-(Though if I ported "macio" IDE ... )
-
-Ultimately, it will have to be done for things like USB & firewire too
-anyway. So maybe I should start working on this soonish. I talked a bit
-with jejb at OLS a year or 2 ago about the way to do it, it shouldn't be
-that much different than what I do in drivers/ide, but then, I know
-pretty much nothing about the linux scsi layer...
+It's not _too_ bad ... you can just put the current request "on
+hold" (and block the queue) until the thread finishes with the speed
+change, but I tend to think nowadays that the state machine approach
+might be better in the long run (even if a bit more complex to implement
+in the first place).
 
 Ben.
- 
+
 
