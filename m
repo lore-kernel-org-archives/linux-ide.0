@@ -1,46 +1,55 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: IDE layer adoptations that *fake* a failing drive?
-Date: 14 May 2004 17:17:24 -0600
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1084576644.3084.92.camel@patibmrh9>
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: Re: arm-lh7a40x IDE support in 2.6.6
+Date: Sat, 15 May 2004 01:26:33 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200405150126.33153.bzolnier@elka.pw.edu.pl>
+References: <200405141840.04401.bzolnier@elka.pw.edu.pl> <200405150019.46504.bzolnier@elka.pw.edu.pl> <20040514224932.GA8061@buici.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:27633 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264579AbUENXRt
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 May 2004 19:17:49 -0400
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S264526AbUENXga@vger.kernel.org>
+In-Reply-To: <20040514224932.GA8061@buici.com>
+Content-Disposition: inline
+To: Marc Singer <elf@buici.com>
+Cc: rmk@arm.linux.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Leon Woestenberg <leonw@mailcan.com>
-Cc: linux-ide@vger.kernel.org
 
-> code that sits between the IDE software layer and
-> the storage device, that emulates a failing disk
-> in one way or another.
+On Saturday 15 of May 2004 00:49, Marc Singer wrote:
+> On Sat, May 15, 2004 at 12:19:46AM +0200, Bartlomiej Zolnierkiewicz wrote:
 
-I guess you want intermittent and unreliable failure ... else you could
-swap in an ATAPI drive, since ATAPI protocol by definition looks like a
-dead ATA drive.
+> > > > > > - you are setting IDE_NO_IRQ in ide_init_hwif_ports() which is
+> > > > > > used in many places in generic IDE code - anybody wanting to
+> > > > > > understand interactions with your code + generic code will have
+> > > > > > serious problems (especially if knows _nothing_ about lpd7a40x)
+> > > > >
+> > > > > I don't know what you mean.  I grep for that constant and found it
+> > > > > nowhere except for ide-io.c and in my code.  It doesn't take much
+> > > > > to find the references.
+> > > >
+> > > > I'm talking about ide_init_hwif_ports() function.
+> > >
+> > > Most of the ARM arch's use it.  Perhaps all of them need a good once
+> > > over.
+> >
+> > Since some time I have a patch killing <asm/arch-*/ide.h>. :)
+>
+> OK.  That raises an interesting question.  If a) you as the IDE
+> maintainer want to make a policy change, and b) you have a concrete
+> action to take, then how do you go about it so that the right thing
+> (tm) happens?
 
-Like you, I want to eject errors and timeouts, please post back here
-what you find.  Meanwhile, three thoughts:
+I posted patch to linux-arm-kernel (rmk, I can't find it in l-a-k archives
+and I also can't find any mail about it being rejected?) and linux-ide.
+[ and to affected arch maintainers of course ]
 
-1) Read errors
+> One tack would be to post to the ARM list stating that there is
+> such-and-such, a new policy, and this requires a change to the
+> way-things-work (tm).  Then effect a patch that breaks the bad stuff
+> so that the users of such bad stuff must cope.
 
-Via ATA pass thru you can force a read error, if your drive supports the
-write/ read long legacy of ATA 2 for that purpose.
+It is stable kernel series so I paid 'stable kernel' price
+and made sure that it shouldn't break anything.
 
-2) No-data timeouts
-
-Via 48-bit lba ATA you can force a slow timeout by asking to verify
-xFFFF lba's = 32 MiB = (1 << (16+9)) bytes, at 512 = x200 = (1 << 9)
-bytes/lba, if you drive actually does verify blocks when asked.
-
-3) Write errors, data timeouts, etc.
-
-Tough, without customarily proprietary knowledge of the drive.
-
-Pat LaVarre
-
-
+Cheers,
+Bartlomiej
