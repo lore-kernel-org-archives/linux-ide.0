@@ -1,105 +1,115 @@
 From: Tejun Heo <tj@home-tj.org>
-Subject: [PATCH 2.6.11-rc2] ide_pci: cleanup ide pci drivers and merges .h
- files into .c files
-Date: Fri, 04 Feb 2005 16:11:16 +0900
-Message-ID: <42032014.1020606@home-tj.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
-Content-Transfer-Encoding: 7bit
-Received: from [211.58.254.17] ([211.58.254.17]:29865 "EHLO hemosu.com")
-	by vger.kernel.org with ESMTP id S261184AbVBDHLV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2005 02:11:21 -0500
+Subject: Re: [PATCH 2.6.11-rc2 01/14] ide_pci: Remove lousy macros from aec62xx.
+Date: Fri,  4 Feb 2005 16:13:17 +0900 (KST)
+Message-ID: <20050204071317.A06E013264C@htj.dyndns.org>
+References: <42032014.1020606@home-tj.org>
+Received: from [211.58.254.17] ([211.58.254.17]:35753 "EHLO hemosu.com")
+	by vger.kernel.org with ESMTP id S263252AbVBDHNU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2005 02:13:20 -0500
+In-Reply-To: <42032014.1020606@home-tj.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+To: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-
- Hello, Bartlomiej.
-
- These patches are the split versions of 05_ide_merge_pci_driver_hc.
-
- I removed crappy/unused macros from aec62xx, pdc202xx_old and
-serverworks drivers in respective *_cleanup patches and merged
-.h into .c files in *_merge patches.
-
-[ Start of patch descriptions ]
 
 01_ide_pci_aec62xx_cleanup.patch
-	: Remove lousy macros from aec62xx.
 
 	Removes SPLIT_BYTE, MAKE_WORD and BUSCLOCK macros which are
 	just better off directly coded from ide/pci/aec62xx driver.
 
-02_ide_pci_aec62xx_merge.patch
-	: Merges aec62xx.h into aec62xx.c
 
-	Merges ide/pci/aec62xx.h into aec62xx.c.
+Signed-off-by: Tejun Heo <tj@home-tj.org>
 
-03_ide_pci_cmd64x_merge.patch
-	: Merges cmd64x.h into cmd64x.c
 
-	Merges ide/pci/cmd64x.h into cmd64x.c.
-
-04_ide_pci_cy82c693_merge.patch
-	: Merges cy82c693.h into cy82c693.c
-
-	Merges ide/pci/cy82c693.h into cy82c693.c.
-
-05_ide_pci_generic_merge.patch
-	: Merges generic.h into generic.c
-
-	Merges ide/pci/generic.h into generic.c.
-
-06_ide_pci_hpt366_merge.patch
-	: Merges hpt366.h into hpt366.c
-
-	Merges ide/pci/hpt366.h into hpt366.c.
-
-07_ide_pci_it8172_merge.patch
-	: Merges it8172.h into it8172.c
-
-	Merges ide/pci/it8172.h into it8172.c.
-
-08_ide_pci_opti621_merge.patch
-	: Merges opti621.h into opti621.c
-
-	Merges ide/pci/opti621.h into opti621.c.
-
-09_ide_pci_pdc202xx_new_merge.patch
-	: Merges pdc202xx_new.h into pdc202xx_new.c
-
-	Merges ide/pci/pdc202xx_new.h into pdc202xx_new.c.
-
-10_ide_pci_pdc202xx_old_cleanup.patch
-	: Removes SPLIT_BYTE macro from pdc202xx_old
-
-	Removes SPLIT_BYTE macro from ide/pci/pdc202xx_old driver.
-
-11_ide_pci_pdc202xx_old_merge.patch
-	: Merges pdc202xx_old.h into pdc202xx_old.c
-
-	Merges ide/pci/pdc202xx_old.h into pdc202xx_old.c.
-
-12_ide_pci_piix_merge.patch
-	: Merges piix.h into piix.c
-
-	Merges ide/pci/piix.h into piix.c.
-
-13_ide_pci_serverworks_cleanup.patch
-	: Removes unused SVWKS_DEBUG_DRIVE_INFO
-
-	Removes unused SVWKS_DEBUG_DRIVE_INFO from ide/pci/serverworks
-	driver.
-
-14_ide_pci_serverworks_merge.patch
-	: Merges serverworks.h into serverworks.c
-
-	Merges ide/pci/serverworks.h into serverworks.c.
-
-[ End of patch descriptions ]
-
- Thanks.
-
--- 
-tejun
-
+Index: linux-idepci-export/drivers/ide/pci/aec62xx.c
+===================================================================
+--- linux-idepci-export.orig/drivers/ide/pci/aec62xx.c	2005-02-04 16:07:37.175314620 +0900
++++ linux-idepci-export/drivers/ide/pci/aec62xx.c	2005-02-04 16:08:23.966693938 +0900
+@@ -89,10 +89,11 @@ static u8 aec62xx_ratemask (ide_drive_t 
+ 
+ static int aec6210_tune_chipset (ide_drive_t *drive, u8 xferspeed)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-	struct pci_dev *dev	= hwif->pci_dev;
+-	u16 d_conf		= 0;
+-	u8 speed	= ide_rate_filter(aec62xx_ratemask(drive), xferspeed);
++	ide_hwif_t *hwif = HWIF(drive);
++	struct pci_dev *dev = hwif->pci_dev;
++	struct chipset_bus_clock_list_entry *busclock = pci_get_drvdata(dev);
++	u16 d_conf = 0;
++	u8 speed = ide_rate_filter(aec62xx_ratemask(drive), xferspeed);
+ 	u8 ultra = 0, ultra_conf = 0;
+ 	u8 tmp0 = 0, tmp1 = 0, tmp2 = 0;
+ 	unsigned long flags;
+@@ -100,16 +101,15 @@ static int aec6210_tune_chipset (ide_dri
+ 	local_irq_save(flags);
+ 	/* 0x40|(2*drive->dn): Active, 0x41|(2*drive->dn): Recovery */
+ 	pci_read_config_word(dev, 0x40|(2*drive->dn), &d_conf);
+-	tmp0 = pci_bus_clock_list(speed, BUSCLOCK(dev));
+-	SPLIT_BYTE(tmp0,tmp1,tmp2);
+-	MAKE_WORD(d_conf,tmp1,tmp2);
++	tmp0 = pci_bus_clock_list(speed, busclock);
++	d_conf = ((tmp0 & 0xf0) << 4) | (tmp0 & 0xf);
+ 	pci_write_config_word(dev, 0x40|(2*drive->dn), d_conf);
+ 
+ 	tmp1 = 0x00;
+ 	tmp2 = 0x00;
+ 	pci_read_config_byte(dev, 0x54, &ultra);
+ 	tmp1 = ((0x00 << (2*drive->dn)) | (ultra & ~(3 << (2*drive->dn))));
+-	ultra_conf = pci_bus_clock_list_ultra(speed, BUSCLOCK(dev));
++	ultra_conf = pci_bus_clock_list_ultra(speed, busclock);
+ 	tmp2 = ((ultra_conf << (2*drive->dn)) | (tmp1 & ~(3 << (2*drive->dn))));
+ 	pci_write_config_byte(dev, 0x54, tmp2);
+ 	local_irq_restore(flags);
+@@ -118,10 +118,11 @@ static int aec6210_tune_chipset (ide_dri
+ 
+ static int aec6260_tune_chipset (ide_drive_t *drive, u8 xferspeed)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-	struct pci_dev *dev	= hwif->pci_dev;
+-	u8 speed	= ide_rate_filter(aec62xx_ratemask(drive), xferspeed);
+-	u8 unit		= (drive->select.b.unit & 0x01);
++	ide_hwif_t *hwif = HWIF(drive);
++	struct pci_dev *dev = hwif->pci_dev;
++	struct chipset_bus_clock_list_entry *busclock = pci_get_drvdata(dev);
++	u8 speed = ide_rate_filter(aec62xx_ratemask(drive), xferspeed);
++	u8 unit = (drive->select.b.unit & 0x01);
+ 	u8 tmp1 = 0, tmp2 = 0;
+ 	u8 ultra = 0, drive_conf = 0, ultra_conf = 0;
+ 	unsigned long flags;
+@@ -129,12 +130,12 @@ static int aec6260_tune_chipset (ide_dri
+ 	local_irq_save(flags);
+ 	/* high 4-bits: Active, low 4-bits: Recovery */
+ 	pci_read_config_byte(dev, 0x40|drive->dn, &drive_conf);
+-	drive_conf = pci_bus_clock_list(speed, BUSCLOCK(dev));
++	drive_conf = pci_bus_clock_list(speed, busclock);
+ 	pci_write_config_byte(dev, 0x40|drive->dn, drive_conf);
+ 
+ 	pci_read_config_byte(dev, (0x44|hwif->channel), &ultra);
+ 	tmp1 = ((0x00 << (4*unit)) | (ultra & ~(7 << (4*unit))));
+-	ultra_conf = pci_bus_clock_list_ultra(speed, BUSCLOCK(dev));
++	ultra_conf = pci_bus_clock_list_ultra(speed, busclock);
+ 	tmp2 = ((ultra_conf << (4*unit)) | (tmp1 & ~(7 << (4*unit))));
+ 	pci_write_config_byte(dev, (0x44|hwif->channel), tmp2);
+ 	local_irq_restore(flags);
+Index: linux-idepci-export/drivers/ide/pci/aec62xx.h
+===================================================================
+--- linux-idepci-export.orig/drivers/ide/pci/aec62xx.h	2005-02-04 16:07:37.175314620 +0900
++++ linux-idepci-export/drivers/ide/pci/aec62xx.h	2005-02-04 16:08:23.967693775 +0900
+@@ -51,16 +51,6 @@ static struct chipset_bus_clock_list_ent
+ 	{	0,		0x00,	0x00	}
+ };
+ 
+-#ifndef SPLIT_BYTE
+-#define SPLIT_BYTE(B,H,L)	((H)=(B>>4), (L)=(B-((B>>4)<<4)))
+-#endif
+-#ifndef MAKE_WORD
+-#define MAKE_WORD(W,HB,LB)	((W)=((HB<<8)+LB))
+-#endif
+-
+-#define BUSCLOCK(D)	\
+-	((struct chipset_bus_clock_list_entry *) pci_get_drvdata((D)))
+-
+ static int init_setup_aec6x80(struct pci_dev *, ide_pci_device_t *);
+ static int init_setup_aec62xx(struct pci_dev *, ide_pci_device_t *);
+ static unsigned int init_chipset_aec62xx(struct pci_dev *, const char *);
