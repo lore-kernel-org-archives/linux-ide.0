@@ -1,61 +1,41 @@
-From: Stefan Smietanowski <stesmi@stesmi.com>
+From: James Courtier-Dutton <James@superbug.demon.co.uk>
 Subject: Re: Recommended SATA controller?
-Date: Sun, 07 Mar 2004 22:32:48 +0100
+Date: Sun, 07 Mar 2004 23:24:13 +0000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <404B9500.9060706@stesmi.com>
-References: <opr4idafayq1sf88@mail.broadpark.no> <404B93D9.5090402@stesmi.com>
+Message-ID: <404BAF1D.9070103@superbug.demon.co.uk>
+References: <opr4idafayq1sf88@mail.broadpark.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 1-2-2-1a.has.sth.bostream.se ([82.182.130.86]:43716 "EHLO
-	K-7.stesmi.com") by vger.kernel.org with ESMTP id S262324AbUCGVcu
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Mar 2004 16:32:50 -0500
-In-Reply-To: <404B93D9.5090402@stesmi.com>
+Received: from anchor-post-31.mail.demon.net ([194.217.242.89]:39688 "EHLO
+	anchor-post-31.mail.demon.net") by vger.kernel.org with ESMTP
+	id S262330AbUCGX0P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 7 Mar 2004 18:26:15 -0500
+In-Reply-To: <opr4idafayq1sf88@mail.broadpark.no>
 List-Id: linux-ide@vger.kernel.org
-To: Stefan Smietanowski <stesmi@stesmi.com>
-Cc: Arve Knudsen <aknuds-1@broadpark.no>, linux-ide@vger.kernel.org
+To: Arve Knudsen <aknuds-1@broadpark.no>
+Cc: linux-ide@vger.kernel.org
 
-Stefan Smietanowski wrote:
+Arve Knudsen wrote:
+> Hi
+> 
+> As it seems the Silicon Image driver won't be radically improved anytime 
+> soon(?), I'm thinking of purchasing a dedicated SATA controller. Can 
+> anyone recommend me a fairly cheap 2-port controller that's known to 
+> work well with Linux (2.6-series)? Stability is imperative, I just had a 
+> solid freeze and I'm afraid it might have to do with disk activity 
+> (playing MP3s while compiling). Might Promise (Ultra 150) or Adaptect 
+> (1210 SA) be worth considering?
+> 
+> Thanks
+> 
+> Arve Knudsen
 
-> Arve Knudsen wrote:
-> 
->> Hi
->>
->> As it seems the Silicon Image driver won't be radically improved 
->> anytime soon(?), I'm thinking of purchasing a dedicated SATA 
->> controller. Can anyone recommend me a fairly cheap 2-port controller 
->> that's known to work well with Linux (2.6-series)? Stability is 
->> imperative, I just had a solid freeze and I'm afraid it might have to 
->> do with disk activity (playing MP3s while compiling). Might Promise 
->> (Ultra 150) or Adaptect (1210 SA) be worth considering?
-> 
-> 
-> I sent a list the other day about my harddrives dieing on me and after
-> following up my search I came across that there is some kind of either
-> driver or hardware error on the VIA 8237 controller's SATA part, but
-> ONLY if you run it in "DISK" mode. It works fine in "RAID" mode.
-> 
-> I can't give you specifics on what works or doesn't as I've only tried
-> 2.4 so far but the promise one seems to work fine for me in 2.4 right
-> now.
-> 
-> So stay away from the 8237 in case you decide to get a motherboard with
-> SATA on instead (not much more expensive really than getting a seperate
-> SATA PCI card.
+The SATA controller on the ICH5 chips seems to work fine here. I have an 
+ABIT IC7-G motherboard with SATA controller on the ICH5 chip, all built 
+into the motherboard.
 
-Specifically three identical hard drives died on me in case you missed
-the email, all in the same way. Low level formatting them cured two
-but not the third. It is being RMA'd as we speak.
+Cheers
+James
 
-The problem is not only with Maxtor harddrives (as it was with me) but
-with all brands. Drives that have died that I have read about are
-WD, Maxtor and Seagate. I can't remember if Hitachi was on the list or
-not but I wouldn't touch Hitachi (ex-IBM) with a 10 foot pole so that's
-why I don't remember. Many people have seen the same problem as I did.
-Some could use powermax to lowlevel the drive and some couldn't.
-Using a different controller with the lowlevel formatted drive seems
-to work for others as it does for me.
-
-// Stefan
