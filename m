@@ -1,114 +1,100 @@
-From: n001 <n001@sengena.com>
-Subject: [BUG REPORT] cat /proc/ide/hdb/identify = ide bus freeze
-Date: Thu, 25 Mar 2004 05:22:19 +0100
+From: Sergey Vlasov <vsu@altlinux.ru>
+Subject: sata_via: ata1 failed to respond
+Date: Thu, 25 Mar 2004 19:44:41 +0300
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40625E7B.7090201@sengena.com>
+Message-ID: <20040325164441.GP1756@master.mivlgu.local>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000503070104050306000709"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Mh8CTEa8Ax54aLHp"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bmvm.sengena.com ([212.13.208.167]:59660 "EHLO bmvm.sengena.com")
-	by vger.kernel.org with ESMTP id S263144AbUCYEW2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Mar 2004 23:22:28 -0500
+Received: from mivlgu.ru ([81.18.140.87]:28844 "EHLO master.mivlgu.local")
+	by vger.kernel.org with ESMTP id S263361AbUCYQoo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Mar 2004 11:44:44 -0500
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: linux-ide@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------000503070104050306000709
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Hi,
-
-Here is a bug report:
-
-when I do this:
-
-cat /proc/ide/hdb/identify
-
-The command stop here, and the ide bus become freezed.
-After about one minute, I have "hdb lost interrupt" (but the IDE bus is 
-always unavailable)
-
-It seem that if I unload "ide_cd", "sr_mod" and "cdrom" modules (don't 
-tried each separatly, but I can if needed), the command work.
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-kernel is:
-2.6.5-rc2
+--Mh8CTEa8Ax54aLHp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-dmesg after booting attached.
+Hello!
 
-If you need more info or testings, just let me know.
+I have another report about nonworking sata_via in 2.4.25-libata9
+plus the probing bug fix (so sata_via was identical to the version
+in 2.4.25-libata12).  The drive was not recognised with these
+messages:
 
--- 
-Nicolas Dimitrijevic - Sengena SARL - http://www.sengena.com
-tel: (33)4 91 40 46 50
+libata version 1.02 loaded.
+sata_via version 0.20
+sata_via(00:0f.0): routed to hard irq line 10
+ata1: SATA max UDMA/133 cmd 0xB800 ctl 0xB402 bmdma 0xA400 irq 20
+ata2: SATA max UDMA/133 cmd 0xB000 ctl 0xA802 bmdma 0xA408 irq 20
+ata1 is slow to respond, please be patient
+ata1 failed to respond (30 secs)
 
+The hardware was: ASUS A7V600 motherboard, Seagate ST3120026AS hard
+drive.  2.4.25-libata1 worked fine.
 
---------------000503070104050306000709
-Content-Type: text/plain;
- name="dmesg.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="dmesg.txt"
+acpi=off and noapic options did not help.  However, replacing
+sata_via.c with the version from 2.4.25-libata1 (with removed
+".phy_config = pata_phy_config" line to make it compile) allowed the
+detection to succeed.
 
-urce
-Console: colour VGA+ 80x25
-Memory: 1033684k/1048560k available (2288k kernel code, 13976k reserved, 880k data, 172k init, 131056k highmem)
-Checking if this processor honours the WP bit even in supervisor mode... Ok.
-Calibrating delay loop... 3399.68 BogoMIPS
-Security Scaffold v1.0.0 initialized
-Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
-Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
-Mount-cache hash table entries: 512 (order: 0, 4096 bytes)
-CPU:     After generic identify, caps: 0383fbff c1c3fbff 00000000 00000000
-CPU:     After vendor identify, caps: 0383fbff c1c3fbff 00000000 00000000
-CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
-CPU: L2 Cache: 256K (64 bytes/line)
-CPU:     After all inits, caps: 0383fbff c1c3fbff 00000000 00000020
-Intel machine check architecture supported.
-Intel machine check reporting enabled on CPU#0.
-CPU: AMD Athlon(TM) XP 2100+ stepping 01
-Enabling fast FPU save and restore... done.
-Enabling unmasked SIMD FPU exception support... done.
-Checking 'hlt' instruction... OK.
-POSIX conformance testing by UNIFIX
-enabled ExtINT on CPU#0
-ESR value before enabling vector: 00000000
-ESR value after enabling vector: 00000000
+I tried to replace ATA_FLAG_SATA_RESET with ATA_FLAG_SRST in the new
+driver - with this change detection also succeeds:
+
+--- kernel-source-2.4.25/drivers/scsi/sata_via.c.via-srst	2004-03-24 16:27:50 +0300
++++ kernel-source-2.4.25/drivers/scsi/sata_via.c	2004-03-25 18:51:19 +0300
+@@ -203,7 +203,7 @@ static int svia_init_one (struct pci_dev
+ 	INIT_LIST_HEAD(&probe_ent->node);
+ 	probe_ent->pdev = pdev;
+ 	probe_ent->sht = &svia_sht;
+-	probe_ent->host_flags = ATA_FLAG_SATA | ATA_FLAG_SATA_RESET |
++	probe_ent->host_flags = ATA_FLAG_SATA | ATA_FLAG_SRST |
+ 				ATA_FLAG_NO_LEGACY;
+ 	probe_ent->port_ops = &svia_sata_ops;
+ 	probe_ent->n_ports = 2;
+
+Here is the full dmesg output from boot with the above change:
+
+=======================================================================
+ctor: 00000000
 ENABLING IO-APIC IRQs
 init IO_APIC IRQs
  IO-APIC (apicid-pin) 2-0, 2-16, 2-17, 2-18, 2-19, 2-20, 2-21, 2-22, 2-23 not connected.
 ..TIMER: vector=0x31 pin1=2 pin2=-1
 Using local APIC timer interrupts.
 calibrating APIC timer ...
-..... CPU clock speed is 1724.0486 MHz.
-..... host bus clock speed is 265.0305 MHz.
-NET: Registered protocol family 16
+..... CPU clock speed is 1150.0919 MHz.
+..... host bus clock speed is 200.0160 MHz.
+cpu: 0, clocks: 2000160, slice: 1000080
+CPU0<T0:2000160,T1:1000080,D:0,S:1000080,C:2000160>
+mtrr: v1.40 (20010327) Richard Gooch (rgooch@atnf.csiro.au)
+mtrr: detected mtrr type: Intel
+ACPI: Subsystem revision 20040311
 PCI: PCI BIOS revision 2.10 entry at 0xf1970, last bus=1
 PCI: Using configuration type 1
-mtrr: v2.0 (20020519)
-ACPI: Subsystem revision 20040311
+Looking for DSDT in initrd ... not found!
 IOAPIC[0]: Set PCI routing entry (2-9 -> 0x71 -> IRQ 9 Mode:1 Active:1)
 ACPI: Interpreter enabled
 ACPI: Using IOAPIC for interrupt routing
+ACPI: System [ACPI] (supports S0 S1 S3 S4 S5)
 ACPI: PCI Interrupt Link [LNKA] (IRQs 3 4 5 6 7 9 10 *11 12)
-ACPI: PCI Interrupt Link [LNKB] (IRQs 3 4 5 6 7 9 10 11 12)
-ACPI: PCI Interrupt Link [LNKC] (IRQs 3 4 5 6 7 9 10 11 12)
-ACPI: PCI Interrupt Link [LNKD] (IRQs 3 4 5 6 7 9 10 11 12)
-ACPI: PCI Interrupt Link [LNKE] (IRQs 3 4 5 6 7 9 10 *11 12)
-ACPI: PCI Interrupt Link [LNKF] (IRQs 3 4 5 6 7 9 10 *11 12)
-ACPI: PCI Interrupt Link [LNKG] (IRQs 3 4 5 6 7 9 *10 11 12)
-ACPI: PCI Interrupt Link [LNKH] (IRQs 3 4 5 6 7 9 10 11 12)
+ACPI: PCI Interrupt Link [LNKB] (IRQs 3 4 5 6 7 9 *10 11 12)
+ACPI: PCI Interrupt Link [LNKC] (IRQs *3 4 5 6 7 9 10 11 12)
+ACPI: PCI Interrupt Link [LNKD] (IRQs 3 4 5 6 7 *9 10 11 12)
+ACPI: PCI Interrupt Link [LNKE] (IRQs 3 4 5 6 7 9 *10 11 12)
+ACPI: PCI Interrupt Link [LNKF] (IRQs 3 4 5 6 7 9 *10 11 12)
+ACPI: PCI Interrupt Link [LNKG] (IRQs *3 4 5 6 7 9 10 11 12)
+ACPI: PCI Interrupt Link [LNKH] (IRQs 3 4 5 6 7 *9 10 11 12)
 ACPI: PCI Root Bridge [PCI0] (00:00)
 PCI: Probing PCI hardware (bus 00)
 ACPI: PCI Interrupt Routing Table [\_SB_.PCI0._PRT]
 ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.PCI1._PRT]
-Linux Plug and Play Support v0.97 (c) Adam Belay
-drivers/usb/core/usb.c: registered new driver usbfs
-drivers/usb/core/usb.c: registered new driver hub
+PCI: Probing PCI hardware
 IOAPIC[0]: Set PCI routing entry (2-18 -> 0xa9 -> IRQ 18 Mode:1 Active:1)
 00:00:09[A] -> 2-18 -> IRQ 18
 IOAPIC[0]: Set PCI routing entry (2-19 -> 0xb1 -> IRQ 19 Mode:1 Active:1)
@@ -117,15 +103,44 @@ IOAPIC[0]: Set PCI routing entry (2-16 -> 0xb9 -> IRQ 16 Mode:1 Active:1)
 00:00:0c[B] -> 2-16 -> IRQ 16
 IOAPIC[0]: Set PCI routing entry (2-17 -> 0xc1 -> IRQ 17 Mode:1 Active:1)
 00:00:0c[C] -> 2-17 -> IRQ 17
+Pin 2-18 already programmed
+Pin 2-16 already programmed
+Pin 2-17 already programmed
+Pin 2-18 already programmed
+Pin 2-19 already programmed
+Pin 2-17 already programmed
+Pin 2-18 already programmed
+Pin 2-19 already programmed
+Pin 2-16 already programmed
+Pin 2-18 already programmed
+Pin 2-19 already programmed
+Pin 2-16 already programmed
+Pin 2-17 already programmed
+Pin 2-19 already programmed
+Pin 2-16 already programmed
+Pin 2-17 already programmed
+Pin 2-18 already programmed
+Pin 2-16 already programmed
+Pin 2-17 already programmed
+Pin 2-18 already programmed
+Pin 2-19 already programmed
 IOAPIC[0]: Set PCI routing entry (2-20 -> 0xc9 -> IRQ 20 Mode:1 Active:1)
 00:00:0f[A] -> 2-20 -> IRQ 20
+Pin 2-20 already programmed
 IOAPIC[0]: Set PCI routing entry (2-21 -> 0xd1 -> IRQ 21 Mode:1 Active:1)
 00:00:10[A] -> 2-21 -> IRQ 21
+Pin 2-21 already programmed
+Pin 2-21 already programmed
+Pin 2-21 already programmed
 IOAPIC[0]: Set PCI routing entry (2-22 -> 0xd9 -> IRQ 22 Mode:1 Active:1)
 00:00:11[C] -> 2-22 -> IRQ 22
+Pin 2-22 already programmed
+Pin 2-16 already programmed
+Pin 2-17 already programmed
 number of MP IRQ sources: 15.
 number of IO-APIC #2 registers: 24.
 testing the IO APIC.......................
+
 IO APIC #2......
 .... register #00: 02000000
 .......    : physical APIC id: 02
@@ -187,204 +202,94 @@ IRQ22 -> 0:22
 .................................... done.
 PCI: Using ACPI for IRQ routing
 PCI: if you experience problems, try using option 'pci=noacpi' or even 'acpi=off'
-radeonfb: Invalid ROM signature 0 should be 0xaa55
-radeonfb: Retreived PLL infos from BIOS
-radeonfb: Reference=27.00 MHz (RefDiv=12) Memory=275.00 Mhz, System=275.00 MHz
-radeonfb: Monitor 1 type CRT found
-radeonfb: EDID probed
-radeonfb: Monitor 2 type no found
-radeonfb: ATI Radeon QL  DDR SGRAM 64 MB
-Simple Boot Flag at 0x3a set to 0x1
-Machine check exception polling timer started.
-apm: BIOS version 1.2 Flags 0x03 (Driver version 1.16ac)
-apm: overridden by ACPI.
-ikconfig 0.7 with /proc/config*
-highmem bounce pool size: 64 pages
-devfs: 2004-01-31 Richard Gooch (rgooch@atnf.csiro.au)
-devfs: boot_options: 0x0
-Initializing Cryptographic API
-PCI: Via IRQ fixup for 0000:00:10.0, from 9 to 5
-PCI: Via IRQ fixup for 0000:00:10.1, from 9 to 5
-PCI: Via IRQ fixup for 0000:00:10.2, from 11 to 5
-PCI: Via IRQ fixup for 0000:00:10.3, from 11 to 5
-isapnp: Scanning for PnP cards...
-isapnp: No Plug & Play device found
-Console: switching to colour frame buffer device 160x64
-Real Time Clock Driver v1.12
-Linux agpgart interface v0.100 (c) Dave Jones
-agpgart: Detected VIA KT400/KT400A/KT600 chipset
-agpgart: Maximum main memory to use for agp memory: 941M
-agpgart: AGP aperture is 128M @ 0xf0000000
-Using anticipatory io scheduler
-Floppy drive(s): fd0 is 1.44M
-FDC 0 is a post-1991 82077
-PCI: Enabling device 0000:00:09.0 (0014 -> 0017)
-sk98lin: Network Device Driver v6.23
-(C)Copyright 1999-2004 Marvell(R).
-eth0: 3Com Gigabit LOM (3C940)
-      PrefPort:A  RlmtMode:Check Link State
-Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+PCI: Via IRQ fixup for 00:10.0, from 11 to 5
+PCI: Via IRQ fixup for 00:10.1, from 11 to 5
+PCI: Via IRQ fixup for 00:10.2, from 10 to 5
+PCI: Via IRQ fixup for 00:10.3, from 10 to 5
+Linux NET4.0 for Linux 2.4
+Based upon Swansea University Computer Society NET3.039
+Initializing RT netlink socket
+Starting kswapd
+kinoded started
+VFS: Disk quotas vdquot_6.5.1
+pty: 256 Unix98 ptys configured
+Serial driver version 5.05c (2001-07-08) with HUB-6 MANY_PORTS MULTIPORT SHARE_IRQ SERIAL_PCI enabled
+ttyS00 at 0x03f8 (irq = 4) is a 16550A
+NET4: Frame Diverter 0.46
+RAMDISK driver initialized: 16 RAM disks of 4096K size 1024 blocksize
+Uniform Multi-Platform E-IDE driver Revision: 7.00beta4-2.4
 ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-VIA8237SATA: IDE controller at PCI slot 0000:00:0f.0
-VIA8237SATA: chipset revision 128
-VIA8237SATA: 100% native mode on irq 20
-    ide2: BM-DMA at 0xa000-0xa007, BIOS settings: hde:pio, hdf:pio
-    ide3: BM-DMA at 0xa008-0xa00f, BIOS settings: hdg:pio, hdh:pio
-VP_IDE: IDE controller at PCI slot 0000:00:0f.1
+VP_IDE: IDE controller at PCI slot 00:0f.1
 VP_IDE: chipset revision 6
 VP_IDE: not 100% native mode: will probe irqs later
-VP_IDE: VIA vt8237 (rev 00) IDE UDMA133 controller on pci0000:00:0f.1
-    ide0: BM-DMA at 0x9400-0x9407, BIOS settings: hda:DMA, hdb:DMA
-    ide1: BM-DMA at 0x9408-0x940f, BIOS settings: hdc:DMA, hdd:DMA
-hda: IC35L040AVVA07-0, ATA DISK drive
-hdb: CD-W540E, ATAPI CD/DVD-ROM drive
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+VP_IDE: VIA vt8237 (rev 00) IDE UDMA133 controller on pci00:0f.1
+    ide0: BM-DMA at 0x9800-0x9807, BIOS settings: hda:DMA, hdb:pio
+    ide1: BM-DMA at 0x9808-0x980f, BIOS settings: hdc:pio, hdd:DMA
+hda: ST380021A, ATA DISK drive
+blk: queue c0303aa0, I/O limit 4095Mb (mask 0xffffffff)
+hdd: CD-W540E, ATAPI CD/DVD-ROM drive
 ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-hdc: ST3120026A, ATA DISK drive
-hdd: IBM-DTLA-307045, ATA DISK drive
 ide1 at 0x170-0x177,0x376 on irq 15
-hda: max request size: 128KiB
-hda: 80418240 sectors (41174 MB) w/1863KiB Cache, CHS=65535/16/63, UDMA(100)
- /dev/ide/host0/bus0/target0/lun0: p1 p2 p3 p4 < p5 p6 p7 >
-hdc: max request size: 1024KiB
-hdc: 234441648 sectors (120034 MB) w/8192KiB Cache, CHS=16383/255/63, UDMA(100)
- /dev/ide/host0/bus1/target0/lun0: p1 < p5 p6 p7 > p2
-hdd: max request size: 128KiB
-hdd: 90069840 sectors (46115 MB) w/1916KiB Cache, CHS=65535/16/63, UDMA(100)
- /dev/ide/host0/bus1/target1/lun0: p1 p2 < p5 > p3
-drivers/usb/core/usb.c: registered new driver hiddev
-drivers/usb/core/usb.c: registered new driver hid
-drivers/usb/input/hid-core.c: v2.0:USB HID core driver
-mice: PS/2 mouse device common for all mice
-serio: i8042 AUX port at 0x60,0x64 irq 12
-input: ImPS/2 Generic Wheel Mouse on isa0060/serio1
-serio: i8042 KBD port at 0x60,0x64 irq 1
-input: AT Translated Set 2 keyboard on isa0060/serio0
-i2c /dev entries driver
-NET: Registered protocol family 2
-IP: routing cache hash table of 8192 buckets, 64Kbytes
-TCP: Hash tables configured (established 262144 bind 65536)
-NET: Registered protocol family 1
-NET: Registered protocol family 10
-IPv6 over IPv4 tunneling driver
-NET: Registered protocol family 17
-Bridge firewalling registered
-ACPI: (supports S0 S1 S4 S5)
-found reiserfs format "3.6" with standard journal
-Reiserfs journal params: device hdc5, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-reiserfs: checking transaction log (hdc5) for (hdc5)
-Using r5 hash to sort names
-VFS: Mounted root (reiserfs filesystem) readonly.
-Freeing unused kernel memory: 172k freed
-Adding 497972k swap on /dev/hda6.  Priority:-1 extents:1
-input: PC Speaker
-USB Universal Host Controller Interface driver v2.2
-uhci_hcd 0000:00:10.0: VIA Technologies, Inc. USB
-uhci_hcd 0000:00:10.0: irq 21, io base 00009000
-uhci_hcd 0000:00:10.0: new USB bus registered, assigned bus number 1
-hub 1-0:1.0: USB hub found
-hub 1-0:1.0: 2 ports detected
-uhci_hcd 0000:00:10.1: VIA Technologies, Inc. USB (#2)
-uhci_hcd 0000:00:10.1: irq 21, io base 00008800
-uhci_hcd 0000:00:10.1: new USB bus registered, assigned bus number 2
-hub 2-0:1.0: USB hub found
-hub 2-0:1.0: 2 ports detected
-uhci_hcd 0000:00:10.2: VIA Technologies, Inc. USB (#3)
-uhci_hcd 0000:00:10.2: irq 21, io base 00008400
-uhci_hcd 0000:00:10.2: new USB bus registered, assigned bus number 3
-hub 3-0:1.0: USB hub found
-hub 3-0:1.0: 2 ports detected
-uhci_hcd 0000:00:10.3: VIA Technologies, Inc. USB (#4)
-uhci_hcd 0000:00:10.3: irq 21, io base 00008000
-uhci_hcd 0000:00:10.3: new USB bus registered, assigned bus number 4
-usb 1-1: new low speed USB device using address 2
-hub 4-0:1.0: USB hub found
-hub 4-0:1.0: 2 ports detected
-hdb: ATAPI 48X CD-ROM CD-R/RW CD-MRW drive, 8192kB Cache, UDMA(33)
-Uniform CD-ROM driver Revision: 3.20
-input: USB HID v1.10 Mouse [Microsoft Microsoft 3-Button Mouse with IntelliEye(TM)] on usb-0000:00:10.0-1
-PCI: Setting latency timer of device 0000:00:11.5 to 64
-usb 4-2: new low speed USB device using address 2
-codec_read: codec 0 is not valid [0xfe0000]
-codec_read: codec 0 is not valid [0xfe0000]
-input: USB HID v1.00 Keyboard [NOVATEK Keyboard NT6881] on usb-0000:00:10.3-2
-codec_read: codec 0 is not valid [0xfe0000]
-codec_read: codec 0 is not valid [0xfe0000]
-input: USB HID v1.00 Mouse [NOVATEK Keyboard NT6881] on usb-0000:00:10.3-2
-Linux video capture interface: v1.00
-usb 2-2: new full speed USB device using address 2
-bttv: driver version 0.9.12 loaded
-bttv: using 8 buffers with 2080k (520 pages) each for capture
-bttv: Bt8xx card found (0).
-PCI: Enabling device 0000:00:0b.0 (0004 -> 0006)
-hub 2-2:1.0: USB hub found
-hub 2-2:1.0: 4 ports detected
-bttv0: Bt848 (rev 18) at 0000:00:0b.0, irq: 19, latency: 32, mmio: 0xe7000000
-bttv0: using: IMS/IXmicro TurboTV [card=9,insmod option]
-bttv0: gpio: en=00000000, out=00000000 in=00fffffe [init]
-bttv0: using tuner=3
-bttv0: i2c: checking for MSP34xx @ 0x80... not found
-bttv0: i2c: checking for TDA9875 @ 0xb0... not found
-bttv0: i2c: checking for TDA7432 @ 0x8a... not found
-tuner: chip found at addr 0xc0 i2c-bus bt848 #0 [sw]
-tuner: type set to 3 (Philips (SECAM+PAL_BG) (FI1216MF, FM1216MF, FR1216MF)) by bt848 #0 [sw]
-bttv0: registered device video0
-bttv0: registered device vbi0
-bttv0: PLL: 28636363 => 35468950 .......<6>usb 2-2.3: new full speed USB device using address 3
-...failed
-found reiserfs format "3.6" with standard journal
-Reiserfs journal params: device hda5, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-reiserfs: checking transaction log (hda5) for (hda5)
-Using r5 hash to sort names
-found reiserfs format "3.6" with standard journal
-Reiserfs journal params: device hda7, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-reiserfs: checking transaction log (hda7) for (hda7)
-Using r5 hash to sort names
-kjournald starting.  Commit interval 5 seconds
-EXT3 FS on hdd1, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-found reiserfs format "3.6" with standard journal
-Reiserfs journal params: device hda3, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-reiserfs: checking transaction log (hda3) for (hda3)
-Using r5 hash to sort names
-ehci_hcd 0000:00:10.4: VIA Technologies, Inc. USB 2.0
-ehci_hcd 0000:00:10.4: irq 21, pci mem f9cbc000
-ehci_hcd 0000:00:10.4: new USB bus registered, assigned bus number 5
-ehci_hcd 0000:00:10.4: USB 2.0 enabled, EHCI 1.00, driver 2003-Dec-29
-usb 4-2: USB disconnect, address 2
-usb 2-2: USB disconnect, address 2
-usb 2-2.3: USB disconnect, address 3
-usb 1-1: USB disconnect, address 2
-hub 5-0:1.0: USB hub found
-hub 5-0:1.0: 8 ports detected
-ohci_hcd: 2004 Feb 02 USB 1.1 'Open' Host Controller (OHCI) Driver (PCI)
-ohci_hcd: block sizes: ed 64 td 64
-usb 2-2: new full speed USB device using address 4
-hub 2-2:1.0: USB hub found
-hub 2-2:1.0: 4 ports detected
-hub 2-2:1.0: hub_hub_status failed (err = -71)
-hub 2-2:1.0: config failed, can't get hub status (err -71)
-usb 4-2: new low speed USB device using address 3
-input: USB HID v1.00 Keyboard [NOVATEK Keyboard NT6881] on usb-0000:00:10.3-2
-input: USB HID v1.00 Mouse [NOVATEK Keyboard NT6881] on usb-0000:00:10.3-2
-usb 1-1: new low speed USB device using address 3
-input: USB HID v1.10 Mouse [Microsoft Microsoft 3-Button Mouse with IntelliEye(TM)] on usb-0000:00:10.0-1
-Disabled Privacy Extensions on device c03da180(lo)
-eth0: network connection up using port A
-    speed:           100
-    autonegotiation: yes
-    duplex mode:     full
-    flowctrl:        symmetric
-    irq moderation:  disabled
-    scatter-gather:  enabled
-eth0: no IPv6 routers present
-hdb: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
-hdb: drive_cmd: error=0x04Aborted Command 
-SCSI subsystem initialized
-[drm] Initialized radeon 1.9.0 20020828 on minor 0
-agpgart: Found an AGP 3.5 compliant device at 0000:00:00.0.
-agpgart: Device is in legacy mode, falling back to 2.x
-agpgart: Putting AGP V2 device at 0000:00:00.0 into 4x mode
-agpgart: Putting AGP V2 device at 0000:01:00.0 into 4x mode
-[drm] Loading R200 Microcode
+hda: attached ide-disk driver.
+hda: host protected area => 1
+hda: 156301488 sectors (80026 MB) w/2048KiB Cache, CHS=9729/255/63, UDMA(100)
+Partition check:
+ hda: hda1 hda2 < hda5 hda6 >
+md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: ... autorun DONE.
+NET4: Linux TCP/IP 1.0 for NET4.0
+IP Protocols: ICMP, UDP, TCP, IGMP
+IP: routing cache hash table of 4096 buckets, 32Kbytes
+TCP: Hash tables configured (established 32768 bind 65536)
+Linux IP multicast router 0.06 plus PIM-SM
+NET4: Unix domain sockets 1.0/SMP for Linux NET4.0.
+RAMDISK: Compressed image found at block 0
+Freeing initrd memory: 145k freed
+VFS: Mounted root (romfs filesystem) readonly.
+SCSI subsystem driver Revision: 1.00
+kmod: failed to exec /sbin/modprobe -s -k scsi_hostadapter, errno = 2
+kmod: failed to exec /sbin/modprobe -s -k scsi_hostadapter, errno = 2
+libata version 1.02 loaded.
+sata_via version 0.20
+sata_via(00:0f.0): routed to hard irq line 10
+ata1: SATA max UDMA/133 cmd 0xB800 ctl 0xB402 bmdma 0xA400 irq 20
+ata2: SATA max UDMA/133 cmd 0xB000 ctl 0xA802 bmdma 0xA408 irq 20
+ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003 88:407f
+ata1: dev 0 ATA, max UDMA/133, 234441648 sectors (lba48)
+ata1: dev 0 configured for UDMA/133
+ata2: no device found (phy stat 00000000)
+ata2: thread exiting
+scsi0 : sata_via
+scsi1 : sata_via
+  Vendor: ATA       Model: ST3120026AS       Rev: 1.02
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+ sda: sda1 sda2 sda3 < sda5 sda6 sda7 >
+VFS: Mounted root (ext2 filesystem) readonly.
+Trying to move old root to /initrd ... failed
+Unmounting old root
+Trying to free ramdisk memory ... okay
+Freeing unused kernel memory: 136k freed
+Executing init=/sbin/init
+=======================================================================
 
---------------000503070104050306000709--
+-- 
+Sergey Vlasov
+
+--Mh8CTEa8Ax54aLHp
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAYwx5W82GfkQfsqIRAuNrAJ9j7+4PWpfHrfUWfHlJnQXSJrogOACff+gy
+rS0bWgYpGalBEaiSCw0aq+c=
+=ktzN
+-----END PGP SIGNATURE-----
+
+--Mh8CTEa8Ax54aLHp--
