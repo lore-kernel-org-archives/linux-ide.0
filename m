@@ -1,50 +1,47 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata atapi work #5
-Date: Fri, 14 May 2004 16:15:58 -0400
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: SATA ATAPI UDMA - first in Linux
+Date: 14 May 2004 14:19:50 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40A528FE.8040301@pobox.com>
-References: <1084560167.8752.7.camel@patibmrh9> <40A5195C.2000402@pobox.com>	<1084562845.8752.37.camel@patibmrh9>  <40A5225B.9000907@pobox.com> <1084564801.3084.13.camel@patibmrh9>
+Message-ID: <1084565990.3084.36.camel@patibmrh9>
+References: <1084563800.8752.53.camel@patibmrh9><40A52683.8050604@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:22977 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262580AbUENUQO
+Received: from email-out1.iomega.com ([147.178.1.82]:5344 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S262585AbUENUUO
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 May 2004 16:16:14 -0400
-In-Reply-To: <1084564801.3084.13.camel@patibmrh9>
+	Fri, 14 May 2004 16:20:14 -0400
+In-Reply-To: <40A52683.8050604@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
-Pat LaVarre wrote:
-> Jeff G:
-> 
-> 
->>an open IP core 
->>compliant to the AHCI specification:
->>http://www.intel.com/technology/serialata/pdf/rev1_0.pdf
-> 
-> 
-> Does the web now offer PCI chip designs in open source?
+> Windows and Linux have both supported SATA ATAPI -- which implicitly 
+> includes UDMA from looking at the bridges -- for a while now, in various 
+>   OS drivers.
 
-Yes.  http://www.opencores.org/projects.cgi/web/pci
+SATA ATAPI PIO I find, easy, yes, immediately available in boot-from-CD
+Linux such as Knoppix.
 
-The above IP core bridges from the PCI bus to the internal wishbone [IP 
-core interconnect] bus.
+SATA ATA UDMA I have found.
 
-In theory, you connect your AHCI IP core to the PCI IP core via 
-wishbone.  opencores.org also has a wishbone-compliant DMA engine.
+SATA ATAPI UDMA I have not found.  Not in Linux, not in Windows.
 
+Perhaps I should blame my Silicon Image 3611CT80 1.4 bridge, and buy
+another?
 
-> 1987..1990 or so I did register-transfer-level chip design (a la
-> Verilog).  I naturally prefer concurrent designs over sequential.
+Do we all agree SATA ATAPI UDMA is missing from Linux-2.6.6 `make
+defconfig`?
 
-All good EE designs are concurrent rather than sequential ;-)
+Can any of us suggest other .config options to try?
 
-But I'm a computer scientist, what do I know...
+> If you have an ICH5 or Silicon Image 3112, I bet you could use your 
+> ATAPI device using the existing Linux IDE driver...
 
-	Jeff
+I believe I have ICH5.  I know I have a board labelled "Intel"
+"D865GBF".
 
+Pat LaVarre
 
 
