@@ -1,28 +1,26 @@
-From: Tobias Lorenz <tobias.lorenz@gmx.net>
-Subject: pdc20619, ata_promise
-Date: Wed, 10 Nov 2004 19:21:05 +0100
-Message-ID: <1100110864.809.4.camel@server.lorenz.priv>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Wanted: small number of crazy highpoint IDE  (HPT366-372N/374)
+	controller owners
+Date: Wed, 10 Nov 2004 18:30:36 +0000
+Message-ID: <1100111436.20556.15.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imap.gmx.net ([213.165.64.20]:27330 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S262080AbUKJSVJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Nov 2004 13:21:09 -0500
+Received: from clock-tower.bc.nu ([81.2.110.250]:64209 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S262110AbUKJTdi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Nov 2004 14:33:38 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Hi,
+I've been debugging and chasing down various HPT IDE problems. I've done
+some cleanups, fixed the PLL tune and little bits like that. These are
+the kind of changes that turn your disk into a random number generator
+if they go wrong but OTOH the HPT372N crashes should be fixed.
 
-will my pdc20619 support in sata_promise be added ?
-Or is anything left to do ?
+Now it needs some testers...
 
-I saw that you applied the renamings (s/sata/ata/). Will the module be
-renamed too, as we discussed (sata_promise->ata_promise) ?
-
-Best regards,
-  Toby
-
+Alan
 
