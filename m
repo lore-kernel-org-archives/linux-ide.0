@@ -1,72 +1,48 @@
 From: "Gutko" <gutko@poczta.onet.pl>
-Subject: Still no DMA on boot on S-ATA (Asus A7N8X-deluxe)
-Date: Sun, 25 May 2003 22:10:28 +0200
+Subject: Re: Still no DMA on boot on S-ATA (Asus A7N8X-deluxe)
+Date: Mon, 26 May 2003 14:22:37 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <003101c322f9$b0082230$928afea9@hal>
+Message-ID: <00f001c32381$7eaf5900$928afea9@hal>
+References: <Pine.LNX.4.44.0305251900170.1211-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.poczta.onet.pl ([213.180.130.30]:23194 "EHLO
+Received: from smtp2.poczta.onet.pl ([213.180.130.30]:25499 "EHLO
 	smtp2.poczta.onet.pl") by vger.kernel.org with ESMTP
-	id S263722AbTEYT5F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 May 2003 15:57:05 -0400
+	id S264358AbTEZMJc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 May 2003 08:09:32 -0400
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-
-Hardware:
-Asus A7N8X -deluxe v1.04 bios 1004
-SI3112A sata chipset
-IBM vancouver2 180GXP pata drive connected to sata trough Asus sata<->pata
-converter
-Kernel 2.4.21-rc3 (and all older 2.4.x with sata support)
-
-Why my hdd is always detected as PIO?
-I can enable udma5 using hdparm, later in rc.local but why it is not working
-on boot?
-
-----------DMESG-----------
-Uniform Multi-Platform E-IDE driver Revision: 7.00beta3-.2.4
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-NFORCE2: IDE controller at PCI slot 00:09.0
-NFORCE2: chipset revision 162
-NFORCE2: not 100% native mode: will probe irqs later
-AMD_IDE: PCI device 10de:0065 (nVidia Corporation) (rev a2) UDMA100
-controller on pci00:09.0
-    ide0: BM-DMA at 0xf000-0xf007, BIOS settings: hda:DMA, hdb:DMA
-    ide1: BM-DMA at 0xf008-0xf00f, BIOS settings: hdc:DMA, hdd:DMA
-SiI3112 Serial ATA: IDE controller at PCI slot 01:0b.0
-SiI3112 Serial ATA: chipset revision 1
-SiI3112 Serial ATA: not 100% native mode: will probe irqs later
-    ide2: MMIO-DMA at 0xe0f54000-0xe0f54007, BIOS settings: hde:pio, hdf:pio
-    ide3: MMIO-DMA at 0xe0f54008-0xe0f5400f, BIOS settings: hdg:pio, hdh:pio
-hdc: LITE-ON LTR-48125S, ATAPI CD/DVD-ROM drive
-hdd: HL-DT-STDVD-ROM GDR8160B, ATAPI CD/DVD-ROM drive
-hde: IC35L180AVV207-1, ATA DISK drive
-hdg: no response (status = 0xfe)
-ide1 at 0x170-0x177,0x376 on irq 15
-ide2 at 0xe0f54080-0xe0f54087,0xe0f5408a on irq 11
-hde: attached ide-disk driver.
-hde: host protected area => 1
-hde: 361882080 sectors (185284 MB) w/7965KiB Cache, CHS=22526/255/63
+Cc: linux-kernel@vger.kernel.org
 
 
-------------
-hdparm -i /dev/hde
-dma enabled manually
+----- Original Message ----- 
+From: "Mark Hahn" <hahn@physics.mcmaster.ca>
+To: "Gutko" <gutko@poczta.onet.pl>
+Sent: Monday, May 26, 2003 1:02 AM
+Subject: Re: Still no DMA on boot on S-ATA (Asus A7N8X-deluxe)
 
- Model=IC35L180AVV207-1, FwRev=V26OA60F, SerialNo=VNVF01G6G0VZ9D
- Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs }
- RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=52
- BuffType=DualPortCache, BuffSize=7965kB, MaxMultSect=16, MultSect=16
- CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
- IORDY=on/off, tPIO={min:240,w/IORDY:120}, tDMA={min:120,rec:120}
- PIO modes:  pio0 pio1 pio2 pio3 pio4
- DMA modes:  mdma0 mdma1 mdma2
- UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5
- AdvancedPM=yes: disabled (255) WriteCache=enabled
- Drive conforms to: ATA/ATAPI-6 T13 1410D revision 3a:  2 3 4 5 6
 
+> > Why my hdd is always detected as PIO?
+>
+> I looked briefly at the driver a couple weeks ago -
+> it appears to be deliberate, perhaps an attempt at conservativism.
+>
+> > I can enable udma5 using hdparm, later in rc.local but why it is not
+working
+> > on boot?
+>
+> does it work well?  I'm trying to evaluate a system with a SiI3112
+> card and two seagate native-sata 120's.  things work OK under very
+> light use, but quickly degenerate into the classic 'lost interrupt'...
+>
+yes i works good but i have onboard SIL3112A chipset. Im using it on udma5
+about
+3 months without any data corruption or errors (linux and windows).
+but I have only one drive connected to sata. I've  heard people running raid
+had
+problems undrer windows too
 
 
