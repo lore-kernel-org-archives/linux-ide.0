@@ -1,38 +1,28 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Best PCI-X SATA controller?
-Date: Sun, 22 Aug 2004 23:04:58 +0100
+From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Subject: Intel 82801EB/82801ER SATA controller's Combined mode does not op
+	erate
+Date: Sun, 22 Aug 2004 09:09:47 +0900
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4129188A.1090506@dgreaves.com>
-References: <20040822214244.11863.qmail@science.horizon.com>
+Message-ID: <7076215DFAA4574099E5CD59FE42226204F23275@pcssrv42.pcs.pc.ome.toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-2022-jp"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:28802 "EHLO mail.ukfsn.org")
-	by vger.kernel.org with ESMTP id S266214AbUHVWFA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Aug 2004 18:05:00 -0400
-In-Reply-To: <20040822214244.11863.qmail@science.horizon.com>
+Received: from inet-tsb.toshiba.co.jp ([202.33.96.40]:46740 "EHLO
+	inet-tsb.toshiba.co.jp") by vger.kernel.org with ESMTP
+	id S266825AbUHVXqC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Aug 2004 19:46:02 -0400
 List-Id: linux-ide@vger.kernel.org
-To: linux@horizon.com
-Cc: linux-ide@vger.kernel.org
+To: 'Jeff Garzik' <jgarzik@pobox.com>
+Cc: "'linux-ide@vger.kernel.org'" <linux-ide@vger.kernel.org>, "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Dear Jeff,
 
-linux@horizon.com wrote:
-
-|I'm setting up a new file server, and trying to get a reasonably
-|future-proof system without getting too spendy.
-
-FWIW I'm very interested in this too.
-
-David
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
-
-iD8DBQFBKRiK8LvjTle4P1gRAp86AJ0ZndBAkARqWThOtUhXJa8SIn1AEACfSnvu
-At3MqRAZUg3lEq2tK9BXVMM=
-=4pJl
------END PGP SIGNATURE-----
+It seems that combined mode does not operate at 2.4.28-pre1/2.6.8.1
+about the ata_piix driver of the Intel 82801EB/82801ER SATA controller
+of Intel 82801EB/82801ER.
+Combined mode operated in the version 1.00 of ata_piix.
+Is the driver for combine modes ata_piix? Or is it piix?
+--
+Haruo
 
