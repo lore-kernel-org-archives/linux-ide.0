@@ -1,63 +1,38 @@
-From: janitor@sternwelten.at
-Subject: [patch 5/5]  ide-cs: replace schedule_timeout() with 	msleep()
-Date: Thu, 02 Sep 2004 01:19:40 +0200
+From: Daniel Drake <dsd@gentoo.org>
+Subject: "dma_timer_expiry: dma status == 0x64" messages under system load
+Date: Thu,  2 Sep 2004 15:27:51 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <E1C2eOC-0003ew-MD@sputnik>
+Message-ID: <1094135271.41372de7b500d@dsd.homelinux.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:41856 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S268134AbUIAXTk
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Sep 2004 19:19:40 -0400
+Received: from mta06-svc.ntlworld.com ([62.253.162.46]:39730 "EHLO
+	mta06-svc.ntlworld.com") by vger.kernel.org with ESMTP
+	id S268288AbUIBODA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Sep 2004 10:03:00 -0400
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, alan@redhat.com, janitor@sternwelten.at
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-ide@vger.kernel.org
 
+Hi,
 
+I'm investigating a problem relating to decreased system responsiveness when
+under IDE load. The following messages appear in dmesg multiple times:
 
+hdb: dma_timer_expiry: dma status == 0x64
+hdb: DMA interrupt recovery
+hdb: lost interrupt
 
+It seems that a patch written by yourself in May 2003 solves the problem:
+http://www.cs.helsinki.fi/linux/linux-kernel/2003-19/1192.html
+... but it is not present in the current kernel.
 
+What is the fate of this patch?
 
-
-I would appreciate any comments from the janitor@sternweltens list.
+For more info see:
+http://bugs.gentoo.org/show_bug.cgi?id=59751
+http://forums.gentoo.org/viewtopic.php?p=1417524
 
 Thanks,
-Nish
-
-
-
-Description: Use msleep() instead of schedule_timeout() to guarantee the
-desired delay.
-
-Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
-Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
-
-
-
----
-
- linux-2.6.9-rc1-bk7-max/drivers/ide/legacy/ide-cs.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff -puN drivers/ide/legacy/ide-cs.c~msleep-drivers_ide_legacy_ide-cs drivers/ide/legacy/ide-cs.c
---- linux-2.6.9-rc1-bk7/drivers/ide/legacy/ide-cs.c~msleep-drivers_ide_legacy_ide-cs	2004-09-01 19:34:49.000000000 +0200
-+++ linux-2.6.9-rc1-bk7-max/drivers/ide/legacy/ide-cs.c	2004-09-01 19:34:49.000000000 +0200
-@@ -43,6 +43,7 @@
- #include <linux/ide.h>
- #include <linux/hdreg.h>
- #include <linux/major.h>
-+#include <linux/delay.h>
- #include <asm/io.h>
- #include <asm/system.h>
- 
-@@ -357,8 +358,7 @@ void ide_config(dev_link_t *link)
- 		break;
- 	    }
- 	}
--	__set_current_state(TASK_UNINTERRUPTIBLE);
--	schedule_timeout(HZ/10);
-+	msleep(100);
-     }
- 
-     if (hd < 0) {
-
-_
+Daniel
