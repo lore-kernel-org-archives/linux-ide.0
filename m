@@ -1,50 +1,74 @@
-From: "Gerry Rozema" <gerryr@rozeware.bc.ca>
-Subject: [PATCH 2.6.9] libata:  Add another drive to the blacklist for SIL_QUIRK_MOD15WRITE
-Date: Sun, 21 Nov 2004 04:35:42 -0800
-Message-ID: <IJEHJPPHAHEBOOMNBBIHGECPGKAA.gerryr@rozeware.bc.ca>
+From: Oliver Bausinger <bausi@bausi.org>
+Subject: SIL 3114 problem
+Date: Sun, 21 Nov 2004 18:38:42 +0100
+Message-ID: <200411211838.42292.bausi@bausi.org>
+Reply-To: bausi@bausi.org
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail2.divebc.com ([64.246.48.85]:39887 "EHLO www.ibtalk.net")
-	by vger.kernel.org with ESMTP id S261705AbUKUMfp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Nov 2004 07:35:45 -0500
-Received: from mail.divebc.com (S01060080c77cb685.vc.shawcable.net [24.85.33.80])
-	by www.ibtalk.net (8.11.6/8.11.6) with ESMTP id iALDFiB15981
-	for <linux-ide@vger.kernel.org>; Sun, 21 Nov 2004 07:15:44 -0600
-Received: from antigua (S01060050bab3486f.vc.shawcable.net [24.85.58.167])
-	by mail.divebc.com (Postfix) with SMTP id 2ACAEB34016
-	for <linux-ide@vger.kernel.org>; Sun, 21 Nov 2004 04:40:22 -0800 (PST)
+Received: from everest.mathematik.uni-tuebingen.de ([134.2.62.220]:10372 "EHLO
+	everest.mathematik.uni-tuebingen.de") by vger.kernel.org with ESMTP
+	id S261710AbUKURjI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 21 Nov 2004 12:39:08 -0500
+Received: from everest.mathematik.uni-tuebingen.de (p509183ED.dip0.t-ipconnect.de [80.145.131.237])
+	by everest.mathematik.uni-tuebingen.de (Postfix) with ESMTP id 379A14B422
+	for <linux-ide@vger.kernel.org>; Sun, 21 Nov 2004 18:39:06 +0100 (CET)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Add a western digital 200 gig drive to the blacklist for
-SIL_QUIRK_MOD15WRITE
+Hi,
 
-I just finished building a raid with 3 new WD drives, and the
-Silicon Image 3114 4 port controller.  I had data corruption problems
-even before I was finished installing onto the new system.  This patch
-corrected that, and it's been running reliably under heavy read/write
-load for a few days now.
+I have strange problems with a SATA controller and harddisk.
 
-Signed-off-by:  Gerry Rozema <gerryr@rozeware.bc.ca>
+Controller: Silicon Image SATA 3114 RAID
+Harddisk: SAMSUNG SP1614C
 
-----
-diff -Naur a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+The controller and disk get recognized, partitioned and formatted with ext3 
+(or reiserfs) without problems.
 
---- a/drivers/scsi/sata_sil.c	2004-11-18 20:08:05.000000000 -0800
-+++ b/drivers/scsi/sata_sil.c	2004-11-18 19:47:15.000000000 -0800
-@@ -92,6 +92,7 @@
- 	{ "ST380011ASL",	SIL_QUIRK_MOD15WRITE },
- 	{ "ST3120022ASL",	SIL_QUIRK_MOD15WRITE },
- 	{ "ST3160021ASL",	SIL_QUIRK_MOD15WRITE },
-+	{ "WDC WD2000JD-00H",	SIL_QUIRK_MOD15WRITE },
- 	{ "Maxtor 4D060H3",	SIL_QUIRK_UDMA5MAX },
- 	{ }
- };
+I previously described a writing problem in   
+http://bugme.osdl.org/show_bug.cgi?id=3751 
+where - when trying to write on the disk - ext3 aborted.
 
-----
+This problem can no longer be reproduced with 2.6.10-rc2-bk6 which I'm 
+currenty running.
 
+Writing to a partition seems to work, but when I fsck.ext3 it (same for reiser 
+and ext2) afterwards, I always get some kind of coruption like this:
 
+root@ubuntu:~ # fsck.ext3 -f /dev/sda2
+e2fsck 1.35 (28-Feb-2004)
+Pass 1: Checking inodes, blocks, and sizes
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+Block bitmap differences:  +(555012--555013) +(653315--653317) 
++(1603588--1603589) +1636356 +(1669123--1669125)
+Fix<y>? yes
+
+/dev/sda2: ***** FILE SYSTEM WAS MODIFIED *****
+/dev/sda2: 140632/977280 files (0.2% non-contiguous), 890219/1953905 blocks
+
+Running fsck again results in similar output. (Also similar happens with 
+reiserfs)
+
+When trying to put the root partition on the SATA disk random programs started 
+to segfault as it doesn't seem to read correctly from the disk.
+
+As none of this is reproducable on the IDE disks I'm working from it seems 
+like a driver problem to me.
+
+I tried to put the harddisk on the sil_blacklist for SIL_QUIRK_MOD15WRITE
+in sata_sil.c which resulted in ext3 aborting the same way as described
+in http://bugme.osdl.org/show_bug.cgi?id=3751 even with 2.6.10-rc2-bk6.
+
+So, if anyone could help me or give me further debugging hints, I'd be 
+thankful.
+
+Greetings
+Bausi
