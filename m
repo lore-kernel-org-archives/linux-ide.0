@@ -1,61 +1,38 @@
-From: linux@horizon.com
-Subject: Best PCI-X SATA controller?
-Date: 22 Aug 2004 21:42:44 -0000
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Best PCI-X SATA controller?
+Date: Sun, 22 Aug 2004 23:04:58 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040822214244.11863.qmail@science.horizon.com>
+Message-ID: <4129188A.1090506@dgreaves.com>
+References: <20040822214244.11863.qmail@science.horizon.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from science.horizon.com ([192.35.100.1]:46134 "HELO
-	science.horizon.com") by vger.kernel.org with SMTP id S266214AbUHVVmt
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Aug 2004 17:42:49 -0400
+Received: from s2.ukfsn.org ([217.158.120.143]:28802 "EHLO mail.ukfsn.org")
+	by vger.kernel.org with ESMTP id S266214AbUHVWFA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Aug 2004 18:05:00 -0400
+In-Reply-To: <20040822214244.11863.qmail@science.horizon.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux@horizon.com
+To: linux@horizon.com
+Cc: linux-ide@vger.kernel.org
 
-I'm setting up a new file server, and trying to get a reasonably
-future-proof system without getting too spendy.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I'm willing to buy hardware that has capabilities that the software
-can't curerntly support as long as I can expect that the support
-will appear in the forseeable future.
+linux@horizon.com wrote:
 
-It looks like SATA drives have basically achieved price parity,
-and I'm setting up a mirrored RAID system, so getting SATA for
-hot-swap is very attractive.
+|I'm setting up a new file server, and trying to get a reasonably
+|future-proof system without getting too spendy.
 
-On the list of features I'd like to explot, native command queuing
-(NCQ) is very attractive, as it should help multithreaded loads a great
-deal.  Fortuitously, some of Seagate's SATA drives, which I already like
-because of the longer warranty, support NCQ.
+FWIW I'm very interested in this too.
 
-(For the Seagate 7200.7 series, the ST3160827AS and ST3200822AS, and
-in general the ST3xxx8xxAS drives, support NCQ.  The ST3xxx0xxAS drives
-do not.)
+David
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.5 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
 
-So, now I need an SATA controller that supports NCQ.  My chosen (Opteron)
-motherboard has PCI-X, and a number of PCI-X SATA controllers are showing
-up.  But which ones can do NCQ and have good Linux support?
+iD8DBQFBKRiK8LvjTle4P1gRAp86AJ0ZndBAkARqWThOtUhXJa8SIn1AEACfSnvu
+At3MqRAZUg3lEq2tK9BXVMM=
+=4pJl
+-----END PGP SIGNATURE-----
 
-Intel's 4-port PCI-X 31244 controller is the only one with openly
-published specifications, and I'm willing to pay extra to support that.
-But I can't find it on an add-in card anywhere.  Does it exist in that
-form?  The SRCS16 looks like something entirely different that does
-not do full PCI-X nor does it support AHCI.
-
-Are there any other AHCI controllers floating around?
-
-The Marvell 88SX60xx chips support NCQ, and their 88SX50xx chips (which
-do not) are the basis of a number of cheap 8-port PCI-X SATa controllers,
-such as trhe RocketRAID 1820A.  But I can't find a card that has the
-88SX60xx on board.  (Confusingly, Promise brags about "Command Queueing
-(CQ) support", but that's PATA-style TCQ, not NCQ, even on the 1820A.)
-
-They aren't publishing specs, but apparently are being helpful on the
-driver development front.
-
-The Promise SATAII150 SX8 card is another possibility, a cheap PCI-X
-8-port SATA controller, but I can't find it for sale anywhere!
-I also can't find published specs, but they appear to be helping jgarzik...
-
-
-Any suggestions?  Thanks!
