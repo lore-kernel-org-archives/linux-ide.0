@@ -1,36 +1,43 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH] IDE update for 2.6.7-rc3 [1/12]
-Date: Tue, 15 Jun 2004 07:29:39 +1000
+From: Dan Hollis <goemon@anime.net>
+Subject: Re: kernel 2.6.6 amd8111 dma bugs
+Date: Mon, 14 Jun 2004 17:34:57 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040614212939.GA19812@gondor.apana.org.au>
-References: <E1BZQSC-0006vd-00@gondolin.me.apana.org.au> <200406132001.44262.bzolnier@elka.pw.edu.pl> <20040613221840.GA31354@gondor.apana.org.au> <200406141637.27492.bzolnier@elka.pw.edu.pl>
+Message-ID: <Pine.LNX.4.44.0406141732090.6744-100000@sasami.anime.net>
+References: <40BE85FA.7000902@clanhk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from arnor.apana.org.au ([203.14.152.115]:38925 "EHLO
-	arnor.apana.org.au") by vger.kernel.org with ESMTP id S264443AbUFNVaG
+Received: from sasami.anime.net ([207.109.251.120]:30107 "EHLO
+	sasami.anime.net") by vger.kernel.org with ESMTP id S264885AbUFOAfC
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jun 2004 17:30:06 -0400
-Content-Disposition: inline
-In-Reply-To: <200406141637.27492.bzolnier@elka.pw.edu.pl>
+	Mon, 14 Jun 2004 20:35:02 -0400
+In-Reply-To: <40BE85FA.7000902@clanhk.org>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "J. Ryan Earl" <heretic@clanhk.org>
+Cc: Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org
 
-On Mon, Jun 14, 2004 at 04:37:27PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> 
-> I'm lost now, so what is your change exactly supposed to do?
+On Wed, 2 Jun 2004, J. Ryan Earl wrote:
+> Jens Axboe wrote:
+> >On Fri, May 28 2004, Dan Hollis wrote:
+> >>replies to email as i'm not subscribed to the list.
+> >>There seem to be regular dma timeouts:
+> >>hdc: dma_timer_expiry: dma status == 0x24
+> >>hdc: DMA interrupt recovery
+> >>hdc: lost interrupt
+> >>hda: dma_timer_expiry: dma status == 0x24
+> >>hda: DMA interrupt recovery
+> >>hda: lost interrupt
+> >>Hardware:
+> >>Opteron 140, Tyan Tomcat K8S (S2850)
+> >Try disabling ACPI (in .config or boot acpi=off iirc)
+> I had that problem, but not with ACPI, only when I forced APIC on.  It 
+> was on the VIA controller which uses the same driver.
 
-The change is only effective when IDE is built as a module.  It allows
-you the option to have the same probing order as if IDE was built-in.
+Turns out it was apic and not acpi at all. Booting with ACPI but noapic 
+and I no longer get any dma errors.
 
-Without the patch it always probes the device as soon as each PCI driver
-is loaded.  And you can still do that as long as ide-generic is loaded
-before the PCI drivers.
+Is the bug in the linux apic code or a hardware flaw in the opteron cpu? 
+Or something else?
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email:  Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+-Dan
+
