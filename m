@@ -1,47 +1,49 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide: hdio.txt update
-Date: Thu, 10 Mar 2005 17:30:35 +0100
-Message-ID: <58cb370e05031008307a0163c1@mail.gmail.com>
-References: <20050302235457.GA21352@htj.dyndns.org>
-	 <20050303021638.GA24150@htj.dyndns.org>
+Subject: Re: PATCH: ALI15x3, 200GB HD, dma broken, no_lba48_dma
+Date: Thu, 10 Mar 2005 17:30:57 +0100
+Message-ID: <58cb370e0503100830533f54b9@mail.gmail.com>
+References: <Pine.LNX.4.60.0503042332240.1782@thelonious.dnsalias.com>
 Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.201]:17171 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262677AbVCJQan (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2005 11:30:43 -0500
-Received: by wproxy.gmail.com with SMTP id 68so815940wra
-        for <linux-ide@vger.kernel.org>; Thu, 10 Mar 2005 08:30:36 -0800 (PST)
-In-Reply-To: <20050303021638.GA24150@htj.dyndns.org>
+Received: from wproxy.gmail.com ([64.233.184.200]:13082 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262718AbVCJQbF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2005 11:31:05 -0500
+Received: by wproxy.gmail.com with SMTP id 68so816058wra
+        for <linux-ide@vger.kernel.org>; Thu, 10 Mar 2005 08:30:57 -0800 (PST)
+In-Reply-To: <Pine.LNX.4.60.0503042332240.1782@thelonious.dnsalias.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bram Verweij <bram.verweij@wanadoo.nl>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+good catch, I overlooked lba48 flag when introducing no_lba48_dma
 
-On Thu, 3 Mar 2005 11:16:38 +0900, Tejun Heo <htejun@gmail.com> wrote:
+I slightly modified your patch:
 
-> +         [2] Both the input and output buffers are copied from the
-> +         user and written back to the user, even when not used.  The
-> +         out_flags and in_flags are written back to the user after
-> +         the ioctl completes.  These are the same as the input
-> +         values, unchanged.
+diff -Nru a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+--- a/drivers/ide/ide-disk.c	2005-03-10 16:07:50 +01:00
++++ b/drivers/ide/ide-disk.c	2005-03-10 16:07:50 +01:00
+@@ -168,6 +168,8 @@
+ 	if (hwif->no_lba48_dma && lba48 && dma) {
+ 		if (block + rq->nr_sectors > 1ULL << 28)
+ 			dma = 0;
++		else
++			lba48 = 0;
+ 	}
+ 
+ 	if (!dma) {
+@@ -181,7 +183,7 @@
+ 	/* FIXME: SELECT_MASK(drive, 0) ? */
+ 
+ 	if (drive->select.b.lba) {
+-		if (drive->addressing == 1) {
++		if (lba48) {
+ 			task_ioreg_t tasklets[10];
+ 
+ 			pr_debug("%s: LBA=0x%012llx\n", drive->name, block);
 
-This is incorrect, please refer to flagged_taskfile() and ide_taskfile_ioctl().
-Unfortunately you've based your latest patch series on this assumption.
-
-> +         Taskfile registers are read back from the drive into
-> +         {io|hob}_ports[] after the command completes iff one of the
-> +         following conditions is met; otherwise, the original values
-> +         will be written back, unchanged.
-> +
-> +           1. The drive fails the command (EIO).
-> +           2. More than one bit is set in tf_out_flags.
-
-Isn't one bit enough?
-
-The rest is of the update is fine, thanks for doing this.
+and applied it, thanks
 
 Bartlomiej
