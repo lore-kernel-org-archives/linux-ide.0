@@ -1,38 +1,26 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: working sata raid - which controller?
-Date: Thu, 12 Aug 2004 01:58:31 -0400
+Subject: Linux SATA RAID FAQ
+Date: Thu, 12 Aug 2004 02:33:41 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040812055831.GA24656@havoc.gtf.org>
-References: <20040810161911.GA10565@devserv.devel.redhat.com> <200408102148.57602.ianh@iahastie.local.net> <026f01c48031$0c121140$cf01a8c0@internal.kbs.net.au>
+Message-ID: <411B0F45.8070500@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([216.162.42.101]:6301 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S266262AbUHLF6f (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Aug 2004 01:58:35 -0400
-Content-Disposition: inline
-In-Reply-To: <026f01c48031$0c121140$cf01a8c0@internal.kbs.net.au>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:37858 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S268423AbUHLGdy
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Aug 2004 02:33:54 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Paul <paul@kbs.net.au>
-Cc: linux-ide@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 
-I really need to do a FAQ page on this...
+As author of the current Linux SATA driver, I get the brunt of the 
+questions and "bug reports" about "Linux doesn't support my hardware 
+SATA RAID".  Sigh.  Silly marketing departments.
 
+Thus, I have created a FAQ.  You might sense a theme...
 
-On Thu, Aug 12, 2004 at 03:56:01PM +1000, Paul wrote:
-> We are purchasing a new test server and I need to know which controllers are
-> sata raid based and are hardware raid and not software raid. We currently
-
-3ware and a few Adaptecs are the main SATA hardware RAID.
-
-
-> use promise fast trak tx4's and have found in linux there is no mirroring
-> support and it does not actively mirror data between the two disks.
-
-Sure it does.  md mirrors quite nicely.
-
-	Jeff
-
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/faq-sata-raid.html
 
 
