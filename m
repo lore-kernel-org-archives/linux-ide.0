@@ -1,50 +1,42 @@
-From: Andy Warner <andyw@pobox.com>
-Subject: Re: [t13] RE: comment on T10 ATA-passthru
-Date: Mon, 1 Nov 2004 20:12:41 -0600
-Message-ID: <20041101201240.A16317@florence.linkmargin.com>
-References: <A9B8FF43A76C0D42A80DDD73CF99BEC80548967B@azsmsx407> <20041029142539.A29944@florence.linkmargin.com> <20041029194311.GA27218@havoc.gtf.org> <20041029153953.B29944@florence.linkmargin.com> <20041029205033.GA32007@havoc.gtf.org>
+From: Christopher Chan <cchan@outblaze.com>
+Subject: linux 2.6.9 controller order reordered.  was: [Re: linux 2.6.9 still
+ having network code problems]
+Date: Tue, 02 Nov 2004 17:04:19 +0800
+Message-ID: <41874D93.9000008@outblaze.com>
+References: <418741EB.3080701@outblaze.com>	<20041102011918.2b453e21.akpm@osdl.org>	<4187478A.1040002@outblaze.com> <20041102014119.1a6096cc.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:20401 "EHLO
-	ms-smtp-03.rdc-kc.rr.com") by vger.kernel.org with ESMTP
-	id S313062AbUKBCO3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Nov 2004 21:14:29 -0500
-Content-Disposition: inline
-In-Reply-To: <20041029205033.GA32007@havoc.gtf.org>; from jgarzik@pobox.com on Fri, Oct 29, 2004 at 04:50:33PM -0400
+Received: from corpmail.outblaze.com ([203.86.166.82]:50086 "EHLO
+	corpmail.outblaze.com") by vger.kernel.org with ESMTP
+	id S291441AbUKBJEE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Nov 2004 04:04:04 -0500
+In-Reply-To: <20041102014119.1a6096cc.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andy Warner <andyw@pobox.com>, linville@redhat.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Andrew Morton <akpm@osdl.org>
 
-Jeff Garzik wrote:
-> [I ask about NCQ ...]
-> Most of the code is already written to assume that queueing is
-> active.  Turning on NCQ in libata is trivial.  Handling errors and
-> synchronization is less trivial :)
+Andrew Morton wrote:
+> Christopher Chan <cchan@outblaze.com> wrote:
+> 
+>>DOH. the kernel swapped the controller order on me...fstab entries 
+>> referred to the wrong device names...
+> 
+> 
+> Eh?  That shouldn't happen.  Could you please generate a full report of
+> this, send it to the appropriate list and cc myself?
+> 
+> Although if that's the 2.6.9 behaviour it's probably a bit late to fix it
+> up.
+> 
 
-I guess I'm a little gun shy here :) Remember, my induction to
-hotplug consisted of:
+Hardware: Tyan mb with Serverworks chipset and onboard Promise controller.
+	The two disks on promise channel since Serverworks does not support ATA100
 
-	"That's because libata doesn't call the proper hot-unplug hooks.
-	 Call those hooks, and the problem goes away."
+FC2 Installation will recognise the disks as hde and hdg
+fstab is accordingly setup as so for swap (everything else are md)
 
-I really don't want to hugely underestimate the effort involved.
-
-Things that I can't quite see being in there right now
-are the low-level state machine support for queued events,
-and data structures and functions required to queue the pending
-requests.
-
-The boundary conditions you allude to seem likely to be
-a pandora's box. Not the least of which will be ensuring
-that queued and non-queued commands never mingle. It is
-my understanding that any non-queued command will abort
-*all* pending queued commands with unpredictable results
-for data in flight.
-
-What (if any) chip/board level driver work can be expected ?
--- 
-andyw@pobox.com
-
-Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
+Changing to a 2.6.9 kernel that has the promise driver compiled in will 
+change the disks to hda and hdc.
