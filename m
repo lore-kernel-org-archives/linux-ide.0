@@ -1,53 +1,37 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Driver retries disk errors.
-Date: Tue, 31 Aug 2004 17:12:50 +0100
+From: "Andrew Chew" <achew@nvidia.com>
+Subject: IDE class driver with SATA controllers
+Date: Tue, 31 Aug 2004 14:03:41 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1093968767.597.14.camel@localhost.localdomain>
-References: <20040830163931.GA4295@bitwizard.nl>
-	 <1093952715.32684.12.camel@localhost.localdomain>
-	 <20040831135403.GB2854@bitwizard.nl>
-	 <1093961570.597.2.camel@localhost.localdomain>
-	 <20040831155653.GD17261@harddisk-recovery.com>
-	 <1093965233.599.8.camel@localhost.localdomain>
-	 <20040831170016.GF17261@harddisk-recovery.com>
+Message-ID: <DBFABB80F7FD3143A911F9E6CFD477B03F969B@hqemmail02.nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from the-village.bc.nu ([81.2.110.252]:56968 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S268754AbUHaROy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Aug 2004 13:14:54 -0400
-In-Reply-To: <20040831170016.GF17261@harddisk-recovery.com>
+Received: from hqemgate02.nvidia.com ([216.228.112.145]:25869 "EHLO
+	hqemgate02.nvidia.com") by vger.kernel.org with ESMTP
+	id S269176AbUHaVDr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Aug 2004 17:03:47 -0400
+Content-class: urn:content-classes:message
 List-Id: linux-ide@vger.kernel.org
-To: Erik Mouw <erik@harddisk-recovery.com>
-Cc: Rogier Wolff <R.E.Wolff@harddisk-recovery.nl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: jgarzik@pobox.com, B.Zolnierkiewicz@elka.pw.edu.pl
 
-On Maw, 2004-08-31 at 18:00, Erik Mouw wrote:
-> > For non hard disk cases many devices do want and need retry.
-> 
-> And many others do not. CompactFlash readers are usually implemented as
-> a USB storage device, which on its turn is implemented as a SCSI
-> "disk". So far I haven't seen a CompactFlash which could be "fixed" by
-> retries.
+In my perusal of the kernel code, I noticed that the IDE subsystem
+handles IDE controllers at legacy IO ports if no other driver claims
+them (albeit without DMA support).  I was wondering if it could be
+extended to support SATA controllers 
+that aren't mapped to legacy I/O ports.
 
-It does no harm trying. It does real harm not being conservative and
-losing peoples data. You recover people's data after its lost, the
-IDE layer's job is to make sure it doesn't get lost in the first place.
+I'm aware of the idex=base,ctl,irq kernel option, but I can't seem to
+get this to work with my SATA controller (using ide6=base,ctl,irq).
 
-> (1) Imagine an application doing a linear read on a file with an 8
-> block read ahead and the last block being bad. The kernel will try to
-> read that bad block 16 times, but because the IDE driver also has 8
-> retries, the kernel will try to read that bad block *64* times. It
-> usually takes an IDE drive about 2 seconds to figure out a block is
-> bad, so the application gets stuck for 2 minutes in that single bad
-> block.
+The reason I'm asking is because it would seem like a good thing to have
+SATA controllers that are broadly compatible with IDE to be usable
+without having to modify the core kernel drivers.  This would at least
+allow a user to perform a Linux install on a SATA drive even if that
+kernel doesn't have explicit support for the SATA controller.  A
+kernel/driver update can then take place after the install.
 
-Right now I know of no way to tell which is readahead for a failed
-command or of telling the block layer to forget them. Fix this at the
-block layer and IDE can abort the readahead sequence happily enough
-because IDE is too dumb to have issued further commands to the drive at
-this point.
-
-Alan
-
+Also, are there plans for libata to take over the IDE class driver
+functionality in the future?
