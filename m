@@ -1,53 +1,59 @@
-From: Tigran Aivazian <tigran@veritas.com>
-Subject: Re: question about SATA and IDE DVD/CD drives.
-Date: Fri, 2 Jul 2004 19:35:14 +0100 (BST)
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH] ide-taskfile.c fixups/cleanups part #2 [1/9]
+Date: Fri, 2 Jul 2004 21:20:04 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0407021929070.3033-100000@einstein.homenet>
-References: <Pine.LNX.4.44.0407021805580.2190-100000@einstein.homenet>
+Message-ID: <20040702192003.GA10138@elf.ucw.cz>
+References: <200406301724.05862.bzolnier@elka.pw.edu.pl> <20040702122004.GC12889@elf.ucw.cz> <200407021843.08976.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pengo.systems.pipex.net ([62.241.160.193]:51082 "EHLO
-	pengo.systems.pipex.net") by vger.kernel.org with ESMTP
-	id S264886AbUGBSgm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jul 2004 14:36:42 -0400
-In-Reply-To: <Pine.LNX.4.44.0407021805580.2190-100000@einstein.homenet>
+Received: from gprs214-65.eurotel.cz ([160.218.214.65]:22669 "EHLO amd.ucw.cz")
+	by vger.kernel.org with ESMTP id S264902AbUGBTUT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jul 2004 15:20:19 -0400
+Content-Disposition: inline
+In-Reply-To: <200407021843.08976.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, cova@ferrara.linux.it, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Jeff,
+Hi!
 
-After I gave up fiddling with "ideX=???" options, an alternative
-possibility just occurred to me, looking at this dmesg output from libata:
+> > > diff -puN drivers/ide/ide-taskfile.c~ide_tf_pio_out_fixes
+> > > drivers/ide/ide-taskfile.c ---
+> > > linux-2.6.7-bk11/drivers/ide/ide-taskfile.c~ide_tf_pio_out_fixes	2004-06-
+> > >28 21:15:54.030210376 +0200 +++
+> > > linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c	2004-06-28
+> > > 21:15:54.035209616 +0200 @@ -409,6 +409,10 @@ ide_startstop_t
+> > > task_out_intr (ide_drive
+> > >  	if (!OK_STAT(stat = hwif->INB(IDE_STATUS_REG), DRIVE_READY,
+> > > drive->bad_wstat)) { return DRIVER(drive)->error(drive, "task_out_intr",
+> > > stat);
+> > >  	}
+> > > +
+> > > +	if (((stat & DRQ_STAT) == 0) ^ !rq->current_nr_sectors)
+> > > +		return DRIVER(drive)->error(drive, __FUNCTION__, stat);
+> > > +
+> >
+> > Looks pretty close to obfuscated c code contents... Can't you use !=
+> 
+> wrrr...
+> 
+> > or kill ! in second clause and use == or something?
+> > 								Pavel
+> 
+> is
+> 
+> 	if (((stat & DRQ_STAT) != 0) ^ (rq->current_nr_sectors != 0))
+> 
+> better?
 
-ata_piix version 1.02
-PCI: Setting latency timer of device 0000:00:1f.2 to 64
-ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0xFFA0 irq 14
-ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003 88:207f
-ata1: dev 0 ATA, max UDMA/133, 234441648 sectors: lba48
-ata1: dev 0 configured for UDMA/133
-scsi0 : ata_piix
-  Vendor: ATA       Model: ST3120026AS       Rev: 3.05
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-ata2: SATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xFFA8 irq 15
-ata2: dev 0 cfg 49:0b00 82:0210 83:1000 84:0000 85:0000 86:0000 87:0000 88:0407
-ata2: dev 0 ATAPI, max UDMA/33
-ata2: dev 0 configured for UDMA/33
-scsi1 : ata_piix
-SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
-SCSI device sda: drive cache: write back
- sda: sda1 sda2 sda3
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+Not much... maybe its just me but I find bitwise xor hard to read in
+logical expression. Perhaps
 
-wouldn't it be nice if I could specify somehow to skip the "ata2" instance
-and leave the 0x170/0x376 resource to be allocated by IDE, which would be
-compiled as a module? Or, once probed and allocated (but not in use) I
-could tell the driver to "release" a particular instance and free all
-resources? I think this is not possible with the current infrastructure
-and, seeing you want to get rid of this conflict altogether, it is
-unlikely you would be interested in adding such support, right?
+ 	if (!(stat & DRQ_STAT) != !rq->current_nr_sectors)
+?
 
-Kind regards
-Tigran
-
+								Pavel
+-- 
+People were complaining that M$ turns users into beta-testers...
+...jr ghea gurz vagb qrirybcref, naq gurl frrz gb yvxr vg gung jnl!
