@@ -1,97 +1,58 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: Promise PDC20269 - PIO Only?
-Date: Tue, 21 Oct 2003 23:28:36 +0200
+From: Stuart_Hayes@Dell.com
+Subject: IDE "logical" geometry & partition tables (problem with 2.4
+ kerne l, also seems to apply to 2.6)
+Date: Tue, 21 Oct 2003 17:00:54 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200310212328.36751.bzolnier@elka.pw.edu.pl>
-References: <200310181819.08930.jeremyhu@uclink4.berkeley.edu> <200310211627.08401.bzolnier@elka.pw.edu.pl> <1066769751.4506.12.camel@eradicator.outersquare.org>
+Message-ID: <CE41BFEF2481C246A8DE0D2B4DBACF4F128A38@ausx2kmpc106.aus.amer.dell.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-2"
+ charset=iso-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:18679 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S263329AbTJUVYQ
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Oct 2003 17:24:16 -0400
-In-Reply-To: <1066769751.4506.12.camel@eradicator.outersquare.org>
-Content-Disposition: inline
+Received: from ausadmmsps307.aus.amer.dell.com ([143.166.224.102]:48388 "HELO
+	AUSADMMSPS307.aus.amer.dell.com") by vger.kernel.org with SMTP
+	id S263411AbTJUWBh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Oct 2003 18:01:37 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Jeremy Huddleston <jeremy@outersquare.org>
-Cc: linux-ide@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tuesday 21 of October 2003 22:55, Jeremy Huddleston wrote:
-> Hmm... I still think there's a bug here because similarly, the bios for
-> my PDC2067 (FastTrak 100) says my drives are operating in UDMA Mode 5.
-> To see this, I press ctr-f to enter the fasttrak configuration utility
-> and goto the drive info page...
 
-I think that BIOS says that they are UDMA5 _capable_.
+Bart --
 
-> But when linux starts, it shows:
-> Oct 21 13:41:07 terminator PDC20267: IDE controller at PCI slot 01:0a.0
-> Oct 21 13:41:07 terminator PDC20267: chipset revision 2
-> Oct 21 13:41:07 terminator PDC20267: not 100% native mode: will probe
-> irqs later
-> Oct 21 13:41:07 terminator PDC20267: (U)DMA Burst Bit ENABLED Primary
-> MASTER Mode Secondary MASTER Mode.
-> Oct 21 13:41:07 terminator ide2: BM-DMA at 0xd800-0xd807, BIOS settings:
-> hde:pio, hdf:pio
-> Oct 21 13:41:07 terminator ide3: BM-DMA at 0xd808-0xd80f, BIOS settings:
-> hdg:pio, hdh:pio
-> ...
-> Oct 21 13:41:07 terminator hde: attached ide-disk driver.
-> Oct 21 13:41:07 terminator hde: host protected area => 1
-> Oct 21 13:41:07 terminator hde: 195371568 sectors (100030 MB) w/2048KiB
-> Cache, CHS=193821/16/63, UDMA(100)
-> Oct 21 13:41:07 terminator hdg: attached ide-disk driver.
-> Oct 21 13:41:07 terminator hdg: host protected area => 1
-> Oct 21 13:41:07 terminator hdg: 195371568 sectors (100030 MB) w/2048KiB
-> Cache, CHS=193821/16/63, UDMA(100)
->
-> Which do I believe?  Promise's BIOS setup utility is reporting UDMA5,
-> but linux says BIOS is reporting PIO... How are the linux drivers
-> determining that it is operating in pio mode?  It is actually fairly
+I have discovered a problem with how Linux determines IDE disk "logical"
+(BIOS) geometry.  It only happens under certain unlikely conditions, but I
+think it is worthy of attention.  Please let me know if you see a problem
+with my analysis!
 
-Look at ide_setup_dma() in drivers/ide/ide-dma.c.
+If an IDE hard drive has no partition table when Linux is booted, *and* if
+the hard drive is on a PCI IDE controller (a controller that isn't at I/O
+address 1f0h), *and* if the drive doesn't support 48-bit addressing, Linux
+will just use the geometry that is reported by the drive in with the
+"identify device" command, rather than getting the geometry used by the IDE
+BIOS by doing an int13 function 8 call.  If a partition table is then
+created on the drive using this geometry, the CHS values in the partition
+table will not be correct.
 
-> important to me that my drives start in UDMA5 mode rather than waiting
-> for hdparm to run in my init scripts because of raid (linux md)
-> reconstruction and filesystem checking that happens after a crash or
-> power failure...
+This will cause the drive not to boot if an MBR is used that does CHS
+addressing (rather than LBA addressing)--or if the IDE BIOS doesn't support
+the int13 extentions that allow LBA addressing.
 
-You don't wait for hdparm, IDE driver _enables_ DMA _before_ RAID is mounted
-and _before_ user-space applications (such as hdparm) can be executed.
+If the drive is on an IDE controller that's at 1F0h (like the primary
+channel on CSB5/ICH5 south bridge controllers), Linux seems to get the
+correct geometry from the BIOS tables (I believe the 2.6 kernel doesn't even
+do this).  Also, if the drive supports 48-bit addressing, Linux assumes 255
+heads/63 sectors, which is probably correct for all PCI IDE controllers.
+Or, if the drive has an existing partition table, Linux is typically able to
+figure out the correct geometry to use by looking at that table.
 
-"hdg: 195371568 sectors (100030 MB) w/2048KiB Cache, CHS=193821/16/63,
-UDMA(100)"
-^^^^^^^^^
+I would think that the best solution might be either to use an int13
+function 8 call, or assuming 255 heads 63 sectors, if the drive geometry
+can't be read from the BIOS table or figured out from an existing partition
+table.  The geometry reported by the drive itself is almost certain to be
+different from the BIOS geometry.
 
---bartlomiej
-
-> On Tue, 2003-10-21 at 07:27, Bartlomiej Zolnierkiewicz wrote:
-> > DMA is enabled correctly on all drives by Linux IDE driver,
-> > (please note that BIOS leaved them in PIO).
-> >
-> > --bartlomiej
-> >
-> > > Oct 20 18:32:04 eradicator hde: attached ide-disk driver.
-> > > Oct 20 18:32:04 eradicator hde: host protected area => 1
-> > > Oct 20 18:32:04 eradicator hde: 240121728 sectors (122942 MB) w/7936KiB
-> > > Cache, CHS=238216/16/63, UDMA(133)
-> > > Oct 20 18:32:04 eradicator hdg: attached ide-disk driver.
-> > > Oct 20 18:32:04 eradicator hdg: host protected area => 1
-> > > Oct 20 18:32:04 eradicator hdg: 240121728 sectors (122942 MB) w/7936KiB
-> > > Cache, CHS=238216/16/63, UDMA(133)
-> > > Oct 20 18:32:04 eradicator hdh: attached ide-disk driver.
-> > > Oct 20 18:32:04 eradicator hdh: host protected area => 1
-> > > Oct 20 18:32:04 eradicator hdh: 240121728 sectors (122942 MB) w/2048KiB
-> > > Cache, CHS=14946/255/63, UDMA(133)
-> > > Oct 20 18:32:04 eradicator hdi: attached ide-disk driver.
-> > > Oct 20 18:32:04 eradicator hdi: host protected area => 1
-> > > Oct 20 18:32:04 eradicator hdi: 320173056 sectors (163929 MB) w/7936KiB
-> > > Cache, CHS=19929/255/63, UDMA(133)
-> > > Oct 20 18:32:04 eradicator hdk: attached ide-disk driver.
-> > > Oct 20 18:32:04 eradicator hdk: host protected area => 1
-> > > Oct 20 18:32:04 eradicator hdk: 320173056 sectors (163929 MB) w/7936KiB
-> > > Cache, CHS=19929/255/63, UDMA(133)
+Thanks,
+Stuart
+stuart_hayes@dell.com
 
