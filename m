@@ -1,26 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: RFC: moving drivers to a new drivers/ata directory
-Date: Fri, 15 Oct 2004 08:46:27 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041015074627.GA18977@infradead.org>
-References: <416F5757.8000306@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Orphaned libata patches
+Date: Fri, 15 Oct 2004 04:01:05 -0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <416F83C1.4000902@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <416F5757.8000306@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:34703 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266465AbUJOIBV
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Oct 2004 04:01:21 -0400
 List-Id: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 
-On Fri, Oct 15, 2004 at 12:51:35AM -0400, Jeff Garzik wrote:
-> 
-> Eventually I would like to move libata, and a few non-libata driver like 
-> 3ware, to drivers/ata.  It would appear in the makefile (and link order) 
-> _after_ drivers/ide and drivers/scsi.
-> 
-> Comments/objections?
 
-Only if your stop using the scsi subsystem.  The handfull scsi drivers outside
-drivers/scsi are a pain already.
+Here are two patches which I created, but they are incomplete, and their 
+parent trees have since disappeared or moved on.
+
+A fair amount of REQUEST SENSE work:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/patch.request-sense.bz2
+
+The easy half of the libata iomap conversion:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/patch.iomap.bz2
+(the remaining half involves iomap'ing >= 4 independent BARs per 
+controller... yuck.)
+
+I'll continue to work on the iomap conversion, but it will be a few days 
+before I get back to it (in case you want to beat me to it, Al).
+
+The request sense patch hasn't been touched in a while.
+
+	Jeff
+
+
 
