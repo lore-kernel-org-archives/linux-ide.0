@@ -1,69 +1,92 @@
 From: Doug Maxey <dwm@austin.ibm.com>
-Subject: [RFC/PATCH 4/7] enable honoring write cache setting of IDE drive
-Date: Fri, 28 Jan 2005 12:16:43 -0600
-Message-ID: <200501281816.j0SIGhBV021106@falcon10.austin.ibm.com>
+Subject: [RFC/PATCH 7/7] enable honoring write cache setting of IDE drive
+Date: Fri, 28 Jan 2005 12:17:24 -0600
+Message-ID: <200501281817.j0SIHOPl021150@falcon10.austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:26010 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S262727AbVA1SQq
+Received: from e31.co.us.ibm.com ([32.97.110.129]:25289 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S262731AbVA1SR3
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Jan 2005 13:16:46 -0500
+	Fri, 28 Jan 2005 13:17:29 -0500
 Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j0SIGjZ7625606
-	for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 13:16:45 -0500
+	by e31.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j0SIHSm4274552
+	for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 13:17:28 -0500
 Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0SIGjqw322782
-	for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 11:16:45 -0700
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0SIHQqw313724
+	for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 11:17:27 -0700
 Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id j0SIGiUO012782
-	for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 11:16:45 -0700
+	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id j0SIHQ9v014396
+	for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 11:17:26 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 Cc: Jens Axboe <axboe@suse.de>, Jeff Garzik <jgarzik@pobox.com>, Linux IDE Mailing List <linux-ide@vger.kernel.org>
 
+Howdy!
 
-    - use new config variable BLK_DEV_HDWC in idedisk_setup code.
+Some IDE drives destined for use in server class or datacenter
+machines will come with "write cache" disabled.  With the current
+code, the setting of the drive is effectively ignored, and the cache
+is always enabled if the drive has cache.
 
- include/linux/ide.h    |    5 +++++
- drivers/ide/ide-disk.c |    4 ++--
- 2 files changed, 7 insertions(+), 2 deletions(-)
+It is hard to define or enable certain behaviors that will keep
+everyone happy, but hey, this is my (and a certain vendor's) take on
+this.  If you are happy with the status quo, no behavior change.  If
+the user desires to have write cache disabled by default (per the
+drive), she can enable a more server friendly behavior.
 
-diff -X /home/dwm/lib/ide-excludes -Nwupar lk-2.6.11-rc2-bk5.a/include/linux/ide.h lk-2.6.11-rc2-bk5.b/include/linux/ide.h
---- lk-2.6.11-rc2-bk5.a/include/linux/ide.h	2005-01-28 09:47:00.000000000 -0600
-+++ lk-2.6.11-rc2-bk5.b/include/linux/ide.h	2005-01-28 11:31:50.671700624 -0600
-@@ -1548,5 +1548,10 @@ extern struct bus_type ide_bus_type;
- 
- /* common write_cache setting. */
- int ide_write_cache(ide_drive_t *, int);
-+#ifdef CONFIG_BLK_DEV_HDWC
-+#define BLK_DEV_HDWC 1
-+#else
-+#define BLK_DEV_HDWC 0
-+#endif /* CONFIG_BLK_DEV_HDWC */
- 
- #endif /* _IDE_H */
-diff -X /home/dwm/lib/ide-excludes -Nwupar lk-2.6.11-rc2-bk5.a/drivers/ide/ide-disk.c lk-2.6.11-rc2-bk5.b/drivers/ide/ide-disk.c
---- lk-2.6.11-rc2-bk5.a/drivers/ide/ide-disk.c	2005-01-26 13:19:34.000000000 -0600
-+++ lk-2.6.11-rc2-bk5.b/drivers/ide/ide-disk.c	2005-01-28 11:27:46.417832856 -0600
-@@ -1083,7 +1083,7 @@ static void idedisk_setup (ide_drive_t *
- 	if ((id->csfo & 1) || (id->cfs_enable_1 & (1 << 5)))
- 		drive->wcache = 1;
- 
--	write_cache(drive, 1);
-+	write_cache(drive, (BLK_DEV_HDWC ? drive->wcache : 1));
- 
- 	/*
- 	 * We must avoid issuing commands a drive does not understand
-@@ -1093,7 +1093,7 @@ static void idedisk_setup (ide_drive_t *
- 	 * LBA48 is not available so we don't need to recheck that.
- 	 */
- 	barrier = 0;
--	if (ide_id_has_flush_cache(id))
-+	if (ide_id_has_flush_cache(id) && drive->wcache)
- 		barrier = 1;
- 	if (drive->addressing == 1) {
- 		/* Can't issue the correct flush ? */
+These patches are against BK5.  No attempt has been made to integrate
+with Jens' latest "scsi/sata write barrier" patches, but will look
+into that when the dust has settled for both.
+
+With BLK_DEV_HDWC at the default of 0, the current driver behavior is
+maintained, i.e., the drive will always use the write cache per the
+current code.  With the setting enabled, the driver will use the
+default value of the drive write cache.
+
+One area this does not touch on is locking.  There does appear to be
+some issues in changing the setting on the fly, but this is ignored in
+the existing code.  Bart has been making some effort.
+
+This set of patches changes the way the write cache setting of IDE
+drives is handled to:
+
+1) move the cache_write code to ide-io, where it will be callable from
+   kernels built without ide-disk.
+
+2) allow the drive to define the default setting of the cache when
+   BLK_DEV_HDWC is set.
+
+3) correctly handle the change of write cache setting from hdparm.
+   This means that the call also changes the blk_queue_ordered()
+   visible variable.
+
+
+1/7 - add ide_write_cache() to ide-io.c.  This is in preparation for
+      the following patches that remove the current write_cache() from
+      ide-disk.c.  Moving to ide-io is allow ide_write_cache() to
+      handle calls (no-op) on systems without ide disks (IDE may not
+      have been built for disks).
+
+2/7 - add hook in ide-taskfile:ide_cmd_ioctl() to call the new
+      function ide_write_cache().
+
+3/7 - Add documentation for the use of the Kbuild variable
+      BLK_DEV_HDWC.
+
+4/7 - use new config variable BLK_DEV_HDWC in idedisk_setup code.
+
+5/7 - remove (now obsolete) write_cache() from ide-disk.c.  replace calls in
+      ide-disk.c with calls to ide_write_cache().
+
+6/7 - change the way that ide_write_cache controls the use of flushing
+      via blk_queue_ordered() to match the setting of the drive's
+      write cache setting.  This patch leaves the idedisk_issue_flush
+      in ide-disk.c, but the func could be moved to ide-io to complete
+      the break of the dependency between ide-io and ide-disk.
+
+7/7 - move idedisk_issue_flush to ide-io.c supporting
+      ide_write_cache()
 
 
