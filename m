@@ -1,45 +1,48 @@
-From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Subject: Re: [2.4 patch] let SCSI_SATA_NV depend on EXPERIMENTAL
-Date: Wed, 8 Dec 2004 19:29:20 -0200
-Message-ID: <20041208212920.GD2348@dmt.cyclades>
-References: <20041205165908.GA25139@thune.sonic.net> <20041208025248.GN5496@stusta.de> <20041208030246.GP5496@stusta.de>
+From: "Atul Bhouraskar" <atul.bhouraskar@acoustic-technologies.com>
+Subject: RE: PROBLEM: dma timeout errors on reads and large writes (sata_vsc on kernel 2.6.9)
+Date: Fri, 10 Dec 2004 09:47:59 +1100
+Message-ID: <002201c4de41$21fee550$0d65a8c0@SHARK>
+References: <41B7F77A.2080404@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:17557 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261571AbULISA2
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Dec 2004 13:00:28 -0500
-Content-Disposition: inline
-In-Reply-To: <20041208030246.GP5496@stusta.de>
+Received: from gizmo09bw.bigpond.com ([144.140.70.19]:9183 "HELO
+	gizmo09bw.bigpond.com") by vger.kernel.org with SMTP
+	id S261650AbULIWtP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Dec 2004 17:49:15 -0500
+In-Reply-To: <41B7F77A.2080404@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Mike Castle <dalgoda@ix.netcom.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: 'Jeff Garzik' <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
+
+> 
+> I got a similar report via my employer as well.  I don't think anybody
+> has really tested sata_vsc on the Intel controller, just the one that
+> Vitesse put out.
+> 
+> You don't happen to have a spare controller, do you?
+> 
+> 	Jeff
+> 
+> 
+
+Hi Jeff,
+
+Thanks for your quick reply. Unfortunately we have only one of the
+controllers here now, though we might be getting a few more in January.
+
+Is there some way I could assist you by doing some tests here and
+reporting debug messages/logs etc?
+
+I am sure there are many other people out there who would be looking for
+a good driver for the intel 31244, so it would be a useful update for
+them too.
 
 
-Applied - thanks Adrian.
+Atul
 
-On Wed, Dec 08, 2004 at 04:02:46AM +0100, Adrian Bunk wrote:
-> Jeff,
-> 
-> Mike Castle <dalgoda@ix.netcom.com> noticed that CONFIG_SCSI_SATA_NV in 
-> 2.4 is marked as "(EXPERIMENTAL)", but doesn't depend on EXPERIMENTAL.
-> 
-> Since it depends on EXPERIMENTAL in 2.6, I'd sugget the patch below to 
-> add this dependency in 2.4, too.
-> 
-> 
-> Signed-off-by: Adrian Bunk <bunk@stusta.de>
-> 
-> --- linux-2.4.29-pre1-full/drivers/scsi/Config.in.old	2004-12-08 03:53:07.000000000 +0100
-> +++ linux-2.4.29-pre1-full/drivers/scsi/Config.in	2004-12-08 03:53:26.000000000 +0100
-> @@ -72,7 +72,7 @@
->  dep_tristate '  AHCI SATA support (EXPERIMENTAL)' CONFIG_SCSI_SATA_AHCI $CONFIG_SCSI_SATA $CONFIG_PCI $CONFIG_EXPERIMENTAL
->  dep_tristate '  ServerWorks Frodo / Apple K2 SATA support (EXPERIMENTAL)' CONFIG_SCSI_SATA_SVW $CONFIG_SCSI_SATA $CONFIG_PCI $CONFIG_EXPERIMENTAL
->  dep_tristate '  Intel PIIX/ICH SATA support' CONFIG_SCSI_ATA_PIIX $CONFIG_SCSI_SATA $CONFIG_PCI
-> -dep_tristate '  NVIDIA SATA support (EXPERIMENTAL)' CONFIG_SCSI_SATA_NV $CONFIG_SCSI_SATA $CONFIG_PCI
-> +dep_tristate '  NVIDIA SATA support (EXPERIMENTAL)' CONFIG_SCSI_SATA_NV $CONFIG_SCSI_SATA $CONFIG_PCI $CONFIG_EXPERIMENTAL
->  dep_tristate '  Promise SATA TX2/TX4 support (EXPERIMENTAL)' CONFIG_SCSI_SATA_PROMISE $CONFIG_SCSI_SATA $CONFIG_PCI $CONFIG_EXPERIMENTAL
->  dep_tristate '  Promise SATA SX4 support (EXPERIMENTAL)' CONFIG_SCSI_SATA_SX4 $CONFIG_SCSI_SATA $CONFIG_PCI $CONFIG_EXPERIMENTAL
->  dep_tristate '  Silicon Image SATA support (EXPERIMENTAL)' CONFIG_SCSI_SATA_SIL $CONFIG_SCSI_SATA $CONFIG_PCI $CONFIG_EXPERIMENTAL
+
+
