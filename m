@@ -1,47 +1,30 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: RFC: moving drivers to a new drivers/ata directory
-Date: Fri, 15 Oct 2004 13:20:48 -0400
+Subject: Re: [SATA] libata-dev queue updated
+Date: Fri, 15 Oct 2004 13:15:21 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <417006F0.5040706@pobox.com>
-References: <416F5757.8000306@pobox.com> <416F8C39.6010804@torque.net>
+Message-ID: <417005A9.8070907@pobox.com>
+References: <20041015080402.GA5938@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:43651 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268206AbUJORVB
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:20355 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S268218AbUJORPe
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Oct 2004 13:21:01 -0400
-In-Reply-To: <416F8C39.6010804@torque.net>
+	Fri, 15 Oct 2004 13:15:34 -0400
+In-Reply-To: <20041015080402.GA5938@havoc.gtf.org>
 List-Id: linux-ide@vger.kernel.org
-To: dougg@torque.net
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Douglas Gilbert wrote:
-> Jeff Garzik wrote:
+Jeff Garzik wrote:
+> BK users:
 > 
->>
->> Eventually I would like to move libata, and a few non-libata driver 
->> like 3ware, to drivers/ata.  It would appear in the makefile (and link 
->> order) _after_ drivers/ide and drivers/scsi.
->>
->> Comments/objections?
-> 
-> 
-> A comment: if SAS HBAs ever get installed on motherboards then
-> it won't be obvious to the average user which susbsystem they
-> should configure (i.e. ATA/SATA or SCSI/SAS). In both cases an
-> internal SATA disk could be connected via a SATA cable to a
-> plug on the motherboard.
-> 
-> So if you do move the drivers to the ata directory it may be
-> useful to stress that it is the category of HBA that is
-> signficant rather than the device at the far end of the cable.
+> 	bk pull bk://gkernel.bkbits.net/libata-dev-2.6
 
 
-That implies that scsi is an acceptable appelation for ATA controllers?
-
-Maybe we need a neutral one like 'drivers/storage'.
+IMPORTANT NOTE:  You must re-clone this repository from scratch.  Please 
+do not 'bk pull' this into an existing repository.
 
 	Jeff
 
