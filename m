@@ -1,23 +1,41 @@
-From: "Adam J. Richter" <adam@yggdrasil.com>
+From: viro@parcelfarce.linux.theplanet.co.uk
 Subject: Re: [FIX] Re: 2.5.70-bk[56] breaks disk partitioning with multiple IDE disks
-Date: Sun, 1 Jun 2003 18:59:03 -0700
+Date: Mon, 2 Jun 2003 03:09:03 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200306020159.h521x3T13476@freya.yggdrasil.com>
+Message-ID: <20030602020903.GA28742@parcelfarce.linux.theplanet.co.uk>
+References: <20030601235333.GN9502@parcelfarce.linux.theplanet.co.uk> <Pine.LNX.4.44.0306011849050.16521-100000@home.transmeta.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h-64-105-35-138.SNVACAID.covad.net ([64.105.35.138]:1664 "EHLO
-	freya.yggdrasil.com") by vger.kernel.org with ESMTP id S264783AbTFBBpL
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:47828 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264786AbTFBBzj
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 1 Jun 2003 21:45:11 -0400
+	Sun, 1 Jun 2003 21:55:39 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0306011849050.16521-100000@home.transmeta.com>
 List-Id: linux-ide@vger.kernel.org
-To: viro@parcelfarce.linux.theplanet.co.uk
-Cc: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Adam J. Richter" <adam@yggdrasil.com>
 
-On Mon, 2 Jun 2003 viro@parcelfarce.linux.theplanet.co.uk wrote:
-> vi drivers/ide/ide.c -c'/drive->list.*driver->drives/s/list_add/&_tail/|x'
+On Sun, Jun 01, 2003 at 06:49:41PM -0700, Linus Torvalds wrote:
+> 
+> On Mon, 2 Jun 2003 viro@parcelfarce.linux.theplanet.co.uk wrote:
+> > 
+> > vi drivers/ide/ide.c -c'/drive->list.*driver->drives/s/list_add/&_tail/|x'
+> 
+> Mind sending me a patch? There's only so much I like doing with vi 
+> scripts, and this went over my threshold.
 
-	Your change worked for me.  Thanks!
+No problem...
 
-Adam J. Richter     __     ______________   575 Oroville Road
-adam@yggdrasil.com     \ /                  Miplitas, California 95035
-+1 408 309-6081         | g g d r a s i l   United States of America
-                         "Free Software For The Rest Of Us."
+--- drivers/ide/ide.c	Sat May 31 15:31:08 2003
++++ /tmp/ide.c	Sun Jun  1 19:50:38 2003
+@@ -2335,7 +2335,7 @@
+ 	setup_driver_defaults(drive);
+ 	spin_unlock_irqrestore(&ide_lock, flags);
+ 	spin_lock(&drives_lock);
+-	list_add(&drive->list, &driver->drives);
++	list_add_tail(&drive->list, &driver->drives);
+ 	spin_unlock(&drives_lock);
+ //	printk(KERN_INFO "%s: attached %s driver.\n", drive->name, driver->name);
+ 	if ((drive->autotune == IDE_TUNE_DEFAULT) ||
