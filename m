@@ -1,78 +1,61 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [sata] libata-2.6 queue updated
-Date: Wed, 15 Sep 2004 12:08:43 -0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040915160843.GA31309@havoc.gtf.org>
+Subject: [sata] new libata-dev-2.6 queue created (AHCI, SATA bridges)
+Date: Wed, 15 Sep 2004 12:10:26 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040915161026.GA31360@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [69.28.190.101] ([69.28.190.101]:28051 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S266648AbUIOQIo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Sep 2004 12:08:44 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S266648AbUIOQNb@vger.kernel.org>
 Content-Disposition: inline
-List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 
-This is the batch that was submitted to Andrew and Linus yesterday.
+
+"libata-dev-2.6" is a new patch queue for SATA features which are under
+development, or need additional testing before being deployed into the
+upstream-bound libata-2.[46] queues.
+
+It currently contains:
+
+1) A workaround for problems on multiple SATA controllers when using
+PATA disks attached via SATA bridges.
+
+2) New driver AHCI.  This should currently be considered a technology
+preview or early beta test.  Simply because it is a young driver on
+complicated hardware, using a new "FIS-based" delivery method (read:
+brand new hotpath), caution is advised.  Do not use in production yet.
+
+
+I have updated my SATA status page to reflect these updates:
+	http://linux.yyz.us/sata/sata-status.html
+
 
 BK users:
+bk pull bk://gkernel.bkbits.net/libata-dev-2.6
 
-	bk pull bk://gkernel.bkbits.net/libata-2.4
-		or
-	bk pull bk://gkernel.bkbits.net/libata-2.6
-
-Patches:
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.4.28-pre3-libata2.patch.bz2
-	or
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.9-rc2-bk1-libata1.patch.bz2
+Patch (NOTE: relative to 2.6.9-rc2-bk1-libata1.patch):
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.9-rc2-bk1-libata1-dev1.patch.bz2
 
 This will update the following files:
 
- drivers/pci/quirks.c        |    4 
- drivers/scsi/ata_piix.c     |   24 +--
- drivers/scsi/libata-core.c  |  308 ++++++++++++++++++++++++++------------------
- drivers/scsi/sata_nv.c      |   66 +++------
- drivers/scsi/sata_promise.c |    8 -
- drivers/scsi/sata_sil.c     |   12 -
- drivers/scsi/sata_sis.c     |   58 +++-----
- drivers/scsi/sata_svw.c     |   74 ++++++++++
- drivers/scsi/sata_sx4.c     |    8 -
- drivers/scsi/sata_via.c     |   53 ++-----
- drivers/scsi/sata_vsc.c     |    8 -
- include/linux/libata.h      |   22 +--
- 12 files changed, 363 insertions(+), 282 deletions(-)
+ drivers/scsi/Kconfig       |    8 
+ drivers/scsi/Makefile      |    1 
+ drivers/scsi/ahci.c        |  973 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/libata-core.c |   37 +
+ include/linux/ata.h        |    1 
+ include/linux/libata.h     |    1 
+ 6 files changed, 1018 insertions(+), 3 deletions(-)
 
 through these ChangeSets:
 
-<ananth@broadcom.com> (04/09/14 1.1867.6.5)
-   [libata sata_svw] race condition fix, new device support
+<jgarzik@pobox.com> (04/09/15 1.1905)
+   [libata] add AHCI driver
+
+<brad@wasp.net.au> (04/09/15 1.1902.1.1)
+   [PATCH] libata basic detection and errata for PATA->SATA bridges
    
-   * address race condition WRT order of DMA-start and ATA command issue
-     (see code comment for more details)
+   This patch works around an issue with WD drives (and possibly others) over SiL PATA->SATA Bridges on SATA controllers locking up with transfers > 200 sectors.
    
-   * Add support for Frodo 4/8
-
-<jgarzik@pobox.com> (04/09/14 1.1867.6.4)
-   [libata] minor comment updates, preparing for iomap merge
-
-<jgarzik@pobox.com> (04/09/13 1.1867.6.3)
-   [libata] consolidate legacy/native mode init code into helpers
-   
-   Eliminates duplicate code in sata_nv, sata_sis, and sata_via.
-
-<jgarzik@pobox.com> (04/09/13 1.1867.6.2)
-   [libata] remove distinction between MMIO/PIO helper functions
-   
-   Prepare for use of new generic iomap API.
-
-<jgarzik@pobox.com> (04/09/13 1.1867.6.1)
-   [libata sata_nv] sync with 2.4
-   
-   Driver should be using LIBATA_MAX_PRD not ATA_MAX_PRD,
-   due to iommu layer splitting.
-
-<jgarzik@pobox.com> (04/08/23 1.1832.2.1)
-   [ata piix] enable ICH5/6 combined mode quirk based on BLK_DEV_IDE_SATA
-
+   Signed-off-by: Brad Campbell <brad@wasp.net.au>
