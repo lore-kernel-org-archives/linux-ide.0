@@ -1,41 +1,30 @@
-From: viro@parcelfarce.linux.theplanet.co.uk
-Subject: Re: [FIX] Re: 2.5.70-bk[56] breaks disk partitioning with multiple IDE disks
-Date: Mon, 2 Jun 2003 03:09:03 +0100
+From: Rick Lindsley <ricklind@us.ibm.com>
+Subject: Re: [2.5.70] possible problem with /dev/diskstats
+Date: Sun, 01 Jun 2003 21:23:11 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20030602020903.GA28742@parcelfarce.linux.theplanet.co.uk>
-References: <20030601235333.GN9502@parcelfarce.linux.theplanet.co.uk> <Pine.LNX.4.44.0306011849050.16521-100000@home.transmeta.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <200306020423.h524NBd02594@owlet.beaverton.ibm.com>
+References: <200306012131.32006.fsdeveloper@yahoo.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:47828 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264786AbTFBBzj
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 1 Jun 2003 21:55:39 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0306011849050.16521-100000@home.transmeta.com>
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:54007 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261825AbTFBEJv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jun 2003 00:09:51 -0400
+In-reply-to: Your message of "Sun, 01 Jun 2003 21:31:31 +0200."
+             <200306012131.32006.fsdeveloper@yahoo.de>
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Adam J. Richter" <adam@yggdrasil.com>
+To: Michael Buesch <fsdeveloper@yahoo.de>
+Cc: linux kernel mailing list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Sun, Jun 01, 2003 at 06:49:41PM -0700, Linus Torvalds wrote:
-> 
-> On Mon, 2 Jun 2003 viro@parcelfarce.linux.theplanet.co.uk wrote:
-> > 
-> > vi drivers/ide/ide.c -c'/drive->list.*driver->drives/s/list_add/&_tail/|x'
-> 
-> Mind sending me a patch? There's only so much I like doing with vi 
-> scripts, and this went over my threshold.
+    I've done some disk-io (compiled some software) and the values
+    now are even lower:
+    
+Interesting, yes, you now have 60 fewer "I/O's in flight."
 
-No problem...
+    Where exactly is the code in the kernel, that produces the diskstats file,
+    so I can try grepping through it?
 
---- drivers/ide/ide.c	Sat May 31 15:31:08 2003
-+++ /tmp/ide.c	Sun Jun  1 19:50:38 2003
-@@ -2335,7 +2335,7 @@
- 	setup_driver_defaults(drive);
- 	spin_unlock_irqrestore(&ide_lock, flags);
- 	spin_lock(&drives_lock);
--	list_add(&drive->list, &driver->drives);
-+	list_add_tail(&drive->list, &driver->drives);
- 	spin_unlock(&drives_lock);
- //	printk(KERN_INFO "%s: attached %s driver.\n", drive->name, driver->name);
- 	if ((drive->autotune == IDE_TUNE_DEFAULT) ||
+The I/O's in flight are incremented in drive_stat_acct() (see ll_rw_blk.c)
+and decremented in attempt_merge() and end_that_request_last().  My gut feel
+is that end_that_request_last() is getting called more often than expected
+via some interesting path, but I've nothing right now to back that up.
+
+Rick
