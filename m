@@ -1,54 +1,52 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: libata badness
-Date: Tue, 5 Oct 2004 08:47:15 +1000
+From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Subject: Re: How to cleanly setup legacy IDE irq ?
+Date: Mon, 4 Oct 2004 23:35:37 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <16737.54003.419130.575839@cse.unsw.edu.au>
-References: <Pine.LNX.4.60-041.0410040656001.2350@unix48.andrew.cmu.edu>
+Message-ID: <200410042335.37109.bzolnier@elka.pw.edu.pl>
+References: <1096602694.11460.29.camel@gaston> <1096851939.9516.53.camel@gaston> <1096852823.9539.61.camel@gaston>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from note.orchestra.cse.unsw.EDU.AU ([129.94.242.24]:49793 "EHLO
-	note.orchestra.cse.unsw.EDU.AU") by vger.kernel.org with ESMTP
-	id S268591AbUJDWr1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Oct 2004 18:47:27 -0400
-In-Reply-To: message from William Knop on Monday October 4
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:8889 "EHLO
+	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
+	id S268685AbUJDXAv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Oct 2004 19:00:51 -0400
+Received: from hadron.elka.pw.edu.pl ([194.29.160.13]:42010 "EHLO localhost")
+	by higgs.elka.pw.edu.pl with ESMTP id S52567AbUJDXAq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Oct 2004 01:00:46 +0200
+Received: from chello062179088136.chello.pl ([62.179.88.136]:65035 "EHLO
+	[192.168.123.164]" ident: "NO-IDENT-SERVICE[2]" smtp-auth: "bzolnier"
+	TLS-CIPHER: <none> TLS-PEER-CN1: <none>) by mion.elka.pw.edu.pl
+	with ESMTP id S57852AbUJDVd0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org> + 1 other);
+	Mon, 4 Oct 2004 23:33:26 +0200
+In-Reply-To: <1096852823.9539.61.camel@gaston>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: William Knop <wknop@andrew.cmu.edu>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-ide@vger.kernel.org
 
-On Monday October 4, wknop@andrew.cmu.edu wrote:
-> CPU:    0
-> EIP:    0060:[<229e4d8c>]    Not tainted
-> EFLAGS: 00010206   (2.6.8-1.521)
-> EIP is at handle_stripe+0x29a/0x1407 [raid5]
-> eax: 00000001   ebx: 00000000   ecx: 00915cb8   edx: 21f7e1c0
-> esi: 1ccbd118   edi: 21f7e1c0   ebp: 01000000   esp: 1d300f28
-> ds: 007b   es: 007b   ss: 0068
-> Process md0_raid5 (pid: 2626, threadinfo=1d300000 task=1d317970)
-> Stack: 2283eb57 20db8000 21f7e1c0 21c30288 1ccbd204 20db8000 00000001 
-> 1ccbd158
->         00000002 00000000 00000000 00000001 00000000 00000000 00000001 
-> 00000000
->         00000001 00000001 00000000 00000003 1ccbd0ac 21f7e1c0 1ccbd0ac 
-> 21f76c00
-> Call Trace:
->   [<2283eb57>] ata_scsi_queuecmd+0xbe/0xc7 [libata]
->   [<229e6b1c>] raid5d+0x1ce/0x2f8 [raid5]
->   [<0228f5d2>] md_thread+0x227/0x256
->   [<0211be05>] autoremove_wake_function+0x0/0x2d
->   [<0211be05>] autoremove_wake_function+0x0/0x2d
->   [<0228f3ab>] md_thread+0x0/0x256
->   [<021041d9>] kernel_thread_helper+0x5/0xb
-> Code: 8b 55 04 83 c1 08 8b 45 00 83 d3 00 39 da 72 0e 0f 87 e0 01
+On Monday 04 October 2004 03:20, Benjamin Herrenschmidt wrote:
+> 
+> > Ugh ? damn, that's a textboot example of crappy code ! You are
+> > putting interrupt routing platform knowledge in non-platform specific
+> > drivers, that is disgusting !
+> 
+> Please, don't take my harsh language to seriously, I missed adding
+> a couple of ;)
+>
+> Just to summarize, I totally agree with you that the existing callbacks
+> are ugly and the way of setting up on-board controllers, especially non
+> PCI ones, should be to have proper controller drivers.
 
-This code starts:
+OK
+ 
+> But as I think I made clear in previous mail, I'm just talking about
+> the specific issue of IRQ routing for PCI controllers set in legacy mode,
+> to avoid cluttering "generic" drivers with all sort of platform ifdef's
+> for something that has really nothing to do with the driver logic itself...  
 
-   0:   8b 55 04                  mov    0x4(%ebp),%edx
-   3:   83 c1 08                  add    $0x8,%ecx
-
-and as %ebp is 01000000, this oopses.  
-It looks very much like a single-bit memory error (as has already been
-suggested as a possibility).
-
-NeilBrown
+Maybe indeed cluttering PCI layer or arch includes with
+information needed only by IDE driver is better...
