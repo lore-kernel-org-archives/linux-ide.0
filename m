@@ -1,54 +1,44 @@
-From: Tejun Heo <tj@home-tj.org>
-Subject: Re: [PATCH 2.6.11-rc2 18/29] ide: comment fixes
-Date: Wed, 2 Feb 2005 12:02:54 +0900
-Message-ID: <20050202030254.GC1187@htj.dyndns.org>
-References: <20050202024017.GA621@htj.dyndns.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Adaptec Hercules 2 (Marvell AIC-8130) SATA chipset support
+Date: Wed, 02 Feb 2005 00:32:56 -0500
+Message-ID: <42006608.5000200@pobox.com>
+References: <BAY21-F2602989D03802536F52405DF7E0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from [211.58.254.17] ([211.58.254.17]:53642 "EHLO hemosu.com")
-	by vger.kernel.org with ESMTP id S262229AbVBBDC4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2005 22:02:56 -0500
-Content-Disposition: inline
-In-Reply-To: <20050202024017.GA621@htj.dyndns.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:60813 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261438AbVBBFdL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Feb 2005 00:33:11 -0500
+In-Reply-To: <BAY21-F2602989D03802536F52405DF7E0@phx.gbl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Christensen Tom <paveraware@hotmail.com>
+Cc: linux-ide@vger.kernel.org
 
-> 18_ide_comment_fixes.patch
+Christensen Tom wrote:
+> I have a server with the above SATA chipset, it has 4 SATA ports, and of 
+> course I can't get linux to recognize it.  I believe from a conversation 
+> with Supermicro (the makers of the motherboard) that it is one of the 
+> Marvell SATA chipsets most likely 88SX6041.  However, Adaptec wrote 
+> their own firmware and rereleased it as the AIC-8130...
 > 
-> 	Comment fixes.
+> They released a binary driver but it only works in 2.4 kernels, and then 
+> only in a couple vendor specific kernels that have exploits and 
+> shouldn't be used.  Any chance that the Marvell driver that is being 
+> worked on will work with this chipset/firmware?
+> 
+> If it's possible that the 88SX6041 driver might work, or if it might be 
+> like the AAR1200 series adaptec cards that are based on the Silicon 
+> Image chipset, but needed a patch to get working I would be more than 
+> happy to test and even try to do some dev work on it.
+
+It's easy to modify the sata_sil.c to include the PCI IDs (lspci -n).
+
+The Marvell chipset driver should be coming along sometime, but it 
+hasn't moved in a while.
+
+	Jeff
 
 
-Signed-off-by: Tejun Heo <tj@home-tj.org>
 
-
-Index: linux-ide-export/drivers/ide/ide-dma.c
-===================================================================
---- linux-ide-export.orig/drivers/ide/ide-dma.c	2005-02-02 10:27:15.202313614 +0900
-+++ linux-ide-export/drivers/ide/ide-dma.c	2005-02-02 10:28:05.642130143 +0900
-@@ -227,7 +227,9 @@ EXPORT_SYMBOL_GPL(ide_build_sglist);
-  *	the PRD table that the IDE layer wants to be fed. The code
-  *	knows about the 64K wrap bug in the CS5530.
-  *
-- *	Returns 0 if all went okay, returns 1 otherwise.
-+ *	Returns the number of built PRD entries if all went okay,
-+ *	returns 0 otherwise.
-+ *
-  *	May also be invoked from trm290.c
-  */
-  
-Index: linux-ide-export/drivers/ide/ide-taskfile.c
-===================================================================
---- linux-ide-export.orig/drivers/ide/ide-taskfile.c	2005-02-02 10:28:05.463159181 +0900
-+++ linux-ide-export/drivers/ide/ide-taskfile.c	2005-02-02 10:28:05.642130143 +0900
-@@ -853,8 +853,8 @@ ide_startstop_t flagged_taskfile (ide_dr
- 		hwif->OUTB(taskfile->high_cylinder, IDE_HCYL_REG);
- 
-         /*
--	 * (ks) In the flagged taskfile approch, we will used all specified
--	 * registers and the register value will not be changed. Except the
-+	 * (ks) In the flagged taskfile approch, we will use all specified
-+	 * registers and the register value will not be changed, except the
- 	 * select bit (master/slave) in the drive_head register. We must make
- 	 * sure that the desired drive is selected.
- 	 */
