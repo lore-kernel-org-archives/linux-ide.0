@@ -1,57 +1,104 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SII 3512 SATA Progress but help still needed
-Date: Mon, 08 Dec 2003 15:33:42 -0500
+From: "M. Grabert" <xam@cs.ucc.ie>
+Subject: siimage problems on Linux/PA-RISC
+Date: Mon, 8 Dec 2003 23:47:13 +0000 (GMT)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <3FD4E026.2020307@pobox.com>
-References: <3FCF9B07.5020509@atl.lmco.com> <3FD4D88A.3050708@atl.lmco.com> <200312082126.32948.bzolnier@elka.pw.edu.pl>
+Message-ID: <Pine.LNX.4.58.0312082315170.13596@sal.ucc.ie>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:29933 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261872AbTLHUd4
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Dec 2003 15:33:56 -0500
-In-Reply-To: <200312082126.32948.bzolnier@elka.pw.edu.pl>
+Received: from csmail.ucc.ie ([143.239.211.231]:19617 "EHLO csmail.ucc.ie")
+	by vger.kernel.org with ESMTP id S261875AbTLHXrW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Dec 2003 18:47:22 -0500
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Aron Rubin <arubin@atl.lmco.com>, linux-ide@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> I don't know. ;-)
-> 
-> I have only one idea right now - look what drivers/scsi/libata.c
-> does for SATA controllers during init and what drivers/ide/ doesn't.
-> 
-> I am talking about sata_phy_reset() in libata.c.
+Hi,
 
-libata-core.c :)
+I'm having troubles getting a (rather new) SiliconImage PCI IDE
+controller working on Linux/PA-RISC.
 
-Basically for Silicon Image:
-* use SATA "SCR" (status and control register) to bring device out of 
-any low-power state it may be in
-* use SATA SCR to reset SATA bus
-* do _not_ issue ATA software reset or E.D.D. (90h), as the desired 
-signature is already in the ATA command block registers
-* look at the signature, decide ATA or ATAPI
-* issue IDENTIFY [PACKET] DEVICE
-* issue SET FEATURES (XFER)
+The original/full error report can be found here:
+http://lists.parisc-linux.org/pipermail/parisc-linux/2003-December/021839.html
 
-That's the ATA_FLAG_SATA_RESET code path.  If the driver has the flag 
-ATA_FLAG_SRST, then the first few steps change to:
-* issue ATA software reset, by flipping SRST bit in Device Control
-* look at signature[...]
+Alan suggests it may be more likely a bug in the siimage driver, rather
+than in the PA-RISC specific bits and I may ask here for more help.
+Please also read Alans comments (forwarded) at the end of this mail.
 
-I'm pretty sure drivers/ide/pci/siimage.c already does the 
-bring-it-out-of-low-power thing, twiddling the SCRs.
 
-(the SCRs are documented in the public SATA spec on www.serialata.org)
+A short summary:
+================
+- 2.4.23 (with and without ide=nodma passed as kernel options) produces
+  'hda lost interrupt' messages; /dev/hda is not accessible (read errors)
 
-In addition, drivers/ide/pci/siimage.c actually does initialize the 
-hardware a bit more fully than my SII driver does, IIRC...
+- 2.6.0-test11 creates a kernel ooops ('Your system ate a SPARC'),
+  passing ide=nodma doesn't change anything
 
-	Jeff
+The full bootlogs/.config/System.maps can be found here:
+
+http://www.cs.ucc.ie/~xam/siimage/
 
 
 
+There might be also big-endian issues, as the bootlog reveals. The
+siimage driver in 2.4.23 says:
 
+  hda: TS130220A2, ATA DISK drive
+  hda: 0 sectors (0 MB) w/8KiB Cache, CHS=65343/0/0
+  hda: INVALID GEOMETRY: 0 PHYSICAL HEADS?
+
+and the siimage driver in 2.6.0-test11 also says:
+
+  hda: TS130220A2, ATA DISK drive
+
+
+Whereas a 2.4.23 kernel using the (crappy but working) onboard NS87415 IDE
+controller of the PA-RISC workstation identifies the Seagate hard disk
+correctly as:
+
+ hda: ST3120022A, ATA DISK drive
+ hda: 234441648 sectors (120034 MB) w/2048KiB Cache, CHS=14593/255/63, (U)DMA
+ Partition check:
+   hda: hda1
+
+
+
+Thanks alot in advance for any help,
+  Max
+
+
+
+---------- Forwarded message ----------
+Date: Mon, 08 Dec 2003 20:11:09 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Grant Grundler <grundler@parisc-linux.org>
+Cc: M. Grabert <xam@cs.ucc.ie>, parisc-linux@lists.parisc-linux.org
+Subject: Re: [parisc-linux] test11-pa2 & serial console on C3k success,
+     siimage problems
+
+On Llu, 2003-12-08 at 18:35, Grant Grundler wrote:
+> On Mon, Dec 08, 2003 at 08:20:38AM +0000, M. Grabert wrote:
+> ...
+> > SiI680: 100% native mode on irq 128
+> >     ide0: MMIO-DMA at 0xf4800000-0xf4800007 -- Error, MMIO ports already in use.
+> >     ide1: MMIO-DMA at 0xf4800008-0xf480000f -- Error, MMIO ports already in use.
+>
+> Look at the code that prints this line and the error msg.
+
+This can only occur if critical 2.4 IDE fixes for mmio are missing from
+2.6 or some kind of implementation error is being tripped. Ask
+Bartlomiej why mmio==2 mode ("check by host driver only") isn't
+implemented. Its requited for mmio PCI devices to work properly even on
+x86. That or the SI680/3112 driver in 2.6 is not setting it and the
+kernel code is there but not being used.
+
+That message just can't occur on the proper code.
+
+Background:
+	Drivers use ioremap returns for mmio registers
+	IDE core only knows ioremap data
+	IDE core used to try and reserve the matching physical locations
+
+On x86 it "happens" to work until you have more than about 2.5Gb of RAM
+
+Alan
