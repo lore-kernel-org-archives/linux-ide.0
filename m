@@ -1,41 +1,43 @@
-From: Mark Lord <lkml@rtr.ca>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: new tool:  blktool
-Date: Thu, 19 Aug 2004 13:44:33 -0400
+Date: Thu, 19 Aug 2004 13:50:17 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4124E701.5020905@rtr.ca>
-References: <411FD744.2090308@pobox.com> <4120E693.8070700@pobox.com> <4124C135.7050200@rtr.ca> <200408191751.19101.bzolnier@elka.pw.edu.pl>
+Message-ID: <4124E859.5090303@pobox.com>
+References: <411FD744.2090308@pobox.com> <4120E693.8070700@pobox.com> <4124C135.7050200@rtr.ca> <200408191751.19101.bzolnier@elka.pw.edu.pl> <4124E701.5020905@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:6077 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S266880AbUHSRpw
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:13755 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266883AbUHSRuc
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Aug 2004 13:45:52 -0400
-In-Reply-To: <200408191751.19101.bzolnier@elka.pw.edu.pl>
+	Thu, 19 Aug 2004 13:50:32 -0400
+In-Reply-To: <4124E701.5020905@rtr.ca>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Mark Lord <lkml@rtr.ca>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-The READ/WRITE SECTOR commands are not actually used by
-any software I know of with HDIO_DRIVE_CMD, so no big deal there.
-The ioctl should be limited to SET_FEATURES, IDENTIFY, and SMART.
+Mark Lord wrote:
+> But there'll need to be some overlap between the old and new,
+> and currently the libata driver has no way for smartmontools
+> or hdparm to communicate and control drive features like
+> the cache/readahead settings, and the various SMART capabilities.
 
-And you'll get no debate from me on wanting a better interface
-moving forward -- I really like the new ATA Command Pass-Through
-draft spec (updated today, by the way).
 
-But there'll need to be some overlap between the old and new,
-and currently the libata driver has no way for smartmontools
-or hdparm to communicate and control drive features like
-the cache/readahead settings, and the various SMART capabilities.
+Supporting the ATA Pass-through CDB in libata will enable support for 
+all of those things.  I think we all agree that there needs to be _some_ 
+way of letting userspace control these attributes via direct ATA command 
+submission.
 
-Simply dropping HDIO_DRIVE_CMD/HDIO_DRIVE_TASK into there would
-immediately gain full compatibility with the existing toolsets,
-and give some time for a newer scheme to be rolled out in the
-kernel, the tools, and ultimately all of the various distros.
+As an aside, although libata _will_ support some sort of user ATA 
+command execution method, some of these attributes are (or will be soon) 
+available through standard SCSI methods.
 
-Cheers
--- 
-Mark Lord
-(hdparm keeper & the original "Linux IDE Guy")
+For example, MODE SENSE/MODE SELECT on the caching mode page allows one 
+to toggle read-ahead and writeback caching.
+
+blktool supports both methods :)
+
+	Jeff
+
+
