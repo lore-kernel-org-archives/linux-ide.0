@@ -1,72 +1,102 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: sata_sil + Maxtor
-Date: Fri, 08 Oct 2004 10:50:34 -0400
+From: Eric Eikenberry <eric.eikenberry@psi.ch>
+Subject: filesystem corruption with sata_sx4 driver
+Date: Fri, 8 Oct 2004 17:24:58 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4166A93A.4030403@pobox.com>
-References: <200410080948.45286.rme@image.dk>
+Message-ID: <Pine.LNX.4.44.0410081711190.1475-100000@ganymede.psi.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:59078 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S269997AbUJHOus
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 Oct 2004 10:50:48 -0400
-In-Reply-To: <200410080948.45286.rme@image.dk>
+Received: from psi11.psi.ch ([129.129.190.111]:11013 "HELO psi11.psi.ch")
+	by vger.kernel.org with SMTP id S270015AbUJHPZg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Oct 2004 11:25:36 -0400
 List-Id: linux-ide@vger.kernel.org
-To: rme@image.dk
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
-Rasmus Melgaard wrote:
-> Hi,
-> 
-> I have a IDE/SATA problem. I have a Silicon Image 3112 sata-controller with a 
-> Maxtor 160 Gb drive connected. Controller and drive is detected in the 
-> kernel-boot process, but an error happens during boot, I think the linux 
-> driver gets an response it doesn't expect.
-> 
-> I'm using for testing the mm-kernel: 2.6.9-rc1-mm1. Every thing seems to work 
-> in Windows, but since I mainly use Linux (Gentoo), I would like it to work 
-> here.
-> 
-> Does anybody have an ideer of how to proceed to solve this problem ? 
-> 
-> Mvh
-> Rasmus
-> 
-> Important part of log:
-> Sep  5 15:55:39 rasmus scsi1 : sata_sil
-> Sep  5 15:55:39 rasmus ata2: no device found (phy stat 00000000)
-> Sep  5 15:55:39 rasmus scsi2 : sata_sil
-> Sep  5 15:55:39 rasmus Vendor: ATA       Model: Maxtor 6Y160M0    Rev: YAR5
-> Sep  5 15:55:39 rasmus Type:   Direct-Access                      ANSI SCSI 
-> revision: 05
-> Sep  5 15:55:39 rasmus SCSI device sda: 320173056 512-byte hdwr sectors 
-> (163929 MB)
-> Sep  5 15:55:39 rasmus SCSI device sda: drive cache: write back
-> Sep  5 15:55:39 rasmus /dev/scsi/host1/bus0/target0/lun0:<3>ata1: command 0x25 
-> timeout, stat 0x58 host_stat 0x60
-> Sep  5 15:55:39 rasmus ata1: status=0x58 { DriveReady SeekComplete 
-> DataRequest }
-> Sep  5 15:55:39 rasmus SCSI error : <1 0 0 0> return code = 0x8000002
-> Sep  5 15:55:39 rasmus Current sda: sense = 70 10
-> Sep  5 15:55:39 rasmus end_request: I/O error, dev sda, sector 0
-> Sep  5 15:55:39 rasmus Buffer I/O error on device sda, logical block 0
-> Sep  5 15:55:39 rasmus ATA: abnormal status 0x58 on port 0xE882E087
-> Sep  5 15:55:39 rasmus ATA: abnormal status 0x58 on port 0xE882E087
-> Sep  5 15:55:39 rasmus ATA: abnormal status 0x58 on port 0xE882E087
-> Sep  5 15:55:39 rasmus ata1: command 0x25 timeout, stat 0xd8 host_stat 0x61
-> Sep  5 15:55:39 rasmus ata1: status=0xd8 { Busy }
-> Sep  5 15:55:39 rasmus SCSI error : <1 0 0 0> return code = 0x8000002
-> Sep  5 15:55:39 rasmus Current sda: sense = 70 10
-> Sep  5 15:55:39 rasmus end_request: I/O error, dev sda, sector 0
-> Sep  5 15:55:39 rasmus Buffer I/O error on device sda, logical block 0
+Dear Jeff & collaborators,
 
-It's quite clearly a device error...  Try upgrading your system and card 
-BIOS, try switching cables, try booting with "noapic" or "acpi=off" or 
-"pci=biosirq" or something like that...
+I am experiencing filesystem corruption with the sata_sx4 driver and
+have accumulated some circumstantial evidence (below) that may permit
+an expert to pinpoint the problem.  Of course, I can't be sure it is
+that driver's problem.
 
-	Jeff
+Any help would be greatly appreciated.
+
+Many thanks in advance.
+
+Regards,
+Eric
+
+======================================================================
+System:
+Dual Xeon box from Fujitsu-Siemens
+root=/dev/hda1 (ext3), a separate 120 GB  EIDE disk
+Promise FastTrak S150 SX4 controller configured as 3 x JBOD
+3 MaxTor Max Line plus II 250 GB SATA drives
+	(the 4th one failed - twice!)
+Suse 9.1
+kernel: linux-2.6.9-rc3-mm3
+ext3 -or- ext2 -or- reiser filesystems for tests below
+	(no differences found)
+
+I made sure that the sata_promise driver was not built, because it is
+loaded in preference to the sata_sx4 driver, causing no end of problems.
+
+Our application involves writing thousands of 7.6 MByte files at maximum
+rate.  So, I made a program to simulate this by writing 1,000 such files
+and measuring times.
+
+Under some circumstances, the filesystem becomes corrupted, with the OS
+reporting "wierd" files - strange permissions, crazy sizes (even
+negative), etc.  These could be recovered with fsck.ext3, etc., to give
+intact files.  So, the files themselves are intact.
+
+The 3 disks were each partitoned with 1 partition.
+
+I either mounted the 3 disks individually as /mnt/sda1, /mnt/sdb2, &
+/mnt/sdc1, or configured them as a RAID0 array, or a mixture of the
+two modes.  Results:
+
+RAID0 with 3 disks, /dev/sda1, /dev/sdb1, /dev/sdc1 - array is
+	corrupted after	~200 files.
+RAID0 with 2 disks, /dev/sda1 & /dev/sdb1;  /mnt/sdc1 mounted, but
+	not used - no problem
+RAID0 with 2 disks, /dev/sda1 & /dev/sdb1;  sdc unplugged -
+	corruption after 110 files; kernel freezes
+no raid, just address /mnt/sda1, /mnt/sdb1 and /mnt/sdc1 directly
+	write 1000 files to /mnt/sda1 - no problem
+	write 1000 files to /mnt/sdb1 - no problem
+	write 1000 files to /mnt/sdc1 - no problem
+	write 1000 files to /mnt/sda1 and /mnt/sdb1 at the same time,
+		alternating drives - no problem
+	write 1000 files to /mnt/sda1, /mnt/sdb1 and /mnt/sdc1 at
+		the same time on a round-robin basis - sdc1 (only)
+		is quickly corrupted.
+Even if sdc1 is merely present, but not mounted, sda1 and sdb1 work
+	correctly.
+But, if sdc1 is unplugged, then sdb1 becomes corrupted.
+
+It is as if inode information is not being properly transmitted to the
+the last disk in the array when it is targetted at the same time as
+the other drives; when the last disk is used by itself, no problem.
+
+Would this information lead someone to a fix?  Is it really the
+sata_sx4 driver's problem?
+
+=====================================================================
 
 
+-------------------------------------------------------
+Eric F. Eikenberry, Ph. D.
+Swiss Light Source
+Paul Scherrer Institute
+CH-5232 Villigen PSI
+Switzerland
+
+Tel:  +41 56 / 310 51 28
+             / 310 32 05
+Fax:  +41 56 / 310 43 62
+
+E-mail: eric.eikenberry@psi.ch
+-------------------------------------------------------
 
