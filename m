@@ -1,36 +1,39 @@
-From: Stefan Smietanowski <stesmi@stesmi.com>
-Subject: Re: Promise IDE controller crashes 2.4.22
-Date: Fri, 28 Nov 2003 04:22:02 +0100
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: 2.6.0 build issues
+Date: Fri, 28 Nov 2003 19:05:00 +1100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <3FC6BF5A.6050204@stesmi.com>
-References: <slrnbsche8.2ir.jgoerzen@christoph.complete.org> <200311272042.19568.bzolnier@elka.pw.edu.pl> <20031127225508.GA5926@complete.org> <200311280016.48828.bzolnier@elka.pw.edu.pl> <20031128022439.GA8333@complete.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20031128080657.D88232C2B6@lists.samba.org>
+References: <3FC677B9.C9046973@eyal.emu.id.au>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from as13-5-5.has.s.bonet.se ([217.215.179.23]:30592 "EHLO
-	K-7.stesmi.com") by vger.kernel.org with ESMTP id S261936AbTK1DTb
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 Nov 2003 22:19:31 -0500
-In-Reply-To: <20031128022439.GA8333@complete.org>
+Received: from dp.samba.org ([66.70.73.150]:6027 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S262055AbTK1IG6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Nov 2003 03:06:58 -0500
+In-reply-to: Your message of "Fri, 28 Nov 2003 09:16:25 +1100."
+             <3FC677B9.C9046973@eyal.emu.id.au>
 List-Id: linux-ide@vger.kernel.org
-To: John Goerzen <jgoerzen@complete.org>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: B.Zolnierkiewicz%elka.pw.edu.pl.linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, mec@shout.net
 
-Hi John.
+In message <3FC677B9.C9046973@eyal.emu.id.au> you write:
+> *** Warning: "ide_pci_unregister_driver" [drivers/ide/pci/via82cxxx.ko] undefined!
+> *** Warning: "ide_pci_register_driver" [drivers/ide/pci/via82cxxx.ko] undefined!
+> *** Warning: "ide_setup_pci_device" [drivers/ide/pci/via82cxxx.ko] undefined!
+> *** Warning: "ide_pci_register_host_proc" [drivers/ide/pci/via82cxxx.ko] undefined!
+> *** Warning: "ide_pci_unregister_driver" [drivers/ide/pci/trm290.ko] undefined
+!
 
->>>>Can you try setting drive to use UDMA100 instead of UDMA133
->>>>(by something like 'hdparm -Xudma100 /dev/hda')?
-> 
-> 
-> Tried that too, but I got: 
-> 
-> pi:~# hdparm -Xudma100 /dev/hde
-> -X: missing value
+Thanks for the report, Eyal!
 
-Try -X69 (69 means udma100)
+It's an IDE Makefile problem (sorry Bart!).  You've set CONFIG_IDE=m,
+but CONFIG_BLK_DEV_IDEDMA_PCI=y.  That might be OK, but the kernel
+only goes into the drivers/ide dir for modules:
 
-Formula is simple. UDMA mode you want + 64, ie UDMA5 = 5+64.
+drivers/Makefile: obj-$(CONFIG_IDE)		+= ide/
 
-// Stefan
+But making this obj-y reveals that setup-pci.c's ide_match_hwif()
+needs ide_hwifs, which is in ide.c, so maybe the Kconfig is wrong?
 
+Help!
+Rusty.
+--
+  Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
