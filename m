@@ -1,49 +1,58 @@
-From: Gene Heskett <gene.heskett@verizon.net>
-Subject: Re: [BK PATCHES] ide-2.6 update
-Date: Wed, 27 Oct 2004 15:03:36 -0400
+From: Brett Russ <russb@emc.com>
+Subject: libata-2.6 bk tree build problem
+Date: Wed, 27 Oct 2004 16:37:29 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200410271503.36426.gene.heskett@verizon.net>
-References: <58cb370e04102706074c20d6d7@mail.gmail.com> <200410271426.04051.gene.heskett@verizon.net> <Pine.LNX.4.58.0410271139530.28839@ppc970.osdl.org>
-Reply-To: gene.heskett@verizon.net
+Message-ID: <41800709.6020808@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out009pub.verizon.net ([206.46.170.131]:52867 "EHLO
-	out009.verizon.net") by vger.kernel.org with ESMTP id S262636AbUJ0TDt
+Received: from mailhub.lss.emc.com ([168.159.2.31]:52879 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S262570AbUJ0Uhq
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Oct 2004 15:03:49 -0400
-In-Reply-To: <Pine.LNX.4.58.0410271139530.28839@ppc970.osdl.org>
-Content-Disposition: inline
+	Wed, 27 Oct 2004 16:37:46 -0400
+Received: from [168.159.32.130] ([168.159.32.130])
+	by mailhub.lss.emc.com (Switch-3.1.6/Switch-3.1.6) with ESMTP id i9RKbYrb023273
+	for <linux-ide@vger.kernel.org>; Wed, 27 Oct 2004 16:37:35 -0400 (EDT)
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@osdl.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wednesday 27 October 2004 14:41, Linus Torvalds wrote:
->On Wed, 27 Oct 2004, Gene Heskett wrote:
->> I don't know for sure if I'm having a problem or not Linus, but I
->> had to dl fc3rc1's iso's several times to get all good md5sums.
->
->I don't think it was your side, I saw it too.
->
->They seem to have replaced the test-rc ISO images in the middle or
-> had some server trouble, so the md5sums simply didn't match
-> originally.
->
->  Linus
+steps to reproduce:
 
-Good, so I'm not crazy after all, as someone on the fedora list 
-accused me of yesterday when I went off topic, at length, responding 
-to a political rant about the shrub and about freedoms in general.  
-Thanks, I needed that. :)
+1) bk pull
+2) make distclean
+3) make menuconfig
 
--- 
-Cheers, Gene
-"There are four boxes to be used in defense of liberty:
- soap, ballot, jury, and ammo. Please use in that order."
--Ed Howdershelt (Author)
-99.28% setiathome rank, not too shabby for a WV hillbilly
-Yahoo.com attorneys please note, additions to this message
-by Gene Heskett are:
-Copyright 2004 by Maurice Eugene Heskett, all rights reserved.
+gives me the following output:
+
+   HOSTCC  scripts/basic/fixdep
+   HOSTCC  scripts/basic/split-include
+   HOSTCC  scripts/basic/docproc
+   SHIPPED scripts/kconfig/zconf.tab.h
+   HOSTCC  scripts/kconfig/conf.o
+   HOSTCC  scripts/kconfig/mconf.o
+   SHIPPED scripts/kconfig/zconf.tab.c
+   SHIPPED scripts/kconfig/lex.zconf.c
+   HOSTCC  -fPIC scripts/kconfig/zconf.tab.o
+   HOSTLLD -shared scripts/kconfig/libkconfig.so
+   HOSTLD  scripts/kconfig/mconf
+   HOSTCC  scripts/lxdialog/checklist.o
+   HOSTCC  scripts/lxdialog/inputbox.o
+   HOSTCC  scripts/lxdialog/lxdialog.o
+   HOSTCC  scripts/lxdialog/menubox.o
+   HOSTCC  scripts/lxdialog/msgbox.o
+   HOSTCC  scripts/lxdialog/textbox.o
+   HOSTCC  scripts/lxdialog/util.o
+   HOSTCC  scripts/lxdialog/yesno.o
+   HOSTLD  scripts/lxdialog/lxdialog
+scripts/kconfig/mconf arch/i386/Kconfig
+drivers/media/dvb/Kconfig:34: can't open file 
+"drivers/media/dvb/dibusb/Kconfig"
+make[1]: *** [menuconfig] Error 1
+make: *** [menuconfig] Error 2
+
+
+Am I doing something wrong?
+
+Thanks,
+BR
