@@ -1,19 +1,24 @@
 From: "Randy.Dunlap" <rddunlap@osdl.org>
 Subject: Re: ide-tape oops
-Date: Wed, 09 Mar 2005 19:13:01 -0800
-Message-ID: <422FBB3D.4010509@osdl.org>
+Date: Wed, 09 Mar 2005 21:23:33 -0800
+Message-ID: <422FD9D5.5010509@osdl.org>
 References: <7619.202.12.233.21.1110421544.squirrel@webmail.theforce.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from fire.osdl.org ([65.172.181.4]:50410 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261151AbVCJDZZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2005 22:25:25 -0500
+Content-Type: multipart/mixed;
+ boundary="------------030403060101040206060508"
+Received: from fire.osdl.org ([65.172.181.4]:16536 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261924AbVCJFf6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2005 00:35:58 -0500
 In-Reply-To: <7619.202.12.233.21.1110421544.squirrel@webmail.theforce.com.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Grahame Jordan <gbj@theforce.com.au>
 Cc: linux-ide@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------030403060101040206060508
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
 Grahame Jordan wrote:
 > Hi,
@@ -23,16 +28,14 @@ Grahame Jordan wrote:
 > 
 > Any help would be appreciated
 > 
-> Thanks
-> 
-> Grahame Jordan
+
+<drive> is null in idetape_chrdev_open.
+Please apply and test with the attached patch, just to try to
+find out what is going one.
+
 > 
 > Debian testing
 > Linux hanlay 2.6.8-2-686-smp #1 SMP Mon Jan 24 02:32:52 EST 2005 i686
-
-Is it possible for you to try to recreate this on a more recent
-kernel?
-
 > GNU/Linux
 > P4 3.2GHz
 > 1GB RAM
@@ -89,3 +92,51 @@ kernel?
 
 -- 
 ~Randy
+
+--------------030403060101040206060508
+Content-Type: text/x-patch;
+ name="ide_tape_test.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ide_tape_test.patch"
+
+
+idetape_chrdev_open() is finding drive == NULL; test why?
+
+Signed-off-by: Randy Dunlap <rddunlap@osdl.org>
+
+diffstat:=
+ drivers/ide/ide-tape.c |    5 +++++
+ 1 files changed, 5 insertions(+)
+
+diff -Naurp ./drivers/ide/ide-tape.c~ide_tape_test ./drivers/ide/ide-tape.c
+--- ./drivers/ide/ide-tape.c~ide_tape_test	2005-03-01 23:37:54.000000000 -0800
++++ ./drivers/ide/ide-tape.c	2005-03-09 21:16:57.000000000 -0800
+@@ -4108,6 +4108,8 @@ static int idetape_chrdev_open (struct i
+ 	if (i >= MAX_HWIFS * MAX_DRIVES)
+ 		return -ENXIO;
+ 	drive = idetape_chrdevs[i].drive;
++	printk("ide-tape-open-test: using minor = %d, i = %d, drive = 0x%p\n",
++		minor, i, drive);
+ 	tape = drive->driver_data;
+ 	filp->private_data = drive;
+ 
+@@ -4640,6 +4642,7 @@ static int idetape_cleanup (ide_drive_t 
+ 		return 1;
+ 	}
+ 	idetape_chrdevs[minor].drive = NULL;
++	printk("ide-tape-cleanup-test: clearing drive for minor = %d\n", minor);
+ 	spin_unlock_irqrestore(&ide_lock, flags);
+ 	DRIVER(drive)->busy = 0;
+ 	(void) ide_unregister_subdriver(drive);
+@@ -4779,6 +4782,8 @@ static int idetape_attach (ide_drive_t *
+ 		;
+ 	idetape_setup(drive, tape, minor);
+ 	idetape_chrdevs[minor].drive = drive;
++	printk("ide-tape-attach-test: using minor = %d for drive = 0x%p\n",
++		minor, drive);
+ 
+ 	devfs_mk_cdev(MKDEV(HWIF(drive)->major, minor),
+ 			S_IFCHR | S_IRUGO | S_IWUGO,
+
+--------------030403060101040206060508--
