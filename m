@@ -1,109 +1,145 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: [BK PATCHES] ide-2.6 update
-Date: Sun, 20 Feb 2005 15:24:56 +0100 (CET)
-Message-ID: <Pine.GSO.4.58.0502201522450.951@mion.elka.pw.edu.pl>
+From: =?iso-8859-1?Q?Rog=E9rio?= Brito <rbrito@ime.usp.br>
+Subject: Re: 2.6.11rc4: irq 5, nobody cared
+Date: Sun, 20 Feb 2005 15:05:50 -0300
+Message-ID: <20050220180550.GA18606@ime.usp.br>
+References: <20050220155600.GD5049@vanheusden.com> <20050220164010.GA17806@ime.usp.br> <4218C692.9040106@tiscali.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:29947 "EHLO
-	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S261830AbVBTOdA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 20 Feb 2005 09:33:00 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Received: from smtpout2.uol.com.br ([200.221.4.193]:50410 "EHLO
+	smtp.uol.com.br") by vger.kernel.org with ESMTP id S261724AbVBTSFz
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 20 Feb 2005 13:05:55 -0500
+Received: from dumont.rtb.ath.cx (unknown [200.221.104.251])
+	by scorpion2.uol.com.br (Postfix) with ESMTP id 1CC348ADB
+	for <linux-ide@vger.kernel.org>; Sun, 20 Feb 2005 15:05:54 -0300 (BRT)
+Content-Disposition: inline
+In-Reply-To: <4218C692.9040106@tiscali.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Matthias-Christian Ott <matthias.christian@tiscali.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, bzolnier@elka.pw.edu.pl, B.Zolnierkiewicz@elka.pw.edu.pl
+
+On Feb 20 2005, Matthias-Christian Ott wrote:
+> Rog=E9rio Brito wrote:
+> >I am willing to test any patch and configuration (let's call me a
+> >"guinea pig"), but I don't know what I should do. I have, OTOH,
+> >reported my problem many times in the past few days. :-(
+> >
+> >I will retry sending my message to the list once again, with the
+> >details (in my case, the message I get is "irq 10: nobody cared!"
+> >and it is regarding my primary HD on my secondary Promise PDC20265
+> >controller).
+
+=46irst of all, Matthias-Christian, thank you very much for your kind
+answer.
+
+I have already tried contacting the linux-ide mailing list as a CC to m=
+y
+earlier messages, but I got no response. I am including some details in
+this e-mail. I included Bartlomiej in the CC, as he is listed as genera=
+l
+IDE maintainer in the MAINTAINERS file.
+
+> Report it to http://bugzilla.kernel.org/. Maybe you'll get help there=
+=2E
+
+Thanks. I will try filing a bug on that system as soon as I get the
+reply to create my account there.
+
+(...)
+> You see it's very difficult to fix such irq problems because some fac=
+tors
+> can cause such an error.
+
+Yes, I understand that.
+
+> Maybe contacting specific malinglists (e.g. for "broken" pci cards
+> the pci mailinglist, etc.), maintainers or developers would be more
+> efficient (cc the lkml) and solve your problem (faster), because
+> this people are specialists are this type of hardware (e.g. pci).
+>=20
+> What hardware is connect through irq 5?
+
+In my case, my problem is not with irq 5, but with irq 10, as I
+mentioned earlier.
+
+The situation is this: I have an Asus A7V motherboard with 2 VIA
+vt82c686a controllers and 2 Promise PDC20265 controllers.
+
+I recently bought myself a new DVD recorder and since Alan Cox told
+me[*] that the Promise controllers had problems with ATAPI devices, I
+decided to arrange my system this way:
+
+/dev/hda: the DVD recorder (VIA controller, master)
+/dev/hdc: an old CD recorder (VIA controller, master)
+/dev/hde: my first HD (Promise controller, master)
+/dev/hdg: my second HD (Promise controller, master)
+
+The Promise controller is able to control the HDs (which now have
+exclusive 80-pin cables) at their maximum, but I get the following
+stack trace if I have /dev/hdg turned on:
+
+- - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - -
+ACPI: PCI interrupt 0000:00:11.0[A] -> GSI 10 (level, low) -> IRQ 10
+PDC20265: chipset revision 2
+PDC20265: 100% native mode on irq 10
+PDC20265: (U)DMA Burst Bit ENABLED Primary PCI Mode Secondary PCI Mode.
+    ide2: BM-DMA at 0x7400-0x7407, BIOS settings: hde:pio, hdf:pio
+    ide3: BM-DMA at 0x7408-0x740f, BIOS settings: hdg:pio, hdh:pio
+Probing IDE interface ide2...
+hde: QUANTUM FIREBALL CX13.0A, ATA DISK drive
+ide2 at 0x8800-0x8807,0x8402 on irq 10
+Probing IDE interface ide3...
+hdg: QUANTUM FIREBALLlct15 30, ATA DISK drive
+irq 10: nobody cared!
+ [<c0128fc1>] __report_bad_irq+0x31/0x77
+ [<c012906b>] note_interrupt+0x4c/0x71
+ [<c0128c86>] __do_IRQ+0x93/0xbd
+ [<c0104635>] do_IRQ+0x19/0x24
+ [<c010335a>] common_interrupt+0x1a/0x20
+ [<c011935c>] __do_softirq+0x2c/0x7d
+ [<c01193cf>] do_softirq+0x22/0x26
+ [<c010463a>] do_IRQ+0x1e/0x24
+ [<c010335a>] common_interrupt+0x1a/0x20
+ [<c0128d89>] enable_irq+0x88/0x8d
+ [<c021edc0>] probe_hwif+0x2da/0x366
+ [<c021a137>] ata_attach+0xa3/0xbd
+ [<c021ee5c>] probe_hwif_init_with_fixup+0x10/0x74
+ [<c0221597>] ide_setup_pci_device+0x72/0x7f
+ [<c0216f82>] pdc202xx_init_one+0x15/0x18
+ [<c039182e>] ide_scan_pcidev+0x34/0x59
+ [<c039186f>] ide_scan_pcibus+0x1c/0x88
+ [<c039179f>] probe_for_hwifs+0xb/0xd
+ [<c03917e5>] ide_init+0x44/0x59
+ [<c037c6ce>] do_initcalls+0x4b/0x99
+ [<c0100272>] init+0x0/0xce
+ [<c0100299>] init+0x27/0xce
+ [<c0101245>] kernel_thread_helper+0x5/0xb
+handlers:
+[<c021c2a6>] (ide_intr+0x0/0xee)
+Disabling IRQ #10
+irq 10: nobody cared!
+- - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - -
+
+This is just an excerpt of the messages. I can provide much more
+details if I know what is relevant.
+
+I had already posted some old dmesg logs at my site
+<http://www.ime.usp.br/~rbrito/ide-problem/>, but this was before I
+got myself a second 80-ribbon cable (I expected that the problem would
+go away, but it didn't).
+
+Any other comments are more than welcome.
 
 
-Hi,
+Thanks in advance, Rog=E9rio Brito.
 
-Please do a
-
-	bk pull bk://bart.bkbits.net/ide-2.6
-
-This will update the following files:
-
- drivers/ide/Kconfig  |    2 +-
- drivers/ide/ide-io.c |    5 +++--
- drivers/ide/ide.c    |    4 ++++
- 3 files changed, 8 insertions(+), 3 deletions(-)
-
-through these ChangeSets:
-
-<ben-linux@fluff.org> (05/02/20 1.2130)
-   [ide] Kconfig for VR1000 machine driver selection
-
-   Fix the use of CONFIG_MACH_VR1000, which was missing an
-   trailing zero from the configuration variable, so never
-   being shown if only the VR1000 was selected
-
-   Signed-off-by: Ben Dooks <ben-linux@fluff.org>
-   Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-<mikukkon@gmail.com> (05/02/20 1.2129)
-   [ide] small compile fix to ide.c with !CONFIG_PCI
-
-   Small patch to fix following warning with CONFIG_IDE && !CONFIG_PCI:
-
-     CC	drivers/ide/ide.o
-   drivers/ide/ide.c: In function 'ide_system_bus_speed':
-   drivers/ide/ide.c:338: warning: unused variable 'pci_default'
-
-   I decided to save some bytes by #ifdef:ing the struct in question.
-   CC:ing Hanna because she did the change (and just to say hi ;-).
-
-   Signed-off-by: Mika Kukkonen <mikukkon@gmail.com>
-   Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-<bzolnier@trik.(none)> (05/02/19 1.2128)
-   [ide] fix ide_get_error_location() for LBA28
-
-   Higher bits (16-23) of the address were ignored.
-
-   Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-diff -Nru a/drivers/ide/Kconfig b/drivers/ide/Kconfig
---- a/drivers/ide/Kconfig	2005-02-20 15:08:56 +01:00
-+++ b/drivers/ide/Kconfig	2005-02-20 15:08:56 +01:00
-@@ -812,7 +812,7 @@
-
- config BLK_DEV_IDE_BAST
- 	tristate "Simtec BAST / Thorcom VR1000 IDE support"
--	depends on ARM && (ARCH_BAST || MACH_VR100)
-+	depends on ARM && (ARCH_BAST || MACH_VR1000)
- 	help
- 	  Say Y here if you want to support the onboard IDE channels on the
- 	  Simtec BAST or the Thorcom VR1000
-diff -Nru a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
---- a/drivers/ide/ide-io.c	2005-02-20 15:08:56 +01:00
-+++ b/drivers/ide/ide-io.c	2005-02-20 15:08:56 +01:00
-@@ -238,9 +238,10 @@
- 		high = ide_read_24(drive);
- 	} else {
- 		u8 cur = HWIF(drive)->INB(IDE_SELECT_REG);
--		if (cur & 0x40)
-+		if (cur & 0x40) {
-+			high = cur & 0xf;
- 			low = (hcyl << 16) | (lcyl << 8) | sect;
--		else {
-+		} else {
- 			low = hcyl * drive->head * drive->sect;
- 			low += lcyl * drive->sect;
- 			low += sect - 1;
-diff -Nru a/drivers/ide/ide.c b/drivers/ide/ide.c
---- a/drivers/ide/ide.c	2005-02-20 15:08:56 +01:00
-+++ b/drivers/ide/ide.c	2005-02-20 15:08:56 +01:00
-@@ -335,10 +335,14 @@
-
- static int ide_system_bus_speed(void)
- {
-+#ifdef CONFIG_PCI
- 	static struct pci_device_id pci_default[] = {
- 		{ PCI_DEVICE(PCI_ANY_ID, PCI_ANY_ID) },
- 		{ }
- 	};
-+#else
-+#define pci_default 0
-+#endif /* CONFIG_PCI */
-
- 	if (!system_bus_speed) {
- 		if (idebus_parameter) {
+[*] http://infocenter.guardiandigital.com/archive/linux-kernel/2004/Dec=
+/2663.html
+--=20
+=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D
+  Rog=E9rio Brito - rbrito@ime.usp.br - http://www.ime.usp.br/~rbrito
+=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D
