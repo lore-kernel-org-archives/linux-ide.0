@@ -1,31 +1,78 @@
-From: Francois Payette <francoisp@netmosphere.net>
-Subject: Re: SATA150TX4 atat1:command timeout
-Date: Fri, 18 Feb 2005 11:40:52 -0500
-Message-ID: <42161A94.1020404@netmosphere.net>
-References: <42111B02.4010805@netmosphere.net> <4211279C.5070205@pobox.com> <421360ED.2040505@netmosphere.net>
+From: "John W. Linville" <linville@tuxdriver.com>
+Subject: [patch libata-dev-2.6 1/5] libata: fix command queue leak when xlat_func fails
+Date: Fri, 18 Feb 2005 14:50:29 -0500
+Message-ID: <20050218195027.GB3197@tuxdriver.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from 65.18.135.ptr ([65.18.135.81]:28330 "EHLO isecurit.com")
-	by vger.kernel.org with ESMTP id S261399AbVBRQkO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2005 11:40:14 -0500
-In-Reply-To: <421360ED.2040505@netmosphere.net>
+Content-Type: text/plain; charset=us-ascii
+Received: from ra.tuxdriver.com ([24.172.12.4]:19462 "EHLO ra.tuxdriver.com")
+	by vger.kernel.org with ESMTP id S261472AbVBRTuf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2005 14:50:35 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Eric Mudama <edmudama@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com
 
-It seems that the locking problem we were experiencing was related to 
-the disparities of drives in a raid 0 array; when we replaced the 
-6Y200M0 with another 6B200S0 the problem never reappeared even after 1.8 
-TB of io. Thanks a buch to Eric for pointing out the differences; the 
-promise card and/or driver must have a problem with the bridge chip on 
-that drive when interfacing with another drive that does not have that 
-chip. We also tested for performance improvements with
+ata_scsi_translate allocates from the libata command queue by calling
+ata_scsi_qc_new.  If xlat_func returns non-zero, control jumps to
+err_out which fails to free the allocated command.  Fix is to add a
+new API to free unused commands.
 
-writel(tmp, mmio + PDC_TBG_MODE);
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
 
-commented out from pdc_host_init, but it does not cause a significant 
-difference when benchmarked with bonnie++.
+ drivers/scsi/libata-core.c |   18 ++++++++++++++++++
+ drivers/scsi/libata-scsi.c |    1 +
+ drivers/scsi/libata.h      |    1 +
+ 3 files changed, 20 insertions(+)
 
-Thanks for your help,
-Francois
+--- sata-smart-2.6/drivers/scsi/libata-scsi.c.bugfix	2005-02-17 16:47:04.992924055 -0500
++++ sata-smart-2.6/drivers/scsi/libata-scsi.c	2005-02-17 16:48:48.265138198 -0500
+@@ -967,6 +967,7 @@ static void ata_scsi_translate(struct at
+ 	return;
+ 
+ err_out:
++	ata_qc_free(qc);
+ 	ata_bad_cdb(cmd, done);
+ 	DPRINTK("EXIT - badcmd\n");
+ }
+--- sata-smart-2.6/drivers/scsi/libata-core.c.bugfix	2005-02-17 16:46:44.659638355 -0500
++++ sata-smart-2.6/drivers/scsi/libata-core.c	2005-02-17 16:48:48.269137664 -0500
+@@ -2687,6 +2687,24 @@ static void __ata_qc_complete(struct ata
+ }
+ 
+ /**
++ *	ata_qc_free - free unused ata_queued_cmd
++ *	@qc: Command to complete
++ *
++ *	Designed to free unused ata_queued_cmd object
++ *	in case something prevents using it.
++ *
++ *	LOCKING:
++ *
++ */
++void ata_qc_free(struct ata_queued_cmd *qc)
++{
++	assert(qc != NULL);	/* ata_qc_from_tag _might_ return NULL */
++	assert(qc->waiting == NULL);	/* nothing should be waiting */
++
++	__ata_qc_complete(qc);
++}
++
++/**
+  *	ata_qc_complete - Complete an active ATA command
+  *	@qc: Command to complete
+  *	@drv_stat: ATA status register contents
+--- sata-smart-2.6/drivers/scsi/libata.h.bugfix	2005-02-17 16:46:47.630241808 -0500
++++ sata-smart-2.6/drivers/scsi/libata.h	2005-02-17 16:48:48.306132726 -0500
+@@ -37,6 +37,7 @@ struct ata_scsi_args {
+ /* libata-core.c */
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_port *ap,
+ 				      struct ata_device *dev);
++extern void ata_qc_free(struct ata_queued_cmd *qc);
+ extern int ata_qc_issue(struct ata_queued_cmd *qc);
+ extern int ata_check_atapi_dma(struct ata_queued_cmd *qc);
+ extern int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg);
+-- 
+John W. Linville
+linville@tuxdriver.com
