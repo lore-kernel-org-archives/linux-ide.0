@@ -1,58 +1,56 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: simple use wcache from drive (was)Re: [RFC/PATCH 0/7] enable honoring write cache setting of IDE drive
-Date: Fri, 28 Jan 2005 23:59:18 +0100
-Message-ID: <58cb370e05012814592266d81f@mail.gmail.com>
-References: <200501282254.j0SMsnBu023405@falcon10.austin.ibm.com>
-	 <58cb370e05012814566dce888a@mail.gmail.com>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [RFC PATCH 2.4] ata_piix on ich6r in RAID mode
+Date: Fri, 28 Jan 2005 20:30:20 -0500
+Message-ID: <41FAE72C.1010905@pobox.com>
+References: <87acqte8xr.fsf@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.192]:8399 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262814AbVA1W7U (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Jan 2005 17:59:20 -0500
-Received: by wproxy.gmail.com with SMTP id 67so326967wri
-        for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 14:59:19 -0800 (PST)
-In-Reply-To: <58cb370e05012814566dce888a@mail.gmail.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:17831 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261401AbVA2Bag (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Jan 2005 20:30:36 -0500
+In-Reply-To: <87acqte8xr.fsf@yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Doug Maxey <dwm@austin.ibm.com>
-Cc: Jens Axboe <axboe@suse.de>, Jeff Garzik <jgarzik@pobox.com>, Linux IDE Mailing List <linux-ide@vger.kernel.org>
+To: Martins Krikis <mkrikis@yahoo.com>
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Fri, 28 Jan 2005 23:56:41 +0100, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
-> On Fri, 28 Jan 2005 16:54:49 -0600, Doug Maxey <dwm@austin.ibm.com> wrote:
-> >
-> > On Fri, 28 Jan 2005 23:32:53 +0100, Bartlomiej Zolnierkiewicz wrote:
-> > >> The datacenters/server folks that would be using these drives would
-> > >> expect them to remain as set.  I have to check, but unless something
-> > >> has changed very recently in the kernel, setting with hdparm does not
-> > >> "stick" in the sense that the command succeeds to the disk, but no change
-> > >> is made to the barrier.
-> > >
-> > >It is not a problem for IDE driver (flushes become no-ops)
-> > >and this way you can later enable wcache and still use barries.
-> >
-> > Well that certainly simplfies things.
-> >
-> > How about this?
-> 
-> No go until 'drive->wcache' bug is fixed.
+Martins Krikis wrote:
+> Without this patch, if the BIOS of an ICH6R box has IDE set to "RAID"
+> mode then ata_piix will not find any SATA disks because it incorrectly
+> tries the legacy mode. With the patch all 4 SATA drives become visible.
+> I don't think it would break any other vendor's SATA, but you can be
+> the judge of that. If so, perhaps we can restrict the test some more
+> by checking vendor/device IDs.
 
-And until user is informed about status of wcache (printk).
+> --- linux-2.4.29/drivers/scsi/libata-core.c	2005-01-28 12:07:56.000000000 -0500
+> +++ linux-2.4.29-iswraid/drivers/scsi/libata-core.c	2005-01-28 12:14:43.000000000 -0500
+> @@ -3605,6 +3605,9 @@ int ata_pci_init_one (struct pci_dev *pd
+>  			legacy_mode = (1 << 3);
+>  	}
+>  
+> +	if ((pdev->class >> 8) == PCI_CLASS_STORAGE_RAID)
+> +		legacy_mode = 0;
+> +
+>  	/* FIXME... */
+>  	if ((!legacy_mode) && (n_ports > 1)) {
+>  		printk(KERN_ERR "ata: BUG: native mode, n_ports > 1\n");
 
-> > ===== drivers/ide/ide-disk.c 1.115 vs edited =====
-> > --- 1.115/drivers/ide/ide-disk.c        2005-01-04 11:39:25 -06:00
-> > +++ edited/drivers/ide/ide-disk.c       2005-01-28 16:48:24 -06:00
-> > @@ -1083,7 +1083,7 @@ static void idedisk_setup (ide_drive_t *
-> >         if ((id->csfo & 1) || (id->cfs_enable_1 & (1 << 5)))
-> >                 drive->wcache = 1;
-> >
-> > -       write_cache(drive, 1);
-> > +       write_cache(drive, drive->wcache);
-> >
-> >         /*
-> >          * We must avoid issuing commands a drive does not understand
-> >
->
+
+hmmmmmm.  Maybe "!= PCI_CLASS_STORAGE_IDE" instead?
+
+Overall, however, I am worried about your report of the driver's 
+behavior based on that BIOS's configuration.  The driver follows the PCI 
+IDE standard (previously SFF 8038i), where a register indicates whether 
+its in legacy or native mode.  As it see it, either
+a) the driver logic for reading that register is wrong, or
+b) BIOS incorrectly configuring the device, or
+c) that register is only applicable for PCI_CLASS_STORAGE_IDE devices.
+
+Comments either way?
+
+	Jeff
+
+
