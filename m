@@ -1,88 +1,120 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: [patch ide-dev 8/9] make ide_task_ioctl() use REQ_DRIVE_TASKFILE
-Date: Thu, 24 Feb 2005 15:48:33 +0100 (CET)
-Message-ID: <Pine.GSO.4.58.0502241547400.13534@mion.elka.pw.edu.pl>
+From: Mark Lord <mlord@pobox.com>
+Subject: Re: [PATCH 2.6.11+ sata_qstor] libata: sata_qstor cosmetic fixes
+Date: Thu, 24 Feb 2005 10:15:45 -0500
+Message-ID: <421DEFA1.1040601@pobox.com>
+References: <421CE018.5030007@pobox.com> <200502232345.23666.adobriyan@mail.ru> <421D1113.9030502@pobox.com> <421D6442.3030308@pobox.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:56862 "EHLO
-	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
-	id S51483AbVBXOsl (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 2 others); Thu, 24 Feb 2005 15:48:41 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------050000000208080802030300"
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:41097 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S262386AbVBXPRC
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Feb 2005 10:17:02 -0500
+In-Reply-To: <421D6442.3030308@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Alexey Dobriyan <adobriyan@mail.ru>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------050000000208080802030300
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Jeff Garzik wrote:
+> Mark Lord wrote:
+> 
+>> Minor patch for new 2.6.xx sata_qstor driver attached,
+>> as per Alexey's fine-toothed comb!  :)
+>>
+>> Signed-off-by: Mark Lord <mlord@pobox.com>
+> 
+> I had to apply this manually, since your mailer "corrupts" the patch by 
+> encoding text/plain as base64.  Please fix your mailer...
+
+Mmm.. first time that's ever happened here.
+It's not the mailer, but the mime-types,
+which must have gotten confused by the ".patch1"
+extension, as opposed to the normal ".patch".
+
+Here it is again, renamed to avoid the faulty mime handling.
+
+Signed-off-by: Mark Lord <mlord@pobox.com>
+
+Cheers
+-- 
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
 
 
-ide_task_ioctl() rewritten to use taskfile transport.
-This is the last user of REQ_DRIVE_TASK.
+--------------050000000208080802030300
+Content-Type: text/x-patch;
+ name="sata_qstor-1.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sata_qstor-1.patch"
 
-bart: ported to recent IDE changes by me
+--- linux/drivers/scsi/sata_qstor.c.orig	2005-02-16 20:31:57.000000000 -0500
++++ linux/drivers/scsi/sata_qstor.c	2005-02-23 18:19:31.000000000 -0500
+@@ -261,11 +261,11 @@
+ 		u32 len;
+ 
+ 		addr = sg_dma_address(sg);
+-		*(u64 *)prd = cpu_to_le64(addr);
++		*(__le64 *)prd = cpu_to_le64(addr);
+ 		prd += sizeof(u64);
+ 
+ 		len = sg_dma_len(sg);
+-		*(u32 *)prd = cpu_to_le32(len);
++		*(__le32 *)prd = cpu_to_le32(len);
+ 		prd += sizeof(u64);
+ 
+ 		VPRINTK("PRD[%u] = (0x%llX, 0x%X)\n", nelem,
+@@ -298,10 +298,10 @@
+ 	/* host control block (HCB) */
+ 	buf[ 0] = QS_HCB_HDR;
+ 	buf[ 1] = hflags;
+-	*(u32 *)(&buf[ 4]) = cpu_to_le32(qc->nsect * ATA_SECT_SIZE);
+-	*(u32 *)(&buf[ 8]) = cpu_to_le32(qc->n_elem);
++	*(__le32 *)(&buf[ 4]) = cpu_to_le32(qc->nsect * ATA_SECT_SIZE);
++	*(__le32 *)(&buf[ 8]) = cpu_to_le32(qc->n_elem);
+ 	addr = ((u64)pp->pkt_dma) + QS_CPB_BYTES;
+-	*(u64 *)(&buf[16]) = cpu_to_le64(addr);
++	*(__le64 *)(&buf[16]) = cpu_to_le64(addr);
+ 
+ 	/* device control block (DCB) */
+ 	buf[24] = QS_DCB_HDR;
+@@ -566,10 +566,10 @@
+ 	int rc, have_64bit_bus = (bus_info & QS_HPHY_64BIT);
+ 
+ 	if (have_64bit_bus &&
+-	    !pci_set_dma_mask(pdev, 0xffffffffffffffffULL)) {
+-		rc = pci_set_consistent_dma_mask(pdev, 0xffffffffffffffffULL);
++	    !pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
++		rc = pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
+ 		if (rc) {
+-			rc = pci_set_consistent_dma_mask(pdev, 0xffffffffULL);
++			rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
+ 			if (rc) {
+ 				printk(KERN_ERR DRV_NAME
+ 					"(%s): 64-bit DMA enable failed\n",
+@@ -578,14 +578,14 @@
+ 			}
+ 		}
+ 	} else {
+-		rc = pci_set_dma_mask(pdev, 0xffffffffULL);
++		rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
+ 		if (rc) {
+ 			printk(KERN_ERR DRV_NAME
+ 				"(%s): 32-bit DMA enable failed\n",
+ 				pci_name(pdev));
+ 			return rc;
+ 		}
+-		rc = pci_set_consistent_dma_mask(pdev, 0xffffffffULL);
++		rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
+ 		if (rc) {
+ 			printk(KERN_ERR DRV_NAME
+ 				"(%s): 32-bit consistent DMA enable failed\n",
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-
-diff -Nru a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
---- a/drivers/ide/ide-taskfile.c	2005-02-24 15:30:02 +01:00
-+++ b/drivers/ide/ide-taskfile.c	2005-02-24 15:30:02 +01:00
-@@ -777,30 +777,42 @@
- 	return err;
- }
-
--static int ide_wait_cmd_task(ide_drive_t *drive, u8 *buf)
--{
--	struct request rq;
--
--	ide_init_drive_cmd(&rq);
--	rq.flags = REQ_DRIVE_TASK;
--	rq.buffer = buf;
--	return ide_do_drive_cmd(drive, &rq, ide_wait);
--}
--
--/*
-- * FIXME : this needs to map into at taskfile. <andre@linux-ide.org>
-- */
--int ide_task_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
-+int ide_task_ioctl(ide_drive_t *drive, unsigned int cmd, unsigned long arg)
- {
- 	void __user *p = (void __user *)arg;
--	int err = 0;
--	u8 args[7], *argbuf = args;
--	int argsize = 7;
-+	int err;
-+	u8 args[7];
-+	ide_task_t task;
-+	struct ata_taskfile *tf = &task.tf;
-
- 	if (copy_from_user(args, p, 7))
- 		return -EFAULT;
--	err = ide_wait_cmd_task(drive, argbuf);
--	if (copy_to_user(p, argbuf, argsize))
-+
-+	memset(&task, 0, sizeof(task));
-+
-+	tf->command	= args[0];
-+	tf->feature	= args[1];
-+	tf->nsect	= args[2];
-+	tf->lbal	= args[3];
-+	tf->lbam	= args[4];
-+	tf->lbah	= args[5];
-+	tf->device	= args[6];
-+
-+	task.command_type = IDE_DRIVE_TASK_NO_DATA;
-+	task.data_phase = TASKFILE_NO_DATA;
-+	task.handler = &task_no_data_intr;
-+
-+	err = ide_diag_taskfile(drive, &task, 0, NULL);
-+
-+	args[0] = tf->command;
-+	args[1] = tf->feature;
-+	args[2] = tf->nsect;
-+	args[3] = tf->lbal;
-+	args[4] = tf->lbam;
-+	args[5] = tf->lbah;
-+	args[6] = tf->device;
-+
-+	if (copy_to_user(p, args, 7))
- 		err = -EFAULT;
- 	return err;
- }
+--------------050000000208080802030300--
