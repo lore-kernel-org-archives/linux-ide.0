@@ -1,172 +1,100 @@
 From: Tejun Heo <tj@home-tj.org>
-Subject: Re: [PATCH REPOST 2.6.11-rc2 14/14] ide_pci: Merges serverworks.h into serverworks.c
-Date: Sat, 5 Feb 2005 09:01:36 +0900
-Message-ID: <20050205000136.GA2420@htj.dyndns.org>
-References: <42032014.1020606@home-tj.org> <20050204071319.0ED0E132703@htj.dyndns.org>
+Subject: [PATCH 2.6.11-rc2] ide: driver updates (phase 2)
+Date: Sat, 5 Feb 2005 11:15:02 +0900
+Message-ID: <20050205021502.GA17767@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from [211.58.254.17] ([211.58.254.17]:32997 "EHLO hemosu.com")
-	by vger.kernel.org with ESMTP id S261566AbVBEABj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2005 19:01:39 -0500
+Received: from [211.58.254.17] ([211.58.254.17]:55786 "EHLO hemosu.com")
+	by vger.kernel.org with ESMTP id S264612AbVBECPL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2005 21:15:11 -0500
 Content-Disposition: inline
-In-Reply-To: <20050204071319.0ED0E132703@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: bzolnier@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
- Sorry, the original #14 added back SVWKS_DEBUG_DRIVE_INFO which #13
-removed.  This is the regenerated patch.
+ Hello, Bartlomiej.
 
-14_ide_pci_serverworks_merge.patch
+ These are reordered/modified/(hopefully)appliable nine patches from
+the previous series of patches.  #01 is the only new one.  It kills
+the unused pkt_task_t in ide.h.  #02/#03 are moved upward and #04 is
+modified as you've requested.  #05/#08 now directly use taskfile
+transport instead of calling ide_taskfile_ioctl().  #08 now also
+properly handles WIN_SMART case.
 
-	Merges ide/pci/serverworks.h into serverworks.c.
+ If these patches go in, I have eight patches left.  One of them is
+ide_explicit_TASKFILE_NO_DATA.  As we've discussed, I'm going to add
+default initialization of task->[pre]handler.  That patch wasn't
+included in this series because I didn't know if do_rw_taskfile() and
+flagged_taskfile() are going to be merged or not.  So, please tell
+me what you think. :-)
+
+ I'll talk about other patches in their reply threads.
 
 
-Signed-off-by: Tejun Heo <tj@home-tj.org>
+[ Start of patch descriptions ]
 
+01_ide_kill_pkt_task_t.patch
+	: kill unused pkt_task_t
 
-Index: linux-idepci-export/drivers/ide/pci/serverworks.c
-===================================================================
---- linux-idepci-export.orig/drivers/ide/pci/serverworks.c	2005-02-05 08:56:34.184740697 +0900
-+++ linux-idepci-export/drivers/ide/pci/serverworks.c	2005-02-05 08:57:24.673562622 +0900
-@@ -39,7 +39,18 @@
- 
- #include <asm/io.h>
- 
--#include "serverworks.h"
-+#define SVWKS_CSB5_REVISION_NEW	0x92 /* min PCI_REVISION_ID for UDMA5 (A2.0) */
-+#define SVWKS_CSB6_REVISION	0xa0 /* min PCI_REVISION_ID for UDMA4 (A1.0) */
-+
-+/* Seagate Barracuda ATA IV Family drives in UDMA mode 5
-+ * can overrun their FIFOs when used with the CSB5 */
-+static const char *svwks_bad_ata100[] = {
-+	"ST320011A",
-+	"ST340016A",
-+	"ST360021A",
-+	"ST380021A",
-+	NULL
-+};
- 
- static u8 svwks_revision = 0;
- static struct pci_dev *isa_dev;
-@@ -582,6 +593,48 @@ static int __init init_setup_csb6 (struc
- 	return ide_setup_pci_device(dev, d);
- }
- 
-+/*
-+ *	Table of the various serverworks capability blocks
-+ */
-+
-+static ide_pci_device_t serverworks_chipsets[] __devinitdata = {
-+	{	/* 0 */
-+		.name		= "SvrWks OSB4",
-+		.init_setup	= init_setup_svwks,
-+		.init_chipset	= init_chipset_svwks,
-+		.init_hwif	= init_hwif_svwks,
-+		.channels	= 2,
-+		.autodma	= AUTODMA,
-+		.bootable	= ON_BOARD,
-+	},{	/* 1 */
-+		.name		= "SvrWks CSB5",
-+		.init_setup	= init_setup_svwks,
-+		.init_chipset	= init_chipset_svwks,
-+		.init_hwif	= init_hwif_svwks,
-+		.init_dma	= init_dma_svwks,
-+		.channels	= 2,
-+		.autodma	= AUTODMA,
-+		.bootable	= ON_BOARD,
-+	},{	/* 2 */
-+		.name		= "SvrWks CSB6",
-+		.init_setup	= init_setup_csb6,
-+		.init_chipset	= init_chipset_svwks,
-+		.init_hwif	= init_hwif_svwks,
-+		.init_dma	= init_dma_svwks,
-+		.channels	= 2,
-+		.autodma	= AUTODMA,
-+		.bootable	= ON_BOARD,
-+	},{	/* 3 */
-+		.name		= "SvrWks CSB6",
-+		.init_setup	= init_setup_csb6,
-+		.init_chipset	= init_chipset_svwks,
-+		.init_hwif	= init_hwif_svwks,
-+		.init_dma	= init_dma_svwks,
-+		.channels	= 1,	/* 2 */
-+		.autodma	= AUTODMA,
-+		.bootable	= ON_BOARD,
-+	}
-+};
- 
- /**
-  *	svwks_init_one	-	called when a OSB/CSB is found
-Index: linux-idepci-export/drivers/ide/pci/serverworks.h
-===================================================================
---- linux-idepci-export.orig/drivers/ide/pci/serverworks.h	2005-02-05 08:57:24.477594365 +0900
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
-@@ -1,67 +0,0 @@
--
--#ifndef SERVERWORKS_H
--#define SERVERWORKS_H
--
--#include <linux/config.h>
--#include <linux/pci.h>
--#include <linux/ide.h>
--
--#define SVWKS_CSB5_REVISION_NEW	0x92 /* min PCI_REVISION_ID for UDMA5 (A2.0) */
--#define SVWKS_CSB6_REVISION	0xa0 /* min PCI_REVISION_ID for UDMA4 (A1.0) */
--
--/* Seagate Barracuda ATA IV Family drives in UDMA mode 5
-- * can overrun their FIFOs when used with the CSB5 */
--static const char *svwks_bad_ata100[] = {
--	"ST320011A",
--	"ST340016A",
--	"ST360021A",
--	"ST380021A",
--	NULL
--};
--
--static int init_setup_svwks(struct pci_dev *, ide_pci_device_t *);
--static int init_setup_csb6(struct pci_dev *, ide_pci_device_t *);
--static unsigned int init_chipset_svwks(struct pci_dev *, const char *);
--static void init_hwif_svwks(ide_hwif_t *);
--static void init_dma_svwks(ide_hwif_t *, unsigned long);
--
--static ide_pci_device_t serverworks_chipsets[] __devinitdata = {
--	{	/* 0 */
--		.name		= "SvrWks OSB4",
--		.init_setup	= init_setup_svwks,
--		.init_chipset	= init_chipset_svwks,
--		.init_hwif	= init_hwif_svwks,
--		.channels	= 2,
--		.autodma	= AUTODMA,
--		.bootable	= ON_BOARD,
--	},{	/* 1 */
--		.name		= "SvrWks CSB5",
--		.init_setup	= init_setup_svwks,
--		.init_chipset	= init_chipset_svwks,
--		.init_hwif	= init_hwif_svwks,
--		.init_dma	= init_dma_svwks,
--		.channels	= 2,
--		.autodma	= AUTODMA,
--		.bootable	= ON_BOARD,
--	},{	/* 2 */
--		.name		= "SvrWks CSB6",
--		.init_setup	= init_setup_csb6,
--		.init_chipset	= init_chipset_svwks,
--		.init_hwif	= init_hwif_svwks,
--		.init_dma	= init_dma_svwks,
--		.channels	= 2,
--		.autodma	= AUTODMA,
--		.bootable	= ON_BOARD,
--	},{	/* 3 */
--		.name		= "SvrWks CSB6",
--		.init_setup	= init_setup_csb6,
--		.init_chipset	= init_chipset_svwks,
--		.init_hwif	= init_hwif_svwks,
--		.init_dma	= init_dma_svwks,
--		.channels	= 1,	/* 2 */
--		.autodma	= AUTODMA,
--		.bootable	= ON_BOARD,
--	}
--};
--
--#endif /* SERVERWORKS_H */
+	Remove unused pkt_task_t definition from ide.h.
+
+02_ide_taskfile_init_drive_cmd.patch
+	: ide_init_drive_cmd() now defaults to REQ_DRIVE_TASKFILE
+
+	ide_init_drive_cmd() now initializes rq->flags to
+	REQ_DRIVE_TASKFILE.
+
+03_ide_diag_taskfile_use_init_drive_cmd.patch
+	: ide_diag_taskfile() rq initialization fix
+
+	In ide_diag_taskfile(), when initializing taskfile rq,
+	ref_count wasn't initialized properly.  Modified to use
+	ide_init_drive_cmd().  This doesn't really change any behavior
+	as the request isn't managed via the block layer.
+
+04_ide_taskfile_flush.patch
+	: convert REQ_DRIVE_TASK to REQ_DRIVE_TASKFILE
+
+	All REQ_DRIVE_TASK users except ide_task_ioctl() converted
+	to use REQ_DRIVE_TASKFILE.
+	1. idedisk_issue_flush() converted to use REQ_DRIVE_TASKFILE.
+	   This and the changes in ide_get_error_location() remove a
+	   possible race condition between ide_get_error_location()
+	   and other requests.
+	2. ide_queue_flush_cmd() converted to use REQ_DRIVE_TASKFILE.
+
+05_ide_taskfile_task_ioctl.patch
+	: map ide_task_ioctl() to ide_taskfile_ioctl()
+
+	ide_task_ioctl() modified to map to ide_taskfile_ioctl().
+	This is the last user of REQ_DRIVE_TASK.
+
+06_ide_remove_task.patch
+	: remove REQ_DRIVE_TASK handling
+
+	Unused REQ_DRIVE_TASK handling removed.
+
+07_ide_taskfile_cmd.patch
+	: convert REQ_DRIVE_CMD to REQ_DRIVE_TASKFILE
+
+	All in-kernel REQ_DRIVE_CMD users except for ide_cmd_ioctl()
+	converted to use REQ_DRIVE_TASKFILE.
+
+08_ide_taskfile_cmd_ioctl.patch
+	: map ide_cmd_ioctl() to ide_taskfile_ioctl()
+
+	ide_cmd_ioctl() converted to use ide_taskfile_ioctl().  This
+	is the last user of REQ_DRIVE_CMD.
+
+09_ide_remove_cmd.patch
+	: remove REQ_DRIVE_CMD handling
+
+	Removed unused REQ_DRIVE_CMD handling.
+
+[ End of patch descriptions ]
+
+Thanks.
+
+-- 
+tejun
+
