@@ -1,82 +1,163 @@
-From: "Tomi Orava" <Tomi.Orava@ncircle.nullnet.fi>
-Subject: HighPoint 374 ide problems with 2.4-kernels
-Date: Sun, 19 Oct 2003 15:24:58 +0300 (EEST)
+From: Jeremy Huddleston <jeremyhu@uclink4.berkeley.edu>
+Subject: Re: Promise PDC20269 - PIO Only?
+Date: Sun, 19 Oct 2003 12:00:20 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <48850.192.168.9.10.1066566298.squirrel@ncircle.nullnet.fi>
+Message-ID: <200310191200.26656.jeremyhu@uclink4.berkeley.edu>
+References: <200310181819.08930.jeremyhu@uclink4.berkeley.edu> <200310190311.40229.jeremyhu@uclink4.berkeley.edu> <200310191139.21718.gardiol@libero.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ncircle.nullnet.fi ([62.236.96.207]:55230 "EHLO
-	ncircle.nullnet.fi") by vger.kernel.org with ESMTP id S262118AbTJSMZA
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 19 Oct 2003 08:25:00 -0400
-Received: from ncircle.nullnet.fi (localhost.localdomain [127.0.0.1])
-	by ncircle.nullnet.fi (Postfix) with SMTP id 9F9421CEC753
-	for <linux-ide@vger.kernel.org>; Sun, 19 Oct 2003 15:24:58 +0300 (EEST)
+Received: from 12-233-44-179.client.attbi.com ([12.233.44.179]:41137 "EHLO
+	terminator.outersquare.org") by vger.kernel.org with ESMTP
+	id S262048AbTJSS4J convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Oct 2003 14:56:09 -0400
+In-Reply-To: <200310191139.21718.gardiol@libero.it>
+Content-Description: clearsigned data
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: gardiol@libero.it, linux-ide@vger.kernel.org
+Cc: Mark Hahn <hahn@physics.mcmaster.ca>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+It's still in mode2 after the explicit -X69 or -X70.  I have a 20267 on my 
+other system, and it goes to mode5 with just the -d1...
+
+11:53:45 Sun Oct 19 2003 root@eradicator)
+~ $ hdparm -d1 -X69 /dev/hde
+
+/dev/hde:
+ setting using_dma to 1 (on)
+ setting xfermode to 69 (UltraDMA mode5)
+ using_dma    =  1 (on)
+
+(11:53:51 Sun Oct 19 2003 root@eradicator)
+~ $ hdparm -i /dev/hde
+
+/dev/hde:
+
+ Model=Maxtor 6Y120P0, FwRev=YAR41VW0, SerialNo=Y40BMM7E
+ Config={ Fixed }
+ RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=57
+ BuffType=DualPortCache, BuffSize=7936kB, MaxMultSect=16, MultSect=off
+ CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=240121728
+ IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio1 pio2 pio3 pio4
+ DMA modes:  mdma0 mdma1 mdma2
+ UDMA modes: udma0 udma1 *udma2 udma3 udma4 udma5 udma6
+ AdvancedPM=yes: disabled (255) WriteCache=enabled
+ Drive conforms to: (null):
+
+ * signifies the current active mode
+
+(11:55:38 Sun Oct 19 2003 root@eradicator)
+~ $ hdparm -d1 -X70 /dev/hde
+
+/dev/hde:
+ setting using_dma to 1 (on)
+ setting xfermode to 70 (UltraDMA mode6)
+ using_dma    =  1 (on)
+
+(11:55:44 Sun Oct 19 2003 root@eradicator)
+~ $ hdparm -i /dev/hde
+
+/dev/hde:
+
+ Model=Maxtor 6Y120P0, FwRev=YAR41VW0, SerialNo=Y40BMM7E
+ Config={ Fixed }
+ RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=57
+ BuffType=DualPortCache, BuffSize=7936kB, MaxMultSect=16, MultSect=off
+ CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=240121728
+ IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio1 pio2 pio3 pio4
+ DMA modes:  mdma0 mdma1 mdma2
+ UDMA modes: udma0 udma1 *udma2 udma3 udma4 udma5 udma6
+ AdvancedPM=yes: disabled (255) WriteCache=enabled
+ Drive conforms to: (null):
+
+ * signifies the current active mode
 
 
-Hi,
-
-I thought that perhaps there would be someone here with additional
-knowledge related to the HPT374 ide-chip driver problems I've had
-for a some time now. Below is a copy from my reply to a fellow
-on linux-kernel list which describes a little bit of my current
-problem & hardware. I'd really appreciate any ideas how to get
-rid of highpoint proprietary drivers in my system.
-
-Do you think my problem could be directly related to Epox motherboard
-as I'm kind of confused about the fact that all the Epox-brand mb's
-that I know don't work with kernel included drivers but still I've
-seen comments on kernel-list that it does work for HPT374 chips
-integrated in some other brand mb's ... ?
-
------------- reply to Carlos Fernandez Sanz" <cfs-lk@nisupu.com> ------
-
-> What's the current status of HPT 374 support? Is it working in any
-kernel version?
-
-Unfortunately, in my experience the included kernel driver doesn't work
-reliable at all with my hardware either. I have tried all possible kernel
-versions up to and including 2.4.23-pre5 without success.
-
-> I know HP provides binaries, but that's no good, I need to use other kernel
-> builds.
-
-The Highpoint proprietary drivers work fine in my case as well, but I'm
-not too happy about the fact that I simply can't access the
-SMART stats of my drivers at all for example.
-
+On Sunday October 19 2003 02:39, Willy Gardiol wrote:
+> Ok, you should also set explicitly the dma mode:
+> hdparm -d1 -X69
+> (69=udma100...)
 >
-> 2.4.20-8 detects the card and provides the devices but data corruptions
-happens all the time. Using the HP drivers everything works fine (note
+> Alle Sunday 19 October 2003 12:11, Jeremy Huddleston ha scritto:
+> > I have done this, and the result is that it still doesn't use the drive
+> > to its full potential:
+> >
+> > (03:07:19 Sun Oct 19 2003 root@eradicator)
+> > ~ $ hdparm -d1 /dev/hde
+> >
+> > /dev/hde:
+> >  setting using_dma to 1 (on)
+> >  using_dma    =  1 (on)
+> >
+> > (03:07:25 Sun Oct 19 2003 root@eradicator)
+> > ~ $ hdparm -i /dev/hde
+> >
+> > /dev/hde:
+> >
+> >  Model=Maxtor 6Y120P0, FwRev=YAR41VW0, SerialNo=Y40BMM7E
+> >  Config={ Fixed }
+> >  RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=57
+> >  BuffType=DualPortCache, BuffSize=7936kB, MaxMultSect=16, MultSect=off
+> >  CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=240121728
+> >  IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+> >  PIO modes:  pio0 pio1 pio2 pio3 pio4
+> >  DMA modes:  mdma0 mdma1 mdma2
+> >  UDMA modes: udma0 udma1 *udma2 udma3 udma4 udma5 udma6
+> >  AdvancedPM=yes: disabled (255) WriteCache=enabled
+> >  Drive conforms to: (null):
+> >
+> >  * signifies the current active mode
+> >
+> > The PDC-Specific drivers are all compiled into the kernel
+> >
+> > On Sunday October 19 2003 00:08, Willy Gardiol wrote:
+> > > Have you tried to enable uDMA using hdpard after boot?
+> > > hdparm -d1 /dev/hdX
+> > >
+> > > There are also some options in kernel configurations which addresses
+> > > when you have more than one promise comtrollers, have you tried them?
+> > > Last, also in the ide section of kernel config you can find an option
+> > > which should enable by default UDMA, have you enabled it?
+> > >
+> > > bye!
+> > >
+> > > Alle Sunday 19 October 2003 03:19, Jeremy Huddleston ha scritto:
+> > > > Hi,
+> > > >
+> > > > I've been using two Promise PDC20269 cards for almost a year now in
+> > > > my system. The cards are U133, but when the kernel boots up, I see
+> > > > the message that all the drives are operating in pio mode.  All the
+> > > > drives are U133 drives, and they are shown as operating in DMA mode
+> > > > when I put them on another controller.
+> > > >
+> > > > I've noticed this deficiency with vanilla linux-2.4.19 through
+> > > > linux-2.4.21, linux-2.4.22-ac4 as well as 2.6.0-test6-mm4...
+> > > >
+> > > > Is there a patch to the 2.4 kernels availible to enable this support?
+> > > > Is this problem being addressed?  Is there any way I can help out?
+> > > >
+> > > > Thanks,
+> > > > Jeremy
+> > > > -
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-ide"
+> > > > in the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
 
-I have tested the kernel hpt374 drivers with all possible kernel
-configurations with and without ACPI/APM, local apic, io-apic and
-they don't seem to change anything in my case. I just get the following
-error message sooner or later and the whole system hangs.
-
-Sep 26 23:07:42 alderan kernel: blk: queue c0466908, I/O limit 4095Mb
-(mask 0xffffffff)
-Sep 26 23:07:42 alderan kernel: hde: dma_timer_expiry: dma status == 0x20
-Sep 26 23:07:42 alderan kernel: hde: timeout waiting for DMA
-Sep 26 23:07:42 alderan kernel: hde: timeout waiting for DMA
-Sep 26 23:07:42 alderan kernel: blk: queue c0466d5c, I/O limit 4095Mb
-(mask 0xffffffff)
-Sep 26 23:07:42 alderan kernel: hdg: dma_timer_expiry: dma status == 0x20
-Sep 26 23:07:42 alderan kernel: hdg: timeout waiting for DMA
-Sep 26 23:07:42 alderan kernel: hdg: timeout waiting for DMA
-
-It might be that my problems are somehow related to the motherboards I've
-been using, as the first one is "Epox 8K9A3+ (Via KT400 chipset)" while
-the another one is "Epox 4PCA3+ (Intel 875p chipset)". But they are 100%
-reproduceble with multiple brands of disk-drives.
---------------------------------------------------------
-
-
-Regards,
-Tomi Orava
-
-
+iD8DBQE/kt9KgKpk8srJOlIRAgBpAJ0QDfObvr3iKSjMKoHi/c2Ppfo6BgCghaK3
+QqUuqdwTyitORk3PVnNXksA=
+=kQQn
+-----END PGP SIGNATURE-----
