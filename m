@@ -1,48 +1,64 @@
-From: "Alan J. Wylie" <alan@wylie.me.uk>
-Subject: Re: 2.4.29-pre1 OOPS early in boot with Intel ICH5 SATA controller
-Date: Sat, 19 Feb 2005 17:41:25 +0000
-Message-ID: <16919.31301.949779.355723@wylie.me.uk>
-References: <16824.8109.697757.673632@devnull.wylie.me.uk>
-	<41BB41DC.6020808@pobox.com>
-	<16829.29661.747368.799519@devnull.wylie.me.uk>
-	<41BD7866.4010009@pobox.com>
-	<16829.34517.689764.245416@devnull.wylie.me.uk>
-	<4217786C.2060603@pobox.com>
+From: solicitorfrank@netscape.net
+Subject: Investment Capital
+Date: Sat, 19 Feb 2005 14:54:28 -0500
+Message-ID: <494AF8A0.7193060A.84B15562__48414.0685912736$1108843065$gmane$org@netscape.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Received: from wylie.me.uk ([82.68.155.89]:27801 "EHLO mail.wylie.me.uk")
-	by vger.kernel.org with ESMTP id S261712AbVBSRl1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Feb 2005 12:41:27 -0500
-In-Reply-To: <4217786C.2060603@pobox.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Received: from imo-d02.mx.aol.com ([205.188.157.34]:52968 "EHLO
+	imo-d02.mx.aol.com") by vger.kernel.org with ESMTP id S261779AbVBST7h
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 Feb 2005 14:59:37 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, EC <wingman@waika9.com>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
 
-On Sat, 19 Feb 2005 12:33:32 -0500, Jeff Garzik <jgarzik@pobox.com> said:
+Re: Investment Capital.
 
->>> Is it possible for you to enable the following two #ifdefs in
->>> include/linux/libata.h, and send me the output?
->>
->>> #define ATA_DEBUG /* debugging output */ #define ATA_VERBOSE_DEBUG
->>> /* yet more debugging output */
->> 
->> 
->> (Hand transcribed - E&OE)
->> 
->> ksymoops output below.
+Your contact has been gotten from after a search for a
+person whom we can jointly invest Trust in and also
+solicit a Honourable partnership with.
 
-> Can you confirm that this is fixed in 2.4.30-pre1?
+I represent a client and my client has interest to do
+business relative to investments in your country in
+areas related to agriculture or any business of your
+choice, to initiate a proper and structured
+relationship:
 
-Sorry - I worked around the problem by setting the BIOS to "Native
-Mode", and the boxes that were showing the problem (Supermicro X6DA8)
-have now been shipped out to customers, where I can no longer do any
-debugging on them.
+Please let me know what your response will be to an
+offer to receive the investment funds :
 
+1. The said fund amounts to Ten Million Pounds sterling.
+ 
+2.The said fund will be transferred to you in same
+state.
 
--- 
-Alan J. Wylie                                          http://www.wylie.me.uk/
-"Perfection [in design] is achieved not when there is nothing left to add,
-but rather when there is nothing left to take away."
-  -- Antoine de Saint-Exupery
+3.The fund is intended to be invested through your
+agency in the purchase of facilities and
+assets, for the said purposes within your country.
+
+4. This transaction will result in you being paid a
+commission of 10% off the investment capital and 
+another 10% of after annual tax income.
+
+5.The fund owners desire absolute confidentiality and
+professionalism in the handling of this matter as the 
+people involved are top government officials.
+Please respond urgently and if you do not intend to 
+help, i will respect your privacy and stop contacting
+you.
+
+Sincerely.
+
+Solicitor. Frank West
+
+NB: Please reply to: solicitorfrank@netscape.net
+
+__________________________________________________________________
+Switch to Netscape Internet Service.
+As low as $9.95 a month -- Sign up today at http://isp.netscape.com/register
+
+Netscape. Just the Net You Need.
+
+New! Netscape Toolbar for Internet Explorer
+Search from anywhere on the Web and block those annoying pop-ups.
+Download now at http://channels.netscape.com/ns/search/install.jsp
