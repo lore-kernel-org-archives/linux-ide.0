@@ -1,31 +1,28 @@
-From: "Craig I. Hagan" <hagan@cih.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] speed up SATA
-Date: Mon, 29 Mar 2004 09:19:11 -0800 (PST)
+Date: Mon, 29 Mar 2004 13:19:02 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0403290918320.12087@svr.cih.com>
-References: <20040328141014.GE24370@suse.de> <40670BD9.9020707@pobox.com>
- <20040328173508.GI24370@suse.de> <40670FDB.6080409@pobox.com>
- <20040328175436.GL24370@suse.de> <20040328180809.GB1087@mail.shareable.org>
-  <20040328181502.GO24370@suse.de> <40671FAF.6080501@pobox.com>
- <20040329080943.GR24370@suse.de> <20040329124147.GC4984@mail.shareable.org>
-  <20040329124421.GB24370@suse.de> <1080565536.3570.4.camel@laptop.fenrus.com>
+Message-ID: <40686896.3000402@pobox.com>
+References: <406612AA.1090406@yahoo.com.au> <4066156F.1000805@pobox.com> <20040328141014.GE24370@suse.de> <40670BD9.9020707@pobox.com> <20040328173508.GI24370@suse.de> <40670FDB.6080409@pobox.com> <20040328175436.GL24370@suse.de> <20040328180809.GB1087@mail.shareable.org> <20040328181502.GO24370@suse.de> <40671FAF.6080501@pobox.com> <20040329080943.GR24370@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moonshine.cih.com ([204.69.206.3]:26581 "EHLO mail.cih.com")
-	by vger.kernel.org with ESMTP id S263015AbUC2RTM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Mar 2004 12:19:12 -0500
-In-Reply-To: <1080565536.3570.4.camel@laptop.fenrus.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:16773 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S263039AbUC2STR
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Mar 2004 13:19:17 -0500
+In-Reply-To: <20040329080943.GR24370@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: Arjan van de Ven <arjanv@redhat.com>
-Cc: Jens Axboe <axboe@suse.de>, Jamie Lokier <jamie@shareable.org>, Jeff Garzik <jgarzik@pobox.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Jamie Lokier <jamie@shareable.org>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-> > Might not be a silly thing to experiment with, definitely something that
-> > should be tested (added to list...)
-> 
-> I wonder if the max read size could/should be correlated with the
-> readahead size for such devices... it sounds like a related property at
-> least.
+I don't care how the implementation looks.  The most basic points are 
+that driver writers should not have to care about the value of this 
+1M-max-request-size magic number, nor is it in any way specific to SATA.
 
-I'd like to see that (for areas where this is supported). This would
-make folks with fibre storage much happier.
+	Jeff
+
+
+
+
