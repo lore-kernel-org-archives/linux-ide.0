@@ -1,35 +1,54 @@
-From: "Eric D. Mudama" <edmudama@mail.bounceswoosh.org>
+From: Denis Vlasenko <vda@port.imtp.ilyichevsk.odessa.ua>
 Subject: Re: [PATCH] speed up SATA
-Date: Sun, 28 Mar 2004 22:24:05 -0700
+Date: Mon, 29 Mar 2004 09:32:30 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040329052405.GG6405@bounceswoosh.org>
-References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <20040328044029.GB1984@bounceswoosh.org> <40667734.8090203@yahoo.com.au> <20040328203357.GB6405@bounceswoosh.org> <20040328205917.GF6405@bounceswoosh.org> <40677C21.7070807@yahoo.com.au>
+Message-ID: <200403290932.30246.vda@port.imtp.ilyichevsk.odessa.ua>
+References: <4066021A.20308@pobox.com> <20040329005502.GG3039@dualathlon.random> <20040329042912.GI18054@ca-server1.us.oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 80-169-17-66.mesanetworks.net ([66.17.169.80]:51890 "EHLO
-	mail.bounceswoosh.org") by vger.kernel.org with ESMTP
-	id S262625AbUC2FX1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Mar 2004 00:23:27 -0500
-Content-Disposition: inline
-In-Reply-To: <40677C21.7070807@yahoo.com.au>
+Received: from 168.imtp.Ilyichevsk.Odessa.UA ([195.66.192.168]:58384 "HELO
+	port.imtp.ilyichevsk.odessa.ua") by vger.kernel.org with SMTP
+	id S262728AbUC2Hfp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Mar 2004 02:35:45 -0500
+In-Reply-To: <20040329042912.GI18054@ca-server1.us.oracle.com>
 List-Id: linux-ide@vger.kernel.org
-To: Nick Piggin <nickpiggin@yahoo.com.au>
-Cc: "Eric D. Mudama" <edmudama@mail.bounceswoosh.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Wim Coekaerts <wim.coekaerts@oracle.com>, Andrea Arcangeli <andrea@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jens Axboe <axboe@suse.de>, William Lee Irwin III <wli@holomorphy.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-On Mon, Mar 29 at 11:30, Nick Piggin wrote:
->Well strictly, you send them one after the other. So unless you
->have something similar to our anticipatory scheduler or plugging
->mechanism, the drive should attack the first one first, shouldn't
->it?
+On Monday 29 March 2004 06:29, Wim Coekaerts wrote:
+> > In 2.4 reaching 512k DMA units that helped a lot, but going past 512k
+> > didn't help in my measurements.  1M maybe these days is needed (as Jens
+> > suggested) but >1M still sounds overkill and I completely agree with
+> > Jens about that.
+>
+> at least 1Mb... more than 1mb (I doubt 32mb is really necessarily
+> useful) is nice for flushing contiguous journal data to disk. between
+> 1-8mb in one io.
+>
+> at least 1mb is good when you have to process massive amounts of data,
+> just read huge chunks of files, we tend to do 1mb. anyway,
+> as you said, at some point it's a bit overkill . I thinkg 1-8mb makes
+> sense.
 
-If you send 32 commands to our disk at once (TCQ/NCQ) we send 'em all
-to our back-end disk engine as fast as possible.
+It makes sense *today*. Do you want to return to this discussion
+ad infinitum?
 
---eric
+Andrea is right, block layer can be coded to detect such a (per-device)
+request size increasing which does not give you any more throughput,
+or increasing which hurts your latency too much, and stick with it.
 
+More detailed:
 
+1. size = 1 sector
+2  measure throughput and latency
+3. size *= 2
+4. measure new_throughput and new_latency
+5. if(new_throughput<=throughput*1.01 || new_latency>50ms) break
+6. throughput = new_throughput; latency = new_latency; goto 3
+
+Real code will have admin overrides (start from N sectors,
+never go higher than M sectors etc), but you got the idea.
 -- 
-Eric D. Mudama
-edmudama@mail.bounceswoosh.org
-
+vda
