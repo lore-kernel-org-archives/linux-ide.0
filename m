@@ -1,50 +1,81 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] IDE update for 2.6.7-rc3 [8/12]
-Date: Fri, 11 Jun 2004 18:01:47 +0200
+Subject: [PATCH] IDE update for 2.6.7-rc3 [3/12]
+Date: Fri, 11 Jun 2004 17:52:22 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200406111801.47580.bzolnier@elka.pw.edu.pl>
+Message-ID: <200406111752.22552.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:8089 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264113AbUFKQQJ
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:14233 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264154AbUFKQQT
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Jun 2004 12:16:09 -0400
+	Fri, 11 Jun 2004 12:16:19 -0400
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Willem Riede <osst@riede.org>
+Cc: linux-kernel@vger.kernel.org
 
 
-[PATCH] ide: fix REQ_DRIVE_* requests error handling in ide-scsi
+[PATCH] ide: ide-proc fix for m68k
 
-If REQ_DRIVE_* request fails ide_end_drive_cmd() should be called
-for it not ->end_request().  This was broken by 2.6.5, fix it.
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+
+On Sat, 29 May 2004, Linus Torvalds wrote:
+> Summary of changes from v2.6.7-rc1 to v2.6.7-rc2
+> ============================================
+>
+> Alexander Viro:
+>   o sparse: ide-proc.c fixes
+
+This change causes 2 warnings (unused variables `val' and `reg') on m68k
+and APUS.  However, the reason why this code was commented out is gone.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 
- linux-2.6.7-rc3-bzolnier/drivers/scsi/ide-scsi.c |    7 +++++++
- 1 files changed, 7 insertions(+)
+ linux-2.6.7-rc3-bzolnier/drivers/ide/ide-proc.c |   22 ----------------------
+ 1 files changed, 22 deletions(-)
 
-diff -puN drivers/scsi/ide-scsi.c~ide_scsi_req_drive drivers/scsi/ide-scsi.c
---- linux-2.6.7-rc3/drivers/scsi/ide-scsi.c~ide_scsi_req_drive	2004-06-10 23:12:23.716220912 +0200
-+++ linux-2.6.7-rc3-bzolnier/drivers/scsi/ide-scsi.c	2004-06-10 23:12:23.726219392 +0200
-@@ -318,6 +318,13 @@ ide_startstop_t idescsi_atapi_error (ide
- 	if (drive == NULL || (rq = HWGROUP(drive)->rq) == NULL)
- 		return ide_stopped;
- 
-+	/* retry only "normal" I/O: */
-+	if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASK | REQ_DRIVE_TASKFILE)) {
-+		rq->errors = 1;
-+		ide_end_drive_cmd(drive, stat, err);
-+		return ide_stopped;
-+	}
-+
- 	if (HWIF(drive)->INB(IDE_STATUS_REG) & (BUSY_STAT|DRQ_STAT))
- 		/* force an abort */
- 		HWIF(drive)->OUTB(WIN_IDLEIMMEDIATE,IDE_COMMAND_REG);
+diff -puN drivers/ide/ide-proc.c~ide_proc_m68k drivers/ide/ide-proc.c
+--- linux-2.6.7-rc3/drivers/ide/ide-proc.c~ide_proc_m68k	2004-06-11 15:47:31.554647472 +0200
++++ linux-2.6.7-rc3-bzolnier/drivers/ide/ide-proc.c	2004-06-11 15:48:21.319082128 +0200
+@@ -233,27 +233,6 @@ static int proc_ide_write_config(struct 
+ 			}
+ #endif	/* CONFIG_BLK_DEV_IDEPCI */
+ 		} else {	/* not pci */
+-#if !defined(__mc68000__) && !defined(CONFIG_APUS)
+-
+-/*
+-* Geert Uytterhoeven
+-*
+-* unless you can explain me what it really does.
+-* On m68k, we don't have outw() and outl() yet,
+-* and I need a good reason to implement it.
+-* 
+-* BTW, IMHO the main remaining portability problem with the IDE driver 
+-* is that it mixes IO (ioport) and MMIO (iomem) access on different platforms.
+-* 
+-* I think all accesses should be done using
+-* 
+-*     ide_in[bwl](ide_device_instance, offset)
+-*     ide_out[bwl](ide_device_instance, value, offset)
+-* 
+-* so the architecture specific code can #define ide_{in,out}[bwl] to the
+-* appropriate function.
+-* 
+-*/
+ 			switch (r->size) {
+ 				case 1:	hwif->OUTB(val, reg);
+ 					break;
+@@ -262,7 +241,6 @@ static int proc_ide_write_config(struct 
+ 				case 4:	hwif->OUTL(val, reg);
+ 					break;
+ 			}
+-#endif /* !__mc68000__ && !CONFIG_APUS */
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(&ide_lock, flags);
 
 _
 
