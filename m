@@ -1,109 +1,100 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: [PATCH] libata DMADIR support
-Date: 17 May 2004 15:06:05 -0600
+Date: 17 May 2004 15:20:40 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1084827965.3211.10.camel@patibmrh9>
+Message-ID: <1084828840.3211.26.camel@patibmrh9>
 References: <1084717146.3576.3.camel@patibmrh9> <40A7F641.3070809@pobox.com>
 	<1084819720.4328.86.camel@patibmrh9>  <40A90D96.2040002@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:13216 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S261862AbUEQVGX
+Received: from email-out1.iomega.com ([147.178.1.82]:22721 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S262026AbUEQVU4
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 May 2004 17:06:23 -0400
+	Mon, 17 May 2004 17:20:56 -0400
 In-Reply-To: <40A90D96.2040002@pobox.com>
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
-> Re: [PATCH] libata-core when not ata_id_use_dmadir despite yes SiliconI
-> From: Jeff Garzik <jgarzik () pobox ! com>
-> Date: 2004-05-15 16:39:57
-> ...
-> > Do you know of some way to detect SI 3611CT80 1.4?
->
-> Not right now.
->
-> I need to see the full IDENTIFY PACKET DEVICE
-> data to discover a way...  (and I need to
-> write some code before libata dumps the full
-> identify-device page)
->
-> Other bridges add an identifying string to the
-> -end- of the ATA device's model name, maybe
-> SiI does too.
+> "documents 2003" link on http://www.t13.org/ ...
+> ATAPI DMA Direction issues Proposal 12/21/03 Hartney
+> http://www.t13.org/docs2003/e03132r3.pdf
 
-Sorry to say,
+Links!  Thank you.
 
-My op xA1 "IDENTIFY" bytes appear nybble-for-nybble identical, no matter
-if sampled via the SATA ATAPI of Si 3611CT80 r1.4 or if sampled via the
-original PATA ATAPI.
+> > If bit 15 of word 62 is cleared to 0, DMADIR bit in the PACKET command
+> > is not required. If bit 15 of word 62  is cleared to zero, then all bits
+> > of word 62 shall be cleared to zero.
+> 
+> I bet your bridge doesn't _require_ DMADIR, therefore it doesn't bother 
+> with word 62?  </wild guess>
 
-I quote:
+Your courage in aggressively sharing wild guesses, I appreciate, thank
+you, but in this instance:
 
-$ cat /var/log/messages | grep ata_dump_id >sata
-$ emacs sata
-$ # reboot to disconnect bridge from host and from device
-$ sudo cat /proc/ide/hdc/identify >pata
-$ diff sata pata
-12c12
-< 203f 0000 0000 0000 0000 404f 0000 0000
----
-> 043f 0000 0000 0000 0000 604f 0000 0000
-$ #88 . 89 . 90 . 91 . 92 . 93 . 94 . 95 are the "word" indices
-$
+My memory of my share of the SATA ATAPI UDMA flurry tells me that my Si
+3611CT80 r1.4 bridge hangs with status = xD0 if we ask it to copy DMA
+Data In, without having prepared op xA0 "PACKET" features = x05 DMA In
+rather than x01 DMA Out.
 
-At first glance, you might think you just saw the upper halves of
-"word"s 88 and 93 change, after calculating 88 = 8 * (line 12 - 1)). 
-But all that's actually changed in "word" 88 is the initially "selected"
-UDMA "mode".  x20XX = UDMA 5, x04XX = UDMA 2.  And all that's actually
-changed in "word" 93 is the CBLDID- detect of mask x2000 i.e. you caught
-me using a 40-pin PATA cable in place of an 80-pin PATA cable.
+Are you not convinced?
 
-Bottom line, all the bits of the "F" set ("F" = "Fixed" = change no more
-often than discs change) have not changed.
+What further experiments should I run or repeat or reemphasise?
 
-I presume by intent as yet we don't mean to appear among the devices of
-/proc/ide/.  I checked all /proc and all /sys, saw our SATA host appear
-there voluminously, but nothing that my newbie eye recognised as device
-data.
+I agree, by connecting my compliant only-DMADIR-capable bridge to a
+compliant PATA DMA device I have ended up violating ATA/PI 6 by claiming
+classic UDMA in op xA1 "IDENTIFY" "word" 88 (line 12 offset 0), when in
+fact the abomination I built only actually supports the DMADIR that
+ATA/PI 7 claims will be described in "word" 62 (line 7 offset 6).
+
+I see that as me falling into the pit that t13.org dug for me, while I
+admittedly wasn't watching closely enough to notice.
+
+I imagine I was not the first and I will not be the last to fall into
+this spiked pit.  Particularly vulnerable will be the people who resell
+compliant PATA ATAPI UDMA devices and then fall into erroneously
+believing that adding a compliant SATA/PATA bridge makes a compliant
+SATA ATAPI UDMA device.
+
+Do you disagree?
 
 Pat LaVarre
 
-P.S. As I wrote the trivial experimental patch below to gather op xA1
-"IDENTIFY" data, I was painfully reminded that DPRINTK flushes per
-invocation, not only at EOL, and that /var/log/messages omits duplicate
-lines.
-
-diff -Nurp linux-2.6.6-bk4/drivers/scsi/libata-core.c linux-2.6.6-bk4-pel/drivers/scsi/libata-core.c
---- linux-2.6.6-bk4/drivers/scsi/libata-core.c	2004-05-17 12:50:15.000000000 -0600
-+++ linux-2.6.6-bk4-pel/drivers/scsi/libata-core.c	2004-05-17 14:18:37.000000000 -0600
-@@ -974,6 +974,24 @@ static inline void ata_dump_id(struct at
- 		"93==0x%04x\n",
- 		dev->id[88],
- 		dev->id[93]);
-+
-+	/* all "word"s, as in lk 2.4 `sudo cat /proc/ide/hd$v/identify` */
-+	do {
-+		int ix;
-+		for (ix = 0; ix < 0x100; ix += 8) {
-+			DPRINTK("0x%03X: "
-+				"%04x %04x %04x %04x %04x %04x %04x %04x\n",
-+				ix * 2,
-+				dev->id[ix+0],
-+				dev->id[ix+1],
-+				dev->id[ix+2],
-+				dev->id[ix+3],
-+				dev->id[ix+4],
-+				dev->id[ix+5],
-+				dev->id[ix+6],
-+				dev->id[ix+7]);
-+		}
-+	} while (0);
- }
- 
- /**
+$ cat sata
+85c0 0000 0000 0000 0000 0000 0000 0000
+0000 0000 3139 3130 4343 3944 4345 3442
+4646 4145 2020 2020 0000 0000 0000 3734
+2e42 2020 2020 496f 6d65 6761 2020 5252
+4420 2020 2020 2020 2020 2020 2020 2020
+2020 2020 2020 2020 2020 2020 2020 0000
+0000 0f00 0000 0200 0000 0006 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0007
+0003 0078 0078 0078 0078 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0040 0000 4218 4000 4000 4218 0000 4000
+203f 0000 0000 0000 0000 404f 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 436f 7079 7269 6768 7420 2863 2920
+3230 3034 2049 6f6d 6567 6120 436f 7270
+2e20 2041 6c6c 2072 6967 6874 7320 7265
+7365 7276 6564 2e00 3032 2f32 372f 3034
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+$
 
 
