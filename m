@@ -1,65 +1,89 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: [PATCH] 2.4 IDE core for 2.5, #2 (was Re: [PATCH] 2.4 IDE core for 2.5)
-Date: Fri, 12 Jul 2002 13:06:20 +0200
+From: Anders Widman <andewid@tnonline.net>
+Subject: IDE
+Date: Fri, 12 Jul 2002 13:23:18 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20020712110620.GA14338@win.tue.nl>
-References: <20020709102249.GA20870@suse.de> <20020709200711.GA13401@win.tue.nl> <20020710054356.GE3185@suse.de> <20020710111115.GJ3185@suse.de>
+Message-ID: <495319109.20020712132318@tnonline.net>
+References: <20020709102249.GA20870@suse.de>
+ <20020709200711.GA13401@win.tue.nl> <20020710054356.GE3185@suse.de>
+ <20020710111115.GJ3185@suse.de> <20020712110620.GA14338@win.tue.nl>
+Reply-To: Anders Widman <andewid@tnonline.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020710111115.GJ3185@suse.de>
+In-Reply-To: <20020712110620.GA14338@win.tue.nl>
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wed, Jul 10, 2002 at 01:11:15PM +0200, Jens Axboe wrote:
+As there seem to be more activity now, maybe someone can help me get
+UDMA 66/100 to work with Promise U100 cards.
 
-> Care to try the next version? I've completely disabled task file i/o
-> since it does seem to be broken in pio, and fixed the multi-write
-> multi-page bio bug as well. There are a number of other changes in
-> there. There are split patches like last time, but also one big patch:
-> 
-> *.kernel.org/pub/linux/kernel/people/axboe/patches/v2.5/2.5.25/
-> 
-> ide24-for-2.5-2
-> 	all of the above
+I have tested on three different systems with 4 brands (Maxtor,
+Seagate, Quantum, IBM) of harddrives. The highest mode I can set is
+UDMA33. When I try to use anything higher I get an error in the kernel
+log saying "kernel: ide2: Speed warnings UDMA 3/4/5 is not functional".
 
-Had no time until now, but just tried ide24-for-2.5-3.
-It did not compile, but after adding 05_25pci-ids-1a it did.
-Also added
+All drives support higher at least UDMA 100.
 
-diff -u --recursive --new-file -X /linux/dontdiff a/drivers/usb/host/uhci-hcd.c b/drivers/usb/host/uhci-hcd.c
---- a/drivers/usb/host/uhci-hcd.c       Mon Jun 17 19:35:40 2002
-+++ b/drivers/usb/host/uhci-hcd.c       Fri Jun 21 22:44:35 2002
-@@ -2428,7 +2428,7 @@
-        return retval;
- }
- 
--static void __devexit uhci_stop(struct usb_hcd *hcd)
-+static void uhci_stop(struct usb_hcd *hcd)
- {
-        struct uhci_hcd *uhci = hcd_to_uhci(hcd);
- 
-@@ -2509,7 +2509,7 @@
-        suspend:                uhci_suspend,
-        resume:                 uhci_resume,
- #endif
--       stop:                   __devexit_p(uhci_stop),
-+       stop:                   uhci_stop,
- 
-        hcd_alloc:              uhci_hcd_alloc,
-        hcd_free:               uhci_hcd_free,
+I have tested with most of the 2.4.17-19 kernels, including the Red
+Hat kernels under Red Hat 7.2 and 7.3. I have also used the -AC
+patches.  I have also compiled with and without "IGNORE word93
+Validation BITS"
 
-to prevent oopses at shutdown.
+The current kernel is 2.4.19-rc1.
 
-The resulting kernel seems to work. Tried it only for a short time,
-but maybe long enough to be confident.
 
-[Yesterday, or the day before I installed a new distribution.
-Unfortunately there are vendor modifications to kernel and
-user space software, so replacing the kernel by a vanilla one
-does not yield a functioning system; will also have to replace
-some vendor user space stuff by vanilla stuff.]
+dmesg log says this om my current system:
+---
 
-Andries
+Uniform Multi-Platform E-IDE driver Revision: 6.31
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+PIIX4: IDE controller on PCI bus 00 dev 21
+PIIX4: chipset revision 1
+PIIX4: not 100% native mode: will probe irqs later
+    ide0: BM-DMA at 0xb800-0xb807, BIOS settings: hda:DMA, hdb:DMA
+    ide1: BM-DMA at 0xb808-0xb80f, BIOS settings: hdc:DMA, hdd:DMA
+PDC20268: IDE controller on PCI bus 00 dev 48
+PCI: Found IRQ 4 for device 00:09.0
+PCI: Sharing IRQ 4 with 00:04.2
+PDC20268: chipset revision 2
+PDC20268: not 100% native mode: will probe irqs later
+    ide2: BM-DMA at 0x9800-0x9807, BIOS settings: hde:pio, hdf:pio
+    ide3: BM-DMA at 0x9808-0x980f, BIOS settings: hdg:pio, hdh:pio
+PDC20268: IDE controller on PCI bus 00 dev 58
+PCI: Found IRQ 10 for device 00:0b.0 
+PDC20268: chipset revision 2
+PDC20268: not 100% native mode: will probe irqs later
+    ide4: BM-DMA at 0x8000-0x8007, BIOS settings: hdi:pio, hdj:pio
+    ide5: BM-DMA at 0x8008-0x800f, BIOS settings: hdk:pio, hdl:pio
+
+---
+hde: 117231408 sectors (60022 MB) w/2048KiB Cache, CHS=116301/16/63, UDMA(33)
+hdf: 120103200 sectors (61493 MB) w/1916KiB Cache, CHS=119150/16/63, UDMA(33)
+hdg: 320173056 sectors (163929 MB) w/2048KiB Cache, CHS=19929/255/63, UDMA(33)
+hdh: 240121728 sectors (122942 MB) w/2048KiB Cache, CHS=14946/255/63, UDMA(33)
+hdi: 160086528 sectors (81964 MB) w/2048KiB Cache, CHS=158816/16/63, UDMA(33)
+hdj: 160086528 sectors (81964 MB) w/2048KiB Cache, CHS=158816/16/63, UDMA(33)
+hdk: 117266688 sectors (60041 MB) w/2000KiB Cache, CHS=116336/16/63, UDMA(33)
+hdl: 117266688 sectors (60041 MB) w/2000KiB Cache, CHS=116336/16/63, UDMA(33)
+---
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+ide1 at 0x170-0x177,0x376 on irq 15
+ide2 at 0xb000-0xb007,0xa802 on irq 4
+ide3 at 0xa400-0xa407,0xa002 on irq 4
+ide4 at 0x9400-0x9407,0x9002 on irq 10
+ide5 at 0x8800-0x8807,0x8402 on irq 10
+---
+hde: ST360021A, ATA DISK drive
+hdf: IC35L060AVER07-0, ATA DISK drive
+hdg: Maxtor 4G160J8, ATA DISK drive
+hdh: Maxtor 4G120J6, ATA DISK drive
+hdi: Maxtor 98196H8, ATA DISK drive
+hdj: Maxtor 98196H8, ATA DISK drive
+hdk: MAXTOR 4K060H3, ATA DISK drive
+hdl: MAXTOR 4K060H3, ATA DISK driv
+
+
+
+The Promise U100Tx2 BIOS does report UDMA100 for ALL drives.
+
