@@ -1,57 +1,51 @@
-From: Leon Woestenberg <leonw@mailcan.com>
-Subject: Re: Marvell SATA for libata?
-Date: Mon, 10 May 2004 08:14:14 +0200
+From: Stefan <gentoopower@yahoo.de>
+Subject: Kernel 2.6.6 Bug !!!!
+Date: Mon, 10 May 2004 13:17:11 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <409F1DB6.7050306@mailcan.com>
-References: <409D84A9.1090107@mailcan.com> <409EEE42.6070201@pobox.com>
+Message-ID: <409F64B7.6050906@yahoo.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:49850 "EHLO
-	out2.smtp.messagingengine.com") by vger.kernel.org with ESMTP
-	id S264537AbUEJGPd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 May 2004 02:15:33 -0400
-In-Reply-To: <409EEE42.6070201@pobox.com>
+Received: from smtp016.mail.yahoo.com ([216.136.174.113]:29560 "HELO
+	smtp016.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S264635AbUEJLK1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 May 2004 07:10:27 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello Jeff,
+Sorry for posting this to the ide list, but it is the only one I'm 
+registered.
 
-Jeff Garzik wrote:
-> Leon Woestenberg wrote:
->> Hello all, Jeff Garzik in particular,
->>
->> we have interest in having the Marvell 88sx5040 SATA controller work
->> under libata.
->>
->> Did you happen to start development for this controller, as your
->> latest libata status report seems to tell so?
->>
->> We have the Marvell datasheet available (but under NDA) as well as
->> the source code from SuperMicro and we would like to convert it to
->> the libata framework.
-> 
-> 
-> In fact, I am working on it right now.
->
-Excellent. Applying as test-bed candidate. :-)
+I just got the new kernel 2.6.6. It seems like there is a really bad bug 
+in it.
+The Nvidia driver and my soundcard driver (this one I wrote myself), 
+don't work anymore.
 
-> I also have the docs and the driver (albeit officially :)).
-> 
-I happen to find it at this public customer support FTP server: 
-ftp://ftp.supermicro.com/driver/SATA/DAC_SATA-MV8/
+When I try to load those modules I get:
 
-which is officially for the MV8 PCI card, which has the forementioned
-chip on its PCB.
+Inavalid Module Format
 
-> A non-queueing driver for Marvell will be fairly straightforward. Adding 
-> queueing will be much more of a chore, though.
-> 
-That makes me wonder, what is the typical performance gain when using
-any of the command queueing methods?
+Who should I contact in order to resolve this issue immidiately????
 
-Regards,
+Tanks, R.S.
 
-Leon.
+P.S. On OSNews I saw someone mentioning:
+
+
+-mregparm=3 (register option) or 4 kb stacks
+
+both aren't set in my kernel
+
+Also I notived, both of the modules have a different name now in 2.6.5 
+they were named:
+
+cmaudio.ko
+nvidia.o
+
+now in 2.6.6
+
+cmaudio.o
+nvidia.ko
+
+Was there a change in compile flags or such thing?
