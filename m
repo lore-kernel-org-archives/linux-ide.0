@@ -1,37 +1,68 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: PATCH: header updates for IDE changes
-Date: Mon, 16 Aug 2004 17:08:04 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200408161708.04376.bzolnier@elka.pw.edu.pl>
-References: <20040815145515.GA9993@devserv.devel.redhat.com>
+Subject: Re: PATCH: quieten some IDE diagnostics we will be using much more
+Date: Mon, 16 Aug 2004 17:14:40 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200408161714.40398.bzolnier@elka.pw.edu.pl>
+References: <20040815144624.GA8168@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:48096 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S267682AbUHPPIg
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Aug 2004 11:08:36 -0400
-In-Reply-To: <20040815145515.GA9993@devserv.devel.redhat.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S267693AbUHPPSs@vger.kernel.org>
+In-Reply-To: <20040815144624.GA8168@devserv.devel.redhat.com>
 Content-Disposition: inline
-List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@redhat.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
+List-Id: linux-ide@vger.kernel.org
 
 
-These changes belong to the patches making actual use of them...
+This PATCH is intermixed with PATCH: IDE - do spin up for all platforms ...
 
-BTW What is the ordering in which your patches should be applied?
-
-On Sunday 15 August 2004 16:55, Alan Cox wrote:
-> Add a "key" (generation) field to the ide taks object so that we can fix
-> the crash when you unload a pcmcia ide device (and later other pci hotplug
-> devices etc) while having a proc file accessed
+On Sunday 15 August 2004 16:46, Alan Cox wrote:
+> diff -u --new-file --recursive --exclude-from /usr/src/exclude
+> linux.vanilla-2.6.8-rc3/drivers/ide/ide-probe.c
+> linux-2.6.8-rc3/drivers/ide/ide-probe.c ---
+> linux.vanilla-2.6.8-rc3/drivers/ide/ide-probe.c	2004-08-09
+> 15:51:00.000000000 +0100 +++
+> linux-2.6.8-rc3/drivers/ide/ide-probe.c	2004-08-14 21:03:03.000000000 +0100
+> @@ -635,12 +680,11 @@
+>  	device_register(&hwif->gendev);
+>  }
 >
-> Add a remove function to be called on unload by later patches
-> Add a raw_taskfile function to allow drives to do command filters
-> Add configured bit so that we can differentiate currently ambigious
-> interface states when unloading.
-> Add a prototype for ide_diag_taskfile (for raw_taskfile users)
-> Add prototypes for the ide key functions (code changes in next patch)
+> -#ifdef CONFIG_PPC
+>  static int wait_hwif_ready(ide_hwif_t *hwif)
+>  {
+>  	int rc;
+>
+> -	printk(KERN_INFO "Probing IDE interface %s...\n", hwif->name);
+> +	printk(KERN_DEBUG "Probing IDE interface %s...\n", hwif->name);
+>
+>  	/* Let HW settle down a bit from whatever init state we
+>  	 * come from */
+> @@ -671,7 +715,6 @@
+>
+>  	return rc;
+>  }
+> -#endif
+>
+>  /*
+>   * This routine only knows how to look for drive units 0 and 1
+> @@ -717,7 +760,6 @@
+>
+>  	local_irq_set(flags);
+>
+> -#ifdef CONFIG_PPC
+>  	/* This is needed on some PPCs and a bunch of BIOS-less embedded
+>  	 * platforms. Typical cases are:
+>  	 *
+> @@ -738,8 +780,7 @@
+>  	 *  BenH.
+>  	 */
+>  	if (wait_hwif_ready(hwif))
+> -		printk(KERN_WARNING "%s: Wait for ready failed before probe !\n",
+> hwif->name); -#endif /* CONFIG_PPC */
+> +		printk(KERN_DEBUG "%s: Wait for ready failed before probe !\n",
+> hwif->name);
+>
+>  	/*
+>  	 * Second drive should only exist if first drive was found,
