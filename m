@@ -1,36 +1,29 @@
-From: Stefan Smietanowski <stesmi@stesmi.com>
+From: "J. Ryan Earl" <heretic@clanhk.org>
 Subject: Re: Status of the sata_sil driver for the VT8237
-Date: Sun, 28 Mar 2004 09:37:15 +0200
+Date: Sun, 28 Mar 2004 01:48:11 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <406680AB.8090204@stesmi.com>
-References: <4066342B.4080105@clanhk.org> <406643A8.2050808@pobox.com> <40664AE4.8010003@clanhk.org>
+Message-ID: <4066833B.4080004@clanhk.org>
+References: <4066342B.4080105@clanhk.org> <406643A8.2050808@pobox.com> <40664AE4.8010003@clanhk.org> <406680AB.8090204@stesmi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 1-2-2-1a.has.sth.bostream.se ([82.182.130.86]:44211 "EHLO
-	K-7.stesmi.com") by vger.kernel.org with ESMTP id S262108AbUC1Hh0
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Mar 2004 02:37:26 -0500
-In-Reply-To: <40664AE4.8010003@clanhk.org>
+Received: from ns.clanhk.org ([69.93.101.154]:40623 "EHLO mail.clanhk.org")
+	by vger.kernel.org with ESMTP id S262119AbUC1HsB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Mar 2004 02:48:01 -0500
+In-Reply-To: <406680AB.8090204@stesmi.com>
 List-Id: linux-ide@vger.kernel.org
-To: "J. Ryan Earl" <heretic@clanhk.org>
+To: Stefan Smietanowski <stesmi@stesmi.com>
 Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi.
+Stefan Smietanowski wrote:
 
-> I meant sata_via, I dunno why I said sata_sil; Freudian typo.  I was 
-> thinking of the current sii3112 I use, which has been stable and 
-> blazingly fast for awhile with the IDE driver--and a little little patch 
-> I keep applying.  I'm looking to upgrade a server with 2 Raptors in it 
-> to an A64 running 64-bit Linux of course.  I wanna get the HDs off the 
-> PCI bus and onto the VT8237 southbridge.  I was wondering if the driver 
-> for -that southbridge- was still considered beta.
+> Many A64 boards today come with a Promise SATA controller as well -
+> works like a charm for me on an ASUS K8V Deluxe board here.
 
-Many A64 boards today come with a Promise SATA controller as well -
-works like a charm for me on an ASUS K8V Deluxe board here.
+That's an option, as is just using the sii3112 that's been working so 
+well, but that still puts the disks on the PCI bus.  The whole point is 
+to get 300MB/sec of burstable I/O off the 133MB/s bus that's shared with 
+the dual gigE controllers and a firewire camera.
 
-The driver is sata_promise but I guess you either knew that or
-would be able to figure it out yourself :)
-
-// Stefan
+-ryan
