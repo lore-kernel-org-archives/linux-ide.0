@@ -1,148 +1,257 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: [PATCH] libata-core when not ata_id_use_dmadir despite yes SiliconI
-	mage
-Date: 15 May 2004 08:20:07 -0600
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: [PATCH] add default ARM/ARM26 IDE host driver
+Date: Sat, 15 May 2004 16:21:27 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1084630807.5082.42.camel@patibmrh9>
+Message-ID: <200405151621.27450.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="=-ZvD21iFXeNosyolsX0e6"
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:27119 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S261421AbUEOOUa
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:64213 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S262538AbUEOOV2
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 May 2004 10:20:30 -0400
+	Sat, 15 May 2004 10:21:28 -0400
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Russell King <rmk@arm.linux.org.uk>, Ian Molton <spyro@f2s.com>
+Cc: Marc Singer <elf@buici.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
---=-ZvD21iFXeNosyolsX0e6
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Ported to 2.6.6-bk1 and cleaned a bit.
 
-> > > Subject: Re: SATA ATAPI work in progress
-> > > ...
-> > > I doubt I can use this patch as is.  I believe,
-> > > because I assembled my drive from components myself,
-> > > its op xA1 Identify data has not changed,
-> > > so I will see a misleading 0 False at:
-> > > 
-> > > #define ata_id_use_dmadir(dev) ((dev)->id[62] & (1 << 15))
-> 
-> Theory confirmed!
+Add drivers/ide/arm/ide_arm.c for simple default IDE interfaces
+and clean obsolete ide_init_default_hwifs() implementations
+in asm-arm/arch-{cl7500,rpc,shark}/ide.h and asm-arm26/ide.h.
 
-Consequently now:
+This allows us to kill ide_init_default_hwifs() completely
+in the next patch (because lh7a40x and sa1100 are broken).
 
-In t13.org since the dawn of time, I see the requirement that compliant
-ATAPI devices tolerate hosts creatively choosing to copy
-(cmd->sc_data_direction != SCSI_DATA_WRITE) into (ata_taskfile.feature &
-x04 ATAPI_DMADIR).
+Cross-compile tested on ARM.
 
-I see devices constructed with Silicon Image 3611CT80 1.4 require such a
-courtesy from the host.
+ linux-2.6.6-bk1-bzolnier/drivers/ide/Kconfig               |    3 
+ linux-2.6.6-bk1-bzolnier/drivers/ide/Makefile              |    3 
+ linux-2.6.6-bk1-bzolnier/drivers/ide/arm/ide_arm.c         |   43 +++++++++++++
+ linux-2.6.6-bk1-bzolnier/drivers/ide/ide.c                 |    5 +
+ linux-2.6.6-bk1-bzolnier/include/asm-arm/arch-cl7500/ide.h |   16 ----
+ linux-2.6.6-bk1-bzolnier/include/asm-arm/arch-rpc/ide.h    |   15 ----
+ linux-2.6.6-bk1-bzolnier/include/asm-arm/arch-shark/ide.h  |   17 -----
+ linux-2.6.6-bk1-bzolnier/include/asm-arm26/ide.h           |   18 -----
+ 8 files changed, 58 insertions(+), 62 deletions(-)
 
-Therefore I propose that Linux, as host, offer that courtesy always.
-
-Pat LaVarre
-
-P.S. Of course I still agree the firmware of devices manufactured with
-this perhaps excessively transparent SATA/ PATA bridge should set "word"
-62 mask x8000 ata_id_use_dmadir, after that proposal in fact becomes a
-t13.org standard, presuming that standards development process doesn't
-move or flip that bit.
-
-Indeed, after the proposal is standard, I'll argue all PATA devices
-should set this bit, on the chance that their actual connection with the
-host is such an extremely transparent SATA/ PATA bridge.
-
-But that argument I expect to lose to the fear that some hosts will
-choose to refuse to speak DMA with devices that set ata_id_use_dmadir,
-rather than choosing to disclose (cmd->sc_data_direction !=
-SCSI_DATA_WRITE).
-
-P.P.S. In passing in include/linux/, I vote we teach Linux to enum
-together all the bits of the ata_taskfile.feature parameter of ATA op
-xA0 ATA_CMD_PACKET.
-
---- o/drivers/scsi/libata-core.c	2004-05-15 07:31:49.000000000 -0600
-+++ linux-2.6.6-bk1/drivers/scsi/libata-core.c	2004-05-15 07:53:40.520947904 -0600
-@@ -1168,8 +1168,10 @@ retry:
- 		if (ata_id_is_ata(dev))		/* sanity check */
- 			goto err_out_nosup;
+diff -puN /dev/null drivers/ide/arm/ide_arm.c
+--- /dev/null	2004-01-17 00:25:55.000000000 +0100
++++ linux-2.6.6-bk1-bzolnier/drivers/ide/arm/ide_arm.c	2004-05-15 03:30:51.000000000 +0200
+@@ -0,0 +1,43 @@
++/*
++ * ARM/ARM26 default IDE host driver
++ *
++ * Copyright (C) 2004 Bartlomiej Zolnierkiewicz
++ * Based on code by: Russell King, Ian Molton and Alexander Schulz.
++ *
++ * May be copied or modified under the terms of the GNU General Public License.
++ */
++
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/ide.h>
++
++#include <asm/mach-types.h>
++#include <asm/irq.h>
++
++#ifdef CONFIG_ARM26
++# define IDE_ARM_HOST	(machine_is_a5k())
++#else
++# define IDE_ARM_HOST	(1)
++#endif
++
++#ifdef CONFIG_ARCH_CLPS7500
++# include <asm/arch/hardware.h>
++#
++# define IDE_ARM_IO	(ISASLOT_IO + 0x1f0)
++# define IDE_ARM_IRQ	IRQ_ISA_14
++#else
++# define IDE_ARM_IO	0x1f0
++# define IDE_ARM_IRQ	IRQ_HARDDISK
++#endif
++
++void __init ide_arm_init(void)
++{
++	if (IDE_ARM_HOST) {
++		hw_regs_t hw;
++
++		memset(&hw, 0, sizeof(hw));
++		ide_std_init_ports(&hw, IDE_ARM_IO, IDE_ARM_IO + 0x206);
++		hw.irq = IDE_ARM_IRQ;
++		ide_register_hw(&hw, NULL);
++	}
++}
+diff -puN drivers/ide/ide.c~ide_arm drivers/ide/ide.c
+--- linux-2.6.6-bk1/drivers/ide/ide.c~ide_arm	2004-05-15 02:51:26.000000000 +0200
++++ linux-2.6.6-bk1-bzolnier/drivers/ide/ide.c	2004-05-15 15:56:04.376084776 +0200
+@@ -272,6 +272,8 @@ static void init_hwif_default(ide_hwif_t
+ #endif
+ }
  
--		if (ata_id_use_dmadir(dev))
--			dev->flags |= ATA_DFLAG_DMADIR;
-+		/* share cmd->sc_data_direction with device
-+		 * even when (!ata_id_use_dmadir(dev)) claims not needed
-+		 */
-+		dev->flags |= ATA_DFLAG_DMADIR;
++extern void ide_arm_init(void);
++
+ /*
+  * init_ide_data() sets reasonable default values into all fields
+  * of all instances of the hwifs and drives, but only on the first call.
+@@ -320,6 +322,9 @@ static void __init init_ide_data (void)
+ 	ide_init_default_hwifs();
+ 	initializing = 0;
+ #endif
++#ifdef CONFIG_IDE_ARM
++	ide_arm_init();
++#endif
+ }
  
- 		/* see if 16-byte commands supported */
- 		tmp = dev->id[0] & 0x3;
---- o/include/linux/ata.h	2004-05-15 07:09:33.000000000 -0600
-+++ linux-2.6.6-bk1/include/linux/ata.h	2004-05-15 07:58:15.181193200 -0600
-@@ -84,8 +84,6 @@ enum {
- 	ATA_ERR			= (1 << 0),	/* have an error */
- 	ATA_SRST		= (1 << 2),	/* software reset */
- 	ATA_ABORTED		= (1 << 2),	/* command aborted */
--	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
--						   0=to device, 1=to host */
+ /*
+diff -puN drivers/ide/Kconfig~ide_arm drivers/ide/Kconfig
+--- linux-2.6.6-bk1/drivers/ide/Kconfig~ide_arm	2004-05-15 03:30:59.000000000 +0200
++++ linux-2.6.6-bk1-bzolnier/drivers/ide/Kconfig	2004-05-15 03:32:35.000000000 +0200
+@@ -855,6 +855,9 @@ config BLK_DEV_IDE_SWARM
+ 	bool "SWARM onboard IDE support"
+ 	depends on SIBYTE_SWARM
  
- 	/* ATA command block registers */
- 	ATA_REG_DATA		= 0x00,
-@@ -136,6 +134,8 @@ enum {
++config IDE_ARM
++	def_bool ARM && (ARCH_A5K || ARCH_CLPS7500 || ARCH_RPC || ARCH_SHARK)
++
+ config BLK_DEV_IDE_ICSIDE
+ 	tristate "ICS IDE interface support"
+ 	depends on ARM && ARCH_ACORN
+diff -puN drivers/ide/Makefile~ide_arm drivers/ide/Makefile
+--- linux-2.6.6-bk1/drivers/ide/Makefile~ide_arm	2004-05-15 02:51:26.000000000 +0200
++++ linux-2.6.6-bk1-bzolnier/drivers/ide/Makefile	2004-05-15 03:32:48.000000000 +0200
+@@ -25,6 +25,9 @@ ide-core-$(CONFIG_BLK_DEV_IDE_TCQ)	+= id
+ ide-core-$(CONFIG_PROC_FS)		+= ide-proc.o
+ ide-core-$(CONFIG_BLK_DEV_IDEPNP)	+= ide-pnp.o
  
- 	/* ATAPI stuff */
- 	ATAPI_PKT_DMA		= (1 << 0),
-+	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
-+						   0=to device, 1=to host */
++# built-in only drivers from arm/
++ide-core-$(CONFIG_IDE_ARM)		+= arm/ide_arm.o
++
+ # built-in only drivers from legacy/
+ ide-core-$(CONFIG_BLK_DEV_IDE_PC9800)	+= legacy/pc9800.o
+ ide-core-$(CONFIG_BLK_DEV_BUDDHA)	+= legacy/buddha.o
+diff -puN include/asm-arm26/ide.h~ide_arm include/asm-arm26/ide.h
+--- linux-2.6.6-bk1/include/asm-arm26/ide.h~ide_arm	2004-05-15 02:51:26.000000000 +0200
++++ linux-2.6.6-bk1-bzolnier/include/asm-arm26/ide.h	2004-05-15 15:56:04.387083104 +0200
+@@ -47,23 +47,7 @@ static inline void ide_init_hwif_ports(h
  
- 	/* cable types */
- 	ATA_CBL_NONE		= 0,
+ #define ide_init_default_irq(base)	(0)
+ 
+-/*
+- * This registers the standard ports for this architecture with the IDE
+- * driver.
+- */
+-static __inline__ void ide_init_default_hwifs(void)
+-{
+-        if (machine_is_a5k()) {
+-                hw_regs_t hw;
+-
+-                memset(&hw, 0, sizeof(hw));
+-
+-                ide_init_hwif_ports(&hw, 0x1f0, 0x3f6, NULL);
+-                hw.irq = IRQ_HARDDISK;
+-                ide_register_hw(&hw,NULL);
+-        }
+-}
+-
++static inline void ide_init_default_hwifs(void) { ; }
+ 
+ /*
+  * We always use the new IDE port registering,
+diff -puN include/asm-arm/arch-cl7500/ide.h~ide_arm include/asm-arm/arch-cl7500/ide.h
+--- linux-2.6.6-bk1/include/asm-arm/arch-cl7500/ide.h~ide_arm	2004-05-15 02:51:26.000000000 +0200
++++ linux-2.6.6-bk1-bzolnier/include/asm-arm/arch-cl7500/ide.h	2004-05-15 15:56:04.388082952 +0200
+@@ -6,8 +6,6 @@
+  * Modifications:
+  *  29-07-1998	RMK	Major re-work of IDE architecture specific code
+  */
+-#include <asm/irq.h>
+-#include <asm/arch/hardware.h>
+ 
+ /*
+  * Set up a hw structure for a specified data port, control port and IRQ.
+@@ -35,16 +33,4 @@ static inline void ide_init_hwif_ports(h
+ 	hw->io_ports[IDE_IRQ_OFFSET] = 0;
+ }
+ 
+-/*
+- * This registers the standard ports for this architecture with the IDE
+- * driver.
+- */
+-static __inline__ void
+-ide_init_default_hwifs(void)
+-{
+-	hw_regs_t hw;
+-
+-	ide_init_hwif_ports(&hw, ISASLOT_IO + 0x1f0, ISASLOT_IO + 0x3f6, NULL);
+-	hw.irq = IRQ_ISA_14;
+-	ide_register_hw(&hw);
+-}
++static inline void ide_init_default_hwifs(void) { ; }
+diff -puN include/asm-arm/arch-rpc/ide.h~ide_arm include/asm-arm/arch-rpc/ide.h
+--- linux-2.6.6-bk1/include/asm-arm/arch-rpc/ide.h~ide_arm	2004-05-15 02:51:26.000000000 +0200
++++ linux-2.6.6-bk1-bzolnier/include/asm-arm/arch-rpc/ide.h	2004-05-15 15:56:04.393082192 +0200
+@@ -10,7 +10,6 @@
+  *  Modifications:
+  *   29-07-1998	RMK	Major re-work of IDE architecture specific code
+  */
+-#include <asm/irq.h>
+ 
+ /*
+  * Set up a hw structure for a specified data port, control port and IRQ.
+@@ -33,16 +32,4 @@ static inline void ide_init_hwif_ports(h
+ 		*irq = 0;
+ }
+ 
+-/*
+- * This registers the standard ports for this architecture with the IDE
+- * driver.
+- */
+-static __inline__ void
+-ide_init_default_hwifs(void)
+-{
+-	hw_regs_t hw;
+-
+-	ide_init_hwif_ports(&hw, 0x1f0, 0x3f6, NULL);
+-	hw.irq = IRQ_HARDDISK;
+-	ide_register_hw(&hw, NULL);
+-}
++static inline void ide_init_default_hwifs(void) { ; }
+diff -puN include/asm-arm/arch-shark/ide.h~ide_arm include/asm-arm/arch-shark/ide.h
+--- linux-2.6.6-bk1/include/asm-arm/arch-shark/ide.h~ide_arm	2004-05-15 02:51:26.000000000 +0200
++++ linux-2.6.6-bk1-bzolnier/include/asm-arm/arch-shark/ide.h	2004-05-15 15:56:04.394082040 +0200
+@@ -8,8 +8,6 @@
+  * Copyright (c) 1998 Russell King
+  */
+ 
+-#include <asm/irq.h>
+-
+ /*
+  * Set up a hw structure for a specified data port, control port and IRQ.
+  * This should follow whatever the default interface uses.
+@@ -31,17 +29,4 @@ static inline void ide_init_hwif_ports(h
+ 		*irq = 0;
+ }
+ 
+-/*
+- * This registers the standard ports for this architecture with the IDE
+- * driver.
+- */
+-static __inline__ void
+-ide_init_default_hwifs(void)
+-{
+-	hw_regs_t hw;
+-
+-	ide_init_hwif_ports(&hw, 0x1f0, 0x3f6, NULL);
+-	hw.irq = 14;
+-	ide_register_hw(&hw,NULL);
+-}
+-
++static inline void ide_init_default_hwifs(void) { ; }
 
-
-
---=-ZvD21iFXeNosyolsX0e6
-Content-Disposition: attachment; filename=pel.patch.7b
-Content-Type: text/x-troff-man; name=pel.patch.7b; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
---- o/drivers/scsi/libata-core.c	2004-05-15 07:31:49.000000000 -0600
-+++ linux-2.6.6-bk1/drivers/scsi/libata-core.c	2004-05-15 07:53:40.520947904 -0600
-@@ -1168,8 +1168,10 @@ retry:
- 		if (ata_id_is_ata(dev))		/* sanity check */
- 			goto err_out_nosup;
- 
--		if (ata_id_use_dmadir(dev))
--			dev->flags |= ATA_DFLAG_DMADIR;
-+		/* share cmd->sc_data_direction with device
-+		 * even when (!ata_id_use_dmadir(dev)) claims not needed
-+		 */
-+		dev->flags |= ATA_DFLAG_DMADIR;
- 
- 		/* see if 16-byte commands supported */
- 		tmp = dev->id[0] & 0x3;
---- o/include/linux/ata.h	2004-05-15 07:09:33.000000000 -0600
-+++ linux-2.6.6-bk1/include/linux/ata.h	2004-05-15 07:58:15.181193200 -0600
-@@ -84,8 +84,6 @@ enum {
- 	ATA_ERR			= (1 << 0),	/* have an error */
- 	ATA_SRST		= (1 << 2),	/* software reset */
- 	ATA_ABORTED		= (1 << 2),	/* command aborted */
--	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
--						   0=to device, 1=to host */
- 
- 	/* ATA command block registers */
- 	ATA_REG_DATA		= 0x00,
-@@ -136,6 +134,8 @@ enum {
- 
- 	/* ATAPI stuff */
- 	ATAPI_PKT_DMA		= (1 << 0),
-+	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
-+						   0=to device, 1=to host */
- 
- 	/* cable types */
- 	ATA_CBL_NONE		= 0,
-
---=-ZvD21iFXeNosyolsX0e6--
+_
 
