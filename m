@@ -1,44 +1,47 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] ide-taskfile.c fixups/cleanups part #2 [4/9]
-Date: Wed, 30 Jun 2004 17:25:05 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200406301725.05181.bzolnier@elka.pw.edu.pl>
+Subject: [PATCH] ide-taskfile.c fixups/cleanups part #2 [5/9]
+Date: Wed, 30 Jun 2004 17:28:35 +0200
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200406301725.23876.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S266720AbUF3PZn@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:16053 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S266712AbUF3PZe
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Jun 2004 11:25:34 -0400
 Content-Disposition: inline
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, rmk@arm.linux.org.uk
 
 
-[PATCH] ide: remove BUSY check from task_in_intr() (CONFIG_IDE_TASKFILE_IO=n)
+[PATCH] remove pre_task_out_intr() comment (CONFIG_IDE_TASKFILE_IO=n)
 
-We shouldn't ever get there if drive is busy and we can't start transfer
-in this case.  ide-disk.c:read_intr() also doesn't check for BUSY_STAT bit.
+disable_irq_nosync() in ide-io.c:ide_do_request() protects
+pre_task_out_intr() from racing with the task_out_intr().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 
- linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+ linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c |    4 ----
+ 1 files changed, 4 deletions(-)
 
-diff -puN drivers/ide/ide-taskfile.c~ide_task_in_intr drivers/ide/ide-taskfile.c
---- linux-2.6.7-bk11/drivers/ide/ide-taskfile.c~ide_task_in_intr	2004-06-28 21:24:49.097867728 +0200
-+++ linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c	2004-06-28 21:24:49.100867272 +0200
-@@ -321,10 +321,8 @@ ide_startstop_t task_in_intr (ide_drive_
- 		if (stat & (ERR_STAT|DRQ_STAT)) {
- 			return DRIVER(drive)->error(drive, "task_in_intr", stat);
- 		}
--		if (!(stat & BUSY_STAT)) {
--			ide_set_handler(drive, &task_in_intr, WAIT_WORSTCASE, NULL);
--			return ide_started;  
--		}
-+		ide_set_handler(drive, &task_in_intr, WAIT_WORSTCASE, NULL);
-+		return ide_started;
- 	}
+diff -puN drivers/ide/ide-taskfile.c~ide_pre_task_out_intr drivers/ide/ide-taskfile.c
+--- linux-2.6.7-bk11/drivers/ide/ide-taskfile.c~ide_pre_task_out_intr	2004-06-28 21:25:10.454621008 +0200
++++ linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c	2004-06-28 21:25:10.458620400 +0200
+@@ -369,10 +369,6 @@ ide_startstop_t task_mulin_intr (ide_dri
  
- 	task_buffer_sectors(drive, rq, 1, IDE_PIO_IN);
+ EXPORT_SYMBOL(task_mulin_intr);
+ 
+-/*
+- * VERIFY ME before 2.4 ... unexpected race is possible based on details
+- * RMK with 74LS245/373/374 TTL buffer logic because of passthrough.
+- */
+ ide_startstop_t pre_task_out_intr (ide_drive_t *drive, struct request *rq)
+ {
+ 	ide_startstop_t startstop;
 
 _
+
