@@ -1,58 +1,33 @@
-From: Eric Eikenberry <eric.eikenberry@psi.ch>
-Subject: filesystem corruption with sata_sx4 driver
-Date: Mon, 11 Oct 2004 12:41:33 +0200 (CEST)
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Detecting CDROM Eject key press
+Date: Mon, 11 Oct 2004 12:54:21 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0410111233580.3966-100000@ganymede.psi.ch>
+Message-ID: <20041011105421.GK2290@suse.de>
+References: <4163E7A2.9060402@vodatel.hr> <pan.2004.10.11.10.08.23.808702@vodatel.hr>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from psi12.psi.ch ([129.129.190.112]:38415 "HELO psi12.psi.ch")
-	by vger.kernel.org with SMTP id S268767AbUJKKmL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Oct 2004 06:42:11 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:53974 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S268775AbUJKK5k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Oct 2004 06:57:40 -0400
+Content-Disposition: inline
+In-Reply-To: <pan.2004.10.11.10.08.23.808702@vodatel.hr>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Vedran Rodic <vedran@vodatel.hr>
 Cc: linux-ide@vger.kernel.org
 
-Dear Jeff & collaborators,
+On Mon, Oct 11 2004, Vedran Rodic wrote:
+> On Wed, 06 Oct 2004 14:40:02 +0200, Vedran Rodic wrote:
+> 
+> > Can I detect that CDROM Eject key has been pressed when the cdrom is
+> > mounted and the CDROM door is locked?
+> > 
+> 
+> I guess this is impossible, and the only way to make the eject key react
+> every time is by disabling door locking.
 
-As described in my previous e-mail, I experience filesystem corruption
-with the sata_sx4 driver.  The syslog shows many messages of the form:
+Yes. If the door is locked, you don't get any notifications.
 
-Oct 10 18:43:21 pc4868 kernel: EXT2-fs error (device md0): ext2_new_block:
-        Allocating block in system zone - block = 133726230
-
-and eventually:
-
-Oct 10 18:57:33 pc4868 kernel: Unable to handle kernel paging request at
-  virtual address ffa48000
-
-The system is:
-Dual Xeon box from Fujitsu-Siemens
-root=/dev/hda1 (ext3), a separate 120 GB  EIDE disk
-Promise FastTrak S150 SX4 controller configured as RAID0
-3 MaxTor Max Line plus II 250 GB SATA drives
-Suse 9.1 with kernnel updated to:  linux-2.6.9-rc3-mm3
-ext2 filesystem on /dev/md0
-
-Any help would be greatly appreciated.
-
-Many thanks in advance.
-
-Regards,
-Eric
-
-
--------------------------------------------------------
-Eric F. Eikenberry, Ph. D.
-Swiss Light Source
-Paul Scherrer Institute
-CH-5232 Villigen PSI
-Switzerland
-
-Tel:  +41 56 / 310 51 28
-             / 310 32 05
-Fax:  +41 56 / 310 43 62
-
-E-mail: eric.eikenberry@psi.ch
--------------------------------------------------------
+-- 
+Jens Axboe
 
