@@ -1,62 +1,33 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: libata PATA support - work items?
-Date: Tue, 04 Jan 2005 18:41:16 -0500
-Message-ID: <41DB299C.3030405@pobox.com>
-References: <006301c4ee5c$49e6a230$95714109@tw.ibm.com> <311601c9050101111929aef5ba@mail.gmail.com>
+Date: Tue, 04 Jan 2005 18:43:26 -0500
+Message-ID: <41DB2A1E.2020809@pobox.com>
+References: <006301c4ee5c$49e6a230$95714109@tw.ibm.com>	 <311601c9050101111929aef5ba@mail.gmail.com>	 <87f94c3705010312568b48d6e@mail.gmail.com>	 <311601c905010313201d5a02fa@mail.gmail.com> <58cb370e05010314092d421aee@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:22667 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262120AbVADXlx
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:44430 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262108AbVADXnn
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Jan 2005 18:41:53 -0500
-In-Reply-To: <311601c9050101111929aef5ba@mail.gmail.com>
+	Tue, 4 Jan 2005 18:43:43 -0500
+In-Reply-To: <58cb370e05010314092d421aee@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Eric Mudama <edmudama@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Albert Lee <albertcc@tw.ibm.com>, IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@suse.de>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Eric Mudama <edmudama@gmail.com>, Greg Freemyer <greg.freemyer@gmail.com>, Albert Lee <albertcc@tw.ibm.com>, IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, dan mares <dmares@dmares.com>
 
-Eric Mudama wrote:
-> On Thu, 30 Dec 2004 18:42:33 +0800, Albert Lee <albertcc@tw.ibm.com> wrote:
-> 
->>    2. C/H/S addressing; libata currently hardcoded to use LBA
-> 
-> 
-> 
-> Are there really people who want to run a newer 2.4 or a 2.6 kernel,
-> who have disks that do not support LBA mode?  CHS will never address
-> more than 32GB of the drive (unless you use vendor unique
-> implementations) and heck, most companies don't even build drives that
-> small anymore...  CHS is very messy, LBA is so much simpler.   Can we
-> just stick with that?
+Bartlomiej Zolnierkiewicz wrote:
+> Existing IDE drivers are not going away any time soon (not 2.6.x at least)
+> and if/when this happens we shouldn't drop CHS support completely
+> from the kernel - IMHO it is quite easy to add CHS support to libata.
+> I also agree that libata PATA development should be focused on LBA
+> but I don't see any problem in keeping CHS support around...
 
 
-Well.......  :)
-
-Originally when I started libata, I targetted it at modern PCI IDE BMDMA 
-(i.e. Intel ICH4-like) controllers, with an eye towards FIS-based 
-controllers such as Intel AHCI or SiI 3124.
-
-As a result, I intentionally hardcoded several things such as LBA 
-support, when writing libata.
-
-Over time, I have consistently seen these "hardcode it" decisions 
-reversed, and the hardcoding removed, mainly to add support for 
-controllers that are an existing PATA chip (with no SATA modifications) 
-glued next to a PATA->SATA transparent bridge.  These controllers 
-essentially require PATA support.  Also, in the community, Bart, Alan 
-Cox, and others (hi Albert) have been interested in supporting some PATA 
-controllers with libata.
-
-So while my original intention with libata was "Bart does the IDE driver 
-for PATA, and I do the IDE driver for SATA", and make a clean break, it 
-seems that libata is moving more and more towards eventually having full 
-PATA support for many controllers, with all that entails.
-
-So, that said, I think it is important for libata to fully support PATA, 
-if it is to support it at all.  That means handling the errata that Alan 
-always bugs me about, and that means handling C/H/S support as well.
+I don't think it's a problem to support C/H/S in libata.  libata already 
+has to handle lba28/lba48, CHS would simply be a third instance of the 
+"fill read/write taskfile" code.
 
 	Jeff
 
