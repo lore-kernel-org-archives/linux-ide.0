@@ -1,56 +1,100 @@
-From: "Eric Vaughan" <Vaughan@iomega.com>
-Subject: SiS 964 hang during mount
-Date: Tue, 25 Jan 2005 15:32:35 -0700
-Message-ID: <C815CE4647F1E64B894D8E0C171943F54883D4@royntex01.iomegacorp.com>
+From: Prarit Bhargava <prarit@sgi.com>
+Subject: [PATCH]: [RFC] Fix error handlnig in hwif-init and sgiioc4 driver
+Date: Wed, 26 Jan 2005 08:25:04 -0500
+Message-ID: <41F79A30.4040900@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+ boundary="------------080509080602010103090303"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-mx1.iomega.com ([147.178.1.72]:1195 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S262207AbVAYWcj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Jan 2005 17:32:39 -0500
-Received: from emailmx0.iomega.com (hubble [147.178.1.70])
-	by email.iomega.com (Postfix) with ESMTP id 5044C19D9
-	for <linux-ide@vger.kernel.org>; Tue, 25 Jan 2005 15:32:35 -0700 (MST)
-Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
-	by emailmx0.iomega.com (Postfix) with ESMTP id 401366E1
-	for <linux-ide@vger.kernel.org>; Tue, 25 Jan 2005 22:32:35 +0000 (UTC)
-content-class: urn:content-classes:message
+Received: from mx1.redhat.com ([66.187.233.31]:41865 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S262289AbVAZNZh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Jan 2005 08:25:37 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.12.11/8.12.11) with ESMTP id j0QDPbLr020634
+	for <linux-ide@vger.kernel.org>; Wed, 26 Jan 2005 08:25:37 -0500
+Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
+	by int-mx1.corp.redhat.com (8.11.6/8.11.6) with ESMTP id j0QDPWO01903
+	for <linux-ide@vger.kernel.org>; Wed, 26 Jan 2005 08:25:32 -0500
+Received: from [172.16.80.158] (prarit.boston.redhat.com [172.16.80.158])
+	by mail.boston.redhat.com (8.12.8/8.12.8) with ESMTP id j0QDPWp5025802
+	for <linux-ide@vger.kernel.org>; Wed, 26 Jan 2005 08:25:32 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Hi, 
-  I have a Serial ATAPI disk drive attached to an SiS 964 SATA
-controller.  I have ATA_ENABLE_ATAPI #defined in libata.h.  This is
-2.6.10, by the way.  When I mount the device, it hangs.  I turned on
-verbose debugging, and just before the hang, I get an assertion failure
-in libata-core.c, line 2675, where it is asserting that qc->flags
-contain the ATA_QCFLAG_ACTIVE flag.  Here's a little context around the
-failure:
+This is a multi-part message in MIME format.
+--------------080509080602010103090303
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-ata_scsi_error: ENTER
-ata_eng_timeout: ENTER
-ata_qc_timeout: ENTER
-ata_host_intr: ata5: host_stat 0x4
-ata_host_intr: ata5: protocol 7 (dev_stat 0x50)
-ata_sg_cleanup: unmapping 1 sg elements
-ata_qc_complete: EXIT
-ata5: command 0xa0 timeout, stat 0x50 host_stat 0x1
-Assertion failed! Qc->flags &
-ATA_QCFLAG_ACTIVE,drivers/scsi/libata-core.c,ata_qc_complete,line=2675
-ata_qc_complete: EXIT
-ata_qc_timeou: EXIT
-ata_eng_timeout: EXIT
-ata_scsi_error: EXIT
+I didn't see any ACKs on this so I'm resubmitting....
 
-I'm working on a way to get all the output from the environment I'm
-using.  Do you need more?  Or is this enough info?  Is the assertion
-failure even relevant?  Let me know if there's anything else I can do to
-help you resolve this issue.
+I discovered an issue where a hwif_init failure lead to /proc/ide files 
+being created for devices that failed probes.  This resulted in 
+oops/WARN_ON/BUG_ON executions through the kernel depending on what 
+actions were on going.
 
-Thanks,
-J. Eric Vaughan
-Iomega Corporation
+The first part of the fix (submitted to linux-ia64 and acpi-devel for 
+review -- I'm including it for completeness) was to fix incorrect error 
+handling in the ACPI layer:
+
+===== drivers/acpi/pci_irq.c 1.35 vs edited =====
+--- 1.35/drivers/acpi/pci_irq.c 2005-01-04 21:48:17 -05:00
++++ edited/drivers/acpi/pci_irq.c       2005-01-14 08:14:34 -05:00
+@@ -487,10 +487,10 @@
+        * If no PRT entry was found, we'll try to derive an IRQ from the
+        * device's parent bridge.
+        */
+-       if (!gsi)
++       if (gsi == -1)
+               gsi = acpi_pci_irq_derive(dev, pin,
+                                         &edge_level, &active_high_low);
+-       if (!gsi)
++       if (gsi == -1)
+               return_VOID;
+
+       /*
+
+The second part of the fix is to the core IDE layer and to the SGI IOC4 
+IDE driver which need to handle errors properly from failed hwif 
+initializations.  This patch is attached for review.
+
+--------------080509080602010103090303
+Content-Type: text/plain;
+ name="acpi-ide.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="acpi-ide.patch"
+
+===== drivers/ide/ide-probe.c 1.90 vs edited =====
+--- 1.90/drivers/ide/ide-probe.c	2004-12-10 14:12:14 -05:00
++++ edited/drivers/ide/ide-probe.c	2005-01-14 08:18:43 -05:00
+@@ -841,7 +841,10 @@
+ 	if (fixup)
+ 		fixup(hwif);
+ 
+-	hwif_init(hwif);
++	if (!hwif_init(hwif)) {
++		printk("%s: Failed to initialize IDE interface\n", hwif->name);
++		return -1;
++	}
+ 
+ 	if (hwif->present) {
+ 		u16 unit = 0;
+===== drivers/ide/pci/sgiioc4.c 1.22 vs edited =====
+--- 1.22/drivers/ide/pci/sgiioc4.c	2005-01-06 20:35:35 -05:00
++++ edited/drivers/ide/pci/sgiioc4.c	2005-01-14 08:18:56 -05:00
+@@ -669,7 +669,10 @@
+ 		printk(KERN_INFO "%s: %s Bus-Master DMA disabled\n",
+ 		       hwif->name, d->name);
+ 
+-	probe_hwif_init(hwif);
++	if (probe_hwif_init(hwif)) {
++		printk(KERN_INFO "%s: initialization failed\n", hwif->name);
++		return -EIO;
++	}
+ 
+ 	/* Create /proc/ide entries */
+ 	create_proc_ide_interfaces(); 
+
+--------------080509080602010103090303--
