@@ -1,77 +1,70 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_nv.c, don't have libata perform phy reset
-Date: Sat, 06 Nov 2004 12:09:39 -0500
-Message-ID: <418D0553.902@pobox.com>
-References: <418C3D3A.6010501@nvidia.com>
+Subject: [BK PATCHES] 2.6.x ATA build fix
+Date: Sat, 6 Nov 2004 15:25:14 -0500
+Message-ID: <20041106202514.GA5788@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:51879 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261424AbUKFRJw
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 6 Nov 2004 12:09:52 -0500
-In-Reply-To: <418C3D3A.6010501@nvidia.com>
+Received: from havoc.gtf.org ([69.28.190.101]:20411 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S261462AbUKFUZX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 6 Nov 2004 15:25:23 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: achew <achew@nvidia.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-
-achew wrote:
-> This patch works around the issue reported in bug 3352 on the bugzilla 
-> bug database.
-> 
-> Link to the bug report: http://bugme.osdl.org/show_bug_cgi?id=3352
-> 
-> In particular, we keep libata from performing the phy reset.  Doing the 
-> phy reset sometimes results in the busy bit failing to deassert.
-> 
-> Signed-off-by: Andrew Chew <achew@nvidia.com>
-> 
-> 
-> --- linux-2.6.10-rc1-bk15/drivers/scsi/sata_nv.c    2004-11-05 
-> 17:49:37.000000000 -0800
-> +++ linux/drivers/scsi/sata_nv.c    2004-11-05 17:55:48.000000000 -0800
-> @@ -20,6 +20,9 @@
->  *  If you do not delete the provisions above, a recipient may use your
->  *  version of this file under either the OSL or the GPL.
->  *
-> + *  0.04
-> + *     - Disabled SATA phy reset to work around a problem where busy 
-> bit never
-> + *       deasserts after a phy reset.
->  *  0.03
->  *     - Fixed a bug where the hotplug handlers for non-CK804/MCP04 were 
-> using
->  *       mmio_base, which is only set for the CK804/MCP04 case.
-> @@ -44,7 +47,7 @@
-> #include <linux/libata.h>
-> 
-> #define DRV_NAME            "sata_nv"
-> -#define DRV_VERSION            "0.03"
-> +#define DRV_VERSION            "0.04"
-> 
-> #define NV_PORTS            2
-> #define NV_PIO_MASK            0x1f
-> @@ -221,7 +224,6 @@
-> static struct ata_port_info nv_port_info = {
->     .sht        = &nv_sht,
->     .host_flags    = ATA_FLAG_SATA |
-> -              ATA_FLAG_SATA_RESET |
->               ATA_FLAG_SRST |
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org
 
 
-I'm not quite ready to apply this just yet.  Reasons:
+Mainly a build fix from Meelios(sp?).
 
-1) The code has two resets!  I think it would be best to remove 
-ATA_FLAG_SRST, since SATA reset should cover that.
+Please do a
 
-2) Once ATA_FLAG_SRST is removed, if the problem still appears, I would 
-prefer that you root-caused this problem.  If it's a problem with the 
-generic libata SATA reset code, I would prefer to fix that, rather than 
-keep working around a bug that should be fixed.
+	bk pull bk://gkernel.bkbits.net/libata-2.6
 
-	Jeff
+This will update the following files:
 
+ include/linux/ata.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
+through these ChangeSets:
 
+<jgarzik@pobox.com> (04/11/06 1.2473)
+   Remove silly comment from linux/ata.h.
+   
+   XFER_xxx is not necessarily "legacy IDE 'stuff'"
+
+<mroos@linux.ee> (04/11/06 1.2472)
+   [PATCH] ata.h undefined types in USB
+   
+   This is todays BK on a x86:
+   
+     CC [M]  drivers/usb/storage/freecom.o
+   In file included from include/linux/hdreg.h:4,
+                    from drivers/usb/storage/freecom.c:32:
+   include/linux/ata.h:197: error: parse error before "u32"
+   ...
+   and so on for tens of lines.
+   
+   Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
+
+diff -Nru a/include/linux/ata.h b/include/linux/ata.h
+--- a/include/linux/ata.h	2004-11-06 14:17:52 -05:00
++++ b/include/linux/ata.h	2004-11-06 14:17:52 -05:00
+@@ -24,6 +24,8 @@
+ #ifndef __LINUX_ATA_H__
+ #define __LINUX_ATA_H__
+ 
++#include <linux/types.h>
++
+ /* defines only for the constants which don't work well as enums */
+ #define ATA_DMA_BOUNDARY	0xffffUL
+ #define ATA_DMA_MASK		0xffffffffULL
+@@ -140,8 +142,6 @@
+ 	XFER_PIO_2		= 0x0A,
+ 	XFER_PIO_1		= 0x09,
+ 	XFER_PIO_0		= 0x08,
+-
+-	/* legacy IDE 'stuff' */
+ 	XFER_SW_DMA_2		= 0x12,
+ 	XFER_SW_DMA_1		= 0x11,
+ 	XFER_SW_DMA_0		= 0x10,
