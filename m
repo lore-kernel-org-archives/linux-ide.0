@@ -1,39 +1,43 @@
-From: maney@two14.net (Martin Maney)
-Subject: Re: [PATCH] Re: 2.4.22-rc2 ext2 filesystem corruption
-Date: Thu, 8 Jan 2004 10:25:08 -0600
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: Re: [PATCH] make ide driver compilable as kernel module (2.6.0)
+Date: Thu, 8 Jan 2004 19:19:38 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040108162508.GA4017@furrr.two14.net>
-References: <200310311941.31930.bzolnier@elka.pw.edu.pl> <20040104011222.GA1433@furrr.two14.net> <200401040307.48530.bzolnier@elka.pw.edu.pl>
-Reply-To: maney@pobox.com
+Message-ID: <200401081919.38846.bzolnier@elka.pw.edu.pl>
+References: <16381.38890.741153.45100@ipc1.karo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsl017-022-215.chi1.dsl.speakeasy.net ([69.17.22.215]:46862
-	"EHLO gateway.two14.net") by vger.kernel.org with ESMTP
-	id S265528AbUAHQZX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Jan 2004 11:25:23 -0500
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:22934 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S265939AbUAHSQk
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Jan 2004 13:16:40 -0500
+In-Reply-To: <16381.38890.741153.45100@ipc1.karo>
 Content-Disposition: inline
-In-Reply-To: <200401040307.48530.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: maney@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Lothar Wassmann <LW@KARO-electronics.de>
+Cc: linux-ide@vger.kernel.org
 
-On Sun, Jan 04, 2004 at 03:07:48AM +0100, Bartlomiej Zolnierkiewicz wrote:
-> I see nothing in 2.4.23 which can explain this.
-> Probably if you boot from Promise you will see corruption again.
+On Thursday 08 of January 2004 18:48, Lothar Wassmann wrote:
+> Hi,
 
-If tin's flags are correct I forgot to reply to this after testing
-that.  In fact I did *not* observe the corruption when I booted from
-the Promise, but I didn't have the same file (an XFree86 source
-archive) that I was using previously.  I think I know which version it
-was, and I'll see about retesting with that.  If that works I'll try to
-recreate a kernel of the version I originally encountered this with and
-try that.  Probably won't have time until the weekend, what with the
-twins' birthday party this evening.
+Hi,
 
--- 
-The trouble with customizing your environment is that it just doesn't
-propagate, so it's not even worth the trouble.  -- Joel Spolsky
+> the following patch enables building the ide driver as a kernel
+> module:
 
-I keep my life in a CVS repository. -- Joey Hess
+It makes them compile, but such modules won't work correctly for some cases.
+It should be fixed similarly as in 2.4.23 (IIRC), I've tried to (patch was posted
+on lkml but without [PATCH] in the subject), but was reported that it doesn't
+work.  This issue requires more work (please read archives for details).
+
+> (BTW: the MAINTAINERS file lists 'B.Zolnierkiewicz@elka.pw.edu.pl' as
+>  the maintainers email address, while all the source files say:
+> '<bkz@linux-ide.org>') --- linux-2.6.0/drivers/block/ll_rw_blk.c	17 Dec
+
+Both work currently.  Please use B.Zolnierkiewicz@elka.pw.edu.pl,
+bkz@linux-ide.org is just a forward.
+
+--bart
 
