@@ -1,43 +1,38 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata AHCI support for Intel ICH6RW
-Date: Fri, 03 Sep 2004 07:48:40 -0400
+Subject: Re: how to enable write back cache on SATA drive?
+Date: Fri, 03 Sep 2004 07:50:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <41385A18.5020103@pobox.com>
-References: <1094184596.16175.3.camel@unicorn.rpratap.homelinux.org>
+Message-ID: <41385A71.5090600@pobox.com>
+References: <ch39av$75s$1@sea.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:13452 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S269636AbUICLtA
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:18316 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S269631AbUICLuV
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 3 Sep 2004 07:49:00 -0400
-In-Reply-To: <1094184596.16175.3.camel@unicorn.rpratap.homelinux.org>
+	Fri, 3 Sep 2004 07:50:21 -0400
+In-Reply-To: <ch39av$75s$1@sea.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Ravi Pratap M <ravi@ximian.com>
-Cc: linux-ide@vger.kernel.org, russb@emc.com
+To: Brett Russ <russb@emc.com>
+Cc: linux-ide@vger.kernel.org
 
-Ravi Pratap M wrote:
-> Hi guys,
+Brett Russ wrote:
+> A coworker is trying to get this done to no avail.  He's tried hdparm, 
+> blktool, sginfo, and scsiinfo without luck--drives appear in write 
+> through cache mode and performance testing confirms.  I've not been 
+> directly involved but need to see progress.  I had the most hope for 
+> blktool but that failed with "BLKFLSBUF: Operation not supported"
 > 
-> My Dell Dimension 8400 machine has the latest Intel ICH6RW controller
-> and I am running kernel 2.6.8.1. I was under the impression that
-> libata's ata_piix driver now supports AHCI mode but when I set the BIOS
-> to that setting, the kernel doesn't see anything.
+> Devices are Maxtor 250G connected to ICH6R in Enhanced non-AHCI mode 
+> using Garzik's 2.6.8.1 libata bk kernel tree (last sync'd ~20040820).
 > 
-> 
-> Has the AHCI driver not fully been integrated into mainline libata ? I
-> downloaded the latest prepatch kernel but I still don't see any AHCI
-> driver (I found an ahci.c that you posted to linux-kernel sometime in
-> April 2004 but that is missing from the main linux kernel source tree
-> that I have downloaded here).
+> See results of some commands below...all snippets from emails to me.
 
 
-Nothing new to add beyond that of
-http://linux.yyz.us/sata/sata-status.html
-
-AHCI _should_ be going in any day now (well, after Labor Day vacation), 
-so it will appear RSN.
+At present, you cannot turn on wcache, if your drives boot up with 
+wcache off.  When SMART support is added, the ability to turn this 
+on/off will be added at the same time.
 
 	Jeff
 
