@@ -1,91 +1,74 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: ide-cd question
-Date: Fri, 18 Mar 2005 17:42:59 +0100
-Message-ID: <58cb370e05031808424e549b9a@mail.gmail.com>
-References: <7A8F92187EF7A249BF847F1BF4903C04010EEA2A@ausx2kmpc103.aus.amer.dell.com>
+Subject: Re: SATA/IDE strangeness (ATI chip)
+Date: Fri, 18 Mar 2005 18:01:21 +0100
+Message-ID: <58cb370e05031809012b59157c@mail.gmail.com>
+References: <4239C48A.2050608@gmx.de>
 Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.201]:31339 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261676AbVCRQnC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Mar 2005 11:43:02 -0500
-Received: by wproxy.gmail.com with SMTP id 67so169349wri
-        for <linux-ide@vger.kernel.org>; Fri, 18 Mar 2005 08:43:00 -0800 (PST)
-In-Reply-To: <7A8F92187EF7A249BF847F1BF4903C04010EEA2A@ausx2kmpc103.aus.amer.dell.com>
+Received: from wproxy.gmail.com ([64.233.184.192]:31341 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261899AbVCRRBW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Mar 2005 12:01:22 -0500
+Received: by wproxy.gmail.com with SMTP id 67so174499wri
+        for <linux-ide@vger.kernel.org>; Fri, 18 Mar 2005 09:01:21 -0800 (PST)
+In-Reply-To: <4239C48A.2050608@gmx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Stuart_Hayes@dell.com" <Stuart_Hayes@dell.com>
-Cc: stuarthayes@austin.rr.com, axboe@suse.de, linux-ide@vger.kernel.org
+To: Oliver Korpilla <Oliver.Korpilla@gmx.de>
+Cc: debian-amd64@lists.debian.org, linux-ide@vger.kernel.org
 
-On Thu, 17 Mar 2005 10:17:58 -0600, Stuart_Hayes@dell.com
-<Stuart_Hayes@dell.com> wrote:
-> Jens Axboe wrote:
-> > On Fri, Mar 04 2005, Stuart_Hayes@Dell.com wrote:
-> >>
-> >>>
-> >>> There's still a problem here, you are not initializing nsectors for
-> >>> non-pc requests. And your comments wrap :)
-> >>>
-> >>>         int nsectors = rq->hard_nr_sectors;
-> >>>
-> >>>         if (blk_pc_request(rq))
-> >>>                 nsectors = (rq->data_len + 511) >> 9;         if
-> >>>                 (!nsectors) nsectors = 1;
-> >>>
-> >>>         ...
-> >>>
-> >>> Can you resend with that fixed up and with a Signed-off-by header?
-> >>
-> >> Here it is.  Thanks for all the help.  I'm attaching as a file, too,
-> >> just in case it gets garbled again.
-> >> Stuart
-> >>
-> >>
-> >> Signed-off-by: Stuart Hayes <stuart_hayes@dell.com>
-> >>
-> >> --- linux-2.6.11/drivers/ide/ide-io.c.orig   2005-03-04
-> >> 16:11:14.000000000 -0500 +++
-> >> linux-2.6.11/drivers/ide/ide-io.c    2005-03-04 16:19:19.000000000
-> >>              -0500 @@ -516,7 +516,19 @@ static ide_startstop_t
-> >> ide_atapi_error(i hwif->OUTB(WIN_IDLEIMMEDIATE, IDE_COMMAND_REG);
-> >>
-> >>      if (rq->errors >= ERROR_MAX) {
-> >> -            drive->driver->end_request(drive, 0, 0);
-> >> +            /*
-> >> +             * make sure request is fully ended--otherwise the
-> >> +             * command will be retried without rq->errors getting
-> >> +             * reset to zero, which could cause us to get stuck
-> >> +             * in a loop with infinite retries without any more +
-> * reset
-> >> attempts +            */
-> >> +            int nsectors = rq->hard_nr_sectors;
-> >> +            if (blk_pc_request(rq))
-> >> +                    nsectors = (rq->data_len + 511) >> 9;
-> >> +            if (!nsectors)
-> >> +                    nsectors = 1;
+Hi,
 
-ide_end_request() handles this case differently
-and this code path is used not only by ide-cd.
-
-You've changed the current behavior here.
-The question is - what are the consequences of that?
-
-> >> +            drive->driver->end_request(drive, 0, nsectors);
-> >>      } else {
-> >>              if ((rq->errors & ERROR_RESET) == ERROR_RESET) {
-> >>                      ++rq->errors;
-> >
-> > Looks good, Bart care to pick this up?
-
-This is not so obvious for me...
-
-> > Signed-off-by: Jens Axboe <axboe@suse.de>
+On Thu, 17 Mar 2005 18:55:22 +0100, Oliver Korpilla
+<Oliver.Korpilla@gmx.de> wrote:
+> Hello!
 > 
-> Bart--
+> On my MSI motherboard there are the following devices:
 > 
-> Is there a chance you might pick this up, or is there a problem with it?
+> 0000:00:11.0 IDE interface: ATI Technologies Inc: Unknown device 437a
+> 0000:00:12.0 IDE interface: ATI Technologies Inc: Unknown device 4379
+> 0000:00:14.1 IDE interface: ATI Technologies Inc: Unknown device 4376
 > 
-> Thanks
-> Stuart
->
+> These are listed in the PCI ID database (not committed yet):
+> 
+> 4376    Standard Dual Channel PCI IDE Controller ATI
+> 4379    ATI 4379 Serial ATA Controller
+> 437a    ATI 437A Serial ATA Controller
+> 
+> The 1st SATA controller seems to work with the SATA_SIL driver from
+> vanilla 2.6.11 (and none sooner, I tried), and I'm using it that way
+> now. Since the Debian Pure64 CD doesn't come with that, it doesn't find
+> a HD when trying to install with the CD.
+> 
+> I have the following problems:
+> ------------------------------
+> * Though the SATA is configured in IDE mode in BIOS it does not show up
+> as IDE within Linux and this does not change when the ATIIXP driver is
+> loaded - ide2 is not recognized as a bus with connected devices. My SATA
+> HD is listed by the BIOS to be channel 2 master, while CD-ROM on the
+> Dual ATA is listed on channel 0, channel 1 is unused, so shouldn't the
+> SATA drive show up as /dev/hde or something???
+
+Linux no longer use legacy/obsolete BIOS ordering/naming.
+You can name /dev nodes however you want using udev.
+
+> * How can I tune the ATIIXP driver via parameters or source modification
+> so it recognizes the SATA controllers as devices to configure???
+
+What for?
+
+> * How can I force ANY IDE driver to recognize these SATA drives in IDE
+> mode?
+> 
+> This is a mail regarding this topic I'm confused about. The author seems
+> to think, ATIIXP can do the 4379 as well:
+
+It can't (reliably).
+
+> http://www.ussg.iu.edu/hypermail/linux/kernel/0412.1/1460.html
+> 
+> Please let me know if I can provide you with any additional data.
+> 
+> Thanks and with kind regards,
+> Oliver Korpilla
