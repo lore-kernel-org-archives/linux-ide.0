@@ -1,96 +1,81 @@
-From: James Courtier-Dutton <James@superbug.demon.co.uk>
-Subject: Re: [BK-Patch] ST3160023AS needs mod15
-Date: Fri, 02 Jul 2004 17:23:05 +0100
+From: Tigran Aivazian <tigran@veritas.com>
+Subject: Re: question about SATA and IDE DVD/CD drives.
+Date: Fri, 2 Jul 2004 17:28:03 +0100 (BST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40E58BE9.7090000@superbug.demon.co.uk>
-References: <Pine.GSO.4.33.0407021149400.25702-100000@sweetums.bluetronic.net>
+Message-ID: <Pine.LNX.4.44.0407021704060.2190-100000@einstein.homenet>
+References: <Pine.LNX.4.44.0407021656110.2190-100000@einstein.homenet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anchor-post-36.mail.demon.net ([194.217.242.86]:62987 "EHLO
-	anchor-post-37.mail.demon.net") by vger.kernel.org with ESMTP
-	id S264697AbUGBQWS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jul 2004 12:22:18 -0400
-In-Reply-To: <Pine.GSO.4.33.0407021149400.25702-100000@sweetums.bluetronic.net>
+Received: from pengo.systems.pipex.net ([62.241.160.193]:65468 "EHLO
+	pengo.systems.pipex.net") by vger.kernel.org with ESMTP
+	id S263020AbUGBQ3a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Jul 2004 12:29:30 -0400
+In-Reply-To: <Pine.LNX.4.44.0407021656110.2190-100000@einstein.homenet>
 List-Id: linux-ide@vger.kernel.org
-To: Ricky Beam <jfbeam@bluetronic.net>
+To: James Courtier-Dutton <James@superbug.demon.co.uk>
 Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Ricky Beam wrote:
-> This BitKeeper patch contains the following changesets:
-> 1.1414
-> 
-> # This is a BitKeeper patch.  What follows are the unified diffs for the
-> # set of deltas contained in the patch.  The rest of the patch, the part
-> # that BitKeeper cares about, is below these diffs.
-> # User:	jfbeam
-> # Host:	troz.com
-> # Root:	/opt/kernel/src/bk-linux-2.6
-> 
-> #
-> #--- 1.27/drivers/scsi/sata_sil.c	2004-06-22 20:42:10 -04:00
-> #+++ 1.28/drivers/scsi/sata_sil.c	2004-07-02 11:42:45 -04:00
-> #@@ -86,6 +86,7 @@
-> # 	{ "ST360015AS",		SIL_QUIRK_MOD15WRITE },
-> # 	{ "ST380023AS",		SIL_QUIRK_MOD15WRITE },
-> # 	{ "ST3120023AS",	SIL_QUIRK_MOD15WRITE },
-> #+	{ "ST3160023AS",	SIL_QUIRK_MOD15WRITE },
-> # 	{ "ST340014ASL",	SIL_QUIRK_MOD15WRITE },
-> # 	{ "ST360014ASL",	SIL_QUIRK_MOD15WRITE },
-> # 	{ "ST380011ASL",	SIL_QUIRK_MOD15WRITE },
-> #
-> 
-> # Diff checksum=b1066f06
-> 
-> 
-> # Patch vers:	1.3
-> # Patch type:	REGULAR
-> 
-> == ChangeSet ==
-> torvalds@athlon.transmeta.com|ChangeSet|20020205173056|16047|c1d11a41ed024864
-> jfbeam@spacemeat.troz.com|ChangeSet|20040702041255|33131
-> D 1.1414 04/07/02 11:42:52-04:00 jfbeam@troz.com +1 -0
-> B torvalds@athlon.transmeta.com|ChangeSet|20020205173056|16047|c1d11a41ed024864
-> C
-> c [PATCH] sata_sil: Add ST3160023AS for mod15
-> c
-> c Signed-off-by: Ricky Beam <jfbeam@troz.com>
-> K 32905
-> P ChangeSet
-> ------------------------------------------------
-> 
-> 0a0
-> 
->>jgarzik@redhat.com|drivers/scsi/sata_sil.c|20031021232136|13432|e65affa611eb11bd jfbeam@troz.com|drivers/scsi/sata_sil.c|20040702154245|50292
-> 
-> 
-> == drivers/scsi/sata_sil.c ==
-> jgarzik@redhat.com|drivers/scsi/sata_sil.c|20031021232136|13432|e65affa611eb11bd
-> jgarzik@pobox.com|drivers/scsi/sata_sil.c|20040623004210|47591
-> D 1.28 04/07/02 11:42:45-04:00 jfbeam@troz.com +1 -0
-> B torvalds@athlon.transmeta.com|ChangeSet|20020205173056|16047|c1d11a41ed024864
-> C
-> c add ST3160023AS to blacklist
-> K 50292
-> O -rw-rw-r--
-> P drivers/scsi/sata_sil.c
-> ------------------------------------------------
-> 
-> I88 1
-> 	{ "ST3160023AS",	SIL_QUIRK_MOD15WRITE },
-> 
-> # Patch checksum=52314a1b
-> 
+> > For some strange reason, you need the PATA HD driver compiled into the 
+> > kernel, together with the SATA driver compiled into the kernel.
+> > Then SATA takes the HDs, and the PATA HD driver is used to identify the 
+> > DVD drive, and thus you can then load the PATA CD module, or the 
+> > IDE-SCSI module to access the DVD drives.
+> > 
+> > I have a ICH5 chipset, so I had exactly the same problems as you.
+> > The strange bit is needing the PATA HD driver compiled into the kernel, 
+> > even though you only need PATA CD/DVD drivers.
 
-What does SIL_QUIRK_MOD15WRITE do?
-I have used ST3160023AS for a long time now without any problems in 
-kernel 2.6.x
+No, still doesn't work. SATA disk is seen but DVD is not seen.
 
-It would be nice if the "hdparm -I /dev/sda" would work(or something 
-similar) on the libata driver, just like it worked on the PATA driver.
-Does anyone know how to do it?
+Here is config:
 
-James
+CONFIG_IDE=y
+CONFIG_BLK_DEV_IDE=y
+CONFIG_BLK_DEV_IDEDISK=y
+CONFIG_BLK_DEV_IDECD=y
+
+but worse, now I get an oops by doing cat /proc/iomem consistently:
+
+Unable to handle kernel paging request at ffffffff00000000 RIP: 
+<ffffffff801ce50c>{strnlen+13}
+PML4 103027 PGD 0 
+Oops: 0000 [1] SMP 
+CPU 0 
+Modules linked in: udf iptable_filter ip_tables
+Pid: 1593, comm: cat Not tainted 2.6.7
+RIP: 0010:[<ffffffff801ce50c>] <ffffffff801ce50c>{strnlen+13}
+RSP: 0018:000001002ae3fd60  EFLAGS: 00010297
+RAX: ffffffff00000000 RBX: 000001003d178014 RCX: 000000000000000a
+RDX: 000001002ae3feb8 RSI: fffffffffffffffe RDI: ffffffff00000000
+RBP: 0000000000000000 R08: 00000000fffffffe R09: 0000000000000004
+R10: 00000000ffffffff R11: 0000000000000000 R12: 000001003d178fff
+R13: ffffffff00000000 R14: 00000000ffffffff R15: 000001002ae3fdc8
+FS:  0000002a958624c0(0000) GS:ffffffff8040a800(0000) 
+knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: ffffffff00000000 CR3: 0000000000101000 CR4: 00000000000006e0
+Process cat (pid: 1593, threadinfo 000001002ae3e000, task 
+000001003c9ea6b0)
+Stack: ffffffff801cedc6 0000010000000001 ffffffff80195bfd 0000000000001000 
+       000001003d178000 ffffffff802c90bd 0000010001e39468 0000010000002000 
+       0000000000002000 0000000000000400 
+Call Trace:<ffffffff801cedc6>{vsnprintf+752} 
+<ffffffff80195bfd>{proc_lookup+223} 
+       <ffffffff80183909>{seq_printf+165} 
+<ffffffff801740c2>{do_lookup+105} 
+       <ffffffff8017497b>{link_path_walk+2157} 
+<ffffffff801702fc>{cp_new_stat+233} 
+       <ffffffff80135d4e>{r_show+113} <ffffffff801833fa>{seq_read+273} 
+       <ffffffff801678af>{vfs_read+201} <ffffffff80167b00>{sys_read+73} 
+       <ffffffff8010e976>{system_call+126} 
+
+Code: 80 3f 00 74 13 48 83 ee 01 48 83 c0 01 48 83 fe ff 74 05 80 
+RIP <ffffffff801ce50c>{strnlen+13} RSP <000001002ae3fd60>
+CR2: ffffffff00000000
+
+Kind regards
+Tigran
+
 
 
