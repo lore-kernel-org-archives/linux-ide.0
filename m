@@ -1,43 +1,32 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch] libata: add ioctls to support SMART
-Date: Mon, 30 Aug 2004 13:58:00 -0400
+Subject: Re: [PATCH] libata ATA vs SATA detection and workaround.
+Date: Mon, 30 Aug 2004 13:59:42 -0400
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <41336AA8.1070401@pobox.com>
-References: <200408301531.i7UFVBg29089@ra.tuxdriver.com> <413361BF.8020805@pobox.com> <20040830124225.A4358@florence.linkmargin.com>
+Message-ID: <41336B0E.1090000@pobox.com>
+References: <41320DAF.2060306@wasp.net.au> <41321288.4090403@pobox.com> <413216CC.5080100@wasp.net.au> <4132198B.8000504@pobox.com> <41321F7F.7050300@pobox.com> <41333CDC.5040106@wasp.net.au> <41334058.4050902@wasp.net.au> <413350A2.1000003@pobox.com> <41335723.40907@wasp.net.au> <413357AE.3000009@pobox.com> <41336141.7010407@wasp.net.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S268723AbUH3SEP@vger.kernel.org>
-In-Reply-To: <20040830124225.A4358@florence.linkmargin.com>
-To: Andy Warner <andyw@pobox.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S268722AbUH3SEL@vger.kernel.org>
+In-Reply-To: <41336141.7010407@wasp.net.au>
+To: Brad Campbell <brad@wasp.net.au>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
 
-Andy Warner wrote:
-> Jeff Garzik wrote:
-> 
->>[...]
->>That implies, then, that you would add code to libata-scsi.c that 
->>translates the ATA-passthru SCSI command into an ATA command using the 
->>ata_scsi_translate() infrastructure.
-> 
-> 
-> Speaking of which - I'm working on this and want to find like
-> minded people playing in the libata-scsi.c/04-262r<n>.pdf
-> sandbox, and collaborate with them.
-> 
-> If you're one of these people, ping me off list and we
-> can pool our efforts.
+Brad Campbell wrote:
+> Pretty new at kernel code. (And C for that matter)
 
-I am trying convince someone to do it for me, since I'm working on new 
-controller support ATM ;-)
+Since you've been so helpful, I choose to disbelieve this ;-)
 
-It shouldn't be hard -- just a new function "ata_scsi_passthru_xlat" 
-that translates the 04-262r<n>.pdf opcode into struct ata_taskfile. 
-That's all that's needed for Step One.
 
-John mentioned he might look at it...  but why don't you guys (and 
-everyone else interested) just work publicly on linux-ide?  Share the 
-knowledge and patches :)
+> I did note that it appears it's not going to do the right thing if we 
+> have more than one device per host, but I guess thats not going to be an 
+> issue for SATA for the near future anyway.
+> 
+> How's this grab you?
+
+Looks perfect.
+
+Confirm for me that it solves your problem, and I'll push it upstream.
 
 	Jeff
