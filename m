@@ -1,82 +1,117 @@
-From: Andre Duffeck <andre@duffeck.de>
-Subject: Poor hd-performance (ALI M15x3-Chipset)
-Date: Fri, 26 Nov 2004 18:02:11 +0100
-Message-ID: <1101488531.5324.14.camel@laptop>
+From: Rasmus Melgaard <rme@image.dk>
+Subject: Solution -> sata_sil + Maxtor problem
+Date: Sat, 27 Nov 2004 17:57:39 +0000
+Message-ID: <200411271757.40060.rme@image.dk>
+References: <200410080948.45286.rme@image.dk> <4166A93A.4030403@pobox.com> <41A461E8.2040207@dgreaves.com>
+Reply-To: rme@image.dk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus.kernel.org ([204.152.189.113]:28865 "EHLO zeus.kernel.org")
-	by vger.kernel.org with ESMTP id S262237AbUKZTQT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 Nov 2004 14:16:19 -0500
-Received: from vs169150.vserver.de (Debian-exim@vs169150.vserver.de [62.75.169.150])
-	by zeus.kernel.org (8.12.11/8.11.6) with ESMTP id iAQHtqDA011100
-	for <linux-ide@vger.kernel.org>; Fri, 26 Nov 2004 09:55:59 -0800
-Received: from [213.23.32.19] (helo=localhost)
-	by vs169150.vserver.de with asmtp (Exim 4.34)
-	id 1CXjUU-0007UX-PN
-	for linux-ide@vger.kernel.org; Fri, 26 Nov 2004 18:02:39 +0100
+Received: from smarthost1.tiscali.dk ([62.79.79.25]:46268 "EHLO
+	smarthost1.tiscali.dk") by vger.kernel.org with ESMTP
+	id S261285AbUK0R5n (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 27 Nov 2004 12:57:43 -0500
+In-Reply-To: <41A461E8.2040207@dgreaves.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: linux-ide@vger.kernel.org
 
-hello,
+Thanks David, goggle on!
 
-i'm experiencing extremely poor performance of my harddisk. it is a
-laptop-disk, but it should be faster, i think.
+Well, that did it! I narrowed it a bit.
 
-laptop:/usr/src/linux/linux-2.6.9# hdparm -tT /dev/hda
+For anybody else with similar problems
+ - I have a Asus A7V (VIA chipset, early revision 1.01 of MB), absolutely 
+latest bios was installed. 
+ - Silicon Image 3112 pci-sata-controller (bios 4250). 
+ - Maxtor 160Gb SATA disk (6Y160M0), but the problem is probably not related 
+to the drive.
 
-/dev/hda:
- Timing cached reads:   1248 MB in  2.00 seconds =3D 623.16 MB/sec
- Timing buffered disk reads:   14 MB in 10.85 seconds =3D   1.29 MB/sec
+ - To solve problem below, disable "Byte Merge" PCI-feature in the bios. 
+Silicon Image 3112 doesn't work with it (in Linux).
 
-laptop:/home/andre# hdparm /dev/hda
+Everythings peacy for now, what was I thinking of enabling byte-merge feature 
+in the bios, I knew it was buggy. 
 
-/dev/hda:
- multcount    =3D  0 (off)
- IO_support   =3D  0 (default 16-bit)
- unmaskirq    =3D  0 (off)
- using_dma    =3D  1 (on)
- keepsettings =3D  0 (off)
- readonly     =3D  0 (off)
- readahead    =3D 256 (on)
- geometry     =3D 16383/255/63, sectors =3D 30005821440, start =3D 0
-
-playing with the settings did not help.
-
-laptop:/usr/src/linux/linux-2.6.9# hdparm -X66 /dev/hda
-		/dev/hda:
-		 setting xfermode to 66 (UltraDMA mode2)
-laptop:/home/andre# hdparm -c1 /dev/hda
-		/dev/hda:
-		 setting 32-bit IO_support flag to 1
-		 IO_support   =3D  1 (32-bit)
-
-laptop:/home/andre# hdparm -t /dev/hda
-		/dev/hda:
-		 Timing buffered disk reads:   14 MB in 10.75 seconds =3D   1.30 MB/s=
-ec
-
-here some more information:
-dmesg:
-ALI15X3: IDE controller at PCI slot 0000:00:10.0
-ACPI: PCI interrupt 0000:00:10.0[A]: no GSI
-ALI15X3: chipset revision 196
-ALI15X3: not 100% native mode: will probe irqs later
-    ide0: BM-DMA at 0x2480-0x2487, BIOS settings: hda:DMA, hdb:pio
-    ide1: BM-DMA at 0x2488-0x248f, BIOS settings: hdc:DMA, hdd:pio
-Probing IDE interface ide0...
-hda: FUJITSU MHR2030AT, ATA DISK drive
-
-lspci:
-0000:00:10.0 IDE interface: ALi Corporation M5229 IDE (rev c4)
-
-Can anybody guess what's wrong here?
-
-thank you,
-
-Andr=E9
+/Rasmus Melgaard
 
 
+On Wednesday 24 November 2004 10:26, David Greaves wrote:
+> Just for the Google of it...
+>
+> I had almost exactly this problem with a cheap plugin sata_sil on 2.6.9
+> on Maxtor 250Gb drives with an old Asus A7V133 motherboard and solved it
+> by upgrading the motherboard BIOS and/or resetting the BIOS values to
+> defaults. I narrowed it down to PCI bus settings.
+>
+> David
+>
+> Jeff Garzik wrote:
+> > Rasmus Melgaard wrote:
+> >> Hi,
+> >>
+> >> I have a IDE/SATA problem. I have a Silicon Image 3112
+> >> sata-controller with a Maxtor 160 Gb drive connected. Controller and
+> >> drive is detected in the kernel-boot process, but an error happens
+> >> during boot, I think the linux driver gets an response it doesn't
+> >> expect.
+> >>
+> >> I'm using for testing the mm-kernel: 2.6.9-rc1-mm1. Every thing seems
+> >> to work in Windows, but since I mainly use Linux (Gentoo), I would
+> >> like it to work here.
+> >>
+> >> Does anybody have an ideer of how to proceed to solve this problem ?
+> >> Mvh
+> >> Rasmus
+> >>
+> >> Important part of log:
+> >> Sep  5 15:55:39 rasmus scsi1 : sata_sil
+> >> Sep  5 15:55:39 rasmus ata2: no device found (phy stat 00000000)
+> >> Sep  5 15:55:39 rasmus scsi2 : sata_sil
+> >> Sep  5 15:55:39 rasmus Vendor: ATA       Model: Maxtor 6Y160M0
+> >> Rev: YAR5
+> >> Sep  5 15:55:39 rasmus Type:   Direct-Access
+> >> ANSI SCSI revision: 05
+> >> Sep  5 15:55:39 rasmus SCSI device sda: 320173056 512-byte hdwr
+> >> sectors (163929 MB)
+> >> Sep  5 15:55:39 rasmus SCSI device sda: drive cache: write back
+> >> Sep  5 15:55:39 rasmus /dev/scsi/host1/bus0/target0/lun0:<3>ata1:
+> >> command 0x25 timeout, stat 0x58 host_stat 0x60
+> >> Sep  5 15:55:39 rasmus ata1: status=0x58 { DriveReady SeekComplete
+> >> DataRequest }
+> >> Sep  5 15:55:39 rasmus SCSI error : <1 0 0 0> return code = 0x8000002
+> >> Sep  5 15:55:39 rasmus Current sda: sense = 70 10
+> >> Sep  5 15:55:39 rasmus end_request: I/O error, dev sda, sector 0
+> >> Sep  5 15:55:39 rasmus Buffer I/O error on device sda, logical block 0
+> >> Sep  5 15:55:39 rasmus ATA: abnormal status 0x58 on port 0xE882E087
+> >> Sep  5 15:55:39 rasmus ATA: abnormal status 0x58 on port 0xE882E087
+> >> Sep  5 15:55:39 rasmus ATA: abnormal status 0x58 on port 0xE882E087
+> >> Sep  5 15:55:39 rasmus ata1: command 0x25 timeout, stat 0xd8
+> >> host_stat 0x61
+> >> Sep  5 15:55:39 rasmus ata1: status=0xd8 { Busy }
+> >> Sep  5 15:55:39 rasmus SCSI error : <1 0 0 0> return code = 0x8000002
+> >> Sep  5 15:55:39 rasmus Current sda: sense = 70 10
+> >> Sep  5 15:55:39 rasmus end_request: I/O error, dev sda, sector 0
+> >> Sep  5 15:55:39 rasmus Buffer I/O error on device sda, logical block 0
+> >
+> > It's quite clearly a device error...  Try upgrading your system and
+> > card BIOS, try switching cables, try booting with "noapic" or
+> > "acpi=off" or "pci=biosirq" or something like that...
+> >
+> >     Jeff
+> >
+> >
+> >
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
