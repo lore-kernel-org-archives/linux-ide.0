@@ -1,118 +1,144 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: [PATCH 2.6.11-rc5+ sata_qstor] sata_qstor:  eh_timeout fix
-Date: Mon, 28 Feb 2005 11:22:46 -0500
-Message-ID: <42234556.10206@pobox.com>
-References: <421CE018.5030007@pobox.com> <200502232345.23666.adobriyan@mail.ru> <421D1113.9030502@pobox.com>
+From: Prakash Punnoor <prakashp@arcor.de>
+Subject: 2.6.11-rc5: sata_sil schows drive twice...
+Date: Mon, 28 Feb 2005 17:47:17 +0100
+Message-ID: <42234B15.3060301@arcor.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050903040601080404090103"
-Received: from orb.pobox.com ([207.8.226.5]:29097 "EHLO orb.pobox.com")
-	by vger.kernel.org with ESMTP id S261678AbVB1QYI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2005 11:24:08 -0500
-In-Reply-To: <421D1113.9030502@pobox.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigD2CF7011D9D756CE2F2A6DF2"
+Received: from mail-in-04.arcor-online.net ([151.189.21.44]:44214 "EHLO
+	mail-in-04.arcor-online.net") by vger.kernel.org with ESMTP
+	id S261684AbVB1Qqm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Feb 2005 11:46:42 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------050903040601080404090103
-Content-Type: text/plain; charset=us-ascii; format=flowed
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigD2CF7011D9D756CE2F2A6DF2
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 
-Here is an update to sata_qstor.c to enable full/proper
-register access during eh_timeout handling.
+hi,
 
-Patch is against 2.6.11-rc5 + earlier sata_qstor cosmetic patch.
-
-Signed-off-by: Mark Lord <mlord@pobox.com>
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+dmesg shows this:
 
 
---------------050903040601080404090103
-Content-Type: text/x-patch;
- name="sata_qstor-2.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sata_qstor-2.patch"
+-- ACPI: PCI Interrupt Link [APC3] enabled at IRQ 18
+ACPI: PCI interrupt 0000:01:0b.0[A] -> GSI 18 (level, high) -> IRQ 18
+ata1: SATA max UDMA/100 cmd 0xF0806080 ctl 0xF080608A bmdma 0xF0806000 irq 18
+ata2: SATA max UDMA/100 cmd 0xF08060C0 ctl 0xF08060CA bmdma 0xF0806008 irq 18
+ata1: dev 0 cfg 49:2f00 82:346b 83:7f01 84:4003 85:3c69 86:3c01 87:4003 88:20ff
+ata1: dev 0 ATA, max UDMA7, 156368016 sectors: lba48
+ata1: dev 0 configured for UDMA/100
+scsi0 : sata_sil
+ata2: no device found (phy stat 00000000)
+scsi1 : sata_sil
+  Vendor: ATA       Model: SAMSUNG SP0812C   Rev: SU10
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 156368016 512-byte hdwr sectors (80060 MB)
+SCSI device sda: drive cache: write back
+SCSI device sda: 156368016 512-byte hdwr sectors (80060 MB)
+SCSI device sda: drive cache: write back
+ sda: sda1 sda2 sda3 sda4 < sda5 >
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
 
---- linux-2.6.11-rc5+/drivers/scsi/sata_qstor.c	2005-02-24 11:28:33.000000000 -0500
-+++ linux/drivers/scsi/sata_qstor.c	2005-02-28 11:19:31.000000000 -0500
-@@ -38,7 +38,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"sata_qstor"
--#define DRV_VERSION	"0.03"
-+#define DRV_VERSION	"0.04"
- 
- enum {
- 	QS_PORTS		= 4,
-@@ -120,6 +120,7 @@
- static void qs_bmdma_stop(struct ata_port *ap);
- static u8 qs_bmdma_status(struct ata_port *ap);
- static void qs_irq_clear(struct ata_port *ap);
-+static void qs_eng_timeout(struct ata_port *ap);
- 
- static Scsi_Host_Template qs_ata_sht = {
- 	.module			= THIS_MODULE,
-@@ -152,7 +153,7 @@
- 	.phy_reset		= qs_phy_reset,
- 	.qc_prep		= qs_qc_prep,
- 	.qc_issue		= qs_qc_issue,
--	.eng_timeout		= ata_eng_timeout,
-+	.eng_timeout		= qs_eng_timeout,
- 	.irq_handler		= qs_intr,
- 	.irq_clear		= qs_irq_clear,
- 	.scr_read		= qs_scr_read,
-@@ -212,7 +213,7 @@
- 	/* nothing */
- }
- 
--static void qs_enter_reg_mode(struct ata_port *ap)
-+static inline void qs_enter_reg_mode(struct ata_port *ap)
- {
- 	u8 __iomem *chan = ap->host_set->mmio_base + (ap->port_no * 0x4000);
- 
-@@ -220,17 +221,34 @@
- 	readb(chan + QS_CCT_CTR0);        /* flush */
- }
- 
--static void qs_phy_reset(struct ata_port *ap)
-+static inline void qs_reset_channel_logic(struct ata_port *ap)
- {
- 	u8 __iomem *chan = ap->host_set->mmio_base + (ap->port_no * 0x4000);
--	struct qs_port_priv *pp = ap->private_data;
- 
--	pp->state = qs_state_idle;
- 	writeb(QS_CTR1_RCHN, chan + QS_CCT_CTR1);
-+	readb(chan + QS_CCT_CTR0);        /* flush */
- 	qs_enter_reg_mode(ap);
-+}
-+
-+static void qs_phy_reset(struct ata_port *ap)
-+{
-+	struct qs_port_priv *pp = ap->private_data;
-+
-+	pp->state = qs_state_idle;
-+	qs_reset_channel_logic(ap);
- 	sata_phy_reset(ap);
- }
- 
-+static void qs_eng_timeout(struct ata_port *ap)
-+{
-+	struct qs_port_priv *pp = ap->private_data;
-+
-+	if (pp->state != qs_state_idle) /* healthy paranoia */
-+		pp->state = qs_state_mmio;
-+	qs_reset_channel_logic(ap);
-+	ata_eng_timeout(ap);
-+}
-+
- static u32 qs_scr_read (struct ata_port *ap, unsigned int sc_reg)
- {
- 	if (sc_reg > SCR_CONTROL)
 
---------------050903040601080404090103--
+but I only have one physical drive attached. I don't seem to have problems
+though. Yesterday I got an oops, but I don't know whether it is connected. I
+copied it here just in case.
+
+I don't know whether rc4 or earlier showed this beahaviour. I am sure that
+2.6.10 didn't show it.
+
+If you need more info, just shout...
+
+Here the oops:
+
+nable to handle kernel paging request at virtual address 3ce0d5d8
+ printing eip:
+b0187fe1
+*pde = 00000000
+Oops: 0000 [#1]
+PREEMPT
+Modules linked in: nvidia
+CPU:    0
+EIP:    0060:[<b0187fe1>]    Tainted: P      VLI
+EFLAGS: 00010206   (2.6.11-rc5-ck1)
+EIP is at do_task_stat+0x1a1/0x7a0
+eax: 00000000   ebx: 3ce0d528   ecx: ef1af2e0   edx: 00000001
+esi: e282a590   edi: 00000001   ebp: 00000000   esp: e8dbbe10
+ds: 007b   es: 007b   ss: 0068
+Process gkrellm2 (pid: 13551, threadinfo=e8dba000 task=e807daa0)
+Stack: d1a89000 b047fcec 00001784 e8dbbf4c 00000053 0000177f 00007ff8 00007623
+       00008802 00007ff8 00802000 00000249 0000f602 00000000 00000000 00000000
+       00000000 00000d82 00000048 0000001e 0000000a 00000001 00000000 000eea81
+Call Trace:
+ [<b016e9cf>] __d_lookup+0x10f/0x190
+ [<b01856d3>] task_dumpable+0x33/0x60
+ [<b0185807>] pid_revalidate+0x37/0xe0
+ [<b0163d2d>] do_lookup+0x5d/0x90
+ [<b016d559>] dput+0x99/0x280
+ [<b0129808>] in_group_p+0x38/0x80
+ [<b0184c80>] proc_info_read+0x50/0x90
+ [<b0156086>] vfs_read+0x126/0x130
+ [<b0156311>] sys_read+0x41/0x70
+ [<b0103119>] sysenter_past_esp+0x52/0x75
+Code: 00 00 00 e8 82 f1 f8 ff 8b 86 70 04 00 00 85 c0 0f 85 5a 05 00 00 8b 8e
+6c 04 00 00 85 c9 0f 84 ba 00 00 00 8b 59 50 85 db 74 3b <8b> 83 b0 00 00 00
+89 84 24 0c 01 00 00 8b 43 04 8b 50 64 c1 e2
+ <6>note: gkrellm2[13551] exited with preempt_count 1
+scheduling while atomic: gkrellm2/0x10000001/13551
+ [<b045b235>] schedule+0x405/0x4c0
+ [<b0145017>] unmap_page_range+0x67/0x90
+ [<b045bb8a>] cond_resched+0x2a/0x50
+ [<b0145259>] unmap_vmas+0x219/0x240
+ [<b014a026>] exit_mmap+0x76/0x160
+ [<b0118772>] mmput+0x32/0xb0
+ [<b011d301>] do_exit+0xb1/0x3f0
+ [<b010430b>] die+0x17b/0x180
+ [<b0114f00>] do_page_fault+0x0/0x586
+ [<b0114f00>] do_page_fault+0x0/0x586
+ [<b01152a5>] do_page_fault+0x3a5/0x586
+ [<b0113239>] set_ioapic_affinity_irq+0x79/0xa0
+ [<b0123c7b>] run_timer_softirq+0x12b/0x1e0
+ [<b0107bb5>] timer_interrupt+0x85/0x160
+ [<b02aa817>] vsnprintf+0x2e7/0x510
+ [<b0114f00>] do_page_fault+0x0/0x586
+ [<b0103b83>] error_code+0x2b/0x30
+ [<b0187fe1>] do_task_stat+0x1a1/0x7a0
+ [<b016e9cf>] __d_lookup+0x10f/0x190
+ [<b01856d3>] task_dumpable+0x33/0x60
+ [<b0185807>] pid_revalidate+0x37/0xe0
+ [<b0163d2d>] do_lookup+0x5d/0x90
+ [<b016d559>] dput+0x99/0x280
+ [<b0129808>] in_group_p+0x38/0x80
+ [<b0184c80>] proc_info_read+0x50/0x90
+ [<b0156086>] vfs_read+0x126/0x130
+ [<b0156311>] sys_read+0x41/0x70
+ [<b0103119>] sysenter_past_esp+0x52/0x75
+
+
+
+Cheers.
+
+Prakash Punnoor
+
+formerly known as Prakash K. Cheemplavam
+
+--------------enigD2CF7011D9D756CE2F2A6DF2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (GNU/Linux)
+
+iD8DBQFCI0sVxU2n/+9+t5gRAkOmAJwPCzVAUXT+TPdYOCWhqa7CGagTtACgmowe
+T/B+e6q+SIdYia3ARB315Lo=
+=ElYx
+-----END PGP SIGNATURE-----
+
+--------------enigD2CF7011D9D756CE2F2A6DF2--
