@@ -1,40 +1,38 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: Re: [patch][9/9] block: remove bio walking
-Date: Thu, 9 Sep 2004 15:53:13 +0200
+Subject: Re: [patch][3/9] ide: add ide_sg_init() helper
+Date: Thu, 9 Sep 2004 15:54:41 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200409091553.13918.bzolnier@elka.pw.edu.pl>
-References: <200409082127.04331.bzolnier@elka.pw.edu.pl> <20040909090314.A24950@flint.arm.linux.org.uk>
+Message-ID: <200409091554.41718.bzolnier@elka.pw.edu.pl>
+References: <200409082126.49832.bzolnier@elka.pw.edu.pl> <413FCB61.7060604@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:35289 "EHLO
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:37081 "EHLO
 	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S264261AbUIINz5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Sep 2004 09:55:57 -0400
-In-Reply-To: <20040909090314.A24950@flint.arm.linux.org.uk>
+	id S264377AbUIIN4Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Sep 2004 09:56:25 -0400
+In-Reply-To: <413FCB61.7060604@pobox.com>
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Russell King <rmk+lkml@arm.linux.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thursday 09 September 2004 10:03, Russell King wrote:
-> On Wed, Sep 08, 2004 at 09:27:04PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > [patch] block: remove bio walking
-> > 
-> > IDE driver was the only user of bio walking code.
 
-was in -bk10 :-(
+On Thursday 09 September 2004 05:17, Jeff Garzik wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > +static inline void ide_sg_init(struct scatterlist *sg, u8 *buf, unsigned int buflen)
+> > +{
+> > +	memset(sg, 0, sizeof(*sg));
+> > +
+> > +	sg->page = virt_to_page(buf);
+> > +	sg->offset = offset_in_page(buf);
+> > +	sg->length = buflen;
+> > +}
+> > +
+> 
+> 
+> Surely this should be more generic?
 
-> The MMC driver also uses this.  Please don't remove.
-
-OK I'll just drop this patch but can't we also use scatterlists in MMC?
-
-The point is that I now think bio walking was a mistake and accessing
-bios directly from low-level drivers is a layering violation (thus
-all the added complexity). Moreover with fixed IDE PIO and without
-bio walking code it should be possible to shrink struct request by
-removing all "current" entries.
-
-Bartlomiej
+Any idea where to put it? linux/blkdev.h?
