@@ -1,50 +1,44 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Andres Meyer <andres.meyer@computer.org>
 Subject: Re: Opteron SATA machine check exception (32bit)
-Date: Wed, 10 Mar 2004 02:22:06 -0500
+Date: Wed, 10 Mar 2004 08:31:34 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <404EC21E.4030809@pobox.com>
-References: <200403100006.36405.andres.meyer@computer.org>
+Message-ID: <200403100831.34416.andres.meyer@computer.org>
+References: <200403100006.36405.andres.meyer@computer.org> <404EC21E.4030809@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:36751 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262256AbUCJHWS
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Mar 2004 02:22:18 -0500
-In-Reply-To: <200403100006.36405.andres.meyer@computer.org>
+Received: from mxout.hispeed.ch ([62.2.95.247]:44737 "EHLO smtp.hispeed.ch")
+	by vger.kernel.org with ESMTP id S262259AbUCJHcU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Mar 2004 02:32:20 -0500
+In-Reply-To: <404EC21E.4030809@pobox.com>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Andres Meyer <andres.meyer@computer.org>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
-Andres Meyer wrote:
-> Hi,
-> 
-> I am trying to get an 2x Opteron system to work. As long as I use the 80GB 
-> Maxtor installed on the integrated IDE controller, everything works fine. As 
-> soon as I try to use the SATA disks, I get a machine check exception and the 
-> system reboots, with the hw clock reset to some silly date.
-> 
-> This one here happened within ca. 7s when trying to write some zeros 
-> (cat /dev/zero > test.file) to the first 160GB disk. On the disk, after 
-> reboot, there was a very small test.file.
-> 
-> Interesting enough, it is possible to read the disks and even do a fsck on the 
-> fs. It is also possible to run a script that writes a small file (eg the 
-> current time) every 5s or so for several days. As I found some strange 
-> behaviour at on port 3&4 on the siimage controller, I did not connect these 
-> disks for now.
-> 
-> Any ideas? Something I could do to help?
+On Wednesday 10 March 2004 08.22, Jeff Garzik wrote:
+> The sata_sil driver is known to have problems at the moment.  Are you
+> having problems with drives connected to the Promise controller as well?
+>   That seems to be working fine on x86, but I wonder if there are
+> problems on x86-64.
+>
+> Can you try booting a 32-bit kernel to see if that changes your results?
+>
+> 	Jeff
 
-The sata_sil driver is known to have problems at the moment.  Are you 
-having problems with drives connected to the Promise controller as well? 
-  That seems to be working fine on x86, but I wonder if there are 
-problems on x86-64.
+As stated previously, It's a 32bit kernel, I did not event try 64bit SATA yet.
 
-Can you try booting a 32-bit kernel to see if that changes your results?
+Andres
 
-	Jeff
-
-
-
+> SW:
+> Linux 2.6.4-rc2 32bit
+> ReiserFs 3
+>
+> HW:
+> 2x Opteron 240, 3GB RAM
+> Tyan 2885ANRF
+> AMD8111: 1x Maxtor 80GB
+> Promise SATA 150: 4x Maxtor 4G160J8 160GB with Marvel IDE2SATA adapters
+> SII3114: 4x Maxtor 7Y250M0 250GB SATA
