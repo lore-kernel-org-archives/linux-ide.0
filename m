@@ -1,100 +1,26 @@
-From: Prarit Bhargava <prarit@sgi.com>
-Subject: [PATCH]: [RFC] Fix error handlnig in hwif-init and sgiioc4 driver
-Date: Wed, 26 Jan 2005 08:25:04 -0500
-Message-ID: <41F79A30.4040900@sgi.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080509080602010103090303"
+From: linux@horizon.com
+Subject: Marvell 88SX[56]0[48]1 libata progress?
+Date: 26 Jan 2005 16:28:54 -0000
+Message-ID: <20050126162854.29462.qmail@science.horizon.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:41865 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S262289AbVAZNZh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Jan 2005 08:25:37 -0500
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.12.11/8.12.11) with ESMTP id j0QDPbLr020634
-	for <linux-ide@vger.kernel.org>; Wed, 26 Jan 2005 08:25:37 -0500
-Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
-	by int-mx1.corp.redhat.com (8.11.6/8.11.6) with ESMTP id j0QDPWO01903
-	for <linux-ide@vger.kernel.org>; Wed, 26 Jan 2005 08:25:32 -0500
-Received: from [172.16.80.158] (prarit.boston.redhat.com [172.16.80.158])
-	by mail.boston.redhat.com (8.12.8/8.12.8) with ESMTP id j0QDPWp5025802
-	for <linux-ide@vger.kernel.org>; Wed, 26 Jan 2005 08:25:32 -0500
+Received: from science.horizon.com ([192.35.100.1]:34603 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S262351AbVAZQ2z
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 26 Jan 2005 11:28:55 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: andyw@pobox.com, linux@horizon.com
 
-This is a multi-part message in MIME format.
---------------080509080602010103090303
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+I was just wondering if there's been any progress.
+I'm about to invest in an Abit SU-2S with an 88sx6081 on board, and was
+wondering how things were going.
 
-I didn't see any ACKs on this so I'm resubmitting....
+I can use the Marvell binary driver as a stopgap, but I'm hoping that
+an open-source driver (and eventually NCQ support) will appear before
+too long.
 
-I discovered an issue where a hwif_init failure lead to /proc/ide files 
-being created for devices that failed probes.  This resulted in 
-oops/WARN_ON/BUG_ON executions through the kernel depending on what 
-actions were on going.
+I'm afraid I can't afford to sponsor development personally, so I don't
+have the right to complain too loudly, but could I politely inquire?
 
-The first part of the fix (submitted to linux-ia64 and acpi-devel for 
-review -- I'm including it for completeness) was to fix incorrect error 
-handling in the ACPI layer:
-
-===== drivers/acpi/pci_irq.c 1.35 vs edited =====
---- 1.35/drivers/acpi/pci_irq.c 2005-01-04 21:48:17 -05:00
-+++ edited/drivers/acpi/pci_irq.c       2005-01-14 08:14:34 -05:00
-@@ -487,10 +487,10 @@
-        * If no PRT entry was found, we'll try to derive an IRQ from the
-        * device's parent bridge.
-        */
--       if (!gsi)
-+       if (gsi == -1)
-               gsi = acpi_pci_irq_derive(dev, pin,
-                                         &edge_level, &active_high_low);
--       if (!gsi)
-+       if (gsi == -1)
-               return_VOID;
-
-       /*
-
-The second part of the fix is to the core IDE layer and to the SGI IOC4 
-IDE driver which need to handle errors properly from failed hwif 
-initializations.  This patch is attached for review.
-
---------------080509080602010103090303
-Content-Type: text/plain;
- name="acpi-ide.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="acpi-ide.patch"
-
-===== drivers/ide/ide-probe.c 1.90 vs edited =====
---- 1.90/drivers/ide/ide-probe.c	2004-12-10 14:12:14 -05:00
-+++ edited/drivers/ide/ide-probe.c	2005-01-14 08:18:43 -05:00
-@@ -841,7 +841,10 @@
- 	if (fixup)
- 		fixup(hwif);
- 
--	hwif_init(hwif);
-+	if (!hwif_init(hwif)) {
-+		printk("%s: Failed to initialize IDE interface\n", hwif->name);
-+		return -1;
-+	}
- 
- 	if (hwif->present) {
- 		u16 unit = 0;
-===== drivers/ide/pci/sgiioc4.c 1.22 vs edited =====
---- 1.22/drivers/ide/pci/sgiioc4.c	2005-01-06 20:35:35 -05:00
-+++ edited/drivers/ide/pci/sgiioc4.c	2005-01-14 08:18:56 -05:00
-@@ -669,7 +669,10 @@
- 		printk(KERN_INFO "%s: %s Bus-Master DMA disabled\n",
- 		       hwif->name, d->name);
- 
--	probe_hwif_init(hwif);
-+	if (probe_hwif_init(hwif)) {
-+		printk(KERN_INFO "%s: initialization failed\n", hwif->name);
-+		return -EIO;
-+	}
- 
- 	/* Create /proc/ide entries */
- 	create_proc_ide_interfaces(); 
-
---------------080509080602010103090303--
+Thanks!
