@@ -1,113 +1,42 @@
-From: Eric Mudama <edmudama@gmail.com>
-Subject: Re: undecoded slave?
-Date: Fri, 24 Sep 2004 10:29:47 -0600
+From: Jesse Stockall <stockall@magma.ca>
+Subject: IDE connector on Promise 20376 SATA controller
+Date: Fri, 24 Sep 2004 17:20:40 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <311601c904092409297131f232@mail.gmail.com>
-References: <200409222357.39492.tabris@tabris.net>
-	 <200409240209.13884.bzolnier@elka.pw.edu.pl>
-	 <311601c90409231841774f5168@mail.gmail.com>
-	 <200409240426.09861.tabris@tabris.net>
-Reply-To: Eric Mudama <edmudama@gmail.com>
+Message-ID: <1096060840.6059.4.camel@homer.blizzard.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.203]:30684 "EHLO mproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S268950AbUIXQbD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Sep 2004 12:31:03 -0400
-Received: by mproxy.gmail.com with SMTP id 77so3152583rnk
-        for <linux-ide@vger.kernel.org>; Fri, 24 Sep 2004 09:30:59 -0700 (PDT)
-In-Reply-To: <200409240426.09861.tabris@tabris.net>
+Received: from mx2.magma.ca ([206.191.0.250]:11488 "EHLO mx2.magma.ca")
+	by vger.kernel.org with ESMTP id S268899AbUIXVUp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Sep 2004 17:20:45 -0400
+Received: from mail4.magma.ca (mail4.magma.ca [206.191.0.222])
+	by mx2.magma.ca (8.13.0/8.13.0) with ESMTP id i8OLKhcC028581
+	for <linux-ide@vger.kernel.org>; Fri, 24 Sep 2004 17:20:44 -0400
+Received: from [192.168.1.20] (ottawa-hs-209-217-84-157.d-ip.magma.ca [209.217.84.157])
+	(authenticated bits=0)
+	by mail4.magma.ca (8.13.0/8.13.0) with ESMTP id i8OLKecK027794
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-ide@vger.kernel.org>; Fri, 24 Sep 2004 17:20:43 -0400
 List-Id: linux-ide@vger.kernel.org
-To: tabris <tabris@tabris.net>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-No rush.
+Hi
 
-I'd just like to see those drives ID'd via a different interface.
+I just purchased a board with a Promise 20376 SATA raid controller that
+also has am IDE connector for a single PATA drive. The sata_promise
+driver does not see the drive attached to the IDE connector.
 
---eric
+I found a few old posts where people indicated that it was on Jeff
+Garziks TODO list. 
 
+kernel version 2.6.9-rc2-mm3
 
-On Fri, 24 Sep 2004 04:26:08 -0400, tabris <tabris@tabris.net> wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
-> 
-> 
-> 
-> On Thursday 23 September 2004 9:41 pm, Eric Mudama wrote:
-> > On Fri, 24 Sep 2004 02:09:13 +0200, Bartlomiej Zolnierkiewicz
-> >
-> > <bzolnier@elka.pw.edu.pl> wrote:
-> > > On Thursday 23 September 2004 22:30, tabris wrote:
-> > > > -----BEGIN PGP SIGNED MESSAGE-----
-> > > > Hash: SHA1
-> > > >
-> > > > On Thursday 23 September 2004 7:14 am, Bartlomiej Zolnierkiewicz
-> wrote:
-> > > > > [ use linux-ide@vger.kernel.org for ATA stuff ]
-> > > > >
-> > > > > On Thursday 23 September 2004 05:57, tabris wrote:
-> > > > > > Probing IDE interface ide3...
-> > > > > > hdg: Maxtor 4D060H3, ATA DISK drive
-> > > > > > hdh: Maxtor 4D060H3, ATA DISK drive
-> > > > > > ide-probe: ignoring undecoded slave
-> > > > > >
-> > > > > > Booted 2.6.9-rc2-mm2, and I no longer have an hdh. the error
-> > > > > > above seems to be the only [stated] reason why.
-> > > > >
-> > > > > Please send hdparm -I output for both drives.
-> > > >
-> > > > As you can see, both drives are the same brand/size/model.
-> > > > Both are connected to the PDC20265 on my ASUS A7V266-E
-> > > > motherboard.
-> > > >
-> > > > /dev/hdg:
-> > > >
-> > > > ATA device, with non-removable media
-> > > >         Model Number:       Maxtor 4D060H3
-> > > >         Serial Number:      D3000000
-> > > >         Firmware Revision:  DAK019K0
-> > >
-> > > Thanks.
-> > > It seems we will need to add this Serial Number to "undecoded
-> > > slave" fixup.
-> > >
-> > > Please also send /proc/ide/hd?/identify to exclude kernel/hdparm
-> > > parsing bug.
-> >
-> > I'm confused, and I think something else must be going on... to have
-> > 2 different drives, with two completely different ASICs in them (and
-> > therefore significantly different object code), have identical
-> > corruption of the same 6 bytes of their configuration block is just
-> > not likely.  I'm pretty sure they don't even have the same utility
-> > zone layout.
-> >
-> > Is that how the drive IDs when connected via other controllers, in
-> > another system, etc?
->         I'd have to get back to you on that, as I had no intention of taking my
-> machine down for such a purpose. But if you truly would need this info,
-> it could be provided within a day or two.
-> >
-> > hrm...
-> >
-> > eric
-> - --
-> tabris
-> - -
-> Reinhart was never his mother's favorite -- and he was an only child.
->                 -- Thomas Berger
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v1.2.4 (GNU/Linux)
-> 
-> iD8DBQFBU9og1U5ZaPMbKQcRApBDAJ9zDlviuLYzN9HEEn8LimDmfnECpQCeNXOE
-> n9Qpr+Et1G73rInipBEiDG8=
-> =N5Oc
-> -----END PGP SIGNATURE-----
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> 
-> 
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Thanks
+
+Jesse
+Please CC me on replies
+
+-- 
+Jesse Stockall <stockall@magma.ca>
+
