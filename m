@@ -1,62 +1,70 @@
-From: Doug Maxey <dwm@austin.ibm.com>
-Subject: Re: [PATCH 1/1] build modular usb isd200 with modular ide
-Date: Tue, 26 Oct 2004 13:05:12 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200410261805.i9QI5CKM029850@falcon10.austin.ibm.com>
-References: <16765.45289.684525.732044@cargo.ozlabs.ibm.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [BK PATCH] 2.6.x libata bug fix
+Date: Tue, 26 Oct 2004 20:00:57 -0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20041027000057.GA28982@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-reply-to: <16765.45289.684525.732044@cargo.ozlabs.ibm.com> 
-To: Paul Mackerras <paulus@samba.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Christoph Hellwig <hch@lst.de>, Greg Kroah-Hartman <greg@kroah.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux IDE Mailing List <linux-ide@vger.kernel.org>, linuxppc64-dev@ozlabs.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from havoc.gtf.org ([69.28.190.101]:25292 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S261553AbUJ0AA7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Oct 2004 20:00:59 -0400
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-
-On Tue, 26 Oct 2004 12:05:29 +1000, Paul Mackerras wrote:
->For Linux or some other OS?
-
-Linux for little over a year, 2.6 for about 3 months, some _other_ OS for
-several years.
-
->
->> device vs BE host.  The transfers are done as a 16 bit quantity, PIO.
->> And yes, I understand, "we have always done it this way".  Works well
->> when you only have to deal with single arch.
->
->No, we haven't always done it this way on PPC. :)  Various different
->ways have been tried over the years and this is the only way that
->doesn't suck.
->
->> Possibly I am not making point very well, that one is preserving the
->> correct byte order and let the structures reflect to native location.
->
->I can't parse that sentence unambiguously...
-
-s/to native location/the normalized (for the host) layout/
-
->
->> Strings get swapped, 16, 32, and 64 bit fields likewise.  I just missed the 
->> LE order that is is being preserved for *some* few fields only.
->
->Strings shouldn't get swapped, or at least, strings should only need
->to be swapped on a BE platform if they also need to be swapped on an
->LE platform.
->
->> There is not a single reference to byte field in the ATA spec for
->> IDENTIFY DEVICE.  It just happens that some of the fields are 8 bits long. Or 
->> 32 or 64.
->
->And your point is...  ?
-
-To me, and I do seem to be in the minority, it seems that normalizing the 
-entire bytestream is the right thing (tm).  But I can see the point that 
-leaving certain parts non-normalized is cheaper.
-
-It was my mistake missing the use of the char fields.  GIITD.  In any
-event, with 2.6.10-rc1 the problem seems to be solved in spite of my
-meddling. :-)
-
-++doug
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org
 
 
+Sigh...
 
+Please do a
+
+	bk pull bk://gkernel.bkbits.net/libata-2.6
+
+This will update the following files:
+
+ drivers/scsi/libata-scsi.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+through these ChangeSets:
+
+<jgarzik@pobox.com> (04/10/26 1.2069)
+   [libata] use kunmap_atomic() correctly
+
+diff -Nru a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+--- a/drivers/scsi/libata-scsi.c	2004-10-26 19:59:30 -04:00
++++ b/drivers/scsi/libata-scsi.c	2004-10-26 19:59:30 -04:00
+@@ -742,13 +742,13 @@
+  *	spin_lock_irqsave(host_set lock)
+  */
+ 
+-static inline void ata_scsi_rbuf_put(struct scsi_cmnd *cmd)
++static inline void ata_scsi_rbuf_put(struct scsi_cmnd *cmd, u8 *buf)
+ {
+ 	if (cmd->use_sg) {
+ 		struct scatterlist *sg;
+ 
+ 		sg = (struct scatterlist *) cmd->request_buffer;
+-		kunmap_atomic(sg->page, KM_USER0);
++		kunmap_atomic(buf - sg->offset, KM_USER0);
+ 	}
+ }
+ 
+@@ -778,7 +778,7 @@
+ 	buflen = ata_scsi_rbuf_get(cmd, &rbuf);
+ 	memset(rbuf, 0, buflen);
+ 	rc = actor(args, rbuf, buflen);
+-	ata_scsi_rbuf_put(cmd);
++	ata_scsi_rbuf_put(cmd, rbuf);
+ 
+ 	if (rc)
+ 		ata_bad_cdb(cmd, args->done);
+@@ -1264,7 +1264,7 @@
+ 			buflen = ata_scsi_rbuf_get(cmd, &buf);
+ 			buf[2] = 0x5;
+ 			buf[3] = (buf[3] & 0xf0) | 2;
+-			ata_scsi_rbuf_put(cmd);
++			ata_scsi_rbuf_put(cmd, buf);
+ 		}
+ 		cmd->result = SAM_STAT_GOOD;
+ 	}
