@@ -1,20 +1,23 @@
-From: info@qsv11.com
-Subject: =?ISO-8859-1?Q?=20=1B$BBp5^JX!JBh0l9?= =?ISO-8859-1?Q?f!K=1B(B?=
-Date: 27 Mar 2005 12:36:36 +0900
-Message-ID: <20050327033636.15043.qmail@mail.qsv05.com>
-Received: from [211.36.37.35] ([211.36.37.35]:28885 "HELO mail.qsv05.com")
-	by vger.kernel.org with SMTP id S261442AbVC0HjF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Mar 2005 02:39:05 -0500
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: hdregs.h puts csfo at word 129 - wrong, that's vendor specific
+Date: Sun, 27 Mar 2005 14:58:48 +0100
+Message-ID: <1111931927.14877.309.camel@localhost.localdomain>
+References: <4243693F.9090008@yahoo.com> <42437F78.8090703@pobox.com>
+	 <4244BF65.6070109@emc.com>  <58cb370e050325180159d5fbb1@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from [81.2.110.250] ([81.2.110.250]:21146 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S261658AbVC0OBP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Mar 2005 09:01:15 -0500
+In-Reply-To: <58cb370e050325180159d5fbb1@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Brett Russ <russb@emc.com>, Jeff Garzik <jgarzik@pobox.com>, Chris Hann <chann94501@yahoo.com>, linux-ide list <linux-ide@vger.kernel.org>
 
-当サイトのご利用は全て無料（男女共￥0円）
-やっぱり出逢うならご近所で気軽に話し合えるメール・エ○チフレンドがいいですよ
-ね。当サイトは全国地域別の市町村単位で近くの友達探しができます。
-http://loves.qsv20.com/
-男性、女性共にプライバシー保護重視で、不必要な時の新着メールの一時停止や、特
-定の
-送信者からの受け取り拒否、掲示板書込みをすぐに最新発言に更新する
-※只今の時間より、ご近所異性の写真＆動画(裏)情報を大量公開しております。
+> AFAIR it was Alan who added this code, so lets ask him :)
+
+
+The cfso check goes back to Andre
 
