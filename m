@@ -1,44 +1,39 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Andres Meyer <andres.meyer@computer.org>
 Subject: Re: Opteron SATA machine check exception (32bit)
-Date: Sat, 20 Mar 2004 06:34:48 -0500
+Date: Sun, 21 Mar 2004 22:44:57 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <405C2C58.5090901@pobox.com>
-References: <200403100006.36405.andres.meyer@computer.org> <200403100831.34416.andres.meyer@computer.org> <404EC5C3.2060603@pobox.com> <200403112258.33170.andres.meyer@computer.org>
+Message-ID: <200403212244.57083.andres.meyer@computer.org>
+References: <200403100006.36405.andres.meyer@computer.org> <200403112258.33170.andres.meyer@computer.org> <405C2C58.5090901@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:51352 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263369AbUCTLfB
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 20 Mar 2004 06:35:01 -0500
-In-Reply-To: <200403112258.33170.andres.meyer@computer.org>
+Received: from mxout.hispeed.ch ([62.2.95.247]:53139 "EHLO smtp.hispeed.ch")
+	by vger.kernel.org with ESMTP id S261321AbUCUVpN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Mar 2004 16:45:13 -0500
+Received: from mail.cputoasters.com (217-162-8-144.dclient.hispeed.ch [217.162.8.144])
+	by smtp.hispeed.ch (8.12.6/8.12.6/tornado-1.0) with ESMTP id i2LLjBW0020039
+	for <linux-ide@vger.kernel.org>; Sun, 21 Mar 2004 22:45:11 +0100
+Received: from kyodai.prv (kyodai.prv [192.168.0.224])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(No client certificate requested)
+	by mail.cputoasters.com (Postfix) with ESMTP id E0CE42B
+	for <linux-ide@vger.kernel.org>; Sun, 21 Mar 2004 22:44:33 +0100 (CET)
+In-Reply-To: <405C2C58.5090901@pobox.com>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Andres Meyer <andres.meyer@computer.org>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Andres Meyer wrote:
->>>As stated previously, It's a 32bit kernel, I did not event try 64bit SATA
->>>yet.
->>
->>Whoops, I missed that.  Thanks, I'll look into it.  If you are willing,
->>defining ATA_DEBUG and ATA_VERBOSE_DEBUG in include/linux/libata.h, and
->>emailing dmesg output, would provide helpful details to me.
->>
->>	Jeff
-> 
-> 
-> I did enable that, but there was not more output in case of crashes. I did try 
-> to connect the 250GB SATA disks to the Promise, which seems to work ok.
-> The 160GB IDE Maxtor & Marvel IDE2SATA on the promise seem to trigger the mce.
-> 
-> I still do not have a clue why...
+On Saturday 20 March 2004 12.34, Jeff Garzik wrote:
+> Does "nomce" fix the mce?  :)  Some mce-related fixes are headed to
+> Linus, I hear...
 
-Does "nomce" fix the mce?  :)  Some mce-related fixes are headed to 
-Linus, I hear...
+It looks like 2.6.5-rc2 fixes the problem by not creating mces anymore. It 
+probably was the UDMA6 & Marvel SATA dongle problem. I also tried to connect 
+them to a highpoint rr1820 controller (I had to hack the openbuild drivers to 
+adjust for some recent API changes). There it began working when not using 
+ATA133 but eg ATA66.
 
-	Jeff
-
-
-
-
+Thanks for your help,
+Andres
