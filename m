@@ -1,44 +1,63 @@
 From: Brett Russ <russb@emc.com>
-Subject: Re: [PATCH libata-dev-2.6 03/05] libata: update ATA PT sense desc code
-Date: Thu, 17 Mar 2005 17:20:16 -0500 (EST)
-Message-ID: <20050317221753.15A7ADF6@lns1032.lss.emc.com>
+Subject: Re: [PATCH libata-dev-2.6 01/05] libata: AHCI tf_read() support
+Date: Thu, 17 Mar 2005 17:20:06 -0500 (EST)
+Message-ID: <20050317221753.F8B31934@lns1032.lss.emc.com>
 References: <20050317221753.53957EDF@lns1032.lss.emc.com>
 Content-Type: text/plain; charset=US-ASCII
+Received: from mailhub.lss.emc.com ([168.159.2.31]:63612 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S261259AbVCQWVe
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Mar 2005 17:21:34 -0500
 In-Reply-To: <20050317221753.53957EDF@lns1032.lss.emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: jgarzik@pobox.com
-List-Id: linux-ide@vger.kernel.org
 
-03_libata_update_desc_code.patch
+01_libata_garzik-ahci-tf-read.patch
 
-	Change the ATA pass through sense block descriptor code to
-	0x09 per SAT
+	(included in libata-2.6) This is Jeff's tf_read() support
+	patch for AHCI.
 
-Signed-off-by: Brett Russ <russb@emc.com>
+Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
 
- libata-scsi.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ ahci.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+)
 
-Index: libata-dev-2.6/drivers/scsi/libata-scsi.c
+Index: libata-dev-2.6/drivers/scsi/ahci.c
 ===================================================================
---- libata-dev-2.6.orig/drivers/scsi/libata-scsi.c	2005-03-08 08:47:48.000000000 -0500
-+++ libata-dev-2.6/drivers/scsi/libata-scsi.c	2005-03-17 17:16:58.000000000 -0500
-@@ -531,7 +531,7 @@ void ata_pass_thru_cc(struct ata_queued_
- 	 */
- 	sb[0] = 0x72 ;
+--- libata-dev-2.6.orig/drivers/scsi/ahci.c	2005-03-17 12:36:29.000000000 -0500
++++ libata-dev-2.6/drivers/scsi/ahci.c	2005-03-17 17:16:57.000000000 -0500
+@@ -179,6 +179,7 @@ static void ahci_eng_timeout(struct ata_
+ static int ahci_port_start(struct ata_port *ap);
+ static void ahci_port_stop(struct ata_port *ap);
+ static void ahci_host_stop(struct ata_host_set *host_set);
++static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+ static void ahci_qc_prep(struct ata_queued_cmd *qc);
+ static u8 ahci_check_status(struct ata_port *ap);
+ static u8 ahci_check_err(struct ata_port *ap);
+@@ -213,6 +214,8 @@ static struct ata_port_operations ahci_o
+ 	.check_err		= ahci_check_err,
+ 	.dev_select		= ata_noop_dev_select,
  
--	desc[0] = 0x8e ;	/* TODO: replace with official value. */
-+	desc[0] = 0x09;
++	.tf_read		= ahci_tf_read,
++
+ 	.phy_reset		= ahci_phy_reset,
  
- 	/*
- 	 * Set length of additional sense data.
-@@ -2059,7 +2059,7 @@ void ata_scsi_simulate(u16 *id,
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_report_luns);
- 			break;
+ 	.qc_prep		= ahci_qc_prep,
+@@ -466,6 +469,14 @@ static u8 ahci_check_err(struct ata_port
+ 	return (readl(mmio + PORT_TFDATA) >> 8) & 0xFF;
+ }
  
--		/* mandantory commands we haven't implemented yet */
-+		/* mandatory commands we haven't implemented yet */
- 		case REQUEST_SENSE:
- 
- 		/* all other commands */
++static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
++{
++	struct ahci_port_priv *pp = ap->private_data;
++	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
++
++	ata_tf_from_fis(d2h_fis, tf);
++}
++
+ static void ahci_fill_sg(struct ata_queued_cmd *qc)
+ {
+ 	struct ahci_port_priv *pp = qc->ap->private_data;
+
