@@ -1,42 +1,81 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2.6.11-rc2 11/29] ide: add ide_drive_t.sleeping
-Date: Thu, 3 Feb 2005 14:30:40 +0100
-Message-ID: <58cb370e05020305304e5d504@mail.gmail.com>
-References: <20050202024017.GA621@htj.dyndns.org>
-	 <20050202025448.GL621@htj.dyndns.org>
-	 <58cb370e05020216476a8f403c@mail.gmail.com>
-	 <20050203113710.GV5710@suse.de>
+Subject: Re: [PATCH]: [RFC] Fix error handlnig in hwif-init and sgiioc4 driver
+Date: Thu, 3 Feb 2005 15:46:54 +0100
+Message-ID: <58cb370e050203064648e81449@mail.gmail.com>
+References: <41F79A30.4040900@sgi.com>
 Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.202]:21365 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S263455AbVBCNak (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Feb 2005 08:30:40 -0500
-Received: by wproxy.gmail.com with SMTP id 67so250910wri
-        for <linux-ide@vger.kernel.org>; Thu, 03 Feb 2005 05:30:40 -0800 (PST)
-In-Reply-To: <20050203113710.GV5710@suse.de>
+Received: from wproxy.gmail.com ([64.233.184.198]:62705 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S263450AbVBCOqz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Feb 2005 09:46:55 -0500
+Received: by wproxy.gmail.com with SMTP id 67so264069wri
+        for <linux-ide@vger.kernel.org>; Thu, 03 Feb 2005 06:46:54 -0800 (PST)
+In-Reply-To: <41F79A30.4040900@sgi.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Tejun Heo <tj@home-tj.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Prarit Bhargava <prarit@sgi.com>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, 3 Feb 2005 12:37:10 +0100, Jens Axboe <axboe@suse.de> wrote:
-> On Thu, Feb 03 2005, Bartlomiej Zolnierkiewicz wrote:
-> > On Wed, 2 Feb 2005 11:54:48 +0900, Tejun Heo <tj@home-tj.org> wrote:
-> > > > 11_ide_drive_sleeping_fix.patch
-> > > >
-> > > >       ide_drive_t.sleeping field added.  0 in sleep field used to
-> > > >       indicate inactive sleeping but because 0 is a valid jiffy
-> > > >       value, though slim, there's a chance that something can go
-> > > >       weird.  And while at it, explicit jiffy comparisons are
-> > > >       converted to use time_{after|before} macros.
-> >
-> > Same question as for "add ide_hwgroup_t.polling" patch.
-> > AFAICS drive->sleep is either '0' or 'timeout + jiffies' (always > 0)
+On Wed, 26 Jan 2005 08:25:04 -0500, Prarit Bhargava <prarit@sgi.com> wrote:
+> I didn't see any ACKs on this so I'm resubmitting....
+
+sorry for the delay
+
+> I discovered an issue where a hwif_init failure lead to /proc/ide files
+> being created for devices that failed probes.  This resulted in
+
+create_proc_ide_interfaces() doesn't create /proc/ide files for
+hwif->present == 0 interfaces but hwif_init() sets hwif->present
+to 0 too late.  Also this hwif->present games are silly and should
+be removed after your patch is applied and locking is verified.
+
+> The second part of the fix is to the core IDE layer and to the SGI IOC4
+> IDE driver which need to handle errors properly from failed hwif
+> initializations.  This patch is attached for review.
+
+please remember about Signed-off-by:
+
+> ===== drivers/ide/ide-probe.c 1.90 vs edited =====
+> --- 1.90/drivers/ide/ide-probe.c        2004-12-10 14:12:14 -05:00
+> +++ edited/drivers/ide/ide-probe.c      2005-01-14 08:18:43 -05:00
+> @@ -841,7 +841,10 @@
+>         if (fixup)
+>                 fixup(hwif);
 > 
-> Hmm, what if jiffies + timeout == 0?
+> -       hwif_init(hwif);
+> +       if (!hwif_init(hwif)) {
+> +               printk("%s: Failed to initialize IDE interface\n", hwif->name);
+> +               return -1;
+> +       }
 
-Hm, jiffies is unsigned and timeout is always > 0
-but this is still possible if jiffies + timeout wraps, right?
+Could you fix hwif_init() to return meaningful error codes
+and return error from hwif_init() instead of '-1'?
+
+>         if (hwif->present) {
+>                 u16 unit = 0;
+> ===== drivers/ide/pci/sgiioc4.c 1.22 vs edited =====
+> --- 1.22/drivers/ide/pci/sgiioc4.c      2005-01-06 20:35:35 -05:00
+> +++ edited/drivers/ide/pci/sgiioc4.c    2005-01-14 08:18:56 -05:00
+> @@ -669,7 +669,10 @@
+>                 printk(KERN_INFO "%s: %s Bus-Master DMA disabled\n",
+>                        hwif->name, d->name);
+> 
+> -       probe_hwif_init(hwif);
+> +       if (probe_hwif_init(hwif)) {
+> +               printk(KERN_INFO "%s: initialization failed\n", hwif->name);
+
+redundant, error message is printed in probe_hwif_init()
+
+> +               return -EIO;
+
+please fix probe_hwif_init() to return error codes
+
+> +       }
+> 
+>         /* Create /proc/ide entries */
+>         create_proc_ide_interfaces();
+
+I removed redundant printk and applied the patch
