@@ -1,77 +1,53 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [RFC/PATCH 0/7] enable honoring write cache setting of IDE drive
-Date: Fri, 28 Jan 2005 23:32:53 +0100
-Message-ID: <58cb370e050128143221c7cac8@mail.gmail.com>
-References: <58cb370e0501281349543d0d14@mail.gmail.com>
-	 <200501282215.j0SMFegK022818@falcon10.austin.ibm.com>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Doug Maxey <dwm@austin.ibm.com>
+Subject: simple use wcache from drive (was)Re: [RFC/PATCH 0/7] enable honoring write cache setting of IDE drive
+Date: Fri, 28 Jan 2005 16:54:49 -0600
+Message-ID: <200501282254.j0SMsnBu023405@falcon10.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.198]:24139 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262798AbVA1WdR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Jan 2005 17:33:17 -0500
-Received: by wproxy.gmail.com with SMTP id 67so324449wri
-        for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 14:33:17 -0800 (PST)
-In-Reply-To: <200501282215.j0SMFegK022818@falcon10.austin.ibm.com>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:32954 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S262808AbVA1Wyy
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Jan 2005 17:54:54 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e33.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j0SMsqCO493782
+	for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 17:54:52 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0SMsq58439268
+	for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 15:54:52 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id j0SMspti032424
+	for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2005 15:54:51 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Doug Maxey <dwm@austin.ibm.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: Jens Axboe <axboe@suse.de>, Jeff Garzik <jgarzik@pobox.com>, Linux IDE Mailing List <linux-ide@vger.kernel.org>
 
-On Fri, 28 Jan 2005 16:15:40 -0600, Doug Maxey <dwm@austin.ibm.com> wrote:
-> 
-> On Fri, 28 Jan 2005 22:49:08 +0100, Bartlomiej Zolnierkiewicz wrote:
-> >On Fri, 28 Jan 2005 15:43:52 -0600, Doug Maxey <dwm@austin.ibm.com> wrote:
-> >>
-> >> On Fri, 28 Jan 2005 22:35:17 +0100, Bartlomiej Zolnierkiewicz wrote:
-> >> >On Fri, 28 Jan 2005 15:06:22 -0600, Doug Maxey <dwm@maxeymade.com> wrote:
-> >> >>
-> >> >> On Fri, 28 Jan 2005 20:11:37 +0100, Bartlomiej Zolnierkiewicz wrote:
-> >> >> >On Fri, 28 Jan 2005 12:16:01 -0600, Doug Maxey <dwm@austin.ibm.com> wrote:
-> >> >> >
-> >> >> >We have too many config options already.
-> >> >> >
-> >> >> >Behavior should be simple:
-> >> >> >* no cache flushes - wcache off by default
-> >> >> >* cache flushes - wcache on by default
-> >> >> >* inform user about the wcache status
-> >> >> >* allow changing of wcache by user
-> >> >>
-> >> >> My interpretation of what you are saying here is the selection of
-> >> >> "cache flush" drives the setting of wcache.  Are you saying that
-> >> >> "barrier=off" on the boot line the currently (only and will remain)
-> >> >> supported method controlling flushes?
-> >> >
-> >> >No, I am saying that cache flush is a property of disk not fs.
-> >> >On the contrary barrier is a property of filesystem.
-> >>
-> >> Ok.  We are talking apples and oranges here.  The disk DOES have FLUSH CACHE,
-> >> which is the main reason these drives work in the later kernels.  You can
-> >> switch wcache back and forth, provided that the correct flushing is done.
-> >>
-> >> Write cache, on the otherhand, which is disabled on the drive by default,
-> >> is not honored.
-> >
-> >What is the practical reason to honor it?
-> 
-> The datacenters/server folks that would be using these drives would
-> expect them to remain as set.  I have to check, but unless something
-> has changed very recently in the kernel, setting with hdparm does not
-> "stick" in the sense that the command succeeds to the disk, but no change
-> is made to the barrier.
 
-It is not a problem for IDE driver (flushes become no-ops)
-and this way you can later enable wcache and still use barries.
+On Fri, 28 Jan 2005 23:32:53 +0100, Bartlomiej Zolnierkiewicz wrote:
+>> The datacenters/server folks that would be using these drives would
+>> expect them to remain as set.  I have to check, but unless something
+>> has changed very recently in the kernel, setting with hdparm does not
+>> "stick" in the sense that the command succeeds to the disk, but no change
+>> is made to the barrier.
+>
+>It is not a problem for IDE driver (flushes become no-ops)
+>and this way you can later enable wcache and still use barries.
 
-> here is the current scenario with a drive that can work with wcache off.
-> - idedisk_setup() forces enabled wcache.
-> - enabled wcache uses FLUSH.
-> - hdparm -W0 disables cache without matching change to barriers.
-> 
-> - Setting "barrier=off" has the undesired side effect of not flushing
->   with wcache enabled on the drive.  Some people with certain servers are
->   _ssooo_ picky. :)
+Well that certainly simplfies things.
 
-This is fs layer problem.
+How about this?
+===== drivers/ide/ide-disk.c 1.115 vs edited =====
+--- 1.115/drivers/ide/ide-disk.c	2005-01-04 11:39:25 -06:00
++++ edited/drivers/ide/ide-disk.c	2005-01-28 16:48:24 -06:00
+@@ -1083,7 +1083,7 @@ static void idedisk_setup (ide_drive_t *
+ 	if ((id->csfo & 1) || (id->cfs_enable_1 & (1 << 5)))
+ 		drive->wcache = 1;
+ 
+-	write_cache(drive, 1);
++	write_cache(drive, drive->wcache);
+ 
+ 	/*
+ 	 * We must avoid issuing commands a drive does not understand
+
+
