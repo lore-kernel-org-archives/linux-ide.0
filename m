@@ -1,312 +1,273 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [BK PATCHES] 2.4.x libata updates
-Date: Mon, 23 Aug 2004 23:42:35 -0400
+From: Brad Campbell <brad@wasp.net.au>
+Subject: libata and md issues with 2.9.1-rc1
+Date: Tue, 24 Aug 2004 21:24:47 +0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040824034235.GA9260@havoc.gtf.org>
+Message-ID: <412B79DF.2000705@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([216.162.42.101]:33937 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S268852AbUHXDmi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Aug 2004 23:42:38 -0400
-Content-Disposition: inline
+Received: from wasp.net.au ([203.190.192.17]:19615 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S268088AbUHXRYM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Aug 2004 13:24:12 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: RAID Linux <linux-raid@vger.kernel.org>
+
+Just a heads up. I'm experiencing "issues" with 2.6.9-rc1 that don't occur with 2.6.5.
+
+I run a 10 disk raid-5 on 3xPromise SATA150 cards and a 2 disk raid-0 on the on-board VIA chipset.
+The 10 disks are Maxtor Maxline-II SATA drives and the raid-0 is a pair of WD2000JB drives with
+Addonics SATA->PATA converters.
+
+I am not seeing any issues with the Promise/Maxtor combo at this stage, but I'm getting random
+read/write errors with the VIA/WD combo that don't appear under 2.6.5 or DOS (I also use Spinrite to
+check the disks when I get issues).
+
+This only appears when the 2 drives are run in the raid-0.
+
+Under 2.6.5 I ran a complete badlocks -n on both drives simultaneously, and repeated the same under 
+2.6.9-rc1 with no problems (7 hours for a complete run). I even ran 5 simultaneous badblocks runs on 
+host 1, 6, 9, 12 & 13 for about 30 minutes with no problems (except PCI bus saturation!)
+
+After starting the raid I ran a complete badblocks -n on /dev/md1 under 2.6.5 with no problems. 
+Under 2.6.9-rc1 I get timeouts immediately I start badblocks -n (the -n is the key as I have to 
+write something to cause the problem)
+
+Aug 24 18:55:03 srv kernel: raid0: looking at sdk1
+Aug 24 18:55:03 srv kernel: raid0:   comparing sdk1(195310080) with sdk1(195310080)
+Aug 24 18:55:03 srv kernel: raid0:   END
+Aug 24 18:55:03 srv kernel: raid0:   ==> UNIQUE
+Aug 24 18:55:03 srv kernel: raid0: 1 zones
+Aug 24 18:55:03 srv kernel: raid0: looking at sdl1
+Aug 24 18:55:03 srv kernel: raid0:   comparing sdl1(195358336) with sdk1(195310080)
+Aug 24 18:55:03 srv kernel: raid0:   NOT EQUAL
+Aug 24 18:55:03 srv kernel: raid0:   comparing sdl1(195358336) with sdl1(195358336)
+Aug 24 18:55:03 srv kernel: raid0:   END
+Aug 24 18:55:03 srv kernel: raid0:   ==> UNIQUE
+Aug 24 18:55:03 srv kernel: raid0: 2 zones
+Aug 24 18:55:03 srv kernel: raid0: FINAL 2 zones
+Aug 24 18:55:03 srv kernel: raid0: zone 1
+Aug 24 18:55:03 srv kernel: raid0: checking sdk1 ... nope.
+Aug 24 18:55:03 srv kernel: raid0: checking sdl1 ... contained as device 0
+Aug 24 18:55:03 srv kernel:   (195358336) is smallest!.
+Aug 24 18:55:03 srv kernel: raid0: zone->nb_dev: 1, size: 48256
+Aug 24 18:55:03 srv kernel: raid0: current zone offset: 195358336
+Aug 24 18:55:03 srv kernel: raid0: done.
+Aug 24 18:55:03 srv kernel: raid0 : md_size is 390668416 blocks.
+Aug 24 18:55:03 srv kernel: raid0 : conf->hash_spacing is 390620160 blocks.
+Aug 24 18:55:03 srv kernel: raid0 : nb_zone is 2.
+Aug 24 18:55:03 srv kernel: raid0 : Allocating 8 bytes for hash.
+Aug 24 19:01:37 srv kernel: ata13: command 0x35 timeout, stat 0xd0 host_stat 0x0
+Aug 24 19:01:37 srv kernel: ata13: status=0xd0 { Busy }
+Aug 24 19:01:37 srv kernel: SCSI error : <12 0 0 0> return code = 0x8000002
+Aug 24 19:01:37 srv kernel: FMK EOM ILI Current sdk: sense = 70 ef
+Aug 24 19:01:37 srv kernel: ASC=28 ASCQ=c0
+Aug 24 19:01:37 srv kernel: end_request: I/O error, dev sdk, sector 63
+Aug 24 19:01:37 srv kernel: ATA: abnormal status 0xD0 on port 0x8807
+Aug 24 19:01:37 srv last message repeated 2 times
+Aug 24 19:02:07 srv kernel: ata13: command 0x35 timeout, stat 0xd0 host_stat 0x1
+Aug 24 19:02:07 srv kernel: ata13: status=0xd0 { Busy }
+Aug 24 19:02:07 srv kernel: SCSI error : <12 0 0 0> return code = 0x8000002
+Aug 24 19:02:07 srv kernel: FMK EOM ILI Current sdk: sense = 70 ef
+Aug 24 19:02:07 srv kernel: ASC=28 ASCQ=c0
+Aug 24 19:02:07 srv kernel: end_request: I/O error, dev sdk, sector 71
+Aug 24 19:02:07 srv kernel: ATA: abnormal status 0xD0 on port 0x8807
+Aug 24 19:02:07 srv last message repeated 2 times
+
+I'm not really even sure where to start here as it only occurs when the 2 drives are in a Raid-0 and 
+  depending on what is going on with the system it can take a while to manifest. (Never more than a 
+hundred megs or so of data though)
+
+Relevant boot log from 2.6.9-rc1 attached
+
+Regards,
+Brad (Certified libata torturer)
+
+Aug 24 19:03:55 srv kernel: Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+Aug 24 19:03:55 srv kernel: ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+Aug 24 19:03:55 srv kernel: VP_IDE: IDE controller at PCI slot 0000:00:0f.1
+Aug 24 19:03:55 srv kernel: VP_IDE: chipset revision 6
+Aug 24 19:03:55 srv kernel: VP_IDE: not 100%% native mode: will probe irqs later
+Aug 24 19:03:55 srv kernel: VP_IDE: VIA vt8237 (rev 00) IDE UDMA133 controller on pci0000:00:0f.1
+Aug 24 19:03:55 srv kernel:     ide0: BM-DMA at 0x6800-0x6807, BIOS settings: hda:DMA, hdb:pio
+Aug 24 19:03:55 srv kernel:     ide1: BM-DMA at 0x6808-0x680f, BIOS settings: hdc:pio, hdd:pio
+Aug 24 19:03:55 srv kernel: hda: WDC WD400EB-00CPF0, ATA DISK drive
+Aug 24 19:03:55 srv kernel: Using anticipatory io scheduler
+Aug 24 19:03:55 srv kernel: ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+Aug 24 19:03:55 srv kernel: hda: max request size: 128KiB
+Aug 24 19:03:55 srv kernel: hda: Host Protected Area detected.
+Aug 24 19:03:55 srv kernel: ^Icurrent capacity is 78159151 sectors (40017 MB)
+Aug 24 19:03:55 srv kernel: ^Inative  capacity is 78165360 sectors (40020 MB)
+Aug 24 19:03:55 srv kernel: hda: 78159151 sectors (40017 MB) w/2048KiB Cache, CHS=65535/16/63, UDMA(100)
+Aug 24 19:03:55 srv kernel:  /dev/ide/host0/bus0/target0/lun0: p1 p2 p3
+Aug 24 19:03:55 srv kernel: libata version 1.02 loaded.
+Aug 24 19:03:55 srv kernel: sata_promise version 0.91
+Aug 24 19:03:55 srv kernel: ata1: SATA max UDMA/133 cmd 0xE080B200 ctl 0xE080B238 bmdma 0x0 irq 19
+Aug 24 19:03:55 srv kernel: ata2: SATA max UDMA/133 cmd 0xE080B280 ctl 0xE080B2B8 bmdma 0x0 irq 19
+Aug 24 19:03:55 srv kernel: ata3: SATA max UDMA/133 cmd 0xE080B300 ctl 0xE080B338 bmdma 0x0 irq 19
+Aug 24 19:03:55 srv kernel: ata4: SATA max UDMA/133 cmd 0xE080B380 ctl 0xE080B3B8 bmdma 0x0 irq 19
+Aug 24 19:03:55 srv kernel: ata1: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003 
+88:407f
+Aug 24 19:03:55 srv kernel: ata1: dev 0 ATA, max UDMA/133, 490234752 sectors (lba48)
+Aug 24 19:03:55 srv kernel: ata1: dev 0 configured for UDMA/133
+Aug 24 19:03:55 srv kernel: scsi0 : sata_promise
+Aug 24 19:03:55 srv kernel: ata2: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003 
+88:407f
+Aug 24 19:03:55 srv kernel: ata2: dev 0 ATA, max UDMA/133, 490234752 sectors (lba48)
+Aug 24 19:03:55 srv kernel: ata2: dev 0 configured for UDMA/133
+Aug 24 19:03:55 srv kernel: scsi1 : sata_promise
+Aug 24 19:03:55 srv kernel: ata3: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003 
+88:407f
+Aug 24 19:03:55 srv kernel: ata3: dev 0 ATA, max UDMA/133, 490234752 sectors (lba48)
+Aug 24 19:03:55 srv kernel: ata3: dev 0 configured for UDMA/133
+Aug 24 19:03:55 srv kernel: scsi2 : sata_promise
+Aug 24 19:03:55 srv kernel: ata4: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003 
+88:407f
+Aug 24 19:03:55 srv kernel: ata4: dev 0 ATA, max UDMA/133, 490234752 sectors (lba48)
+Aug 24 19:03:55 srv kernel: ata4: dev 0 configured for UDMA/133
+Aug 24 19:03:55 srv kernel: scsi3 : sata_promise
+Aug 24 19:03:55 srv kernel:   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: 1.02
+Aug 24 19:03:55 srv kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Aug 24 19:03:55 srv kernel:   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: 1.02
+Aug 24 19:03:55 srv kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Aug 24 19:03:55 srv kernel:   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: 1.02
+Aug 24 19:03:55 srv kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Aug 24 19:03:55 srv kernel:   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: 1.02
+Aug 24 19:03:55 srv kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Aug 24 19:03:55 srv kernel: ata5: SATA max UDMA/133 cmd 0xE080D200 ctl 0xE080D238 bmdma 0x0 irq 17
+Aug 24 19:03:55 srv kernel: ata6: SATA max UDMA/133 cmd 0xE080D280 ctl 0xE080D2B8 bmdma 0x0 irq 17
+Aug 24 19:03:55 srv kernel: ata7: SATA max UDMA/133 cmd 0xE080D300 ctl 0xE080D338 bmdma 0x0 irq 17
+Aug 24 19:03:55 srv kernel: ata8: SATA max UDMA/133 cmd 0xE080D380 ctl 0xE080D3B8 bmdma 0x0 irq 17
+Aug 24 19:03:55 srv kernel: ata5: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003 
+88:407fAug 24 19:03:55 srv kernel: ata5: dev 0 ATA, max UDMA/133, 490234752 sectors (lba48)
+Aug 24 19:03:55 srv kernel: ata5: dev 0 configured for UDMA/133
+Aug 24 19:03:55 srv kernel: scsi4 : sata_promise
+Aug 24 19:03:55 srv kernel: ata6: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003 
+88:407f
+Aug 24 19:03:55 srv kernel: ata6: dev 0 ATA, max UDMA/133, 490234752 sectors (lba48)
+Aug 24 19:03:55 srv kernel: ata6: dev 0 configured for UDMA/133
+Aug 24 19:03:55 srv kernel: scsi5 : sata_promise
+Aug 24 19:03:55 srv kernel: ata7: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003 
+88:407f
+Aug 24 19:03:55 srv kernel: ata7: dev 0 ATA, max UDMA/133, 490234752 sectors (lba48)
+Aug 24 19:03:55 srv kernel: ata7: dev 0 configured for UDMA/133
+Aug 24 19:03:55 srv kernel: scsi6 : sata_promise
+Aug 24 19:03:55 srv kernel: ata8: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003 
+88:407f
+Aug 24 19:03:55 srv kernel: ata8: dev 0 ATA, max UDMA/133, 490234752 sectors (lba48)
+Aug 24 19:03:55 srv kernel: ata8: dev 0 configured for UDMA/133
+Aug 24 19:03:55 srv kernel: scsi7 : sata_promise
+Aug 24 19:03:55 srv kernel:   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: 1.02
+Aug 24 19:03:55 srv kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Aug 24 19:03:55 srv kernel:   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: 1.02
+Aug 24 19:03:55 srv kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Aug 24 19:03:55 srv kernel:   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: 1.02
+Aug 24 19:03:55 srv kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Aug 24 19:03:55 srv kernel:   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: 1.02
+Aug 24 19:03:55 srv kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Aug 24 19:03:55 srv kernel: ata9: SATA max UDMA/133 cmd 0xE080F200 ctl 0xE080F238 bmdma 0x0 irq 18
+Aug 24 19:03:55 srv kernel: ata10: SATA max UDMA/133 cmd 0xE080F280 ctl 0xE080F2B8 bmdma 0x0 irq 18
+Aug 24 19:03:55 srv kernel: ata11: SATA max UDMA/133 cmd 0xE080F300 ctl 0xE080F338 bmdma 0x0 irq 18
+Aug 24 19:03:55 srv kernel: ata12: SATA max UDMA/133 cmd 0xE080F380 ctl 0xE080F3B8 bmdma 0x0 irq 18
+Aug 24 19:03:55 srv kernel: ata9: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003 
+88:407f
+Aug 24 19:03:55 srv kernel: ata9: dev 0 ATA, max UDMA/133, 490234752 sectors (lba48)
+Aug 24 19:03:55 srv kernel: ata9: dev 0 configured for UDMA/133
+Aug 24 19:03:55 srv kernel: scsi8 : sata_promise
+Aug 24 19:03:55 srv kernel: ata10: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003 
+88:407f
+Aug 24 19:03:55 srv kernel: ata10: dev 0 ATA, max UDMA/133, 490234752 sectors (lba48)
+Aug 24 19:03:55 srv kernel: ata10: dev 0 configured for UDMA/133
+Aug 24 19:03:55 srv kernel: scsi9 : sata_promise
+Aug 24 19:03:55 srv kernel: ata11: no device found (phy stat 00000000)
+Aug 24 19:03:55 srv kernel: ata11: thread exiting
+Aug 24 19:03:55 srv kernel: scsi10 : sata_promise
+Aug 24 19:03:55 srv kernel: ata12: no device found (phy stat 00000000)
+Aug 24 19:03:55 srv kernel: ata12: thread exiting
+Aug 24 19:03:55 srv kernel: scsi11 : sata_promise
+Aug 24 19:03:55 srv kernel:   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: 1.02
+Aug 24 19:03:55 srv kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Aug 24 19:03:55 srv kernel:   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: 1.02
+Aug 24 19:03:55 srv kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Aug 24 19:03:55 srv kernel: sata_via version 0.20
+Aug 24 19:03:55 srv kernel: sata_via(0000:00:0f.0): routed to hard irq line 6
+Aug 24 19:03:55 srv kernel: ata13: SATA max UDMA/133 cmd 0x8800 ctl 0x8402 bmdma 0x7400 irq 20
+Aug 24 19:03:55 srv kernel: ata14: SATA max UDMA/133 cmd 0x8000 ctl 0x7802 bmdma 0x7408 irq 20
+Aug 24 19:03:55 srv kernel: ata13: dev 0 cfg 49:2f00 82:346b 83:7f01 84:4003 85:3469 86:3c01 87:4003 
+88:203f
+Aug 24 19:03:55 srv kernel: ata13: dev 0 ATA, max UDMA/100, 390622887 sectors (lba48)
+Aug 24 19:03:55 srv kernel: ata13: dev 0 configured for UDMA/100
+Aug 24 19:03:55 srv kernel: scsi12 : sata_via
+Aug 24 19:03:55 srv kernel: ata14: dev 0 cfg 49:2f00 82:346b 83:7f01 84:4003 85:3469 86:3c01 87:4003 
+88:203f
+Aug 24 19:03:55 srv kernel: ata14: dev 0 ATA, max UDMA/100, 390719855 sectors (lba48)
+Aug 24 19:03:55 srv kernel: ata14: dev 0 configured for UDMA/100
+Aug 24 19:03:55 srv kernel: scsi13 : sata_via
+Aug 24 19:03:55 srv kernel:   Vendor: ATA       Model: WDC WD2000JB-00D  Rev: 1.02
+Aug 24 19:03:55 srv kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Aug 24 19:03:55 srv kernel:   Vendor: ATA       Model: WDC WD2000JB-00F  Rev: 1.02
+Aug 24 19:03:55 srv kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Aug 24 19:03:55 srv kernel: SCSI device sda: 490234752 512-byte hdwr sectors (251000 MB)
+Aug 24 19:03:55 srv kernel: SCSI device sda: drive cache: write through
+Aug 24 19:03:55 srv kernel:  /dev/scsi/host0/bus0/target0/lun0: p1
+Aug 24 19:03:55 srv kernel: Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+Aug 24 19:03:55 srv kernel: SCSI device sdb: 490234752 512-byte hdwr sectors (251000 MB)
+Aug 24 19:03:55 srv kernel: SCSI device sdb: drive cache: write through
+Aug 24 19:03:55 srv kernel:  /dev/scsi/host1/bus0/target0/lun0: p1
+Aug 24 19:03:55 srv kernel: Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
+Aug 24 19:03:55 srv kernel: SCSI device sdc: 490234752 512-byte hdwr sectors (251000 MB)
+Aug 24 19:03:55 srv kernel: SCSI device sdc: drive cache: write through
+Aug 24 19:03:55 srv kernel:  /dev/scsi/host2/bus0/target0/lun0: p1
+Aug 24 19:03:55 srv kernel: Attached scsi disk sdc at scsi2, channel 0, id 0, lun 0
+Aug 24 19:03:55 srv kernel: SCSI device sdd: 490234752 512-byte hdwr sectors (251000 MB)
+Aug 24 19:03:55 srv kernel: SCSI device sdd: drive cache: write through
+Aug 24 19:03:55 srv kernel:  /dev/scsi/host3/bus0/target0/lun0: p1
+Aug 24 19:03:55 srv kernel: Attached scsi disk sdd at scsi3, channel 0, id 0, lun 0
+Aug 24 19:03:55 srv kernel: SCSI device sde: 490234752 512-byte hdwr sectors (251000 MB)
+Aug 24 19:03:55 srv kernel: SCSI device sde: drive cache: write through
+Aug 24 19:03:55 srv kernel:  /dev/scsi/host4/bus0/target0/lun0: p1
+Aug 24 19:03:55 srv kernel: Attached scsi disk sde at scsi4, channel 0, id 0, lun 0
+Aug 24 19:03:55 srv kernel: SCSI device sdf: 490234752 512-byte hdwr sectors (251000 MB)
+Aug 24 19:03:55 srv kernel: SCSI device sdf: drive cache: write through
+Aug 24 19:03:55 srv kernel:  /dev/scsi/host5/bus0/target0/lun0: p1
+Aug 24 19:03:55 srv kernel: Attached scsi disk sdf at scsi5, channel 0, id 0, lun 0
+Aug 24 19:03:55 srv kernel: SCSI device sdg: 490234752 512-byte hdwr sectors (251000 MB)
+Aug 24 19:03:55 srv kernel: SCSI device sdg: drive cache: write through
+Aug 24 19:03:55 srv kernel:  /dev/scsi/host6/bus0/target0/lun0: p1
+Aug 24 19:03:55 srv kernel: Attached scsi disk sdg at scsi6, channel 0, id 0, lun 0
+Aug 24 19:03:55 srv kernel: SCSI device sdh: 490234752 512-byte hdwr sectors (251000 MB)
+Aug 24 19:03:55 srv kernel: SCSI device sdh: drive cache: write through
+Aug 24 19:03:55 srv kernel:  /dev/scsi/host7/bus0/target0/lun0: p1
+Aug 24 19:03:55 srv kernel: Attached scsi disk sdh at scsi7, channel 0, id 0, lun 0
+Aug 24 19:03:55 srv kernel: SCSI device sdi: 490234752 512-byte hdwr sectors (251000 MB)
+Aug 24 19:03:55 srv kernel: SCSI device sdi: drive cache: write through
+Aug 24 19:03:55 srv kernel:  /dev/scsi/host8/bus0/target0/lun0: p1
+Aug 24 19:03:55 srv kernel: Attached scsi disk sdi at scsi8, channel 0, id 0, lun 0
+Aug 24 19:03:55 srv kernel: SCSI device sdj: 490234752 512-byte hdwr sectors (251000 MB)
+Aug 24 19:03:55 srv kernel: SCSI device sdj: drive cache: write through
+Aug 24 19:03:55 srv kernel:  /dev/scsi/host9/bus0/target0/lun0: p1
+Aug 24 19:03:55 srv kernel: Attached scsi disk sdj at scsi9, channel 0, id 0, lun 0
+Aug 24 19:03:55 srv kernel: SCSI device sdk: 390622887 512-byte hdwr sectors (199999 MB)
+Aug 24 19:03:55 srv kernel: SCSI device sdk: drive cache: write through
+Aug 24 19:03:55 srv kernel:  /dev/scsi/host12/bus0/target0/lun0: p1
+Aug 24 19:03:55 srv kernel: Attached scsi disk sdk at scsi12, channel 0, id 0, lun 0
+Aug 24 19:03:55 srv kernel: SCSI device sdl: 390719855 512-byte hdwr sectors (200049 MB)
+Aug 24 19:03:55 srv kernel: SCSI device sdl: drive cache: write through
+Aug 24 19:03:55 srv kernel:  /dev/scsi/host13/bus0/target0/lun0: p1
+Aug 24 19:03:55 srv kernel: Attached scsi disk sdl at scsi13, channel 0, id 0, lun 0
+Aug 24 19:03:55 srv kernel: Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
+Aug 24 19:03:55 srv kernel: Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
+Aug 24 19:03:55 srv kernel: Attached scsi generic sg2 at scsi2, channel 0, id 0, lun 0,  type 0
+Aug 24 19:03:55 srv kernel: Attached scsi generic sg3 at scsi3, channel 0, id 0, lun 0,  type 0
+Aug 24 19:03:55 srv kernel: Attached scsi generic sg4 at scsi4, channel 0, id 0, lun 0,  type 0
+Aug 24 19:03:55 srv kernel: Attached scsi generic sg5 at scsi5, channel 0, id 0, lun 0,  type 0
+Aug 24 19:03:55 srv kernel: Attached scsi generic sg6 at scsi6, channel 0, id 0, lun 0,  type 0
+Aug 24 19:03:55 srv kernel: Attached scsi generic sg7 at scsi7, channel 0, id 0, lun 0,  type 0
+Aug 24 19:03:55 srv kernel: Attached scsi generic sg8 at scsi8, channel 0, id 0, lun 0,  type 0
+Aug 24 19:03:55 srv kernel: Attached scsi generic sg9 at scsi9, channel 0, id 0, lun 0,  type 0
+Aug 24 19:03:55 srv kernel: Attached scsi generic sg10 at scsi12, channel 0, id 0, lun 0,  type 0
+Aug 24 19:03:55 srv kernel: Attached scsi generic sg11 at scsi13, channel 0, id 0, lun 0,  type 0
+Aug 24 19:03:55 srv kernel: mice: PS/2 mouse device common for all mice
 
 
-Mostly minor fixes.
-
-Please do a
-
-	bk pull bk://kernel.bkbits.net/jgarzik/libata-upstream-2.4
-
-This will update the following files:
-
- Documentation/Configure.help |   10 ++
- drivers/scsi/libata-scsi.c   |  158 ++++++++++++++++++++++++++++++++++++++-----
- drivers/scsi/libata.h        |    2 
- drivers/scsi/sata_nv.c       |    6 +
- include/linux/ata.h          |    2 
- 5 files changed, 158 insertions(+), 20 deletions(-)
-
-through these ChangeSets:
-
-<achew@nvidia.com> (04/08/18 1.1472.1.13)
-   [libata sata_nv] fix leak on error
-   
-   Spotted by Francois Romieu.
-
-<alan@redhat.com> (04/08/18 1.1472.1.12)
-   [libata] improve translation of ATA errors to SCSI sense codes
-
-<jgarzik@pobox.com> (04/08/18 1.1472.1.11)
-   [ata] remove 'packed' attributed from struct ata_prd
-   
-   It's not needed, and it generates very poor code on some platforms.
-   
-   Noticed by Bart and David Miller.
-
-<bunk@fs.tum.de> (04/08/18 1.1472.1.10)
-   [PATCH] 2.4.28-pre1: add two SATA Configure.help entries
-   
-   The trivial patch below adds the missing Configure.help entries for two
-   new options.
-   
-   
-   Signed-off-by: Adrian Bunk <bunk@fs.tum.de>
-
-diff -Nru a/Documentation/Configure.help b/Documentation/Configure.help
---- a/Documentation/Configure.help	2004-08-23 23:41:43 -04:00
-+++ b/Documentation/Configure.help	2004-08-23 23:41:43 -04:00
-@@ -9324,6 +9324,16 @@
- 
-   If unsure, say N.
- 
-+CONFIG_SCSI_ATA_PIIX
-+  This option enables support for ICH5 Serial ATA.
-+
-+  If unsure, say N.
-+
-+CONFIG_SCSI_SATA_NV
-+  This option enables support for NVIDIA Serial ATA.
-+
-+  If unsure, say N.
-+
- CONFIG_SCSI_SATA_PROMISE
-   This option enables support for Promise Serial ATA TX2/TX4.
- 
-diff -Nru a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
---- a/drivers/scsi/libata-scsi.c	2004-08-23 23:41:43 -04:00
-+++ b/drivers/scsi/libata-scsi.c	2004-08-23 23:41:43 -04:00
-@@ -161,34 +161,158 @@
-  *	ata_to_sense_error - convert ATA error to SCSI error
-  *	@qc: Command that we are erroring out
-  *
-- *	Converts an ATA error into a SCSI error.
-- *
-- *	Right now, this routine is laughably primitive.  We
-- *	don't even examine what ATA told us, we just look at
-- *	the command data direction, and return a fatal SCSI
-- *	sense error based on that.
-+ *	Converts an ATA error into a SCSI error. While we are at it
-+ *	we decode and dump the ATA error for the user so that they
-+ *	have some idea what really happened at the non make-believe
-+ *	layer.
-  *
-  *	LOCKING:
-  *	spin_lock_irqsave(host_set lock)
-  */
- 
--void ata_to_sense_error(struct ata_queued_cmd *qc)
-+void ata_to_sense_error(struct ata_queued_cmd *qc, u8 drv_stat)
- {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
-+	u8 err = 0;
-+	unsigned char *sb = cmd->sense_buffer;
-+	/* Based on the 3ware driver translation table */
-+	static unsigned char sense_table[][4] = {
-+		/* BBD|ECC|ID|MAR */
-+		{0xd1, 		ABORTED_COMMAND, 0x00, 0x00}, 	// Device busy                  Aborted command
-+		/* BBD|ECC|ID */
-+		{0xd0,  	ABORTED_COMMAND, 0x00, 0x00}, 	// Device busy                  Aborted command
-+		/* ECC|MC|MARK */
-+		{0x61, 		HARDWARE_ERROR, 0x00, 0x00}, 	// Device fault                 Hardware error
-+		/* ICRC|ABRT */		/* NB: ICRC & !ABRT is BBD */
-+		{0x84, 		ABORTED_COMMAND, 0x47, 0x00}, 	// Data CRC error               SCSI parity error
-+		/* MC|ID|ABRT|TRK0|MARK */
-+		{0x37, 		NOT_READY, 0x04, 0x00}, 	// Unit offline                 Not ready
-+		/* MCR|MARK */
-+		{0x09, 		NOT_READY, 0x04, 0x00}, 	// Unrecovered disk error       Not ready
-+		/*  Bad address mark */
-+		{0x01, 		MEDIUM_ERROR, 0x13, 0x00}, 	// Address mark not found       Address mark not found for data field
-+		/* TRK0 */
-+		{0x02, 		HARDWARE_ERROR, 0x00, 0x00}, 	// Track 0 not found		  Hardware error
-+		/* Abort & !ICRC */
-+		{0x04, 		ABORTED_COMMAND, 0x00, 0x00}, 	// Aborted command              Aborted command
-+		/* Media change request */
-+		{0x08, 		NOT_READY, 0x04, 0x00}, 	// Media change request	  FIXME: faking offline
-+		/* SRV */
-+		{0x10, 		ABORTED_COMMAND, 0x14, 0x00}, 	// ID not found                 Recorded entity not found
-+		/* Media change */
-+		{0x08,  	NOT_READY, 0x04, 0x00}, 	// Media change		  FIXME: faking offline
-+		/* ECC */
-+		{0x40, 		MEDIUM_ERROR, 0x11, 0x04}, 	// Uncorrectable ECC error      Unrecovered read error
-+		/* BBD - block marked bad */
-+		{0x80, 		MEDIUM_ERROR, 0x11, 0x04}, 	// Block marked bad		  Medium error, unrecovered read error
-+		{0xFF, 0xFF, 0xFF, 0xFF}, // END mark 
-+	};
-+	static unsigned char stat_table[][4] = {
-+		/* Must be first because BUSY means no other bits valid */
-+		{0x80, 		ABORTED_COMMAND, 0x47, 0x00},	// Busy, fake parity for now
-+		{0x20, 		HARDWARE_ERROR,  0x00, 0x00}, 	// Device fault
-+		{0x08, 		ABORTED_COMMAND, 0x47, 0x00},	// Timed out in xfer, fake parity for now
-+		{0x04, 		RECOVERED_ERROR, 0x11, 0x00},	// Recovered ECC error	  Medium error, recovered
-+		{0xFF, 0xFF, 0xFF, 0xFF}, // END mark 
-+	};
-+	int i = 0;
- 
- 	cmd->result = SAM_STAT_CHECK_CONDITION;
--
--	cmd->sense_buffer[0] = 0x70;
--	cmd->sense_buffer[2] = MEDIUM_ERROR;
--	cmd->sense_buffer[7] = 14 - 8;	/* addnl. sense len. FIXME: correct? */
--
-+	
-+	/*
-+	 *	Is this an error we can process/parse
-+	 */
-+	 
-+	if(drv_stat & ATA_ERR)
-+		/* Read the err bits */
-+		err = ata_chk_err(qc->ap);
-+
-+	/* Display the ATA level error info */
-+	
-+	printk(KERN_WARNING "ata%u: status=0x%02x { ", qc->ap->id, drv_stat);
-+	if(drv_stat & 0x80)
-+	{
-+		printk("Busy ");
-+		err = 0;	/* Data is not valid in this case */
-+	}
-+	else {
-+		if(drv_stat & 0x40)	printk("DriveReady ");
-+		if(drv_stat & 0x20)	printk("DeviceFault ");
-+		if(drv_stat & 0x10)	printk("SeekComplete ");
-+		if(drv_stat & 0x08)	printk("DataRequest ");
-+		if(drv_stat & 0x04)	printk("CorrectedError ");
-+		if(drv_stat & 0x02)	printk("Index ");
-+		if(drv_stat & 0x01)	printk("Error ");
-+	}
-+	printk("}\n");
-+	
-+	if(err)
-+	{
-+		printk(KERN_WARNING "ata%u: error=0x%02x { ", qc->ap->id, err);
-+		if(err & 0x04)		printk("DriveStatusError ");
-+		if(err & 0x80)
-+		{
-+			if(err & 0x04)
-+				printk("BadCRC ");
-+			else
-+				printk("Sector ");
-+		}
-+		if(err & 0x40)		printk("UncorrectableError ");
-+		if(err & 0x10)		printk("SectorIdNotFound ");
-+		if(err & 0x02)		printk("TrackZeroNotFound ");
-+		if(err & 0x01)		printk("AddrMarkNotFound ");
-+		printk("}\n");
-+		
-+		/* Should we dump sector info here too ?? */
-+	}
-+		
-+	
-+	/* Look for err */
-+	while(sense_table[i][0] != 0xFF)
-+	{
-+		/* Look for best matches first */
-+		if((sense_table[i][0] & err) == sense_table[i][0])
-+		{
-+			sb[0] = 0x70;
-+			sb[2] = sense_table[i][1];
-+			sb[7] = 0x0a;
-+			sb[12] = sense_table[i][2];
-+			sb[13] = sense_table[i][3];
-+			return;
-+		}
-+		i++;
-+	}
-+	/* No immediate match */
-+	if(err)
-+		printk(KERN_DEBUG "ata%u: no sense translation for 0x%02x\n", qc->ap->id, err);
-+	
-+	/* Fall back to interpreting status bits */
-+	while(stat_table[i][0] != 0xFF)
-+	{
-+		if(stat_table[i][0] & drv_stat)
-+		{
-+			sb[0] = 0x70;
-+			sb[2] = stat_table[i][1];
-+			sb[7] = 0x0a;
-+			sb[12] = stat_table[i][2];
-+			sb[13] = stat_table[i][3];
-+			return;
-+		}
-+		i++;
-+	}
-+	/* No error ?? */
-+	printk(KERN_ERR "ata%u: called with no error (%02X)!\n", qc->ap->id, drv_stat);
- 	/* additional-sense-code[-qualifier] */
-+	
-+	sb[0] = 0x70;
-+	sb[2] = MEDIUM_ERROR;
-+	sb[7] = 0x0A;
- 	if (cmd->sc_data_direction == SCSI_DATA_READ) {
--		cmd->sense_buffer[12] = 0x11; /* "unrecovered read error" */
--		cmd->sense_buffer[13] = 0x04;
-+		sb[12] = 0x11; /* "unrecovered read error" */
-+		sb[13] = 0x04;
- 	} else {
--		cmd->sense_buffer[12] = 0x0C; /* "write error -             */
--		cmd->sense_buffer[13] = 0x02; /*  auto-reallocation failed" */
-+		sb[12] = 0x0C; /* "write error -             */
-+		sb[13] = 0x02; /*  auto-reallocation failed" */
- 	}
- }
- 
-@@ -462,7 +586,7 @@
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 
- 	if (unlikely(drv_stat & (ATA_ERR | ATA_BUSY | ATA_DRQ)))
--		ata_to_sense_error(qc);
-+		ata_to_sense_error(qc, drv_stat);
- 	else
- 		cmd->result = SAM_STAT_GOOD;
- 
-diff -Nru a/drivers/scsi/libata.h b/drivers/scsi/libata.h
---- a/drivers/scsi/libata.h	2004-08-23 23:41:43 -04:00
-+++ b/drivers/scsi/libata.h	2004-08-23 23:41:43 -04:00
-@@ -46,7 +46,7 @@
- 
- 
- /* libata-scsi.c */
--extern void ata_to_sense_error(struct ata_queued_cmd *qc);
-+extern void ata_to_sense_error(struct ata_queued_cmd *qc, u8 drv_stat);
- extern int ata_scsi_error(struct Scsi_Host *host);
- extern unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf,
- 			       unsigned int buflen);
-diff -Nru a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
---- a/drivers/scsi/sata_nv.c	2004-08-23 23:41:43 -04:00
-+++ b/drivers/scsi/sata_nv.c	2004-08-23 23:41:43 -04:00
-@@ -370,7 +370,7 @@
- 		probe_ent->mmio_base = ioremap(pci_resource_start(pdev, 5),
- 				pci_resource_len(pdev, 5));
- 		if (probe_ent->mmio_base == NULL)
--			goto err_out_free_ent;
-+			goto err_out_iounmap;
- 
- 		base = (unsigned long)probe_ent->mmio_base;
- 
-@@ -395,6 +395,10 @@
- 	ata_add_to_probe_list(probe_ent);
- 
- 	return 0;
-+
-+err_out_iounmap:
-+	if (host->host_desc->host_flags & NV_HOST_FLAGS_SCR_MMIO)
-+		iounmap(probe_ent->mmio_base);
- 
- err_out_free_ent:
- 	kfree(probe_ent);
-diff -Nru a/include/linux/ata.h b/include/linux/ata.h
---- a/include/linux/ata.h	2004-08-23 23:41:43 -04:00
-+++ b/include/linux/ata.h	2004-08-23 23:41:43 -04:00
-@@ -192,7 +192,7 @@
- struct ata_prd {
- 	u32			addr;
- 	u32			flags_len;
--} __attribute__((packed));
-+};
- 
- struct ata_taskfile {
- 	unsigned long		flags;		/* ATA_TFLAG_xxx */
