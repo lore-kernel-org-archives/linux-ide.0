@@ -1,46 +1,55 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] atapi request sense work
-Date: 27 May 2004 19:28:51 -0600
+From: Daniel Drake <dsd@gentoo.org>
+Subject: Strange kernel messages using sata_sil under 2.6.7-rc1-mm1
+Date: Fri, 28 May 2004 16:03:08 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1085707731.3117.11.camel@patibmrh9>
-References: <1084717146.3576.3.camel@patibmrh9> <40AD7FB2.10506@pobox.com><1
-	 085153750.6103.33.camel@patibmrh9><200405211746.35015.bzolnier@elka.pw.ed
-	u	 .	pl><1085162347.4791.24.camel@patibmrh9><1085170025.3083.91.camel@pati
-	bm	r h9> <40AE79E1.9020005@pobox.com><1085182749.3122.15.camel@patibmrh9> <
-	40AE9493.1040701@pobox.com><1085186021.4510.0.camel@patibmrh9>  <1085188300
-	.3658.18.camel@patibmrh9><1085608170.4148.138.camel@patibmrh9>  <1085699522
-	.3853.1.camel@patibmrh9>
+Message-ID: <40B754AC.4030607@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:63621 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265478AbUE1B24
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 May 2004 21:28:56 -0400
-In-Reply-To: <1085699522.3853.1.camel@patibmrh9>
+Received: from cpc5-hitc2-5-0-cust152.lutn.cable.ntl.com ([82.0.115.152]:58023
+	"EHLO zog.reactivated.net") by vger.kernel.org with ESMTP
+	id S263079AbUE1Nt0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 May 2004 09:49:26 -0400
+Received: from [192.168.0.2] (dsd [192.168.0.2])
+	by zog.reactivated.net (Postfix) with ESMTP id D7BC426D853
+	for <linux-ide@vger.kernel.org>; Fri, 28 May 2004 14:57:28 +0100 (BST)
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-> naive variation on your auto sense patch
-> ...
-> I'll follow up with quoted dmesg when I can ...
+Hi,
 
-Deeply boring, I'm sorry to say:
+Earlier, I switched from 2.6.6-mm2 to 2.6.7-rc1-mm1.
+I now get the following messages in dmesg, which I have not seen before:
 
-ata_tf_load_pio: feat 0x0 nsect 0x0 lba 0x0 0x12 0x0
-ata_tf_load_pio: device 0xA0
-ata_exec: cmd 0xA0
+FAILED
+   status = 1, message = 00, host = 0, driver = 08
+   Current sd: sense = 70  5
+ASC=20 ASCQ= 0
+Raw sense data:0x70 0x00 0x05 0x00 0x00 0x00 0x00 0x06 0x00 0x00 0x00 0x00 
+0x20 0x00
+FAILED
+   status = 1, message = 00, host = 0, driver = 08
+   Current sd: sense = 70  5
+ASC=20 ASCQ= 0
+Raw sense data:0x70 0x00 0x05 0x00 0x00 0x00 0x00 0x06 0x00 0x00 0x00 0x00 
+0x20 0x00
 
-That was the end of life.
+I get approximately one of these messages every 20 minutes.
+Problem persists after a reboot.
 
-Now of course I hope to abandon that naive approach in favour of naively
-misunderstanding what you're starting again with ata_check_bmdma near
-the intact inline patch of:
+grepping for "Raw sense data" suggests that this message comes from the SCSI 
+layer. The only SCSI-like thing on my system is my SATA disk. It's a Seagate 
+40GB IDE disk, connected via an IDE-SATA converter to a:
 
-http://marc.theaimsgroup.com/?l=linux-ide&m=108570321913006
+0000:01:0b.0 RAID bus controller: Silicon Image, Inc. (formerly CMD Technology 
+Inc) Silicon Image Serial ATARaid Controller [ CMD/Sil 3112/3112A ] (rev 02)
 
-Pat LaVarre
+Despite these messages, the system seems to be running OK.
 
+Is this a problem with the SATA implementation or should I report it to the 
+SCSI developers? Any patches I should try reverting or adding?
 
+Thanks,
+
+Daniel
