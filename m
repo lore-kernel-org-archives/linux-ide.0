@@ -1,34 +1,132 @@
-From: linux@horizon.com
-Subject: Re: Which SATA Combos To Consider?
-Date: 21 Feb 2005 09:25:01 -0000
-Message-ID: <20050221092501.15349.qmail@science.horizon.com>
-Received: from science.horizon.com ([192.35.100.1]:13360 "HELO
-	science.horizon.com") by vger.kernel.org with SMTP id S261930AbVBUJZC
+From: PALFFY Daniel <dpalffy-lists@rainstorm.org>
+Subject: Re: sata_sil data corruption
+Date: Mon, 21 Feb 2005 12:25:09 +0100 (CET)
+Message-ID: <Pine.LNX.4.58.0502211219250.23186@rainstorm.org>
+References: <Pine.LNX.4.58.0412281319001.5054@rainstorm.org> <421778E4.8060705@pobox.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from rainstorm.omikk.bme.hu ([152.66.114.242]:15109 "EHLO
+	rainstorm.org") by vger.kernel.org with ESMTP id S261948AbVBULZV
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Feb 2005 04:25:02 -0500
+	Mon, 21 Feb 2005 06:25:21 -0500
+In-Reply-To: <421778E4.8060705@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com, linux@horizon.com
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> In terms of hardware, AHCI (from Intel/SiS/ULi/others) and Silicon Image 
-> 3124 are the best of the current generation of "FIS-based" SATA-II 
-> controllers.  With these controllers, ATA controllers are __finally__ as 
-> efficient as SCSI controllers have been for years.
-> 
-> For SATA-I controllers, I tend to feel that the Promise SATA cards 
-> driven by the sata_promise driver are decent.
-> 
-> The rest of the SATA-I controllers all pretty much look the same, 
-> hardware-wise:  Decade-old PATA controller interface with PCI 
-> extensions, with further SATA extensions (SATA phy registers).
+On Sat, 19 Feb 2005, Jeff Garzik wrote:
 
-I had been looking hard at the Abit SU-2S, with the Marvell 88SX6081
-on board.  Is this to say that the Marvell chip is also in the latter
-category of "slow annoying PATA-like crap"?
+> PALFFY Daniel wrote:
+> > Hi,
+> >
+> > I'm trying to set up a machine with a si3112a controller (lspci: 1095:3112
+> > (rev 01) Subsystem: 1095:6112, cheap PCI card) and a ST3200822AS Rev:
+> > 3.01 disk and I see continuous silent data corruption while reading the
+> > disk. Writing seems to be ok. I have 2.6.10-ac1 built with conservative
+> > options (UP, no PREEMPT, 8k stack, no regparm). After seeing problems I
+> > tried to blacklist my drive to do MOD15, but it didn't help.
+> >
+> > Finally I did
+> >
+> >     unsigned long long i = 0;
+> >     while (write(1, &i, sizeof(i)) != -1) i++;
+> >
+> > to the only primary partition while running sata_sil. Reading it back with
+> >
+> >     unsigned long long i=0, j;
+> >     while (read(0, &j, sizeof(i)) == sizeof(i)) {
+> >         if (j != i) fprintf(stderr, "diff at %llx: read: %llx\n", i, j);
+> >         i++;
+> >     }
+> >
+> > gives similar results, but always different:
+> > diff at 5efff: read: 5ef24
+> > diff at 7ffff: read: 7ff08
+> > diff at 8ffff: read: 8ff51
+> > diff at 97fff: read: 97f00
+> > diff at affff: read: aff00
+> > diff at bffff: read: bffac
+> > diff at dffff: read: dff00
+> > diff at efffe: read: eff00
+> > diff at effff: read: eff00
+> > diff at fffbf: read: fffff
+> > and so on.
+> >
+> > Reading back the same data with the ide siimage driver worked for at least
+> > 500MB without corrupted data, but dma doesn't work with that driver, this
+> > is logged on about the first read attempt:
+> >
+> > hde: dma_intr: bad DMA status (dma_stat=76)
+> > hde: dma_intr: status=0x50 { DriveReady SeekComplete }
+> >
+> > ide: failed opcode was: unknown
+> > hde: DMA disabled
+> > ide2: reset phy, status=0x00000113, siimage_reset
+> > ide2: reset: success
+> >
+> > The machine is an old Compaq Prosignia 200, with a p2 300 and
+> > 0000:00:00.0 Host bridge: Intel Corp. 440FX - 82441FX PMC [Natoma] (rev 02)
+> > chipset. Relevant parts from dmesg:
+> >
+> > sata_sil:
+> >
+> > libata version 1.10 loaded.
+> > sata_sil version 0.8
+> > ata1: SATA max UDMA/100 cmd 0xC886A080 ctl 0xC886A08A bmdma 0xC886A000 irq 10
+> > ata2: SATA max UDMA/100 cmd 0xC886A0C0 ctl 0xC886A0CA bmdma 0xC886A008 irq 10
+> > ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003 88:207f
+> > ata1: dev 0 ATA, max UDMA/133, 390721968 sectors: lba48
+> > ata1(0): applying Seagate errata fix
+> > ata1: dev 0 configured for UDMA/100
+> > scsi1 : sata_sil
+> > ata2: no device found (phy stat 00000000)
+> > scsi2 : sata_sil
+> >   Vendor: ATA       Model: ST3200822AS       Rev: 3.01
+> >   Type:   Direct-Access                      ANSI SCSI revision: 05
+> > SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
+> > SCSI device sdb: drive cache: write back
+> >
+> > siimage:
+> >
+> > SiI3112 Serial ATA: IDE controller at PCI slot 0000:00:0a.0
+> > SiI3112 Serial ATA: chipset revision 1
+> > SiI3112 Serial ATA: 100% native mode on irq 10
+> >     ide2: MMIO-DMA , BIOS settings: hde:DMA, hdf:DMA
+> >     ide3: MMIO-DMA , BIOS settings: hdg:pio, hdh:pio
+> > Probing IDE interface ide2...
+> > hde: ST3200822AS, ATA DISK drive
+> > hde: applying pessimistic Seagate errata fix
+> > ide2 at 0xc886a080-0xc886a087,0xc886a08a on irq 10
+> > hde: max request size: 7KiB
+> > hde: 390721968 sectors (200049 MB) w/8192KiB Cache, CHS=24321/255/63
+> > hde: cache flushes supported
+> >  hde:<3>hde: dma_intr: bad DMA status (dma_stat=76)
+> > hde: dma_intr: status=0x50 { DriveReady SeekComplete }
+> >
+> > ide: failed opcode was: unknown
+> >  hde1
+> > Probing IDE interface ide3...
+> > hdg: no response (status = 0xfe)
+> > hde: dma_intr: bad DMA status (dma_stat=76)
+> > hde: dma_intr: status=0x50 { DriveReady SeekComplete }
+> >
+> > ide: failed opcode was: unknown
 
-Does anyone know an AHCI controller that can be attached to a dual opteron
-motherboard?  All of the ones mentioned seem to be built into Intel
-chipsets.
+Hi,
 
-Thanks!
+> Don't use --two-- drivers for the same hardware.
+>
+> Can you re-test with siimage disabled?
+
+Of course it was disabled while testing sata_sil and vice-versa. I've just
+tried that driver to test if the hardware was faulty. Since then, I've
+tested the same disk/controller combo in a BX based PentiumII system, and
+it worked perfectly fine, but in the Compaq machine it still failed with
+2.6.10-ac10. So I think it might be some low-level hardware
+incompatibility...
+
+--
+Daniel
+			...and Linux for all.
+
