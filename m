@@ -1,71 +1,92 @@
-From: "Kou, Haofeng" <Haofeng.Kou@idt.com>
-Subject: SI3112
-Date: Wed, 6 Aug 2003 13:22:22 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <C8AEE7623CD92344B097388DA0ABD05C0544E7AA@corpbridge.corp.idt.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: linux kernel mailing list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-
-Anyone has make the SI3112 SATA card fully work on the embedded board?
-I have tried the 2.4.21 from kernel.org, the RedHat9.0 and the MIPS
-kernel-2.4.21 from linux-mips.org. But all of them shows:
-
-hda: lost interrupt
-hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-hda: drive not ready for command
-
-Any suggestion or information are welcome!
-
-Thanks!
-
-
-
------Original Message-----
-From: Michael Buesch [mailto:fsdeveloper@yahoo.de]
-Sent: Wednesday, August 06, 2003 12:32 PM
-To: Frank Van Damme
-Cc: linux kernel mailing list; linux-ide@vger.kernel.org
+From: Michael Buesch <fsdeveloper@yahoo.de>
 Subject: Re: [2.6] system is very slow during disk access
-
+Date: Wed, 6 Aug 2003 22:47:14 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200308062247.17816.fsdeveloper@yahoo.de>
+References: <200308062052.10752.fsdeveloper@yahoo.de> <200308062331.08020.insecure@mail.od.ua>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <200308062331.08020.insecure@mail.od.ua>
+Content-Description: clearsigned data
+Content-Disposition: inline
+To: insecure@mail.od.ua
+Cc: linux kernel mailing list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-On Wednesday 06 August 2003 21:29, Frank Van Damme wrote:
-> Maybe you just didn't enable DMA on them. Use hdparm -v /dev/foo to find
-> out.
+On Wednesday 06 August 2003 22:31, insecure wrote:
+> hdparm -T -t output? dmesg? lspci? /proc/ide stuff?
 
-DMA is on.
 
-root@lfs:/home/mb> hdparm -v /dev/hda
+root@lfs:/home/mb> hdparm -T -t /dev/hda
 
 /dev/hda:
- multcount    = 16 (on)
- IO_support   =  1 (32-bit)
- unmaskirq    =  0 (off)
- using_dma    =  1 (on)
- keepsettings =  0 (off)
- readonly     =  0 (off)
- readahead    = 256 (on)
- geometry     = 14244/16/63, sectors = 80418240, start = 0
+ Timing buffer-cache reads:   128 MB in  0.37 seconds =343.22 MB/sec
+ Timing buffered disk reads:  64 MB in  1.53 seconds = 41.81 MB/sec
 
 
-root@lfs:/home/mb> hdparm -v /dev/hdc
+dmesg doesn't show any unusual messages.
 
-/dev/hdc:
- multcount    = 16 (on)
- IO_support   =  1 (32-bit)
- unmaskirq    =  0 (off)
- using_dma    =  1 (on)
- keepsettings =  0 (off)
- readonly     =  0 (off)
- readahead    = 256 (on)
- geometry     = 14244/16/63, sectors = 80418240, start = 0
 
+root@lfs:/home/mb> lspci 
+00:00.0 Host bridge: Intel Corp. 82845 845 (Brookdale) Chipset Host Bridge (rev 04)
+00:01.0 PCI bridge: Intel Corp. 82845 845 (Brookdale) Chipset AGP Bridge (rev 04)
+00:1e.0 PCI bridge: Intel Corp. 82801BA/CA/DB PCI Bridge (rev 05)
+00:1f.0 ISA bridge: Intel Corp. 82801BA ISA Bridge (LPC) (rev 05)
+00:1f.1 IDE interface: Intel Corp. 82801BA IDE U100 (rev 05)
+00:1f.2 USB Controller: Intel Corp. 82801BA/BAM USB (Hub #1) (rev 05)
+00:1f.3 SMBus: Intel Corp. 82801BA/BAM SMBus (rev 05)
+00:1f.4 USB Controller: Intel Corp. 82801BA/BAM USB (Hub #2) (rev 05)
+01:00.0 VGA compatible controller: nVidia Corporation NV25 [GeForce4 Ti4400] (rev a2)
+03:02.0 Multimedia video controller: Brooktree Corporation Bt878 Video Capture (rev 11)
+03:02.1 Multimedia controller: Brooktree Corporation Bt878 Audio Capture (rev 11)
+03:03.0 Multimedia audio controller: Ensoniq 5880 AudioPCI (rev 02)
+03:04.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL-8029(AS)
+03:0c.0 USB Controller: NEC Corporation USB (rev 41)
+03:0c.1 USB Controller: NEC Corporation USB (rev 41)
+03:0c.2 USB Controller: NEC Corporation USB 2.0 (rev 02)
+
+root@lfs:/home/mb> cat /proc/ide/drivers 
+ide-cdrom version 4.59-ac1
+ide-disk version 1.18
+
+root@lfs:/home/mb> cat /proc/ide/hda/settings 
+name                    value           min             max             mode
+- ----                    -----           ---             ---             ----
+acoustic                0               0               254             rw
+address                 0               0               2               rw
+bios_cyl                79780           0               65535           rw
+bios_head               16              0               255             rw
+bios_sect               63              0               63              rw
+bswap                   0               0               1               r
+current_speed           69              0               70              rw
+failures                0               0               65535           rw
+init_speed              69              0               70              rw
+io_32bit                1               0               3               rw
+keepsettings            0               0               1               rw
+lun                     0               0               7               rw
+max_failures            1               0               65535           rw
+multcount               16              0               16              rw
+nice1                   1               0               1               rw
+nowerr                  0               0               1               rw
+number                  0               0               3               rw
+pio_mode                write-only      0               255             w
+slow                    0               0               1               rw
+unmaskirq               0               0               1               rw
+using_dma               1               0               1               rw
+wcache                  0               0               1               rw
+
+
+root@lfs:/home/mb> cat /proc/ide/hda/model 
+IC35L040AVVA07-0
+
+
+> --
+> insecure
 
 - -- 
 Regards Michael Buesch  [ http://www.8ung.at/tuxsoft ]
@@ -74,8 +95,7 @@ Penguin on this machine:  Linux 2.6.0-test2 - i386
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.1 (GNU/Linux)
 
-iD8DBQE/MVeeoxoigfggmSgRAkVfAJ4/SIBNLy7v4+E5OgA/z4FjMcKFfgCfTF94
-orXbTJpyryLpKXwjzkZoyqU=
-=4jnz
+iD8DBQE/MWlSoxoigfggmSgRAjXOAJ9zyjWGS7G30ScpX+qff+xCY0AEzACfRVvQ
+42uPwSsmoPv5hte149jD398=
+=XNT2
 -----END PGP SIGNATURE-----
-
