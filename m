@@ -1,56 +1,45 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: [PATCH] libata atapi work #5
-Date: Fri, 14 May 2004 15:09:16 -0400
+Date: 14 May 2004 13:27:25 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40A5195C.2000402@pobox.com>
-References: <1084560167.8752.7.camel@patibmrh9>
+Message-ID: <1084562845.8752.37.camel@patibmrh9>
+References: <1084560167.8752.7.camel@patibmrh9> <40A5195C.2000402@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:61625 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262114AbUENTJ3
+Received: from email-out1.iomega.com ([147.178.1.82]:56790 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S262279AbUENT1u
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 May 2004 15:09:29 -0400
-In-Reply-To: <1084560167.8752.7.camel@patibmrh9>
+	Fri, 14 May 2004 15:27:50 -0400
+In-Reply-To: <40A5195C.2000402@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
-Pat LaVarre wrote:
->>-				if (qc && ((qc->flags & ATA_QCFLAG_POLL) == 0))
->>+				if (qc && (!(qc->tf.ctl & ATA_NIEN)))
->>...
->>-	ATA_QCFLAG_POLL		= (1 << 5), /* polling, no interrupts */
-> 
-> 
-> Back in PATA, when I set x02 ATA_NIEN, I mis/remember I saw INTRQ float,
-> rather than becoming reliably deasserted.
-> 
-> Is life better in SATA?
+> Read up in the SATA docs ...
 
-On pure SATA, you just have a bit in a FIS, as I mentioned in one of the 
-other emails (in this current email flurry :)).
+Will do at t13.org ...
 
-On bridged SATA, where either the host controller or the device, or 
-both, have an on-device SATA<->PATA bridge, the bridge must deal with 
-INTRQ.  On the whole it is _much_ more clean.
+> Reading your emails, you sound like a "hardware guy" to me :)
 
-Read up in the SATA docs on the difference between a "command FIS" and a 
-"control FIS".  Here's a quick intro...
+Yes.
 
-Both are Host-to-Device Register FIS's.  The former is sent to the 
-device when the Command shadow register is written.  The latter is sent 
-to the device when the Device Control register is written.  Both types 
-of H2D Register FIS, command and control, send a complete copy of the 
-taskfile shadow registers to the device at that time.
+Kind of you to celebrate my sanity. :-)
 
-Reading your emails, you sound like a "hardware guy" to me :)  SATA is 
-_very_ different from PATA at the hardware level.  What used to be chip 
-selects and signals are now bits in a data structure that is sent -- 
-much like an ethernet frame -- over a serial link.
+Specifically, I was salaried in 1994..1999 mostly to write device
+firmware: SCSI/ PPT/ ATAPI/ USB/ FireWire/ etc.  But often for test &
+once to ship I wrote the host-side of the cable too, most recently x86
+PATA UDMA.
 
-	Jeff
+Also I helped write the usb.org USB/ATAPI bridge spec, so I find serial/
+parallel conversion familiar.  And always my employer mass-produced one
+basic drive and then added bridges to support other kinds of cabling, so
+bridging to PATA ATAPI was my whole world in 1997..1999.
 
+Pat LaVarre
+http://sourceforge.net/projects/iomrrdtools/
+http://members.aol.com/plscsi/tools/pldd/
+http://members.aol.com/plscsi/
 
 
