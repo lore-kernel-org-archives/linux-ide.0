@@ -1,44 +1,71 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata DMADIR support
-Date: Mon, 17 May 2004 15:08:06 -0400
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [PATCH] libata atapi work #2.1
+Date: 17 May 2004 13:24:24 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40A90D96.2040002@pobox.com>
-References: <1084717146.3576.3.camel@patibmrh9> <40A7F641.3070809@pobox.com> <1084819720.4328.86.camel@patibmrh9>
+Message-ID: <1084821864.4452.2.camel@patibmrh9>
+References: <1084721991.3085.6.camel@patibmrh9> <40A7F757.9020200@pobox.com>
+	<1084805767.3083.10.camel@patibmrh9>  <40A8FD19.8050906@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:40598 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262205AbUEQTIY
+Received: from email-out2.iomega.com ([147.178.1.83]:36494 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S262175AbUEQTYo
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 May 2004 15:08:24 -0400
-In-Reply-To: <1084819720.4328.86.camel@patibmrh9>
+	Mon, 17 May 2004 15:24:44 -0400
+Received: from royntex01.iomegacorp.com (franklin [10.1.1.83])
+	by email.iomega.com (Postfix) with ESMTP id 861BF169B
+	for <linux-ide@vger.kernel.org>; Mon, 17 May 2004 13:24:43 -0600 (MDT)
+In-Reply-To: <40A8FD19.8050906@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Pat LaVarre wrote:
-> I remember I promised cross-references into the t13.org theories.  Over
-> time I hope to walk back thru ATA/PI 7, 6, 5, and 4.  Here first is most
-> of a DMADIR grep in ATA/PI 7, quoted below.
+(-: Be warned, this from me is all ack, ack, ack - no substance. :-)
 
-Under the "documents 2003" link on http://www.t13.org/ there is also the 
-original Silicon Image proposal:
+> -bk4 should include everything
+> except the obvious ... define ...
 
-ATAPI DMA Direction issues Proposal 12/21/03 Hartney
-http://www.t13.org/docs2003/e03132r3.pdf
+Yes, -bk4 works great here now, same as the collected patches did
+before.
 
-Though the latest rev of ATA/ATAPI7 docs are probably a more up-to-date 
-guide.
+> Last night's -bk4
 
-> If bit 15 of word 62 is cleared to 0, DMADIR bit in the PACKET command
-> is not required. If bit 15 of word 62  is cleared to zero, then all bits
-> of word 62 shall be cleared to zero.
+Thanks for the hint.
 
-I bet your bridge doesn't _require_ DMADIR, therefore it doesn't bother 
-with word 62?  </wild guess>
+Independently at http://kernel.org I saw notice of 2004-05-17 11:46 UTC
+-bk4 appear.  The actual patch did not arrive in the view I have here of
+http://www.kernel.org/pub/linux/kernel/v2.6/snapshots/ til later, maybe
+16:00 UTC.  Now is past 19:00 UTC.
 
-	Jeff
+Pat LaVarre
 
+P.S. "Same as" "before" is of course my destructive exercise:
+
+plscsi /dev/sg0 -i 0x12 -x "03 00:00:00 12 00" -v
+plscsi /dev/sg0 -i 0x12 -x "03 00:00:00 12 00" -v
+time pldd of if=/dev/sg0 bs=64k sbs=2k skip=0 count=1600
+time pldd of=/dev/sg0 if bs=64k sbs=2k seek=0 count=1600
+
+--- linux-2.6.6-bk4/include/linux/libata.h	2004-05-17 12:50:20.000000000 -0600
++++ linux-2.6.6-bk4-pel/include/linux/libata.h	2004-05-17 13:11:16.315019408 -0600
+@@ -33,14 +33,14 @@
+  * compile-time options
+  */
+ #undef ATA_FORCE_PIO		/* do not configure or use DMA */
+-#undef ATA_DEBUG		/* debugging output */
+-#undef ATA_VERBOSE_DEBUG	/* yet more debugging output */
++#define ATA_DEBUG		/* debugging output */
++#define ATA_VERBOSE_DEBUG	/* yet more debugging output */
+ #undef ATA_IRQ_TRAP		/* define to ack screaming irqs */
+ #undef ATA_NDEBUG		/* define to disable quick runtime checks */
+-#undef ATA_ENABLE_ATAPI		/* define to enable ATAPI support */
++#define ATA_ENABLE_ATAPI		/* define to enable ATAPI support */
+ #undef ATA_ENABLE_PATA		/* define to enable PATA support in some
+ 				 * low-level drivers */
+-#undef ATAPI_ENABLE_DMADIR	/* enables ATAPI DMADIR bridge support */
++#define ATAPI_ENABLE_DMADIR	/* enables ATAPI DMADIR bridge support */
+ 
+ 
+ /* note: prints function name for you */
 
 
