@@ -1,58 +1,149 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: PATCH: 2.6.10 - IT8212 IDE
-Date: Wed, 29 Dec 2004 23:38:27 +0100
-Message-ID: <58cb370e04122914384fba1973@mail.gmail.com>
-References: <1104246926.22366.97.camel@localhost.localdomain>
-	 <58cb370e041229092919c1b4a8@mail.gmail.com>
-	 <1104355483.31622.2.camel@localhost.localdomain>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Prarit Bhargava <prarit@sgi.com>
+Subject: Request for Info: DMA timeout rq->buffer = NULL ?
+Date: Thu, 30 Dec 2004 13:23:02 -0500
+Message-ID: <41D44786.6060708@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.207]:26351 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261303AbUL2Wi2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Dec 2004 17:38:28 -0500
-Received: by wproxy.gmail.com with SMTP id 36so119441wra
-        for <linux-ide@vger.kernel.org>; Wed, 29 Dec 2004 14:38:27 -0800 (PST)
-In-Reply-To: <1104355483.31622.2.camel@localhost.localdomain>
+Received: from mx1.redhat.com ([66.187.233.31]:8125 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S261693AbUL3SXv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Dec 2004 13:23:51 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.12.11/8.12.11) with ESMTP id iBUINpWv026562
+	for <linux-ide@vger.kernel.org>; Thu, 30 Dec 2004 13:23:51 -0500
+Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
+	by int-mx1.corp.redhat.com (8.11.6/8.11.6) with ESMTP id iBUINpr17303
+	for <linux-ide@vger.kernel.org>; Thu, 30 Dec 2004 13:23:51 -0500
+Received: from [172.16.83.37] (dhcp83-37.boston.redhat.com [172.16.83.37])
+	by mail.boston.redhat.com (8.12.8/8.12.8) with ESMTP id iBUINmPD011045
+	for <linux-ide@vger.kernel.org>; Thu, 30 Dec 2004 13:23:48 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wed, 29 Dec 2004 21:24:45 +0000, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> On Mer, 2004-12-29 at 17:29, Bartlomiej Zolnierkiewicz wrote:
-> > ide_get_best_pio_mode(drive, 4, 5, NULL) always returns 4
-> > [ quick fix == hardcode 4 for now and add FIXME ]
-> 
-> Doesn't seem that way reading the code.
+I've come across a situation which appears to be an issue where a 
+request has had a DMA timeout and then been reissued in PIO mode.  The 
+core issue is that the function ide_dma_timeout_retry sets the 
+rq->buffer = NULL.  Later on, when this request is retried in PIO mode 
+we hit a BUG() because of the NULL rq->buffer pointer.
 
-u8 ide_get_best_pio_mode (ide_drive_t *drive, u8 mode_wanted, u8
-max_mode, ide_pio_data_t *d)
-{
+I'm wondering exactly why rq->buffer = NULL?
 
-/* mode_wanted == 4, max_mode == 5 */
+I'm on 2 processor IA64 platform using the SGI IOC4 IDE driver. 
 
+Details are as follows:
+
+A request is created, bogus request = 0xe00000307a98cf18 .
+
+The request is issued to the drive.  For some reason it's timer
+fires waiting for DMA.
+
+ide-io.c:1264: ide_timer_expiry is called because of the timeout
+
+ide-io.c:1334 ide_dma_timeout_retry is called.
+
+ide-io.c:1204: ide_dma_timeout_retry
+
+This function puts the drive into PIO mode and turns off DMA.
+The drive is un-busy'd.  Part of this procedure is to NULL out the
+rq->buffer.
+
+ide-io.c:1346: ide_do_request is called
+
+ide-io.c;1055: ide_do_request
+
+The request is re-issued with the drive in PIO mode and the busted 
+rq->buffer = NULL request.
+
+ide-io.c:1178: start_request is called.
+
+ide-io.c:837: start_request
+
+ide-io.c:920: (DRIVER(drive)->do_request(drive, rq, block)) is called.
+
+This resolves to a call to ide-cd.c:2048:ide_do_rw_cdrom.
+
+ide-cd.c;2048: ide_do_rw_cdrom
+
+ide-cd.c:2071:cdrom_start_read is called
+
+ide-cd.c:1411:cdrom_start_read
+
+ide-cd.c:1421:restore_request is called
+
+ide-cd.c:1393:restore_request
+
+This function calculates rq->hard_cur_sectors, etc., based on the
+values of rq->buffer.  The problem is that rq->buffer = NULL.
+Obviously, all calculations in this function are bogus.
+
+ide-cd.c:1441: cdrom_start_packet_command is issued with the bogus request,
+and with cdrom_read_intr as the interrupt handler.
+
+Sometime later, an interrupt occurs and ide-cd.c:1110:cdrom_read_intr
+runs.
+
+ide-cd.c:1110:cdrom_read_intr
+
+ide-cd.c:1129:cdrom_decode_status is called
+
+ide-cd.c:711:cdrom_decode_status
+
+ide-cd.c:870:cdrom_queue_request_sense is called
+
+ide-cd.c:573 cdrom_queue_request_sense
+
+This function adds a new request (I will refer to this as the sense 
+request) 0xe00000307be66960,
+to the queue which simply will query the CDROM for sense.
+
+The sense request stores the bogus request on line 592:
+        rq->buffer = (void *) 0xe00000307a98cf18;
+
+This function issues the command directly to the drive and preempts any 
+existing commands.
+
+Eventually a cdrom_pc_intr occurs which returns the sense request.
+
+Another cdrom_pc_intr occurs in order to remove
+the sense request, 0xe00000307be66960, from the queue.
+
+ide-cd.c:1449:cdrom_pc_intr
+
+ide-cd.c:1482: cdrom_end_request called
+
+ide-cd.c:653:cdrom_end_request
+
+((rq->flags & REQ_SENSE) && uptodate) = 1 and the value of failed is the 
+bogus request.
+
+ide-cd.c:678:ide_end_dequeued_request called
+
+ide-io.c:206: ide_end_dequeued_request
+
+This function has been called with the bogus request, and a negative 
+value for nr_sectors.
+As you climb through the code, the return in this function depends on 
+the return value from
+drivers/block/ll_rw_blk.c:2798:__end_that_request_first .
+
+In this function, nr_bytes = nr_sectors << 9.  However, nr_bytes and 
+nr_sectors are
+negative numbers because of the bogus request value of 
+rq->nr_hard_sectors being
+munged earlier on.
+
+This causes a return of 1 from __end_that_request_first.
 ...
 
-	if (mode_wanted != 255) {
+We're totally out in the weeds here.  __end_that_request_first is coded 
+correctly and
+correctly returns 1 ("not done") all the way up to 
+ide_end_dequeued_request ... and
+then you hit
 
-/* 4 != 255 */
+ide-cd.c:679:BUG()
 
-		pio_mode = mode_wanted;
 
-/* pio_mode == 4 */
 
-	} else if (!drive->id) {
-		pio_mode = 0;
-	} else if ((pio_mode = ide_scan_pio_blacklist(id->model)) != -1) {
-		overridden = 1;
-		blacklisted = 1;
-		use_iordy = (pio_mode > 2);
-	} else {
-...
-	}
-...
-	return pio_mode;
-}
