@@ -1,76 +1,158 @@
-From: Philip Armstrong <phil@kantaka.co.uk>
-Subject: Re: (fwd) Re: Bug#289770: kernel-image-2.6.10-1-686: 2.6.10 fails to set up DMA on my IBM thinkpad
-Date: Wed, 12 Jan 2005 17:56:05 +0000
-Message-ID: <20050112175605.GA1827@kantaka.co.uk>
-References: <20050111195345.GI2618@stro.at> <20050112120245.GA24839@kantaka.co.uk> <200501121352.33520.bzolnier@elka.pw.edu.pl> <20050112133524.GA27287@kantaka.co.uk> <41E52A38.9060108@sgi.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [Fwd: ATA/x86_64 oops during SMART command]
+Date: Wed, 12 Jan 2005 13:44:46 -0500
+Message-ID: <41E5701E.7060005@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------040506010309030203030300"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsl-217-155-153-11.zen.co.uk ([217.155.153.11]:55739 "EHLO
-	217.155.153.11") by vger.kernel.org with ESMTP id S261271AbVALR4K
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:7584 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261227AbVALSpB
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 12 Jan 2005 12:56:10 -0500
-Content-Disposition: inline
-In-Reply-To: <41E52A38.9060108@sgi.com>
+	Wed, 12 Jan 2005 13:45:01 -0500
+Received: from [69.134.152.124] (helo=[10.10.10.88])
+	by www.linux.org.uk with asmtp (TLSv1:AES256-SHA:256)
+	(Exim 4.33)
+	id 1ConUK-0007xj-0e
+	for linux-ide@vger.kernel.org; Wed, 12 Jan 2005 18:45:00 +0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Prarit Bhargava <prarit@sgi.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>, maximilian attems <debian@sternwelten.at>, linux-ide@vger.kernel.org, 289770@bugs.debian.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Wed, Jan 12, 2005 at 08:46:32AM -0500, Prarit Bhargava wrote:
-> Philip and Bartlomiej,
-> 
-> I've been tracking an almost identical problem on my IA64 platform with 
-> a bk pull that is about a month old. 
-> 
-> I tracked it down to a duplicate vector request of 0x38 = 56 by the 
-> mmtimer -- take a look at /proc/interrupts, /proc/ioports, /proc/iomem 
-> and see if anything has requested the specific area that your CD is 
-> trying to get.
+This is a multi-part message in MIME format.
+--------------040506010309030203030300
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Interrupts and iomem seem pretty much the same, but ioports looks like
-the following:
 
-bucephalus:~# diff -W 80 --side-by-side 2.6.8/ioports 2.6.10/ioports
-0000-001f : dma1                        0000-001f : dma1
-0020-0021 : pic1                        0020-0021 : pic1
-0040-005f : timer                     | 0040-0043 : timer0
-                                      > 0050-0053 : timer1
-0060-006f : keyboard                    0060-006f : keyboard
-0070-0077 : rtc                         0070-0077 : rtc
-0080-008f : dma page reg                0080-008f : dma page reg
-00a0-00a1 : pic2                        00a0-00a1 : pic2
-00c0-00df : dma2                        00c0-00df : dma2
-00f0-00ff : fpu                         00f0-00ff : fpu
-01f0-01f7 : ide0                        01f0-01f7 : ide0
-0200-0207 : ns558-pnp                   0200-0207 : ns558-pnp
-03bc-03be : parport0                    03bc-03be : parport0
-03c0-03df : vga+                        03c0-03df : vga+
-03f6-03f6 : ide0                        03f6-03f6 : ide0
-03f8-03ff : serial                      03f8-03ff : serial
-04d0-04d1 : pnp 00:0a                   04d0-04d1 : pnp 00:0a
-0530-0533 : Crystal audio controller    0530-0533 : Crystal audio
-controller
-0cf8-0cff : PCI conf1                   0cf8-0cff : PCI conf1
-1000-100f : 0000:00:07.1              <
-  1000-1007 : ide0                    <
-15e0-15ef : pnp 00:0a                   15e0-15ef : pnp 00:0a
-4000-40ff : PCI CardBus #02             4000-40ff : PCI CardBus #02
-4400-44ff : PCI CardBus #02             4400-44ff : PCI CardBus #02
-4800-48ff : PCI CardBus #06             4800-48ff : PCI CardBus #06
-4c00-4cff : PCI CardBus #06             4c00-4cff : PCI CardBus #06
-8400-841f : 0000:00:07.2                8400-841f : 0000:00:07.2
-  8400-841f : uhci_hcd                    8400-841f : uhci_hcd
-d000-dfff : PCI Bus #01                 d000-dfff : PCI Bus #01
-                                      > ef00-ef3f : 0000:00:07.3
-efa0-efbf : 0000:00:07.3                efa0-efbf : 0000:00:07.3
-  ef00-efaf : pnp 00:0a               | fcf0-fcff : 0000:00:07.1
-    ef00-ef3f : 0000:00:07.3          |   fcf8-fcff : pnp 00:1c
-fcf8-fcff : pnp 00:1c                 <
+--------------040506010309030203030300
+Content-Type: message/rfc822;
+ name="ATA/x86_64 oops during SMART command"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ATA/x86_64 oops during SMART command"
 
-cheers,
+Return-path: <SRS0=dhEd=P3=vger.kernel.org=linux-kernel-owner+jgarzik=40pobox.com-S261323AbVALKkj@bounce2.pobox.com>
+Envelope-to: jgarzik@canuck.infradead.org
+Delivery-date: Wed, 12 Jan 2005 05:43:12 -0500
+Received: from integer.pobox.com ([208.58.1.194])
+	by canuck.infradead.org with esmtp (Exim 4.43 #1 (Red Hat Linux))
+	id 1Cofy2-0007vM-8C
+	for jgarzik@canuck.infradead.org; Wed, 12 Jan 2005 05:43:12 -0500
+Received: from integer.pobox.com (localhost [127.0.0.1])
+	by integer.pobox.com (Postfix) with ESMTP id 2CCF3EB25E
+	for <jgarzik@canuck.infradead.org>; Wed, 12 Jan 2005 05:43:09 -0500 (EST)
+Delivered-To: jgarzik@pobox.com
+Received: from vger.kernel.org (vger.kernel.org [12.107.209.244])
+	by integer.pobox.com (Postfix) with ESMTP id 11CADE6515
+	for <jgarzik@pobox.com>; Wed, 12 Jan 2005 05:43:09 -0500 (EST)
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S261323AbVALKkj (ORCPT <rfc822;jgarzik@pobox.com>);
+	Wed, 12 Jan 2005 05:40:39 -0500
+Received: (majordomo@vger.kernel.org) by vger.kernel.org id S261325AbVALKkj
+	(ORCPT <rfc822;linux-kernel-outgoing>);
+	Wed, 12 Jan 2005 05:40:39 -0500
+Received: from relay.muni.cz ([147.251.4.35]:1678 "EHLO tirith.ics.muni.cz")
+	by vger.kernel.org with ESMTP id S261323AbVALKk2 (ORCPT
+	<rfc822;linux-kernel@vger.kernel.org>);
+	Wed, 12 Jan 2005 05:40:28 -0500
+Received: from anxur1.fi.muni.cz (anxur1.fi.muni.cz [147.251.48.42])
+	by tirith.ics.muni.cz (8.13.2/8.13.2) with ESMTP id j0CAeP2a024135
+	for <linux-kernel@vger.kernel.org>; Wed, 12 Jan 2005 11:40:25 +0100
+Received: by anxur1.fi.muni.cz (Postfix, from userid 11561)
+	id 45D5D22318D; Wed, 12 Jan 2005 11:40:25 +0100 (CET)
+Date: Wed, 12 Jan 2005 11:40:25 +0100
+From: Jan Kasprzak <kas@fi.muni.cz>
+To: linux-kernel@vger.kernel.org
+Subject: ATA/x86_64 oops during SMART command
+Message-ID: <20050112104025.GE13145@fi.muni.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.4.1i
+X-Muni-Envelope-From: kas@fi.muni.cz
+X-Muni-Virus-Test: Clean
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+X-Mailing-List: linux-kernel@vger.kernel.org
+X-Spam-Score: 0.0 (/)
+X-IMAPbase: 1104879958 7236
+X-UID: 7233
+X-Keywords: 
 
-Phil
+	Hi all,
+
+	today I have found that SMART self-test on my /dev/hdb failed.
+When trying to do selective self-test for the affected blocks, the
+smartctl command segfaulted in kernel. Is this a smartctl bug or
+a IDE driver bug?
+
+	The command line was the following:
+
+# smartctl -t select,14552074-14552300 /dev/hdb
+smartctl version 5.33 [x86_64-redhat-linux-gnu] Copyright (C) 2002-4 Bruce AllenHome page is http://smartmontools.sourceforge.net/
+
+=== START OF OFFLINE IMMEDIATE AND SELF-TEST SECTION ===
+Killed
+#
+
+	The machine is ASUS SK8V (VIA KT800), Athlon FX-51 running
+2.6.10 and Fedora Core 3. End of my dmesg(8) output is here:
+
+end_request: I/O error, dev hdb, sector 14552072
+hdb: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+hdb: dma_intr: error=0x40 { UncorrectableError }, LBAsect=14552078, high=0, low=14552078, sector=14552072
+ide: failed opcode was: unknown
+end_request: I/O error, dev hdb, sector 14552072
+Unable to handle kernel NULL pointer dereference at 0000000000000048 RIP:
+<ffffffff80286c50>{pre_task_out_intr+160}
+PML4 3c9b0067 PGD 0
+Oops: 0000 [1]
+CPU 0
+Modules linked in: loop vfat fat parport_pc lp parport sd_mod binfmt_misc ohci1394 ieee1394 usb_storage floppy sata_via libata scsi_mod
+Pid: 27322, comm: smartctl Not tainted 2.6.10
+RIP: 0010:[<ffffffff80286c50>] <ffffffff80286c50>{pre_task_out_intr+160}
+RSP: 0018:000001002fff3ac8  EFLAGS: 00010216
+RAX: 0000000000000000 RBX: ffffffff80493010 RCX: 0000000000000170
+RDX: ffffffff80481240 RSI: 000001003fd32640 RDI: ffffffff8047fcc0
+RBP: 0000000000000000 R08: 000000000000752f R09: 000001001fcf2000
+R10: 0000000000000000 R11: ffffffff80286bb0 R12: 0000000000000000
+R13: 000001003fd32600 R14: ffffffff80492c80 R15: 00000000ffffffff
+FS:  0000002a9579eb00(0000) GS:ffffffff804b36c0(0000) knlGS:00000000558a5ea0
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 0000000000000048 CR3: 0000000000101000 CR4: 00000000000006e0
+Process smartctl (pid: 27322, threadinfo 000001002fff2000, task 0000010012922750)
+Stack: 0000000000000000 ffffffff80493010 000001002fff3ba8 ffffffff80281e64
+       0000000000000000 000001003fd32640 000001002fff3ba8 0000000000000016
+       0000000000000002 000001002fff3ba8
+Call Trace:<ffffffff80281e64>{ide_do_request+1268} <ffffffff802824f9>{ide_do_drive_cmd+201}
+       <ffffffff80286d83>{ide_diag_taskfile+227} <ffffffff8028712d>{ide_taskfile_ioctl+765}
+       <ffffffff80286bb0>{pre_task_out_intr+0} <ffffffff80286aa0>{task_out_intr+0}
+       <ffffffff8027fd0f>{generic_ide_ioctl+975} <ffffffff80224cf9>{pty_write+89}
+       <ffffffff8022132d>{tty_default_put_char+29} <ffffffff80221d21>{opost+449}
+       <ffffffff80223e7c>{write_chan+892} <ffffffff8025a2ca>{blkdev_ioctl+1818}
+       <ffffffff8021e484>{tty_write+628} <ffffffff80127a04>{recalc_task_prio+436}
+       <ffffffff80382090>{thread_return+41} <ffffffff80173a90>{sys_ioctl+880}
+       <ffffffff8010d19a>{system_call+126}
+
+Code: 48 83 7d 48 00 74 07 c7 45 70 00 00 00 00 48 8b 83 90 00 00
+RIP <ffffffff80286c50>{pre_task_out_intr+160} RSP <000001002fff3ac8>
+CR2: 0000000000000048
+
+-Yenya
 
 -- 
-http://www.kantaka.co.uk/ .oOo. public key: http://www.kantaka.co.uk/gpg.txt
+| Jan "Yenya" Kasprzak  <kas at {fi.muni.cz - work | yenya.net - private}> |
+| GPG: ID 1024/D3498839      Fingerprint 0D99A7FB206605D7 8B35FCDE05B18A5E |
+| http://www.fi.muni.cz/~kas/   Czech Linux Homepage: http://www.linux.cz/ |
+> Whatever the Java applications and desktop dances may lead to, Unix will <
+> still be pushing the packets around for a quite a while.      --Rob Pike <
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
+
+
+--------------040506010309030203030300--
