@@ -1,186 +1,73 @@
-From: Helge Hafting <helgehaf@aitel.hist.no>
-Subject: [PATCH] Some Kconfig corrections for ide drivers
-Date: Tue, 13 May 2003 11:33:32 +0200
+From: pacho baratta <pachox@evolinux.it>
+Subject: /dev/hda problem with samsung hd
+Date: 22 May 2003 14:08:43 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <3EC0BBEC.7030701@aitel.hist.no>
+Message-ID: <1053605323.1135.16.camel@alice>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hermine.idb.hist.no ([158.38.50.15]:8966 "HELO
-	hermine.idb.hist.no") by vger.kernel.org with SMTP id S263390AbTEMJW0
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 May 2003 05:22:26 -0400
+Received: from [213.140.2.50] ([213.140.2.50]:57540 "EHLO eta.fastwebnet.it")
+	by vger.kernel.org with ESMTP id S261788AbTEVLvx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 May 2003 07:51:53 -0400
+Received: from [5.8.94.75] (5.8.94.75) by eta.fastwebnet.it (6.7.016)
+        id 3EAF5CD20033331D for linux-ide@vger.kernel.org; Thu, 22 May 2003 14:04:57 +0200
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 
-Ide hardware seems to have moved from drivers/ide
-to drivers/ide/pci or drivers/ide/legacy.
+i'm working with a disk (samsung sv1022d) that my system cannot see. i
+have a live cd with kernel 2.4.20 and glibc-2.2.5.
 
-This patch updates Kconfig accordingly, so people
-reading the help texts are told to look at
-<file:drivers/ide/pci/sis5513.c>
-instead of the nonexistant
-<file:drivers/ide/sis5513.c>
-There are similiar updated for the other ide drivers.
+now when i boot i find in dmesg:
 
-Helge Hafting
+hda samsung sv1022d my100 ata disk drive
+hda: task_no_data_intr 0x51 {DriveRady SeekComplete Error}
+hda: task_no_data_intr 0x04 {DriveStatusError}
+hda: 1 sectors (0 mb) w/480KiB Cache CHS=1240/255/63
 
---- Kconfig.orig        2003-05-05 01:53:14.000000000 +0200
-+++ Kconfig     2003-05-13 11:18:19.000000000 +0200
-@@ -456,7 +456,7 @@
+....
 
-           If you say Y here, you also need to say Y to "Use DMA by default
-           when available", above.  Please read the comments at the top of
--         <file:drivers/ide/alim15x3.c>.
-+         <file:drivers/ide/pci/alim15x3.c>.
+hda : hda : bad access : block 0 count 2
+end request I/O error dev 03:030 (hda) sector 0
 
-           If unsure, say N.
 
-@@ -543,7 +543,7 @@
-         depends on BLK_DEV_HPT34X && IDEDMA_PCI_WIP
-         help
-           This is a dangerous thing to attempt currently! Please read the
--         comments at the top of <file:drivers/ide/hpt34x.c>.  If you say Y
-+         comments at the top of <file:drivers/ide/pci/hpt34x.c>.  If 
-you say Y
-           here, then say Y to "Use DMA by default when available" as well.
+so i tried parted, this is the response:
+/dev/hda disk label not recognized
+the operating system think the geometry on dev/hda is 0/255/63
 
-           If unsure, say N.
-@@ -605,14 +605,14 @@
-           This driver adds detection and support for the NS87415 chip
-           (used in SPARC64, among others).
+and doesn't give me acess to the disk.
 
--         Please read the comments at the top of 
-<file:drivers/ide/ns87415.c>.
-+         Please read the comments at the top of 
-<file:drivers/ide/pci/ns87415.c>.
+same for fdisk:
+it simply prints: impossible to read /dev/hda.
 
-  config BLK_DEV_OPTI621
-         tristate "OPTi 82C621 chipset enhanced support (EXPERIMENTAL)"
-         depends on PCI && BLK_DEV_IDEPCI && EXPERIMENTAL
-         help
-           This is a driver for the OPTi 82C621 EIDE controller.
--         Please read the comments at the top of 
-<file:drivers/ide/opti621.c>.
-+         Please read the comments at the top of 
-<file:drivers/ide/pci/opti621.c>.
+hdparm -iv /dev/hda says:
+multcount	0 off
+i/o_support		0	
+unmaskirq	0
+dma_supprt		1
+keepsettings		0
+readahead		8
+readonly		0
+geometry		1240/255/63 sectors 1 start 0
 
-  config BLK_DEV_PDC202XX_OLD
-         tristate "PROMISE PDC202{46|62|65|67} support"
-@@ -631,7 +631,8 @@
-           when the PDC20265 BIOS has been disabled (for faster boot up).
+disk samsung v1022d my100
+drive conform to ata-atapi-4
 
-           Please read the comments at the top of
--         <file:drivers/ide/pdc202xx.c>.
-+         <file:drivers/ide/pci/pdc202xx_old.c>, and
-+         <file:drivers/ide/pci/pdc202xx_new.c>.
 
-           If unsure, say N.
+so i inserted my redhat sysadmin cd.
+by that (it a kernel 2.4.14) i have access to the disk, fix the label by
+parted, rebuild the partitions but when i reboot with lfs i see
+everything as before. 
+simply lfs system has not access to the disk
 
-@@ -689,7 +690,7 @@
-           If you say Y here, you need to say Y to "Use DMA by default when
-           available" as well.
+well i tried to change setting in bios and put CHS=1240/255/63 with same
+results.
 
--         Please read the comments at the top of 
-<file:drivers/ide/sis5513.c>.
-+         Please read the comments at the top of 
-<file:drivers/ide/pci/sis5513.c>.
+ideas?
 
-  config BLK_DEV_SLC90E66
-         tristate "SLC90E66 chipset support"
-@@ -705,7 +706,7 @@
-           available" as well.
-
-           Please read the comments at the top of
--         drivers/ide/slc90e66.c.
-+         <file:drivers/ide/pci/slc90e66.c>.
-
-  config BLK_DEV_TRM290
-         tristate "Tekram TRM290 chipset support"
-@@ -714,7 +715,7 @@
-           This driver adds support for bus master DMA transfers
-           using the Tekram TRM290 PCI IDE chip. Volunteers are
-           needed for further tweaking and development.
--         Please read the comments at the top of 
-<file:drivers/ide/trm290.c>.
-+         Please read the comments at the top of 
-<file:drivers/ide/pci/trm290.c>.
-
-  config BLK_DEV_VIA82CXXX
-         tristate "VIA82CXXX chipset support"
-@@ -945,7 +946,7 @@
-           boot parameter.  It enables support for the secondary IDE 
-interface
-           of the ALI M1439/1443/1445/1487/1489 chipsets, and permits faster
-           I/O speeds to be set as well.  See the files
--         <file:Documentation/ide.txt> and <file:drivers/ide/ali14xx.c> for
-+         <file:Documentation/ide.txt> and 
-<file:drivers/ide/legacy/ali14xx.c> for
-           more info.
-
-  config BLK_DEV_DTC2278
-@@ -956,7 +957,7 @@
-           boot parameter. It enables support for the secondary IDE 
-interface
-           of the DTC-2278 card, and permits faster I/O speeds to be set as
-           well. See the <file:Documentation/ide.txt> and
--         <file:drivers/ide/dtc2278.c> files for more info.
-+         <file:drivers/ide/legacy/dtc2278.c> files for more info.
-
-  config BLK_DEV_HT6560B
-         tristate "Holtek HT6560B support"
-@@ -966,7 +967,7 @@
-           boot parameter. It enables support for the secondary IDE 
-interface
-           of the Holtek card, and permits faster I/O speeds to be set 
-as well.
-           See the <file:Documentation/ide.txt> and
--         <file:drivers/ide/ht6560b.c> files for more info.
-+         <file:drivers/ide/legacy/ht6560b.c> files for more info.
-
-  config BLK_DEV_PDC4030
-         tristate "PROMISE DC4030 support (EXPERIMENTAL)"
-@@ -979,7 +980,7 @@
-           supported (and probably never will be since I don't think the 
-cards
-           support them). This driver is enabled at runtime using the 
-"ide0=dc4030"
-           or "ide1=dc4030" kernel boot parameter. See the
--         <file:drivers/ide/pdc4030.c> file for more info.
-+         <file:drivers/ide/legacy/pdc4030.c> file for more info.
-
-  config BLK_DEV_QD65XX
-         tristate "QDI QD65xx support"
-@@ -987,7 +988,7 @@
-         help
-           This driver is enabled at runtime using the "ide0=qd65xx" kernel
-           boot parameter.  It permits faster I/O speeds to be set.  See the
--         <file:Documentation/ide.txt> and <file:drivers/ide/qd65xx.c> for
-+         <file:Documentation/ide.txt> and 
-<file:drivers/ide/legacy/qd65xx.c> for
-           more info.
-
-  config BLK_DEV_UMC8672
-@@ -998,7 +999,7 @@
-           boot parameter. It enables support for the secondary IDE 
-interface
-           of the UMC-8672, and permits faster I/O speeds to be set as well.
-           See the files <file:Documentation/ide.txt> and
--         <file:drivers/ide/umc8672.c> for more info.
-+         <file:drivers/ide/legacy/umc8672.c> for more info.
-
-  config BLK_DEV_HD_ONLY
-         bool "Old hard disk (MFM/RLL/IDE) driver"
-@@ -1067,7 +1068,8 @@
-           available" as well.
-
-           Please read the comments at the top of
--         <file:drivers/ide/pdc202xx.c>.
-+         <file:drivers/ide/pci/pdc202xx_old.c>, and
-+         <file:drivers/ide/pci/pdc202xx_new.c>.
-
-           If unsure, say N.
-
+pacho
+-- 
+pacho baratta			IT Consultant
+tel. +39 347 078.51.31		www.evolinux.it
+mail: pachox@evolinux.it
 
