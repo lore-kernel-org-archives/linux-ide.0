@@ -1,12 +1,13 @@
 From: janitor@sternwelten.at
-Subject: [patch 4/5]  ide-tape: replace schedule_timeout() with 	msleep()
-Date: Thu, 02 Sep 2004 01:19:34 +0200
+Subject: [patch 3/5]  ide-cd: replace schedule_timeout() with 	msleep()
+Date: Thu, 02 Sep 2004 01:19:29 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <E1C2eO7-0003eC-1z@sputnik>
+Message-ID: <E1C2eO1-0003dQ-CV@sputnik>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:8336 "EHLO baikonur.stro.at")
-	by vger.kernel.org with ESMTP id S267998AbUIAXTf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Sep 2004 19:19:35 -0400
+Received: from baikonur.stro.at ([213.239.196.228]:17097 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S268115AbUIAXT3
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Sep 2004 19:19:29 -0400
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: B.Zolnierkiewicz@elka.pw.edu.pl, alan@redhat.com, janitor@sternwelten.at
@@ -29,15 +30,16 @@ msleep(jiffies_to_msecs(some_time));
 
 msleep() is not exactly the same as the previous code, but I only did
 this replacement where I thought long delays were *desired*. If this is
-not the case here, then just disregard this patch.
+not the case here, then just disregard this patch. I think in this case,
+though, because of the while() loop, this was the desired effect.
 
 Thanks,
 Nish
 
 
 
-Description: Uses msleep() instead of schedule_timeout() to guarantee
-the task delays at least the desired time amount.
+Description: Replace cdrom_sleep() with msleep() and remove
+cdrom_sleep() definition.
 
 Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
 Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
@@ -46,21 +48,40 @@ Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
 
 ---
 
- linux-2.6.9-rc1-bk7-max/drivers/ide/ide-tape.c |    3 +--
- 1 files changed, 1 insertion(+), 2 deletions(-)
+ linux-2.6.9-rc1-bk7-max/drivers/ide/ide-cd.c |   15 +--------------
+ 1 files changed, 1 insertion(+), 14 deletions(-)
 
-diff -puN drivers/ide/ide-tape.c~msleep-drivers_ide_ide-tape drivers/ide/ide-tape.c
---- linux-2.6.9-rc1-bk7/drivers/ide/ide-tape.c~msleep-drivers_ide_ide-tape	2004-09-01 19:34:48.000000000 +0200
-+++ linux-2.6.9-rc1-bk7-max/drivers/ide/ide-tape.c	2004-09-01 19:34:48.000000000 +0200
-@@ -2858,8 +2858,7 @@ static int idetape_wait_ready(ide_drive_
- 		} else if (!(tape->sense_key == 2 && tape->asc == 4 &&
- 			     (tape->ascq == 1 || tape->ascq == 8)))
- 			return -EIO;
--		current->state = TASK_INTERRUPTIBLE;
--  		schedule_timeout(HZ / 10);
-+		msleep(100);
- 	}
- 	return -EIO;
+diff -puN drivers/ide/ide-cd.c~msleep-drivers_ide_ide-cd drivers/ide/ide-cd.c
+--- linux-2.6.9-rc1-bk7/drivers/ide/ide-cd.c~msleep-drivers_ide_ide-cd	2004-09-01 19:34:48.000000000 +0200
++++ linux-2.6.9-rc1-bk7-max/drivers/ide/ide-cd.c	2004-09-01 19:34:48.000000000 +0200
+@@ -1519,19 +1519,6 @@ static ide_startstop_t cdrom_do_packet_c
  }
+ 
+ 
+-/* Sleep for TIME jiffies.
+-   Not to be called from an interrupt handler. */
+-static
+-void cdrom_sleep (int time)
+-{
+-	int sleep = time;
+-
+-	do {
+-		set_current_state(TASK_INTERRUPTIBLE);
+-		sleep = schedule_timeout(sleep);
+-	} while (sleep);
+-}
+-
+ static
+ int cdrom_queue_packet_command(ide_drive_t *drive, struct request *rq)
+ {
+@@ -1566,7 +1553,7 @@ int cdrom_queue_packet_command(ide_drive
+ 				/* The drive is in the process of loading
+ 				   a disk.  Retry, but wait a little to give
+ 				   the drive time to complete the load. */
+-				cdrom_sleep(2 * HZ);
++				msleep(2000);
+ 			} else {
+ 				/* Otherwise, don't retry. */
+ 				retries = 0;
 
 _
