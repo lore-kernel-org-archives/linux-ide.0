@@ -1,40 +1,34 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: H8/300 target support patch
-Date: Fri, 20 Feb 2004 19:42:00 +0100
+From: Russell King <rmk@arm.linux.org.uk>
+Subject: [PATCH] ICS IDE is not a PCI IDE interface
+Date: Fri, 20 Feb 2004 19:44:13 +0000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200402201942.00232.bzolnier@elka.pw.edu.pl>
-References: <m2y8r4naht.wl%ysato@users.sourceforge.jp> <200402201625.42842.bzolnier@elka.pw.edu.pl> <m2hdxl3a5s.wl%ysato@users.sourceforge.jp>
+Message-ID: <20040220194412.C12815@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:63929 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261257AbUBTSf4
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Feb 2004 13:35:56 -0500
-In-Reply-To: <m2hdxl3a5s.wl%ysato@users.sourceforge.jp>
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:26888 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S261376AbUBTToR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 20 Feb 2004 14:44:17 -0500
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 
-On Friday 20 of February 2004 18:58, Yoshinori Sato wrote:
+Don't list icside.o in drivers/ide/pci/Makefile - it's in drivers/ide/arm.
 
-> > - added #if !defined(__H8300H__) to ide-proc.c
-> >   (only place where ->OUTL is used, ->INL is unused in generic IDE code)
->
-> "__H8300S__" becomes the same condition, too.
+--- orig/drivers/ide/pci/Makefile	Thu Feb  5 15:25:31 2004
++++ linux/drivers/ide/pci/Makefile	Thu Feb  5 15:35:16 2004
+@@ -11,7 +11,6 @@ obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c
+ obj-$(CONFIG_BLK_DEV_HPT34X)		+= hpt34x.o
+ obj-$(CONFIG_BLK_DEV_HPT366)		+= hpt366.o
+ #obj-$(CONFIG_BLK_DEV_HPT37X)		+= hpt37x.o
+-obj-$(CONFIG_BLK_DEV_IDE_ICSIDE)	+= icside.o
+ obj-$(CONFIG_BLK_DEV_IT8172)		+= it8172.o
+ obj-$(CONFIG_BLK_DEV_NS87415)		+= ns87415.o
+ obj-$(CONFIG_BLK_DEV_OPTI621)		+= opti621.o
 
-Oh yes, it should be CONFIG_H8300.
-
-> > - __ide_outl() and __ide_inl() removed
-> > - redundant includes removed
-> > - init driver through initcall (so no need to make changes in ide.c)
->
-> It seems to have been overwritten with default_hwif_iops
-> setting of h8300_hwif_iops in module_init.
-
-Yep, h8300_ide_init() still should be called from ide.c.
-(because ide_register_hw() checks "initialization" flag etc.)
-
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 PCMCIA      - http://pcmcia.arm.linux.org.uk/
+                 2.6 Serial core
