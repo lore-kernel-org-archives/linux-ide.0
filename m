@@ -1,27 +1,26 @@
-From: "Adam J. Richter" <adam@yggdrasil.com>
-Subject: 2.5.70-bk[56] breaks disk partitioning with multiple IDE disks
-Date: Sun, 1 Jun 2003 15:59:02 -0700
+From: viro@parcelfarce.linux.theplanet.co.uk
+Subject: [FIX] Re: 2.5.70-bk[56] breaks disk partitioning with multiple IDE disks
+Date: Mon, 2 Jun 2003 00:53:33 +0100
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200306012259.h51Mx2i14095@freya.yggdrasil.com>
+Message-ID: <20030601235333.GN9502@parcelfarce.linux.theplanet.co.uk>
+References: <200306012259.h51Mx2i14095@freya.yggdrasil.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <200306012259.h51Mx2i14095@freya.yggdrasil.com>
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Adam J. Richter" <adam@yggdrasil.com>
 List-Id: linux-ide@vger.kernel.org
 
-	Disk partition under linux-2.5.70-bk[56] systems with two
-IDE disks is broken.  Under these kernels, the first disk gets
-the partitioning of the second disk.  Reverting drivers/ide/ide.c
-to the 2.5.70-bk4 version makes the problem go away.
+On Sun, Jun 01, 2003 at 03:59:02PM -0700, Adam J. Richter wrote:
+> 	Disk partition under linux-2.5.70-bk[56] systems with two
+> IDE disks is broken.  Under these kernels, the first disk gets
+> the partitioning of the second disk.  Reverting drivers/ide/ide.c
+> to the 2.5.70-bk4 version makes the problem go away.
 
-	However, there were other changes made to ide.c that are
-probably not related to this problem, and I haven't yet analyzed the
-problem enough to suggest a potentially correct patch.
+vi drivers/ide/ide.c -c'/drive->list.*driver->drives/s/list_add/&_tail/|x'
 
-	Note that I use user-level disk partition table parsing via
-partx from util-linux and run ide as a loadable module.  It is
-possible that other configuations might not experience this problem.
-
-Adam J. Richter     __     ______________   575 Oroville Road
-adam@yggdrasil.com     \ /                  Miplitas, California 95035
-+1 408 309-6081         | g g d r a s i l   United States of America
-                         "Free Software For The Rest Of Us."
+Now that we use idedefault_driver.drives instead of ata_unused, the order
+of drives on the driver->drives becomes significant; note that when we added
+to ata_unused, we had done that to the end of list.
