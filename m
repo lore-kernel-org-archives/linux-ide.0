@@ -1,38 +1,75 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [patch][3/9] ide: add ide_sg_init() helper
-Date: Thu, 9 Sep 2004 16:47:05 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040909144705.GD1737@suse.de>
-References: <200409082126.49832.bzolnier@elka.pw.edu.pl> <413FCB61.7060604@pobox.com> <200409091554.41718.bzolnier@elka.pw.edu.pl>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [patch][9/9] block: remove bio walking
+Date: Thu, 9 Sep 2004 15:54:20 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20040909155420.D6434@flint.arm.linux.org.uk>
+References: <200409082127.04331.bzolnier@elka.pw.edu.pl> <200409091553.13918.bzolnier@elka.pw.edu.pl> <20040909150444.C6434@flint.arm.linux.org.uk> <200409091628.25304.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S265195AbUIIOsn@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:12804 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S265230AbUIIOy3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Sep 2004 10:54:29 -0400
 Content-Disposition: inline
-In-Reply-To: <200409091554.41718.bzolnier@elka.pw.edu.pl>
-To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <200409091628.25304.bzolnier@elka.pw.edu.pl>; from bzolnier@elka.pw.edu.pl on Thu, Sep 09, 2004 at 04:28:25PM +0200
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, Jeff Garzik <jgarzik@pobox.com>
 
-On Thu, Sep 09 2004, Bartlomiej Zolnierkiewicz wrote:
-> 
-> On Thursday 09 September 2004 05:17, Jeff Garzik wrote:
-> > Bartlomiej Zolnierkiewicz wrote:
-> > > +static inline void ide_sg_init(struct scatterlist *sg, u8 *buf, unsigned int buflen)
-> > > +{
-> > > +	memset(sg, 0, sizeof(*sg));
-> > > +
-> > > +	sg->page = virt_to_page(buf);
-> > > +	sg->offset = offset_in_page(buf);
-> > > +	sg->length = buflen;
-> > > +}
-> > > +
+On Thu, Sep 09, 2004 at 04:28:25PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Thursday 09 September 2004 16:04, Russell King wrote:
+> > On Thu, Sep 09, 2004 at 03:53:13PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > > On Thursday 09 September 2004 10:03, Russell King wrote:
+> > > > On Wed, Sep 08, 2004 at 09:27:04PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > > > > [patch] block: remove bio walking
+> > > > > 
+> > > > > IDE driver was the only user of bio walking code.
+> > > 
+> > > was in -bk10 :-(
+> > > 
+> > > > The MMC driver also uses this.  Please don't remove.
+> > > 
+> > > OK I'll just drop this patch but can't we also use scatterlists in MMC?
+> > > 
+> > > The point is that I now think bio walking was a mistake and accessing
+> > > bios directly from low-level drivers is a layering violation (thus
+> > > all the added complexity). Moreover with fixed IDE PIO and without
+> > > bio walking code it should be possible to shrink struct request by
+> > > removing all "current" entries.
 > > 
-> > 
-> > Surely this should be more generic?
+> > I'm wondering whether it is legal to map onto SG lists and then do PIO.
+> > Provided we don't end up using the DMA API and then using PIO to the
+> > original pages, it should work.
 > 
-> Any idea where to put it? linux/blkdev.h?
+> Yes, it actually works fine. See the other patches from the patchkit. :-)
 
-How about asm/scatterlist.h?
+Actually, if you've only tested x86, you don't know if it works fine.
+x86 is a rather benign architecture when it comes to testing whether
+various interfaces are being used correctly.
+
+> > However, using the SG lists does finally provide us with a nice way to
+> > ensure that we have the right information to finally fix IDE wrt the
+> > PIO cache issues (dirty cache lines being left in the page cache.)
+> 
+> Could you explain the issue a bit more?
+
+Essentially, kernel PIO writes data into the page cache, and that action
+may leave data in the CPU's caches.  Since the kernels mappings may not
+be coherent with mappings in userspace, data written to the kernel
+mappings may remain in the data cache, and stale data would be visible
+to user space.
+
+There has been talk about using flush_dcache_page() to resolve
+this issue, but I'm not sure what the outcome was.  Certainly
+flush_dcache_page() is supposed to be used before the data in the
+kernels page cache is read or written.
+
+See Documentation/cachetlb.txt for further information on this
+interface.
 
 -- 
-Jens Axboe
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 PCMCIA      - http://pcmcia.arm.linux.org.uk/
+                 2.6 Serial core
