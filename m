@@ -1,45 +1,70 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: 2.6.0test10 hangs just after IDE detection
-Date: Wed, 26 Nov 2003 23:11:47 +0100
+From: David Greaves <lkml@dgreaves.com>
+Subject: Re: Promise Ultra100TX2 PDC20286 broken in 2.6.0-test9
+Date: Wed, 26 Nov 2003 22:50:09 +0000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200311262311.48092.bzolnier@elka.pw.edu.pl>
-References: <20031126215448.GA1801@bijwaard.dyns.net>
+Message-ID: <3FC52E21.6020605@dgreaves.com>
+References: <3FAD5145.5040603@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-2"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:39410 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264375AbTKZWKm
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 26 Nov 2003 17:10:42 -0500
-In-Reply-To: <20031126215448.GA1801@bijwaard.dyns.net>
-Content-Disposition: inline
+Received: from mail18.svr.pol.co.uk ([195.92.67.23]:29710 "EHLO
+	mail18.svr.pol.co.uk") by vger.kernel.org with ESMTP
+	id S264361AbTKZWwW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 26 Nov 2003 17:52:22 -0500
+Received: from modem-382.hyena.dialup.pol.co.uk ([81.78.113.126] helo=oak.dgreaves.com)
+	by mail18.svr.pol.co.uk with esmtp (Exim 4.14)
+	id 1AP8VB-0005Fj-1m
+	for linux-ide@vger.kernel.org; Wed, 26 Nov 2003 22:51:17 +0000
+Received: from 80.dgreaves.com ([10.0.0.80] helo=dgreaves.com)
+	by oak.dgreaves.com with esmtp (Exim 4.20)
+	id 1AP9VT-0003in-Ie
+	for linux-ide@vger.kernel.org; Wed, 26 Nov 2003 23:55:39 +0000
+In-Reply-To: <3FAD5145.5040603@dgreaves.com>
 List-Id: linux-ide@vger.kernel.org
-To: Dennis Bijwaard <bijwaard@home.nl>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
+Hi Bart
+I've downloaded (but not yet tried) -test10 but as you said elsewhere, 
+there are no patches that seem to touch the area I had a problem with.
 
-IDE related changes in 2.6.0-test10 are:
-ide-tape fixes, alim15x3 fix, AMD and nVidia update and TCQ disable.
+Do you think my problem is likely to be touched by -test11?
+Are there any other patches you'd like me to try?
 
-If you are using aic7xxx SCSI you should try -test11 first (fixes hang).
+BTW this list is now on  
 
-If it doesn't help you can easily verify if this hang is caused by IDE,
-just try to boot kernel compiled without IDE support.
+http://marc.theaimsgroup.com/?l=linux-ide&r=1&w=2
 
---bart
+Hank says
 
-On Wednesday 26 of November 2003 22:54, Dennis Bijwaard wrote:
-> Hi,
+>I don't think vger keeps copies of older messages, but if you know of
+>anywhere I can find 'em I'd be happy to bulk-add them to our archives.
 >
-> I've been running 2.6.0test9 and earlier without much problems w.r.t.
-> IDE. Now with test10 it hangs just after IDE detection. I suspect this
-> is because I have IDEDISK configured as a module because my main drives are
-> all SCSI. I use CONFIG_PREEMPT.
+I figured you may have them/some?
+
+David
+
+David Greaves wrote:
+
+> Summary:
+> PDC20286 fails horribly with 2 UDMA drives on its primary channel
+> If I move one drive to the second channel it seems OK.
 >
-> This is the last that the kernel reports before it stops (does not react
-> to SysRq interupts):
 >
-> ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+> I have compiled with and without "DMA on by default".
+> I've also used the autotune options (and ata66)
+> I looked for the most conservative config I could find before posting 
+> (well, I thought I did) :)
+>
+> ok...
+> I tried again with:
+> * DMA on by default (IDEDMA_PCI_AUTO) (done a partial config dump 
+> later...)
+> * removed noapic and used both autotune options (not tried before)
+>  kernel /vmlinuz-2.6.0-test9 ro root=/dev/hdc3 ide2=autotune 
+> ide3=autotune single
+>
+> Result:
+> same problem
+
 
