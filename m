@@ -1,36 +1,80 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: [PATCH] tiny patch to kill warning in drivers/ide/ide.c
-Date: Wed, 9 Jun 2004 12:31:20 +0200
+From: =?iso-8859-1?Q?J=F6rn?= Engel <joern@wohnheim.fh-wedel.de>
+Subject: [STACK] >3k call path in ide
+Date: Wed, 9 Jun 2004 14:29:21 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200406091231.20049.bzolnier@elka.pw.edu.pl>
-References: <Pine.LNX.4.56.0406090335260.25359@jjulnx.backbone.dif.dk>
+Message-ID: <20040609122921.GG21168@wohnheim.fh-wedel.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:14751 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S265692AbUFIK1a
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 9 Jun 2004 06:27:30 -0400
-In-Reply-To: <Pine.LNX.4.56.0406090335260.25359@jjulnx.backbone.dif.dk>
+Received: from mail.fh-wedel.de ([213.39.232.194]:8849 "EHLO mail.fh-wedel.de")
+	by vger.kernel.org with ESMTP id S265756AbUFIM3R (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jun 2004 08:29:17 -0400
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Jesper Juhl <juhl-lkml@dif.dk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Wednesday 09 of June 2004 03:38, Jesper Juhl wrote:
-> To kill this warning :
->
-> drivers/ide/ide.c: In function `ide_unregister_subdriver':
-> drivers/ide/ide.c:2216: warning: implicit declaration of function
-> `pnpide_init'
->
-> I added a simple declaration of pnpide_init to drivers/ide/ide.c
->
-> Here's a patch against 2.6.7-rc3 - please consider including it (or if
-> that's not the way to do it, then don't) :)
+Bartlomiej, can you put ide_config on a diet?
 
-Thanks but the real bug is to call pnpide_init() from
-ide_unregister_subdriver(), I'll push ide-pnp update soon.
+stackframes for call path too long (3052):
+    size  function
+       0  client_reg_t->event_handler
+    1168  ide_config
+      12  ide_register_hw
+      44  ide_unregister
+      12  ide_unregister_subdriver
+       0  pnpide_init
+       0  pnp_register_driver
+       0  driver_register
+      20  bus_add_driver
+      16  driver_attach
+      72  tty_register_device
+       0  class_simple_device_add
+       0  class_device_register
+      16  class_device_add
+       0  kobject_add
+       0  kobject_hotplug
+     132  call_usermodehelper
+      80  wait_for_completion
+      84  schedule
+      16  __put_task_struct
+      20  audit_free
+      36  audit_log_start
+      16  __kmalloc
+       0  __get_free_pages
+      28  __alloc_pages
+     284  try_to_free_pages
+       0  out_of_memory
+       0  mmput
+      16  exit_aio
+       0  __put_ioctx
+      16  do_munmap
+       0  split_vma
+      36  vma_adjust
+       0  fput
+       0  __fput
+       0  locks_remove_flock
+      12  panic
+       0  sys_sync
+       0  sync_inodes
+     308  sync_inodes_sb
+       0  do_writepages
+     128  mpage_writepages
+       4  write_boundary_block
+       0  ll_rw_block
+      28  submit_bh
+       0  bio_alloc
+      88  mempool_alloc
+     256  wakeup_bdflush
+      20  pdflush_operation
+       0  printk
+       0  preempt_schedule
+      84  schedule
 
+J=F6rn
+
+--=20
+When you close your hand, you own nothing. When you open it up, you
+own the whole world.
+-- Li Mu Bai in Tiger & Dragon
