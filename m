@@ -1,42 +1,44 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH] IDE update for 2.6.7-rc3 [1/12]
-Date: Sun, 13 Jun 2004 18:35:00 +1000
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: {linux-ide] ide errors redhat 9.0 install
+Date: Sun, 13 Jun 2004 09:55:54 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <E1BZQSC-0006vd-00@gondolin.me.apana.org.au>
-References: <20040612103453.GB26482@infradead.org>
+Message-ID: <26FDB430-BD52-11D8-908B-00039398BB5E@ieee.org>
+References: <1086616777.3649.10.camel@patibmrh9> <00b301c44fea$ead73350$13f9
+	e2d1@zoom>
+Mime-Version: 1.0 (Apple Message framework v618)
+Content-Type: text/plain;
+	charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from arnor.apana.org.au ([203.14.152.115]:60425 "EHLO
-	arnor.apana.org.au") by vger.kernel.org with ESMTP id S265024AbUFMIgX
+Received: from email-out2.iomega.com ([147.178.1.83]:6858 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S265196AbUFMPyw
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 13 Jun 2004 04:36:23 -0400
-In-Reply-To: <20040612103453.GB26482@infradead.org>
+	Sun, 13 Jun 2004 11:54:52 -0400
+In-Reply-To: <00b301c44fea$ead73350$13f9e2d1@zoom>
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Paul Gimpelj <pgimpelj@sympatico.ca>
+Cc: linux-ide@vger.kernel.org
 
-Christoph Hellwig <hch@infradead.org> wrote:
-> On Fri, Jun 11, 2004 at 05:50:30PM +0200, Bartlomiej Zolnierkiewicz wrote:
->> 
->> Probably some drivers are still missed because I changed only
->> these drivers that I knew that there are PCI cards using them.
->> 
->> If you know about PCI cards using other drivers please speak up.
-> 
-> IMHO the PCI ->probe methods should always be __devinit.  It's rather
-> hard to make sure they're never every hotplugged in any way, especially
-> with the dynamic id adding via sysfs thing.
+Paul G:
 
-Well the reason I made them all __devinit in my patch is because it
-also tries to maintain the same PCI probing order as a builtin kernel
-when IDE is built as a module.
+ > ...
 
-To do that all the PCI driver modules are loaded before probing takes
-place.  Therefore if any probing funciton is declared as __init then
-this will not work.
+Thank you for your many kind words, certainly I join you in applauding 
+linux-ide folk.
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email:  Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+ > just installed xp ...
+ > msblaster.exe worm ...
+
+I answer re worms in Windows not online here in linux-ide, rather 
+online in blog:
+
+Subject: Microsoft Windows patch again advised when
+http://plavarre.blog-city.com/read/645732.htm
+
+I vote we move that talk there or elsewhere because I know some 
+linux-ide subscribers ask that we leave the world-writable linux-ide 
+focused exclusively on IDE in Linux.
+
+Pat LaVarre
+
