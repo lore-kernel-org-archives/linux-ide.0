@@ -1,45 +1,55 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: PATCH: allow ide-generic users to ask it to capture unknown
-	devices
-Date: Sat, 06 Nov 2004 00:52:53 +0000
-Message-ID: <1099702372.5556.95.camel@localhost.localdomain>
-References: <1099671737.5556.32.camel@localhost.localdomain>
-	 <200411052256.27303.bzolnier@elka.pw.edu.pl>
-	 <1099697274.5567.76.camel@localhost.localdomain>
-	 <200411060146.05980.bzolnier@elka.pw.edu.pl>
+From: achew <achew@nvidia.com>
+Subject: [PATCH] sata_nv.c, don't have libata perform phy reset
+Date: Fri, 05 Nov 2004 18:55:54 -0800
+Message-ID: <418C3D3A.6010501@nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:43461 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S261288AbUKFBzr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 5 Nov 2004 20:55:47 -0500
-In-Reply-To: <200411060146.05980.bzolnier@elka.pw.edu.pl>
+Received: from hqemgate00.nvidia.com ([216.228.112.144]:24324 "EHLO
+	hqemgate00.nvidia.com") by vger.kernel.org with ESMTP
+	id S261285AbUKFCrd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 Nov 2004 21:47:33 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sad, 2004-11-06 at 00:46, Bartlomiej Zolnierkiewicz wrote:
-> > Because when someone adds an entry they'll break the driver.
-> 
-> Please be specific, what will break?
+This patch works around the issue reported in bug 3352 on the bugzilla bug database.
 
-The entry is currently last. Someone seeing the comment it must be last
-is likely to also leave it last in the table and thus the hardcoded 14
-would
-need to become 15. Making it "0" took away the cause.
+Link to the bug report: http://bugme.osdl.org/show_bug_cgi?id=3352
 
-> > Correct but they must force it on by hand. It generates a printk to tell
-> > the user and so its obvious in any bug reports..
-> 
-> 99% of IDE bugreports don't contain full dmesg...
+In particular, we keep libata from performing the phy reset.  Doing the phy reset sometimes results in the busy bit failing to deassert.
 
-At the moment it prints it quite early. If I move the printk down I can
-change it so that at the point it grabs the hwif (ie right in the IDE
-logs)
-it says "blah blah grabbing Unknown device (0x1111, 0x2222)"
+Signed-off-by: Andrew Chew <achew@nvidia.com>
 
-Would that be preferable ?
+
+--- linux-2.6.10-rc1-bk15/drivers/scsi/sata_nv.c	2004-11-05 17:49:37.000000000 -0800
++++ linux/drivers/scsi/sata_nv.c	2004-11-05 17:55:48.000000000 -0800
+@@ -20,6 +20,9 @@
+  *  If you do not delete the provisions above, a recipient may use your
+  *  version of this file under either the OSL or the GPL.
+  *
++ *  0.04
++ *     - Disabled SATA phy reset to work around a problem where busy bit never
++ *       deasserts after a phy reset.
+  *  0.03
+  *     - Fixed a bug where the hotplug handlers for non-CK804/MCP04 were using
+  *       mmio_base, which is only set for the CK804/MCP04 case.
+@@ -44,7 +47,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME			"sata_nv"
+-#define DRV_VERSION			"0.03"
++#define DRV_VERSION			"0.04"
+ 
+ #define NV_PORTS			2
+ #define NV_PIO_MASK			0x1f
+@@ -221,7 +224,6 @@
+ static struct ata_port_info nv_port_info = {
+ 	.sht		= &nv_sht,
+ 	.host_flags	= ATA_FLAG_SATA |
+-			  ATA_FLAG_SATA_RESET |
+ 			  ATA_FLAG_SRST |
+ 			  ATA_FLAG_NO_LEGACY,
+ 	.pio_mask	= NV_PIO_MASK,
 
