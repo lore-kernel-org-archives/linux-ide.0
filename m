@@ -1,46 +1,63 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: Linux hangs during IDE initialization at boot for 30 sec
-Date: Fri, 04 Feb 2005 09:17:12 +1100
-Message-ID: <1107469032.2363.44.camel@gaston>
-References: <200502011257.40059.brade@informatik.uni-muenchen.de>
-	 <pan.2005.02.01.20.21.46.334334@surrey.ac.uk>
-	 <1107299901.5624.28.camel@gaston>
-	 <200502031358.16827.roffermanns@sysgo.com>
+From: Tejun Heo <tj@home-tj.org>
+Subject: Re: [PATCH 2.6.11-rc2 21/29] ide: Merge do_rw_taskfile() and flagged_taskfile().
+Date: Fri, 04 Feb 2005 09:30:27 +0900
+Message-ID: <4202C223.6050802@home-tj.org>
+References: <20050202024017.GA621@htj.dyndns.org>	 <20050202030603.GF1187@htj.dyndns.org> <58cb370e050203103952e1cd22@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from gate.crashing.org ([63.228.1.57]:65235 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S263023AbVBCWRz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Feb 2005 17:17:55 -0500
-In-Reply-To: <200502031358.16827.roffermanns@sysgo.com>
+Received: from [211.58.254.17] ([211.58.254.17]:61314 "EHLO hemosu.com")
+	by vger.kernel.org with ESMTP id S263291AbVBDAas (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Feb 2005 19:30:48 -0500
+In-Reply-To: <58cb370e050203103952e1cd22@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rolf Offermanns <roffermanns@sysgo.com>
-Cc: list linux-ide <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, 2005-02-03 at 13:58 +0100, Rolf Offermanns wrote:
-> On Wednesday 02 February 2005 00:18, you wrote:
+Hello,
+
+Bartlomiej Zolnierkiewicz wrote:
+> On Wed, 2 Feb 2005 12:06:03 +0900, Tejun Heo <tj@home-tj.org> wrote:
 > 
-> >
-> > The IDE layer waits up to 30 seconds for a device to drop it's busy bit,
-> > which is necessary for some drives that aren't fully initialized yet.
-> >
-> > I suspect in your case, it's reading "ff", which indicates either that
-> > there is no hardware where the kernel tries to probe, or that there is
-> > bogus IDE interfaces which don't properly have the D7 line pulled low so
-> > that BUSY appears not set in absence of a drive.
-> >
-> I have the same kind of bogus hardware here. What would be the right place to 
-> workaround this? (unfortunately it's not possible to fix/change the 
-> hardware).
+>>>21_ide_do_taskfile.patch
+>>>
+>>>      Merged do_rw_taskfile() and flagged_taskfile() into
+>>>      do_taskfile().  During the merge, the following changes took
+>>>      place.
+>>>      1. flagged taskfile now honors HOB feature register.
+>>>         (do_rw_taskfile() did write to HOB feature.)
+>>>      2. No do_rw_taskfile() HIHI check on select register.  Except
+>>>         for the DEV bit, all bits are honored.
+>>>      3. Uses taskfile->data_phase to determine if dma trasfer is
+>>>         requested.  (do_rw_taskfile() directly switched on
+>>>         taskfile->command for all dma commands)
+>>
+>>Signed-off-by: Tejun Heo <tj@home-tj.org>
+> 
+> 
+> do_rw_taskfile() is going to be used by fs requests once
+> __ide_do_rw_disk() is converted to taskfile transport.
+> 
+> I don't think that do_rw_taskfile() and flagged_taskfile() merge
+> is a good thing as it adds unnecessary overhead for hot path
+> (fs requests).
 
-Do not register interfaces that you know aren't populated...
+Yeah, I also thought about that, but here are reasons why I still think 
+merging is better.
 
-One thing is, the wait code does explicitely check for a value of 0xff
-and exists in this case (assuming this means no HW at all is wired
-there). So for some reason, you interface is returning something else,
-it would be interesting to "see" what value you are getting.
+1. The added overhead is small.  It's just a dozen more if's per every 
+disk io.  I don't think it will make any noticeable difference.
 
-Ben.
+2. If hot path optimization is needed, it can be easily done inside one 
+do_taskfile() function with one or two more if's.
 
+3. Currently, do_rw_taskfile() isn't used by __ide_do_rw_disk().  We can 
+think about optimization when actually converting it to use taskfile 
+transport.  And IMHO, if hot path optimization is needed, leaving hot 
+path optimization where it is now (inside __ide_do_rw_disk()) is better 
+  than moving it to separate taskfile function (do_rw_taskfile()).
+
+-- 
+tejun
 
