@@ -1,42 +1,33 @@
-From: Rolf Offermanns <roffermanns@sysgo.com>
-Subject: Re: Linux hangs during IDE initialization at boot for 30 sec
-Date: Thu, 3 Feb 2005 13:58:16 +0100
-Message-ID: <200502031358.16827.roffermanns@sysgo.com>
-References: <200502011257.40059.brade@informatik.uni-muenchen.de> <pan.2005.02.01.20.21.46.334334@surrey.ac.uk> <1107299901.5624.28.camel@gaston>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2.6.11-rc2 12/29] ide: add ide_hwgroup_t.polling
+Date: Thu, 3 Feb 2005 15:20:54 +0100
+Message-ID: <58cb370e050203062052c5052@mail.gmail.com>
+References: <20050202024017.GA621@htj.dyndns.org>
+	 <20050202025538.GM621@htj.dyndns.org>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [62.8.134.5] ([62.8.134.5]:8607 "EHLO mailgate2.sysgo.com")
-	by vger.kernel.org with ESMTP id S262900AbVBCM6T (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Feb 2005 07:58:19 -0500
-In-Reply-To: <1107299901.5624.28.camel@gaston>
-Content-Disposition: inline
+Received: from wproxy.gmail.com ([64.233.184.197]:50723 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S263556AbVBCOWF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Feb 2005 09:22:05 -0500
+Received: by wproxy.gmail.com with SMTP id 67so258920wri
+        for <linux-ide@vger.kernel.org>; Thu, 03 Feb 2005 06:22:05 -0800 (PST)
+In-Reply-To: <20050202025538.GM621@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@home-tj.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wednesday 02 February 2005 00:18, you wrote:
+On Wed, 2 Feb 2005 11:55:38 +0900, Tejun Heo <tj@home-tj.org> wrote:
+> > 12_ide_hwgroup_t_polling.patch
+> >
+> >       ide_hwgroup_t.polling field added.  0 in poll_timeout field
+> >       used to indicate inactive polling but because 0 is a valid
+> >       jiffy value, though slim, there's a chance that something
+> >       weird can happen.
+> 
+> Signed-off-by: Tejun Heo <tj@home-tj.org>
 
->
-> The IDE layer waits up to 30 seconds for a device to drop it's busy bit,
-> which is necessary for some drives that aren't fully initialized yet.
->
-> I suspect in your case, it's reading "ff", which indicates either that
-> there is no hardware where the kernel tries to probe, or that there is
-> bogus IDE interfaces which don't properly have the D7 line pulled low so
-> that BUSY appears not set in absence of a drive.
->
-I have the same kind of bogus hardware here. What would be the right place to 
-workaround this? (unfortunately it's not possible to fix/change the 
-hardware).
-
--Rolf
--- 
-Rolf Offermanns <roffermanns@sysgo.com>
-SYSGO AG     Tel.: +49-6136-9948-0
-Am Pfaffenstein 14   Fax: +49-6136-9948-10
-55270 Klein-Winternheim  http://www.sysgo.com
-
+applied
