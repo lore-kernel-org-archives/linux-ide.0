@@ -1,128 +1,92 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2.6.11-rc3 04/11] ide: removes unneeded HOB access using ATA_TFLAG_LBA48 flag
-Date: Thu, 10 Feb 2005 17:38:29 +0900 (KST)
-Message-ID: <20050210083824.97E549BE@htj.dyndns.org>
+Subject: Re: [PATCH 2.6.11-rc3 07/11] ide: make ide_task_ioctl() use TASKFILE
+Date: Thu, 10 Feb 2005 17:38:44 +0900 (KST)
+Message-ID: <20050210083839.71582492@htj.dyndns.org>
 References: <20050210083808.48E9DD1A@htj.dyndns.org>
-Received: from wproxy.gmail.com ([64.233.184.198]:63701 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262057AbVBJIii (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Feb 2005 03:38:38 -0500
-Received: by wproxy.gmail.com with SMTP id 68so76955wri
-        for <linux-ide@vger.kernel.org>; Thu, 10 Feb 2005 00:38:38 -0800 (PST)
+Received: from wproxy.gmail.com ([64.233.184.202]:7896 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262064AbVBJIiy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Feb 2005 03:38:54 -0500
+Received: by wproxy.gmail.com with SMTP id 69so82475wra
+        for <linux-ide@vger.kernel.org>; Thu, 10 Feb 2005 00:38:54 -0800 (PST)
 In-Reply-To: <20050210083808.48E9DD1A@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
 
-04_ide_ATA_TFLAG_LBA48.patch
+07_ide_taskfile_task_ioctl.patch
 
-	This small patch fixes unneeded writes/reads to LBA48 taskfile
-	registers on LBA48 capable disks for following cases:
+	ide_task_ioctl() rewritten to use taskfile transport.  This is
+	the last user of REQ_DRIVE_TASK.
 
-	* Power Management requests
-	  (WIN_FLUSH_CACHE[_EXT], WIN_STANDBYNOW1, WIN_IDLEIMMEDIATE commands)
-	* special commands (WIN_SPECIFY, WIN_RESTORE, WIN_SETMULT)
-	* Host Protected Area support (WIN_READ_NATIVE_MAX, WIN_SET_MAX)
-	* /proc/ide/ SMART support (WIN_SMART with SMART_ENABLE,
-	  SMART_READ_VALUES and SMART_READ_THRESHOLDS subcommands)
-	* write cache enabling/disabling in ide-disk
-	  (WIN_SETFEATURES with SETFEATURES_{EN,DIS}_WCACHE)
-	* write cache flushing in ide-disk (WIN_FLUSH_CACHE[_EXT])
-	* acoustic management in ide-disk
-	  (WIN_SETFEATURES with SETFEATURES_{EN,DIS}_AAM)
-	* door (un)locking in ide-disk (WIN_DOORLOCK, WIN_DOORUNLOCK)
-	* /proc/ide/hd?/identify support (WIN_IDENTIFY)
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-	Patch adds 'unsinged long flags' to ide_task_t and uses
-	ATA_TFLAG_LBA48 flag (from <linux/ata.h>) to indicate need of
-	accessing LBA48 taskfile registers.
+ ide-taskfile.c |   50 +++++++++++++++++++++++++++++++-------------------
+ 1 files changed, 31 insertions(+), 19 deletions(-)
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-
- drivers/ide/ide-disk.c     |    6 ++++++
- drivers/ide/ide-io.c       |    2 +-
- drivers/ide/ide-taskfile.c |    7 +++++--
- include/linux/ide.h        |    1 +
- 4 files changed, 13 insertions(+), 3 deletions(-)
-
-Index: linux-ide/drivers/ide/ide-disk.c
-===================================================================
---- linux-ide.orig/drivers/ide/ide-disk.c	2005-02-10 17:31:48.698694939 +0900
-+++ linux-ide/drivers/ide/ide-disk.c	2005-02-10 17:38:01.169901379 +0900
-@@ -362,6 +362,9 @@ static unsigned long long idedisk_read_n
- 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_READ_NATIVE_MAX_EXT;
- 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
- 	args.handler				= &task_no_data_intr;
-+
-+	args.flags |= ATA_TFLAG_LBA48;
-+
-         /* submit command request */
-         ide_raw_taskfile(drive, &args, NULL);
- 
-@@ -431,6 +434,9 @@ static unsigned long long idedisk_set_ma
- 	args.hobRegister[IDE_CONTROL_OFFSET_HOB]= (drive->ctl|0x80);
- 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
- 	args.handler				= &task_no_data_intr;
-+
-+	args.flags |= ATA_TFLAG_LBA48;
-+
- 	/* submit command request */
- 	ide_raw_taskfile(drive, &args, NULL);
- 	/* if OK, compute maximum address value */
-Index: linux-ide/drivers/ide/ide-io.c
-===================================================================
---- linux-ide.orig/drivers/ide/ide-io.c	2005-02-10 17:38:00.436024471 +0900
-+++ linux-ide/drivers/ide/ide-io.c	2005-02-10 17:38:01.171901044 +0900
-@@ -487,7 +487,7 @@ void ide_end_drive_cmd (ide_drive_t *dri
- 			args->tfRegister[IDE_SELECT_OFFSET]  = hwif->INB(IDE_SELECT_REG);
- 			args->tfRegister[IDE_STATUS_OFFSET]  = stat;
- 
--			if (drive->addressing == 1) {
-+			if (args->flags & ATA_TFLAG_LBA48) {
- 				hwif->OUTB(drive->ctl|0x80, IDE_CONTROL_REG);
- 				args->hobRegister[IDE_FEATURE_OFFSET]	= hwif->INB(IDE_FEATURE_REG);
- 				args->hobRegister[IDE_NSECTOR_OFFSET]	= hwif->INB(IDE_NSECTOR_REG);
 Index: linux-ide/drivers/ide/ide-taskfile.c
 ===================================================================
---- linux-ide.orig/drivers/ide/ide-taskfile.c	2005-02-10 17:38:00.832957893 +0900
-+++ linux-ide/drivers/ide/ide-taskfile.c	2005-02-10 17:38:01.172900876 +0900
-@@ -101,7 +101,7 @@ ide_startstop_t do_rw_taskfile (ide_driv
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	task_struct_t *taskfile	= (task_struct_t *) task->tfRegister;
- 	hob_struct_t *hobfile	= (hob_struct_t *) task->hobRegister;
--	u8 HIHI			= (drive->addressing == 1) ? 0xE0 : 0xEF;
-+	u8 HIHI			= (task->flags & ATA_TFLAG_LBA48) ? 0xE0 : 0xEF;
+--- linux-ide.orig/drivers/ide/ide-taskfile.c	2005-02-10 17:38:01.539839336 +0900
++++ linux-ide/drivers/ide/ide-taskfile.c	2005-02-10 17:38:01.974766393 +0900
+@@ -742,30 +742,42 @@ abort:
+ 	return err;
+ }
  
- 	/* ALL Command Block Executions SHALL clear nIEN, unless otherwise */
- 	if (IDE_CONTROL_REG) {
-@@ -110,7 +110,7 @@ ide_startstop_t do_rw_taskfile (ide_driv
- 	}
- 	SELECT_MASK(drive, 0);
+-static int ide_wait_cmd_task(ide_drive_t *drive, u8 *buf)
+-{
+-	struct request rq;
+-
+-	ide_init_drive_cmd(&rq);
+-	rq.flags = REQ_DRIVE_TASK;
+-	rq.buffer = buf;
+-	return ide_do_drive_cmd(drive, &rq, ide_wait);
+-}
+-
+-/*
+- * FIXME : this needs to map into at taskfile. <andre@linux-ide.org>
+- */
+-int ide_task_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
++int ide_task_ioctl(ide_drive_t *drive, unsigned int cmd, unsigned long arg)
+ {
+ 	void __user *p = (void __user *)arg;
+-	int err = 0;
+-	u8 args[7], *argbuf = args;
+-	int argsize = 7;
++	int err;
++	u8 args[7];
++	ide_task_t task;
++	u8 *regs = task.tfRegister;
  
--	if (drive->addressing == 1) {
-+	if (task->flags & ATA_TFLAG_LBA48) {
- 		hwif->OUTB(hobfile->feature, IDE_FEATURE_REG);
- 		hwif->OUTB(hobfile->sector_count, IDE_NSECTOR_REG);
- 		hwif->OUTB(hobfile->sector_number, IDE_SECTOR_REG);
-@@ -573,6 +573,9 @@ int ide_taskfile_ioctl (ide_drive_t *dri
- 	args.data_phase   = req_task->data_phase;
- 	args.command_type = req_task->req_cmd;
- 
-+	if (drive->addressing == 1)
-+		args.flags |= ATA_TFLAG_LBA48;
+ 	if (copy_from_user(args, p, 7))
+ 		return -EFAULT;
+-	err = ide_wait_cmd_task(drive, argbuf);
+-	if (copy_to_user(p, argbuf, argsize))
 +
- 	drive->io_32bit = 0;
- 	switch(req_task->data_phase) {
- 		case TASKFILE_OUT_DMAQ:
-Index: linux-ide/include/linux/ide.h
-===================================================================
---- linux-ide.orig/include/linux/ide.h	2005-02-10 17:38:00.044090212 +0900
-+++ linux-ide/include/linux/ide.h	2005-02-10 17:38:01.174900541 +0900
-@@ -1258,6 +1258,7 @@ typedef struct ide_task_s {
-  *	struct hd_drive_hob_hdr		hobf;
-  *	hob_struct_t		hobf;
-  */
-+	unsigned long		flags;		/* ATA_TFLAG_xxx */
- 	task_ioreg_t		tfRegister[8];
- 	task_ioreg_t		hobRegister[8];
- 	ide_reg_valid_t		tf_out_flags;
++	memset(&task, 0, sizeof(task));
++
++	regs[IDE_COMMAND_OFFSET]	= args[0];
++	regs[IDE_FEATURE_OFFSET]	= args[1];
++	regs[IDE_NSECTOR_OFFSET]	= args[2];
++	regs[IDE_SECTOR_OFFSET]		= args[3];
++	regs[IDE_LCYL_OFFSET]		= args[4];
++	regs[IDE_HCYL_OFFSET]		= args[5];
++	regs[IDE_SELECT_OFFSET]		= args[6];
++	
++	task.command_type		= IDE_DRIVE_TASK_NO_DATA;
++	task.data_phase			= TASKFILE_NO_DATA;
++	task.handler			= &task_no_data_intr;
++
++	err = ide_diag_taskfile(drive, &task, 0, NULL);
++
++	args[0] = regs[IDE_COMMAND_OFFSET];
++	args[1] = regs[IDE_FEATURE_OFFSET];
++	args[2] = regs[IDE_NSECTOR_OFFSET];
++	args[3] = regs[IDE_SECTOR_OFFSET];
++	args[4] = regs[IDE_LCYL_OFFSET];
++	args[5] = regs[IDE_HCYL_OFFSET];
++	args[6] = regs[IDE_SELECT_OFFSET];
++
++	if (copy_to_user(p, args, 7))
+ 		err = -EFAULT;
+ 	return err;
+ }
