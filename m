@@ -1,100 +1,93 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [rfc][patch] ide: fix unneeded LBA48 taskfile registers access
-Date: Mon, 07 Feb 2005 13:47:33 +0900
-Message-ID: <4206F2E5.7020501@gmail.com>
-References: <Pine.GSO.4.58.0502062348200.2763@mion.elka.pw.edu.pl>
+Subject: Re: [PATCH 2.6.11-rc2 08/09] ide: map ide_cmd_ioctl() to ide_taskfile_ioctl()
+Date: Mon, 07 Feb 2005 14:02:49 +0900
+Message-ID: <4206F679.8060309@gmail.com>
+References: <20050205021502.GA17767@htj.dyndns.org>	 <20050205021557.6A692132705@htj.dyndns.org> <58cb370e050206104674386588@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.199]:59629 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261346AbVBGErm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Feb 2005 23:47:42 -0500
-Received: by wproxy.gmail.com with SMTP id 71so837085wra
-        for <linux-ide@vger.kernel.org>; Sun, 06 Feb 2005 20:47:39 -0800 (PST)
-In-Reply-To: <Pine.GSO.4.58.0502062348200.2763@mion.elka.pw.edu.pl>
+Received: from wproxy.gmail.com ([64.233.184.207]:43607 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261349AbVBGFC4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Feb 2005 00:02:56 -0500
+Received: by wproxy.gmail.com with SMTP id 67so798976wri
+        for <linux-ide@vger.kernel.org>; Sun, 06 Feb 2005 21:02:56 -0800 (PST)
+In-Reply-To: <58cb370e050206104674386588@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@home-tj.org>
-
-Hello, Bartlomiej.
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Tejun Heo <tj@home-tj.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
-> [ against ide-dev-2.6 tree, boot tested on LBA48 drive ]
+> I have not fully reviewed it yet but I've noticed two things...
 > 
-> This small patch fixes unneeded writes/reads to LBA48 taskfile registers
-> on LBA48 capable disks for following cases:
 > 
-> * Power Management requests
->   (WIN_FLUSH_CACHE[_EXT], WIN_STANDBYNOW1, WIN_IDLEIMMEDIATE commands)
-> * special commands (WIN_SPECIFY, WIN_RESTORE, WIN_SETMULT)
-> * Host Protected Area support (WIN_READ_NATIVE_MAX, WIN_SET_MAX)
-> * /proc/ide/ SMART support (WIN_SMART with SMART_ENABLE,
->   SMART_READ_VALUES and SMART_READ_THRESHOLDS subcommands)
-> * write cache enabling/disabling in ide-disk
->   (WIN_SETFEATURES with SETFEATURES_{EN,DIS}_WCACHE)
-> * write cache flushing in ide-disk (WIN_FLUSH_CACHE[_EXT])
-> * acoustic management in ide-disk
->   (WIN_SETFEATURES with SETFEATURES_{EN,DIS}_AAM)
-> * door (un)locking in ide-disk (WIN_DOORLOCK, WIN_DOORUNLOCK)
-> * /proc/ide/hd?/identify support (WIN_IDENTIFY)
+>>@@ -648,11 +648,11 @@ u8 eighty_ninty_three (ide_drive_t *driv
+>>
+>> EXPORT_SYMBOL(eighty_ninty_three);
+>>
+>>-int ide_ata66_check (ide_drive_t *drive, ide_task_t *args)
+>>+int ide_ata66_check(ide_drive_t *drive, task_ioreg_t *regs)
+>> {
+>>-       if ((args->tfRegister[IDE_COMMAND_OFFSET] == WIN_SETFEATURES) &&
+>>-           (args->tfRegister[IDE_SECTOR_OFFSET] > XFER_UDMA_2) &&
+>>-           (args->tfRegister[IDE_FEATURE_OFFSET] == SETFEATURES_XFER)) {
+>>+       if (regs[IDE_COMMAND_OFFSET] == WIN_SETFEATURES &&
+>>+           regs[IDE_SECTOR_OFFSET] > XFER_UDMA_2 &&
+>>+           regs[IDE_FEATURE_OFFSET] == SETFEATURES_XFER) {
+>> #ifndef CONFIG_IDEDMA_IVB
+>>                if ((drive->id->hw_config & 0x6000) == 0) {
+>> #else /* !CONFIG_IDEDMA_IVB */
 > 
-> Patch adds 'unsinged long flags' to ide_task_t and uses ATA_TFLAG_LBA48
-> flag (from <linux/ata.h>) to indicate need of accessing LBA48 taskfile
-> registers.
+> 
+> What is the rationale for this change?
+> ide_task_t is available in ide_cmd_ioctl().
+> 
 
-  ide_task_t already has fields to enable/disable writing/reading of 
-taskfile and hob registers (tf_in_flags and tf_out_flags).  How about 
-adding the following two helpers.
+  Sorry, it was for the previous map to ide_taskfile_ioctl() 
+implementation, where ide_cmd_ioctl() didn't have ide_task_t.  I'll 
+restore it.  Also, I've forgot to update the description of this patch. 
+  I'll fix that too.
 
-static inline ide_init_task[_std](ide_task_t *task)
-{
-	memset(task, 0, sizeof(*task));
-	task->tf_out_flags = IDE_TASKFILE_STD_OUT_FLAGS;
-	task->tf_in_flags = IDE_TASKFILE_STD_IN_FLAGS;
-}
+> 
+>>@@ -678,11 +678,11 @@ int ide_ata66_check (ide_drive_t *drive,
+>>  * 1 : Safe to update drive->id DMA registers.
+>>  * 0 : OOPs not allowed.
+>>  */
+>>-int set_transfer (ide_drive_t *drive, ide_task_t *args)
+>>+int set_transfer(ide_drive_t *drive, task_ioreg_t *regs)
+>> {
+>>-       if ((args->tfRegister[IDE_COMMAND_OFFSET] == WIN_SETFEATURES) &&
+>>-           (args->tfRegister[IDE_SECTOR_OFFSET] >= XFER_SW_DMA_0) &&
+>>-           (args->tfRegister[IDE_FEATURE_OFFSET] == SETFEATURES_XFER) &&
+>>+       if (regs[IDE_COMMAND_OFFSET] == WIN_SETFEATURES &&
+>>+           regs[IDE_SECTOR_OFFSET] >= XFER_SW_DMA_0 &&
+>>+           regs[IDE_FEATURE_OFFSET] == SETFEATURES_XFER &&
+>>            (drive->id->dma_ultra ||
+>>             drive->id->dma_mword ||
+>>             drive->id->dma_1word))
+> 
+> 
+> ditto
+> 
 
-static inline ide_init_task_lba48(ide_task_t *task)
-{
-	memset(task, 0, sizeof(*task));
-	task->tf_out_flags = IDE_TASKFILE_STD_OUT_FLAGS
-			| (IDE_HOB_STD_OUT_FLAGS << 8);
-	task->tf_in_flags = IDE_TASKFILE_STD_IN_FLAGS
-			| (IDE_HOB_STD_IN_FLAGS << 8);
-}
+  ditto. :-)
 
-  And, when writing taskfile,
+> 
+>>+       io_32bit = drive->io_32bit;
+>>+       drive->io_32bit = 0;    /* racy */
+>>+       ret = ide_diag_taskfile(drive, &task, in_size, buf);
+>>+       drive->io_32bit = io_32bit;
+> 
+> 
+> It wasn't racy before this patch.  I know that it is like that
+> in ide_taskfile_ioctl() but it is not an excuse for propagating
+> the bug.  It can be easily fixed if you use drive_cmd_intr()
+> instead of task_in_intr() as task->handler.
 
-if (task->tf_out_flags & 0xf == IDE_TASKFILE_STD_OUT_FLAGS) {
-	/* Write taskfile regs without testing flags */
-} else {
-	/* Flagged taskfile */
-}
-
-if (task->tf_out_flags & 0xf0 == IDE_TASKFILE_HOB_OUT_FLAGS) {
-	/* Write hob regs without testing flags */
-} else {
-	/* Flagged hob */
-}
-
-  And, when reading taskfile back,
-
-if (task->tf_in_flags & 0xf0) {
-	/* Read all hob regs */
-}
-
-/* Read all taskfile regs */
-
-  And, we need to check if any of in/out flags is zero in ioctl 
-functions and set STD flags appropriately.  So, basically, in kernel, 
-tf_{in|out}_flags == 0 now means 0, not default.
-
-  By doing like above,
-
-  1. Virtually the same effect
-  2. No need to add new field to ide_task_t
-  3. Cleaner semantics (ATA_TFLAG_LBA48 and tf_{in|out}_flags carry
-     duplicate information.)
+  Fixing the race condition in taskfile ioctl was on my to-do list, so I 
+was thinking unifying the problem wouldn't be bad such that it can be 
+fixed together later (soon).  I think I can make a patch to fix taskfile 
+ioctl first and then submit this patch again without the race.
 
   Thanks.
 
