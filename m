@@ -1,46 +1,63 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: WARN_ON(buflen > PAGE_SIZE) libata-core.c
-Date: Thu, 16 Sep 2004 22:39:34 -0400
+From: Ian Leonard <ian@smallworld.cx>
+Subject: Re: Highpoint & ide probing problem
+Date: Fri, 17 Sep 2004 09:06:18 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <414A4E66.5000009@pobox.com>
-References: <20040901150801.A12145@florence.linkmargin.com> <414A34A6.1020506@pobox.com> <20040916213450.A14950@florence.linkmargin.com>
+Message-ID: <414A9AFA.7060403@smallworld.cx>
+References: <4147EDDD.8030001@smallworld.cx> <41483BB0.9090401@latech.edu> <41484A89.1030404@smallworld.cx> <4148B3CC.5010605@latech.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:666 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268496AbUIQCjr
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Sep 2004 22:39:47 -0400
-In-Reply-To: <20040916213450.A14950@florence.linkmargin.com>
+Received: from mta06-svc.ntlworld.com ([62.253.162.46]:9599 "EHLO
+	mta06-svc.ntlworld.com") by vger.kernel.org with ESMTP
+	id S268568AbUIQIGT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Sep 2004 04:06:19 -0400
+In-Reply-To: <4148B3CC.5010605@latech.edu>
 List-Id: linux-ide@vger.kernel.org
-To: Andy Warner <andyw@pobox.com>
+To: Ryan Bourgeois <rgb005@latech.edu>
 Cc: linux-ide@vger.kernel.org
 
-Andy Warner wrote:
-> Jeff Garzik wrote:
+Ryan Bourgeois wrote:
+> Alright, you don't have to worry about RAID anyway, so you're set 
+> there.    I assume the onboard controller is handled by the PIIXn 
+> (CONFIG_BLK_DEV_PIIX) driver since it's standard Intel.  The Highpoint 
+
+Yes I have.
+
+> controller will definately be handled by the HPT36X/37X driver 
+> (CONFIG_BLK_DEV_HPT366).
+> If your kernel is not configured with support for the above, you need to 
+> do so, especially the HPT driver, as generic support is unlikely to work 
+> properly with the Highpoint (didn't work right for my Highpoint).
 > 
->>[...]
->>
->>>In libata-core.c:ata_sg_init_one() there is:
->>>
->>>	WARN_ON(buflen > PAGE_SIZE);
->>
->>[...]
->>A non-scatter-gather transfer is assumed to be one page in length, using 
->>only a single 'struct scatterlist' element.  You could probably "cheat" 
->>and indicate the scatterlist element is longer than PAGE_SIZE, but make 
->>sure to review all code paths...
+> Apparently Itox does not provide the manual for this mobo via their 
+> website, so I can't help you with BIOS settings that may be proprietary 
+> to that board.  None of the boards I've experience with mention "auto" 
+> or "enhanced mode" for SATA controllers, so I don't know what these 
+> settings imply for software configuration.
+
+Strange, all the ones I have see do. That doesn't mean I know what they 
+do - I have never seen a full description. However it has something to 
+do with the relationship with the PATA and SATA drives. I would guess 
+that an old driver may only handle 4 drives (not the full compliment of 
+8, or in my case 10) so the bios specifies which ones you want to use. 
+An enhanced driver allows all.
+
+It would appear the Highpoint driver isn't getting this right.
+
+> If it is the case that your kernel is configured as per above, then this 
+> definately needs to be CC'd to the list (I've done so) for other 
+> suggestions, as at the moment I can't think of anything.  I know, I 
+> dried up quickly, but my brain is offline at the moment...
 > 
-> 
-> Bear with me, if I'm being dense, but why is that a valid
-> assumption ? Is it because in most instances, such requests
-> are made by filesystem code, as opposed to arbitrary user
-> initiated I/O ?
+> Sorry I couldn't be of more help, but hey, I tried  >8)
 
-A struct scatterlist is a list of page/offset/length triplets, so it 
-breaks the model if a triplet extends past a page boundary.
-
-	Jeff
+Indeed you did, and I thank you for that. Do you think I should copy 
+this to the main list?
 
 
+
+-- 
+Ian Leonard
+
+Please ignore spelling and punctuation - I did.
