@@ -1,39 +1,50 @@
-From: "James Spooner" <james@endace.com>
-Subject: Re: Marvell 88SX[56]0[48]1 libata driver development.
-Date: Wed, 4 Aug 2004 19:05:47 +1200
+From: Andi Kleen <ak@suse.de>
+Subject: PATA handling on ICH5R in 2.6.8rc2
+Date: Wed, 4 Aug 2004 18:45:04 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <081b01c479f1$7843e050$5440a8c0@zeus>
-References: <20040803120504.A31838@florence.linkmargin.com> <20040803234709.GC25032@havoc.gtf.org>
+Message-ID: <20040804184504.21dcb386.ak@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from et.endace.com ([219.88.101.154]:14790 "EHLO et.endace.com")
-	by vger.kernel.org with ESMTP id S267304AbUHDHFy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Aug 2004 03:05:54 -0400
+Received: from cantor.suse.de ([195.135.220.2]:50135 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S267351AbUHDQtt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Aug 2004 12:49:49 -0400
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Andy Warner <andyw@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, axboe@suse.de, jun.nakajima@intel.com
 
 
-Jeff Garzik wrote:
-> 
-> I've already got most of a driver locally; patience grasshopper :)
-> 
-> Marvell gave me access to their SATA hardware docs -- and more
-> importantly -- errata which must be taken into account.
-> 
+Hallo,
 
-What does this mean for the Marvell running Adaptec firmware 
-such as is on the Supermicro P4SCT+ (they call it an aic81xx iirc)?
+I have a machine with a ICH5R southbridge and a PATA DVD hanging off it.
+When I compile the kernel without CONFIG_BLK_DEV_IDE_SATA then the old IDE driver
+detects the DVD anyways, but refuses to enable DMA (because the PCI ID entry
+is not compiled into piix.c). It doesn't even disable -u1 which causes quite
+some problems when accessing the CD ROM: I get endless floods of "too many lost
+ticks", which means it has spent more than 100 jiffies with interrupts off
+doing something. I fixed this with hdparm -u1, but it's still quite slow
+with DMA off.
 
+I could enable BLK_DEV_IDE_SATA, but then the old IDE driver would 
+try to drive all SATA drives, which would be wrong I guess.
 
-Jeff, by the way, did you see my mail about the BUG() with the 
-ata_piix driver, I note that it works fine in RHEL3's kernel,
-not sure whats going on there?
+I presume the right way to fix it would be to always readd the PCI ID
+entry for 82801EB_1 to piix.c, but only let it be handled by the old 
+driver when there is a PATA DVD on the controller (and leave the other
+controllers to libata). Still this could get conflicts when there is a
+real SATA device on the same controller (can this happen?) 
 
-Cheers
+For that the piix.c probe function would just need to do a quick
+cable check and ignore the device when it is SATA and when BLK_DEV_IDE_SATA 
+is unset. I looked through the  Intel ICH5 manuals, but it was not obvious to 
+me how to probe this non intrusively. I suppose one way would be to go through
+the full IDE driver initialization for the drive, and then when SATA is 
+detected bail out again and reset the controller and leave it for libata.
 
-James
+Or drive the DVD always with libata? Does it have an working ATAPI driver yet?
 
+Is there a better solution for this problem? 
+
+Thanks,
+-Andi
