@@ -1,150 +1,53 @@
-From: Tom Winkler <tom@qwws.net>
-Subject: poor IDE performance on ASUS P4PE with WD800JB
-Date: Thu, 23 Jan 2003 15:09:22 +0100
+From: Anton Cook <acook@tpg.com.au>
+Subject: HDIO_SET_DMA, 'No DRQ after issuing WRITE'' and PCI resource collisions - kernel 2.4.19
+Date: Tue, 4 Feb 2003 12:02:04 +1100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200301231509.22780.tom@qwws.net>
-Reply-To: tom@qwws.net
+Message-ID: <01C2CC45.3C7C8B40@ACOOK>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-Hi,
-
-I've asked this question in several Newsgroups but nobody was really
-able to answer it. That's why I decided to send it to LKM. Please CC
-me on your replies. Thanks!
-
-I've got a question related to ide performance.
-First of all my hardware:
-Mainboard: ASUS P4PE (using onboard IDE but not S-ATA)
-   http://www.asus.com/products/mb/socket478/p4pe/overview.htm
-Harddisk: Western Digital WD800JB
-   http://www.westerndigital.com/products/products.asp?DriveID=32
+To: "'linux-ide@vger.kernel.org'" <linux-ide@vger.kernel.org>
+Cc: "'andre@linux-ide.org'" <andre@linux-ide.org>
 
 
-Now about the current performance:
+With kernel v2.4.19 I have the following problems:
 
-tom@storm:~$ sudo hdparm -tT /dev/hda
-/dev/hda:
- Timing buffer-cache reads:   128 MB in  0.27 seconds =474.07 MB/sec
- Timing buffered disk reads:  64 MB in  3.05 seconds = 20.98 MB/sec
+(1) dmesg: 'PCI: Device 00:1f.1 not available because of resource collisions' (IDE device)
+(2) hdparm -d 1 /dev/hda gives 'HDIO_SET_DMA failed: Operation not permitted'
+(3) 'No DRQ after issuing WRITE' syslog messages.
+(4) lspci shows:
+00:1f.1 IDE interface: Intel Corporation: Unknown device 248b (rev 02) ....
+    Subsystem: Intel Corporation: Unknown device 3419
+    Flags: bus master, medium devsel, latency 0, IRQ 17
+    ...
 
-The cache read time is pretty ok but the disk read time is below of
-what I'd have expected. My expectations would have been about 40MB/sec.
+The mainboard is an Intel SE7500CW2 with IDE FW82801CA chipset and 2 XEON CPUs. 
+The 4 x HDDs are SEAGATE ST120023A.
+Kernel options include:
+CONFIG_:- 
+ BLK_DEV_IDE=y, 
+ BLK_DEV_IDEDISK=y,
+ BLK_DEV_IDEPCI=y,
+ IDEPCI_SHARE_IRQ=y, 
+ BLK_DEV_IDEDMA=y, 
+ BLK_DEV_ADMA=y, 
 
-Am I wrong with my expectations for this setup?
-I'd really be interested in any suggestion about how I could omptimize
-the system.
+Are these  kernel problems with the above hardware and if so advice on later kernels or patches would be greatlt appreciated?
 
+Anton
+ 
+This email and any attachments are confidential and may be subject to
+copyright, legal or some other professional privilege. They are intended
+solely for the attention and use of the named addressee(s). They may only be
+copied, distributed or disclosed with the consent of the copyright owner.
 
-And here's some more information about the current settings (let me
-know if you need anything else):
-
-tom@storm:~$ sudo hdparm /dev/hda
-/dev/hda:
- multcount    = 16 (on)
- I/O support  =  3 (32-bit w/sync)
- unmaskirq    =  1 (on)
- using_dma    =  1 (on)
- keepsettings =  0 (off)
- nowerr       =  0 (off)
- readonly     =  0 (off)
- readahead    = 255 (on)
- geometry     = 9729/255/63, sectors = 156301488, start = 0
- busstate     =  1 (on)
-
-
-tom@storm:~$ sudo cat /proc/ide/hda/settings
-name                    value           min             max             mode
-----                    -----           ---             ---             ----
-acoustic                0               0               254             rw
-address                 0               0               2               rw
-bios_cyl                9729            0               65535           rw
-bios_head               255             0               255             rw
-bios_sect               63              0               63              rw
-breada_readahead        255             0               255             rw
-bswap                   0               0               1               r
-current_speed           69              0               69              rw
-failures                0               0               65535           rw
-file_readahead          16384           0               16384           rw
-ide_scsi                0               0               1               rw
-init_speed              69              0               69              rw
-io_32bit                3               0               3               rw
-keepsettings            0               0               1               rw
-lun                     0               0               7               rw
-max_failures            1               0               65535           rw
-max_kb_per_request      255             1               255             rw
-multcount               16              0               16              rw
-nice1                   1               0               1               rw
-nowerr                  0               0               1               rw
-number                  0               0               3               rw
-pio_mode                write-only      0               255             w
-slow                    0               0               1               rw
-unmaskirq               1               0               1               rw
-using_dma               1               0               1               rw
-wcache                  0               0               1               rw
-
-
-tom@storm:~$ sudo hdparm -I /dev/hda
-/dev/hda:
-non-removable ATA device, with non-removable media
-        Model Number:           WDC WD800JB-00CRA1
-        Serial Number:          WD-WMA8E3710419
-        Firmware Revision:      17.07W17
-Standards:
-        Supported: 1 2 3 4 5
-        Likely used: 5
-Configuration:
-        Logical         max     current
-        cylinders       16383   16383
-        heads           16      16
-        sectors/track   63      63
-        bytes/track:    57600           (obsolete)
-        bytes/sector:   600             (obsolete)
-        current sector capacity: 16514064
-        LBA user addressable sectors = 156301488
-Capabilities:
-        LBA, IORDY(can be disabled)
-        Buffer size: 8192.0kB   ECC bytes: 40   Queue depth: 1
-        Standby timer values: spec'd by standard, with device specific minimum
-        r/w multiple sector transfer: Max = 16  Current = 16
-        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
-             Cycle time: min=120ns recommended=120ns
-        PIO: pio0 pio1 pio2 pio3 pio4
-             Cycle time: no flow control=120ns  IORDY flow control=120ns
-Commands/features:
-        Enabled Supported:
-           *    READ BUFFER cmd
-           *    WRITE BUFFER cmd
-           *    Host Protected Area feature set
-           *    look-ahead
-           *    write cache
-           *    Power Management feature set
-                Security Mode feature set
-                SMART feature set
-                SET MAX security extension
-           *    DOWNLOAD MICROCODE cmd
-Security:
-                supported
-        not     enabled
-        not     locked
-        not     frozen
-        not     expired: security count
-        not     supported: enhanced erase
-HW reset results:
-        CBLID- above Vih
-        Device num = 0 determined by the jumper
-Checksum: correct
+If you have received this email by mistake or by breach of the
+confidentiality clause, please notify the sender immediately by return email
+and delete or destroy all copies of the email.  Any confidentiality,
+privilege or copyright is not waived or lost because this email has been
+sent to you by mistake.
 
 
 
-A full dmesg dump can be found at http://www.wnk.at/files/dmesg.txt
-
-
-Thanks very much,
--- 
-Tom Winkler
