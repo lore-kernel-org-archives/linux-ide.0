@@ -1,149 +1,176 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.11-rc2 0/29] ide: driver updates
-Date: Wed, 02 Feb 2005 03:31:59 -0500
-Message-ID: <42008FFF.1080904@pobox.com>
-References: <20050202024017.GA621@htj.dyndns.org>
+From: "Albert Lee" <albertcc@tw.ibm.com>
+Subject: [PATCH] libata-dev-2.6: pdc2027x timing register fix for 100MHz adapters
+Date: Wed, 2 Feb 2005 17:01:24 +0800
+Message-ID: <003f01c50905$c8090d10$6401a8c0@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:63428 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262090AbVBBIcX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Feb 2005 03:32:23 -0500
-In-Reply-To: <20050202024017.GA621@htj.dyndns.org>
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_003C_01C50948.D3E4A700"
+Received: from bluehawaii.tikira.net ([61.62.22.51]:60396 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S262201AbVBBJCD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Feb 2005 04:02:03 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@home-tj.org>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
-Tejun Heo wrote:
->  Hello, B. Zolnierkiewicz.
-> 
->  These patches are various fixes/improvements to the ide driver.  They
-> are against the 2.6 bk tree as of today (20050202).
-> 
-> 01_ide_remove_adma100.patch
-> 
-> 	Removes drivers/ide/pci/adma100.[hc].  The driver isn't
-> 	compilable (missing functions) and no Kconfig actually enables
-> 	CONFIG_BLK_DEV_ADMA100.
+This is a multi-part message in MIME format.
 
-Also, the libata-dev-2.6 tree has an "ata_adma" driver which is 
-complete, but needs some testing (and I have h/w).
+------=_NextPart_000_003C_01C50948.D3E4A700
+Content-Type: text/plain;
+	charset="big5"
+Content-Transfer-Encoding: 7bit
 
-> 05_ide_merge_pci_driver_hc.patch
-> 
-> 	Merges drivers/ide/pci/*.h files into their corresponding *.c
-> 	files.  Rationales are
-> 	1. There's no reason to separate pci drivers into header and
-> 	   body.  No header file is shared and they're simple enough.
-> 	2. struct pde_pci_device_t *_chipsets[] are _defined_ in the
-> 	   header files.  That isn't the custom and there's no good
-> 	   reason to do differently in these drivers.
-> 	3. Tracking changelogs shows that the bugs fixed by 00 and 01
-> 	   are introduced during mass-updating ide pci drivers by
-> 	   forgetting to update *.h files.
+Hi Jeff,
 
-Personally, I agree.  However, I would ask Alan for his rationale before 
-applying this...
+  I did not get the pdc2027x timing registers right for the 100 MHz adapters.
+For the 100MHz adapters, the hardware will automatically set the timing registers to the correct value.
+No need to set the timing register by software table lookup.
+(The values in the lookup table are for 133Mhz adapters, which are incorrect for 100MHz adapters.)
 
+  Attached please find the patch against the libata-dev-2.6 tree for your review. Thanks.
 
-> 07_ide_reg_valid_t_endian_fix.patch
-> 
-> 	ide_reg_valid_t contains bitfield flags but doesn't reverse
-> 	bit orders using __*_ENDIAN_BITFIELD macros.  And constants
-> 	for ide_reg_valid_t, IDE_{TASKFILE|HOB}_STD_{IN|OUT}_FLAGS,
-> 	are defined as byte values which are correct only on
-> 	little-endian machines.  This patch defines reversed constants
-> 	and .h byte union structure to make things correct on big
-> 	endian machines.  The only code which uses above macros is in
-> 	flagged_taskfile() and the code is currently unused, so this
-> 	patch doesn't change any behavior.  (The code will get used in
-> 	later patches.)
+Albert
 
-doesn't this "fix" change behavior on existing big endian machines?
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+----------------------------------------------------------------------------------------------
+--- libata-dev-2.6/drivers/scsi/pata_pdc2027x.c 2005-02-02 16:08:39.000000000 +0800
++++ libata-dev-2.6-mod/drivers/scsi/pata_pdc2027x.c 2005-02-02 16:17:26.000000000 +0800
+@@ -29,7 +29,7 @@
+ #include <asm/io.h>
+ 
+ #define DRV_NAME "pata_pdc2027x"
+-#define DRV_VERSION "0.55"
++#define DRV_VERSION "0.56"
+ #undef PDC_DEBUG
+ 
+ #ifdef PDC_DEBUG
+@@ -130,7 +130,32 @@
+  .bios_param  = ata_std_bios_param,
+ };
+ 
+-static struct ata_port_operations pdc2027x_pata_ops = {
++static struct ata_port_operations pdc2027x_pata100_ops = {
++ .port_disable  = ata_port_disable,
++
++ .tf_load  = ata_tf_load,
++ .tf_read  = ata_tf_read,
++ .check_status  = ata_check_status,
++ .exec_command  = ata_exec_command,
++ .dev_select  = ata_std_dev_select,
++
++ .phy_reset  = pdc2027x_phy_reset,   
++
++ .check_atapi_dma = pdc2027x_check_atapi_dma,
++ .bmdma_setup  = ata_bmdma_setup,
++ .bmdma_start  = ata_bmdma_start,
++ .qc_prep  = ata_qc_prep,
++ .qc_issue  = ata_qc_issue_prot,
++ .eng_timeout  = ata_eng_timeout,
++
++ .irq_handler  = ata_interrupt,
++ .irq_clear  = ata_bmdma_irq_clear,
++
++ .port_start  = ata_port_start,
++ .port_stop  = ata_port_stop,
++};
++
++static struct ata_port_operations pdc2027x_pata133_ops = {
+  .port_disable  = ata_port_disable,
+  .set_piomode  = pdc2027x_set_piomode,   
+  .set_dmamode  = pdc2027x_set_dmamode,  
+@@ -167,7 +192,7 @@
+   .pio_mask = 0x1f, /* pio0-4 */
+   .mwdma_mask = 0x07, /* mwdma0-2 */
+   .udma_mask = ATA_UDMA5, /* udma0-5 */
+-  .port_ops = &pdc2027x_pata_ops,
++  .port_ops = &pdc2027x_pata100_ops,
+  },
+  /* PDC_UDMA_133 */
+  {
+@@ -177,7 +202,7 @@
+   .pio_mask = 0x1f, /* pio0-4 */
+   .mwdma_mask = 0x07, /* mwdma0-2 */
+   .udma_mask = ATA_UDMA6, /* udma0-6 */
+-  .port_ops = &pdc2027x_pata_ops,
++  .port_ops = &pdc2027x_pata133_ops,
+  },
+ };
+ 
 
+------=_NextPart_000_003C_01C50948.D3E4A700
+Content-Type: application/octet-stream;
+	name="pdc2027x_056.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="pdc2027x_056.patch"
 
-> 15_ide_flagged_taskfile_data_byte_order_fix.patch
-> 
-> 	In flagged_taskfile(), when writing data register,
-> 	taskfile->data goes to the lower byte and hobfile->data goes
-> 	to the upper byte on little endian machines and the opposite
-> 	happens on big endian machines.  This patch make
-> 	taskfile->data always go to the lower byte regardless of
-> 	endianess.
+--- libata-dev-2.6/drivers/scsi/pata_pdc2027x.c	2005-02-02 =
+16:08:39.000000000 +0800=0A=
++++ libata-dev-2.6-mod/drivers/scsi/pata_pdc2027x.c	2005-02-02 =
+16:17:26.000000000 +0800=0A=
+@@ -29,7 +29,7 @@=0A=
+ #include <asm/io.h>=0A=
+ =0A=
+ #define DRV_NAME	"pata_pdc2027x"=0A=
+-#define DRV_VERSION	"0.55"=0A=
++#define DRV_VERSION	"0.56"=0A=
+ #undef PDC_DEBUG=0A=
+ =0A=
+ #ifdef PDC_DEBUG=0A=
+@@ -130,7 +130,32 @@=0A=
+ 	.bios_param		=3D ata_std_bios_param,=0A=
+ };=0A=
+ =0A=
+-static struct ata_port_operations pdc2027x_pata_ops =3D {=0A=
++static struct ata_port_operations pdc2027x_pata100_ops =3D {=0A=
++	.port_disable		=3D ata_port_disable,=0A=
++=0A=
++	.tf_load		=3D ata_tf_load,=0A=
++	.tf_read		=3D ata_tf_read,=0A=
++	.check_status		=3D ata_check_status,=0A=
++	.exec_command		=3D ata_exec_command,=0A=
++	.dev_select		=3D ata_std_dev_select,=0A=
++=0A=
++	.phy_reset		=3D pdc2027x_phy_reset,   =0A=
++=0A=
++	.check_atapi_dma	=3D pdc2027x_check_atapi_dma,=0A=
++	.bmdma_setup		=3D ata_bmdma_setup,=0A=
++	.bmdma_start		=3D ata_bmdma_start,=0A=
++	.qc_prep		=3D ata_qc_prep,=0A=
++	.qc_issue		=3D ata_qc_issue_prot,=0A=
++	.eng_timeout		=3D ata_eng_timeout,=0A=
++=0A=
++	.irq_handler		=3D ata_interrupt,=0A=
++	.irq_clear		=3D ata_bmdma_irq_clear,=0A=
++=0A=
++	.port_start		=3D ata_port_start,=0A=
++	.port_stop		=3D ata_port_stop,=0A=
++};=0A=
++=0A=
++static struct ata_port_operations pdc2027x_pata133_ops =3D {=0A=
+ 	.port_disable		=3D ata_port_disable,=0A=
+ 	.set_piomode		=3D pdc2027x_set_piomode,   =0A=
+ 	.set_dmamode		=3D pdc2027x_set_dmamode,  =0A=
+@@ -167,7 +192,7 @@=0A=
+ 		.pio_mask	=3D 0x1f, /* pio0-4 */=0A=
+ 		.mwdma_mask	=3D 0x07, /* mwdma0-2 */=0A=
+ 		.udma_mask	=3D ATA_UDMA5, /* udma0-5 */=0A=
+-		.port_ops	=3D &pdc2027x_pata_ops,=0A=
++		.port_ops	=3D &pdc2027x_pata100_ops,=0A=
+ 	},=0A=
+ 	/* PDC_UDMA_133 */=0A=
+ 	{=0A=
+@@ -177,7 +202,7 @@=0A=
+ 		.pio_mask	=3D 0x1f, /* pio0-4 */=0A=
+ 		.mwdma_mask	=3D 0x07, /* mwdma0-2 */=0A=
+ 		.udma_mask	=3D ATA_UDMA6, /* udma0-6 */=0A=
+-		.port_ops	=3D &pdc2027x_pata_ops,=0A=
++		.port_ops	=3D &pdc2027x_pata133_ops,=0A=
+ 	},=0A=
+ };=0A=
+ =0A=
 
-ditto
-
-
-> 16_ide_flagged_taskfile_select_dev_bit_masking.patch
-> 
-> 	In flagged_taskfile(), make off DEV bit before OR'ing it with
-> 	drive->select.all when writing to IDE_SELECT_REG.
-
-Probably the right thing to do, but be very very careful you have 
-audited all uses...
-
-
-> 21_ide_do_taskfile.patch
-> 
-> 	Merged do_rw_taskfile() and flagged_taskfile() into
-> 	do_taskfile().  During the merge, the following changes took
-> 	place.
-> 	1. flagged taskfile now honors HOB feature register.
-> 	   (do_rw_taskfile() did write to HOB feature.)
-> 	2. No do_rw_taskfile() HIHI check on select register.  Except
-> 	   for the DEV bit, all bits are honored.
-> 	3. Uses taskfile->data_phase to determine if dma trasfer is
-> 	   requested.  (do_rw_taskfile() directly switched on
-> 	   taskfile->command for all dma commands)
-
-I think Bart already had plans for this (similar to your patch)?
-
-
-> 22_ide_taskfile_flush.patch
-> 
-> 	All REQ_DRIVE_TASK users except ide_task_ioctl() converted
-> 	to use REQ_DRIVE_TASKFILE.
-
-Rationale?
-
-
-> 24_ide_remove_task.patch
-> 
-> 	Unused REQ_DRIVE_TASK handling removed.
-
-this series is nice.
-
-
-> 25_ide_taskfile_cmd.patch
-> 
-> 	All in-kernel REQ_DRIVE_CMD users except for ide_cmd_ioctl()
-> 	converted to use REQ_DRIVE_TASKFILE.
-> 26_ide_taskfile_cmd_ioctl.patch
-> 
-> 	ide_cmd_ioctl() converted to use ide_taskfile_ioctl().  This
-> 	is the last user of REQ_DRIVE_CMD.
-
-ditto
-
-
-> 27_ide_remove_cmd.patch
-> 
-> 	Removed unused REQ_DRIVE_CMD handling.
-> 
-> 28_ide_taskfile_init_drive_cmd.patch
-> 
-> 	ide_init_drive_cmd() now initializes rq->flags to
-> 	REQ_DRIVE_TASKFILE.
-> 
-> 29_ide_explicit_TASKFILE_NO_DATA.patch
-> 
-> 	Make data_phase explicit in NO_DATA cases.
-
-I would make sure this series gets some amount of testing in -mm before 
-pushing upstream, though...
-
-	Jeff
+------=_NextPart_000_003C_01C50948.D3E4A700--
 
 
