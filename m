@@ -1,130 +1,214 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2.6.11-rc3 00/08] ide: taskfile cleanup
-Date: Sat,  5 Mar 2005 10:47:58 +0900 (KST)
-Message-ID: <20050305014758.4EDB4992@htj.dyndns.org>
+Subject: Re: [PATCH 2.6.11-rc3 02/08] ide: convert __ide_do_rw_disk() to use ide_load_taskfile()
+Date: Sat,  5 Mar 2005 10:48:08 +0900 (KST)
+Message-ID: <20050305014803.3C048CBA@htj.dyndns.org>
+References: <20050305014758.4EDB4992@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20050305014758.4EDB4992@htj.dyndns.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-ide@vger.kernel.org
 
 
- Hello, Bartlomiej.
- Hello, Jeff.
-
- These eight patches
-
- * define ATA_TFLAG_{OUT|IN}_* flags
- * unify/generalize taskfile transport
- * cleanup ide driver accordingly
-
- For behavior changes by #03.  I don't think defining a special flag
-to handle the TASKFILE case is necessary.  The change isn't
-user-visible.  And for the TASK ioctl, I think we should modify all
-ioctls to disallow changing the upper nibble of the DEVICE register
-except for the LBA bit.  What do you think?
-
- I tried hard not to break things and tested changes but I'm pretty
-sure that I've missed something.  So, please comment.  :-)
-
-[ Start of patch descriptions ]
-
-01_ide_TFLAG_OUT_IN.patch
-	: add individual ATA_TFLAG_{OUT|IN}_* flags
-
-	This patch replaces ide_task_t->tf_{out|in}_flags handling
-	with newly defined individual ATA_TFLAG_{OUT|IN}_* flags and
-	helper functions ide_{load|read}_taskfile().  To ease
-	transition of the IDE code, temporary flags
-	ATA_TFLAG_IDE_FLAGGED and ATA_TFLAG_IDE_LBA48 are defined.
-	This patch is tit-for-tat and shouldn't change any behavior.
-
 02_ide_use_load_taskfile_in_do_rw_disk.patch
-	: convert __ide_do_rw_disk() to use ide_load_taskfile()
 
 	Reimplements __ide_do_rw_disk() using ide_load_taskfile().
 	While at it, clean up the function a little bit.
 
-03_ide_remove_flagged_taskfile.patch
-	: remove flagged_taskfile() and unify taskfile paths
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-	This patch removes flagged_taskfile().  All taskfile command
-	issuing goes through do_rw_taskfile().  do_rw_taskfile()
-	doesn't modify mangle with load flags anymore.  It's now
-	caller's responsibility to set appropriate flags.  Likewise,
-	ide_end_drive_cmd() is modified not to mangle with read flags,
-	and ide_dma_intr() now also finishes commands with
-	task_end_request().  Above changes make taskfile path unified
-	& generic.
+ ide-disk.c |  163 ++++++++++++++++++++++++-------------------------------------
+ 1 files changed, 65 insertions(+), 98 deletions(-)
 
-	As all ioctl subtleties are now responsibility of respective
-	ioctl functions.  TASKFILE and TASK ioctl functions are
-	updated to set flags according to old behaviors.  The
-	following two behavior changes occur.
-
-	* TASKFILE ioctl: taskfile registers are read back whether or
-	  not the command fails.  As copying back to user doesn't
-	  happen in cases where reading back didn't occur before, this
-	  change isn't user-visible.  Defining & using a flag like
-	  ATA_TFLAG_READ_ON_ERROR will remove this issue.
-	* TASK ioctl: drive->select.all & ~ATA_LBA is OR'd to device
-	  value.  Previously, only ATA_DEV bit was OR'd.
-
-	Also, all ide_{raw|diag}_taskfile(), do_rw_taskfile() users
-	are converted to use the new individual OUT/IN flags.  As
-	results, the following behavior changes occur.
-
-	* idedisk_read_native_max_address(): ADDR/LBA48 regs are not
-	  loaded.  LBA48/DEVICE registers are not read back unless
-	  necessary.
-	* idedisk_set_max_address(): DEVICE register is not read
-	  unless necessary.
-	* smart_enable(): DEVICE register is not loaded.  Registers
-	  are not read back.
-	* smart_disable(): ditto
-	* get_smart_threshold(): DEVICE register is not loaded.
-	* ide_task_init_flush(): ADDR/LBA48/DEVICE registers are not
-	  loaded.
-	* ide_init_specify_cmd(): Register aren't read back.
-	* ide_init_restore_cmd(): DEVICE register not loaded.  No read back.
-	* ide_init_setmult_cmd(): ditto
-
-04_ide_remove_unused_fields.patch
-	: remove unused fields ide_drive_t->rq and ide_task_t->special
-
-	Remove unused fields ide_drive_t->rq and ide_task_t->special
-
-05_ide_use_protocol.patch
-	: use ide_task_t->tf.protocol instead of ide_task_t->data_phase
-
-	Remove ide_task_t->{data_phase,command_type,prehandler,rq} and
-	use tf->protocol instead.  Now the protocol value wholey
-	defines how to drive a taskfile except for NODATA cases where
-	a caller can optionally specify handler (for special
-	commands).  The following behavior changes occur.
-
-	* ide_taskfile_ioctl(): req_task->command_type is ignored.
-	  This doesn't make any difference except for error/crash
-	  cases in the original code.
-
-06_ide_taskfile_set_xfer_rate.patch
-	: convert set_xfer_rate() to use taskfile ioctl
-
-	Convert set_xfer_rate() to use taskfile ioctl.
-
-07_ide_taskfile_cmd_ioctl.patch
-	: reimplement ide_cmd_ioctl() using taskfile
-
-	Reimplement ide_cmd_ioctl() using taskfile.
-
-08_ide_remove_REQ_DRIVE_CMD.patch
-	: remove REQ_DRIVE_CMD handling
-
-	Remove REQ_DRIVE_CMD handling.  ide_init_drive_cmd() now
-	defaults to REQ_DRIVE_TASKFILE (now the only drive command :-).
-
-[ End of patch descriptions ]
-
- Thanks.
-
---
-tejun
+Index: linux-taskfile-ng/drivers/ide/ide-disk.c
+===================================================================
+--- linux-taskfile-ng.orig/drivers/ide/ide-disk.c	2005-03-05 10:46:58.305078940 +0900
++++ linux-taskfile-ng/drivers/ide/ide-disk.c	2005-03-05 10:46:58.762007508 +0900
+@@ -158,114 +158,80 @@ static int lba_capacity_is_ok (struct hd
+  */
+ ide_startstop_t __ide_do_rw_disk (ide_drive_t *drive, struct request *rq, sector_t block)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-	unsigned int dma	= drive->using_dma;
+-	u8 lba48		= (drive->addressing == 1) ? 1 : 0;
+-	task_ioreg_t command	= WIN_NOP;
+-	ata_nsector_t		nsectors;
+-
+-	nsectors.all		= (u16) rq->nr_sectors;
+-
+-	if (hwif->no_lba48_dma && lba48 && dma) {
+-		if (block + rq->nr_sectors > 1ULL << 28)
+-			dma = 0;
+-	}
+-
+-	if (!dma) {
+-		ide_init_sg_cmd(drive, rq);
+-		ide_map_sg(drive, rq);
+-	}
++	ide_hwif_t *hwif = drive->hwif;
++	int lba48 = (drive->addressing == 1) ? 1 : 0;
++	ide_task_t task;
++	struct ata_taskfile *tf = &task.tf;
++	u8 command;
+ 
++	/* ALL Command Block Executions SHALL clear nIEN. */
+ 	if (IDE_CONTROL_REG)
+ 		hwif->OUTB(drive->ctl, IDE_CONTROL_REG);
+-
+ 	/* FIXME: SELECT_MASK(drive, 0) ? */
+ 
+-	if (drive->select.b.lba) {
+-		if (drive->addressing == 1) {
+-			task_ioreg_t tasklets[10];
+-
+-			pr_debug("%s: LBA=0x%012llx\n", drive->name, block);
++	memset(&task, 0, sizeof(task));
+ 
+-			tasklets[0] = 0;
+-			tasklets[1] = 0;
+-			tasklets[2] = nsectors.b.low;
+-			tasklets[3] = nsectors.b.high;
+-			tasklets[4] = (task_ioreg_t) block;
+-			tasklets[5] = (task_ioreg_t) (block>>8);
+-			tasklets[6] = (task_ioreg_t) (block>>16);
+-			tasklets[7] = (task_ioreg_t) (block>>24);
+-			if (sizeof(block) == 4) {
+-				tasklets[8] = (task_ioreg_t) 0;
+-				tasklets[9] = (task_ioreg_t) 0;
+-			} else {
+-				tasklets[8] = (task_ioreg_t)((u64)block >> 32);
+-				tasklets[9] = (task_ioreg_t)((u64)block >> 40);
+-			}
+-#ifdef DEBUG
+-			printk("%s: 0x%02x%02x 0x%02x%02x%02x%02x%02x%02x\n",
+-				drive->name, tasklets[3], tasklets[2],
+-				tasklets[9], tasklets[8], tasklets[7],
+-				tasklets[6], tasklets[5], tasklets[4]);
+-#endif
+-			hwif->OUTB(tasklets[1], IDE_FEATURE_REG);
+-			hwif->OUTB(tasklets[3], IDE_NSECTOR_REG);
+-			hwif->OUTB(tasklets[7], IDE_SECTOR_REG);
+-			hwif->OUTB(tasklets[8], IDE_LCYL_REG);
+-			hwif->OUTB(tasklets[9], IDE_HCYL_REG);
+-
+-			hwif->OUTB(tasklets[0], IDE_FEATURE_REG);
+-			hwif->OUTB(tasklets[2], IDE_NSECTOR_REG);
+-			hwif->OUTB(tasklets[4], IDE_SECTOR_REG);
+-			hwif->OUTB(tasklets[5], IDE_LCYL_REG);
+-			hwif->OUTB(tasklets[6], IDE_HCYL_REG);
+-			hwif->OUTB(0x00|drive->select.all,IDE_SELECT_REG);
+-		} else {
+-			hwif->OUTB(0x00, IDE_FEATURE_REG);
+-			hwif->OUTB(nsectors.b.low, IDE_NSECTOR_REG);
+-			hwif->OUTB(block, IDE_SECTOR_REG);
+-			hwif->OUTB(block>>=8, IDE_LCYL_REG);
+-			hwif->OUTB(block>>=8, IDE_HCYL_REG);
+-			hwif->OUTB(((block>>8)&0x0f)|drive->select.all,IDE_SELECT_REG);
+-		}
++	if (drive->select.b.lba) {
++		/* LBA28/LBA48 */
++		tf->flags	|= ATA_TFLAG_OUT_ADDR | ATA_TFLAG_OUT_DEVICE;
++		tf->nsect	= rq->nr_sectors;
++		tf->lbal	= block;
++		tf->lbam	= block >> 8;
++		tf->lbah	= block >> 16;
++
++		if (lba48) {
++			tf->flags	|= ATA_TFLAG_OUT_LBA48;
++			tf->hob_nsect	= rq->nr_sectors >> 8;
++			tf->hob_lbal	= block >> 24;
++			tf->hob_lbam	= block >> 32;
++			tf->hob_lbah	= block >> 40;
++		} else
++			tf->device	= (block >> 24) & 0xf;
+ 	} else {
+-		unsigned int sect,head,cyl,track;
+-		track = (int)block / drive->sect;
+-		sect  = (int)block % drive->sect + 1;
+-		hwif->OUTB(sect, IDE_SECTOR_REG);
+-		head  = track % drive->head;
+-		cyl   = track / drive->head;
+-
+-		pr_debug("%s: CHS=%u/%u/%u\n", drive->name, cyl, head, sect);
+-
+-		hwif->OUTB(0x00, IDE_FEATURE_REG);
+-		hwif->OUTB(nsectors.b.low, IDE_NSECTOR_REG);
+-		hwif->OUTB(cyl, IDE_LCYL_REG);
+-		hwif->OUTB(cyl>>8, IDE_HCYL_REG);
+-		hwif->OUTB(head|drive->select.all,IDE_SELECT_REG);
+-	}
+-
+-	if (dma) {
+-		if (!hwif->dma_setup(drive)) {
+-			if (rq_data_dir(rq)) {
+-				command = lba48 ? WIN_WRITEDMA_EXT : WIN_WRITEDMA;
+-				if (drive->vdma)
+-					command = lba48 ? WIN_WRITE_EXT: WIN_WRITE;
+-			} else {
+-				command = lba48 ? WIN_READDMA_EXT : WIN_READDMA;
+-				if (drive->vdma)
+-					command = lba48 ? WIN_READ_EXT: WIN_READ;
+-			}
+-			hwif->dma_exec_cmd(drive, command);
+-			hwif->dma_start(drive);
+-			return ide_started;
++		/* CHS */
++		int track	= (int)block / drive->sect;
++		int cyl		= track / drive->head;
++		int head	= track % drive->head;
++		int sect	= (int)block % drive->sect + 1;
++
++		tf->flags	|= ATA_TFLAG_OUT_ADDR | ATA_TFLAG_OUT_DEVICE;
++		tf->nsect	= rq->nr_sectors;
++		tf->lbal	= sect;
++		tf->lbam	= cyl;
++		tf->lbah	= cyl >> 8;
++		tf->device	= head;
++	}
++
++	tf->device |= drive->select.all;
++
++	ide_load_taskfile(drive, &task);
++
++	if (drive->using_dma &&
++	    !(hwif->no_lba48_dma && block + rq->nr_sectors > 1ULL << 28)) {
++		/* DMA */
++		if (hwif->dma_setup(drive))
++			goto fallback_to_pio;
++		if (rq_data_dir(rq) == READ) {
++			command = lba48 ? WIN_READDMA_EXT : WIN_READDMA;
++			if (drive->vdma)
++				command = lba48 ? WIN_READ_EXT : WIN_READ;
++		} else {
++			command = lba48 ? WIN_WRITEDMA_EXT : WIN_WRITEDMA;
++			if (drive->vdma)
++				command = lba48 ? WIN_WRITE_EXT : WIN_WRITE;
+ 		}
+-		/* fallback to PIO */
+-		ide_init_sg_cmd(drive, rq);
++		hwif->dma_exec_cmd(drive, command);
++		hwif->dma_start(drive);
++		return ide_started;
+ 	}
+ 
+-	if (rq_data_dir(rq) == READ) {
++	/* PIO */
++	ide_map_sg(drive, rq);
++	/* dma_setup() has already done ide_map_sg(). */
++ fallback_to_pio:
++	ide_init_sg_cmd(drive, rq);
+ 
++	if (rq_data_dir(rq) == READ) {
+ 		if (drive->mult_count) {
+ 			hwif->data_phase = TASKFILE_MULTI_IN;
+ 			command = lba48 ? WIN_MULTREAD_EXT : WIN_MULTREAD;
+@@ -274,7 +240,8 @@ ide_startstop_t __ide_do_rw_disk (ide_dr
+ 			command = lba48 ? WIN_READ_EXT : WIN_READ;
+ 		}
+ 
+-		ide_execute_command(drive, command, &task_in_intr, WAIT_CMD, NULL);
++		ide_execute_command(drive, command, &task_in_intr,
++				    WAIT_CMD, NULL);
+ 		return ide_started;
+ 	} else {
+ 		if (drive->mult_count) {
