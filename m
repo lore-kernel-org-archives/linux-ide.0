@@ -1,177 +1,285 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH] libata atapi work #3
-Date: Thu, 13 May 2004 21:34:34 -0400
+From: Rene Herman <rene.herman@keyaccess.nl>
+Subject: Re: [RFT][PATCH] ide-disk.c: more write cache fixes
+Date: Fri, 14 May 2004 13:58:58 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40A4222A.7020403@pobox.com>
+Message-ID: <40A4B482.3040706@keyaccess.nl>
+References: <200405132116.44201.bzolnier@elka.pw.edu.pl> <40A404A5.8070500@keyaccess.nl> <200405140214.08136.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------060902080901080600070207"
+ boundary="------------040407010404010700080801"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:63697 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264373AbUENBes
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 May 2004 21:34:48 -0400
+Received: from smtpq1.home.nl ([213.51.128.196]:34703 "EHLO smtpq1.home.nl")
+	by vger.kernel.org with ESMTP id S265259AbUENMAi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 May 2004 08:00:38 -0400
+In-Reply-To: <200405140214.08136.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Pat LaVarre <p.lavarre@ieee.org>
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@redhat.com>, Andrew Morton <akpm@osdl.org>, "Eric D. Mudama" <edmudama@mail.bounceswoosh.org>, Jens Axboe <axboe@suse.de>
 
 This is a multi-part message in MIME format.
---------------060902080901080600070207
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+--------------040407010404010700080801
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
+Bartlomiej Zolnierkiewicz wrote:
 
---------------060902080901080600070207
+> Please look at write_cache(), it will try to {en,dis}able write cache
+> and then set drive->wcache *only* if disk has ATA-6 cache flush bits.
+
+Yes, you're quite right.
+
+Have again attached a 'rollup' patch against vanilla 2.6.6, including 
+this, Andrew's SYSTEM_SHUTDOWN split and the quick "don't switch of 
+spindle if rebooting" hack. Again, just in case anyone finds it useful.
+
+(by the way, the SYSTEM_SHUTDOWN split is already in -mm2)
+
+Rene.
+
+--------------040407010404010700080801
 Content-Type: text/plain;
- name="patch.3"
+ name="linux-2.6.6_rollup2.diff"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="patch.3"
+ filename="linux-2.6.6_rollup2.diff"
 
-# This is a BitKeeper generated diff -Nru style patch.
-#
-# ChangeSet
-#   2004/05/13 21:26:59-04:00 jgarzik@redhat.com 
-#   [libata] more ATAPI work - translate SCSI CDB to ATA PACKET
-#   
-#   Now that we can specify ATAPI as a taskfile protocol, we can utilize
-#   the existing SCSI->ATA translation infrastructure to build an ATA
-#   PACKET command quickly and easily.
-# 
-diff -Nru a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
---- a/drivers/scsi/libata-core.c	Thu May 13 21:28:26 2004
-+++ b/drivers/scsi/libata-core.c	Thu May 13 21:28:26 2004
-@@ -2794,20 +2794,6 @@
- 	return timeout;
+diff -urN linux-2.6.6.orig/drivers/ide/ide-disk.c linux-2.6.6/drivers/ide/ide-disk.c
+--- linux-2.6.6.orig/drivers/ide/ide-disk.c	2004-05-10 09:31:44.000000000 +0200
++++ linux-2.6.6/drivers/ide/ide-disk.c	2004-05-14 00:33:44.000000000 +0200
+@@ -740,8 +740,6 @@
+ 		return __ide_do_rw_disk(drive, rq, block);
  }
  
--void atapi_start(struct ata_queued_cmd *qc)
--{
--	struct ata_port *ap = qc->ap;
+-static int do_idedisk_flushcache(ide_drive_t *drive);
 -
--	qc->flags |= ATA_QCFLAG_ACTIVE;
--	ap->active_tag = qc->tag;
+ static u8 idedisk_dump_status (ide_drive_t *drive, const char *msg, u8 stat)
+ {
+ 	ide_hwif_t *hwif = HWIF(drive);
+@@ -1359,11 +1357,18 @@
+ 	return 0;
+ }
+ 
++/* check if CACHE FLUSH (EXT) command is supported (bits defined in ATA-6) */
++#define ide_id_has_flush_cache(id)	((id)->cfs_enable_2 & 0x3000)
++
++/* some Maxtor disks have bit 13 defined incorrectly so check bit 10 too */
++#define ide_id_has_flush_cache_ext(id)	\
++	(((id)->cfs_enable_2 & 0x2400) == 0x2400)
++
+ static int write_cache (ide_drive_t *drive, int arg)
+ {
+ 	ide_task_t args;
+ 
+-	if (!(drive->id->cfs_enable_2 & 0x3000))
++	if (!ide_id_has_flush_cache(drive->id))
+ 		return 1;
+ 
+ 	memset(&args, 0, sizeof(ide_task_t));
+@@ -1383,7 +1388,7 @@
+ 	ide_task_t args;
+ 
+ 	memset(&args, 0, sizeof(ide_task_t));
+-	if (drive->id->cfs_enable_2 & 0x2400)
++	if (ide_id_has_flush_cache_ext(drive->id))
+ 		args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_FLUSH_CACHE_EXT;
+ 	else
+ 		args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_FLUSH_CACHE;
+@@ -1513,11 +1518,11 @@
+ 	switch (rq->pm->pm_step) {
+ 	case idedisk_pm_flush_cache:	/* Suspend step 1 (flush cache) */
+ 		/* Not supported? Switch to next step now. */
+-		if (!drive->wcache) {
++		if (!drive->wcache || !ide_id_has_flush_cache(drive->id)) {
+ 			idedisk_complete_power_step(drive, rq, 0, 0);
+ 			return ide_stopped;
+ 		}
+-		if (drive->id->cfs_enable_2 & 0x2400)
++		if (ide_id_has_flush_cache_ext(drive->id))
+ 			args->tfRegister[IDE_COMMAND_OFFSET] = WIN_FLUSH_CACHE_EXT;
+ 		else
+ 			args->tfRegister[IDE_COMMAND_OFFSET] = WIN_FLUSH_CACHE;
+@@ -1678,8 +1683,12 @@
+ #endif	/* CONFIG_IDEDISK_MULTI_MODE */
+ 	}
+ 	drive->no_io_32bit = id->dword_io ? 1 : 0;
+-	if (drive->id->cfs_enable_2 & 0x3000)
+-		write_cache(drive, (id->cfs_enable_2 & 0x3000));
++
++	/* write cache enabled? */
++	if ((id->csfo & 1) || (id->cfs_enable_1 & (1 << 5)))
++		drive->wcache = 1;
++
++	write_cache(drive, 1);
+ 
+ #ifdef CONFIG_BLK_DEV_IDE_TCQ_DEFAULT
+ 	if (drive->using_dma)
+@@ -1687,9 +1696,17 @@
+ #endif
+ }
+ 
++static void ide_cacheflush_p(ide_drive_t *drive)
++{
++	if (!drive->wcache || !ide_id_has_flush_cache(drive->id))
++		return;
++
++	if (do_idedisk_flushcache(drive))
++		printk(KERN_INFO "%s: wcache flush failed!\n", drive->name);
++}
++
+ static int idedisk_cleanup (ide_drive_t *drive)
+ {
+-	static int ide_cacheflush_p(ide_drive_t *drive);
+ 	struct gendisk *g = drive->disk;
+ 	ide_cacheflush_p(drive);
+ 	if (ide_unregister_subdriver(drive))
+@@ -1704,10 +1721,11 @@
+ 
+ static void ide_device_shutdown(struct device *dev)
+ {
+-	ide_drive_t *drive = container_of(dev, ide_drive_t, gendev);
 -
--	ata_dev_select(ap, qc->dev->devno, 1, 0);
--	ata_tf_to_host_nolock(ap, &qc->tf);
--	queue_work(ata_wq, &ap->packet_task);
--
--	VPRINTK("EXIT\n");
+-	printk("Shutdown: %s\n", drive->name);
+-	dev->bus->suspend(dev, PM_SUSPEND_STANDBY);
++	if (system_state != SYSTEM_RESTART) {
++		ide_drive_t *drive = container_of(dev, ide_drive_t, gendev);
++		printk("Shutdown: %s\n", drive->name);
++		dev->bus->suspend(dev, PM_SUSPEND_STANDBY);
++	}
+ }
+ 
+ /*
+@@ -1740,7 +1758,6 @@
+ 
+ static int idedisk_open(struct inode *inode, struct file *filp)
+ {
+-	u8 cf;
+ 	ide_drive_t *drive = inode->i_bdev->bd_disk->private_data;
+ 	drive->usage++;
+ 	if (drive->removable && drive->usage == 1) {
+@@ -1758,35 +1775,6 @@
+ 		if (drive->doorlocking && ide_raw_taskfile(drive, &args, NULL))
+ 			drive->doorlocking = 0;
+ 	}
+-	drive->wcache = 0;
+-	/* Cache enabled? */
+-	if (drive->id->csfo & 1)
+-		drive->wcache = 1;
+-	/* Cache command set available? */
+-	if (drive->id->cfs_enable_1 & (1 << 5))
+-		drive->wcache = 1;
+-	/* ATA6 cache extended commands */
+-	cf = drive->id->command_set_2 >> 24;
+-	if ((cf & 0xC0) == 0x40 && (cf & 0x30) != 0)
+-		drive->wcache = 1;
+-	return 0;
 -}
 -
- /**
-  *	atapi_packet_task - Write CDB bytes to hardware
-  *	@_data: Port to which ATAPI device is attached.
-diff -Nru a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
---- a/drivers/scsi/libata-scsi.c	Thu May 13 21:28:26 2004
-+++ b/drivers/scsi/libata-scsi.c	Thu May 13 21:28:26 2004
-@@ -885,53 +885,20 @@
- }
- 
- /**
-- *	atapi_scsi_queuecmd - Send CDB to ATAPI device
-- *	@ap: Port to which ATAPI device is attached.
-- *	@dev: Target device for CDB.
-- *	@cmd: SCSI command being sent to device.
-- *	@done: SCSI command completion function.
-- *
-- *	Sends CDB to ATAPI device.  If the Linux SCSI layer sends a
-- *	non-data command, then this function handles the command
-- *	directly, via polling.  Otherwise, the bmdma engine is started.
-+ *	atapi_xlat - Initialize PACKET taskfile
-+ *	@qc: command structure to be initialized
-+ *	@scsicmd: SCSI CDB associated with this PACKET command
-  *
-  *	LOCKING:
-  *	spin_lock_irqsave(host_set lock)
-+ *
-+ *	RETURNS:
-+ *	Zero on success, non-zero on failure.
-  */
- 
--static void atapi_scsi_queuecmd(struct ata_port *ap, struct ata_device *dev,
--			       struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
-+static unsigned int atapi_xlat(struct ata_queued_cmd *qc, u8 *scsicmd)
- {
--	struct ata_queued_cmd *qc;
--	u8 *scsicmd = cmd->cmnd;
+-static int ide_cacheflush_p(ide_drive_t *drive)
+-{
+-	if (!(drive->id->cfs_enable_2 & 0x3000))
+-		return 0;
 -
--	VPRINTK("ENTER, drv_stat = 0x%x\n", ata_chk_status(ap));
--
--	if (cmd->sc_data_direction == SCSI_DATA_UNKNOWN) {
--		DPRINTK("unknown data, scsicmd 0x%x\n", scsicmd[0]);
--		ata_bad_cdb(cmd, done);
--		return;
+-	if(drive->wcache)
+-	{
+-		if (do_idedisk_flushcache(drive))
+-		{
+-			printk (KERN_INFO "%s: Write Cache FAILED Flushing!\n",
+-				drive->name);
+-			return -EIO;
+-		}
+-		return 1;
 -	}
--
--	switch(scsicmd[0]) {
--	case READ_6:
--	case WRITE_6:
--	case MODE_SELECT:
--	case MODE_SENSE:
--		DPRINTK("read6/write6/modesel/modesense trap\n");
--		ata_bad_scsiop(cmd, done);
--		return;
--
--	default:
--		/* do nothing */
--		break;
--	}
--
--	qc = ata_scsi_qc_new(ap, dev, cmd, done);
--	if (!qc) {
--		printk(KERN_ERR "ata%u: command queue empty\n", ap->id);
--		return;
--	}
-+	struct scsi_cmnd *cmd = qc->scsicmd;
- 
- 	qc->flags |= ATA_QCFLAG_ATAPI;
- 
-@@ -943,17 +910,20 @@
- 
- 	qc->tf.command = ATA_CMD_PACKET;
- 
--	if (cmd->sc_data_direction == SCSI_DATA_NONE) {
--		qc->tf.protocol = ATA_PROT_ATAPI;
-+	if ((cmd->sc_data_direction == SCSI_DATA_NONE) ||
-+	    ((qc->flags & ATA_QCFLAG_DMA) == 0)) {
- 		qc->flags |= ATA_QCFLAG_POLL;
-+		qc->tf.protocol = ATA_PROT_ATAPI;
- 		qc->tf.ctl |= ATA_NIEN;	/* disable interrupts */
-+		qc->tf.lbam = (8 * 1024) & 0xff;
-+		qc->tf.lbah = (8 * 1024) >> 8;
- 	} else {
--		qc->tf.protocol = ATA_PROT_ATAPI_DMA;
- 		qc->flags |= ATA_QCFLAG_SG; /* data is present; dma-map it */
-+		qc->tf.protocol = ATA_PROT_ATAPI_DMA;
- 		qc->tf.feature |= ATAPI_PKT_DMA;
- 	}
- 
--	atapi_start(qc);
-+	return 0;
- }
- 
- /**
-@@ -1092,7 +1062,7 @@
- 		else
- 			ata_scsi_simulate(ap, dev, cmd, done);
- 	} else
--		atapi_scsi_queuecmd(ap, dev, cmd, done);
-+		ata_scsi_translate(ap, dev, cmd, done, atapi_xlat);
- 
- out_unlock:
  	return 0;
-diff -Nru a/drivers/scsi/libata.h b/drivers/scsi/libata.h
---- a/drivers/scsi/libata.h	Thu May 13 21:28:26 2004
-+++ b/drivers/scsi/libata.h	Thu May 13 21:28:26 2004
-@@ -44,7 +44,6 @@
- extern void ata_dev_select(struct ata_port *ap, unsigned int device,
-                            unsigned int wait, unsigned int can_sleep);
- extern void ata_tf_to_host_nolock(struct ata_port *ap, struct ata_taskfile *tf);
--extern void atapi_start(struct ata_queued_cmd *qc);
+ }
  
+@@ -1867,10 +1855,7 @@
+ 	if ((!drive->head || drive->head > 16) && !drive->select.b.lba) {
+ 		printk(KERN_ERR "%s: INVALID GEOMETRY: %d PHYSICAL HEADS?\n",
+ 			drive->name, drive->head);
+-		if ((drive->id->cfs_enable_2 & 0x3000) && drive->wcache)
+-			if (do_idedisk_flushcache(drive))
+-				printk (KERN_INFO "%s: Write Cache FAILED Flushing!\n",
+-					drive->name);
++		ide_cacheflush_p(drive);
+ 		ide_unregister_subdriver(drive);
+ 		DRIVER(drive)->busy--;
+ 		goto failed;
+diff -urN linux-2.6.6.orig/include/linux/kernel.h linux-2.6.6/include/linux/kernel.h
+--- linux-2.6.6.orig/include/linux/kernel.h	2004-05-10 09:31:47.000000000 +0200
++++ linux-2.6.6/include/linux/kernel.h	2004-05-14 00:33:35.000000000 +0200
+@@ -109,14 +109,17 @@
+ extern void bust_spinlocks(int yes);
+ extern int oops_in_progress;		/* If set, an oops, panic(), BUG() or die() is in progress */
+ extern int panic_on_oops;
+-extern int system_state;		/* See values below */
+ extern int tainted;
+ extern const char *print_tainted(void);
  
- /* libata-scsi.c */
+ /* Values used for system_state */
+-#define SYSTEM_BOOTING 0
+-#define SYSTEM_RUNNING 1
+-#define SYSTEM_SHUTDOWN 2
++extern enum system_states {
++	SYSTEM_BOOTING,
++	SYSTEM_RUNNING,
++	SYSTEM_HALT,
++	SYSTEM_POWER_OFF,
++	SYSTEM_RESTART,
++} system_state;
+ 
+ #define TAINT_PROPRIETARY_MODULE	(1<<0)
+ #define TAINT_FORCED_MODULE		(1<<1)
+diff -urN linux-2.6.6.orig/init/main.c linux-2.6.6/init/main.c
+--- linux-2.6.6.orig/init/main.c	2004-05-10 09:31:47.000000000 +0200
++++ linux-2.6.6/init/main.c	2004-05-14 00:33:35.000000000 +0200
+@@ -95,7 +95,8 @@
+ extern void tc_init(void);
+ #endif
+ 
+-int system_state;	/* SYSTEM_BOOTING/RUNNING/SHUTDOWN */
++enum system_states system_state;
++EXPORT_SYMBOL(system_state);
+ 
+ /*
+  * Boot command-line arguments
+diff -urN linux-2.6.6.orig/kernel/sys.c linux-2.6.6/kernel/sys.c
+--- linux-2.6.6.orig/kernel/sys.c	2004-05-10 09:31:47.000000000 +0200
++++ linux-2.6.6/kernel/sys.c	2004-05-14 00:33:35.000000000 +0200
+@@ -447,7 +447,7 @@
+ 	switch (cmd) {
+ 	case LINUX_REBOOT_CMD_RESTART:
+ 		notifier_call_chain(&reboot_notifier_list, SYS_RESTART, NULL);
+-		system_state = SYSTEM_SHUTDOWN;
++		system_state = SYSTEM_RESTART;
+ 		device_shutdown();
+ 		printk(KERN_EMERG "Restarting system.\n");
+ 		machine_restart(NULL);
+@@ -463,7 +463,7 @@
+ 
+ 	case LINUX_REBOOT_CMD_HALT:
+ 		notifier_call_chain(&reboot_notifier_list, SYS_HALT, NULL);
+-		system_state = SYSTEM_SHUTDOWN;
++		system_state = SYSTEM_HALT;
+ 		device_shutdown();
+ 		printk(KERN_EMERG "System halted.\n");
+ 		machine_halt();
+@@ -473,7 +473,7 @@
+ 
+ 	case LINUX_REBOOT_CMD_POWER_OFF:
+ 		notifier_call_chain(&reboot_notifier_list, SYS_POWER_OFF, NULL);
+-		system_state = SYSTEM_SHUTDOWN;
++		system_state = SYSTEM_POWER_OFF;
+ 		device_shutdown();
+ 		printk(KERN_EMERG "Power down.\n");
+ 		machine_power_off();
+@@ -489,7 +489,7 @@
+ 		buffer[sizeof(buffer) - 1] = '\0';
+ 
+ 		notifier_call_chain(&reboot_notifier_list, SYS_RESTART, buffer);
+-		system_state = SYSTEM_SHUTDOWN;
++		system_state = SYSTEM_RESTART;
+ 		device_shutdown();
+ 		printk(KERN_EMERG "Restarting system with command '%s'.\n", buffer);
+ 		machine_restart(buffer);
 
---------------060902080901080600070207--
-
+--------------040407010404010700080801--
