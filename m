@@ -1,53 +1,44 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: RAID5 - 2nd drive died whilst waiting for RMA
-Date: Wed, 17 Nov 2004 12:04:57 +0000
-Message-ID: <419B3E69.3020803@dgreaves.com>
-References: <200411132039.iADKdDN07474@www.watkins-home.com>	<41968282.6060306@dgreaves.com> <4198DF79.8080809@dgreaves.com>	<41999A9B.2000907@wasp.net.au> <419B3435.3080707@dgreaves.com> <yw1x4qjog1lf.fsf@ford.inprovide.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: PATCH (for comment): ide-cd possible race in PIO mode
+Date: Wed, 17 Nov 2004 13:19:50 +0000
+Message-ID: <1100697589.32677.3.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:8657 "EHLO mail.ukfsn.org")
-	by vger.kernel.org with ESMTP id S262265AbUKQMFC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Nov 2004 07:05:02 -0500
-In-Reply-To: <yw1x4qjog1lf.fsf@ford.inprovide.com>
+Received: from clock-tower.bc.nu ([81.2.110.250]:26340 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S262331AbUKQOW6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Nov 2004 09:22:58 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?M=E5ns_Rullg=E5rd?= <mru@inprovide.com>
-Cc: Brad Campbell <brad@wasp.net.au>, Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-M=E5ns Rullg=E5rd wrote:
+Working on tracing down Fedora bug #115458
+(https://bugzilla.redhat.com/bugzilla/process_bug.cgi) I found what
+appears to be a race between the IDE CD driver and the hardware status.
+It doesn't appear to explain the bug at all but it does look like a bug
+of itself
 
->David Greaves <david@dgreaves.com> writes:
-> =20
->
->>I've been tracking this on the ide list and I've been nervous of
->>applying anything since I don't have proper  backups. I'm relying on
->>redundancy.
->>   =20
->>
->RAID can *never* replace proper backups.  RAID only protects against
->low-level disk failures.  Filesystem corruption caused by bugs,
->accidental deleting of files, etc. are happily allowed.  Get a DVD
->burner, you'll thank yourself one day.
-> =20
->
-Got one.
-I have 935Gb of data (soon to be 1.2Tb)
-Each DVD holds 4.7Gb and takes 20-30 mins to burn.
-Any other ideas ? ;)
+When we issue an ide command the status bits don't become valid for
+400nS. In the DMA case ide_execute_command handles this but in the PIO
+case we don't do the needed locking, use OUTBSYNC to avoid posting or
+delay. This means that in some situations we can execute the command
+handler in PIO mode before the command status bits are valid and the
+handler may read and act wrongly.
 
-David
-
-PS Seriously - the data is films, my CDs, DVDs, TV shows and the like.=20
-It's a bummer to lose but in the grand scheme of things it's only the t=
-elly.
-My _real_ personal data (photos etc) are mirrored onto physically=20
-seperate disks each night. The 'backups' are remounted read-only. It's=20
-the 'rsync snapshot' method.
-
-See: http://www.mikerubel.org/computers/rsync_snapshots/
-
-Thanks for your concern though :)
+--- drivers/ide/ide-cd.c~	2004-11-17 14:08:42.950485320 +0000
++++ drivers/ide/ide-cd.c	2004-11-17 14:08:42.951485168 +0000
+@@ -897,7 +897,10 @@
+ 		return ide_started;
+ 	} else {
+ 		/* packet command */
+-		HWIF(drive)->OUTB(WIN_PACKETCMD, IDE_COMMAND_REG);
++		spin_lock_irqsave(&ide_lock, flags);
++		HWIF(drive)->OUTBSYNC(WIN_PACKETCMD, IDE_COMMAND_REG);
++		ndelay(400);
++		spin_unlock_irqsave(&ide_lock, flags);
+ 		return (*handler) (drive);
+ 	}
+ }
 
