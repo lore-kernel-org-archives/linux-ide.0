@@ -1,32 +1,52 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [SATA] libata-dev queue updated
-Date: Wed, 27 Oct 2004 19:03:39 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <4180294B.6060803@pobox.com>
-References: <20041027065208.GA16230@havoc.gtf.org> <20041028005316.001d2e64.robn@verdi.et.tudelft.nl>
+From: Gene Heskett <gene.heskett@verizon.net>
+Subject: Re: [BK PATCHES] ide-2.6 update
+Date: Thu, 28 Oct 2004 02:45:58 -0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200410280245.58167.gene.heskett@verizon.net>
+References: <58cb370e04102706074c20d6d7@mail.gmail.com> <200410271305.06265.gene.heskett@verizon.net> <Pine.LNX.4.58.0410271019140.28839@ppc970.osdl.org>
+Reply-To: gene.heskett@verizon.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262748AbUJ0XMw@vger.kernel.org>
-In-Reply-To: <20041028005316.001d2e64.robn@verdi.et.tudelft.nl>
-To: Rob van Nieuwkerk <robn@verdi.et.tudelft.nl>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from out012pub.verizon.net ([206.46.170.137]:58087 "EHLO
+	out012.verizon.net") by vger.kernel.org with ESMTP id S262878AbUJ1GqA
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Oct 2004 02:46:00 -0400
+In-Reply-To: <Pine.LNX.4.58.0410271019140.28839@ppc970.osdl.org>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@osdl.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-Rob van Nieuwkerk wrote:
-> On Wed, 27 Oct 2004 02:52:08 -0400
-> Jeff Garzik <jgarzik@pobox.com> wrote:
-> 
-> Hi Jeff,
-> 
-> 
->>John W. Linville:
->>  o libata: SMART support via ATA pass-thru
-> 
-> 
-> Does this mean that now we can use SMART on SATA disks ?
-> Or only PATA disks ?
+On Wednesday 27 October 2004 13:20, Linus Torvalds wrote:
+>On Wed, 27 Oct 2004, Gene Heskett wrote:
+>> >current linus' -bk tree, latest -bk snapshot should also be OK
+>>
+>> Drat.  I can't afford bitkeeper, either the time or the resources.
+>> So I assume this will be in 2.6.10-rc2 or 3?
+>
+>You can also just do the the daily snapshots - in
+>/pub/linux/kernel/v2.6/snapshots.
+>
+>But yes, I'm also pulling Bartlomiej's tree into the next release,
+> so if you can wait..
+>
+>  Linus
 
-Both.
+I went after 2.6.10-rc1, and the bk6 patch for it, and its been 
+running here for about 2 hours, no hits, no runs, no errors so far.
+I watched a little tvtime, browsed with FF for an hour or so, and of 
+course kmail runs full time here.  And amanda just finished up.  It 
+feels good, and Just Works(tm).
 
-	Jeff
+-- 
+Cheers, Gene
+"There are four boxes to be used in defense of liberty:
+ soap, ballot, jury, and ammo. Please use in that order."
+-Ed Howdershelt (Author)
+99.28% setiathome rank, not too shabby for a WV hillbilly
+Yahoo.com attorneys please note, additions to this message
+by Gene Heskett are:
+Copyright 2004 by Maurice Eugene Heskett, all rights reserved.
