@@ -1,48 +1,43 @@
 From: "Gutko" <gutko@poczta.onet.pl>
 Subject: Re: Still no DMA on boot on S-ATA (Asus A7N8X-deluxe)
-Date: Mon, 26 May 2003 14:22:37 +0200
+Date: Mon, 26 May 2003 16:03:00 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <00f001c32381$7eaf5900$928afea9@hal>
-References: <Pine.LNX.4.44.0305251900170.1211-100000@coffee.psychology.mcmaster.ca>
+Message-ID: <016e01c3238f$846e4320$928afea9@hal>
+References: <Pine.LNX.4.44.0305251900170.1211-100000@coffee.psychology.mcmaster.ca> <00f001c32381$7eaf5900$928afea9@hal> <3ED21294.30701@hifo.unizh.ch>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.poczta.onet.pl ([213.180.130.30]:25499 "EHLO
-	smtp2.poczta.onet.pl") by vger.kernel.org with ESMTP
-	id S264358AbTEZMJc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 May 2003 08:09:32 -0400
+Received: from smtp4.poczta.onet.pl ([213.180.130.28]:17057 "EHLO
+	smtp4.poczta.onet.pl") by vger.kernel.org with ESMTP
+	id S264369AbTEZNtv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 May 2003 09:49:51 -0400
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
 
------ Original Message ----- 
-From: "Mark Hahn" <hahn@physics.mcmaster.ca>
-To: "Gutko" <gutko@poczta.onet.pl>
-Sent: Monday, May 26, 2003 1:02 AM
-Subject: Re: Still no DMA on boot on S-ATA (Asus A7N8X-deluxe)
+> >>>I can enable udma5 using hdparm, later in rc.local but why it is not
+> >
+> how do you do this?
+hdparm -d1 -X udma5 -c1 -m16 /dev/hde
+
+> what kind of Problems?
+data corruption
+
+http://www.nforcershq.com/forum/viewtopic.php?t=5108&highlight=data+corruption
 
 
-> > Why my hdd is always detected as PIO?
 >
-> I looked briefly at the driver a couple weeks ago -
-> it appears to be deliberate, perhaps an attempt at conservativism.
->
-> > I can enable udma5 using hdparm, later in rc.local but why it is not
-working
-> > on boot?
->
-> does it work well?  I'm trying to evaluate a system with a SiI3112
-> card and two seagate native-sata 120's.  things work OK under very
-> light use, but quickly degenerate into the classic 'lost interrupt'...
->
-yes i works good but i have onboard SIL3112A chipset. Im using it on udma5
-about
-3 months without any data corruption or errors (linux and windows).
-but I have only one drive connected to sata. I've  heard people running raid
-had
-problems undrer windows too
+> I've noticed that with the 2.4.21-rc2 it wasn't possible to use
+> framebuffer AND the SiI3112 at the same time. I had to disable fb
+> because of this (no loss for me, the debian installer works without fb
+> too .-))
+
+I dont know how it was in pure rc2. I always patched it with Alan's  -ACx
+> Is this solved in -rc3?
+
+if you have more than 512MB try passing "mem=512" to lilo. seems to work
 
 
