@@ -1,47 +1,35 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: Re: PATCH: Put the new API functions in the header files
-Date: Sat, 6 Nov 2004 01:51:28 +0100
-Message-ID: <200411060151.28742.bzolnier@elka.pw.edu.pl>
-References: <1099672368.5630.47.camel@localhost.localdomain> <200411052302.50280.bzolnier@elka.pw.edu.pl> <1099697793.5567.85.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: PATCH: Allow per driver taskfile filters
+Date: Fri, 05 Nov 2004 23:45:33 +0000
+Message-ID: <1099698331.5567.90.camel@localhost.localdomain>
+References: <1099672568.5564.49.camel@localhost.localdomain>
+	 <200411052311.45231.bzolnier@elka.pw.edu.pl>
+	 <1099697126.5630.71.camel@localhost.localdomain>
+	 <200411060142.02146.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:42214 "EHLO
-	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S261275AbUKFAr7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 5 Nov 2004 19:47:59 -0500
-Received: from hadron.elka.pw.edu.pl ([194.29.160.13]:42988 "EHLO localhost")
-	by higgs.elka.pw.edu.pl with ESMTP id S49955AbUKFAr6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 6 Nov 2004 01:47:58 +0100
-Received: from chello062179088136.chello.pl ([62.179.88.136]:65187 "EHLO
-	[192.168.123.164]" ident: "NO-IDENT-SERVICE[2]" smtp-auth: "bzolnier"
-	TLS-CIPHER: <none> TLS-PEER-CN1: <none>) by mion.elka.pw.edu.pl
-	with ESMTP id S98895AbUKFAqz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org> + 1 other);
-	Sat, 6 Nov 2004 01:46:55 +0100
-In-Reply-To: <1099697793.5567.85.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from clock-tower.bc.nu ([81.2.110.250]:39109 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S261295AbUKFAsZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 Nov 2004 19:48:25 -0500
+In-Reply-To: <200411060142.02146.bzolnier@elka.pw.edu.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 Cc: linux-ide@vger.kernel.org
 
-On Saturday 06 November 2004 00:36, Alan Cox wrote:
-> On Gwe, 2004-11-05 at 22:02, Bartlomiej Zolnierkiewicz wrote:
-> > * there is no ordering of your patches
-> > * they are splitted on file boundary not change boundary
-> >   (ie. appling one patch leaves you with kernel which won't compile)
+On Sad, 2004-11-06 at 00:42, Bartlomiej Zolnierkiewicz wrote:
+> * ATAPI is done and working (both PIO and DMA)
+> * half of the blacklists is a crap (but I don't know which half :( )
 > 
-> Well I could send you bigger pieces if you want but you objected to that
-> last time.
+> BTW this is a _new_ driver so it is much easier to move
 
-all or nothing...
+Its not on my schedule. Someone else can do it, but I'd suggest instead
+that they spend their time helping Jeff get stuff like the Marvell
+driver up and running first. Good to hear ATAPI now works with the SATA
+stuff.
 
-> > * they are whitespace damaged as usual
-> 
-> Well if you want to be a bigot about the old trailing space caused by
-> editor auto indenting feel free 8)
+Alan
 
-sigh
