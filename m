@@ -1,79 +1,36 @@
-From: "Eric D. Mudama" <edmudama@mail.bounceswoosh.org>
-Subject: Re: [PATCH] speed up SATA
-Date: Sun, 28 Mar 2004 13:33:57 -0700
+From: "J. Ryan Earl" <heretic@clanhk.org>
+Subject: Re: Status of the sata_sil driver for the VT8237
+Date: Sun, 28 Mar 2004 14:40:31 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040328203357.GB6405@bounceswoosh.org>
-References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <20040328044029.GB1984@bounceswoosh.org> <40667734.8090203@yahoo.com.au>
+Message-ID: <4067383F.1030805@clanhk.org>
+References: <4066342B.4080105@clanhk.org> <406643A8.2050808@pobox.com> <40664AE4.8010003@clanhk.org> <406680AB.8090204@stesmi.com> <4066833B.4080004@clanhk.org> <4067340A.5080709@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 80-169-17-66.mesanetworks.net ([66.17.169.80]:23729 "EHLO
-	mail.bounceswoosh.org") by vger.kernel.org with ESMTP
-	id S262461AbUC1UdU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Mar 2004 15:33:20 -0500
-Content-Disposition: inline
-In-Reply-To: <40667734.8090203@yahoo.com.au>
+Received: from ns.clanhk.org ([69.93.101.154]:50352 "EHLO mail.clanhk.org")
+	by vger.kernel.org with ESMTP id S262176AbUC1UkS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Mar 2004 15:40:18 -0500
+In-Reply-To: <4067340A.5080709@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Nick Piggin <nickpiggin@yahoo.com.au>
-Cc: "Eric D. Mudama" <edmudama@mail.bounceswoosh.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sun, Mar 28 at 16:56, Nick Piggin wrote:
->Eric D. Mudama wrote:
->>32-MB requests are the best for raw throughput.
->>
->>~15ms to land at your target location, then pure 50-60MB/sec for the .5
->>seconds it takes to finish the operation. (media limited at that point)
->>
->>Sure, there's more latency, but I guess that is application dependant.
->>
->
->What about a queue depth of 2, and writing that 32MB in 1MB requests?
+Jeff Garzik wrote:
 
-I'm 99% sure that it'll wind up slower... The concept of "ZLR - zero
-latency read?" where they start reading immediately wherever they
-land, then merge that into the host request later, possibly catching
-the front of the command at the very end can help.  However, if you
-issue those 32 tags immediately, there's the chance that the drive
-won't recognize the pattern as quickly, and wind up doing additional
-seeks, or even worse, additional, unnecessary dwell...  In queueing,
-you could wind up caching data on the back end of 32 host requests
-without the first LBA in cache for any of them, which means you can't
-start those data transfers until you've read a "first LBA", meaning
-you now need to discard something you've intentionally read from the
-media.
-
-The kicker when handling any request larger than the on-disk cache
-size combined with queueing is that you don't know ahead of time if
-you'll be able to satisfy the request by the time you get there.  If
-the drive was already holding megabytes 4-5 in cache, that works
-pretty well as it'll be an instant cache hit, however, if you were
-holding megabytes 4-4.99, there's a chance you will have had to
-discard some of that data to make room for other in-process disk work
-(say you had a buffer almost full of dirty writes and therefore
-insufficient buffer for the entire host request), which means you may
-need to toss megabytes 4.5-4.99 out, in which case you'll need to do
-the disk I/O anyway.  In that case, starting at the beginning of the
-entire region and just tossing from cache as you transfer to the host
-works a lot better.
-
-On a large sequential access, the odds of a cache hit into that
-sequential area is minimal in practice, so we can actually just churn
-the same small chunk of buffer satisfying the large read, while not
-losing any efficiency due to having 6.5MB of dirty random writes ready
-to go on the back end.
-
-A 32-MB op by definition cannot be atomic with an 8MB DRAM on the
-drive, so once we give up that idea, we optimize our buffer usage for
-maximum cache efficiency and granularity.  (Basically, if the drive
-reports a hard error writing a 32MB request, you need to assume the
-entire 32MB request needs to be reissued.  You can't assume that just
-because the error was on the last block, that you can "trust" that the
-first LBA of the request actually made it.)
-
---eric
+> Do you really plan to get 300MB/sec from two disks?  :)
 
 
--- 
-Eric D. Mudama
-edmudama@mail.bounceswoosh.org
+Yes, for about 50-100ms at a time, and -to- the disks, not from them; 
+well, the caches anyway.  On 133MB/s PCI, more like 150-300ms of 
+saturation on bursts, and shared with the NICs.  I have very short and 
+bursty I/O patterns as is typical in real-time applications.  It's 
+easier to guarantee latency when your pipes are always at a small 
+fraction of their potential.  100ms higher latency, even for part of a 
+second, is quite noticeable in what I serve.
 
+-ryan
+
+PS 2.6 dropped my latencies under load by about 90% over 2.4!  We're 
+talking 40-80ms application response time under high load to 8-10ms 
+under high load.  <3
