@@ -1,22 +1,26 @@
-From: "Paresh Sawant" <p.Sawant@zensar.com>
-Subject: struct to be passed to ioctl call for commanf HDIO_DRIVE_CMD
-Date: Wed, 4 Dec 2002 14:40:21 +0530
+From: Matti Aarnio <matti.aarnio@zmailer.org>
+Subject: Re: struct to be passed to ioctl call for commanf HDIO_DRIVE_CMD
+Date: Wed, 4 Dec 2002 11:25:36 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <54670264D99F034EA23CBB7D7A45AE7E5ECE@zenmail1.ind.zensar.com>
+Message-ID: <20021204092536.GB1099@mea-ext.zmailer.org>
+References: <54670264D99F034EA23CBB7D7A45AE7E5ECD@zenmail1.ind.zensar.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from scanmail.zensar.com (smtpfw.zensar.com [202.54.40.195])
-	by omega.zensar.com (8.9.3+Sun/8.9.3) with SMTP id OAA19799
-	for <linux-ide@vger.kernel.org>; Wed, 4 Dec 2002 14:44:56 -0500 (GMT)
-content-class: urn:content-classes:message
+Content-Disposition: inline
+In-Reply-To: <54670264D99F034EA23CBB7D7A45AE7E5ECD@zenmail1.ind.zensar.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Paresh Sawant <p.Sawant@zensar.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-c-programming@vger.kernel.org
 
-Hi 
+On Wed, Dec 04, 2002 at 02:38:18PM +0530, Paresh Sawant wrote:
+> Hi!
+>         I want to send ATA command to IDE hard disk driver using ioctl 
+>	  with comand "HDIO_DRIVE_CMD", to do raw write to hard disk. 
+>	  Which Struct i should pass to ioctl call as a third argument ?
 
-	I want to send ATA command to IDE hard disk driver using ioctl with comand "HDIO_DRIVE_CMD", to do raw write to hard disk. Which Struct i should pass to ioctl call as a third argument ?
+  Read the source of  ide_cmd_ioctl()   at  drivers/ide/ide-taskfile.c
+  Presently that is the only documentation on it.
 
-Thanks 
-paresh
+> thanks 
+> paresh
