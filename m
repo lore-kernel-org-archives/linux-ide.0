@@ -1,68 +1,80 @@
-From: "Martin Schwenke" <martin@meltin.net>
-Subject: 2.6.0-test4 suspends IDE devices after resume
-Date: Thu, 28 Aug 2003 09:54:36 +1000
+From: "Theepan" <tornado@linuxfromscratch.org>
+Subject: IDE Performance issues
+Date: Mon, 1 Sep 2003 23:12:49 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <16205.17596.600646.259901@martins.ozlabs.org>
-Reply-To: "Martin Schwenke" <martin@meltin.net>
+Message-ID: <001301c370cd$cd46ed50$0200a8c0@tornado>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:34954 "EHLO ozlabs.org")
-	by vger.kernel.org with ESMTP id S262489AbTH0X67 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Aug 2003 19:58:59 -0400
+Received: from x1-6-00-a0-c9-de-85-f2.k78.webspeed.dk ([80.197.249.79]:38345
+	"EHLO storm.stormchasers.dk") by vger.kernel.org with ESMTP
+	id S263299AbTIAVNC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Sep 2003 17:13:02 -0400
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, Patrick Mochel <mochel@osdl.org>, Con Kolivas <kernel@kolivas.org>
+To: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 
-I'm running 2.6.0-test4 (with Con Kolivas' interactivity patch) and
-twice I've had my IDE devices re-suspend after I resume from an APM
-suspend (to disk/hibernation).  This is obviously annoying, because
-there's little you can do to recover from it!  :-) The machine is an
-IBM ThinkPad T22 with an IDE interface that looks like this:
+Hi there,
 
-  00:07.1 IDE interface: Intel Corp. 82371AB/EB/MB PIIX4 IDE (rev 01)
+I have a RAID5 setup with 4 x 120GB IDE disks and I have always wondered why
+the performance of my RAID set never exceeded 60-66MB/s when a lot of people
+talk about their RAID setup sustaining 80-100MB/s (and then some more).
 
-I didn't see this problem with test3 (or test2 or test1).
+Until recently I've just blamed the overhead that software RAID brings,
+namely because it is software and takes up CPU cycles and I don't have the
+fastest processors in the world. After a lot of tests, I found out that
+RAID5 is not to blame but the IDE/PCI layer on the other hand is.
 
-Stuff I copied down from the console is at the end of this message.
-"..." indicates intermingled USB stuff that I didn't write down.
+zcav, a tool from bonnie++ package, was used to measure the sequential read
+rate. All disks were able to sustain minimum 30MB/s when accessed
+seperately. When accessed simultaneously I get these results:
 
-Apart from that, I've also seen a message in my logs that looks like:
+When accessing 1 disk, the read rate was 30MB/s (as expected).
+When accessing 2 disks, the read rate was 60MB/s (30MB/s on each disk, as
+expected)
+When accessing 3 disks, the read rate was 60MB/s (20MB/s on each disk,
+dropping 10Mb/s)
+When accessing 4 disks, the read rate was 60MB/s (15MB/s on each disk,
+dropping 15Mb/s)
 
-  hda: a request made it's way while we are power managing...
+When accessing md1 (RAID5 with 4 disks), the read rate was 55-63MB/s.
 
-Any ideas?
+A quick look at the results show that the maximum performance achived was
+60MB/s no matter how many disks (2+) were involved - the same performance
+you could/would expect from a ATA66 system. On a 32bit system where the PCI
+bus operates as 33mhz, one would expect the maximum theoretical throughput
+to be 133MB/s (or 127,x MB/s).
 
-peace & happiness,
-martin
---------8<---------8<-------- CUT HERE --------8<---------8<--------
-hda: start_power_step(step: 1000)
-blk: queue dfe50800, I/O limit 4095Mb (mask 0xffffffff)
-hda: completing PM request, resume
-hdc: Wakeup request inited, waiting for !BSY...
-hdc: start_power_step(step: 1000)
-hdc: completing PM request, resume
-...
-hdc: start_power_step(step: 0)
-hdc: completing PM request, suspend
-hda: start_power_step(step: 0)
-hda: start_power_step(step: 1)
-hda: complete_power_step(step: 1, stat: 50, err: 0)
-hda: completing PM request, suspend
-hda: Wakeup request inited, waiting for !BSY...
-hda: start_power_step(step: 1000)
-blk: queue dfe50800, I/O limit 4095Mb (mask 0xffffffff)
-hda: completing PM request, resume
-hdc: Wakeup request inited, waiting for !BSY...
-hdc: start_power_step(step: 1000)
-hdc: completing PM request, resume
-...
-hdc: start_power_step(step: 0)
-hdc: completing PM request, suspend
-hda: start_power_step(step: 0)
-hda: start_power_step(step: 1)
-hda: complete_power_step(step: 1, stat: 50, err: 0)
-hda: completing PM request, suspend
---------8<---------8<-------- CUT HERE --------8<---------8<--------
+I have 2 x Promise TX2 ATA133 Controller and 4 Maxtor 120GB disks (3 x
+5400RPM and 1 x 7200RPM, all disks are ATA133 capable and operate in this
+mode according to hdparm). DMA and 32bit is enabled on the disks using
+hdparm
+as well. The disks are attached as master only, that is one disk per IDE
+channel.
+
+The system is a Dual P3-500mhz wih 256MB RAM.
+The motherboard is SOYO SY-D6IBA with 440BX chipset.
+I'm running Debian Linux and kernel 2.4.22 (vanilla kernel with only
+lm_sensors and i2c patched).
+The RAID5 consists of 4 disks with 128KB as chunk-size.
+The onboard SCSI is disabled as I have no use of it.
+
+
+LILO has "ide2=ata66 ide3=ata66 ide4=ata66 ide5=ata66" appended, becase I've
+read that this instructs the kernel to use some ATA66+ calls and thereby
+utilizing the ATA66 (and higher).
+
+Anyone have any idea what this is about (maybe by first hand experience) and
+why? - and preferably also how I would go about "fixing" it.
+
+
+If there's need for output from lcpci, dmesg etc, let me know - I have them
+ready. I do not know if these lists prefer outputs attached or included as
+body in the email - which is why I didn't include them at all in any way.
+
+
+--
+Theepan
+
 
