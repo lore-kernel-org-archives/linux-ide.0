@@ -1,50 +1,85 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] module ide-pnp
-Date: Sat, 19 Jun 2004 12:43:16 +0200
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: [PATCH] ide-taskfile.c fixups/cleanups [4/11]
+Date: Sat, 19 Jun 2004 18:10:08 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040619104316.GA30619@lst.de>
-References: <20040619103546.GA30487@lst.de>
+Message-ID: <200406191810.08584.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:52902 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S265482AbUFSKnS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Jun 2004 06:43:18 -0400
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by mail.lst.de (8.12.3/8.12.3/Debian-6.6) with ESMTP id i5JAhGQc030637
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <linux-ide@vger.kernel.org>; Sat, 19 Jun 2004 12:43:16 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id i5JAhG8d030635
-	for linux-ide@vger.kernel.org; Sat, 19 Jun 2004 12:43:16 +0200
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:5028 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264153AbUFSQPo
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 Jun 2004 12:15:44 -0400
 Content-Disposition: inline
-In-Reply-To: <20040619103546.GA30487@lst.de>
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-
-On Sat, Jun 19, 2004 at 12:35:46PM +0200, Christoph Hellwig wrote:
-> This patch allows compile ide-pnp as a module.  The original patch is
-> from Herbert Xu through the Debian kernel package, but I reworked it
-> significantly.
-
-oops, makefile bits missing:
+Cc: linux-kernel@vger.kernel.org
 
 
---- 1.21/drivers/ide/Makefile	2004-06-18 08:43:53 +02:00
-+++ edited/drivers/ide/Makefile	2004-06-19 12:42:49 +02:00
-@@ -23,7 +23,6 @@
- ide-core-$(CONFIG_BLK_DEV_IDEDMA)	+= ide-dma.o
- ide-core-$(CONFIG_BLK_DEV_IDE_TCQ)	+= ide-tcq.o
- ide-core-$(CONFIG_PROC_FS)		+= ide-proc.o
--ide-core-$(CONFIG_BLK_DEV_IDEPNP)	+= ide-pnp.o
+[PATCH] ide: check drive->mult_count in flagged_taskfile()
+
+Check drive->mult_count in flagged_taskfile() and fail request early
+if necessary so there is no need to do it later in the PIO handlers.
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+
+ linux-2.6.7-bzolnier/drivers/ide/ide-taskfile.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
+
+diff -puN drivers/ide/ide-taskfile.c~ide_tf_multi_check drivers/ide/ide-taskfile.c
+--- linux-2.6.7/drivers/ide/ide-taskfile.c~ide_tf_multi_check	2004-06-19 02:56:06.001922504 +0200
++++ linux-2.6.7-bzolnier/drivers/ide/ide-taskfile.c	2004-06-19 02:56:06.006921744 +0200
+@@ -1188,6 +1188,14 @@ ide_startstop_t flagged_taskfile (ide_dr
+ 	void debug_taskfile(drive, task);
+ #endif /* CONFIG_IDE_TASK_IOCTL_DEBUG */
  
- # built-in only drivers from arm/
- ide-core-$(CONFIG_IDE_ARM)		+= arm/ide_arm.o
-@@ -44,6 +43,7 @@
++	if (task->data_phase == TASKFILE_MULTI_IN ||
++	    task->data_phase == TASKFILE_MULTI_OUT) {
++		if (!drive->mult_count) {
++			printk(KERN_ERR "%s: multimode not set!\n", drive->name);
++			return ide_stopped;
++		}
++	}
++
+ 	/*
+ 	 * (ks) Check taskfile in/out flags.
+ 	 * If set, then execute as it is defined.
+@@ -1370,8 +1378,6 @@ ide_startstop_t flagged_task_mulin_intr 
+ 	unsigned int msect, nsect;
  
- obj-$(CONFIG_BLK_DEV_IDE)		+= ide-core.o
- obj-$(CONFIG_IDE_GENERIC)		+= ide-generic.o
-+obj-$(CONFIG_BLK_DEV_IDEPNP)		+= ide-pnp.o
+ 	msect = drive->mult_count;
+-	if (msect == 0) 
+-		return DRIVER(drive)->error(drive, "flagged_task_mulin_intr (multimode not set)", stat); 
  
- obj-$(CONFIG_BLK_DEV_IDEDISK)		+= ide-disk.o
- obj-$(CONFIG_BLK_DEV_IDECD)		+= ide-cd.o
+ 	if (!OK_STAT(stat, DATA_READY, BAD_R_STAT)) {
+ 		if (stat & ERR_STAT) {
+@@ -1477,15 +1483,11 @@ ide_startstop_t flagged_task_out_intr (i
+ 
+ ide_startstop_t flagged_pre_task_mulout_intr (ide_drive_t *drive, struct request *rq)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-	u8 stat			= hwif->INB(IDE_STATUS_REG);
+ 	char *pBuf		= NULL;
+ 	ide_startstop_t startstop;
+ 	unsigned int msect, nsect;
+ 
+ 	msect = drive->mult_count;
+-	if (msect == 0)
+-		return DRIVER(drive)->error(drive, "flagged_pre_task_mulout_intr (multimode not set)", stat);
+ 
+ 	if (ide_wait_stat(&startstop, drive, DATA_READY,
+ 			BAD_W_STAT, WAIT_DRQ)) {
+@@ -1514,8 +1516,6 @@ ide_startstop_t flagged_task_mulout_intr
+ 	unsigned int msect, nsect;
+ 
+ 	msect = drive->mult_count;
+-	if (msect == 0)
+-		return DRIVER(drive)->error(drive, "flagged_task_mulout_intr (multimode not set)", stat);
+ 
+ 	if (!OK_STAT(stat, DRIVE_READY, BAD_W_STAT)) 
+ 		return DRIVER(drive)->error(drive, "flagged_task_mulout_intr", stat);
+
+_
+
