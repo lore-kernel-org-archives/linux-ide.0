@@ -1,60 +1,71 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: libata dev_config call order wrong.
-Date: Sun, 29 Aug 2004 13:59:39 -0400
+Date: Sun, 29 Aug 2004 14:25:03 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4132198B.8000504@pobox.com>
-References: <41320DAF.2060306@wasp.net.au> <41321288.4090403@pobox.com> <413216CC.5080100@wasp.net.au>
+Message-ID: <41321F7F.7050300@pobox.com>
+References: <41320DAF.2060306@wasp.net.au> <41321288.4090403@pobox.com> <413216CC.5080100@wasp.net.au> <4132198B.8000504@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060908080205050906030907"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:4306 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268245AbUH2R7x
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:24276 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S268259AbUH2SZT
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Aug 2004 13:59:53 -0400
-In-Reply-To: <413216CC.5080100@wasp.net.au>
+	Sun, 29 Aug 2004 14:25:19 -0400
+In-Reply-To: <4132198B.8000504@pobox.com>
 List-Id: linux-ide@vger.kernel.org
 To: Brad Campbell <brad@wasp.net.au>
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Brad Campbell wrote:
-> Jeff Garzik wrote:
-> 
->>
->> Take a look at what ATA_DFLAG_LOCK_SECTORS does ;-)  Here's hoping 
->> that's the last piece of the puzzle...
-> 
-> 
-> HAHA! He says. That was not in 2.6.8.1! That solves that one.
-> 
-> Frankly, now I'm running a WD2500BB on one of those converters on a 
-> RAID-5 I'm just going to leave the 200 sector hack in my kernel until we 
-> figure out a way to detect the bridges. I can't see any other clean way 
-> of doing it.
+This is a multi-part message in MIME format.
+--------------060908080205050906030907
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-me either, unless I can figure out a way to detect that a disk is PATA 
-not SATA.  Nothing is obvious from the specs on www.t13.org, but who knows.
+Jeff Garzik wrote:
+> me either, unless I can figure out a way to detect that a disk is PATA 
+> not SATA.  Nothing is obvious from the specs on www.t13.org, but who knows.
 
-Honestly I would prefer to apply some "if it's PATA-over-SATA bridge" 
-rules, namely,
-* limit to udma5 (udma/100)
-* limit to 256 sectors [actually 200 in libata]
+According to the Serial ATA docs, IDENTIFY DEVICE word 93 will be zero 
+if it's Serial ATA.  Who knows if that's true, given the wierd wild 
+world of ATA devices.
 
+So, given the attached patch, you could try and create a generic 
+ata_dev_config that all drivers call, that does something like
 
->> BTW I just sent email to SiI to see if there is a way to detect a 
->> PATA->SATA bridge.
-> 
-> 
-> Man I hope so.. I don't want to resort to having to throw these board 
-> away or constantly patch my kernel! I could just go and buy some more 
-> SATA drives I guess, but where would the fun be in that!
+	/* limit bridge transfers to udma5, 200 sectors */
+	if ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev))) {
+                 printk(KERN_INFO "ata%u(%u): applying bridge limits\n",
+                        ap->id, dev->devno);
+		ap->udma_mask &= ATA_UDMA5;
+                 ap->host->max_sectors = ATA_MAX_SECTORS;
+                 ap->host->hostt->max_sectors = ATA_MAX_SECTORS;
+                 dev->flags |= ATA_DFLAG_LOCK_SECTORS;
+	}
 
-hehe
-
-Another option is to have a "no large transfers" module option that 
-users could specify; that way you wouldn't have to patch the kernel, and 
-it would work for all drivers without having to maintain a blacklist.
+Regards,
 
 	Jeff
 
 
+
+--------------060908080205050906030907
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+===== include/linux/ata.h 1.17 vs edited =====
+--- 1.17/include/linux/ata.h	2004-08-18 01:47:22 -04:00
++++ edited/include/linux/ata.h	2004-08-29 14:18:02 -04:00
+@@ -218,6 +218,7 @@
+ };
+ 
+ #define ata_id_is_ata(dev)	(((dev)->id[0] & (1 << 15)) == 0)
++#define ata_id_is_sata(dev)	((dev)->id[93] == 0)
+ #define ata_id_rahead_enabled(dev) ((dev)->id[85] & (1 << 6))
+ #define ata_id_wcache_enabled(dev) ((dev)->id[85] & (1 << 5))
+ #define ata_id_has_flush(dev) ((dev)->id[83] & (1 << 12))
+
+--------------060908080205050906030907--
