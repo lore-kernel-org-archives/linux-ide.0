@@ -1,72 +1,31 @@
-From: Craig Bradney <cbradney@zip.com.au>
-Subject: Re: Serial ATA (SATA) for Linux status report
-Date: Sun, 18 Jan 2004 21:33:34 +0100
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1074458014.31271.20.camel@athlonxp.bradney.info>
-References: <20031203204445.GA26987@gtf.org>
-	 <200401181432.55736.adasi@kernel.pl>  <400AC9BA.1020103@pobox.com>
+From: Jan De Luyck <lkml@kcore.org>
+Subject: HPT370 status [2.4/2.6]
+Date: Tue, 20 Jan 2004 11:01:45 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200401201101.45551.lkml@kcore.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-868gRDnrhTKLd+MqRA6Q"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from legolas.restena.lu ([158.64.1.34]:11757 "EHLO smtp.restena.lu")
-	by vger.kernel.org with ESMTP id S263510AbUARUdf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Jan 2004 15:33:35 -0500
-In-Reply-To: <400AC9BA.1020103@pobox.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Witold Krecicki <adasi@kernel.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
+Hello List,
 
---=-868gRDnrhTKLd+MqRA6Q
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: quoted-printable
+Before I start frying my disks and all, what's the usability status of the 
+Hightpoint HPT370 ide "raid" controller on linux 2.4 and 2.6?
 
-On Sun, 2004-01-18 at 19:00, Jeff Garzik wrote:
-> Witold Krecicki wrote:
-> > Dnia Wednesday 03 of December 2003 21:44, Jeff Garzik napisa=B3:
-> >=20
-> >>Editor's preface:  This is clearly a first draft, only covering the
-> >>basics.  In order for this document to be effective, I request that
-> >>users and developers send me (or post) their SATA driver questions and
-> >>issues.  I will do my best to address them here.
-> >>
-> >>
-> >>Serial ATA (SATA) for Linux
-> >>status report
-> >>Dec 3, 2003
-> >=20
-> > What about SMART capabilities? with sii3112 I had it, but with libata I=
- cannot=20
-> > get any informations :/
->=20
->=20
-> Currently do not support random userland programs throwing random ATA=20
-> commands at us...  so no SMART support at present :)  It's coming, though=
-.
+Is there any release that actually supports the "half hard half software" 
+stripe that can be created with the bios of these things?
 
+I've got one on my mobo (Abit KG7-Raid) and I'm in dire need of extra 
+controllers ;p If the raid would work, would be nice, but is not required.
 
-On the note of SATA interfaced drives, is there a way to power them
-down?=20
+[linux-ide answers: please CC me since I'm not on _that_ list]
 
-I have recently attached my spare PATA drive with a converter and use it
-just for backups (mount, rsync, umount). I have these configured through
-SCSI (/dev/sda) with the 3112 2.6.1 support. hdparm comlains the drive
-is SCSI... is there a similar command to power it down?
-
-thanks
-Craig
-
---=-868gRDnrhTKLd+MqRA6Q
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
-
-iD8DBQBACu2ei+pIEYrr7mQRAu4/AJ9QApNr/BrkD3FD74ntH9ywozKC9gCeLZGF
-AMh9CIptcMcikyuMAPPHCZw=
-=Riov
------END PGP SIGNATURE-----
-
---=-868gRDnrhTKLd+MqRA6Q--
-
+Jan
+-- 
+Nipples, dimples, knuckles, NICKLES, wrinkles, pimples!!
