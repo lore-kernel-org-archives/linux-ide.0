@@ -1,55 +1,44 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: H8/300 target support patch
-Date: Thu, 26 Feb 2004 20:26:51 +0100
+From: Alex Bennee <kernel-hacker@bennee.com>
+Subject: Why do I see reads when writing to the disk?
+Date: Thu, 26 Feb 2004 19:23:56 +0000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200402262026.51202.bzolnier@elka.pw.edu.pl>
-References: <m2y8r4naht.wl%ysato@users.sourceforge.jp> <200402221828.18830.bzolnier@elka.pw.edu.pl> <m27jy9okjg.wl%ysato@users.sourceforge.jp>
+Message-ID: <1077823436.2789.51.camel@cambridge.braddahead.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:47355 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S262993AbUBZTUU
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Feb 2004 14:20:20 -0500
-In-Reply-To: <m27jy9okjg.wl%ysato@users.sourceforge.jp>
-Content-Disposition: inline
+Received: from nimbus19.internetters.co.uk ([209.61.216.65]:58845 "HELO
+	nimbus19.internetters.co.uk") by vger.kernel.org with SMTP
+	id S262930AbUBZTa4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Feb 2004 14:30:56 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by cambridge.braddahead.com (Postfix) with ESMTP id 5A3BE1C201
+	for <linux-ide@vger.kernel.org>; Thu, 26 Feb 2004 19:23:57 +0000 (GMT)
 List-Id: linux-ide@vger.kernel.org
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Thursday 26 of February 2004 17:46, Yoshinori Sato wrote:
-> At Sun, 22 Feb 2004 18:28:18 +0100,
->
-> Bartlomiej Zolnierkiewicz wrote:
-> > On Sunday 22 of February 2004 18:08, Bartlomiej Zolnierkiewicz wrote:
-> > > > I corrected it to initialize it with ide_init_default_hwifs.
-> > > > A correction of ide.c becomes needless.
-> > >
-> > > NO!!!  ide_init_default_hwifs() should DIE!
-> > > The same goes for ide_default_{irq,io_base}().
-> > >
-> > > They are not needed - you have driver(s) for H8/300 IDE controllers!
-> >
-> > It should be like that:
-> >
-> > You should have host drivers for your IDE controllers,
-> > not inline functions for ide.c and ide-probe.c.
->
-> I tuned to a driver of PC/AT wherever practicable.
+Hi,
 
-Just because original/legacy PC/AT driver is braindamaged (and dated)
-doesn't mean your code should be, does it?  Hiding driver's code into
-asm/ide.h causes MAJOR problems for IDE code reorganization.
+I've been adding DMA support to my IDE driver. I've gotten DMA Read
+working fine but I've been having problems getting DMA writes working.
+In the process of debugging I've noticed what seems like odd behaviour.
 
-> Examination is necessary for a call method of h8300_hwif_iops.
+I'm doing writes straight to the disk with a:
 
-All ide-iops.c #ifdef-s won't be needed if you separate you driver
-properly from asm/ide.h (thus overriding default_hwif_iops() ops
-by ones used by your driver).
+dd if=testfile of=/dev/hda
 
-Please revert to putting your code into ide/h8300/.
+testfile resides on NFS, nothing is mounted on disks yet.
 
-Thanks.
+However I see 8 dma_read operations before the dma_write operation. Why
+is this? Am I missing some subtle point with the system cache or
+something?
+
+Please cc any responses to me as I don't seem to be able to subscribe to
+the ide list.
+
+Cheers,
+
+-- 
+Alex, homepage: http://www.bennee.com/~alex/
+He who laughs last -- missed the punch line.
 
