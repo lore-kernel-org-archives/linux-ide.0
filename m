@@ -1,79 +1,38 @@
-From: Justin Cormack <justin@street-vision.com>
+From: Konstantin Sobolev <kos@supportwizard.com>
 Subject: Re: poor sata performance on 2.6
-Date: Thu, 15 Apr 2004 16:08:12 +0100
+Date: Thu, 15 Apr 2004 19:16:27 +0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1082041692.19571.82.camel@lotte.street-vision.com>
-References: <200404150236.05894.kos@supportwizard.com>
-	 <200404151826.54488.kos@supportwizard.com>
-	 <1082039593.19568.75.camel@lotte.street-vision.com>
-	 <200404151848.05857.kos@supportwizard.com>
+Message-ID: <200404151916.27605.kos@supportwizard.com>
+References: <200404150236.05894.kos@supportwizard.com> <200404151848.05857.kos@supportwizard.com> <1082041692.19571.82.camel@lotte.street-vision.com>
+Reply-To: kos@supportwizard.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="koi8-r"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tench.street-vision.com ([212.18.235.100]:50359 "EHLO
-	tench.street-vision.com") by vger.kernel.org with ESMTP
-	id S264159AbUDOPIS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Apr 2004 11:08:18 -0400
-In-Reply-To: <200404151848.05857.kos@supportwizard.com>
+Received: from smtp.rol.ru ([194.67.21.9]:45243 "EHLO smtp.rol.ru")
+	by vger.kernel.org with ESMTP id S264313AbUDOPNq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Apr 2004 11:13:46 -0400
+Received: from 81.211.110.66.adsl-spb.net.rol.ru ([81.211.110.66]:43904 "EHLO
+	81.211.110.66.adsl-spb.net.rol.ru" smtp-auth: <none> TLS-CIPHER: <none>
+	TLS-PEER-CN1: <none>) by gnome03.net.rol.ru with ESMTP
+	id S17475975AbUDOPNn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Apr 2004 19:13:43 +0400
+In-Reply-To: <1082041692.19571.82.camel@lotte.street-vision.com>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Konstantin Sobolev <kos@supportwizard.com>
+To: Justin Cormack <justin@street-vision.com>
 Cc: linux-ide@vger.kernel.org
 
-On Thu, 2004-04-15 at 15:48, Konstantin Sobolev wrote:
-> On Thursday 15 April 2004 18:33, Justin Cormack wrote:
-> > On Thu, 2004-04-15 at 15:26, Konstantin Sobolev wrote:
-> > > On Thursday 15 April 2004 18:00, Justin Cormack wrote:
-> > > > hmm, odd. I get 50MB/s or so from normal (7200, 8MB cache) WD disks,
-> > > > and Seagate from the same controller. Can you send lspci,
-> > > > /proc/interrupts and dmesg...
-> > >
-> > > Attached are files for 2.6.5-mm5 with highmem, ACPI and APIC turned off.
-> >
-> > ah. Make a filesystem on it and mount it and try again. I see you have
-> > no partition table and so probably no filesystem. This means the block
-> > size is set to default 512byte not 4k which makes disk operations slow.
-> > Any filesystem should default to block size of 4k, eg ext2.
-> 
-> Very interesting!
-> created partition table,
-> kos sata # mkfs.ext2 /dev/sda1
-> [..skipped..]
-> kos mnt # cd /
-> kos / # mkdir wd
-> kos / # mount /dev/sda1 /wd
-> kos / # hdparm -t -a8192 /dev/sda
-> 
-> /dev/sda:
->  setting fs readahead to 8192
->  readahead    = 8192 (on)
->  Timing buffered disk reads:   82 MB in  3.03 seconds =  27.02 MB/sec
-> 
-> kos / # mount | grep sda
-> /dev/sda1 on /wd type ext2 (rw)
-> kos / # hdparm -t -a8192 /dev/sda
-> 
-> /dev/sda:
->  setting fs readahead to 8192
->  readahead    = 8192 (on)
->  Timing buffered disk reads:  206 MB in  3.02 seconds =  68.15 MB/sec
-> kos / # hdparm -t -a8192 /dev/sda
-> 
-> /dev/sda:
->  setting fs readahead to 8192
->  readahead    = 8192 (on)
->  Timing buffered disk reads:  206 MB in  3.02 seconds =  68.18 MB/sec
-> 
-> So first time it gave the same loosy 27 MB/s and subsequent tests give pretty 
-> good 68 MB/s! Why?
+On Thursday 15 April 2004 19:08, Justin Cormack wrote:
+> Ah yes, I noticed that once or twice. Not sure what the reason is. It
+> may be something to do with how hdparm tries to deal with bypassing the
+> vm, or how the scsi layer deals with block size changes or something. I
+> wouldnt worry. It only happens if you do hdparm ever when the block size
+> is 512bytes. 68MB/s is pretty nice. Was thinking of getting some of
+> those drives.
 
-Ah yes, I noticed that once or twice. Not sure what the reason is. It
-may be something to do with how hdparm tries to deal with bypassing the
-vm, or how the scsi layer deals with block size changes or something. I
-wouldnt worry. It only happens if you do hdparm ever when the block size
-is 512bytes. 68MB/s is pretty nice. Was thinking of getting some of
-those drives.
-
-Justin
-
-
+Thanks a lot! :)
+-- 
+/KoS
+* Life with pets is never dull.					      
