@@ -1,41 +1,61 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: ioctl BLKROSET not working
-Date: Wed, 22 Dec 2004 18:30:31 -0500
-Message-ID: <87f94c3704122215303c8d9f5c@mail.gmail.com>
-Reply-To: Greg Freemyer <greg.freemyer@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [BK PATCH] 2.6.x libata fix
+Date: Wed, 22 Dec 2004 21:17:09 -0500
+Message-ID: <20041223021709.GA25086@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.196]:61959 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262079AbULVXac (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Dec 2004 18:30:32 -0500
-Received: by wproxy.gmail.com with SMTP id 69so42579wri
-        for <linux-ide@vger.kernel.org>; Wed, 22 Dec 2004 15:30:31 -0800 (PST)
+Received: from havoc.gtf.org ([63.115.148.101]:37264 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S261156AbULWCRK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Dec 2004 21:17:10 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, dan mares <dmares@dmares.com>
-
-All,
-
-I would like to use the "hdparm -r 0 /dev/hdc" capability with a
-current kernel to make a drive readonly.
-
-I tried it with 2.6.8 and it had no effect with my Adaptec 2-channel
-ATA PCI adaptor. (Similar to SIIG).
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: achew@nvidia.com, linux-ide@vger.kernel.org
 
 
-I looked at hdparm's source and it is calling ioctl with BLKROSET.
+Please do a
 
-I found that in ide.h, but not ide.c  (Not that I would recognise it.)
+	bk pull bk://gkernel.bkbits.net/libata-2.6
 
-Should it work? 
-Has the functionality been deprecated? 
-Is it a driver function or a controller function?
+This will update the following files:
 
-I searched bugzilla (bugme.osdl.org) for "BLKROSET" and found nothing.
+ drivers/scsi/sata_nv.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletion(-)
 
-Thanks
-Greg
--- 
-Greg Freemyer
+through these ChangeSets:
+
+<jgarzik@pobox.com> (04/12/22 1.2216)
+   [libata sata_nv] fix dev detect by removing sata-reset flag
+   
+   Remove ATA_FLAG_SATA_RESET.  See comment in code and
+   http://bugme.osdl.org/show_bug.cgi?id=3352 for more details.
+   
+   This problem needs more investigation.  Removing the flag
+   appears to fix the problems in the field, so it's the best
+   temporary solution.
+
+diff -Nru a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
+--- a/drivers/scsi/sata_nv.c	2004-12-22 21:16:18 -05:00
++++ b/drivers/scsi/sata_nv.c	2004-12-22 21:16:18 -05:00
+@@ -218,10 +218,18 @@
+ 	.host_stop		= nv_host_stop,
+ };
+ 
++/* FIXME: The hardware provides the necessary SATA PHY controls
++ * to support ATA_FLAG_SATA_RESET.  However, it is currently
++ * necessary to disable that flag, to solve misdetection problems.
++ * See http://bugme.osdl.org/show_bug.cgi?id=3352 for more info.
++ *
++ * This problem really needs to be investigated further.  But in the
++ * meantime, we avoid ATA_FLAG_SATA_RESET to get people working.
++ */
+ static struct ata_port_info nv_port_info = {
+ 	.sht		= &nv_sht,
+ 	.host_flags	= ATA_FLAG_SATA |
+-			  ATA_FLAG_SATA_RESET |
++			  /* ATA_FLAG_SATA_RESET | */
+ 			  ATA_FLAG_SRST |
+ 			  ATA_FLAG_NO_LEGACY,
+ 	.pio_mask	= NV_PIO_MASK,
