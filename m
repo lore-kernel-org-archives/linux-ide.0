@@ -1,104 +1,46 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] IDE update for 2.6.3 (7/9)
-Date: Thu, 19 Feb 2004 15:59:02 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200402191559.02022.bzolnier@elka.pw.edu.pl>
+From: Hans-Peter Jansen <hpj@urpla.net>
+Subject: Re: Time spent waiting for uncorrectable errors
+Date: Thu, 19 Feb 2004 16:13:18 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200402191613.18342.hpj@urpla.net>
+References: <20040216082157.GK57556@vivien.franken.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.176]:20954 "EHLO
+	moutng.kundenserver.de") by vger.kernel.org with ESMTP
+	id S267318AbUBSPN3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Feb 2004 10:13:29 -0500
+In-Reply-To: <20040216082157.GK57556@vivien.franken.de>
 Content-Disposition: inline
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alex Goller <alex@vivien.franken.de>, linux-ide@vger.kernel.org
 
+On Monday 16 February 2004 09:21, Alex Goller wrote:
+> Hi,
+>
+> is there any data regarding how long current disks try to read a
+> sector before quitting with an uncorrectable error? The problem is,
+> that i have no reliable way to reproduce the error, i will try to
+> read from a hopefully (!) broken disk this afternoon and try to
+> measure the time spent for that.
 
-[IDE] remove dead/unfinished taskfile version of ide_cmd_ioctl()
+IIRC, the kernel tries to read a defect block exactly 8 times.
 
- linux-2.6.3-root/drivers/ide/ide-taskfile.c |   65 ----------------------------
- 1 files changed, 65 deletions(-)
+The problem is (according to some Maxtor guy), a drive, that returns
+a hard sector error has tried to read it internally a few tausand
+times (~2650), which results in about 21200 physical retries.
 
-diff -puN drivers/ide/ide-taskfile.c~ide_cmd_ioctl drivers/ide/ide-taskfile.c
---- linux-2.6.3/drivers/ide/ide-taskfile.c~ide_cmd_ioctl	2004-02-19 02:11:21.212111024 +0100
-+++ linux-2.6.3-root/drivers/ide/ide-taskfile.c	2004-02-19 02:11:21.218110112 +0100
-@@ -1669,7 +1669,6 @@ EXPORT_SYMBOL(ide_wait_cmd);
-  */
- int ide_cmd_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
- {
--#if 1
- 	int err = 0;
- 	u8 args[4], *argbuf = args;
- 	u8 xfer_rate = 0;
-@@ -1720,70 +1719,6 @@ abort:
- 	if (argsize > 4)
- 		kfree(argbuf);
- 	return err;
--
--#else
--
--	int err = -EIO;
--	u8 args[4], *argbuf = args;
--	u8 xfer_rate = 0;
--	int argsize = 0;
--	ide_task_t tfargs;
--
--	if (NULL == (void *) arg) {
--		struct request rq;
--		ide_init_drive_cmd(&rq);
--		return ide_do_drive_cmd(drive, &rq, ide_wait);
--	}
--
--	if (copy_from_user(args, (void *)arg, 4))
--		return -EFAULT;
--
--	memset(&tfargs, 0, sizeof(ide_task_t));
--	tfargs.tfRegister[IDE_FEATURE_OFFSET] = args[2];
--	tfargs.tfRegister[IDE_NSECTOR_OFFSET] = args[3];
--	tfargs.tfRegister[IDE_SECTOR_OFFSET]  = args[1];
--	tfargs.tfRegister[IDE_LCYL_OFFSET]    = 0x00;
--	tfargs.tfRegister[IDE_HCYL_OFFSET]    = 0x00;
--	tfargs.tfRegister[IDE_SELECT_OFFSET]  = 0x00;
--	tfargs.tfRegister[IDE_COMMAND_OFFSET] = args[0];
--
--	if (args[3]) {
--		argsize = (SECTOR_WORDS * 4 * args[3]);
--		argbuf = kmalloc(argsize, GFP_KERNEL);
--		if (argbuf == NULL)
--			return -ENOMEM;
--	}
--
--	if (set_transfer(drive, &tfargs)) {
--		xfer_rate = args[1];
--		if (ide_ata66_check(drive, &tfargs))
--			goto abort;
--	}
--
--	tfargs.command_type = ide_cmd_type_parser(&tfargs);
--	err = ide_raw_taskfile(drive, &tfargs, argbuf);
--
--	if (!err && xfer_rate) {
--		/* active-retuning-calls future */
--		ide_set_xfer_rate(driver, xfer_rate);
--		ide_driveid_update(drive);
--	}
--abort:
--	args[0] = tfargs.tfRegister[IDE_COMMAND_OFFSET];
--	args[1] = tfargs.tfRegister[IDE_FEATURE_OFFSET];
--	args[2] = tfargs.tfRegister[IDE_NSECTOR_OFFSET];
--	args[3] = 0;
--
--	if (copy_to_user((void *)arg, argbuf, 4))
--		err = -EFAULT;
--	if (argbuf != NULL) {
--		if (copy_to_user((void *)arg, argbuf + 4, argsize))
--			err = -EFAULT;
--		kfree(argbuf);
--	}
--	return err;
--
--#endif
- }
- 
- EXPORT_SYMBOL(ide_cmd_ioctl);
+Unfortunately this renders an unpatched linux kernel useless for data 
+recovery tasks. Well, not useless in general, but you simply need a 
+_lot_ of patience.
 
-_
+Last time I've done it myself, it took about 40 hours to copy a 
+defective 80 GB HD with dd_rescue. Fortunately, the damage was in
+some mpeg2 streams, which is quite robust in handling long runs of
+zeros ;-)..
+
+Pete
+
