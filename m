@@ -1,50 +1,33 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: PATCH libata-2.6 4/5] Prevent the device from overrunning the
- buffer in __atapi_pio_bytes()
-Date: Tue, 22 Mar 2005 14:11:52 -0500
-Message-ID: <42406DF8.6050504@pobox.com>
-References: <423A8AA4.5040601@tw.ibm.com> <58cb370e0503180031d40b0a3@mail.gmail.com> <423A9989.7050008@tw.ibm.com>
+Subject: Re: [PATCH libata-dev-2.6 04/05] libata: support descriptor sense
+ in ctrl page
+Date: Tue, 22 Mar 2005 23:24:58 -0500
+Message-ID: <4240EF9A.7050701@pobox.com>
+References: <20050317221753.53957EDF@lns1032.lss.emc.com> <20050317221753.D65B81E4@lns1032.lss.emc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:20168 "EHLO
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:22401 "EHLO
 	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261665AbVCVTMH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 Mar 2005 14:12:07 -0500
-In-Reply-To: <423A9989.7050008@tw.ibm.com>
+	id S262773AbVCWEZK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 Mar 2005 23:25:10 -0500
+In-Reply-To: <20050317221753.D65B81E4@lns1032.lss.emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Linux IDE <linux-ide@vger.kernel.org>
+To: Brett Russ <russb@emc.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Albert Lee wrote:
->  >
->  > Bartlomiej Zolnierkiewicz wrote:
+Brett Russ wrote:
+> 04_libata_control_pg_desc_bit.patch
 > 
->>>
->>> Problem:
->>>   Some bad behaved CD-ROM drives will return more data than ask to.
->>> (I have such CD-RW drive and it crashed the kernel.)
->>
->>
->>
->> These devices are compliant with original ATAPI spec.
->>
->> Such condition shouldn't be treated as an error
->> - extra data should be read and dumped.
->>
->>
-> Hi Bart,
+> 	libata must support the descriptor format sense blocks as they
+> 	are required to properly report results of ATA pass through
+> 	commands as well as other SCSI commands reporting 48b LBAs.
+> 	This patch adjusts the control mode page to properly report
+> 	this.
 > 
-> For read, we can read and discard the extra data from the device.
-> For write, the device is asking for more data than we have.
-> Should we supply some dummy data to the device? Or we just stop and 
-> return it as error?
+> Signed-off-by: Brett Russ <russb@emc.com>
 
-For write, we need to pad.  For DMA, we need to add additional zeroes, 
-until the DMA transfer ends on a dword boundary.  For PIO, we must at 
-least pad to a word boundary.
-
-	Jeff
+applied
 
 
