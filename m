@@ -1,37 +1,32 @@
-From: GrantC <grant_nospam@dodo.com.au>
-Subject: Solved: was Re: IDE channels not independent in PIIX4E?
-Date: Mon, 28 Feb 2005 17:25:32 +1100
-Message-ID: <8e3521tlk6q49848ed3ur869eqdqa5s92e@4ax.com>
-References: <07s221pobdf00ogs0cgbg0u2dl6prs4096@4ax.com> <Pine.LNX.4.44.0502271102410.15651-100000@coffee.psychology.mcmaster.ca>
+From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Subject: Re: [patch ide-dev 4/9] add ide_task_init_flush() helper
+Date: Sun, 27 Feb 2005 17:23:02 +0100
+Message-ID: <200502271723.02313.bzolnier@elka.pw.edu.pl>
+References: <Pine.GSO.4.58.0502241540250.13534@mion.elka.pw.edu.pl> <20050227045637.GC25723@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Received: from relay01.mail-hub.dodo.com.au ([203.220.32.149]:36019 "EHLO
-	relay01.mail-hub.dodo.com.au") by vger.kernel.org with ESMTP
-	id S261563AbVB1GZn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Feb 2005 01:25:43 -0500
-In-Reply-To: <Pine.LNX.4.44.0502271102410.15651-100000@coffee.psychology.mcmaster.ca>
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:56462 "EHLO
+	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
+	id S261591AbVB1Nd4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Feb 2005 08:33:56 -0500
+In-Reply-To: <20050227045637.GC25723@htj.dyndns.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Recently, Mark Hahn wrote:
 
->getting 25 MB/s out of older-generation udma33 controllers isn't bad;
->I don't remember ever getting better than about 28 out of 33, regardless
->of which chipset/memory/cpu.
-...
-Thanks Mark.
+Hi,
 
-Using gcc-2.95.3 instead of gcc-3.3.4 cut kernel compile time 
-for 'time make clean bzImage' from 26 to 16 minutes, everything 
-else the same -- slackware-10.1 install with gcc-2.95.3 from 
-slackware-8.1.  
+On Sunday 27 February 2005 05:56, Tejun Heo wrote:
+>  Hello,
+> 
+>  Just one minor thing.  Doesn't moving ide_task_s upward belong to
+> patch #7?
 
-I knew I lost that ten minutes somewhere last year, just found 
-it by circumnavigating other possibilities :o)
+It is needed for ide_task_init_flush() prototype.
 
-Cheers,
-Grant.
-
+> > +void ide_task_init_flush(ide_drive_t *, ide_task_t *);
