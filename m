@@ -1,31 +1,29 @@
-From: "David S. Miller" <davem@redhat.com>
-Subject: Re: [PATCH] Fix ALi15x3 DMA on sparc64 (maybe others)
-Date: Thu, 17 Jul 2003 23:38:49 -0700
+From: James Courtier-Dutton <James@superbug.demon.co.uk>
+Subject: ide-floppy status.
+Date: Mon, 21 Jul 2003 18:40:44 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20030717233849.102250cb.davem@redhat.com>
-References: <20030717181410.GI1171@phunnypharm.org>
+Message-ID: <3F1C259C.5000002@superbug.demon.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pizda.ninka.net ([216.101.162.242]:50409 "EHLO pizda.ninka.net")
-	by vger.kernel.org with ESMTP id S271736AbTGRGdp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jul 2003 02:33:45 -0400
-In-Reply-To: <20030717181410.GI1171@phunnypharm.org>
+Received: from anchor-post-30.mail.demon.net ([194.217.242.88]:15112 "EHLO
+	anchor-post-30.mail.demon.net") by vger.kernel.org with ESMTP
+	id S270676AbTGURZn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Jul 2003 13:25:43 -0400
+Received: from superbug.demon.co.uk ([158.152.58.16])
+	by anchor-post-30.mail.demon.net with esmtp (Exim 3.35 #1)
+	id 19eeeS-000HtQ-0U
+	for linux-ide@vger.kernel.org; Mon, 21 Jul 2003 18:40:44 +0100
 List-Id: linux-ide@vger.kernel.org
-To: Ben Collins <bcollins@debian.org>
-Cc: marcelo@conectiva.com.br, alan@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Thu, 17 Jul 2003 14:14:10 -0400
-Ben Collins <bcollins@debian.org> wrote:
+Hi,
 
-> Attached is a patch that is known to fix atleast the DMA corruption
-> occuring on sparc64 in 2.4.x kernels for ALi15x3 IDE chipsets. I think
-> Alan hinted that someone also reported it fixed a similar problem on
-> alpha.
+What is the status of ide-floppy in kernel 2.6.0test1
+It just oops here all the time.
+Are there any patches?
 
-Marcelo, please apply this.  Not only does it indeed fix
-problems on Sparc64 and Alpha, it also is ACK'd by Alan
-and already present in 2.5.x
+Cheers
+James
 
-Thanks.
