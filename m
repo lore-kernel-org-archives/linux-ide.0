@@ -1,57 +1,56 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] IDE: remove WAIT_READY dependency on APM
-Date: Tue, 1 Feb 2005 00:42:34 +0100
-Message-ID: <20050131234234.GU21437@stusta.de>
+From: "Daniel E. Markle" <syntax@pa.net>
+Subject: [PATCH] sata_sil mod15 quirk with Seagate ST380013AS
+Date: Tue, 01 Feb 2005 00:39:11 -0500
+Message-ID: <41FF15FF.7060503@pa.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:5894 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261463AbVAaXmg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 31 Jan 2005 18:42:36 -0500
-Content-Disposition: inline
+Content-Type: multipart/mixed;
+ boundary="------------040708090706090204060802"
+Received: from ashtech.net ([66.59.109.171]:40075 "EHLO mail.ashtech.net")
+	by vger.kernel.org with ESMTP id S261554AbVBAFg1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2005 00:36:27 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-On the one hand APM isn't enabled on all laptops.
-On the other hand, this also affects regular PCs with APM support (or
-using a distribution kernel with APM support).
+This is a multi-part message in MIME format.
+--------------040708090706090204060802
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The time for the !APM case was already increased from 30msec in 2.4 .
-Isn't there a timeout that is suitable for all cases?
+Hardware Environment:
+AMD64, onboard SiI 3114 controller
 
-Alan Cox answered:
-> The five seconds should be just fine for all cases. The smaller value
-> with no
-> power manglement should help speed up recovery however. It probably
-> doesn't belong CONFIG_APM now ACPI and friends are involved either.
+Drive Model:
+Seagate 80GB ST380013AS
 
-Until someone has a real good solution (consider e.g. that most PC users 
-might have ACPI support enabled), this patch unconditionally sets 
-WAIT_READY to 5 seconds.
+Problem:
+Drive would lock up whenever the disk was used heavily.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Applied attached patch to add it to the "mod15" blacklist which seems to 
+have fixed the problem.
 
----
+--
+Daniel E. Markle
 
-This patch as already sent on:
-- 11 Dec 2004
-- 17 Jan 2005
+--------------040708090706090204060802
+Content-Type: text/x-patch;
+ name="20050131-seagate-sata-3114.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="20050131-seagate-sata-3114.diff"
 
---- linux-2.6.10-rc2-mm4-full/include/linux/ide.h.old	2004-12-11 18:11:20.000000000 +0100
-+++ linux-2.6.10-rc2-mm4-full/include/linux/ide.h	2004-12-11 18:11:32.000000000 +0100
-@@ -187,11 +187,7 @@
-  * Timeouts for various operations:
-  */
- #define WAIT_DRQ	(HZ/10)		/* 100msec - spec allows up to 20ms */
--#if defined(CONFIG_APM) || defined(CONFIG_APM_MODULE)
- #define WAIT_READY	(5*HZ)		/* 5sec - some laptops are very slow */
--#else
--#define WAIT_READY	(HZ/10)		/* 100msec - should be instantaneous */
--#endif /* CONFIG_APM || CONFIG_APM_MODULE */
- #define WAIT_PIDENTIFY	(10*HZ)	/* 10sec  - should be less than 3ms (?), if all ATAPI CD is closed at boot */
- #define WAIT_WORSTCASE	(30*HZ)	/* 30sec  - worst case when spinning up */
- #define WAIT_CMD	(10*HZ)	/* 10sec  - maximum wait for an IRQ to happen */
+diff -urN linux.orig/drivers/scsi/sata_sil.c linux/drivers/scsi/sata_sil.c
+--- linux.orig/drivers/scsi/sata_sil.c	2005-01-31 09:49:03.488652904 -0500
++++ linux/drivers/scsi/sata_sil.c	2005-01-31 09:52:28.165537288 -0500
+@@ -84,6 +84,7 @@
+ 	{ "ST330013AS",		SIL_QUIRK_MOD15WRITE },
+ 	{ "ST340017AS",		SIL_QUIRK_MOD15WRITE },
+ 	{ "ST360015AS",		SIL_QUIRK_MOD15WRITE },
++	{ "ST380013AS",		SIL_QUIRK_MOD15WRITE },
+ 	{ "ST380023AS",		SIL_QUIRK_MOD15WRITE },
+ 	{ "ST3120023AS",	SIL_QUIRK_MOD15WRITE },
+ 	{ "ST3160023AS",	SIL_QUIRK_MOD15WRITE },
+
+--------------040708090706090204060802--
 
