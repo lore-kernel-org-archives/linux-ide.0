@@ -1,86 +1,108 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] ide-taskfile.c fixups/cleanups [1/11]
-Date: Sat, 19 Jun 2004 18:07:22 +0200
+Subject: [PATCH] ide-taskfile.c fixups/cleanups [9/11]
+Date: Sat, 19 Jun 2004 18:14:04 +0200
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200406191807.22987.bzolnier@elka.pw.edu.pl>
+Message-ID: <200406191814.04988.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S264373AbUFSQVE@vger.kernel.org>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S264298AbUFSQZ3@vger.kernel.org>
 Content-Disposition: inline
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 
-[PATCH] ide: remove redundant hwgroup->handler checks from ide-taskfile.c
+[PATCH] ide: don't clear rq->errors for REQ_DRIVE_TASKFILE requests
 
-Remove checks for hwgroup->handler == NULL from task_[in,mulin,out]_intr()
-(CONFIG_IDE_TASKFILE_IO=n versions).  These functions can be called only from
-ide_intr() or ide_timer_expiry() and both set hwgroup->handler to NULL first.
+REQ_DRIVE_TASKFILE requests aren't retried so don't clear rq->errors
+in CONFIG_IDE_TASKFILE_IO=n PIO handlers and in CONFIG_IDE_TASKFILE_IO=y
+PIO handlers clear rq->errors only for fs requests, flagged_* PIO
+handlers were already okay.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 
- linux-2.6.7-bzolnier/drivers/ide/ide-taskfile.c |   19 +++++--------------
- 1 files changed, 5 insertions(+), 14 deletions(-)
+ linux-2.6.7-bzolnier/drivers/ide/ide-taskfile.c |   17 ++++++-----------
+ 1 files changed, 6 insertions(+), 11 deletions(-)
 
-diff -puN drivers/ide/ide-taskfile.c~ide_handler_checks drivers/ide/ide-taskfile.c
---- linux-2.6.7/drivers/ide/ide-taskfile.c~ide_handler_checks	2004-06-19 02:40:54.620473544 +0200
-+++ linux-2.6.7-bzolnier/drivers/ide/ide-taskfile.c	2004-06-19 02:40:54.625472784 +0200
-@@ -317,8 +317,7 @@ ide_startstop_t task_in_intr (ide_drive_
- 		}
- 		if (!(stat & BUSY_STAT)) {
- 			DTF("task_in_intr to Soon wait for next interrupt\n");
--			if (HWGROUP(drive)->handler == NULL)
--				ide_set_handler(drive, &task_in_intr, WAIT_WORSTCASE, NULL);
-+			ide_set_handler(drive, &task_in_intr, WAIT_WORSTCASE, NULL);
- 			return ide_started;  
- 		}
- 	}
-@@ -332,12 +331,7 @@ ide_startstop_t task_in_intr (ide_drive_
- 	if (--rq->current_nr_sectors <= 0)
- 		if (!DRIVER(drive)->end_request(drive, 1, 0))
- 			return ide_stopped;
--	/*
--	 * ERM, it is techincally legal to leave/exit here but it makes
--	 * a mess of the code ...
--	 */
--	if (HWGROUP(drive)->handler == NULL)
--		ide_set_handler(drive, &task_in_intr, WAIT_WORSTCASE, NULL);
-+	ide_set_handler(drive, &task_in_intr, WAIT_WORSTCASE, NULL);
- 	return ide_started;
- }
+diff -puN drivers/ide/ide-taskfile.c~ide_tf_rq_errors drivers/ide/ide-taskfile.c
+--- linux-2.6.7/drivers/ide/ide-taskfile.c~ide_tf_rq_errors	2004-06-19 03:01:41.416931672 +0200
++++ linux-2.6.7-bzolnier/drivers/ide/ide-taskfile.c	2004-06-19 03:01:41.421930912 +0200
+@@ -374,7 +374,6 @@ ide_startstop_t task_mulin_intr (ide_dri
+ 			nsect = msect;
+ 		pBuf = rq->buffer + task_rq_offset(rq);
+ 		taskfile_input_data(drive, pBuf, nsect * SECTOR_WORDS);
+-		rq->errors = 0;
+ 		rq->current_nr_sectors -= nsect;
+ 		msect -= nsect;
  
-@@ -360,8 +354,7 @@ ide_startstop_t task_mulin_intr (ide_dri
- 			return DRIVER(drive)->error(drive, "task_mulin_intr", stat);
- 		}
- 		/* no data yet, so wait for another interrupt */
--		if (HWGROUP(drive)->handler == NULL)
--			ide_set_handler(drive, &task_mulin_intr, WAIT_WORSTCASE, NULL);
-+		ide_set_handler(drive, &task_mulin_intr, WAIT_WORSTCASE, NULL);
- 		return ide_started;
- 	}
- 
-@@ -384,8 +377,7 @@ ide_startstop_t task_mulin_intr (ide_dri
- 				return ide_stopped;
- 		}
- 	} while (msect);
--	if (HWGROUP(drive)->handler == NULL)
--		ide_set_handler(drive, &task_mulin_intr, WAIT_WORSTCASE, NULL);
-+	ide_set_handler(drive, &task_mulin_intr, WAIT_WORSTCASE, NULL);
- 	return ide_started;
- }
- 
-@@ -445,8 +437,7 @@ ide_startstop_t task_out_intr (ide_drive
- 		rq->errors = 0;
+@@ -439,7 +438,6 @@ ide_startstop_t task_out_intr (ide_drive
+ 		rq = HWGROUP(drive)->rq;
+ 		pBuf = rq->buffer + task_rq_offset(rq);
+ 		taskfile_output_data(drive, pBuf, SECTOR_WORDS);
+-		rq->errors = 0;
  		rq->current_nr_sectors--;
  	}
--	if (HWGROUP(drive)->handler == NULL)
--		ide_set_handler(drive, &task_out_intr, WAIT_WORSTCASE, NULL);
-+	ide_set_handler(drive, &task_out_intr, WAIT_WORSTCASE, NULL);
+ 	ide_set_handler(drive, &task_out_intr, WAIT_WORSTCASE, NULL);
+@@ -523,7 +521,6 @@ ide_startstop_t task_mulout_intr (ide_dr
+ 		taskfile_output_data(drive, pBuf, nsect * SECTOR_WORDS);
+ 		rq->current_nr_sectors -= nsect;
+ 	} while (msect);
+-	rq->errors = 0;
+ 	if (HWGROUP(drive)->handler == NULL)
+ 		ide_set_handler(drive, &task_mulout_intr, WAIT_WORSTCASE, NULL);
  	return ide_started;
+@@ -536,9 +533,10 @@ EXPORT_SYMBOL(task_mulout_intr);
+ static void task_sectors(ide_drive_t *drive, struct request *rq,
+ 			 unsigned nsect, unsigned rw)
+ {
+-	if (rq->cbio)	/* fs request */
++	if (rq->cbio) {	/* fs request */
++		rq->errors = 0;
+ 		task_bio_sectors(drive, rq, nsect, rw);
+-	else		/* task request */
++	} else		/* task request */
+ 		task_buffer_sectors(drive, rq, nsect, rw);
  }
  
+@@ -547,7 +545,6 @@ static inline void task_bio_multi_sector
+ {
+ 	unsigned int nsect, msect = drive->mult_count;
+ 
+-	rq->errors = 0;
+ 	do {
+ 		nsect = rq->current_nr_sectors;
+ 		if (nsect > msect)
+@@ -565,9 +562,10 @@ static inline void task_bio_multi_sector
+ static void task_multi_sectors(ide_drive_t *drive,
+ 			       struct request *rq, unsigned rw)
+ {
+-	if (rq->cbio)	/* fs request */
++	if (rq->cbio) {	/* fs request */
++		rq->errors = 0;
+ 		task_bio_multi_sectors(drive, rq, rw);
+-	else		/* task request */
++	} else		/* task request */
+ 		task_buffer_multi_sectors(drive, rq, rw);
+ }
+ 
+@@ -620,7 +618,6 @@ finish_rq:
+ 		return ide_stopped;
+ 	}
+ 
+-	rq->errors = 0;
+ 	task_sectors(drive, rq, 1, IDE_PIO_IN);
+ 
+ 	/* If it was the last datablock check status and finish transfer. */
+@@ -724,8 +721,6 @@ ide_startstop_t task_out_intr (ide_drive
+ 
+ 	/* Still data left to transfer. */
+ 	ide_set_handler(drive, &task_out_intr, WAIT_WORSTCASE, NULL);
+-
+-	rq->errors = 0;
+ 	task_sectors(drive, rq, 1, IDE_PIO_OUT);
+ 
+ 	return ide_started;
 
 _
