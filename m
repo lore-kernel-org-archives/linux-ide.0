@@ -1,59 +1,38 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Brad Campbell <brad@wasp.net.au>
 Subject: Re: [patch] libata: add ioctls to support SMART
-Date: Mon, 30 Aug 2004 13:19:59 -0400
+Date: Mon, 30 Aug 2004 21:35:44 +0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <413361BF.8020805@pobox.com>
+Message-ID: <41336570.8090308@wasp.net.au>
 References: <200408301531.i7UFVBg29089@ra.tuxdriver.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:62648 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268592AbUH3RUP
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Aug 2004 13:20:15 -0400
+Received: from wasp.net.au ([203.190.192.17]:43977 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S268658AbUH3RfO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Aug 2004 13:35:14 -0400
 In-Reply-To: <200408301531.i7UFVBg29089@ra.tuxdriver.com>
 List-Id: linux-ide@vger.kernel.org
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
 John W. Linville wrote:
 > Support for HDIO_DRIVE_CMD and HDIO_DRIVE_TASK in libata.  Useful for
 > supporting SMART w/ unmodified smartctl and smartd userland binaries.
-
-First let me say that it's a damn fine first attempt, and people should 
-be able to use this for SMART until support is merged officially.
-
-
+> 
 > Not happy w/ loop after failed ata_qc_new_init(), but needed because smartctl
 > and smartd did not retry after failure.  Likely need an option to wait for
 > available qc?  Also not sure all the error return codes are correct...
+> 
 
-I'd like to implement it a bit differently, and I think this different 
-method will solve some of the open questions you have.
+YYYYYYYYYYEeeeeeeeeeeeeeeeeeeeeeeeeeehhhhhhhhhhaaaaaaaaaaaaaaaaaaa!!!!!!!!
 
-Take a look at http://www.t10.org/ftp/t10/document.04/04-260r2.pdf
+I know it's a bit kludgy and does not really fit the philosophy of libata but it works and it lets 
+me keep an eye on my drives *now*.
 
-I would like to implement HDIO_DRIVE_CMD and HDIO_DRIVE_TASK completely 
-inside libata-scsi.c.  These ioctls should translate the ioctl arguments 
-into an ATA-passthru SCSI command, and use the standard "issue a scsi 
-command" kernel API to submit the command and wait for a result.
+Although just for good measure I'll probably unmount and stop my raid arrays before I use it on the 
+disks. Whats it like for locking on a busy system?
 
-That implies, then, that you would add code to libata-scsi.c that 
-translates the ATA-passthru SCSI command into an ATA command using the 
-ata_scsi_translate() infrastructure.
-
-Note that you'll need to make up a SCSI opcode, inside the SCSI 
-vendor-specific opcode space, since the ATA-passthru hasn't yet been 
-assigned an official SCSI opcode.  SPC-3 
-(http://www.t10.org/ftp/t10/drafts/spc3/spc3r20a.pdf) lists the 
-available opcodes in section C.3, denoted with a 'V' across all columns.
-
-Once libata-scsi.c can handle the ATA-passthru SCSI command, 
-implementing HDIO_DRIVE_{TASK,CMD} should be quite trivial.
-
-And SMART support will be complete :)
-
-	Jeff
-
+Regards,
+Brad
 
