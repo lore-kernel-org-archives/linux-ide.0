@@ -1,32 +1,36 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: [SATA] status report, libata-dev queue updated
-Date: Fri, 05 Nov 2004 23:44:20 +0400
-Message-ID: <418BD814.807@wasp.net.au>
-References: <20041105100049.GA31653@havoc.gtf.org> <418BCED3.1030600@wasp.net.au> <20041105132613.A30910@florence.linkmargin.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] PA-RISC update to 87415
+Date: Fri, 5 Nov 2004 21:17:03 +0100
+Message-ID: <58cb370e04110512175fc2ded9@mail.gmail.com>
+References: <20041103200059.GC17672@colo.lackof.org>
+	 <58cb370e04110312215ee851e4@mail.gmail.com>
+	 <20041103213351.GB23415@colo.lackof.org>
+	 <58cb370e041103140121017ea1@mail.gmail.com>
+	 <20041103232356.GD23415@colo.lackof.org>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:49637 "EHLO wasp.net.au")
-	by vger.kernel.org with ESMTP id S261187AbUKETng (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Nov 2004 14:43:36 -0500
-In-Reply-To: <20041105132613.A30910@florence.linkmargin.com>
+Received: from zeus.kernel.org ([204.152.189.113]:28078 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S261187AbUKEUSP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Nov 2004 15:18:15 -0500
+Received: from rproxy.gmail.com (rproxy.gmail.com [64.233.170.196])
+	by zeus.kernel.org (8.12.11/8.11.6) with ESMTP id iA5KI7q7032388
+	for <linux-ide@vger.kernel.org>; Fri, 5 Nov 2004 12:18:07 -0800
+Received: by rproxy.gmail.com with SMTP id a36so109521rnf
+        for <linux-ide@vger.kernel.org>; Fri, 05 Nov 2004 12:17:03 -0800 (PST)
+In-Reply-To: <20041103232356.GD23415@colo.lackof.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andy Warner <andyw@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Grant Grundler <grundler@parisc-linux.org>
+Cc: matthew@wil.cx, linux-ide@vger.kernel.org
 
-Andy Warner wrote:
-> Brad Campbell wrote:
-> 
->>[...]
->>Read that as "I have tried really, really hard to break it and as yet been unable to".
-> 
-> 
-> Is your system SMP ? I'm actively tracking a problem now with
-> pass-thru behaviour (via /dev/sg* ) on SMP systems.
+applied
 
-Nope, sorry. Only lowly UP here.
+I had to cover init_iops_ns87415 by CONFIG_SUPERIO to fix:
 
-Regards,
-Brad
+drivers/ide/pci/ns87415.c:95: warning: `superio_ide_init_iops' defined
+but not used
+
+I also marked init_iops_ns87415 with __devinit
