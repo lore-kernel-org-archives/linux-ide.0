@@ -1,50 +1,39 @@
 From: domen@coderock.org
-Subject: [patch 1/6] ide/ide-cs: replace schedule_timeout() with msleep()
-Date: Sun, 06 Mar 2005 11:42:03 +0100
-Message-ID: <20050306104203.057601F1F0@trashy.coderock.org>
-Received: from coderock.org ([193.77.147.115]:26538 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S261367AbVCFKmI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Mar 2005 05:42:08 -0500
+Subject: [patch 3/6] Resend: drivers/ide/pci/cs5520.c fix return code value
+Date: Sun, 06 Mar 2005 11:42:10 +0100
+Message-ID: <20050306104210.C3D331F203@trashy.coderock.org>
+Received: from coderock.org ([193.77.147.115]:30634 "EHLO trashy.coderock.org")
+	by vger.kernel.org with ESMTP id S261373AbVCFKmQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Mar 2005 05:42:16 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org, domen@coderock.org, nacc@us.ibm.com, janitor@sternwelten.at
+Cc: linux-ide@vger.kernel.org, domen@coderock.org, amitg@calsoftinc.com, gud@eth.net
 
 
 
+The patch follows from the suggestions by AC and Felipe W Damasio for fixing the return codes from IDE drivers.
 
+Do consider applying.
 
-Uses msleep() in place of schedule_timeout()
-to guarantee the task delays as expected.
-
-Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
-Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
+Signed-off-by: Amit Gud <gud@eth.net>
 Signed-off-by: Domen Puncer <domen@coderock.org>
 ---
 
 
- kj-domen/drivers/ide/legacy/ide-cs.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ kj-domen/drivers/ide/pci/cs5520.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/ide/legacy/ide-cs.c~msleep-drivers_ide_ide-cs drivers/ide/legacy/ide-cs.c
---- kj/drivers/ide/legacy/ide-cs.c~msleep-drivers_ide_ide-cs	2005-03-05 16:09:13.000000000 +0100
-+++ kj-domen/drivers/ide/legacy/ide-cs.c	2005-03-05 16:09:13.000000000 +0100
-@@ -43,6 +43,7 @@
- #include <linux/ide.h>
- #include <linux/hdreg.h>
- #include <linux/major.h>
-+#include <linux/delay.h>
- #include <asm/io.h>
- #include <asm/system.h>
- 
-@@ -346,8 +347,7 @@ static void ide_config(dev_link_t *link)
- 		break;
- 	    }
+diff -puN drivers/ide/pci/cs5520.c~return_code-drivers_ide_pci_cs5520 drivers/ide/pci/cs5520.c
+--- kj/drivers/ide/pci/cs5520.c~return_code-drivers_ide_pci_cs5520	2005-03-05 16:11:10.000000000 +0100
++++ kj-domen/drivers/ide/pci/cs5520.c	2005-03-05 16:11:10.000000000 +0100
+@@ -224,7 +224,7 @@ static int __devinit cs5520_init_one(str
+ 	if(pci_enable_device_bars(dev, 1<<2))
+ 	{
+ 		printk(KERN_WARNING "%s: Unable to enable 55x0.\n", d->name);
+-		return 1;
++		return -ENODEV;
  	}
--	__set_current_state(TASK_UNINTERRUPTIBLE);
--	schedule_timeout(HZ/10);
-+	msleep(100);
-     }
- 
-     if (hd < 0) {
+ 	pci_set_master(dev);
+ 	if (pci_set_dma_mask(dev, 0xFFFFFFFF)) {
 _
