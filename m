@@ -1,31 +1,51 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: PATCH: Fix HPT366 crash and support HPT372N
-Date: Mon, 2 Aug 2004 10:39:51 -0400
+From: "J. Ryan Earl" <heretic@clanhk.org>
+Subject: Re: sata_via - too slow
+Date: Mon, 02 Aug 2004 16:55:47 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040802143951.GA15610@devserv.devel.redhat.com>
-References: <20040801001522.GA13954@devserv.devel.redhat.com> <20040802141131.GA2716@mea-ext.zmailer.org>
+Message-ID: <410EC673.1090506@clanhk.org>
+References: <410E2E9C.8020606@scssoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:10734 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S266574AbUHBOko (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Aug 2004 10:40:44 -0400
-Content-Disposition: inline
-In-Reply-To: <20040802141131.GA2716@mea-ext.zmailer.org>
+Received: from mail.hardcore-gaming.net ([69.93.101.157]:32993 "EHLO
+	mail.hardcore-gaming.net") by vger.kernel.org with ESMTP
+	id S264147AbUHBVzy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Aug 2004 17:55:54 -0400
+In-Reply-To: <410E2E9C.8020606@scssoft.com>
 List-Id: linux-ide@vger.kernel.org
-To: Matti Aarnio <matti.aarnio@zmailer.org>
-Cc: Alan Cox <alan@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org
+To: Petr Sebor <petr@scssoft.com>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Aug 02, 2004 at 05:11:31PM +0300, Matti Aarnio wrote:
-> I have been wondering about HPT37x in Fedora Core (development) kernel
-> called  kernel-smp-2.6.7-1.501.i686.  It doesn't find one of the cards
-> attached to a HPT372A card that I have.
-> 
-> I tried also to boot with a bit older kernels: 2.6.3, 2.6.5 do work just 
-> fine (except of 2.6.5 barfs the keyboard..). 
+Petr Sebor wrote:
 
-Probably unrelated. I'd ask Arjan or see if it depends on the compiler or
-some other horror
+> and it is being worse, I can see frequently, that the 'wait' gets 
+> frequently over 90%.
+> I have tried the kernel both in SMP or UP, with noacpi, iommu=off, 
+> preemptible kernel or not
+> without difference....
 
-This patch is unrelated to 372A
+Which 86_64.org patches are you using?
 
+>
+> From what I have understood, these drives are SATA with PATA bridge on 
+> them.
+> The problems described happen on both. No difference.
+>
+> Interesting is, that
+> root@opteron:$ hdparm -t /dev/sda
+>
+> /dev/sda:
+> Timing buffered disk reads:  144 MB in  3.03 seconds =  47.45 MB/sec
+>
+> So it is not _that_ slow... 
+
+I highly doubt it's related to libata or sata_via at all.  A high wait 
+indicates your processors handle data a lot faster than your harddrives 
+can deliver and processes are blocked waiting on I/O, it would otherwise 
+be counted as idle time in the 2.4 line; this is normal AFAIK.  Your 
+performance is nominal, the problem is most likely elsewhere.
+
+What motherboard is this?  The MSI FAR2 whatever?
+
+-ryan
