@@ -1,120 +1,103 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Subject: [rfc][patch] ide: fix unneeded LBA48 taskfile registers access
-Date: Sun, 6 Feb 2005 23:54:11 +0100 (CET)
-Message-ID: <Pine.GSO.4.58.0502062348200.2763@mion.elka.pw.edu.pl>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [rfc][patch] ide: fix unneeded LBA48 taskfile registers access
+Date: Mon, 07 Feb 2005 13:47:33 +0900
+Message-ID: <4206F2E5.7020501@gmail.com>
+References: <Pine.GSO.4.58.0502062348200.2763@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:31730 "EHLO
-	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S261178AbVBFWzf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 6 Feb 2005 17:55:35 -0500
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:51543 "EHLO
-	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
-	id S199965AbVBFWyS (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 4 others); Sun, 6 Feb 2005 23:54:18 +0100
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from wproxy.gmail.com ([64.233.184.199]:59629 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261346AbVBGErm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Feb 2005 23:47:42 -0500
+Received: by wproxy.gmail.com with SMTP id 71so837085wra
+        for <linux-ide@vger.kernel.org>; Sun, 06 Feb 2005 20:47:39 -0800 (PST)
+In-Reply-To: <Pine.GSO.4.58.0502062348200.2763@mion.elka.pw.edu.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@home-tj.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@home-tj.org>
 
+Hello, Bartlomiej.
 
-[ against ide-dev-2.6 tree, boot tested on LBA48 drive ]
+Bartlomiej Zolnierkiewicz wrote:
+> [ against ide-dev-2.6 tree, boot tested on LBA48 drive ]
+> 
+> This small patch fixes unneeded writes/reads to LBA48 taskfile registers
+> on LBA48 capable disks for following cases:
+> 
+> * Power Management requests
+>   (WIN_FLUSH_CACHE[_EXT], WIN_STANDBYNOW1, WIN_IDLEIMMEDIATE commands)
+> * special commands (WIN_SPECIFY, WIN_RESTORE, WIN_SETMULT)
+> * Host Protected Area support (WIN_READ_NATIVE_MAX, WIN_SET_MAX)
+> * /proc/ide/ SMART support (WIN_SMART with SMART_ENABLE,
+>   SMART_READ_VALUES and SMART_READ_THRESHOLDS subcommands)
+> * write cache enabling/disabling in ide-disk
+>   (WIN_SETFEATURES with SETFEATURES_{EN,DIS}_WCACHE)
+> * write cache flushing in ide-disk (WIN_FLUSH_CACHE[_EXT])
+> * acoustic management in ide-disk
+>   (WIN_SETFEATURES with SETFEATURES_{EN,DIS}_AAM)
+> * door (un)locking in ide-disk (WIN_DOORLOCK, WIN_DOORUNLOCK)
+> * /proc/ide/hd?/identify support (WIN_IDENTIFY)
+> 
+> Patch adds 'unsinged long flags' to ide_task_t and uses ATA_TFLAG_LBA48
+> flag (from <linux/ata.h>) to indicate need of accessing LBA48 taskfile
+> registers.
 
-This small patch fixes unneeded writes/reads to LBA48 taskfile registers
-on LBA48 capable disks for following cases:
+  ide_task_t already has fields to enable/disable writing/reading of 
+taskfile and hob registers (tf_in_flags and tf_out_flags).  How about 
+adding the following two helpers.
 
-* Power Management requests
-  (WIN_FLUSH_CACHE[_EXT], WIN_STANDBYNOW1, WIN_IDLEIMMEDIATE commands)
-* special commands (WIN_SPECIFY, WIN_RESTORE, WIN_SETMULT)
-* Host Protected Area support (WIN_READ_NATIVE_MAX, WIN_SET_MAX)
-* /proc/ide/ SMART support (WIN_SMART with SMART_ENABLE,
-  SMART_READ_VALUES and SMART_READ_THRESHOLDS subcommands)
-* write cache enabling/disabling in ide-disk
-  (WIN_SETFEATURES with SETFEATURES_{EN,DIS}_WCACHE)
-* write cache flushing in ide-disk (WIN_FLUSH_CACHE[_EXT])
-* acoustic management in ide-disk
-  (WIN_SETFEATURES with SETFEATURES_{EN,DIS}_AAM)
-* door (un)locking in ide-disk (WIN_DOORLOCK, WIN_DOORUNLOCK)
-* /proc/ide/hd?/identify support (WIN_IDENTIFY)
+static inline ide_init_task[_std](ide_task_t *task)
+{
+	memset(task, 0, sizeof(*task));
+	task->tf_out_flags = IDE_TASKFILE_STD_OUT_FLAGS;
+	task->tf_in_flags = IDE_TASKFILE_STD_IN_FLAGS;
+}
 
-Patch adds 'unsinged long flags' to ide_task_t and uses ATA_TFLAG_LBA48
-flag (from <linux/ata.h>) to indicate need of accessing LBA48 taskfile
-registers.
+static inline ide_init_task_lba48(ide_task_t *task)
+{
+	memset(task, 0, sizeof(*task));
+	task->tf_out_flags = IDE_TASKFILE_STD_OUT_FLAGS
+			| (IDE_HOB_STD_OUT_FLAGS << 8);
+	task->tf_in_flags = IDE_TASKFILE_STD_IN_FLAGS
+			| (IDE_HOB_STD_IN_FLAGS << 8);
+}
 
-diff -Nru a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
---- a/drivers/ide/ide-disk.c	2005-02-06 23:47:44 +01:00
-+++ b/drivers/ide/ide-disk.c	2005-02-06 23:47:44 +01:00
-@@ -362,6 +362,9 @@
- 	args.tfRegister[IDE_COMMAND_OFFSET]	= WIN_READ_NATIVE_MAX_EXT;
- 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
- 	args.handler				= &task_no_data_intr;
-+
-+	args.flags |= ATA_TFLAG_LBA48;
-+
-         /* submit command request */
-         ide_raw_taskfile(drive, &args, NULL);
+  And, when writing taskfile,
 
-@@ -431,6 +434,9 @@
- 	args.hobRegister[IDE_CONTROL_OFFSET_HOB]= (drive->ctl|0x80);
- 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
- 	args.handler				= &task_no_data_intr;
-+
-+	args.flags |= ATA_TFLAG_LBA48;
-+
- 	/* submit command request */
- 	ide_raw_taskfile(drive, &args, NULL);
- 	/* if OK, compute maximum address value */
-diff -Nru a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
---- a/drivers/ide/ide-io.c	2005-02-06 23:47:44 +01:00
-+++ b/drivers/ide/ide-io.c	2005-02-06 23:47:44 +01:00
-@@ -487,7 +487,7 @@
- 			args->tfRegister[IDE_SELECT_OFFSET]  = hwif->INB(IDE_SELECT_REG);
- 			args->tfRegister[IDE_STATUS_OFFSET]  = stat;
+if (task->tf_out_flags & 0xf == IDE_TASKFILE_STD_OUT_FLAGS) {
+	/* Write taskfile regs without testing flags */
+} else {
+	/* Flagged taskfile */
+}
 
--			if (drive->addressing == 1) {
-+			if (args->flags & ATA_TFLAG_LBA48) {
- 				hwif->OUTB(drive->ctl|0x80, IDE_CONTROL_REG);
- 				args->hobRegister[IDE_FEATURE_OFFSET]	= hwif->INB(IDE_FEATURE_REG);
- 				args->hobRegister[IDE_NSECTOR_OFFSET]	= hwif->INB(IDE_NSECTOR_REG);
-diff -Nru a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
---- a/drivers/ide/ide-taskfile.c	2005-02-06 23:47:44 +01:00
-+++ b/drivers/ide/ide-taskfile.c	2005-02-06 23:47:44 +01:00
-@@ -101,7 +101,7 @@
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	task_struct_t *taskfile	= (task_struct_t *) task->tfRegister;
- 	hob_struct_t *hobfile	= (hob_struct_t *) task->hobRegister;
--	u8 HIHI			= (drive->addressing == 1) ? 0xE0 : 0xEF;
-+	u8 HIHI			= (task->flags & ATA_TFLAG_LBA48) ? 0xE0 : 0xEF;
+if (task->tf_out_flags & 0xf0 == IDE_TASKFILE_HOB_OUT_FLAGS) {
+	/* Write hob regs without testing flags */
+} else {
+	/* Flagged hob */
+}
 
- 	/* ALL Command Block Executions SHALL clear nIEN, unless otherwise */
- 	if (IDE_CONTROL_REG) {
-@@ -110,7 +110,7 @@
- 	}
- 	SELECT_MASK(drive, 0);
+  And, when reading taskfile back,
 
--	if (drive->addressing == 1) {
-+	if (task->flags & ATA_TFLAG_LBA48) {
- 		hwif->OUTB(hobfile->feature, IDE_FEATURE_REG);
- 		hwif->OUTB(hobfile->sector_count, IDE_NSECTOR_REG);
- 		hwif->OUTB(hobfile->sector_number, IDE_SECTOR_REG);
-@@ -577,6 +577,9 @@
- 	args.tf_out_flags = req_task->out_flags;
- 	args.data_phase   = req_task->data_phase;
- 	args.command_type = req_task->req_cmd;
-+
-+	if (drive->addressing == 1)
-+		args.flags |= ATA_TFLAG_LBA48;
+if (task->tf_in_flags & 0xf0) {
+	/* Read all hob regs */
+}
 
- 	drive->io_32bit = 0;
- 	switch(req_task->data_phase) {
-diff -Nru a/include/linux/ide.h b/include/linux/ide.h
---- a/include/linux/ide.h	2005-02-06 23:47:44 +01:00
-+++ b/include/linux/ide.h	2005-02-06 23:47:44 +01:00
-@@ -1258,6 +1258,7 @@
-  *	struct hd_drive_hob_hdr		hobf;
-  *	hob_struct_t		hobf;
-  */
-+	unsigned long		flags;		/* ATA_TFLAG_xxx */
- 	task_ioreg_t		tfRegister[8];
- 	task_ioreg_t		hobRegister[8];
- 	ide_reg_valid_t		tf_out_flags;
+/* Read all taskfile regs */
+
+  And, we need to check if any of in/out flags is zero in ioctl 
+functions and set STD flags appropriately.  So, basically, in kernel, 
+tf_{in|out}_flags == 0 now means 0, not default.
+
+  By doing like above,
+
+  1. Virtually the same effect
+  2. No need to add new field to ide_task_t
+  3. Cleaner semantics (ATA_TFLAG_LBA48 and tf_{in|out}_flags carry
+     duplicate information.)
+
+  Thanks.
+
+-- 
+tejun
+
