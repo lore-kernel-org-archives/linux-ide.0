@@ -1,40 +1,77 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: PATCH: Add fixup functionality to the PCI drivers
-Date: Sat, 6 Nov 2004 17:05:39 +0100
-Message-ID: <58cb370e041106080527177f8c@mail.gmail.com>
-References: <1099672842.5564.56.camel@localhost.localdomain>
-	 <200411052313.06968.bzolnier@elka.pw.edu.pl>
-	 <1099697347.5630.78.camel@localhost.localdomain>
-	 <200411060144.13024.bzolnier@elka.pw.edu.pl>
-	 <1099698235.5630.87.camel@localhost.localdomain>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] sata_nv.c, don't have libata perform phy reset
+Date: Sat, 06 Nov 2004 12:09:39 -0500
+Message-ID: <418D0553.902@pobox.com>
+References: <418C3D3A.6010501@nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.200]:41073 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261411AbUKFQFn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 6 Nov 2004 11:05:43 -0500
-Received: by rproxy.gmail.com with SMTP id a36so175030rnf
-        for <linux-ide@vger.kernel.org>; Sat, 06 Nov 2004 08:05:39 -0800 (PST)
-In-Reply-To: <1099698235.5630.87.camel@localhost.localdomain>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:51879 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261424AbUKFRJw
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 6 Nov 2004 12:09:52 -0500
+In-Reply-To: <418C3D3A.6010501@nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: achew <achew@nvidia.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, 05 Nov 2004 23:43:56 +0000, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> On Sad, 2004-11-06 at 00:44, Bartlomiej Zolnierkiewicz wrote:
-> > > > this chunk is not needed
-> > >
-> > > Disagree. Look more carefully - we always need to pass d so we can pass
-> > > d->fixup
-> >
-> > siimage is the only user of d->fixup right now,
-> > it doesn't use ide_setup_pci_devices()
+achew wrote:
+> This patch works around the issue reported in bug 3352 on the bugzilla 
+> bug database.
 > 
-> If you think having the two API's differ in whether d->fixup is honoured
-> is good then I must disagree strongly with your taste in API's - you are
-> asking for the first person expecting it to work to get burned
+> Link to the bug report: http://bugme.osdl.org/show_bug_cgi?id=3352
+> 
+> In particular, we keep libata from performing the phy reset.  Doing the 
+> phy reset sometimes results in the busy bit failing to deassert.
+> 
+> Signed-off-by: Andrew Chew <achew@nvidia.com>
+> 
+> 
+> --- linux-2.6.10-rc1-bk15/drivers/scsi/sata_nv.c    2004-11-05 
+> 17:49:37.000000000 -0800
+> +++ linux/drivers/scsi/sata_nv.c    2004-11-05 17:55:48.000000000 -0800
+> @@ -20,6 +20,9 @@
+>  *  If you do not delete the provisions above, a recipient may use your
+>  *  version of this file under either the OSL or the GPL.
+>  *
+> + *  0.04
+> + *     - Disabled SATA phy reset to work around a problem where busy 
+> bit never
+> + *       deasserts after a phy reset.
+>  *  0.03
+>  *     - Fixed a bug where the hotplug handlers for non-CK804/MCP04 were 
+> using
+>  *       mmio_base, which is only set for the CK804/MCP04 case.
+> @@ -44,7 +47,7 @@
+> #include <linux/libata.h>
+> 
+> #define DRV_NAME            "sata_nv"
+> -#define DRV_VERSION            "0.03"
+> +#define DRV_VERSION            "0.04"
+> 
+> #define NV_PORTS            2
+> #define NV_PIO_MASK            0x1f
+> @@ -221,7 +224,6 @@
+> static struct ata_port_info nv_port_info = {
+>     .sht        = &nv_sht,
+>     .host_flags    = ATA_FLAG_SATA |
+> -              ATA_FLAG_SATA_RESET |
+>               ATA_FLAG_SRST |
 
-OK, I agree and I will fix that.
+
+I'm not quite ready to apply this just yet.  Reasons:
+
+1) The code has two resets!  I think it would be best to remove 
+ATA_FLAG_SRST, since SATA reset should cover that.
+
+2) Once ATA_FLAG_SRST is removed, if the problem still appears, I would 
+prefer that you root-caused this problem.  If it's a problem with the 
+generic libata SATA reset code, I would prefer to fix that, rather than 
+keep working around a bug that should be fixed.
+
+	Jeff
+
+
+
