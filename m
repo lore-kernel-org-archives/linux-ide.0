@@ -1,52 +1,101 @@
-From: janitor@sternwelten.at
-Subject: [patch 4/4]  ide/ide-cs: replace 	schedule_timeout() with msleep()
-Date: Thu, 21 Oct 2004 10:41:46 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <E1CKYW2-0003zH-Gb@sputnik>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:64173 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S270700AbUJUIlu
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Oct 2004 04:41:50 -0400
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Linux v2.6.9... (compile stats)
+Date: Thu, 21 Oct 2004 04:57:17 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <417779ED.6040403@pobox.com>
+References: <1098196575.4320.0.camel@cherrybomb.pdx.osdl.net> <20041019161834.GA23821@one-eyed-alien.net> <1098310286.3381.5.camel@cherrybomb.pdx.osdl.net> <20041020224106.GM23987@parcelfarce.linux.theplanet.co.uk> <Pine.LNX.4.58.0410201710370.2317@ppc970.osdl.org> <41770307.5060304@pobox.com> <20041021015522.GH23987@parcelfarce.linux.theplanet.co.uk> <41771813.8090204@pobox.com> <20041021022442.GI23987@parcelfarce.linux.theplanet.co.uk> <417720D6.1030908@pobox.com> <20041021043557.GK23987@parcelfarce.linux.theplanet.co.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S270627AbUJUJBA@vger.kernel.org>
+In-Reply-To: <20041021043557.GK23987@parcelfarce.linux.theplanet.co.uk>
+To: viro@parcelfarce.linux.theplanet.co.uk
+Cc: Linus Torvalds <torvalds@osdl.org>, John Cherry <cherry@osdl.org>, Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org, janitor@sternwelten.at, nacc@us.ibm.com
+
+viro@parcelfarce.linux.theplanet.co.uk wrote:
+> On Wed, Oct 20, 2004 at 10:37:10PM -0400, Jeff Garzik wrote:
+> 
+>>viro@parcelfarce.linux.theplanet.co.uk wrote:
+>>
+>>>IDGI.  Why do you insist on releasing these guys in library code?  Even
+>>
+>>Because there are two distinct and separate models of port mapping/usage:
+>>
+>>1) A bunch of separate IO address spaces (PIO).  The "mapping" is 
+>>currently done in ata_pci_init_native_mode() and ata_pci_init_legacy_mode()
+>>
+>>2) One single linear address space (MMIO).  The mapping is done in the 
+>>low-level driver.
+>>
+>>#1 is in the library because the logic is duplicated _precisely_, across 
+>>multiple host controllers, according to a hardware specification.
+>>
+>>Thus, if the mapping is done in the library core, so should the unmapping.
+> 
+> 
+> Not really.  You are making the case for having a helper that would unmap
+> for case 1 and having it in the library, just as we do for mapping in that
+
+Sure:  libata is a library, so all functions are helpers.  It's just one 
+more helper function.
+
+
+> case.  What you have is different, though - it's a single function that does
+> entire ->remove() for all (AFAICS) SATA drivers.
+
+That's intentional, see below.
+
+
+> And that's where the problem is - decision on releasing resource should belong
+> to the driver; sure, it can and should use library helper, just as it did
+> when it was grabbing these resources.
 
 
 
 
-Any comments would be appreciated.
+> Note, BTW, that current ata_pci_remove_one() is begging for trouble - for
+> one thing, it does iounmap() before we get to ata_scsi_release(), i.e.
+> ata_host_remove(), i.e. ->port_stop().   And the first look at the drivers
+> that provide ->port_stop() shows that ahci_port_stop() does readl()/writel()
+> on the ->mmio_base.  Oops...
 
-Description: Uses msleep() in place of schedule_timeout()
-to guarantee the task delays as expected.
+Ah the perils of an undocumented API :)  You're misunderstanding 
+->port_stop.
 
-Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
-Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
+That's a bug in ahci:  port_stop should never touch the hardware. 
+port_stop is only for releasing per-driver resources like kmalloc or DMA 
+memory.
 
----
+Note...  another thing to keep in mind is that all libata drivers use 
+ata_pci_remove_one() because that makes it possible to smooth over the 
+differences between 2.4 and 2.6 scsi drivers.
 
- linux-2.6.9-max/drivers/ide/legacy/ide-cs.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+> And that's where the problem is - decision on releasing resource should belong
+> to the driver; sure, it can and should use library helper, just as it did
+> when it was grabbing these resources.
+[...]
+> free_irq() also looks fishy, BTW.  How about moving all that group past the
+> point where you are done with individual ports and merging it (and any other
+> unmapping we might want to do) into a single callback?  Depending on whether
+> ->host_stop() is really needed early we might use ->host_stop for that...
 
-diff -puN drivers/ide/legacy/ide-cs.c~msleep-drivers_ide_ide-cs drivers/ide/legacy/ide-cs.c
---- linux-2.6.9/drivers/ide/legacy/ide-cs.c~msleep-drivers_ide_ide-cs	2004-10-21 02:37:59.000000000 +0200
-+++ linux-2.6.9-max/drivers/ide/legacy/ide-cs.c	2004-10-21 02:37:59.000000000 +0200
-@@ -43,6 +43,7 @@
- #include <linux/ide.h>
- #include <linux/hdreg.h>
- #include <linux/major.h>
-+#include <linux/delay.h>
- #include <asm/io.h>
- #include <asm/system.h>
- 
-@@ -357,8 +358,7 @@ void ide_config(dev_link_t *link)
- 		break;
- 	    }
- 	}
--	__set_current_state(TASK_UNINTERRUPTIBLE);
--	schedule_timeout(HZ/10);
-+	msleep(100);
-     }
- 
-     if (hd < 0) {
-_
+I don't see any problems, given what I just wrote above.
+
+Just the annoyance of individually mapping and unmapping 4 or 5 PCI 
+BARs, and mixing 4 ranges of ISA legacy ioports for good measure.
+
+
+Now...  addressing the overall theme of your message...  eventually 
+libata wants to move to a strict port_{start,stop}, host_{start,stop} 
+mechanism where the driver does more of the heavy lifting [by providing 
+hooks that call libata helpers, rather than a helper calling hooks as 
+ata_pci_remove_one does now].
+
+But to get there will take _many_ iterations, since two things get in 
+the way there:
+* 2.4 compat
+* the necessity to issue several ATA commands before we can respond to 
+-any- SCSI commands
+
+	Jeff
