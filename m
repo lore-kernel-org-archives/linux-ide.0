@@ -1,100 +1,71 @@
-From: Ajit Prem <Ajit.Prem@motorola.com>
-Subject: Re: 31244 & sata_vsc & PPC
-Date: Wed, 16 Feb 2005 18:21:46 -0700
-Message-ID: <4213F1AA.6060500@motorola.com>
-References: <4213996C.4060301@motorola.com> <20050216190821.GA19150@havoc.gtf.org> <4213BADF.8000307@motorola.com> <4213C852.4070105@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: libata oops 2.6.11-rc4 yesterdays BK
+Date: Thu, 17 Feb 2005 00:08:43 -0500
+Message-ID: <421426DB.2000308@pobox.com>
+References: <4212CBD6.7020703@wasp.net.au> <42132803.2080701@wasp.net.au> <4213821D.1030203@pobox.com> <4213B2F8.2070800@wasp.net.au> <20050216154033.I10699@florence.linkmargin.com> <4213CD9E.9040703@pobox.com> <20050216174954.K10699@florence.linkmargin.com> <4213DE38.70309@pobox.com> <20050216182040.L10699@florence.linkmargin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from motgate3.mot.com ([144.189.100.103]:28568 "EHLO
-	motgate3.mot.com") by vger.kernel.org with ESMTP id S262187AbVBQBWG
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Feb 2005 20:22:06 -0500
-In-Reply-To: <4213C852.4070105@pobox.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:63437 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S262216AbVBQFJC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Feb 2005 00:09:02 -0500
+In-Reply-To: <20050216182040.L10699@florence.linkmargin.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>
+To: Andy Warner <andyw@pobox.com>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org
+
+Andy Warner wrote:
+> Jeff Garzik wrote:
+> 
+>>[...]
+>>Unfortunately, that's what you're _supposed_ to do, busy-wait for every 
+>>"block" (where block == 1 sector for PIO, and <n> sectors for PIO-Mult).
+> 
+> 
+> The logic surrounding PIO-multi in PATA-land looked markedly different.
+
+Not surprising, as the path when interrupts are enabled looks different.
+
+I'm starting to wonder if polling isn't just a dismal failure on SATA, 
+since the status register/etc. is all emulated.  Thinking further along 
+those lines (how an ATA shadow register set is faked by the host 
+controller using FIS data), I wonder if polling -- per ATA spec -- 
+exposes a race between FIS reception and processing, and the update of 
+the ATA shadow register block.
 
 
-It's just a dirty hack that works
-for the limited case where I'm
-using only 1 disk off port 1 on a
-board that makes 3 ports available.
-I'm not sure what the side effects
-are, or how things will work if
-all 3 ports are used (which I'm
-unable to test).
+>>Wasn't it you that had a patch that used ata_altstatus() to mitigate 
+>>this somewhat?
+> 
+> 
+> Yeah - and to not call queue_work() to accomplish the polling
+> (which could start the next poll immediately on an SMP machine),
+> I suppose that _could_ just as easily point to a locking problem,
+> as a state machine logic flaw. My proof-of-concept kludge was to
+> call queue_delayed_work() instead.
+> 
+> 
+>>It's entirely possible that I'm one of the first to punish SATA 
+>>controllers with PIO polling data transfer, rather than interrupt-driven 
+>>xfer.  The SMP aspect makes me suspicious that something else might be 
+>>involved, as well.  Ever since the 2.6.10-bkN kernel updated ACPI, the 
+>>one SMP machine I had that failed on libata started working.
+> 
+> 
+> I saw errors on both SiI (3114) and Promise (20319) cards, so
+> I'm not convinced that (these) problems are at the chip-level
+> (not that there aren't plenty of those to go around.)
+> 
+> 
+>>Any chance you could debug this further?
+> 
+> 
+> I'll see what I can do.
 
-Anyway, here's the hack I used:
+Thanks,
 
-@@ -174,6 +174,9 @@
-    if (ap && (!(ap->flags & ATA_FLAG_PORT_DISABLED))) {
-        struct ata_queued_cmd *qc;
- 
-+       vsc_sata_scr_write(ap, VSC_SATA_SCR_ERROR_OFFSET, 0x00010001);
-+       readl((void *)ap->ioaddr.status_addr);
-+
-        qc = ata_qc_from_tag(ap, ap->active_tag);
-        if (qc && (!(qc->tf.ctl & ATA_NIEN)))
-            handled += ata_host_intr(ap, qc);
+	Jeff
 
-
-Now, on "modprobe sata_vsc", I get:
-
- ata1: SATA max UDMA/133 cmd 0xE107C200 ctl 0xE107C229 bmdma 0xE107C270 
-irq 98
- ata2: SATA max UDMA/133 cmd 0xE107C400 ctl 0xE107C429 bmdma 0xE107C470 
-irq 98
- ata3: SATA max UDMA/133 cmd 0xE107C600 ctl 0xE107C629 bmdma 0xE107C670 
-irq 98
- ata4: SATA max UDMA/133 cmd 0xE107C800 ctl 0xE107C829 bmdma 0xE107C870 
-irq 98
- ata1: no device found (phy stat 00000000)
- scsi0 : sata_vsc
- ata2: dev 0 ATA, max UDMA/100, 78140160 sectors:
- ata2(0): applying bridge limits
- ata2: dev 0 configured for UDMA/100
- scsi1 : sata_vsc
- ata3: no device found (phy stat 00000000)
- scsi2 : sata_vsc
- ata4: no device found (phy stat 00000000)
- scsi3 : sata_vsc
-   Vendor: ATA       Model: FUJITSU MHS2040A  Rev   : C003
-   Type:   Direct-Access                      ANSI SCSI revision: 05
- SCSI device sda: 78140160 512-byte hdwr sectors (40008 MB)
- SCSI device sda: drive cache: write back
- SCSI device sda: 78140160 512-byte hdwr sectors (40008 MB)
- SCSI device sda: drive cache: write back
-  sda: sda1 sda2 sda3
- Attached scsi disk sda at scsi1, channel 0, id 0, lun 0
- Attached scsi generic sg0 at scsi1, channel 0, id 0, lun 0,  type 0
-
-
-I can then fdisk, mount, and use the SATA disk with no problems.
-
-AP
-
-
-Jeff Garzik wrote:
-
-> Ajit Prem wrote:
->
->>
->> As a follow-up to my previous email where
->> I indicated that int_status on entry into
->> vsc_sata_interrupt indicates 0x8300, I
->> put in a crude fix in the vsc_sata_interrupt
->> handler to read the taskfile status register,
->> and to clear the appropriate bits in the
->> SATA SError register, and now things work
->> just fine.
->
->
-> Wanna post your crude patch to the list?
->
->     Jeff
->
->
->
 
