@@ -1,73 +1,63 @@
-From: "Albert Lee" <albertcc@tw.ibm.com>
-Subject: Re: libata PATA support - work items?
-Date: Thu, 6 Jan 2005 16:51:27 +0800
-Message-ID: <005701c4f3ce$37d56140$fb7f4109@tw.ibm.com>
-References: <006301c4ee5c$49e6a230$95714109@tw.ibm.com> <41DB2781.7000203@pobox.com>
+From: Prarit Bhargava <prarit@sgi.com>
+Subject: [PATCH]: resubmitted: Fix erroneous rq->buffer = NULL in ide-io.c:ide_dma_timeout_retry
+Date: Thu, 06 Jan 2005 10:21:56 -0500
+Message-ID: <41DD5794.6080804@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bluehawaii.tikira.net ([61.62.22.51]:500 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S262781AbVAFJDN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 Jan 2005 04:03:13 -0500
+Received: from mx1.redhat.com ([66.187.233.31]:7907 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S262856AbVAFPV6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2005 10:21:58 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.12.11/8.12.11) with ESMTP id j06FLwVC003735
+	for <linux-ide@vger.kernel.org>; Thu, 6 Jan 2005 10:21:58 -0500
+Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
+	by int-mx1.corp.redhat.com (8.11.6/8.11.6) with ESMTP id j06FLwr05360
+	for <linux-ide@vger.kernel.org>; Thu, 6 Jan 2005 10:21:58 -0500
+Received: from [172.16.83.37] (dhcp83-37.boston.redhat.com [172.16.83.37])
+	by mail.boston.redhat.com (8.12.8/8.12.8) with ESMTP id j06FLtne008016
+	for <linux-ide@vger.kernel.org>; Thu, 6 Jan 2005 10:21:55 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "\"Bartlomiej Zolnierkiewicz\"" <bzolnier@gmail.com>, "\"IDE Linux\"" <linux-ide@vger.kernel.org>, "\"Doug Maxey\"" <dwm@maxeymade.com>, "\"Alan Cox\"" <alan@lxorguk.ukuu.org.uk>
+To: linux-ide@vger.kernel.org
+
+Colleagues,
+
+Please see discussion related to this patch here,
+
+http://marc.theaimsgroup.com/?l=linux-ide&m=110485007824374&w=2
+
+Thanks,
+
+Prarit.
 
 
-For the 1st item,
-- add PATA device errata/blacklist info
-Is there any detail or draft design idea available?
+--- linux-2.5.orig/drivers/ide/ide-io.c 2005-01-04 15:45:17.000000000 -0500
++++ linux-2.5/drivers/ide/ide-io.c      2005-01-04 15:45:27.000000000 -0500
+@@ -1205,21 +1205,21 @@
+        HWGROUP(drive)->rq = NULL;
 
-For
-- C/H/S addressing.
- I've an old Segate drive which support CHS-only at hand.
-Maybe I can work on it first.
+        rq->errors = 0;
 
-  BTW, what items are required for the PATA lowlevel driver like pdc2027x
-to move out of the libata-dev tree to production tree? Do we have to finish all items?
+        if (!rq->bio)
+                goto out;
 
+        rq->sector = rq->bio->bi_sector;
+        rq->current_nr_sectors = bio_iovec(rq->bio)->bv_len >> 9;
+        rq->hard_cur_sectors = rq->current_nr_sectors;
+-       rq->buffer = NULL;
++       rq->buffer = bio_data(rq->bio);
+ out:
+        return ret;
+ }
 
-Albert
+ /**
+  *     ide_timer_expiry        -       handle lack of an IDE interrupt
+  *     @data: timer callback magic (hwgroup)
+  *
+  *     An IDE command has timed out before the expected drive return
+  *     occurred. At this point we attempt to clean up the current
 
------ Original Message ----- 
-From: "Jeff Garzik" <jgarzik@pobox.com>
-To: "Albert Lee" <albertcc@tw.ibm.com>
-Cc: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>; "IDE Linux" <linux-ide@vger.kernel.org>; "Doug Maxey" <dwm@maxeymade.com>;
-"Alan Cox" <alan@lxorguk.ukuu.org.uk>
-Sent: Wednesday, January 05, 2005 7:32 AM
-Subject: Re: libata PATA support - work items?
-
-
-> Albert Lee wrote:
-> > The following PATA work items were previously collected from the mailing list:
-> >     1. ATAPI
-> >        1.1 possibly avoid REPORT LUNS for ATAPI devices
-> >        1.2 when check condition occurs, automatically request sense inside
-> >             driver, and put that data into the sense buffer.
-> >        1.3 make INQUIRY report SCSI version MMC-3 (or later...)
-> >        1.4 support strange sector sizes
-> >     2. C/H/S addressing; libata currently hardcoded to use LBA
-> >     3. add PATA device errata/blacklist info
-> >    (Any missing items?)
-> >
-> > Need your advice, thanks.
->
-> Yes, this seems like an accurate list to me.
->
-> I would probably prioritize #3 as the most important, followed by C/H/S
-> support.
->
-> Jeff
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
 
