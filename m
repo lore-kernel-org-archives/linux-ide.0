@@ -1,136 +1,28 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: PATCH: add drive_to_key functions
-Date: Mon, 16 Aug 2004 19:12:26 +0200
+Subject: Re: PATCH: straighten out the IDE layer locking and add hotplug
+Date: Mon, 16 Aug 2004 19:23:19 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200408161912.26595.bzolnier@elka.pw.edu.pl>
-References: <20040815145844.GA10778@devserv.devel.redhat.com>
+Message-ID: <200408161923.19024.bzolnier@elka.pw.edu.pl>
+References: <20040815151346.GA13761@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:11507 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S267804AbUHPRSE
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:4340 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S267813AbUHPRXk
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Aug 2004 13:18:04 -0400
-In-Reply-To: <20040815145844.GA10778@devserv.devel.redhat.com>
+	Mon, 16 Aug 2004 13:23:40 -0400
+In-Reply-To: <20040815151346.GA13761@devserv.devel.redhat.com>
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@redhat.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 
-On Sunday 15 August 2004 16:58, Alan Cox wrote:
-> Clear new remove field
-> Clear pci_dev field on init
-> Add functions that allow us to keep persistent (reasonably so anyway) keys
-> 	not pointers to drive objects in the /proc file. Worst case is you
-> 	reload the driver 64K times and get the new data not an error.
-> Clean up ide_system_bus_speed docs
->
->
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude
-> linux.vanilla-2.6.8-rc3/drivers/ide/ide.c linux-2.6.8-rc3/drivers/ide/ide.c
-> --- linux.vanilla-2.6.8-rc3/drivers/ide/ide.c	2004-08-09 15:51:00.000000000
-> +0100 +++ linux-2.6.8-rc3/drivers/ide/ide.c	2004-08-12 17:55:05.000000000
-> +0100 @@ -219,12 +219,15 @@
->  	hwif->name[3]	= '0' + index;
->
->  	hwif->bus_state	= BUSSTATE_ON;
-> -
-> +
+On Sunday 15 August 2004 17:13, Alan Cox wrote:
+> There really isnt any sane way to break this patch down because all the
+> changes are interlinked so closely.
 
-whitespace damage
-
->  	hwif->atapi_dma = 0;		/* disable all atapi dma */
->  	hwif->ultra_mask = 0x80;	/* disable all ultra */
->  	hwif->mwdma_mask = 0x80;	/* disable all mwdma */
->  	hwif->swdma_mask = 0x80;	/* disable all swdma */
->
-> +	hwif->pci_dev = NULL;
-> +	hwif->remove = NULL;
-> +
-
-not needed - memsetting to zero is done earlier
-
->  	sema_init(&hwif->gendev_rel_sem, 0);
->
->  	default_hwif_iops(hwif);
-> @@ -321,12 +324,67 @@
->  }
->
->  /*
-> - * ide_system_bus_speed() returns what we think is the system VESA/PCI
-> - * bus speed (in MHz).  This is used for calculating interface PIO
-> timings. - * The default is 40 for known PCI systems, 50 otherwise.
-> - * The "idebus=xx" parameter can be used to override this value.
-> - * The actual value to be used is computed/displayed the first time
-> through. + *	ide_drive_from_key	-	turn key into drive
-> + *	@kval: persistent key
-> + *
-> + *	Convert a key into a drive. Currently the key is packed as
-> + *	[keyval] << 16 | hwif << 8 | drive_num. Caller must hold
-> + *	ide_settings_sem for the duration of the returned reference
-> + */
-> +
-> +ide_drive_t *ide_drive_from_key(void *kval)
-> +{
-> +	unsigned long key = (unsigned long) kval;
-> +	int idx = (key >> 8) & 0xFF;
-> +	int drive = key & 3;
-> +	ide_hwif_t *hwif = &ide_hwifs[idx];
-> +	ide_drive_t *ret;
-> +
-> +	key >>= 16;
-> +
-> +	if(hwif->configured == 0 || hwif->present == 0 ||
-> hwif->drives[drive].dead || hwif->key != key) +		ret = NULL;
-> +	else
-> +		ret = &ide_hwifs[idx].drives[drive];
-> +
-> +	return ret;
-> +}
-> +
-> +EXPORT_SYMBOL_GPL(ide_drive_from_key);
-> +
-> +/*
-> + *	ide_drive_to_key	-	turn drive to persistent key
-> + *	@drive: drive to use
-> + *
-> + *	Convert drive into a key. Currently the key is packed as
-> + *	[keyval] << 16 | hwif << 8 | drive_num. Caller must hold
-> + *	ide_settings_sem for the duration of the returned reference
->   */
-> +
-> +void *ide_drive_to_key(ide_drive_t *drive)
-> +{
-> +	ide_hwif_t *hwif = HWIF(drive);
-> +	unsigned long val;
-> +
-> +	val = (hwif->index << 8) | (hwif->key << 16) | drive->select.b.unit;
-> +	return (void *)val;
-> +}
-> +
-> +EXPORT_SYMBOL_GPL(ide_drive_to_key);
-
-AFAICS ide_drive_[from,to]_key are to be used only from ide-proc.c
-so EXPORT_SYMBOLs are not needed
-
-> +/**
-> + *	ide_system_bus_speed	-	guess bus speed
-> + *
-> + *	ide_system_bus_speed() returns what we think is the system VESA/PCI
-> + *	bus speed (in MHz).  This is used for calculating interface PIO
-> timings. + *	The default is 40 for known PCI systems, 50 otherwise.
-> + *	The "idebus=xx" parameter can be used to override this value.
-> + *	The actual value to be used is computed/displayed the first time
-> + *	through. Drivers should only use this as a last resort.
-> + *
-> + *	Returns a guessed speed in Mhz
-> + */
-> +
->  int ide_system_bus_speed (void)
->  {
->  	if (!system_bus_speed) {
->
-
-This change belongs to "ide DocBook fixes" patch.
+at least /proc/ide/hd?/settings:ide-scsi removal and doc fixes are very easy 
+to separate, I also think that locking fixes should be separated from 
+hotplugging ones
