@@ -1,468 +1,52 @@
 From: Oliver Bausinger <bausi@bausi.org>
-Subject: Re: sata_sil problems (lockup at boottime)
-Date: Sun, 5 Dec 2004 09:08:32 +0100
-Message-ID: <200412050908.33124.bausi@bausi.org>
-References: <41B2499E.1080905@nv-systems.net>
+Subject: siimage annoyance (was: ata_sil problems (lockup at boottime))
+Date: Sun, 5 Dec 2004 15:15:34 +0100
+Message-ID: <200412051515.34666.bausi@bausi.org>
+References: <41B2499E.1080905@nv-systems.net> <200412050908.33124.bausi@bausi.org>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_BIssB9U3QPT2oRH"
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from everest.mathematik.uni-tuebingen.de ([134.2.62.220]:26585 "EHLO
+Received: from everest.mathematik.uni-tuebingen.de ([134.2.62.220]:12257 "EHLO
 	everest.mathematik.uni-tuebingen.de") by vger.kernel.org with ESMTP
-	id S261279AbULEILV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 5 Dec 2004 03:11:21 -0500
-In-Reply-To: <41B2499E.1080905@nv-systems.net>
+	id S261305AbULEOP5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 5 Dec 2004 09:15:57 -0500
+In-Reply-To: <200412050908.33124.bausi@bausi.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Gerald Hopf <gerald.hopf@nv-systems.net>
 
---Boundary-00=_BIssB9U3QPT2oRH
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Replying to myself after more experimentation:
 
-Hi,
-
-On Sunday 05 December 2004 00:34, you wrote:
-> Hello everyone,
+> [The other possible thing to do is to use the siimage driver in
+> drivers/ide, but this one stopped working with 2.6.8 and further. The
+> siimage driver works quite good with 2.6.7, so this is another proof for no
+> hardware problems]
 >
-> i'm having some really strange problems with the sata_sil driver.
->
-> My hardware:
-> Asus A7N8X Deluxe Rev 1.x with onboard Sil3112 Controller
-> - Samsung SP1614C SATA Harddrive
-> - for further testing : PATA to SATA Adapter that came with an ABIT
-> Mainboard
 
-I have the same problem with this hardware. The harddisk is a SAMSUNG SP1614C 
-again and the controller is this one:
+Ok, support for the deprected siimage driver has to be explicitly enabled  
+unter drivers/ide (CONFIG_BLK_DEV_IDE_SATA). Then it recognizes the chipset 
+and seems to work so far.
 
-0000:00:0a.0 Unknown mass storage controller: Silicon Image, Inc. (formerly 
-CMD Technology Inc) SiI 3112 [SATALink/SATARaid] Serial ATA Controller (rev 
-01)
-        Subsystem: Silicon Image, Inc. (formerly CMD Technology Inc) SiI 3112 
-[SATALink/SATARaid] Serial ATA Controller
-        Flags: bus master, 66MHz, medium devsel, latency 32, IRQ 5
-        I/O ports at a000 [size=8]
-        I/O ports at 9800 [size=4]
-        I/O ports at 9400 [size=8]
-        I/O ports at 9000 [size=4]
-        I/O ports at 8800 [size=16]
-        Memory at e2000000 (32-bit, non-prefetchable)
+The only annoyance is that the driver hangs for some seconds probing the 
+second port (which is unused):
 
-Trying to insert the sata_sil module on 2.6.{7,8,9,10-rc3} gives
-
-libata version 1.10 loaded.
-sata_sil version 0.8
+SiI3112 Serial ATA: IDE controller at PCI slot 0000:00:0a.0
 PCI: Found IRQ 5 for device 0000:00:0a.0
-ata1: SATA max UDMA/100 cmd 0xD0800080 ctl 0xD080008A bmdma 0xD0800000 irq 5
-ata2: SATA max UDMA/100 cmd 0xD08000C0 ctl 0xD08000CA bmdma 0xD0800008 irq 5
-irq 5: nobody cared!
- [<c012e5aa>] __report_bad_irq+0x2a/0x90
- [<c012df60>] handle_IRQ_event+0x30/0x70
- [<c012e69c>] note_interrupt+0x6c/0xd0
- [<c012e0d0>] __do_IRQ+0x130/0x160
- [<c01042b9>] do_IRQ+0x19/0x30
- [<c0102896>] common_interrupt+0x1a/0x20
- [<c0117ab0>] __do_softirq+0x30/0x90
- [<c0117b36>] do_softirq+0x26/0x30
- [<c012df24>] irq_exit+0x34/0x40
- [<c01042be>] do_IRQ+0x1e/0x30
- [<c0102896>] common_interrupt+0x1a/0x20
- [<c01005f0>] default_idle+0x0/0x30
- [<c0100613>] default_idle+0x23/0x30
- [<c010068a>] cpu_idle+0x3a/0x60
- [<c032678d>] start_kernel+0x16d/0x1b0
- [<c0326360>] unknown_bootoption+0x0/0x1b0
-handlers:
-[<d0962490>] (ata_interrupt+0x0/0x1c0 [libata])
-Disabling IRQ #5
-ata1: dev 0 cfg 49:2f00 82:346b 83:7f01 84:4003 85:3c68 86:3c01 87:4003 
-88:20ff
-ata1: dev 0 ATA, max UDMA7, 312581808 sectors: lba48
+SiI3112 Serial ATA: chipset revision 1
+SiI3112 Serial ATA: 100% native mode on irq 5
+    ide2: MMIO-DMA , BIOS settings: hde:DMA, hdf:DMA
+    ide3: MMIO-DMA , BIOS settings: hdg:pio, hdh:pio
+Probing IDE interface ide2...
+hde: SAMSUNG SP1614C, ATA DISK drive
+ide2 at 0xd0800080-0xd0800087,0xd080008a on irq 5
+Probing IDE interface ide3...
+hdg: no response (status = 0xfe)
 
+But one can live with that.
 
-I think I can rule out hardware problems because a FreeBSD 5.3 install
-worked flawlessly on this disk. 
-
-
-[The other possible thing to do is to use the siimage driver in drivers/ide,
-but this one stopped working with 2.6.8 and further. The siimage driver works
-quite good with 2.6.7, so this is another proof for no hardware problems]
-
-> This problem has been there in all of the latest 2.6.X kernel revisions.
-> I'm currently using 2.6.10-rc3 (which came out today), but i've allready
-> had this problem in 2.6.9 and 2.6.8 and probably even 2.6.7 if i
-> remember correctly.
->
-> I tried quite a lot to get rid of those problems, including:
-> - Flashing a new/different Bios (even with different versions of the
-> Silicon Image SATA Bios part: 4.2.47 and 4.2.50)
-
-Where did you get it? URL?
-
-> - Disabling APIC in the Bios, compiling Kernel with or without APIC
-
-Did the same without result. I also disabled ACPI without any effect on the 
-problem.
-
-> - Changing the IRQ of the Controller by reserving IRQ#11 in the Bios
-
-My controller's irq is unshared.
-
-> Is there ANYTHING i can do (except buying a promise controller) ?
->
-
-I truly hope so.
-
-Greetings,
+Greetings
 Bausi
-
-
-P.S.: For reference, I append my kernel configuration
-
-
---Boundary-00=_BIssB9U3QPT2oRH
-Content-Type: text/plain;
-  charset="utf-8";
-  name="kernel-config"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="kernel-config"
-
-bausi@camino:~$ cat /boot/config-2.6.10-rc3  | grep -v ^# | grep -v ^$
-CONFIG_X86=y
-CONFIG_MMU=y
-CONFIG_UID16=y
-CONFIG_GENERIC_ISA_DMA=y
-CONFIG_GENERIC_IOMAP=y
-CONFIG_EXPERIMENTAL=y
-CONFIG_BROKEN=y
-CONFIG_BROKEN_ON_SMP=y
-CONFIG_LOCK_KERNEL=y
-CONFIG_LOCALVERSION=""
-CONFIG_SWAP=y
-CONFIG_SYSVIPC=y
-CONFIG_POSIX_MQUEUE=y
-CONFIG_BSD_PROCESS_ACCT=y
-CONFIG_SYSCTL=y
-CONFIG_LOG_BUF_SHIFT=14
-CONFIG_HOTPLUG=y
-CONFIG_KOBJECT_UEVENT=y
-CONFIG_EMBEDDED=y
-CONFIG_KALLSYMS=y
-CONFIG_FUTEX=y
-CONFIG_EPOLL=y
-CONFIG_SHMEM=y
-CONFIG_CC_ALIGN_FUNCTIONS=0
-CONFIG_CC_ALIGN_LABELS=0
-CONFIG_CC_ALIGN_LOOPS=0
-CONFIG_CC_ALIGN_JUMPS=0
-CONFIG_MODULES=y
-CONFIG_MODULE_UNLOAD=y
-CONFIG_MODULE_FORCE_UNLOAD=y
-CONFIG_OBSOLETE_MODPARM=y
-CONFIG_MODVERSIONS=y
-CONFIG_KMOD=y
-CONFIG_X86_PC=y
-CONFIG_MK7=y
-CONFIG_X86_CMPXCHG=y
-CONFIG_X86_XADD=y
-CONFIG_X86_L1_CACHE_SHIFT=6
-CONFIG_RWSEM_XCHGADD_ALGORITHM=y
-CONFIG_X86_WP_WORKS_OK=y
-CONFIG_X86_INVLPG=y
-CONFIG_X86_BSWAP=y
-CONFIG_X86_POPAD_OK=y
-CONFIG_X86_GOOD_APIC=y
-CONFIG_X86_INTEL_USERCOPY=y
-CONFIG_X86_USE_PPRO_CHECKSUM=y
-CONFIG_X86_USE_3DNOW=y
-CONFIG_HPET_TIMER=y
-CONFIG_PREEMPT=y
-CONFIG_X86_TSC=y
-CONFIG_X86_MCE=y
-CONFIG_X86_MCE_NONFATAL=m
-CONFIG_MICROCODE=m
-CONFIG_X86_MSR=m
-CONFIG_X86_CPUID=m
-CONFIG_EDD=m
-CONFIG_HIGHMEM4G=y
-CONFIG_HIGHMEM=y
-CONFIG_MTRR=y
-CONFIG_HAVE_DEC_LOCK=y
-CONFIG_PM=y
-CONFIG_ACPI_BLACKLIST_YEAR=2001
-CONFIG_APM=m
-CONFIG_PCI=y
-CONFIG_PCI_GOANY=y
-CONFIG_PCI_BIOS=y
-CONFIG_PCI_DIRECT=y
-CONFIG_PCI_NAMES=y
-CONFIG_BINFMT_ELF=y
-CONFIG_BINFMT_AOUT=m
-CONFIG_BINFMT_MISC=m
-CONFIG_STANDALONE=y
-CONFIG_PREVENT_FIRMWARE_BUILD=y
-CONFIG_FW_LOADER=m
-CONFIG_PARPORT=m
-CONFIG_PARPORT_PC=m
-CONFIG_PARPORT_PC_CML1=m
-CONFIG_PARPORT_SERIAL=m
-CONFIG_PARPORT_PC_FIFO=y
-CONFIG_PARPORT_1284=y
-CONFIG_BLK_DEV_FD=m
-CONFIG_BLK_DEV_LOOP=m
-CONFIG_BLK_DEV_CRYPTOLOOP=m
-CONFIG_BLK_DEV_NBD=m
-CONFIG_BLK_DEV_RAM=y
-CONFIG_BLK_DEV_RAM_COUNT=16
-CONFIG_BLK_DEV_RAM_SIZE=8192
-CONFIG_BLK_DEV_INITRD=y
-CONFIG_INITRAMFS_SOURCE=""
-CONFIG_LBD=y
-CONFIG_CDROM_PKTCDVD=m
-CONFIG_CDROM_PKTCDVD_BUFFERS=8
-CONFIG_IOSCHED_NOOP=y
-CONFIG_IOSCHED_AS=y
-CONFIG_IOSCHED_DEADLINE=y
-CONFIG_IOSCHED_CFQ=y
-CONFIG_IDE=y
-CONFIG_BLK_DEV_IDE=y
-CONFIG_BLK_DEV_IDEDISK=y
-CONFIG_BLK_DEV_IDECD=m
-CONFIG_BLK_DEV_IDETAPE=m
-CONFIG_BLK_DEV_IDEFLOPPY=m
-CONFIG_BLK_DEV_IDESCSI=m
-CONFIG_IDE_GENERIC=m
-CONFIG_BLK_DEV_CMD640=y
-CONFIG_BLK_DEV_IDEPCI=y
-CONFIG_IDEPCI_SHARE_IRQ=y
-CONFIG_BLK_DEV_GENERIC=y
-CONFIG_BLK_DEV_IDEDMA_PCI=y
-CONFIG_IDEDMA_PCI_AUTO=y
-CONFIG_BLK_DEV_PDC202XX_OLD=m
-CONFIG_PDC202XX_BURST=y
-CONFIG_BLK_DEV_SIIMAGE=m
-CONFIG_BLK_DEV_VIA82CXXX=y
-CONFIG_BLK_DEV_IDEDMA=y
-CONFIG_IDEDMA_AUTO=y
-CONFIG_SCSI=y
-CONFIG_SCSI_PROC_FS=y
-CONFIG_BLK_DEV_SD=y
-CONFIG_CHR_DEV_SG=y
-CONFIG_SCSI_MULTI_LUN=y
-CONFIG_SCSI_CONSTANTS=y
-CONFIG_SCSI_LOGGING=y
-CONFIG_SCSI_SPI_ATTRS=m
-CONFIG_SCSI_FC_ATTRS=m
-CONFIG_SCSI_SATA=y
-CONFIG_SCSI_SATA_SIL=m
-CONFIG_SCSI_QLA2XXX=y
-CONFIG_SCSI_DEBUG=m
-CONFIG_MD=y
-CONFIG_BLK_DEV_MD=m
-CONFIG_MD_LINEAR=m
-CONFIG_MD_RAID0=m
-CONFIG_MD_RAID1=m
-CONFIG_MD_RAID10=m
-CONFIG_MD_RAID5=m
-CONFIG_MD_RAID6=m
-CONFIG_MD_MULTIPATH=m
-CONFIG_BLK_DEV_DM=m
-CONFIG_DM_CRYPT=m
-CONFIG_DM_SNAPSHOT=m
-CONFIG_DM_MIRROR=m
-CONFIG_DM_ZERO=m
-CONFIG_NET=y
-CONFIG_PACKET=m
-CONFIG_PACKET_MMAP=y
-CONFIG_NETLINK_DEV=m
-CONFIG_UNIX=m
-CONFIG_NET_KEY=m
-CONFIG_INET=y
-CONFIG_SYN_COOKIES=y
-CONFIG_INET_AH=m
-CONFIG_INET_ESP=m
-CONFIG_INET_IPCOMP=m
-CONFIG_INET_TUNNEL=m
-CONFIG_IP_TCPDIAG=y
-CONFIG_XFRM=y
-CONFIG_NETDEVICES=y
-CONFIG_DUMMY=m
-CONFIG_TUN=m
-CONFIG_NET_ETHERNET=y
-CONFIG_MII=m
-CONFIG_NET_PCI=y
-CONFIG_8139TOO=m
-CONFIG_8139TOO_PIO=y
-CONFIG_8139TOO_TUNE_TWISTER=y
-CONFIG_8139TOO_8129=y
-CONFIG_INPUT=y
-CONFIG_INPUT_MOUSEDEV=m
-CONFIG_INPUT_MOUSEDEV_PSAUX=y
-CONFIG_INPUT_MOUSEDEV_SCREEN_X=1024
-CONFIG_INPUT_MOUSEDEV_SCREEN_Y=768
-CONFIG_INPUT_JOYDEV=m
-CONFIG_INPUT_TSDEV=m
-CONFIG_INPUT_TSDEV_SCREEN_X=240
-CONFIG_INPUT_TSDEV_SCREEN_Y=320
-CONFIG_INPUT_EVDEV=m
-CONFIG_INPUT_EVBUG=m
-CONFIG_SOUND_GAMEPORT=y
-CONFIG_SERIO=y
-CONFIG_SERIO_I8042=y
-CONFIG_SERIO_SERPORT=m
-CONFIG_SERIO_CT82C710=m
-CONFIG_SERIO_PARKBD=m
-CONFIG_SERIO_PCIPS2=m
-CONFIG_SERIO_RAW=m
-CONFIG_INPUT_KEYBOARD=y
-CONFIG_KEYBOARD_ATKBD=y
-CONFIG_INPUT_MOUSE=y
-CONFIG_MOUSE_PS2=m
-CONFIG_MOUSE_SERIAL=m
-CONFIG_INPUT_MISC=y
-CONFIG_INPUT_PCSPKR=m
-CONFIG_VT=y
-CONFIG_VT_CONSOLE=y
-CONFIG_HW_CONSOLE=y
-CONFIG_SERIAL_8250=y
-CONFIG_SERIAL_8250_CONSOLE=y
-CONFIG_SERIAL_8250_NR_UARTS=4
-CONFIG_SERIAL_8250_EXTENDED=y
-CONFIG_SERIAL_8250_MANY_PORTS=y
-CONFIG_SERIAL_8250_SHARE_IRQ=y
-CONFIG_SERIAL_8250_MULTIPORT=y
-CONFIG_SERIAL_8250_RSA=y
-CONFIG_SERIAL_CORE=y
-CONFIG_SERIAL_CORE_CONSOLE=y
-CONFIG_UNIX98_PTYS=y
-CONFIG_LEGACY_PTYS=y
-CONFIG_LEGACY_PTY_COUNT=256
-CONFIG_PRINTER=m
-CONFIG_PPDEV=m
-CONFIG_HW_RANDOM=m
-CONFIG_NVRAM=m
-CONFIG_RTC=m
-CONFIG_GEN_RTC=m
-CONFIG_GEN_RTC_X=y
-CONFIG_AGP=m
-CONFIG_AGP_VIA=m
-CONFIG_DRM=y
-CONFIG_DRM_MGA=m
-CONFIG_HANGCHECK_TIMER=m
-CONFIG_VIDEO_SELECT=y
-CONFIG_VGA_CONSOLE=y
-CONFIG_DUMMY_CONSOLE=y
-CONFIG_SOUND=m
-CONFIG_SND=m
-CONFIG_SND_TIMER=m
-CONFIG_SND_PCM=m
-CONFIG_SND_RAWMIDI=m
-CONFIG_SND_OSSEMUL=y
-CONFIG_SND_MIXER_OSS=m
-CONFIG_SND_PCM_OSS=m
-CONFIG_SND_RTCTIMER=m
-CONFIG_SND_MPU401_UART=m
-CONFIG_SND_AC97_CODEC=m
-CONFIG_SND_ENS1371=m
-CONFIG_SND_VIA82XX=m
-CONFIG_USB=m
-CONFIG_USB_DEVICEFS=y
-CONFIG_USB_BANDWIDTH=y
-CONFIG_USB_ARCH_HAS_HCD=y
-CONFIG_USB_ARCH_HAS_OHCI=y
-CONFIG_USB_EHCI_HCD=m
-CONFIG_USB_EHCI_SPLIT_ISO=y
-CONFIG_USB_EHCI_ROOT_HUB_TT=y
-CONFIG_USB_OHCI_HCD=m
-CONFIG_USB_UHCI_HCD=m
-CONFIG_USB_STORAGE=m
-CONFIG_USB_HID=m
-CONFIG_USB_HIDINPUT=y
-CONFIG_USB_HIDDEV=y
-CONFIG_USB_KBD=m
-CONFIG_USB_MOUSE=m
-CONFIG_EXT2_FS=y
-CONFIG_EXT2_FS_XATTR=y
-CONFIG_EXT2_FS_POSIX_ACL=y
-CONFIG_EXT2_FS_SECURITY=y
-CONFIG_EXT3_FS=y
-CONFIG_EXT3_FS_XATTR=y
-CONFIG_EXT3_FS_POSIX_ACL=y
-CONFIG_EXT3_FS_SECURITY=y
-CONFIG_JBD=y
-CONFIG_JBD_DEBUG=y
-CONFIG_FS_MBCACHE=y
-CONFIG_FS_POSIX_ACL=y
-CONFIG_DNOTIFY=y
-CONFIG_ISO9660_FS=m
-CONFIG_JOLIET=y
-CONFIG_ZISOFS=y
-CONFIG_ZISOFS_FS=m
-CONFIG_UDF_FS=m
-CONFIG_UDF_NLS=y
-CONFIG_FAT_FS=m
-CONFIG_MSDOS_FS=m
-CONFIG_VFAT_FS=m
-CONFIG_FAT_DEFAULT_CODEPAGE=437
-CONFIG_FAT_DEFAULT_IOCHARSET="iso8859-1"
-CONFIG_NTFS_FS=m
-CONFIG_NTFS_RW=y
-CONFIG_PROC_FS=y
-CONFIG_PROC_KCORE=y
-CONFIG_SYSFS=y
-CONFIG_DEVPTS_FS_XATTR=y
-CONFIG_DEVPTS_FS_SECURITY=y
-CONFIG_TMPFS=y
-CONFIG_RAMFS=y
-CONFIG_SMB_FS=m
-CONFIG_CIFS=m
-CONFIG_MSDOS_PARTITION=y
-CONFIG_NLS=y
-CONFIG_NLS_DEFAULT="cp437"
-CONFIG_NLS_CODEPAGE_437=m
-CONFIG_NLS_CODEPAGE_850=m
-CONFIG_NLS_ASCII=m
-CONFIG_NLS_ISO8859_1=m
-CONFIG_NLS_ISO8859_15=m
-CONFIG_NLS_UTF8=m
-CONFIG_SECURITY=y
-CONFIG_SECURITY_CAPABILITIES=y
-CONFIG_SECURITY_ROOTPLUG=m
-CONFIG_CRYPTO=y
-CONFIG_CRYPTO_HMAC=y
-CONFIG_CRYPTO_NULL=m
-CONFIG_CRYPTO_MD4=m
-CONFIG_CRYPTO_MD5=m
-CONFIG_CRYPTO_SHA1=m
-CONFIG_CRYPTO_SHA256=m
-CONFIG_CRYPTO_SHA512=m
-CONFIG_CRYPTO_WP512=m
-CONFIG_CRYPTO_DES=m
-CONFIG_CRYPTO_BLOWFISH=m
-CONFIG_CRYPTO_TWOFISH=m
-CONFIG_CRYPTO_SERPENT=m
-CONFIG_CRYPTO_AES_586=m
-CONFIG_CRYPTO_CAST5=m
-CONFIG_CRYPTO_CAST6=m
-CONFIG_CRYPTO_TEA=m
-CONFIG_CRYPTO_ARC4=m
-CONFIG_CRYPTO_KHAZAD=m
-CONFIG_CRYPTO_ANUBIS=m
-CONFIG_CRYPTO_DEFLATE=m
-CONFIG_CRYPTO_MICHAEL_MIC=m
-CONFIG_CRYPTO_CRC32C=m
-CONFIG_CRC_CCITT=m
-CONFIG_CRC32=m
-CONFIG_LIBCRC32C=m
-CONFIG_ZLIB_INFLATE=m
-CONFIG_ZLIB_DEFLATE=m
-CONFIG_GENERIC_HARDIRQS=y
-CONFIG_GENERIC_IRQ_PROBE=y
-CONFIG_X86_BIOS_REBOOT=y
-
---Boundary-00=_BIssB9U3QPT2oRH--
