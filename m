@@ -1,44 +1,66 @@
-From: Marco Trevisan <trevisan@ost.it>
-Subject: sata_via broken?
-Date: Mon, 15 Dec 2003 19:12:46 +0100
+From: Mickael Marchand <marchand@kde.org>
+Subject: adaptec 1210sa, lost interrupt
+Date: Thu, 18 Dec 2003 00:49:00 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <3FDDF99E.1080107@ost.it>
+Message-ID: <200312180049.09951.marchand@kde.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [212.103.193.198] ([212.103.193.198]:23046 "EHLO mail.ost.lan")
-	by vger.kernel.org with ESMTP id S263886AbTLOSLY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Dec 2003 13:11:24 -0500
-Received: from localhost (mail-cvs [127.0.0.1])
-	by mail.ost.lan (Postfix) with ESMTP id E754A2C354
-	for <linux-ide@vger.kernel.org>; Mon, 15 Dec 2003 19:11:22 +0100 (CET)
-Received: from ost.it (nb-marco.ost.lan [10.2.1.92])
-	by mail.ost.lan (Postfix) with ESMTP id CC6042C34C
-	for <linux-ide@vger.kernel.org>; Mon, 15 Dec 2003 19:11:13 +0100 (CET)
+Received: from alhya.freenux.org ([213.41.137.38]:12416 "EHLO
+	moria.freenux.org") by vger.kernel.org with ESMTP id S264868AbTLQXsj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Dec 2003 18:48:39 -0500
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Hello all,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I'm experiencing problems in having the vt8237 S-ATA controller working
-properly on my board (MSI KT6-Delta).
-I'm running 2.6.0-test11-bk10 (distro: Debian 'testing').
-After browsing the list archive, I found something about this problem
-(threads: "SATA and 2.6.0-test9"and "Linux 2.6.0-test9"), but no solution...
-I then surfed the net and it seems that there is a patch for 2.4.22
-kernels (I don't know wether it works or not).
+Hi,
 
-So my questions are:
-1) is this issue to be resolved shortly in 2.6.0-testX ?
-2) Which SATA PCI controller is known to work properly under 2.6.0-test11 ?
+anyone has a small idea of what to do to make it work ?
+I tried both siimage and sata_sil (libata) with it, all got locked with 
+interrupt/dma stuff with 2.4/2.6 latest patches, noapic noacpi (dma 
+enabled/disabled)
 
-The machine is currently under testing, so I can try experimental
-patches if it can help the process.
+I feel pretty curious on the fact that the 2 channels wants to use the same 
+IRQ and it tries to share it with another device (on my K7 it tried to share 
+IRQ 5 with my soundcard, so i removed the soundcard but that did not help 
+either).
+Maybe I am wrong, but it looks really strange to me that both channels use the 
+same IRQ and I wonder if the channels are conflicting with each other.
 
-Thanks in advance for any reply.
+I tried also to disable the share IDE interrupts in kernel, but it does not 
+seem to change anything.
 
-     Marco Trevisan
+So if you have ideas/comments about it, I can try them ...
 
+maybe I will try to disable one of the ports and see if that helps.
 
+Dec 17 14:25:46 moria kernel: Adaptec AAR-1210SA: IDE controller at PCI slot 
+0000:00:11.0
+Dec 17 14:25:46 moria kernel: PCI: Found IRQ 5 for device 0000:00:11.0
+Dec 17 14:25:46 moria kernel: PCI: Sharing IRQ 5 with 0000:00:0b.0
+Dec 17 14:25:46 moria kernel: Adaptec AAR-1210SA: chipset revision 2
+Dec 17 14:25:46 moria kernel: Adaptec AAR-1210SA: 100%% native mode on irq 5
+Dec 17 14:25:46 moria kernel:     ide2: MMIO-DMA at 0xd09b9e00-0xd09b9e07, 
+BIOS settings: hde:pio, hdf:pio
+Dec 17 14:25:46 moria kernel:     ide3: MMIO-DMA at 0xd09b9e08-0xd09b9e0f, 
+BIOS settings: hdg:pio, hdh:pio
+Dec 17 14:25:46 moria kernel: hde: ST3120026AS, ATA DISK drive
 
+please CC me.
+
+cheers,
+Mik
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQE/4OtwyOYzc4nQ8j0RAg9tAKCZ/iS0U/RhafUgYwyv6jcZa9DyrACeIKX1
+KjYHUaeWsMZvc0yG3y5JBfo=
+=swKN
+-----END PGP SIGNATURE-----
