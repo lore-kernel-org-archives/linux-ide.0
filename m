@@ -1,17 +1,17 @@
 From: Amit Gud <gud@eth.net>
-Subject: Re: [PATCH 22/91] get rid of	pci_find_{device,subsys}drivers/ide/pci/pdc202xx_new.c
-Date: Wed, 30 Mar 2005 15:59:10 +0530
-Message-ID: <424A7F76.5010502@eth.net>
-References: <ITPXCHFE1HRjGLinwB300002080@itpxchfe1.enterprise.veritas.com>
+Subject: Re: [PATCH 21/91] get rid of	pci_find_{device,subsys}drivers/ide/pci/hpt366.c
+Date: Wed, 30 Mar 2005 15:59:36 +0530
+Message-ID: <424A7F90.5070708@eth.net>
+References: <ITPXCHFE1b2X5YqE1L70000207f@itpxchfe1.enterprise.veritas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bay-bridge.veritas.com ([143.127.3.10]:62764 "EHLO
-	MTVMIME03.enterprise.veritas.com") by vger.kernel.org with ESMTP
-	id S261848AbVC3KXr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Mar 2005 05:23:47 -0500
-In-Reply-To: <ITPXCHFE1HRjGLinwB300002080@itpxchfe1.enterprise.veritas.com>
+Received: from bay-bridge.veritas.com ([143.127.3.10]:54319 "EHLO
+	MTVMIME01.enterprise.veritas.com") by vger.kernel.org with ESMTP
+	id S261846AbVC3KYN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Mar 2005 05:24:13 -0500
+In-Reply-To: <ITPXCHFE1b2X5YqE1L70000207f@itpxchfe1.enterprise.veritas.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "Amit S. Gud" <gud@eth.net>, greg@kroah.com
