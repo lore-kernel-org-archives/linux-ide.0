@@ -1,39 +1,42 @@
-From: Brad Campbell <brad@wasp.net.au>
+From: Andy Warner <andyw@pobox.com>
 Subject: Re: [SATA] status report, libata-dev queue updated
-Date: Fri, 05 Nov 2004 23:04:51 +0400
-Message-ID: <418BCED3.1030600@wasp.net.au>
-References: <20041105100049.GA31653@havoc.gtf.org>
+Date: Fri, 5 Nov 2004 13:26:13 -0600
+Message-ID: <20041105132613.A30910@florence.linkmargin.com>
+References: <20041105100049.GA31653@havoc.gtf.org> <418BCED3.1030600@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:44516 "EHLO wasp.net.au")
-	by vger.kernel.org with ESMTP id S261163AbUKETEH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Nov 2004 14:04:07 -0500
-In-Reply-To: <20041105100049.GA31653@havoc.gtf.org>
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:11757 "EHLO
+	ms-smtp-02.rdc-kc.rr.com") by vger.kernel.org with ESMTP
+	id S261163AbUKET15 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 Nov 2004 14:27:57 -0500
+Content-Disposition: inline
+In-Reply-To: <418BCED3.1030600@wasp.net.au>; from brad@wasp.net.au on Fri, Nov 05, 2004 at 11:04:51PM +0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jeff Garzik wrote:
+Brad Campbell wrote:
+> [...]
+> Read that as "I have tried really, really hard to break it and as yet been unable to".
 
-> <andyw:pobox.com>:
->   o [libata scsi] support 12-byte passthru CDB
->   o [libata scsi] passthru CDB check condition processing
->   o T10/04-262 ATA pass thru - patch
-> 
-> 
-> John W. Linville:
->   o libata: SMART support via ATA pass-thru
+Is your system SMP ? I'm actively tracking a problem now with
+pass-thru behaviour (via /dev/sg* ) on SMP systems.
 
-I'll just add a big ack for these two patches. I have been using these extensively now for a couple 
-of weeks on a 14 drive array spread over 12 Maxtor Drives on Promise SATA150TX4 Controllers and 1 
-WD2500BB on a VIA controller by way of an SIL PATA->SATA bridge polling all drives hourly for full 
-SMART stats and running daily self tests while also testing heavy drive usage patterns and manual 
-SMART polling and have not encountered any data corruption.
+Symptom is a system freeze after a few messages like
+this:
 
-Read that as "I have tried really, really hard to break it and as yet been unable to".
+ata3: command 0x34 timeout, stat 0x58 host_stat 0x0
+ata2: command 0x24 timeout, stat 0x58 host_stat 0x0
+ata3: status=0x58 { DriveReady SeekComplete <4>ATA: abnormal status 0x58 on port 0xF8A3CCC7
+ata2: status=0x58 { DriveReady SeekComplete DataRequest }
+DataReq
 
-Regards,
-Brad
+This particular example is of a Read Sectors command pending
+on one drive and Write Sectors on another. Don't know if it
+is the pio state machine not being SMP-safe, or what just yet.
+-- 
+andyw@pobox.com
+
+Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
