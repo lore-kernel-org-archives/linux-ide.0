@@ -1,29 +1,66 @@
-From: "Kien Pham" <kienca@lycos.com>
-Subject: ATAPI Support Broken
-Date: Tue, 11 Jan 2005 22:35:13 -0500
-Message-ID: <20050112033513.F01CFCA07A@ws7-4.us4.outblaze.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [BK PATCH] 2.6.x libata update
+Date: Wed, 12 Jan 2005 01:34:04 -0500
+Message-ID: <41E4C4DC.3070901@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------060109020200040804000902"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from webmail-outgoing.us4.outblaze.com ([205.158.62.67]:37770 "EHLO
-	webmail-outgoing.us4.outblaze.com") by vger.kernel.org with ESMTP
-	id S261354AbVALDfY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jan 2005 22:35:24 -0500
-Received: from wfilter.us4.outblaze.com (wfilter.us4.outblaze.com [205.158.62.180])
-	by webmail-outgoing.us4.outblaze.com (Postfix) with QMQP id 21A4E18001CE
-	for <linux-ide@vger.kernel.org>; Wed, 12 Jan 2005 03:35:23 +0000 (GMT)
-Content-Disposition: inline
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:25480 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261256AbVALGeX
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 12 Jan 2005 01:34:23 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Tried SATA (libata) ATAPI support on both an Intel ICH 5 chipset and a Silicon Image 3112 chipset. Seems to lockup at the same place. Debug dumps from dmesg available on request. Any hints on how to proceed to debug would be appreciated.
+This is a multi-part message in MIME format.
+--------------060109020200040804000902
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-~K.P.
--- 
-_______________________________________________
-Find what you are looking for with the Lycos Yellow Pages
-http://r.lycos.com/r/yp_emailfooter/http://yellowpages.lycos.com/default.asp?SRC=lycos10
 
+--------------060109020200040804000902
+Content-Type: text/plain;
+ name="changelog.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="changelog.txt"
+
+Please do a
+
+	bk pull bk://gkernel.bkbits.net/libata-2.6
+
+This will update the following files:
+
+ drivers/scsi/sata_sil.c |    2 ++
+ 1 files changed, 2 insertions(+)
+
+through these ChangeSets:
+
+<fli@ati.com> (05/01/12 1.2504)
+   [libata sata_sil] support ATI IXP300/IXP400 SATA
+
+
+--------------060109020200040804000902
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff -Nru a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+--- a/drivers/scsi/sata_sil.c	2005-01-12 01:07:04 -05:00
++++ b/drivers/scsi/sata_sil.c	2005-01-12 01:07:04 -05:00
+@@ -71,6 +71,8 @@
+ 	{ 0x1095, 0x0240, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
+ 	{ 0x1095, 0x3512, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
+ 	{ 0x1095, 0x3114, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3114 },
++	{ 0x1002, 0x436e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
++	{ 0x1002, 0x4379, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
+ 	{ }	/* terminate list */
+ };
+ 
+
+--------------060109020200040804000902--
