@@ -1,63 +1,71 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] 2.4 IDE core for 2.5
-Date: Wed, 10 Jul 2002 07:43:56 +0200
+Subject: [PATCH] 2.4 IDE core for 2.5, #2 (was Re: [PATCH] 2.4 IDE core for 2.5)
+Date: Wed, 10 Jul 2002 13:11:15 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20020710054356.GE3185@suse.de>
-References: <20020709102249.GA20870@suse.de> <20020709200711.GA13401@win.tue.nl>
+Message-ID: <20020710111115.GJ3185@suse.de>
+References: <20020709102249.GA20870@suse.de> <20020709200711.GA13401@win.tue.nl> <20020710054356.GE3185@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20020709200711.GA13401@win.tue.nl>
+In-Reply-To: <20020710054356.GE3185@suse.de>
 List-Id: linux-ide@vger.kernel.org
 To: Andries Brouwer <aebr@win.tue.nl>
 Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Tue, Jul 09 2002, Andries Brouwer wrote:
-> On Tue, Jul 09, 2002 at 12:22:49PM +0200, Jens Axboe wrote:
+On Wed, Jul 10 2002, Jens Axboe wrote:
+> > This afternoon I booted 2.5.25 with your patches and two more,
+> > one to prevent an oops when shutting down, the other to fix
+> > ethernet cards detection. Started torturing two disks on
+> > HPT366. After 3 minutes
+> > 
+> > 	hde: status error: status=0x50 { DriveReady SeekComplete }
+> > 	hde: no DRQ after issuing WRITE
+> > 
+> > and seven minutes later
+> > 
+> > 	hde: task_out_intr: status=0x51 { DriveReady SeekComplete Error }
+> > 	hde: task_out_intr: error=0x04 { DriveStatusError }
+> > 
+> > Soon lots of processes were hanging in D. Reboot. e2fsck.
 > 
-> > I've forward ported the 2.4 IDE core to 2.5.25.
-> 
-> Very good!
-> 
-> There are two kinds of objections.
-> The minor one is political - you can imagine.
+> The above seems to be plain pio, you didn't use multi mode did you? I
+> think my current tree has the multi-page multi mode bio issue resolved,
+> however I'll test for some hours before sending out the next patch set.
 
-Naturally.
+Care to try the next version? I've completely disabled task file i/o
+since it does seem to be broken in pio, and fixed the multi-write
+multi-page bio bug as well. There are a number of other changes in
+there. There are split patches like last time, but also one big patch:
 
-> The major one is technical. You did not port the 2.4 good PIO
-> behaviour to 2.5. Bartlomiej already warned about this, so I
-> need only confirm:
-> 
-> This afternoon I booted 2.5.25 with your patches and two more,
-> one to prevent an oops when shutting down, the other to fix
-> ethernet cards detection. Started torturing two disks on
-> HPT366. After 3 minutes
-> 
-> 	hde: status error: status=0x50 { DriveReady SeekComplete }
-> 	hde: no DRQ after issuing WRITE
-> 
-> and seven minutes later
-> 
-> 	hde: task_out_intr: status=0x51 { DriveReady SeekComplete Error }
-> 	hde: task_out_intr: error=0x04 { DriveStatusError }
-> 
-> Soon lots of processes were hanging in D. Reboot. e2fsck.
+*.kernel.org/pub/linux/kernel/people/axboe/patches/v2.5/2.5.25/
 
-The above seems to be plain pio, you didn't use multi mode did you? I
-think my current tree has the multi-page multi mode bio issue resolved,
-however I'll test for some hours before sending out the next patch set.
+00_25ide-compile-1a
+	no changes, rediffed
 
-> Then booted vanilla 2.4.17. Tortured disks in the same way.
-> After several hours all is still perfect. I'll leave this
-> for a night, but so far I have never seen these errors on 2.4
-> and very often in recent 2.5.
+05_25pci-ids-1a
+	no changes, rediffed
 
-Good to know.
+10_24ide-core-2
+	various fixes, see old/ for the complete list
 
-Thanks for your report, it'll probably take a day or two before the
-kinks of the 2.5 conversion have been ironed out and the ide core is as
-stable as 2.4.
+15_24-misc-bits-2
+	added (broken) sparc64 bits. too lazy to revert these right,
+	waiting for update
+
+20_ide-build-config-1a
+	consolidate config and build split
+
+25_ide-scsi-1
+	no changes, rediffed
+
+and finally,
+
+ide24-for-2.5-2
+	all of the above
+
+Also pull'able from bk://linux25-24ide@project.bkbits.net/linux25-24ide
+(soonish)
 
 -- 
 Jens Axboe
