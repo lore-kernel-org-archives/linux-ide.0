@@ -1,72 +1,109 @@
-From: Eric Wong <normalperson@yhbt.net>
-Subject: Success(?) with SiI + Seagate pessimistic fix disabled.
-Date: Thu, 8 Jan 2004 15:21:53 -0800
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Re: HPT372 DMA corruption
+Date: Thu, 22 Jan 2004 18:27:46 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040108232153.GA1061@BL4ST>
+Message-ID: <Pine.LNX.4.10.10401221821170.9012-100000@master.linux-ide.org>
+References: <yw1xu12z9yyq.fsf@kth.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from user-0c8gj4g.cable.mindspring.com ([24.136.76.144]:24961 "EHLO
-	bl4st.dyndns.org") by vger.kernel.org with ESMTP id S264971AbUAWCXJ
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Jan 2004 21:23:09 -0500
-Received: from normalperson by bl4st.dyndns.org with local (Exim 3.36 #1 (Debian))
-	id 1AejTO-0000Id-00
-	for <linux-ide@vger.kernel.org>; Thu, 08 Jan 2004 23:21:54 +0000
-Content-Disposition: inline
+Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:17425
+	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
+	id S265215AbUAWCaP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jan 2004 21:30:15 -0500
+In-Reply-To: <yw1xu12z9yyq.fsf@kth.se>
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-
-Hi, I got a generic SiI card at the computer fair over the weekend and a
-pair of Seagate drives (not RAIDed in any way).  Disappointed by the
-performance with the pessimistic errata fix, I took a chance and
-commented it out, my computer is still running and the drives are a lot
-faster :)
-
-I have nothing important on the drives yet, but I'm copying data back
-and forth between them (reiserfs 3.6) to test it.  MD5 checks don't show
-any problems.  Let me know if you have any other ideas to test (and try
-to break) my setup.
-
-lspci:
-00:0e.0 RAID bus controller: CMD Technology Inc Silicon Image SiI 3112 SATARaid Controller (rev 02)
-	Subsystem: CMD Technology Inc: Unknown device 6112
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32, Cache Line Size: 0x08 (32 bytes)
-	Interrupt: pin A routed to IRQ 10
-	Region 0: I/O ports at b000 [size=8]
-	Region 1: I/O ports at a800 [size=4]
-	Region 2: I/O ports at a400 [size=8]
-	Region 3: I/O ports at a000 [size=4]
-	Region 4: I/O ports at 9800 [size=16]
-	Region 5: Memory at de800000 (32-bit, non-prefetchable) [size=512]
-	Expansion ROM at <unassigned> [disabled] [size=512K]
-	Capabilities: [60] Power Management version 2
-		Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 PME-Enable- DSel=0 DScale=2 PME-
+Cc: linux-kernel@vger.kernel.org
 
 
-dmesg:
-ata1: SATA max UDMA/133 cmd 0xF8933080 ctl 0xF893308A bmdma 0xF8933000 irq 10
-ata2: SATA max UDMA/133 cmd 0xF89330C0 ctl 0xF89330CA bmdma 0xF8933008 irq 10
-ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003 88:207f
-ata1: dev 0 ATA, max UDMA/133, 312581808 sectors (lba48)
-ata1: dev 0 configured for UDMA/133
-scsi0 : ata_sil
-ata2: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003 88:207f
-ata2: dev 0 ATA, max UDMA/133, 312581808 sectors (lba48)
-ata2: dev 0 configured for UDMA/133
-scsi1 : ata_sil
-  Vendor: ATA       Model: ST3160023AS       Rev: 0.81
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
-SCSI device sda: drive cache: write through
- sda: sda1
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-  Vendor: ATA       Model: ST3160023AS       Rev: 0.81
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sdb: 312581808 512-byte hdwr sectors (160042 MB)
+It has NOTHING to do with VIA!
 
--- 
-Eric Wong
+It has everything to do with a missing function th hpt366.c code.
+
+It is all about what the FIFO thresholds are wrt to when interrupts are
+issued and a pre-emptive like notification.
+
+I am waiting on one of my customers report they are happy with the fix =
+and
+will ship the fix before I release it to the public.  I have this serio=
+us
+problem on not testing volitale patches on the general masses.
+
+In my opinion, after several weeks of hard-on testing, the changes are
+clean, correct, and exact.
+
+Noting this type of patch would not be doable, had I not split the
+individual dma operations way back when.
+
+And yes for the remainder of the peanut gallery, I will "SHUT UP" for n=
+ow.
+
+Cheers,
+
+Andre Hedrick
+LAD Storage Consulting Group
+
+On Wed, 14 Jan 2004, M=E5ns Rullg=E5rd wrote:
+
+> Chuck Berg <chuck@encinc.com> writes:
+>=20
+> > On Fri, Jan 09, 2004 at 03:24:28PM -0500, Richard B. Johnson wrote:
+> > [cmp -l bad good]
+> >> >  89260029   0  31
+> >> >  89260030   0 327
+> >> >  89260031   0 200
+> >> >  89260032   0  13
+> >>=20
+> >> Since whole bytes are not written, this looks strangely like
+> >> an attempt to DMA to cached RAM! Since the CPU didn't write
+> >
+> > I tested this by reading with O_DIRECT, and immediately after each =
+read(),
+> > read all of a 1MB array (my cache is only 256kB), and then checking=
+ the
+> > data. The same corruption occurs.=20
+> >
+> > Via had a DMA corruption bug a couple years ago with similar sympto=
+ms,
+> > apparently with the VT82C686B southbridge. Mine is a VT82C586B (whi=
+ch some
+> > people also reported problems with). My board dates long after thes=
+e
+> > problems were discovered, so I sure hope it's not the same bug. I'l=
+l try
+> > upgrading my BIOS to the latest version in case Soyo's changelog is=
+ not
+> > entirely honest.
+>=20
+> Well, VIA never did have a good reputation.
+>=20
+> > I did learn some more about the pattern of corruption. The data is =
+not
+> > being written to memory - the "bad" data is whatever happened to be=
+ there
+> > before. It usually happens in 4, but sometimes 64 or 32 byte chunks=
+=2E
+>=20
+> Is it always a multiple of 4 bytes?  Is there any pattern in the
+> position of the corruption, such as always aligned to some value?
+>=20
+> > When I read from the device with O_DIRECT, the corruption only
+> > appears at the very end of the read. I've confirmed this for reads
+> > of 512 bytes through 256k at multiples of 512 bytes.
+>=20
+> Could something be cutting off the DMA transfer too early?
+>=20
+> --=20
+> M=E5ns Rullg=E5rd
+> mru@kth.se
+>=20
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kerne=
+l" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>=20
+
