@@ -1,36 +1,115 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: linux 2.6.9 controller order reordered. was: [Re: linux 2.6.9 still having network code problems]
-Date: Wed, 3 Nov 2004 14:00:22 +0100
-Message-ID: <58cb370e041103050016acc419@mail.gmail.com>
-References: <418741EB.3080701@outblaze.com>
-	 <20041102011918.2b453e21.akpm@osdl.org>
-	 <4187478A.1040002@outblaze.com>
-	 <20041102014119.1a6096cc.akpm@osdl.org>
-	 <41874D93.9000008@outblaze.com>
-	 <20041102020712.18218d47.akpm@osdl.org>
-	 <418751B3.8090003@outblaze.com>
-	 <20041102022604.262058c4.akpm@osdl.org>
-	 <1099413643.24934.1.camel@localhost.localdomain>
-	 <41888160.5080502@outblaze.com>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: More IDE hackery
+Date: Wed, 03 Nov 2004 13:16:50 +0000
+Message-ID: <1099487809.29560.28.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-pJhD38tF+fT4gW/fixQE"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.203]:27884 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261583AbUKCNA0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Nov 2004 08:00:26 -0500
-Received: by rproxy.gmail.com with SMTP id a36so82802rnf
-        for <linux-ide@vger.kernel.org>; Wed, 03 Nov 2004 05:00:22 -0800 (PST)
-In-Reply-To: <41888160.5080502@outblaze.com>
+Received: from clock-tower.bc.nu ([81.2.110.250]:32703 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S261610AbUKCOTi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Nov 2004 09:19:38 -0500
+Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
+	by localhost.localdomain (8.12.11/8.12.11) with ESMTP id iA3DGpnZ029721
+	for <linux-ide@vger.kernel.org>; Wed, 3 Nov 2004 13:16:51 GMT
+Received: (from alan@localhost)
+	by localhost.localdomain (8.12.11/8.12.11/Submit) id iA3DGoY5029720
+	for linux-ide@vger.kernel.org; Wed, 3 Nov 2004 13:16:50 GMT
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christopher Chan <cchan@outblaze.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Do you have CONFIG_BLK_DEV_OFFBOARD=y in your config?
 
-On Wed, 03 Nov 2004 14:57:36 +0800, Christopher Chan <cchan@outblaze.com> wrote:
-> 
-> > What are you on about ? The problem is that in the two traces his
-> > serverworks has moved from ide0 to ide2.
+--=-pJhD38tF+fT4gW/fixQE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+Our SI3112 driver fixups don't work in some cases. I found this while
+trying to work out what was going on in IT8212. At the point we check
+for the mod15 bug we may not have drive data. So we need a "fixups"
+callback. 
+
+I've also played with a pile of flash adapters - it seems the slave
+decode bug is PCMCIA specific - so we need a fixup hook for
+pcmcia/delkin/..
+
+I ended up with the following which solves all three in one go and
+allows us to fix anything else that turns up
+
+1. Turned ide_undecoded_slave into a routine of its own
+2. Changed probe_hwif_init to take a third argument a "fixup" callback
+which is run after hwif_init but before ata_attach
+3. Modify ide-cs, delkin to pass ide_undecoded_slave as their fixup
+4. Added "fixup" as a method in the ide_pci_device_t and made the
+pci-setup code pass this as the fixup argument to probe_hwif_init
+5. Made si3112 pass the mod15 check this way, made it8212 pass the
+geometry demnagler this way
+6. Fix up the other callers to pass NULL
+
+I've attached the code change, if you think its sane I'll split you out
+a set of patches versus the base Linus tree which do this
+
+Alan
+
+
+
+--=-pJhD38tF+fT4gW/fixQE
+Content-Disposition: attachment; filename=a1
+Content-Transfer-Encoding: base64
+Content-Type: text/x-patch; name=a1; charset=UTF-8
+
+ZGlmZiAtdSAtLW5ldy1maWxlIC0tcmVjdXJzaXZlIC0tZXhjbHVkZS1mcm9tIC91c3Ivc3JjL2V4
+Y2x1ZGUgbGludXgudmFuaWxsYS0yLjYuOS9kcml2ZXJzL2lkZS9pZGUtcHJvYmUuYyBsaW51eC0y
+LjYuOS9kcml2ZXJzL2lkZS9pZGUtcHJvYmUuYw0KLS0tIGxpbnV4LnZhbmlsbGEtMi42LjkvZHJp
+dmVycy9pZGUvaWRlLXByb2JlLmMJMjAwNC0xMC0yMCAyMzoxNjo1My4wMDAwMDAwMDAgKzAxMDAN
+CisrKyBsaW51eC0yLjYuOS9kcml2ZXJzL2lkZS9pZGUtcHJvYmUuYwkyMDA0LTExLTAyIDE4OjA0
+OjU4LjAwMDAwMDAwMCArMDAwMA0KQEAgLTY2Miw2ICs2NjIsNDIgQEANCiAJcmV0dXJuIHJjOw0K
+IH0NCiANCisvKioNCisgKglpZGVfdW5kZWNvZGVkX3NsYXZlCS0JbG9vayBmb3IgYmFkIENGIGFk
+YXB0ZXJzDQorICoJQGh3aWY6IGludGVyZmFjZQ0KKyAqDQorICoJQW5hbHlzZSB0aGUgZHJpdmVz
+IG9uIHRoZSBpbnRlcmZhY2UgYW5kIGF0dGVtcHQgdG8gZGVjaWRlIGlmIHdlDQorICoJaGF2ZSB0
+aGUgc2FtZSBkcml2ZSB2aWV3ZWQgdHdpY2UuIFRoaXMgb2NjdXJzIHdpdGggY3JhcCBDRiBhZGFw
+dGVycw0KKyAqCWFuZCBQQ01DSUEgc29tZXRpbWVzLg0KKyAqLw0KKw0KK3ZvaWQgaWRlX3VuZGVj
+b2RlZF9zbGF2ZShpZGVfaHdpZl90ICpod2lmKSANCit7DQorCWlkZV9kcml2ZV90ICpkcml2ZTAg
+PSAmaHdpZi0+ZHJpdmVzWzBdOw0KKwlpZGVfZHJpdmVfdCAqZHJpdmUxID0gJmh3aWYtPmRyaXZl
+c1sxXTsNCisJDQorCWlmIChkcml2ZTAtPnByZXNlbnQgPT0gMCB8fCBkcml2ZTEtPnByZXNlbnQg
+PT0gMCkNCisJCQlyZXR1cm47DQorCQkNCisJLyogSWYgdGhlIG1vZGVscyBkb24ndCBtYXRjaCB0
+aGV5IGFyZSBub3QgdGhlIHNhbWUgcHJvZHVjdCAqLwkNCisJaWYgKHN0cmNtcChkcml2ZTAtPmlk
+LT5tb2RlbCwgZHJpdmUxLT5pZC0+bW9kZWwpKQ0KKwkJcmV0dXJuOw0KKwkvKiBTZXJpYWwgbnVt
+YmVycyBkbyBub3QgbWF0Y2ggKi8NCisJaWYoc3RybmNtcChkcml2ZTAtPmlkLT5zZXJpYWxfbm8s
+IGRyaXZlMS0+aWQtPnNlcmlhbF9ubywgMjApKQ0KKwkJcmV0dXJuOw0KKwkvKiBObyBzZXJpYWwg
+bnVtYmVyLCB0aGFua2Z1bGx5IHZlcnkgcmFyZSBmb3IgQ0YgKi8NCisJaWYgKGRyaXZlMC0+aWQt
+PnNlcmlhbF9ub1swXSA9PSAwKQ0KKwkJcmV0dXJuOw0KKwkvKiBIYXMgYSBzZXJpYWwgbnVtYmVy
+IGJ1dCBpcyB3YXJwZWQgKi8NCisJaWYgKCFzdHJzdHIoZHJpdmUwLT5pZC0+bW9kZWwsICJJbnRl
+Z3JhdGVkIFRlY2hub2xvZ3kgRXhwcmVzcyIpKQ0KKwkJcmV0dXJuOw0KKwkvKiBBcHBlYXJzIHRv
+IGJlIGFuIElERSBmbGFzaCBhZGFwdGVyIHdpdGggZGVjb2RlIGJ1Z3MgKi8NCisJcHJpbnRrKEtF
+Uk5fV0FSTklORyAiaWRlLXByb2JlOiBpZ25vcmluZyB1bmRlY29kZWQgc2xhdmVcbiIpOw0KKwlk
+cml2ZTEtPnByZXNlbnQgPSAwOw0KK30NCisNCitFWFBPUlRfU1lNQk9MKGlkZV91bmRlY29kZWRf
+c2xhdmUpOw0KKw0KIC8qDQogICogVGhpcyByb3V0aW5lIG9ubHkga25vd3MgaG93IHRvIGxvb2sg
+Zm9yIGRyaXZlIHVuaXRzIDAgYW5kIDENCiAgKiBvbiBhbiBpbnRlcmZhY2UsIHNvIGFueSBzZXR0
+aW5nIG9mIE1BWF9EUklWRVMgPiAyIHdvbid0IHdvcmsgaGVyZS4NCkBAIC03MzYsMTggKzc3Miw2
+IEBADQogCQlpZGVfZHJpdmVfdCAqZHJpdmUgPSAmaHdpZi0+ZHJpdmVzW3VuaXRdOw0KIAkJZHJp
+dmUtPmRuID0gKGh3aWYtPmNoYW5uZWwgPyAyIDogMCkgKyB1bml0Ow0KIAkJKHZvaWQpIHByb2Jl
+X2Zvcl9kcml2ZShkcml2ZSk7DQotCQlpZiAoZHJpdmUtPnByZXNlbnQgJiYgaHdpZi0+cHJlc2Vu
+dCAmJiB1bml0ID09IDEpIHsNCi0JCQlpZiAoc3RyY21wKGh3aWYtPmRyaXZlc1swXS5pZC0+bW9k
+ZWwsIGRyaXZlLT5pZC0+bW9kZWwpID09IDAgJiYNCi0JCQkgICAgLyogRG9uJ3QgZG8gdGhpcyBm
+b3Igbm9wcm9iZSBvciBub24gQVRBICovDQotCQkJICAgIHN0cmNtcChkcml2ZS0+aWQtPm1vZGVs
+LCAiVU5LTk9XTiIpICYmDQotCQkJICAgIC8qIEFuZCBiZXdhcmUgb2YgY29uZnVzZWQgTWF4dG9y
+IGRyaXZlcyB0aGF0IGdvICJNMDAwMDAwMDAwMCINCi0JCQkgICAgICAiVGhlIFNOIyBpcyBnYXJi
+YWdlIGluIHRoZSBJRCBibG9jay4uLiIgW0VyaWNdICovDQotCQkJICAgIHN0cm5jbXAoZHJpdmUt
+PmlkLT5zZXJpYWxfbm8sICJNMDAwMDAwMDAwMDAwMDAwMDAwMCIsIDIwKSAmJg0KLQkJCSAgICBz
+dHJuY21wKGh3aWYtPmRyaXZlc1swXS5pZC0+c2VyaWFsX25vLCBkcml2ZS0+aWQtPnNlcmlhbF9u
+bywgMjApID09IDApIHsNCi0JCQkJcHJpbnRrKEtFUk5fV0FSTklORyAiaWRlLXByb2JlOiBpZ25v
+cmluZyB1bmRlY29kZWQgc2xhdmVcbiIpOw0KLQkJCQlkcml2ZS0+cHJlc2VudCA9IDA7DQotCQkJ
+fQ0KLQkJfQ0KIAkJaWYgKGRyaXZlLT5wcmVzZW50ICYmICFod2lmLT5wcmVzZW50KSB7DQogCQkJ
+aHdpZi0+cHJlc2VudCA9IDE7DQogCQkJaWYgKGh3aWYtPmNoaXBzZXQgIT0gaWRlXzRkcml2ZXMg
+fHwNCkBAIC04MjEsMTMgKzg0NSwxOCBAQA0KIH0NCiANCiBzdGF0aWMgaW50IGh3aWZfaW5pdChp
+ZGVfaHdpZl90ICpod2lmKTsNCi1pbnQgcHJvYmVfaHdpZl9pbml0IChpZGVfaHdpZl90ICpod2lm
+KQ0KKw0KK2ludCBwcm9iZV9od2lmX2luaXQgKGlkZV9od2lmX3QgKmh3aWYsIHZvaWQgKCpmaXh1
+cCkoaWRlX2h3aWZfdCAqaHdpZikpDQogew0KIAlwcm9iZV9od2lmKGh3aWYpOw0KIAlod2lmX2lu
+aXQoaHdpZik7DQogDQogCWlmIChod2lmLT5wcmVzZW50KSB7DQogCQl1MTYgdW5pdCA9IDA7DQor
+DQorCQlpZihmaXh1cCAhPSBOVUxMKQ0KKwkJCWZpeHVwKGh3aWYpOw0KKwkJCQ0KIAkJZm9yICh1
+bml0ID0gMDsgdW5pdCA8IE1BWF9EUklWRVM7ICsrdW5pdCkgew0KIAkJCWlkZV9kcml2ZV90ICpk
+cml2ZSA9ICZod2lmLT5kcml2ZXNbdW5pdF07DQogCQkJLyogRm9yIG5vdyBkb24ndCBhdHRhY2gg
+YWJzZW50IGRyaXZlcywgd2UgbWF5DQo=
+
+--=-pJhD38tF+fT4gW/fixQE--
