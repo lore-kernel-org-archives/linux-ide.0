@@ -1,50 +1,54 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] atapi request sense work
-Date: Wed, 19 May 2004 16:54:53 -0600
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: Re: piix dma setup code
+Date: Thu, 20 May 2004 00:59:19 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <8A55CC7D-A9E7-11D8-B31E-003065635034@ieee.org>
-References: <1084717146.3576.3.camel@patibmrh9> <40A7F641.3070809@pobox.com>
-	 <1084819720.4328.86.camel@patibmrh9>  <40A90D96.2040002@pobox.com><108482
-	 8		840.3211.26.camel@patibmrh9>  <40A92F69.6030309@pobox.com><1084831524.3
-	2 11	.67.camel@patibmrh9>  <40A93E85.4010904@pobox.com> <1084920024.3191.8.
-	ca mel@patibmrh9> <40AAA0BA.9040307@pobox.com>
-Mime-Version: 1.0 (Apple Message framework v613)
+Message-ID: <200405200059.19575.bzolnier@elka.pw.edu.pl>
+References: <40A9F150.4070209@turbolinux.co.jp> <200405191851.06281.bzolnier@elka.pw.edu.pl> <40ABE058.7070705@pobox.com>
+Mime-Version: 1.0
 Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:6565 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264665AbUESWy6
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:62391 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S264647AbUESXL4
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 19 May 2004 18:54:58 -0400
-In-Reply-To: <40AAA0BA.9040307@pobox.com>
+	Wed, 19 May 2004 19:11:56 -0400
+In-Reply-To: <40ABE058.7070705@pobox.com>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+Cc: Go Taniguchi <go@turbolinux.co.jp>, linux-ide@vger.kernel.org, "Nakajima, Jun" <jun.nakajima@intel.com>
 
-This actually almost does work.  Once via ssh I saw:
+On Thursday 20 of May 2004 00:31, Jeff Garzik wrote:
+> (added Jun to CC)
+>
+> Bartlomiej Zolnierkiewicz wrote:
+> > On Tuesday 18 of May 2004 13:19, Go Taniguchi wrote:
+> >>If speed is XFER_UDMA_6, base clock is set to low base clock.
+> >>It should be "speed >= XFER_UDMA_5". My ICH6 system reported XFER_UDMA_6,
+> >
+> > Jeff, does ICH6 support UDMA6?
+> > ICH5 doesn't but ata_piix.c allows it.
+>
+> Good question.  AFAICS ICH5 and ICH6 are the same such that:
+> * PATA does not support UDMA6
+> * internal base clock is 133Mhz for UDMA5
 
-$ sudo modprobe ata-piix
-$ plscsi /dev/sg0 -X time 5 0 -i 8 -x "25 00 00:00:00:00 00 00:00 00"
-// x 6 29 sense
-// -x0002 = -2 = plscsi.main exit int
-$ plscsi /dev/sg0 -X time 5 0 -i 8 -x "25 00 00:00:00:00 00 00:00 00"
-...
+strange, it is 100MHz according to the datasheet
 
-Argh I should have said -v to plscsi.  Meanwhile, without complete 
-proof, I believe that "// x 6 29 sense" line from plscsi means an auto 
-sense once ran well enough to produce sense byte 0 = x70, a sane 
-additional length at offset 7, and SK ASC ASCQ = x 6 29 00 i.e. auto 
-sense once mostly worked.
+> * SATA PCI device exports, but completely ignores, PATA timing registers
+>
+> So for ata_piix at least, I would prefer to do
+> * patch1: your patch, based on Go's patch
+> * patch2: only configure timing registers for PATA port (PATA is only
+> used when an #ifdef is defined)
+> * patch3: do not limit SATA to udma5
 
-But then the second try of that same command dumped an indefinitely 
-long series of what by eye and hand I transcribe as:
+OK
 
-ata_scsi_translate: ENTER
-ata_scsi_dump_cdb: CDB(2:0,0,0) 25 00 00 00 00 00 00 00 00
+this reminds me that long time ago I spotted small bug in configuring PATA
+timing registers in ata_piix.c but was too lazy to send a patch because code
+is #ifdef-ed and bug was (is?) only for slave device 8)
 
-Sorry to say now real life intrudes, I'll report again later/ tomorrow.
-
-Pat LaVarre
+Bartlomiej
 
