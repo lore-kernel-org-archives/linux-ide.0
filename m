@@ -1,49 +1,63 @@
-From: Nick Piggin <nickpiggin@yahoo.com.au>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] speed up SATA
-Date: Sun, 28 Mar 2004 10:21:04 +1000
+Date: Sat, 27 Mar 2004 19:49:12 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <40661A70.3090608@yahoo.com.au>
-References: <4066021A.20308@pobox.com>	<40661049.1050004@yahoo.com.au> <20040327160745.7207ff98.akpm@osdl.org>
+Message-ID: <40662108.40705@pobox.com>
+References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406616EE.80301@pobox.com> <4066191E.4040702@yahoo.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp017.mail.yahoo.com ([216.136.174.114]:8888 "HELO
-	smtp017.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S262000AbUC1AVH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Mar 2004 19:21:07 -0500
-In-Reply-To: <20040327160745.7207ff98.akpm@osdl.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:37814 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262035AbUC1At1
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 27 Mar 2004 19:49:27 -0500
+In-Reply-To: <4066191E.4040702@yahoo.com.au>
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Andrew Morton wrote:
-> Nick Piggin <nickpiggin@yahoo.com.au> wrote:
-> 
->> > 
->> > With this simple patch, the max request size goes from 128K to 32MB... 
->> > so you can imagine this will definitely help performance.  Throughput 
->> > goes up.  Interrupts go down.  Fun for the whole family.
->> > 
->>
->> Hi Jeff,
->> I think 32MB is too much. You incur latency and lose
->> scheduling grainularity. I bet returns start diminishing
->> pretty quickly after 1MB or so.
-> 
-> 
-> As far as interactivity and throughput is concerned, the effect of really
-> big requests will be the same as the effect of permitting _more_ requests. 
-> Namely: more memory can be under readahead or writeback at any particular
-> point in time.
-> 
+Nick Piggin wrote:
+> Aside, you should make 2 or 4 tags the default though: that
+> still gives you the pipelining without sacrificing latency
+> and usibility.
 
-Not quite, because a single 32MB write might take what? 500ms to
-complete... and the IO scheduler wants to stop writes after 60ms
-if there are waiting reads.
+I would rather have a sane block layer default, that works without my 
+intervention :)
 
-And writes will be more likely to be submitted as large requests.
+Ditto the max_sectors issue, the driver for the hardware w/ a 256-depth 
+queue should attempt to queue up to the hardware maximum.  The block 
+layer can be smart and limit things further from there...
 
-I think Jeff is right that in theory though, the drivers should
-just export their capabilities, and the block layer or IO scheduler
-should decide on the maximum size to actually use.
+IIRC the AIC7xxx driver sets the queue depth to 200+ on one of my 
+drives.  That may be 2.4, though...
+
+
+> The only area (I think) where large queues outperform the IO
+> scheduler are lots of parallel, scattered reads. I think this
+> is because the drive can immediately return cached data even
+> though it looks like a large seek to the IO scheduler.
+> (This is from testing on my single, old SCSI disk though.)
+
+Most ATA drives have their own internal disk schedulers, and all of the 
+major vendors seem to have done something useful with TCQ.  Newer drives 
+definitely take advantage of the additional knowledge gained via 
+knowledge of the entire queue rather than just a single request.
+
+The parallel-reads case you mention is definitely a winner with TCQ, but 
+writes are also, for ATA-specific reasons (among others):  since ATA has 
+been one-command-at-a-time for so long, write caching became necessary 
+for decent performance.  So ATA disks needed a decent internal IO 
+scheduler, just maintain a decent level of performance.
+
+TCQ-on-write for ATA disks is yummy because you don't really know what 
+the heck the ATA disk is writing at the present time.  By the time the 
+Linux disk scheduler gets around to deciding it has a nicely merged and 
+scheduled set of requests, it may be totally wrong for the disk's IO 
+scheduler.  TCQ gives the disk a lot more power when the disk integrates 
+writes into its internal IO scheduling.
+
+	Jeff
+
+
+
