@@ -1,76 +1,82 @@
-From: James Courtier-Dutton <James@superbug.demon.co.uk>
-Subject: Re: Serial ATA (SATA) for Linux status report
-Date: Wed, 14 Jan 2004 23:31:13 +0000
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [SATA] libata update posted, and news
+Date: Wed, 14 Jan 2004 19:34:53 -0500
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <4005D141.7050408@superbug.demon.co.uk>
-References: <20031203204445.GA26987@gtf.org> <87hdyyxjgl.fsf@stark.xeocode.com> <20040114225653.GA32704@codepoet.org>
+Message-ID: <4005E02D.703@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------040606030709000208070300"
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20040114225653.GA32704@codepoet.org>
-To: andersen@codepoet.org
-Cc: Greg Stark <gsstark@mit.edu>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 List-Id: linux-ide@vger.kernel.org
 
-Erik Andersen wrote:
-> On Wed Jan 14, 2004 at 05:18:34PM -0500, Greg Stark wrote:
-> 
->>Jeff Garzik <jgarzik@pobox.com> writes:
->>
->>
->>>Intel ICH5
->>>
->>>Issue #2: Excessive interrupts are seen in some configurations.
->>
->>I guess I'm seeing this problem. I'm trying to get my P4P800 motherboard with
->>an ICH5 chipset working completely. So far I've been living without the cdrom
->>or DVD players. I see lots of other posts on linux-kernel about the same
->>problems:
-> 
-> 
-> I have the same deal.  My offer to send Jeff a P4P800 motherboard
-> to test with is still open....
-> 
->  -Erik
-> 
-> --
-> Erik B. Andersen             http://codepoet-consulting.com/
+This is a multi-part message in MIME format.
+--------------040606030709000208070300
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I have a ABIT IC7-G motherboard with the ICH5 chipset.
-No reported problems with it. I would be happy to do some tests, just in 
-case I have not actually noticed the problems.
 
-hda=DVD-ROM
-hdb=DVD writer
-hdc=SATA Seagate Hard Disc 160 Gig.
-hdd=Empty.
+Updates to the Silicon Image and ServerWorks drivers.
 
-I do sometimes have problems during BIOS startup, with it not detecting 
-the SATA hard disc, but pressing the reset button a few times fixes that.
+News:
+* will freeze current codebase as libata 1.0, without queueing support. 
+  libata 2.x development has already begun, and will support queueing, 
+sata2, and will build upon the existing codebase.
+* ServerWorks seems stable, will remove 'beta' label soon
 
-Jan 14 01:01:17 new kernel: Uniform Multi-Platform E-IDE driver 
-revision: 7.00alpha2
-Jan 14 01:01:17 new kernel: ide: Assuming 33MHz system bus speed for PIO 
-modes; override with idebus=xx
-Jan 14 01:01:17 new kernel: ICH5-SATA: IDE controller at PCI slot 
-0000:00:1f.2
-Jan 14 01:01:17 new kernel: ICH5-SATA: chipset revision 2
-Jan 14 01:01:17 new kernel: ICH5-SATA: not 100%% native mode: will probe 
-irqs later
-Jan 14 01:01:17 new kernel:     ide0: BM-DMA at 0xf000-0xf007, BIOS 
-settings: hda:DMA, hdb:DMA
-Jan 14 01:01:17 new kernel:     ide1: BM-DMA at 0xf008-0xf00f, BIOS 
-settings: hdc:DMA, hdd:pio
-Jan 14 01:01:17 new kernel: hda: ATAPI DVD-ROM 16XMax, ATAPI CD/DVD-ROM 
-drive
-Jan 14 01:01:17 new kernel: hdb: OPTORITEDVD RW DD0203, ATAPI CD/DVD-ROM 
-drive
-Jan 14 01:01:17 new kernel: ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-Jan 14 01:01:17 new kernel: hdc: ST3160023AS, ATA DISK drive
-Jan 14 01:01:17 new kernel: ide1 at 0x170-0x177,0x376 on irq 15
-Jan 14 01:01:17 new kernel: hdc: max request size: 1024KiB
-Jan 14 01:01:17 new kernel: hdc: 312581808 sectors (160041 MB) w/8192KiB 
-Cache, CHS=19457/255/63, UDMA(33)
-Jan 14 01:01:17 new kernel:  /dev/ide/host0/bus1/target0/lun0: p1 p2 < 
-p5 p6 p7 >
+Notes:
+* Silicon Image support is still considered to be unstable. 
+drivers/ide's siimage.c is preferred.
+* Silicon Image users with Seagate SATA, particularly if you know if you 
+have the "mod15write" bug, should make sure that the driver is properly 
+applying the errata fix.
+
+Patch for 2.4.x:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.4.25-pre4-libata1.patch.bz2
+
+Patch for 2.6.x:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.1-bk2-libata1.patch.bz2
+
+BK repositories:
+bk://gkernel.bkbits.net/libata-2.[45]
+
+Changelog versus 2.6.x mainline attached.
+
+
+
+--------------040606030709000208070300
+Content-Type: text/plain;
+ name="changelog.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="changelog.txt"
+
+ChangeSet@1.1513, 2004-01-14 18:44:53-05:00, benh@kernel.crashing.org
+  [libata sata_svw] cleanup, better probing
+  
+  * use fewer magic numbers
+  * probe all 4 ports, using standard SATA SCRs
+  * limit udma mask to 0x3f
+  * clean up PPC-specific procfs stuff
+
+ChangeSet@1.1512, 2004-01-14 18:34:48-05:00, arubin@atl.lmco.com
+  [libata sata_sil] add pci id for Silicon Image 3512
+
+ChangeSet@1.1511, 2004-01-14 18:19:36-05:00, normalperson@yhbt.net
+  [libata sata_sil] cleaner, better version of errata workarounds
+  
+  No longer unfairly punishes non-errata Seagate and Maxtor drives.
+
+ChangeSet@1.1474.72.3, 2004-01-06 04:26:01-05:00, marchand@kde.org
+  [libata sata_sil] add support for adaptec 1210sa, 4-port sii 3114
+
+ChangeSet@1.1474.72.2, 2004-01-06 04:22:09-05:00, jgarzik@redhat.com
+  [libata sata_svr] fix DRV_NAME to reflect actual driver filename
+
+ChangeSet@1.1474.61.1, 2003-12-30 19:46:09-05:00, jgarzik@redhat.com
+  [libata sata_sil] unmask interrupts during initialization
+  
+  Prudent in general, and needed for Adaptec BIOSes.
+
+
+--------------040606030709000208070300--
