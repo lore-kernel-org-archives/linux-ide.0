@@ -1,92 +1,101 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC] IDE/ATA/SATA controller hotplug
-Date: Tue, 27 Jul 2004 11:31:15 -0400
+Subject: Re: [PATCH 2.6.8-rc2] sata_nv.c
+Date: Tue, 27 Jul 2004 13:07:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <41067543.3090003@pobox.com>
-References: <200407191947.i6JJldK1024910@falcon10.austin.ibm.com>
+Message-ID: <41068BBB.3090000@pobox.com>
+References: <DBFABB80F7FD3143A911F9E6CFD477B03F95E1@hqemmail02.nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:42881 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266427AbUG0Pbd
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:48273 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266434AbUG0RHU
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Jul 2004 11:31:33 -0400
-In-Reply-To: <200407191947.i6JJldK1024910@falcon10.austin.ibm.com>
+	Tue, 27 Jul 2004 13:07:20 -0400
+In-Reply-To: <DBFABB80F7FD3143A911F9E6CFD477B03F95E1@hqemmail02.nvidia.com>
 List-Id: linux-ide@vger.kernel.org
-To: Doug Maxey <dwm@austin.ibm.com>
-Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Andrew Chew <achew@nvidia.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Doug Maxey wrote:
-> Howdy!
-> 
->   This note went out originally to a semi-internal list, but after
->   several comments, posting it here...
-> 
->   As we chug along here in PPC64 land, we (meaning IBM internal) have
->   been given a requirement to make all devices on our new DLPAR
->   (POWER5 and later) systems be hotplug capable.  This includes ALL
->   PCI devices on the system, even those that are soldered on the
->   motherboard.
-> 
->   This raises some interesting issues when dealing with IDE devices.
-> 
->   I realize there is considerable work under way (hi Bart :) to clean
->   up the 2.6 trees.  This hotplug work would be another delta on top
->   of that work.
->   The changes could also possibly affect the libata work, as that
->   could also be touched by work on the attached devices themselves.
+Andrew Chew wrote:
+> This patch updates the NVIDIA libata-based SATA driver to support the
+> CK804 SATA controller.
 
-Why do you think libata is not already hotplug capable, WRT controllers?
+Please fix and resubmit:
+
+1) [style] no need to explicitly init first enum to zero:
+
++typedef enum
++{
++       NFORCE2 = 0,
++       NFORCE3,
++       CK804
++} nv_host_type_t;
 
 
->   What I would like is input on the general strategy that should be
->   taken to modify the controller/adapter and device stack to:
-> 
->   1) be first class modules, where all controllers/adapters are
->      capable of being loaded and unloaded.  This is directed mostly at
->      IDE/Southbridge controller/adapter devices.
+2) in Linux (and POSIX), 'struct foo' is preferred over 'foo_t':
 
-this is already the case in IDE and libata
-
-
->   2) extend that support to all child devices; disk, optical,
->      and tape.
-
-this is already the case in IDE and SCSI
-
-
->   3) be part of mainline.
-
-this is already the case
++{
++       nv_host_type_t          host_type;
++       unsigned long           host_flags;
++       void                    (*enable_hotplug)(struct ata_probe_ent 
+*probe_en
+t);
++       void                    (*disable_hotplug)(struct ata_host_set 
+*host_set
+);
++       void                    (*check_hotplug)(struct ata_host_set 
+*host_set);
++
++} nv_host_desc_t;
 
 
->   The items I perceive at the top of the issue list are:
-> 
->   - The primary platforms for IDE/ATA devices are x86 based, and
->     certainly do not care about having this capability.
+3) [style] single statements should not be enclosed by braces
 
-incorrect
++       if (host->host_desc->check_hotplug) {
++               host->host_desc->check_hotplug(host_set);
+         }
+...
++       if (host->host_desc->host_flags & NV_HOST_FLAGS_SCR_MMIO) {
++               return readl(ap->ioaddr.scr_addr + (sc_reg * 4));
++       } else {
++               return inl(ap->ioaddr.scr_addr + (sc_reg * 4));
++       }
+...
++       // Enable hotplug event interrupts.
++       if (host->host_desc->enable_hotplug) {
++               host->host_desc->enable_hotplug(probe_ent);
++       }
+
+etc.
 
 
->   - Assuming the capability is added, what rework would be acceptable
->     for block devices?
+4) [leak] driver appears to be missing a ->host_free hook, to free your 
+nv_host_t structure.
 
-none
-
-
->   - Where should this capability go?  Fork a subset of IDE
->     controllers, and put them under the arch specific dir?
->     Or include all devices?
-
-there is nothing arch-specific about this
++       host = kmalloc(sizeof(nv_host_t), GFP_KERNEL);
 
 
->   - should we work to the goal of having the capability for all
->     platforms, and all IDE devices?
+5) [bug] check ioremap return value for failure (==NULL)
 
-of course
++               mmio_base = ioremap(pci_resource_start(pdev, 5),
++                               pci_resource_len(pdev, 5));
 
-	Jeff
+
+6) [leak] probe_ent->mmio_base is not set for the MMIO case, therefore, 
+iounmap() is never called for you by ata_pci_remove_one() [libata-core.c].
+
+
+7) don't use host->scr_addr as a sly way to obtain your base address. 
+Use host_set->mmio_base directly (casting from unsigned long if it's PIO 
+rather than MMIO).
+
+
+8) "avoid magic numbers".  Avoid decimal or hexidecimal constants in 
+actual code.  Prefer to use macros/enums instead.
+
++       pci_read_config_byte(probe_ent->pdev, 0x50, &regval);
++       regval |= 0x04;
++       pci_write_config_byte(probe_ent->pdev, 0x50, regval);
 
 
