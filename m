@@ -1,109 +1,23 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [SATA] libata-dev queue updated
-Date: Sun, 13 Feb 2005 15:33:39 -0500
-Message-ID: <420FB9A3.1090002@pobox.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: PATA drivers in libata?
+Date: Sun, 13 Feb 2005 16:12:46 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0502131611360.16537-100000@coffee.psychology.mcmaster.ca>
+References: <420FA1B9.6030100@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060103060109090905030401"
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:10135 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261303AbVBMUdy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 13 Feb 2005 15:33:54 -0500
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from coriana6.CIS.McMaster.CA ([130.113.128.17]:46735 "EHLO
+	coriana6.cis.mcmaster.ca") by vger.kernel.org with ESMTP
+	id S261314AbVBMVND (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 13 Feb 2005 16:13:03 -0500
+In-Reply-To: <420FA1B9.6030100@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@suse.de>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060103060109090905030401
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+> * With ATA passthru (in libata-dev currently), libata supports SMART and 
+> the HDIO_CMD/HDIO_TASK generalized ioctls.  Should I care about 
+> supporting other ioctls?
 
-A minor update since the last post.  Recent changes:
+is there some other mechanism to en/disable write caching?
 
-* updated to 2.6.11-rc4, posted patch (see attached).
-
-* turned on ATAPI by default.  If you got an S/ATAPI DVD burner for 
-Christmas, you'll like this.
-
-WARNING DANGER WARNING:  Some drivers such as sata_promise and ahci have 
-not yet been updated to support ATAPI.
-
-More details on patch/BK/changes attached.
-
-
---------------060103060109090905030401
-Content-Type: text/plain;
- name="libata-dev.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata-dev.txt"
-
-BK users:
-
-	bk pull bk://gkernel.bkbits.net/libata-dev-2.6
-
-Patch:
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.11-rc4-libata-dev1.patch.bz2
-
-This will update the following files:
-
- drivers/scsi/Kconfig         |   18 -
- drivers/scsi/Makefile        |    2 
- drivers/scsi/ata_adma.c      |  636 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/libata-core.c   |  174 +++-------
- drivers/scsi/libata-scsi.c   |  409 +++++++++++++++++++++++
- drivers/scsi/libata.h        |    6 
- drivers/scsi/pata_pdc2027x.c |  742 +++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/sata_promise.c  |   84 ++++
- drivers/scsi/sata_via.c      |  202 ++++++++---
- include/linux/ata.h          |    1 
- include/linux/libata.h       |    4 
- include/scsi/scsi.h          |    3 
- 12 files changed, 2096 insertions(+), 185 deletions(-)
-
-through these ChangeSets:
-
-<andyw:pobox.com>:
-  o [libata scsi] support 12-byte passthru CDB
-  o [libata scsi] passthru CDB check condition processing
-  o T10/04-262 ATA pass thru - patch
-
-<erikbenada:yahoo.ca>:
-  o [libata sata_promise] support PATA ports on SATA controllers
-
-Adam J. Richter:
-  o ata_pci_remove_one used freed memory
-
-Albert Lee:
-  o pdc2027x timing register bug fix
-  o [libata pdc2027x] fix incorrect pio and mwdma masks
-  o [libata pdc2027x] remove quirks and ROM enable
-  o [libata] add driver for Promise PATA 2027x
-
-Brad Campbell:
-  o libata basic detection and errata for PATA->SATA bridges
-
-Jeff Garzik:
-  o [libata] turn on ATAPI support
-  o [libata sata_promise] merge Tobias Lorenz' pdc20619 patch, part 2
-  o [libata] small cleanups
-  o [libata] remove unused execute-device-diagnostic reset method
-  o [libata] add new driver ata_adma
-  o [libata sata_via] add support for VT6421 SATA
-  o [libata sata_via] minor cleanups
-  o [libata pdc2027x] update for upstream struct device conversion
-  o [libata sata_promise] fix merge bugs
-  o [libata] fix build breakage
-  o [libata] fix SATA->PATA bridge detect compile breakage
-  o [libata] fix printk warning
-
-John W. Linville:
-  o libata: SMART support via ATA pass-thru
-
-Tobias Lorenz:
-  o [libata sata_promise] pdc20619 (PATA) support
-  o libata-scsi: get-identity ioctl support
-
-
---------------060103060109090905030401--
