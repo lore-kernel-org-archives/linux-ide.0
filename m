@@ -1,51 +1,61 @@
-From: Carlo Scarfoglio <mi2332@mclink.it>
-Subject: SiI3112 and data corruption
-Date: Sat, 21 Aug 2004 13:35:50 +0200
+From: linux@horizon.com
+Subject: Best PCI-X SATA controller?
+Date: 22 Aug 2004 21:42:44 -0000
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <41273396.5050304@mclink.it>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20040822214244.11863.qmail@science.horizon.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail7.mclink.it ([195.110.128.94]:31758 "EHLO mail7.mclink.it")
-	by vger.kernel.org with ESMTP id S265031AbUHULW4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Aug 2004 07:22:56 -0400
-Received: from [213.155.203.170] (hwadsl-pool-213-155-203-170.telvia.it [213.155.203.170] (may be forged))
-	by mail7.mclink.it (8.12.6p2/8.12.3) with ESMTP id i7LBMsHE071942
-	for <linux-ide@vger.kernel.org>; Sat, 21 Aug 2004 13:22:54 +0200 (CEST)
-	(envelope-from mi2332@mclink.it)
+Received: from science.horizon.com ([192.35.100.1]:46134 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S266214AbUHVVmt
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Aug 2004 17:42:49 -0400
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: linux@horizon.com
 
-I already posted a few days ago on the kernel mailing list, but received
-no answer, with the exception of few concerned users.
-In short: when copying large files (> 400) MB from the Maxtor SATA disk
-on a channel of the SiI3112 controller on my motherboard
-(NForce2) to a Seagate ST3200822AS disk on the other channel,
-copied files are corrupted.
-Strange thing is, smaller files are not affected, copying from the
-Seagate to the Maxtor is OK and from other PATA disks on the
-NForce2 controller or from a ramdisk to the Seagate is OK as
-well.  Seagate to Seagate is fine.
+I'm setting up a new file server, and trying to get a reasonably
+future-proof system without getting too spendy.
 
-I tested kernel 2.6.7 with IDE driver, kernel 2.6.8.1 libata driver
-with SATA patch Aug 18 applied, kernel 2.6.4 IDE driver from
-the SuSE 9.1 DVD distro, 2.4.20 on Morphix cd.
-I switched channels without effect.
-I assume that the disk is healthy (it is brand new, well cooled,
-passes the Seagate tests).
+I'm willing to buy hardware that has capabilities that the software
+can't curerntly support as long as I can expect that the support
+will appear in the forseeable future.
 
-Yesterday I tried two more things:
-- I added the disk to the blacklist, no change,
-- I increased the ata_pause value in libata.h
-from 400 to 600 and this improved things a bit.
-450 MB files copied with few or no errors. With
-a value of 1000 I can sometimes copy 512MB files
-without errors.
-The Reiserfs fs on the Seagate gets corrupted too
-after a dozen runs of copy/compare.
+It looks like SATA drives have basically achieved price parity,
+and I'm setting up a mirrored RAID system, so getting SATA for
+hot-swap is very attractive.
 
-More details about my system can be found in
-my previous post.
+On the list of features I'd like to explot, native command queuing
+(NCQ) is very attractive, as it should help multithreaded loads a great
+deal.  Fortuitously, some of Seagate's SATA drives, which I already like
+because of the longer warranty, support NCQ.
 
-Carlo Scarfoglio
+(For the Seagate 7200.7 series, the ST3160827AS and ST3200822AS, and
+in general the ST3xxx8xxAS drives, support NCQ.  The ST3xxx0xxAS drives
+do not.)
+
+So, now I need an SATA controller that supports NCQ.  My chosen (Opteron)
+motherboard has PCI-X, and a number of PCI-X SATA controllers are showing
+up.  But which ones can do NCQ and have good Linux support?
+
+Intel's 4-port PCI-X 31244 controller is the only one with openly
+published specifications, and I'm willing to pay extra to support that.
+But I can't find it on an add-in card anywhere.  Does it exist in that
+form?  The SRCS16 looks like something entirely different that does
+not do full PCI-X nor does it support AHCI.
+
+Are there any other AHCI controllers floating around?
+
+The Marvell 88SX60xx chips support NCQ, and their 88SX50xx chips (which
+do not) are the basis of a number of cheap 8-port PCI-X SATa controllers,
+such as trhe RocketRAID 1820A.  But I can't find a card that has the
+88SX60xx on board.  (Confusingly, Promise brags about "Command Queueing
+(CQ) support", but that's PATA-style TCQ, not NCQ, even on the 1820A.)
+
+They aren't publishing specs, but apparently are being helpful on the
+driver development front.
+
+The Promise SATAII150 SX8 card is another possibility, a cheap PCI-X
+8-port SATA controller, but I can't find it for sale anywhere!
+I also can't find published specs, but they appear to be helping jgarzik...
+
+
+Any suggestions?  Thanks!
