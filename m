@@ -1,75 +1,66 @@
 From: Eric Mudama <edmudama@gmail.com>
-Subject: Re: sata_promise performance observations
-Date: Mon, 25 Oct 2004 11:55:28 -0600
+Subject: Re: Silicon Image 3112 h/w docs available
+Date: Mon, 25 Oct 2004 11:53:45 -0600
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <311601c904102510555d7c0810@mail.gmail.com>
-References: <417A1826.5010502@wasp.net.au>
+Message-ID: <311601c904102510532a627fbc@mail.gmail.com>
+References: <41792BC3.9060304@pobox.com>
+	 <20041023191125.GJ9119@mail.petta-tech.com>
 Reply-To: Eric Mudama <edmudama@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.192]:61124 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261233AbUJYRzc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Oct 2004 13:55:32 -0400
-Received: by rproxy.gmail.com with SMTP id 77so457460rnk
-        for <linux-ide@vger.kernel.org>; Mon, 25 Oct 2004 10:55:28 -0700 (PDT)
-In-Reply-To: <417A1826.5010502@wasp.net.au>
+Received: from zeus.kernel.org ([204.152.189.113]:35068 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S261216AbUJYRyv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Oct 2004 13:54:51 -0400
+Received: from rproxy.gmail.com (rproxy.gmail.com [64.233.170.196])
+	by zeus.kernel.org (8.12.11/8.11.6) with ESMTP id i9PHsnjW007130
+	for <linux-ide@vger.kernel.org>; Mon, 25 Oct 2004 10:54:50 -0700
+Received: by rproxy.gmail.com with SMTP id 77so457089rnk
+        for <linux-ide@vger.kernel.org>; Mon, 25 Oct 2004 10:53:46 -0700 (PDT)
+In-Reply-To: <20041023191125.GJ9119@mail.petta-tech.com>
 List-Id: linux-ide@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: linux-ide@vger.kernel.org
+To: Eric Wong <eric@petta-tech.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-arbitration between the multiple PCI cards?  A single card that
-doesn't have to compete for PCI resources would, in theory, be
-faster...
+My understanding is that there's nothing to put in a SI3112 spec
+regarding this issue.
 
-(Don't know much about this chunk of hardware, 'tis only a guess)
+The card follows the specification correctly.  The issue is some
+drives don't handle this "legal but unexpected" behavior.  That issue
+(in theory) would be for the drive vendors to document.
 
+--eric
 
-On Sat, 23 Oct 2004 12:36:54 +0400, Brad Campbell <brad@wasp.net.au> wrote:
-> G'day all,
+On Sat, 23 Oct 2004 12:11:25 -0700, Eric Wong <eric@petta-tech.com> wrote:
+> Jeff Garzik <jgarzik@pobox.com> wrote:
+> >
+> > In order to better support open source developers, Silicon Image has
+> > been kind enough to give me permission to publicly post the hardware
+> > documentation for some of their older SATA chipsets on my docs site,
+> > namely the 3112 in this case:
+> >
+> > http://gkernel.sourceforge.net/specs/sii/3112A_SiI-DS-0095-B2.pdf.bz2
+> >
+> > This documentation will assist developers in maintaining the
+> > siimage/sata_sil SATA drivers in the Linux kernel.
+> >
+> > So now the 311x joins the ranks of "open hardware".  Thanks, SiI!
 > 
-> Interesting observation with 3 SATA150TX4 cards and 10 Maxtor Maxline-II 250GB SATA drives.
+> Doesn't seem to contain any more info on drives/controllers affected by
+> the mod15write quirk.  I'd like to see firmware revisions added to the
+> blacklist, and not just model numbers anymore.  I didn't have that
+> information when I first implemented the blacklist (model numbers only),
+> and it still doesn't seem to be available right now.
 > 
-> If I run a concurrent dd if=/dev/sda > /dev/null and dd if=/dev/sdb > /dev/null I get the expected
-> 115MB/s transfer rates in vmstat.
+> I'm rather disappointed that the drive (ST3160023AS) I use has managed
+> to get its way onto the blacklist[1].  I'm using rev 3.05 of that drive
+> with a 3112 (rev 02), and have been for nearly a year at full speed and
+> have never had problems under heavy read/write usage.  Setups affected
+> by an uncorrected mod15write bug are corrupted almost immediately, no?
 > 
-> If I do a dd if=/dev/sda > /dev/null and dd if=/dev/sde > /dev/null I get about 80MB/s
+> --
+> Eric Wong -- eric@petta-tech.com -- normalperson@yhbt.net
 > 
-> sda, sde & sdi I get
-> procs -----------memory---------- ---swap-- -----io---- --system-- ----cpu----
 > 
->   3  0  22540   2560 463908   5320    0    0 85294    16 1102   761 11 88  0  1
->   3  1  22540   1480 464852   5320    0    0 86493    25  987   512 13 86  0  0
->   2  2  22540   2176 464304   5268    0    0 86774    18 1091   721 12 87  0  1
->   2  2  22540   1488 464860   5368    0    0 85562    18  921   416 13 87  0  0
-> 
-> When streaming from drives not on the same controller, I lose about 30mb/s transfer rate. In fact,
-> it seems to max out at about 86MB/s no matter what combination of drives I use if I stream from more
-> than one controller.
-> 
-> However, if I use sda, sbb & sdc I get
-> 
-> procs -----------memory---------- ---swap-- -----io---- --system-- ----cpu----
-> 
->   0  3  22512   1768 464448   5304    0    0 121661    18 1257   566  9 59  0 32
->   0  3  22512   1536 464696   5316    0    0 122903    14 1262   578 10 59  0 31
->   0  3  22512   2112 464228   5268    0    0 121655    14 1255   578  9 60  0 32
-> 
-> How bizzare. I have latency set to 32 on all controllers, but I have tried as low as 8 and as high
-> as 128 to no avail.
-> 
-> I have readahead set to 4096 on all devices.
-> 
-> Anyone have any ideas?
-> 
-> Not that this is an issue for me (I'm only using it as a fileserver over GB eth so its not like
-> 100MB/s is actually required, just an interesting observation)
-> 
-> Regards,
-> Brad
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
