@@ -1,70 +1,47 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [KJ] Re: [PATCH] drivers/ide/cs5520.c : Use the DMA_{64,
-	32}BIT_MASK constants
-Date: Thu, 10 Mar 2005 17:30:12 +0100
-Message-ID: <58cb370e050310083053a0e495@mail.gmail.com>
-References: <20050308133358.GA5311@localhost.localdomain>
+Subject: Re: [PATCH] ide: hdio.txt update
+Date: Thu, 10 Mar 2005 17:30:35 +0100
+Message-ID: <58cb370e05031008307a0163c1@mail.gmail.com>
+References: <20050302235457.GA21352@htj.dyndns.org>
+	 <20050303021638.GA24150@htj.dyndns.org>
 Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============79057958929800565=="
-In-Reply-To: <20050308133358.GA5311@localhost.localdomain>
-List-Unsubscribe: <http://lists.osdl.org/mailman/listinfo/kernel-janitors>,
-	<mailto:kernel-janitors-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/kernel-janitors>
-List-Post: <mailto:kernel-janitors@lists.osdl.org>
-List-Help: <mailto:kernel-janitors-request@lists.osdl.org?subject=help>
-List-Subscribe: <http://lists.osdl.org/mailman/listinfo/kernel-janitors>,
-	<mailto:kernel-janitors-request@lists.osdl.org?subject=subscribe>
-Sender: kernel-janitors-bounces@lists.osdl.org
-Errors-To: kernel-janitors-bounces@lists.osdl.org
-To: Tobias Klauser <tklauser@nuerscht.ch>
-Cc: kernel-janitors@lists.osdl.org, linux-ide@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-
---===============79057958929800565==
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-
-On Tue, 8 Mar 2005 14:33:58 +0100, Tobias Klauser <tklauser@nuerscht.ch> wrote:
-> Hello,
+Received: from wproxy.gmail.com ([64.233.184.201]:17171 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262677AbVCJQan (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2005 11:30:43 -0500
+Received: by wproxy.gmail.com with SMTP id 68so815940wra
+        for <linux-ide@vger.kernel.org>; Thu, 10 Mar 2005 08:30:36 -0800 (PST)
+In-Reply-To: <20050303021638.GA24150@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 Hi,
 
-> Description: Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h
-> when calling pci_set_dma_mask() or pci_set_consistent_dma_mask()
-> See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
+On Thu, 3 Mar 2005 11:16:38 +0900, Tejun Heo <htejun@gmail.com> wrote:
 
-only DMA_32BIT_MASK constant is used in the patch
- 
-> Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
-> 
-> --- linux-2.6.11.orig/drivers/ide/pci/cs5520.c  2005-03-02 12:50:39.000000000 +0100
-> +++ linux-2.6.11/drivers/ide/pci/cs5520.c       2005-03-03 11:46:46.000000000 +0100
-> @@ -227,7 +227,7 @@ static int __devinit cs5520_init_one(str
->                 return 1;
->         }
->         pci_set_master(dev);
-> -       if (pci_set_dma_mask(dev, 0xFFFFFFFF)) {
-> +       if (pci_set_dma_mask(dev, DMA_32BIT_MASK)) {
->                 printk(KERN_WARNING "cs5520: No suitable DMA available.\n");
->                 return -ENODEV;
->         }
+> +         [2] Both the input and output buffers are copied from the
+> +         user and written back to the user, even when not used.  The
+> +         out_flags and in_flags are written back to the user after
+> +         the ioctl completes.  These are the same as the input
+> +         values, unchanged.
 
-You need to include <linux/dma-mapping.h> explicitly
-or build will fail for some architectures, i.e. please see:
-http://linus.bkbits.net:8080/linux-2.5/cset@41d833427yYZzu6TxydNrr5z6f02cg?nav=index.html|src/|src/drivers|src/drivers/ide|related/drivers/ide/setup-pci.c
+This is incorrect, please refer to flagged_taskfile() and ide_taskfile_ioctl().
+Unfortunately you've based your latest patch series on this assumption.
+
+> +         Taskfile registers are read back from the drive into
+> +         {io|hob}_ports[] after the command completes iff one of the
+> +         following conditions is met; otherwise, the original values
+> +         will be written back, unchanged.
+> +
+> +           1. The drive fails the command (EIO).
+> +           2. More than one bit is set in tf_out_flags.
+
+Isn't one bit enough?
+
+The rest is of the update is fine, thanks for doing this.
 
 Bartlomiej
-
---===============79057958929800565==
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-_______________________________________________
-Kernel-janitors mailing list
-Kernel-janitors@lists.osdl.org
-http://lists.osdl.org/mailman/listinfo/kernel-janitors
-
---===============79057958929800565==--
