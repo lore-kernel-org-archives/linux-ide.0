@@ -1,31 +1,50 @@
-From: Masakazu Iwamura <masa@cs.osakafu-u.ac.jp>
-Subject: Re: Second SATA disk is not recognized in kernel 2.6.x
-Date: Tue, 26 Oct 2004 11:58:53 +0900 (JST)
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20041026.115853.74754735.masa@cs.osakafu-u.ac.jp>
-References: <20041024.021758.130228080.masa@cs.osakafu-u.ac.jp>
-	<20041025.192404.59463574.masa@cs.osakafu-u.ac.jp>
-	<58cb370e041025062658d28930@mail.gmail.com>
+From: Paul Mackerras <paulus@samba.org>
+Subject: Re: [PATCH 1/1] build modular usb isd200 with modular ide
+Date: Tue, 26 Oct 2004 12:05:29 +1000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <16765.45289.684525.732044@cargo.ozlabs.ibm.com>
+References: <16765.34908.93713.977225@cargo.ozlabs.ibm.com>
+	<200410252355.i9PNtlSp025091@falcon10.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from orange.ss.cs.osakafu-u.ac.jp ([157.16.33.140]:896 "EHLO
-	orange.ss.cs.osakafu-u.ac.jp") by vger.kernel.org with ESMTP
-	id S262140AbUJZC64 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Oct 2004 22:58:56 -0400
-In-Reply-To: <58cb370e041025062658d28930@mail.gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200410252355.i9PNtlSp025091@falcon10.austin.ibm.com>
+To: Doug Maxey <dwm@austin.ibm.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Christoph Hellwig <hch@lst.de>, Greg Kroah-Hartman <greg@kroah.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux IDE Mailing List <linux-ide@vger.kernel.org>, linuxppc64-dev@ozlabs.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Bartlomiej wrote:
-> libata has problems with handling hw RAID connected to the second
-> SATA port (?), for now you can revert to using IDE driver, just disable
-> CONFIG_SCSI_SATA and enable CONFIG_BLK_DEV_IDE_SATA.
+Doug Maxey writes:
 
-I tried this. But, it did not boot also because of an error related to
-IRQ #18.
-Anyway, thank you!
+> Oh yes, I am aware.  Just happen to be working on PPC64.  Have been
+> writing drivers for this base for several years.  It's the olde LE
 
-masa
+For Linux or some other OS?
+
+> device vs BE host.  The transfers are done as a 16 bit quantity, PIO.
+> And yes, I understand, "we have always done it this way".  Works well
+> when you only have to deal with single arch.
+
+No, we haven't always done it this way on PPC. :)  Various different
+ways have been tried over the years and this is the only way that
+doesn't suck.
+
+> Possibly I am not making point very well, that one is preserving the
+> correct byte order and let the structures reflect to native location.
+
+I can't parse that sentence unambiguously...
+
+> Strings get swapped, 16, 32, and 64 bit fields likewise.  I just missed the 
+> LE order that is is being preserved for *some* few fields only.
+
+Strings shouldn't get swapped, or at least, strings should only need
+to be swapped on a BE platform if they also need to be swapped on an
+LE platform.
+
+> There is not a single reference to byte field in the ATA spec for
+> IDENTIFY DEVICE.  It just happens that some of the fields are 8 bits long. Or 
+> 32 or 64.
+
+And your point is...  ?
+
+Paul.
