@@ -1,169 +1,43 @@
-From: Matthias-Christian Ott <matthias.christian@tiscali.de>
-Subject: Re: 2.6.11rc4: irq 5, nobody cared
-Date: Sun, 20 Feb 2005 21:00:42 +0100
-Message-ID: <4218EC6A.5000800@tiscali.de>
-References: <20050220155600.GD5049@vanheusden.com> <20050220164010.GA17806@ime.usp.br> <4218C692.9040106@tiscali.de> <20050220180550.GA18606@ime.usp.br>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: libata oops 2.6.11-rc4 yesterdays BK
+Date: Mon, 21 Feb 2005 08:27:49 +0400
+Message-ID: <42196345.5040501@wasp.net.au>
+References: <4212CBD6.7020703@wasp.net.au> <42132803.2080701@wasp.net.au> <4213821D.1030203@pobox.com> <4213B2F8.2070800@wasp.net.au> <20050216154033.I10699@florence.linkmargin.com> <42158774.9030406@wasp.net.au> <4216BD10.2070008@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Received: from relay1.tiscali.de ([62.26.116.129]:52944 "EHLO
-	webmail.tiscali.de") by vger.kernel.org with ESMTP id S261786AbVBTUAq
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 20 Feb 2005 15:00:46 -0500
-In-Reply-To: <20050220180550.GA18606@ime.usp.br>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from wasp.net.au ([203.190.192.17]:2499 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S261790AbVBUE2C (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Feb 2005 23:28:02 -0500
+In-Reply-To: <4216BD10.2070008@wasp.net.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Rog=E9rio_Brito?= <rbrito@ime.usp.br>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, bzolnier@elka.pw.edu.pl, B.Zolnierkiewicz@elka.pw.edu.pl
+To: Brad Campbell <brad@wasp.net.au>
+Cc: Andy Warner <andyw@pobox.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Rog=E9rio Brito wrote:
+Brad Campbell wrote:
 
->On Feb 20 2005, Matthias-Christian Ott wrote:
-> =20
->
->>Rog=E9rio Brito wrote:
->>   =20
->>
->>>I am willing to test any patch and configuration (let's call me a
->>>"guinea pig"), but I don't know what I should do. I have, OTOH,
->>>reported my problem many times in the past few days. :-(
->>>
->>>I will retry sending my message to the list once again, with the
->>>details (in my case, the message I get is "irq 10: nobody cared!"
->>>and it is regarding my primary HD on my secondary Promise PDC20265
->>>controller).
->>>     =20
->>>
->
->First of all, Matthias-Christian, thank you very much for your kind
->answer.
->
->I have already tried contacting the linux-ide mailing list as a CC to =
-my
->earlier messages, but I got no response. I am including some details i=
-n
->this e-mail. I included Bartlomiej in the CC, as he is listed as gener=
-al
->IDE maintainer in the MAINTAINERS file.
->
-> =20
->
->>Report it to http://bugzilla.kernel.org/. Maybe you'll get help there=
-=2E
->>   =20
->>
->
->Thanks. I will try filing a bug on that system as soon as I get the
->reply to create my account there.
->
->(...)
-> =20
->
->>You see it's very difficult to fix such irq problems because some fac=
-tors
->>can cause such an error.
->>   =20
->>
->
->Yes, I understand that.
->
-> =20
->
->>Maybe contacting specific malinglists (e.g. for "broken" pci cards
->>the pci mailinglist, etc.), maintainers or developers would be more
->>efficient (cc the lkml) and solve your problem (faster), because
->>this people are specialists are this type of hardware (e.g. pci).
->>
->>What hardware is connect through irq 5?
->>   =20
->>
->
->In my case, my problem is not with irq 5, but with irq 10, as I
->mentioned earlier.
->
->The situation is this: I have an Asus A7V motherboard with 2 VIA
->vt82c686a controllers and 2 Promise PDC20265 controllers.
->
->I recently bought myself a new DVD recorder and since Alan Cox told
->me[*] that the Promise controllers had problems with ATAPI devices, I
->decided to arrange my system this way:
->
->/dev/hda: the DVD recorder (VIA controller, master)
->/dev/hdc: an old CD recorder (VIA controller, master)
->/dev/hde: my first HD (Promise controller, master)
->/dev/hdg: my second HD (Promise controller, master)
->
->The Promise controller is able to control the HDs (which now have
->exclusive 80-pin cables) at their maximum, but I get the following
->stack trace if I have /dev/hdg turned on:
->
->- - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - -
->ACPI: PCI interrupt 0000:00:11.0[A] -> GSI 10 (level, low) -> IRQ 10
->PDC20265: chipset revision 2
->PDC20265: 100% native mode on irq 10
->PDC20265: (U)DMA Burst Bit ENABLED Primary PCI Mode Secondary PCI Mode=
-=2E
->    ide2: BM-DMA at 0x7400-0x7407, BIOS settings: hde:pio, hdf:pio
->    ide3: BM-DMA at 0x7408-0x740f, BIOS settings: hdg:pio, hdh:pio
->Probing IDE interface ide2...
->hde: QUANTUM FIREBALL CX13.0A, ATA DISK drive
->ide2 at 0x8800-0x8807,0x8402 on irq 10
->Probing IDE interface ide3...
->hdg: QUANTUM FIREBALLlct15 30, ATA DISK drive
->irq 10: nobody cared!
-> [<c0128fc1>] __report_bad_irq+0x31/0x77
-> [<c012906b>] note_interrupt+0x4c/0x71
-> [<c0128c86>] __do_IRQ+0x93/0xbd
-> [<c0104635>] do_IRQ+0x19/0x24
-> [<c010335a>] common_interrupt+0x1a/0x20
-> [<c011935c>] __do_softirq+0x2c/0x7d
-> [<c01193cf>] do_softirq+0x22/0x26
-> [<c010463a>] do_IRQ+0x1e/0x24
-> [<c010335a>] common_interrupt+0x1a/0x20
-> [<c0128d89>] enable_irq+0x88/0x8d
-> [<c021edc0>] probe_hwif+0x2da/0x366
-> [<c021a137>] ata_attach+0xa3/0xbd
-> [<c021ee5c>] probe_hwif_init_with_fixup+0x10/0x74
-> [<c0221597>] ide_setup_pci_device+0x72/0x7f
-> [<c0216f82>] pdc202xx_init_one+0x15/0x18
-> [<c039182e>] ide_scan_pcidev+0x34/0x59
-> [<c039186f>] ide_scan_pcibus+0x1c/0x88
-> [<c039179f>] probe_for_hwifs+0xb/0xd
-> [<c03917e5>] ide_init+0x44/0x59
-> [<c037c6ce>] do_initcalls+0x4b/0x99
-> [<c0100272>] init+0x0/0xce
-> [<c0100299>] init+0x27/0xce
-> [<c0101245>] kernel_thread_helper+0x5/0xb
->handlers:
->[<c021c2a6>] (ide_intr+0x0/0xee)
->Disabling IRQ #10
->irq 10: nobody cared!
->- - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - -
->
->This is just an excerpt of the messages. I can provide much more
->details if I know what is relevant.
->
->I had already posted some old dmesg logs at my site
-><http://www.ime.usp.br/~rbrito/ide-problem/>, but this was before I
->got myself a second 80-ribbon cable (I expected that the problem would
->go away, but it didn't).
->
->Any other comments are more than welcome.
->
->
->Thanks in advance, Rog=E9rio Brito.
->
->[*] http://infocenter.guardiandigital.com/archive/linux-kernel/2004/De=
-c/2663.html
-> =20
->
-Hi!
-I'm not IDE specialist, but what about operating systems? Did you try a=
-=20
-Windows or BSD CD (try it with a Windows 2000/XP CD, if you have one,=20
-else burn a NetBSD or FreeBSD/DragonflyBSD CD -- this is important to=20
-see if it's a linux bug or acpi bug)? Anyway this is very strange.
+> 
+> Have been unable to hit the bug with SMART disabled (Kernel unchanged). 
+> So...... Pass through (or SMART in particular) is not really safe on UP 
+> either, you just have to work really hard at it to hit the corner cases.
 
-Good luck!
-Matthias-Christian Ott
+I tried it last night with the latest and greatest Vanilla BK + libata + libata-dev and really 
+pounded the poor machine hard with very rude bash scripts doing SMART polling from two separate 
+tasks (so randomly I would poll the same drive with two different queries simultaneously) and I 
+could certainly fail drives out of the array, but no oops.
+
+So yes, SMART is causing timeouts but no longer causing an oops here.
+
+Now I have also replaced the PSU with a much better specced unit, so that may have also been a 
+contributing factor to the oops. (The 12v rail was running on the edge).
+
+If this rebuild this morning gets through then I'll go back to the old kernel that was oopsing and 
+try it again to compare.
+
+Regards,
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
