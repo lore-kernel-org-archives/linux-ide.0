@@ -1,46 +1,34 @@
-From: Alan Cox <alan@redhat.com>
-Subject: PATCH: ide probe
-Date: Mon, 6 Sep 2004 11:33:04 -0400
+From: Hasse Hagen Johansen <hhj@musikcheck.dk>
+Subject: Problem detecting disks on the PATA part of PDC20378
+Date: Tue, 07 Sep 2004 20:39:32 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040906153304.GA6067@devserv.devel.redhat.com>
+Message-ID: <413E0064.7040105@musikcheck.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:27351 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S268153AbUIFPdI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Sep 2004 11:33:08 -0400
-Content-Disposition: inline
+Received: from e81-19-243-105s.easyspeedy.com ([81.19.243.105]:31717 "EHLO
+	hagen-johansen.dk") by vger.kernel.org with ESMTP id S268392AbUIGSjQ
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Sep 2004 14:39:16 -0400
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This is a revised version of the IDE probe undecoded slave detection patch. It
-replaces the one in the -mm tree. It contains just the probe code so none of
-the other IDE stuff thats pending Bartlomiej deciding which little bits to
-merge first, and stands alone.
+Hi
 
+I would like to use dmraid to set up my existing Promise fake raid, but 
+it seems that kernel 2.6.8.1 doesn't detect the individual discs on the 
+PDC20378 controller, som I am again out of luck trying to upgrade to the 
+2.6.x kernels.
 
---- ../linux.vanilla-2.6.8.1/drivers/ide/ide-probe.c	2004-08-16 17:57:02.000000000 +0100
-+++ drivers/ide/ide-probe.c	2004-08-30 14:46:17.000000000 +0100
-@@ -749,6 +776,22 @@
- 		ide_drive_t *drive = &hwif->drives[unit];
- 		drive->dn = (hwif->channel ? 2 : 0) + unit;
- 		(void) probe_for_drive(drive);
-+		if (drive->present && hwif->present && unit == 1)
-+		{
-+			if(strcmp(hwif->drives[0].id->model, drive->id->model) == 0 &&
-+			   /* Don't do this for noprobe or non ATA */
-+			   strcmp(drive->id->model, "UNKNOWN") &&
-+			   /* ITE haven't got this figured out either (see the quirk code too) */
-+			   !strstr(drive->id->model, "Integrated Technology Express") &&
-+			   /* And beware of confused Maxtor drives that go "M0000000000" 
-+			      "The SN# is garbage in the ID block..." [Eric] */
-+			   strncmp(drive->id->serial_no, "M0000000000000000000", 20) && 
-+			   strncmp(hwif->drives[0].id->serial_no, drive->id->serial_no, 20) == 0)
-+			{
-+				printk(KERN_WARNING "ide-probe: ignoring undecoded slave\n");
-+				drive->present = 0;
-+			}
-+		}
- 		if (drive->present && !hwif->present) {
- 			hwif->present = 1;
- 			if (hwif->chipset != ide_4drives ||
+Is there any plans or fixes to detect PATA discs on this controller, 
+i've seen that people say that the SATA part works fine, but I am pretty 
+stuck right now (I should never have used that fakeraid). I am writing 
+here as I didn't get any info from the severel distribtution lists, and 
+one LUG lists I am on.
+
+Acutally I will just hear if there is any hope in using this controller 
+at all
+
+Best Regards
+Hasse
