@@ -1,51 +1,65 @@
-From: Andy Warner <andyw@pobox.com>
-Subject: Re: libata oops 2.6.11-rc4 yesterdays BK
-Date: Wed, 16 Feb 2005 18:20:40 -0600
-Message-ID: <20050216182040.L10699@florence.linkmargin.com>
-References: <4212CBD6.7020703@wasp.net.au> <42132803.2080701@wasp.net.au> <4213821D.1030203@pobox.com> <4213B2F8.2070800@wasp.net.au> <20050216154033.I10699@florence.linkmargin.com> <4213CD9E.9040703@pobox.com> <20050216174954.K10699@florence.linkmargin.com> <4213DE38.70309@pobox.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: PATA drivers in libata?
+Date: Thu, 17 Feb 2005 12:11:48 +1100
+Message-ID: <1108602708.5382.9.camel@gaston>
+References: <420FA1B9.6030100@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:53972 "EHLO
-	ms-smtp-04.rdc-kc.rr.com") by vger.kernel.org with ESMTP
-	id S262164AbVBQAUq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Feb 2005 19:20:46 -0500
-Content-Disposition: inline
-In-Reply-To: <4213DE38.70309@pobox.com>; from jgarzik@pobox.com on Wed, Feb 16, 2005 at 06:58:48PM -0500
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from gate.crashing.org ([63.228.1.57]:3229 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S262067AbVBQBMP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2005 20:12:15 -0500
+In-Reply-To: <420FA1B9.6030100@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andy Warner <andyw@pobox.com>, Brad Campbell <brad@wasp.net.au>, linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>
 
-Jeff Garzik wrote:
-> [...]
-> Unfortunately, that's what you're _supposed_ to do, busy-wait for every 
-> "block" (where block == 1 sector for PIO, and <n> sectors for PIO-Mult).
+On Sun, 2005-02-13 at 13:51 -0500, Jeff Garzik wrote:
+> I wanted to open a discussion on libata and PATA.
+> 
+> libata-dev now has two drivers that support PATA, pata_pdc2027x and 
+> ata_piix, and the core is getting close (DMA blacklist in, C/H/S support 
+> close).
+> 
+> What are the opinions on issues relating to making PATA libata support 
+> available in the upstream kernel?  Here's my random list.
+> 
+> * I think CONFIG_IDE should continue to be the default answer for "what 
+> driver do I use for PATA?"
 
-The logic surrounding PIO-multi in PATA-land looked markedly different.
+Yes.
 
-> Wasn't it you that had a patch that used ata_altstatus() to mitigate 
-> this somewhat?
+> * Should there be a config option similar to CONFIG_BLK_DEV_IDE_SATA, 
+> called CONFIG_SCSI_ATA_PATA?  A runtime 'pata' module option?  Should we 
+> include 'DANGER DANGER conflicts with CONFIG_IDE' in the Kconfig 
+> description?
 
-Yeah - and to not call queue_work() to accomplish the polling
-(which could start the next poll immediately on an SMP machine),
-I suppose that _could_ just as easily point to a locking problem,
-as a state machine logic flaw. My proof-of-concept kludge was to
-call queue_delayed_work() instead.
+Eventually... I'm thinking I may port the "macio" IDE to libata one day,
+but for now, I still need both drivers/ide for it and libata for SATA.
 
-> It's entirely possible that I'm one of the first to punish SATA 
-> controllers with PIO polling data transfer, rather than interrupt-driven 
-> xfer.  The SMP aspect makes me suspicious that something else might be 
-> involved, as well.  Ever since the 2.6.10-bkN kernel updated ACPI, the 
-> one SMP machine I had that failed on libata started working.
+> * With ATA passthru (in libata-dev currently), libata supports SMART and 
+> the HDIO_CMD/HDIO_TASK generalized ioctls.  Should I care about 
+> supporting other ioctls?
+> 
+> * pci_enable_device() issues?
+> 
+> * power management differences?
 
-I saw errors on both SiI (3114) and Promise (20319) cards, so
-I'm not convinced that (these) problems are at the chip-level
-(not that there aren't plenty of those to go around.)
+Well, libata doesn't have power management proper at all for now. In
+fact, I need to do something at the generic SCSI level similar to what I
+did for drivers/ide, that is turning the PM callbacks into requests down
+the queues etc... but I don't have any SCSI or libata HW that can power
+manage at the moment, so I didn't quite bother yet.
 
-> Any chance you could debug this further?
+(Though if I ported "macio" IDE ... )
 
-I'll see what I can do.
--- 
-andyw@pobox.com
+Ultimately, it will have to be done for things like USB & firewire too
+anyway. So maybe I should start working on this soonish. I talked a bit
+with jejb at OLS a year or 2 ago about the way to do it, it shouldn't be
+that much different than what I do in drivers/ide, but then, I know
+pretty much nothing about the linux scsi layer...
 
-Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
+Ben.
+ 
+
