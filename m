@@ -1,61 +1,34 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [sata] new libata-dev-2.6 queue created (AHCI, SATA bridges)
-Date: Wed, 15 Sep 2004 12:10:26 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040915161026.GA31360@havoc.gtf.org>
+From: Andre Tomt <andre@tomt.net>
+Subject: Re: [sata] new libata-dev-2.6 queue created (AHCI, SATA bridges)
+Date: Thu, 16 Sep 2004 00:47:14 +0200
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <4148C672.4050905@tomt.net>
+References: <20040915161026.GA31360@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S266648AbUIOQNb@vger.kernel.org>
-Content-Disposition: inline
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ns1.skjellin.no ([80.239.42.66]:33767 "HELO mail.skjellin.no")
+	by vger.kernel.org with SMTP id S267721AbUIOWpN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Sep 2004 18:45:13 -0400
+In-Reply-To: <20040915161026.GA31360@havoc.gtf.org>
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Jeff Garzik wrote:
 
+> I have updated my SATA status page to reflect these updates:
+> 	http://linux.yyz.us/sata/sata-status.html
 
-"libata-dev-2.6" is a new patch queue for SATA features which are under
-development, or need additional testing before being deployed into the
-upstream-bound libata-2.[46] queues.
+Good stuff :-)
 
-It currently contains:
+Is there any news on Marvell progress? I'll get my hands dirty on a 
+shipment with servers using the chips on friday, I may be able to sneak 
+in some testing before deployment (they will be rewired to use ICH5-R 
+for now)
 
-1) A workaround for problems on multiple SATA controllers when using
-PATA disks attached via SATA bridges.
-
-2) New driver AHCI.  This should currently be considered a technology
-preview or early beta test.  Simply because it is a young driver on
-complicated hardware, using a new "FIS-based" delivery method (read:
-brand new hotpath), caution is advised.  Do not use in production yet.
-
-
-I have updated my SATA status page to reflect these updates:
-	http://linux.yyz.us/sata/sata-status.html
-
-
-BK users:
-bk pull bk://gkernel.bkbits.net/libata-dev-2.6
-
-Patch (NOTE: relative to 2.6.9-rc2-bk1-libata1.patch):
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.9-rc2-bk1-libata1-dev1.patch.bz2
-
-This will update the following files:
-
- drivers/scsi/Kconfig       |    8 
- drivers/scsi/Makefile      |    1 
- drivers/scsi/ahci.c        |  973 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/libata-core.c |   37 +
- include/linux/ata.h        |    1 
- include/linux/libata.h     |    1 
- 6 files changed, 1018 insertions(+), 3 deletions(-)
-
-through these ChangeSets:
-
-<jgarzik@pobox.com> (04/09/15 1.1905)
-   [libata] add AHCI driver
-
-<brad@wasp.net.au> (04/09/15 1.1902.1.1)
-   [PATCH] libata basic detection and errata for PATA->SATA bridges
-   
-   This patch works around an issue with WD drives (and possibly others) over SiL PATA->SATA Bridges on SATA controllers locking up with transfers > 200 sectors.
-   
-   Signed-off-by: Brad Campbell <brad@wasp.net.au>
+Hmm, I wonder if there is any AHCI PCI(-X/E) plug-in boards planned. 
+That would be nice indeed. Seems like SATAII-like features on PCI-boards 
+are bound to Marvell or hardware RAID cards like 3ware 9xxx or newer LSI 
+MegaRAID currently.
