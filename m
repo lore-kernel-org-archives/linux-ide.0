@@ -1,95 +1,31 @@
-From: Bernard Blackham <bernard@blackham.com.au>
-Subject: shutdown patch
-Date: Sun, 28 Dec 2003 11:04:39 +0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20031228030438.GA1273@amidala>
+From: Daniel Brahneborg <daniel.com@wtnord.net>
+Subject: Re: siimage and two nics
+Date: Sun, 28 Dec 2003 15:49:33 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20031228154933.A5275@nettis.grimsta>
+References: <20031226085450.A4045@nettis.grimsta> <34449.209.163.161.49.1072444479.squirrel@mail.clanhk.org> <20031226195705.B4045@nettis.grimsta> <3FEBAFA5.8020604@clanhk.org> <20031226232826.A7057@nettis.grimsta> <3FEBCA3C.5000803@clanhk.org> <20031227083050.A8631@nettis.grimsta> <3FECD15B.1010004@clanhk.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="jho1yZJdad60DJr+"
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 212-214-141-209.v-by.wtnord.net ([212.214.141.209]:18565 "EHLO
+	ricercar.mine.nu") by vger.kernel.org with ESMTP id S261522AbTL1Otn
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Dec 2003 09:49:43 -0500
 Content-Disposition: inline
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, swsusp-devel@lists.sourceforge.net
+In-Reply-To: <3FECD15B.1010004@clanhk.org>; from heretic@clanhk.org on Sat, Dec 27, 2003 at 12:24:59AM +0000
 List-Id: linux-ide@vger.kernel.org
+To: "J. Ryan Earl" <heretic@clanhk.org>
+Cc: Daniel Brahneborg <daniel.com@wtnord.net>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 
+On Sat, Dec 27, 2003 at 12:24:59AM +0000, J. Ryan Earl wrote:
+> I suggest the -mm tree, it includes all the patches for the siimage 
+> driver, plus many more.  It has been stable in my testing.
 
---jho1yZJdad60DJr+
-Content-Type: multipart/mixed; boundary="OgqxwSJOaUobr8KG"
-Content-Disposition: inline
+I just tried that, but with the same data corruption problem
+as with Linus tree: Writing large files on a raid5 disk causes
+random data corruption.
 
+I seem to get less DMA problems now though, which is very nice.
 
---OgqxwSJOaUobr8KG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+/Basic
 
-Hi,
-
-In 2.4, there was an IDE reboot notifier that placed HDDs into
-standby before shutdown (and parking heads). These no longer exist
-in 2.6's IDE code since the power management rework. Debian (and
-probably most distributions) run halt(8) as the last command in
-runlevel 0 which puts the disk into standby mode, so generally it
-isn't a problem.
-
-However, if the system is powered off by other means (eg,
-suspend-to-disk), the drive is never placed in standby mode, and
-some drives will make a very audible "thunk" (my guess is as they
-race to park their heads).
-
-This patch places the disks in standby when device_shutdown() is
-called. Please consider it, or something with the same functionality
-(I'm not sure if it's correct to assume that calling
-device->shutdown() can be treated the same as entering S5).
-
-Regards,
-
-Bernard.
-
---=20
- Bernard Blackham <bernard at blackham dot com dot au>
-
---OgqxwSJOaUobr8KG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="ide-shutdown.diff"
-Content-Transfer-Encoding: quoted-printable
-
-diff -ruN linux-2.6.0/drivers/ide/ide.c.orig linux-2.6.0/drivers/ide/ide.c
---- linux-2.6.0/drivers/ide/ide.c.orig	2003-12-18 10:58:38.000000000 +0800
-+++ linux-2.6.0/drivers/ide/ide.c	2003-12-28 10:18:47.000000000 +0800
-@@ -2493,6 +2493,11 @@
- 	return 0;
- }
-=20
-+static void ide_drive_shutdown (struct device * dev)
-+{
-+	generic_ide_suspend(dev, 5);
-+}
-+
- int ide_register_driver(ide_driver_t *driver)
- {
- 	struct list_head list;
-@@ -2519,6 +2524,7 @@
- 	driver->gen_driver.name =3D (char *) driver->name;
- 	driver->gen_driver.bus =3D &ide_bus_type;
- 	driver->gen_driver.remove =3D ide_drive_remove;
-+	driver->gen_driver.shutdown =3D ide_drive_shutdown;
- 	return driver_register(&driver->gen_driver);
- }
-=20
-
---OgqxwSJOaUobr8KG--
-
---jho1yZJdad60DJr+
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQE/7khGccTsdj5FJ6QRAhEPAKCTO+fLALgs2Wa8iK0GiMKclUJlKQCghGTS
-Giv+gl4XjdXwCLJlJSNTyvU=
-=dVTO
------END PGP SIGNATURE-----
-
---jho1yZJdad60DJr+--
