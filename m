@@ -1,38 +1,46 @@
-From: James Courtier-Dutton <James@superbug.demon.co.uk>
-Subject: Better support for Serial ATA Hard Discs.
-Date: Mon, 16 Aug 2004 17:00:15 +0100
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4120DA0F.4060506@superbug.demon.co.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: PATCH: fixup incomplete ident blocks on ITE raid volumes
+Date: Mon, 16 Aug 2004 15:57:39 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1092668252.20736.11.camel@localhost.localdomain>
+References: <20040815144527.GA7983@devserv.devel.redhat.com>
+	 <200408161716.35922.bzolnier@elka.pw.edu.pl>
+	 <20040816152816.GD10279@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anchor-post-36.mail.demon.net ([194.217.242.86]:10502 "EHLO
-	anchor-post-37.mail.demon.net") by vger.kernel.org with ESMTP
-	id S267791AbUHPQAU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Aug 2004 12:00:20 -0400
-Received: from superbug.demon.co.uk ([80.176.146.252] helo=[192.168.1.10])
-	by anchor-post-37.mail.demon.net with esmtp (Exim 3.35 #1)
-	id 1BwjuC-0004eg-0b
-	for linux-ide@vger.kernel.org; Mon, 16 Aug 2004 16:00:16 +0000
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S267740AbUHPQFI@vger.kernel.org>
+In-Reply-To: <20040816152816.GD10279@devserv.devel.redhat.com>
+To: Alan Cox <alan@redhat.com>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, torvalds@osdl.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-I have a SATA HD, and my motherboard can talk to it using PATA or SATA.
-Using PATA, the SATA HD appears to linux as an IDE HD. So I can use 
-hdparm on it, and therefore set sleep/power down times. e.g. hdparm -S60 
-/dev/hda
+/sOn Llu, 2004-08-16 at 16:28, Alan Cox wrote:
+> On Mon, Aug 16, 2004 at 05:16:35PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > This should be part of ITE driver patch and be compiled only when ITE driver 
+> > is going to be used or even better - there should be new callback for that.
+> 
+> Nice theory but doesn't work that way. The ITE drive will do this even if
+> you don't have the ITE driver compiled in because it'll be seen as the
+> mainboard legacy controller (or generic) in some systems.
 
-Using SATA, the SATA HD appears to linux as a SCSI HD. I can use hdparm 
-on it, but it is limited. e.g. hdparm -S60 /dev/sda  <- Will not work.
+By way of more explanation here. The ITE chip does some interesting
+things. Its got two modes. The first is a generic nodescript and 
+slightly irritatingly designed IDE device. The second runs stuff via an
+onboard microcontroller which can do stuff like fire transactions up on
+both busses and then do the DMA to both at once.
 
-I am using linux kernel 2.6.8.
-Should I be using some different tool for setting sleep/power down times 
-when using the SATA HD in SATA mode?
+The firmware when you have raid volumes fakes up identity blocks (badly)
+and the device is IDE class and capable of being your main IDE
+controller. In that situation even the generic PIO driver will 
+see the RAID volumes and get confused by the ident blocks.
 
-I would also like to get hddtemp to work with SATA HDs as well.
+There is a second problem too resulting from this. Not only might the
+IT8212 module not be loaded, but even if it is we probe the generic IDE
+devices with the generic PIO and then attach the PCI driver on top of
+it. That one can be dealt with by using a little bit of care but the
+fact generic IDE sees them I think means it has to be in the generic ide
+probe code. A later patch removes the geometry stuff as I fixed that
+properly in ide-disk so it isn't needed now.
 
-Can anyone advise me on what to do next?
-
-James
-
+Alan
