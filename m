@@ -1,63 +1,142 @@
-From: Eldad Zack <eldad@stoneshaft.ath.cx>
-Subject: kernel boot hang, SATA_VIA compiled without APIC_IO
-Date: Fri, 3 Dec 2004 03:45:42 +0200
-Message-ID: <200412030345.45282.eldad@stoneshaft.ath.cx>
+From: "Albert Lee" <albertcc@tw.ibm.com>
+Subject: Re: [PATCH] libata: Use ATAPI PIO mode for specific request buffer sizes
+Date: Fri, 3 Dec 2004 15:18:04 +0800
+Message-ID: <002701c4d908$40740e90$be4d4109@tw.ibm.com>
+References: <00ce01c4d6b8$d222d080$bc604109@tw.ibm.com> <41AEFAA4.80907@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1232455.TYaQ19hRxX";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0024_01C4D94B.48F1B070"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 212.199.9.99.forward.012.net.il ([212.199.9.99]:41634 "EHLO
-	stoneshaft.ath.cx") by vger.kernel.org with ESMTP id S261838AbULCBre
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Dec 2004 20:47:34 -0500
+Received: from bluehawaii.tikira.net ([61.62.22.51]:9714 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S261813AbULCHT2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 3 Dec 2004 02:19:28 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
---nextPart1232455.TYaQ19hRxX
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_0024_01C4D94B.48F1B070
 Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 
-Hello,
+Hi, Jeff:
 
-I've recently got a SATA capable machine (Via chipset) and I've exprienced =
-a=20
-nasty hang at boottime, using kernel 2.6.9.
-After some recompiling different parameters it boiled down to APIC_IO being=
-=20
-not selected (this is a UP machine).
+> > ..
+> > Two changes:
+> > 1. Use ATAPI PIO mode for ATAPI REQUEST_SENSE
+> > 2. Use ATAPI PIO mode for specific SCSI commands issued to ATAPI device that
+> >     buffer_size % 256 != 0.
+> > 
+> >   Since for most commands, buffer_size % 256 is 0,  this patch
+> > won't introduce big impact to the performance of libata (hopefully).
+> >   
+> >   Tested OK on on my machine with pdc20275 and ASUS CD-RW drive.
+> 
+> hmmmmmmm.
+> 
+> Your change #1 makes perfect sense, and I agree it is the safer (and 
+> more simple) route.
+> 
+> I must ponder change #2 some more (after some sleep :)).  In particular, 
+> I am concerned that making change #2 across all controllers will hurt 
+> performance on the commands whose data length is not purely sector-sized 
+> chunks.
+> 
+> Would you mind splitting up change #1 and #2 into separate patches?
+> 
 
-Without APIC_IO selected the system would hang while loading SATA.
+  Attached please find the request sense patch for change #1 (the patch is against 
+libata-dev-2.6 tree).
 
-I've only tried 2.6.5 to notice it would not hang but would emit messeges a=
-s=20
-"hde: lost interrupt", and eventually go on with the boot, the sata being=20
-unusable.
+  For change #2, agreed the previous patch is problematic since it will impact all 
+adapters and the buffer_size % 256 rule might also fail for other host adapters. 
 
-Out of curiousity, I'd like to know if APIC_IO is absolutly needed when=20
-dealing with SATA, and also, I'd like to help debug this problem so that a=
-=20
-kernel compiled without APIC_IO would at the very least not hang...
+  How about let LLD provide a callback function such that libata core
+can ask the LLD: "Which protocol do you like this command to be processed? " or
+"Can this command be processed in ATAPI DMA mode reliably? " 
+when the the command is received?
+
+Albert
+
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+-----------------------------------------------------------------------------------------------------------
+diff -Nru libata-dev-2.6-ori/drivers/scsi/libata-core.c libata-dev-2.6/drivers/scsi/libata-core.c
+--- libata-dev-2.6-ori/drivers/scsi/libata-core.c 2004-11-30 12:52:28.000000000 +0800
++++ libata-dev-2.6/drivers/scsi/libata-core.c 2004-11-30 13:49:36.000000000 +0800
+@@ -2435,7 +2435,6 @@
+  DECLARE_COMPLETION(wait);
+  struct ata_queued_cmd *qc;
+  unsigned long flags;
+- int using_pio = dev->flags & ATA_DFLAG_PIO;
+  int rc;
+ 
+  DPRINTK("ATAPI request sense\n");
+@@ -2456,16 +2455,10 @@
+  qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+  qc->tf.command = ATA_CMD_PACKET;
+ 
+- if (using_pio) {
+-  qc->tf.protocol = ATA_PROT_ATAPI;
+-  qc->tf.lbam = (8 * 1024) & 0xff;
+-  qc->tf.lbah = (8 * 1024) >> 8;
+-
+-  qc->nbytes = SCSI_SENSE_BUFFERSIZE;
+- } else {
+-  qc->tf.protocol = ATA_PROT_ATAPI_DMA;
+-  qc->tf.feature |= ATAPI_PKT_DMA;
+- }
++ qc->tf.protocol = ATA_PROT_ATAPI;
++ qc->tf.lbam = (8 * 1024) & 0xff;
++ qc->tf.lbah = (8 * 1024) >> 8;
++ qc->nbytes = SCSI_SENSE_BUFFERSIZE;
+ 
+  qc->waiting = &wait;
+  qc->complete_fn = ata_qc_complete_noop;
 
 
-=2D-=20
-Eldad Zack <eldad@stoneshaft.ath.cx>
-Key/Fingerprint at pgp.mit.edu, ID 0x96EA0A93
+------=_NextPart_000_0024_01C4D94B.48F1B070
+Content-Type: application/octet-stream;
+	name="request_sense.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="request_sense.patch"
 
---nextPart1232455.TYaQ19hRxX
-Content-Type: application/pgp-signature
+diff -Nru libata-dev-2.6-ori/drivers/scsi/libata-core.c libata-dev-2.6/drivers/scsi/libata-core.c
+--- libata-dev-2.6-ori/drivers/scsi/libata-core.c	2004-11-30 12:52:28.000000000 +0800
++++ libata-dev-2.6/drivers/scsi/libata-core.c	2004-11-30 13:49:36.000000000 +0800
+@@ -2435,7 +2435,6 @@
+ 	DECLARE_COMPLETION(wait);
+ 	struct ata_queued_cmd *qc;
+ 	unsigned long flags;
+-	int using_pio = dev->flags & ATA_DFLAG_PIO;
+ 	int rc;
+ 
+ 	DPRINTK("ATAPI request sense\n");
+@@ -2456,16 +2455,10 @@
+ 	qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	qc->tf.command = ATA_CMD_PACKET;
+ 
+-	if (using_pio) {
+-		qc->tf.protocol = ATA_PROT_ATAPI;
+-		qc->tf.lbam = (8 * 1024) & 0xff;
+-		qc->tf.lbah = (8 * 1024) >> 8;
+-
+-		qc->nbytes = SCSI_SENSE_BUFFERSIZE;
+-	} else {
+-		qc->tf.protocol = ATA_PROT_ATAPI_DMA;
+-		qc->tf.feature |= ATAPI_PKT_DMA;
+-	}
++	qc->tf.protocol = ATA_PROT_ATAPI;
++	qc->tf.lbam = (8 * 1024) & 0xff;
++	qc->tf.lbah = (8 * 1024) >> 8;
++	qc->nbytes = SCSI_SENSE_BUFFERSIZE;
+ 
+ 	qc->waiting = &wait;
+ 	qc->complete_fn = ata_qc_complete_noop;
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
+------=_NextPart_000_0024_01C4D94B.48F1B070--
 
-iD8DBQBBr8VJT+MN7JbqCpMRAsOJAJwPoglNolmGXWavlVgLKUFMtYNk3ACeI8j/
-rMR4m0XN7D47ySbsjzK0QoA=
-=Y35M
------END PGP SIGNATURE-----
-
---nextPart1232455.TYaQ19hRxX--
