@@ -1,49 +1,45 @@
 From: "Henrik Gustafsson" <lkml@fnord.se>
 Subject: Odd disk errors
-Date: Mon, 30 Aug 2004 22:37:06 +0200
+Date: Mon, 30 Aug 2004 23:13:07 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <opsdkbj4u4184obg@mail1.telia.com>
+Message-ID: <opsdkc75mv184obg@mail1.telia.com>
+References: <opsdkbj4u4184obg@mail1.telia.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
 	format=flowed	delsp=yes
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from av13-1-sn4.m-sp.skanova.net ([81.228.10.104]:7327 "EHLO
-	av13-1-sn4.m-sp.skanova.net") by vger.kernel.org with ESMTP
-	id S261239AbUH3UhL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Aug 2004 16:37:11 -0400
-Received: from smtp4-1-sn4.m-sp.skanova.net (smtp4-1-sn4.m-sp.skanova.net [81.228.10.181])
-	by av13-1-sn4.m-sp.skanova.net (Postfix) with ESMTP id 73EA637E42
-	for <linux-ide@vger.kernel.org>; Mon, 30 Aug 2004 22:37:10 +0200 (CEST)
-Received: from mail1.telia.com (h253n2fls20o918.bredband.comhem.se [217.208.64.253])
-	by smtp4-1-sn4.m-sp.skanova.net (Postfix) with ESMTP id 8208337E43
-	for <linux-ide@vger.kernel.org>; Mon, 30 Aug 2004 22:37:05 +0200 (CEST)
+Received: from av6-2-sn2.hy.skanova.net ([81.228.8.107]:55442 "EHLO
+	av6-2-sn2.hy.skanova.net") by vger.kernel.org with ESMTP
+	id S261375AbUH3VNB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Aug 2004 17:13:01 -0400
+In-Reply-To: <opsdkbj4u4184obg@mail1.telia.com>
 List-Id: linux-ide@vger.kernel.org
-Cc: "linux-kernel@vger.kernel.org;" <linux-ide@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 Hello!
 
-I keep getting errors when I use disks connected to my Promise SX4-card.  
-It might be the disks of course, but it seems somewhat unlikely that 5  
+I keep getting errors when I use disks connected to my Promise SX4-card.
+It might be the disks of course, but it seems somewhat unlikely that 5
 disks have had (more or less) the same error :)
 
-Right now I am running a gentoo-patched 2.6.8-kernel  
+Right now I am running a gentoo-patched 2.6.8-kernel
 (linux-2.6.8-gentoo-r3) patched with the 2.6.8-libata2 patch.
 
-I had similar errors under 2.6.7 and 2.6.6 ( See  
-http://lkml.org/lkml/2004/7/21/16 for some background ). That time it  
-affected disks 1, 2, 3 and another disk. This time I have got the error on  
-disk 1 and 4. The disks are connected in the same order. My guess is I can  
+I had similar errors under 2.6.7 and 2.6.6 ( See
+http://lkml.org/lkml/2004/7/21/16 for some background ). That time it
+affected disks 1, 2, 3 and another disk. This time I have got the error on
+disk 1 and 4. The disks are connected in the same order. My guess is I can
 provoke the error on the other disks aswell if I keep trying :)
 
-To provoke the errors I used badblocks -svw /dev/sdX. These particular  
-errors occured during a run och badblocks on all four disks at once (sdd  
-after about a day and sda after 2), but earlier tests (under 2.6.7) has  
-indicated that they appear even if only one disk is connected to the  
-controller. Worth noting is it took far longer for the errors to manifest  
+To provoke the errors I used badblocks -svw /dev/sdX. These particular
+errors occured during a run och badblocks on all four disks at once (sdd
+after about a day and sda after 2), but earlier tests (under 2.6.7) has
+indicated that they appear even if only one disk is connected to the
+controller. Worth noting is it took far longer for the errors to manifest
 after the kernel-upgrade.
 
-The errors show themselves through dmesg entries like these (sector  
+The errors show themselves through dmesg entries like these (sector
 numbers vary though):
 
 ata1: command timeout
@@ -68,14 +64,14 @@ FMK EOM ILI Current sdd: sense = 70 e5
 ASC=5e ASCQ=c1
 end_request: I/O error, dev sdd, sector 482285912
 
-One thing I found odd was that there was that am error-message for sector  
-6296 occurred before an error for sector 6176. I was under the impression  
-that badblocks(8) tested the sectors in sequential order. Note the extra  
+One thing I found odd was that there was that am error-message for sector
+6296 occurred before an error for sector 6176. I was under the impression
+that badblocks(8) tested the sectors in sequential order. Note the extra
 line on the error for sector 6176.
-Also, a bit weird is what messages end up in the syslog (metalog actually)  
-and what messages are only shown in the dmesg ('ata4: status=0x51  
-{ DriveReady SeekComplete Error }' for example is only printed on a  
-fraction of the errors). This could of course have something to do with  
+Also, a bit weird is what messages end up in the syslog (metalog actually)
+and what messages are only shown in the dmesg ('ata4: status=0x51
+{ DriveReady SeekComplete Error }' for example is only printed on a
+fraction of the errors). This could of course have something to do with
 the logger :)
 
 Lots of text to follow...
@@ -84,28 +80,31 @@ Thanks!
 // Henrik Gustafsson
 
 
-dmesg after boot, dmesg filled with error messages, config, ver_linux,  
-/proc/cpuinfo, /proc/modules, /proc/ioports, /proc/iomem, lspci -vvv and  
-/var/log/everything/<relevant files> grepped and cut to remove noise (most  
-notably nmbd messages). In that order.
+
+
+Here comes dmesg after boot, dmesg filled with error messages, config,  
+ver_linux,
+/proc/cpuinfo, /proc/modules, /proc/ioports, /proc/iomem, lspci -vvv and
+finally /var/log/everything/<relevant files> grepped and cut to remove
+noise. In that order.
 
 root@shiroi:~> dmesg
-Linux version 2.6.8-gentoo-r3 (root@shiroi) (gcc version 3.3.3 20040412  
-(Gentoo Linux 3.3.3-r6, ssp-3.3.2-2, pie-8.7.6)) #1 Fri Aug 27 19:33:12  
+Linux version 2.6.8-gentoo-r3 (root@shiroi) (gcc version 3.3.3 20040412
+(Gentoo Linux 3.3.3-r6, ssp-3.3.2-2, pie-8.7.6)) #1 Fri Aug 27 19:33:12
 CEST 2004
 BIOS-provided physical RAM map:
-  BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
-  BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
-  BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
-  BIOS-e820: 0000000000100000 - 000000001fff0000 (usable)
-  BIOS-e820: 000000001fff0000 - 000000001fff3000 (ACPI NVS)
-  BIOS-e820: 000000001fff3000 - 0000000020000000 (ACPI data)
-  BIOS-e820: 00000000ffff0000 - 0000000100000000 (reserved)
+   BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
+   BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
+   BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
+   BIOS-e820: 0000000000100000 - 000000001fff0000 (usable)
+   BIOS-e820: 000000001fff0000 - 000000001fff3000 (ACPI NVS)
+   BIOS-e820: 000000001fff3000 - 0000000020000000 (ACPI data)
+   BIOS-e820: 00000000ffff0000 - 0000000100000000 (reserved)
 511MB LOWMEM available.
 On node 0 totalpages: 131056
-   DMA zone: 4096 pages, LIFO batch:1
-   Normal zone: 126960 pages, LIFO batch:16
-   HighMem zone: 0 pages, LIFO batch:1
+    DMA zone: 4096 pages, LIFO batch:1
+    Normal zone: 126960 pages, LIFO batch:16
+    HighMem zone: 0 pages, LIFO batch:1
 DMI 2.2 present.
 ACPI: RSDP (v000 AOPEN                                     ) @ 0x000f5e70
 ACPI: RSDT (v001 AOPEN  AWRDACPI 0x42302e31 AWRD 0x00000000) @ 0x1fff3000
@@ -122,10 +121,9 @@ Using tsc for high-res timesource
 Console: colour VGA+ 80x25
 Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
 Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
-Memory: 515584k/524224k available (1792k kernel code, 7876k reserved, 778k  
+Memory: 515584k/524224k available (1792k kernel code, 7876k reserved, 778k
 data, 140k init, 0k highmem)
-Checking if this processor honours the WP bit even in supervisor mode...  
-Ok.
+Checking if this processor honours the WP bit even in supervisor mode...Ok.
 Calibrating delay loop... 1773.56 BogoMIPS
 Mount-cache hash table entries: 512 (order: 0, 4096 bytes)
 CPU: After generic identify, caps: 0383fbff 00000000 00000000 00000000
@@ -151,22 +149,22 @@ PCI: PCI BIOS revision 2.10 entry at 0xfb370, last bus=1
 PCI: Using configuration type 1
 mtrr: v2.0 (20020519)
 ACPI: Subsystem revision 20040326
-  tbxface-0117 [03] acpi_load_tables      : ACPI Tables successfully  
+   tbxface-0117 [03] acpi_load_tables      : ACPI Tables successfully
 acquired
-Parsing all Control  
+Parsing all Control
 Methods:..............................................................................................
 Table [DSDT](id F004) - 388 Objects with 29 Devices 94 Methods 27 Regions
 ACPI Namespace successfully loaded at root c03c8efc
 ACPI: IRQ9 SCI: Level Trigger.
-evxfevnt-0093 [04] acpi_enable           : Transition to ACPI mode  
+evxfevnt-0093 [04] acpi_enable           : Transition to ACPI mode
 successful
-evgpeblk-0867 [06] ev_create_gpe_block   : GPE 00 to 15 [_GPE] 2 regs at  
+evgpeblk-0867 [06] ev_create_gpe_block   : GPE 00 to 15 [_GPE] 2 regs at
 0000000000004020 on int 9
-evgpeblk-0925 [06] ev_create_gpe_block   : Found 0 Wake, Enabled 3 Runtime  
+evgpeblk-0925 [06] ev_create_gpe_block   : Found 0 Wake, Enabled 3 Runtime
 GPEs in this block
-Completing Region/Field/Buffer/Package  
+Completing Region/Field/Buffer/Package
 initialization:...............................................................
-Initialized 27/27 Regions 8/8 Fields 18/18 Buffers 10/10 Packages (397  
+Initialized 27/27 Regions 8/8 Fields 18/18 Buffers 10/10 Packages (397
 nodes)
 Executing all Device _STA and_INI methods:...............................
 31 Devices found containing: 31 _STA, 2 _INI methods
@@ -176,7 +174,7 @@ ACPI: PCI Root Bridge [PCI0] (00:00)
 PCI: Probing PCI hardware (bus 00)
 ACPI: PCI Interrupt Routing Table [\_SB_.PCI0._PRT]
 ACPI: PCI Interrupt Link [LNKA] (IRQs 1 3 4 5 6 7 *10 11 12 14 15)
-ACPI: PCI Interrupt Link [LNKB] (IRQs 1 3 4 5 6 7 10 11 12 14 15) *0,  
+ACPI: PCI Interrupt Link [LNKB] (IRQs 1 3 4 5 6 7 10 11 12 14 15) *0,
 disabled.
 ACPI: PCI Interrupt Link [LNKC] (IRQs 1 3 4 5 6 7 *10 11 12 14 15)
 ACPI: PCI Interrupt Link [LNKD] (IRQs 1 3 4 5 6 7 *10 11 12 14 15)
@@ -212,15 +210,15 @@ VP_IDE: IDE controller at PCI slot 0000:00:11.1
 VP_IDE: chipset revision 6
 VP_IDE: not 100% native mode: will probe irqs later
 VP_IDE: VIA vt8233 (rev 00) IDE UDMA100 controller on pci0000:00:11.1
-     ide0: BM-DMA at 0xd000-0xd007, BIOS settings: hda:DMA, hdb:pio
-     ide1: BM-DMA at 0xd008-0xd00f, BIOS settings: hdc:pio, hdd:pio
+      ide0: BM-DMA at 0xd000-0xd007, BIOS settings: hda:DMA, hdb:pio
+      ide1: BM-DMA at 0xd008-0xd00f, BIOS settings: hdc:pio, hdd:pio
 hda: IC35L090AVV207-0, ATA DISK drive
 Using anticipatory io scheduler
 ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
 hda: max request size: 1024KiB
-hda: 160836480 sectors (82348 MB) w/1821KiB Cache, CHS=16383/255/63,  
+hda: 160836480 sectors (82348 MB) w/1821KiB Cache, CHS=16383/255/63,
 UDMA(100)
-  hda: hda1 hda2 hda3
+   hda: hda1 hda2 hda3
 matroxfb_crtc2: secondary head of fb0 was registered as fb1
 NET: Registered protocol family 2
 IP: routing cache hash table of 4096 buckets, 32Kbytes
@@ -229,8 +227,8 @@ NET: Registered protocol family 1
 NET: Registered protocol family 17
 ReiserFS: hda3: found reiserfs format "3.6" with standard journal
 ReiserFS: hda3: using ordered data mode
-ReiserFS: hda3: journal params: device hda3, size 8192, journal first  
-block 18, max trans len 1024, max batch 900, max commit age 30, max trans  
+ReiserFS: hda3: journal params: device hda3, size 8192, journal first
+block 18, max trans len 1024, max batch 900, max commit age 30, max trans
 age 30
 ReiserFS: hda3: checking transaction log (hda3)
 ReiserFS: hda3: Using r5 hash to sort names
@@ -244,51 +242,51 @@ ata1: SATA max UDMA/133 cmd 0xE29C2200 ctl 0xE29C2238 bmdma 0x0 irq 10
 ata2: SATA max UDMA/133 cmd 0xE29C2280 ctl 0xE29C22B8 bmdma 0x0 irq 10
 ata3: SATA max UDMA/133 cmd 0xE29C2300 ctl 0xE29C2338 bmdma 0x0 irq 10
 ata4: SATA max UDMA/133 cmd 0xE29C2380 ctl 0xE29C23B8 bmdma 0x0 irq 10
-ata1: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003  
+ata1: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003
 88:207f
 ata1: dev 0 ATA, max UDMA/133, 490234752 sectors: lba48
 ata1: dev 0 configured for UDMA/133
 scsi0 : sata_sx4
-ata2: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003  
+ata2: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003
 88:207f
 ata2: dev 0 ATA, max UDMA/133, 490234752 sectors: lba48
 ata2: dev 0 configured for UDMA/133
 scsi1 : sata_sx4
-ata3: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003  
+ata3: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003
 88:207f
 ata3: dev 0 ATA, max UDMA/133, 490234752 sectors: lba48
 ata3: dev 0 configured for UDMA/133
 scsi2 : sata_sx4
-ata4: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003  
+ata4: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003
 88:207f
 ata4: dev 0 ATA, max UDMA/133, 490234752 sectors: lba48
 ata4: dev 0 configured for UDMA/133
 scsi3 : sata_sx4
-   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: YAR5
-   Type:   Direct-Access                      ANSI SCSI revision: 05
-   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: YAR5
-   Type:   Direct-Access                      ANSI SCSI revision: 05
-   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: YAR5
-   Type:   Direct-Access                      ANSI SCSI revision: 05
-   Vendor: ATA       Model: Maxtor 7Y250M0    Rev: YAR5
-   Type:   Direct-Access                      ANSI SCSI revision: 05
+    Vendor: ATA       Model: Maxtor 7Y250M0    Rev: YAR5
+    Type:   Direct-Access                      ANSI SCSI revision: 05
+    Vendor: ATA       Model: Maxtor 7Y250M0    Rev: YAR5
+    Type:   Direct-Access                      ANSI SCSI revision: 05
+    Vendor: ATA       Model: Maxtor 7Y250M0    Rev: YAR5
+    Type:   Direct-Access                      ANSI SCSI revision: 05
+    Vendor: ATA       Model: Maxtor 7Y250M0    Rev: YAR5
+    Type:   Direct-Access                      ANSI SCSI revision: 05
 input: ImPS/2 Generic Wheel Mouse on isa0060/serio1
 device-mapper: 4.1.0-ioctl (2003-12-10) initialised: dm@uk.sistina.com
 SCSI device sda: 490234752 512-byte hdwr sectors (251000 MB)
 SCSI device sda: drive cache: write back
-  sda: unknown partition table
+   sda: unknown partition table
 Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
 SCSI device sdb: 490234752 512-byte hdwr sectors (251000 MB)
 SCSI device sdb: drive cache: write back
-  sdb: unknown partition table
+   sdb: unknown partition table
 Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
 SCSI device sdc: 490234752 512-byte hdwr sectors (251000 MB)
 SCSI device sdc: drive cache: write back
-  sdc: unknown partition table
+   sdc: unknown partition table
 Attached scsi disk sdc at scsi2, channel 0, id 0, lun 0
 SCSI device sdd: 490234752 512-byte hdwr sectors (251000 MB)
 SCSI device sdd: drive cache: write back
-  sdd: unknown partition table
+   sdd: unknown partition table
 Attached scsi disk sdd at scsi3, channel 0, id 0, lun 0
 usbcore: registered new driver usbfs
 usbcore: registered new driver hub
@@ -304,15 +302,15 @@ ACPI: PCI interrupt 0000:00:09.0[A] -> GSI 10 (level, low) -> IRQ 10
 e1000: eth0: e1000_probe: Intel(R) PRO/1000 Network Connection
 USB Universal Host Controller Interface driver v2.2
 ACPI: PCI interrupt 0000:00:11.2[D] -> GSI 10 (level, low) -> IRQ 10
-uhci_hcd 0000:00:11.2: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1  
+uhci_hcd 0000:00:11.2: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
 Controller
 uhci_hcd 0000:00:11.2: irq 10, io base 0000d400
 uhci_hcd 0000:00:11.2: new USB bus registered, assigned bus number 1
 hub 1-0:1.0: USB hub found
 hub 1-0:1.0: 2 ports detected
 via82xx: Assuming DXS channels with 48k fixed sample rate.
-          Please try dxs_support=1 or dxs_support=4 option
-          and report if it works on your machine.
+           Please try dxs_support=1 or dxs_support=4 option
+           and report if it works on your machine.
 ACPI: PCI interrupt 0000:00:11.5[C] -> GSI 10 (level, low) -> IRQ 10
 PCI: Setting latency timer of device 0000:00:11.5 to 64
 e1000: eth0: e1000_watchdog: NIC Link is Up 1000 Mbps Full Duplex
@@ -1933,15 +1931,15 @@ CONFIG_PC=y
 
 
 root@shiroi:~> cat /proc/version
-Linux version 2.6.8-gentoo-r3 (root@shiroi) (gcc version 3.3.3 20040412  
-(Gentoo Linux 3.3.3-r6, ssp-3.3.2-2, pie-8.7.6)) #1 Fri Aug 27 19:33:12  
+Linux version 2.6.8-gentoo-r3 (root@shiroi) (gcc version 3.3.3 20040412
+(Gentoo Linux 3.3.3-r6, ssp-3.3.2-2, pie-8.7.6)) #1 Fri Aug 27 19:33:12
 CEST 2004
 
 root@shiroi:~> /usr/src/linux/scripts/ver_linux
 If some fields are empty or look unusual you may have an old version.
 Compare to the current minimal requirements in Documentation/Changes.
 
-Linux shiroi 2.6.8-gentoo-r3 #1 Fri Aug 27 19:33:12 CEST 2004 i686 Celeron  
+Linux shiroi 2.6.8-gentoo-r3 #1 Fri Aug 27 19:33:12 CEST 2004 i686 Celeron
 (Coppermine) GenuineIntel GNU/Linux
 
 Gnu C                  3.3.3
@@ -1957,9 +1955,9 @@ Procps                 3.1.15
 Net-tools              1.60
 Kbd                    1.12
 Sh-utils               5.2.1
-Modules Loaded         snd_via82xx snd_pcm snd_timer snd_ac97_codec  
-snd_page_alloc snd_mpu401_uart snd_rawmidi snd soundcore uhci_hcd e1000  
-via_agp agpgart rtc usbcore sd_mod dm_mod psmouse i2c_matroxfb  
+Modules Loaded         snd_via82xx snd_pcm snd_timer snd_ac97_codec
+snd_page_alloc snd_mpu401_uart snd_rawmidi snd soundcore uhci_hcd e1000
+via_agp agpgart rtc usbcore sd_mod dm_mod psmouse i2c_matroxfb
 i2c_algo_bit w83627hf eeprom i2c_sensor i2c_isa i2c_viapro sata_sx4 libata
 
 root@shiroi:~> cat /proc/cpuinfo
@@ -1979,7 +1977,7 @@ fpu             : yes
 fpu_exception   : yes
 cpuid level     : 2
 wp              : yes
-flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca  
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca
 cmov pat pse36 mmx fxsr sse
 bogomips        : 1773.56
 
@@ -1991,8 +1989,8 @@ snd_ac97_codec 64356 1 snd_via82xx, Live 0xe2af1000
 snd_page_alloc 8872 2 snd_via82xx,snd_pcm, Live 0xe2aa1000
 snd_mpu401_uart 5760 1 snd_via82xx, Live 0xe2a99000
 snd_rawmidi 17248 1 snd_mpu401_uart, Live 0xe2a27000
-snd 38136 6  
-snd_via82xx,snd_pcm,snd_timer,snd_ac97_codec,snd_mpu401_uart,snd_rawmidi,  
+snd 38136 6
+snd_via82xx,snd_pcm,snd_timer,snd_ac97_codec,snd_mpu401_uart,snd_rawmidi,
 Live 0xe2a57000
 soundcore 6784 1 snd, Live 0xe2a4a000
 uhci_hcd 28240 0 - Live 0xe2a8e000
@@ -2027,25 +2025,25 @@ root@shiroi:~> cat /proc/ioports
 01f0-01f7 : ide0
 0290-0297 : w83627hf
 03c0-03df : vga+
-   03c0-03df : matrox
+    03c0-03df : matrox
 03f6-03f6 : ide0
 0cf8-0cff : PCI conf1
 5000-5007 : viapro-smbus
 c000-c03f : 0000:00:09.0
-   c000-c03f : e1000
+    c000-c03f : e1000
 c400-c4ff : 0000:00:0b.0
-   c400-c4ff : sata_sx4
+    c400-c4ff : sata_sx4
 c800-c8ff : 0000:00:0b.0
-   c800-c8ff : sata_sx4
+    c800-c8ff : sata_sx4
 cc00-ccff : 0000:00:0b.0
-   cc00-ccff : sata_sx4
+    cc00-ccff : sata_sx4
 d000-d00f : 0000:00:11.1
-   d000-d007 : ide0
-   d008-d00f : ide1
+    d000-d007 : ide0
+    d008-d00f : ide1
 d400-d41f : 0000:00:11.2
-   d400-d41f : uhci_hcd
+    d400-d41f : uhci_hcd
 e000-e0ff : 0000:00:11.5
-   e000-e0ff : VIA8233
+    e000-e0ff : VIA8233
 
 root@shiroi:~> cat /proc/iomem
 00000000-0009fbff : System RAM
@@ -2056,184 +2054,185 @@ root@shiroi:~> cat /proc/iomem
 000ca000-000d5fff : Adapter ROM
 000f0000-000fffff : System ROM
 00100000-1ffeffff : System RAM
-   00100000-002c003d : Kernel code
-   002c003e-003828bf : Kernel data
+    00100000-002c003d : Kernel code
+    002c003e-003828bf : Kernel data
 1fff0000-1fff2fff : ACPI Non-volatile Storage
 1fff3000-1fffffff : ACPI Tables
 d0000000-d3ffffff : 0000:00:00.0
 d4000000-d5ffffff : PCI Bus #01
-   d4000000-d5ffffff : 0000:01:00.0
-     d4000000-d5ffffff : matroxfb FB
+    d4000000-d5ffffff : 0000:01:00.0
+      d4000000-d5ffffff : matroxfb FB
 d6000000-d8ffffff : PCI Bus #01
-   d6000000-d6003fff : 0000:01:00.0
-     d6000000-d6003fff : matroxfb MMIO
-   d7000000-d77fffff : 0000:01:00.0
+    d6000000-d6003fff : 0000:01:00.0
+      d6000000-d6003fff : matroxfb MMIO
+    d7000000-d77fffff : 0000:01:00.0
 da000000-da0fffff : 0000:00:0b.0
-   da000000-da0fffff : sata_sx4
+    da000000-da0fffff : sata_sx4
 da100000-da11ffff : 0000:00:09.0
-   da100000-da11ffff : e1000
+    da100000-da11ffff : e1000
 da120000-da13ffff : 0000:00:09.0
-   da120000-da13ffff : e1000
+    da120000-da13ffff : e1000
 da140000-da147fff : 0000:00:0b.0
-   da140000-da147fff : sata_sx4
+    da140000-da147fff : sata_sx4
 ffff0000-ffffffff : reserved
 
 root@shiroi:~> lspci -vvv
-0000:00:00.0 Host bridge: VIA Technologies, Inc. VT8633 [Apollo Pro266]  
+0000:00:00.0 Host bridge: VIA Technologies, Inc. VT8633 [Apollo Pro266]
 (rev 01)
-         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-  
+          Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
 ParErr- Stepping- SERR- FastB2B-
-         Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort-  
+          Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort-
 <TAbort- <MAbort+ >SERR- <PERR-
-         Latency: 8
-         Region 0: Memory at d0000000 (32-bit, prefetchable)
-         Capabilities: [a0] AGP version 2.0
-                 Status: RQ=32 Iso- ArqSz=0 Cal=0 SBA+ ITACoh- GART64-  
+          Latency: 8
+          Region 0: Memory at d0000000 (32-bit, prefetchable)
+          Capabilities: [a0] AGP version 2.0
+                  Status: RQ=32 Iso- ArqSz=0 Cal=0 SBA+ ITACoh- GART64-
 HTrans- 64bit- FW- AGP3- Rate=x1,x4
-                 Command: RQ=1 ArqSz=0 Cal=0 SBA- AGP- GART64- 64bit- FW-  
+                  Command: RQ=1 ArqSz=0 Cal=0 SBA- AGP- GART64- 64bit- FW-
 Rate=<none>
-         Capabilities: [c0] Power Management version 2
-                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA  
+          Capabilities: [c0] Power Management version 2
+                  Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
 PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+                  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 
-0000:00:01.0 PCI bridge: VIA Technologies, Inc. VT8633 [Apollo Pro266 AGP]  
+0000:00:01.0 PCI bridge: VIA Technologies, Inc. VT8633 [Apollo Pro266 AGP]
 (prog-if 00 [Normal decode])
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-  
+          Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
 ParErr- Stepping- SERR- FastB2B-
-         Status: Cap+ 66Mhz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort-  
+          Status: Cap+ 66Mhz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort-
 <TAbort- <MAbort+ >SERR- <PERR-
-         Latency: 0
-         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-         I/O behind bridge: 0000f000-00000fff
-         Memory behind bridge: d6000000-d8ffffff
-         Prefetchable memory behind bridge: d4000000-d5ffffff
-         BridgeCtl: Parity- SERR- NoISA+ VGA+ MAbort- >Reset- FastB2B-
-         Capabilities: [80] Power Management version 2
-                 Flags: PMEClk- DSI- D1+ D2- AuxCurrent=0mA  
+          Latency: 0
+          Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+          I/O behind bridge: 0000f000-00000fff
+          Memory behind bridge: d6000000-d8ffffff
+          Prefetchable memory behind bridge: d4000000-d5ffffff
+          BridgeCtl: Parity- SERR- NoISA+ VGA+ MAbort- >Reset- FastB2B-
+          Capabilities: [80] Power Management version 2
+                  Flags: PMEClk- DSI- D1+ D2- AuxCurrent=0mA
 PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+                  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 
-0000:00:09.0 Ethernet controller: Intel Corp. 82540EM Gigabit Ethernet  
+0000:00:09.0 Ethernet controller: Intel Corp. 82540EM Gigabit Ethernet
 Controller (rev 02)
-         Subsystem: Intel Corp. PRO/1000 MT Desktop Adapter
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-  
+          Subsystem: Intel Corp. PRO/1000 MT Desktop Adapter
+          Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
 ParErr- Stepping- SERR- FastB2B-
-         Status: Cap+ 66Mhz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort-  
+          Status: Cap+ 66Mhz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort-
 <TAbort- <MAbort- >SERR- <PERR-
-         Latency: 32 (63750ns min), cache line size 08
-         Interrupt: pin A routed to IRQ 10
-         Region 0: Memory at da100000 (32-bit, non-prefetchable)
-         Region 1: Memory at da120000 (32-bit, non-prefetchable) [size=128K]
-         Region 2: I/O ports at c000 [size=64]
-         Capabilities: [dc] Power Management version 2
-                 Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA  
+          Latency: 32 (63750ns min), cache line size 08
+          Interrupt: pin A routed to IRQ 10
+          Region 0: Memory at da100000 (32-bit, non-prefetchable)
+          Region 1: Memory at da120000 (32-bit, non-prefetchable)  
+[size=128K]
+          Region 2: I/O ports at c000 [size=64]
+          Capabilities: [dc] Power Management version 2
+                  Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA
 PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                 Status: D0 PME-Enable- DSel=0 DScale=1 PME-
-         Capabilities: [e4] PCI-X non-bridge device.
-                 Command: DPERE- ERO+ RBC=0 OST=0
-                 Status: Bus=0 Dev=0 Func=0 64bit- 133MHz- SCD- USC-,  
-DC=simple, DMMRBC=0, DMOST=0, DMCRS=0, RSCEM-      Capabilities: [f0]  
+                  Status: D0 PME-Enable- DSel=0 DScale=1 PME-
+          Capabilities: [e4] PCI-X non-bridge device.
+                  Command: DPERE- ERO+ RBC=0 OST=0
+                  Status: Bus=0 Dev=0 Func=0 64bit- 133MHz- SCD- USC-,
+DC=simple, DMMRBC=0, DMOST=0, DMCRS=0, RSCEM-      Capabilities: [f0]
 Message Signalled Interrupts: 64bit+ Queue=0/0 Enable-
-                 Address: 0000000000000000  Data: 0000
+                  Address: 0000000000000000  Data: 0000
 
-0000:00:0b.0 RAID bus controller: Promise Technology, Inc. PDC20621  
+0000:00:0b.0 RAID bus controller: Promise Technology, Inc. PDC20621
 [SATA150 SX4] 4 Channel IDE RAID Controller (rev 01)
-         Subsystem: Promise Technology, Inc. PDC20621 [SATA150 SX4] 4  
+          Subsystem: Promise Technology, Inc. PDC20621 [SATA150 SX4] 4
 Channel IDE RAID Controller
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-  
+          Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
 ParErr- Stepping- SERR- FastB2B-
-         Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-  
+          Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
 <TAbort- <MAbort- >SERR- <PERR-
-         Latency: 96 (1500ns min, 4500ns max), cache line size 08
-         Interrupt: pin A routed to IRQ 10
-         Region 0: I/O ports at c400
-         Region 1: I/O ports at c800 [size=256]
-         Region 2: I/O ports at cc00 [size=256]
-         Region 3: Memory at da000000 (32-bit, non-prefetchable) [size=1M]
-         Region 4: Memory at da140000 (32-bit, non-prefetchable) [size=32K]
-         Capabilities: [60] Power Management version 1
-                 Flags: PMEClk- DSI+ D1+ D2- AuxCurrent=0mA  
+          Latency: 96 (1500ns min, 4500ns max), cache line size 08
+          Interrupt: pin A routed to IRQ 10
+          Region 0: I/O ports at c400
+          Region 1: I/O ports at c800 [size=256]
+          Region 2: I/O ports at cc00 [size=256]
+          Region 3: Memory at da000000 (32-bit, non-prefetchable) [size=1M]
+          Region 4: Memory at da140000 (32-bit, non-prefetchable) [size=32K]
+          Capabilities: [60] Power Management version 1
+                  Flags: PMEClk- DSI+ D1+ D2- AuxCurrent=0mA
 PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+                  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 
 0000:00:11.0 ISA bridge: VIA Technologies, Inc. VT8233 PCI to ISA Bridge
-         Subsystem: VIA Technologies, Inc.: Unknown device 0000
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-  
+          Subsystem: VIA Technologies, Inc.: Unknown device 0000
+          Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
 ParErr- Stepping+ SERR- FastB2B-
-         Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort-  
+          Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort-
 <TAbort- <MAbort- >SERR- <PERR-
-         Latency: 0
-         Capabilities: [c0] Power Management version 2
-                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA  
+          Latency: 0
+          Capabilities: [c0] Power Management version 2
+                  Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
 PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+                  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 
-0000:00:11.1 IDE interface: VIA Technologies, Inc.  
-VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06) (prog-if  
+0000:00:11.1 IDE interface: VIA Technologies, Inc.
+VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06) (prog-if
 8a [Master SecP PriP])
-         Subsystem: VIA Technologies, Inc.  
+          Subsystem: VIA Technologies, Inc.
 VT82C586/B/VT82C686/A/B/VT8233/A/C/VT8235 PIPC Bus Master IDE
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-  
+          Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
 ParErr- Stepping- SERR- FastB2B-
-         Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-  
+          Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
 <TAbort- <MAbort- >SERR- <PERR-
-         Latency: 32
-         Region 4: I/O ports at d000 [size=16]
-         Capabilities: [c0] Power Management version 2
-                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA  
+          Latency: 32
+          Region 4: I/O ports at d000 [size=16]
+          Capabilities: [c0] Power Management version 2
+                  Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
 PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+                  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 
-0000:00:11.2 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1  
+0000:00:11.2 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
 Controller (rev 18) (prog-if 00 [UHCI])
-         Subsystem: VIA Technologies, Inc. (Wrong ID) USB Controller
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-  
+          Subsystem: VIA Technologies, Inc. (Wrong ID) USB Controller
+          Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
 ParErr- Stepping- SERR- FastB2B-
-         Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort-  
+          Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort-
 <TAbort- <MAbort- >SERR- <PERR-
-         Latency: 32, cache line size 08
-         Interrupt: pin D routed to IRQ 10
-         Region 4: I/O ports at d400 [size=32]
-         Capabilities: [80] Power Management version 2
-                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA  
+          Latency: 32, cache line size 08
+          Interrupt: pin D routed to IRQ 10
+          Region 4: I/O ports at d400 [size=32]
+          Capabilities: [80] Power Management version 2
+                  Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
 PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+                  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 
-0000:00:11.5 Multimedia audio controller: VIA Technologies, Inc.  
+0000:00:11.5 Multimedia audio controller: VIA Technologies, Inc.
 VT8233/A/8235/8237 AC97 Audio Controller (rev 10)
-         Subsystem: Analog Devices: Unknown device 5360
-         Control: I/O+ Mem- BusMaster- SpecCycle- MemWINV- VGASnoop-  
+          Subsystem: Analog Devices: Unknown device 5360
+          Control: I/O+ Mem- BusMaster- SpecCycle- MemWINV- VGASnoop-
 ParErr- Stepping- SERR- FastB2B-
-         Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort-  
+          Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort-
 <TAbort- <MAbort- >SERR- <PERR-
-         Interrupt: pin C routed to IRQ 10
-         Region 0: I/O ports at e000
-         Capabilities: [c0] Power Management version 2
-                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA  
+          Interrupt: pin C routed to IRQ 10
+          Region 0: I/O ports at e000
+          Capabilities: [c0] Power Management version 2
+                  Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
 PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+                  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 
-0000:01:00.0 VGA compatible controller: Matrox Graphics, Inc. MGA G400 AGP  
+0000:01:00.0 VGA compatible controller: Matrox Graphics, Inc. MGA G400 AGP
 (rev 04) (prog-if 00 [VGA])
-         Subsystem: Matrox Graphics, Inc. Millennium G400 16Mb SDRAM
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-  
+          Subsystem: Matrox Graphics, Inc. Millennium G400 16Mb SDRAM
+          Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
 ParErr- Stepping- SERR- FastB2B-
-         Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-  
+          Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
 <TAbort- <MAbort- >SERR- <PERR-
-         Latency: 32 (4000ns min, 8000ns max), cache line size 08
-         Interrupt: pin A routed to IRQ 10
-         Region 0: Memory at d4000000 (32-bit, prefetchable)
-         Region 1: Memory at d6000000 (32-bit, non-prefetchable) [size=16K]
-         Region 2: Memory at d7000000 (32-bit, non-prefetchable) [size=8M]
-         Capabilities: [dc] Power Management version 2
-                 Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA  
+          Latency: 32 (4000ns min, 8000ns max), cache line size 08
+          Interrupt: pin A routed to IRQ 10
+          Region 0: Memory at d4000000 (32-bit, prefetchable)
+          Region 1: Memory at d6000000 (32-bit, non-prefetchable) [size=16K]
+          Region 2: Memory at d7000000 (32-bit, non-prefetchable) [size=8M]
+          Capabilities: [dc] Power Management version 2
+                  Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA
 PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-         Capabilities: [f0] AGP version 2.0
-                 Status: RQ=32 Iso- ArqSz=0 Cal=0 SBA+ ITACoh- GART64-  
+                  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+          Capabilities: [f0] AGP version 2.0
+                  Status: RQ=32 Iso- ArqSz=0 Cal=0 SBA+ ITACoh- GART64-
 HTrans- 64bit- FW- AGP3- Rate=x1,x2,x4
-                 Command: RQ=32 ArqSz=0 Cal=0 SBA+ AGP+ GART64- 64bit- FW-  
+                  Command: RQ=32 ArqSz=0 Cal=0 SBA+ AGP+ GART64- 64bit- FW-
 Rate=x1
 
 
@@ -2241,14 +2240,14 @@ root@shiroi:~> cat log
 Aug 29 00:42:18 [kernel] ata4: status=0x51 { DriveReady SeekComplete Error  
 }
 Aug 29 00:42:48 [kernel] ata4: command timeout
-                 - Last output repeated 26 times -
+                  - Last output repeated 26 times -
 Aug 29 00:56:18 [kernel] ata4: command timeout
-                 - Last output repeated 29 times -
+                  - Last output repeated 29 times -
 
 [cut...lines identical to the ones above]
 
 Aug 29 16:47:09 [kernel] ata4: command timeout
-                 - Last output repeated 5 times -
+                  - Last output repeated 5 times -
 Aug 29 16:49:41 [kernel] ata1: status=0x51 { DriveReady SeekComplete Error  
 }
 Aug 29 16:50:09 [kernel] ata4: command timeout
@@ -2268,3 +2267,5 @@ Aug 29 21:04:37 [kernel] ata4: command timeout
 Aug 29 21:04:39 [kernel] ata1: command timeout
 Aug 29 21:05:07 [kernel] ata4: command timeout
 Aug 29 21:05:09 [kernel] ata1: command timeout
+
+
