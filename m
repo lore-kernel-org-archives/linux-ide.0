@@ -1,78 +1,49 @@
-From: "Dario Oliva" <doliva@arcoide.com>
-Subject: Removable IDE/ATA device
-Date: Mon, 25 Oct 2004 14:03:18 -0400
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: [BK PATCHES] ide-2.6 update
+Date: Mon, 25 Oct 2004 15:18:47 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAAROcsBjpda0STrtuFqqmVycKAAAAQAAAAjmwTaZlO/kyr6gl0Tg00hQEAAAAA@arcoide.com>
+Message-ID: <417D5197.5030405@tmr.com>
+References: <m3zn2boq1h.fsf@lugabout.cloos.reno.nv.us><58cb370e04102405081d62bf40@mail.gmail.com> <58cb370e04102413156543b72e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail3.atl.registeredsite.com ([64.224.219.77]:4521 "EHLO
-	mail3.atl.registeredsite.com") by vger.kernel.org with ESMTP
-	id S261191AbUJYSD1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Oct 2004 14:03:27 -0400
-Received: from imta02a2.registeredsite.com (imta02a2.registeredsite.com [64.225.255.11])
-	by mail3.atl.registeredsite.com (8.12.11/8.12.8) with ESMTP id i9PI3QdU013912
-	for <linux-ide@vger.kernel.org>; Mon, 25 Oct 2004 18:03:26 GMT
-Received: from DJT9VL41 ([67.104.187.162]) by imta02a2.registeredsite.com
-          with ESMTP
-          id <20041025180326.WHTL7559.imta02a2.registeredsite.com@DJT9VL41>
-          for <linux-ide@vger.kernel.org>; Mon, 25 Oct 2004 14:03:26 -0400
+Received: from prgy-npn1.prodigy.com ([207.115.54.37]:39313 "EHLO
+	oddball.prodigy.com") by vger.kernel.org with ESMTP id S261263AbUJYTQc
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Oct 2004 15:16:32 -0400
+In-Reply-To: <58cb370e04102413156543b72e@mail.gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: James Cloos <cloos@jhcloos.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I have the following problem with a removable IDE/ATA media device. Linux
-attempts to read from the media even if it not present. I had spoken to
-Bartlomiej about it and he pointed out that idedisk_open() in ide-disk.c was
-ignoring whether media was present or not. I wrote a change to the function,
-but Linux still tries to read from the media. I believe this is being done
-by some file system check, but it should not try it if the media is not
-present. Any ideas?
+Bartlomiej Zolnierkiewicz wrote:
+> On Sun, 24 Oct 2004 12:48:58 -0700, James Cloos <cloos@jhcloos.com> wrote:
+> 
+>>Are all of the data displayed in /proc/ide/piix et al now available
+>>in sysfs?  If so, 'twould've been useful for a small utility -- a
+> 
+> 
+> All these data can be obtained from user-space,
+> no need for bloating sysfs.
+> 
+> 
+>>la lsscsi(8) -- that can format that data like the /proc/ide files
+>>to have been released before dropping the /proc files....
+>>It is a regression to loose convenient access to the controllers'
+>>current configs....
+> 
+> 
+> http://home.elka.pw.edu.pl/~bzolnier/atapci/
+> 
+> released > 2 years ago :)
+> 
+> works fine but probably needs some cut'n'paste updates
 
-Here is the patch for idedisk_open()
+Other than one obvious patch to get rid of all the warnings from putting 
+comments after #endif w/o a comment inducer, seems to work...
 
---- ../linux-2.6.8.1/drivers/ide/ide-disk.c	2004-08-14
-06:55:19.000000000 -0400
-+++ drivers/ide/ide-disk.c	2004-10-20 09:21:57.806286608 -0400
-@@ -754,7 +754,7 @@ ide_startstop_t idedisk_error (ide_drive
- 		try_to_flush_leftover_data(drive);
- 	if (hwif->INB(IDE_STATUS_REG) & (BUSY_STAT|DRQ_STAT)) {
- 		/* force an abort */
--		hwif->OUTB(WIN_IDLEIMMEDIATE,IDE_COMMAND_REG);
-+		hwif->OUTB(WIN_IDLEIMMEDIATE,IDE_COMMAND_REG); 
- 	}
- 	if (rq->errors >= ERROR_MAX || blk_noretry_request(rq))
- 		DRIVER(drive)->end_request(drive, 0, 0);
-@@ -1643,6 +1643,25 @@ static int idedisk_open(struct inode *in
- 		if (drive->doorlocking && ide_raw_taskfile(drive, &args,
-NULL))
- 			drive->doorlocking = 0;
- 	}
-+	if(drive->removable) {
-+		ide_task_t args;
-+		ide_hwif_t *hwif = HWIF(drive);
-+	        u8 err;
-+		memset(&args, 0, sizeof(ide_task_t));
-+		args.tfRegister[IDE_COMMAND_OFFSET] = WIN_GETMEDIASTATUS;
-+		args.command_type = IDE_DRIVE_TASK_NO_DATA;
-+		args.handler      = &task_no_data_intr;	
-+		ide_raw_taskfile(drive, &args, NULL);
-+		err = hwif->INB(IDE_ERROR_REG);
-+		/*
-+                 * Check to see if media is present.
-+		 * If no media is present, return -1.
-+                 */
-+		if (err & TRK0_ERR) {	
-+			drive->usage--;
-+			return -1;
-+		}
-+	}
- 	return 0;
- }
-
-Dario Oliva
-
-
-
-
+-- 
+    -bill davidsen (davidsen@tmr.com)
+"The secret to procrastination is to put things off until the
+  last possible moment - but no longer"  -me
