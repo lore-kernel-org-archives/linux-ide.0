@@ -1,44 +1,54 @@
-From: kiu <kiu@gmx.net>
-Subject: kernel history of ide performance
-Date: Tue, 05 Apr 2005 10:46:37 +0200
-Message-ID: <1112690797.4252506dd574e@kiun.homelinux.net>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: kernel history of ide performance
+Date: Tue, 5 Apr 2005 11:00:40 +0200
+Message-ID: <58cb370e0504050200759f42f1@mail.gmail.com>
+References: <1112690797.4252506dd574e@kiun.homelinux.net>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtprelay01.ispgateway.de ([80.67.18.13]:53432 "EHLO
-	smtprelay01.ispgateway.de") by vger.kernel.org with ESMTP
-	id S261615AbVDEIqp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Apr 2005 04:46:45 -0400
-Received: from unknown (HELO blacksheep.qnet) (675341@[217.86.55.180])
-          (envelope-sender <kiu@gmx.net>)
-          by smtprelay01.ispgateway.de (qmail-ldap-1.03) with AES256-SHA encrypted SMTP
-          for <linux-ide@vger.kernel.org>; 5 Apr 2005 08:46:40 -0000
-Received: from localhost ([127.0.0.1])
-	by blacksheep.qnet with esmtp (Exim 4.50)
-	id 1DIjhm-0001tJ-47
-	for linux-ide@vger.kernel.org; Tue, 05 Apr 2005 10:46:38 +0200
+Received: from wproxy.gmail.com ([64.233.184.205]:41488 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261628AbVDEJAk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Apr 2005 05:00:40 -0400
+Received: by wproxy.gmail.com with SMTP id 68so364569wra
+        for <linux-ide@vger.kernel.org>; Tue, 05 Apr 2005 02:00:40 -0700 (PDT)
+In-Reply-To: <1112690797.4252506dd574e@kiun.homelinux.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: kiu <kiu@gmx.net>
+Cc: linux-ide@vger.kernel.org
 
-Hi ide team,
+Hi,
 
-i often heard "uh, since kernel 2.6.bla the ide perfomance is soo bad".
-Because of that (and the joy of writing bash scripts noone else will understand
-*g*) i wrote an automated test script to get comparable measurements.
+On Apr 5, 2005 10:46 AM, kiu <kiu@gmx.net> wrote:
+> Hi ide team,
+> 
+> i often heard "uh, since kernel 2.6.bla the ide perfomance is soo bad".
+> Because of that (and the joy of writing bash scripts noone else will understand
+> *g*) i wrote an automated test script to get comparable measurements.
 
-The script compiles 2.6.0-2.6.11.6 (yes "" | make oldconfig), boots each kernel,
-runs hdparm/bonnie++ and create some pngs with gnuplot.
+Please note that hdparm results can be highly influenced 
+by changes in the Virtual Memory management.
 
-I ran the script on a Intel 82371AB/EB/MB PIIX4/PIICeleron 333/IC35L040AVER07
-machine and you can find the results here:
+One of my TODO items is tool for testing raw IDE performance,
+so we know where to put blame for degraded results... :)
+[ but it should wait until all IDE driver is taskfile based ]
 
-    http://www.kiu.weite-welt.com/misc/idetest
+> The script compiles 2.6.0-2.6.11.6 (yes "" | make oldconfig), boots each kernel,
+> runs hdparm/bonnie++ and create some pngs with gnuplot.
+> 
+> I ran the script on a Intel 82371AB/EB/MB PIIX4/PIICeleron 333/IC35L040AVER07
+> machine and you can find the results here:
+> 
+>     http://www.kiu.weite-welt.com/misc/idetest
 
-I am quite busy at the moment and hopefully have time next month to clean up the
-scripts for a release (are you interested?) and do further testing...
--- 
-kiu
+Good job, thanks for doing this.
 
+> I am quite busy at the moment and hopefully have time next month to clean up the
+> scripts for a release (are you interested?) and do further testing...
 
+It would be great to test at least every -rc kernel so eventual
+regressions can be discovered (and fixed) before final release.
+
+Bartlomiej
