@@ -1,29 +1,56 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: PATCH: Remove debugging delay from CS5520 driver
-Date: Fri, 05 Nov 2004 16:20:06 +0000
-Message-ID: <1099671605.5567.29.camel@localhost.localdomain>
+From: "Mark Klarzynski" <mark.k@computer-design.co.uk>
+Subject: Hot Plug and LIBATA
+Date: Fri, 5 Nov 2004 17:22:06 -0000
+Message-ID: <02ba01c4c35b$f9f9bb70$4500a8c0@MarkK>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:5061 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S261410AbUKERXC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 5 Nov 2004 12:23:02 -0500
+Received: from server6.tcw.telecomplete.net ([213.160.116.7]:49426 "EHLO
+	server6.tcw.telecomplete.net") by vger.kernel.org with ESMTP
+	id S262728AbUKERXX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 Nov 2004 12:23:23 -0500
+Received: from host13.cdg.adsl.telecomplete.net ([213.160.101.94] helo=Chris.Domain)
+	by server6.tcw.telecomplete.net with esmtp (Exim 4.34)
+	id 1CQ7o1-0003tA-9q
+	for linux-ide@vger.kernel.org; Fri, 05 Nov 2004 17:23:22 +0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+To: linux-ide@vger.kernel.org
 
-diff --exclude-from /usr/src/exclude -u --new-file --recursive linux.vanilla-2.6.10rc1/drivers/ide/pci/cs5520.c linux-2.6.10rc1/drivers/ide/pci/cs5520.c
---- linux.vanilla-2.6.10rc1/drivers/ide/pci/cs5520.c	2004-11-05 15:34:47.000000000 +0000
-+++ linux-2.6.10rc1/drivers/ide/pci/cs5520.c	2004-11-05 16:07:46.000000000 +0000
-@@ -305,8 +305,6 @@
- 
- 	ide_pci_setup_ports(dev, d, 1, 14, &index);
- 
--	printk("Index.b %d %d\n", index.b.low, index.b.high);
--	mdelay(2000);
- 	if((index.b.low & 0xf0) != 0xf0)
- 		probe_hwif_init(&ide_hwifs[index.b.low]);
- 	if((index.b.high & 0xf0) != 0xf0)
+Forgive me as I am sure that this has been asked a 100 times and that
+the answers are all there to be found, but I am a newbie to Linux and
+all my experience is within the design of hardware raid. So I have to
+resolve this, but have come to a dead end.
+
+I have a problem hot-plugging a sata drive and have gone through the
+following steps:
+
+1 - Initially I was using a standard Linux 2.4.27 kernel and the Silicon
+Image 3112A's presented the sata drives as HDx.  Although the drives
+functioned fine, hot plug was not possible.
+
+2 - I discovered LIBATA and as it is clearly superior and now presented
+the drives as SDx.
+
+3 - I could now use a bunch of newer found commands (such as # echo scsi
+remove-single-drive..)  to add and remove the drives. this works as long
+as I do not physically remove the drive.
+
+4 - if I physically remove a drive, the system hangs when I do an echo
+scsi add-single-drive..
+
+
+I am presuming (and it is only a presumption) that LIBATA somehow cannot
+rescan the sata bus. does anybody know of a workaround / fix /
+suggestion or decent outlet for a tranquilizer?
+
+
+
+Thank you
+
+
+
+
 
