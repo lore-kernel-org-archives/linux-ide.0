@@ -1,37 +1,62 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: PATA+SATA controllers and libata (was Re: IDE connector on Promise
- 20376 SATA controller)
-Date: Fri, 24 Sep 2004 19:24:24 -0400
+From: George Georgalis <georgalis@gmail.com>
+Subject: Re: [PATCH] fix sata_sil quirk
+Date: Sun, 26 Sep 2004 23:40:05 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <4154ACA8.80401@pobox.com>
-References: <1096060840.6059.4.camel@homer.blizzard.org>	 <415497E1.9050207@pobox.com> <58cb370e04092415506cacdf86@mail.gmail.com>
+Message-ID: <d91f4d0c040926204019fde277@mail.gmail.com>
+References: <40D8FE55.3030008@pobox.com>
+	 <Pine.GSO.4.33.0406230230010.25702-100000@sweetums.bluetronic.net>
+	 <20040628015431.GA31687@trot.local>
+Reply-To: George Georgalis <georgalis@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:63687 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S269059AbUIXXYh
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 24 Sep 2004 19:24:37 -0400
-In-Reply-To: <58cb370e04092415506cacdf86@mail.gmail.com>
+Received: from rproxy.gmail.com ([64.233.170.193]:42830 "EHLO mproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S265773AbUI0DkJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Sep 2004 23:40:09 -0400
+Received: by mproxy.gmail.com with SMTP id 77so3596877rnk
+        for <linux-ide@vger.kernel.org>; Sun, 26 Sep 2004 20:40:09 -0700 (PDT)
+In-Reply-To: <20040628015431.GA31687@trot.local>
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Uwe Koziolek <uwe.koziolek@gmx.net>, Erik Andersen <andersen@codepoet.org>
+To: Linux Kernel Mail List <linux-kernel@vger.kernel.org>, George Georgalis <george@galis.org>
+Cc: Ricky Beam <jfbeam@bluetronic.net>, linux-ide@vger.kernel.org
+
+On Sun, 27 Jun 2004 21:54:31 -0400, George Georgalis <george@galis.org> wrote:
+> On Wed, Jun 23, 2004 at 02:34:35AM -0400, Ricky Beam wrote:
+> >
+> >That list needs a:
+> >         { "ST3160023AS",        SIL_QUIRK_MOD15WRITE },
+> >as well.
+> 
+> happens to be my drive, is there any way to tell a drive needs
+> be in the quirk 15 list, other than it's Seagate and big writes
+> block the dev?
 
 
-The problems to solve, in order to support PATA and SATA on the same 
-controller:
+Actually my problem with big writes was the bk kernel I downloaded was
+a rev too early (2.6.7-bk7 ?).
 
-1) struct ata_probe_ent describes a single host controller.  It has a 
-single struct ata_port_operations pointer.  To support PATA and SATA on 
-the same controller, multiple ata_port_operations pointers must be 
-supported.
+I tested the sata_sil.c version from June 25 (via bk checkout)
+extensively and had no problem... posted my results then, hdparm
+reported ~42 - 51 MB/sec, and never a write block.
 
-2) struct ata_host_set uses a single struct ata_port_operations for the 
-entire host controller.
+Today I try putting 2.6.8.1 on the box and I'm getting ~14 MB/sec, the
+drive has been added to the sil_blacklist. Why? What did I miss?
 
-Fix those two things, and support for PATA+SATA controllers is possible.
+I've taken my drive out of the black list, abused it with 5 continuous
+writes and "top id 0" no problem after 58Gb. I'm doing it again this
+time simultaneously with a massive rm -rf of backup directories. I
+really don't anticipate a problem.
 
-	Jeff
+So what's up with 
 
+         /*{ "ST3160023AS",      SIL_QUIRK_MOD15WRITE },*/
 
+before it got in there, it was said the black list "would not grow"
+(for unexplained reasons).
+
+// George
+
+-- 
+George Georgalis, systems architect, administrator Linux BSD IXOYE
+http://galis.org/george/ cell:646-331-2027 mailto:george@galis.org
