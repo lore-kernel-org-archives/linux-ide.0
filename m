@@ -1,27 +1,34 @@
-From: Oliver Korpilla <Oliver.Korpilla@gmx.de>
-Subject: How to obtain documentation?
-Date: Thu, 31 Mar 2005 19:29:18 +0200
-Message-ID: <424C336E.3020804@gmx.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: sata_sil Mod15Write quirk workaround patch for vanilla kernel avaialble.
+Date: Fri, 01 Apr 2005 00:01:23 +0900
+Message-ID: <424C10C3.9080102@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:44468 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261440AbVCaNfY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Mar 2005 08:35:24 -0500
+Received: from wproxy.gmail.com ([64.233.184.204]:20593 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261490AbVCaPBa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Mar 2005 10:01:30 -0500
+Received: by wproxy.gmail.com with SMTP id 68so648511wri
+        for <linux-ide@vger.kernel.org>; Thu, 31 Mar 2005 07:01:28 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: mage@adamant.ua
 
-Hello!
 
-Has anybody obtained developer documentation from ATI about their 
-chipsets, like their IDE and SATA controllers?
+ Hello, guys.
 
-Is the ATI IXP IDE code reverse-engineered or written from documentation 
-provided by ATI?
+ I  generated m16w workaround patch for 2.6.11.6 (by just removing two
+lines :-) and set up a page regarding m15w quirk and the workaournd.
+I'm planning on updating m15w patch against the vanilla tree until it
+gets into the mainline so that impatient users can try out and it gets
+more testing.
 
-If 2nd, how do you obtain documentation from ATI?
+ http://home-tj.org/m15w
 
-With kind regards,
-Oliver Korpilla
+ Thanks.
+
+-- 
+tejun
+
