@@ -1,60 +1,59 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Brad Campbell <brad@wasp.net.au>
 Subject: Re: Libata VIA woes continue. Worked around - *wrong*
-Date: Sun, 29 Aug 2004 03:57:59 -0400
+Date: Sun, 29 Aug 2004 12:17:15 +0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <41318C87.9010806@pobox.com>
-References: <412F3DEA.2070307@wasp.net.au> <41318680.8080102@wasp.net.au>
+Message-ID: <4131910B.6020000@wasp.net.au>
+References: <412F3DEA.2070307@wasp.net.au> <41318680.8080102@wasp.net.au> <41318C87.9010806@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:59059 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S267330AbUH2H6N
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Aug 2004 03:58:13 -0400
-In-Reply-To: <41318680.8080102@wasp.net.au>
+Received: from wasp.net.au ([203.190.192.17]:26767 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S267330AbUH2IQj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Aug 2004 04:16:39 -0400
+In-Reply-To: <41318C87.9010806@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
-Brad Campbell wrote:
-> Brad Campbell wrote:
+Jeff Garzik wrote:
+
 > 
->> Ok, so after a couple of reboots with max_sector set to 200 the 
->> problem re-occurs.
->>
->> It must be something to do with programming the controller or timing 
->> or some other issue.
->>
->> I have worked around it by putting my 2 raid-0 drives on my spare 
->> promise ports, and at UDMA100 with transfers of 2048 sectors they 
->> behave fine no matter what I throw at them.
+> Well, there are some cases on a few controllers (SiI is one that comes 
+> to mind) where -- IIRC -- bridges dictate the max is UDMA/100, not 
+> UDMA/133, even if the underlying device is UDMA/133.
+> 
+> In sata_promise.c or sata_via.c, what happens if you change udma_mask 
+> from 0x7f to 0x3f?  Do the failures go away?
+
+These drives are UDMA/100. On the VIA controller I changed the udma_mask to 0x1f and the failures 
+"appeared" to go away but that was before I realised the exact nature of the failure mode. (That 
+being it will either fail on bootup, or very soon after or it will work perfectly until the next boot)
+
+I can always hook the drives up and hammer them if you'd like me to do further testing but I'm not 
+sure how we can then let libata know that the drives connected need to be slowed down as we can't 
+identify we have a bridge connected really.
+
+I'm still not convinced that it's not something else.
+Sure transfers > 200 sectors killed it on the VIA controller at UDMA/100 while they appeared to work 
+ok at UDMA/66. I guess I need to run a defined array of tests.
+
+- Large transfers (> 200) at UDMA/100 and UDMA/66
+- Small transfers (<=200) at UDMA/100 and UDMA/66
+- Something like 10 reboot cycles of each.
+
+It's very hard to hit on the Promise controller (Perhaps < 10% of reboots) while on the VIA 
+controller it happens maybe 60% of the time.
+
+And of course 2.6.5 never hits it at all. (And given I patched the VIA driver in 2.6.9-rc1 to keep 
+transfers < 200 sectors and still hit the bug it's not that!)
+
+>> Cross that bridge if we come to it I guess.
 > 
 > 
-> Scratch that. After a couple of days if intensive testing/rebooting and 
-> abuse they play up on the
-> Promise controller in exactly the same failure mode. Just far harder to 
-> trigger.
-> 
-> I have removed these bridge board from my system now and thus the 
-> problem no longer exists. I'm a
-> little concerned that this might show itself for other people in the 
-> future but then I guess most
-> sane people buy SATA hard disks rather than re-use old ATA drives with 
-> bridge boards.
+> Guffaw ;-)
 
-Well, there are some cases on a few controllers (SiI is one that comes 
-to mind) where -- IIRC -- bridges dictate the max is UDMA/100, not 
-UDMA/133, even if the underlying device is UDMA/133.
+Oh bugger.. I had not even realised what I said! :p) (Slow news day obviously)
 
-In sata_promise.c or sata_via.c, what happens if you change udma_mask 
-from 0x7f to 0x3f?  Do the failures go away?
-
-
-> Cross that bridge if we come to it I guess.
-
-Guffaw ;-)
-
-	Jeff
-
-
+Regards,
+Brad
