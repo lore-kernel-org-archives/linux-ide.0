@@ -1,47 +1,26 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [SATA] libata-dev queue updated
-Date: Sat, 19 Feb 2005 12:09:06 -0500
-Message-ID: <421772B2.7050100@pobox.com>
-References: <4216FB7B.3030409@pobox.com> <4217703E.4070307@tomt.net>
+Subject: Re: SATA (libata) + sg oops in 2.4.28-pre1
+Date: Sat, 19 Feb 2005 12:28:43 -0500
+Message-ID: <4217774B.2080206@pobox.com>
+References: <04Aug16.170456edt.332566@cyborg.cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:34699 "EHLO
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:44172 "EHLO
 	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261741AbVBSRJ3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 Feb 2005 12:09:29 -0500
-In-Reply-To: <4217703E.4070307@tomt.net>
+	id S261744AbVBSR25 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 Feb 2005 12:28:57 -0500
+In-Reply-To: <04Aug16.170456edt.332566@cyborg.cybernetics.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andre Tomt <andre@tomt.net>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: tonyb@cybernetics.com
+Cc: linux-ide@vger.kernel.org
 
-Andre Tomt wrote:
-> Jeff Garzik wrote:
-> 
->> Patch URL, BK URL, and changelog attached.
->>
->> Recent changes:
->> * New sata_qstor driver.
->>
->> * Turn on ATAPI by default.
->>
->> * Change a couple unconditional use-the-hardware function calls to be 
->> callbacks instead.  Should have been this way originally.
->>
->> * Most of C/H/S support.
->>
->> * Fix bugs in ADMA driver.
->>
->> * Support PCI MSI in AHCI driver.
->> * Support ATAPI in AHCI driver.
->>
->> * Improve ATA passthru (a.k.a. SMART) support
->>
-> 
-> How is the Marvell driver coming along? Did it stall? :-)
+Tony Battersby wrote:
+> I get an oops trying to get standard inquiry data from a SATA disk via
+> /dev/sg0 in kernel 2.4.28-pre1:
 
-Yeah, it's stalled...
+Does this still occur, in 2.4.30-pre1?
 
 	Jeff
 
