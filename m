@@ -1,43 +1,37 @@
-From: Andy Warner <andyw@pobox.com>
-Subject: Re: [SATA] status report, libata-dev queue updated
-Date: Fri, 5 Nov 2004 18:06:02 -0600
-Message-ID: <20041105180602.D31715@florence.linkmargin.com>
-References: <20041105100049.GA31653@havoc.gtf.org> <418BCED3.1030600@wasp.net.au> <20041105132613.A30910@florence.linkmargin.com> <418BD814.807@wasp.net.au>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: PATCH: Allow per driver taskfile filters
+Date: Fri, 05 Nov 2004 23:25:28 +0000
+Message-ID: <1099697126.5630.71.camel@localhost.localdomain>
+References: <1099672568.5564.49.camel@localhost.localdomain>
+	 <200411052311.45231.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:35053 "EHLO
-	ms-smtp-02.rdc-kc.rr.com") by vger.kernel.org with ESMTP
-	id S261279AbUKFAHt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 5 Nov 2004 19:07:49 -0500
-Content-Disposition: inline
-In-Reply-To: <418BD814.807@wasp.net.au>; from brad@wasp.net.au on Fri, Nov 05, 2004 at 11:44:20PM +0400
+Received: from clock-tower.bc.nu ([81.2.110.250]:32709 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S261281AbUKFA2Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 Nov 2004 19:28:24 -0500
+In-Reply-To: <200411052311.45231.bzolnier@elka.pw.edu.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: Andy Warner <andyw@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org
 
-Brad Campbell wrote:
-> Andy Warner wrote:
-> > Brad Campbell wrote:
-> > 
-> >>[...]
-> >>Read that as "I have tried really, really hard to break it and as yet been unable to".
-> > 
-> > 
-> > Is your system SMP ? I'm actively tracking a problem now with
-> > pass-thru behaviour (via /dev/sg* ) on SMP systems.
+On Gwe, 2004-11-05 at 22:11, Bartlomiej Zolnierkiewicz wrote:
+> This covers ide_raw_taskfile() calls, what with do_rw_taskfile()
+> ones and HDIO_DRIVE_[CMD,TASK,TASKFILE] ioctls?
+
+do_rw_taskfile could be filtered. I'm not clear if filtering the HDIO
+ones
+is the right thing to do
+
+> BTW IT8212 is (also) a real hardware RAID and it really deserves
+>     its own driver in the future (can share code with libata).
 > 
-> Nope, sorry. Only lowly UP here.
+> What is missing in libata to handle it?
 
-I can confirm that there is some sort of problem with
-PIO and SMP. Either exercising only DMA commands, or booting
-with maxcpus=1 avoids the problem. At present, I suspect
-the PIO task and/or state machine, but I'm still investigating.
+ATAPI, working blacklists, testing, the same as to move every other
+driver over. When the rest move it can.
 
-I doubt this problem will occur unless you have concurrent
-PIO access to different controllers on an SMP system.
--- 
-andyw@pobox.com
 
-Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
