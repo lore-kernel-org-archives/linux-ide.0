@@ -1,52 +1,36 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch] scsi/libata: correct bug for ULi M5281
-Date: Sat, 11 Dec 2004 14:15:39 -0500
-Message-ID: <41BB475B.1000202@pobox.com>
-References: <OF518056F7.FB1438A8-ON48256F64.0024A22B@uli.com.tw>
+From: Aris Basic <aris.basic@silencesoftware.com>
+Subject: sata_sil.c fix
+Date: Sun, 12 Dec 2004 08:50:28 -0500
+Message-ID: <41BC4CA4.50602@silencesoftware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:21132 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261998AbULKTPo
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 11 Dec 2004 14:15:44 -0500
-In-Reply-To: <OF518056F7.FB1438A8-ON48256F64.0024A22B@uli.com.tw>
+Received: from electron.myhostdns.com ([147.202.33.71]:2700 "EHLO
+	electron.myhostdns.com") by vger.kernel.org with ESMTP
+	id S262080AbULLNub (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 12 Dec 2004 08:50:31 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Clear.Zhang@uli.com.tw
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, andrebalsa@mailingaddress.org, Peer.Chen@uli.com.tw, Emily.Jiang@uli.com.tw, Eric.Lo@uli.com.tw
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Clear.Zhang@uli.com.tw wrote:
-> Hi, Jeff
-> 
-> The sata_uli patch for m5281 looks fine,but some of M5281 chip's PHY
-> is not stable sometime, so it need a workaround to correct the bug.
-> 
-> patch_M5281workaround is just for it.
-> 
-> The patch is applied to kernel 2.6.9. Pleases apply to new kernels, thanks
-> a lot.
-> 
-> Signed-off-by: Clear Zhang <Clear.Zhang@uli.com.tw>
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I'm afraid I must reject this patch.  We do not wish to put
-hardware-specific workarounds in libata-core.c or libata-scsi.c.
+Hi
+my box needs this harddrive added to sata_sil.c in order to make it work
+(otherwise it crashes after some time)
 
-I would suggest either
-(a) finding a way to add the workaround to sata_uli.c, or
-(b) finding the "root cause" of the problem, and determine why the
-libata code is insufficient.
+{ "ST3120026AS",        SIL_QUIRK_MOD15WRITE },
 
-Two suggestions I have while investigating your problem:
-1) Replacing the ->phy_reset() hook may allow you to solve the problem
-in sata_uli.c.
-2) It is entirely possible that we need to add additional error handling
-code to libata, including hooks back into the low-level driver (such as
-sata_uli.c).
+thx
+aris
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-Regards,
-
-	Jeff
-
-
+iD8DBQFBvEykSxHd9YgswYMRAkcxAJwIGV/H21PVMmJotQtYFe1TQa8GmwCggWkl
+aS5z2c6ti+ADrO44cG2qq6Y=
+=Rt9F
+-----END PGP SIGNATURE-----
