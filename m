@@ -1,287 +1,121 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] ide: hdio.txt update
-Date: Fri, 11 Mar 2005 15:29:08 +0900
-Message-ID: <20050311062908.GA11552@htj.dyndns.org>
-References: <20050302235457.GA21352@htj.dyndns.org> <20050303021638.GA24150@htj.dyndns.org> <58cb370e05031008307a0163c1@mail.gmail.com>
+From: "Grahame Jordan" <gbj@theforce.com.au>
+Subject: Re: ide-tape oops
+Date: Fri, 11 Mar 2005 21:22:49 +1100 (EST)
+Message-ID: <38831.203.20.16.2.1110536569.squirrel@webmail.theforce.com.au>
+References: <7619.202.12.233.21.1110421544.squirrel@webmail.theforce.com.au>
+    <422FD9D5.5010509@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from wproxy.gmail.com ([64.233.184.194]:61339 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262565AbVCKG3R (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Mar 2005 01:29:17 -0500
-Received: by wproxy.gmail.com with SMTP id 68so1042088wra
-        for <linux-ide@vger.kernel.org>; Thu, 10 Mar 2005 22:29:14 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <58cb370e05031008307a0163c1@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Received: from yoda.netcore.com.au ([203.18.21.12]:46999 "EHLO
+	ob1.theforce.com.au") by vger.kernel.org with ESMTP id S263248AbVCKKXU
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Mar 2005 05:23:20 -0500
+In-Reply-To: <422FD9D5.5010509@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: Grahame Jordan <gbj@theforce.com.au>, linux-ide@vger.kernel.org
 
- Greetings Bartlomiej,
+Randy,
 
- I've updated the following
+Applied patch and get:
 
- * in_flags modification when out_flags != 0 && in_flags == 0
- * more than one -> one or more than one
- * tf_{in|out}_flags -> {in|out}_flags as tf_* are in-kernel names
+Mar 11 21:02:37 hanlay -- MARK --
+Mar 11 21:08:45 hanlay kernel: ide-tape-open-test: using minor = 0, i = 0,
+drive = 0x00000000
+Mar 11 21:08:45 hanlay kernel: f8917470
+Mar 11 21:08:45 hanlay kernel: PREEMPT SMP
+...
 
- I'll update the taskfile patch series after receiving your comments
-about the patches.  Also, if you have a big picture for the IDE
-driver, do you care to spill?  What I have in mind now are
-
- 1. Completion-based taskfile (no direct ending/error handling of
-    requests), so that we can use it for specials/rw_disk/eh/etc...
- 2. Make specials (set_geometry, set_multmode...) more regular.
- 3. Do error-handling/resetting in a exception handler thread.
-    Maybe this and #2 should happen together.
-
- So, please let me know what you think.  Updated patch for hdio.txt
-follows.
+Does not look like it is getting attached.
 
 
- This patch updates Documentation/ioctl/hdio.txt to include more
-detailed descriptions about HDIO_DRIVE_{CMD|TASK|TASKFILE} ioctls.
+Should this module taint the kernel?
+Mar 11 15:22:41 hanlay kernel: ide_tape: no version for "struct_module"
+found: kernel tainted.
 
- Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Index: linux-taskfile-ng/Documentation/ioctl/hdio.txt
-===================================================================
---- linux-taskfile-ng.orig/Documentation/ioctl/hdio.txt	2005-03-11 15:10:59.068016786 +0900
-+++ linux-taskfile-ng/Documentation/ioctl/hdio.txt	2005-03-11 15:27:32.718915939 +0900
-@@ -573,26 +573,43 @@ HDIO_DRIVE_TASKFILE		execute raw taskfil
- 	  EFAULT	req_cmd == TASKFILE_IN_OUT (not implemented as of 2.6.8)
- 	  EPERM		req_cmd == TASKFILE_MULTI_OUT and drive
- 	  		multi-count not yet set.
--
-+	  EIO		Drive failed the command.
- 
- 	notes:
- 
--	  [1] Currently (2.6.8), both the input and output buffers are
--	  copied from the user and written back to the user, even when
--	  not used.  This may be a bug.
--
--	  [2] The out_flags and in_flags are returned to the user after
--	  the ioctl completes.	Currently (2.6.8) these are the same
--	  as the input values, unchanged.  In the future, they may have
--	  more significance.
--
--	  Extreme caution should be used with using this ioctl.  A
--	  mistake can easily corrupt data or hang the system.
--
--	  The argument to the ioctl is a pointer to a region of memory
--	  containing a ide_task_request_t structure, followed by an
--	  optional buffer of data to be transmitted to the drive,
--	  followed by an optional buffer to receive data from the drive.
-+	  [1] READ THE FOLLOWING NOTES *CAREFULLY*.  THIS IOCTL IS
-+	  FULL OF GOTCHAS.  Extreme caution should be used with using
-+	  this ioctl.  A mistake can easily corrupt data or hang the
-+	  system.
-+
-+	  [2] Both the input and output buffers are copied from the
-+	  user and written back to the user, even when not used.
-+
-+	  [3] If one or more bits are set in out_flags and in_flags is
-+	  zero, the following values are used for in_flags.all and
-+	  written back into in_flags on completion.
-+
-+	   * IDE_TASKFILE_STD_IN_FLAGS | (IDE_HOB_STD_IN_FLAGS << 8)
-+	     if LBA48 addressing is enabled for the drive
-+	   * IDE_TASKFILE_STD_IN_FLAGS
-+	     if CHS/LBA28
-+
-+	  The association between in_flags.all and each enable
-+	  bitfield flips depending on endianess; fortunately, TASKFILE
-+	  only uses inflags.b.data bit and ignores all other bits.
-+	  The end result is that, on any endian machines, it has no
-+	  effect other than modifying in_flags on completion.
-+
-+	  [4] The default value of SELECT is (0xa0|DEV_bit|LBA_bit)
-+	  except for four drives per port chipsets.  For four drives
-+	  per port chipsets, it's (0xa0|DEV_bit|LBA_bit) for the first
-+	  pair and (0x80|DEV_bit|LBA_bit) for the second pair.
-+
-+	  [5] The argument to the ioctl is a pointer to a region of
-+	  memory containing a ide_task_request_t structure, followed
-+	  by an optional buffer of data to be transmitted to the
-+	  drive, followed by an optional buffer to receive data from
-+	  the drive.
- 
- 	  Command is passed to the disk drive via the ide_task_request_t
- 	  structure, which contains these fields:
-@@ -611,11 +628,66 @@ HDIO_DRIVE_TASKFILE		execute raw taskfil
- 	    out_size		output (user->drive) buffer size, bytes
- 	    in_size		input (drive->user) buffer size, bytes
- 
--	  This ioctl does not necessarily respect all flags in the
--	  out_flags and in_flags values -- some taskfile registers
--	  may be written or read even if not requested in the flags.
--	  Unused fields of io_ports[] and hob_ports[] should be set
--	  to zero.
-+	  When out_flags is zero, the following registers are loaded.
-+
-+	    HOB_FEATURE		If the drive supports LBA48
-+	    HOB_NSECTOR		If the drive supports LBA48
-+	    HOB_SECTOR		If the drive supports LBA48
-+	    HOB_LCYL		If the drive supports LBA48
-+	    HOB_HCYL		If the drive supports LBA48
-+	    FEATURE
-+	    NSECTOR
-+	    SECTOR
-+	    LCYL
-+	    HCYL
-+	    SELECT		First, masked with 0xE0 if LBA48, 0xEF
-+				otherwise; then, or'ed with the default
-+				value of SELECT.
-+
-+	  If any bit in out_flags is set, the following registers are loaded.
-+
-+	    HOB_DATA		If out_flags.b.data is set.  HOB_DATA will
-+				travel on DD8-DD15 on little endian machines
-+				and on DD0-DD7 on big endian machines.
-+	    DATA		If out_flags.b.data is set.  DATA will
-+				travel on DD0-DD7 on little endian machines
-+				and on DD8-DD15 on big endian machines.
-+	    HOB_NSECTOR		If out_flags.b.nsector_hob is set
-+	    HOB_SECTOR		If out_flags.b.sector_hob is set
-+	    HOB_LCYL		If out_flags.b.lcyl_hob is set
-+	    HOB_HCYL		If out_flags.b.hcyl_hob is set
-+	    FEATURE		If out_flags.b.feature is set
-+	    NSECTOR		If out_flags.b.nsector is set
-+	    SECTOR		If out_flags.b.sector is set
-+	    LCYL		If out_flags.b.lcyl is set
-+	    HCYL		If out_flags.b.hcyl is set
-+	    SELECT		Or'ed with the default value of SELECT and
-+				loaded regardless of out_flags.b.select.
-+
-+	  Taskfile registers are read back from the drive into
-+	  {io|hob}_ports[] after the command completes iff one of the
-+	  following conditions is met; otherwise, the original values
-+	  will be written back, unchanged.
-+
-+	    1. The drive fails the command (EIO).
-+	    2. One or more than one bits are set in out_flags.
-+	    3. The requested data_phase is TASKFILE_NO_DATA.
-+
-+	    HOB_DATA		If in_flags.b.data is set.  It will contain
-+				DD8-DD15 on little endian machines and
-+				DD0-DD7 on big endian machines.
-+	    DATA		If in_flags.b.data is set.  It will contain
-+				DD0-DD7 on little endian machines and
-+				DD8-DD15 on big endian machines.
-+	    HOB_FEATURE		If the drive supports LBA48
-+	    HOB_NSECTOR		If the drive supports LBA48
-+	    HOB_SECTOR		If the drive supports LBA48
-+	    HOB_LCYL		If the drive supports LBA48
-+	    HOB_HCYL		If the drive supports LBA48
-+	    NSECTOR
-+	    SECTOR
-+	    LCYL
-+	    HCYL
- 
- 	  The data_phase field describes the data transfer to be
- 	  performed.  Value is one of:
-@@ -626,27 +698,30 @@ HDIO_DRIVE_TASKFILE		execute raw taskfil
- 	    TASKFILE_MULTI_OUT
- 	    TASKFILE_IN_OUT
- 	    TASKFILE_IN_DMA
--	    TASKFILE_IN_DMAQ
-+	    TASKFILE_IN_DMAQ		== IN_DMA (queueing not supported)
- 	    TASKFILE_OUT_DMA
--	    TASKFILE_OUT_DMAQ
--	    TASKFILE_P_IN
--	    TASKFILE_P_IN_DMA
--	    TASKFILE_P_IN_DMAQ
--	    TASKFILE_P_OUT
--	    TASKFILE_P_OUT_DMA
--	    TASKFILE_P_OUT_DMAQ
-+	    TASKFILE_OUT_DMAQ		== OUT_DMA (queueing not supported)
-+	    TASKFILE_P_IN		unimplemented
-+	    TASKFILE_P_IN_DMA		unimplemented
-+	    TASKFILE_P_IN_DMAQ		unimplemented
-+	    TASKFILE_P_OUT		unimplemented
-+	    TASKFILE_P_OUT_DMA		unimplemented
-+	    TASKFILE_P_OUT_DMAQ		unimplemented
- 
- 	  The req_cmd field classifies the command type.  It may be
- 	  one of:
- 
- 	    IDE_DRIVE_TASK_NO_DATA
--	    IDE_DRIVE_TASK_SET_XFER
-+	    IDE_DRIVE_TASK_SET_XFER	unimplemented
- 	    IDE_DRIVE_TASK_IN
--	    IDE_DRIVE_TASK_OUT
-+	    IDE_DRIVE_TASK_OUT		unimplemented
- 	    IDE_DRIVE_TASK_RAW_WRITE
- 
--
--
-+	  [6] Do not access {in|out}_flags->all except for resetting
-+	  all the bits.  Always access individual bit fields.  ->all
-+	  value will flip depending on endianess.  For the same
-+	  reason, do not use IDE_{TASKFILE|HOB}_STD_{OUT|IN}_FLAGS
-+	  constants defined in hdreg.h.
- 
- 
- 
-@@ -663,7 +738,13 @@ HDIO_DRIVE_CMD			execute a special drive
- 
- 	inputs:
- 
--	  Taskfile register values:
-+	  Commands other than WIN_SMART
-+	    args[0]	COMMAND
-+	    args[1]	NSECTOR
-+	    args[2]	FEATURE
-+	    args[3]	NSECTOR
-+
-+	  WIN_SMART
- 	    args[0]	COMMAND
- 	    args[1]	SECTOR
- 	    args[2]	FEATURE
-@@ -682,11 +763,28 @@ HDIO_DRIVE_CMD			execute a special drive
- 	error returns:
- 	  EACCES	Access denied:  requires CAP_SYS_RAWIO
- 	  ENOMEM	Unable to allocate memory for task
-+	  EIO		Drive reports error
- 
- 	notes:
- 
--	  Taskfile registers IDE_LCYL, IDE_HCYL, and IDE_SELECT are
--	  set to zero before executing the command.
-+	  [1] For commands other than WIN_SMART, args[1] should equal
-+	  args[3].  SECTOR, LCYL and HCYL are undefined.  For
-+	  WIN_SMART, 0x4f and 0xc2 are loaded into LCYL and HCYL
-+	  respectively.  In both cases SELECT will contain the default
-+	  value for the drive.  Please refer to HDIO_DRIVE_TASKFILE
-+	  notes for the default value of SELECT.
-+
-+	  [2] If NSECTOR value is greater than zero and the drive sets
-+	  DRQ when interrupting for the command, NSECTOR * 512 bytes
-+	  are read from the device into the area following NSECTOR.
-+	  In the above example, the area would be
-+	  args[4..4+XFER_SIZE].  16bit PIO is used regardless of
-+	  HDIO_SET_32BIT setting.
-+
-+	  [3] If COMMAND == WIN_SETFEATURES && FEATURE == SETFEATURES_XFER
-+	  && NSECTOR >= XFER_SW_DMA_0 && the drive supports any DMA
-+	  mode, IDE driver will try to tune the transfer mode of the
-+	  drive accordingly.
- 
- 
- 
-@@ -726,7 +824,14 @@ HDIO_DRIVE_TASK			execute task and speci
- 	error returns:
- 	  EACCES	Access denied:  requires CAP_SYS_RAWIO
- 	  ENOMEM	Unable to allocate memory for task
-+	  ENOMSG	Device is not a disk drive.
-+	  EIO		Drive failed the command.
-+
-+	notes:
- 
-+	  [1] DEV bit (0x10) of SELECT register is ignored and the
-+	  appropriate value for the drive is used.  All other bits
-+	  are used unaltered.
- 
- 
- 
+
+Cheers
+
+Grahame Jordan
+
+> Grahame Jordan wrote:
+>> Hi,
+>>
+>> I have a machine on which when I run something like mt -f /dev/ht0
+>> status
+>> it seg faults. However I have another machine same spec that works OK?
+>>
+>> Any help would be appreciated
+>>
+>
+> <drive> is null in idetape_chrdev_open.
+> Please apply and test with the attached patch, just to try to
+> find out what is going one.
+>
+>>
+>> Debian testing
+>> Linux hanlay 2.6.8-2-686-smp #1 SMP Mon Jan 24 02:32:52 EST 2005 i686
+>> GNU/Linux
+>> P4 3.2GHz
+>> 1GB RAM
+>>
+>>  <6>i2c /dev entries driver
+>> Unable to handle kernel NULL pointer dereference at virtual address
+>> 00000020
+>>  printing eip:
+>> f891744e
+>> *pde = 00000000
+>> Oops: 0000 [#3]
+>> PREEMPT SMP
+>> Modules linked in: i2c_dev i2c_i801 i2c_core tsdev mousedev psmouse ipv6
+>> snd_intel8x0 snd_ac97_codec snd_pcm snd_timer snd_page_alloc gameport
+>> snd_mpu401_uart snd_rawmidi snd_seq_device snd hw_random shpchp pciehp
+>> pci_hotplug intel_agp intel_mch_agp agpgart evdev ehci_hcd eth1394
+>> uhci_hcd usbcore i810_audio ac97_codec soundcore piix sk98lin ohci1394
+>> capability commoncap ide_tape sbp2 ieee1394 ide_cd ide_core genrtc ext2
+>> ext3 jbd mbcache sr_mod cdrom sd_mod sata_promise ata_piix libata
+>> scsi_mod
+>> unix font vesafb cfbcopyarea cfbimgblt cfbfillrect
+>> CPU:    0
+>> EIP:    0060:[<f891744e>]    Not tainted
+>> EFLAGS: 00010297   (2.6.8-2-686-smp)
+>> EIP is at idetape_chrdev_open+0x3e/0x190 [ide_tape]
+>> eax: 00000000   ebx: 00000000   ecx: f738d440   edx: fffffffa
+>> esi: 00000000   edi: cb534000   ebp: f7642380   esp: cb535dac
+>> ds: 007b   es: 007b   ss: 0068
+>> Process mt (pid: 7038, threadinfo=cb534000 task=f7005210)
+>> Stack: f738b51c f7642380 0000000f 00000001 00000286 00000000 00000132
+>> f7b2ac00
+>>        f756cd9c 422faee6 24eb6ec0 f756cdd8 cb457400 cb457404 40165000
+>> c1000000
+>>        c014de6b c1169f40 422faee6 24eb6ec0 00000000 c02de380 00000282
+>> 00000246
+>> Call Trace:
+>>  [<c014de6b>] zap_pte_range+0x3b/0x2d0
+>>  [<c0142a56>] buffered_rmqueue+0x116/0x230
+>>  [<c0142e80>] __alloc_pages+0x310/0x370
+>>  [<c013e2bb>] find_get_page+0x3b/0x70
+>>  [<c013f5b9>] filemap_nopage+0x229/0x3c0
+>>  [<c0179cf1>] dput+0x31/0x270
+>>  [<c016fe4e>] link_path_walk+0xc2e/0x1020
+>>  [<c014d9ee>] pte_alloc_map+0xae/0x100
+>>  [<c016ebf7>] permission+0x67/0x80
+>>  [<c016a453>] cdev_get+0x53/0xb0
+>>  [<c016a0a5>] chrdev_open+0x125/0x290
+>>  [<c0160931>] get_empty_filp+0x71/0x110
+>>  [<c015ec2a>] dentry_open+0x16a/0x260
+>>  [<c015eab8>] filp_open+0x68/0x70
+>>  [<c015ed69>] get_unused_fd+0x49/0x100
+>>  [<c015ef9b>] sys_open+0x5b/0x90
+>>  [<c01061fb>] syscall_call+0x7/0xb
+>> Code: 8b 5e 20 89 b5 80 00 00 00 f0 0f ba ab fc 18 00 00 02 19 c0
+>
+>
+> --
+> ~Randy
+>
+
+
