@@ -1,28 +1,25 @@
 From: Andre Hedrick <andre@linux-ide.org>
-Subject: Re: [PATCH] IDE TCQ for 2.4.19-pre8
-Date: Mon, 6 May 2002 11:57:41 -0700 (PDT)
+Subject: patchset updates 2.4 ide
+Date: Fri, 10 May 2002 12:00:26 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10205061154520.22915-100000@master.linux-ide.org>
-References: <20020506134535.GC18817@suse.de>
+Message-ID: <Pine.LNX.4.10.10205101157290.3133-100000@master.linux-ide.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20020506134535.GC18817@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Mon, 6 May 2002, Jens Axboe wrote:
 
-> People who were (rightfully so) afraid to test 2.5 can now play with ide
-> tagged queueing in 2.4. Works great here.
+http://www.linuxdiskcert.org/ide-2.4.19-p7.all.convert.10.patch.bz2
+http://www.linuxdiskcert.org/ide-2.4.19-p8-ac1.all.convert.10.patch.bz2
 
-So how much longer will this game go on or should I invest "enigma device"
-to be able to read and track the renaming game.  Obvious you are left
-hanging in 2.5 under tag w/o a solid working transport layer and no diag
-access to test.
+Closer to making it modular and selectable/split io/mmio channel access.
 
-Cheers,
+There are a few patches left out as time was a crunch.
+
+Cheers
+
 
 Andre Hedrick
 LAD Storage Consulting Group
