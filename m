@@ -1,23 +1,71 @@
 From: "Shai Fultheim" <shai@ftcon.com>
 Subject: RE: Multiple (ICH3) IDE-controllers in a system
-Date: Thu, 6 May 2004 12:18:55 -0700
+Date: Thu, 6 May 2004 14:05:56 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200405061918.BLI57844@ms6.netsolmail.com>
-References: <20040506064546.GA239@ucw.cz>
+Message-ID: <200405062105.BLI83826@ms6.netsolmail.com>
+References: <200405061918.BLI57844@ms6.netsolmail.com>
 Reply-To: <shai@ftcon.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_00D1_01C43373.41072760"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omr4.netsolmail.com ([216.168.230.140]:22239 "EHLO
-	omr4.netsolmail.com") by vger.kernel.org with ESMTP id S261928AbUEFTTz
+Received: from omr2.netsolmail.com ([216.168.230.163]:41915 "EHLO
+	omr2.netsolmail.com") by vger.kernel.org with ESMTP id S263024AbUEFVGS
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 May 2004 15:19:55 -0400
-In-Reply-To: <20040506064546.GA239@ucw.cz>
+	Thu, 6 May 2004 17:06:18 -0400
+In-Reply-To: <200405061918.BLI57844@ms6.netsolmail.com>
 List-Id: linux-ide@vger.kernel.org
 To: 'Vojtech Pavlik' <vojtech@suse.cz>, 'Bartlomiej Zolnierkiewicz' <B.Zolnierkiewicz@elka.pw.edu.pl>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_00D1_01C43373.41072760
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+
+Vojtech and Bartlomiej,
+
+Attached patch that fix the problem according to (2) below.  Let me know if
+you can apply it.
+
+Thanks. 
+
+
+--- linux-2.6.5-mm6.orig/arch/i386/pci/fixup.c  2004-04-29
+05:23:35.000000000 -0700
++++ linux-2.6.5-mm6/arch/i386/pci/fixup.c       2004-05-07
+01:45:31.000000000 -0700
+@@ -92,6 +92,15 @@
+        int i;
+ 
+        /*
++        * Runs the fixup only for the first IDE controller
++        * (Shai Fultheim - shai@ftcon.com)
++        */
++       static int called = 0;
++       if (called)
++               return;
++       called = 1;
++
++       /*
+         * There exist PCI IDE controllers which have utter garbage
+         * in first four base registers. Ignore that.
+         */
+
+
+
+--Shai
+
+
+-----Original Message-----
+From: linux-ide-owner@vger.kernel.org
+[mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Shai Fultheim
+Sent: Thursday, May 06, 2004 12:19
+To: 'Vojtech Pavlik'; 'Bartlomiej Zolnierkiewicz'
+Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: RE: Multiple (ICH3) IDE-controllers in a system
 
 Ok.
 I would suggest one of the followings:
@@ -72,4 +120,39 @@ SuSE Labs, SuSE CR
 To unsubscribe from this list: send the line "unsubscribe linux-ide" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+------=_NextPart_000_00D1_01C43373.41072760
+Content-Type: application/octet-stream;
+	name="pci-ide-fixup.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="pci-ide-fixup.patch"
+
+--- linux-2.6.5-mm6.orig/arch/i386/pci/fixup.c	2004-04-29 =
+05:23:35.000000000 -0700=0A=
++++ linux-2.6.5-mm6/arch/i386/pci/fixup.c	2004-05-07 01:45:31.000000000 =
+-0700=0A=
+@@ -92,6 +92,15 @@=0A=
+ 	int i;=0A=
+ =0A=
+ 	/*=0A=
++	 * Runs the fixup only for the first IDE controller=0A=
++	 * (Shai Fultheim - shai@ftcon.com)=0A=
++	 */=0A=
++	static int called =3D 0;=0A=
++	if (called)=0A=
++		return;=0A=
++	called =3D 1;=0A=
++=0A=
++	/*=0A=
+ 	 * There exist PCI IDE controllers which have utter garbage=0A=
+ 	 * in first four base registers. Ignore that.=0A=
+ 	 */=0A=
+
+------=_NextPart_000_00D1_01C43373.41072760--
 
