@@ -1,77 +1,66 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: [parisc-linux] [PATCH] asm-parisc/ide.h cleanup (there are no standard ports)
-Date: Sun, 28 Mar 2004 00:24:57 +0100
+Subject: Re: [PATCH] speed up SATA
+Date: Sun, 28 Mar 2004 00:32:22 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200403280024.57672.bzolnier@elka.pw.edu.pl>
-References: <200403241443.43206.bzolnier@elka.pw.edu.pl> <20040327222810.GB24782@colo.lackof.org>
+Message-ID: <200403280032.22180.bzolnier@elka.pw.edu.pl>
+References: <4066021A.20308@pobox.com> <40660877.3090302@stesmi.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:4776 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S262052AbUC0XP7
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:51624 "EHLO
+	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261967AbUC0XXQ
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Mar 2004 18:15:59 -0500
-In-Reply-To: <20040327222810.GB24782@colo.lackof.org>
+	Sat, 27 Mar 2004 18:23:16 -0500
+In-Reply-To: <40660877.3090302@stesmi.com>
 Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: parisc-linux@parisc-linux.org, linux-ide@vger.kernel.org
+To: Stefan Smietanowski <stesmi@stesmi.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-On Saturday 27 of March 2004 23:28, Grant Grundler wrote:
-> On Wed, Mar 24, 2004 at 02:43:43PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > Hi,
-> >
-> > Is this patch correct?
+On Sunday 28 of March 2004 00:04, Stefan Smietanowski wrote:
+> Hi Jeff.
 >
-> It's not necessary.
-
-Well, I know but I have other cleanups incremental to this one. :-)
-
-> > Regards,
-> > Bartlomiej
+> > The "lba48" feature in ATA allows for addressing of sectors > 137GB, and
+> > also allows for transfers of up to 64K sector, instead of the
+> > traditional 256 sectors in older ATA.
 > >
-> >  linux-2.6.5-rc2-bk3-root/include/asm-parisc/ide.h |   15 ++-------------
-> >  1 files changed, 2 insertions(+), 13 deletions(-)
+> > libata simply limited all transfers to a 200 sectors (just under the 256
+> > sector limit).  This was mainly being careful, and making sure I had a
+> > solution that worked everywhere.  I also wanted to see how the iommu S/G
+> > stuff would shake out.
 > >
-> > diff -puN include/asm-parisc/ide.h~parisc_no_default_ide_ports
-> > include/asm-parisc/ide.h ---
-> > linux-2.6.5-rc2-bk3/include/asm-parisc/ide.h~parisc_no_default_ide_ports	
-> >2004-03-24 14:39:06.293991064 +0100 +++
-> > linux-2.6.5-rc2-bk3-root/include/asm-parisc/ide.h	2004-03-24
-> > 14:39:33.400870192 +0100 @@ -41,19 +41,8 @@ static __inline__ void
-> > ide_init_hwif_por
-> >  	hw->io_ports[IDE_IRQ_OFFSET] = 0;
-> >  }
+> > Things seem to be looking pretty good, so it's now time to turn on
+> > lba48-sized transfers.  Most SATA disks will be lba48 anyway, even the
+> > ones smaller than 137GB, for this and other reasons.
 > >
-> > -static __inline__ void ide_init_default_hwifs(void)
-> > -{
-> > -#ifndef CONFIG_PCI
-> > -	hw_regs_t hw;
-> > -	int index;
-> > -
-> > -	for(index = 0; index < MAX_HWIFS; index++) {
-> > -		ide_init_hwif_ports(&hw, ide_default_io_base(index), 0, NULL);
-> > -		hw.irq = ide_default_irq(ide_default_io_base(index));
-> > -		ide_register_hw(&hw);
-> > -	}
-> > -#endif
-> > -}
-> > +/* There are no standard ports. */
-> > +static inline void ide_init_default_hwifs(void)	{ ; }
->
-> Note the "ifndef CONFIG_PCI" - we only support IDE behind PCI to date.
-> ie this function already is "empty" for parisc since PCI must be enabled
+> > With this simple patch, the max request size goes from 128K to 32MB...
+> > so you can imagine this will definitely help performance.  Throughput
+> > goes up.  Interrupts go down.  Fun for the whole family.
 
-It is also NOP for #ifdef CONFIG_PCI (that is the reason for this patch BTW)
-since both ide_default_io_base() and ide_default_irq() are defined as '0'.
+What about latency?
 
-> when IDE is enabled. Hypothetically someone could add an IDE card
-> to a parisc EISA bus (eg 725), not define PCI, and then run the IDE
-> in PIO mode since DMA is still kaputt behind our EISA IOMMU.
+What about recently discussed PRD table "limit" of 256 entries?
 
-That would require (at least) passing "ide=base[,ctl,[irq]]" kernel parameter.
+AFAIR these are the reasons why IDE driver is currently
+limiting max request size to 1024K on LBA48 disks.
+
+> What will happen when a PATA disk lies behind a Marvel(ous) bridge, as
+> in most SATA disks today?
+
+Most modern PATA disks support LBA48 and IDE driver has been using
+large transfers for some time. :-)
+
+> Is large transfers mandatory in the LBA48 spec and is LBA48 really
+> mandatory in SATA?
+
+large transfers are part of LBA48 spec
+
+> And yes, I saw that the dmesg showed a Maxtor drive, but I'm uncertain
+> if that disk of yours has a Marvel chip on or not, since newer Maxtors
+> might (have) come out (already) without a Marvel chip, I just don't
+> know.
 
 Regards,
 Bartlomiej
