@@ -1,60 +1,50 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: page fault scalability patch V12 [0/7]: Overview and performance
- tests
-Date: Thu, 02 Dec 2004 02:00:37 -0500
-Message-ID: <41AEBD95.7030804@pobox.com>
-References: <Pine.LNX.4.44.0411221457240.2970-100000@localhost.localdomain>	<Pine.LNX.4.58.0411221343410.22895@schroedinger.engr.sgi.com>	<Pine.LNX.4.58.0411221419440.20993@ppc970.osdl.org>	<Pine.LNX.4.58.0411221424580.22895@schroedinger.engr.sgi.com>	<Pine.LNX.4.58.0411221429050.20993@ppc970.osdl.org>	<Pine.LNX.4.58.0412011539170.5721@schroedinger.engr.sgi.com>	<Pine.LNX.4.58.0412011608500.22796@ppc970.osdl.org>	<41AEB44D.2040805@pobox.com> <20041201223441.3820fbc0.akpm@osdl.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: page fault scalability patch V12 [0/7]: Overview and
+	performance tests
+Date: Thu, 02 Dec 2004 18:05:48 +1100
+Message-ID: <1101971149.5593.64.camel@gaston>
+References: <Pine.LNX.4.44.0411221457240.2970-100000@localhost.localdomain>
+	 <Pine.LNX.4.58.0411221343410.22895@schroedinger.engr.sgi.com>
+	 <Pine.LNX.4.58.0411221419440.20993@ppc970.osdl.org>
+	 <Pine.LNX.4.58.0411221424580.22895@schroedinger.engr.sgi.com>
+	 <Pine.LNX.4.58.0411221429050.20993@ppc970.osdl.org>
+	 <Pine.LNX.4.58.0412011539170.5721@schroedinger.engr.sgi.com>
+	 <Pine.LNX.4.58.0412011608500.22796@ppc970.osdl.org>
+	 <41AEB44D.2040805@pobox.com> <20041201223441.3820fbc0.akpm@osdl.org>
+	 <41AEBD95.7030804@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:52132 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261565AbULBHAw
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Dec 2004 02:00:52 -0500
-In-Reply-To: <20041201223441.3820fbc0.akpm@osdl.org>
+Received: from gate.crashing.org ([63.228.1.57]:64169 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S261566AbULBHGV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Dec 2004 02:06:21 -0500
+In-Reply-To: <41AEBD95.7030804@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: torvalds@osdl.org, benh@kernel.crashing.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
 
-Andrew Morton wrote:
-> We need an -rc3 yet.  And I need to do another pass through the
-> regressions-since-2.6.9 list.  We've made pretty good progress there
-> recently.  Mid to late December is looking like the 2.6.10 date.
+On Thu, 2004-12-02 at 02:00 -0500, Jeff Garzik wrote:
 
+> 
+> 2.6.9:
+> 	bitbang ATA taskfile registers
+> 	queue_work()
+> 	workqueue thread bitbangs ATA data register (read id page)
+> 
+> So I wonder if <something> doesn't like CPU 0 sending I/O traffic to the 
+> on-board SATA PCI device, then immediately after that, CPU 1 sending I/O 
+> traffic.
+> 
+> Anyway, back to debugging...  :)
 
-another for that list, BTW:
+They may not end up in order if they are stores (the stores to the
+taskfile may be out of order vs; the loads/stores to/from the data
+register) unless you have a spinlock protecting both or a full sync (on
+ppc), but then, I don't know the ordering things on x86_64. This could
+certainly be a problem on ppc & ppc64 too.
 
-I am currently chasing a 2.6.8->2.6.9 SATA regression, which causes 
-ata_piix (Intel ICH5/6/7) to not-find some SATA devices on x86-64 SMP, 
-but works on UP.  Potentially related to >=4GB of RAM.
+Ben.
 
-
-
-Details, in case anyone is interested:
-Unless my code is screwed up (certainly possible), PIO data-in [using 
-the insw() call] seems to return all zeroes on a true-blue SMP machine, 
-for the identify-device command.  When this happens, libata (correctly) 
-detects a bad id page and bails.  (problem doesn't show up on single CPU 
-w/ HT)
-
-What changed from 2.6.8 to 2.6.9 is
-
-2.6.8:
-	bitbang ATA taskfile registers (loads command)
-	bitbang ATA data register (read id page)
-
-2.6.9:
-	bitbang ATA taskfile registers
-	queue_work()
-	workqueue thread bitbangs ATA data register (read id page)
-
-So I wonder if <something> doesn't like CPU 0 sending I/O traffic to the 
-on-board SATA PCI device, then immediately after that, CPU 1 sending I/O 
-traffic.
-
-Anyway, back to debugging...  :)
-
-	Jeff
 
