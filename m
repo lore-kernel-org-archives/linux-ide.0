@@ -1,42 +1,32 @@
-From: "Stuart D. Gathman" <stuart@bmsi.com>
-Subject: Re: ide-tape.c (vs. st.c / ide-scsi.c)
-Date: Sun, 28 Sep 2003 21:30:51 -0400 (EDT)
+From: Yossi Down-Under <fcp@pop.co.za>
+Subject: ide cdrom performance issue
+Date: 05 Oct 2003 19:35:32 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0309282123250.17331-100000@bmsred.bmsi.com>
-References: <CE41BFEF2481C246A8DE0D2B4DBACF4F128A1F@ausx2kmpc106.aus.amer.dell.com>
+Message-ID: <1065375332.1355.9.camel@server>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from www.bmsi.com ([66.160.67.186]:2471 "EHLO spidey.bmsi.com")
-	by vger.kernel.org with ESMTP id S262771AbTI2Baw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2003 21:30:52 -0400
-In-Reply-To: <CE41BFEF2481C246A8DE0D2B4DBACF4F128A1F@ausx2kmpc106.aus.amer.dell.com>
+Received: from ctb-mesg4.saix.net ([196.25.240.76]:40640 "EHLO
+	ctb-mesg4.saix.net") by vger.kernel.org with ESMTP id S263222AbTJERff
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 5 Oct 2003 13:35:35 -0400
+Received: from ckb-ip-nas-1-p233.telkom-ipnet.co.za (ckb-ip-nas-1-p233.telkom-ipnet.co.za [155.239.77.233])
+	by ctb-mesg4.saix.net (Postfix) with ESMTP id 02463AAD3
+	for <linux-ide@vger.kernel.org>; Sun,  5 Oct 2003 19:35:32 +0200 (SAST)
 List-Id: linux-ide@vger.kernel.org
-To: Stuart_Hayes@Dell.com
-Cc: linux-ide@vger.kernel.org, linux-tape@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Fri, 26 Sep 2003 Stuart_Hayes@Dell.com wrote:
+Running RH9 with xcdroast and three recorders each on its own ide
+channel configured for ide-scsi. Having trouble with buffer underruns.
+Am told by xcdroast author that it is a kernel ide driver issue,
+specifically not using dma for transfers and recommended I try a newer
+kernel.
 
-> Does using ide-tape have any advantages over using st.c / ide-scsi for
-> controlling ATAPI tape drives, other than the following?
+My question is whether the 2.5.75 kernel is going to improve this
+situation before going to the trouble to install it?
 
-For me, ide-tape was easier to set up for all IDE systems (typical low end).
-I had to stop using it with kernel-2.4.20 because it simply doesn't
-work at all anymore (crashes system).  Setting up for ide-scsi tape
-adds several more steps to an install (including append="hdd=ide-scsi" for the
-boot loader).
+Thanks,
 
-Furthermore, the ide-scsi+st driver prints all kinds of errors on the console
-about commands not being recognized when using a low end IDE tape, but the tape
-works fine.  Not having looked at the guts of the code, I suspect that ide-tape
-knows more about which commands low end IDE drives don't support.
-
-So there is a lot of overlap between ide-scsi+st and ide-tape, but ide-tape
-specializes in low end drives - and doesn't expect full SCSI tape compliance.
-
--- 
-			Stuart D. Gathman <stuart@bmsi.com>
-      Business Management Systems Inc.  Phone: 703 591-0911 Fax: 703 591-6154
-	"[Microsoft] products are even less buggy than others, in terms of
-	    per capita usage." - Steve Balmer, Microsoft Corporation
+L. Baker
 
