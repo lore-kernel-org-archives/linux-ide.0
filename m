@@ -1,58 +1,95 @@
-From: Daniel Brahneborg <daniel.com@wtnord.net>
-Subject: Re: siimage and two nics
-Date: Sat, 27 Dec 2003 23:40:52 +0100
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20031227234052.A2433@nettis.grimsta>
-References: <20031226085450.A4045@nettis.grimsta> <34449.209.163.161.49.1072444479.squirrel@mail.clanhk.org> <20031226195705.B4045@nettis.grimsta> <3FEBAFA5.8020604@clanhk.org> <20031226232826.A7057@nettis.grimsta> <3FEBCA3C.5000803@clanhk.org> <20031227083050.A8631@nettis.grimsta> <3FECD15B.1010004@clanhk.org>
+From: Bernard Blackham <bernard@blackham.com.au>
+Subject: shutdown patch
+Date: Sun, 28 Dec 2003 11:04:39 +0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20031228030438.GA1273@amidala>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 212-214-141-209.v-by.wtnord.net ([212.214.141.209]:41088 "EHLO
-	ricercar.mine.nu") by vger.kernel.org with ESMTP id S264830AbTL0WlG
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Dec 2003 17:41:06 -0500
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="jho1yZJdad60DJr+"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3FECD15B.1010004@clanhk.org>; from heretic@clanhk.org on Sat, Dec 27, 2003 at 12:24:59AM +0000
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, swsusp-devel@lists.sourceforge.net
 List-Id: linux-ide@vger.kernel.org
-To: "J. Ryan Earl" <heretic@clanhk.org>
-Cc: Daniel Brahneborg <daniel.com@wtnord.net>, linux-ide@vger.kernel.org
 
-On Sat, Dec 27, 2003 at 12:24:59AM +0000, J. Ryan Earl wrote:
-> Daniel Brahneborg wrote:
-> 
-> >What matters is that I still want to be able to access the small
-> >IDE drive I have on the PATA connector.
->
-> That should not be a problem.  If you build the via82cxxx into the 
-> kernel and use siimage as a module, the two sata drives should be hde 
-> and hdg, but you could build the siimage into the kernel and boot of the 
-> RAID if you wanted too.
 
-I'm making progress!  I'm using Linus kernel 2.6, have via82cxxx
-and siimage built in, no scsi stuff at all, and set the ports and
-irq's for ide0, ide1, ide2 and ide3 with Grub.  This makes the
-siimage drives end up nicely as ide4 and ide5, or hdi and hdk.
-It even allows me to have two network cards without crashing.
+--jho1yZJdad60DJr+
+Content-Type: multipart/mixed; boundary="OgqxwSJOaUobr8KG"
+Content-Disposition: inline
 
-When the machine boots I always get a handful of "irq 12: nobody
-cared", but most things seem to work fine anyway.  Except, of
-course, that I now get corrupt files when reading or writing large
-files.  It only seems to appear on the raid system, not the disks
-themselves, so I'll check with the raid guys.
 
-I'll try the -mm tree and see if it makes any difference.
+--OgqxwSJOaUobr8KG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> >Btw, what speed should I be able to get with the siimage module?
->
-> You have to consider I'm using WD360GD "Raptors" and not whatever drive 
-> you have.  I get 35-55 MB/sec sequential read/write throughput on a 
-> single disk.
+Hi,
 
-Ok, that's the same as me.  Around 55MB/sec on the Via interface,
-around 35MB/sec on the siimage interface, and 25-30MB/sec on the
-Raid5 disk.  This is with just a Duron 800MHz, so that's cool.
+In 2.4, there was an IDE reboot notifier that placed HDDs into
+standby before shutdown (and parking heads). These no longer exist
+in 2.6's IDE code since the power management rework. Debian (and
+probably most distributions) run halt(8) as the last command in
+runlevel 0 which puts the disk into standby mode, so generally it
+isn't a problem.
 
-Tons of thanks for all your help and your suggestions.
+However, if the system is powered off by other means (eg,
+suspend-to-disk), the drive is never placed in standby mode, and
+some drives will make a very audible "thunk" (my guess is as they
+race to park their heads).
 
-/Basic
+This patch places the disks in standby when device_shutdown() is
+called. Please consider it, or something with the same functionality
+(I'm not sure if it's correct to assume that calling
+device->shutdown() can be treated the same as entering S5).
 
+Regards,
+
+Bernard.
+
+--=20
+ Bernard Blackham <bernard at blackham dot com dot au>
+
+--OgqxwSJOaUobr8KG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="ide-shutdown.diff"
+Content-Transfer-Encoding: quoted-printable
+
+diff -ruN linux-2.6.0/drivers/ide/ide.c.orig linux-2.6.0/drivers/ide/ide.c
+--- linux-2.6.0/drivers/ide/ide.c.orig	2003-12-18 10:58:38.000000000 +0800
++++ linux-2.6.0/drivers/ide/ide.c	2003-12-28 10:18:47.000000000 +0800
+@@ -2493,6 +2493,11 @@
+ 	return 0;
+ }
+=20
++static void ide_drive_shutdown (struct device * dev)
++{
++	generic_ide_suspend(dev, 5);
++}
++
+ int ide_register_driver(ide_driver_t *driver)
+ {
+ 	struct list_head list;
+@@ -2519,6 +2524,7 @@
+ 	driver->gen_driver.name =3D (char *) driver->name;
+ 	driver->gen_driver.bus =3D &ide_bus_type;
+ 	driver->gen_driver.remove =3D ide_drive_remove;
++	driver->gen_driver.shutdown =3D ide_drive_shutdown;
+ 	return driver_register(&driver->gen_driver);
+ }
+=20
+
+--OgqxwSJOaUobr8KG--
+
+--jho1yZJdad60DJr+
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQE/7khGccTsdj5FJ6QRAhEPAKCTO+fLALgs2Wa8iK0GiMKclUJlKQCghGTS
+Giv+gl4XjdXwCLJlJSNTyvU=
+=dVTO
+-----END PGP SIGNATURE-----
+
+--jho1yZJdad60DJr+--
