@@ -1,32 +1,49 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Gene Heskett <gene.heskett@verizon.net>
 Subject: Re: [BK PATCHES] ide-2.6 update
-Date: Wed, 27 Oct 2004 11:41:32 -0700 (PDT)
+Date: Wed, 27 Oct 2004 15:03:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0410271139530.28839@ppc970.osdl.org>
-References: <58cb370e04102706074c20d6d7@mail.gmail.com>
- <200410271305.06265.gene.heskett@verizon.net> <Pine.LNX.4.58.0410271019140.28839@ppc970.osdl.org>
- <200410271426.04051.gene.heskett@verizon.net>
+Message-ID: <200410271503.36426.gene.heskett@verizon.net>
+References: <58cb370e04102706074c20d6d7@mail.gmail.com> <200410271426.04051.gene.heskett@verizon.net> <Pine.LNX.4.58.0410271139530.28839@ppc970.osdl.org>
+Reply-To: gene.heskett@verizon.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:25738 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S262576AbUJ0Slh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Oct 2004 14:41:37 -0400
-In-Reply-To: <200410271426.04051.gene.heskett@verizon.net>
+Received: from out009pub.verizon.net ([206.46.170.131]:52867 "EHLO
+	out009.verizon.net") by vger.kernel.org with ESMTP id S262636AbUJ0TDt
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Oct 2004 15:03:49 -0400
+In-Reply-To: <Pine.LNX.4.58.0410271139530.28839@ppc970.osdl.org>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
-To: Gene Heskett <gene.heskett@verizon.net>
-Cc: linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@osdl.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
+On Wednesday 27 October 2004 14:41, Linus Torvalds wrote:
+>On Wed, 27 Oct 2004, Gene Heskett wrote:
+>> I don't know for sure if I'm having a problem or not Linus, but I
+>> had to dl fc3rc1's iso's several times to get all good md5sums.
+>
+>I don't think it was your side, I saw it too.
+>
+>They seem to have replaced the test-rc ISO images in the middle or
+> had some server trouble, so the md5sums simply didn't match
+> originally.
+>
+>  Linus
 
+Good, so I'm not crazy after all, as someone on the fedora list 
+accused me of yesterday when I went off topic, at length, responding 
+to a political rant about the shrub and about freedoms in general.  
+Thanks, I needed that. :)
 
-On Wed, 27 Oct 2004, Gene Heskett wrote:
-> 
-> I don't know for sure if I'm having a problem or not Linus, but I had 
-> to dl fc3rc1's iso's several times to get all good md5sums.  
-
-I don't think it was your side, I saw it too.
-
-They seem to have replaced the test-rc ISO images in the middle or had
-some server trouble, so the md5sums simply didn't match originally.
-
-		Linus
+-- 
+Cheers, Gene
+"There are four boxes to be used in defense of liberty:
+ soap, ballot, jury, and ammo. Please use in that order."
+-Ed Howdershelt (Author)
+99.28% setiathome rank, not too shabby for a WV hillbilly
+Yahoo.com attorneys please note, additions to this message
+by Gene Heskett are:
+Copyright 2004 by Maurice Eugene Heskett, all rights reserved.
