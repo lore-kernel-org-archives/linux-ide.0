@@ -1,75 +1,61 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: [PATCH] Re: PCI IRQ problems -- update
-Date: Thu, 16 Dec 2004 06:16:56 -0500
-Message-ID: <20041216111656.GA12740@jim.sh>
-References: <20041211173538.GA21216@jim.sh> <1102783555.7267.37.camel@localhost.localdomain> <20041211202314.GA22731@jim.sh> <20041211220307.GA23848@jim.sh> <1102851831.1371.23.camel@localhost.localdomain>
+From: "Prakash K. Cheemplavam" <prakashkc@gmx.de>
+Subject: Re: Data Corruption when both ports of SiI3112 used
+Date: Thu, 16 Dec 2004 18:29:58 +0100
+Message-ID: <41C1C616.9070007@gmx.de>
+References: <41AA2607.2090906@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigEF77824F531723CC7E4B7F0F"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:43173 "EHLO neurosis.jim.sh")
-	by vger.kernel.org with ESMTP id S261480AbULPLRA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Dec 2004 06:17:00 -0500
-Content-Disposition: inline
-In-Reply-To: <1102851831.1371.23.camel@localhost.localdomain>
+Received: from mail.gmx.de ([213.165.64.20]:25505 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261879AbULPRaB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Dec 2004 12:30:01 -0500
+In-Reply-To: <41AA2607.2090906@gmx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Linux IDE <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
-> > I added a quirk for this case.  This is against 2.6.10-rc3, and it
-> > makes all of my problems go away cleanly.  Is this reasonable?
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigEF77824F531723CC7E4B7F0F
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Prakash K. Cheemplavam schrieb:
+> I get some tiny but nevertheless destastrous errors in following 
+> situation. (And no, Jeff, my cables are alright. ;-)
 > 
-> I think so. You might want to send a copy to linux-ide@vger.kernel.org
-> so that Bartlomiej doesn't miss it.
+> SiI3112A chip on nforce2 board.
+> Samsung 160 GB PATA drive on first connector via PATA->SATA convertor
+> Samsung 80 GB SATA drive on second connector
+> 
+> I copy two ~200MB big tgz archive from sdb to sda. I remount partition 
+> on sda and test files for integrity. Usually at least one of those 
+> fails. (The more files I copy the more files differ in tiny places. 
 
-Alan, thanks for the help.
+I haven't tried on my box yet, but another guy did it and he could 
+reproduce this, and also fix it: It seems to be nforce2 specific issue. 
+In bios you have the option ext-p2p. though bios states that 30us will 
+prevent data corruption on si3112, it is not true. It seems that is must 
+be set to 1ms.
 
-Bartlomiej: I have an ICH3-M controller on my laptop.  The BIOS is
-leaving the prog-if as 0x8E (primary = legacy, secondary = native).
-When the PCI interrupt is routed (either in the IDE driver's
-pci_enable_device, or earlier if pci=routeirq is used), unhandled
-interrupts cause IRQ 9 to be disabled, breaking most of my other
-hardware.  This seems to be caused by having the nonexistant secondary
-interface set to native mode.  According to the datasheet I checked,
-having different modes for primary/secondary is not an allowed
-combination anyway, so the following PCI quirk checks for this case
-and forces both interfaces to legacy if true.
+Is it possible to do this in linux kernel just for safety? I think this 
+is rather crucial...
 
-It may make sense to make this more generic (this problem may affect
-other PCI IDs as well), or it may be better solved in the IDE driver,
-at least when pci=routeirq is not used.  But the following patch does
-work well for me.
+Prakash
 
--jim
+--------------enigEF77824F531723CC7E4B7F0F
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
---- a/drivers/pci/quirks.c	2004-12-10 19:18:50.000000000 -0500
-+++ b/drivers/pci/quirks.c	2004-12-11 16:32:41.000000000 -0500
-@@ -717,6 +717,26 @@
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB5IDE, quirk_svwks_csb5ide );
- 
-+/*
-+ *	Intel 82801CAM ICH3-M datasheet says IDE modes must be the same
-+ */
-+static void __init quirk_ide_samemode(struct pci_dev *pdev)
-+{
-+	u8 prog;
-+	pci_read_config_byte(pdev, PCI_CLASS_PROG, &prog);
-+	if ( ((prog & 1) && !(prog & 4)) || ((prog & 4) && !(prog & 1)) )
-+	{
-+		printk(KERN_INFO
-+		       "PCI: IDE mode mismatch; forcing legacy mode\n");
-+		prog &= ~5;
-+		pdev->class &= ~5;
-+		pci_write_config_byte(pdev, PCI_CLASS_PROG, prog);
-+		/* need to re-assign BARs for compat mode */
-+		quirk_ide_bases(pdev);
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801CA_10, quirk_ide_samemode);
-+
- /* This was originally an Alpha specific thing, but it really fits here.
-  * The i82375 PCI/EISA bridge appears as non-classified. Fix that.
-  */
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.6 (GNU/Linux)
 
+iD8DBQFBwcYZxU2n/+9+t5gRAnHnAKD24dYhKQaVDGl4z/5YFJ4c+RNcjgCg9Ys2
+maxCRTVS0ItvGgZvAwkIYbs=
+=7t9X
+-----END PGP SIGNATURE-----
+
+--------------enigEF77824F531723CC7E4B7F0F--
