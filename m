@@ -1,131 +1,59 @@
-From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
-Subject: [patch] 2.4.28-pre1: piix for 82801ESB  combine mode
-Date: Thu, 19 Aug 2004 18:05:27 +0900
+From: Kevin Shanahan <kmshanah@ucwb.org.au>
+Subject: Re: libata & scsi error handling
+Date: Thu, 19 Aug 2004 21:19:14 +0930
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <7076215DFAA4574099E5CD59FE42226204ED6D95@pcssrv42.pcs.pc.ome.toshiba.co.jp>
+Message-ID: <1092916153.2279.17.camel@localhost>
+References: <4122771A.4070203@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-2022-jp"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from inet-tsb.toshiba.co.jp ([202.33.96.40]:28815 "EHLO
-	inet-tsb.toshiba.co.jp") by vger.kernel.org with ESMTP
-	id S264256AbUHSJGx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Aug 2004 05:06:53 -0400
+Received: from ns.ucwb.org.au ([202.45.120.126]:28168 "EHLO mail.ucwb.org.au")
+	by vger.kernel.org with ESMTP id S265706AbUHSLrV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2004 07:47:21 -0400
+Received: from [192.168.2.52] (unknown [192.168.2.52])
+	by mail.ucwb.org.au (Postfix) with ESMTP id 6F03212B66
+	for <linux-ide@vger.kernel.org>; Thu, 19 Aug 2004 21:17:02 +0930 (CST)
+In-Reply-To: <4122771A.4070203@wasp.net.au>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, linux-ide@vger.kernel.org, "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+To: linux-ide@vger.kernel.org
 
-Dear Jeff,
+On Wed, 2004-08-18 at 06:52, Brad Campbell wrote:
+> brad@srv:/usr/src$ diff -u temp/linux-2.6.8.1/drivers/scsi/libata-scsi.c 
+> linux-2.6.8.1/drivers/scsi/libata-scsi.c
+> --- temp/linux-2.6.8.1/drivers/scsi/libata-scsi.c       2004-08-14 14:55:19.000000000 +0400
+> +++ linux-2.6.8.1/drivers/scsi/libata-scsi.c    2004-08-18 01:04:11.000000000 +0400
+> @@ -213,6 +213,7 @@
+> 
+>          ap = (struct ata_port *) &host->hostdata[0];
+>          ap->ops->eng_timeout(ap);
+> +       host->host_failed--;
+> 
+>          DPRINTK("EXIT\n");
+>          return 0;
 
-It seems that it cannot perform in combine mode 
-at the ata_piix driver of a version 1.02.
-In this case, although a piix driver should operate, 
-ESB_3 is not recognized in a piix driver.
-I created the following patches to linux-2.4,8-pre1 and linux-2.6.8.1.
-Would you be applied in this patch?
+Thanks for this Brad - great detective work 8)
 
-===== For linux-2.4.28-pre1 =====
+This got me going again, so the reads do make progress. I'm looking at
+what's happening with my dd_rescue trying to read from the disk and it
+seems a little strange.
 
-diff -urN linux-2.4.28-pre1.orig/drivers/ide/pci/piix.c linux-2.4.28-pre1/drivers/ide/pci/piix.c
---- linux-2.4.28-pre1.orig/drivers/ide/pci/piix.c	2004-08-17 14:24:03.000000000 +0900
-+++ linux-2.4.28-pre1/drivers/ide/pci/piix.c	2004-08-19 15:10:35.000000000 +0900
-@@ -143,6 +143,7 @@
- 		p += sprintf(p, "\n                                Intel ");
- 		switch(dev->device) {
- 			case PCI_DEVICE_ID_INTEL_82801EB_1:
-+			case PCI_DEVICE_ID_INTEL_ESB_3:
- 				p += sprintf(p, "PIIX4 SATA 150 ");
- 				break;
- 			case PCI_DEVICE_ID_INTEL_82801BA_8:
-@@ -281,6 +282,7 @@
- 
- 	switch(dev->device) {
- 		case PCI_DEVICE_ID_INTEL_82801EB_1:
-+		case PCI_DEVICE_ID_INTEL_ESB_3:
- 			mode = 3;
- 			break;
- 		/* UDMA 100 capable */
-@@ -881,7 +883,10 @@
-  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801EB_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 18},
- #endif
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ESB_2, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 19},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_2, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 20},
-+#ifdef CONFIG_BLK_DEV_IDE_SATA
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ESB_3, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 20},
-+#endif
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_2, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 21},
- 	{ 0, },
- };
- 
-diff -urN linux-2.4.28-pre1.orig/drivers/ide/pci/piix.h linux-2.4.28-pre1/drivers/ide/pci/piix.h
---- linux-2.4.28-pre1.orig/drivers/ide/pci/piix.h	2004-08-17 14:34:47.000000000 +0900
-+++ linux-2.4.28-pre1/drivers/ide/pci/piix.h	2004-08-19 12:42:58.000000000 +0900
-@@ -321,6 +321,20 @@
- 		.extra		= 0,
- 	},{	/* 20 */
- 		.vendor		= PCI_VENDOR_ID_INTEL,
-+		.device		= PCI_DEVICE_ID_INTEL_ESB_3,
-+		.name		= "ICH5-SATA",
-+		.init_setup	= init_setup_piix,
-+		.init_chipset	= init_chipset_piix,
-+		.init_iops	= NULL,
-+		.init_hwif	= init_hwif_piix,
-+		.init_dma	= init_dma_piix,
-+		.channels	= 2,
-+		.autodma	= AUTODMA,
-+		.enablebits	= {{0x41,0x80,0x80}, {0x43,0x80,0x80}},
-+		.bootable	= ON_BOARD,
-+		.extra		= 0,
-+	},{	/* 21 */
-+		.vendor		= PCI_VENDOR_ID_INTEL,
- 		.device		= PCI_DEVICE_ID_INTEL_ICH6_2,
- 		.name		= "ICH6",
- 		.init_setup	= init_setup_piix,
+ptrace shows dd_rescue is calling pread to read 512 bytes from a sector
+aligned locations. For each pread call I can see, syslog shows the sata
+driver attempting to read several sectors (difficult to count, but it's
+probably between 8 and 32 - maybe this is readahead?).
 
-===== For linux-2.6.8.1 =====
+Even if the request was longer than one sector, is there any reason not
+to abort the entire read request once an unreadable sector is
+encountered? pread will just end up returning -1 anyway.
 
-diff -urN linux-2.6.8.1orig/drivers/ide/pci/piix.c linux-2.6.8.1/drivers/ide/pci/piix.c
---- linux-2.6.8.1orig/drivers/ide/pci/piix.c	2004-08-14 19:54:48.000000000 +0900
-+++ linux-2.6.8.1/drivers/ide/pci/piix.c	2004-08-19 14:38:56.344569904 +0900
-@@ -142,6 +142,7 @@
- 		p += sprintf(p, "\n                                Intel ");
- 		switch(dev->device) {
- 			case PCI_DEVICE_ID_INTEL_82801EB_1:
-+			case PCI_DEVICE_ID_INTEL_ESB_3:
- 				p += sprintf(p, "PIIX4 SATA 150 ");
- 				break;
- 			case PCI_DEVICE_ID_INTEL_82801BA_8:
-@@ -280,6 +281,7 @@
- 
- 	switch(dev->device) {
- 		case PCI_DEVICE_ID_INTEL_82801EB_1:
-+		case PCI_DEVICE_ID_INTEL_ESB_3:
- 			mode = 3;
- 			break;
- 		/* UDMA 100 capable */
-@@ -797,7 +799,10 @@
-  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801EB_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 18},
- #endif
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ESB_2, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 19},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_19, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 20},
-+#ifdef CONFIG_BLK_DEV_IDE_SATA
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ESB_3, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 20},
-+#endif
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_19, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 21},
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, piix_pci_tbl);
-diff -urN linux-2.6.8.1orig/drivers/ide/pci/piix.h linux-2.6.8.1/drivers/ide/pci/piix.h
---- linux-2.6.8.1orig/drivers/ide/pci/piix.h	2004-08-14 19:54:51.000000000 +0900
-+++ linux-2.6.8.1/drivers/ide/pci/piix.h	2004-08-19 11:35:46.234320616 +0900
-@@ -61,7 +61,8 @@
- 	/* 17 */ DECLARE_PIIX_DEV("ICH4"),
- 	/* 18 */ DECLARE_PIIX_DEV("ICH5-SATA"),
- 	/* 19 */ DECLARE_PIIX_DEV("ICH5"),
--	/* 20 */ DECLARE_PIIX_DEV("ICH6")
-+	/* 20 */ DECLARE_PIIX_DEV("ICH5-SATA"),
-+	/* 21 */ DECLARE_PIIX_DEV("ICH6")
- };
- 
- #endif /* PIIX_H */
+Do other disk drivers (libata, ide or others) behave the same way?
+
+I ask because it has now taken approximately 24 hours for dd_rescue to
+read ~250 (bad) sectors from this disk (I hope I'm not getting too far
+off topic).
+
+Thanks,
+Kevin.
+
 
