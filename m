@@ -1,86 +1,48 @@
-From: Erik Andersen <andersen@codepoet.org>
-Subject: Re: [sata] libata update
-Date: Fri, 2 Apr 2004 17:45:27 -0700
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [PATCH] speed up SATA
+Date: Sat, 3 Apr 2004 02:48:26 -0800
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040403004527.GA6148@codepoet.org>
-References: <406B31F3.1010702@pobox.com>
-Reply-To: andersen@codepoet.org
+Message-ID: <20040403104826.GA737325@sgi.com>
+References: <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406616EE.80301@pobox.com> <4066191E.4040702@yahoo.com.au> <40662108.40705@pobox.com> <20040328135124.GA32597@mail.shareable.org> <40670A36.3000005@pobox.com> <20040328173623.GA1087@mail.shareable.org> <20040402101108.GA752170@sgi.com> <20040402161149.GA32483@mail.shareable.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from codepoet.org ([166.70.99.138]:33990 "EHLO codepoet.org")
-	by vger.kernel.org with ESMTP id S261460AbUDCApy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Apr 2004 19:45:54 -0500
+Received: from mtvcafw.sgi.com ([192.48.171.6]:30320 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S261682AbUDCKuS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Apr 2004 05:50:18 -0500
 Content-Disposition: inline
-In-Reply-To: <406B31F3.1010702@pobox.com>
+In-Reply-To: <20040402161149.GA32483@mail.shareable.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jamie Lokier <jamie@shareable.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Nick Piggin <nickpiggin@yahoo.com.au>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-On Wed Mar 31, 2004 at 04:02:43PM -0500, Jeff Garzik wrote:
+On Fri, Apr 02, 2004 at 05:11:49PM +0100, Jamie Lokier wrote:
+> Jeremy Higdon wrote:
+> > > This is what I mean: turn off write cacheing, and performance on PATA
+> > > drops because of the serialisation and lost inter-command time.
+> > 
+> > Since you have to write the sectors in order (well, you don't have
+> > to, but the drives all do this), you lose a rev between each write
+> > when you don't queue commands or have write cacheing.
 > 
-> Small update, to fix a couple important 2.4-only bugs:
-> * SMP kernels would lock up during probing
-> * Hardware delays were incorrect, due to HZ=100
+> I don't see how the driver can write the sectors out of order, if
+> there is no TCQ (we're talking PATA) and every write must be committed
+> before it's acknowledged (write cache disabled).
+>
+> > > With TCQ-on-write, you can turn off write cacheing and in theory
+> > > performance doesn't have to drop, is that right?
+> > 
+> > Correct.  I have proven this to my satisfaction.
+> 
+> Are you refuting the following assertion by Eric D. Mudama's, based on
+> your measurements?  In other words, are ATA's 32 TCQ slots enough to
+> eliminate the performance advantage of write cacheing?
 
-I have a Soyo P4 motherboard with built in Intel ICH5, Sil, and I have
-"IDE + SATA" enabled in the bios, presumably meaning the ICH5 is in
-combined mode.  I usually boot with my rootfs on a ordinary IDE drive
-(pata on ICH5 ide0), a cdrom (pata on ICH5 ide1) and a sata drive (sata1
-on ICH5), which has all been working nicely.  Many thanks.  :-)  Here is
-what I usually see from the ICH5:
+I must apologize.  I had thought the context was SCSI, but now I
+see that it is linux-ide.  So please disregard comments about command
+queueing.  If you have write cache disabled and no TCQ (latter is common,
+former may or may not be), you want to write as big a chunk as you can.
 
-    Uniform Multi-Platform E-IDE driver Revision: 7.00beta5-2.4
-    ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-    ICH5: IDE controller at PCI slot 00:1f.1
-    ICH5: chipset revision 2
-    ICH5: not 100% native mode: will probe irqs later
-	ide0: BM-DMA at 0xf000-0xf007, BIOS settings: hda:DMA, hdb:pio
-	ide1: BM-DMA at 0xf008-0xf00f, BIOS settings: hdc:pio, hdd:pio
-    hda: WDC WD2000JB-32EVA0, ATA DISK drive
-    hdc: SONY DVD RW DRU-510A, ATAPI CD/DVD-ROM drive
-    ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-    ide1 at 0x170-0x177,0x376 on irq 15
-    hda: attached ide-disk driver.
-    hda: 390721968 sectors (200049 MB) w/8192KiB Cache, CHS=24321/255/63, UDMA(100)
-    Partition check:
-     hda: hda1 hda2
-    SCSI subsystem driver Revision: 1.00
-    libata version 1.02 loaded.
-    ata_piix version 1.02
-    PCI: Setting latency timer of device 00:1f.2 to 64
-    ata1: SATA max UDMA/133 cmd 0xC000 ctl 0xC402 bmdma 0xD000 irq 18
-    ata2: SATA max UDMA/133 cmd 0xC800 ctl 0xCC02 bmdma 0xD008 irq 18
-    ata1: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4003 85:7c69 86:3e01 87:4003 88:207f
-    ata1: dev 0 ATA, max UDMA/133, 398297088 sectors (lba48)
-    ata1: dev 0 configured for UDMA/133
-    ata2: SATA port has no device.
-    ata2: thread exiting
-    scsi0 : ata_piix
-    scsi1 : ata_piix
-      Vendor: ATA       Model: Maxtor 6Y200M0    Rev: 1.02
-      Type:   Direct-Access                      ANSI SCSI revision: 05
+I'm sorry about the confusion.
 
-Yesterday while doing some testing, I made a CD with the same kernel on
-it as shown above, i.e. latest 2.4.26-rc1 + the current
-2.4.26-rc1-libata3 patch.  I then unplugged the power connector to my
-usual rootfs drive (the WDC WD2000JB on ide0) to make sure I wouldn't
-screw it up ;-).  
-
-Booting from CD (the SONY on ide1) with only the Maxtor 6Y200M0 (on the
-ICH5 sata1), the libata driver wedged solid on bootup.  After printing
-
-    ata1: SATA max UDMA/133 cmd 0xC000 ctl 0xC402 bmdma 0xD000 irq 18
-    ata2: SATA max UDMA/133 cmd 0xC800 ctl 0xCC02 bmdma 0xD008 irq 18
-
-the box was dead dead dead.  I can't test this setup with the bios set
-to SATA only, since I don't own any SATA cdrom drives.  Simply plugging
-the WDC WD2000JB on ide0 back in allowed the system to boot normally.
-As nearly as I can tell, one has to have a pata drive installed or the
-ata_piix driver will wedge solid.
-
- -Erik
-
---
-Erik B. Andersen             http://codepoet-consulting.com/
---This message was written using 73% post-consumer electrons--
+jeremy
