@@ -1,43 +1,39 @@
-From: Nicola <ivololeribar@yahoo.it>
+From: Uwe Koziolek <uwe.koziolek@gmx.net>
 Subject: Re: SiS 180 pata
-Date: Mon, 5 Jul 2004 16:03:48 +0200
+Date: Mon, 05 Jul 2004 22:31:11 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200407051603.48708.ivololeribar@yahoo.it>
-References: <200407051253.47003.ivololeribar@yahoo.it> <40E95B1D.3080501@pobox.com>
+Message-ID: <1089059471.2868.9.camel@uk3.local>
+References: <200407051253.47003.ivololeribar@yahoo.it>
+	 <40E95B1D.3080501@pobox.com>  <200407051603.48708.ivololeribar@yahoo.it>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp004.mail.ukl.yahoo.com ([217.12.11.35]:4283 "HELO
-	smtp004.mail.ukl.yahoo.com") by vger.kernel.org with SMTP
-	id S266120AbUGEODo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 5 Jul 2004 10:03:44 -0400
-In-Reply-To: <40E95B1D.3080501@pobox.com>
-Content-Disposition: inline
+Received: from mail.gmx.net ([213.165.64.20]:25737 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261857AbUGEUbf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jul 2004 16:31:35 -0400
+In-Reply-To: <200407051603.48708.ivololeribar@yahoo.it>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: uwe.koziolek@gmx.net, linux-ide@vger.kernel.org
+To: Nicola <ivololeribar@yahoo.it>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Monday 05 July 2004 15:43, you wrote:
+Hello Nicola,
 
-> > Now I'm quite confused. Does the sata_sis module covers only the sata
-> > side
->
-> Correct...   as the name implies.
->
-> You need to add PCI ids to the SIS IDE driver.
->
-> 	Jeff
-I've added the id few days ago (not yet approved):
-http://pciids.sourceforge.net/iii/?i=1039
+please can you provide the output of lspci -vvxxx
 
-should be something like:
-{ "SiS180",     PCI_DEVICE_ID_SI_180,   ATA_133   },
-inside sis5513.c
+> should be something like:
+> { "SiS180",     PCI_DEVICE_ID_SI_180,   ATA_133   },
+> inside sis5513.c
+> 
+if the pata ports on the Sis180 a using the same ID 180, then we have a
+conflict. We have 2 drivers for SIS 180.
 
-May I help somehow in developping/testing the pata driver?
-Please let me know
+I expect a different way in the SiS180 chip: a different ID
+The output of lspci may helps hopefully.
 
-Thank you
-Nicola
+But maybe i do not answer before next monday.
+
+Uwe
+
+
+
