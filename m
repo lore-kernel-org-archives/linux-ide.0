@@ -1,49 +1,70 @@
-From: chris.bu@gmx.net
-Subject: sata_via + VT8237 RAID 0 array of 2 s-ata drives
-Date: Thu, 10 Mar 2005 11:22:16 +0100 (MET)
-Message-ID: <29362.1110450136@www25.gmx.net>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [KJ] Re: [PATCH] drivers/ide/cs5520.c : Use the DMA_{64,
+	32}BIT_MASK constants
+Date: Thu, 10 Mar 2005 17:30:12 +0100
+Message-ID: <58cb370e050310083053a0e495@mail.gmail.com>
+References: <20050308133358.GA5311@localhost.localdomain>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Received: from pop.gmx.de ([213.165.64.20]:60122 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S262505AbVCJKWR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2005 05:22:17 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============79057958929800565=="
+In-Reply-To: <20050308133358.GA5311@localhost.localdomain>
+List-Unsubscribe: <http://lists.osdl.org/mailman/listinfo/kernel-janitors>,
+	<mailto:kernel-janitors-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/kernel-janitors>
+List-Post: <mailto:kernel-janitors@lists.osdl.org>
+List-Help: <mailto:kernel-janitors-request@lists.osdl.org?subject=help>
+List-Subscribe: <http://lists.osdl.org/mailman/listinfo/kernel-janitors>,
+	<mailto:kernel-janitors-request@lists.osdl.org?subject=subscribe>
+Sender: kernel-janitors-bounces@lists.osdl.org
+Errors-To: kernel-janitors-bounces@lists.osdl.org
+To: Tobias Klauser <tklauser@nuerscht.ch>
+Cc: kernel-janitors@lists.osdl.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
 
-Hi Jeff,
+--===============79057958929800565==
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-a quick question about libata + sata_via V1.10 as included in the most
-recent kernel 2.6.11.2:
+On Tue, 8 Mar 2005 14:33:58 +0100, Tobias Klauser <tklauser@nuerscht.ch> wrote:
+> Hello,
 
-I have a MSI KT6V (MS-7021) mainboard with VIA VT-8237 Southbridge and want
-to connect two S-ATA hard disk drives. Both drives should run in a RAID 0
-array, which is to be configured through the S-ATA RAID BIOS on the main
-board.
+Hi,
 
-Is it possible that the sata_via driver recognizes the existence of the
-array and treats it as one drive under LINUX? As far as I've learned, the
-VT-8237 is not a real hardware RAID solution and needs some software support
-from the OS, too. Again, is it possible to do this, or does the driver only
-support seperate s-ata channels, no matter what is configured in the S-ATA
-RAID BIOS? If the BIOS configured RAID volumes are not supported at all (any
-plans for the near future?) what would you recommend to do instead to
-provide fast and efficient RAID 0 striping for both s-ata drives (to double
-the r/w data rate).
+> Description: Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h
+> when calling pci_set_dma_mask() or pci_set_consistent_dma_mask()
+> See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
 
-Are there any other limitations with the current sata_via driver concerning
-VT8237 with two S-ATA drives?
+only DMA_32BIT_MASK constant is used in the patch
+ 
+> Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
+> 
+> --- linux-2.6.11.orig/drivers/ide/pci/cs5520.c  2005-03-02 12:50:39.000000000 +0100
+> +++ linux-2.6.11/drivers/ide/pci/cs5520.c       2005-03-03 11:46:46.000000000 +0100
+> @@ -227,7 +227,7 @@ static int __devinit cs5520_init_one(str
+>                 return 1;
+>         }
+>         pci_set_master(dev);
+> -       if (pci_set_dma_mask(dev, 0xFFFFFFFF)) {
+> +       if (pci_set_dma_mask(dev, DMA_32BIT_MASK)) {
+>                 printk(KERN_WARNING "cs5520: No suitable DMA available.\n");
+>                 return -ENODEV;
+>         }
 
-Thank you very much for your support and the continued effort to maintain
-this driver.
+You need to include <linux/dma-mapping.h> explicitly
+or build will fail for some architectures, i.e. please see:
+http://linus.bkbits.net:8080/linux-2.5/cset@41d833427yYZzu6TxydNrr5z6f02cg?nav=index.html|src/|src/drivers|src/drivers/ide|related/drivers/ide/setup-pci.c
 
+Bartlomiej
 
-Best regards,
+--===============79057958929800565==
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Chris
+_______________________________________________
+Kernel-janitors mailing list
+Kernel-janitors@lists.osdl.org
+http://lists.osdl.org/mailman/listinfo/kernel-janitors
 
--- 
-DSL Komplett von GMX +++ Supergünstig und stressfrei einsteigen!
-AKTION "Kein Einrichtungspreis" nutzen: http://www.gmx.net/de/go/dsl
+--===============79057958929800565==--
