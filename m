@@ -1,63 +1,71 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: IDE Hotswap
-Date: Wed, 29 Sep 2004 03:54:38 +0200
+Date: Wed, 29 Sep 2004 02:50:34 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200409290354.38440.bzolnier@elka.pw.edu.pl>
-References: <8CCBDD5583C50E4196F012E79439B45C069657DB@atl-ms1.megatrends.com> <200409282338.10456.bzolnier@elka.pw.edu.pl> <1096407955.14083.45.camel@localhost.localdomain>
+Message-ID: <1096422632.14637.30.camel@localhost.localdomain>
+References: <8CCBDD5583C50E4196F012E79439B45C069657DB@atl-ms1.megatrends.com>
+	 <200409282338.10456.bzolnier@elka.pw.edu.pl>
+	 <1096407955.14083.45.camel@localhost.localdomain>
+	 <200409290354.38440.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:10368 "EHLO
-	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
-	id S268155AbUI2CZC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Sep 2004 22:25:02 -0400
-In-Reply-To: <1096407955.14083.45.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from clock-tower.bc.nu ([81.2.110.250]:46985 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S268163AbUI2CxJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Sep 2004 22:53:09 -0400
+In-Reply-To: <200409290354.38440.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 Cc: Suresh Grandhi <Sureshg@ami.com>, "'linux-ide@vger.kernel.org'" <linux-ide@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
-On Tuesday 28 September 2004 23:45, Alan Cox wrote:
-> On Maw, 2004-09-28 at 22:38, Bartlomiej Zolnierkiewicz wrote:
-> > No and such workaround won't work anyway because
-> > re-register operation is nothing else but unregister+register.
+On Mer, 2004-09-29 at 02:54, Bartlomiej Zolnierkiewicz wrote:
+> Your patch is a nice start but it don't solve main issues, not to even
+> mention minor stuff like leaving /proc/ide/<chipset> around.
+> Merging it now is asking for problems.
+
+Oh I agree. There is a patch but it isn't the final answer. There is a
+small resource bug (harmless but a bug) in the 2.6.8.1-ac patch. I
+hadn't noticed proc/ide/<chipset> leaking but I'll take a look when I
+get time to sort that out. 
+
+> > For drive level hotplug its actually a lot easier and I guess that is
+> > the case most users care about. The changes done for 2.6 clean up stuff
 > 
-> If you grab the 2.6.8.1-ac patch you can do IDE controller hotplugging
-> and a few other things but not yet drive hotplugging. 2.4 can do drive
-> hotplug although you need a small -ac patch if you see wrong disk
-> geometry data.
+> drive level hotplug is actually much harder
+> and it is _required_ for controller level hotplug, no? :)
+
+Actually its all a lot easier now than in 2.4 because the block layer is
+designed to make it possible.
+
+> > like suspend mean the nasties in 2.4 for sequencing have gone away. No
+> > refcounting needed since the block and fs layer are doing it all for
 > 
-> For new controllers (ie SATA ones) use Jeff Garzik's serial ATA layer as
-> that is a lot cleaner and the SCSI layer already has a good basic
-> understanding of hotplug management.
-> 
-> > Any help/support is appreciated.
-> 
-> Except for the dynamic stuff I consider the problem solved. Its up to
-> you when and what you merge and I understand why you want to get stuff
-> like sysfs there. 
+> It helps but you still get bunch of races.  Refcounting is _really_ needed.
 
-Your patch is a nice start but it don't solve main issues, not to even
-mention minor stuff like leaving /proc/ide/<chipset> around.
+Even in 2.4 ide drive hotplug was easy. The drive hotplug comes out
+trivially because your controllers are fairly constant. As we all know
+driver level hotplug is a bit trickier although the block layer has
+really made this vastly easier in 2.6
 
-Merging it now is asking for problems.
+For drive level hotplug you don't actually need refcounting at all
+providing you've got a couple of locking issues dealt with.
 
-> For drive level hotplug its actually a lot easier and I guess that is
-> the case most users care about. The changes done for 2.6 clean up stuff
+Firstly the drive never goes away as a high level object (in fact you
+don't want it to as then you can't ioctl it to make it come back!). That
+means the upper layers don't know anything about it.
 
-drive level hotplug is actually much harder
-and it is _required_ for controller level hotplug, no? :)
+At the IDE layer the 2.4 code simply enforced the rule that you must be
+the only opener of the device in order to hot unplug it. That means we
+know its quiescent and not mounted. The only 2.4 race I know about is
+suspend in parallel to hot unplug, and 2.6 has the mechanism to fix that
+properly because suspend is a command state machine.
 
-> like suspend mean the nasties in 2.4 for sequencing have gone away. No
-> refcounting needed since the block and fs layer are doing it all for
+Providing hot unplug is about making drive->present stuff vary and
+flipping to ide_default drivers the world is happy. The moment you want
+to make /dev/hda 'disappear' to the block layer its fun, and on 2.4 its
+as good as impossible.
 
-It helps but you still get bunch of races.  Refcounting is _really_ needed.
+Alan
 
-> you. TTY layer, revoke(), and some other current critical bonfires first
-> before I can help with that however.
-
-Fine.
-
-Bartlomiej
