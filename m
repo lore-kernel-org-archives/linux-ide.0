@@ -1,25 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: RFC: moving drivers to a new drivers/ata directory
-Date: Fri, 15 Oct 2004 19:32:22 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097865140.10133.184.camel@localhost.localdomain>
-References: <416F5757.8000306@pobox.com> <416F8C39.6010804@torque.net>
-	 <417006F0.5040706@pobox.com>
+From: Doug Maxey <dwm@maxeymade.com>
+Subject: hdparm write cache settings
+Date: Fri, 15 Oct 2004 14:48:20 -0500
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200410151948.i9FJmKMR019895@falcon30.maxeymade.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <417006F0.5040706@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: dougg@torque.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from falcon30.maxeymade.com ([24.173.215.190]:12006 "EHLO
+	falcon30.maxeymade.com") by vger.kernel.org with ESMTP
+	id S268342AbUJOTsX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Oct 2004 15:48:23 -0400
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <mlord@pobox.com>
+Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>
 
-On Gwe, 2004-10-15 at 18:20, Jeff Garzik wrote:
-> Maybe we need a neutral one like 'drivers/storage'.
 
-Where does that leave usb, firewire or i2o 8). At the end of the 
-day the only "perfect" division is a single directory "drivers", and
-that doesn't work.
+Mark,
 
-Having drivers/ata seems a decent approximation.
+I have been tweaking the idedisk_setup() and write_cache() to handle
+drives with write cache disabled by default and the barrier settings on
+changes between WC enabled and disabled.
+
+Bart has pointed out in offline mail, and testing has confirmed, that 
+HDIO_DRIVE_CMD is used, which bypasses the settings parameter lookup 
+in generic_ide_ioctl() of the drive settings enabled in ide_add_settings().  
+
+Is it reasonable that a change could be made to enable the use of
+HDIO_SET_WCACHE in hdparm?
+
+Or should I be looking to intercept the call and do The Right Thing
+(TM:) in the ide driver?
+
+
+++doug
+
+
+
 
