@@ -1,42 +1,41 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+From: Alan Cox <alan@redhat.com>
 Subject: Re: PATCH: straighten out the IDE layer locking and add hotplug
-Date: Tue, 17 Aug 2004 17:05:43 +0200
+Date: Tue, 17 Aug 2004 11:33:26 -0400
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200408171705.43974.bzolnier@elka.pw.edu.pl>
-References: <20040815151346.GA13761@devserv.devel.redhat.com> <200408171630.07979.bzolnier@elka.pw.edu.pl> <20040817144604.GA30778@devserv.devel.redhat.com>
+Message-ID: <20040817153326.GA31746@devserv.devel.redhat.com>
+References: <20040815151346.GA13761@devserv.devel.redhat.com> <200408171630.07979.bzolnier@elka.pw.edu.pl> <20040817144604.GA30778@devserv.devel.redhat.com> <200408171705.43974.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:64903 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S268281AbUHQPGk
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Aug 2004 11:06:40 -0400
-In-Reply-To: <20040817144604.GA30778@devserv.devel.redhat.com>
+Received: from mx1.redhat.com ([66.187.233.31]:25264 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S268301AbUHQPe1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2004 11:34:27 -0400
 Content-Disposition: inline
+In-Reply-To: <200408171705.43974.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Alan Cox <alan@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 
-On Tuesday 17 August 2004 16:46, Alan Cox wrote:
-> > ide_match_hwif() checks for hwif->chipset - ordering will not be the same
-> > i.e. you load driver for some IDE PCI controller which doesn't have
-> > drives attached to it, unload it, load some other driver - hwifs will be
-> > reused - some sequence in 2.4 will possibly leave you with different
-> > ordering because hwif->chipset will stay as ide_pci not ide_unknown
->
-> You can't unload them in 2.4.
+On Tue, Aug 17, 2004 at 05:05:43PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > You can't unload them in 2.4.
+> Really?  That would simplify a lot of considerations...
 
-Really?  That would simplify a lot of considerations...
+I wanted to make that work but it proved too interesting in handing the
+drive back to legacy
 
-> > Yep, please tell me how are you going to support drive hot plug?
->
-> We can do it the 2.4-ac way - that works with the locking I think. What
+> > We can do it the 2.4-ac way - that works with the locking I think. What
+> if you are talking about abusing HDIO_SCAN_HWIF then HELL NO
 
-if you are talking about abusing HDIO_SCAN_HWIF then HELL NO
+No I'm talking about the 2.4-ac way - using the bus state stuff which is
+currently useless.
 
-> might be nicer if it works out is to follow the shutdown/suspend code
-> approach so that we actually queue the "unplug" into the command stream.
+> > might be nicer if it works out is to follow the shutdown/suspend code
+> > approach so that we actually queue the "unplug" into the command stream.
+> 
+> and we are back to lack of sysfs integration
 
-and we are back to lack of sysfs integration
+Not really. We don't need sysfs to queue a series of command phases and then
+drop the drive.
+
+Alan
+
