@@ -1,43 +1,36 @@
-From: "Paul Gimpelj" <pgimpelj@sympatico.ca>
-Subject: {linux-ide]  ide errors redhat 9.0 install
-Date: Fri, 4 Jun 2004 00:02:45 -0400
+From: Marc Singer <elf@buici.com>
+Subject: Re: [RFC][DOC] writing IDE driver guidelines
+Date: Sat, 5 Jun 2004 12:49:59 -0700
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <008501c449e8$cb229ca0$3410fea9@zoom>
+Message-ID: <20040605194959.GA13228@buici.com>
+References: <200405151923.50343.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tomts16-srv.bellnexxia.net ([209.226.175.4]:40578 "EHLO
-	tomts16-srv.bellnexxia.net") by vger.kernel.org with ESMTP
-	id S265572AbUFDD73 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Jun 2004 23:59:29 -0400
-Received: from zoom ([209.226.248.74]) by tomts16-srv.bellnexxia.net
-          (InterMail vM.5.01.06.10 201-253-122-130-110-20040306) with SMTP
-          id <20040604035928.KWOO9492.tomts16-srv.bellnexxia.net@zoom>
-          for <linux-ide@vger.kernel.org>; Thu, 3 Jun 2004 23:59:28 -0400
+Received: from florence.buici.com ([206.124.142.26]:24471 "HELO
+	florence.buici.com") by vger.kernel.org with SMTP id S261865AbUFETuB
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 5 Jun 2004 15:50:01 -0400
+Content-Disposition: inline
+In-Reply-To: <200405151923.50343.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-I have ide errors on my compaq deskpros with redhat 9.0, primary ide is
-cable select with only one connection, and secondary is master/salve cable.
-redhat 7.3 has no ide errors.
+On Sat, May 15, 2004 at 07:23:50PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> - IDE is going into full host driver model
+>   so write host driver for your interface
 
-I am preparing to install test kernels on this box, and it would be helpful
-if there are any peculiarities
-with compaq's. I thought that newer kernels were backward compatible with
-the pentium I series cpu.
+Can you tell me what this means?  Is arm/rapide.c an example?  If not,
+what *is* and example?  Is the arm/ide_arm.c *not* the right way?
 
-Also, can anyone point me to open source documentation on pci bridge
-commands, and bus mastering, and extending the interrupt range past 256
-slots, and general pci commands.
-Can devices be remapped at the bus level below the operating system? and can
-the pinouts be revectored on the cables, and onboard parallel and serial
-lines. and slots on mboard
-and info on pci-isa bridge.
+> - see drivers in drivers/ide/arm and drivers/ide/legacy for examples
+>   (especially m68k and arm specific drivers)
+> 
+> - do not use ide_setup_ports()
 
-thanks very much.
+Hmm.  macide in legacy does.  Is this, then, a bad bad example legacy?
 
-regards,
-Paul
+The piece I'm missing is how to replace the ioops functions for my
+platform.  I could implement something in ide-iops.c.  Is that the way?
+
 
