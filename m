@@ -1,92 +1,44 @@
 From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: [PATCH] ide-taskfile.c fixups/cleanups part #2 [1/9]
-Date: Wed, 30 Jun 2004 17:24:05 +0200
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200406301724.05862.bzolnier@elka.pw.edu.pl>
+Subject: [PATCH] ide-taskfile.c fixups/cleanups part #2 [4/9]
+Date: Wed, 30 Jun 2004 17:25:05 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200406301725.05181.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:16053 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S266702AbUF3PZY
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Jun 2004 11:25:24 -0400
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S266720AbUF3PZn@vger.kernel.org>
 Content-Disposition: inline
-List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 
-[PATCH] ide: PIO-out fixes for ide-taskfile.c (CONFIG_IDE_TASKFILE_IO=n)
+[PATCH] ide: remove BUSY check from task_in_intr() (CONFIG_IDE_TASKFILE_IO=n)
 
-- in task_out_intr() fix off-by-1 bug and (stat & DRQ_STAT) check,
-  previously "if" was always true for rq->current_nr_sectors == 1
-- fail request if DRQ_STAT is not set and rq->current_nr_sectors != 0
-  (instead of setting handler and waiting for the next IRQ) or if DRQ_STAT
-  is set but !rq->current_nr_sectors (in task_mulout_intr() this was OK)
-- in task_mulout_intr() check also DRIVE_READY and WRERR_STAT status bits
+We shouldn't ever get there if drive is busy and we can't start transfer
+in this case.  ide-disk.c:read_intr() also doesn't check for BUSY_STAT bit.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 
- linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c |   31 +++++++++----------
- 1 files changed, 16 insertions(+), 15 deletions(-)
+ linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-diff -puN drivers/ide/ide-taskfile.c~ide_tf_pio_out_fixes drivers/ide/ide-taskfile.c
---- linux-2.6.7-bk11/drivers/ide/ide-taskfile.c~ide_tf_pio_out_fixes	2004-06-28 21:15:54.030210376 +0200
-+++ linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c	2004-06-28 21:15:54.035209616 +0200
-@@ -409,6 +409,10 @@ ide_startstop_t task_out_intr (ide_drive
- 	if (!OK_STAT(stat = hwif->INB(IDE_STATUS_REG), DRIVE_READY, drive->bad_wstat)) {
- 		return DRIVER(drive)->error(drive, "task_out_intr", stat);
- 	}
-+
-+	if (((stat & DRQ_STAT) == 0) ^ !rq->current_nr_sectors)
-+		return DRIVER(drive)->error(drive, __FUNCTION__, stat);
-+
- 	/*
- 	 * Safe to update request for partial completions.
- 	 * We have a good STATUS CHECK!!!
-@@ -416,9 +420,8 @@ ide_startstop_t task_out_intr (ide_drive
- 	if (!rq->current_nr_sectors)
- 		if (!DRIVER(drive)->end_request(drive, 1, 0))
- 			return ide_stopped;
--	if ((rq->current_nr_sectors==1) ^ (stat & DRQ_STAT)) {
--		task_buffer_sectors(drive, rq, 1, IDE_PIO_OUT);
--	}
-+
-+	task_buffer_sectors(drive, rq, 1, IDE_PIO_OUT);
- 	ide_set_handler(drive, &task_out_intr, WAIT_WORSTCASE, NULL);
- 	return ide_started;
- }
-@@ -461,18 +464,16 @@ ide_startstop_t task_mulout_intr (ide_dr
- 	u8 stat				= hwif->INB(IDE_STATUS_REG);
- 	struct request *rq		= HWGROUP(drive)->rq;
- 
--	if (!OK_STAT(stat, DATA_READY, BAD_R_STAT) || !rq->current_nr_sectors) {
--		if (stat & (ERR_STAT|DRQ_STAT)) {
--			return DRIVER(drive)->error(drive, "task_mulout_intr", stat);
+diff -puN drivers/ide/ide-taskfile.c~ide_task_in_intr drivers/ide/ide-taskfile.c
+--- linux-2.6.7-bk11/drivers/ide/ide-taskfile.c~ide_task_in_intr	2004-06-28 21:24:49.097867728 +0200
++++ linux-2.6.7-bk11-bzolnier/drivers/ide/ide-taskfile.c	2004-06-28 21:24:49.100867272 +0200
+@@ -321,10 +321,8 @@ ide_startstop_t task_in_intr (ide_drive_
+ 		if (stat & (ERR_STAT|DRQ_STAT)) {
+ 			return DRIVER(drive)->error(drive, "task_in_intr", stat);
+ 		}
+-		if (!(stat & BUSY_STAT)) {
+-			ide_set_handler(drive, &task_in_intr, WAIT_WORSTCASE, NULL);
+-			return ide_started;  
 -		}
--		/* Handle last IRQ, occurs after all data was sent. */
--		if (!rq->current_nr_sectors) {
--			DRIVER(drive)->end_request(drive, 1, 0);
--			return ide_stopped;
--		}
--		/* no data yet, so wait for another interrupt */
--		ide_set_handler(drive, &task_mulout_intr, WAIT_WORSTCASE, NULL);
--		return ide_started;
-+	if (!OK_STAT(stat, DRIVE_READY, drive->bad_wstat))
-+		return DRIVER(drive)->error(drive, __FUNCTION__, stat);
-+
-+	if (((stat & DRQ_STAT) == 0) ^ !rq->current_nr_sectors)
-+		return DRIVER(drive)->error(drive, __FUNCTION__, stat);
-+
-+	/* Handle last IRQ, occurs after all data was sent. */
-+	if (!rq->current_nr_sectors) {
-+		DRIVER(drive)->end_request(drive, 1, 0);
-+		return ide_stopped;
++		ide_set_handler(drive, &task_in_intr, WAIT_WORSTCASE, NULL);
++		return ide_started;
  	}
  
- 	task_buffer_multi_sectors(drive, rq, IDE_PIO_OUT);
+ 	task_buffer_sectors(drive, rq, 1, IDE_PIO_IN);
 
 _
-
