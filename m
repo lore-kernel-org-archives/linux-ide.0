@@ -1,150 +1,78 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH] ULi SATA fixes, new support
-Date: Tue, 16 Nov 2004 02:21:31 -0500
-Message-ID: <20041116072131.GA32560@havoc.gtf.org>
-Reply-To: linux-ide@vger.kernel.org
+From: "Albert Lee" <albertcc@tw.ibm.com>
+Subject: libata-dev-2.6 ATAPI interrupt lost problem with pdc2027x under UDMA mode
+Date: Tue, 16 Nov 2004 17:03:55 +0800
+Message-ID: <006601c4cbbb$369788c0$6801a8c0@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261934AbUKPHWt@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset="big5"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bluehawaii.tikira.net ([61.62.22.51]:46830 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S261946AbUKPJEU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Nov 2004 04:04:20 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: Doug Maxey <dwm@maxeymade.com>, IDE Linux <linux-ide@vger.kernel.org>
+
+Hi,
+  I am testing ATAPI device with libata-dev.2.6 code and the pdc2027x driver.
+
+Environment:
+- pdc20275 on the MSI P4HS-4 mainboard
+- Maxtor 6Y080L0 as primary dev0
+- Seagate ST380011A as primary dev1
+- Asus CRW-5232AS as secondard dev0
+
+The following are the results:
+
+1. All the harddisk drives works fine with either PIO or DMA
+2. For the ATAPI device, READ and other commands works fine with ATAPI UDMA protocol.
+   However, when REQUEST_SENSE / MODE_SENSE is issued to the CD-RW drive with
+   ATAPI DMA protocol, the interrupt is lost. 
+3. All commands, including REQUEST_SENSE/MODE_SENSE, work fine with ATAPI PIO protocol.
+4. PIIX and the same Asus drive work fine, both UDMA and PIO.
+
+For the problem of lost interrupt, I've checked the pdc2027x global control register (which shows 
+the status of INTRQ and DMARQ directly), the Asus drive already report INTRQ and 
+said UDMA completed.  However, pdc20275 does not report interrupt and said DMA on going.
+
+Any clue or idea for this problem? Thanks.
+Albert
+=============================================================
+(dmesg log attached)
+ata_scsi_dump_cdb: CDB (2:0,0,0) 12 00 00 00 60 00 20 00 00
+atapi_xlat: nodata[0]
+ata_sg_setup_one: mapped buffer of 96 bytes for read
+ata_exec_command_pio: ata2: cmd 0xA0
+atapi_packet_task: busy wait
+atapi_packet_task: send cdb
+ata_host_intr: ata2: protocol 7 (dev_stat 0x50)        => "inquiry" is successful
+ata_sg_clean: unmapping 1 sg elements
+  Vendor: ASUS      Model: CRW-5232AS        Rev: 1.02
+  Type:   CD-ROM                             ANSI SCSI revision: 05
+ata_scsi_dump_cdb: CDB (2:0,0,0) 00 00 00 00 00 00 00 00 00
+ata_exec_command_pio: ata2: cmd 0xA0
+atapi_packet_task: busy wait
+atapi_packet_task: send cdb
+ata_host_intr: ata2: protocol 6 (dev_stat 0x50)   => "test unit ready" is successful
+ata_scsi_dump_cdb: CDB (2:0,0,0) 5a 00 2a 00 00 00 00 00 80  => "mode sense" fails 
+atapi_xlat: nodata[0]
+ata_sg_setup_one: mapped buffer of 128 bytes for read
+ata_exec_command_pio: ata2: cmd 0xA0
+atapi_packet_task: busy wait
+atapi_packet_task: send cdb
+ata_scsi_error: ENTER                 => Promise pdc2027x timeout here. Interrupt lost. (PIIX works.)
+ata_eng_timeout: ENTER
+ata_qc_timeout: ENTER
+ata2: command 0xa0 timeout, stat 0x50 host_stat 0x1  => Device: OK, host: DMA on going.
+ata_sg_clean: unmapping 1 sg elements
+ata_qc_timeout: EXIT
+ata_eng_timeout: EXIT
+ata_scsi_error: EXIT
+sr0: scsi3-mmc drive: 0x/0x caddy 
+=> should be   sr0: scsi3-mmc drive: 52x/52x writer cd/rw xa/form2 cdda tray
+Uniform CD-ROM driver Revision: 3.20
 
 
-Another one just checked into libata-dev-2.6.
-
-
- drivers/scsi/sata_uli.c |   51 +++++++++++++++++++++---------------------------
- 1 files changed, 23 insertions(+), 28 deletions(-)
-
-through these ChangeSets:
-
-<jgarzik@pobox.com> (04/11/16 1.2169)
-   [libata sata_uli] add 5281 support, fix SATA phy setup for others
-   
-   Contributed by Peer Chen @ ULi and tested by a user.
-
-diff -Nru a/drivers/scsi/sata_uli.c b/drivers/scsi/sata_uli.c
---- a/drivers/scsi/sata_uli.c	2004-11-16 02:19:58 -05:00
-+++ b/drivers/scsi/sata_uli.c	2004-11-16 02:19:58 -05:00
-@@ -32,16 +32,18 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"sata_uli"
--#define DRV_VERSION	"0.2"
-+#define DRV_VERSION	"0.5"
- 
- enum {
- 	uli_5289		= 0,
- 	uli_5287		= 1,
-+	uli_5281		= 2,
- 
- 	/* PCI configuration registers */
--	ULI_SCR_BASE		= 0x90, /* sata0 phy SCR registers */
--	ULI_SATA1_OFS		= 0x10, /* offset from sata0->sata1 phy regs */
--
-+	ULI5287_BASE		= 0x90, /* sata0 phy SCR registers */
-+	ULI5287_OFFS		= 0x10, /* offset from sata0->sata1 phy regs */
-+	ULI5281_BASE		= 0x60, /* sata0 phy SCR  registers */
-+	ULI5281_OFFS		= 0x60, /* offset from sata0->sata1 phy regs */
- };
- 
- static int uli_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
-@@ -51,6 +53,7 @@
- static struct pci_device_id uli_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_AL, 0x5289, PCI_ANY_ID, PCI_ANY_ID, 0, 0, uli_5289 },
- 	{ PCI_VENDOR_ID_AL, 0x5287, PCI_ANY_ID, PCI_ANY_ID, 0, 0, uli_5287 },
-+	{ PCI_VENDOR_ID_AL, 0x5281, PCI_ANY_ID, PCI_ANY_ID, 0, 0, uli_5281 },
- 	{ }	/* terminate list */
- };
- 
-@@ -125,33 +128,15 @@
- MODULE_DEVICE_TABLE(pci, uli_pci_tbl);
- MODULE_VERSION(DRV_VERSION);
- 
--static unsigned int get_scr_cfg_addr(unsigned int port_no, unsigned int sc_reg)
-+static unsigned int get_scr_cfg_addr(struct ata_port *ap, unsigned int sc_reg)
- {
--	unsigned int addr = ULI_SCR_BASE + (4 * sc_reg);
--
--	switch (port_no) {
--	case 0:
--		break;
--	case 1:
--		addr += ULI_SATA1_OFS;
--		break;
--	case 2:
--		addr += ULI_SATA1_OFS*4;
--		break;
--	case 3:
--		addr += ULI_SATA1_OFS*5;
--		break;
--	default:
--		BUG();
--		break;
--	}
--	return addr;
-+	return ap->ioaddr.scr_addr + (4 * sc_reg);
- }
- 
- static u32 uli_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
--	unsigned int cfg_addr = get_scr_cfg_addr(ap->port_no, sc_reg);
-+	unsigned int cfg_addr = get_scr_cfg_addr(ap, sc_reg);
- 	u32 val;
- 
- 	pci_read_config_dword(pdev, cfg_addr, &val);
-@@ -161,7 +146,7 @@
- static void uli_scr_cfg_write (struct ata_port *ap, unsigned int scr, u32 val)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
--	unsigned int cfg_addr = get_scr_cfg_addr(ap->port_no, scr);
-+	unsigned int cfg_addr = get_scr_cfg_addr(ap, scr);
- 
- 	pci_write_config_dword(pdev, cfg_addr, val);
- }
-@@ -222,9 +207,11 @@
- 		rc = -ENOMEM;
- 		goto err_out_regions;
- 	}
--
-+	
- 	switch (board_idx) {
- 	case uli_5287:
-+		probe_ent->port[0].scr_addr = ULI5287_BASE;
-+		probe_ent->port[1].scr_addr = ULI5287_BASE + ULI5287_OFFS;
-        		probe_ent->n_ports = 4;
- 
-        		probe_ent->port[2].cmd_addr = pci_resource_start(pdev, 0) + 8;
-@@ -232,19 +219,27 @@
- 		probe_ent->port[2].ctl_addr =
- 			(pci_resource_start(pdev, 1) | ATA_PCI_CTL_OFS) + 4;
- 		probe_ent->port[2].bmdma_addr = pci_resource_start(pdev, 4) + 16;
-+		probe_ent->port[2].scr_addr = ULI5287_BASE + ULI5287_OFFS*4;
- 
- 		probe_ent->port[3].cmd_addr = pci_resource_start(pdev, 2) + 8;
- 		probe_ent->port[3].altstatus_addr =
- 		probe_ent->port[3].ctl_addr =
- 			(pci_resource_start(pdev, 3) | ATA_PCI_CTL_OFS) + 4;
- 		probe_ent->port[3].bmdma_addr = pci_resource_start(pdev, 4) + 24;
-+		probe_ent->port[3].scr_addr = ULI5287_BASE + ULI5287_OFFS*5;
- 
- 		ata_std_ports(&probe_ent->port[2]);
- 		ata_std_ports(&probe_ent->port[3]);
- 		break;
- 
- 	case uli_5289:
--		/* do nothing; ata_pci_init_native_mode did it all */
-+		probe_ent->port[0].scr_addr = ULI5287_BASE;
-+		probe_ent->port[1].scr_addr = ULI5287_BASE + ULI5287_OFFS;
-+		break;
-+
-+	case uli_5281:
-+		probe_ent->port[0].scr_addr = ULI5281_BASE;
-+		probe_ent->port[1].scr_addr = ULI5281_BASE + ULI5281_OFFS;
- 		break;
- 
- 	default:
