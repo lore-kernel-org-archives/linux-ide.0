@@ -1,35 +1,26 @@
-From: Alexey Dobriyan <adobriyan@mail.ru>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [BK PATCHES] 2.6.x libata fixes (mostly)
-Date: Wed, 23 Feb 2005 23:57:18 +0200
-Message-ID: <200502232357.18723.adobriyan@mail.ru>
+Date: Wed, 23 Feb 2005 16:24:24 -0500
+Message-ID: <421CF488.2010606@pobox.com>
 References: <421CE018.5030007@pobox.com> <200502232345.23666.adobriyan@mail.ru>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from mx1.mail.ru ([194.67.23.121]:65081 "EHLO mx1.mail.ru")
-	by vger.kernel.org with ESMTP id S261581AbVBWU5Z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Feb 2005 15:57:25 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:34509 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261597AbVBWVYq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Feb 2005 16:24:46 -0500
 In-Reply-To: <200502232345.23666.adobriyan@mail.ru>
-Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Alexey Dobriyan <adobriyan@mail.ru>
 Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Lord <mlord@pobox.com>
 
-On Wednesday 23 February 2005 23:45, Alexey Dobriyan wrote:
-> > +static void qs_ata_setup_port(struct ata_ioports *port, unsigned long base)
-> > +{
-> > +	port->cmd_addr		=
-> 
-> > +	port->error_addr	=
-> 
-> > +	port->status_addr	=
-> 
-> > +	port->altstatus_addr	=
-> 
-> Oo-oops...
+Thanks.  All this stuff was minor, so I'll wait until 2.6.11 release to 
+update.
 
-Too much snipping and time to sleep for me, sorry. :-(
+I forwarded the qstor stuff to maintainer Mark Lord.
 
-	Alexey
+	Jeff
+
+
