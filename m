@@ -1,44 +1,68 @@
-From: "Slawek" <slawek@computer-design.co.uk>
-Subject: LEDs on Silicon Image SATA
-Date: Wed, 17 Nov 2004 18:31:03 -0000
-Message-ID: <01e601c4ccd3$991e92e0$4500a8c0@MarkK>
+From: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
+Subject: Re: [BUG] Kernel disables DMA on RICOH CD-R/RW
+Date: Thu, 18 Nov 2004 09:16:27 +1100
+Message-ID: <200411180916.27342.sriharivijayaraghavan@yahoo.com.au>
+References: <20041116124656.82075.qmail@web52601.mail.yahoo.com> <1100706838.420.47.camel@localhost.localdomain> <20041117210657.GP26240@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from server6.tcw.telecomplete.net ([213.160.116.7]:57361 "EHLO
-	server6.tcw.telecomplete.net") by vger.kernel.org with ESMTP
-	id S262477AbUKQSdD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Nov 2004 13:33:03 -0500
-Received: from host13.cdg.adsl.telecomplete.net ([213.160.101.94] helo=Chris.Domain)
-	by server6.tcw.telecomplete.net with esmtp (Exim 4.34)
-	id 1CUUc1-0000vL-2y
-	for linux-ide@vger.kernel.org; Wed, 17 Nov 2004 18:33:01 +0000
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_728mB3xH79CP/sM"
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262637AbUKQWPU@vger.kernel.org>
+In-Reply-To: <20041117210657.GP26240@suse.de>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-Hi.
-
-Does anybody have the activity LEDs working via SI3122A's?
-
-I am aware that SATA does not have a pin defined for activity, however
-this is dealt with on the SI chips (and I presume other SATA chips)..
-the driver I think configures the SI to use a port as activity and the
-system board has a connector.
-
-The SI driver for windows works fine and the activity blinks all day
-long. but on linux I can not get the leds to function.
 
 
-Is this being looked at by anybody?
+--Boundary-00=_728mB3xH79CP/sM
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
+On Thu, 18 Nov 2004 08:06 am, Jens Axboe wrote:
+> On Wed, Nov 17 2004, Alan Cox wrote:
+> > On Maw, 2004-11-16 at 13:01, Bartlomiej Zolnierkiewicz wrote:
+> > > Previously VIA IDE driver ignored DMA blacklists completely
+> > > (which was of course wrong), it was fixed.
+> > >
+> > > Probably this drive should be removed from the blacklist.
+> > > Does anybody remember why was it added there?
+> >
+> > As I said before almost all of our blacklist is junk from when the IDE
+> > ATAPI DMA bug wasn't fixed.
+>
+> I sure don't remember why, so sounds plausible.
 
-Thank you
+Could you please accept this patch? (against vanilla 2.6.10-rc2)
 
+I have tested my RICOH CD-R/RW with this patch (on CD Reading/Writing), and it 
+works just fine with DMA enabled.
 
+(Unfortunately I do not have any other drive in the DMA disabled list, and 
+hence I could not test for them.)
 
-Slawek
+Thank you.
+Hari.
 
+--Boundary-00=_728mB3xH79CP/sM
+Content-Type: text/x-diff;
+  charset="iso-8859-1";
+  name="patch-ide-dma-for-ricoh"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="patch-ide-dma-for-ricoh"
 
+--- 2.6.10-rc2/drivers/ide/ide-dma.c.orig	2004-11-18 08:50:03.000000000 +1100
++++ 2.6.10-rc2/drivers/ide/ide-dma.c	2004-11-18 08:50:24.000000000 +1100
+@@ -129,7 +129,6 @@
+ 	{ "CD-532E-A"		,	"ALL"		},
+ 	{ "E-IDE CD-ROM CR-840",	"ALL"		},
+ 	{ "CD-ROM Drive/F5A",	"ALL"		},
+-	{ "RICOH CD-R/RW MP7083A",	"ALL"		},
+ 	{ "WPI CDD-820",		"ALL"		},
+ 	{ "SAMSUNG CD-ROM SC-148C",	"ALL"		},
+ 	{ "SAMSUNG CD-ROM SC-148F",	"ALL"		},
+
+--Boundary-00=_728mB3xH79CP/sM--
