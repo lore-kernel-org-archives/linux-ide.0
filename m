@@ -1,39 +1,56 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [patch][2/3] ide: add ide_hwif_t->dma_exec_cmd()
-Date: Mon, 13 Sep 2004 15:31:37 -0700
+From: "Michal 'hramrach' Suchanek" <hramrach@centrum.cz>
+Subject: Re: Via SATA not working here
+Date: Tue, 14 Sep 2004 11:43:36 +0200
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040913223137.GB95391@sgi.com>
-References: <200409130133.55663.bzolnier@elka.pw.edu.pl> <20040913213552.GA95513@sgi.com> <200409140011.22047.bzolnier@elka.pw.edu.pl>
+Message-ID: <20040914094336.GG18257@uvt316-2.ruk.cuni.cz>
+References: <20040912191542.GO21202@uvt316-2.ruk.cuni.cz> <414520BB.3080306@wasp.net.au>
+Reply-To: "Michal 'hramrach' Suchanek" <hramrach@centrum.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.20]:2462 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S269024AbUIMWb5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Sep 2004 18:31:57 -0400
+Received: from dec59.ruk.cuni.cz ([195.113.2.17]:58130 "HELO dec59.ruk.cuni.cz")
+	by vger.kernel.org with SMTP id S269240AbUINJpv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Sep 2004 05:45:51 -0400
 Content-Disposition: inline
-In-Reply-To: <200409140011.22047.bzolnier@elka.pw.edu.pl>
+In-Reply-To: <414520BB.3080306@wasp.net.au>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mikael Starvik <mikael.starvik@axis.com>, Erik Jacobson <erikj@subway.americas.sgi.com>
+To: Brad Campbell <brad@wasp.net.au>, f@uvt316-2.ruk.cuni.cz
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Tue, Sep 14, 2004 at 12:11:21AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Monday 13 September 2004 23:35, Jeremy Higdon wrote:
-> > > Some real bugs are also fixed:
-> > > - in Etrax ide.c driver REQ_DRIVE_TASKFILE requests weren't
-> > >   handled properly for drive->addressing == 0
-> > > - in trm290.c read and write commands were interchanged
-> > > - in sgiioc4.c commands weren't sent to disk devices
+On Mon, Sep 13, 2004 at 08:23:23AM +0400, Brad Campbell wrote:
+> Michal 'hramrach' Suchanek wrote:
+> >Hello
+> >
+> >I found it would eventually lock up with the hdd led shining steadily.
+I saw the lockup happen finally and I saw a stream of
+hda: lost interrupt
+I did not try to reproduce it with 2.6.5 because it takes hours of
+compilig to cause the lockup.
 > 
-> DMA commands, PIO ones were sent out
+> Could you try it with a 2.6.5 kernel please? There were some changes made 
+> between 2.6.5 and 2.6.7 that may well cause issues with HD's attached to 
+> dongles. There have been patches created for this by they have not yet made 
+> the mainstream kernel.
 > 
-> > Sgiioc4 only is used with multimedia devices.  I don't think disks will
-> > work with it, even if you do send commands.
-> 
-> It is hard to believe but if this is true it should be documented somewhere.
-> 
-> Anyway my changes don't make it worse. :-)
+> I'd be interested to see how that pans out.
+With 2.6.5 I get the same results.
 
-Okay.  I just wanted to be sure you knew.  It would be a challenge
-just to connect a disk to it, so it probably doesn't matter too much.
-Even if you did and it worked, Multimode 2 DMA speeds would not be
-too exciting . . . .   :-)
+The libata error message:
+
+ata1: DMA timeout, stat 0x0
+ATA: abnormal status 0xD0 on prot 0xEC07
+scsi0: ERROR on channel 0, id0, lin0, CDB: Write (10) 00 01 65 dc e7 00
+00 42 00
+Current sda: sense key Medium Error
+Additional sense: Write Error - auto reallocation failed
+end_request: I/O error, dev sda, sector 23452903
+ATA: abnormal status 0xD0 on prot 0xEC07
+ATA: abnormal status 0xD0 on prot 0xEC07
+ATA: abnormal status 0xD0 on prot 0xEC07
+
+
+Note that the 0xd0 is the same as the ide DMA timeout error.
+
+Thanks
+
+Michal Suchanek
