@@ -1,32 +1,27 @@
-From: Christophe Saout <christophe@saout.de>
-Subject: Re: Possibly wrong BIO usage in ide_multwrite
-Date: Tue, 06 Jan 2004 16:21:36 +0100
+From: Roland Dreier <roland@topspin.com>
+Subject: Re: [PATCH] libata update
+Date: 06 Jan 2004 08:33:39 -0800
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1073402495.6624.3.camel@leto.cs.pocnet.net>
-References: <1072977507.4170.14.camel@leto.cs.pocnet.net>
-	 <200401060059.52833.bzolnier@elka.pw.edu.pl>
-	 <20040106113330.GA5827@leto.cs.pocnet.net>
-	 <200401061538.48904.bzolnier@elka.pw.edu.pl>
+Message-ID: <52ekudvxy4.fsf@topspin.com>
+References: <200401041413.20573.marchand@kde.org> <3FFA80BE.2040205@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <200401061538.48904.bzolnier@elka.pw.edu.pl>
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <3FFA80BE.2040205@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Am Di, den 06.01.2004 schrieb Bartlomiej Zolnierkiewicz um 15:38:
+Hi Jeff and others,
 
-> > > > Remember? Can bio be NULL somewhere? Or what do you mean? It's our
-> > > > scratchpad and ide_multwrite never puts a NULL bio on it.
-> > >
-> > > After last sector of the whole transfer is processed ide_multwrite() will
-> > > set it to NULL.
-> >
-> > No, it doesn't.
-> 
-> Yep, you are right, bio is NULL, but rq->bio is not set...
+On the topic of Silicon Image SATA support, how do things look for
+supporting the SiI 3512?  This chip seems to be pretty common on
+Nforce3 boards.
 
-So, shall I resend the updated patch with the one line moved above the
-comment?
+I had a look on the SiI web site and they say the programming
+interface is very close to the 3112.  Unfortunately their data sheets
+don't seem to be freely available so I can't tell how close the
+interface really is (or do the work to add 3512 support myself).
+
+Thanks,
+  Roland
