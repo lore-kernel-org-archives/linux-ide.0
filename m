@@ -1,34 +1,66 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: FC3 driver for Promise TX4200?
-Date: Mon, 21 Feb 2005 17:23:34 -0500
-Message-ID: <421A5F66.2050001@pobox.com>
-References: <200502212157.j1LLvbS5015328@auklet.phys.uvic.ca>
+Subject: [PATCH] libata kfree fix
+Date: Mon, 21 Feb 2005 17:27:23 -0500
+Message-ID: <421A604B.9090302@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:58780 "EHLO
+Content-Type: multipart/mixed;
+ boundary="------------080600070009090607070607"
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:9629 "EHLO
 	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262107AbVBUWYA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Feb 2005 17:24:00 -0500
-In-Reply-To: <200502212157.j1LLvbS5015328@auklet.phys.uvic.ca>
+	id S262143AbVBUW1i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Feb 2005 17:27:38 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephenson Yang <yang@beluga.phys.uvic.ca>
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Stephenson Yang wrote:
-> Hello,
->   Just wondering if there is a 2.6 driver
-> for the TX4200. The latest sata_promise
-> (for TX4) does not work with TX4200.
-> I notice Promise has the source code for 2.4
-> (http://www.promise.com/support/download/download2_eng.asp?productID=128&category=all&os=100#)
+This is a multi-part message in MIME format.
+--------------080600070009090607070607
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I don't know product numbers.
+Fixes double-kfree that caused slab corruption.
 
-I need lspci or chip id.
+Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
 
-	Jeff
+--------------080600070009090607070607
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
 
+===== drivers/scsi/libata-core.c 1.116 vs edited =====
+--- 1.116/drivers/scsi/libata-core.c	2005-02-01 20:23:51 -05:00
++++ edited/drivers/scsi/libata-core.c	2005-02-20 23:34:32 -05:00
+@@ -2800,7 +2800,7 @@
+ 			return 1;
+ 
+ 		/* fall through */
+-	
++
+ 	default:
+ 		return 0;
+ 	}
+@@ -3743,16 +3743,13 @@
+ 	if (legacy_mode) {
+ 		if (legacy_mode & (1 << 0))
+ 			ata_device_add(probe_ent);
+-		else
+-			kfree(probe_ent);
+ 		if (legacy_mode & (1 << 1))
+ 			ata_device_add(probe_ent2);
+-		else
+-			kfree(probe_ent2);
+-	} else {
++	} else
+ 		ata_device_add(probe_ent);
+-	}
++
+ 	kfree(probe_ent);
++	kfree(probe_ent2);
+ 
+ 	return 0;
+ 
 
-
+--------------080600070009090607070607--
