@@ -1,54 +1,32 @@
-From: 240231@msn.com
-Subject: The 30 Hour Wonder!              =?ISO-8859-1?Q?=20=19?= 292774032
-Date: Fri, 31 Oct 2003 03:19:05 -0500
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Processes receive SIGSEGV if TCQ is enabled
+Date: Fri, 31 Oct 2003 14:00:41 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <S263101AbTJaI2C/20031031082802Z+24664@vger.kernel.org>
-Reply-To: 240231@msn.com
+Message-ID: <20031031130041.GI7314@suse.de>
+References: <200310301601.55588.schlicht@uni-mannheim.de> <200310301848.19065.bzolnier@elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [200.140.224.8] ([200.140.224.8]:42756 "HELO 200.140.224.8")
-	by vger.kernel.org with SMTP id S263101AbTJaI2C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Oct 2003 03:28:02 -0500
+Received: from ns.virtualhost.dk ([195.184.98.160]:34208 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S263293AbTJaNAk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Oct 2003 08:00:40 -0500
+Content-Disposition: inline
+In-Reply-To: <200310301848.19065.bzolnier@elka.pw.edu.pl>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Thomas Schlichter <schlicht@uni-mannheim.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Cyalus comes in smaller doses and produces fewer side effects. 
-Cyalus also works much faster than Sildenafil-based medications. 
-In clinical trials, the majority of men who took the drug were able to 
-engage in sexual intercourse within 30 minutes or less. 
-The studies also indicated that Cyalus stays in the system 
-for up to 30 hours. That's 26 hours longer than the traditional 
-Sildenafil-based medications treatment. 
+On Thu, Oct 30 2003, Bartlomiej Zolnierkiewicz wrote:
+> 
+> [ Jens - IDE TCQ maintainer 8) added to cc: ]
 
-Test results showed that out of 700 participants at least 88 percent of men experienced improvement with their erections. 
+Not really (added, that is :)
 
-More info http://www.hostvy.com/
+> Could you also send dmesg output and retry with vanilla -test9?
 
+It's probably via + tcq, that drive is known good with ide-tcq. At least
+I've never seen problems with it.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          
-24C88C6C-10C55E3B-1341780C-3AA93E4D-C5E6975
-          
-3A4B831E-7C8EAFA0-3137018F-63ECC744-34253921
-   
-7A954564-5F7A0D79-476D4135-28A5536F-7ADD4B51
-                
-
+-- 
+Jens Axboe
 
