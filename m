@@ -1,34 +1,29 @@
-From: William Knop <wknop@andrew.cmu.edu>
-Subject: Re: libata badness
-Date: Mon, 4 Oct 2004 14:03:56 -0400 (EDT)
+From: Andy Warner <andyw@pobox.com>
+Subject: Re: libata & scsi rescan.
+Date: Mon, 4 Oct 2004 15:56:47 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60-041.0410041353270.9105@unix43.andrew.cmu.edu>
-References: <Pine.LNX.4.60-041.0410040656001.2350@unix48.andrew.cmu.edu>
- <41617AA0.9020809@pobox.com> <Pine.LNX.4.60-041.0410041323160.9105@unix43.andrew.cmu.edu>
- <20041004175003.GA10814@jim.sh>
+Message-ID: <20041004155647.A9589@florence.linkmargin.com>
+References: <20041001123951.A23006@florence.linkmargin.com> <415DA2C0.3060600@pobox.com> <20041001141244.B23006@florence.linkmargin.com> <415DB03E.5090005@pobox.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.andrew.cmu.edu ([128.2.10.83]:32644 "EHLO
-	smtp.andrew.cmu.edu") by vger.kernel.org with ESMTP id S268400AbUJDSD5
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Oct 2004 14:03:57 -0400
-In-Reply-To: <20041004175003.GA10814@jim.sh>
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:26811 "EHLO
+	ms-smtp-03.rdc-kc.rr.com") by vger.kernel.org with ESMTP
+	id S267619AbUJDU6e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Oct 2004 16:58:34 -0400
+Content-Disposition: inline
+In-Reply-To: <415DB03E.5090005@pobox.com>; from jgarzik@pobox.com on Fri, Oct 01, 2004 at 03:30:06PM -0400
 List-Id: linux-ide@vger.kernel.org
-To: Jim Paris <jim@jtan.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
+Jeff Garzik wrote:
+> [...]
+> That's because libata doesn't call the proper hot-unplug hooks.  Call 
+> those hooks, and the problem goes away.
 
-> Or else something else on your system is bad.  Like your CPU or RAM.
-> Run memtest for a while.
+Suggested reading, anyone ?
+-- 
+andyw@pobox.com
 
-I ran memtest for a few hours. It all checks out. Also, CPU intensive 
-stuff doesn't cause weirdness.
-
-The only things which cause corruption, so far as I can tell, are 
-operations on my raid device, md0. Copying from the array takes a while 
-for a crash, while rebuilding a drive on the array is very prompt (<1m) at 
-causing a crash. The crashes likely as not cause widespread kernel 
-corruption. It's only a matter of time before my root fs is blown away 
-again.
-
+Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
