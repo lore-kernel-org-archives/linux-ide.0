@@ -1,376 +1,143 @@
-From: Phil Dibowitz <phil@ipom.com>
-Subject: IDE kernel traces in 2.6.9 - Bad IRQ ?
-Date: Sat, 30 Oct 2004 16:21:13 -0700
-Message-ID: <418421E9.6000809@ipom.com>
+From: CaT <cat@zip.com.au>
+Subject: Re: PDC20267 bug and corruption (was: Re: [BK PATCHES] ide-2.6 update)
+Date: Sun, 31 Oct 2004 10:48:25 +1100
+Message-ID: <20041030234825.GD1287@zip.com.au>
+References: <58cb370e04102706074c20d6d7@mail.gmail.com> <20041027133431.GF1127@zip.com.au> <58cb370e04102706512283405@mail.gmail.com> <20041030034745.GA1287@zip.com.au> <58cb370e04103011065c265ce4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary=------------enig129F4B557820DBD4FBA880A8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from msg-mx2.usc.edu ([128.125.137.7]:22469 "EHLO msg-mx2.usc.edu")
-	by vger.kernel.org with ESMTP id S261420AbUJ3XVQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Oct 2004 19:21:16 -0400
-Received: from [10.1.1.2] ([128.125.81.146])
- by msg-mx2.usc.edu (Sun Java System Messaging Server 6.1 HotFix 0.02 (built
- Aug 25 2004)) with ESMTPSA id <0I6F003KW7JESBE0@msg-mx2.usc.edu> for
- linux-ide@vger.kernel.org; Sat, 30 Oct 2004 16:21:15 -0700 (PDT)
+Received: from nessie.weebeastie.net ([220.233.7.36]:7819 "EHLO
+	theirongiant.lochness.weebeastie.net") by vger.kernel.org with ESMTP
+	id S261429AbUJ3Xs6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Oct 2004 19:48:58 -0400
+Content-Disposition: inline
+In-Reply-To: <58cb370e04103011065c265ce4@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: torvalds@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig129F4B557820DBD4FBA880A8
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Sat, Oct 30, 2004 at 08:06:11PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Sat, 30 Oct 2004 13:47:45 +1000, CaT <cat@zip.com.au> wrote:
+> > 2. dd if=/dev/hde of=/dev/null
+> >    dd if=/dev/zero of=/dev/hdh
+...
+> > With method #2, a whole lot more fun occurs. The logfile I have is big
+> > (almost 400k) so I've compressed it and included it as an attachment.
+> > This is with kernel 2.6.10-rc1-bk7 (no logs survived from me testing
+> > this with rc1-mm2).
+> 
+> Indeed, this is a lot more fun. ;)
 
-I just upgraded my computer, compiled a new kernel appropriately, and 
-I'm getting a ton of kernel issues surrounding the IDE driver. I tried a 
-generic debian kernel as well, but same issue. Here are the tracebacks I 
-get during boot:
+:)
 
-Oct 30 15:56:19 rider kernel: ide0 at 0xefe0-0xefe7,0xefae on irq 5
-Oct 30 15:56:19 rider kernel: hda: max request size: 128KiB
-Oct 30 15:56:19 rider kernel:  [__report_bad_irq+42/139] 
-__report_bad_irq+0x2a/0x8b
-Oct 30 15:56:19 rider kernel:  [note_interrupt+111/159] 
-note_interrupt+0x6f/0x9f
-Oct 30 15:56:19 rider kernel:  [do_IRQ+295/310] do_IRQ+0x127/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [__do_softirq+47/135] __do_softirq+0x2f/0x87
-Oct 30 15:56:19 rider kernel:  [do_softirq+38/40] do_softirq+0x26/0x28
-Oct 30 15:56:19 rider kernel:  [do_IRQ+259/310] do_IRQ+0x103/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [mwait_idle+48/70] mwait_idle+0x30/0x46
-Oct 30 15:56:19 rider kernel:  [cpu_idle+55/80] cpu_idle+0x37/0x50
-Oct 30 15:56:19 rider kernel:  [start_kernel+343/368] 
-start_kernel+0x157/0x170
-Oct 30 15:56:19 rider kernel:  [unknown_bootoption+0/348] 
-unknown_bootoption+0x0/0x15c
-Oct 30 15:56:19 rider kernel: hda: 30015216 sectors (15367 MB) w/2048KiB 
-Cache, CHS=29777/16/63, UDMA(100)
-Oct 30 15:56:19 rider kernel:  hda: hda1 hda2 hda3 hda4 < hda5 hda6 >
-Oct 30 15:56:19 rider kernel: hdb: max request size: 128KiB
-Oct 30 15:56:19 rider kernel:  [__report_bad_irq+42/139] 
-__report_bad_irq+0x2a/0x8b
-Oct 30 15:56:19 rider kernel:  [note_interrupt+111/159] 
-note_interrupt+0x6f/0x9f
-Oct 30 15:56:19 rider kernel:  [do_IRQ+295/310] do_IRQ+0x127/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [__do_softirq+47/135] __do_softirq+0x2f/0x87
-Oct 30 15:56:19 rider kernel:  [do_softirq+38/40] do_softirq+0x26/0x28
-Oct 30 15:56:19 rider kernel:  [do_IRQ+259/310] do_IRQ+0x103/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [mwait_idle+48/70] mwait_idle+0x30/0x46
-Oct 30 15:56:19 rider kernel:  [cpu_idle+55/80] cpu_idle+0x37/0x50
-Oct 30 15:56:19 rider kernel:  [start_kernel+343/368] 
-start_kernel+0x157/0x170
-Oct 30 15:56:19 rider kernel:  [unknown_bootoption+0/348] 
-unknown_bootoption+0x0/0x15c
-Oct 30 15:56:19 rider kernel: hdb: 240121728 sectors (122942 MB) 
-w/7936KiB Cache, CHS=65535/16/63, UDMA(100)
-Oct 30 15:56:19 rider kernel:  [__report_bad_irq+42/139] 
-__report_bad_irq+0x2a/0x8b
-Oct 30 15:56:19 rider kernel:  [note_interrupt+111/159] 
-note_interrupt+0x6f/0x9f
-Oct 30 15:56:19 rider kernel:  [do_IRQ+295/310] do_IRQ+0x127/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [__do_softirq+47/135] __do_softirq+0x2f/0x87
-Oct 30 15:56:19 rider kernel:  [do_softirq+38/40] do_softirq+0x26/0x28
-Oct 30 15:56:19 rider kernel:  [do_IRQ+259/310] do_IRQ+0x103/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [ide_do_drive_cmd+213/312] 
-ide_do_drive_cmd+0xd5/0x138
-Oct 30 15:56:19 rider kernel:  [ide_diag_taskfile+161/228] 
-ide_diag_taskfile+0xa1/0xe4
-Oct 30 15:56:19 rider kernel:  [ide_raw_taskfile+39/43] 
-ide_raw_taskfile+0x27/0x2b
-Oct 30 15:56:19 rider kernel:  [write_cache+113/146] write_cache+0x71/0x92
-Oct 30 15:56:19 rider kernel:  [task_no_data_intr+0/149] 
-task_no_data_intr+0x0/0x95
-Oct 30 15:56:19 rider kernel:  [idedisk_setup+907/1270] 
-idedisk_setup+0x38b/0x4f6
-Oct 30 15:56:19 rider kernel:  [idedisk_attach+152/342] 
-idedisk_attach+0x98/0x156
-Oct 30 15:56:19 rider kernel:  [ata_attach+219/418] ata_attach+0xdb/0x1a2
-Oct 30 15:56:19 rider kernel:  [ide_register_driver+261/280] 
-ide_register_driver+0x105/0x118
-Oct 30 15:56:19 rider kernel:  [idedisk_init+15/22] idedisk_init+0xf/0x16
-Oct 30 15:56:19 rider kernel:  [do_initcalls+39/179] do_initcalls+0x27/0xb3
-Oct 30 15:56:19 rider kernel:  [sock_init+63/72] sock_init+0x3f/0x48
-Oct 30 15:56:19 rider kernel:  [init+0/341] init+0x0/0x155
-Oct 30 15:56:19 rider kernel:  [init+61/341] init+0x3d/0x155
-Oct 30 15:56:19 rider kernel:  [kernel_thread_helper+0/11] 
-kernel_thread_helper+0x0/0xb
-Oct 30 15:56:19 rider kernel:  [kernel_thread_helper+5/11] 
-kernel_thread_helper+0x5/0xb
-Oct 30 15:56:19 rider kernel:  hdb: hdb1
-Oct 30 15:56:19 rider kernel:  [__report_bad_irq+42/139] 
-__report_bad_irq+0x2a/0x8b
-Oct 30 15:56:19 rider kernel:  [note_interrupt+111/159] 
-note_interrupt+0x6f/0x9f
-Oct 30 15:56:19 rider kernel:  [do_IRQ+295/310] do_IRQ+0x127/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [__do_softirq+47/135] __do_softirq+0x2f/0x87
-Oct 30 15:56:19 rider kernel:  [do_softirq+38/40] do_softirq+0x26/0x28
-Oct 30 15:56:19 rider kernel:  [do_IRQ+259/310] do_IRQ+0x103/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [mwait_idle+48/70] mwait_idle+0x30/0x46
-Oct 30 15:56:19 rider kernel:  [cpu_idle+55/80] cpu_idle+0x37/0x50
-Oct 30 15:56:19 rider kernel:  [start_kernel+343/368] 
-start_kernel+0x157/0x170
-Oct 30 15:56:19 rider kernel:  [unknown_bootoption+0/348] 
-unknown_bootoption+0x0/0x15c
+> Is this bug new/old?
 
-....(other non-related boot messages, then)....
+old.
 
-Oct 30 15:56:19 rider kernel: Freeing unused kernel memory: 116k freed
-Oct 30 15:56:19 rider kernel:  [__report_bad_irq+42/139] 
-__report_bad_irq+0x2a/0x8b
-Oct 30 15:56:19 rider kernel:  [note_interrupt+111/159] 
-note_interrupt+0x6f/0x9f
-Oct 30 15:56:19 rider kernel:  [do_IRQ+295/310] do_IRQ+0x127/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [__do_softirq+47/135] __do_softirq+0x2f/0x87
-Oct 30 15:56:19 rider kernel:  [do_softirq+38/40] do_softirq+0x26/0x28
-Oct 30 15:56:19 rider kernel:  [do_IRQ+259/310] do_IRQ+0x103/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [mwait_idle+48/70] mwait_idle+0x30/0x46
-Oct 30 15:56:19 rider kernel:  [cpu_idle+55/80] cpu_idle+0x37/0x50
-Oct 30 15:56:19 rider kernel:  [start_kernel+343/368] 
-start_kernel+0x157/0x170
-Oct 30 15:56:19 rider kernel:  [unknown_bootoption+0/348] 
-unknown_bootoption+0x0/0x15
-c
-Oct 30 15:56:19 rider kernel:  [__report_bad_irq+42/139] 
-__report_bad_irq+0x2a/0x8b
-Oct 30 15:56:19 rider kernel:  [note_interrupt+111/159] 
-note_interrupt+0x6f/0x9f
-Oct 30 15:56:19 rider kernel:  [do_IRQ+295/310] do_IRQ+0x127/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [__do_softirq+47/135] __do_softirq+0x2f/0x87
-Oct 30 15:56:19 rider kernel:  [do_softirq+38/40] do_softirq+0x26/0x28
-Oct 30 15:56:19 rider kernel:  [do_IRQ+259/310] do_IRQ+0x103/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [enable_irq+64/197] enable_irq+0x40/0xc5
-Oct 30 15:56:19 rider kernel:  [SELECT_DRIVE+47/69] SELECT_DRIVE+0x2f/0x45
-Oct 30 15:56:19 rider kernel:  [ide_config_drive_speed+331/857] 
-ide_config_drive_spee
-d+0x14b/0x359
-Oct 30 15:56:19 rider kernel:  [piix_tune_chipset+559/961] 
-piix_tune_chipset+0x22f/0x
-3c1
-Oct 30 15:56:19 rider kernel:  [piix_config_drive_for_dma+120/159] 
-piix_config_drive_
-for_dma+0x78/0x9f
-Oct 30 15:56:19 rider kernel:  [piix_config_drive_xfer_rate+157/172] 
-piix_config_driv
-e_xfer_rate+0x9d/0xac
-Oct 30 15:56:19 rider kernel:  [set_using_dma+54/113] 
-set_using_dma+0x36/0x71
-Oct 30 15:56:19 rider kernel:  [ide_write_setting+110/241] 
-ide_write_setting+0x6e/0xf
-1
-Oct 30 15:56:19 rider kernel:  [generic_ide_ioctl+194/1734] 
-generic_ide_ioctl+0xc2/0x
-6c6
-Oct 30 15:56:19 rider kernel:  [do_page_fault+923/1437] 
-do_page_fault+0x39b/0x59d
-Oct 30 15:56:19 rider kernel:  [dentry_open+265/546] dentry_open+0x109/0x222
-Oct 30 15:56:19 rider kernel:  [filp_open+98/100] filp_open+0x62/0x64
-Oct 30 15:56:19 rider kernel:  [idedisk_ioctl+0/27] idedisk_ioctl+0x0/0x1b
-Oct 30 15:56:19 rider kernel:  [blkdev_ioctl+134/1051] 
-blkdev_ioctl+0x86/0x41b
-Oct 30 15:56:19 rider kernel:  [block_ioctl+0/21] block_ioctl+0x0/0x15
-Oct 30 15:56:19 rider kernel:  [sys_ioctl+247/588] sys_ioctl+0xf7/0x24c
-Oct 30 15:56:19 rider kernel:  [syscall_call+7/11] syscall_call+0x7/0xb
-Oct 30 15:56:19 rider kernel:  [__report_bad_irq+42/139] 
-__report_bad_irq+0x2a/0x8b
-Oct 30 15:56:19 rider kernel:  [note_interrupt+111/159] 
-note_interrupt+0x6f/0x9f
-Oct 30 15:56:19 rider kernel:  [do_IRQ+295/310] do_IRQ+0x127/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [__do_softirq+47/135] __do_softirq+0x2f/0x87
-Oct 30 15:56:19 rider kernel:  [do_softirq+38/40] do_softirq+0x26/0x28
-Oct 30 15:56:19 rider kernel:  [do_IRQ+259/310] do_IRQ+0x103/0x136
-Oct 30 15:56:19 rider kernel:  [common_interrupt+24/32] 
-common_interrupt+0x18/0x20
-Oct 30 15:56:19 rider kernel:  [mwait_idle+48/70] mwait_idle+0x30/0x46
-Oct 30 15:56:19 rider kernel:  [cpu_idle+55/80] cpu_idle+0x37/0x50
-Oct 30 15:56:19 rider kernel:  [start_kernel+343/368] 
-start_kernel+0x157/0x170
-Oct 30 15:56:19 rider kernel:  [unknown_bootoption+0/348] 
-unknown_bootoption+0x0/0x15c
+> Is it pdc202xx_old specific?  Does the same havoc happen
 
+Can I use new with the 20267? According to config help and the source
+code I looked at the 20267 is not listed as one of the devices for new.
 
+> if you connect drives to the on-board Intel IDE controller?
 
-Here's an lspci -v:
-[phil@rider ~]$ sudo lspci -v
-0000:00:00.0 Host bridge: Intel Corp. 82865G/PE/P DRAM 
-Controller/Host-Hub Interface (rev 02)
-         Subsystem: Asustek Computer, Inc. P4P800 Mainboard
-         Flags: bus master, fast devsel, latency 0
-         Memory at e0000000 (32-bit, prefetchable) [size=256M]
-         Capabilities: [e4] #09 [2106]
-         Capabilities: [a0] AGP version 3.0
+I haven't tried that yet (mainly cos it's a bit of a pain - I have 3
+devs connected to it, inc boot stuff - and i didn't know if it'd be
+really useful info) but I will if need be. Just shout.
 
-0000:00:01.0 PCI bridge: Intel Corp. 82865G/PE/P PCI to AGP Controller 
-(rev 02) (prog-if 00 [Normal decode])
-         Flags: bus master, 66MHz, fast devsel, latency 64
-         Bus: primary=00, secondary=01, subordinate=01, sec-latency=64
-         Memory behind bridge: fc900000-fe9fffff
-         Prefetchable memory behind bridge: bff00000-dfefffff
+I have tried going fron hdd to hdh but nothing bad happened. It's only
+when going from hde to hdh that fun occurs.
 
-0000:00:1d.0 USB Controller: Intel Corp. 82801EB/ER (ICH5/ICH5R) USB 
-UHCI #1 (rev 02) (prog-if 00 [UHCI])
-         Subsystem: Asustek Computer, Inc. P4P800 Mainboard
-         Flags: bus master, medium devsel, latency 0, IRQ 10
-         I/O ports at ef00 [size=32]
+> Please post /proc identify data for both drives and PCI config
 
-0000:00:1d.1 USB Controller: Intel Corp. 82801EB/ER (ICH5/ICH5R) USB 
-UHCI #2 (rev 02) (prog-if 00 [UHCI])
-         Subsystem: Asustek Computer, Inc. P4P800 Mainboard
-         Flags: bus master, medium devsel, latency 0, IRQ 5
-         I/O ports at ef20 [size=32]
+hde:
+045a 3fff 37c8 0010 0000 0000 003f 0000
+0000 0000 2020 2020 2020 564e 5642 3031
+4732 5241 4b38 5848 0003 0e3b 0034 5632
+324f 4136 3341 4943 3335 4c30 3630 4156
+5632 3037 2d30 2020 2020 2020 2020 2020
+2020 2020 2020 2020 2020 2020 2020 8010
+0000 2f00 4000 0200 0200 0007 ffff 0001
+003f ffc1 003e 0110 a120 0728 0000 0007
+0003 0078 0078 00f0 0078 0000 0000 0000
+0000 0000 0000 001f 0000 0000 0000 0000
+007c 0019 74eb 7fea 4023 7468 3c02 4023
+203f 000f 0000 0000 fffe 600b 80fe 0000
+0000 0000 0000 0000 a120 0728 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0001 000b 0000 0000 0000 001b 0000 0000
+4000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 8000 0000
+424f 0000 0000 0182 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 74a5
 
-0000:00:1d.2 USB Controller: Intel Corp. 82801EB/ER (ICH5/ICH5R) USB 
-UHCI #3 (rev 02) (prog-if 00 [UHCI])
-         Subsystem: Asustek Computer, Inc. P4P800 Mainboard
-         Flags: bus master, medium devsel, latency 0, IRQ 5
-         I/O ports at ef40 [size=32]
+hdh:
+0c5a 3fff c837 0010 0000 0000 003f 0000
+0000 0000 2020 2020 2020 2020 2020 2020
+334c 4a32 3259 3846 0000 4000 0004 332e
+3031 2020 2020 5354 3332 3030 3832 3241
+2020 2020 2020 2020 2020 2020 2020 2020
+2020 2020 2020 2020 2020 2020 2020 8010
+0000 2f00 4000 0200 0200 0007 ffff 0001
+003f ffc1 003e 0110 ffff 0fff 0000 0007
+0003 0078 0078 00f0 0078 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+007e 001b 346b 7d01 4003 3469 3c01 4003
+203f 0000 0000 fefe 0000 6d00 8000 0000
+0000 0000 0000 0000 f1b0 1749 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0001 f1b0 1749 f1b0 1749 2020 0002 42b6
+0000 008a 3c06 3c0a 0000 07c6 0100 0800
+10f0 1000 0002 0030 0000 0000 0000 fe06
+0000 fe03 0000 0000 0000 0000 00e3 000b
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 d8a5
 
-0000:00:1d.3 USB Controller: Intel Corp. 82801EB/ER (ICH5/ICH5R) USB 
-UHCI #4 (rev 02) (prog-if 00 [UHCI])
-         Subsystem: Asustek Computer, Inc. P4P800 Mainboard
-         Flags: bus master, medium devsel, latency 0, IRQ 10
-         I/O ports at ef80 [size=32]
+> space dump for PDC20267 so someone can verify them.
 
-0000:00:1d.7 USB Controller: Intel Corp. 82801EB/ER (ICH5/ICH5R) USB2 
-EHCI Controller (rev 02) (prog-if 20 [EHCI])
-         Subsystem: Asustek Computer, Inc. P4P800 Mainboard
-         Flags: bus master, medium devsel, latency 0, IRQ 11
-         Memory at febffc00 (32-bit, non-prefetchable) [size=1K]
-         Capabilities: [50] Power Management version 2
-         Capabilities: [58] #0a [20a0]
+0000:00:0d.0 Unknown mass storage controller: Promise Technology, Inc.  PDC20267 (FastTrak100/Ultra100) (rev 02)
+00: 5a 10 30 4d 07 00 10 02 02 00 80 01 00 40 00 00
+10: f1 10 00 00 01 18 00 00 f9 10 00 00 05 18 00 00
+20: 81 10 00 00 00 00 00 42 00 00 00 00 5a 10 33 4d
+30: 00 00 00 00 58 00 00 00 00 00 00 00 0b 01 00 00
+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: ce 33 00 00 00 00 00 00 01 00 01 00 00 00 00 00
+60: f1 24 41 00 c4 f3 4f 00 04 f3 4f 00 31 24 41 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-0000:00:1e.0 PCI bridge: Intel Corp. 82801 PCI Bridge (rev c2) (prog-if 
-00 [Normal decode])
-         Flags: bus master, fast devsel, latency 0
-         Bus: primary=00, secondary=02, subordinate=02, sec-latency=64
-         I/O behind bridge: 0000d000-0000dfff
-         Memory behind bridge: fea00000-feafffff
-
-0000:00:1f.0 ISA bridge: Intel Corp. 82801EB/ER (ICH5/ICH5R) LPC Bridge 
-(rev 02)
-         Flags: bus master, medium devsel, latency 0
-
-0000:00:1f.1 IDE interface: Intel Corp. 82801EB/ER (ICH5/ICH5R) Ultra 
-ATA 100 Storage Controller (rev 02) (prog-if 8f [Master SecP SecO PriP 
-PriO])
-         Subsystem: Asustek Computer, Inc. P4P800 Mainboard
-         Flags: bus master, medium devsel, latency 0, IRQ 5
-         I/O ports at efe0 [size=8]
-         I/O ports at efac [size=4]
-         I/O ports at efa0 [size=8]
-         I/O ports at efa8 [size=4]
-         I/O ports at ef60 [size=16]
-         Memory at 40000000 (32-bit, non-prefetchable) [size=1K]
-
-0000:00:1f.3 SMBus: Intel Corp. 82801EB/ER (ICH5/ICH5R) SMBus Controller 
-(rev 02)
-         Subsystem: Asustek Computer, Inc. P4P800 Mainboard
-         Flags: medium devsel, IRQ 5
-         I/O ports at 0400 [size=32]
-
-0000:00:1f.5 Multimedia audio controller: Intel Corp. 82801EB/ER 
-(ICH5/ICH5R) AC'97 Audio Controller (rev 02)
-         Subsystem: Asustek Computer, Inc.: Unknown device 812a
-         Flags: bus master, medium devsel, latency 0, IRQ 5
-         I/O ports at e800 [size=256]
-         I/O ports at ee80 [size=64]
-         Memory at febff800 (32-bit, non-prefetchable) [size=512]
-         Memory at febff400 (32-bit, non-prefetchable) [size=256]
-         Capabilities: [50] Power Management version 2
-
-0000:01:00.0 VGA compatible controller: nVidia Corporation NV 36 
-[GeForce 5700] (rev a1) (prog-if 00 [VGA])
-         Subsystem: Asustek Computer, Inc.: Unknown device 814f
-         Flags: bus master, 66MHz, medium devsel, latency 248, IRQ 10
-         Memory at fd000000 (32-bit, non-prefetchable) [size=16M]
-         Memory at c0000000 (32-bit, prefetchable) [size=256M]
-         Expansion ROM at fe9e0000 [disabled] [size=128K]
-         Capabilities: [60] Power Management version 2
-         Capabilities: [44] AGP version 3.0
-
-0000:02:03.0 FireWire (IEEE 1394): VIA Technologies, Inc. IEEE 1394 Host 
-Controller (rev 80) (prog-if 10 [OHCI])
-         Subsystem: Asustek Computer, Inc.: Unknown device 808a
-         Flags: bus master, medium devsel, latency 64, IRQ 11
-         Memory at feaff800 (32-bit, non-prefetchable) [size=2K]
-         I/O ports at dc00 [size=128]
-         Capabilities: [50] Power Management version 2
-
-0000:02:05.0 Ethernet controller: Marvell Technology Group Ltd. Yukon 
-Gigabit Ethernet 10/100/1000Base-T Adapter (rev 13)
-         Subsystem: Asustek Computer, Inc.: Unknown device 811a
-         Flags: bus master, 66MHz, medium devsel, latency 64, IRQ 11
-         Memory at feaf8000 (32-bit, non-prefetchable) [size=16K]
-         I/O ports at d800 [size=256]
-         Expansion ROM at feaa0000 [disabled] [size=128K]
-         Capabilities: [48] Power Management version 2
-         Capabilities: [50] Vital Product Data
-
-[phil@rider ~]$
-
-uname:
-[phil@rider ~]$ uname -a
-Linux rider 2.6.9rider #1 Sun Oct 31 04:10:25 PST 2004 i686 GNU/Linux
-[phil@rider ~]$
-
-
-I have an Asus P4P800-E Delux motherboard, with a Pentium 4 3.0G E, I 
-have two PATA hard drives connected to hda and hdb -- if I connect my 
-CDROMs on hdc and hdd I get so many of the above errors I can't even 
-boot -- but with just the two harddrives I get the errors exactly as above.
-
-If there's any additional information I can provide, please let me know. 
-Also, I'm not on the linux-ide list, so please CC me on replies.
-
-Thanks.
 -- 
-Phil Dibowitz                             phil@ipom.com
-Freeware and Technical Pages              Insanity Palace of Metallica
-http://www.phildev.net/                   http://www.ipom.com/
-
-"They that can give up essential liberty to obtain a little temporary
-safety deserve neither liberty nor safety."
-  - Benjamin Franklin, 1759
-
-
---------------enig129F4B557820DBD4FBA880A8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
-
-iD8DBQFBhCHpN5XoxaHnMrsRAuqzAJ9V1m0kiBnmDJjwMYQ0nAJ389FB3wCeIfzE
-9c98iVvSzeTXK2jBaD+YtNU=
-=Cgh2
------END PGP SIGNATURE-----
-
---------------enig129F4B557820DBD4FBA880A8--
+    Red herrings strewn hither and yon.
