@@ -1,67 +1,32 @@
-From: Ian Hastie <ianh@iahastie.clara.net>
-Subject: Re: PATCH: Add support for IT8212 IDE controllers
-Date: Fri, 6 Aug 2004 01:45:49 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] (IDE) restore access to low order LBA following error
+Date: Fri, 06 Aug 2004 01:01:05 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200408060145.50380.ianh@iahastie.local.net>
-References: <20040731232227.GA28455@devserv.devel.redhat.com> <200408012022.42516.ianh@iahastie.local.net> <1091401522.31305.0.camel@localhost.localdomain>
+Message-ID: <1091750465.8366.54.camel@localhost.localdomain>
+References: <41126458.1050203@emc.com>
+	 <1091724300.8043.58.camel@localhost.localdomain>
+	 <4112BF1E.9070404@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mra04.ex.eclipse.net.uk ([212.104.129.139]:41682 "EHLO
-	mra04.ex.eclipse.net.uk") by vger.kernel.org with ESMTP
-	id S267558AbUHFApz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Aug 2004 20:45:55 -0400
-In-Reply-To: <1091401522.31305.0.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from the-village.bc.nu ([81.2.110.252]:39359 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S268042AbUHFBE7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Aug 2004 21:04:59 -0400
+In-Reply-To: <4112BF1E.9070404@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Brett Russ <russb@emc.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 
-On Monday 02 Aug 2004 00:05, Alan Cox wrote:
-> Ok try this
+On Gwe, 2004-08-06 at 00:13, Jeff Garzik wrote:
+> Alan Cox wrote:
+> > Once Jeff has MWDMA and ATAPI in the new SATA/ATA driver he wrote then
+> > migration might be an even better option. It'll certainly be easier to
+> > do a lot of things right with the newest SATA code than with the current
+> > IDE layer.
+> BTW MWDMA is already done and checked in :)
 
-OK, tried it now.  Sorry it took so long to get around to it.
+Do ATAPI and I'll be glad to help move the other drivers over. I need
+hotplug for my PIIX controller and SI680!
 
-It gets the ATA clock setting right, but that's the only obvious change.  
-Everything else in the boot log seems the same.
-
-The UDMA rate is still detected wrongly, but this is because the PCI reg 0x40 
-contains the value 0xa000 which should mean 40 wire cables.  I am using 
-rounded canbles, but I can't say if this would cause a misdetection or not.  
-The ITE driver seems to suggest that cable detect can only be used if the 
-chip is in "Firmware" mode.  I thought I saw a more definite reference to 
-this, but I can't seem to find it now.  It's certainly true that I have not 
-seen any data corruption on the connected drives even when running at hat 
-should be UDMA133.
-
-One other small point is that SMART doesn't work through this driver.  
-smartctl -A says there is a checksum error and then says SMART is not active.
-
-IT8212: IDE controller at PCI slot 0000:00:0c.0
-ACPI: PCI interrupt 0000:00:0c.0[A] -> GSI 17 (level, low) -> IRQ 17
-IT8212: chipset revision 17
-IT8212: 100% native mode on irq 17
-ide2: BM-DMA at 0xec00-0xec07, BIOS settings: hde:pio, hdf:pio
-it8212: controller in smart mode.
-it8212: BIOS seleted a 66MHz clock.
-ide3: BM-DMA at 0xec08-0xec0f, BIOS settings: hdg:pio, hdh:pio
-it8212: BIOS seleted a 66MHz clock.
-hde: Maxtor 6Y120P0, ATA DISK drive
-ide2 at 0xb000-0xb007,0xa802 on irq 17
-hde: max request size: 128KiB
-hde: recal_intr: status=0x51 { DriveReady SeekComplete Error }
-hde: recal_intr: error=0x04 { DriveStatusError }
-hde: 240121728 sectors (122942 MB) w/7936KiB Cache, CHS=65535/16/63, UDMA(33)
-/dev/ide/host2/bus0/target0/lun0: p1 p2
-hdg: Maxtor 6Y120P0, ATA DISK drive
-ide3 at 0xa400-0xa407,0xa002 on irq 17
-hdg: max request size: 128KiB
-hdg: recal_intr: status=0x51 { DriveReady SeekComplete Error }
-hdg: recal_intr: error=0x04 { DriveStatusError }
-hdg: 240121728 sectors (122942 MB) w/7936KiB Cache, CHS=65535/16/63, UDMA(33)
-/dev/ide/host2/bus1/target0/lun0: p1 p2
-
--- 
-Ian.
