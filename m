@@ -1,44 +1,32 @@
-From: Gene Heskett <gene.heskett@verizon.net>
+From: Linus Torvalds <torvalds@osdl.org>
 Subject: Re: [BK PATCHES] ide-2.6 update
-Date: Wed, 27 Oct 2004 14:19:59 -0400
+Date: Wed, 27 Oct 2004 11:41:32 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200410271419.59500.gene.heskett@verizon.net>
-References: <58cb370e04102706074c20d6d7@mail.gmail.com> <200410271305.06265.gene.heskett@verizon.net> <58cb370e041027101527b5e340@mail.gmail.com>
-Reply-To: gene.heskett@verizon.net
+Message-ID: <Pine.LNX.4.58.0410271139530.28839@ppc970.osdl.org>
+References: <58cb370e04102706074c20d6d7@mail.gmail.com>
+ <200410271305.06265.gene.heskett@verizon.net> <Pine.LNX.4.58.0410271019140.28839@ppc970.osdl.org>
+ <200410271426.04051.gene.heskett@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out003pub.verizon.net ([206.46.170.103]:16375 "EHLO
-	out003.verizon.net") by vger.kernel.org with ESMTP id S262587AbUJ0SUF
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Oct 2004 14:20:05 -0400
-In-Reply-To: <58cb370e041027101527b5e340@mail.gmail.com>
-Content-Disposition: inline
+Received: from fw.osdl.org ([65.172.181.6]:25738 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S262576AbUJ0Slh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Oct 2004 14:41:37 -0400
+In-Reply-To: <200410271426.04051.gene.heskett@verizon.net>
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: torvalds@osdl.org, linux-ide@vger.kernel.org
+To: Gene Heskett <gene.heskett@verizon.net>
+Cc: linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-On Wednesday 27 October 2004 13:15, Bartlomiej Zolnierkiewicz wrote:
->>On Wed, 27 Oct 2004 13:05:06 -0400, Gene Heskett
 
->> Drat.  I can't afford bitkeeper, either the time or the resources.
->> So I assume this will be in 2.6.10-rc2 or 3?
->
->I hope it will be in the next -bk snapshot...
 
-I just grabbed 2.6.10-rc1-bk6.  Dated about 3 hours ago if the time 
-zones are the same.
+On Wed, 27 Oct 2004, Gene Heskett wrote:
+> 
+> I don't know for sure if I'm having a problem or not Linus, but I had 
+> to dl fc3rc1's iso's several times to get all good md5sums.  
 
-Thanks
+I don't think it was your side, I saw it too.
 
--- 
-Cheers, Gene
-"There are four boxes to be used in defense of liberty:
- soap, ballot, jury, and ammo. Please use in that order."
--Ed Howdershelt (Author)
-99.28% setiathome rank, not too shabby for a WV hillbilly
-Yahoo.com attorneys please note, additions to this message
-by Gene Heskett are:
-Copyright 2004 by Maurice Eugene Heskett, all rights reserved.
+They seem to have replaced the test-rc ISO images in the middle or had
+some server trouble, so the md5sums simply didn't match originally.
+
+		Linus
