@@ -1,48 +1,59 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: [parisc-linux] [PATCH] asm-parisc/ide.h cleanup (there are no standard ports)
-Date: Sun, 28 Mar 2004 01:04:51 +0100
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] speed up SATA
+Date: Sat, 27 Mar 2004 18:59:43 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <200403280104.51341.bzolnier@elka.pw.edu.pl>
-References: <200403241443.43206.bzolnier@elka.pw.edu.pl> <200403280024.57672.bzolnier@elka.pw.edu.pl> <20040327234926.GC24782@colo.lackof.org>
+Message-ID: <4066156F.1000805@pobox.com>
+References: <4066021A.20308@pobox.com> <40661049.1050004@yahoo.com.au> <406611CA.3050804@pobox.com> <406612AA.1090406@yahoo.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mion.elka.pw.edu.pl ([194.29.160.35]:52396 "EHLO
-	mion.elka.pw.edu.pl") by vger.kernel.org with ESMTP id S261907AbUC0Xzl
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:1461 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261907AbUC0X75
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Mar 2004 18:55:41 -0500
-In-Reply-To: <20040327234926.GC24782@colo.lackof.org>
-Content-Disposition: inline
+	Sat, 27 Mar 2004 18:59:57 -0500
+In-Reply-To: <406612AA.1090406@yahoo.com.au>
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: parisc-linux@parisc-linux.org, linux-ide@vger.kernel.org
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-On Sunday 28 of March 2004 00:49, Grant Grundler wrote:
-> On Sun, Mar 28, 2004 at 12:24:57AM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > Well, I know but I have other cleanups incremental to this one. :-)
->
-> Ah ok - go for it.
->
-> > It is also NOP for #ifdef CONFIG_PCI (that is the reason for this patch
-> > BTW) since both ide_default_io_base() and ide_default_irq() are defined
-> > as '0'.
->
-> Ok - I didn't look any deeper.
->
-> > > Hypothetically someone could add an IDE card
-> > > to a parisc EISA bus (eg 725), not define PCI, and then run the IDE
-> > > in PIO mode since DMA is still kaputt behind our EISA IOMMU.
-> >
-> > That would require (at least) passing "ide=base[,ctl,[irq]]" kernel
-> > parameter.
->
-> I was told offline my hypothetical example is in fact hypothetical.
-> parisc won't build with IDE unless PCI is defined. I haven't tried.
+Nick Piggin wrote:
+> Jeff Garzik wrote:
+> 
+>> Nick Piggin wrote:
+>>
+>>> I think 32MB is too much. You incur latency and lose
+>>> scheduling grainularity. I bet returns start diminishing
+>>> pretty quickly after 1MB or so.
+>>
+>>
+>>
+>> See my reply to Bart.
+>>
+>> Also, it is not the driver's responsibility to do anything but export 
+>> the hardware maximums.
+>>
+>> It's up to the sysadmin to choose a disk scheduling policy they like, 
+>> which implies that a _scheduler_, not each individual driver, should 
+>> place policy limitations on max_sectors.
+>>
+> 
+> Yeah I suppose you're right there. In practice it doesn't
+> work that way though, does it?
 
-Ok, I will push this to Linus.
+Not my problem  <grin>
 
-Thanks,
-Bartlomiej
+People shouldn't be tuning max_sectors at the source code level: that 
+just embeds the policy decisions in the source code, and leads to 
+constant fiddling with the driver to get things "just right". Over time, 
+disks get faster and latency falls naturally.  Thus the definition of 
+"just right" must be constantly tuned in the driver source code as time 
+passes.
+
+I also wouldn't want to lock out any users who wanted to use SATA at 
+full speed ;-)
+
+	Jeff
+
+
 
