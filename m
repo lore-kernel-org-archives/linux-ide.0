@@ -1,28 +1,34 @@
 From: Marcin Kuk <marcin.kuk@gmail.com>
 Subject: Re: toshiba ide - ide dma setting
-Date: Tue, 8 Feb 2005 23:32:38 +0100
-Message-ID: <28d670ae05020814323d0d2010@mail.gmail.com>
+Date: Wed, 9 Feb 2005 03:00:49 +0100
+Message-ID: <28d670ae0502081800236852c6@mail.gmail.com>
 References: <28d670ae0502081139464d51c@mail.gmail.com>
 	 <58cb370e050208124447c7b1e@mail.gmail.com>
 	 <28d670ae0502081341467eb64f@mail.gmail.com>
 	 <58cb370e050208140441bef38f@mail.gmail.com>
+	 <28d670ae05020814323d0d2010@mail.gmail.com>
 Reply-To: Marcin Kuk <marcin.kuk@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from rproxy.gmail.com ([64.233.170.206]:40869 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261644AbVBHWcm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2005 17:32:42 -0500
-Received: by rproxy.gmail.com with SMTP id a36so929407rnf
-        for <linux-ide@vger.kernel.org>; Tue, 08 Feb 2005 14:32:38 -0800 (PST)
-In-Reply-To: <58cb370e050208140441bef38f@mail.gmail.com>
+Received: from rproxy.gmail.com ([64.233.170.200]:54948 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261742AbVBICAu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2005 21:00:50 -0500
+Received: by rproxy.gmail.com with SMTP id z35so990425rne
+        for <linux-ide@vger.kernel.org>; Tue, 08 Feb 2005 18:00:49 -0800 (PST)
+In-Reply-To: <28d670ae05020814323d0d2010@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-> output of lspci command would be also helpful
+Bad news :-(.
 
-# lspci -vv 
+Now I am working with my new compiled 2..6.10ac12 kernel.
+I can't enable DMA setting.
+
+My system: Slackware 10
+
+# lspci -vv
 00:00.0 Host bridge: Toshiba America Info Systems 601 (rev a0)
 Subsystem: Toshiba America Info Systems: Unknown device 0001
 Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
@@ -77,16 +83,30 @@ Region 0: I/O ports at ffe0 [size=32]
 
  * signifies the current active mode
 
-> This patch is in Alan's -ac tree.
-> Just get the latest patch for 2.6.10 from:
-> http://kernel.org/pub/linux/kernel/people/alan/linux-2.6/2.6.10/
+# dmesg
+..............
+Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+Probing IDE interface ide0...
+hda: TOSHIBA MK4006MAV, ATA DISK drive
+Probing IDE interface ide1...
+hdc: CD-220EA, ATAPI CD/DVD-ROM drive
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+ide1 at 0x170-0x177,0x376 on irq 15
+hda: max request size: 128KiB
+hda: 8007552 sectors (4099 MB), CHS=7944/16/63
+hda: cache flushes not supported
+ hda: hda1 hda2 hda3 hda4
+hdc: ATAPI 20X CD-ROM drive, 128kB Cache
+Uniform CD-ROM driver Revision: 3.20
+................
 
-As I remember I tried kernel applied by this patch.
-This was the first thing that I made after vanilla kernel.
-I will try for sure again, but keep in mind that without DMA it is
-horribly long.
-Haha can you imagine what I felt when updatetedb for slocate was
-runned at first time? Believe me I would like solve this problem as
-soon as possible.
+# hdparm -d1 /dev/hda
+/dev/hda:
+ setting using_dma to 1 (on)
+ HDIO_SET_DMA failed: Operation not permitted
+ using_dma    =  0 (off)
+
+What can I do?
 
 Marcin Kuk
