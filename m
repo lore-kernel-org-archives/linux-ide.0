@@ -1,58 +1,67 @@
-From: Denis Vlasenko <vda@port.imtp.ilyichevsk.odessa.ua>
+From: Konstantin Sobolev <kos@supportwizard.com>
 Subject: Re: poor sata performance on 2.6
-Date: Thu, 15 Apr 2004 15:37:38 +0300
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200404151537.38739.vda@port.imtp.ilyichevsk.odessa.ua>
-References: <200404150236.05894.kos@supportwizard.com> <407E35E0.3080902@vision.ee> <200404151440.23858.kos@supportwizard.com>
+Date: Thu, 15 Apr 2004 17:05:23 +0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200404151705.23753.kos@supportwizard.com>
+References: <200404150236.05894.kos@supportwizard.com> <200404151440.23858.kos@supportwizard.com> <200404151537.38739.vda@port.imtp.ilyichevsk.odessa.ua>
+Reply-To: kos@supportwizard.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <200404151440.23858.kos@supportwizard.com>
-To: kos@supportwizard.com, Lenar =?iso-8859-1?q?L=F5hmus?= <lenar@vision.ee>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.rol.ru ([194.67.21.9]:30430 "EHLO smtp.rol.ru")
+	by vger.kernel.org with ESMTP id S263825AbUDONCo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Apr 2004 09:02:44 -0400
+Received: from 81.211.110.66.adsl-spb.net.rol.ru ([81.211.110.66]:24451 "EHLO
+	81.211.110.66.adsl-spb.net.rol.ru" smtp-auth: <none> TLS-CIPHER: <none>
+	TLS-PEER-CN1: <none>) by gnome03.net.rol.ru with ESMTP
+	id S17476766AbUDONCm (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 1 other); Thu, 15 Apr 2004 17:02:42 +0400
+In-Reply-To: <200404151537.38739.vda@port.imtp.ilyichevsk.odessa.ua>
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
+To: Denis Vlasenko <vda@port.imtp.ilyichevsk.odessa.ua>
+Cc: Lenar =?iso-8859-1?q?L=F5hmus?= <lenar@vision.ee>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thursday 15 April 2004 13:40, Konstantin Sobolev wrote:
-> On Thursday 15 April 2004 11:12, Lenar L=F5hmus wrote:
-> > >for sata_sil:
-> > >
-> > >/dev/sda:
-> > > Timing buffer-cache reads:   1412 MB in  2.00 seconds =3D 705.05 =
-MB/sec
-> > > Timing buffered disk reads:   84 MB in  3.06 seconds =3D  27.43 M=
-B/sec
-> > >
-> > >So my old IDE HDD appears to be considerably faster. Expected resu=
-lts
-> > > were 55-70MB/s.
-> >
-> > With same hard drive connected to 3ware S-ATA controller I got
-> > 40-50MB/sec with hdparm on 2.6.4 and 2.6.5. Then
-> > tried to hdparm -a 8192 /dev/sda, and got this:
-> >
+On Thursday 15 April 2004 16:37, Denis Vlasenko wrote:
 > > /dev/sda:
-> >  Timing buffer-cache reads:   2056 MB in  2.00 seconds =3D 1027.13 =
-MB/sec
-> >  Timing buffered disk reads:  266 MB in  3.00 seconds =3D  88.53 MB=
-/sec
-> >
-> > So you may try that switch, maybe helps.
+> >  setting fs readahead to 8192
+> >  readahead    = 8192 (on)
+> >  Timing buffered disk reads:   84 MB in  3.06 seconds =  27.46 MB/sec
 >
-> unfortunately it doesn't:
+> 27 Mb/s is not 'very' bad for 80Gb drive.
 >
-> /dev/sda:
->  setting fs readahead to 8192
->  readahead    =3D 8192 (on)
->  Timing buffered disk reads:   84 MB in  3.06 seconds =3D  27.46 MB/s=
-ec
+> Can you verify that drive indeed is able to do better
+> (quick test under Windows is in order)? It would be silly
+> to try to hunt down problem which do not exist.
 
-27 Mb/s is not 'very' bad for 80Gb drive.
+Here's this drive benchmarks under Windows on almost the same SATA controller:
 
-Can you verify that drive indeed is able to do better
-(quick test under Windows is in order)? It would be silly
-to try to hunt down problem which do not exist.
+http://www.tomshardware.com/storage/20040123/wd740-01.html
+actual numbers:
+http://www.tomshardware.com/storage/20040123/wd740-08.html
 
-If problem does exist, try 2.4 kernels.
---=20
-vda
+It appears to be the fastest SATA drive up to the moment, I expected to get 
+something around 60-70 MB/sec
+
+>
+> If problem does exist, try 2.4 kernels.
+
+I tried 2.4.25. There is no sata_sil driver there. siimage driver detects the 
+controller but doesn't detect the disk:
+
+SiI3112 Serial ATA: IDE controller at PCI slot 00:0f.0
+PCI: Found IRQ 12 for device 00:0f.0
+PCI: Sharing IRQ 12 with 00:0a.0
+PCI: Sharing IRQ 12 with 00:10.2
+SiI3112 Serial ATA: chipset revision 2
+SiI3112 Serial ATA: not 100% native mode: will probe irqs later
+    ide2: MMIO-DMA , BIOS settings: hde:pio, hdf:pio
+    ide3: MMIO-DMA , BIOS settings: hdg:pio, hdh:pio
+
+that's all
+
+-- 
+/KoS
+* A fool and his money are my kind of customer.			      
