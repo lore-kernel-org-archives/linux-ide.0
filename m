@@ -1,66 +1,59 @@
-From: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
-Subject: RE: PATCH for disabling write cache on SATA drives
-Date: Tue, 29 Jun 2004 14:19:24 -0500
+From: hab <hab@hbahr.org>
+Subject: Re: libata patches in 2.6.7bk6 Hang Maxtor on SP bridge
+Date: Tue, 29 Jun 2004 17:35:17 -0500
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1F6D1D1660975A4887628A011443A1BC07734C05@uswaumsx13medge.med.ge.com>
+Message-ID: <40E1EEA5.7090300@hbahr.org>
+References: <40E096B6.8090108@hbahr.org> <20040629082514.GB19267@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ext-ch1gw-6.online-age.net ([64.37.194.14]:59878 "EHLO
-	ext-ch1gw-6.online-age.net") by vger.kernel.org with ESMTP
-	id S265970AbUF2TT7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Jun 2004 15:19:59 -0400
+Received: from mxsf01.cluster1.charter.net ([209.225.28.201]:13763 "EHLO
+	mxsf01.cluster1.charter.net") by vger.kernel.org with ESMTP
+	id S266132AbUF2W7J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Jun 2004 18:59:09 -0400
+Received: from mxip05.cluster1.charter.net (mxip05a.cluster1.charter.net [209.225.28.135])
+	by mxsf01.cluster1.charter.net (8.12.11/8.12.11) with ESMTP id i5TMxqC3026533
+	for <linux-ide@vger.kernel.org>; Tue, 29 Jun 2004 18:59:53 -0400
+In-Reply-To: <20040629082514.GB19267@havoc.gtf.org>
 List-Id: linux-ide@vger.kernel.org
-To: 'Jeff Garzik' <jgarzik@pobox.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org, "'sedwards@xmission.com'" <sedwards@xmission.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
+Jeff Garzik wrote:
 
-On Monday, June 28, 2004 at 6:12 PM, Jeff Garzik wrote:
-
-> On Fri, Jun 25, 2004 at 06:21:24PM -0500, Edwards, Scott (MED, Kelly
-IT Resouces) wrote:
->> 
->> I don't know if this is useful for anyone or if anyone even cares,
-but just
->> in case someone does, this is the patch I made to disable the write
-cache on
->> the Serial ATA drives.  It doesn't make the write cache controllable
-from
->> the user level, it just ALWAYS disables it.  (I tried to make one
-that could
->> be sent via an ioctl, but there were far too many things that I
-didn't
->> understand and it didn't work.)  Since I have never done this before
-I don't
->> know if there is some protocol that I missed, if so I'm sorry.  If
-there are
->> glaring stupid mistakes (very likely) please let me know.
+>On Mon, Jun 28, 2004 at 05:07:50PM -0500, hab wrote:
+>  
 >
-> In principle your patch is fine, but I would really like to find a
-> better way of allowing the user to do this.
+>>Sir
+>>   I resolved problem by baking out scsi portion of patches, athough
+>>some general configs such as FC2 development still introduce
+>>the same problem as identified in the attached message.
+>>    
+>>
 >
-> My immediate guess would be to use the standard SCSI method of
-disabling
-> write cache, and have that initiate wbcache disable on the SATA side.
->
-> Long term, this would be augmented by an "ATA passthru" opcode or
-ioctl.
+>Use sata_sil not siimage.  And certainly not _both_ drivers.
 >
 >	Jeff
-
-I first tried to make a real scsi ioctl command in libata-scsi.c, so I
-could just use the scsiinfo program to disable the write cache.  I  made
-a xlat_mode_select command but it didn't work and management didn't want
-me
-spending more time trying to figure it out.  And really for it to work
-correctly there would have to be a xlat_mode_sense because now it is
-just 
-simulated (in ata_scsi_simulate).
-
-I'm willing to work on it on my own time as soon as I get a SATA drive, 
-if someone would be willing to advise me on how to send the ATA commands
-to the drive (I think this is where it failed before).
-
+>
+>  
+>
+Can you think of any others that might cause a conflict.  I had 
+inadvertantly left
+siimage from a previous compile and starting with a make clean solved 
+it.  However
+if I take the redhat FC2 development config for i686 even if I leave 
+siimage unchecked it
+still has the same problem.  siimage was not compiled so it isn't the 
+problem.
+I will report this to redhat as well.
 Thanks
-  -Scott
+Hubert
+
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  
+>
 
