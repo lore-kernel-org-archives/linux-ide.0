@@ -1,33 +1,40 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: Re: [BUG] Kernel disables DMA on RICOH CD-R/RW
-Date: Wed, 17 Nov 2004 22:06:57 +0100
-Message-ID: <20041117210657.GP26240@suse.de>
-References: <20041116124656.82075.qmail@web52601.mail.yahoo.com> <58cb370e04111605019fc1df8@mail.gmail.com> <1100706838.420.47.camel@localhost.localdomain>
+Subject: Re: PATCH (for comment): ide-cd possible race in PIO mode
+Date: Wed, 17 Nov 2004 21:56:02 +0100
+Message-ID: <20041117205602.GO26240@suse.de>
+References: <1100697589.32677.3.camel@localhost.localdomain> <20041117153706.GH26240@suse.de> <1100708728.420.68.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:14981 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262608AbUKQVJp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Nov 2004 16:09:45 -0500
+Received: from ns.virtualhost.dk ([195.184.98.160]:34177 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262528AbUKQU4b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Nov 2004 15:56:31 -0500
 Content-Disposition: inline
-In-Reply-To: <1100706838.420.47.camel@localhost.localdomain>
+In-Reply-To: <1100708728.420.68.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
 On Wed, Nov 17 2004, Alan Cox wrote:
-> On Maw, 2004-11-16 at 13:01, Bartlomiej Zolnierkiewicz wrote:
-> > Previously VIA IDE driver ignored DMA blacklists completely
-> > (which was of course wrong), it was fixed.
+> On Mer, 2004-11-17 at 15:37, Jens Axboe wrote:
+> > > -		HWIF(drive)->OUTB(WIN_PACKETCMD, IDE_COMMAND_REG);
+> > > +		spin_lock_irqsave(&ide_lock, flags);
+> > > +		HWIF(drive)->OUTBSYNC(WIN_PACKETCMD, IDE_COMMAND_REG);
+> > > +		ndelay(400);
+> > > +		spin_unlock_irqsave(&ide_lock, flags);
+> > >  		return (*handler) (drive);
+> > >  	}
+> > >  }
 > > 
-> > Probably this drive should be removed from the blacklist.
-> > Does anybody remember why was it added there?
+> > What good does the lock do?
 > 
-> As I said before almost all of our blacklist is junk from when the IDE
-> ATAPI DMA bug wasn't fixed.
+> The same as in ide_execute_command - make sure we don't take an IDE
+> interrupt that tries to read the state during the delay. That is the old
+> 2.4 "may drives shared IRQ random fails" fix and why the lock is taken
+> in ide_execute_command.
 
-I sure don't remember why, so sounds plausible.
+Ah I see, makes sense. I didn't think about the shared irq case.
 
 -- 
 Jens Axboe
