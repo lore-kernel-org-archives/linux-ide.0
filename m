@@ -1,46 +1,49 @@
-From: Jens Axboe <axboe@suse.de>
+From: Jan Dittmer <jan@jandittmer.de>
 Subject: Re: Oops on boot with TCQ enabled (VIA KT133A)
-Date: Sun, 20 Oct 2002 11:38:18 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021020093818.GC24484@suse.de>
-References: <200210190241.49618.jan@jandittmer.de> <20021019091518.GG871@suse.de> <20021019222403.B3018@ucw.cz> <20021019230434.A800@ucw.cz> <20021020003834.GJ871@suse.de> <20021020104601.C8606@ucw.cz>
+Date: Sun, 20 Oct 2002 16:57:52 +0200
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <200210201657.52250.jan@jandittmer.de>
+References: <200210190241.49618.jan@jandittmer.de> <20021020104601.C8606@ucw.cz> <20021020093818.GC24484@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021020104601.C8606@ucw.cz>
-To: Vojtech Pavlik <vojtech@suse.cz>
-Cc: Jan Dittmer <jan@jandittmer.de>, Linux Kernel List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.whm.tu-harburg.de (qmailr@proxy.whm.tu-harburg.de [134.28.72.5])
+	by rztsun.rz.tu-harburg.de (8.9.0/8.8.8) with SMTP id QAA09903
+	for <linux-ide@vger.kernel.org>; Sun, 20 Oct 2002 16:56:56 +0200 (MET DST)
+In-Reply-To: <20021020093818.GC24484@suse.de>
 List-Id: linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Vojtech Pavlik <vojtech@suse.cz>
 
-On Sun, Oct 20 2002, Vojtech Pavlik wrote:
-> On Sun, Oct 20, 2002 at 02:38:34AM +0200, Jens Axboe wrote:
-> > On Sat, Oct 19 2002, Vojtech Pavlik wrote:
-> > > On Sat, Oct 19, 2002 at 10:24:03PM +0200, Vojtech Pavlik wrote:
-> > > 
-> > > > > It's not an oops, and it's not causes by TCQ either. The above is simply
-> > > > > a reminder to fix the ide init sequence, because it's probe sequence
-> > > > > tries to use drive->disk before it has been set up. That is worked
-> > > > > around, but stack is dumped for good measure. So you can feel
-> > > > > comfortable using 2.5.44 regardless.
-> > > > > 
-> > > > > But I'm curious about TCQ on your system, since another VIA user
-> > > > > reported problems. Does it appear to work for you?
-> > > > 
-> > > > It definitely works on my VIA just fine.
-> > > 
-> > > Famous last words. I tried to play with the /proc using_tcq setting and
-> > > got a filesystem corruption immediately.
-> > 
-> > There _may_ be issues with changing depth on the fly. So if you could
-> > just test without fiddling with changing depths that would be great.
-> 
-> Ok. No changes in /proc using_tcq after boot, assuming it's enabled
-> automatically (checked that in kernel config0, it works perfectly fine.
+> > > There _may_ be issues with changing depth on the fly. So if you could
+> > > just test without fiddling with changing depths that would be great.
+> >
+> > Ok. No changes in /proc using_tcq after boot, assuming it's enabled
+> > automatically (checked that in kernel config0, it works perfectly fine.
+>
+> Thanks for verifying that! Jan, you appeared to have problems even with
+> tcq-per-default enabled and not touching the depth while running io, is
+> that correct?
 
-Thanks for verifying that! Jan, you appeared to have problems even with
-tcq-per-default enabled and not touching the depth while running io, is
-that correct?
+Thats correct. But I couldn't reproduce it, after applying the following 
+changeset. But that doesn't seem very related (I got some oops' while playing 
+a video). But iirc I always watched a music video when file system corruption 
+appeared?!
+I'll try tomorrow evening without this change if I can reproduce the 
+problem...
 
--- 
-Jens Axboe
+jan
+
+
+--- emufx.c     11 Oct 2002 13:29:36 -0000      1.23
++++ emufx.c     19 Oct 2002 14:29:43 -0000
+@@ -413,7 +413,7 @@
+
+        snd_runtime_check(emu, return -EINVAL);
+        snd_runtime_check(handler, return -EINVAL);
+-       irq = kmalloc(sizeof(*irq), GFP_KERNEL);
++       irq = kmalloc(sizeof(*irq), GFP_ATOMIC);
+        if (irq == NULL)
+                return -ENOMEM;
+        irq->handler = handler;
