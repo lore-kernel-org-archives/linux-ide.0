@@ -1,41 +1,31 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Intel 31244
-Date: Sat, 05 Feb 2005 21:41:19 -0500
-Message-ID: <420583CF.9060409@pobox.com>
-References: <41B86DDA.6000204@vanteon.com>
+Subject: Re: Promise 579 with current(?) libata in libata-dev-2.6 queue
+Date: Sat, 05 Feb 2005 21:54:48 -0500
+Message-ID: <420586F8.1010207@pobox.com>
+References: <m3sm8ljkco.fsf@kalahari.s2.org> <417023B6.9070900@pobox.com> <m36557k0a4.fsf@kalahari.s2.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:25258 "EHLO
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:6059 "EHLO
 	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S270596AbVBFClf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 5 Feb 2005 21:41:35 -0500
-In-Reply-To: <41B86DDA.6000204@vanteon.com>
+	id S263471AbVBFCzE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 5 Feb 2005 21:55:04 -0500
+In-Reply-To: <m36557k0a4.fsf@kalahari.s2.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tom Herbert <herbert@vanteon.com>
-Cc: linux-ide@vger.kernel.org, herbert@infosecuresystems.com
+To: Jarno Paananen <jpaana@s2.org>
+Cc: linux-ide@vger.kernel.org
 
-Tom Herbert wrote:
-> Jeremy,
-> 
-> Hi.
-> 
-> I am working on a project to update an embedded RAID controller to use 
-> the Intel 31244 chip. I would like to use the sata_vsc driver as an 
-> alternative to the Intel sample sources. There are very recent comments 
-> in various places in the driver code and at 
-> http://www.linuxmafia.com/faq/Hardware/sata.html#via suggesting that the 
-> Vitesse VSC7174 chip is compatible. This also appears to be likely  
-> after a preliminary comparision of the code with the 31244 Intel docs.
-> 
-> Before I jump in and commit to using this driver, I would appreciate it 
-> if you or Jeff have any information as to whether the sata_vsc chip has 
-> been tested yet with the Intel chip.
-
-Someone on the list reported it working.
-
-	Jeff
+Jarno Paananen wrote:
+> --- sata_promise.c.old	2004-10-19 03:38:55.000000000 +0300
+> +++ sata_promise.c	2004-10-19 03:32:33.000000000 +0300
+> @@ -158,6 +158,8 @@
+>  	  board_2037x },
+>  	{ PCI_VENDOR_ID_PROMISE, 0x3376, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+>  	  board_2037x },
+> +	{ PCI_VENDOR_ID_PROMISE, 0x3574, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+> +	  board_2037x },
 
 
+applied
 
