@@ -1,29 +1,42 @@
-From: <larrycroney@cox.net>
-Subject: Minor IDE bug (new quirky disk with Promise Ultra66)
-Date: Fri, 4 Oct 2002 16:08:26 -0400
+From: F Baube <fbaube@welho.com>
+Subject: PROBLEM: 2.5.40 IDE "dirty" flag crashes 2.4.18
+Date: Sun, 6 Oct 2002 03:48:36 +0300
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20021004200826.ZHDB1315.lakemtao04.cox.net@smtp.east.cox.net>
+Message-ID: <20021006034836.A6334@welho.com>
+Reply-To: fbaube@welho.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.east.cox.net ([172.18.52.58]) by lakemtao04.cox.net
-          (InterMail vM.5.01.04.05 201-253-122-122-105-20011231) with SMTP
-          id <20021004200826.ZHDB1315.lakemtao04.cox.net@smtp.east.cox.net>
-          for <linux-ide@vger.kernel.org>; Fri, 4 Oct 2002 16:08:26 -0400
+Content-Disposition: inline
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: fbaube@welho.com
 
-IDE Maintainers,
+2.5.40 IDE "dirty" flag crashes 2.4
 
-I have another quirky disk to add to the "pdc_quirk_drives" list in "/drivers/ide/pdc202xx_new.h".  The disk's string is:
+- I have my root and boot partitions on an IDE drive
+- I built and booted a 2.5.40 kernel
+- Oddly, on this bootup "kudzu" was triggered
+- More importantly, when the 2.5.40 kernel failed to recognize my=20
+  keyboard (probably a bad config) I did a hard reboot (the red button)
+- On the next bootup I selected my stock Redhat 2.4.18 kernel
+- The 2.4.18 kernel was loaded from the /boot partition okay
+- After some preliminaries, the 2.4.18 kernel froze with a kernel panic=
+,=20
+  complaining about my root partition and an unrecognised "attribute(4)=
+" =20
+- I used a rescue disk and "e2fsck -f" to mark the root partition as =20
+  cleanly unmounted (and also to rewrite the partition type ("Linux"))
+- This fixed it -- the next boot into 2.4.18 went smoothly
 
-"QUANTUM FIREBALLP LM30.0"
+My best guess is that when 2.5.40 marked the drive as dirty, it did=20
+so using a flag value which is extremely not-backward-compatible with=20
+2.4.18.
 
-The boot process would hang with this disk plugged in, but after adding the line and recompiling, it has worked without a hitch.
 
-By the way, I found the problem in 2.4.2, and I checked the latest kernel as of now (2.5.40) and this specific disk is not yet included.
+terveisi=E4 Helsingist=E4,
 
-Thank you,
-Larry Croney
+f baube
+fbaube @ welho.com
 
