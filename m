@@ -1,38 +1,29 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: ide-2.4.20-pre4-ac2.patch
-Date: 29 Aug 2002 23:55:41 +0100
+Date: 30 Aug 2002 00:21:04 +0100
 Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1030661741.1326.7.camel@irongate.swansea.linux.org.uk>
-References: <Pine.LNX.4.10.10208271503530.24156-100000@master.linux-ide.org>
+Message-ID: <1030663264.1327.22.camel@irongate.swansea.linux.org.uk>
+References: <Pine.LNX.4.44.0208300113150.8911-100000@serv>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.10.10208271503530.24156-100000@master.linux-ide.org>
+In-Reply-To: <Pine.LNX.4.44.0208300113150.8911-100000@serv>
 List-Id: linux-ide@vger.kernel.org
-To: Andre Hedrick <andre@linux-ide.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Roman Zippel <zippel@linux-m68k.org>
+Cc: Andre Hedrick <andre@linux-ide.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, 2002-08-27 at 23:17, Andre Hedrick wrote:
+On Fri, 2002-08-30 at 00:16, Roman Zippel wrote:
+> Hi,
 > 
-> This is out and has been forwarded to AC for review.
+> On 29 Aug 2002, Alan Cox wrote:
+> 
+> > Gayle I think should be m68k
+> > not ppc (actually Im pretty sure),
+> 
+> It's for m68k and ppc Amigas, but I don't think two separate drivers are
+> needed.
 
-Rejected. I found several errors, a couple of strange reverts and some
-files being moved to clearly wrong places. It also mixes up multiple
-changes.
-
-Andre to make this work I need
-	- One change per patch (within reason)
-	- An explanation of what it does
-
-For example I've got files you moved and changed, looking at that in
-diff is a right pita. I've got a big diff with errors in it (eg gayle in
-ppc) I can't easily be sure I can cleanly drop parts of.
-
-Lets start with the file moving. Send me a diff for the Config/Makefile
-and a lit of the files to move and where. Gayle I think should be m68k
-not ppc (actually Im pretty sure), CMD640 is PCI so why file it in
-legacy. "legacy" I took to mean pre PCI rather than "I think its junk"
-8)
-
+So its actually a false divide and dumping them in "legacy" is probably
+a lot simpler ?
 
