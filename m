@@ -1,22 +1,18 @@
 From: "Nicklas Bondesson" <nicke@nicke.nu>
 Subject: RE: IDE-RAID Drive Performance
 Date: Sat, 3 Jan 2004 16:58:40 +0100
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <S263537AbUACP6l/20040103155841Z+21584@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <S263539AbUACP6l/20040103155841Z+21583@vger.kernel.org>
 References: <1073138426.8863.33.camel@slurv.pasop.tomt.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from as1-6-4.ld.bonet.se ([194.236.130.199]:39552 "HELO
-	mail.nicke.nu") by vger.kernel.org with SMTP id S263537AbUACP6l
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Jan 2004 10:58:41 -0500
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 In-Reply-To: <1073138426.8863.33.camel@slurv.pasop.tomt.net>
-List-Id: linux-ide@vger.kernel.org
 To: 'Andre Tomt' <lkml@tomt.net>, crg@purplefields.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 I don't know if you have read my latest post regarding this. anyway here it
 is :)
@@ -86,6 +82,3 @@ unsafe with faster settings.
 Without any user intervention at all, my Seagate 7200 120G's does 55MB/s in
 the infamious hdparm test, on a VIA KT266 based board, both in
 2.6.1-rc1 and 2.4.23.
-
-
-
