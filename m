@@ -1,11 +1,11 @@
 From: domen@coderock.org
-Subject: [patch 2/2] drivers/scsi/sata_vsc: Use the DMA_32BIT_MASK constant
-Date: Fri, 08 Apr 2005 09:53:09 +0200
-Message-ID: <20050408075310.1457F1F39E@trashy.coderock.org>
+Subject: [patch 1/2] drivers/scsi/ahci: Use the DMA_{64,32}BIT_MASK constants
+Date: Fri, 08 Apr 2005 09:53:06 +0200
+Message-ID: <20050408075306.C8B1D1EE91@trashy.coderock.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from coderock.org ([193.77.147.115]:32224 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S262747AbVDHHxY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Apr 2005 03:53:24 -0400
+Received: from coderock.org ([193.77.147.115]:29664 "EHLO trashy.coderock.org")
+	by vger.kernel.org with ESMTP id S262746AbVDHHxQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Apr 2005 03:53:16 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com
@@ -27,16 +27,16 @@ Signed-off-by: Domen Puncer <domen@coderock.org>
 ---
 
 
- kj-domen/drivers/scsi/sata_vsc.c |    1 +
+ kj-domen/drivers/scsi/ahci.c |    1 +
  1 files changed, 1 insertion(+)
 
-diff -puN drivers/scsi/sata_vsc.c~dma_mask-drivers_scsi_sata_vsc drivers/scsi/sata_vsc.c
---- kj/drivers/scsi/sata_vsc.c~dma_mask-drivers_scsi_sata_vsc	2005-04-05 12:57:50.000000000 +0200
-+++ kj-domen/drivers/scsi/sata_vsc.c	2005-04-05 12:57:50.000000000 +0200
-@@ -21,6 +21,7 @@
- #include <linux/blkdev.h>
+diff -puN drivers/scsi/ahci.c~dma_mask-drivers_scsi_ahci drivers/scsi/ahci.c
+--- kj/drivers/scsi/ahci.c~dma_mask-drivers_scsi_ahci	2005-04-05 12:57:49.000000000 +0200
++++ kj-domen/drivers/scsi/ahci.c	2005-04-05 12:57:49.000000000 +0200
+@@ -32,6 +32,7 @@
  #include <linux/delay.h>
  #include <linux/interrupt.h>
+ #include <linux/sched.h>
 +#include <linux/dma-mapping.h>
  #include "scsi.h"
  #include <scsi/scsi_host.h>
