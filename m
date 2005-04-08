@@ -1,44 +1,68 @@
-From: domen@coderock.org
-Subject: [patch 1/2] drivers/scsi/ahci: Use the DMA_{64,32}BIT_MASK constants
-Date: Fri, 08 Apr 2005 09:53:06 +0200
-Message-ID: <20050408075306.C8B1D1EE91@trashy.coderock.org>
+From: Gerald Hopf <linux-ide@nv-systems.net>
+Subject: 'hdparm -C' problems with libata-dev
+Date: Fri, 08 Apr 2005 16:03:21 +0200
+Message-ID: <42568F29.6020800@nv-systems.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from coderock.org ([193.77.147.115]:29664 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S262746AbVDHHxQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Apr 2005 03:53:16 -0400
+Received: from nv-systems.net ([62.75.252.178]:48904 "EHLO mail.nv-systems.net")
+	by vger.kernel.org with ESMTP id S262819AbVDHODW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Apr 2005 10:03:22 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, domen@coderock.org, tklauser@nuerscht.ch
+To: linux-ide@vger.kernel.org
 
+Hi everyone,
 
+I've been trying to get the hdparm and hddtemp tools to work with my 
+Seagate SATA Drives.
 
-The previous patch did not compile cleanly on all architectures so
-here's a fixed one.
+I have 4 Drives connected to an nVidia nForce 3 SATA Controller, and 1 
+Drive connected to a Promise SATA 150 TX2.
 
-Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h when calling
-pci_set_dma_mask() or pci_set_consistent_dma_mask()
-This patch includes dma-mapping.h explicitly because it caused errors
-on some architectures otherwise.
-See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
+After some reading, i found out that SMART support for reading the 
+harddrive's temperature is not yet in the kernel, so i got the 
+libata-dev patch from here: 
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.11-libata-dev1.patch.bz2
 
-Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
-Signed-off-by: Domen Puncer <domen@coderock.org>
----
+and patched the 2.6.11.7 kernel with it. (Worked fine, but i'm not sure 
+if that was the right patch file? The BK patches are newer, are those 
+the "right" ones, or are they only for such a specific BK version of a 
+kernel?)
 
+Everything worked fine, and after updating hddtemp to the latest 
+v0.3_beta13, i even am able to get temperature readings from the drives.
 
- kj-domen/drivers/scsi/ahci.c |    1 +
- 1 files changed, 1 insertion(+)
+What's not fully working as expected, however, is hdparm. If I (for 
+example) want to check the drive's power status, i get the following:
 
-diff -puN drivers/scsi/ahci.c~dma_mask-drivers_scsi_ahci drivers/scsi/ahci.c
---- kj/drivers/scsi/ahci.c~dma_mask-drivers_scsi_ahci	2005-04-05 12:57:49.000000000 +0200
-+++ kj-domen/drivers/scsi/ahci.c	2005-04-05 12:57:49.000000000 +0200
-@@ -32,6 +32,7 @@
- #include <linux/delay.h>
- #include <linux/interrupt.h>
- #include <linux/sched.h>
-+#include <linux/dma-mapping.h>
- #include "scsi.h"
- #include <scsi/scsi_host.h>
- #include <linux/libata.h>
-_
+root # hdparm -C /dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde
+/dev/sda: \ drive state is:  standby
+/dev/sdb: \ drive state is:  standby
+/dev/sdc: \ drive state is:  standby
+/dev/sdd: \ drive state is:  standby
+/dev/sde: \ drive state is:  standby
+
+The drives are of course, NOT in standby, but are in the state 
+"active/idle".
+
+When setting the standby parameter for a drive, everything seems to work 
+normally.
+
+root # hdparm -S 241 /dev/sda
+/dev/sda:  setting standby to 241 (30 minutes)
+
+I wasn't able to check that this really works (because of missing hdparm 
+-C) but i think it acually does. At least hdparm -y is able to standby a 
+drive.
+
+I'm using hdparm v5.9, which is IMHO the most recent version.
+Is there anything i can do to make this ('hdparm -C') work? Is this a 
+libata bug or missing feature? A Seagate Firmware bug? A hdparm problem? 
+Or just not possible with SATA Drives?
+
+I'd gratefully appreciate any help/comments ;-)
+
+Gerald
+
