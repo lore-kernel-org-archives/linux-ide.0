@@ -1,25 +1,44 @@
-From: Manu <nobody@guzu.net>
-Subject: Oops when using HDIO_DRIVE_TASKFILE
-Date: Fri, 08 Apr 2005 02:43:49 +0200
-Message-ID: <4255D3C5.6000609@guzu.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: domen@coderock.org
+Subject: [patch 2/2] drivers/scsi/sata_vsc: Use the DMA_32BIT_MASK constant
+Date: Fri, 08 Apr 2005 09:53:09 +0200
+Message-ID: <20050408075310.1457F1F39E@trashy.coderock.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 26.mail-out.ovh.net ([213.186.42.179]:61347 "EHLO
-	26.mail-out.ovh.net") by vger.kernel.org with ESMTP id S262613AbVDGVoP
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 7 Apr 2005 17:44:15 -0400
+Received: from coderock.org ([193.77.147.115]:32224 "EHLO trashy.coderock.org")
+	by vger.kernel.org with ESMTP id S262747AbVDHHxY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Apr 2005 03:53:24 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, domen@coderock.org, tklauser@nuerscht.ch
 
 
-As I'm playing a bit with HDIO_DRIVE_TASKFILE, the kernel always crashes
-when I try to send data (TASKFILE_OUT).
-Is this a known behaviour or did I misuse the ioctl ?
 
-I'm using the last Gentoo kernel 2.6.11.6 (with Gentoo patches).
+The previous patch did not compile cleanly on all architectures so
+here's a fixed one.
 
-Thanks.
+Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h when calling
+pci_set_dma_mask() or pci_set_consistent_dma_mask()
+This patch includes dma-mapping.h explicitly because it caused errors
+on some architectures otherwise.
+See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
 
+Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
+Signed-off-by: Domen Puncer <domen@coderock.org>
+---
+
+
+ kj-domen/drivers/scsi/sata_vsc.c |    1 +
+ 1 files changed, 1 insertion(+)
+
+diff -puN drivers/scsi/sata_vsc.c~dma_mask-drivers_scsi_sata_vsc drivers/scsi/sata_vsc.c
+--- kj/drivers/scsi/sata_vsc.c~dma_mask-drivers_scsi_sata_vsc	2005-04-05 12:57:50.000000000 +0200
++++ kj-domen/drivers/scsi/sata_vsc.c	2005-04-05 12:57:50.000000000 +0200
+@@ -21,6 +21,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
++#include <linux/dma-mapping.h>
+ #include "scsi.h"
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+_
