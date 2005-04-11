@@ -1,17 +1,16 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH 0/4] libata-dev-2.6: pdc2027x PLL input clock detection
- fix, etc.
-Date: Mon, 11 Apr 2005 18:11:43 +0800
-Message-ID: <425A4D5F.2010903@tw.ibm.com>
+Subject: [PATCH 4/4] libata-dev-2.6: pdc2027x PLL input clock detection fix
+Date: Mon, 11 Apr 2005 18:28:59 +0800
+Message-ID: <425A516B.8090000@tw.ibm.com>
 References: <425A49F6.3040904@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------030701060307080604090507"
+ boundary="------------020402060507010002080608"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bluehawaii.tikira.net ([61.62.22.51]:34275 "EHLO
+Received: from bluehawaii.tikira.net ([61.62.22.51]:21987 "EHLO
 	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S261755AbVDKKMm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Apr 2005 06:12:42 -0400
+	id S261764AbVDKKaD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 11 Apr 2005 06:30:03 -0400
 In-Reply-To: <425A49F6.3040904@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -19,36 +18,36 @@ To: Jeff Garzik <jgarzik@pobox.com>
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Linux IDE <linux-ide@vger.kernel.org>
 
 This is a multi-part message in MIME format.
---------------030701060307080604090507
+--------------020402060507010002080608
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
 Hi Jeff,
 
 Desc:
-    pdc2027x: fix the PLL input clock detection problem:
+     pdc2027x: fix the PLL input clock detection problem:
 Sometimes the pdc2027x driver reads incorrect value from the counter and initialize the hardware with incorrect clock rate.
 
 Root Cause:
 
 - The PLL input clock counter on the pdc2027x is a 30-bit deceasing counter.
-   The driver reads the decreasing counter byte by byte and assemsble back the
-   whole 30-bit counter when detecting the PLL input clock rate on the fly.
+    The driver reads the decreasing counter byte by byte and assemsble back the
+    whole 30-bit counter when detecting the PLL input clock rate on the fly.
 
 - The driver reads the counter from LSB then MSB, byte by byte.
-   For example, for 7D030093, the driver read  93, 00, 03 and 7D,
-   piece by piece. (This is pdc2027x hardware limitation.)
+    For example, for 7D030093, the driver read  93, 00, 03 and 7D,
+    piece by piece. (This is pdc2027x hardware limitation.)
 
 - The counter is running when the driver reads it.
-   Ex. When 7D030093 decreasing to 7D027FFF, sometimes the driver will read 7D020093.
-   That is, when the driver read LSB, LSB 0093 is quite close to zero. Later when the
-   driver read MSB, MSB is already changed from 7D03 to 7D02. => The driver
-   assembles the wrong bytes and gets 7D020093.
+    Ex. When 7D030093 decreasing to 7D027FFF, sometimes the driver will read 7D020093.
+    That is, when the driver read LSB, LSB 0093 is quite close to zero. Later when the
+    driver read MSB, MSB is already changed from 7D03 to 7D02. => The driver
+    assembles the wrong bytes and gets 7D020093.
 
 Changes:
 - Verify whether the driver is reading while the MSB bits of the counter is changing.
-   If yes, reread the counter. (Incorrect LSB bits only affect the result by less than 5% under 100ms
-   delay time and can be ignored.)
+    If yes, reread the counter. (Incorrect LSB bits only affect the result by less than 5% under 100ms
+    delay time and can be ignored.)
 
 - Change the delay time from 1ms to 100ms. This can make the detected clock rate more accurate.
 The extra time spent on rereading the counter is less than 1% compared to 100ms.
@@ -59,7 +58,7 @@ Albert
 
 Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
 
---------------030701060307080604090507
+--------------020402060507010002080608
 Content-Type: text/plain;
  name="pdc_060_2.diff"
 Content-Transfer-Encoding: 7bit
@@ -142,6 +141,6 @@ Content-Disposition: inline;
  	PDPRINTK("start[%lu] end[%lu] \n", start_count, end_count);
  	PDPRINTK("PLL input clock[%ld]Hz\n", pll_clock);
 
---------------030701060307080604090507--
+--------------020402060507010002080608--
 
 
