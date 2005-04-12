@@ -1,28 +1,37 @@
-From: Dmitry Sanarin <sanarin@nikiet.ru>
-Subject: libata-dev bugreport (Promise TX2plus PATA)
-Date: Mon, 11 Apr 2005 14:48:01 +0400
-Message-ID: <200504111448.01849.sanarin@nikiet.ru>
+From: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: 'hdparm -C' problems with libata-dev
+Date: Tue, 12 Apr 2005 10:00:03 -0400
+Message-ID: <20050412140002.GC27920@tuxdriver.com>
+References: <42568F29.6020800@nv-systems.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from alpha.nikiet.ru ([195.128.70.10]:38482 "HELO alpha.nikiet.ru")
-	by vger.kernel.org with SMTP id S261769AbVDKKtb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Apr 2005 06:49:31 -0400
-Received: (from uucp@localhost) by  alpha.nikiet.ru (950413.SGI.8.6.12/950213.SGI.AUTOCF) id OAA00181 for <linux-ide@vger.kernel.org>; Mon, 11 Apr 2005 14:48:18 -0200
-Received: from oitt.nikiet.ru (root@localhost)
-	by oitt.nikiet.ru (8.12.10/8.12.10) with SMTP id j3BAlCwe011721
-	for <linux-ide@vger.kernel.org>; Mon, 11 Apr 2005 14:47:12 +0400
+Received: from ra.tuxdriver.com ([24.172.12.4]:15632 "EHLO ra.tuxdriver.com")
+	by vger.kernel.org with ESMTP id S262354AbVDLOAL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Apr 2005 10:00:11 -0400
 Content-Disposition: inline
+In-Reply-To: <42568F29.6020800@nv-systems.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
+To: Gerald Hopf <linux-ide@nv-systems.net>
 Cc: linux-ide@vger.kernel.org
 
- I have Promise TX2plus controller. This controller has 3 interfaces : 2 SATA 
-and PARA. SATA interfaces works fine. PATA work correctly only with one 
-drive. Adding second PATA drive causes seriuos filesystem damage.
- Linux kernel 2.6.11 + latest libata-dev patch from  
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/.
+On Fri, Apr 08, 2005 at 04:03:21PM +0200, Gerald Hopf wrote:
 
+> Is there anything i can do to make this ('hdparm -C') work? Is this a 
+> libata bug or missing feature? A Seagate Firmware bug? A hdparm problem? 
+> Or just not possible with SATA Drives?
+
+Sounds like a bug w/ my implementation of HDIO_DRIVE_CMD for libata.
+However, I have yet to take the opportunity to track it down.  Plus,
+I'll be taking a little vacation over the coming weekend, so I likely
+won't get to this until sometime next week... :-(
+
+Until then, please feel free to experiment more w/ hdparm to see if
+there are any other problems w/ hdparm on SATA.  Please copy me on
+reports of any such problems (or send them to me directly).  Thanks!
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
