@@ -1,87 +1,54 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/ide/: possible cleanups
-Date: Sun, 17 Apr 2005 22:02:51 +0200
-Message-ID: <20050417200251.GH3625@stusta.de>
+From: sean <seandarcy2@gmail.com>
+Subject: 2.6.12-rc2 ahci and piix modules fail on ich6r
+Date: Sun, 17 Apr 2005 16:12:00 -0400
+Message-ID: <d3ufn6$da1$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:7443 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261464AbVDQUCw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 17 Apr 2005 16:02:52 -0400
-Content-Disposition: inline
+Received: from main.gmane.org ([80.91.229.2]:35753 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S261524AbVDQUZI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Apr 2005 16:25:08 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1DNGG2-0007t1-KL
+	for linux-ide@vger.kernel.org; Sun, 17 Apr 2005 22:20:42 +0200
+Received: from ool-4356fcdd.dyn.optonline.net ([67.86.252.221])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sun, 17 Apr 2005 22:20:42 +0200
+Received: from seandarcy2 by ool-4356fcdd.dyn.optonline.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sun, 17 Apr 2005 22:20:42 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This patch contains the following possible cleanups:
-- pci/cy82c693.c: make a needlessly global function statix
-- remove the following unneeded EXPORT_SYMBOL's:
-  - ide-taskfile.c: do_rw_taskfile
-  - ide-iops.c: default_hwif_iops
-  - ide-iops.c: default_hwif_transport
-  - ide-iops.c: wait_for_ready
+I have a gigabyte GA-8i915g Pro mobo, with a 82801FR (ICH6) 
+hub  (checked with lspci).  One SATA Maxtor 6B300S0. I've 
+used the ata-piix compiled in the past ( not as a module). 
+That worked.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+So, messing around I rebuilt with support for the ahci 
+module in 2.6.12-rc2 and left in the ata-piix module.
 
----
+This is the boot drive, and it fails. If I rebuild again 
+without the ahci module ( same config otherwise - ata -piix 
+as a module ) it still fails!
 
- drivers/ide/ide-iops.c     |    6 ------
- drivers/ide/ide-taskfile.c |    2 --
- drivers/ide/pci/cy82c693.c |    2 +-
- 3 files changed, 1 insertion(+), 9 deletions(-)
+BTW, the RedHat fedora fc4 kernels fail. It's the same 
+problem since they're module based.  But, the fc3 kernels 
+work. Odd
 
---- linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c.old	2005-02-05 02:57:03.000000000 +0100
-+++ linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c	2005-02-05 02:57:12.000000000 +0100
-@@ -161,8 +161,6 @@
- 	return ide_stopped;
- }
- 
--EXPORT_SYMBOL(do_rw_taskfile);
--
- /*
-  * set_multmode_intr() is invoked on completion of a WIN_SETMULT cmd.
-  */
+So I rebuilt again with ahci built in - no ata-piix.  That 
+failed.  Then I tried BOTH. That worked.  dmesg shows:
 
---- linux-2.6.12-rc2-mm3-full/drivers/ide/pci/cy82c693.c.old	2005-04-17 21:11:22.000000000 +0200
-+++ linux-2.6.12-rc2-mm3-full/drivers/ide/pci/cy82c693.c	2005-04-17 21:11:30.000000000 +0200
-@@ -469,7 +469,7 @@
- 
- static __initdata ide_hwif_t *primary;
- 
--void __init init_iops_cy82c693(ide_hwif_t *hwif)
-+static void __init init_iops_cy82c693(ide_hwif_t *hwif)
- {
- 	if (PCI_FUNC(hwif->pci_dev->devfn) == 1)
- 		primary = hwif;
---- linux-2.6.12-rc2-mm3-full/drivers/ide/ide-iops.c.old	2005-04-17 21:12:44.000000000 +0200
-+++ linux-2.6.12-rc2-mm3-full/drivers/ide/ide-iops.c	2005-04-17 21:12:54.000000000 +0200
-@@ -104,8 +104,6 @@
- 	hwif->INSL	= ide_insl;
- }
- 
--EXPORT_SYMBOL(default_hwif_iops);
--
- /*
-  *	MMIO operations, typically used for SATA controllers
-  */
-@@ -329,8 +327,6 @@
- 	hwif->atapi_output_bytes	= atapi_output_bytes;
- }
- 
--EXPORT_SYMBOL(default_hwif_transport);
--
- /*
-  * Beginning of Taskfile OPCODE Library and feature sets.
-  */
-@@ -525,8 +525,6 @@
- 	return 0;
- }
- 
--EXPORT_SYMBOL(wait_for_ready);
--
- /*
-  * This routine busy-waits for the drive status to be not "busy".
-  * It then checks the status for all of the "good" bits and none
+libata version 1.10 loaded.
+ata_piix version 1.03
+
+To sum up, the only way I've been able to boot is using 
+ata-piix built in - not as a module.
+
+And ahci won't load with ich6.
+
+sean
 
