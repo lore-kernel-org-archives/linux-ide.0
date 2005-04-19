@@ -1,87 +1,89 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: ST3120026A working in 2.4.30 w sata_sil
-Date: Mon, 18 Apr 2005 04:26:31 -0400
-Message-ID: <42636F37.3050300@pobox.com>
-References: <426352FB.1070507@nsr500.net>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH 1/1] libata-dev-2.6: pdc2027x ATAPI DMA fix
+Date: Tue, 19 Apr 2005 14:08:23 +0800
+Message-ID: <4264A057.9020604@tw.ibm.com>
+References: <425A49F6.3040904@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------070601030204050108090307"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:23966 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261904AbVDRI0x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 Apr 2005 04:26:53 -0400
-In-Reply-To: <426352FB.1070507@nsr500.net>
+Received: from bluehawaii.tikira.net ([61.62.22.51]:6629 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S261230AbVDSGI4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 Apr 2005 02:08:56 -0400
+In-Reply-To: <425A49F6.3040904@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tim Moore <tim.moore@nsr500.net>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-Tim Moore wrote:
-> FYI;
-> 
-> Applied the v0.9 patch to sata_sil.c:
-> 
-> # ChangeSet
-> # 2005/03/24 23:32:42-05:00 Carlos.Pardo@xxxxxxxxxxxxxxxx
-> # [PATCH] sata_sil: Fix FIFO PCI Bus Arbitration
-> 
-> Applied this Brian Kuschak hack to libata-core.c:
-> 
-> --- libata-core.c.orig    2005-02-23 17:41:03.831836464 -0800
-> +++ libata-core.c    2005-02-23 17:54:51.287044152 -0800
-> @@ -3158,6 +3158,11 @@
->      if (qc && (!(qc->tf.ctl & ATA_NIEN))) {
->          handled |= ata_host_intr(ap, qc);
->      }
-> +    else {
-> +        /* bk - just ack spurious interrupt here - temp workaround */
-> +        ata_irq_ack(ap, 0);        
-> +        printk(KERN_WARNING "ata%d: irq trap\n", ap->id);
-> +    }
-> 
-> Added "pci=biosirq ide2=0 ide3=0" to boot params,
-> some combination of which reliabily and repeatedly works:
-> ...
-> bata version 1.10 loaded.
-> sata_sil version 0.9
-> ata1: SATA max UDMA/100 cmd 0xF880F080 ctl 0xF880F08A bmdma 0xF880F000 
-> irq 11
-> ata2: SATA max UDMA/100 cmd 0xF880F0C0 ctl 0xF880F0CA bmdma 0xF880F008 
-> irq 11
-> ata1: irq trap
-> ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3468 86:3c01 87:4003 
-> 88:003f
-> ata1: dev 0 ATA, max UDMA/100, 234441648 sectors: lba48
-> ata1: dev 0 configured for UDMA/100
-> ata2: no device found (phy stat 00000000)
-> scsi2 : sata_sil
-> scsi3 : sata_sil
->   Vendor: ATA       Model: ST3120026A        Rev: 3.01
->   Type:   Direct-Access                      ANSI SCSI revision: 05
-> ...
-> 
-> Prior to making all three of these changes, boot attempts with the sata_sil
-> driver when any PATA disk was connected to the bridge would hard lock 
-> just after:
-> ...
-> ata2: SATA max UDMA/100 cmd 0xF880F0C0 ctl 0xF880F0CA bmdma 0xF880F008 
-> irq 11
-> 
-> The ide driver generated errors at each access and was removed:
-> ...
-> kernel: hde: sata_error = 0x00000000, watchdog = 0, 
-> siimage_mmio_ide_dma_test_irq
-> last message repeated 10 times
-> 
-> Hope this sheds some light.
+This is a multi-part message in MIME format.
+--------------070601030204050108090307
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Are you running two drivers for the same hardware, at the same time? 
-(siimage and sata_sil)
+Jeff,
 
-That would certainly create a problem.
+   pdc2027x: pdc2027x ATAPI DMA fix.
+The previous (request_bufflen % 256) ATAPI DMA rule still fails and causes timeout in some case.
 
-	Jeff
+Changes:
+- Only turn on pdc2027x ATAPI DMA for READ/WRITE and (request_bufflen % 1024 == 0) for safty.
 
+Attached please find the patch against the libata-dev-2.6 tree for your review. Thanks.
+
+Albert
+
+--------------070601030204050108090307
+Content-Type: text/plain;
+ name="pdc_061.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="pdc_061.diff"
+
+--- libata-dev-2.6-pll-fix/drivers/scsi/pata_pdc2027x.c	2005-04-11 15:05:42.000000000 +0800
++++ libata-dev-2.6-dma_fix/drivers/scsi/pata_pdc2027x.c	2005-04-16 08:59:34.000000000 +0800
+@@ -29,7 +29,7 @@
+ #include <asm/io.h>
+ 
+ #define DRV_NAME	"pata_pdc2027x"
+-#define DRV_VERSION	"0.60"
++#define DRV_VERSION	"0.61"
+ #undef PDC_DEBUG
+ 
+ #ifdef PDC_DEBUG
+@@ -445,11 +445,26 @@
+ static int pdc2027x_check_atapi_dma(struct ata_queued_cmd *qc)
+ {
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+-	int rc = 0;
++	u8 *scsicmd = cmd->cmnd;
++	int rc = 1; /* atapi dma off by default */
+ 
+-	/* pdc2027x can only do ATAPI DMA for specific buffer size */
+-	if (cmd->request_bufflen % 256)
+-		rc = 1;
++	switch (scsicmd[0]) {
++	case READ_6:
++	case READ_10:
++	case READ_12:
++	case READ_16:
++
++	case WRITE_6:
++	case WRITE_10:
++	case WRITE_12:
++	case WRITE_16:
++		/* pdc2027x can only do ATAPI DMA for specific buffer size */
++		if (cmd->request_bufflen % 1024 == 0)
++			rc = 0;
++		break;
++	default:
++		;
++	}
+ 
+ 	return rc;
+ }
+
+--------------070601030204050108090307--
 
 
