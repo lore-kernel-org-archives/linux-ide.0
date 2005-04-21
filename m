@@ -1,112 +1,53 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] scan all enabled ports on ata_piix
-Date: Thu, 21 Apr 2005 14:36:43 +0200
-Message-ID: <42679E5B.4030809@suse.de>
+From: for_spam@gmx.de
+Subject: ICH6 / SATA performance problems
+Date: Thu, 21 Apr 2005 21:04:09 +0200 (MEST)
+Message-ID: <12540.1114110249@www24.gmx.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040005050908070601050106"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:9907 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S261332AbVDUMgo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2005 08:36:44 -0400
+Received: from pop.gmx.net ([213.165.64.20]:4755 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261794AbVDUTEL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2005 15:04:11 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: jgarzik@pobox.com
 
-This is a multi-part message in MIME format.
---------------040005050908070601050106
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+Hello, 
 
-Hi all,
+i have a strange sata performance problem with my new system:
 
-on this ACER travelmate (ICH6 chipset) the BIOS somehow sets the
-PIIX_PORT_ENABLED bit, but not the PIIX_PORT_PRESENT bit.
-Appearently the BIOS did not do any device scan / initialisation, and
-then, the ICH6 spec does not actually require it.
-As the current code scans for PIIX_PORT_PRESENT | PIIX_PORT_ENABLED it
-fails to detect any devices.
-And as the spec is somewhat unclear at this point I'd vote for relaxing
-the check to PIIX_PORT_ENABLED only.
-It doesn't do any harm as any non-existing devices will be discarded
-later on anyway.
+MoBo:    Gigabyte GA-8I915G-MF
+Chipset: Intel i915G (Intel ICH6 Southbridge)
 
-Please apply.
+OS is SuSE 9.3 Professional with Kernel 2.6.11.4-20a-smp (with HT) or
+2.6.11.4-20a-default (without HT) - I installed and tried both (switched off
+HT in Bios and installed default kernel)
 
-Cheers,
+Initially, performance seemed quite ok, but as i did some of my usual tests
+(dd if=/dev/zero of=test.dat bs=1024k count=8192) i wondered about the bad
+performance values.
 
-Hannes
+For writing i get just below 7 MB/sec !!!
+
+ata_piix on SuSE 9.3 (2.6.11.4-20a) is version 1.03
+
+For comparison, I booted my knoppix 3.7, Kernel 2.6.9 and surprisingly I get
+43 MB/sec - that`s ~6 times faster and a value i would have expected.
+
+ata_piix on Knoppix 3.7 (2.6.9) is version 1.02
+
+Any hints what`s going wrong here and how to fix this issue ?
+
+thanks in advance
+roland
+
+P.S.: 
+please put me on CC because i`m not on this list.
+
+
 -- 
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux AG				S390 & zSeries
-Maxfeldstraße 5				+49 911 74053 688
-90409 Nürnberg				http://www.suse.de
++++ NEU: GMX DSL_Flatrate! Schon ab 14,99 EUR/Monat! +++
 
---------------040005050908070601050106
-Content-Type: text/plain;
- name="ata_piix-scan-all-enabled-ports"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ata_piix-scan-all-enabled-ports"
-
-Subject: ata_piix does not find any devices on ACER laptop
-From: Hannes Reinecke <hare@suse.de>
-References: 78564
-
-ICH6 spec defines the PORT_ bits as:
-PORT_ENABLED (R/W): 
-0 = Disabled. The port is in the  off  state and cannot detect any
-devices.
-1 = Enabled. The port can transition between the on,
-partial, and slumber states and can detect devices.
-
-PORT_PRESENT  (R/O) The status of this bit may change at any time. This
-bit is cleared when the port is disabled via PORT_ENABLED. This bit is not
-cleared upon surprise removal of a device.
-
-So from a textual view it is not necessary that PORT_PRESENT _must_ be
-set, especially if a device detection has to be done anyway. And, in
-fact, this is the view that ACER has been taken with its new Laptops
-(e.g. Travelmate 4150).
-
-And the definition of PORT_ENABLED / PORT_PRESENT is mixed up, btw.
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Jens Axboe <axboe@suse.de>
-
---- linux-2.6.11/drivers/scsi/ata_piix.c.orig	2005-04-20 15:09:20.000000000 +0200
-+++ linux-2.6.11/drivers/scsi/ata_piix.c	2005-04-21 14:13:49.000000000 +0200
-@@ -50,8 +50,8 @@ enum {
- 	PIIX_COMB_PATA_P0	= (1 << 1),
- 	PIIX_COMB		= (1 << 2), /* combined mode enabled? */
- 
--	PIIX_PORT_PRESENT	= (1 << 0),
--	PIIX_PORT_ENABLED	= (1 << 4),
-+	PIIX_PORT_ENABLED	= (1 << 0),
-+	PIIX_PORT_PRESENT	= (1 << 4),
- 
- 	PIIX_80C_PRI		= (1 << 5) | (1 << 4),
- 	PIIX_80C_SEC		= (1 << 7) | (1 << 6),
-@@ -342,7 +342,9 @@ static void piix_pata_phy_reset(struct a
-  *	None (inherited from caller).
-  *
-  *	RETURNS:
-- *	Non-zero if device detected, zero otherwise.
-+ *	Non-zero if port is enabled, it may or may not have a device
-+ *	attached in that case (PRESENT bit would only be set if BIOS probe
-+ *	was done). Zero is returned if port is disabled.
-  */
- static int piix_sata_probe (struct ata_port *ap)
- {
-@@ -366,7 +368,7 @@ static int piix_sata_probe (struct ata_p
- 	 */
- 
- 	for (i = 0; i < 4; i++) {
--		mask = (PIIX_PORT_PRESENT << i) | (PIIX_PORT_ENABLED << i);
-+		mask = (PIIX_PORT_ENABLED << i);
- 
- 		if ((orig_mask & mask) == mask)
- 			if (combined || (i == ap->hard_port_no))
-
---------------040005050908070601050106--
+GMX Garantie: Surfen ohne Tempo-Limit! http://www.gmx.net/de/go/dsl
