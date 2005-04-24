@@ -1,48 +1,55 @@
-From: Tyler <pml@dtbb.net>
-Subject: Increasing max supported ide drives to more than 26
-Date: Sun, 24 Apr 2005 06:15:57 -0700
-Message-ID: <426B9C0D.9010209@dtbb.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Daniel Egger <de@axiros.com>
+Subject: Re: Primary ide disk inaccessible. 2.6.11.7, x86_64
+Date: Sun, 24 Apr 2005 17:06:13 +0200
+Message-ID: <064085cb719a246d17e19bde8dfcaee2@axiros.com>
+References: <426B8D14.9050408@lboro.ac.uk>
+Mime-Version: 1.0 (Apple Message framework v622)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-11-756503809"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound01.telus.net ([199.185.220.220]:22950 "EHLO
-	priv-edtnes56.telusplanet.net") by vger.kernel.org with ESMTP
-	id S262330AbVDXNPx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 24 Apr 2005 09:15:53 -0400
-Received: from [192.168.0.28] (really [142.179.55.145])
-          by priv-edtnes56.telusplanet.net
-          (InterMail vM.6.01.04.04 201-2131-118-104-20050224) with ESMTP
-          id <20050424131552.AWA6414.priv-edtnes56.telusplanet.net@[192.168.0.28]>
-          for <linux-ide@vger.kernel.org>; Sun, 24 Apr 2005 07:15:52 -0600
+Received: from 213-239-212-8.clients.your-server.de ([213.239.212.8]:18899
+	"EHLO live1.axiros.com") by vger.kernel.org with ESMTP
+	id S262334AbVDXPGk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 24 Apr 2005 11:06:40 -0400
+In-Reply-To: <426B8D14.9050408@lboro.ac.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "A.E.Lawrence" <A.E.Lawrence@lboro.ac.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-I would like to modify my kernel to be able to support more than the 
-maximum of 26 IDE drives.
 
-Its not that it won't support that many now, but when you have more than 
-26 drives currently, they start being named things like /dev/hd{ 
-/dev/hd; etc.. instead of like the scsi system where after they roll 
-past /dev/sdz, they go to /dev/sdaa /dev/sdab, etc.
+--Apple-Mail-11-756503809
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 
-I've already configured my kernel to allow 20 IDE controllers (2 ports 
-each), using the MAX_HWIFS in the include/asm-i386/ide.h file.  This 
-allows all my controllers to be detected/used when linux starts, but the 
-system doesn't letter the drives properly past /dev/hdz.
+On 24.04.2005, at 14:12, A.E.Lawrence wrote:
 
-The system consists of  2 x onboard channels (4 drives), 4 x highpoint 
-hpt374 chipset raid cards (not using built-in raid option) which gives 
-16 ports (32 drives), and optionally, there's also a built-in promise 
-pdc 20378 (currently unused and disabled in bios, and no drivers in kernel).
+> I have 4 sata, 1 scsi and 1 ata hard disks attached to an Asus A8N-SLI.
+> The primary ata disc (connected to ide0) is inaccessible:
 
-The driver that is included in the kernel (2.6.11.7) doesn't use scsi 
-emulation.. it uses /dev/hdX lettering scheme (is there  a way to tell 
-it to use scsi emulation / drive lettering), only the driver you 
-download from highpoint uses scsi emulation and drive lettering.  I 
-would prefer to have the option of using either the tainted proprietary 
-driver, or the included kernel driver, and only the drive lettering is 
-holding me back.. thanks
+Are you booting from PATA or SATA? I had a similar problem
+where the PATA drives wouldn't be probed if I booted from
+a SATA drive. Vice versa it worked/works, though my chipset
+is VIA but the boards where this problem occured are also
+from Asus and daughter company.
 
-Tyler.
+Servus,
+       Daniel
+
+--Apple-Mail-11-756503809
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (Darwin)
+
+iD8DBQFCa7Xmchlzsq9KoIYRAhUaAKDhmc3QqTAsBDR9OJVdBO86+bAHrwCcCUqv
+7eb4cRWfL+Gx7COq5euV+i4=
+=k3OM
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-11-756503809--
+
