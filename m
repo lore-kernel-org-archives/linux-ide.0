@@ -1,50 +1,48 @@
-From: "A.E.Lawrence" <A.E.Lawrence@lboro.ac.uk>
-Subject: Primary ide disk inaccessible. 2.6.11.7, x86_64
-Date: Sun, 24 Apr 2005 13:12:04 +0100
-Message-ID: <426B8D14.9050408@lboro.ac.uk>
+From: Tyler <pml@dtbb.net>
+Subject: Increasing max supported ide drives to more than 26
+Date: Sun, 24 Apr 2005 06:15:57 -0700
+Message-ID: <426B9C0D.9010209@dtbb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from weed.lut.ac.uk ([158.125.1.226]:39906 "EHLO weed.lut.ac.uk")
-	by vger.kernel.org with ESMTP id S262311AbVDXMMn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Apr 2005 08:12:43 -0400
+Received: from outbound01.telus.net ([199.185.220.220]:22950 "EHLO
+	priv-edtnes56.telusplanet.net") by vger.kernel.org with ESMTP
+	id S262330AbVDXNPx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 24 Apr 2005 09:15:53 -0400
+Received: from [192.168.0.28] (really [142.179.55.145])
+          by priv-edtnes56.telusplanet.net
+          (InterMail vM.6.01.04.04 201-2131-118-104-20050224) with ESMTP
+          id <20050424131552.AWA6414.priv-edtnes56.telusplanet.net@[192.168.0.28]>
+          for <linux-ide@vger.kernel.org>; Sun, 24 Apr 2005 07:15:52 -0600
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-AMD64 FX, x86_64 architecture, 2.6.11.7 (and earlier)
------------------------------------------------------
+I would like to modify my kernel to be able to support more than the 
+maximum of 26 IDE drives.
 
-I have 4 sata, 1 scsi and 1 ata hard disks attached to an Asus A8N-SLI.
-The primary ata disc (connected to ide0) is inaccessible:
+Its not that it won't support that many now, but when you have more than 
+26 drives currently, they start being named things like /dev/hd{ 
+/dev/hd; etc.. instead of like the scsi system where after they roll 
+past /dev/sdz, they go to /dev/sdaa /dev/sdab, etc.
 
-NFORCE-CK804: 0000:00:06.0 (rev a2) UDMA133 controller
-     ide0: BM-DMA at 0xf000-0xf007, BIOS settings: hda:DMA, hdb:DMA
-     ide1: BM-DMA at 0xf008-0xf00f, BIOS settings: hdc:DMA, hdd:DMA
-Probing IDE interface ide0...
-hda: JTS Corporation CHAMPION MODEL C3000-3A, ATA DISK drive
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+I've already configured my kernel to allow 20 IDE controllers (2 ports 
+each), using the MAX_HWIFS in the include/asm-i386/ide.h file.  This 
+allows all my controllers to be detected/used when linux starts, but the 
+system doesn't letter the drives properly past /dev/hdz.
 
-But later:-
+The system consists of  2 x onboard channels (4 drives), 4 x highpoint 
+hpt374 chipset raid cards (not using built-in raid option) which gives 
+16 ports (32 drives), and optionally, there's also a built-in promise 
+pdc 20378 (currently unused and disabled in bios, and no drivers in kernel).
 
-Probing IDE interface ide5...
-hda: max request size: 128KiB
-hda: 0 sectors (0 MB) w/256KiB Cache, CHS=5824/16/63, DMA   <=======
-hda: cache flushes not supported                            <=======
+The driver that is included in the kernel (2.6.11.7) doesn't use scsi 
+emulation.. it uses /dev/hdX lettering scheme (is there  a way to tell 
+it to use scsi emulation / drive lettering), only the driver you 
+download from highpoint uses scsi emulation and drive lettering.  I 
+would prefer to have the option of using either the tainted proprietary 
+driver, or the included kernel driver, and only the drive lettering is 
+holding me back.. thanks
 
-At some point when I was installing and running some sort of 2.6.n
-debian installation kernel, the problem was not present: this disc was
-mounted along with the others. But now with all the debian kernels that
-I have tried, and my own builds of 2.6.7.11, the disc on ide0 cannot be
-used.
-
-There is a report with configurations and dmesg dumps etc here:
-http://homepage.ntlworld.com/lawrence_a_e/report.txt
-
-I have turned #DEBUG on in ide-disk.c although I suspect that the 
-problem is elsewhere.
-
-ael
-
+Tyler.
