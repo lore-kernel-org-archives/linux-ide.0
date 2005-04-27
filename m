@@ -1,32 +1,97 @@
-From: "Brian Rademacher" <rad@radfiles.net>
-Subject: Marvell 88SX6081 driver...
-Date: Wed, 27 Apr 2005 00:35:30 -0600
-Message-ID: <005801c54af3$4fc24fd0$0301a8c0@Rad>
-Reply-To: "Brian Rademacher" <rad@radfiles.net>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [PATCH 1/1] libata-dev-2.6: pdc2027x ATAPI DMA fix
+Date: Wed, 27 Apr 2005 16:55:57 +0800
+Message-ID: <426F539D.3090605@tw.ibm.com>
+References: <425A49F6.3040904@tw.ibm.com> <4264A057.9020604@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020508030103040104070705"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rwcrmhc11.comcast.net ([204.127.198.35]:20990 "EHLO
-	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S261695AbVD0Gfd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Apr 2005 02:35:33 -0400
-Received: from Rad (Radlocal [192.168.1.3])
-	by radfiles.net (8.12.11/8.12.11) with SMTP id j3R6Ze4K004295
-	for <linux-ide@vger.kernel.org>; Wed, 27 Apr 2005 00:35:40 -0600
+Received: from bluehawaii.tikira.net ([61.62.22.51]:29168 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S261268AbVD0I46 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Apr 2005 04:56:58 -0400
+In-Reply-To: <4264A057.9020604@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Linux IDE <linux-ide@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
-Is anyone working on a driver for this?  I know that Jeff Garzik was working 
-on a libata one at one point, but that it was stalled as of February...The 
-only driver I can find is the 3.40 release from Marvell, and it rather 
-reliably crashes under heavy disk loads (drives go offline)...Marvell has a 
-3.41 release on their extranet, but they won't let me have it...
+This is a multi-part message in MIME format.
+--------------020508030103040104070705
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I can't help with the programming end, but I'd be more than happy to beta 
-test anything that anyone has...
+
+Hi Jeff,
+
+Revised pdc2027x: pdc2027x ATAPI DMA fix.
+(Please ignore the previous patch.)
+
+Problem:
+The previous (request_bufflen % 256) ATAPI DMA rule still fails and
+causes timeout in some case.
+
+Changes:
+- Only turn on pdc2027x ATAPI DMA for READ/WRITE.
+
+The additional (request_bufflen % 1024 == 0) check in the previous patch is
+not necessary. Since most ATAPI devices has 512 bytes or 2048 bytes sector size,
+it should be safe for ATAPI DMA. Thanks Jens for the advice.
+
+Attached please find the revised patch against the libata-dev-2.6 tree for your
+review. Thanks.
+
+Albert
+
+--------------020508030103040104070705
+Content-Type: text/plain;
+ name="pdc_061.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="pdc_061.diff"
+
+--- linux-2.6.5-SLES9_SP2_BRANCH_20050418161416/drivers/scsi/pata_pdc2027x.c.ori	2005-04-19 15:34:15.000000000 +0800
++++ linux-2.6.5-SLES9_SP2_BRANCH_20050418161416/drivers/scsi/pata_pdc2027x.c	2005-04-26 21:44:18.849971712 +0800
+@@ -29,7 +29,7 @@
+ #include <asm/io.h>
+ 
+ #define DRV_NAME	"pata_pdc2027x"
+-#define DRV_VERSION	"0.60"
++#define DRV_VERSION	"0.61"
+ #undef PDC_DEBUG
+ 
+ #ifdef PDC_DEBUG
+@@ -445,11 +445,24 @@
+ static int pdc2027x_check_atapi_dma(struct ata_queued_cmd *qc)
+ {
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+-	int rc = 0;
++	u8 *scsicmd = cmd->cmnd;
++	int rc = 1; /* atapi dma off by default */
+ 
+-	/* pdc2027x can only do ATAPI DMA for specific buffer size */
+-	if (cmd->request_bufflen % 256)
+-		rc = 1;
++	switch (scsicmd[0]) {
++	case READ_6:
++	case READ_10:
++	case READ_12:
++	case READ_16:
++
++	case WRITE_6:
++	case WRITE_10:
++	case WRITE_12:
++	case WRITE_16:
++		rc = 0;
++		break;
++	default:
++		;
++	}
+ 
+ 	return rc;
+ }
+
+--------------020508030103040104070705--
+
 
