@@ -1,49 +1,50 @@
-From: Li Shaohua <shaohua.li@intel.com>
-Subject: IDE suspend/resume issue
-Date: Thu, 28 Apr 2005 13:52:35 +0800
-Message-ID: <1114667555.22492.6.camel@sli10-desk.sh.intel.com>
+From: Silken Tiger <st@iss.tu-darmstadt.de>
+Subject: SATA and hotplug
+Date: Thu, 28 Apr 2005 14:05:29 +0200
+Message-ID: <200504281405.29926.st@iss.tu-darmstadt.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr17.intel.com ([134.134.136.16]:61122 "EHLO
-	orsfmr002.jf.intel.com") by vger.kernel.org with ESMTP
-	id S262145AbVD1FzO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Apr 2005 01:55:14 -0400
-Received: from orsfmr101.jf.intel.com (orsfmr101.jf.intel.com [10.7.209.17])
-	by orsfmr002.jf.intel.com (8.12.10/8.12.10/d: major-outer.mc,v 1.1 2004/09/17 17:50:56 root Exp $) with ESMTP id j3S5tEBn009935
-	for <linux-ide@vger.kernel.org>; Thu, 28 Apr 2005 05:55:14 GMT
-Received: from orsmsxvs040.jf.intel.com (orsmsxvs040.jf.intel.com [192.168.65.206])
-	by orsfmr101.jf.intel.com (8.12.10/8.12.10/d: major-inner.mc,v 1.2 2004/09/17 18:05:01 root Exp $) with SMTP id j3S5tD15025481
-	for <linux-ide@vger.kernel.org>; Thu, 28 Apr 2005 05:55:14 GMT
-Received: from [172.16.219.62] ([172.16.219.62])
- by orsmsxvs040.jf.intel.com (SAVSMTP 3.1.7.47) with SMTP id M2005042722551200381
- for <linux-ide@vger.kernel.org>; Wed, 27 Apr 2005 22:55:12 -0700
+Received: from mailserver2.hrz.tu-darmstadt.de ([130.83.174.20]:24211 "EHLO
+	mailserver2.hrz.tu-darmstadt.de") by vger.kernel.org with ESMTP
+	id S262088AbVD1MFg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Apr 2005 08:05:36 -0400
+Received: from iss1.vlsi.informatik.tu-darmstadt.de (iss1.vlsi.informatik.tu-darmstadt.de [130.83.164.1])
+	by mailserver2.hrz.tu-darmstadt.de (8.12.10/8.12.10) with ESMTP id j3SC5UL6027576
+	for <linux-ide@vger.kernel.org>; Thu, 28 Apr 2005 14:05:30 +0200
+Received: from localhost (localhost [127.0.0.1])
+	by iss1.vlsi.informatik.tu-darmstadt.de (Postfix) with ESMTP id 63A0E8007
+	for <linux-ide@vger.kernel.org>; Thu, 28 Apr 2005 14:05:30 +0200 (CEST)
+Received: from iss1.vlsi.informatik.tu-darmstadt.de ([127.0.0.1])
+	by localhost (iss1 [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+	id 28435-01 for <linux-ide@vger.kernel.org>;
+	Thu, 28 Apr 2005 14:05:30 +0200 (CEST)
+Received: from iss10.vlsi.informatik.tu-darmstadt.de (iss10.vlsi.informatik.tu-darmstadt.de [130.83.164.10])
+	by iss1.vlsi.informatik.tu-darmstadt.de (Postfix) with ESMTP id 471DF8006
+	for <linux-ide@vger.kernel.org>; Thu, 28 Apr 2005 14:05:30 +0200 (CEST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-IDE gurus,
-We have observed many IDE failure cases after suspend-to-ram. The
-failure is either resume IDE hang or IDE reports error after resume. In
-my box, every time I hear the IDE motor's sound, the box resume is ok.
-Otherwise, it hangs. From ACPI spec, the IDE driver should call many
-ACPI methods like _GTM, _STM and execute task file gotten from _GTF
-method. So we quite suspect the IDE suspend/resume has problem. I knows
-little about IDE, so here are some questions for your guys.
-1.how could I get the ATA driver ID block returned by Identify Drive
-command (command code is 0xech)? is taskfile_lib_get_identify designed
-for this (give it a struct hd_driveid parameter)?
+Hi
 
-2. The ACPI _GTF method return a series commands. The definition is:
-command 1: Reg values for (1F1, 1F2, 1F3, 1F4, 1F5, 1F6, 1F7)
-command 2: Reg values for (1F1, 1F2, 1F3, 1F4, 1F5, 1F6, 1F7)
-.....
-So how to call the command in generic_ide_resume? before or after
-ide_do_drive_cmd (the last line of the routine)?
+I have a via kt600 chipset with sata ports. As described on the sata page
+http://linux.yyz.us/sata/sata-status.html. This driver supports hotplug. 
+Unfortunatly the libsata doesn't. So my question is if there is a easy way 
+around this. Sometimes hotplugging works, most times not with the following 
+error message: 
+kernel: ATA: abnormal status 0xD0 on port 0xA807 (on 2.6.11.7)
+The kernel doesn't even reboot. Can this error be removed by issuing some 
+commands with hdparm or scsitools or /sysfs tricks?
+If this doesn't work, is it possible to find a solution with a cheap sil pci 
+bus sata controller and by unloading loading the driver module?
 
-Thanks in advance! Please cc me, since I don't subscribe the mail list.
+Besides is there much missing for hotplug support in libsata?
 
-Thanks,
-Shaohua
+Thanks
+ST
 
+PS: Please cc me, not subscribed.
