@@ -1,77 +1,40 @@
-From: Marcello Maggioni <hayarms@gmail.com>
-Subject: Re: [PATCH] Timeout at bootTime with NEC3500A (and others) when inserted a CD in it.
-Date: Thu, 28 Apr 2005 23:56:56 +0200
-Message-ID: <63f5296805042814562248b3a2@mail.gmail.com>
-References: <63f529680504260719283a6a96@mail.gmail.com>
-Reply-To: Marcello Maggioni <hayarms@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Multiple functionality breakages in 2.6.12rc3 IDE layer
+Date: Thu, 28 Apr 2005 23:26:27 +0100
+Message-ID: <1114727182.24687.235.camel@localhost.localdomain>
+References: <Pine.LNX.3.96.1050428140509.29292A-100000@gatekeeper.tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.194]:3358 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262274AbVD1V44 convert rfc822-to-8bit
+Received: from clock-tower.bc.nu ([81.2.110.250]:28113 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S262298AbVD1W1m
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Apr 2005 17:56:56 -0400
-Received: by zproxy.gmail.com with SMTP id 13so590335nzp
-        for <linux-ide@vger.kernel.org>; Thu, 28 Apr 2005 14:56:56 -0700 (PDT)
-In-Reply-To: <63f529680504260719283a6a96@mail.gmail.com>
-Content-Disposition: inline
+	Thu, 28 Apr 2005 18:27:42 -0400
+In-Reply-To: <Pine.LNX.3.96.1050428140509.29292A-100000@gatekeeper.tmr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-2005/4/26, Marcello Maggioni <hayarms@gmail.com>:
-> Hi all,
-> 
-> I've attached a patch intended for solving boottime issues with this
-> and other drives when a CD/DVD is inserted .
-> 
-> Problem: Some drives (NEC 3500 , TDK 1616N , Mad-dog MD-16XDVD9, RICOH
-> MP5163DA , Memorex DVD9 drive and IO-DATA's too for sure) , if a
-> CD/DVD is inserted into the tray when the system is booted and if
-> before the OS bootup the BIOS checked for the presence of a bootable
-> CD/DVD into the drive , during the IDE probe phase the drive may
-> result busy and remain so for the next 25/30 seconds . This cause the
-> drive to be skipped during the booting phase and not begin usable
-> until the next reboot (if the reboot goes well and the drive doesn't
-> timeout again ).
-> 
-> Solution: Rising the timeout time from 10 seconds to 35 seconds
-> (during these 35 seconds  every drive should wake up for sure
-> according to the tests I've done) .
-> 
-> Here the simple patch :
-> 
-> --- drivers/ide/ide-probe.c.orig        2005-04-26 15:04:46.000000000 +0200
-> +++ drivers/ide/ide-probe.c     2005-04-26 15:04:14.000000000 +0200
-> @@ -638,13 +638,13 @@
->         SELECT_DRIVE(&hwif->drives[0]);
->         hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
->         mdelay(2);
-> -       rc = ide_wait_not_busy(hwif, 10000);
-> +       rc = ide_wait_not_busy(hwif, 35000);
->         if (rc)
->                 return rc;
->         SELECT_DRIVE(&hwif->drives[1]);
->         hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
->         mdelay(2);
-> -       rc = ide_wait_not_busy(hwif, 10000);
-> +       rc = ide_wait_not_busy(hwif, 35000);
-> 
->         /* Exit function with master reselected (let's be sane) */
->         SELECT_DRIVE(&hwif->drives[0]);
-> 
-> Greets,
-> 
-> Maggioni Marcello
-> 
+On Iau, 2005-04-28 at 19:13, Bill Davidsen wrote:
+> On Thu, 28 Apr 2005, Alan Cox wrote:
 
-I have a question to ask.
+> But isn't that the stuff we use for swapping drives? Down the drive, down
+> the interface, swap, and restart? Are these the functions called by hdparm
+> (-bRU) which are all of a sudden not going to work? Or am I being
+> alarmist?
 
-What would be the negative effect of rising this timeout time?
+True but the only kernels supporting that are 2.4.x-ac. There are
+reasons I noticed this and looking at getting 2.6 IDE back to 2.4
+standards in this area was one of them.
 
-Thanks
+> I missed the discussion of why it was felt that the users would no longer
+> want to be able to do these things, or the new way to do it.
 
-Bye
+I'm assuming it may be accidental rather than detailed planning. Also
+its taken this long to notice so its clearly not that critical to
+everyone. Seems to be reasonably sane to fix too.
 
-Marcello
+Alan
+
