@@ -1,75 +1,77 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Multiple functionality breakages in 2.6.12rc3 IDE layer
-Date: Thu, 28 Apr 2005 22:41:00 +0200
-Message-ID: <58cb370e05042813414af5bc1e@mail.gmail.com>
-References: <1114703284.18809.208.camel@localhost.localdomain>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Marcello Maggioni <hayarms@gmail.com>
+Subject: Re: [PATCH] Timeout at bootTime with NEC3500A (and others) when inserted a CD in it.
+Date: Thu, 28 Apr 2005 23:56:56 +0200
+Message-ID: <63f5296805042814562248b3a2@mail.gmail.com>
+References: <63f529680504260719283a6a96@mail.gmail.com>
+Reply-To: Marcello Maggioni <hayarms@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.193]:43144 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262127AbVD1UlF convert rfc822-to-8bit
+Received: from zproxy.gmail.com ([64.233.162.194]:3358 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262274AbVD1V44 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Apr 2005 16:41:05 -0400
-Received: by wproxy.gmail.com with SMTP id 68so868636wra
-        for <linux-ide@vger.kernel.org>; Thu, 28 Apr 2005 13:41:00 -0700 (PDT)
-In-Reply-To: <1114703284.18809.208.camel@localhost.localdomain>
+	Thu, 28 Apr 2005 17:56:56 -0400
+Received: by zproxy.gmail.com with SMTP id 13so590335nzp
+        for <linux-ide@vger.kernel.org>; Thu, 28 Apr 2005 14:56:56 -0700 (PDT)
+In-Reply-To: <63f529680504260719283a6a96@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On 4/28/05, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> Ages ago we added an ide_default driver to clean up all the corner cases
-
-s/clean up/hide/
-
-> like spurious IRQs for a device with no matching driver (eg ide-cd and
-> no CD driver) as well as ioctls and file access.
->  
-> 2.6.12rc removes it. Unfortunately it also means that if your only IDE
-> interface is one you hand configure you can no longer run Linux. It also
-> changes other aspects of behaviour although they don't look problematic
-> for most users. You can no longer
->         - Control the bus state of an interface
->         - Reset an interface
->         - Add an interface if none exist
->         - Issue raw commands
->         - Get an objects bios geometry
->         - Read the identify data by ioctl (its still in proc but may be stale)
-
-Details please.
-
-> without having a device specific driver loaded matching the media - and
-> that only works if its already detected the device correctly.
+2005/4/26, Marcello Maggioni <hayarms@gmail.com>:
+> Hi all,
 > 
-> I don't have the tools at the moment to generate spurious IRQ's for
-> devices with no driver loaded but it does look like the code may well
-> then crash. From the way the changes were done it appears the current
-> IDE maintainers never appreciated that ide_default existed for far more
-> than just cleaning up ide-proc but also to handle IRQ's, opening of
-> empty slots, ioctls and power
-> management ?
+> I've attached a patch intended for solving boottime issues with this
+> and other drives when a CD/DVD is inserted .
+> 
+> Problem: Some drives (NEC 3500 , TDK 1616N , Mad-dog MD-16XDVD9, RICOH
+> MP5163DA , Memorex DVD9 drive and IO-DATA's too for sure) , if a
+> CD/DVD is inserted into the tray when the system is booted and if
+> before the OS bootup the BIOS checked for the presence of a bootable
+> CD/DVD into the drive , during the IDE probe phase the drive may
+> result busy and remain so for the next 25/30 seconds . This cause the
+> drive to be skipped during the booting phase and not begin usable
+> until the next reboot (if the reboot goes well and the drive doesn't
+> timeout again ).
+> 
+> Solution: Rising the timeout time from 10 seconds to 35 seconds
+> (during these 35 seconds  every drive should wake up for sure
+> according to the tests I've done) .
+> 
+> Here the simple patch :
+> 
+> --- drivers/ide/ide-probe.c.orig        2005-04-26 15:04:46.000000000 +0200
+> +++ drivers/ide/ide-probe.c     2005-04-26 15:04:14.000000000 +0200
+> @@ -638,13 +638,13 @@
+>         SELECT_DRIVE(&hwif->drives[0]);
+>         hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
+>         mdelay(2);
+> -       rc = ide_wait_not_busy(hwif, 10000);
+> +       rc = ide_wait_not_busy(hwif, 35000);
+>         if (rc)
+>                 return rc;
+>         SELECT_DRIVE(&hwif->drives[1]);
+>         hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
+>         mdelay(2);
+> -       rc = ide_wait_not_busy(hwif, 10000);
+> +       rc = ide_wait_not_busy(hwif, 35000);
+> 
+>         /* Exit function with master reselected (let's be sane) */
+>         SELECT_DRIVE(&hwif->drives[0]);
+> 
+> Greets,
+> 
+> Maggioni Marcello
+> 
 
-Maybe you should mail current maintainer before spreading FUD?
+I have a question to ask.
 
-No functionality was removed AFAIK, see the patches.  I spend quite 
-a bit of time making sure that nothing breaks up (I missed one special
-case but somebody already posted patch to LKML fixing it).
+What would be the negative effect of rising this timeout time?
 
-These patches were posted at least two times to both linux-ide and
-linux-kernel, they were in -mm for ages - were you hiding under the
-rock?
+Thanks
 
-> The ability to specify the IDE ports on the command line as needed for
-> some Sony laptop installs have also become "obsolete" over time. They
-> still appear to work but spew a warning that the user will soon be
-> screwed.
+Bye
 
-This was discussed few times already.
-
-Alan, seriously, what is your problem?
-
-Bartlomiej
+Marcello
