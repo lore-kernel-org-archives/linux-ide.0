@@ -1,148 +1,102 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 2/2] libata-2.6: Ignore interrupt before the ATAPI CDB is
- sent to the device
-Date: Fri, 29 Apr 2005 17:39:00 +0800
-Message-ID: <427200B4.4050308@tw.ibm.com>
-References: <4271FE02.1080009@tw.ibm.com>
+From: <Stuart_Hayes@Dell.com>
+Subject: RE: [PATCH 2.6.11.6] ide-scsi: kmap scatter/gather before doing PIO
+Date: Fri, 29 Apr 2005 10:45:13 -0500
+Message-ID: <7A8F92187EF7A249BF847F1BF4903C04010EEC07@ausx2kmpc103.aus.amer.dell.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------000001020300080907070303"
+	boundary="----_=_NextPart_001_01C54CD2.6EEFB7B0"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bluehawaii.tikira.net ([61.62.22.51]:24042 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S262209AbVD2Jj0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Apr 2005 05:39:26 -0400
-In-Reply-To: <4271FE02.1080009@tw.ibm.com>
+Received: from ausc60pc101.us.dell.com ([143.166.85.206]:32789 "EHLO
+	ausc60pc101.us.dell.com") by vger.kernel.org with ESMTP
+	id S262802AbVD2PpQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Apr 2005 11:45:16 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Jens Axboe <axboe@suse.de>, Linux IDE <linux-ide@vger.kernel.org>
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------000001020300080907070303
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
 
-Hi Jeff,
-
-Problem:
-   Sometimes the interrupt handler is invoked before atapi_packet_task() sending CDB to the device.
-The interrupt handler completes the command and later when atapi_packet_task() runs, the command is already gone.
-
-Changes:
-  - Add 2 PIO states to libata.h.
-  - Prevent the interrupt handler from completing the command before the ATAPI CDB is sent to the device.
-
-Attached please find the patch against the libata-2.6 tree for your review. Thanks.
-
-Albert
-
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-
---------------000001020300080907070303
+------_=_NextPart_001_01C54CD2.6EEFB7B0
 Content-Type: text/plain;
- name="atapi_state_fix.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="atapi_state_fix.diff"
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
---- linux-2.6.11.7-twe/include/linux/libata.h	2005-04-25 14:59:15.000000000 +0800
-+++ linux-2.6.11.7-mod/include/linux/libata.h	2005-04-25 15:06:25.000000000 +0800
-@@ -161,6 +161,8 @@
- 	PIO_ST_LAST,
- 	PIO_ST_LAST_POLL,
- 	PIO_ST_ERR,
-+	PIO_ST_PKT,
-+	PIO_ST_CDB_SENT,
- };
- 
- /* forward declarations */
---- linux-2.6.11.7-twe/drivers/scsi/libata-core.c	2005-04-25 16:19:05.000000000 +0800
-+++ linux-2.6.11.7-mod/drivers/scsi/libata-core.c	2005-04-29 16:20:32.000000000 +0800
-@@ -2632,6 +2632,7 @@
- 	default:
- 		ata_altstatus(ap);
- 		drv_stat = ata_chk_status(ap);
-+		ap->pio_task_state = PIO_ST_IDLE;
- 
- 		/* ack bmdma irq events */
- 		ap->ops->irq_clear(ap);
-@@ -2934,17 +2935,20 @@
- 	case ATA_PROT_ATAPI:
- 		ata_qc_set_polling(qc);
- 		ata_tf_to_host_nolock(ap, &qc->tf);
-+		ap->pio_task_state = PIO_ST_PKT;
- 		queue_work(ata_wq, &ap->packet_task);
- 		break;
- 
- 	case ATA_PROT_ATAPI_NODATA:
- 		ata_tf_to_host_nolock(ap, &qc->tf);
-+		ap->pio_task_state = PIO_ST_PKT;
- 		queue_work(ata_wq, &ap->packet_task);
- 		break;
- 
- 	case ATA_PROT_ATAPI_DMA:
- 		ap->ops->tf_load(ap, &qc->tf);	 /* load tf registers */
- 		ap->ops->bmdma_setup(qc);	    /* set up bmdma */
-+		ap->pio_task_state = PIO_ST_PKT;
- 		queue_work(ata_wq, &ap->packet_task);
- 		break;
- 
-@@ -3142,6 +3146,13 @@
- {
- 	u8 status, host_stat;
- 
-+	/* ATAPI: Ignore interrupt if CDB is not sent yet  */
-+	if (is_atapi_taskfile(&qc->tf) &&
-+	    ap->pio_task_state != PIO_ST_CDB_SENT) {
-+		DPRINTK("ata%u: not my atapi interrupt\n", ap->id);
-+		goto idle_irq;
-+	}
-+
- 	switch (qc->tf.protocol) {
- 
- 	case ATA_PROT_DMA:
-@@ -3174,6 +3185,8 @@
- 		DPRINTK("ata%u: protocol %d (dev_stat 0x%X)\n",
- 			ap->id, qc->tf.protocol, status);
- 
-+		ap->pio_task_state = PIO_ST_IDLE;
-+
- 		/* ack bmdma irq events */
- 		ap->ops->irq_clear(ap);
- 
-@@ -3260,6 +3273,7 @@
- 	struct ata_port *ap = _data;
- 	struct ata_queued_cmd *qc;
- 	u8 status;
-+	unsigned long flags;
- 
- 	qc = ata_qc_from_tag(ap, ap->active_tag);
- 	assert(qc != NULL);
-@@ -3275,10 +3289,13 @@
- 	if ((status & (ATA_BUSY | ATA_DRQ)) != ATA_DRQ)
- 		goto err_out;
- 
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+
- 	/* send SCSI cdb */
- 	DPRINTK("send cdb\n");
- 	assert(ap->cdb_len >= 12);
- 	ata_data_xfer(ap, qc->cdb, ap->cdb_len, 1);
-+	ap->pio_task_state = PIO_ST_CDB_SENT;
- 
- 	/* if we are DMA'ing, irq handler takes over from here */
- 	if (qc->tf.protocol == ATA_PROT_ATAPI_DMA)
-@@ -3295,6 +3312,8 @@
- 		queue_work(ata_wq, &ap->pio_task);
- 	}
- 
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
- 	return;
- 
- err_out:
+Bartlomiej Zolnierkiewicz wrote:
+> On Apr 5, 2005 11:08 PM, Stuart_Hayes@dell.com
+> <Stuart_Hayes@dell.com> wrote:=20
+>=20
+>> How is this?  I already had the "flags" declarations at the beginning
+>> of the functions, but I wrapped them and the irq disable/enables in
+>> the
+>=20
+> I mean at the very beginning but lets leave it as it is.
+>=20
+>> HIGHMEM ifdef, like ide_pio_sector() in ide-taskfile.c.
+>=20
+> thanks
+>=20
+> Bartlomiej
 
---------------000001020300080907070303--
+Bart --
+
+With more testing, I've discovered a problem with thin patch--I used the
+"KM_USER0" window for kmap_atomic(), but that's apparently not safe to
+use in an interrupt handler, because there are places in the kernel
+where KM_USER0 is used without masking interrupts (see
+include/linux/highmem.h for several examples).  This patch is identical
+to the previous one I sent in, except it uses the KM_IRQ0 window, which=20
+I verified is not used anywhere without IRQs masked.
+
+This patch is against 2.6.11.7... the latest kernel on kernel.org didn't
+yet have the previous patch I submitted.  If it would be more useful, I
+can make this patch against an ide-scsi.c that already has my previous
+patch applied--I wasn't sure which would be better.
+
+Thanks!
+Stuart
 
 
+
+------_=_NextPart_001_01C54CD2.6EEFB7B0
+Content-Type: application/octet-stream;
+	name="ide-scsi.2.6.11.7.try5.patch"
+Content-Transfer-Encoding: base64
+Content-Description: ide-scsi.2.6.11.7.try5.patch
+Content-Disposition: attachment;
+	filename="ide-scsi.2.6.11.7.try5.patch"
+
+ZGlmZiAtcHVyTiBsaW51eC0yLjYuMTEuNy9kcml2ZXJzL3Njc2kvaWRlLXNjc2kuYyBsaW51eC0y
+LjYuMTEuN21vZHMvZHJpdmVycy9zY3NpL2lkZS1zY3NpLmMKLS0tIGxpbnV4LTIuNi4xMS43L2Ry
+aXZlcnMvc2NzaS9pZGUtc2NzaS5jCTIwMDUtMDQtMDcgMTQ6NTc6NDYuMDAwMDAwMDAwIC0wNDAw
+CisrKyBsaW51eC0yLjYuMTEuN21vZHMvZHJpdmVycy9zY3NpL2lkZS1zY3NpLmMJMjAwNS0wNC0y
+OSAxMToxMjoyMi4wMDAwMDAwMDAgLTA0MDAKQEAgLTE0Myw2ICsxNDMsNyBAQCBzdGF0aWMgdm9p
+ZCBpZGVzY3NpX2lucHV0X2J1ZmZlcnMgKGlkZV9kCiB7CiAJaW50IGNvdW50OwogCWNoYXIgKmJ1
+ZjsKKwl1bnNpZ25lZCBsb25nIGZsYWdzOwogCiAJd2hpbGUgKGJjb3VudCkgewogCQlpZiAocGMt
+PnNnIC0gKHN0cnVjdCBzY2F0dGVybGlzdCAqKSBwYy0+c2NzaV9jbWQtPnJlcXVlc3RfYnVmZmVy
+ID4gcGMtPnNjc2lfY21kLT51c2Vfc2cpIHsKQEAgLTE1MSw4ICsxNTIsMTEgQEAgc3RhdGljIHZv
+aWQgaWRlc2NzaV9pbnB1dF9idWZmZXJzIChpZGVfZAogCQkJcmV0dXJuOwogCQl9CiAJCWNvdW50
+ID0gbWluKHBjLT5zZy0+bGVuZ3RoIC0gcGMtPmJfY291bnQsIGJjb3VudCk7Ci0JCWJ1ZiA9IHBh
+Z2VfYWRkcmVzcyhwYy0+c2ctPnBhZ2UpICsgcGMtPnNnLT5vZmZzZXQ7CisJCWxvY2FsX2lycV9z
+YXZlKGZsYWdzKTsKKwkJYnVmID0ga21hcF9hdG9taWMocGMtPnNnLT5wYWdlLCBLTV9JUlEwKSAr
+IHBjLT5zZy0+b2Zmc2V0OwogCQlkcml2ZS0+aHdpZi0+YXRhcGlfaW5wdXRfYnl0ZXMoZHJpdmUs
+IGJ1ZiArIHBjLT5iX2NvdW50LCBjb3VudCk7CisJCWt1bm1hcF9hdG9taWMoYnVmIC0gcGMtPnNn
+LT5vZmZzZXQsIEtNX0lSUTApOworCQlsb2NhbF9pcnFfcmVzdG9yZShmbGFncyk7CiAJCWJjb3Vu
+dCAtPSBjb3VudDsgcGMtPmJfY291bnQgKz0gY291bnQ7CiAJCWlmIChwYy0+Yl9jb3VudCA9PSBw
+Yy0+c2ctPmxlbmd0aCkgewogCQkJcGMtPnNnKys7CkBAIC0xNjUsNiArMTY5LDcgQEAgc3RhdGlj
+IHZvaWQgaWRlc2NzaV9vdXRwdXRfYnVmZmVycyAoaWRlXwogewogCWludCBjb3VudDsKIAljaGFy
+ICpidWY7CisJdW5zaWduZWQgbG9uZyBmbGFnczsKIAogCXdoaWxlIChiY291bnQpIHsKIAkJaWYg
+KHBjLT5zZyAtIChzdHJ1Y3Qgc2NhdHRlcmxpc3QgKikgcGMtPnNjc2lfY21kLT5yZXF1ZXN0X2J1
+ZmZlciA+IHBjLT5zY3NpX2NtZC0+dXNlX3NnKSB7CkBAIC0xNzMsOCArMTc4LDExIEBAIHN0YXRp
+YyB2b2lkIGlkZXNjc2lfb3V0cHV0X2J1ZmZlcnMgKGlkZV8KIAkJCXJldHVybjsKIAkJfQogCQlj
+b3VudCA9IG1pbihwYy0+c2ctPmxlbmd0aCAtIHBjLT5iX2NvdW50LCBiY291bnQpOwotCQlidWYg
+PSBwYWdlX2FkZHJlc3MocGMtPnNnLT5wYWdlKSArIHBjLT5zZy0+b2Zmc2V0OworCQlsb2NhbF9p
+cnFfc2F2ZShmbGFncyk7CisJCWJ1ZiA9IGttYXBfYXRvbWljKHBjLT5zZy0+cGFnZSwgS01fSVJR
+MCkgKyBwYy0+c2ctPm9mZnNldDsKIAkJZHJpdmUtPmh3aWYtPmF0YXBpX291dHB1dF9ieXRlcyhk
+cml2ZSwgYnVmICsgcGMtPmJfY291bnQsIGNvdW50KTsKKwkJa3VubWFwX2F0b21pYyhidWYgLSBw
+Yy0+c2ctPm9mZnNldCwgS01fSVJRMCk7CisJCWxvY2FsX2lycV9yZXN0b3JlKGZsYWdzKTsKIAkJ
+YmNvdW50IC09IGNvdW50OyBwYy0+Yl9jb3VudCArPSBjb3VudDsKIAkJaWYgKHBjLT5iX2NvdW50
+ID09IHBjLT5zZy0+bGVuZ3RoKSB7CiAJCQlwYy0+c2crKzsK
+
+------_=_NextPart_001_01C54CD2.6EEFB7B0--
