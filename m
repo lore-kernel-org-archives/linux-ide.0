@@ -1,63 +1,120 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Multiple functionality breakages in 2.6.12rc3 IDE layer
-Date: Fri, 29 Apr 2005 02:23:39 +0200
-Message-ID: <58cb370e05042817232461fb09@mail.gmail.com>
-References: <1114703284.18809.208.camel@localhost.localdomain>
-	 <58cb370e05042813414af5bc1e@mail.gmail.com>
-	 <1114727522.18355.242.camel@localhost.localdomain>
-	 <58cb370e05042816003c2ca4be@mail.gmail.com>
-	 <1114731804.24687.259.camel@localhost.localdomain>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH 1/1] libata-dev-2.6: pdc2027x yet another PLL fix
+Date: Fri, 29 Apr 2005 11:19:55 +0800
+Message-ID: <4271A7DB.9030202@tw.ibm.com>
+References: <425A49F6.3040904@tw.ibm.com> <4264A057.9020604@tw.ibm.com> <426F539D.3090605@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------060303090908090206090607"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.200]:31190 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262351AbVD2AXk convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Apr 2005 20:23:40 -0400
-Received: by wproxy.gmail.com with SMTP id 68so934282wra
-        for <linux-ide@vger.kernel.org>; Thu, 28 Apr 2005 17:23:39 -0700 (PDT)
-In-Reply-To: <1114731804.24687.259.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from bluehawaii.tikira.net ([61.62.22.51]:40417 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S262374AbVD2DUb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Apr 2005 23:20:31 -0400
+In-Reply-To: <426F539D.3090605@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-On 4/29/05, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> On Gwe, 2005-04-29 at 00:00, Bartlomiej Zolnierkiewicz wrote:
-> > > why. You've disabled open() of a device with no bound driver.
-> >
-> > Guess what open() for ide-default was doing in 2.6?
-> >
-> > return -ENXIO;
-> >
-> > and no it wasn't my change - it was the effect of fixing
-> > locking of the higher layers.
-> 
-> Yes so it needed fixing and without all the kref, kmalloc, unique object
-> structure per ide driver code spew too.
+This is a multi-part message in MIME format.
+--------------060303090908090206090607
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-IDE is similar to SCSI now in this respect.
-Are you claiming that SCSI needs fixing too?
+Hi Jeff,
 
-> > > The fact that the IDE layer appears to be getting worse not better,
-> > > which given the starting point is a remarkable achievement.
-> >
-> > Personal insults are easy, get technical facts.
-> 
-> I consider that a technical fact. The last IDE code I maintained fully
-> in 2.4 had mostly working locking, drive hotplug, open for unbound
-> drivers, didnt oops on spurious irqs and wasn't losing all sorts of
-> useful boot options. I had hoped that I wouldnt have to totally fork the
-> 2.6 IDE code in order to get back to where 2.4-ac was and get the
-> locking working so you can't oops it via /proc
+   Yet another pdc2027x PLL fix.
 
-Somehow you seem to forget that I took maintaince over
-2.5.5x (or 2.5.6x) and there was a lot new stuff added when
-you were away (i.e. driver-model and IDE code needs to conform
-with it to get sane power management and sysfs support)
-and that a lot of other things have changed (influencing IDE).
+Problem:
+   The mdelay(100) does not delay exactly 100 ms on power5 machines
+with the CPU micro-partitioning feature turned on.
 
-Feel free to fork so you'll be wasting yours time only and not mine.
+Changes:
+  - Change the "unsigned long" counter data type to "long".
+    (Since the counter value is only 30-bit, "long" should be enough.)
+  - Add do_gettimeofday() to measure the elapsed time.
+
+Patch tested OK on power4, power5 and x86 machines.
+(According to the document, do_gettimeofday() works on most platforms
+except some old M68K machines. There are no PCI slots on those machines,
+using do_gettimeofday() seems to be safe here.)
+
+Attached please find the patch against the libata-dev-2.6 tree
+for your review. Thanks.
+
+
+Albert
+
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+
+--------------060303090908090206090607
+Content-Type: text/plain;
+ name="pdc062.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="pdc062.diff"
+
+--- linux-ori/drivers/scsi/pata_pdc2027x.c	2005-04-27 18:13:09.000000000 +0800
++++ linux/drivers/scsi/pata_pdc2027x.c	2005-04-28 16:34:36.000000000 +0800
+@@ -29,7 +29,7 @@
+ #include <asm/io.h>
+ 
+ #define DRV_NAME	"pata_pdc2027x"
+-#define DRV_VERSION	"0.61"
++#define DRV_VERSION	"0.62"
+ #undef PDC_DEBUG
+ 
+ #ifdef PDC_DEBUG
+@@ -472,10 +472,10 @@
+  * @probe_ent: for the port address
+  */
+ 
+-static unsigned long pdc_read_counter(struct ata_probe_ent *probe_ent)
++static long pdc_read_counter(struct ata_probe_ent *probe_ent)
+ {
+ 	u8 ctr0, ctr1, ctr2, ctr3;
+-	unsigned long counter;
++	long counter;
+ 	u8 ctr0v, ctr1v, ctr2v, ctr3v;
+ 	int retry = 1;
+ 
+@@ -625,11 +625,13 @@
+ static long pdc_detect_pll_input_clock(struct ata_probe_ent *probe_ent) 
+ {
+ 	u8 scr1;
+-	unsigned long start_count, end_count;
+-	long pll_clock;
++	long start_count, end_count;
++	struct timeval start_time, end_time;
++	long pll_clock, usec_elapsed;
+ 
+ 	/* Read current counter value */
+ 	start_count = pdc_read_counter(probe_ent);
++	do_gettimeofday(&start_time);
+ 
+ 	/* Start the test mode */
+ 	outb(0x01, probe_ent->port[0].bmdma_addr + 0x01);
+@@ -642,6 +644,7 @@
+ 
+ 	/* Read the counter values again */
+ 	end_count = pdc_read_counter(probe_ent);
++	do_gettimeofday(&end_time);
+ 
+ 	/* Stop the test mode */
+ 	outb(0x01, probe_ent->port[0].bmdma_addr + 0x01);
+@@ -650,7 +653,9 @@
+ 	outb(scr1 & 0xBF, probe_ent->port[0].bmdma_addr + 0x03);
+ 
+ 	/* calculate the input clock in Hz */
+-	pll_clock = (long) ((start_count - end_count) * 10);
++	usec_elapsed = (end_time.tv_sec - start_time.tv_sec) * 1000000 + 
++		(end_time.tv_usec - start_time.tv_usec);
++	pll_clock = (start_count - end_count) / 100 * (100000000 / usec_elapsed);
+ 
+ 	PDPRINTK("start[%lu] end[%lu] \n", start_count, end_count);
+ 	PDPRINTK("PLL input clock[%ld]Hz\n", pll_clock);
+
+--------------060303090908090206090607--
+
+
