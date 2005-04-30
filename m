@@ -1,35 +1,90 @@
-From: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: ahci or ata-piix for ich6?
-Date: Sat, 30 Apr 2005 13:18:28 -0400
-Message-ID: <20050430171827.GA14203@tuxdriver.com>
-References: <d502d3$sl8$1@sea.gmane.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/ide/: possible cleanups
+Date: Sat, 30 Apr 2005 22:07:50 +0200
+Message-ID: <20050430200750.GM3571@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([24.172.12.4]:15121 "EHLO ra.tuxdriver.com")
-	by vger.kernel.org with ESMTP id S261310AbVD3RSb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Apr 2005 13:18:31 -0400
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:5391 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261392AbVD3UHw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Apr 2005 16:07:52 -0400
 Content-Disposition: inline
-In-Reply-To: <d502d3$sl8$1@sea.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sean <seandarcy2@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sat, Apr 30, 2005 at 09:55:17AM -0400, sean wrote:
-> I have a mobo with the 915G, 82801FB/FBW (ICH6/ICH6W) SATA 
-> controller. Which SATA driver in 2.6.12-rc3?
+This patch contains the following possible cleanups:
+- pci/cy82c693.c: make a needlessly global function static
+- remove the following unneeded EXPORT_SYMBOL's:
+  - ide-taskfile.c: do_rw_taskfile
+  - ide-iops.c: default_hwif_iops
+  - ide-iops.c: default_hwif_transport
+  - ide-iops.c: wait_for_ready
 
-If you configured AHCI in the BIOS, then ahci should work.  Otherwise
-ata_piix is the choice.  In fact, for ICH6 ata_piix is smart enough
-to disable AHCI on its own, if it gets loaded.  So, ata_piix is the
-safe choice (ignoring any issues favoring AHCI).
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-For those observing, the reason this is an issue is because Intel
-used the same PCI ID for ICH6 in either IDE or AHCI mode.  So, there
-is no obvious choice for kudzu and the like to make.
+---
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+This patch was already sent on:
+- 17 Apr 2005
+
+ drivers/ide/ide-iops.c     |    6 ------
+ drivers/ide/ide-taskfile.c |    2 --
+ drivers/ide/pci/cy82c693.c |    2 +-
+ 3 files changed, 1 insertion(+), 9 deletions(-)
+
+--- linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c.old	2005-02-05 02:57:03.000000000 +0100
++++ linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c	2005-02-05 02:57:12.000000000 +0100
+@@ -161,8 +161,6 @@
+ 	return ide_stopped;
+ }
+ 
+-EXPORT_SYMBOL(do_rw_taskfile);
+-
+ /*
+  * set_multmode_intr() is invoked on completion of a WIN_SETMULT cmd.
+  */
+
+--- linux-2.6.12-rc2-mm3-full/drivers/ide/pci/cy82c693.c.old	2005-04-17 21:11:22.000000000 +0200
++++ linux-2.6.12-rc2-mm3-full/drivers/ide/pci/cy82c693.c	2005-04-17 21:11:30.000000000 +0200
+@@ -469,7 +469,7 @@
+ 
+ static __initdata ide_hwif_t *primary;
+ 
+-void __init init_iops_cy82c693(ide_hwif_t *hwif)
++static void __init init_iops_cy82c693(ide_hwif_t *hwif)
+ {
+ 	if (PCI_FUNC(hwif->pci_dev->devfn) == 1)
+ 		primary = hwif;
+--- linux-2.6.12-rc2-mm3-full/drivers/ide/ide-iops.c.old	2005-04-17 21:12:44.000000000 +0200
++++ linux-2.6.12-rc2-mm3-full/drivers/ide/ide-iops.c	2005-04-17 21:12:54.000000000 +0200
+@@ -104,8 +104,6 @@
+ 	hwif->INSL	= ide_insl;
+ }
+ 
+-EXPORT_SYMBOL(default_hwif_iops);
+-
+ /*
+  *	MMIO operations, typically used for SATA controllers
+  */
+@@ -329,8 +327,6 @@
+ 	hwif->atapi_output_bytes	= atapi_output_bytes;
+ }
+ 
+-EXPORT_SYMBOL(default_hwif_transport);
+-
+ /*
+  * Beginning of Taskfile OPCODE Library and feature sets.
+  */
+@@ -525,8 +525,6 @@
+ 	return 0;
+ }
+ 
+-EXPORT_SYMBOL(wait_for_ready);
+-
+ /*
+  * This routine busy-waits for the drive status to be not "busy".
+  * It then checks the status for all of the "good" bits and none
+
