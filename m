@@ -1,53 +1,36 @@
-From: sean <seandarcy2@gmail.com>
-Subject: Re: ahci or ata-piix for ich6?
-Date: Sat, 30 Apr 2005 21:12:23 -0400
-Message-ID: <d51a2h$h1f$1@sea.gmane.org>
-References: <d502d3$sl8$1@sea.gmane.org> <20050430171827.GA14203@tuxdriver.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [2.6 patch] drivers/ide/: possible cleanups
+Date: Sun, 01 May 2005 14:37:43 +0100
+Message-ID: <1114954660.11309.154.camel@localhost.localdomain>
+References: <20050430200750.GM3571@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:65245 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S261506AbVEABtb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Apr 2005 21:49:31 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1DS3TA-0007rv-5r
-	for linux-ide@vger.kernel.org; Sun, 01 May 2005 03:42:04 +0200
-Received: from ool-4356fcdd.dyn.optonline.net ([67.86.252.221])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sun, 01 May 2005 03:42:04 +0200
-Received: from seandarcy2 by ool-4356fcdd.dyn.optonline.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sun, 01 May 2005 03:42:04 +0200
-In-Reply-To: <20050430171827.GA14203@tuxdriver.com>
+Received: from clock-tower.bc.nu ([81.2.110.250]:19427 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S261514AbVEANlF
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 1 May 2005 09:41:05 -0400
+In-Reply-To: <20050430200750.GM3571@stusta.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Andrew Morton <akpm@osdl.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-John W. Linville wrote:
-> On Sat, Apr 30, 2005 at 09:55:17AM -0400, sean wrote:
-> 
->>I have a mobo with the 915G, 82801FB/FBW (ICH6/ICH6W) SATA 
->>controller. Which SATA driver in 2.6.12-rc3?
-> 
-> 
-> If you configured AHCI in the BIOS, then ahci should work.  Otherwise
-> ata_piix is the choice.  In fact, for ICH6 ata_piix is smart enough
-> to disable AHCI on its own, if it gets loaded.  So, ata_piix is the
-> safe choice (ignoring any issues favoring AHCI).
-> 
-> For those observing, the reason this is an issue is because Intel
-> used the same PCI ID for ICH6 in either IDE or AHCI mode.  So, there
-> is no obvious choice for kudzu and the like to make.
-> 
-> John
+On Sad, 2005-04-30 at 21:07, Adrian Bunk wrote:
+> This patch contains the following possible cleanups:
+> - pci/cy82c693.c: make a needlessly global function static
+> - remove the following unneeded EXPORT_SYMBOL's:
+>   - ide-taskfile.c: do_rw_taskfile
+>   - ide-iops.c: default_hwif_iops
+>   - ide-iops.c: default_hwif_transport
+>   - ide-iops.c: wait_for_ready
 
-Aha!  I don't have ( or least can't find ) any ahci option 
-in my bios for the gigabyte GA-8i915g board. I've asked on 
-the alt gigabyte newgroup.
+default_*_ops are very much API items not currently used. You need them
+if you
+want to switch from mmio back to pio (eg doing S3 resume) although
+nobody is currently doing that.
 
-thanks
+wait_for_ready used to be used by ide-probe as a module so seems sane.
 
-sean
 
