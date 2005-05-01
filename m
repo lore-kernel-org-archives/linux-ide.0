@@ -1,52 +1,73 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [2.6 patch] drivers/ide/: possible cleanups
-Date: Sun, 1 May 2005 16:29:15 +0200
-Message-ID: <20050501142915.GF3592@stusta.de>
-References: <20050430200750.GM3571@stusta.de> <1114954660.11309.154.camel@localhost.localdomain>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH 2.6.11.6] ide-scsi: kmap scatter/gather before doing PIO
+Date: Sun, 1 May 2005 17:49:02 +0200
+Message-ID: <20050501154901.GH2034@suse.de>
+References: <7A8F92187EF7A249BF847F1BF4903C04010EEC08@ausx2kmpc103.aus.amer.dell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:39175 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261634AbVEAO3Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 1 May 2005 10:29:16 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:34978 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261679AbVEAPtI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 May 2005 11:49:08 -0400
 Content-Disposition: inline
-In-Reply-To: <1114954660.11309.154.camel@localhost.localdomain>
+In-Reply-To: <7A8F92187EF7A249BF847F1BF4903C04010EEC08@ausx2kmpc103.aus.amer.dell.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andrew Morton <akpm@osdl.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Stuart_Hayes@Dell.com
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-On Sun, May 01, 2005 at 02:37:43PM +0100, Alan Cox wrote:
-> On Sad, 2005-04-30 at 21:07, Adrian Bunk wrote:
-> > This patch contains the following possible cleanups:
-> > - pci/cy82c693.c: make a needlessly global function static
-> > - remove the following unneeded EXPORT_SYMBOL's:
-> >   - ide-taskfile.c: do_rw_taskfile
-> >   - ide-iops.c: default_hwif_iops
-> >   - ide-iops.c: default_hwif_transport
-> >   - ide-iops.c: wait_for_ready
-> 
-> default_*_ops are very much API items not currently used. You need them
-> if you
-> want to switch from mmio back to pio (eg doing S3 resume) although
-> nobody is currently doing that.
+On Fri, Apr 29 2005, Stuart_Hayes@Dell.com wrote:
+> > With more testing, I've discovered a problem with thin patch--I used
+> > the "KM_USER0" window for kmap_atomic(), but that's apparently not
+> > safe to use in an interrupt handler, because there are places in the
+> > kernel where KM_USER0 is used without masking interrupts (see
+> > include/linux/highmem.h for several examples).  This patch is
+> > identical to the previous one I sent in, except it uses the KM_IRQ0
+> > window, which I verified is not used anywhere without IRQs masked.   
+> > 
+> > This patch is against 2.6.11.7... the latest kernel on kernel.org
+> > didn't yet have the previous patch I submitted.  If it would be more
+> > useful, I can make this patch against an ide-scsi.c that already has
+> > my previous patch applied--I wasn't sure which would be better.   
 
-My patch only removes the EXPORT_SYMBOL's.
+(you should inline the patch so one can comment on it...)
 
-The functions themselves stay (since they are used), and if someone 
-wants at some time in the future use them from a module, re-adding them 
-will be trivial.
+The IO code typically uses the BIO defines for this.
 
-> wait_for_ready used to be used by ide-probe as a module so seems sane.
+diff -purN linux-2.6.11.7/drivers/scsi/ide-scsi.c linux-2.6.11.7mods/drivers/scsi/ide-scsi.c
+--- linux-2.6.11.7/drivers/scsi/ide-scsi.c	2005-04-07 14:57:46.000000000 -0400
++++ linux-2.6.11.7mods/drivers/scsi/ide-scsi.c	2005-04-29 11:46:55.000000000 -0400
+@@ -143,6 +143,9 @@ static void idescsi_input_buffers (ide_d
+ {
+ 	int count;
+ 	char *buf;
++#ifdef CONFIG_HIGHMEM
++	unsigned long flags;
++#endif
+ 
+ 	while (bcount) {
+ 		if (pc->sg - (struct scatterlist *) pc->scsi_cmd->request_buffer > pc->scsi_cmd->use_sg) {
+@@ -151,8 +154,15 @@ static void idescsi_input_buffers (ide_d
+ 			return;
+ 		}
+ 		count = min(pc->sg->length - pc->b_count, bcount);
+-		buf = page_address(pc->sg->page) + pc->sg->offset;
++#ifdef CONFIG_HIGHMEM
++		local_irq_save(flags);
++#endif
 
-cu
-Adrian
+This is just aweful, don't add tons of ifdefs. If you must
+differentiate, just do something ala:
+
+        if (PageHighMem(page)) {
+                save interrupts
+                buf = kmap
+        } else
+                buf = page_address(xxx).
+
+and so on. But why are you still doing it this way? Did we not agree
+that adding a host template no-high-mem defines was way better??
 
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+Jens Axboe
 
