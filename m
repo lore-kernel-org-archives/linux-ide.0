@@ -1,64 +1,51 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: IDE problems in 2.6.12-rc1-bk1 onwards (was Re: 2.6.12-rc3-mm1)
-Date: Sun, 1 May 2005 20:41:03 +0200
-Message-ID: <58cb370e0505011141a2b3c58@mail.gmail.com>
-References: <03be01c54e77$83d86980$0f01a8c0@max>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [2.6 patch] drivers/ide/: possible cleanups
+Date: Mon, 02 May 2005 11:27:24 +1000
+Message-ID: <1114997244.7112.360.camel@gaston>
+References: <20050430200750.GM3571@stusta.de>
+	 <1114954660.11309.154.camel@localhost.localdomain>
+	 <20050501142915.GF3592@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.204]:13708 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262640AbVEASlG convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 1 May 2005 14:41:06 -0400
-Received: by wproxy.gmail.com with SMTP id 68so1531883wra
-        for <linux-ide@vger.kernel.org>; Sun, 01 May 2005 11:41:03 -0700 (PDT)
-In-Reply-To: <03be01c54e77$83d86980$0f01a8c0@max>
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:24734 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S261575AbVEBBbg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 May 2005 21:31:36 -0400
+In-Reply-To: <20050501142915.GF3592@stusta.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Purdie <rpurdie@rpsys.net>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dominik Brodowski <linux@brodo.de>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
 
-On 5/1/05, Richard Purdie <rpurdie@rpsys.net> wrote:
-> I've switched back to 2.6.12-rc3-mm1 and added some debuging to all the ide
-> functions to trace the order functions are getting called. I've shown the
-> result below for two different oops. There is more than one problem. The
-> first problem was introduced in 2.6.12-rc1-bk1 in the ide-disk changes. The
-> second has been around for a while but is showing up again.
->  
-> The problem is idedisk_cleanup() gets called twice from ide_unregister().
-> Once here:
+On Sun, 2005-05-01 at 16:29 +0200, Adrian Bunk wrote:
+> On Sun, May 01, 2005 at 02:37:43PM +0100, Alan Cox wrote:
+> > On Sad, 2005-04-30 at 21:07, Adrian Bunk wrote:
+> > > This patch contains the following possible cleanups:
+> > > - pci/cy82c693.c: make a needlessly global function static
+> > > - remove the following unneeded EXPORT_SYMBOL's:
+> > >   - ide-taskfile.c: do_rw_taskfile
+> > >   - ide-iops.c: default_hwif_iops
+> > >   - ide-iops.c: default_hwif_transport
+> > >   - ide-iops.c: wait_for_ready
+> > 
+> > default_*_ops are very much API items not currently used. You need them
+> > if you
+> > want to switch from mmio back to pio (eg doing S3 resume) although
+> > nobody is currently doing that.
 > 
->  for (unit = 0; unit < MAX_DRIVES; ++unit) {
->   drive = &hwif->drives[unit];
->   if (!drive->present)
->    continue;
->   DRIVER(drive)->cleanup(drive);
->  }
+> My patch only removes the EXPORT_SYMBOL's.
 > 
-> and secondly in ide_unregister indirectly via:
-> 
->   blk_cleanup_queue(drive->queue);
->   printk(KERN_ERR "ide_unregister4()\n");
->   device_unregister(&drive->gendev);
->   down(&drive->gendev_rel_sem);
->   spin_lock_irq(&ide_lock);
->   drive->queue = NULL;
->   printk(KERN_ERR "ide_unregister5()\n");
-> 
-> device_unregister()  triggers ide_drive_remove() which calls
-> DRIVER(drive)->cleanup(drive);
-> 
-> In the first call to idedisk_cleanup(), ide_disk_put(idkp) is called which
-> decreases the reference counter to zero. This triggers ide_disk_release()
-> which calls kfree(idkp). Hence the second call to idedisk_cleanup() calls
-> what is now a null pointer (or worse).
+> The functions themselves stay (since they are used), and if someone 
+> wants at some time in the future use them from a module, re-adding them 
+> will be trivial.
 
-Thanks for excellent debugging.
+Hrm... well, that means if I ever want ide-pmac for example to be a
+module, I'll have to add them back...
 
-Both problems should be fixed by "convert IDE device drivers to 
-driver-model" patch but I need to resync it against latest kernels.
+On the other hand, I agree that their names aren't very nice for
+exported symbols... they should have been ide_* 
 
-Bartlomiej
+Ben.
+
+
