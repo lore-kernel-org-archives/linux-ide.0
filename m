@@ -1,52 +1,68 @@
-From: "Oskar Liljeblad" <oskar@osk.mine.nu>
-Subject: Re: clock drift with two Promise Ultra133 TX2 (PDC 20269) cards
-Date: Tue, 3 May 2005 19:28:46 +0200
-Message-ID: <20050503172845.GA12944@oskar>
-References: <66F9227F7417874C8DB3CEB05772741704514D@MILEX0.Miltope.local>
+From: Greg KH <greg@kroah.com>
+Subject: Re: 2.6.12-rc3-mm2 - /proc/ide/sr0/model: No such file or directory
+Date: Tue, 3 May 2005 11:27:30 -0700
+Message-ID: <20050503182729.GC14539@kroah.com>
+References: <20050430164303.6538f47c.akpm@osdl.org> <Pine.LNX.4.62.0505010429050.2491@dragon.hyggekrogen.localhost> <20050503031158.GA6917@kroah.com> <20050502201823.0ab02e96.akpm@osdl.org> <20050503044805.GA14750@kroah.com> <58cb370e05050300117f125506@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from diadema.skane.tbv.se ([193.13.139.13]:33182 "EHLO
-	diadema.skane.tbv.se") by vger.kernel.org with ESMTP
-	id S261441AbVECR2s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 May 2005 13:28:48 -0400
+Received: from mail.kroah.org ([69.55.234.183]:13760 "EHLO perch.kroah.org")
+	by vger.kernel.org with ESMTP id S261503AbVECS1s (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2005 14:27:48 -0400
 Content-Disposition: inline
-In-Reply-To: <66F9227F7417874C8DB3CEB05772741704514D@MILEX0.Miltope.local>
+In-Reply-To: <58cb370e05050300117f125506@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Drew Winstel <DWinstel@Miltope.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Andrew Morton <akpm@osdl.org>, B.Zolnierkiewicz@elka.pw.edu.pl, juhl-lkml@dif.dk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tuesday, May 03, 2005 at 11:53, Drew Winstel wrote:
-> I think I know what the problem is.
+On Tue, May 03, 2005 at 09:11:08AM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On 5/3/05, Greg KH <greg@kroah.com> wrote:
+> > On Mon, May 02, 2005 at 08:18:23PM -0700, Andrew Morton wrote:
+> > > Greg KH <greg@kroah.com> wrote:
+> > > >
+> > > > On Sun, May 01, 2005 at 04:32:45AM +0200, Jesper Juhl wrote:
+> > > > > On Sat, 30 Apr 2005, Andrew Morton wrote:
+> > > > >
+> > > > > >
+> > > > > > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.12-rc3/2.6.12-rc3-mm2/
+> > > > > >
+> > > > >
+> > > > > I see one small change in behaviour with this kernel.
+> > > > >
+> > > > > During boot when initializing udev I see
+> > > > >
+> > > > > Initializing udev dynamic device directory.
+> > > > > grep: /proc/ide/sr0/model: No such file or directory
+> > > > > grep: /proc/ide/sr1/model: No such file or directory
+> > > > >
+> > > > > With previous kernels I only see
+> > > > >
+> > > > > Initializing udev dynamic device directory.
+> > > >
+> > > > That is because you have a udev script that is expecting to see ide
+> > > > stuff in proc.  That has now been moved to sysfs, so you should not need
+> > > > to run external scripts to detect ide devices now.  I suggest you go bug
+> > > > your distro, or whoever set up those rules about it.
+> > >
+> > > err, we don't want to break existing userspace setups, please.
+> > 
+> > I agree.  Bart, want to put the /proc stuff back, mark it depreciated in
+> > the Documentation/feature-removal-schedule.txt as going away in 6 months
+> > or so, and then remove it after that time has gone by?
 > 
-> In include/linux/libata.h, make sure the preprocessor declarations are as 
-> follows.  I think the defaults have ATA_ENABLE_PATA undefined.
+> /proc/ide stuff was _not_ removed, please see original mail:
+>  
+> On 5/1/05, Jesper Juhl <juhl-lkml@dif.dk> wrote:
 > 
-> #define ATA_ENABLE_ATAPI        /* undefine to disable ATAPI support */
-> #define ATA_ENABLE_PATA          /* define to enable PATA support in some
->                                  * low-level drivers */
+> > This machine has no IDE device at all, only SCSI, and the kernel config
+> > has no IDE support either. The config I'm using has not changed in any
 
-Thanks, now it loads correctly. Unfortunately the clock drift still occurs
-with pata_pdc2027x. I'm guessing here, but can clock drift have anything
-to do with IRQs? Also, is it normal to see errors in /proc/interrupt?
+Doh, sorry about that.
 
-# cat /proc/interrupts 
-           CPU0       
-  0:     954189          XT-PIC  timer
-  2:          0          XT-PIC  cascade
-  8:         16          XT-PIC  rtc
-  9:          0          XT-PIC  acpi
- 10:       1630          XT-PIC  eth1
- 11:     103147          XT-PIC  libata
- 12:       9990          XT-PIC  eth0
- 14:       5993          XT-PIC  ide0
- 15:     145866          XT-PIC  libata
-NMI:          0 
-LOC:          0 
-ERR:      23672
-MIS:          0
+Must be a pretty dumb udev script that is failing there, please report
+this to your distro.
 
-Regards,
+thanks,
 
-Oskar Liljeblad (oskar@osk.mine.nu)
+greg k-h
