@@ -1,68 +1,45 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: 2.6.12-rc3-mm2 - /proc/ide/sr0/model: No such file or directory
-Date: Tue, 3 May 2005 11:27:30 -0700
-Message-ID: <20050503182729.GC14539@kroah.com>
-References: <20050430164303.6538f47c.akpm@osdl.org> <Pine.LNX.4.62.0505010429050.2491@dragon.hyggekrogen.localhost> <20050503031158.GA6917@kroah.com> <20050502201823.0ab02e96.akpm@osdl.org> <20050503044805.GA14750@kroah.com> <58cb370e05050300117f125506@mail.gmail.com>
+From: "Drew Winstel" <DWinstel@Miltope.com>
+Subject: RE: clock drift with two Promise Ultra133 TX2 (PDC 20269) cards
+Date: Tue, 3 May 2005 13:29:45 -0500
+Message-ID: <66F9227F7417874C8DB3CEB057727417045155@MILEX0.Miltope.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kroah.org ([69.55.234.183]:13760 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S261503AbVECS1s (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2005 14:27:48 -0400
-Content-Disposition: inline
-In-Reply-To: <58cb370e05050300117f125506@mail.gmail.com>
+Received: from firewall.miltope.com ([208.12.184.221]:36372 "EHLO
+	smtp.miltope.com") by vger.kernel.org with ESMTP id S261536AbVECS3P convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 May 2005 14:29:15 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Andrew Morton <akpm@osdl.org>, B.Zolnierkiewicz@elka.pw.edu.pl, juhl-lkml@dif.dk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Oskar Liljeblad <oskar@osk.mine.nu>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, May 03, 2005 at 09:11:08AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On 5/3/05, Greg KH <greg@kroah.com> wrote:
-> > On Mon, May 02, 2005 at 08:18:23PM -0700, Andrew Morton wrote:
-> > > Greg KH <greg@kroah.com> wrote:
-> > > >
-> > > > On Sun, May 01, 2005 at 04:32:45AM +0200, Jesper Juhl wrote:
-> > > > > On Sat, 30 Apr 2005, Andrew Morton wrote:
-> > > > >
-> > > > > >
-> > > > > > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.12-rc3/2.6.12-rc3-mm2/
-> > > > > >
-> > > > >
-> > > > > I see one small change in behaviour with this kernel.
-> > > > >
-> > > > > During boot when initializing udev I see
-> > > > >
-> > > > > Initializing udev dynamic device directory.
-> > > > > grep: /proc/ide/sr0/model: No such file or directory
-> > > > > grep: /proc/ide/sr1/model: No such file or directory
-> > > > >
-> > > > > With previous kernels I only see
-> > > > >
-> > > > > Initializing udev dynamic device directory.
-> > > >
-> > > > That is because you have a udev script that is expecting to see ide
-> > > > stuff in proc.  That has now been moved to sysfs, so you should not need
-> > > > to run external scripts to detect ide devices now.  I suggest you go bug
-> > > > your distro, or whoever set up those rules about it.
-> > >
-> > > err, we don't want to break existing userspace setups, please.
-> > 
-> > I agree.  Bart, want to put the /proc stuff back, mark it depreciated in
-> > the Documentation/feature-removal-schedule.txt as going away in 6 months
-> > or so, and then remove it after that time has gone by?
-> 
-> /proc/ide stuff was _not_ removed, please see original mail:
->  
-> On 5/1/05, Jesper Juhl <juhl-lkml@dif.dk> wrote:
-> 
-> > This machine has no IDE device at all, only SCSI, and the kernel config
-> > has no IDE support either. The config I'm using has not changed in any
+> Thanks, now it loads correctly. Unfortunately the clock drift still occurs
+> with pata_pdc2027x. I'm guessing here, but can clock drift have anything
+> to do with IRQs? Also, is it normal to see errors in /proc/interrupt?
 
-Doh, sorry about that.
+I've never noticed any errors before, but that could just be a result of me 
+never actually bothering to look.
 
-Must be a pretty dumb udev script that is failing there, please report
-this to your distro.
+> # cat /proc/interrupts 
 
-thanks,
+<snip>
+> ERR:      23672
 
-greg k-h
+Hmmm....
+
+I'm grasping at straws here.
+
+Let's do some poking into your kernel config.  What do you have set under 
+"Processor type and features"?  
+
+I experienced a similar situation once in the past, but that was a result of 
+drives losing DMA and doing simultaneous activity on eight drives and four 
+controllers.  Moving to the pata_pdc2027x driver seems to have cleared it 
+right up.
+
+Sorry I can't provide a quick cure-all!
+
+Drew
