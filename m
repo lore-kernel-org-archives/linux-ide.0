@@ -1,43 +1,70 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: "Oskar Liljeblad" <oskar@osk.mine.nu>
 Subject: Re: clock drift with two Promise Ultra133 TX2 (PDC 20269) cards
-Date: Wed, 04 May 2005 13:59:28 -0400
-Message-ID: <42790D80.6020300@tmr.com>
-References: <66F9227F7417874C8DB3CEB05772741704514D@MILEX0.Miltope.local><66F9227F7417874C8DB3CEB05772741704514D@MILEX0.Miltope.local> <20050503172845.GA12944@oskar>
+Date: Wed, 4 May 2005 22:10:11 +0200
+Message-ID: <20050504201011.GA817@oskar>
+References: <66F9227F7417874C8DB3CEB057727417045155@MILEX0.Miltope.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from prgy-npn1.prodigy.com ([207.115.54.37]:18576 "EHLO
-	oddball.prodigy.com") by vger.kernel.org with ESMTP id S261244AbVEDR7Q
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 May 2005 13:59:16 -0400
-In-Reply-To: <20050503172845.GA12944@oskar>
+Received: from aquila.skane.tbv.se ([193.13.139.7]:22433 "EHLO
+	diadema.skane.tbv.se") by vger.kernel.org with ESMTP
+	id S261357AbVEDUKU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 May 2005 16:10:20 -0400
+Content-Disposition: inline
+In-Reply-To: <66F9227F7417874C8DB3CEB057727417045155@MILEX0.Miltope.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Oskar Liljeblad <oskar@osk.mine.nu>
-Cc: Drew Winstel <DWinstel@Miltope.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Drew Winstel <DWinstel@Miltope.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bill Davidsen <davidsen@tmr.com>
 
-Oskar Liljeblad wrote:
-> On Tuesday, May 03, 2005 at 11:53, Drew Winstel wrote:
+On Tuesday, May 03, 2005 at 13:45, Drew Winstel wrote:
+> > Thanks, now it loads correctly. Unfortunately the clock drift still occurs
+> > with pata_pdc2027x. I'm guessing here, but can clock drift have anything
+> > to do with IRQs? Also, is it normal to see errors in /proc/interrupt?
 > 
->>I think I know what the problem is.
->>
->>In include/linux/libata.h, make sure the preprocessor declarations are as 
->>follows.  I think the defaults have ATA_ENABLE_PATA undefined.
->>
->>#define ATA_ENABLE_ATAPI        /* undefine to disable ATAPI support */
->>#define ATA_ENABLE_PATA          /* define to enable PATA support in some
->>                                 * low-level drivers */
-> 
-> 
-> Thanks, now it loads correctly. Unfortunately the clock drift still occurs
-> with pata_pdc2027x. I'm guessing here, but can clock drift have anything
-> to do with IRQs? Also, is it normal to see errors in /proc/interrupt?
+> I've never noticed any errors before, but that could just be a result of me 
+> never actually bothering to look.
 
-Are you by chance running ntpd? And have you checked to see if it dies 
-as soon as it starts? There's a bug in the ntp M/L wrt execstack.
+Are interrupts errors serious? Can anyone tell? The error count was higher
+when I had a fifth PCI card in the computer (natsemi ethernet NIC).
+Could there be some kind of PCI card conflict? Maybe I should try to
+remove a few of them...
 
--- 
-    -bill davidsen (davidsen@tmr.com)
-"The secret to procrastination is to put things off until the
-  last possible moment - but no longer"  -me
+[..]
+> Let's do some poking into your kernel config.  What do you have set under 
+> "Processor type and features"?
+
+CONFIG_X86_PC=y
+CONFIG_MK7=y
+CONFIG_X86_CMPXCHG=y
+CONFIG_X86_XADD=y
+CONFIG_X86_L1_CACHE_SHIFT=6
+CONFIG_RWSEM_XCHGADD_ALGORITHM=y
+CONFIG_GENERIC_CALIBRATE_DELAY=y
+CONFIG_X86_WP_WORKS_OK=y
+CONFIG_X86_INVLPG=y
+CONFIG_X86_BSWAP=y
+CONFIG_X86_POPAD_OK=y
+CONFIG_X86_GOOD_APIC=y
+CONFIG_X86_INTEL_USERCOPY=y
+CONFIG_X86_USE_PPRO_CHECKSUM=y
+CONFIG_X86_USE_3DNOW=y
+CONFIG_HPET_TIMER=y
+CONFIG_X86_UP_APIC=y
+CONFIG_X86_UP_IOAPIC=y
+CONFIG_X86_LOCAL_APIC=y
+CONFIG_X86_IO_APIC=y
+CONFIG_X86_TSC=y
+
+In other words, Athlon/Duron/K7 + HPET + Local APIC + IO-Apic
+(though I have tried with both XT-PIC and Local APIC, with same
+drift).
+
+And no, the clock drift occurs no matter if ntpd is running or not.
+It's having a very hard time to syncronize with the remote servers,
+because the clock drift is too high. (It also says somewhere in the
+NTP documentation that it doesn't handle too high clock drift.)
+
+Regards,
+
+Oskar Liljeblad (oskar@osk.mine.nu)
