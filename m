@@ -1,35 +1,44 @@
-From: Kanniball <kanniball@zmail.pt>
-Subject: Sil3112 bugfix: wich one???
-Date: Wed, 4 May 2005 16:24:44 +0000
-Message-ID: <200505041624.44269.kanniball@zmail.pt>
-Reply-To: kanniball@zmail.pt
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: IDE problems in 2.6.12-rc1-bk1 onwards (was Re: 2.6.12-rc3-mm1)
+Date: Wed, 04 May 2005 16:44:02 +0100
+Message-ID: <1115221441.18790.8.camel@localhost.localdomain>
+References: <03be01c54e77$83d86980$0f01a8c0@max>
+	 <1115056032.10369.33.camel@localhost.localdomain>
+	 <033301c54f4e$aedcda80$0f01a8c0@max>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.92.212.1] ([81.92.212.1]:60420 "EHLO zmail.pt")
-	by vger.kernel.org with ESMTP id S261840AbVEDOQ2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2005 10:16:28 -0400
-Received: from 80.172.45.63
-	by zmail.pt
-	(MDaemon.PRO.v6.8.4.R)
-	with ESMTP id 39-md50000000001.tmp
-	for <linux-ide@vger.kernel.org>; Wed, 04 May 2005 15:14:27 +0100
-Content-Disposition: inline
+Received: from [81.2.110.250] ([81.2.110.250]:6285 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S261871AbVEDPpd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2005 11:45:33 -0400
+In-Reply-To: <033301c54f4e$aedcda80$0f01a8c0@max>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Richard Purdie <rpurdie@rpsys.net>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, bzolnier@gmail.com, Dominik Brodowski <linux@brodo.de>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
 
-Hi!
+On Llu, 2005-05-02 at 20:39, Richard Purdie wrote:
+> We've had this conversation before - I tried the -ac tree and found that 
+> whilst it will retry, it blocked whilst waiting and this blocking meant the 
+> status of the drive never changed. The "cardctl eject" command would 
+> therefore just sit there locked up which didn't really solve my problem.
 
-There are two patches for fixing the problem with Silicon Image 311x SATA 
-controllers, one from Silicon Image and other from Tejun Heo.
-Wich one "we" should apply?
+You have to do that, stick a scope on the port and you'll see that the
+IDE layer is still writing to the I/O ports until the last reference is
+dropped.
 
-Thanks for your patience and for your work!
+> The changeover to the driver model means all the callbacks.get handled by 
+> the kobjects and the function only needs to be called once. I applied that 
+> patch and so far it seems to be working very well. As an added bonus, 
+> hotunpluging is also working. I can still make it oops but seemingly not in 
+> the ide layer any longer (now it looks vfs related :).
 
-Best regards,
+It is definitely the right way to go, but you do also have to kill the
+IDE ops and know that every current operating reference is no longer
+using the old IDE ops before you can safely reuse a PCMCIA port/PCI
+slot, otherwise you merely trade easy to find bugs for really nasty
+hotplug races.
 
-Paulo Fidalgo, aka Kanniball
+Alan
 
