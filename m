@@ -1,47 +1,44 @@
-From: gdnixon1@enterate.com.ar
-Subject: Inquiry From Gerald
-Date: Thu,  5 May 2005 19:26:53 -0300
-Message-ID: <1115332013.427a9dad1bfe8__18531.9440126934$1115331245$gmane$org@mail.enterate.com.ar>
+From: "Fco. Javier" =?ISO-8859-1?Q?F=E9lix?= <sshinf@ono.com>
+Subject: Path to Add support for primise FastTrack TX2200 2Ports
+Date: Fri, 06 May 2005 12:32:38 +0200
+Message-ID: <1115375558.14573.6.camel@ffelix>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed; boundary="=-RoVtu1qE1Fc5iwRcB/iG"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from customer79-105.iplannetworks.net ([200.68.68.105]:29313 "EHLO
-	mail.enterate.com.ar") by vger.kernel.org with ESMTP
-	id S262003AbVEEWSO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 May 2005 18:18:14 -0400
+Received: from smtp.ono.com ([62.42.230.12]:12161 "EHLO resmta04.ono.com")
+	by vger.kernel.org with ESMTP id S261203AbVEFKbH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 May 2005 06:31:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Dear Friend,
-I am Mr. Gerald Nixon, I write to inform you of my desire to acquire properties 
-Hence i am contacting you if you would agree to assist me in other to actualize 
-this transaction. the funds to carry out this proposed investments is presently 
-lodged in a finance security firm i honestly request your assistance to provide 
-for me a safe account in your country to receive the money before we can put 
-the funds into use. The total sum is 4.5Million Great Britain Pounds.  
-As soon as the amount mentioned above is successfully transferred into your 
-account, you can go ahead in buying the properties. It might interest you to 
-note that transaction of such may raise suspicion of irrationality but i assure 
-you it will be executed safely without breaching our limited personal integrity 
-that we have in one way or the other aspire to protect. So let us allow trust 
-to play a very minimal role until performance is seen.  Thank you in 
-anticipation of your co-operation.
-Best Regards,
-Mr. Gerald Nixon
 
-Note: I have set aside 25% of this fund to consult your assistance.
+--=-RoVtu1qE1Fc5iwRcB/iG
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+I test with Kernel 2.6.11-ck4 and this patch in a machine two weeks and
+it run ok
 
 
 
+--=-RoVtu1qE1Fc5iwRcB/iG
+Content-Disposition: attachment; filename=sata_promise.c.diff
+Content-Type: text/x-patch; name=sata_promise.c.diff; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
-* Este mensaje fue enviado desde http://www.enterate.com.ar/ 
-____________________________________________________________ 
+--- sata_promise.c	2005-05-06 12:18:51.866666336 +0200
++++ sata_promise.c.new	2005-04-21 18:19:04.000000000 +0200
+@@ -150,6 +150,8 @@
+ static struct pci_device_id pdc_ata_pci_tbl[] = {
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3371, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_2037x },
++	{ PCI_VENDOR_ID_PROMISE, 0x3571, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_2037x },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3373, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_2037x },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3375, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
 
-* Conectate GRATIS a Internet desde Enterate ! 
-Usuario   : enterate@enterate.com.ar 
-Clave     : enterate 
-desde Buenos Aires : 4004-8007 
-desde otras ciudades, consulta en : 
-http://www.enterate.com.ar/InternetGratis.htm 
+--=-RoVtu1qE1Fc5iwRcB/iG--
 
