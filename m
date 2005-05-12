@@ -1,43 +1,79 @@
-From: "John W. Linville" <linville@tuxdriver.com>
-Subject: [patch 2.6.12-rc4 1/1] libata: stop setting sdev->host->max_sectors for lba48 drives
-Date: Thu, 12 May 2005 15:49:54 -0400
-Message-ID: <20050512194953.GA8587@tuxdriver.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Experimental git repositories available for SATA
+Date: Thu, 12 May 2005 16:56:24 -0400
+Message-ID: <4283C2F8.6020801@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------080603080507080604060206"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([24.172.12.4]:1042 "EHLO ra.tuxdriver.com")
-	by vger.kernel.org with ESMTP id S261978AbVELTuC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2005 15:50:02 -0400
-Content-Disposition: inline
+Received: from mail.dvmed.net ([216.237.124.58]:35792 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S262117AbVELU4e (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2005 16:56:34 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, stuart_hayes@Dell.com
+To: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-Avoid changing sdev->host->max_sectors because it can prevent use of
-non-lba48 drives on other ports of the same adapter.
+This is a multi-part message in MIME format.
+--------------080603080507080604060206
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Stuart Hayes <stuart_hayes@Dell.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
 
- drivers/scsi/libata-scsi.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletion(-)
+I have finally gotten around to getting 2.6.x libata development moved 
+over from BitKeeper to git.
 
---- linux-2.6.12-rc4/drivers/scsi/libata-scsi.c.orig	2005-05-12 15:13:51.414435435 -0400
-+++ linux-2.6.12-rc4/drivers/scsi/libata-scsi.c	2005-05-12 15:22:55.813648107 -0400
-@@ -347,7 +347,10 @@ int ata_scsi_slave_config(struct scsi_de
- 		 */
- 		if ((dev->flags & ATA_DFLAG_LBA48) &&
- 		    ((dev->flags & ATA_DFLAG_LOCK_SECTORS) == 0)) {
--			sdev->host->max_sectors = 2048;
-+			/*
-+			 * do not overwrite sdev->host->max_sectors, since
-+			 * other drives on this host may not support LBA48
-+			 */
- 			blk_queue_max_sectors(sdev->request_queue, 2048);
- 		}
- 	}
--- 
-John W. Linville
-linville@tuxdriver.com
+
+The "for Linus/Andrew" repository is libata-2.6.git, available at
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-2.6.git/
+
+The new libata-dev repository is libata-dev.git, available at
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git/
+
+
+A word about these repositories.  I don't use any SCM besides git 
+itself.  libata-2.6.git appears as you would expect:  .git/HEAD points 
+to refs/heads/master, which is the top-of-tree, and contains patches 
+destined for upstream ASAP.
+
+libata-dev.git is a bit different, as it contains multiple branches:
+> [jgarzik@pretzel libata-dev]$ ls .git/refs/heads/
+> adma        atapi-enable        iomap        pdc2027x
+> adma-mwi    bridge-detect       iomap-step1  pdc20619
+> ahci-atapi  chs-support         master       promise-sata-pata
+> ahci-msi    ioctl-get-identity  passthru     sil24
+
+I use the attached 'git-switch-tree' script to update the working 
+directory to reflect the desired branch.
+
+As soon as I am comfortable with git merging, I will create an 'ALL' 
+branch, which contains all of these trees, merged together properly.
+
+	Jeff
+
+
+
+
+--------------080603080507080604060206
+Content-Type: text/plain;
+ name="git-switch-tree"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="git-switch-tree"
+
+#!/bin/sh
+
+if [ "x$1" != "x" ]
+then
+	if [ ! -f .git/refs/heads/$1 ]
+	then
+		echo Branch $1 not found.
+		exit 1
+	fi
+
+	( cd .git && rm -f HEAD && ln -s refs/heads/$1 HEAD )
+fi
+
+git-read-tree $(cat .git/HEAD) && git-checkout-cache -q -f -a
+
+--------------080603080507080604060206--
