@@ -1,39 +1,43 @@
-From: <florian.werner@netcontrol.de>
-Subject: sata dvd burning issue
-Date: Thu, 12 May 2005 13:51:45 +0200
-Message-ID: <F1F08A2468B3814982D2F4FEBB03DD422E416D@xxl-nt-02.hewis.local>
+From: "John W. Linville" <linville@tuxdriver.com>
+Subject: [patch 2.6.12-rc4 1/1] libata: stop setting sdev->host->max_sectors for lba48 drives
+Date: Thu, 12 May 2005 15:49:54 -0400
+Message-ID: <20050512194953.GA8587@tuxdriver.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from darkgate.equinoxe.de ([217.22.192.6]:14770 "HELO
-	darkgate.equinoxe.de") by vger.kernel.org with SMTP id S261505AbVELLvx convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 12 May 2005 07:51:53 -0400
-Received: from unknown (HELO mail.netcontrol.de) ([217.91.107.244]) (envelope-sender <florian.werner@netcontrol.de>)
-          by darkgate.equinoxe.de (qmail-ldap-1.03) with SMTP
-          for <linux-ide@vger.kernel.org>; 12 May 2005 11:36:22 -0000
-Content-Class: urn:content-classes:message
+Received: from ra.tuxdriver.com ([24.172.12.4]:1042 "EHLO ra.tuxdriver.com")
+	by vger.kernel.org with ESMTP id S261978AbVELTuC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2005 15:50:02 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, stuart_hayes@Dell.com
 
-hi
+Avoid changing sdev->host->max_sectors because it can prevent use of
+non-lba48 drives on other ports of the same adapter.
 
-i managed to get my new Plextor PX-712SA DVD-Burner working by changing
-/usr/src/linux/include/linux/libata.h
+Signed-off-by: Stuart Hayes <stuart_hayes@Dell.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
 
-from:
-#undef ATA_ENABLE_ATAPI
-to
-#define ATA_ENABLE_ATAPI
+ drivers/scsi/libata-scsi.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletion(-)
 
-now i can mount dvds and cds but i am not able to burn!
-
-best regards
-
-florian werner
-
-
-
+--- linux-2.6.12-rc4/drivers/scsi/libata-scsi.c.orig	2005-05-12 15:13:51.414435435 -0400
++++ linux-2.6.12-rc4/drivers/scsi/libata-scsi.c	2005-05-12 15:22:55.813648107 -0400
+@@ -347,7 +347,10 @@ int ata_scsi_slave_config(struct scsi_de
+ 		 */
+ 		if ((dev->flags & ATA_DFLAG_LBA48) &&
+ 		    ((dev->flags & ATA_DFLAG_LOCK_SECTORS) == 0)) {
+-			sdev->host->max_sectors = 2048;
++			/*
++			 * do not overwrite sdev->host->max_sectors, since
++			 * other drives on this host may not support LBA48
++			 */
+ 			blk_queue_max_sectors(sdev->request_queue, 2048);
+ 		}
+ 	}
+-- 
+John W. Linville
+linville@tuxdriver.com
