@@ -1,69 +1,41 @@
-From: Benjamin LaHaise <bcrl@kvack.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [rfc/patch] libata -- port configurable delays
-Date: Fri, 13 May 2005 16:03:12 -0400
-Message-ID: <20050513200312.GA6555@kvack.org>
+Date: Fri, 13 May 2005 22:52:59 +0100
+Message-ID: <1116021178.20545.3.camel@localhost.localdomain>
 References: <20050513185850.GA5777@kvack.org> <4284FC6E.7060300@pobox.com>
+	 <20050513200312.GA6555@kvack.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from kanga.kvack.org ([66.96.29.28]:19861 "EHLO kanga.kvack.org")
-	by vger.kernel.org with ESMTP id S262532AbVEMUA2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 May 2005 16:00:28 -0400
-Content-Disposition: inline
-In-Reply-To: <4284FC6E.7060300@pobox.com>
+Received: from clock-tower.bc.nu ([81.2.110.250]:24011 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S262561AbVEMVyg
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 May 2005 17:54:36 -0400
+In-Reply-To: <20050513200312.GA6555@kvack.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Benjamin LaHaise <bcrl@kvack.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Fri, May 13, 2005 at 03:13:50PM -0400, Jeff Garzik wrote:
-> This delay is based on field experience, rather than spec.  I'm open to 
-> making this optional, as you have done.  Some issues related to this 
-> delay, to consider:
+On Gwe, 2005-05-13 at 21:03, Benjamin LaHaise wrote:
+> > 3) IIRC some rare PATA devices don't like having their Status register 
+> > banged "too hard".  No data, just a vague memory.
 
-Do you have the original bug reports so we know which chipsets / drive 
-combinations are problematic?
+Not that I am aware of. There are a few ICH/PIIX variants where if you
+read status during a transaction at the wrong time bad stuff occurs
+including to the block on disk. That may be what you are thinking of
 
-> 1) Nothing in life is free.  This delay is useful on some platforms, 
-> because banging away at the Status register for extended periods of time 
-> can cause an insane amount of PCI IO traffic.  Removing the delay just 
-> moves the punishment from one area to another.
+> > 
+> > 4) It may be worthwhile to rewrite the loop to check the Status register 
+> > _first_, then delay.
 
-In this case the time to complete the task is reduced by 18%, so the 
-delay is definately excessive.  That 18% is remarkably close to the 
-19.5% hit for __delay in the profile results.
+The 400nS delay after a command is required before status becomes valid.
+This isn't about 'incorrect' devices in the command case. It is about
+strictly correct behaviour and propogation/response times. For the cases
+its not required and you wan to keep PCI load down then checking first
+is clearly logical.
 
-> 2) In a few controllers, the SATA<->FIS emulation can go kerflooey if 
-> you bang the Status register 'too hard'.
-
-The patch only enables it on one variant of ICH6 SATA so far.
-
-> 3) IIRC some rare PATA devices don't like having their Status register 
-> banged "too hard".  No data, just a vague memory.
-> 
-> 4) It may be worthwhile to rewrite the loop to check the Status register 
-> _first_, then delay.
-> 
-> Finally, simply disabling the delay is IMO _far_ too dangerous on such a 
-> popular driver (ata_piix).
-
-Have you a better suggestion for blacklisting devices?
-
-> I would be conservative, and create a module option for libata (not 
-> ata_piix) which allows a user to globally disable the delay.  And make 
-> sure that option defaults to 'delay', the current behavior.
-
-This option is undesirable for hardware which behaves correctly.  The 
-vast majority of users aren't going to be fiddling with hdparm options
-(I certainly don't want to see modern SATA being a repeat of the magic 
-handwaving the IDE driver and DMA went through for years).
-
-At the very least the option should be introduced and new drivers should 
-start life without these legacy delays in place.  If doing it on a per 
-port interface isn't good enough, what is?  Globally seems worse to me 
-as then any system with a mix of old and new hardware isn't going to do 
+Also btw beware of PCI posting - writel/ndelay(400) isn't going to do
 the right thing.
 
-		-ben
--- 
-"Time is what keeps everything from happening all at once." -- John Wheeler
