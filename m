@@ -1,72 +1,80 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [try2] [PATCH] Silicon Image SATA 3124 driver preview
-Date: Fri, 13 May 2005 15:20:23 -0400
-Message-ID: <4284FDF7.9020608@pobox.com>
+Subject: Re: [rfc/patch] libata -- port configurable delays
+Date: Fri, 13 May 2005 15:13:50 -0400
+Message-ID: <4284FC6E.7060300@pobox.com>
+References: <20050513185850.GA5777@kvack.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262517AbVEMTZP@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262500AbVEMTow@vger.kernel.org>
+In-Reply-To: <20050513185850.GA5777@kvack.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Carlos Pardo <Carlos.Pardo@siliconimage.com>
+To: Benjamin LaHaise <bcrl@kvack.org>
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
 
+Benjamin LaHaise wrote:
+> Hello Jeff et al,
+> 
+> The patch below makes the delays in ata_pause() and ata_busy_wait() 
+> configurable on a per-port basis, and enables the no delay flag on 
+> the one chipset I've tested on.  Getting rid of the delays is worth 
+> quite a bit: doing sequential 512 byte O_DIRECT AIO reads results in 
+> a drop from 35.743s to 29.205s using simple-aio-min_nr 20480 10 (a copy 
+> is available at http://www.kvack.org/~bcrl/simple-aio-min_nr.c).  
+> Before this patch __delay() is the number one entry in oprofile 
+> results for this workload.  Does this look like a reasonable approach 
+> for chipsets that aren't completely braindead?  Cheers,
 
-My previous posting of this driver appears to be have disappeared into
-the ether.  Let's see if this gets through.
+Well, there are several things going on here.
+
+> @@ -469,7 +470,8 @@ static inline u8 ata_chk_status(struct a
+>  static inline void ata_pause(struct ata_port *ap)
+>  {
+>  	ata_altstatus(ap);
+> -	ndelay(400);
+> +	if (!(ap->flags & ATA_FLAG_NO_UDELAY))
+> +		ndelay(400);
+
+This delay is required per spec.  So, this specific change is vetoed.
 
 
-Silicon Image recently contributed a PREVIEW RELEASE (for review, not
-production use) driver for their new 3124 series of cards.
+> @@ -478,7 +480,8 @@ static inline u8 ata_busy_wait(struct at
+>  	u8 status;
+>  
+>  	do {
+> -		udelay(10);
+> +		if (!(ap->flags & ATA_FLAG_NO_UDELAY))
+> +			udelay(10);
+>  		status = ata_chk_status(ap);
+>  		max--;
+>  	} while ((status & bits) && (max > 0));
 
-The SiI 3124 cards, much like the AHCI hardware now appearing, is
-among the first of the SATA cards to use a highly efficient command
-delivery method, the FIS.  Rather than emulate an ATA shadow register
-set, FIS-based SATA controllers expose on-the-wire SATA FISs to the
-OS driver.  FIS-based SATA controllers tend to be more efficient,
-and less error prone, than non-FIS-based controllers.
+This delay is based on field experience, rather than spec.  I'm open to 
+making this optional, as you have done.  Some issues related to this 
+delay, to consider:
 
+1) Nothing in life is free.  This delay is useful on some platforms, 
+because banging away at the Status register for extended periods of time 
+can cause an insane amount of PCI IO traffic.  Removing the delay just 
+moves the punishment from one area to another.
 
-Download URL:
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.12-rc2-sil24-1.patch.bz2
+2) In a few controllers, the SATA<->FIS emulation can go kerflooey if 
+you bang the Status register 'too hard'.
 
-[email servers seem to have eaten the email that contained the sil24 
-driver in an inline patch]
+3) IIRC some rare PATA devices don't like having their Status register 
+banged "too hard".  No data, just a vague memory.
 
+4) It may be worthwhile to rewrite the loop to check the Status register 
+_first_, then delay.
 
-My own review comments on this driver:
+Finally, simply disabling the delay is IMO _far_ too dangerous on such a 
+popular driver (ata_piix).
 
-1) basically OK
+I would be conservative, and create a module option for libata (not 
+ata_piix) which allows a user to globally disable the delay.  And make 
+sure that option defaults to 'delay', the current behavior.
 
-2) I would prefer that bus reset be better integrated into libata core,
-rather than moving most of the operations into sata_sil24 driver.  I'm
-trying to keep SATA PHY access as common as possible, across the many
-pieces of SATA hardware out there.  It remains to be seen, how possible
-is this goal?...
+Creative suggestions welcomed...
 
-3) When Port Multiplier support is enabled, it will need to be integrated
-into libata core, so that all controllers can support it.  Some
-controllers will have "hardware assist" for PM, and others not.  We'll
-have to handle both.
-
-4) Long delay in sil_wait_for_completion().  Long delays should be
-converted into a sleep, or performed in some other method other than
-busy-wait.
-
-5) [style] Linux kernel code style avoids what we call StudlyCaps, which
-is the C++ way of separating words.  Linux prefers "fis_type" to
-"FisType", and "port_registers" or "port_regs" to "Port_Registers".
-
-6) This driver does not appear to support 64-bit?
-
-+       writel((u32) paddr, &port_base->CmdActivate[0].s.ActiveLow);
-
-We definitely do not want to add any 32-bit assumptions into a new Linux
-driver.
-
-7) [bug] the following is unacceptably long, in issue_soft_reset:
-+       udelay(10000); /* delay 10 ms */
-
-8) [bug] ditto, in sil_init_pm()
-
-9) your struct Port_Registers likely need the 'packed' gcc attribute
+	Jeff
