@@ -1,26 +1,29 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [rfc/patch] libata -- port configurable delays
-Date: Fri, 13 May 2005 21:51:32 -0400
-Message-ID: <428559A4.1060300@rtr.ca>
-References: <20050513185850.GA5777@kvack.org> <4284FC6E.7060300@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [patch 2.6.12-rc4 1/1] libata: stop setting sdev->host->max_sectors
+ for lba48 drives
+Date: Sun, 15 May 2005 18:02:00 -0400
+Message-ID: <4287C6D8.5030204@pobox.com>
+References: <20050512194953.GA8587@tuxdriver.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:60172 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S262675AbVENBva
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 May 2005 21:51:30 -0400
-In-Reply-To: <4284FC6E.7060300@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:12952 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261266AbVEOWCD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 May 2005 18:02:03 -0400
+In-Reply-To: <20050512194953.GA8587@tuxdriver.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Benjamin LaHaise <bcrl@kvack.org>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-ide@vger.kernel.org, stuart_hayes@Dell.com
 
-PIIX chips should be fine w.r.t. unnecessary delays (or lack thereof).
+John W. Linville wrote:
+> Avoid changing sdev->host->max_sectors because it can prevent use of
+> non-lba48 drives on other ports of the same adapter.
+> 
+> Signed-off-by: Stuart Hayes <stuart_hayes@Dell.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-I recall only one situation WAY BACK in time that had an issue with
-continuous banging, but don't remember anything of the details
-other than that this was circa 1995 or so.
+applied
 
-Cheers
+
