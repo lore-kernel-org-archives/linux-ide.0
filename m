@@ -1,20 +1,34 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/4] libata-dev-2.6: pdc2027x add ata_scsi_ioctl
-Date: Sun, 15 May 2005 22:38:46 -0400
-Message-ID: <428807B6.9080104@pobox.com>
-References: <425A49F6.3040904@tw.ibm.com> <425A4B21.8040603@tw.ibm.com>
+Subject: Re: [PATCH 2.6.12-rc2 2/2] libata: add basic atapi error reporting
+Date: Sun, 15 May 2005 22:43:00 -0400
+Message-ID: <428808B4.8040102@pobox.com>
+References: <4261C20B.7010403@shore.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:50585 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261194AbVEPCjC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 May 2005 22:39:02 -0400
-In-Reply-To: <425A4B21.8040603@tw.ibm.com>
+Received: from mail.dvmed.net ([216.237.124.58]:52377 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261234AbVEPCnF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 May 2005 22:43:05 -0400
+In-Reply-To: <4261C20B.7010403@shore.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Linux IDE <linux-ide@vger.kernel.org>
+To: "Eric A. Cottrell" <eac@shore.net>
+Cc: Linux IDE <linux-ide@vger.kernel.org>
 
-applied patches 1-4
+Eric A. Cottrell wrote:
+> Hello Jeff,
+> 
+> Problem:
+> ATAPI errors are not fully reported to the SCSI subsystem.  A check 
+> condition was returned but the SCSI subsystem does not get the sense 
+> from the device.  This causes problems when unimplemented and bad SCSI 
+> commands are sent to an atapi device.
+
+This is a bit strange.  It should get the sense from the device.  It is 
+requested from ata_qc_timeout().  Is this not happening for you?
+
+	Jeff
+
+
 
