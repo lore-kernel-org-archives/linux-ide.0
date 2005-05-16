@@ -1,44 +1,33 @@
-From: Christopher Allen Wing <wingc@engin.umich.edu>
-Subject: Re: ata_piix patch
-Date: Mon, 16 May 2005 17:44:06 -0400 (EDT)
-Message-ID: <Pine.LNX.4.58.0505161743180.8582@hammer.engin.umich.edu>
-References: <e16ac85e05051614414ffbb768@mail.gmail.com>
+From: Greg Felix <gregfelixlkml@gmail.com>
+Subject: ata_piix patch
+Date: Mon, 16 May 2005 15:41:58 -0600
+Message-ID: <e16ac85e05051614414ffbb768@mail.gmail.com>
+Reply-To: Greg Felix <gregfelixlkml@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hammer.engin.umich.edu ([141.213.40.79]:64160 "EHLO
-	hammer.engin.umich.edu") by vger.kernel.org with ESMTP
-	id S261901AbVEPVoL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 May 2005 17:44:11 -0400
-In-Reply-To: <e16ac85e05051614414ffbb768@mail.gmail.com>
+Received: from zproxy.gmail.com ([64.233.162.198]:17716 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261911AbVEPVmJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 May 2005 17:42:09 -0400
+Received: by zproxy.gmail.com with SMTP id 13so1525001nzn
+        for <linux-ide@vger.kernel.org>; Mon, 16 May 2005 14:41:58 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Felix <gregfelixlkml@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: Christopher Allen Wing <wingc@engin.umich.edu>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Great. I checked the libata repo last week and it wasn't there yet, so I
-didn't know if it had been dropped, or if there were still unresolved
-issues that prevented it from going forward.
+Chris,
 
-
-Thanks,
-
-Chris
-wingc@engin.umich.edu
+I asked Jeff this the other day.  He responded thusly:
 
 
-On Mon, 16 May 2005, Greg Felix wrote:
+Greg Felix wrote:
+> Do you plan on applying this ata_piix patch in the future?
 
-> Chris,
->
-> I asked Jeff this the other day.  He responded thusly:
->
->
-> Greg Felix wrote:
-> > Do you plan on applying this ata_piix patch in the future?
->
-> It's applied, just waiting for Linus to return from vacation :)
->
-> Thanks for your patience.
->
->        Jeff
+It's applied, just waiting for Linus to return from vacation :)
+
+Thanks for your patience.
+
+       Jeff
