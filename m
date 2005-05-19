@@ -1,120 +1,82 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: [git patches] 2.6.x libata fixes
-Date: Tue, 17 May 2005 09:19:34 -0700 (PDT)
-Message-ID: <Pine.LNX.4.58.0505170855170.18337@ppc970.osdl.org>
-References: <428A11C2.4030900@pobox.com>
+From: Steven Scholz <steven.scholz@imc-berlin.de>
+Subject: NULL pointer dereference in ide_drive_remove.
+Date: Thu, 19 May 2005 15:35:38 +0200
+Message-ID: <428C962A.2000308@imc-berlin.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:12462 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261812AbVEQQR4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 May 2005 12:17:56 -0400
-In-Reply-To: <428A11C2.4030900@pobox.com>
+Received: from mail.imc-berlin.de ([217.110.46.186]:61201 "EHLO
+	mail.imc-berlin.de") by vger.kernel.org with ESMTP id S262494AbVESNfn
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 May 2005 09:35:43 -0400
+Received: from mailserver.berlin.imc-berlin.de (mailserver.berlin.imc-berlin.de [10.0.0.19])
+	by mail.imc-berlin.de (Postfix) with ESMTP id 2C87D2F017
+	for <linux-ide@vger.kernel.org>; Thu, 19 May 2005 15:35:42 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by mailserver.berlin.imc-berlin.de (Postfix) with ESMTP id 213851193C
+	for <linux-ide@vger.kernel.org>; Thu, 19 May 2005 15:35:42 +0200 (CEST)
+Received: from [10.0.2.10] (scholz.berlin.imc-berlin.de [10.0.2.10])
+	by mailserver.berlin.imc-berlin.de (Postfix) with ESMTP id 6B9BB9A12
+	for <linux-ide@vger.kernel.org>; Thu, 19 May 2005 15:35:41 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
+Hi there,
 
+(This is my first post to this list! Bear with me.)
 
-On Tue, 17 May 2005, Jeff Garzik wrote:
-> 
-> Please pull the master (HEAD) branch of
-> rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-2.6.git
+I am working on PCMCIA IDE on an embedded ARM board (2.6.12-rc4).
 
-Pulled.
+After doing
 
-> Review contents (diffstat/changelog/patch) attached to this email.  I'm 
-> still new to git, so pull carefully.  :)
+~ # umount /mnt/pcmcia
+~ # cardctl eject
 
-My pull gets the same diffstat as you claimed, and everything looks good.
+the board crashes with
 
-> Three git-related comments:
-> 
-> 1) James Bottomley's git-changes-script is darned useful, for this 
-> ex-BitKeeper user.  I've attached it.
+Unable to handle kernel NULL pointer dereference at virtual address 00000010
+pgd = c08e8000
+[00000010] *pgd=208ef031, *pte=00000000, *ppte=00000000
+Internal error: Oops: 17 [#1]
+Modules linked in:
+CPU: 0
+PC is at ide_drive_remove+0x44/0x64
+LR is at ide_drive_remove+0x48/0x64
+...
+Process cardctl (pid: 773, stack limit = 0xc0d54194)
+...
+Backtrace:
+(ide_drive_remove+0x0/0x64) from (device_release_driver+0x70/0x80)
+(device_release_driver+0x0/0x80) from (bus_remove_device+0x58/0x90)
+(bus_remove_device+0x0/0x90) from (device_del+0x68/0x9c)
 
-It should _really_ be updated to do a better job, modern git can do much 
-better. 
+I added a few debug outputs and noticed that the call stack is
 
-See the answer to the next question, since that's really the same thing:
+IDE: ide_unregister(639)
+IDE: ide_unregister_subdriver(2094)
+IDE: ide_unregister_subdriver(2096): drive=hda, driver=ide-disk
+IDE: auto_remove_settings(1092)
+IDE: ide_hwif_release_regions(494)
+IDE: ide_drive_remove(2127)
+IDE: ide_drive_remove(2133): ERROR: DRIVER(drive)=00000000 !!!
 
-> 2) What is the preferred way to generate a 'for Linus' diff?  I used to 
-> BitKeeper's "repogca" feature to find the GCA for the diff.
+In ide_unregister_subdriver() I found
 
-You can use
+	drive->driver = NULL;
 
-	"git-merge-base HEAD OTHER_HEAD"
+so of corse if ide_drive_remove() is called later DRIVER(drive) is NULL and 
+DRIVER(drive)->cleanup(drive) crashes.
 
-to get the global common ancestor. However, that's pretty pointless, since 
-what you're after is really "what are the differences", and that's what 
-"git-rev-tree" gives you for any arbitrary points.
+So maybe you want to do a check like
 
-With modern git, what you do is something like this (totally untested, 
-but you hopefully get the idea):
+	if (DRIVER(drive))
+		DRIVER(drive)->cleanup(drive);
 
-	local=.
-	remote=.
-	localhead=HEAD
-	remotehead=HEAD
+in drivers/ide/ide.c:ide_drive_remove().
 
-	#
-	# default to silent mode (changelog only),
-	# use "-p" to enable full patch information.
-	#
-	diff-tree-arg=-s
+Please CC me as I am not subscribe to the list.
 
-	#
-	# Get the arguments
-	#
-	while true; do
-	   case "$1" in
-	      -R)     shift;
-	              remote="$1"
-	              shift;;
-	      -L)     shift;
-	              local="$1"
-	              shift;;
-	      -r)     shift;
-	              remotehead="$1"
-	              shift;;
-	      -p)     diff-tree-args=-p
-	              shift;;
-	       *)     localhead="$1"
-                      break;;
-	   esac
-	done
-	
-	#
-	# Tell git about where it can find all the objects
-	#
-	export GIT_OBJECT_DIRECTORY=$local/.git/objects
-	export GIT_ALTERNATE_OBJECT_DIRECTORIES=$remote/.git/objects
-
-	# ..and get the heads
-	head=$(cat $local/.git/$localhead)
-	other_head=$(cat $remote/.git/$remotehead)
-
-	# What exists in remote-head but not in the local head?
-	git-rev-tree $other_head ^$head |
-		cut -d' ' -f2 |
-		git-diff-tree --stdin -v $diff-tree-args
-
-and it should just DoTheRightThing(tm) modulo the inevitable
-ObviousBugs(tm).
-
-> 3) Note that my object database is not pruned.  When I used 
-> git-pull-script to locally merge my libata-dev.git#misc-fixes branch 
-> into libata-2.6.git, it pulled all the objects in libata-dev.  I was too 
-> slack to bother with pruning libata-2.6.git, knowing that eventually the 
-> other changesets will make their way upstream.
-
-I do keep my trees pruned and I still run fsck religiously, so I just 
-force a prune after a pull. I _prefer_ to see clean trees, though - not 
-because it matters from a techncial perspective, but because it tells me 
-that the other side didn't have any left-over strange objects that might 
-have been intended to be included.
-
-But your tree looked fine.
-
-		Linus
+-- 
+Steven
