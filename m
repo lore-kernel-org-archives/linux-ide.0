@@ -1,42 +1,35 @@
-From: Pascal Giard <evilynux@gmail.com>
-Subject: 2.6.11-rc4 libata-core (irq 30: nobody cared!)
-Date: Sat, 21 May 2005 04:39:36 -0400
-Message-ID: <428EF3C8.4000807@gmail.com>
+From: Jan <M.Lutzer@gmx.de>
+Subject: Sil 3112A + Seagate Barracuda NCQ 300GB = freeze
+Date: Sat, 21 May 2005 12:09:28 +0200
+Message-ID: <428F08D8.8030306@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.193]:51149 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261471AbVEUIfx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 May 2005 04:35:53 -0400
-Received: by wproxy.gmail.com with SMTP id 69so123590wri
-        for <linux-ide@vger.kernel.org>; Sat, 21 May 2005 01:35:52 -0700 (PDT)
+Received: from mail.gmx.de ([213.165.64.20]:46282 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261720AbVEUKJ3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 May 2005 06:09:29 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, bkuschak@yahoo.com
+To: linux-ide@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hello!
+I bought a new Seagate Barracuda SATA harddisk with NCQ and a capacity
+of 300GB. I attached it to my Sil 3112A Controller but Linux freezes
+while booting. I am using this controller with a Seagate Barracuda 150GB
+without problems for a long time. Note that the new problematic harddisk
+is the second SATA harddisk (ata2 ?)connected to the controller. I had
+written the error messages to a paper and typed in again.
 
-Just so you know...
-I've experienced the problem with a sil3112A (Silicon Image) w/ a
-Seagate 120GB SATA w/ NCQ. Brian Kuschak's hack=B9 works fine for me.
+ata1(0): applying Seagate errate fix
+ata1: dev 0 configured for UDMA/100
+scsi0: sata_sil
+irq10: nobody cared
+    [<c013645a>] __report_bad_irq +0x2a/0xa0
+    ... a lot of messages starting with a number like [<c013645a>] ...
+Disabling IRQ #10
 
-I'm running a modified version (NCQ hack) of Debian's modified 2.6.11.
+My kernel version is 2.6.11-ck. I tried also the Silicon Image IDE
+driver (different to sata_sil) with a similar result.
 
-Now i'm wondering if there's been some news since then...
-I mean, that was posted in february.
-
-Anyway, thanks Brian!
-
-- -Pascal
-=B9 http://lkml.org/lkml/2005/2/23/236
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
-
-iD8DBQFCjvPI1Lfd97FsypURAgWpAJ4uEBQOURf3yz7TiRc3nLt1EyG85QCfX1ZX
-lSIz3Ekx1G/0HpBBHipAZ8g=3D
-=3DzCnw
------END PGP SIGNATURE-----
+Any idea what to do? Thanks alot! Jan
