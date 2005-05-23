@@ -1,46 +1,43 @@
-From: Kodandaram Harish-ahk026 <harish@motorola.com>
-Subject: SATA Coldplug operation
-Date: Mon, 23 May 2005 13:03:46 +0530
-Message-ID: <772BCEF88A1DD91191F80011856715F303377229@zin24exm01.ap.mot.com>
+From: Paulo Fidalgo <kanniball@zmail.pt>
+Subject: [Sil31112 + Seagate drive] patch testing report
+Date: Mon, 23 May 2005 15:52:34 +0100
+Message-ID: <200505231552.34521.kanniball@zmail.pt>
+Reply-To: kanniball@zmail.pt
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from motgate8.mot.com ([129.188.136.8]:41390 "EHLO motgate8.mot.com")
-	by vger.kernel.org with ESMTP id S261860AbVEWHeC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 May 2005 03:34:02 -0400
-Received: from il06exr04.mot.com (il06exr04.mot.com [129.188.137.134])
-	by motgate8.mot.com (Motorola/Motgate7) with ESMTP id j4N7fmP7014426
-	for <linux-ide@vger.kernel.org>; Mon, 23 May 2005 00:41:49 -0700 (MST)
-Received: from zin24exm01.ap.mot.com (zin24exm01.ap.mot.com [10.232.25.1])
-	by il06exr04.mot.com (8.13.1/8.13.0) with ESMTP id j4N7b2P4013862
-	for <linux-ide@vger.kernel.org>; Mon, 23 May 2005 02:37:03 -0500 (CDT)
+Received: from [81.92.212.1] ([81.92.212.1]:52232 "EHLO zmail.pt")
+	by vger.kernel.org with ESMTP id S261876AbVEWOtb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 May 2005 10:49:31 -0400
+Received: from 80.172.45.18
+	by zmail.pt
+	(MDaemon.PRO.v6.8.4.R)
+	with ESMTP id 30-md50000000002.tmp
+	for <linux-ide@vger.kernel.org>; Mon, 23 May 2005 15:47:22 +0100
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Hello All,
+Hi!
 
-I am using Intel based board with ICH5 as south bridge. A SATA disk is
-connected to it and I have requirement to support hot plug for SATA disk.
+I've been testing my system with the reference patch from Silicon Image and 
+with Tejun Heo's one.
+[http://marc.theaimsgroup.com/?l=linux-kernel&m=111173514717575&w=2]
+[http://marc.theaimsgroup.com/?l=linux-ide&m=111260146423451&w=2]
 
-In reference to SATA status report in
-http://linux.yyz.us/sata/software-status.html	Hotplug Support I need few
-clarifications:
+and I've got better performance on reading.. althougth this is still far from 
+normal expected performance. I've tested with copy and moving files (small 
+and big ones), and found no problems at all.
+Thanks for all developers for you great work.
 
-1. Does Coldplug operation is limited to removal of device or even cold
-insertion is possible.
-2. With Coldplug operation do you mean the already connected drive can be
-powered ON or OFF or its just that kernel is not aware of disk but hardware
-wise the disk is connected.
-3. Does Coldplug operation effects any other devices connected to ICH5.
-4. Does coldplug operation is supported in 2.4 kernel and what is the
-procedure to see it working
+Since this looks like an permanent problem of hardware combination, I will 
+avoid all products from both brand names (Silicon Image and Segeate), and 
+alert my friends on that... in my opinion a bug like this is unacceptable, so 
+bye bye Seagate and Silicon Image.
 
-Thanks in advance.
-Regards,
-Harish
-Motorola Inc.
-Phone: 080-51364676
-Mobile: 9448346311
+Best regards,
+Paulo Fidalgo
 
