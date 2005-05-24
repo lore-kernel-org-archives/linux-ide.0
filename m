@@ -1,82 +1,85 @@
-From: Andy Stewart <andystewart@comcast.net>
-Subject: Re: enable-reads-on-plextor-712-sa-on-26115.patch added to -mm tree
-Date: Mon, 23 May 2005 20:44:39 -0400
-Message-ID: <429278F7.70008@comcast.net>
-References: <200505232245.j4NMjtk4024089@shell0.pdx.osdl.net>	<4292628E.4090209@pobox.com>	<4292743C.4040409@comcast.net> <20050523173420.22281325.akpm@osdl.org>
+From: thorild@Update.UU.SE (Thorild Selen)
+Subject: Problems with pdc20318 (Promise SATA150 TX4 rev. 02), 2.6.11.10
+Date: Tue, 24 May 2005 03:29:40 +0200
+Message-ID: <17042.33668.214764.117576@Psilocybe.Update.UU.SE>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rwcrmhc14.comcast.net ([216.148.227.89]:3999 "EHLO
-	rwcrmhc14.comcast.net") by vger.kernel.org with ESMTP
-	id S261267AbVEXAol (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 May 2005 20:44:41 -0400
-In-Reply-To: <20050523173420.22281325.akpm@osdl.org>
+Received: from pernis.its.UU.SE ([130.238.4.153]:64141 "EHLO pernis.its.uu.se")
+	by vger.kernel.org with ESMTP id S261263AbVEXB3q convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 May 2005 21:29:46 -0400
+Received: from Psilocybe.Update.UU.SE (Psilocybe.Update.UU.SE [130.238.19.25])
+	by pernis.its.uu.se (Postfix) with ESMTP id 90D8A240
+	for <linux-ide@vger.kernel.org>; Tue, 24 May 2005 03:29:40 +0200 (MSZ)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Greetings,
+
+I'm trying to diagnose a disk related problem, and would be very
+thankful for help and suggestions for how to go on.
+
+The system is a x86, 1 Intel Xeon processor (HT) machine currently
+running a 2.6.11.10 kernel. It has a Adaptec AIC-7902 U320 SCSI
+controller which appears to work just fine, and a Promise SATA150 TX4
+(rev. 02, pdc20318) controller that apparently does not (the below is
+from dmesg):
+
+  ata2: status=3D0x51 { DriveReady SeekComplete Error }
+  ata2: error=3D0x84 { DriveStatusError BadCRC }
+  ata1: status=3D0x51 { DriveReady SeekComplete Error }
+  ata1: error=3D0x84 { DriveStatusError BadCRC }
+  [...time passes...]
+ =20
+  ata1: status=3D0x51 { DriveReady SeekComplete Error }
+  ata1: error=3D0x84 { DriveStatusError BadCRC }
+  ata4: status=3D0x51 { DriveReady SeekComplete Error }
+  ata4: error=3D0x84 { DriveStatusError BadCRC }
+  [...more time passes...]
+ =20
+  ata4: status=3D0x51 { DriveReady SeekComplete Error }
+  ata4: error=3D0x84 { DriveStatusError BadCRC }
+  ata4: status=3D0x51 { DriveReady SeekComplete Error }
+  ata4: error=3D0x10 { SectorIdNotFound }
+  [...even more time passes...]
+ =20
+  ata4: status=3D0x51 { DriveReady SeekComplete Error }
+  ata4: error=3D0x84 { DriveStatusError BadCRC }
+  ata4: status=3D0x51 { DriveReady SeekComplete Error }
+  ata4: error=3D0x10 { SectorIdNotFound }
+  [last two lines repeated a bunch of times, and then...]
+ =20
+  SCSI error : <5 0 0 0> return code =3D 0x8000002
+  sdf: Current: sense key: Aborted Command
+  Additional sense: Recorded entity not found
+  end_request: I/O error, dev sdf, sector 24330039
+
+The fact that the errors appear to be rather evenly distributed over
+the disks (it has also affected ata3 at other occasions) make me
+believe that either the controller or the driver is to blame. (It
+seems improbable to me that all the disks have gone bad together --
+tell me if I'm wrong.) The disks are Hitachi Deskstar model
+HDS722516VLSA80, SATA. Voltages and temperatures seem OK. (I haven't
+checked the disks with SMART as the driver doesn't support it.)
+
+The kernel is compiled with gcc 3.3.6 (Debian 1:3.3.6-4), and is using
+APIC and cfq elevator. For the disks ext3 atop LVM atop md is used,
+but the low-level character of the errors make me believe that the
+error lies in a lower layer (driver, controller or possibly disks).
+
+The problem started to appear somewhere around 2.6.7 I believe, but
+downgrading does not seem appealing as several security issues have
+been addressed in later kernels. Also, could it be that the problem
+existed to some extent before, but wasn't shown due to less/different
+error handling?  I believe that some more error handling code was
+added to the Promise SATA driver not too long ago.
+
+Any ideas? I've been looking for other reports of similar problems,
+but I haven't really found anything matching.
 
 
-HI Andrew,
-
-Andrew Morton wrote:
-> Andy Stewart <andystewart@comcast.net> wrote:
->>>Good show.
->>Aw, come on, Jeff.  I gave it a shot,
-> 
-> You did, and that's very much appreciated, thanks.
-
-Thank you for the encouraging words.  :-)
-
-> 
->>If you believe this patch is
->>inappropriate, then please ask Andrew Morton to remove it
-> 
-> I already have removed it, but only because it appears that the patch might
-> cause regressions in other areas.
-
-I agree that my patch should be removed if it is breaking other things.
-Thanks for taking it out.
-
-> 
-> Basically it goes like this:
-> 
-> - Someone sends a patch
-> 
-> - Patch gets ignored.
-> 
-> - I merge it, without even looking at the thing.
-> 
-> I do this as a reminder to myself and to other developers that there is
-> some kernel bug or shortcoming.  Basically, it's a bug-tracking system. 
-> Periodically I'll spam the maintainer with the patch and eventually he'll
-> tell me to drop the thing because the problem is fixed, or he'll tell the
-> originator why the patch will never be merged.
-> 
-> Either way, the patch (and the problem which caused you to write the patch)
-> gets some sort of definite dispositive handling, rather than falling
-> through a crack.
-
-Thank you for the explaination, and for the feedback to let me know that
-the patch didn't fall through the cracks.
-
-Andy
-
-- --
-Andy Stewart, Founder
-Worcester Linux Users' Group
-Worcester, MA, USA
-http://www.wlug.org
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
-
-iD8DBQFCknj3Hl0iXDssISsRApp1AJ97vyP5CGavkNmP0TIHL4yvVga6nwCdFL1+
-wYN6ergAnBeboO0OQK9/NBo=
-=RwPj
------END PGP SIGNATURE-----
+Thorild Sel=E9n
+Datorf=F6reningen Update / Update Computer Club, Uppsala, SE
