@@ -1,101 +1,74 @@
-From: root@smtp.nexlab.net
-Subject: (unknown)
-Date: Tue, 24 May 2005 11:21:21 +0200 (CEST)
-Message-ID: <20050524092121.6CE37FA7B@smtp.nexlab.net>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] libata: device suspend/resume
+Date: Tue, 24 May 2005 20:17:06 +1000
+Message-ID: <4292FF22.5040201@torque.net>
+References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de> <4292CF5D.90809@pobox.com> <20050524070714.GU9855@suse.de> <4292D37C.5020700@pobox.com> <4292D44C.2040102@suse.de> <4292D55B.3050801@pobox.com>
+Reply-To: dougg@torque.net
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.nexlab.net ([213.173.188.110]:32712 "EHLO smtp.nexlab.net")
-	by vger.kernel.org with ESMTP id S262017AbVEXJV0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2005 05:21:26 -0400
+Received: from zorg.st.net.au ([203.16.233.9]:53939 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S262073AbVEXKRI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2005 06:17:08 -0400
+In-Reply-To: <4292D55B.3050801@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-	by smtp.nexlab.net (Postfix) with ESMTP id DE1F8FB74
-
-	for <chiakotay@nexlab.it>; Tue, 24 May 2005 10:01:46 +0200 (CEST)
-
-Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-
-	id S261332AbVEXG12 (ORCPT <rfc822;chiakotay@nexlab.it>);
-
-	Tue, 24 May 2005 02:27:28 -0400
-
-Received: (majordomo@vger.kernel.org) by vger.kernel.org id S261321AbVEXG12
-
-	(ORCPT <rfc822;linux-kernel-outgoing>);
-
-	Tue, 24 May 2005 02:27:28 -0400
-
-Received: from mail.dvmed.net ([216.237.124.58]:6349 "EHLO mail.dvmed.net")
-
-	by vger.kernel.org with ESMTP id S261259AbVEXG1M (ORCPT
-
-	<rfc822;linux-kernel@vger.kernel.org>);
-
-	Tue, 24 May 2005 02:27:12 -0400
-
-Received: from cpe-065-184-065-144.nc.res.rr.com ([65.184.65.144] helo=[10.10.10.88])
-
-	by mail.dvmed.net with esmtpsa (Exim 4.51 #1 (Red Hat Linux))
-
-	id 1DaSsf-0001On-LK; Tue, 24 May 2005 06:27:10 +0000
-
-Message-ID: <4292C93B.9000009@pobox.com>
-
-Date:	Tue, 24 May 2005 02:27:07 -0400
-
-From: Jeff Garzik <jgarzik@pobox.com>
-User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.6) Gecko/20050328 Fedora/1.7.6-1.2.5
-
-X-Accept-Language: en-us, en
-
-MIME-Version: 1.0
-
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Andrew Morton <akpm@osdl.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [git patches] 2.6.x libata new PCI ids
-
-References: <4292BA93.801@pobox.com> <Pine.LNX.4.58.0505232310590.2307@ppc970.osdl.org>
-
-In-Reply-To: <Pine.LNX.4.58.0505232310590.2307@ppc970.osdl.org>
-
-Content-Type: text/plain; charset=us-ascii; format=flowed
-
-Content-Transfer-Encoding: 7bit
-
-X-Spam-Score: 0.0 (/)
-
-Sender: linux-kernel-owner@vger.kernel.org
-Precedence: bulk
-
-X-Mailing-List:	linux-kernel@vger.kernel.org
-
-
-
-Linus Torvalds wrote:
+Jeff Garzik wrote:
+> Hannes Reinecke wrote:
 > 
-> On Tue, 24 May 2005, Jeff Garzik wrote:
-> 
->>Please pull the 'new-ids' branch from
->>
->>rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
->>
->>This add new PCI ids to some SATA drivers.
+>> We've finally succeeded in convincing everyone that having '/dev/sdX'
+>> instead of '/dev/hdX' was a neccessary step forward.
+>> I think we're getting shot if we now tell them to reverse this _again_.
+>> Can we at least have it optional?
 > 
 > 
-> So here the trees are identical in between the two versions, so the later 
-> commit is definitely not doing anything. What's up?
+> I will not break compatibility with /dev/sdX, don't worry :)
+> 
+> It will always be there as an optional piece, as I described in my other 
+> reply to you.
 
-pass 'refs/heads/new-ids' as the second arg to git-pull-script.
+Jeff,
+At the risk of boring you but informing others, Serial
+Attached SCSI (SAS) is going to muddy things.
 
-	Jeff
+The SCSI ATA Translation (SAT
+http://www.t10.org/ftp/t10/drafts/sat/sat-r04.pdf )
+draft hopefully will find application any many areas
+other than libata (e.g. USB mass storage and 1394's
+SBP-2 drivers). The Scope section (section 1) of that
+draft makes interesting reading: in point a) the author
+sees SAT as presenting a unified command interface for
+block type devices across PATA, SATA and ATAPI!
 
+However the primary reason that SAT started is the
+fact that SAS infrastructure can include SATA disks.
+SAS defines the Serial ATA Tunneled Protocol (STP)
+which in linux will first appear in a SAS LLD (i.e.
+a scsi subsystem Low Level Driver, something like
+aic7xxx). Connecting a SATA disk (transported via SAS)
+to the IDE subsystem and a /dev/hd? device node seems
+like an unnatural act (a bit like ide-scsi in reverse).
+A solution involving libata seems appropriate in this case.
 
+Even more likely is that a SAT layer will be implemented
+in SAS enclosures just inches away from lots of SATA
+disks. From the point of view of a linux machine
+such SATA disks talk the SCSI command set and are
+connected via a SAS transport (Serial SCSI Protocol (SSP)).
+The only things that will probably care about the
+difference between such SATA disks and SAS disks are
+utilities like smartmontools (and that gap is being
+partially closed as well).
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
+Even without SAS we already have many fibre channel
+enclosures that bridge to SATA disks. Hopefully a
+SAT layer will be retro-fitted into some of those.
+
+Perhaps libata could be renamed libsat.
+
+Doug Gilbert
 
