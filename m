@@ -1,48 +1,38 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata: device suspend/resume
-Date: Tue, 24 May 2005 08:21:29 +0200
-Message-ID: <20050524062128.GT9855@suse.de>
-References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [git patches] 2.6.x libata new PCI ids
+Date: Tue, 24 May 2005 02:27:07 -0400
+Message-ID: <4292C93B.9000009@pobox.com>
+References: <4292BA93.801@pobox.com> <Pine.LNX.4.58.0505232310590.2307@ppc970.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1116886206.5021.42.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:6349 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261259AbVEXG1M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2005 02:27:12 -0400
+In-Reply-To: <Pine.LNX.4.58.0505232310590.2307@ppc970.osdl.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Mon, May 23 2005, James Bottomley wrote:
-> On Mon, 2005-05-23 at 16:45 -0400, Jeff Garzik wrote:
-> > On Mon, May 23, 2005 at 03:41:15PM -0500, James Bottomley wrote:
-> > > The thread petered out before a resolution, however, I think
-> > > at least disk devices should be doing a synchronize cache on suspend.
-> > 
-> > Agreed.
+Linus Torvalds wrote:
 > 
-> OK, try this as a straw horse.  It plumbs our scsi bus model into
-> suspend and resume via the driver (which would be the ULD) function.
-> The only ULD which has an extra function is sd, and all it does is
-> synchronize the cache if it was writeback.  I believe you translate SYNC
-> CACHE in libata, so this patch should be sufficient (unless we still
-> have a problem with ATA devices that lie about their cache types?)
+> On Tue, 24 May 2005, Jeff Garzik wrote:
 > 
-> I think this is sufficient, because if the LLD also wants this
-> information, it can get it from the model of the bus it's attached to.
+>>Please pull the 'new-ids' branch from
+>>
+>>rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+>>
+>>This add new PCI ids to some SATA drivers.
+> 
+> 
+> So here the trees are identical in between the two versions, so the later 
+> commit is definitely not doing anything. What's up?
 
-suspend/resume is a lot more complicated than just flushing a cache, the
-below will probably get you safe asleep but you will never get devices
-alive again after power-up on suspend-to-ram.
+pass 'refs/heads/new-ids' as the second arg to git-pull-script.
 
-I also greatly prefer issuing a standby command to the drive after the
-flush, so that we don't risk using the emergency parks of the drive. If
-a drive happens to lie about wrt the flush command, it gets an extra
-chance to flush the cache as it now knows that power will be gone very
-soon. So I think the ->suspend/->resume hooks should belong to the LLD,
-not the ULD as the ULD has no idea how to suspend all devices types.
+	Jeff
 
 
--- 
-Jens Axboe
 
