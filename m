@@ -1,32 +1,53 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: device suspend/resume
-Date: Tue, 24 May 2005 12:37:38 -0400
-Message-ID: <42935852.2020300@pobox.com>
-References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de> <4292CF5D.90809@pobox.com> <20050524075953.GY9855@suse.de> <4292E3EE.10006@pobox.com> <20050524085133.GZ9855@suse.de>
+From: "Oskar Liljeblad" <oskar@osk.mine.nu>
+Subject: clock drift with 2x Promise Ultra133 TX2 (PDC 20269) (again)
+Date: Tue, 24 May 2005 18:53:39 +0200
+Message-ID: <20050524165339.GA16577@oskar>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:7375 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S262157AbVEXQhp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2005 12:37:45 -0400
-In-Reply-To: <20050524085133.GZ9855@suse.de>
+Received: from diadema.skane.tbv.se ([193.13.139.13]:14055 "EHLO
+	diadema.skane.tbv.se") by vger.kernel.org with ESMTP
+	id S261349AbVEXQxm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 May 2005 12:53:42 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: raw@dslr.net
 
-Jens Axboe wrote:
-> I agree, it's a cleaner approach, with the rq being a container for
-> generel messages as well not just SCSI commands. The one missing piece
-> for that was the rq->end_io() callback so everything doesn't have to go
-> down sync, but that is in now as well.
-> 
-> I'll try and cook something up.
+Problem:
+I have two Promise Ultra133 TX2 (PDC 20269) cards, each with two
+Maxtor UDMA133 hard drives connected. The system also has another
+hard drive connected to the motherboard. A total of five drives.
 
-Very cool ;)
+When I concurrently read from two hard drives connected to
+different Promise cards, there is heavy software clock drift.
+The software clock runs too fast - approx. a few seconds per
+minute during this i/o. To reproduce:
 
-	Jeff
+  hwclock --hctosys
+  hwclock --show
+  date
+  dd if=/dev/hde of=/dev/null bs=1M count=7200 &
+  dd if=/dev/hdi of=/dev/null bs=1M count=7200 &
+  wait
+  wait
+  hwclock --show
+  date
 
+This doesn't happen if I read from two drives connected to the
+same card, or one drive connected to the motherboard and one
+connected to a Promise card.
 
+I've removed all other PCI devices in the system - problem remains.
+I tried different motherboards:
 
+  Asus A7V266-C with AMD AthlonXP 2000+ (i686) - problem occurs
+  Asus A7V600-X with AMD Sempron 2600+  (i686) - problem occurs
+  Abit KV8 Pro  with AMD Athlon64 3000+ (i686) - problem does not occur!
+
+So what makes the Abit motherboard different?
+
+Regards,
+
+Oskar Liljeblad (oskar@osk.mine.nu)
