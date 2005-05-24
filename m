@@ -1,65 +1,48 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: [git patches] 2.6.x libata new PCI ids
-Date: Mon, 23 May 2005 23:14:18 -0700 (PDT)
-Message-ID: <Pine.LNX.4.58.0505232310590.2307@ppc970.osdl.org>
-References: <4292BA93.801@pobox.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] libata: device suspend/resume
+Date: Tue, 24 May 2005 08:21:29 +0200
+Message-ID: <20050524062128.GT9855@suse.de>
+References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:55784 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261175AbVEXGMQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2005 02:12:16 -0400
-In-Reply-To: <4292BA93.801@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1116886206.5021.42.camel@mulgrave>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-
-
-On Tue, 24 May 2005, Jeff Garzik wrote:
->
-> Please pull the 'new-ids' branch from
+On Mon, May 23 2005, James Bottomley wrote:
+> On Mon, 2005-05-23 at 16:45 -0400, Jeff Garzik wrote:
+> > On Mon, May 23, 2005 at 03:41:15PM -0500, James Bottomley wrote:
+> > > The thread petered out before a resolution, however, I think
+> > > at least disk devices should be doing a synchronize cache on suspend.
+> > 
+> > Agreed.
 > 
-> rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+> OK, try this as a straw horse.  It plumbs our scsi bus model into
+> suspend and resume via the driver (which would be the ULD) function.
+> The only ULD which has an extra function is sd, and all it does is
+> synchronize the cache if it was writeback.  I believe you translate SYNC
+> CACHE in libata, so this patch should be sufficient (unless we still
+> have a problem with ATA devices that lie about their cache types?)
 > 
-> This add new PCI ids to some SATA drivers.
+> I think this is sufficient, because if the LLD also wants this
+> information, it can get it from the model of the bus it's attached to.
 
-So here the trees are identical in between the two versions, so the later 
-commit is definitely not doing anything. What's up?
+suspend/resume is a lot more complicated than just flushing a cache, the
+below will probably get you safe asleep but you will never get devices
+alive again after power-up on suspend-to-ram.
 
-I don't have a "git-undo" script, but it looks something like this:
+I also greatly prefer issuing a standby command to the drive after the
+flush, so that we don't risk using the emergency parks of the drive. If
+a drive happens to lie about wrt the flush command, it gets an extra
+chance to flush the cache as it now knows that power will be gone very
+soon. So I think the ->suspend/->resume hooks should belong to the LLD,
+not the ULD as the ULD has no idea how to suspend all devices types.
 
-	echo [top-you-want-to-save] > .git/HEAD
-	git-read-tree -m HEAD
-	git-update-cache -f -u -a
 
-and you're done - it should take less than half a second.
-
-You can do "git-prune-script" at some point if you want to throw away the
-objects that are no longer reachable, but the way you work, you'll never 
-even notice - you'll just have another stale head that isn't reachable 
-from anywhere any more.
-
-		Linus
-----
-
-commit 37c15447c565ab458ee3778e198d08f4041caa99
-tree 2eda289903e3bf19eebce7d5f9aaed2240a02479
-parent 9422e59ddf6cae68e46d7a2c3afe1ce4e739d3eb
-author Martin Povolny <martin.povolny@solnet.cz> Mon, 16 May 2005 02:41:00 -0400
-committer Jeff Garzik <jgarzik@pobox.com> Mon, 16 May 2005 02:41:00 -0400
-
-[PATCH] sata_promise: new PCI ID for TX4200
-
-[note - blank changeset]
-
---------------------------
-commit 9422e59ddf6cae68e46d7a2c3afe1ce4e739d3eb
-tree 2eda289903e3bf19eebce7d5f9aaed2240a02479
-parent eeff84cc026e73d12fbe4484b5fa0d01efa8dc60
-author Francisco Javier <ffelix@sshinf.com> Mon, 16 May 2005 02:39:00 -0400
-committer Jeff Garzik <jgarzik@pobox.com> Mon, 16 May 2005 02:39:00 -0400
-
-[PATCH] sata_promise: add PCI ID for FastTrak TX2200 2-ports
+-- 
+Jens Axboe
 
