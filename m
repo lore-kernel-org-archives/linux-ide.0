@@ -1,53 +1,36 @@
-From: "Oskar Liljeblad" <oskar@osk.mine.nu>
-Subject: clock drift with 2x Promise Ultra133 TX2 (PDC 20269) (again)
-Date: Tue, 24 May 2005 18:53:39 +0200
-Message-ID: <20050524165339.GA16577@oskar>
+From: "Shawn Starr" <sstarr@platform.com>
+Subject: [PATCH][2.6.12-rc4][SATA] sil driver - Blacklist Maxtor disk - Redux
+Date: Tue, 24 May 2005 13:13:35 -0400
+Message-ID: <9CD190F4AD92EC499A9397F49C8B0E4E01E8EC86@catoexm04.noam.corp.platform.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from diadema.skane.tbv.se ([193.13.139.13]:14055 "EHLO
-	diadema.skane.tbv.se") by vger.kernel.org with ESMTP
-	id S261349AbVEXQxm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 May 2005 12:53:42 -0400
-Content-Disposition: inline
+Received: from mailtir.platform.com ([192.219.104.248]:63112 "EHLO
+	mailtir.platform.com") by vger.kernel.org with ESMTP
+	id S261292AbVEXRNh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2005 13:13:37 -0400
+content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: raw@dslr.net
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Problem:
-I have two Promise Ultra133 TX2 (PDC 20269) cards, each with two
-Maxtor UDMA133 hard drives connected. The system also has another
-hard drive connected to the motherboard. A total of five drives.
+Yes, I know we shouldn't do this, but at the current
+time, this seems to fix DMA READ/WRITE timeout
+problems. This also may fix the sata_nv driver as
+well, but this seems indicate that there is a lowlevel
+problem with the SATA subsystem. 
 
-When I concurrently read from two hard drives connected to
-different Promise cards, there is heavy software clock drift.
-The software clock runs too fast - approx. a few seconds per
-minute during this i/o. To reproduce:
+Signed-off-by: Shawn Starr <shawn.starr@rogers.com>
 
-  hwclock --hctosys
-  hwclock --show
-  date
-  dd if=/dev/hde of=/dev/null bs=1M count=7200 &
-  dd if=/dev/hdi of=/dev/null bs=1M count=7200 &
-  wait
-  wait
-  hwclock --show
-  date
-
-This doesn't happen if I read from two drives connected to the
-same card, or one drive connected to the motherboard and one
-connected to a Promise card.
-
-I've removed all other PCI devices in the system - problem remains.
-I tried different motherboards:
-
-  Asus A7V266-C with AMD AthlonXP 2000+ (i686) - problem occurs
-  Asus A7V600-X with AMD Sempron 2600+  (i686) - problem occurs
-  Abit KV8 Pro  with AMD Athlon64 3000+ (i686) - problem does not occur!
-
-So what makes the Abit motherboard different?
-
-Regards,
-
-Oskar Liljeblad (oskar@osk.mine.nu)
+--- sata_sil.c.old      2005-05-24 12:19:20.312197269 -0400
++++ sata_sil.c  2005-05-11 14:05:26.000000000 -0400
+@@ -93,6 +93,7 @@ struct sil_drivelist {
+        { "ST380011ASL",        SIL_QUIRK_MOD15WRITE },
+        { "ST3120022ASL",       SIL_QUIRK_MOD15WRITE },
+        { "ST3160021ASL",       SIL_QUIRK_MOD15WRITE },
++       { "Maxtor 6Y080M0",     SIL_QUIRK_MOD15WRITE },
+        { "Maxtor 4D060H3",     SIL_QUIRK_UDMA5MAX },
+        { }
+ };
