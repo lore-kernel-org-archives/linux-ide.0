@@ -1,38 +1,52 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [git patches] 2.6.x libata new PCI ids
-Date: Tue, 24 May 2005 02:27:07 -0400
-Message-ID: <4292C93B.9000009@pobox.com>
-References: <4292BA93.801@pobox.com> <Pine.LNX.4.58.0505232310590.2307@ppc970.osdl.org>
+Subject: Re: [PATCH] libata: device suspend/resume
+Date: Tue, 24 May 2005 02:53:17 -0400
+Message-ID: <4292CF5D.90809@pobox.com>
+References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:6349 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261259AbVEXG1M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2005 02:27:12 -0400
-In-Reply-To: <Pine.LNX.4.58.0505232310590.2307@ppc970.osdl.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20050524062128.GT9855@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Linus Torvalds wrote:
+Jens Axboe wrote:
+> suspend/resume is a lot more complicated than just flushing a cache, the
+> below will probably get you safe asleep but you will never get devices
+> alive again after power-up on suspend-to-ram.
 > 
-> On Tue, 24 May 2005, Jeff Garzik wrote:
-> 
->>Please pull the 'new-ids' branch from
->>
->>rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
->>
->>This add new PCI ids to some SATA drivers.
-> 
-> 
-> So here the trees are identical in between the two versions, so the later 
-> commit is definitely not doing anything. What's up?
+> I also greatly prefer issuing a standby command to the drive after the
+> flush, so that we don't risk using the emergency parks of the drive. If
+> a drive happens to lie about wrt the flush command, it gets an extra
+> chance to flush the cache as it now knows that power will be gone very
+> soon. So I think the ->suspend/->resume hooks should belong to the LLD,
+> not the ULD as the ULD has no idea how to suspend all devices types.
 
-pass 'refs/heads/new-ids' as the second arg to git-pull-script.
+
+You are right about issuing the standby command after flush.  I don't 
+think an LLD hook is the proper way to accomplish it, however.
+
+The SCSI layer needs to issue the START STOP UNIT command in response to 
+a suspend event, and libata-scsi will (per SAT spec) translate that into 
+the ATA standby command.  Merely following the relevant SCSI+SAT+ATA 
+standards gets us there.
+
+Longer term, SATA PM through SCSI will have three facets:
+
+* Device PM.  This is best handled by the device class driver (sd/sr/st).
+
+* Bus PM.  This is best handled by the transport class driver (need to 
+write for SATA and SAS).
+
+* Host PM.  This is handled in the obvious manner, using existing PM 
+driver hooks.  PCI D0/D3, etc.
+
+I can describe how this will look when libata is divorced from SCSI, if 
+you would like, too...
 
 	Jeff
-
 
 
