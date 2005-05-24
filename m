@@ -1,111 +1,52 @@
-From: Andy Stewart <andystewart@comcast.net>
+From: Andrew Morton <akpm@osdl.org>
 Subject: Re: enable-reads-on-plextor-712-sa-on-26115.patch added to -mm tree
-Date: Mon, 23 May 2005 20:24:28 -0400
-Message-ID: <4292743C.4040409@comcast.net>
-References: <200505232245.j4NMjtk4024089@shell0.pdx.osdl.net> <4292628E.4090209@pobox.com>
+Date: Mon, 23 May 2005 17:34:20 -0700
+Message-ID: <20050523173420.22281325.akpm@osdl.org>
+References: <200505232245.j4NMjtk4024089@shell0.pdx.osdl.net>
+	<4292628E.4090209@pobox.com>
+	<4292743C.4040409@comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rwcrmhc14.comcast.net ([216.148.227.89]:45992 "EHLO
-	rwcrmhc14.comcast.net") by vger.kernel.org with ESMTP
-	id S261221AbVEXAYf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 May 2005 20:24:35 -0400
-In-Reply-To: <4292628E.4090209@pobox.com>
+Received: from fire.osdl.org ([65.172.181.4]:45461 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261224AbVEXAdf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 May 2005 20:33:35 -0400
+In-Reply-To: <4292743C.4040409@comcast.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: akpm@osdl.org, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Andy Stewart <andystewart@comcast.net>
+Cc: jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-Jeff Garzik wrote:
-> akpm@osdl.org wrote:
->> The patch titled
->>
->>      Enable reads on Plextor 712-SA on 2.6.11.5
->>
->> has been added to the -mm tree.  Its filename is
->>
->>      enable-reads-on-plextor-712-sa-on-26115.patch
->>
->> Patches currently in -mm which might be from andystewart@comcast.net are
->>
->> enable-reads-on-plextor-712-sa-on-26115.patch
+Andy Stewart <andystewart@comcast.net> wrote:
+>
+> > 
+> > Good show.
 > 
-> Andrew -- The use of the word 'hack' didn't trigger any response??
+> Aw, come on, Jeff.  I gave it a shot,
 
-HI Jeff et al,
+You did, and that's very much appreciated, thanks.
 
-If you are referencing the commented out debug messages, I apologize,
-and will endeavor to omit those in the future.
+> If you believe this patch is
+> inappropriate, then please ask Andrew Morton to remove it
 
-> 
-> By hardcoding so much of the inquiry data, this patch -overwrites- valid
-> inquiry data provided by the device, with generic data.  This patch
-> makes generic the probe data that the SCSI layer -depends on to be
-> different-.
+I already have removed it, but only because it appears that the patch might
+cause regressions in other areas.
 
-The SCSI inquiry command does not work on this device for reasons
-unknown to me.  I saw in the code where the SCSI inquiry command was
-"emulated", or handled in software, for ATA devices.  I simply copied
-that method for ATAPI devices.  At least that was my intent.  I cloned
-one function, modified it slightly, and (I thought) called it in a
-reasonable place.
+Basically it goes like this:
 
-> 
-> Effectively you made one CD-ROM device work, killed all the others, and
-> enabled an oops generator.
+- Someone sends a patch
 
-I fail to see how other devices would have been killed by this patch.
-The inquiry data were simply moved from one data structure to another.
+- Patch gets ignored.
 
-I tested this patch on my system with many different reads, mounts, and
-unmounts and never generated an oops.  Would you tell me what you did
-that caused an oops?  That would help me to improve my testing before
-attempting to submit future patches.
+- I merge it, without even looking at the thing.
 
-> 
-> Good show.
+I do this as a reminder to myself and to other developers that there is
+some kernel bug or shortcoming.  Basically, it's a bug-tracking system. 
+Periodically I'll spam the maintainer with the patch and eventually he'll
+tell me to drop the thing because the problem is fixed, or he'll tell the
+originator why the patch will never be merged.
 
-Aw, come on, Jeff.  I gave it a shot, I'm trying to give back to the
-community rather than simply complain.  OK, so my work isn't perfect,
-and you've pointed ont valid technical reasons why.  At least *I tried*
-to contribute code rather than just offering complaints, and I'm willing
-to admit that I'll need to try harder in the future.
-
-> 
-> Even if this patch worked, you still need to fix the following:
-> 
-> * Patch INQUIRY data -slightly- to fool the SCSI layer into working
-> correctly.  This is what Andy's patch [poorly] attempts to address.
-> * Handling DRQ interrupts (early patch exists)
-> * Padding DMA data (50% patch exists)
-> * Fix error handling (patch exists)
-> * Fix all FIS-based drivers so that an error doesn't cause an oops
-> * Implement non-polled REQUEST SENSE error handling for FIS-based drivers
-
-As with any patch, it is completely at the discretion of the kernel
-developers as to whether it gets included.  If you believe this patch is
-inappropriate, then please ask Andrew Morton to remove it, and I'll
-respect the decision.
-
-Thanks for looking at the code and for offering your comments.
-
-Andy
-
-- --
-Andy Stewart, Founder
-Worcester Linux Users' Group
-Worcester, MA, USA
-http://www.wlug.org
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
-
-iD8DBQFCknQ8Hl0iXDssISsRAtvpAKCBwfatiK8bLCSTz6EztI+C50KP2QCeM7vd
-TCIX1cYtKEdsQK8zRTNr0Do=
-=ZZKj
------END PGP SIGNATURE-----
+Either way, the patch (and the problem which caused you to write the patch)
+gets some sort of definite dispositive handling, rather than falling
+through a crack.
