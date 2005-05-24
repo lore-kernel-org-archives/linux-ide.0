@@ -1,66 +1,101 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata: device suspend/resume
-Date: Tue, 24 May 2005 10:51:35 +0200
-Message-ID: <20050524085133.GZ9855@suse.de>
-References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de> <4292CF5D.90809@pobox.com> <20050524075953.GY9855@suse.de> <4292E3EE.10006@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: root@smtp.nexlab.net
+Subject: (unknown)
+Date: Tue, 24 May 2005 11:21:21 +0200 (CEST)
+Message-ID: <20050524092121.6CE37FA7B@smtp.nexlab.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:30603 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261954AbVEXIvn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2005 04:51:43 -0400
-Content-Disposition: inline
-In-Reply-To: <4292E3EE.10006@pobox.com>
+Received: from smtp.nexlab.net ([213.173.188.110]:32712 "EHLO smtp.nexlab.net")
+	by vger.kernel.org with ESMTP id S262017AbVEXJV0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2005 05:21:26 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Tue, May 24 2005, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >On Tue, May 24 2005, Jeff Garzik wrote:
-> >
-> >>The SCSI layer needs to issue the START STOP UNIT command in response to 
-> >>a suspend event, and libata-scsi will (per SAT spec) translate that into 
-> >>the ATA standby command.  Merely following the relevant SCSI+SAT+ATA 
-> >>standards gets us there.
-> >
-> >
-> >BTW, you also need to set host/device modes on resume. Where do you
-> >propose to do that currently, without the LLD hook?
+	by smtp.nexlab.net (Postfix) with ESMTP id DE1F8FB74
+
+	for <chiakotay@nexlab.it>; Tue, 24 May 2005 10:01:46 +0200 (CEST)
+
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+
+	id S261332AbVEXG12 (ORCPT <rfc822;chiakotay@nexlab.it>);
+
+	Tue, 24 May 2005 02:27:28 -0400
+
+Received: (majordomo@vger.kernel.org) by vger.kernel.org id S261321AbVEXG12
+
+	(ORCPT <rfc822;linux-kernel-outgoing>);
+
+	Tue, 24 May 2005 02:27:28 -0400
+
+Received: from mail.dvmed.net ([216.237.124.58]:6349 "EHLO mail.dvmed.net")
+
+	by vger.kernel.org with ESMTP id S261259AbVEXG1M (ORCPT
+
+	<rfc822;linux-kernel@vger.kernel.org>);
+
+	Tue, 24 May 2005 02:27:12 -0400
+
+Received: from cpe-065-184-065-144.nc.res.rr.com ([65.184.65.144] helo=[10.10.10.88])
+
+	by mail.dvmed.net with esmtpsa (Exim 4.51 #1 (Red Hat Linux))
+
+	id 1DaSsf-0001On-LK; Tue, 24 May 2005 06:27:10 +0000
+
+Message-ID: <4292C93B.9000009@pobox.com>
+
+Date:	Tue, 24 May 2005 02:27:07 -0400
+
+From: Jeff Garzik <jgarzik@pobox.com>
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.6) Gecko/20050328 Fedora/1.7.6-1.2.5
+
+X-Accept-Language: en-us, en
+
+MIME-Version: 1.0
+
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Andrew Morton <akpm@osdl.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [git patches] 2.6.x libata new PCI ids
+
+References: <4292BA93.801@pobox.com> <Pine.LNX.4.58.0505232310590.2307@ppc970.osdl.org>
+
+In-Reply-To: <Pine.LNX.4.58.0505232310590.2307@ppc970.osdl.org>
+
+Content-Type: text/plain; charset=us-ascii; format=flowed
+
+Content-Transfer-Encoding: 7bit
+
+X-Spam-Score: 0.0 (/)
+
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+
+X-Mailing-List:	linux-kernel@vger.kernel.org
+
+
+
+Linus Torvalds wrote:
 > 
-> In the START STOP UNIT emulation.  SSU is basically a high level "do PM 
-> command".
-
-Ok, works for me.
-
-> As a tangent, I would like to try and convince you to stop thinking so 
-> much about hooks, and start thinking about adding new commands at the 
-> struct request level.  Sending things down the request_queue is much 
-> nicer because commands can be sent using the normal rq mechanisms. 
-> Often, commands can be translated directly into ATA or SCSI commands in 
-> the prep function.
+> On Tue, 24 May 2005, Jeff Garzik wrote:
 > 
-> Two commands I have been thinking about, to add alongside READ, WRITE, 
-> READA, READ_SYNC, etc. are:  SYNC_CACHE and PM_EVENT.
+>>Please pull the 'new-ids' branch from
+>>
+>>rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+>>
+>>This add new PCI ids to some SATA drivers.
 > 
-> This would be quite useful for DM and md RAID, especially.  It becomes 
-> trivial to clone a SYNC_CACHE command, and send it to 5 underlying ATA 
-> and SCSI devices in a RAID array.  If the PM_EVENT or SYNC_CACHE command 
-> needs special processing, one can easily add code for that without 
-> needing any hooks -- just call your new code from the request_queue 
-> function that handles READ/WRITE/READA/...
 > 
-> This applies to the current thread (PM_EVENT), and also fits right into 
-> your barrier work, too (SYNC_CACHE).
+> So here the trees are identical in between the two versions, so the later 
+> commit is definitely not doing anything. What's up?
 
-I agree, it's a cleaner approach, with the rq being a container for
-generel messages as well not just SCSI commands. The one missing piece
-for that was the rq->end_io() callback so everything doesn't have to go
-down sync, but that is in now as well.
+pass 'refs/heads/new-ids' as the second arg to git-pull-script.
 
-I'll try and cook something up.
+	Jeff
 
--- 
-Jens Axboe
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
 
