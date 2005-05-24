@@ -1,84 +1,98 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: enable-reads-on-plextor-712-sa-on-26115.patch added to -mm tree
-Date: Mon, 23 May 2005 23:30:03 -0400
-Message-ID: <42929FBB.3060707@pobox.com>
-References: <200505232245.j4NMjtk4024089@shell0.pdx.osdl.net> <4292628E.4090209@pobox.com> <4292743C.4040409@comcast.net>
+Subject: [git patches] 2.6.x libata new PCI ids
+Date: Tue, 24 May 2005 01:24:35 -0400
+Message-ID: <4292BA93.801@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020908040206020909070108"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:20684 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261338AbVEXDaL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 May 2005 23:30:11 -0400
-In-Reply-To: <4292743C.4040409@comcast.net>
+Received: from mail.dvmed.net ([216.237.124.58]:52684 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261307AbVEXFYi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2005 01:24:38 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andy Stewart <andystewart@comcast.net>
-Cc: akpm@osdl.org, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Andy Stewart wrote:
-> Jeff Garzik wrote:
->>By hardcoding so much of the inquiry data, this patch -overwrites- valid
->>inquiry data provided by the device, with generic data.  This patch
->>makes generic the probe data that the SCSI layer -depends on to be
->>different-.
+This is a multi-part message in MIME format.
+--------------020908040206020909070108
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> The SCSI inquiry command does not work on this device for reasons
-> unknown to me.  I saw in the code where the SCSI inquiry command was
-> "emulated", or handled in software, for ATA devices.  I simply copied
-> that method for ATAPI devices.  At least that was my intent.  I cloned
-> one function, modified it slightly, and (I thought) called it in a
-> reasonable place.
+Please pull the 'new-ids' branch from
 
-All of SCSI is emulated for ATA; for ATAPI, 99% of SCSI is passed 
-through to the underlying device.  The two must be treated very differently.
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-The SCSI layer needs to see the per-device data returned by passing the 
-INQUIRY command to the device via the ATA PACKET command.
+This add new PCI ids to some SATA drivers.
+
+diffstat, changelog, and patch attached.
 
 
->>Effectively you made one CD-ROM device work, killed all the others, and
->>enabled an oops generator.
-> 
-> 
-> I fail to see how other devices would have been killed by this patch.
 
-The SCSI layer discovers, and interprets devices based on the data 
-returned by the INQUIRY command.  Your patch causes the kernel to act as 
-if all ATAPI devices behave just like your Plextor, which is very very 
-wrong.
-
-It's a good thing nobody tried to use an ATAPI tape drive with your 
-patch, for example.  The kernel would have thought it was a CD-ROM, and 
-tried to talk to it as such.
+--------------020908040206020909070108
+Content-Type: text/plain;
+ name="libata-2.6.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libata-2.6.txt"
 
 
-> I tested this patch on my system with many different reads, mounts, and
-> unmounts and never generated an oops.  Would you tell me what you did
-> that caused an oops?  That would help me to improve my testing before
-> attempting to submit future patches.
-
-Any use of ATAPI in certain drivers (like AHCI) will cause an oops, 
-because those drivers are not yet fully ATAPI aware.
+ drivers/scsi/sata_promise.c |    2 ++
+ drivers/scsi/sata_sil.c     |    1 +
+ 2 files changed, 3 insertions(+)
 
 
->>Good show.
-> 
-> 
-> Aw, come on, Jeff.  I gave it a shot, I'm trying to give back to the
-> community rather than simply complain.  OK, so my work isn't perfect,
-> and you've pointed ont valid technical reasons why.  At least *I tried*
-> to contribute code rather than just offering complaints, and I'm willing
-> to admit that I'll need to try harder in the future.
+commit 37c15447c565ab458ee3778e198d08f4041caa99
+tree 2eda289903e3bf19eebce7d5f9aaed2240a02479
+parent 9422e59ddf6cae68e46d7a2c3afe1ce4e739d3eb
+author Martin Povolny <martin.povolny@solnet.cz> Mon, 16 May 2005 02:41:00 -0400
+committer Jeff Garzik <jgarzik@pobox.com> Mon, 16 May 2005 02:41:00 -0400
 
-There's nothing wrong with contributing to ATAPI debugging and development!
+[PATCH] sata_promise: new PCI ID for TX4200
 
-We just don't need to be merging such a broken patch into -mm, where it 
-will cause more headaches than it will solve.
+[note - blank changeset]
 
-Thou Shalt Not Turn On ATAPI Before Its Time.  It's still in the realm 
-of debugging patches.
+--------------------------
+commit 9422e59ddf6cae68e46d7a2c3afe1ce4e739d3eb
+tree 2eda289903e3bf19eebce7d5f9aaed2240a02479
+parent eeff84cc026e73d12fbe4484b5fa0d01efa8dc60
+author Francisco Javier <ffelix@sshinf.com> Mon, 16 May 2005 02:39:00 -0400
+committer Jeff Garzik <jgarzik@pobox.com> Mon, 16 May 2005 02:39:00 -0400
 
-	Jeff
+[PATCH] sata_promise: add PCI ID for FastTrak TX2200 2-ports
 
+--------------------------
+commit eeff84cc026e73d12fbe4484b5fa0d01efa8dc60
+tree 136a26c73b90d0dd1c4088bb9a65409b5a2d806d
+parent 88d7bd8cb9eb8d64bf7997600b0d64f7834047c5
+author NAKAMURA Kenta <kenta@c.csce.kyushu-u.ac.jp> Mon, 16 May 2005 02:35:41 -0400
+committer Jeff Garzik <jgarzik@pobox.com> Mon, 16 May 2005 02:35:41 -0400
 
+[PATCH] sata_sil: new ID 1002:437A for ATI IXP400
+
+--------------------------
+diff --git a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
+--- a/drivers/scsi/sata_promise.c
++++ b/drivers/scsi/sata_promise.c
+@@ -151,6 +151,8 @@ static struct ata_port_info pdc_port_inf
+ static struct pci_device_id pdc_ata_pci_tbl[] = {
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3371, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_2037x },
++	{ PCI_VENDOR_ID_PROMISE, 0x3571, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_2037x },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3373, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_2037x },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3375, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -82,6 +82,7 @@ static struct pci_device_id sil_pci_tbl[
+ 	{ 0x1095, 0x3114, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3114 },
+ 	{ 0x1002, 0x436e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
+ 	{ 0x1002, 0x4379, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
++	{ 0x1002, 0x437a, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
+ 	{ }	/* terminate list */
+ };
+ 
+
+--------------020908040206020909070108--
