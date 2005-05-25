@@ -1,1687 +1,651 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata: device suspend/resume
-Date: Wed, 25 May 2005 11:29:52 +0200
-Message-ID: <20050525092952.GA7005@suse.de>
-References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de> <4292CF5D.90809@pobox.com> <20050524075953.GY9855@suse.de> <4292E3EE.10006@pobox.com> <20050524085133.GZ9855@suse.de> <42935852.2020300@pobox.com>
+From: Michael Neuffer <neuffer@neuffer.info>
+Subject: Failed Assertion in libata-core.c
+Date: Wed, 25 May 2005 12:24:10 +0200
+Message-ID: <20050525102410.GA14845@neuffer.info>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-in-03.arcor-online.net ([151.189.21.43]:25744 "EHLO
+	mail-in-03.arcor-online.net") by vger.kernel.org with ESMTP
+	id S262117AbVEYKY3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 May 2005 06:24:29 -0400
 Content-Disposition: inline
-In-Reply-To: <42935852.2020300@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, May 24 2005, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >I agree, it's a cleaner approach, with the rq being a container for
-> >generel messages as well not just SCSI commands. The one missing piece
-> >for that was the rq->end_io() callback so everything doesn't have to go
-> >down sync, but that is in now as well.
-> >
-> >I'll try and cook something up.
-> 
-> Very cool ;)
 
-This is the base for it. It splits request->flags into two variables:
+Hi Jeff
 
-- cmd_type. this is not a bitmask, but a value indicating what type of
-  request this is.
+I just aquired myself a Promise SATA150 TX4 controller and
+a RAIDSonic SATA 4in3 Backplane on Ebay plus 4 drives and 
+started playing around with them. 
 
-- cmd_flags. various command modified flags.
+While building an RAID 5 array I got an assertion.
 
-The idea is to add a REQ_TYPE_LINUX_BLOCK request type, where we define
-a set of command opcodes that signify an upper level defined function
-(such as flush) that is implemented differently at the hardware/driver
-level. Basically a way to pass down messages or commands generically.
+This is with a 2.6.12-rc4-mm2 kernel
 
-I like this better than using scsi opcodes always, it's a cleaner
-abstraction. For sending generic commands to a device, we could add a
-function ala:
+[4338287.713000] md: bind<sdc1>
+[4338287.719000] md: bind<sdd1>
+[4338287.726000] raid5: device sdd1 operational as raid disk 3
+[4338287.732000] raid5: device sdc1 operational as raid disk 2
+[4338287.739000] raid5: device sdb1 operational as raid disk 1
+[4338287.745000] raid5: device sda1 operational as raid disk 0
+[4338287.752000] raid5: allocated 4206kB for md6
+[4338287.758000] raid5: raid level 5 set md6 active with 4 out of 4 devices, algorithm 2
+[4338287.765000] RAID5 conf printout:
+[4338287.771000]  --- rd:4 wd:4 fd:0
+[4338287.777000]  disk 0, o:1, dev:sda1
+[4338287.783000]  disk 1, o:1, dev:sdb1
+[4338287.789000]  disk 2, o:1, dev:sdc1
+[4338287.796000]  disk 3, o:1, dev:sdd1
+[4338287.802000] .......<6>md: syncing RAID array md6
+[4338287.809000] md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
+[4338287.815000] md: using maximum available idle IO bandwith (but not more than 200000 KB/sec) for reconstruction.
+[4338287.821000] md: using 128k window, over a total of 390708736 blocks.
+[4338606.290000] md: md6: sync done.
+[4338606.303000] md: checkpointing recovery of md6.
+[4338606.311000] md: md6 stopped.
+[4338606.317000] md: unbind<sdd1>
+[4338606.322000] md: export_rdev(sdd1)
+[4338606.328000] md: unbind<sdc1>
+[4338606.334000] md: export_rdev(sdc1)
+[4338606.339000] md: unbind<sdb1>
+[4338606.345000] md: export_rdev(sdb1)
+[4338606.351000] md: unbind<sda1>
+[4338606.356000] md: export_rdev(sda1)
+[4338755.703000] md: bind<sda1>
+[4338755.708000] md: bind<sdb1>
+[4338755.714000] md: bind<sdc1>
+[4338755.718000] md: bind<sdd1>
+[4338755.723000] raid5: device sdd1 operational as raid disk 3
+[4338755.728000] raid5: device sdc1 operational as raid disk 2
+[4338755.733000] raid5: device sdb1 operational as raid disk 1
+[4338755.738000] raid5: device sda1 operational as raid disk 0
+[4338755.744000] raid5: allocated 4206kB for md6
+[4338755.749000] raid5: raid level 5 set md6 active with 4 out of 4 devices, algorithm 2
+[4338755.753000] RAID5 conf printout:
+[4338755.758000]  --- rd:4 wd:4 fd:0
+[4338755.763000]  disk 0, o:1, dev:sda1
+[4338755.767000]  disk 1, o:1, dev:sdb1
+[4338755.772000]  disk 2, o:1, dev:sdc1
+[4338755.776000]  disk 3, o:1, dev:sdd1
+[4338755.781000] .......<6>md: syncing RAID array md6
+[4338755.787000] md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
+[4338755.792000] md: using maximum available idle IO bandwith (but not more than 200000 KB/sec) for reconstruction.
+[4338755.797000] md: using 128k window, over a total of 390708736 blocks.
+[4341590.193000] ata1: command timeout
+[4341594.292000] Assertion failed! qc->flags & ATA_QCFLAG_ACTIVE,drivers/scsi/libata-core.c,ata_qc_complete,line=2807
+[4341594.298000] ata1: status=0x51 { DriveReady SeekComplete Error }
+[4341594.302000] ata1: called with no error (51)!
+[4341594.307000] SCSI error : <0 0 0 0> return code = 0x8000002
+[4341594.312000] sda: Current: sense key: Medium Error
+[4341594.319000]     Additional sense: Write error - auto reallocation failed
+[4341594.324000] end_request: I/O error, dev sda, sector 475878719
+[4341594.329000] raid5: Disk failure on sda1, disabling device. Operation continuing on 3 devices
 
-blk_send_message(queue, unsigned char cmd, completion_callback);
+The system was still usable and claimed to continue building the
+array, but an mke2fs that was running against md6 at that time hung 
+and couldn't be killed.
 
-that would allocate the request, set it up, add to block layer queue,
-and call the completion_callback when it is done. So for a flush, a
-driver could do
+After a hard reset - a normal shutdown didn't work and hung, 
+the system came up clean and is continuing to (re)build the RAID-5
+array
 
-        blk_send_message(q, REQ_LB_OP_FLUSH, flush_done);
+If you need any additional information just let me know.
 
-to a target queue.
+Cheers
+   Mike
 
-What do you think?
 
-Index: drivers/block/as-iosched.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/block/as-iosched.c  (mode:100644)
-+++ uncommitted/drivers/block/as-iosched.c  (mode:100644)
-@@ -1476,7 +1476,7 @@
- 		}
- 	} else
- 		WARN_ON(blk_fs_request(rq)
--			&& (!(rq->flags & (REQ_HARDBARRIER|REQ_SOFTBARRIER))) );
-+			&& (!(rq->cmd_flags & (REQ_HARDBARRIER|REQ_SOFTBARRIER))) );
- 
- 	/* Stop anticipating - let this request get through */
- 	as_antic_stop(ad);
-@@ -1522,7 +1522,7 @@
- 	}
- 
- 	/* barriers must flush the reorder queue */
--	if (unlikely(rq->flags & (REQ_SOFTBARRIER | REQ_HARDBARRIER)
-+	if (unlikely(rq->cmd_flags & (REQ_SOFTBARRIER | REQ_HARDBARRIER)
- 			&& where == ELEVATOR_INSERT_SORT)) {
- 		WARN_ON(1);
- 		where = ELEVATOR_INSERT_BACK;
-Index: drivers/block/deadline-iosched.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/block/deadline-iosched.c  (mode:100644)
-+++ uncommitted/drivers/block/deadline-iosched.c  (mode:100644)
-@@ -628,7 +628,7 @@
- 	struct deadline_data *dd = q->elevator->elevator_data;
- 
- 	/* barriers must flush the reorder queue */
--	if (unlikely(rq->flags & (REQ_SOFTBARRIER | REQ_HARDBARRIER)
-+	if (unlikely(rq->cmd_flags & (REQ_SOFTBARRIER | REQ_HARDBARRIER)
- 			&& where == ELEVATOR_INSERT_SORT))
- 		where = ELEVATOR_INSERT_BACK;
- 
-Index: drivers/block/elevator.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/block/elevator.c  (mode:100644)
-+++ uncommitted/drivers/block/elevator.c  (mode:100644)
-@@ -272,7 +272,7 @@
- 	if (blk_account_rq(rq))
- 		q->in_flight--;
- 
--	rq->flags &= ~REQ_STARTED;
-+	rq->cmd_flags &= ~REQ_STARTED;
- 
- 	if (e->ops->elevator_deactivate_req_fn)
- 		e->ops->elevator_deactivate_req_fn(q, rq);
-@@ -285,7 +285,7 @@
- 	/*
- 	 * if this is the flush, requeue the original instead and drop the flush
- 	 */
--	if (rq->flags & REQ_BAR_FLUSH) {
-+	if (rq->cmd_type == REQ_TYPE_FLUSH) {
- 		clear_bit(QUEUE_FLAG_FLUSH, &q->queue_flags);
- 		rq = rq->end_io_data;
- 	}
-@@ -306,7 +306,7 @@
- 	/*
- 	 * barriers implicitly indicate back insertion
- 	 */
--	if (rq->flags & (REQ_SOFTBARRIER | REQ_HARDBARRIER) &&
-+	if (rq->cmd_flags & (REQ_SOFTBARRIER | REQ_HARDBARRIER) &&
- 	    where == ELEVATOR_INSERT_SORT)
- 		where = ELEVATOR_INSERT_BACK;
- 
-@@ -374,12 +374,12 @@
- 		 * that has been delayed should not be passed by new incoming
- 		 * requests
- 		 */
--		rq->flags |= REQ_STARTED;
-+		rq->cmd_flags |= REQ_STARTED;
- 
- 		if (rq == q->last_merge)
- 			q->last_merge = NULL;
- 
--		if ((rq->flags & REQ_DONTPREP) || !q->prep_rq_fn)
-+		if ((rq->cmd_flags & REQ_DONTPREP) || !q->prep_rq_fn)
- 			break;
- 
- 		ret = q->prep_rq_fn(q, rq);
-@@ -395,7 +395,7 @@
- 				nr_bytes = rq->data_len;
- 
- 			blkdev_dequeue_request(rq);
--			rq->flags |= REQ_QUIET;
-+			rq->cmd_flags |= REQ_QUIET;
- 			end_that_request_chunk(rq, 0, nr_bytes);
- 			end_that_request_last(rq);
- 		} else {
-Index: drivers/block/floppy.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/block/floppy.c  (mode:100644)
-+++ uncommitted/drivers/block/floppy.c  (mode:100644)
-@@ -3001,8 +3001,8 @@
- 	if (usage_count == 0) {
- 		printk("warning: usage count=0, current_req=%p exiting\n",
- 		       current_req);
--		printk("sect=%ld flags=%lx\n", (long)current_req->sector,
--		       current_req->flags);
-+		printk("sect=%ld type=%x flags=%x\n", (long)current_req->sector,
-+		       current_req->cmd_type, current_req->cmd_flags);
- 		return;
- 	}
- 	if (test_bit(0, &fdc_busy)) {
-Index: drivers/block/ll_rw_blk.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/block/ll_rw_blk.c  (mode:100644)
-+++ uncommitted/drivers/block/ll_rw_blk.c  (mode:100644)
-@@ -349,7 +349,7 @@
- 	struct request *rq = flush_rq->end_io_data;
- 	request_queue_t *q = rq->q;
- 
--	rq->flags |= REQ_BAR_PREFLUSH;
-+	rq->cmd_flags |= REQ_BAR_PREFLUSH;
- 
- 	if (!flush_rq->errors)
- 		elv_requeue_request(q, rq);
-@@ -365,7 +365,7 @@
- 	struct request *rq = flush_rq->end_io_data;
- 	request_queue_t *q = rq->q;
- 
--	rq->flags |= REQ_BAR_POSTFLUSH;
-+	rq->cmd_flags |= REQ_BAR_POSTFLUSH;
- 
- 	q->end_flush_fn(q, flush_rq);
- 	clear_bit(QUEUE_FLAG_FLUSH, &q->queue_flags);
-@@ -383,7 +383,7 @@
- 
- 	rq_init(q, flush_rq);
- 	flush_rq->elevator_private = NULL;
--	flush_rq->flags = REQ_BAR_FLUSH;
-+	flush_rq->cmd_type = REQ_TYPE_FLUSH;
- 	flush_rq->rq_disk = rq->rq_disk;
- 	flush_rq->rl = NULL;
- 
-@@ -392,7 +392,7 @@
- 	 * pre and post flush as done in that case
- 	 */
- 	if (!q->prepare_flush_fn(q, flush_rq)) {
--		rq->flags |= REQ_BAR_PREFLUSH | REQ_BAR_POSTFLUSH;
-+		rq->cmd_flags |= REQ_BAR_PREFLUSH | REQ_BAR_POSTFLUSH;
- 		clear_bit(QUEUE_FLAG_FLUSH, &q->queue_flags);
- 		return rq;
- 	}
-@@ -421,7 +421,7 @@
- 
- 	rq_init(q, flush_rq);
- 	flush_rq->elevator_private = NULL;
--	flush_rq->flags = REQ_BAR_FLUSH;
-+	flush_rq->cmd_type = REQ_TYPE_FLUSH;
- 	flush_rq->rq_disk = rq->rq_disk;
- 	flush_rq->rl = NULL;
- 
-@@ -934,7 +934,7 @@
- 	}
- 
- 	list_del_init(&rq->queuelist);
--	rq->flags &= ~REQ_QUEUED;
-+	rq->cmd_flags &= ~REQ_QUEUED;
- 	rq->tag = -1;
- 
- 	if (unlikely(bqt->tag_index[tag] == NULL))
-@@ -970,7 +970,7 @@
- 	unsigned long *map = bqt->tag_map;
- 	int tag = 0;
- 
--	if (unlikely((rq->flags & REQ_QUEUED))) {
-+	if (unlikely((rq->cmd_flags & REQ_QUEUED))) {
- 		printk(KERN_ERR 
- 		       "request %p for device [%s] already tagged %d",
- 		       rq, rq->rq_disk ? rq->rq_disk->disk_name : "?", rq->tag);
-@@ -987,7 +987,7 @@
- 	tag += ffz(*map);
- 	__set_bit(tag, bqt->tag_map);
- 
--	rq->flags |= REQ_QUEUED;
-+	rq->cmd_flags |= REQ_QUEUED;
- 	rq->tag = tag;
- 	bqt->tag_index[tag] = rq;
- 	blkdev_dequeue_request(rq);
-@@ -1022,61 +1022,31 @@
- 		if (rq->tag == -1) {
- 			printk("bad tag found on list\n");
- 			list_del_init(&rq->queuelist);
--			rq->flags &= ~REQ_QUEUED;
-+			rq->cmd_flags &= ~REQ_QUEUED;
- 		} else
- 			blk_queue_end_tag(q, rq);
- 
--		rq->flags &= ~REQ_STARTED;
-+		rq->cmd_flags &= ~REQ_STARTED;
- 		__elv_add_request(q, rq, ELEVATOR_INSERT_BACK, 0);
- 	}
- }
- 
- EXPORT_SYMBOL(blk_queue_invalidate_tags);
- 
--static char *rq_flags[] = {
--	"REQ_RW",
--	"REQ_FAILFAST",
--	"REQ_SOFTBARRIER",
--	"REQ_HARDBARRIER",
--	"REQ_CMD",
--	"REQ_NOMERGE",
--	"REQ_STARTED",
--	"REQ_DONTPREP",
--	"REQ_QUEUED",
--	"REQ_PC",
--	"REQ_BLOCK_PC",
--	"REQ_SENSE",
--	"REQ_FAILED",
--	"REQ_QUIET",
--	"REQ_SPECIAL",
--	"REQ_DRIVE_CMD",
--	"REQ_DRIVE_TASK",
--	"REQ_DRIVE_TASKFILE",
--	"REQ_PREEMPT",
--	"REQ_PM_SUSPEND",
--	"REQ_PM_RESUME",
--	"REQ_PM_SHUTDOWN",
--};
--
- void blk_dump_rq_flags(struct request *rq, char *msg)
- {
- 	int bit;
- 
--	printk("%s: dev %s: flags = ", msg,
--		rq->rq_disk ? rq->rq_disk->disk_name : "?");
--	bit = 0;
--	do {
--		if (rq->flags & (1 << bit))
--			printk("%s ", rq_flags[bit]);
--		bit++;
--	} while (bit < __REQ_NR_BITS);
-+	printk("%s: dev %s: type=%x, flags=%x\n", msg,
-+		rq->rq_disk ? rq->rq_disk->disk_name : "?", rq->cmd_type,
-+		rq->cmd_flags);
- 
- 	printk("\nsector %llu, nr/cnr %lu/%u\n", (unsigned long long)rq->sector,
- 						       rq->nr_sectors,
- 						       rq->current_nr_sectors);
- 	printk("bio %p, biotail %p, buffer %p, data %p, len %u\n", rq->bio, rq->biotail, rq->buffer, rq->data, rq->data_len);
- 
--	if (rq->flags & (REQ_BLOCK_PC | REQ_PC)) {
-+	if (blk_pc_request(rq)) {
- 		printk("cdb: ");
- 		for (bit = 0; bit < sizeof(rq->cmd); bit++)
- 			printk("%02x ", rq->cmd[bit]);
-@@ -1253,7 +1223,7 @@
- 	int nr_phys_segs = bio_phys_segments(q, bio);
- 
- 	if (req->nr_phys_segments + nr_phys_segs > q->max_phys_segments) {
--		req->flags |= REQ_NOMERGE;
-+		req->cmd_flags |= REQ_NOMERGE;
- 		if (req == q->last_merge)
- 			q->last_merge = NULL;
- 		return 0;
-@@ -1276,7 +1246,7 @@
- 
- 	if (req->nr_hw_segments + nr_hw_segs > q->max_hw_segments
- 	    || req->nr_phys_segments + nr_phys_segs > q->max_phys_segments) {
--		req->flags |= REQ_NOMERGE;
-+		req->cmd_flags |= REQ_NOMERGE;
- 		if (req == q->last_merge)
- 			q->last_merge = NULL;
- 		return 0;
-@@ -1297,7 +1267,7 @@
- 	int len;
- 
- 	if (req->nr_sectors + bio_sectors(bio) > q->max_sectors) {
--		req->flags |= REQ_NOMERGE;
-+		req->cmd_flags |= REQ_NOMERGE;
- 		if (req == q->last_merge)
- 			q->last_merge = NULL;
- 		return 0;
-@@ -1329,7 +1299,7 @@
- 	int len;
- 
- 	if (req->nr_sectors + bio_sectors(bio) > q->max_sectors) {
--		req->flags |= REQ_NOMERGE;
-+		req->cmd_flags |= REQ_NOMERGE;
- 		if (req == q->last_merge)
- 			q->last_merge = NULL;
- 		return 0;
-@@ -1784,10 +1754,10 @@
- 		return NULL;
- 
- 	/*
--	 * first three bits are identical in rq->flags and bio->bi_rw,
-+	 * first three bits are identical in rq->cmd_flags and bio->bi_rw,
- 	 * see bio.h and blkdev.h
- 	 */
--	rq->flags = rw;
-+	rq->cmd_flags = rw;
- 
- 	if (!elv_set_request(q, rq, gfp_mask))
- 		return rq;
-@@ -2044,8 +2014,8 @@
-  *    Many block devices need to execute commands asynchronously, so they don't
-  *    block the whole kernel from preemption during request execution.  This is
-  *    accomplished normally by inserting aritficial requests tagged as
-- *    REQ_SPECIAL in to the corresponding request queue, and letting them be
-- *    scheduled for actual execution by the request queue.
-+ *    REQ_TYPE_SPECIAL in to the corresponding request queue, and letting them
-+ *    be scheduled for actual execution by the request queue.
-  *
-  *    We have the option of inserting the head or the tail of the queue.
-  *    Typically we use the tail for new ioctls and so forth.  We use the head
-@@ -2062,7 +2032,8 @@
- 	 * must not attempt merges on this) and that it acts as a soft
- 	 * barrier
- 	 */
--	rq->flags |= REQ_SPECIAL | REQ_SOFTBARRIER;
-+	rq->cmd_type = REQ_TYPE_SPECIAL;
-+	rq->cmd_flags |= REQ_SOFTBARRIER;
- 
- 	rq->special = data;
- 
-@@ -2215,7 +2186,7 @@
- 		rq->sense_len = 0;
- 	}
- 
--	rq->flags |= REQ_NOMERGE;
-+	rq->cmd_flags |= REQ_NOMERGE;
- 	rq->waiting = &wait;
- 	rq->end_io = blk_end_sync_rq;
- 	elv_add_request(q, rq, ELEVATOR_INSERT_BACK, 1);
-@@ -2277,7 +2248,8 @@
- 	struct request *rq = blk_get_request(q, WRITE, __GFP_WAIT);
- 	int ret;
- 
--	rq->flags |= REQ_BLOCK_PC | REQ_SOFTBARRIER;
-+	rq->cmd_type = REQ_TYPE_BLOCK_PC;
-+	rq->cmd_flags |= REQ_SOFTBARRIER;
- 	rq->sector = 0;
- 	memset(rq->cmd, 0, sizeof(rq->cmd));
- 	rq->cmd[0] = 0x35;
-@@ -2679,19 +2651,19 @@
- 		goto again;
- 	}
- 
--	req->flags |= REQ_CMD;
-+	req->cmd_type = REQ_TYPE_FS;
- 
- 	/*
- 	 * inherit FAILFAST from bio (for read-ahead, and explicit FAILFAST)
- 	 */
- 	if (bio_rw_ahead(bio) || bio_failfast(bio))
--		req->flags |= REQ_FAILFAST;
-+		req->cmd_flags |= REQ_FAILFAST;
- 
- 	/*
- 	 * REQ_BARRIER implies no merging, but lets make it explicit
- 	 */
- 	if (barrier)
--		req->flags |= (REQ_HARDBARRIER | REQ_NOMERGE);
-+		req->cmd_flags |= (REQ_HARDBARRIER | REQ_NOMERGE);
- 
- 	req->errors = 0;
- 	req->hard_sector = req->sector = sector;
-@@ -3068,7 +3040,7 @@
- 		req->errors = 0;
- 
- 	if (!uptodate) {
--		if (blk_fs_request(req) && !(req->flags & REQ_QUIET))
-+		if (blk_fs_request(req) && !(req->cmd_flags & REQ_QUIET))
- 			printk("end_request: I/O error, dev %s, sector %llu\n",
- 				req->rq_disk ? req->rq_disk->disk_name : "?",
- 				(unsigned long long)req->sector);
-@@ -3236,8 +3208,8 @@
- 
- void blk_rq_bio_prep(request_queue_t *q, struct request *rq, struct bio *bio)
- {
--	/* first three bits are identical in rq->flags and bio->bi_rw */
--	rq->flags |= (bio->bi_rw & 7);
-+	/* first three bits are identical in rq->cmd_flags and bio->bi_rw */
-+	rq->cmd_flags |= (bio->bi_rw & 7);
- 
- 	rq->nr_phys_segments = bio_phys_segments(q, bio);
- 	rq->nr_hw_segments = bio_hw_segments(q, bio);
-Index: drivers/block/nbd.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/block/nbd.c  (mode:100644)
-+++ uncommitted/drivers/block/nbd.c  (mode:100644)
-@@ -428,7 +428,7 @@
- 		dprintk(DBG_BLKDEV, "%s: request %p: dequeued (flags=%lx)\n",
- 				req->rq_disk->disk_name, req, req->flags);
- 
--		if (!(req->flags & REQ_CMD))
-+		if (!blk_fs_request(req))
- 			goto error_out;
- 
- 		lo = req->rq_disk->private_data;
-@@ -510,7 +510,7 @@
- 	switch (cmd) {
- 	case NBD_DISCONNECT:
- 	        printk(KERN_INFO "%s: NBD_DISCONNECT\n", lo->disk->disk_name);
--		sreq.flags = REQ_SPECIAL;
-+		sreq.cmd_type = REQ_TYPE_SPECIAL;
- 		nbd_cmd(&sreq) = NBD_CMD_DISC;
- 		/*
- 		 * Set these to sane values in case server implementation
-Index: drivers/block/noop-iosched.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/block/noop-iosched.c  (mode:100644)
-+++ uncommitted/drivers/block/noop-iosched.c  (mode:100644)
-@@ -39,7 +39,7 @@
- 	/*
- 	 * new merges must not precede this barrier
- 	 */
--	if (rq->flags & REQ_HARDBARRIER)
-+	if (rq->cmd_flags & REQ_HARDBARRIER)
- 		q->last_merge = NULL;
- 	else if (!q->last_merge)
- 		q->last_merge = rq;
-Index: drivers/block/paride/pd.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/block/paride/pd.c  (mode:100644)
-+++ uncommitted/drivers/block/paride/pd.c  (mode:100644)
-@@ -436,7 +436,7 @@
- 
- static enum action do_pd_io_start(void)
- {
--	if (pd_req->flags & REQ_SPECIAL) {
-+	if (blk_special_request(pd_req)) {
- 		phase = pd_special;
- 		return pd_special();
- 	}
-Index: drivers/block/pktcdvd.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/block/pktcdvd.c  (mode:100644)
-+++ uncommitted/drivers/block/pktcdvd.c  (mode:100644)
-@@ -365,15 +365,15 @@
- 	rq->sense = sense;
- 	memset(sense, 0, sizeof(sense));
- 	rq->sense_len = 0;
--	rq->flags |= REQ_BLOCK_PC | REQ_HARDBARRIER;
-+	rq->cmd_type = REQ_TYPE_BLOCK_PC;
-+	rq->cmd_flags |= (REQ_HARDBARRIER | REQ_NOMERGE);
- 	if (cgc->quiet)
--		rq->flags |= REQ_QUIET;
-+		rq->cmd_flags |= REQ_QUIET;
- 	memcpy(rq->cmd, cgc->cmd, CDROM_PACKET_SIZE);
- 	if (sizeof(rq->cmd) > CDROM_PACKET_SIZE)
- 		memset(rq->cmd + CDROM_PACKET_SIZE, 0, sizeof(rq->cmd) - CDROM_PACKET_SIZE);
- 
- 	rq->ref_count++;
--	rq->flags |= REQ_NOMERGE;
- 	rq->waiting = &wait;
- 	rq->end_io = blk_end_sync_rq;
- 	elv_add_request(q, rq, ELEVATOR_INSERT_BACK, 1);
-Index: drivers/block/scsi_ioctl.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/block/scsi_ioctl.c  (mode:100644)
-+++ uncommitted/drivers/block/scsi_ioctl.c  (mode:100644)
-@@ -276,7 +276,7 @@
- 	rq->sense = sense;
- 	rq->sense_len = 0;
- 
--	rq->flags |= REQ_BLOCK_PC;
-+	rq->cmd_type = REQ_TYPE_BLOCK_PC;
- 	bio = rq->bio;
- 
- 	/*
-@@ -406,7 +406,7 @@
- 
- 	rq->data = buffer;
- 	rq->data_len = bytes;
--	rq->flags |= REQ_BLOCK_PC;
-+	rq->cmd_type = REQ_TYPE_BLOCK_PC;
- 
- 	blk_execute_rq(q, bd_disk, rq);
- 	err = rq->errors & 0xff;	/* only 8 bit SCSI status */
-@@ -553,7 +553,7 @@
- 			close = 1;
- 		case CDROMEJECT:
- 			rq = blk_get_request(q, WRITE, __GFP_WAIT);
--			rq->flags |= REQ_BLOCK_PC;
-+			rq->cmd_type = REQ_TYPE_BLOCK_PC;
- 			rq->data = NULL;
- 			rq->data_len = 0;
- 			rq->timeout = BLK_DEFAULT_TIMEOUT;
-Index: drivers/block/xd.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/block/xd.c  (mode:100644)
-+++ uncommitted/drivers/block/xd.c  (mode:100644)
-@@ -310,7 +310,7 @@
- 		int res = 0;
- 		int retry;
- 
--		if (!(req->flags & REQ_CMD)) {
-+		if (!blk_fs_request(req)) {
- 			end_request(req, 0);
- 			continue;
- 		}
-Index: drivers/cdrom/cdrom.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/cdrom/cdrom.c  (mode:100644)
-+++ uncommitted/drivers/cdrom/cdrom.c  (mode:100644)
-@@ -2125,7 +2125,7 @@
- 		rq->cmd[9] = 0xf8;
- 
- 		rq->cmd_len = 12;
--		rq->flags |= REQ_BLOCK_PC;
-+		rq->cmd_type = REQ_TYPE_BLOCK_PC;
- 		rq->timeout = 60 * HZ;
- 		bio = rq->bio;
- 
-Index: drivers/cdrom/cdu31a.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/cdrom/cdu31a.c  (mode:100644)
-+++ uncommitted/drivers/cdrom/cdu31a.c  (mode:100644)
-@@ -1339,8 +1339,10 @@
- 		}
- 
- 		/* WTF??? */
--		if (!(req->flags & REQ_CMD))
-+		if (!blk_fs_request(req)) {
-+			end_request(req, 0);
- 			continue;
-+		}
- 		if (rq_data_dir(req) == WRITE) {
- 			end_request(req, 0);
- 			continue;
-Index: drivers/ide/ide-cd.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-cd.c  (mode:100644)
-+++ uncommitted/drivers/ide/ide-cd.c  (mode:100644)
-@@ -372,7 +372,7 @@
- {
- 	int log = 0;
- 
--	if (!sense || !rq || (rq->flags & REQ_QUIET))
-+	if (!sense || !rq || (rq->cmd_flags & REQ_QUIET))
- 		return 0;
- 
- 	switch (sense->sense_key) {
-@@ -562,7 +562,7 @@
- 	struct cdrom_info *cd = drive->driver_data;
- 
- 	ide_init_drive_cmd(rq);
--	rq->flags = REQ_PC;
-+	rq->cmd_type = REQ_TYPE_BLOCK_PC;
- 	rq->rq_disk = cd->disk;
- }
- 
-@@ -582,7 +582,7 @@
- 	rq->cmd[0] = GPCMD_REQUEST_SENSE;
- 	rq->cmd[4] = rq->data_len = 18;
- 
--	rq->flags = REQ_SENSE;
-+	rq->cmd_type = REQ_TYPE_SENSE;
- 
- 	/* NOTE! Save the failed command in "rq->buffer" */
- 	rq->buffer = (void *) failed_command;
-@@ -595,10 +595,10 @@
- 	struct request *rq = HWGROUP(drive)->rq;
- 	int nsectors = rq->hard_cur_sectors;
- 
--	if ((rq->flags & REQ_SENSE) && uptodate) {
-+	if (blk_sense_request(rq) && uptodate) {
- 		/*
--		 * For REQ_SENSE, "rq->buffer" points to the original failed
--		 * request
-+		 * For REQ_TYPE_SENSE, "rq->buffer" points to the original
-+		 * failed request
- 		 */
- 		struct request *failed = (struct request *) rq->buffer;
- 		struct cdrom_info *info = drive->driver_data;
-@@ -658,17 +658,17 @@
- 		return 1;
- 	}
- 
--	if (rq->flags & REQ_SENSE) {
-+	if (blk_sense_request(rq)) {
- 		/* We got an error trying to get sense info
- 		   from the drive (probably while trying
- 		   to recover from a former error).  Just give up. */
- 
--		rq->flags |= REQ_FAILED;
-+		rq->cmd_flags |= REQ_FAILED;
- 		cdrom_end_request(drive, 0);
- 		ide_error(drive, "request sense failure", stat);
- 		return 1;
- 
--	} else if (rq->flags & (REQ_PC | REQ_BLOCK_PC)) {
-+	} else if (blk_pc_request(rq)) {
- 		/* All other functions, except for READ. */
- 		unsigned long flags;
- 
-@@ -676,7 +676,7 @@
- 		 * if we have an error, pass back CHECK_CONDITION as the
- 		 * scsi status byte
- 		 */
--		if ((rq->flags & REQ_BLOCK_PC) && !rq->errors)
-+		if (!rq->errors)
- 			rq->errors = SAM_STAT_CHECK_CONDITION;
- 
- 		/* Check for tray open. */
-@@ -687,12 +687,12 @@
- 			cdrom_saw_media_change (drive);
- 			/*printk("%s: media changed\n",drive->name);*/
- 			return 0;
--		} else if (!(rq->flags & REQ_QUIET)) {
-+		} else if (!(rq->cmd_flags & REQ_QUIET)) {
- 			/* Otherwise, print an error. */
- 			ide_dump_status(drive, "packet command error", stat);
- 		}
- 		
--		rq->flags |= REQ_FAILED;
-+		rq->cmd_flags |= REQ_FAILED;
- 
- 		/*
- 		 * instead of playing games with moving completions around,
-@@ -819,7 +819,7 @@
- 			wait = ATAPI_WAIT_PC;
- 			break;
- 		default:
--			if (!(rq->flags & REQ_QUIET))
-+			if (!(rq->cmd_flags & REQ_QUIET))
- 				printk(KERN_INFO "ide-cd: cmd 0x%x timed out\n", rq->cmd[0]);
- 			wait = 0;
- 			break;
-@@ -1062,7 +1062,7 @@
- 		if (rq->current_nr_sectors > 0) {
- 			printk (KERN_ERR "%s: cdrom_read_intr: data underrun (%d blocks)\n",
- 				drive->name, rq->current_nr_sectors);
--			rq->flags |= REQ_FAILED;
-+			rq->cmd_flags |= REQ_FAILED;
- 			cdrom_end_request(drive, 0);
- 		} else
- 			cdrom_end_request(drive, 1);
-@@ -1399,7 +1399,7 @@
- 			printk ("%s: cdrom_pc_intr: data underrun %d\n",
- 				drive->name, pc->buflen);
- 			*/
--			rq->flags |= REQ_FAILED;
-+			rq->cmd_flags |= REQ_FAILED;
- 			cdrom_end_request(drive, 0);
- 		}
- 		return ide_stopped;
-@@ -1452,14 +1452,14 @@
- 		rq->data += thislen;
- 		rq->data_len -= thislen;
- 
--		if (rq->flags & REQ_SENSE)
-+		if (blk_sense_request(rq))
- 			rq->sense_len += thislen;
- 	} else {
- confused:
- 		printk (KERN_ERR "%s: cdrom_pc_intr: The drive "
- 			"appears confused (ireason = 0x%02x)\n",
- 			drive->name, ireason);
--		rq->flags |= REQ_FAILED;
-+		rq->cmd_flags |= REQ_FAILED;
- 	}
- 
- 	/* Now we wait for another interrupt. */
-@@ -1487,7 +1487,7 @@
- 
- 	info->dma = 0;
- 	info->cmd = 0;
--	rq->flags &= ~REQ_FAILED;
-+	rq->cmd_flags &= ~REQ_FAILED;
- 	len = rq->data_len;
- 
- 	/* Start sending the command to the drive. */
-@@ -1500,7 +1500,7 @@
- {
- 	struct request_sense sense;
- 	int retries = 10;
--	unsigned int flags = rq->flags;
-+	unsigned int flags = rq->cmd_flags;
- 
- 	if (rq->sense == NULL)
- 		rq->sense = &sense;
-@@ -1509,14 +1509,14 @@
- 	do {
- 		int error;
- 		unsigned long time = jiffies;
--		rq->flags = flags;
-+		rq->cmd_flags = flags;
- 
- 		error = ide_do_drive_cmd(drive, rq, ide_wait);
- 		time = jiffies - time;
- 
- 		/* FIXME: we should probably abort/retry or something 
- 		 * in case of failure */
--		if (rq->flags & REQ_FAILED) {
-+		if (rq->cmd_flags & REQ_FAILED) {
- 			/* The request failed.  Retry if it was due to a unit
- 			   attention status
- 			   (usually means media was changed). */
-@@ -1538,10 +1538,10 @@
- 		}
- 
- 		/* End of retry loop. */
--	} while ((rq->flags & REQ_FAILED) && retries >= 0);
-+	} while ((rq->cmd_flags & REQ_FAILED) && retries >= 0);
- 
- 	/* Return an error if the command failed. */
--	return (rq->flags & REQ_FAILED) ? -EIO : 0;
-+	return (rq->cmd_flags & REQ_FAILED) ? -EIO : 0;
- }
- 
- /*
-@@ -1915,7 +1915,7 @@
- {
- 	struct cdrom_info *info = drive->driver_data;
- 
--	rq->flags |= REQ_QUIET;
-+	rq->cmd_flags |= REQ_QUIET;
- 
- 	info->dma = 0;
- 	info->cmd = 0;
-@@ -1974,11 +1974,11 @@
- 		}
- 		info->last_block = block;
- 		return action;
--	} else if (rq->flags & (REQ_PC | REQ_SENSE)) {
-+	} else if (rq->cmd_type == REQ_TYPE_SENSE) {
- 		return cdrom_do_packet_command(drive);
--	} else if (rq->flags & REQ_BLOCK_PC) {
-+	} else if (blk_pc_request(rq)) {
- 		return cdrom_do_block_pc(drive, rq);
--	} else if (rq->flags & REQ_SPECIAL) {
-+	} else if (blk_special_request(rq)) {
- 		/*
- 		 * right now this can only be a reset...
- 		 */
-@@ -2056,7 +2056,7 @@
- 
- 	req.sense = sense;
- 	req.cmd[0] = GPCMD_TEST_UNIT_READY;
--	req.flags |= REQ_QUIET;
-+	req.cmd_flags |= REQ_QUIET;
- 
- #if ! STANDARD_ATAPI
-         /* the Sanyo 3 CD changer uses byte 7 of TEST_UNIT_READY to 
-@@ -2180,7 +2180,7 @@
- 	req.sense = sense;
- 	req.data =  buf;
- 	req.data_len = buflen;
--	req.flags |= REQ_QUIET;
-+	req.cmd_flags |= REQ_QUIET;
- 	req.cmd[0] = GPCMD_READ_TOC_PMA_ATIP;
- 	req.cmd[6] = trackno;
- 	req.cmd[7] = (buflen >> 8);
-@@ -2476,7 +2476,7 @@
- 	req.timeout = cgc->timeout;
- 
- 	if (cgc->quiet)
--		req.flags |= REQ_QUIET;
-+		req.cmd_flags |= REQ_QUIET;
- 
- 	req.sense = cgc->sense;
- 	cgc->stat = cdrom_queue_packet_command(drive, &req);
-@@ -2618,7 +2618,8 @@
- 	int ret;
- 
- 	cdrom_prepare_request(drive, &req);
--	req.flags = REQ_SPECIAL | REQ_QUIET;
-+	req.cmd_type = REQ_TYPE_SPECIAL;
-+	req.cmd_flags = REQ_QUIET;
- 	ret = ide_do_drive_cmd(drive, &req, ide_wait);
- 
- 	/*
-@@ -3097,9 +3098,9 @@
- 
- static int ide_cdrom_prep_fn(request_queue_t *q, struct request *rq)
- {
--	if (rq->flags & REQ_CMD)
-+	if (blk_fs_request(rq))
- 		return ide_cdrom_prep_fs(q, rq);
--	else if (rq->flags & REQ_BLOCK_PC)
-+	else if (blk_pc_request(rq))
- 		return ide_cdrom_prep_pc(rq);
- 
- 	return 0;
-Index: drivers/ide/ide-disk.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-disk.c  (mode:100644)
-+++ uncommitted/drivers/ide/ide-disk.c  (mode:100644)
-@@ -731,7 +731,8 @@
- 		rq->cmd[0] = WIN_FLUSH_CACHE;
- 
- 
--	rq->flags |= REQ_DRIVE_TASK | REQ_SOFTBARRIER;
-+	rq->cmd_type = REQ_TYPE_ATA_TASK;
-+	rq->cmd_flags |= REQ_SOFTBARRIER;
- 	rq->buffer = rq->cmd;
- 	return 1;
- }
-Index: drivers/ide/ide-dma.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-dma.c  (mode:100644)
-+++ uncommitted/drivers/ide/ide-dma.c  (mode:100644)
-@@ -210,7 +210,7 @@
- 	ide_hwif_t *hwif = HWIF(drive);
- 	struct scatterlist *sg = hwif->sg_table;
- 
--	if ((rq->flags & REQ_DRIVE_TASKFILE) && rq->nr_sectors > 256)
-+	if ((rq->cmd_type == REQ_TYPE_ATA_TASKFILE) && rq->nr_sectors > 256)
- 		BUG();
- 
- 	ide_map_sg(drive, rq);
-Index: drivers/ide/ide-floppy.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-floppy.c  (mode:100644)
-+++ uncommitted/drivers/ide/ide-floppy.c  (mode:100644)
-@@ -588,7 +588,7 @@
- 	/* Why does this happen? */
- 	if (!rq)
- 		return 0;
--	if (!(rq->flags & REQ_SPECIAL)) { //if (!IDEFLOPPY_RQ_CMD (rq->cmd)) {
-+	if (!blk_special_request(rq)) {
- 		/* our real local end request function */
- 		ide_end_request(drive, uptodate, nsecs);
- 		return 0;
-@@ -687,7 +687,7 @@
- 
- 	ide_init_drive_cmd(rq);
- 	rq->buffer = (char *) pc;
--	rq->flags = REQ_SPECIAL;	//rq->cmd = IDEFLOPPY_PC_RQ;
-+	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	rq->rq_disk = floppy->disk;
- 	(void) ide_do_drive_cmd(drive, rq, ide_preempt);
- }
-@@ -1301,7 +1301,7 @@
- 		idefloppy_do_end_request(drive, 0, 0);
- 		return ide_stopped;
- 	}
--	if (rq->flags & REQ_CMD) {
-+	if (blk_fs_request(rq)) {
- 		if (((long)rq->sector % floppy->bs_factor) ||
- 		    (rq->nr_sectors % floppy->bs_factor)) {
- 			printk("%s: unsupported r/w request size\n",
-@@ -1311,9 +1311,9 @@
- 		}
- 		pc = idefloppy_next_pc_storage(drive);
- 		idefloppy_create_rw_cmd(floppy, pc, rq, block);
--	} else if (rq->flags & REQ_SPECIAL) {
-+	} else if (blk_special_request(rq))
- 		pc = (idefloppy_pc_t *) rq->buffer;
--	} else if (rq->flags & REQ_BLOCK_PC) {
-+	} else if (blk_fs_request(rq)) {
- 		pc = idefloppy_next_pc_storage(drive);
- 		if (idefloppy_blockpc_cmd(floppy, pc, rq)) {
- 			idefloppy_do_end_request(drive, 0, 0);
-@@ -1341,7 +1341,7 @@
- 
- 	ide_init_drive_cmd (&rq);
- 	rq.buffer = (char *) pc;
--	rq.flags = REQ_SPECIAL;		//	rq.cmd = IDEFLOPPY_PC_RQ;
-+	rq.cmd_type = REQ_TYPE_SPECIAL;
- 	rq.rq_disk = floppy->disk;
- 
- 	return ide_do_drive_cmd(drive, &rq, ide_wait);
-Index: drivers/ide/ide-io.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-io.c  (mode:100644)
-+++ uncommitted/drivers/ide/ide-io.c  (mode:100644)
-@@ -60,7 +60,7 @@
- {
- 	int ret = 1;
- 
--	BUG_ON(!(rq->flags & REQ_STARTED));
-+	BUG_ON(!blk_rq_started(rq));
- 
- 	/*
- 	 * if failfast is set on a request, override number of sectors and
-@@ -310,7 +310,7 @@
- 	rq = HWGROUP(drive)->rq;
- 	spin_unlock_irqrestore(&ide_lock, flags);
- 
--	if (rq->flags & REQ_DRIVE_CMD) {
-+	if (rq->cmd_type == REQ_TYPE_ATA_CMD) {
- 		u8 *args = (u8 *) rq->buffer;
- 		if (rq->errors == 0)
- 			rq->errors = !OK_STAT(stat,READY_STAT,BAD_STAT);
-@@ -320,7 +320,7 @@
- 			args[1] = err;
- 			args[2] = hwif->INB(IDE_NSECTOR_REG);
- 		}
--	} else if (rq->flags & REQ_DRIVE_TASK) {
-+	} else if (rq->cmd_type == REQ_TYPE_ATA_TASK) {
- 		u8 *args = (u8 *) rq->buffer;
- 		if (rq->errors == 0)
- 			rq->errors = !OK_STAT(stat,READY_STAT,BAD_STAT);
-@@ -334,7 +334,7 @@
- 			args[5] = hwif->INB(IDE_HCYL_REG);
- 			args[6] = hwif->INB(IDE_SELECT_REG);
- 		}
--	} else if (rq->flags & REQ_DRIVE_TASKFILE) {
-+	} else if (rq->cmd_type & REQ_TYPE_ATA_TASKFILE) {
- 		ide_task_t *args = (ide_task_t *) rq->special;
- 		if (rq->errors == 0)
- 			rq->errors = !OK_STAT(stat,READY_STAT,BAD_STAT);
-@@ -530,7 +530,7 @@
- 		return ide_stopped;
- 
- 	/* retry only "normal" I/O: */
--	if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASK | REQ_DRIVE_TASKFILE)) {
-+	if (!blk_fs_request(rq)) {
- 		rq->errors = 1;
- 		ide_end_drive_cmd(drive, stat, err);
- 		return ide_stopped;
-@@ -581,7 +581,7 @@
- 		return ide_stopped;
- 
- 	/* retry only "normal" I/O: */
--	if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASK | REQ_DRIVE_TASKFILE)) {
-+	if (!blk_fs_request(rq)) {
- 		rq->errors = 1;
- 		ide_end_drive_cmd(drive, BUSY_STAT, 0);
- 		return ide_stopped;
-@@ -751,7 +751,7 @@
- 	if (hwif->sg_mapped)	/* needed by ide-scsi */
- 		return;
- 
--	if ((rq->flags & REQ_DRIVE_TASKFILE) == 0) {
-+	if (rq->cmd_type != REQ_TYPE_ATA_TASKFILE) {
- 		hwif->sg_nents = blk_rq_map_sg(drive->queue, rq, sg);
- 	} else {
- 		sg_init_one(sg, rq->buffer, rq->nr_sectors * SECTOR_SIZE);
-@@ -787,7 +787,7 @@
- 		struct request *rq)
- {
- 	ide_hwif_t *hwif = HWIF(drive);
--	if (rq->flags & REQ_DRIVE_TASKFILE) {
-+	if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE) {
-  		ide_task_t *args = rq->special;
-  
- 		if (!args)
-@@ -809,7 +809,7 @@
- 		if (args->tf_out_flags.all != 0) 
- 			return flagged_taskfile(drive, args);
- 		return do_rw_taskfile(drive, args);
--	} else if (rq->flags & REQ_DRIVE_TASK) {
-+	} else if (rq->cmd_type == REQ_TYPE_ATA_TASK) {
- 		u8 *args = rq->buffer;
- 		u8 sel;
-  
-@@ -835,7 +835,7 @@
-  		hwif->OUTB(sel, IDE_SELECT_REG);
-  		ide_cmd(drive, args[0], args[2], &drive_cmd_intr);
-  		return ide_started;
-- 	} else if (rq->flags & REQ_DRIVE_CMD) {
-+ 	} else if (rq->cmd_type == REQ_TYPE_ATA_CMD) {
-  		u8 *args = rq->buffer;
- 
- 		if (!args)
-@@ -890,7 +890,7 @@
- 	ide_startstop_t startstop;
- 	sector_t block;
- 
--	BUG_ON(!(rq->flags & REQ_STARTED));
-+	BUG_ON(!blk_rq_started(rq));
- 
- #ifdef DEBUG
- 	printk("%s: start_request: current=0x%08lx\n",
-@@ -948,9 +948,10 @@
- 	if (!drive->special.all) {
- 		ide_driver_t *drv;
- 
--		if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASK))
-+		if (rq->cmd_type == REQ_TYPE_ATA_CMD ||
-+		    rq->cmd_type == REQ_TYPE_ATA_TASK)
- 			return execute_drive_cmd(drive, rq);
--		else if (rq->flags & REQ_DRIVE_TASKFILE)
-+		else if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE)
- 			return execute_drive_cmd(drive, rq);
- 		else if (blk_pm_request(rq)) {
- #ifdef DEBUG_PM
-@@ -1193,7 +1194,8 @@
- 		 * unless the subdriver triggers such a thing in its own PM
- 		 * state machine.
- 		 */
--		if (drive->blocked && !blk_pm_request(rq) && !(rq->flags & REQ_PREEMPT)) {
-+		if (drive->blocked && !blk_pm_request(rq) &&
-+		    !(rq->cmd_flags & REQ_PREEMPT)) {
- 			/* We clear busy, there should be no pending ATA command at this point. */
- 			hwgroup->busy = 0;
- 			break;
-@@ -1596,7 +1598,7 @@
- void ide_init_drive_cmd (struct request *rq)
- {
- 	memset(rq, 0, sizeof(*rq));
--	rq->flags = REQ_DRIVE_CMD;
-+	rq->cmd_type = REQ_TYPE_ATA_CMD;
- 	rq->ref_count = 1;
- }
- 
-@@ -1659,7 +1661,7 @@
- 		hwgroup->rq = NULL;
- 	if (action == ide_preempt || action == ide_head_wait) {
- 		where = ELEVATOR_INSERT_FRONT;
--		rq->flags |= REQ_PREEMPT;
-+		rq->cmd_flags |= REQ_PREEMPT;
- 	}
- 	__elv_add_request(drive->queue, rq, where, 0);
- 	ide_do_request(hwgroup, IDE_NO_IRQ);
-Index: drivers/ide/ide-lib.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-lib.c  (mode:100644)
-+++ uncommitted/drivers/ide/ide-lib.c  (mode:100644)
-@@ -458,13 +458,14 @@
- 	spin_unlock(&ide_lock);
- 	if (!rq)
- 		return;
--	if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASK)) {
-+	if (rq->cmd_type == REQ_TYPE_ATA_CMD ||
-+	    rq->cmd_type == REQ_TYPE_ATA_TASK) {
- 		char *args = rq->buffer;
- 		if (args) {
- 			opcode = args[0];
- 			found = 1;
- 		}
--	} else if (rq->flags & REQ_DRIVE_TASKFILE) {
-+	} else if (rq->cmd_type & REQ_TYPE_ATA_TASKFILE) {
- 		ide_task_t *args = rq->special;
- 		if (args) {
- 			task_struct_t *tf = (task_struct_t *) args->tfRegister;
-Index: drivers/ide/ide-tape.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-tape.c  (mode:100644)
-+++ uncommitted/drivers/ide/ide-tape.c  (mode:100644)
-@@ -1774,7 +1774,7 @@
- static void idetape_init_rq(struct request *rq, u8 cmd)
- {
- 	memset(rq, 0, sizeof(*rq));
--	rq->flags = REQ_SPECIAL;
-+	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	rq->cmd[0] = cmd;
- }
- 
-@@ -2431,7 +2431,7 @@
- 			rq->sector, rq->nr_sectors, rq->current_nr_sectors);
- #endif /* IDETAPE_DEBUG_LOG */
- 
--	if ((rq->flags & REQ_SPECIAL) == 0) {
-+	if (!blk_special_request(rq)) {
- 		/*
- 		 * We do not support buffer cache originated requests.
- 		 */
-@@ -2760,7 +2760,7 @@
- 	idetape_tape_t *tape = drive->driver_data;
- 
- #if IDETAPE_DEBUG_BUGS
--	if (rq == NULL || (rq->flags & REQ_SPECIAL) == 0) {
-+	if (rq == NULL || !blk_special_request(rq)) {
- 		printk (KERN_ERR "ide-tape: bug: Trying to sleep on non-valid request\n");
- 		return;
- 	}
-Index: drivers/ide/ide-taskfile.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-taskfile.c  (mode:100644)
-+++ uncommitted/drivers/ide/ide-taskfile.c  (mode:100644)
-@@ -366,7 +366,7 @@
- 
- static void task_end_request(ide_drive_t *drive, struct request *rq, u8 stat)
- {
--	if (rq->flags & REQ_DRIVE_TASKFILE) {
-+	if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE) {
- 		ide_task_t *task = rq->special;
- 
- 		if (task->tf_out_flags.all) {
-@@ -471,7 +471,7 @@
- 	struct request rq;
- 
- 	memset(&rq, 0, sizeof(rq));
--	rq.flags = REQ_DRIVE_TASKFILE;
-+	rq.cmd_type = REQ_TYPE_ATA_TASKFILE;
- 	rq.buffer = buf;
- 
- 	/*
-@@ -496,7 +496,7 @@
- 		rq.hard_cur_sectors = rq.current_nr_sectors = rq.nr_sectors;
- 
- 		if (args->command_type == IDE_DRIVE_TASK_RAW_WRITE)
--			rq.flags |= REQ_RW;
-+			rq.cmd_flags |= REQ_RW;
- 	}
- 
- 	rq.special = args;
-@@ -739,7 +739,7 @@
- 	struct request rq;
- 
- 	ide_init_drive_cmd(&rq);
--	rq.flags = REQ_DRIVE_TASK;
-+	rq.cmd_type = REQ_TYPE_ATA_TASK;
- 	rq.buffer = buf;
- 	return ide_do_drive_cmd(drive, &rq, ide_wait);
- }
-Index: drivers/ide/ide.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide.c  (mode:100644)
-+++ uncommitted/drivers/ide/ide.c  (mode:100644)
-@@ -1381,7 +1381,7 @@
- 	memset(&rq, 0, sizeof(rq));
- 	memset(&rqpm, 0, sizeof(rqpm));
- 	memset(&args, 0, sizeof(args));
--	rq.flags = REQ_PM_SUSPEND;
-+	rq.cmd_type = REQ_TYPE_PM_SUSPEND;
- 	rq.special = &args;
- 	rq.pm = &rqpm;
- 	rqpm.pm_step = ide_pm_state_start_suspend;
-@@ -1400,7 +1400,7 @@
- 	memset(&rq, 0, sizeof(rq));
- 	memset(&rqpm, 0, sizeof(rqpm));
- 	memset(&args, 0, sizeof(args));
--	rq.flags = REQ_PM_RESUME;
-+	rq.cmd_type = REQ_TYPE_PM_RESUME;
- 	rq.special = &args;
- 	rq.pm = &rqpm;
- 	rqpm.pm_step = ide_pm_state_start_resume;
-Index: drivers/ide/legacy/hd.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/legacy/hd.c  (mode:100644)
-+++ uncommitted/drivers/ide/legacy/hd.c  (mode:100644)
-@@ -624,7 +624,7 @@
- 		req->rq_disk->disk_name, (req->cmd == READ)?"read":"writ",
- 		cyl, head, sec, nsect, req->buffer);
- #endif
--	if (req->flags & REQ_CMD) {
-+	if (blk_fs_request(req)) {
- 		switch (rq_data_dir(req)) {
- 		case READ:
- 			hd_out(disk,nsect,sec,head,cyl,WIN_READ,&read_intr);
-Index: drivers/message/i2o/i2o_block.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/message/i2o/i2o_block.c  (mode:100644)
-+++ uncommitted/drivers/message/i2o/i2o_block.c  (mode:100644)
-@@ -352,9 +352,9 @@
- 	struct i2o_block_request *ireq;
- 
- 	/* request is already processed by us, so return */
--	if (req->flags & REQ_SPECIAL) {
-+	if (blk_special_request(req)) {
- 		osm_debug("REQ_SPECIAL already set!\n");
--		req->flags |= REQ_DONTPREP;
-+		req->cmd_flags |= REQ_DONTPREP;
- 		return BLKPREP_OK;
- 	}
- 
-@@ -373,7 +373,8 @@
- 		ireq = req->special;
- 
- 	/* do not come back here */
--	req->flags |= REQ_DONTPREP | REQ_SPECIAL;
-+	req->cmd_type = REQ_TYPE_SPECIAL;
-+	req->cmd_flags |= REQ_DONTPREP;
- 
- 	return BLKPREP_OK;
- };
-Index: drivers/mmc/mmc_queue.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/mmc/mmc_queue.c  (mode:100644)
-+++ uncommitted/drivers/mmc/mmc_queue.c  (mode:100644)
-@@ -28,7 +28,7 @@
- 	struct mmc_queue *mq = q->queuedata;
- 	int ret = BLKPREP_KILL;
- 
--	if (req->flags & REQ_SPECIAL) {
-+	if (blk_special_request(req)) {
- 		/*
- 		 * Special commands already have the command
- 		 * blocks already setup in req->special.
-@@ -36,7 +36,7 @@
- 		BUG_ON(!req->special);
- 
- 		ret = BLKPREP_OK;
--	} else if (req->flags & (REQ_CMD | REQ_BLOCK_PC)) {
-+	} else if (blk_fs_request(req) || blk_pc_request(req)) {
- 		/*
- 		 * Block I/O requests need translating according
- 		 * to the protocol.
-Index: drivers/mtd/mtd_blkdevs.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/mtd/mtd_blkdevs.c  (mode:100644)
-+++ uncommitted/drivers/mtd/mtd_blkdevs.c  (mode:100644)
-@@ -47,7 +47,7 @@
- 	nsect = req->current_nr_sectors;
- 	buf = req->buffer;
- 
--	if (!(req->flags & REQ_CMD))
-+	if (!blk_fs_request(req))
- 		return 0;
- 
- 	if (block + nsect > get_capacity(req->rq_disk))
-Index: drivers/scsi/ide-scsi.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/scsi/ide-scsi.c  (mode:100644)
-+++ uncommitted/drivers/scsi/ide-scsi.c  (mode:100644)
-@@ -317,7 +317,7 @@
- 	pc->buffer = buf;
- 	pc->c[0] = REQUEST_SENSE;
- 	pc->c[4] = pc->request_transfer = pc->buffer_size = SCSI_SENSE_BUFFERSIZE;
--	rq->flags = REQ_SENSE;
-+	rq->cmd_type = REQ_TYPE_SENSE;
- 	pc->timeout = jiffies + WAIT_READY;
- 	/* NOTE! Save the failed packet command in "rq->buffer" */
- 	rq->buffer = (void *) failed_command->special;
-@@ -370,12 +370,12 @@
- 	u8 *scsi_buf;
- 	unsigned long flags;
- 
--	if (!(rq->flags & (REQ_SPECIAL|REQ_SENSE))) {
-+	if (!blk_special_request(rq) || !blk_sense_request(rq)) {
- 		ide_end_request(drive, uptodate, nrsecs);
- 		return 0;
- 	}
- 	ide_end_drive_cmd (drive, 0, 0);
--	if (rq->flags & REQ_SENSE) {
-+	if (blk_sense_request(rq)) {
- 		idescsi_pc_t *opc = (idescsi_pc_t *) rq->buffer;
- 		if (log) {
- 			printk ("ide-scsi: %s: wrap up check %lu, rst = ", drive->name, opc->scsi_cmd->serial_number);
-@@ -686,7 +686,7 @@
- 	printk (KERN_INFO "sector: %ld, nr_sectors: %ld, current_nr_sectors: %d\n",rq->sector,rq->nr_sectors,rq->current_nr_sectors);
- #endif /* IDESCSI_DEBUG_LOG */
- 
--	if (rq->flags & (REQ_SPECIAL|REQ_SENSE)) {
-+	if (blk_sense_request(rq) || blk_special_request(rq)) {
- 		return idescsi_issue_pc (drive, (idescsi_pc_t *) rq->special);
- 	}
- 	blk_dump_rq_flags(rq, "ide-scsi: unsup command");
-@@ -921,7 +921,7 @@
- 
- 	ide_init_drive_cmd (rq);
- 	rq->special = (char *) pc;
--	rq->flags = REQ_SPECIAL;
-+	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	spin_unlock_irq(host->host_lock);
- 	rq->rq_disk = scsi->disk;
- 	(void) ide_do_drive_cmd (drive, rq, ide_end);
-@@ -975,7 +975,7 @@
- 		 */
- 		printk (KERN_ERR "ide-scsi: cmd aborted!\n");
- 
--		if (scsi->pc->rq->flags & REQ_SENSE)
-+		if (blk_sense_request(scsi->pc->rq))
- 			kfree(scsi->pc->buffer);
- 		kfree(scsi->pc->rq);
- 		kfree(scsi->pc);
-@@ -1023,7 +1023,7 @@
- 	/* kill current request */
- 	blkdev_dequeue_request(req);
- 	end_that_request_last(req);
--	if (req->flags & REQ_SENSE)
-+	if (blk_sense_request(req))
- 		kfree(scsi->pc->buffer);
- 	kfree(scsi->pc);
- 	scsi->pc = NULL;
-Index: drivers/scsi/scsi_lib.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/scsi/scsi_lib.c  (mode:100644)
-+++ uncommitted/drivers/scsi/scsi_lib.c  (mode:100644)
-@@ -90,7 +90,7 @@
- 	 * Because users of this function are apt to reuse requests with no
- 	 * modification, we have to sanitise the request flags here
- 	 */
--	sreq->sr_request->flags &= ~REQ_DONTPREP;
-+	sreq->sr_request->cmd_flags &= ~REQ_DONTPREP;
- 	blk_insert_request(sreq->sr_device->request_queue, sreq->sr_request,
- 		       	   at_head, sreq, 0);
- 	return 0;
-@@ -485,7 +485,7 @@
-  */
- static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
- {
--	cmd->request->flags &= ~REQ_DONTPREP;
-+	cmd->request->cmd_flags &= ~REQ_DONTPREP;
- 	blk_insert_request(q, cmd->request, 1, cmd, 1);
- 
- 	scsi_run_queue(q);
-@@ -922,7 +922,7 @@
- 	/*
- 	 * if this is a rq->data based REQ_BLOCK_PC, setup for a non-sg xfer
- 	 */
--	if ((req->flags & REQ_BLOCK_PC) && !req->bio) {
-+	if (blk_pc_request(req) && req->bio) {
- 		cmd->request_bufflen = req->data_len;
- 		cmd->request_buffer = req->data;
- 		req->buffer = req->data;
-@@ -942,7 +942,7 @@
- 	 */
- 	sgpnt = scsi_alloc_sgtable(cmd, GFP_ATOMIC);
- 	if (unlikely(!sgpnt)) {
--		req->flags |= REQ_SPECIAL;
-+		req->cmd_type = REQ_TYPE_SPECIAL;
- 		return BLKPREP_DEFER;
- 	}
- 
-@@ -1066,7 +1066,7 @@
- 	 * these two cases differently.  We differentiate by looking
- 	 * at request->cmd, as this tells us the real story.
- 	 */
--	if (req->flags & REQ_SPECIAL) {
-+	if (req->cmd_type == REQ_TYPE_SPECIAL) {
- 		struct scsi_request *sreq = req->special;
- 
- 		if (sreq->sr_magic == SCSI_REQ_MAGIC) {
-@@ -1076,7 +1076,7 @@
- 			scsi_init_cmd_from_req(cmd, sreq);
- 		} else
- 			cmd = req->special;
--	} else if (req->flags & (REQ_CMD | REQ_BLOCK_PC)) {
-+	} else if (blk_fs_request(req) || blk_pc_request(req)) {
- 
- 		if(unlikely(specials_only)) {
- 			if(specials_only == SDEV_QUIESCE ||
-@@ -1119,7 +1119,7 @@
- 	 * lock.  We hope REQ_STARTED prevents anything untoward from
- 	 * happening now.
- 	 */
--	if (req->flags & (REQ_CMD | REQ_BLOCK_PC)) {
-+	if (blk_fs_request(req) || blk_pc_request(req)) {
- 		struct scsi_driver *drv;
- 		int ret;
- 
-@@ -1158,7 +1158,7 @@
- 	/*
- 	 * The request is now prepped, no need to come back here
- 	 */
--	req->flags |= REQ_DONTPREP;
-+	req->cmd_flags |= REQ_DONTPREP;
- 	return BLKPREP_OK;
- 
-  defer:
-@@ -1250,7 +1250,7 @@
- 
- 	while ((req = elv_next_request(q)) != NULL) {
- 		blkdev_dequeue_request(req);
--		req->flags |= REQ_QUIET;
-+		req->cmd_flags |= REQ_QUIET;
- 		while (end_that_request_first(req, 0, req->nr_sectors))
- 			;
- 		end_that_request_last(req);
-@@ -1305,7 +1305,7 @@
- 			printk(KERN_ERR "scsi%d (%d:%d): rejecting I/O to offline device\n",
- 			       sdev->host->host_no, sdev->id, sdev->lun);
- 			blkdev_dequeue_request(req);
--			req->flags |= REQ_QUIET;
-+			req->cmd_flags |= REQ_QUIET;
- 			while (end_that_request_first(req, 0, req->nr_sectors))
- 				;
- 			end_that_request_last(req);
-Index: drivers/scsi/sd.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/scsi/sd.c  (mode:100644)
-+++ uncommitted/drivers/scsi/sd.c  (mode:100644)
-@@ -329,13 +329,9 @@
- 		}
- 		SCpnt->cmnd[0] = WRITE_6;
- 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
--	} else if (rq_data_dir(rq) == READ) {
-+	} else {
- 		SCpnt->cmnd[0] = READ_6;
- 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
--	} else {
--		printk(KERN_ERR "sd: Unknown command %lx\n", rq->flags);
--/* overkill 	panic("Unknown sd command %lx\n", rq->flags); */
--		return 0;
- 	}
- 
- 	SCSI_LOG_HLQUEUE(2, printk("%s : %s %d/%ld 512 byte blocks.\n", 
-@@ -769,7 +765,8 @@
- 
- 	if (sdkp->WCE) {
- 		memset(rq->cmd, 0, sizeof(rq->cmd));
--		rq->flags |= REQ_BLOCK_PC | REQ_SOFTBARRIER;
-+		rq->cmd_type = REQ_TYPE_BLOCK_PC;
-+		rq->cmd_flags |= REQ_SOFTBARRIER;
- 		rq->timeout = SD_TIMEOUT;
- 		rq->cmd[0] = SYNCHRONIZE_CACHE;
- 		return 1;
-Index: drivers/scsi/sr.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/scsi/sr.c  (mode:100644)
-+++ uncommitted/drivers/scsi/sr.c  (mode:100644)
-@@ -349,7 +349,7 @@
- 		goto queue;
- 	}
- 
--	if (!(SCpnt->request->flags & REQ_CMD)) {
-+	if (!blk_fs_request(SCpnt->request)) {
- 		blk_dump_rq_flags(SCpnt->request, "sr unsup command");
- 		return 0;
- 	}
-Index: drivers/scsi/sun3_NCR5380.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/scsi/sun3_NCR5380.c  (mode:100644)
-+++ uncommitted/drivers/scsi/sun3_NCR5380.c  (mode:100644)
-@@ -2017,7 +2017,7 @@
- 		if((count > SUN3_DMA_MINSIZE) && (sun3_dma_setup_done
- 						  != cmd))
- 		{
--			if(cmd->request->flags & REQ_CMD) {
-+			if(blk_fs_request(cmd->request)) {
- 				sun3scsi_dma_setup(d, count,
- 						   rq_data_dir(cmd->request));
- 				sun3_dma_setup_done = cmd;
-Index: drivers/scsi/sun3_scsi.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/scsi/sun3_scsi.c  (mode:100644)
-+++ uncommitted/drivers/scsi/sun3_scsi.c  (mode:100644)
-@@ -524,7 +524,7 @@
- static inline unsigned long sun3scsi_dma_xfer_len(unsigned long wanted, Scsi_Cmnd *cmd,
- 				    int write_flag)
- {
--	if(cmd->request->flags & REQ_CMD)
-+	if(blk_fs_request(cmd->request))
-  		return wanted;
- 	else
- 		return 0;
-Index: drivers/scsi/sun3_scsi_vme.c
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/scsi/sun3_scsi_vme.c  (mode:100644)
-+++ uncommitted/drivers/scsi/sun3_scsi_vme.c  (mode:100644)
-@@ -458,7 +458,7 @@
- static inline unsigned long sun3scsi_dma_xfer_len(unsigned long wanted, Scsi_Cmnd *cmd,
- 				    int write_flag)
- {
--	if(cmd->request->flags & REQ_CMD)
-+	if(blk_fs_request(cmd->request))
-  		return wanted;
- 	else
- 		return 0;
-Index: include/linux/blkdev.h
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/include/linux/blkdev.h  (mode:100644)
-+++ uncommitted/include/linux/blkdev.h  (mode:100644)
-@@ -113,7 +113,8 @@
- 	struct list_head queuelist; /* looking for ->queue? you must _not_
- 				     * access it directly, use
- 				     * blkdev_dequeue_request! */
--	unsigned long flags;		/* see REQ_ bits below */
-+	unsigned int cmd_flags;
-+	unsigned char cmd_type;
- 
- 	/* Maintain bio traversal state for part by part I/O submission.
- 	 * hard_* are block layer internals, no driver should touch them!
-@@ -188,38 +189,63 @@
- };
- 
- /*
-- * first three bits match BIO_RW* bits, important
-+ * request command types
-  */
--enum rq_flag_bits {
-+enum rq_cmd_type_bits {
-+	REQ_TYPE_FS		= 1,	/* fs request */
-+	REQ_TYPE_BLOCK_PC,		/* scsi command */
-+	REQ_TYPE_SENSE,			/* sense request */
-+	REQ_TYPE_PM_SUSPEND,		/* suspend request */
-+	REQ_TYPE_PM_RESUME,		/* resume request */
-+	REQ_TYPE_PM_SHUTDOWN,		/* shutdown request */
-+	REQ_TYPE_FLUSH,			/* flush request */
-+	REQ_TYPE_SPECIAL,		/* driver defined type */
-+	REQ_TYPE_LINUX_BLOCK,		/* generic block layer message */
-+	/*
-+	 * for ATA/ATAPI devices. this really doesn't belong here, ide should
-+	 * use REQ_TYPE_SPECIAL and use rq->cmd[0] to differentiate what type
-+	 * of request this is.
-+	 */
-+	REQ_TYPE_ATA_CMD,
-+	REQ_TYPE_ATA_TASK,
-+	REQ_TYPE_ATA_TASKFILE,
-+};
-+
-+/*
-+ * For request of type REQ_TYPE_LINUX_BLOCK, rq->cmd[0] is the opcode being
-+ * sent down (similar to how REQ_TYPE_BLOCK_PC means that ->cmd[] holds a
-+ * SCSI cdb.
-+ *
-+ * 0x00 -> 0x3f are driver private, to be used for whatever purpose they need,
-+ * typically to differentiate REQ_TYPE_SPECIAL requests.
-+ *
-+ */
-+enum {
-+	/*
-+	 * just examples for now
-+	 */
-+	REQ_LB_OP_EJECT	= 0x40,		/* eject request */
-+	REQ_LB_OP_FLUSH = 0x41,		/* flush device */
-+};
-+
-+/*
-+ * request type modified bits. first three bits match BIO_RW* bits, important
-+ */
-+enum rq_cmd_flag_bits {
- 	__REQ_RW,		/* not set, read. set, write */
- 	__REQ_FAILFAST,		/* no low level driver retries */
- 	__REQ_SOFTBARRIER,	/* may not be passed by ioscheduler */
- 	__REQ_HARDBARRIER,	/* may not be passed by drive either */
--	__REQ_CMD,		/* is a regular fs rw request */
- 	__REQ_NOMERGE,		/* don't touch this for merging */
- 	__REQ_STARTED,		/* drive already may have started this one */
- 	__REQ_DONTPREP,		/* don't call prep for this one */
- 	__REQ_QUEUED,		/* uses queueing */
--	/*
--	 * for ATA/ATAPI devices
--	 */
--	__REQ_PC,		/* packet command (special) */
--	__REQ_BLOCK_PC,		/* queued down pc from block layer */
--	__REQ_SENSE,		/* sense retrival */
--
- 	__REQ_FAILED,		/* set if the request failed */
- 	__REQ_QUIET,		/* don't worry about errors */
--	__REQ_SPECIAL,		/* driver suplied command */
--	__REQ_DRIVE_CMD,
--	__REQ_DRIVE_TASK,
--	__REQ_DRIVE_TASKFILE,
- 	__REQ_PREEMPT,		/* set for "ide_preempt" requests */
--	__REQ_PM_SUSPEND,	/* suspend request */
--	__REQ_PM_RESUME,	/* resume request */
--	__REQ_PM_SHUTDOWN,	/* shutdown request */
- 	__REQ_BAR_PREFLUSH,	/* barrier pre-flush done */
- 	__REQ_BAR_POSTFLUSH,	/* barrier post-flush */
--	__REQ_BAR_FLUSH,	/* rq is the flush request */
-+
- 	__REQ_NR_BITS,		/* stops here */
- };
- 
-@@ -227,30 +253,18 @@
- #define REQ_FAILFAST	(1 << __REQ_FAILFAST)
- #define REQ_SOFTBARRIER	(1 << __REQ_SOFTBARRIER)
- #define REQ_HARDBARRIER	(1 << __REQ_HARDBARRIER)
--#define REQ_CMD		(1 << __REQ_CMD)
- #define REQ_NOMERGE	(1 << __REQ_NOMERGE)
- #define REQ_STARTED	(1 << __REQ_STARTED)
- #define REQ_DONTPREP	(1 << __REQ_DONTPREP)
- #define REQ_QUEUED	(1 << __REQ_QUEUED)
--#define REQ_PC		(1 << __REQ_PC)
--#define REQ_BLOCK_PC	(1 << __REQ_BLOCK_PC)
--#define REQ_SENSE	(1 << __REQ_SENSE)
- #define REQ_FAILED	(1 << __REQ_FAILED)
- #define REQ_QUIET	(1 << __REQ_QUIET)
--#define REQ_SPECIAL	(1 << __REQ_SPECIAL)
--#define REQ_DRIVE_CMD	(1 << __REQ_DRIVE_CMD)
--#define REQ_DRIVE_TASK	(1 << __REQ_DRIVE_TASK)
--#define REQ_DRIVE_TASKFILE	(1 << __REQ_DRIVE_TASKFILE)
- #define REQ_PREEMPT	(1 << __REQ_PREEMPT)
--#define REQ_PM_SUSPEND	(1 << __REQ_PM_SUSPEND)
--#define REQ_PM_RESUME	(1 << __REQ_PM_RESUME)
--#define REQ_PM_SHUTDOWN	(1 << __REQ_PM_SHUTDOWN)
- #define REQ_BAR_PREFLUSH	(1 << __REQ_BAR_PREFLUSH)
- #define REQ_BAR_POSTFLUSH	(1 << __REQ_BAR_POSTFLUSH)
--#define REQ_BAR_FLUSH	(1 << __REQ_BAR_FLUSH)
- 
- /*
-- * State information carried for REQ_PM_SUSPEND and REQ_PM_RESUME
-+ * State information carried for REQ_TYPE_PM_SUSPEND and REQ_TYPE_PM_RESUME
-  * requests. Some step values could eventually be made generic.
-  */
- struct request_pm_state
-@@ -434,25 +448,28 @@
- #define blk_queue_stopped(q)	test_bit(QUEUE_FLAG_STOPPED, &(q)->queue_flags)
- #define blk_queue_flushing(q)	test_bit(QUEUE_FLAG_FLUSH, &(q)->queue_flags)
- 
--#define blk_fs_request(rq)	((rq)->flags & REQ_CMD)
--#define blk_pc_request(rq)	((rq)->flags & REQ_BLOCK_PC)
--#define blk_noretry_request(rq)	((rq)->flags & REQ_FAILFAST)
--#define blk_rq_started(rq)	((rq)->flags & REQ_STARTED)
-+#define blk_fs_request(rq)	((rq)->cmd_type == REQ_TYPE_FS)
-+#define blk_pc_request(rq)	((rq)->cmd_type == REQ_TYPE_BLOCK_PC)
-+#define blk_special_request(rq)	((rq)->cmd_type == REQ_TYPE_SPECIAL)
-+#define blk_sense_request(rq)	((rq)->cmd_type == REQ_TYPE_SENSE)
-+
-+#define blk_noretry_request(rq)	((rq)->cmd_flags & REQ_FAILFAST)
-+#define blk_rq_started(rq)	((rq)->cmd_flags & REQ_STARTED)
- 
- #define blk_account_rq(rq)	(blk_rq_started(rq) && blk_fs_request(rq))
- 
--#define blk_pm_suspend_request(rq)	((rq)->flags & REQ_PM_SUSPEND)
--#define blk_pm_resume_request(rq)	((rq)->flags & REQ_PM_RESUME)
-+#define blk_pm_suspend_request(rq)	((rq)->cmd_type == REQ_TYPE_PM_SUSPEND)
-+#define blk_pm_resume_request(rq)	((rq)->cmd_type == REQ_TYPE_PM_RESUME)
- #define blk_pm_request(rq)	\
--	((rq)->flags & (REQ_PM_SUSPEND | REQ_PM_RESUME))
-+	(blk_pm_suspend_request(rq) || blk_pm_resume_request(rq))
- 
--#define blk_barrier_rq(rq)	((rq)->flags & REQ_HARDBARRIER)
--#define blk_barrier_preflush(rq)	((rq)->flags & REQ_BAR_PREFLUSH)
--#define blk_barrier_postflush(rq)	((rq)->flags & REQ_BAR_POSTFLUSH)
-+#define blk_barrier_rq(rq)	((rq)->cmd_flags & REQ_HARDBARRIER)
-+#define blk_barrier_preflush(rq)	((rq)->cmd_flags & REQ_BAR_PREFLUSH)
-+#define blk_barrier_postflush(rq)	((rq)->cmd_flags & REQ_BAR_POSTFLUSH)
- 
- #define list_entry_rq(ptr)	list_entry((ptr), struct request, queuelist)
- 
--#define rq_data_dir(rq)		((rq)->flags & 1)
-+#define rq_data_dir(rq)		((rq)->cmd_flags & 1)
- 
- static inline int blk_queue_full(struct request_queue *q, int rw)
- {
-@@ -485,7 +502,7 @@
- #define RQ_NOMERGE_FLAGS	\
- 	(REQ_NOMERGE | REQ_STARTED | REQ_HARDBARRIER | REQ_SOFTBARRIER)
- #define rq_mergeable(rq)	\
--	(!((rq)->flags & RQ_NOMERGE_FLAGS) && blk_fs_request((rq)))
-+	(!((rq)->cmd_flags & RQ_NOMERGE_FLAGS) && blk_fs_request((rq)))
- 
- /*
-  * noop, requests are automagically marked as active/inactive by I/O
-@@ -654,7 +671,7 @@
-  */
- #define blk_queue_tag_depth(q)		((q)->queue_tags->busy)
- #define blk_queue_tag_queue(q)		((q)->queue_tags->busy < (q)->queue_tags->max_depth)
--#define blk_rq_tagged(rq)		((rq)->flags & REQ_QUEUED)
-+#define blk_rq_tagged(rq)		((rq)->cmd_flags & REQ_QUEUED)
- extern int blk_queue_start_tag(request_queue_t *, struct request *);
- extern struct request *blk_queue_find_tag(request_queue_t *, int);
- extern void blk_queue_end_tag(request_queue_t *, struct request *);
-Index: include/scsi/scsi_tcq.h
-===================================================================
---- 137318b273db26b889675101fbd02d2e84cae5e3/include/scsi/scsi_tcq.h  (mode:100644)
-+++ uncommitted/include/scsi/scsi_tcq.h  (mode:100644)
-@@ -98,7 +98,7 @@
- 	struct scsi_device *sdev = cmd->device;
- 
-         if (blk_rq_tagged(req)) {
--		if (sdev->ordered_tags && req->flags & REQ_HARDBARRIER)
-+		if (sdev->ordered_tags && req->cmd_flags & REQ_HARDBARRIER)
-         	        *msg++ = MSG_ORDERED_TAG;
-         	else
-         	        *msg++ = MSG_SIMPLE_TAG;
+server:/etc# cat /proc/mdstat 
+Personalities : [linear] [raid0] [raid1] [raid5] [multipath] [raid10] 
+md6 : active raid5 sdd1[3] sdc1[2] sdb1[1] sda1[0]
+      1172126208 blocks level 5, 128k chunk, algorithm 2 [4/4] [UUUU]
+      [===>.................]  resync = 17.6% (68818176/390708736) finish=172.3min speed=31116K/sec
+      
+md1 : active raid1 hdd5[1] hda5[0]
+      8000256 blocks [2/2] [UU]
+      
+md2 : active raid1 hdd6[1] hda6[0]
+      4000064 blocks [2/2] [UU]
+      
+md3 : active raid1 hdd7[1] hda7[0]
+      20000768 blocks [2/2] [UU]
+      
+md4 : active raid1 hdd8[1] hda8[0]
+      20000768 blocks [2/2] [UU]
+      
+md5 : active raid1 hdd9[1] hda9[0]
+      24153600 blocks [2/2] [UU]
+      
+md0 : active raid1 hdd1[1] hda1[0]
+      995904 blocks [2/2] [UU]
+      
+unused devices: <none>
 
--- 
-Jens Axboe
+
+[4294667.296000] Linux version 2.6.12-rc4-mm2 (root@server) (gcc version 3.3.6 (Debian 1:3.3.6-5)) #3 Tue May 24 19:41:29 CEST 2005
+[4294667.296000] BIOS-provided physical RAM map:
+[4294667.296000]  BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
+[4294667.296000]  BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
+[4294667.296000]  BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
+[4294667.296000]  BIOS-e820: 0000000000100000 - 000000002fff0000 (usable)
+[4294667.296000]  BIOS-e820: 000000002fff0000 - 000000002fff8000 (ACPI data)
+[4294667.296000]  BIOS-e820: 000000002fff8000 - 0000000030000000 (ACPI NVS)
+[4294667.296000]  BIOS-e820: 00000000fec00000 - 00000000fec01000 (reserved)
+[4294667.296000]  BIOS-e820: 00000000fee00000 - 00000000fee01000 (reserved)
+[4294667.296000]  BIOS-e820: 00000000fff80000 - 0000000100000000 (reserved)
+[4294667.296000] 767MB LOWMEM available.
+[4294667.296000] On node 0 totalpages: 196592
+[4294667.296000]   DMA zone: 4096 pages, LIFO batch:1
+[4294667.296000]   Normal zone: 192496 pages, LIFO batch:31
+[4294667.296000]   HighMem zone: 0 pages, LIFO batch:1
+[4294667.296000] DMI 2.3 present.
+[4294667.296000] ACPI: RSDP (v000 AMI                                   ) @ 0x000fa9f0
+[4294667.296000] ACPI: RSDT (v001 AMIINT VIA_K7   0x00000010 MSFT 0x00000097) @ 0x2fff0000
+[4294667.296000] ACPI: FADT (v001 AMIINT VIA_K7   0x00000011 MSFT 0x00000097) @ 0x2fff0030
+[4294667.296000] ACPI: DSDT (v001    VIA   VIA_K7 0x00001000 MSFT 0x0100000d) @ 0x00000000
+[4294667.296000] ACPI: PM-Timer IO Port: 0x808
+[4294667.296000] Allocating PCI resources starting at 30000000 (gap: 30000000:cec00000)
+[4294667.296000] Built 1 zonelists
+[4294667.296000] Local APIC disabled by BIOS -- you can enable it with "lapic"
+[4294667.296000] mapped APIC to ffffd000 (01603000)
+[4294667.296000] Initializing CPU#0
+[4294667.296000] Kernel command line: BOOT_IMAGE=Linux ro root=900 video=vesa:ypan
+[4294667.296000] CPU 0 irqstacks, hard=c06f3000 soft=c06f2000
+[4294667.296000] PID hash table entries: 4096 (order: 12, 65536 bytes)
+[4294667.296000] Detected 1303.546 MHz processor.
+[4294667.296000] Using pmtmr for high-res timesource
+[4294667.296000] Console: colour dummy device 80x25
+[4294670.078000] Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
+[4294670.080000] Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
+[4294670.112000] Memory: 772228k/786368k available (3914k kernel code, 13624k reserved, 1906k data, 240k init, 0k highmem)
+[4294670.112000] Checking if this processor honours the WP bit even in supervisor mode... Ok.
+[4294670.173000] Calibrating delay using timer specific routine.. 2607.90 BogoMIPS (lpj=1303952)
+[4294670.173000] Mount-cache hash table entries: 512
+[4294670.173000] CPU: After generic identify, caps: 0383f9ff c1cbf9ff 00000000 00000000 00000000 00000000 00000000
+[4294670.173000] CPU: After vendor identify, caps: 0383f9ff c1cbf9ff 00000000 00000000 00000000 00000000 00000000
+[4294670.173000] CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
+[4294670.173000] CPU: L2 Cache: 64K (64 bytes/line)
+[4294670.173000] CPU: After all inits, caps: 0383f9ff c1cbf9ff 00000000 00000020 00000000 00000000 00000000
+[4294670.173000] CPU: AMD Duron(tm)  stepping 01
+[4294670.173000] Enabling fast FPU save and restore... done.
+[4294670.173000] Enabling unmasked SIMD FPU exception support... done.
+[4294670.173000] Checking 'hlt' instruction... OK.
+[4294670.178000]  tbxface-0120 [02] acpi_load_tables      : ACPI Tables successfully acquired
+[4294670.222000] Parsing all Control Methods:....................................................................................................................................................
+[4294670.305000] Table [DSDT](id F004) - 513 Objects with 47 Devices 148 Methods 32 Regions
+[4294670.305000] ACPI Namespace successfully loaded at root c0755ae0
+[4294670.305000] ACPI: setting ELCR to 0200 (from 0c20)
+[4294670.305000] evxfevnt-0096 [03] acpi_enable           : Transition to ACPI mode successful
+[4294670.305000] softlockup thread 0 started up.
+[4294670.306000] NET: Registered protocol family 16
+[4294670.306000] ACPI: bus type pci registered
+[4294670.307000] PCI: PCI BIOS revision 2.10 entry at 0xfdb11, last bus=1
+[4294670.307000] PCI: Using configuration type 1
+[4294670.307000] mtrr: v2.0 (20020519)
+[4294670.307000] ACPI: Subsystem revision 20050408
+[4294670.317000] evgpeblk-1016 [06] ev_create_gpe_block   : GPE 00 to 0F [_GPE] 2 regs on int 0x9
+[4294670.318000] evgpeblk-1024 [06] ev_create_gpe_block   : Found 6 Wake, Enabled 0 Runtime GPEs in this block
+[4294670.327000] Completing Region/Field/Buffer/Package initialization:...............................................................................................
+[4294670.625000] Initialized 32/32 Regions 9/9 Fields 44/44 Buffers 10/22 Packages (522 nodes)
+[4294670.625000] Executing all Device _STA and_INI methods:..................................................
+[4294671.545000] 50 Devices found containing: 50 _STA, 1 _INI methods
+[4294671.546000] ACPI: Interpreter enabled
+[4294671.546000] ACPI: Using PIC for interrupt routing
+[4294671.581000] ACPI: PCI Root Bridge [PCI0] (0000:00)
+[4294671.581000] PCI: Probing PCI hardware (bus 00)
+[4294671.586000] ACPI: Assume root bridge [\_SB_.PCI0] segment is 0
+[4294671.953000] Boot video device is 0000:01:00.0
+[4294671.954000] ACPI: PCI Interrupt Routing Table [\_SB_.PCI0._PRT]
+[4294673.813000] ACPI: Power Resource [URP1] (off)
+[4294673.818000] ACPI: Power Resource [URP2] (off)
+[4294673.824000] ACPI: Power Resource [FDDP] (off)
+[4294673.830000] ACPI: Power Resource [LPTP] (off)
+[4294673.941000] ACPI: PCI Interrupt Link [LNKA] (IRQs 3 4 5 6 7 10 *11 12 14 15)
+[4294673.984000] ACPI: PCI Interrupt Link [LNKB] (IRQs 3 4 *5 6 7 10 11 12 14 15)
+[4294674.028000] ACPI: PCI Interrupt Link [LNKC] (IRQs 3 4 5 6 7 *10 11 12 14 15)
+[4294674.071000] ACPI: PCI Interrupt Link [LNKD] (IRQs 3 4 5 6 7 *10 11 12 14 15)
+[4294674.115000] ACPI: PCI Interrupt Link [LNKE] (IRQs 3 4 5 6 7 10 11 12 14 15) *0, disabled.
+[4294674.159000] ACPI: PCI Interrupt Link [LNKF] (IRQs 3 4 5 6 7 10 11 12 14 15) *0, disabled.
+[4294674.203000] ACPI: PCI Interrupt Link [LNKG] (IRQs 3 4 5 6 7 10 11 12 14 15) *0, disabled.
+[4294674.248000] ACPI: PCI Interrupt Link [LNKH] (IRQs 3 4 5 6 7 10 11 12 14 15) *0, disabled.
+[4294674.267000] Linux Plug and Play Support v0.97 (c) Adam Belay
+[4294674.267000] pnp: PnP ACPI init
+[4294674.985000] pnp: PnP ACPI: found 11 devices
+[4294674.985000] PnPBIOS: Disabled by ACPI PNP
+[4294674.985000] SCSI subsystem initialized
+[4294674.985000] usbcore: registered new driver usbfs
+[4294674.985000] usbcore: registered new driver hub
+[4294674.985000] PCI: Using ACPI for IRQ routing
+[4294674.985000] PCI: If a device doesn't work, try "pci=routeirq".  If it helps, post a report
+[4294675.071000] pnp: the driver 'system' has been registered
+[4294675.071000] pnp: match found with the PnP device '00:00' and the driver 'system'
+[4294675.071000] apm: BIOS version 1.2 Flags 0x03 (Driver version 1.16ac)
+[4294675.072000] apm: overridden by ACPI.
+[4294675.074000] inotify device minor=63
+[4294675.074000] VFS: Disk quotas dquot_6.5.1
+[4294675.074000] Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+[4294675.074000] devfs: 2004-01-31 Richard Gooch (rgooch@atnf.csiro.au)
+[4294675.074000] devfs: boot_options: 0x1
+[4294675.074000] Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
+[4294675.074000] fuse init (API version 7.1)
+[4294675.074000] Initializing Cryptographic API
+[4294675.074000] vesafb: framebuffer at 0xda000000, mapped to 0xf0880000, using 5120k, total 32768k
+[4294675.074000] vesafb: mode is 1280x1024x16, linelength=2560, pages=1
+[4294675.074000] vesafb: protected mode interface info at c000:03a7
+[4294675.074000] vesafb: scrolling: redraw
+[4294675.074000] vesafb: Truecolor: size=0:5:6:5, shift=0:11:5:0
+[4294675.114000] Console: switching to colour frame buffer device 160x64
+[4294675.115000] fb0: VESA VGA frame buffer device
+[4294675.115000] ACPI: Power Button (FF) [PWRF]
+[4294675.116000] ACPI: Power Button (CM) [PWRB]
+[4294675.116000] ACPI: Sleep Button (CM) [SLPB]
+[4294675.133000] ACPI: CPU0 (power states: C1[C1])
+[4294675.133000] isapnp: Scanning for PnP cards...
+[4294675.446000] isapnp: No Plug & Play device found
+[4294675.497000] Real Time Clock Driver v1.12
+[4294675.497000] Linux agpgart interface v0.101 (c) Dave Jones
+[4294675.497000] agpgart: Detected VIA KT400/KT400A/KT600 chipset
+[4294675.508000] agpgart: AGP aperture is 128M @ 0xe0000000
+[4294675.508000] [drm] Initialized drm 1.0.0 20040925
+[4294675.508000] cn_fork is registered
+[4294675.508000] pnp: the driver 'i8042 kbd' has been registered
+[4294675.508000] pnp: match found with the PnP device '00:06' and the driver 'i8042 kbd'
+[4294675.508000] pnp: the driver 'i8042 aux' has been registered
+[4294675.508000] pnp: match found with the PnP device '00:05' and the driver 'i8042 aux'
+[4294675.508000] PNP: PS/2 Controller [PNP0303:PS2K,PNP0f13:PS2M] at 0x60,0x64 irq 1,12
+[4294675.509000] serio: i8042 AUX port at 0x60,0x64 irq 12
+[4294675.509000] serio: i8042 KBD port at 0x60,0x64 irq 1
+[4294675.509000] Serial: 8250/16550 driver $Revision: 1.90 $ 8 ports, IRQ sharing disabled
+[4294675.510000] ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
+[4294675.510000] ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
+[4294675.586000] ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
+[4294675.662000] ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
+[4294675.663000] pnp: the driver 'serial' has been registered
+[4294675.663000] pnp: match found with the PnP device '00:08' and the driver 'serial'
+[4294675.663000] ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
+[4294675.664000] pnp: match found with the PnP device '00:09' and the driver 'serial'
+[4294675.664000] ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
+[4294675.664000] pnp: the driver 'parport_pc' has been registered
+[4294675.665000] pnp: match found with the PnP device '00:0a' and the driver 'parport_pc'
+[4294675.665000] parport: PnPBIOS parport detected.
+[4294675.665000] parport0: PC-style at 0x378 (0x778), irq 7, dma 3 [PCSPP,TRISTATE,COMPAT,EPP,ECP,DMA]
+[4294675.748000] io scheduler noop registered
+[4294675.748000] io scheduler anticipatory registered
+[4294675.748000] io scheduler deadline registered
+[4294675.748000] io scheduler cfq registered
+[4294675.748000] Floppy drive(s): fd0 is 1.44M
+[4294675.762000] FDC 0 is a post-1991 82077
+[4294675.764000] RAMDISK driver initialized: 16 RAM disks of 4096K size 1024 blocksize
+[4294675.764000] loop: loaded (max 8 devices)
+[4294675.765000] tg3.c:v3.27 (May 5, 2005)
+[4294675.812000] ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 10
+[4294675.817000] PCI: setting IRQ 10 as level-triggered
+[4294675.822000] ACPI: PCI Interrupt 0000:00:0b.0[A] -> Link [LNKC] -> GSI 10 (level, low) -> IRQ 10
+[4294675.880000] eth0: Tigon3 [partno(BCM95705A50) rev 3003 PHY(5705)] (PCI:33MHz:32-bit) 10/100/1000BaseT Ethernet 00:11:09:c3:59:97
+[4294675.886000] eth0: RXcsums[1] LinkChgREG[0] MIirq[0] ASF[0] Split[0] WireSpeed[0] TSOcap[1] 
+[4294675.892000] PPP generic driver version 2.4.2
+[4294675.898000] PPP Deflate Compression module registered
+[4294675.903000] PPP BSD Compression module registered
+[4294675.909000] NET: Registered protocol family 24
+[4294675.914000] netconsole: not configured, aborting
+[4294675.920000] Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+[4294675.926000] ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+[4294675.931000] VP_IDE: IDE controller at PCI slot 0000:00:0f.1
+[4294675.937000] acpi_bus-0212 [01] acpi_bus_set_power    : Device is not power manageable
+[4294675.985000] ACPI: PCI Interrupt Link [LNKA] enabled at IRQ 11
+[4294675.991000] PCI: setting IRQ 11 as level-triggered
+[4294675.997000] ACPI: PCI Interrupt 0000:00:0f.1[A] -> Link [LNKA] -> GSI 11 (level, low) -> IRQ 11
+[4294676.003000] PCI: Via PIC IRQ fixup for 0000:00:0f.1, from 255 to 11
+[4294676.009000] VP_IDE: chipset revision 6
+[4294676.015000] VP_IDE: not 100% native mode: will probe irqs later
+[4294676.021000] VP_IDE: VIA vt8237 (rev 00) IDE UDMA133 controller on pci0000:00:0f.1
+[4294676.027000]     ide0: BM-DMA at 0xfc00-0xfc07, BIOS settings: hda:DMA, hdb:DMA
+[4294676.033000]     ide1: BM-DMA at 0xfc08-0xfc0f, BIOS settings: hdc:DMA, hdd:DMA
+[4294676.039000] Probing IDE interface ide0...
+[4294676.423000] hda: MAXTOR 4K080H4, ATA DISK drive
+[4294676.684000] hdb: SAMSUNG SP1604N, ATA DISK drive
+[4294676.741000] ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+[4294676.747000] Probing IDE interface ide1...
+[4294677.539000] hdc: PLEXTOR DVDR PX-716A, ATAPI CD/DVD-ROM drive
+[4294677.800000] hdd: MAXTOR 4K080H4, ATA DISK drive
+[4294677.857000] ide1 at 0x170-0x177,0x376 on irq 15
+[4294677.864000] pnp: the driver 'ide' has been registered
+[4294677.864000] Probing IDE interface ide2...
+[4294678.377000] Probing IDE interface ide3...
+[4294678.890000] Probing IDE interface ide4...
+[4294679.403000] Probing IDE interface ide5...
+[4294679.916000] hda: max request size: 128KiB
+[4294679.948000] hda: 156301488 sectors (80026 MB) w/2000KiB Cache, CHS=65535/16/63, UDMA(100)
+[4294679.954000] hda: cache flushes supported
+[4294679.960000]  /dev/ide/host0/bus0/target0/lun0: p1 p2 p3 < p5 p6 p7 p8 p9 >
+[4294680.072000] hdb: max request size: 1024KiB
+[4294680.079000] hdb: 312581808 sectors (160041 MB) w/2048KiB Cache, CHS=19457/255/63, UDMA(100)
+[4294680.086000] hdb: cache flushes supported
+[4294680.093000]  /dev/ide/host0/bus0/target1/lun0: p1 < p5 p6 >
+[4294680.122000] ide-disk: probe of 1.0 failed with error 1
+[4294680.128000] hdd: max request size: 128KiB
+[4294680.165000] hdd: 156301488 sectors (80026 MB) w/2000KiB Cache, CHS=65535/16/63, UDMA(100)
+[4294680.172000] hdd: cache flushes supported
+[4294680.179000]  /dev/ide/host0/bus1/target1/lun0: p1 p2 p3 < p5 p6 p7 p8 p9 >
+[4294680.298000] hdc: ATAPI 40X DVD-ROM DVD-R CD-R/RW drive, 8192kB Cache
+[4294680.305000] Uniform CD-ROM driver Revision: 3.20
+[4294680.362000] 3ware 9000 Storage Controller device driver for Linux v2.26.02.002.
+[4294680.369000] libata version 1.10 loaded.
+[4294680.369000] sata_promise version 1.01
+[4294680.410000] ACPI: PCI Interrupt Link [LNKD] enabled at IRQ 10
+[4294680.417000] ACPI: PCI Interrupt 0000:00:07.0[A] -> Link [LNKD] -> GSI 10 (level, low) -> IRQ 10
+[4294680.435000] ata1: SATA max UDMA/133 cmd 0xF081E200 ctl 0xF081E238 bmdma 0x0 irq 10
+[4294680.442000] ata2: SATA max UDMA/133 cmd 0xF081E280 ctl 0xF081E2B8 bmdma 0x0 irq 10
+[4294680.449000] ata3: SATA max UDMA/133 cmd 0xF081E300 ctl 0xF081E338 bmdma 0x0 irq 10
+[4294680.456000] ata4: SATA max UDMA/133 cmd 0xF081E380 ctl 0xF081E3B8 bmdma 0x0 irq 10
+[4294680.818000] ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4023 85:3469 86:3c01 87:4023 88:407f
+[4294680.818000] ata1: dev 0 ATA, max UDMA/133, 781422768 sectors: lba48
+[4294680.825000] ata1: dev 0 configured for UDMA/133
+[4294680.832000] scsi0 : sata_promise
+[4294681.194000] ata2: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4023 85:3469 86:3c01 87:4023 88:407f
+[4294681.194000] ata2: dev 0 ATA, max UDMA/133, 781422768 sectors: lba48
+[4294681.201000] ata2: dev 0 configured for UDMA/133
+[4294681.208000] scsi1 : sata_promise
+[4294681.570000] ata3: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4023 85:3469 86:3c01 87:4023 88:407f
+[4294681.570000] ata3: dev 0 ATA, max UDMA/133, 781422768 sectors: lba48
+[4294681.577000] ata3: dev 0 configured for UDMA/133
+[4294681.584000] scsi2 : sata_promise
+[4294681.946000] ata4: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4023 85:3469 86:3c01 87:4023 88:407f
+[4294681.946000] ata4: dev 0 ATA, max UDMA/133, 781422768 sectors: lba48
+[4294681.953000] ata4: dev 0 configured for UDMA/133
+[4294681.960000] scsi3 : sata_promise
+[4294681.966000]   Vendor: ATA       Model: ST3400832AS       Rev: 3.02
+[4294681.973000]   Type:   Direct-Access                      ANSI SCSI revision: 05
+[4294681.981000]   Vendor: ATA       Model: ST3400832AS       Rev: 3.02
+[4294681.988000]   Type:   Direct-Access                      ANSI SCSI revision: 05
+[4294681.995000]   Vendor: ATA       Model: ST3400832AS       Rev: 3.02
+[4294682.002000]   Type:   Direct-Access                      ANSI SCSI revision: 05
+[4294682.010000]   Vendor: ATA       Model: ST3400832AS       Rev: 3.02
+[4294682.017000]   Type:   Direct-Access                      ANSI SCSI revision: 05
+[4294682.024000] sata_via version 1.1
+[4294682.024000] acpi_bus-0212 [01] acpi_bus_set_power    : Device is not power manageable
+[4294682.072000] ACPI: PCI Interrupt Link [LNKB] enabled at IRQ 5
+[4294682.079000] PCI: setting IRQ 5 as level-triggered
+[4294682.085000] ACPI: PCI Interrupt 0000:00:0f.0[B] -> Link [LNKB] -> GSI 5 (level, low) -> IRQ 5
+[4294682.092000] sata_via(0000:00:0f.0): routed to hard irq line 5
+[4294682.099000] ata5: SATA max UDMA/133 cmd 0xD800 ctl 0xD402 bmdma 0xC800 irq 5
+[4294682.106000] ata6: SATA max UDMA/133 cmd 0xD000 ctl 0xCC02 bmdma 0xC808 irq 5
+[4294682.313000] ata5: no device found (phy stat 00000000)
+[4294682.319000] scsi4 : sata_via
+[4294682.527000] ata6: no device found (phy stat 00000000)
+[4294682.533000] scsi5 : sata_via
+[4294682.541000] st: Version 20050501, fixed bufsize 32768, s/g segs 256
+[4294682.548000] SCSI device sda: 781422768 512-byte hdwr sectors (400088 MB)
+[4294682.554000] SCSI device sda: drive cache: write back
+[4294682.561000] SCSI device sda: 781422768 512-byte hdwr sectors (400088 MB)
+[4294682.568000] SCSI device sda: drive cache: write back
+[4294682.574000]  /dev/scsi/host0/bus0/target0/lun0: p1
+[4294682.600000] Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+[4294682.607000] SCSI device sdb: 781422768 512-byte hdwr sectors (400088 MB)
+[4294682.613000] SCSI device sdb: drive cache: write back
+[4294682.620000] SCSI device sdb: 781422768 512-byte hdwr sectors (400088 MB)
+[4294682.626000] SCSI device sdb: drive cache: write back
+[4294682.633000]  /dev/scsi/host1/bus0/target0/lun0: p1
+[4294682.658000] Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
+[4294682.665000] SCSI device sdc: 781422768 512-byte hdwr sectors (400088 MB)
+[4294682.671000] SCSI device sdc: drive cache: write back
+[4294682.678000] SCSI device sdc: 781422768 512-byte hdwr sectors (400088 MB)
+[4294682.684000] SCSI device sdc: drive cache: write back
+[4294682.690000]  /dev/scsi/host2/bus0/target0/lun0: p1
+[4294682.719000] Attached scsi disk sdc at scsi2, channel 0, id 0, lun 0
+[4294682.726000] SCSI device sdd: 781422768 512-byte hdwr sectors (400088 MB)
+[4294682.732000] SCSI device sdd: drive cache: write back
+[4294682.738000] SCSI device sdd: 781422768 512-byte hdwr sectors (400088 MB)
+[4294682.744000] SCSI device sdd: drive cache: write back
+[4294682.750000]  /dev/scsi/host3/bus0/target0/lun0: p1
+[4294682.776000] Attached scsi disk sdd at scsi3, channel 0, id 0, lun 0
+[4294682.782000] Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
+[4294682.789000] Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
+[4294682.795000] Attached scsi generic sg2 at scsi2, channel 0, id 0, lun 0,  type 0
+[4294682.801000] Attached scsi generic sg3 at scsi3, channel 0, id 0, lun 0,  type 0
+[4294682.807000] ieee1394: Initialized config rom entry `ip1394'
+[4294682.807000] ohci1394: $Rev: 1250 $ Ben Collins <bcollins@debian.org>
+[4294682.814000] ACPI: PCI Interrupt 0000:00:0e.0[A] -> Link [LNKB] -> GSI 5 (level, low) -> IRQ 5
+[4294682.873000] ohci1394: fw-host0: OHCI-1394 1.0 (PCI): IRQ=[5]  MMIO=[dfffe000-dfffe7ff]  Max Packet=[2048]
+[4294682.887000] sbp2: $Rev: 1219 $ Ben Collins <bcollins@debian.org>
+[4294682.893000] usbmon: debugs is not available
+[4294682.900000] ACPI: PCI Interrupt 0000:00:0a.2[C] -> Link [LNKD] -> GSI 10 (level, low) -> IRQ 10
+[4294682.906000] ehci_hcd 0000:00:0a.2: NEC Corporation USB 2.0
+[4294682.934000] ehci_hcd 0000:00:0a.2: new USB bus registered, assigned bus number 1
+[4294682.940000] ehci_hcd 0000:00:0a.2: irq 10, io mem 0xdfffef00
+[4294682.946000] ehci_hcd 0000:00:0a.2: park 0
+[4294682.953000] ehci_hcd 0000:00:0a.2: USB 2.0 initialized, EHCI 1.00, driver 10 Dec 2004
+[4294682.960000] hub 1-0:1.0: USB hub found
+[4294682.966000] hub 1-0:1.0: 5 ports detected
+[4294682.993000] acpi_bus-0212 [01] acpi_bus_set_power    : Device is not power manageable
+[4294682.999000] ACPI: PCI Interrupt 0000:00:10.4[C] -> Link [LNKC] -> GSI 10 (level, low) -> IRQ 10
+[4294683.006000] ehci_hcd 0000:00:10.4: VIA Technologies, Inc. USB 2.0
+[4294683.012000] ehci_hcd 0000:00:10.4: new USB bus registered, assigned bus number 2
+[4294683.019000] ehci_hcd 0000:00:10.4: irq 10, io mem 0xdfffed00
+[4294683.025000] ehci_hcd 0000:00:10.4: USB 2.0 initialized, EHCI 1.00, driver 10 Dec 2004
+[4294683.032000] hub 2-0:1.0: USB hub found
+[4294683.038000] hub 2-0:1.0: 8 ports detected
+[4294683.065000] ohci_hcd: 2005 April 22 USB 1.1 'Open' Host Controller (OHCI) Driver (PCI)
+[4294683.065000] ACPI: PCI Interrupt 0000:00:0a.0[A] -> Link [LNKB] -> GSI 5 (level, low) -> IRQ 5
+[4294683.071000] ohci_hcd 0000:00:0a.0: NEC Corporation USB
+[4294683.078000] ohci_hcd 0000:00:0a.0: new USB bus registered, assigned bus number 3
+[4294683.084000] ohci_hcd 0000:00:0a.0: irq 5, io mem 0xdfffc000
+[4294683.171000] hub 3-0:1.0: USB hub found
+[4294683.177000] hub 3-0:1.0: 3 ports detected
+[4294683.214000] ACPI: PCI Interrupt 0000:00:0a.1[B] -> Link [LNKC] -> GSI 10 (level, low) -> IRQ 10
+[4294683.220000] ohci_hcd 0000:00:0a.1: NEC Corporation USB (#2)
+[4294683.227000] ohci_hcd 0000:00:0a.1: new USB bus registered, assigned bus number 4
+[4294683.233000] ohci_hcd 0000:00:0a.1: irq 10, io mem 0xdfffd000
+[4294683.320000] hub 4-0:1.0: USB hub found
+[4294683.326000] hub 4-0:1.0: 2 ports detected
+[4294683.363000] mice: PS/2 mouse device common for all mice
+[4294683.369000] i2c /dev entries driver
+[4294683.376000] md: linear personality registered as nr 1
+[4294683.382000] md: raid0 personality registered as nr 2
+[4294683.388000] md: raid1 personality registered as nr 3
+[4294683.395000] md: raid10 personality registered as nr 9
+[4294683.401000] md: raid5 personality registered as nr 4
+[4294683.407000] raid5: automatically using best checksumming function: pIII_sse
+[4294683.418000]    pIII_sse  :  3444.000 MB/sec
+[4294683.424000] raid5: using function: pIII_sse (3444.000 MB/sec)
+[4294683.430000] md: multipath personality registered as nr 7
+[4294683.436000] md: md driver 0.90.2 MAX_MD_DEVS=256, MD_SB_DISKS=27
+[4294683.442000] md: bitmap version 3.38
+[4294683.451000] device-mapper: 4.4.0-ioctl (2005-01-12) initialised: dm-devel@redhat.com
+[4294683.458000] device-mapper: dm-multipath version 1.0.4 loaded
+[4294683.464000] device-mapper: dm-round-robin version 1.0.0 loaded
+[4294683.470000] Advanced Linux Sound Architecture Driver Version 1.0.9rc3  (Thu Mar 24 10:33:39 2005 UTC).
+[4294683.477000] acpi_bus-0212 [01] acpi_bus_set_power    : Device is not power manageable
+[4294683.484000] ACPI: PCI Interrupt 0000:00:11.5[C] -> Link [LNKC] -> GSI 10 (level, low) -> IRQ 10
+[4294683.491000] PCI: Setting latency timer of device 0000:00:11.5 to 64
+[4294683.507000] input: AT Translated Set 2 keyboard on isa0060/serio0
+[4294683.850000] input: ImPS/2 Generic Wheel Mouse on isa0060/serio1
+[4294684.002000] ALSA device list:
+[4294684.008000]   #0: VIA 8237 with CMI9761 at 0xb000, irq 10
+[4294684.015000] NET: Registered protocol family 2
+[4294684.032000] IP: routing cache hash table of 8192 buckets, 64Kbytes
+[4294684.039000] TCP established hash table entries: 131072 (order: 8, 1048576 bytes)
+[4294684.049000] TCP bind hash table entries: 65536 (order: 6, 262144 bytes)
+[4294684.056000] TCP: Hash tables configured (established 131072 bind 65536)
+[4294684.063000] NET: Registered protocol family 1
+[4294684.070000] NET: Registered protocol family 10
+[4294684.076000] Disabled Privacy Extensions on device c05f6de0(lo)
+[4294684.083000] IPv6 over IPv4 tunneling driver
+[4294684.090000] NET: Registered protocol family 17
+[4294684.096000] NET: Registered protocol family 15
+[4294684.102000] 802.1Q VLAN Support v1.8 Ben Greear <greearb@candelatech.com>
+[4294684.109000] All bugs added by David S. Miller <davem@redhat.com>
+[4294684.117000] BIOS EDD facility v0.16 2004-Jun-25, 7 devices found
+[4294684.124000] devfs_mk_dev: could not append to parent for md/0
+[4294684.131000] md: Autodetecting RAID arrays.
+[4294684.154000] ieee1394: Host added: ID:BUS[0-00:1023]  GUID[0010dc0000776648]
+[4294684.291000] md: autorun ...
+[4294684.297000] md: considering hdd9 ...
+[4294684.303000] md:  adding hdd9 ...
+[4294684.309000] md: hdd8 has different UUID to hdd9
+[4294684.316000] md: hdd7 has different UUID to hdd9
+[4294684.322000] md: hdd6 has different UUID to hdd9
+[4294684.327000] md: hdd5 has different UUID to hdd9
+[4294684.333000] md: hdd1 has different UUID to hdd9
+[4294684.339000] md:  adding hda9 ...
+[4294684.345000] md: hda8 has different UUID to hdd9
+[4294684.350000] md: hda7 has different UUID to hdd9
+[4294684.356000] md: hda6 has different UUID to hdd9
+[4294684.361000] md: hda5 has different UUID to hdd9
+[4294684.366000] md: hda1 has different UUID to hdd9
+[4294684.372000] devfs_mk_dev: could not append to parent for md/5
+[4294684.377000] md: created md5
+[4294684.382000] md: bind<hda9>
+[4294684.387000] md: bind<hdd9>
+[4294684.392000] md: running: <hdd9><hda9>
+[4294684.397000] raid1: raid set md5 active with 2 out of 2 mirrors
+[4294684.402000] md: considering hdd8 ...
+[4294684.408000] md:  adding hdd8 ...
+[4294684.413000] md: hdd7 has different UUID to hdd8
+[4294684.418000] md: hdd6 has different UUID to hdd8
+[4294684.423000] md: hdd5 has different UUID to hdd8
+[4294684.427000] md: hdd1 has different UUID to hdd8
+[4294684.432000] md:  adding hda8 ...
+[4294684.437000] md: hda7 has different UUID to hdd8
+[4294684.442000] md: hda6 has different UUID to hdd8
+[4294684.447000] md: hda5 has different UUID to hdd8
+[4294684.451000] md: hda1 has different UUID to hdd8
+[4294684.456000] devfs_mk_dev: could not append to parent for md/4
+[4294684.460000] md: created md4
+[4294684.465000] md: bind<hda8>
+[4294684.469000] md: bind<hdd8>
+[4294684.473000] md: running: <hdd8><hda8>
+[4294684.478000] raid1: raid set md4 active with 2 out of 2 mirrors
+[4294684.482000] md: considering hdd7 ...
+[4294684.486000] md:  adding hdd7 ...
+[4294684.490000] md: hdd6 has different UUID to hdd7
+[4294684.493000] md: hdd5 has different UUID to hdd7
+[4294684.497000] md: hdd1 has different UUID to hdd7
+[4294684.501000] md:  adding hda7 ...
+[4294684.504000] md: hda6 has different UUID to hdd7
+[4294684.508000] md: hda5 has different UUID to hdd7
+[4294684.511000] md: hda1 has different UUID to hdd7
+[4294684.515000] devfs_mk_dev: could not append to parent for md/3
+[4294684.518000] md: created md3
+[4294684.522000] md: bind<hda7>
+[4294684.525000] md: bind<hdd7>
+[4294684.528000] md: running: <hdd7><hda7>
+[4294684.531000] raid1: raid set md3 active with 2 out of 2 mirrors
+[4294684.535000] md: considering hdd6 ...
+[4294684.538000] md:  adding hdd6 ...
+[4294684.541000] md: hdd5 has different UUID to hdd6
+[4294684.544000] md: hdd1 has different UUID to hdd6
+[4294684.547000] md:  adding hda6 ...
+[4294684.550000] md: hda5 has different UUID to hdd6
+[4294684.553000] md: hda1 has different UUID to hdd6
+[4294684.556000] devfs_mk_dev: could not append to parent for md/2
+[4294684.559000] md: created md2
+[4294684.562000] md: bind<hda6>
+[4294684.565000] md: bind<hdd6>
+[4294684.568000] md: running: <hdd6><hda6>
+[4294684.571000] raid1: raid set md2 active with 2 out of 2 mirrors
+[4294684.574000] md: considering hdd5 ...
+[4294684.578000] md:  adding hdd5 ...
+[4294684.581000] md: hdd1 has different UUID to hdd5
+[4294684.584000] md:  adding hda5 ...
+[4294684.587000] md: hda1 has different UUID to hdd5
+[4294684.591000] devfs_mk_dev: could not append to parent for md/1
+[4294684.594000] md: created md1
+[4294684.597000] md: bind<hda5>
+[4294684.601000] md: bind<hdd5>
+[4294684.604000] md: running: <hdd5><hda5>
+[4294684.608000] raid1: raid set md1 active with 2 out of 2 mirrors
+[4294684.611000] md: considering hdd1 ...
+[4294684.614000] md:  adding hdd1 ...
+[4294684.618000] md:  adding hda1 ...
+[4294684.621000] md: created md0
+[4294684.624000] md: bind<hda1>
+[4294684.628000] md: bind<hdd1>
+[4294684.631000] md: running: <hdd1><hda1>
+[4294684.634000] raid1: raid set md0 active with 2 out of 2 mirrors
+[4294684.638000] md: ... autorun DONE.
+[4294684.718000] EXT3-fs: INFO: recovery required on readonly filesystem.
+[4294684.722000] EXT3-fs: write access will be enabled during recovery.
+[4294684.846000] EXT3-fs: recovery complete.
+[4294684.850000] kjournald starting.  Commit interval 5 seconds
+[4294684.854000] EXT3-fs: mounted filesystem with ordered data mode.
+[4294684.858000] VFS: Mounted root (ext3 filesystem) readonly.
+[4294684.894000] Mounted devfs on /dev
+[4294684.898000] Freeing unused kernel memory: 240k freed
+[4294688.032000] Adding 996020k swap on /dev/hda2.  Priority:-1 extents:1
+[4294688.051000] Adding 996020k swap on /dev/hdd2.  Priority:-2 extents:1
+[4294688.153000] EXT3 FS on md0, internal journal
+[4294691.695000] usbcore: registered new driver usbkbd
+[4294691.700000] drivers/usb/input/usbkbd.c: :USB HID Boot Protocol keyboard driver
+[4294691.767000] Initializing USB Mass Storage driver...
+[4294691.794000] usbcore: registered new driver usb-storage
+[4294691.799000] USB Mass Storage support registered.
+[4294692.068000] devfs_mk_dev: could not append to parent for md/6
+[4294692.073000] md: raidstart(pid 1352) used deprecated START_ARRAY ioctl. This will not be supported beyond 2.6
+[4294692.168000] md: autorun ...
+[4294692.174000] md: considering sdd1 ...
+[4294692.179000] md:  adding sdd1 ...
+[4294692.184000] md:  adding sdc1 ...
+[4294692.189000] md:  adding sdb1 ...
+[4294692.194000] md:  adding sda1 ...
+[4294692.200000] md: created md6
+[4294692.205000] md: bind<sda1>
+[4294692.210000] md: bind<sdb1>
+[4294692.215000] md: bind<sdc1>
+[4294692.220000] md: bind<sdd1>
+[4294692.225000] md: running: <sdd1><sdc1><sdb1><sda1>
+[4294692.230000] md: md6: raid array is not clean -- starting background reconstruction
+[4294692.235000] raid5: device sdd1 operational as raid disk 3
+[4294692.240000] raid5: device sdc1 operational as raid disk 2
+[4294692.245000] raid5: device sdb1 operational as raid disk 1
+[4294692.250000] raid5: device sda1 operational as raid disk 0
+[4294692.256000] raid5: allocated 4206kB for md6
+[4294692.261000] raid5: raid level 5 set md6 active with 4 out of 4 devices, algorithm 2
+[4294692.266000] RAID5 conf printout:
+[4294692.271000]  --- rd:4 wd:4 fd:0
+[4294692.275000]  disk 0, o:1, dev:sda1
+[4294692.280000]  disk 1, o:1, dev:sdb1
+[4294692.285000]  disk 2, o:1, dev:sdc1
+[4294692.289000]  disk 3, o:1, dev:sdd1
+[4294692.294000] md: ... autorun DONE.
+[4294692.299000] .......<6>md: syncing RAID array md6
+[4294692.303000] md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
+[4294692.308000] md: using maximum available idle IO bandwith (but not more than 200000 KB/sec) for reconstruction.
+[4294692.320000] md: using 128k window, over a total of 390708736 blocks.
+[4294693.111000] kjournald starting.  Commit interval 5 seconds
+[4294693.118000] EXT3 FS on md1, internal journal
+[4294693.123000] EXT3-fs: mounted filesystem with ordered data mode.
+[4294693.182000] kjournald starting.  Commit interval 5 seconds
+[4294693.189000] EXT3 FS on md2, internal journal
+[4294693.194000] EXT3-fs: mounted filesystem with ordered data mode.
+[4294693.264000] kjournald starting.  Commit interval 5 seconds
+[4294693.271000] EXT3 FS on md3, internal journal
+[4294693.276000] EXT3-fs: mounted filesystem with ordered data mode.
+[4294693.331000] kjournald starting.  Commit interval 5 seconds
+[4294693.338000] EXT3 FS on md4, internal journal
+[4294693.342000] EXT3-fs: mounted filesystem with ordered data mode.
+[4294693.419000] kjournald starting.  Commit interval 5 seconds
+[4294693.425000] EXT3 FS on md5, internal journal
+[4294693.430000] EXT3-fs: mounted filesystem with ordered data mode.
+[4294693.456000] kjournald starting.  Commit interval 5 seconds
+[4294693.461000] EXT3 FS on hdb5, internal journal
+[4294693.466000] EXT3-fs: mounted filesystem with ordered data mode.
+[4294693.489000] kjournald starting.  Commit interval 5 seconds
+[4294693.495000] EXT3 FS on hdb6, internal journal
+[4294693.495000] EXT3-fs: mounted filesystem with ordered data mode.
+[4294696.118000] Intel(R) PRO/1000 Network Driver - version 6.0.54-k2-NAPI
+[4294696.128000] Copyright (c) 1999-2004 Intel Corporation.
+[4294696.158000] ACPI: PCI Interrupt 0000:00:06.0[A] -> Link [LNKB] -> GSI 5 (level, low) -> IRQ 5
+[4294696.741000] e1000: eth1: e1000_probe: Intel(R) PRO/1000 Network Connection
+[4294701.021000] input: PC Speaker
+[4294708.408000] tg3: eth0: Link is up at 1000 Mbps, full duplex.
+[4294708.408000] tg3: eth0: Flow control is on for TX and on for RX.
+[4294716.068000] eth0: no IPv6 routers present
+[4294722.450000] lp0: using parport0 (interrupt-driven).
+[4294738.398000] program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+[4294738.421000] program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
 
