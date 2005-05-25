@@ -1,87 +1,86 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [git patches try2] 2.6.x libata new PCI ids
-Date: Wed, 25 May 2005 19:35:08 -0400
-Message-ID: <42950BAC.5010406@pobox.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] libata: device suspend/resume
+Date: Thu, 26 May 2005 01:40:39 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0505252201270.6612@poirot.grange>
+References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave>
+ <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave>
+ <20050524062128.GT9855@suse.de> <4292CF5D.90809@pobox.com>
+ <20050524075953.GY9855@suse.de> <4292E3EE.10006@pobox.com>
+ <20050524085133.GZ9855@suse.de> <42935852.2020300@pobox.com>
+ <20050525092952.GA7005@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020203080507060906090703"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:55510 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261609AbVEYXfM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 May 2005 19:35:12 -0400
+Received: from mail.gmx.net ([213.165.64.20]:44997 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261616AbVEYXml (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 May 2005 19:42:41 -0400
+In-Reply-To: <20050525092952.GA7005@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020203080507060906090703
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+On Wed, 25 May 2005, Jens Axboe wrote:
 
+> On Tue, May 24 2005, Jeff Garzik wrote:
+> > Jens Axboe wrote:
+> > >I agree, it's a cleaner approach, with the rq being a container for
+> > >generel messages as well not just SCSI commands. The one missing piece
+> > >for that was the rq->end_io() callback so everything doesn't have to go
+> > >down sync, but that is in now as well.
+> > >
+> > >I'll try and cook something up.
+> > 
+> > Very cool ;)
+> 
+> This is the base for it. It splits request->flags into two variables:
+> 
+> - cmd_type. this is not a bitmask, but a value indicating what type of
+>   request this is.
+> 
+> - cmd_flags. various command modified flags.
+> 
+> The idea is to add a REQ_TYPE_LINUX_BLOCK request type, where we define
+> a set of command opcodes that signify an upper level defined function
+> (such as flush) that is implemented differently at the hardware/driver
+> level. Basically a way to pass down messages or commands generically.
+> 
+> I like this better than using scsi opcodes always, it's a cleaner
+> abstraction. For sending generic commands to a device, we could add a
+> function ala:
+> 
+> blk_send_message(queue, unsigned char cmd, completion_callback);
+> 
+> that would allocate the request, set it up, add to block layer queue,
+> and call the completion_callback when it is done. So for a flush, a
+> driver could do
+> 
+>         blk_send_message(q, REQ_LB_OP_FLUSH, flush_done);
+> 
+> to a target queue.
+> 
+> What do you think?
 
-That ghost changeset should be gone now.
+Heh, very nice! Just what's needed for nbd!:-) NBD has several "threads":
 
-Please pull branch 'new-ids' of
-rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+1. the one running in the original nbd-client context, receiving answers 
+from the server and completing requests,
 
-diffstat/changelog/patch attached.
+2. the block queue
 
+3. (my addition) block-device operations open, close, ioctl...
 
---------------020203080507060906090703
-Content-Type: text/plain;
- name="libata-2.6.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata-2.6.txt"
+1. and 2. are already working in the block queue context, to simplify 3. I 
+also faked those operations with block requests. I didn't go as far as 
+really submitting them to the block layer and completing them 
+respectively, I just used the same request object and inserted it directly 
+into the internal list to process replies in 1. With the current patch 
+from Jens (with some minor extensions) this could be done even nicer.
 
- drivers/scsi/sata_promise.c |    2 ++
- drivers/scsi/sata_sil.c     |    1 +
- 2 files changed, 3 insertions(+)
+(see also my another post today to linux-scsi)
 
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
-commit 4c3a53d4108367f639e5e0fe9366dfd7679c5514
-tree 0dcafa1f300870aecff4ac45bda16879aa89e61d
-parent 525a099771d348a25d12ef9c47aa8680c7317e35
-author Francisco Javier <ffelix@sshinf.com> Thu, 26 May 2005 03:29:37 -0400
-committer Jeff Garzik <jgarzik@pobox.com> Thu, 26 May 2005 03:29:37 -0400
-
-[PATCH] sata_promise: add PCI ID for FastTrak TX2200 2-ports
-
---------------------------
-commit 525a099771d348a25d12ef9c47aa8680c7317e35
-tree 86fe91606c8994f6358c8afeb1c3b9f0f4784bd7
-parent 2a24ab628aa7b190be32f63dfb6d96f3fb61580a
-author NAKAMURA Kenta <kenta@c.csce.kyushu-u.ac.jp> Thu, 26 May 2005 03:28:38 -0400
-committer Jeff Garzik <jgarzik@pobox.com> Thu, 26 May 2005 03:28:38 -0400
-
-[PATCH] sata_sil: new ID 1002:437A for ATI IXP400
-
---------------------------
-
-
-diff --git a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
---- a/drivers/scsi/sata_promise.c
-+++ b/drivers/scsi/sata_promise.c
-@@ -151,6 +151,8 @@ static struct ata_port_info pdc_port_inf
- static struct pci_device_id pdc_ata_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_PROMISE, 0x3371, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_2037x },
-+	{ PCI_VENDOR_ID_PROMISE, 0x3571, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+	  board_2037x },
- 	{ PCI_VENDOR_ID_PROMISE, 0x3373, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_2037x },
- 	{ PCI_VENDOR_ID_PROMISE, 0x3375, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
---- a/drivers/scsi/sata_sil.c
-+++ b/drivers/scsi/sata_sil.c
-@@ -82,6 +82,7 @@ static struct pci_device_id sil_pci_tbl[
- 	{ 0x1095, 0x3114, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3114 },
- 	{ 0x1002, 0x436e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
- 	{ 0x1002, 0x4379, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
-+	{ 0x1002, 0x437a, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
- 	{ }	/* terminate list */
- };
- 
-
---------------020203080507060906090703--
