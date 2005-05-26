@@ -1,120 +1,42 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Playing with SATA NCQ
-Date: Thu, 26 May 2005 22:30:18 +0200
-Message-ID: <20050526203017.GA16768@suse.de>
-References: <20050526140058.GR1419@suse.de> <4295F87B.9070106@pobox.com> <20050526170658.GT1419@suse.de> <42962833.4000000@pobox.com>
+From: Mark Lord <mlord@pobox.com>
+Subject: Re: [PATCH] libata: fix use-after-free during driver unload/unplug
+Date: Thu, 26 May 2005 17:33:13 -0400
+Message-ID: <42964099.6000207@pobox.com>
+References: <42962379.5000206@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:10453 "EHLO
-	nelson.home.kernel.dk") by vger.kernel.org with ESMTP
-	id S261722AbVEZU31 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 May 2005 16:29:27 -0400
-Content-Disposition: inline
-In-Reply-To: <42962833.4000000@pobox.com>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:9995 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S261800AbVEZVdX
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 May 2005 17:33:23 -0400
+In-Reply-To: <42962379.5000206@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@suse.de>, Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
 
-On Thu, May 26 2005, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >On Thu, May 26 2005, Jeff Garzik wrote:
-> >>>+int ata_read_log_page(struct ata_port *ap, unsigned int device, char 
-> >>>page,
-> >>>+		      char *buffer, unsigned int sectors)
-> >>>+{
-> >>>+	struct ata_device *dev = &ap->device[device];
-> >>>+	DECLARE_COMPLETION(wait);
-> >>>+	struct ata_queued_cmd *qc;
-> >>>+	unsigned long flags;
-> >>>+	u8 status;
-> >>>+	int rc;
-> >>>+
-> >>>+	assert(dev->class == ATA_DEV_ATA);
-> >>>+
-> >>>+	ata_dev_select(ap, device, 1, 1);
-> >>
-> >>is this needed?  These types of calls need to be removed, in general, as 
-> >>they don't make sense on FIS-based hardware at all.
-> >
-> >
-> >You tell me, this read_log_page() was mainly copy-pasted from the pio
-> >driven function above it. I'll try and kill the select when doing error
-> >testing.
-> >
-> >
-> >>>+	printk("RLP issue\n");
-> >>>+	spin_lock_irqsave(&ap->host_set->lock, flags);
-> >>>+	rc = ata_qc_issue(qc);
-> >>>+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-> >>>+	printk("RLP issue done\n");
-> >>>+
-> >>>+	if (rc)
-> >>>+		return -EIO;
-> >>>+
-> >>>+	wait_for_completion(&wait);
-> >>>+
-> >>>+	printk("RLP wait done\n");
-> >>>+
-> >>>+	status = ata_chk_status(ap);
-> >>>+	if (status & (ATA_ERR | ATA_ABORTED))
-> >>>+		return -EIO;
-> >>
-> >>we need to get rid of this too for AHCI-like devices
-> >
-> >
-> >Can you expand on that?
-> 
-> (this covers both quoted questions above)
-> 
-> The PIO function assumes that PCI IDE-like ATA register blocks (command 
-> registers, control registers) are available.  The read-log-page function 
-> can make no such assumptions.
-> 
-> dev-select and check-status should both be done by the machinery that 
-> occurs once you start things in motion by calling ata_qc_issue().
-> 
-> Doing things this way is necessary for FIS-based hardware like AHCI or 
-> SiI 3124.
+Hi Jeff!
 
-I'll get it cleaned up and tested.
+Jeff Garzik wrote:
+>
+> * add ->host_stop_prewalk() hook, use it in sata_qstor.c (hi Mark). 
+> sata_qstor appears to require the host-stop-before-port-stop ordering 
+> that existed prior to applying the attached patch.
 
-> >>For all hardware that uses SActive (all NCQ), the max is 31 not 32.
-> >
-> >
-> >That's not true, the max is 32 counting 0 as a valid tag. So 31 is
-> >indeed th max tag value, but 32 is the depth.
-> 
-> I was talking about depth.  In libata, it's a policy decision to never 
-> use more than 31 tags at any given time.
-> 
-> You can change it from 31 to 32 in SuSE for value-add, if you wish :)
-> 
-> Note also that error handling occasionally needs a command slot, so the 
-> limit may even be 30 (or 31 at most).
+Mmm.. I'm a little bit rusty here, but I don't think qstor
+cares about the order, so long as ports are marked with
+ATA_FLAG_PORT_DISABLED before invoking port_stop().
 
-Reserving one for error handling makes a lot of sense, that's a good
-point. I still don't buy your argument for not using the full 32 slots
-in total, though. But in the end I don't suppose it matters a lot, 31 or
-30 for queue depth is very much at the end of the spectrum of
-diminishing return in difference.
+I've tried to allow disabling/enabling individual ports
+on-the-fly as needed, even though it never really happens
+in practice.  So host_stop() kills the whole chip, whereas
+port_stop() I took to mean just one of the four SATA ports.
 
-> >The two depths were added because we need to differentiate between the
-> >two for issuing new commands. ncq_depth > 0 is fine for issuing a new
-> >FPDMA request, where as non-FPDMA commands need both !ncq_depth and
-> >!depth.
-> 
-> You can definitely handle both FPDMA and non-FPDMA with a single 
-> variable.  Think harder on this one.  You have flags to work with, you 
-> know...
-
-Of course it is possible, but I would rather trade 4-bytes of space to
-get clearer code than switching a flag on/off all the time and counting
-a single depth. But hey that's trivial detail, compared to what else is
-missing. When this becomes the most important point, we can take it up
-again :-)
-
+Cheers
 -- 
-Jens Axboe
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
 
