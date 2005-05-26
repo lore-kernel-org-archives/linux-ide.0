@@ -1,125 +1,189 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: device suspend/resume
-Date: Wed, 25 May 2005 21:05:51 -0400
-Message-ID: <429520EF.2070501@pobox.com>
-References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de> <4292CF5D.90809@pobox.com> <20050524075953.GY9855@suse.de> <4292E3EE.10006@pobox.com> <20050524085133.GZ9855@suse.de> <42935852.2020300@pobox.com> <20050525092952.GA7005@suse.de>
+Subject: [doc][git] playing with git, and netdev/libata-dev trees
+Date: Thu, 26 May 2005 01:26:15 -0400
+Message-ID: <42955DF7.4000805@pobox.com>
+Reply-To: Linux Kernel <linux-kernel@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080304080801070200040800"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:3799 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261638AbVEZBF4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 May 2005 21:05:56 -0400
-In-Reply-To: <20050525092952.GA7005@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------080304080801070200040800
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-
-Jens Axboe wrote:
-> On Tue, May 24 2005, Jeff Garzik wrote:
-> 
->>Jens Axboe wrote:
->>
->>>I agree, it's a cleaner approach, with the rq being a container for
->>>generel messages as well not just SCSI commands. The one missing piece
->>>for that was the rq->end_io() callback so everything doesn't have to go
->>>down sync, but that is in now as well.
->>>
->>>I'll try and cook something up.
->>
->>Very cool ;)
-> 
-> 
-> This is the base for it. It splits request->flags into two variables:
-> 
-> - cmd_type. this is not a bitmask, but a value indicating what type of
->   request this is.
-> 
-> - cmd_flags. various command modified flags.
-> 
-> The idea is to add a REQ_TYPE_LINUX_BLOCK request type, where we define
-> a set of command opcodes that signify an upper level defined function
-> (such as flush) that is implemented differently at the hardware/driver
-> level. Basically a way to pass down messages or commands generically.
-> 
-> I like this better than using scsi opcodes always, it's a cleaner
-> abstraction. For sending generic commands to a device, we could add a
-> function ala:
-
-cmd_type just adds a needless layer of switch{} statements in block 
-drivers, and its information that can be trivially derived from the 
-command opcode itself.
-
-	cmd_type = cmd_types[opcode];
-
-HOWEVER, don't fall in love with SCSI opcodes.
-
-We want _Linux_ commands, not SCSI commands.  Just think of a 
-request_queue as having its own command protocol, one that you can 
-_change at will_.
-
-Yes, often request_queue commands may map seamlessly to SCSI (or ATA or 
-I2O) commands.  And that's good.  But don't let yourself be locked into 
-SCSI.  SCSI is not generic enough, nor mutable enough for all our needs.
-
-Just the other day I was thinking about the simpler approach, like the 
-attached :)  It
-* adds RQ_ to avoid namespace conflicts
-* adds RQ_FLUSH, RQ_PM_EVENT
-
-So, overall, I would say "think Linux opcodes" as the preferred direction.
-
-	Jeff
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:3544 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261204AbVEZF0T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 May 2005 01:26:19 -0400
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>, Netdev <netdev@oss.sgi.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Andrew Morton <akpm@osdl.org>, Git Mailing List <git@vger.kernel.org>
 
 
+Hopefully, this email can quick-start some people on git.
 
---------------080304080801070200040800
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
+One of the things Linus's new 'git' tool allows me to do is make public 
+the 50+ repositories that were previously only available on my local 
+workstation.  This should make it a lot easier for developers to see 
+precisely what I have merged, and makes generating follow-up patches a 
+whole lot easier.
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -66,13 +66,24 @@ extern int dir_notify_enable;
- 
- #define RW_MASK		1
- #define RWA_MASK	2
--#define READ 0
--#define WRITE 1
--#define READA 2		/* read-ahead  - don't block if no resources */
--#define SPECIAL 4	/* For non-blockdevice requests in request queue */
--#define READ_SYNC	(READ | (1 << BIO_RW_SYNC))
--#define WRITE_SYNC	(WRITE | (1 << BIO_RW_SYNC))
--#define WRITE_BARRIER	((1 << BIO_RW) | (1 << BIO_RW_BARRIER))
-+#define RQ_READ		0
-+#define RQ_WRITE	1
-+#define RQ_READA	2	/* read-ahead  - don't block if no resources */
-+#define RQ_SPECIAL	4	/* For non-blockdevice requests in request queue */
-+#define RQ_READ_SYNC		(READ | (1 << BIO_RW_SYNC))
-+#define RQ_WRITE_SYNC		(WRITE | (1 << BIO_RW_SYNC))
-+#define RQ_WRITE_BARRIER	((1 << BIO_RW) | (1 << BIO_RW_BARRIER))
-+#define RQ_FLUSH	7
-+#define RQ_PM_EVENT	8
-+
-+/* compatibility with existing code */
-+#define READ		RQ_READ
-+#define WRITE		RQ_WRITE
-+#define READA		RQ_READA
-+#define SPECIAL		RQ_SPECIAL
-+#define READ_SYNC	RQ_READ_SYNC
-+#define WRITE_SYNC	RQ_WRITE_SYNC
-+#define WRITE_BARRIER	RQ_WRITE_BARRIER
- 
- #define SEL_IN		1
- #define SEL_OUT		2
+When I merge a patch for drivers/net/forcedeth.c, I merge it into a 
+brand new 'forcedeth' repository, a peer to the 40+ other such 
+repository.  Under BitKeeper, I made these repositories available merged 
+together into one big "netdev-2.6" repository because it was too time 
+consuming to make the individual 50+ trees publicly available.  With 
+git, developers have direct access to the individual trees.
 
---------------080304080801070200040800--
+I thought I would write up a quick guide describing how to mess around 
+with the netdev and libata-dev trees, and with git in general.
+
+
+1) installing git
+
+git requires bootstrapping, since you must have git installed in order 
+to check out git.git (git repo), and linux-2.6.git (kernel repo).  I 
+have put together a bootstrap tarball of today's git repository.
+
+Download tarball from:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/git-20050526.tar.bz2
+
+tarball build-deps:  zlib, libcurl
+
+install tarball:  unpack && make && sudo make prefix=/usr/local install
+
+jgarzik helper scripts, not in official git distribution:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/git-switch-tree
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/git-new-branch
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/git-changes-script
+
+After reading the rest of this document, come back and update your copy 
+of git to the latest:
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/torvalds/git.git
+
+
+2) download a linux kernel tree for the very first time
+
+mkdir -p linux-2.6/.git
+cd linux-2.6
+rsync -a --delete --verbose --stats --progress \ 
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git/ 
+\          <- word-wrapped backslash; sigh
+    .git/
+
+
+3) download latest changes to on-disk local tree
+
+cd linux-2.6
+git-pull-script \
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
+
+
+4) check out files from the git repository into the working directory
+
+cd linux-2.6
+git-read-tree -m HEAD && git-checkout-cache -q -f -u -a
+
+
+5) check in your own modifications (e.g. apply a patch)
+
+# go to repo
+cd linux-2.6
+
+# make some modifications
+patch -sp1 < /tmp/my.patch
+diffstat -p1 < /tmp/my.patch
+
+# NOTE: add '--add' and/or '--remove' if files were added or removed
+git-update-cache <list of all files changed>
+
+# commit changes
+GIT_AUTHOR_NAME="John Doe"		\
+    GIT_AUTHOR_EMAIL="jdoe@foo.com"	\
+    GIT_COMMITTER_NAME="Jeff Garzik"	\
+    GIT_COMMITTER_EMAIL="jgarzik@pobox.com"	\
+    git-commit-tree `git-write-tree`	\
+    -p $(cat .git/HEAD )			\
+    < changelog.txt			\
+    > .git/HEAD
+
+
+6) List all changes in working dir, in diff format.
+
+git-diff-cache -p HEAD
+
+
+7) List all changesets (i.e. show each cset's description text) in local 
+tree that are not present in remote tree.
+
+cd my-kernel-tree-2.6
+git-changes-script -L ../linux-2.6 | less
+
+
+8) List all changesets:
+
+git-whatchanged
+
+
+9) apply all patches in a Berkeley mbox-format file
+
+First, download and add to your PATH Linus's git tools:
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/torvalds/git-tools.git
+
+cd my-kernel-tree-2.6
+dotest /path/to/mbox  # yes, Linus has no taste in naming useful scripts
+
+
+10) don't forget to download tags from time to time.
+
+git-pull-script only downloads sha1-indexed object data, and the 
+requested remote head.  This misses updates to the .git/refs/tags/ and 
+.git/refs/heads directories.  It is advisable to update your kernel .git 
+directories periodically with a full rsync command, to make sure you got 
+everything:
+
+cd linux-2.6
+rsync -a --delete --verbose --stats --progress \ 
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git/ 
+\          <- word-wrapped backslash; sigh
+    .git/
+
+
+11) [jg-specific] list all branches found in netdev-2.6 or libata-dev trees.
+
+Download
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/netdev-2.6.git
+	or
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+
+
+cd netdev-2.6
+ls .git/refs/heads/
+
+{ these are the current netdev-2.6 branches }
+> 8139cp       forcedeth    master     qeth           smc91x         we18
+> 8139too-iomap  for-linus    natsemi      r8169      smc91x-eeprom  wifi
+> airo           hdlc         ns83820      register-netdev  starfire
+> atmel          ieee80211    orinoco      remove-drivers   tlan
+> chelsio        iff-running  orinoco-hch  sis900           veth
+> dm9000         janitor      ppp          skge             viro
+
+
+
+12) [jg-specific] make desired branch current in working directory
+
+git-switch-tree $branch
+
+
+13) [jg-specific] create a new branch, and make it current
+
+git-new-branch $branch
+
+
+14) [jg-specific] examine which branch is current
+
+ls -l .git/HEAD
+
+
+15) undo all local modifications (same as checkout):
+
+git-read-tree -m HEAD && git-checkout-cache -q -f -u -a
+
+
+
