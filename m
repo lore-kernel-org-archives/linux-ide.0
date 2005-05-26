@@ -1,142 +1,186 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [git patch] 2.6.x libata fix
-Date: Thu, 26 May 2005 12:56:25 -0400
-Message-ID: <4295FFB9.9080803@pobox.com>
+Subject: [PATCH][RFT] AHCI message signalled interrupt (MSI) support
+Date: Thu, 26 May 2005 13:05:18 -0400
+Message-ID: <429601CE.7020401@pobox.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------030804090609030608070209"
+ boundary="------------020901020601080802040503"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:43994 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261606AbVEZQ42 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 May 2005 12:56:28 -0400
+Received: from mail.dvmed.net ([216.237.124.58]:51418 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261611AbVEZRFV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 May 2005 13:05:21 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
 
 This is a multi-part message in MIME format.
---------------030804090609030608070209
+--------------020901020601080802040503
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
 
-Please pull branch 'misc-fixes' of
-rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+This adds a more-efficient interrupt delivery mechanism to AHCI, once 
+tested, it will become the default for all MSI-capable systems.
 
-to obtain the fix described in the attachment.
+	Jeff
 
 
 
---------------030804090609030608070209
+
+--------------020901020601080802040503
 Content-Type: text/plain;
- name="libata-2.6.txt"
+ name="patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="libata-2.6.txt"
+ filename="patch"
 
-
-
- drivers/scsi/libata-core.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
-
-
-commit 32529e0128923e42126b5d14e444c18295a452ba
-tree d50736f63bd9692076d68c3f8748f1b6bf540a80
-parent bef9c558841604116704e10b3d9ff3dbf4939423
-author Albert Lee <albertcc@tw.ibm.com> Thu, 26 May 2005 11:49:42 -0400
-committer Jeff Garzik <jgarzik@pobox.com> Thu, 26 May 2005 11:49:42 -0400
-
-[PATCH] libata: Fix zero sg_dma_len() on 64-bit platform
-
-When testing ATAPI PIO data transfer on the ppc64 platform,  __atapi_pio_bytes() got zero when
-sg_dma_len() is used. I checked the <asm-ppc64/scatterlish.h>, the struct scatterlist is defined as:
-
-struct scatterlist {
-	struct page *page;
-	unsigned int offset;
-	unsigned int length;
-
-	/* For TCE support */
-	u32 dma_address;
-	u32 dma_length;
-};
-
-#define sg_dma_address(sg)	((sg)->dma_address)
-#define sg_dma_len(sg)		((sg)->dma_length)
-
-So, if the scatterlist is not DMA mapped, sg_dma_len() will return zero on ppc64.
-The same problem should occur on the x86-64 platform.
-On the i386 platform, sg_dma_len() returns sg->length, that's why the problem does not occur on an i386.
-
-Changes:
-- Use sg->length if the scatterlist is not DMA mapped (yet).
-
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-
---------------------------
-
-
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -2071,7 +2071,7 @@ void ata_sg_init_one(struct ata_queued_c
- 	sg = qc->sg;
- 	sg->page = virt_to_page(buf);
- 	sg->offset = (unsigned long) buf & ~PAGE_MASK;
--	sg_dma_len(sg) = buflen;
-+	sg->length = buflen;
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -152,6 +152,7 @@ struct ahci_sg {
+ 
+ struct ahci_host_priv {
+ 	unsigned long		flags;
++	unsigned int		have_msi; /* is PCI MSI enabled? */
+ 	u32			cap;	/* cache of HOST_CAP register */
+ 	u32			port_map; /* cache of HOST_PORTS_IMPL reg */
+ };
+@@ -182,6 +183,7 @@ static void ahci_qc_prep(struct ata_queu
+ static u8 ahci_check_status(struct ata_port *ap);
+ static u8 ahci_check_err(struct ata_port *ap);
+ static inline int ahci_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
++static void ahci_remove_one (struct pci_dev *pdev);
+ 
+ static Scsi_Host_Template ahci_sht = {
+ 	.module			= THIS_MODULE,
+@@ -271,7 +273,7 @@ static struct pci_driver ahci_pci_driver
+ 	.name			= DRV_NAME,
+ 	.id_table		= ahci_pci_tbl,
+ 	.probe			= ahci_init_one,
+-	.remove			= ata_pci_remove_one,
++	.remove			= ahci_remove_one,
+ };
+ 
+ 
+@@ -876,15 +878,19 @@ static int ahci_host_init(struct ata_pro
  }
  
- void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
-@@ -2101,11 +2101,12 @@ static int ata_sg_setup_one(struct ata_q
- 	dma_addr_t dma_address;
+ /* move to PCI layer, integrate w/ MSI stuff */
+-static void pci_enable_intx(struct pci_dev *pdev)
++static void pci_intx(struct pci_dev *pdev, int enable)
+ {
+-	u16 pci_command;
++	u16 pci_command, new;
  
- 	dma_address = dma_map_single(ap->host_set->dev, qc->buf_virt,
--				     sg_dma_len(sg), dir);
-+				     sg->length, dir);
- 	if (dma_mapping_error(dma_address))
- 		return -1;
+ 	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
+-	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
+-		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
++
++	if (enable)
++		new = pci_command & ~PCI_COMMAND_INTX_DISABLE;
++	else
++		new = pci_command | PCI_COMMAND_INTX_DISABLE;
++
++	if (new != pci_command)
+ 		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
+-	}
+ }
  
- 	sg_dma_address(sg) = dma_address;
-+	sg_dma_len(sg) = sg->length;
+ static void ahci_print_info(struct ata_probe_ent *probe_ent)
+@@ -966,7 +972,7 @@ static int ahci_init_one (struct pci_dev
+ 	unsigned long base;
+ 	void *mmio_base;
+ 	unsigned int board_idx = (unsigned int) ent->driver_data;
+-	int pci_dev_busy = 0;
++	int have_msi, pci_dev_busy = 0;
+ 	int rc;
  
- 	DPRINTK("mapped buffer of %d bytes for %s\n", sg_dma_len(sg),
- 		qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
-@@ -2310,7 +2311,7 @@ static void ata_pio_sector(struct ata_qu
- 	qc->cursect++;
- 	qc->cursg_ofs++;
- 
--	if ((qc->cursg_ofs * ATA_SECT_SIZE) == sg_dma_len(&sg[qc->cursg])) {
-+	if ((qc->cursg_ofs * ATA_SECT_SIZE) == (&sg[qc->cursg])->length) {
- 		qc->cursg++;
- 		qc->cursg_ofs = 0;
+ 	VPRINTK("ENTER\n");
+@@ -984,12 +990,17 @@ static int ahci_init_one (struct pci_dev
+ 		goto err_out;
  	}
-@@ -2347,7 +2348,7 @@ next_page:
- 	page = nth_page(page, (offset >> PAGE_SHIFT));
- 	offset %= PAGE_SIZE;
  
--	count = min(sg_dma_len(sg) - qc->cursg_ofs, bytes);
-+	count = min(sg->length - qc->cursg_ofs, bytes);
+-	pci_enable_intx(pdev);
++	if (pci_enable_msi(pdev) == 0)
++		have_msi = 1;
++	else {
++		pci_intx(pdev, 1);
++		have_msi = 0;
++	}
  
- 	/* don't cross page boundaries */
- 	count = min(count, (unsigned int)PAGE_SIZE - offset);
-@@ -2358,7 +2359,7 @@ next_page:
- 	qc->curbytes += count;
- 	qc->cursg_ofs += count;
- 
--	if (qc->cursg_ofs == sg_dma_len(sg)) {
-+	if (qc->cursg_ofs == sg->length) {
- 		qc->cursg++;
- 		qc->cursg_ofs = 0;
+ 	probe_ent = kmalloc(sizeof(*probe_ent), GFP_KERNEL);
+ 	if (probe_ent == NULL) {
+ 		rc = -ENOMEM;
+-		goto err_out_regions;
++		goto err_out_msi;
  	}
-@@ -2371,7 +2372,7 @@ next_page:
- 	kunmap(page);
  
- 	if (bytes) {
--		if (qc->cursg_ofs < sg_dma_len(sg))
-+		if (qc->cursg_ofs < sg->length)
- 			goto next_page;
- 		goto next_sg;
- 	}
+ 	memset(probe_ent, 0, sizeof(*probe_ent));
+@@ -1022,6 +1033,8 @@ static int ahci_init_one (struct pci_dev
+ 	probe_ent->mmio_base = mmio_base;
+ 	probe_ent->private_data = hpriv;
+ 
++	hpriv->have_msi = have_msi;
++
+ 	/* initialize adapter */
+ 	rc = ahci_host_init(probe_ent);
+ 	if (rc)
+@@ -1041,7 +1054,11 @@ err_out_iounmap:
+ 	iounmap(mmio_base);
+ err_out_free_ent:
+ 	kfree(probe_ent);
+-err_out_regions:
++err_out_msi:
++	if (have_msi)
++		pci_disable_msi(pdev);
++	else
++		pci_intx(pdev, 0);
+ 	pci_release_regions(pdev);
+ err_out:
+ 	if (!pci_dev_busy)
+@@ -1049,6 +1066,42 @@ err_out:
+ 	return rc;
+ }
+ 
++static void ahci_remove_one (struct pci_dev *pdev)
++{
++	struct device *dev = pci_dev_to_dev(pdev);
++	struct ata_host_set *host_set = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host_set->private_data;
++	struct ata_port *ap;
++	unsigned int i;
++	int have_msi;
++
++	for (i = 0; i < host_set->n_ports; i++) {
++		ap = host_set->ports[i];
++
++		scsi_remove_host(ap->host);
++	}
++
++	have_msi = hpriv->have_msi;
++	free_irq(host_set->irq, host_set);
++	host_set->ops->host_stop(host_set);
++	iounmap(host_set->mmio_base);
++
++	for (i = 0; i < host_set->n_ports; i++) {
++		ap = host_set->ports[i];
++
++		ata_scsi_release(ap->host);
++		scsi_host_put(ap->host);
++	}
++
++	if (have_msi)
++		pci_disable_msi(pdev);
++	else
++		pci_intx(pdev, 0);
++	pci_release_regions(pdev);
++	kfree(host_set);
++	pci_disable_device(pdev);
++	dev_set_drvdata(dev, NULL);
++}
+ 
+ static int __init ahci_init(void)
+ {
 
---------------030804090609030608070209--
+--------------020901020601080802040503--
