@@ -1,32 +1,32 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Playing with SATA NCQ
-Date: Thu, 26 May 2005 13:15:34 -0400
-Message-ID: <42960436.4070106@pobox.com>
-References: <20050526140058.GR1419@suse.de> <4295F87B.9070106@pobox.com> <20050526170658.GT1419@suse.de> <20050526171132.GV1419@suse.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: CSB5 IDE does not fully support native mode??
+Date: Thu, 26 May 2005 18:22:03 +0100
+Message-ID: <1117128122.5743.158.camel@localhost.localdomain>
+References: <200505242026.DJT32107@ms3.netsolmail.com>
+	 <1117117463.5743.149.camel@localhost.localdomain>
+	 <200505261055.38137.bjorn.helgaas@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:54234 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261652AbVEZRPh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 May 2005 13:15:37 -0400
-In-Reply-To: <20050526171132.GV1419@suse.de>
+Received: from clock-tower.bc.nu ([81.2.110.250]:40113 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S261655AbVEZRYX
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 May 2005 13:24:23 -0400
+In-Reply-To: <200505261055.38137.bjorn.helgaas@hp.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Cc: evt@texelsoft.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Jens Axboe wrote:
-> Re-reading AHCI spec, it does indicate that you want to set SActive
-> after building the command. I'll move it back, but keep the conditional
-> of setting SActive on queued commands.
+On Iau, 2005-05-26 at 17:55, Bjorn Helgaas wrote:
+> This has been niggling in my mind for a while -- in legacy mode,
+> the device should use IRQ 14/15.  But I think we still call
+> pci_enable_device(), which sets up IRQ routing according to
+> the usual PCI rules.  Should we be using pci_enable_device()
+> at all in legacy mode?
 
-SActive is intentionally used for non-NCQ devices.  The SATA registers 
-are -host- registers not -device- registers, remember.
-
-At the very least, I would like to see a lot of testing before you make 
-the current unconditional code conditional.
-
-	Jeff
-
+For all the other enables yes. The IRQ is an interesting case and I'd
+have to look into the newer code to even guess - Bartlomiej has probably
+has a much better idea as maintainer.
 
