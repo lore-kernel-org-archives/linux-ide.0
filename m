@@ -1,42 +1,48 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: [PATCH] libata: fix use-after-free during driver unload/unplug
-Date: Thu, 26 May 2005 17:33:13 -0400
-Message-ID: <42964099.6000207@pobox.com>
-References: <42962379.5000206@pobox.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Playing with SATA NCQ
+Date: Thu, 26 May 2005 17:50:16 -0400
+Message-ID: <42964498.9080909@rtr.ca>
+References: <20050526140058.GR1419@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:9995 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S261800AbVEZVdX
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:31752 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S261804AbVEZVuV
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 May 2005 17:33:23 -0400
-In-Reply-To: <42962379.5000206@pobox.com>
+	Thu, 26 May 2005 17:50:21 -0400
+In-Reply-To: <20050526140058.GR1419@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@suse.de>, Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Jeff!
+I also saw a good boost from NCQ on the qstor driver (full version,
+not the libata subset) last year.  Very good for busy servers
+and RAID arrays.
 
-Jeff Garzik wrote:
->
-> * add ->host_stop_prewalk() hook, use it in sata_qstor.c (hi Mark). 
-> sata_qstor appears to require the host-stop-before-port-stop ordering 
-> that existed prior to applying the attached patch.
+Jens Axboe wrote:
++	do {
++		/*
++		 * we rely on the FIFO order of the exclusive waitqueues
++		 */
++		prepare_to_wait_exclusive(&ap->cmd_wait_queue, &wait,
++					  TASK_UNINTERRUPTIBLE);
++
++		if (!ata_qc_issue_ok(ap, qc, 1)) {
++			spin_unlock_irq(&ap->host_set->lock);
++			schedule();
++			spin_lock_irq(&ap->host_set->lock);
++		}
++
++		finish_wait(&ap->cmd_wait_queue, &wait);
++
++	} while (!ata_qc_issue_ok(ap, qc, 1));
 
-Mmm.. I'm a little bit rusty here, but I don't think qstor
-cares about the order, so long as ports are marked with
-ATA_FLAG_PORT_DISABLED before invoking port_stop().
+In this bit (above), is it possible for this code to ever
+be invoked from a SCHED_RR or SCHED_FIFO context?
 
-I've tried to allow disabling/enabling individual ports
-on-the-fly as needed, even though it never really happens
-in practice.  So host_stop() kills the whole chip, whereas
-port_stop() I took to mean just one of the four SATA ports.
+If so, it will lock out all lower-priority processes
+for the duration of the polling interval.
 
 Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
-
