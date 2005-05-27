@@ -1,63 +1,114 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: libata, SCSI and storage drivers
-Date: Fri, 27 May 2005 15:04:26 -0400
-Message-ID: <1117220666.7379.8.camel@mulgrave>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC3D@xbl3.ad.emulex.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH] fix ide-scsi EH locking
+Date: Fri, 27 May 2005 17:19:45 -0400
+Message-ID: <42978EF1.5000703@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC3D@xbl3.ad.emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: luben_tuikov@adaptec.com, Douglas Gilbert <dougg@torque.net>, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------090503010009000008000405"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:18401 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S262601AbVE0VTz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 May 2005 17:19:55 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@osdl.org>
 
-On Fri, 2005-05-27 at 13:45 -0400, James.Smart@Emulex.Com wrote:
-> The transport can be a subsystem on it's own and is perhaps independent
-> of SCSI altogether. In this case, SCSI just happens to be a personality
-> of something on the transport. This is at odds with the current design
-> in which the transport is something under SCSI and inherently bound to
-> the SCSI "host".
-
-Actually, no that's no longer true.  Initially I did it this way, but
-now the SCSI transport classes are build on top of the generic transport
-classes (and these are independent of SCSI).  I anticipate that soon
-we'll get a PHY transport class that will attach both to SAS and SATA
-devices (and won't care which subsystem they're under).
-
-> I understand how we got to where we are, but shouldn't we consider making
-> some transports independent subsystems ? If the only protocol that
-> can be run on the transport is SCSI (ex: SPI), then the transport can be
-> under SCSI. However, if the transport can support multiple protocols (FC
-> can support SCSI, IP, (or ATA)), shouldn't it be structured more like an io
-> bus like pci ? 
-> 
-> It does mess up the device tree heirarchy. In general, you want the
-> device tree to continue along the transport specific elements until it finds
-> remote endpoints (things your going to use), at which point the protocol
-> specific elements can kick in. For example (using FC):
->  /sys/devices/<pci>/fcport5/rport-5:3/target10:0:0/10:0:0:0  - the SCSI lun
-> 
-> What this leaves out is : where is the scsi host device ? It doesn't make
-> sense to insert it in-between the transport elements. It likely just becomes
-> a leaf entity. Continuing the example:
->  /sys/devices/<pci>/fcport5/host10  - scsi host interface
->  /sys/devices/<pci>/fcport5/eth3    - network interface
-> 
-> Food for thought...   Is this out in left field ?
-
-Well, that's why it's a class.  All the devices appear under 
-
-/class/<transport class name>
-
-and these devices are simply the names of the actual generic devices, so
-there's no reason target0:3:0 can't co-exist happily with ata3:0 or
-something here.  The idea being (I think) that the class infrastructure
-actually flattens the tree.  So there's always a device link that points
-into the true device tree, but all the class properties are available in
-flattened form.
-
-James
+This is a multi-part message in MIME format.
+--------------090503010009000008000405
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
 
+SCSI's error handling hooks are called inside
+
+	spin_lock_irqsave(host_lock, flags)
+	...
+	spin_unlock_irqrestore(host_lock, flags)
+
+ide-scsi's SCSI EH functions, which operate inside the above lock, wrap 
+several operations inside
+
+	spin_lock_irq(ide_lock)
+	...
+	spin_unlock_irq(ide_lock)
+
+Use of the unconditional spin_lock_irq(), as opposed to 
+spin_lock_irqsave(), corrupts the irq context.
+
+Attached patch (against latest git) updates ide-scsi to simply use the 
+spin_lock() variant, since we know we are already inside of 
+spin_lock_irqsave().
+
+Patch untested, but at least the code isn't obviously wrong now...
+
+
+
+--------------090503010009000008000405
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
+--- a/drivers/scsi/ide-scsi.c
++++ b/drivers/scsi/ide-scsi.c
+@@ -46,6 +46,7 @@
+ #include <linux/slab.h>
+ #include <linux/ide.h>
+ #include <linux/scatterlist.h>
++#include <linux/delay.h>
+ 
+ #include <asm/io.h>
+ #include <asm/bitops.h>
+@@ -959,7 +960,8 @@ static int idescsi_eh_abort (struct scsi
+ 	if (test_bit(IDESCSI_LOG_CMD, &scsi->log))
+ 		printk (KERN_WARNING "ide-scsi: drive did%s become ready\n", busy?" not":"");
+ 
+-	spin_lock_irq(&ide_lock);
++	/* remember, we are inside spin_lock_irq() already */
++	spin_lock(&ide_lock);
+ 
+ 	/* If there is no pc running we're done (our interrupt took care of it) */
+ 	if (!scsi->pc) {
+@@ -985,7 +987,7 @@ static int idescsi_eh_abort (struct scsi
+ 	}
+ 
+ ide_unlock:
+-	spin_unlock_irq(&ide_lock);
++	spin_unlock(&ide_lock);
+ no_drive:
+ 	if (test_bit(IDESCSI_LOG_CMD, &scsi->log))
+ 		printk (KERN_WARNING "ide-scsi: abort returns %s\n", ret == SUCCESS?"success":"failed");
+@@ -1012,7 +1014,8 @@ static int idescsi_eh_reset (struct scsi
+ 		return FAILED;
+ 	}
+ 
+-	spin_lock_irq(&ide_lock);
++	/* remember, we are inside spin_lock_irq() already */
++	spin_lock(&ide_lock);
+ 
+ 	if (!scsi->pc || (req = scsi->pc->rq) != HWGROUP(drive)->rq || !HWGROUP(drive)->handler) {
+ 		printk (KERN_WARNING "ide-scsi: No active request in idescsi_eh_reset\n");
+@@ -1038,16 +1041,15 @@ static int idescsi_eh_reset (struct scsi
+ 	HWGROUP(drive)->rq = NULL;
+ 	HWGROUP(drive)->handler = NULL;
+ 	HWGROUP(drive)->busy = 1;		/* will set this to zero when ide reset finished */
+-	spin_unlock_irq(&ide_lock);
++	spin_unlock(&ide_lock);
+ 
+ 	ide_do_reset(drive);
+ 
+ 	/* ide_do_reset starts a polling handler which restarts itself every 50ms until the reset finishes */
+ 
+ 	do {
+-		set_current_state(TASK_UNINTERRUPTIBLE);
+ 		spin_unlock_irq(cmd->device->host->host_lock);
+-		schedule_timeout(HZ/20);
++		msleep(50);
+ 		spin_lock_irq(cmd->device->host->host_lock);
+ 	} while ( HWGROUP(drive)->handler );
+ 
+
+--------------090503010009000008000405--
