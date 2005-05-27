@@ -1,20 +1,48 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH][RFT] libata: fix use-after-free during driver unload/unplug
-Date: Thu, 26 May 2005 22:00:42 -0400
-Message-ID: <42967F4A.9030705@pobox.com>
-References: <42962379.5000206@pobox.com> <42964099.6000207@pobox.com> <42967601.7080003@pobox.com> <429678B0.7000009@rtr.ca>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] libata: device suspend/resume
+Date: Fri, 27 May 2005 12:01:38 +1000
+Message-ID: <1117159298.9076.178.camel@gaston>
+References: <20050523201535.GA24298@havoc.gtf.org>
+	 <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org>
+	 <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de>
+	 <4292CF5D.90809@pobox.com> <20050524075953.GY9855@suse.de>
+	 <4292E3EE.10006@pobox.com> <20050524085133.GZ9855@suse.de>
+	 <42935852.2020300@pobox.com>  <20050525092952.GA7005@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:20188 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261334AbVE0CAu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 May 2005 22:00:50 -0400
-In-Reply-To: <429678B0.7000009@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20050525092952.GA7005@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
-Cc: Mark Lord <liml@rtr.ca>, Jens Axboe <axboe@suse.de>, Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
 
-Attached is the patch I committed, please test.
+On Wed, 2005-05-25 at 11:29 +0200, Jens Axboe wrote:
+> On Tue, May 24 2005, Jeff Garzik wrote:
+> > Jens Axboe wrote:
+> > >I agree, it's a cleaner approach, with the rq being a container for
+> > >generel messages as well not just SCSI commands. The one missing piece
+> > >for that was the rq->end_io() callback so everything doesn't have to go
+> > >down sync, but that is in now as well.
+> > >
+> > >I'll try and cook something up.
+> > 
+> > Very cool ;)
+> 
+> This is the base for it. It splits request->flags into two variables:
+> 
+> - cmd_type. this is not a bitmask, but a value indicating what type of
+>   request this is.
+> 
+> - cmd_flags. various command modified flags.
+
+I like it too. It's a long overdue cleanup :)
+
+Another thing is we should/could probably move some of the other fields
+in the struct request into a union of structs. Some of them are never
+present simultaneously ...
+
+Ben.
+
 
