@@ -1,62 +1,47 @@
 From: Jens Axboe <axboe@suse.de>
 Subject: Re: Playing with SATA NCQ
-Date: Fri, 27 May 2005 08:28:03 +0200
-Message-ID: <20050527062802.GH1435@suse.de>
-References: <20050526140058.GR1419@suse.de> <42964498.9080909@rtr.ca>
+Date: Fri, 27 May 2005 08:39:22 +0200
+Message-ID: <20050527063921.GI1435@suse.de>
+References: <20050526140058.GR1419@suse.de> <4296A517.3020502@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:50115 "EHLO
+Received: from brick.kernel.dk ([62.242.22.158]:29642 "EHLO
 	nelson.home.kernel.dk") by vger.kernel.org with ESMTP
-	id S261407AbVE0G1F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 27 May 2005 02:27:05 -0400
+	id S261824AbVE0GiY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 27 May 2005 02:38:24 -0400
 Content-Disposition: inline
-In-Reply-To: <42964498.9080909@rtr.ca>
+In-Reply-To: <4296A517.3020502@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, May 26 2005, Mark Lord wrote:
-> I also saw a good boost from NCQ on the qstor driver (full version,
-> not the libata subset) last year.  Very good for busy servers
-> and RAID arrays.
-
-It does seem to work amazingly well, from a performance point of view.
-
+On Fri, May 27 2005, Jeff Garzik wrote:
 > Jens Axboe wrote:
-> +	do {
-> +		/*
-> +		 * we rely on the FIFO order of the exclusive waitqueues
-> +		 */
-> +		prepare_to_wait_exclusive(&ap->cmd_wait_queue, &wait,
-> +					  TASK_UNINTERRUPTIBLE);
-> +
-> +		if (!ata_qc_issue_ok(ap, qc, 1)) {
-> +			spin_unlock_irq(&ap->host_set->lock);
-> +			schedule();
-> +			spin_lock_irq(&ap->host_set->lock);
-> +		}
-> +
-> +		finish_wait(&ap->cmd_wait_queue, &wait);
-> +
-> +	} while (!ata_qc_issue_ok(ap, qc, 1));
+> >@@ -189,7 +194,7 @@
+> > 	.ioctl			= ata_scsi_ioctl,
+> > 	.queuecommand		= ata_scsi_queuecmd,
+> > 	.eh_strategy_handler	= ata_scsi_error,
+> >-	.can_queue		= ATA_DEF_QUEUE,
+> >+	.can_queue		= ATA_MAX_QUEUE,
+> > 	.this_id		= ATA_SHT_THIS_ID,
+> > 	.sg_tablesize		= AHCI_MAX_SG,
+> > 	.max_sectors		= ATA_MAX_SECTORS,
+> >@@ -200,7 +205,7 @@
+> > 	.dma_boundary		= AHCI_DMA_BOUNDARY,
+> > 	.slave_configure	= ata_scsi_slave_config,
+> > 	.bios_param		= ata_std_bios_param,
+> >-	.ordered_flush		= 1,
+> >+	.ordered_flush		= 0, /* conflicts with NCQ for now */
+> > };
+> > 
+> > static struct ata_port_operations ahci_ops = {
 > 
-> In this bit (above), is it possible for this code to ever
-> be invoked from a SCHED_RR or SCHED_FIFO context?
-> 
-> If so, it will lock out all lower-priority processes
-> for the duration of the polling interval.
+> Also, you'll probably want to implement ata_scsi_change_queue_depth, and 
+> reference it in ahci.c (and other NCQ-capable drivers).
 
-Yeah, I'm not a huge fan of the need for the above code... If every qc
-was tied to a SCSI command, we could just ask for a later requeue of the
-request as is currently done with NCQ commands. Alternatively, we could
-add an internal libata qc queue for postponing these commands. That
-would take a little effort, as the sync errors reported by
-ata_qc_issue() would then be need to signalled async through the
-completion callback instead.
-
-Jeff, what do you think?
+Done!
 
 -- 
 Jens Axboe
