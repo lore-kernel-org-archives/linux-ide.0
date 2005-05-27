@@ -1,134 +1,104 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] SATA NCQ support
-Date: Fri, 27 May 2005 09:30:17 +0200
-Message-ID: <20050527073016.GO1435@suse.de>
-References: <20050527070353.GL1435@suse.de> <4296CAA8.9060307@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Playing with SATA NCQ
+Date: Fri, 27 May 2005 03:29:32 -0400
+Message-ID: <4296CC5C.5000807@pobox.com>
+References: <20050526140058.GR1419@suse.de> <4295F87B.9070106@pobox.com> <20050527072046.GN1435@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------060805070408010400080703"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:52183 "EHLO
-	nelson.home.kernel.dk") by vger.kernel.org with ESMTP
-	id S261939AbVE0H3U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 27 May 2005 03:29:20 -0400
-Content-Disposition: inline
-In-Reply-To: <4296CAA8.9060307@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:39901 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261942AbVE0H3f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 May 2005 03:29:35 -0400
+In-Reply-To: <20050527072046.GN1435@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Jens Axboe <axboe@suse.de>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, May 27 2005, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >Update the patch, it's against bleeding edge git (applies to 2.6.12-rc5
-> >as well). Changes:
+This is a multi-part message in MIME format.
+--------------060805070408010400080703
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Jens Axboe wrote:
+> I double checked this. If you agree to move the setting of QCFLAG_ACTIVE
+> _after_ successful ap->ops->qc_issue(qc) and clear it _after_
+> __ata_qc_complete(qc) then I can just use that bit and kill
+> ATA_QCFLAG_ACCOUNT.
 > 
-> I'll throw this into libata-dev branch "ncq" right now.
+> What do you think?
 
-Ok cool.
+Fine with me.
 
-> >+static void ahci_host_ncq_intr_err(struct ata_port *ap)
-> >+{
-> >+	void *mmio = ap->host_set->mmio_base;
-> >+	void *port_mmio = ahci_port_base(mmio, ap->port_no);
-> >+	char *buffer;
-> >+
-> >+	printk(KERN_ERR "ata%u: ncq interrupt error\n", ap->id);
-> >+
-> >+	ahci_intr_error(ap, readl(port_mmio + PORT_IRQ_STAT));
-> >+
-> >+	buffer = kmalloc(512, GFP_KERNEL);
-> 
-> cannot use GFP_KERNEL in interrupt context
+Keep in mind that the attached patch was applied recently...
 
-Duh of course, I moved this call from eh_strategy callback to interrupt
-as well and forgot to change the allocation mask. I'll fix that up when
-fixing the error handling.
+	Jeff
 
-> >@@ -2868,6 +2995,21 @@
-> > int ata_qc_issue(struct ata_queued_cmd *qc)
-> > {
-> > 	struct ata_port *ap = qc->ap;
-> >+	int rc = ATA_QC_ISSUE_FATAL;
-> >+
-> >+	/*
-> >+	 * see if we can queue one more command at this point in time, see
-> >+	 * comment at ata_qc_issue_ok(). NCQ commands typically originate 
-> >from
-> >+	 * the SCSI layer, we can ask the mid layer to defer those commands
-> >+	 * similar to a QUEUE_FULL condition on a 'real' SCSI device
-> >+	 */
-> >+	if (!ata_qc_issue_ok(ap, qc, 0)) {
-> >+		if (qc->flags & ATA_QCFLAG_DEFER)
-> >+			return ATA_QC_ISSUE_DEFER;
-> >+
-> >+		ata_qc_issue_wait(ap, qc);
-> >+		assert(ata_qc_issue_ok(ap, qc, 0));
-> >+	}
-> > 
-> 
-> This is too late.  We shouldn't get to this point and find out, "uh oh, 
-> queue full."
-> 
-> ata_qc_new() should fail to obtain a qc if the queue is full, at which 
-> point you may directly return queue-full.
-> 
-> If ata_qc_new() succeeds, but wish to wait for the queue to drain, add 
-> that logic -much- earlier than the ata_qc_issue() call.  I would rather 
-> have that logic at a higher level.
 
-That is the typical case, ata_qc_new() succeeds but we cannot issue the
-command yet. So where do you want this logic placed? You cannot drop the
-host_lock in-between, as that could potentially change the situation.
 
-> >+int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
-> >+{
-> >+	struct ata_port *ap;
-> >+	struct ata_device *dev;
-> >+	int max_depth;
-> >+
-> >+	if (sdev->id >= ATA_MAX_DEVICES)
-> >+		return sdev->queue_depth;
-> >+
-> >+	ap = (struct ata_port *) &sdev->host->hostdata[0];
-> >+	dev = &ap->device[sdev->id];
-> >+
-> >+	max_depth = min(sdev->host->can_queue, ata_id_queue_depth(dev->id));
-> >+	if (queue_depth > max_depth)
-> >+		queue_depth = max_depth;
-> >+
-> >+	scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, queue_depth);
-> >+	return queue_depth;
-> >+}
-> 
-> Please add this function immediately above, or below, 
-> ata_scsi_slave_config().  That will make backporting to 2.4.x easier.
 
-No problem, done.
 
-> >===================================================================
-> >--- 3ac9a34948049bff79a2b2ce49c0a3c84e35a748/include/linux/ata.h  
-> >(mode:100644)
-> >+++ uncommitted/include/linux/ata.h  (mode:100644)
-> >@@ -79,7 +79,8 @@
-> > 	ATA_NIEN		= (1 << 1),	/* disable-irq flag */
-> > 	ATA_LBA			= (1 << 6),	/* LBA28 selector */
-> > 	ATA_DEV1		= (1 << 4),	/* Select Device 1 (slave) */
-> >-	ATA_DEVICE_OBS		= (1 << 7) | (1 << 5), /* obs bits in dev 
-> >reg */
-> >+	ATA_DEVICE_OBS		= (1 << 5), 	/* obs bits in dev reg */
-> >+	ATA_FPDMA_FUA		= (1 << 7),	/* FUA cache bypass bit */
-> > 	ATA_DEVCTL_OBS		= (1 << 3),	/* obsolete bit in devctl 
-> > 	reg */
-> > 	ATA_BUSY		= (1 << 7),	/* BSY status bit */
-> > 	ATA_DRDY		= (1 << 6),	/* device ready */
-> 
-> Don't do this.  You can add ATA_FPDMA_FUA, but don't arbitrarily change 
-> ATA_DEVICE_OBS.
-> 
-> This is something that may have to be done on a per-device basis.
+--------------060805070408010400080703
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
 
-Agree, I'll just remove it as FUA isn't used yet anyways.
+author Albert Lee <albertcc@tw.ibm.com> Fri, 29 Apr 2005 17:34:59 +0800
+committer Jeff Garzik <jgarzik@pobox.com> Mon, 16 May 2005 02:46:59 -0400
 
--- 
-Jens Axboe
+[PATCH] libata: Prevent the interrupt handler from completing a command twice
 
+Problem:
+   During the libata CD-ROM stress test, sometimes the "BUG: timeout
+without command" error is seen.
+
+Root cause:
+  Unexpected interrupt occurs after the ata_qc_complete() is called,
+but before the SCSI error handler.  The interrupt handler is invoked
+before the SCSI error handler, and it clears the command by calling
+ata_qc_complete() again.  Later when the SCSI error handler is run,
+the ata_queued_cmd is already gone, causing the "BUG: timeout without
+command" error.
+
+Changes:
+  - Use the ATA_QCFLAG_ACTIVE flag to prevent the interrupt handler
+from completing the command twice, before the scsi_error_handler.
+
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+
+
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -2539,7 +2539,7 @@ static void atapi_request_sense(struct a
+ 	ata_sg_init_one(qc, cmd->sense_buffer, sizeof(cmd->sense_buffer));
+ 	qc->dma_dir = DMA_FROM_DEVICE;
+ 
+-	memset(&qc->cdb, 0, sizeof(ap->cdb_len));
++	memset(&qc->cdb, 0, ap->cdb_len);
+ 	qc->cdb[0] = REQUEST_SENSE;
+ 	qc->cdb[4] = SCSI_SENSE_BUFFERSIZE;
+ 
+@@ -2811,6 +2811,7 @@ void ata_qc_complete(struct ata_queued_c
+ 
+ 	/* call completion callback */
+ 	rc = qc->complete_fn(qc, drv_stat);
++	qc->flags &= ~ATA_QCFLAG_ACTIVE;
+ 
+ 	/* if callback indicates not to complete command (non-zero),
+ 	 * return immediately
+@@ -3229,7 +3230,8 @@ irqreturn_t ata_interrupt (int irq, void
+ 			struct ata_queued_cmd *qc;
+ 
+ 			qc = ata_qc_from_tag(ap, ap->active_tag);
+-			if (qc && (!(qc->tf.ctl & ATA_NIEN)))
++			if (qc && (!(qc->tf.ctl & ATA_NIEN)) &&
++			    (qc->flags & ATA_QCFLAG_ACTIVE))
+ 				handled |= ata_host_intr(ap, qc);
+ 		}
+ 	}
+
+--------------060805070408010400080703--
