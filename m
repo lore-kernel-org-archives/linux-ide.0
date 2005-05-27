@@ -1,107 +1,49 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] libata: device suspend/resume
-Date: Fri, 27 May 2005 00:56:19 +0200
-Message-ID: <58cb370e0505261556788967a7@mail.gmail.com>
-References: <20050523201535.GA24298@havoc.gtf.org>
-	 <20050523204516.GA28058@havoc.gtf.org>
-	 <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de>
-	 <4292CF5D.90809@pobox.com> <20050524075953.GY9855@suse.de>
-	 <4292E3EE.10006@pobox.com> <20050524085133.GZ9855@suse.de>
-	 <42935852.2020300@pobox.com> <20050525092952.GA7005@suse.de>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: fix use-after-free during driver unload/unplug
+Date: Thu, 26 May 2005 21:21:05 -0400
+Message-ID: <42967601.7080003@pobox.com>
+References: <42962379.5000206@pobox.com> <42964099.6000207@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20050525092952.GA7005@suse.de>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:11996 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261269AbVE0BVL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 May 2005 21:21:11 -0400
+In-Reply-To: <42964099.6000207@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <mlord@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@suse.de>, Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
 
-Nice work Jens, some feedback below:
-
-On 5/25/05, Jens Axboe <axboe@suse.de> wrote:
-
-> Index: drivers/ide/ide-floppy.c
-> ===================================================================
-> --- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-floppy.c  (mode:100644)
-> +++ uncommitted/drivers/ide/ide-floppy.c  (mode:100644)
-
-> @@ -1311,9 +1311,9 @@
->                 }
->                 pc = idefloppy_next_pc_storage(drive);
->                 idefloppy_create_rw_cmd(floppy, pc, rq, block);
-> -       } else if (rq->flags & REQ_SPECIAL) {
-> +       } else if (blk_special_request(rq))
->                 pc = (idefloppy_pc_t *) rq->buffer;
-> -       } else if (rq->flags & REQ_BLOCK_PC) {
-> +       } else if (blk_fs_request(rq)) {
->                 pc = idefloppy_next_pc_storage(drive);
->                 if (idefloppy_blockpc_cmd(floppy, pc, rq)) {
->                         idefloppy_do_end_request(drive, 0, 0);
-
-blk_pc_request(rq)
-
-> Index: drivers/ide/ide-io.c
-> ===================================================================
-> --- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-io.c  (mode:100644)
-> +++ uncommitted/drivers/ide/ide-io.c  (mode:100644)
-
-> @@ -948,9 +948,10 @@
->         if (!drive->special.all) {
->                 ide_driver_t *drv;
+Mark Lord wrote:
+> Hi Jeff!
 > 
-> -               if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASK))
-> +               if (rq->cmd_type == REQ_TYPE_ATA_CMD ||
-> +                   rq->cmd_type == REQ_TYPE_ATA_TASK)
->                         return execute_drive_cmd(drive, rq);
-> -               else if (rq->flags & REQ_DRIVE_TASKFILE)
-> +               else if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE)
->                         return execute_drive_cmd(drive, rq);
->                 else if (blk_pm_request(rq)) {
->  #ifdef DEBUG_PM
-
-|| rq->cmd_type == REQ_TYPE_ATA_TASKFILE while at it
-
-> Index: drivers/scsi/ide-scsi.c
-> ===================================================================
-> --- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/scsi/ide-scsi.c  (mode:100644)
-> +++ uncommitted/drivers/scsi/ide-scsi.c  (mode:100644)
-
-> @@ -370,12 +370,12 @@
->         u8 *scsi_buf;
->         unsigned long flags;
+> Jeff Garzik wrote:
 > 
-> -       if (!(rq->flags & (REQ_SPECIAL|REQ_SENSE))) {
-> +       if (!blk_special_request(rq) || !blk_sense_request(rq)) {
->                 ide_end_request(drive, uptodate, nrsecs);
->                 return 0;
->         }
+>>
+>> * add ->host_stop_prewalk() hook, use it in sata_qstor.c (hi Mark). 
+>> sata_qstor appears to require the host-stop-before-port-stop ordering 
+>> that existed prior to applying the attached patch.
+> 
+> 
+> Mmm.. I'm a little bit rusty here, but I don't think qstor
+> cares about the order, so long as ports are marked with
+> ATA_FLAG_PORT_DISABLED before invoking port_stop().
+> 
+> I've tried to allow disabling/enabling individual ports
+> on-the-fly as needed, even though it never really happens
+> in practice.  So host_stop() kills the whole chip, whereas
+> port_stop() I took to mean just one of the four SATA ports.
 
-!blk_special_request(rq) && !blk_sense_request(rq)
+qstor's ->host_stop() disables global interrupts, and I didn't know if 
+you really wanted to do that prior to ->port_stop().
 
-> Index: drivers/scsi/scsi_lib.c
-> ===================================================================
-> --- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/scsi/scsi_lib.c  (mode:100644)
-> +++ uncommitted/drivers/scsi/scsi_lib.c  (mode:100644)
+I would much prefer to eliminate the ->host_stop_prewalk() hook, and 
+simply call ->host_stop after all ->port_stop() calls complete, if qstor 
+doesn't need the pre-walk.
 
-> @@ -922,7 +922,7 @@
->         /*
->          * if this is a rq->data based REQ_BLOCK_PC, setup for a non-sg xfer
->          */
-> -       if ((req->flags & REQ_BLOCK_PC) && !req->bio) {
-> +       if (blk_pc_request(req) && req->bio) {
->                 cmd->request_bufflen = req->data_len;
->                 cmd->request_buffer = req->data;
->                 req->buffer = req->data;
-
-!req->bio
+	Jeff
 
 
-I assume they you've verified that there are no odd cases possible like
-rq->flags = REQ_DRIVE_TASKFILE | REQ_BAR_FLUSH or rq->flags = REQ_PC
-(without REQ_BLOCK_PC) which would be obviously broken by this patch?
 
-Bartlomiej
