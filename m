@@ -1,26 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] fix ide-scsi EH locking
-Date: Sat, 28 May 2005 00:09:02 +0100
-Message-ID: <1117235334.29624.251.camel@localhost.localdomain>
-References: <42978EF1.5000703@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] SATA NCQ support
+Date: Fri, 27 May 2005 19:47:52 -0400
+Message-ID: <4297B1A8.6090902@pobox.com>
+References: <20050527070353.GL1435@suse.de> <4296CAA8.9060307@pobox.com> <20050527073016.GO1435@suse.de> <4296CE3B.3040504@pobox.com> <20050527074712.GQ1435@suse.de> <4296DA4B.6040303@pobox.com> <20050527083509.GT1435@suse.de> <4296DC75.2020809@pobox.com> <20050527084254.GU1435@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <42978EF1.5000703@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@osdl.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:46049 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S262663AbVE0Xry (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 May 2005 19:47:54 -0400
+In-Reply-To: <20050527084254.GU1435@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Gwe, 2005-05-27 at 22:19, Jeff Garzik wrote:
-> Patch untested, but at least the code isn't obviously wrong now...
+Jens Axboe wrote:
+> On Fri, May 27 2005, Jeff Garzik wrote:
+> 
+>>Jens Axboe wrote:
+>>
+>>>Actually, I didn't look far enough up - ata_scsi_qc_new() already
+>>>completes the command with QUEUE_FULL if ata_qc_new_init() fails. So
+>>>there's no bug, but perhaps it would be cleaner to move it to
+>>>ata_scsi_translate instead?
+>>
+>>Ah, ok.
+>>
+>>Yes, if you are in a cleaning mood, that would be a better location.
+> 
+> 
+> Always in a code cleaning mood - here it is against vanilla, I've
+> integrated it in the ncq stuff as well.
 
-The abort code check of cmd->serial_number is the only thing I can see
-that needs care and that looks safe by the time we hit eh_abort because
-the mid level has quiesced the request queue.
+Committed to 'ncq' branch of libata-dev.git.
 
-eh_reset is whacking on requests but they are the IDE layer requests so
-I suspect you want to simply drop the scsi locks for the eh functions
-much earlier and use spin_lock_irqsave/restore on the ide lock ?
+	Jeff
+
+
 
