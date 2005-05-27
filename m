@@ -1,46 +1,41 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: device suspend/resume
-Date: Thu, 26 May 2005 22:54:00 -0400
-Message-ID: <42968BC8.1040108@pobox.com>
-References: <20050523201535.GA24298@havoc.gtf.org>	 <1116880875.5021.34.camel@mulgrave>  <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave>
+Subject: [work] libata project: START STOP UNIT translation
+Date: Thu, 26 May 2005 23:00:30 -0400
+Message-ID: <42968D4E.10109@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1116886206.5021.42.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org, Jens Axboe <axboe@suse.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:35036 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261779AbVE0DAi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 May 2005 23:00:38 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-James Bottomley wrote:
-> +/* Just quietly quiesce the device and SYNCHRONIZE CACHE for suspend too */
-> +static int sd_suspend(struct device *dev, pm_message_t state, u32 level)
-> +{
-> +	struct scsi_device *sdp = to_scsi_device(dev);
-> +	struct scsi_disk *sdkp = dev_get_drvdata(dev);
-> +
-> +	if (!sdkp)
-> +		return 0;         /* this can happen */
-> +
-> +	if (!sdkp->WCE)
-> +		return 0;
-> +
-> +	/* don't try to sync an offline device ... it will only error */
-> +	if (!scsi_device_online(sdp))
-> +		return 0;
-> +
-> +	if (sd_sync_cache(sdp))
-> +		return -EIO;
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
 
-Add
+If anybody is looking for SATA kernel hacking project, here's a small 
+and self-contained one:
 
-	if (I_can_PM_this_disk && sd_start_stop_unit(sdp))
-		return -EIO;
+	Implement the translation of SCSI command START STOP UNIT in
+	drivers/scsi/libata-scsi.c.
 
-and libata is happy.
+Among other things, this will give people with SATA power management 
+capabilities.
 
-	Jeff
+START STOP UNIT is described at
+	http://www.t10.org/ftp/t10/drafts/sbc2/sbc2r16.pdf
+
+The translation of START STOP UNIT from SCSI to ATA is described at
+	http://www.t10.org/ftp/t10/drafts/sat/sat-r04.pdf
+
+The relevant ATA commands you will be using are documented at
+	http://www.t13.org/docs2004/d1532v1r4b-ATA-ATAPI-7.pdf
+
+More info on SATA hacking can be had by reading
+	http://linux.yyz.us/sata/devel.html
+
+or by reading drivers/scsi/libata*.[ch], include/linux/libata.h, 
+include/linux/ata.h, and drivers/scsi/sata_*.c.
 
 
