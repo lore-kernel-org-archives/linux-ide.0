@@ -1,53 +1,38 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata: device suspend/resume
-Date: Fri, 27 May 2005 08:55:26 +0200
-Message-ID: <20050527065525.GK1435@suse.de>
-References: <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de> <4292CF5D.90809@pobox.com> <20050524075953.GY9855@suse.de> <4292E3EE.10006@pobox.com> <20050524085133.GZ9855@suse.de> <42935852.2020300@pobox.com> <20050525092952.GA7005@suse.de> <1117159298.9076.178.camel@gaston>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Playing with SATA NCQ
+Date: Fri, 27 May 2005 02:58:13 -0400
+Message-ID: <4296C505.2030806@pobox.com>
+References: <20050526140058.GR1419@suse.de> <42964498.9080909@rtr.ca> <20050527062802.GH1435@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:61382 "EHLO
-	nelson.home.kernel.dk") by vger.kernel.org with ESMTP
-	id S261908AbVE0Gy2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 27 May 2005 02:54:28 -0400
-Content-Disposition: inline
-In-Reply-To: <1117159298.9076.178.camel@gaston>
+Received: from mail.dvmed.net ([216.237.124.58]:29405 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261913AbVE0G6T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 May 2005 02:58:19 -0400
+In-Reply-To: <20050527062802.GH1435@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, May 27 2005, Benjamin Herrenschmidt wrote:
-> On Wed, 2005-05-25 at 11:29 +0200, Jens Axboe wrote:
-> > On Tue, May 24 2005, Jeff Garzik wrote:
-> > > Jens Axboe wrote:
-> > > >I agree, it's a cleaner approach, with the rq being a container for
-> > > >generel messages as well not just SCSI commands. The one missing piece
-> > > >for that was the rq->end_io() callback so everything doesn't have to go
-> > > >down sync, but that is in now as well.
-> > > >
-> > > >I'll try and cook something up.
-> > > 
-> > > Very cool ;)
-> > 
-> > This is the base for it. It splits request->flags into two variables:
-> > 
-> > - cmd_type. this is not a bitmask, but a value indicating what type of
-> >   request this is.
-> > 
-> > - cmd_flags. various command modified flags.
+Jens Axboe wrote:
+> Yeah, I'm not a huge fan of the need for the above code... If every qc
+> was tied to a SCSI command, we could just ask for a later requeue of the
+> request as is currently done with NCQ commands. Alternatively, we could
+> add an internal libata qc queue for postponing these commands. That
+> would take a little effort, as the sync errors reported by
+> ata_qc_issue() would then be need to signalled async through the
+> completion callback instead.
 > 
-> I like it too. It's a long overdue cleanup :)
+> Jeff, what do you think?
 
-Indeed, it is something I wish I had done originally when moving away
-from the 2.4 rq->cmd setup. Better late than never :)
+Just use the SCSI layer for requeueing.  That's what I intended.
 
-> Another thing is we should/could probably move some of the other fields
-> in the struct request into a union of structs. Some of them are never
-> present simultaneously ...
+Every qc that matters can be requeued.  Just don't worry about 
+non-queued, non-fast-path commands.  They are typically used in 
+functions that will immediately notice a failure, and handle it accordingly.
 
-Yes, that would be a nice way to save some space.
+	Jeff
 
--- 
-Jens Axboe
 
