@@ -1,42 +1,63 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] SATA NCQ support
-Date: Fri, 27 May 2005 19:47:52 -0400
-Message-ID: <4297B1A8.6090902@pobox.com>
-References: <20050527070353.GL1435@suse.de> <4296CAA8.9060307@pobox.com> <20050527073016.GO1435@suse.de> <4296CE3B.3040504@pobox.com> <20050527074712.GQ1435@suse.de> <4296DA4B.6040303@pobox.com> <20050527083509.GT1435@suse.de> <4296DC75.2020809@pobox.com> <20050527084254.GU1435@suse.de>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Playing with SATA NCQ
+Date: Sat, 28 May 2005 14:12:59 +0200
+Message-ID: <20050528121258.GA17869@suse.de>
+References: <20050526140058.GR1419@suse.de> <429793C8.8090007@gmail.com> <42979C4F.8020007@pobox.com> <42979FA3.1010106@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:46049 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S262663AbVE0Xry (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 May 2005 19:47:54 -0400
-In-Reply-To: <20050527084254.GU1435@suse.de>
+Received: from ns.virtualhost.dk ([195.184.98.160]:8611 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262714AbVE1MMp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 May 2005 08:12:45 -0400
+Content-Disposition: inline
+In-Reply-To: <42979FA3.1010106@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michael Thonke <iogl64nx@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jens Axboe wrote:
-> On Fri, May 27 2005, Jeff Garzik wrote:
+On Sat, May 28 2005, Michael Thonke wrote:
+> Jeff Garzik schrieb:
 > 
->>Jens Axboe wrote:
->>
->>>Actually, I didn't look far enough up - ata_scsi_qc_new() already
->>>completes the command with QUEUE_FULL if ata_qc_new_init() fails. So
->>>there's no bug, but perhaps it would be cleaner to move it to
->>>ata_scsi_translate instead?
->>
->>Ah, ok.
->>
->>Yes, if you are in a cleaning mood, that would be a better location.
+> > Michael Thonke wrote:
+> >
+> >> Hello Jens,
+> >>
+> >> I tried to play with your patch on ICH6R and ICH7R chipset also on
+> >> Sil3124R Controller
+> >> with 2xSamsung HD160JJ SATAII drives. But the performance gain stay
+> >> out..
+> >> anything special to set to get it working? I used a vanilla-kernel
+> >> 2.6.12-rc5-git2 for it.
+> >
+> >
+> > SiI 3124 driver needs to be updated to support NCQ.
+> >
+> >     Jeff
+> >
+> >
+> >
+> >
+> Hello Jeff,
 > 
-> 
-> Always in a code cleaning mood - here it is against vanilla, I've
-> integrated it in the ncq stuff as well.
+> thanks for the info, and whats about Intel ICH6R and ICH7R anything
+> special there?
+> I played a bit with the patch and tried to tune it a bit. But there is
+> no Documentation
+> for AHCI in kernel.with parameter I can handover or can be changed.
+> Maybe I've missed them?
+> If so can you please refer me to one?
 
-Committed to 'ncq' branch of libata-dev.git.
+There's really nothing to be tuned. If NCQ is enabled for your drive, it
+will be printed in dmesg after the lba48 flag, such as:
 
-	Jeff
+ata1: dev 0 ATA, max UDMA/133, 488281250 sectors lba48 ncq
 
+If you don't see NCQ there, your drive/controller doesn't support it.
+Likewise you will have a queueing depth of > 1 if NCQ is enabled, check
+/sys/block/sdX/device/queue_depth to see what the configured queueing
+depth is for that device.
 
+-- 
+Jens Axboe
 
