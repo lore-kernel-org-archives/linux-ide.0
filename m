@@ -1,43 +1,57 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: Playing with SATA NCQ
-Date: Sun, 29 May 2005 15:05:18 -0400
-Message-ID: <20050529190518.GA7928@havoc.gtf.org>
-References: <20050526140058.GR1419@suse.de> <429793C8.8090007@gmail.com> <42979C4F.8020007@pobox.com> <42979FA3.1010106@gmail.com> <20050528121258.GA17869@suse.de> <4299BD23.6010004@gmail.com> <4299CD31.8020805@rtr.ca> <20050529190421.GB29770@suse.de>
+Date: Sun, 29 May 2005 21:06:08 +0200
+Message-ID: <20050529190608.GC29770@suse.de>
+References: <20050526140058.GR1419@suse.de> <429793C8.8090007@gmail.com> <42979C4F.8020007@pobox.com> <42979FA3.1010106@gmail.com> <20050528121258.GA17869@suse.de> <429A05AC.9020805@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from atlmail.prod.rxgsys.com ([69.61.70.25]:57502 "EHLO
-	bastet.signetmail.com") by vger.kernel.org with ESMTP
-	id S261363AbVE2TFb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 May 2005 15:05:31 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:653 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261404AbVE2TFz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 May 2005 15:05:55 -0400
 Content-Disposition: inline
-In-Reply-To: <20050529190421.GB29770@suse.de>
+In-Reply-To: <429A05AC.9020805@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Mark Lord <liml@rtr.ca>, Michael Thonke <iogl64nx@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michael Thonke <iogl64nx@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, May 29, 2005 at 09:04:21PM +0200, Jens Axboe wrote:
-> On Sun, May 29 2005, Mark Lord wrote:
-> > My basic hdparm timing test shouldn't show much of a difference
-> > with NCQ tests, becase hdparm just does a single request at a time,
-> > and waits for the results before issuing another.  Now, kernel read-ahead
-> > may result in some command overlap and a slight throughput increase, but..
-> > 
-> > Something like dbench and/or bonnie++ are more appropriate here.
+On Sun, May 29 2005, Michael Thonke wrote:
+> Jens Axboe schrieb:
 > 
-> I don't like bonnie++ very much and dbench is very write intensive. I
-> would suggest trying tiotest, find it on sf.net. It gets easily readable
-> results and they are usually fairly consistent across runs if you limit
-> the RAM to something sensible (eg 256MB and using a data set size of
-> 768MB).
+> >There's really nothing to be tuned. If NCQ is enabled for your drive, it
+> >will be printed in dmesg after the lba48 flag, such as:
+> >
+> >ata1: dev 0 ATA, max UDMA/133, 488281250 sectors lba48 ncq
+> >
+> >If you don't see NCQ there, your drive/controller doesn't support it.
+> >Likewise you will have a queueing depth of > 1 if NCQ is enabled, check
+> >/sys/block/sdX/device/queue_depth to see what the configured queueing
+> >depth is for that device.
+> >
+> >  
+> >
+> Hello again,
+> 
+> the queue_depth of 30 is okay? On boot the CFQ scheduler tells:
 
-As an FYI...  download Stephen Tweedie's verify-data tool at
-http://people.redhat.com/sct/src/verify-data/
+By default, the maximum depth is used. For desktop use, a depth of 2-4
+is probably more appropriate until the io schedulers become a little
+more intelligent wrt queueing.
 
-Robin Miller's 'dt' is also nice to have.
+>       cfq: depth 4 reached, tagging now on
+> 
+> This only appears with AHCI enabled what does that mean?
 
-	Jeff
+It only appears if AHCI is enabled, because tagged command queueing is
+only working/enabled on AHCI. The message is informational only, CFQ
+tells you that it has detected queueing hardware (driver maintains a
+depth of >= 4).
 
+> Also a question which options can be set in queue_type?
 
+Nothing.
+
+-- 
+Jens Axboe
 
