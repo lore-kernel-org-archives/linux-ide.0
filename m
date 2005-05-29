@@ -1,50 +1,49 @@
-From: Michael Thonke <iogl64nx@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: Playing with SATA NCQ
-Date: Sun, 29 May 2005 20:10:52 +0200
-Message-ID: <429A05AC.9020805@gmail.com>
-References: <20050526140058.GR1419@suse.de> <429793C8.8090007@gmail.com> <42979C4F.8020007@pobox.com> <42979FA3.1010106@gmail.com> <20050528121258.GA17869@suse.de>
+Date: Sun, 29 May 2005 14:14:34 -0400
+Message-ID: <20050529181434.GA5632@havoc.gtf.org>
+References: <20050526140058.GR1419@suse.de> <1117382598.4851.3.camel@localhost.localdomain> <4299EF16.2050208@pobox.com> <1117385429.4851.8.camel@localhost.localdomain> <4299F4E2.4020305@pobox.com> <1117387432.4851.13.camel@localhost.localdomain> <20050529172949.GA3578@havoc.gtf.org> <1117388703.4851.21.camel@localhost.localdomain> <429A036D.8090104@pobox.com> <1117390251.4851.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.203]:38327 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261393AbVE2SLC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 May 2005 14:11:02 -0400
-Received: by wproxy.gmail.com with SMTP id 68so1391649wri
-        for <linux-ide@vger.kernel.org>; Sun, 29 May 2005 11:10:59 -0700 (PDT)
-In-Reply-To: <20050528121258.GA17869@suse.de>
+Received: from atlmail.prod.rxgsys.com ([69.61.70.25]:26525 "EHLO
+	bastet.signetmail.com") by vger.kernel.org with ESMTP
+	id S261384AbVE2SOo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 29 May 2005 14:14:44 -0400
+Content-Disposition: inline
+In-Reply-To: <1117390251.4851.24.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Erik Slagter <erik@slagter.name>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
-Jens Axboe schrieb:
+On Sun, May 29, 2005 at 08:10:51PM +0200, Erik Slagter wrote:
+> On Sun, 2005-05-29 at 14:01 -0400, Jeff Garzik wrote:
+> > Erik Slagter wrote:
+> > > I guess the only way to have, for example the ICH6, not using legacy
+> > > IRQ/ports, is to switch it to AHCI, which only the BIOS can do (if
+> > > implemented).
+> > 
+> > "native mode" is where PATA and/or SATA PCI device is programmed into 
+> > full PCI mode -- PCI BARs, PCI irq, etc.  Some BIOSen allow you to 
+> > enable mode, which disables all use of legacy IRQ/ports.
+> > 
+> > Also, ICH6 silicon does not support AHCI, only ICH6-R and ICH6-M.
+> 
+> So, I do have this laptop with ICH6-M, is there a way to get it in
+> "native" mode without having to enable AHCI mode (can't do that, the
+> BIOS doesn't allow it)?
 
->There's really nothing to be tuned. If NCQ is enabled for your drive, it
->will be printed in dmesg after the lba48 flag, such as:
->
->ata1: dev 0 ATA, max UDMA/133, 488281250 sectors lba48 ncq
->
->If you don't see NCQ there, your drive/controller doesn't support it.
->Likewise you will have a queueing depth of > 1 if NCQ is enabled, check
->/sys/block/sdX/device/queue_depth to see what the configured queueing
->depth is for that device.
->
->  
->
-Hello again,
+Same as enabling AHCI mode -- really need a BIOS option to do that.
 
-the queue_depth of 30 is okay? On boot the CFQ scheduler tells:
 
-      cfq: depth 4 reached, tagging now on
+> I still think still using IRQ14/15 etc. is
+> silly ;-)
 
-This only appears with AHCI enabled what does that mean?
+<shrug>  IRQ14/15 are dedicated to IDE, whereas PCI irqs might be shared.
+That can sometimes be faster, and/or lead to fewer problems.
 
-Also a question which options can be set in queue_type?
+	Jeff
 
-Best regard and thanks for help
-
-Greets
-    Michael
 
 
