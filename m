@@ -1,65 +1,32 @@
-From: Erik Slagter <erik@slagter.name>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: Playing with SATA NCQ
-Date: Sun, 29 May 2005 19:45:03 +0200
-Message-ID: <1117388703.4851.21.camel@localhost.localdomain>
-References: <20050526140058.GR1419@suse.de>
-	 <1117382598.4851.3.camel@localhost.localdomain>
-	 <4299EF16.2050208@pobox.com>
-	 <1117385429.4851.8.camel@localhost.localdomain>
-	 <4299F4E2.4020305@pobox.com>
-	 <1117387432.4851.13.camel@localhost.localdomain>
-	 <20050529172949.GA3578@havoc.gtf.org>
+Date: Sun, 29 May 2005 14:01:17 -0400
+Message-ID: <429A036D.8090104@pobox.com>
+References: <20050526140058.GR1419@suse.de>	 <1117382598.4851.3.camel@localhost.localdomain>	 <4299EF16.2050208@pobox.com>	 <1117385429.4851.8.camel@localhost.localdomain>	 <4299F4E2.4020305@pobox.com>	 <1117387432.4851.13.camel@localhost.localdomain>	 <20050529172949.GA3578@havoc.gtf.org> <1117388703.4851.21.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oldconomy.demon.nl ([212.238.217.56]:52918 "EHLO
-	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S261361AbVE2RqF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 May 2005 13:46:05 -0400
-In-Reply-To: <20050529172949.GA3578@havoc.gtf.org>
+Received: from mail.dvmed.net ([216.237.124.58]:43751 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261369AbVE2SBV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 May 2005 14:01:21 -0400
+In-Reply-To: <1117388703.4851.21.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Erik Slagter <erik@slagter.name>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
-On Sun, 2005-05-29 at 13:29 -0400, Jeff Garzik wrote:
-> On Sun, May 29, 2005 at 07:23:52PM +0200, Erik Slagter wrote:
-> > On Sun, 2005-05-29 at 12:59 -0400, Jeff Garzik wrote:
-> > > > My question was if there is a fundamental reason why the AHCI mode of
-> > > > the ICH6/7 must be enabled by the BIOS, is there a reason why the kernel
-> > > > doesn't do it, or can't do it?
-> > > 
-> > > The BIOS sets up PCI resources necessary to use AHCI mode.
-> > 
-> > Ok. So there's absolutely no way to do that afterwards? It'd really be a
-> > pity :-(
-> 
-> It is technically possible.  BIOS is just software, just like the OS.
-> 
-> It's just a huge pain in the butt, because the kernel might accidentally
-> stomp on some resources the BIOS secretly set up, or somesuch.
+Erik Slagter wrote:
+> I guess the only way to have, for example the ICH6, not using legacy
+> IRQ/ports, is to switch it to AHCI, which only the BIOS can do (if
+> implemented).
 
-Ah, ok. I wasn't aware of this large role of the BIOS in setting up
-hardware, nowadays. Grmbl.
+"native mode" is where PATA and/or SATA PCI device is programmed into 
+full PCI mode -- PCI BARs, PCI irq, etc.  Some BIOSen allow you to 
+enable mode, which disables all use of legacy IRQ/ports.
 
-> > On the same subject: is there a reason why ICH6 gets "BAR0-3 ignored"
-> > and always gets the legacy i/o ports and IRQ's assigned? I'd say there
-> > is absolutely no need to be compatible in this way, the PCI code can
-> > assign the IRQ and I/O ports as with any other PCI device?
-> 
-> IDE is special.
-> 
-> This is due to how the BIOS sets up an IDE PCI device in legacy mode.
-> BAR0-3 are set to zero, which is a signal to the OS that the IDE PCI
-> device is in legacy mode (io 0x1f0+0x170, irq 14+15).  Since the IDE I/O
-> ports are in ISA space not PCI space, the PCI BARs reflect nothing.
+Also, ICH6 silicon does not support AHCI, only ICH6-R and ICH6-M.
 
-Goodie. So we will be stuck with MS/DOS compatibility until somewhere in
-the next millenium.
+	Jeff
 
-I guess the only way to have, for example the ICH6, not using legacy
-IRQ/ports, is to switch it to AHCI, which only the BIOS can do (if
-implemented).
 
-Thrilling.
