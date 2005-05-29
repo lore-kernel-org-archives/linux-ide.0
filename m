@@ -1,49 +1,25 @@
-From: Jens Axboe <axboe@suse.de>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: Playing with SATA NCQ
-Date: Sun, 29 May 2005 21:21:08 +0200
-Message-ID: <20050529192108.GC30586@suse.de>
-References: <20050526140058.GR1419@suse.de> <429793C8.8090007@gmail.com> <42979C4F.8020007@pobox.com> <42979FA3.1010106@gmail.com> <20050528121258.GA17869@suse.de> <4299BD23.6010004@gmail.com> <4299CD31.8020805@rtr.ca> <20050529190421.GB29770@suse.de> <20050529190518.GA7928@havoc.gtf.org>
+Date: Sun, 29 May 2005 16:17:49 -0400
+Message-ID: <429A236D.8030307@pobox.com>
+References: <20050526140058.GR1419@suse.de> <429793C8.8090007@gmail.com> <42979C4F.8020007@pobox.com> <42979FA3.1010106@gmail.com> <20050528121258.GA17869@suse.de> <4299BD23.6010004@gmail.com> <20050529190259.GA29770@suse.de> <429A2238.8010604@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:10899 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261410AbVE2TVy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 May 2005 15:21:54 -0400
-Content-Disposition: inline
-In-Reply-To: <20050529190518.GA7928@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261430AbVE2USA@vger.kernel.org>
+In-Reply-To: <429A2238.8010604@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michael Thonke <iogl64nx@gmail.com>
+Cc: Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Mark Lord <liml@rtr.ca>, Michael Thonke <iogl64nx@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, May 29 2005, Jeff Garzik wrote:
-> On Sun, May 29, 2005 at 09:04:21PM +0200, Jens Axboe wrote:
-> > On Sun, May 29 2005, Mark Lord wrote:
-> > > My basic hdparm timing test shouldn't show much of a difference
-> > > with NCQ tests, becase hdparm just does a single request at a time,
-> > > and waits for the results before issuing another.  Now, kernel read-ahead
-> > > may result in some command overlap and a slight throughput increase, but..
-> > > 
-> > > Something like dbench and/or bonnie++ are more appropriate here.
-> > 
-> > I don't like bonnie++ very much and dbench is very write intensive. I
-> > would suggest trying tiotest, find it on sf.net. It gets easily readable
-> > results and they are usually fairly consistent across runs if you limit
-> > the RAM to something sensible (eg 256MB and using a data set size of
-> > 768MB).
-> 
-> As an FYI...  download Stephen Tweedie's verify-data tool at
-> http://people.redhat.com/sct/src/verify-data/
+Michael Thonke wrote:
+> Well the subjective feeling is great through! What I noticed is a
+> improvement on rsync (goes slighty faster drive to drive).
+> The noise decrease now it only make noise on very heavy IO reads and writes.
 
-Interesting, will try it tomorrow.
 
-> Robin Miller's 'dt' is also nice to have.
+It might be as simple as...  NCQ means the drive is doing more work. 
+More work means more noise.
 
-Yep, have tried that in the past. I'm just recommending tiotest as an
-easy and good way for people to test performance quickly. Just boot with
-256MB and use eg tiobench.pl --threads 8 should be a good way to test
-NCQ.
-
--- 
-Jens Axboe
-
+	Jeff
