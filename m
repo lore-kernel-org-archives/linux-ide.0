@@ -1,41 +1,33 @@
-From: Jens Axboe <axboe@suse.de>
+From: Erik Slagter <erik@slagter.name>
 Subject: Re: Playing with SATA NCQ
-Date: Mon, 30 May 2005 08:07:50 +0200
-Message-ID: <20050530060749.GD7054@suse.de>
-References: <20050526140058.GR1419@suse.de> <429793C8.8090007@gmail.com> <42979C4F.8020007@pobox.com> <42979FA3.1010106@gmail.com> <20050528121258.GA17869@suse.de> <4299BD23.6010004@gmail.com> <20050529190259.GA29770@suse.de> <429A2238.8010604@gmail.com>
+Date: Mon, 30 May 2005 09:29:52 +0200
+Message-ID: <1117438192.4851.29.camel@localhost.localdomain>
+References: <20050526140058.GR1419@suse.de>
+	 <1117382598.4851.3.camel@localhost.localdomain>
+	 <4299F47B.5020603@gmail.com>
+	 <1117387591.4851.17.camel@localhost.localdomain>  <429A58F4.3040308@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:55427 "EHLO
-	nelson.home.kernel.dk") by vger.kernel.org with ESMTP
-	id S261526AbVE3GGr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 May 2005 02:06:47 -0400
-Content-Disposition: inline
-In-Reply-To: <429A2238.8010604@gmail.com>
+Received: from oldconomy.demon.nl ([212.238.217.56]:7865 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S261537AbVE3HaF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 May 2005 03:30:05 -0400
+In-Reply-To: <429A58F4.3040308@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Thonke <iogl64nx@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Michael Thonke <iogl64nx@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sun, May 29 2005, Michael Thonke wrote:
-> >Nothing, unfortunately NCQ doesn't provided any way of doing ordered
-> >tags. The only tunable is the queue_depth, you can set that anywhere
-> >between 1 and 30.
-> >
-> >  
-> >
-> So way my drive got default 30 as queue_depth on AHCI as you mentoined
-> in the next mail
-> 2-4 should be suitable and enough/normal?
+On Sun, 2005-05-29 at 20:06 -0400, Mark Lord wrote:
+> > ICH6M (mobile/no raid) on a Dell Inspiron 9300 laptop. AFAIK there are
+> > no plans to implement support for AHCI transition in the BIOS. &^$##($%
+> > DELL.
+> 
+> No hope of it on this machine (I'm using a tricked-out i9300 here too),
+> because (1) the HD is PATA, not SATA, and (2) the drive itself probably
+> doesn't support NCQ (my 100GB drive does NOT -- use "hdparm -I" to see
+> what is supported on any given drive.  libata-dev includes hdparm support).
 
-Yes, 30 will be default for basically anyone as ahci now advertises a
-max depth of 30 and the drives typically all support a depth of 32. The
-minimum value of those two is used.
-
-Whether 2-4 is 'enough' depends on your workload. But usually 2-4 is
-enough to get a nice speedup on heavier io, while still getting you good
-latencies on the individual io.
-
--- 
-Jens Axboe
-
+I really have a (native) SATA drive, I checked the ID from dmesg.
