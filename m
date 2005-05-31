@@ -1,32 +1,60 @@
-From: Erik Slagter <erik@slagter.name>
+From: Patrick McFarland <pmcfarland@downeast.net>
 Subject: Re: Playing with SATA NCQ
-Date: Tue, 31 May 2005 09:48:09 +0200
-Message-ID: <1117525689.3108.19.camel@localhost.localdomain>
-References: <20050526140058.GR1419@suse.de>
-	 <1117382598.4851.3.camel@localhost.localdomain>
-	 <4299F47B.5020603@gmail.com>
-	 <1117387591.4851.17.camel@localhost.localdomain> <429A58F4.3040308@rtr.ca>
-	 <1117438192.4851.29.camel@localhost.localdomain> <429B56CA.5080803@rtr.ca>
-	 <1117477364.3108.2.camel@localhost.localdomain>
-	 <429B6060.1010806@pobox.com>  <429B9E68.6080205@rtr.ca>
+Date: Tue, 31 May 2005 04:05:36 -0400
+Message-ID: <200505310405.43869.pmcfarland@downeast.net>
+References: <20050526140058.GR1419@suse.de> <429B9E68.6080205@rtr.ca> <1117525689.3108.19.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed;
+  boundary="nextPart1182965.hnyEn4gE1E";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oldconomy.demon.nl ([212.238.217.56]:31424 "EHLO
-	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S261289AbVEaHtE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 May 2005 03:49:04 -0400
-In-Reply-To: <429B9E68.6080205@rtr.ca>
+Received: from downeast.net ([12.149.251.230]:43510 "EHLO downeast.net")
+	by vger.kernel.org with ESMTP id S261353AbVEaIIQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 May 2005 04:08:16 -0400
+In-Reply-To: <1117525689.3108.19.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Michael Thonke <iogl64nx@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Erik Slagter <erik@slagter.name>
+Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, Michael Thonke <iogl64nx@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mon, 2005-05-30 at 19:14 -0400, Mark Lord wrote:
-> > libata software supports PATA, but no distribution ships with libata 
-> > PATA support enabled (nor should they!).
-> 
-> (K)Ubuntu does, and it works very well, thanks.
+--nextPart1182965.hnyEn4gE1E
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-So that's two... Does it also show your (pata) harddisk as /dev/sda?
+On Tuesday 31 May 2005 03:48 am, Erik Slagter wrote:
+> On Mon, 2005-05-30 at 19:14 -0400, Mark Lord wrote:
+> > > libata software supports PATA, but no distribution ships with libata
+> > > PATA support enabled (nor should they!).
+> >
+> > (K)Ubuntu does, and it works very well, thanks.
+>
+> So that's two... Does it also show your (pata) harddisk as /dev/sda?
+
+Ubuntu and Kubuntu are both the same distro, thankyouverymuch. I'm running=
+=20
+Ubuntu, and it does _not_ show pata drives as /dev/s*, only has /dev/h*.
+
+=2D-=20
+Patrick "Diablo-D3" McFarland || pmcfarland@downeast.net
+"Computer games don't affect kids; I mean if Pac-Man affected us as kids, w=
+e'd=20
+all be running around in darkened rooms, munching magic pills and listening=
+ to
+repetitive electronic music." -- Kristian Wilson, Nintendo, Inc, 1989
+
+--nextPart1182965.hnyEn4gE1E
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.5 (GNU/Linux)
+
+iD4DBQBCnBrX8Gvouk7G1cURAjxsAJoDZ6jQueAH/9+nDP930gvEDb8rqwCY2yBN
+jHS83eOm31IgYHzgOoIIOQ==
+=3lXw
+-----END PGP SIGNATURE-----
+
+--nextPart1182965.hnyEn4gE1E--
