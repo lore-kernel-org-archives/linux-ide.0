@@ -1,38 +1,82 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] SATA NCQ #3
-Date: Tue, 31 May 2005 12:49:19 -0400
-Message-ID: <429C958F.7090700@pobox.com>
-References: <20050531124659.GB1530@suse.de> <429C86AD.4050605@pobox.com> <429C90DE.3000106@tls.msk.ru>
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: [RFT][PATCH] IDE devfs fixes
+Date: Wed, 1 Jun 2005 00:31:58 +0200 (CEST)
+Message-ID: <Pine.GSO.4.62.0506010023470.21923@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:22913 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261963AbVEaQt0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 May 2005 12:49:26 -0400
-In-Reply-To: <429C90DE.3000106@tls.msk.ru>
+Received: from higgs.elka.pw.edu.pl ([194.29.160.5]:11716 "EHLO
+	higgs.elka.pw.edu.pl") by vger.kernel.org with ESMTP
+	id S261190AbVEaWw6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 31 May 2005 18:52:58 -0400
+Received: from mion.elka.pw.edu.pl ([194.29.160.35]:50944 "EHLO
+	mion.elka.pw.edu.pl") by higgs.elka.pw.edu.pl with ESMTP
+	id S41507AbVEaWcK (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 1 other); Wed, 1 Jun 2005 00:32:10 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-
-Michael Tokarev wrote:
-> Jeff Garzik wrote:
-> []
-> 
->> 
->> struct ahci_host_priv {
->> 	unsigned long		flags;
->>+	unsigned int		have_msi; /* is PCI MSI enabled? */
-> 
-> 
-> BTW, can `have_msi' be just another bit in the `flags' field?
-
-Yes, that would be a good cleanup to make.
-
-Wanna submit a patch adding HOST_CAP_MSI bit?
-
-	Jeff
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
 
+Anybody using devfs + modular IDE support?  If so please test, thanks.
 
+[PATCH] IDE devfs fixes
+
+* don't remove drive->devfs_name in drive_release_dev(), this should
+   fix OOPS for ide-floppy driver (drive->devfs_name is already removed
+   by del_gendisk()) and ide-{cd,floppy,tape} drivers (drive->devfs_name
+   is not registered et all)
+* remove workaround for the above bug from ide-disk driver (which probably
+   caused devfs support to brake if ide-disk module was reloaded)
+* remove dead code from ide_unregister() (drive->devfs_name is only set
+   if drive->present == 1)
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+
+Index: ide-2.6.git/drivers/ide/ide-disk.c
+===================================================================
+--- ide-2.6.git.orig/drivers/ide/ide-disk.c
++++ ide-2.6.git/drivers/ide/ide-disk.c
+@@ -1048,7 +1048,6 @@ static void ide_disk_release(struct kref
+  	struct gendisk *g = idkp->disk;
+
+  	drive->driver_data = NULL;
+-	drive->devfs_name[0] = '\0';
+  	g->private_data = NULL;
+  	put_disk(g);
+  	kfree(idkp);
+Index: ide-2.6.git/drivers/ide/ide-probe.c
+===================================================================
+--- ide-2.6.git.orig/drivers/ide/ide-probe.c
++++ ide-2.6.git/drivers/ide/ide-probe.c
+@@ -1308,10 +1308,6 @@ static void drive_release_dev (struct de
+  	ide_drive_t *drive = container_of(dev, ide_drive_t, gendev);
+
+  	spin_lock_irq(&ide_lock);
+-	if (drive->devfs_name[0] != '\0') {
+-		devfs_remove(drive->devfs_name);
+-		drive->devfs_name[0] = '\0';
+-	}
+  	ide_remove_drive_from_hwgroup(drive);
+  	if (drive->id != NULL) {
+  		kfree(drive->id);
+Index: ide-2.6.git/drivers/ide/ide.c
+===================================================================
+--- ide-2.6.git.orig/drivers/ide/ide.c
++++ ide-2.6.git/drivers/ide/ide.c
+@@ -593,13 +593,8 @@ void ide_unregister(unsigned int index)
+  		goto abort;
+  	for (unit = 0; unit < MAX_DRIVES; ++unit) {
+  		drive = &hwif->drives[unit];
+-		if (!drive->present) {
+-			if (drive->devfs_name[0] != '\0') {
+-				devfs_remove(drive->devfs_name);
+-				drive->devfs_name[0] = '\0';
+-			}
++		if (!drive->present)
+  			continue;
+-		}
+  		spin_unlock_irq(&ide_lock);
+  		device_unregister(&drive->gendev);
+  		down(&drive->gendev_rel_sem);
