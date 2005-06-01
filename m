@@ -1,24 +1,71 @@
-From: John Patrick Poet <john@BlueSkyTours.com>
-Subject: sata_sil24 status ?
-Date: Tue, 31 May 2005 17:13:19 -0600 (MDT)
-Message-ID: <Pine.SOL.4.58L0.0505311711040.4584@katana.blueskytours.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] AHCI PCI MSI support, update 1
+Date: Wed, 1 Jun 2005 07:44:26 +0200
+Message-ID: <20050601054422.GA1441@suse.de>
+References: <429C8978.4060601@pobox.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nat1.blueskytours.com ([12.96.192.180]:7655 "HELO
-	volcano.blueskytours.com") by vger.kernel.org with SMTP
-	id S261159AbVEaXNV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 May 2005 19:13:21 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:5075 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261249AbVFAFne (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jun 2005 01:43:34 -0400
+Content-Disposition: inline
+In-Reply-To: <429C8978.4060601@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
+On Tue, May 31 2005, Jeff Garzik wrote:
+> 
+> I just updated the AHCI PCI MSI support patch to support the latest 
+> ->host_stop() semantics changes that just made it into upstream.
+> 
+> This patch, until its merged, may always be found in the 'ahci-msi' 
+> branch of
+> rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-I am considering purchasing a motherboard with a Sil3132 controller on it.
-I see that a preliminary driver (sata_sil24) is available.  Does anyone have
-any idea when this driver will be ready for production?
+Tested on an ich6 based system, with this ahci controller:
 
-Thanks,
+centera:~ # lspci -s 0000:00:1f.2 -v
+0000:00:1f.2 IDE interface: Intel Corp. I/O Controller Hub SATA cc=raid
+(rev 03) (prog-if 8f [Master SecP SecO PriP PriO])
+        Subsystem: Tyan Computer: Unknown device 5150
+        Flags: bus master, 66Mhz, medium devsel, latency 0, IRQ 169
+        I/O ports at e900
+        I/O ports at ea00 [size=4]
+        I/O ports at eb00 [size=8]
+        I/O ports at ec00 [size=4]
+        I/O ports at ed00 [size=16]
+        Memory at d03c3000 (32-bit, non-prefetchable) [size=1K]
+        Capabilities: [70] Power Management version 2
 
-John
+And system boots and works fine, MSI isn't enabled of course.
+
+Also tested on an ich7 based system (945G express chipset), with this
+ahci controller:
+
+nelson:~ # lspci -s 0000:00:1f.2 -v
+0000:00:1f.2 Class 0106: Intel Corporation I/O Controller Hub SATA
+cc=AHCI (rev 01) (prog-if 01)
+        Subsystem: Intel Corporation: Unknown device e302
+        Flags: bus master, 66Mhz, medium devsel, latency 0, IRQ 201
+        I/O ports at 40d8 [size=8]
+        I/O ports at 40f4 [size=4]
+        I/O ports at 40d0 [size=8]
+        I/O ports at 40f0 [size=4]
+        I/O ports at 4020 [size=32]
+        Memory at 48304000 (32-bit, non-prefetchable) [size=1K]
+        Capabilities: [80] Message Signalled Interrupts: 64bit- Queue=0/0 Enable+
+        Capabilities: [70] Power Management version 2
+        Capabilities: [a8] #12 [0010]
+
+System boots and works fine (typing this message here), MSI is enabled.
+I double checked with an added printk :-)
+
+So that's at least one ACK for you. Now running NCQ and MSI enabled
+ahci, I'm not sure SATA gets any better!
+
 -- 
+Jens Axboe
+
