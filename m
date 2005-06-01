@@ -1,71 +1,35 @@
-From: Jens Axboe <axboe@suse.de>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] AHCI PCI MSI support, update 1
-Date: Wed, 1 Jun 2005 07:44:26 +0200
-Message-ID: <20050601054422.GA1441@suse.de>
-References: <429C8978.4060601@pobox.com>
+Date: Wed, 01 Jun 2005 01:46:27 -0400
+Message-ID: <429D4BB3.6080903@pobox.com>
+References: <429C8978.4060601@pobox.com> <20050601054422.GA1441@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:5075 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261249AbVFAFne (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jun 2005 01:43:34 -0400
-Content-Disposition: inline
-In-Reply-To: <429C8978.4060601@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:32133 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261277AbVFAFqg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jun 2005 01:46:36 -0400
+In-Reply-To: <20050601054422.GA1441@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Jens Axboe <axboe@suse.de>
 Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-On Tue, May 31 2005, Jeff Garzik wrote:
-> 
-> I just updated the AHCI PCI MSI support patch to support the latest 
-> ->host_stop() semantics changes that just made it into upstream.
-> 
-> This patch, until its merged, may always be found in the 'ahci-msi' 
-> branch of
-> rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+Jens Axboe wrote:
+> System boots and works fine (typing this message here), MSI is enabled.
+> I double checked with an added printk :-)
 
-Tested on an ich6 based system, with this ahci controller:
+Any chance you could post a full /proc/interrupts output for this box?
 
-centera:~ # lspci -s 0000:00:1f.2 -v
-0000:00:1f.2 IDE interface: Intel Corp. I/O Controller Hub SATA cc=raid
-(rev 03) (prog-if 8f [Master SecP SecO PriP PriO])
-        Subsystem: Tyan Computer: Unknown device 5150
-        Flags: bus master, 66Mhz, medium devsel, latency 0, IRQ 169
-        I/O ports at e900
-        I/O ports at ea00 [size=4]
-        I/O ports at eb00 [size=8]
-        I/O ports at ec00 [size=4]
-        I/O ports at ed00 [size=16]
-        Memory at d03c3000 (32-bit, non-prefetchable) [size=1K]
-        Capabilities: [70] Power Management version 2
 
-And system boots and works fine, MSI isn't enabled of course.
+> So that's at least one ACK for you. Now running NCQ and MSI enabled
+> ahci, I'm not sure SATA gets any better!
 
-Also tested on an ich7 based system (945G express chipset), with this
-ahci controller:
+<grin>
 
-nelson:~ # lspci -s 0000:00:1f.2 -v
-0000:00:1f.2 Class 0106: Intel Corporation I/O Controller Hub SATA
-cc=AHCI (rev 01) (prog-if 01)
-        Subsystem: Intel Corporation: Unknown device e302
-        Flags: bus master, 66Mhz, medium devsel, latency 0, IRQ 201
-        I/O ports at 40d8 [size=8]
-        I/O ports at 40f4 [size=4]
-        I/O ports at 40d0 [size=8]
-        I/O ports at 40f0 [size=4]
-        I/O ports at 4020 [size=32]
-        Memory at 48304000 (32-bit, non-prefetchable) [size=1K]
-        Capabilities: [80] Message Signalled Interrupts: 64bit- Queue=0/0 Enable+
-        Capabilities: [70] Power Management version 2
-        Capabilities: [a8] #12 [0010]
+Thanks,
 
-System boots and works fine (typing this message here), MSI is enabled.
-I double checked with an added printk :-)
+	Jeff
 
-So that's at least one ACK for you. Now running NCQ and MSI enabled
-ahci, I'm not sure SATA gets any better!
-
--- 
-Jens Axboe
 
