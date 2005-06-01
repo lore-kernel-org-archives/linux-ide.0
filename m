@@ -1,53 +1,52 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] PCI: amd74xx patch for new NVIDIA device IDs
-Date: Wed, 1 Jun 2005 11:50:14 +0200
-Message-ID: <58cb370e05060102504fa06c4c@mail.gmail.com>
-References: <111760252426@kroah.com> <429D647F.5020701@pobox.com>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Tobias Reinhard <tracer@robotech.de>
+Subject: Problem with concurrent SATA-Writes
+Date: Wed, 01 Jun 2005 19:13:06 +0200
+Message-ID: <429DECA2.6020609@robotech.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.194]:49064 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261151AbVFAJuO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Jun 2005 05:50:14 -0400
-Received: by wproxy.gmail.com with SMTP id 68so417788wra
-        for <linux-ide@vger.kernel.org>; Wed, 01 Jun 2005 02:50:14 -0700 (PDT)
-In-Reply-To: <429D647F.5020701@pobox.com>
-Content-Disposition: inline
+Received: from moutvdom.kundenserver.de ([212.227.126.249]:2030 "EHLO
+	moutvdomng.kundenserver.de") by vger.kernel.org with ESMTP
+	id S261473AbVFARNL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Jun 2005 13:13:11 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Greg K-H <greg@kroah.com>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, acurrid@nvidia.com
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On 6/1/05, Jeff Garzik <jgarzik@pobox.com> wrote:
-> Greg KH wrote:
-> > [PATCH] PCI: amd74xx patch for new NVIDIA device IDs
-> >
-> > Here's the 2.6 amd74xx patch for NVIDIA MCP51.
-> >
-> > Signed-off-by: Andy Currid <acurrid@nvidia.com>
-> > Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-> >
-> > ---
-> > commit af00f9811e0ccbd3db84ddc4cffb0da942653393
-> > tree 5a9c3b7f7d61d96d3624ad130b173a761cb7dac2
-> > parent 2ac2610b26c9da72820443328ff2c56c7b8c87b8
-> > author Andy Currid <acurrid@nvidia.com> Mon, 23 May 2005 08:55:45 -0700
-> > committer Greg KH <gregkh@suse.de> Tue, 31 May 2005 14:26:38 -0700
-> >
-> >  drivers/ide/pci/amd74xx.c |    3 +++
-> >  include/linux/pci_ids.h   |    6 ++++++
-> 
-> 
-> This is hardly a PCI patch.
-> 
-> Has Bart, the IDE maintainer, acked this?
-> 
->         Jeff
-> 
+Hello Jeff, hello to the linux-ide-list!
 
-Thanks Jeff.
+I already posted this to the lkml, but unfortunately I got no usefull 
+answer. I think the problem is related to the SIL-Driver so maybe you 
+are the right person to contact - or someone at the linux-ide-list...
 
-Ack.
+If you need any other informations or logs please tell me. I really want 
+to use these discs.
+
+Tobias
+
+Original Msg:
+--------
+I have a problem with two SATA-Discs. I have an onboard SIL3114 with
+four SATA-Ports an onboard NVIDIA with two SATA-Ports - both controllers
+are disable via BIOS (and are not detected by Linux)(only for this test
+of course - normally I have other HDD on this ports). The only
+controller that is found is the add-on controller in a PCI-Slot
+(SIL3112). And that is the one I have trouble with.
+
+If I read or write  (via dd) from the first one -> no problems. Same
+when read or write from the second or when I read (only read!) from both
+at the same time. Data-Transfer-Rate is around 45MB/s for each HDD.
+
+The problem occures when I try to write on both discs at the same time.
+For example I write /dev/zero to the first one and then start to write
+/dev/zero to the second one. The System-Load goes up to 4 with nearly
+100% io-wait and nearly no write-access to the drives.
+
+Any hints?
+
+- no errormessages in syslog
+- happens with Kernel 2.6.11.7 and with 2.6.12-rc5
+- HDDs are Samsung Spinpoint 200GB
+- (I use the SCSI-SATA-Drivers)
+
