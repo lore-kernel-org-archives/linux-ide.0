@@ -1,38 +1,46 @@
-From: "Daniela Engert" <dani@ngrt.de>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: sata_sil problem / oops
-Date: Thu, 02 Jun 2005 21:50:13 +0200 (CDT)
-Message-ID: <200506021950.j52JoAi01072@epz01.nefonline.de>
-References: <20050602192327.GA13964@suse.de>
-Reply-To: "Daniela Engert" <dani@ngrt.de>
+Date: Thu, 02 Jun 2005 17:45:14 -0400
+Message-ID: <429F7DEA.9050506@pobox.com>
+References: <20050602100358.GA28855@suse.de> <200506021847.j52IlYi28562@epz01.nefonline.de> <20050602192327.GA13964@suse.de> <20050602193037.GB13964@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from epz01.nefonline.de ([212.204.66.1]:31935 "EHLO
-	epz01.nefonline.de") by vger.kernel.org with ESMTP id S261291AbVFBTuN
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Jun 2005 15:50:13 -0400
-In-Reply-To: <20050602192327.GA13964@suse.de>
+Received: from mail.dvmed.net ([216.237.124.58]:47547 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261407AbVFBVpU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jun 2005 17:45:20 -0400
+In-Reply-To: <20050602193037.GB13964@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Daniela Engert <dani@ngrt.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, meissner@suse.de
 
-On Thu, 2 Jun 2005 21:23:29 +0200, Jens Axboe wrote:
+Jens Axboe wrote:
+> Seems that is so, from looking at the driver. If I were to guess at a
+> fix for this, it would be as follows.
+> 
+> diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+> --- a/drivers/scsi/sata_sil.c
+> +++ b/drivers/scsi/sata_sil.c
+> @@ -432,7 +432,13 @@ static int sil_init_one (struct pci_dev 
+>  		writeb(cls, mmio_base + SIL_FIFO_R0);
+>  		writeb(cls, mmio_base + SIL_FIFO_W0);
+>  		writeb(cls, mmio_base + SIL_FIFO_R1);
+> -		writeb(cls, mmio_base + SIL_FIFO_W2);
+> +		writeb(cls, mmio_base + SIL_FIFO_W1);
+> +		if (ent->driver_data == sil_3114) {
+> +			writeb(cls, mmio_base + SIL_FIFO_R2);
+> +			writeb(cls, mmio_base + SIL_FIFO_W2);
+> +			writeb(cls, mmio_base + SIL_FIFO_R3);
+> +			writeb(cls, mmio_base + SIL_FIFO_W3);
+> +		}
 
->On Thu, Jun 02 2005, Daniela Engert wrote:
 
->> My OS/2 driver and the Windows driver write to the following locations:
->> 
->> SiI3112: BAR5+0x40, BAR5+0x41, BAR5+0x44, BAR5+0x45
->> SiI3114: BAR5+0x40, BAR5+0x41, BAR5+0x44, BAR5+0x45,
->> 	 BAR5+0x240, BAR5+0x241, BAR5+0x244, BAR5+0x245
->
->Does the 3112 have two ports and the 3114 four?
+This definitely looks like a needed fix to me.
 
-Exactly.
+Can someone confirm that this fixes the reported problem?
 
-Ciao,
-  Dani
+	Jeff
 
 
