@@ -1,45 +1,43 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: sata_sil problem / oops
-Date: Thu, 02 Jun 2005 17:45:14 -0400
-Message-ID: <429F7DEA.9050506@pobox.com>
-References: <20050602100358.GA28855@suse.de> <200506021847.j52IlYi28562@epz01.nefonline.de> <20050602192327.GA13964@suse.de> <20050602193037.GB13964@suse.de>
+Subject: Re: Problem with concurrent SATA-Writes
+Date: Thu, 02 Jun 2005 17:57:08 -0400
+Message-ID: <429F80B4.10409@pobox.com>
+References: <429DECA2.6020609@robotech.de> <429DF174.2000002@pobox.com> <429E3966.2050208@robotech.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:47547 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261407AbVFBVpU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jun 2005 17:45:20 -0400
-In-Reply-To: <20050602193037.GB13964@suse.de>
+Received: from mail.dvmed.net ([216.237.124.58]:3772 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261351AbVFBV5O (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jun 2005 17:57:14 -0400
+In-Reply-To: <429E3966.2050208@robotech.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Daniela Engert <dani@ngrt.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, meissner@suse.de
+To: Tobias Reinhard <tracer@robotech.de>
+Cc: linux-ide@vger.kernel.org
 
-Jens Axboe wrote:
-> Seems that is so, from looking at the driver. If I were to guess at a
-> fix for this, it would be as follows.
+Tobias Reinhard wrote:
 > 
-> diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
-> --- a/drivers/scsi/sata_sil.c
-> +++ b/drivers/scsi/sata_sil.c
-> @@ -432,7 +432,13 @@ static int sil_init_one (struct pci_dev 
->  		writeb(cls, mmio_base + SIL_FIFO_R0);
->  		writeb(cls, mmio_base + SIL_FIFO_W0);
->  		writeb(cls, mmio_base + SIL_FIFO_R1);
-> -		writeb(cls, mmio_base + SIL_FIFO_W2);
-> +		writeb(cls, mmio_base + SIL_FIFO_W1);
-> +		if (ent->driver_data == sil_3114) {
-> +			writeb(cls, mmio_base + SIL_FIFO_R2);
-> +			writeb(cls, mmio_base + SIL_FIFO_W2);
-> +			writeb(cls, mmio_base + SIL_FIFO_R3);
-> +			writeb(cls, mmio_base + SIL_FIFO_W3);
-> +		}
+> 
+> Jeff Garzik wrote:
+> 
+>> Yes, I think this is the third time I've read your email.  You can 
+>> stop posting it now.
+>>
+>> Sometimes we just don't have time to read and respond to every support 
+>> request.  If you absolutely require support, please use a paid support 
+>> channel like SuSE or Red Hat.
+> 
+> Sorry if I annoyed or bothered You or any other one on the list.
+> 
+> I didn't expect that You or any other immediately care about my problems 
+> and solve them or already have a solution. I could try to fix the driver 
+> myself but as it seems to be a SIL-specific Problem I need the help or 
+> some hints from someone who has the (nda-)docs. Maybe they already noted 
+> this as an errata for which some kind of quirk is needed.
 
-
-This definitely looks like a needed fix to me.
-
-Can someone confirm that this fixes the reported problem?
+The sata_sil hardware docs are public:
+http://gkernel.sourceforge.net/specs/sii/3112A_SiI-DS-0095-B2.pdf.bz2
 
 	Jeff
 
