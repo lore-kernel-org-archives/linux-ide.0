@@ -1,73 +1,77 @@
-From: Lionel Bouton <Lionel.Bouton@inet6.fr>
-Subject: Re: SIS5513, 80pin cable detect, and notebook
-Date: Fri, 03 Jun 2005 13:19:36 +0200
-Message-ID: <42A03CC8.80006@inet6.fr>
-References: <1117754292.8154.20.camel@doom>
+From: Balazs Ree <ree@ree.hu>
+Subject: Samsung SP0822N does not go over UDMA 33 (2.6.11)
+Date: Fri, 03 Jun 2005 15:18:44 +0200
+Message-ID: <pan.2005.06.03.13.18.36.818342@ree.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from www01.ies.inet6.fr ([62.210.153.201]:6835 "EHLO
-	smtp.ies.inet6.fr") by vger.kernel.org with ESMTP id S261215AbVFCLTn
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 3 Jun 2005 07:19:43 -0400
-In-Reply-To: <1117754292.8154.20.camel@doom>
+Received: from main.gmane.org ([80.91.229.2]:41646 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S261262AbVFCNrC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Jun 2005 09:47:02 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1DeCPl-0002eB-EF
+	for linux-ide@vger.kernel.org; Fri, 03 Jun 2005 15:40:45 +0200
+Received: from 3e44aa8f.adsl.enternet.hu ([62.68.170.143])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Fri, 03 Jun 2005 15:40:45 +0200
+Received: from ree by 3e44aa8f.adsl.enternet.hu with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Fri, 03 Jun 2005 15:40:45 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Maynard <maynardp@shaw.ca>
-Cc: Linux-IDE <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Peter Maynard wrote the following on 06/03/05 01:18 :
 
->Sorry to bother you, but I could not find an answer anywhere and have
->searched for days.
->
->I have a Notebook with a sis5513 [sis963 southbridge] udma133 controller
->and a Hitachi IC25N060ATMR04 HD which supports ATA6.  However, as this
->is a notebook, the HD is directly connected to the motherboard without a
->cable.
->
->Using Kernel 2.6.10 the system boots and sets HD as udma2 (confirmed in
->both dmesg and hdparm -I) because it does not detect an 80pin cable.
->
->My question is:  should the cable detect circuitry of the sis5513
->recognize the fact there is no cable and setup as 80c?
->  
->
+I have a new Samsung SP0822N. This is a 80G (P)ATA disk that is supposed
+to support ATA133. It is connected to a SiI680 PCI controller. I am using
+kernel 2.6.11.
 
-No, there is no reliable way to do this: the same chipsets can be used
-in various configurations and the driver would have to check for all
-existing hardware configurations which support reliable transfers even
-if the controller<->drive interface isn't a 80-pin one (which would
-probably involve a whole new kernel framework to guess which exact model
-the computer is: far too much work for probably an incomplete result
-involving an ever changing huge database).
-Windows drivers can (temporarily) get around that because each vendor
-can package its own driver tuned for the actual hardware configuration.
-I guess these configurations on Windows eventually exhibit the same
-problems without any available "ideX=ata66" workaround: when you upgrade
-to a new Windows version, you are eventually forced to use Windows'
-bundled drivers because the vendor doesn't support your hardware on the
-new shiny Windows version : udma2 mode. I'm even wondering if all
-vendors actually bother to tune the base Windows drivers: many notebooks
-comes with cheap 4200rpm drives that don't benefit much if at all from
-udma3+ (I had such a configuration not so long ago).
+But at bootup, the disk is identified as ATA33:
 
->If this the correct function of the ide/sis code, what is the best
->method to change the udma mode.  I am currently using the boot up
->option:  ide0=ata66  which works (udma100 shows in dmesg and hdparm show
->change to udma5) - but this is listed as an obsolete boot command that
->is to be removed....
->
->  
->
+Jun  3 12:49:08 brumi kernel: SiI680: chipset revision 2
+Jun  3 12:49:08 brumi kernel: SiI680: BASE CLOCK == 133
+Jun  3 12:49:08 brumi kernel: SiI680: 100% native mode on irq 10
+Jun  3 12:49:08 brumi kernel: ide2: MMIO-DMA , BIOS settings: hde:pio, hdf:pio
+Jun  3 12:49:08 brumi kernel: ide3: MMIO-DMA , BIOS settings: hdg:pio, hdh:pio
+Jun  3 12:49:08 brumi kernel: Probing IDE interface ide2...
+Jun  3 12:49:08 brumi kernel: hde: SAMSUNG SP0822N, ATA DISK drive
+Jun  3 12:49:08 brumi kernel: ide2 at 0xf8802080-0xf8802087,0xf880208a on irq 10
+Jun  3 12:49:08 brumi kernel: hde: max request size: 64KiB
+Jun  3 12:49:08 brumi kernel: hde: 156368016 sectors (80060 MB) w/2048KiB Cache, CHS=16383/255/63, UDMA(33)
+Jun  3 12:49:08 brumi kernel: hde: cache flushes supported
 
-If this option were removed and not replaced by something else, I guess
-it will reappear shortly after removal due to hordes of angry notebook
-users (you are far from alone in this case) arrassing the IDE maintainers...
+Later, if I try to go beyond udma2 with hdparm, it pretends as if it
+changed the setting, but the setting actually stays on udma2. With
+hdparm -i I get the following output:
 
-ideX=ata66 is the way to go (at least for now).
+ Model=SAMSUNG SP0822N, FwRev=WA100-10, SerialNo=S06QJ10Y458485
+ Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs }
+ RawCHS=16383/16/63, TrkSize=31374, SectSize=498, ECCbytes=4
+ BuffType=DualPortCache, BuffSize=2048kB, MaxMultSect=16, MultSect=16
+ CurCHS=65535/1/63, CurSects=4128705, LBA=yes, LBAsects=156368016
+ IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio1 pio2 pio3 pio4
+ DMA modes:  mdma0 mdma1 mdma2
+ UDMA modes: udma0 udma1 *udma2 udma3 udma4 udma5 udma6
+ AdvancedPM=no WriteCache=enabled
+ Drive conforms to: ATA/ATAPI-6 T13 1410D revision 1:
 
-Regards,
+It seems as if the cable would be wrong. This can be, however, excluded: I
+am using 80 pin cables and changed the cable as well, with no success. I
+also tried to boot with ide2=ata66: this did not help either.
 
-Lionel
+There is an older SAMSUMG (0802N) sitting on the other channel of the same
+interface (same type of cable) and it goes fine with udma5. I got this
+new disk as a replacement for a similar unit that fried itself. Now I am a
+bit worried. I tried to look at the ide sources but I am lost
+about why it figures out this timing restriction. Any clue would be
+appreciated!
+
+Thanks a lot,
+
+-- 
+Balazs REE
+
+
