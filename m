@@ -1,77 +1,131 @@
-From: Balazs Ree <ree@ree.hu>
-Subject: Samsung SP0822N does not go over UDMA 33 (2.6.11)
-Date: Fri, 03 Jun 2005 15:18:44 +0200
-Message-ID: <pan.2005.06.03.13.18.36.818342@ree.hu>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH] libata: shelved ioctl-get-identity patch
+Date: Sat, 04 Jun 2005 00:30:56 -0400
+Message-ID: <42A12E80.8090203@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------000006050000020502060705"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:41646 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S261262AbVFCNrC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Jun 2005 09:47:02 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1DeCPl-0002eB-EF
-	for linux-ide@vger.kernel.org; Fri, 03 Jun 2005 15:40:45 +0200
-Received: from 3e44aa8f.adsl.enternet.hu ([62.68.170.143])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Fri, 03 Jun 2005 15:40:45 +0200
-Received: from ree by 3e44aa8f.adsl.enternet.hu with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Fri, 03 Jun 2005 15:40:45 +0200
+Received: from mail.dvmed.net ([216.237.124.58]:23233 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261229AbVFDEbE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Jun 2005 00:31:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
+
+This is a multi-part message in MIME format.
+--------------000006050000020502060705
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
 
-I have a new Samsung SP0822N. This is a 80G (P)ATA disk that is supposed
-to support ATA133. It is connected to a SiI680 PCI controller. I am using
-kernel 2.6.11.
+I am removing the attached patch from libata-dev.git, as it does not 
+justify the maintenance burden at the present time.  The reasons it sat 
+in libata-dev rather than go upstream are discussed at the top of the patch.
 
-But at bootup, the disk is identified as ATA33:
+If anyone feels strongly about this ioctl, take it upon yourself to 
+research the patch fully, address the concerns, and present an updated 
+solution.
 
-Jun  3 12:49:08 brumi kernel: SiI680: chipset revision 2
-Jun  3 12:49:08 brumi kernel: SiI680: BASE CLOCK == 133
-Jun  3 12:49:08 brumi kernel: SiI680: 100% native mode on irq 10
-Jun  3 12:49:08 brumi kernel: ide2: MMIO-DMA , BIOS settings: hde:pio, hdf:pio
-Jun  3 12:49:08 brumi kernel: ide3: MMIO-DMA , BIOS settings: hdg:pio, hdh:pio
-Jun  3 12:49:08 brumi kernel: Probing IDE interface ide2...
-Jun  3 12:49:08 brumi kernel: hde: SAMSUNG SP0822N, ATA DISK drive
-Jun  3 12:49:08 brumi kernel: ide2 at 0xf8802080-0xf8802087,0xf880208a on irq 10
-Jun  3 12:49:08 brumi kernel: hde: max request size: 64KiB
-Jun  3 12:49:08 brumi kernel: hde: 156368016 sectors (80060 MB) w/2048KiB Cache, CHS=16383/255/63, UDMA(33)
-Jun  3 12:49:08 brumi kernel: hde: cache flushes supported
-
-Later, if I try to go beyond udma2 with hdparm, it pretends as if it
-changed the setting, but the setting actually stays on udma2. With
-hdparm -i I get the following output:
-
- Model=SAMSUNG SP0822N, FwRev=WA100-10, SerialNo=S06QJ10Y458485
- Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs }
- RawCHS=16383/16/63, TrkSize=31374, SectSize=498, ECCbytes=4
- BuffType=DualPortCache, BuffSize=2048kB, MaxMultSect=16, MultSect=16
- CurCHS=65535/1/63, CurSects=4128705, LBA=yes, LBAsects=156368016
- IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
- PIO modes:  pio0 pio1 pio2 pio3 pio4
- DMA modes:  mdma0 mdma1 mdma2
- UDMA modes: udma0 udma1 *udma2 udma3 udma4 udma5 udma6
- AdvancedPM=no WriteCache=enabled
- Drive conforms to: ATA/ATAPI-6 T13 1410D revision 1:
-
-It seems as if the cable would be wrong. This can be, however, excluded: I
-am using 80 pin cables and changed the cable as well, with no success. I
-also tried to boot with ide2=ata66: this did not help either.
-
-There is an older SAMSUMG (0802N) sitting on the other channel of the same
-interface (same type of cable) and it goes fine with udma5. I got this
-new disk as a replacement for a similar unit that fried itself. Now I am a
-bit worried. I tried to look at the ide sources but I am lost
-about why it figures out this timing restriction. Any clue would be
-appreciated!
-
-Thanks a lot,
-
--- 
-Balazs REE
+The patch will be archived forever at
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/archive/2.6.12-rc5-git8-ioctl-get-identity.patch.bz2
 
 
+
+--------------000006050000020502060705
+Content-Type: text/x-patch;
+ name="2.6.12-rc5-git8-ioctl-get-identity.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="2.6.12-rc5-git8-ioctl-get-identity.patch"
+
+
+For inclusion,
+
+a) should determine if need for ioctl justifies maintenance
+
+b) should address Bart Z's concerns:
+* it is not complete HDIO_GET_IDENTIFY implementation
+  (applications may assume otherwise)
+* you may need to add byte-swapping of the fields in the future
+  (currently it is fine)
+* same info is available via pass-thru inteface
+
+
+
+
+ drivers/scsi/libata-scsi.c |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+)
+
+
+commit fcf604172829176bc618663e8387c8943ff88b66
+tree b10326c351daf26f34ce43b6a37369b30bb434c2
+parent 89fb1c9e5e5345ea5531d6378912a5896923e914
+parent 8be3de3fd8469154a2b3e18a4712032dac5b4a53
+author <jgarzik@pretzel.yyz.us> Sat, 04 Jun 2005 08:02:29 -0400
+committer Jeff Garzik <jgarzik@pobox.com> Sat, 04 Jun 2005 08:02:29 -0400
+
+Automatic merge of /spare/repo/linux-2.6/.git branch HEAD
+
+--------------------------
+commit 89fb1c9e5e5345ea5531d6378912a5896923e914
+tree 48fd7c6d1f9bba8936fc3e1208465c854c77834c
+parent 88d7bd8cb9eb8d64bf7997600b0d64f7834047c5
+author Tobias Lorenz <tobias.lorenz@gmx.net> Thu, 12 May 2005 23:10:33 -0400
+committer Jeff Garzik <jgarzik@pobox.com> Thu, 12 May 2005 23:10:33 -0400
+
+[PATCH] libata-scsi: get-identity ioctl support
+
+This patch adds support for transfering drive informations via the
+hd_driveid structure to the hdparm utility. At the moment, only
+cylinders, sectors, heads, model and firmware version are transfered.
+
+Signed-off-by: Tobias Lorenz <tobias.lorenz@gmx.net>
+Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
+
+--------------------------
+
+
+
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -72,6 +72,17 @@ int ata_scsi_ioctl(struct scsi_device *s
+ 	struct ata_port *ap;
+ 	struct ata_device *dev;
+ 	int val = -EINVAL, rc = -EINVAL;
++	struct hd_driveid drv_id = {
++		.cyls		= 0,
++		.sectors	= 0,
++		.heads		= 0,
++		.fw_rev		= "",
++		.model		= "",
++		.cur_cyls	= 0,
++		.cur_heads	= 0,
++		.cur_sectors	= 0,
++	};
++	int geom[3];
+ 
+ 	ap = (struct ata_port *) &scsidev->host->hostdata[0];
+ 	if (!ap)
+@@ -96,6 +107,17 @@ int ata_scsi_ioctl(struct scsi_device *s
+ 			return -EINVAL;
+ 		return 0;
+ 
++	case HDIO_GET_IDENTITY:
++		ata_std_bios_param(scsidev, NULL, dev->n_sectors, geom);
++		drv_id.cur_heads	= drv_id.heads		= geom[0];
++		drv_id.cur_sectors	= drv_id.sectors	= geom[1];
++		drv_id.cur_cyls		= drv_id.cyls		= geom[2];
++		strncpy((char *) &drv_id.model, scsidev->model, sizeof(drv_id.model));
++		strncpy((char *) &drv_id.fw_rev, scsidev->rev, sizeof(drv_id.fw_rev));
++		if(copy_to_user((char *) arg, (char *) &drv_id, sizeof(drv_id)))
++			return(-EFAULT);
++		return 0;
++
+ 	default:
+ 		rc = -ENOTTY;
+ 		break;
+
+--------------000006050000020502060705--
