@@ -1,42 +1,48 @@
-From: Greg Stark <gsstark@mit.edu>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [SATA] libata-dev queue updated
-Date: 04 Jun 2005 11:17:40 -0400
-Message-ID: <87vf4ujgmj.fsf@stark.xeocode.com>
-References: <42A14541.6020209@pobox.com>
+Date: Sat, 04 Jun 2005 13:48:28 -0400
+Message-ID: <42A1E96C.6080806@pobox.com>
+References: <42A14541.6020209@pobox.com> <87vf4ujgmj.fsf@stark.xeocode.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from stark.xeocode.com ([216.58.44.227]:23242 "EHLO
-	stark.xeocode.com") by vger.kernel.org with ESMTP id S261380AbVFDPRr
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 4 Jun 2005 11:17:47 -0400
-In-Reply-To: <42A14541.6020209@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:37058 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261326AbVFDRse (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Jun 2005 13:48:34 -0400
+In-Reply-To: <87vf4ujgmj.fsf@stark.xeocode.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Greg Stark <gsstark@mit.edu>
 Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-Jeff Garzik <jgarzik@pobox.com> writes:
-
-> Several updates to the libata-dev.git repository.  Some of the branches have
-> been folded into a new upstream-2.6.13 branch, which holds several changes (see
-> attached).  Other branches were updated to the most recent kernel, which
-> contained doc updates that caused some minor merge conflicts.
+Greg Stark wrote:
+> Jeff Garzik <jgarzik@pobox.com> writes:
 > 
-> I haven't yet updated 'passthru' and 'chs-support' branches to the latest
-> kernel.
 > 
-> Git Repository URL:
-> rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+>>Several updates to the libata-dev.git repository.  Some of the branches have
+>>been folded into a new upstream-2.6.13 branch, which holds several changes (see
+>>attached).  Other branches were updated to the most recent kernel, which
+>>contained doc updates that caused some minor merge conflicts.
+>>
+>>I haven't yet updated 'passthru' and 'chs-support' branches to the latest
+>>kernel.
+>>
+>>Git Repository URL:
+>>rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+>>
+>>List of branches:
+>>adma          chs-support  master    pdc2027x           sleeping-eh
+>>adma-mwi      iomap        ncq       promise-sata-pata  upstream-2.6.13
+>>atapi-enable  iomap-step1  passthru  sil24
 > 
-> List of branches:
-> adma          chs-support  master    pdc2027x           sleeping-eh
-> adma-mwi      iomap        ncq       promise-sata-pata  upstream-2.6.13
-> atapi-enable  iomap-step1  passthru  sil24
+> 
+> Are there diffs downloadable for these? In particular I'm looking for
+> passthru. I'm imagining that with passthru SMART works?
 
-Are there diffs downloadable for these? In particular I'm looking for
-passthru. I'm imagining that with passthru SMART works?
+You'll need to generate the diffs yourself, I'm afraid.
 
--- 
-greg
+	Jeff
+
+
 
