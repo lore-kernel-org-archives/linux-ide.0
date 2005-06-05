@@ -1,34 +1,34 @@
-From: Greg Stark <gsstark@mit.edu>
-Subject: Re: [SATA] libata-dev queue updated
-Date: 05 Jun 2005 01:30:31 -0400
-Message-ID: <878y1pjrpk.fsf@stark.xeocode.com>
-References: <42A14541.6020209@pobox.com> <87vf4ujgmj.fsf@stark.xeocode.com>
-	<42A1E96C.6080806@pobox.com> <20050604185028.GZ4992@stusta.de>
-	<42A1FB91.5060702@pobox.com> <87psv2j5mb.fsf@stark.xeocode.com>
-	<20050604191958.GA13111@havoc.gtf.org>
-	<87k6l9k0aa.fsf@stark.xeocode.com> <42A263BB.9070606@pobox.com>
+From: Wes Newell <w.newell@verizon.net>
+Subject: SIS180 PATA drive support
+Date: Sun, 05 Jun 2005 15:58:21 -0500
+Message-ID: <42A3676D.7080408@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from stark.xeocode.com ([216.58.44.227]:7078 "EHLO stark.xeocode.com")
-	by vger.kernel.org with ESMTP id S261459AbVFEFao (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Jun 2005 01:30:44 -0400
-In-Reply-To: <42A263BB.9070606@pobox.com>
+Received: from vms042pub.verizon.net ([206.46.252.42]:25822 "EHLO
+	vms042pub.verizon.net") by vger.kernel.org with ESMTP
+	id S261617AbVFEU4G (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 5 Jun 2005 16:56:06 -0400
+Received: from [192.168.0.2] ([71.240.164.117])
+ by vms042.mailsrvcs.net (Sun Java System Messaging Server 6.2 HotFix 0.04
+ (built Dec 24 2004)) with ESMTPA id <0IHM001YRQ5HID2C@vms042.mailsrvcs.net> for
+ linux-ide@vger.kernel.org; Sun, 05 Jun 2005 15:56:06 -0500 (CDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Greg Stark <gsstark@mit.edu>, Adrian Bunk <bunk@stusta.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>
+To: linux-ide@vger.kernel.org
 
-Jeff Garzik <jgarzik@pobox.com> writes:
+Is there any driver that supports the PATA ports on this controller? 
+Been told by Jeff Garzick that sata_sis does not support PATA drives. 
+For ref. I've got a Jetway S755MAX MB, kernel 2.6.11-6mdk. I've tried 
+making a new driver by changing if (trueid == 0x5518) to 0x0180 in 
+sis5513.c and adding a new module named s180ata to kconfig. And while I 
+did accomplish that and it compiled the new module ok, it crapped out 
+painfully. I'm sure not knowing what I'm doing and not being a C 
+programmer had a lot to do with that, but It appears to me that support 
+for the pata ports of the sis180 could accomplished this way if done 
+properly. Anyway, I'm at your mercy. I'd appreciate any reply, even if 
+it's just get lost and forget about pata support.:-)
 
-> Greg Stark wrote:
-> > So, uh, where do I get git? Where is your "git repository" and Linus' "git
-> > repository" and how do I set that up?
-> 
-> http://lkml.org/lkml/2005/5/26/11
-
-Ah, very nice. Thank you.
-
--- 
-greg
+thanks
 
