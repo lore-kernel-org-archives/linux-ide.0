@@ -1,57 +1,86 @@
-From: Balazs Ree <ree@ree.hu>
-Subject: Re: Samsung SP0822N does not go over UDMA 33 (2.6.11)
-Date: Mon, 06 Jun 2005 10:12:18 +0200
-Message-ID: <pan.2005.06.06.08.12.11.7629@ree.hu>
-References: <pan.2005.06.03.13.18.36.818342@ree.hu>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/4] sg traverse fix for __atapi_pio_bytes()
+Date: Mon, 6 Jun 2005 11:24:26 +0200
+Message-ID: <58cb370e05060602241afa7175@mail.gmail.com>
+References: <42A3FF7B.3040201@tw.ibm.com> <42A40193.3090500@tw.ibm.com>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:24271 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S261219AbVFFIRo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jun 2005 04:17:44 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1DfCiz-000061-7X
-	for linux-ide@vger.kernel.org; Mon, 06 Jun 2005 10:12:45 +0200
-Received: from 3e44aa8f.adsl.enternet.hu ([62.68.170.143])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Mon, 06 Jun 2005 10:12:45 +0200
-Received: from ree by 3e44aa8f.adsl.enternet.hu with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Mon, 06 Jun 2005 10:12:45 +0200
+Received: from wproxy.gmail.com ([64.233.184.197]:25307 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261245AbVFFJZI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Jun 2005 05:25:08 -0400
+Received: by wproxy.gmail.com with SMTP id 68so1785059wra
+        for <linux-ide@vger.kernel.org>; Mon, 06 Jun 2005 02:25:08 -0700 (PDT)
+In-Reply-To: <42A40193.3090500@tw.ibm.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
+Hi,
 
-I posted this earlier:
-
-> I have a new Samsung SP0822N. This is a 80G (P)ATA disk that is supposed
-> to support ATA133. It is connected to a SiI680 PCI controller. I am using
-> kernel 2.6.11.
+On 6/6/05, Albert Lee <albertcc@tw.ibm.com> wrote:
+> Hi Jeff,
 > 
-> But at bootup, the disk is identified as ATA33:
+> Problem:
+>    Incorrect md5sum when using ATAPI PIO mode to verify a distro CD.
 > 
-> Jun  3 12:49:08 brumi kernel: hde: 156368016 sectors (80060 MB) w/2048KiB Cache, CHS=16383/255/63, UDMA(33)
->
->  Model=SAMSUNG SP0822N, FwRev=WA100-10, SerialNo=S06QJ10Y458485
+> Root cause:
+>    sg traverse problem.
+> In __atapi_pio_bytes(), if qc->cursg++ is increased and "goto next_page" is executed,
+> then sg is not updated to the new qc->cursg and the old sg is overwritten with the new data.
+> 
+> Changes:
+> - Replace "goto next_page" with "goto next_sg" to make sg updated.
+> 
+>    Attached please find the patch against the linux-2.6.git tree for your review. Thanks.
+> 
+> Albert
+> 
+> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+> 
+> 
+> 
+> --- 10_atapi_pio_fix/drivers/scsi/libata-core.c 2005-06-06 13:37:50.000000000 +0800
+> +++ 11_atapi_pio_sg_fix/drivers/scsi/libata-core.c      2005-06-06 13:45:33.000000000 +0800
+> @@ -2577,7 +2577,6 @@
+>  next_sg:
+>         sg = &qc->sg[qc->cursg];
+> 
+> -next_page:
+>         page = sg->page;
+>         offset = sg->offset + qc->cursg_ofs;
+> 
+> @@ -2585,6 +2584,7 @@
+>         page = nth_page(page, (offset >> PAGE_SHIFT));
+>         offset %= PAGE_SIZE;
+> 
+> +       /* don't overrun current sg */
+>         count = min(sg->length - qc->cursg_ofs, bytes);
+> 
+>         /* don't cross page boundaries */
+> @@ -2609,8 +2609,6 @@
+>         kunmap(page);
+> 
+>         if (bytes) {
+> -               if (qc->cursg_ofs < sg->length)
+> -                       goto next_page;
+>                 goto next_sg;
+>         }
+>  }
+> 
 
-As I've received no reply for this help request, I can assume that no one
-uses this particular model of Samsung. Perhaps it is a new model...? This
-means I am on my own.
+Looks good.  Jeff, please apply.
 
-I would be willing to find out why this happens, but someone could
-please give me a helping hand? It would be great if you could point me to
-the exact location of the ide code where the limitation to udma2 is made,
-this would save me an enormous amount of time. Then I guess I would make
-the code a bit more verbose and figure out something. You can also contact
-me directly about this.
+Ack-ed by: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
 
-Thank you very much in advance, any help is highly appreciated.
+Minor CodingStyle nitpick - braces can be dropped:
 
--- 
-Bala'zs REE' jabber + email: ree@ree.hu
-             ICQ: 75955071   AIM: reebalazs
+        if (bytes)
+                goto next_sg;
 
-
+Bartlomiej
