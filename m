@@ -1,26 +1,26 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [SATA] libata-dev queue updated
-Date: Mon, 06 Jun 2005 12:01:58 -0400
-Message-ID: <42A47376.80203@rtr.ca>
-References: <42A14541.6020209@pobox.com> <87vf4ujgmj.fsf@stark.xeocode.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: shelved ioctl-get-identity patch
+Date: Mon, 06 Jun 2005 12:24:30 -0400
+Message-ID: <42A478BE.1010907@pobox.com>
+References: <42A12E80.8090203@pobox.com> <42A472AC.8040307@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261209AbVFFQCZ@vger.kernel.org>
-In-Reply-To: <87vf4ujgmj.fsf@stark.xeocode.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261494AbVFFQYj@vger.kernel.org>
+In-Reply-To: <42A472AC.8040307@rtr.ca>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Greg Stark <gsstark@mit.edu>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Greg Stark wrote:
->
-> Are there diffs downloadable for these? In particular I'm looking for
-> passthru. I'm imagining that with passthru SMART works?
+Mark Lord wrote:
+> For now, "hdparm -I" works just fine using HDIO_DRIVE_CMD,
+> but if somebody could show me how to use ATA PASSTHRU,
+> then I'll port it over to that.
 
-SMART works already using the HDIO_* ioctls in libata-dev
-(these may be built on top of the passthru stuff.. dunno).
+Use the SG_IO ioctl to send ATA passthru CDBs.  Passthru CDBs are 
+defined in the T10 "SAT" specification.
 
-Eg.  smartctl -data -a /dev/sda
+blktool should have example code ;-)
 
-Cheers
+	Jeff
