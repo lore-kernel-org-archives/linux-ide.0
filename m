@@ -1,50 +1,72 @@
-From: Jim Ramsay <jim.ramsay@gmail.com>
-Subject: Re: sata_promise driver and 2.6.11 on a MIPS board
-Date: Mon, 6 Jun 2005 15:58:48 -0600
-Message-ID: <4789af9e05060614585b319b1@mail.gmail.com>
-References: <4789af9e05060613394b1809c3@mail.gmail.com>
-	 <42A4B6D1.9010402@pobox.com>
-Reply-To: Jim Ramsay <jim.ramsay@gmail.com>
+From: Alban Browaeys <browaeys.alban@wanadoo.fr>
+Subject: Re: Samsung SP0822N does not go over UDMA 33 (2.6.11)
+Date: Mon, 06 Jun 2005 18:08:36 +0200
+Message-ID: <pan.2005.06.06.16.08.35.934967@wanadoo.fr>
+References: <pan.2005.06.03.13.18.36.818342@ree.hu> <pan.2005.06.06.08.12.11.7629@ree.hu>
+Reply-To: browaeys.alban@wanadoo.fr
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.193]:7893 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261737AbVFFWF3 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Jun 2005 18:05:29 -0400
-Received: by zproxy.gmail.com with SMTP id 16so1907037nzp
-        for <linux-ide@vger.kernel.org>; Mon, 06 Jun 2005 15:05:28 -0700 (PDT)
-In-Reply-To: <42A4B6D1.9010402@pobox.com>
-Content-Disposition: inline
+Received: from main.gmane.org ([80.91.229.2]:47812 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S261788AbVFGBEP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jun 2005 21:04:15 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1DfSRt-0004lv-2P
+	for linux-ide@vger.kernel.org; Tue, 07 Jun 2005 03:00:09 +0200
+Received: from atoulouse-152-1-32-252.w82-125.abo.wanadoo.fr ([82.125.30.252])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 07 Jun 2005 03:00:09 +0200
+Received: from browaeys.alban by atoulouse-152-1-32-252.w82-125.abo.wanadoo.fr with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 07 Jun 2005 03:00:09 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On 6/6/05, Jeff Garzik <jgarzik@pobox.com> wrote:
-> Jim Ramsay wrote:
-> > The driver then waits via a wait_for_completion apparently waiting for
-> > the PCI card to throw an interrupt so it can continue.  However, I
-> > never see this interrupt generated, and the driver code waits forever.
-> 
-> 
-> This is a known bug that definitely needs fixing:
-> 
-> (to ATA developers)
-> Any time an ATA command is issued outside of the SCSI layer, we need to
-> employ a timer to time out commands.
-> 
-> Since most commands are done within the SCSI layer, which provides a lot
-> of error handling apparatus, most commands properly time out.  The ones
-> during probe - IDENTIFY DEVICE, set xfer mode, etc. - do not have such a
-> timer.
+Le Mon, 06 Jun 2005 10:12:18 +0200, Balazs Ree a =E9crit :
 
-So is this an issue with the sata_promise.c driver, or the
-libata-core.c?  Which one should implement the timeout?
 
-What would you suggest as a workaround or a proper fix?
+Sorry i am the most newby of kernel hackers , though i hope the pointer=
+s
+to documentation can help you (well and that you can go further than i =
+did
+with those)
 
--- 
-Jim Ramsay
-"Me fail English?  That's unpossible!"
+> As I've received no reply for this help request, I can assume that no=
+ one
+> uses this particular model of Samsung. Perhaps it is a new model...? =
+This
+> means I am on my own.
+
+Well i am also having issues with atapi and such a card though it looks
+like "my" problem comes from drive. I am also waiting to see the end of
+the ide/scsi transport layer redesign (though following it and learning
+from the changesets).
+
+> I would be willing to find out why this happens, but someone
+could
+> please give me a helping hand? It would be great if you could point m=
+e
+> to the exact location of the ide code where the limitation to udma2 i=
+s
+> made, this would save me an enormous amount of time. Then I guess I
+> would make the code a bit more verbose and figure out something. You =
+can
+> also contact me directly about this.
+
+I would suggest reading about the 2.6 driver model at linux weekly news
+kernel section : http://lwn.net/Kernel/Index/ (for example Driver porti=
+ng:
+the gendisk interface http://lwn.net/Articles/25711/ )
+
+and the "linux device drivers, third edition" http://lwn.net/Kernel/LDD=
+3/=20
+(though the book is worth to buy :) , sadly i only have the second edit=
+ion
+
+
+Cheers
+Alban
+
