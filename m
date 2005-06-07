@@ -1,51 +1,61 @@
-From: Brad Campbell <brad@wasp.net.au>
+From: Greg Stark <gsstark@mit.edu>
 Subject: Re: [SATA] libata-dev queue updated
-Date: Tue, 07 Jun 2005 17:15:05 +0400
-Message-ID: <42A59DD9.5090903@wasp.net.au>
-References: <42A14541.6020209@pobox.com> <87vf4ujgmj.fsf@stark.xeocode.com>	<42A47376.80203@rtr.ca> <87u0kbhqsz.fsf@stark.xeocode.com> <42A58307.3080906@wasp.net.au> <42A6AD46.5090200@rtr.ca>
+Date: 07 Jun 2005 09:51:23 -0400
+Message-ID: <87is0qi8bo.fsf@stark.xeocode.com>
+References: <42A14541.6020209@pobox.com> <87vf4ujgmj.fsf@stark.xeocode.com>
+	<42A47376.80203@rtr.ca> <87u0kbhqsz.fsf@stark.xeocode.com>
+	<42A6AE3E.7070401@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261857AbVFGNPS@vger.kernel.org>
-In-Reply-To: <42A6AD46.5090200@rtr.ca>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from stark.xeocode.com ([216.58.44.227]:9376 "EHLO stark.xeocode.com")
+	by vger.kernel.org with ESMTP id S261863AbVFGNvk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2005 09:51:40 -0400
+In-Reply-To: <42A6AE3E.7070401@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
 Cc: Greg Stark <gsstark@mit.edu>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>
-List-Id: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Brad Campbell wrote:
+
+Mark Lord <liml@rtr.ca> writes:
+
+> Greg Stark wrote:
+> > Uh, this is 2.6.12-rc4 with the latest libata-dev patch from Garzik's web
+> > site:
+> >  bash-3.00$ smartctl -data -a /dev/sda
+> >  smartctl version 5.32 Copyright (C) 2002-4 Bruce Allen
+> >  Home page is http://smartmontools.sourceforge.net/
+> >  Smartctl: Device Read Identity Failed (not an ATA/ATAPI device)
 > 
-> 
-> That's weird.  So, is your /dev/sda a (S)ATA drive?
+> Oh, wait a sec -- Jeff just posted that he's nuked the "read identity" ioctl(),
+> so I suppose that has now broken smartmontools compatibility.
 
-Yep.. I have 28 Maxtor Maxline-II drives on Promise SATA150TX4's
-They all show up under /dev/scsi/host??
+I think this libata-dev patch was prior to that announcement.
 
-> 
-> Maybe there's something screwy with true SATA drives and libata (doubtful)?
+It's 2.6.11-bk6-libata-dev1.patch which I appear to have downloaded May 15th.
+(Sorry I guess "latest" wasn't very precise)
 
-Not that I know of.. it has been working great here for months now.. (bar the odd oops)
+> So Linux either goes without S.M.A.R.T. for SATA (again),
+> or Jeff puts it back, or smartmontools gets upgraded Real Soon Now.
 
-> I also have "smartctl -data" working with SATA drives through the
-> qstor driver (the non-libata version) without any issues, so we know
-> the drives themselves are happy with it.
-> 
->> smartctl -d ata -a /dev/sda
+:(
 
-> Same thing as "-data".  Either works.
-> 
+What I really want to get working is actually hddtemp which uses SMART just to
+get the temperature:
 
-So it does..
+bash-3.00$ hddtemp /dev/hda
+/dev/hda: MAXTOR 6L080J4: 50 C
+bash-3.00$ hddtemp /dev/sda
+/dev/sda: Maxtor 7Y250M0  YAR5: drive is sleeping
+bash-3.00$ hddtemp /dev/sdb
+/dev/sdb: Maxtor 6Y120M0  YAR5: drive is sleeping
 
-I'm still using a 2.6.10-bk10 kernel here with the libata-dev patches and some minor md patches.. 
-It's stable unless one of the drives throws an error, whereapon libata oops and stops talking to the 
-other drives (and then it gets really messy).. Have not had time to reproduce/upgrade to see if it's 
-fixed though.
+The two M0 drives are SATA drives and they certainly are not sleeping. Come to
+think of it that's awfully hot for the PATA drive. I think I'll put it to
+sleep for a while.
 
-Regards,
-Brad
+
 -- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+greg
+
