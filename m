@@ -1,51 +1,139 @@
-From: Balazs Ree <ree@ree.hu>
-Subject: Re: Samsung SP0822N does not go over UDMA 33 (2.6.11)
-Date: Tue, 07 Jun 2005 23:07:02 +0200
-Message-ID: <pan.2005.06.07.21.06.59.837074@ree.hu>
-References: <pan.2005.06.03.13.18.36.818342@ree.hu> <pan.2005.06.06.08.12.11.7629@ree.hu>
+From: "Shawn Starr" <sstarr@platform.com>
+Subject: Re: [RFT, PATCH] sata_sil corruption / lockup fix
+Date: Tue, 7 Jun 2005 18:14:35 -0400
+Message-ID: <9CD190F4AD92EC499A9397F49C8B0E4E01E8ECCD@catoexm04.noam.corp.platform.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:14815 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S261986AbVFGVSc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2005 17:18:32 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1DflNS-0002oQ-OX
-	for linux-ide@vger.kernel.org; Tue, 07 Jun 2005 23:12:50 +0200
-Received: from 3e44aa8f.adsl.enternet.hu ([62.68.170.143])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 07 Jun 2005 23:12:50 +0200
-Received: from ree by 3e44aa8f.adsl.enternet.hu with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 07 Jun 2005 23:12:50 +0200
+Received: from mailtir.platform.com ([192.219.104.248]:62706 "EHLO
+	mailtir.platform.com") by vger.kernel.org with ESMTP
+	id S261997AbVFGWOk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2005 18:14:40 -0400
+Received: from catoexm04.noam.corp.platform.com (bridgehead.platform.com [172.25.241.154])
+	by mailtir.platform.com (8.12.10/8.12.10) with ESMTP id j57M9jpG011283
+	for <linux-ide@vger.kernel.org>; Tue, 7 Jun 2005 18:09:45 -0400 (EDT)
+Content-Class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-I wrote earlier:
+Tried this patch with RHEL3 U5 (2.4.21) still see lockups when doing certain writes.
+
+I believe this won't fix the same result in RHEL4 2.6.9. 
+
+I would like to build 2.6.12-rc6 and see what changes have occured since.
+
+Shawn.
+
+-------------------------
  
->> I have a new Samsung SP0822N. This is a 80G (P)ATA disk that is supposed
->> to support ATA133. It is connected to a SiI680 PCI controller. I am using
->> kernel 2.6.11.
->> 
->> But at bootup, the disk is identified as ATA33:
->> 
->> Jun  3 12:49:08 brumi kernel: hde: 156368016 sectors (80060 MB) w/2048KiB Cache, CHS=16383/255/63, UDMA(33)
->>
->>  Model=SAMSUNG SP0822N, FwRev=WA100-10, SerialNo=S06QJ10Y458485
 
-I've found the solution! With CONFIG_IDEDMA_IVB set (IGNORE word93
-Validation BITS) it gets the full ATA133 speed.
+Date	Fri, 25 Mar 2005 02:14:18 -0500	
+From	Jeff Garzik <>	
+Subject	[RFT, PATCH] sata_sil corruption / lockup fix	
+Silicon Image contributed a patch which should help some of the 
+situations that users were seeing.  If you are having problems with 
+sata_sil, please do try out this patch.
 
-So the problem was yet the 80c ribbon detection. I was a bit confused
-about this because previously I had thought from the documentations that
-the boot option idex=ata66 would override this problem (but it did not do
-so, and I wrongly supposed it must be something else than cable detection
-then).
+I'm concerned that the sata_sil blacklist has been growing beyond the 
+older Seagate drives which definitely had buggy firmware; concerned that 
+the Mod15Write fix was simply "fixing" the problem addressed by this 
+patch, simply by hiding the problem behind slow performance.  [note: the 
+only way to really know for sure is with ATA bus traces]
 
--- 
-Bala'zs REE' jabber + email: ree@ree.hu
-             ICQ: 75955071   AIM: reebalazs
+On platforms where the SiI BIOS isn't executed (non-x86), this patch is 
+probably more critical.  On x86, it is purported to only be needed on a 
+single motherboard.
+
+Test results (to linux-ide@vger.kernel.org) would be appreciated, 
+particularly from users with newer Seagate drives.
+
+Finally, there are also a few reports of problems of "screaming 
+interrupts" on configurations with SiI 311x + Seagate NCQ drives.  This 
+is a separate problem, and I haven't looked into it yet.
+
+	Jeff
+
+
+
+#
+# ChangeSet
+#   2005/03/24 23:32:42-05:00 Carlos.Pardo
+#   [PATCH] sata_sil: Fix FIFO PCI Bus Arbitration
+#   
+#   This patch set default values for the FIFO PCI Bus Arbitration to avoid
+#   data corruption. The root cause is due to our PCI bus master handling
+#   mismatch with the chipset PCI bridge during DMA xfer (write data to the
+#   device). The patch is to setup the DMA fifo threshold so that there is
+#   no chance for the DMA engine to change protocol. We have seen this
+#   problem only on one motherboard.
+#   
+#   Signed-off-by: Silicon Image Corporation <cpardo>
+#   Signed-off-by: Jeff Garzik <jgarzik>
+# 
+diff -Nru a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+--- a/drivers/scsi/sata_sil.c	2005-03-25 02:06:38 -05:00
++++ b/drivers/scsi/sata_sil.c	2005-03-25 02:06:38 -05:00
+@@ -38,12 +38,21 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"sata_sil"
+-#define DRV_VERSION	"0.8"
++#define DRV_VERSION	"0.9"
+ 
+ enum {
+ 	sil_3112		= 0,
+ 	sil_3114		= 1,
+ 
++	SIL_FIFO_R0		= 0x40,
++	SIL_FIFO_W0		= 0x41,
++	SIL_FIFO_R1		= 0x44,
++	SIL_FIFO_W1		= 0x45,
++	SIL_FIFO_R2		= 0x240,
++	SIL_FIFO_W2		= 0x241,
++	SIL_FIFO_R3		= 0x244,
++	SIL_FIFO_W3		= 0x245,
++
+ 	SIL_SYSCFG		= 0x48,
+ 	SIL_MASK_IDE0_INT	= (1 << 22),
+ 	SIL_MASK_IDE1_INT	= (1 << 23),
+@@ -199,6 +208,13 @@
+ MODULE_DEVICE_TABLE(pci, sil_pci_tbl);
+ MODULE_VERSION(DRV_VERSION);
+ 
++static unsigned char sil_get_device_cache_line(struct pci_dev *pdev)
++{
++	u8 cache_line = 0;
++	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &cache_line);
++	return cache_line;
++}
++
+ static void sil_post_set_mode (struct ata_port *ap)
+ {
+ 	struct ata_host_set *host_set = ap->host_set;
+@@ -341,6 +357,7 @@
+ 	unsigned int i;
+ 	int pci_dev_busy = 0;
+ 	u32 tmp, irq_mask;
++	u8 cls;
+ 
+ 	if (!printed_version++)
+ 		printk(KERN_DEBUG DRV_NAME " version " DRV_VERSION "\n");
+@@ -404,6 +421,15 @@
+ 		probe_ent->port[i].scr_addr = base + sil_port[i].scr;
+ 		ata_std_ports(&probe_ent->port[i]);
+ 	}
++
++	/* Initialize FIFO PCI bus arbitration */
++	cls = sil_get_device_cache_line(pdev);
++	cls >>= 3;
++	cls++;  /* cls = (line_size/8)+1 */
++	writeb(cls, mmio_base + SIL_FIFO_R0);
++	writeb(cls, mmio_base + SIL_FIFO_W0);
++	writeb(cls, mmio_base + SIL_FIFO_R1);
++	writeb(cls, mmio_base + SIL_FIFO_W2);
+ 
+ 	if (ent->driver_data == sil_3114) {
+ 		irq_mask = SIL_MASK_4PORT;
 
