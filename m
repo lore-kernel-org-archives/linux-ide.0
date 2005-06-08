@@ -1,45 +1,37 @@
-From: Greg Stark <gsstark@mit.edu>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: SMART support for libata
-Date: 08 Jun 2005 12:59:40 -0400
-Message-ID: <87br6g6ayr.fsf@stark.xeocode.com>
-References: <87y8g8r4y6.fsf@stark.xeocode.com> <41B7EFA3.8000007@pobox.com>
+Date: Wed, 08 Jun 2005 14:52:30 -0400
+Message-ID: <42A73E6E.80808@rtr.ca>
+References: <87y8g8r4y6.fsf@stark.xeocode.com> <41B7EFA3.8000007@pobox.com> <87br6g6ayr.fsf@stark.xeocode.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from stark.xeocode.com ([216.58.44.227]:17078 "EHLO
-	stark.xeocode.com") by vger.kernel.org with ESMTP id S261386AbVFHRAN
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:25604 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S261522AbVFHSwc
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Jun 2005 13:00:13 -0400
-In-Reply-To: <41B7EFA3.8000007@pobox.com>
+	Wed, 8 Jun 2005 14:52:32 -0400
+In-Reply-To: <87br6g6ayr.fsf@stark.xeocode.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Greg Stark <gsstark@mit.edu>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Greg Stark <gsstark@mit.edu>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
+Greg Stark wrote:
+>
+> getting really hot so I put it to sleep with "hdparm -Y".
+> 
+> Now whenever smartd probes that drive my system freezes for a few seconds and
+> I get this in my syslog:
+> 
+> Jun  8 12:49:36 stark kernel: hda: status timeout: status=0xd0 { Busy }
+> Jun  8 12:49:36 stark kernel: 
+> Jun  8 12:49:36 stark kernel: ide: failed opcode was: 0xe5
 
-FWIW here's a report of a bit of a problem with libata-dev and SMART support.
-I'm not actually clear whether this is the fault of libata or the traditional
-IDE drivers though.
+That is normal and expected behaviour.
+A "sleeping" drive never responds to commands
+until woken with a reset.
 
-I built 2.6.12rc4 with 2.6.11-bk6-libata-dev1.patch applied. 
-(I had to fix up a couple things that didn't apply against 2.6.12)
+You should be using "-y" (standby) instead of "-Y" (sleep).
 
-I updated to 5.33 per someone's suggestion on the mailing list and SMART
-support started working. Yay. At that point I noticed my old PATA drive was
-getting really hot so I put it to sleep with "hdparm -Y".
-
-Now whenever smartd probes that drive my system freezes for a few seconds and
-I get this in my syslog:
-
-Jun  8 12:49:36 stark kernel: hda: status timeout: status=0xd0 { Busy }
-Jun  8 12:49:36 stark kernel: 
-Jun  8 12:49:36 stark kernel: ide: failed opcode was: 0xe5
-
-I'm fine with failing to get SMART info from a sleeping drive. I'm not clear
-whether it's actually possible to get data back or not though it would be nice
-to know how much sleeping is lowering the drive temperature. But freezing the
-machine is unkind.
-
--- 
-greg
-
+Cheers
