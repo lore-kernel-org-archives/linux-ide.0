@@ -1,52 +1,70 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] SATA NCQ #4
-Date: Wed, 8 Jun 2005 13:45:26 +0200
-Message-ID: <20050608114526.GF18490@suse.de>
-References: <20050608102857.GC18490@suse.de> <qrjda1h0sbohfdi5t57rqpp581avqcslir@4ax.com> <20050608114150.GE18490@suse.de>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [PATCH 2/4] if condition fix for __atapi_pio_bytes()
+Date: Wed, 08 Jun 2005 19:58:22 +0800
+Message-ID: <42A6DD5E.30408@tw.ibm.com>
+References: <42A3FF7B.3040201@tw.ibm.com> <42A40214.5080006@tw.ibm.com>	 <58cb370e050606023238eeecba@mail.gmail.com>	 <42A66A60.5060105@tw.ibm.com> <58cb370e0506080248378c2cf2@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:5336 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262178AbVFHLoW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jun 2005 07:44:22 -0400
-Content-Disposition: inline
-In-Reply-To: <20050608114150.GE18490@suse.de>
+Received: from bluehawaii.tikira.net ([61.62.22.51]:23033 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S262181AbVFHL71 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Jun 2005 07:59:27 -0400
+In-Reply-To: <58cb370e0506080248378c2cf2@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Coady <grant_lkml@dodo.com.au>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
-On Wed, Jun 08 2005, Jens Axboe wrote:
-> On Wed, Jun 08 2005, Grant Coady wrote:
-> > Hi Jens,
-> > On Wed, 8 Jun 2005 12:28:59 +0200, Jens Axboe <axboe@suse.de> wrote:
-> > >
-> > >This should be pretty final, at least only minor stuff left. Changes:
-> > 
-> > Fell over here, on http://scatter.mine.nu/test/boxen/sempro/
-> > 
-> > No logged info, just scrolling heaps junk on screen --> libata 
-> > I could see and I think 8 digit hex in [] on left.  
-> > 
-> > Hit RESET to reboot, no apparent filesystem damage :)  Sorry so 
-> > little info.  patched 2.6.12-rc6 cleanly  seemed to go stupid 
-> > during mount reiserfs partitions, about that stage of boot.
+
+Hi Bart:
+
+>>
+>>Normally (qc->cursg_ofs > sg->length) or (count > bytes) won't happen.
+>>However, if we apply patch [4/4], which overrun the odd-length buffer by one byte,
+>>then (qc->cursg_ofs > sg->length) and (count > bytes) could happen.
 > 
-> Interesting, looking at your boot log from 2.6.12-rc6 your controller is
-> a via and thus doesn't support NCQ at all so the patch should do nothing
-> for you.
 > 
-> I'll try and disable ahci on one box here to see if it catches anything,
-> if not I'll probably ask you for more details.
+> If so wouldn't it be easier to round 'bytes' instead of 'count' in the patch #4?
+> 
+> * this patch (#2) gets simpler
+> * no need to round 'bytes' in the patch #3
+> * rounding can be moved from "sg loop" to the beginning of __atapi_pio_bytes()
+>   in the patch #4
+> 
 
-Boots for me. The drive in your system supports NCQ, which should be the
-same situation I just recreated here (drive supports NCQ, controller
-does not).
+ata_data_xfer() also does rounding: 'unsigned int words = buflen >> 1;'
+If we only round 'bytes' and moves rounding from "sg loop" to the beginning of __atapi_pio_bytes(),
+then the last 1 bytes of odd length buffer will still be lost.
 
-Any chance you can log the boot process when it fails, using serial
-console or something similar? At least write down the EIP of where it
-fails :-)
+Ex. say 'sg->length' is 51, 'qc->cursg_ofs' is 0 and 'bytes' is 52 (rounded), after the min()
+         /* don't overrun current sg */
+	count = min(sg->length - qc->cursg_ofs, bytes);
 
--- 
-Jens Axboe
+      'count' will be 51, and ata_data_xfer() will only transfer 50 bytes.
+  52 - 51 = 1 (1 byte trailing) So the trailing handling code will be invoked and eat the 51th and 52th byte.
+The 51th byte is lost. :(
+
+   Maybe we can round both 'sg->length' and 'bytes'?
+Ex.
+	bytes += bytes & 0x01;
+         ....
+loop:
+	....
+	/* don't overrun current sg */
+	sg->length += (sg->length) & 0x01;  // Round sg->length
+	count = min(sg->length - qc->cursg_ofs, bytes);
+      => both 'count' and 'byte' will be 52 here
+
+   However, this will introduce another rounding into the loop. :(
+
+BTW, some cd-rom drive acutally rounds odd length from 51 to 52. (eg. asus crw-5232as on my test machine).
+Overrunning the count and sg (sg->length is 51) by one byte as done in patch #4 can save us one loop in the trailing handling code.
+Ex. count 51 rounded to 52; byte is 52 rounded by device
+     => byte -= count is zero and no need to go the trailing handling code.
+
+Albert
+
+
 
