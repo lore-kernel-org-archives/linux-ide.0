@@ -1,55 +1,71 @@
-From: sean <seandarcy2@gmail.com>
-Subject: Re: does AHCI work on intel 915 ICH6 controllers? Is it supposed
-   to?
-Date: Thu, 09 Jun 2005 09:53:22 -0400
-Message-ID: <d89hcm$7ej$1@sea.gmane.org>
-References: <d87q4j$d37$1@sea.gmane.org> <42A7A191.7040700@pobox.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: New IDE driver for review
+Date: Thu, 9 Jun 2005 17:10:23 +0200
+Message-ID: <58cb370e050609081023f26433@mail.gmail.com>
+References: <BFECAF9E178F144FAEF2BF4CE739C668030174FD@exmail1.se.axis.com>
+	 <BFECAF9E178F144FAEF2BF4CE739C668014C7A6E@exmail1.se.axis.com>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:20131 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S262385AbVFIOb1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jun 2005 10:31:27 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1DgNhl-0005kB-Hl
-	for linux-ide@vger.kernel.org; Thu, 09 Jun 2005 16:08:21 +0200
-Received: from ool-4356fcdd.dyn.optonline.net ([67.86.252.221])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 09 Jun 2005 16:08:21 +0200
-Received: from seandarcy2 by ool-4356fcdd.dyn.optonline.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 09 Jun 2005 16:08:21 +0200
-In-Reply-To: <42A7A191.7040700@pobox.com>
+Received: from wproxy.gmail.com ([64.233.184.205]:46687 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261849AbVFIPKY convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Jun 2005 11:10:24 -0400
+Received: by wproxy.gmail.com with SMTP id 68so178897wra
+        for <linux-ide@vger.kernel.org>; Thu, 09 Jun 2005 08:10:23 -0700 (PDT)
+In-Reply-To: <BFECAF9E178F144FAEF2BF4CE739C668014C7A6E@exmail1.se.axis.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Mikael Starvik <mikael.starvik@axis.com>
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-[...........]
-> Plain vanilla ICH6 does not support AHCI, but other ICH6 variants such 
-> as ICH6-R do.  If your chip does support AHCI, then your BIOS is not 
-> enabling it.
-> 
-> AHCI support is clearly indicated by Region 5, a memory (MMIO) region:
-> 
->>         Region 0: I/O ports at e880 [size=8]
->>         Region 1: I/O ports at e800 [size=4]
->>         Region 2: I/O ports at e480 [size=8]
->>         Region 3: I/O ports at e400 [size=4]
->>         Region 4: I/O ports at e080 [size=32]
->>         Region 5: Memory at feb3fc00 (32-bit, non-prefetchable) [size=1K]
-> 
-> 
-> Regards,
-> 
->     Jeff
-> 
+On 6/9/05, Mikael Starvik <mikael.starvik@axis.com> wrote:
+> Ok, updated driver and requested include files attached.
 
-Thanks for the quick response. I've sent another request to 
-gigabyte for a BIOS update.  Fat chance.
+Thanks.
 
-sean
+> The drivers are similar but it would still require many ugly ifdef:s or
+> similar to combine them. I could of course extract the stuff that is the
+> same to a common file to make the arch-specific files smaller. These drivers
+> are rarley touched so I see no major maintanence benefit by combining them.
 
+I still would like to see one driver:
+* less maintenance for IDE people
+* better readability of ide-v10.c
+  (IDE specific stuff separated from arch specific stuff)
+* good opportunity to cleanup ide-v10.c a bit
 
+this won't require many ugly ifdef's, ie.
+
+#ifdef v10
+static void etrax_ide_set_pio(u8 setup, u8 strobe, u8 hold)
+{
+	*R_ATA_CONFIG =
+		IO_FIELD(R_ATA_CONFIG, enable,         1 ) |
+		IO_FIELD(R_ATA_CONFIG, dma_strobe, ATA_DMA2_STROBE) |
+		IO_FIELD(R_ATA_CONFIG, dma_hold,    ATA_DMA2_HOLD) |
+		IO_FIELD(R_ATA_CONFIG, pio_setup,    setup) |
+		IO_FIELD(R_ATA_CONFIG, pio_strobe,   strobe) |
+		IO_FIELD(R_ATA_CONFIG, pio_hold,      hold);
+}
+...
+#else
+static void etrax_ide_set_pio(u8 setup, u8 strobe, u8 hold)
+{
+	reg_ata_rw_ctrl0 ctrl0 = REG_RD(ata, regi_ata, rw_ctrl0);
+
+	ctrl0.pio_setup = setup;
+	ctrl0.pio_strb = strobe;
+	ctrl0.pio_hold = hold;
+
+	REG_WR(ata, regi_ata, rw_ctrl0, ctrl0);
+}
+...
+#endif
+
+and later just use etrax_ide_set_pio()
+
+Bartlomiej
