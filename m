@@ -1,75 +1,34 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] SATA NCQ #4
-Date: Thu, 09 Jun 2005 02:43:58 -0400
-Message-ID: <42A7E52E.5040101@pobox.com>
-References: <20050608102857.GC18490@suse.de> <qrjda1h0sbohfdi5t57rqpp581avqcslir@4ax.com> <20050608114150.GE18490@suse.de> <20050608114526.GF18490@suse.de> <tbgea15ls0a5kovgnsr62fkhtgnspmjfeg@4ax.com> <20050609062338.GC5140@suse.de> <20050609064031.GF5140@suse.de>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2/4] if condition fix for __atapi_pio_bytes()
+Date: Thu, 9 Jun 2005 08:54:19 +0200
+Message-ID: <58cb370e050608235434b2d945@mail.gmail.com>
+References: <42A3FF7B.3040201@tw.ibm.com> <42A40214.5080006@tw.ibm.com>
+	 <58cb370e050606023238eeecba@mail.gmail.com>
+	 <42A66A60.5060105@tw.ibm.com>
+	 <58cb370e0506080248378c2cf2@mail.gmail.com>
+	 <42A6DD5E.30408@tw.ibm.com>
+	 <58cb370e05060806334c997daa@mail.gmail.com>
+	 <42A7C00E.3070600@tw.ibm.com>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:35540 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S262304AbVFIGoH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jun 2005 02:44:07 -0400
-In-Reply-To: <20050609064031.GF5140@suse.de>
+Received: from wproxy.gmail.com ([64.233.184.205]:13687 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262296AbVFIGyU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Jun 2005 02:54:20 -0400
+Received: by wproxy.gmail.com with SMTP id 69so605050wri
+        for <linux-ide@vger.kernel.org>; Wed, 08 Jun 2005 23:54:20 -0700 (PDT)
+In-Reply-To: <42A7C00E.3070600@tw.ibm.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Grant Coady <grant_lkml@dodo.com.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
-Jens Axboe wrote:
-> On Thu, Jun 09 2005, Jens Axboe wrote:
-> 
->>On Thu, Jun 09 2005, Grant Coady wrote:
->>
->>>On Wed, 8 Jun 2005 13:45:26 +0200, Jens Axboe <axboe@suse.de> wrote:
->>>
->>>>Any chance you can log the boot process when it fails, using serial
->>>>console or something similar? At least write down the EIP of where it
->>>>fails :-)
->>>
->>>Guess what?  I switched box on this morning with monitor off and 
->>>the boot completed, 'cos I'd logged in much time later ssh.  Didn't 
->>>give it enough time yesterday :(
->>>
->>>I have one very large syslog... 139MB
->>>
->>>How much of that would you like :)
->>>
->>>Jun  9 04:27:45 sempro kernel:  [<c0100ad3>] default_idle+0x23/0x30
->>>Jun  9 04:27:45 sempro kernel:  [<c0100b58>] cpu_idle+0x48/0x60
->>>Jun  9 04:27:45 sempro kernel:  [<c04867b8>] start_kernel+0x148/0x170
->>>Jun  9 04:27:45 sempro kernel:  [<c04863a0>] unknown_bootoption+0x0/0x1b0
->>>Jun  9 04:27:45 sempro kernel: Badness in __ata_qc_complete at drivers/scsi/libata-core.c:3062
->>
->>Ah duh, I never tested on UP, you have to use assert_spin_locked() there
->>not the direct spin_is_locked().
->>
->>So your system was functioning just fine, you just got a warning for
->>every completed request slowing it down a lot :)
->>
->>This should fix it. Jeff, can you apply that incremental to the ncq
->>branch? Thanks!
->>
->>--- linux-2.6/drivers/scsi/libata-core.c~	2005-06-09 08:20:34.000000000 +0200
->>+++ linux-2.6/drivers/scsi/libata-core.c	2005-06-09 08:22:24.000000000 +0200
->>@@ -3059,7 +3059,7 @@
->> 	struct ata_port *ap = qc->ap;
->> 	unsigned int tag, do_clear = 0;
->> 
->>-	WARN_ON(!spin_is_locked(&ap->host_set->lock));
->>+	WARN_ON(!assert_spin_locked(&ap->host_set->lock));
->> 
->> 	if (likely(qc->flags & ATA_QCFLAG_ACTIVE)) {
->> 		assert(ap->queue_depth);
-> 
-> 
-> Or just kill the check completely, it has served its purpose.
+On 6/9/05, Albert Lee <albertcc@tw.ibm.com> wrote:
 
-The solution that included the patch won the battle ;-)
+> Attached please find the revised patch #3 and #4 for your review.
 
-I'll be pushing your incremental update out to kernel.org in a sec.
-
-	Jeff
-
-
-
+Fine with me.
