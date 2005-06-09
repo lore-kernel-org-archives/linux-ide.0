@@ -1,37 +1,25 @@
-From: "Mikael Starvik" <mikael.starvik@axis.com>
-Subject: RE: New IDE driver for review
-Date: Thu, 9 Jun 2005 12:29:17 +0200
-Message-ID: <BFECAF9E178F144FAEF2BF4CE739C668014C7A6A@exmail1.se.axis.com>
-References: <BFECAF9E178F144FAEF2BF4CE739C668030174FD@exmail1.se.axis.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: New IDE driver for review
+Date: Thu, 9 Jun 2005 12:14:27 +0200
+Message-ID: <58cb370e0506090314689ecb2a@mail.gmail.com>
+References: <BFECAF9E178F144FAEF2BF4CE739C668014C7A60@exmail1.se.axis.com>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from miranda.se.axis.com ([193.13.178.8]:62948 "EHLO
-	miranda.se.axis.com") by vger.kernel.org with ESMTP id S262339AbVFIK3V convert rfc822-to-8bit
+Received: from wproxy.gmail.com ([64.233.184.195]:59514 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262341AbVFIKO2 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Jun 2005 06:29:21 -0400
-In-Reply-To: <BFECAF9E178F144FAEF2BF4CE739C668030174FD@exmail1.se.axis.com>
+	Thu, 9 Jun 2005 06:14:28 -0400
+Received: by wproxy.gmail.com with SMTP id 68so55117wra
+        for <linux-ide@vger.kernel.org>; Thu, 09 Jun 2005 03:14:27 -0700 (PDT)
+In-Reply-To: <BFECAF9E178F144FAEF2BF4CE739C668014C7A60@exmail1.se.axis.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Bartlomiej Zolnierkiewicz' <bzolnier@gmail.com>
+To: Mikael Starvik <mikael.starvik@axis.com>
 Cc: linux-ide@vger.kernel.org
-
-Great, thanks for your time!
-
-I'll correct the things you point out and send the files again
-(including .h-files) for a new round.
-
-/Mikael
-
------Original Message-----
-From: Bartlomiej Zolnierkiewicz [mailto:bzolnier@gmail.com] 
-Sent: Thursday, June 09, 2005 12:14 PM
-To: Mikael Starvik
-Cc: linux-ide@vger.kernel.org
-Subject: Re: New IDE driver for review
-
 
 Hi,
 
@@ -202,8 +190,7 @@ why is host side 80-wires cable flag always set?
 this controller doesn't even support UDMA > 2
 
 > 		hwif->sg_table =
-> 		  kmalloc(sizeof(struct scatterlist) * PRD_ENTRIES,
-GFP_KERNEL);
+> 		  kmalloc(sizeof(struct scatterlist) * PRD_ENTRIES, GFP_KERNEL);
 
 this will memleak memory as hwif->sg_table is allocated during probe
 
@@ -229,8 +216,7 @@ please use 'drive->hwif->hwgroup' instead of HWGROUP() (everywhere)
 > 	}
 > 	else
 > 	{
-> 		hwif->sg_nents = i = blk_rq_map_sg(drive->queue, rq,
-hwif->sg_table);
+> 		hwif->sg_nents = i = blk_rq_map_sg(drive->queue, rq, hwif->sg_table);
 > 	}
 
 above code should be replaced by:
@@ -247,16 +233,14 @@ above code should be replaced by:
 > 	LED_DISK_WRITE(0);
 > 
 > 	dma_stat = HWIF(drive)->ide_dma_end(drive);
-> 	stat = HWIF(drive)->INB(IDE_STATUS_REG);		/* get drive
-status */
+> 	stat = HWIF(drive)->INB(IDE_STATUS_REG);		/* get drive status */
 > 	if (OK_STAT(stat,DRIVE_READY,drive->bad_wstat|DRQ_STAT)) {
 > 		if (!dma_stat) {
 > 			struct request *rq;
 > 			rq = HWGROUP(drive)->rq;
 > 			for (i = rq->nr_sectors; i > 0;) {
 > 				i -= rq->current_nr_sectors;
-> 				DRIVER(drive)->end_request(drive, 1,
-rq->nr_sectors);
+> 				DRIVER(drive)->end_request(drive, 1, rq->nr_sectors);
 > 			}
 > 			return ide_stopped;
 > 		}
@@ -284,4 +268,3 @@ files).
 
 Thanks,
 Bartlomiej
-
