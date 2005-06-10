@@ -1,45 +1,87 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: SMART support for libata
-Date: Fri, 10 Jun 2005 08:38:59 +0200
-Message-ID: <20050610063858.GN5140@suse.de>
-References: <87y8g8r4y6.fsf@stark.xeocode.com> <41B7EFA3.8000007@pobox.com> <87br6g6ayr.fsf@stark.xeocode.com> <42A73E6E.80808@rtr.ca> <873brs5ir8.fsf@stark.xeocode.com> <42A85F5E.10208@rtr.ca> <87u0k74cuy.fsf@stark.xeocode.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH 2/4] libata: if condition fix for __atapi_pio_bytes()
+Date: Fri, 10 Jun 2005 15:38:22 +0800
+Message-ID: <42A9436E.9090906@tw.ibm.com>
+References: <42A3FF7B.3040201@tw.ibm.com> <42A7ED91.4090008@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------000807010209040403010802"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:47503 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262414AbVFJGh6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2005 02:37:58 -0400
-Content-Disposition: inline
-In-Reply-To: <87u0k74cuy.fsf@stark.xeocode.com>
+Received: from bluehawaii.tikira.net ([61.62.22.51]:55263 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S261511AbVFJHir (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Jun 2005 03:38:47 -0400
+In-Reply-To: <42A7ED91.4090008@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Stark <gsstark@mit.edu>
-Cc: Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>
 
-On Thu, Jun 09 2005, Greg Stark wrote:
-> 
-> Mark Lord <liml@rtr.ca> writes:
-> 
-> > Greg Stark wrote:
-> > ..
-> > >>You should be using "-y" (standby) instead of "-Y" (sleep).
-> > > I'll try that. But that's not going to make it spin up when it gets a SMART
-> > > query is it?
-> > 
-> > Depends on what SMART items are being queried.
-> > 
-> > Actually, what you should *really* be using is "hdparm -S"
-> > with a suitable timeout value (say, 30 or larger).
-> 
-> Not really since the drive will just spin up ever few seconds as bdflush (or
-> whatever it's called these days) dribbles out pages.
-> 
-> What I should *really* be using is the noflushd daemon. That's been on hold
-> since I found it didn't work with SATA drives. But I wonder if it would work
-> these days.
+This is a multi-part message in MIME format.
+--------------000807010209040403010802
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-noflushd is ancient, have you tried playing with laptop mode?
+Hi Jeff,
 
--- 
-Jens Axboe
+Resend the patch #2 against the linux-2.6.git tree (0086b5ec7834b78358dea3f713275a9ae2b229ec).
+
+Problem:
+    In __atapi_pio_bytes(), when (bytes > qc->nbytes) or (qc->cursg_ofs > sg->length) or
+(count > bytes), the if condition is not handled properly.
+
+Changes:
+- Fix the "if conditions" to make the "if conditions" more robust.
+
+
+Albert
+
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+
+
+--------------000807010209040403010802
+Content-Type: text/plain;
+ name="02_if_fix.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="02_if_fix.diff"
+
+--- 11_atapi_pio_sg_fix/drivers/scsi/libata-core.c	2005-06-10 14:51:51.000000000 +0800
++++ 12_atapi_pio_if_condition_fix/drivers/scsi/libata-core.c	2005-06-06 13:52:11.000000000 +0800
+@@ -2571,7 +2571,7 @@
+ 	unsigned char *buf;
+ 	unsigned int offset, count;
+ 
+-	if (qc->curbytes == qc->nbytes - bytes)
++	if (qc->curbytes + bytes >= qc->nbytes)
+ 		ap->pio_task_state = PIO_ST_LAST;
+ 
+ next_sg:
+@@ -2592,11 +2592,10 @@
+ 
+ 	buf = kmap(page) + offset;
+ 
+-	bytes -= count;
+ 	qc->curbytes += count;
+ 	qc->cursg_ofs += count;
+ 
+-	if (qc->cursg_ofs == sg->length) {
++	if (qc->cursg_ofs >= sg->length) {
+ 		qc->cursg++;
+ 		qc->cursg_ofs = 0;
+ 	}
+@@ -2608,7 +2607,9 @@
+ 
+ 	kunmap(page);
+ 
+-	if (bytes) {
++	if (bytes > count) {
++		bytes -= count; 
++
+ 		goto next_sg;
+ 	}
+ }
+
+--------------000807010209040403010802--
+
 
