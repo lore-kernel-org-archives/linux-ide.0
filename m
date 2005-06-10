@@ -1,43 +1,45 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH 0/4] Resubmit ATAPI PIO mode fixes
-Date: Fri, 10 Jun 2005 14:08:12 +0800
-Message-ID: <42A92E4C.80709@tw.ibm.com>
-References: <42A3FF7B.3040201@tw.ibm.com> <42A7ED91.4090008@pobox.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: SMART support for libata
+Date: Fri, 10 Jun 2005 08:38:59 +0200
+Message-ID: <20050610063858.GN5140@suse.de>
+References: <87y8g8r4y6.fsf@stark.xeocode.com> <41B7EFA3.8000007@pobox.com> <87br6g6ayr.fsf@stark.xeocode.com> <42A73E6E.80808@rtr.ca> <873brs5ir8.fsf@stark.xeocode.com> <42A85F5E.10208@rtr.ca> <87u0k74cuy.fsf@stark.xeocode.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bluehawaii.tikira.net ([61.62.22.51]:37882 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S262451AbVFJGIq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Jun 2005 02:08:46 -0400
-In-Reply-To: <42A7ED91.4090008@pobox.com>
+Received: from ns.virtualhost.dk ([195.184.98.160]:47503 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262414AbVFJGh6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2005 02:37:58 -0400
+Content-Disposition: inline
+In-Reply-To: <87u0k74cuy.fsf@stark.xeocode.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>
+To: Greg Stark <gsstark@mit.edu>
+Cc: Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
+On Thu, Jun 09 2005, Greg Stark wrote:
+> 
+> Mark Lord <liml@rtr.ca> writes:
+> 
+> > Greg Stark wrote:
+> > ..
+> > >>You should be using "-y" (standby) instead of "-Y" (sleep).
+> > > I'll try that. But that's not going to make it spin up when it gets a SMART
+> > > query is it?
+> > 
+> > Depends on what SMART items are being queried.
+> > 
+> > Actually, what you should *really* be using is "hdparm -S"
+> > with a suitable timeout value (say, 30 or larger).
+> 
+> Not really since the drive will just spin up ever few seconds as bdflush (or
+> whatever it's called these days) dribbles out pages.
+> 
+> What I should *really* be using is the noflushd daemon. That's been on hold
+> since I found it didn't work with SATA drives. But I wonder if it would work
+> these days.
 
+noflushd is ancient, have you tried playing with laptop mode?
 
-Hi Jeff,
-
-> 
-> 
-> I applied patch #1 of this series.
-> 
-> Could you please wait a couple days (for your patch #1 to appear in 
-> upstream), and then resend the rest of this patch series?
-> 
-> Thanks for your patience,
-> 
->     Jeff
-> 
-> 
-> 
-
-Thanks for reviewing/accepting patch #1. :)
-I'll resend other patches later once patch #1 merged to the mainline.
-
-Albert
-
+-- 
+Jens Axboe
 
