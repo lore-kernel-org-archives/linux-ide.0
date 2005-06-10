@@ -1,81 +1,83 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 4/4] libata: odd length data handling for __atapi_pio_bytes()
-Date: Fri, 10 Jun 2005 15:46:46 +0800
-Message-ID: <42A94566.5020009@tw.ibm.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2/4] libata: if condition fix for __atapi_pio_bytes()
+Date: Fri, 10 Jun 2005 09:56:59 +0200
+Message-ID: <58cb370e050610005628a5706a@mail.gmail.com>
 References: <42A3FF7B.3040201@tw.ibm.com> <42A7ED91.4090008@pobox.com>
+	 <42A9436E.9090906@tw.ibm.com>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010106020600020505050906"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bluehawaii.tikira.net ([61.62.22.51]:51699 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S262512AbVFJHrV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Jun 2005 03:47:21 -0400
-In-Reply-To: <42A7ED91.4090008@pobox.com>
+Received: from wproxy.gmail.com ([64.233.184.197]:55930 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262512AbVFJH5C convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Jun 2005 03:57:02 -0400
+Received: by wproxy.gmail.com with SMTP id 68so531407wra
+        for <linux-ide@vger.kernel.org>; Fri, 10 Jun 2005 00:56:59 -0700 (PDT)
+In-Reply-To: <42A9436E.9090906@tw.ibm.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
-This is a multi-part message in MIME format.
---------------010106020600020505050906
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+n 6/10/05, Albert Lee <albertcc@tw.ibm.com> wrote:
+> Hi Jeff,
+> 
+> Resend the patch #2 against the linux-2.6.git tree (0086b5ec7834b78358dea3f713275a9ae2b229ec).
+> 
+> Problem:
+>     In __atapi_pio_bytes(), when (bytes > qc->nbytes) or (qc->cursg_ofs > sg->length) or
+> (count > bytes), the if condition is not handled properly.
 
-Hi Jeff,
+Only (bytes > qc->nbytes) can happen now.
 
-Resend the patch #4.
-
-Problem:
-- When odd length data is transfered, the last byte of data is lost.
-
-Changes:
-- When an odd length data transfer is seen, round it up to the next even length.
-   The same as atapi_input_bytes() in the ide-iops does.
-   This may overrun the odd length buffer by one byte.
-
-- Rename 'dwords' to 'words' in ata_pio_data_xfer()
-
-
-Albert
-
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-
---------------010106020600020505050906
-Content-Type: text/plain;
- name="04_odd_data.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="04_odd_data.diff"
-
---- 13_atapi_pio_trailing_data_handling/drivers/scsi/libata-core.c	2005-06-09 11:05:10.000000000 +0800
-+++ 14_atapi_pio_odd_handling/drivers/scsi/libata-core.c	2005-06-10 15:08:24.000000000 +0800
-@@ -2491,7 +2491,7 @@
- 			       unsigned int buflen, int write_data)
- {
- 	unsigned int i;
--	unsigned int words = buflen >> 1;
-+	unsigned int words = (buflen+1) >> 1;
- 	u16 *buf16 = (u16 *) buf;
- 	void __iomem *mmio = (void __iomem *)ap->ioaddr.data_addr;
- 
-@@ -2507,12 +2507,12 @@
- static void ata_pio_data_xfer(struct ata_port *ap, unsigned char *buf,
- 			      unsigned int buflen, int write_data)
- {
--	unsigned int dwords = buflen >> 1;
-+	unsigned int words = (buflen+1) >> 1;
- 
- 	if (write_data)
--		outsw(ap->ioaddr.data_addr, buf, dwords);
-+		outsw(ap->ioaddr.data_addr, buf, words);
- 	else
--		insw(ap->ioaddr.data_addr, buf, dwords);
-+		insw(ap->ioaddr.data_addr, buf, words);
- }
- 
- static void ata_data_xfer(struct ata_port *ap, unsigned char *buf,
-
---------------010106020600020505050906--
-
-
+> Changes:
+> - Fix the "if conditions" to make the "if conditions" more robust.
+> 
+> 
+> Albert
+> 
+> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+> 
+> 
+> 
+> --- 11_atapi_pio_sg_fix/drivers/scsi/libata-core.c      2005-06-10 14:51:51.000000000 +0800
+> +++ 12_atapi_pio_if_condition_fix/drivers/scsi/libata-core.c    2005-06-06 13:52:11.000000000 +0800
+> @@ -2571,7 +2571,7 @@
+>         unsigned char *buf;
+>         unsigned int offset, count;
+> 
+> -       if (qc->curbytes == qc->nbytes - bytes)
+> +       if (qc->curbytes + bytes >= qc->nbytes)
+>                 ap->pio_task_state = PIO_ST_LAST;
+> 
+>  next_sg:
+> @@ -2592,11 +2592,10 @@
+> 
+>         buf = kmap(page) + offset;
+> 
+> -       bytes -= count;
+>         qc->curbytes += count;
+>         qc->cursg_ofs += count;
+> 
+> -       if (qc->cursg_ofs == sg->length) {
+> +       if (qc->cursg_ofs >= sg->length) {
+>                 qc->cursg++;
+>                 qc->cursg_ofs = 0;
+>         }
+> @@ -2608,7 +2607,9 @@
+> 
+>         kunmap(page);
+> 
+> -       if (bytes) {
+> +       if (bytes > count) {
+> +               bytes -= count;
+> +
+>                 goto next_sg;
+>         }
+>  }
+> 
+> 
+>
