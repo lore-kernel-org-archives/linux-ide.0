@@ -1,30 +1,95 @@
-From: "Shawn Starr" <sstarr@platform.com>
-Subject: [2.6.12-rc6][SATA] sil driver - K8N-E Deluxe hanging with Maxtor SATA disk
-Date: Fri, 10 Jun 2005 18:43:26 -0400
-Message-ID: <9CD190F4AD92EC499A9397F49C8B0E4E01E8ECE6@catoexm04.noam.corp.platform.com>
+From: kallol@nucleodyne.com
+Subject: Fwd: Re: Performance figure for sx8 driver
+Date: Sat, 11 Jun 2005 02:18:14 -0400
+Message-ID: <20050611021814.riaatwh8ztskw4g4@www.nucleodyne.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailtir.platform.com ([192.219.104.248]:56537 "EHLO
-	mailtir.platform.com") by vger.kernel.org with ESMTP
-	id S261363AbVFJWn1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2005 18:43:27 -0400
-Received: from catoexm04.noam.corp.platform.com (bridgehead.platform.com [172.25.241.154])
-	by mailtir.platform.com (8.12.10/8.12.10) with ESMTP id j5AMcKpG001678
-	for <linux-ide@vger.kernel.org>; Fri, 10 Jun 2005 18:38:20 -0400 (EDT)
-Content-Class: urn:content-classes:message
+Received: from easyspace.ezspl.net ([216.74.109.141]:6087 "EHLO
+	easyspace.ezspl.net") by vger.kernel.org with ESMTP id S261553AbVFKGSC
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 11 Jun 2005 02:18:02 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 
-Hi Jeff, 
 
-I tried your latest patch plus the other fix to this patch and the controller is still hanging with DMA WRITE timeouts.
 
-http://lkml.org/lkml/2005/3/25/33
+Hello Jeff,
+           How did you verify that performance improved making the
+changes those
+you suggested?
 
-Any other solutions?
+hdparm does not show it.
 
-Shawn.
+Regards,
+Kallol
+
+Quoting kallol@nucleodyne.com:
+
+> Hello Jeff,
+>            Changing CARM_MAX_Q to 30 and upgrading the firmware to
+> firmware(BIOS-1.00.0.37, Firmware-1.3.19) does not help.
+>
+> Anything else to try?
+>
+> Kallol
+>
+> Quoting Jeff Garzik <jgarzik@pobox.com>:
+>
+>> kallol@nucleodyne.com wrote:
+>>> Does anyone have performace figure for sx8 driver which is for
+>>> promise SATAII150
+>>> 8 port PCI-X adapter?
+>>>
+>>> Someone reports that on a platform with sx8 driver, multiple hdparms on
+>>> different disks those are connected to the same adapter (there are
+>>> 8 ports) can
+>>> not get more than 45MB/sec in total, whereas a SCSI based driver
+>>> for the same
+>>> adapter gets around 150MB/sec.
+>>>
+>>> Any comment on this?
+>>
+>> Known.  Early firmwares for SX8 had problems that forced the driver to
+>> limit the number of outstanding requests, for all ports, to _one_.
+>>
+>> Later firmwares have fixed this, but the driver has not been updated to
+>> detect newer(fixed) firmwares.
+>>
+>> You may update drivers/block/sx8.c as such:
+>>
+>> - CARM_MAX_Q              = 1,               /* one command at a time */
+>> + CARM_MAX_Q              = 30,              /* 30 commands at a time */
+>>
+>> if you have a newer firmware, to obtain much better performance.
+>>
+>> 	Jeff
+>>
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+>>
+>
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
+
+
+
+
+
+----- End forwarded message -----
+
