@@ -1,70 +1,44 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Pata support for SIS180
-Date: Sun, 12 Jun 2005 23:34:37 -0400
-Message-ID: <42ACFECD.7060909@pobox.com>
-References: <42AAE8B1.8080607@verizon.net> <42AC9BB9.2030304@gmx.net> <42ACAE15.4030001@verizon.net>
+Subject: Re: Fwd: Re: Performance figure for sx8 driver
+Date: Sun, 12 Jun 2005 23:39:25 -0400
+Message-ID: <42ACFFED.9050701@pobox.com>
+References: <20050611021814.riaatwh8ztskw4g4@www.nucleodyne.com>	 <42AC6310.7030809@rtr.ca> <1118598197.25250.20.camel@driver>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:58337 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261345AbVFMDeo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Jun 2005 23:34:44 -0400
-In-Reply-To: <42ACAE15.4030001@verizon.net>
+Received: from mail.dvmed.net ([216.237.124.58]:60129 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261346AbVFMDja (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Jun 2005 23:39:30 -0400
+In-Reply-To: <1118598197.25250.20.camel@driver>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Wes Newell <w.newell@verizon.net>
-Cc: Uwe Koziolek <uwe.koziolek@gmx.net>, "linux.ide" <linux-ide@vger.kernel.org>
+To: kallol@nucleodyne.com
+Cc: Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Wes Newell wrote:
-> Uwe Koziolek wrote:
+Kallol Biswas wrote:
+> I have been investigating what the cause of performance loss could be.
 > 
->> Wes Newell schrieb:
->>
->>  
->>
->>> Can anyone tell me if/how one could add device support for the sis180
->>> chipset pata ports to the sis5513 module? I've tried adding this as
->>> others have said it works for the 965 southbridge,
->>>
->>> if ((trueid == 0x5518) || (trueid == 0x0180)) {
->>>
->>> but it stll doesn't see a real sis180 on a Jetway S755MAX MB.
->>>   
->>
->>
->>
->> you must include the chip into the pci_device_id table
->>
->> static *struct* pci_device_id sis5513_pci_tbl[] = {
->>     { PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_5513, PCI_ANY_ID, PCI_ANY_ID, 
->> 0, 0, 0},
->>     { PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_5518, PCI_ANY_ID, PCI_ANY_ID, 
->> 0, 0, 0},
->> +    { PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_180, PCI_ANY_ID, PCI_ANY_ID, 
->> 0, 0, 0},
->>     { 0, },
->> };
->>
->>
->> regards
->> Uwe Koziolek
->>
->>  
->>
-> Won't compile. I copied the sis180 line above into the code (- the + 
-> sign of course). I tried both 0x180 and 0x0180 as a trueid. Didn't 
-> matter. Keep in mind I'm not a C programmer.:-)
+> I have noticed several things:
 > 
-> This is the error I get;
-> 
->  CC      drivers/ide/pci/sis5513.o
-> drivers/ide/pci/sis5513.c:955: error: `PCI_DEVICE_ID_SI_180' undeclared 
-> here (not in a function)
+> 0) Setting to CARM_MAX_Q to 30 hangs. So we have been testing only with
+> CARM_MAX_Q == 1. The firmware has not been updated yet.
 
-You need to add this #define to include/linux/pci_ids.h.
+Note that CARM_MAX_Q controls the --host-- queue.
+
+This means that, with CARM_MAX_Q==1, only one command can be sent to 
+--any-- disk, at a time.  disks 1-7 must wait for disk 0 to complete an 
+I/O, and so on.  Each command is host-synchronous.
+
+As such, this limits multi-disk performance quite severely, but does not 
+hamper single disk performance.
+
+CARM_MAX_Q==1 is set as such (as mentioned earlier in the thread) 
+because early firmwares would lock up if that value was increased.
+
+It has been reported that newer firmwares work fine with CARM_MAX_Q==30, 
+which completely eliminates the host-synchronous condition.
 
 	Jeff
-
 
 
