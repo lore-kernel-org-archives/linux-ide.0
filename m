@@ -1,44 +1,73 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Fwd: Re: Performance figure for sx8 driver
-Date: Sun, 12 Jun 2005 23:39:25 -0400
-Message-ID: <42ACFFED.9050701@pobox.com>
-References: <20050611021814.riaatwh8ztskw4g4@www.nucleodyne.com>	 <42AC6310.7030809@rtr.ca> <1118598197.25250.20.camel@driver>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: does AHCI work on intel 915 ICH6 controllers? Is it supposed
+   to?
+Date: Mon, 13 Jun 2005 11:52:37 +0800
+Message-ID: <42AD0305.5060705@tw.ibm.com>
+References: <d87q4j$d37$1@sea.gmane.org> <42A7A191.7040700@pobox.com> <d89hcm$7ej$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:60129 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261346AbVFMDja (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Jun 2005 23:39:30 -0400
-In-Reply-To: <1118598197.25250.20.camel@driver>
+Received: from bluehawaii.tikira.net ([61.62.22.51]:3563 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S261348AbVFMDxB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 12 Jun 2005 23:53:01 -0400
+In-Reply-To: <d89hcm$7ej$1@sea.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kallol@nucleodyne.com
-Cc: Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: sean <seandarcy2@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Kallol Biswas wrote:
-> I have been investigating what the cause of performance loss could be.
+
+
+sean wrote:
+> Jeff Garzik wrote:
+> [...........]
 > 
-> I have noticed several things:
+>> Plain vanilla ICH6 does not support AHCI, but other ICH6 variants such 
+>> as ICH6-R do.  If your chip does support AHCI, then your BIOS is not 
+>> enabling it.
+>>
+>> AHCI support is clearly indicated by Region 5, a memory (MMIO) region:
+>>
+>>>         Region 0: I/O ports at e880 [size=8]
+>>>         Region 1: I/O ports at e800 [size=4]
+>>>         Region 2: I/O ports at e480 [size=8]
+>>>         Region 3: I/O ports at e400 [size=4]
+>>>         Region 4: I/O ports at e080 [size=32]
+>>>         Region 5: Memory at feb3fc00 (32-bit, non-prefetchable) 
+>>> [size=1K]
+>>
+>>
+>>
+>> Regards,
+>>
+>>     Jeff
+>>
 > 
-> 0) Setting to CARM_MAX_Q to 30 hangs. So we have been testing only with
-> CARM_MAX_Q == 1. The firmware has not been updated yet.
+> Thanks for the quick response. I've sent another request to gigabyte for 
+> a BIOS update.  Fat chance.
+> 
+> sean
+> 
 
-Note that CARM_MAX_Q controls the --host-- queue.
+Hi Sean,
 
-This means that, with CARM_MAX_Q==1, only one command can be sent to 
---any-- disk, at a time.  disks 1-7 must wait for disk 0 to complete an 
-I/O, and so on.  Each command is host-synchronous.
+I also have a 915G based system (AOpen EZ915) and I'm interested to try the
+AHCI support. So I checked whether AHCI could be used on my 915G box.
+The PCI device ID for my ICH6 is 0x2651.
+=> So, no AHCI support. :(
+(Only ICH6-R 0x2652 and ICH6-M 0x2653 have AHCI support. Not plain ICH6.
+http://download.intel.com/design/chipsets/specupdt/30147411.pdf )
 
-As such, this limits multi-disk performance quite severely, but does not 
-hamper single disk performance.
+ From your previous post
+"00:1f.2 IDE interface: Intel Corp. 82801FB/FW (ICH6/ICH6W) "
+I guess your box is the same as mine, plain ICH6 without AHCI support.
+(You can check the PCI device ID by "lspci -n".)
 
-CARM_MAX_Q==1 is set as such (as mentioned earlier in the thread) 
-because early firmwares would lock up if that value was increased.
+If so, update BIOS won't help since there is no AHCI support on the hardware.
 
-It has been reported that newer firmwares work fine with CARM_MAX_Q==30, 
-which completely eliminates the host-synchronous condition.
+Albert
 
-	Jeff
 
 
