@@ -1,35 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: does AHCI work on intel 915 ICH6 controllers? Is it supposed
- to?
-Date: Sat, 18 Jun 2005 16:40:18 -0400
-Message-ID: <42B486B2.6050608@pobox.com>
-References: <d87q4j$d37$1@sea.gmane.org> <42A7A191.7040700@pobox.com>	 <d89hcm$7ej$1@sea.gmane.org> <42AD0305.5060705@tw.ibm.com> <c195ebf705061813191a48a69f@mail.gmail.com>
+From: "Nicolas Baradakis" <nbk@sitadelle.com>
+Subject: ITE 8212 controller
+Date: Sun, 19 Jun 2005 17:53:49 +0200 (CEST)
+Message-ID: <58132.163.5.255.62.1119196429.squirrel@monmail.cegetel.net>
+Reply-To: linux-ide@vger.kernel.org, nbk@sitadelle.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:44179 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261299AbVFRUkW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Jun 2005 16:40:22 -0400
-In-Reply-To: <c195ebf705061813191a48a69f@mail.gmail.com>
+Received: from mf01.sitadelle.com ([212.94.174.80]:38878 "EHLO
+	smtp.cegetel.net") by vger.kernel.org with ESMTP id S262257AbVFSPxu
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 19 Jun 2005 11:53:50 -0400
+Received: from sitadelle.com (217-19-192-105.dti.cegetel.net [217.19.192.105])
+	by smtp.cegetel.net (Postfix) with SMTP id 40D3E3181A3
+	for <linux-ide@vger.kernel.org>; Sun, 19 Jun 2005 17:53:47 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sean darcy <seandarcy2@gmail.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-sean darcy wrote:
-> Mine is also 0x2651.
-> 
-> But I must be blind, but I don't see any statement that  only  -R and
-> -M have AHCI support.
+For now, there is no support for ITE 8212 RAID controller in official
+released 2.6 kernels. I don't know if many people buy the PCI cards,
+but currently ASUS makes motherboard series with onboard ITE 8212F
+RAID controllers, available for less than 100 euros. I thought I was
+buying a very common motherboard, but in the end I couldn't use all
+the IDE connectors. After some search, I found a patch inside the
+Fedora kernel package.
 
+I'm not using Fedora, therefore I applied only the patch named
+linux-2.6.11-ide-acfixes.patch and successfully built a 2.6.11 kernel
+image. The patch adds a new it821x module which correctly detects the
+ITE 8212 controller model on my motherboard. I didn't test the RAID
+mode, but I can at least report it works in normal IDE mode.
 
-Here's my statement :)
+I'm posting to provide positive feedback about this driver, and I
+hope the patch will be merged in next kernel releases. The file
+linux-2.6.11-ide-acfixes.patch can be found here:
+https://www.redhat.com/archives/fedora-cvs-commits/2005-May/msg00462.html
 
-PCI ID 0x2651 does not have AHCI support in the chip.
-
-No amount of BIOS poking can fix that.
-
-	Jeff
+-- 
+Nicolas Baradakis
 
 
