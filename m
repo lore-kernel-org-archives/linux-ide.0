@@ -1,52 +1,53 @@
 From: domen@coderock.org
-Subject: [patch 1/6] ide/ide-cs: replace schedule_timeout() with msleep()
-Date: Mon, 20 Jun 2005 23:52:17 +0200
-Message-ID: <20050620215216.538027000@nd47.coderock.org>
+Subject: [patch 2/6] Replace pci_find_device with pci_dev_present
+Date: Mon, 20 Jun 2005 23:52:18 +0200
+Message-ID: <20050620215217.508725000@nd47.coderock.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from coderock.org ([193.77.147.115]:31129 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S261753AbVFTV4H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2005 17:56:07 -0400
-Content-Disposition: inline; filename=msleep-drivers_ide_ide-cs.patch
+Received: from coderock.org ([193.77.147.115]:32665 "EHLO trashy.coderock.org")
+	by vger.kernel.org with ESMTP id S261755AbVFTV4L (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2005 17:56:11 -0400
+Content-Disposition: inline; filename=pci_dev_present-drivers_ide_pci_alim15x3.patch
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org, Nishanth Aravamudan <nacc@us.ibm.com>, Maximilian Attems <janitor@sternwelten.at>, domen@coderock.org
+Cc: linux-ide@vger.kernel.org, Hanna Linder <hannal@us.ibm.com>, Maximilian Attems <janitor@sternwelten.at>, domen@coderock.org
 
-From: Nishanth Aravamudan <nacc@us.ibm.com>
+From: Hanna Linder <hannal@us.ibm.com>
 
 
 
-Uses msleep() in place of schedule_timeout()
-to guarantee the task delays as expected.
+The dev returned from pci_find_device was not used so it can be replaced
+with pci_dev_present. Has been compile tested.
 
-Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
+Hanna Linder
+IBM Linux Technology Center
+
+Signed-off-by: Hanna Linder <hannal@us.ibm.com>
 Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
 Signed-off-by: Domen Puncer <domen@coderock.org>
 ---
- ide-cs.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ alim15x3.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletion(-)
 
-Index: quilt/drivers/ide/legacy/ide-cs.c
+Index: quilt/drivers/ide/pci/alim15x3.c
 ===================================================================
---- quilt.orig/drivers/ide/legacy/ide-cs.c
-+++ quilt/drivers/ide/legacy/ide-cs.c
-@@ -43,6 +43,7 @@
- #include <linux/ide.h>
- #include <linux/hdreg.h>
- #include <linux/major.h>
-+#include <linux/delay.h>
- #include <asm/io.h>
- #include <asm/system.h>
+--- quilt.orig/drivers/ide/pci/alim15x3.c
++++ quilt/drivers/ide/pci/alim15x3.c
+@@ -876,9 +876,14 @@ static ide_pci_device_t ali15x3_chipset 
+  
+ static int __devinit alim15x3_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ {
++	static struct pci_device_id ati_rs100[] = {
++		{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS100) },
++		{ },
++	};
++
+ 	ide_pci_device_t *d = &ali15x3_chipset;
  
-@@ -346,8 +347,7 @@ static void ide_config(dev_link_t *link)
- 		break;
- 	    }
- 	}
--	__set_current_state(TASK_UNINTERRUPTIBLE);
--	schedule_timeout(HZ/10);
-+	msleep(100);
-     }
+-	if(pci_find_device(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS100, NULL))
++	if(pci_dev_present(ati_rs100))
+ 		printk(KERN_ERR "Warning: ATI Radeon IGP Northbridge is not yet fully tested.\n");
  
-     if (hd < 0) {
+ #if defined(CONFIG_SPARC64)
 
 --
