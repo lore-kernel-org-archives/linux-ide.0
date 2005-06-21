@@ -1,7 +1,7 @@
 From: Yuri Kirsanov <flash@rccb.ru>
 Subject: Re[6]: TX4000 RAID and sata_promise
-Date: Tue, 21 Jun 2005 22:19:13 +0400
-Message-ID: <1483195265.20050621221913@rccb.ru>
+Date: Tue, 21 Jun 2005 22:24:24 +0400
+Message-ID: <253506078.20050621222424@rccb.ru>
 References: <01f501c5a223$9faf5470$6f0aa8c0@rgkb.local>
  <4301E5C5.2030203@dtbb.net>  <1124199054.5550.71.camel@localhost.localdomain>
  <015701c5a267$594284f0$6f0aa8c0@rgkb.local>
@@ -19,15 +19,14 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [213.85.106.100] ([213.85.106.100]:57263 "EHLO rccb.ru")
-	by vger.kernel.org with ESMTP id S1030280AbVHPSS3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Aug 2005 14:18:29 -0400
+Received: from [213.85.106.100] ([213.85.106.100]:46555 "EHLO rccb.ru")
+	by vger.kernel.org with ESMTP id S1030268AbVHPSXk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Aug 2005 14:23:40 -0400
 In-Reply-To: <1124215786.29001.2.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Erik Slagter <erik@slagter.name>
 Cc: linux-ide@vger.kernel.org
-
 
 ES> Hmm, then I guess it would be very interesting to know WHY it doesn't
 ES> load at boot time! What are the symptoms?
@@ -35,70 +34,38 @@ ES> load at boot time! What are the symptoms?
 ES> It seems to strange to me that sata reports PATA devices... What kind of
 ES> harddisks do you connected (brand, type, pata/sata?)
 
-I have Promise TX4000 4xPATA controller...I've patched it with this
-patch:
+I don't know why it doesn't load autoload, maybe I need to insert
+something into /etc/modprobe.conf?
 
---- a/drivers/scsi/sata_promise.c       Sat May  7 05:20:31 2005
-+++ b/drivers/scsi/sata_promise.c       Thu May 12 19:51:01 2005
-@@ -59,6 +59,7 @@
- 
-        board_2037x             = 0,    /* FastTrak S150 TX2plus */
-        board_20319             = 1,    /* FastTrak S150 TX4 */
-+       board_20619             = 2,    /* FastTrak TX4000 */
- 
-        PDC_HAS_PATA            = (1 << 1), /* PDC20375 has PATA */
- 
-@@ -146,6 +147,17 @@
-                .udma_mask      = 0x7f, /* udma0-6 ; FIXME */
-                .port_ops       = &pdc_ata_ops,
-        },
-+
-+       /* board_20619 */
-+       {
-+               .sht            = &pdc_ata_sht,
-+               .host_flags     = ATA_FLAG_NO_LEGACY | ATA_FLAG_SRST |
-+                                 ATA_FLAG_MMIO | ATA_FLAG_SLAVE_POSS,
-+               .pio_mask       = 0x1f, /* pio0-4 */
-+               .mwdma_mask     = 0x07, /* mwdma0-2 */
-+               .udma_mask      = 0x7f, /* udma0-6 ; FIXME */
-+               .port_ops       = &pdc_ata_ops,
-+       },
- };
- 
- static struct pci_device_id pdc_ata_pci_tbl[] = {
-@@ -169,6 +181,9 @@
-        { PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-          board_20319 },
- 
-+       { PCI_VENDOR_ID_PROMISE, 0x6629, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+         board_20619 },
-+
-        { }     /* terminate list */
- };
- 
-@@ -633,6 +648,15 @@
-        case board_2037x:
-                        probe_ent->n_ports = 2;
-                break;
-+       case board_20619:
-+               probe_ent->n_ports = 4;
-+
-+               pdc_ata_setup_port(&probe_ent->port[2], base + 0x300);
-+               pdc_ata_setup_port(&probe_ent->port[3], base + 0x380);
-+
-+               probe_ent->port[2].scr_addr = base + 0x600;
-+               probe_ent->port[3].scr_addr = base + 0x700;
-+                break;
-        default:
-                BUG();
-                break;
-@@ -673,7 +697,7 @@
- 
- 
- MODULE_AUTHOR("Jeff Garzik");
--MODULE_DESCRIPTION("Promise SATA TX2/TX4 low-level driver");
-+MODULE_DESCRIPTION("Promise ATA TX2/TX4/TX4000 low-level driver");
- MODULE_LICENSE("GPL");
- MODULE_DEVICE_TABLE(pci, pdc_ata_pci_tbl);
- MODULE_VERSION(DRV_VERSION);
+Here's my 'lspci' and 'lspcidrake' (lspcidrake is a Mandrake Linux
+tool):
+
+[root@mandr ~]# lspci
+00:00.0 Host bridge: Intel Corporation 82815 815 Chipset Host Bridge and Memory Controller Hub (rev 02)
+00:02.0 VGA compatible controller: Intel Corporation 82815 CGC [Chipset Graphics Controller] (rev 02)
+00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 02)
+00:1f.0 ISA bridge: Intel Corporation 82801BA ISA Bridge (LPC) (rev 02)
+00:1f.1 IDE interface: Intel Corporation 82801BA IDE U100 (rev 02)
+00:1f.2 USB Controller: Intel Corporation 82801BA/BAM USB (Hub #1) (rev 02)
+00:1f.3 SMBus: Intel Corporation 82801BA/BAM SMBus (rev 02)
+00:1f.4 USB Controller: Intel Corporation 82801BA/BAM USB (Hub #2) (rev 02)
+00:1f.5 Multimedia audio controller: Intel Corporation 82801BA/BAM AC'97 Audio (rev 02)
+01:02.0 Ethernet controller: 3Com Corporation 3c905C-TX/TX-M [Tornado] (rev 78)
+01:09.0 RAID bus controller: Promise Technology, Inc. PDC20619 (FastTrak TX4000) (rev 02)
+
+
+[root@mandr ~]# lspcidrake
+intel-agp       : Intel Corp.|82815 815 Chipset Host Bridge and Memory Controller Hub [BRIDGE_HOST]
+Card:Intel 815  : Intel Corp.|82815 CGC [Chipset Graphics Controller] [DISPLAY_VGA]
+hw_random       : Intel Corp.|82820 815e (Camino 2) Chipset PCI [BRIDGE_PCI]
+i810-tco        : Intel Corp.|82820 815e (Camino 2) Chipset ISA Bridge (ICH2) [BRIDGE_ISA]
+piix            : Intel Corp.|82820 815e (Camino 2) Chipset IDE U100 [STORAGE_IDE]
+usb-uhci        : Intel Corp.|82820 815e (Camino 2) Chipset USB (Hub A) [SERIAL_USB]
+i2c-i801        : Intel Corp.|82820 815e (Camino 2) Chipset SMBus [SERIAL_SMBUS]
+usb-uhci        : Intel Corp.|82820 815e (Camino 2) Chipset USB (Hub B) [SERIAL_USB]
+i810_audio      : Intel Corp.|ICH2 810 Chipset AC'97 Audio Controller [MULTIMEDIA_AUDIO]
+3c59x           : 3Com Corp.|3c905C-TX [Fast Etherlink] [NETWORK_ETHERNET]
+sata_promise    : Promise Technology|FastTrak TX4000 Controller [STORAGE_RAID]
+hub             : Linux 2.6.12.4-10flh uhci_hcd|Intel Corporation 82801BA/BAM USB (Hub #2) [Hub|Unused]
+hub             : Linux 2.6.12.4-10flh uhci_hcd|Intel Corporation 82801BA/BAM USB (Hub #1) [Hub|Unused]
 
