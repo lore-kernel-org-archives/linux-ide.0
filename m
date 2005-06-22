@@ -1,55 +1,45 @@
-From: Rafael =?iso-8859-2?q?=C1vila_de_Esp=EDndola?=
-	<rafael.espindola@gmail.com>
-Subject: Re: unable to set udma >= 3 on ich5 on 2.6.11
-Date: Tue, 21 Jun 2005 22:50:52 -0300
-Message-ID: <200506212251.27168.rafael.espindola@gmail.com>
-References: <564d96fb05062005064283caaf@mail.gmail.com> <pan.2005.06.21.17.50.40.495619@ree.hu>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [SATA] libata-dev queue updated
+Date: Wed, 22 Jun 2005 12:15:59 -0400
+Message-ID: <42B98EBF.7020500@rtr.ca>
+References: <42A14541.6020209@pobox.com> <87vf4ujgmj.fsf@stark.xeocode.com>	<42A1E96C.6080806@pobox.com> <20050604185028.GZ4992@stusta.de>	<42A1FB91.5060702@pobox.com> <87psv2j5mb.fsf@stark.xeocode.com>	<20050604191958.GA13111@havoc.gtf.org> <87k6l9k0aa.fsf@stark.xeocode.com> <42A263BB.9070606@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1675351.WnOWAeMnIJ";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.197]:61763 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262507AbVFVBvr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jun 2005 21:51:47 -0400
-Received: by wproxy.gmail.com with SMTP id 68so46948wri
-        for <linux-ide@vger.kernel.org>; Tue, 21 Jun 2005 18:51:47 -0700 (PDT)
-In-Reply-To: <pan.2005.06.21.17.50.40.495619@ree.hu>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:49924 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S261582AbVFVQQB
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Jun 2005 12:16:01 -0400
+In-Reply-To: <42A263BB.9070606@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Balazs Ree <ree@ree.hu>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Greg Stark <gsstark@mit.edu>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>
 
---nextPart1675351.WnOWAeMnIJ
-Content-Type: text/plain;
-  charset="iso-8859-2"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Jeff Garzik wrote:
+> Greg Stark wrote:
+> 
+>> So, uh, where do I get git? Where is your "git repository" and Linus' 
+>> "git repository" and how do I set that up?
+> 
+> http://lkml.org/lkml/2005/5/26/11
+> 
+>     Jeff
 
-Em Tue 21 Jun 2005 14:50, Balazs Ree escreveu:
-> Just a blind guess... you might
-> want to try to set the kernel parameter CONFIG_IDEDMA_IVB (IGNORE
-> word93 Validation BITS). I had this problem recently and this was
-> the one that solved it. But I am not an expert so pardon me if I said
-> something stupid.
-It worked!
-Thanks.
+Okay, so now I have two separate git repositories,
+one for Linus's tree (currently at 2.6.12), and another
+that is Jeff's libata-dev bundle of goodies.
 
-What is to blame? ICH5? If so, Is there a  black list were I could add it?
+But I have no idea whatsoever what to do next.
 
-Rafael
+What I *want*, is the patchset for "passthru",
+so that I can apply those patches to 2.6.12 and
+then test that kernel.
 
---nextPart1675351.WnOWAeMnIJ
-Content-Type: application/pgp-signature
+But it is nowhere even remotely close to possibly perhaps
+someday eventually maybe suggestively obvious how to do that.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+Anyone care to volunteer the info?  Jeff?
 
-iD8DBQBCuMQfLlrfGJ8JUHwRAhMJAJ9n38YyHbwZmN078+3ZDDsJivJSMQCeL+OP
-G3HwSNmVROmmgpTVR24Fpss=
-=S/1g
------END PGP SIGNATURE-----
-
---nextPart1675351.WnOWAeMnIJ--
+Thanks
