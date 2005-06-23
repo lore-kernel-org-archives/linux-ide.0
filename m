@@ -1,93 +1,41 @@
-From: Rob Punkunus <rpunkunus@nvidia.com>
-Subject: [PATCH][2.4.31] amd74xx patch for new NVIDIA device IDs
-Date: Wed, 22 Jun 2005 20:19:56 -0700
-Message-ID: <1119496571.2068.12.camel@dhcp-174-26.nvidia.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [SATA] libata-dev queue updated
+Date: Wed, 22 Jun 2005 23:39:20 -0400
+Message-ID: <42BA2EE8.7010303@rtr.ca>
+References: <42A14541.6020209@pobox.com> <87vf4ujgmj.fsf@stark.xeocode.com>	<42A1E96C.6080806@pobox.com> <20050604185028.GZ4992@stusta.de>	<42A1FB91.5060702@pobox.com> <87psv2j5mb.fsf@stark.xeocode.com>	<20050604191958.GA13111@havoc.gtf.org> <87k6l9k0aa.fsf@stark.xeocode.com> <42A263BB.9070606@pobox.com> <42B98EBF.7020500@rtr.ca> <42B9C8AB.8040001@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.112.143]:11277 "EHLO
-	HQEMGATE03.nvidia.com") by vger.kernel.org with ESMTP
-	id S261930AbVFWBRK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Jun 2005 21:17:10 -0400
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:26386 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S262020AbVFWDj0
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Jun 2005 23:39:26 -0400
+In-Reply-To: <42B9C8AB.8040001@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: rpunkunus@nvidia.com, blazara@nvidia.com, acurrid@nvidia.com, achew@nvidia.com, amartin@nvidia.com, bzolnier@gmail.com, vojtech@suse.cz, gregkh@suse.de, jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Greg Stark <gsstark@mit.edu>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-Signed-off-by: Rob Punkunus <rpunkunus@nvidia.com>
----
+Jeff Garzik wrote:
+>
+> You can obtain a patch from the 'passthru' branch by doing
+> 
+>     git checkout -f passthru
+>     git-diff-tree -p master HEAD > /tmp/patch
+> 
+> or simply by downloading what I just uploaded a few minutes ago
 
-diff -pur linux-2.4.31/drivers/ide/pci/amd74xx.c patch-linux-2.4.31/drivers/ide/pci/amd74xx.c
---- linux-2.4.31/drivers/ide/pci/amd74xx.c	2004-11-17 03:54:21.000000000 -0800
-+++ patch-linux-2.4.31/drivers/ide/pci/amd74xx.c	2005-06-20 05:43:13.000000000 -0700
-@@ -71,6 +71,8 @@ static struct amd_ide_chip {
- 	{ PCI_DEVICE_ID_NVIDIA_NFORCE3S_SATA2,	0x50, AMD_UDMA_133 },
- 	{ PCI_DEVICE_ID_NVIDIA_NFORCE_CK804_IDE,	0x50, AMD_UDMA_133 },
- 	{ PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_IDE,	0x50, AMD_UDMA_133 },
-+	{ PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE,	0x50, AMD_UDMA_133 },
-+	{ PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE, 	0x50, AMD_UDMA_133 },
- 	{ 0 }
- };
- 
-@@ -473,6 +475,8 @@ static struct pci_device_id amd74xx_pci_
- #endif
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_CK804_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 13 },
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 14 },
-+	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 15 },
-+	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 16 },
- 	{ 0, },
- };
- 
-diff -pur linux-2.4.31/drivers/ide/pci/amd74xx.h patch-linux-2.4.31/drivers/ide/pci/amd74xx.h
---- linux-2.4.31/drivers/ide/pci/amd74xx.h	2004-11-17 03:54:21.000000000 -0800
-+++ patch-linux-2.4.31/drivers/ide/pci/amd74xx.h	2005-06-17 08:19:22.000000000 -0700
-@@ -197,6 +197,31 @@ static ide_pci_device_t amd74xx_chipsets
- 		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x01,0x01}},
- 		.bootable	= ON_BOARD,
- 	},
-+
-+	{
-+		/* 15 */
-+		.vendor		= PCI_VENDOR_ID_NVIDIA,
-+		.device		= PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE,
-+		.name		= "NFORCE-MCP51",
-+		.init_chipset	= init_chipset_amd74xx,
-+		.init_hwif	= init_hwif_amd74xx,
-+		.channels	= 2,
-+		.autodma	= AUTODMA,
-+		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x01,0x01}},
-+		.bootable	= ON_BOARD,
-+	},
-+	{
-+		/* 16 */
-+		.vendor		= PCI_VENDOR_ID_NVIDIA,
-+		.device		= PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE,
-+		.name		= "NFORCE-MCP55",
-+		.init_chipset	= init_chipset_amd74xx,
-+		.init_hwif	= init_hwif_amd74xx,
-+		.channels	= 2,
-+		.autodma	= AUTODMA,
-+		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x01,0x01}},
-+		.bootable	= ON_BOARD,
-+	},
- 	{
- 		.vendor		= 0,
- 		.device		= 0,
-Only in patch-linux-2.4.31/include: asm
-Only in patch-linux-2.4.31/include/linux: modules
-diff -pur linux-2.4.31/include/linux/pci_ids.h patch-linux-2.4.31/include/linux/pci_ids.h
---- linux-2.4.31/include/linux/pci_ids.h	2005-05-31 17:56:56.000000000 -0700
-+++ patch-linux-2.4.31/include/linux/pci_ids.h	2005-06-20 05:49:07.000000000 -0700
-@@ -1034,6 +1034,8 @@
- #define PCI_DEVICE_ID_NVIDIA_GEFORCE3_1		0x0201
- #define PCI_DEVICE_ID_NVIDIA_GEFORCE3_2		0x0202
- #define PCI_DEVICE_ID_NVIDIA_QUADRO_DDC		0x0203
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE	0x0265
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE   0x036E
- 
- #define PCI_VENDOR_ID_IMS		0x10e0
- #define PCI_DEVICE_ID_IMS_8849		0x8849
+Great, it works now!  I had actually stumbled across a similar recipe
+on my own, but prior to your very recent update of libata-dev.git
+it gave me a huge unruly diff that didn't look right.
 
+Now, though, the recipe above gives me exactly the same patch
+that you posted, thanks!
 
+Now if only the same were possible for atapi-enable,
+though I suspect that branch is simply a one-liner to libata.h.
 
+Do you have the suspend/resume stuff (Jens A.) in a tree some place?
+
+Thanks Jeff!
