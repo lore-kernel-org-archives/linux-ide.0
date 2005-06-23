@@ -1,61 +1,31 @@
-From: Balazs Ree <ree@ree.hu>
-Subject: Re: unable to set udma >= 3 on ich5 on 2.6.11
-Date: Thu, 23 Jun 2005 06:48:55 +0200
-Message-ID: <pan.2005.06.23.04.48.47.954791@ree.hu>
-References: <564d96fb05062005064283caaf@mail.gmail.com> <pan.2005.06.21.17.50.40.495619@ree.hu> <200506212251.27168.rafael.espindola@gmail.com>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH][2.4.31] amd74xx patch for new NVIDIA device IDs
+Date: Wed, 22 Jun 2005 22:43:19 -0700
+Message-ID: <20050623054319.GA11045@suse.de>
+References: <1119496571.2068.12.camel@dhcp-174-26.nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:41677 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S262124AbVFWFAx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2005 01:00:53 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1DlJjD-0002b3-72
-	for linux-ide@vger.kernel.org; Thu, 23 Jun 2005 06:54:15 +0200
-Received: from 3e44bdc0.adsl.enternet.hu ([62.68.189.192])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2005 06:54:15 +0200
-Received: from ree by 3e44bdc0.adsl.enternet.hu with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2005 06:54:15 +0200
+Received: from lyle.provo.novell.com ([137.65.81.174]:15020 "EHLO
+	lyle.provo.novell.com") by vger.kernel.org with ESMTP
+	id S262085AbVFWFnh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Jun 2005 01:43:37 -0400
+Content-Disposition: inline
+In-Reply-To: <1119496571.2068.12.camel@dhcp-174-26.nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Rob Punkunus <rpunkunus@nvidia.com>
+Cc: blazara@nvidia.com, acurrid@nvidia.com, achew@nvidia.com, amartin@nvidia.com, bzolnier@gmail.com, vojtech@suse.cz, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Tue, 21 Jun 2005 22:50:52 -0300 keltez=E9ssel Rafael =C1vila de Esp=EDn=
-dola
-azt =EDrta:
+On Wed, Jun 22, 2005 at 08:19:56PM -0700, Rob Punkunus wrote:
+> Signed-off-by: Rob Punkunus <rpunkunus@nvidia.com>
+> ---
+> 
+> diff -pur linux-2.4.31/drivers/ide/pci/amd74xx.c patch-linux-2.4.31/drivers/ide/pci/amd74xx.c
+> --- linux-2.4.31/drivers/ide/pci/amd74xx.c	2004-11-17 03:54:21.000000000 -0800
 
-> Em Tue 21 Jun 2005 14:50, Balazs Ree escreveu:
->> Just a blind guess... you might
->> want to try to set the kernel parameter CONFIG_IDEDMA_IVB (IGNORE
->> word93 Validation BITS). I had this problem recently and this was
->> the one that solved it. But I am not an expert so pardon me if I sai=
-d
-> It worked!
-> Thanks.
->=20
-> What is to blame? ICH5? If so, Is there a  black list were I could ad=
-d it?
+Thanks, but I'm not taking any 2.4 patches :)
 
-To me it seems that there are two implementations of the 80cc ribbon
-detection in the kernel - one is the "standard" and the other one is th=
-e
-one that some drives actually implement? Or how is that? Maybe it would=
- be
-good to make the default setting to "true" in the kernel config or rath=
-er
-just put some more emphasized hint about this in some docs where people
-bump into it more easily? It is true that the help text of the config
-parameter tells exactly what to do, but otherwise I spent a long time
-investigating this problem before finding the "obvious", and I guess I'=
-m
-not alone.
+Good luck,
 
---=20
-Bala'zs REE' jabber + email: ree@ree.hu
-             ICQ: 75955071   AIM + skype: reebalazs
-
-
+greg k-h
