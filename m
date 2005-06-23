@@ -1,41 +1,61 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [SATA] libata-dev queue updated
-Date: Wed, 22 Jun 2005 23:39:20 -0400
-Message-ID: <42BA2EE8.7010303@rtr.ca>
-References: <42A14541.6020209@pobox.com> <87vf4ujgmj.fsf@stark.xeocode.com>	<42A1E96C.6080806@pobox.com> <20050604185028.GZ4992@stusta.de>	<42A1FB91.5060702@pobox.com> <87psv2j5mb.fsf@stark.xeocode.com>	<20050604191958.GA13111@havoc.gtf.org> <87k6l9k0aa.fsf@stark.xeocode.com> <42A263BB.9070606@pobox.com> <42B98EBF.7020500@rtr.ca> <42B9C8AB.8040001@pobox.com>
+From: Balazs Ree <ree@ree.hu>
+Subject: Re: unable to set udma >= 3 on ich5 on 2.6.11
+Date: Thu, 23 Jun 2005 06:48:55 +0200
+Message-ID: <pan.2005.06.23.04.48.47.954791@ree.hu>
+References: <564d96fb05062005064283caaf@mail.gmail.com> <pan.2005.06.21.17.50.40.495619@ree.hu> <200506212251.27168.rafael.espindola@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:26386 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S262020AbVFWDj0
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Jun 2005 23:39:26 -0400
-In-Reply-To: <42B9C8AB.8040001@pobox.com>
+Received: from main.gmane.org ([80.91.229.2]:41677 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S262124AbVFWFAx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2005 01:00:53 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1DlJjD-0002b3-72
+	for linux-ide@vger.kernel.org; Thu, 23 Jun 2005 06:54:15 +0200
+Received: from 3e44bdc0.adsl.enternet.hu ([62.68.189.192])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2005 06:54:15 +0200
+Received: from ree by 3e44bdc0.adsl.enternet.hu with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2005 06:54:15 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Greg Stark <gsstark@mit.edu>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>
+To: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
->
-> You can obtain a patch from the 'passthru' branch by doing
-> 
->     git checkout -f passthru
->     git-diff-tree -p master HEAD > /tmp/patch
-> 
-> or simply by downloading what I just uploaded a few minutes ago
+Tue, 21 Jun 2005 22:50:52 -0300 keltez=E9ssel Rafael =C1vila de Esp=EDn=
+dola
+azt =EDrta:
 
-Great, it works now!  I had actually stumbled across a similar recipe
-on my own, but prior to your very recent update of libata-dev.git
-it gave me a huge unruly diff that didn't look right.
+> Em Tue 21 Jun 2005 14:50, Balazs Ree escreveu:
+>> Just a blind guess... you might
+>> want to try to set the kernel parameter CONFIG_IDEDMA_IVB (IGNORE
+>> word93 Validation BITS). I had this problem recently and this was
+>> the one that solved it. But I am not an expert so pardon me if I sai=
+d
+> It worked!
+> Thanks.
+>=20
+> What is to blame? ICH5? If so, Is there a  black list were I could ad=
+d it?
 
-Now, though, the recipe above gives me exactly the same patch
-that you posted, thanks!
+To me it seems that there are two implementations of the 80cc ribbon
+detection in the kernel - one is the "standard" and the other one is th=
+e
+one that some drives actually implement? Or how is that? Maybe it would=
+ be
+good to make the default setting to "true" in the kernel config or rath=
+er
+just put some more emphasized hint about this in some docs where people
+bump into it more easily? It is true that the help text of the config
+parameter tells exactly what to do, but otherwise I spent a long time
+investigating this problem before finding the "obvious", and I guess I'=
+m
+not alone.
 
-Now if only the same were possible for atapi-enable,
-though I suspect that branch is simply a one-liner to libata.h.
+--=20
+Bala'zs REE' jabber + email: ree@ree.hu
+             ICQ: 75955071   AIM + skype: reebalazs
 
-Do you have the suspend/resume stuff (Jens A.) in a tree some place?
 
-Thanks Jeff!
