@@ -1,52 +1,39 @@
-From: Krzysztof Oledzki <olel@ans.pl>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: SATA speed. Should be 150 or 133?
-Date: Fri, 24 Jun 2005 11:33:58 +0200 (CEST)
-Message-ID: <Pine.LNX.4.62.0506241127210.3016@bizon.gios.gov.pl>
-References: <Pine.LNX.4.62.0506240135340.29382@bizon.gios.gov.pl>
- <42BB794B.6080109@rtr.ca>
+Date: Fri, 24 Jun 2005 11:35:42 -0400
+Message-ID: <42BC284E.7050202@rtr.ca>
+References: <Pine.LNX.4.62.0506240135340.29382@bizon.gios.gov.pl> <42BB794B.6080109@rtr.ca> <Pine.LNX.4.62.0506241127210.3016@bizon.gios.gov.pl>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-187430788-1671707983-1119605638=:3016"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bizon.gios.gov.pl ([212.244.124.8]:19162 "EHLO
-	bizon.gios.gov.pl") by vger.kernel.org with ESMTP id S263082AbVFXJeJ
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:23566 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S263051AbVFXPft
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 24 Jun 2005 05:34:09 -0400
-In-Reply-To: <42BB794B.6080109@rtr.ca>
+	Fri, 24 Jun 2005 11:35:49 -0400
+In-Reply-To: <Pine.LNX.4.62.0506241127210.3016@bizon.gios.gov.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Krzysztof Oledzki <olel@ans.pl>
+Cc: Mark Lord <lkml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+>> True SATA drives ignore the "transfer speed",
+>> as it really is meaningless and does not apply.
+> 
+> So, am I the the only person confused by this message? ;)
+> There is "SATA max UDMA/133" not "PATA max UDMA/133".
 
----187430788-1671707983-1119605638=:3016
-Content-Type: TEXT/PLAIN; charset=ISO-8859-2; format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+No, it really is as confusing as it sounds!
+The drive is SATA, but the transfer speed gunk only
+applies to the internal "PATA" portion of the drive,
+which communicates to the built-in SATA bridge chip
+of the same drive, which in turn presents a pure SATA
+interface to the host computer.
 
+> Oh, so how to check true (current) speed?
 
+Same as always:  hdparm -I /dev/sd?
+(requires the libata-dev "passthru" patch
+recently reposted here by Jeff Garzik).
 
-On Thu, 23 Jun 2005, Mark Lord wrote:
-
-> True SATA drives ignore the "transfer speed",
-> as it really is meaningless and does not apply.
-So, am I the the only person confused by this message? ;)
-There is "SATA max UDMA/133" not "PATA max UDMA/133".
-
-> But most (all?) first-gen SATA drives are really
-> PATA drives with a SATA bridge built-in.
-> Some of those drives require that Linux set the
-> DMA transfer speed for them to work reliably.
-Oh, so how to check true (current) speed?
-
-> Last I looked, the highest valid PATA transfer
-> speed was still "UDMA/133".  150 just plain
-> doesn't exist for PATA (and the whole concept
-> doesn't exist for SATA, so ..)
-OK :)
-
-
-Best regards,
-
- =09=09=09=09Krzysztof Ol=EAdzki
----187430788-1671707983-1119605638=:3016--
+cheers
