@@ -1,14 +1,14 @@
 From: maximilian attems <janitor@sternwelten.at>
-Subject: [patch 1/13] ide hotplug mark __devinit alim15x3.c
-Date: Sun, 26 Jun 2005 18:45:57 +0200
-Message-ID: <20050626164557.GI12811@sputnik.stro.at>
+Subject: [patch 3/13] ide hotplug mark __devinit cmd640.c
+Date: Sun, 26 Jun 2005 18:46:12 +0200
+Message-ID: <20050626164612.GJ12811@sputnik.stro.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:56247 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S261452AbVFZRE7
+Received: from baikonur.stro.at ([213.239.196.228]:58551 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S261457AbVFZRFC
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Jun 2005 13:04:59 -0400
+	Sun, 26 Jun 2005 13:05:02 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -16,61 +16,96 @@ To: B.Zolnierkiewicz@elka.pw.edu.pl
 Cc: linux-ide@vger.kernel.org
 
 From: Herbert Xu <herbert@gondor.apana.org.au>
-
+  
+  
 mark the __init section __devinit.
-Splitted up from the Debian kernel patch.
-
-see the thread about the pci hotplug crash on a stratus box.
-http://marc.theaimsgroup.com/?l=linux-kernel&m=111930108613386&w=2
+Splitted up from the Debian kernel patch. 
 
 
 Signed-off-by: maximilian attems <janitor@sternwelten.at>
 
-diff -aurN a/drivers/ide/pci/alim15x3.c b/drivers/ide/pci/alim15x3.c
---- a/drivers/ide/pci/alim15x3.c	2005-06-06 11:22:29.000000000 -0400
-+++ b/drivers/ide/pci/alim15x3.c	2005-06-15 22:01:23.000000000 -0400
-@@ -583,7 +583,7 @@
-  *	appropriate also sets up the 1533 southbridge.
+
+diff -aurN a/drivers/ide/pci/cmd640.c b/drivers/ide/pci/cmd640.c
+--- a/drivers/ide/pci/cmd640.c	2005-06-06 11:22:29.000000000 -0400
++++ b/drivers/ide/pci/cmd640.c	2005-06-15 22:01:23.000000000 -0400
+@@ -278,7 +278,7 @@
+ 	spin_unlock_irqrestore(&ide_lock, flags);
+ }
+ 
+-static int __init match_pci_cmd640_device (void)
++static int __devinit match_pci_cmd640_device (void)
+ {
+ 	const u8 ven_dev[4] = {0x95, 0x10, 0x40, 0x06};
+ 	unsigned int i;
+@@ -298,7 +298,7 @@
+ /*
+  * Probe for CMD640x -- pci method 1
   */
-   
--static unsigned int __init init_chipset_ali15x3 (struct pci_dev *dev, const char *name)
-+static unsigned int __devinit init_chipset_ali15x3 (struct pci_dev *dev, const char *name)
+-static int __init probe_for_cmd640_pci1 (void)
++static int __devinit probe_for_cmd640_pci1 (void)
+ {
+ 	__get_cmd640_reg = get_cmd640_reg_pci1;
+ 	__put_cmd640_reg = put_cmd640_reg_pci1;
+@@ -314,7 +314,7 @@
+ /*
+  * Probe for CMD640x -- pci method 2
+  */
+-static int __init probe_for_cmd640_pci2 (void)
++static int __devinit probe_for_cmd640_pci2 (void)
+ {
+ 	__get_cmd640_reg = get_cmd640_reg_pci2;
+ 	__put_cmd640_reg = put_cmd640_reg_pci2;
+@@ -328,7 +328,7 @@
+ /*
+  * Probe for CMD640x -- vlb
+  */
+-static int __init probe_for_cmd640_vlb (void)
++static int __devinit probe_for_cmd640_vlb (void)
+ {
+ 	u8 b;
+ 
+@@ -349,7 +349,7 @@
+  *  Returns 1 if an IDE interface/drive exists at 0x170,
+  *  Returns 0 otherwise.
+  */
+-static int __init secondary_port_responding (void)
++static int __devinit secondary_port_responding (void)
  {
  	unsigned long flags;
- 	u8 tmpbyte;
-@@ -677,7 +677,7 @@
-  *	FIXME: frobs bits that are not defined on newer ALi devicea
-  */
  
--static unsigned int __init ata66_ali15x3 (ide_hwif_t *hwif)
-+static unsigned int __devinit ata66_ali15x3 (ide_hwif_t *hwif)
- {
- 	struct pci_dev *dev	= hwif->pci_dev;
- 	unsigned int ata66	= 0;
-@@ -748,7 +748,7 @@
-  *	Initialize the IDE structure side of the ALi 15x3 driver.
+@@ -392,7 +392,7 @@
+  * Check whether prefetch is on for a drive,
+  * and initialize the unmask flags for safe operation.
   */
-  
--static void __init init_hwif_common_ali15x3 (ide_hwif_t *hwif)
-+static void __devinit init_hwif_common_ali15x3 (ide_hwif_t *hwif)
+-static void __init check_prefetch (unsigned int index)
++static void __devinit check_prefetch (unsigned int index)
  {
- 	hwif->autodma = 0;
- 	hwif->tuneproc = &ali15x3_tune_drive;
-@@ -794,7 +794,7 @@
-  *	Sparc systems
+ 	ide_drive_t *drive = cmd_drives[index];
+ 	u8 b = get_cmd640_reg(prefetch_regs[index]);
+@@ -413,7 +413,7 @@
+ /*
+  * Figure out which devices we control
   */
+-static void __init setup_device_ptrs (void)
++static void __devinit setup_device_ptrs (void)
+ {
+ 	unsigned int i;
  
--static void __init init_hwif_ali15x3 (ide_hwif_t *hwif)
-+static void __devinit init_hwif_ali15x3 (ide_hwif_t *hwif)
- {
- 	u8 ideic, inmir;
- 	s8 irq_routing_table[] = { -1,  9, 3, 10, 4,  5, 7,  6,
-@@ -847,7 +847,7 @@
-  *	the actual work.
+@@ -495,7 +495,7 @@
+ /*
+  * This routine retrieves the initial drive timings from the chipset.
   */
- 
--static void __init init_dma_ali15x3 (ide_hwif_t *hwif, unsigned long dmabase)
-+static void __devinit init_dma_ali15x3 (ide_hwif_t *hwif, unsigned long dmabase)
+-static void __init retrieve_drive_counts (unsigned int index)
++static void __devinit retrieve_drive_counts (unsigned int index)
  {
- 	if (m5229_revision < 0x20)
- 		return;
+ 	u8 b;
+ 
+@@ -716,7 +716,7 @@
+ /*
+  * Probe for a cmd640 chipset, and initialize it if found.  Called from ide.c
+  */
+-int __init ide_probe_for_cmd640x (void)
++int __devinit ide_probe_for_cmd640x (void)
+ {
+ #ifdef CONFIG_BLK_DEV_CMD640_ENHANCED
+ 	int second_port_toggled = 0;
