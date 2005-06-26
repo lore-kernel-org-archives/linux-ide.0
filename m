@@ -1,30 +1,33 @@
-From: Jessie <peered@jackisch.com>
-Subject: The good sex guide!
-Date: Sat, 25 Jun 2005 08:52:13 -0400
-Message-ID: <249639922.11933049804@c-24-61-80-212.hsd1.ma.comcast.net>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: SATA speed. Should be 150 or 133?
+Date: Sat, 25 Jun 2005 21:57:17 -0400
+Message-ID: <42BE0B7D.4050307@rtr.ca>
+References: <Pine.LNX.4.62.0506240135340.29382@bizon.gios.gov.pl> <42BB794B.6080109@rtr.ca> <Pine.LNX.4.62.0506241127210.3016@bizon.gios.gov.pl> <42BC284E.7050202@rtr.ca> <Pine.LNX.4.62.0506242032290.1394@bizon.gios.gov.pl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from c-24-61-80-212.hsd1.ma.comcast.net ([24.61.80.212]:9229 "HELO
-	c-24-61-80-212.hsd1.ma.comcast.net") by vger.kernel.org with SMTP
-	id S261212AbVFYMwT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 25 Jun 2005 08:52:19 -0400
-Received: from [131.238.138.132] (port=4280 helo=[monopolized])
-    by c-24-61-80-212.hsd1.ma.comcast.net with esmtp
-    id 12866274772sternly23659
-    for linux-ide@vger.kernel.org; Sat, 25 Jun 2005 08:52:14 -0400
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:17157 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S261550AbVFZB5Y
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 25 Jun 2005 21:57:24 -0400
+In-Reply-To: <Pine.LNX.4.62.0506242032290.1394@bizon.gios.gov.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Krzysztof Oledzki <olel@ans.pl>
+Cc: linux-ide@vger.kernel.org
 
-Pharmacy - No prescription required
-http://psob.c9x5ydcn94ukyvc.poromajg.info
+Krzysztof Oledzki wrote:
+>
+> # hdparm -I /dev/sda
+> 
+> /dev/sda:
+> (...)
+>         DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
+> (...)
+> 
+> This one? udma6?
 
+Yup.  udma6 == UDMA/133
 
-
-In order to be a realist you must believe in miracles.  
-If we don't succeed we run the risk of failure.   
-Act as if it were impossible to fail.     
-
-
+Cheers
