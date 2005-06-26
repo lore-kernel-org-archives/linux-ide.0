@@ -1,58 +1,30 @@
-From: maximilian attems <janitor@sternwelten.at>
-Subject: [patch 5/13] ide hotplug mark __devinit cy82c693.c
-Date: Sun, 26 Jun 2005 18:46:40 +0200
-Message-ID: <20050626164640.GL12811@sputnik.stro.at>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: SATA speed. Should be 150 or 133?
+Date: Sun, 26 Jun 2005 13:08:54 -0400
+Message-ID: <42BEE126.6070208@pobox.com>
+References: <Pine.LNX.4.62.0506240135340.29382@bizon.gios.gov.pl> <42BB794B.6080109@rtr.ca> <Pine.LNX.4.62.0506241127210.3016@bizon.gios.gov.pl> <42BC284E.7050202@rtr.ca> <Pine.LNX.4.62.0506242032290.1394@bizon.gios.gov.pl> <42BE0B7D.4050307@rtr.ca> <Pine.LNX.4.62.0506261229430.2421@bizon.gios.gov.pl> <42BEB4B0.8090405@pobox.com> <Pine.LNX.4.62.0506261612420.9277@bizon.gios.gov.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:59319 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S261459AbVFZRFD
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Jun 2005 13:05:03 -0400
-Content-Disposition: inline
+Received: from mail.dvmed.net ([216.237.124.58]:57547 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261465AbVFZRJA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Jun 2005 13:09:00 -0400
+In-Reply-To: <Pine.LNX.4.62.0506261612420.9277@bizon.gios.gov.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org
+To: Krzysztof Oledzki <olel@ans.pl>
+Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-From: Herbert Xu <herbert@gondor.apana.org.au>
-  
-  
-mark the __init section __devinit.
-Splitted up from the Debian kernel patch. 
+Krzysztof Oledzki wrote:
+> So, excuse me for asking this question again: how to check true 
+> (current) speed? I still don't know if this disk uses UDMA/133 or SATA150.
 
-Signed-off-by: maximilian attems <janitor@sternwelten.at>
+This is an irrelevant question, because the answer is "both."
 
-diff -aurN a/drivers/ide/pci/cy82c693.c b/drivers/ide/pci/cy82c693.c
---- a/drivers/ide/pci/cy82c693.c	2005-06-06 11:22:29.000000000 -0400
-+++ b/drivers/ide/pci/cy82c693.c	2005-06-15 22:01:23.000000000 -0400
-@@ -391,7 +391,7 @@
- /*
-  * this function is called during init and is used to setup the cy82c693 chip
-  */
--static unsigned int __init init_chipset_cy82c693(struct pci_dev *dev, const char *name)
-+static unsigned int __devinit init_chipset_cy82c693(struct pci_dev *dev, const char *name)
- {
- 	if (PCI_FUNC(dev->devfn) != 1)
- 		return 0;
-@@ -443,7 +443,7 @@
- /*
-  * the init function - called for each ide channel once
-  */
--static void __init init_hwif_cy82c693(ide_hwif_t *hwif)
-+static void __devinit init_hwif_cy82c693(ide_hwif_t *hwif)
- {
- 	hwif->autodma = 0;
- 
-@@ -467,9 +467,9 @@
- 	hwif->drives[1].autodma = hwif->autodma;
- }
- 
--static __initdata ide_hwif_t *primary;
-+static __devinitdata ide_hwif_t *primary;
- 
--void __init init_iops_cy82c693(ide_hwif_t *hwif)
-+void __devinit init_iops_cy82c693(ide_hwif_t *hwif)
- {
- 	if (PCI_FUNC(hwif->pci_dev->devfn) == 1)
- 		primary = hwif;
+The SATA bus speed is always 1.5Gbps, 3Gbps, etc. but the device must 
+also set udma speed (udma0-6).
+
+	Jeff
+
+
