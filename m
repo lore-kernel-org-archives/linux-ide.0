@@ -1,30 +1,39 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SATA speed. Should be 150 or 133?
-Date: Sun, 26 Jun 2005 13:08:54 -0400
-Message-ID: <42BEE126.6070208@pobox.com>
-References: <Pine.LNX.4.62.0506240135340.29382@bizon.gios.gov.pl> <42BB794B.6080109@rtr.ca> <Pine.LNX.4.62.0506241127210.3016@bizon.gios.gov.pl> <42BC284E.7050202@rtr.ca> <Pine.LNX.4.62.0506242032290.1394@bizon.gios.gov.pl> <42BE0B7D.4050307@rtr.ca> <Pine.LNX.4.62.0506261229430.2421@bizon.gios.gov.pl> <42BEB4B0.8090405@pobox.com> <Pine.LNX.4.62.0506261612420.9277@bizon.gios.gov.pl>
+Subject: Re: [PATCH] libata-dev-2.6-ncq: lengthen COMMRESET delay
+Date: Sun, 26 Jun 2005 13:19:39 -0400
+Message-ID: <42BEE3AB.2010601@pobox.com>
+References: <20050626142719.GA24968@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:57547 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261465AbVFZRJA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Jun 2005 13:09:00 -0400
-In-Reply-To: <Pine.LNX.4.62.0506261612420.9277@bizon.gios.gov.pl>
+Received: from mail.dvmed.net ([216.237.124.58]:1484 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261471AbVFZRTo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Jun 2005 13:19:44 -0400
+In-Reply-To: <20050626142719.GA24968@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Krzysztof Oledzki <olel@ans.pl>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: axboe@suse.de, linux-ide@vger.kernel.org
 
-Krzysztof Oledzki wrote:
-> So, excuse me for asking this question again: how to check true 
-> (current) speed? I still don't know if this disk uses UDMA/133 or SATA150.
+Tejun Heo wrote:
+>  Hello, Jeff.
+>  Hello, Jens.
+> 
+>  This is the first patch of a series of updates to the ncq head of
+> libata-dev-2.6 tree.  The first six patches (including this one) are
+> independent misc updates/fixes, so I'm posting each of those patches
+> as a separate mail.  After the six patches, a patchset consisted of 8
+> patches follows which moves most of NCQ completion/error-handling to
+> libata-core layer and implements proper error-handling.
+> 
+>  This patch lengthens the delay between DET setting and clearing for
+> COMMRESET from 400us to 1ms.  I couldn't find any requiremen regarding
+> the duration of COMMRESET in SATA I/II specs but AHCI-1.1 10.4.2
+> states that it should be at least 1ms.
+> 
+>  Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-This is an irrelevant question, because the answer is "both."
-
-The SATA bus speed is always 1.5Gbps, 3Gbps, etc. but the device must 
-also set udma speed (udma0-6).
-
-	Jeff
+ACK (i.e. I will apply this patch)
 
 
