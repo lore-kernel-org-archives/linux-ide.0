@@ -1,84 +1,114 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata-dev-2.6-ncq: ahci: remove ata_port_start/stop() calls
-Date: Sun, 26 Jun 2005 23:52:50 +0900
-Message-ID: <20050626145250.GF24968@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH Linux 2.6.12 00/09] NCQ: generic NCQ completion/error-handling
+Date: Mon, 27 Jun 2005 00:21:07 +0900 (KST)
+Message-ID: <20050626152105.D86561FB@htj.dyndns.org>
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.207]:34200 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261299AbVFZOw6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Jun 2005 10:52:58 -0400
-Received: by zproxy.gmail.com with SMTP id l1so94311nzf
-        for <linux-ide@vger.kernel.org>; Sun, 26 Jun 2005 07:52:56 -0700 (PDT)
-Content-Disposition: inline
+Received: from wproxy.gmail.com ([64.233.184.194]:41494 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261305AbVFZPVO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Jun 2005 11:21:14 -0400
+Received: by wproxy.gmail.com with SMTP id 58so199297wri
+        for <linux-ide@vger.kernel.org>; Sun, 26 Jun 2005 08:21:12 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, axboe@suse.de, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, axboe@suse.de, linux-ide@vger.kernel.org
 
  Hello, Jeff.
  Hello, Jens.
 
- This is the last of six misc updates to ncq.
+ This patchset implements generic completion and error-handling for
+NCQ commands.  This patchset assumes that the previous six misc
+patches to NCQ are applied.
 
- This patch removes unnecessary ata_port_start/stop() calls from
-ahci_port_start/stop().
+ In the original implementation, ahci driver proper handled completion
+and error-handling of NCQ commands and NCQ error-handling was broken.
 
- Signed-off-by: Tejun Heo <htejun@gmail.com>
+ * fails to finish scsi cmds (EH cannot be entered after the first
+   time and erring requests never get completed or failed.)
+ * doesn't reset host_failed
+ * corrupts shost->eh_cmd_q
 
-Index: work/drivers/scsi/ahci.c
-===================================================================
---- work.orig/drivers/scsi/ahci.c	2005-06-26 18:11:27.000000000 +0900
-+++ work/drivers/scsi/ahci.c	2005-06-26 18:13:17.000000000 +0900
-@@ -307,26 +307,19 @@ static int ahci_port_start(struct ata_po
- 	struct device *dev = ap->host_set->dev;
- 	struct ahci_host_priv *hpriv = ap->host_set->private_data;
- 	struct ahci_port_priv *pp;
--	int rc;
- 	void *mem, *mmio = ap->host_set->mmio_base;
- 	void *port_mmio = ahci_port_base(mmio, ap->port_no);
- 	dma_addr_t mem_dma;
- 
--	rc = ata_port_start(ap);
--	if (rc)
--		return rc;
--
- 	pp = kmalloc(sizeof(*pp), GFP_KERNEL);
--	if (!pp) {
--		rc = -ENOMEM;
--		goto err_out;
--	}
-+	if (!pp)
-+		return -ENOMEM;
- 	memset(pp, 0, sizeof(*pp));
- 
- 	mem = dma_alloc_coherent(dev, AHCI_PORT_PRIV_DMA_SZ, &mem_dma, GFP_KERNEL);
- 	if (!mem) {
--		rc = -ENOMEM;
--		goto err_out_kfree;
-+		kfree(pp);
-+		return -ENOMEM;
- 	}
- 	memset(mem, 0, AHCI_PORT_PRIV_DMA_SZ);
- 
-@@ -373,12 +366,6 @@ static int ahci_port_start(struct ata_po
- 	readl(port_mmio + PORT_CMD); /* flush */
- 
- 	return 0;
--
--err_out_kfree:
--	kfree(pp);
--err_out:
--	ata_port_stop(ap);
--	return rc;
- }
- 
- 
-@@ -404,7 +391,6 @@ static void ahci_port_stop(struct ata_po
- 	dma_free_coherent(dev, AHCI_PORT_PRIV_DMA_SZ,
- 			  pp->cmd_slot, pp->cmd_slot_dma);
- 	kfree(pp);
--	ata_port_stop(ap);
- }
- 
- static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg_in)
+ New implementation...
+
+ * does as much as possible in the libata-core layer.
+ * unifies error and timeout paths and handles all in EH context.
+
+ I tested EH using ASUS P5LD2 (ICH7R) and Samsung HD160JJ, and, for
+me, EH is pretty solid now.  I'll post logs from my test runs in a
+reply to this mail.
+
+[ Start of patch descriptions ]
+
+01_NCQ_add-ata_qc_complete_err.patch
+	: add ata_qc_complete_err() and @drv_err to functions
+
+	In the error path, the error register is read in the later
+	stage during sense buffer construction.  However, w/ NCQ, we
+	need to get the error register value from the log page and use
+	it for sense buffer construction.  This patch adds
+	ata_qc_complete_err() and adds @drv_err to functions in the
+	error path.
+
+02_NCQ_add-timeout-to-ata_read_log_page.patch
+	: add timeout to ata_read_log_page()
+
+	Some drives may lock up during read log page after NCQ
+	failures (HD160JJ does), so we need to timeout
+	ata_read_log_page().  This function adds timeout feature to
+	ata_read_log_page().
+
+03_NCQ_implement-ap_sactive.patch
+	: add ap->sactive
+
+	This patch makes libata-core layer aware of ap->sactive
+	status.
+
+04_NCQ_export-scsi_retry_command.patch
+	: export scsi_retry_command
+
+	Export scsi_retry_command
+
+05_NCQ_add-ncq-helpers.patch
+	: implement NCQ helpers
+
+	This patch implements the following NCQ helpers to be used by
+	specific drivers to implement interrupt and error handler.
+
+	ata_ncq_complete()	: normal completion of commands
+	ata_ncq_abort()		: error completion of commands
+	ata_ncq_recover()	: EH recovery helper
+
+06_NCQ_ahci-new-eh.patch
+	: convert ahci to use new NCQ helpers
+
+	This patch converts ahci to use new NCQ helpers.
+
+07_NCQ_ahci-stop-dma-before-reset.patch
+	: stop dma before reset
+
+	AHCI 1.1 mandates stopping dma before issueing COMMRESET.  The
+	original code didn't and it resulted in occasional lockup of
+	the controller during EH recovery.  This patch fixes the
+	problem.
+
+08_NCQ_remove-or-unexport-unused-functions.patch
+	: remove/unexport unused/unnecessary functions
+
+	This patch removes ata_scsi_block_requests() and
+	ata_scsi_unblock_requests(), and makes ata_read_log_page() and
+	ata_to_sense_error() static.
+
+09_NCQ_ahci-debug.patch
+	: causes error or timeout
+
+	This is what I've used for testing EH.  This patch contains
+	codes for corrupting or skipping specific tags causing error
+	conditions.  If you're curious....
+
+[ End of patch descriptions ]
+
+ Thanks a lot.
+
+--
+tejun
 
