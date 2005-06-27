@@ -1,67 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata-dev-2.6-ncq: rewrite __ata_qc_complete
-Date: Mon, 27 Jun 2005 20:13:42 +0900
-Message-ID: <42BFDF66.3010402@gmail.com>
-References: <20050626144110.GD24968@htj.dyndns.org> <42BEE593.7050004@pobox.com> <20050627082709.GO19550@suse.de> <42BFC68E.3020707@tw.ibm.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: siimage card causes repeated oopses and panics on a PowerMac
+ G4 running 2.6.12.1
+Date: Mon, 27 Jun 2005 07:22:31 -0400
+Message-ID: <42BFE177.1050007@pobox.com>
+References: <9c1484f205062702203936d7ca@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.197]:25315 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261727AbVF0LNv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jun 2005 07:13:51 -0400
-Received: by zproxy.gmail.com with SMTP id f1so159685nzc
-        for <linux-ide@vger.kernel.org>; Mon, 27 Jun 2005 04:13:51 -0700 (PDT)
-In-Reply-To: <42BFC68E.3020707@tw.ibm.com>
+Received: from mail.dvmed.net ([216.237.124.58]:15824 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261208AbVF0LWh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jun 2005 07:22:37 -0400
+In-Reply-To: <9c1484f205062702203936d7ca@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: Jens Axboe <axboe@suse.de>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Steven Schlansker <stevenschlansker@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Albert Lee wrote:
-> 
-> Tejun Heo wrote:
-> 
->> Also, remove spurious clearing of ATA_QCFLAG_ACTIVE from
->> ata_qc_complete().
->>
-> Hi Tejun:
-> 
-> Clearing the ATA_QCFLAG_ACTIVE in ata_qc_complete() is needed. We have to
-> prevent the interrupt handler from racing with the error handler in ATAPI.
-> (Please see the following link for the detail:
-> http://marc.theaimsgroup.com/?l=linux-ide&m=111476734016857&w=2)
-> 
-> Albert
-> 
+Steven Schlansker wrote:
+> I have a SIIG Ultra-ATA 133/100 Pro for Mac card in my Sawtooth G4
+> that, upon being touched in any way (loading the siimage module,
+> trying to access the corresponding /dev/hd? entries, and just about
+> anything else) causes either an oops, a flood of oopses, or a panic.
 
-  Hello, Albert.
+> If I do so much as touch the new /dev/hde entry or such, many more
+> oopses and occassionally a panic will happen.  I can provide more
+> samples if necessary, I figured two would be enough to get started. 
+> The process is always different, and sometimes it even seems to be
+> unrelated to the card entirely.  Usually it's modprobe and udev.  I
+> have not successfully captured one of the panics with netconsole yet,
+> but I remember the line "Aieeee, killing interrupt handler" from them.
+>  I do not believe that the hardware is defective, as the exact same
+> card works very well under Mac OS X (which even boots from a drive
+> connected to it, so OpenFirmware does not seem to have issues with it
+> either)
 
-  Ah... I see.  Sorry, I didn't check the ATAPI code (Is any SATA ATAPI 
-device selling in retail shops?  I want one for testing but cannot find 
-one).  I'll remove that removal ;-) and add some comment there to 
-clarify things.  it also means that ATAPI handling of my NCQ helpers is 
-broken
+Two things:
 
-  BTW, now that I've read how libata defers command completion to EH 
-using qc_complete return value, I have a question.  While I was writing 
-NCQ EH, the biggest problem was that we're called differently from 
-several places and EH conventions differ in each case.
+1) turn off preempt
 
-  1. from libata core: we don't have associated SCSI command and EH 
-won't be entered.
-  2. from SCSI midlayer (SCSI special cmds): we have associated SCSI 
-command but EH won't be entered on failure (scsidone is overrided).
-  3. from blk via SCSI (SCSI normal cmds): we have associated SCSI 
-command and EH will be entered on failure.
+2) use sata_sil driver rather than siimage
 
-  I couldn't defer qc-completion on error interrupt to EH, as I don't 
-know whether it will be entered or not.  So, NCQ helpers always 
-qc-completes commands and NCQ EH helper deals with what's left.  It 
-seems that the current ATAPI code doesn't account for these differences 
-when handling errors.  Is EH-entrance guaranteed on ATAPI failures?
+	Jeff
 
-  TIA.
 
--- 
-tejun
