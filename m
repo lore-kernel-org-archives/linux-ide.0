@@ -1,78 +1,31 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [git patch] 2.6.x libata fix
-Date: Mon, 27 Jun 2005 08:21:25 -0400
-Message-ID: <42BFEF45.8000302@pobox.com>
+Subject: Re: [PATCH] libata-dev-2.6-ncq: rewrite __ata_qc_complete
+Date: Mon, 27 Jun 2005 08:30:16 -0400
+Message-ID: <42BFF158.9060203@pobox.com>
+References: <20050626144110.GD24968@htj.dyndns.org> <42BEE593.7050004@pobox.com> <20050627082709.GO19550@suse.de> <42BFC68E.3020707@tw.ibm.com> <42BFDF66.3010402@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000005040907070609080203"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:34512 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S262096AbVF0MV3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jun 2005 08:21:29 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------000005040907070609080203
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:43472 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S262110AbVF0Mab (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jun 2005 08:30:31 -0400
+In-Reply-To: <42BFDF66.3010402@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org
 
-Please pull from the 'upstream' branch of
-rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-
-to obtain the fix (and cleanup) described in the attachment.
-
-
---------------000005040907070609080203
-Content-Type: text/plain;
- name="libata-dev.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata-dev.txt"
-
- drivers/scsi/libata-scsi.c |   16 +++++++++++-----
- 1 files changed, 11 insertions(+), 5 deletions(-)
-
-
-Philip Pokorny:
-  libata fix read capacity handling for more than 2TB
+Tejun Heo wrote:
+>  Ah... I see.  Sorry, I didn't check the ATAPI code (Is any SATA ATAPI 
+> device selling in retail shops?  I want one for testing but cannot find 
+> one).  I'll remove that removal ;-) and add some comment there to 
+> clarify things.  it also means that ATAPI handling of my NCQ helpers is 
+> broken
 
 
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -1176,8 +1176,12 @@ unsigned int ata_scsiop_read_cap(struct 
- 		n_sectors = ata_id_u32(args->id, 60);
- 	n_sectors--;		/* ATA TotalUserSectors - 1 */
- 
--	tmp = n_sectors;	/* note: truncates, if lba48 */
- 	if (args->cmd->cmnd[0] == READ_CAPACITY) {
-+		if( n_sectors >= 0xffffffffULL )
-+			tmp = 0xffffffff ;  /* Return max count on overflow */
-+		else
-+			tmp = n_sectors ;
-+
- 		/* sector count, 32-bit */
- 		rbuf[0] = tmp >> (8 * 3);
- 		rbuf[1] = tmp >> (8 * 2);
-@@ -1191,10 +1195,12 @@ unsigned int ata_scsiop_read_cap(struct 
- 
- 	} else {
- 		/* sector count, 64-bit */
--		rbuf[2] = n_sectors >> (8 * 7);
--		rbuf[3] = n_sectors >> (8 * 6);
--		rbuf[4] = n_sectors >> (8 * 5);
--		rbuf[5] = n_sectors >> (8 * 4);
-+		tmp = n_sectors >> (8 * 4);
-+		rbuf[2] = tmp >> (8 * 3);
-+		rbuf[3] = tmp >> (8 * 2);
-+		rbuf[4] = tmp >> (8 * 1);
-+		rbuf[5] = tmp;
-+		tmp = n_sectors;
- 		rbuf[6] = tmp >> (8 * 3);
- 		rbuf[7] = tmp >> (8 * 2);
- 		rbuf[8] = tmp >> (8 * 1);
+Yep, SATA ATAPI is selling in retail shops now.
 
---------------000005040907070609080203--
+	Jeff
+
+
