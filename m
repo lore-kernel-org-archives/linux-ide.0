@@ -1,40 +1,32 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata-dev-2.6-ncq: rewrite __ata_qc_complete
-Date: Mon, 27 Jun 2005 22:21:08 +0900
-Message-ID: <42BFFD44.7020402@gmail.com>
-References: <20050626144110.GD24968@htj.dyndns.org> <42BEE593.7050004@pobox.com> <20050627082709.GO19550@suse.de> <42BFC68E.3020707@tw.ibm.com> <42BFDF66.3010402@gmail.com> <42BFF158.9060203@pobox.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH Linux 2.6.12 00/09] NCQ: generic NCQ completion/error-handling
+Date: Mon, 27 Jun 2005 16:33:44 +0200
+Message-ID: <20050627143344.GI11633@suse.de>
+References: <20050626152105.D86561FB@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.193]:2758 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262052AbVF0NVS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jun 2005 09:21:18 -0400
-Received: by zproxy.gmail.com with SMTP id i11so179771nzh
-        for <linux-ide@vger.kernel.org>; Mon, 27 Jun 2005 06:21:15 -0700 (PDT)
-In-Reply-To: <42BFF158.9060203@pobox.com>
+Received: from ns.virtualhost.dk ([195.184.98.160]:26331 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261779AbVF0OcX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jun 2005 10:32:23 -0400
+Content-Disposition: inline
+In-Reply-To: <20050626152105.D86561FB@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
+On Mon, Jun 27 2005, Tejun Heo wrote:
+>  Hello, Jeff.
+>  Hello, Jens.
 > 
->>  Ah... I see.  Sorry, I didn't check the ATAPI code (Is any SATA ATAPI 
->> device selling in retail shops?  I want one for testing but cannot 
->> find one).  I'll remove that removal ;-) and add some comment there to 
->> clarify things.  it also means that ATAPI handling of my NCQ helpers 
->> is broken
-> 
-> Yep, SATA ATAPI is selling in retail shops now.
-> 
->     Jeff
+>  This patchset implements generic completion and error-handling for
+> NCQ commands.  This patchset assumes that the previous six misc
+> patches to NCQ are applied.
 
-  Yay, just found Plextor PX-716SA in an online shop.  I think it's the 
-only model available here. :-)
-
-  Thanks.
+Excellent, much needed work in that area. I will give it a test spin
+here as well, I have one drive that likes to barf with ncq occasionally.
 
 -- 
-tejun
+Jens Axboe
+
