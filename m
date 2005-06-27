@@ -1,55 +1,44 @@
-From: Stefan Smietanowski <stesmi@stesmi.com>
-Subject: Re: SATA speed. Should be 150 or 133?
-Date: Sun, 26 Jun 2005 20:44:57 +0200
-Message-ID: <42BEF7A9.2070202@stesmi.com>
-References: <Pine.LNX.4.62.0506240135340.29382@bizon.gios.gov.pl> <42BB794B.6080109@rtr.ca> <Pine.LNX.4.62.0506241127210.3016@bizon.gios.gov.pl> <42BC284E.7050202@rtr.ca> <Pine.LNX.4.62.0506242032290.1394@bizon.gios.gov.pl> <42BE0B7D.4050307@rtr.ca> <Pine.LNX.4.62.0506261229430.2421@bizon.gios.gov.pl> <42BEB4B0.8090405@pobox.com> <Pine.LNX.4.62.0506261612420.9277@bizon.gios.gov.pl> <42BEE126.6070208@pobox.com>
+From: Kallol Biswas <kallol@nucleodyne.com>
+Subject: Enabling MSI on SATAII150
+Date: 26 Jun 2005 18:11:50 -0700
+Message-ID: <1119834710.13331.654.camel@driver>
+References: <20050611021814.riaatwh8ztskw4g4@www.nucleodyne.com>
+	 <42AC6310.7030809@rtr.ca> <1118598197.25250.20.camel@driver>
+	 <42ACFFED.9050701@pobox.com>
+Reply-To: kallol@nucleodyne.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mxfep02.bredband.com ([195.54.107.73]:36072 "EHLO
-	mxfep02.bredband.com") by vger.kernel.org with ESMTP
-	id S261549AbVFZSjq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Jun 2005 14:39:46 -0400
-In-Reply-To: <42BEE126.6070208@pobox.com>
+Received: from rwcrmhc12.comcast.net ([216.148.227.85]:1687 "EHLO
+	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
+	id S261697AbVF0BNC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 26 Jun 2005 21:13:02 -0400
+In-Reply-To: <42ACFFED.9050701@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Krzysztof Oledzki <olel@ans.pl>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hello Jeff,
+          We have been using the sx8 driver on a MIPS based custom
+platform.
+It seems the line based interrupt mechanism is broken on the system.
 
-Hi. This is directed toward Krzysztof and not you Jeff.
+SATA1150 controller supports MSI interrupt like other PCI-X devices.
 
->> So, excuse me for asking this question again: how to check true
->> (current) speed? I still don't know if this disk uses UDMA/133 or
->> SATA150.
-> 
-> 
-> This is an irrelevant question, because the answer is "both."
-> 
-> The SATA bus speed is always 1.5Gbps, 3Gbps, etc. but the device must
-> also set udma speed (udma0-6).
+Unfortunately we do not have access to the controller's technical
+specification yet.
 
-Or simply speaking, if your device is SATA150 it has a 1.5Gbps link to
-the IDE chipset always.
-If the device is UDMA133 with a bridge (built-in or external) then
-the link is 1.5Gbps between the IDE chipset and the bridge and UDMA0-6
-between the drive and the bridge. Many older SATA drives were nothing
-more than UDMA133 drives with a bridge and I believe most (all?) used
-a UDMA133<->SATA150 bridge by Marvell.
+Would it be possible to send us a reply detailing how to enable
+MSI interrupt on the adapter?
 
-So if you want a finite question : Look on the electronics board
-of the harddrive and if you find a Marvell chip near the SATA connector
-then your drive is UDMA133 with a bridge chip. You can naturally
-check any resources on the internet if you so chose.
+BTW, with CARM_MAX_Q == 30 and a workaround to fix lost interrupt we
+have got good performance with the driver. Thanks for good work. MSI
+will help improve performance more, as there won't be any delay
+associated with handling lost interrupt.
 
-// Stefan
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (MingW32)
 
-iD8DBQFCvveoBrn2kJu9P78RArhJAJsEvbtbhvvUYjwYh46hRKVMmN6UiACgjGAr
-AjR46vZNydzIR0tMDLg1CKc=
-=t20w
------END PGP SIGNATURE-----
+Kallol
+     
+
