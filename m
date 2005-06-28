@@ -1,113 +1,340 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Organized summary of the pacthes
-Date: Tue, 28 Jun 2005 11:21:32 -0400
-Message-ID: <42C16AFC.7010908@pobox.com>
-References: <42C12A10.8030308@tw.ibm.com>
+Subject: [git patches] 2.6.x libata updates
+Date: Tue, 28 Jun 2005 12:59:33 -0400
+Message-ID: <42C181F5.6090606@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------050202000002060706090002"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:21207 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S262038AbVF1PVq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jun 2005 11:21:46 -0400
-In-Reply-To: <42C12A10.8030308@tw.ibm.com>
+Received: from mail.dvmed.net ([216.237.124.58]:57303 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S262151AbVF1Q7h (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jun 2005 12:59:37 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: doug_maxey@us.ibm.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Albert Lee wrote:
-> Summary of the pacthes for your review (as of 6/28/2005):
-> 1. atapi_pio_bytes() fixes
->   => Three patches pending:
->      #1-2. __atapi_pio_bytes(): if condition fix
->      http://marc.theaimsgroup.com/?l=linux-ide&m=111838913812842&w=2
+This is a multi-part message in MIME format.
+--------------050202000002060706090002
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I'll probably apply this
+please pull from branch 'upstream-20050628-1' of
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-
->      #1-3. __atapi_pio_bytes(): trailing data handling fix
->      http://marc.theaimsgroup.com/?l=linux-ide&m=111838955410270&w=2
-> 
->      #1-4. __atapi_pio_bytes(): odd-length data handling fix
->      http://marc.theaimsgroup.com/?l=linux-ide&m=111838987630460&w=2
->      Patch #1-4 will overrun the odd-length buffer by one byte. :(
->      Maybe we can just ignore the last byte of odd-length buffer?
-
-These two patches make me REALLY nervous.  This overrun business needs 
-to be handled in a different way.
-
-For DMA, we will want to copy 0-3 odd bytes into a 4-byte buffer, and 
-then make that 4-byte buffer than final DMA segment.
-
-For PIO, we might as well use the same buffer, and copy the last 0-3 (or 
-0-1?) odd bytes.
-
-Never overrun.
+to obtain the changes described in the attachment.
 
 
-> 2. atapi_packet_task() assertion failed fix
->   => Revised patch submitted:
->      http://marc.theaimsgroup.com/?l=linux-ide&m=111830130223323&w=2
->   => Need more revision to remove the 'case ATA_PROT_ATAPI' handling in it.
->     (It conflicts with patch #3-2 below:
->      http://marc.theaimsgroup.com/?l=linux-ide&m=111951880730921&w=2)
-> 
-> 
-> 3. ata_pio_task() race condition fixes.
->   => Two patches submitted. Waiting for review:
->    #3-1  http://marc.theaimsgroup.com/?l=linux-ide&m=111958527005103&w=2
->    #3-2  http://marc.theaimsgroup.com/?l=linux-ide&m=111951880730921&w=2
-
-These are probably OK.
-
-However, I am pondering scrapping all the polling code, since on SATA, 
-interrupt-driven mode is much more desirable.
-
-If I continue to use polling, I will (after further review) apply your 
-patches.
-
-Luckily PIO data paths are not used by users yet (disabled by default), 
-so these problems are not urgent.
+--------------050202000002060706090002
+Content-Type: text/plain;
+ name="libata-dev.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libata-dev.txt"
 
 
-> =======
-> 4. ata_qc_complete() race condition fix.
->   => In ata_qc_complete(),
->      "qc->flags &= ~ATA_QCFLAG_ACTIVE;" should be _before_
->      "rc = qc->complete_fn(qc, drv_stat);".
 
-I agree.
+ Documentation/DocBook/libata.tmpl |   96 ++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/ahci.c               |   22 +-------
+ drivers/scsi/libata-core.c        |    6 +-
+ 3 files changed, 101 insertions(+), 23 deletions(-)
 
 
->   => Otherwise ata_qc_complete() might race with atapi_request_sense().
+Edward Falk:
+  Minor libata documentation patch
 
-If ata_qc_complete() is racing with atapi_request_sense(), more 
-synchronization is needed.  ATAPI is violating the host state machine, 
-that wants fixing.
+Jeff Garzik:
+  libata: update DMA blacklist
 
-
-> 5. pata_pdc2027x 0.62 update
->   => http://marc.theaimsgroup.com/?l=linux-ide&m=111474486330692&w=2
->   => Need more revision according to libata-dev tree in git.
-
-I think this patch is not needed, once ATAPI DMA/PIO is fixed properly 
-as described above.
+Tejun Heo:
+  libata: ahci: remove ata_port_start/stop() calls
+  libata: lengthen COMMRESET delay
 
 
-> 6. IDENTIFY DEVICE detects phantom drive problem
->    http://marc.theaimsgroup.com/?l=linux-ide&m=111622547309019&w=2
 
-To answer the question in your email here, we should separate hardware 
-Status register value from a new 'force_error' parameter.  This would 
-require a new test in the code
+diff --git a/Documentation/DocBook/libata.tmpl b/Documentation/DocBook/libata.tmpl
+--- a/Documentation/DocBook/libata.tmpl
++++ b/Documentation/DocBook/libata.tmpl
+@@ -84,6 +84,14 @@ void (*port_disable) (struct ata_port *)
+ 	Called from ata_bus_probe() and ata_bus_reset() error paths,
+ 	as well as when unregistering from the SCSI module (rmmod, hot
+ 	unplug).
++	This function should do whatever needs to be done to take the
++	port out of use.  In most cases, ata_port_disable() can be used
++	as this hook.
++	</para>
++	<para>
++	Called from ata_bus_probe() on a failed probe.
++	Called from ata_bus_reset() on a failed bus reset.
++	Called from ata_scsi_release().
+ 	</para>
+ 
+ 	</sect2>
+@@ -98,6 +106,13 @@ void (*dev_config) (struct ata_port *, s
+ 	found.  Typically used to apply device-specific fixups prior to
+ 	issue of SET FEATURES - XFER MODE, and prior to operation.
+ 	</para>
++	<para>
++	Called by ata_device_add() after ata_dev_identify() determines
++	a device is present.
++	</para>
++	<para>
++	This entry may be specified as NULL in ata_port_operations.
++	</para>
+ 
+ 	</sect2>
+ 
+@@ -135,6 +150,8 @@ void (*tf_read) (struct ata_port *ap, st
+ 	registers / DMA buffers.  ->tf_read() is called to read the
+ 	hardware registers / DMA buffers, to obtain the current set of
+ 	taskfile register values.
++	Most drivers for taskfile-based hardware (PIO or MMIO) use
++	ata_tf_load() and ata_tf_read() for these hooks.
+ 	</para>
+ 
+ 	</sect2>
+@@ -147,6 +164,8 @@ void (*exec_command)(struct ata_port *ap
+ 	<para>
+ 	causes an ATA command, previously loaded with
+ 	->tf_load(), to be initiated in hardware.
++	Most drivers for taskfile-based hardware use ata_exec_command()
++	for this hook.
+ 	</para>
+ 
+ 	</sect2>
+@@ -161,6 +180,10 @@ Allow low-level driver to filter ATA PAC
+ indicating whether or not it is OK to use DMA for the supplied PACKET
+ command.
+ 	</para>
++	<para>
++	This hook may be specified as NULL, in which case libata will
++	assume that atapi dma can be supported.
++	</para>
+ 
+ 	</sect2>
+ 
+@@ -175,6 +198,14 @@ u8   (*check_err)(struct ata_port *ap);
+ 	Reads the Status/AltStatus/Error ATA shadow register from
+ 	hardware.  On some hardware, reading the Status register has
+ 	the side effect of clearing the interrupt condition.
++	Most drivers for taskfile-based hardware use
++	ata_check_status() for this hook.
++	</para>
++	<para>
++	Note that because this is called from ata_device_add(), at
++	least a dummy function that clears device interrupts must be
++	provided for all drivers, even if the controller doesn't
++	actually have a taskfile status register.
+ 	</para>
+ 
+ 	</sect2>
+@@ -188,7 +219,13 @@ void (*dev_select)(struct ata_port *ap, 
+ 	Issues the low-level hardware command(s) that causes one of N
+ 	hardware devices to be considered 'selected' (active and
+ 	available for use) on the ATA bus.  This generally has no
+-meaning on FIS-based devices.
++	meaning on FIS-based devices.
++	</para>
++	<para>
++	Most drivers for taskfile-based hardware use
++	ata_std_dev_select() for this hook.  Controllers which do not
++	support second drives on a port (such as SATA contollers) will
++	use ata_noop_dev_select().
+ 	</para>
+ 
+ 	</sect2>
+@@ -204,6 +241,8 @@ void (*phy_reset) (struct ata_port *ap);
+ 	for device presence (PATA and SATA), typically a soft reset
+ 	(SRST) will be performed.  Drivers typically use the helper
+ 	functions ata_bus_reset() or sata_phy_reset() for this hook.
++	Many SATA drivers use sata_phy_reset() or call it from within
++	their own phy_reset() functions.
+ 	</para>
+ 
+ 	</sect2>
+@@ -227,6 +266,25 @@ PCI IDE DMA Status register.
+ These hooks are typically either no-ops, or simply not implemented, in
+ FIS-based drivers.
+ 	</para>
++	<para>
++Most legacy IDE drivers use ata_bmdma_setup() for the bmdma_setup()
++hook.  ata_bmdma_setup() will write the pointer to the PRD table to
++the IDE PRD Table Address register, enable DMA in the DMA Command
++register, and call exec_command() to begin the transfer.
++	</para>
++	<para>
++Most legacy IDE drivers use ata_bmdma_start() for the bmdma_start()
++hook.  ata_bmdma_start() will write the ATA_DMA_START flag to the DMA
++Command register.
++	</para>
++	<para>
++Many legacy IDE drivers use ata_bmdma_stop() for the bmdma_stop()
++hook.  ata_bmdma_stop() clears the ATA_DMA_START flag in the DMA
++command register.
++	</para>
++	<para>
++Many legacy IDE drivers use ata_bmdma_status() as the bmdma_status() hook.
++	</para>
+ 
+ 	</sect2>
+ 
+@@ -250,6 +308,10 @@ int (*qc_issue) (struct ata_queued_cmd *
+ 	helper function ata_qc_issue_prot() for taskfile protocol-based
+ 	dispatch.  More advanced drivers implement their own ->qc_issue.
+ 	</para>
++	<para>
++	ata_qc_issue_prot() calls ->tf_load(), ->bmdma_setup(), and
++	->bmdma_start() as necessary to initiate a transfer.
++	</para>
+ 
+ 	</sect2>
+ 
+@@ -279,6 +341,21 @@ void (*irq_clear) (struct ata_port *);
+ 	before the interrupt handler is registered, to be sure hardware
+ 	is quiet.
+ 	</para>
++	<para>
++	The second argument, dev_instance, should be cast to a pointer
++	to struct ata_host_set.
++	</para>
++	<para>
++	Most legacy IDE drivers use ata_interrupt() for the
++	irq_handler hook, which scans all ports in the host_set,
++	determines which queued command was active (if any), and calls
++	ata_host_intr(ap,qc).
++	</para>
++	<para>
++	Most legacy IDE drivers use ata_bmdma_irq_clear() for the
++	irq_clear() hook, which simply clears the interrupt and error
++	flags in the DMA status register.
++	</para>
+ 
+ 	</sect2>
+ 
+@@ -292,6 +369,7 @@ void (*scr_write) (struct ata_port *ap, 
+ 	<para>
+ 	Read and write standard SATA phy registers.  Currently only used
+ 	if ->phy_reset hook called the sata_phy_reset() helper function.
++	sc_reg is one of SCR_STATUS, SCR_CONTROL, SCR_ERROR, or SCR_ACTIVE.
+ 	</para>
+ 
+ 	</sect2>
+@@ -307,17 +385,29 @@ void (*host_stop) (struct ata_host_set *
+ 	->port_start() is called just after the data structures for each
+ 	port are initialized.  Typically this is used to alloc per-port
+ 	DMA buffers / tables / rings, enable DMA engines, and similar
+-	tasks.  
++	tasks.  Some drivers also use this entry point as a chance to
++	allocate driver-private memory for ap->private_data.
++	</para>
++	<para>
++	Many drivers use ata_port_start() as this hook or call
++	it from their own port_start() hooks.  ata_port_start()
++	allocates space for a legacy IDE PRD table and returns.
+ 	</para>
+ 	<para>
+ 	->port_stop() is called after ->host_stop().  It's sole function
+ 	is to release DMA/memory resources, now that they are no longer
+-	actively being used.
++	actively being used.  Many drivers also free driver-private
++	data from port at this time.
++	</para>
++	<para>
++	Many drivers use ata_port_stop() as this hook, which frees the
++	PRD table.
+ 	</para>
+ 	<para>
+ 	->host_stop() is called after all ->port_stop() calls
+ have completed.  The hook must finalize hardware shutdown, release DMA
+ and other resources, etc.
++	This hook may be specified as NULL, in which case it is not called.
+ 	</para>
+ 
+ 	</sect2>
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -304,26 +304,19 @@ static int ahci_port_start(struct ata_po
+ 	struct device *dev = ap->host_set->dev;
+ 	struct ahci_host_priv *hpriv = ap->host_set->private_data;
+ 	struct ahci_port_priv *pp;
+-	int rc;
+ 	void *mem, *mmio = ap->host_set->mmio_base;
+ 	void *port_mmio = ahci_port_base(mmio, ap->port_no);
+ 	dma_addr_t mem_dma;
+ 
+-	rc = ata_port_start(ap);
+-	if (rc)
+-		return rc;
+-
+ 	pp = kmalloc(sizeof(*pp), GFP_KERNEL);
+-	if (!pp) {
+-		rc = -ENOMEM;
+-		goto err_out;
+-	}
++	if (!pp)
++		return -ENOMEM;
+ 	memset(pp, 0, sizeof(*pp));
+ 
+ 	mem = dma_alloc_coherent(dev, AHCI_PORT_PRIV_DMA_SZ, &mem_dma, GFP_KERNEL);
+ 	if (!mem) {
+-		rc = -ENOMEM;
+-		goto err_out_kfree;
++		kfree(pp);
++		return -ENOMEM;
+ 	}
+ 	memset(mem, 0, AHCI_PORT_PRIV_DMA_SZ);
+ 
+@@ -373,12 +366,6 @@ static int ahci_port_start(struct ata_po
+ 	readl(port_mmio + PORT_CMD); /* flush */
+ 
+ 	return 0;
+-
+-err_out_kfree:
+-	kfree(pp);
+-err_out:
+-	ata_port_stop(ap);
+-	return rc;
+ }
+ 
+ 
+@@ -404,7 +391,6 @@ static void ahci_port_stop(struct ata_po
+ 	dma_free_coherent(dev, AHCI_PORT_PRIV_DMA_SZ,
+ 			  pp->cmd_slot, pp->cmd_slot_dma);
+ 	kfree(pp);
+-	ata_port_stop(ap);
+ }
+ 
+ static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg_in)
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -1408,7 +1408,9 @@ void __sata_phy_reset(struct ata_port *a
+ 	if (ap->flags & ATA_FLAG_SATA_RESET) {
+ 		/* issue phy wake/reset */
+ 		scr_write_flush(ap, SCR_CONTROL, 0x301);
+-		udelay(400);			/* FIXME: a guess */
++		/* Couldn't find anything in SATA I/II specs, but
++		 * AHCI-1.1 10.4.2 says at least 1 ms. */
++		mdelay(1);
+ 	}
+ 	scr_write_flush(ap, SCR_CONTROL, 0x300); /* phy wake/clear reset */
+ 
+@@ -1920,6 +1922,7 @@ static const char * ata_dma_blacklist []
+ 	"HITACHI CDR-8335",
+ 	"HITACHI CDR-8435",
+ 	"Toshiba CD-ROM XM-6202B",
++	"TOSHIBA CD-ROM XM-1702BC",
+ 	"CD-532E-A",
+ 	"E-IDE CD-ROM CR-840",
+ 	"CD-ROM Drive/F5A",
+@@ -1927,7 +1930,6 @@ static const char * ata_dma_blacklist []
+ 	"SAMSUNG CD-ROM SC-148C",
+ 	"SAMSUNG CD-ROM SC",
+ 	"SanDisk SDP3B-64",
+-	"SAMSUNG CD-ROM SN-124",
+ 	"ATAPI CD-ROM DRIVE 40X MAXIMUM",
+ 	"_NEC DV5800A",
+ };
 
-	int have_error = forced_error || (tf->status & ATA_ERR);
-
-Eventually we need to separate out errors into separate classes (hi 
-Alan, hi Tejun), such as dma-error, bus-error, device-error, etc.  When 
-that is done, the code paths described in your email must change anyway.
-
-	Jeff
-
-
+--------------050202000002060706090002--
