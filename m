@@ -1,43 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Organized summary of the pacthes
-Date: Tue, 28 Jun 2005 19:00:12 +0100
-Message-ID: <1119981611.32381.32.camel@localhost.localdomain>
-References: <42C12A10.8030308@tw.ibm.com>  <42C16AFC.7010908@pobox.com>
+From: Jim Ramsay <jim.ramsay@gmail.com>
+Subject: libata and hotplug status
+Date: Tue, 28 Jun 2005 14:55:30 -0600
+Message-ID: <4789af9e050628135547fa5e14@mail.gmail.com>
+Reply-To: Jim Ramsay <jim.ramsay@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:34524 "EHLO lxorguk.ukuu.org.uk")
-	by vger.kernel.org with ESMTP id S262178AbVF1SD7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jun 2005 14:03:59 -0400
-In-Reply-To: <42C16AFC.7010908@pobox.com>
+Received: from zproxy.gmail.com ([64.233.162.204]:48024 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261634AbVF1U4A convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Jun 2005 16:56:00 -0400
+Received: by zproxy.gmail.com with SMTP id i11so395491nzi
+        for <linux-ide@vger.kernel.org>; Tue, 28 Jun 2005 13:55:56 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Albert Lee <albertcc@tw.ibm.com>, doug_maxey@us.ibm.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Tejun Heo <htejun@gmail.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Linux-ide <linux-ide@vger.kernel.org>
 
-On Maw, 2005-06-28 at 16:21, Jeff Garzik wrote:
-> These two patches make me REALLY nervous.  This overrun business needs 
-> to be handled in a different way.
-> 
-> For DMA, we will want to copy 0-3 odd bytes into a 4-byte buffer, and 
-> then make that 4-byte buffer than final DMA segment.
+I read at http://linux.yyz.us/sata/software-status.html that "libata
+does not support hotplug... yet", implying that it eventually would.
 
-You may need 16 or 32 byte alignment for some hardware on the host side.
+I am very interested in the current state and progress of SATA hotplug
+support for libata-based drivers (specifically the 'sata_promise'
+driver for the Promise TX4 card).  Has there been any preliminary work
+or discussion on this feature?
 
-> However, I am pondering scrapping all the polling code, since on SATA, 
-> interrupt-driven mode is much more desirable.
+How would it best be implemented?  How much of a pain would it be to
+do?  Are there any half-baked patches out there I can take a peek at
+or help with?  Who can I prod to bump this up on the priority list for
+libata?  What should I prod with?
 
-You need both interrupt and polled command issue. ACPI needs to be able
-to issue taskfiles to the IDE drive fairly early during resume. Right
-now this isn't done at all. If polled is there it might also prove a
-useful way to reissue a command when you think the IRQ routing is hosed
-8)
-
-There is a really nasty case here that the old IDE layer totally screwed
-up: You may need to sequence speed changes into error recovery (BAD CRC)
-which is coming from a timeout and irq context. In the sata layer at
-least its from an eh thread.
-
-Alan
-
+-- 
+Jim Ramsay
+"Me fail English?  That's unpossible!"
