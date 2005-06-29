@@ -1,39 +1,48 @@
-From: "Wilmer Stringer" <nakehopod@nctta.org>
-Subject: UBC: Unique Logo design!
-Date: Wed, 29 Jun 2005 22:00:43 +0000 (UTC)
-Message-ID: <200506292204.j5TM4mLl024638__19003.2386839905$1120082443$gmane$org@zeus2.kernel.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: siimage card causes repeated oopses and panics on a PowerMac
+	G4 running 2.6.12.1
+Date: Thu, 30 Jun 2005 09:21:38 +1000
+Message-ID: <1120087299.31924.9.camel@gaston>
+References: <9c1484f205062702203936d7ca@mail.gmail.com>
+	 <42BFE177.1050007@pobox.com>
+	 <6A4A6C03-7A2D-45BE-AE66-4CF38F8607EC@gmail.com>
+	 <58cb370e050629031277d13798@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:5350 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S262653AbVF2WFB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jun 2005 18:05:01 -0400
-Date: Wen, 29 Jun 2005 09:15:32 +0000
+Received: from gate.crashing.org ([63.228.1.57]:5548 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S262728AbVF2X1L (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jun 2005 19:27:11 -0400
+In-Reply-To: <58cb370e050629031277d13798@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-fsdevel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Steven Schlansker <stevenschlansker@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-Your business lacks visual identity?
+On Wed, 2005-06-29 at 12:12 +0200, Bartlomiej Zolnierkiewicz wrote:
+> Hi,
+> 
+> On 6/28/05, Steven Schlansker <stevenschlansker@gmail.com> wrote:
+> > I turned off preempt and compiled the sata_sil driver.  Loading it
+> > did not seem to cause any troubles, but dmesg had nothing but a
+> > version message.  No discovery of hardware seemed to happen with the
+> > sata driver (this is not a sata card as far as I know?) and no /dev/
+> > sd? or /dev/hd? entries appeared at all.
+> 
+> Yep, SiI680 is a PATA chipset, sata_sil won't help.
+> 
+> > The old kernel module, recompiled without preempt, still causes
+> > crashing and general badness.
+> > 
+> > Thank you for the suggestions, got anything else to try?
+> 
+> Disabling PMAC IDE driver - actual OOPS comes from it (weird).
+> 
+> Please also send full dmesg output.
 
-Marketing efforts falling short?
+Can you send me the backtrace of the oops ?
 
-Invisible among a sea of competitors?
-
-You're on the right track for a solution - keep reading...
-Our professional designers specialize in the creation of custom logos and business/corporate identities. Our design needs to be seen only once to gain customer attention and recognition. With one of our unique, eye-catching mages you'll never have to introduce yourself twice!
-We promise fast turnaround and 100% customer satisfaction. Choose from as any design ideas as necessary, select as many colors as you wish, order any modifications you like, and request any format. Our prices are affordable for any size of business, and get this: there are no hidden fees.
-
-Follow the link below to browse our portfolio and check out our Sweet Deals.
-Wipe the "in" from "invisible" in just a few days - with us!
-http://i0u8.net.ox-files.info
-
-Sincerely,
-Wilmer Stringer
-
-
-
-
+Ben.
 
 
