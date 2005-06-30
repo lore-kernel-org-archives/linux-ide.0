@@ -1,73 +1,62 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH] libata: Fix failed assertion in ata_qc_complete()
-Date: Thu, 30 Jun 2005 17:56:16 +0800
-Message-ID: <42C3C1C0.2040501@tw.ibm.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH Linux 2.6.12 00/09] NCQ: generic NCQ completion/error-handling
+Date: Thu, 30 Jun 2005 19:51:17 +0900
+Message-ID: <42C3CEA5.9040509@gmail.com>
+References: <20050626152105.D86561FB@htj.dyndns.org> <20050627143344.GI11633@suse.de> <20050630073633.GF2243@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080806020704040101070506"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bluehawaii.tikira.net ([61.62.22.51]:11254 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S262920AbVF3J43 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 30 Jun 2005 05:56:29 -0400
+Received: from wproxy.gmail.com ([64.233.184.195]:62770 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262940AbVF3KyC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jun 2005 06:54:02 -0400
+Received: by wproxy.gmail.com with SMTP id i31so69799wra
+        for <linux-ide@vger.kernel.org>; Thu, 30 Jun 2005 03:54:00 -0700 (PDT)
+In-Reply-To: <20050630073633.GF2243@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------080806020704040101070506
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Jens Axboe wrote:
+> On Mon, Jun 27 2005, Jens Axboe wrote:
+> 
+>>On Mon, Jun 27 2005, Tejun Heo wrote:
+>>
+>>> Hello, Jeff.
+>>> Hello, Jens.
+>>>
+>>> This patchset implements generic completion and error-handling for
+>>>NCQ commands.  This patchset assumes that the previous six misc
+>>>patches to NCQ are applied.
+>>
+>>Excellent, much needed work in that area. I will give it a test spin
+>>here as well, I have one drive that likes to barf with ncq occasionally.
+> 
+> 
+> Ok, I've run with this for a few days and finally hit the
+> drive-stops-responding condition yesterday afternoon. Error recovery
+> worked a lot better than before, but eventually went down anyways. But
+> now I got a better look at the error, and it's the drive throwing an
+> ICRC (error 0x80). Very odd. I've never seen this happen with non-NCQ
+> operations, however I've seen it now a few times using NCQ. Any ideas?
+> 
 
-Hi Jeff,
+  Hello, Jens.
 
-(This is the patch #4 in the summary.)
-Problem:
-    'assert(qc->flags & ATA_QCFLAG_ACTIVE)' assertion failed in ata_pio_complete().
+  Can you please describe how the drive went down in detail?  If 
+possible, log messages w/ the debug message patch applied would be 
+great.  As the EH now resets both the controller (on entry to EH) and 
+the drive (on timeout), we should be able to recover unless something 
+goes very strange.
 
-Root cause:
-  Please see the detailed dmesg log in the follow-up mail.
+  I'm currently trying to rewrite sil24 driver to make it look saner and 
+support NCQ.  Once I'm done with it (maybe one or two more days... I 
+hope), I'll do the second take of generic NCQ patches including ATAPI EH 
+fix and stuff and it would be great to have your failure log message 
+before doing that.
 
-Change:
-- Reorder the clearing of the 'qc->flags &= ~ATA_QCFLAG_ACTIVE' flag to
-   be _before_ 'qc->complete_fn(qc, drv_stat)' instead of _after_.
-- Add a comment per Tejun's advice.
+  Thanks.  :-)
 
-Attached please find the patch against the linux-2.6.git tree
-(HEAD 9b4311eedb17fa88f02e4876cd6aa9a08e383cd6) for your review. Thanks.
-
-Albert
-
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-
-
---------------080806020704040101070506
-Content-Type: text/plain;
- name="patch.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch.diff"
-
---- linux/drivers/scsi/libata-core.c.ori	2005-06-30 17:16:28.000000000 +0800
-+++ linux/drivers/scsi/libata-core.c	2005-06-30 17:35:50.000000000 +0800
-@@ -3086,9 +3086,14 @@
- 	if (likely(qc->flags & ATA_QCFLAG_DMAMAP))
- 		ata_sg_clean(qc);
- 
-+	/* atapi: inactivate qc to prevent the interrupt handler from 
-+	 * completing the command twice, before the scsi error handler
-+	 * is called.
-+	 */
-+	qc->flags &= ~ATA_QCFLAG_ACTIVE;
-+
- 	/* call completion callback */
- 	rc = qc->complete_fn(qc, drv_stat);
--	qc->flags &= ~ATA_QCFLAG_ACTIVE;
- 
- 	/* if callback indicates not to complete command (non-zero),
- 	 * return immediately
-
---------------080806020704040101070506--
-
-
+-- 
+tejun
