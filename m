@@ -1,62 +1,33 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH Linux 2.6.12 00/09] NCQ: generic NCQ completion/error-handling
-Date: Thu, 30 Jun 2005 19:51:17 +0900
-Message-ID: <42C3CEA5.9040509@gmail.com>
-References: <20050626152105.D86561FB@htj.dyndns.org> <20050627143344.GI11633@suse.de> <20050630073633.GF2243@suse.de>
+From: "Al Boldi" <a1426z@gawab.com>
+Subject: RE: Organized summary of the pacthes
+Date: Thu, 30 Jun 2005 15:45:45 +0300
+Message-ID: <200506301246.PAA29456@raad.intranet>
+References: <42C3B0B1.6090001@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.195]:62770 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262940AbVF3KyC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jun 2005 06:54:02 -0400
-Received: by wproxy.gmail.com with SMTP id i31so69799wra
-        for <linux-ide@vger.kernel.org>; Thu, 30 Jun 2005 03:54:00 -0700 (PDT)
-In-Reply-To: <20050630073633.GF2243@suse.de>
+Received: from [212.76.81.127] ([212.76.81.127]:48900 "EHLO raad.intranet")
+	by vger.kernel.org with ESMTP id S262820AbVF3N5T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jun 2005 09:57:19 -0400
+In-Reply-To: <42C3B0B1.6090001@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: 'Albert Lee' <albertcc@tw.ibm.com>, 'Jeff Garzik' <jgarzik@pobox.com>
+Cc: doug_maxey@us.ibm.com, linux-ide@vger.kernel.org, 'Bartlomiej Zolnierkiewicz' <B.Zolnierkiewicz@elka.pw.edu.pl>, 'Alan Cox' <alan@lxorguk.ukuu.org.uk>, 'Tejun Heo' <htejun@gmail.com>, 'Benjamin Herrenschmidt' <benh@kernel.crashing.org>
 
-Jens Axboe wrote:
-> On Mon, Jun 27 2005, Jens Axboe wrote:
-> 
->>On Mon, Jun 27 2005, Tejun Heo wrote:
->>
->>> Hello, Jeff.
->>> Hello, Jens.
->>>
->>> This patchset implements generic completion and error-handling for
->>>NCQ commands.  This patchset assumes that the previous six misc
->>>patches to NCQ are applied.
->>
->>Excellent, much needed work in that area. I will give it a test spin
->>here as well, I have one drive that likes to barf with ncq occasionally.
-> 
-> 
-> Ok, I've run with this for a few days and finally hit the
-> drive-stops-responding condition yesterday afternoon. Error recovery
-> worked a lot better than before, but eventually went down anyways. But
-> now I got a better look at the error, and it's the drive throwing an
-> ICRC (error 0x80). Very odd. I've never seen this happen with non-NCQ
-> operations, however I've seen it now a few times using NCQ. Any ideas?
-> 
+By the way,
+Why is the ide-driver in so slow?
+Hdparm -tT gives 28mb/s in 2.6.12 
+Cat /dev/hda > /dev/null gives 2% user 25% sys 0% idle 73% IOWAIT
 
-  Hello, Jens.
+Hdparm -tT gives 38mb/s in 2.4.31
+Cat /dev/hda > /dev/null gives 2% user 33% sys 65% idle
 
-  Can you please describe how the drive went down in detail?  If 
-possible, log messages w/ the debug message patch applied would be 
-great.  As the EH now resets both the controller (on entry to EH) and 
-the drive (on timeout), we should be able to recover unless something 
-goes very strange.
+It feels like DMA is not being applied properly in 2.6.12.
 
-  I'm currently trying to rewrite sil24 driver to make it look saner and 
-support NCQ.  Once I'm done with it (maybe one or two more days... I 
-hope), I'll do the second take of generic NCQ patches including ATAPI EH 
-fix and stuff and it would be great to have your failure log message 
-before doing that.
+Your comments please.
 
-  Thanks.  :-)
+Thanks!
 
--- 
-tejun
