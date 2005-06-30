@@ -1,29 +1,30 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: Organized summary of the pacthes
-Date: Thu, 30 Jun 2005 19:10:59 +0200
-Message-ID: <20050630171059.GA18362@suse.de>
-References: <42C12A10.8030308@tw.ibm.com> <42C16AFC.7010908@pobox.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: regarding Silicon Image 3124/3132 driver
+Date: Fri, 01 Jul 2005 08:19:26 +0900
+Message-ID: <42C47DFE.4050301@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:24290 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S262839AbVF3RLG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jun 2005 13:11:06 -0400
-Content-Disposition: inline
-In-Reply-To: <42C16AFC.7010908@pobox.com>
+Received: from wproxy.gmail.com ([64.233.184.203]:8481 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S263091AbVF3XTf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jun 2005 19:19:35 -0400
+Received: by wproxy.gmail.com with SMTP id i11so211879wra
+        for <linux-ide@vger.kernel.org>; Thu, 30 Jun 2005 16:19:32 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Albert Lee <albertcc@tw.ibm.com>, doug_maxey@us.ibm.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
- On Tue, Jun 28, Jeff Garzik wrote:
 
-> >=======
-> >4. ata_qc_complete() race condition fix.
-> >  => In ata_qc_complete(),
-> >     "qc->flags &= ~ATA_QCFLAG_ACTIVE;" should be _before_
-> >     "rc = qc->complete_fn(qc, drv_stat);".
-> 
-> I agree.
+  Hello, Jeff.
 
-Does it need a membarrier as well?
+  For the past few days, I've been trying to rewrite sata_sil24 driver 
+to make it look better and support NCQ.  Unfortunately, I cannot figure 
+out how to make sactive register work on this hardware.  Do you happen 
+to know who can I contact to get some technical information (hopefully 
+document, but just some tips are good too) about this chip?
+
+  TIA.
+
+-- 
+tejun
