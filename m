@@ -1,218 +1,51 @@
-From: "Yan Hoffman" <whitemooon@fibertel.com.ar>
-Subject: Die einzigartige Moglichkeit, zum Ihres Einkommens zu erhohen.  Anti- Spam Schutzcode:RJ-4583
-Date: Fri, 01 Jul 2005 14:00:15 -1000
-Message-ID: <B8388131.166F78D__15364.033522974$1120190255$gmane$org@fibertel.com.ar>
+From: Pekka Pietikainen <pp@ee.oulu.fi>
+Subject: host protected area fun
+Date: Fri, 1 Jul 2005 11:01:46 +0300
+Message-ID: <20050701080146.GA2054@ee.oulu.fi>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 9-78-235-201.fibertel.com.ar ([201.235.78.9]:22277 "HELO
-	fibertel.com.ar") by vger.kernel.org with SMTP id S263214AbVGAEDS
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Jul 2005 00:03:18 -0400
+Received: from ee.oulu.fi ([130.231.61.23]:11945 "EHLO ee.oulu.fi")
+	by vger.kernel.org with ESMTP id S262772AbVGAIB4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Jul 2005 04:01:56 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ia64@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Lieber Freund,
-Wenn Sie mehr Geld, mehr Sicherheit und mehr Freiheit haben mochten, dann
-kann das der wichtigste Brief fur Sie sein, den Sie in Ihrem Leben gelesen
-haben.
-Hier sind die Grunde dazu:
-Sie werden erfahren, wie ich habe... wie Sie werden... das in Wirklichkeit
-bringen, "mit Ihrem PC zu arbeiten und die Bezahlung fur einen vollen
-Arbeitstag erhalten".
-Was noch wichtiger ist, dass Sie einfach damit anfangen konnen, ohne jedes
-Risiko und Investionen von Ihrer Seite im Voraus.
-Jetzt, weiss ich, dass Sie skeptisch gesinnt sind. Das ist in Ordnung und
-ganz typisch. Lassen Sie mich Ihnen drei Grunde vorlegen, warum Sie diesen
-Business ohne zu zogern beginnen sollen.
+Possible problem documented in irc conversation below, too lazy to rewrite 
+all that :-)
 
-Drei Grunde, daran zu glauben, was ich sage
+Have there been some behavioural changes in this area recently? 
+Linux happily overwriting the HPA seems to have happened between 
+fc3 and fc4. Could be some userspace partitioning related/bios brokedness
+thing too I suppose?
 
-Erstens, Ich bin NICHT im Begriff Ihnen zu versprechen, dass Sie  dreissig
-tausend USD  in den nachsten 90 Tagen oder $500 pro Tag ab nachster Woche
-verdienen werden. Das ist absolut ubertrieben.   Was wichtig fur Sie zu
-begreifen ist, dass es unter viel Mull nur wenig Edelsteine gibt. 
-Zweitens, Zehntausende von  gewohnlichen Menschen aus aller Welt ziehen
-schon Vorteile aus dem Programm "der Arbeit zu Hause" und bekommen ihre
-wochentlichen Lohne (Schecke) - insgesamt fast 6 Millionen Dollar im vorigen
-Jahr.
-Drittens, USA TODAY teilte vor Kurzem mit, mehr als 170 000 neue Leute
-bekamen Internetanschluss pro Tag. Viele kluge Geschaftsleute werden reich
-mit Hilfe vom Internet. Und das ist erst der Anfang! Mit unserem System
-konnen Sie Ihr Geld ohne besondere Bemuhungen bekommen!
+02:04  * pp tries to figure out host protected area stuff
+02:04 < pp> _apparently_ these stinkpads have a hidden partition containing
+            windows xp etc.
+02:04 < pp> which the bios protects
+02:04 < pp> linux happily ignores that setting and tries to use that area as
+well
+02:05 < pp> which works until you eg. resume  from suspend and the area is
+            locked again
+02:05 < pp> which makes your box pretty unhappy
+02:05 < pp> at some point the behaviour was to just ignore the extra space
+02:06 < freitag> pp: i think i have machines that print at boot they ignore
+the host protected area
+02:06 < pp> so whatever is there got nuked :-)
+02:07 < pp> apparently could even be bios setup etc. on some models
+02:07 < rdd> they can reinstall XP from there too (if it's not nuked)
+02:07 < pp> yea
+02:08 < pp> basically my laptop went into a state where in "normal" setting
+it
+            worked until resuming from suspend, after which it got io errors
+02:08 < pp> in "secure" mode (no OS access to hpa) the box refused to boot
+at all
+02:08 < pp> and in "disabled" it's totally happy
+02:08 < pp> but the fancy ibm stuff disappeared
+02:09 < pp> oh well
+02:09 < freitag> tell linux-ide
 
-Das ist die Liste der Vorteile, die Sie ziehen konnen
-
-Das vollendete, einfache im Gebrauch System, das Sie einfach "einschalten",
-um Extrabucks zu bekommen.
-Der Hausbusiness wurde von beschaftigten Leuten geschaffen - nur 3-5
-Stunden pro Woche und Sie werden Ihre Bezahlung fur den vollen Arbeitstag in
-Ihrer Tasche bestimmt haben.
-Diese Arbeit stort Ihre laufende Arbeit, Ihren Beruf oder Ihre Karriere
-nicht - Sie wahlen die Zeit fur die Arbeit im Internet.
-Sie schafft "mache das einmal, wirst mit Geld fur dein ganzes Leben
-versorgt sein" und Honorar bekommen Sie ohne das Haus zu verlassen.
-Keine Erfahrung brauchen Sie dafur.
-Geniessen Sie innige Ruhe, die Sie wahrend der Arbeit mit einer der
-erfolgreichsten und bewahrten Industrieorganisationen und mit dem
-langfristigen Mitglied von Better Business Bureau.
-Sie werden Ihren Business auf einer soliden Basis entwickeln - 14 Jahre der
-zuverlassigen und erfahrenen Strategien.
-Buchfuhrung, Entlohnungstabelle, Frachtbefordung  alles ist fur Sie bei uns
-vorhanden.
-Keine Dienstnehmer sind notig.
-Arbeiten Sie nur zu Hause, nur an Ihrem PC.
-Unentgeltliche professionelle Beratungen.
-Keine Begrenzungen fur mogliche Verdienste!
-Keine teure Einrichtung eines Buros wird verlangt!
-Riesige potentielle Steuerprofite.
-Keine territorielle Begrenzungen!  
-Das System ist auch perfekt fur Verschaffung der Extragelder fur schon
-bestehendes Geschaft.
-Das ist eine kurze Liste aller Vorteile, die Sie ziehen konnen. Es kostet
-Ihnen nichts darauf einzugehen und es gibt keine Verpflichtungen. Jetzt sind
-Sie vielleicht verwundert...
-
-Und wie konnen wir alle diese Dinge tun? Lassen Sie mich erklaren. Dazu
-dienen aber nicht meine Worte, sondern die Worte von anderen Leute:
-"Wie viele von uns, habe ich vieles probiert. Ich habe  endlich das
-gefunden, was sich organisatorisch und materiell jeden Tag bewahrt. Ich
-konnte kaum glauben, dass das, was ich in den ersten Wochen meiner Arbeit in
-meinem Postkasten fand, war nur Abschlagszahlung".
-B. Trask
-Arizona, die USA
-
-"Die Unterstutzung, die ich erhalten habe, war ausserordentlich gross. Ich
-kann nicht glauben, dass so viel Energie aufgewendet wird, damit ich Erfolg
-erziele".
-
-A. Marks
-Michigan, die USA
-
- 
-
-"Nachdem ich viel Zeit, Energie und Ressourcen in Marketing fur einige
-fruhere Programme ausgelegt hatte, war ich fur einen so einfachen und
-absolut automatischen Prozess, der von De-payments Powerline Systeme
-angeboten wurde, nicht vorbereitet. Ich war ebenso durch den allumfassenden
-angebotenen Training sehr beeindruckt. Das ist der ins Leben umgesetzte
-Traum. Danke Ihnen, De-payments".
-D.Kukkee
-Kanada
-
-"Ich habe Internet 6 jahre benutzt und De-payments ist die beste und
-vollendete Moglichkeit unter denen, die ich gesehen habe... alles ist so
-einfach und klar, es gibt keine Unklarheiten uberhaupt".
-Delroy
-Jamaika
-
- 
-
-"Ich habe in De-payments einen hochwertigen und schnellen Business
-gefunden. Das bedeutet schon etwas fur mich – ich will mein eigenes Haus und
-einen guten Verdienst haben. De-payments gibt mir solche Moglichkeit!"
-K.Pfaff
-Connecticut, die USA
-
-"De-payments ist eine grosse Moglichkeit, finanzielle Unabhangigkeit mit
-der guten Arbeitsethik zu erreichen. Verlassliche und professionelle Leute,
-tolle Produktion".
-A. Cooper
-Arizona, die USA
-
-
-Was ist eingeschlossen?
-Wenn Sie unser Team anschliessen, bekommen Sie das volle Instrumentarium
-der Trainings und der Unterstutzung von De-payments. Nichts wird dem
-Selbstlauf uberlassen. Alles ist vorgesehen.
-Ausgaben!
-Unentgeltliche 24-Stunden Beratungen
-Jeder De-payments-Mitarbeiter wird von 3 Leaders unterstutzt, die ihn mit
-den kostenlosen Konsultationen und Unterstutzung versehen.
-Familienbusiness mit Steuer- und Erbeprofite.
-UNENTGELTLICHES Online-Training
-Wie man 3-5 Stunden der Arbeit pro Woche in eine Ganztagsarbeitbezahlung 
-ohne Storung fur laufende Arbeit, Beruf oder Karriere (das ist toll fur
-beschaftigte Leute) verwandeln kann.
-Wie man Internettechnologie "in 50 Orten gleichzeitig sein" gebrauchen und
-den Verdienst drastisch erhohen kann.
-Wie man "self-funding" - Marketingtechnik benutzen kann, um alle Werbung
-gratis zu machen.
-Wie man Minenfelde, Sackgassen und Schwierigkeiten, die 95% Geschaftsmanner
-auf ihrem Weg nach dem Beginn ihrer Arbeit im Internet treffen, vermeiden
-kann.
-Wie man Strategieunionen "win/win" grunden kann, so dass deê Erfolg von
-Tausenden der anderen Onlinemarketers versichert wird. 
-Der billigste Weg, das Geld online zu verdienen
-Dank Internet sind Ihre Businesskosten minimal. Sie konnen mit Millionen
-via E-Mail, Suchmaschinen, Direktorien, kostenlose Berater, etc. Kontakt
-aufnehmen. Alles ist frei! Keine door-to-door Verkaufe... Keine Post...
-Keinen Druck... Keine Brochuren... Keine Tonbandkassetten... Keine Videos...
-Keine Ferngesprache. Unverzugliche Kommunikation – in aller Welt. Sie konnen
-viel Geld sparen.
-So, konnen Sie sehen, dass alles, was Sie fur den Anfang des zusatlichen
-Verdiensts brauchen, ist  keine Kosten und Verpflichtungen von Ihrer Seite.
-Hier sind andere gute Nachrichten...
-
-Unentschlossen?
-Bewerben Sie sich jetzt...
-Uberlegen Sie sich jede Zeit!
-
-Das liegt an Ihnen...
- 
-
-Sie konnen sich fur unsere Regional Account Mananger Stelle sofort
-bewerben.
-
-Der von uns angebotene Job ist mit Mail verbunden. Das ist ein einfacher
-Job, der Sie nicht auffordert, Ihre laufende Arbeit aufzugeben.
-
-Erhalten Sie Scheks und losen Sie sie von unseren Kunden (Wire Transfer,
-PayPal Transfer, Uberweisung, Kassierer- oder Persohnliche Schecks) ein und
-schicken Sie unseren Vertretern das Geld durch die Western Union (ihre
-Honorar betragt 5-10% der erhaltenen Summe).
-
-Wenn Sie versuchen mochten, brauchen Sie das Folgende: 
-
-
-Hausadresse und Telefonnummer
-Volljahrigkeit
-Internetanschluss, 24 Stunden, 7 Tage pro Woche
-PC zu Hause
-Sie sollen bereit sein, uns eine schriftliche Bestatigung zu geben, damit
-wir Informationen uber Sie bekommen.
-
-Bewerbungsformular
-
-Fullen Sie es bitte ein und schicken es zu: yanhoffman@paysde.com
-
-1. Ihr Vorname und Name:
-2. Land:
-3. Alter:
-4. Einige Worte uber Sie selbst:
-
-Emails sollen zu yanhoffman@paysde.com gerichtet werden
-
-Mit vielen Grussen
-yanhoffman@paysde.com
-
-P.S. Wie jeder InternetUser mussen Sie schon viele Systeme "werde schnell
-reich" gesehen haben. Vielleicht sind Sie der Tatsache gegenuber skeptisch ,
-dass es legale Wege fur den Verdienst aus den Fruchten der
-Internetrevolution geben kann. Sowas habe ich auch gefuhlt, bevor ich
-De-payments Marketing Group vor einem Jahr fand.
-
- P.P.S. Vielleicht ware es uberflussig, Ihnen zu sagen, dass anstrengende
-Arbeit kein Schlussel zum Wohlhaben ist. Wenn es so ware, dann fuhren mehr
-Arbeiter ihre BMWs jetzt und Sie bekamen schon Ihre Rente, stimmt es? Das
-Problem mit typischem Job besteht darin, dass alles, was Sie tun ist Verkauf
-Ihrer Zeit gegen Geld – und dann, wenn sie aufhoren, gibt es auch kein Geld
-mehr. Als De-payments Arbeiter werden Sie am System "mache das einmal, wirst
-fur das ganze Leben versorgt sein" teilnehmen.
-Digitale Unterschrift:
-
-
-
+:-)
