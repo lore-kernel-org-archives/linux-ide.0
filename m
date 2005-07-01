@@ -1,53 +1,32 @@
-From: Felix Seeger <seeger@sitewaerts.de>
-Subject: Problems with Asus P4P800-VM and compatibility-mode for IDE drives
-Date: Fri, 1 Jul 2005 18:01:00 +0200
-Message-ID: <200507011801.00261.seeger@sitewaerts.de>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/ide/Makefile: kill dead CONFIG_BLK_DEV_IDE_TCQ entry
+Date: Sat, 2 Jul 2005 00:54:42 +0200
+Message-ID: <20050701225442.GB3592@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from trans145.ems-ag.de ([212.86.207.149]:5638 "EHLO
-	samoa.sitewaerts") by vger.kernel.org with ESMTP id S263383AbVGAQAD
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Jul 2005 12:00:03 -0400
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:15889 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261415AbVGAWyn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 Jul 2005 18:54:43 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi,
+This patch kills the dead CONFIG_BLK_DEV_IDE_TCQ entry.
 
-I just got an Asus P4P800-VM board. I am trying to get it working with one ide 
-drive, and two sata drives.
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-If I enable "Enhanced Mode" in the bios, I am not able to boot linux because I 
-get "irq11: nobody cared". IRQ 11 is the ide ide driver as far as I was able 
-to see from the messages above.
+--- linux-2.6.12-mm2-full/drivers/ide/Makefile.old	2005-07-01 00:46:38.000000000 +0200
++++ linux-2.6.12-mm2-full/drivers/ide/Makefile	2005-07-01 00:46:45.000000000 +0200
+@@ -20,7 +20,6 @@
+ # Core IDE code - must come before legacy
+ ide-core-$(CONFIG_BLK_DEV_IDEPCI)	+= setup-pci.o
+ ide-core-$(CONFIG_BLK_DEV_IDEDMA)	+= ide-dma.o
+-ide-core-$(CONFIG_BLK_DEV_IDE_TCQ)	+= ide-tcq.o
+ ide-core-$(CONFIG_PROC_FS)		+= ide-proc.o
+ ide-core-$(CONFIG_BLK_DEV_IDEPNP)	+= ide-pnp.o
+ 
 
-I found this problem with google and there, the workaround is to enable 
-"Compatibility Mode". 
-
-In Compatibility mode, I am unable to enable DMA and/or UDMA3+ Modes for my 
-IDE drive, even bios/hdparm -i says they are available. For dma I get  a 
-"Operation not permitted" from hdparm without a message in my system logs.
-
-Also, it doesn't help to compile the scsi sata ich5 driver as a module or if I 
-remove the driver from the configuration and deaktivate the sata drives.
-
-
-The only way I get DMA working is in enhanced mode, but there I get the IRQ 
-Problems when I plug in my sata drives. Next I will try is a bios update, but 
-the notes from asus don't look like they changes something there.
-
-
-Is this a known problem, can I help to debug this ? At the moment I cannot use 
-the machine anyway so I can test patches, no important data on the hd.
-
-
-I am running a 2.6.12.1 Linus kernel.
-
-Thanks !
-Felix
-
-P.S. Please CC me
