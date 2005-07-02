@@ -1,108 +1,130 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Organized summary of the pacthes
-Date: Sat, 02 Jul 2005 14:24:00 +0900
-Message-ID: <42C624F0.8060406@gmail.com>
-References: <42C12A10.8030308@tw.ibm.com> <42C16AFC.7010908@pobox.com> <42C3B0B1.6090001@tw.ibm.com>
+From: Erik Slagter <erik@slagter.name>
+Subject: [PATCH] ich6m-pciid-piix.patch
+Date: Sat, 02 Jul 2005 12:57:54 +0200
+Message-ID: <1120301874.4300.35.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-d9CY5WW9SRLrbIkgBGaQ"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.204]:5362 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261477AbVGBFYJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Jul 2005 01:24:09 -0400
-Received: by wproxy.gmail.com with SMTP id i2so489767wra
-        for <linux-ide@vger.kernel.org>; Fri, 01 Jul 2005 22:24:07 -0700 (PDT)
-In-Reply-To: <42C3B0B1.6090001@tw.ibm.com>
+Received: from oldconomy.demon.nl ([212.238.217.56]:54948 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S261156AbVGBKzE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 2 Jul 2005 06:55:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, doug_maxey@us.ibm.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-Albert Lee wrote:
-> 
-> Jeff,
-> 
->> Albert Lee wrote:
->>
->>> Summary of the pacthes for your review (as of 6/28/2005):
->>> 1. atapi_pio_bytes() fixes
->>>   => Three patches pending:
->>>      #1-2. __atapi_pio_bytes(): if condition fix
->>>      http://marc.theaimsgroup.com/?l=linux-ide&m=111838913812842&w=2
->>
->>
->>
->> I'll probably apply this
->>
->>
->>>      #1-3. __atapi_pio_bytes(): trailing data handling fix
->>>      http://marc.theaimsgroup.com/?l=linux-ide&m=111838955410270&w=2
->>>
->>>      #1-4. __atapi_pio_bytes(): odd-length data handling fix
->>>      http://marc.theaimsgroup.com/?l=linux-ide&m=111838987630460&w=2
->>>      Patch #1-4 will overrun the odd-length buffer by one byte. :(
->>>      Maybe we can just ignore the last byte of odd-length buffer?
->>
->>
->>
->> These two patches make me REALLY nervous.  This overrun business needs 
->> to be handled in a different way.
->>
->> For DMA, we will want to copy 0-3 odd bytes into a 4-byte buffer, and 
->> then make that 4-byte buffer than final DMA segment.
->>
->> For PIO, we might as well use the same buffer, and copy the last 0-3 
->> (or 0-1?) odd bytes.
->>
->> Never overrun.
->>
-> 
-> Thanks for the review and tolerance for the newbie blindness.
-> I'll revise/resubmit patch 1-3 and 1-4 per your advice.
-> I will also study the DMA padding/alignment advised by you and Alan.
-> 
->>
->>> 2. atapi_packet_task() assertion failed fix
->>>   => Revised patch submitted:
->>>      http://marc.theaimsgroup.com/?l=linux-ide&m=111830130223323&w=2
->>>   => Need more revision to remove the 'case ATA_PROT_ATAPI' handling 
->>> in it.
->>>     (It conflicts with patch #3-2 below:
->>>      http://marc.theaimsgroup.com/?l=linux-ide&m=111951880730921&w=2)
->>>
->>>
->>> 3. ata_pio_task() race condition fixes.
->>>   => Two patches submitted. Waiting for review:
->>>    #3-1  http://marc.theaimsgroup.com/?l=linux-ide&m=111958527005103&w=2
->>>    #3-2  http://marc.theaimsgroup.com/?l=linux-ide&m=111951880730921&w=2
->>
->>
->>
->> These are probably OK.
->>
->> However, I am pondering scrapping all the polling code, since on SATA, 
->> interrupt-driven mode is much more desirable.
-> 
-> 
-> Is there any draft plan or design for the interrupt driven PIO code
-> available? Also as Alan said, PIO polling would be useful for some
-> situation. Any plan for libata to support both PIO polling mode and the
-> interrupt driven mode?
-> 
-> If permitted, I would like to take this opportunity to participate in
-> the interrupt driven PIO task, under your design guideline.
-> 
 
-  Hi, Albert.
+--=-d9CY5WW9SRLrbIkgBGaQ
+Content-Type: multipart/mixed; boundary="=-IYlZOT46YpJrPZPVe1bF"
 
-  For interrupt-driven PIO, IDE driver should be an example albeit quite 
-complex.  Once interrupt-driven PIO is implemented, IMHO, generic 
-polling IO can easily be added by calling interrupt handler periodically 
-while the driver is expecting notification (any command is in-flight). 
-Most low-level SATA driver interrupt handlers are already ready to 
-handle spurious interrupts, and maybe we can add a flag to disable 
-polling for those unable to swallow spurious interrupts if any such 
-device/driver exsits.
 
--- 
-tejun
+--=-IYlZOT46YpJrPZPVe1bF
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+I am not sure someone already did this one, but it doesn't seem to be in
+git nor mm at the moment.
+
+This adds ICH6M to the pci ids of the (standard) piix ide driver. This
+makes it possible to use the standard ide driver for this chipset and
+enable udma.
+
+The other way is to use the libata driver, but this has too many
+drawback for the moment (no hdparm/smart/atapi support, with
+patch/#define it does, but doesn't work for me and crashes). Also pata
+harddisks are assigned incorrectly sda device names.
+
+This look okay to me, having said this, I must admit I don't know ***
+from this source file ;-)
+
+Thx.
+
+diff -ur a/drivers/ide/pci/piix.c linux-2.6.12/drivers/ide/pci/piix.c
+--- a/drivers/ide/pci/piix.c	2005-06-17 21:48:29.000000000 +0200
++++ b/drivers/ide/pci/piix.c	2005-07-02 12:37:43.000000000 +0200
+@@ -133,6 +133,7 @@
+ 		case PCI_DEVICE_ID_INTEL_82801EB_11:
+ 		case PCI_DEVICE_ID_INTEL_ESB_2:
+ 		case PCI_DEVICE_ID_INTEL_ICH6_19:
++		case PCI_DEVICE_ID_INTEL_ICH6_5:
+ 		case PCI_DEVICE_ID_INTEL_ICH7_21:
+ 		case PCI_DEVICE_ID_INTEL_ESB2_18:
+ 			mode =3D 3;
+@@ -447,6 +448,7 @@
+ 		case PCI_DEVICE_ID_INTEL_82801E_11:
+ 		case PCI_DEVICE_ID_INTEL_ESB_2:
+ 		case PCI_DEVICE_ID_INTEL_ICH6_19:
++		case PCI_DEVICE_ID_INTEL_ICH6_5:
+ 		case PCI_DEVICE_ID_INTEL_ICH7_21:
+ 		case PCI_DEVICE_ID_INTEL_ESB2_18:
+ 		{
+@@ -575,6 +577,7 @@
+ 	/* 21 */ DECLARE_PIIX_DEV("ICH7"),
+ 	/* 22 */ DECLARE_PIIX_DEV("ICH4"),
+ 	/* 23 */ DECLARE_PIIX_DEV("ESB2"),
++	/* 24 */ DECLARE_PIIX_DEV("ICH6M"),
+ };
+=20
+ /**
+@@ -651,6 +654,7 @@
+ 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH7_21, PCI_ANY_ID,
+PCI_ANY_ID, 0, 0, 21},
+ 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801DB_1, PCI_ANY_ID,
+PCI_ANY_ID, 0, 0, 22},
+ 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ESB2_18, PCI_ANY_ID,
+PCI_ANY_ID, 0, 0, 23},
++ 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_5, PCI_ANY_ID,
+PCI_ANY_ID, 0, 0, 24},
+ 	{ 0, },
+ };
+ MODULE_DEVICE_TABLE(pci, piix_pci_tbl);
+
+
+--=-IYlZOT46YpJrPZPVe1bF
+Content-Disposition: inline; filename=ich6m-pciid-piix.patch
+Content-Type: text/x-patch; name=ich6m-pciid-piix.patch; charset=UTF-8
+Content-Transfer-Encoding: base64
+
+ZGlmZiAtdXIgYS9kcml2ZXJzL2lkZS9wY2kvcGlpeC5jIGxpbnV4LTIuNi4xMi9kcml2ZXJzL2lk
+ZS9wY2kvcGlpeC5jDQotLS0gYS9kcml2ZXJzL2lkZS9wY2kvcGlpeC5jCTIwMDUtMDYtMTcgMjE6
+NDg6MjkuMDAwMDAwMDAwICswMjAwDQorKysgYi9kcml2ZXJzL2lkZS9wY2kvcGlpeC5jCTIwMDUt
+MDctMDIgMTI6Mzc6NDMuMDAwMDAwMDAwICswMjAwDQpAQCAtMTMzLDYgKzEzMyw3IEBADQogCQlj
+YXNlIFBDSV9ERVZJQ0VfSURfSU5URUxfODI4MDFFQl8xMToNCiAJCWNhc2UgUENJX0RFVklDRV9J
+RF9JTlRFTF9FU0JfMjoNCiAJCWNhc2UgUENJX0RFVklDRV9JRF9JTlRFTF9JQ0g2XzE5Og0KKwkJ
+Y2FzZSBQQ0lfREVWSUNFX0lEX0lOVEVMX0lDSDZfNToNCiAJCWNhc2UgUENJX0RFVklDRV9JRF9J
+TlRFTF9JQ0g3XzIxOg0KIAkJY2FzZSBQQ0lfREVWSUNFX0lEX0lOVEVMX0VTQjJfMTg6DQogCQkJ
+bW9kZSA9IDM7DQpAQCAtNDQ3LDYgKzQ0OCw3IEBADQogCQljYXNlIFBDSV9ERVZJQ0VfSURfSU5U
+RUxfODI4MDFFXzExOg0KIAkJY2FzZSBQQ0lfREVWSUNFX0lEX0lOVEVMX0VTQl8yOg0KIAkJY2Fz
+ZSBQQ0lfREVWSUNFX0lEX0lOVEVMX0lDSDZfMTk6DQorCQljYXNlIFBDSV9ERVZJQ0VfSURfSU5U
+RUxfSUNINl81Og0KIAkJY2FzZSBQQ0lfREVWSUNFX0lEX0lOVEVMX0lDSDdfMjE6DQogCQljYXNl
+IFBDSV9ERVZJQ0VfSURfSU5URUxfRVNCMl8xODoNCiAJCXsNCkBAIC01NzUsNiArNTc3LDcgQEAN
+CiAJLyogMjEgKi8gREVDTEFSRV9QSUlYX0RFVigiSUNINyIpLA0KIAkvKiAyMiAqLyBERUNMQVJF
+X1BJSVhfREVWKCJJQ0g0IiksDQogCS8qIDIzICovIERFQ0xBUkVfUElJWF9ERVYoIkVTQjIiKSwN
+CisJLyogMjQgKi8gREVDTEFSRV9QSUlYX0RFVigiSUNINk0iKSwNCiB9Ow0KIA0KIC8qKg0KQEAg
+LTY1MSw2ICs2NTQsNyBAQA0KIAl7IFBDSV9WRU5ET1JfSURfSU5URUwsIFBDSV9ERVZJQ0VfSURf
+SU5URUxfSUNIN18yMSwgUENJX0FOWV9JRCwgUENJX0FOWV9JRCwgMCwgMCwgMjF9LA0KIAl7IFBD
+SV9WRU5ET1JfSURfSU5URUwsIFBDSV9ERVZJQ0VfSURfSU5URUxfODI4MDFEQl8xLCBQQ0lfQU5Z
+X0lELCBQQ0lfQU5ZX0lELCAwLCAwLCAyMn0sDQogCXsgUENJX1ZFTkRPUl9JRF9JTlRFTCwgUENJ
+X0RFVklDRV9JRF9JTlRFTF9FU0IyXzE4LCBQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCAwLCAwLCAy
+M30sDQorIAl7IFBDSV9WRU5ET1JfSURfSU5URUwsIFBDSV9ERVZJQ0VfSURfSU5URUxfSUNINl81
+LCBQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCAwLCAwLCAyNH0sDQogCXsgMCwgfSwNCiB9Ow0KIE1P
+RFVMRV9ERVZJQ0VfVEFCTEUocGNpLCBwaWl4X3BjaV90YmwpOw0K
+
+
+--=-IYlZOT46YpJrPZPVe1bF--
+
+--=-d9CY5WW9SRLrbIkgBGaQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQBCxnMyJgD/6j32wUYRAoYiAJ9HOL9P6cCwSTwItmZKztLrb15Y3gCdEtsA
+UFBh2pJow4FXNea0CDD2tCY=
+=F/jy
+-----END PGP SIGNATURE-----
+
+--=-d9CY5WW9SRLrbIkgBGaQ--
