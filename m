@@ -1,33 +1,42 @@
-From: Zoltan Boszormenyi <zboszor@freemail.hu>
-Subject: Re: [2.6 patch] SCSI_SATA has to be a tristate
-Date: Sun, 03 Jul 2005 16:01:07 +0200
-Message-ID: <42C7EFA3.8010809@freemail.hu>
-References: <42C6C5CE.50203@freemail.hu> <20050702214351.GB5346@stusta.de>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [patch 1/13] ide hotplug mark __devinit alim15x3.c
+Date: Sun, 3 Jul 2005 17:11:49 +0200
+Message-ID: <58cb370e050703081118380728@mail.gmail.com>
+References: <20050626164557.GI12811@sputnik.stro.at>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dunaweb1.euroweb.hu ([195.184.0.6]:58763 "EHLO
-	szolnok.dunaweb.hu") by vger.kernel.org with ESMTP id S261422AbVGCNmd
+Received: from nproxy.gmail.com ([64.233.182.203]:9653 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261452AbVGCPLu convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Jul 2005 09:42:33 -0400
-In-Reply-To: <20050702214351.GB5346@stusta.de>
+	Sun, 3 Jul 2005 11:11:50 -0400
+Received: by nproxy.gmail.com with SMTP id o25so125592nfa
+        for <linux-ide@vger.kernel.org>; Sun, 03 Jul 2005 08:11:49 -0700 (PDT)
+In-Reply-To: <20050626164557.GI12811@sputnik.stro.at>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: maximilian attems <janitor@sternwelten.at>
+Cc: linux-ide@vger.kernel.org
 
-Adrian Bunk =EDrta:
-> On Sat, Jul 02, 2005 at 06:50:22PM +0200, Zoltan Boszormenyi wrote:
->>*** Warning: "ata_device_add" [drivers/scsi/sata_vsc.ko] undefined!
->>...
->>.config is attached.
->=20
->=20
-> Thanks for this report, the fix is below.
+Hi,
 
-Thanks, now sata_via and sata_promise load correctly on my machine.
+All patches except #3 merged.
+[ cmd640 is not using PCI core -> patch #3 rejected ]
 
-Best regards,
-Zolt=E1n B=F6sz=F6rm=E9nyi
+Thanks,
+Bartlomiej
+
+On 6/26/05, maximilian attems <janitor@sternwelten.at> wrote:
+> From: Herbert Xu <herbert@gondor.apana.org.au>
+> 
+> mark the __init section __devinit.
+> Splitted up from the Debian kernel patch.
+> 
+> see the thread about the pci hotplug crash on a stratus box.
+> http://marc.theaimsgroup.com/?l=linux-kernel&m=111930108613386&w=2
+> 
+> 
+> Signed-off-by: maximilian attems <janitor@sternwelten.at>
