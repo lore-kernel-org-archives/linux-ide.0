@@ -1,34 +1,28 @@
-From: maximilian attems <janitor@sternwelten.at>
-Subject: Re: [patch 1/13] ide hotplug mark __devinit alim15x3.c
-Date: Mon, 4 Jul 2005 11:17:51 +0200
-Message-ID: <20050704091750.GA27207@sputnik.stro.at>
-References: <20050626164557.GI12811@sputnik.stro.at> <58cb370e050703081118380728@mail.gmail.com>
+From: "Al Boldi" <a1426z@gawab.com>
+Subject: RE: [git patches] IDE update
+Date: Mon, 4 Jul 2005 15:01:03 +0300
+Message-ID: <200507041201.PAA26389@raad.intranet>
+References: <Pine.GSO.4.62.0507031847460.678@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:3523 "EHLO baikonur.stro.at")
-	by vger.kernel.org with ESMTP id S261536AbVGDJSP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jul 2005 05:18:15 -0400
-Content-Disposition: inline
-In-Reply-To: <58cb370e050703081118380728@mail.gmail.com>
+Received: from [212.76.84.95] ([212.76.84.95]:61700 "EHLO raad.intranet")
+	by vger.kernel.org with ESMTP id S261613AbVGDMBt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jul 2005 08:01:49 -0400
+In-Reply-To: <Pine.GSO.4.62.0507031847460.678@mion.elka.pw.edu.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: 'Bartlomiej Zolnierkiewicz' <B.Zolnierkiewicz@elka.pw.edu.pl>, 'Linus Torvalds' <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-hello,
+Bartlomiej Zolnierkiewicz wrote: {
+Please pull from:
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/bart/ide-2.6.git
+}
 
-On Sun, 03 Jul 2005, Bartlomiej Zolnierkiewicz wrote:
+Does it fix the idedriver int/dma problem?
 
-> All patches except #3 merged.
-> [ cmd640 is not using PCI core -> patch #3 rejected ]
-> 
-> Thanks,
-> Bartlomiej
-> 
+Al
 
-thanks a lot for your double check.
-i already saw the mails today in bk-commits-head :)
-
---
-maks
