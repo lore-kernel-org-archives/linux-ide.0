@@ -1,30 +1,51 @@
-From: Jess <retraining@stingraydivers.com>
-Subject: Software cds $15 and $99 get al software in 1 cd
-Date: Tue, 5 Jul 2005 18:48:11 +0200
-Message-ID: <11423042793.3852165582@201-254-148-78.speedy.com.ar>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: [git patches] IDE update
+Date: Tue, 5 Jul 2005 10:27:06 -0700 (PDT)
+Message-ID: <Pine.LNX.4.58.0507051016420.3570@g5.osdl.org>
+References: <42C9C56D.7040701@tomt.net> <42CA5A84.1060005@rainbow-software.org>
+ <20050705101414.GB18504@suse.de> <42CA5EAD.7070005@rainbow-software.org>
+ <20050705104208.GA20620@suse.de> <42CA7EA9.1010409@rainbow-software.org>
+ <1120567900.12942.8.camel@linux> <42CA84DB.2050506@rainbow-software.org>
+ <1120569095.12942.11.camel@linux> <42CAAC7D.2050604@rainbow-software.org>
+ <20050705142122.GY1444@suse.de>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 201-254-148-78.speedy.com.ar ([201.254.148.78]:7923 "HELO
-	201-254-148-78.speedy.com.ar") by vger.kernel.org with SMTP
-	id S261914AbVGEQsL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Jul 2005 12:48:11 -0400
-Received: from [204.153.239.200] (port=4351 helo=[Hamburg])
-    by 201-254-148-78.speedy.com.ar with esmtp
-    id 2167423957hexadecimal12730
-    for linux-ide@vger.kernel.org; Tue, 5 Jul 2005 18:48:12 +0200
+Received: from smtp.osdl.org ([65.172.181.4]:55510 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261915AbVGER1Z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jul 2005 13:27:25 -0400
+In-Reply-To: <20050705142122.GY1444@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-Welcome to VIP Quality Software.
-http://vjgd.szepv9alp2ah7bs.misbornai.com
+To: Jens Axboe <axboe@suse.de>
+Cc: Ondrej Zary <linux@rainbow-software.org>, =?ISO-8859-1?Q?Andr=E9_Tomt?= <andre@tomt.net>, Al Boldi <a1426z@gawab.com>, 'Bartlomiej Zolnierkiewicz' <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
 
+On Tue, 5 Jul 2005, Jens Axboe wrote:
+> 
+> Looks interesting, 2.6 spends oodles of times copying to user space.
+> Lets check if raw reads perform ok, please try and time this app in 2.4
+> and 2.6 as well.
 
-Many go fishing without knowing it is fish they are after.  
-You can't legislate against rumor.        
+I think it's just that 2.4.x used to allow longer command queues. I think
+MAX_NR_REQUESTS is 1024 in 2.4.x, and just 128 in 2.6.x or something like
+that.
 
+Also, the congestion thresholds are questionable: we consider a queue
+congested if it is within 12% of full, but then we consider it uncongested
+whenever it falls to within 18% of full, which I bet means that for some
+streaming loads we have just a 6% "window" that we keep adding new
+requests to (we wait when we're almost full, but then we start adding
+requests again when we're _still_ almost full). Jens, we talked about this
+long ago, but I don't think we ever did any timings.
 
+Making things worse, things like this are only visible on stupid hardware
+that has long latencies to get started (many SCSI controllers used to have
+horrid latencies), so you'll never even see any difference on a lot of 
+hardware.
+
+It's probably worth testing with a bigger request limit. I forget what the 
+/proc interfaces are (and am too lazy to look it up), Jens can tell us ;)
+
+		Linus
