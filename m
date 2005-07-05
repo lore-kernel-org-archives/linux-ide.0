@@ -1,54 +1,75 @@
-From: "Al Boldi" <a1426z@gawab.com>
-Subject: IOWAIT block layer problem
-Date: Tue, 5 Jul 2005 06:43:33 +0300
-Message-ID: <200507050343.GAA26158@raad.intranet>
-References: <42C9C56D.7040701@tomt.net>
+From: Phil Dibowitz <phil@ipom.com>
+Subject: Re: Promise 20378
+Date: Mon, 04 Jul 2005 22:50:22 -0700
+Message-ID: <42CA1F9E.4090305@ipom.com>
+References: <42C7B584.401@ipom.com> <42C9F50B.4000508@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1256
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary=------------enigCD68411A38A77E04DDB68DA6
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [213.184.187.60] ([213.184.187.60]:25861 "EHLO raad.intranet")
-	by vger.kernel.org with ESMTP id S261755AbVGEDop convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Jul 2005 23:44:45 -0400
-In-Reply-To: <42C9C56D.7040701@tomt.net>
+Received: from msg-mx2.usc.edu ([128.125.137.7]:44499 "EHLO msg-mx2.usc.edu")
+	by vger.kernel.org with ESMTP id S261752AbVGEFuY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jul 2005 01:50:24 -0400
+Received: from [10.1.1.2] ([128.125.81.146])
+ by msg-mx2.usc.edu (Sun Java System Messaging Server 6.2-2.02 (built Mar 22
+ 2005)) with ESMTPSA id <0IJ5002U347Z0I30@msg-mx2.usc.edu> for
+ linux-ide@vger.kernel.org; Mon, 04 Jul 2005 22:50:23 -0700 (PDT)
+In-reply-to: <42C9F50B.4000508@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?windows-1256?Q?'Andr=E9_Tomt'?= <andre@tomt.net>
-Cc: 'Bartlomiej Zolnierkiewicz' <bzolnier@gmail.com>, 'Ondrej Zary' <linux@rainbow-software.org>, 'Linus Torvalds' <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Andr=E9 Tomt wrote: {
->>>>On 7/4/05, Al Boldi <a1426z@gawab.com> wrote:
->>>>Hdparm -tT gives 38mb/s in 2.4.31
->>>>Cat /dev/hda > /dev/null gives 2% user 33% sys 65% idle
->>>>
->>>>Hdparm -tT gives 28mb/s in 2.6.12
->>>>Cat /dev/hda > /dev/null gives 2% user 25% sys 0% idle 73% IOWAIT
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigCD68411A38A77E04DDB68DA6
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-The "hdparm doesn't get as high scores as in 2.4" is a old discussed to
-death "problem" on LKML. So far nobody has been able to show it affects
-anything  but that pretty useless quasi-benchmark.
+Jeff Garzik wrote:
+> Phil Dibowitz wrote:
+> 
+>> So, there doesn't appear to be a driver for the 20378 in the kernel...
+>> though google showed a few people using some proprietary drivers with
+>> varying luck. Ew.
+>>
+>> I noticed there are a lot of other Promise drivers in the kernel for the
+>> same general line, which leads me to believe there may be some interest
+>> in getting a 20378 driver in the kernel.
+>>
+>> So, since I now own a machine with one, I thought I'd drop this list a
+>> line and say "I can test stuff and provide info on the chipset"...
+> 
+> 
+> Just add the PCI ID to drivers/scsi/sata_promise.c...
 
->>>No errors though, only sluggish system.
+Markus K. emailed me to let me know about sata_promise, which already
+binds to my controller with no errors. I'm wondering if it'll support
+the PATA controller on there as well - we'll see. I'll play around with
+it and report back. Thanks.
 
-Really sluggish or just "benchmark-sluggish"?
-If the former, try selecting a different IO elevator/sheduler.
+-- 
+Phil Dibowitz                             phil@ipom.com
+Freeware and Technical Pages              Insanity Palace of Metallica
+http://www.phildev.net/                   http://www.ipom.com/
 
-> When you compare 2.4.31 with 2.6.12 don't you see this problem on you=
-r=20
-> machine?
-> If you have a fast system the slowdown won't show, but your IOWAIT=20
-> will be higher anyway!
+"They that can give up essential liberty to obtain a little temporary
+safety deserve neither liberty nor safety."
+ - Benjamin Franklin, 1759
 
-Nothing wrong with 73% iowait
-Beware 2.4 didn't export that statistic at all to userspace, so 0% iowa=
-it
-gets reported from most 2.6-ready reporting tools on 2.4.
 
-}
+--------------enigCD68411A38A77E04DDB68DA6
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-1. hdparm only gives you an indicator.
-2. Really sluggish, as in unresponsive to commands.
-3. Tried all IO elevators/shedulers to no avail.
-4. In 2.4 IOWAIT is added to sys, as in 8% IOWAIT.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
 
+iD8DBQFCyh+fN5XoxaHnMrsRAu+pAJ9wWnScmXIVdhOaS3S2vXYMfrnySwCgnRgr
+Ktrgu4Pn4F+M0q514qP6sHc=
+=QtTj
+-----END PGP SIGNATURE-----
+
+--------------enigCD68411A38A77E04DDB68DA6--
