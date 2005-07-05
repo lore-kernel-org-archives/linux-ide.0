@@ -1,36 +1,54 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Promise 20378
-Date: Mon, 04 Jul 2005 22:48:43 -0400
-Message-ID: <42C9F50B.4000508@pobox.com>
-References: <42C7B584.401@ipom.com>
+From: "Al Boldi" <a1426z@gawab.com>
+Subject: IOWAIT block layer problem
+Date: Tue, 5 Jul 2005 06:43:33 +0300
+Message-ID: <200507050343.GAA26158@raad.intranet>
+References: <42C9C56D.7040701@tomt.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1256
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:12429 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261756AbVGECsp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jul 2005 22:48:45 -0400
-In-Reply-To: <42C7B584.401@ipom.com>
+Received: from [213.184.187.60] ([213.184.187.60]:25861 "EHLO raad.intranet")
+	by vger.kernel.org with ESMTP id S261755AbVGEDop convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Jul 2005 23:44:45 -0400
+In-Reply-To: <42C9C56D.7040701@tomt.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phil Dibowitz <phil@ipom.com>
-Cc: linux-ide@vger.kernel.org
+To: =?windows-1256?Q?'Andr=E9_Tomt'?= <andre@tomt.net>
+Cc: 'Bartlomiej Zolnierkiewicz' <bzolnier@gmail.com>, 'Ondrej Zary' <linux@rainbow-software.org>, 'Linus Torvalds' <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Phil Dibowitz wrote:
-> So, there doesn't appear to be a driver for the 20378 in the kernel...
-> though google showed a few people using some proprietary drivers with
-> varying luck. Ew.
-> 
-> I noticed there are a lot of other Promise drivers in the kernel for the
-> same general line, which leads me to believe there may be some interest
-> in getting a 20378 driver in the kernel.
-> 
-> So, since I now own a machine with one, I thought I'd drop this list a
-> line and say "I can test stuff and provide info on the chipset"...
+Andr=E9 Tomt wrote: {
+>>>>On 7/4/05, Al Boldi <a1426z@gawab.com> wrote:
+>>>>Hdparm -tT gives 38mb/s in 2.4.31
+>>>>Cat /dev/hda > /dev/null gives 2% user 33% sys 65% idle
+>>>>
+>>>>Hdparm -tT gives 28mb/s in 2.6.12
+>>>>Cat /dev/hda > /dev/null gives 2% user 25% sys 0% idle 73% IOWAIT
 
-Just add the PCI ID to drivers/scsi/sata_promise.c...
+The "hdparm doesn't get as high scores as in 2.4" is a old discussed to
+death "problem" on LKML. So far nobody has been able to show it affects
+anything  but that pretty useless quasi-benchmark.
 
-	Jeff
+>>>No errors though, only sluggish system.
 
+Really sluggish or just "benchmark-sluggish"?
+If the former, try selecting a different IO elevator/sheduler.
 
+> When you compare 2.4.31 with 2.6.12 don't you see this problem on you=
+r=20
+> machine?
+> If you have a fast system the slowdown won't show, but your IOWAIT=20
+> will be higher anyway!
+
+Nothing wrong with 73% iowait
+Beware 2.4 didn't export that statistic at all to userspace, so 0% iowa=
+it
+gets reported from most 2.6-ready reporting tools on 2.4.
+
+}
+
+1. hdparm only gives you an indicator.
+2. Really sluggish, as in unresponsive to commands.
+3. Tried all IO elevators/shedulers to no avail.
+4. In 2.4 IOWAIT is added to sys, as in 8% IOWAIT.
 
