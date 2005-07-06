@@ -1,103 +1,58 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH Linux 2.6.12 00/09] NCQ: generic NCQ completion/error-handling
-Date: Wed, 6 Jul 2005 15:00:05 +0200
-Message-ID: <20050706130004.GB1373@suse.de>
-References: <20050626152105.D86561FB@htj.dyndns.org> <20050627143344.GI11633@suse.de> <20050630073633.GF2243@suse.de> <42C3CEA5.9040509@gmail.com> <20050630152620.GZ2243@suse.de> <20050701002035.GA24878@htj.dyndns.org> <20050701085912.GB2243@suse.de> <20050704055332.GA7249@suse.de> <20050706125500.GA1373@suse.de>
+From: Andi Kleen <ak@suse.de>
+Subject: [PATCH] Fix crash on boot in kmalloc_node IDE changes
+Date: Wed, 6 Jul 2005 15:30:53 +0200
+Message-ID: <20050706133052.GF21330@wotan.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:56250 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261419AbVGFM6d (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2005 08:58:33 -0400
+Received: from cantor.suse.de ([195.135.220.2]:42452 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S262227AbVGFNa7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2005 09:30:59 -0400
 Content-Disposition: inline
-In-Reply-To: <20050706125500.GA1373@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun <htejun@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, torvalds@osdl.org, linux-kernel@vger.kernel.org, christoph@lameter.com
 
-On Wed, Jul 06 2005, Jens Axboe wrote:
-> On Mon, Jul 04 2005, Jens Axboe wrote:
-> > On Fri, Jul 01 2005, Jens Axboe wrote:
-> > > >  I converted most of debug messages I've used during development into
-> > > > warning messages when posting the patchset and forgot about it, so
-> > > > I've never posted the debug patch.  Sorry about that.  Here's a small
-> > > > patch which adds some more messages though.  The following patch also
-> > > > adds printk'ing FIS on each command issue in ahci.c:ahci_qc_issue(),
-> > > > if you think it would fill your log excessively, feel free to turn it
-> > > > off.  It wouldn't probably matter anyway.
-> > > 
-> > > I will have to kill the issue part of the patch, that would generate
-> > > insane amounts of printk traffic :-)
-> > > 
-> > > I'll boot the kernel and report what happens.
-> > 
-> > It triggered last night, but the old kernel was booted. This was the
-> > log:
-> > 
-> > ahci ata1: stat=d0, issuing COMRESET
-> > ata1: recovering from error
-> > ata1: status=0x01 { Error }
-> > ata1: error=0x80 { Sector }
-> > SCSI error : <0 0 0 0> return code = 0x8000002
-> > sda: Current: sense key=0x3
-> >     ASC=0x11 ASCQ=0x4
-> > end_request: I/O error, dev sda, sector 66255899
-> > Buffer I/O error on device sda2, logical block 8018923
-> > lost page write due to I/O error on sda2
-> > ata1: status=0x01 { Error }
-> > ata1: error=0x80 { Sector }
-> > SCSI error : <0 0 0 0> return code = 0x8000002
-> > sda: Current: sense key=0x3
-> >     ASC=0x11 ASCQ=0x4
-> > end_request: I/O error, dev sda, sector 66239043
-> > Buffer I/O error on device sda2, logical block 8016816
-> > lost page write due to I/O error on sda2
-> > ata1: recovering from error
-> > ata1: status=0x01 { Error }
-> > ata1: error=0x80 { Sector }
-> > SCSI error : <0 0 0 0> return code = 0x8000002
-> > sda: Current: sense key=0x3
-> >     ASC=0x11 ASCQ=0x4
-> > end_request: I/O error, dev sda, sector 66239051
-> > Buffer I/O error on device sda2, logical block 8016817
-> > lost page write due to I/O error on sda2
-> > ata1: status=0x01 { Error }
-> > ata1: error=0x80 { Sector }
-> > SCSI error : <0 0 0 0> return code = 0x8000002
-> > sda: Current: sense key=0x3
-> >     ASC=0x11 ASCQ=0x4
-> > end_request: I/O error, dev sda, sector 35137043
-> 
-> This is with the extra debug. Given that it is the timeout triggering,
-> only the sstatus is new.
-> 
-> ahci ata1: stat=d0, issuing COMRESET
-> ata1: started resetting...
-> ata1: end resetting, sstatus=00000113
-> ata1: recovering from error
-> ata1: status=0x01 { Error }
-> ata1: error=0x80 { Sector }
-> SCSI error : <0 0 0 0> return code = 0x8000002
-> sda: Current: sense key=0x3
->     ASC=0x11 ASCQ=0x4
-> end_request: I/O error, dev sda, sector 66190875
-> Buffer I/O error on device sda2, logical block 8010795
-> lost page write due to I/O error on sda2
-> ata1: status=0x01 { Error }
-> ata1: error=0x80 { Sector }
-> SCSI error : <0 0 0 0> return code = 0x8000002
-> sda: Current: sense key=0x3
->     ASC=0x11 ASCQ=0x4
-> end_request: I/O error, dev sda, sector 66159699
-> Buffer I/O error on device sda2, logical block 8006898
-> lost page write due to I/O error on sda2
 
-btw, the reason it hangs here (I suspect) is that your read_log_page()
-logic is wrong - not every error condition will have NCQ_FAILED set
-before entering ncq_recover. The timeout will not, for instance.
-Testing... As usual, this will take days.
+Without this patch a dual Xeon EM64T machine would oops on boot
+because the hwif pointer here was NULL. I also added a check for
+pci_dev because it's doubtful that all IDE devices have pci_devs.
 
--- 
-Jens Axboe
+Signed-off-by: Andi Kleen <ak@suse.de>
+
+
+Index: linux/drivers/ide/ide-probe.c
+===================================================================
+--- linux.orig/drivers/ide/ide-probe.c
++++ linux/drivers/ide/ide-probe.c
+@@ -978,8 +978,10 @@ static int ide_init_queue(ide_drive_t *d
+ 	 *	do not.
+ 	 */
+ 
+-	q = blk_init_queue_node(do_ide_request, &ide_lock,
+-				pcibus_to_node(drive->hwif->pci_dev->bus));
++	int node = 0; /* Should be -1 */
++	if (drive->hwif && drive->hwif->pci_dev)
++		node = pcibus_to_node(drive->hwif->pci_dev->bus); 
++	q = blk_init_queue_node(do_ide_request, &ide_lock, node);
+ 	if (!q)
+ 		return 1;
+ 
+@@ -1096,8 +1098,13 @@ static int init_irq (ide_hwif_t *hwif)
+ 		hwgroup->hwif->next = hwif;
+ 		spin_unlock_irq(&ide_lock);
+ 	} else {
+-		hwgroup = kmalloc_node(sizeof(ide_hwgroup_t), GFP_KERNEL,
+-			pcibus_to_node(hwif->drives[0].hwif->pci_dev->bus));
++		int node = 0; 
++		if (hwif->drives[0].hwif) { 
++			struct pci_dev *pdev = hwif->drives[0].hwif->pci_dev;  
++			if (pdev)
++				node = pcibus_to_node(pdev->bus);
++		}
++		hwgroup = kmalloc_node(sizeof(ide_hwgroup_t), GFP_KERNEL,node);
+ 		if (!hwgroup)
+ 	       		goto out_up;
+ 
+
 
