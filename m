@@ -1,58 +1,66 @@
-From: Christoph Lameter <christoph@lameter.com>
-Subject: Re: [PATCH] Fix crash on boot in kmalloc_node IDE changes
-Date: Wed, 6 Jul 2005 10:07:08 -0700 (PDT)
-Message-ID: <Pine.LNX.4.62.0507061006190.20554@graphe.net>
-References: <20050706133052.GF21330@wotan.suse.de> <Pine.LNX.4.62.0507060933330.20107@graphe.net>
- <20050706164533.GK21330@wotan.suse.de>
+From: "Quazi" <quazi7hossain@tiscali.it>
+Subject: Cash for investment
+Date: Wed, 06 Jul 2005 19:43:39 -0300
+Message-ID: <92D01570.FD38B2E@tiscali.it>
+Reply-To: "Quazi" <quazi7hossain@tiscali.it>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from graphe.net ([209.204.138.32]:22736 "EHLO graphe.net")
-	by vger.kernel.org with ESMTP id S262378AbVGFRHP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2005 13:07:15 -0400
-In-Reply-To: <20050706164533.GK21330@wotan.suse.de>
+Received: from [213.42.167.187] ([213.42.167.187]:8712 "HELO tiscali.it")
+	by vger.kernel.org with SMTP id S262386AbVGFRHq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2005 13:07:46 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: linux-ide@vger.kernel.org, torvalds@osdl.org, linux-kernel@vger.kernel.org
+To: Administrator <linux-ide@vger.kernel.org>
 
-On Wed, 6 Jul 2005, Andi Kleen wrote:
+Hello!
 
-> On Wed, Jul 06, 2005 at 09:34:28AM -0700, Christoph Lameter wrote:
-> > On Wed, 6 Jul 2005, Andi Kleen wrote:
-> > 
-> > > -	q = blk_init_queue_node(do_ide_request, &ide_lock,
-> > > -				pcibus_to_node(drive->hwif->pci_dev->bus));
-> > > +	int node = 0; /* Should be -1 */
-> > 
-> > Why is this not -1?
-> 
-> Because there is no code in rc3 that handles -1 in kmalloc_node.
-> 
-> If you add a patch that handles it then feel free to change.
-> But fixing the bootup has the highest priority.
-> 
-> > 
-> > > +		int node = 0; 
-> > > +		if (hwif->drives[0].hwif) { 
-> > 
-> > Also needs to be -1.
-> 
-> Then it would crash again.
+Compliments
 
-The patch follows. Maybe add that and include a signoff by me?:
+I have been searching for a person whom we can jointly invest, Trust in and
+also solicit an honorable partnership with. 
+I want to confirm that your contact information was got from a web email
+directory. I represent a client who is interested in investing in your
+country in areas related to agriculture or any business of your choice, to
+initiate a proper and structured relationship. Please let me know what your
+response will be to an offer to receive investment funds in cash if; 
+1. The said fund amounts to US$8,500,000 (Eight Million, Five hundred
+Thousand US Dollars).
+2. The said fund is in cash and needs to be transferred in the same state,
+due to some covert reasons.
+3. The fund could be invested through your agency in the purchase of
+facility and assets for investment purposes within your country, in
+collaboration with the agency of the current brokers.
+4. This transaction will result in you being paid a commission of 10% off
+the investment capital.
+5. The fund owners desire absolute confidentiality and professionalism
+in the handling of this matter, due to risks of seizure of the fund and
+litigation if personalities are revealed. 
+The fund owners have interest to invest in any of the following industries,
+depending on which is most transparent, low risk, and average profit
+yielding: Power Generation, Telecommunication and Software Development, Film
+Production, Hardware Manufacturing and Export, Medicine, Construction or
+Real-Estate Development.
+Based upon the information provided above, I would like to know if you
+shall be able to assist in the nature of managing the investment fund. You
+must note that the fund can only be transferred in cash, therefore if you
+are in acceptance to participate with us in the investment of the fund, you
+shall also need to participate with us in the transfer of the fund in cash
+in the manner of receiving the fund in cash and depositing it in a Trusted
+account opened in favour of the investment to be established.
+And this account would serve as the base or operating account for the
+investment. I am obliged to believe that you would be able to understand the
+information above, and should you need further information, please do not
+hesitate to ask.
+Kindly confirm receipt of this email by sending all correspondence to:
+quazihossain44@netscape.net
 
-Index: linux-2.6.git/mm/slab.c
-===================================================================
---- linux-2.6.git.orig/mm/slab.c	2005-07-05 17:03:30.000000000 -0700
-+++ linux-2.6.git/mm/slab.c	2005-07-05 18:25:20.000000000 -0700
-@@ -2372,6 +2372,9 @@
- 	struct slab *slabp;
- 	kmem_bufctl_t next;
- 
-+	if (nodeid == -1)
-+		return kmem_cache_alloc_node(cachep, flags);
-+
- 	for (loop = 0;;loop++) {
- 		struct list_head *q;
- 
+Sincerely,
+
+Quazi Hossain  (Esq)
+
+
+
+
