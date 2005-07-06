@@ -1,64 +1,118 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: sata_sil 3112 activity LED patch
-Date: Wed, 06 Jul 2005 11:07:13 -0400
-Message-ID: <42CBF3A1.1020508@pobox.com>
-References: <20050706025136.GA15493@alumni.uwaterloo.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH Linux 2.6.12 00/09] NCQ: generic NCQ completion/error-handling
+Date: Thu, 07 Jul 2005 00:11:49 +0900
+Message-ID: <42CBF4B5.4010403@gmail.com>
+References: <20050626152105.D86561FB@htj.dyndns.org> <20050627143344.GI11633@suse.de> <20050630073633.GF2243@suse.de> <42C3CEA5.9040509@gmail.com> <20050630152620.GZ2243@suse.de> <20050701002035.GA24878@htj.dyndns.org> <20050701085912.GB2243@suse.de> <20050704055332.GA7249@suse.de> <20050706125500.GA1373@suse.de> <20050706130004.GB1373@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:35220 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S262347AbVGFPHQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2005 11:07:16 -0400
-In-Reply-To: <20050706025136.GA15493@alumni.uwaterloo.ca>
+Received: from zproxy.gmail.com ([64.233.162.198]:50732 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262054AbVGFPL5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2005 11:11:57 -0400
+Received: by zproxy.gmail.com with SMTP id r28so611172nza
+        for <linux-ide@vger.kernel.org>; Wed, 06 Jul 2005 08:11:57 -0700 (PDT)
+In-Reply-To: <20050706130004.GB1373@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aric Cyr <acyr@alumni.uwaterloo.ca>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Aric Cyr wrote:
-> After finally getting fed up with not having my activity light working
-> for my SATA drives, I came up with a small patch (more like hack) to
-> make it work.  It works quite well, but I'm afraid that there are many
-> restriction that this patch does not check for that it probably
-> should... so consider this a work-in-progress.  My information is
-> based on a document from Silicon Image that appears to no longer be
-> available on their website (Sil-AN-0082-E; 8112-0082.pdf).  I still
-> have a copy if anyone is interested.
+Jens Axboe wrote:
+> On Wed, Jul 06 2005, Jens Axboe wrote:
 > 
-> There are two restrictions that are not checked:
+>>On Mon, Jul 04 2005, Jens Axboe wrote:
+>>
+>>>On Fri, Jul 01 2005, Jens Axboe wrote:
+>>>
+>>>>> I converted most of debug messages I've used during development into
+>>>>>warning messages when posting the patchset and forgot about it, so
+>>>>>I've never posted the debug patch.  Sorry about that.  Here's a small
+>>>>>patch which adds some more messages though.  The following patch also
+>>>>>adds printk'ing FIS on each command issue in ahci.c:ahci_qc_issue(),
+>>>>>if you think it would fill your log excessively, feel free to turn it
+>>>>>off.  It wouldn't probably matter anyway.
+>>>>
+>>>>I will have to kill the issue part of the patch, that would generate
+>>>>insane amounts of printk traffic :-)
+>>>>
+>>>>I'll boot the kernel and report what happens.
+>>>
+>>>It triggered last night, but the old kernel was booted. This was the
+>>>log:
+>>>
+>>>ahci ata1: stat=d0, issuing COMRESET
+>>>ata1: recovering from error
+>>>ata1: status=0x01 { Error }
+>>>ata1: error=0x80 { Sector }
+>>>SCSI error : <0 0 0 0> return code = 0x8000002
+>>>sda: Current: sense key=0x3
+>>>    ASC=0x11 ASCQ=0x4
+>>>end_request: I/O error, dev sda, sector 66255899
+>>>Buffer I/O error on device sda2, logical block 8018923
+>>>lost page write due to I/O error on sda2
+>>>ata1: status=0x01 { Error }
+>>>ata1: error=0x80 { Sector }
+>>>SCSI error : <0 0 0 0> return code = 0x8000002
+>>>sda: Current: sense key=0x3
+>>>    ASC=0x11 ASCQ=0x4
+>>>end_request: I/O error, dev sda, sector 66239043
+>>>Buffer I/O error on device sda2, logical block 8016816
+>>>lost page write due to I/O error on sda2
+>>>ata1: recovering from error
+>>>ata1: status=0x01 { Error }
+>>>ata1: error=0x80 { Sector }
+>>>SCSI error : <0 0 0 0> return code = 0x8000002
+>>>sda: Current: sense key=0x3
+>>>    ASC=0x11 ASCQ=0x4
+>>>end_request: I/O error, dev sda, sector 66239051
+>>>Buffer I/O error on device sda2, logical block 8016817
+>>>lost page write due to I/O error on sda2
+>>>ata1: status=0x01 { Error }
+>>>ata1: error=0x80 { Sector }
+>>>SCSI error : <0 0 0 0> return code = 0x8000002
+>>>sda: Current: sense key=0x3
+>>>    ASC=0x11 ASCQ=0x4
+>>>end_request: I/O error, dev sda, sector 35137043
+>>
+>>This is with the extra debug. Given that it is the timeout triggering,
+>>only the sstatus is new.
+>>
+>>ahci ata1: stat=d0, issuing COMRESET
+>>ata1: started resetting...
+>>ata1: end resetting, sstatus=00000113
+>>ata1: recovering from error
+>>ata1: status=0x01 { Error }
+>>ata1: error=0x80 { Sector }
+>>SCSI error : <0 0 0 0> return code = 0x8000002
+>>sda: Current: sense key=0x3
+>>    ASC=0x11 ASCQ=0x4
+>>end_request: I/O error, dev sda, sector 66190875
+>>Buffer I/O error on device sda2, logical block 8010795
+>>lost page write due to I/O error on sda2
+>>ata1: status=0x01 { Error }
+>>ata1: error=0x80 { Sector }
+>>SCSI error : <0 0 0 0> return code = 0x8000002
+>>sda: Current: sense key=0x3
+>>    ASC=0x11 ASCQ=0x4
+>>end_request: I/O error, dev sda, sector 66159699
+>>Buffer I/O error on device sda2, logical block 8006898
+>>lost page write due to I/O error on sda2
 > 
-> 1) Is the chip a 3112 or 3114?  I assume that this would only work on
->    a 3112, but whether it is "a bad thing" on a 3114 I do not know.
 > 
-> 2) BAR5 + 0x54 is apparently used for the flash memory address and
->    data lines.  However for most motherboards (i.e. not add-on cards)
->    with the chip, like my EPOX 8RDA3+, there is no flash memory, so
->    these lines are hijacked as LED GPIO.  I assume that this is a
->    common practice for motherboard makers using the sil3112 since
->    Silicon Image went out of their way to produce the above mentioned
->    document.  Anyways, the problem is that this patch does not check
->    if flash memory is installed or not before twiddling with the GPIO
->    lines.  This could be extremely bad for people running the 3112
->    from add-on cards (or any implementation with flash memory
->    installed).
+> btw, the reason it hangs here (I suspect) is that your read_log_page()
+> logic is wrong - not every error condition will have NCQ_FAILED set
+> before entering ncq_recover. The timeout will not, for instance.
+> Testing... As usual, this will take days.
 > 
-> Setting the low 8bits at BAR5+54h seems to enable the LED circuit.  It
-> seems that this circuit is patched through into the motherboard as it
-> lights the regular hard drive light on the front of my case.  Setting
-> bits [8:15] at BAR5+54h clears the bits, disabling the LED.  I hooked
-> this logic into the ata_bmdma_start and ata_bmdma_stop which were made
-> into simple wrapper functions in sata_sil.c that just set the GPIO
-> bits and calls ata_bmdma_*.
 
-I don't think its ugly, necessarily.  I do worry about the flash memory 
-stuff, though, which is why I don't want to merge this upstream for now.
+  I thought log page 10h would be valid only after the drive reported 
+error during NCQ processing.  That's why it doesn't read log page on 
+timeouts.  Hmmm, maybe we should read log page 10h on any NCQ failure 
+but discard the result on timeout.  Please let me know how your testing 
+goes.
 
-For your patch specifically, it would be nice to follow the coding style 
-that is found in the rest of the driver (single-tab indents, etc., read 
-CodingStyle in kernel source tree).
+  Thanks. :-)
 
-	Jeff
-
-
-
+-- 
+tejun
