@@ -1,30 +1,37 @@
-From: Sylvester <cram@garygardiner.com>
-Subject: Large natural erection!
-Date: Wed, 6 Jul 2005 00:50:44 -0200
-Message-ID: <1040375073.5997383834@201009178227.user.veloxzone.com.br>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: "Al Boldi" <a1426z@gawab.com>
+Subject: RE: [git patches] IDE update
+Date: Wed, 6 Jul 2005 06:26:03 +0300
+Message-ID: <200507060326.GAA25248@raad.intranet>
+References: <Pine.LNX.4.58.0507051748540.3570@g5.osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="windows-1256"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 201009178227.user.veloxzone.com.br ([201.9.178.227]:22291 "HELO
-	201009178227.user.veloxzone.com.br") by vger.kernel.org with SMTP
-	id S262107AbVGFCqO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Jul 2005 22:46:14 -0400
-Received: from [120.203.88.74] (port=4266 helo=[imperial])
-    by 201009178227.user.veloxzone.com.br with esmtp
-    id 9912434549Burnham99458
-    for linux-ide@vger.kernel.org; Wed, 6 Jul 2005 00:50:45 -0200
+Received: from [213.184.187.37] ([213.184.187.37]:42756 "EHLO raad.intranet")
+	by vger.kernel.org with ESMTP id S261689AbVGFD2W (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jul 2005 23:28:22 -0400
+In-Reply-To: <Pine.LNX.4.58.0507051748540.3570@g5.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: 'Linus Torvalds' <torvalds@osdl.org>, 'Grant Coady' <grant_lkml@dodo.com.au>
+Cc: 'Jens Axboe' <axboe@suse.de>, 'Ondrej Zary' <linux@rainbow-software.org>, =?windows-1256?Q?'Andr=E9_Tomt'?= <andre@tomt.net>, 'Bartlomiej Zolnierkiewicz' <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Learn how to get this freedom...freedom of choice
-http://wuwva.p4a0tq7i4z7xbqp.guigehl.com
+Linus Torvalds wrote: {
+On Wed, 6 Jul 2005, Grant Coady wrote:
+> 
+> Executive Summary
 
+Btw, can you try this same thing (or at least a subset) with a large file on
+a filesystem? Does that show the same pattern, or is it always just the raw
+device?
+}
 
-
-Equal Rights were created for everyone.       
-Heroing is one of the shortest-lived professions there is.    
-The character of a man is known from his conversations.   
+Linus,
+Cat /dev/hda > /dev/null and cat /tmp/tst.dsk > /dev/null show the same
+symptoms.
+The problem shows most when the cpu is slow and the hd is fast.
+When the cpu is fast and the hd is slow the cpu will make up for lost cycles
+and the problem will not show!
 
 
