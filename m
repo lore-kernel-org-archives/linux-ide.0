@@ -1,54 +1,37 @@
-From: Christoph Lameter <christoph@lameter.com>
-Subject: [another PATCH] Fix crash on boot in kmalloc_node IDE changes
-Date: Thu, 7 Jul 2005 09:21:55 -0700 (PDT)
-Message-ID: <Pine.LNX.4.62.0507070912140.27066@graphe.net>
-References: <20050706133052.GF21330@wotan.suse.de>
+From: Douglas <optimality@datakencana.com>
+Subject: Adobe+macromedia+OS etc all in CD under $99
+Date: Thu, 7 Jul 2005 14:08:03 -0200
+Message-ID: <7425752559.8514463995@200.170.127.206.user.ajato.com.br>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from graphe.net ([209.204.138.32]:44206 "EHLO graphe.net")
-	by vger.kernel.org with ESMTP id S261360AbVGGQWA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jul 2005 12:22:00 -0400
-In-Reply-To: <20050706133052.GF21330@wotan.suse.de>
+Received: from 200.170.127.206.user.ajato.com.br ([200.170.127.206]:49668 "EHLO
+	[192.168.1.100]") by vger.kernel.org with ESMTP id S261367AbVGGQT5
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 7 Jul 2005 12:19:57 -0400
+Received: from [120.154.46.160] (port=4310 helo=[sleepwalk])
+    by 200.170.127.206.user.ajato.com.br with esmtp
+    id 1296086689diabetic37481
+    for linux-ide@vger.kernel.org; Thu, 7 Jul 2005 14:08:04 -0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: linux-ide@vger.kernel.org, torvalds@osdl.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wed, 6 Jul 2005, Andi Kleen wrote:
+For professional documents use professional software... 
+http://nlcba.qfcnt78j50qx598.isothujonene.info
 
-> Without this patch a dual Xeon EM64T machine would oops on boot
-> because the hwif pointer here was NULL. I also added a check for
-> pci_dev because it's doubtful that all IDE devices have pci_devs.
 
-Here is IMHO the right way to fix this. Test for the hwif != NULL and
-test for pci_dev != NULL before determining the node number of the pci 
-bus that the device is connected to. Maybe we need a hwif_to_node for ide 
-drivers that is also able to determine the locality of other hardware?
 
-Signed-off-by: Christoph Lameter <christoph@lameter.com>
 
-Index: linux-2.6.git/drivers/ide/ide-probe.c
-===================================================================
---- linux-2.6.git.orig/drivers/ide/ide-probe.c	2005-06-23 11:38:02.000000000 -0700
-+++ linux-2.6.git/drivers/ide/ide-probe.c	2005-07-07 09:15:04.000000000 -0700
-@@ -979,7 +979,8 @@
- 	 */
- 
- 	q = blk_init_queue_node(do_ide_request, &ide_lock,
--				pcibus_to_node(drive->hwif->pci_dev->bus));
-+				(drive->hwif && drive->hwif->pci_dev) ?
-+				pcibus_to_node(drive->hwif->pci_dev->bus): -1);
- 	if (!q)
- 		return 1;
- 
-@@ -1097,7 +1098,8 @@
- 		spin_unlock_irq(&ide_lock);
- 	} else {
- 		hwgroup = kmalloc_node(sizeof(ide_hwgroup_t), GFP_KERNEL,
--			pcibus_to_node(hwif->drives[0].hwif->pci_dev->bus));
-+			(hwif->drives[0].hwif && hwif->drives[0].hwif->pci_dev) ?
-+			pcibus_to_node(hwif->drives[0].hwif->pci_dev->bus) : -1);
- 		if (!hwgroup)
- 	       		goto out_up;
- 
+Shoot, coward, you are only going to kill a man.   
+Wrinkles should merely indicate where smiles have been.     
+
+
+
+
+-- 
+Internal Virus Database is out-of-date.
+Checked by AVG Anti-Virus.
+Version: 7.0.300 / Virus Database: 266.0.0 - Release Date: 18/2/2005
+
