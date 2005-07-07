@@ -1,65 +1,322 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: sata_sil 3112 activity LED patch
-Date: Thu, 7 Jul 2005 14:47:03 +0200
-Message-ID: <20050707124702.GB24401@suse.de>
-References: <20050706025136.GA15493@alumni.uwaterloo.ca> <42CBF3A1.1020508@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261419AbVGGMvQ@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <42CBF3A1.1020508@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Aric Cyr <acyr@alumni.uwaterloo.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH libata-dev-2.6:ncq 01/11] libata: implement ata_qc_exec_special()
+Date: Thu,  7 Jul 2005 22:09:18 +0900 (KST)
+Message-ID: <20050707130840.08D28E71@htj.dyndns.org>
+References: <20050707130840.5046338C@htj.dyndns.org>
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wproxy.gmail.com ([64.233.184.200]:15708 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261462AbVGGNJX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jul 2005 09:09:23 -0400
+Received: by wproxy.gmail.com with SMTP id i22so190930wra
+        for <linux-ide@vger.kernel.org>; Thu, 07 Jul 2005 06:09:23 -0700 (PDT)
+In-Reply-To: <20050707130840.5046338C@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, axboe@suse.de, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-On Wed, Jul 06 2005, Jeff Garzik wrote:
-> Aric Cyr wrote:
-> >After finally getting fed up with not having my activity light working
-> >for my SATA drives, I came up with a small patch (more like hack) to
-> >make it work.  It works quite well, but I'm afraid that there are many
-> >restriction that this patch does not check for that it probably
-> >should... so consider this a work-in-progress.  My information is
-> >based on a document from Silicon Image that appears to no longer be
-> >available on their website (Sil-AN-0082-E; 8112-0082.pdf).  I still
-> >have a copy if anyone is interested.
-> >
-> >There are two restrictions that are not checked:
-> >
-> >1) Is the chip a 3112 or 3114?  I assume that this would only work on
-> >   a 3112, but whether it is "a bad thing" on a 3114 I do not know.
-> >
-> >2) BAR5 + 0x54 is apparently used for the flash memory address and
-> >   data lines.  However for most motherboards (i.e. not add-on cards)
-> >   with the chip, like my EPOX 8RDA3+, there is no flash memory, so
-> >   these lines are hijacked as LED GPIO.  I assume that this is a
-> >   common practice for motherboard makers using the sil3112 since
-> >   Silicon Image went out of their way to produce the above mentioned
-> >   document.  Anyways, the problem is that this patch does not check
-> >   if flash memory is installed or not before twiddling with the GPIO
-> >   lines.  This could be extremely bad for people running the 3112
-> >   from add-on cards (or any implementation with flash memory
-> >   installed).
-> >
-> >Setting the low 8bits at BAR5+54h seems to enable the LED circuit.  It
-> >seems that this circuit is patched through into the motherboard as it
-> >lights the regular hard drive light on the front of my case.  Setting
-> >bits [8:15] at BAR5+54h clears the bits, disabling the LED.  I hooked
-> >this logic into the ata_bmdma_start and ata_bmdma_stop which were made
-> >into simple wrapper functions in sata_sil.c that just set the GPIO
-> >bits and calls ata_bmdma_*.
-> 
-> I don't think its ugly, necessarily.  I do worry about the flash memory 
-> stuff, though, which is why I don't want to merge this upstream for now.
-> 
-> For your patch specifically, it would be nice to follow the coding style 
-> that is found in the rest of the driver (single-tab indents, etc., read 
-> CodingStyle in kernel source tree).
+01_libata_implement-ata_qc_exec_special.patch
 
-There's also an existing variant of this in the block layer, the
-activity_fn, that we use on the ibook/powerbook to use the sleep led as
-an activity light. Just in case you prefer that to overloading the bmdma
-start/stop handlers.
+	This patch implements ata_qc_exec_special() function which
+	generalizes libata internal special command execution and adds
+	timeout.  All internal commands are converted.  Timeout
+	constants are added to libata.h and, while at it, removed
+	unused ATA_TMOUT_EDD.
 
--- 
-Jens Axboe
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+
+ drivers/scsi/libata-core.c |  170 +++++++++++++++++++++++++++++----------------
+ include/linux/libata.h     |    7 +
+ 2 files changed, 117 insertions(+), 60 deletions(-)
+
+Index: work/drivers/scsi/libata-core.c
+===================================================================
+--- work.orig/drivers/scsi/libata-core.c	2005-07-07 22:08:35.000000000 +0900
++++ work/drivers/scsi/libata-core.c	2005-07-07 22:08:35.000000000 +0900
+@@ -59,7 +59,6 @@ static int fgb(u32 bitmap);
+ static int ata_choose_xfer_mode(struct ata_port *ap,
+ 				u8 *xfer_mode_out,
+ 				unsigned int *xfer_shift_out);
+-static int ata_qc_complete_noop(struct ata_queued_cmd *qc, u8 drv_stat);
+ static void __ata_qc_complete(struct ata_queued_cmd *qc);
+ 
+ static unsigned int ata_unique_id = 1;
+@@ -70,6 +69,87 @@ MODULE_DESCRIPTION("Library module for A
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(DRV_VERSION);
+ 
++static int ata_qc_complete_noop(struct ata_queued_cmd *qc, u8 drv_stat)
++{
++	return 0;
++}
++
++static void ata_qc_exec_special_timeout(unsigned long data)
++{
++	struct completion *wait = (void *)data;
++	complete(wait);
++}
++
++/**
++ *	ata_qc_exec_special - execute libata internal special command
++ *	@qc: Command to execute
++ *	@tmout: timeout in jiffies
++ *
++ *	Executes libata internal command with timeout.  Timeout and
++ *	error conditions are reported via return value.  No recovery
++ *	action is taken after a command times out.  It's caller's duto
++ *	to clean up after timeout.
++ *
++ *	Also, note that error condition is checked after the qc is
++ *	completed, meaning that if another command is issued before
++ *	checking the condition, we get the wrong values.  As special
++ *	cmds are used only for initialization and recovery, this
++ *	won't cause any problem currently.
++ *
++ *	LOCKING:
++ *	None.  Should be called with kernel context, might sleep.
++ */
++
++static int ata_qc_exec_special(struct ata_queued_cmd *qc, unsigned long tmout)
++{
++	struct ata_port *ap = qc->ap;
++	DECLARE_COMPLETION(wait);
++	struct timer_list timer;
++	int rc;
++
++	might_sleep();
++
++	if (ata_busy_sleep(ap, ATA_TMOUT_SPECIAL_QUICK, ATA_TMOUT_SPECIAL))
++		return -ETIMEDOUT;
++
++	qc->complete_fn = ata_qc_complete_noop;
++	qc->waiting = &wait;
++
++	if (tmout) {
++		init_timer(&timer);
++		timer.function = ata_qc_exec_special_timeout;
++		timer.data = (unsigned long)&wait;
++		timer.expires = jiffies + tmout;
++		add_timer(&timer);
++	}
++
++	spin_lock_irq(&ap->host_set->lock);
++	rc = ata_qc_issue(qc);
++	spin_unlock_irq(&ap->host_set->lock);
++
++	if (rc) {
++		if (tmout)
++			del_timer(&timer);
++		return -EAGAIN;	/* any better value for issue failure? */
++	}
++
++	wait_for_completion(&wait);
++
++	if (tmout && !del_timer(&timer)) {
++		spin_lock_irq(&ap->host_set->lock);
++		if (qc->waiting == &wait) {
++			ata_qc_complete(qc, 0);
++			rc = -ETIMEDOUT;
++		}
++		spin_unlock_irq(&ap->host_set->lock);
++	}
++
++	if (rc == 0 && !ata_ok(ata_chk_status(ap)))
++		rc = -EIO;
++
++	return rc;
++}
++
+ /**
+  *	ata_tf_load - send taskfile registers to host controller
+  *	@ap: Port to which output is sent
+@@ -1126,9 +1206,7 @@ static void ata_dev_identify(struct ata_
+ 	unsigned long xfer_modes;
+ 	u8 status;
+ 	unsigned int using_edd;
+-	DECLARE_COMPLETION(wait);
+ 	struct ata_queued_cmd *qc;
+-	unsigned long flags;
+ 	int rc;
+ 
+ 	if (!ata_dev_present(dev)) {
+@@ -1166,20 +1244,19 @@ retry:
+ 		DPRINTK("do ATAPI identify\n");
+ 	}
+ 
+-	qc->waiting = &wait;
+-	qc->complete_fn = ata_qc_complete_noop;
++	rc = ata_qc_exec_special(qc, ATA_TMOUT_IDENTIFY);
+ 
+-	spin_lock_irqsave(&ap->host_set->lock, flags);
+-	rc = ata_qc_issue(qc);
+-	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++	switch (rc) {
++	case 0:
++		break;
++	case -EIO:
++		/* Device failed the command */
++		status = ata_chk_status(ap);
+ 
+-	if (rc)
+-		goto err_out;
+-	else
+-		wait_for_completion(&wait);
++		if (!(status & ATA_ERR))
++			/* Weird error condition, give up */
++			goto err_out;
+ 
+-	status = ata_chk_status(ap);
+-	if (status & ATA_ERR) {
+ 		/*
+ 		 * arg!  EDD works for all test cases, but seems to return
+ 		 * the ATA signature for some ATAPI devices.  Until the
+@@ -1202,6 +1279,9 @@ retry:
+ 				goto retry;
+ 			}
+ 		}
++		/* Fall through */
++	default:
++		/* Issue failed or some other error */
+ 		goto err_out;
+ 	}
+ 
+@@ -1326,10 +1406,7 @@ int ata_read_log_page(struct ata_port *a
+ 		      char *buffer, unsigned int sectors)
+ {
+ 	struct ata_device *dev = &ap->device[device];
+-	DECLARE_COMPLETION(wait);
+ 	struct ata_queued_cmd *qc;
+-	unsigned long flags;
+-	int rc;
+ 
+ 	assert(dev->class == ATA_DEV_ATA);
+ 
+@@ -1347,18 +1424,7 @@ int ata_read_log_page(struct ata_port *a
+ 	qc->tf.lbal = page;
+ 	qc->flags |= ATA_QCFLAG_PREEMPT;
+ 
+-	qc->waiting = &wait;
+-	qc->complete_fn = ata_qc_complete_noop;
+-
+-	spin_lock_irqsave(&ap->host_set->lock, flags);
+-	rc = ata_qc_issue(qc);
+-	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+-
+-	if (rc)
+-		return -EIO;
+-
+-	wait_for_completion(&wait);
+-	return 0;
++	return ata_qc_exec_special(qc, ATA_TMOUT_READLOG);
+ }
+ 
+ /**
+@@ -2133,10 +2199,8 @@ static int ata_choose_xfer_mode(struct a
+ 
+ static void ata_dev_set_xfermode(struct ata_port *ap, struct ata_device *dev)
+ {
+-	DECLARE_COMPLETION(wait);
+ 	struct ata_queued_cmd *qc;
+ 	int rc;
+-	unsigned long flags;
+ 
+ 	/* set up set-features taskfile */
+ 	DPRINTK("set features - xfer mode\n");
+@@ -2150,17 +2214,13 @@ static void ata_dev_set_xfermode(struct 
+ 	qc->tf.protocol = ATA_PROT_NODATA;
+ 	qc->tf.nsect = dev->xfer_mode;
+ 
+-	qc->waiting = &wait;
+-	qc->complete_fn = ata_qc_complete_noop;
+-
+-	spin_lock_irqsave(&ap->host_set->lock, flags);
+-	rc = ata_qc_issue(qc);
+-	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+-
+-	if (rc)
++	rc = ata_qc_exec_special(qc, ATA_TMOUT_SET_XFERMODE);
++	if (rc) {
++		printk(KERN_ERR "ata%u: failed to set xfermode, disabling... "
++		       "(rc=%d stat=0x%x err=0x%x)\n",
++		       ap->id, rc, ata_chk_status(ap), ata_chk_err(ap));
+ 		ata_port_disable(ap);
+-	else
+-		wait_for_completion(&wait);
++	}
+ 
+ 	DPRINTK("EXIT\n");
+ }
+@@ -2828,9 +2888,7 @@ static void ata_pio_task(void *_data)
+ static void atapi_request_sense(struct ata_port *ap, struct ata_device *dev,
+ 				struct scsi_cmnd *cmd)
+ {
+-	DECLARE_COMPLETION(wait);
+ 	struct ata_queued_cmd *qc;
+-	unsigned long flags;
+ 	int rc;
+ 
+ 	DPRINTK("ATAPI request sense\n");
+@@ -2856,17 +2914,16 @@ static void atapi_request_sense(struct a
+ 	qc->tf.lbah = (8 * 1024) >> 8;
+ 	qc->nbytes = SCSI_SENSE_BUFFERSIZE;
+ 
+-	qc->waiting = &wait;
+-	qc->complete_fn = ata_qc_complete_noop;
+-
+-	spin_lock_irqsave(&ap->host_set->lock, flags);
+-	rc = ata_qc_issue(qc);
+-	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+-
+-	if (rc)
+-		ata_port_disable(ap);
+-	else
+-		wait_for_completion(&wait);
++	rc = ata_qc_exec_special(qc, ATA_TMOUT_REQUEST_SENSE);
++	if (rc) {
++		printk(KERN_WARNING "ata%u: failed to read sense data "
++		       "(rc=%d stat=0x%x err=0x%x)\n",
++		       ap->id, rc, ata_chk_status(ap), ata_chk_err(ap));
++		/*
++		 * If this happens, we're returning w/ NULL sense
++		 * data.  Upper layer can handle it.
++		 */
++	}
+ 
+ 	DPRINTK("EXIT\n");
+ }
+@@ -3049,11 +3106,6 @@ struct ata_queued_cmd *ata_qc_new_init(s
+ 	return qc;
+ }
+ 
+-static int ata_qc_complete_noop(struct ata_queued_cmd *qc, u8 drv_stat)
+-{
+-	return 0;
+-}
+-
+ static void __ata_qc_complete(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+Index: work/include/linux/libata.h
+===================================================================
+--- work.orig/include/linux/libata.h	2005-07-07 22:08:35.000000000 +0900
++++ work/include/linux/libata.h	2005-07-07 22:08:35.000000000 +0900
+@@ -129,12 +129,17 @@ enum {
+ 	ATA_QC_ISSUE_FATAL	= -1,
+ 
+ 	/* various lengths of time */
+-	ATA_TMOUT_EDD		= 5 * HZ,	/* hueristic */
+ 	ATA_TMOUT_PIO		= 30 * HZ,
+ 	ATA_TMOUT_BOOT		= 30 * HZ,	/* hueristic */
+ 	ATA_TMOUT_BOOT_QUICK	= 7 * HZ,	/* hueristic */
+ 	ATA_TMOUT_CDB		= 30 * HZ,
+ 	ATA_TMOUT_CDB_QUICK	= 5 * HZ,
++	ATA_TMOUT_SPECIAL	= 30 * HZ,
++	ATA_TMOUT_SPECIAL_QUICK	= 5 * HZ,
++	ATA_TMOUT_IDENTIFY	= 5 * HZ,	/* hueristic */
++	ATA_TMOUT_READLOG	= 5 * HZ,	/* hueristic */
++	ATA_TMOUT_SET_XFERMODE	= 5 * HZ,	/* hueristic */
++	ATA_TMOUT_REQUEST_SENSE	= 5 * HZ,	/* hueristic */
+ 
+ 	/* ATA bus states */
+ 	BUS_UNKNOWN		= 0,
+
