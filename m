@@ -1,34 +1,53 @@
 From: Andi Kleen <ak@suse.de>
 Subject: Re: [another PATCH] Fix crash on boot in kmalloc_node IDE changes
-Date: Thu, 7 Jul 2005 18:40:24 +0200
-Message-ID: <20050707164024.GK21330@wotan.suse.de>
-References: <20050706133052.GF21330@wotan.suse.de> <Pine.LNX.4.62.0507070912140.27066@graphe.net> <Pine.LNX.4.58.0507070937130.3293@g5.osdl.org>
+Date: Thu, 7 Jul 2005 18:36:04 +0200
+Message-ID: <20050707163604.GJ21330@wotan.suse.de>
+References: <20050706133052.GF21330@wotan.suse.de> <Pine.LNX.4.62.0507070912140.27066@graphe.net> <20050707162442.GI21330@wotan.suse.de> <Pine.LNX.4.62.0507070930220.5875@graphe.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261339AbVGGQrT@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.suse.de ([195.135.220.2]:4746 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S261374AbVGGQgF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jul 2005 12:36:05 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0507070937130.3293@g5.osdl.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Christoph Lameter <christoph@lameter.com>, Andi Kleen <ak@suse.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.62.0507070930220.5875@graphe.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christoph Lameter <christoph@lameter.com>
+Cc: Andi Kleen <ak@suse.de>, linux-ide@vger.kernel.org, torvalds@osdl.org, linux-kernel@vger.kernel.org
 
-On Thu, Jul 07, 2005 at 09:38:17AM -0700, Linus Torvalds wrote:
+On Thu, Jul 07, 2005 at 09:32:51AM -0700, Christoph Lameter wrote:
+> On Thu, 7 Jul 2005, Andi Kleen wrote:
 > 
-> 
-> On Thu, 7 Jul 2005, Christoph Lameter wrote:
+> > On Thu, Jul 07, 2005 at 09:21:55AM -0700, Christoph Lameter wrote:
+> > > On Wed, 6 Jul 2005, Andi Kleen wrote:
+> > > 
+> > > > Without this patch a dual Xeon EM64T machine would oops on boot
+> > > > because the hwif pointer here was NULL. I also added a check for
+> > > > pci_dev because it's doubtful that all IDE devices have pci_devs.
+> > > 
+> > > Here is IMHO the right way to fix this. Test for the hwif != NULL and
+> > > test for pci_dev != NULL before determining the node number of the pci 
+> > > bus that the device is connected to. Maybe we need a hwif_to_node for ide 
+> > > drivers that is also able to determine the locality of other hardware?
 > > 
-> > Here is IMHO the right way to fix this. Test for the hwif != NULL and
-> > test for pci_dev != NULL before determining the node number of the pci 
-> > bus that the device is connected to.
+> > Hmm? Where is the difference? 
 > 
-> I think this is pretty unreadable.
-> 
-> If you make it use a trivial inline function for the thing, I think that 
-> would be ok, though.
-> 
-> Complex expressions are bad.
+> node = -1 if the node cannot be determined.
 
-You could just use the previous patch I posted (hint hint...;) 
+But that will crash right now.
+
+Trading one crash for another doesn't seem to be particularly useful.
+
+
+> > This is 100% equivalent to my code except that you compressed
+> > it all into a single expression.
+> 
+> My patch consistently checks for hwif != NULL and pci_dev != NULL. 
+> There was someother stuff in your patch. This patch does not add any 
+> additional variables and is more readable.
+
+No it was exactly the same except for a working node number.
 
 -Andi
+
