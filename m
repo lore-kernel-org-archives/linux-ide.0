@@ -1,26 +1,24 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: [another PATCH] Fix crash on boot in kmalloc_node IDE changes
-Date: Thu, 7 Jul 2005 23:25:18 +0200
-Message-ID: <20050707212518.GO21330@wotan.suse.de>
-References: <20050706133052.GF21330@wotan.suse.de> <Pine.LNX.4.62.0507070912140.27066@graphe.net> <Pine.LNX.4.58.0507070937130.3293@g5.osdl.org> <Pine.LNX.4.62.0507071022480.7105@graphe.net> <Pine.LNX.4.58.0507071154440.3293@g5.osdl.org> <Pine.LNX.4.62.0507071208210.8200@graphe.net> <20050707211505.GM21330@wotan.suse.de> <58cb370e050707141913e87371@mail.gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [git patches] IDE update
+Date: Thu, 07 Jul 2005 18:32:52 -0400
+Message-ID: <42CDAD94.7000306@rtr.ca>
+References: <42C9C56D.7040701@tomt.net> <42CA5A84.1060005@rainbow-software.org> <20050705101414.GB18504@suse.de> <42CA5EAD.7070005@rainbow-software.org> <20050705104208.GA20620@suse.de> <42CA7EA9.1010409@rainbow-software.org> <1120567900.12942.8.camel@linux> <42CA84DB.2050506@rainbow-software.org> <1120569095.12942.11.camel@linux> <42CAAC7D.2050604@rainbow-software.org> <20050705142122.GY1444@suse.de> <6m8mc1lhug5d345uqikru1vpsqi6hciv41@4ax.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:15536 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S261601AbVGGVZV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jul 2005 17:25:21 -0400
-Content-Disposition: inline
-In-Reply-To: <58cb370e050707141913e87371@mail.gmail.com>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:43282 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S261476AbVGGWcu
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 7 Jul 2005 18:32:50 -0400
+In-Reply-To: <6m8mc1lhug5d345uqikru1vpsqi6hciv41@4ax.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Andi Kleen <ak@suse.de>, Christoph Lameter <christoph@lameter.com>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Grant Coady <grant_lkml@dodo.com.au>
+Cc: Jens Axboe <axboe@suse.de>, Ondrej Zary <linux@rainbow-software.org>, =?ISO-8859-1?Q?Andr=E9_Tomt?= <andre@tomt.net>, Al Boldi <a1426z@gawab.com>, 'Bartlomiej Zolnierkiewicz' <bzolnier@gmail.com>, 'Linus Torvalds' <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> > The setup was a Intel board with 1 PATA/4 SATA onboard and only a CD-ROM
-> > and a external Promise PATA controller with two PATA disks.
-> 
-> actual OOPS would be very useful
+Note:
 
-It's difficult because I don't have serial on that machine.
+hdparm can also use O_DIRECT for the -t timing test.
 
--Andi
+Eg.  hdparm --direct -t /dev/hda
