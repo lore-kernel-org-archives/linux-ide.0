@@ -1,160 +1,305 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH libata-dev-2.6:ncq 04/11] libata: implement ap->sactive
-Date: Thu,  7 Jul 2005 22:09:33 +0900 (KST)
-Message-ID: <20050707130840.32B35551@htj.dyndns.org>
+Subject: Re: [PATCH libata-dev-2.6:ncq 06/11] libata: implement generic NCQ helpers
+Date: Thu,  7 Jul 2005 22:09:43 +0900 (KST)
+Message-ID: <20050707130840.1C8B6E03@htj.dyndns.org>
 References: <20050707130840.5046338C@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.201]:32612 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261470AbVGGNJk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jul 2005 09:09:40 -0400
-Received: by wproxy.gmail.com with SMTP id i28so191209wra
-        for <linux-ide@vger.kernel.org>; Thu, 07 Jul 2005 06:09:37 -0700 (PDT)
+Received: from rproxy.gmail.com ([64.233.170.201]:25638 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261484AbVGGNJv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jul 2005 09:09:51 -0400
+Received: by rproxy.gmail.com with SMTP id a36so160039rnf
+        for <linux-ide@vger.kernel.org>; Thu, 07 Jul 2005 06:09:48 -0700 (PDT)
 In-Reply-To: <20050707130840.5046338C@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, axboe@suse.de, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-04_libata_implement-sactive.patch
+06_libata_implement-ncq-helpers.patch
 
-	This patch implements generic ap->sactive handling for NCQ
-	commands.
+	This patch implements generic NCQ completion/error-handling
+	helpers.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
- drivers/scsi/libata-core.c |   37 ++++++++++++++++++++++++-------------
- drivers/scsi/libata-scsi.c |    6 +++---
- include/linux/libata.h     |    5 ++---
- 3 files changed, 29 insertions(+), 19 deletions(-)
+ drivers/scsi/libata-core.c |  237 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/libata.h     |    3 
+ 2 files changed, 240 insertions(+)
 
-Index: work/drivers/scsi/libata-core.c
-===================================================================
---- work.orig/drivers/scsi/libata-core.c	2005-07-07 22:08:35.000000000 +0900
-+++ work/drivers/scsi/libata-core.c	2005-07-07 22:08:36.000000000 +0900
-@@ -3140,14 +3140,20 @@ void ata_qc_free(struct ata_queued_cmd *
- 	assert(ata_tag_valid(qc->tag));
- 
- 	if (likely(qc->flags & ATA_QCFLAG_ACTIVE)) {
--		assert(ap->queue_depth);
--		ap->queue_depth--;
-+		assert(ap->flags & ATA_FLAG_INFLIGHT);
- 
--		if (!ap->queue_depth)
--			ap->flags &= ~ATA_FLAG_NCQ_QUEUED;
--		if (tag == ap->active_tag) {
-+		if (ap->active_tag == ATA_TAG_POISON) {
-+			assert(ap->sactive & (1 << tag));
-+			ap->sactive &= ~(1 << tag);
-+			if (!ap->sactive)
-+				ap->flags &= ~ATA_FLAG_INFLIGHT;
-+		} else {
-+			assert(ap->active_tag == tag &&
-+			       (qc->flags & ATA_QCFLAG_PREEMPT || !ap->sactive));
- 			ap->active_tag = ap->preempted_tag;
- 			ap->preempted_tag = ATA_TAG_POISON;
-+			if (ap->active_tag == ATA_TAG_POISON && !ap->sactive)
-+				ap->flags &= ~ATA_FLAG_INFLIGHT;
- 		}
- 	}
- 
-@@ -3304,7 +3310,7 @@ static inline int ata_qc_issue_ok(struct
- 	/*
- 	 * If nothing is queued, it's always ok to continue.
- 	 */
--	if (!ap->queue_depth)
-+	if (!(ap->flags & ATA_FLAG_INFLIGHT))
- 		return 1;
- 
- 	/*
-@@ -3318,7 +3324,7 @@ static inline int ata_qc_issue_ok(struct
- 	 * Command is NCQ, allow it to be queued if the commands that are
- 	 * currently running are also NCQ
- 	 */
--	if (ap->flags & ATA_FLAG_NCQ_QUEUED)
-+	if (ap->sactive)
- 		return 1;
- 
- 	return 0;
-@@ -3396,20 +3402,25 @@ int ata_qc_issue(struct ata_queued_cmd *
- 
- 	ap->ops->qc_prep(qc);
- 
--	qc->ap->active_tag = qc->tag;
- 	qc->flags |= ATA_QCFLAG_ACTIVE;
- 
- 	assert(ap->preempted_tag == ATA_TAG_POISON);
- 
--	if (qc->flags & ATA_QCFLAG_PREEMPT) {
-+	if (!(qc->flags & ATA_QCFLAG_PREEMPT)) {
-+		assert(ap->active_tag == ATA_TAG_POISON);
-+
-+		if (qc->flags & ATA_QCFLAG_NCQ)
-+			ap->sactive |= 1 << qc->tag;
-+		else {
-+			assert(!ap->sactive);
-+			ap->active_tag = qc->tag;
-+		}
-+	} else {
- 		ap->preempted_tag = ap->active_tag;
- 		ap->active_tag = qc->tag;
- 	}
- 
--	if (qc->flags & ATA_QCFLAG_NCQ)
--		ap->flags |= ATA_FLAG_NCQ_QUEUED;
--
--	ap->queue_depth++;
-+	ap->flags |= ATA_FLAG_INFLIGHT;
- 
- 	rc = ap->ops->qc_issue(qc);
- 	if (rc != ATA_QC_ISSUE_OK)
-Index: work/drivers/scsi/libata-scsi.c
-===================================================================
---- work.orig/drivers/scsi/libata-scsi.c	2005-07-07 22:08:35.000000000 +0900
-+++ work/drivers/scsi/libata-scsi.c	2005-07-07 22:08:36.000000000 +0900
-@@ -164,10 +164,10 @@ struct ata_queued_cmd *ata_scsi_qc_new(s
- 		return NULL;
- 	if (ap->cmd_waiters)
- 		return NULL;
--	if (ap->queue_depth) {
-+	if (ap->flags & ATA_FLAG_INFLIGHT) {
- 		if (!scsi_rw_ncq_request(dev, cmd))
- 			return NULL;
--		if (!(ap->flags & ATA_FLAG_NCQ_QUEUED))
-+		if (!ap->sactive)
- 			return NULL;
- 	}
- 
-@@ -517,7 +517,7 @@ int ata_scsi_error(struct Scsi_Host *hos
- 		ap->ops->error_handler(ap);
- 
- 	spin_lock_irq(&ap->host_set->lock);
--	assert(!ap->queue_depth && !ap->host->host_busy);
-+	assert(!(ap->flags & ATA_FLAG_INFLIGHT) && !ap->host->host_busy);
- 	host->host_failed = 0;
- 	ap->flags &= ~(ATA_FLAG_ERROR | ATA_FLAG_RECOVERY);
- 	if (ap->cmd_waiters)
 Index: work/include/linux/libata.h
 ===================================================================
---- work.orig/include/linux/libata.h	2005-07-07 22:08:35.000000000 +0900
+--- work.orig/include/linux/libata.h	2005-07-07 22:08:36.000000000 +0900
 +++ work/include/linux/libata.h	2005-07-07 22:08:36.000000000 +0900
-@@ -116,7 +116,7 @@ enum {
- 	ATA_FLAG_SATA_RESET	= (1 << 7), /* use COMRESET */
- 	ATA_FLAG_PIO_DMA	= (1 << 8), /* PIO cmds via DMA */
- 	ATA_FLAG_NCQ		= (1 << 9), /* Can do NCQ */
--	ATA_FLAG_NCQ_QUEUED	= (1 << 10), /* NCQ commands are queued */
-+	ATA_FLAG_INFLIGHT	= (1 << 10), /* Command(s) in flight */
- 	ATA_FLAG_ERROR		= (1 << 11), /* Error met and EH scheduled */
- 	ATA_FLAG_RECOVERY	= (1 << 12), /* Recovery in progress */
+@@ -463,6 +463,9 @@ extern int ata_read_log_page(struct ata_
+ 			     unsigned int);
+ extern void ata_eh_qc_complete(struct ata_queued_cmd *qc);
+ extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
++extern int ata_ncq_complete(struct ata_port *ap);
++extern int ata_ncq_error(struct ata_port *ap);
++extern void ata_ncq_recover(struct ata_port *ap, int did_reset);
  
-@@ -323,9 +323,8 @@ struct ata_port {
- 	struct ata_device	device[ATA_MAX_DEVICES];
  
- 	struct ata_queued_cmd	qcmd[ATA_MAX_CMDS];
--	unsigned long		qactive;
-+	unsigned long		qactive, sactive;
- 	unsigned int		active_tag, preempted_tag;
--	unsigned int		queue_depth;
+ #ifdef CONFIG_PCI
+Index: work/drivers/scsi/libata-core.c
+===================================================================
+--- work.orig/drivers/scsi/libata-core.c	2005-07-07 22:08:36.000000000 +0900
++++ work/drivers/scsi/libata-core.c	2005-07-07 22:08:36.000000000 +0900
+@@ -49,6 +49,10 @@
  
- 	wait_queue_head_t	cmd_wait_queue;
- 	unsigned int		cmd_waiters;
+ #include "libata.h"
+ 
++#define ata_for_each_tag(tag, mask) \
++	for (tag = find_first_bit(&mask, ATA_MAX_CMDS); tag < ATA_MAX_CMDS; \
++	     tag = find_next_bit(&mask, ATA_MAX_CMDS, tag + 1))
++
+ static unsigned int ata_busy_sleep (struct ata_port *ap,
+ 				    unsigned long tmout_pat,
+ 			    	    unsigned long tmout);
+@@ -3861,6 +3865,236 @@ irqreturn_t ata_interrupt (int irq, void
+ 	return IRQ_RETVAL(handled);
+ }
+ 
++/*
++ * NCQ helpers
++ */
++
++/**
++ *     ata_ncq_complete - NCQ driver helper.  Complete requests normally.
++ *     @ap: port in question
++ *
++ *     Complete in-flight commands.  One device per port is assumed.
++ *     This functions is meant to be called from specific driver's
++ *     interrupt routine to complete requests normally.  On
++ *     invocation, if non-NCQ command was in-flight, it's completed
++ *     normally.  If NCQ commands were in-flight, Sactive register is
++ *     read and completed commands are processed.
++ *
++ *     LOCKING:
++ *     spin_lock_irqsave(host_set lock)
++ */
++int ata_ncq_complete(struct ata_port *ap)
++{
++	int nr_done = 0;
++	unsigned long done_mask = 0;
++	unsigned tag;
++
++	/*
++	 * ap->active_tag test should come before ap->sactive test to
++	 * complete EH requests.
++	 */
++	if (ap->active_tag != ATA_TAG_POISON)
++		done_mask = 1 << ap->active_tag;
++	else if (ap->sactive) {
++		unsigned long new_sactive = scr_read(ap, SCR_ACTIVE);
++		done_mask = new_sactive ^ ap->sactive;
++
++		if (unlikely(done_mask & new_sactive)) {
++			printk(KERN_ERR "ata%u: illegal sactive transition (%08lx->%08lx)\n",
++			       ap->id, ap->sactive, new_sactive);
++			done_mask &= ~new_sactive;
++		}
++	}
++
++	ata_for_each_tag(tag, done_mask) {
++		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, tag);
++		assert(qc);
++		ata_qc_complete(qc);
++		nr_done++;
++	}
++
++	return nr_done;
++}
++
++/**
++ *     ata_ncq_error - NCQ driver helper.  Abort commands and invoke EH.
++ *     @ap: port in question.
++ *
++ *     Abort in-flight commands and invoke EH.  This function is
++ *     meant to be called from specific driver's interrupt routine to
++ *     indicate error.
++ *
++ *     LOCKING:
++ *     spin_lock_irqsave(host_set lock)
++ */
++
++int ata_ncq_error(struct ata_port *ap)
++{
++	int nr_aborted = 0;
++	unsigned long sactive = 0;
++	unsigned tag;
++
++	printk(KERN_WARNING "ata%u: aborting commands due to error.  "
++	       "active_tag %d, sactive %08lx\n",
++	       ap->id,
++	       ap->active_tag != ATA_TAG_POISON ? ap->active_tag : -1,
++	       ap->sactive);
++
++	/*
++	 * ap->active_tag test should come before ap->sactive test to
++	 * complete EH requests.
++	 */
++	if (ap->active_tag != ATA_TAG_POISON)
++		sactive = 1 << ap->active_tag;
++	else if (ap->sactive) {
++		/* Complete successful requests before aborting. */
++		ata_ncq_complete(ap);
++		if (!ap->sactive)
++			printk(KERN_WARNING "ata%u: device reports successful "
++			       "completion of all NCQ commands after error\n",
++			       ap->id);
++		sactive = ap->sactive;
++	}
++
++	ata_for_each_tag(tag, sactive) {
++		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, tag);
++		assert(qc);
++		ata_qc_error(qc);
++		nr_aborted++;
++	}
++
++	return nr_aborted;
++}
++
++static inline int ata_read_log_10h(struct ata_port *ap, unsigned *tagp,
++				   u8 *drv_statp, u8 *drv_errp)
++{
++	char *buffer;
++	int rc;
++
++	buffer = kmalloc(512, GFP_KERNEL);
++	if (buffer == NULL) {
++		printk(KERN_ERR "ata%u: unable to allocate memory for error\n",
++		       ap->id);
++		return -ENOMEM;
++	}
++
++	rc = ata_read_log_page(ap, 0, READ_LOG_SATA_NCQ_PAGE, buffer, 1);
++	if (rc < 0) {
++		printk(KERN_ERR "ata%u: failed to read log page 10h (%d)\n",
++		       ap->id, rc);
++		goto out;
++	}
++
++	if (buffer[0] & 0x80) {
++		printk(KERN_WARNING "ata%u: NQ bit set on log page 10h\n",
++		       ap->id);
++		rc = -EIO;
++		goto out;
++	}
++
++	*tagp = buffer[0] & 0x1f;
++	*drv_statp = buffer[2] | ATA_ERR;
++	*drv_errp = buffer[3];
++	rc = 0;
++ out:
++	kfree(buffer);
++	return rc;
++}
++
++/**
++ *     ata_ncq_recover - NCQ driver helper.  Recover from error.
++ *     @ap: port in question
++ *     @did_reset: specific driver performed reset.  Log page 10h might
++ *                 be invalid.
++ *
++ *     This function is to be called from eng_timeout routine of
++ *     specific drivers.  Before calling this function, specific
++ *     drivers are required to
++ *
++ *     - Clear all in-flight requests.  Drivers only have to clear
++ *       low-level state (like stopping DMA engine and clearing
++ *       interrupts).  All generic command cancelling are dealt by
++ *       libata-core layer.
++ *
++ *     - Make the controller ready for new commands.
++ *
++ *     LOCKING:
++ *     Inherited from SCSI layer (in EH context, can sleep)
++ */
++void ata_ncq_recover(struct ata_port *ap, int did_reset)
++{
++	unsigned ncq_abort_tag = ATA_TAG_POISON;
++	u8 stat = 0, err = 0;
++	unsigned long sactive;
++	unsigned tag;
++
++	DPRINTK("ENTER\n");
++
++	stat = ata_chk_status(ap);
++	err = ata_chk_err(ap);
++
++	/*
++	 * if commands have timed out or DRQ/BSY is set, device needs
++	 * to be reset.
++	 */
++	if (!(ap->flags & ATA_FLAG_ERROR) || stat & (ATA_BUSY | ATA_DRQ)) {
++		printk(KERN_WARNING "ata%u: stat=%x, issuing COMRESET\n", ap->id, stat);
++		ap->ops->phy_reset(ap);
++		did_reset = 1;
++	}
++
++	if (ap->sactive) {
++		if (ap->flags & ATA_FLAG_ERROR) {
++			u8 tstat, terr;
++			/*
++			 * Regardless of did_reset, we read log page
++			 * 10h.  The drive might need it to restart
++			 * operation.  If did_reset, we ignore the
++			 * result.
++			 */
++			if (ata_read_log_10h(ap, &tag, &tstat, &terr) == 0) {
++				printk(KERN_INFO "ata%u: log_ext_10h, tag=%d "
++				       "stat=%02x err=%02x%s\n",
++				       ap->id, tag, tstat, terr,
++				       did_reset ? " (ignored due to reset)" : "");
++				if (!did_reset) {
++					ncq_abort_tag = tag;
++					stat = tstat;
++					err = terr;
++				}
++			} else {
++				printk(KERN_WARNING "ata%u: resetting...\n",
++				       ap->id);
++				ap->ops->phy_reset(ap);
++			}
++		}
++		sactive = ap->sactive;
++	} else
++		sactive = 1 << ap->active_tag;
++
++	ata_for_each_tag(tag, sactive) {
++		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, tag);
++		assert(qc);
++		if (ncq_abort_tag != ATA_TAG_POISON && tag != ncq_abort_tag) {
++			ata_eh_qc_retry(qc);
++			continue;
++		}
++
++		if (qc->scsicmd) {
++			if (qc->dev->class == ATA_DEV_ATA ||
++			    !(qc->flags & ATA_QCFLAG_ERROR))
++				ata_to_sense_error(qc, stat | ATA_ERR, err);
++			else
++				atapi_request_sense(ap, qc->dev, qc->scsicmd);
++		}
++
++		ata_eh_qc_complete(qc);
++	}
++
++	DPRINTK("EXIT\n");
++}
++
+ /**
+  *	atapi_packet_task - Write CDB bytes to hardware
+  *	@_data: Port to which ATAPI device is attached.
+@@ -4719,6 +4953,9 @@ EXPORT_SYMBOL_GPL(ata_scsi_requeue);
+ EXPORT_SYMBOL_GPL(ata_read_log_page);
+ EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
+ EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
++EXPORT_SYMBOL_GPL(ata_ncq_complete);
++EXPORT_SYMBOL_GPL(ata_ncq_error);
++EXPORT_SYMBOL_GPL(ata_ncq_recover);
+ 
+ #ifdef CONFIG_PCI
+ EXPORT_SYMBOL_GPL(pci_test_config_bits);
 
