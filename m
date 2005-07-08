@@ -1,38 +1,53 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [git patches] IDE update
-Date: Fri, 8 Jul 2005 13:45:07 +0200
-Message-ID: <20050708114503.GG7050@suse.de>
-References: <42CA84DB.2050506@rainbow-software.org> <1120569095.12942.11.camel@linux> <42CAAC7D.2050604@rainbow-software.org> <20050705142122.GY1444@suse.de> <6m8mc1lhug5d345uqikru1vpsqi6hciv41@4ax.com> <Pine.LNX.4.58.0507051748540.3570@g5.osdl.org> <nljmc1h40t2bv316ufij10o2am5607hpse@4ax.com> <Pine.LNX.4.58.0507052209180.3570@g5.osdl.org> <20050708084817.GB7050@suse.de> <20050708102056.GA7172@elte.hu>
+From: Erik Slagter <erik@slagter.name>
+Subject: Readahead with softraid1
+Date: Fri, 08 Jul 2005 14:00:29 +0200
+Message-ID: <1120824029.23681.18.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MZBx49+zyIMpr65yCxJD"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:31206 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262578AbVGHLnk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2005 07:43:40 -0400
-Content-Disposition: inline
-In-Reply-To: <20050708102056.GA7172@elte.hu>
+Received: from oldconomy.demon.nl ([212.238.217.56]:61611 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S262459AbVGHMBG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 8 Jul 2005 08:01:06 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Linus Torvalds <torvalds@osdl.org>, Grant Coady <grant_lkml@dodo.com.au>, Ondrej Zary <linux@rainbow-software.org>, =?iso-8859-1?Q?Andr=E9?= Tomt <andre@tomt.net>, Al Boldi <a1426z@gawab.com>, 'Bartlomiej Zolnierkiewicz' <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Fri, Jul 08 2005, Ingo Molnar wrote:
-> 
-> * Jens Axboe <axboe@suse.de> wrote:
-> 
-> > But! I used hdparm -t solely, 2.6 was always ~5% faster than 2.4. But 
-> > using -Tt slowed down the hd speed by about 30%. So it looks like some 
-> > scheduler interaction, perhaps the memory timing loops gets it marked 
-> > as batch or something?
-> 
-> to check whether that could be the case, could you try:
-> 
-> 	nice -n -20 hdparm -t /dev/hdc
-> 
-> does that produce different results?
 
-Same result, see my next mail, it turned out to be a read-ahead bug.
+--=-MZBx49+zyIMpr65yCxJD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Jens Axboe
+Hi,
 
+I am using softraid 1 on two sata disks and I'm trying to get the best
+possible performance. IMHO read actions (if properly addressed) should
+be split over the two drivers and performed independently. However, I
+don't notice anything to back this up. The read performance (with the
+dreaded hdparm) shows read performance on sda,sdb and md0 exactly the
+same.
+
+I've been playing a bit with readahead and it does matter a bit in that
+if I disable readahead for sda/sdb completely, the read rate for these
+goes completely down (to be expected) whilst the read rate on md0 stays
+the same (also a bit to be expected). Other combinations do not show any
+significant impact.
+
+I also played with the i/o scheduler and nr_requests (as from previous
+messages here).
+
+What am I doing wrong here???
+
+--=-MZBx49+zyIMpr65yCxJD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQBCzmrdJgD/6j32wUYRAgriAJ4iA9Su/Z2nI93q5fSzQTiHNXPm4ACdHfsO
+ytFL2nau2ImWTvxKRxQFO68=
+=53r0
+-----END PGP SIGNATURE-----
+
+--=-MZBx49+zyIMpr65yCxJD--
