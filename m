@@ -1,46 +1,73 @@
-From: Grant Coady <grant_lkml@dodo.com.au>
-Subject: Re: [git patches] IDE update
-Date: Fri, 08 Jul 2005 10:06:43 +1000
-Message-ID: <koerc1h7m0iri2pdrvsa0pu2tjakobq78o@4ax.com>
-References: <42C9C56D.7040701@tomt.net> <42CA5A84.1060005@rainbow-software.org> <20050705101414.GB18504@suse.de> <42CA5EAD.7070005@rainbow-software.org> <20050705104208.GA20620@suse.de> <42CA7EA9.1010409@rainbow-software.org> <1120567900.12942.8.camel@linux> <42CA84DB.2050506@rainbow-software.org> <1120569095.12942.11.camel@linux> <42CAAC7D.2050604@rainbow-software.org> <20050705142122.GY1444@suse.de> <6m8mc1lhug5d345uqikru1vpsqi6hciv41@4ax.com> <42CDAD94.7000306@rtr.ca>
+From: Christoph Lameter <christoph@lameter.com>
+Subject: Re: [another PATCH] Fix crash on boot in kmalloc_node IDE changes
+Date: Thu, 7 Jul 2005 21:44:23 -0700 (PDT)
+Message-ID: <Pine.LNX.4.62.0507072141390.14256@graphe.net>
+References: <20050706133052.GF21330@wotan.suse.de> <Pine.LNX.4.62.0507070912140.27066@graphe.net>
+ <Pine.LNX.4.58.0507070937130.3293@g5.osdl.org> <Pine.LNX.4.62.0507071022480.7105@graphe.net>
+ <Pine.LNX.4.58.0507071154440.3293@g5.osdl.org> <Pine.LNX.4.62.0507071208210.8200@graphe.net>
+ <20050707211505.GM21330@wotan.suse.de> <58cb370e050707141913e87371@mail.gmail.com>
+ <20050707212518.GO21330@wotan.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [202.136.32.45] ([202.136.32.45]:2277 "EHLO
-	relay02.mail-hub.dodo.com.au") by vger.kernel.org with ESMTP
-	id S262335AbVGHAHp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 7 Jul 2005 20:07:45 -0400
-In-Reply-To: <42CDAD94.7000306@rtr.ca>
+Received: from graphe.net ([209.204.138.32]:6349 "EHLO graphe.net")
+	by vger.kernel.org with ESMTP id S262607AbVGHEo1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2005 00:44:27 -0400
+In-Reply-To: <20050707212518.GO21330@wotan.suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jens Axboe <axboe@suse.de>, Ondrej Zary <linux@rainbow-software.org>, =?ISO-8859-1?Q?=20Andr=E9?= Tomt <andre@tomt.net>, Al Boldi <a1426z@gawab.com>, 'Bartlomiej Zolnierkiewicz' <bzolnier@gmail.com>, 'Linus Torvalds' <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andi Kleen <ak@suse.de>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Thu, 07 Jul 2005 18:32:52 -0400, Mark Lord <liml@rtr.ca> wrote:
->
->hdparm can also use O_DIRECT for the -t timing test.
+On Thu, 7 Jul 2005, Andi Kleen wrote:
 
-I've not been able to get dual channel I/O speed faster than single 
-interface speed, either as 'md' RAID0 or simultaneous reading or 
-writing done the other day:
+> > > The setup was a Intel board with 1 PATA/4 SATA onboard and only a CD-ROM
+> > > and a external Promise PATA controller with two PATA disks.
+> > 
+> > actual OOPS would be very useful
+> 
+> It's difficult because I don't have serial on that machine.
 
-Time to write or read 500MB file:
+Maybe we can settle on this patch until we know for sure that the hwif 
+is also a problem. In that case we can simply patch hwif_to_node:
 
->summary		2.4.31-hf1	2.6.12.2
->boxen \ time ->	 w 	 r	 w	 r
->---------------	----	----	----	----
-...
->peetoo			33	20	26.5	22
->(simultaneuous		57	37.5	52	38.5)
 
-MB/s		2.4.31-hf1	2.6.12.2
-		w	r	w	r
-single		15	25	19	23
-dual		17.5	27	19	26
-
-These timings show very little happening in parallel, is that normal?
-
-Thanks,
---Grant.
-
+Index: linux-2.6.git/drivers/ide/ide-probe.c
+===================================================================
+--- linux-2.6.git.orig/drivers/ide/ide-probe.c	2005-06-23 11:38:02.000000000 -0700
++++ linux-2.6.git/drivers/ide/ide-probe.c	2005-07-07 20:18:22.000000000 -0700
+@@ -960,6 +960,15 @@
+ }
+ #endif /* MAX_HWIFS > 1 */
+ 
++static inline int hwif_to_node(ide_hwif_t *hwif)
++{
++	if (hwif->pci_dev)
++		return pcibus_to_node(hwif->pci_dev->bus);
++	else
++		/* Add ways to determine the node of other busses here */
++		return -1;
++}
++
+ /*
+  * init request queue
+  */
+@@ -978,8 +987,7 @@
+ 	 *	do not.
+ 	 */
+ 
+-	q = blk_init_queue_node(do_ide_request, &ide_lock,
+-				pcibus_to_node(drive->hwif->pci_dev->bus));
++	q = blk_init_queue_node(do_ide_request, &ide_lock, hwif_to_node(hwif));
+ 	if (!q)
+ 		return 1;
+ 
+@@ -1097,7 +1105,7 @@
+ 		spin_unlock_irq(&ide_lock);
+ 	} else {
+ 		hwgroup = kmalloc_node(sizeof(ide_hwgroup_t), GFP_KERNEL,
+-			pcibus_to_node(hwif->drives[0].hwif->pci_dev->bus));
++					hwif_to_node(hwif->drives[0].hwif));
+ 		if (!hwgroup)
+ 	       		goto out_up;
+ 
