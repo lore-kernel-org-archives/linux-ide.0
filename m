@@ -1,70 +1,73 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH Linux 2.6.12 00/09] NCQ: generic NCQ completion/error-handling
-Date: Fri, 8 Jul 2005 15:54:01 +0200
-Message-ID: <20050708135401.GO7050@suse.de>
-References: <20050630073633.GF2243@suse.de> <42C3CEA5.9040509@gmail.com> <20050630152620.GZ2243@suse.de> <20050701002035.GA24878@htj.dyndns.org> <20050701085912.GB2243@suse.de> <20050704055332.GA7249@suse.de> <20050706125500.GA1373@suse.de> <20050706130004.GB1373@suse.de> <20050708080347.GA7050@suse.de> <20050708102728.GA5426@htj.dyndns.org>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Readahead with softraid1
+Date: Fri, 8 Jul 2005 11:28:37 -0400
+Message-ID: <87f94c37050708082828e37574@mail.gmail.com>
+References: <1120824029.23681.18.camel@localhost.localdomain>
+	 <1120824984.3415.233.camel@vom>
+Reply-To: Greg Freemyer <greg.freemyer@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:14210 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262662AbVGHNwb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2005 09:52:31 -0400
+Received: from wproxy.gmail.com ([64.233.184.203]:7067 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262686AbVGHP3D convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 8 Jul 2005 11:29:03 -0400
+Received: by wproxy.gmail.com with SMTP id i1so481316wra
+        for <linux-ide@vger.kernel.org>; Fri, 08 Jul 2005 08:29:00 -0700 (PDT)
+In-Reply-To: <1120824984.3415.233.camel@vom>
 Content-Disposition: inline
-In-Reply-To: <20050708102728.GA5426@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: DCox@icc.net
+Cc: Erik Slagter <erik@slagter.name>, Linux IDE List <linux-ide@vger.kernel.org>
 
-On Fri, Jul 08 2005, Tejun Heo wrote:
-> On Fri, Jul 08, 2005 at 10:03:48AM +0200, Jens Axboe wrote:
-> > Hi,
-> > 
-> > Ok, one more error, this time from irq context:
-> > 
-> > AHCI: ata1: error irq, status=40000001 stat=51 err=04 sstat=00000113
-> > serr=00000000
-> > ata1: aborting commands due to error.  active_tag -1, sactive 00000001
-> > ahci: sactive 1
-> > ata1: recovering from error
-> > sactive=0
-> > ata1: failed to read log page 10h (-110)
-> > ata1: resetting...
-> > ata1: started resetting...
-> > ata1: end resetting, sstatus=00000113
-> > ata1: status=0x01 { Error }
-> > ata1: error=0x80 { Sector }
-> > SCSI error : <0 0 0 0> return code = 0x8000002
-> > sda: Current: sense key=0x3
-> >     ASC=0x11 ASCQ=0x4
-> > end_request: I/O error, dev sda, sector 2120875
-> > Buffer I/O error on device sda2, logical block 2045
-> > lost page write due to I/O error on sda2
-> > 
-> > -- 
-> > Jens Axboe
+On 7/8/05, Danny Cox wrote:
+> Erik,
 > 
->  Hi, Jens.
+> On Fri, 2005-07-08 at 14:00 +0200, Erik Slagter wrote:
+> > I am using softraid 1 on two sata disks and I'm trying to get the best
+> > possible performance. IMHO read actions (if properly addressed) should
+> > be split over the two drivers and performed independently. However, I
+> > don't notice anything to back this up. The read performance (with the
+> > dreaded hdparm) shows read performance on sda,sdb and md0 exactly the
+> > same.
+> ...
+> > What am I doing wrong here???
 > 
->  I also have a weird lockup log.  This log is generated with the
-> second take of NCQ patchset I've posted yesterday.  It's Samsung
-> HD160JJ on ICH7R AHCI.  Every command with tag#3 is scrambled, so
-> recovery operations are performed constantly (log 10h, if that fails
-> COMRESET).  After a few hours, the drive failed to become online after
-> COMRESET.  Rebooting didn't work.  BIOS couldn't detect/recover it.  I
-> had to power-cycle to make it online again.  I'm running similar test
-> with much lower error-late (5~6 errors per 3000 requests) to avoid too
-> many COMRESET's and, for more than six hours, it's been running okay.
-> Error log follows.
+>         Nothing.  I'll take a shot at answering this one instead of lurking
+> this time.  Then, I'll crawl back under my rock.
+> 
+>         The raid1 driver keeps a "last visited block" for each drive.  This is
+> the block number that was most recently read or written by that drive.
+> When a read request arrives, the driver examines each drive for the
+> nearest last visited block to the one requested.  Guess what?  If the
+> read starts with drive sda, then it will *always* be the one chosen to
+> service the read in the future, because the last visited block number is
+> only one off.  This would only change if there are multiple processes
+> performing I/O on the md device.  Then, it may switch to another drive.
+> In any case, it will *tend* to stick with the same drive.
+> 
+>         Did I explain that well, or only muddy the waters?
+> 
+> --
+> Daniel S. Cox
+> Internet Commerce Corporation
+> 
 
-very strange, the drive must be really buggered.
+Interesting.  Unfortunately, I do a lot of sequential reading with
+little or no other computer activity and had wondered about the "slow"
+speed of RAID 1 on read.
 
->  Jens, can you run your test with the new patchset?
+Does anyone know if that a common implementation on Hardware Raid
+controllers too?
 
-Sure, I will try. But I will be away from this box for the next two
-weeks (vacation, then KS/OLS), so I cannot do much about it in the near
-future...
+I have actually been working mostly with 3ware 7000 series cards, so
+the md implementation does not affect me, but if that is a common
+design then the 3ware card may have a similar algorithm.
 
+Greg
 -- 
-Jens Axboe
-
+Greg Freemyer
+The Norcross Group
+Forensics for the 21st Century
