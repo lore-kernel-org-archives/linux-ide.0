@@ -1,51 +1,69 @@
-From: Danny Cox <DCox@icc.net>
+From: Erik Slagter <erik@slagter.name>
 Subject: Re: Readahead with softraid1
-Date: Fri, 08 Jul 2005 08:16:24 -0400
-Message-ID: <1120824984.3415.233.camel@vom>
+Date: Fri, 08 Jul 2005 15:16:32 +0200
+Message-ID: <1120828592.23681.24.camel@localhost.localdomain>
 References: <1120824029.23681.18.camel@localhost.localdomain>
-Reply-To: DCox@icc.net
+	 <1120824984.3415.233.camel@vom>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lfEJBRXo9KJ7Bmco9/7h"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from webmail.ecweb.com ([209.168.254.136]:6333 "EHLO
-	webmail.ecweb.com") by vger.kernel.org with ESMTP id S262587AbVGHMQd
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 Jul 2005 08:16:33 -0400
-In-Reply-To: <1120824029.23681.18.camel@localhost.localdomain>
+Received: from oldconomy.demon.nl ([212.238.217.56]:1216 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S262661AbVGHNRH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 8 Jul 2005 09:17:07 -0400
+In-Reply-To: <1120824984.3415.233.camel@vom>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Erik Slagter <erik@slagter.name>
+To: DCox@icc.net
 Cc: Linux IDE List <linux-ide@vger.kernel.org>
 
-Erik,
 
-On Fri, 2005-07-08 at 14:00 +0200, Erik Slagter wrote:
-> I am using softraid 1 on two sata disks and I'm trying to get the best
-> possible performance. IMHO read actions (if properly addressed) should
-> be split over the two drivers and performed independently. However, I
-> don't notice anything to back this up. The read performance (with the
-> dreaded hdparm) shows read performance on sda,sdb and md0 exactly the
-> same.
-...
-> What am I doing wrong here???
+--=-lfEJBRXo9KJ7Bmco9/7h
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-	Nothing.  I'll take a shot at answering this one instead of lurking
-this time.  Then, I'll crawl back under my rock.
+On Fri, 2005-07-08 at 08:16 -0400, Danny Cox wrote:
 
-	The raid1 driver keeps a "last visited block" for each drive.  This is
-the block number that was most recently read or written by that drive.
-When a read request arrives, the driver examines each drive for the
-nearest last visited block to the one requested.  Guess what?  If the
-read starts with drive sda, then it will *always* be the one chosen to
-service the read in the future, because the last visited block number is
-only one off.  This would only change if there are multiple processes
-performing I/O on the md device.  Then, it may switch to another drive.
-In any case, it will *tend* to stick with the same drive.
+> > What am I doing wrong here???
+>=20
+> 	Nothing.  I'll take a shot at answering this one instead of lurking
+> this time.  Then, I'll crawl back under my rock.
+>=20
+> 	The raid1 driver keeps a "last visited block" for each drive.  This is
+> the block number that was most recently read or written by that drive.
+> When a read request arrives, the driver examines each drive for the
+> nearest last visited block to the one requested.  Guess what?  If the
+> read starts with drive sda, then it will *always* be the one chosen to
+> service the read in the future, because the last visited block number is
+> only one off.  This would only change if there are multiple processes
+> performing I/O on the md device.  Then, it may switch to another drive.
+> In any case, it will *tend* to stick with the same drive.
+>=20
+> 	Did I explain that well, or only muddy the waters?
 
-	Did I explain that well, or only muddy the waters?
+perfect explanation, thanks (and also Jens!).
 
--- 
-Daniel S. Cox
-Internet Commerce Corporation
+Is this a design decision or is it fundamentaly impossible to split the
+work amongst several drives?  I guess the md driver at least do a
+prefetch of the next block/chunk on the "other" drive(s)?
 
+Now I am still wondering about the readahead issue. What would be a sane
+setting? I guess having both the drives and md doing readahead is not
+optimal?
+
+Also I noticed that the default readahead value changed significantly
+from 2.4 to 2.6, is there a particular reason for that?
+
+--=-lfEJBRXo9KJ7Bmco9/7h
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQBCznywJgD/6j32wUYRAtdMAJkBnmdCxaTwsaQ+HF1vn6yZBpuupACfQyFd
+JPz+pwBuA74Qlpwb7UCXInI=
+=3+fX
+-----END PGP SIGNATURE-----
+
+--=-lfEJBRXo9KJ7Bmco9/7h--
