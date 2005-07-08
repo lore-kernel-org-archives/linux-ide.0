@@ -1,62 +1,33 @@
-From: "quazi " <quazi9hossain@tiscali.it>
-Subject: See to this proposal
-Date: Fri, 08 Jul 2005 12:58:34 +0700
-Message-ID: <BE806562.1C6D10F@tiscali.it>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] SCSI_SATA has to be a tristate
+Date: Fri, 8 Jul 2005 23:48:02 +0200
+Message-ID: <20050708214802.GK3671@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [202.108.2.33] ([202.108.2.33]:57252 "HELO tiscali.it")
-	by vger.kernel.org with SMTP id S262850AbVGHUBH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2005 16:01:07 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262891AbVGHVvY@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Administrator <linux-ide@vger.kernel.org>
 
-Hello!
-Compliments
-I have been searching for a person whom we can jointly invest, Trust in and
-also solicit an honorable partnership with. 
-I want to confirm that your contact information was got from a web email
-directory. I represent a client who is interested in investing in your
-country in areas related to agriculture or any business of your choice, to
-initiate a proper and structured relationship. Please let me know what your
-response will be to an offer to receive investment funds in cash if; 
-1. The said fund amounts to US$8,500,000 (Eight Million, Five hundred
-Thousand US Dollars).
-2. The said fund is in cash and needs to be transferred in the same state,
-due to some covert reasons.
-3. The fund could be invested through your agency in the purchase of
-facility and assets for investment purposes within your country, in
-collaboration with the agency of the current brokers.
-4. This transaction will result in you being paid a commission of 10% off
-the investment capital.
-5. The fund owners desire absolute confidentiality and professionalism
-in the handling of this matter, due to risks of seizure of the fund and
-litigation if personalities are revealed. 
-The fund owners have interest to invest in any of the following industries,
-depending on which is most transparent, low risk, and average profit
-yielding: Power Generation, Telecommunication and Software Development, Film
-Production, Hardware Manufacturing and Export, Medicine, Construction or
-Real-Estate Development.
-Based upon the information provided above, I would like to know if you
-shall be able to assist in the nature of managing the investment fund. You
-must note that the fund can only be transferred in cash, therefore if you
-are in acceptance to participate with us in the investment of the fund, you
-shall also need to participate with us in the transfer of the fund in cash
-in the manner of receiving the fund in cash and depositing it in a Trusted
-account opened in favour of the investment to be established.
-And this account would serve as the base or operating account for the
-investment. I am obliged to believe that you would be able to understand the
-information above, and should you need further information, please do not
-hesitate to ask.
-Kindly confirm receipt of this email by sending all correspondence to:
-quazihossain44@netscape.net
+SCSI=m must disallow static drivers.
 
-Sincerely,
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-Quazi Hossain  (Esq)
+---
 
+This patch was already sent on:
+- 2 Jul 2005
 
-
+--- linux-2.6.13-rc1-mm1/drivers/scsi/Kconfig.old	2005-07-02 21:57:40.000000000 +0200
++++ linux-2.6.13-rc1-mm1/drivers/scsi/Kconfig	2005-07-02 21:58:06.000000000 +0200
+@@ -447,7 +447,7 @@
+ source "drivers/scsi/megaraid/Kconfig.megaraid"
+ 
+ config SCSI_SATA
+-	bool "Serial ATA (SATA) support"
++	tristate "Serial ATA (SATA) support"
+ 	depends on SCSI
+ 	help
+ 	  This driver family supports Serial ATA host controllers
