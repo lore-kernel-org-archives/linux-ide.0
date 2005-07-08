@@ -1,73 +1,44 @@
-From: Christoph Lameter <christoph@lameter.com>
-Subject: Re: [another PATCH] Fix crash on boot in kmalloc_node IDE changes
-Date: Thu, 7 Jul 2005 21:44:23 -0700 (PDT)
-Message-ID: <Pine.LNX.4.62.0507072141390.14256@graphe.net>
-References: <20050706133052.GF21330@wotan.suse.de> <Pine.LNX.4.62.0507070912140.27066@graphe.net>
- <Pine.LNX.4.58.0507070937130.3293@g5.osdl.org> <Pine.LNX.4.62.0507071022480.7105@graphe.net>
- <Pine.LNX.4.58.0507071154440.3293@g5.osdl.org> <Pine.LNX.4.62.0507071208210.8200@graphe.net>
- <20050707211505.GM21330@wotan.suse.de> <58cb370e050707141913e87371@mail.gmail.com>
- <20050707212518.GO21330@wotan.suse.de>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH Linux 2.6.12 00/09] NCQ: generic NCQ completion/error-handling
+Date: Fri, 8 Jul 2005 10:03:48 +0200
+Message-ID: <20050708080347.GA7050@suse.de>
+References: <20050626152105.D86561FB@htj.dyndns.org> <20050627143344.GI11633@suse.de> <20050630073633.GF2243@suse.de> <42C3CEA5.9040509@gmail.com> <20050630152620.GZ2243@suse.de> <20050701002035.GA24878@htj.dyndns.org> <20050701085912.GB2243@suse.de> <20050704055332.GA7249@suse.de> <20050706125500.GA1373@suse.de> <20050706130004.GB1373@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from graphe.net ([209.204.138.32]:6349 "EHLO graphe.net")
-	by vger.kernel.org with ESMTP id S262607AbVGHEo1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2005 00:44:27 -0400
-In-Reply-To: <20050707212518.GO21330@wotan.suse.de>
+Received: from ns.virtualhost.dk ([195.184.98.160]:1964 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262279AbVGHICq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2005 04:02:46 -0400
+Content-Disposition: inline
+In-Reply-To: <20050706130004.GB1373@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Tejun <htejun@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Thu, 7 Jul 2005, Andi Kleen wrote:
+Hi,
 
-> > > The setup was a Intel board with 1 PATA/4 SATA onboard and only a CD-ROM
-> > > and a external Promise PATA controller with two PATA disks.
-> > 
-> > actual OOPS would be very useful
-> 
-> It's difficult because I don't have serial on that machine.
+Ok, one more error, this time from irq context:
 
-Maybe we can settle on this patch until we know for sure that the hwif 
-is also a problem. In that case we can simply patch hwif_to_node:
+AHCI: ata1: error irq, status=40000001 stat=51 err=04 sstat=00000113
+serr=00000000
+ata1: aborting commands due to error.  active_tag -1, sactive 00000001
+ahci: sactive 1
+ata1: recovering from error
+sactive=0
+ata1: failed to read log page 10h (-110)
+ata1: resetting...
+ata1: started resetting...
+ata1: end resetting, sstatus=00000113
+ata1: status=0x01 { Error }
+ata1: error=0x80 { Sector }
+SCSI error : <0 0 0 0> return code = 0x8000002
+sda: Current: sense key=0x3
+    ASC=0x11 ASCQ=0x4
+end_request: I/O error, dev sda, sector 2120875
+Buffer I/O error on device sda2, logical block 2045
+lost page write due to I/O error on sda2
 
+-- 
+Jens Axboe
 
-Index: linux-2.6.git/drivers/ide/ide-probe.c
-===================================================================
---- linux-2.6.git.orig/drivers/ide/ide-probe.c	2005-06-23 11:38:02.000000000 -0700
-+++ linux-2.6.git/drivers/ide/ide-probe.c	2005-07-07 20:18:22.000000000 -0700
-@@ -960,6 +960,15 @@
- }
- #endif /* MAX_HWIFS > 1 */
- 
-+static inline int hwif_to_node(ide_hwif_t *hwif)
-+{
-+	if (hwif->pci_dev)
-+		return pcibus_to_node(hwif->pci_dev->bus);
-+	else
-+		/* Add ways to determine the node of other busses here */
-+		return -1;
-+}
-+
- /*
-  * init request queue
-  */
-@@ -978,8 +987,7 @@
- 	 *	do not.
- 	 */
- 
--	q = blk_init_queue_node(do_ide_request, &ide_lock,
--				pcibus_to_node(drive->hwif->pci_dev->bus));
-+	q = blk_init_queue_node(do_ide_request, &ide_lock, hwif_to_node(hwif));
- 	if (!q)
- 		return 1;
- 
-@@ -1097,7 +1105,7 @@
- 		spin_unlock_irq(&ide_lock);
- 	} else {
- 		hwgroup = kmalloc_node(sizeof(ide_hwgroup_t), GFP_KERNEL,
--			pcibus_to_node(hwif->drives[0].hwif->pci_dev->bus));
-+					hwif_to_node(hwif->drives[0].hwif));
- 		if (!hwgroup)
- 	       		goto out_up;
- 
