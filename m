@@ -1,42 +1,66 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Adrian Bunk <bunk@stusta.de>
 Subject: Re: [2.6 patch] SCSI_SATA has to be a tristate
-Date: Fri, 08 Jul 2005 20:05:06 -0400
-Message-ID: <42CF14B2.70700@pobox.com>
+Date: Sat, 9 Jul 2005 03:24:00 +0200
+Message-ID: <20050709012359.GO3671@stusta.de>
 References: <20050708214802.GK3671@stusta.de> <Pine.LNX.4.61.0507090134040.3743@scrub.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262989AbVGIAIs@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S263012AbVGIBYp@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <Pine.LNX.4.61.0507090134040.3743@scrub.home>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Roman Zippel <zippel@linux-m68k.org>
-Cc: Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Andrew Morton <akpm@osdl.org>, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Roman Zippel wrote:
+On Sat, Jul 09, 2005 at 01:36:08AM +0200, Roman Zippel wrote:
 > Hi,
 > 
 > On Fri, 8 Jul 2005, Adrian Bunk wrote:
 > 
-> 
->>--- linux-2.6.13-rc1-mm1/drivers/scsi/Kconfig.old	2005-07-02 21:57:40.000000000 +0200
->>+++ linux-2.6.13-rc1-mm1/drivers/scsi/Kconfig	2005-07-02 21:58:06.000000000 +0200
->>@@ -447,7 +447,7 @@
->> source "drivers/scsi/megaraid/Kconfig.megaraid"
->> 
->> config SCSI_SATA
->>-	bool "Serial ATA (SATA) support"
->>+	tristate "Serial ATA (SATA) support"
->> 	depends on SCSI
->> 	help
->> 	  This driver family supports Serial ATA host controllers
-> 
+> > --- linux-2.6.13-rc1-mm1/drivers/scsi/Kconfig.old	2005-07-02 21:57:40.000000000 +0200
+> > +++ linux-2.6.13-rc1-mm1/drivers/scsi/Kconfig	2005-07-02 21:58:06.000000000 +0200
+> > @@ -447,7 +447,7 @@
+> >  source "drivers/scsi/megaraid/Kconfig.megaraid"
+> >  
+> >  config SCSI_SATA
+> > -	bool "Serial ATA (SATA) support"
+> > +	tristate "Serial ATA (SATA) support"
+> >  	depends on SCSI
+> >  	help
+> >  	  This driver family supports Serial ATA host controllers
 > 
 > Did you verify that this works?
+> Overwise "depends on SCSI=y" might also be correct.
 
-No, he didn't :)
+Yes, I did.
 
-This option needs to follow the rules for dep_mbool in 2.4.x.  It should 
-not be a tristate, but it is dependent on a tristate.
+The problem is that all the SATA drivers depend on SCSI_SATA.
 
-	Jeff
+With SCSI=m and SCSI_SATA=y this allows the static enabling of the SATA 
+drivers with unwanted effects, e.g.:
+- SCSI=m, SCSI_SATA=y, SCSI_ATA_ADMA=y
+  -> SCSI_ATA_ADMA is built statically but scsi/built-in.o is not linked 
+     into the kernel
+- SCSI=m, SCSI_SATA=y, SCSI_ATA_ADMA=y, SCSI_SATA_AHCI=m
+  -> SCSI_ATA_ADMA and libata are built statically but 
+     scsi/built-in.o is not linked into the kernel,
+     SCSI_SATA_AHCI is built modular (unresolved symbols due to missing 
+                                      libata)
+
+Making SCSI_SATA a tristate solves all these problems.
+
+"depends on SCSI=y" would also solve these problems, but it would leave 
+people with modular SCSI without SATA support...
+
+> bye, Roman
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
