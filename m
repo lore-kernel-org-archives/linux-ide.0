@@ -1,58 +1,54 @@
-From: =?ISO-8859-1?Q?Guillaume_Laur=E8s?=
-	<guillaume.laures@club-internet.fr>
-Subject: unknown problem with seagate SATA drive
-Date: Sat, 9 Jul 2005 23:59:44 +0200
-Message-ID: <c051b4e5d0c63fa4c8f7a9109b7ec89a@club-internet.fr>
-Mime-Version: 1.0 (Apple Message framework v622)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-1-905264177"
+From: kallol@nucleodyne.com
+Subject: MSI question
+Date: Sat, 09 Jul 2005 20:07:56 -0400
+Message-ID: <20050709200756.s0t1g5qioav4kkw4@www.nucleodyne.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay-bv.club-internet.fr ([194.158.96.102]:59646 "EHLO
-	relay-bv.club-internet.fr") by vger.kernel.org with ESMTP
-	id S261752AbVGIV7v (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 9 Jul 2005 17:59:51 -0400
+Received: from easyspace.ezspl.net ([216.74.109.141]:40124 "EHLO
+	easyspace.ezspl.net") by vger.kernel.org with ESMTP id S261783AbVGJAHx
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 9 Jul 2005 20:07:53 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: tom.l.nguyen@intel.com
+Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+
+Hello Tom,
+         I have been trying to enable MSI interrupt on a MIPs based network
+processor plaform.
+
+The adapter is based on Prommise PCI-X SATA controller. The configuration
+is described below
+
+CPU --- HOST Bridge ---- device bus ---- PCI-X bridge --- PCI-X slot
 
 
---Apple-Mail-1-905264177
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+The PCI-X bridge is programmed to accept write transactions (address, and data)
+from the Promise adapter and convert them to generate an interrupt to the PIC
+that is on the host bridge.
 
-Hello,
+I have been successful to generate one MSI interrupt. The CPU gets the
+interrupt.
+With a PCI-X analyzer I see the Promise adapter is writing a predefined pattern
+(0x5a5a) to a predefined address. The PCI-X bridge claims the transaction and
+then I see an interrupt on the CPU.
 
-I'm encountering a problem with a seagate drive you seem to know and=20
-have adressed in the sata_sil driver. The drive just stops spinning=20
-after a random amount of time and is then completely unusable until a=20
-power down/power up sequence. The "fix" I'm refering to is limit=20
-requests to 15 sectors.
-Do you know if this workaround could be used in sata_sis like you did=20
-in sata_sil ?
-The drive used to work perfectly for 6 monthes on an intel box (don't=20
-remember which sata chipset it was) and is unusable on both sata_nv and=20=
 
-now sata_sis.
+The problem is that the card generates the MSI transaction only once. I guess
+we have to enable the card to generate another MSI transaction again, right?
 
-Thanks you for your answer !!
+I do not have access to the card's manual, so not sure what has to be done to
+get MSI working again.
 
-Guillaume Laur=E8s=
+On this system, the pin based interrupt mechanism is not working yet, so MSI has
+to work.
 
---Apple-Mail-1-905264177
-content-type: application/pgp-signature; x-mac-type=70674453;
-	name=PGP.sig
-content-description: =?ISO-8859-1?Q?Ceci_est_une_signature_=E9lectronique_PGP?=
-content-disposition: inline; filename=PGP.sig
-content-transfer-encoding: 7bit
+Any reply will be greatly appreciated.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (Darwin)
+Kallol
 
-iD8DBQFC0EjRxnIJde5abSkRAkM/AJ4lM13Bx97fOkNBb/DezVqGLqsxewCcCAis
-cJ/Xms8ZiW8nuxlP6kt0K/w=
-=NyDk
------END PGP SIGNATURE-----
-
---Apple-Mail-1-905264177--
 
