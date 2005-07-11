@@ -1,30 +1,27 @@
-From: Jonathan <ornament@freebelt.com>
-Subject: Get discounted OEM software from Online Store!
-Date: Sun, 10 Jul 2005 13:01:52 +0200
-Message-ID: <23379107243.5912078431@ip51cda8fa.speed.planet.nl>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [git patches] IDE update
+Date: Mon, 11 Jul 2005 15:21:47 +0100
+Message-ID: <1121091705.7434.66.camel@localhost.localdomain>
+References: <20050705101414.GB18504@suse.de>
+	 <42CA5EAD.7070005@rainbow-software.org> <20050705104208.GA20620@suse.de>
+	 <42CA7EA9.1010409@rainbow-software.org> <1120567900.12942.8.camel@linux>
+	 <42CA84DB.2050506@rainbow-software.org> <1120569095.12942.11.camel@linux>
+	 <42CAAC7D.2050604@rainbow-software.org> <20050705142122.GY1444@suse.de>
+	 <Pine.LNX.4.58.0507051016420.3570@g5.osdl.org>
+	 <20050705191448.GB30235@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ip51cda8fa.speed.planet.nl ([81.205.168.250]:60969 "HELO
-	ip51cda8fa.speed.planet.nl") by vger.kernel.org with SMTP
-	id S261892AbVGJLBs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 10 Jul 2005 07:01:48 -0400
-Received: from [78.47.38.26] (port=4541 helo=[agglomerate])
-    by ip51cda8fa.speed.planet.nl with esmtp
-    id 7916619227absorptions13001
-    for linux-ide@vger.kernel.org; Sun, 10 Jul 2005 13:01:53 +0200
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261816AbVGKO2a@vger.kernel.org>
+In-Reply-To: <20050705191448.GB30235@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Linus Torvalds <torvalds@osdl.org>, Ondrej Zary <linux@rainbow-software.org>, =?ISO-8859-1?Q?Andr=E9?= Tomt <andre@tomt.net>, Al Boldi <a1426z@gawab.com>, 'Bartlomiej Zolnierkiewicz' <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Looking for cheap high-quality software? 
-http://wpq.nu9kq45y2fnuk65.bushiaaina.com
+On Maw, 2005-07-05 at 20:14, Jens Axboe wrote:
+> IDE still has much lower overhead per command than your average SCSI
+> hardware. SATA with FIS even improves on this, definitely a good thing!
 
-
-
-
-Spinnin' a rope is fun if your neck ain't in it.  
-The mind's first step to self-awareness must be through the body.  
-
-
+But SCSI overlaps them while in PATA they are dead time. Thats why PATA
+is so demanding of large I/O block sizes
