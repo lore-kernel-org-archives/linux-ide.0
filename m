@@ -1,86 +1,57 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Host protected area on suspend/resume
-Date: Tue, 12 Jul 2005 11:23:39 -0400
-Message-ID: <87f94c3705071208235342d318@mail.gmail.com>
-References: <20050712113044.GA8744@srcf.ucam.org> <42D3D87F.5040901@gmail.com>
-Reply-To: Greg Freemyer <greg.freemyer@gmail.com>
+From: Steven Scholz <steven.scholz@imc-berlin.de>
+Subject: hotplug event on fdisk?
+Date: Tue, 12 Jul 2005 17:57:52 +0200
+Message-ID: <42D3E880.6060902@imc-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.197]:31703 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261394AbVGLPYw convert rfc822-to-8bit
+Received: from mail.imc-berlin.de ([217.110.46.186]:33805 "EHLO
+	mail.imc-berlin.de") by vger.kernel.org with ESMTP id S261497AbVGLP5z
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 12 Jul 2005 11:24:52 -0400
-Received: by wproxy.gmail.com with SMTP id i16so1124144wra
-        for <linux-ide@vger.kernel.org>; Tue, 12 Jul 2005 08:24:50 -0700 (PDT)
-In-Reply-To: <42D3D87F.5040901@gmail.com>
-Content-Disposition: inline
+	Tue, 12 Jul 2005 11:57:55 -0400
+Received: from mailserver.berlin.imc-berlin.de (mailserver.berlin.imc-berlin.de [10.0.0.19])
+	by mail.imc-berlin.de (Postfix) with ESMTP id 9291A2F016
+	for <linux-ide@vger.kernel.org>; Tue, 12 Jul 2005 16:05:44 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by mailserver.berlin.imc-berlin.de (Postfix) with ESMTP id D37DD1207C
+	for <linux-ide@vger.kernel.org>; Tue, 12 Jul 2005 17:57:53 +0200 (CEST)
+Received: from [10.0.2.10] (scholz.berlin.imc-berlin.de [10.0.2.10])
+	by mailserver.berlin.imc-berlin.de (Postfix) with ESMTP id 1F5F111C73
+	for <linux-ide@vger.kernel.org>; Tue, 12 Jul 2005 17:57:53 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl
+To: linux-ide@vger.kernel.org
 
-On 7/12/05, Tejun Heo wrote:
-> Matthew Garrett wrote:
-> > On boot, Linux will attempt to disable the host protected area on a
-> > disk. After a suspend/resume cycle, the BIOS may reenable it (seen on a
-> > Thinkpad T40 and R40). As a result, the kernel is now unable to access
-> > the HPA.
-> >
-> > Is there any issue with just adding a call to idedisk_check_hpa() in the
-> > IDE resume code?
-> 
->   This has come up several times now.  One thing I'm curious about is
-> why we are disabling HPA on boot without consent from the user.  AFAIK,
-> HPA is mostly used to implement hidden recovery/suspend storage areas
-> and disabling automatically on boot increases the likeliness of
-> destroying them.  What do we gain by disabling HPA on boot?  Are there
-> some dumb machines which unnecessarily sets HPA and reduces the capacity
-> of drives excessively?  Even in such cases, wouldn't it be better to do
-> idedisk_check_hpa() only when kernel parameter explicitly says so?
-> 
-> --
-> tejun
+Hi,
 
-Crawling out from under my rock, I agree with Tejun.
+I noticed that /sbin/hotplug is called by the kernel when I am doing
 
-Always enabling access to HPA seems very strange.
+	fdisk -l /dev/hda
 
-It also eliminates the ability to use the IDE Offset feature.  IIUC,
-the offset feature is a boolean flag that, when true, basically tells
-the drive that all LBA references are into the HPA area.
+to do a "remove" and then do "add" again:
 
-By using the HPA in conjunction with the Offset flag, one has the
-ability to have two complete disk layouts.  Each could have its own
-boot sector, partition table, and partitions.  I have never used this
-feature, but I do have DOS based tools that supposidely control the
-HPA config. and the state of the offset boolean.
+~ # fdisk -l /dev/hda
+kobject_hotplug
+kobject_hotplug: /sbin/hotplug block seq=574 HOME=/ 
+PATH=/sbin:/bin:/usr/sbin:/usr/bin ACTION=remove DEVPATH=/block/hda/hda1 
+SUBSYSTEM=block
+  hda: hda1
+kobject_hotplug
+kobject_hotplug: /sbin/hotplug block seq=575 HOME=/ 
+PATH=/sbin:/bin:/usr/sbin:/usr/bin ACTION=add DEVPATH=/block/hda/hda1
+SUBSYSTEM=block
 
-I routinely perform "forensic image aquires".  Normally that is a
-simple "dd if=/dev/hdx.....".
+Disk /dev/hda: 512 MB, 512483328 bytes
+16 heads, 63 sectors/track, 993 cylinders
+Units = cylinders of 1008 * 512 = 516096 bytes
 
-For me the untlimate would be to have Linux support for something like:
-disable offset
-dd normal sectors
-enable offset
-dd hpa sectors
-
-That way I capture the areas as seperate images and if 2 boot sectors,
-partition tables, partitions etc. exist I can analyse them seperately.
-
-Conclusion, automatically overriding HPA seems to be outside of the
-normal Linux way of doing things.  At a minimum, there should be a
-flag to prevent it from happening.  If it is needed there are existing
-userspace linux tools that can modify the HPA config.
+    Device Boot    Start       End    Blocks   Id  System
+/dev/hda1   *           1         993      500440+   6  FAT16
 
 
-FYI: In addition to HPA potentially reducing usable disk size, the
-size can also be artificially reduced via DCO.  I am not aware of any
-Linux tools for addressing/eliminating artificial DCO restrictions.
+Why is it so? And what is the system suposed to do? Actually remove the device?
 
-Greg
--- 
-Greg Freemyer
-The Norcross Group
-Forensics for the 21st Century
+--
+Steven
+
