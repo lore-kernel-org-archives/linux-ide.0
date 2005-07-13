@@ -1,71 +1,40 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH libata-dev-2.6:ncq+ncq helpers] sata_sil24 debug stuff
-Date: Wed, 13 Jul 2005 12:32:20 +0900
-Message-ID: <20050713033220.GB9349@htj.dyndns.org>
-References: <20050713033101.GA9349@htj.dyndns.org>
+From: Grant Coady <grant_lkml@dodo.com.au>
+Subject: Re: Host protected area on suspend/resume
+Date: Wed, 13 Jul 2005 14:28:15 +1000
+Message-ID: <lu59d1tp7fdi1lo3gp9srfj93b984roir3@4ax.com>
+References: <20050712113044.GA8744@srcf.ucam.org> <42D3D87F.5040901@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.201]:60110 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262534AbVGMDcZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jul 2005 23:32:25 -0400
-Received: by zproxy.gmail.com with SMTP id o37so52812nzf
-        for <linux-ide@vger.kernel.org>; Tue, 12 Jul 2005 20:32:24 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20050713033101.GA9349@htj.dyndns.org>
+Received: from relay01.mail-hub.dodo.com.au ([203.220.32.149]:50874 "EHLO
+	relay01.mail-hub.dodo.com.au") by vger.kernel.org with ESMTP
+	id S262552AbVGME2X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Jul 2005 00:28:23 -0400
+In-Reply-To: <42D3D87F.5040901@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl
 
- As usual, error trigger and debug message patch.
+On Tue, 12 Jul 2005 23:49:35 +0900, Tejun Heo <htejun@gmail.com> wrote:
 
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -421,6 +421,46 @@ static int sil24_qc_issue(struct ata_que
- 	struct sil24_port_priv *pp = ap->private_data;
- 	dma_addr_t paddr = pp->cmd_block_dma + qc->tag * sizeof(*pp->cmd_block);
- 
-+#if 0
-+	static unsigned err_cnt;
-+	err_cnt++;
-+	if (err_cnt > 500 && err_cnt % 30 == 0) {
-+		struct sil24_cmd_block *cb = pp->cmd_block + qc->tag;
-+		struct sil24_prb *prb = &cb->prb;
-+		u8 *fis = prb->fis;
-+		printk("SIL24%u: FAILING %p: %08x %08x %08x %08x %08x\n",
-+		       ap->id, qc->scsicmd,
-+		       ((unsigned *)fis)[0], ((unsigned *)fis)[1],
-+		       ((unsigned *)fis)[2], ((unsigned *)fis)[3],
-+		       ((unsigned *)fis)[4]);
-+		fis[4] = 0xff;
-+		fis[5] = 0xff;
-+		fis[6] = 0xff;
-+		fis[8] = 0xff;
-+		fis[9] = 0xff;
-+		fis[10] = 0xff;
-+	}
-+#endif
-+
-+#if 0
-+	{
-+		struct sil24_cmd_block *cb = pp->cmd_block + qc->tag;
-+		struct sil24_prb *prb = &cb->prb;
-+		u32 *fis = (u32 *)prb->fis;
-+		printk("SIL24%u: FIS %p: %08x %08x %08x %08x %08x\n",
-+		       ap->id, qc->scsicmd,
-+		       fis[0], fis[1], fis[2], fis[3], fis[4]);
-+	}
-+#endif
-+
-+#if 1
-+	static unsigned skip_cnt;
-+	skip_cnt++;
-+	if (skip_cnt > 500 && skip_cnt % 100 == 0) {
-+		printk("AHCI: SKIPPING %02u\n", qc->tag);
-+		return 0;
-+	}
-+#endif
- 	writel((u32)paddr, pp->port + PORT_CMD_ACTIVATE);
- 	return 0;
- }
+>Matthew Garrett wrote:
+>> On boot, Linux will attempt to disable the host protected area on a 
+>> disk. After a suspend/resume cycle, the BIOS may reenable it (seen on a 
+...
+>  This has come up several times now.  One thing I'm curious about is 
+>why we are disabling HPA on boot without consent from the user.  AFAIK, 
+>HPA is mostly used to implement hidden recovery/suspend storage areas 
+>and disabling automatically on boot increases the likeliness of 
+>destroying them.  What do we gain by disabling HPA on boot?
+
+It simply implies one _must_not_ use linux-kernel 2.6 to prepare IDE 
+drives, stay with 2.4 series for drive preparation until the bug is 
+fixed.
+
+I'd noticed the issue but ignored it as I still setup systems with 
+2.4 prior to installing 2.6.
+
+--Grant.
+
