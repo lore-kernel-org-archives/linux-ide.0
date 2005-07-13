@@ -1,63 +1,66 @@
-From: Sergey Vlasov <vsu@altlinux.ru>
-Subject: Re: Host protected area on suspend/resume
-Date: Wed, 13 Jul 2005 15:25:15 +0400
-Message-ID: <20050713152515.61c61ee2.vsu@altlinux.ru>
-References: <20050712113044.GA8744@srcf.ucam.org>
-	<42D3D87F.5040901@gmail.com>
+From: Lorenzo De Carli <ldk@katamail.com>
+Subject: SATA ich6 problem on Acer notebook
+Date: Wed, 13 Jul 2005 20:54:24 +0200
+Message-ID: <42D56360.2020708@katamail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="pgp-sha1";
- boundary="Signature=_Wed__13_Jul_2005_15_25_15_+0400_T683iyR8BxDzKm5m"
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mivlgu.ru ([81.18.140.87]:34186 "EHLO mail.mivlgu.ru")
-	by vger.kernel.org with ESMTP id S262612AbVGMLZX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jul 2005 07:25:23 -0400
-In-Reply-To: <42D3D87F.5040901@gmail.com>
+Received: from vsmtp4.tin.it ([212.216.176.224]:8880 "EHLO vsmtp4.tin.it")
+	by vger.kernel.org with ESMTP id S262389AbVGMSyb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jul 2005 14:54:31 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
---Signature=_Wed__13_Jul_2005_15_25_15_+0400_T683iyR8BxDzKm5m
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+I hope this won't be a duplicated bug report... I'm unable to get the
+SATA controller working on a Centrino notebook, specifically an Acer
+Travelmate 4152 Lmi. The controller is Intel 82801FBM integrated in the 
+ICH6.
+The machine seems to have the hard disk (60 GB) and the cdrom drive 
+connected to channel 1, while channel 0 isn't used (?!).
 
-On Tue, 12 Jul 2005 23:49:35 +0900 Tejun Heo wrote:
+I've tried the following steps:
 
-> Matthew Garrett wrote:
-> > On boot, Linux will attempt to disable the host protected area on a 
-> > disk. After a suspend/resume cycle, the BIOS may reenable it (seen on a 
-> > Thinkpad T40 and R40). As a result, the kernel is now unable to access 
-> > the HPA.
-> > 
-> > Is there any issue with just adding a call to idedisk_check_hpa() in the 
-> > IDE resume code?
-> 
->   This has come up several times now.  One thing I'm curious about is 
-> why we are disabling HPA on boot without consent from the user.  AFAIK, 
-> HPA is mostly used to implement hidden recovery/suspend storage areas 
-> and disabling automatically on boot increases the likeliness of 
-> destroying them.  What do we gain by disabling HPA on boot?  Are there 
-> some dumb machines which unnecessarily sets HPA and reduces the capacity 
-> of drives excessively?  Even in such cases, wouldn't it be better to do 
-> idedisk_check_hpa() only when kernel parameter explicitly says so?
+first, i've compiled the kernel without pata drivers, only ahci:
+	CFG_SCSI_SATA=y
+	CFG_SCSI_SATA_AHCI=y
+this didn't work, I obtained an error -12 while scanning drives.
 
-Support for disabling HPA during boot is needed mainly for old
-machines with BIOS limitations. Some disks have jumpers which limit
-capacity to 32 GB, so that such old BIOSes can recognize the disk
-without hanging at boot; disabling HPA gives access to the whole
-capacity.
+then, i've tried with ata_piix:
+	CFG_SCSI_SATA=y
+	CFG_SCSI_ATA_PIIX=y
+this time, the kernel ended up saying "SATA port has no device"
 
---Signature=_Wed__13_Jul_2005_15_25_15_+0400_T683iyR8BxDzKm5m
-Content-Type: application/pgp-signature
+in both cases, the boot process hung because the kernel couldn't find 
+the root device.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
+I've experimented with the PATA drivers, but the piix driver doesn't 
+work; the only module that can detect the hd is ide_generic and this 
+means no DMA.
 
-iD8DBQFC1PoeW82GfkQfsqIRAntTAJ0Vn88/1ZIiEirYCoRbl4iyyD9oYwCffxak
-TQTJfCAVJ6hkjwbERiKVElw=
-=AGhU
------END PGP SIGNATURE-----
+If I compile in the same kernel ide-generic and ata_piix, the generic 
+driver is used and ata_piix does nothing. If I boot the kernel with the 
+ide1=noprobe option, the generic driver is not loaded but ata_piix again 
+finds no drives.
 
---Signature=_Wed__13_Jul_2005_15_25_15_+0400_T683iyR8BxDzKm5m--
+The kernel used is the 2.6.11 with debian patches; I think that also the 
+2.6.12 has the same problem, because the most recent version of SUSE 
+(which use 2.6.12) hangs during the installation process saying that no 
+cd drive can be found. Same does Ubuntu Hoary with 2.6.10.
+
+I've found many other people having the same problem, for example with 
+some Dell notebooks. I think is some kind of bios related bug, because 
+in other machines the controller works.
+
+If you're interested in fixing this, I can provide more specific error 
+messages and the resources used by the driver under Windows XP.
+
+best regards,
+Lorenzo De Carli
+
+-- 
+Lorenzo De Carli                                        ldk@katamail.com
+   "I lay my head on the railroad track and wait for the double-E
+     The railroad don't run no more poor, poor pitiful me" (Warren Zevon)
+
