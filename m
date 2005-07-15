@@ -1,50 +1,68 @@
-From: domen@coderock.org
-Subject: [patch 1/1] drivers/ide/ide-tape.c : Use of time_after macro
-Date: Fri, 15 Jul 2005 00:21:12 +0200
-Message-ID: <20050714222111.777320000@homer>
+From: Seiichi Ikarashi <ikarashi@miraclelinux.com>
+Subject: [PATCH] libata on SATA only (non-combined) & legcy mode
+Date: Fri, 15 Jul 2005 16:02:19 +0900
+Message-ID: <20050715154003.B597.IKARASHI@miraclelinux.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from coderock.org ([193.77.147.115]:51361 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S262605AbVGNWVR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jul 2005 18:21:17 -0400
-Content-Disposition: inline; filename=time_after-drivers_ide_ide-tape
+Received: from ns.miraclelinux.com ([219.118.163.66]:61314 "EHLO
+	mail01.miraclelinux.com") by vger.kernel.org with ESMTP
+	id S263218AbVGOHCW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Jul 2005 03:02:22 -0400
+Received: from mail01 (localhost.localdomain [127.0.0.1])
+	by mail01.miraclelinux.com (Postfix) with ESMTP id B89FC306687
+	for <linux-ide@vger.kernel.org>; Fri, 15 Jul 2005 16:02:20 +0900 (JST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: gadio@netvision.net.il
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, Marcelo Feitoza Parisi <marcelo@feitoza.com.br>, domen@coderock.org
+To: Linux IDE <linux-ide@vger.kernel.org>
 
-From: Marcelo Feitoza Parisi <marcelo@feitoza.com.br>
+Hi Jeff,
 
+The libata driver cannot be loaded if a system has a CD-ROM drive
+connected via SATA instead of PATA because this is not combined
+mode and reserved no ports in quirk_intel_ide_combined() function.
+I think SATA only (non-combined) && legacy mode should be treated
+as same as such combined mode. How about following patch?
 
-Use of the time_after() macro, defined at linux/jiffies.h, which deal
-with wrapping correctly and are nicer to read.
-
-Signed-off-by: Marcelo Feitoza Parisi <marcelo@feitoza.com.br>
-Signed-off-by: Domen Puncer <domen@coderock.org>
-
----
- ide-tape.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletion(-)
-
-Index: quilt/drivers/ide/ide-tape.c
-===================================================================
---- quilt.orig/drivers/ide/ide-tape.c
-+++ quilt/drivers/ide/ide-tape.c
-@@ -443,6 +443,7 @@
- #include <linux/smp_lock.h>
- #include <linux/completion.h>
- #include <linux/bitops.h>
-+#include <linux/jiffies.h>
- 
- #include <asm/byteorder.h>
- #include <asm/irq.h>
-@@ -2333,7 +2334,7 @@ static ide_startstop_t idetape_rw_callba
+----------------------- Original Message -----------------------
+--- linux-2.6.11.7/drivers/pci/quirks.c.orig	2005-04-08 03:57:08.000000000 +0900
++++ linux-2.6.11.7/drivers/pci/quirks.c	2005-07-15 15:19:21.000000000 +0900
+@@ -1195,7 +1195,7 @@ static void __devinit quirk_intel_ide_co
+ 		else if (tmp == 0x6)	/* bits 11x */
+ 			comb = (1 << 2);	/* PATA port 0, SATA port 1 */
+ 		else
+-			return;			/* not in combined mode */
++			comb = 0;		/* not in combined mode */
+ 	} else {
+ 		WARN_ON((ich != 6) && (ich != 7));
+ 		tmp &= 0x3;  /* interesting bits 1:0 */
+@@ -1204,7 +1204,7 @@ static void __devinit quirk_intel_ide_co
+ 		else if (tmp & (1 << 1))
+ 			comb = (1 << 0);	/* SATA port 0, PATA port 1 */
+ 		else
+-			return;			/* not in combined mode */
++			comb = 0;		/* not in combined mode */
  	}
- 	if (time_after(jiffies, tape->insert_time))
- 		tape->insert_speed = tape->insert_size / 1024 * HZ / (jiffies - tape->insert_time);
--	if (jiffies - tape->avg_time >= HZ) {
-+	if (time_after_eq(jiffies, tape->avg_time + HZ)) {
- 		tape->avg_speed = tape->avg_size * HZ / (jiffies - tape->avg_time) / 1024;
- 		tape->avg_size = 0;
- 		tape->avg_time = jiffies;
+ 
+ 	/*
+@@ -1224,8 +1224,13 @@ static void __devinit quirk_intel_ide_co
+ 	 */
+ 	if (comb == (1 << 0))
+ 		request_region(0x1f0, 8, "libata");	/* port 0 */
+-	else
++	else if (comb == (1 << 2))
+ 		request_region(0x170, 8, "libata");	/* port 1 */
++
++	if (comb == 0 && (prog & 0x5) == 0) {   /* Legacy but SATA only */
++		request_region(0x1f0, 8, "libata");     /* port 0 */
++		request_region(0x170, 8, "libata");     /* port 1 */
++	}
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,    PCI_ANY_ID,	  quirk_intel_ide_combined );
+ #endif /* CONFIG_SCSI_SATA */
+--------------------- Original Message Ends --------------------
 
---
+-- 
+Seiichi Ikarashi <ikarashi@miraclelinux.com>
+
