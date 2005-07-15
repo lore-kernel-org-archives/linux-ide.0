@@ -1,112 +1,56 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: scsi/libata bootup sysfs oops with 2.6.12 + 2.6.13-rc3
-Date: Fri, 15 Jul 2005 19:33:45 +0100
-Message-ID: <42D80189.5080805@gentoo.org>
+From: Jim Ramsay <jim.ramsay@gmail.com>
+Subject: Re: libata and sata_promise errors when using multiple disks on the same controller simultaneously
+Date: Fri, 15 Jul 2005 13:33:13 -0600
+Message-ID: <4789af9e0507151233235ee42@mail.gmail.com>
+References: <4789af9e050705111263cc6f7b@mail.gmail.com>
+Reply-To: Jim Ramsay <jim.ramsay@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta08-winn.ispmail.ntl.com ([81.103.221.48]:41753 "EHLO
-	mta08-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
-	id S263294AbVGOSak (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Jul 2005 14:30:40 -0400
+Received: from zproxy.gmail.com ([64.233.162.202]:45561 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261714AbVGOTdP convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Jul 2005 15:33:15 -0400
+Received: by zproxy.gmail.com with SMTP id r28so398856nza
+        for <linux-ide@vger.kernel.org>; Fri, 15 Jul 2005 12:33:13 -0700 (PDT)
+In-Reply-To: <4789af9e050705111263cc6f7b@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: edinatux@gmail.com, greg@kroah.com
+To: Linux-ide <linux-ide@vger.kernel.org>
+Cc: Jarrod Johnson <jarrod.b.johnson@gmail.com>
 
-Hi,
+I have further characterized the error.  It looks like, at least
+during the softraid rebuild process, most DMA commands are sent to the
+PCI card and then complete via an IRQ callback before the next command
+is sent.  However, the problem I see here sometimes occurrs when:
 
-After upgrading kernel, Edward (on CC) is having trouble booting up.
+- Command for drive 1 is sent to the PCI card via DMA
+(sata_promise.c:pdc_packet_start)
+- Command for drive 2 is sent to the PCI card via DMA before the
+previous command completes
+- Command for drive 1 completes (sata_promise.c:pdc_host_intr)
 
-The kernel hangs after reporting it can't mount root on /dev/sda3, which is 
-supposed to be a partition on a SATA disk, connected to a sata_nv controller.
+Often the command for drive 2 will now timeout.
 
-As serial console is not available, we stripped down the kernel in hope that 
-the SATA disk detection would appear on the same screen so that it could be 
-caught on camera :)
+Now, I have seen the case when this above scenario will actually
+complete successfully, either with a second IRQ just for the drive2
+command, or sometimes with a single IRQ which completes both commands.
 
-After removing the more verbose parts of the kernel (USB, ACPI, etc) in 
-attempt to get disk detection messages on the same screen, we ran into another 
-issue. The kernel oops's on boot up, and tries to kill init. So its not even 
-getting as far this time (last time, it got all the way to trying to mount root).
+I have a workaround using a semaphore which causes all commands to
+strictly serialize, (lock it in pdc_packet_start, unlock in
+pdc_host_intr) thereby not allowing any concurrent commands, but this
+appears to have a large performance impact.  At least it allows me to
+actually cause my softraid device to finish syncing to 100%.
 
-This problem did not exist in 2.6.10 which can still be booted right now. It 
-is reprocable on both 2.6.12 and 2.6.13-rc3.
+I'm looking for other solutions, or a clue as to the actual cause of
+the error.  My current theory is that if the second command is sent to
+the PCI via DMA too soon, it may be overlooked, so some rate-limiting
+may be useful, if I can figure out how to implement it.
 
-Under 2.6.10, these messages appear during disk detection:
+Any comments or suggestions here would be greatly appreciated, thanks!
 
-ata1: SATA max UDMA/133 cmd 0x9F0 ctl 0xBF2 bmdma 0xF200 irq 23
-ata2: SATA max UDMA/133 cmd 0x970 ctl 0xB72 bmdma 0xF208 irq 23
-ata1: dev 0 cfg 49:2f00 82:7c6b 83:7b09 84:4003 85:7c69 86:3a01 87:4003 88:407f
-ata1: dev 0 ATA, max UDMA/133, 240121728 sectors:
-nv_sata: Primary device added
-nv_sata: Primary device removed
-nv_sata: Secondary device removed
-ata1: dev 0 configured for UDMA/133
-scsi0 : sata_nv
-ata2: no device found (phy stat 00000000)
-scsi1 : sata_nv
-   Vendor: ATA       Model: Maxtor 6Y120M0    Rev: YAR5
-   Type:   Direct-Access                      ANSI SCSI revision: 05
-st: Version 20041025, fixed bufsize 32768, s/g segs 256
-SCSI device sda: 240121728 512-byte hdwr sectors (122942 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 240121728 512-byte hdwr sectors (122942 MB)
-SCSI device sda: drive cache: write back
-  /dev/scsi/host0/bus0/target0/lun0: p1 p2 p3
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
-
-
-Under a minimal 2.6.13-rc3, this happens instead:
-
-ata1: SATA max UDMA/133 cmd 0x9F0 ctl 0xBF2 bmdma 0xF200 irq 0
-ata2: SATA max UDMA/133 cmd 0x970 ctl 0xB72 bmdma 0xF208 irq 0
-Unable to handle kernel NULL pointer dereference at <...> RIP: 
-sysfs_hash_and_remove+16
-
-PGD 0
-Oops: 0000 [1] SMP
-CPU 0
-Modules linked in:
-Pid 1, comm: swapper Not tainted 2.6.13-rc3
-RIP: sysfs_hash_and_remove+16
-
-Call trace:
-class_device_del   class_device_unregister
-scsi_remove_host   setup_irq
-request_irq   ata_host_remove
-ata_device_add   pci_conf1_write
-pcibios_set_master   nv_init_one
-pci_device_probe   driver_probe_device
-__driver_attach   __driver_attach
-__driver_attach   bus_for_each_dev
-bus_add_driver   pci_register_driver
-init   child_rip
-init   child_rip
-
-I can provide a full jpeg if required.
-
-
-It looks like dir->d_inode is null, although I don't have much idea where the 
-real bug exists.
-
-(gdb) list *sysfs_hash_and_remove+16
-0x5b0 is in sysfs_hash_and_remove (semaphore.h:107).
-102      * This is ugly, but we want the default case to fall through.
-103      * "__down_failed" is a special asm handler that calls the C
-104      * routine that actually waits. See arch/x86_64/kernel/semaphore.c
-105      */
-106     static inline void down(struct semaphore * sem)
-107     {
-108             might_sleep();
-109
-110             __asm__ __volatile__(
-111                     "# atomic down operation\n\t"
-
-
-Any ideas or suggestions?
-
-Thanks,
-Daniel
+-- 
+Jim Ramsay
+"Me fail English?  That's unpossible!"
