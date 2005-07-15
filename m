@@ -1,56 +1,52 @@
-From: Jim Ramsay <jim.ramsay@gmail.com>
-Subject: Re: libata and sata_promise errors when using multiple disks on the same controller simultaneously
-Date: Fri, 15 Jul 2005 13:33:13 -0600
-Message-ID: <4789af9e0507151233235ee42@mail.gmail.com>
-References: <4789af9e050705111263cc6f7b@mail.gmail.com>
-Reply-To: Jim Ramsay <jim.ramsay@gmail.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] SCSI_SATA has to be a tristate
+Date: Fri, 15 Jul 2005 23:35:05 +0200
+Message-ID: <20050715213505.GG18059@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.202]:45561 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261714AbVGOTdP convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Jul 2005 15:33:15 -0400
-Received: by zproxy.gmail.com with SMTP id r28so398856nza
-        for <linux-ide@vger.kernel.org>; Fri, 15 Jul 2005 12:33:13 -0700 (PDT)
-In-Reply-To: <4789af9e050705111263cc6f7b@mail.gmail.com>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:15370 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261213AbVGOVfI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Jul 2005 17:35:08 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux-ide <linux-ide@vger.kernel.org>
-Cc: Jarrod Johnson <jarrod.b.johnson@gmail.com>
+To: Andrew Morton <akpm@osdl.org>
+Cc: jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-I have further characterized the error.  It looks like, at least
-during the softraid rebuild process, most DMA commands are sent to the
-PCI card and then complete via an IRQ callback before the next command
-is sent.  However, the problem I see here sometimes occurrs when:
+SCSI=m must disallow static drivers.
 
-- Command for drive 1 is sent to the PCI card via DMA
-(sata_promise.c:pdc_packet_start)
-- Command for drive 2 is sent to the PCI card via DMA before the
-previous command completes
-- Command for drive 1 completes (sata_promise.c:pdc_host_intr)
+The problem is that all the SATA drivers depend on SCSI_SATA.
 
-Often the command for drive 2 will now timeout.
+With SCSI=m and SCSI_SATA=y this allows the static enabling of the SATA
+drivers with unwanted effects, e.g.:
+- SCSI=m, SCSI_SATA=y, SCSI_ATA_ADMA=y
+  -> SCSI_ATA_ADMA is built statically but scsi/built-in.o is not linked
+     into the kernel
+- SCSI=m, SCSI_SATA=y, SCSI_ATA_ADMA=y, SCSI_SATA_AHCI=m
+  -> SCSI_ATA_ADMA and libata are built statically but
+     scsi/built-in.o is not linked into the kernel,
+     SCSI_SATA_AHCI is built modular (unresolved symbols due to missing
+                                      libata)
 
-Now, I have seen the case when this above scenario will actually
-complete successfully, either with a second IRQ just for the drive2
-command, or sometimes with a single IRQ which completes both commands.
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-I have a workaround using a semaphore which causes all commands to
-strictly serialize, (lock it in pdc_packet_start, unlock in
-pdc_host_intr) thereby not allowing any concurrent commands, but this
-appears to have a large performance impact.  At least it allows me to
-actually cause my softraid device to finish syncing to 100%.
+---
 
-I'm looking for other solutions, or a clue as to the actual cause of
-the error.  My current theory is that if the second command is sent to
-the PCI via DMA too soon, it may be overlooked, so some rate-limiting
-may be useful, if I can figure out how to implement it.
+This patch was already sent on:
+- 8 Jul 2005
+- 2 Jul 2005
 
-Any comments or suggestions here would be greatly appreciated, thanks!
-
--- 
-Jim Ramsay
-"Me fail English?  That's unpossible!"
+--- linux-2.6.13-rc1-mm1/drivers/scsi/Kconfig.old	2005-07-02 21:57:40.000000000 +0200
++++ linux-2.6.13-rc1-mm1/drivers/scsi/Kconfig	2005-07-02 21:58:06.000000000 +0200
+@@ -447,7 +447,7 @@
+ source "drivers/scsi/megaraid/Kconfig.megaraid"
+ 
+ config SCSI_SATA
+-	bool "Serial ATA (SATA) support"
++	tristate "Serial ATA (SATA) support"
+ 	depends on SCSI
+ 	help
+ 	  This driver family supports Serial ATA host controllers
+k
