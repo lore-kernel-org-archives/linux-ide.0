@@ -1,68 +1,40 @@
-From: Seiichi Ikarashi <ikarashi@miraclelinux.com>
-Subject: [PATCH] libata on SATA only (non-combined) & legcy mode
-Date: Fri, 15 Jul 2005 16:02:19 +0900
-Message-ID: <20050715154003.B597.IKARASHI@miraclelinux.com>
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: Re: [PATCH] Add SanDisk ConnectPlus to the device table
+Date: Fri, 15 Jul 2005 18:58:53 +0200
+Message-ID: <20050715165853.GA3586@isilmar.linta.de>
+References: <1121203461.9992.3.camel@dv> <1121284071.10274.2.camel@dv> <1121286837.2763.6.camel@dv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.miraclelinux.com ([219.118.163.66]:61314 "EHLO
-	mail01.miraclelinux.com") by vger.kernel.org with ESMTP
-	id S263218AbVGOHCW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Jul 2005 03:02:22 -0400
-Received: from mail01 (localhost.localdomain [127.0.0.1])
-	by mail01.miraclelinux.com (Postfix) with ESMTP id B89FC306687
-	for <linux-ide@vger.kernel.org>; Fri, 15 Jul 2005 16:02:20 +0900 (JST)
+Received: from isilmar.linta.de ([213.239.214.66]:42949 "EHLO linta.de")
+	by vger.kernel.org with ESMTP id S263341AbVGOQ6y (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jul 2005 12:58:54 -0400
+Content-Disposition: inline
+In-Reply-To: <1121284071.10274.2.camel@dv> <1121286837.2763.6.camel@dv>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE <linux-ide@vger.kernel.org>
+To: Pavel Roskin <proski@gnu.org>
+Cc: pcmcia <linux-pcmcia@lists.infradead.org>, linux-ide@vger.kernel.org
 
-Hi Jeff,
+Hi,
 
-The libata driver cannot be loaded if a system has a CD-ROM drive
-connected via SATA instead of PATA because this is not combined
-mode and reserved no ports in quirk_intel_ide_combined() function.
-I think SATA only (non-combined) && legacy mode should be treated
-as same as such combined mode. How about following patch?
+On Wed, Jul 13, 2005 at 04:33:57PM -0400, Pavel Roskin wrote:
+> Sorry for cross-post, not sure who should apply this patch.
 
------------------------ Original Message -----------------------
---- linux-2.6.11.7/drivers/pci/quirks.c.orig	2005-04-08 03:57:08.000000000 +0900
-+++ linux-2.6.11.7/drivers/pci/quirks.c	2005-07-15 15:19:21.000000000 +0900
-@@ -1195,7 +1195,7 @@ static void __devinit quirk_intel_ide_co
- 		else if (tmp == 0x6)	/* bits 11x */
- 			comb = (1 << 2);	/* PATA port 0, SATA port 1 */
- 		else
--			return;			/* not in combined mode */
-+			comb = 0;		/* not in combined mode */
- 	} else {
- 		WARN_ON((ich != 6) && (ich != 7));
- 		tmp &= 0x3;  /* interesting bits 1:0 */
-@@ -1204,7 +1204,7 @@ static void __devinit quirk_intel_ide_co
- 		else if (tmp & (1 << 1))
- 			comb = (1 << 0);	/* SATA port 0, PATA port 1 */
- 		else
--			return;			/* not in combined mode */
-+			comb = 0;		/* not in combined mode */
- 	}
- 
- 	/*
-@@ -1224,8 +1224,13 @@ static void __devinit quirk_intel_ide_co
- 	 */
- 	if (comb == (1 << 0))
- 		request_region(0x1f0, 8, "libata");	/* port 0 */
--	else
-+	else if (comb == (1 << 2))
- 		request_region(0x170, 8, "libata");	/* port 1 */
-+
-+	if (comb == 0 && (prog & 0x5) == 0) {   /* Legacy but SATA only */
-+		request_region(0x1f0, 8, "libata");     /* port 0 */
-+		request_region(0x170, 8, "libata");     /* port 1 */
-+	}
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,    PCI_ANY_ID,	  quirk_intel_ide_combined );
- #endif /* CONFIG_SCSI_SATA */
---------------------- Original Message Ends --------------------
+Will push it upstream via pcmcia.
 
--- 
-Seiichi Ikarashi <ikarashi@miraclelinux.com>
+> SanDisk ConnectPlus has two functions.  Function 0 is prism2 card,
+> currently only supported by HostAP (not in the kernel).  Function 1 is
+> 128M flash, supported by ide-cs.  This patch adds an entry for function
+> 1 to ide-cs.c.
 
+Applied.
+
+> There are two problems with the message about missing callback
+> functions: it's not written in correct English and it lacks newline at
+> the end.
+
+Also applied. /me wears a brown paper bag for that spelling "bug"...
+
+Thanks,
+	Dominik
