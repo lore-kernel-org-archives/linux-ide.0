@@ -1,30 +1,101 @@
-From: Tobias <minimal@zastrow.net>
-Subject: Buying Viagra online has never been more easy, reliable or profitable!
-Date: Sat, 16 Jul 2005 15:04:34 +0800
-Message-ID: <81605489.25121118074@219.159.133.235>
-Mime-Version: 1.0 (Apple Message framework v728)
+From: Matt Gillette <matt.gillette@netcell.com>
+Subject: [PATCH 2.6.13-rc3] Add support for Netcell Revolution to pci-ide generic driver
+Date: Sat, 16 Jul 2005 07:17:04 -0700
+Message-ID: <dd3a477a1dcd51760fca4c6e4af3a986@netcell.com>
+Mime-Version: 1.0 (Apple Message framework v622)
 Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [219.159.133.235] ([219.159.133.235]:30519 "HELO
-	219.159.133.235") by vger.kernel.org with SMTP id S262262AbVGPHDG
+Received: from 64-60-240-146.cust.telepacific.net ([64.60.240.146]:41190 "EHLO
+	Netcell.com") by vger.kernel.org with ESMTP id S261622AbVGPORM
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 16 Jul 2005 03:03:06 -0400
-Received: from [110.60.25.113] (port=4554 helo=[breakables])
-    by 219.159.133.235 with esmtp
-    id 1038256595Wellesley25634
-    for linux-ide@vger.kernel.org; Sat, 16 Jul 2005 15:04:35 +0800
+	Sat, 16 Jul 2005 10:17:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl
 
-Many specialty drugs, including injectables commonly stocked and available.
-http://wrens.alwaysfor.biz/?verbalizingxtvuyplaitzvpunidirectionally
+Description: Adds support for Netcell Revolution to pci-ide generic 
+driver by including it in the list of devices matched. Includes the 
+Revolution in the list of simplex devices forced into DMA mode.
 
+Signed-off-by: Matt Gillette <matt.gillette@netcell.com>
+-------
 
-They are never alone that are accompanied with noble thoughts.   
-If you can't stand the heat, get out of the kitchen.  
-Life is sobs, sniffles, and smiles, with sniffles predominating.    
-Disinterested intellectual curiosity is the life blood of real civilization.   
+diff -purN linux-2.6.13-rc3/drivers/ide/pci/generic.c 
+linux/drivers/ide/pci/generic.c
+--- linux-2.6.13-rc3/drivers/ide/pci/generic.c	2005-07-14 
+18:02:17.000000000 -0700
++++ linux/drivers/ide/pci/generic.c	2005-07-15 15:33:00.000000000 -0700
+@@ -173,7 +173,13 @@ static ide_pci_device_t generic_chipsets
+  		.channels	= 2,
+  		.autodma	= NOAUTODMA,
+  		.bootable	= ON_BOARD,
+-	}
++	},{	/* 14 */
++		.name		= "Revolution",
++                .init_hwif      = init_hwif_generic,
++                .channels       = 2,
++                .autodma        = AUTODMA,
++                .bootable       = OFF_BOARD,
++        }
+  };
 
+  /**
+@@ -231,6 +237,7 @@ static struct pci_device_id generic_pci_
+  	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO,     
+PCI_ANY_ID, PCI_ANY_ID, 0, 0, 11},
+  	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1,   
+PCI_ANY_ID, PCI_ANY_ID, 0, 0, 12},
+  	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2,   
+PCI_ANY_ID, PCI_ANY_ID, 0, 0, 13},
++	{ PCI_VENDOR_ID_NETCELL,PCI_DEVICE_ID_REVOLUTION,          
+PCI_ANY_ID, PCI_ANY_ID, 0, 0, 14},	
+  	/* Must come last. If you add entries adjust this table appropriately 
+and the init_one code */
+  	{ PCI_ANY_ID,		PCI_ANY_ID,			   PCI_ANY_ID, PCI_ANY_ID, 
+PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL, 0},
+  	{ 0, },
+diff -purN linux-2.6.13-rc3/drivers/ide/setup-pci.c 
+linux/drivers/ide/setup-pci.c
+--- linux-2.6.13-rc3/drivers/ide/setup-pci.c	2005-07-14 
+18:02:17.000000000 -0700
++++ linux/drivers/ide/setup-pci.c	2005-07-15 14:43:26.000000000 -0700
+@@ -229,6 +229,7 @@ second_chance_to_dma:
+  			case PCI_DEVICE_ID_AMD_VIPER_7409:
+  			case PCI_DEVICE_ID_CMD_643:
+  			case PCI_DEVICE_ID_SERVERWORKS_CSB5IDE:
++			case PCI_DEVICE_ID_REVOLUTION:
+  				simplex_stat = hwif->INB(dma_base + 2);
+  				hwif->OUTB((simplex_stat&0x60),(dma_base + 2));
+  				simplex_stat = hwif->INB(dma_base + 2);
+diff -purN linux-2.6.13-rc3/drivers/pci/pci.ids 
+linux/drivers/pci/pci.ids
+--- linux-2.6.13-rc3/drivers/pci/pci.ids	2005-07-14 18:02:07.000000000 
+-0700
++++ linux/drivers/pci/pci.ids	2005-07-16 06:28:32.000000000 -0700
+@@ -7982,7 +7982,7 @@
+  		168c 2042  Netgate 5354MP Plus ARIES2 a/b/g MiniPCI Adapter
+  	1014  AR5212 802.11abg NIC
+  169c  Netcell Corporation
+-	0044  SyncRAID SR3000/5000 Series SATA RAID Controllers
++	0044  Revolution Storage Processing Card
+  16a5  Tekram Technology Co.,Ltd.
+  16ab  Global Sun Technology Inc
+  	1100  GL24110P
+diff -purN linux-2.6.13-rc3/include/linux/pci_ids.h 
+linux/include/linux/pci_ids.h
+--- linux-2.6.13-rc3/include/linux/pci_ids.h	2005-07-14 
+18:01:56.000000000 -0700
++++ linux/include/linux/pci_ids.h	2005-07-15 14:43:26.000000000 -0700
+@@ -2170,6 +2170,9 @@
+  #define PCI_VENDOR_ID_SIBYTE		0x166d
+  #define PCI_DEVICE_ID_BCM1250_HT	0x0002
+
++#define PCI_VENDOR_ID_NETCELL		0x169c
++#define PCI_DEVICE_ID_REVOLUTION	0x0044
++
+  #define PCI_VENDOR_ID_LINKSYS		0x1737
+  #define PCI_DEVICE_ID_LINKSYS_EG1032	0x1032
+  #define PCI_DEVICE_ID_LINKSYS_EG1064	0x1064
 
