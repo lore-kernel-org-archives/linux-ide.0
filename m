@@ -1,34 +1,30 @@
-From: Theodore <yelp@krunch.com.au>
-Subject: Pleasure your women - size does matter!
-Date: Sat, 16 Jul 2005 02:42:58 +0200
-Message-ID: <12158854355.933890000@p54803380.dip.t-dialin.net>
+From: Tobias <minimal@zastrow.net>
+Subject: Buying Viagra online has never been more easy, reliable or profitable!
+Date: Sat, 16 Jul 2005 15:04:34 +0800
+Message-ID: <81605489.25121118074@219.159.133.235>
 Mime-Version: 1.0 (Apple Message framework v728)
 Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from p54803380.dip.t-dialin.net ([84.128.51.128]:2825 "HELO
-	p54803380.dip.t-dialin.net") by vger.kernel.org with SMTP
-	id S262115AbVGPAnQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Jul 2005 20:43:16 -0400
-Received: from [63.140.47.237] (port=4394 helo=[remains])
-    by p54803380.dip.t-dialin.net with esmtp
-    id 1376989816Stendhal57439
-    for linux-ide@vger.kernel.org; Sat, 16 Jul 2005 02:42:59 +0200
+Received: from [219.159.133.235] ([219.159.133.235]:30519 "HELO
+	219.159.133.235") by vger.kernel.org with SMTP id S262262AbVGPHDG
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 16 Jul 2005 03:03:06 -0400
+Received: from [110.60.25.113] (port=4554 helo=[breakables])
+    by 219.159.133.235 with esmtp
+    id 1038256595Wellesley25634
+    for linux-ide@vger.kernel.org; Sat, 16 Jul 2005 15:04:35 +0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Penis Growth Patches are here!
-http://www.xunepa.com/ss/
+Many specialty drugs, including injectables commonly stocked and available.
+http://wrens.alwaysfor.biz/?verbalizingxtvuyplaitzvpunidirectionally
 
 
-
-
-
-In politics, absurdity is not a handicap.      
-No one can make you feel inferior without your consent.   
-It's not what you look at that matters, it's what you see. 
-In England there are sixty different religions and only one sauce.  
-If we don't end war, war will end us.    
+They are never alone that are accompanied with noble thoughts.   
+If you can't stand the heat, get out of the kitchen.  
+Life is sobs, sniffles, and smiles, with sniffles predominating.    
+Disinterested intellectual curiosity is the life blood of real civilization.   
 
 
