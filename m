@@ -1,101 +1,148 @@
-From: Matt Gillette <matt.gillette@netcell.com>
-Subject: [PATCH 2.6.13-rc3] Add support for Netcell Revolution to pci-ide generic driver
-Date: Sat, 16 Jul 2005 07:17:04 -0700
-Message-ID: <dd3a477a1dcd51760fca4c6e4af3a986@netcell.com>
-Mime-Version: 1.0 (Apple Message framework v622)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Sergey Vlasov <vsu@altlinux.ru>
+Subject: Re: hotplug event on fdisk?
+Date: Sat, 16 Jul 2005 21:24:52 +0400
+Message-ID: <20050716212452.531e0a84.vsu@altlinux.ru>
+References: <42D3E880.6060902@imc-berlin.de>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="pgp-sha1";
+ boundary="Signature=_Sat__16_Jul_2005_21_24_52_+0400_Yrj7lRo.a8bSQG3h"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 64-60-240-146.cust.telepacific.net ([64.60.240.146]:41190 "EHLO
-	Netcell.com") by vger.kernel.org with ESMTP id S261622AbVGPORM
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 16 Jul 2005 10:17:12 -0400
+Received: from mail.murom.net ([213.177.124.17]:16818 "EHLO ns1.murom.ru")
+	by vger.kernel.org with ESMTP id S261500AbVGPRZR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Jul 2005 13:25:17 -0400
+In-Reply-To: <42D3E880.6060902@imc-berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl
+To: Steven Scholz <steven.scholz@imc-berlin.de>
+Cc: linux-ide@vger.kernel.org
 
-Description: Adds support for Netcell Revolution to pci-ide generic 
-driver by including it in the list of devices matched. Includes the 
-Revolution in the list of simplex devices forced into DMA mode.
+--Signature=_Sat__16_Jul_2005_21_24_52_+0400_Yrj7lRo.a8bSQG3h
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Matt Gillette <matt.gillette@netcell.com>
--------
+On Tue, 12 Jul 2005 17:57:52 +0200 Steven Scholz wrote:
 
-diff -purN linux-2.6.13-rc3/drivers/ide/pci/generic.c 
-linux/drivers/ide/pci/generic.c
---- linux-2.6.13-rc3/drivers/ide/pci/generic.c	2005-07-14 
-18:02:17.000000000 -0700
-+++ linux/drivers/ide/pci/generic.c	2005-07-15 15:33:00.000000000 -0700
-@@ -173,7 +173,13 @@ static ide_pci_device_t generic_chipsets
-  		.channels	= 2,
-  		.autodma	= NOAUTODMA,
-  		.bootable	= ON_BOARD,
--	}
-+	},{	/* 14 */
-+		.name		= "Revolution",
-+                .init_hwif      = init_hwif_generic,
-+                .channels       = 2,
-+                .autodma        = AUTODMA,
-+                .bootable       = OFF_BOARD,
-+        }
-  };
+> I noticed that /sbin/hotplug is called by the kernel when I am doing
+> 
+> 	fdisk -l /dev/hda
+> 
+> to do a "remove" and then do "add" again:
+> 
+> ~ # fdisk -l /dev/hda
+> kobject_hotplug
+> kobject_hotplug: /sbin/hotplug block seq=574 HOME=/ 
+> PATH=/sbin:/bin:/usr/sbin:/usr/bin ACTION=remove DEVPATH=/block/hda/hda1 
+> SUBSYSTEM=block
+>   hda: hda1
+> kobject_hotplug
+> kobject_hotplug: /sbin/hotplug block seq=575 HOME=/ 
+> PATH=/sbin:/bin:/usr/sbin:/usr/bin ACTION=add DEVPATH=/block/hda/hda1
+> SUBSYSTEM=block
+> 
+> Disk /dev/hda: 512 MB, 512483328 bytes
+> 16 heads, 63 sectors/track, 993 cylinders
+> Units = cylinders of 1008 * 512 = 516096 bytes
+> 
+>     Device Boot    Start       End    Blocks   Id  System
+> /dev/hda1   *           1         993      500440+   6  FAT16
+> 
+> 
+> Why is it so? And what is the system suposed to do? Actually remove
+> the device?
 
-  /**
-@@ -231,6 +237,7 @@ static struct pci_device_id generic_pci_
-  	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO,     
-PCI_ANY_ID, PCI_ANY_ID, 0, 0, 11},
-  	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1,   
-PCI_ANY_ID, PCI_ANY_ID, 0, 0, 12},
-  	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2,   
-PCI_ANY_ID, PCI_ANY_ID, 0, 0, 13},
-+	{ PCI_VENDOR_ID_NETCELL,PCI_DEVICE_ID_REVOLUTION,          
-PCI_ANY_ID, PCI_ANY_ID, 0, 0, 14},	
-  	/* Must come last. If you add entries adjust this table appropriately 
-and the init_one code */
-  	{ PCI_ANY_ID,		PCI_ANY_ID,			   PCI_ANY_ID, PCI_ANY_ID, 
-PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL, 0},
-  	{ 0, },
-diff -purN linux-2.6.13-rc3/drivers/ide/setup-pci.c 
-linux/drivers/ide/setup-pci.c
---- linux-2.6.13-rc3/drivers/ide/setup-pci.c	2005-07-14 
-18:02:17.000000000 -0700
-+++ linux/drivers/ide/setup-pci.c	2005-07-15 14:43:26.000000000 -0700
-@@ -229,6 +229,7 @@ second_chance_to_dma:
-  			case PCI_DEVICE_ID_AMD_VIPER_7409:
-  			case PCI_DEVICE_ID_CMD_643:
-  			case PCI_DEVICE_ID_SERVERWORKS_CSB5IDE:
-+			case PCI_DEVICE_ID_REVOLUTION:
-  				simplex_stat = hwif->INB(dma_base + 2);
-  				hwif->OUTB((simplex_stat&0x60),(dma_base + 2));
-  				simplex_stat = hwif->INB(dma_base + 2);
-diff -purN linux-2.6.13-rc3/drivers/pci/pci.ids 
-linux/drivers/pci/pci.ids
---- linux-2.6.13-rc3/drivers/pci/pci.ids	2005-07-14 18:02:07.000000000 
--0700
-+++ linux/drivers/pci/pci.ids	2005-07-16 06:28:32.000000000 -0700
-@@ -7982,7 +7982,7 @@
-  		168c 2042  Netgate 5354MP Plus ARIES2 a/b/g MiniPCI Adapter
-  	1014  AR5212 802.11abg NIC
-  169c  Netcell Corporation
--	0044  SyncRAID SR3000/5000 Series SATA RAID Controllers
-+	0044  Revolution Storage Processing Card
-  16a5  Tekram Technology Co.,Ltd.
-  16ab  Global Sun Technology Inc
-  	1100  GL24110P
-diff -purN linux-2.6.13-rc3/include/linux/pci_ids.h 
-linux/include/linux/pci_ids.h
---- linux-2.6.13-rc3/include/linux/pci_ids.h	2005-07-14 
-18:01:56.000000000 -0700
-+++ linux/include/linux/pci_ids.h	2005-07-15 14:43:26.000000000 -0700
-@@ -2170,6 +2170,9 @@
-  #define PCI_VENDOR_ID_SIBYTE		0x166d
-  #define PCI_DEVICE_ID_BCM1250_HT	0x0002
+Looking at the size of your device (512 MB), I guess that it is some
+king of flash drive.  Such devices pretend to be removable hard disks -
+and here the "removable" bit causes trouble.
 
-+#define PCI_VENDOR_ID_NETCELL		0x169c
-+#define PCI_DEVICE_ID_REVOLUTION	0x0044
+ide-disk.c:idedisk_open() has this code:
+
+	if (drive->removable && drive->usage == 1) {
+		... unrelated code for door locking ...
+		check_disk_change(inode->i_bdev);
+		...
+
+This code detects the opening of a previously unused removable device
+and checks if the disk was changed.  check_disk_change() applied to an
+IDE disk device used idedisk_media_changed() to find out if the disk
+really was changed; this function is rather simple:
+
+static int idedisk_media_changed(struct gendisk *disk)
+{
+	struct ide_disk_obj *idkp = ide_disk_g(disk);
+	ide_drive_t *drive = idkp->drive;
+
+	/* do not scan partitions twice if this is a removable device */
+	if (drive->attach) {
+		drive->attach = 0;
+		return 0;
+	}
+	/* if removable, always assume it was changed */
+	return drive->removable;
+}
+
+Seems that either IDE does not have a command to check for disk change,
+or such command is unreliable on many devices, or maybe the needed code
+is simply not implemented.  Anyway, the end result is that every open of
+an otherwise unused removable IDE disk results in invalidation of the
+partition table - therefore you see all that hotplug events.
+
+BTW, such behavior of the kernel also causes problems with, e.g., HAL
+(when HAL tries to look at the CompactFlash drive to find out what
+partitions does it contain, this results in hotplug events for all
+partitions; with some HAL versions and configurations this can result in
+an endless loop).
+
+One possible workaround is to consider flash drives as non-removable in
+idedisk_media_changed().  For typical CompactFlash drives used with
+ide-cs, this is actually correct - the actual media is not removable
+from such drive, the IDE _controller_ is added and removed instead.
+However, I'm not sure if this would be correct for all possible
+configurations.
+
+Anyway, here is the patch with such workaround for CompactFlash (against
+the current git tree, but it should also apply to earlier kernels with
+some fuzz).
+
+---
+Subject: [PATCH] Avoid superfluous rechecking of partitions for IDE flash drives
+
+For some reason, IDE flash drives report that they have removable media,
+which is not really correct - the drive as a whole is removed, therefore
+rescanning of the partition table on the first open of such devices is
+just a waste of time.
+
+Signed-off-by: Sergey Vlasov <vsu@altlinux.ru>
+
+diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -1174,6 +1174,14 @@ static int idedisk_media_changed(struct 
+ 	struct ide_disk_obj *idkp = ide_disk_g(disk);
+ 	ide_drive_t *drive = idkp->drive;
+ 
++	/*
++	 * PCMCIA flash drives report themselves as removable, but can be
++	 * treated as fixed - when such device is removed, its IDE controller
++	 * also disappears.
++	 */
++	if (drive->is_flash)
++		return 0;
 +
-  #define PCI_VENDOR_ID_LINKSYS		0x1737
-  #define PCI_DEVICE_ID_LINKSYS_EG1032	0x1032
-  #define PCI_DEVICE_ID_LINKSYS_EG1064	0x1064
+ 	/* do not scan partitions twice if this is a removable device */
+ 	if (drive->attach) {
+ 		drive->attach = 0;
 
+--Signature=_Sat__16_Jul_2005_21_24_52_+0400_Yrj7lRo.a8bSQG3h
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.5 (GNU/Linux)
+
+iD8DBQFC2ULoW82GfkQfsqIRAijBAJ40qmSBJkmrAOEKOVie9CrAULUI2wCghuQq
+gXXSMRejLPt1r2Oav6ejPI4=
+=69jn
+-----END PGP SIGNATURE-----
+
+--Signature=_Sat__16_Jul_2005_21_24_52_+0400_Yrj7lRo.a8bSQG3h--
