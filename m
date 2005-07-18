@@ -1,41 +1,32 @@
-From: Kelly McDonald <Kelly.McDonald@vistashare.com>
-Subject: Promise SATA 300 TX2+ works w/ sata_promise
-Date: Mon, 18 Jul 2005 10:16:56 -0400
-Message-ID: <1121696216.11954.5.camel@shadrach>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Harry <Gambia@pjsc.ch>
+Subject: What's in your louis vuitton handbag?
+Date: Mon, 18 Jul 2005 13:41:34 -0300
+Message-ID: <9466657924.1526585543@OL230-213.fibertel.com.ar>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta10.adelphia.net ([68.168.78.202]:63741 "EHLO
-	mta10.adelphia.net") by vger.kernel.org with ESMTP id S261759AbVGRORI
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 Jul 2005 10:17:08 -0400
+Received: from OL230-213.fibertel.com.ar ([24.232.213.230]:5644 "HELO
+	OL230-213.fibertel.com.ar") by vger.kernel.org with SMTP
+	id S261842AbVGRQlj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 18 Jul 2005 12:41:39 -0400
+Received: from [51.61.209.141] (port=4042 helo=[Ektachrome])
+    by OL230-213.fibertel.com.ar with esmtp
+    id 244417948dialing823
+    for linux-ide@vger.kernel.org; Mon, 18 Jul 2005 13:41:35 -0300
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Jeff,
-
-I added my promise Sata 300 TX2+ to the sata_promise driver:
+Rolex ?
+http://canals.dnsm.net/repli/dir/
 
 
-lspci: 
-
-0000:02:0a.0 Unknown mass storage controller: Promise Technology, Inc.:
-Unknown device 3d73 (rev 02)
 
 
-change made: (2.6.11.11 kernel)
+Baseball is Heaven's gift to mortals.       
+In health the flesh is graced, the holy enters the world.  
+Thomas Jefferson still lives.         
+There are in nature neither rewards nor punishments, there are consequences.  
 
-163,164d162
-<       { PCI_VENDOR_ID_PROMISE, 0x3d73, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-<         board_2037x },
-
-Haven't tried on-board ide pata yet.
-
-Regards, 
-Kelly McDonald.
-
--- 
 
