@@ -1,32 +1,33 @@
-From: Harry <Gambia@pjsc.ch>
-Subject: What's in your louis vuitton handbag?
-Date: Mon, 18 Jul 2005 13:41:34 -0300
-Message-ID: <9466657924.1526585543@OL230-213.fibertel.com.ar>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Nguyen, Tom L" <tom.l.nguyen@intel.com>
+Subject: RE: MSI question
+Date: Mon, 18 Jul 2005 10:37:51 -0700
+Message-ID: <C7AB9DA4D0B1F344BF2489FA165E502409337D9A@orsmsx404.amr.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from OL230-213.fibertel.com.ar ([24.232.213.230]:5644 "HELO
-	OL230-213.fibertel.com.ar") by vger.kernel.org with SMTP
-	id S261842AbVGRQlj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 Jul 2005 12:41:39 -0400
-Received: from [51.61.209.141] (port=4042 helo=[Ektachrome])
-    by OL230-213.fibertel.com.ar with esmtp
-    id 244417948dialing823
-    for linux-ide@vger.kernel.org; Mon, 18 Jul 2005 13:41:35 -0300
+Received: from fmr19.intel.com ([134.134.136.18]:10124 "EHLO
+	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
+	id S261326AbVGRRiE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jul 2005 13:38:04 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: kallol@nucleodyne.com
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Rolex ?
-http://canals.dnsm.net/repli/dir/
+On Saturday, July 09, 2005 5:08 PM, Kallol wrote:
+> The problem is that the card generates the MSI transaction only once.
+I
+> guess we have to enable the card to generate another MSI transaction 
+> again, right?
 
+Have you verified whether the Promise adapter driver's interrupt service
+routine associated with MSI vector is called once the card generates the
+MSI? Does this driver handle MSI generated from its device
+appropriately? If yes, you can enable the card to generate another MSI
+transaction.
 
-
-
-Baseball is Heaven's gift to mortals.       
-In health the flesh is graced, the holy enters the world.  
-Thomas Jefferson still lives.         
-There are in nature neither rewards nor punishments, there are consequences.  
-
-
+Thanks,
+Long
