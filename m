@@ -1,33 +1,62 @@
-From: "Nguyen, Tom L" <tom.l.nguyen@intel.com>
-Subject: RE: MSI question
-Date: Mon, 18 Jul 2005 10:37:51 -0700
-Message-ID: <C7AB9DA4D0B1F344BF2489FA165E502409337D9A@orsmsx404.amr.corp.intel.com>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: Promise TX4200 support?
+Date: Mon, 18 Jul 2005 20:01:50 +0100
+Message-ID: <42DBFC9E.1040607@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr19.intel.com ([134.134.136.18]:10124 "EHLO
-	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
-	id S261326AbVGRRiE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jul 2005 13:38:04 -0400
-Content-class: urn:content-classes:message
+Received: from mta09-winn.ispmail.ntl.com ([81.103.221.49]:23875 "EHLO
+	mta09-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
+	id S261483AbVGRS7o (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 18 Jul 2005 14:59:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kallol@nucleodyne.com
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, martin.povolny@solnet.cz
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Saturday, July 09, 2005 5:08 PM, Kallol wrote:
-> The problem is that the card generates the MSI transaction only once.
-I
-> guess we have to enable the card to generate another MSI transaction 
-> again, right?
+Hi,
 
-Have you verified whether the Promise adapter driver's interrupt service
-routine associated with MSI vector is called once the card generates the
-MSI? Does this driver handle MSI generated from its device
-appropriately? If yes, you can enable the card to generate another MSI
-transaction.
+I recieved an email from someone claiming to be stuck with Linux 2.4, due to 
+relying on a Promise TX4200 disk controller (using the fdsata driver from 
+promise's website, which is 2.4-only):
+
+0000:01:09.0 RAID bus controller: Promise Technology, Inc.: Unknown device 
+3519 (rev 02)
+         Subsystem: Promise Technology, Inc.: Unknown device 3519
+         Flags: bus master, 66Mhz, medium devsel, latency 64, IRQ 9
+         I/O ports at dc00 [size=128]
+         I/O ports at d800 [size=256]
+         Memory at ff8ff000 (32-bit, non-prefetchable) [size=4K]
+         Memory at ff8c0000 (32-bit, non-prefetchable) [size=128K]
+         Expansion ROM at ff8e0000 [disabled] [size=64K]
+         Capabilities: [60] Power Management version 2
+
+What is the status of this on 2.6? I found a blank changeset (??) in the mail 
+below, from 24th May:
+
+Jeff Garzik wrote:
+ > Please pull the 'new-ids' branch from
+ >
+ > rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+ >
+ > This add new PCI ids to some SATA drivers.
+<snip>
+ > commit 37c15447c565ab458ee3778e198d08f4041caa99
+ > tree 2eda289903e3bf19eebce7d5f9aaed2240a02479
+ > parent 9422e59ddf6cae68e46d7a2c3afe1ce4e739d3eb
+ > author Martin Povolny <martin.povolny@solnet.cz> Mon, 16 May 2005 02:41:00 
+-0400
+ > committer Jeff Garzik <jgarzik@pobox.com> Mon, 16 May 2005 02:41:00 -0400
+ >
+ > [PATCH] sata_promise: new PCI ID for TX4200
+ >
+ > [note - blank changeset]
+ >
+
+Was this accidently removed, or is the sata_promise driver actually 
+incompatible with this hardware?
 
 Thanks,
-Long
+Daniel
+
