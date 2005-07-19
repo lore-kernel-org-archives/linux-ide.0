@@ -1,62 +1,37 @@
-From: =?UTF-8?B?TWFydGluIFBvdm9sbsO9?= <martin.povolny@solnet.cz>
-Subject: Re: Promise TX4200 support?
-Date: Tue, 19 Jul 2005 06:36:46 +0200
-Message-ID: <42DC835E.7030301@solnet.cz>
-References: <42DBFC9E.1040607@gentoo.org> <42DC0A99.2010304@solnet.cz> <42DC2F44.7000708@gentoo.org>
+From: Jarrod Johnson <jarrod.b.johnson@gmail.com>
+Subject: Problems w/ RAID-5/sata_promise/PDC20579
+Date: Tue, 19 Jul 2005 00:58:41 -0400
+Message-ID: <fab4e42a050718215857958bc4@mail.gmail.com>
+Reply-To: Jarrod Johnson <jarrod.b.johnson@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.solnet.cz ([193.165.198.50]:19138 "EHLO solnet.cz")
-	by vger.kernel.org with ESMTP id S261943AbVGSEhV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jul 2005 00:37:21 -0400
-Received: from mail by solnet.cz with scanned-ok (Exim 3.35 #1 (Debian))
-	id 1Dujqz-0007xr-00
-	for <linux-ide@vger.kernel.org>; Tue, 19 Jul 2005 06:37:13 +0200
-In-Reply-To: <42DC2F44.7000708@gentoo.org>
+Received: from wproxy.gmail.com ([64.233.184.197]:52063 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261946AbVGSE7v convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 Jul 2005 00:59:51 -0400
+Received: by wproxy.gmail.com with SMTP id i11so1150750wra
+        for <linux-ide@vger.kernel.org>; Mon, 18 Jul 2005 21:59:51 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Daniel Drake wrote:
-> Hi Martin,
->=20
-> Martin Povoln=C3=BD wrote:
->=20
->> We are succesfully running patched sata_promise with 3 disks in a
->> raid5/raid1 setup. (Patched against ubuntu linux-image 2.6.11-1-686
->> package.)
->=20
->=20
-> Could you please either send in your patch, or tell me which board_
-> setting (2037x/20319/20619) the device ID table should include so I c=
-an
-> write submit one myself.
->=20
+I have a Soltek planar with this controller providing two ports.
 
-=46or me it works with 20319, but I don't understand the difference
-between different settings.
+As I try to use those ports together with two non-pdc attached sata
+drives for software raid, the devices hanging off of the PDC
+controller frequently become unresponive, throwing I/O errors on every
+attempt to read a sector after a timeout.
 
-*** sata_promise.c	2005-05-11 21:22:20.000000000 +0200
---- sata_promise_new.c	2005-05-11 21:22:02.000000000 +0200
-***************
-*** 164,171 ****
---- 164,173 ----
-  	{ PCI_VENDOR_ID_PROMISE, 0x3318, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-  	  board_20319 },
-  	{ PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-  	  board_20319 },
-+ 	{ PCI_VENDOR_ID_PROMISE, 0x3519, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+ 	  board_20319 },
-  	{ PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-  	  board_20319 },
+Don't have the exact error in front of me, but essentially, it gets
+command timeout,
+then every command to the controller seems to give the same, status of
+0xff busy, but not much more informative output.
 
-  	{ }	/* terminate list */
+The situation seems very similar to Jim Ramsays:
+http://www.opensubscriber.com/message/linux-ide@vger.kernel.org/1671725.html
 
-Regards,
-
---=20
-Mgr. Martin Povoln=C3=BD, soLNet, s.r.o.,
-+420777714458, martin.povolny@solnet.cz
-
+Output seems to line up pretty much exactly, except specific sector
+numbers, of course.
