@@ -1,48 +1,62 @@
-From: Daniel Drake <dsd@gentoo.org>
+From: =?UTF-8?B?TWFydGluIFBvdm9sbsO9?= <martin.povolny@solnet.cz>
 Subject: Re: Promise TX4200 support?
-Date: Mon, 18 Jul 2005 23:37:56 +0100
-Message-ID: <42DC2F44.7000708@gentoo.org>
-References: <42DBFC9E.1040607@gentoo.org> <42DC0A99.2010304@solnet.cz>
+Date: Tue, 19 Jul 2005 06:36:46 +0200
+Message-ID: <42DC835E.7030301@solnet.cz>
+References: <42DBFC9E.1040607@gentoo.org> <42DC0A99.2010304@solnet.cz> <42DC2F44.7000708@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta07-winn.ispmail.ntl.com ([81.103.221.47]:30385 "EHLO
-	mta07-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
-	id S261314AbVGRWfG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 Jul 2005 18:35:06 -0400
-In-Reply-To: <42DC0A99.2010304@solnet.cz>
+Received: from ns.solnet.cz ([193.165.198.50]:19138 "EHLO solnet.cz")
+	by vger.kernel.org with ESMTP id S261943AbVGSEhV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jul 2005 00:37:21 -0400
+Received: from mail by solnet.cz with scanned-ok (Exim 3.35 #1 (Debian))
+	id 1Dujqz-0007xr-00
+	for <linux-ide@vger.kernel.org>; Tue, 19 Jul 2005 06:37:13 +0200
+In-Reply-To: <42DC2F44.7000708@gentoo.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?TWFydGluIFBvdm9sbsO9?= <martin.povolny@solnet.cz>
+To: Daniel Drake <dsd@gentoo.org>
 Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Martin,
-
-Martin Povoln=C3=BD wrote:
-> We are succesfully running patched sata_promise with 3 disks in a
-> raid5/raid1 setup. (Patched against ubuntu linux-image 2.6.11-1-686
-> package.)
-
-Could you please either send in your patch, or tell me which board_ set=
-ting=20
-(2037x/20319/20619) the device ID table should include so I can write s=
-ubmit=20
-one myself.
-
-> 'lspci -v' says:
+Daniel Drake wrote:
+> Hi Martin,
 >=20
-> 02:02.0 RAID bus controller: Promise Technology, Inc.: Unknown device
-> 3519 (rev 02)
->         Subsystem: Promise Technology, Inc.: Unknown device 3519
->         Flags: bus master, 66Mhz, medium devsel, latency 64, IRQ 18
->         I/O ports at dc00 [size=3D128]
->         I/O ports at d800 [size=3D256]
->         Memory at feaff000 (32-bit, non-prefetchable) [size=3D4K]
->         Memory at feac0000 (32-bit, non-prefetchable) [size=3D128K]
->         Expansion ROM at feae0000 [disabled] [size=3D64K]
->         Capabilities: [60] Power Management version 2
+> Martin Povoln=C3=BD wrote:
+>=20
+>> We are succesfully running patched sata_promise with 3 disks in a
+>> raid5/raid1 setup. (Patched against ubuntu linux-image 2.6.11-1-686
+>> package.)
+>=20
+>=20
+> Could you please either send in your patch, or tell me which board_
+> setting (2037x/20319/20619) the device ID table should include so I c=
+an
+> write submit one myself.
+>=20
 
-Thanks,
-Daniel
+=46or me it works with 20319, but I don't understand the difference
+between different settings.
+
+*** sata_promise.c	2005-05-11 21:22:20.000000000 +0200
+--- sata_promise_new.c	2005-05-11 21:22:02.000000000 +0200
+***************
+*** 164,171 ****
+--- 164,173 ----
+  	{ PCI_VENDOR_ID_PROMISE, 0x3318, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+  	  board_20319 },
+  	{ PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+  	  board_20319 },
++ 	{ PCI_VENDOR_ID_PROMISE, 0x3519, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++ 	  board_20319 },
+  	{ PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+  	  board_20319 },
+
+  	{ }	/* terminate list */
+
+Regards,
+
+--=20
+Mgr. Martin Povoln=C3=BD, soLNet, s.r.o.,
++420777714458, martin.povolny@solnet.cz
+
