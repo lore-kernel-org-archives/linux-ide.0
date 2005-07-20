@@ -1,86 +1,45 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Kernel 2.4.26 cannot umount CD: device or resource busy (no fuser)
-Date: Wed, 20 Jul 2005 14:28:43 +1000
-Message-ID: <42DDD2FB.5020306@torque.net>
-References: <29450.1121817356@www6.gmx.net> <29775.1121817486@www15.gmx.net>
-Reply-To: dougg@torque.net
+From: "Simon" <isuqatntul@moose-mail.com>
+Subject: THEY FOUND NEW ANTIDOTE
+Date: Wed, 20 Jul 2005 19:08:13 -0400
+Message-ID: <00b901c58d7f$e7504e50$776be6ec__49360.4543422863$1121900982$gmane$org@efvut>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <29775.1121817486@www15.gmx.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jim <jim999@gmx.net>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from zeus2.kernel.org ([204.152.191.36]:53142 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S261565AbVGTXIS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jul 2005 19:08:18 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: sparclinux@vger.kernel.org
 
-Jim wrote:
-> Symptom: Cannot umount a CD-Rom in my CD-Roaster/Burner/Toaster whatever
-> 
-> Reason to write to ide AND Scsi-List: Its an IDE - Drive, but with
-> scsi-emulation running. So my 4 questions: WHY is the drive locked? And
-> HOW to work arround it other than to reboot the system? Can't a forced    
-> umount be implemented for other cases than just for NFS (as manpage 
-> sais)? Or is my system just too old and buggy? (because it is, besides from
-> updates)
-> 
-> And yes: It's more than once this happened:
-> 
-> # umount /mnt/toaster
-> umount: /mnt/toaster: device is busy
-> # fuser  -v -m /mnt/toaster/
-> # mount | grep toaster
-> /dev/scd0 on /mnt/toaster type iso9660 (ro,noexec,...)
-> # lsof | grep -e scd0 -e toaster
-> # umount /mnt/toaster
-> umount: /mnt/toaster: device is busy
-> # umount -f /mnt/toaster
-> umount2: Device or resource busy
-> umount: /dev/scd0: not mounted
-> umount: /mnt/toaster: Illegal seek
-> # umount /dev/scd0 || umount -f /dev/scd0
-> umount: /mnt/toaster: device is busy
-> umount2: Device or resource busy
-> umount: /dev/scd0: not mounted
-> umount: /mnt/toaster: Illegal seek
-> # umount -V
-> umount: mount-2.10m
-> # fuser -V
-> fuser from psmisc version 18
-> #
+The Ancient Secret of Life
+'THE ANTIDOTE'
 
-Jim,
-Linux uses the "prevent allow medium removal" MMC
-command to effectively lock the medium (disc) in the
-drive while a file system on it is mounted. The eject
-linux command tries to unmount any file systems
-before unlocking and ejecting the disc. If the unmount
-fails (e.g. "Device or resource busy) then it won't
-unlock the drive. Perhaps eject has/should_have an
-option to bypass the unmount when it fails.
+Kills ALL known deadly Viruses & Bacteria in the body that keep diseases, namely: 
+Influenza, SARS, Cancer, HIV etc. etc. active.
 
-The lsof command may help you find which application
-has a file open and therefore inhibiting the unmount.
-If that doesn't work then fetch the sg3_utils package
-and the sg_prevent utility in there may be of interest.
-Assuming your cd/dvd drive is /dev/sg0 then this should
-eject your drive in lk 2.4 :
-    sg_prevent --prevent=0 /dev/sg0
-    sg_start -loej /dev/sg0
+http://www.dghsfaes.com/fvd
 
-In the lk 2.6 series the actual device name could be
-used (e.g. /dev/hdd rather than /dev/sg0).
+A disease must be made DORMANT to stop infection.
+'The ANTIDOTE' is the answer.
 
-Soon I will release sdparm 0.94 which adds some commands.
-The sequence to unlock then eject would be:
-    sdparm -C unlock /dev/hdd
-    sdparm -C eject /dev/hdd
 
-BTW After the unlock operation is successful the eject
-button on the drive should work.
-
-Doug Gilbert
+WE ARE THE ONLY COMPANY IN THE WORLD WHO HAVE DEVELOPED AND 
+ENHANCED THIS PRODUCT FOR SALE.
 
 
 
+http://www.dghsfaes.com/fvd
 
+
+
+If you cannot access the site it maybe busy due to high demand for this product.
+Please try again later in a few hours or the next day.
+
+
+Nah not for me
+http://www.dghsfaes.com/backhome
