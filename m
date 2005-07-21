@@ -1,121 +1,94 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: ST380013AS works on SiI 3112
-Date: Thu, 21 Jul 2005 18:53:11 +0200
-Message-ID: <20050721165311.GB3200@skl-net.de>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH] serverworks should not take ahold of megaraid'd controllers
+Date: Thu, 21 Jul 2005 15:37:38 -0700
+Message-ID: <42E023B2.5030900@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig9D4648A981B3A7BA646483D0"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from systemlinux.org ([83.151.29.59]:12190 "EHLO m18s25.vlinux.de")
-	by vger.kernel.org with ESMTP id S261803AbVGUQxk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jul 2005 12:53:40 -0400
-Content-Disposition: inline
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:57745 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261910AbVGUWhp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jul 2005 18:37:45 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: garzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: AJ Johnson <blujuice@us.ibm.com>
 
-Hi Jeff, list
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig9D4648A981B3A7BA646483D0
+Content-Type: multipart/mixed;
+ boundary="------------020904050004010507030005"
 
-Some days ago I bought a 80G Seatate ST380013AS Sata Disk and connected
-it to my SiI 3112 onboard Controller.
+This is a multi-part message in MIME format.
+--------------020904050004010507030005
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-The drive runs only at about 1/3 speed and the driver consumes way
-too much CPU. IMHO this is due to the MOD15WRITE quirk which is turned
-on for the ST380013AS as it is blacklisted by the driver.
+Hi all,
 
-In your mail
+I've noticed what might be a small bug with the serverworks driver in
+2.6.12.3.  The IBM HS20 blade has a ServerWorks CSB6 IDE controller with
+an optional LSI MegaIDE RAID BIOS (BIOS assisted software raid, iow).
+When this megaide BIOS is enabled on the HS20, the PCI
+subvendor/subdevice IDs on the CSB6 are changed from the default
+(ServerWorks) to IBM.  However, the serverworks driver doesn't notice
+this and will attach to the controller anyway, thus allowing raw access
+to the disks in the RAID.  An unsuspecting user can then read and write
+whatever they want to the drive, which could very well degrade or
+destroy the array, which is clearly not desirable behavior.
 
-	http://archives.free.net.ph/message/20040812.064323.27500c92.html
-	
-from August 04 you say this is a known issue and you have no plans
-to address it in the future as the number of blacklisted drives is
-finite.
+The attached patch against 2.6.12.3 makes the serverworks driver ignore
+a megaraided CSB6.  If desired, I can respin this patch with a debugging
+knob to force the serverworks driver to use the old behavior.  This
+patch has been tested on the HS20 mentioned above, and I haven't seen
+any problems with it.
 
-I also noted that the ST380013AS drive was added quite recently to
-the blacklist because Daniel E. Markle reported drive lockups on his
-AMD64 system with the SiI 3114 controller.
+Please let me know what you think of this patch; I'm not cc'd on lkml or
+linux-ide.
 
-	http://www.mail-archive.com/linux-ide@vger.kernel.org/msg00091.html                                                  
+--Darrick
 
-As both controller and architecture differ between Daniel's system
-and mine, I thought there might be the chance that the quirk is
-unnecessary for my particular setup.
+--------------020904050004010507030005
+Content-Type: text/x-patch;
+ name="megaraid_svwks_blacklist-2.6.12.3-2.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="megaraid_svwks_blacklist-2.6.12.3-2.patch"
 
-So I removed ST380013AS from the blacklist and to my surprise,
-everything seems to work very well.
+diff -Naur linux-2.6.12.3_0/drivers/ide/pci/serverworks.c linux-2.6.12.3_1/drivers/ide/pci/serverworks.c
+--- linux-2.6.12.3_0/drivers/ide/pci/serverworks.c	2005-07-15 14:18:57.000000000 -0700
++++ linux-2.6.12.3_1/drivers/ide/pci/serverworks.c	2005-07-21 13:02:54.469552989 -0700
+@@ -645,6 +647,15 @@
+ {
+ 	ide_pci_device_t *d = &serverworks_chipsets[id->driver_data];
+ 
++	/* Refuse to acknowledge CSB6 in MegaRAID mode on IBM HS20/40 blade. */
++	if (	dev->subsystem_vendor == PCI_VENDOR_ID_IBM &&
++		dev->subsystem_device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE)
++	{
++		printk(KERN_INFO "svwks: MegaRAID detected; ignoring.\n");
++		return -ENODEV;
++	}
++
++
+ 	return d->init_setup(dev, d);
+ }
+ 
 
-I created a partition and a filesystem, mounted it, and did the
-following in parallel for about 20 hours now:
-	
-	run 65 tasks in parallel, each of which writes/unlinks 1G of
-	data in an endless loop (stress -d 65)
+--------------020904050004010507030005--
 
-	run "cat /dev/sda > /dev/null" in an endless loop
+--------------enig9D4648A981B3A7BA646483D0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-	extract a kernel tar.gz, compare the contents with known "good"
-	contents, remove the tar.gz, create a tar.gz from the unpacked
-	sources, remove the unpacked sources. Also in an endless loop.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-If there are other tests which might trigger the problem more likely,
-please tell me and I will run them.
+iD8DBQFC4CO3a6vRYYgWQuURAty/AJ959wv2qob8arVEEOiYK/o/7SI/BwCfZ02j
+y736393c853mf42E6l92lEY=
+=nvtN
+-----END PGP SIGNATURE-----
 
-OTOH, if you think my tests show that the MOD15 problem does not
-occur with the ST380013AS/SiI 3112 combination, the driver should be
-changed to reflect this.
-
-In fact, I already looked at sata_sil.c a bit and tried to implement
-blacklisting only for some controller/disk combinations, but I did
-not succeed because I was unable to find out how to obtain the
-pci_device_id associated with the drive from sil_dev_config() :(
-
-Anyway, here's the relevant output of "lspci -vvv" and dmesg (kernel
-2.6.12.3)
-
-------------------------------------
-00:0f.0 RAID bus controller: Silicon Image, Inc. (formerly CMD
-Technology Inc) SiI 3112 [SATALink/SATARaid] Serial ATA Controller (rev 02)
-        Subsystem: Silicon Image, Inc. (formerly CMD Technology Inc) SiI 3112 SATARaid Controller
-        Flags: bus master, 66Mhz, medium devsel, latency 32, IRQ 11
-        I/O ports at c000 [size=8]
-        I/O ports at c400 [size=4]
-        I/O ports at c800 [size=8]
-        I/O ports at cc00 [size=4]
-        I/O ports at d000 [size=16]
-        Memory at ed001000 (32-bit, non-prefetchable) [size=512]
-        Expansion ROM at <unassigned> [disabled] [size=512K]
-        Capabilities: [60] Power Management version 2
-------------------------------------
-libata version 1.11 loaded.
-sata_sil version 0.9
-ACPI: PCI Interrupt 0000:00:0f.0[A] -> Link [LNKC] -> GSI 11 (level, low) -> IRQ 11
-ata1: SATA max UDMA/100 cmd 0xF0802080 ctl 0xF080208A bmdma 0xF0802000 irq 11
-ata2: SATA max UDMA/100 cmd 0xF08020C0 ctl 0xF08020CA bmdma 0xF0802008 irq 11
-ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003 88:207f
-ata1: dev 0 ATA, max UDMA/133, 156301488 sectors: lba48
-ata1: dev 0 configured for UDMA/100
-scsi0 : sata_sil
-ata2: no device found (phy stat 00000000)
-scsi1 : sata_sil
-  Vendor: ATA       Model: ST380013AS        Rev: 3.00
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
-SCSI device sda: drive cache: write back
- sda: sda1
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
-------------------------------------
-
-One last question: Why does "hdparm -iv /dev/sda" fail with
-
-HDIO_GET_IDENTITY failed: Inappropriate ioctl for device
-
-This is the latest hdparm v6.1.
-
-Have fun
-Andre
-
-PS: Please CC me as I'm not on the list.
--- 
-Jesus not only saves, he also frequently makes backups
+--------------enig9D4648A981B3A7BA646483D0--
