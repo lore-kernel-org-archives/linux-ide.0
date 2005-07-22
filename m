@@ -1,51 +1,54 @@
-From: Alex Murphy <murphy@sgtp.samara.ru>
-Subject: Promise TX4200 with kernel 2.6.x
-Date: Fri, 22 Jul 2005 10:25:38 +0500
-Message-ID: <200507221025.38299.murphy@sgtp.samara.ru>
+From: Steve Sutphen <steve@cs.ualberta.ca>
+Subject: Silicon Image 3114 and Seagate disks
+Date: Fri, 22 Jul 2005 05:55:02 -0600
+Message-ID: <20050722115501.GA15870@cs.ualberta.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.sgtp.samara.ru ([195.128.153.202]:7901 "EHLO sgtp.samara.ru")
-	by vger.kernel.org with ESMTP id S262042AbVGVGIw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jul 2005 02:08:52 -0400
-Received: from bene.samgtp ([192.168.1.4] verified)
-  by sgtp.samara.ru (CommuniGate Pro SMTP 4.3c2)
-  with ESMTP id 340545 for linux-ide@vger.kernel.org; Fri, 22 Jul 2005 11:15:08 +0500
+Received: from sunkay.cs.ualberta.ca ([129.128.4.11]:63420 "EHLO
+	sunkay.cs.ualberta.ca") by vger.kernel.org with ESMTP
+	id S261253AbVGVLzL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Jul 2005 07:55:11 -0400
+Received: (from localhost user: 'steve' uid#10 fake: STDIN (steve@snaring))
+	by sunkay.cs.ualberta.ca id S557421AbVGVLzC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jul 2005 05:55:02 -0600
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello!
 
- I ask a pardon for the letter, but I see, that you are maintener kernels 
-linux in the field of promise raid adapters. At me is new promise tx-4200 
-sata raid, its kernel now does not support, probably there are patches 
-including such support for linux 2.6.x kernel ?
+I have a system with a Tyan S2882 mother board that has a Silicon Image
+Si3114 SATA controller that I would like to use one of the "blacklisted"
+Seagate drives on.  As has been discussed in this mailing list, when one 
+uses the current driver performance is poor on this combination (I
+see around 14MB/s using hdparm's buffered read test--Bonnie++ confirms 
+that).  
 
-Yours faithfully, Alexey.
+I was hunting around to see if there might be a better driver, and came
+across this note in the Release notes for the:
 
-lspci -v
-0000:00:0d.0 RAID bus controller: Promise Technology, Inc. PDC40519 (FastTrak 
-TX4200) (rev 02)
-        Subsystem: Promise Technology, Inc. PDC40519 (FastTrak TX4200)
-        Flags: bus master, 66Mhz, medium devsel, latency 64, IRQ 5
-        I/O ports at b000 [size=128]
-        I/O ports at ec00 [size=256]
-        Memory at fde00000 (32-bit, non-prefetchable) [size=4K]
-        Memory at fdd00000 (32-bit, non-prefetchable) [size=128K]
-        Expansion ROM at fdc00000 [disabled] [size=64K]
-        Capabilities: [60] Power Management version 2
+SiI SATARaid Linux device driver ver 1.0.0.20 Release
 
-lspci -nv
-0000:00:0d.0 Class 0104: 105a:3519 (rev 02)
-        Subsystem: 105a:3519
-        Flags: bus master, 66Mhz, medium devsel, latency 64, IRQ 5
-        I/O ports at b000 [size=128]
-        I/O ports at ec00 [size=256]
-        Memory at fde00000 (32-bit, non-prefetchable) [size=4K]
-        Memory at fdd00000 (32-bit, non-prefetchable) [size=128K]
-        Expansion ROM at fdc00000 [disabled] [size=64K]
-        Capabilities: [60] Power Management version 2
+Both the Tyan support download driver and the one from SiliconImage
+have the following "Limitation" listed:
+
+3. Mod15Write fix for Seagate Drives (for chip-set versions 3112 1.21 or older)
+
+It seems that this driver may treat the 3114 and the 3112 the same way, and
+that at least in the 3112 code the Seagate problem may not exist on newer
+versions of the SI chip.  Lspci thinks that I have a Rev.2 chip/firmware:
+04:05.0 Unknown mass storage controller: Silicon Image, Inc. SiI 3114 [SATALink/SATARaid] Serial ATA Controller (rev 02)
+
+The SI firmware version that my SI chip is running is 5.0.48.
+
+My question is--is it possible that my ST3120026AS Seagate drive might 
+work without the "blacklisting"?  Should I try it?  If so, what is a 
+good test--will it lock up, or corrupt data?
+
+If not with the current driver, then is there a new driver that 
+is coming down the pipe that will fix this in the reasonably near term?
+
+Thank you,
+	steve@cs.ualberta.ca
