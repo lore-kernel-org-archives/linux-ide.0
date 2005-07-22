@@ -1,54 +1,39 @@
-From: Jarrod Johnson <jarrod.b.johnson@gmail.com>
-Subject: Re: Problems w/ RAID-5/sata_promise/PDC20579
-Date: Thu, 21 Jul 2005 21:23:54 -0400
-Message-ID: <fab4e42a0507211823236da64b@mail.gmail.com>
-References: <fab4e42a050718215857958bc4@mail.gmail.com>
-Reply-To: Jarrod Johnson <jarrod.b.johnson@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 0/3] Add disk hotswap support to libata
+Date: Thu, 21 Jul 2005 21:35:24 -0400
+Message-ID: <42E04D5C.5010907@pobox.com>
+References: <42E01024.9030600@nit.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.203]:53961 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261973AbVGVBYb convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Jul 2005 21:24:31 -0400
-Received: by wproxy.gmail.com with SMTP id i11so190282wra
-        for <linux-ide@vger.kernel.org>; Thu, 21 Jul 2005 18:24:30 -0700 (PDT)
-In-Reply-To: <fab4e42a050718215857958bc4@mail.gmail.com>
-Content-Disposition: inline
+Received: from mail.dvmed.net ([216.237.124.58]:42661 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S262000AbVGVBfc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jul 2005 21:35:32 -0400
+In-Reply-To: <42E01024.9030600@nit.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Lukasz Kosewski <lkosewsk@nit.ca>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Has anyone had success with any SATAII sata_promise card doing large
-amounts of I/O to multiple drives attached to a controller?  If can
-resync ~20 GB arrays with relatively low risk, but if trying to
-sustain a resync/restore over 200 GB or so, I rarely complete,
-especially if booted and doing typical multi-user stuff.  During
-normal operation of a synced raid-5 array, the controller hoses up
-every few days in the same manner by simple matter of probablity I
-suppose.
+Lukasz Kosewski wrote:
+> Hey all, introductory blurb here.
+> 
+> This sequence of patches will add a framework to libata to allow for 
+> hot-swapping disks in and out.
+> 
+> There are three patches:
+> 01-promise_sataII150_support
+> 02-libata_hotswap_infrastructure
+> 03-promise_hotswap_support
 
-Is there anything I can do to help get this fixed?  Or is the solution
-possibly elsewhere?  Is there libata work done recently for SATAII in
-general?
+Pretty cool stuff!
 
-On 7/19/05, Jarrod Johnson <jarrod.b.johnson@gmail.com> wrote:
-> I have a Soltek planar with this controller providing two ports.
-> 
-> As I try to use those ports together with two non-pdc attached sata
-> drives for software raid, the devices hanging off of the PDC
-> controller frequently become unresponive, throwing I/O errors on every
-> attempt to read a sector after a timeout.
-> 
-> Don't have the exact error in front of me, but essentially, it gets
-> command timeout,
-> then every command to the controller seems to give the same, status of
-> 0xff busy, but not much more informative output.
-> 
-> The situation seems very similar to Jim Ramsays:
-> http://www.opensubscriber.com/message/linux-ide@vger.kernel.org/1671725.html
-> 
-> Output seems to line up pretty much exactly, except specific sector
-> numbers, of course.
->
+As soon as I finish SATA ATAPI (this week[end]), I'll take a look at 
+this.  A quick review of the patches didn't turn up anything terribly 
+objectionable, though :)
+
+	Jeff
+
+
+P.S.  You might want to CC linux-ide as well, on libata patches.
