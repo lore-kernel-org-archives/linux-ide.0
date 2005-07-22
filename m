@@ -1,41 +1,54 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] serverworks should not take ahold of megaraid'd
-	controllers
-Date: Fri, 22 Jul 2005 01:46:33 +0100
-Message-ID: <1121993194.854.14.camel@localhost.localdomain>
-References: <42E023B2.5030900@us.ibm.com>
+From: Jarrod Johnson <jarrod.b.johnson@gmail.com>
+Subject: Re: Problems w/ RAID-5/sata_promise/PDC20579
+Date: Thu, 21 Jul 2005 21:23:54 -0400
+Message-ID: <fab4e42a0507211823236da64b@mail.gmail.com>
+References: <fab4e42a050718215857958bc4@mail.gmail.com>
+Reply-To: Jarrod Johnson <jarrod.b.johnson@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:21705 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S261929AbVGVAWM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Jul 2005 20:22:12 -0400
-In-Reply-To: <42E023B2.5030900@us.ibm.com>
+Received: from wproxy.gmail.com ([64.233.184.203]:53961 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261973AbVGVBYb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Jul 2005 21:24:31 -0400
+Received: by wproxy.gmail.com with SMTP id i11so190282wra
+        for <linux-ide@vger.kernel.org>; Thu, 21 Jul 2005 18:24:30 -0700 (PDT)
+In-Reply-To: <fab4e42a050718215857958bc4@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, AJ Johnson <blujuice@us.ibm.com>
+To: linux-ide@vger.kernel.org
 
-On Iau, 2005-07-21 at 15:37 -0700, Darrick J. Wong wrote:
-> I've noticed what might be a small bug with the serverworks driver in
-> 2.6.12.3.  The IBM HS20 blade has a ServerWorks CSB6 IDE controller with
-> an optional LSI MegaIDE RAID BIOS (BIOS assisted software raid, iow).
+Has anyone had success with any SATAII sata_promise card doing large
+amounts of I/O to multiple drives attached to a controller?  If can
+resync ~20 GB arrays with relatively low risk, but if trying to
+sustain a resync/restore over 200 GB or so, I rarely complete,
+especially if booted and doing typical multi-user stuff.  During
+normal operation of a synced raid-5 array, the controller hoses up
+every few days in the same manner by simple matter of probablity I
+suppose.
 
-With a binary only proprietary driver.
+Is there anything I can do to help get this fixed?  Or is the solution
+possibly elsewhere?  Is there libata work done recently for SATAII in
+general?
 
-> (ServerWorks) to IBM.  However, the serverworks driver doesn't notice
-> this and will attach to the controller anyway, thus allowing raw access
-> to the disks in the RAID.  An unsuspecting user can then read and write
-> whatever they want to the drive, which could very well degrade or
-> destroy the array, which is clearly not desirable behavior.
-
-It may be appropriate for some vendor situations but it isn't
-appropriate for the base kernel to default to assuming the user wants to
-use binary only drivers instead of dmraid. Especially as the raid
-formats for this hardware are partially known despite no assistance I
-know of from the vendor.
-
-Alan
-
+On 7/19/05, Jarrod Johnson <jarrod.b.johnson@gmail.com> wrote:
+> I have a Soltek planar with this controller providing two ports.
+> 
+> As I try to use those ports together with two non-pdc attached sata
+> drives for software raid, the devices hanging off of the PDC
+> controller frequently become unresponive, throwing I/O errors on every
+> attempt to read a sector after a timeout.
+> 
+> Don't have the exact error in front of me, but essentially, it gets
+> command timeout,
+> then every command to the controller seems to give the same, status of
+> 0xff busy, but not much more informative output.
+> 
+> The situation seems very similar to Jim Ramsays:
+> http://www.opensubscriber.com/message/linux-ide@vger.kernel.org/1671725.html
+> 
+> Output seems to line up pretty much exactly, except specific sector
+> numbers, of course.
+>
