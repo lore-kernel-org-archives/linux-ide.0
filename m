@@ -1,43 +1,69 @@
-From: Lukasz Kosewski <lkosewsk@gmail.com>
-Subject: Re: [PATCH 0/3] Add disk hotswap support to libata
-Date: Fri, 22 Jul 2005 14:31:18 -0400
-Message-ID: <355e5e5e0507221131666451e3@mail.gmail.com>
-References: <42E01024.9030600@nit.ca> <42E04D5C.5010907@pobox.com>
-Reply-To: Lukasz Kosewski <lkosewsk@gmail.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCH] serverworks should not take ahold of megaraid'd controllers
+Date: Fri, 22 Jul 2005 16:17:15 -0700
+Message-ID: <42E17E7B.6090805@us.ibm.com>
+References: <42E023B2.5030900@us.ibm.com> <1121993194.854.14.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.205]:8936 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262132AbVGVSbS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 Jul 2005 14:31:18 -0400
-Received: by zproxy.gmail.com with SMTP id s1so252200nze
-        for <linux-ide@vger.kernel.org>; Fri, 22 Jul 2005 11:31:18 -0700 (PDT)
-In-Reply-To: <42E04D5C.5010907@pobox.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigCAC76465A93FDC269A56172B"
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262223AbVGVXTp@vger.kernel.org>
+In-Reply-To: <1121993194.854.14.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 7/21/05, Jeff Garzik <jgarzik@pobox.com> wrote:
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigCAC76465A93FDC269A56172B
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+Arjan, Alan:
+
+I didn't know that dmraid supports MegaIDE nowadays.  Thanks for the
+tipoff, and I apologize for the unnecessary traffic.  I'll look into dmraid.
+
+--D
+
+Alan Cox wrote:
+> On Iau, 2005-07-21 at 15:37 -0700, Darrick J. Wong wrote:
 > 
-> Pretty cool stuff!
+>>I've noticed what might be a small bug with the serverworks driver in
+>>2.6.12.3.  The IBM HS20 blade has a ServerWorks CSB6 IDE controller with
+>>an optional LSI MegaIDE RAID BIOS (BIOS assisted software raid, iow).
 > 
-> As soon as I finish SATA ATAPI (this week[end]), I'll take a look at
-> this.  A quick review of the patches didn't turn up anything terribly
-> objectionable, though :)
+> 
+> With a binary only proprietary driver.
+> 
+> 
+>>(ServerWorks) to IBM.  However, the serverworks driver doesn't notice
+>>this and will attach to the controller anyway, thus allowing raw access
+>>to the disks in the RAID.  An unsuspecting user can then read and write
+>>whatever they want to the drive, which could very well degrade or
+>>destroy the array, which is clearly not desirable behavior.
+> 
+> 
+> It may be appropriate for some vendor situations but it isn't
+> appropriate for the base kernel to default to assuming the user wants to
+> use binary only drivers instead of dmraid. Especially as the raid
+> formats for this hardware are partially known despite no assistance I
+> know of from the vendor.
+> 
+> Alan
+> 
+> 
 
-Excellent!  Thanks for the quick turnaround!
+--------------enigCAC76465A93FDC269A56172B
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-> P.S.  You might want to CC linux-ide as well, on libata patches. 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-I've CCed the original patches to Linux-ide for comments.  Also, I've
-re-sent patch 3 with a minor fix to boolean logic with bits.
+iD8DBQFC4X57a6vRYYgWQuURAgqKAJwIJ0DNjCbQGjY6tloriFBzJSvUzQCeMpF8
+1kIuPjwcHSoeEoe4/NIdfEE=
+=WXjk
+-----END PGP SIGNATURE-----
 
-Enjoy!
-
-Luke Kosewski
-Human Cannonball
-Net Integration Technologies
+--------------enigCAC76465A93FDC269A56172B--
