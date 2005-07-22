@@ -1,116 +1,136 @@
-From: Kanniball <kanniball@zmail.pt>
-Subject: Re: Silicon Image 3114 and Seagate disks
-Date: Fri, 22 Jul 2005 15:00:26 +0100
-Message-ID: <200507221500.26152.kanniball@zmail.pt>
-References: <EXCHG2003pDS7hx27kB00000473@EXCHG2003.microtech-ks.com>
-Reply-To: kanniball@zmail.pt
+From: Lukasz Kosewski <lkosewsk@gmail.com>
+Subject: [PATCH 3/3 RESEND] Add disk hotswap support to libata
+Date: Fri, 22 Jul 2005 14:11:57 -0400
+Message-ID: <355e5e5e050722111141c0bf14@mail.gmail.com>
+Reply-To: Lukasz Kosewski <lkosewsk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_592_20949589.1122055917483"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.92.212.1] ([81.92.212.1]:27154 "EHLO zmail.pt")
-	by vger.kernel.org with ESMTP id S262087AbVGVN74 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jul 2005 09:59:56 -0400
-Received: from 80.172.45.45
-	by zmail.pt
-	(MDaemon.PRO.v6.8.4.R)
-	with ESMTP id 29-md50000000001.tmp
-	for <linux-ide@vger.kernel.org>; Fri, 22 Jul 2005 14:57:59 +0100
-In-Reply-To: <EXCHG2003pDS7hx27kB00000473@EXCHG2003.microtech-ks.com>
-Content-Disposition: inline
+Received: from zproxy.gmail.com ([64.233.162.199]:11818 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261291AbVGVSL6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jul 2005 14:11:58 -0400
+Received: by zproxy.gmail.com with SMTP id k1so252437nzf
+        for <linux-ide@vger.kernel.org>; Fri, 22 Jul 2005 11:11:57 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I've debated this issue before here.
-Althoug I've found no solution, I would like to try removing my seagate drive 
-and make some tests, but I only have that drive, and I can't afford one now.
-I've tried the patch from Tejun Heo and one patch from Silicon Image:
-[http://marc.theaimsgroup.com/?l=linux-kernel&m=111173514717575&w=2]
-[http://marc.theaimsgroup.com/?l=linux-ide&m=111260146423451&w=2]
+------=_Part_592_20949589.1122055917483
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-and get better read performance, although I don't see any improvment in the 
-write performance (I think Tejun said that).
-You can try those patches and test them. I'm not sure, but I think the one 
-from Silicon Image has been integrated in the latest kernel release.
+Hey Jeff, everyone.
 
-When I can afford a new disk I will make some tests and then go to the store 
-and claim for a new drive (even if I had to make some trick to get the drive 
-faulty, while I have warranty).
+This is a resend of patch 3 of my libata hotswap series, wherein I
+found a silly flaw in my logic.  I don't know what kind of crack I was
+smoking, but I somehow turned "a =3D a & ~b" in the Promise driver into
+"a =3D a ^ b" in my hotswap code, which is clearly wrong.  I don't know
+how it worked through my testing, but I'm willing to bet this is a
+coincidence.  Please apply this patch instead of the previously sent
+patch 03.
 
-By the way my controller is a Sil3112.
+Luke Kosewski
+Human Cannonball
+Net Integration Technologies
 
-Regards,
-Paulo Fidalgo
+------=_Part_592_20949589.1122055917483
+Content-Type: text/x-patch; name="03-promise_hotswap_support-2.6.13-rc3-mm1.diff"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="03-promise_hotswap_support-2.6.13-rc3-mm1.diff"
 
-On Friday 22 July 2005 14:42, Roger Heflin wrote:
-> Hi Steve,
->
-> I saw the same thing with a tyan mb and a different Seagate disk,
-> removing from the blacklist sped things up a lot, and fixed some
-> bad kernel response issues (bad response was only with SMP,
-> not with single cpu).     I send an email about it several
-> weeks ago to this list detailing what I found.
->
->                     Roger
->
-> > -----Original Message-----
-> > From: linux-ide-owner@vger.kernel.org
-> > [mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Steve Sutphen
-> > Sent: Friday, July 22, 2005 6:55 AM
-> > To: Jeff Garzik
-> > Cc: linux-ide@vger.kernel.org
-> > Subject: Silicon Image 3114 and Seagate disks
-> >
-> >
-> > I have a system with a Tyan S2882 mother board that has a
-> > Silicon Image
-> > Si3114 SATA controller that I would like to use one of the
-> > "blacklisted"
-> > Seagate drives on.  As has been discussed in this mailing
-> > list, when one uses the current driver performance is poor on
-> > this combination (I see around 14MB/s using hdparm's buffered
-> > read test--Bonnie++ confirms that).
-> >
-> > I was hunting around to see if there might be a better
-> > driver, and came across this note in the Release notes for the:
-> >
-> > SiI SATARaid Linux device driver ver 1.0.0.20 Release
-> >
-> > Both the Tyan support download driver and the one from
-> > SiliconImage have the following "Limitation" listed:
-> >
-> > 3. Mod15Write fix for Seagate Drives (for chip-set versions
-> > 3112 1.21 or older)
-> >
-> > It seems that this driver may treat the 3114 and the 3112 the
-> > same way, and that at least in the 3112 code the Seagate
-> > problem may not exist on newer versions of the SI chip.
-> > Lspci thinks that I have a Rev.2 chip/firmware:
-> > 04:05.0 Unknown mass storage controller: Silicon Image, Inc.
-> > SiI 3114 [SATALink/SATARaid] Serial ATA Controller (rev 02)
-> >
-> > The SI firmware version that my SI chip is running is 5.0.48.
-> >
-> > My question is--is it possible that my ST3120026AS Seagate
-> > drive might work without the "blacklisting"?  Should I try
-> > it?  If so, what is a good test--will it lock up, or corrupt data?
-> >
-> > If not with the current driver, then is there a new driver
-> > that is coming down the pipe that will fix this in the
-> > reasonably near term?
-> >
-> > Thank you,
-> > 	steve@cs.ualberta.ca
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe
-> > linux-ide" in the body of a message to
-> > majordomo@vger.kernel.org More majordomo info at
-> > http://vger.kernel.org/majordomo-info.html
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+MjEuMDcuMDUgIEx1a2UgS29zZXdza2kgIDxsa29zZXdza0BuaXQuY2E+CgoJKiBBIGZ1bGwgaW1w
+bGVtZW50YXRpb24gb2YgaG90cGx1ZyBvbiBhIGxpYmF0YSBjb250cm9sbGVyLCB0aGlzIGJlaW5n
+CgkgIHRoZSBQcm9taXNlIFR4NC9UeDIgUGx1cyBjb250cm9sbGVyIGxpbmUgKGJvdGggU0FUQTE1
+MCBhbmQgU0FUQUlJMTUwKS4KCSAgQWxtb3N0IGFsbCBvZiB0aGUgY29kZSBwZXJ0YWluaW5nIHRv
+IGhvdyB0byB0YWxrIHRvIHRoZSBob3RwbHVnCgkgIHJlZ2lzdGVycyBoYXMgYmVlbiBzdG9sZW4g
+ZnJvbSB0aGUgcGRjLXVsc2F0YTIgYW5kIHVsdHJhLTEuMC44IFByb21pc2UKCSAgZHJpdmVycy4g
+IFRoaXMgaW52b2x2ZXMgZGV0ZWN0aW5nIHdoZW4gd2UgaGF2ZSBhbiBpbnRlcnJ1cHQgcGVuZGlu
+ZwoJICBhbmQgb24gd2hhdCBkZXZpY2UsIGFzIHdlbGwgYXMgdGhlIGJpdCB3aGVyZSBhIGhhcmQg
+U0FUQSByZXNldCBnZXRzCgkgIGEgU0FUQUlJMTUwIGNvbnRyb2xsZXIgdG8gcmUtc3BldyBhIHBs
+dWcgaW50ZXJydXB0LgoJKiBOb3RlIHRoYXQgdGhlIGhvdHBsdWcgaGFuZGxpbmcgY29kZSBjb21l
+cyBBRlRFUiB0aGUgbm9ybWFsIGludGVycnVwdAoJICBoYW5kbGluZyBjb2RlIGluIHBkY19pbnRl
+cnJ1cHRfY29tbW9uOyB0aGlzIGlzIGJlY2F1c2Ugd2UncmUgbXVjaAoJICBtb3JlIGxpa2VseSB0
+byByZWNlaXZlIG5vcm1hbCBpbnRlcnJ1cHRzLCBzbyB0aGlzIGRyb3BzIHRoZSBBVkVSQUdFCgkg
+IGludGVycnVwdCBoYW5kbGluZyB0aW1lIGRvd24gYSBsb3QuCgpTaWduZWQtb2ZmLWJ5OiAgTHVr
+ZSBLb3Nld3NraSA8bGtvc2V3c2tAbml0LmNhPgoKLS0tIGxpbnV4LTIuNi4xMy1yYzMvZHJpdmVy
+cy9zY3NpL3NhdGFfcHJvbWlzZS5jLm9sZAkyMDA1LTA3LTIxIDEzOjUyOjEzLjAzNzg5NTYzOSAt
+MDQwMAorKysgbGludXgtMi42LjEzLXJjMy9kcml2ZXJzL3Njc2kvc2F0YV9wcm9taXNlLmMJMjAw
+NS0wNy0yMSAxMzo1NTo1My40OTA5NjQ2NDUgLTA0MDAKQEAgLTg0LDYgKzg0LDcgQEAgc3RhdGlj
+IHZvaWQgcGRjX2VuZ190aW1lb3V0KHN0cnVjdCBhdGFfcAogc3RhdGljIGludCBwZGNfcG9ydF9z
+dGFydChzdHJ1Y3QgYXRhX3BvcnQgKmFwKTsKIHN0YXRpYyB2b2lkIHBkY19wb3J0X3N0b3Aoc3Ry
+dWN0IGF0YV9wb3J0ICphcCk7CiBzdGF0aWMgdm9pZCBwZGNfcGh5X3Jlc2V0KHN0cnVjdCBhdGFf
+cG9ydCAqYXApOworc3RhdGljIHZvaWQgcGRjMl9waHlfcmVzZXQoc3RydWN0IGF0YV9wb3J0ICph
+cCk7CiBzdGF0aWMgdm9pZCBwZGNfcGF0YV9waHlfcmVzZXQoc3RydWN0IGF0YV9wb3J0ICphcCk7
+CiBzdGF0aWMgdm9pZCBwZGNfcGF0YV9jYmxfZGV0ZWN0KHN0cnVjdCBhdGFfcG9ydCAqYXApOwog
+c3RhdGljIHZvaWQgcGRjX3FjX3ByZXAoc3RydWN0IGF0YV9xdWV1ZWRfY21kICpxYyk7CkBAIC0x
+MzksNyArMTQwLDcgQEAgc3RhdGljIHN0cnVjdCBhdGFfcG9ydF9vcGVyYXRpb25zIHBkYzJfYQog
+CS5jaGVja19zdGF0dXMJCT0gYXRhX2NoZWNrX3N0YXR1cywKIAkuZXhlY19jb21tYW5kCQk9IHBk
+Y19leGVjX2NvbW1hbmRfbW1pbywKIAkuZGV2X3NlbGVjdAkJPSBhdGFfc3RkX2Rldl9zZWxlY3Qs
+Ci0JLnBoeV9yZXNldAkJPSBwZGNfcGh5X3Jlc2V0LAorCS5waHlfcmVzZXQJCT0gcGRjMl9waHlf
+cmVzZXQsCiAJLnFjX3ByZXAJCT0gcGRjX3FjX3ByZXAsCiAJLnFjX2lzc3VlCQk9IHBkY19xY19p
+c3N1ZV9wcm90LAogCS5lbmdfdGltZW91dAkJPSBwZGNfZW5nX3RpbWVvdXQsCkBAIC0zMjUsNiAr
+MzI2LDQ4IEBAIHN0YXRpYyB2b2lkIHBkY19waHlfcmVzZXQoc3RydWN0IGF0YV9wb3IKIAkJcGRj
+X3BhdGFfcGh5X3Jlc2V0KGFwKTsKIH0KIAorLyogTWFzayBob3RwbHVnIGludGVycnVwdHMgZm9y
+IG9uZSBjaGFubmVsIChhcCkgKi8KK3N0YXRpYyBpbmxpbmUgdm9pZCBwZGMyX2Rpc2FibGVfY2hh
+bm5lbF9ob3RwbHVnX2ludGVycnVwdHMoc3RydWN0IGF0YV9wb3J0ICphcCkKK3sKKwl2b2lkICpt
+bWlvID0gYXAtPmhvc3Rfc2V0LT5tbWlvX2Jhc2UgKyBQREMyX1NBVEFfUExVR19DU1IgKyAyOwor
+CisJdTggbWFza2ZsYWdzID0gcmVhZGIobW1pbyk7CisJbWFza2ZsYWdzIHw9ICgweDExIDw8ICh1
+OClhcC0+aGFyZF9wb3J0X25vKTsKKwl3cml0ZWIobWFza2ZsYWdzLCBtbWlvKTsKK30KKworc3Rh
+dGljIGlubGluZSB2b2lkIHBkYzJfZW5hYmxlX2NoYW5uZWxfaG90cGx1Z19pbnRlcnJ1cHRzKHN0
+cnVjdCBhdGFfcG9ydCAqYXApCit7CisKKwl2b2lkICptbWlvID0gYXAtPmhvc3Rfc2V0LT5tbWlv
+X2Jhc2UgKyBQREMyX1NBVEFfUExVR19DU1I7CisKKwkvL0NsZWFyIGNoYW5uZWwgaG90cGx1ZyBp
+bnRlcnJ1cHRzCisJdTggbWFza2ZsYWdzID0gcmVhZGIobW1pbyk7CisJbWFza2ZsYWdzID0gKDB4
+MTEgPDwgKHU4KWFwLT5oYXJkX3BvcnRfbm8pOworCXdyaXRlYihtYXNrZmxhZ3MsIG1taW8pOwor
+CisJLy9Vbm1hc2sgY2hhbm5lbCBob3RwbHVnIGludGVycnVwdHMKKwltYXNrZmxhZ3MgPSByZWFk
+YihtbWlvICsgMik7CisJbWFza2ZsYWdzICY9IH4oMHgxMSA8PCAodTgpYXAtPmhhcmRfcG9ydF9u
+byk7CisJd3JpdGViKG1hc2tmbGFncywgbW1pbyArIDIpOworfQorCitzdGF0aWMgdm9pZCBwZGMy
+X3BoeV9yZXNldChzdHJ1Y3QgYXRhX3BvcnQgKmFwKQoreworCS8qIEFzIG9ic2VydmVkIG9uIHRo
+ZSBQcm9taXNlIFNBVEFJSTE1MCBUeDIgUGx1cy9UeDQsIGdpdmluZyB0aGUKKwkgKiBjb250cm9s
+bGVyIGEgaGFyZCByZXNldCB0cmlnZ2VycyBhbm90aGVyIGhvdHBsdWcgaW50ZXJydXB0LiAgU28K
+KwkgKiBkaXNhYmxlIHRoZW0gZm9yIHRoZSBoYXJkIHJlc2V0LCBhbmQgcmUtZW5hYmxlIGFmdGVy
+d2FyZHMuCisJICoKKwkgKiBObyBQQVRBIHN1cHBvcnQgaGVyZSB5ZXQKKwkgKi8KKwlpZiAoYXAt
+PmZsYWdzICYgQVRBX0ZMQUdfU0FUQV9SRVNFVCAmJiBhcC0+ZmxhZ3MgJiBBVEFfRkxBR19TQVRB
+KSB7CisJCXBkYzJfZGlzYWJsZV9jaGFubmVsX2hvdHBsdWdfaW50ZXJydXB0cyhhcCk7CisJCXBk
+Y19waHlfcmVzZXQoYXApOworCQlwZGMyX2VuYWJsZV9jaGFubmVsX2hvdHBsdWdfaW50ZXJydXB0
+cyhhcCk7CisJfSBlbHNlCisJCXBkY19waHlfcmVzZXQoYXApOworfQorCiBzdGF0aWMgdm9pZCBw
+ZGNfcGF0YV9jYmxfZGV0ZWN0KHN0cnVjdCBhdGFfcG9ydCAqYXApCiB7CiAJdTggdG1wOwpAQCAt
+NDgzLDYgKzUyNiw3IEBAIHN0YXRpYyBpbmxpbmUgdW5zaWduZWQgaW50IHBkY19pbnRlcnJ1cHQK
+IAlzdHJ1Y3QgYXRhX2hvc3Rfc2V0ICpob3N0X3NldCA9IGRldl9pbnN0YW5jZTsKIAlzdHJ1Y3Qg
+YXRhX3BvcnQgKmFwOwogCXZvaWQgKm1taW9fYmFzZTsKKwl1OCBwbHVnZGF0YSwgbWFza2ZsYWdz
+OwogCXUzMiBtYXNrID0gMDsKIAl1bnNpZ25lZCBpbnQgaSwgdG1wLCBoYW5kbGVkID0gMDsKIAl1
+bnNpZ25lZCBsb25nIGZsYWdzOwpAQCAtNDkyLDIxICs1MzYsMTggQEAgc3RhdGljIGlubGluZSB1
+bnNpZ25lZCBpbnQgcGRjX2ludGVycnVwdAogCX0KIAogCW1taW9fYmFzZSA9IGhvc3Rfc2V0LT5t
+bWlvX2Jhc2U7Ci0JCisKIAlzcGluX2xvY2tfaXJxc2F2ZSgmaG9zdF9zZXQtPmxvY2ssIGZsYWdz
+KTsKIAogCS8qIHJlYWRpbmcgc2hvdWxkIGFsc28gY2xlYXIgaW50ZXJydXB0cyAqLwogCW1hc2sg
+PSByZWFkbChtbWlvX2Jhc2UgKyBQRENfSU5UX1NFUU1BU0spOwogCi0JaWYgKG1hc2sgPT0gMHhm
+ZmZmZmZmZikgewotCQlWUFJJTlRLKCJRVUlDSyBFWElUIDJcbiIpOwotCQlnb3RvIGRvbmVfaXJx
+OwotCX0KKwlpZiAobWFzayA9PSAweGZmZmZmZmZmKQorCQlnb3RvIHRyeV9ob3RwbHVnOworCiAJ
+bWFzayAmPSAweGZmZmY7CQkvKiBvbmx5IDE2IHRhZ3MgcG9zc2libGUgKi8KLQlpZiAoIW1hc2sp
+IHsKLQkJVlBSSU5USygiUVVJQ0sgRVhJVCAzXG4iKTsKLQkJZ290byBkb25lX2lycTsKLQl9CisJ
+aWYgKCFtYXNrKQorCQlnb3RvIHRyeV9ob3RwbHVnOwogCiAJd3JpdGVsKG1hc2ssIG1taW9fYmFz
+ZSArIFBEQ19JTlRfU0VRTUFTSyk7CiAKQEAgLTUyMiw3ICs1NjMsMzIgQEAgc3RhdGljIGlubGlu
+ZSB1bnNpZ25lZCBpbnQgcGRjX2ludGVycnVwdAogCQkJCWhhbmRsZWQgKz0gcGRjX2hvc3RfaW50
+cihhcCwgcWMpOwogCQl9CiAJfQotICAgICAgIAorCisJaWYgKGhhbmRsZWQpCisJCWdvdG8gZG9u
+ZV9pcnE7CisKK3RyeV9ob3RwbHVnOgorCXBsdWdkYXRhID0gcmVhZGIobW1pb19iYXNlICsgaG90
+cGx1Z19yZWdzKTsKKwltYXNrZmxhZ3MgPSByZWFkYihtbWlvX2Jhc2UgKyBob3RwbHVnX3JlZ3Mg
+KyAyKTsKKwlwbHVnZGF0YSAmPSB+bWFza2ZsYWdzOworCWlmIChwbHVnZGF0YSkgeworCQl3cml0
+ZWIocGx1Z2RhdGEsIG1taW9fYmFzZSArIGhvdHBsdWdfcmVncyk7CisJCWZvciAoaSA9IDA7IGkg
+PCBob3N0X3NldC0+bl9wb3J0czsgKytpKSB7CisJCQlhcCA9IGhvc3Rfc2V0LT5wb3J0c1tpXTsK
+KwkJCWlmICghKGFwLT5mbGFncyAmIEFUQV9GTEFHX1NBVEEpKQorCQkJCWNvbnRpbnVlOyAgLy9O
+byBQQVRBIHN1cHBvcnQgaGVyZS4uLiB5ZXQKKwkJCS8vIENoZWNrIHVucGx1ZyBmbGFnCisJCQlp
+ZiAocGx1Z2RhdGEgJiAweDAxKSB7CisJCQkJYXRhX2hvdHBsdWdfdW5wbHVnKGFwKTsKKwkJCQlo
+YW5kbGVkID0gMTsKKwkJCX0gZWxzZSBpZiAoKHBsdWdkYXRhID4+IDQpICYgMHgwMSkgeyAgLy9D
+aGVjayBwbHVnIGZsYWcKKwkJCQlhdGFfaG90cGx1Z19wbHVnKGFwKTsKKwkJCQloYW5kbGVkID0g
+MTsKKwkJCX0KKwkJCXBsdWdkYXRhID4+PSAxOworCQl9CisJfQorCiBkb25lX2lycToKIAlzcGlu
+X3VubG9ja19pcnFyZXN0b3JlKCZob3N0X3NldC0+bG9jaywgZmxhZ3MpOwogCXJldHVybiBoYW5k
+bGVkOwpAQCAtNjM2LDkgKzcwMiw5IEBAIHN0YXRpYyB2b2lkIHBkY19ob3N0X2luaXQodW5zaWdu
+ZWQgaW50IGMKIAl0bXAgPSByZWFkbChvZmZzZXQpOwogCXdyaXRlbCh0bXAgfCAweGZmLCBvZmZz
+ZXQpOwogCi0JLyogbWFzayBwbHVnL3VucGx1ZyBpbnRzICovCisJLyogdW5tYXNrIHBsdWcvdW5w
+bHVnIGludHMgKi8KIAl0bXAgPSByZWFkbChvZmZzZXQpOwotCXdyaXRlbCh0bXAgfCAweGZmMDAw
+MCwgb2Zmc2V0KTsKKwl3cml0ZWwodG1wICYgMHhmZjAwZmZmZiwgb2Zmc2V0KTsKIAogCS8qIHJl
+ZHVjZSBUQkcgY2xvY2sgdG8gMTMzIE1oei4gKi8KIAl0bXAgPSByZWFkbChtbWlvICsgUERDX1RC
+R19NT0RFKTsK
+------=_Part_592_20949589.1122055917483--
