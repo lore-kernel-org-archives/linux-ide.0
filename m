@@ -1,79 +1,56 @@
-From: Phil Dibowitz <phil@ipom.com>
-Subject: Re: Promise 20378
-Date: Sat, 23 Jul 2005 13:38:56 -0700
-Message-ID: <42E2AAE0.2090501@ipom.com>
-References: <42C7B584.401@ipom.com> <42C9F50B.4000508@pobox.com>
+From: Thorild Selen <thorild@Update.UU.SE>
+Subject: Re: libata and sata_promise errors when using multiple disks on the same controller simultaneously
+Date: Sun, 24 Jul 2005 00:45:10 +0200
+Message-ID: <x3kd5p9i1l5.fsf@Psilocybe.Update.UU.SE>
+References: <4789af9e050705111263cc6f7b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary=------------enigED76D0472C5ADE40AD6240B1
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from msg-mx3.usc.edu ([128.125.137.8]:35728 "EHLO msg-mx3.usc.edu")
-	by vger.kernel.org with ESMTP id S261590AbVGWUjI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Jul 2005 16:39:08 -0400
-Received: from [10.1.1.2] ([128.125.81.146])
- by msg-mx3.usc.edu (Sun Java System Messaging Server 6.2-2.07 (built May 25
- 2005)) with ESMTPSA id <0IK300GT3LD2JXE0@msg-mx3.usc.edu> for
- linux-ide@vger.kernel.org; Sat, 23 Jul 2005 13:39:08 -0700 (PDT)
-In-reply-to: <42C9F50B.4000508@pobox.com>
+Received: from elvira.ekonomikum.uu.se ([130.238.164.5]:47055 "EHLO
+	elvira.ekonomikum.uu.se") by vger.kernel.org with ESMTP
+	id S261314AbVGWWpV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Jul 2005 18:45:21 -0400
+Received: from Psilocybe.Update.UU.SE (Psilocybe.Update.UU.SE [130.238.19.25])
+	by elvira.ekonomikum.uu.se (Postfix) with ESMTP id 73B77198
+	for <linux-ide@vger.kernel.org>; Sun, 24 Jul 2005 00:45:10 +0200 (MSZ)
+In-Reply-To: <4789af9e050705111263cc6f7b@mail.gmail.com> (Jim Ramsay's message of "5 Jul 05 18:12:15 GMT")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigED76D0472C5ADE40AD6240B1
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+I'm sorry to say that I have experienced problems very similar to
+those of Jim Ramsay and others with a recent Linux 2.6 kernel (2.6.12)
+and a Promise SATA controller (PDC20318 (SATA150 TX4) though, not the
+SATAII one), and a raid5 atop that. Disks are Hitachi Deskstar 160MB
+SATA.
 
-I finally got a chance to test this.
+Logged error messages similar to those reported by Jim Ramsay, and
+also by Joerg Sommrey on linux-kernel, including several occasions of
+messages like:
 
-So, the sata_promise driver seems to support the Promise 20378
-controller, but it doesn't see PATA drives (the controller supports both
-SATA and PATA drives).
+       ata4: status=3D0x51 { DriveReady SeekComplete Error }
+       ata4: error=3D0x40 { UncorrectableError }
+      (... the two lines above repeated multiple times ...)
+       scsi5: ERROR on channel 0, id 0, lun 0,
+               CDB: Read (10) 00 08 38 46 2d 00 00 c8 00
+       Current sd08:57: sense key Medium Error
+       Additional sense indicates Unrecovered read error -
+               auto reallocate failed
+        I/O error: dev 08:57, sector 49773056
 
-I plugged a single PATA drive in - then in the promise BIOS I configured
-a single "array" on the drive, and booted. This sata_promise sees the
-PATA and SATA controller, but doesn't see the drives:
+After a while, two disks got kicked out of the raid (with several
+hours in between, though), the second time leading to a crashed raid
+and serious file system corruption.  :(
 
-Jul 23 13:31:47 rider kernel: ata1: SATA max UDMA/133 cmd 0xF89E4200 ctl
-0xF89E4238 bmdma 0x0 irq 23
-Jul 23 13:31:47 rider kernel: ata2: SATA max UDMA/133 cmd 0xF89E4280 ctl
-0xF89E42B8 bmdma 0x0 irq 23
-Jul 23 13:31:47 rider kernel: ata1: no device found (phy stat 00000000)
-Jul 23 13:31:47 rider kernel: scsi0 : sata_promise
-Jul 23 13:31:47 rider kernel: ata2: no device found (phy stat 00000000)
-Jul 23 13:31:47 rider kernel: scsi1 : sata_promise
+The hardware appears quite healthy; stressing the disks (and
+controller) hard with a recent 2.6.12 kernel gives loads of error
+messages, but repeating the test with a 2.6.10 kernel doesn't show any
+problems at all.
 
-It sees no drives there period. Further, while it the device has 2 SATA
-chains, it only has 1 PATA, but as you can see, it seems to see 2.
-
-Any ideas?
-
-(PS. I'm not on the list, so please CC me).
-
-Thanks,
--- 
-Phil Dibowitz                             phil@ipom.com
-Freeware and Technical Pages              Insanity Palace of Metallica
-http://www.phildev.net/                   http://www.ipom.com/
-
-"They that can give up essential liberty to obtain a little temporary
-safety deserve neither liberty nor safety."
- - Benjamin Franklin, 1759
+Thus, it appears that some serious bug has crept into the Promise
+driver (or possibly other parts of libata), between 2.6.10 and 2.6.12.
 
 
---------------enigED76D0472C5ADE40AD6240B1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
-
-iD8DBQFC4qrmN5XoxaHnMrsRArQIAKCGaYtWGDzzShJaw037nXGHh+n4CQCfeScm
-Wdii8ckpuy+Sa1N9spEuje4=
-=iwA/
------END PGP SIGNATURE-----
-
---------------enigED76D0472C5ADE40AD6240B1--
+Thorild Sel=E9n
+Datorf=F6reningen Update / Update Computer Club, Uppsala, SE
