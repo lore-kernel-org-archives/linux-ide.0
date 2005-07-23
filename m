@@ -1,69 +1,17 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [PATCH] serverworks should not take ahold of megaraid'd controllers
-Date: Fri, 22 Jul 2005 16:17:15 -0700
-Message-ID: <42E17E7B.6090805@us.ibm.com>
-References: <42E023B2.5030900@us.ibm.com> <1121993194.854.14.camel@localhost.localdomain>
+From: "Mr.Derrick Tanner." <derricktanner1@yahoo.es>
+Subject: (unknown)
+Date: Sat, 23 Jul 2005 12:50:02 +0800
+Message-ID: <1122094202.42e1cc7a29d1b__26665.973934769$1122094501$gmane$org@mail.iinet.net.au>
+Reply-To: derricktanner1@kaixo.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigCAC76465A93FDC269A56172B"
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262223AbVGVXTp@vger.kernel.org>
-In-Reply-To: <1121993194.854.14.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from per-qv1-webmail-02.iinet.net.au ([203.59.3.54]:35231 "HELO
+	mail.iinet.net.au") by vger.kernel.org with SMTP id S262358AbVGWEyI
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 23 Jul 2005 00:54:08 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigCAC76465A93FDC269A56172B
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 
-Arjan, Alan:
-
-I didn't know that dmraid supports MegaIDE nowadays.  Thanks for the
-tipoff, and I apologize for the unnecessary traffic.  I'll look into dmraid.
-
---D
-
-Alan Cox wrote:
-> On Iau, 2005-07-21 at 15:37 -0700, Darrick J. Wong wrote:
-> 
->>I've noticed what might be a small bug with the serverworks driver in
->>2.6.12.3.  The IBM HS20 blade has a ServerWorks CSB6 IDE controller with
->>an optional LSI MegaIDE RAID BIOS (BIOS assisted software raid, iow).
-> 
-> 
-> With a binary only proprietary driver.
-> 
-> 
->>(ServerWorks) to IBM.  However, the serverworks driver doesn't notice
->>this and will attach to the controller anyway, thus allowing raw access
->>to the disks in the RAID.  An unsuspecting user can then read and write
->>whatever they want to the drive, which could very well degrade or
->>destroy the array, which is clearly not desirable behavior.
-> 
-> 
-> It may be appropriate for some vendor situations but it isn't
-> appropriate for the base kernel to default to assuming the user wants to
-> use binary only drivers instead of dmraid. Especially as the raid
-> formats for this hardware are partially known despite no assistance I
-> know of from the vendor.
-> 
-> Alan
-> 
-> 
-
---------------enigCAC76465A93FDC269A56172B
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFC4X57a6vRYYgWQuURAgqKAJwIJ0DNjCbQGjY6tloriFBzJSvUzQCeMpF8
-1kIuPjwcHSoeEoe4/NIdfEE=
-=WXjk
------END PGP SIGNATURE-----
-
---------------enigCAC76465A93FDC269A56172B--
