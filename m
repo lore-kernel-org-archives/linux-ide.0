@@ -1,38 +1,64 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC][PATCH] libata ATAPI alignment
-Date: Fri, 29 Jul 2005 14:38:54 +0100
-Message-ID: <1122644334.13581.42.camel@localhost.localdomain>
-References: <20050729050654.GA10413@havoc.gtf.org>
+From: Sampei <sampei02@tiscali.it>
+Subject: DriveStatusError
+Date: Sun, 24 Jul 2005 21:42:52 +0200
+Message-ID: <1122234170.2206.49.camel@zio_budda>
+Reply-To: sampei02@tiscali.it
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:9949 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S262055AbVG2NPx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Jul 2005 09:15:53 -0400
-In-Reply-To: <20050729050654.GA10413@havoc.gtf.org>
+Received: from mail-relay-1.tiscali.it ([213.205.33.41]:29867 "EHLO
+	mail-relay-1.tiscali.it") by vger.kernel.org with ESMTP
+	id S262699AbVG2SkR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Jul 2005 14:40:17 -0400
+Received: from localhost.localdomain (62.11.100.42) by mail-relay-1.tiscali.it (7.2.063)
+        id 42D67C6200150C4E for linux-ide@vger.kernel.org; Fri, 29 Jul 2005 20:40:02 +0200
+Received: from localhost.localdomain (zio_budda [127.0.0.1])
+	by localhost.localdomain (8.12.11/8.12.11/sendmail.mc 8.12.11-4.6  05/12/2004) with ESMTP id j6OJgtch003126
+	for <linux-ide@vger.kernel.org>; Sun, 24 Jul 2005 21:42:55 +0200
+Received: (from shotokan@localhost)
+	by localhost.localdomain (8.12.11/8.12.11/Submit) id j6OJgr92003125
+	for linux-ide@vger.kernel.org; Sun, 24 Jul 2005 21:42:54 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>
+To: linux-ide@vger.kernel.org
 
-On Gwe, 2005-07-29 at 01:06 -0400, Jeff Garzik wrote:
-> So, one thing that's terribly ugly about SATA ATAPI is that we need to
-> pad DMA transfers to the next 32-bit boundary, if the length is not
-> evenly divisible by 4.
+I bought new Maxtor HD 80 GB but something doesn't work on Fedora Core 3
+because it gives this message:
 
-Looks good and avoids the special case leaking into the core code.
 
-> Complicating matters, we currently must support two methods of data
-> buffer submission:  a single kernel virtual address, or a struct
-> scatterlist.
+hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+hda: dma_intr: Error=0x84 { DriveStatusError BadCRC }
+ide: failed opcode was: unknown
+hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+hda: dma_intr: Error=0x84 { DriveStatusError BadCRC }
+ide: failed opcode was: unknown
+.
+.
+.
+hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+hda: dma_intr: Error=0x84 { DriveStatusError BadCRC }
+ide: failed opcode was: unknown
+ide0: reset: success
+Kernel panic - not syncing: mm/mmap.c:534: spin_lock(mm/rmap.c:cb80cf08)
 
-For the moment - also you turn the single buffer into a one entry sglist
-so its not to bad.
 
-> Review is requested by any and all parties, as well as suggestions for
-> a prettier approach.
+already locked by <NULL>/0. (Not tainted)
 
-I'd pull the code into seperate functions but thats my only real
-comment.
+[c0120445] panic+0x42/0x1c0
+[c015e1e1] vma_prio_tree_insert+017/0x2a
+[c01656d3] vma_adjust+0x322/0x556
+[c0166f30] split_vma+0xdd/0xf5
+[c0167c70] mprotect_fixup+0xf1/0x1ca
+[c0167edb] sys_mprotect+0192/0x253
+[c010392d] syscall_call+0x7/0xb
+
+This problem occurs in a variable time after boot.
+After few hours that pc is turned off.
+I already used 80-wire cable and my Maxtor HD plugs are seated properly.
+I'm using Kernel 2.6.12-1.1372 on Fedora Core 3
+HD is 80 GB Maxtor ATA/133
+
+With hdparm command I can see hda is set in "udma5".
+How can I solve it ?
+
