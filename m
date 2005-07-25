@@ -1,43 +1,32 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: libata total system lockup fix
-Date: Mon, 25 Jul 2005 11:53:13 -0400
-Message-ID: <42E50AE9.3000207@rtr.ca>
-References: <42E4ED70.1050501@pobox.com> <42E4FC75.70006@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+From: Peter <Balkan@dialcourier.com>
+Subject: Every night becomes unforgettable event in your life owing to this new means for treatment ED!
+Date: Mon, 25 Jul 2005 19:29:44 +0200
+Message-ID: <1246403087.126071117493@BSN-165-122-97.dsl.siol.net>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:56581 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S261239AbVGYPxM
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Jul 2005 11:53:12 -0400
-In-Reply-To: <42E4FC75.70006@pobox.com>
+Received: from BSN-165-122-97.dsl.siol.net ([194.165.122.97]:6151 "HELO
+	BSN-165-122-97.dsl.siol.net") by vger.kernel.org with SMTP
+	id S261422AbVGYR3q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Jul 2005 13:29:46 -0400
+Received: from [79.30.157.38] (port=4470 helo=[mistake])
+    by BSN-165-122-97.dsl.siol.net with esmtp
+    id 11362095891Novak42148
+    for linux-ide@vger.kernel.org; Mon, 25 Jul 2005 19:29:45 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Mark Lord <mlord@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, hare@suse.de
+To: linux-ide@vger.kernel.org
 
- >The problem with this patch is that is causes leaks, and doesn't actually ready the devices because scsi_eh_ready_devs() is never called: scsi_eh_abort_cmds() is guaranteed to fail out every time its called.
+Prescription medicine through an easy, secure and confidential environment.
+http://whimsical.q67.net/pha/as/
 
-MMmm.. bummer if that's the case, but it does execute here
-on my machine about once every two seconds, continuously,
-for hours on end, and the DVD-RW drive still works when
-I eventually do place a disc into it later on.
 
-I suppose the bug isn't seen more commonly because libata is
-the only (?) SCSI LLD that supplies it's own eh strategy function.
-Or are there other users of that interface now?
 
-I'm off on holiday for the next while, but I'll check in on this
-again when I get back.  Perhaps the originator of this patch could
-chip in with some of the fixes, if you point out where the "leaks" are.
 
- >Ahha.. here's the header from the original email for this patch
- >Subject: [PATCH] Fix SATA ATAPI error handling
- >From: Hannes Reinecke <hare@suse.de>
- >Date: Wed, 23 Mar 2005 16:28:16 +0100
- >To: SCSI Mailing List <linux-scsi@vger.kernel.org>
- >CC: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>,
- >Jens Axboe <axboe@suse.de>, Kurt Garloff <garloff@suse.de>:
+They are never alone that are accompanied with noble thoughts.   
+Beware of the man whose God is in the skies.   
+My mother had morning sickness after I was born.    
+The habit of giving only enhances the desire to give.   
 
-Cheers
+
