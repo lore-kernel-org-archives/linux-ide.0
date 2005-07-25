@@ -1,58 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: libata total system lockup fix
-Date: Mon, 25 Jul 2005 10:51:33 -0400
-Message-ID: <42E4FC75.70006@pobox.com>
-References: <42E4ED70.1050501@pobox.com>
+Date: Mon, 25 Jul 2005 11:53:13 -0400
+Message-ID: <42E50AE9.3000207@rtr.ca>
+References: <42E4ED70.1050501@pobox.com> <42E4FC75.70006@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:43444 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261308AbVGYOvg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jul 2005 10:51:36 -0400
-In-Reply-To: <42E4ED70.1050501@pobox.com>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:56581 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S261239AbVGYPxM
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Jul 2005 11:53:12 -0400
+In-Reply-To: <42E4FC75.70006@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <mlord@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, hare@suse.de
 
-Mark Lord wrote:
-> Jeff,
-> 
-> We corresponded about this bugfix ages ago,
-> but I find I'm still patching it into each new
-> kernel.org kernel to keep my system from locking
-> up hard in the libata error handling path.
-> 
-> (error handling is triggered by the KDE/Gnome desktop
-> polling the empty ATAPI drive every second or two,
-> gets an error when no disc inserted, thereby triggering
-> SCSI/libata error paths, which lock system hard once
-> in a few thousand tries -- about once every two hours).
-> 
-> This patch originally came to me from you, and I've now
-> forgotten where you got it from.  But it does fix the
-> problem here.  I have also circulated this patch among
-> many other users of "ata_piix" on modern laptops,
-> and it seems to cure random lockups for them as well.
-> 
-> This configuration (2.6 kernel, ata_piix driving hard disk
-> and DVD-RW drive in a Centrino laptop) is now very very
-> commonplace, and the lockups are driving users crazy.
-> 
-> Sure would be nice to see it in 2.6.13 or 2.6.14 by default.
+ >The problem with this patch is that is causes leaks, and doesn't actually ready the devices because scsi_eh_ready_devs() is never called: scsi_eh_abort_cmds() is guaranteed to fail out every time its called.
 
-The problem with this patch is that is causes leaks, and doesn't 
-actually ready the devices because scsi_eh_ready_devs() is never called: 
-scsi_eh_abort_cmds() is guaranteed to fail out every time its called.
+MMmm.. bummer if that's the case, but it does execute here
+on my machine about once every two seconds, continuously,
+for hours on end, and the DVD-RW drive still works when
+I eventually do place a disc into it later on.
 
-So it just trades one set of failures for another.  I don't dispute that 
-lockups SUCK but someone (me? noone else is stepping up) needs to look 
-into fixing it.
+I suppose the bug isn't seen more commonly because libata is
+the only (?) SCSI LLD that supplies it's own eh strategy function.
+Or are there other users of that interface now?
 
-When I finish up SATA ATAPI today, I'll put this on the short list.
+I'm off on holiday for the next while, but I'll check in on this
+again when I get back.  Perhaps the originator of this patch could
+chip in with some of the fixes, if you point out where the "leaks" are.
 
-	Jeff
+ >Ahha.. here's the header from the original email for this patch
+ >Subject: [PATCH] Fix SATA ATAPI error handling
+ >From: Hannes Reinecke <hare@suse.de>
+ >Date: Wed, 23 Mar 2005 16:28:16 +0100
+ >To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+ >CC: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>,
+ >Jens Axboe <axboe@suse.de>, Kurt Garloff <garloff@suse.de>:
 
-
-
+Cheers
