@@ -1,72 +1,212 @@
-From: Jarrod Johnson <jarrod.b.johnson@gmail.com>
-Subject: Re: libata and sata_promise errors when using multiple disks on the same controller simultaneously
-Date: Mon, 25 Jul 2005 22:01:39 -0400
-Message-ID: <fab4e42a050725190163ddb605@mail.gmail.com>
-References: <4789af9e050705111263cc6f7b@mail.gmail.com>
-	 <4789af9e0507151233235ee42@mail.gmail.com>
-	 <fab4e42a05072410043f0ccfd5@mail.gmail.com>
-Reply-To: Jarrod Johnson <jarrod.b.johnson@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 3/3 RESEND] Add disk hotswap support to libata
+Date: Tue, 26 Jul 2005 13:25:02 -0400
+Message-ID: <42E671EE.7000309@pobox.com>
+References: <355e5e5e050722111141c0bf14@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.192]:15446 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261545AbVGZCBj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Jul 2005 22:01:39 -0400
-Received: by wproxy.gmail.com with SMTP id i2so1045449wra
-        for <linux-ide@vger.kernel.org>; Mon, 25 Jul 2005 19:01:39 -0700 (PDT)
-In-Reply-To: <fab4e42a05072410043f0ccfd5@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <355e5e5e050722111141c0bf14@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Lukasz Kosewski <lkosewsk@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Anyone have suggestions as to how to implement a semaphore/lock as
-described?  I've been trying to use my PDC20579 controller for a while
-and just want to use it, even if significantly slowly, reliably.  I
-tried a few things, but I'm admittedly a very inexperiencied kernel
-hacker, and particularly the thought of some lock to span the context
-of an IO request and answering DMA seems to not be a commonly
-addressed issue.  My attempts all ended in deadlock, not locking
-anything at all, and/or throwing 'scheduling while atomic' messages on
-every I/O request, while still not preventing the condition.  Unless
-someone seems to have a proper solution, I'd like to know a quick hack
-to keep me going with this array in the interim.
+Lukasz Kosewski wrote:
+> Hey Jeff, everyone.
+> 
+> This is a resend of patch 3 of my libata hotswap series, wherein I
+> found a silly flaw in my logic.  I don't know what kind of crack I was
+> smoking, but I somehow turned "a = a & ~b" in the Promise driver into
+> "a = a ^ b" in my hotswap code, which is clearly wrong.  I don't know
+> how it worked through my testing, but I'm willing to bet this is a
+> coincidence.  Please apply this patch instead of the previously sent
+> patch 03.
+> 
+> Luke Kosewski
+> Human Cannonball
+> Net Integration Technologies
+> 
+> 
+> ------------------------------------------------------------------------
+> 
+> 21.07.05  Luke Kosewski  <lkosewsk@nit.ca>
+> 
+> 	* A full implementation of hotplug on a libata controller, this being
+> 	  the Promise Tx4/Tx2 Plus controller line (both SATA150 and SATAII150).
+> 	  Almost all of the code pertaining to how to talk to the hotplug
+> 	  registers has been stolen from the pdc-ulsata2 and ultra-1.0.8 Promise
+> 	  drivers.  This involves detecting when we have an interrupt pending
+> 	  and on what device, as well as the bit where a hard SATA reset gets
+> 	  a SATAII150 controller to re-spew a plug interrupt.
+> 	* Note that the hotplug handling code comes AFTER the normal interrupt
+> 	  handling code in pdc_interrupt_common; this is because we're much
+> 	  more likely to receive normal interrupts, so this drops the AVERAGE
+> 	  interrupt handling time down a lot.
+> 
+> Signed-off-by:  Luke Kosewski <lkosewsk@nit.ca>
+> 
+> --- linux-2.6.13-rc3/drivers/scsi/sata_promise.c.old	2005-07-21 13:52:13.037895639 -0400
+> +++ linux-2.6.13-rc3/drivers/scsi/sata_promise.c	2005-07-21 13:55:53.490964645 -0400
+> @@ -84,6 +84,7 @@ static void pdc_eng_timeout(struct ata_p
+>  static int pdc_port_start(struct ata_port *ap);
+>  static void pdc_port_stop(struct ata_port *ap);
+>  static void pdc_phy_reset(struct ata_port *ap);
+> +static void pdc2_phy_reset(struct ata_port *ap);
+>  static void pdc_pata_phy_reset(struct ata_port *ap);
+>  static void pdc_pata_cbl_detect(struct ata_port *ap);
+>  static void pdc_qc_prep(struct ata_queued_cmd *qc);
+> @@ -139,7 +140,7 @@ static struct ata_port_operations pdc2_a
+>  	.check_status		= ata_check_status,
+>  	.exec_command		= pdc_exec_command_mmio,
+>  	.dev_select		= ata_std_dev_select,
+> -	.phy_reset		= pdc_phy_reset,
+> +	.phy_reset		= pdc2_phy_reset,
+>  	.qc_prep		= pdc_qc_prep,
+>  	.qc_issue		= pdc_qc_issue_prot,
+>  	.eng_timeout		= pdc_eng_timeout,
+> @@ -325,6 +326,48 @@ static void pdc_phy_reset(struct ata_por
+>  		pdc_pata_phy_reset(ap);
+>  }
+>  
+> +/* Mask hotplug interrupts for one channel (ap) */
+> +static inline void pdc2_disable_channel_hotplug_interrupts(struct ata_port *ap)
+> +{
+> +	void *mmio = ap->host_set->mmio_base + PDC2_SATA_PLUG_CSR + 2;
+> +
+> +	u8 maskflags = readb(mmio);
+> +	maskflags |= (0x11 << (u8)ap->hard_port_no);
+> +	writeb(maskflags, mmio);
+> +}
+> +
+> +static inline void pdc2_enable_channel_hotplug_interrupts(struct ata_port *ap)
+> +{
+> +
+> +	void *mmio = ap->host_set->mmio_base + PDC2_SATA_PLUG_CSR;
+> +
+> +	//Clear channel hotplug interrupts
+> +	u8 maskflags = readb(mmio);
+> +	maskflags = (0x11 << (u8)ap->hard_port_no);
+> +	writeb(maskflags, mmio);
+> +
+> +	//Unmask channel hotplug interrupts
+> +	maskflags = readb(mmio + 2);
+> +	maskflags &= ~(0x11 << (u8)ap->hard_port_no);
+> +	writeb(maskflags, mmio + 2);
+> +}
+> +
+> +static void pdc2_phy_reset(struct ata_port *ap)
+> +{
+> +	/* As observed on the Promise SATAII150 Tx2 Plus/Tx4, giving the
+> +	 * controller a hard reset triggers another hotplug interrupt.  So
+> +	 * disable them for the hard reset, and re-enable afterwards.
+> +	 *
+> +	 * No PATA support here yet
+> +	 */
+> +	if (ap->flags & ATA_FLAG_SATA_RESET && ap->flags & ATA_FLAG_SATA) {
+> +		pdc2_disable_channel_hotplug_interrupts(ap);
+> +		pdc_phy_reset(ap);
+> +		pdc2_enable_channel_hotplug_interrupts(ap);
+> +	} else
+> +		pdc_phy_reset(ap);
+> +}
 
-> On 7/15/05, Jim Ramsay  wrote:
-> > I have further characterized the error.  It looks like, at least
-> > during the softraid rebuild process, most DMA commands are sent to the
-> > PCI card and then complete via an IRQ callback before the next command
-> > is sent.  However, the problem I see here sometimes occurrs when:
-> >
-> > - Command for drive 1 is sent to the PCI card via DMA
-> > (sata_promise.c:pdc_packet_start)
-> > - Command for drive 2 is sent to the PCI card via DMA before the
-> > previous command completes
-> > - Command for drive 1 completes (sata_promise.c:pdc_host_intr)
-> >
-> > Often the command for drive 2 will now timeout.
-> >
-> > Now, I have seen the case when this above scenario will actually
-> > complete successfully, either with a second IRQ just for the drive2
-> > command, or sometimes with a single IRQ which completes both commands.
-> >
-> > I have a workaround using a semaphore which causes all commands to
-> > strictly serialize, (lock it in pdc_packet_start, unlock in
-> > pdc_host_intr) thereby not allowing any concurrent commands, but this
-> > appears to have a large performance impact.  At least it allows me to
-> > actually cause my softraid device to finish syncing to 100%.
-> >
-> > I'm looking for other solutions, or a clue as to the actual cause of
-> > the error.  My current theory is that if the second command is sent to
-> > the PCI via DMA too soon, it may be overlooked, so some rate-limiting
-> > may be useful, if I can figure out how to implement it.
-> >
-> > Any comments or suggestions here would be greatly appreciated, thanks!
-> >
-> > --
-> > Jim Ramsay
-> > "Me fail English?  That's unpossible!"
-> >
->
+Don't special case this.  disable/enable hotplug interrupts for all 
+controllers.
+
+
+>  static void pdc_pata_cbl_detect(struct ata_port *ap)
+>  {
+>  	u8 tmp;
+> @@ -483,6 +526,7 @@ static inline unsigned int pdc_interrupt
+>  	struct ata_host_set *host_set = dev_instance;
+>  	struct ata_port *ap;
+>  	void *mmio_base;
+> +	u8 plugdata, maskflags;
+>  	u32 mask = 0;
+>  	unsigned int i, tmp, handled = 0;
+>  	unsigned long flags;
+> @@ -492,21 +536,18 @@ static inline unsigned int pdc_interrupt
+>  	}
+>  
+>  	mmio_base = host_set->mmio_base;
+> -	
+> +
+>  	spin_lock_irqsave(&host_set->lock, flags);
+>  
+>  	/* reading should also clear interrupts */
+>  	mask = readl(mmio_base + PDC_INT_SEQMASK);
+>  
+> -	if (mask == 0xffffffff) {
+> -		VPRINTK("QUICK EXIT 2\n");
+> -		goto done_irq;
+> -	}
+> +	if (mask == 0xffffffff)
+> +		goto try_hotplug;
+
+you are confusing controller hotplug (mask == 0xffffffff) and device 
+hotplug.
+
+controller hotplug should already be handled correct, by testing 
+0xffffffff and supporting the PCI ->remove hook.
+
+
+>  	mask &= 0xffff;		/* only 16 tags possible */
+> -	if (!mask) {
+> -		VPRINTK("QUICK EXIT 3\n");
+> -		goto done_irq;
+> -	}
+> +	if (!mask)
+> +		goto try_hotplug;
+>  
+>  	writel(mask, mmio_base + PDC_INT_SEQMASK);
+>  
+> @@ -522,7 +563,32 @@ static inline unsigned int pdc_interrupt
+>  				handled += pdc_host_intr(ap, qc);
+>  		}
+>  	}
+> -       
+> +
+> +	if (handled)
+> +		goto done_irq;
+> +
+> +try_hotplug:
+> +	plugdata = readb(mmio_base + hotplug_regs);
+> +	maskflags = readb(mmio_base + hotplug_regs + 2);
+> +	plugdata &= ~maskflags;
+> +	if (plugdata) {
+> +		writeb(plugdata, mmio_base + hotplug_regs);
+> +		for (i = 0; i < host_set->n_ports; ++i) {
+> +			ap = host_set->ports[i];
+> +			if (!(ap->flags & ATA_FLAG_SATA))
+> +				continue;  //No PATA support here... yet
+> +			// Check unplug flag
+> +			if (plugdata & 0x01) {
+> +				ata_hotplug_unplug(ap);
+> +				handled = 1;
+> +			} else if ((plugdata >> 4) & 0x01) {  //Check plug flag
+> +				ata_hotplug_plug(ap);
+> +				handled = 1;
+> +			}
+> +			plugdata >>= 1;
+
+you probably need a debounce timer; see the SiI email I am about to send.
+
+
+>  done_irq:
+>  	spin_unlock_irqrestore(&host_set->lock, flags);
+>  	return handled;
+> @@ -636,9 +702,9 @@ static void pdc_host_init(unsigned int c
+>  	tmp = readl(offset);
+>  	writel(tmp | 0xff, offset);
+>  
+> -	/* mask plug/unplug ints */
+> +	/* unmask plug/unplug ints */
+>  	tmp = readl(offset);
+> -	writel(tmp | 0xff0000, offset);
+> +	writel(tmp & 0xff00ffff, offset);
+>  
+>  	/* reduce TBG clock to 133 Mhz. */
+>  	tmp = readl(mmio + PDC_TBG_MODE);
+
