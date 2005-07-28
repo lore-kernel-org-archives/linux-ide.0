@@ -1,49 +1,28 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: [PATCH] sata_promise: Add TX4200 (PDC40519) ID
-Date: Thu, 28 Jul 2005 13:36:34 +0100
-Message-ID: <42E8D152.4050907@gentoo.org>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: libata suspend/resume
+Date: Thu, 28 Jul 2005 14:31:50 +0100
+Message-ID: <20050728133150.GA29418@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000806020708020101030009"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta08-winn.ispmail.ntl.com ([81.103.221.48]:53881 "EHLO
-	mta08-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
-	id S261432AbVG1MgN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Jul 2005 08:36:13 -0400
+Received: from cavan.codon.org.uk ([217.147.81.22]:7053 "EHLO
+	cavan.codon.org.uk") by vger.kernel.org with ESMTP id S261272AbVG1Nc2
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Jul 2005 09:32:28 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, murphy@sgtp.samara.ru, martin.povolny@solnet.cz
+To: linux-ide@vger.kernel.org, axboe@suse.de
 
-This is a multi-part message in MIME format.
---------------000806020708020101030009
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Hi,
 
-The Promise TX4200 is a 4-port SATA controller based on the PDC40519 chip. It 
-meets the description of the 20619, so just a simple ID needs to be added to 
-support this hardware. Thanks to Martin Povolný for testing.
+An increasing number of laptop vendors seem to be including sata 
+controllers now, and so we're looking at shipping the libata 
+suspend/resume patch. The discussion about suspend in the scsi layer 
+doesn't seem to have ended very conclusively, and I haven't been able to 
+find any sign of that code ending up anywhere. What's the current 
+status with this?
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
-
-
---------------000806020708020101030009
-Content-Type: text/x-patch;
- name="sata-promise-tx4200.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sata-promise-tx4200.patch"
-
---- linux-2.6.13-rc3-git9/drivers/scsi/sata_promise.c.orig	2005-07-28 13:29:47.000000000 +0100
-+++ linux-2.6.13-rc3-git9/drivers/scsi/sata_promise.c	2005-07-28 13:30:54.000000000 +0100
-@@ -181,6 +181,8 @@ static struct pci_device_id pdc_ata_pci_
- 	  board_20319 },
- 	{ PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_20319 },
-+	{ PCI_VENDOR_ID_PROMISE, 0x3519, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+	  board_20319 },
- 	{ PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_20319 },
- 
-
---------------000806020708020101030009--
+Thanks,
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
