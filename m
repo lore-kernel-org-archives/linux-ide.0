@@ -1,31 +1,31 @@
-From: Doug Maxey <dwm@maxeymade.com>
-Subject: Re: [PATCH 0/3] Add disk hotswap support to libata
-Date: Thu, 28 Jul 2005 13:54:19 -0500
-Message-ID: <200507281854.j6SIsJ87006310@falcon30.maxeymade.com>
-References: <42E04D5C.5010907@pobox.com>
+From: "Timothy Thelin" <Timothy.Thelin@wdc.com>
+Subject: copyright and linux patches
+Date: Thu, 28 Jul 2005 12:03:41 -0700
+Message-ID: <CA45571DE57E1C45BF3552118BA92C9D060A88@WDSCEXBECL03.sc.wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:60648 "EHLO
-	falcon30.maxeymade.com") by vger.kernel.org with ESMTP
-	id S261531AbVG1Sy1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Jul 2005 14:54:27 -0400
-In-reply-to: <42E04D5C.5010907@pobox.com> 
+Received: from wdscexfe01.sc.wdc.com ([129.253.170.53]:54376 "EHLO
+	wdscexfe01.sc.wdc.com") by vger.kernel.org with ESMTP
+	id S261471AbVG1TDl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jul 2005 15:03:41 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Lukasz Kosewski <lkosewsk@nit.ca>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
 
-On Thu, 21 Jul 2005 21:35:24 EDT, Jeff Garzik wrote:
->As soon as I finish SATA ATAPI (this week[end]), I'll take a look at 
->this.  A quick review of the patches didn't turn up anything terribly 
->objectionable, though :)
->
+For libata and submitted patches, how is copyright dealt with?  Based on
+some googling, it sounds like each project decides on its own policy of
+whether ownership is transfered to the maintainer, stays with the submitter,
+or does something else.
 
-I would like to offer to test when you are ready.  Some older and new SATAPI 
-drives, various chipsets (ICH{5,6}, TX4 on the way).  And a SATA analyzer 
-for anything really odd. 
+This isn't a question of licensing; it's just a question of how copyright
+and patches work for libata and linux.
 
-++doug
+I'm also not expecting a legal answer, just some idea about what's intended
+=)
 
+Thanks,
+Tim Thelin
