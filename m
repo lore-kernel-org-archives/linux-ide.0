@@ -1,65 +1,31 @@
-From: Polly <pollyp100@yahoo.com>
-Subject: Plextor 712 sa write issue
-Date: Thu, 28 Jul 2005 08:18:46 -0700 (PDT)
-Message-ID: <20050728151846.17096.qmail@web34312.mail.mud.yahoo.com>
+From: Doug Maxey <dwm@maxeymade.com>
+Subject: Re: [PATCH 0/3] Add disk hotswap support to libata
+Date: Thu, 28 Jul 2005 13:54:19 -0500
+Message-ID: <200507281854.j6SIsJ87006310@falcon30.maxeymade.com>
+References: <42E04D5C.5010907@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web34312.mail.mud.yahoo.com ([66.163.178.144]:24159 "HELO
-	web34312.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S261543AbVG1PSv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Jul 2005 11:18:51 -0400
+Received: from falcon30.maxeymade.com ([24.173.215.190]:60648 "EHLO
+	falcon30.maxeymade.com") by vger.kernel.org with ESMTP
+	id S261531AbVG1Sy1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Jul 2005 14:54:27 -0400
+In-reply-to: <42E04D5C.5010907@pobox.com> 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-Greetings,
-
-I am able to read-only mount and read from my Plextor
-712-SA DVD burner, but I cannot mount the drive
-read-write. I wonder if anyone here might have some
-suggestions about how I could solve this problem.
-
-Here is the error message I get when I try this to
-
-mount -t iso9660 /dev/scd0 /mnt/cdrecorder -o rw:
-
----
-Jul 28 11:37:54 HTPC kernel: cdrom: sr0: mrw address
-space DMA selected
-Jul 28 11:37:54 HTPC kernel: attempt to access beyond
-end of device
-Jul 28 11:37:54 HTPC kernel: sr0: rw=0, want=68,
-limit=4
-Jul 28 11:37:54 HTPC kernel: isofs_fill_super: bread
-failed, dev=sr0, iso_blknum=16, block=16
----
-
-I am running under 2.6.12.3, with ATA_ENABLE_ATAPI and
-ATA_ENABLE_PATA in libata.h turned on. My motherboard
-is an Intel 915G, with a Intel 82801 FW/FB (ICH6) Sata
-controller. 
-
-I see that there are a variety of branches out there
-for SATA. Should I try any of them? Or can you
-suggest any other strategy for solving this problem?
-
-Also: Is this a known issue? Should I open a bug
-report in Bugzilla on this? 
-
-I'm pretty ignorant about the workings of SATA, so I
-can't be much help with coding. But if a developer
-would like to try out some fixes on my configuration,
-I'd be happy work with him or her to do the testing.
-
-Thanks in advance for your help,
-
--Polly
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Lukasz Kosewski <lkosewsk@nit.ca>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 
-		
-____________________________________________________
-Start your day with Yahoo! - make it your home page 
-http://www.yahoo.com/r/hs 
- 
+On Thu, 21 Jul 2005 21:35:24 EDT, Jeff Garzik wrote:
+>As soon as I finish SATA ATAPI (this week[end]), I'll take a look at 
+>this.  A quick review of the patches didn't turn up anything terribly 
+>objectionable, though :)
+>
+
+I would like to offer to test when you are ready.  Some older and new SATAPI 
+drives, various chipsets (ICH{5,6}, TX4 on the way).  And a SATA analyzer 
+for anything really odd. 
+
+++doug
+
