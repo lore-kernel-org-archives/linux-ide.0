@@ -1,15 +1,15 @@
 From: sampei02@tiscali.it
-Subject: (unknown)
-Date: Fri, 29 Jul 2005 21:01:49 +0200
-Message-ID: <42D7AAD50002B6A0@mail-6.mail.tiscali.sys>
+Subject: DriveStatusError
+Date: Fri, 29 Jul 2005 21:02:38 +0200
+Message-ID: <42D7AAD50002B6A4@mail-6.mail.tiscali.sys>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mrqout2.tiscali.it ([195.130.225.12]:65427 "EHLO
-	mrqout2.tiscali.it") by vger.kernel.org with ESMTP id S262732AbVG2TBy convert rfc822-to-8bit
+Received: from mrqout2.tiscali.it ([195.130.225.12]:36756 "EHLO
+	mrqout2.tiscali.it") by vger.kernel.org with ESMTP id S262738AbVG2TCn convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Jul 2005 15:01:54 -0400
+	Fri, 29 Jul 2005 15:02:43 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
