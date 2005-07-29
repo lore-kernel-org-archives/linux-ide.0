@@ -1,58 +1,38 @@
-From: Steven Scholz <steven.scholz@imc-berlin.de>
-Subject: Crash in ide_do_request() on card removal
-Date: Fri, 29 Jul 2005 14:01:52 +0200
-Message-ID: <42EA1AB0.6070001@imc-berlin.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFC][PATCH] libata ATAPI alignment
+Date: Fri, 29 Jul 2005 14:38:54 +0100
+Message-ID: <1122644334.13581.42.camel@localhost.localdomain>
+References: <20050729050654.GA10413@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.imc-berlin.de ([217.110.46.186]:26131 "EHLO
-	mail.imc-berlin.de") by vger.kernel.org with ESMTP id S262560AbVG2MB5
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Jul 2005 08:01:57 -0400
-Received: from mailserver.berlin.imc-berlin.de (mailserver.berlin.imc-berlin.de [10.0.0.19])
-	by mail.imc-berlin.de (Postfix) with ESMTP id 3D2022F016
-	for <linux-ide@vger.kernel.org>; Fri, 29 Jul 2005 14:01:54 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by mailserver.berlin.imc-berlin.de (Postfix) with ESMTP id 3192012157
-	for <linux-ide@vger.kernel.org>; Fri, 29 Jul 2005 14:01:54 +0200 (CEST)
-Received: from [10.0.2.10] (scholz.berlin.imc-berlin.de [10.0.2.10])
-	by mailserver.berlin.imc-berlin.de (Postfix) with ESMTP id 546A41203F
-	for <linux-ide@vger.kernel.org>; Fri, 29 Jul 2005 14:01:53 +0200 (CEST)
+Received: from clock-tower.bc.nu ([81.2.110.250]:9949 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S262055AbVG2NPx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Jul 2005 09:15:53 -0400
+In-Reply-To: <20050729050654.GA10413@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
-Hi there,
+On Gwe, 2005-07-29 at 01:06 -0400, Jeff Garzik wrote:
+> So, one thing that's terribly ugly about SATA ATAPI is that we need to
+> pad DMA transfers to the next 32-bit boundary, if the length is not
+> evenly divisible by 4.
 
-when surprisingly removing a CF ATA card (without unmounting before) I sometimes 
-get kernel crashes in ide_do_request() (linux-2.6.13-rc4 on ARM):
+Looks good and avoids the special case leaking into the core code.
 
-cardmgr[194]: shutting down socket 0
-cardmgr[194]: executing: './ide stop hda'
-cardmgr[194]: + umount -v /dev/hda1
-Assertion '(hwgroup->drive)' failed in drivers/ide/ide-io.c:ide_do_request(1130)
-Assertion '(drive)' failed in drivers/ide/ide-io.c:choose_drive(1035)
-Unable to handle kernel NULL pointer dereference at virtual address 00000010
-pgd = c0e34000
-[00000010] *pgd=20eb0031, *pte=00000000, *ppte=00000000
-Internal error: Oops: 17 [#1]
-Modules linked in: ide_cs pcmcia at91_cf pcmcia_core
-CPU: 0
-PC is at ide_do_request+0x100/0x480
-LR is at 0x1
-pc : [<c00f9980>]    lr : [<00000001>]    Not tainted
-...
+> Complicating matters, we currently must support two methods of data
+> buffer submission:  a single kernel virtual address, or a struct
+> scatterlist.
 
-As the assertions show "drive" is NULL (due to the card removal?) and thus the 
-kernel crashes ...
+For the moment - also you turn the single buffer into a one entry sglist
+so its not to bad.
 
-Upon card removal the pcmcia cardmgr tries to unmount the drive which disapeared.
+> Review is requested by any and all parties, as well as suggestions for
+> a prettier approach.
 
-("sometimes" above means that the rest of the time the kernel is not dumping 
-core, but the umount process hangs forever.)
-
-Is this a kernel bug?
-
--- 
-Steven
+I'd pull the code into seperate functions but thats my only real
+comment.
