@@ -1,43 +1,21 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH libata-dev-2.6:sil24 00/07] sil24: misc fixes
-Date: Sat, 30 Jul 2005 19:13:52 +0900 (KST)
-Message-ID: <20050730101344.1C985988@htj.dyndns.org>
+Subject: Re: [PATCH libata-dev-2.6:sil24 02/07] sil24: move error handling out of hot interrupt path
+Date: Sat, 30 Jul 2005 19:14:02 +0900 (KST)
+Message-ID: <20050730101344.F56FB4A0@htj.dyndns.org>
+References: <20050730101344.1C985988@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.196]:53434 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S263030AbVG3KN7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Jul 2005 06:13:59 -0400
-Received: by zproxy.gmail.com with SMTP id i11so693495nzh
-        for <linux-ide@vger.kernel.org>; Sat, 30 Jul 2005 03:13:57 -0700 (PDT)
+Received: from zproxy.gmail.com ([64.233.162.193]:16096 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S263031AbVG3KOJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Jul 2005 06:14:09 -0400
+Received: by zproxy.gmail.com with SMTP id i11so693501nzh
+        for <linux-ide@vger.kernel.org>; Sat, 30 Jul 2005 03:14:07 -0700 (PDT)
+In-Reply-To: <20050730101344.1C985988@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, Carlos.Pardo@siliconimage.com, linux-ide@vger.kernel.org
 
- Hello, Jeff & Carlos.
-
- These patches are misc fixes suggested by Jeff for rewritten sil24
-driver.  The follwing issues are not fixed in this patchset.  I need
-more info to work on these.
-
- * Device signature access on reset.
- * How to discern completion interrupts from error ones.
- * 64bit activation
- * Removal of PORT_RST in sil24_init_one().
-
-[ Start of patch descriptions ]
-
-01_sil24_add-status-emulation.patch
-	: implement status register emulation
-
-	Add back status register emulation.  It's very simple.  If the
-	previous command completed successfully, we return ATA_DRDY
-	for all following status register queries; otherwise, we
-	return ATA_DRDY | ATA_ERR.  We can improve error reporting by
-	reading CMD_ERROR register and emulating status/error values
-	accordingly.
-
 02_sil24_separate-out-error-path.patch
-	: move error handling out of hot interrupt path
 
 	Move error handling from sil24_host_intr into separate
 	function - sil24_error_intr.
@@ -45,44 +23,86 @@ more info to work on these.
 	Jeff, I don't think this patch actually improves readability
 	and/or performance.  Is this what you wanted?
 
-03_sil24_add-test-for-PCI-fault.patch
-	: add testing for PCI fault
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-	On entry to interrupt handler, PORT_SLOT_STAT register is read
-	first.  Check if PCI fault or device removal has occurred by
-	testing the value for 0xffffffff.
+ sata_sil24.c |   59 +++++++++++++++++++++++++++++++++--------------------------
+ 1 files changed, 33 insertions(+), 26 deletions(-)
 
-04_sil24_remove-irq-disable-on-spurious-interrupt.patch
-	: remove irq disable code on spurious interrupt
-
-	If interrupt occurs on a disabled port, the driver used to
-	mask the port's interrupt, but we don't know if such action is
-	necessary yet and that's not what other drives do.  So, just
-	do nothing and tell IRQ subsystem that it's not our interrupt.
-
-05_sil24_mdelay-instead-of-udelay.patch
-	: use longer delay function and less iteration in reset_controller
-
-	loop 100 times with mdelay(1) instead of 1000 times with
-	udelay(100) in sil24_reset_controller.
-
-	Jeff, is this what you wanted?  If not, just ignore this
-	patch.  The following patches will apply without this one.
-
-06_sil24_add-flusing-after-masking-irq.patch
-	: add IO flushing after masking irq during initialization
-
-	Add IO flushing after masking irq during initialization.
-
-07_sil24_add-FIXME-ata_device_add-return_value.patch
-	: add FIXME comment above ata_device_add
-
-	Add FIXME comment above ata_device_add.
-
-[ End of patch descriptions ]
-
- Thanks.
-
---
-tejun
+Index: work/drivers/scsi/sata_sil24.c
+===================================================================
+--- work.orig/drivers/scsi/sata_sil24.c	2005-07-30 19:13:39.000000000 +0900
++++ work/drivers/scsi/sata_sil24.c	2005-07-30 19:13:40.000000000 +0900
+@@ -482,6 +482,37 @@ static void sil24_eng_timeout(struct ata
+ 	sil24_reset_controller(ap);
+ }
+ 
++static void sil24_error_intr(struct ata_port *ap, u32 slot_stat)
++{
++	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
++	struct sil24_port_priv *pp = ap->private_data;
++	void *port = pp->port;
++	u32 irq_stat, cmd_err, sstatus, serror;
++
++	irq_stat = readl(port + PORT_IRQ_STAT);
++	cmd_err = readl(port + PORT_CMD_ERR);
++	sstatus = readl(port + PORT_SSTATUS);
++	serror = readl(port + PORT_SERROR);
++
++	/* Clear IRQ/errors */
++	writel(irq_stat, port + PORT_IRQ_STAT);
++	if (cmd_err)
++		writel(cmd_err, port + PORT_CMD_ERR);
++	if (serror)
++		writel(serror, port + PORT_SERROR);
++
++	printk(KERN_ERR DRV_NAME " ata%u: error interrupt on port%d\n"
++	       "  stat=0x%x irq=0x%x cmd_err=%d sstatus=0x%x serror=0x%x\n",
++	       ap->id, ap->port_no, slot_stat, irq_stat, cmd_err, sstatus, serror);
++
++	/* FIXME: We can do better and emulate the err register too. */
++	pp->stat = ATA_DRDY | ATA_ERR;
++	if (qc)
++		ata_qc_complete(qc, ATA_ERR);
++
++	sil24_reset_controller(ap);
++}
++
+ static inline void sil24_host_intr(struct ata_port *ap)
+ {
+ 	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
+@@ -494,32 +525,8 @@ static inline void sil24_host_intr(struc
+ 		pp->stat = ATA_DRDY;
+ 		if (qc)
+ 			ata_qc_complete(qc, 0);
+-	} else {
+-		u32 irq_stat, cmd_err, sstatus, serror;
+-
+-		irq_stat = readl(port + PORT_IRQ_STAT);
+-		cmd_err = readl(port + PORT_CMD_ERR);
+-		sstatus = readl(port + PORT_SSTATUS);
+-		serror = readl(port + PORT_SERROR);
+-
+-		/* Clear IRQ/errors */
+-		writel(irq_stat, port + PORT_IRQ_STAT);
+-		if (cmd_err)
+-			writel(cmd_err, port + PORT_CMD_ERR);
+-		if (serror)
+-			writel(serror, port + PORT_SERROR);
+-
+-		printk(KERN_ERR DRV_NAME " ata%u: error interrupt on port%d\n"
+-		       "  stat=0x%x irq=0x%x cmd_err=%d sstatus=0x%x serror=0x%x\n",
+-		       ap->id, ap->port_no, slot_stat, irq_stat, cmd_err, sstatus, serror);
+-
+-		/* FIXME: We can do better and emulate the err register too. */
+-		pp->stat = ATA_DRDY | ATA_ERR;
+-		if (qc)
+-			ata_qc_complete(qc, ATA_ERR);
+-
+-		sil24_reset_controller(ap);
+-	}
++	} else
++		sil24_error_intr(ap, slot_stat);
+ }
+ 
+ static irqreturn_t sil24_interrupt(int irq, void *dev_instance, struct pt_regs *regs)
 
