@@ -1,20 +1,32 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_nv: Support MCP51/MCP55 device IDs
-Date: Sun, 31 Jul 2005 01:04:52 -0400
-Message-ID: <42EC5BF4.9050102@pobox.com>
-References: <42C7DDB7.50201@gentoo.org>
+From: Matty <sari@golfmak.com>
+Subject: Buy Viagra Online here
+Date: Sun, 31 Jul 2005 20:18:20 +0700
+Message-ID: <1627189053.6793861221@203-151-140-120.inter.net.th>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:35544 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261620AbVGaFE5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Jul 2005 01:04:57 -0400
-In-Reply-To: <42C7DDB7.50201@gentoo.org>
+Received: from [203.113.51.6] ([203.113.51.6]:28932 "HELO
+	203-151-140-120.inter.net.th") by vger.kernel.org with SMTP
+	id S261760AbVGaNSn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 31 Jul 2005 09:18:43 -0400
+Received: from [80.73.26.151] (port=7561 helo=[repugnant])
+    by 203-151-140-120.inter.net.th with esmtp
+    id 4474323748Tanzania45813
+    for linux-ide@vger.kernel.org; Sun, 31 Jul 2005 20:18:21 +0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>
-Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, rpunkunus@nvidia.com
+To: linux-ide@vger.kernel.org
 
-applied
+Men's health pills - order securely online.
+http://gardened.q67.net/pharmacy/dir/
+
+
+
+
+Fear not those who argue but those who dodge.    
+The gods too are fond of a joke     
+Anybody can be good in the country. There are no temptations there. 
+At least when I was govenor, cocaine was expensive.    
+
 
