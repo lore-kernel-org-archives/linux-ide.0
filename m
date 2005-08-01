@@ -1,105 +1,49 @@
-From: Otto Meier <gf435@gmx.net>
+From: Daniel Drake <dsd@gentoo.org>
 Subject: Re: Driver for sata adapter promise sata300 tx4
-Date: Mon, 01 Aug 2005 17:28:56 +0200
-Message-ID: <42EE3FB8.10008@gmx.net>
-References: <42EDE918.9040807@gmx.net> <42EE3501.7010107@gentoo.org>
+Date: Mon, 01 Aug 2005 17:16:31 +0100
+Message-ID: <42EE4ADF.4080502@gentoo.org>
+References: <42EDE918.9040807@gmx.net> <42EE3501.7010107@gentoo.org> <42EE3FB8.10008@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.183]:210 "EHLO
-	moutng.kundenserver.de") by vger.kernel.org with ESMTP
-	id S261299AbVHAP3A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Aug 2005 11:29:00 -0400
-In-Reply-To: <42EE3501.7010107@gentoo.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262257AbVHAQTU@vger.kernel.org>
+In-Reply-To: <42EE3FB8.10008@gmx.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Otto Meier <gf435@gmx.net>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Daniel Drake wrote:
-> Otto Meier wrote:
->> This card use the sata chip pdc 40718 (as of my card)
->> the lastest sata_promise kernel with sata promise patch driver=20
->> doesn't recognise
->> this card.
->>
->> I added the following line to static struct pci_device_id=20
->> pdc_ata_pci_tbl[] in sata_promise.c:
->>
->> { PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
->> board_20319 },
->>
->> and the card was recognised and seam to work without errors so far.
->
-> Yes, this should be fine (this is a 4-port SATA card right?)
->
-> Are you happy to produce and submit a patch yourself (read=20
-> Documentation/SubmittingPatches) or should I submit one for you?
->
-> Thanks,
-> Daniel
->
->
-Yes you are right it is a 4-port sata-II 300 card (PDC40718 ). Accordin=
-g to
-the promise feature list it should support :
+Otto Meier wrote:
+> My question is also are these features (NCQ/TCQ) and the heigher 
+> datarate be supported by this
+> modification? or is only the basic feature set of sata 150 TX4 supported?
 
-SATA300=E2=84=A2 TX4 Highlights
+NCQ support is under development. Search the archives for Jens Axboe's recent 
+patches to support this. I don't know about TCQ.
 
-   * Native Command Queuing (NCQ)
-   * SATA Tagged Command Queuing (TCQ)
-   * Large LBA support for drives above 137GB
-   * Supports Serial ATAPI devices
-   * Disk Activity LED Headers
-   * Flexible future-proof upgrade for users with motherboards that
-     only have a PCI interface
+> Here is the patch:
+> 
+> --- linux/drivers/scsi/sata_promise.c.orig 2005-08-01 17:09:48.474824778 
+> +0200
+> +++ linux/drivers/scsi/sata_promise.c 2005-07-31 12:57:06.415979512 +0200
 
+Your patch will not apply because it is linewrapped. You also need to submit 
+it in a mail of its own to the relevent lists and maintainer, with your 
+sign-off  (see Documentation/SubmittingPatches)
 
-My question is also are these features (NCQ/TCQ) and the heigher=20
-datarate be supported by this
-modification? or is only the basic feature set of sata 150 TX4 supporte=
-d?
+> I just saw the patches of  Luke Kosewski regarding the SATA150 TX4 
+> antipating
+> them it might be right to modify the patch to
+> 
+> + { PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+> + board_40518 },
 
-Here is the patch:
+It won't compile like this because board_40518 is not a valid identifier. I 
+also think it doesn't really matter as it looks like these identifier codes 
+have lost their numerical meanings, and now just signify:
 
---- linux/drivers/scsi/sata_promise.c.orig 2005-08-01 17:09:48.47482477=
-8 +0200
-+++ linux/drivers/scsi/sata_promise.c 2005-07-31 12:57:06.415979512 +02=
-00
-@@ -183,6 +183,8 @@ static struct pci_device_id pdc_ata_pci_board_20319=
- },
-{ PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,=20
-board_20319 },
-+ { PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+ board_20319 },
-{ PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-board_20319 },
+board_2037x - 2 port SATA, maybe with an extra PATA port
+board_20319 - 4 port SATA
+board_20619 - 4 port PATA
 
-
-
-Thanks
-Otto
-
-
-I just saw the patches of  Luke Kosewski regarding the SATA150 TX4 anti=
-pating
-them it might be right to modify the patch to=20
-
-
---- linux/drivers/scsi/sata_promise.c.orig 2005-08-01 17:09:48.47482477=
-8 +0200
-+++ linux/drivers/scsi/sata_promise.c 2005-07-31 12:57:06.415979512 +02=
-00
-@@ -183,6 +183,8 @@ static struct pci_device_id pdc_ata_pci_board_20319=
- },
-{ PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,=20
-board_20319 },
-+ { PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+ board_40518 },
-{ PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-board_20319 },
-
-bye=20
-Otto
+Daniel
