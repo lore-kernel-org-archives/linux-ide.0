@@ -1,87 +1,66 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [git patch] libata fix
-Date: Sun, 31 Jul 2005 19:29:23 -0400
-Message-ID: <42ED5ED3.9060209@pobox.com>
+From: Ricky Cheng <rickycheng@qnap.com.tw>
+Subject: Re: [info] Silicon Image device hotplug debounce
+Date: Mon, 1 Aug 2005 04:23:34 +0000 (UTC)
+Message-ID: <loom.20050801T061802-766@post.gmane.org>
+References: <42E672C1.4000502@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000002090103040500040007"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:17371 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S262081AbVGaX30 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Jul 2005 19:29:26 -0400
+Received: from main.gmane.org ([80.91.229.2]:41430 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S261527AbVHAFki (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Aug 2005 01:40:38 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1DzT2Q-0004fM-1f
+	for linux-ide@vger.kernel.org; Mon, 01 Aug 2005 07:40:34 +0200
+Received: from mail.qnap.com.tw ([mail.qnap.com.tw])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 01 Aug 2005 07:40:34 +0200
+Received: from rickycheng by mail.qnap.com.tw with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 01 Aug 2005 07:40:34 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------000002090103040500040007
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Jeff Garzik <jgarzik <at> pobox.com> writes:
 
-Please pull from the 'upstream-fixes' branch of
-rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-
-to obtain the damnable-annoying[1] fix described in the attached 
-diffstat/changelog/patch.
-
-	Jeff
-
-
-[1] the option is truly a boolean, that enables or disables a menu (not 
-any code).  But it won't work as a boolean apparently :/  Roman doesn't 
-have any better suggestions, so oh well.
-
-
---------------000002090103040500040007
-Content-Type: text/plain;
- name="libata-dev.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata-dev.txt"
-
- drivers/scsi/Kconfig |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-
-commit faa725332f39329288f52b7f872ffda866ba5b09
-Author: Adrian Bunk <bunk@stusta.de>
-Date:   Wed Jul 27 01:06:35 2005 -0700
-
-    [PATCH] SCSI_SATA has to be a tristate
-    
-    SCSI=m must disallow static drivers.
-    
-    The problem is that all the SATA drivers depend on SCSI_SATA.
-    
-    With SCSI=m and SCSI_SATA=y this allows the static enabling of the SATA
-    drivers with unwanted effects, e.g.:
-    - SCSI=m, SCSI_SATA=y, SCSI_ATA_ADMA=y
-      -> SCSI_ATA_ADMA is built statically but scsi/built-in.o is not linked
-         into the kernel
-    - SCSI=m, SCSI_SATA=y, SCSI_ATA_ADMA=y, SCSI_SATA_AHCI=m
-      -> SCSI_ATA_ADMA and libata are built statically but
-         scsi/built-in.o is not linked into the kernel,
-         SCSI_SATA_AHCI is built modular (unresolved symbols due to missing
-                                          libata)
-    
-    Signed-off-by: Adrian Bunk <bunk@stusta.de>
-    Cc: Jeff Garzik <jgarzik@pobox.com>
-    Signed-off-by: Andrew Morton <akpm@osdl.org>
-    Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
+> 
+> 
+> This is some info that Silicon Image provided, for use in developing 
+> SATA hotplug.  This info is public and not NDA as of the publishing of 
+> the SiI 311x hardware documentation at
+> 
+> 	http://gkernel.sourceforge.net/specs/sii/
+> 
+> Kudos again to SiI for opening their 311x and CMD680 [PATA] docs.
+> 
+> 	Jeff
+> 
+> 
+> 
+> 
+> Here are some writeups for our 3112/3152 hot plug/unplug handling.  Hope it 
+will
+>  help in your open source development.
+> 
+> For the 3114 controller, the sequence is essentially the same as the 3112 
+except
+>  that the PHYRDY change handler does not need to reset the channel and of 
+course
+>  obvious changes to handle the two additional channels of the 3114.
+> 
+> Best regards,
+> [silicon image person]
+> 
 
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -424,7 +424,7 @@ config SCSI_IN2000
- source "drivers/scsi/megaraid/Kconfig.megaraid"
- 
- config SCSI_SATA
--	bool "Serial ATA (SATA) support"
-+	tristate "Serial ATA (SATA) support"
- 	depends on SCSI
- 	help
- 	  This driver family supports Serial ATA host controllers
+Hi, This is Ricky. I am finding solution of sil 3512 chip hotswap problem.
+I think this doc can help some. But I don't really understand libata very much.
+Can someone help some ideas?..Thanks
+I know I should do something in interrupt handler in libata.c like check 
+status of plug/unplug. Is is right?
 
---------------000002090103040500040007--
+
+
