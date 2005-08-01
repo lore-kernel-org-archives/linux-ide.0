@@ -1,38 +1,42 @@
-From: Ricky Cheng <rickycheng@qnap.com.tw>
-Subject: Re: [info] Silicon Image device hotplug debounce
-Date: Mon, 1 Aug 2005 06:52:44 +0000 (UTC)
-Message-ID: <loom.20050801T084800-886@post.gmane.org>
-References: <42E672C1.4000502@pobox.com>  <loom.20050801T061802-766@post.gmane.org> <355e5e5e05073123121fd7e13f@mail.gmail.com>
+From: Lukasz Kosewski <lkosewsk@gmail.com>
+Subject: [PATCH 0/3] Add disk hotswap support to libata RESEND #2
+Date: Mon, 1 Aug 2005 03:00:56 -0700
+Message-ID: <355e5e5e0508010300d0aedc9@mail.gmail.com>
+Reply-To: Lukasz Kosewski <lkosewsk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:5514 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S262024AbVHAGxS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Aug 2005 02:53:18 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1DzUAf-0000r0-S9
-	for linux-ide@vger.kernel.org; Mon, 01 Aug 2005 08:53:10 +0200
-Received: from mail.qnap.com.tw ([mail.qnap.com.tw])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Mon, 01 Aug 2005 08:53:09 +0200
-Received: from rickycheng by mail.qnap.com.tw with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Mon, 01 Aug 2005 08:53:09 +0200
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
+Hey Jeff, all,
 
-> Look (tonight, over the next few hours in fact) for messages of the
-> type "Add disk hotswap support to libata." I should have some patches
-> sent in by then.
-> 
+The following is my latest attempt at re-doing the hotswap patches for
+libata hotswapping.  This has some positive upsides:
 
-Hi, Luke
+- The patches seem cleaner
+- The patches seem more multi-purpose and adaptable for use across all
+controllers, not just the Promise ones.
+- Jeff is more likely to accept them since most of his suggestions
+have been factored in.
 
-Thanks a lot, I'll keep waiting for the patch sent tonight to test.
+There is also a downside:
 
-Ricky Cheng
+- The patches haven't been tested at ALL since I don't have any
+hardware until September.
 
+So, try at your own risk.  Everything seems sane to me, however it is
+3:00 AM here.
+
+Jeff, these patches are designed against 2.6.13-rc3-mm1.  As a result,
+they are meant to apply overtop of the sata_promise 'support PATA
+port' patch.
+
+Please apply and try.  And send me comments about how the patches are
+broken in weird scenarios.
+
+Luke Kosewski
