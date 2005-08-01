@@ -1,17 +1,17 @@
 From: Otto Meier <gf435@gmx.net>
 Subject: Re: Driver for sata adapter promise sata300 tx4
-Date: Mon, 01 Aug 2005 17:12:00 +0200
-Message-ID: <42EE3BC0.6010002@gmx.net>
+Date: Mon, 01 Aug 2005 17:28:56 +0200
+Message-ID: <42EE3FB8.10008@gmx.net>
 References: <42EDE918.9040807@gmx.net> <42EE3501.7010107@gentoo.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:17646 "EHLO
+Received: from moutng.kundenserver.de ([212.227.126.183]:210 "EHLO
 	moutng.kundenserver.de") by vger.kernel.org with ESMTP
-	id S261299AbVHAPMH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Aug 2005 11:12:07 -0400
+	id S261299AbVHAP3A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Aug 2005 11:29:00 -0400
 In-Reply-To: <42EE3501.7010107@gentoo.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -48,13 +48,13 @@ the promise feature list it should support :
 
 SATA300=E2=84=A2 TX4 Highlights
 
-    * Native Command Queuing (NCQ)
-    * SATA Tagged Command Queuing (TCQ)
-    * Large LBA support for drives above 137GB
-    * Supports Serial ATAPI devices
-    * Disk Activity LED Headers
-    * Flexible future-proof upgrade for users with motherboards that
-      only have a PCI interface
+   * Native Command Queuing (NCQ)
+   * SATA Tagged Command Queuing (TCQ)
+   * Large LBA support for drives above 137GB
+   * Supports Serial ATAPI devices
+   * Disk Activity LED Headers
+   * Flexible future-proof upgrade for users with motherboards that
+     only have a PCI interface
 
 
 My question is also are these features (NCQ/TCQ) and the heigher=20
@@ -65,13 +65,12 @@ d?
 Here is the patch:
 
 --- linux/drivers/scsi/sata_promise.c.orig 2005-08-01 17:09:48.47482477=
-8=20
-+0200
+8 +0200
 +++ linux/drivers/scsi/sata_promise.c 2005-07-31 12:57:06.415979512 +02=
 00
-@@ -183,6 +183,8 @@ static struct pci_device_id pdc_ata_pci_
-board_20319 },
-{ PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+@@ -183,6 +183,8 @@ static struct pci_device_id pdc_ata_pci_board_20319=
+ },
+{ PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,=20
 board_20319 },
 + { PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
 + board_20319 },
@@ -84,3 +83,23 @@ Thanks
 Otto
 
 
+I just saw the patches of  Luke Kosewski regarding the SATA150 TX4 anti=
+pating
+them it might be right to modify the patch to=20
+
+
+--- linux/drivers/scsi/sata_promise.c.orig 2005-08-01 17:09:48.47482477=
+8 +0200
++++ linux/drivers/scsi/sata_promise.c 2005-07-31 12:57:06.415979512 +02=
+00
+@@ -183,6 +183,8 @@ static struct pci_device_id pdc_ata_pci_board_20319=
+ },
+{ PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,=20
+board_20319 },
++ { PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++ board_40518 },
+{ PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+board_20319 },
+
+bye=20
+Otto
