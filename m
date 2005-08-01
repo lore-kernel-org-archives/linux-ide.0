@@ -1,40 +1,43 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: Re: Driver for sata adapter promise sata300 tx4
-Date: Mon, 01 Aug 2005 15:43:13 +0100
-Message-ID: <42EE3501.7010107@gentoo.org>
-References: <42EDE918.9040807@gmx.net>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH 0/3] libata PIO fixes (revised)
+Date: Mon, 01 Aug 2005 22:54:35 +0800
+Message-ID: <42EE37AB.2000006@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.103.221.47] ([81.103.221.47]:549 "EHLO
-	mta07-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
-	id S262219AbVHAOl7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Aug 2005 10:41:59 -0400
-In-Reply-To: <42EDE918.9040807@gmx.net>
+Received: from bluehawaii.tikira.net ([61.62.22.51]:25084 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S261288AbVHAOyq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Aug 2005 10:54:46 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Otto Meier <gf435@gmx.net>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: IDE Linux <linux-ide@vger.kernel.org>
 
-Otto Meier wrote:
-> This card use the sata chip pdc 40718 (as of my card)
-> the lastest sata_promise kernel with sata promise patch driver doesn't 
-> recognise
-> this card.
-> 
-> I added the following line to static struct pci_device_id 
-> pdc_ata_pci_tbl[]  in sata_promise.c:
-> 
->        { PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
->          board_20319 },
-> 
-> and the card was recognised and seam to work without errors so far.
+Jeff,
 
-Yes, this should be fine (this is a 4-port SATA card right?)
+The PIO fixes revised according to the previous reviews.
 
-Are you happy to produce and submit a patch yourself (read 
-Documentation/SubmittingPatches) or should I submit one for you?
+1/3 pio1.diff:
+   - Modify the "if conditions" in __atapi_pio_bytes() to be more robust.
 
-Thanks,
-Daniel
+2/3 pio2.diff:
+   - Add ATA_FLAG_IO_32BIT to libata.h for hosts with 32-bit data register.
+   - Modify ata_mmio_data_xfer() and ata_pio_data_xfer() to handle buffer with length
+     not aligned to 32-bit boundary.
+
+3/3 pio3.diff:
+   - Modify __atapi_pio_bytes() to handle the case when device returns/needs extra data.
+
+(Patch diff'ed against 2.6.13-rc4 tree, 02459eaab98a6a57717bc0cacede148fc76af881)
+
+Tested ok on x86 with Promise PDC20275 and LG DVD-Multi drive.
+
+For your review and advice, thanks.
+
+Albert
+
+
+
+
