@@ -1,35 +1,39 @@
-From: "Juliana R." <fYZ@ultrapostman.com>
-Subject: Job.
-Date: Mon, 01 Aug 2005 21:15:59 -0700
-Message-ID: <100001c59718$e37a4e9f$d204d001@ultrapostman.com>
+From: Otto Meier <gf435@gmx.net>
+Subject: Driver for sata adapter promise sata300 tx4
+Date: Mon, 01 Aug 2005 16:14:20 +0200
+Message-ID: <42EE2E3C.5060008@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:50312 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S261803AbVHANJO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Aug 2005 09:09:14 -0400
-Received: from freeassclips.com ([211.222.236.8])
-	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id j71D9AHs026191
-	for <linux-ide@vger.kernel.org>; Mon, 1 Aug 2005 06:09:12 -0700
-Received: from ultrapostman.com (ultrapostman-com-bk.mr.outblaze.com [205.158.62.181])
-	by freeassclips.com (Postfix) with ESMTP id 709679AF98
-	for <linux-ide@vger.kernel.org>; Mon, 01 Aug 2005 21:15:59 -0700
+Received: from moutng.kundenserver.de ([212.227.126.187]:53205 "EHLO
+	moutng.kundenserver.de") by vger.kernel.org with ESMTP
+	id S262086AbVHAOO1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Aug 2005 10:14:27 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux <linux-ide@vger.kernel.org>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Hello,
+Hi,
 
-We are Russian marriage agency.
-We need cooperation with you.
+This card use the sata chip pdc 40718 (as of my card)
+the lastest sata_promise kernel with sata promise patch driver doesn't 
+recognise
+this card.
 
-You can earn some cash for the small help in one matter.
+I added the following line to static struct pci_device_id 
+pdc_ata_pci_tbl[]  in sata_promise.c:
 
-Please contact us only by this e-mail for more details: INFO@ROYALWIFES.COM
+       { PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+         board_20319 },
 
-Thanks,
-Juliana Ramazanova.
-Manager.
+and the card was recognised and seam to work without errors so far.
+
+bilding a soft raid5 on it and moving data doesn't broke it.
+
+It would be interesting to hear from the guru's if this is ok to do?.
+
+Otto
 
 
