@@ -1,49 +1,65 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: Re: Driver for sata adapter promise sata300 tx4
-Date: Mon, 01 Aug 2005 17:16:31 +0100
-Message-ID: <42EE4ADF.4080502@gentoo.org>
-References: <42EDE918.9040807@gmx.net> <42EE3501.7010107@gentoo.org> <42EE3FB8.10008@gmx.net>
+From: Polly <pollyp100@yahoo.com>
+Subject: Plextor 712-sa write issue (repost)
+Date: Mon, 1 Aug 2005 10:23:17 -0700 (PDT)
+Message-ID: <20050801172318.79706.qmail@web34313.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262257AbVHAQTU@vger.kernel.org>
-In-Reply-To: <42EE3FB8.10008@gmx.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Otto Meier <gf435@gmx.net>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from web34313.mail.mud.yahoo.com ([66.163.178.145]:17761 "HELO
+	web34313.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S262052AbVHARXW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Aug 2005 13:23:22 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Otto Meier wrote:
-> My question is also are these features (NCQ/TCQ) and the heigher 
-> datarate be supported by this
-> modification? or is only the basic feature set of sata 150 TX4 supported?
 
-NCQ support is under development. Search the archives for Jens Axboe's recent 
-patches to support this. I don't know about TCQ.
+Hi,
 
-> Here is the patch:
-> 
-> --- linux/drivers/scsi/sata_promise.c.orig 2005-08-01 17:09:48.474824778 
-> +0200
-> +++ linux/drivers/scsi/sata_promise.c 2005-07-31 12:57:06.415979512 +0200
+This is my second post on this issue, in the hopes
+that someone can enlighten me, or point me off to the
+right resource for this problem.
 
-Your patch will not apply because it is linewrapped. You also need to submit 
-it in a mail of its own to the relevent lists and maintainer, with your 
-sign-off  (see Documentation/SubmittingPatches)
+I can mount my Plextor 712 SA DVD burner read-only,
+but I can't mount it read-write. I have an Intel ICH6
+SATA controller:
 
-> I just saw the patches of  Luke Kosewski regarding the SATA150 TX4 
-> antipating
-> them it might be right to modify the patch to
-> 
-> + { PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-> + board_40518 },
+---
+Jul 28 11:37:54 HTPC kernel: cdrom: sr0: mrw address
+space DMA selected
+Jul 28 11:37:54 HTPC kernel: attempt to access beyond
+end of device
+Jul 28 11:37:54 HTPC kernel: sr0: rw=0, want=68,
+limit=4
+Jul 28 11:37:54 HTPC kernel: isofs_fill_super: bread
+failed, dev=sr0, iso_blknum=16, block=16
+---
 
-It won't compile like this because board_40518 is not a valid identifier. I 
-also think it doesn't really matter as it looks like these identifier codes 
-have lost their numerical meanings, and now just signify:
+I am running under 2.6.12.3, with ATA_ENABLE_ATAPI and
+ATA_ENABLE_PATA in libata.h turned on.
 
-board_2037x - 2 port SATA, maybe with an extra PATA port
-board_20319 - 4 port SATA
-board_20619 - 4 port PATA
+- Is this a known issue? If so, is there a bug number
+I should track, a branch or release I should be
+keeping an eye on? Should I be trying out a particular
+patch? Is there a workaround for this?
 
-Daniel
+- If this is not a known issue, should I open a
+bugzilla report on this? Is there additional
+information that would be useful for me to include in
+a report?
+
+Again, if there are developers that are working on
+this, I'd be happy to work with you as an alpha test
+site.
+
+Thank you for your time,
+
+Polly
+
+
+		
+____________________________________________________
+Start your day with Yahoo! - make it your home page 
+http://www.yahoo.com/r/hs 
+ 
