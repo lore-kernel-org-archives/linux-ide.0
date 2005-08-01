@@ -1,74 +1,44 @@
-From: Martin Wilck <martin.wilck@fujitsu-siemens.com>
-Subject: ahci, SActive flag, and the HD activity LED
-Date: Tue, 02 Aug 2005 17:40:40 +0200
-Message-ID: <42EF93F8.8050601@fujitsu-siemens.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2/3] libata ata_data_xfer() fix
+Date: Mon, 01 Aug 2005 14:36:51 -0400
+Message-ID: <42EE6BC3.1040401@pobox.com>
+References: <42EE37AB.2000006@tw.ibm.com> <42EE392B.8000405@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030509070302080501090105"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dgate1.fujitsu-siemens.com ([217.115.66.35]:64330 "EHLO
-	dgate1.fujitsu-siemens.com") by vger.kernel.org with ESMTP
-	id S261575AbVHBPks (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Aug 2005 11:40:48 -0400
+Received: from mail.dvmed.net ([216.237.124.58]:58849 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261155AbVHASgz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Aug 2005 14:36:55 -0400
+In-Reply-To: <42EE392B.8000405@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org
-Cc: "Wichert, Gerhard" <Gerhard.Wichert@fujitsu-siemens.com>
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: IDE Linux <linux-ide@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030509070302080501090105
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Albert Lee wrote:
+> Jeff,
+> 
+> PATCH 2/3: ata_data_xfer() fix
+> 
+> Changes:
+>   - Add ATA_FLAG_IO_32BIT to libata.h for hosts with 32-bit data register.
+>   - Modify ata_mmio_data_xfer() and ata_pio_data_xfer() to handle buffer 
+> length
+>     not aligned to 32-bit boundary.
+> 
+> This patch does not reuse ap->pad as alignment buffer since
+> four bytes of local variable seems good enough.
 
-Hello Jeff, hello Jens, hello everybody,
+32-bit IO needs to be a separate patch.
 
-I am referring to the debate about whether or not setting the SActive 
-bit for non-NCQ ATA commands (e.g. http://lkml.org/lkml/2005/5/26/142).
+I made a design decision to -not- support 32bit IO, since it is not 
+universally supported by all host controllers.  It is much easier to say 
+"use DMA" instead.
 
-In our machines, this behavior of the Linux AHCI driver causes the HD 
-activity LED to stay on all the time. If I apply the attached trivial 
-patch (this is for the RedHat EL4.0-U1 kernel), the LED behaves nicely.
+libata would need additional checks, following similar logic in 
+drivers/ide, to do 32-bit IO.
 
-Jeff has stated in the above thread that "SActive is intentionally used 
-for non-NCQ devices". However I find clear indication in the specs that 
-the SActive flag should be set if and only if tagged queuing is being 
-used, and only for a specified subset of commands that support queuing 
-(http://www.t13.org/docs2005/D1699r1e-ATA8-ACS.pdf, secs. 4.19 and 
-4.20). The current mainline driver doesn't use queuing.
-
-If I am reading the specs correctly, that'd mean the ahci driver is 
-wrong in setting the SActive bit. Could you please comment? Jeff, in 
-particular, could you please give more detail why you say this flag is 
-"intentionally used"?
-
-Regards
-Martin
-
--- 
-Martin Wilck                Phone: +49 5251 8 15113
-Fujitsu Siemens Computers   Fax:   +49 5251 8 20409
-Heinz-Nixdorf-Ring 1        mailto:Martin.Wilck@Fujitsu-Siemens.com
-D-33106 Paderborn           http://www.fujitsu-siemens.com/primergy
+	Jeff
 
 
---------------030509070302080501090105
-Content-Type: text/x-patch;
- name="ahci_sactive.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ahci_sactive.diff"
-
---- ahci.c.orig	2005-06-13 11:39:26.000000000 +0200
-+++ ahci.c	2005-08-02 10:48:47.000000000 +0200
-@@ -691,9 +703,6 @@
- 	struct ata_port *ap = qc->ap;
- 	void *port_mmio = (void *) ap->ioaddr.cmd_addr;
- 
--	writel(1, port_mmio + PORT_SCR_ACT);
--	readl(port_mmio + PORT_SCR_ACT);	/* flush */
--
- 	writel(1, port_mmio + PORT_CMD_ISSUE);
- 	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
- 
-
---------------030509070302080501090105--
