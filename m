@@ -1,65 +1,105 @@
-From: Polly <pollyp100@yahoo.com>
-Subject: Plextor 712-sa write issue (repost)
-Date: Mon, 1 Aug 2005 10:23:17 -0700 (PDT)
-Message-ID: <20050801172318.79706.qmail@web34313.mail.mud.yahoo.com>
+From: Steven Scholz <steven.scholz@imc-berlin.de>
+Subject: Re: Crash in ide_do_request() on card removal
+Date: Tue, 02 Aug 2005 11:57:48 +0200
+Message-ID: <42EF439C.5000903@imc-berlin.de>
+References: <42EA1AB0.6070001@imc-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web34313.mail.mud.yahoo.com ([66.163.178.145]:17761 "HELO
-	web34313.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S262052AbVHARXW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Aug 2005 13:23:22 -0400
+Received: from mail.imc-berlin.de ([217.110.46.186]:12303 "EHLO
+	mail.imc-berlin.de") by vger.kernel.org with ESMTP id S261468AbVHBJ5w
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Aug 2005 05:57:52 -0400
+In-Reply-To: <42EA1AB0.6070001@imc-berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+Steven Scholz wrote:
+
+> Hi there,
+> 
+> when surprisingly removing a CF ATA card (without unmounting before) I 
+> sometimes get kernel crashes in ide_do_request() (linux-2.6.13-rc4 on ARM):
+> 
+> cardmgr[194]: shutting down socket 0
+> cardmgr[194]: executing: './ide stop hda'
+> cardmgr[194]: + umount -v /dev/hda1
+> Assertion '(hwgroup->drive)' failed in 
+> drivers/ide/ide-io.c:ide_do_request(1130)
+> Assertion '(drive)' failed in drivers/ide/ide-io.c:choose_drive(1035)
+> Unable to handle kernel NULL pointer dereference at virtual address 
+> 00000010
+> pgd = c0e34000
+> [00000010] *pgd=20eb0031, *pte=00000000, *ppte=00000000
+> Internal error: Oops: 17 [#1]
+> Modules linked in: ide_cs pcmcia at91_cf pcmcia_core
+> CPU: 0
+> PC is at ide_do_request+0x100/0x480
+> LR is at 0x1
+> pc : [<c00f9980>]    lr : [<00000001>]    Not tainted
+> ...
+> 
+> As the assertions show "drive" is NULL (due to the card removal?) and 
+> thus the kernel crashes ...
+> 
+> Upon card removal the pcmcia cardmgr tries to unmount the drive which 
+> disapeared.
+> 
+> ("sometimes" above means that the rest of the time the kernel is not 
+> dumping core, but the umount process hangs forever.)
+
+(I think) I found the reason for this behaviour:
+
+Upon card removal the functions
+
+~ # cardctl eject
+ide_release(398)
+ide_unregister(585): index=0
+blk_unregister_queue(3603)
+elv_unregister_queue(549)
+ide_unregister(698)
+ide_detach(164)
+
+are called. Thus the request queue for the drive is discarded which is fair 
+enough. But disk->queue would still point to a (now invalid) request_queue_t 
+structure. Thus if I/O requests (e.g. "umount") are started _after_ the drive 
+was removed bad things can happen! So I think we should explicitly remove the 
+reference to that queue by doing
+
+void blk_unregister_queue(struct gendisk *disk)
+{
+	request_queue_t *q = disk->queue;
+
+	if (q && q->request_fn) {
+		elv_unregister_queue(q);
+		kobject_unregister(&q->kobj);
++		disk->queue = NULL;
+		kobject_put(&disk->kobj);
+	}
+}
+
+in drivers/block/ll_rw_blk.c
+
+Then instead of a crash or hang one would get
+
+~ # umount /mnt/pcmcia/
+...
+generic_shutdown_super(249) calling sop->put_super @ c00ac734
+fat_clusters_flush(49)
+generic_make_request: Trying to access nonexistent block-device hda1 (1)
+FAT: bread failed in fat_clusters_flush
+
+Thanks a million.
+
+--
+Steven
 
 
-Hi,
-
-This is my second post on this issue, in the hopes
-that someone can enlighten me, or point me off to the
-right resource for this problem.
-
-I can mount my Plextor 712 SA DVD burner read-only,
-but I can't mount it read-write. I have an Intel ICH6
-SATA controller:
-
----
-Jul 28 11:37:54 HTPC kernel: cdrom: sr0: mrw address
-space DMA selected
-Jul 28 11:37:54 HTPC kernel: attempt to access beyond
-end of device
-Jul 28 11:37:54 HTPC kernel: sr0: rw=0, want=68,
-limit=4
-Jul 28 11:37:54 HTPC kernel: isofs_fill_super: bread
-failed, dev=sr0, iso_blknum=16, block=16
----
-
-I am running under 2.6.12.3, with ATA_ENABLE_ATAPI and
-ATA_ENABLE_PATA in libata.h turned on.
-
-- Is this a known issue? If so, is there a bug number
-I should track, a branch or release I should be
-keeping an eye on? Should I be trying out a particular
-patch? Is there a workaround for this?
-
-- If this is not a known issue, should I open a
-bugzilla report on this? Is there additional
-information that would be useful for me to include in
-a report?
-
-Again, if there are developers that are working on
-this, I'd be happy to work with you as an alpha test
-site.
-
-Thank you for your time,
-
-Polly
 
 
-		
-____________________________________________________
-Start your day with Yahoo! - make it your home page 
-http://www.yahoo.com/r/hs 
- 
+
+
+
+
