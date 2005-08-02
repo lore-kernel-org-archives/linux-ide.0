@@ -1,40 +1,33 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC][PATCH] libata ATAPI alignment
-Date: Tue, 02 Aug 2005 10:31:36 -0400
-Message-ID: <42EF83C8.3070003@pobox.com>
-References: <20050729050654.GA10413@havoc.gtf.org> <20050802082719.GA22569@suse.de>
+From: Steven Scholz <steven.scholz@imc-berlin.de>
+Subject: Re: Crash in ide_do_request() on card removal
+Date: Tue, 02 Aug 2005 15:03:20 +0200
+Message-ID: <42EF6F18.4090905@imc-berlin.de>
+References: <20050802104859.GG22569@suse.de> <42EF5488.9020802@imc-berlin.de> <20050802111302.GH22569@suse.de> <42EF5651.1040905@imc-berlin.de> <20050802112804.GJ22569@suse.de> <42EF594C.7090902@imc-berlin.de> <20050802113328.GK22569@suse.de> <42EF626B.6090103@imc-berlin.de> <20050802122609.GM22569@suse.de> <42EF69AD.30201@imc-berlin.de> <20050802125437.GA11967@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20050802082719.GA22569@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.imc-berlin.de ([217.110.46.186]:48398 "EHLO
+	mail.imc-berlin.de") by vger.kernel.org with ESMTP id S261509AbVHBNDW
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Aug 2005 09:03:22 -0400
+In-Reply-To: <20050802125437.GA11967@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
 Jens Axboe wrote:
-> On Fri, Jul 29 2005, Jeff Garzik wrote:
->>diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
->>--- a/drivers/scsi/ahci.c
->>+++ b/drivers/scsi/ahci.c
->>@@ -44,7 +44,7 @@
->> 
->> enum {
->> 	AHCI_PCI_BAR		= 5,
->>-	AHCI_MAX_SG		= 168, /* hardware max is 64K */
->>+	AHCI_MAX_SG		= 300, /* hardware max is 64K */
->> 	AHCI_DMA_BOUNDARY	= 0xffffffff,
->> 	AHCI_USE_CLUSTERING	= 0,
->> 	AHCI_CMD_SLOT_SZ	= 32 * 32,
+
+> It's not the right way, it only solves a little part of the problem.
+> Killing a request with an error usually looks like this:
 > 
-> 
-> Reasoning? I agree, just wondering... How big is the allocated area now?
+> 	blkdev_dequeue_request(rq);
+> 	end_that_request_first(rq, 0, rq->hard_nr_sectors);
+> 	end_that_request_last(rq);
 
-168 kept the entire allocated DMA area to 4K.
+How do I get the request? do_ide_request() only get the complete request_queue_t 
+*q. Shell I use elv_next_request() ?
 
-300 increases that to <I don't care>K.  ;-)
-
-	Jeff
-
-
+-- 
+Steven
