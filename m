@@ -1,105 +1,77 @@
-From: Steven Scholz <steven.scholz@imc-berlin.de>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: Crash in ide_do_request() on card removal
-Date: Tue, 02 Aug 2005 11:57:48 +0200
-Message-ID: <42EF439C.5000903@imc-berlin.de>
-References: <42EA1AB0.6070001@imc-berlin.de>
+Date: Tue, 2 Aug 2005 15:45:47 +0200
+Message-ID: <20050802134546.GC2408@suse.de>
+References: <20050802112804.GJ22569@suse.de> <42EF594C.7090902@imc-berlin.de> <20050802113328.GK22569@suse.de> <42EF626B.6090103@imc-berlin.de> <20050802122609.GM22569@suse.de> <42EF69AD.30201@imc-berlin.de> <20050802125437.GA11967@suse.de> <42EF6F18.4090905@imc-berlin.de> <20050802130646.GA7519@suse.de> <42EF7747.6050208@imc-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.imc-berlin.de ([217.110.46.186]:12303 "EHLO
-	mail.imc-berlin.de") by vger.kernel.org with ESMTP id S261468AbVHBJ5w
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Aug 2005 05:57:52 -0400
-In-Reply-To: <42EA1AB0.6070001@imc-berlin.de>
+Received: from ns.virtualhost.dk ([195.184.98.160]:50921 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261520AbVHBNnz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Aug 2005 09:43:55 -0400
+Content-Disposition: inline
+In-Reply-To: <42EF7747.6050208@imc-berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Steven Scholz <steven.scholz@imc-berlin.de>
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-Steven Scholz wrote:
-
-> Hi there,
+On Tue, Aug 02 2005, Steven Scholz wrote:
+> Jens Axboe wrote:
 > 
-> when surprisingly removing a CF ATA card (without unmounting before) I 
-> sometimes get kernel crashes in ide_do_request() (linux-2.6.13-rc4 on ARM):
+> >On Tue, Aug 02 2005, Steven Scholz wrote:
+> >
+> >>Jens Axboe wrote:
+> >>
+> >>
+> >>>It's not the right way, it only solves a little part of the problem.
+> >>>Killing a request with an error usually looks like this:
+> >>>
+> >>>	blkdev_dequeue_request(rq);
+> >>>	end_that_request_first(rq, 0, rq->hard_nr_sectors);
+> >>>	end_that_request_last(rq);
+> >>
+> >>How do I get the request? do_ide_request() only get the complete 
+> >>request_queue_t *q. Shell I use elv_next_request() ?
+> >
+> >Yes.
 > 
-> cardmgr[194]: shutting down socket 0
-> cardmgr[194]: executing: './ide stop hda'
-> cardmgr[194]: + umount -v /dev/hda1
-> Assertion '(hwgroup->drive)' failed in 
-> drivers/ide/ide-io.c:ide_do_request(1130)
-> Assertion '(drive)' failed in drivers/ide/ide-io.c:choose_drive(1035)
-> Unable to handle kernel NULL pointer dereference at virtual address 
-> 00000010
-> pgd = c0e34000
-> [00000010] *pgd=20eb0031, *pte=00000000, *ppte=00000000
-> Internal error: Oops: 17 [#1]
-> Modules linked in: ide_cs pcmcia at91_cf pcmcia_core
-> CPU: 0
-> PC is at ide_do_request+0x100/0x480
-> LR is at 0x1
-> pc : [<c00f9980>]    lr : [<00000001>]    Not tainted
-> ...
+> So my workaround for now would be
 > 
-> As the assertions show "drive" is NULL (due to the card removal?) and 
-> thus the kernel crashes ...
+> --- linux-2.6.13-rc5/drivers/ide/ide-io.c
+> +++ linux-2.6.13-rc4-at91-multiIO/drivers/ide/ide-io.c
+> @@ -1230,7 +1264,18 @@ void do_ide_request(request_queue_t *q)
+>  {
+>         ide_drive_t *drive = q->queuedata;
 > 
-> Upon card removal the pcmcia cardmgr tries to unmount the drive which 
-> disapeared.
-> 
-> ("sometimes" above means that the rest of the time the kernel is not 
-> dumping core, but the umount process hangs forever.)
+> -       ide_do_request(HWGROUP(drive), IDE_NO_IRQ);
+> +       if (drive->present)
+> +               ide_do_request(HWGROUP(drive), IDE_NO_IRQ);
+> +       else {
+> +               struct request  *rq;
+> +               printk("%s() drive is not present anymore! Kill 
+> request.\n", __FUNCTION__);
+> +               rq = elv_next_request(q);
+> +               if (rq) {
+> +                       blkdev_dequeue_request(rq);
+> +                       end_that_request_first(rq, 0, rq->hard_nr_sectors);
+> +                       end_that_request_last(rq);
+> +               }
+> +       }
 
-(I think) I found the reason for this behaviour:
+Pretty close. Make the killing a loop:
 
-Upon card removal the functions
+        while ((rq = elv_next_request(q)) != NULL) {
+                blkdev_dequeue_request(rq);
+                end_that_request_first(rq, 0, rq->hard_nr_sectors);
+                end_that_request_last(rq);
+        }
 
-~ # cardctl eject
-ide_release(398)
-ide_unregister(585): index=0
-blk_unregister_queue(3603)
-elv_unregister_queue(549)
-ide_unregister(698)
-ide_detach(164)
+and it looks ok to me. Change the printk to something a little more
+appropriate as well, ala
 
-are called. Thus the request queue for the drive is discarded which is fair 
-enough. But disk->queue would still point to a (now invalid) request_queue_t 
-structure. Thus if I/O requests (e.g. "umount") are started _after_ the drive 
-was removed bad things can happen! So I think we should explicitly remove the 
-reference to that queue by doing
+        printk(KERN_WARNING "%s: not present, killing requests\n", drive->name);
 
-void blk_unregister_queue(struct gendisk *disk)
-{
-	request_queue_t *q = disk->queue;
-
-	if (q && q->request_fn) {
-		elv_unregister_queue(q);
-		kobject_unregister(&q->kobj);
-+		disk->queue = NULL;
-		kobject_put(&disk->kobj);
-	}
-}
-
-in drivers/block/ll_rw_blk.c
-
-Then instead of a crash or hang one would get
-
-~ # umount /mnt/pcmcia/
-...
-generic_shutdown_super(249) calling sop->put_super @ c00ac734
-fat_clusters_flush(49)
-generic_make_request: Trying to access nonexistent block-device hda1 (1)
-FAT: bread failed in fat_clusters_flush
-
-Thanks a million.
-
---
-Steven
-
-
-
-
-
-
-
+-- 
+Jens Axboe
 
