@@ -1,59 +1,74 @@
-From: Ian Oliver <lists@foxhill.co.uk>
-Subject: Lockup when using three or more TX2plus/PDC20375 cards
-Date: Tue, 02 Aug 2005 16:35:13 +0100
-Message-ID: <VA.00001960.01b93e16@foxhill.co.uk>
-Reply-To: linux-ide@vger.kernel.org
+From: Martin Wilck <martin.wilck@fujitsu-siemens.com>
+Subject: ahci, SActive flag, and the HD activity LED
+Date: Tue, 02 Aug 2005 17:40:40 +0200
+Message-ID: <42EF93F8.8050601@fujitsu-siemens.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------030509070302080501090105"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay2.tidymail.co.uk ([217.146.107.7]:8845 "EHLO
-	relay2.tidymail.co.uk") by vger.kernel.org with ESMTP
-	id S261568AbVHBPfQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Aug 2005 11:35:16 -0400
-Received: from [217.146.124.254] (helo=foxhill.co.uk)
-	 by relay2.tidymail.co.uk  with esmtpa
-	  (Exim 4.52)
-	 id 1DzynR-0001Uf-6l
-	for linux-ide@vger.kernel.org; Tue, 02 Aug 2005 15:35:13 +0000
+Received: from dgate1.fujitsu-siemens.com ([217.115.66.35]:64330 "EHLO
+	dgate1.fujitsu-siemens.com") by vger.kernel.org with ESMTP
+	id S261575AbVHBPks (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Aug 2005 11:40:48 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org
+Cc: "Wichert, Gerhard" <Gerhard.Wichert@fujitsu-siemens.com>
 
-Hi,
+This is a multi-part message in MIME format.
+--------------030509070302080501090105
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I am using Ubuntu Hoary with the standard 2.6.10 kernel.
-I have 4x Maxtor SATA cards using the PDC20375 (rebranded Promise 
-TX2plus) in PCI slots. Each drive is cabled to 2 SATA HDs and these are 
-used as two groups of four for software raid using mdadm. Boot drive is 
-a non-raid PATA drive.
+Hello Jeff, hello Jens, hello everybody,
 
-When I really hammer the sw raid that's on two of the cards it will 
-generate lots of these in the log -
-Jul 25 17:33:42 localhost kernel: ata7: status=0x51 { DriveReady 
-SeekComplete Error }
-Jul 25 17:33:42 localhost kernel: ata7: error=0x0c { DriveStatusError }
+I am referring to the debate about whether or not setting the SActive 
+bit for non-NCQ ATA commands (e.g. http://lkml.org/lkml/2005/5/26/142).
 
-then I get the following on the console -
-ata7: command timeout
-and then the whole machine locks solid.
+In our machines, this behavior of the Linux AHCI driver causes the HD 
+activity LED to stay on all the time. If I apply the attached trivial 
+patch (this is for the RedHat EL4.0-U1 kernel), the LED behaves nicely.
 
-I can do whatever I like to the raid on the 1st four cards and it seems 
-rock solid.
+Jeff has stated in the above thread that "SActive is intentionally used 
+for non-NCQ devices". However I find clear indication in the specs that 
+the SActive flag should be set if and only if tagged queuing is being 
+used, and only for a specified subset of commands that support queuing 
+(http://www.t13.org/docs2005/D1699r1e-ATA8-ACS.pdf, secs. 4.19 and 
+4.20). The current mainline driver doesn't use queuing.
 
-I hear talk of 3rd and subsequent cards not being initialised by the 
-BIOS, and my "lspci -v" results back this up. (Please see 
-http://bugzilla.ubuntu.com/show_bug.cgi?id=13046 rather than cluttering 
-this list.)
-
-How can I address this problem? I have just built a 2.6.10 kernel and 
-modules (very much a first for me) so I think I can apply patches and 
-try things out.
-
-Note that I think Ubuntu has some patches from later kernels applied to 
-their libata to add pass through, but I don't know the status of the 
-sata_promise.
+If I am reading the specs correctly, that'd mean the ahci driver is 
+wrong in setting the SActive bit. Could you please comment? Jeff, in 
+particular, could you please give more detail why you say this flag is 
+"intentionally used"?
 
 Regards
+Martin
 
-Ian
+-- 
+Martin Wilck                Phone: +49 5251 8 15113
+Fujitsu Siemens Computers   Fax:   +49 5251 8 20409
+Heinz-Nixdorf-Ring 1        mailto:Martin.Wilck@Fujitsu-Siemens.com
+D-33106 Paderborn           http://www.fujitsu-siemens.com/primergy
 
 
+--------------030509070302080501090105
+Content-Type: text/x-patch;
+ name="ahci_sactive.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ahci_sactive.diff"
 
+--- ahci.c.orig	2005-06-13 11:39:26.000000000 +0200
++++ ahci.c	2005-08-02 10:48:47.000000000 +0200
+@@ -691,9 +703,6 @@
+ 	struct ata_port *ap = qc->ap;
+ 	void *port_mmio = (void *) ap->ioaddr.cmd_addr;
+ 
+-	writel(1, port_mmio + PORT_SCR_ACT);
+-	readl(port_mmio + PORT_SCR_ACT);	/* flush */
+-
+ 	writel(1, port_mmio + PORT_CMD_ISSUE);
+ 	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
+ 
+
+--------------030509070302080501090105--
