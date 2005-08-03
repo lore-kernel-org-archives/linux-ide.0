@@ -1,66 +1,223 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [RFC][PATCH] libata ATAPI alignment
-Date: Tue, 2 Aug 2005 10:27:19 +0200
-Message-ID: <20050802082719.GA22569@suse.de>
-References: <20050729050654.GA10413@havoc.gtf.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH linux-2.6.13-rc3] SATA: rewritten sil24 driver
+Date: Wed, 03 Aug 2005 00:09:05 -0400
+Message-ID: <42F04361.4020001@pobox.com>
+References: <20050728013622.GA14026@htj.dyndns.org> <42E93FB9.6090800@pobox.com> <20050730081734.GA14242@htj.dyndns.org> <42EFFA05.8010003@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:64986 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261421AbVHBIZX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Aug 2005 04:25:23 -0400
-Content-Disposition: inline
-In-Reply-To: <20050729050654.GA10413@havoc.gtf.org>
+Received: from mail.dvmed.net ([216.237.124.58]:37866 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S262015AbVHCEJO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Aug 2005 00:09:14 -0400
+In-Reply-To: <42EFFA05.8010003@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Edward Falk <efalk@google.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
-On Fri, Jul 29 2005, Jeff Garzik wrote:
-> 
-> So, one thing that's terribly ugly about SATA ATAPI is that we need to
-> pad DMA transfers to the next 32-bit boundary, if the length is not
-> evenly divisible by 4.
-> 
-> Messing with the scatterlist to accomplish this is terribly ugly
-> no matter how you slice it.  One way would be to create my own
-> scatterlist, via memcpy and then manual labor.  Another way would be
-> to special case a pad buffer, appending it onto the end of various
-> scatterlist code.
-
-It's not pretty, but I think it's the only solution currently.
-
-> Complicating matters, we currently must support two methods of data
-> buffer submission:  a single kernel virtual address, or a struct
-> scatterlist.
-
-Fairly soon the !use_sg case will be gone, at least coming from SCSI. I
-hope we can completely get away from the virtual address + length for
-any remaining cases, just making it a single entry sg list.
-
-> 
-> Review is requested by any and all parties, as well as suggestions for
-> a prettier approach.
-> 
-> This is one of the last steps needed to get ATAPI going.
+Edward Falk wrote:
+> Hi Tejun; I'm the guy at Google working on SATA drivers (port 
+> multipliers right now).  As soon as I can (next week perhaps, I'll start 
+> looking at the driver you wrote.  From what I can see, it looks quite good.
 > 
 > 
 > 
-> diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-> --- a/drivers/scsi/ahci.c
-> +++ b/drivers/scsi/ahci.c
-> @@ -44,7 +44,7 @@
->  
->  enum {
->  	AHCI_PCI_BAR		= 5,
-> -	AHCI_MAX_SG		= 168, /* hardware max is 64K */
-> +	AHCI_MAX_SG		= 300, /* hardware max is 64K */
->  	AHCI_DMA_BOUNDARY	= 0xffffffff,
->  	AHCI_USE_CLUSTERING	= 0,
->  	AHCI_CMD_SLOT_SZ	= 32 * 32,
+>>>> +
+>>>> +static u8 sil24_check_status(struct ata_port *ap)
+>>>> +{
+>>>> +    return ATA_DRDY;
+>>>> +}
+>>>> +
+>>>> +static u8 sil24_check_err(struct ata_port *ap)
+>>>> +{
+>>>> +    return 0;
+>>>> +}
+>>>
+>>>
+>>> For these two functions, we need to grab the values for these 
+>>> registers from the D2H Register FIS.  These should not be constant 
+>>> values, they are used in probing.
+>>>
+>>
+>>  Sadly I don't know where the values are.  The original driver seems
+>> to assume that taskfile registers are overlayed with PORT_PRB, but
+>> they are not.  Values are bogus there.  Again, in need of hardware
+>> docs here.
+> 
+> 
+> The original driver is broken.  Taskfile registers have to be read back 
+> from the returned FIS block after a command completion.
 
-Reasoning? I agree, just wondering... How big is the allocated area now?
+Correct.
 
--- 
-Jens Axboe
+
+> Hmmmm, perhaps libata should provide an ata_fis_to_tf() function that 
+> examines a FIS block, confirms that it's a device-to-host type FIS, and 
+> read the taskfile registers back out.
+
+Such as ata_tf_from_fis() in libata-core.c? :)
+
+
+>>  The original rewritten sil24 driver against NCQ helpers had simple
+>> status register emulation using normal/error completion interrupt.  I
+>> don't know why I stripped that while converting the driver over
+>> vanilla libata (sorry).  I'll restore it.  It's not good, but it
+>> correctly indicates error on error.
+> 
+> 
+> It's still better than what we have.
+> 
+> 
+> 
+>>>> +static void sil24_phy_reset(struct ata_port *ap)
+>>>> +{
+>>>> +    __sata_phy_reset(ap);
+>>>> +    /*
+>>>> +     * No ATAPI yet.  Just unconditionally indicate ATA device.
+>>>> +     * If ATAPI device is attached, it will fail ATA_CMD_ID_ATA
+>>>> +     * and libata core will ignore the device.
+>>>> +     */
+>>>> +    if (!(ap->flags & ATA_FLAG_PORT_DISABLED))
+>>>> +        ap->device[0].class = ATA_DEV_ATA;
+>>>> +}
+>>>
+>>>
+>>> We need to use the standard probing code to figure this out. 
+>>> ata_dev_classify(), etc.
+>>>
+>>
+>>
+>>  Again, the problem here is that I don't know how to access the
+>> signature values after reset.
+> 
+> 
+> Again, you would need to fetch them from the returned FIS structure. 
+
+Correct.
+
+
+>>>> +static void sil24_irq_clear(struct ata_port *ap)
+>>>> +{
+>>>> +    /* unused */
+>>>> +}
+>>>
+>>>
+>>> we need to fill this in.
+> 
+> 
+> I think this will work (adapted from sil_interrupt():
+> 
+> static void sil_irq_clear(struct ata_port *ap)
+> {
+>         struct sil_port_priv *pp = ap->private_data;
+>         struct Port_Registers *port_base = pp->pregs;
+>     unsigned long port_int;
+> 
+>     port_int  = readl((void *)&port_base->IntStatus);
+>     writel(port_int, &port_base->IntStatus);
+> }
+> 
+> I'm assuming that this entry point is expected to clear all interrupts, no?
+
+Correct.
+
+
+>>>> +    /* Max ~100ms */
+>>>> +    for (cnt = 0; cnt < 1000; cnt++) {
+>>>> +        udelay(100);
+>>>> +        tmp = readl(port + PORT_CTRL_STAT);
+>>>> +        if (!(tmp & PORT_CS_DEV_RST))
+>>>> +            break;
+>>>> +    }
+>>>
+>>>
+>>> Use mdelay.  We should be able to sleep here?
+>>>
+>>> Either way, we want to avoid long delays like this.
+> 
+> 
+> Does mdelay() sleep?  I thought it just called udelay().
+
+mdelay() does not sleep.
+
+
+> At any rate, I think 100ms is only the worst-case delay.
+> 
+> Is it safe to call msleep() at boot time?
+
+Yes.
+
+
+>>>> +    /* GPIO off */
+>>>> +    writel(0, host_base + HOST_FLASH_CMD);
+>>>> +
+>>>> +    /* Mask interrupts during initialization */
+>>>> +    writel(0, host_base + HOST_CTRL);
+>>>
+>>>
+>>> add a readl() to flush this write out to the PCI bus ("PCI posting")
+>>>
+>>
+>>
+>>  Sure.  And, out of curiosity, isn't sync unnecessary unless we're
+>> gonna perform some kind of timed waiting following it?  We don't have
+>> any timing requirement after above interrupt masking, do we?
+> 
+> 
+> 
+> I think we're ok here; the code reads PORT_CTRL_STAT a few lines down; 
+> that will flush the write.  I don't think there's a race condition 
+> involved.
+
+No race condition.  Typically there is often a mistaken assumption that
+
+	writel(...)
+	udelay(...)
+
+will accomplish the desired effect.  Due to posted writes, the write may 
+be posted to the PCI device after some delay, such that, the udelay() 
+and the posted write execute concurrently, skewing the desired timing 
+effect.
+
+
+> OK, a couple of questions of my own:
+> 
+> Any documentation on NCQ helpers or other related kernel code?
+> 
+> What's the proper way to implement very long delays.  I want to 
+> implement staggered disk spinup in my port multiplier code.  Would 
+> mdelay(5000) be terribly anti-social?  I'm guessing yes, but then, how 
+
+Yes :)  msleep(5000) is far less anti-social, but still yucky...
+
+
+> do I ensure that no process tries to access the disk until I've spun it up?
+
+The probe code is typically serialized, to prevent problems like this. 
+Specifically, you'll have to be aware of when libata adds devices to the 
+SCSI layer.
+
+
+> Port multiplier spec says that the GSCR[2] register indicates how many 
+> ports the port multiplier supports.  On my 5-port device, this register 
+> reads back as six.  Are they counting the control port, or is this 
+> device defective?
+
+Good question!  ;-)
+
+
+> What causes a disk to spin up?  Is it the COMRESET?  Soft reset?  In 
+> either case, it sounds like I need to spin up a drive just to detect it. 
+>  Not optimal.
+
+It depends.  COMRESET or power management can do it.  This stuff is 
+documented in the SATA docs.  This is more on the device end than the 
+host end, but in general you must be aware of
+* host controller power state(s)
+* SATA bus power state(s)
+* SATA device power state(s)
+
+	Jeff
+
 
