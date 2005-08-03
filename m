@@ -1,210 +1,44 @@
-From: Brett Russ <russb@emc.com>
-Subject: [PATCH 2.6.12.3] PCI/libata INTx cleanup
-Date: Wed,  3 Aug 2005 16:47:09 -0400 (EDT)
-Message-ID: <20050803204709.8BA0720B06@lns1058.lss.emc.com>
+From: Stefan <gentoopower@yahoo.de>
+Subject: [OT] Great resources for Linux Programming?
+Date: Thu, 04 Aug 2005 01:08:16 +0200
+Message-ID: <42F14E60.7080300@yahoo.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailhub.lss.emc.com ([168.159.2.31]:10963 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S262446AbVHCUpO
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Aug 2005 16:45:14 -0400
+Received: from smtp108.mail.sc5.yahoo.com ([66.163.170.6]:4010 "HELO
+	smtp108.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S261629AbVHCXIH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Aug 2005 19:08:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Simple cleanup to eliminate X copies of the same function in libata.  
-Moved pci_enable_intx() to pci.c, added pci_disable_intx() as well, 
-and use them throughout libata and msi.c.
+Since I'm a frequent reader of this list, I'm going to ask you guys this
+question first.
 
-Signed-off-by: Brett Russ <russb@emc.com>
+I started working on my masters thesis (computer science) and I need to
+find in depth resources about linux programming,
+I want to ask you guys if you know any good documentation, tutorials
+especially about linux threads, semaphores, events, signals.
+My implemtation requires me to implement those things for windows and
+linux, so I would need some
+comparison, codesamples about threads in windows and linux etc. The only
+good resource I found for now was a migrating tutorial from ibm.
 
-Index: linux-2.6.12.3-mv/drivers/pci/msi.c
-===================================================================
---- linux-2.6.12.3-mv.orig/drivers/pci/msi.c
-+++ linux-2.6.12.3-mv/drivers/pci/msi.c
-@@ -456,10 +456,7 @@ static void enable_msi_mode(struct pci_d
- 	}
-     	if (pci_find_capability(dev, PCI_CAP_ID_EXP)) {
- 		/* PCI Express Endpoint device detected */
--		u16 cmd;
--		pci_read_config_word(dev, PCI_COMMAND, &cmd);
--		cmd |= PCI_COMMAND_INTX_DISABLE;
--		pci_write_config_word(dev, PCI_COMMAND, cmd);
-+		pci_disable_intx(dev);
- 	}
- }
+Does anyone know where I can get some additional info about that?
+
+
+Thanks Stefan
+
+P.S. Sorry for bugging you guys with that!
+
  
-@@ -478,10 +475,7 @@ static void disable_msi_mode(struct pci_
- 	}
-     	if (pci_find_capability(dev, PCI_CAP_ID_EXP)) {
- 		/* PCI Express Endpoint device detected */
--		u16 cmd;
--		pci_read_config_word(dev, PCI_COMMAND, &cmd);
--		cmd &= ~PCI_COMMAND_INTX_DISABLE;
--		pci_write_config_word(dev, PCI_COMMAND, cmd);
-+		pci_enable_intx(dev);
- 	}
- }
- 
-Index: linux-2.6.12.3-mv/drivers/pci/pci.c
-===================================================================
---- linux-2.6.12.3-mv.orig/drivers/pci/pci.c
-+++ linux-2.6.12.3-mv/drivers/pci/pci.c
-@@ -733,6 +733,43 @@ pci_clear_mwi(struct pci_dev *dev)
- 	}
- }
- 
-+
-+/**
-+ * pci_enable_intx - enables INTx generation in PCI cfg space cmd register
-+ * @dev: the PCI device to enable
-+ *
-+ * Enables PCI INTx generation for device
-+ */
-+void 
-+pci_enable_intx(struct pci_dev *pdev)
-+{
-+        u16 pci_command;
-+
-+        pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
-+        if (pci_command & PCI_COMMAND_INTX_DISABLE) {
-+                pci_command &= ~PCI_COMMAND_INTX_DISABLE;
-+                pci_write_config_word(pdev, PCI_COMMAND, pci_command);
-+        }
-+}
-+
-+/**
-+ * pci_disable_intx - disables INTx generation in PCI cfg space cmd register
-+ * @dev: the PCI device to disable
-+ *
-+ * Disables PCI INTx generation for device
-+ */
-+void 
-+pci_disable_intx(struct pci_dev *pdev)
-+{
-+        u16 pci_command;
-+
-+        pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
-+        if (!(pci_command & PCI_COMMAND_INTX_DISABLE)) {
-+                pci_command |= PCI_COMMAND_INTX_DISABLE;
-+                pci_write_config_word(pdev, PCI_COMMAND, pci_command);
-+        }
-+}
-+
- #ifndef HAVE_ARCH_PCI_SET_DMA_MASK
- /*
-  * These can be overridden by arch-specific implementations
-@@ -809,6 +846,8 @@ EXPORT_SYMBOL(pci_request_region);
- EXPORT_SYMBOL(pci_set_master);
- EXPORT_SYMBOL(pci_set_mwi);
- EXPORT_SYMBOL(pci_clear_mwi);
-+EXPORT_SYMBOL(pci_enable_intx);
-+EXPORT_SYMBOL(pci_disable_intx);
- EXPORT_SYMBOL(pci_set_dma_mask);
- EXPORT_SYMBOL(pci_set_consistent_dma_mask);
- EXPORT_SYMBOL(pci_assign_resource);
-Index: linux-2.6.12.3-mv/drivers/scsi/sata_sis.c
-===================================================================
---- linux-2.6.12.3-mv.orig/drivers/scsi/sata_sis.c
-+++ linux-2.6.12.3-mv/drivers/scsi/sata_sis.c
-@@ -186,18 +186,6 @@ static void sis_scr_write (struct ata_po
- 		outl(val, ap->ioaddr.scr_addr + (sc_reg * 4));
- }
- 
--/* move to PCI layer, integrate w/ MSI stuff */
--static void pci_enable_intx(struct pci_dev *pdev)
--{
--	u16 pci_command;
--
--	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
--	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
--		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
--		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
--	}
--}
--
- static int sis_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	struct ata_probe_ent *probe_ent = NULL;
-Index: linux-2.6.12.3-mv/drivers/scsi/ahci.c
-===================================================================
---- linux-2.6.12.3-mv.orig/drivers/scsi/ahci.c
-+++ linux-2.6.12.3-mv/drivers/scsi/ahci.c
-@@ -878,18 +878,6 @@ static int ahci_host_init(struct ata_pro
- 	return 0;
- }
- 
--/* move to PCI layer, integrate w/ MSI stuff */
--static void pci_enable_intx(struct pci_dev *pdev)
--{
--	u16 pci_command;
--
--	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
--	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
--		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
--		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
--	}
--}
--
- static void ahci_print_info(struct ata_probe_ent *probe_ent)
- {
- 	struct ahci_host_priv *hpriv = probe_ent->private_data;
-Index: linux-2.6.12.3-mv/drivers/scsi/ata_piix.c
-===================================================================
---- linux-2.6.12.3-mv.orig/drivers/scsi/ata_piix.c
-+++ linux-2.6.12.3-mv/drivers/scsi/ata_piix.c
-@@ -545,18 +545,6 @@ static void piix_set_dmamode (struct ata
- 	}
- }
- 
--/* move to PCI layer, integrate w/ MSI stuff */
--static void pci_enable_intx(struct pci_dev *pdev)
--{
--	u16 pci_command;
--
--	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
--	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
--		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
--		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
--	}
--}
--
- #define AHCI_PCI_BAR 5
- #define AHCI_GLOBAL_CTL 0x04
- #define AHCI_ENABLE (1 << 31)
-Index: linux-2.6.12.3-mv/drivers/scsi/sata_uli.c
-===================================================================
---- linux-2.6.12.3-mv.orig/drivers/scsi/sata_uli.c
-+++ linux-2.6.12.3-mv/drivers/scsi/sata_uli.c
-@@ -171,18 +171,6 @@ static void uli_scr_write (struct ata_po
- 	uli_scr_cfg_write(ap, sc_reg, val);
- }
- 
--/* move to PCI layer, integrate w/ MSI stuff */
--static void pci_enable_intx(struct pci_dev *pdev)
--{
--	u16 pci_command;
--
--	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
--	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
--		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
--		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
--	}
--}
--
- static int uli_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	struct ata_probe_ent *probe_ent;
-Index: linux-2.6.12.3-mv/include/linux/pci.h
-===================================================================
---- linux-2.6.12.3-mv.orig/include/linux/pci.h
-+++ linux-2.6.12.3-mv/include/linux/pci.h
-@@ -810,6 +810,8 @@ void pci_set_master(struct pci_dev *dev)
- #define HAVE_PCI_SET_MWI
- int pci_set_mwi(struct pci_dev *dev);
- void pci_clear_mwi(struct pci_dev *dev);
-+void pci_enable_intx(struct pci_dev *pdev);
-+void pci_disable_intx(struct pci_dev *pdev);
- int pci_set_dma_mask(struct pci_dev *dev, u64 mask);
- int pci_set_consistent_dma_mask(struct pci_dev *dev, u64 mask);
- int pci_assign_resource(struct pci_dev *dev, int i);
+
+	
+
+	
+		
+___________________________________________________________ 
+Gesendet von Yahoo! Mail - Jetzt mit 1GB Speicher kostenlos - Hier anmelden: http://mail.yahoo.de
+
