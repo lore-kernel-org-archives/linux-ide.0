@@ -1,57 +1,51 @@
-From: Adam Goode <adam@evdebs.org>
+From: Matthias Schniedermeyer <ms@citd.de>
 Subject: Re: ahci, SActive flag, and the HD activity LED
-Date: Wed, 03 Aug 2005 14:12:41 -0400
-Message-ID: <1123092761.3982.20.camel@lynx.auton.cs.cmu.edu>
-References: <42EF93F8.8050601@fujitsu-siemens.com>
-	 <20050802163519.GB3710@suse.de>  <42F05359.7030006@fujitsu-siemens.com>
+Date: Wed, 03 Aug 2005 21:21:23 +0200
+Message-ID: <42F11933.7050607@citd.de>
+References: <42EF93F8.8050601@fujitsu-siemens.com> <20050802163519.GB3710@suse.de> <42F05359.7030006@fujitsu-siemens.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-T2iqRVyEcl4pLSqTu15z"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from server262.com ([64.14.68.15]:38356 "EHLO server262.com")
-	by vger.kernel.org with ESMTP id S262381AbVHCSNI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Aug 2005 14:13:08 -0400
+Received: from dsw2k3.info ([195.71.86.227]:16328 "EHLO dsw2k3.info")
+	by vger.kernel.org with ESMTP id S262440AbVHCTVb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Aug 2005 15:21:31 -0400
 In-Reply-To: <42F05359.7030006@fujitsu-siemens.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Wilck <martin.wilck@fujitsu-siemens.com>
-Cc: Jens Axboe <axboe@suse.de>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, "Wichert, Gerhard" <Gerhard.Wichert@fujitsu-siemens.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-
---=-T2iqRVyEcl4pLSqTu15z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2005-08-03 at 07:17 +0200, Martin Wilck wrote:
+Martin Wilck wrote:
 > Jens Axboe wrote:
->=20
-> >>If I am reading the specs correctly, that'd mean the ahci driver is=20
-> >>wrong in setting the SActive bit.
-> >=20
-> > I completely agree, that was my reading of the spec as well and hence m=
-y
-> > original posts about this in the NCQ thread.
->=20
-> Have you (or has anybody else) also seen the wrong behavior of the=20
+> 
+>>> If I am reading the specs correctly, that'd mean the ahci driver is 
+>>> wrong in setting the SActive bit.
+>>
+>>
+>> I completely agree, that was my reading of the spec as well and hence my
+>> original posts about this in the NCQ thread.
+> 
+> Have you (or has anybody else) also seen the wrong behavior of the 
 > activity LED?
 
-Yes, Dell Precision 380, ICH7R AHCI controller, SATA non-NCQ Western
-Digital drive.
+925X-Chipset
+Lspci says: 8086:2652
+Intel Corp. 82801FR/FRW (ICH6R/ICH6RW) SATA Controller (rev 03)
+HDD:
+Western Digital WD2000JD-00H, i believe this HDD is non-NCQ.
+
+Kernels: 2.6.10 - 2.6.12
+The Activity-LED has burned like a light-bulb every since i have that 
+computer. (Excluding the few seconds before booting Linux. :-) )
 
 
-Adam
 
+Bis denn
 
---=-T2iqRVyEcl4pLSqTu15z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQBC8QkZlenB4PQRJawRAk3kAJ4yui1ZC8oophTsbDAnUnG0/0kAcgCgghud
-JV+sKoa/yL4Ex5EPdQwi4qU=
-=ufbG
------END PGP SIGNATURE-----
-
---=-T2iqRVyEcl4pLSqTu15z--
+-- 
+Real Programmers consider "what you see is what you get" to be just as
+bad a concept in Text Editors as it is in women. No, the Real Programmer
+wants a "you asked for it, you got it" text editor -- complicated,
+cryptic, powerful, unforgiving, dangerous.
 
