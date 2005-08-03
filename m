@@ -1,34 +1,57 @@
-From: Theodore <angriest@shs-computer.com>
-Subject: Bro check out this awesome new product
-Date: Wed, 3 Aug 2005 17:05:26 +0200
-Message-ID: <4031913800.2564228232@81-203-99-218.user.ono.com>
+From: Adam Goode <adam@evdebs.org>
+Subject: Re: ahci, SActive flag, and the HD activity LED
+Date: Wed, 03 Aug 2005 14:12:41 -0400
+Message-ID: <1123092761.3982.20.camel@lynx.auton.cs.cmu.edu>
+References: <42EF93F8.8050601@fujitsu-siemens.com>
+	 <20050802163519.GB3710@suse.de>  <42F05359.7030006@fujitsu-siemens.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-T2iqRVyEcl4pLSqTu15z"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 81-203-99-218.user.ono.com ([81.203.99.218]:39685 "HELO
-	81-203-99-218.user.ono.com") by vger.kernel.org with SMTP
-	id S262295AbVHCPFq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Aug 2005 11:05:46 -0400
-Received: from [80.38.153.156] (port=9421 helo=[buzzards])
-    by 81-203-99-218.user.ono.com with esmtp
-    id 99183112398Watertown49317
-    for linux-ide@vger.kernel.org; Wed, 3 Aug 2005 17:05:27 +0200
+Received: from server262.com ([64.14.68.15]:38356 "EHLO server262.com")
+	by vger.kernel.org with ESMTP id S262381AbVHCSNI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Aug 2005 14:13:08 -0400
+In-Reply-To: <42F05359.7030006@fujitsu-siemens.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-Male sexual enhancement formula
-http://www.xtesir.com/pt/?9&barricade
+To: Martin Wilck <martin.wilck@fujitsu-siemens.com>
+Cc: Jens Axboe <axboe@suse.de>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, "Wichert, Gerhard" <Gerhard.Wichert@fujitsu-siemens.com>
 
 
+--=-T2iqRVyEcl4pLSqTu15z
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 2005-08-03 at 07:17 +0200, Martin Wilck wrote:
+> Jens Axboe wrote:
+>=20
+> >>If I am reading the specs correctly, that'd mean the ahci driver is=20
+> >>wrong in setting the SActive bit.
+> >=20
+> > I completely agree, that was my reading of the spec as well and hence m=
+y
+> > original posts about this in the NCQ thread.
+>=20
+> Have you (or has anybody else) also seen the wrong behavior of the=20
+> activity LED?
+
+Yes, Dell Precision 380, ICH7R AHCI controller, SATA non-NCQ Western
+Digital drive.
 
 
+Adam
 
-Cynicism is an unpleasant way of saying the truth.    
-Don't let it end like this. Tell them I said something.  
-The ultimate security is your understanding of reality.     
-You must lose a fly to catch a trout.    
-Religion is the fashionable substitute for belief.      
 
+--=-T2iqRVyEcl4pLSqTu15z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQBC8QkZlenB4PQRJawRAk3kAJ4yui1ZC8oophTsbDAnUnG0/0kAcgCgghud
+JV+sKoa/yL4Ex5EPdQwi4qU=
+=ufbG
+-----END PGP SIGNATURE-----
+
+--=-T2iqRVyEcl4pLSqTu15z--
 
