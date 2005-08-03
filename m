@@ -1,38 +1,34 @@
-From: Otto Meier <gf435@gmx.net>
-Subject: [PATCH] aktivate sata300 TX4 in sata_promise
-Date: Wed, 03 Aug 2005 10:59:04 +0200
-Message-ID: <42F08758.9000109@gmx.net>
+From: =?ISO-8859-1?Q?Andr=E9_Tomt?= <andre@tomt.net>
+Subject: Re: ahci, SActive flag, and the HD activity LED
+Date: Wed, 03 Aug 2005 13:08:40 +0200
+Message-ID: <42F0A5B8.6060300@tomt.net>
+References: <42EF93F8.8050601@fujitsu-siemens.com> <20050802163519.GB3710@suse.de> <42F05359.7030006@fujitsu-siemens.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.183]:14275 "EHLO
-	moutng.kundenserver.de") by vger.kernel.org with ESMTP
-	id S262160AbVHCI7T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Aug 2005 04:59:19 -0400
+Received: from mail1.skjellin.no ([80.239.42.67]:27624 "EHLO mx1.skjellin.no")
+	by vger.kernel.org with ESMTP id S262220AbVHCLIn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Aug 2005 07:08:43 -0400
+In-Reply-To: <42F05359.7030006@fujitsu-siemens.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Martin Wilck <martin.wilck@fujitsu-siemens.com>
+Cc: Jens Axboe <axboe@suse.de>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, "Wichert, Gerhard" <Gerhard.Wichert@fujitsu-siemens.com>
 
-Hallo,
+Martin Wilck wrote:
+> Jens Axboe wrote:
+> 
+>>> If I am reading the specs correctly, that'd mean the ahci driver is 
+>>> wrong in setting the SActive bit.
+>>
+>>
+>> I completely agree, that was my reading of the spec as well and hence my
+>> original posts about this in the NCQ thread.
+> 
+> 
+> Have you (or has anybody else) also seen the wrong behavior of the 
+> activity LED?
 
-this Patch get the Promise SATA300 TX4 card working.
-Please accept. Patch is against 2.6.13-rc3-git5.
-
-Signed-off-by: Otto Meier <gf435@gmx.net>
-
---- linux/drivers/scsi/sata_promise.c.orig      2005-08-01 
-17:09:48.474824778 +0200
-+++ linux/drivers/scsi/sata_promise.c   2005-07-31 12:57:06.415979512 +0200
-@@ -183,6 +183,8 @@ static struct pci_device_id pdc_ata_pci_
-          board_20319 },
-        { PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-          board_20319 },
-+        { PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+          board_20319 },
-        { PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-          board_20319 },
-
-
-
+I have, Asus P5LD2 i945P, ICH7R AHCI controller, Hitachi Deskstar T7K250 
+250GB "SATA2" drives. Kernel 2.6.12.x
