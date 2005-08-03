@@ -1,34 +1,72 @@
-From: =?ISO-8859-1?Q?Andr=E9_Tomt?= <andre@tomt.net>
-Subject: Re: ahci, SActive flag, and the HD activity LED
-Date: Wed, 03 Aug 2005 13:08:40 +0200
-Message-ID: <42F0A5B8.6060300@tomt.net>
-References: <42EF93F8.8050601@fujitsu-siemens.com> <20050802163519.GB3710@suse.de> <42F05359.7030006@fujitsu-siemens.com>
+From: Jarrod Johnson <jarrod.b.johnson@gmail.com>
+Subject: Re: Lockup when using three or more TX2plus/PDC20375 cards
+Date: Wed, 3 Aug 2005 10:16:08 -0400
+Message-ID: <fab4e42a05080307162186b325@mail.gmail.com>
+References: <VA.00001960.01b93e16@foxhill.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail1.skjellin.no ([80.239.42.67]:27624 "EHLO mx1.skjellin.no")
-	by vger.kernel.org with ESMTP id S262220AbVHCLIn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Aug 2005 07:08:43 -0400
-In-Reply-To: <42F05359.7030006@fujitsu-siemens.com>
+Received: from wproxy.gmail.com ([64.233.184.207]:41026 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262265AbVHCOQJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Aug 2005 10:16:09 -0400
+Received: by wproxy.gmail.com with SMTP id i13so136355wra
+        for <linux-ide@vger.kernel.org>; Wed, 03 Aug 2005 07:16:09 -0700 (PDT)
+In-Reply-To: <VA.00001960.01b93e16@foxhill.co.uk>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Wilck <martin.wilck@fujitsu-siemens.com>
-Cc: Jens Axboe <axboe@suse.de>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, "Wichert, Gerhard" <Gerhard.Wichert@fujitsu-siemens.com>
+To: linux-ide@vger.kernel.org
 
-Martin Wilck wrote:
-> Jens Axboe wrote:
-> 
->>> If I am reading the specs correctly, that'd mean the ahci driver is 
->>> wrong in setting the SActive bit.
->>
->>
->> I completely agree, that was my reading of the spec as well and hence my
->> original posts about this in the NCQ thread.
-> 
-> 
-> Have you (or has anybody else) also seen the wrong behavior of the 
-> activity LED?
+Welcome to the club.  I actually have a PDC20579 with only two ports
+and a sata_nv down, and the PDC20579 under md RAID5 stress sometimes
+just stops responding entirely.  I've talked with Jim Ramsay and tried
+his patches, but nothing make the failure go away.
 
-I have, Asus P5LD2 i945P, ICH7R AHCI controller, Hitachi Deskstar T7K250 
-250GB "SATA2" drives. Kernel 2.6.12.x
+On 8/2/05, Ian Oliver <lists@foxhill.co.uk> wrote:
+> Hi,
+> 
+> I am using Ubuntu Hoary with the standard 2.6.10 kernel.
+> I have 4x Maxtor SATA cards using the PDC20375 (rebranded Promise
+> TX2plus) in PCI slots. Each drive is cabled to 2 SATA HDs and these are
+> used as two groups of four for software raid using mdadm. Boot drive is
+> a non-raid PATA drive.
+> 
+> When I really hammer the sw raid that's on two of the cards it will
+> generate lots of these in the log -
+> Jul 25 17:33:42 localhost kernel: ata7: status=0x51 { DriveReady
+> SeekComplete Error }
+> Jul 25 17:33:42 localhost kernel: ata7: error=0x0c { DriveStatusError }
+> 
+> then I get the following on the console -
+> ata7: command timeout
+> and then the whole machine locks solid.
+> 
+> I can do whatever I like to the raid on the 1st four cards and it seems
+> rock solid.
+> 
+> I hear talk of 3rd and subsequent cards not being initialised by the
+> BIOS, and my "lspci -v" results back this up. (Please see
+> http://bugzilla.ubuntu.com/show_bug.cgi?id=13046 rather than cluttering
+> this list.)
+> 
+> How can I address this problem? I have just built a 2.6.10 kernel and
+> modules (very much a first for me) so I think I can apply patches and
+> try things out.
+> 
+> Note that I think Ubuntu has some patches from later kernels applied to
+> their libata to add pass through, but I don't know the status of the
+> sata_promise.
+> 
+> Regards
+> 
+> Ian
+> 
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
