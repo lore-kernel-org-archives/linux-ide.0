@@ -1,51 +1,210 @@
-From: Matthias Schniedermeyer <ms@citd.de>
-Subject: Re: ahci, SActive flag, and the HD activity LED
-Date: Wed, 03 Aug 2005 21:21:23 +0200
-Message-ID: <42F11933.7050607@citd.de>
-References: <42EF93F8.8050601@fujitsu-siemens.com> <20050802163519.GB3710@suse.de> <42F05359.7030006@fujitsu-siemens.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Brett Russ <russb@emc.com>
+Subject: [PATCH 2.6.12.3] PCI/libata INTx cleanup
+Date: Wed,  3 Aug 2005 16:47:09 -0400 (EDT)
+Message-ID: <20050803204709.8BA0720B06@lns1058.lss.emc.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsw2k3.info ([195.71.86.227]:16328 "EHLO dsw2k3.info")
-	by vger.kernel.org with ESMTP id S262440AbVHCTVb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Aug 2005 15:21:31 -0400
-In-Reply-To: <42F05359.7030006@fujitsu-siemens.com>
+Received: from mailhub.lss.emc.com ([168.159.2.31]:10963 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S262446AbVHCUpO
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Aug 2005 16:45:14 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Martin Wilck wrote:
-> Jens Axboe wrote:
-> 
->>> If I am reading the specs correctly, that'd mean the ahci driver is 
->>> wrong in setting the SActive bit.
->>
->>
->> I completely agree, that was my reading of the spec as well and hence my
->> original posts about this in the NCQ thread.
-> 
-> Have you (or has anybody else) also seen the wrong behavior of the 
-> activity LED?
+Simple cleanup to eliminate X copies of the same function in libata.  
+Moved pci_enable_intx() to pci.c, added pci_disable_intx() as well, 
+and use them throughout libata and msi.c.
 
-925X-Chipset
-Lspci says: 8086:2652
-Intel Corp. 82801FR/FRW (ICH6R/ICH6RW) SATA Controller (rev 03)
-HDD:
-Western Digital WD2000JD-00H, i believe this HDD is non-NCQ.
+Signed-off-by: Brett Russ <russb@emc.com>
 
-Kernels: 2.6.10 - 2.6.12
-The Activity-LED has burned like a light-bulb every since i have that 
-computer. (Excluding the few seconds before booting Linux. :-) )
-
-
-
-Bis denn
-
--- 
-Real Programmers consider "what you see is what you get" to be just as
-bad a concept in Text Editors as it is in women. No, the Real Programmer
-wants a "you asked for it, you got it" text editor -- complicated,
-cryptic, powerful, unforgiving, dangerous.
-
+Index: linux-2.6.12.3-mv/drivers/pci/msi.c
+===================================================================
+--- linux-2.6.12.3-mv.orig/drivers/pci/msi.c
++++ linux-2.6.12.3-mv/drivers/pci/msi.c
+@@ -456,10 +456,7 @@ static void enable_msi_mode(struct pci_d
+ 	}
+     	if (pci_find_capability(dev, PCI_CAP_ID_EXP)) {
+ 		/* PCI Express Endpoint device detected */
+-		u16 cmd;
+-		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+-		cmd |= PCI_COMMAND_INTX_DISABLE;
+-		pci_write_config_word(dev, PCI_COMMAND, cmd);
++		pci_disable_intx(dev);
+ 	}
+ }
+ 
+@@ -478,10 +475,7 @@ static void disable_msi_mode(struct pci_
+ 	}
+     	if (pci_find_capability(dev, PCI_CAP_ID_EXP)) {
+ 		/* PCI Express Endpoint device detected */
+-		u16 cmd;
+-		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+-		cmd &= ~PCI_COMMAND_INTX_DISABLE;
+-		pci_write_config_word(dev, PCI_COMMAND, cmd);
++		pci_enable_intx(dev);
+ 	}
+ }
+ 
+Index: linux-2.6.12.3-mv/drivers/pci/pci.c
+===================================================================
+--- linux-2.6.12.3-mv.orig/drivers/pci/pci.c
++++ linux-2.6.12.3-mv/drivers/pci/pci.c
+@@ -733,6 +733,43 @@ pci_clear_mwi(struct pci_dev *dev)
+ 	}
+ }
+ 
++
++/**
++ * pci_enable_intx - enables INTx generation in PCI cfg space cmd register
++ * @dev: the PCI device to enable
++ *
++ * Enables PCI INTx generation for device
++ */
++void 
++pci_enable_intx(struct pci_dev *pdev)
++{
++        u16 pci_command;
++
++        pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
++        if (pci_command & PCI_COMMAND_INTX_DISABLE) {
++                pci_command &= ~PCI_COMMAND_INTX_DISABLE;
++                pci_write_config_word(pdev, PCI_COMMAND, pci_command);
++        }
++}
++
++/**
++ * pci_disable_intx - disables INTx generation in PCI cfg space cmd register
++ * @dev: the PCI device to disable
++ *
++ * Disables PCI INTx generation for device
++ */
++void 
++pci_disable_intx(struct pci_dev *pdev)
++{
++        u16 pci_command;
++
++        pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
++        if (!(pci_command & PCI_COMMAND_INTX_DISABLE)) {
++                pci_command |= PCI_COMMAND_INTX_DISABLE;
++                pci_write_config_word(pdev, PCI_COMMAND, pci_command);
++        }
++}
++
+ #ifndef HAVE_ARCH_PCI_SET_DMA_MASK
+ /*
+  * These can be overridden by arch-specific implementations
+@@ -809,6 +846,8 @@ EXPORT_SYMBOL(pci_request_region);
+ EXPORT_SYMBOL(pci_set_master);
+ EXPORT_SYMBOL(pci_set_mwi);
+ EXPORT_SYMBOL(pci_clear_mwi);
++EXPORT_SYMBOL(pci_enable_intx);
++EXPORT_SYMBOL(pci_disable_intx);
+ EXPORT_SYMBOL(pci_set_dma_mask);
+ EXPORT_SYMBOL(pci_set_consistent_dma_mask);
+ EXPORT_SYMBOL(pci_assign_resource);
+Index: linux-2.6.12.3-mv/drivers/scsi/sata_sis.c
+===================================================================
+--- linux-2.6.12.3-mv.orig/drivers/scsi/sata_sis.c
++++ linux-2.6.12.3-mv/drivers/scsi/sata_sis.c
+@@ -186,18 +186,6 @@ static void sis_scr_write (struct ata_po
+ 		outl(val, ap->ioaddr.scr_addr + (sc_reg * 4));
+ }
+ 
+-/* move to PCI layer, integrate w/ MSI stuff */
+-static void pci_enable_intx(struct pci_dev *pdev)
+-{
+-	u16 pci_command;
+-
+-	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
+-	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
+-		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
+-		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
+-	}
+-}
+-
+ static int sis_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	struct ata_probe_ent *probe_ent = NULL;
+Index: linux-2.6.12.3-mv/drivers/scsi/ahci.c
+===================================================================
+--- linux-2.6.12.3-mv.orig/drivers/scsi/ahci.c
++++ linux-2.6.12.3-mv/drivers/scsi/ahci.c
+@@ -878,18 +878,6 @@ static int ahci_host_init(struct ata_pro
+ 	return 0;
+ }
+ 
+-/* move to PCI layer, integrate w/ MSI stuff */
+-static void pci_enable_intx(struct pci_dev *pdev)
+-{
+-	u16 pci_command;
+-
+-	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
+-	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
+-		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
+-		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
+-	}
+-}
+-
+ static void ahci_print_info(struct ata_probe_ent *probe_ent)
+ {
+ 	struct ahci_host_priv *hpriv = probe_ent->private_data;
+Index: linux-2.6.12.3-mv/drivers/scsi/ata_piix.c
+===================================================================
+--- linux-2.6.12.3-mv.orig/drivers/scsi/ata_piix.c
++++ linux-2.6.12.3-mv/drivers/scsi/ata_piix.c
+@@ -545,18 +545,6 @@ static void piix_set_dmamode (struct ata
+ 	}
+ }
+ 
+-/* move to PCI layer, integrate w/ MSI stuff */
+-static void pci_enable_intx(struct pci_dev *pdev)
+-{
+-	u16 pci_command;
+-
+-	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
+-	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
+-		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
+-		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
+-	}
+-}
+-
+ #define AHCI_PCI_BAR 5
+ #define AHCI_GLOBAL_CTL 0x04
+ #define AHCI_ENABLE (1 << 31)
+Index: linux-2.6.12.3-mv/drivers/scsi/sata_uli.c
+===================================================================
+--- linux-2.6.12.3-mv.orig/drivers/scsi/sata_uli.c
++++ linux-2.6.12.3-mv/drivers/scsi/sata_uli.c
+@@ -171,18 +171,6 @@ static void uli_scr_write (struct ata_po
+ 	uli_scr_cfg_write(ap, sc_reg, val);
+ }
+ 
+-/* move to PCI layer, integrate w/ MSI stuff */
+-static void pci_enable_intx(struct pci_dev *pdev)
+-{
+-	u16 pci_command;
+-
+-	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
+-	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
+-		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
+-		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
+-	}
+-}
+-
+ static int uli_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	struct ata_probe_ent *probe_ent;
+Index: linux-2.6.12.3-mv/include/linux/pci.h
+===================================================================
+--- linux-2.6.12.3-mv.orig/include/linux/pci.h
++++ linux-2.6.12.3-mv/include/linux/pci.h
+@@ -810,6 +810,8 @@ void pci_set_master(struct pci_dev *dev)
+ #define HAVE_PCI_SET_MWI
+ int pci_set_mwi(struct pci_dev *dev);
+ void pci_clear_mwi(struct pci_dev *dev);
++void pci_enable_intx(struct pci_dev *pdev);
++void pci_disable_intx(struct pci_dev *pdev);
+ int pci_set_dma_mask(struct pci_dev *dev, u64 mask);
+ int pci_set_consistent_dma_mask(struct pci_dev *dev, u64 mask);
+ int pci_assign_resource(struct pci_dev *dev, int i);
