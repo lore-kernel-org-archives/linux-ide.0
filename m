@@ -1,60 +1,72 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH linux-2.6.13-rc3] SATA: rewritten sil24 driver
-Date: Thu, 4 Aug 2005 11:20:25 +0900
-Message-ID: <20050804022025.GA19237@htj.dyndns.org>
-References: <20050728013622.GA14026@htj.dyndns.org> <42E93FB9.6090800@pobox.com> <20050730081734.GA14242@htj.dyndns.org> <42EFFA05.8010003@google.com> <42F04361.4020001@pobox.com> <20050803142812.GA25446@htj.dyndns.org>
+From: Martin Wilck <martin.wilck@fujitsu-siemens.com>
+Subject: [PATCH] Fix HD activity LED with ahci
+Date: Thu, 04 Aug 2005 09:04:56 +0200
+Message-ID: <42F1BE18.9000105@fujitsu-siemens.com>
+References: <42EF93F8.8050601@fujitsu-siemens.com>	 <20050802163519.GB3710@suse.de>  <42F05359.7030006@fujitsu-siemens.com> <1123092761.3982.20.camel@lynx.auton.cs.cmu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------060001050205090301000602"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.192]:21134 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261710AbVHDCUa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Aug 2005 22:20:30 -0400
-Received: by wproxy.gmail.com with SMTP id i20so34513wra
-        for <linux-ide@vger.kernel.org>; Wed, 03 Aug 2005 19:20:30 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20050803142812.GA25446@htj.dyndns.org>
+Received: from dgate2.fujitsu-siemens.com ([217.115.66.36]:44849 "EHLO
+	dgate2.fujitsu-siemens.com") by vger.kernel.org with ESMTP
+	id S261849AbVHDHFD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Aug 2005 03:05:03 -0400
+In-Reply-To: <1123092761.3982.20.camel@lynx.auton.cs.cmu.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Edward Falk <efalk@google.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Carlos Pardo <Carlos.Pardo@siliconimage.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Adam Goode <adam@evdebs.org>, Jens Axboe <axboe@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, "Wichert, Gerhard" <Gerhard.Wichert@fujitsu-siemens.com>
 
- Hello, Edward.
+This is a multi-part message in MIME format.
+--------------060001050205090301000602
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
- One more question.
+All right,
 
-> > >
-> > >I think this will work (adapted from sil_interrupt():
-> > >
-> > >static void sil_irq_clear(struct ata_port *ap)
-> > >{
-> > >        struct sil_port_priv *pp = ap->private_data;
-> > >        struct Port_Registers *port_base = pp->pregs;
-> > >    unsigned long port_int;
-> > >
-> > >    port_int  = readl((void *)&port_base->IntStatus);
-> > >    writel(port_int, &port_base->IntStatus);
-> > >}
-> > >
-> > >I'm assuming that this entry point is expected to clear all interrupts, no?
-> > 
-> > Correct.
-> > 
-> 
->  I'll verify with the error register clearing part of the original
-> driver and submit a patch.
-> 
+this looks like a pretty broad agreement on this issue.
+Jeff, would you please apply this patch?
 
- Command completion interrupt is automatcally cleared by reading
-PORT_SLOT_STAT register (SlotStatus in the original driver), and error
-registers should be manually cleared by writing to PORT_IRQ_STAT
-(IntStatus).
+Regards,
+Martin
 
- I agree that above code should clear both.  Just wanna verify.  Have
-you tested it and/or do you have any information confirming this?  If
-we don't have any further info, I think we should read PORT_SLOT_STAT
-before clearing PORT_IRQ_STAT to be on the safe side.
 
- Thanks.
 
--- 
-tejun
+--------------060001050205090301000602
+Content-Type: text/x-patch;
+ name="ahci_sactive.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ahci_sactive.diff"
+
+Patch: fix wrong HD activity control by ahci driver
+Signed-off-by: Martin.Wilck@fujitsu-siemens.com
+
+The ahci driver 1.0 sets the SActive bit on every transaction,
+causing the LED to light up. The SActive bit is used only for
+native command queuing (NCQ) which the current driver version 
+doesn't implement. Resetting the SActive bit is the device's 
+responsibility (by sending a "Set Device Bits FIS" to the
+host adapter) but this is not required in response to 
+non-NCQ commands, and (most) devices don't. Thus the LED 
+stays always on. This patch fixes the LED behavior.
+
+Spec references:
+http://www.intel.com/technology/serialata/pdf/rev1_1.pdf, sec. 3.3.13, 5.5.1
+http://www.serialata.org/docs/serialata10a.pdf
+http://www.intel.com/design/storage/papers/25266401.pdf
+
+--- linux-2.6.13-rc5/drivers/scsi/ahci.c.orig	2005-08-04 08:14:44.000000000 +0200
++++ linux-2.6.13-rc5/drivers/scsi/ahci.c	2005-08-04 08:19:06.000000000 +0200
+@@ -696,9 +696,6 @@ static int ahci_qc_issue(struct ata_queu
+ 	struct ata_port *ap = qc->ap;
+ 	void *port_mmio = (void *) ap->ioaddr.cmd_addr;
+ 
+-	writel(1, port_mmio + PORT_SCR_ACT);
+-	readl(port_mmio + PORT_SCR_ACT);	/* flush */
+-
+ 	writel(1, port_mmio + PORT_CMD_ISSUE);
+ 	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
+ 
+
+--------------060001050205090301000602--
