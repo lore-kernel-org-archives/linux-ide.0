@@ -1,54 +1,35 @@
-From: Doug Maxey <dwm@maxeymade.com>
-Subject: Re: [PATCH 3/3] libata-dev: Fix pdc2027x ATAPI DMA lost irq problem
-Date: Thu, 04 Aug 2005 13:41:09 -0500
-Message-ID: <200508041841.j74If9fv027567@falcon30.maxeymade.com>
-References: <42F252ED.8020206@tw.ibm.com>
+From: Edward Falk <efalk@google.com>
+Subject: Re: [PATCH linux-2.6.13-rc3] SATA: rewritten sil24 driver
+Date: Thu, 04 Aug 2005 11:46:51 -0700
+Message-ID: <42F2629B.70407@google.com>
+References: <20050728013622.GA14026@htj.dyndns.org> <42E93FB9.6090800@pobox.com> <20050730081734.GA14242@htj.dyndns.org> <42EFFA05.8010003@google.com> <42F04361.4020001@pobox.com> <20050803142812.GA25446@htj.dyndns.org> <20050804022025.GA19237@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:41400 "EHLO
-	falcon30.maxeymade.com") by vger.kernel.org with ESMTP
-	id S262596AbVHDSrF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 4 Aug 2005 14:47:05 -0400
-In-reply-to: <42F252ED.8020206@tw.ibm.com> 
+Received: from 216-239-45-4.google.com ([216.239.45.4]:18371 "EHLO
+	216-239-45-4.google.com") by vger.kernel.org with ESMTP
+	id S262596AbVHDSsq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Aug 2005 14:48:46 -0400
+In-Reply-To: <20050804022025.GA19237@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
-I suspect that Albert will not be able to reply for a few days, there 
-seems to be an issue with the weather in Taiwan, as in, they may be 
-hunkered down for a typhoon.
 
-On Fri, 05 Aug 2005 01:39:57 +0800, Albert Lee wrote:
->Jeff,
->
->Patch 3/3: Fix pdc2027x ATAPI DMA lost irq problem
->
->Description:
->   Sometimes pdc2027x will lost irq after ATAPI DMA data transfer.
->   With the previous rule (cmd->request_bufflen % 256), the ATAPI DMA irq lost
->problem still occurs during the test.
+>  I agree that above code should clear both.  Just wanna verify.  Have
+> you tested it and/or do you have any information confirming this?  If
+> we don't have any further info, I think we should read PORT_SLOT_STAT
+> before clearing PORT_IRQ_STAT to be on the safe side.
 
-Do you want to lash up the analyzer here in Austin?  I suspect this may be 
-a manifestation of a READ CAPACITY issue.  It is legal for the device fw 
-to report the lead-in, and lead-out blocks in the total, but you cannot 
-actually access the blocks from the device.  The blocks reported by 
-READ CAPACITY can be off by 3 to the high side.
+I've implemented the clear_irq() function to clear all interrupts as you 
+said, but haven't had time to test this thoroughly.  Ultimately, we 
+don't know if it works until we experience real errors and see how the 
+system responds.
 
->
->   Root cause for the irq lost is unknown. I've tried your ATAPI DMA alignment
->patch, but the problem still occurs, even the buffer is aligned. I guess it is pdc2027x hardware problem.
->
->   The following workarounds are adapted from the Promise pdc618 GPL driver.
->They seems know about the problem and has the workaround.
->
->Changes:
->   - Only turn on ATAPI DMA for READ, WRITE, READ_CD and READ_DVD_STRUCTURE commands.
->   - For WRITE_10, if LBA -45150 (FFFF4FA2h) to  -1 (FFFFFFFFh) then use PIO mode.
->
+I don't think it matters in which order you do things, as long as you 
+allow for the fact that reading PORT_SLOT_STAT will clear the command 
+completion interrupt flag.
 
-See above.
-
-++doug
-
+	-ed
