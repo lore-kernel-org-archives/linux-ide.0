@@ -1,34 +1,27 @@
-From: Edward Falk <efalk@google.com>
-Subject: Re: [PATCH linux-2.6.13-rc3] SATA: rewritten sil24 driver
-Date: Thu, 04 Aug 2005 11:51:31 -0700
-Message-ID: <42F263B3.3050509@google.com>
-References: <20050728013622.GA14026@htj.dyndns.org> <42E93FB9.6090800@pobox.com> <20050730081734.GA14242@htj.dyndns.org> <42EFFA05.8010003@google.com> <20050804085104.GA10201@htj.dyndns.org>
+From: Brett Russ <russb@emc.com>
+Subject: Re: [PATCH 1/3] libata-dev: Convert pdc2027x from PIO to MMIO
+Date: Thu, 04 Aug 2005 15:40:15 -0400
+Message-ID: <42F26F1F.8010903@emc.com>
+References: <42F24DBE.0@tw.ibm.com> <42F25114.1050009@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 216-239-45-4.google.com ([216.239.45.4]:25820 "EHLO
-	216-239-45-4.google.com") by vger.kernel.org with ESMTP
-	id S262632AbVHDSvl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 4 Aug 2005 14:51:41 -0400
-In-Reply-To: <20050804085104.GA10201@htj.dyndns.org>
+Received: from mailhub.lss.emc.com ([168.159.2.31]:59703 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S262629AbVHDTj0
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Aug 2005 15:39:26 -0400
+In-Reply-To: <42F25114.1050009@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>
 
-Tejun Heo wrote:
->  Hi, again, Edward.
-> 
->  Bad news...
-> 
-> On Tue, Aug 02, 2005 at 03:56:05PM -0700, Edward Falk wrote:
-> 
->>Again, you would need to fetch them from the returned FIS structure. 
->>Here's a code fragment derived from SiI's issue_soft_reset() function:
+Albert Lee wrote:
+> +	cgcr = readl(port_mmio(ap, PDC_GLOBAL_CTL));
 
-Yeah, well, that's what I get for sending code fragments I haven't 
-tested.  Stand by, I'll tinker with my own version of the driver and 
-send you an improved fragment.
+I've read that read[bwl]() and write[bwl]() are deprecated and 
+discouraged in new code and instead ioread{8,16,32}() and 
+iowrite{8,16,32}() should be used.  Is this the case?
 
-	-ed
+BR
