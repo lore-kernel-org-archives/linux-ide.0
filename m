@@ -1,29 +1,60 @@
-From: Christoph Lameter <christoph@lameter.com>
-Subject: Re: [patch] ide: fix kmalloc_node breakage in ide driver
-Date: Wed, 3 Aug 2005 18:31:03 -0700 (PDT)
-Message-ID: <Pine.LNX.4.62.0508031830440.25755@graphe.net>
-References: <20050804012657.GA3542@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH linux-2.6.13-rc3] SATA: rewritten sil24 driver
+Date: Thu, 4 Aug 2005 11:20:25 +0900
+Message-ID: <20050804022025.GA19237@htj.dyndns.org>
+References: <20050728013622.GA14026@htj.dyndns.org> <42E93FB9.6090800@pobox.com> <20050730081734.GA14242@htj.dyndns.org> <42EFFA05.8010003@google.com> <42F04361.4020001@pobox.com> <20050803142812.GA25446@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from graphe.net ([209.204.138.32]:27346 "EHLO graphe.net")
-	by vger.kernel.org with ESMTP id S261732AbVHDBbO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Aug 2005 21:31:14 -0400
-In-Reply-To: <20050804012657.GA3542@localhost.localdomain>
+Received: from wproxy.gmail.com ([64.233.184.192]:21134 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261710AbVHDCUa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Aug 2005 22:20:30 -0400
+Received: by wproxy.gmail.com with SMTP id i20so34513wra
+        for <linux-ide@vger.kernel.org>; Wed, 03 Aug 2005 19:20:30 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20050803142812.GA25446@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ravikiran G Thirumalai <kiran@scalex86.org>
-Cc: Andrew Morton <akpm@osdl.org>, shai@scalex86.org, linux-kernel@vger.kernel.org, ak@suse.de, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Edward Falk <efalk@google.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
-On Wed, 3 Aug 2005, Ravikiran G Thirumalai wrote:
+ Hello, Edward.
 
-> Machines with ide-interfaces which do not have pci devices are crashing on boot
-> at pcibus_to_node in the ide drivers.  We noticed this on a x445 running
-> 2.6.13-rc4.  Similar issue was discussed earlier, but the crash was due 
-> to hwif being NULL.
-> http://marc.theaimsgroup.com/?t=112075352000003&r=1&w=2
-> Andi and Christoph had patches, but neither went in.  Here's one of those
-> patches with an added BUG_ON(hwif == NULL).  Please include.
+ One more question.
 
-This needs to go into 2.6.13.
+> > >
+> > >I think this will work (adapted from sil_interrupt():
+> > >
+> > >static void sil_irq_clear(struct ata_port *ap)
+> > >{
+> > >        struct sil_port_priv *pp = ap->private_data;
+> > >        struct Port_Registers *port_base = pp->pregs;
+> > >    unsigned long port_int;
+> > >
+> > >    port_int  = readl((void *)&port_base->IntStatus);
+> > >    writel(port_int, &port_base->IntStatus);
+> > >}
+> > >
+> > >I'm assuming that this entry point is expected to clear all interrupts, no?
+> > 
+> > Correct.
+> > 
+> 
+>  I'll verify with the error register clearing part of the original
+> driver and submit a patch.
+> 
 
+ Command completion interrupt is automatcally cleared by reading
+PORT_SLOT_STAT register (SlotStatus in the original driver), and error
+registers should be manually cleared by writing to PORT_IRQ_STAT
+(IntStatus).
+
+ I agree that above code should clear both.  Just wanna verify.  Have
+you tested it and/or do you have any information confirming this?  If
+we don't have any further info, I think we should read PORT_SLOT_STAT
+before clearing PORT_IRQ_STAT to be on the safe side.
+
+ Thanks.
+
+-- 
+tejun
