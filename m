@@ -1,50 +1,47 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 3] sata: restore sg on setup failure
-Date: Sun, 7 Aug 2005 15:17:37 +0900
-Message-ID: <20050807061737.GA14913@htj.dyndns.org>
-References: <20050729050654.GA10413@havoc.gtf.org> <20050807054850.GA13335@htj.dyndns.org>
+From: Erik Slagter <erik@slagter.name>
+Subject: Re: Looking for support of Promise PDC40775 (SATA 300 TX2plus)
+Date: Sun, 07 Aug 2005 11:15:15 +0200
+Message-ID: <1123406115.4303.0.camel@localhost.localdomain>
+References: <20050806231016.7a4f6553.raphael.bossek@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050807054850.GA13335@htj.dyndns.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QpNRWn15ktFF5L3aFhoY"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from oldconomy.demon.nl ([212.238.217.56]:399 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S1751339AbVHGJQQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 7 Aug 2005 05:16:16 -0400
+In-Reply-To: <20050806231016.7a4f6553.raphael.bossek@gmx.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Raphael Bossek <raphael.bossek@gmx.de>
+Cc: linux-ide <linux-ide@vger.kernel.org>
 
- I forgot to restore sg->length on setup failure.  This patch adds it.
 
+--=-QpNRWn15ktFF5L3aFhoY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+> I'm looking for 2.6 support of this kind of Promise controller.
+> Is there any progress ongoing to support this kind of hardware
+> with SATA and PATA conectors?
+> Promise released GPL source code Linux 2.4 driver for this controllers
+>=20
+> PDC40518        Promise SATAII150 TX4
+> PDC20575        Promise SATAII150 TX2plus
+  ^^^^^^^^
 
-Index: work/drivers/scsi/libata-core.c
-===================================================================
---- work.orig/drivers/scsi/libata-core.c	2005-08-07 15:13:20.000000000 +0900
-+++ work/drivers/scsi/libata-core.c	2005-08-07 15:15:27.000000000 +0900
-@@ -2401,8 +2401,11 @@ static int ata_sg_setup_one(struct ata_q
- 
- 	dma_address = dma_map_single(ap->host_set->dev, qc->buf_virt,
- 				     sg->length, dir);
--	if (dma_mapping_error(dma_address))
-+	if (dma_mapping_error(dma_address)) {
-+		/* restore sg */
-+		sg->length += qc->pad_len;
- 		return -1;
-+	}
- 
- 	sg_dma_address(sg) = dma_address;
- 	sg_dma_len(sg) = sg->length;
-@@ -2473,8 +2476,11 @@ static int ata_sg_setup(struct ata_queue
- 
- 	dir = qc->dma_dir;
- 	n_elem = dma_map_sg(ap->host_set->dev, sg, qc->n_elem, dir);
--	if (n_elem < 1)
-+	if (n_elem < 1) {
-+		/* restore last sg */
-+		lsg->length += qc->pad_len;
- 		return -1;
-+	}
- 
- 	DPRINTK("%d sg elements mapped\n", n_elem);
- 
+I have this one working. It's as simple as adding the PCI id.
+
+--=-QpNRWn15ktFF5L3aFhoY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQBC9dEiJgD/6j32wUYRAuNjAJ4vYMJE2CV2Kz30dN0kWXYx9nq1/wCeP0wU
+2PCUnlEy2cp0ieD+OSXhsMk=
+=GXC7
+-----END PGP SIGNATURE-----
+
+--=-QpNRWn15ktFF5L3aFhoY--
