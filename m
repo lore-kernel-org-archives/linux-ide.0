@@ -1,47 +1,33 @@
-From: Erik Slagter <erik@slagter.name>
-Subject: Re: Looking for support of Promise PDC40775 (SATA 300 TX2plus)
-Date: Sun, 07 Aug 2005 11:15:15 +0200
-Message-ID: <1123406115.4303.0.camel@localhost.localdomain>
-References: <20050806231016.7a4f6553.raphael.bossek@gmx.de>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 2/3] libata-dev: pdc2027x mdelay() problem fix for
+	power5 micro-partitioning
+Date: Sun, 07 Aug 2005 11:18:14 +0200
+Message-ID: <1123406295.30257.104.camel@gaston>
+References: <42F24DBE.0@tw.ibm.com>  <42F251C2.8090409@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QpNRWn15ktFF5L3aFhoY"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oldconomy.demon.nl ([212.238.217.56]:399 "EHLO
-	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S1751339AbVHGJQQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Aug 2005 05:16:16 -0400
-In-Reply-To: <20050806231016.7a4f6553.raphael.bossek@gmx.de>
+Received: from gate.crashing.org ([63.228.1.57]:10707 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S1751341AbVHGJZA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Aug 2005 05:25:00 -0400
+In-Reply-To: <42F251C2.8090409@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Raphael Bossek <raphael.bossek@gmx.de>
-Cc: linux-ide <linux-ide@vger.kernel.org>
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
+On Fri, 2005-08-05 at 01:34 +0800, Albert Lee wrote:
+> Jeff,
+> 
+> Patch 2/3: pdc2027x mdelay() problem fix for micro-partitioning
+> 
+> Description:
+>    The mdelay(100) does not delay exactly 100 ms on IBM power5 machines when the power5 CPU micro-partitioning feature is turned on.
+> Ex. If micro-partitioning is set to use 0.1 of the CPU time, mdelay(100) will delay about 1 sec instead of 100ms.
 
---=-QpNRWn15ktFF5L3aFhoY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+How so ? mdelay() implementation on ppc64 uses the timebase register, it
+should tick at a constant speed and be calibrated at boot.
 
-> I'm looking for 2.6 support of this kind of Promise controller.
-> Is there any progress ongoing to support this kind of hardware
-> with SATA and PATA conectors?
-> Promise released GPL source code Linux 2.4 driver for this controllers
->=20
-> PDC40518        Promise SATAII150 TX4
-> PDC20575        Promise SATAII150 TX2plus
-  ^^^^^^^^
+Ben.
 
-I have this one working. It's as simple as adding the PCI id.
-
---=-QpNRWn15ktFF5L3aFhoY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQBC9dEiJgD/6j32wUYRAuNjAJ4vYMJE2CV2Kz30dN0kWXYx9nq1/wCeP0wU
-2PCUnlEy2cp0ieD+OSXhsMk=
-=GXC7
------END PGP SIGNATURE-----
-
---=-QpNRWn15ktFF5L3aFhoY--
