@@ -1,57 +1,35 @@
-From: Andreas =?iso-8859-1?q?Kl=F6ckner?= <inform@tiker.net>
-Subject: libata and PATA devices
-Date: Sun, 7 Aug 2005 19:48:59 +0200
-Message-ID: <200508071949.03782.inform@tiker.net>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Moving...  please wait
+Date: Sun, 7 Aug 2005 17:51:53 -0400
+Message-ID: <20050807215153.GB22212@havoc.gtf.org>
+References: <42EC5D96.3050304@pobox.com> <000001c59b91$d7f07370$4810100a@pc.s2io.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3618695.lELxVAjaSR";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:44486 "EHLO
-	moutng.kundenserver.de") by vger.kernel.org with ESMTP
-	id S1752455AbVHGRtI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Aug 2005 13:49:08 -0400
+Received: from havoc.gtf.org ([69.61.125.42]:2493 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1752845AbVHGVv4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Aug 2005 17:51:56 -0400
+Content-Disposition: inline
+In-Reply-To: <000001c59b91$d7f07370$4810100a@pc.s2io.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Ravinandan Arakali <ravinandan.arakali@neterion.com>, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: raghavendra.koushik@neterion.com, leonid.grossman@neterion.com, rapuru.sriram@neterion.com, akpm@osdl.org
 
---nextPart3618695.lELxVAjaSR
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Sun, Aug 07, 2005 at 01:51:52PM -0700, Ravinandan Arakali wrote:
+> Jeff,
+> The entire set of patches have been resent and an additional
+> patch13 to address earlier comments.
+> Pls confirm if these patches apply correctly.
 
-Hey Jeff, all,
 
-I was wondering why ATA_ENABLE_PATA and ATA_ENABLE_ATAPI are #undef'ed in=20
-include/linux/libata.h by default, since reverting them to #define's was th=
-e=20
-only way to make the ata-piix driver detect my CDROM on my new shiny ThinkP=
-ad=20
-(Intel Corp. 82801FBM (ICH6M) SATA Controller). I would assume that most=20
-people would want this. The drive worked out of the box on Ubuntu, so I=20
-assume that their vendor patch includes this anyway.
+I'm in the process of moving to a new house, and getting a new computer
+lab set up.
 
-Is there a specific reason that these are disabled? Are there any bad=20
-consequences that I'm not aware of? Only reading the source really revealed=
-=20
-that this was the way to get my CD-ROM to work.
+I have email and can ACK any critical patches, but everything else must
+wait for 2.6.14 to open (which fits nicely into the 2.6 release cycle).
 
-Thanks,
-Andreas
+	Jeff
 
---nextPart3618695.lELxVAjaSR
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
 
-iD8DBQBC9kmPJZ7T4Hn4+FIRApMGAKCG1NlE1D87NrCdwgPwA9eD+Zf+YACeJ3+z
-0uDNOuzKppKQKb+RCUGbVJk=
-=ZLSb
------END PGP SIGNATURE-----
-
---nextPart3618695.lELxVAjaSR--
