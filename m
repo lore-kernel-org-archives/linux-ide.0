@@ -1,47 +1,64 @@
 From: Erik Slagter <erik@slagter.name>
-Subject: Re: DriveStatusError BadCRC
-Date: Mon, 08 Aug 2005 11:54:17 +0200
-Message-ID: <1123494857.22328.52.camel@localhost.localdomain>
-References: <42D7AAD50003D4AA@mail-6.mail.tiscali.sys>
-	 <311601c905080707384a2def32@mail.gmail.com>
+Subject: Re: libata and PATA devices
+Date: Mon, 08 Aug 2005 12:10:56 +0200
+Message-ID: <1123495856.22328.62.camel@localhost.localdomain>
+References: <200508071949.03782.inform@tiker.net>
+	 <42F6B8CD.4050100@gmail.com>  <20050808030239.GA27502@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-M50d2vw5lcRctuhG9wU7"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RQRuXigpxlb92O1SDKCA"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oldconomy.demon.nl ([212.238.217.56]:19328 "EHLO
+Received: from oldconomy.demon.nl ([212.238.217.56]:15233 "EHLO
 	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S1750791AbVHHJzT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Aug 2005 05:55:19 -0400
-In-Reply-To: <311601c905080707384a2def32@mail.gmail.com>
+	id S1750800AbVHHKLJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Aug 2005 06:11:09 -0400
+In-Reply-To: <20050808030239.GA27502@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
 
---=-M50d2vw5lcRctuhG9wU7
+--=-RQRuXigpxlb92O1SDKCA
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2005-08-07 at 08:38 -0600, Eric D. Mudama wrote:
-> 51/84 indicates the crc failed on the incoming write data from your
-> system.  These failures should be very rare (on PATA), but the bummer
-> is they don't have anything to do with bad blocks on the media or
-> degrading heads...
+On Sun, 2005-08-07 at 23:02 -0400, Jeff Garzik wrote:
+> On Mon, Aug 08, 2005 at 10:43:41AM +0900, Tejun Heo wrote:
+> >  I don't know much about PATA support.  All I know is that ICH's seem=20
+> > to generate a lot of noise in this mailing list w/ its legacy, combined=
+,=20
+> > ahci and whatever modes and no one setting seems to satisfy all.  (If=20
+> > anyone knows more about it, please fill in here.)
 >=20
-> What is the temperature like inside your case?  What host adapter are
-> you using?  How many drives in the system?
+> Combined mode aggregates the PATA and SATA devices into a single PCI
+> device.  The chosen solution was to use the IDE driver for PATA, and
+> libata for SATA.
 
-I'd suggest trying another cable... And also a lower UDMA setting.
+BTW can you tell me why my PATA harddisk shows up as scsi (sd..) disk
+using ICH6M, using kernel with both plain ide and libata/piix enabled? I
+was under the impression that PATA harddisks should always show up as
+hd..
 
---=-M50d2vw5lcRctuhG9wU7
+I tried two approaches and both sort of work: include the PCI id in the
+ide/piix list (disk/cd show up as hd..) or enable atapi in libata
+(disk/cd show up as sd/scd), although the latter tends to lock up hard
+every once in while, which is to be expected I assume.
+
+Just puzzled...
+
+Is there a possibility that dell attaches PATA harddisks using a
+SATA/PATA converter to the SATA connection of the ICH6M?
+
+--=-RQRuXigpxlb92O1SDKCA
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.2 (GNU/Linux)
 
-iD8DBQBC9yvJJgD/6j32wUYRAo8oAJ9EgbrhRZrUqUiSdCQH3zWw/Bo6KgCeNW+8
-z++fcMAHETc+egRc+iWoEWw=
-=//b3
+iD8DBQBC9y+wJgD/6j32wUYRAodYAJ9MjZjzZ57TLhr5HJ0avjKOfyDvagCfRvJy
+tdzgvrMQowphFfeMWUJEzn8=
+=+34B
 -----END PGP SIGNATURE-----
 
---=-M50d2vw5lcRctuhG9wU7--
+--=-RQRuXigpxlb92O1SDKCA--
