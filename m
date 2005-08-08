@@ -1,37 +1,24 @@
-From: Jesse Barnes <jesse.barnes@intel.com>
-Subject: ata_piix hang in 2.6.13-rc5
-Date: Mon, 8 Aug 2005 10:20:48 -0700
-Message-ID: <200508081020.48945.jesse.barnes@intel.com>
+From: "Carlos Pardo" <Carlos.Pardo@siliconimage.com>
+Subject: RE: [PATCH linux-2.6.13-rc3] SATA: rewritten sil24 driver
+Date: Mon, 8 Aug 2005 10:31:45 -0700
+Message-ID: <2E9B8131C44AF746B1E06BF9B15A434B045D7F93@zima.siliconimage.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr24.intel.com ([143.183.121.16]:17385 "EHLO
-	scsfmr004.sc.intel.com") by vger.kernel.org with ESMTP
-	id S932122AbVHHRVC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Aug 2005 13:21:02 -0400
-Content-Disposition: inline
+Received: from siimage.com ([12.24.47.101]:54287 "EHLO mail.siimage.com")
+	by vger.kernel.org with ESMTP id S932098AbVHHR3Z convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Aug 2005 13:29:25 -0400
+content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, Edward Falk <efalk@google.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Raymond Liu <Raymond.Liu@siliconimage.com>
 
-I recently tried to upgrade an ICH5 based box I have to see if a PCI 
-resource allocation bug went away, but was stymied by the fact that 
-recent kernels (2.6.12 from Fedora and 2.6.13-rc5) hang when ata_piix 
-probes for drives.  The last messages I get are these:
+Jeff, et al -
 
-Loading ata_piix.ko module
-ACPI: PCI Interrupt 0000:00:1f.2[A] -> GSI 18 (level, low) -> IRQ 177
-ata1: SATA max UDMA/133 cmd 0xC800 ctl 0xC482 bmdma 0xC000 irq 177
-ata2: SATA max UDMA/133 cmd 0xC400 ctl 0xC082 bmdma 0xC008 irq 177
-ata1: SATA port has no device.
-scsi0: ata_piix
-ata2: dev 0 ata, max UDMA/133, 312581808 sectors, lba48
-<hang>
+One question. Do the open source driver support pass-through commands ? if so, how ? If you do not support it, are you planning to implement pass-through commands sometime in the future ?
 
-Is this a known problem?  Is there anything in particular I should try?
-
-Thanks,
-Jesse
+Carlos
 
