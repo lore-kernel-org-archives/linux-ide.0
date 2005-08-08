@@ -1,40 +1,86 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata and PATA devices
-Date: Sun, 7 Aug 2005 23:02:39 -0400
-Message-ID: <20050808030239.GA27502@havoc.gtf.org>
-References: <200508071949.03782.inform@tiker.net> <42F6B8CD.4050100@gmail.com>
+From: Horms <horms@debian.org>
+Subject: Re: Bug#321442: kernel-source-2.6.8: fails to compile on powerpc (drivers/ide/ppc/pmac.c)
+Date: Mon, 8 Aug 2005 17:57:04 +0900
+Message-ID: <20050808085703.GE18551@verge.net.au>
+References: <E1E13vT-0008G7-R1@arda.LT-P.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:7865 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1750706AbVHHDCp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Aug 2005 23:02:45 -0400
+Received: from koto.vergenet.net ([210.128.90.7]:1235 "EHLO koto.vergenet.net")
+	by vger.kernel.org with ESMTP id S1750767AbVHHI5X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Aug 2005 04:57:23 -0400
 Content-Disposition: inline
-In-Reply-To: <42F6B8CD.4050100@gmail.com>
+In-Reply-To: <E1E13vT-0008G7-R1@arda.LT-P.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andreas =?iso-8859-1?Q?Kl=F6ckner?= <inform@tiker.net>, linux-ide@vger.kernel.org
+To: LT-P <LT-P@LT-P.net>, 321442@bugs.debian.org
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mon, Aug 08, 2005 at 10:43:41AM +0900, Tejun Heo wrote:
->  I don't know much about PATA support.  All I know is that ICH's seem 
-> to generate a lot of noise in this mailing list w/ its legacy, combined, 
-> ahci and whatever modes and no one setting seems to satisfy all.  (If 
-> anyone knows more about it, please fill in here.)
+On Fri, Aug 05, 2005 at 05:15:57PM +0200, LT-P wrote:
+> Package: kernel-source-2.6.8
+> Version: 2.6.8-16
+> Severity: normal
+> 
+> The kernel-source-2.6.8 sources fail to compile on powerpc (PowerMac 4400).
+> 
+> ___
+> CC      drivers/ide/ide.o
+> CC      drivers/ide/ide-default.o
+> CC      drivers/ide/ide-io.o
+> CC      drivers/ide/ide-iops.o
+> CC      drivers/ide/ide-lib.o
+> CC      drivers/ide/ide-probe.o
+> CC      drivers/ide/ide-taskfile.o
+> CC      drivers/ide/ide-dma.o
+> CC      drivers/ide/ide-proc.o
+> CC      drivers/ide/ppc/pmac.o
+> drivers/ide/ppc/pmac.c: Dans la fonction ?? pmac_ide_dma_read ??:
+> drivers/ide/ppc/pmac.c:1951: error: `ide_dma_intr' undeclared (first use in this function)
+> drivers/ide/ppc/pmac.c:1951: error: (Each undeclared identifier is reported only once
+> drivers/ide/ppc/pmac.c:1951: error: for each function it appears in.)
+> drivers/ide/ppc/pmac.c: Dans la fonction ?? pmac_ide_dma_write ??:
+> drivers/ide/ppc/pmac.c:1982: error: `ide_dma_intr' undeclared (first use in this function)
+> drivers/ide/ppc/pmac.c: Dans la fonction ?? pmac_ide_setup_dma ??:
+> drivers/ide/ppc/pmac.c:2157: error: `__ide_dma_off_quietly' undeclared (first use in this function)
+> drivers/ide/ppc/pmac.c:2158: error: `__ide_dma_on' undeclared (first use in this function)
+> drivers/ide/ppc/pmac.c:2167: error: `__ide_dma_verbose' undeclared (first use in this function)
+> drivers/ide/ppc/pmac.c:2168: error: `__ide_dma_timeout' undeclared (first use in this function)
+> make[3]: *** [drivers/ide/ppc/pmac.o] Error 1
+> make[2]: *** [drivers/ide] Error 2
+> make[1]: *** [drivers] Error 2
 
-Combined mode aggregates the PATA and SATA devices into a single PCI
-device.  The chosen solution was to use the IDE driver for PATA, and
-libata for SATA.
+Can you please enable BLK_DEV_IDEDMA_PCI and see if that resolves your
+problem. If it does, then the following patch should fix Kconfig
+so that BLK_DEV_IDEDMA_PCI needs to be enabled for BLK_DEV_IDE_PMAC
+to be enabled. It should patch cleanly against Debian's 2.6.8 and
+Linus' current Git tree.
 
-This was necessary since ATAPI support did not exist in libata (nor did
-SATAPI devices exist).  An unfortunate side effect is that only one
-driver could have access to the busmaster DMA registers -- libata --
-which meant that the IDE driver was limited to PIO data xfer for PATA.
-
-Once ATAPI support is mature in libata, we can support PATA fully in
-libata, and eliminate this PATA speed limitation in combined mode.
-
-	Jeff
+-- 
+Horms
 
 
+BLK_DEV_IDEDMA_PCI seems to be needed for BLK_DEV_IDE_PMAC to compile
 
+Signed-off-by: Horms <horms@verge.net.au>
+
+
+--- a/drivers/ide/Kconfig.orig	2005-08-08 17:48:17.000000000 +0900
++++ b/drivers/ide/Kconfig	2005-08-08 17:48:48.000000000 +0900
+@@ -749,8 +749,6 @@
+ 	  This allows the kernel to change PIO, DMA and UDMA speeds and to
+ 	  configure the chip to optimum performance.
+ 
+-endif
+-
+ config BLK_DEV_IDE_PMAC
+ 	bool "Builtin PowerMac IDE support"
+ 	depends on PPC_PMAC && IDE=y
+@@ -759,6 +757,8 @@
+ 	  most of the recent Apple Power Macintoshes and PowerBooks.
+ 	  If unsure, say Y.
+ 
++endif
++
+ config BLK_DEV_IDE_PMAC_ATA100FIRST
+ 	bool "Probe internal ATA/100 (Kauai) first"
+ 	depends on BLK_DEV_IDE_PMAC
