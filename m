@@ -1,24 +1,38 @@
-From: "Carlos Pardo" <Carlos.Pardo@siliconimage.com>
-Subject: RE: [PATCH linux-2.6.13-rc3] SATA: rewritten sil24 driver
-Date: Mon, 8 Aug 2005 10:31:45 -0700
-Message-ID: <2E9B8131C44AF746B1E06BF9B15A434B045D7F93@zima.siliconimage.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH linux-2.6.13-rc3] SATA: rewritten sil24 driver
+Date: Mon, 8 Aug 2005 13:37:48 -0400
+Message-ID: <20050808173748.GA22580@havoc.gtf.org>
+References: <2E9B8131C44AF746B1E06BF9B15A434B045D7F93@zima.siliconimage.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from siimage.com ([12.24.47.101]:54287 "EHLO mail.siimage.com")
-	by vger.kernel.org with ESMTP id S932098AbVHHR3Z convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Aug 2005 13:29:25 -0400
-content-class: urn:content-classes:message
+Received: from havoc.gtf.org ([69.61.125.42]:5018 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S932139AbVHHRhx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Aug 2005 13:37:53 -0400
+Content-Disposition: inline
+In-Reply-To: <2E9B8131C44AF746B1E06BF9B15A434B045D7F93@zima.siliconimage.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Edward Falk <efalk@google.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Raymond Liu <Raymond.Liu@siliconimage.com>
+To: Carlos Pardo <Carlos.Pardo@siliconimage.com>
+Cc: Tejun Heo <htejun@gmail.com>, Edward Falk <efalk@google.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Raymond Liu <Raymond.Liu@siliconimage.com>
 
-Jeff, et al -
+On Mon, Aug 08, 2005 at 10:31:45AM -0700, Carlos Pardo wrote:
+> One question. Do the open source driver support pass-through commands ? if so, how ? If you do not support it, are you planning to implement pass-through commands sometime in the future ?
 
-One question. Do the open source driver support pass-through commands ? if so, how ? If you do not support it, are you planning to implement pass-through commands sometime in the future ?
+I don't know about sata_sil24 in particular.  In general, there is a
+patch in the "libata-dev.git" repository that supports ATA passthru, and
+this is scheduled to be merged into the main 2.6.x kernel as soon as
+some bugs are fixed.
 
-Carlos
+sata_sil24 definitely needs to support this ATA passthru feature.
+
+As implemented, each SATA driver is simply a generic ATA command engine,
+for any command.  struct ata_taskfile (linux/ata.h) has a field that
+indicates the command protocol used for command delivery (pio, dma,
+no-data, etc.).  Each driver should execute ATA commands based on the
+specified ATA protocol.
+
+	Jeff
+
+
 
