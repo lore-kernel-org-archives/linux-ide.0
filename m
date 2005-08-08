@@ -1,86 +1,80 @@
-From: Horms <horms@debian.org>
-Subject: Re: Bug#321442: kernel-source-2.6.8: fails to compile on powerpc (drivers/ide/ppc/pmac.c)
-Date: Mon, 8 Aug 2005 17:57:04 +0900
-Message-ID: <20050808085703.GE18551@verge.net.au>
-References: <E1E13vT-0008G7-R1@arda.LT-P.net>
+From: Steven Scholz <steven.scholz@imc-berlin.de>
+Subject: Re: Crash in ide_do_request() on card removal
+Date: Mon, 08 Aug 2005 11:00:57 +0200
+Message-ID: <42F71F49.6050005@imc-berlin.de>
+References: <20050802113328.GK22569@suse.de> <42EF626B.6090103@imc-berlin.de> <20050802122609.GM22569@suse.de> <42EF69AD.30201@imc-berlin.de> <20050802125437.GA11967@suse.de> <42EF6F18.4090905@imc-berlin.de> <20050802130646.GA7519@suse.de> <42EF7747.6050208@imc-berlin.de> <20050802134546.GC2408@suse.de> <42EF7AFD.9090507@imc-berlin.de> <20050802141156.GF2408@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from koto.vergenet.net ([210.128.90.7]:1235 "EHLO koto.vergenet.net")
-	by vger.kernel.org with ESMTP id S1750767AbVHHI5X (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Aug 2005 04:57:23 -0400
-Content-Disposition: inline
-In-Reply-To: <E1E13vT-0008G7-R1@arda.LT-P.net>
+Received: from mail.imc-berlin.de ([217.110.46.186]:8200 "EHLO
+	mail.imc-berlin.de") by vger.kernel.org with ESMTP id S1750771AbVHHJBB
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Aug 2005 05:01:01 -0400
+In-Reply-To: <20050802141156.GF2408@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: LT-P <LT-P@LT-P.net>, 321442@bugs.debian.org
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-On Fri, Aug 05, 2005 at 05:15:57PM +0200, LT-P wrote:
-> Package: kernel-source-2.6.8
-> Version: 2.6.8-16
-> Severity: normal
-> 
-> The kernel-source-2.6.8 sources fail to compile on powerpc (PowerMac 4400).
-> 
-> ___
-> CC      drivers/ide/ide.o
-> CC      drivers/ide/ide-default.o
-> CC      drivers/ide/ide-io.o
-> CC      drivers/ide/ide-iops.o
-> CC      drivers/ide/ide-lib.o
-> CC      drivers/ide/ide-probe.o
-> CC      drivers/ide/ide-taskfile.o
-> CC      drivers/ide/ide-dma.o
-> CC      drivers/ide/ide-proc.o
-> CC      drivers/ide/ppc/pmac.o
-> drivers/ide/ppc/pmac.c: Dans la fonction ?? pmac_ide_dma_read ??:
-> drivers/ide/ppc/pmac.c:1951: error: `ide_dma_intr' undeclared (first use in this function)
-> drivers/ide/ppc/pmac.c:1951: error: (Each undeclared identifier is reported only once
-> drivers/ide/ppc/pmac.c:1951: error: for each function it appears in.)
-> drivers/ide/ppc/pmac.c: Dans la fonction ?? pmac_ide_dma_write ??:
-> drivers/ide/ppc/pmac.c:1982: error: `ide_dma_intr' undeclared (first use in this function)
-> drivers/ide/ppc/pmac.c: Dans la fonction ?? pmac_ide_setup_dma ??:
-> drivers/ide/ppc/pmac.c:2157: error: `__ide_dma_off_quietly' undeclared (first use in this function)
-> drivers/ide/ppc/pmac.c:2158: error: `__ide_dma_on' undeclared (first use in this function)
-> drivers/ide/ppc/pmac.c:2167: error: `__ide_dma_verbose' undeclared (first use in this function)
-> drivers/ide/ppc/pmac.c:2168: error: `__ide_dma_timeout' undeclared (first use in this function)
-> make[3]: *** [drivers/ide/ppc/pmac.o] Error 1
-> make[2]: *** [drivers/ide] Error 2
-> make[1]: *** [drivers] Error 2
+Jens Axboe wrote:
 
-Can you please enable BLK_DEV_IDEDMA_PCI and see if that resolves your
-problem. If it does, then the following patch should fix Kconfig
-so that BLK_DEV_IDEDMA_PCI needs to be enabled for BLK_DEV_IDE_PMAC
-to be enabled. It should patch cleanly against Debian's 2.6.8 and
-Linus' current Git tree.
+> On Tue, Aug 02 2005, Steven Scholz wrote:
+>=20
+>>[PATCH] ide: kill requests when drive is not present anymore
+>>
+>>Signed-off-by: Steven Scholz <steven.scholz@imc-berlin.de>
+>>
+>>Ok?
+>>
+>>Change the CHANGELOG at your will.
+>>
+>>--
+>>Steven
+>=20
+>=20
+>>--- linux-2.6.13-rc5/drivers/ide/ide-io.c	2005-06-17 21:48:29.0000000=
+00 +0200
+>>+++ linux-2.6.13-rc4-at91-multiIO/drivers/ide/ide-io.c	2005-08-02 15:=
+46:53.000000000 +0200
+>>@@ -1230,7 +1257,17 @@ void do_ide_request(request_queue_t *q)
+>> {
+>> 	ide_drive_t *drive =3D q->queuedata;
+>>=20
+>>-	ide_do_request(HWGROUP(drive), IDE_NO_IRQ);
+>>+	if (drive->present)
+>>+		ide_do_request(HWGROUP(drive), IDE_NO_IRQ);
+>>+	else {
+>>+		struct request	*rq;
+>>+		printk(KERN_WARNING "%s: not present, killing requests\n", drive->=
+name);
+>>+		while ((rq =3D elv_next_request(q)) !=3D NULL) {
+>>+			blkdev_dequeue_request(rq);
+>>+			end_that_request_first(rq, 0, rq->hard_nr_sectors);
+>>+			end_that_request_last(rq);
+>>+		}
+>>+	}
+>> }
+>>=20
+>> /*
+>=20
+>=20
+> Looks good to me now, that's one item off Barts list :-)
 
--- 
-Horms
+Will it get into 2.6.13? It's not in -rc6 though.
+
+--
+Steven
 
 
-BLK_DEV_IDEDMA_PCI seems to be needed for BLK_DEV_IDE_PMAC to compile
-
-Signed-off-by: Horms <horms@verge.net.au>
 
 
---- a/drivers/ide/Kconfig.orig	2005-08-08 17:48:17.000000000 +0900
-+++ b/drivers/ide/Kconfig	2005-08-08 17:48:48.000000000 +0900
-@@ -749,8 +749,6 @@
- 	  This allows the kernel to change PIO, DMA and UDMA speeds and to
- 	  configure the chip to optimum performance.
- 
--endif
--
- config BLK_DEV_IDE_PMAC
- 	bool "Builtin PowerMac IDE support"
- 	depends on PPC_PMAC && IDE=y
-@@ -759,6 +757,8 @@
- 	  most of the recent Apple Power Macintoshes and PowerBooks.
- 	  If unsure, say Y.
- 
-+endif
-+
- config BLK_DEV_IDE_PMAC_ATA100FIRST
- 	bool "Probe internal ATA/100 (Kauai) first"
- 	depends on BLK_DEV_IDE_PMAC
+
+--=20
+Steven Scholz
+
+imc Measurement & Control               imc Me=DFsysteme GmbH
+Voltastr. 5                             Voltastr. 5
+13355 Berlin                            13355 Berlin
+Germany                                 Deutschland
