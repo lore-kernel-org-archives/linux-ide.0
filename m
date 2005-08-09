@@ -1,46 +1,46 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Erik Slagter <erik@slagter.name>
 Subject: Re: libata for SATA HDs.
-Date: Tue, 9 Aug 2005 14:04:11 -0400
-Message-ID: <20050809180411.GD10315@havoc.gtf.org>
-References: <42EEA9D5.5080304@superbug.demon.co.uk> <42F8B264.5010706@rtr.ca> <42F8EE0B.7000706@superbug.demon.co.uk>
+Date: Tue, 09 Aug 2005 20:18:49 +0200
+Message-ID: <1123611529.28278.12.camel@localhost.localdomain>
+References: <42EEA9D5.5080304@superbug.demon.co.uk>
+	 <42F8B264.5010706@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pLgbGbilNmPrHichnX/E"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:21384 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S964904AbVHISEL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Aug 2005 14:04:11 -0400
-Content-Disposition: inline
-In-Reply-To: <42F8EE0B.7000706@superbug.demon.co.uk>
+Received: from oldconomy.demon.nl ([212.238.217.56]:51134 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S964914AbVHISTK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Aug 2005 14:19:10 -0400
+In-Reply-To: <42F8B264.5010706@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Courtier-Dutton <James@superbug.demon.co.uk>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
-
-On Tue, Aug 09, 2005 at 06:55:23PM +0100, James Courtier-Dutton wrote:
-> Mark Lord wrote:
-> >James Courtier-Dutton wrote:
-> >
-> >>Google did not help me.
-> >>
-> >>Can I use the kernel libata and do commands like this now? :
-> >>hdparm -S60 /dev/sda
-> >
-> >
-> >Yes, but only if you manually apply the "libata-passthru" patch.
-> >
-> >The copy (below) works with 2.6.12, and I'm including it here
-> >for the benefit of the many who aren't yet ready to adopt a new
-> >religion (git) just for obtaining this vital functionality.
-> >
-> >Cheers
-> >
-> 
-> So, why hasn't that patch got into the kernel?
-
-Because there are several reports of it causing problems, when used on a
-loaded system.
-
-	Jeff
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org
 
 
+--=-pLgbGbilNmPrHichnX/E
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 2005-08-09 at 09:40 -0400, Mark Lord wrote:
+> > Can I use the kernel libata and do commands like this now? :
+> > hdparm -S60 /dev/sda
+>=20
+> Yes, but only if you manually apply the "libata-passthru" patch.
+
+Hmmm, hdparm -S indeed works now, but smartctl doesn't work yet :-(. I
+was silently hoping that would start working as well.
+
+--=-pLgbGbilNmPrHichnX/E
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQBC+POJJgD/6j32wUYRArjkAJ0f7VB+sQMscXKRN8rGjGEHsQh5AACgiFg7
+GzziU7H2bhK7JnyfNGz+Dbk=
+=oEN7
+-----END PGP SIGNATURE-----
+
+--=-pLgbGbilNmPrHichnX/E--
