@@ -1,34 +1,46 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata and PATA devices
-Date: Tue, 9 Aug 2005 14:02:56 -0400
-Message-ID: <20050809180256.GC10315@havoc.gtf.org>
-References: <200508071949.03782.inform@tiker.net> <42F6B8CD.4050100@gmail.com> <20050808030239.GA27502@havoc.gtf.org> <1123495856.22328.62.camel@localhost.localdomain> <42F8B41C.4040408@rtr.ca> <1123607133.28278.5.camel@localhost.localdomain>
+Subject: Re: libata for SATA HDs.
+Date: Tue, 9 Aug 2005 14:04:11 -0400
+Message-ID: <20050809180411.GD10315@havoc.gtf.org>
+References: <42EEA9D5.5080304@superbug.demon.co.uk> <42F8B264.5010706@rtr.ca> <42F8EE0B.7000706@superbug.demon.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:15750 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S964903AbVHISC5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Aug 2005 14:02:57 -0400
+Received: from havoc.gtf.org ([69.61.125.42]:21384 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S964904AbVHISEL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Aug 2005 14:04:11 -0400
 Content-Disposition: inline
-In-Reply-To: <1123607133.28278.5.camel@localhost.localdomain>
+In-Reply-To: <42F8EE0B.7000706@superbug.demon.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Erik Slagter <erik@slagter.name>
+To: James Courtier-Dutton <James@superbug.demon.co.uk>
 Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-On Tue, Aug 09, 2005 at 07:05:33PM +0200, Erik Slagter wrote:
-> On Tue, 2005-08-09 at 09:48 -0400, Mark Lord wrote:
-> > But there's also a fix for that, again floating around only in private repositories.
+On Tue, Aug 09, 2005 at 06:55:23PM +0100, James Courtier-Dutton wrote:
+> Mark Lord wrote:
+> >James Courtier-Dutton wrote:
+> >
+> >>Google did not help me.
+> >>
+> >>Can I use the kernel libata and do commands like this now? :
+> >>hdparm -S60 /dev/sda
+> >
+> >
+> >Yes, but only if you manually apply the "libata-passthru" patch.
+> >
+> >The copy (below) works with 2.6.12, and I'm including it here
+> >for the benefit of the many who aren't yet ready to adopt a new
+> >religion (git) just for obtaining this vital functionality.
+> >
+> >Cheers
+> >
 > 
-> Grmbl.
+> So, why hasn't that patch got into the kernel?
 
-Mark is just working off steam.  The "fix" causes leaks, and does
-not really fix what was intended.  It stops the symptoms Mark was
-seeing, but eventually you'll run out of commands, or kernel memory,
-and everything still stop _anyway_.
-
-We don't apply band-aids, only fixes.
+Because there are several reports of it causing problems, when used on a
+loaded system.
 
 	Jeff
+
 
 
