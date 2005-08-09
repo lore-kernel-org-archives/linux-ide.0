@@ -1,41 +1,30 @@
-From: James Courtier-Dutton <James@superbug.demon.co.uk>
-Subject: Re: libata for SATA HDs.
-Date: Tue, 09 Aug 2005 18:55:23 +0100
-Message-ID: <42F8EE0B.7000706@superbug.demon.co.uk>
-References: <42EEA9D5.5080304@superbug.demon.co.uk> <42F8B264.5010706@rtr.ca>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: libata and PATA devices
+Date: Tue, 9 Aug 2005 14:01:11 -0400
+Message-ID: <20050809180111.GB10315@havoc.gtf.org>
+References: <200508071949.03782.inform@tiker.net> <42F6B8CD.4050100@gmail.com> <20050808030239.GA27502@havoc.gtf.org> <1123495856.22328.62.camel@localhost.localdomain> <42F8B41C.4040408@rtr.ca> <42F8B949.6070004@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anchor-post-34.mail.demon.net ([194.217.242.92]:16658 "EHLO
-	anchor-post-34.mail.demon.net") by vger.kernel.org with ESMTP
-	id S964902AbVHIRzY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Aug 2005 13:55:24 -0400
-In-Reply-To: <42F8B264.5010706@rtr.ca>
+Received: from havoc.gtf.org ([69.61.125.42]:9862 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S964901AbVHISBM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Aug 2005 14:01:12 -0400
+Content-Disposition: inline
+In-Reply-To: <42F8B949.6070004@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Erik Slagter <erik@slagter.name>
 
-Mark Lord wrote:
-> James Courtier-Dutton wrote:
-> 
->> Google did not help me.
->>
->> Can I use the kernel libata and do commands like this now? :
->> hdparm -S60 /dev/sda
-> 
-> 
-> Yes, but only if you manually apply the "libata-passthru" patch.
-> 
-> The copy (below) works with 2.6.12, and I'm including it here
-> for the benefit of the many who aren't yet ready to adopt a new
-> religion (git) just for obtaining this vital functionality.
-> 
-> Cheers
-> 
+On Tue, Aug 09, 2005 at 10:10:17AM -0400, Mark Lord wrote:
+> The PATA ATAPI works now -- perhaps it could be turned on by default
+> while efforts continue to implement support for SATA ATAPI devices.
 
-So, why hasn't that patch got into the kernel?
+No, PATA ATAPI DMA still needs the same fixes that SATA ATAPI does.
 
-James
+ATAPI is incomplete, the reason why the IDE driver is preferred still.
+
+	Jeff
+
+
 
