@@ -1,58 +1,44 @@
-From: James Courtier-Dutton <James@superbug.demon.co.uk>
-Subject: Re: libata for SATA HDs.
-Date: Tue, 09 Aug 2005 23:27:51 +0100
-Message-ID: <42F92DE7.9070301@superbug.demon.co.uk>
-References: <42EEA9D5.5080304@superbug.demon.co.uk> <42F8B264.5010706@rtr.ca> <42F8EE0B.7000706@superbug.demon.co.uk> <20050809180411.GD10315@havoc.gtf.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: libata total system lockup fix
+Date: Wed, 10 Aug 2005 08:54:42 +0900
+Message-ID: <42F94242.6090402@gmail.com>
+References: <42E4ED70.1050501@pobox.com> <42E4FC75.70006@pobox.com> <42E50AE9.3000207@rtr.ca> <42F2E267.50402@gmail.com> <42F8C8D0.2010603@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anchor-post-34.mail.demon.net ([194.217.242.92]:3850 "EHLO
-	anchor-post-34.mail.demon.net") by vger.kernel.org with ESMTP
-	id S965008AbVHIW1y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Aug 2005 18:27:54 -0400
-In-Reply-To: <20050809180411.GD10315@havoc.gtf.org>
+Received: from zproxy.gmail.com ([64.233.162.192]:31252 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750975AbVHIXyv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Aug 2005 19:54:51 -0400
+Received: by zproxy.gmail.com with SMTP id i11so12258nzh
+        for <linux-ide@vger.kernel.org>; Tue, 09 Aug 2005 16:54:48 -0700 (PDT)
+In-Reply-To: <42F8C8D0.2010603@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: Mark Lord <mlord@pobox.com>
+Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, hare@suse.de
 
-Jeff Garzik wrote:
-> On Tue, Aug 09, 2005 at 06:55:23PM +0100, James Courtier-Dutton wrote:
+
+Hi, Mark.
+
+Mark Lord wrote:
+> Tejun,
 > 
->>Mark Lord wrote:
->>
->>>James Courtier-Dutton wrote:
->>>
->>>
->>>>Google did not help me.
->>>>
->>>>Can I use the kernel libata and do commands like this now? :
->>>>hdparm -S60 /dev/sda
->>>
->>>
->>>Yes, but only if you manually apply the "libata-passthru" patch.
->>>
->>>The copy (below) works with 2.6.12, and I'm including it here
->>>for the benefit of the many who aren't yet ready to adopt a new
->>>religion (git) just for obtaining this vital functionality.
->>>
->>>Cheers
->>>
->>
->>So, why hasn't that patch got into the kernel?
+> I'm back from holiday now, and will try your one-liner
+> in place of the more complex patch I had been using.
 > 
-> 
-> Because there are several reports of it causing problems, when used on a
-> loaded system.
-> 
-> 	Jeff
+> (that's what you intended, right?)
 > 
 
-Jeff,
+  Yeap, and if possible, please also try the second large patch.  I 
+wanna make sure it's free of that problem.
 
-What sort of problems? Loss of data?
-I don't really have the time to do a full restore cycle just to try libata.
+> Should know within a few hours whether it solves this
+> problem here or not.
 
-James
+  Cool.
 
+  Thanks.
+
+-- 
+tejun
