@@ -1,47 +1,58 @@
-From: Erik Slagter <erik@slagter.name>
-Subject: Re: libata for SATA HDs.
-Date: Wed, 10 Aug 2005 09:41:18 +0200
-Message-ID: <1123659678.28278.33.camel@localhost.localdomain>
-References: <42EEA9D5.5080304@superbug.demon.co.uk>
-	 <42F8B264.5010706@rtr.ca> <1123611529.28278.12.camel@localhost.localdomain>
-	 <42F90C3C.6010809@rtr.ca>
+From: sampei02@tiscali.it
+Subject: SOLVED: DriveStatusError BadCRC
+Date: Wed, 10 Aug 2005 12:14:35 +0200
+Message-ID: <42D7AA47000408B7@mail-5.mail.tiscali.sys>
+References: <1123494857.22328.52.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uCfKtg08P6/TXh+Us22p"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oldconomy.demon.nl ([212.238.217.56]:48352 "EHLO
-	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S965033AbVHJHmP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Aug 2005 03:42:15 -0400
-In-Reply-To: <42F90C3C.6010809@rtr.ca>
+Received: from mrqout1.tiscali.it ([195.130.225.11]:18332 "EHLO
+	mrqout1.tiscali.it") by vger.kernel.org with ESMTP id S932554AbVHJKOr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Aug 2005 06:14:47 -0400
+In-Reply-To: <1123494857.22328.52.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org
+To: Erik Slagter <erik@slagter.name>, linux-ide@vger.kernel.org
+
+I replaced 80 wire flat cable with another 40 wire cable.
+In this way I have no errors but now UDMA mode is set to 2 value.
+I'm sure that MOTHERBOARD supports UDMA ATA/33/66/100 BUS IDE ports.
+What do you think ?
 
 
---=-uCfKtg08P6/TXh+Us22p
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>-- Messaggio Originale --
+>Subject: Re: DriveStatusError BadCRC
+>From:	Erik Slagter <erik@slagter.name>
+>To:	linux-ide@vger.kernel.org
+>Date:	Mon, 08 Aug 2005 11:54:17 +0200
+>
+>
+>On Sun, 2005-08-07 at 08:38 -0600, Eric D. Mudama wrote:
+>> 51/84 indicates the crc failed on the incoming write data from your
+>> system.  These failures should be very rare (on PATA), but the bumme=
+r
+>> is they don't have anything to do with bad blocks on the media or
+>> degrading heads...
+>>=20
+>> What is the temperature like inside your case?  What host adapter ar=
+e
+>> you using?  How many drives in the system?
+>
+>I'd suggest trying another cable... And also a lower UDMA setting.
+>
+>Allegato: signature.asc
+>
 
-On Tue, 2005-08-09 at 16:04 -0400, Mark Lord wrote:
-> > Hmmm, hdparm -S indeed works now, but smartctl doesn't work yet :-(. I
-> > was silently hoping that would start working as well.
->=20
-> Smartctl wants the "-d ata" option set to speak to libata.
 
-Once again right on the spot! Thanks! Now I think about it, it seems
-logical...
+__________________________________________________________________
+TISCALI ADSL 1.25 MEGA
+Solo con Tiscali Adsl navighi senza limiti e telefoni senza canone Tele=
+com
+a partire da 19,95 Euro/mese.
+Attivala entro il 31 agosto, il primo MESE =E8 GRATIS! CLICCA QUI.
+http://abbonati.tiscali.it/adsl/sa/1e25flat_tc/
 
---=-uCfKtg08P6/TXh+Us22p
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
 
-iD8DBQBC+a+eJgD/6j32wUYRAihEAKCGhK02rC26GYldIYWq++9D4+WqYwCdFqMA
-i0qAOKcDE/7RRaj8Kq7F8fs=
-=8evG
------END PGP SIGNATURE-----
-
---=-uCfKtg08P6/TXh+Us22p--
