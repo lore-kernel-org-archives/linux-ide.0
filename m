@@ -1,28 +1,34 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/2] sata: fix sata_sx4 dma_prep to not use sg->length
-Date: Wed, 10 Aug 2005 17:24:06 -0400
-Message-ID: <42FA7076.6060801@pobox.com>
-References: <20050729050654.GA10413@havoc.gtf.org> <20050807054850.GA13335@htj.dyndns.org> <20050807055340.GB13335@htj.dyndns.org>
+Subject: Re: libata total system lockup fix
+Date: Wed, 10 Aug 2005 17:24:57 -0400
+Message-ID: <42FA70A9.6080608@pobox.com>
+References: <42E4ED70.1050501@pobox.com> <42E4FC75.70006@pobox.com> <42E50AE9.3000207@rtr.ca> <42F2E267.50402@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20050807055340.GB13335@htj.dyndns.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:37281 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030277AbVHJVZB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Aug 2005 17:25:01 -0400
+In-Reply-To: <42F2E267.50402@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Mark Lord <mlord@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, hare@suse.de
 
 Tejun Heo wrote:
->  sata_sx4 directly references sg->length to calculate total_len in
-> pdc20621_dma_prep().  This is incorrect as dma_map_sg() could have
-> merged multiple sg's into one and, in such case, sg->length doesn't
-> reflect true size of the entry.  This patch makes it use
-> sg_dma_len(sg).
+> diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+> --- a/drivers/scsi/libata-scsi.c
+> +++ b/drivers/scsi/libata-scsi.c
+> @@ -385,6 +385,7 @@ int ata_scsi_error(struct Scsi_Host *hos
+>          * appropriate place
+>          */
+>         host->host_failed--;
+> +       INIT_LIST_HEAD(&host->eh_cmd_q);
 > 
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>         DPRINTK("EXIT\n");
+>         return 0;
+
 
 applied to 2.6.13
-
 
