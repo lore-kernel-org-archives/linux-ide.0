@@ -1,77 +1,56 @@
-From: "Timothy Thelin" <Timothy.Thelin@wdc.com>
-Subject: RE: libata for SATA HDs.
-Date: Wed, 10 Aug 2005 11:42:11 -0700
-Message-ID: <CA45571DE57E1C45BF3552118BA92C9D060AA3@WDSCEXBECL03.sc.wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+From: linux@horizon.com
+Subject: Re: NCQ support NVidia NForce4 (CK804) SATAII
+Date: 10 Aug 2005 15:17:03 -0400
+Message-ID: <20050810191703.4647.qmail@science.horizon.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wdscexfe01.sc.wdc.com ([129.253.170.53]:24709 "EHLO
-	wdscexfe01.sc.wdc.com") by vger.kernel.org with ESMTP
-	id S965256AbVHJSmK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Aug 2005 14:42:10 -0400
-Content-class: urn:content-classes:message
+Received: from science.horizon.com ([192.35.100.1]:6188 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S1030191AbVHJTRP
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Aug 2005 15:17:15 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>, James Courtier-Dutton <James@superbug.demon.co.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: iogl64nx@gmail.com
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
+To save Jeff the trouble of replying....
 
->>>>> Yes, but only if you manually apply the "libata-passthru" patch.
->>>>
->>>> So, why hasn't that patch got into the kernel?
->>>
->>> Because there are several reports of it causing problems, when used on a
->>> loaded system.
+> If NVidia followed the SATA-IO spec than should be possible to make them 
+> work with NCQ, or do I think wrong of that?
+> Or isn't it possible?
 
-> Please post more information about these "problems".
+The SATA spec defines the interface between the SATA controller and the
+hard drive.  It does not define in any way the interface between
+the host processor and the SATA controller.  There is no mention of
+controller registers and what the bits in them mean.
 
-> I wonder if it might be another occurance of the libata eh lockups.
-> Those are NOT unique to ATAPI -- the lockups can happen anytime
-> the libata eh code is run, like on a busy RAID, or "loaded system"
-> suffering failed "passthru" commands.
->
-> Perhaps kill a couple of birds with one stone, if we're lucky.
+Given that a good controller involves not only the registers themselves,
+but also a number of data structures pointed to by those registers,
+there's quite a bit of complexity there.
 
-I figured I should give my $.02 =)
+Jeff has, quite sensibly, decided to focus his efforts on hardware whose
+manufacturers haven't made special effort to keep useful documentation
+away from him.  (By declaring them "trade secrets" and threatening to
+punish any employees who might othrwise send him a copy.)
 
-I've noticed some bugs with the passthru implementation and have been
-working on some fixes using a custom slax live cd.  I'm in the process of
-fixing and creating multiple patches, which I was going to post to this
-list.
+> I found a Product Brief/Specification and a Blockdiagramm.
 
-In particular this is what I've found so far:
-1) The sense buffer returned when the "check condition" bit is active is
-incorrect
-   - The status and error registers values returned are the command and
-features registers sent in (they never get updated from the device after the
-command is done).
-   - The additional length field is 14 but it should be 12
-2) The offline bit is ignored
-3) The length fields are ignored
-4) Not all the cdb protocols are implemented
+That sort of thing is quite devoid of programming detail.  It's like
+trying to navigate the New Jersey Turnpike using an early Dutch map of
+New Amsterdam.
 
+In fact, it was probably created before the programming interface was
+even designed.  Somebody said "we want these features", drew up the spec,
+and handed that wishlist to the silicon hackers to fill in the details
+and implement.
 
-Item 1: This is trivial to fix (note that the bug also exists when
-generating the fixed length sense buffer)
-Item 2: This is important for lower level vendor commands, and its inclusion
-helps mean the difference between staying in linux or rebooting to dos.
-Companies / Users are becomming less inclined to do the latter =)
-Item 3: I don't know how important 3 is to fix considering you will have the
-scsi layer's length info in addition to the cdbs length info.  Maybe just a
-check to make sure they match, and if they don't, abort the cdb.
-Item 4: Considering the passthru spec lists all the protocols, they should
-get implemented.  Otherwise apps wanting to use the passthru mechanism are
-going to be blind that protocols are not implemented.  Alternatively, there
-could be a way to (1) identify the backend is libata so it can be
-special-cased (maybe a "get version" ioctl), and (2) have a means to probe
-libata to find out what is and is not implemented at runtime (maybe extra
-information on the "get version" ioctl).
+> Could it be possible to make reverse engeneering?
 
+Yes, but it's far more time-consuming.  In particular, early silicon
+always has bugs, and finding the bugs and developing workarounds
+is a PITA when you have the specs; without them, it can be a nightmare.
 
-Btw I have not experienced any stability issues with the passthru
-implmentation, just bugs or missing implementations.
+Jeff has plenty to do without making his life more difficult.
+Reverse-engineering NVIDIA is at the bottom of the list.  He
+may never get to it in person.
 
-Thanks,
-Tim Thelin
+Of course, if you'd like to make an attempt...
