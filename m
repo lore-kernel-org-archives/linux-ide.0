@@ -1,58 +1,42 @@
-From: sampei02@tiscali.it
-Subject: SOLVED: DriveStatusError BadCRC
-Date: Wed, 10 Aug 2005 12:14:35 +0200
-Message-ID: <42D7AA47000408B7@mail-5.mail.tiscali.sys>
-References: <1123494857.22328.52.camel@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: SOLVED: DriveStatusError BadCRC
+Date: Wed, 10 Aug 2005 19:25:40 +0900
+Message-ID: <42F9D624.6020005@gmail.com>
+References: <42D7AA47000408B7@mail-5.mail.tiscali.sys>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mrqout1.tiscali.it ([195.130.225.11]:18332 "EHLO
-	mrqout1.tiscali.it") by vger.kernel.org with ESMTP id S932554AbVHJKOr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Aug 2005 06:14:47 -0400
-In-Reply-To: <1123494857.22328.52.camel@localhost.localdomain>
+Received: from wproxy.gmail.com ([64.233.184.198]:38243 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932543AbVHJKZt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Aug 2005 06:25:49 -0400
+Received: by wproxy.gmail.com with SMTP id i20so105142wra
+        for <linux-ide@vger.kernel.org>; Wed, 10 Aug 2005 03:25:46 -0700 (PDT)
+In-Reply-To: <42D7AA47000408B7@mail-5.mail.tiscali.sys>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Erik Slagter <erik@slagter.name>, linux-ide@vger.kernel.org
+To: sampei02@tiscali.it
+Cc: Erik Slagter <erik@slagter.name>, linux-ide@vger.kernel.org
 
-I replaced 80 wire flat cable with another 40 wire cable.
-In this way I have no errors but now UDMA mode is set to 2 value.
-I'm sure that MOTHERBOARD supports UDMA ATA/33/66/100 BUS IDE ports.
-What do you think ?
+sampei02@tiscali.it wrote:
+> I replaced 80 wire flat cable with another 40 wire cable.
+> In this way I have no errors but now UDMA mode is set to 2 value.
+> I'm sure that MOTHERBOARD supports UDMA ATA/33/66/100 BUS IDE ports.
+> What do you think ?
 
+  [sticking nose in...]
 
->-- Messaggio Originale --
->Subject: Re: DriveStatusError BadCRC
->From:	Erik Slagter <erik@slagter.name>
->To:	linux-ide@vger.kernel.org
->Date:	Mon, 08 Aug 2005 11:54:17 +0200
->
->
->On Sun, 2005-08-07 at 08:38 -0600, Eric D. Mudama wrote:
->> 51/84 indicates the crc failed on the incoming write data from your
->> system.  These failures should be very rare (on PATA), but the bumme=
-r
->> is they don't have anything to do with bad blocks on the media or
->> degrading heads...
->>=20
->> What is the temperature like inside your case?  What host adapter ar=
-e
->> you using?  How many drives in the system?
->
->I'd suggest trying another cable... And also a lower UDMA setting.
->
->Allegato: signature.asc
->
+  In that case, it could be one of...
 
+  #1 faulty cable, try another 80c cable
+  #2 only one device gets attached to the cable but it's using the 
+middle connector.  You need to use the connector at the end of cable 
+when you connect only one device.  (I think it became a requirement w/ 
+newer transfer modes.  No? still recommendation?)
+  #3 faulty IDE controller (or faulty traces from the controller to cable)
+  #4 faulty drive
 
-__________________________________________________________________
-TISCALI ADSL 1.25 MEGA
-Solo con Tiscali Adsl navighi senza limiti e telefoni senza canone Tele=
-com
-a partire da 19,95 Euro/mese.
-Attivala entro il 31 agosto, il primo MESE =E8 GRATIS! CLICCA QUI.
-http://abbonati.tiscali.it/adsl/sa/1e25flat_tc/
+  My bet is on #1 or #2.
 
-
-
+-- 
+tejun
