@@ -1,91 +1,77 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [git patches] 2.6.x libata fixes
-Date: Wed, 10 Aug 2005 14:37:23 -0400
-Message-ID: <42FA4963.5060507@pobox.com>
+From: "Timothy Thelin" <Timothy.Thelin@wdc.com>
+Subject: RE: libata for SATA HDs.
+Date: Wed, 10 Aug 2005 11:42:11 -0700
+Message-ID: <CA45571DE57E1C45BF3552118BA92C9D060AA3@WDSCEXBECL03.sc.wdc.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070305070007070704000300"
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:5793 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965247AbVHJShb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Aug 2005 14:37:31 -0400
+Received: from wdscexfe01.sc.wdc.com ([129.253.170.53]:24709 "EHLO
+	wdscexfe01.sc.wdc.com") by vger.kernel.org with ESMTP
+	id S965256AbVHJSmK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Aug 2005 14:42:10 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------070305070007070704000300
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Please pull from the 'upstream-fixes' branch of
-rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-
-to obtain the two fixes described in the attached diffstat/changelog/patch.
+To: Mark Lord <liml@rtr.ca>, James Courtier-Dutton <James@superbug.demon.co.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
 
---------------070305070007070704000300
-Content-Type: text/plain;
- name="libata-dev.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata-dev.txt"
+>>>>> Yes, but only if you manually apply the "libata-passthru" patch.
+>>>>
+>>>> So, why hasn't that patch got into the kernel?
+>>>
+>>> Because there are several reports of it causing problems, when used on a
+>>> loaded system.
 
- drivers/scsi/libata-scsi.c |    1 +
- drivers/scsi/sata_sx4.c    |    2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+> Please post more information about these "problems".
 
+> I wonder if it might be another occurance of the libata eh lockups.
+> Those are NOT unique to ATAPI -- the lockups can happen anytime
+> the libata eh code is run, like on a busy RAID, or "loaded system"
+> suffering failed "passthru" commands.
+>
+> Perhaps kill a couple of birds with one stone, if we're lucky.
 
+I figured I should give my $.02 =)
 
-commit 42517438f9c1011a03e49a542cba32ac5a80dd8e
-Author: Tejun Heo <htejun@gmail.com>
-Date:   Wed Aug 10 13:38:27 2005 -0400
+I've noticed some bugs with the passthru implementation and have been
+working on some fixes using a custom slax live cd.  I'm in the process of
+fixing and creating multiple patches, which I was going to post to this
+list.
 
-    libata: fix EH-related lockup by properly cleaning EH command list
-    
-    Yet another hack due to the fact that libata is the only user of SCSI's
-    ->eh_strategy_handler() hook.
-
-commit fae009847c9ea3d668bbee21ce1d76764eca5039
-Author: Tejun Heo <htejun@gmail.com>
-Date:   Sun Aug 7 14:53:40 2005 +0900
-
-    [PATCH] sata: fix sata_sx4 dma_prep to not use sg->length
-    
-     sata_sx4 directly references sg->length to calculate total_len in
-    pdc20621_dma_prep().  This is incorrect as dma_map_sg() could have
-    merged multiple sg's into one and, in such case, sg->length doesn't
-    reflect true size of the entry.  This patch makes it use
-    sg_dma_len(sg).
-    
-    Signed-off-by: Tejun Heo <htejun@gmail.com>
-    Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
+In particular this is what I've found so far:
+1) The sense buffer returned when the "check condition" bit is active is
+incorrect
+   - The status and error registers values returned are the command and
+features registers sent in (they never get updated from the device after the
+command is done).
+   - The additional length field is 14 but it should be 12
+2) The offline bit is ignored
+3) The length fields are ignored
+4) Not all the cdb protocols are implemented
 
 
+Item 1: This is trivial to fix (note that the bug also exists when
+generating the fixed length sense buffer)
+Item 2: This is important for lower level vendor commands, and its inclusion
+helps mean the difference between staying in linux or rebooting to dos.
+Companies / Users are becomming less inclined to do the latter =)
+Item 3: I don't know how important 3 is to fix considering you will have the
+scsi layer's length info in addition to the cdbs length info.  Maybe just a
+check to make sure they match, and if they don't, abort the cdb.
+Item 4: Considering the passthru spec lists all the protocols, they should
+get implemented.  Otherwise apps wanting to use the passthru mechanism are
+going to be blind that protocols are not implemented.  Alternatively, there
+could be a way to (1) identify the backend is libata so it can be
+special-cased (maybe a "get version" ioctl), and (2) have a means to probe
+libata to find out what is and is not implemented at runtime (maybe extra
+information on the "get version" ioctl).
 
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -385,6 +385,7 @@ int ata_scsi_error(struct Scsi_Host *hos
- 	 * appropriate place
- 	 */
- 	host->host_failed--;
-+	INIT_LIST_HEAD(&host->eh_cmd_q);
- 
- 	DPRINTK("EXIT\n");
- 	return 0;
-diff --git a/drivers/scsi/sata_sx4.c b/drivers/scsi/sata_sx4.c
---- a/drivers/scsi/sata_sx4.c
-+++ b/drivers/scsi/sata_sx4.c
-@@ -468,7 +468,7 @@ static void pdc20621_dma_prep(struct ata
- 	for (i = 0; i < last; i++) {
- 		buf[idx++] = cpu_to_le32(sg_dma_address(&sg[i]));
- 		buf[idx++] = cpu_to_le32(sg_dma_len(&sg[i]));
--		total_len += sg[i].length;
-+		total_len += sg_dma_len(&sg[i]);
- 	}
- 	buf[idx - 1] |= cpu_to_le32(ATA_PRD_EOT);
- 	sgt_len = idx * 4;
 
---------------070305070007070704000300--
+Btw I have not experienced any stability issues with the passthru
+implmentation, just bugs or missing implementations.
+
+Thanks,
+Tim Thelin
