@@ -1,54 +1,30 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: SCSI, MMC, SAS and SATA power management
-Date: Thu, 11 Aug 2005 16:24:46 +1000
-Message-ID: <42FAEF2E.3090102@torque.net>
-Reply-To: dougg@torque.net
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 2/3] libata-dev: pdc2027x mdelay() problem fix for
+	power5 micro-partitioning
+Date: Thu, 11 Aug 2005 10:36:20 +0200
+Message-ID: <1123749380.20143.12.camel@gaston>
+References: <42F24DBE.0@tw.ibm.com> <42F251C2.8090409@tw.ibm.com>
+	 <42FAC04F.4060405@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:27883 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S932241AbVHKGYu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Aug 2005 02:24:50 -0400
+Received: from gate.crashing.org ([63.228.1.57]:31373 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S1030223AbVHKIhK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Aug 2005 04:37:10 -0400
+In-Reply-To: <42FAC04F.4060405@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Albert Lee <albertcc@tw.ibm.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Wed, 2005-08-10 at 23:04 -0400, Jeff Garzik wrote:
 
-While looking into implementing the START STOP UNIT
-SCSI command for SATA disks, I spent some time looking
-at power management state machines in various standards.
-It is pretty confusing stuff so I have made a web page to
-summarise the various states. See:
-http://www.torque.net/sg/power.html
+> mdelay() should be investigated as to why its not working on your 
+> platform.  do_gettimeofday() is -less- granular and accurate than 
+> mdelay(), usually.
 
+Agreed. mdelay() should have worked.
 
-One linux (or device) problem I noticed while looking
-at this was how lk 2.6.13-rc6 reacts when an ATAPI
-cd/dvd drive is placed into SLEEP state. This isn't
-a normal thing to do but can be done thus:
-   sg_start -pc=5 /dev/hdd
-where sg_start is found in the sg3_utils package. The
-ATA8-ACS draft says that the device should first respond
-to a SLEEP ATA command and thereafter not respond to
-any commands until a reset occurs. One would think that
-the MMC equivalent (i.e. START STOP UNIT command
-[power_condition=5]) should react the same way. What I
-observed on my laptop was about 10 minutes of timeouts
-(with a message about lost interrupts every minute)
-before things stabilised. Same thing occurred on a desktop
-with a recent LG DVD+-R DL drive. I don't think kscd
-polling the drive was helping.
+Ben.
 
-Doug Gilbert
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-Comment: Using GnuPG with Fedora - http://enigmail.mozdev.org
-
-iD8DBQFC+u8unayo+9E+FQIRAknJAJ9wGSGIuhK7Hhd5gTd4bIj08GD+jACgovDm
-q+/tSP5uo2LIFbQwENqc2j4=
-=43KH
------END PGP SIGNATURE-----
