@@ -1,160 +1,60 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata total system lockup fix
-Date: Thu, 11 Aug 2005 16:13:02 -0400
-Message-ID: <42FBB14E.5040002@pobox.com>
-References: <42E4ED70.1050501@pobox.com> <42E4FC75.70006@pobox.com> <42E50AE9.3000207@rtr.ca> <42F2E267.50402@gmail.com> <20050805040105.GA18466@htj.dyndns.org>
+From: Wes Newell <w.newell@verizon.net>
+Subject: Re: libata and PATA devices
+Date: Thu, 11 Aug 2005 15:19:14 -0500
+Message-ID: <42FBB2C2.8060100@verizon.net>
+References: <200508071949.03782.inform@tiker.net>	<42F6B8CD.4050100@gmail.com>
+ <20050808030239.GA27502@havoc.gtf.org>
+ <1123495856.22328.62.camel@localhost.localdomain> <42F8B41C.4040408@rtr.ca>
+ <42FACCA8.6050408@pobox.com> <42FB853E.4070100@rtr.ca>
+ <42FB889F.50607@pobox.com> <1123789132.4422.30.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:31912 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932420AbVHKUNI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Aug 2005 16:13:08 -0400
-In-Reply-To: <20050805040105.GA18466@htj.dyndns.org>
+Received: from vms042pub.verizon.net ([206.46.252.42]:29868 "EHLO
+	vms042pub.verizon.net") by vger.kernel.org with ESMTP
+	id S932421AbVHKUOU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 Aug 2005 16:14:20 -0400
+Received: from [192.168.0.2] ([71.244.9.153])
+ by vms042.mailsrvcs.net (Sun Java System Messaging Server 6.2 HotFix 0.04
+ (built Dec 24 2004)) with ESMTPA id <0IL2004OHQVT1VG9@vms042.mailsrvcs.net> for
+ linux-ide@vger.kernel.org; Thu, 11 Aug 2005 15:14:18 -0500 (CDT)
+In-reply-to: <1123789132.4422.30.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Mark Lord <mlord@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, hare@suse.de
+To: "linux.ide" <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
->  And this is the combined patch against ncq head of libata-dev-2.6
-> tree.  Commit d032ec9048ff82a704b96b93cfd6f2e8e3a06b19.
-> 
->  Only ata_piix, sata_sil and ahci are converted and all other SATA
-> drivers are broken.  So, enable only those three SATA drivers when
-> compiling with this patch.
+On Thu, 2005-08-11 at 13:19 -0400, Jeff Garzik wrote:
 
-Overall, the approach of adding a timeout to the 'special' commands is a 
-good, and necessary approach.
+>>Mark Lord wrote:
+>>    
+>>
+>>>Jeff Garzik wrote:
+>>>      
+>>>
+>>>>currently no one should be using libata for PATA support.
+>>>>        
+>>>>
+>>>We emailed back and forth extensively about how this has
+>>>not been true since early this year.  Modern laptops are
+>>>using libata for the ICH6M support, simply because libata
+>>>claims that chipset, and the IDE driver does not.
+>>>These laptops are using PATA drives (eg. "FUJITSU MHV2100AH").
+>>>      
+>>>
+>>This sounds like a misconfigured kernel.  The IDE driver should pick up 
+>>the PATA port, and libata should pick up the SATA port.  Anything else 
+>>is a bug, and should be addressed by me or Bart.
+>>    
+>>
 
-Comments follow...
-
-
-> Index: work/drivers/scsi/libata-core.c
-> ===================================================================
-> --- work.orig/drivers/scsi/libata-core.c	2005-08-05 12:55:08.000000000 +0900
-> +++ work/drivers/scsi/libata-core.c	2005-08-05 12:55:50.000000000 +0900
-> @@ -49,6 +49,10 @@
->  
->  #include "libata.h"
->  
-> +#define ata_for_each_tag(tag, mask) \
-> +	for (tag = find_first_bit(&mask, ATA_MAX_CMDS); tag < ATA_MAX_CMDS; \
-> +	     tag = find_next_bit(&mask, ATA_MAX_CMDS, tag + 1))
-> +
->  static unsigned int ata_busy_sleep (struct ata_port *ap,
->  				    unsigned long tmout_pat,
->  			    	    unsigned long tmout);
-> @@ -59,7 +63,6 @@ static int fgb(u32 bitmap);
->  static int ata_choose_xfer_mode(struct ata_port *ap,
->  				u8 *xfer_mode_out,
->  				unsigned int *xfer_shift_out);
-> -static int ata_qc_complete_noop(struct ata_queued_cmd *qc, u8 drv_stat);
->  static void __ata_qc_complete(struct ata_queued_cmd *qc);
->  
->  static unsigned int ata_unique_id = 1;
-> @@ -70,6 +73,87 @@ MODULE_DESCRIPTION("Library module for A
->  MODULE_LICENSE("GPL");
->  MODULE_VERSION(DRV_VERSION);
->  
-> +static void ata_qc_complete_noop(struct ata_queued_cmd *qc)
-> +{
-> +	/* noop */
-> +}
-> +
-> +static void ata_qc_exec_special_timeout(unsigned long data)
-> +{
-> +	struct completion *wait = (void *)data;
-> +	complete(wait);
-> +}
-> +
-> +/**
-> + *	ata_qc_exec_special - execute libata internal special command
-> + *	@qc: Command to execute
-> + *	@tmout: timeout in jiffies
-> + *
-> + *	Executes libata internal command with timeout.  Timeout and
-> + *	error conditions are reported via return value.  No recovery
-> + *	action is taken after a command times out.  It's caller's duto
-> + *	to clean up after timeout.
-> + *
-> + *	Also, note that error condition is checked after the qc is
-> + *	completed, meaning that if another command is issued before
-> + *	checking the condition, we get the wrong values.  As special
-> + *	cmds are used only for initialization and recovery, this
-> + *	won't cause any problem currently.
-> + *
-> + *	LOCKING:
-> + *	None.  Should be called with kernel context, might sleep.
-> + */
-> +
-> +static int ata_qc_exec_special(struct ata_queued_cmd *qc, unsigned long tmout)
-> +{
-> +	struct ata_port *ap = qc->ap;
-> +	DECLARE_COMPLETION(wait);
-> +	struct timer_list timer;
-> +	int rc;
-> +
-> +	might_sleep();
-> +
-> +	if (ata_busy_sleep(ap, ATA_TMOUT_SPECIAL_QUICK, ATA_TMOUT_SPECIAL))
-> +		return -ETIMEDOUT;
-> +
-> +	qc->complete_fn = ata_qc_complete_noop;
-> +	qc->waiting = &wait;
-> +
-> +	if (tmout) {
-> +		init_timer(&timer);
-> +		timer.function = ata_qc_exec_special_timeout;
-> +		timer.data = (unsigned long)&wait;
-> +		timer.expires = jiffies + tmout;
-> +		add_timer(&timer);
-
-Just use mod_timer(), and combine these last two lines into a single one.
-
-
-> +	spin_lock_irq(&ap->host_set->lock);
-> +	rc = ata_qc_issue(qc);
-> +	spin_unlock_irq(&ap->host_set->lock);
-> +
-> +	if (rc) {
-> +		if (tmout)
-> +			del_timer(&timer);
-
-Use del_timer_sync() here, and for every case where you are not inside a 
-spinlock.
-
-
-> +		return -EAGAIN;	/* any better value for issue failure? */
-> +	}
-> +
-> +	wait_for_completion(&wait);
-> +
-> +	if (tmout && !del_timer(&timer)) {
-> +		spin_lock_irq(&ap->host_set->lock);
-> +		if (qc->waiting == &wait) {
-> +			ata_qc_complete(qc);
-> +			rc = -ETIMEDOUT;
-> +		}
-> +		spin_unlock_irq(&ap->host_set->lock);
-> +	}
-> +
-> +	if (rc == 0 && !ata_ok(ata_chk_status(ap)))
-> +		rc = -EIO;
-
-General comment on libata:  we should move away from using the Status 
-register directly, and more towards an indication that the taskfile 
-described by the queue_cmd is in error.  i.e. add an 'error' flag or 
-something like that.
-
-The rest seems fairly sane.
-
-General comment on libata error handling:  as soon as SATA ATAPI is 
-complete, we can move libata to using SCSI's fine-grained error handling 
-hooks (eh_{abort,timeout,bus,host}_handler), which will make error 
-handling easier, and avoid the problems that keep cropping up with the 
-->eh_strategy_handler() approach.
-
-	Jeff
-
+While ya'll are talking about pata support, has anyone got a driver that 
+supports the pata ports of the SIS180 yet? And I don't care which 
+way.:-) As you might recall, I tried patching the 5513 driver, but had 
+limited success with constant lost interrupts. I'm not a C programmer 
+and don't know much about the whole IDE layout, but I'm willing to test 
+on a Jetway S755MAX Board, that constist of the standard pata ports off 
+the sis755 and a secondary SIS180 with 2 ports of sata and 1 channel 
+pata (2 drives). I'm running the 2.6.11 kernel, but can install whatever 
+you would want to test with on another drive.
 
