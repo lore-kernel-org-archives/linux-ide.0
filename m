@@ -1,54 +1,54 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata and PATA devices
-Date: Wed, 10 Aug 2005 23:57:28 -0400
-Message-ID: <42FACCA8.6050408@pobox.com>
-References: <200508071949.03782.inform@tiker.net>	 <42F6B8CD.4050100@gmail.com>  <20050808030239.GA27502@havoc.gtf.org> <1123495856.22328.62.camel@localhost.localdomain> <42F8B41C.4040408@rtr.ca>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: SCSI, MMC, SAS and SATA power management
+Date: Thu, 11 Aug 2005 16:24:46 +1000
+Message-ID: <42FAEF2E.3090102@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:17059 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932233AbVHKD5c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Aug 2005 23:57:32 -0400
-In-Reply-To: <42F8B41C.4040408@rtr.ca>
+Received: from zorg.st.net.au ([203.16.233.9]:27883 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S932241AbVHKGYu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Aug 2005 02:24:50 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Erik Slagter <erik@slagter.name>, linux-ide@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Erik Slagter wrote:
-> 
->>
->> Is there a possibility that dell attaches PATA harddisks using a
->> SATA/PATA converter to the SATA connection of the ICH6M?
-> 
-> 
-> That chipset is used in virtually all modern laptops,
-> and includes a PATA interface as well as SATA.
-> 
-> Most current laptops ship with a PATA hard drive, and a PATA
-> ATAPI drive.  The easiest way to make them usable under Linux-2.6
-> is to patch libata and turn on ATAPI support, using ata_piix.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-No, the best thing to do is use the IDE driver for PATA.  That is the 
-most stable, most well-tested path to ATAPI support at present.
+While looking into implementing the START STOP UNIT
+SCSI command for SATA disks, I spent some time looking
+at power management state machines in various standards.
+It is pretty confusing stuff so I have made a web page to
+summarise the various states. See:
+http://www.torque.net/sg/power.html
 
 
-> This REALLY ought to be on by default now, Jeff.
-> Especially since the default is to NOT work at all..
+One linux (or device) problem I noticed while looking
+at this was how lk 2.6.13-rc6 reacts when an ATAPI
+cd/dvd drive is placed into SLEEP state. This isn't
+a normal thing to do but can be done thus:
+   sg_start -pc=5 /dev/hdd
+where sg_start is found in the sg3_utils package. The
+ATA8-ACS draft says that the device should first respond
+to a SLEEP ATA command and thereafter not respond to
+any commands until a reset occurs. One would think that
+the MMC equivalent (i.e. START STOP UNIT command
+[power_condition=5]) should react the same way. What I
+observed on my laptop was about 10 minutes of timeouts
+(with a message about lost interrupts every minute)
+before things stabilised. Same thing occurred on a desktop
+with a recent LG DVD+-R DL drive. I don't think kscd
+polling the drive was helping.
 
-Correct, because currently no one should be using libata for PATA support.
+Doug Gilbert
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+Comment: Using GnuPG with Fedora - http://enigmail.mozdev.org
 
-Turning on ATAPI and PATA support by default will break existing setups.
-
-
-> The libata code is taking forever to catch up to modern reality,
-> mostly because so much of it lives eternally in Jeff's private
-> git repository, where only a few people ever exercise the code.
-
-Exaggeration.  We're talking about a single #define here, to enable ATAPI.
-
-	Jeff
-
-
+iD8DBQFC+u8unayo+9E+FQIRAknJAJ9wGSGIuhK7Hhd5gTd4bIj08GD+jACgovDm
+q+/tSP5uo2LIFbQwENqc2j4=
+=43KH
+-----END PGP SIGNATURE-----
