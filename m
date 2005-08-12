@@ -1,40 +1,36 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 0/3] libata-dev: pdc2027x fixes
-Date: Fri, 12 Aug 2005 15:09:42 +0800
-Message-ID: <42FC4B36.9080805@tw.ibm.com>
+From: Dick <dm@chello.nl>
+Subject: Re: How to put an =?utf-8?b?YXRhX3BpaXg=?= (SATA) harddisk to sleep/standby
+Date: Fri, 12 Aug 2005 06:58:52 +0000 (UTC)
+Message-ID: <loom.20050812T085801-129@post.gmane.org>
+References: <loom.20050811T214109-933@post.gmane.org> <42FBB66C.3020008@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bluehawaii.tikira.net ([61.62.22.51]:5117 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S932204AbVHLHLe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Aug 2005 03:11:34 -0400
+Received: from main.gmane.org ([80.91.229.2]:12936 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S932383AbVHLHLU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Aug 2005 03:11:20 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1E3TgB-0006aX-HE
+	for linux-ide@vger.kernel.org; Fri, 12 Aug 2005 09:10:11 +0200
+Received: from g227179.upc-g.chello.nl ([80.57.227.179])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Fri, 12 Aug 2005 09:10:11 +0200
+Received: from dm by g227179.upc-g.chello.nl with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Fri, 12 Aug 2005 09:10:11 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>
+To: linux-ide@vger.kernel.org
 
-Jeff,
+Jeff Garzik <jgarzik <at> pobox.com> writes:
+> use the SCSI START STOP UNIT change I checked in last night.
 
-pdc2027x driver fix:
+Thanks it works!
 
-1/3 pdc1.diff:
-     - Convert pdc2027x from PIO to MMIO.
-
-2/3 pdc2.diff:
-    - use "long" for the counter data type instead of "unsigned long"
-
-3/3 pdc3.diff:
-    - pdc2027x ATAPI DMA irq lost problem workaround
-
-(diff'ed against libata-dev tree, pdc2027x branch
-   b59bb64eca815cab0b21c9761d42c4c78f7ff467)
-Tested ok on x86 and ppc64.
-
-For your review, thanks.
-
-Albert
+greetings,
+Dick
 
 
 
