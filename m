@@ -1,42 +1,35 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH 3/3] libata-dev: pdc2027x ATAPI DMA lost irq problem workaround
-Date: Fri, 12 Aug 2005 16:20:05 +0800
-Message-ID: <42FC5BB5.9080504@tw.ibm.com>
-References: <42FC4B36.9080805@tw.ibm.com> <42FC4E7B.9030503@tw.ibm.com> <42FC52A8.8070102@pobox.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] IDE: don't offer IDE_GENERIC on ia64
+Date: Fri, 12 Aug 2005 09:40:12 +0100
+Message-ID: <1123836012.22460.16.camel@localhost.localdomain>
+References: <200508111424.43150.bjorn.helgaas@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bluehawaii.tikira.net ([61.62.22.51]:39935 "EHLO
-	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
-	id S1750705AbVHLIVi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Aug 2005 04:21:38 -0400
-In-Reply-To: <42FC52A8.8070102@pobox.com>
+Received: from clock-tower.bc.nu ([81.2.110.250]:20932 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S1750709AbVHLI3Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Aug 2005 04:29:16 -0400
+In-Reply-To: <200508111424.43150.bjorn.helgaas@hp.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>
+To: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org
 
+On Iau, 2005-08-11 at 14:24 -0600, Bjorn Helgaas wrote:
+> IA64 boxes only have PCI IDE devices, so there's no need to blindly poke
+> around in I/O port space.  Poking at things that don't exist causes MCAs
+> on HP ia64 systems.
+> 
+> Signed-off-by: Bjorn Helgaas <bjorn.helgaas@hp.com>
 
+Nak-by: Alan Cox <alan@redhat.com>
 
-Jeff Garzik wrote:
-
-> Albert Lee wrote:
-> 
->>   Root cause for the irq lost is unknown yet. I've tried your ATAPI 
->> DMA alignment
->> patch, but the problem still occurs, even the buffer is aligned. I 
->> guess it is pdc2027x hardware problem.
-> 
-> 
-> 
-> Note that my ATAPI DMA alignment patch was buggy, as Tejun noted...
-> 
-> Tejun's updated patch is worth a try.
-> 
-
-Thanks for the advice. Will try.
-
-Albert
+Assuming all IA-64 boxes are PCI or better then you actually want to
+edit include/asm-ia64/ide.h and edit ide_default_io_base where someone
+years ago cut and pasted x86-32 values so that case 2-5 are removed.
+Then you will just probe the compatibility mode PCI addresses for system
+IDE channels.
 
 
