@@ -1,32 +1,39 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 3/3] libata-dev: pdc2027x ATAPI DMA lost irq problem workaround
-Date: Fri, 12 Aug 2005 03:41:28 -0400
-Message-ID: <42FC52A8.8070102@pobox.com>
-References: <42FC4B36.9080805@tw.ibm.com> <42FC4E7B.9030503@tw.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] IDE: don't offer IDE_GENERIC on ia64
+Date: Fri, 12 Aug 2005 09:35:50 +0100
+Message-ID: <1123835751.22460.13.camel@localhost.localdomain>
+References: <200508111424.43150.bjorn.helgaas@hp.com>
+	 <20050811214807.GA9775@havoc.gtf.org> <42FBC985.4030602@pobox.com>
+	 <200508111707.30861.bjorn.helgaas@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:45482 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751157AbVHLHle (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Aug 2005 03:41:34 -0400
-In-Reply-To: <42FC4E7B.9030503@tw.ibm.com>
+Received: from [81.2.110.250] ([81.2.110.250]:46742 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S1750831AbVHLIJ1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Aug 2005 04:09:27 -0400
+In-Reply-To: <200508111707.30861.bjorn.helgaas@hp.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>
+To: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org, Tony Luck <tony.luck@intel.com>
 
-Albert Lee wrote:
->   Root cause for the irq lost is unknown yet. I've tried your ATAPI DMA 
-> alignment
-> patch, but the problem still occurs, even the buffer is aligned. I guess 
-> it is pdc2027x hardware problem.
+On Iau, 2005-08-11 at 17:07 -0600, Bjorn Helgaas wrote:
+> So the scenario in question (correct me if I'm wrong) is that we
+> have a PCI IDE device that is handed off in compatibility mode (and
+> may only work in that mode).  In that case, the PCI *device* still
+> exists, so shouldn't the IDE PCI code claim that device, notice that
+> it's in compatibility mode, and use the legacy ports and IRQs if
+> necessary?
 
+The PCI IDE code and legacy IDE code both find the device and they
+realise its the same device so that it is driven by a suitable driver.
+The legacy IDE driver is useful if your platform has an unsupported IDE
+controller. It seems ot me the correct fix for IA64 is probably to set
+your arch specific probe address function to only probe the standard PCI
+legacy ports and to do any other appropriate checks, not to take an axe
+to Kconfig. 
 
-Note that my ATAPI DMA alignment patch was buggy, as Tejun noted...
-
-Tejun's updated patch is worth a try.
-
-	Jeff
-
+Alan
 
