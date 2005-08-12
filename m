@@ -1,44 +1,36 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SATA status report updated
-Date: Fri, 12 Aug 2005 01:45:00 -0400
-Message-ID: <42FC375C.3040304@pobox.com>
-References: <42FC2EF8.7030404@pobox.com> <20050812074012.60487882.robn@berrymount.nl>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH 0/2] libata PIO fixes (revised)
+Date: Fri, 12 Aug 2005 14:09:51 +0800
+Message-ID: <42FC3D2F.1030803@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20050812074012.60487882.robn@berrymount.nl>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Rob van Nieuwkerk <robn@berrymount.nl>
-Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bluehawaii.tikira.net ([61.62.22.51]:27622 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S1751099AbVHLGLf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Aug 2005 02:11:35 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: IDE Linux <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>
 
-Rob van Nieuwkerk wrote:
-> On Fri, 12 Aug 2005 01:09:12 -0400
-> Jeff Garzik <jgarzik@pobox.com> wrote:
-> 
-> Hi Jeff,
-> 
-> 
->>Things in SATA-land have been moving along recently, so I updated the 
->>software status report:
->>
->>	http://linux.yyz.us/sata/software-status.html
-> 
-> 
-> Is any progress made on SMART support ?
-> I've been reading "SMART support will be integrated very soon"
-> for a very long time now .. :-)
+Jeff,
 
-True enough :/
+The PIO fixes revised according to the previous reviews.
 
-It's been feature-complete for a while, but the reports from testers in 
-the field have made me too nervous to push it into the upstream kernel.
+1/2 pio1.diff:
+   - Modify ata_mmio_data_xfer() and ata_pio_data_xfer() to handle buffer with odd length.
 
-I might push it upstream, but disable it by default, which would allow 
-for a wider test audience.
+2/2 pio2.diff:
+   - Modify __atapi_pio_bytes() to handle the case where device returns/needs extra data.
 
-	Jeff
+(Patch diff'ed against 2.6.13-rc6 tree, 7d69fa6266770eeb6317eddd46b64456e8a515bf)
 
+Tested ok on x86 with Promise PDC20275 and LG DVD-Multi drive.
+
+For your review and advice, thanks.
+
+Albert
 
 
