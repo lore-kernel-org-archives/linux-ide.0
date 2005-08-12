@@ -1,46 +1,26 @@
-From: Mogens Valentin <monz@danbbs.dk>
-Subject: Re: SATA status report updated
-Date: Fri, 12 Aug 2005 21:17:39 +0200
-Message-ID: <42FCF5D3.1080409__17199.9621591114$1123874395$gmane$org@danbbs.dk>
-References: <42FC2EF8.7030404@pobox.com>
-Reply-To: monz@danbbs.dk
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Re: [PATCH] IDE: don't offer IDE_GENERIC on ia64
+Date: Fri, 12 Aug 2005 21:41:44 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0508122141380.16845@yvahk01.tjqt.qr>
+References: <200508111424.43150.bjorn.helgaas@hp.com> <20050811203437.GA9265@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <42FC2EF8.7030404@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from linux01.gwdg.de ([134.76.13.21]:53401 "EHLO linux01.gwdg.de")
+	by vger.kernel.org with ESMTP id S1750714AbVHLTlw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Aug 2005 15:41:52 -0400
+In-Reply-To: <20050811203437.GA9265@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-Jeff Garzik wrote:
-> 
-> Things in SATA-land have been moving along recently, so I updated the 
-> software status report:
-> 
->     http://linux.yyz.us/sata/software-status.html
-
- >> Queueing support, NCQ:
- >> #3 will be supported by libata, for all hardware and devices that
- >> support NCQ.
-
-I guess this means libata support for HW-based NCQ.
-It also could mean software/driver implemented NCQ, which could work on 
-chipsets not supporting HW-NCQ in unison with a disk having NCQ?
-
-> Although I have not updated it in several weeks, folks may wish to refer 
-> to the hardware status report as well:
-> 
->     http://linux.yyz.us/sata/sata-status.html
-
-How well does libata work with the newest ULi chipsets?
-If not well, is there a possible timeframe?
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Bjorn Helgaas <bjorn.helgaas@hp.com>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org
 
 
-(not on kernel list; if anyone there comments on ULi, pls. cc private)
+>Maybe it should instead depend on those systems where it is available.
+>Anything but X86?
 
+x86_64?
+
+
+Jan Engelhardt
 -- 
-Kind regards,
-Mogens Valentin
-
