@@ -1,233 +1,51 @@
-From: Brett Russ <russb@emc.com>
-Subject: [PATCH 2.6.12.3] PCI/libata INTx cleanup
-Date: Fri, 12 Aug 2005 13:10:43 -0400 (EDT)
-Message-ID: <20050812171043.CF61020E8B__19065.9431428232$1123866640$gmane$org@lns1058.lss.emc.com>
-References: <20050803204709.8BA0720B06@lns1058.lss.emc.com> <42FBA08C.5040103@pobox.com>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH 2.6.12.3] PCI/libata INTx cleanup
+Date: Fri, 12 Aug 2005 11:22:55 -0700
+Message-ID: <20050812182253.GA7842@suse.de>
+References: <20050803204709.8BA0720B06@lns1058.lss.emc.com> <42FBA08C.5040103@pobox.com> <20050812171043.CF61020E8B@lns1058.lss.emc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailhub.lss.emc.com ([168.159.2.31]:24975 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP
-	id S1750733AbVHLRJD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Aug 2005 13:09:03 -0400
-In-Reply-To: <42FBA08C.5040103@pobox.com>
+Received: from lyle.provo.novell.com ([137.65.81.174]:60986 "EHLO
+	lyle.provo.novell.com") by vger.kernel.org with ESMTP
+	id S1750852AbVHLSXJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Aug 2005 14:23:09 -0400
+Content-Disposition: inline
+In-Reply-To: <20050812171043.CF61020E8B@lns1058.lss.emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Greg KH <gregkh@suse.de>
+To: Brett Russ <russb@emc.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jeff Garzik wrote:
-> Brett Russ wrote:
+On Fri, Aug 12, 2005 at 01:10:43PM -0400, Brett Russ wrote:
+> Jeff Garzik wrote:
+> > Brett Russ wrote:
+> > 
+> >> Simple cleanup to eliminate X copies of the same function in libata.  
+> >> Moved pci_enable_intx() to pci.c, added pci_disable_intx() as well, 
+> >> and use them throughout libata and msi.c.
+> >>
+> >> Signed-off-by: Brett Russ <russb@emc.com>
+> > 
+> > 
+> > Though there is nothing wrong with this patch, I would prefer a single 
+> > function, pci_intx(), as found in drivers/scsi/ahci.c.
+> > 
+> > Would you be willing to move that one to the PCI layer, eliminate the 
+> > multiple copies of pci_enable_intx(), and replace the calls to 
+> > pci_enable_intx() with calls to pci_intx() ?
 > 
->> Simple cleanup to eliminate X copies of the same function in libata.  
->> Moved pci_enable_intx() to pci.c, added pci_disable_intx() as well, 
->> and use them throughout libata and msi.c.
->>
->> Signed-off-by: Brett Russ <russb@emc.com>
-> 
-> 
-> Though there is nothing wrong with this patch, I would prefer a single 
-> function, pci_intx(), as found in drivers/scsi/ahci.c.
-> 
-> Would you be willing to move that one to the PCI layer, eliminate the 
-> multiple copies of pci_enable_intx(), and replace the calls to 
-> pci_enable_intx() with calls to pci_intx() ?
+> Sounds like what I did, except for the naming change.  I did away with
+> pci_disable_intx() and changed the names.  Look ok?
 
-Sounds like what I did, except for the naming change.  I did away with
-pci_disable_intx() and changed the names.  Look ok?
+Looks ok to me, care to resend it with a Signed-off-by: and a new
+changelog entry so I can apply it?
 
-BR
+> +EXPORT_SYMBOL(pci_intx);
 
+Hm, for new pci functions, I prefer to have them marked as
+EXPORT_SYMBOL_GPL(), is that ok with you?
 
-Index: linux-2.6.12.3-mv/drivers/pci/msi.c
-===================================================================
---- linux-2.6.12.3-mv.orig/drivers/pci/msi.c
-+++ linux-2.6.12.3-mv/drivers/pci/msi.c
-@@ -478,10 +478,7 @@ static void disable_msi_mode(struct pci_
- 	}
-     	if (pci_find_capability(dev, PCI_CAP_ID_EXP)) {
- 		/* PCI Express Endpoint device detected */
--		u16 cmd;
--		pci_read_config_word(dev, PCI_COMMAND, &cmd);
--		cmd &= ~PCI_COMMAND_INTX_DISABLE;
--		pci_write_config_word(dev, PCI_COMMAND, cmd);
-+		pci_intx(dev);
- 	}
- }
- 
-Index: linux-2.6.12.3-mv/drivers/pci/pci.c
-===================================================================
---- linux-2.6.12.3-mv.orig/drivers/pci/pci.c
-+++ linux-2.6.12.3-mv/drivers/pci/pci.c
-@@ -733,6 +733,25 @@ pci_clear_mwi(struct pci_dev *dev)
- 	}
- }
- 
-+
-+/**
-+ * pci_intx - enables INTx generation in PCI cfg space cmd register
-+ * @dev: the PCI device to enable
-+ *
-+ * Enables PCI INTx generation for device
-+ */
-+void 
-+pci_intx(struct pci_dev *pdev)
-+{
-+        u16 pci_command;
-+
-+        pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
-+        if (pci_command & PCI_COMMAND_INTX_DISABLE) {
-+                pci_command &= ~PCI_COMMAND_INTX_DISABLE;
-+                pci_write_config_word(pdev, PCI_COMMAND, pci_command);
-+        }
-+}
-+
- #ifndef HAVE_ARCH_PCI_SET_DMA_MASK
- /*
-  * These can be overridden by arch-specific implementations
-@@ -809,6 +828,7 @@ EXPORT_SYMBOL(pci_request_region);
- EXPORT_SYMBOL(pci_set_master);
- EXPORT_SYMBOL(pci_set_mwi);
- EXPORT_SYMBOL(pci_clear_mwi);
-+EXPORT_SYMBOL(pci_intx);
- EXPORT_SYMBOL(pci_set_dma_mask);
- EXPORT_SYMBOL(pci_set_consistent_dma_mask);
- EXPORT_SYMBOL(pci_assign_resource);
-Index: linux-2.6.12.3-mv/drivers/scsi/sata_sis.c
-===================================================================
---- linux-2.6.12.3-mv.orig/drivers/scsi/sata_sis.c
-+++ linux-2.6.12.3-mv/drivers/scsi/sata_sis.c
-@@ -186,18 +186,6 @@ static void sis_scr_write (struct ata_po
- 		outl(val, ap->ioaddr.scr_addr + (sc_reg * 4));
- }
- 
--/* move to PCI layer, integrate w/ MSI stuff */
--static void pci_enable_intx(struct pci_dev *pdev)
--{
--	u16 pci_command;
--
--	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
--	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
--		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
--		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
--	}
--}
--
- static int sis_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	struct ata_probe_ent *probe_ent = NULL;
-@@ -254,7 +242,7 @@ static int sis_init_one (struct pci_dev 
- 	}
- 
- 	pci_set_master(pdev);
--	pci_enable_intx(pdev);
-+	pci_intx(pdev);
- 
- 	/* FIXME: check ata_device_add return value */
- 	ata_device_add(probe_ent);
-Index: linux-2.6.12.3-mv/drivers/scsi/ahci.c
-===================================================================
---- linux-2.6.12.3-mv.orig/drivers/scsi/ahci.c
-+++ linux-2.6.12.3-mv/drivers/scsi/ahci.c
-@@ -878,18 +878,6 @@ static int ahci_host_init(struct ata_pro
- 	return 0;
- }
- 
--/* move to PCI layer, integrate w/ MSI stuff */
--static void pci_enable_intx(struct pci_dev *pdev)
--{
--	u16 pci_command;
--
--	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
--	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
--		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
--		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
--	}
--}
--
- static void ahci_print_info(struct ata_probe_ent *probe_ent)
- {
- 	struct ahci_host_priv *hpriv = probe_ent->private_data;
-@@ -987,7 +975,7 @@ static int ahci_init_one (struct pci_dev
- 		goto err_out;
- 	}
- 
--	pci_enable_intx(pdev);
-+	pci_intx(pdev);
- 
- 	probe_ent = kmalloc(sizeof(*probe_ent), GFP_KERNEL);
- 	if (probe_ent == NULL) {
-Index: linux-2.6.12.3-mv/drivers/scsi/ata_piix.c
-===================================================================
---- linux-2.6.12.3-mv.orig/drivers/scsi/ata_piix.c
-+++ linux-2.6.12.3-mv/drivers/scsi/ata_piix.c
-@@ -545,18 +545,6 @@ static void piix_set_dmamode (struct ata
- 	}
- }
- 
--/* move to PCI layer, integrate w/ MSI stuff */
--static void pci_enable_intx(struct pci_dev *pdev)
--{
--	u16 pci_command;
--
--	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
--	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
--		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
--		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
--	}
--}
--
- #define AHCI_PCI_BAR 5
- #define AHCI_GLOBAL_CTL 0x04
- #define AHCI_ENABLE (1 << 31)
-@@ -651,7 +639,7 @@ static int piix_init_one (struct pci_dev
- 	 * message-signalled interrupts currently).
- 	 */
- 	if (port_info[0]->host_flags & PIIX_FLAG_CHECKINTR)
--		pci_enable_intx(pdev);
-+		pci_intx(pdev);
- 
- 	if (combined) {
- 		port_info[sata_chan] = &piix_port_info[ent->driver_data];
-Index: linux-2.6.12.3-mv/drivers/scsi/sata_uli.c
-===================================================================
---- linux-2.6.12.3-mv.orig/drivers/scsi/sata_uli.c
-+++ linux-2.6.12.3-mv/drivers/scsi/sata_uli.c
-@@ -171,18 +171,6 @@ static void uli_scr_write (struct ata_po
- 	uli_scr_cfg_write(ap, sc_reg, val);
- }
- 
--/* move to PCI layer, integrate w/ MSI stuff */
--static void pci_enable_intx(struct pci_dev *pdev)
--{
--	u16 pci_command;
--
--	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
--	if (pci_command & PCI_COMMAND_INTX_DISABLE) {
--		pci_command &= ~PCI_COMMAND_INTX_DISABLE;
--		pci_write_config_word(pdev, PCI_COMMAND, pci_command);
--	}
--}
--
- static int uli_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	struct ata_probe_ent *probe_ent;
-@@ -255,7 +243,7 @@ static int uli_init_one (struct pci_dev 
- 	}
- 
- 	pci_set_master(pdev);
--	pci_enable_intx(pdev);
-+	pci_intx(pdev);
- 
- 	/* FIXME: check ata_device_add return value */
- 	ata_device_add(probe_ent);
-Index: linux-2.6.12.3-mv/include/linux/pci.h
-===================================================================
---- linux-2.6.12.3-mv.orig/include/linux/pci.h
-+++ linux-2.6.12.3-mv/include/linux/pci.h
-@@ -810,6 +810,7 @@ void pci_set_master(struct pci_dev *dev)
- #define HAVE_PCI_SET_MWI
- int pci_set_mwi(struct pci_dev *dev);
- void pci_clear_mwi(struct pci_dev *dev);
-+void pci_intx(struct pci_dev *pdev);
- int pci_set_dma_mask(struct pci_dev *dev, u64 mask);
- int pci_set_consistent_dma_mask(struct pci_dev *dev, u64 mask);
- int pci_assign_resource(struct pci_dev *dev, int i);
+thanks,
+
+greg k-h
