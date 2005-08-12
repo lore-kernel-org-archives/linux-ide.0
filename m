@@ -1,39 +1,65 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] IDE: don't offer IDE_GENERIC on ia64
-Date: Fri, 12 Aug 2005 09:35:50 +0100
-Message-ID: <1123835751.22460.13.camel@localhost.localdomain>
-References: <200508111424.43150.bjorn.helgaas@hp.com>
-	 <20050811214807.GA9775@havoc.gtf.org> <42FBC985.4030602@pobox.com>
-	 <200508111707.30861.bjorn.helgaas@hp.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [PATCH 0/3] libata-dev: pdc2027x fixes
+Date: Fri, 12 Aug 2005 16:10:08 +0800
+Message-ID: <42FC5960.3030703@tw.ibm.com>
+References: <42FC4B36.9080805@tw.ibm.com> <42FC51BB.2050401@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:46742 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S1750831AbVHLIJ1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Aug 2005 04:09:27 -0400
-In-Reply-To: <200508111707.30861.bjorn.helgaas@hp.com>
+Received: from bluehawaii.tikira.net ([61.62.22.51]:40959 "EHLO
+	bluehawaii.tikira.net") by vger.kernel.org with ESMTP
+	id S1750833AbVHLILr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Aug 2005 04:11:47 -0400
+In-Reply-To: <42FC51BB.2050401@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org, Tony Luck <tony.luck@intel.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: IDE Linux <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>
 
-On Iau, 2005-08-11 at 17:07 -0600, Bjorn Helgaas wrote:
-> So the scenario in question (correct me if I'm wrong) is that we
-> have a PCI IDE device that is handed off in compatibility mode (and
-> may only work in that mode).  In that case, the PCI *device* still
-> exists, so shouldn't the IDE PCI code claim that device, notice that
-> it's in compatibility mode, and use the legacy ports and IRQs if
-> necessary?
 
-The PCI IDE code and legacy IDE code both find the device and they
-realise its the same device so that it is driven by a suitable driver.
-The legacy IDE driver is useful if your platform has an unsupported IDE
-controller. It seems ot me the correct fix for IA64 is probably to set
-your arch specific probe address function to only probe the standard PCI
-legacy ports and to do any other appropriate checks, not to take an axe
-to Kconfig. 
+Jeff,
 
-Alan
+> Albert Lee wrote:
+> 
+>> Jeff,
+>>
+>> pdc2027x driver fix:
+>>
+>> 1/3 pdc1.diff:
+>>     - Convert pdc2027x from PIO to MMIO.
+>>
+>> 2/3 pdc2.diff:
+>>    - use "long" for the counter data type instead of "unsigned long"
+>>
+>> 3/3 pdc3.diff:
+>>    - pdc2027x ATAPI DMA irq lost problem workaround
+> 
+> 
+> Applied all three patches to pdc2027x branch of libata-dev.git.
+> 
+> I continue to dislike patch #3, but without more info, I fear this 
+> workaround may be necessary.
+> 
+
+I've visited Promise in February for the pdc2027x irq lost problem.
+They said it might be related to hardware FIFO problem, but they also
+said it might be ATAPI device problem. I don't know how to fix it, just
+have the (buflen% 256) workaround by trial and error. The (buflen % 256)
+workaround does not alway work, however.
+
+After checking how the ATAPI DMA is handled in their GPL code last week,
+I sent an e-mail to ask them about the workaround, especially the
+strange negative LBA check. No reply yet.
+
+The command white list workaround alone seems working fine so far. Read,
+burn and rip audio tracks by ATAPI DMA are ok. If any WRITE_10 problem
+is hit in the future, maybe we can try the negative LBA check then.
+
+Thanks for the review,
+
+Albert
+
+
+
 
