@@ -1,51 +1,49 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH 2.6.12.3] PCI/libata INTx cleanup
-Date: Fri, 12 Aug 2005 11:22:55 -0700
-Message-ID: <20050812182253.GA7842@suse.de>
-References: <20050803204709.8BA0720B06@lns1058.lss.emc.com> <42FBA08C.5040103@pobox.com> <20050812171043.CF61020E8B@lns1058.lss.emc.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: SATA status report updated
+Date: Fri, 12 Aug 2005 19:07:58 +0100
+Message-ID: <42FCE57E.2070302@dgreaves.com>
+References: <42FC2EF8.7030404@pobox.com> <20050812074012.60487882.robn@berrymount.nl> <42FC375C.3040304@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lyle.provo.novell.com ([137.65.81.174]:60986 "EHLO
-	lyle.provo.novell.com") by vger.kernel.org with ESMTP
-	id S1750852AbVHLSXJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Aug 2005 14:23:09 -0400
-Content-Disposition: inline
-In-Reply-To: <20050812171043.CF61020E8B@lns1058.lss.emc.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <42FC375C.3040304@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Rob van Nieuwkerk <robn@berrymount.nl>, Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Brett Russ <russb@emc.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Aug 12, 2005 at 01:10:43PM -0400, Brett Russ wrote:
-> Jeff Garzik wrote:
-> > Brett Russ wrote:
-> > 
-> >> Simple cleanup to eliminate X copies of the same function in libata.  
-> >> Moved pci_enable_intx() to pci.c, added pci_disable_intx() as well, 
-> >> and use them throughout libata and msi.c.
-> >>
-> >> Signed-off-by: Brett Russ <russb@emc.com>
-> > 
-> > 
-> > Though there is nothing wrong with this patch, I would prefer a single 
-> > function, pci_intx(), as found in drivers/scsi/ahci.c.
-> > 
-> > Would you be willing to move that one to the PCI layer, eliminate the 
-> > multiple copies of pci_enable_intx(), and replace the calls to 
-> > pci_enable_intx() with calls to pci_intx() ?
-> 
-> Sounds like what I did, except for the naming change.  I did away with
-> pci_disable_intx() and changed the names.  Look ok?
+Jeff Garzik wrote:
 
-Looks ok to me, care to resend it with a Signed-off-by: and a new
-changelog entry so I can apply it?
+>
+> True enough :/
+>
+> It's been feature-complete for a while, but the reports from testers
+> in the field have made me too nervous to push it into the upstream
+> kernel.
+>
+> I might push it upstream, but disable it by default, which would allow
+> for a wider test audience.
 
-> +EXPORT_SYMBOL(pci_intx);
+Could you specify what tests and reports would be useful and what risks
+are involved?
+Eg If I have 2 SATA drives then could (OK, of course it *could* - but is
+it likely) I break sda whilst testing with sdb? I can live with crashes
+and hangs and I can mitigate data loss, but I may think twice if it'll
+toast the drive.
 
-Hm, for new pci functions, I prefer to have them marked as
-EXPORT_SYMBOL_GPL(), is that ok with you?
+Nb: I often think that if people bemoaning the lack of testers put a bit
+of effort into saying what tests would be useful then more people would
+run them.
+"Here run this and just say if it crashes" is one approach.
+"Try these options, use smartd, turn on debugging like this and send
+this part of the output if you have a problem. Previously reported
+problems include: <blah, blah blah>. Oh, it's only ever going to affect
+the drive you specify and the worst case scenario is a low-level format
+using the vendor's download (which may or may not be available)" - makes
+me more aware of what I'm getting into.
 
-thanks,
+David
 
-greg k-h
+-- 
+
