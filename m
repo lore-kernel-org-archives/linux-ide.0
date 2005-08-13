@@ -1,57 +1,38 @@
-From: Carl-Daniel Hailfinger <c-d.hailfinger.devel.2005@gmx.net>
-Subject: Re: [linux-usb-devel] PCI quirks not handled and config space differences
- on resume from S3
-Date: Tue, 16 Aug 2005 17:44:18 +0200
-Message-ID: <430209D2.1000307@gmx.net>
-References: <Pine.LNX.4.44L0.0508161131240.18233-100000@iolanthe.rowland.org>
+From: LT-P <LT-P@LT-P.net>
+Subject: Re: Bug#321442: kernel-source-2.6.8: fails to compile on powerpc
+ (drivers/ide/ppc/pmac.c)
+Date: Sun, 14 Aug 2005 00:54:30 +0200
+Message-ID: <20050814005430.2e26e627@arda.LT-P.net>
+References: <E1E13vT-0008G7-R1@arda.LT-P.net>
+	<20050808085703.GE18551@verge.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imap.gmx.net ([213.165.64.20]:22754 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1030190AbVHPPoA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Aug 2005 11:44:00 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0508161131240.18233-100000@iolanthe.rowland.org>
+Received: from AReims-151-1-72-193.w83-198.abo.wanadoo.fr ([83.198.94.193]:29453
+	"EHLO arda.LT-P.net") by vger.kernel.org with ESMTP
+	id S1030193AbVHPPr0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Aug 2005 11:47:26 -0400
+In-Reply-To: <20050808085703.GE18551@verge.net.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: acpi-devel <acpi-devel@lists.sourceforge.net>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+To: Horms <horms@debian.org>
+Cc: 321442@bugs.debian.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Alan Stern schrieb:
-> On Tue, 16 Aug 2005, Carl-Daniel Hailfinger wrote:
-> 
-> 
->>Hi,
->>[...]
->>Besides that, a number of drivers do not restore the pci config
->>space of their associated devices properly on resume from S3.
->>
->>These drivers (and associated devices) are:
->>- uhci_hcd (USB Controller: Intel Corp. 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) USB UHCI Controller)
->>[...]
->>Diff between "lspci -vvvxxx" before and after resume for all
->>problematic devices on my machine is attached.
->>
->>Are there any patches I can try?
-> 
-> 
-> The uhci-hcd driver _does_ restore the config space for its devices 
-> properly.
-> 
->> [lspci dump]
-> 
-> 
-> Just because the before and after values are different doesn't mean 
-> anything is wrong.  Those particular bits are set by the hardware in 
-> response to various events.  They are used only by the BIOS, to provide 
-> USB keyboard and mouse services.  They don't affect the device's function 
-> or the Linux driver at all.
+Le lun 08 ao=FB 2005 17:57:04 CEST, Horms <horms@debian.org> a =E9crit:
 
-Thanks for the information and sorry for bothering you.
+> Can you please enable BLK_DEV_IDEDMA_PCI and see if that resolves you=
+r
+> problem. If it does, then the following patch should fix Kconfig
+> so that BLK_DEV_IDEDMA_PCI needs to be enabled for BLK_DEV_IDE_PMAC
+> to be enabled. It should patch cleanly against Debian's 2.6.8 and
+> Linus' current Git tree.
+It seems to solve the problem, thanks.
+Sometimes, I feel like I am the only person in the world to compile the=
+ kernel on
+powerpc... :)
 
-> Alan Stern
+LT-P
 
-Regards,
-Carl-Daniel
--- 
-http://www.hailfinger.org/
+--=20
+Seals are cute, kiss them
