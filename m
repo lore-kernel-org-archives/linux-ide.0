@@ -1,332 +1,144 @@
-From: Erik Slagter <erik@slagter.name>
-Subject: Re: libata and PATA devices
-Date: Sat, 13 Aug 2005 13:30:40 +0200
-Message-ID: <1123932640.4378.10.camel@localhost.localdomain>
-References: <200508071949.03782.inform@tiker.net>
-	 <42F6B8CD.4050100@gmail.com>  <20050808030239.GA27502@havoc.gtf.org>
-	 <1123495856.22328.62.camel@localhost.localdomain> <42F8B41C.4040408@rtr.ca>
-	 <42FACCA8.6050408@pobox.com> <42FB853E.4070100@rtr.ca>
-	 <42FB889F.50607@pobox.com> <1123789132.4422.30.camel@localhost.localdomain>
-	 <42FBB33D.8050003@pobox.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IqoWfr6eccHYt1E54+EG"
+From: Chris Boot <bootc@bootc.net>
+Subject: Re: SiI 3112A + Seagate HDs = still no go?
+Date: Sat, 13 Aug 2005 13:14:29 +0100
+Message-ID: <EB750DA5-854F-4387-A5D7-F646EB8E7AAC@bootc.net>
+References: <12872CA9-F089-4955-8751-8CC4E7B2140A@bootc.net> <42FC166A.3020505@gmail.com> <0FDE8D5B-CFF2-44F9-8C98-9C5EC5CDAE92@bootc.net> <42FC87ED.6030201@gmail.com> <22B1D7C7-7BC8-449C-914C-FCE5226BCAF2@bootc.net> <655E2636-B4D4-42EC-B10C-C8B8EFA09E33@bootc.net> <42FCAD4D.7080707@gmail.com> <74C9A166-2FDC-45F8-BEB1-A574FD9602D4@bootc.net> <42FD493D.8020506@gmail.com>
+Mime-Version: 1.0 (Apple Message framework v733)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oldconomy.demon.nl ([212.238.217.56]:17630 "EHLO
-	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S932148AbVHMLbH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 Aug 2005 07:31:07 -0400
-In-Reply-To: <42FBB33D.8050003@pobox.com>
+Received: from baldrick.bootc.net ([83.142.228.48]:42718 "EHLO
+	baldrick.bootc.net") by vger.kernel.org with ESMTP id S932157AbVHMMOt
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 13 Aug 2005 08:14:49 -0400
+In-Reply-To: <42FD493D.8020506@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-kernel@vger.kernel.org
 
 
---=-IqoWfr6eccHYt1E54+EG
-Content-Type: multipart/mixed; boundary="=-iy6CUB5hsS2la/OZDFhq"
+On 13 Aug 2005, at 2:13, Tejun Heo wrote:
+
+>
+>  Hello, Chris.
+>
+> Chris Boot wrote:
+>
+>> On 12 Aug 2005, at 15:08, Tejun Heo wrote:
+>>
+>>>
+>>> [adding cc to Jeff Garzik. (Hi!)]
+>>>
+>>>  Hi again, Chris.
+>>>
+>>>  Unfortunately, I'm as lost as you are.  Can you please do the   
+>>> followings?
+>>>
+>>>  * Verify if read is free from the problem.  ie. does "dd if=/ 
+>>> dev/ sd? of=/dev/null" work?
+>>>
+>> Works like a treat at 30 MB/s. I do get a few errors in the log   
+>> (repeated a couple of times), but they seem mostly harmless:
+>> ata1: status=0x51 { DriveReady SeekComplete Error }
+>> ata1: error=0x04 { DriveStatusError }
+>>
+>
+>  This is IDE ABRT error and it indicates that something strange is  
+> going on.  You're not getting this kind of error on VIA controller,  
+> right?
+
+I most certainly am not.
+
+>
+>>>  * Turn on ATA_DEBUG and ATA_VERBOSE_DEBUG in include/linux/  
+>>> libata.h (change #undef's to #define's) and make the drive  
+>>> hang.   The log should show what was going on.
+>>>
+>> While untarring and compiling the new kernel I got lots of:
+>> ata1: status=0x51 { DriveReady SeekComplete Error }
+>> ata1: error=0x84 { DriveStatusError BadCRC }
+>>
+>
+>  Wow, this is CRC error.  Something is wrong w/ your controller.
+
+Great...
+
+>> Syslog seems to die log before I get anything useful, and setting   
+>> loglevel 9 with SysRq gives:
+>> ata_fill_sg: PRD[126]: 0x1206A000, 0x1000)
+>> ata_fill_sg: PRD[127]: 0x1206B000, 0x1000)
+>> ata_dev_select: ENTER, ata1: device 0, wait 1
+>> ATA: abnormal status 0xD9 on port 0xE0804087
+>> ATA: abnormal status 0xD9 on port 0xE0804087
+>> ata_tf_load_mmio: hob: feat 0x0 nsect 0x3, lba 0x1 0x0 0x0
+>> ata_tf_load_mmio: feat 0x0 nsect 0xF8 lba 0x1A 0xEF 0x33
+>> ata_tf_load_mmio: device 0xE0
+>> ATA: abnormal statux 0xD9 on port 0xE0804087
+>> ata_exec_command_mmio: ata: cmd 0x35
+>> ata_scsi_translate: EXIT
+>> It then hangs for exactly 30 seconds, and more stuff flies by   
+>> followed by much the same messages EXCEPT:
+>> 1. There seems to be one less ata_fill_sg line every time, since  
+>> PRD [XXX] decrements by one every time.
+>> 2. The ata_tf_load_mmio lines give different nsect and lba, the   
+>> device stays the same.
+>>
+>
+>  30 secs is SCSI command timeout and retrying w/ one less chunk is  
+> sd driver's error recovery behavior.
+>
+>  It seems that a lot of errors occur while bits are going through  
+> your SATA connection.  I don't know about Seagate drives, but my  
+> Samsung drive sometimes locks up if it gets weird packets/ 
+> commands.  This might be also your case.  PHY-resetting usually  
+> gets the drive back online but currently libata doesn't do any such  
+> error recovery actions.  To make sure that it's because of faulty  
+> controller, can you please try the following?
+>
+>  * Monitor how IO goes on the drive in Windows.  You can do this by
+>      - Start->Run and enter perfmon.
+>      - After perfmon starts, right click on (heh heh, I guess this is
+>        one of those few times you read this on linux kernel mailing
+>        list) counter list and select add. Add DiskBytes/sec counter of
+>        PhysicalDisk object.
+>      - Adjust scale to 0.0000010.  Also, change color to black to make
+>        it stand out.
+>      - start dd.
+>
+>  I think, if the errors are due to hardware error, the perfmon  
+> graph will show some stuttering when it hits command timeout.  So,  
+> write to disk, as writing seems to cause timeouts.  If the problem  
+> also happens on Windows, it's highly likely that you have a faulty  
+> controller.
+
+Some interesting developments!
+
+I installed a fresh copy of Windows, and all the VIA and nVidia and  
+so on drivers. At some point during all this (a period of relatively  
+heavy disk IO), the computer seemed to crash and I rebooted it. It  
+then worked fine for a while, but during my perfmon testing it seemed  
+to do the same thing. This time I left it for a while and it did  
+eventually wake up again, so I'm guessing the controller is a bit  
+fubared. Perfmon did indeed show several dips down to or very close  
+to 0 during the write operation, with peaks up to 48 MB/sec, which is  
+pretty respectable. So, time to replace the brand-new controller I  
+guess.
+
+Now, do you think this is just my one particular controller card and  
+a simple return would fix the problem, or is it more likely a problem  
+with the whole range? It's an Innovision EIO SATA controller: http:// 
+www.ivmm.com/eio/products/index.htm
+
+Would it be a safer bet to go for the Adaptec controller of the same  
+variety? How reliable are they?
+
+Many thanks,
+Chris
+
+-- 
+Chris Boot
+bootc@bootc.net
+http://www.bootc.net/
 
 
---=-iy6CUB5hsS2la/OZDFhq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2005-08-11 at 16:21 -0400, Jeff Garzik wrote:
-> Erik Slagter wrote:
-
-> Your patch was wrong because the SATA device should always be claimed by=20
-> libata.
->=20
-> The system is thus:
->=20
-> 1) drivers/pci/quirks.c reserves SATA ports (only!) for libata
-> 2) Legacy IDE driver claims the unreserved PATA port
-> 3) libata loads and uses the ports reserved in #1
->=20
-> This requires a specific kernel configuration:
-> (a) CONFIG_IDE_GENERIC be set, and
-> (b) IDE driver is built into the kernel.
->=20
-> This also requires that your SATA device is listed in drivers/pci/quirks.=
-c.
->=20
-> Both (a) and (b) are kernel configuration issues.  I never saw anything=20
-> in any email thread indicating that (a) and (b) were verified and=20
-> eliminated as problem sources.
-
-> To be more clear:
-
-> The legacy ISA IDE driver, not the PIIX IDE driver, must claim the
-> PATA port.
-
-Okay, here it comes.
-
-hardware: Dell Inspiron 9300 with ICH6M and Fujitsu PATA harddisk + PATA
-dvd driver
-kernel: 2.6.12.3 plain vanilla
-config: generic ide, no ide piix support, no pci ide support whatsoever,
-libata support, libata_piix support
-
-result: the pata harddisk is recognised by libata_piix and
-assigned /dev/sda, the dvd drive is found by the generic ide driver.
-(dmesg output attached)
-
-Alternative:
-
-config: generic ide, no ide piix support, no pci ide support whatsoever,
-libata support, no libata_piix support
-
-result: not bootable because no root disk whatsoever is found
-(no /dev/sda nor /dev/hda). The dvd driver is found by the generic ide
-driver.
-
-Looks like the practise does not match your statement.
-
---=-iy6CUB5hsS2la/OZDFhq
-Content-Disposition: inline; filename=dmesg-1
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; name=dmesg-1; charset=UTF-8
-
-TGludXggdmVyc2lvbiAyLjYuMTIuM3Rlc3QxIChlcmlrQHNreWxsYSkgKGdjYyB2ZXJzaW9uIDQu
-MC4xIDIwMDUwNzI3IChSZWQgSGF0IDQuMC4xLTUpKSAjNiBGcmkgQXVnIDEyIDE3OjU0OjQ5IENF
-U1QgMjAwNQ0KQklPUy1wcm92aWRlZCBwaHlzaWNhbCBSQU0gbWFwOg0KIEJJT1MtZTgyMDogMDAw
-MDAwMDAwMDAwMDAwMCAtIDAwMDAwMDAwMDAwOWYwMDAgKHVzYWJsZSkNCiBCSU9TLWU4MjA6IDAw
-MDAwMDAwMDAwOWYwMDAgLSAwMDAwMDAwMDAwMGEwMDAwIChyZXNlcnZlZCkNCiBCSU9TLWU4MjA6
-IDAwMDAwMDAwMDAxMDAwMDAgLSAwMDAwMDAwMDNmZmRhMDAwICh1c2FibGUpDQogQklPUy1lODIw
-OiAwMDAwMDAwMDNmZmRhMDAwIC0gMDAwMDAwMDA0MDAwMDAwMCAocmVzZXJ2ZWQpDQogQklPUy1l
-ODIwOiAwMDAwMDAwMGUwMDAwMDAwIC0gMDAwMDAwMDBmMDAwNzAwMCAocmVzZXJ2ZWQpDQogQklP
-Uy1lODIwOiAwMDAwMDAwMGYwMDA4MDAwIC0gMDAwMDAwMDBmMDAwYzAwMCAocmVzZXJ2ZWQpDQog
-QklPUy1lODIwOiAwMDAwMDAwMGZlYzAwMDAwIC0gMDAwMDAwMDBmZWMxMDAwMCAocmVzZXJ2ZWQp
-DQogQklPUy1lODIwOiAwMDAwMDAwMGZlZDIwMDAwIC0gMDAwMDAwMDBmZWUxMDAwMCAocmVzZXJ2
-ZWQpDQogQklPUy1lODIwOiAwMDAwMDAwMGZmYjAwMDAwIC0gMDAwMDAwMDEwMDAwMDAwMCAocmVz
-ZXJ2ZWQpDQoxMjdNQiBISUdITUVNIGF2YWlsYWJsZS4NCjg5Nk1CIExPV01FTSBhdmFpbGFibGUu
-DQpOWCAoRXhlY3V0ZSBEaXNhYmxlKSBwcm90ZWN0aW9uOiBhY3RpdmUNCk9uIG5vZGUgMCB0b3Rh
-bHBhZ2VzOiAyNjIxMDYNCiAgRE1BIHpvbmU6IDQwOTYgcGFnZXMsIExJRk8gYmF0Y2g6MQ0KICBO
-b3JtYWwgem9uZTogMjI1MjgwIHBhZ2VzLCBMSUZPIGJhdGNoOjMxDQogIEhpZ2hNZW0gem9uZTog
-MzI3MzAgcGFnZXMsIExJRk8gYmF0Y2g6MTUNCkRNSSAyLjMgcHJlc2VudC4NCkFDUEk6IFJTRFAg
-KHYwMDAgREVMTCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICApIEAgMHgwMDBmYzli
-MA0KQUNQSTogUlNEVCAodjAwMSBERUxMICAgIENQaSBSICAgMHgyN2Q1MDIxNyBBU0wgIDB4MDAw
-MDAwNjEpIEAgMHgzZmZkYTdkMw0KQUNQSTogRkFEVCAodjAwMSBERUxMICAgIENQaSBSICAgMHgy
-N2Q1MDIxNyBBU0wgIDB4MDAwMDAwNjEpIEAgMHgzZmZkYjQwMA0KQUNQSTogTUFEVCAodjAwMSBE
-RUxMICAgIENQaSBSICAgMHgyN2Q1MDIxNyBBU0wgIDB4MDAwMDAwNDcpIEAgMHgzZmZkYmMwMA0K
-QUNQSTogTUNGRyAodjAxNiBERUxMICAgIENQaSBSICAgMHgyN2Q1MDIxNyBBU0wgIDB4MDAwMDAw
-NjEpIEAgMHgzZmZkYmJjMA0KQUNQSTogQk9PVCAodjAwMSBERUxMICAgIENQaSBSICAgMHgyN2Q1
-MDIxNyBBU0wgIDB4MDAwMDAwNjEpIEAgMHgzZmZkYjdjMA0KQUNQSTogU1NEVCAodjAwMSAgUG1S
-ZWYgIENwdTBJc3QgMHgwMDAwMzAwMCBJTlRMIDB4MjAwMzA1MjIpIEAgMHgzZmZkYWJlNg0KQUNQ
-STogU1NEVCAodjAwMSAgUG1SZWYgIENwdTBDc3QgMHgwMDAwMzAwMSBJTlRMIDB4MjAwMzA1MjIp
-IEAgMHgzZmZkYWEwZQ0KQUNQSTogU1NEVCAodjAwMSAgUG1SZWYgICAgQ3B1UG0gMHgwMDAwMzAw
-MCBJTlRMIDB4MjAwMzA1MjIpIEAgMHgzZmZkYTgxMw0KQUNQSTogRFNEVCAodjAwMSBJTlQ0MzAg
-U1lTRmV4eHggMHgwMDAwMTAwMSBNU0ZUIDB4MDEwMDAwMGUpIEAgMHgwMDAwMDAwMA0KQUNQSTog
-UE0tVGltZXIgSU8gUG9ydDogMHgxMDA4DQpBQ1BJOiBMb2NhbCBBUElDIGFkZHJlc3MgMHhmZWUw
-MDAwMA0KQUNQSTogTEFQSUMgKGFjcGlfaWRbMHgwMF0gbGFwaWNfaWRbMHgwMF0gZW5hYmxlZCkN
-ClByb2Nlc3NvciAjMCA2OjEzIEFQSUMgdmVyc2lvbiAyMA0KQUNQSTogTEFQSUMgKGFjcGlfaWRb
-MHgwMV0gbGFwaWNfaWRbMHgwMV0gZGlzYWJsZWQpDQpBQ1BJOiBMQVBJQ19OTUkgKGFjcGlfaWRb
-MHgwMF0gaGlnaCBlZGdlIGxpbnRbMHgxXSkNCkFDUEk6IExBUElDX05NSSAoYWNwaV9pZFsweDAx
-XSBoaWdoIGVkZ2UgbGludFsweDFdKQ0KQUNQSTogSU9BUElDIChpZFsweDAxXSBhZGRyZXNzWzB4
-ZmVjMDAwMDBdIGdzaV9iYXNlWzBdKQ0KSU9BUElDWzBdOiBhcGljX2lkIDEsIHZlcnNpb24gMzIs
-IGFkZHJlc3MgMHhmZWMwMDAwMCwgR1NJIDAtMjMNCkFDUEk6IElOVF9TUkNfT1ZSIChidXMgMCBi
-dXNfaXJxIDAgZ2xvYmFsX2lycSAyIGRmbCBkZmwpDQpBQ1BJOiBJTlRfU1JDX09WUiAoYnVzIDAg
-YnVzX2lycSA5IGdsb2JhbF9pcnEgOSBoaWdoIGxldmVsKQ0KQUNQSTogSVJRMCB1c2VkIGJ5IG92
-ZXJyaWRlLg0KQUNQSTogSVJRMiB1c2VkIGJ5IG92ZXJyaWRlLg0KQUNQSTogSVJROSB1c2VkIGJ5
-IG92ZXJyaWRlLg0KRW5hYmxpbmcgQVBJQyBtb2RlOiAgRmxhdC4gIFVzaW5nIDEgSS9PIEFQSUNz
-DQpVc2luZyBBQ1BJIChNQURUKSBmb3IgU01QIGNvbmZpZ3VyYXRpb24gaW5mb3JtYXRpb24NCkFs
-bG9jYXRpbmcgUENJIHJlc291cmNlcyBzdGFydGluZyBhdCA0MDAwMDAwMCAoZ2FwOiA0MDAwMDAw
-MDphMDAwMDAwMCkNCkJ1aWx0IDEgem9uZWxpc3RzDQpLZXJuZWwgY29tbWFuZCBsaW5lOiBybyBy
-ZXN1bWU9L2Rldi9oZGE0IHJvb3Q9L2Rldi9oZGEyIG5taV93YXRjaGRvZz0yIG5ldGNvbnNvbGU9
-QDE3Mi4zMS40LjIvZXRoMCw1MTRAMTcyLjMxLjEuMS8gcm9vdD0vZGV2L3NkYTIgaW5pdD0vYmlu
-L3NoDQpuZXRjb25zb2xlOiBsb2NhbCBwb3J0IDY2NjUNCm5ldGNvbnNvbGU6IGxvY2FsIElQIDE3
-Mi4zMS40LjINCm5ldGNvbnNvbGU6IGludGVyZmFjZSBldGgwDQpuZXRjb25zb2xlOiByZW1vdGUg
-cG9ydCA1MTQNCm5ldGNvbnNvbGU6IHJlbW90ZSBJUCAxNzIuMzEuMS4xDQpuZXRjb25zb2xlOiBy
-ZW1vdGUgZXRoZXJuZXQgYWRkcmVzcyBmZjpmZjpmZjpmZjpmZjpmZg0KbWFwcGVkIEFQSUMgdG8g
-ZmZmZmQwMDAgKGZlZTAwMDAwKQ0KbWFwcGVkIElPQVBJQyB0byBmZmZmYzAwMCAoZmVjMDAwMDAp
-DQpJbml0aWFsaXppbmcgQ1BVIzANClBJRCBoYXNoIHRhYmxlIGVudHJpZXM6IDQwOTYgKG9yZGVy
-OiAxMiwgNjU1MzYgYnl0ZXMpDQpEZXRlY3RlZCAyMTI4LjU5MiBNSHogcHJvY2Vzc29yLg0KVXNp
-bmcgcG10bXIgZm9yIGhpZ2gtcmVzIHRpbWVzb3VyY2UNCkNvbnNvbGU6IGNvbG91ciBWR0ErIDgw
-eDI1DQpEZW50cnkgY2FjaGUgaGFzaCB0YWJsZSBlbnRyaWVzOiAxMzEwNzIgKG9yZGVyOiA3LCA1
-MjQyODggYnl0ZXMpDQpJbm9kZS1jYWNoZSBoYXNoIHRhYmxlIGVudHJpZXM6IDY1NTM2IChvcmRl
-cjogNiwgMjYyMTQ0IGJ5dGVzKQ0KTWVtb3J5OiAxMDM0MTA4ay8xMDQ4NDI0ayBhdmFpbGFibGUg
-KDI4MThrIGtlcm5lbCBjb2RlLCAxMzUwMGsgcmVzZXJ2ZWQsIDEyMTRrIGRhdGEsIDE3NmsgaW5p
-dCwgMTMwOTIwayBoaWdobWVtKQ0KQ2hlY2tpbmcgaWYgdGhpcyBwcm9jZXNzb3IgaG9ub3VycyB0
-aGUgV1AgYml0IGV2ZW4gaW4gc3VwZXJ2aXNvciBtb2RlLi4uIE9rLg0KQ2FsaWJyYXRpbmcgZGVs
-YXkgbG9vcC4uLiA0MTk0LjMwIEJvZ29NSVBTIChscGo9MjA5NzE1MikNCk1vdW50LWNhY2hlIGhh
-c2ggdGFibGUgZW50cmllczogNTEyDQpDUFU6IEFmdGVyIGdlbmVyaWMgaWRlbnRpZnksIGNhcHM6
-IGFmZTlmYmZmIDAwMTAwMDAwIDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMTgwIDAwMDAwMDAwIDAw
-MDAwMDAwDQpDUFU6IEFmdGVyIHZlbmRvciBpZGVudGlmeSwgY2FwczogYWZlOWZiZmYgMDAxMDAw
-MDAgMDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAxODAgMDAwMDAwMDAgMDAwMDAwMDANCkNQVTogTDEg
-SSBjYWNoZTogMzJLLCBMMSBEIGNhY2hlOiAzMksNCkNQVTogTDIgY2FjaGU6IDIwNDhLDQpDUFU6
-IEFmdGVyIGFsbCBpbml0cywgY2FwczogYWZlOWZiZmYgMDAxMDAwMDAgMDAwMDAwMDAgMDAwMDAw
-NDAgMDAwMDAxODAgMDAwMDAwMDAgMDAwMDAwMDANCkludGVsIG1hY2hpbmUgY2hlY2sgYXJjaGl0
-ZWN0dXJlIHN1cHBvcnRlZC4NCkludGVsIG1hY2hpbmUgY2hlY2sgcmVwb3J0aW5nIGVuYWJsZWQg
-b24gQ1BVIzAuDQpDUFU6IEludGVsKFIpIFBlbnRpdW0oUikgTSBwcm9jZXNzb3IgMi4xM0dIeiBz
-dGVwcGluZyAwOA0KRW5hYmxpbmcgZmFzdCBGUFUgc2F2ZSBhbmQgcmVzdG9yZS4uLiBkb25lLg0K
-RW5hYmxpbmcgdW5tYXNrZWQgU0lNRCBGUFUgZXhjZXB0aW9uIHN1cHBvcnQuLi4gZG9uZS4NCkNo
-ZWNraW5nICdobHQnIGluc3RydWN0aW9uLi4uIE9LLg0KRU5BQkxJTkcgSU8tQVBJQyBJUlFzDQou
-LlRJTUVSOiB2ZWN0b3I9MHgzMSBwaW4xPTIgcGluMj0tMQ0KTkVUOiBSZWdpc3RlcmVkIHByb3Rv
-Y29sIGZhbWlseSAxNg0KUENJOiBQQ0kgQklPUyByZXZpc2lvbiAyLjEwIGVudHJ5IGF0IDB4ZmJh
-YWUsIGxhc3QgYnVzPTQNClBDSTogVXNpbmcgTU1DT05GSUcNCm10cnI6IHYyLjAgKDIwMDIwNTE5
-KQ0KQUNQSTogU3Vic3lzdGVtIHJldmlzaW9uIDIwMDUwMzA5DQpBQ1BJOiBJbnRlcnByZXRlciBl
-bmFibGVkDQpBQ1BJOiBVc2luZyBJT0FQSUMgZm9yIGludGVycnVwdCByb3V0aW5nDQpBQ1BJOiBQ
-Q0kgUm9vdCBCcmlkZ2UgW1BDSTBdICgwMDAwOjAwKQ0KUENJOiBQcm9iaW5nIFBDSSBoYXJkd2Fy
-ZSAoYnVzIDAwKQ0KUENJOiBJZ25vcmluZyBCQVIwLTMgb2YgSURFIGNvbnRyb2xsZXIgMDAwMDow
-MDoxZi4yDQpCb290IHZpZGVvIGRldmljZSBpcyAwMDAwOjAxOjAwLjANClBDSTogVHJhbnNwYXJl
-bnQgYnJpZGdlIC0gMDAwMDowMDoxZS4wDQpBQ1BJOiBQQ0kgSW50ZXJydXB0IFJvdXRpbmcgVGFi
-bGUgW1xfU0JfLlBDSTAuX1BSVF0NCkFDUEk6IFBDSSBJbnRlcnJ1cHQgTGluayBbTE5LQV0gKElS
-UXMgOSAxMCAqMTEpDQpBQ1BJOiBQQ0kgSW50ZXJydXB0IExpbmsgW0xOS0JdIChJUlFzIDUgNykg
-KjEwDQpBQ1BJOiBQQ0kgSW50ZXJydXB0IExpbmsgW0xOS0NdIChJUlFzICo5IDEwIDExKQ0KQUNQ
-STogUENJIEludGVycnVwdCBMaW5rIFtMTktEXSAoSVJRcyA1ICo3IDkgMTAgMTEpDQpBQ1BJOiBQ
-Q0kgSW50ZXJydXB0IExpbmsgW0xOS0VdIChJUlFzIDMgNCA1IDYgNyA5IDEwIDExIDEyIDE0IDE1
-KSAqMCwgZGlzYWJsZWQuDQpBQ1BJOiBQQ0kgSW50ZXJydXB0IExpbmsgW0xOS0ZdIChJUlFzIDMg
-NCA1IDYgNyA5IDEwIDExIDEyIDE0IDE1KSAqMCwgZGlzYWJsZWQuDQpBQ1BJOiBQQ0kgSW50ZXJy
-dXB0IExpbmsgW0xOS0hdIChJUlFzIDMgNCA1IDYgNyA5IDEwIDExIDEyIDE0IDE1KSAqMCwgZGlz
-YWJsZWQuDQpBQ1BJOiBQQ0kgSW50ZXJydXB0IFJvdXRpbmcgVGFibGUgW1xfU0JfLlBDSTAuQUdQ
-Xy5fUFJUXQ0KQUNQSTogUENJIEludGVycnVwdCBSb3V0aW5nIFRhYmxlIFtcX1NCXy5QQ0kwLlBD
-SUUuX1BSVF0NCkxpbnV4IFBsdWcgYW5kIFBsYXkgU3VwcG9ydCB2MC45NyAoYykgQWRhbSBCZWxh
-eQ0KcG5wOiBQblAgQUNQSSBpbml0DQpwbnA6IFBuUCBBQ1BJOiBmb3VuZCAxMCBkZXZpY2VzDQpp
-OGs6IG5vdCBydW5uaW5nIG9uIGEgRGVsbCBzeXN0ZW0NCmk4azogdmVuZG9yPURlbGwgSW5jLiwg
-bW9kZWw9SW5zcGlyb24gOTMwMCwgdmVyc2lvbj1BMDINCmk4azogdW5hYmxlIHRvIGdldCBTTU0g
-RGVsbCBzaWduYXR1cmUNCmk4azogdW5hYmxlIHRvIGdldCBTTU0gQklPUyB2ZXJzaW9uDQpTQ1NJ
-IHN1YnN5c3RlbSBpbml0aWFsaXplZA0KTGludXggS2VybmVsIENhcmQgU2VydmljZXMNCiAgb3B0
-aW9uczogIFtwY2ldIFtjYXJkYnVzXSBbcG1dDQpQQ0k6IFVzaW5nIEFDUEkgZm9yIElSUSByb3V0
-aW5nDQpQQ0k6IElmIGEgZGV2aWNlIGRvZXNuJ3Qgd29yaywgdHJ5ICJwY2k9cm91dGVpcnEiLiAg
-SWYgaXQgaGVscHMsIHBvc3QgYSByZXBvcnQNCkJsdWV0b290aDogQ29yZSB2ZXIgMi43DQpORVQ6
-IFJlZ2lzdGVyZWQgcHJvdG9jb2wgZmFtaWx5IDMxDQpCbHVldG9vdGg6IEhDSSBkZXZpY2UgYW5k
-IGNvbm5lY3Rpb24gbWFuYWdlciBpbml0aWFsaXplZA0KQmx1ZXRvb3RoOiBIQ0kgc29ja2V0IGxh
-eWVyIGluaXRpYWxpemVkDQpwbnA6IDAwOjAxOiBpb3BvcnQgcmFuZ2UgMHg0ZDAtMHg0ZDEgaGFz
-IGJlZW4gcmVzZXJ2ZWQNCnBucDogMDA6MDE6IGlvcG9ydCByYW5nZSAweDEwMDAtMHgxMDA1IGNv
-dWxkIG5vdCBiZSByZXNlcnZlZA0KcG5wOiAwMDowMTogaW9wb3J0IHJhbmdlIDB4MTAwOC0weDEw
-MGYgY291bGQgbm90IGJlIHJlc2VydmVkDQpwbnA6IDAwOjAyOiBpb3BvcnQgcmFuZ2UgMHhmNDAw
-LTB4ZjRmZSBoYXMgYmVlbiByZXNlcnZlZA0KcG5wOiAwMDowMjogaW9wb3J0IHJhbmdlIDB4MTAw
-Ni0weDEwMDcgaGFzIGJlZW4gcmVzZXJ2ZWQNCnBucDogMDA6MDI6IGlvcG9ydCByYW5nZSAweDEw
-MGEtMHgxMDU5IGNvdWxkIG5vdCBiZSByZXNlcnZlZA0KcG5wOiAwMDowMjogaW9wb3J0IHJhbmdl
-IDB4MTA2MC0weDEwN2YgaGFzIGJlZW4gcmVzZXJ2ZWQNCnBucDogMDA6MDI6IGlvcG9ydCByYW5n
-ZSAweDEwODAtMHgxMGJmIGhhcyBiZWVuIHJlc2VydmVkDQpwbnA6IDAwOjAyOiBpb3BvcnQgcmFu
-Z2UgMHgxMGMwLTB4MTBkZiBoYXMgYmVlbiByZXNlcnZlZA0KcG5wOiAwMDowNzogaW9wb3J0IHJh
-bmdlIDB4OTAwLTB4OTBmIGhhcyBiZWVuIHJlc2VydmVkDQpwbnA6IDAwOjA3OiBpb3BvcnQgcmFu
-Z2UgMHg5MTAtMHg5MWYgaGFzIGJlZW4gcmVzZXJ2ZWQNCnBucDogMDA6MDc6IGlvcG9ydCByYW5n
-ZSAweDkyMC0weDkyZiBoYXMgYmVlbiByZXNlcnZlZA0KcG5wOiAwMDowNzogaW9wb3J0IHJhbmdl
-IDB4OTMwLTB4OTNmIGhhcyBiZWVuIHJlc2VydmVkDQpwbnA6IDAwOjA3OiBpb3BvcnQgcmFuZ2Ug
-MHg5NDAtMHg5N2YgaGFzIGJlZW4gcmVzZXJ2ZWQNClNpbXBsZSBCb290IEZsYWcgYXQgMHg3OSBz
-ZXQgdG8gMHgxDQpNYWNoaW5lIGNoZWNrIGV4Y2VwdGlvbiBwb2xsaW5nIHRpbWVyIHN0YXJ0ZWQu
-DQpJQS0zMiBNaWNyb2NvZGUgVXBkYXRlIERyaXZlcjogdjEuMTQgPHRpZ3JhbkB2ZXJpdGFzLmNv
-bT4NCmhpZ2htZW0gYm91bmNlIHBvb2wgc2l6ZTogNjQgcGFnZXMNCkluc3RhbGxpbmcga25mc2Qg
-KGNvcHlyaWdodCAoQykgMTk5NiBva2lyQG1vbmFkLnN3Yi5kZSkuDQpJbml0aWFsaXppbmcgQ3J5
-cHRvZ3JhcGhpYyBBUEkNCkFDUEk6IFBDSSBJbnRlcnJ1cHQgMDAwMDowMDowMS4wW0FdIC0+IEdT
-SSAxNiAobGV2ZWwsIGxvdykgLT4gSVJRIDE2OQ0KUENJOiBTZXR0aW5nIGxhdGVuY3kgdGltZXIg
-b2YgZGV2aWNlIDAwMDA6MDA6MDEuMCB0byA2NA0KYXNzaWduX2ludGVycnVwdF9tb2RlIEZvdW5k
-IE1TSSBjYXBhYmlsaXR5DQpBbGxvY2F0ZSBQb3J0IFNlcnZpY2VbcGNpZTAwXQ0KQWxsb2NhdGUg
-UG9ydCBTZXJ2aWNlW3BjaWUwM10NCkFDUEk6IEFDIEFkYXB0ZXIgW0FDXSAob24tbGluZSkNCkFD
-UEk6IEJhdHRlcnkgU2xvdCBbQkFUMF0gKGJhdHRlcnkgcHJlc2VudCkNCkFDUEk6IExpZCBTd2l0
-Y2ggW0xJRF0NCkFDUEk6IFBvd2VyIEJ1dHRvbiAoQ00pIFtQQlROXQ0KQUNQSTogU2xlZXAgQnV0
-dG9uIChDTSkgW1NCVE5dDQpBQ1BJOiBWaWRlbyBEZXZpY2UgW1ZJRF0gKG11bHRpLWhlYWQ6IHll
-cyAgcm9tOiBubyAgcG9zdDogbm8pDQpBQ1BJOiBDUFUwIChwb3dlciBzdGF0ZXM6IEMxW0MxXSBD
-MltDMl0gQzNbQzNdIEM0W0MzXSkNCkFDUEk6IFByb2Nlc3NvciBbQ1BVMF0gKHN1cHBvcnRzIDgg
-dGhyb3R0bGluZyBzdGF0ZXMpDQpBQ1BJOiBUaGVybWFsIFpvbmUgW1RITV0gKDUyIEMpDQpSZWFs
-IFRpbWUgQ2xvY2sgRHJpdmVyIHYxLjEyDQpod19yYW5kb206IGNhbm5vdCBlbmFibGUgUk5HLCBh
-Ym9ydGluZw0KUE5QOiBQUy8yIENvbnRyb2xsZXIgW1BOUDAzMDM6S0JDLFBOUDBmMTM6UFMyTV0g
-YXQgMHg2MCwweDY0IGlycSAxLDEyDQpzZXJpbzogaTgwNDIgQVVYIHBvcnQgYXQgMHg2MCwweDY0
-IGlycSAxMg0Kc2VyaW86IGk4MDQyIEtCRCBwb3J0IGF0IDB4NjAsMHg2NCBpcnEgMQ0KaW8gc2No
-ZWR1bGVyIG5vb3AgcmVnaXN0ZXJlZA0KaW8gc2NoZWR1bGVyIGRlYWRsaW5lIHJlZ2lzdGVyZWQN
-Cmxvb3A6IGxvYWRlZCAobWF4IDggZGV2aWNlcykNCnBrdGNkdmQ6IHYwLjIuMGEgMjAwNC0wNy0x
-NCBKZW5zIEF4Ym9lIChheGJvZUBzdXNlLmRlKSBhbmQgcGV0ZXJvMkB0ZWxpYS5jb20NClBQUCBn
-ZW5lcmljIGRyaXZlciB2ZXJzaW9uIDIuNC4yDQpQUFAgRGVmbGF0ZSBDb21wcmVzc2lvbiBtb2R1
-bGUgcmVnaXN0ZXJlZA0KUFBQIEJTRCBDb21wcmVzc2lvbiBtb2R1bGUgcmVnaXN0ZXJlZA0KbmV0
-Y29uc29sZTogZXRoMCBkb2Vzbid0IGV4aXN0LCBhYm9ydGluZy4NClVuaWZvcm0gTXVsdGktUGxh
-dGZvcm0gRS1JREUgZHJpdmVyIFJldmlzaW9uOiA3LjAwYWxwaGEyDQppZGU6IEFzc3VtaW5nIDMz
-TUh6IHN5c3RlbSBidXMgc3BlZWQgZm9yIFBJTyBtb2Rlczsgb3ZlcnJpZGUgd2l0aCBpZGVidXM9
-eHgNCmlkZTA6IEkvTyByZXNvdXJjZSAweDFGMC0weDFGNyBub3QgZnJlZS4NCmlkZTA6IHBvcnRz
-IGFscmVhZHkgaW4gdXNlLCBza2lwcGluZyBwcm9iZQ0KUHJvYmluZyBJREUgaW50ZXJmYWNlIGlk
-ZTEuLi4NCmhkYzogU09OWSBEVkQrLy1SVyBEVy1ENTZBLCBBVEFQSSBDRC9EVkQtUk9NIGRyaXZl
-DQpQcm9iaW5nIElERSBpbnRlcmZhY2UgaWRlMi4uLg0KUHJvYmluZyBJREUgaW50ZXJmYWNlIGlk
-ZTMuLi4NClByb2JpbmcgSURFIGludGVyZmFjZSBpZGU0Li4uDQpQcm9iaW5nIElERSBpbnRlcmZh
-Y2UgaWRlNS4uLg0KaWRlMSBhdCAweDE3MC0weDE3NywweDM3NiBvbiBpcnEgMTUNCmhkYzogQVRB
-UEkgMjRYIERWRC1ST00gRFZELVIgQ0QtUi9SVyBkcml2ZSwgMjA0OGtCIENhY2hlDQpVbmlmb3Jt
-IENELVJPTSBkcml2ZXIgUmV2aXNpb246IDMuMjANCmxpYmF0YSB2ZXJzaW9uIDEuMTEgbG9hZGVk
-Lg0KYWhjaSB2ZXJzaW9uIDEuMDANCkFDUEk6IFBDSSBJbnRlcnJ1cHQgMDAwMDowMDoxZi4yW0Jd
-IC0+IEdTSSAxNyAobGV2ZWwsIGxvdykgLT4gSVJRIDE5Mw0KYWhjaTogcHJvYmUgb2YgMDAwMDow
-MDoxZi4yIGZhaWxlZCB3aXRoIGVycm9yIC0xMg0KYXRhX3BpaXggdmVyc2lvbiAxLjAzDQpBQ1BJ
-OiBQQ0kgSW50ZXJydXB0IDAwMDA6MDA6MWYuMltCXSAtPiBHU0kgMTcgKGxldmVsLCBsb3cpIC0+
-IElSUSAxOTMNCmF0YTogMHgxNzAgSURFIHBvcnQgYnVzeQ0KUENJOiBTZXR0aW5nIGxhdGVuY3kg
-dGltZXIgb2YgZGV2aWNlIDAwMDA6MDA6MWYuMiB0byA2NA0KYXRhMTogU0FUQSBtYXggVURNQS8x
-MzMgY21kIDB4MUYwIGN0bCAweDNGNiBibWRtYSAweEJGQTAgaXJxIDE0DQphdGExOiBkZXYgMCBj
-ZmcgNDk6MmIwMCA4MjozNDZiIDgzOjViMjkgODQ6NDAwMyA4NTozNDY5IDg2OjFhMDkgODc6NDAw
-MyA4ODoyMDNmDQphdGExOiBkZXYgMCBBVEEsIG1heCBVRE1BLzEwMCwgMTU2MzAxNDg4IHNlY3Rv
-cnM6DQphdGExOiBkZXYgMCBjb25maWd1cmVkIGZvciBVRE1BLzEwMA0Kc2NzaTAgOiBhdGFfcGlp
-eA0KICBWZW5kb3I6IEFUQSAgICAgICBNb2RlbDogRlVKSVRTVSBNSFQyMDgwQSAgUmV2OiAwMDZD
-DQogIFR5cGU6ICAgRGlyZWN0LUFjY2VzcyAgICAgICAgICAgICAgICAgICAgICBBTlNJIFNDU0kg
-cmV2aXNpb246IDA1DQpTQ1NJIGRldmljZSBzZGE6IDE1NjMwMTQ4OCA1MTItYnl0ZSBoZHdyIHNl
-Y3RvcnMgKDgwMDI2IE1CKQ0KU0NTSSBkZXZpY2Ugc2RhOiBkcml2ZSBjYWNoZTogd3JpdGUgYmFj
-aw0KU0NTSSBkZXZpY2Ugc2RhOiAxNTYzMDE0ODggNTEyLWJ5dGUgaGR3ciBzZWN0b3JzICg4MDAy
-NiBNQikNClNDU0kgZGV2aWNlIHNkYTogZHJpdmUgY2FjaGU6IHdyaXRlIGJhY2sNCiBzZGE6IHNk
-YTEgc2RhMiBzZGEzIHNkYTQNCkF0dGFjaGVkIHNjc2kgZGlzayBzZGEgYXQgc2NzaTAsIGNoYW5u
-ZWwgMCwgaWQgMCwgbHVuIDANCkF0dGFjaGVkIHNjc2kgZ2VuZXJpYyBzZzAgYXQgc2NzaTAsIGNo
-YW5uZWwgMCwgaWQgMCwgbHVuIDAsICB0eXBlIDANCm9oY2kxMzk0OiAkUmV2OiAxMjUwICQgQmVu
-IENvbGxpbnMgPGJjb2xsaW5zQGRlYmlhbi5vcmc+DQpBQ1BJOiBQQ0kgSW50ZXJydXB0IDAwMDA6
-MDM6MDEuMVtCXSAtPiBHU0kgMTggKGxldmVsLCBsb3cpIC0+IElSUSAyMDENCm9oY2kxMzk0OiBm
-dy1ob3N0MDogT0hDSS0xMzk0IDEuMSAoUENJKTogSVJRPVsyMDFdICBNTUlPPVtkZmNmYzgwMC1k
-ZmNmY2ZmZl0gIE1heCBQYWNrZXQ9WzIwNDhdDQp2aWRlbzEzOTQ6IEluc3RhbGxlZCB2aWRlbzEz
-OTQgbW9kdWxlDQppZWVlMTM5NDogcmF3MTM5NDogL2Rldi9yYXcxMzk0IGRldmljZSBpbml0aWFs
-aXplZA0Kc2JwMjogJFJldjogMTIxOSAkIEJlbiBDb2xsaW5zIDxiY29sbGluc0BkZWJpYW4ub3Jn
-Pg0KaWVlZTEzOTQ6IExvYWRlZCBBTURUUCBkcml2ZXINCmllZWUxMzk0OiBMb2FkZWQgQ01QIGRy
-aXZlcg0KUENJOiBFbmFibGluZyBkZXZpY2UgMDAwMDowMzowMS4wICgwMDAwIC0+IDAwMDIpDQpB
-Q1BJOiBQQ0kgSW50ZXJydXB0IDAwMDA6MDM6MDEuMFtBXSAtPiBHU0kgMTkgKGxldmVsLCBsb3cp
-IC0+IElSUSAyMDkNClllbnRhOiBDYXJkQnVzIGJyaWRnZSBmb3VuZCBhdCAwMDAwOjAzOjAxLjAg
-WzEwMjg6MDE4OV0NClllbnRhOiBJU0EgSVJRIG1hc2sgMHgwNGI4LCBQQ0kgaXJxIDIwOQ0KU29j
-a2V0IHN0YXR1czogMzAwMDAwMDYNCm1pY2U6IFBTLzIgbW91c2UgZGV2aWNlIGNvbW1vbiBmb3Ig
-YWxsIG1pY2UNCkFkdmFuY2VkIExpbnV4IFNvdW5kIEFyY2hpdGVjdHVyZSBEcml2ZXIgVmVyc2lv
-biAxLjAuOXJjMiAgKFRodSBNYXIgMjQgMTA6MzM6MzkgMjAwNSBVVEMpLg0KQUNQSTogUENJIElu
-dGVycnVwdCAwMDAwOjAwOjFlLjJbQV0gLT4gR1NJIDE2IChsZXZlbCwgbG93KSAtPiBJUlEgMTY5
-DQpQQ0k6IFNldHRpbmcgbGF0ZW5jeSB0aW1lciBvZiBkZXZpY2UgMDAwMDowMDoxZS4yIHRvIDY0
-DQppbnB1dDogQVQgVHJhbnNsYXRlZCBTZXQgMiBrZXlib2FyZCBvbiBpc2EwMDYwL3NlcmlvMA0K
-YWxwcy5jOiBFbmFibGluZyBoYXJkd2FyZSB0YXBwaW5nDQppbnB1dDogUFMvMiBNb3VzZSBvbiBp
-c2EwMDYwL3NlcmlvMQ0KaW5wdXQ6IEFscHNQUy8yIEFMUFMgR2xpZGVQb2ludCBvbiBpc2EwMDYw
-L3NlcmlvMQ0KaW50ZWw4eDBfbWVhc3VyZV9hYzk3X2Nsb2NrOiBtZWFzdXJlZCA0OTQ3MCB1c2Vj
-cw0KaW50ZWw4eDA6IGNsb2NraW5nIHRvIDQ4MDAwDQpBQ1BJOiBQQ0kgSW50ZXJydXB0IDAwMDA6
-MDA6MWUuM1tCXSAtPiBHU0kgMTcgKGxldmVsLCBsb3cpIC0+IElSUSAxOTMNClBDSTogU2V0dGlu
-ZyBsYXRlbmN5IHRpbWVyIG9mIGRldmljZSAwMDAwOjAwOjFlLjMgdG8gNjQNCmllZWUxMzk0OiBI
-b3N0IGFkZGVkOiBJRDpCVVNbMC0wMDoxMDIzXSAgR1VJRFszMjRmYzAwMDJlN2Q0YzMwXQ0KTUMn
-OTcgMSBjb252ZXJ0ZXJzIGFuZCBHUElPIG5vdCByZWFkeSAoMHhmZjAwKQ0KQUxTQSBkZXZpY2Ug
-bGlzdDoNCiAgIzA6IEludGVsIElDSDYgd2l0aCBTVEFDOTc1MCw1MSBhdCAweGRmZmZmZTAwLCBp
-cnEgMTY5DQogICMxOiBJbnRlbCBJQ0ggTW9kZW0gYXQgMHhlZTAwLCBpcnEgMTkzDQpORVQ6IFJl
-Z2lzdGVyZWQgcHJvdG9jb2wgZmFtaWx5IDINCklQOiByb3V0aW5nIGNhY2hlIGhhc2ggdGFibGUg
-b2YgODE5MiBidWNrZXRzLCA2NEtieXRlcw0KVENQIGVzdGFibGlzaGVkIGhhc2ggdGFibGUgZW50
-cmllczogMjYyMTQ0IChvcmRlcjogOSwgMjA5NzE1MiBieXRlcykNClRDUCBiaW5kIGhhc2ggdGFi
-bGUgZW50cmllczogNjU1MzYgKG9yZGVyOiA2LCAyNjIxNDQgYnl0ZXMpDQpUQ1A6IEhhc2ggdGFi
-bGVzIGNvbmZpZ3VyZWQgKGVzdGFibGlzaGVkIDI2MjE0NCBiaW5kIDY1NTM2KQ0KSVB2NCBvdmVy
-IElQdjQgdHVubmVsaW5nIGRyaXZlcg0KR1JFIG92ZXIgSVB2NCB0dW5uZWxpbmcgZHJpdmVyDQpO
-RVQ6IFJlZ2lzdGVyZWQgcHJvdG9jb2wgZmFtaWx5IDENCk5FVDogUmVnaXN0ZXJlZCBwcm90b2Nv
-bCBmYW1pbHkgMTANCklQdjYgb3ZlciBJUHY0IHR1bm5lbGluZyBkcml2ZXINCk5FVDogUmVnaXN0
-ZXJlZCBwcm90b2NvbCBmYW1pbHkgMTcNCkJsdWV0b290aDogTDJDQVAgdmVyIDIuNw0KQmx1ZXRv
-b3RoOiBMMkNBUCBzb2NrZXQgbGF5ZXIgaW5pdGlhbGl6ZWQNCkJsdWV0b290aDogU0NPIChWb2lj
-ZSBMaW5rKSB2ZXIgMC40DQpCbHVldG9vdGg6IFNDTyBzb2NrZXQgbGF5ZXIgaW5pdGlhbGl6ZWQN
-CkJsdWV0b290aDogUkZDT01NIHZlciAxLjUNCkJsdWV0b290aDogUkZDT01NIHNvY2tldCBsYXll
-ciBpbml0aWFsaXplZA0KQmx1ZXRvb3RoOiBSRkNPTU0gVFRZIGxheWVyIGluaXRpYWxpemVkDQpC
-bHVldG9vdGg6IEJORVAgKEV0aGVybmV0IEVtdWxhdGlvbikgdmVyIDEuMg0KQmx1ZXRvb3RoOiBC
-TkVQIGZpbHRlcnM6IHByb3RvY29sIG11bHRpY2FzdA0KQmx1ZXRvb3RoOiBISURQIChIdW1hbiBJ
-bnRlcmZhY2UgRW11bGF0aW9uKSB2ZXIgMS4xDQo4MDIuMVEgVkxBTiBTdXBwb3J0IHYxLjggQmVu
-IEdyZWVhciA8Z3JlZWFyYkBjYW5kZWxhdGVjaC5jb20+DQpBbGwgYnVncyBhZGRlZCBieSBEYXZp
-ZCBTLiBNaWxsZXIgPGRhdmVtQHJlZGhhdC5jb20+DQphY3BpLWNwdWZyZXE6IENQVTAgLSBBQ1BJ
-IHBlcmZvcm1hbmNlIG1hbmFnZW1lbnQgYWN0aXZhdGVkLg0KVGVzdGluZyBOTUkgd2F0Y2hkb2cg
-Li4uIE9LLg0KQUNQSSB3YWtldXAgZGV2aWNlczogDQogTElEIFBCVE4gUENJMCBVU0IwIFVTQjEg
-VVNCMiBVU0I0IFVTQjMgTU9ETSBQQ0lFIA0KQUNQSTogKHN1cHBvcnRzIFMwIFMzIFM0IFM0Ymlv
-cyBTNSkNCmtqb3VybmFsZCBzdGFydGluZy4gIENvbW1pdCBpbnRlcnZhbCA1IHNlY29uZHMNCkVY
-VDMtZnM6IG1vdW50ZWQgZmlsZXN5c3RlbSB3aXRoIG9yZGVyZWQgZGF0YSBtb2RlLg0KVkZTOiBN
-b3VudGVkIHJvb3QgKGV4dDMgZmlsZXN5c3RlbSkgcmVhZG9ubHkuDQpGcmVlaW5nIHVudXNlZCBr
-ZXJuZWwgbWVtb3J5OiAxNzZrIGZyZWVkDQpFWFQzLWZzIHdhcm5pbmc6IG1heGltYWwgbW91bnQg
-Y291bnQgcmVhY2hlZCwgcnVubmluZyBlMmZzY2sgaXMgcmVjb21tZW5kZWQNCkVYVDMgRlMgb24g
-c2RhMiwgaW50ZXJuYWwgam91cm5hbA0K
-
-
---=-iy6CUB5hsS2la/OZDFhq--
-
---=-IqoWfr6eccHYt1E54+EG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQBC/dngJgD/6j32wUYRAre8AJsF+iODliDEV9cFxOjuAaHGdTvYBgCeNbLA
-Nb49lahkzL805/UMdqI5A5M=
-=vsHP
------END PGP SIGNATURE-----
-
---=-IqoWfr6eccHYt1E54+EG--
