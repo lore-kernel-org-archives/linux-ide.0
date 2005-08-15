@@ -1,44 +1,38 @@
-From: =?ISO-8859-1?Q?Dieter_St=FCken?= <stueken@conterra.de>
-Subject: Re: IDENTIFY DEVICE not working any more?
-Date: Mon, 15 Aug 2005 15:54:13 +0200
-Message-ID: <43009E85.40606@conterra.de>
-References: <43005B4D.1090801@conterra.de> <1124102095.8189.45.camel@localhost.localdomain> <43009642.40805@conterra.de> <4300998D.6000205@dtbb.net>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH 2.6.13-rc6] PCI/libata INTx cleanup
+Date: Mon, 15 Aug 2005 09:31:55 -0700
+Message-ID: <20050815163155.GB10257@suse.de>
+References: <20050803204709.8BA0720B06@lns1058.lss.emc.com> <42FBA08C.5040103@pobox.com> <20050812171043.CF61020E8B@lns1058.lss.emc.com> <20050812182253.GA7842@suse.de> <42FD14E9.8060502@pobox.com> <20050812224303.F40A820E94@lns1058.lss.emc.com> <42FD3EDF.7050809@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vvv.conterra.de ([212.124.44.162]:43729 "EHLO conterra.de")
-	by vger.kernel.org with ESMTP id S964772AbVHONyR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Aug 2005 09:54:17 -0400
-Received: from localhost (unknown [127.0.0.1])
-	by conterra.de (-) with ESMTP id 4CCB71C88E2
-	for <linux-ide@vger.kernel.org>; Mon, 15 Aug 2005 15:54:16 +0200 (CEST)
-In-Reply-To: <4300998D.6000205@dtbb.net>
+Received: from lyle.provo.novell.com ([137.65.81.174]:17247 "EHLO
+	lyle.provo.novell.com") by vger.kernel.org with ESMTP
+	id S964828AbVHOQcA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 Aug 2005 12:32:00 -0400
+Content-Disposition: inline
+In-Reply-To: <42FD3EDF.7050809@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Brett Russ <russb@emc.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tyler wrote:
-> Were the 2.6.11 kernels you have included with a distribution such as=
-=20
-> ubuntu, fedora, etc?  If it was, there's a good chance that it has th=
-e=20
-> passthru libata patch, that allows you to access drives using smartct=
-l,=20
-> with the special ata flag.
+On Fri, Aug 12, 2005 at 08:29:19PM -0400, Jeff Garzik wrote:
+> Brett Russ wrote:
+> >Simple cleanup to eliminate X copies of the pci_enable_intx() function
+> >in libata.  Moved ahci.c's pci_intx() to pci.c and use it throughout
+> >libata and msi.c.
+> >
+> >Signed-off-by: Brett Russ <russb@emc.com>
+> 
+> Looks good to me.
+> 
+> Greg, do you want to queue this (since it touches PCI), or should I 
+> (since it touches SATA drivers)?
 
-That may be the explanation: I used prebuild kernels from SuSE and got =
-the
-illusion the SMART enabled libata went into the recent kernels since 2.=
-6.9
-by default. So I'll try with the libata patch explicitely again.
+I'll take it and add it to my trees and send it off to Linus after
+2.6.13 comes out.
 
-Thanks for the tip.
+thanks,
 
-Dieter.
---=20
-Dieter St=FCken, con terra GmbH, M=FCnster
-     stueken@conterra.de
-     http://www.conterra.de/
-     (0)251-7474-501
+greg k-h
