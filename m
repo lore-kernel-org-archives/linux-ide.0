@@ -1,48 +1,36 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 2.6.13-rc6] PCI/libata INTx cleanup
-Date: Mon, 15 Aug 2005 13:06:37 -0700
-Message-ID: <20050815200637.GA15871@kroah.com>
-References: <20050803204709.8BA0720B06@lns1058.lss.emc.com> <42FBA08C.5040103@pobox.com> <20050812171043.CF61020E8B@lns1058.lss.emc.com> <20050812182253.GA7842@suse.de> <42FD14E9.8060502@pobox.com> <20050812224303.F40A820E94@lns1058.lss.emc.com> <20050815185732.GA15216@kroah.com> <4300E83F.1090401@emc.com>
+From: "JAVS" <mueth@dr.com>
+Subject: kKh <Name>, we invite You to elite sites with 4 in 1 l9j
+Date: Mon, 15 Aug 2005 17:09:40 +0000
+Message-ID: <LJAJIK45HG16KE35@dr.com>
+References: <955CAL9H667ICF01@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kroah.org ([69.55.234.183]:50337 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S964920AbVHOUHI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Aug 2005 16:07:08 -0400
-Content-Disposition: inline
-In-Reply-To: <4300E83F.1090401@emc.com>
+Received: from zeus2.kernel.org ([204.152.191.36]:21957 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S964940AbVHOUJT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Aug 2005 16:09:19 -0400
+Received: from aar.alcatel-alsthom.fr (catv-506275ab.catv.broadband.hu [80.98.117.171])
+	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id j7FK9Ggc005644
+	for <linux-ide@vger.kernel.org>; Mon, 15 Aug 2005 13:09:17 -0700
+In-Reply-To: <955CAL9H667ICF01@vger.kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brett Russ <russb@emc.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Greg KH <gregkh@suse.de>
+To: Linux-ide <linux-ide@vger.kernel.org>
 
-On Mon, Aug 15, 2005 at 03:08:47PM -0400, Brett Russ wrote:
-> Greg KH wrote:
-> >On Fri, Aug 12, 2005 at 06:43:03PM -0400, Brett Russ wrote:
-> >
-> >>Simple cleanup to eliminate X copies of the pci_enable_intx() function
-> >>in libata.  Moved ahci.c's pci_intx() to pci.c and use it throughout
-> >>libata and msi.c.
-> >>
-> >>Signed-off-by: Brett Russ <russb@emc.com>
-> >
-> >
-> >It would have been nice if you had built this code :(
-> >
-> >Hint, get rid of all TRUE and FALSE usages in your patch.  Care to try
-> >again?
-> >
-> >thanks,
-> >
-> >greg k-h
-> 
-> 
-> Hmm, I did build it before submitting, saw not even a warning.  So I 
-> just rebuilt it again to verify, and same thing.  Why would my tree work 
-> and not yours?  config file?
+Hello Linux-ide,
 
-You don't have MSI enabled in yours :(
+At this time we can offer a small update at our system - BD-MAGAZINE Issue N1,2,3,4,5!
+... When it's  late  at night , all ya really  need is some  midnight passion. See 
+a video few sweet young models show fashion for your passion within these pages.
+Tanya, Marisha, Oksana and Alena.They have new video serries of beautiful Tanya...
+  
+             http://TYThdhrtTCG.leetempire.com/5/?Ulf7tzpn
+  
+Our great and unique offer: for each subscribtion You get access to another
+three sites from our portal for 31 days... without any additional payments!
+Simply subscribe, select and use!
 
-thanks,
+MSGID: lOH30n2v4JGZDFTUTaml303Ylt5FRw3e
 
-greg k-h
+
