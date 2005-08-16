@@ -1,121 +1,90 @@
-From: "Naren (Narendra) Sankar" <nsankar@broadcom.com>
-Subject: [PATCH 2.6.13-rc6 ] serverworks: Add support for new
- southbridge IDE
-Date: Tue, 16 Aug 2005 11:30:28 -0700
-Message-ID: <8AFFB74283C8EF46ACA4C331087033F10F5B04@NT-SJCA-0750.brcm.ad.broadcom.com>
+From: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Subject: Re: [PATCH] IDE: don't offer IDE_GENERIC on ia64
+Date: Tue, 16 Aug 2005 13:16:32 -0600
+Message-ID: <200508161316.32602.bjorn.helgaas@hp.com>
+References: <200508111424.43150.bjorn.helgaas@hp.com> <200508151507.22776.bjorn.helgaas@hp.com> <58cb370e050816023845b57a74@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="----_=_NextPart_001_01C5A290.9868BA7B"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:38417 "EHLO
-	MMS1.broadcom.com") by vger.kernel.org with ESMTP id S1030288AbVHPSay
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Aug 2005 14:30:54 -0400
-Content-class: urn:content-classes:message
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org
-
-This is a multi-part message in MIME format.
-
-------_=_NextPart_001_01C5A290.9868BA7B
 Content-Type: text/plain;
- charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ia64-owner@vger.kernel.org>
+In-Reply-To: <58cb370e050816023845b57a74@mail.gmail.com>
+Content-Disposition: inline
+Sender: linux-ia64-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Hi Everyone
+On Tuesday 16 August 2005 3:38 am, Bartlomiej Zolnierkiewicz wrote:
+> On 8/15/05, Bjorn Helgaas <bjorn.helgaas@hp.com> wrote:
+> > On Friday 12 August 2005 2:40 am, Alan Cox wrote:
+> Agreed but I have few comments:
+> * is this change OK w.r.t. IA64_HP_SIM?
 
-Description -
+Kernels for the HP simulator (ski) use a SCSI model, not IDE,
+so they should be OK.
 
-BCM5785 (HT1000) is a Opteron Southbridge from Serverworks/Broadcom that
-Incorporates a single channel ATA100 IDE controller that is functionally
-Identical to the Serverworks CSB6 IDE controller. This patch adds =
-support
-For the new PCI device ID and also the support for this controller.
+The SGI simulator *does* use IDE, and this will break that.  But
+my friends at SGI are looking at exposing the simulated IDE device
+via PCI, which should fix it.
 
-Signed-off-by: Narendra Sankar <nsankar@broadcom.com>
+> * removing IDE_ARCH_OBSOLETE_INIT define has some implications,
+>   * non-functional ide-cs driver (but there is no PCMCIA on IA64?)
 
+PCMCIA might be of theoretical interest, but not important enough
+by itself to keep IDE_ARCH_OBSOLETE_INIT, IMHO.  And it sounds like
+ide-cs can be fixed fairly easily to not depend on it.
 
-For your review
-Thanks
-=20
-Naren Sankar
-System Architect
-Chipset Product Line
-Broadcom Corporation
-2451 Mission College Blvd
-Santa Clara, CA 95054
-Office:  (408) 922-7143
-Email:  nsankar@broadcom.com <mailto:nsankar@broadcom.com> =20
+>   * ordering change for ide-pnp interfaces in case of no IDE devices
+>     on default IDE PCI ports, (but there aren't any ide-pnp devices on IA64?)
 
-------_=_NextPart_001_01C5A290.9868BA7B
-Content-Type: application/octet-stream;
- name=ide.patch
-Content-Transfer-Encoding: base64
-Content-Description: ide.patch
-Content-Disposition: attachment;
- filename=ide.patch
+I'm not aware of any ide-pnp devices on IA64, so I don't think this
+is a problem for us.  The SGI simulator could use ide-pnp via
+PNPACPI, but ordering shouldn't be a problem there.
 
-ZGlmZiAtdXByTiAtWCBsaW51eC0yLjYuMTMtcmM2L0RvY3VtZW50YXRpb24vZG9udGRpZmYgbGlu
-dXgtMi42LjEzLXJjNi9kcml2ZXJzL2lkZS9wY2kvc2VydmVyd29ya3MuYyBsaW51eC0yLjYuMTMt
-cmM2LmJyY20vZHJpdmVycy9pZGUvcGNpL3NlcnZlcndvcmtzLmMKLS0tIGxpbnV4LTIuNi4xMy1y
-YzYvZHJpdmVycy9pZGUvcGNpL3NlcnZlcndvcmtzLmMJMjAwNS0wOC0wNyAxMToxODo1Ni4wMDAw
-MDAwMDAgLTA3MDAKKysrIGxpbnV4LTIuNi4xMy1yYzYuYnJjbS9kcml2ZXJzL2lkZS9wY2kvc2Vy
-dmVyd29ya3MuYwkyMDA1LTA4LTE2IDExOjE5OjIzLjYzNTc3NDAwMCAtMDcwMApAQCAtMjEsNiAr
-MjEsOSBAQAogICoKICAqICAgQ1NCNjogYENoYW1waW9uIFNvdXRoIEJyaWRnZScgSURFIEludGVy
-ZmFjZSAob3B0aW9uYWw6IHRoaXJkIGNoYW5uZWwpCiAgKgorICogICBIVDEwMDA6IEFLQSBCQ001
-Nzg1IC0gSHlwZXJ0cmFuc3BvcnQgU291dGhicmlkZ2UgZm9yIE9wdGVyb24gc3lzdGVtcy4gSURF
-CisgKiAgIGNvbnRyb2xsZXIgc2FtZSBhcyB0aGUgQ1NCNi4gU2luZ2xlIGNoYW5uZWwgQVRBMTAw
-IG9ubHkuCisgKgogICogRG9jdW1lbnRhdGlvbjoKICAqCUF2YWlsYWJsZSB1bmRlciBOREEgb25s
-eS4gRXJyYXRhIGluZm8gdmVyeSBoYXJkIHRvIGdldC4KICAqCkBAIC03MSw2ICs3NCw4IEBAIHN0
-YXRpYyB1OCBzdndrc19yYXRlbWFzayAoaWRlX2RyaXZlX3QgKmQKIAlpZiAoIXN2d2tzX3Jldmlz
-aW9uKQogCQlwY2lfcmVhZF9jb25maWdfYnl0ZShkZXYsIFBDSV9SRVZJU0lPTl9JRCwgJnN2d2tz
-X3JldmlzaW9uKTsKIAorCWlmIChkZXYtPmRldmljZSA9PSBQQ0lfREVWSUNFX0lEX1NFUlZFUldP
-UktTX0hUMTAwMElERSkKKwkJcmV0dXJuIDI7CiAJaWYgKGRldi0+ZGV2aWNlID09IFBDSV9ERVZJ
-Q0VfSURfU0VSVkVSV09SS1NfT1NCNElERSkgewogCQl1MzIgcmVnID0gMDsKIAkJaWYgKGlzYV9k
-ZXYpCkBAIC0xMDksNiArMTE0LDcgQEAgc3RhdGljIHU4IHN2d2tzX2NzYl9jaGVjayAoc3RydWN0
-IHBjaV9kZQogCQljYXNlIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NCNUlERToKIAkJY2Fz
-ZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktTX0NTQjZJREU6CiAJCWNhc2UgUENJX0RFVklDRV9J
-RF9TRVJWRVJXT1JLU19DU0I2SURFMjoKKwkJY2FzZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktT
-X0hUMTAwMElERToKIAkJCXJldHVybiAxOwogCQlkZWZhdWx0OgogCQkJYnJlYWs7CkBAIC00Mzgs
-NiArNDQ0LDEzIEBAIHN0YXRpYyB1bnNpZ25lZCBpbnQgX19kZXZpbml0IGluaXRfY2hpcHMKIAkJ
-CWJ0ciB8PSAoc3Z3a3NfcmV2aXNpb24gPj0gU1ZXS1NfQ1NCNV9SRVZJU0lPTl9ORVcpID8gMHgz
-IDogMHgyOwogCQlwY2lfd3JpdGVfY29uZmlnX2J5dGUoZGV2LCAweDVBLCBidHIpOwogCX0KKwkv
-KiBTZXR1cCBIVDEwMDAgU291dGhCcmlkZ2UgQ29udHJvbGxlciAtIFNpbmdsZSBDaGFubmVsIE9u
-bHkgKi8KKwllbHNlIGlmIChkZXYtPmRldmljZSA9PSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktT
-X0hUMTAwMElERSkgeworCQlwY2lfcmVhZF9jb25maWdfYnl0ZShkZXYsIDB4NUEsICZidHIpOwor
-CQlidHIgJj0gfjB4NDA7CisJCWJ0ciB8PSAweDM7CisJCXBjaV93cml0ZV9jb25maWdfYnl0ZShk
-ZXYsIDB4NUEsICZidHIpOworCX0KIAogCXJldHVybiAoZGV2LT5pcnEpID8gZGV2LT5pcnEgOiAw
-OwogfQpAQCAtNjI5LDYgKzY0MiwxNSBAQCBzdGF0aWMgaWRlX3BjaV9kZXZpY2VfdCBzZXJ2ZXJ3
-b3Jrc19jaGlwCiAJCS5jaGFubmVscwk9IDEsCS8qIDIgKi8KIAkJLmF1dG9kbWEJPSBBVVRPRE1B
-LAogCQkuYm9vdGFibGUJPSBPTl9CT0FSRCwKKwl9LHsJLyogNCAqLworCQkubmFtZQkJPSAiU3Zy
-V2tzIEhUMTAwMCIsCisJCS5pbml0X3NldHVwCT0gaW5pdF9zZXR1cF9zdndrcywKKwkJLmluaXRf
-Y2hpcHNldAk9IGluaXRfY2hpcHNldF9zdndrcywKKwkJLmluaXRfaHdpZgk9IGluaXRfaHdpZl9z
-dndrcywKKwkJLmluaXRfZG1hCT0gaW5pdF9kbWFfc3Z3a3MsCisJCS5jaGFubmVscwk9IDEsCS8q
-IDIgKi8KKwkJLmF1dG9kbWEJPSBBVVRPRE1BLAorCQkuYm9vdGFibGUJPSBPTl9CT0FSRCwKIAl9
-CiB9OwogCkBAIC02NTMsNiArNjc1LDcgQEAgc3RhdGljIHN0cnVjdCBwY2lfZGV2aWNlX2lkIHN2
-d2tzX3BjaV90YgogCXsgUENJX1ZFTkRPUl9JRF9TRVJWRVJXT1JLUywgUENJX0RFVklDRV9JRF9T
-RVJWRVJXT1JLU19DU0I1SURFLCBQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCAwLCAwLCAxfSwKIAl7
-IFBDSV9WRU5ET1JfSURfU0VSVkVSV09SS1MsIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NC
-NklERSwgUENJX0FOWV9JRCwgUENJX0FOWV9JRCwgMCwgMCwgMn0sCiAJeyBQQ0lfVkVORE9SX0lE
-X1NFUlZFUldPUktTLCBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktTX0NTQjZJREUyLCBQQ0lfQU5Z
-X0lELCBQQ0lfQU5ZX0lELCAwLCAwLCAzfSwKKwl7IFBDSV9WRU5ET1JfSURfU0VSVkVSV09SS1Ms
-IFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfSFQxMDAwSURFLCBQQ0lfQU5ZX0lELCBQQ0lfQU5Z
-X0lELCAwLCAwLCA0fSwKIAl7IDAsIH0sCiB9OwogTU9EVUxFX0RFVklDRV9UQUJMRShwY2ksIHN2
-d2tzX3BjaV90YmwpOwpkaWZmIC11cHJOIC1YIGxpbnV4LTIuNi4xMy1yYzYvRG9jdW1lbnRhdGlv
-bi9kb250ZGlmZiBsaW51eC0yLjYuMTMtcmM2L2luY2x1ZGUvbGludXgvcGNpX2lkcy5oIGxpbnV4
-LTIuNi4xMy1yYzYuYnJjbS9pbmNsdWRlL2xpbnV4L3BjaV9pZHMuaAotLS0gbGludXgtMi42LjEz
-LXJjNi9pbmNsdWRlL2xpbnV4L3BjaV9pZHMuaAkyMDA1LTA4LTA3IDExOjE4OjU2LjAwMDAwMDAw
-MCAtMDcwMAorKysgbGludXgtMi42LjEzLXJjNi5icmNtL2luY2x1ZGUvbGludXgvcGNpX2lkcy5o
-CTIwMDUtMDgtMTYgMDk6NTg6MzcuODYwOTcwMDAwIC0wNzAwCkBAIC0xNTgwLDYgKzE1ODAsNyBA
-QAogI2RlZmluZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktTX09TQjRJREUgMHgwMjExCiAjZGVm
-aW5lIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NCNUlERSAweDAyMTIKICNkZWZpbmUgUENJ
-X0RFVklDRV9JRF9TRVJWRVJXT1JLU19DU0I2SURFIDB4MDIxMworI2RlZmluZSBQQ0lfREVWSUNF
-X0lEX1NFUlZFUldPUktTX0hUMTAwMElERSAweDAyMTQKICNkZWZpbmUgUENJX0RFVklDRV9JRF9T
-RVJWRVJXT1JLU19DU0I2SURFMiAweDAyMTcKICNkZWZpbmUgUENJX0RFVklDRV9JRF9TRVJWRVJX
-T1JLU19PU0I0VVNCIDB4MDIyMAogI2RlZmluZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktTX0NT
-QjVVU0IgUENJX0RFVklDRV9JRF9TRVJWRVJXT1JLU19PU0I0VVNCCg==
+But it is interesting that PNP IDE devices are discovered *after*
+PCI devices.  For serial, we do PNP before PCI, on the theory that
+PNP devices are usually built-in and shouldn't move if you just plug
+in a new PCI card.
 
-------_=_NextPart_001_01C5A290.9868BA7B--
+>   * non-functional HDIO_REGISTER_HWIF ioctl (ain't really working either)
 
+HDIO_SCAN_HWIF - I don't know about this one.  How are we supposed to
+follow the "new ports shouldn't define IDE_ARCH_OBSOLETE_INIT" injunction
+if we lose all this functionality without it?  ia64 is about as close to
+a new port as you get :-)
+
+> This changes default default MAX_HWIFS value from
+> 10 (6 in case of !CONFIG_PCI) to 4 which is not desirable.
+> 
+> IMO the best thing for now is to leave MAX_HWIFS alone.
+
+IDE on ia64 is little-used, so I'm OK with leaving it alone, but
+I do think it's wrong for an architecture with no real restriction
+to specify MAX_HWIFS in ide.h.  Better to have the config option,
+and make the default there larger if necessary.
+
+> > I noticed that on a box with no devices on ide1, we probed
+> > ide1 twice -- once via ide_setup_pci_device() and again via
+> > ide_generic_init().  This isn't fatal, since the generic probe
+> > uses the I/O ports setup by PCI IDE, but it's unnecessary
+> > and a bit ugly.
+> > 
+> > I stuck in a "hwif->noprobe = 1" at the point where probe_hwif()
+> > decides the interface isn't present, which prevents the second
+> > probe by ide_generic_init().
+> 
+> Please separate this change out - it is a nice fix but it affects other
+> archs/drivers and somebody needs to audit all IDE host drivers that
+> they set hwif->noprobe = 0 correctly before probing in case of re-using
+> hwif that was already owned/probed by other driver.
+
+OK, I'll split this and look into it a bit more.
+
+> Please make IDE_GENERIC depend on !IA_64.
+
+Huh?  The first patch I posted did exactly that, nothing more.  But
+Alan pointed out that I should instead clean up asm-ia64/ide.h, which
+I think leads to a nicer solution.
+
+Thanks for the detailed comments!
