@@ -1,71 +1,121 @@
-From: Yuri Kirsanov <flash@rccb.ru>
-Subject: Re[6]: TX4000 RAID and sata_promise
-Date: Tue, 21 Jun 2005 22:24:24 +0400
-Message-ID: <253506078.20050621222424@rccb.ru>
-References: <01f501c5a223$9faf5470$6f0aa8c0@rgkb.local>
- <4301E5C5.2030203@dtbb.net>  <1124199054.5550.71.camel@localhost.localdomain>
- <015701c5a267$594284f0$6f0aa8c0@rgkb.local>
- <1124200207.5550.74.camel@localhost.localdomain>
- <016a01c5a26a$1745ca50$6f0aa8c0@rgkb.local>
- <1124200516.5550.77.camel@localhost.localdomain>
- <017501c5a26a$bb31bfc0$6f0aa8c0@rgkb.local>
- <1124202300.19419.0.camel@localhost.localdomain>
- <1721975015.20050621203841@rccb.ru>
- <1124211467.19419.24.camel@localhost.localdomain>
- <71290359.20050621214728@rccb.ru>
- <1124215786.29001.2.camel@localhost.localdomain>
-Reply-To: Yuri Kirsanov <flash@rccb.ru>
+From: "Naren (Narendra) Sankar" <nsankar@broadcom.com>
+Subject: [PATCH 2.6.13-rc6 ] serverworks: Add support for new
+ southbridge IDE
+Date: Tue, 16 Aug 2005 11:30:28 -0700
+Message-ID: <8AFFB74283C8EF46ACA4C331087033F10F5B04@NT-SJCA-0750.brcm.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="----_=_NextPart_001_01C5A290.9868BA7B"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [213.85.106.100] ([213.85.106.100]:46555 "EHLO rccb.ru")
-	by vger.kernel.org with ESMTP id S1030268AbVHPSXk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Aug 2005 14:23:40 -0400
-In-Reply-To: <1124215786.29001.2.camel@localhost.localdomain>
+Received: from mms1.broadcom.com ([216.31.210.17]:38417 "EHLO
+	MMS1.broadcom.com") by vger.kernel.org with ESMTP id S1030288AbVHPSay
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Aug 2005 14:30:54 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Erik Slagter <erik@slagter.name>
+To: B.Zolnierkiewicz@elka.pw.edu.pl
 Cc: linux-ide@vger.kernel.org
 
-ES> Hmm, then I guess it would be very interesting to know WHY it doesn't
-ES> load at boot time! What are the symptoms?
+This is a multi-part message in MIME format.
 
-ES> It seems to strange to me that sata reports PATA devices... What kind of
-ES> harddisks do you connected (brand, type, pata/sata?)
+------_=_NextPart_001_01C5A290.9868BA7B
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
 
-I don't know why it doesn't load autoload, maybe I need to insert
-something into /etc/modprobe.conf?
+Hi Everyone
 
-Here's my 'lspci' and 'lspcidrake' (lspcidrake is a Mandrake Linux
-tool):
+Description -
 
-[root@mandr ~]# lspci
-00:00.0 Host bridge: Intel Corporation 82815 815 Chipset Host Bridge and Memory Controller Hub (rev 02)
-00:02.0 VGA compatible controller: Intel Corporation 82815 CGC [Chipset Graphics Controller] (rev 02)
-00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 02)
-00:1f.0 ISA bridge: Intel Corporation 82801BA ISA Bridge (LPC) (rev 02)
-00:1f.1 IDE interface: Intel Corporation 82801BA IDE U100 (rev 02)
-00:1f.2 USB Controller: Intel Corporation 82801BA/BAM USB (Hub #1) (rev 02)
-00:1f.3 SMBus: Intel Corporation 82801BA/BAM SMBus (rev 02)
-00:1f.4 USB Controller: Intel Corporation 82801BA/BAM USB (Hub #2) (rev 02)
-00:1f.5 Multimedia audio controller: Intel Corporation 82801BA/BAM AC'97 Audio (rev 02)
-01:02.0 Ethernet controller: 3Com Corporation 3c905C-TX/TX-M [Tornado] (rev 78)
-01:09.0 RAID bus controller: Promise Technology, Inc. PDC20619 (FastTrak TX4000) (rev 02)
+BCM5785 (HT1000) is a Opteron Southbridge from Serverworks/Broadcom that
+Incorporates a single channel ATA100 IDE controller that is functionally
+Identical to the Serverworks CSB6 IDE controller. This patch adds =
+support
+For the new PCI device ID and also the support for this controller.
+
+Signed-off-by: Narendra Sankar <nsankar@broadcom.com>
 
 
-[root@mandr ~]# lspcidrake
-intel-agp       : Intel Corp.|82815 815 Chipset Host Bridge and Memory Controller Hub [BRIDGE_HOST]
-Card:Intel 815  : Intel Corp.|82815 CGC [Chipset Graphics Controller] [DISPLAY_VGA]
-hw_random       : Intel Corp.|82820 815e (Camino 2) Chipset PCI [BRIDGE_PCI]
-i810-tco        : Intel Corp.|82820 815e (Camino 2) Chipset ISA Bridge (ICH2) [BRIDGE_ISA]
-piix            : Intel Corp.|82820 815e (Camino 2) Chipset IDE U100 [STORAGE_IDE]
-usb-uhci        : Intel Corp.|82820 815e (Camino 2) Chipset USB (Hub A) [SERIAL_USB]
-i2c-i801        : Intel Corp.|82820 815e (Camino 2) Chipset SMBus [SERIAL_SMBUS]
-usb-uhci        : Intel Corp.|82820 815e (Camino 2) Chipset USB (Hub B) [SERIAL_USB]
-i810_audio      : Intel Corp.|ICH2 810 Chipset AC'97 Audio Controller [MULTIMEDIA_AUDIO]
-3c59x           : 3Com Corp.|3c905C-TX [Fast Etherlink] [NETWORK_ETHERNET]
-sata_promise    : Promise Technology|FastTrak TX4000 Controller [STORAGE_RAID]
-hub             : Linux 2.6.12.4-10flh uhci_hcd|Intel Corporation 82801BA/BAM USB (Hub #2) [Hub|Unused]
-hub             : Linux 2.6.12.4-10flh uhci_hcd|Intel Corporation 82801BA/BAM USB (Hub #1) [Hub|Unused]
+For your review
+Thanks
+=20
+Naren Sankar
+System Architect
+Chipset Product Line
+Broadcom Corporation
+2451 Mission College Blvd
+Santa Clara, CA 95054
+Office:  (408) 922-7143
+Email:  nsankar@broadcom.com <mailto:nsankar@broadcom.com> =20
+
+------_=_NextPart_001_01C5A290.9868BA7B
+Content-Type: application/octet-stream;
+ name=ide.patch
+Content-Transfer-Encoding: base64
+Content-Description: ide.patch
+Content-Disposition: attachment;
+ filename=ide.patch
+
+ZGlmZiAtdXByTiAtWCBsaW51eC0yLjYuMTMtcmM2L0RvY3VtZW50YXRpb24vZG9udGRpZmYgbGlu
+dXgtMi42LjEzLXJjNi9kcml2ZXJzL2lkZS9wY2kvc2VydmVyd29ya3MuYyBsaW51eC0yLjYuMTMt
+cmM2LmJyY20vZHJpdmVycy9pZGUvcGNpL3NlcnZlcndvcmtzLmMKLS0tIGxpbnV4LTIuNi4xMy1y
+YzYvZHJpdmVycy9pZGUvcGNpL3NlcnZlcndvcmtzLmMJMjAwNS0wOC0wNyAxMToxODo1Ni4wMDAw
+MDAwMDAgLTA3MDAKKysrIGxpbnV4LTIuNi4xMy1yYzYuYnJjbS9kcml2ZXJzL2lkZS9wY2kvc2Vy
+dmVyd29ya3MuYwkyMDA1LTA4LTE2IDExOjE5OjIzLjYzNTc3NDAwMCAtMDcwMApAQCAtMjEsNiAr
+MjEsOSBAQAogICoKICAqICAgQ1NCNjogYENoYW1waW9uIFNvdXRoIEJyaWRnZScgSURFIEludGVy
+ZmFjZSAob3B0aW9uYWw6IHRoaXJkIGNoYW5uZWwpCiAgKgorICogICBIVDEwMDA6IEFLQSBCQ001
+Nzg1IC0gSHlwZXJ0cmFuc3BvcnQgU291dGhicmlkZ2UgZm9yIE9wdGVyb24gc3lzdGVtcy4gSURF
+CisgKiAgIGNvbnRyb2xsZXIgc2FtZSBhcyB0aGUgQ1NCNi4gU2luZ2xlIGNoYW5uZWwgQVRBMTAw
+IG9ubHkuCisgKgogICogRG9jdW1lbnRhdGlvbjoKICAqCUF2YWlsYWJsZSB1bmRlciBOREEgb25s
+eS4gRXJyYXRhIGluZm8gdmVyeSBoYXJkIHRvIGdldC4KICAqCkBAIC03MSw2ICs3NCw4IEBAIHN0
+YXRpYyB1OCBzdndrc19yYXRlbWFzayAoaWRlX2RyaXZlX3QgKmQKIAlpZiAoIXN2d2tzX3Jldmlz
+aW9uKQogCQlwY2lfcmVhZF9jb25maWdfYnl0ZShkZXYsIFBDSV9SRVZJU0lPTl9JRCwgJnN2d2tz
+X3JldmlzaW9uKTsKIAorCWlmIChkZXYtPmRldmljZSA9PSBQQ0lfREVWSUNFX0lEX1NFUlZFUldP
+UktTX0hUMTAwMElERSkKKwkJcmV0dXJuIDI7CiAJaWYgKGRldi0+ZGV2aWNlID09IFBDSV9ERVZJ
+Q0VfSURfU0VSVkVSV09SS1NfT1NCNElERSkgewogCQl1MzIgcmVnID0gMDsKIAkJaWYgKGlzYV9k
+ZXYpCkBAIC0xMDksNiArMTE0LDcgQEAgc3RhdGljIHU4IHN2d2tzX2NzYl9jaGVjayAoc3RydWN0
+IHBjaV9kZQogCQljYXNlIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NCNUlERToKIAkJY2Fz
+ZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktTX0NTQjZJREU6CiAJCWNhc2UgUENJX0RFVklDRV9J
+RF9TRVJWRVJXT1JLU19DU0I2SURFMjoKKwkJY2FzZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktT
+X0hUMTAwMElERToKIAkJCXJldHVybiAxOwogCQlkZWZhdWx0OgogCQkJYnJlYWs7CkBAIC00Mzgs
+NiArNDQ0LDEzIEBAIHN0YXRpYyB1bnNpZ25lZCBpbnQgX19kZXZpbml0IGluaXRfY2hpcHMKIAkJ
+CWJ0ciB8PSAoc3Z3a3NfcmV2aXNpb24gPj0gU1ZXS1NfQ1NCNV9SRVZJU0lPTl9ORVcpID8gMHgz
+IDogMHgyOwogCQlwY2lfd3JpdGVfY29uZmlnX2J5dGUoZGV2LCAweDVBLCBidHIpOwogCX0KKwkv
+KiBTZXR1cCBIVDEwMDAgU291dGhCcmlkZ2UgQ29udHJvbGxlciAtIFNpbmdsZSBDaGFubmVsIE9u
+bHkgKi8KKwllbHNlIGlmIChkZXYtPmRldmljZSA9PSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktT
+X0hUMTAwMElERSkgeworCQlwY2lfcmVhZF9jb25maWdfYnl0ZShkZXYsIDB4NUEsICZidHIpOwor
+CQlidHIgJj0gfjB4NDA7CisJCWJ0ciB8PSAweDM7CisJCXBjaV93cml0ZV9jb25maWdfYnl0ZShk
+ZXYsIDB4NUEsICZidHIpOworCX0KIAogCXJldHVybiAoZGV2LT5pcnEpID8gZGV2LT5pcnEgOiAw
+OwogfQpAQCAtNjI5LDYgKzY0MiwxNSBAQCBzdGF0aWMgaWRlX3BjaV9kZXZpY2VfdCBzZXJ2ZXJ3
+b3Jrc19jaGlwCiAJCS5jaGFubmVscwk9IDEsCS8qIDIgKi8KIAkJLmF1dG9kbWEJPSBBVVRPRE1B
+LAogCQkuYm9vdGFibGUJPSBPTl9CT0FSRCwKKwl9LHsJLyogNCAqLworCQkubmFtZQkJPSAiU3Zy
+V2tzIEhUMTAwMCIsCisJCS5pbml0X3NldHVwCT0gaW5pdF9zZXR1cF9zdndrcywKKwkJLmluaXRf
+Y2hpcHNldAk9IGluaXRfY2hpcHNldF9zdndrcywKKwkJLmluaXRfaHdpZgk9IGluaXRfaHdpZl9z
+dndrcywKKwkJLmluaXRfZG1hCT0gaW5pdF9kbWFfc3Z3a3MsCisJCS5jaGFubmVscwk9IDEsCS8q
+IDIgKi8KKwkJLmF1dG9kbWEJPSBBVVRPRE1BLAorCQkuYm9vdGFibGUJPSBPTl9CT0FSRCwKIAl9
+CiB9OwogCkBAIC02NTMsNiArNjc1LDcgQEAgc3RhdGljIHN0cnVjdCBwY2lfZGV2aWNlX2lkIHN2
+d2tzX3BjaV90YgogCXsgUENJX1ZFTkRPUl9JRF9TRVJWRVJXT1JLUywgUENJX0RFVklDRV9JRF9T
+RVJWRVJXT1JLU19DU0I1SURFLCBQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCAwLCAwLCAxfSwKIAl7
+IFBDSV9WRU5ET1JfSURfU0VSVkVSV09SS1MsIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NC
+NklERSwgUENJX0FOWV9JRCwgUENJX0FOWV9JRCwgMCwgMCwgMn0sCiAJeyBQQ0lfVkVORE9SX0lE
+X1NFUlZFUldPUktTLCBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktTX0NTQjZJREUyLCBQQ0lfQU5Z
+X0lELCBQQ0lfQU5ZX0lELCAwLCAwLCAzfSwKKwl7IFBDSV9WRU5ET1JfSURfU0VSVkVSV09SS1Ms
+IFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfSFQxMDAwSURFLCBQQ0lfQU5ZX0lELCBQQ0lfQU5Z
+X0lELCAwLCAwLCA0fSwKIAl7IDAsIH0sCiB9OwogTU9EVUxFX0RFVklDRV9UQUJMRShwY2ksIHN2
+d2tzX3BjaV90YmwpOwpkaWZmIC11cHJOIC1YIGxpbnV4LTIuNi4xMy1yYzYvRG9jdW1lbnRhdGlv
+bi9kb250ZGlmZiBsaW51eC0yLjYuMTMtcmM2L2luY2x1ZGUvbGludXgvcGNpX2lkcy5oIGxpbnV4
+LTIuNi4xMy1yYzYuYnJjbS9pbmNsdWRlL2xpbnV4L3BjaV9pZHMuaAotLS0gbGludXgtMi42LjEz
+LXJjNi9pbmNsdWRlL2xpbnV4L3BjaV9pZHMuaAkyMDA1LTA4LTA3IDExOjE4OjU2LjAwMDAwMDAw
+MCAtMDcwMAorKysgbGludXgtMi42LjEzLXJjNi5icmNtL2luY2x1ZGUvbGludXgvcGNpX2lkcy5o
+CTIwMDUtMDgtMTYgMDk6NTg6MzcuODYwOTcwMDAwIC0wNzAwCkBAIC0xNTgwLDYgKzE1ODAsNyBA
+QAogI2RlZmluZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktTX09TQjRJREUgMHgwMjExCiAjZGVm
+aW5lIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NCNUlERSAweDAyMTIKICNkZWZpbmUgUENJ
+X0RFVklDRV9JRF9TRVJWRVJXT1JLU19DU0I2SURFIDB4MDIxMworI2RlZmluZSBQQ0lfREVWSUNF
+X0lEX1NFUlZFUldPUktTX0hUMTAwMElERSAweDAyMTQKICNkZWZpbmUgUENJX0RFVklDRV9JRF9T
+RVJWRVJXT1JLU19DU0I2SURFMiAweDAyMTcKICNkZWZpbmUgUENJX0RFVklDRV9JRF9TRVJWRVJX
+T1JLU19PU0I0VVNCIDB4MDIyMAogI2RlZmluZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktTX0NT
+QjVVU0IgUENJX0RFVklDRV9JRF9TRVJWRVJXT1JLU19PU0I0VVNCCg==
+
+------_=_NextPart_001_01C5A290.9868BA7B--
 
