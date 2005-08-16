@@ -1,77 +1,49 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] PCI quirks not handled and config space
- differences on resume from S3
-Date: Tue, 16 Aug 2005 11:37:03 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0508161131240.18233-100000@iolanthe.rowland.org>
-References: <4301DF63.1020605@gmx.net>
+From: Erik Slagter <erik@slagter.name>
+Subject: Re: UDMA modes
+Date: Tue, 16 Aug 2005 17:35:44 +0200
+Message-ID: <1124206544.19419.4.camel@localhost.localdomain>
+References: <42D7AAB8000479BA@mail-4.mail.tiscali.sys>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qEFYTPPIJg/SoAXb3N5Z"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:38325 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP
-	id S1030183AbVHPPhE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Aug 2005 11:37:04 -0400
-In-Reply-To: <4301DF63.1020605@gmx.net>
+Received: from oldconomy.demon.nl ([212.238.217.56]:1677 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S1030182AbVHPPgG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Aug 2005 11:36:06 -0400
+In-Reply-To: <42D7AAB8000479BA@mail-4.mail.tiscali.sys>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Carl-Daniel Hailfinger <c-d.hailfinger.devel.2005@gmx.net>
-Cc: acpi-devel <acpi-devel@lists.sourceforge.net>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
-
-On Tue, 16 Aug 2005, Carl-Daniel Hailfinger wrote:
-
-> Hi,
-> 
-> it seems that PCI quirks are not handled on resume which results
-> in all kinds of strange effects, like disappeared PCI devices.
-
-> Besides that, a number of drivers do not restore the pci config
-> space of their associated devices properly on resume from S3.
-> 
-> These drivers (and associated devices) are:
-> - intel_agp (Host bridge: Intel Corp. 82855PM Processor to I/O Controller)
-> - ? (PCI bridge: Intel Corp. 82855PM Processor to AGP Controller)
-> - uhci_hcd (USB Controller: Intel Corp. 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) USB UHCI Controller)
-> - ? (PCI bridge: Intel Corp. 82801 PCI Bridge)
-> - ? (ISA bridge: Intel Corp. 82801DBM LPC Interface Controller)
-> - piix_ide (IDE interface: Intel Corp. 82801DBM (ICH4) Ultra ATA Storage Controller)
-> 
-> Diff between "lspci -vvvxxx" before and after resume for all
-> problematic devices on my machine is attached.
-> 
-> Are there any patches I can try?
-
-The uhci-hcd driver _does_ restore the config space for its devices 
-properly.
+To: sampei02@tiscali.it
+Cc: linux-ide@vger.kernel.org
 
 
-> USB UHCI Controller #1 (rev 03) (prog-if 00 [UHCI])
->         Subsystem: Samsung Electronics Co Ltd: Unknown device c00c
->         Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-Stepping- SERR- FastB2B-
->         Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-<TAbort- <MAbort- >SERR- <PERR-
->         Latency: 0
->         Interrupt: pin A routed to IRQ 5
->         Region 4: I/O ports at 1800 [size=32]
->  00: 86 80 c2 24 05 00 80 02 03 00 03 0c 00 00 80 00
->  10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->  20: 01 18 00 00 00 00 00 00 00 00 00 00 4d 14 0c c0
->  30: 00 00 00 00 00 00 00 00 00 00 00 00 05 01 00 00
->  40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->  50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->  60: 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->  70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->  80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->  90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->  a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->  b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> -c0: 00 25 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> +c0: 00 2f 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->  d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+--=-qEFYTPPIJg/SoAXb3N5Z
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Just because the before and after values are different doesn't mean 
-anything is wrong.  Those particular bits are set by the hardware in 
-response to various events.  They are used only by the BIOS, to provide 
-USB keyboard and mouse services.  They don't affect the device's function 
-or the Linux driver at all.
+On Tue, 2005-08-16 at 16:21 +0200, sampei02@tiscali.it wrote:
+> My Maxtor Hard Disk supports UDMA <=3D 6 (133)
+> How can I control BITS options in controller ? What's line command ?
+> How can I verify controller is properly configured in my kernel ?
 
-Alan Stern
+cd /usr/src/linux
+make menuconfig
+device drivers -> ATA/ATAPI/MFM/RLL support -> IGNORE word93 Validation
+BITS
 
+If you're using a kernel from your distribution, I am afraid it will
+invalidate a lot of the options to get this working right.
+
+--=-qEFYTPPIJg/SoAXb3N5Z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQBDAgfQJgD/6j32wUYRAgzPAJ43M8Wwxf+ynHot/cXEH0sgTLHwKQCfZVdb
+ELC8Q+B+dKX8dwPioWujGzo=
+=Pwaw
+-----END PGP SIGNATURE-----
+
+--=-qEFYTPPIJg/SoAXb3N5Z--
