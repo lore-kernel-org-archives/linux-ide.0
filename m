@@ -1,38 +1,49 @@
-From: LT-P <LT-P@LT-P.net>
+From: Erik Slagter <erik@slagter.name>
 Subject: Re: Bug#321442: kernel-source-2.6.8: fails to compile on powerpc
- (drivers/ide/ppc/pmac.c)
-Date: Sun, 14 Aug 2005 00:54:30 +0200
-Message-ID: <20050814005430.2e26e627@arda.LT-P.net>
+	(drivers/ide/ppc/pmac.c)
+Date: Tue, 16 Aug 2005 17:51:00 +0200
+Message-ID: <1124207460.19419.22.camel@localhost.localdomain>
 References: <E1E13vT-0008G7-R1@arda.LT-P.net>
-	<20050808085703.GE18551@verge.net.au>
+	 <20050808085703.GE18551@verge.net.au>
+	 <20050814005430.2e26e627@arda.LT-P.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zLzWAGGri5LtoSPfMGHq"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from AReims-151-1-72-193.w83-198.abo.wanadoo.fr ([83.198.94.193]:29453
-	"EHLO arda.LT-P.net") by vger.kernel.org with ESMTP
-	id S1030193AbVHPPr0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Aug 2005 11:47:26 -0400
-In-Reply-To: <20050808085703.GE18551@verge.net.au>
+Received: from oldconomy.demon.nl ([212.238.217.56]:17537 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S1030201AbVHPPvH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Aug 2005 11:51:07 -0400
+In-Reply-To: <20050814005430.2e26e627@arda.LT-P.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Horms <horms@debian.org>
-Cc: 321442@bugs.debian.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: LT-P <LT-P@LT-P.net>
+Cc: linux-ide@vger.kernel.org
 
-Le lun 08 ao=FB 2005 17:57:04 CEST, Horms <horms@debian.org> a =E9crit:
 
-> Can you please enable BLK_DEV_IDEDMA_PCI and see if that resolves you=
-r
-> problem. If it does, then the following patch should fix Kconfig
-> so that BLK_DEV_IDEDMA_PCI needs to be enabled for BLK_DEV_IDE_PMAC
-> to be enabled. It should patch cleanly against Debian's 2.6.8 and
-> Linus' current Git tree.
-It seems to solve the problem, thanks.
-Sometimes, I feel like I am the only person in the world to compile the=
- kernel on
-powerpc... :)
+--=-zLzWAGGri5LtoSPfMGHq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-LT-P
+On Sun, 2005-08-14 at 00:54 +0200, LT-P wrote:
+> It seems to solve the problem, thanks.
+> Sometimes, I feel like I am the only person in the world to compile the k=
+ernel on
+> powerpc... :)
 
---=20
-Seals are cute, kiss them
+Well, then at least it should be two (compiling and running linux on DMM
+dreambox with PPC controller, although I don't have a harddisk
+fitted...)
+
+--=-zLzWAGGri5LtoSPfMGHq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQBDAgtkJgD/6j32wUYRAgmmAJ9Rpel7P1vSknwHQNrULmv16ciEhgCfQo0S
+BRhkfS4HHr7QwwkWe7hfHKU=
+=eQva
+-----END PGP SIGNATURE-----
+
+--=-zLzWAGGri5LtoSPfMGHq--
