@@ -1,57 +1,81 @@
-From: "Yuri Kirsanov" <flash@rccb.ru>
-Subject: TX4000 RAID and sata_promise
-Date: Tue, 16 Aug 2005 09:30:33 +0400
-Message-ID: <01f501c5a223$9faf5470$6f0aa8c0@rgkb.local>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH] libata: Clear ATA_QCFLAG_ACTIVE flag before calling the completion
+ callback
+Date: Tue, 16 Aug 2005 14:25:38 +0800
+Message-ID: <430186E2.4050203@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1251"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------030609090104040701010401"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [213.85.106.100] ([213.85.106.100]:2513 "EHLO rccb.ru")
-	by vger.kernel.org with ESMTP id S965111AbVHPF2S (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Aug 2005 01:28:18 -0400
-Received: from [192.168.10.111] (HELO flash)
-  by rccb.ru (CommuniGate Pro SMTP 4.2.8)
-  with SMTP id 970594 for linux-ide@vger.kernel.org; Tue, 16 Aug 2005 05:28:41 +0000
+Received: from ausmtp01.au.ibm.com ([202.81.18.186]:36334 "EHLO
+	ausmtp01.au.ibm.com") by vger.kernel.org with ESMTP id S932603AbVHPG0h
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Aug 2005 02:26:37 -0400
+Received: from sd0208e0.au.ibm.com (d23rh904.au.ibm.com [202.81.18.202])
+	by ausmtp01.au.ibm.com (8.12.10/8.12.10) with ESMTP id j7G6SnAP061066
+	for <linux-ide@vger.kernel.org>; Tue, 16 Aug 2005 16:28:54 +1000
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.250.243])
+	by sd0208e0.au.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7G6T33f063266
+	for <linux-ide@vger.kernel.org>; Tue, 16 Aug 2005 16:29:03 +1000
+Received: from d23av02.au.ibm.com (loopback [127.0.0.1])
+	by d23av02.au.ibm.com (8.12.11/8.13.3) with ESMTP id j7G6Q2Xa015144
+	for <linux-ide@vger.kernel.org>; Tue, 16 Aug 2005 16:26:03 +1000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>
 
-Good day. I have Mandrake Linux LE2005 with custom kernel
-2.6.12.2+Reiser4 patch+TX4000 patch
-(First part of this patch
-http://www.mail-archive.com/linux-ide@vger.kernel.org/msg00150.html
-second part failed and I can't figure out how to apply it). When i do
-'modprobe sata_promise' it only says:
+This is a multi-part message in MIME format.
+--------------030609090104040701010401
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Aug 14 19:24:21 mandr kernel: libata version 1.11 loaded.
-Aug 14 19:24:21 mandr kernel: sata_promise version 1.01
-Aug 14 19:24:21 mandr kernel: PCI: Found IRQ 9 for device 0000:01:09.0
-Aug 14 19:24:21 mandr kernel: ata1: PATA max UDMA/133 cmd 0xC89FE200 ctl
-0xC89FE238 bmdma 0x0 irq 9
-Aug 14 19:24:21 mandr kernel: ata2: PATA max UDMA/133 cmd 0xC89FE280 ctl
-0xC89FE2B8 bmdma 0x0 irq 9
-Aug 14 19:24:21 mandr kernel: ata3: PATA max UDMA/133 cmd 0xC89FE300 ctl
-0xC89FE338 bmdma 0x0 irq 9
-Aug 14 19:24:21 mandr kernel: ata4: PATA max UDMA/133 cmd 0xC89FE380 ctl
-0xC89FE3B8 bmdma 0x0 irq 9
-Aug 14 19:24:21 mandr kernel: ata1: no device found (phy stat 00000000)
-Aug 14 19:24:21 mandr kernel: scsi0 : sata_promise
-Aug 14 19:24:21 mandr kernel: ata2: no device found (phy stat 00000000)
-Aug 14 19:24:21 mandr kernel: scsi1 : sata_promise
-Aug 14 19:24:21 mandr kernel: ata3: no device found (phy stat 00000000)
-Aug 14 19:24:21 mandr kernel: scsi2 : sata_promise
-Aug 14 19:24:22 mandr kernel: ata4: no device found (phy stat 00000000)
-Aug 14 19:24:22 mandr kernel: scsi3 : sata_promise
+Jeff,
 
- I have 2 hard drives connected to TX4000 on IDE1 channel, in stripe
-mode. I've set up raid in TX4000 BIOS, but in Linux it can't see my
-hard disks, and so I have no /dev/sd* and can't mount this hard
-disks...Could you please help me, what am I doing wrong?
-I've already tried to install sata_promise both as a module and as a
-built-in...I've tried to do 'modprobe sd_mod' first, it only says
-'SCSI system initialized'. I'm completely stuck with it :(
+Description:
+  After calling the completion callback, the libata error handler might be
+running and getting atapi sense data. Clearing the ATA_QCFLAG_ACTIVE flag
+at this point might interfere with the libata error handler.
 
- PS. I have ASUS i815 CUSL2-M motherboard.
+Changes:
+   - Clear the ATA_QCFLAG_ACTIVE flag before calling the completion callback
+     (and also before the error handler)
+   - Add some comment
 
+Resend for 2.6.13-rc6(3edea4833a1efcd43e1dff082bc8001fdfe74b34).
+For your review, thanks.
+
+Albert
+
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+
+
+
+--------------030609090104040701010401
+Content-Type: text/plain;
+ name="misc1.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="misc1.diff"
+
+--- linux/drivers/scsi/libata-core.c	2005-08-16 10:54:12.000000000 +0800
++++ 01_qcactive/drivers/scsi/libata-core.c	2005-08-16 13:36:22.000000000 +0800
+@@ -3086,9 +3086,14 @@
+ 	if (likely(qc->flags & ATA_QCFLAG_DMAMAP))
+ 		ata_sg_clean(qc);
+ 
++	/* atapi: mark qc as inactive to prevent the interrupt handler
++	 * from completing the command twice later, before the error handler
++	 * is called. (when rc != 0 and atapi request sense is needed)
++	 */
++	qc->flags &= ~ATA_QCFLAG_ACTIVE;
++
+ 	/* call completion callback */
+ 	rc = qc->complete_fn(qc, drv_stat);
+-	qc->flags &= ~ATA_QCFLAG_ACTIVE;
+ 
+ 	/* if callback indicates not to complete command (non-zero),
+ 	 * return immediately
+
+--------------030609090104040701010401--
 
