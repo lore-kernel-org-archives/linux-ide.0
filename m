@@ -1,78 +1,77 @@
-From: "Eric D. Mudama" <edmudama@gmail.com>
-Subject: Re: UDMA modes
-Date: Tue, 16 Aug 2005 09:13:25 -0600
-Message-ID: <311601c9050816081331a39ac9@mail.gmail.com>
-References: <1124183117.5550.58.camel@localhost.localdomain>
-	 <42D7AAB8000479BA@mail-4.mail.tiscali.sys>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] PCI quirks not handled and config space
+ differences on resume from S3
+Date: Tue, 16 Aug 2005 11:37:03 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0508161131240.18233-100000@iolanthe.rowland.org>
+References: <4301DF63.1020605@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.207]:8128 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S965262AbVHPPN2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Aug 2005 11:13:28 -0400
-Received: by rproxy.gmail.com with SMTP id i8so966140rne
-        for <linux-ide@vger.kernel.org>; Tue, 16 Aug 2005 08:13:25 -0700 (PDT)
-In-Reply-To: <42D7AAB8000479BA@mail-4.mail.tiscali.sys>
-Content-Disposition: inline
+Received: from iolanthe.rowland.org ([192.131.102.54]:38325 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1030183AbVHPPhE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Aug 2005 11:37:04 -0400
+In-Reply-To: <4301DF63.1020605@gmx.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "sampei02@tiscali.it" <sampei02@tiscali.it>
-Cc: Erik Slagter <erik@slagter.name>, linux-ide@vger.kernel.org
+To: Carl-Daniel Hailfinger <c-d.hailfinger.devel.2005@gmx.net>
+Cc: acpi-devel <acpi-devel@lists.sourceforge.net>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 
-we'd need to see the dmesg output I am sure
+On Tue, 16 Aug 2005, Carl-Daniel Hailfinger wrote:
 
-On 8/16/05, sampei02@tiscali.it <sampei02@tiscali.it> wrote:
-> My Maxtor Hard Disk supports UDMA <=3D 6 (133)
-> How can I control BITS options in controller ? What's line command ?
-> How can I verify controller is properly configured in my kernel ?
->=20
->=20
-> >-- Messaggio Originale --
-> >Subject: Re: UDMA modes
-> >From: Erik Slagter <erik@slagter.name>
-> >To: sampei02@tiscali.it
-> >Cc: linux-ide@vger.kernel.org
-> >Date: Tue, 16 Aug 2005 11:05:17 +0200
-> >
-> >
-> >On Tue, 2005-08-16 at 09:02 +0200, sampei02@tiscali.it wrote:
-> >> I have motherboard which supports DMA ATA 66/100/133 and I connect=
- HD
-> with
-> >> new 80-wire cable.
-> >> I have FC3 with Kernel 2.6.9
-> >> With hdparm -i /dev/hda I get:
-> >>
-> >> DMA modes: udma0 udma1 udma2
-> >> UDMA modes: udma0 udma1 *udma2
-> >>
-> >> Why udma is 2 and not udma 5 ?
-> >
-> >Controller not explicitly supported by linux or not configured in th=
-e
-> >kernel? Controller needs BITS option? (see IDE config). Harddisk doe=
-sn't
-> >support > udma2?
-> >
-> >Allegato: signature.asc
-> >
->=20
->=20
-> __________________________________________________________________
-> TISCALI ADSL 1.25 MEGA
-> Solo con Tiscali Adsl navighi senza limiti e telefoni senza canone Te=
-lecom
-> a partire da 19,95 Euro/mese.
-> Attivala entro il 31 agosto, il primo MESE =E8 GRATIS! CLICCA QUI.
-> http://abbonati.tiscali.it/adsl/sa/1e25flat_tc/
->=20
->=20
->=20
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Hi,
+> 
+> it seems that PCI quirks are not handled on resume which results
+> in all kinds of strange effects, like disappeared PCI devices.
+
+> Besides that, a number of drivers do not restore the pci config
+> space of their associated devices properly on resume from S3.
+> 
+> These drivers (and associated devices) are:
+> - intel_agp (Host bridge: Intel Corp. 82855PM Processor to I/O Controller)
+> - ? (PCI bridge: Intel Corp. 82855PM Processor to AGP Controller)
+> - uhci_hcd (USB Controller: Intel Corp. 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) USB UHCI Controller)
+> - ? (PCI bridge: Intel Corp. 82801 PCI Bridge)
+> - ? (ISA bridge: Intel Corp. 82801DBM LPC Interface Controller)
+> - piix_ide (IDE interface: Intel Corp. 82801DBM (ICH4) Ultra ATA Storage Controller)
+> 
+> Diff between "lspci -vvvxxx" before and after resume for all
+> problematic devices on my machine is attached.
+> 
+> Are there any patches I can try?
+
+The uhci-hcd driver _does_ restore the config space for its devices 
+properly.
+
+
+> USB UHCI Controller #1 (rev 03) (prog-if 00 [UHCI])
+>         Subsystem: Samsung Electronics Co Ltd: Unknown device c00c
+>         Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-Stepping- SERR- FastB2B-
+>         Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-<TAbort- <MAbort- >SERR- <PERR-
+>         Latency: 0
+>         Interrupt: pin A routed to IRQ 5
+>         Region 4: I/O ports at 1800 [size=32]
+>  00: 86 80 c2 24 05 00 80 02 03 00 03 0c 00 00 80 00
+>  10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  20: 01 18 00 00 00 00 00 00 00 00 00 00 4d 14 0c c0
+>  30: 00 00 00 00 00 00 00 00 00 00 00 00 05 01 00 00
+>  40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  60: 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -c0: 00 25 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +c0: 00 2f 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+Just because the before and after values are different doesn't mean 
+anything is wrong.  Those particular bits are set by the hardware in 
+response to various events.  They are used only by the BIOS, to provide 
+USB keyboard and mouse services.  They don't affect the device's function 
+or the Linux driver at all.
+
+Alan Stern
+
