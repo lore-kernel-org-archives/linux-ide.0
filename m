@@ -1,37 +1,59 @@
-From: sampei02@tiscali.it
-Subject: UDMA modes
-Date: Tue, 16 Aug 2005 09:02:42 +0200
-Message-ID: <42D7AAA0000490E9@mail-2.mail.tiscali.sys>
+From: Erik Slagter <erik@slagter.name>
+Subject: Re: libata and PATA devices
+Date: Tue, 16 Aug 2005 09:21:22 +0200
+Message-ID: <1124176883.4314.3.camel@localhost.localdomain>
+References: <200508071949.03782.inform@tiker.net>
+	 <42F6B8CD.4050100@gmail.com>  <20050808030239.GA27502@havoc.gtf.org>
+	 <1123495856.22328.62.camel@localhost.localdomain> <42F8B41C.4040408@rtr.ca>
+	 <42FACCA8.6050408@pobox.com> <42FB853E.4070100@rtr.ca>
+	 <42FB889F.50607@pobox.com> <1123789132.4422.30.camel@localhost.localdomain>
+	 <42FBB33D.8050003@pobox.com>
+	 <1123932640.4378.10.camel@localhost.localdomain>
+	 <42FE12D6.1070600@pobox.com>
+	 <1123948250.11048.9.camel@localhost.localdomain>
+	 <42FE1828.4000104@pobox.com>
+	 <1123949005.11048.16.camel@localhost.localdomain>
+	 <42FE2380.5040508@pobox.com>
+	 <1123951997.15215.1.camel@localhost.localdomain>  <43010B78.7050807@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-19Qzh7cJcowubHHAKGcU"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mrqout1.tiscali.it ([195.130.225.11]:23482 "EHLO
-	mrqout1.tiscali.it") by vger.kernel.org with ESMTP id S932608AbVHPHCw convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Aug 2005 03:02:52 -0400
+Received: from oldconomy.demon.nl ([212.238.217.56]:35234 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S932614AbVHPHWE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Aug 2005 03:22:04 -0400
+In-Reply-To: <43010B78.7050807@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-I have motherboard which supports DMA ATA 66/100/133 and I connect HD w=
-ith
-new 80-wire cable.
-I have FC3 with Kernel 2.6.9
-With hdparm -i /dev/hda I get:
-
-DMA modes: udma0 udma1 udma2
-UDMA modes: udma0 udma1 *udma2
-
-Why udma is 2 and not udma 5 ?
-
-__________________________________________________________________
-TISCALI ADSL 1.25 MEGA
-Solo con Tiscali Adsl navighi senza limiti e telefoni senza canone Tele=
-com
-a partire da 19,95 Euro/mese.
-Attivala entro il 31 agosto, il primo MESE =E8 GRATIS! CLICCA QUI.
-http://abbonati.tiscali.it/adsl/sa/1e25flat_tc/
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
 
+--=-19Qzh7cJcowubHHAKGcU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 2005-08-15 at 17:39 -0400, Mark Lord wrote:
+> > I already had it working this way, actually, but it has a bad habit of
+> > locking up solid every now and then. So I'll wait and in the meantime
+> > use my patched kernel (=3Dall drives on IDE).
+>=20
+> That's a different problem, with a one-liner fix recently
+> posted to address it -- Jeff even has the one-liner out
+> for 2.6.13 now, I believe.
+
+Yep, I already applied it. Seems to work for me.
+
+--=-19Qzh7cJcowubHHAKGcU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQBDAZPyJgD/6j32wUYRAlzxAJ9VZ2fRzmKH+ZnhrskbtGKFwcQnnwCeKz2z
+prEmKAvETcmCEJGOTlW0UNw=
+=6C3F
+-----END PGP SIGNATURE-----
+
+--=-19Qzh7cJcowubHHAKGcU--
