@@ -1,90 +1,45 @@
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] IDE: don't offer IDE_GENERIC on ia64
-Date: Tue, 16 Aug 2005 13:16:32 -0600
-Message-ID: <200508161316.32602.bjorn.helgaas@hp.com>
-References: <200508111424.43150.bjorn.helgaas@hp.com> <200508151507.22776.bjorn.helgaas@hp.com> <58cb370e050816023845b57a74@mail.gmail.com>
+Date: Tue, 16 Aug 2005 21:25:46 +0100
+Message-ID: <1124223946.22924.4.camel@localhost.localdomain>
+References: <200508111424.43150.bjorn.helgaas@hp.com>
+	 <200508151507.22776.bjorn.helgaas@hp.com>
+	 <58cb370e050816023845b57a74@mail.gmail.com>
+	 <200508161316.32602.bjorn.helgaas@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ia64-owner@vger.kernel.org>
-In-Reply-To: <58cb370e050816023845b57a74@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-ia64-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from clock-tower.bc.nu ([81.2.110.250]:3265 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S932402AbVHPT6x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Aug 2005 15:58:53 -0400
+In-Reply-To: <200508161316.32602.bjorn.helgaas@hp.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org
 
-On Tuesday 16 August 2005 3:38 am, Bartlomiej Zolnierkiewicz wrote:
-> On 8/15/05, Bjorn Helgaas <bjorn.helgaas@hp.com> wrote:
-> > On Friday 12 August 2005 2:40 am, Alan Cox wrote:
-> Agreed but I have few comments:
-> * is this change OK w.r.t. IA64_HP_SIM?
-
-Kernels for the HP simulator (ski) use a SCSI model, not IDE,
-so they should be OK.
-
-The SGI simulator *does* use IDE, and this will break that.  But
-my friends at SGI are looking at exposing the simulated IDE device
-via PCI, which should fix it.
-
-> * removing IDE_ARCH_OBSOLETE_INIT define has some implications,
->   * non-functional ide-cs driver (but there is no PCMCIA on IA64?)
-
-PCMCIA might be of theoretical interest, but not important enough
-by itself to keep IDE_ARCH_OBSOLETE_INIT, IMHO.  And it sounds like
-ide-cs can be fixed fairly easily to not depend on it.
-
->   * ordering change for ide-pnp interfaces in case of no IDE devices
->     on default IDE PCI ports, (but there aren't any ide-pnp devices on IA64?)
-
-I'm not aware of any ide-pnp devices on IA64, so I don't think this
-is a problem for us.  The SGI simulator could use ide-pnp via
-PNPACPI, but ordering shouldn't be a problem there.
-
-But it is interesting that PNP IDE devices are discovered *after*
-PCI devices.  For serial, we do PNP before PCI, on the theory that
-PNP devices are usually built-in and shouldn't move if you just plug
-in a new PCI card.
-
->   * non-functional HDIO_REGISTER_HWIF ioctl (ain't really working either)
-
-HDIO_SCAN_HWIF - I don't know about this one.  How are we supposed to
-follow the "new ports shouldn't define IDE_ARCH_OBSOLETE_INIT" injunction
-if we lose all this functionality without it?  ia64 is about as close to
-a new port as you get :-)
-
-> This changes default default MAX_HWIFS value from
-> 10 (6 in case of !CONFIG_PCI) to 4 which is not desirable.
+> >   * non-functional HDIO_REGISTER_HWIF ioctl (ain't really working either)
 > 
-> IMO the best thing for now is to leave MAX_HWIFS alone.
+> HDIO_SCAN_HWIF - I don't know about this one.  How are we supposed to
+> follow the "new ports shouldn't define IDE_ARCH_OBSOLETE_INIT" injunction
+> if we lose all this functionality without it?  ia64 is about as close to
+> a new port as you get :-)
 
-IDE on ia64 is little-used, so I'm OK with leaving it alone, but
-I do think it's wrong for an architecture with no real restriction
-to specify MAX_HWIFS in ide.h.  Better to have the config option,
-and make the default there larger if necessary.
+It allows you to register interfaces from user space.
 
-> > I noticed that on a box with no devices on ide1, we probed
-> > ide1 twice -- once via ide_setup_pci_device() and again via
-> > ide_generic_init().  This isn't fatal, since the generic probe
-> > uses the I/O ports setup by PCI IDE, but it's unnecessary
-> > and a bit ugly.
-> > 
-> > I stuck in a "hwif->noprobe = 1" at the point where probe_hwif()
-> > decides the interface isn't present, which prevents the second
-> > probe by ide_generic_init().
-> 
-> Please separate this change out - it is a nice fix but it affects other
-> archs/drivers and somebody needs to audit all IDE host drivers that
-> they set hwif->noprobe = 0 correctly before probing in case of re-using
-> hwif that was already owned/probed by other driver.
+As to IDE_ARCH_OBOSOLETE_INIT, its a red herring. It's not worth the
+trouble to avoid it given the expected short remaining life time of the
+old IDE layer. Far better would be to help get the new SATA layer doing
+PATA so drivers/ide can be deleted.
 
-OK, I'll split this and look into it a bit more.
+> IDE on ia64 is little-used, so I'm OK with leaving it alone, but
+> I do think it's wrong for an architecture with no real restriction
+> to specify MAX_HWIFS in ide.h.  Better to have the config option,
+> and make the default there larger if necessary.
 
-> Please make IDE_GENERIC depend on !IA_64.
+In the ideal world - its a historical inheritance that its not dynamic -
+you probably should set it to 10 though - just for plug in IDE cards.
 
-Huh?  The first patch I posted did exactly that, nothing more.  But
-Alan pointed out that I should instead clean up asm-ia64/ide.h, which
-I think leads to a nicer solution.
 
-Thanks for the detailed comments!
