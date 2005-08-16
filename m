@@ -1,43 +1,57 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: libata and PATA devices
-Date: Mon, 15 Aug 2005 17:39:04 -0400
-Message-ID: <43010B78.7050807@rtr.ca>
-References: <200508071949.03782.inform@tiker.net>	 <42F6B8CD.4050100@gmail.com>  <20050808030239.GA27502@havoc.gtf.org>	 <1123495856.22328.62.camel@localhost.localdomain> <42F8B41C.4040408@rtr.ca>	 <42FACCA8.6050408@pobox.com> <42FB853E.4070100@rtr.ca>	 <42FB889F.50607@pobox.com> <1123789132.4422.30.camel@localhost.localdomain>	 <42FBB33D.8050003@pobox.com>	 <1123932640.4378.10.camel@localhost.localdomain>	 <42FE12D6.1070600@pobox.com>	 <1123948250.11048.9.camel@localhost.localdomain>	 <42FE1828.4000104@pobox.com>	 <1123949005.11048.16.camel@localhost.localdomain>	 <42FE2380.5040508@pobox.com> <1123951997.15215.1.camel@localhost.localdomain>
+From: "Yuri Kirsanov" <flash@rccb.ru>
+Subject: TX4000 RAID and sata_promise
+Date: Tue, 16 Aug 2005 09:30:33 +0400
+Message-ID: <01f501c5a223$9faf5470$6f0aa8c0@rgkb.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="windows-1251"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:13061 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S964985AbVHOVit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 Aug 2005 17:38:49 -0400
-In-Reply-To: <1123951997.15215.1.camel@localhost.localdomain>
+Received: from [213.85.106.100] ([213.85.106.100]:2513 "EHLO rccb.ru")
+	by vger.kernel.org with ESMTP id S965111AbVHPF2S (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Aug 2005 01:28:18 -0400
+Received: from [192.168.10.111] (HELO flash)
+  by rccb.ru (CommuniGate Pro SMTP 4.2.8)
+  with SMTP id 970594 for linux-ide@vger.kernel.org; Tue, 16 Aug 2005 05:28:41 +0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Erik Slagter <erik@slagter.name>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Erik Slagter wrote:
->
-> I already had it working this way, actually, but it has a bad habit of
-> locking up solid every now and then. So I'll wait and in the meantime
-> use my patched kernel (=all drives on IDE).
+Good day. I have Mandrake Linux LE2005 with custom kernel
+2.6.12.2+Reiser4 patch+TX4000 patch
+(First part of this patch
+http://www.mail-archive.com/linux-ide@vger.kernel.org/msg00150.html
+second part failed and I can't figure out how to apply it). When i do
+'modprobe sata_promise' it only says:
 
-That's a different problem, with a one-liner fix recently
-posted to address it -- Jeff even has the one-liner out
-for 2.6.13 now, I believe.
+Aug 14 19:24:21 mandr kernel: libata version 1.11 loaded.
+Aug 14 19:24:21 mandr kernel: sata_promise version 1.01
+Aug 14 19:24:21 mandr kernel: PCI: Found IRQ 9 for device 0000:01:09.0
+Aug 14 19:24:21 mandr kernel: ata1: PATA max UDMA/133 cmd 0xC89FE200 ctl
+0xC89FE238 bmdma 0x0 irq 9
+Aug 14 19:24:21 mandr kernel: ata2: PATA max UDMA/133 cmd 0xC89FE280 ctl
+0xC89FE2B8 bmdma 0x0 irq 9
+Aug 14 19:24:21 mandr kernel: ata3: PATA max UDMA/133 cmd 0xC89FE300 ctl
+0xC89FE338 bmdma 0x0 irq 9
+Aug 14 19:24:21 mandr kernel: ata4: PATA max UDMA/133 cmd 0xC89FE380 ctl
+0xC89FE3B8 bmdma 0x0 irq 9
+Aug 14 19:24:21 mandr kernel: ata1: no device found (phy stat 00000000)
+Aug 14 19:24:21 mandr kernel: scsi0 : sata_promise
+Aug 14 19:24:21 mandr kernel: ata2: no device found (phy stat 00000000)
+Aug 14 19:24:21 mandr kernel: scsi1 : sata_promise
+Aug 14 19:24:21 mandr kernel: ata3: no device found (phy stat 00000000)
+Aug 14 19:24:21 mandr kernel: scsi2 : sata_promise
+Aug 14 19:24:22 mandr kernel: ata4: no device found (phy stat 00000000)
+Aug 14 19:24:22 mandr kernel: scsi3 : sata_promise
 
--ml
+ I have 2 hard drives connected to TX4000 on IDE1 channel, in stripe
+mode. I've set up raid in TX4000 BIOS, but in Linux it can't see my
+hard disks, and so I have no /dev/sd* and can't mount this hard
+disks...Could you please help me, what am I doing wrong?
+I've already tried to install sata_promise both as a module and as a
+built-in...I've tried to do 'modprobe sd_mod' first, it only says
+'SCSI system initialized'. I'm completely stuck with it :(
+
+ PS. I have ASUS i815 CUSL2-M motherboard.
 
 
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -385,6 +385,7 @@ int ata_scsi_error(struct Scsi_Host *hos
-           * appropriate place
-           */
-          host->host_failed--;
-+       INIT_LIST_HEAD(&host->eh_cmd_q);
-
-          DPRINTK("EXIT\n");
-          return 0;
