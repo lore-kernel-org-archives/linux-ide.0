@@ -1,80 +1,58 @@
-From: Erik Slagter <erik@slagter.name>
+From: "Davidlohr Bueso A." <dbueso@linuxchile.cl>
 Subject: Re: Problems with DMA enabling
-Date: Wed, 17 Aug 2005 17:59:14 +0200
-Message-ID: <1124294354.5948.18.camel@localhost.localdomain>
+Date: Wed, 17 Aug 2005 13:31:25 -0400
+Message-ID: <1124299885.3851.7.camel@localhost>
 References: <1124293208.3885.10.camel@localhost>
+	 <1124294354.5948.18.camel@localhost.localdomain>
+Reply-To: dbueso@linuxchile.cl
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Rd7b02xjp4P/G+rKlfLR"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oldconomy.demon.nl ([212.238.217.56]:48025 "EHLO
-	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S1751153AbVHQQAE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Aug 2005 12:00:04 -0400
-In-Reply-To: <1124293208.3885.10.camel@localhost>
+Received: from pc-79-164-104-200.cm.vtr.net ([200.104.164.79]:29917 "EHLO
+	localhost") by vger.kernel.org with ESMTP id S1751184AbVHQRcz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Aug 2005 13:32:55 -0400
+In-Reply-To: <1124294354.5948.18.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dbueso@linuxchile.cl
+To: Erik Slagter <erik@slagter.name>
 Cc: linux-ide@vger.kernel.org
 
+On Wed, 2005-08-17 at 17:59 +0200, Erik Slagter wrote:
+> On Wed, 2005-08-17 at 11:40 -0400, Davidlohr Bueso A. wrote:
+> ROFL! Sorry...
 
---=-Rd7b02xjp4P/G+rKlfLR
-Content-Type: multipart/mixed; boundary="=-NPobYIwsHGyqR8AUJpJR"
+I didn't mention that I recompiled/rebooted my system after making the
+changes because it is obvious that I did it. I'm also not using my
+debian-precompiled kernel -> I got 2.6.12.3 from kernel.org
+> 
+> You're changing a kernel BUILDING parameter here. It will not have any
+> effect until you recompile your kernel, so kiss your debian pre-compiled
+> kernel goodbye ;-)
+> 
+> There are actually several HOWTO's for kernel (re)building, btw.
+> 
+> If you are going to do this, you need to apply this patch as well (see
+> attachment) or your computer will lock up every now and then.
+> 
+> If you have built the new kernel and booted it, your cd/dvd drive will
+> now be claimed by libata and show up as /dev/scd0 instead of /dev/hdc
+> (or similar). Hdparm -d 1 will not work (either), but DMA will be used
+> anyway.
 
+I added the patch you attached, recompiled, rebooted and still can't
+use /dev/scd0 (not a valid block device), here's what I get with dmes|
+grep ata:
 
---=-NPobYIwsHGyqR8AUJpJR
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+libata version 1.11 loaded.
+ata_piix version 1.03
+ata: 0x170 IDE port busy
+ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0xBFA0 irq 14
+ata1: dev 0 cfg 49:0f00 82:746b 83:7fe9 84:4023 85:f469 86:3e49 87:4023
+88:203f
+ata1: dev 0 ATA, max UDMA/100, 117210240 sectors: lba48
+ata1: dev 0 configured for UDMA/100
+scsi0 : ata_piix
 
-On Wed, 2005-08-17 at 11:40 -0400, Davidlohr Bueso A. wrote:
-
-> After googling I discovered that the solution for many was changing in
-> include/linux/libata.h
->=20
-> #undef ATA_ENABLE_ATAPI /* define to enable ATAPI support */=20
-> to=20
-> #define ATA_ENABLE_ATAPI /* define to enable ATAPI support */
-
-ROFL! Sorry...
-
-You're changing a kernel BUILDING parameter here. It will not have any
-effect until you recompile your kernel, so kiss your debian pre-compiled
-kernel goodbye ;-)
-
-There are actually several HOWTO's for kernel (re)building, btw.
-
-If you are going to do this, you need to apply this patch as well (see
-attachment) or your computer will lock up every now and then.
-
-If you have built the new kernel and booted it, your cd/dvd drive will
-now be claimed by libata and show up as /dev/scd0 instead of /dev/hdc
-(or similar). Hdparm -d 1 will not work (either), but DMA will be used
-anyway.
-
---=-NPobYIwsHGyqR8AUJpJR
-Content-Disposition: inline; filename=satalockup-patch
-Content-Type: text/x-patch; name=satalockup-patch; charset=UTF-8
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9saWJhdGEtc2NzaS5jIGIvZHJpdmVycy9zY3NpL2xp
-YmF0YS1zY3NpLmMNCi0tLSBhL2RyaXZlcnMvc2NzaS9saWJhdGEtc2NzaS5jDQorKysgYi9kcml2
-ZXJzL3Njc2kvbGliYXRhLXNjc2kuYw0KQEAgLTM4NSw2ICszODUsNyBAQCBpbnQgYXRhX3Njc2lf
-ZXJyb3Ioc3RydWN0IFNjc2lfSG9zdCAqaG9zDQoJICogYXBwcm9wcmlhdGUgcGxhY2UNCgkgKi8N
-Cglob3N0LT5ob3N0X2ZhaWxlZC0tOw0KKwlJTklUX0xJU1RfSEVBRCgmaG9zdC0+ZWhfY21kX3Ep
-Ow0KDQoJRFBSSU5USygiRVhJVFxuIik7DQoJcmV0dXJuIDA7DQo=
-
-
---=-NPobYIwsHGyqR8AUJpJR--
-
---=-Rd7b02xjp4P/G+rKlfLR
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQBDA17SJgD/6j32wUYRAqAPAJ4398OV93GelxPTLztbB/9gXbLFjwCeKWwI
-KBe5zawM7M4zFfe9t9Huodw=
-=Ro9t
------END PGP SIGNATURE-----
-
---=-Rd7b02xjp4P/G+rKlfLR--
+Thanks,
+Dave
