@@ -1,40 +1,36 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.13-rc6 ] (updated) serverworks: Add support for new
- southbridge IDE
-Date: Wed, 17 Aug 2005 13:39:08 -0400
-Message-ID: <4303763C.8070707@pobox.com>
-References: <8AFFB74283C8EF46ACA4C331087033F10F5BCB@NT-SJCA-0750.brcm.ad.broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: linux@horizon.com
+Subject: Which controllers can support port multipliers?
+Date: 17 Aug 2005 13:47:18 -0400
+Message-ID: <20050817174718.18095.qmail@science.horizon.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:55236 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751162AbVHQRjO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Aug 2005 13:39:14 -0400
-In-Reply-To: <8AFFB74283C8EF46ACA4C331087033F10F5BCB@NT-SJCA-0750.brcm.ad.broadcom.com>
+Received: from science.horizon.com ([192.35.100.1]:23867 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S1751184AbVHQRrc
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Aug 2005 13:47:32 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Naren (Narendra) Sankar" <nsankar@broadcom.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux@horizon.com
 
-Naren (Narendra) Sankar wrote:
-> Hi Everyone
-> 
-> Description -
-> 
-> BCM5785 (HT1000) is a Opteron Southbridge from Serverworks/Broadcom that
-> Incorporates a single channel ATA100 IDE controller that is functionally
-> Identical to the Serverworks CSB6 IDE controller. This patch adds support For
-> the new PCI device ID and also the support for this controller.
-> 
-> Update - 
-> Fixed typo.
-> 
-> Signed-off-by: Narendra Sankar <nsankar@broadcom.com>
+I realize the software support isn't there now, but I'm having trouble
+getting a lot of SATA drives into a cheap AMD64 computer.
 
-ACK
+Most everything has 4 ports on the motherboard, but all the cheap SATA
+controllers are PCI-X, and all of the Socket 939 or 940 PCI-X motherboards
+are expensive.  Yes, I can plug a PCI-X controller into an ordinary PCI
+slot, but that's a big bandwidth hit.
 
-	Jeff
+So I'm thinking of starting my RAID system with 4x400 GB drives, but
+getting a case that can hold more, and hoping that port multipliers will
+appear by the time I need to expand.
 
+But that means that I need to pick a motherboard that is hardware-capable
+of port multiplier support, even if it isn't supported yet.
 
+Does anyone know which controllers are capable of driving a port multiplier,
+and which are definitely not?
 
+Thanks!
+
+(P.S. If anyone is searching, a cheap peripheral company named Addonics
+makes Sil3124 PCI-X 4-port SATA cards.)
