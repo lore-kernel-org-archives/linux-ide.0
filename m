@@ -1,127 +1,38 @@
-From: "Naren (Narendra) Sankar" <nsankar@broadcom.com>
-Subject: [PATCH 2.6.13-rc6 ] (updated) serverworks: Add support for new
- southbridge IDE
-Date: Wed, 17 Aug 2005 08:01:20 -0700
-Message-ID: <8AFFB74283C8EF46ACA4C331087033F10F5BCB@NT-SJCA-0750.brcm.ad.broadcom.com>
+From: Jim Ramsay <jim.ramsay@gmail.com>
+Subject: Re: ata_scsi_queuecmd locking question
+Date: Wed, 17 Aug 2005 09:23:13 -0600
+Message-ID: <4789af9e050817082353db4520@mail.gmail.com>
+References: <4789af9e05081615216c1de2be@mail.gmail.com>
+	 <43026A34.5000403@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="----_=_NextPart_001_01C5A33C.8BFE3E91"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:21262 "EHLO
-	MMS3.broadcom.com") by vger.kernel.org with ESMTP id S1751148AbVHQPBn
+Received: from zproxy.gmail.com ([64.233.162.204]:30743 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751153AbVHQPXQ convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Aug 2005 11:01:43 -0400
-Content-class: urn:content-classes:message
+	Wed, 17 Aug 2005 11:23:16 -0400
+Received: by zproxy.gmail.com with SMTP id r28so142492nza
+        for <linux-ide@vger.kernel.org>; Wed, 17 Aug 2005 08:23:13 -0700 (PDT)
+In-Reply-To: <43026A34.5000403@pobox.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux-ide <linux-ide@vger.kernel.org>
 
-This is a multi-part message in MIME format.
+On 8/16/05, Jeff Garzik <jgarzik@pobox.com> wrote:
+> Jim Ramsay wrote:
+> > I'm just looking into libata-scsi.c, and noticed that the comments for
+> > ata_scs_queuecmd note that it is supposed to obtain host_set->lock.
+> > It doesn't seem to do so.
+> >
+> > Should it?
+> 
+> The SCSI layer acquires this lock for us.
 
-------_=_NextPart_001_01C5A33C.8BFE3E91
-Content-Type: text/plain;
- charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
+Ah yes, now I see - This lock is also pointed at by the host->host_lock
 
-Hi Everyone
-
-Description -
-
-BCM5785 (HT1000) is a Opteron Southbridge from Serverworks/Broadcom that
-Incorporates a single channel ATA100 IDE controller that is functionally
-Identical to the Serverworks CSB6 IDE controller. This patch adds =
-support For
-the new PCI device ID and also the support for this controller.
-
-Update -=20
-Fixed typo.
-
-Signed-off-by: Narendra Sankar <nsankar@broadcom.com>
-
-=20
-
-For your review
-
-Thanks
-
-=20
-Naren Sankar
-System Architect
-Chipset Product Line
-Broadcom Corporation
-2451 Mission College Blvd
-Santa Clara, CA 95054
-Office:  (408) 922-7143
-Email:  nsankar@broadcom.com <mailto:nsankar@broadcom.com> =20
-
-------_=_NextPart_001_01C5A33C.8BFE3E91
-Content-Type: application/octet-stream;
- name=ht1000ide.patch
-Content-Transfer-Encoding: base64
-Content-Description: ht1000ide.patch
-Content-Disposition: attachment;
- filename=ht1000ide.patch
-
-ZGlmZiAtdXByTiAtWCBsaW51eC0yLjYuMTMtcmM2L0RvY3VtZW50YXRpb24vZG9udGRpZmYgbGlu
-dXgtMi42LjEzLXJjNi9kcml2ZXJzL2lkZS9wY2kvc2VydmVyd29ya3MuYyBsaW51eC0yLjYuMTMt
-cmM2LmJyY20vZHJpdmVycy9pZGUvcGNpL3NlcnZlcndvcmtzLmMKLS0tIGxpbnV4LTIuNi4xMy1y
-YzYvZHJpdmVycy9pZGUvcGNpL3NlcnZlcndvcmtzLmMJMjAwNS0wOC0wNyAxMToxODo1Ni4wMDAw
-MDAwMDAgLTA3MDAKKysrIGxpbnV4LTIuNi4xMy1yYzYuYnJjbS9kcml2ZXJzL2lkZS9wY2kvc2Vy
-dmVyd29ya3MuYwkyMDA1LTA4LTE2IDExOjE5OjIzLjYzNTc3NDAwMCAtMDcwMApAQCAtMjEsNiAr
-MjEsOSBAQAogICoKICAqICAgQ1NCNjogYENoYW1waW9uIFNvdXRoIEJyaWRnZScgSURFIEludGVy
-ZmFjZSAob3B0aW9uYWw6IHRoaXJkIGNoYW5uZWwpCiAgKgorICogICBIVDEwMDA6IEFLQSBCQ001
-Nzg1IC0gSHlwZXJ0cmFuc3BvcnQgU291dGhicmlkZ2UgZm9yIE9wdGVyb24gc3lzdGVtcy4gSURF
-CisgKiAgIGNvbnRyb2xsZXIgc2FtZSBhcyB0aGUgQ1NCNi4gU2luZ2xlIGNoYW5uZWwgQVRBMTAw
-IG9ubHkuCisgKgogICogRG9jdW1lbnRhdGlvbjoKICAqCUF2YWlsYWJsZSB1bmRlciBOREEgb25s
-eS4gRXJyYXRhIGluZm8gdmVyeSBoYXJkIHRvIGdldC4KICAqCkBAIC03MSw2ICs3NCw4IEBAIHN0
-YXRpYyB1OCBzdndrc19yYXRlbWFzayAoaWRlX2RyaXZlX3QgKmQKIAlpZiAoIXN2d2tzX3Jldmlz
-aW9uKQogCQlwY2lfcmVhZF9jb25maWdfYnl0ZShkZXYsIFBDSV9SRVZJU0lPTl9JRCwgJnN2d2tz
-X3JldmlzaW9uKTsKIAorCWlmIChkZXYtPmRldmljZSA9PSBQQ0lfREVWSUNFX0lEX1NFUlZFUldP
-UktTX0hUMTAwMElERSkKKwkJcmV0dXJuIDI7CiAJaWYgKGRldi0+ZGV2aWNlID09IFBDSV9ERVZJ
-Q0VfSURfU0VSVkVSV09SS1NfT1NCNElERSkgewogCQl1MzIgcmVnID0gMDsKIAkJaWYgKGlzYV9k
-ZXYpCkBAIC0xMDksNiArMTE0LDcgQEAgc3RhdGljIHU4IHN2d2tzX2NzYl9jaGVjayAoc3RydWN0
-IHBjaV9kZQogCQljYXNlIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NCNUlERToKIAkJY2Fz
-ZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktTX0NTQjZJREU6CiAJCWNhc2UgUENJX0RFVklDRV9J
-RF9TRVJWRVJXT1JLU19DU0I2SURFMjoKKwkJY2FzZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktT
-X0hUMTAwMElERToKIAkJCXJldHVybiAxOwogCQlkZWZhdWx0OgogCQkJYnJlYWs7CkBAIC00Mzgs
-NiArNDQ0LDEzIEBAIHN0YXRpYyB1bnNpZ25lZCBpbnQgX19kZXZpbml0IGluaXRfY2hpcHMKIAkJ
-CWJ0ciB8PSAoc3Z3a3NfcmV2aXNpb24gPj0gU1ZXS1NfQ1NCNV9SRVZJU0lPTl9ORVcpID8gMHgz
-IDogMHgyOwogCQlwY2lfd3JpdGVfY29uZmlnX2J5dGUoZGV2LCAweDVBLCBidHIpOwogCX0KKwkv
-KiBTZXR1cCBIVDEwMDAgU291dGhCcmlkZ2UgQ29udHJvbGxlciAtIFNpbmdsZSBDaGFubmVsIE9u
-bHkgKi8KKwllbHNlIGlmIChkZXYtPmRldmljZSA9PSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktT
-X0hUMTAwMElERSkgeworCQlwY2lfcmVhZF9jb25maWdfYnl0ZShkZXYsIDB4NUEsICZidHIpOwor
-CQlidHIgJj0gfjB4NDA7CisJCWJ0ciB8PSAweDM7CisJCXBjaV93cml0ZV9jb25maWdfYnl0ZShk
-ZXYsIDB4NUEsIGJ0cik7CisJfQogCiAJcmV0dXJuIChkZXYtPmlycSkgPyBkZXYtPmlycSA6IDA7
-CiB9CkBAIC02MjksNiArNjQyLDE1IEBAIHN0YXRpYyBpZGVfcGNpX2RldmljZV90IHNlcnZlcndv
-cmtzX2NoaXAKIAkJLmNoYW5uZWxzCT0gMSwJLyogMiAqLwogCQkuYXV0b2RtYQk9IEFVVE9ETUEs
-CiAJCS5ib290YWJsZQk9IE9OX0JPQVJELAorCX0sewkvKiA0ICovCisJCS5uYW1lCQk9ICJTdnJX
-a3MgSFQxMDAwIiwKKwkJLmluaXRfc2V0dXAJPSBpbml0X3NldHVwX3N2d2tzLAorCQkuaW5pdF9j
-aGlwc2V0CT0gaW5pdF9jaGlwc2V0X3N2d2tzLAorCQkuaW5pdF9od2lmCT0gaW5pdF9od2lmX3N2
-d2tzLAorCQkuaW5pdF9kbWEJPSBpbml0X2RtYV9zdndrcywKKwkJLmNoYW5uZWxzCT0gMSwJLyog
-MiAqLworCQkuYXV0b2RtYQk9IEFVVE9ETUEsCisJCS5ib290YWJsZQk9IE9OX0JPQVJELAogCX0K
-IH07CiAKQEAgLTY1Myw2ICs2NzUsNyBAQCBzdGF0aWMgc3RydWN0IHBjaV9kZXZpY2VfaWQgc3Z3
-a3NfcGNpX3RiCiAJeyBQQ0lfVkVORE9SX0lEX1NFUlZFUldPUktTLCBQQ0lfREVWSUNFX0lEX1NF
-UlZFUldPUktTX0NTQjVJREUsIFBDSV9BTllfSUQsIFBDSV9BTllfSUQsIDAsIDAsIDF9LAogCXsg
-UENJX1ZFTkRPUl9JRF9TRVJWRVJXT1JLUywgUENJX0RFVklDRV9JRF9TRVJWRVJXT1JLU19DU0I2
-SURFLCBQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCAwLCAwLCAyfSwKIAl7IFBDSV9WRU5ET1JfSURf
-U0VSVkVSV09SS1MsIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NCNklERTIsIFBDSV9BTllf
-SUQsIFBDSV9BTllfSUQsIDAsIDAsIDN9LAorCXsgUENJX1ZFTkRPUl9JRF9TRVJWRVJXT1JLUywg
-UENJX0RFVklDRV9JRF9TRVJWRVJXT1JLU19IVDEwMDBJREUsIFBDSV9BTllfSUQsIFBDSV9BTllf
-SUQsIDAsIDAsIDR9LAogCXsgMCwgfSwKIH07CiBNT0RVTEVfREVWSUNFX1RBQkxFKHBjaSwgc3Z3
-a3NfcGNpX3RibCk7CmRpZmYgLXVwck4gLVggbGludXgtMi42LjEzLXJjNi9Eb2N1bWVudGF0aW9u
-L2RvbnRkaWZmIGxpbnV4LTIuNi4xMy1yYzYvaW5jbHVkZS9saW51eC9wY2lfaWRzLmggbGludXgt
-Mi42LjEzLXJjNi5icmNtL2luY2x1ZGUvbGludXgvcGNpX2lkcy5oCi0tLSBsaW51eC0yLjYuMTMt
-cmM2L2luY2x1ZGUvbGludXgvcGNpX2lkcy5oCTIwMDUtMDgtMDcgMTE6MTg6NTYuMDAwMDAwMDAw
-IC0wNzAwCisrKyBsaW51eC0yLjYuMTMtcmM2LmJyY20vaW5jbHVkZS9saW51eC9wY2lfaWRzLmgJ
-MjAwNS0wOC0xNiAwOTo1ODozNy44NjA5NzAwMDAgLTA3MDAKQEAgLTE1ODAsNiArMTU4MCw3IEBA
-CiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfT1NCNElERSAweDAyMTEKICNkZWZp
-bmUgUENJX0RFVklDRV9JRF9TRVJWRVJXT1JLU19DU0I1SURFIDB4MDIxMgogI2RlZmluZSBQQ0lf
-REVWSUNFX0lEX1NFUlZFUldPUktTX0NTQjZJREUgMHgwMjEzCisjZGVmaW5lIFBDSV9ERVZJQ0Vf
-SURfU0VSVkVSV09SS1NfSFQxMDAwSURFIDB4MDIxNAogI2RlZmluZSBQQ0lfREVWSUNFX0lEX1NF
-UlZFUldPUktTX0NTQjZJREUyIDB4MDIxNwogI2RlZmluZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldP
-UktTX09TQjRVU0IgMHgwMjIwCiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NC
-NVVTQiBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktTX09TQjRVU0IK
-
-------_=_NextPart_001_01C5A33C.8BFE3E91--
-
+-- 
+Jim Ramsay
+"Me fail English?  That's unpossible!"
