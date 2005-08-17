@@ -1,68 +1,127 @@
-From: Chris Boot <bootc@bootc.net>
-Subject: Re: SiI 3112A + Seagate HDs = still no go? [SOLVED]
-Date: Wed, 17 Aug 2005 11:32:03 +0100
-Message-ID: <43031223.4020901@bootc.net>
-References: <12872CA9-F089-4955-8751-8CC4E7B2140A@bootc.net> <42FC166A.3020505@gmail.com> <0FDE8D5B-CFF2-44F9-8C98-9C5EC5CDAE92@bootc.net> <42FC87ED.6030201@gmail.com> <22B1D7C7-7BC8-449C-914C-FCE5226BCAF2@bootc.net> <655E2636-B4D4-42EC-B10C-C8B8EFA09E33@bootc.net> <42FCAD4D.7080707@gmail.com> <74C9A166-2FDC-45F8-BEB1-A574FD9602D4@bootc.net> <42FD493D.8020506@gmail.com> <EB750DA5-854F-4387-A5D7-F646EB8E7AAC@bootc.net> <42FE0ACE.6010506@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] add correct device link to ide-cs
+Date: Wed, 17 Aug 2005 15:20:59 +0200
+Message-ID: <430339BB.1010503@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------040804070806020201040209"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from baldrick.bootc.net ([83.142.228.48]:56474 "EHLO
-	baldrick.bootc.net") by vger.kernel.org with ESMTP id S1751053AbVHQKcF
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Aug 2005 06:32:05 -0400
-In-Reply-To: <42FE0ACE.6010506@gmail.com>
+Received: from ns2.suse.de ([195.135.220.15]:64206 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S1751123AbVHQNVB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Aug 2005 09:21:01 -0400
+Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx2.suse.de (Postfix) with ESMTP id E188F7FC
+	for <linux-ide@vger.kernel.org>; Wed, 17 Aug 2005 15:20:59 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
+This is a multi-part message in MIME format.
+--------------040804070806020201040209
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> Chris Boot wrote:
->
->> Some interesting developments!
->>
->> I installed a fresh copy of Windows, and all the VIA and nVidia and  
->> so on drivers. At some point during all this (a period of relatively  
->> heavy disk IO), the computer seemed to crash and I rebooted it. It  
->> then worked fine for a while, but during my perfmon testing it 
->> seemed  to do the same thing. This time I left it for a while and it 
->> did  eventually wake up again, so I'm guessing the controller is a 
->> bit  fubared. Perfmon did indeed show several dips down to or very 
->> close  to 0 during the write operation, with peaks up to 48 MB/sec, 
->> which is  pretty respectable. So, time to replace the brand-new 
->> controller I  guess.
->>
->> Now, do you think this is just my one particular controller card and  
->> a simple return would fix the problem, or is it more likely a 
->> problem  with the whole range? It's an Innovision EIO SATA 
->> controller: http:// www.ivmm.com/eio/products/index.htm
->>
->> Would it be a safer bet to go for the Adaptec controller of the same  
->> variety? How reliable are they?
->
->
->  I frankly don't know.  Maybe it's just one faulty controller, 
-> connector or whatever.  Maybe the card manufacturer screwed up 
-> somewhere.  I mean, the only course I took in electronics is 
-> introductory digital circuits which used 74xx chips and push triggered 
-> clock on a breadboard.  What would I know about gigahertz signaling 
-> error.  :-p
->
->  Though, one thing I can say is majority of 311x controllers don't 
-> seem to suffer from this problem.  So, take your pick.
->
-Right, I've replaced my previous controller with an Adaptec AHA-1205SA, 
-and I'm rebulding 2 RAID-1 arrays at 50MB/sec without a hitch.
+Hi Jens,
 
-Thanks for your help diagnosing my problem, it was much appreciated!
+the ide-cs driver does not create the correct device link; instead of
+being connected to the appropriate PCMCIA slot it just sits und
+/sys/devices. Clearly unsatisfactory.
 
-Many thanks,
-Chris
+To fix I've added a field 'dev' to include/linux/ide.h:hw_regs_t.
+This is being passed over as the 'gendev.parent' link for hwif, thus
+allowing us to set the device link even for non-PCI devices.
 
--- 
-Chris Boot
-bootc@bootc.net
-http://www.bootc.net/
+I think it's a quite sensible approach, but it's probably not for me to
+decide.
 
+Comments etc welcome.
+Otherwise, please apply.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstra=DFe 5				+49 911 74053 688
+90409 N=FCrnberg				http://www.suse.de
+
+--------------040804070806020201040209
+Content-Type: text/plain;
+ name="ide-cs-correct-device-link"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ide-cs-correct-device-link"
+
+From: Hannes Reinecke <hare@suse.de>
+Subject: Incorrect device link for ide-cs
+
+Devices driven by ide-cs will appear under /sys/devices instead of the
+appropriate PCMCIA device. To fix this I had to extend the hw_regs_t
+structure with a 'struct device' field, which allows us to set the
+parent link for the appropriate hwif.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -803,6 +803,7 @@ found:
+ 	hwif->irq = hw->irq;
+ 	hwif->noprobe = 0;
+ 	hwif->chipset = hw->chipset;
++	hwif->gendev.parent = hw->dev;
+ 
+ 	if (!initializing) {
+ 		probe_hwif_init_with_fixup(hwif, fixup);
+diff --git a/drivers/ide/legacy/ide-cs.c b/drivers/ide/legacy/ide-cs.c
+--- a/drivers/ide/legacy/ide-cs.c
++++ b/drivers/ide/legacy/ide-cs.c
+@@ -182,13 +182,14 @@ static void ide_detach(dev_link_t *link)
+     
+ } /* ide_detach */
+ 
+-static int idecs_register(unsigned long io, unsigned long ctl, unsigned long irq)
++static int idecs_register(unsigned long io, unsigned long ctl, unsigned long irq, struct pcmcia_device *handle)
+ {
+     hw_regs_t hw;
+     memset(&hw, 0, sizeof(hw));
+-    ide_init_hwif_ports(&hw, io, ctl, NULL);
++    ide_std_init_ports(&hw, io, ctl);
+     hw.irq = irq;
+     hw.chipset = ide_pci;
++    hw.dev = &handle->dev;
+     return ide_register_hw_with_fixup(&hw, NULL, ide_undecoded_slave);
+ }
+ 
+@@ -328,12 +329,12 @@ static void ide_config(dev_link_t *link)
+ 
+     /* retry registration in case device is still spinning up */
+     for (hd = -1, i = 0; i < 10; i++) {
+-	hd = idecs_register(io_base, ctl_base, link->irq.AssignedIRQ);
++	hd = idecs_register(io_base, ctl_base, link->irq.AssignedIRQ, handle);
+ 	if (hd >= 0) break;
+ 	if (link->io.NumPorts1 == 0x20) {
+ 	    outb(0x02, ctl_base + 0x10);
+ 	    hd = idecs_register(io_base + 0x10, ctl_base + 0x10,
+-				link->irq.AssignedIRQ);
++				link->irq.AssignedIRQ, handle);
+ 	    if (hd >= 0) {
+ 		io_base += 0x10;
+ 		ctl_base += 0x10;
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -230,6 +230,7 @@ typedef struct hw_regs_s {
+ 	int		dma;			/* our dma entry */
+ 	ide_ack_intr_t	*ack_intr;		/* acknowledge interrupt */
+ 	hwif_chipset_t  chipset;
++	struct device	*dev;
+ } hw_regs_t;
+ 
+ /*
+
+--------------040804070806020201040209--
