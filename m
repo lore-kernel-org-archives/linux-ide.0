@@ -1,127 +1,127 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] add correct device link to ide-cs
-Date: Wed, 17 Aug 2005 15:20:59 +0200
-Message-ID: <430339BB.1010503@suse.de>
+From: "Naren (Narendra) Sankar" <nsankar@broadcom.com>
+Subject: [PATCH 2.6.13-rc6 ] (updated) serverworks: Add support for new
+ southbridge IDE
+Date: Wed, 17 Aug 2005 08:01:20 -0700
+Message-ID: <8AFFB74283C8EF46ACA4C331087033F10F5BCB@NT-SJCA-0750.brcm.ad.broadcom.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------040804070806020201040209"
+ boundary="----_=_NextPart_001_01C5A33C.8BFE3E91"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:64206 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1751123AbVHQNVB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Aug 2005 09:21:01 -0400
-Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx2.suse.de (Postfix) with ESMTP id E188F7FC
-	for <linux-ide@vger.kernel.org>; Wed, 17 Aug 2005 15:20:59 +0200 (CEST)
+Received: from mms3.broadcom.com ([216.31.210.19]:21262 "EHLO
+	MMS3.broadcom.com") by vger.kernel.org with ESMTP id S1751148AbVHQPBn
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Aug 2005 11:01:43 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
+To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------040804070806020201040209
-Content-Type: text/plain; charset=ISO-8859-1
+
+------_=_NextPart_001_01C5A33C.8BFE3E91
+Content-Type: text/plain;
+ charset=us-ascii
 Content-Transfer-Encoding: quoted-printable
 
-Hi Jens,
+Hi Everyone
 
-the ide-cs driver does not create the correct device link; instead of
-being connected to the appropriate PCMCIA slot it just sits und
-/sys/devices. Clearly unsatisfactory.
+Description -
 
-To fix I've added a field 'dev' to include/linux/ide.h:hw_regs_t.
-This is being passed over as the 'gendev.parent' link for hwif, thus
-allowing us to set the device link even for non-PCI devices.
+BCM5785 (HT1000) is a Opteron Southbridge from Serverworks/Broadcom that
+Incorporates a single channel ATA100 IDE controller that is functionally
+Identical to the Serverworks CSB6 IDE controller. This patch adds =
+support For
+the new PCI device ID and also the support for this controller.
 
-I think it's a quite sensible approach, but it's probably not for me to
-decide.
+Update -=20
+Fixed typo.
 
-Comments etc welcome.
-Otherwise, please apply.
+Signed-off-by: Narendra Sankar <nsankar@broadcom.com>
 
-Cheers,
+=20
 
-Hannes
---=20
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux Products GmbH		S390 & zSeries
-Maxfeldstra=DFe 5				+49 911 74053 688
-90409 N=FCrnberg				http://www.suse.de
+For your review
 
---------------040804070806020201040209
-Content-Type: text/plain;
- name="ide-cs-correct-device-link"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ide-cs-correct-device-link"
+Thanks
 
-From: Hannes Reinecke <hare@suse.de>
-Subject: Incorrect device link for ide-cs
+=20
+Naren Sankar
+System Architect
+Chipset Product Line
+Broadcom Corporation
+2451 Mission College Blvd
+Santa Clara, CA 95054
+Office:  (408) 922-7143
+Email:  nsankar@broadcom.com <mailto:nsankar@broadcom.com> =20
 
-Devices driven by ide-cs will appear under /sys/devices instead of the
-appropriate PCMCIA device. To fix this I had to extend the hw_regs_t
-structure with a 'struct device' field, which allows us to set the
-parent link for the appropriate hwif.
+------_=_NextPart_001_01C5A33C.8BFE3E91
+Content-Type: application/octet-stream;
+ name=ht1000ide.patch
+Content-Transfer-Encoding: base64
+Content-Description: ht1000ide.patch
+Content-Disposition: attachment;
+ filename=ht1000ide.patch
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+ZGlmZiAtdXByTiAtWCBsaW51eC0yLjYuMTMtcmM2L0RvY3VtZW50YXRpb24vZG9udGRpZmYgbGlu
+dXgtMi42LjEzLXJjNi9kcml2ZXJzL2lkZS9wY2kvc2VydmVyd29ya3MuYyBsaW51eC0yLjYuMTMt
+cmM2LmJyY20vZHJpdmVycy9pZGUvcGNpL3NlcnZlcndvcmtzLmMKLS0tIGxpbnV4LTIuNi4xMy1y
+YzYvZHJpdmVycy9pZGUvcGNpL3NlcnZlcndvcmtzLmMJMjAwNS0wOC0wNyAxMToxODo1Ni4wMDAw
+MDAwMDAgLTA3MDAKKysrIGxpbnV4LTIuNi4xMy1yYzYuYnJjbS9kcml2ZXJzL2lkZS9wY2kvc2Vy
+dmVyd29ya3MuYwkyMDA1LTA4LTE2IDExOjE5OjIzLjYzNTc3NDAwMCAtMDcwMApAQCAtMjEsNiAr
+MjEsOSBAQAogICoKICAqICAgQ1NCNjogYENoYW1waW9uIFNvdXRoIEJyaWRnZScgSURFIEludGVy
+ZmFjZSAob3B0aW9uYWw6IHRoaXJkIGNoYW5uZWwpCiAgKgorICogICBIVDEwMDA6IEFLQSBCQ001
+Nzg1IC0gSHlwZXJ0cmFuc3BvcnQgU291dGhicmlkZ2UgZm9yIE9wdGVyb24gc3lzdGVtcy4gSURF
+CisgKiAgIGNvbnRyb2xsZXIgc2FtZSBhcyB0aGUgQ1NCNi4gU2luZ2xlIGNoYW5uZWwgQVRBMTAw
+IG9ubHkuCisgKgogICogRG9jdW1lbnRhdGlvbjoKICAqCUF2YWlsYWJsZSB1bmRlciBOREEgb25s
+eS4gRXJyYXRhIGluZm8gdmVyeSBoYXJkIHRvIGdldC4KICAqCkBAIC03MSw2ICs3NCw4IEBAIHN0
+YXRpYyB1OCBzdndrc19yYXRlbWFzayAoaWRlX2RyaXZlX3QgKmQKIAlpZiAoIXN2d2tzX3Jldmlz
+aW9uKQogCQlwY2lfcmVhZF9jb25maWdfYnl0ZShkZXYsIFBDSV9SRVZJU0lPTl9JRCwgJnN2d2tz
+X3JldmlzaW9uKTsKIAorCWlmIChkZXYtPmRldmljZSA9PSBQQ0lfREVWSUNFX0lEX1NFUlZFUldP
+UktTX0hUMTAwMElERSkKKwkJcmV0dXJuIDI7CiAJaWYgKGRldi0+ZGV2aWNlID09IFBDSV9ERVZJ
+Q0VfSURfU0VSVkVSV09SS1NfT1NCNElERSkgewogCQl1MzIgcmVnID0gMDsKIAkJaWYgKGlzYV9k
+ZXYpCkBAIC0xMDksNiArMTE0LDcgQEAgc3RhdGljIHU4IHN2d2tzX2NzYl9jaGVjayAoc3RydWN0
+IHBjaV9kZQogCQljYXNlIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NCNUlERToKIAkJY2Fz
+ZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktTX0NTQjZJREU6CiAJCWNhc2UgUENJX0RFVklDRV9J
+RF9TRVJWRVJXT1JLU19DU0I2SURFMjoKKwkJY2FzZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktT
+X0hUMTAwMElERToKIAkJCXJldHVybiAxOwogCQlkZWZhdWx0OgogCQkJYnJlYWs7CkBAIC00Mzgs
+NiArNDQ0LDEzIEBAIHN0YXRpYyB1bnNpZ25lZCBpbnQgX19kZXZpbml0IGluaXRfY2hpcHMKIAkJ
+CWJ0ciB8PSAoc3Z3a3NfcmV2aXNpb24gPj0gU1ZXS1NfQ1NCNV9SRVZJU0lPTl9ORVcpID8gMHgz
+IDogMHgyOwogCQlwY2lfd3JpdGVfY29uZmlnX2J5dGUoZGV2LCAweDVBLCBidHIpOwogCX0KKwkv
+KiBTZXR1cCBIVDEwMDAgU291dGhCcmlkZ2UgQ29udHJvbGxlciAtIFNpbmdsZSBDaGFubmVsIE9u
+bHkgKi8KKwllbHNlIGlmIChkZXYtPmRldmljZSA9PSBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktT
+X0hUMTAwMElERSkgeworCQlwY2lfcmVhZF9jb25maWdfYnl0ZShkZXYsIDB4NUEsICZidHIpOwor
+CQlidHIgJj0gfjB4NDA7CisJCWJ0ciB8PSAweDM7CisJCXBjaV93cml0ZV9jb25maWdfYnl0ZShk
+ZXYsIDB4NUEsIGJ0cik7CisJfQogCiAJcmV0dXJuIChkZXYtPmlycSkgPyBkZXYtPmlycSA6IDA7
+CiB9CkBAIC02MjksNiArNjQyLDE1IEBAIHN0YXRpYyBpZGVfcGNpX2RldmljZV90IHNlcnZlcndv
+cmtzX2NoaXAKIAkJLmNoYW5uZWxzCT0gMSwJLyogMiAqLwogCQkuYXV0b2RtYQk9IEFVVE9ETUEs
+CiAJCS5ib290YWJsZQk9IE9OX0JPQVJELAorCX0sewkvKiA0ICovCisJCS5uYW1lCQk9ICJTdnJX
+a3MgSFQxMDAwIiwKKwkJLmluaXRfc2V0dXAJPSBpbml0X3NldHVwX3N2d2tzLAorCQkuaW5pdF9j
+aGlwc2V0CT0gaW5pdF9jaGlwc2V0X3N2d2tzLAorCQkuaW5pdF9od2lmCT0gaW5pdF9od2lmX3N2
+d2tzLAorCQkuaW5pdF9kbWEJPSBpbml0X2RtYV9zdndrcywKKwkJLmNoYW5uZWxzCT0gMSwJLyog
+MiAqLworCQkuYXV0b2RtYQk9IEFVVE9ETUEsCisJCS5ib290YWJsZQk9IE9OX0JPQVJELAogCX0K
+IH07CiAKQEAgLTY1Myw2ICs2NzUsNyBAQCBzdGF0aWMgc3RydWN0IHBjaV9kZXZpY2VfaWQgc3Z3
+a3NfcGNpX3RiCiAJeyBQQ0lfVkVORE9SX0lEX1NFUlZFUldPUktTLCBQQ0lfREVWSUNFX0lEX1NF
+UlZFUldPUktTX0NTQjVJREUsIFBDSV9BTllfSUQsIFBDSV9BTllfSUQsIDAsIDAsIDF9LAogCXsg
+UENJX1ZFTkRPUl9JRF9TRVJWRVJXT1JLUywgUENJX0RFVklDRV9JRF9TRVJWRVJXT1JLU19DU0I2
+SURFLCBQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCAwLCAwLCAyfSwKIAl7IFBDSV9WRU5ET1JfSURf
+U0VSVkVSV09SS1MsIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NCNklERTIsIFBDSV9BTllf
+SUQsIFBDSV9BTllfSUQsIDAsIDAsIDN9LAorCXsgUENJX1ZFTkRPUl9JRF9TRVJWRVJXT1JLUywg
+UENJX0RFVklDRV9JRF9TRVJWRVJXT1JLU19IVDEwMDBJREUsIFBDSV9BTllfSUQsIFBDSV9BTllf
+SUQsIDAsIDAsIDR9LAogCXsgMCwgfSwKIH07CiBNT0RVTEVfREVWSUNFX1RBQkxFKHBjaSwgc3Z3
+a3NfcGNpX3RibCk7CmRpZmYgLXVwck4gLVggbGludXgtMi42LjEzLXJjNi9Eb2N1bWVudGF0aW9u
+L2RvbnRkaWZmIGxpbnV4LTIuNi4xMy1yYzYvaW5jbHVkZS9saW51eC9wY2lfaWRzLmggbGludXgt
+Mi42LjEzLXJjNi5icmNtL2luY2x1ZGUvbGludXgvcGNpX2lkcy5oCi0tLSBsaW51eC0yLjYuMTMt
+cmM2L2luY2x1ZGUvbGludXgvcGNpX2lkcy5oCTIwMDUtMDgtMDcgMTE6MTg6NTYuMDAwMDAwMDAw
+IC0wNzAwCisrKyBsaW51eC0yLjYuMTMtcmM2LmJyY20vaW5jbHVkZS9saW51eC9wY2lfaWRzLmgJ
+MjAwNS0wOC0xNiAwOTo1ODozNy44NjA5NzAwMDAgLTA3MDAKQEAgLTE1ODAsNiArMTU4MCw3IEBA
+CiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfT1NCNElERSAweDAyMTEKICNkZWZp
+bmUgUENJX0RFVklDRV9JRF9TRVJWRVJXT1JLU19DU0I1SURFIDB4MDIxMgogI2RlZmluZSBQQ0lf
+REVWSUNFX0lEX1NFUlZFUldPUktTX0NTQjZJREUgMHgwMjEzCisjZGVmaW5lIFBDSV9ERVZJQ0Vf
+SURfU0VSVkVSV09SS1NfSFQxMDAwSURFIDB4MDIxNAogI2RlZmluZSBQQ0lfREVWSUNFX0lEX1NF
+UlZFUldPUktTX0NTQjZJREUyIDB4MDIxNwogI2RlZmluZSBQQ0lfREVWSUNFX0lEX1NFUlZFUldP
+UktTX09TQjRVU0IgMHgwMjIwCiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NC
+NVVTQiBQQ0lfREVWSUNFX0lEX1NFUlZFUldPUktTX09TQjRVU0IK
 
-diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -803,6 +803,7 @@ found:
- 	hwif->irq = hw->irq;
- 	hwif->noprobe = 0;
- 	hwif->chipset = hw->chipset;
-+	hwif->gendev.parent = hw->dev;
- 
- 	if (!initializing) {
- 		probe_hwif_init_with_fixup(hwif, fixup);
-diff --git a/drivers/ide/legacy/ide-cs.c b/drivers/ide/legacy/ide-cs.c
---- a/drivers/ide/legacy/ide-cs.c
-+++ b/drivers/ide/legacy/ide-cs.c
-@@ -182,13 +182,14 @@ static void ide_detach(dev_link_t *link)
-     
- } /* ide_detach */
- 
--static int idecs_register(unsigned long io, unsigned long ctl, unsigned long irq)
-+static int idecs_register(unsigned long io, unsigned long ctl, unsigned long irq, struct pcmcia_device *handle)
- {
-     hw_regs_t hw;
-     memset(&hw, 0, sizeof(hw));
--    ide_init_hwif_ports(&hw, io, ctl, NULL);
-+    ide_std_init_ports(&hw, io, ctl);
-     hw.irq = irq;
-     hw.chipset = ide_pci;
-+    hw.dev = &handle->dev;
-     return ide_register_hw_with_fixup(&hw, NULL, ide_undecoded_slave);
- }
- 
-@@ -328,12 +329,12 @@ static void ide_config(dev_link_t *link)
- 
-     /* retry registration in case device is still spinning up */
-     for (hd = -1, i = 0; i < 10; i++) {
--	hd = idecs_register(io_base, ctl_base, link->irq.AssignedIRQ);
-+	hd = idecs_register(io_base, ctl_base, link->irq.AssignedIRQ, handle);
- 	if (hd >= 0) break;
- 	if (link->io.NumPorts1 == 0x20) {
- 	    outb(0x02, ctl_base + 0x10);
- 	    hd = idecs_register(io_base + 0x10, ctl_base + 0x10,
--				link->irq.AssignedIRQ);
-+				link->irq.AssignedIRQ, handle);
- 	    if (hd >= 0) {
- 		io_base += 0x10;
- 		ctl_base += 0x10;
-diff --git a/include/linux/ide.h b/include/linux/ide.h
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -230,6 +230,7 @@ typedef struct hw_regs_s {
- 	int		dma;			/* our dma entry */
- 	ide_ack_intr_t	*ack_intr;		/* acknowledge interrupt */
- 	hwif_chipset_t  chipset;
-+	struct device	*dev;
- } hw_regs_t;
- 
- /*
+------_=_NextPart_001_01C5A33C.8BFE3E91--
 
---------------040804070806020201040209--
