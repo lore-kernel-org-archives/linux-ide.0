@@ -1,76 +1,271 @@
-From: Erik Slagter <erik@slagter.name>
-Subject: Re: TX4000 RAID and sata_promise
-Date: Thu, 18 Aug 2005 19:11:29 +0200
-Message-ID: <1124385089.5921.0.camel@localhost.localdomain>
-References: <653445328.20050623210533@rccb.ru>
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: [git patches] ide update
+Date: Thu, 18 Aug 2005 23:37:49 +0200 (CEST)
+Message-ID: <Pine.GSO.4.62.0508182332470.22579@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-10M4lu6K0CNxujaYgAdB"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oldconomy.demon.nl ([212.238.217.56]:12217 "EHLO
-	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S932288AbVHRRMF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 Aug 2005 13:12:05 -0400
-In-Reply-To: <653445328.20050623210533@rccb.ru>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932488AbVHRV4l@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yuri Kirsanov <flash@rccb.ru>
-Cc: linux-ide@vger.kernel.org
 
 
---=-10M4lu6K0CNxujaYgAdB
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Thu, 2005-06-23 at 21:05 +0400, Yuri Kirsanov wrote:
-> Here's my dmesg with sata_promise compiled-in kernel:
+3 obvious fixes + support for 2 new controllers
+(just new PCI IDs).
 
-[ ... ]
+Please pull from:
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/bart/ide-2.6.git
 
-I don't get it. There is no mentioning of libata whatsoever!
-
---=-10M4lu6K0CNxujaYgAdB
-Content-Type: application/x-pkcs7-signature; name=smime.p7s
-Content-Disposition: attachment; filename=smime.p7s
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGFjCCAs8w
-ggI4oAMCAQICAw9TczANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
-d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
-YWlsIElzc3VpbmcgQ0EwHhcNMDUwODE4MTE1NDA1WhcNMDYwODE4MTE1NDA1WjBDMR8wHQYDVQQD
-ExZUaGF3dGUgRnJlZW1haWwgTWVtYmVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFt
-ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANAMKW15OgreNb+Wd++Xcw6uNJUXXIfX
-56u1rtTObMmbbDY2wNc4Iqwbuwaysvox3z+YElXBibE8BAyV1iMjhee4mOfAy38dGHtWDxhOGke8
-VpkyY8DSWgMN5p4egTiT6YNdHW75iiQ+Vh5zMHju1UXnIqgf5zkUGkNuxYp15jLZvRDbfA5H+Sil
-jbZGB2fiPOJHpyI61ZidcMgdow31qm70/oe6vXxhSZLzo7OLvExE+mQHwbCSIJMN/hPTK1z0lmQ1
-kkaEjHrefqIgoF9Dk/WfOtulzvR3xBzDL50GZ32BxT/OhXYe1SHEJpSM1S/aq8TBQJYwjzREWyDh
-0OYsmr0CAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFndGVyLm5hbWUwDAYDVR0TAQH/BAIw
-ADANBgkqhkiG9w0BAQQFAAOBgQCCpzoneRQIKsUO8zSnwQ7yhJTrS/EaDibiIVrkkCbzXwCiHFAi
-7nmTRF0DlLVF3Ssf97ITWT/RSdkj9Xke0OHH7724PJdfpA6OglMnx2i7IcJLzPgPjB+fOmfR0nYX
-UYKuzGxTOXmshLmPcwKdpFuRLLk7n+vrTAwJYJI++crhJzCCAz8wggKooAMCAQICAQ0wDQYJKoZI
-hvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQIEwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcT
-CUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmlj
-YXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMTG1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFp
-bCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJlZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3
-MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUg
-Q29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwg
-SXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAxKY8VXNV+065yplaHmjAdQRw
-nd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNaLIkVcI7dyfArhVqqP3FWy688Cwfn8R+R
-NiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUqVIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEA
-AaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1UdHwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwu
-dGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWlsQ0EuY3JsMAsGA1UdDwQEAwIBBjApBgNV
-HREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVsMi0xMzgwDQYJKoZIhvcNAQEFBQADgYEA
-SIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYfqi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6E
-sZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa9/eH1sYITq726jTlEBpbNU1341YheILc
-IRk13iSx0x1G/11fZU8xggHvMIIB6wIBATBpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3
-dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1h
-aWwgSXNzdWluZyBDQQIDD1NzMAkGBSsOAwIaBQCgXTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcB
-MBwGCSqGSIb3DQEJBTEPFw0wNTA4MTgxNzExMjNaMCMGCSqGSIb3DQEJBDEWBBS0uAeGUQf8+9cV
-uHPCTOMA5WaXRTANBgkqhkiG9w0BAQEFAASCAQDBpColu6xHV+ICeHl/OBR8/VxQUt15FVEd/V7F
-m62izl0Pwvt2VhmYx2ZiW3cCXKt/irqrPhR7+SEQXflxYJysA5nw0qrC4A6dA8pL/Ui0xKGRkJEr
-9Jy3BwdenLfKPHqOL7b71rRTC9Zw6Dj1GTD5EpLD4am+MOqveDqz97t1JJtTBavhVjJr800ZmXuL
-xdhH83jKvCwyLQvM4cxo+UmJJ9Htr0xPWoNyqfwllbIUgBaKB4EiALu22d90zFInMsx+3Wu8YEV0
-7LeFjhE4bhGDmlBInD1fJ/8yvDDLVNH8OdoH4zUiiVC9kcuDnLFNkGjnziskAzxG9NWOIB0loSoe
-AAAAAAAA
+diffstat/changelog/patch below
+--
+Bartlomiej
 
 
---=-10M4lu6K0CNxujaYgAdB--
+  drivers/ide/Kconfig           |    1 +
+  drivers/ide/ide-floppy.c      |    2 +-
+  drivers/ide/pci/generic.c     |    7 +++++++
+  drivers/ide/pci/serverworks.c |   23 +++++++++++++++++++++++
+  drivers/ide/ppc/pmac.c        |    2 +-
+  drivers/ide/setup-pci.c       |    1 +
+  include/linux/pci_ids.h       |    6 +++++-
+  7 files changed, 39 insertions(+), 3 deletions(-)
+
+
+commit 84f57fbc724e3b56dc87c37dddac89f82cf75ef6
+Author: Narendra Sankar <nsankar@broadcom.com>
+Date:   Thu Aug 18 22:30:35 2005 +0200
+
+     [PATCH] serverworks: add support for new southbridge IDE
+
+     BCM5785 (HT1000) is a Opteron Southbridge from Serverworks/Broadcom that
+     incorporates a single channel ATA100 IDE controller that is functionally
+     identical to the Serverworks CSB6 IDE controller.  This patch adds support
+     for the new PCI device ID and also the support for this controller.
+
+     Signed-off-by: Narendra Sankar <nsankar@broadcom.com>
+     Acked-by: Jeff Garzik <jgarzik@pobox.com>
+
+commit 2f09a7f4af131bf23c013ead89373deba1c7593c
+Author: Matt Gillette <matt.gillette@netcell.com>
+Date:   Thu Aug 18 22:27:07 2005 +0200
+
+     [PATCH] ide: add support for Netcell Revolution to pci-ide generic driver
+
+     Adds support for Netcell Revolution to pci-ide generic driver by including
+     it in the list of devices matched.  Includes the Revolution in the list of
+     simplex devices forced into DMA mode.
+
+     Signed-off-by: Matt Gillette <matt.gillette@netcell.com>
+     Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+     Cc: Jeff Garzik <jgarzik@pobox.com>
+     Signed-off-by: Andrew Morton <akpm@osdl.org>
+
+commit b07e5eccaf512ae3209beae5cd2e3a27c92c300b
+Author: Grant Coady <gcoady@gmail.com>
+Date:   Thu Aug 18 22:19:55 2005 +0200
+
+     [PATCH] ide: fix PCI_DEVIEC_ID_APPLE_UNI_N_ATA spelling
+
+     Signed-off-by: Grant Coady <gcoady@gmail.com>
+
+commit 0ac72b351bdf29252e4181b07fa7feed8501b5d2
+Author: Juha-Matti Tapio <jmtapio@verkkotelakka.net>
+Date:   Thu Aug 18 22:13:44 2005 +0200
+
+     [PATCH] ide: fix the BLK_DEV_IDEDMA_PCI dependency for drivers/ide/ppc/pmac.c
+
+     drivers/ide/ppc/pmac.c uses symbols ide_build_sglist,
+     __ide_dma_off_quietly, __ide_dma_on and __ide_dma_timeout when
+     CONFIG_BLK_DEV_IDEDMA_PMAC is defined. The declarations for these
+     symbols (in ide.h) depend on CONFIG_BLK_DEV_IDEDMA_PCI. There is a
+     missing dependency for this in drivers/ide/Kconfig which causes
+     drivers/ide/ppc/pmac.c to fail to build if CONFIG_BLK_DEV_IDEDMA_PMAC
+     is selected but CONFIG_BLK_DEV_IDEDMA_PCI is not.
+
+     Signed-off-by: Juha-Matti Tapio <jmtapio@verkkotelakka.net>
+
+commit c40d3d38a8f04fff4394c7323db239bce780db60
+Author: Bartlomiej Zolnierkiewicz <bzolnier@elka.pw.edu.pl>
+Date:   Thu Aug 18 22:09:21 2005 +0200
+
+     [PATCH] ide-floppy: fix IDEFLOPPY_TICKS_DELAY
+
+     * IDEFLOPPY_TICKS_DELAY assumed HZ == 100, fix it
+     * increase the delay to 50ms (to match comment in the code)
+
+     Thanks to Manfred Scherer <manfred.scherer.mhm@t-online.de>
+     for reporting the problem and testing the patch.
+
+
+
+diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
+--- a/drivers/ide/Kconfig
++++ b/drivers/ide/Kconfig
+@@ -764,6 +764,7 @@ config BLK_DEV_IDE_PMAC_ATA100FIRST
+  config BLK_DEV_IDEDMA_PMAC
+  	bool "PowerMac IDE DMA support"
+  	depends on BLK_DEV_IDE_PMAC
++	select BLK_DEV_IDEDMA_PCI
+  	help
+  	  This option allows the driver for the built-in IDE controller on
+  	  Power Macintoshes and PowerBooks to use DMA (direct memory access)
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -317,7 +317,7 @@ typedef struct ide_floppy_obj {
+  	unsigned long flags;
+  } idefloppy_floppy_t;
+
+-#define IDEFLOPPY_TICKS_DELAY	3	/* default delay for ZIP 100 */
++#define IDEFLOPPY_TICKS_DELAY	HZ/20	/* default delay for ZIP 100 (50ms) */
+
+  /*
+   *	Floppy flag bits values.
+diff --git a/drivers/ide/pci/generic.c b/drivers/ide/pci/generic.c
+--- a/drivers/ide/pci/generic.c
++++ b/drivers/ide/pci/generic.c
+@@ -173,6 +173,12 @@ static ide_pci_device_t generic_chipsets
+  		.channels	= 2,
+  		.autodma	= NOAUTODMA,
+  		.bootable	= ON_BOARD,
++	},{	/* 14 */
++		.name		= "Revolution",
++		.init_hwif	= init_hwif_generic,
++		.channels	= 2,
++		.autodma	= AUTODMA,
++		.bootable	= OFF_BOARD,
+  	}
+  };
+
+@@ -231,6 +237,7 @@ static struct pci_device_id generic_pci_
+  	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO,     PCI_ANY_ID, PCI_ANY_ID, 0, 0, 11},
+  	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 12},
+  	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 13},
++	{ PCI_VENDOR_ID_NETCELL,PCI_DEVICE_ID_REVOLUTION,          PCI_ANY_ID, PCI_ANY_ID, 0, 0, 14},
+  	/* Must come last. If you add entries adjust this table appropriately and the init_one code */
+  	{ PCI_ANY_ID,		PCI_ANY_ID,			   PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL, 0},
+  	{ 0, },
+diff --git a/drivers/ide/pci/serverworks.c b/drivers/ide/pci/serverworks.c
+--- a/drivers/ide/pci/serverworks.c
++++ b/drivers/ide/pci/serverworks.c
+@@ -21,6 +21,9 @@
+   *
+   *   CSB6: `Champion South Bridge' IDE Interface (optional: third channel)
+   *
++ *   HT1000: AKA BCM5785 - Hypertransport Southbridge for Opteron systems. IDE
++ *   controller same as the CSB6. Single channel ATA100 only.
++ *
+   * Documentation:
+   *	Available under NDA only. Errata info very hard to get.
+   *
+@@ -71,6 +74,8 @@ static u8 svwks_ratemask (ide_drive_t *d
+  	if (!svwks_revision)
+  		pci_read_config_byte(dev, PCI_REVISION_ID, &svwks_revision);
+
++	if (dev->device == PCI_DEVICE_ID_SERVERWORKS_HT1000IDE)
++		return 2;
+  	if (dev->device == PCI_DEVICE_ID_SERVERWORKS_OSB4IDE) {
+  		u32 reg = 0;
+  		if (isa_dev)
+@@ -109,6 +114,7 @@ static u8 svwks_csb_check (struct pci_de
+  		case PCI_DEVICE_ID_SERVERWORKS_CSB5IDE:
+  		case PCI_DEVICE_ID_SERVERWORKS_CSB6IDE:
+  		case PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2:
++		case PCI_DEVICE_ID_SERVERWORKS_HT1000IDE:
+  			return 1;
+  		default:
+  			break;
+@@ -438,6 +444,13 @@ static unsigned int __devinit init_chips
+  			btr |= (svwks_revision >= SVWKS_CSB5_REVISION_NEW) ? 0x3 : 0x2;
+  		pci_write_config_byte(dev, 0x5A, btr);
+  	}
++	/* Setup HT1000 SouthBridge Controller - Single Channel Only */
++	else if (dev->device == PCI_DEVICE_ID_SERVERWORKS_HT1000IDE) {
++		pci_read_config_byte(dev, 0x5A, &btr);
++		btr &= ~0x40;
++		btr |= 0x3;
++		pci_write_config_byte(dev, 0x5A, btr);
++	}
+
+  	return (dev->irq) ? dev->irq : 0;
+  }
+@@ -629,6 +642,15 @@ static ide_pci_device_t serverworks_chip
+  		.channels	= 1,	/* 2 */
+  		.autodma	= AUTODMA,
+  		.bootable	= ON_BOARD,
++	},{	/* 4 */
++		.name		= "SvrWks HT1000",
++		.init_setup	= init_setup_svwks,
++		.init_chipset	= init_chipset_svwks,
++		.init_hwif	= init_hwif_svwks,
++		.init_dma	= init_dma_svwks,
++		.channels	= 1,	/* 2 */
++		.autodma	= AUTODMA,
++		.bootable	= ON_BOARD,
+  	}
+  };
+
+@@ -653,6 +675,7 @@ static struct pci_device_id svwks_pci_tb
+  	{ PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB5IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
+  	{ PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB6IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
+  	{ PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3},
++	{ PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_HT1000IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4},
+  	{ 0, },
+  };
+  MODULE_DEVICE_TABLE(pci, svwks_pci_tbl);
+diff --git a/drivers/ide/ppc/pmac.c b/drivers/ide/ppc/pmac.c
+--- a/drivers/ide/ppc/pmac.c
++++ b/drivers/ide/ppc/pmac.c
+@@ -1664,7 +1664,7 @@ static struct macio_driver pmac_ide_maci
+  };
+
+  static struct pci_device_id pmac_ide_pci_match[] = {
+-	{ PCI_VENDOR_ID_APPLE, PCI_DEVIEC_ID_APPLE_UNI_N_ATA, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
++	{ PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_UNI_N_ATA, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+  	{ PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_IPID_ATA100, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+  	{ PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_K2_ATA100, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+  	{ PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_SH_ATA,
+diff --git a/drivers/ide/setup-pci.c b/drivers/ide/setup-pci.c
+--- a/drivers/ide/setup-pci.c
++++ b/drivers/ide/setup-pci.c
+@@ -229,6 +229,7 @@ second_chance_to_dma:
+  			case PCI_DEVICE_ID_AMD_VIPER_7409:
+  			case PCI_DEVICE_ID_CMD_643:
+  			case PCI_DEVICE_ID_SERVERWORKS_CSB5IDE:
++			case PCI_DEVICE_ID_REVOLUTION:
+  				simplex_stat = hwif->INB(dma_base + 2);
+  				hwif->OUTB((simplex_stat&0x60),(dma_base + 2));
+  				simplex_stat = hwif->INB(dma_base + 2);
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -881,7 +881,7 @@
+  #define PCI_DEVICE_ID_APPLE_UNI_N_PCI15	0x002e
+  #define PCI_DEVICE_ID_APPLE_UNI_N_FW2	0x0030
+  #define PCI_DEVICE_ID_APPLE_UNI_N_GMAC2	0x0032
+-#define PCI_DEVIEC_ID_APPLE_UNI_N_ATA	0x0033
++#define PCI_DEVICE_ID_APPLE_UNI_N_ATA	0x0033
+  #define PCI_DEVICE_ID_APPLE_UNI_N_AGP2	0x0034
+  #define PCI_DEVICE_ID_APPLE_IPID_ATA100	0x003b
+  #define PCI_DEVICE_ID_APPLE_KEYLARGO_I	0x003e
+@@ -1580,6 +1580,7 @@
+  #define PCI_DEVICE_ID_SERVERWORKS_OSB4IDE 0x0211
+  #define PCI_DEVICE_ID_SERVERWORKS_CSB5IDE 0x0212
+  #define PCI_DEVICE_ID_SERVERWORKS_CSB6IDE 0x0213
++#define PCI_DEVICE_ID_SERVERWORKS_HT1000IDE 0x0214
+  #define PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2 0x0217
+  #define PCI_DEVICE_ID_SERVERWORKS_OSB4USB 0x0220
+  #define PCI_DEVICE_ID_SERVERWORKS_CSB5USB PCI_DEVICE_ID_SERVERWORKS_OSB4USB
+@@ -2184,6 +2185,9 @@
+  #define PCI_VENDOR_ID_SIBYTE		0x166d
+  #define PCI_DEVICE_ID_BCM1250_HT	0x0002
+
++#define PCI_VENDOR_ID_NETCELL		0x169c
++#define PCI_DEVICE_ID_REVOLUTION	0x0044
++
+  #define PCI_VENDOR_ID_LINKSYS		0x1737
+  #define PCI_DEVICE_ID_LINKSYS_EG1032	0x1032
+  #define PCI_DEVICE_ID_LINKSYS_EG1064	0x1064
