@@ -1,35 +1,30 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [git patches] ide update
-Date: Fri, 19 Aug 2005 00:08:54 +0100
-Message-ID: <1124406535.20755.12.camel@localhost.localdomain>
-References: <Pine.GSO.4.62.0508182332470.22579@mion.elka.pw.edu.pl>
+From: "Davidlohr Bueso A." <dbueso@linuxchile.cl>
+Subject: Re: Problems with DMA enabling
+Date: Thu, 18 Aug 2005 19:52:17 -0400
+Message-ID: <1124409137.3593.0.camel@localhost>
+References: <1124293208.3885.10.camel@localhost>
+	 <1124294354.5948.18.camel@localhost.localdomain>
+	 <1124299885.3851.7.camel@localhost>
+	 <1124355661.8720.23.camel@localhost.localdomain>
+Reply-To: dbueso@linuxchile.cl
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:4505 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S932504AbVHRWln (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 Aug 2005 18:41:43 -0400
-In-Reply-To: <Pine.GSO.4.62.0508182332470.22579@mion.elka.pw.edu.pl>
+Received: from pc-79-164-104-200.cm.vtr.net ([200.104.164.79]:15081 "EHLO
+	localhost") by vger.kernel.org with ESMTP id S932289AbVHRXyO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Aug 2005 19:54:14 -0400
+In-Reply-To: <1124355661.8720.23.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Erik Slagter <erik@slagter.name>
+Cc: linux-ide@vger.kernel.org
 
-On Iau, 2005-08-18 at 23:37 +0200, Bartlomiej Zolnierkiewicz wrote:
-> +	},{	/* 14 */
-> +		.name		= "Revolution",
-> +		.init_hwif	= init_hwif_generic,
-> +		.channels	= 2,
-> +		.autodma	= AUTODMA,
-> +		.bootable	= OFF_BOARD,
->   	}
+On Thu, 2005-08-18 at 11:01 +0200, Erik Slagter wrote:
 
-This seems rather odd - the driver asks for AUTODMA yet because its IDE
-generic contains no code to retune the device interface for DMA ?
+> For this to work, you must disable (legacy) IDE altogether. It looks it
+> has claimed the second port before libata can do it.
 
+Worked like a charm, thanks!
 
-BTW whats the status on the CS5535 driver that someone submitted a while
-back ?
-
+Dave
