@@ -1,71 +1,98 @@
-From: Steven Scholz <steven.scholz@imc-berlin.de>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: when are buffers/caches flushed?
-Date: Thu, 18 Aug 2005 13:34:01 +0200
-Message-ID: <43047229.7010007@imc-berlin.de>
-References: <43046817.803@imc-berlin.de> <43046FD2.4080401@gmail.com>
+Date: Thu, 18 Aug 2005 20:59:44 +0900
+Message-ID: <43047830.4060705@gmail.com>
+References: <43046817.803@imc-berlin.de> <43046FD2.4080401@gmail.com> <43047229.7010007@imc-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.imc-berlin.de ([217.110.46.186]:22287 "EHLO
-	mail.imc-berlin.de") by vger.kernel.org with ESMTP id S932200AbVHRLeF
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 Aug 2005 07:34:05 -0400
-In-Reply-To: <43046FD2.4080401@gmail.com>
+Received: from wproxy.gmail.com ([64.233.184.198]:58475 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932151AbVHRL76 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Aug 2005 07:59:58 -0400
+Received: by wproxy.gmail.com with SMTP id i20so340658wra
+        for <linux-ide@vger.kernel.org>; Thu, 18 Aug 2005 04:59:50 -0700 (PDT)
+In-Reply-To: <43047229.7010007@imc-berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Steven Scholz <steven.scholz@imc-berlin.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-
-> Steven Scholz wrote:
->=20
->> Hi there,
+Steven Scholz wrote:
+> Tejun Heo wrote:
+> 
+>> Steven Scholz wrote:
 >>
->> According to an (old) man page of sync(2)
+>>> Hi there,
+>>>
+>>> According to an (old) man page of sync(2)
+>>>
+>>>        According to  the  standard  specification  (e.g.,  SVID),
+>>>        sync()  schedules  the  writes,  but may return before the
+>>>        actual writing is done.   However,  since  version  1.3.20
+>>>        Linux  does actually wait.  (This still does not guarantee
+>>>        data integrity: modern disks have large caches.)
+>>>
+>>> How about recent kernels? Does sync() block until buffers are flushed?
+>>> How can I find out if the disk caches are actually flushed?
+>>>
+>>> I want to make sure that all data is flushed to my disk drive before 
+>>> powering down the system.
+>>>
+>>> Thanks.
+>>>
 >>
->>        According to  the  standard  specification  (e.g.,  SVID),
->>        sync()  schedules  the  writes,  but may return before the
->>        actual writing is done.   However,  since  version  1.3.20
->>        Linux  does actually wait.  (This still does not guarantee
->>        data integrity: modern disks have large caches.)
+>>  All disk caches are flushed before shutdown via the following path.
 >>
->> How about recent kernels? Does sync() block until buffers are flushe=
-d?
->> How can I find out if the disk caches are actually flushed?
+>> kernel/sys.c::sys_reboot()
+>> kernel/drivers/base/power/shutdown.c::device_shutdown()
+>>  driver specific ->shutdown callback, for ide disks, the path is
+>> drivers/ide/ide-disk.c::ide_device_shutdown()
+>> drivers/ide/ide-disk.c::ide_cacheflush_p()
+>> drivers/ide/ide-disk.c::do_idedisk_flushcache()
 >>
->> I want to make sure that all data is flushed to my disk drive before=
-=20
->> powering down the system.
->>
->> Thanks.
->>
->=20
->  All disk caches are flushed before shutdown via the following path.
->=20
-> kernel/sys.c::sys_reboot()
-> kernel/drivers/base/power/shutdown.c::device_shutdown()
->  driver specific ->shutdown callback, for ide disks, the path is
-> drivers/ide/ide-disk.c::ide_device_shutdown()
-> drivers/ide/ide-disk.c::ide_cacheflush_p()
-> drivers/ide/ide-disk.c::do_idedisk_flushcache()
->=20
->  And, AFAIK, sync() doesn't flush disk caches.
+>>  And, AFAIK, sync() doesn't flush disk caches.
+> 
+> 
+> How about umount?
+> 
 
-How about umount?
+[CC'ing Bartlomiej (Hi!)]
 
---
-Steven
+  Hmmm, umount doesn't.  I think maybe adding cache flushing to sync and 
+umount can be helpful.
 
+  And one more thing, ide-disk doesn't flush cache when shutting down. 
+It flushes only when rebooting.
 
+from ide_device_shutdown()...
 
+#ifdef	CONFIG_ALPHA
+	/* On Alpha, halt(8) doesn't actually turn the machine off,
+	   it puts you into the sort of firmware monitor. Typically,
+	   it's used to boot another kernel image, so it's not much
+	   different from reboot(8). Therefore, we don't need to
+	   spin down the disk in this case, especially since Alpha
+	   firmware doesn't handle disks in standby mode properly.
+	   On the other hand, it's reasonably safe to turn the power
+	   off when the shutdown process reaches the firmware prompt,
+	   as the firmware initialization takes rather long time -
+	   at least 10 seconds, which should be sufficient for
+	   the disk to expire its write cache. */
+	if (system_state != SYSTEM_POWER_OFF) {
+#else
+	if (system_state == SYSTEM_RESTART) {
+#endif
+		ide_cacheflush_p(drive);
+		return;
+	}
 
---=20
-Steven Scholz
+  It seems that the if clause are there due to some historic thing.  The 
+comment suggests that the body in the if clause spun down the drive 
+previously, and we needed the if to avoid spinning down unnecessarily, 
+and the if is left there after we changed the body to flush cache.
 
-imc Measurement & Control               imc Me=DFsysteme GmbH
-Voltastr. 5                             Voltastr. 5
-13355 Berlin                            13355 Berlin
-Germany                                 Deutschland
+  Bartlomiej, am I missing something?
+
+-- 
+tejun
