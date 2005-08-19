@@ -1,78 +1,37 @@
-From: Brett Russ <russb@emc.com>
-Subject: Re: [git] libata-dev queue updated
-Date: Fri, 19 Aug 2005 07:42:34 -0400
-Message-ID: <4305C5AA.20200@emc.com>
-References: <20050819035437.GA18324@havoc.gtf.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: libata total system lockup fix
+Date: Fri, 19 Aug 2005 09:07:50 -0400
+Message-ID: <4305D9A6.8010502@rtr.ca>
+References: <42E4ED70.1050501@pobox.com> <42E4FC75.70006@pobox.com>	 <42E50AE9.3000207@rtr.ca> <42F2E267.50402@gmail.com>	 <42FA70A9.6080608@pobox.com>  <43052C03.7060306@pobox.com> <1124444101.2217.64.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailhub.lss.emc.com ([168.159.2.31]:36421 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S932644AbVHSLqT
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:10415 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S932621AbVHSNHv
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Aug 2005 07:46:19 -0400
-In-Reply-To: <20050819035437.GA18324@havoc.gtf.org>
+	Fri, 19 Aug 2005 09:07:51 -0400
+In-Reply-To: <1124444101.2217.64.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org
+To: Erik Slagter <erik@slagter.name>
+Cc: Mark Lord <mlord@pobox.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Jeff Garzik wrote:
+Erik Slagter wrote:
+> On Thu, 2005-08-18 at 20:46 -0400, Mark Lord wrote:
+> 
+>>After a week of further experience with this patch,
+..
+>>I'm now reverting to the original "broken" patch
+..
+> 
+> What is exactly the "broken" patch and what is "this" patch?
 
->In such cases, patches are divided into branches by category: ncq (NCQ
->queueing support), chs-support (C/H/S support), adma (new ADMA driver),
->sil24 (new Silicon Image 312x driver), passthru (ATA passthrough/SMART
->support), etc.
->  
->
-Jeff,
-The below doesn't seem to include NCQ. Is this an oversight?
-Thanks,
-BR
+"this" patch refered to the subject of that email,
+the "one-liner" included therein.
 
->Albert Lee:
->  [libata] C/H/S support, for older devices
->  [libata] add driver for Promise PATA 2027x
->  libata-dev-2.6: pdc2027x add ata_scsi_ioctl
->  libata-dev-2.6: pdc2027x change comments
->  libata-dev-2.6: pdc2027x move the PLL counter reading code
->  libata-dev-2.6: pdc2027x PLL input clock detection fix
->  libata ata_data_xfer() fix
->  libata handle the case when device returns/needs extra data
->  libata-dev: Convert pdc2027x from PIO to MMIO
->  libata-dev: pdc2027x use "long" for counter data type
->  libata-dev: pdc2027x ATAPI DMA lost irq problem workaround
->
->Daniel Drake:
->  sata_nv: Support MCP51/MCP55 device IDs
->
->Douglas Gilbert:
->  [libata scsi] add START STOP UNIT translation
->
->Erik Benada:
->  [libata sata_promise] support PATA ports on SATA controllers
->
->Jason Gaston:
->  ahci: AHCI mode SATA patch for Intel ICH7-M DH
->
->Jeff Garzik:
->  [libata] add new driver ata_adma
->  [libata adma] enable PCI MWI during controller initialization
->  [libata] ATA passthru (arbitrary ATA command execution)
->  [libata] ata_adma: update for recent ->host_stop() API changes
->  [libata] pata_pdc2027x: update for recent ->host_stop() API changes
->  libata: Update 'passthru' branch for latest libata
->  libata: trim trailing whitespace.
->
->Tejun Heo:
->  SATA: rewritten sil24 driver
->  sil24: add FIXME comment above ata_device_add
->  sil24: remove irq disable code on spurious interrupt
->  sil24: add testing for PCI fault
->  sil24: move error handling out of hot interrupt path
->  sil24: remove PORT_TF
->  sil24: replace pp->port w/ ap->ioaddr.cmd_addr
->  sil24: fix PORT_CTRL_STAT constants
->  sil24: add more comments for constants
->  
->
+The "broken" patch (which behaves in a very unbroken manner)
+is in the collection of "essentials" that I maintain for
+modern laptop users at http://rtr.ca/dell_i9300/kernels/
+
+Cheers
