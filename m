@@ -1,59 +1,45 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [parisc-linux] Re: Why toggle_bounce only for disks?
-Date: Fri, 19 Aug 2005 09:32:02 -0400
-Message-ID: <1124458322.5130.18.camel@mulgrave>
-References: <20050806235615.GK3505@roadwarrior.mcmartin.ca>
-	 <58cb370e05081903073d9a2b73@mail.gmail.com> <20050819102132.GM6273@suse.de>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: libata total system lockup fix
+Date: Fri, 19 Aug 2005 15:32:37 +0200
+Message-ID: <58cb370e050819063253265500@mail.gmail.com>
+References: <42E4ED70.1050501@pobox.com> <42E4FC75.70006@pobox.com>
+	 <42E50AE9.3000207@rtr.ca> <42F2E267.50402@gmail.com>
+	 <42FA70A9.6080608@pobox.com> <43052C03.7060306@pobox.com>
+	 <1124444101.2217.64.camel@localhost.localdomain>
+	 <4305D9A6.8010502@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:4242 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932676AbVHSNcL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Aug 2005 09:32:11 -0400
-In-Reply-To: <20050819102132.GM6273@suse.de>
+Received: from nproxy.gmail.com ([64.233.182.204]:60220 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932677AbVHSNck convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Aug 2005 09:32:40 -0400
+Received: by nproxy.gmail.com with SMTP id x37so177069nfc
+        for <linux-ide@vger.kernel.org>; Fri, 19 Aug 2005 06:32:37 -0700 (PDT)
+In-Reply-To: <4305D9A6.8010502@rtr.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, PARISC list <parisc-linux@lists.parisc-linux.org>, Kyle McMartin <kyle@parisc-linux.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Erik Slagter <erik@slagter.name>, Mark Lord <mlord@pobox.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Fri, 2005-08-19 at 12:21 +0200, Jens Axboe wrote:
-> Because not bouncing is a performance optimization and I only did the
-> work on ide-cd to allow it. Your patch breaks ide-cd on highmem i386
-> machines, so it's not acceptable.
+On 8/19/05, Mark Lord <liml@rtr.ca> wrote:
+> Erik Slagter wrote:
+> > On Thu, 2005-08-18 at 20:46 -0400, Mark Lord wrote:
+> >
+> >>After a week of further experience with this patch,
+> ..
+> >>I'm now reverting to the original "broken" patch
+> ..
+> >
+> > What is exactly the "broken" patch and what is "this" patch?
 > 
-> Tells us more about this crash instead, I'm pretty sure you are working
-> around another issue (your io-mmu code, is it hardware or software?)
-> somehwere with this patch.
+> "this" patch refered to the subject of that email,
+> the "one-liner" included therein.
+> 
+> The "broken" patch (which behaves in a very unbroken manner)
+> is in the collection of "essentials" that I maintain for
+> modern laptop users at http://rtr.ca/dell_i9300/kernels/
 
-OK, so the particular fix is wrong; but the logic in ide_toggle_bounce()
-is also incorrec.  Our problem is not that we don't want to bounce
-highmem in ide-cd, it's that this is a parisc system with an IOMMU and
-doesn't have any highmem to begin with.
-
-we need ide_toggle_bounce to return BLK_BOUNCE_ANY always if
-PCI_DMA_BUS_IS_PHYS is not set.
-
-James
-
-diff --git a/drivers/ide/ide-lib.c b/drivers/ide/ide-lib.c
---- a/drivers/ide/ide-lib.c
-+++ b/drivers/ide/ide-lib.c
-@@ -410,10 +410,10 @@ void ide_toggle_bounce(ide_drive_t *driv
- {
- 	u64 addr = BLK_BOUNCE_HIGH;	/* dma64_addr_t */
- 
--	if (on && drive->media == ide_disk) {
--		if (!PCI_DMA_BUS_IS_PHYS)
--			addr = BLK_BOUNCE_ANY;
--		else if (HWIF(drive)->pci_dev)
-+	if (!PCI_DMA_BUS_IS_PHYS)
-+		addr = BLK_BOUNCE_ANY;
-+	else if (on && drive->media == ide_disk) {
-+		if (HWIF(drive)->pci_dev)
- 			addr = HWIF(drive)->pci_dev->dma_mask;
- 	}
- 
-
-
+http://rtr.ca/dell_i9300/kernel/
