@@ -1,64 +1,50 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata total system lockup fix
-Date: Fri, 19 Aug 2005 12:45:58 +0900
-Message-ID: <430555F6.4090709@gmail.com>
-References: <42E4ED70.1050501@pobox.com> <42E4FC75.70006@pobox.com> <42E50AE9.3000207@rtr.ca> <42F2E267.50402@gmail.com> <42FA70A9.6080608@pobox.com> <43052C03.7060306@pobox.com> <4305504B.7080201@gmail.com> <430553DB.5030807@rtr.ca>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: libata error handling
+Date: Thu, 18 Aug 2005 23:49:19 -0400
+Message-ID: <430556BF.5070004@pobox.com>
+References: <20050729050654.GA10413@havoc.gtf.org> <20050807054850.GA13335@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.205]:25420 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932259AbVHSDqG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Aug 2005 23:46:06 -0400
-Received: by wproxy.gmail.com with SMTP id i2so525766wra
-        for <linux-ide@vger.kernel.org>; Thu, 18 Aug 2005 20:46:06 -0700 (PDT)
-In-Reply-To: <430553DB.5030807@rtr.ca>
+Received: from mail.dvmed.net ([216.237.124.58]:40154 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932545AbVHSDt1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Aug 2005 23:49:27 -0400
+In-Reply-To: <20050807054850.GA13335@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Mark Lord wrote:
-> Tejun Heo wrote:
-> 
->>
->>  I've been trying to reproduce your lockup here, but haven't succeeded 
->> yet.  I'm currently doing multiple "while true; do cat /dev/sr0; 
->> done", bonnie, raw random IOs (latter two are to give some randomness 
->> to test condition).
-> 
-> 
-> Gotta trigger the eh code to get lockups, and hard disks are
-> so reliable by themselves that it just ain't gonna happen
-> very often that way.
 
-  Yeap, the sr0 is my SATA DVD+-RW/DL drive, and as no media is present, 
-each cat results in EH handling leading to No medium found error.
+Tejun,
 
-> 
-> My notebook has a DVD+-RW/DL drive, which the desktop (KDE) polls
-> every second or so -- generates a libata error every time it does
-> that with no disk in the drive.  But hours or days can go by before
-> this produces the race that locks things up (and it NEVER locks up
-> if I keep a disc in the drive).
+In an email I cannot find anymore, you asked why I was interested in 
+converting libata to use the fine-grained EH hooks in the SCSI layer, 
+rather than continued with the current ->eh_strategy_handler() method.
 
-  Okay, I'll keep my test running for longer.
+Several reasons:
 
-> 
-> However, I have had the machine lock up solid during suspend/resume (RAM)
-> at least once in the past couple of days --> perhaps a command timeout
-> on accessing the disk on resume (or suspend?) is aggrievating
-> the situation.  No problems with the large "broken" fix,
-> but the one-liner was just giving me too much grief.
+1) The fine-grained hooks of the SCSI layer are somewhat standard for 
+block devices.  The events they signify -- timeout, abort cmd, dev 
+reset, bus reset, and host reset -- map precisely to the events that we 
+must deal with at the ATA level.
 
-  Hmmm, if the lockup only occurs w/ suspend/resume w/ one-liner.  The 
-lockup could be a different problem.  I'll try to dig deeper.
+But be warned of false sharing, as I talk about in #2...
 
-> The laptop & I are off for a road trip for the next seven days or so,
-> and it will be in constant daily use for presentations and stuff.
-> So, no risky testing over the next week, sorry.
+2) When libata SAT translation layer becomes optional, and libata drives 
+a "true" block device, use of ->eh_strategy_handler() will actually be 
+an obstacle due to false sharing of code paths.  ->eh_strategy_handler() 
+is indeed a single "do it all" EH entrypoint, but within that entrypoint 
+you must perform several SCSI-specific tasks.
 
-  Dang. :-p
+3) ->eh_strategy_handler() has continually proven to be a method of 
+error handling poorly supported by the SCSI layer.  There are many 
+assumption coded into the SCSI layer that this is -not- the path taken 
+by LLD EH code, and libata must constantly work around these assumptions.
 
--- 
-tejun
+4) libata is the -only- user of ->eh_strategy_handler(), and oddballs 
+must be stomped out.  It creates a maintenance burden on the SCSI layer 
+that should be eliminated.
+
+
