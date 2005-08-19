@@ -1,61 +1,43 @@
-From: Jon Escombe <lists@dresco.co.uk>
-Subject: Re: [patch] libata passthrough - return register data from HDIO_*
- commands
-Date: Fri, 19 Aug 2005 20:31:45 +0100
-Message-ID: <430633A1.8030009@dresco.co.uk>
-References: <42FE2FBA.3000605@dresco.co.uk> <430112F6.3090906@dresco.co.uk> <20050819190625.GB2736@tuxdriver.com> <20050819191902.GC2736@tuxdriver.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: libata error handling
+Date: Fri, 19 Aug 2005 12:38:54 -0700
+Message-ID: <20050819193853.GA1549@us.ibm.com>
+References: <20050729050654.GA10413@havoc.gtf.org> <20050807054850.GA13335@htj.dyndns.org> <430556BF.5070004@pobox.com> <4306290B.6080608@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pythagoras.zen.co.uk ([212.23.3.140]:12257 "EHLO
-	pythagoras.zen.co.uk") by vger.kernel.org with ESMTP
-	id S965016AbVHSTdU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Aug 2005 15:33:20 -0400
-In-Reply-To: <20050819191902.GC2736@tuxdriver.com>
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:8161 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S965016AbVHSTjz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Aug 2005 15:39:55 -0400
+Content-Disposition: inline
+In-Reply-To: <4306290B.6080608@adaptec.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-John W. Linville wrote:
+On Fri, Aug 19, 2005 at 02:46:35PM -0400, Luben Tuikov wrote:
 
->On Fri, Aug 19, 2005 at 03:06:27PM -0400, John W. Linville wrote:
->  
->
->>On Mon, Aug 15, 2005 at 11:11:02PM +0100, Jon Escombe wrote:
->>    
->>
->>>>Here is a first attempt at a patch to return register data from the 
->>>>libata passthrough HDIO ioctl handlers, I needed this as the ATA 
->>>>'unload immediate' command returns the success in the lbal register. 
->>>>        
->>>>
->
->  
->
->>Overall, I like the patch.  I trust your assertion that it actually
->>works... :-)
->>
->>I have a few comments...
->>    
->>
->
->Well, apparently "Jon Escombe <lists@dresco.co.uk>" is not a good
->address.  I got a delivery failur notification email from his mail
->server.  Hopefully Jon reads the lists... :-)
->
->John
->  
->
-Thanks, will take a look at the comments.
+> 
+> Using the command time out hook and the strategy routine, gives _complete_
+> control over host recovery, and I really do mean _complete_.
+> 
 
-Not sure why the email bounced, but I will give you another email 
-address so you could forward me the notification (if you still have it?)
+I assume you mean hostt->eh_timed_out.
 
-Regards,
-Jon.
+Is anyone implmenting (or has implemented) a ->eh_timed_out function? I see
+none in mainline kernel.
 
+I was looking at using it in an LLDD, but hit two problems, and have
+started to work on an alternate approach of cancelling (aborting or wtf you
+want to call it) a list of commands in the eh thread.
 
-______________________________________________________________
-Email via Mailtraq4Free from Enstar (www.mailtraqdirect.co.uk)
+The two problems I see with the hook are:
+
+It calls the driver in interrupt context, so the called function can't
+sleep.
+
+There is no queueing or list mechanism, so LLDD's that can only cancel one
+command at a time will have problem.
+
+-- Patrick Mansfield
