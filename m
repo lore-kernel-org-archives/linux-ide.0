@@ -1,30 +1,32 @@
-From: "Davidlohr Bueso A." <dbueso@linuxchile.cl>
-Subject: Re: Problems with DMA enabling
-Date: Thu, 18 Aug 2005 19:52:17 -0400
-Message-ID: <1124409137.3593.0.camel@localhost>
-References: <1124293208.3885.10.camel@localhost>
-	 <1124294354.5948.18.camel@localhost.localdomain>
-	 <1124299885.3851.7.camel@localhost>
-	 <1124355661.8720.23.camel@localhost.localdomain>
-Reply-To: dbueso@linuxchile.cl
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [git patches] ide update
+Date: Thu, 18 Aug 2005 20:44:57 -0400
+Message-ID: <43052B89.8080709@rtr.ca>
+References: <Pine.GSO.4.62.0508182332470.22579@mion.elka.pw.edu.pl> <Pine.LNX.4.58.0508181512240.3412@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pc-79-164-104-200.cm.vtr.net ([200.104.164.79]:15081 "EHLO
-	localhost") by vger.kernel.org with ESMTP id S932289AbVHRXyO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Aug 2005 19:54:14 -0400
-In-Reply-To: <1124355661.8720.23.camel@localhost.localdomain>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:56753 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S932539AbVHSAo6
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 Aug 2005 20:44:58 -0400
+In-Reply-To: <Pine.LNX.4.58.0508181512240.3412@g5.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Erik Slagter <erik@slagter.name>
-Cc: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Thu, 2005-08-18 at 11:01 +0200, Erik Slagter wrote:
+Linus Torvalds wrote:
+>
+> Btw, things like this:
+> 
+> 	+#define IDEFLOPPY_TICKS_DELAY  HZ/20   /* default delay for ZIP 100 (50ms) */
+> 
+> are just bugs waiting to happen.
 
-> For this to work, you must disable (legacy) IDE altogether. It looks it
-> has claimed the second port before libata can do it.
+Needs parenthesis: ((HZ)/20)
 
-Worked like a charm, thanks!
+Or one could just use the msecs_to_jiffies() macro.
 
-Dave
+Cheers
