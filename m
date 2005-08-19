@@ -1,65 +1,78 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Why toggle_bounce only for disks?
-Date: Fri, 19 Aug 2005 12:21:33 +0200
-Message-ID: <20050819102132.GM6273@suse.de>
-References: <20050806235615.GK3505@roadwarrior.mcmartin.ca> <58cb370e05081903073d9a2b73@mail.gmail.com>
+From: Brett Russ <russb@emc.com>
+Subject: Re: [git] libata-dev queue updated
+Date: Fri, 19 Aug 2005 07:42:34 -0400
+Message-ID: <4305C5AA.20200@emc.com>
+References: <20050819035437.GA18324@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:432 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932615AbVHSKTN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Aug 2005 06:19:13 -0400
-Content-Disposition: inline
-In-Reply-To: <58cb370e05081903073d9a2b73@mail.gmail.com>
+Received: from mailhub.lss.emc.com ([168.159.2.31]:36421 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S932644AbVHSLqT
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Aug 2005 07:46:19 -0400
+In-Reply-To: <20050819035437.GA18324@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Kyle McMartin <kyle@parisc-linux.org>, linux-ide@vger.kernel.org, parisc-linux@lists.parisc-linux.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org
 
-On Fri, Aug 19 2005, Bartlomiej Zolnierkiewicz wrote:
-> Hi,
-> 
-> http://www.ussg.iu.edu/hypermail/linux/kernel/0209.1/1074.html
-> 
-> Jens, is this still true??
+Jeff Garzik wrote:
 
-It is, ide-cd would require changes to accept highmem pages.
+>In such cases, patches are divided into branches by category: ncq (NCQ
+>queueing support), chs-support (C/H/S support), adma (new ADMA driver),
+>sil24 (new Silicon Image 312x driver), passthru (ATA passthrough/SMART
+>support), etc.
+>  
+>
+Jeff,
+The below doesn't seem to include NCQ. Is this an oversight?
+Thanks,
+BR
 
-> > Ahoi,
-> > 
-> > The following patch fixes a crash caused by attempting to bounce buffer
-> > when an IDE CD-ROM is used on a machine with an IO-MMU. [At least, this
-> > patch fixes things so I can use my IDE CD-ROM behind an ns87415 on a
-> > HP PA-RISC workstation.]
-> > 
-> > Why was this only allowed for disks?
-
-Because not bouncing is a performance optimization and I only did the
-work on ide-cd to allow it. Your patch breaks ide-cd on highmem i386
-machines, so it's not acceptable.
-
-Tells us more about this crash instead, I'm pretty sure you are working
-around another issue (your io-mmu code, is it hardware or software?)
-somehwere with this patch.
-
-
-> > --- a/drivers/ide/ide-lib.c   18 Jul 2005 18:46:30 -0000
-> > +++ b/drivers/ide/ide-lib.c   6 Aug 2005 20:28:04 -0000
-> > @@ -410,7 +410,7 @@ void ide_toggle_bounce(ide_drive_t *driv
-> >  {
-> >         u64 addr = BLK_BOUNCE_HIGH;     /* dma64_addr_t */
-> > 
-> > -       if (on && drive->media == ide_disk) {
-> > +       if (on) {
-> >                 if (!PCI_DMA_BUS_IS_PHYS)
-> >                         addr = BLK_BOUNCE_ANY;
-> >                 else if (HWIF(drive)->pci_dev)
-> > 
-> > Cheers,
-> > --
-> > Kyle McMartin
-> 
-
--- 
-Jens Axboe
-
+>Albert Lee:
+>  [libata] C/H/S support, for older devices
+>  [libata] add driver for Promise PATA 2027x
+>  libata-dev-2.6: pdc2027x add ata_scsi_ioctl
+>  libata-dev-2.6: pdc2027x change comments
+>  libata-dev-2.6: pdc2027x move the PLL counter reading code
+>  libata-dev-2.6: pdc2027x PLL input clock detection fix
+>  libata ata_data_xfer() fix
+>  libata handle the case when device returns/needs extra data
+>  libata-dev: Convert pdc2027x from PIO to MMIO
+>  libata-dev: pdc2027x use "long" for counter data type
+>  libata-dev: pdc2027x ATAPI DMA lost irq problem workaround
+>
+>Daniel Drake:
+>  sata_nv: Support MCP51/MCP55 device IDs
+>
+>Douglas Gilbert:
+>  [libata scsi] add START STOP UNIT translation
+>
+>Erik Benada:
+>  [libata sata_promise] support PATA ports on SATA controllers
+>
+>Jason Gaston:
+>  ahci: AHCI mode SATA patch for Intel ICH7-M DH
+>
+>Jeff Garzik:
+>  [libata] add new driver ata_adma
+>  [libata adma] enable PCI MWI during controller initialization
+>  [libata] ATA passthru (arbitrary ATA command execution)
+>  [libata] ata_adma: update for recent ->host_stop() API changes
+>  [libata] pata_pdc2027x: update for recent ->host_stop() API changes
+>  libata: Update 'passthru' branch for latest libata
+>  libata: trim trailing whitespace.
+>
+>Tejun Heo:
+>  SATA: rewritten sil24 driver
+>  sil24: add FIXME comment above ata_device_add
+>  sil24: remove irq disable code on spurious interrupt
+>  sil24: add testing for PCI fault
+>  sil24: move error handling out of hot interrupt path
+>  sil24: remove PORT_TF
+>  sil24: replace pp->port w/ ap->ioaddr.cmd_addr
+>  sil24: fix PORT_CTRL_STAT constants
+>  sil24: add more comments for constants
+>  
+>
