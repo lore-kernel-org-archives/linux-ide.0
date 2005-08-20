@@ -1,64 +1,79 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SATA status report updated
-Date: Fri, 19 Aug 2005 20:02:48 -0400
-Message-ID: <43067328.3020200@pobox.com>
-References: <4AA7B-4jm-5@gated-at.bofh.it> <4DagM-7c8-43@gated-at.bofh.it> <871x4ql24a.fsf@ABG3595C.abg.fsc.net> <43062623.607@pobox.com> <430664C8.1090000@home.nl>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [SUMMARY] libata EH
+Date: Sat, 20 Aug 2005 11:33:51 +0900
+Message-ID: <20050820023351.GA690@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932771AbVHTAC5@vger.kernel.org>
-In-Reply-To: <430664C8.1090000@home.nl>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Simon Oosthoek <s.oosthoek@home.nl>
-Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from zproxy.gmail.com ([64.233.162.198]:50483 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932631AbVHTCeB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Aug 2005 22:34:01 -0400
+Received: by zproxy.gmail.com with SMTP id i11so489771nzh
+        for <linux-ide@vger.kernel.org>; Fri, 19 Aug 2005 19:33:57 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, albertcc@tw.ibm.com, mlord@pobox.com, lkosewsk@gmail.com, luben_tuikov@adaptec.com
 
-Simon Oosthoek wrote:
-> I know Mandriva is on the ball and a bug with some information and an 
-> updated patch is on the kernel bugme...
-> 
-> http://qa.mandriva.com/show_bug.cgi?id=17654
-> http://bugme.osdl.org/show_bug.cgi?id=4192
-> 
-> I'd say it's important to get some proper fix in a distribution soon (so 
-> I can use my new PC ;-)
+ Hello, Jeff & libata developers.
 
+ I've been spending some time on libata EH and am trying to make a
+list of things which can be improved.  If you have something, please
+add to the list.
 
-That's not an updated patch.  That's the patch that duplicates kernel 
-infrastructure, implementing things in the driver that should instead be 
-implemented in libata core.
+1. Errors are handled in multiple paths.
 
-That's how Windows drivers are written: work around the OS, rather than 
-fix it.
+	* ATA errors are handled directly in intr context
 
-Here is a list of problems with the patch.  I'll paste this into the bug 
-as well:
+	* timeouts are handled by ->eng_timeout via SCSI EH
 
-1) duplicates SATA phy reset
+	* ATAPI errors are forwarded to ->eng_timeout in somewhat hackish way
 
-2) abuses infrastructure to support PATA, rather than doing it properly. 
-  doing it properly involves an approach similar to that found in the 
-'promise-sata-pata' branch of libata-dev.git.  Same problem as Promise 
-SATA+PATA, with the same solution.
+2. Synchronization
 
-3) duplicates ATA bus reset, except, does it poorly
+	* SCSI EH entrance is not synchronized with normal processing.
+	  ATAPI error handling/timeout handling can run concurrently
+	  with normal command processing.  Albert, I think it's the
+	  same problem you're trying to solve by moving ATA_QCFLAG_ACTIVE
+	  clearing.
 
-4) duplicates ata_busy_sleep()
+	  http://marc.theaimsgroup.com/?l=linux-ide&m=112417360223374&w=2
 
-5) appears to do strange things with PATA devices, when one uses the 
-->scr_write() and ->scr_read() hooks -- hooks used to talk to SATA PHYs 
-(never PATA devices).
+	* SCSI EH entrance is not synchronized with polling tasks.
+	  We should cancel & wait for polling tasks on entry to EH, but
+	  we don't.
 
-6) [maybe] sets DMA/PIO timings even for SATA devices.  This -may- be 
-needed, depending on PATA<->SATA bridge presence in the host controller
+3. Error handling too weak
 
-7) Pads DMA to 32-bit boundary.  Should be done in libata core, this is 
-needed for all host controllers.
+	* We need to check the device responds to commands (say, w/
+	  IDENTIFY or CHK_POWER) after an error, and then reset if it
+          doens't.  To do this, we need to handle all errors in EH.
 
-8) The DMA pad code is very buggy.  It uses the dma_map_single() to map 
-a buffer, but never synchronizes nor flushes the buffer.  This can and 
-will lead to data corruption, particularly on x86-64 platform.
+4. Better error reporting
 
-Regards,
+	* We currently depend on ATA_STAT and ATA_ERR register values
+	  to check for and report errors.  As Jeff said, this is way
+	  too crude.  We need better error reporting.  I think having
+	  unified code path for error handling will help implementing
+	  this.
 
-	Jeff
+5. EH is currently holding off other improvements
+
+	* NCQ controllers (or any other non-legacy ATA interface based
+          ones) don't fit nicely into current ATA error handling in
+          interrupt scheme.  As NCQ errors require issuing read log
+	  command, we need to be in EH context to handle these errors.
+
+	* To properly implement hotplug, we need to have solid error
+          handling.  IMHO, implementing hotplug with current EH will
+	  be quite fragile.
+
+ Whether we choose to stay with ->eh_strategy_handler or move over to
+fine-grained SCSI EH, IMHO, libata EH needs some work.  So... how
+should we proceed?
+
+ Thanks.
+
+-- 
+tejun
