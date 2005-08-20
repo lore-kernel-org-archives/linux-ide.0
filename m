@@ -1,45 +1,35 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Enabling MSI on SATAII150
-Date: Sat, 20 Aug 2005 02:19:05 -0400
-Message-ID: <4306CB59.4000202@pobox.com>
-References: <20050611021814.riaatwh8ztskw4g4@www.nucleodyne.com>	 <42AC6310.7030809@rtr.ca> <1118598197.25250.20.camel@driver>	 <42ACFFED.9050701@pobox.com> <1119834710.13331.654.camel@driver>
+Subject: Re: AHCI_MAX_SG
+Date: Sat, 20 Aug 2005 02:45:21 -0400
+Message-ID: <4306D181.5050205@pobox.com>
+References: <20050609090859.GO5140@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:6625 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751078AbVHTGTR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Aug 2005 02:19:17 -0400
-In-Reply-To: <1119834710.13331.654.camel@driver>
+Received: from mail.dvmed.net ([216.237.124.58]:10721 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751078AbVHTGp1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Aug 2005 02:45:27 -0400
+In-Reply-To: <20050609090859.GO5140@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kallol@nucleodyne.com
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Kallol Biswas wrote:
-> Hello Jeff,
->           We have been using the sx8 driver on a MIPS based custom
-> platform.
-> It seems the line based interrupt mechanism is broken on the system.
-> 
-> SATA1150 controller supports MSI interrupt like other PCI-X devices.
-> 
-> Unfortunately we do not have access to the controller's technical
-> specification yet.
-> 
-> Would it be possible to send us a reply detailing how to enable
-> MSI interrupt on the adapter?
+Jens Axboe wrote:
+> Been wondering about this weird value for a while - why does it default
+> to 168 segments? As clustering is disabled, that makes 672KiB the
+> largest supported request. So currently the dma mapped controller
+> command area is about 91KiB in size, I guess the limit is meant to limit
+> the size of that area because 256 would be nicer. So how about making it
+> 160 which makes the resulting command at least a multiple of 128, or
+> even just 128 which gives us a nice clean 512KiB?
 
-Should be just pci_enable_msi() in the appropriate place.  Look at 
-recent drivers/scsi/ahci.c for an example.
+(I hope you don't mind me making a private message public -- several 
+people have asked this, and even you have brought this up in public)
 
+168 is the number that guarantees that AHCI_PORT_PRIV_DMA_SZ is 4K.
 
-> BTW, with CARM_MAX_Q == 30 and a workaround to fix lost interrupt we
-> have got good performance with the driver. Thanks for good work. MSI
-> will help improve performance more, as there won't be any delay
-> associated with handling lost interrupt.
-
-Cool.
+No other reason, and, it can (and probably will) be increased in the future.
 
 	Jeff
 
