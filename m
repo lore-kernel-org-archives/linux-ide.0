@@ -1,81 +1,211 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: More libata EH data points
-Date: Sun, 21 Aug 2005 02:11:44 +0900
-Message-ID: <43076450.4030007@gmail.com>
-References: <4306D2F2.9000309@pobox.com>
+Subject: Re: [SUMMARY] libata EH
+Date: Sun, 21 Aug 2005 02:31:14 +0900
+Message-ID: <430768E2.60808@gmail.com>
+References: <20050820023351.GA690@htj.dyndns.org> <4306B62F.7090509@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.198]:57960 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932584AbVHTRMJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Aug 2005 13:12:09 -0400
-Received: by wproxy.gmail.com with SMTP id i2so797121wra
-        for <linux-ide@vger.kernel.org>; Sat, 20 Aug 2005 10:12:02 -0700 (PDT)
-In-Reply-To: <4306D2F2.9000309@pobox.com>
+Received: from wproxy.gmail.com ([64.233.184.206]:41785 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932589AbVHTReL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Aug 2005 13:34:11 -0400
+Received: by wproxy.gmail.com with SMTP id i2so799277wra
+        for <linux-ide@vger.kernel.org>; Sat, 20 Aug 2005 10:34:04 -0700 (PDT)
+In-Reply-To: <4306B62F.7090509@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org, albertcc@tw.ibm.com, mlord@pobox.com, lkosewsk@gmail.com, luben_tuikov@adaptec.com, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <axboe@suse.de>
+
+
+  Hello, guys.
 
 Jeff Garzik wrote:
-> Check out this lkml thread: 
-> http://marc.theaimsgroup.com/?t=111709353400001&r=1&w=2
 > 
-> It may help to turn on CONFIG_DEBUG_SLAB...
+> (added Alan, Bart and Jens to CC)
+> 
+> Tejun Heo wrote:
+> 
+>>  Hello, Jeff & libata developers.
+>>
+>>  I've been spending some time on libata EH and am trying to make a
+>> list of things which can be improved.  If you have something, please
+>> add to the list.
+>>
+>> 1. Errors are handled in multiple paths.
+>>
+>>     * ATA errors are handled directly in intr context
+> 
+> 
+> Simple stuff like "command aborted" (invalid command) can be handled 
+> immediately, no need to kick in the error handling.
+> 
+> But as long as the right hardware interrupts are acknowledged, I don't 
+> mind if all error handling is moved to the thread.
 > 
 
-  Hello, Jeff.  Hello, Mark.
+  My preference is toward unifying into single path as long as 
+performance penalty is acceptable for the sake of simplicity.
 
-  The thread is reporting the following two problems.
+> 
+>>     * timeouts are handled by ->eng_timeout via SCSI EH
+>>
+>>     * ATAPI errors are forwarded to ->eng_timeout in somewhat hackish way
+> 
+> 
+> ->eng_timeout is somewhat misnamed.  A more correct name would be 
+> "error_hander".  ATAPI errors are intentionally forwarded to SCSI EH via 
+> the normal check-condition handling paths, which cause the SCSI EH to be 
+> invoked.
+> 
+> 
+>> 2. Synchronization
+>>
+>>     * SCSI EH entrance is not synchronized with normal processing.
+>>       ATAPI error handling/timeout handling can run concurrently
+>>       with normal command processing.  Albert, I think it's the
+>>       same problem you're trying to solve by moving ATA_QCFLAG_ACTIVE
+>>       clearing.
+>>
+>>       http://marc.theaimsgroup.com/?l=linux-ide&m=112417360223374&w=2
+> 
+> 
+> The SCSI layer stops all command processing before calling 
+> ->eh_strategy_handler().  Where do you see that it runs concurrently 
+> with normal command processing?  That should definitely -not- be happening.
+> 
 
-  1. w/o patch, scmd is accessed after deallocated.
-  2. w/ patch, scmd is freed twice.
+  There are currently two problems.
 
-  I'm aware of both problems and have just verified both with test 
-cases.  The first problem is caused by not clearing eh_cmdq in 
-ata_scsi_error.  This leaves eh_cmd_q pointing at freed scmd after eh is 
-complete.
+  * As we don't grab host_set lock on entry to ata_scsi_error(), we can
+    run concurrently with latter part of ata_qc_complete().  This race is
+    addressed by the following patches I've just posted.
 
-  After the first eh is complete, eh_cmd_q is pointing to freed scmd(s). 
-  When the next error occurs, scsi_softirq() calls scsi_eh_scmd_add(), 
-which adds the command to shost->eh_cmd_q.  As eh_cmd_q contains 
-dangling pointers, this corrupts freed memory causing #1 (and infinite 
-loop depending on circumstances).
+    http://marc.theaimsgroup.com/?l=linux-ide&m=112454734102242&w=2
 
-  The patch modifies ATAPI eh path to use ata_qc_timeout_done instead of 
-scsi_finish_cmd and scmd's are finished by scsi_invoke_strategy_handler 
-using scsi_eh_flush_done_q.  As ATA timeout path isn't modified, when an 
-ATA timeout occurs, a scmd is finished first in ata_qc_timeout and again 
-in scsi_invoke_strategy_handler causing double free.
+  * After entering EH, normal command completion or spurious interrupt
+    can occur.  We currently don't peg those interrupts, so interrupt
+    handling can interfere with EH.
 
-  With INIT_LIST_HEAD(&host->eh_cmd_q) one liner patch, both problems 
-don't occur.  As for Mark's lockup problem, I think that it's probably a 
-different issue.  One of probable lockup scenario is...
+> 
+>>     * SCSI EH entrance is not synchronized with polling tasks.
+> 
+> 
+> Yes, this definitely needs fixing.
+> 
+> Luckily the polling task is very rarely used, by normal users.
+> 
+> 
+>> 3. Error handling too weak
+>>
+>>     * We need to check the device responds to commands (say, w/
+>>       IDENTIFY or CHK_POWER) after an error, and then reset if it
+>>           doens't.  To do this, we need to handle all errors in EH.
+> 
+> 
+> First you need to classify the error, then handle based on that 
+> classification.
+> 
+> - DMA and PCI bus errors are usually indicated via status bits in 
+> controller registers, such as ATA_DMA_ERR on standard PCI IDE controllers.
+> 
+> - Device errors will be indicated via the ATA Status and Error registers.
+> 
+> 
+> - PCI bus errors should be handled by resetting the host controller (if 
+> possible), and then retrying the command [NOTE: better suggestions welcome]
+> 
+> - DMA errors should be handled by hueristics:  If more than $N (3?) DMA 
+> errors happen in 15 minutes,
+> * decrease SATA PHY speed.  if speed cannot be decreased,
+> * decrease UDMA xfer speed.  if at UDMA0, switch to PIO4
+> * decrease PIO xfer speed.  if at PIO3, complain, but continue
+> 
+> Commands should be retried after DMA errors.
+> 
+> - Device errors should handled as per ATA specs.  Usually these error do 
+> not cause a retry, but they may require additional inquiry such as READ 
+> LOG EXT if its a media error.
+> 
+> 
+>> 4. Better error reporting
+>>
+>>     * We currently depend on ATA_STAT and ATA_ERR register values
+>>       to check for and report errors.  As Jeff said, this is way
+>>       too crude.  We need better error reporting.  I think having
+>>       unified code path for error handling will help implementing
+>>       this.
+> 
+> 
+> This will fall naturally out of better error handling (stuff I described 
+> above).
+> 
+> 
+>> 5. EH is currently holding off other improvements
+>>
+>>     * NCQ controllers (or any other non-legacy ATA interface based
+>>           ones) don't fit nicely into current ATA error handling in
+>>           interrupt scheme.  As NCQ errors require issuing read log
+>>       command, we need to be in EH context to handle these errors.
+>>
+>>     * To properly implement hotplug, we need to have solid error
+>>           handling.  IMHO, implementing hotplug with current EH will
+>>       be quite fragile.
+> 
+> 
+> Correct.  Both NCQ and hotplug really want decent error handling -- 
+> particularly hotplug.  Hotplug will likely travel the error handling 
+> paths, though at that point we prefer the English word "exception" 
+> rather than "error"  :)
+> 
+> 
+>>  Whether we choose to stay with ->eh_strategy_handler or move over to
+>> fine-grained SCSI EH, IMHO, libata EH needs some work.  So... how
+>> should we proceed?
+> 
+> 
+> Well, moving over to the fine-grained hooks should make the remaining 
+> problems Mark sees go away, as well as guaranteeing that we get command 
+> completion right.
+> 
+> Staying with ->eh_strategy_handler() means auditing the entire SCSI 
+> layer to check and see what gets set on error, which libata must then 
+> manually reset.  Obviously there are still some bugs in this area, as 
+> Mark has demonstrated.  The big reason why I don't like 
+> ->eh_strategy_handler() is that it continues to be an unknown quantity, 
+> in terms of, we don't still have a complete list of things-to-do during 
+> error handling.
 
-  1. ATAPI command gets issued for probing. (PROT_ATAPI_NODATA)
-  2. atapi_packet_task sends cdb
-  3. interrupt occurs and command is failed
-  4. EH entered, sense requested (PROT_ATAPI_PIO, ATA_NIEN set)
-  5. Machine enters sleep state
-  6. Machine wakes up
-  7. Power event raises an interrupt.
-  8. *BOOM* We're in a screaming interrupt lockup.
+  As I wrote previously, I'm not very sure if Mark and I are looking at 
+the same problem, but I think that once we know how the system is locked 
+up, the debugging shouldn't be that difficult.
 
-  It might be that Mark was experiencing both freed memory corruption 
-problem and above scenario.  Although I don't see how the broken fix 
-patch would prevent some lockup which would occur with the one liner, 
-as, AFAIK, the one liner does everything that the broken patch tries to 
-do.  The only difference is that the one liner doesn't clear 
-scmd->eh_entry, but this shouldn't cause any trouble.
+  As there are concerns regarding semantics of ->eh_strategy_handler and 
+it's a less-used and less-charted territory, I'm gonna try to write a 
+document describing the following.
 
-  When and if time permits, it would be very helpful for Mark to gather 
-some information about the lockups.  We currently don't even know if 
-we're looking at the same problem.  Especially as the current libata 
-implementation is not ready for suspending/resuming and doesn't 
-synchronize with polling tasks.
+  * How SCSI EH works and commands flow through it with the default
+    fine-grained hooks.
+  * From above, extract what ->eh_strategy_handler() should do.
+  * What libata error conditions are there and how qc's should be
+    handle.
+  * How to integrate libata EH into SCSI EH without losing commands.
 
-  Thanks.
+  I don't how good the doc will turn out (don't expect too much), but I 
+hope it could serve as a basis for discussion if nothing else.
+
+> If you are interested in tackling the work, you're more than welcome to 
+> choose either path.  Either way, the work won't go to waste.
+> 
+>     Jeff
+
+  After writing above mentioned doc, I'll try to improve/revise and 
+break down my previously posted EH patchset and explain how they conform 
+to above yet-to-be-written document such that it can be better 
+understood and easier to review/debug.
+
+  Thanks a lot.
 
 -- 
 tejun
