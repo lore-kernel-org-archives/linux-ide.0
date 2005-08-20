@@ -1,80 +1,22 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH libata-dev-2.6:upstream 00/02] atapi: packet task vs. intr race fix
-Date: Sat, 20 Aug 2005 18:17:22 +0900 (KST)
-Message-ID: <20050820091651.486821E0@htj.dyndns.org>
+Subject: Re: [PATCH libata-dev-2.6:upstream 02/02] atapi: fix atapi_packet_task vs. ata_host_intr race
+Date: Sat, 20 Aug 2005 18:17:32 +0900 (KST)
+Message-ID: <20050820091651.0C7C50B9@htj.dyndns.org>
+References: <20050820091651.486821E0@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.198]:52949 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751078AbVHTJRp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Aug 2005 05:17:45 -0400
-Received: by wproxy.gmail.com with SMTP id i2so754752wra
-        for <linux-ide@vger.kernel.org>; Sat, 20 Aug 2005 02:17:39 -0700 (PDT)
+Received: from rproxy.gmail.com ([64.233.170.204]:60235 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751078AbVHTJRj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Aug 2005 05:17:39 -0400
+Received: by rproxy.gmail.com with SMTP id i8so664544rne
+        for <linux-ide@vger.kernel.org>; Sat, 20 Aug 2005 02:17:37 -0700 (PDT)
+In-Reply-To: <20050820091651.486821E0@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, albertcc@tw.ibm.com
 Cc: linux-ide@vger.kernel.org
 
- Hello, Jeff and Albert.
-
- This patchset fixes the following race.
-(port A has ATA device and B ATAPI).
-
-port B	: ata_issue_prot() (ATAPI_NODATA)
-port B	: packet_task scheduled
-port A	: ata_issue_prot() (DMA)
-intr	: ata_interrupt()
-port A	: ata_host_intr -> this is all good & dandy
-port B	: ata_host_intr -> finishes ATAPI cmd w/ error (request sense)
-
- This is where the race is, we're polling for port B's qc, we must not
-mess with it from interrupt.  Now, port B has dangling packet_task
-which will race w/ whatever will run on port B.
-
- The problem is that we don't always protect polled ports from
-interrupts with ata_qc_set_polling() and for non-DMA ATA commands
-there's no way to discern if actually an IRQ has occurred (this
-sucks), so we end up finishing the other port's command.
-
- This condition occurs quite often if both port A and B are busy.  The
-most common result is assertion failure in atapi_packet_task
-(assert(qc->flags & ATA_QCFLAG_ACTIVE)), but depending on timing and
-on SMP, weirder things could happen, I think.
-
- Note that for ATAPI_DMA, interrupt from the other port won't mess
-with a polled command as we can tell that it's not ours with
-bmdma_status, but, if spurious interrupt occurs on the port, the
-packet_task will go dangling.  That's why ATAPI_DMA also needs
-protection.  The baseline is that all polled qc's need to be protected
-with ata_qc_set_polling() until polling task is done with the command.
-
- Albert, I think, part of your assertion failures are from this.  We
-also have unprotected qc_complete/EH race which can also cause other
-assertion failures.  I'll post a patch for that soon.
-
-[ Start of patch descriptions ]
-
-01_atapi_update-ata_irq_on.patch
-	: update ata_irq_on
-
-	Update ata_irq_on for atapi_packet_task fix.  Changes are
-
-	* IRQ is cleared _before_ unmasking interrupt.  This is
-	  necessary as unmasking could raise a pending interrupt
-	  which should have been ignored.
-
-	* IRQ is cleared using both ata_chk_status and
-          ap->ops->irq_clear.
-
-	* ap->ctl value represents default ctl value and never gets
-	  modified.  ap->last_ctl is the currently loaded ctl value.
-	  Don't turn off ATA_NIEN on ap->ctl as the bit never gets set
-	  on it.  Directly modify ap->last_ctl.
-
-	* Don't do ata_wait_idle.  All current callers don't need it.
-	  And it will always time out when used in atapi_packet_task.
-
 02_atapi_fix-atapi_packet_task-race.patch
-	: fix atapi_packet_task vs. ata_host_intr race
 
 	Protect ATAPI_NODATA and ATAPI_DMA commands from being
 	finished by ata_host_intr before atapi_packet_task is done w/
@@ -83,10 +25,75 @@ assertion failures.  I'll post a patch for that soon.
 	or by spurious interrupt, making atapi_packet_task access
 	already finished commands.
 
-[ End of patch descriptions ]
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Thanks.
+ libata-core.c |   34 +++++++++++++++++++++-------------
+ 1 files changed, 21 insertions(+), 13 deletions(-)
 
---
-tejun
+Index: work/drivers/scsi/libata-core.c
+===================================================================
+--- work.orig/drivers/scsi/libata-core.c	2005-08-20 18:12:30.000000000 +0900
++++ work/drivers/scsi/libata-core.c	2005-08-20 18:16:49.000000000 +0900
+@@ -3218,11 +3218,13 @@ int ata_qc_issue_prot(struct ata_queued_
+ 		break;
+ 
+ 	case ATA_PROT_ATAPI_NODATA:
++		ata_qc_set_polling(qc);
+ 		ata_tf_to_host_nolock(ap, &qc->tf);
+ 		queue_work(ata_wq, &ap->packet_task);
+ 		break;
+ 
+ 	case ATA_PROT_ATAPI_DMA:
++		ata_qc_set_polling(qc);
+ 		ap->ops->tf_load(ap, &qc->tf);	 /* load tf registers */
+ 		ap->ops->bmdma_setup(qc);	    /* set up bmdma */
+ 		queue_work(ata_wq, &ap->packet_task);
+@@ -3580,8 +3582,8 @@ irqreturn_t ata_interrupt (int irq, void
+ 			struct ata_queued_cmd *qc;
+ 
+ 			qc = ata_qc_from_tag(ap, ap->active_tag);
+-			if (qc && (!(qc->tf.ctl & ATA_NIEN)) &&
+-			    (qc->flags & ATA_QCFLAG_ACTIVE))
++			if ((!(ap->last_ctl & ATA_NIEN)) &&
++			    qc && (qc->flags & ATA_QCFLAG_ACTIVE))
+ 				handled |= ata_host_intr(ap, qc);
+ 		}
+ 	}
+@@ -3628,19 +3630,25 @@ static void atapi_packet_task(void *_dat
+ 	/* send SCSI cdb */
+ 	DPRINTK("send cdb\n");
+ 	assert(ap->cdb_len >= 12);
+-	ata_data_xfer(ap, qc->cdb, ap->cdb_len, 1);
+ 
+-	/* if we are DMA'ing, irq handler takes over from here */
+-	if (qc->tf.protocol == ATA_PROT_ATAPI_DMA)
+-		ap->ops->bmdma_start(qc);	    /* initiate bmdma */
+-
+-	/* non-data commands are also handled via irq */
+-	else if (qc->tf.protocol == ATA_PROT_ATAPI_NODATA) {
+-		/* do nothing */
+-	}
++	if (qc->tf.protocol == ATA_PROT_ATAPI_DMA ||
++	    qc->tf.protocol == ATA_PROT_ATAPI_NODATA) {
++		/* Once we're done issuing command and kicking bmdma,
++		 * irq handler takes over.  To not lose irq, we need
++		 * to enable irq before sending cdb, but interrupt
++		 * handler shouldn't be invoked before we're finished.
++		 * Hence, the following locking.
++		 */
++		spin_lock_irq(&ap->host_set->lock);
++		ata_irq_on(ap);
++		ata_data_xfer(ap, qc->cdb, ap->cdb_len, 1);
++		if (qc->tf.protocol == ATA_PROT_ATAPI_DMA)
++			ap->ops->bmdma_start(qc);	/* initiate bmdma */
++		spin_unlock_irq(&ap->host_set->lock);
++	} else {
++		ata_data_xfer(ap, qc->cdb, ap->cdb_len, 1);
+ 
+-	/* PIO commands are handled by polling */
+-	else {
++		/* PIO commands are handled by polling */
+ 		ap->pio_task_state = PIO_ST;
+ 		queue_work(ata_wq, &ap->pio_task);
+ 	}
 
