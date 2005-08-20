@@ -1,70 +1,81 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH libata-dev-2.6:upstream 02/02] libata: add host_set locking to ata_scsi_error()
-Date: Sat, 20 Aug 2005 23:15:40 +0900 (KST)
-Message-ID: <20050820141408.52DFBF95@htj.dyndns.org>
-References: <20050820141408.62050C34@htj.dyndns.org>
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: More libata EH data points
+Date: Sun, 21 Aug 2005 02:11:44 +0900
+Message-ID: <43076450.4030007@gmail.com>
+References: <4306D2F2.9000309@pobox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.192]:6765 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751247AbVHTOQD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Aug 2005 10:16:03 -0400
-Received: by wproxy.gmail.com with SMTP id i20so740466wra
-        for <linux-ide@vger.kernel.org>; Sat, 20 Aug 2005 07:16:00 -0700 (PDT)
-In-Reply-To: <20050820141408.62050C34@htj.dyndns.org>
+Received: from wproxy.gmail.com ([64.233.184.198]:57960 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932584AbVHTRMJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Aug 2005 13:12:09 -0400
+Received: by wproxy.gmail.com with SMTP id i2so797121wra
+        for <linux-ide@vger.kernel.org>; Sat, 20 Aug 2005 10:12:02 -0700 (PDT)
+In-Reply-To: <4306D2F2.9000309@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, albertcc@tw.ibm.com
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>
 
-02_libata_add-locking-to-ata_scsi_error.patch
+Jeff Garzik wrote:
+> Check out this lkml thread: 
+> http://marc.theaimsgroup.com/?t=111709353400001&r=1&w=2
+> 
+> It may help to turn on CONFIG_DEBUG_SLAB...
+> 
 
-	SCSI EH can start before ata_qc_complete is completely
-	complete.  so, latter part of ata_qc_complete can run
-	side-by-side with ->eng_timeout(), interfering EH.
+  Hello, Jeff.  Hello, Mark.
 
-        This patch makes ata_scsi_error() to grab and release host_set
-	lock before invoking ->eng_timeout().
+  The thread is reporting the following two problems.
 
-	Note: host_failed decrementing and eh_cmd_q banging are moved
-	above ->eng_timeout() invocation such that they're done while
-	holding the lock.
+  1. w/o patch, scmd is accessed after deallocated.
+  2. w/ patch, scmd is freed twice.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+  I'm aware of both problems and have just verified both with test 
+cases.  The first problem is caused by not clearing eh_cmdq in 
+ata_scsi_error.  This leaves eh_cmd_q pointing at freed scmd after eh is 
+complete.
 
- libata-scsi.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
+  After the first eh is complete, eh_cmd_q is pointing to freed scmd(s). 
+  When the next error occurs, scsi_softirq() calls scsi_eh_scmd_add(), 
+which adds the command to shost->eh_cmd_q.  As eh_cmd_q contains 
+dangling pointers, this corrupts freed memory causing #1 (and infinite 
+loop depending on circumstances).
 
-Index: work/drivers/scsi/libata-scsi.c
-===================================================================
---- work.orig/drivers/scsi/libata-scsi.c	2005-08-20 22:34:02.000000000 +0900
-+++ work/drivers/scsi/libata-scsi.c	2005-08-20 23:13:40.000000000 +0900
-@@ -373,12 +373,14 @@ int ata_scsi_slave_config(struct scsi_de
- 
- int ata_scsi_error(struct Scsi_Host *host)
- {
--	struct ata_port *ap;
-+	struct ata_port *ap = (struct ata_port *) &host->hostdata[0];
- 
- 	DPRINTK("ENTER\n");
- 
--	ap = (struct ata_port *) &host->hostdata[0];
--	ap->ops->eng_timeout(ap);
-+	/* The following locking ensures that we enter eng_timeout
-+	 * after ata_qc_complete is complete.
-+	 */
-+	spin_lock_irq(&ap->host_set->lock);
- 
- 	/* TODO: this is per-command; when queueing is supported
- 	 * this code will either change or move to a more
-@@ -387,6 +389,10 @@ int ata_scsi_error(struct Scsi_Host *hos
- 	host->host_failed--;
- 	INIT_LIST_HEAD(&host->eh_cmd_q);
- 
-+	spin_unlock_irq(&ap->host_set->lock);
-+
-+	ap->ops->eng_timeout(ap);
-+
- 	DPRINTK("EXIT\n");
- 	return 0;
- }
+  The patch modifies ATAPI eh path to use ata_qc_timeout_done instead of 
+scsi_finish_cmd and scmd's are finished by scsi_invoke_strategy_handler 
+using scsi_eh_flush_done_q.  As ATA timeout path isn't modified, when an 
+ATA timeout occurs, a scmd is finished first in ata_qc_timeout and again 
+in scsi_invoke_strategy_handler causing double free.
 
+  With INIT_LIST_HEAD(&host->eh_cmd_q) one liner patch, both problems 
+don't occur.  As for Mark's lockup problem, I think that it's probably a 
+different issue.  One of probable lockup scenario is...
+
+  1. ATAPI command gets issued for probing. (PROT_ATAPI_NODATA)
+  2. atapi_packet_task sends cdb
+  3. interrupt occurs and command is failed
+  4. EH entered, sense requested (PROT_ATAPI_PIO, ATA_NIEN set)
+  5. Machine enters sleep state
+  6. Machine wakes up
+  7. Power event raises an interrupt.
+  8. *BOOM* We're in a screaming interrupt lockup.
+
+  It might be that Mark was experiencing both freed memory corruption 
+problem and above scenario.  Although I don't see how the broken fix 
+patch would prevent some lockup which would occur with the one liner, 
+as, AFAIK, the one liner does everything that the broken patch tries to 
+do.  The only difference is that the one liner doesn't clear 
+scmd->eh_entry, but this shouldn't cause any trouble.
+
+  When and if time permits, it would be very helpful for Mark to gather 
+some information about the lockups.  We currently don't even know if 
+we're looking at the same problem.  Especially as the current libata 
+implementation is not ready for suspending/resuming and doesn't 
+synchronize with polling tasks.
+
+  Thanks.
+
+-- 
+tejun
