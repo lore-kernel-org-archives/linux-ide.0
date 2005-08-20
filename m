@@ -1,87 +1,51 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/ide/: possible cleanups
-Date: Sat, 20 Aug 2005 21:02:51 +0200
-Message-ID: <20050820190251.GZ3615@stusta.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [SUMMARY] libata EH
+Date: Sat, 20 Aug 2005 21:02:48 +0100
+Message-ID: <1124568170.14518.13.camel@localhost.localdomain>
+References: <20050820023351.GA690@htj.dyndns.org>
+	 <4306B62F.7090509@pobox.com>  <430768E2.60808@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:16139 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S932784AbVHTTCx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 20 Aug 2005 15:02:53 -0400
-Content-Disposition: inline
+Received: from [81.2.110.250] ([81.2.110.250]:53950 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S1751012AbVHTTwV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 20 Aug 2005 15:52:21 -0400
+In-Reply-To: <430768E2.60808@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, albertcc@tw.ibm.com, mlord@pobox.com, lkosewsk@gmail.com, luben_tuikov@adaptec.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <axboe@suse.de>
 
-This patch contains the following possible cleanups:
-- pci/cy82c693.c: make a needlessly global function static
-- remove the following unneeded EXPORT_SYMBOL's:
-  - ide-taskfile.c: do_rw_taskfile
-  - ide-iops.c: default_hwif_iops
-  - ide-iops.c: default_hwif_transport
-  - ide-iops.c: wait_for_ready
+On Sul, 2005-08-21 at 02:31 +0900, Tejun Heo wrote:
+>   My preference is toward unifying into single path as long as 
+> performance penalty is acceptable for the sake of simplicity.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+I don't think it is a big issue for ATA. The drive tends to take 10-15
+seconds before it goes and whines at us, and it is hopefully not a fast
+path.
 
----
+> >>     * SCSI EH entrance is not synchronized with polling tasks.
+> > 
+> > 
+> > Yes, this definitely needs fixing.
+> > 
+> > Luckily the polling task is very rarely used, by normal users.
 
- drivers/ide/ide-iops.c     |    6 ------
- drivers/ide/ide-taskfile.c |    2 --
- drivers/ide/pci/cy82c693.c |    2 +-
- 3 files changed, 1 insertion(+), 9 deletions(-)
+The old IDE has this bug on reset paths too - and people do eventually
+hit it.
 
---- linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c.old	2005-02-05 02:57:03.000000000 +0100
-+++ linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c	2005-02-05 02:57:12.000000000 +0100
-@@ -161,8 +161,6 @@
- 	return ide_stopped;
- }
- 
--EXPORT_SYMBOL(do_rw_taskfile);
--
- /*
-  * set_multmode_intr() is invoked on completion of a WIN_SETMULT cmd.
-  */
+> > - DMA errors should be handled by hueristics:  If more than $N (3?) DMA 
+> > errors happen in 15 minutes,
+> > * decrease SATA PHY speed.  if speed cannot be decreased,
+> > * decrease UDMA xfer speed.  if at UDMA0, switch to PIO4
+> > * decrease PIO xfer speed.  if at PIO3, complain, but continue
 
---- linux-2.6.12-rc2-mm3-full/drivers/ide/pci/cy82c693.c.old	2005-04-17 21:11:22.000000000 +0200
-+++ linux-2.6.12-rc2-mm3-full/drivers/ide/pci/cy82c693.c	2005-04-17 21:11:30.000000000 +0200
-@@ -469,7 +469,7 @@
- 
- static __initdata ide_hwif_t *primary;
- 
--void __devinit init_iops_cy82c693(ide_hwif_t *hwif)
-+static void __devinit init_iops_cy82c693(ide_hwif_t *hwif)
- {
- 	if (PCI_FUNC(hwif->pci_dev->devfn) == 1)
- 		primary = hwif;
---- linux-2.6.12-rc2-mm3-full/drivers/ide/ide-iops.c.old	2005-04-17 21:12:44.000000000 +0200
-+++ linux-2.6.12-rc2-mm3-full/drivers/ide/ide-iops.c	2005-04-17 21:12:54.000000000 +0200
-@@ -104,8 +104,6 @@
- 	hwif->INSL	= ide_insl;
- }
- 
--EXPORT_SYMBOL(default_hwif_iops);
--
- /*
-  *	MMIO operations, typically used for SATA controllers
-  */
-@@ -329,8 +327,6 @@
- 	hwif->atapi_output_bytes	= atapi_output_bytes;
- }
- 
--EXPORT_SYMBOL(default_hwif_transport);
--
- /*
-  * Beginning of Taskfile OPCODE Library and feature sets.
-  */
-@@ -525,8 +525,6 @@
- 	return 0;
- }
- 
--EXPORT_SYMBOL(wait_for_ready);
--
- /*
-  * This routine busy-waits for the drive status to be not "busy".
-  * It then checks the status for all of the "good" bits and none
+Remember this means issuing a command to the drive before re-issuing the
+failed command. The old IDE also has serious problems with this as it
+ends up trying to issue a polling command from an IRQ racing its own
+timeout code. One good reason for the EH approach scsi takes of
+quiescing first and running in task context.
+
 
