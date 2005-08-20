@@ -1,153 +1,129 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [SUMMARY] libata EH
-Date: Sat, 20 Aug 2005 00:48:47 -0400
-Message-ID: <4306B62F.7090509@pobox.com>
-References: <20050820023351.GA690@htj.dyndns.org>
+Subject: Re: [PATCH libata-dev-2.6:ncq 00/11] libata: new error handling &
+ NCQ generic helpers (review only)
+Date: Sat, 20 Aug 2005 02:08:08 -0400
+Message-ID: <4306C8C8.2010901@pobox.com>
+References: <20050707130840.5046338C@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:62431 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751039AbVHTEtD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Aug 2005 00:49:03 -0400
-In-Reply-To: <20050820023351.GA690@htj.dyndns.org>
+Received: from mail.dvmed.net ([216.237.124.58]:737 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751080AbVHTGIT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Aug 2005 02:08:19 -0400
+In-Reply-To: <20050707130840.5046338C@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, albertcc@tw.ibm.com, mlord@pobox.com, lkosewsk@gmail.com, luben_tuikov@adaptec.com, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <axboe@suse.de>
-
-
-(added Alan, Bart and Jens to CC)
+Cc: axboe@suse.de, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
->  Hello, Jeff & libata developers.
+
+> 01_libata_implement-ata_qc_exec_special.patch
+> 	: implement ata_qc_exec_special()
 > 
->  I've been spending some time on libata EH and am trying to make a
-> list of things which can be improved.  If you have something, please
-> add to the list.
+> 	This patch implements ata_qc_exec_special() function which
+> 	generalizes libata internal special command execution and adds
+> 	timeout.  All internal commands are converted.  Timeout
+> 	constants are added to libata.h and, while at it, removed
+> 	unused ATA_TMOUT_EDD.
+
+this seems sane, though I wonder if it could be split up a bit more
+
+
+> 02_libata_new-error-handling.patch
+> 	: implement new EH framework and convert non-ncq EH
 > 
-> 1. Errors are handled in multiple paths.
+> 	This patch implements new EH framework and converts non-ncq EH
+> 	to use it.  Now errors and timeouts are all handled by EH
+> 	handler inside EH thread.
 > 
-> 	* ATA errors are handled directly in intr context
-
-Simple stuff like "command aborted" (invalid command) can be handled 
-immediately, no need to kick in the error handling.
-
-But as long as the right hardware interrupts are acknowledged, I don't 
-mind if all error handling is moved to the thread.
-
-
-> 	* timeouts are handled by ->eng_timeout via SCSI EH
+> 	* All failed commands are posted to EH by using ata_qc_error()
+> 	  without qc-completion.  All timed out commands are posted to
+> 	  EH, too.  On entry to EH handler, all active qc's are either
+> 	  failed or timed out qc's, and they are all.  Also it's
+> 	  guaranteed that once EH is started, only EH can finish or
+> 	  retry it.  Normal or spurious interrupts during recovery
+> 	  don't affect failed qc's.
 > 
-> 	* ATAPI errors are forwarded to ->eng_timeout in somewhat hackish way
-
-->eng_timeout is somewhat misnamed.  A more correct name would be 
-"error_hander".  ATAPI errors are intentionally forwarded to SCSI EH via 
-the normal check-condition handling paths, which cause the SCSI EH to be 
-invoked.
-
-
-> 2. Synchronization
+> 	* EH handles error and determines whether to retry or fail
+> 	  qc's.  It is responsible for setting error information to
+> 	  notify upper layer if it's gonna fail a command.  (Jeff,
+> 	  this should make implementing error classes you've talked
+> 	  about easier.  All error handling is done inside EH and we
+> 	  can just set sense data appropriately and eh-complete the
+> 	  commands.)
 > 
-> 	* SCSI EH entrance is not synchronized with normal processing.
-> 	  ATAPI error handling/timeout handling can run concurrently
-> 	  with normal command processing.  Albert, I think it's the
-> 	  same problem you're trying to solve by moving ATA_QCFLAG_ACTIVE
-> 	  clearing.
+> 	* After EH is complete, operation resumes.
 > 
-> 	  http://marc.theaimsgroup.com/?l=linux-ide&m=112417360223374&w=2
-
-The SCSI layer stops all command processing before calling 
-->eh_strategy_handler().  Where do you see that it runs concurrently 
-with normal command processing?  That should definitely -not- be happening.
-
-
-> 	* SCSI EH entrance is not synchronized with polling tasks.
-
-Yes, this definitely needs fixing.
-
-Luckily the polling task is very rarely used, by normal users.
-
-
-> 3. Error handling too weak
+> 	The following changes are worth noting.
 > 
-> 	* We need to check the device responds to commands (say, w/
-> 	  IDENTIFY or CHK_POWER) after an error, and then reset if it
->           doens't.  To do this, we need to handle all errors in EH.
-
-First you need to classify the error, then handle based on that 
-classification.
-
-- DMA and PCI bus errors are usually indicated via status bits in 
-controller registers, such as ATA_DMA_ERR on standard PCI IDE controllers.
-
-- Device errors will be indicated via the ATA Status and Error registers.
-
-
-- PCI bus errors should be handled by resetting the host controller (if 
-possible), and then retrying the command [NOTE: better suggestions welcome]
-
-- DMA errors should be handled by hueristics:  If more than $N (3?) DMA 
-errors happen in 15 minutes,
-* decrease SATA PHY speed.  if speed cannot be decreased,
-* decrease UDMA xfer speed.  if at UDMA0, switch to PIO4
-* decrease PIO xfer speed.  if at PIO3, complain, but continue
-
-Commands should be retried after DMA errors.
-
-- Device errors should handled as per ATA specs.  Usually these error do 
-not cause a retry, but they may require additional inquiry such as READ 
-LOG EXT if its a media error.
-
-
-> 4. Better error reporting
+> 	* ->eng_timeout renamed to ->error_handler
 > 
-> 	* We currently depend on ATA_STAT and ATA_ERR register values
-> 	  to check for and report errors.  As Jeff said, this is way
-> 	  too crude.  We need better error reporting.  I think having
-> 	  unified code path for error handling will help implementing
-> 	  this.
-
-This will fall naturally out of better error handling (stuff I described 
-above).
-
-
-> 5. EH is currently holding off other improvements
+> 	* ata_eh_qc_complete(), ata_eh_qc_retry() added
 > 
-> 	* NCQ controllers (or any other non-legacy ATA interface based
->           ones) don't fit nicely into current ATA error handling in
->           interrupt scheme.  As NCQ errors require issuing read log
-> 	  command, we need to be in EH context to handle these errors.
+> 	* __ata_qc_complete() used to deal with resource freeing and
+> 	  completing wait for special cmds.  As this patch removes the
+> 	  only use of __ata_qc_complete(), it's moved into
+> 	  ata_qc_free() and ata_qc_free() deals only with resource
+> 	  freeing.  New __ata_qc_complete() is defined to be used by
+> 	  ata_eh_qc_*() functions (internal use only).
 > 
-> 	* To properly implement hotplug, we need to have solid error
->           handling.  IMHO, implementing hotplug with current EH will
-> 	  be quite fragile.
+> 	* After allocated, all commands are either freed with
+>           ata_qc_free() if it can't be issued or completed with
+>           ata[_eh]_qc_complete().  No half-completion anymore.
+> 
+> 	* As filling upper layer error info is the reponsibility of
+> 	  the recovery handler now, qc->complete_fn() doesn't need
+> 	  drv_stat argument.  Also, as all commands are completed
+> 	  fully at once, there's no need for int return value.  This
+> 	  leaves very little functionality to qc->complete_fn,
+> 	  currently only ATAPI inquiry result tempering.  I think just
+> 	  inlining that part and removing this callback will make the
+> 	  code easier.
+> 
+> 	* Although it looks like a lot of changes, from a device's
+> 	  point of view, nothing changes.  Only software structure is
+> 	  changed.
+> 
+> 	This patch is separated out only to make changes incremental.
+> 	I haven't really tested this patch alone.  Please test with
+> 	the following NCQ EH patches applied.
 
-Correct.  Both NCQ and hotplug really want decent error handling -- 
-particularly hotplug.  Hotplug will likely travel the error handling 
-paths, though at that point we prefer the English word "exception" 
-rather than "error"  :)
+this seems mostly OK, though I need to read it over again.  Definitely 
+needs to be split up.  Things like the renaming should be moved to 
+separate patches.
 
 
->  Whether we choose to stay with ->eh_strategy_handler or move over to
-> fine-grained SCSI EH, IMHO, libata EH needs some work.  So... how
-> should we proceed?
+> 05_libata_add-drv_err-to-ata_to_sense_error.patch
+> 	: add drv_err argument to ata_to_sense_error()
+> 
+> 	During NCQ error handling, drv_stat and drv_err values are
+> 	obtained from log page 10h.  This patch adds drv_err argument
+> 	to ata_to_sense_error() such that it can be used with values
+> 	obtained from log page 10h.
 
-Well, moving over to the fine-grained hooks should make the remaining 
-problems Mark sees go away, as well as guaranteeing that we get command 
-completion right.
+Seems OK, though the s/err/drv_err/ should be a separate patch.
 
-Staying with ->eh_strategy_handler() means auditing the entire SCSI 
-layer to check and see what gets set on error, which libata must then 
-manually reset.  Obviously there are still some bugs in this area, as 
-Mark has demonstrated.  The big reason why I don't like 
-->eh_strategy_handler() is that it continues to be an unknown quantity, 
-in terms of, we don't still have a complete list of things-to-do during 
-error handling.
 
-If you are interested in tackling the work, you're more than welcome to 
-choose either path.  Either way, the work won't go to waste.
+> 07_libata_convert-ahci-to-new-eh.patch
+> 	: convert ahci driver to use new NCQ helpers
+> 
+> 	This patch converts ahci driver to use new NCQ helpers.
 
-	Jeff
+the start-DMA path seems a bit heavy, though if its ONLY used in EH 
+paths, I suppose its OK.
+
+
+> 08_libata_ahci-stop-dma-before-resetting.patch
+> 	: stop dma before reset
+> 
+> 	AHCI 1.1 mandates stopping dma before issueing COMMRESET.  The
+> 	original code didn't and it resulted in occasional lockup of
+> 	the controller during EH recovery.  This patch fixes the
+> 	problem.
+
+patch should probably be bumped to the top of the list (modulo obvious 
+dependencies)
 
 
