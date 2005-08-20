@@ -1,22 +1,60 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH libata-dev-2.6:upstream 01/02] atapi: update ata_irq_on
-Date: Sat, 20 Aug 2005 18:17:27 +0900 (KST)
-Message-ID: <20050820091651.B8D48034@htj.dyndns.org>
-References: <20050820091651.486821E0@htj.dyndns.org>
+Subject: [PATCH libata-dev-2.6:upstream 00/02] atapi: packet task vs. intr race fix
+Date: Sat, 20 Aug 2005 18:17:22 +0900 (KST)
+Message-ID: <20050820091651.486821E0@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.198]:61213 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751078AbVHTJRd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Aug 2005 05:17:33 -0400
-Received: by rproxy.gmail.com with SMTP id r35so684795rna
-        for <linux-ide@vger.kernel.org>; Sat, 20 Aug 2005 02:17:32 -0700 (PDT)
-In-Reply-To: <20050820091651.486821E0@htj.dyndns.org>
+Received: from wproxy.gmail.com ([64.233.184.198]:52949 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751078AbVHTJRp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Aug 2005 05:17:45 -0400
+Received: by wproxy.gmail.com with SMTP id i2so754752wra
+        for <linux-ide@vger.kernel.org>; Sat, 20 Aug 2005 02:17:39 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, albertcc@tw.ibm.com
 Cc: linux-ide@vger.kernel.org
 
+ Hello, Jeff and Albert.
+
+ This patchset fixes the following race.
+(port A has ATA device and B ATAPI).
+
+port B	: ata_issue_prot() (ATAPI_NODATA)
+port B	: packet_task scheduled
+port A	: ata_issue_prot() (DMA)
+intr	: ata_interrupt()
+port A	: ata_host_intr -> this is all good & dandy
+port B	: ata_host_intr -> finishes ATAPI cmd w/ error (request sense)
+
+ This is where the race is, we're polling for port B's qc, we must not
+mess with it from interrupt.  Now, port B has dangling packet_task
+which will race w/ whatever will run on port B.
+
+ The problem is that we don't always protect polled ports from
+interrupts with ata_qc_set_polling() and for non-DMA ATA commands
+there's no way to discern if actually an IRQ has occurred (this
+sucks), so we end up finishing the other port's command.
+
+ This condition occurs quite often if both port A and B are busy.  The
+most common result is assertion failure in atapi_packet_task
+(assert(qc->flags & ATA_QCFLAG_ACTIVE)), but depending on timing and
+on SMP, weirder things could happen, I think.
+
+ Note that for ATAPI_DMA, interrupt from the other port won't mess
+with a polled command as we can tell that it's not ours with
+bmdma_status, but, if spurious interrupt occurs on the port, the
+packet_task will go dangling.  That's why ATAPI_DMA also needs
+protection.  The baseline is that all polled qc's need to be protected
+with ata_qc_set_polling() until polling task is done with the command.
+
+ Albert, I think, part of your assertion failures are from this.  We
+also have unprotected qc_complete/EH race which can also cause other
+assertion failures.  I'll post a patch for that soon.
+
+[ Start of patch descriptions ]
+
 01_atapi_update-ata_irq_on.patch
+	: update ata_irq_on
 
 	Update ata_irq_on for atapi_packet_task fix.  Changes are
 
@@ -35,59 +73,20 @@ Cc: linux-ide@vger.kernel.org
 	* Don't do ata_wait_idle.  All current callers don't need it.
 	  And it will always time out when used in atapi_packet_task.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+02_atapi_fix-atapi_packet_task-race.patch
+	: fix atapi_packet_task vs. ata_host_intr race
 
- libata.h |   28 +++++++++++++++-------------
- 1 files changed, 15 insertions(+), 13 deletions(-)
+	Protect ATAPI_NODATA and ATAPI_DMA commands from being
+	finished by ata_host_intr before atapi_packet_task is done w/
+	the commands.  Previously, such ATAPI commands could have been
+	completed by interrupts from other ports in the same host_set
+	or by spurious interrupt, making atapi_packet_task access
+	already finished commands.
 
-Index: work/include/linux/libata.h
-===================================================================
---- work.orig/include/linux/libata.h	2005-08-20 18:12:30.000000000 +0900
-+++ work/include/linux/libata.h	2005-08-20 18:16:49.000000000 +0900
-@@ -565,30 +565,32 @@ static inline void ata_tf_init(struct at
-  *	ata_irq_on - Enable interrupts on a port.
-  *	@ap: Port on which interrupts are enabled.
-  *
-- *	Enable interrupts on a legacy IDE device using MMIO or PIO,
-- *	wait for idle, clear any pending interrupts.
-+ *	Clear pending interrupts and enable interrupts on a legacy IDE
-+ *	device using MMIO or PIO.
-  *
-  *	LOCKING:
-  *	Inherited from caller.
-  */
- 
--static inline u8 ata_irq_on(struct ata_port *ap)
-+static inline void ata_irq_on(struct ata_port *ap)
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
--	u8 tmp;
- 
--	ap->ctl &= ~ATA_NIEN;
--	ap->last_ctl = ap->ctl;
-+	/* Clear pending interrupts. */
-+	ata_chk_status(ap);
-+	ap->ops->irq_clear(ap);
- 
--	if (ap->flags & ATA_FLAG_MMIO)
--		writeb(ap->ctl, (void __iomem *) ioaddr->ctl_addr);
--	else
--		outb(ap->ctl, ioaddr->ctl_addr);
--	tmp = ata_wait_idle(ap);
-+	ap->last_ctl &= ATA_NIEN;
- 
--	ap->ops->irq_clear(ap);
-+	/* smp_wmb() is here to make sure that other processors see
-+	 * ATA_NIEN cleared on receiving interrupts.
-+	 */
-+	smp_wmb();
- 
--	return tmp;
-+	if (ap->flags & ATA_FLAG_MMIO)
-+		writeb(ap->last_ctl, (void __iomem *) ioaddr->ctl_addr);
-+	else
-+		outb(ap->last_ctl, ioaddr->ctl_addr);
- }
- 
- 
+[ End of patch descriptions ]
+
+Thanks.
+
+--
+tejun
 
