@@ -1,31 +1,30 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: A note on libata passthru patch
-Date: Sun, 21 Aug 2005 17:44:27 -0400
-Message-ID: <4308F5BB.8040506@pobox.com>
-References: <4308F40E.3010109@pobox.com>
+From: Mogens Valentin <monz@danbbs.dk>
+Subject: Re: SATA status report updated
+Date: Sun, 21 Aug 2005 19:11:29 +0200
+Message-ID: <4308B5C1.2040304@danbbs.dk>
+References: <42FC2EF8.7030404@pobox.com>
+Reply-To: monz@danbbs.dk
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:4748 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S1751155AbVHUVoe
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 21 Aug 2005 17:44:34 -0400
-In-Reply-To: <4308F40E.3010109@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <42FC2EF8.7030404@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-I'm certain there are lots of vendor-specific commands
-that might assume exclusive bus access, if not exclusive
-host access.  All of this makes a reasonable case for
-having libata stop other host activity before/while
-performing any passthru command.
+Jeff Garzik wrote:
+> Although I have not updated it in several weeks, folks may wish to refer 
+> to the hardware status report as well:
+> 
+>     http://linux.yyz.us/sata/sata-status.html
 
-Cheers
+Jeff, is it possible for you at this time to comment on support for the 
+JMicron JMB360 sataII chip?  Possible timeframe?
+It's starting to be used with the ULi M1695/M1567 chipset.
+
 -- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+Kind regards,
+Mogens Valentin
 
