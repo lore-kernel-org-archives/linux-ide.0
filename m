@@ -1,85 +1,68 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH libata-dev-2.6:upstream 00/02] atapi: packet task vs.
- intr race fix
-Date: Sun, 21 Aug 2005 15:47:35 -0400
-Message-ID: <4308DA57.9000303@pobox.com>
-References: <20050820091651.486821E0@htj.dyndns.org>
+Subject: a word about ATA interrupts, and SATA (was Re: [PATCH libata-dev-2.6:upstream
+ 00/02] libata: race fixes)
+Date: Sun, 21 Aug 2005 16:08:21 -0400
+Message-ID: <4308DF35.4070503@pobox.com>
+References: <20050820141408.62050C34@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from zeus1.kernel.org ([204.152.191.4]:60105 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751105AbVHUVM2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Aug 2005 17:12:28 -0400
+	by vger.kernel.org with ESMTP id S1751103AbVHUVMP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Aug 2005 17:12:15 -0400
 Received: from mail.dvmed.net (mail.dvmed.net [216.237.124.58])
-	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id j7LJorvB032297
-	for <linux-ide@vger.kernel.org>; Sun, 21 Aug 2005 12:50:53 -0700
-In-Reply-To: <20050820091651.486821E0@htj.dyndns.org>
+	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id j7LKBb4E006562
+	for <linux-ide@vger.kernel.org>; Sun, 21 Aug 2005 13:11:38 -0700
+In-Reply-To: <20050820141408.62050C34@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>
+Cc: albertcc@tw.ibm.com
 
-Tejun Heo wrote:
->  Hello, Jeff and Albert.
-> 
->  This patchset fixes the following race.
-> (port A has ATA device and B ATAPI).
-> 
-> port B	: ata_issue_prot() (ATAPI_NODATA)
-> port B	: packet_task scheduled
-> port A	: ata_issue_prot() (DMA)
-> intr	: ata_interrupt()
-> port A	: ata_host_intr -> this is all good & dandy
-> port B	: ata_host_intr -> finishes ATAPI cmd w/ error (request sense)
-> 
->  This is where the race is, we're polling for port B's qc, we must not
-> mess with it from interrupt.  Now, port B has dangling packet_task
-> which will race w/ whatever will run on port B.
-> 
->  The problem is that we don't always protect polled ports from
-> interrupts with ata_qc_set_polling() and for non-DMA ATA commands
-> there's no way to discern if actually an IRQ has occurred (this
-> sucks), so we end up finishing the other port's command.
-> 
->  This condition occurs quite often if both port A and B are busy.  The
-> most common result is assertion failure in atapi_packet_task
-> (assert(qc->flags & ATA_QCFLAG_ACTIVE)), but depending on timing and
-> on SMP, weirder things could happen, I think.
-> 
->  Note that for ATAPI_DMA, interrupt from the other port won't mess
-> with a polled command as we can tell that it's not ours with
-> bmdma_status, but, if spurious interrupt occurs on the port, the
-> packet_task will go dangling.  That's why ATAPI_DMA also needs
-> protection.  The baseline is that all polled qc's need to be protected
-> with ata_qc_set_polling() until polling task is done with the command.
-> 
-> 
-> [ Start of patch descriptions ]
+BTW, here is food for thought:
 
-While this is something to look into, the supplied patches are 
-definitely not the way we want to go.  We need to follow the state 
-diagram for the PACKET command protocol.  ATA4 [1] diagrams are a good 
-thing to read, since they include mention of the behavior of certain 
-ATAPI devices that can send an interrupt between taskfile-out and 
-write-cdb steps in the sequence.
+In first generation SATA controllers, the host controller silicon 
+emulates a set of PATA taskfile registers.  When you follow the ATA 
+command protocols (host state machines), handling ATA commands in the 
+specified manner, the host controller silicon is processing that stuff 
+behind your back, silently converting your actions into other actions:
 
-In patch #2, you're making ata_irq_on() way too heavy.  In patch #1, 
-calling ata_qc_set_polling() for non-polled commands is a hack.
+* storing data in a H2D Register FIS buffer, for eventually sending to 
+the device
+* storing data received from a D2H Register FIS or SDB FIS into the host 
+controller taskfile registers.
+* handling PIO Setup and Data FISes, for PIO data xfer and PACKET 
+command protocol
+* handling FIS's associated with DMA data transfer
 
-The better solution is to track the PACKET command protocol state much 
-more closely, so that the code _knows_ when it should and shouldn't be 
-getting an interrupt.
+I've never seen any documentation for any host controller, that 
+describes how the emulation is implemented in silicon.  Probably nobody 
+outside of the original VHDL designers for each chip know that.  All we 
+know, we must figure out from inference:  we pretend a host chip is 
+PATA, and the host chip turns our actions into a SATA FIS conversion.
 
-This is required anyway because, as mentioned in another email, an ATA 
-device might assert INTRQ for certain events, such as non-data commands, 
-where the controller is not required to assert the BMDMA IRQ bit.
+Because of this, we can discern several unique SATA quirks:
+(a) writing most ATA registers simply involves storing a data value into 
+a buffer on the host controller
+(b) writing to Device Control or Command registers causes a H2D Register 
+FIS to be sent.
+(c) [most important to this thread] the ATA INTRQ is signalled by 
+setting the 'I' bit in certain FIS's.  It is no longer a pure indication 
+of the INTRQ signal, as it was in PATA.
 
-I _suspect_ that many host controllers cause the BMDMA IRQ bit to track 
-the ATA INTRQ status precisely, but this theory has not been validated.
+Due to the ramifications of (c), polling in general is possible but not 
+the best idea.  libata currently uses polling for the IDENTIFY DEVICE 
+command, and I have long been thinking about turning off polling for 
+SATA controllers.  Some SATA controllers, such as Vitesse/Intel, simply 
+do not support the ATA nIEN bit.  It is emulated in the driver.  Other 
+controllers may not honor the nIEN bit correctly (due to bad emulation 
+logic in silicon, probably).
+
+Just factor this info into your decisions, when playing around with the 
+interrupt delivery code.
 
 	Jeff
 
 
-[1] http://www.t13.org/project/d1153r18-ATA-ATAPI-4.pdf
 
