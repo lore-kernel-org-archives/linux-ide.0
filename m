@@ -1,121 +1,183 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [SUMMARY] libata EH
-Date: Sun, 21 Aug 2005 00:09:58 -0400
-Message-ID: <4307FE96.10405@pobox.com>
-References: <20050820023351.GA690@htj.dyndns.org> <4306B62F.7090509@pobox.com> <430768E2.60808@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH libata-dev-2.6:upstream 00/02] atapi: packet task vs.
+ intr race fix
+Date: Mon, 22 Aug 2005 05:40:17 +0900
+Message-ID: <4308E6B1.6030001@gmail.com>
+References: <20050820091651.486821E0@htj.dyndns.org> <4308DA57.9000303@pobox.com> <4308E13E.6070104@gmail.com> <4308E2C9.6040605@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:64484 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750769AbVHUEKT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Aug 2005 00:10:19 -0400
-In-Reply-To: <430768E2.60808@gmail.com>
+Received: from zeus1.kernel.org ([204.152.191.4]:60613 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751088AbVHUUnQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Aug 2005 16:43:16 -0400
+Received: from zproxy.gmail.com (zproxy.gmail.com [64.233.162.193])
+	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id j7LKfRB2015536
+	for <linux-ide@vger.kernel.org>; Sun, 21 Aug 2005 13:41:28 -0700
+Received: by zproxy.gmail.com with SMTP id r28so629024nza
+        for <linux-ide@vger.kernel.org>; Sun, 21 Aug 2005 13:40:22 -0700 (PDT)
+In-Reply-To: <4308E2C9.6040605@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, albertcc@tw.ibm.com, mlord@pobox.com, lkosewsk@gmail.com, luben_tuikov@adaptec.com, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <axboe@suse.de>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Simple stuff like "command aborted" (invalid command) can be handled 
->> immediately, no need to kick in the error handling.
-
->> But as long as the right hardware interrupts are acknowledged, I don't 
->> mind if all error handling is moved to the thread.
-
->  My preference is toward unifying into single path as long as 
-> performance penalty is acceptable for the sake of simplicity.
-
-The hot path is completing reads and writes successfully.
-Secondary hot path is completing <other commands> successfully.
-
-For everything else, clear, simple, maintainable code is preferred over 
-fast code.
-
-
->>> 2. Synchronization
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+> 
+>>
+>>  Hello, Jeff.
+>>
+>> Jeff Garzik wrote:
+>>
+>>> Tejun Heo wrote:
 >>>
->>>     * SCSI EH entrance is not synchronized with normal processing.
->>>       ATAPI error handling/timeout handling can run concurrently
->>>       with normal command processing.  Albert, I think it's the
->>>       same problem you're trying to solve by moving ATA_QCFLAG_ACTIVE
->>>       clearing.
+>>>>  Hello, Jeff and Albert.
+>>>>
+>>>>  This patchset fixes the following race.
+>>>> (port A has ATA device and B ATAPI).
+>>>>
+>>>> port B    : ata_issue_prot() (ATAPI_NODATA)
+>>>> port B    : packet_task scheduled
+>>>> port A    : ata_issue_prot() (DMA)
+>>>> intr    : ata_interrupt()
+>>>> port A    : ata_host_intr -> this is all good & dandy
+>>>> port B    : ata_host_intr -> finishes ATAPI cmd w/ error (request 
+>>>> sense)
+>>>>
+>>>>  This is where the race is, we're polling for port B's qc, we must not
+>>>> mess with it from interrupt.  Now, port B has dangling packet_task
+>>>> which will race w/ whatever will run on port B.
+>>>>
+>>>>  The problem is that we don't always protect polled ports from
+>>>> interrupts with ata_qc_set_polling() and for non-DMA ATA commands
+>>>> there's no way to discern if actually an IRQ has occurred (this
+>>>> sucks), so we end up finishing the other port's command.
+>>>>
+>>>>  This condition occurs quite often if both port A and B are busy.  The
+>>>> most common result is assertion failure in atapi_packet_task
+>>>> (assert(qc->flags & ATA_QCFLAG_ACTIVE)), but depending on timing and
+>>>> on SMP, weirder things could happen, I think.
+>>>>
+>>>>  Note that for ATAPI_DMA, interrupt from the other port won't mess
+>>>> with a polled command as we can tell that it's not ours with
+>>>> bmdma_status, but, if spurious interrupt occurs on the port, the
+>>>> packet_task will go dangling.  That's why ATAPI_DMA also needs
+>>>> protection.  The baseline is that all polled qc's need to be protected
+>>>> with ata_qc_set_polling() until polling task is done with the command.
+>>>>
+>>>>
+>>>> [ Start of patch descriptions ]
 >>>
->>>       http://marc.theaimsgroup.com/?l=linux-ide&m=112417360223374&w=2
+>>>
+>>>
+>>>
+>>> While this is something to look into, the supplied patches are 
+>>> definitely not the way we want to go.  We need to follow the state 
+>>> diagram for the PACKET command protocol.  ATA4 [1] diagrams are a 
+>>> good thing to read, since they include mention of the behavior of 
+>>> certain ATAPI devices that can send an interrupt between taskfile-out 
+>>> and write-cdb steps in the sequence.
+>>>
+>>> In patch #2, you're making ata_irq_on() way too heavy.  In patch #1, 
+>>> calling ata_qc_set_polling() for non-polled commands is a hack.
 >>
 >>
 >>
->> The SCSI layer stops all command processing before calling 
->> ->eh_strategy_handler().  Where do you see that it runs concurrently 
->> with normal command processing?  That should definitely -not- be 
->> happening.
+>>  Have you received patches in the reverse order?  #1 changes 
+>> ata_irq_on() and #2 adds ata_qc_set_polling().
 >>
+>>  Hmmm, only a call to ata_chk_status() is added to ata_irq_on(), which 
+>> I think is needed regardless of other changes, and ata_wait_idle() is 
+>> removed.  Does that make the function heavy?
+>>
+>>>
+>>> The better solution is to track the PACKET command protocol state 
+>>> much more closely, so that the code _knows_ when it should and 
+>>> shouldn't be getting an interrupt.
+>>>
+>>> This is required anyway because, as mentioned in another email, an 
+>>> ATA device might assert INTRQ for certain events, such as non-data 
+>>> commands, where the controller is not required to assert the BMDMA 
+>>> IRQ bit.
+>>>
+>>> I _suspect_ that many host controllers cause the BMDMA IRQ bit to 
+>>> track the ATA INTRQ status precisely, but this theory has not been 
+>>> validated.
+>>>
+>>>     Jeff
+>>>
+>>>
+>>> [1] http://www.t13.org/project/d1153r18-ATA-ATAPI-4.pdf
+>>
+>>
+>>
+>>  Without interrupt pending information from BMDMA bit for non-DMA 
+>> commands (which I don't think we can use for non-DMA cmds as we'll 
+>> never be sure if all controllers behave that way), the problem is that 
+>> for many SATA controllers, more than one ports share single interrupt 
+>> line.   And without interrupt pending bit, shared interrupt means a 
+>> lot of spurious interrupts making it impossible to know when to expect 
+>> interrupts.
 > 
->  There are currently two problems.
 > 
->  * As we don't grab host_set lock on entry to ata_scsi_error(), we can
->    run concurrently with latter part of ata_qc_complete().  This race is
->    addressed by the following patches I've just posted.
+> Incorrect...  this is why I keep harping on the "ATA host state machine."
 > 
->    http://marc.theaimsgroup.com/?l=linux-ide&m=112454734102242&w=2
-
-
-hmmmmm.  I can see a bit of that:
-
-When ->eh_strategy_handler() is called, the SCSI layer has stopped 
-sending commands to all ports on the specified SCSI host.
-
-However, it looks like we can race against
-(a) interrupt handler completing a command on another port
-(b) interrupt handler belatedly completing a command on our port
-(c) if polling, another kernel thread
-
-(a) shouldn't matter right now, but will in the future when we take a 
-host-reset action that can 'blip' all ports.
-(b) is a -very- rare worry in ATA, since commands that don't complete 
-after 30 seconds probably will never complete.  But given how CHECK 
-CONDITION is implemented in libata's ATAPI code, falling immediately 
-over to the EH, this might be a real concern for ATAPI.
-(c) was mentioned in previous emails.  A rare worry.
-
-Did I miss anything?
-
-
->  * After entering EH, normal command completion or spurious interrupt
->    can occur.  We currently don't peg those interrupts, so interrupt
->    handling can interfere with EH.
-
-As long as it is not the local port, it shouldn't interfere with EH 
-(currently).
-
-
->  As there are concerns regarding semantics of ->eh_strategy_handler and 
-> it's a less-used and less-charted territory, I'm gonna try to write a 
-> document describing the following.
+> You rely on proper implementation to know when to expect interrupts. 
+> Read the state diagrams, they tell you precisely when an interrupt may 
+> be expected.  By definition, any other interrupt is probably a PCI 
+> shared interrupt, or a hardware or software bug.
 > 
->  * How SCSI EH works and commands flow through it with the default
->    fine-grained hooks.
->  * From above, extract what ->eh_strategy_handler() should do.
->  * What libata error conditions are there and how qc's should be
->    handle.
->  * How to integrate libata EH into SCSI EH without losing commands.
+
+  I think I'm familiar with ATA host state machine.  I don't think I'm 
+currently saying things because I don't know about it.  Maybe I'm 
+missing something here.  Please consider the following scenario.
+
+1. non-DMA command issued.
+2. device does something
+3. another device sharing the IRQ line raises interrupt
+4. D2H FIS received (BSY off, DRDY on, INTR on)
+5. interrupt handler kicks in for #3
+6. SATA controller raises interrupt
+7. SATA handler invoked from #5 checks ATA_STATUS and determines that
+    completes the command (we don't know if it's our interrupt or not)
+8. interrupt handler from #5 returns.
+9. interrupt handler for #6.
+10. nobody cared.
+
+  Did I miss something?
+
 > 
->  I don't how good the doc will turn out (don't expect too much), but I 
-> hope it could serve as a basis for discussion if nothing else.
+>>  IDE driver deals with this by having only one command active per 
+>> interrupt, but SATA doesn't have such scheme yet.  And I don't know if 
+>> such a scheme is desirable at all.  Maybe just continuing to poll 
+>> non-DMA commands (which isn't much a burden anyway) and keeping DMA 
+>> commands fast is a better approach.
+> 
+> 
+> The IDE driver has a high density, but look closely... it follows the 
+> ATA host state machine as well.
+> 
 
-It would certainly be nice to get all of this written down.
+  Yes it does, and it does a lot of exclusion among ports to do so...
 
+> 
+>>  So, how should we do here?  To follow ATA/ATAPI state machine, we 
+>> need to implement exclusion among ports sharing an interrupt.  Is this 
+>> the way to go?  Arggggggg...  Lack of interrupt pending bit is such a 
+>> pain in the ass.  :-(
+> 
+> 
+> If the code knows what state its in, it knows whether or not to expect 
+> an interrupt.  All that state information should already be synchronized 
+> by spinlock(host-lock), too.
+> 
 
->  After writing above mentioned doc, I'll try to improve/revise and break 
-> down my previously posted EH patchset and explain how they conform to 
-> above yet-to-be-written document such that it can be better understood 
-> and easier to review/debug.
+  I think the problem is whether or not we're expecting interrupts, 
+we'll get interrupts that are't ours and we have no way to tell if 
+they're ours or not.  No?
 
-Cool.  Thank you.
+  Thanks.
 
-I'll get those patches reviewed sometime this weekend.
-
-	Jeff
-
-
+-- 
+tejun
