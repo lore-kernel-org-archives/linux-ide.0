@@ -1,39 +1,60 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH libata:upstream] sil: apply M15W quirk selectively
-Date: Mon, 22 Aug 2005 17:45:12 -0400
-Message-ID: <430A4768.4000201@pobox.com>
-References: <1121894035.4885.15.camel@drevil.aslab.com> <20050728141242.GA10010@htj.dyndns.org> <4308D3D0.50504@pobox.com> <4308E7F4.3000509@gmail.com> <4308EDB5.6060102@pobox.com> <4308F5CD.7060001@gmail.com> <58cb370e05082203194cf1f424@mail.gmail.com> <20050822114639.GA26607@htj.dyndns.org> <430A2959.300@pobox.com> <20050822213912.GA13920@htj.dyndns.org>
+From: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: A note on libata passthru patch
+Date: Mon, 22 Aug 2005 08:26:05 -0400
+Message-ID: <20050822122603.GI2736@tuxdriver.com>
+References: <4308F40E.3010109@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:6791 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751266AbVHVVpW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 17:45:22 -0400
-In-Reply-To: <20050822213912.GA13920@htj.dyndns.org>
+Received: from zeus1.kernel.org ([204.152.191.4]:12676 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751305AbVHVVzf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 17:55:35 -0400
+Received: from ra.tuxdriver.com (ra.tuxdriver.com [24.172.12.4])
+	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id j7MCTU63023866
+	for <linux-ide@vger.kernel.org>; Mon, 22 Aug 2005 05:29:30 -0700
+Content-Disposition: inline
+In-Reply-To: <4308F40E.3010109@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Michael Madore <Michael.Madore@aslab.com>, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <mlord@pobox.com>
 
-Tejun Heo wrote:
-> On Mon, Aug 22, 2005 at 03:36:57PM -0400, Jeff Garzik wrote:
->>Tejun Heo wrote:
+On Sun, Aug 21, 2005 at 05:37:18PM -0400, Jeff Garzik wrote:
+> 
+> Something that Alan unintentionally reminded me, about the libata 
+> passthru patch:  Some controllers require certain ATA commands to be 
+> synchronized at the host-wide level.
 
->>5) add SIL_FLAG_M15W to the list of host_flags in the new sil_3112_m15w 
->>entry created in step #4.
+<snip>
 
->  Can we use host_flags for that?  It seems that it's for ATA_FLAG_*
-> flags, and we currently don't explicitly reserve any bits from
-> ATA_FLAG_*.
+> Currently probing is 100% synchronous, so our internal use of SET 
+> FEATURES - XFER MODE is safe.  But when you turn on ATA passthru, it is 
+> not safe.
 
-The drivers are free to use the upper bits of ap->flags for their own 
-purposes.  ata_piix.c is an example of this, with PIIX_FLAG_xxx.
+...except that the passthru code specifically filters-out the SET
+FEATURES - XFER MODE command. (libata_scsi.c:1976)
+ 
+> This is another issue that needs fixing before we can merge the ATA 
+> passthru feature, since the consequences can be serious.
 
-We can worry about bitspace collision when libata general flags and 
-driver-specific flags get so numerous its a problem.
+I am by no means an expert either on ATA in general or on the oddities
+and quirks of specific SATA controllers.  I don't know if anyone else
+interested in the fate of the passthru patch is such an expert or not,
+but either way it would likely be helpful to list any other specific
+synchronization issues known to date which might be problematic.
 
-	Jeff
+Presuming that such a list either exists or is likely to exist, does
+anyone have suggestions for what needs to be done in the general
+case here?  Perhaps some infrastructure needs to be added to verify
+that it is okay for the passthru stuff to issue a given command at a
+given time on a given controller?  Sounds complicated...  Maybe some
+infrastructure to quiesce _everything_ on the controller before
+issuing a passthru command?  Just thinking "out loud"...
 
+I'd like to help (and I'd like the passthru stuff to be "in"), but
+I need some guidance...
 
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
