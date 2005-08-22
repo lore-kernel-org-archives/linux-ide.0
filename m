@@ -1,90 +1,73 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH libata:upstream] sil: apply M15W quirk selectively (take 2)
-Date: Tue, 23 Aug 2005 07:27:25 +0900
-Message-ID: <20050822222725.GA17359@htj.dyndns.org>
-References: <1121894035.4885.15.camel@drevil.aslab.com> <20050728141242.GA10010@htj.dyndns.org> <4308D3D0.50504@pobox.com> <4308E7F4.3000509@gmail.com> <4308EDB5.6060102@pobox.com> <4308F5CD.7060001@gmail.com> <58cb370e05082203194cf1f424@mail.gmail.com> <20050822114639.GA26607@htj.dyndns.org> <430A2959.300@pobox.com> <20050822213912.GA13920@htj.dyndns.org>
+Subject: Re: [PATCH libata-dev-2.6:upstream 02/02] libata: add host_set locking to ata_scsi_error()
+Date: Mon, 22 Aug 2005 17:23:29 +0900
+Message-ID: <20050822082329.GB3252@htj.dyndns.org>
+References: <20050820141408.62050C34@htj.dyndns.org> <20050820141408.52DFBF95@htj.dyndns.org> <4308DB7B.7090706@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.205]:64015 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751375AbVHVW1c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 18:27:32 -0400
-Received: by zproxy.gmail.com with SMTP id r28so789838nza
-        for <linux-ide@vger.kernel.org>; Mon, 22 Aug 2005 15:27:31 -0700 (PDT)
+Received: from zeus1.kernel.org ([204.152.191.4]:17289 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751412AbVHVW0O (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 18:26:14 -0400
+Received: from zproxy.gmail.com (zproxy.gmail.com [64.233.162.193])
+	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id j7M8OdCi010662
+	for <linux-ide@vger.kernel.org>; Mon, 22 Aug 2005 01:24:42 -0700
+Received: by zproxy.gmail.com with SMTP id r28so685623nza
+        for <linux-ide@vger.kernel.org>; Mon, 22 Aug 2005 01:23:34 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20050822213912.GA13920@htj.dyndns.org>
+In-Reply-To: <4308DB7B.7090706@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Michael Madore <Michael.Madore@aslab.com>, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
+Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
- As SII reports that only original 3112's are affected by M15W quirk,
-This patch adds SIL_FLAG_MOD15WRITE to selectively apply M15W quirk
-depending on chipsets.  As of yet, we don't know exactly which PCI IDs
-are for original 3112, so M15W quirk is applied to all except for 3512
-and 3124.  Once more info is avaliable, we can change some of these
-sil_3112_m15w's to sil_3112.
+On Sun, Aug 21, 2005 at 03:52:27PM -0400, Jeff Garzik wrote:
+> Tejun Heo wrote:
+> >02_libata_add-locking-to-ata_scsi_error.patch
+> >
+> >	SCSI EH can start before ata_qc_complete is completely
+> >	complete.  so, latter part of ata_qc_complete can run
+> >	side-by-side with ->eng_timeout(), interfering EH.
+> >
+> >        This patch makes ata_scsi_error() to grab and release host_set
+> >	lock before invoking ->eng_timeout().
+> >
+> >	Note: host_failed decrementing and eh_cmd_q banging are moved
+> >	above ->eng_timeout() invocation such that they're done while
+> >	holding the lock.
+> 
+> I think it's better to follow a path that sets a "EH owns this port now" 
+> flag inside spinlock,
+> 
+> 	spin_lock_irqsave()
+> 	ap->in_eh = 1;
+> 	spin_unlock_irqrestore()
+> 
+> and then check that flag in ata_qc_complete()
+> 
+> 	if (qc->ap->in_eh)
+> 		return; /* do nothing else with command */
+> 
+> so that for the case of a late interrupt, the interrupt handler should 
+> acknowledge the interrupt, but not actually touch the ata_queued_cmd state.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+ Hi!
 
-diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
---- a/drivers/scsi/sata_sil.c
-+++ b/drivers/scsi/sata_sil.c
-@@ -41,8 +41,11 @@
- #define DRV_VERSION	"0.9"
- 
- enum {
-+	SIL_FLAG_MOD15WRITE	= (1 << 30),
-+
- 	sil_3112		= 0,
--	sil_3114		= 1,
-+	sil_3112_m15w		= 1,
-+	sil_3114		= 2,
- 
- 	SIL_FIFO_R0		= 0x40,
- 	SIL_FIFO_W0		= 0x41,
-@@ -76,13 +79,13 @@ static void sil_scr_write (struct ata_po
- static void sil_post_set_mode (struct ata_port *ap);
- 
- static struct pci_device_id sil_pci_tbl[] = {
--	{ 0x1095, 0x3112, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
--	{ 0x1095, 0x0240, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
-+	{ 0x1095, 0x3112, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112_m15w },
-+	{ 0x1095, 0x0240, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112_m15w },
- 	{ 0x1095, 0x3512, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
- 	{ 0x1095, 0x3114, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3114 },
--	{ 0x1002, 0x436e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
--	{ 0x1002, 0x4379, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
--	{ 0x1002, 0x437a, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
-+	{ 0x1002, 0x436e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112_m15w },
-+	{ 0x1002, 0x4379, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112_m15w },
-+	{ 0x1002, 0x437a, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112_m15w },
- 	{ }	/* terminate list */
- };
- 
-@@ -174,6 +177,16 @@ static struct ata_port_info sil_port_inf
- 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
- 		.udma_mask	= 0x3f,			/* udma0-5 */
- 		.port_ops	= &sil_ops,
-+	}, /* sil_3112_15w - keep it sync'd w/ sil_3112 */
-+	{
-+		.sht		= &sil_sht,
-+		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-+				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
-+				  SIL_FLAG_MOD15WRITE,
-+		.pio_mask	= 0x1f,			/* pio0-4 */
-+		.mwdma_mask	= 0x07,			/* mwdma0-2 */
-+		.udma_mask	= 0x3f,			/* udma0-5 */
-+		.port_ops	= &sil_ops,
- 	}, /* sil_3114 */
- 	{
- 		.sht		= &sil_sht,
-@@ -331,7 +344,7 @@ static void sil_dev_config(struct ata_po
- 		}
- 
- 	/* limit requests to 15 sectors */
--	if (quirks & SIL_QUIRK_MOD15WRITE) {
-+	if (ap->flags & SIL_FLAG_MOD15WRITE && quirks & SIL_QUIRK_MOD15WRITE) {
- 		printk(KERN_INFO "ata%u(%u): applying Seagate errata fix\n",
- 		       ap->id, dev->devno);
- 		ap->host->max_sectors = 15;
+ I think above is larger subject than what this patch deals with and
+should be dealt with when we revamp EH (implementing in_eh will
+certainly involve other changes, I think).  So, I think, for short
+term, either Albert's patch[1][2] or above one should go in to plug
+ATA_QCFLAG_ACTIVE race.
+
+ I think if Albert's patch goes in, above patch is not necessary, as
+the only race we currently have is ATAPI EH case and clearing
+ATA_QCFLAG_ACTIVE is the only thing we do after ->complete_fn() in
+such cases.
+
+ Thanks.
+
+[1] http://marc.theaimsgroup.com/?l=linux-ide&m=112417360223374&w=2
+[2] Well, this referencing thing is neat.  ;-)
+
+-- 
+tejun
