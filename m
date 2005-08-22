@@ -1,60 +1,45 @@
-From: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: A note on libata passthru patch
-Date: Mon, 22 Aug 2005 08:26:05 -0400
-Message-ID: <20050822122603.GI2736@tuxdriver.com>
-References: <4308F40E.3010109@pobox.com>
+From: Arnaud Patard <apatard@mandriva.com>
+Subject: Re: maintenence sata_sis
+Date: Mon, 22 Aug 2005 13:48:25 +0200
+Message-ID: <m3k6iechva.fsf@anduin.mandrakesoft.com>
+References: <m31x4pkhjb.fsf@anduin.mandrakesoft.com>
+	<4309A268.8090203@gmx.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:12676 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751305AbVHVVzf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 17:55:35 -0400
-Received: from ra.tuxdriver.com (ra.tuxdriver.com [24.172.12.4])
-	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id j7MCTU63023866
-	for <linux-ide@vger.kernel.org>; Mon, 22 Aug 2005 05:29:30 -0700
-Content-Disposition: inline
-In-Reply-To: <4308F40E.3010109@pobox.com>
+Received: from zeus1.kernel.org ([204.152.191.4]:53638 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751178AbVHVWL2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 18:11:28 -0400
+Received: from anduin.mandrakesoft.com (ezoffice.mandriva.com [84.14.106.134])
+	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id j7MBjkQs005267
+	for <linux-ide@vger.kernel.org>; Mon, 22 Aug 2005 04:45:49 -0700
+In-Reply-To: <4309A268.8090203@gmx.net> (Uwe Koziolek's message of "Mon, 22
+ Aug 2005 12:01:12 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <mlord@pobox.com>
+To: Uwe Koziolek <uwe.koziolek@gmx.net>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Rainer.Koenig@fujitsu-siemens.com
 
-On Sun, Aug 21, 2005 at 05:37:18PM -0400, Jeff Garzik wrote:
-> 
-> Something that Alan unintentionally reminded me, about the libata 
-> passthru patch:  Some controllers require certain ATA commands to be 
-> synchronized at the host-wide level.
+Uwe Koziolek <uwe.koziolek@gmx.net> writes:
 
-<snip>
+> Hello Jeff,
+Hi
 
-> Currently probing is 100% synchronous, so our internal use of SET 
-> FEATURES - XFER MODE is safe.  But when you turn on ATA passthru, it is 
-> not safe.
+>
+> currently it exists 3 variants to support the SiS182 Chipset
+> - use SiS182 with the code from SiS180, only add the PCI-ID to the driver
 
-...except that the passthru code specifically filters-out the SET
-FEATURES - XFER MODE command. (libata_scsi.c:1976)
- 
-> This is another issue that needs fixing before we can merge the ATA 
-> passthru feature, since the consequences can be serious.
+Adding only the pci-id is not a good solution as the registers of the
+second sata port have differents addresses than the one of the SiS180
+chipset. To sum-up, with this patch, only the first port will work.
 
-I am by no means an expert either on ATA in general or on the oddities
-and quirks of specific SATA controllers.  I don't know if anyone else
-interested in the fate of the passthru patch is such an expert or not,
-but either way it would likely be helpful to list any other specific
-synchronization issues known to date which might be problematic.
+> - the source code from OSDL
+> - the source code from www.sis.com
 
-Presuming that such a list either exists or is likely to exist, does
-anyone have suggestions for what needs to be done in the general
-case here?  Perhaps some infrastructure needs to be added to verify
-that it is okay for the passthru stuff to issue a given command at a
-given time on a given controller?  Sounds complicated...  Maybe some
-infrastructure to quiesce _everything_ on the controller before
-issuing a passthru command?  Just thinking "out loud"...
+Jeff issued some comments about their patch for adding the support of
+the SiS182.
 
-I'd like to help (and I'd like the passthru stuff to be "in"), but
-I need some guidance...
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Regards,
+Arnaud
+
