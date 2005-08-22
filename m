@@ -1,75 +1,52 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH libata:upstream] sil: apply M15W quirk selectively
-Date: Mon, 22 Aug 2005 15:36:57 -0400
-Message-ID: <430A2959.300@pobox.com>
-References: <1121894035.4885.15.camel@drevil.aslab.com> <20050728141242.GA10010@htj.dyndns.org> <4308D3D0.50504@pobox.com> <4308E7F4.3000509@gmail.com> <4308EDB5.6060102@pobox.com> <4308F5CD.7060001@gmail.com> <58cb370e05082203194cf1f424@mail.gmail.com> <20050822114639.GA26607@htj.dyndns.org>
+Subject: libata TODO: ioread/iowrite work (was Re: [PATCH libata:upstream]
+ remove compiler warnings)
+Date: Mon, 22 Aug 2005 15:50:41 -0400
+Message-ID: <430A2C91.4060803@pobox.com>
+References: <20050822091129.GA15373@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:40326 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750718AbVHVThF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 15:37:05 -0400
-In-Reply-To: <20050822114639.GA26607@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750749AbVHVTuq@vger.kernel.org>
+In-Reply-To: <20050822091129.GA15373@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Michael Madore <Michael.Madore@aslab.com>, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
+Cc: linux-ide@vger.kernel.org, Al Viro <viro@parcelfarce.linux.theplanet.co.uk>, Linux Kernel <linux-kernel@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
->  Hello, Jeff & Bartlomiej & all.
+>  Hello, Jeff.
 > 
-> 
->>What about fixing 3114 for a start? :-)
-> 
-> 
->  Yeap, why not?  Here it is.
-> --
-> 
->  This patch adds chipset mask to sil_blacklist such that quirks can be
-> applied selectively depending on chipset.  And add sil_3112_m15w
-> chipset which is identical to sil_3112 except that mod15write quirk is
-> applied.  As we don't know which PCI IDs are affected yet, I've
-> changed all 3112's to sil_3112_m15w.  Later when we know which PCI IDs
-> are affected, we can just change them to sil_3112 later.
-> 
+>  This patch removes compiler warnings which are caused by using
+> ioports values (unsigned long) for the address argument of
+> read/write[bwl]() functions without casting.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Thanks for tackling this.  I would approach it in a different manner:
+NAK...  These warnings exist as a reminder of the remaining 
+ioread/iowrite() work that must occur.  Look at the 'iomap' and 
+'iomap-step1' branches of libata-dev.git for incomplete examples of this 
+work.
 
-1) add to the enum at the top,
-+	SIL_FLAG_M15W		= (1 << 30),
+One must:
 
-2) do
-         sil_3112                = 0,
--       sil_3114                = 1,
-+	sil_3112_m15w		= 1,
-+	sil_3114		= 2,
-
-
-3) in sil_pci_tbl[], change all the sil_3112 entries to sil_3112_m15w, 
-EXCEPT for PCI ID 0x1095, 0x3512, which should remain sil_3112.
-
-
-
-4) in sil_port_info[], duplicate sil_3112 entry to new entry 
-sil_3112_m15w.  make sure order in sil_port_info[] array matches the 
-values in step #2.
-
-
-5) add SIL_FLAG_M15W to the list of host_flags in the new sil_3112_m15w 
-entry created in step #4.
-
-
-6) in sil_dev_config(), change
-        if (quirks & SIL_QUIRK_MOD15WRITE) {
-test to also test (ap->flags & SIL_FLAG_M15W)
+- create a data structure to store a bunch of I/O port values, as 
+returned by pci_iomap() and ioport_map()
+- update legacy PCI IDE (aka looks like ISA IDE) code path to use 
+ioport_map() to obtain the I/O addresses we need
+- update native mode PCI IDE (aka looks like PCI) code path to use 
+pci_iomap()
+- update all the other drivers that use ioremap() to use pci_iomap()
+- change struct ata_ioports, s/unsigned long/void __iomem */
+- fix up the last few bits in each driver, such as
+	* eliminating the 'unsigned long base' variable in each
+	  xxx_init_one() function
+	* changing the xxx_setup_port() function to indicate
+	  void __iomem * rather than unsigned long
+- one last check for any last s/long/void iomem */ changes to be made
+- install Linus's "sparse" source checker
+- run 'make C=1' in the kernel tree, and make sure libata and drivers 
+don't spew warnings
 
 
-Check over these steps to see if I missing anything...  at the very 
-least, I have illustrated the approach that should be taken.
-
-	Jeff
-
-
+So... it's not as simple as just killing the warnings ;-)
