@@ -1,49 +1,51 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Problems with SiL3114 and WDC WD2500SD-01K
-Date: Mon, 22 Aug 2005 11:53:58 +0900
-Message-ID: <43093E46.70202@gmail.com>
-References: <1124581007.5764.10.camel@rambo.fortresscode.com>	 <4307CE8B.1030403@gmail.com> <1124678422.4075.3.camel@rambo.fortresscode.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [patch] libata passthrough - return register data from HDIO_*
+ commands
+Date: Mon, 22 Aug 2005 00:43:36 -0400
+Message-ID: <430957F8.9070507@pobox.com>
+References: <42FE2FBA.3000605@dresco.co.uk> <430112F6.3090906@dresco.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:37774 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932281AbVHVW6F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 18:58:05 -0400
-Received: from zproxy.gmail.com (zproxy.gmail.com [64.233.162.193])
-	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id j7M2t8YC032521
-	for <linux-ide@vger.kernel.org>; Sun, 21 Aug 2005 19:55:09 -0700
-Received: by zproxy.gmail.com with SMTP id i11so615476nzh
-        for <linux-ide@vger.kernel.org>; Sun, 21 Aug 2005 19:54:03 -0700 (PDT)
-In-Reply-To: <1124678422.4075.3.camel@rambo.fortresscode.com>
+Received: from zeus1.kernel.org ([204.152.191.4]:15502 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751432AbVHVW4g (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 18:56:36 -0400
+In-Reply-To: <430112F6.3090906@dresco.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Larry Battraw <lbattraw@insightbb.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jon Escombe <lists@dresco.co.uk>
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Larry Battraw wrote:
-> 	Hi Tejun,
+Jon Escombe wrote:
 > 
->   Thanks for the reply.  I've tried different PCI slots, different
-> ports, different cables, and lastly, win98 DOS.  DOS is able to
-> partition and format the drive without a problem, and I copied files
-> over, etc. without any errors.  Are there any diagnostics or tests I can
-> run to get a better idea of what's going on?
+>> Here is a first attempt at a patch to return register data from the 
+>> libata passthrough HDIO ioctl handlers, I needed this as the ATA 
+>> 'unload immediate' command returns the success in the lbal register. 
+>> This patch applies on top of 2.6.12 and Jeffs 
+>> 2.6.12-git4-passthru1.patch. (Apologies, but Thunderbird appears to 
+>> have replaced the tabs with spaces).
+>>
+>> One oddity is that the sr_result field is correctly being set in 
+>> ata_gen_ata_desc_sense(), however the high word is different when 
+>> we're back in the ioctl hander. I've coded round this for now by only 
+>> checking the low word, but this needs more investigation.
+>>
+>> Jeff, could this functionality be incorporated into the pasthrough 
+>> patch when complete?
 > 
-> Larry
 > 
+> 
+> I'd failed to realise that scsi_finish_command() sets the high byte of 
+> the result field to DRIVER_SENSE when there is sense data. Patch updated 
+> to reflect this...
+> 
+> Haven't had any feedback on the patch itself - but this now does what I 
+> wanted it do to.  (I can't find a way to make Thunderbird retain tabs in 
+> the message body, so sending as an attachment).
 
- Hello, Larry.
+Patch seems sane at first glance.  I'll look over it in depth this week.
 
- The following thread deals with similar problem.
+	Jeff
 
-http://marc.theaimsgroup.com/?l=linux-kernel&m=112379743726061&w=2
 
- The diagnostic/conclusion being...
-
-http://marc.theaimsgroup.com/?l=linux-kernel&m=112393534926655&w=2
-
- Hope it helps.
-
--- 
-tejun
