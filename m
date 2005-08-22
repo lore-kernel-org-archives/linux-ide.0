@@ -1,220 +1,74 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: error processing + rw 6 byte fix
-Date: Mon, 22 Aug 2005 15:10:03 -0400
-Message-ID: <430A230B.8040204@pobox.com>
-References: <430994BC.4060102@torque.net>
+Subject: Re: [PATCH libata:upstream] sil: apply M15W quirk selectively
+Date: Mon, 22 Aug 2005 15:36:57 -0400
+Message-ID: <430A2959.300@pobox.com>
+References: <1121894035.4885.15.camel@drevil.aslab.com> <20050728141242.GA10010@htj.dyndns.org> <4308D3D0.50504@pobox.com> <4308E7F4.3000509@gmail.com> <4308EDB5.6060102@pobox.com> <4308F5CD.7060001@gmail.com> <58cb370e05082203194cf1f424@mail.gmail.com> <20050822114639.GA26607@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <430994BC.4060102@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:40326 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750718AbVHVThF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 15:37:05 -0400
+In-Reply-To: <20050822114639.GA26607@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Michael Madore <Michael.Madore@aslab.com>, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 
-Douglas Gilbert wrote:
-> This is a revised patch following this post:
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=112461881419898&w=2
-> 
-> The plan is to add MODE SELECT SCSI command support to
-> libata so that parameters such as WCE and DRA can be
-> changed by a user (i.e. Write(back) Cache Enable and
-> Disable Read Ahead respectively). There are still some
-> issues to be addressed with MODE SELECT so the attached
-> is mainly a subset of the earlier one.
-> It improves error processing and fixes a READ_6/WRITE_6
-> SCSI command special case ** as requested by Jeff G.
-> 
-> The attached is against lk 2.6.13-rc6 and includes the
-> START STOP UNIT patch.
-> 
-> ChangeLog:
->    - generalize SCSI error processing
->    - add block descriptor to MODE SENSE command
->    - make various changes to sync with sat-r05 (as
->      noted in source)
->    - fix READ(6) and WRITE(6) SCSI command special
->      case: transfer_length=0 -> transfer 256 blocks
+Tejun Heo wrote:
+>  Hello, Jeff & Bartlomiej & all.
 > 
 > 
-> ** The special case can be tested with sg_dd:
-> sg_dd if=/dev/sda blk_sgio=1 cdbsz=6 of=. bs=512 bpt=256 count=256
->    This tests READ(6) with a transfer length of 0
->    (i.e. 256 blocks) in its cdb.
->    BTW the scsi_debug driver has the same bug.
+>>What about fixing 3114 for a start? :-)
 > 
-> Signed-off-by: Douglas Gilbert <dougg@torque.net>
+> 
+>  Yeap, why not?  Here it is.
+> --
+> 
+>  This patch adds chipset mask to sil_blacklist such that quirks can be
+> applied selectively depending on chipset.  And add sil_3112_m15w
+> chipset which is identical to sil_3112 except that mod15write quirk is
+> applied.  As we don't know which PCI IDs are affected yet, I've
+> changed all 3112's to sil_3112_m15w.  Later when we know which PCI IDs
+> are affected, we can just change them to sil_3112 later.
+> 
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-First change needed:  this patch must be incremental to your previous 
-START STOP UNIT patch, since I have already applied that patch.
+Thanks for tackling this.  I would approach it in a different manner:
 
+1) add to the enum at the top,
++	SIL_FLAG_M15W		= (1 << 30),
 
-> @@ -579,7 +631,19 @@
->  	}
->  
->  	if (scsicmd[0] == READ_6 || scsicmd[0] == WRITE_6) {
-> -		qc->nsect = tf->nsect = scsicmd[4];
-> +		if (scsicmd[4] == 0) {
-> +			/*
-> +			 * For READ_6 and WRITE_6 (only)
-> +			 * transfer_len==0 -> 256 blocks !!
-> +			 */
-> +			if (lba48) {
-> +				tf->hob_nsect = 1;
-> +				qc->nsect = 256;
-> +			} else
-> +				return 1;
-> +		} else
-> +			qc->nsect = scsicmd[4];
-> +		tf->nsect = scsicmd[4];
->  		tf->lbal = scsicmd[3];
->  		tf->lbam = scsicmd[2];
->  		tf->lbah = scsicmd[1] & 0x1f; /* mask out reserved bits */
-
-lba28 ATA commands behave similarly:  for READ DMA, which only has an 
-8-bit sector count, 00h == 256 sectors.
-
-So, you should not error out for that case.
+2) do
+         sil_3112                = 0,
+-       sil_3114                = 1,
++	sil_3112_m15w		= 1,
++	sil_3114		= 2,
 
 
-> @@ -1027,6 +1121,13 @@
->  	return sizeof(page);
->  }
->  
-> +/* As of sat-r05: considering defining this page (for QErr).
-> + * D_SENSE is now 0 (fixed sense data format);
-> + * guess extended self test completion time: 30 seconds (why?).
-> + */
-> +static const u8 def_control_mpage[] = {
-> +		0xa, 0xa, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 0, 30};
-> +
->  /**
->   *	ata_msense_ctl_mode - Simulate MODE SENSE control mode page
->   *	@dev: Device associated with this MODE SENSE command
-> @@ -1041,16 +1142,17 @@
->  
->  static unsigned int ata_msense_ctl_mode(u8 **ptr_io, const u8 *last)
->  {
-> -	const u8 page[] = {0xa, 0xa, 6, 0, 0, 0, 0, 0, 0xff, 0xff, 0, 30};
-> -
-> -	/* byte 2: set the descriptor format sense data bit (bit 2)
-> -	 * since we need to support returning this format for SAT
-> -	 * commands and any SCSI commands against a 48b LBA device.
-> -	 */
-> -
-> -	ata_msense_push(ptr_io, last, page, sizeof(page));
-> -	return sizeof(page);
-> +	ata_msense_push(ptr_io, last, def_control_mpage,
-> +			sizeof(def_control_mpage));
-> +	return sizeof(def_control_mpage);
->  }
-> +	
-
-Please don't shuffle code around, AND change it at the same time.  It 
-has the effect of hiding small changes.
-
-In this case, you have chosen to clear the D_SENSE bit (ok) and the 
-GLTSD bit (not ok).
-
-
-> +static const u8 def_rw_recovery_mpage[] = {
-> +		0x1,			  /* page code */
-> +		0xa,			  /* page length */
-> +		(1 << 6),		  /* note: ARRE=1 */
-> +		0, 0, 0, 0, 0, 0, 0, 0, 0 /* 9 zeroes */
-> +	};	/* sat-r05 says AWRE will be 0 */
->  
->  /**
->   *	ata_msense_rw_recovery - Simulate MODE SENSE r/w error recovery page
-> @@ -1066,15 +1168,9 @@
->  
->  static unsigned int ata_msense_rw_recovery(u8 **ptr_io, const u8 *last)
->  {
-> -	const u8 page[] = {
-> -		0x1,			  /* page code */
-> -		0xa,			  /* page length */
-> -		(1 << 7) | (1 << 6),	  /* note auto r/w reallocation */
-> -		0, 0, 0, 0, 0, 0, 0, 0, 0 /* 9 zeroes */
-> -	};
-> -
-> -	ata_msense_push(ptr_io, last, page, sizeof(page));
-> -	return sizeof(page);
-> +	ata_msense_push(ptr_io, last, def_rw_recovery_mpage,
-> +			sizeof(def_rw_recovery_mpage));
-> +	return sizeof(def_rw_recovery_mpage);
->  }
->  
->  /**
-
-Similarly, do not clear bits without discussion.
-
-In this case, I disagree with SAT.  ATA devices will definitely 
-reallocate around defective sectors in the background, trying its 
-damndest to complete a write without failing.
-
-Reads are obviously different.  The device doesn't known, until the OS 
-asks for a sector, whether its corrupt or not.  The device is free to 
-reallocate this sector as well, in the background, once it discovers 
-that a sector is defective.
-
-How to interpret this?  Re-reading SBC-2, it is my feeling that ATA 
-devices should either set both AWRE and ARRE since they do perform 
-background reallocation, or, set NEITHER bit, since the libata SAT layer 
-does not support the error reporting bits mentioned in SBC-2 for R/W 
-Recovery Page.
-
-As of the current implementation, I made a conscious decision to ignore 
-SAT and set both bits.  I'm willing to consider changing to the 'neither 
-bit' setup, but not one where ARRE is the only bit set.
-
-
-> @@ -1093,28 +1189,54 @@
->  				  unsigned int buflen)
->  {
->  	u8 *scsicmd = args->cmd->cmnd, *p, *last;
-> -	unsigned int page_control, six_byte, output_len;
-> +	const u8 sat_blk_desc[] = {0, 0, 0, 0, 0, 0, 0x2, 0x0};
-> +	/* 512 byte blocks, number of blocks = 0, (sat-r05) */
-
-NOTE: don't hardcode 512, since that will change very soon in SATA.
-
-1K ATA devices are just around the corner.
-
-> @@ -1570,11 +1737,6 @@
->  			ata_scsi_rbuf_fill(&args, ata_scsiop_mode_sense);
->  			break;
->  
-> -		case MODE_SELECT:	/* unconditionally return */
-> -		case MODE_SELECT_10:	/* bad-field-in-cdb */
-> -			ata_bad_cdb(cmd, done);
-> -			break;
-> -
->  		case READ_CAPACITY:
->  			ata_scsi_rbuf_fill(&args, ata_scsiop_read_cap);
->  			break;
-
-At this point in the patch series, you should not be removing this code 
-AFAICS.
+3) in sil_pci_tbl[], change all the sil_3112 entries to sil_3112_m15w, 
+EXCEPT for PCI ID 0x1095, 0x3512, which should remain sil_3112.
 
 
 
-Finally, overall, it would really be nice if you would split your 
-changes into a series of patches.  i.e.
+4) in sil_port_info[], duplicate sil_3112 entry to new entry 
+sil_3112_m15w.  make sure order in sil_port_info[] array matches the 
+values in step #2.
 
-[PATCH 1/4] START STOP UNIT (already applied)
-[PATCH 2/4] ata_scsi_set_sense() impl, and usage
-[PATCH 3/4] twiddle mode parameter page values
-[PATCH 4/4] MODE SENSE cleanup, blk descriptor, move mode page values
-etc.
 
-I don't mean to carp, but separating out changes in this manner is 
-strongly encouraged under Linux, and greatly aids in reviewing and 
-applying each patch.  You don't have to enumerate EVERY change into a 
-separate patch, just be reasonable:  group sets of associated changes 
-into patches.
+5) add SIL_FLAG_M15W to the list of host_flags in the new sil_3112_m15w 
+entry created in step #4.
 
-Thanks, and regards,
+
+6) in sil_dev_config(), change
+        if (quirks & SIL_QUIRK_MOD15WRITE) {
+test to also test (ap->flags & SIL_FLAG_M15W)
+
+
+Check over these steps to see if I missing anything...  at the very 
+least, I have illustrated the approach that should be taken.
 
 	Jeff
 
