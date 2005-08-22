@@ -1,56 +1,92 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: [PATCH] sata_promise: Add PDC40718 id
-Date: Mon, 22 Aug 2005 14:58:57 +0100
-Message-ID: <4309DA21.8050404@gentoo.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH libata:upstream] sil: apply M15W quirk selectively
+Date: Tue, 23 Aug 2005 06:39:12 +0900
+Message-ID: <20050822213912.GA13920@htj.dyndns.org>
+References: <1121894035.4885.15.camel@drevil.aslab.com> <20050728141242.GA10010@htj.dyndns.org> <4308D3D0.50504@pobox.com> <4308E7F4.3000509@gmail.com> <4308EDB5.6060102@pobox.com> <4308F5CD.7060001@gmail.com> <58cb370e05082203194cf1f424@mail.gmail.com> <20050822114639.GA26607@htj.dyndns.org> <430A2959.300@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000206070705040204030004"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:53997 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751221AbVHVVYp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 17:24:45 -0400
-Received: from mta07-winn.ispmail.ntl.com (mta07-winn.ispmail.ntl.com [81.103.221.47])
-	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id j7ME1sxc002334
-	for <linux-ide@vger.kernel.org>; Mon, 22 Aug 2005 07:02:04 -0700
+Received: from wproxy.gmail.com ([64.233.184.198]:12105 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751172AbVHVVk2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 17:40:28 -0400
+Received: by wproxy.gmail.com with SMTP id i20so106072wra
+        for <linux-ide@vger.kernel.org>; Mon, 22 Aug 2005 14:39:37 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <430A2959.300@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, gf435@gmx.net
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Michael Madore <Michael.Madore@aslab.com>, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 
-This is a multi-part message in MIME format.
---------------000206070705040204030004
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+ Hi, Jeff.
 
-From: Otto Meier <gf435@gmx.net>
+ My posted patch is broken anyway.  I was indexing sil_port_info w/
+bit masks.  :-(
 
-Otto Meier recently submitted a patch to support the PDC40718 chip (marketed 
-as SATA300 TX4, a 4-port SATA controller).
+On Mon, Aug 22, 2005 at 03:36:57PM -0400, Jeff Garzik wrote:
+> Tejun Heo wrote:
+> > Hello, Jeff & Bartlomiej & all.
+> >
+> >
+> >>What about fixing 3114 for a start? :-)
+> >
+> >
+> > Yeap, why not?  Here it is.
+> >--
+> >
+> > This patch adds chipset mask to sil_blacklist such that quirks can be
+> >applied selectively depending on chipset.  And add sil_3112_m15w
+> >chipset which is identical to sil_3112 except that mod15write quirk is
+> >applied.  As we don't know which PCI IDs are affected yet, I've
+> >changed all 3112's to sil_3112_m15w.  Later when we know which PCI IDs
+> >are affected, we can just change them to sil_3112 later.
+> >
+> >
+> >Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> Thanks for tackling this.  I would approach it in a different manner:
+> 
+> 1) add to the enum at the top,
+> +	SIL_FLAG_M15W		= (1 << 30),
+> 
+> 2) do
+>         sil_3112                = 0,
+> -       sil_3114                = 1,
+> +	sil_3112_m15w		= 1,
+> +	sil_3114		= 2,
+> 
+> 
+> 3) in sil_pci_tbl[], change all the sil_3112 entries to sil_3112_m15w, 
+> EXCEPT for PCI ID 0x1095, 0x3512, which should remain sil_3112.
+> 
+> 
+> 
+> 4) in sil_port_info[], duplicate sil_3112 entry to new entry 
+> sil_3112_m15w.  make sure order in sil_port_info[] array matches the 
+> values in step #2.
+> 
+> 
+> 5) add SIL_FLAG_M15W to the list of host_flags in the new sil_3112_m15w 
+> entry created in step #4.
 
-I am resending it as this patch has not been applied (maybe due to whitespace 
-damage in the previous submission?). Please apply :)
+ Can we use host_flags for that?  It seems that it's for ATA_FLAG_*
+flags, and we currently don't explicitly reserve any bits from
+ATA_FLAG_*.
 
-Signed-off-by: Otto Meier <gf435@gmx.net>
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
+> 
+> 
+> 6) in sil_dev_config(), change
+>        if (quirks & SIL_QUIRK_MOD15WRITE) {
+> test to also test (ap->flags & SIL_FLAG_M15W)
+> 
+> 
+> Check over these steps to see if I missing anything...  at the very 
+> least, I have illustrated the approach that should be taken.
+> 
+> 	Jeff
+> 
 
+ Thanks.
 
---------------000206070705040204030004
-Content-Type: text/x-patch;
- name="promise-tx4.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="promise-tx4.patch"
-
---- linux-2.6.13-rc6/drivers/scsi/sata_promise.c.orig	2005-08-22 14:32:11.000000000 +0100
-+++ linux-2.6.13-rc6/drivers/scsi/sata_promise.c	2005-08-22 14:32:48.000000000 +0100
-@@ -181,6 +181,8 @@ static struct pci_device_id pdc_ata_pci_
- 	  board_20319 },
- 	{ PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_20319 },
-+	{ PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+	  board_20319 },
- 	{ PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_20319 },
- 
-
---------------000206070705040204030004--
+-- 
+tejun
