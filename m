@@ -1,92 +1,74 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH libata:upstream] sil: apply M15W quirk selectively
-Date: Tue, 23 Aug 2005 06:39:12 +0900
-Message-ID: <20050822213912.GA13920@htj.dyndns.org>
-References: <1121894035.4885.15.camel@drevil.aslab.com> <20050728141242.GA10010@htj.dyndns.org> <4308D3D0.50504@pobox.com> <4308E7F4.3000509@gmail.com> <4308EDB5.6060102@pobox.com> <4308F5CD.7060001@gmail.com> <58cb370e05082203194cf1f424@mail.gmail.com> <20050822114639.GA26607@htj.dyndns.org> <430A2959.300@pobox.com>
+From: Ricky Cheng <rickycheng@qnap.com.tw>
+Subject: Problem with sil chip tests
+Date: Mon, 22 Aug 2005 13:15:30 +0000 (UTC)
+Message-ID: <loom.20050822T145903-249@post.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.198]:12105 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751172AbVHVVk2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 17:40:28 -0400
-Received: by wproxy.gmail.com with SMTP id i20so106072wra
-        for <linux-ide@vger.kernel.org>; Mon, 22 Aug 2005 14:39:37 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <430A2959.300@pobox.com>
+Received: from zeus1.kernel.org ([204.152.191.4]:35970 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751265AbVHVVoo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 17:44:44 -0400
+Received: from ciao.gmane.org (main.gmane.org [80.91.229.2])
+	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id j7MDL4aY014377
+	for <linux-ide@vger.kernel.org>; Mon, 22 Aug 2005 06:21:04 -0700
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1E7CCZ-0001Kc-JK
+	for linux-ide@vger.kernel.org; Mon, 22 Aug 2005 15:18:59 +0200
+Received: from 211-75-85-27.HINET-IP.hinet.net ([211-75-85-27.HINET-IP.hinet.net])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 22 Aug 2005 15:18:59 +0200
+Received: from rickycheng by 211-75-85-27.HINET-IP.hinet.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 22 Aug 2005 15:18:59 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Michael Madore <Michael.Madore@aslab.com>, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
+To: linux-ide@vger.kernel.org
 
- Hi, Jeff.
+Him I have some problems with the process of test.
 
- My posted patch is broken anyway.  I was indexing sil_port_info w/
-bit masks.  :-(
+I did some tests one 3 machine.
 
-On Mon, Aug 22, 2005 at 03:36:57PM -0400, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> > Hello, Jeff & Bartlomiej & all.
-> >
-> >
-> >>What about fixing 3114 for a start? :-)
-> >
-> >
-> > Yeap, why not?  Here it is.
-> >--
-> >
-> > This patch adds chipset mask to sil_blacklist such that quirks can be
-> >applied selectively depending on chipset.  And add sil_3112_m15w
-> >chipset which is identical to sil_3112 except that mod15write quirk is
-> >applied.  As we don't know which PCI IDs are affected yet, I've
-> >changed all 3112's to sil_3112_m15w.  Later when we know which PCI IDs
-> >are affected, we can just change them to sil_3112 later.
-> >
-> >
-> >Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> Thanks for tackling this.  I would approach it in a different manner:
-> 
-> 1) add to the enum at the top,
-> +	SIL_FLAG_M15W		= (1 << 30),
-> 
-> 2) do
->         sil_3112                = 0,
-> -       sil_3114                = 1,
-> +	sil_3112_m15w		= 1,
-> +	sil_3114		= 2,
-> 
-> 
-> 3) in sil_pci_tbl[], change all the sil_3112 entries to sil_3112_m15w, 
-> EXCEPT for PCI ID 0x1095, 0x3512, which should remain sil_3112.
-> 
-> 
-> 
-> 4) in sil_port_info[], duplicate sil_3112 entry to new entry 
-> sil_3112_m15w.  make sure order in sil_port_info[] array matches the 
-> values in step #2.
-> 
-> 
-> 5) add SIL_FLAG_M15W to the list of host_flags in the new sil_3112_m15w 
-> entry created in step #4.
+1. CPU: VIA 800 MHz, with 4 IDE HD
+2. CPU: VIA 800 MHz, 2 Sil3512 chip with 4 SATA HD
+3. CPI: INTER 3.0 GHz, 1 sil3114 chip with 4 SATA HD
 
- Can we use host_flags for that?  It seems that it's for ATA_FLAG_*
-flags, and we currently don't explicitly reserve any bits from
-ATA_FLAG_*.
+kernel version: 2.4.30, 2.6.12
+They have almost the same
 
-> 
-> 
-> 6) in sil_dev_config(), change
->        if (quirks & SIL_QUIRK_MOD15WRITE) {
-> test to also test (ap->flags & SIL_FLAG_M15W)
-> 
-> 
-> Check over these steps to see if I missing anything...  at the very 
-> least, I have illustrated the approach that should be taken.
-> 
-> 	Jeff
-> 
+I do 2 kind of tests on a mounted and formated file-system.
+  (1). On the mounted dir dd 500M from /dev/zero and use time to calculate the 
+system and real time: 
+         time dd if=/dev/zero of=500M bs=25M count=20
+  (2). use hdparm -t /dev/sda
 
- Thanks.
+Those are the result of 3 machine.
+1. IDE: (1)real: 10~12 sec
+           user: 0
+           sys: 5~6 sec
+        (2)hdparm: ~48MB/sec
 
--- 
-tejun
+2.SATA: (1)real: 10~13 sec
+           user: 0
+           sys: 9~10 sec
+        (2)hdparm: almost 32MB/sec
+3.INTEL 3.0G with SiL 3114 chip
+        (1)real: 18~30 sec
+           user: 0
+           sys: 0.9 sec  <--confused
+        (2)hdparm: ~45MB/sec
+
+Those result confused me. 
+I use the IDE drive is faster than SATA drive?
+
+Does anybody can correct me the correct process of tests? Because those 
+experiments I tried get a strange result.
+Especially, I use the 3.0G CPU and I get higher hdparm read values. But When I 
+try to write data, it shows me a very bad value. Sometime write 500M to HD 
+almost need 30 secs. I think it is bad? right?But the sys time is very short.
+
+   
+Thanks for help.
+Ricky        
+
