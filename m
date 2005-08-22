@@ -1,89 +1,221 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH libata-dev-2.6:upstream 00/02] atapi: packet task vs. intr race fix
-Date: Mon, 22 Aug 2005 08:51:49 +0900
-Message-ID: <20050821235149.GA14097@htj.dyndns.org>
-References: <20050820091651.486821E0@htj.dyndns.org> <4308DA57.9000303@pobox.com> <4308E13E.6070104@gmail.com> <4308E2C9.6040605@pobox.com> <4308E6B1.6030001@gmail.com> <4308F114.9020608@pobox.com> <4308F450.4050402@gmail.com> <4308F943.9090706@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: error processing + rw 6 byte fix
+Date: Mon, 22 Aug 2005 15:10:03 -0400
+Message-ID: <430A230B.8040204@pobox.com>
+References: <430994BC.4060102@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.194]:13346 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751172AbVHUXv7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Aug 2005 19:51:59 -0400
-Received: by zproxy.gmail.com with SMTP id i11so600891nzh
-        for <linux-ide@vger.kernel.org>; Sun, 21 Aug 2005 16:51:54 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <4308F943.9090706@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <430994BC.4060102@torque.net>
+Sender: linux-scsi-owner@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-On Sun, Aug 21, 2005 at 05:59:31PM -0400, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> > Now I see what you're saying.  We should be able to know/clear 
-> >interrupt by reading ATA_STATUS.  So, not having explicit interrupt 
-> >pending bit can be compensated by following changes in ATA_STATUS (so 
-> >the state machine), right?  Thanks a lot for putting up with my ignorance.
+Douglas Gilbert wrote:
+> This is a revised patch following this post:
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112461881419898&w=2
 > 
-> Correct.  Just never forget there is a side effect to reading the Status 
-> register -- it clears any interrupt event it also signals.
+> The plan is to add MODE SELECT SCSI command support to
+> libata so that parameters such as WCE and DRA can be
+> changed by a user (i.e. Write(back) Cache Enable and
+> Disable Read Ahead respectively). There are still some
+> issues to be addressed with MODE SELECT so the attached
+> is mainly a subset of the earlier one.
+> It improves error processing and fixes a READ_6/WRITE_6
+> SCSI command special case ** as requested by Jeff G.
+> 
+> The attached is against lk 2.6.13-rc6 and includes the
+> START STOP UNIT patch.
+> 
+> ChangeLog:
+>    - generalize SCSI error processing
+>    - add block descriptor to MODE SENSE command
+>    - make various changes to sync with sat-r05 (as
+>      noted in source)
+>    - fix READ(6) and WRITE(6) SCSI command special
+>      case: transfer_length=0 -> transfer 256 blocks
 > 
 > 
-> > So, how about a port status bit to tell interrupt handler whether or 
-> >not we are expecting an interrupt currently?  That would solve the race 
-> >from I tried to fix in the first patchset.  If that's okay with you, 
-> >I'll redo all four patches accordingly.
+> ** The special case can be tested with sg_dd:
+> sg_dd if=/dev/sda blk_sgio=1 cdbsz=6 of=. bs=512 bpt=256 count=256
+>    This tests READ(6) with a transfer length of 0
+>    (i.e. 256 blocks) in its cdb.
+>    BTW the scsi_debug driver has the same bug.
 > 
-> I'm a bit skeptical, TBH.  I would prefer some sort of approach whereby 
-> the code knows where the port is, inside the host state machine, and may 
-> deduce from that "location" whether or not an interrupt is expected. 
-> That's precisely how the code functions now with ATA DMA and non-data, 
-> at least (or should...).
-> 
-> If we find out where the bug in the "I know when I expect an interrupt" 
-> logic is, then your race should be easy to fix.  Currently, I can see 
-> that (a) ATAPI interrupt can race with called-immediately EH, and (b) 
-> ATAPI may throw an interrupt to indicate CDB is ready to be sent [see 
-> ATA-4], and libata doesn't yet support such a state in its host state 
-> machine (HSM) implementation.
-> 
-> That said, if you still wish to send such a patch, I will give it an 
-> open and honest review.
-> 
-> Maybe your bit flag approach plugs the hole in the existing HSM -- I 
-> would just like to know _where_ this hole is.  So far I don't see it, 
-> except for (a) and (b) ATAPI examples above.
+> Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
- For example, ATA_PROT_NODATA is processed as follows.
+First change needed:  this patch must be incremental to your previous 
+START STOP UNIT patch, since I have already applied that patch.
 
-   Driver				Controller
-   -------------------------------------------------------------------------
-1. issue ATA_CMD_PACKET
-2.					Turns on BSY and sends H2D regs
-3. atapi_packet_task poll for BSY
-4.					D2H regs FIS (!BSY, DRQ)
-5. packet_task sends CDB
-6.					Turns on BSY and sends DATA FIS
-7.					D2H regs FIS (!BSY, DRDY, INTR)
-8. intr handler completes the cmd
 
- In step #3, we're waiting for BSY to clear - command is active and
-NIEN is clear.  After step #4 but before #5, command is active, BSY
-clear and DRQ set, if an interrupt from the other port occurs here, it
-will incorrectly fail this qc causing EH to kick in for sense data.
+> @@ -579,7 +631,19 @@
+>  	}
+>  
+>  	if (scsicmd[0] == READ_6 || scsicmd[0] == WRITE_6) {
+> -		qc->nsect = tf->nsect = scsicmd[4];
+> +		if (scsicmd[4] == 0) {
+> +			/*
+> +			 * For READ_6 and WRITE_6 (only)
+> +			 * transfer_len==0 -> 256 blocks !!
+> +			 */
+> +			if (lba48) {
+> +				tf->hob_nsect = 1;
+> +				qc->nsect = 256;
+> +			} else
+> +				return 1;
+> +		} else
+> +			qc->nsect = scsicmd[4];
+> +		tf->nsect = scsicmd[4];
+>  		tf->lbal = scsicmd[3];
+>  		tf->lbam = scsicmd[2];
+>  		tf->lbah = scsicmd[1] & 0x1f; /* mask out reserved bits */
 
- The problem is that the current interrupt handler is unaware of the
-HSM state where NIEN and BSY are clear but interrupts are not
-expected.  So, the problem is that the interrupt handler doesn't know
-enough about HSM state to be able to determine that the interrupt is
-not its.  The flag I've mentioned is to tell just that to the
-interrupt handler.
+lba28 ATA commands behave similarly:  for READ DMA, which only has an 
+8-bit sector count, 00h == 256 sectors.
 
- Otherwise, I think we can implement something like ap->ata_state and
-fully record where the HSM is, which would also be useful to implement
-interrupt-driven PIO.  What do you think?
+So, you should not error out for that case.
 
- Thanks.  :-)
 
--- 
-tejun
+> @@ -1027,6 +1121,13 @@
+>  	return sizeof(page);
+>  }
+>  
+> +/* As of sat-r05: considering defining this page (for QErr).
+> + * D_SENSE is now 0 (fixed sense data format);
+> + * guess extended self test completion time: 30 seconds (why?).
+> + */
+> +static const u8 def_control_mpage[] = {
+> +		0xa, 0xa, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 0, 30};
+> +
+>  /**
+>   *	ata_msense_ctl_mode - Simulate MODE SENSE control mode page
+>   *	@dev: Device associated with this MODE SENSE command
+> @@ -1041,16 +1142,17 @@
+>  
+>  static unsigned int ata_msense_ctl_mode(u8 **ptr_io, const u8 *last)
+>  {
+> -	const u8 page[] = {0xa, 0xa, 6, 0, 0, 0, 0, 0, 0xff, 0xff, 0, 30};
+> -
+> -	/* byte 2: set the descriptor format sense data bit (bit 2)
+> -	 * since we need to support returning this format for SAT
+> -	 * commands and any SCSI commands against a 48b LBA device.
+> -	 */
+> -
+> -	ata_msense_push(ptr_io, last, page, sizeof(page));
+> -	return sizeof(page);
+> +	ata_msense_push(ptr_io, last, def_control_mpage,
+> +			sizeof(def_control_mpage));
+> +	return sizeof(def_control_mpage);
+>  }
+> +	
+
+Please don't shuffle code around, AND change it at the same time.  It 
+has the effect of hiding small changes.
+
+In this case, you have chosen to clear the D_SENSE bit (ok) and the 
+GLTSD bit (not ok).
+
+
+> +static const u8 def_rw_recovery_mpage[] = {
+> +		0x1,			  /* page code */
+> +		0xa,			  /* page length */
+> +		(1 << 6),		  /* note: ARRE=1 */
+> +		0, 0, 0, 0, 0, 0, 0, 0, 0 /* 9 zeroes */
+> +	};	/* sat-r05 says AWRE will be 0 */
+>  
+>  /**
+>   *	ata_msense_rw_recovery - Simulate MODE SENSE r/w error recovery page
+> @@ -1066,15 +1168,9 @@
+>  
+>  static unsigned int ata_msense_rw_recovery(u8 **ptr_io, const u8 *last)
+>  {
+> -	const u8 page[] = {
+> -		0x1,			  /* page code */
+> -		0xa,			  /* page length */
+> -		(1 << 7) | (1 << 6),	  /* note auto r/w reallocation */
+> -		0, 0, 0, 0, 0, 0, 0, 0, 0 /* 9 zeroes */
+> -	};
+> -
+> -	ata_msense_push(ptr_io, last, page, sizeof(page));
+> -	return sizeof(page);
+> +	ata_msense_push(ptr_io, last, def_rw_recovery_mpage,
+> +			sizeof(def_rw_recovery_mpage));
+> +	return sizeof(def_rw_recovery_mpage);
+>  }
+>  
+>  /**
+
+Similarly, do not clear bits without discussion.
+
+In this case, I disagree with SAT.  ATA devices will definitely 
+reallocate around defective sectors in the background, trying its 
+damndest to complete a write without failing.
+
+Reads are obviously different.  The device doesn't known, until the OS 
+asks for a sector, whether its corrupt or not.  The device is free to 
+reallocate this sector as well, in the background, once it discovers 
+that a sector is defective.
+
+How to interpret this?  Re-reading SBC-2, it is my feeling that ATA 
+devices should either set both AWRE and ARRE since they do perform 
+background reallocation, or, set NEITHER bit, since the libata SAT layer 
+does not support the error reporting bits mentioned in SBC-2 for R/W 
+Recovery Page.
+
+As of the current implementation, I made a conscious decision to ignore 
+SAT and set both bits.  I'm willing to consider changing to the 'neither 
+bit' setup, but not one where ARRE is the only bit set.
+
+
+> @@ -1093,28 +1189,54 @@
+>  				  unsigned int buflen)
+>  {
+>  	u8 *scsicmd = args->cmd->cmnd, *p, *last;
+> -	unsigned int page_control, six_byte, output_len;
+> +	const u8 sat_blk_desc[] = {0, 0, 0, 0, 0, 0, 0x2, 0x0};
+> +	/* 512 byte blocks, number of blocks = 0, (sat-r05) */
+
+NOTE: don't hardcode 512, since that will change very soon in SATA.
+
+1K ATA devices are just around the corner.
+
+> @@ -1570,11 +1737,6 @@
+>  			ata_scsi_rbuf_fill(&args, ata_scsiop_mode_sense);
+>  			break;
+>  
+> -		case MODE_SELECT:	/* unconditionally return */
+> -		case MODE_SELECT_10:	/* bad-field-in-cdb */
+> -			ata_bad_cdb(cmd, done);
+> -			break;
+> -
+>  		case READ_CAPACITY:
+>  			ata_scsi_rbuf_fill(&args, ata_scsiop_read_cap);
+>  			break;
+
+At this point in the patch series, you should not be removing this code 
+AFAICS.
+
+
+
+Finally, overall, it would really be nice if you would split your 
+changes into a series of patches.  i.e.
+
+[PATCH 1/4] START STOP UNIT (already applied)
+[PATCH 2/4] ata_scsi_set_sense() impl, and usage
+[PATCH 3/4] twiddle mode parameter page values
+[PATCH 4/4] MODE SENSE cleanup, blk descriptor, move mode page values
+etc.
+
+I don't mean to carp, but separating out changes in this manner is 
+strongly encouraged under Linux, and greatly aids in reviewing and 
+applying each patch.  You don't have to enumerate EVERY change into a 
+separate patch, just be reasonable:  group sets of associated changes 
+into patches.
+
+Thanks, and regards,
+
+	Jeff
+
+
