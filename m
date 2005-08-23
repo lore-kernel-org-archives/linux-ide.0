@@ -1,86 +1,50 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH libata-dev-2.6:upstream 00/02] atapi: packet task vs.
- intr race fix
-Date: Sun, 21 Aug 2005 20:27:38 -0400
-Message-ID: <43091BFA.2020101@pobox.com>
-References: <20050820091651.486821E0@htj.dyndns.org> <4308DA57.9000303@pobox.com> <4308E13E.6070104@gmail.com> <4308E2C9.6040605@pobox.com> <4308E6B1.6030001@gmail.com> <4308F114.9020608@pobox.com> <4308F450.4050402@gmail.com> <4308F943.9090706@pobox.com> <20050821235149.GA14097@htj.dyndns.org>
+From: "Timothy Thelin" <Timothy.Thelin@wdc.com>
+Subject: libata passthru: implementation of protocol "soft reset" questions / discussion
+Date: Mon, 22 Aug 2005 17:13:53 -0700
+Message-ID: <CA45571DE57E1C45BF3552118BA92C9D060AE0@WDSCEXBECL03.sc.wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:22673 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932341AbVHVXNK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 19:13:10 -0400
-Received: from mail.dvmed.net (mail.dvmed.net [216.237.124.58])
-	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id j7M0UqM3009447
-	for <linux-ide@vger.kernel.org>; Sun, 21 Aug 2005 17:30:53 -0700
-In-Reply-To: <20050821235149.GA14097@htj.dyndns.org>
+Received: from wdscexfe02.sc.wdc.com ([129.253.170.52]:42308 "EHLO
+	wdscexfe02.sc.wdc.com") by vger.kernel.org with ESMTP
+	id S1751130AbVHWANy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2005 20:13:54 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
-
-Tejun Heo wrote:
->  For example, ATA_PROT_NODATA is processed as follows.
-
-You mean ATA_PROT_ATAPI_NODATA, I presume.
-
->    Driver				Controller
->    -------------------------------------------------------------------------
-> 1. issue ATA_CMD_PACKET
-> 2.					Turns on BSY and sends H2D regs
-> 3. atapi_packet_task poll for BSY
-> 4.					D2H regs FIS (!BSY, DRQ)
-> 5. packet_task sends CDB
-> 6.					Turns on BSY and sends DATA FIS
-
-but first PIO Setup FIS
+To: linux-ide@vger.kernel.org
 
 
-> 7.					D2H regs FIS (!BSY, DRDY, INTR)
-> 8. intr handler completes the cmd
-> 
->  In step #3, we're waiting for BSY to clear - command is active and
-> NIEN is clear.  After step #4 but before #5, command is active, BSY
-> clear and DRQ set, if an interrupt from the other port occurs here, it
-> will incorrectly fail this qc causing EH to kick in for sense data.
+Hi all,
 
-Agreed, that is a problem w/ libata's ATAPI HSM.  Two problems actually:
+I've been implementing various peices of missing passthru functionality (for
+future review and submission) and I hit a bump, so I'm wondering what you
+all think.
 
-(a) [what you found] at that point in the HSM, unexpected interrupts can 
-incorrectly complete a command
-(b) [a 'todo' item'] at that point in the HSM, there may actually be an 
-expected interrupt, before which the CDB should not be sent, per ATA/ATAPI-4
+For implementing various missing cdb protocols, I'm attempting to merge them
+into the normal libata protocols.  So for instance I have a
+ATA_PROT_RETURN_RESPONSE (cdb "Return Response Information") and
+ATA_PROT_SOFT_RESET (cdb "Soft reset").  This worked well until I needed to
+restore xfer modes after the soft reset.
 
+Since the soft reset can reset various volatile settings (pio xfer, dma
+xfer, etc), they should get restored before another normal libata command
+has a chance to procede.  I thought of simply using ata_setxfer right after
+doing the soft reset, but the problem is that doing this invovles launching
+a new queued command (inside ata_dev_set_xfermode) from within a queued
+command (the original ATA_PROT_SOFT_RESET).  I also thought about
+translating the soft reset cdb into 2 sequential queued commands, but the
+code path for creating / translating queued commands seems to want a 1-1
+relationship between cdb and command.
 
->  The problem is that the current interrupt handler is unaware of the
-> HSM state where NIEN and BSY are clear but interrupts are not
-> expected.  So, the problem is that the interrupt handler doesn't know
-> enough about HSM state to be able to determine that the interrupt is
-> not its.
+So anyone have ideas / is there a better way to do this?  There doesn't seem
+to be a trivial way to solve this so I figured I'd ask what people wanted as
+the solution.
 
-Agreed.
+(Note that this same issue will come up with doing the cdb "Hard Reset")
 
-
-> The flag I've mentioned is to tell just that to the
-> interrupt handler.
-
->  Otherwise, I think we can implement something like ap->ata_state and
-> fully record where the HSM is, which would also be useful to implement
-> interrupt-driven PIO.  What do you think?
-
-I tend to prefer ap->ata_state method, since I definitely would like to 
-implement interrupt-driven PIO.  But if the patch is too ugly, maybe a 
-bit flag would be OK.
-
-Long term, PIO w/ interrupts is probably the best thing to do under 
-SATA.  That prevents problems with PATA->SATA emulation that lead to 
-screaming interrupts.  For SATA, it seems like polling is a bad idea in 
-all cases [save suspend/resume edge cases].
-
-SATA technology is inherently more suited to an interrupt-driven 
-architecture anyway.  Polling makes less sense, and needlessly increases 
-PCI bus traffic.
-
-	Jeff
+Thanks,
+Tim Thelin
 
