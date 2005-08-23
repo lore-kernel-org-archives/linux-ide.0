@@ -1,84 +1,68 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata: error processing + rw 6 byte fix
-Date: Tue, 23 Aug 2005 14:44:02 +0200
-Message-ID: <20050823124401.GH16461@suse.de>
-References: <430994BC.4060102@torque.net> <20050823071338.GA11233@suse.de> <430B1799.1060800@torque.net>
+From: Fabian Knittel <fabian.knittel@avona.com>
+Subject: Re: Problems with Promise SATAII TX4
+Date: Tue, 23 Aug 2005 14:58:06 +0200
+Message-ID: <430B1D5E.9070201@avona.com>
+References: <20050330001007.GA16954@cebitec.uni-bielefeld.de> <430404A5.7060000@avona.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:61351 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1750817AbVHWMoI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Aug 2005 08:44:08 -0400
-Content-Disposition: inline
-In-Reply-To: <430B1799.1060800@torque.net>
+Received: from smtp1.rz.uni-karlsruhe.de ([129.13.185.217]:25829 "EHLO
+	smtp1.rz.uni-karlsruhe.de") by vger.kernel.org with ESMTP
+	id S932161AbVHWM6R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Aug 2005 08:58:17 -0400
+Received: from fsi-pc1.fsmi.local ([10.14.1.1]:43218 ident=Debian-exim)
+	by fsmi-s1.fs.uni-karlsruhe.de with esmtp (Exim 4.50 #1 (Debian))
+	id 1E7YLp-0001mp-7F
+	for <linux-ide@vger.kernel.org>; Tue, 23 Aug 2005 14:58:01 +0200
+Received: from fsi-cl224.fsmi.local ([10.14.1.224]:32804 helo=am-nb01.am.local)
+	by fsi-pc1.fsmi.local with esmtp (Exim 4.50 #1 (Debian))
+	id 1E7YLP-00021o-BV
+	for <linux-ide@vger.kernel.org>; Tue, 23 Aug 2005 14:57:35 +0200
+Received: from [127.0.0.1] (helo=[127.0.0.1])
+	by am-nb01.am.local with esmtp (Exim 3.35 #1 (Debian))
+	id 1E7YLv-0000vu-00
+	for <linux-ide@vger.kernel.org>; Tue, 23 Aug 2005 14:58:07 +0200
+In-Reply-To: <430404A5.7060000@avona.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tue, Aug 23 2005, Douglas Gilbert wrote:
-> Jens Axboe wrote:
-> > On Mon, Aug 22 2005, Douglas Gilbert wrote:
-> > 
-> >> 	if (scsicmd[0] == READ_6 || scsicmd[0] == WRITE_6) {
-> >>-		qc->nsect = tf->nsect = scsicmd[4];
-> >>+		if (scsicmd[4] == 0) {
-> >>+			/*
-> >>+			 * For READ_6 and WRITE_6 (only)
-> >>+			 * transfer_len==0 -> 256 blocks !!
-> >>+			 */
-> >>+			if (lba48) {
-> >>+				tf->hob_nsect = 1;
-> >>+				qc->nsect = 256;
-> >>+			} else
-> >>+				return 1;
-> > 
-> > 
-> > This isn't quite right, for 28-bit lba a 0 sector value means 256
-> > sectors to transfer as well. So just make that:
-> > 
-> >         if (lba48) {
-> >                 tf->hob_nsect = 1;
-> >                 qc->nsect = 256;
-> >         }
-> > 
-> >         /* continue */
-> > 
-> > and it should work fine. Similarly for 48-bit lba, 0 means 16^2 sectors.
+Hi,
+
+I wrote:
+> I'm experiencing problems with my Promise SATAII TX4 controller, quite
+> similar to what Kim reported a few months ago.
 > 
-> Jens,
-> Since for 28-bit lba a 0 sector value means 256 sectors
-> do I need to check for the lba48 case at all? As proposed
-> to Jeff is this ok (for READ_6 and WRITE_6):
-> 
->        if (scsicmd[4] == 0) {
->            /*
->             * For READ_6 and WRITE_6 (only)
->             * transfer_len==0 -> 256 blocks !!
->             */
->            qc->nsect = 256;
->        } else
->            qc->nsect = scsicmd[4];
->        tf->nsect = scsicmd[4];
+> Using a fresh linux-2.6.12.5 upstream kernel to boot into a rescue shell
+> (so there's no distribution specific stuff going on, nothing else
+> loaded, etc.), I can access my three connected Maxtor 120GB drives just
+> fine, as long as I do so individually.
+[...]
+>>Attached devices:
+>>Host: scsi0 Channel: 00 Id: 00 Lun: 00
+>>  Vendor: ATA      Model: Maxtor 6Y120M0   Rev: YAR5
+>>  Type:   Direct-Access                    ANSI SCSI revision: 05
+>>Host: scsi1 Channel: 00 Id: 00 Lun: 00
+>>  Vendor: ATA      Model: Maxtor 6Y120M0   Rev: YAR5
+>>  Type:   Direct-Access                    ANSI SCSI revision: 05
+>>Host: scsi3 Channel: 00 Id: 00 Lun: 00
+>>  Vendor: ATA      Model: Maxtor 6Y120M0   Rev: YAR5
+>>  Type:   Direct-Access                    ANSI SCSI revision: 05
 
-This will break for lba48 devices, since if you have scsicmd[4] == 0, a
-lba48 read/write will want to transfer 65536 sectors instead of the
-intended 256.
+OK, apparently it's somewhat hardware related after all. I've added a
+Seagate drive (Model: ST3120827AS, Rev: 3.42) and reading from this
+drive together with two of the Maxtor drives (any two of the three)
+currently works without problems (for now).
 
-Your qc->nsect logic is correct, but you need to set tf->hob_nsect 1
-for lba48 if scsicmd[4] == 0 to correctly tell that command to transfer
-256 sectors.
+Switching ports and cables doesn't change anything, so it's not related
+to that.
 
-> Also I noticed while testing the original code with READ_6
-> (sectors=0) that the device locked up (power cycle required).
-> So given the point you make for 48-bit lba, 0 means 16^2
-> sectors, then the READ_10 (sectors=0) and READ_16 (sectors=0)
-> which are valid nops according to SBC-2 may also lock up
-> in libata.
+But how can that be? The individual drives don't reveal any problems and
+(as reported in my previous mail) the drives worked seamlessly for a few
+weeks ...
 
-Try with the corrected sector counts, should work. I didn't check the
-other READ_X/WRITE_X, so you should probably audit them as well :)
+I'll have to do some more testing and this is probably off-topic by now,
+so I'll stop with the noise now.
 
--- 
-Jens Axboe
-
+Fabian
