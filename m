@@ -1,20 +1,16 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_promise: Add PDC40519 id
-Date: Tue, 23 Aug 2005 01:04:07 -0400
-Message-ID: <430AAE47.4050801@pobox.com>
-References: <4309DA3B.3030900@gentoo.org>
+Subject: Re: [PATCH] Fix HD activity LED with ahci
+Date: Tue, 23 Aug 2005 01:03:50 -0400
+Message-ID: <430AAE36.2070705@pobox.com>
+References: <42EF93F8.8050601@fujitsu-siemens.com>	 <20050802163519.GB3710@suse.de>  <42F05359.7030006@fujitsu-siemens.com> <1123092761.3982.20.camel@lynx.auton.cs.cmu.edu> <42F1BE18.9000105@fujitsu-siemens.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:4233 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932076AbVHWFEL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Aug 2005 01:04:11 -0400
-In-Reply-To: <4309DA3B.3030900@gentoo.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751266AbVHWFEA@vger.kernel.org>
+In-Reply-To: <42F1BE18.9000105@fujitsu-siemens.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Martin Wilck <martin.wilck@fujitsu-siemens.com>
+Cc: Adam Goode <adam@evdebs.org>, Jens Axboe <axboe@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, "Wichert, Gerhard" <Gerhard.Wichert@fujitsu-siemens.com>
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>
-Cc: linux-ide@vger.kernel.org, martin.povolny@solnet.cz
 
 applied
-
