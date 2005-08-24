@@ -1,62 +1,80 @@
-From: Jim Ramsay <jim.ramsay@gmail.com>
-Subject: Re: [PATCH 3/3] Add disk hotswap support to libata RESEND #2
-Date: Wed, 24 Aug 2005 09:11:01 -0600
-Message-ID: <4789af9e05082408111c4a6294@mail.gmail.com>
-References: <355e5e5e05080103021a8239df@mail.gmail.com>
-	 <4789af9e050823124140eb924f@mail.gmail.com>
-	 <4789af9e050823154364c8e9eb@mail.gmail.com>
-	 <430BA990.9090807@mvista.com> <430BCB41.5070206@s5r6.in-berlin.de>
-	 <355e5e5e05082407031138120a@mail.gmail.com>
+From: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Subject: [PATCH] IDE: move CONFIG_IDE_MAX_HWIFS into linux/ide.h
+Date: Wed, 24 Aug 2005 09:57:51 -0600
+Message-ID: <200508240957.51328.bjorn.helgaas@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <355e5e5e05082407031138120a@mail.gmail.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751087AbVHXP6Q@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: Lukasz Kosewski <lkosewsk@gmail.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rth@twiddle.net, ink@jurassic.park.msu.ru, lethal@linux-sh.org, kkojima@rr.iij4u.or.jp, linux-sh@m17n.org
 List-Id: linux-ide@vger.kernel.org
 
-On 8/24/05, Lukasz Kosewski <lkosewsk@gmail.com> wrote:
-> On 8/24/05, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> > >> Timers appear to operate in an atomic context, so timers should not be
-> > >> allowed to call scsi_remove_device, which eventually schedules.
-> > >>
-> > >> Any suggestions on the best way to fix this?
-> > >
-> > > Workqueue, perhaps.
-> 
-> Perhaps.  Actually, of course :)
+CONFIG_IDE_MAX_HWIFS is a generic thing, no need to have it duplicated
+by every arch that uses it.
 
-How about the existing ata_wq workqueue?  This makes sense.  When the
-timer expires, it adds a task to this queue.
+Signed-off-by: Bjorn Helgaas <bjorn.helgaas@hp.com>
 
-> The reason these aren't working is because they have never been
-> tested.  I sent in my not-entirely-finished patches the night before I
-> left for China for one month.
-
-Well, I'm on a time-sensitive project right now, and they "need"
-hotplug support, so maybe I'll patch your patches and do what testing
-I can.  I'll post a fourth patch in a few days.
-
-> When I get back to Waterloo (Ontario) in September, I should send in
-> revised versions of these patches with the following fixes:
-> 
-> - mod_timer instead of delete_timer/change timeout/add_timer
-That's easy.  I'll add it in my 'patch 4/3'
-
-> - bunch of code cleanups
-Haven't touched this, looks pretty clean to me
-
-> - proper error handling
-This may be something I'll have to stick my fingers in as I do more testing
-
-> - actually making the patches work.
-Hopefully I'll get this going.
-
-[Update, 10 mins later] Hey, I've got unplugging working already!
-
--- 
-Jim Ramsay
-"Me fail English?  That's unpossible!"
+Index: work-ide/include/asm-alpha/ide.h
+===================================================================
+--- work-ide.orig/include/asm-alpha/ide.h	2005-08-24 09:36:41.000000000 -0600
++++ work-ide/include/asm-alpha/ide.h	2005-08-24 09:37:12.000000000 -0600
+@@ -15,10 +15,6 @@
+ 
+ #include <linux/config.h>
+ 
+-#ifndef MAX_HWIFS
+-#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
+-#endif
+-
+ #define IDE_ARCH_OBSOLETE_DEFAULTS
+ 
+ static inline int ide_default_irq(unsigned long base)
+Index: work-ide/include/asm-sh/ide.h
+===================================================================
+--- work-ide.orig/include/asm-sh/ide.h	2005-08-24 09:36:41.000000000 -0600
++++ work-ide/include/asm-sh/ide.h	2005-08-24 09:37:12.000000000 -0600
+@@ -16,10 +16,6 @@
+ 
+ #include <linux/config.h>
+ 
+-#ifndef MAX_HWIFS
+-#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
+-#endif
+-
+ #define ide_default_io_ctl(base)	(0)
+ 
+ #include <asm-generic/ide_iops.h>
+Index: work-ide/include/asm-sh64/ide.h
+===================================================================
+--- work-ide.orig/include/asm-sh64/ide.h	2005-08-24 09:36:41.000000000 -0600
++++ work-ide/include/asm-sh64/ide.h	2005-08-24 09:37:12.000000000 -0600
+@@ -17,10 +17,6 @@
+ 
+ #include <linux/config.h>
+ 
+-#ifndef MAX_HWIFS
+-#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
+-#endif
+-
+ /* Without this, the initialisation of PCI IDE cards end up calling
+  * ide_init_hwif_ports, which won't work. */
+ #ifdef CONFIG_BLK_DEV_IDEPCI
+Index: work-ide/include/linux/ide.h
+===================================================================
+--- work-ide.orig/include/linux/ide.h	2005-08-24 09:37:03.000000000 -0600
++++ work-ide/include/linux/ide.h	2005-08-24 09:37:24.000000000 -0600
+@@ -266,6 +266,10 @@
+ 
+ #include <asm/ide.h>
+ 
++#ifndef MAX_HWIFS
++#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
++#endif
++
+ /* needed on alpha, x86/x86_64, ia64, mips, ppc32 and sh */
+ #ifndef IDE_ARCH_OBSOLETE_DEFAULTS
+ # define ide_default_io_base(index)	(0)
