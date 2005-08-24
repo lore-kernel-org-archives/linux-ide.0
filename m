@@ -1,53 +1,66 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Another libata TODO item
-Date: Wed, 24 Aug 2005 02:17:11 -0400
-Message-ID: <430C10E7.9060502@pobox.com>
-Reply-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+From: Wes Newell <w.newell@verizon.net>
+Subject: Re: Sis180 Jetway S755Max
+Date: Wed, 24 Aug 2005 01:20:55 -0500
+Message-ID: <430C11C7.8010308@verizon.net>
+References: <m31x4pkhjb.fsf@anduin.mandrakesoft.com>	<4309A268.8090203@gmx.net>
+ <430AA69A.1030307@verizon.net>	<430AD885.4080001@gmx.net>
+ <430B63D1.6080108@verizon.net> <m3fyt02y2t.fsf@anduin.mandrakesoft.com>
+ <430B91C1.6040407@verizon.net> <430B9D0A.3060202@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:46223 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751469AbVHXGRU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Aug 2005 02:17:20 -0400
+Received: from vms040pub.verizon.net ([206.46.252.40]:27901 "EHLO
+	vms040pub.verizon.net") by vger.kernel.org with ESMTP
+	id S1751475AbVHXGTZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Aug 2005 02:19:25 -0400
+Received: from [192.168.0.2] ([71.244.20.31])
+ by vms040.mailsrvcs.net (Sun Java System Messaging Server 6.2 HotFix 0.04
+ (built Dec 24 2004)) with ESMTPA id <0ILP004WGQWCJE93@vms040.mailsrvcs.net> for
+ linux-ide@vger.kernel.org; Wed, 24 Aug 2005 01:19:24 -0500 (CDT)
+In-reply-to: <430B9D0A.3060202@gmx.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>
+To: Uwe Koziolek <uwe.koziolek@gmx.net>
+Cc: Arnaud Patard <apatard@mandriva.com>, "linux.ide" <linux-ide@vger.kernel.org>
+
+Uwe Koziolek wrote:
+
+>Hello Wes,
+>
+>i include for you a hothack for SiS180 into the sata5513, untested and
+>not pretty.
+>
+>  
+>
+I tried this one first. It found the controller but errored out. here 
+the relevant dmesg.
+
+Linux version 2.6.11-12mdkcustom (root@wes2.com) (gcc version 3.4.3 
+(Mandrakelinux 10.2 3.4.3-7mdk)) #1 Tue Aug 23 23:58:08 CDT 2005
+
+SIS5513: IDE controller at PCI slot 0000:00:0c.0
+SIS5513: chipset revision 0
+SIS5513: IDE controller at PCI slot 0000:00:0c.0
+SIS5513: chipset revision 0
+SIS_IDE: probe of 0000:00:0c.0 failed with error -1
 
 
-Difficulty:  beginner / intermediate
+>additional i include the patch submitted by Arnaud Patard.
+>
+>  
+>
+I'm not sure how or to which sata_sis.c file to apply this. I've got the 
+one that came with the above kernel, and then I've got the one I 
+downloaded from SIS that locks up the system when a pata drive is 
+installed on the sis180. The first was simple enough, just replaced the 
+original sis5513.c and recompiled the kernel. Don't know what to do with 
+this one.
 
-Modern network drivers have a per-NIC list of debugging messages that 
-can be enabled/disabled at runtime, implemented as a bitmask named 
-'msg_enable' in each driver.  VERY useful for tracing specific events 
-during debugging.  grep for 'msg_enable', 'netif_msg_', and 'NETIF_MSG_'.
-
-To make libata debugging easier and more fine-grained, we should convert 
-DPRINTK/VPRINTK calls in libata to code that looks like
-
-	if (ata_msg_xxx(ap->msg_enable))
-		printk(...)
-
-The task involves:
-
-* reviewing net driver msg_enable usage
-* reviewing original netif_msg documentation by Donald Becker, at 
-(scroll down)
-http://www.scyld.com/pipermail/vortex/2001-November/001426.html
-
-* designing a sliding scale of ever-more-verbose classes of messages, 
-for libata and libata drivers
-* design a method by which userspace may change the per-port msg_enable 
-variable in libata
-
-* implement the sliding scale as ATA_MSG_xxx / ata_msg_xxx()
-* add msg_enable to struct ata_port
-* implement method of setting ap->msg_enable via userspace
-* convert messages in libata-core/libata-scsi
-* convert messages in each driver
-* add 'debug' module option to each driver, in a manner that duplicates 
-net driver module options
-* test!
-
-
+>If the last one works, it is the better solution, with chances to be
+>included into the kernel.
+>
+>  
+>
+Is the sata_sis patch suppossed to add pata support. Can't tell from his 
+message and the code is greek to me.
