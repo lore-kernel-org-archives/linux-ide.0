@@ -1,39 +1,44 @@
-From: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: libata passthru  (S.M.A.R.T.) support for 2.4.31?
-Date: Wed, 24 Aug 2005 12:02:03 -0400
-Message-ID: <20050824160201.GB1100@tuxdriver.com>
-References: <430B1E7A.30406@permabit.com> <20050823132235.GA21267@tuxdriver.com> <430B7EC9.3050802@permabit.com>
+From: Jim Ramsay <jim.ramsay@gmail.com>
+Subject: Re: [PATCH 3/3] Add disk hotswap support to libata RESEND #2
+Date: Wed, 24 Aug 2005 10:12:31 -0600
+Message-ID: <4789af9e05082409121cc6870@mail.gmail.com>
+References: <355e5e5e05080103021a8239df@mail.gmail.com>
+	 <4789af9e050823124140eb924f@mail.gmail.com>
+	 <4789af9e050823154364c8e9eb@mail.gmail.com>
+	 <430BA990.9090807@mvista.com> <430BCB41.5070206@s5r6.in-berlin.de>
+	 <355e5e5e05082407031138120a@mail.gmail.com>
+	 <4789af9e05082408111c4a6294@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([24.172.12.4]:35341 "EHLO ra.tuxdriver.com")
-	by vger.kernel.org with ESMTP id S1751089AbVHXQCU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Aug 2005 12:02:20 -0400
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751111AbVHXQMf@vger.kernel.org>
+In-Reply-To: <4789af9e05082408111c4a6294@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <430B7EC9.3050802@permabit.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lukasz Kosewski <lkosewsk@gmail.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Fortson <mfortson@permabit.com>
-Cc: linux-ide@vger.kernel.org
 
-On Tue, Aug 23, 2005 at 03:53:45PM -0400, Michael Fortson wrote:
-> John W. Linville wrote:
+On 8/24/05, Jim Ramsay <jim.ramsay@gmail.com> wrote:
+> On 8/24/05, Lukasz Kosewski <lkosewsk@gmail.com> wrote:
+> > On 8/24/05, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+> > > >> Timers appear to operate in an atomic context, so timers should not be
+> > > >> allowed to call scsi_remove_device, which eventually schedules.
+> > > >>
+> > > >> Any suggestions on the best way to fix this?
+> > > >
+> > > > Workqueue, perhaps.
+> >
+> > Perhaps.  Actually, of course :)
+> 
+> How about the existing ata_wq workqueue?  This makes sense.  When the
+> timer expires, it adds a task to this queue.
 
-> >Have you tried applying that passthru patch to the 2.4.31 sources?
+Note to self - No, you cannot use the exsting 'ata_wq' workqueue - The
+plug-in events need to put other work on the queue during the hotplug
+event... and of course this deadlocks since you're in the queuethread
+already.
 
-> I attempted to use 
-> http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.13-rc6-git10-libata1.patch.bz2 
-> against 2.4.31 but several portions of the patch were rejected and one file 
-> (drivers/scsi/Kconfig) doesn't exist at all.
-
-Hmmm...that patch seems to cover all the pending libata development
-stuff, not just passthru/SMART.  I thought Jeff had a separate patch
-available for that at one time, but I don't see it ATM...
-
-You probably can tease such a patch out of git...will have to
-investigate...
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Jim Ramsay
+"Me fail English?  That's unpossible!"
