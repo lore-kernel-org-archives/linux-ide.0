@@ -1,44 +1,26 @@
-From: Jim Ramsay <jim.ramsay@gmail.com>
-Subject: Re: [PATCH 3/3] Add disk hotswap support to libata RESEND #2
-Date: Wed, 24 Aug 2005 10:12:31 -0600
-Message-ID: <4789af9e05082409121cc6870@mail.gmail.com>
-References: <355e5e5e05080103021a8239df@mail.gmail.com>
-	 <4789af9e050823124140eb924f@mail.gmail.com>
-	 <4789af9e050823154364c8e9eb@mail.gmail.com>
-	 <430BA990.9090807@mvista.com> <430BCB41.5070206@s5r6.in-berlin.de>
-	 <355e5e5e05082407031138120a@mail.gmail.com>
-	 <4789af9e05082408111c4a6294@mail.gmail.com>
+From: Roland Dreier <rolandd@cisco.com>
+Subject: Re: Another libata TODO item
+Date: Wed, 24 Aug 2005 09:15:13 -0700
+Message-ID: <52d5o31fce.fsf@cisco.com>
+References: <430C10E7.9060502@pobox.com>
+	<20050824074116.GF24513@infradead.org> <430C271E.7060006@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751111AbVHXQMf@vger.kernel.org>
-In-Reply-To: <4789af9e05082408111c4a6294@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lukasz Kosewski <lkosewsk@gmail.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ams-iport-1.cisco.com ([144.254.224.140]:59274 "EHLO
+	ams-iport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S1751106AbVHXQPX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Aug 2005 12:15:23 -0400
+In-Reply-To: <430C271E.7060006@pobox.com> (Jeff Garzik's message of "Wed, 24
+ Aug 2005 03:51:58 -0400")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On 8/24/05, Jim Ramsay <jim.ramsay@gmail.com> wrote:
-> On 8/24/05, Lukasz Kosewski <lkosewsk@gmail.com> wrote:
-> > On 8/24/05, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> > > >> Timers appear to operate in an atomic context, so timers should not be
-> > > >> allowed to call scsi_remove_device, which eventually schedules.
-> > > >>
-> > > >> Any suggestions on the best way to fix this?
-> > > >
-> > > > Workqueue, perhaps.
-> >
-> > Perhaps.  Actually, of course :)
-> 
-> How about the existing ata_wq workqueue?  This makes sense.  When the
-> timer expires, it adds a task to this queue.
+    Jeff> In any case, I also contine to be skeptical of in-kernel
+    Jeff> logging subsystems.
 
-Note to self - No, you cannot use the exsting 'ata_wq' workqueue - The
-plug-in events need to put other work on the queue during the hotplug
-event... and of course this deadlocks since you're in the queuethread
-already.
+Aren't you proposing a libata logging subsystem?
 
--- 
-Jim Ramsay
-"Me fail English?  That's unpossible!"
+ - R.
