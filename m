@@ -1,66 +1,118 @@
-From: Wes Newell <w.newell@verizon.net>
-Subject: Re: Sis180 Jetway S755Max
-Date: Wed, 24 Aug 2005 01:20:55 -0500
-Message-ID: <430C11C7.8010308@verizon.net>
-References: <m31x4pkhjb.fsf@anduin.mandrakesoft.com>	<4309A268.8090203@gmx.net>
- <430AA69A.1030307@verizon.net>	<430AD885.4080001@gmx.net>
- <430B63D1.6080108@verizon.net> <m3fyt02y2t.fsf@anduin.mandrakesoft.com>
- <430B91C1.6040407@verizon.net> <430B9D0A.3060202@gmx.net>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: libata-dev queue updated
+Date: Wed, 24 Aug 2005 02:56:42 -0400
+Message-ID: <20050824065642.GA15784@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vms040pub.verizon.net ([206.46.252.40]:27901 "EHLO
-	vms040pub.verizon.net") by vger.kernel.org with ESMTP
-	id S1751475AbVHXGTZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Aug 2005 02:19:25 -0400
-Received: from [192.168.0.2] ([71.244.20.31])
- by vms040.mailsrvcs.net (Sun Java System Messaging Server 6.2 HotFix 0.04
- (built Dec 24 2004)) with ESMTPA id <0ILP004WGQWCJE93@vms040.mailsrvcs.net> for
- linux-ide@vger.kernel.org; Wed, 24 Aug 2005 01:19:24 -0500 (CDT)
-In-reply-to: <430B9D0A.3060202@gmx.net>
+Received: from havoc.gtf.org ([69.61.125.42]:22186 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1751108AbVHXG4r (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Aug 2005 02:56:47 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Uwe Koziolek <uwe.koziolek@gmx.net>
-Cc: Arnaud Patard <apatard@mandriva.com>, "linux.ide" <linux-ide@vger.kernel.org>
-
-Uwe Koziolek wrote:
-
->Hello Wes,
->
->i include for you a hothack for SiS180 into the sata5513, untested and
->not pretty.
->
->  
->
-I tried this one first. It found the controller but errored out. here 
-the relevant dmesg.
-
-Linux version 2.6.11-12mdkcustom (root@wes2.com) (gcc version 3.4.3 
-(Mandrakelinux 10.2 3.4.3-7mdk)) #1 Tue Aug 23 23:58:08 CDT 2005
-
-SIS5513: IDE controller at PCI slot 0000:00:0c.0
-SIS5513: chipset revision 0
-SIS5513: IDE controller at PCI slot 0000:00:0c.0
-SIS5513: chipset revision 0
-SIS_IDE: probe of 0000:00:0c.0 failed with error -1
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
 
->additional i include the patch submitted by Arnaud Patard.
->
->  
->
-I'm not sure how or to which sata_sis.c file to apply this. I've got the 
-one that came with the above kernel, and then I've got the one I 
-downloaded from SIS that locks up the system when a pata drive is 
-installed on the sis180. The first was simple enough, just replaced the 
-original sis5513.c and recompiled the kernel. Don't know what to do with 
-this one.
 
->If the last one works, it is the better solution, with chances to be
->included into the kernel.
->
->  
->
-Is the sata_sis patch suppossed to add pata support. Can't tell from his 
-message and the code is greek to me.
+
+Recent updates:
+* core: ATAPI fixes from Tejun Heo and Albert Lee
+* sata_promise: new PCI IDs
+* sata_sil: don't apply mod15write fix to 3125/3114 chips
+* ahci: "HD LED always on" fix
+
+
+git users:  'ALL' branch of
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+
+Patch:
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.13-rc7-libata1.patch.bz2
+
+
+ drivers/scsi/Kconfig         |   26 +
+ drivers/scsi/Makefile        |    3 
+ drivers/scsi/ahci.c          |    5 
+ drivers/scsi/ata_adma.c      |  786 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/ata_piix.c      |   14 
+ drivers/scsi/libata-core.c   |  360 +++++++++++++--
+ drivers/scsi/libata-scsi.c   |  984 ++++++++++++++++++++++++++++++++++---------
+ drivers/scsi/libata.h        |    5 
+ drivers/scsi/pata_pdc2027x.c |  847 +++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sata_nv.c       |   24 -
+ drivers/scsi/sata_promise.c  |   63 ++
+ drivers/scsi/sata_qstor.c    |    8 
+ drivers/scsi/sata_sil.c      |   31 -
+ drivers/scsi/sata_sil24.c    |  785 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/sata_sis.c      |    2 
+ drivers/scsi/sata_svw.c      |   10 
+ drivers/scsi/sata_sx4.c      |  141 +++---
+ drivers/scsi/sata_uli.c      |    2 
+ drivers/scsi/sata_via.c      |    2 
+ drivers/scsi/sata_vsc.c      |    5 
+ include/linux/ata.h          |   16 
+ include/linux/libata.h       |   11 
+ include/linux/pci_ids.h      |    1 
+ include/scsi/scsi.h          |    3 
+ 24 files changed, 3762 insertions(+), 372 deletions(-)
+
+
+Albert Lee:
+  [libata] C/H/S support, for older devices
+  [libata] add driver for Promise PATA 2027x
+  libata-dev-2.6: pdc2027x add ata_scsi_ioctl
+  libata-dev-2.6: pdc2027x change comments
+  libata-dev-2.6: pdc2027x move the PLL counter reading code
+  libata-dev-2.6: pdc2027x PLL input clock detection fix
+  libata ata_data_xfer() fix
+  libata handle the case when device returns/needs extra data
+  libata-dev: Convert pdc2027x from PIO to MMIO
+  libata-dev: pdc2027x use "long" for counter data type
+  libata-dev: pdc2027x ATAPI DMA lost irq problem workaround
+  libata: Clear ATA_QCFLAG_ACTIVE flag before calling the completion callback
+
+Daniel Drake:
+  sata_nv: Support MCP51/MCP55 device IDs
+  sata_promise: Add PDC40519 id
+
+Douglas Gilbert:
+  [libata scsi] add START STOP UNIT translation
+
+Erik Benada:
+  [libata sata_promise] support PATA ports on SATA controllers
+
+Jason Gaston:
+  ahci: AHCI mode SATA patch for Intel ICH7-M DH
+
+Jeff Garzik:
+  [libata] add new driver ata_adma
+  [libata adma] enable PCI MWI during controller initialization
+  [libata] ATA passthru (arbitrary ATA command execution)
+  [libata] ata_adma: update for recent ->host_stop() API changes
+  [libata] pata_pdc2027x: update for recent ->host_stop() API changes
+  libata: Update 'passthru' branch for latest libata
+  libata: trim trailing whitespace.
+
+Martin Wilck:
+  Fix HD activity LED with ahci
+
+Otto Meier:
+  sata_promise: Add PDC40718 id
+
+Tejun Heo:
+  SATA: rewritten sil24 driver
+  sil24: add FIXME comment above ata_device_add
+  sil24: remove irq disable code on spurious interrupt
+  sil24: add testing for PCI fault
+  sil24: move error handling out of hot interrupt path
+  sil24: remove PORT_TF
+  sil24: replace pp->port w/ ap->ioaddr.cmd_addr
+  sil24: fix PORT_CTRL_STAT constants
+  sil24: add more comments for constants
+  fix atapi_packet_task vs. intr race (take 2)
+  libata: implement ata_poll_qc_complete and use it in polling functions
+  sil: apply M15W quirk selectively (take 2)
+
+
+
