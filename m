@@ -1,80 +1,39 @@
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Subject: [PATCH] IDE: move CONFIG_IDE_MAX_HWIFS into linux/ide.h
-Date: Wed, 24 Aug 2005 09:57:51 -0600
-Message-ID: <200508240957.51328.bjorn.helgaas@hp.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: libata passthru  (S.M.A.R.T.) support for 2.4.31?
+Date: Wed, 24 Aug 2005 12:02:03 -0400
+Message-ID: <20050824160201.GB1100@tuxdriver.com>
+References: <430B1E7A.30406@permabit.com> <20050823132235.GA21267@tuxdriver.com> <430B7EC9.3050802@permabit.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751087AbVHXP6Q@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ra.tuxdriver.com ([24.172.12.4]:35341 "EHLO ra.tuxdriver.com")
+	by vger.kernel.org with ESMTP id S1751089AbVHXQCU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Aug 2005 12:02:20 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rth@twiddle.net, ink@jurassic.park.msu.ru, lethal@linux-sh.org, kkojima@rr.iij4u.or.jp, linux-sh@m17n.org
+In-Reply-To: <430B7EC9.3050802@permabit.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Michael Fortson <mfortson@permabit.com>
+Cc: linux-ide@vger.kernel.org
 
-CONFIG_IDE_MAX_HWIFS is a generic thing, no need to have it duplicated
-by every arch that uses it.
+On Tue, Aug 23, 2005 at 03:53:45PM -0400, Michael Fortson wrote:
+> John W. Linville wrote:
 
-Signed-off-by: Bjorn Helgaas <bjorn.helgaas@hp.com>
+> >Have you tried applying that passthru patch to the 2.4.31 sources?
 
-Index: work-ide/include/asm-alpha/ide.h
-===================================================================
---- work-ide.orig/include/asm-alpha/ide.h	2005-08-24 09:36:41.000000000 -0600
-+++ work-ide/include/asm-alpha/ide.h	2005-08-24 09:37:12.000000000 -0600
-@@ -15,10 +15,6 @@
- 
- #include <linux/config.h>
- 
--#ifndef MAX_HWIFS
--#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
--#endif
--
- #define IDE_ARCH_OBSOLETE_DEFAULTS
- 
- static inline int ide_default_irq(unsigned long base)
-Index: work-ide/include/asm-sh/ide.h
-===================================================================
---- work-ide.orig/include/asm-sh/ide.h	2005-08-24 09:36:41.000000000 -0600
-+++ work-ide/include/asm-sh/ide.h	2005-08-24 09:37:12.000000000 -0600
-@@ -16,10 +16,6 @@
- 
- #include <linux/config.h>
- 
--#ifndef MAX_HWIFS
--#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
--#endif
--
- #define ide_default_io_ctl(base)	(0)
- 
- #include <asm-generic/ide_iops.h>
-Index: work-ide/include/asm-sh64/ide.h
-===================================================================
---- work-ide.orig/include/asm-sh64/ide.h	2005-08-24 09:36:41.000000000 -0600
-+++ work-ide/include/asm-sh64/ide.h	2005-08-24 09:37:12.000000000 -0600
-@@ -17,10 +17,6 @@
- 
- #include <linux/config.h>
- 
--#ifndef MAX_HWIFS
--#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
--#endif
--
- /* Without this, the initialisation of PCI IDE cards end up calling
-  * ide_init_hwif_ports, which won't work. */
- #ifdef CONFIG_BLK_DEV_IDEPCI
-Index: work-ide/include/linux/ide.h
-===================================================================
---- work-ide.orig/include/linux/ide.h	2005-08-24 09:37:03.000000000 -0600
-+++ work-ide/include/linux/ide.h	2005-08-24 09:37:24.000000000 -0600
-@@ -266,6 +266,10 @@
- 
- #include <asm/ide.h>
- 
-+#ifndef MAX_HWIFS
-+#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
-+#endif
-+
- /* needed on alpha, x86/x86_64, ia64, mips, ppc32 and sh */
- #ifndef IDE_ARCH_OBSOLETE_DEFAULTS
- # define ide_default_io_base(index)	(0)
+> I attempted to use 
+> http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.13-rc6-git10-libata1.patch.bz2 
+> against 2.4.31 but several portions of the patch were rejected and one file 
+> (drivers/scsi/Kconfig) doesn't exist at all.
+
+Hmmm...that patch seems to cover all the pending libata development
+stuff, not just passthru/SMART.  I thought Jeff had a separate patch
+available for that at one time, but I don't see it ATM...
+
+You probably can tease such a patch out of git...will have to
+investigate...
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
