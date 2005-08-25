@@ -1,250 +1,36 @@
-From: Jon Escombe <lists-Xbpc2PeERmvQXOPxS62xeg@public.gmane.org>
-Subject: Re: Re: HDAPS, Need to park the head for real
-Date: Wed, 24 Aug 2005 22:44:52 +0100
-Message-ID: <430CEA54.7060803@dresco.co.uk>
-References: <1124205914.4855.14.camel@localhost.localdomain> <20050816200708.GE3425@suse.de>
+From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Subject: RE: libata-dev queue updated
+Date: Thu, 25 Aug 2005 15:56:23 +0900
+Message-ID: <BF571719A4041A478005EF3F08EA6DF001617907@pcsmail03.pcs.pc.ome.toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070207020605000201020501"
-Return-path: <hdaps-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-In-Reply-To: <20050816200708.GE3425-l3A5Bk7waGM@public.gmane.org>
-Sender: hdaps-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-Errors-To: hdaps-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/hdaps-devel>,
-	<mailto:hdaps-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Post: <mailto:hdaps-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:hdaps-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/hdaps-devel>,
-	<mailto:hdaps-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=hdaps-devel>
-To: Jens Axboe <axboe-l3A5Bk7waGM@public.gmane.org>
-Cc: Alejandro Bonilla Beeche <abonilla-N/cRWR3FREN3ZuITGxAgx9i2O/JbrIOy@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, hdaps devel <hdaps-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain;
+	charset="iso-2022-jp"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964861AbVHYG5Q@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
 List-Id: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------070207020605000201020501
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Hi Jeff,
 
-Jens Axboe wrote:
+2.6.13- rc7-libata1.patch.bz2 was used. 
+A combined mode of ata_piix seems not to work. 
+Is the following patches correct?
 
-> Ok, I'll give you some hints to get you started... What you really want
->
->to do, is:
->
->- Insert a park request at the front of the queue
->- On completion callback on that request, freeze the block queue and
->  schedule it for unfreeze after a given time
->  
->
-
-Am attaching a first attempt at a patch - for comments only - please 
-don't apply to a production system. I've not delved into the IDE code 
-before, so I've just been following my nose... In other words - It 
-appears to work for me - but I may be doing something crazy ;)
-
-Having said that, I tested with a utility that repeatedly froze/thawed 
-hundreds of times while really hammering the disk with file copies, and 
-nothing oopsed or failed to checksum afterwards...
-
-To do:
-
-Move the /proc interface to sysfs. At the moment it's just a simple 
-'echo -n 1 > /proc/ide/hda/freeze' to freeze, and 0 to thaw.
-
-Address Jens concerns about our userspace code falling over and leaving 
-the machine hung. I favour retaining a binary on/off interface (rather 
-than specifying a timeout up front), but having the IDE code auto-thaw 
-on a timer.. That way we can just keep writing 1's to it while we're 
-checking the accelerometer and wanting to keep it frozen, and if we 
-should die then it'll wake up by itself after a second or so...
-
-Same again for libata (for T43 owners).
-
-Regards,
-Jon.
-
-
-
-______________________________________________________________
-Email via Mailtraq4Free from Enstar (www.mailtraqdirect.co.uk)
---------------070207020605000201020501
-Content-Type: text/x-patch;
- name="ide_freeze.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ide_freeze.patch"
-
-diff -urN linux-2.6.13-rc6.original/drivers/ide/ide-io.c linux-2.6.13-rc6/drivers/ide/ide-io.c
---- linux-2.6.13-rc6.original/drivers/ide/ide-io.c	2005-06-17 20:48:29.000000000 +0100
-+++ linux-2.6.13-rc6/drivers/ide/ide-io.c	2005-08-24 20:56:31.000000000 +0100
-@@ -1181,6 +1181,16 @@
- 		}
+diff -urN linux-2.6.13-rc7.orig/drivers/scsi/Kconfig linux-2.6.13-rc7/drivers/scsi/Kconfig
+--- linux-2.6.13-rc7.orig/drivers/scsi/Kconfig	2005-08-25 13:44:33.000000000 +0900
++++ linux-2.6.13-rc7/drivers/scsi/Kconfig	2005-08-25 14:33:38.000000000 +0900
+@@ -424,7 +424,7 @@
+ source "drivers/scsi/megaraid/Kconfig.megaraid"
  
- 		/*
-+		 * Don't accept a request when the queue is stopped
-+		 * (unless we are resuming from suspend)
-+		 */
-+		if (test_bit(QUEUE_FLAG_STOPPED, &drive->queue->queue_flags) && !blk_pm_resume_request(rq)) {
-+			printk(KERN_ERR "%s: queue is stopped!\n", drive->name);
-+			hwgroup->busy = 0;
-+			break;
-+		}
-+
-+		/*
- 		 * Sanity: don't accept a request that isn't a PM request
- 		 * if we are currently power managed. This is very important as
- 		 * blk_stop_queue() doesn't prevent the elv_next_request()
-@@ -1661,6 +1671,9 @@
- 		where = ELEVATOR_INSERT_FRONT;
- 		rq->flags |= REQ_PREEMPT;
- 	}
-+	if (action == ide_next)
-+		where = ELEVATOR_INSERT_FRONT;
-+
- 	__elv_add_request(drive->queue, rq, where, 0);
- 	ide_do_request(hwgroup, IDE_NO_IRQ);
- 	spin_unlock_irqrestore(&ide_lock, flags);
-diff -urN linux-2.6.13-rc6.original/drivers/ide/ide-proc.c linux-2.6.13-rc6/drivers/ide/ide-proc.c
---- linux-2.6.13-rc6.original/drivers/ide/ide-proc.c	2005-06-17 20:48:29.000000000 +0100
-+++ linux-2.6.13-rc6/drivers/ide/ide-proc.c	2005-08-24 21:51:14.000000000 +0100
-@@ -264,6 +264,122 @@
- 	return -EINVAL;
- }
- 
-+static int proc_ide_read_freeze
-+	(char *page, char **start, off_t off, int count, int *eof, void *data)
-+{
-+	ide_drive_t	*drive = (ide_drive_t *) data;
-+	char		*out = page;
-+	int		len;
-+
-+	proc_ide_settings_warn();
-+
-+	if (test_bit(QUEUE_FLAG_STOPPED, &drive->queue->queue_flags))
-+		out += sprintf(out, "%s: queue is stopped\n", drive->name);
-+	else
-+		out += sprintf(out, "%s: queue not stopped\n", drive->name);
-+
-+	len = out - page;
-+	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
-+}
-+
-+void ide_end_freeze_rq(struct request *rq)
-+{
-+	struct completion	*waiting = rq->waiting;
-+	u8			*argbuf = rq->buffer;
-+
-+	/* Spinlock is already acquired */
-+	if (argbuf[3] == 0xc4) {
-+		blk_stop_queue(rq->q);
-+		printk(KERN_ERR "ide_end_freeze_rq(): Queue stopped...\n");
-+	}
-+	else
-+		printk(KERN_ERR "ide_end_freeze_rq(): Head not parked...\n");
-+/*
-+	blk_stop_queue(rq->q);
-+	printk(KERN_ERR "ide_end_freeze_rq(): Queue stopped...\n");
-+*/
-+	complete(waiting);
-+}
-+
-+static int proc_ide_write_freeze(struct file *file, const char __user *buffer,
-+				   unsigned long count, void *data)
-+{
-+	DECLARE_COMPLETION(wait);
-+	unsigned long	val, flags;
-+	char 		*buf, *s;	
-+	struct request	rq;
-+	ide_drive_t	*drive = (ide_drive_t *) data;
-+	u8 		args[7], *argbuf = args;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EACCES;
-+
-+	proc_ide_settings_warn();
-+
-+	if (count >= PAGE_SIZE)
-+		return -EINVAL;
-+
-+	s = buf = (char *)__get_free_page(GFP_USER);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	if (copy_from_user(buf, buffer, count)) {
-+		free_page((unsigned long)buf);
-+		return -EFAULT;
-+	}
-+
-+	buf[count] = '\0';
-+	memset(&rq, 0, sizeof(rq));
-+	memset(&args, 0, sizeof(args));
-+
-+	/* Ought to check we're the right sort of device - i.e. hard disk only */
-+
-+	/* STANDY IMMEDIATE COMMAND (spins down drive - more obvious for testing?)
-+	argbuf[0] = 0xe0;
-+	*/
-+
-+	/* UNLOAD IMMEDIATE COMMAND */
-+	argbuf[0] = 0xe1;
-+	argbuf[1] = 0x44;
-+	argbuf[3] = 0x4c;
-+	argbuf[4] = 0x4e;
-+	argbuf[5] = 0x55;
-+
-+	/* Ought to have some sanity checking around these values */
-+	val = simple_strtoul(buf, &s, 10);
-+	if (val) {
-+		/* Check we're not already frozen */
-+		if (!test_bit(QUEUE_FLAG_STOPPED, &drive->queue->queue_flags)) {
-+			/* Issue the park command & freeze */
-+			ide_init_drive_cmd(&rq);
-+
-+			rq.flags = REQ_DRIVE_TASK;
-+			rq.buffer = argbuf;
-+			rq.waiting = &wait;
-+			rq.end_io = ide_end_freeze_rq;
-+
-+			ide_do_drive_cmd(drive, &rq, ide_next);
-+			wait_for_completion(&wait);
-+			rq.waiting = NULL;
-+		}
-+		else
-+			printk(KERN_ERR "proc_ide_write_freeze(): Queue already stopped...\n");
-+	}
-+	else {
-+		/* Check we are frozen & unfreeze */ 
-+		if (test_bit(QUEUE_FLAG_STOPPED, &drive->queue->queue_flags)) {
-+			spin_lock_irqsave(&ide_lock, flags);
-+			blk_start_queue(drive->queue);
-+			spin_unlock_irqrestore(&ide_lock, flags);
-+			printk(KERN_ERR "proc_ide_write_freeze(): Queue started...\n");
-+		}
-+		else
-+			printk(KERN_ERR "proc_ide_write_freeze(): Queue not stopped...\n");
-+	}
-+	free_page((unsigned long)buf);
-+	return count;
-+}
-+
- int proc_ide_read_capacity
- 	(char *page, char **start, off_t off, int count, int *eof, void *data)
- {
-@@ -390,6 +506,7 @@
- 	{ "media",	S_IFREG|S_IRUGO,	proc_ide_read_media,	NULL },
- 	{ "model",	S_IFREG|S_IRUGO,	proc_ide_read_dmodel,	NULL },
- 	{ "settings",	S_IFREG|S_IRUSR|S_IWUSR,proc_ide_read_settings,	proc_ide_write_settings },
-+	{ "freeze",	S_IFREG|S_IRUSR|S_IWUSR,proc_ide_read_freeze,	proc_ide_write_freeze },
- 	{ NULL,	0, NULL, NULL }
- };
- 
+ config SCSI_SATA
+-	tristate "Serial ATA (SATA) support"
++	bool "Serial ATA (SATA) support"
+ 	depends on SCSI
+ 	help
+ 	  This driver family supports Serial ATA host controllers
 
---------------070207020605000201020501--
-
-
--------------------------------------------------------
-SF.Net email is Sponsored by the Better Software Conference & EXPO
-September 19-22, 2005 * San Francisco, CA * Development Lifecycle Practices
-Agile & Plan-Driven Development * Managing Projects & Teams * Testing & QA
-Security * Process Improvement & Measurement * http://www.sqe.com/bsce5sf
+--
+Haruo
