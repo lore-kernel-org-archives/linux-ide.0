@@ -1,18 +1,18 @@
 From: Alexander Shaposhnikov <shaposh@isp.nsc.ru>
 Subject: sata_sil + UDMA CRC errors
-Date: Thu, 25 Aug 2005 20:51:15 +0700
-Message-ID: <1124977875.2949.10.camel@m00>
+Date: Thu, 25 Aug 2005 20:53:17 +0700
+Message-ID: <1124977997.2949.13.camel@m00>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.isp.nsc.ru ([194.226.178.19]:21467 "EHLO ns.isp.nsc.ru")
-	by vger.kernel.org with ESMTP id S964990AbVHYNvK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Aug 2005 09:51:10 -0400
+Received: from ns.isp.nsc.ru ([194.226.178.19]:35291 "EHLO ns.isp.nsc.ru")
+	by vger.kernel.org with ESMTP id S964992AbVHYN4p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Aug 2005 09:56:45 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: htejun@gmail.com
+Cc: "Carlos.Pardo@siliconimage.com" <Carlos.Pardo@siliconimage.com>, "lbattraw@insightbb.com" <lbattraw@insightbb.com>, "jgarzik@pobox.com" <jgarzik@pobox.com>, htejun@gmail.com
 
 Good time of the day.
 I think this might be a bug in sata_sil driver.
