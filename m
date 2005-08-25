@@ -1,36 +1,45 @@
-From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
-Subject: RE: libata-dev queue updated
-Date: Thu, 25 Aug 2005 15:56:23 +0900
-Message-ID: <BF571719A4041A478005EF3F08EA6DF001617907@pcsmail03.pcs.pc.ome.toshiba.co.jp>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [Hdaps-devel] Re: HDAPS, Need to park the head for real
+Date: Thu, 25 Aug 2005 11:57:47 +0100
+Message-ID: <1124967468.21456.6.camel@localhost.localdomain>
+References: <1124205914.4855.14.camel@localhost.localdomain>
+	 <20050816200708.GE3425@suse.de>  <430CEA54.7060803@dresco.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-2022-jp"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964861AbVHYG5Q@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from clock-tower.bc.nu ([81.2.110.250]:49342 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964915AbVHYK3s
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Aug 2005 06:29:48 -0400
+In-Reply-To: <430CEA54.7060803@dresco.co.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jon Escombe <lists@dresco.co.uk>
+Cc: Jens Axboe <axboe@suse.de>, Alejandro Bonilla Beeche <abonilla@linuxwireless.org>, linux-kernel <linux-kernel@vger.kernel.org>, hdaps devel <hdaps-devel@lists.sourceforge.net>, linux-ide@vger.kernel.org
 
-Hi Jeff,
+You need the kernel side timeout. Consider this case
 
-2.6.13- rc7-libata1.patch.bz2 was used. 
-A combined mode of ata_piix seems not to work. 
-Is the following patches correct?
+One page of memory holds the parking code
+A second page is swapped to disk and holds the resume code
 
-diff -urN linux-2.6.13-rc7.orig/drivers/scsi/Kconfig linux-2.6.13-rc7/drivers/scsi/Kconfig
---- linux-2.6.13-rc7.orig/drivers/scsi/Kconfig	2005-08-25 13:44:33.000000000 +0900
-+++ linux-2.6.13-rc7/drivers/scsi/Kconfig	2005-08-25 14:33:38.000000000 +0900
-@@ -424,7 +424,7 @@
- source "drivers/scsi/megaraid/Kconfig.megaraid"
- 
- config SCSI_SATA
--	tristate "Serial ATA (SATA) support"
-+	bool "Serial ATA (SATA) support"
- 	depends on SCSI
- 	help
- 	  This driver family supports Serial ATA host controllers
+You park the disk
+You wakeup
+You got to page in the resume code
 
---
-Haruo
+So you really do want the kernel helping to avoid a deadlock
+
+@@ -1661,6 +1671,9 @@
+                where = ELEVATOR_INSERT_FRONT;
+                rq->flags |= REQ_PREEMPT;
+        }
++       if (action == ide_next)
++               where = ELEVATOR_INSERT_FRONT;
++
+        __elv_add_request(drive->queue, rq, where, 0);
+        ide_do_request(hwgroup, IDE_NO_IRQ);
+        spin_unlock_irqrestore(&ide_lock, flags);
+
+Also puzzles me- why is this needed ?
+
+
