@@ -1,57 +1,58 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: libata-dev queue updated
-Date: Thu, 25 Aug 2005 13:02:18 +0200
-Message-ID: <20050825110218.GN4851@stusta.de>
-References: <BF571719A4041A478005EF3F08EA6DF001617907@pcsmail03.pcs.pc.ome.toshiba.co.jp>
+From: Alexander Shaposhnikov <shaposh@isp.nsc.ru>
+Subject: sata_sil + UDMA CRC errors
+Date: Thu, 25 Aug 2005 20:51:15 +0700
+Message-ID: <1124977875.2949.10.camel@m00>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:43023 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S964936AbVHYLCV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Aug 2005 07:02:21 -0400
-Content-Disposition: inline
-In-Reply-To: <BF571719A4041A478005EF3F08EA6DF001617907@pcsmail03.pcs.pc.ome.toshiba.co.jp>
+Received: from ns.isp.nsc.ru ([194.226.178.19]:21467 "EHLO ns.isp.nsc.ru")
+	by vger.kernel.org with ESMTP id S964990AbVHYNvK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Aug 2005 09:51:10 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: htejun@gmail.com
 
-On Thu, Aug 25, 2005 at 03:56:23PM +0900, Tomita, Haruo wrote:
+Good time of the day.
+I think this might be a bug in sata_sil driver.
 
-> Hi Jeff,
-> 
-> 2.6.13- rc7-libata1.patch.bz2 was used. 
-> A combined mode of ata_piix seems not to work. 
-> Is the following patches correct?
-> 
-> diff -urN linux-2.6.13-rc7.orig/drivers/scsi/Kconfig linux-2.6.13-rc7/drivers/scsi/Kconfig
-> --- linux-2.6.13-rc7.orig/drivers/scsi/Kconfig	2005-08-25 13:44:33.000000000 +0900
-> +++ linux-2.6.13-rc7/drivers/scsi/Kconfig	2005-08-25 14:33:38.000000000 +0900
-> @@ -424,7 +424,7 @@
->  source "drivers/scsi/megaraid/Kconfig.megaraid"
->  
->  config SCSI_SATA
-> -	tristate "Serial ATA (SATA) support"
-> +	bool "Serial ATA (SATA) support"
->  	depends on SCSI
->  	help
->  	  This driver family supports Serial ATA host controllers
+I have ASUS K8N-DL board with onborad sil3114 controller. As support for
+nVidia Nforce 2200 SATA is broken in current sata_nv driver, i have to
+use sil3114. Kernel is 2.6.13-rc6 + "sata_sil Mod15Write
+quirk workaround" patch of TeJun Heo. OS is Fedora4 x86_64
 
-No, this bug reintroduces a problem with SCSI=m.
+There are two SATA drives, Seagate 7200.7 160Gb and Samsung SP0812C
+80Gb. 
 
-Which problem do you face?
-And how did this change alone fix it for you?
+Here is the problem: 
+Any intensive read/write activity results in alot of UDMA CRC errors for both drives.
+I am getting :
+ata1: status=0x51 { DriveReady SeekComplete Error }
+ata1: error=0x04 { DriveStatusError }
+kernel messages. With the patch applied, error rate is significantly low
+for Seagate drive; Samsung is still virtually unusable. 
+I checked SMART attributes, and the count of  UDMA CRC errors is ~200
+for Seagate and more than 1000 for Samsung. Every time i get new
+"status=0x51" errors for any drive, number of UDMA CRC errors grow
+accordingly. 
 
-> Haruo
+But there seems to be no problems under Windows. Even highest read/write
+activity do not generate any new CRC errors. 
 
-cu
-Adrian
+Sorry for bad english.
 
--- 
+Best Regards,
+Alexander Shaposhnikov
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+
+ 
+
+
+
+
+
+
+
+
 
