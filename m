@@ -1,45 +1,57 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [Hdaps-devel] Re: HDAPS, Need to park the head for real
-Date: Thu, 25 Aug 2005 11:57:47 +0100
-Message-ID: <1124967468.21456.6.camel@localhost.localdomain>
-References: <1124205914.4855.14.camel@localhost.localdomain>
-	 <20050816200708.GE3425@suse.de>  <430CEA54.7060803@dresco.co.uk>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: libata-dev queue updated
+Date: Thu, 25 Aug 2005 13:02:18 +0200
+Message-ID: <20050825110218.GN4851@stusta.de>
+References: <BF571719A4041A478005EF3F08EA6DF001617907@pcsmail03.pcs.pc.ome.toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:49342 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964915AbVHYK3s
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Aug 2005 06:29:48 -0400
-In-Reply-To: <430CEA54.7060803@dresco.co.uk>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:43023 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S964936AbVHYLCV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Aug 2005 07:02:21 -0400
+Content-Disposition: inline
+In-Reply-To: <BF571719A4041A478005EF3F08EA6DF001617907@pcsmail03.pcs.pc.ome.toshiba.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jon Escombe <lists@dresco.co.uk>
-Cc: Jens Axboe <axboe@suse.de>, Alejandro Bonilla Beeche <abonilla@linuxwireless.org>, linux-kernel <linux-kernel@vger.kernel.org>, hdaps devel <hdaps-devel@lists.sourceforge.net>, linux-ide@vger.kernel.org
+To: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-You need the kernel side timeout. Consider this case
+On Thu, Aug 25, 2005 at 03:56:23PM +0900, Tomita, Haruo wrote:
 
-One page of memory holds the parking code
-A second page is swapped to disk and holds the resume code
+> Hi Jeff,
+> 
+> 2.6.13- rc7-libata1.patch.bz2 was used. 
+> A combined mode of ata_piix seems not to work. 
+> Is the following patches correct?
+> 
+> diff -urN linux-2.6.13-rc7.orig/drivers/scsi/Kconfig linux-2.6.13-rc7/drivers/scsi/Kconfig
+> --- linux-2.6.13-rc7.orig/drivers/scsi/Kconfig	2005-08-25 13:44:33.000000000 +0900
+> +++ linux-2.6.13-rc7/drivers/scsi/Kconfig	2005-08-25 14:33:38.000000000 +0900
+> @@ -424,7 +424,7 @@
+>  source "drivers/scsi/megaraid/Kconfig.megaraid"
+>  
+>  config SCSI_SATA
+> -	tristate "Serial ATA (SATA) support"
+> +	bool "Serial ATA (SATA) support"
+>  	depends on SCSI
+>  	help
+>  	  This driver family supports Serial ATA host controllers
 
-You park the disk
-You wakeup
-You got to page in the resume code
+No, this bug reintroduces a problem with SCSI=m.
 
-So you really do want the kernel helping to avoid a deadlock
+Which problem do you face?
+And how did this change alone fix it for you?
 
-@@ -1661,6 +1671,9 @@
-                where = ELEVATOR_INSERT_FRONT;
-                rq->flags |= REQ_PREEMPT;
-        }
-+       if (action == ide_next)
-+               where = ELEVATOR_INSERT_FRONT;
-+
-        __elv_add_request(drive->queue, rq, where, 0);
-        ide_do_request(hwgroup, IDE_NO_IRQ);
-        spin_unlock_irqrestore(&ide_lock, flags);
+> Haruo
 
-Also puzzles me- why is this needed ?
+cu
+Adrian
 
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
