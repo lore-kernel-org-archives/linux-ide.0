@@ -1,71 +1,34 @@
-From: ha haha <hahaha_30k@yahoo.com>
-Subject: another question -- RE: Promise SATAII150 TX4: strange disk ordering
-Date: Thu, 25 Aug 2005 20:51:01 -0700 (PDT)
-Message-ID: <20050826035101.97723.qmail@web30213.mail.mud.yahoo.com>
-References: <EC70EFBFB6977A478BEB386684E8A7420CE728@pwfsbs01.pwf.local>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: #undef ATA_ENABLE_PATA
+Date: Fri, 26 Aug 2005 05:30:04 -0400
+Message-ID: <430EE11C.5040409@pobox.com>
+References: <20050723192433.GA25240@canonical.org>	 <20050723201010.GE6913@bugs.debian.org>	 <20050723223744.GA18882@canonical.org>	 <20050724091729.GF6913@bugs.debian.org>	 <20050724140705.GA6942@canonical.org> <20050725035430.GJ10254@verge.net.au>	 <20050826032417.GA6065@canonical.org>  <20050826043601.GY6418@verge.net.au> <1125046140.10546.17.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web30213.mail.mud.yahoo.com ([68.142.201.226]:36192 "HELO
-	web30213.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751455AbVHZDvE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Aug 2005 23:51:04 -0400
-In-Reply-To: <EC70EFBFB6977A478BEB386684E8A7420CE728@pwfsbs01.pwf.local>
+Received: from mail.dvmed.net ([216.237.124.58]:15525 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932249AbVHZJaX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Aug 2005 05:30:23 -0400
+In-Reply-To: <1125046140.10546.17.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Allen Bolderoff <allen@gist.net.au>, linux-ide@vger.kernel.org
-Cc: Eyal Lebedinsky <eyal@eyal.emu.id.au>, jgarzik@pobox.com
+To: Erik Slagter <erik@slagter.name>
+Cc: Horms <horms@verge.net.au>, 319659@bugs.debian.org, Brett Smith <debbug@brettcsmith.org>, linux-ide@vger.kernel.org
 
-Allen,
-
-  How about another Promise Fasttrack S150 TX4 SATA
-card, its PCIID is 0x105a:0x3319? Does this card also
-has similar problem? 
-
-# lspci -n
-...
-05:09.0 Class 0104: 105a:3319 (rev 02)
-...
-
- From my experience, the 2 SATA hard disks connected
-through Promise SATA card (0x105a:0x3319) fails much
-more often than another 2 SATA hard disks directly
-connected to motherboard, as often as 4 times! I just
-don't know why for a while.
-
- Please advice. Thanks a lot.
-
-
-
---- Allen Bolderoff <allen@gist.net.au> wrote:
-
-> > driver" and introducing driver options to manually
-> order the ports?
-> > 
-> > How can I ensure stable device names (/dev/sd*)?
-> > 
-> 
-> I use LVM.
-> 
-> However - this card/driver is known to break when
-> using more than 1
-> drive at a time (ie accessing 2 or 3 drives at once)
+Erik Slagter wrote:
+> On Fri, 2005-08-26 at 13:36 +0900, Horms wrote:
 > 
 > 
+>>#undef ATA_ENABLE_ATAPI         /* define to enable ATAPI support */
+>>#undef ATA_ENABLE_PATA          /* define to enable PATA support in some
 > 
 > 
-> 
-> -
-> To unsubscribe from this list: send the line
-> "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at 
-> http://vger.kernel.org/majordomo-info.html
-> 
+> These two would very interesting to me to be included in Kconfig.
+
+Neither of these are ready for prime time, with known problems.  Move 
+them to Kconfig, and I have to deal with the bug reports.  No thanks...
+
+	Jeff
 
 
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
