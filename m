@@ -1,59 +1,82 @@
-From: Jens Axboe <axboe-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: Re: HDAPS, Need to park the head for real
-Date: Fri, 26 Aug 2005 08:49:35 +0200
-Message-ID: <20050826064934.GP4018@suse.de>
-References: <1124205914.4855.14.camel@localhost.localdomain> <20050816200708.GE3425@suse.de> <430CEA54.7060803@dresco.co.uk> <1124967468.21456.6.camel@localhost.localdomain> <430E0A84.8080809@dresco.co.uk>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: libata-dev queue updated
+Date: Fri, 26 Aug 2005 02:16:28 +0200
+Message-ID: <20050826001628.GF6471__1108.33724397725$1125044511$gmane$org@stusta.de>
+References: <BF571719A4041A478005EF3F08EA6DF001617B39@pcsmail03.pcs.pc.ome.toshiba.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <hdaps-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:7944 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S965025AbVHZAQc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Aug 2005 20:16:32 -0400
 Content-Disposition: inline
-In-Reply-To: <430E0A84.8080809-Xbpc2PeERmvQXOPxS62xeg@public.gmane.org>
-Sender: hdaps-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-Errors-To: hdaps-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/hdaps-devel>,
-	<mailto:hdaps-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Post: <mailto:hdaps-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:hdaps-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/hdaps-devel>,
-	<mailto:hdaps-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=hdaps-devel>
-To: Jon Escombe <lists-Xbpc2PeERmvQXOPxS62xeg@public.gmane.org>
-Cc: Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>, Alejandro Bonilla Beeche <abonilla-N/cRWR3FREN3ZuITGxAgx9i2O/JbrIOy@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, hdaps devel <hdaps-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <BF571719A4041A478005EF3F08EA6DF001617B39@pcsmail03.pcs.pc.ome.toshiba.co.jp>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Aug 25 2005, Jon Escombe wrote:
-> Alan Cox wrote:
-> >@@ -1661,6 +1671,9 @@
-> >                where = ELEVATOR_INSERT_FRONT;
-> >                rq->flags |= REQ_PREEMPT;
-> >        }
-> >+       if (action == ide_next)
-> >+               where = ELEVATOR_INSERT_FRONT;
-> >+
-> >        __elv_add_request(drive->queue, rq, where, 0);
-> >        ide_do_request(hwgroup, IDE_NO_IRQ);
-> >        spin_unlock_irqrestore(&ide_lock, flags);
-> >
-> >Also puzzles me- why is this needed ?
+On Fri, Aug 26, 2005 at 09:04:37AM +0900, Tomita, Haruo wrote:
+> On  Thursday, August 25, 2005 8:02 PM (JST), Adrian Bunk wrote:
 > 
-> I wanted the park command to get in at the head of the queue (behind the 
-> currently executing request).
+> > > 2.6.13- rc7-libata1.patch.bz2 was used. 
+> > > A combined mode of ata_piix seems not to work. 
+> > > Is the following patches correct?
+> > > 
+> > > diff -urN linux-2.6.13-rc7.orig/drivers/scsi/Kconfig 
+> > linux-2.6.13-rc7/drivers/scsi/Kconfig
+> > > --- linux-2.6.13-rc7.orig/drivers/scsi/Kconfig	
+> > 2005-08-25 13:44:33.000000000 +0900
+> > > +++ linux-2.6.13-rc7/drivers/scsi/Kconfig	2005-08-25 
+> > 14:33:38.000000000 +0900
+> > > @@ -424,7 +424,7 @@
+> > >  source "drivers/scsi/megaraid/Kconfig.megaraid"
+> > >  
+> > >  config SCSI_SATA
+> > > -	tristate "Serial ATA (SATA) support"
+> > > +	bool "Serial ATA (SATA) support"
+> > >  	depends on SCSI
+> > >  	help
+> > >  	  This driver family supports Serial ATA host controllers
+> > 
+> > No, this bug reintroduces a problem with SCSI=m.
 > 
-> Contrary to the comments for ide_do_drive_cmd(), ide_next didn't appear 
-> to do anything to achieve this? At least from my initial testing before 
-> I made this change - it could take a second or so for the park command 
-> to be issued if the disk was busy....
+> Please explain this bug in detail. 
 
-That part seems to have been lost, apparently. The above patch is
-correct.
+Assuming your patch is applied:
+
+With SCSI=m and SCSI_SATA=y this allows the static enabling of the SATA 
+drivers with unwanted effects, e.g.:
+- SCSI=m, SCSI_SATA=y, SCSI_ATA_ADMA=y
+  -> SCSI_ATA_ADMA is built statically but scsi/built-in.o is not linked 
+     into the kernel
+- SCSI=m, SCSI_SATA=y, SCSI_ATA_ADMA=y, SCSI_SATA_AHCI=m
+  -> SCSI_ATA_ADMA and libata are built statically but 
+     scsi/built-in.o is not linked into the kernel,
+     SCSI_SATA_AHCI is built modular (unresolved symbols due to missing 
+                                      libata)
+
+> > Which problem do you face?
+> > And how did this change alone fix it for you?
+> 
+> I am using Intel 82801EB SATA controller.
+> 2.6.13-rc7-libata1.patch.bz2 worked as PATA when 82801EB was used in a combined mode. 
+> Does quirk_intel_ide_combined() work effectively?
+
+I do still not see how your proposed patch would have _any_ influence on 
+your problem.
+
+> Thanks,
+> Haruo
+
+cu
+Adrian
 
 -- 
-Jens Axboe
 
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
-
--------------------------------------------------------
-SF.Net email is Sponsored by the Better Software Conference & EXPO
-September 19-22, 2005 * San Francisco, CA * Development Lifecycle Practices
-Agile & Plan-Driven Development * Managing Projects & Teams * Testing & QA
-Security * Process Improvement & Measurement * http://www.sqe.com/bsce5sf
