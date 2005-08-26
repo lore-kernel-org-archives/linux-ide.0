@@ -1,34 +1,37 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: #undef ATA_ENABLE_PATA
-Date: Fri, 26 Aug 2005 05:30:04 -0400
-Message-ID: <430EE11C.5040409@pobox.com>
-References: <20050723192433.GA25240@canonical.org>	 <20050723201010.GE6913@bugs.debian.org>	 <20050723223744.GA18882@canonical.org>	 <20050724091729.GF6913@bugs.debian.org>	 <20050724140705.GA6942@canonical.org> <20050725035430.GJ10254@verge.net.au>	 <20050826032417.GA6065@canonical.org>  <20050826043601.GY6418@verge.net.au> <1125046140.10546.17.camel@localhost.localdomain>
+From: Martin Wilck <martin.wilck@fujitsu-siemens.com>
+Subject: Re: [PATCH] Fix HD activity LED with ahci
+Date: Fri, 26 Aug 2005 14:59:36 +0200
+Message-ID: <430F1238.2020608@fujitsu-siemens.com>
+References: <42EF93F8.8050601@fujitsu-siemens.com>	 <20050802163519.GB3710@suse.de>  <42F05359.7030006@fujitsu-siemens.com> <1123092761.3982.20.camel@lynx.auton.cs.cmu.edu> <42F1BE18.9000105@fujitsu-siemens.com> <430955FC.9080106@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:15525 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932249AbVHZJaX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Aug 2005 05:30:23 -0400
-In-Reply-To: <1125046140.10546.17.camel@localhost.localdomain>
+Received: from dgate2.fujitsu-siemens.com ([217.115.66.36]:62240 "EHLO
+	dgate2.fujitsu-siemens.com") by vger.kernel.org with ESMTP
+	id S1751559AbVHZM75 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 26 Aug 2005 08:59:57 -0400
+In-Reply-To: <430955FC.9080106@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Erik Slagter <erik@slagter.name>
-Cc: Horms <horms@verge.net.au>, 319659@bugs.debian.org, Brett Smith <debbug@brettcsmith.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, "Wichert, Gerhard" <Gerhard.Wichert@fujitsu-siemens.com>
 
-Erik Slagter wrote:
-> On Fri, 2005-08-26 at 13:36 +0900, Horms wrote:
+Jeff Garzik wrote:
+
+> To answer the question everybody was asking, this line was in the code 
+> because it was in the patch that got AHCI working.
 > 
-> 
->>#undef ATA_ENABLE_ATAPI         /* define to enable ATAPI support */
->>#undef ATA_ENABLE_PATA          /* define to enable PATA support in some
-> 
-> 
-> These two would very interesting to me to be included in Kconfig.
+> I'm inclined to apply the above patch, but I'll wait until 2.6.13, so 
+> that we can get some decent testing.
 
-Neither of these are ready for prime time, with known problems.  Move 
-them to Kconfig, and I have to deal with the bug reports.  No thanks...
+Great. As far as the testing is concerned, we have had no problems with 
+the patch here.
 
-	Jeff
+Thanks, Martin
 
-
+-- 
+Martin Wilck                Phone: +49 5251 8 15113
+Fujitsu Siemens Computers   Fax:   +49 5251 8 20409
+Heinz-Nixdorf-Ring 1        mailto:Martin.Wilck@Fujitsu-Siemens.com
+D-33106 Paderborn           http://www.fujitsu-siemens.com/primergy
