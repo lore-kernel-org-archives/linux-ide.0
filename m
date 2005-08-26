@@ -1,35 +1,60 @@
-From: Alexander Shaposhnikov <shaposh@isp.nsc.ru>
-Subject: RE :sata_sil + UDMA CRC errors
-Date: Fri, 26 Aug 2005 11:41:27 +0700
-Message-ID: <1125031287.2477.15.camel@m00>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: #undef ATA_ENABLE_PATA
+Date: Fri, 26 Aug 2005 00:55:23 -0400
+Message-ID: <430EA0BB.6080801@pobox.com>
+References: <20050723192433.GA25240@canonical.org> <20050723201010.GE6913@bugs.debian.org> <20050723223744.GA18882@canonical.org> <20050724091729.GF6913@bugs.debian.org> <20050724140705.GA6942@canonical.org> <20050725035430.GJ10254@verge.net.au> <20050826032417.GA6065@canonical.org> <20050826043601.GY6418@verge.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.isp.nsc.ru ([194.226.178.19]:24457 "EHLO ns.isp.nsc.ru")
-	by vger.kernel.org with ESMTP id S1751503AbVHZEl2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Aug 2005 00:41:28 -0400
+Received: from mail.dvmed.net ([216.237.124.58]:51361 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751503AbVHZEz2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Aug 2005 00:55:28 -0400
+In-Reply-To: <20050826043601.GY6418@verge.net.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: TeJun Heo <htejun@gmail.com>, Paul Taylor <Paul.Taylor@siliconimage.com>, Yuri Kirsanov <flash@rccb.ru>, "Carlos.Pardo@siliconimage.com" <Carlos.Pardo@siliconimage.com>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "lbattraw@insightbb.com" <lbattraw@insightbb.com>
+To: Horms <horms@verge.net.au>
+Cc: linux-ide@vger.kernel.org, Brett Smith <debbug@brettcsmith.org>, 319659@bugs.debian.org
 
-I can reproducibly hang the system by copying alot of files (some
-several gigs) to some directory and than making "sync". It hangs with
-the repeated messages :
+Horms wrote:
+> Hi Jeff, Hi All,
+> 
+> In the cause of debuging a problem with a DVD burner[1]
+> Brett Smith brought to my attention that there are several
+> variables in ./include/linux/libata.h, that when changed
+> from #undef to #define, enable features in the ATA subsystem.
+> 
+> Is there any interest in a patch to make any/all of these configurable
+> through Kconfig, or are they too hackish/dangerous/whatever to consider.
+> I'm more than happy to make a patch if there is interest, please let me
+> know wither way.
+> 
+> Specifically, I am refering to:
+> 
+> /*
+>  * compile-time options
+>  */
+> #undef ATA_DEBUG                /* debugging output */
+> #undef ATA_VERBOSE_DEBUG        /* yet more debugging output */
 
-Aug 22 04:18:11 m00 kernel: ata4: command 0x35 timeout, stat 0xd1
-host_stat 0x1
-Aug 22 04:18:11 m00 kernel: ata4: status=0xd1 { Busy }
-Aug 22 04:18:11 m00 kernel: SCSI error : <3 0 0 0> return code =
-0x8000002
-Aug 22 04:18:11 m00 kernel: sdb: Current: sense key: Aborted Command
-Aug 22 04:18:11 m00 kernel:     Additional sense: Scsi parity error
-Aug 22 04:18:11 m00 kernel: end_request: I/O error, dev sdb, sector
-22213847
-Aug 22 04:18:11 m00 kernel: ATA: abnormal status 0xD1 on port
-0xFFFFC200000042C7
-Aug 22 04:18:11 m00 last message repeated 2 times
+These should go away, once ATA_MSG_xxx is implemented (a la NETIF_MSG_xxx).
+
+
+> #undef ATA_IRQ_TRAP             /* define to ack screaming irqs */
+> #undef ATA_NDEBUG               /* define to disable quick runtime checks */
+> #undef ATA_ENABLE_ATAPI         /* define to enable ATAPI support */
+> #undef ATA_ENABLE_PATA          /* define to enable PATA support in some
+>                                  * low-level drivers */
+> #undef ATAPI_ENABLE_DMADIR      /* enables ATAPI DMADIR bridge support */
+
+These are all things that are either incomplete, or should not be 
+configured by non-developers.
+
+When something is safe to turn on in the upstream kernel, it gets turned 
+on :)  This is why ATAPI defaults to off, even though some silly distros 
+turn it on.
+
+	Jeff
 
 
 
