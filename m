@@ -1,39 +1,40 @@
 From: Erik Slagter <erik@slagter.name>
-Subject: Re: #undef ATA_ENABLE_PATA
-Date: Fri, 26 Aug 2005 10:49:00 +0200
-Message-ID: <1125046140.10546.17.camel@localhost.localdomain>
-References: <20050723192433.GA25240@canonical.org>
-	 <20050723201010.GE6913@bugs.debian.org>
-	 <20050723223744.GA18882@canonical.org>
-	 <20050724091729.GF6913@bugs.debian.org>
-	 <20050724140705.GA6942@canonical.org> <20050725035430.GJ10254@verge.net.au>
-	 <20050826032417.GA6065@canonical.org>  <20050826043601.GY6418@verge.net.au>
+Subject: RE: Promise SATAII150 TX4: strange disk ordering
+Date: Fri, 26 Aug 2005 10:46:48 +0200
+Message-ID: <1125046008.10546.14.camel@localhost.localdomain>
+References: <EC70EFBFB6977A478BEB386684E8A7420CE728@pwfsbs01.pwf.local>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-XkqDyvXDz1WcWeD2Nwln"
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-/SEtwU5DIcQmVgA7UhQr"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oldconomy.demon.nl ([212.238.217.56]:39336 "EHLO
+Received: from oldconomy.demon.nl ([212.238.217.56]:37288 "EHLO
 	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S932544AbVHZItE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 Aug 2005 04:49:04 -0400
-In-Reply-To: <20050826043601.GY6418@verge.net.au>
+	id S932305AbVHZIrF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 26 Aug 2005 04:47:05 -0400
+In-Reply-To: <EC70EFBFB6977A478BEB386684E8A7420CE728@pwfsbs01.pwf.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Horms <horms@verge.net.au>
-Cc: 319659@bugs.debian.org, Brett Smith <debbug@brettcsmith.org>, linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Allen Bolderoff <allen@gist.net.au>
+Cc: Eyal Lebedinsky <eyal@eyal.emu.id.au>, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
 
---=-XkqDyvXDz1WcWeD2Nwln
+--=-/SEtwU5DIcQmVgA7UhQr
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2005-08-26 at 13:36 +0900, Horms wrote:
+On Fri, 2005-08-26 at 12:35 +0930, Allen Bolderoff wrote:
+> > driver" and introducing driver options to manually order the ports?
+> > How can I ensure stable device names (/dev/sd*)?
 
-> #undef ATA_ENABLE_ATAPI         /* define to enable ATAPI support */
-> #undef ATA_ENABLE_PATA          /* define to enable PATA support in some
+> I use LVM.
+>=20
+> However - this card/driver is known to break when using more than 1
+> drive at a time (ie accessing 2 or 3 drives at once)=20
 
-These two would very interesting to me to be included in Kconfig.
+Interesting. I am using a TX2 with two drives attached as softraid-1 (so
+they are accessed at the same time all of the time) and I have no
+problems at all.
 
---=-XkqDyvXDz1WcWeD2Nwln
+--=-/SEtwU5DIcQmVgA7UhQr
 Content-Type: application/x-pkcs7-signature; name=smime.p7s
 Content-Disposition: attachment; filename=smime.p7s
 Content-Transfer-Encoding: base64
@@ -69,13 +70,13 @@ sZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa9/eH1sYITq726jTlEBpbNU1341YheILc
 IRk13iSx0x1G/11fZU8xggHvMIIB6wIBATBpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3
 dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1h
 aWwgSXNzdWluZyBDQQIDD1NzMAkGBSsOAwIaBQCgXTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcB
-MBwGCSqGSIb3DQEJBTEPFw0wNTA4MjYwODQ5MDBaMCMGCSqGSIb3DQEJBDEWBBS4+Bm/2IZl4QIe
-7tNchix4iZ4MpzANBgkqhkiG9w0BAQEFAASCAQABc3ykcVGK+Pv1bKwLduGWzQPFeUFkANYxUXOG
-gyY9nw2vUTurlofTG1FWvzTMat0FtS3cexmcotd1s/OmK0T+wA+XR0BWXaFfSz1st4h4rGDmIE6G
-3x6NUJ1wyL9pTnFn61Anr5Cxgl3jMeItL7SoGOmh+RxDJTTb7YTFqwuXL/aJmKNE9dqFP51bTTCr
-R0wMpNgwIqkCkbvXlVgWsuKeo37aVra/7uGWeMYEbwntZ8I8d+JAHAiH8bSfkGJ7xxpV9a9+/swA
-tAdNvJn4YA3Ay1o6eNal5y9dnF21X8bj63cbwydctHmyxsAvVVAHvaqZAwClFl3hwHmIHap+Ku9Y
+MBwGCSqGSIb3DQEJBTEPFw0wNTA4MjYwODQ2NDRaMCMGCSqGSIb3DQEJBDEWBBTuSq+jNlO5wprc
+wVJ8/KWmVaHQDDANBgkqhkiG9w0BAQEFAASCAQBBdnNWQKwBubuCUriMoypKgAAaSgwoxEAl4FVF
+PuTLM5uM5Ue+N/JFsyoVZP+UN8c/5mA7lyVPowe8fFTYGNFq9dKct7xjI139NJ9wsXl32bqvqaE4
+eqR1FwMhdCQPw2VO/KqoZoOioABibsxy2B8yIJeLx/OT1IyKIE3bIO809QyALI2i3JsM8v+jlhJZ
+XVZeHD2X6T4HhreiogJPsPTQmZFpL00NI6Fwj9ms6j9mc0kuXDoeqjLbY0Ubc77ET5MWhMqHehwd
+bs137IkQA7jzu6jrszWI2vVxjFEIJUiG5vkdU8LaorOjIXuawcjSf3Y5hjeFkJH0TItYz8bCQQWq
 AAAAAAAA
 
 
---=-XkqDyvXDz1WcWeD2Nwln--
+--=-/SEtwU5DIcQmVgA7UhQr--
