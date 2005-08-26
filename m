@@ -1,46 +1,35 @@
-From: Jon Escombe <lists@dresco.co.uk>
-Subject: Re: [Hdaps-devel] Re: HDAPS, Need to park the head for real
-Date: Thu, 25 Aug 2005 19:14:28 +0100
-Message-ID: <430E0A84.8080809@dresco.co.uk>
-References: <1124205914.4855.14.camel@localhost.localdomain>	 <20050816200708.GE3425@suse.de>  <430CEA54.7060803@dresco.co.uk> <1124967468.21456.6.camel@localhost.localdomain>
+From: Alexander Shaposhnikov <shaposh@isp.nsc.ru>
+Subject: RE :sata_sil + UDMA CRC errors
+Date: Fri, 26 Aug 2005 11:41:27 +0700
+Message-ID: <1125031287.2477.15.camel@m00>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from heisenberg.zen.co.uk ([212.23.3.141]:51356 "EHLO
-	heisenberg.zen.co.uk") by vger.kernel.org with ESMTP
-	id S1751402AbVHYSQO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Aug 2005 14:16:14 -0400
-In-Reply-To: <1124967468.21456.6.camel@localhost.localdomain>
+Received: from ns.isp.nsc.ru ([194.226.178.19]:24457 "EHLO ns.isp.nsc.ru")
+	by vger.kernel.org with ESMTP id S1751503AbVHZEl2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Aug 2005 00:41:28 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jens Axboe <axboe@suse.de>, Alejandro Bonilla Beeche <abonilla@linuxwireless.org>, linux-kernel <linux-kernel@vger.kernel.org>, hdaps devel <hdaps-devel@lists.sourceforge.net>, linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: TeJun Heo <htejun@gmail.com>, Paul Taylor <Paul.Taylor@siliconimage.com>, Yuri Kirsanov <flash@rccb.ru>, "Carlos.Pardo@siliconimage.com" <Carlos.Pardo@siliconimage.com>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "lbattraw@insightbb.com" <lbattraw@insightbb.com>
 
-Alan Cox wrote:
-> @@ -1661,6 +1671,9 @@
->                 where = ELEVATOR_INSERT_FRONT;
->                 rq->flags |= REQ_PREEMPT;
->         }
-> +       if (action == ide_next)
-> +               where = ELEVATOR_INSERT_FRONT;
-> +
->         __elv_add_request(drive->queue, rq, where, 0);
->         ide_do_request(hwgroup, IDE_NO_IRQ);
->         spin_unlock_irqrestore(&ide_lock, flags);
-> 
-> Also puzzles me- why is this needed ?
+I can reproducibly hang the system by copying alot of files (some
+several gigs) to some directory and than making "sync". It hangs with
+the repeated messages :
 
-I wanted the park command to get in at the head of the queue (behind the 
-currently executing request).
+Aug 22 04:18:11 m00 kernel: ata4: command 0x35 timeout, stat 0xd1
+host_stat 0x1
+Aug 22 04:18:11 m00 kernel: ata4: status=0xd1 { Busy }
+Aug 22 04:18:11 m00 kernel: SCSI error : <3 0 0 0> return code =
+0x8000002
+Aug 22 04:18:11 m00 kernel: sdb: Current: sense key: Aborted Command
+Aug 22 04:18:11 m00 kernel:     Additional sense: Scsi parity error
+Aug 22 04:18:11 m00 kernel: end_request: I/O error, dev sdb, sector
+22213847
+Aug 22 04:18:11 m00 kernel: ATA: abnormal status 0xD1 on port
+0xFFFFC200000042C7
+Aug 22 04:18:11 m00 last message repeated 2 times
 
-Contrary to the comments for ide_do_drive_cmd(), ide_next didn't appear 
-to do anything to achieve this? At least from my initial testing before 
-I made this change - it could take a second or so for the park command 
-to be issued if the disk was busy....
 
-Regards,
-Jon.
 
-______________________________________________________________
-Email via Mailtraq4Free from Enstar (www.mailtraqdirect.co.uk)
