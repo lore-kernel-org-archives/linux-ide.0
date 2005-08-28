@@ -1,45 +1,51 @@
-From: Yuri Kirsanov <flash@rccb.ru>
-Subject: TX4000 RAID and sata_promise
-Date: Sun, 28 Aug 2005 17:33:10 +0400
-Message-ID: <923172921.20050828173310@rccb.ru>
-Reply-To: Yuri Kirsanov <flash@rccb.ru>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: libata: clustering on or off?
+Date: Sun, 28 Aug 2005 16:20:19 +0200
+Message-ID: <20050828142018.GS4018@suse.de>
+References: <20050828094218.GA29145@havoc.gtf.org> <1125224541.3219.13.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [213.85.106.102] ([213.85.106.102]:49807 "EHLO rccb.ru")
-	by vger.kernel.org with ESMTP id S1750789AbVH1NdJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Aug 2005 09:33:09 -0400
-Received: from 80.249.155.6 (account flash [80.249.155.6] verified)
-  by rccb.ru (CommuniGate Pro SMTP 4.2.8)
-  with ESMTP id 1029052 for linux-ide@vger.kernel.org; Sun, 28 Aug 2005 13:35:23 +0000
+Received: from ns.virtualhost.dk ([195.184.98.160]:15233 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1751171AbVH1OUW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Aug 2005 10:20:22 -0400
+Content-Disposition: inline
+In-Reply-To: <1125224541.3219.13.camel@laptopd505.fenrus.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Good day. I've tried latest kernel 2.6.13-rc7, TX4000 support seems to
-be in sata_promise already. After startup I see following in dmesg:
+On Sun, Aug 28 2005, Arjan van de Ven wrote:
+> On Sun, 2005-08-28 at 05:42 -0400, Jeff Garzik wrote:
+> > The constant ATA_SHT_USE_CLUSTERING in include/linux/libata.h controls
+> > the use of SCSI layer's use_clustering feature, for a great many libata
+> > drivers.
+> > 
+> > The current setup has clustering disabled, which in theory causes the
+> > block layer to do less work, at the expense of a greater number of
+> > scatter/gather table entries used.
+> > 
+> > Any opinions WRT turning on clustering for libata?
+> 
+> in 2.4 clustering was expensive due to a large number of checks that
+> were done (basically the number of fragments got recounted a gazilion
+> times). In 2.6 Jens fixed that afaik to make it basically free...
+> at which point it's a win always.
 
-libata version 1.12 loaded.
-sata_promise version 1.02
-PCI: Found IRQ 5 for device 0000:01:09.0
-ata1: PATA max UDMA/133 cmd 0xCC81C200 ctl 0xCC81C238 bmdma 0x0 irq 5
-ata2: PATA max UDMA/133 cmd 0xCC81C280 ctl 0xCC81C2B8 bmdma 0x0 irq 5
-ata3: PATA max UDMA/133 cmd 0xCC81C300 ctl 0xCC81C338 bmdma 0x0 irq 5
-ata4: PATA max UDMA/133 cmd 0xCC81C380 ctl 0xCC81C3B8 bmdma 0x0 irq 5
-ata1: no device found (phy stat 00000000)
-scsi0 : sata_promise
-ata2: no device found (phy stat 00000000)
-scsi1 : sata_promise
-ata3: no device found (phy stat 00000000)
-scsi2 : sata_promise
-ata4: no device found (phy stat 00000000)
-scsi3 : sata_promise
+Yeah, it wont cost any extra cycles, so there's no point in keeping it
+turned off for that reason.
 
+> Imo clustering on the driver level should announce driver capabilities.
+> If clustering for some arch/kernel makes it slower, that should be
+> decided at a midlayer level and not in each driver; eg the midlayer
+> would chose to ignore the drivers capabilities.
+> So .. my opinion would be that libata should announce the capability (it
+> seems the code/hw can do it). 
 
-Anybody has any ideas? As I can see, my TX4000 is found by
-sata_promise, it even detects it's UDMA modes, but it still can't find
-any of my hard drives, while TX4000 BIOS shows all of them ok.
+Agree, we should just remove the ability to control clustering, as it
+really overlaps with the segment settings anyways.
 
-Jeff, please, can you comment this situation???
+-- 
+Jens Axboe
 
