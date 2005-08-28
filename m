@@ -1,65 +1,153 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: libata: clustering on or off?
-Date: Sun, 28 Aug 2005 20:01:56 +0200
-Message-ID: <20050828180154.GW4018@suse.de>
-References: <20050828094218.GA29145@havoc.gtf.org> <1125224541.3219.13.camel@laptopd505.fenrus.org> <20050828142018.GS4018@suse.de> <4311F519.5050300@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH] sata_vsc: configure DMA bursts explicitly
+Date: Sun, 28 Aug 2005 16:48:40 -0400
+Message-ID: <20050828204840.GA12790@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750801AbVH1Uss@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4311F519.5050300@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeremy Higdon <jeremy@sgi.com>, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Sun, Aug 28 2005, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >On Sun, Aug 28 2005, Arjan van de Ven wrote:
-> >
-> >>On Sun, 2005-08-28 at 05:42 -0400, Jeff Garzik wrote:
-> >>
-> >>>The constant ATA_SHT_USE_CLUSTERING in include/linux/libata.h controls
-> >>>the use of SCSI layer's use_clustering feature, for a great many libata
-> >>>drivers.
-> >>>
-> >>>The current setup has clustering disabled, which in theory causes the
-> >>>block layer to do less work, at the expense of a greater number of
-> >>>scatter/gather table entries used.
-> >>>
-> >>>Any opinions WRT turning on clustering for libata?
-> >>
-> >>in 2.4 clustering was expensive due to a large number of checks that
-> >>were done (basically the number of fragments got recounted a gazilion
-> >>times). In 2.6 Jens fixed that afaik to make it basically free...
-> >>at which point it's a win always.
-> 
-> >Yeah, it wont cost any extra cycles,
-> 
-> A simple grep for QUEUE_FLAG_CLUSTER-related code shows that it -does- 
-> cost extra cycles.
 
-Well yes, none is not true of course. But it's not a lot, like extra
-iterations of the request mappings like it used to. So in by far the
-most cases, it should be a win overall.
+I've always felt that the comment about "bug in chip related to cacheline
+size" was somewhat questionable, since it really seemed like the driver
+was obviously not configuring cacheline size and DMA burst length
+correctly.
 
-> >>Imo clustering on the driver level should announce driver capabilities.
-> >>If clustering for some arch/kernel makes it slower, that should be
-> >>decided at a midlayer level and not in each driver; eg the midlayer
-> >>would chose to ignore the drivers capabilities.
-> >>So .. my opinion would be that libata should announce the capability (it
-> >>seems the code/hw can do it). 
-> >
-> >
-> >Agree, we should just remove the ability to control clustering, as it
-> >really overlaps with the segment settings anyways.
-> 
-> OK, I guess the consensus is to use clustering :)
-> 
-> We'll see if anything blows up in 2.6.14...
+Is there anyone around at SGI, or anywhere else, that could test this?
 
-;-)
+Any additional info about the "bug" in the chip?
 
--- 
-Jens Axboe
+What follows is a COMPLETELY UNTESTED patch that attempts to configure
+the chip more correctly.
 
+
+diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
+--- a/drivers/scsi/sata_vsc.c
++++ b/drivers/scsi/sata_vsc.c
+@@ -27,7 +27,16 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"sata_vsc"
+-#define DRV_VERSION	"1.0"
++#define DRV_VERSION	"1.1"
++
++enum vsc_pci_cfg_constants {
++	VSC_CFG				= 0x98, /* VSC7174 Configuration */
++	VSC_DMA				= 0xA0, /* DMA control / status */
++
++	VSC_DMA_NO_M			= (1 << 2), /* disable PCI MWI/MRM */
++	VSC_DMA_WCACHE			= (1 << 1), /* wr DMA cacheln align */
++	VSC_DMA_RCACHE			= (1 << 0), /* rd DMA cacheln align */
++};
+ 
+ /* Interrupt register offsets (from chip base address) */
+ #define VSC_SATA_INT_STAT_OFFSET	0x00
+@@ -255,6 +264,33 @@ static void __devinit vsc_sata_setup_por
+ 	writel(0, base + VSC_SATA_UP_DATA_BUFFER_OFFSET);
+ }
+ 
++static void vsc_pci_cfg_dma(struct pci_dev *pdev, int mwi)
++{
++	u32 dmacfg, new_dmacfg;
++	u8 clnsz = 0;
++
++	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &clnsz);
++	pci_read_config_dword(pdev, VSC_DMA, &dmacfg);
++
++	/* Set DMA burst length.  Should always be greater than
++	 * clnsz, except when we are at maximum (0x80)
++	 */
++
++	new_dmacfg = dmacfg & 0xffff00f8; /* Mask out DMA BL, low 3 bits */
++	if (clnsz > 0) {
++		if (clnsz >= 0x80)
++			new_dmacfg |= (0x80 << 8);
++		else
++			new_dmacfg |= ((clnsz * 2) << 8);
++		new_dmacfg |= VSC_DMA_WCACHE | VSC_DMA_RCACHE;
++	} else {
++		new_dmacfg |= (0x80 << 8);
++		new_dmacfg |= VSC_DMA_NO_M;	/* Disable PCI MRM/MWI */
++	}
++
++	if (new_dmacfg != dmacfg)
++		pci_write_config_dword(pdev, VSC_DMA, new_dmacfg);
++}
+ 
+ static int __devinit vsc_sata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+@@ -264,6 +300,7 @@ static int __devinit vsc_sata_init_one (
+ 	int pci_dev_busy = 0;
+ 	void *mmio_base;
+ 	int rc;
++	int mwi = 1;
+ 
+ 	if (!printed_version++)
+ 		printk(KERN_DEBUG DRV_NAME " version " DRV_VERSION "\n");
+@@ -286,20 +323,24 @@ static int __devinit vsc_sata_init_one (
+ 		goto err_out;
+ 	}
+ 
++	rc = pci_set_mwi(pdev);
++	if (rc)
++		mwi = 0;
++
+ 	/*
+ 	 * Use 32 bit DMA mask, because 64 bit address support is poor.
+ 	 */
+ 	rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
+ 	if (rc)
+-		goto err_out_regions;
++		goto err_out_mwi;
+ 	rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
+ 	if (rc)
+-		goto err_out_regions;
++		goto err_out_mwi;
+ 
+ 	probe_ent = kmalloc(sizeof(*probe_ent), GFP_KERNEL);
+ 	if (probe_ent == NULL) {
+ 		rc = -ENOMEM;
+-		goto err_out_regions;
++		goto err_out_mwi;
+ 	}
+ 	memset(probe_ent, 0, sizeof(*probe_ent));
+ 	probe_ent->dev = pci_dev_to_dev(pdev);
+@@ -313,10 +354,7 @@ static int __devinit vsc_sata_init_one (
+ 	}
+ 	base = (unsigned long) mmio_base;
+ 
+-	/*
+-	 * Due to a bug in the chip, the default cache line size can't be used
+-	 */
+-	pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 0x80);
++	vsc_pci_cfg_dma(pdev, mwi);
+ 
+ 	probe_ent->sht = &vsc_sata_sht;
+ 	probe_ent->host_flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+@@ -348,7 +386,7 @@ static int __devinit vsc_sata_init_one (
+ 	 * DPA mode.  If bit 28 is set, LED 0 reflects all ports' activity.
+ 	 * If bit 28 is clear, each port has its own LED.
+ 	 */
+-	pci_write_config_dword(pdev, 0x98, 0);
++	pci_write_config_dword(pdev, VSC_CFG, 0);
+ 
+ 	/* FIXME: check ata_device_add return value */
+ 	ata_device_add(probe_ent);
+@@ -358,7 +396,12 @@ static int __devinit vsc_sata_init_one (
+ 
+ err_out_free_ent:
+ 	kfree(probe_ent);
+-err_out_regions:
++err_out_mwi:
++	/* FIXME: create a custom PCI ->remove() hook, which calls
++	 * pci_clear_mwi() at ->remove time
++	 */
++	if (mwi)
++		pci_clear_mwi(pdev);
+ 	pci_release_regions(pdev);
+ err_out:
+ 	if (!pci_dev_busy)
