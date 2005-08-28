@@ -1,43 +1,45 @@
-From: Guillaume Betous <guillaume@betous.fr.st>
-Subject: pdc202xx_old and CONFIG_PDC202XX_FORCE
-Date: Sun, 28 Aug 2005 15:19:23 +0200
-Message-ID: <4311B9DB.2090306@betous.fr.st>
+From: Yuri Kirsanov <flash@rccb.ru>
+Subject: TX4000 RAID and sata_promise
+Date: Sun, 28 Aug 2005 17:33:10 +0400
+Message-ID: <923172921.20050828173310@rccb.ru>
+Reply-To: Yuri Kirsanov <flash@rccb.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pepelepew.homelinux.net ([217.66.125.214]:30257 "EHLO
-	pepelepew.homelinux.net") by vger.kernel.org with ESMTP
-	id S1750728AbVH1NUc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Aug 2005 09:20:32 -0400
-Received: from [192.168.0.2] (pepelepew [192.168.0.2])
-	by pepelepew.homelinux.net (Postfix) with ESMTP id 2458D71643
-	for <linux-ide@vger.kernel.org>; Sun, 28 Aug 2005 15:19:17 +0200 (CEST)
+Received: from [213.85.106.102] ([213.85.106.102]:49807 "EHLO rccb.ru")
+	by vger.kernel.org with ESMTP id S1750789AbVH1NdJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Aug 2005 09:33:09 -0400
+Received: from 80.249.155.6 (account flash [80.249.155.6] verified)
+  by rccb.ru (CommuniGate Pro SMTP 4.2.8)
+  with ESMTP id 1029052 for linux-ide@vger.kernel.org; Sun, 28 Aug 2005 13:35:23 +0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Hi all !
+Good day. I've tried latest kernel 2.6.13-rc7, TX4000 support seems to
+be in sata_promise already. After startup I see following in dmesg:
 
-First, I hope to be in the right mailing-list. Please, tell me if I'm wrong.
+libata version 1.12 loaded.
+sata_promise version 1.02
+PCI: Found IRQ 5 for device 0000:01:09.0
+ata1: PATA max UDMA/133 cmd 0xCC81C200 ctl 0xCC81C238 bmdma 0x0 irq 5
+ata2: PATA max UDMA/133 cmd 0xCC81C280 ctl 0xCC81C2B8 bmdma 0x0 irq 5
+ata3: PATA max UDMA/133 cmd 0xCC81C300 ctl 0xCC81C338 bmdma 0x0 irq 5
+ata4: PATA max UDMA/133 cmd 0xCC81C380 ctl 0xCC81C3B8 bmdma 0x0 irq 5
+ata1: no device found (phy stat 00000000)
+scsi0 : sata_promise
+ata2: no device found (phy stat 00000000)
+scsi1 : sata_promise
+ata3: no device found (phy stat 00000000)
+scsi2 : sata_promise
+ata4: no device found (phy stat 00000000)
+scsi3 : sata_promise
 
-I had some minor problems to find my hard drives on the PDC20267 of my 
-mother board (Intel SBC2). All the drives were hidden by the BIOS.
 
-I just took a look at the module code and the Kconfig file, and found a 
-'FIXME' remark [1]. As it was just around my problem, I took a few hours 
-(-; to improve the code, implementing a new configuration bit : 
-CONFIG_PDC202XX_FORCE_OLD.
+Anybody has any ideas? As I can see, my TX4000 is found by
+sata_promise, it even detects it's UDMA modes, but it still can't find
+any of my hard drives, while TX4000 BIOS shows all of them ok.
 
-It is exactly the same behaviour of the CONFIG_PDC202XX_FORCE bit, but 
-only for the pdc202xx_old module. I changed de Kconfig file too to 
-manage separately the two bits.
+Jeff, please, can you comment this situation???
 
-If you're interested in my changes, I can send patches (as soon as I 
-know how to make the patches (((-: )
-
-Regards,
-
-gUI
-
-[1] # FIXME - probably wants to be one for old and for new
