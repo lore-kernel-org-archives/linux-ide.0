@@ -1,56 +1,43 @@
-From: Francois Romieu <romieu@fr.zoreil.com>
-Subject: Re: [PATCH] sata_sil: enable Large Block Transfers
-Date: Sun, 28 Aug 2005 12:39:59 +0200
-Message-ID: <20050828103959.GA19154@electric-eye.fr.zoreil.com>
-References: <20050828093404.GA29039@havoc.gtf.org>
+From: Guillaume Betous <guillaume@betous.fr.st>
+Subject: pdc202xx_old and CONFIG_PDC202XX_FORCE
+Date: Sun, 28 Aug 2005 15:19:23 +0200
+Message-ID: <4311B9DB.2090306@betous.fr.st>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from electric-eye.fr.zoreil.com ([213.41.134.224]:50050 "EHLO
-	fr.zoreil.com") by vger.kernel.org with ESMTP id S1751131AbVH1Kmj
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Aug 2005 06:42:39 -0400
-Content-Disposition: inline
-In-Reply-To: <20050828093404.GA29039@havoc.gtf.org>
+Received: from pepelepew.homelinux.net ([217.66.125.214]:30257 "EHLO
+	pepelepew.homelinux.net") by vger.kernel.org with ESMTP
+	id S1750728AbVH1NUc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Aug 2005 09:20:32 -0400
+Received: from [192.168.0.2] (pepelepew [192.168.0.2])
+	by pepelepew.homelinux.net (Postfix) with ESMTP id 2458D71643
+	for <linux-ide@vger.kernel.org>; Sun, 28 Aug 2005 15:19:17 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Jeff Garzik <jgarzik@pobox.com> :
-[...]
-> diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
-> --- a/drivers/scsi/sata_sil.c
-> +++ b/drivers/scsi/sata_sil.c
-[...]
-> @@ -210,6 +214,37 @@ MODULE_LICENSE("GPL");
->  MODULE_DEVICE_TABLE(pci, sil_pci_tbl);
->  MODULE_VERSION(DRV_VERSION);
->  
-> +
-> +static inline void sil_fill_sg(struct ata_queued_cmd *qc)
-> +{
-> +	struct scatterlist *sg = qc->sg;
-> +	struct ata_port *ap = qc->ap;
-> +	unsigned int idx, nelem;
-> +
-> +	assert(sg != NULL);
-> +	assert(qc->n_elem > 0);
-> +
-> +	idx = 0;
-> +	for (nelem = qc->n_elem; nelem; nelem--,sg++) {
-> +		u32 addr = sg_dma_address(sg);
-> +		u32 sg_len = sg_dma_len(sg);
-> +
-> +		ap->prd[idx].addr = cpu_to_le32(addr);
-> +		ap->prd[idx].flags_len = cpu_to_le32(sg_len);
-> +	}
-> +
-> +	if (idx)
-> +		ap->prd[idx - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
-> +}
+Hi all !
 
-Does it not lack an 'idx++' somewhere ?
+First, I hope to be in the right mailing-list. Please, tell me if I'm wrong.
 
---
-Ueimor
+I had some minor problems to find my hard drives on the PDC20267 of my 
+mother board (Intel SBC2). All the drives were hidden by the BIOS.
+
+I just took a look at the module code and the Kconfig file, and found a 
+'FIXME' remark [1]. As it was just around my problem, I took a few hours 
+(-; to improve the code, implementing a new configuration bit : 
+CONFIG_PDC202XX_FORCE_OLD.
+
+It is exactly the same behaviour of the CONFIG_PDC202XX_FORCE bit, but 
+only for the pdc202xx_old module. I changed de Kconfig file too to 
+manage separately the two bits.
+
+If you're interested in my changes, I can send patches (as soon as I 
+know how to make the patches (((-: )
+
+Regards,
+
+gUI
+
+[1] # FIXME - probably wants to be one for old and for new
