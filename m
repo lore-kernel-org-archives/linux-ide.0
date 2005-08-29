@@ -1,88 +1,115 @@
-From: Jim Ramsay <jim.ramsay@gmail.com>
-Subject: Re: [PATCH 3/3] Add disk hotswap support to libata RESEND #2
-Date: Mon, 29 Aug 2005 13:45:03 -0600
-Message-ID: <4789af9e0508291245709eca2f@mail.gmail.com>
-References: <355e5e5e05080103021a8239df@mail.gmail.com>
-	 <4789af9e050823124140eb924f@mail.gmail.com>
-	 <4789af9e050823154364c8e9eb@mail.gmail.com>
-	 <430BA990.9090807@mvista.com> <430BCB41.5070206@s5r6.in-berlin.de>
-	 <355e5e5e05082407031138120a@mail.gmail.com>
-	 <4789af9e05082408111c4a6294@mail.gmail.com>
-	 <4789af9e05082409121cc6870@mail.gmail.com>
-	 <4789af9e0508291223435f174@mail.gmail.com>
+From: Rudolph Pereira <rudolph@faex.net>
+Subject: Re: sis5513.c patch
+Date: Tue, 30 Aug 2005 06:07:02 +1000
+Message-ID: <20050829200702.GA2236@localhost.localdomain>
+References: <42A621BC.7040607@a-wing.co.uk> <58cb370e05060800276f3fc29c@mail.gmail.com> <42A6AB1B.8000800@a-wing.co.uk> <58cb370e05060801585b49020e@mail.gmail.com> <58cb370e05060802149b2f530@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed; boundary="nFreZHaLTZJo0R7j"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.205]:62750 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751479AbVH2TpE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Aug 2005 15:45:04 -0400
-Received: by zproxy.gmail.com with SMTP id r28so687448nza
-        for <linux-ide@vger.kernel.org>; Mon, 29 Aug 2005 12:45:03 -0700 (PDT)
-In-Reply-To: <4789af9e0508291223435f174@mail.gmail.com>
+Received: from 109.82.233.220.exetel.com.au ([220.233.82.109]:30739 "EHLO
+	faex.net") by vger.kernel.org with ESMTP id S1751493AbVH2UHQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Aug 2005 16:07:16 -0400
 Content-Disposition: inline
+In-Reply-To: <58cb370e05060802149b2f530@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux-ide <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: info@a-wing.co.uk, linux-ide@vger.kernel.org
 
-Another interesting issue with hotplug which may need SCSI-layer changes:
- 
-If you unplug a device that some process already has open (for
-example, md), the device is removed, but the internal scsi_device
-struct is not actually freed until ALL references to this device
-(including that still held by md) release it.
- 
-When you re-plugin the device at this time (scsi_device has been
-marked as 'deleted' but not actually freed), the code properly detects
-that while there is still a scsi_device for this host/channel/id/lun
-combination, it is marked as "SDEV_DEL" and so should not be used. 
-Fine - a new scsi_device struct is allocated and added to  the back of
-the Scsi_Host->__devices list.
- 
-The problem: From now on, whenever someone wants to use this scsi
-device, they will end up calling scsi_device_lookup, which calls
-__scsi_device_lookup, which will always return the first scsi_device
-struct, the one which is now SDEV_DEL, so scsi_device_lookup will
-return NULL.  This means that subsequent hot-unplugs will not remove
-the most-recently-allocated scsi_device struct, so no hotplug events
-are sent and no udev devices are removed.  This is bad -> a memory
-leak.
- 
-The workaround:  This probably has ramifications I'm not considering,
-but the following replacement for __scsi_device_lookup in scsi.c seems
-to work for me.  It returns the LAST matching scsi_device (and
-therefore most-recently allocated), as opposed to the old code which
-returned the FIRST matching scsi_device:
- 
-struct scsi_device *__scsi_device_lookup(struct Scsi_Host *shost,
-                 uint channel, uint id, uint lun)
-{
-         struct scsi_device *found_sdev = NULL;
-         struct scsi_device *sdev;
- 
-         list_for_each_entry(sdev, &shost->__devices, siblings) {
-                 printk( "device lookup checking %d:%d:%d:%d against
-%d:%d:%d:%d\n",
-                                 shost->host_no, channel, id, lun,
-                                 shost->host_no, sdev->channel,
-sdev->id, sdev->lun );
-                 if (sdev->channel == channel && sdev->id == id &&
-                                 sdev->lun ==lun)
-                 {
-                         found_sdev = sdev;
-                 }
-         }
- 
-         return found_sdev;
-}
- 
-How else could this be solved?  I suppose adding newly allocated
-scsi_device structs to the FRONT of the Scsi_Host->__devices list
-would have the same effect as my alternate search routine, but I don't
-know which would be better.  I can't think of any solution that
-wouldn't touch the existing SCSI layer, though.
 
--- 
-Jim Ramsay
-"Me fail English?  That's unpossible!"
+--nFreZHaLTZJo0R7j
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+(replying to an old thread, as a I just discovered it)
+
+On Wed, Jun 08, 2005 at 11:14:45AM +0200, Bartlomiej Zolnierkiewicz wrote:
+> Second look into sis5513.c and another problem turns out - patch breaks 
+> support for IDE controllers integrated into 961 and 961B South Bridges
+> (ATA_133 is used instead of ATA_100 and ATA133a).
+> 
+> For unknown Host Bridges driver checks for presence of 961/961B/962/963
+> South Bridges by checking true device ID (please see sis5513.c for details) 
+> and assigns 'chipset_family' accordingly (ATA_100/ATA_133a or ATA_133).
+> 
+> You have 965L South Bridge so probably it has newer true device ID 
+> and  may also require different programming sequence.
+I also have an ASUS K8S-MX with a SiS 760GX/SiS 965L as in this thread.
+The attached patch, modified from one for the 964L by Arnaud Patard/Uwe
+Koziolek, against 2.6.13-rc6-mm2, works for me and should do things properly.
+
+I've been running it for the last couple of days with a bit of heavy I/O
+(testing) and have seen no problems as yet.
+
+If anyone out there has one of these mb/chipset combos and could try to
+see if it fixes anything, or if anyone has feedback, I'd be happy to
+adjust the patch, etc.
+
+--nFreZHaLTZJo0R7j
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="sis5513-965.patch"
+
+--- drivers/ide/pci/sis5513.c.orig	2005-08-27 12:37:26.000000000 +1000
++++ drivers/ide/pci/sis5513.c	2005-08-27 11:11:54.000000000 +1000
+@@ -42,7 +42,7 @@
+  * Fortunately the 5513 can be 'unmasked' by fiddling with some config space
+  * bits, changing its device id to the true one - 5517 for 961 and 5518 for
+  * 962/963.
+- */
++ */ 
+ 
+ #include <linux/config.h>
+ #include <linux/types.h>
+@@ -726,7 +726,7 @@
+ */
+ 
+ /* Chip detection and general config */
+-static unsigned int __devinit init_chipset_sis5513 (struct pci_dev *dev, const char *name)
++static unsigned int __init init_chipset_sis5513 (struct pci_dev *dev, const char *name)
+ {
+ 	struct pci_dev *host;
+ 	int i = 0;
+@@ -778,6 +778,15 @@
+ 					printk(KERN_INFO "SIS5513: Switching to 5513 register mapping\n");
+ 				}
+ 			}
++			else if (trueid == 0x180) { /* sis965L */
++				u16 pci_command;
++				pci_read_config_word(dev, PCI_COMMAND, &pci_command);
++				pci_command &= ~PCI_COMMAND_INTX_DISABLE;
++				pci_write_config_word(dev, PCI_COMMAND, pci_command);
++				chipset_family = ATA_133;
++				printk(KERN_INFO "SIS5513: SiS 965 IDE UDMA133 controller\n");
++			}
++
+ 	}
+ 
+ 	if (!chipset_family) { /* Belongs to pci-quirks */
+@@ -879,7 +888,7 @@
+ 	return 0;
+ }
+ 
+-static unsigned int __devinit ata66_sis5513 (ide_hwif_t *hwif)
++static unsigned int __init ata66_sis5513 (ide_hwif_t *hwif)
+ {
+ 	u8 ata66 = 0;
+ 
+@@ -897,7 +906,7 @@
+         return ata66;
+ }
+ 
+-static void __devinit init_hwif_sis5513 (ide_hwif_t *hwif)
++static void __init init_hwif_sis5513 (ide_hwif_t *hwif)
+ {
+ 	hwif->autodma = 0;
+ 
+@@ -952,6 +961,7 @@
+ static struct pci_device_id sis5513_pci_tbl[] = {
+ 	{ PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_5513, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+ 	{ PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_5518, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
++        { PCI_VENDOR_ID_SI, 0x180,                 PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+ 	{ 0, },
+ };
+ MODULE_DEVICE_TABLE(pci, sis5513_pci_tbl);
+
+--nFreZHaLTZJo0R7j--
