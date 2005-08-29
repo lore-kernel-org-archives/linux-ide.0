@@ -1,54 +1,43 @@
 From: Erik Slagter <erik@slagter.name>
 Subject: Re: TX4000 RAID and sata_promise
-Date: Mon, 29 Aug 2005 10:52:06 +0200
-Message-ID: <1125305526.31694.75.camel@localhost.localdomain>
-References: <923172921.20050828173310@rccb.ru>
+Date: Mon, 29 Aug 2005 10:57:26 +0200
+Message-ID: <1125305846.31694.79.camel@localhost.localdomain>
+References: <15736083109.20050828210820@rccb.ru>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-HhOEyudmS6sgqFEkZebo"
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-9aK1w642Bl88I4R8OhgF"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oldconomy.demon.nl ([212.238.217.56]:20964 "EHLO
+Received: from oldconomy.demon.nl ([212.238.217.56]:34438 "EHLO
 	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S1750793AbVH2Iwd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Aug 2005 04:52:33 -0400
-In-Reply-To: <923172921.20050828173310@rccb.ru>
+	id S1750866AbVH2I6H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Aug 2005 04:58:07 -0400
+In-Reply-To: <15736083109.20050828210820@rccb.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Yuri Kirsanov <flash@rccb.ru>
 Cc: linux-ide@vger.kernel.org
 
 
---=-HhOEyudmS6sgqFEkZebo
+--=-9aK1w642Bl88I4R8OhgF
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2005-08-28 at 17:33 +0400, Yuri Kirsanov wrote:
-> Good day. I've tried latest kernel 2.6.13-rc7, TX4000 support seems to
-> be in sata_promise already. After startup I see following in dmesg:
->=20
-> libata version 1.12 loaded.
-> sata_promise version 1.02
-> PCI: Found IRQ 5 for device 0000:01:09.0
-> ata1: PATA max UDMA/133 cmd 0xCC81C200 ctl 0xCC81C238 bmdma 0x0 irq 5
-> ata2: PATA max UDMA/133 cmd 0xCC81C280 ctl 0xCC81C2B8 bmdma 0x0 irq 5
-> ata3: PATA max UDMA/133 cmd 0xCC81C300 ctl 0xCC81C338 bmdma 0x0 irq 5
-> ata4: PATA max UDMA/133 cmd 0xCC81C380 ctl 0xCC81C3B8 bmdma 0x0 irq 5
-> ata1: no device found (phy stat 00000000)
-> scsi0 : sata_promise
-> ata2: no device found (phy stat 00000000)
-> scsi1 : sata_promise
-> ata3: no device found (phy stat 00000000)
-> scsi2 : sata_promise
-> ata4: no device found (phy stat 00000000)
-> scsi3 : sata_promise
->=20
->=20
-> Anybody has any ideas? As I can see, my TX4000 is found by
-> sata_promise, it even detects it's UDMA modes, but it still can't find
-> any of my hard drives, while TX4000 BIOS shows all of them ok.
+On Sun, 2005-08-28 at 21:08 +0400, Yuri Kirsanov wrote:
+> As you can see, only one hard drive is connected to my TX4000, and
+> because I disabled sata check I get abnormal status on another ports.
+> But my hard drive works just fine! I'm looking forward to attach
+> another hard drive and create RAID in TX4000 BIOS. I wonder, will
+> sata_promise detect two disks on two ports, or just one thru BIOS?
 
-Maybe you have to enable PATA support in include/libata.h?
+As mentioned before, don't use the promise softraid, you're much better
+of using the linux kernel raid implementation. Yes I know you need to
+configure "something" in the bios to make it continue booting ;-) I
+suggest making all your harddisks a stripe.
 
---=-HhOEyudmS6sgqFEkZebo
+Strange nobody answers your TX4000 mails. I could only explain that by
+the topic having been discussed over and over, but that doesn't seem to
+be the case (at least not in the last month).
+
+--=-9aK1w642Bl88I4R8OhgF
 Content-Type: application/x-pkcs7-signature; name=smime.p7s
 Content-Disposition: attachment; filename=smime.p7s
 Content-Transfer-Encoding: base64
@@ -84,13 +73,13 @@ sZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa9/eH1sYITq726jTlEBpbNU1341YheILc
 IRk13iSx0x1G/11fZU8xggHvMIIB6wIBATBpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3
 dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1h
 aWwgSXNzdWluZyBDQQIDD1NzMAkGBSsOAwIaBQCgXTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcB
-MBwGCSqGSIb3DQEJBTEPFw0wNTA4MjkwODUyMDZaMCMGCSqGSIb3DQEJBDEWBBQOgkJ8s7o6Xrks
-4ezE2ZY2MhO6IDANBgkqhkiG9w0BAQEFAASCAQC2oELY/edaQJX0i3AjvSQ1mrUvJ6SnrYh6ezF2
-x6Ys8MnlAuTn44Q1LFnqLjzGr08H38HEDBAc0mucS4GmBggcytOuSrqHJEkEk0wyM3JQO8MpOUPS
-l+Kzj9tRrIvPJ/lLlmmXa2oiSmf3ZH3gOZnIBqQQpscM0BxEXW/d4u1BZU7PJR25TtLazE11Kn5b
-WDQU2LxomvMsq0rsmyfcimgHSi9jr8G4j20gqz60DcKwTse2Atr1DYfKxWJN6mJHLp+jbfrGUE5Y
-MXwOAW4DdUK4Zpos7Ktm/tCnHJOvMq61WwzIVB+IjIv3lc/TWyWOC0OTkFACs6I24hSvitSCugD/
+MBwGCSqGSIb3DQEJBTEPFw0wNTA4MjkwODU3MjZaMCMGCSqGSIb3DQEJBDEWBBRmSQVl/vu9yhk+
+DgHHW9AaGp7pojANBgkqhkiG9w0BAQEFAASCAQApv5eQlmCeHKNmdpISeqhRfi5zE4f7tAov+rvO
+mNMkZtpm/6vJFaQvnSHs60mYfPeIh5mnmP9HXruHo5YVAWCilcG5uynpjpUa9etC3OlMTxzSdJzA
+MtFVyvfEixX38g6gHB/a3dHPm/8zEP99ZCPeZuKwV8+jPATdtJ+ExXsM6ibg+qR9nSqTGSIhQmLe
+1q5cGqdvp1lFJCukL66Vk/xL7FrvFQG9YDkLVOPv2424HwTvSWF2LWuZcjQYY7VemL37TyYAhOVW
+JuVPmmBaFNbLEuzaOQfOO8vZAJIBJvPV+mBRXuWffwdp3uGpU/YakPdcXgn0/YSNDCZRFQGso0Bu
 AAAAAAAA
 
 
---=-HhOEyudmS6sgqFEkZebo--
+--=-9aK1w642Bl88I4R8OhgF--
