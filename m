@@ -1,111 +1,83 @@
-From: Wes Newell <w.newell@verizon.net>
-Subject: Re: Sis180 Jetway S755Max
-Date: Mon, 29 Aug 2005 12:58:55 -0500
-Message-ID: <43134CDF.2060106@verizon.net>
-References: <m31x4pkhjb.fsf@anduin.mandrakesoft.com>	<4309A268.8090203@gmx.net>
- <430AA69A.1030307@verizon.net>	<430AD885.4080001@gmx.net>
- <430B63D1.6080108@verizon.net>	<m3fyt02y2t.fsf@anduin.mandrakesoft.com>
- <430B91C1.6040407@verizon.net> <430B9D0A.3060202@gmx.net>
- <430C11C7.8010308@verizon.net> <m3ek8cswgd.fsf@anduin.mandrakesoft.com>
+From: Yuri Kirsanov <flash@cln.ru>
+Subject: Re: [PATCH] TX4000 RAID and sata_promise
+Date: Mon, 29 Aug 2005 22:10:26 +0400
+Message-ID: <1775043734.20050829221026@rccb.ru>
+References: <00a701c5acba$4653f8d0$6f0aa8c0@rgkb.local>
+Reply-To: Yuri Kirsanov <flash@cln.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vms044pub.verizon.net ([206.46.252.44]:7636 "EHLO
-	vms044pub.verizon.net") by vger.kernel.org with ESMTP
-	id S1751188AbVH2R4Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Aug 2005 13:56:24 -0400
-Received: from [192.168.0.2] ([71.244.20.31])
- by vms044.mailsrvcs.net (Sun Java System Messaging Server 6.2 HotFix 0.04
- (built Dec 24 2004)) with ESMTPA id <0ILZ00BL7WI0SEU0@vms044.mailsrvcs.net> for
- linux-ide@vger.kernel.org; Mon, 29 Aug 2005 12:56:24 -0500 (CDT)
-In-reply-to: <m3ek8cswgd.fsf@anduin.mandrakesoft.com>
+Received: from [213.85.106.102] ([213.85.106.102]:20667 "EHLO rccb.ru")
+	by vger.kernel.org with ESMTP id S1751256AbVH2SK1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Aug 2005 14:10:27 -0400
+In-Reply-To: <00a701c5acba$4653f8d0$6f0aa8c0@rgkb.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnaud Patard <apatard@mandriva.com>
-Cc: Uwe Koziolek <uwe.koziolek@gmx.net>, "linux.ide" <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com
 
-Arnaud Patard wrote:
+Wonderful, Jeff! Thanks a lot, now my TX4000 can be used under Linux
+just ok! :) Without hacking libata-core.c. So, I suggest you to
+include your patch for correct TX4000 work into further kernel
+releases.
 
->Wes Newell <w.newell@verizon.net> writes:
->
->  
->
->>Uwe Koziolek wrote:
->>
->>    
->>
->>>Hello Wes,
->>>
->>>i include for you a hothack for SiS180 into the sata5513, untested and
->>>not pretty.
->>>
->>>      
->>>
->>I tried this one first. It found the controller but errored out. here
->>the relevant dmesg.
->>
->>Linux version 2.6.11-12mdkcustom (root@wes2.com) (gcc version 3.4.3
->>(Mandrakelinux 10.2 3.4.3-7mdk)) #1 Tue Aug 23 23:58:08 CDT 2005
->>
->>SIS5513: IDE controller at PCI slot 0000:00:0c.0
->>SIS5513: chipset revision 0
->>SIS5513: IDE controller at PCI slot 0000:00:0c.0
->>SIS5513: chipset revision 0
->>SIS_IDE: probe of 0000:00:0c.0 failed with error -1
->>    
->>
->strange.. it's like the driver didn't recognize your chipset. According
->to Jetway you have a 963L MuTIOL chipset which is afaik supported by the
->driver.
->  
->
+Now, only two small things disturbs me:
+1. My hard drives are now online, but on any other free ports I see
+error message like these:
 
-Yes, it has the 963, but it ALSO has a real SIS180 on it. That's where 
-the problem lies, not with the 963. The 963 ide ports work fine with the 
-stock 5513 driver.
+libata version 1.11 loaded.
+sata_promise version 1.01
+PCI: Found IRQ 5 for device 0000:01:0a.0
+ata1: PATA max UDMA/133 cmd 0xCC802200 ctl 0xCC802238 bmdma 0x0 irq 5
+ata2: PATA max UDMA/133 cmd 0xCC802280 ctl 0xCC8022B8 bmdma 0x0 irq 5
+ata3: PATA max UDMA/133 cmd 0xCC802300 ctl 0xCC802338 bmdma 0x0 irq 5
+ata4: PATA max UDMA/133 cmd 0xCC802380 ctl 0xCC8023B8 bmdma 0x0 irq 5
+ata1: dev 0 cfg 49:0f00 82:346b 83:5b01 84:4003 85:3469 86:1a01 87:4003 88:407f
+ata1: dev 0 ATA, max UDMA/133, 40132503 sectors:
+ata1: dev 0 configured for UDMA/33
+scsi0 : sata_promise
+ATA: abnormal status 0x8 on port 0xCC80229C
+ata2: disabling port
+scsi1 : sata_promise
+ATA: abnormal status 0x8 on port 0xCC80231C
+ata3: disabling port
+scsi2 : sata_promise
+ATA: abnormal status 0x8 on port 0xCC80239C
+ata4: disabling port
+scsi3 : sata_promise
+  Vendor: ATA       Model: MAXTOR 6L020J1    Rev: A93.
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 40132503 512-byte hdwr sectors (20548 MB)
+SCSI device sda: drive cache: write back
+SCSI device sda: 40132503 512-byte hdwr sectors (20548 MB)
+SCSI device sda: drive cache: write back
+ /dev/scsi/host0/bus0/target0/lun0: unknown partition table
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
 
->Could you try the sis5113.c I've attached ? It's the same one as the one
->submitted by Uwe. I only added some silly printks.
->
->  
->
->>>additional i include the patch submitted by Arnaud Patard.
->>>
->>>      
->>>
->>I'm not sure how or to which sata_sis.c file to apply this. I've got
->>the one that came with the above kernel, and then I've got the one I
->>    
->>
->
->the sata_sis from the 2.6.11-12mdk is the same as the one on kernel.org.
->
->  
->
->>downloaded from SIS that locks up the system when a pata drive is
->>installed on the sis180. The first was simple enough, just replaced
->>the original sis5513.c and recompiled the kernel. Don't know what to
->>do with this one.
->>
->>    
->>
->>>If the last one works, it is the better solution, with chances to be
->>>included into the kernel.
->>>
->>>      
->>>
->> the sata_sis patch suppossed to add pata support. Can't tell from
->>his message and the code is greek to me.
->>    
->>
->
->I've configured the registers of the card when in pata mode but it's not
->tested (I've only a SiS964L and SiS182 handy). I've only tested SATA
->mode for SiS180 and SiS182. 
->
->  
->
-Ok, I've give this a try first.
+Maybe I should apply some additional patch to correct "Abnormal status
+0x8 on port", or this is correct behaviour and I can just ignore it?
 
+2. Module sata_promise only starts when I include SCSI disk support
+with sata_promise as a built-in into a kernel.
+(and only together, when I've tried to include SCSI disk support
+WITHOUT built-in sata_promise - it doesn't work at all.)
+What should I include into my /etc/modules.conf to auto-start libata
+with sata_promise? Doing modprobe sata_promise works just fine, but I
+prefer all TX4000 related modules to be loaded automatically at
+boot-time. And why didn't my kernel automatically setup all necessary
+modules into modprobe.conf?
+
+Thanks a lot for your help!
+
+>> Well, sata_promise definitely should not be attempting to call
+>> sata_phy_reset(), since this is a PATA board.
+>>
+>> Maybe the attached patch will help?
+>>
+>> Jeff
+>>
+>>
+>>
 
