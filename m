@@ -1,86 +1,42 @@
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Subject: [PATCH] IDE: move CONFIG_IDE_MAX_HWIFS into linux/ide.h (resend)
-Date: Mon, 29 Aug 2005 16:51:50 -0600
-Message-ID: <200508291651.50831.bjorn.helgaas@hp.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Promise SATAII150 TX4: strange disk ordering
+Date: Tue, 30 Aug 2005 00:44:35 -0400
+Message-ID: <4313E433.1080602@pobox.com>
+References: <430E4AB0.2060600@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from atlrel6.hp.com ([156.153.255.205]:16582 "EHLO atlrel6.hp.com")
-	by vger.kernel.org with ESMTP id S1751318AbVH2WwH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Aug 2005 18:52:07 -0400
-Content-Disposition: inline
+Received: from mail.dvmed.net ([216.237.124.58]:6596 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932123AbVH3Eom (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Aug 2005 00:44:42 -0400
+In-Reply-To: <430E4AB0.2060600@eyal.emu.id.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rth@twiddle.net, ink@jurassic.park.msu.ru, lethal@linux-sh.org, kkojima@rr.iij4u.or.jp, linux-sh@m17n.org
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: linux-ide@vger.kernel.org
 
-Ping...  any objection to this?
+Eyal Lebedinsky wrote:
+> I needed a 4-port SATA controller and this was was picked. It seems
+> to work OK, however I find that Linux (2.6.12.5 and .13-rc7) see
+> the disks in a different order than the labelled sockets (which do
+> match what the BIOS detection lists at bootup).
+> 
+> It is not even the reverse order:
+> 	TX4 socket	sata_promise ata*
+> 	1		4
+> 	2		2
+> 	3		1
+> 	4		3
+> This order looks stable - I connected a different number of disks
+> on some ports and this ordering was maintained.
+
+sata_promise driver just presents the devices in the order that the 
+board maker has wired each port to the chip.  What may be labelled "port 
+3" on the board might be wired to the chip's port-0.  sata_promise just 
+presents what it is given.
+
+	Jeff
 
 
-CONFIG_IDE_MAX_HWIFS is a generic thing, no need to have it duplicated
-by every arch that uses it.
 
-Signed-off-by: Bjorn Helgaas <bjorn.helgaas@hp.com>
-
-Index: work-ide/include/asm-alpha/ide.h
-===================================================================
---- work-ide.orig/include/asm-alpha/ide.h	2005-08-24 09:36:41.000000000 -0600
-+++ work-ide/include/asm-alpha/ide.h	2005-08-24 09:37:12.000000000 -0600
-@@ -15,10 +15,6 @@
- 
- #include <linux/config.h>
- 
--#ifndef MAX_HWIFS
--#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
--#endif
--
- #define IDE_ARCH_OBSOLETE_DEFAULTS
- 
- static inline int ide_default_irq(unsigned long base)
-Index: work-ide/include/asm-sh/ide.h
-===================================================================
---- work-ide.orig/include/asm-sh/ide.h	2005-08-24 09:36:41.000000000 -0600
-+++ work-ide/include/asm-sh/ide.h	2005-08-24 09:37:12.000000000 -0600
-@@ -16,10 +16,6 @@
- 
- #include <linux/config.h>
- 
--#ifndef MAX_HWIFS
--#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
--#endif
--
- #define ide_default_io_ctl(base)	(0)
- 
- #include <asm-generic/ide_iops.h>
-Index: work-ide/include/asm-sh64/ide.h
-===================================================================
---- work-ide.orig/include/asm-sh64/ide.h	2005-08-24 09:36:41.000000000 -0600
-+++ work-ide/include/asm-sh64/ide.h	2005-08-24 09:37:12.000000000 -0600
-@@ -17,10 +17,6 @@
- 
- #include <linux/config.h>
- 
--#ifndef MAX_HWIFS
--#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
--#endif
--
- /* Without this, the initialisation of PCI IDE cards end up calling
-  * ide_init_hwif_ports, which won't work. */
- #ifdef CONFIG_BLK_DEV_IDEPCI
-Index: work-ide/include/linux/ide.h
-===================================================================
---- work-ide.orig/include/linux/ide.h	2005-08-24 09:37:03.000000000 -0600
-+++ work-ide/include/linux/ide.h	2005-08-24 09:37:24.000000000 -0600
-@@ -266,6 +266,10 @@
- 
- #include <asm/ide.h>
- 
-+#ifndef MAX_HWIFS
-+#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
-+#endif
-+
- /* needed on alpha, x86/x86_64, ia64, mips, ppc32 and sh */
- #ifndef IDE_ARCH_OBSOLETE_DEFAULTS
- # define ide_default_io_base(index)	(0)
