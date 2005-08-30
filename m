@@ -1,46 +1,33 @@
-From: Brett Russ <russb@emc.com>
-Subject: [PATCH 2.6.13] Fix pio_mask values
-Date: Tue, 30 Aug 2005 15:03:09 -0400 (EDT)
-Message-ID: <20050830190309.E14FE20F4C@lns1058.lss.emc.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932344AbVH3TDT@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [RFC][PATCH 2.6.13] Marvell SATA support (PIO mode)
+Date: Tue, 30 Aug 2005 16:48:04 -0400
+Message-ID: <4314C604.4030208@pobox.com>
+References: <20050830183625.BEE1520F4C@lns1058.lss.emc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:60619 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932458AbVH3UsS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Aug 2005 16:48:18 -0400
+In-Reply-To: <20050830183625.BEE1520F4C@lns1058.lss.emc.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brett Russ <russb@emc.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-ata_get_mode_mask() has PIO modes 3 and 4 as bits 3 and 4 in the pio_mask
-since the value read from the drive is shifted left by 3 bits and OR'd with
-0x7 (which corresponds to PIO 2-0).  Thus, the drivers below need adjustments
-to comply with the way pio_mask is used.  I left the masks in a state which
-agrees with the existing comments; perhaps they all should get 0x1f to
-indicate driver support for PIO4-0 but that can be done later.
+Brett Russ wrote:
+> This is the first public release of my libata compatible low level driver for
+> the Marvell SATA family.  Currently it successfully runs in PIO mode on a 6081
+> chip.  EDMA support is in the works and should be done shortly.  Review,
+> testing (especially on other flavors of Marvell), comments welcome.
 
-Signed-off-by: Brett Russ <russb@emc.com>
+Even though its only PIO, if you feel this is stable, I would like to 
+get it into upstream soon-ish.
+
+Current version looks OK to me.
+
+	Jeff
 
 
-Index: linux-2.6.13/drivers/scsi/ahci.c
-===================================================================
---- linux-2.6.13.orig/drivers/scsi/ahci.c
-+++ linux-2.6.13/drivers/scsi/ahci.c
-@@ -244,7 +244,7 @@ static struct ata_port_info ahci_port_in
- 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
- 				  ATA_FLAG_PIO_DMA,
--		.pio_mask	= 0x03, /* pio3-4 */
-+		.pio_mask	= 0x18, /* pio3-4 */
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
- 		.port_ops	= &ahci_ops,
- 	},
-Index: linux-2.6.13/drivers/scsi/sata_uli.c
-===================================================================
---- linux-2.6.13.orig/drivers/scsi/sata_uli.c
-+++ linux-2.6.13/drivers/scsi/sata_uli.c
-@@ -120,7 +120,7 @@ static struct ata_port_info uli_port_inf
- 	.sht            = &uli_sht,
- 	.host_flags     = ATA_FLAG_SATA | ATA_FLAG_SATA_RESET |
- 			  ATA_FLAG_NO_LEGACY,
--	.pio_mask       = 0x03,		//support pio mode 4 (FIXME)
-+	.pio_mask       = 0x10,		//support pio mode 4 (FIXME)
- 	.udma_mask      = 0x7f,		//support udma mode 6
- 	.port_ops       = &uli_ops,
- };
+
