@@ -1,131 +1,63 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: [PATCH] Add VIA VT6410 support
-Date: Tue, 30 Aug 2005 15:27:15 +0100
-Message-ID: <43146CC3.4010005@gentoo.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [RFC] libata new EH document
+Date: Tue, 30 Aug 2005 09:27:02 -0500
+Message-ID: <1125412023.5037.15.camel@mulgrave>
+References: <20050829061124.GA2725@htj.dyndns.org>
+	 <43142279.3070004@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040009050504060302000608"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932154AbVH3O1R@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: bzolnier@gmail.com, jgarzik@pobox.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, posting@blx4.net, vsu@altlinux.ru
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:21920 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932152AbVH3O2O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Aug 2005 10:28:14 -0400
+In-Reply-To: <43142279.3070004@tw.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
-This is a multi-part message in MIME format.
---------------040009050504060302000608
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+On Tue, 2005-08-30 at 17:10 +0800, Albert Lee wrote:
+> Could we get the sense data before calling qc->scsidone()?  (Using the 
+> proposed separate
+> EH qc can keep the original qc intact.)
 
-Jeff/Bart,
+Well, the way most SCSI drivers do it today is to turn around the
+command returning Check Condition from irq context.  This is sort of
+like ACA simulation.  The reason it's done is because while a drive
+holds a contingent allegiance condition it cannot accept other commands.
+This effectively holds everything in abeyance until the sense is taken,
+so for fast operation, SCSI drivers take the sense as soon as possible.
 
-Can of you please apply this to a git tree and get this included in 2.6.14. 
-The patch is about 6 months old and has been included in Gentoo kernels for 
-about 3 months, and we've recieved multiple success reports.
+Ideally, though this mechanism should be deprecated because it causes us
+to keep a complete copy of the old command and parameters around which
+is a hit in the command allocation and set up fast path.
 
-I sent a mail to Bart at the end of June asking about this, and Sergey Vlasov 
-recently asked the same question on LKML. If the patch isn't acceptable then 
-please at least say _something_ :)
+> The issue:
+> When a DVD drive returns MEDIUM_ERROR in the sense data, libata doesn't 
+> retry the command.
+> 
+> For libata, when scsi_softirq() calls scsi_decide_disposition() and 
+> scsi_check_sense() to determine
+> how to handle the result, scsi_check_sense() always returns "fail" since 
+> the sense data is not there
+> yet. The sense data is requested later in the libata error handler. But 
+> the command has already been
+> considered as an "error".
+> 
+> By having the sense data ready before calling qc->scsidone(), we can 
+> make the
+> NEEDS_RETRY work in scsi_softirq().  So, for things like MEDIUM_ERROR, 
+> the device has
+> a chance to retry/recover the error. This seems to be important for 
+> devices with built-in
+> defect management system.
 
-Thanks!
+It sounds like the ATA error handler is missing the sense interpretation
+part.  If you look at the scsi error handler, we will request sense and
+then redecide the disposition based on the return.
 
---
-
-From: Mathias Kretschmer <posting@blx4.net>
-
-Add VIA VT6410 IDE support
-
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
+James
 
 
---------------040009050504060302000608
-Content-Type: text/x-patch;
- name="4300_via-vt6410.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="4300_via-vt6410.patch"
-
-diff -Naru a/drivers/ide/pci/via82cxxx.c b/drivers/ide/pci/via82cxxx.c
---- a/drivers/ide/pci/via82cxxx.c	2005-05-06 11:22:48 -07:00
-+++ b/drivers/ide/pci/via82cxxx.c	2005-05-06 11:22:48 -07:00
-@@ -79,6 +79,7 @@
- 	u8 rev_max;
- 	u16 flags;
- } via_isa_bridges[] = {
-+	{ "vt6410",	PCI_DEVICE_ID_VIA_6410,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
- 	{ "vt8237",	PCI_DEVICE_ID_VIA_8237,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
- 	{ "vt8235",	PCI_DEVICE_ID_VIA_8235,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
- 	{ "vt8233a",	PCI_DEVICE_ID_VIA_8233A,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
-@@ -616,24 +617,35 @@
- 	hwif->drives[1].autodma = hwif->autodma;
- }
- 
--static ide_pci_device_t via82cxxx_chipset __devinitdata = {
--	.name		= "VP_IDE",
--	.init_chipset	= init_chipset_via82cxxx,
--	.init_hwif	= init_hwif_via82cxxx,
--	.channels	= 2,
--	.autodma	= NOAUTODMA,
--	.enablebits	= {{0x40,0x02,0x02}, {0x40,0x01,0x01}},
--	.bootable	= ON_BOARD,
-+static ide_pci_device_t via82cxxx_chipsets[] __devinitdata = {
-+	{	/* 0 */
-+		.name		= "VP_IDE",
-+		.init_chipset	= init_chipset_via82cxxx,
-+		.init_hwif	= init_hwif_via82cxxx,
-+		.channels	= 2,
-+		.autodma	= NOAUTODMA,
-+		.enablebits	= {{0x40,0x02,0x02}, {0x40,0x01,0x01}},
-+		.bootable	= ON_BOARD
-+	},{	/* 1 */
-+		.name		= "VP_IDE",
-+		.init_chipset	= init_chipset_via82cxxx,
-+		.init_hwif	= init_hwif_via82cxxx,
-+		.channels	= 2,
-+		.autodma	= AUTODMA,
-+		.enablebits	= {{0x00,0x00,0x00}, {0x00,0x00,0x00}},
-+		.bootable	= ON_BOARD,
-+	}
- };
- 
- static int __devinit via_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- {
--	return ide_setup_pci_device(dev, &via82cxxx_chipset);
-+	return ide_setup_pci_device(dev, &via82cxxx_chipsets[id->driver_data]);
- }
- 
- static struct pci_device_id via_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C576_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{ PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C586_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+	{ PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_6410,     PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, via_pci_tbl);
-diff -Naru a/include/linux/pci_ids.h b/include/linux/pci_ids.h
---- a/include/linux/pci_ids.h	2005-05-06 11:22:48 -07:00
-+++ b/include/linux/pci_ids.h	2005-05-06 11:22:48 -07:00
-@@ -1280,6 +1280,7 @@
- #define PCI_DEVICE_ID_VIA_8703_51_0	0x3148
- #define PCI_DEVICE_ID_VIA_8237_SATA	0x3149
- #define PCI_DEVICE_ID_VIA_XN266		0x3156
-+#define PCI_DEVICE_ID_VIA_6410		0x3164
- #define PCI_DEVICE_ID_VIA_8754C_0	0x3168
- #define PCI_DEVICE_ID_VIA_8235		0x3177
- #define PCI_DEVICE_ID_VIA_P4N333	0x3178
-# This is a BitKeeper generated diff -Nru style patch.
-#
-# ChangeSet
-#   2005/02/11 19:31:17+01:00 bzolnier@trik.(none) 
-#   [ide via82cxxx] add VIA VT6410 support
-#   
-#   From: Mathias Kretschmer <posting@blx4.net>
-# 
-# drivers/ide/pci/via82cxxx.c
-#   2005/02/11 19:31:06+01:00 bzolnier@trik.(none) +21 -9
-#   [ide via82cxxx] add VIA VT6410 support
-# 
-# include/linux/pci_ids.h
-#   2005/02/11 19:31:06+01:00 bzolnier@trik.(none) +1 -0
-#   [ide via82cxxx] add VIA VT6410 support
-# 
-
---------------040009050504060302000608--
