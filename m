@@ -1,68 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFC] libata new EH document
-Date: Tue, 30 Aug 2005 19:26:41 +0900
-Message-ID: <43143461.7040606@gmail.com>
-References: <20050829061124.GA2725@htj.dyndns.org> <43142279.3070004@tw.ibm.com>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: Promise SATAII150 TX4: strange disk ordering
+Date: Tue, 30 Aug 2005 20:31:59 +1000
+Message-ID: <4314359F.2070100@eyal.emu.id.au>
+References: <430E4AB0.2060600@eyal.emu.id.au> <4313E433.1080602@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.202]:48554 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751283AbVH3K0t (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Aug 2005 06:26:49 -0400
-Received: by wproxy.gmail.com with SMTP id i14so1157291wra
-        for <linux-ide@vger.kernel.org>; Tue, 30 Aug 2005 03:26:48 -0700 (PDT)
-In-Reply-To: <43142279.3070004@tw.ibm.com>
+Received: from omta03sl.mx.bigpond.com ([144.140.92.155]:27062 "EHLO
+	omta03sl.mx.bigpond.com") by vger.kernel.org with ESMTP
+	id S1751186AbVH3KcG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Aug 2005 06:32:06 -0400
+In-Reply-To: <4313E433.1080602@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Albert Lee wrote:
+Jeff Garzik wrote:
+> Eyal Lebedinsky wrote:
+> 
+>> I needed a 4-port SATA controller and this was was picked. It seems
+>> to work OK, however I find that Linux (2.6.12.5 and .13-rc7) see
+>> the disks in a different order than the labelled sockets (which do
+>> match what the BIOS detection lists at bootup).
 >>
->> 4. Corresponding scmd's result code is set to
->>    SAM_STAT_CHECK_CONDITION and qc->scsidone() callback is called
->>    directly.  As we haven't filled sense data,
->>    scsi_determine_disposition() will return FAILED and SCSI EH will
->>    be scheduled.  Note that as we directly call qc->scsidone(), qc is
->>    left intact.
->>  
->>
+>> It is not even the reverse order:
+>>     TX4 socket    sata_promise ata*
+>>     1        4
+>>     2        2
+>>     3        1
+>>     4        3
+>> This order looks stable - I connected a different number of disks
+>> on some ports and this ordering was maintained.
 > 
-> Could we get the sense data before calling qc->scsidone()?  (Using the 
-> proposed separate
-> EH qc can keep the original qc intact.)
 > 
-> The issue:
-> When a DVD drive returns MEDIUM_ERROR in the sense data, libata doesn't 
-> retry the command.
+> sata_promise driver just presents the devices in the order that the
+> board maker has wired each port to the chip.  What may be labelled "port
+> 3" on the board might be wired to the chip's port-0.  sata_promise just
+> presents what it is given.
 > 
-> For libata, when scsi_softirq() calls scsi_decide_disposition() and 
-> scsi_check_sense() to determine
-> how to handle the result, scsi_check_sense() always returns "fail" since 
-> the sense data is not there
-> yet. The sense data is requested later in the libata error handler. But 
-> the command has already been
-> considered as an "error".
-> 
-> By having the sense data ready before calling qc->scsidone(), we can 
-> make the
-> NEEDS_RETRY work in scsi_softirq().  So, for things like MEDIUM_ERROR, 
-> the device has
-> a chance to retry/recover the error. This seems to be important for 
-> devices with built-in
-> defect management system.
+>     Jeff
 
-  There are two ways a scmd can leave EH - retry by scsi_queue_insert() 
-and finish by scsi_finish_cmd().  I think the problem you described can 
-be easily solved by choosing the former method when finishing the qc 
-from EH.  Note that other advanced EH stuff like reconfiguring transport 
-speed also requires retrying, so we will surely have a mechanism for 
-retrying failed qc's from EH.
+Seeing how people trust these number, the confusion is risky. I may
+remove the wrong raid disk when it is reported offline and lose the
+lot.
 
-  Wouldn't that be enough?
+If we know the wiring (I assume this is stable for each board) why
+not arrange the logical ports accordingly? Much more user friendly.
 
-  Thanks.
+Thanks
 
 -- 
-tejun
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+	attach .zip as .dat
