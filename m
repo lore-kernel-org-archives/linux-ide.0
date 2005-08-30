@@ -1,136 +1,285 @@
-From: Wes Newell <w.newell@verizon.net>
-Subject: Re: Sis180 Jetway S755Max
-Date: Tue, 30 Aug 2005 02:46:01 -0500
-Message-ID: <43140EB9.6070902@verizon.net>
-References: <m31x4pkhjb.fsf@anduin.mandrakesoft.com>	<4309A268.8090203@gmx.net>
- <430AA69A.1030307@verizon.net>	<430AD885.4080001@gmx.net>
- <430B63D1.6080108@verizon.net>	<m3fyt02y2t.fsf@anduin.mandrakesoft.com>
- <430B91C1.6040407@verizon.net> <430B9D0A.3060202@gmx.net>
- <430C11C7.8010308@verizon.net> <m3ek8cswgd.fsf@anduin.mandrakesoft.com>
- <43134CDF.2060106@verizon.net>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [RFC] libata new EH document
+Date: Tue, 30 Aug 2005 17:10:17 +0800
+Message-ID: <43142279.3070004@tw.ibm.com>
+References: <20050829061124.GA2725@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vms048pub.verizon.net ([206.46.252.48]:16005 "EHLO
-	vms048pub.verizon.net") by vger.kernel.org with ESMTP
-	id S1751186AbVH3Hne (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Aug 2005 03:43:34 -0400
-Received: from [192.168.0.2] ([71.244.20.31])
- by vms048.mailsrvcs.net (Sun Java System Messaging Server 6.2 HotFix 0.04
- (built Dec 24 2004)) with ESMTPA id <0IM000LQ4YS729G6@vms048.mailsrvcs.net> for
- linux-ide@vger.kernel.org; Tue, 30 Aug 2005 02:43:19 -0500 (CDT)
-In-reply-to: <43134CDF.2060106@verizon.net>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:32989 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751293AbVH3JLE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Aug 2005 05:11:04 -0400
+In-Reply-To: <20050829061124.GA2725@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnaud Patard <apatard@mandriva.com>
-Cc: Uwe Koziolek <uwe.koziolek@gmx.net>, "linux.ide" <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
 
-Wes Newell wrote:
+Tejun Heo wrote:
 
-> Arnaud Patard wrote:
+> Hello, Jeff, Albert & ATA developers.
 >
->> Wes Newell <w.newell@verizon.net> writes:
->>
->>  
->>
->>> Uwe Koziolek wrote:
->>>
->>>   
->>>
->>>> Hello Wes,
->>>>
->>>> i include for you a hothack for SiS180 into the sata5513, untested and
->>>> not pretty.
->>>>
->>>>     
->>>
->>> I tried this one first. It found the controller but errored out. here
->>> the relevant dmesg.
->>>
->>> Linux version 2.6.11-12mdkcustom (root@wes2.com) (gcc version 3.4.3
->>> (Mandrakelinux 10.2 3.4.3-7mdk)) #1 Tue Aug 23 23:58:08 CDT 2005
->>>
->>> SIS5513: IDE controller at PCI slot 0000:00:0c.0
->>> SIS5513: chipset revision 0
->>> SIS5513: IDE controller at PCI slot 0000:00:0c.0
->>> SIS5513: chipset revision 0
->>> SIS_IDE: probe of 0000:00:0c.0 failed with error -1
->>>   
->>
->> strange.. it's like the driver didn't recognize your chipset. According
->> to Jetway you have a 963L MuTIOL chipset which is afaik supported by the
->> driver.
->>  
->>
+> This is the final one of recent document series for libata EH - SCSI
+>EH, ATA exceptions, libata EH and, this one - libata new EH.
 >
-> Yes, it has the 963, but it ALSO has a real SIS180 on it. That's where 
-> the problem lies, not with the 963. The 963 ide ports work fine with 
-> the stock 5513 driver.
+> This document tries to discuss how to implement new advanced EH.  It
+>also describes some proposed mechanisms in detail.  I'm aware that
+>things are vague without actual code, but I still think this document
+>alone can at least help discussion if nothing else.  As long as some
+>consensus is reached regarding general desing, I'll follow up with
+>patches.
 >
->> Could you try the sis5113.c I've attached ? It's the same one as the one
->> submitted by Uwe. I only added some silly printks.
->>
->>  
->>
->>>> additional i include the patch submitted by Arnaud Patard.
->>>>
->>>>     
->>>
->>> I'm not sure how or to which sata_sis.c file to apply this. I've got
->>> the one that came with the above kernel, and then I've got the one I
->>>   
->>
->>
->> the sata_sis from the 2.6.11-12mdk is the same as the one on kernel.org.
->>
->>  
->>
->>> downloaded from SIS that locks up the system when a pata drive is
->>> installed on the sis180. The first was simple enough, just replaced
->>> the original sis5513.c and recompiled the kernel. Don't know what to
->>> do with this one.
->>>
->>>   
->>>
->>>> If the last one works, it is the better solution, with chances to be
->>>> included into the kernel.
->>>>
->>>>     
->>>
->>> the sata_sis patch suppossed to add pata support. Can't tell from
->>> his message and the code is greek to me.
->>>   
->>
->>
->> I've configured the registers of the card when in pata mode but it's not
->> tested (I've only a SiS964L and SiS182 handy). I've only tested SATA
->> mode for SiS180 and SiS182.
->>  
->>
-> Ok, I've give this a try first.
+> Jeff, a lot are from my previous new EH/NCQ patchset but also quite
+>a bit has changed (for better, I hope).
 >
-Didn't work. syslog output:
-(with no drive attached)
-Aug 30 02:22:34 wes2 kernel: libata version 1.10 loaded.
-Aug 30 02:22:34 wes2 kernel: ata1: SATA max UDMA/133 cmd 0xDC00 ctl 
-0xE002 bmdma 0xEC00 irq 19
-Aug 30 02:22:34 wes2 kernel: ata2: SATA max UDMA/133 cmd 0xE400 ctl 
-0xE802 bmdma 0xEC08 irq 19
-Aug 30 02:22:34 wes2 kernel: ata1: no device found (phy stat c033c754)
-Aug 30 02:22:34 wes2 kernel: scsi1 : sata_sis
-Aug 30 02:22:35 wes2 kernel: ata2: no device found (phy stat c033c754)
-Aug 30 02:22:35 wes2 kernel: scsi2 : sata_sis
+> Thanks.
+>
+>
+>libata new EH
+>======================================
+>
+> As discussed in the previous libata EH doc, the current libata EH
+>needs some improvements.  This document discusses goals of new libata
+>EH and how to reach them.  Please read SCSI EH, ATA exceptions and
+>libata EH documents first.
+>
+>TABLE OF CONTENTS
+>
+>[1] Goals & design choices
+>    [1-1] Use SCSI hostt->eh_strategy_handler()
+>    [1-2] Unified error path in an EH thread
+>    [1-3] Synchronization
+>    [1-4] Clean mechanism to hand off qc's to EH
+>    [1-5] Separate EH qc
+>    [1-6] SCSI/libata separation
+>[2] Designs
+>    [2-1] Handoff of failed qc's
+>    [2-2] Timed out scmd's and qc's
+>    [2-3] Summary of [2-1] and [2-2]
+>    [2-4] EH processing & completion
+>[3] Ideas
+>    [3-1] Using EH for non-error exceptions and dynamic reconfiguration
+>    [3-2] Using EH for host_set level exclusion
+>[4] Implementation plan
+>
+>
+>[1] Goals & design choices
+>
+> The final goal is implementing advanced error handling as described
+>in ATA exceptions document including NCQ EH, dynamic transport
+>reconfiguration and non-error exception handling for power management
+>and hot plugging.
+>
+> The followings are sub goals and design choices to reach the final
+>goal.
+>
+>
+>[1-1] Use SCSI hostt->eh_strategy_handler()
+>
+>    We have two other alternatives here - one is using fine-grained
+>    SCSI EH callbacks and the other is implementing separate EH for
+>    libata.
+>
+>    Using fine-grained SCSI EH callbacks is possible, but it has too
+>    much SCSI/SPI assumptions in it - ATA error handling can be quite
+>    different from SCSI error handling.  Also, as described in the
+>    SCSI EH doc, it issues several SCSI commands for recovery.  They
+>    can be translated but recovery through translation is a bit
+>    creepy, IMHO.
+>
+>    The second option - private EH implementation - is attractive in
+>    that it will be better integrated into libata.  However,
+>    implementing a full EH when a generic framwork is already in place
+>    doesn't make a lot of people happy.  And, I think integration
+>    problems can be worked around without too much trouble.
+>
+>    The basic semantics of eh_strategy_handler() are
+>
+>    - Full context EH.
+>
+>    - After EH is started, all normal command processing is suspended
+>      until EH is complete.
+>
+>    - Once EH is determined to be necessary, active commands are
+>      drained by suppressing all command issuing and waiting for
+>      in-flight commands.  When EH is finally entered, all active
+>      commands are failed commands.
+>
+>    IMO, above semantics are fairly fundamental to block device error
+>    handling and, in the future, to whatever framework libata
+>    migrates, assuming above semantics shouldn't hurt too much.
+>
+>
+>[1-2] Unified error path in an EH thread
+>
+>    Currently EH is scattered around several places including the
+>    interrupt handler and polling tasks.  This is problemetic for the
+>    following reasons.
+>
+>    a. Full EH context is required for error handling.
+>
+>       Advanced recovery usually involves resetting, command issuing
+>       and other blocking operations.
+>
+>    b. Simple errors may trigger complex error handling behavior.
+>
+>       For example, when an ABRT error occurs, reporting to upper
+>       layer is sufficent for most cases; however, repeated ABRT
+>       errors for known-to-be-supported commands might indicate too
+>       high transmission speed.  In such cases, full EH context is
+>       required to perform error handling.
+>
+>    c. Scattered complex EH is difficult to implement and maintain.
+>
+>       EH logic can be somewhat complex and scattering won't help
+>       implementing and maintaining it.  Also, libata low level
+>       drivers are allowed to override callbacks where part of EH
+>       logic may reside making matters worse.
+>
+>
+>[1-3] Synchronization
+>
+>    A simple & concrete qc synchronization model to make sure that EH
+>    and any other processing don't occur concurrently is needed.
+>
+>
+>[1-4] Clean mechanism to hand off qc's to EH
+>
+>    For EH to handle errors and timeouts, letting EH deal with and
+>    complete both errored and timed out qc's is good for simplicity
+>    and consistency.  To achieve this, we need a mechanism to hand off
+>    a qc to EH.
+>
+>    Currently, libata EH has a similar mechanism to hand off a failed
+>    ATAPI qc to EH.  As described in libata EH doc, such qc is
+>    half-completed and used as place holder until EH is kicked in and
+>    handles it.
+>
+>    This half-completion isn't very clean semantically and requires
+>    calling splitted internal completion routines directly.  Also, as
+>    such qc's are not explicitly marked as failed, not-very-intuitive
+>    stuff has to be done to avoid spurious interrupts or other events
+>    from messing with it after error has occurred.
+>
+>
+>[1-5] Separate EH qc
+>
+>    EH needs to issue qc's for recovery.  There can be several ways to
+>    allocate EH qc.
+>
+>    a. reserve one extra qc for internal/EH commands
+>    b. reserve one of normal qc's
+>    c. use failed qc
+>    d. complete failed qc first and reuse it
+>
+>    The preferred choice is #a for the following reasons.
+>
+>    - Allowing only one concurrent internal command is okay as long as
+>      proper allocation mechanism is implemented or only one user is
+>      guaranteed.
+>
+>    - EH commands are restricted to non-NCQ commands, so reserving an
+>      extra qc won't break qc to tag mapping.
+>
+>    - #b is impossible for non-NCQ devices because only one qc is
+>      available.
+>
+>    - #c requires dancing with qc's internals.  No real nerd likes
+>       dancing.
+>
+>    - It may be necessary to issue commands to determine whether to
+>      finish or retry a qc, so #d is out.
+>
+>
+>[1-6] SCSI/libata separation
+>
+>    Internal libata EH logic implementation should be free from SCSI
+>    considerations.  All glueing work should be localized to EH
+>    frontend and once in the actual error handling EH should only deal
+>    with qc's.
+>
+>
+>[2] Designs
+>
+> This section proposes detailed design of several important mechanisms
+>to help discussion and verification.
+>
+>
+>[2-1] Handoff of failed qc's
+>
+> As described above, when normal command processing determines that a
+>qc has failed, those qc's have to be handed off to EH without being
+>lost.
+>
+> A new qc flag ATA_QCFLAG_ERROR is defined to mark qc's which have
+>failed and ata_qc_error() is defined to be used by command processing
+>to mark failed qc and schedule EH.  ata_qc_error() has to be called
+>under the same condition as ata_qc_complete() - under host_lock - and
+>performs the following.
+>
+> 1. First check if the command is already marked with
+>    ATA_QCFLAG_ERROR.  If so, this isn't the first error completion
+>    attempt, just return.
+>
+> 2. Mark the qc with ATA_QCFLAG_ERROR.
+>
+> 3. As, currently, SCSI command issuing is not atomic with respect to
+>    SHOST_RECOVERY flag, we need a separate atomic mechanism to plug
+>    command issuing.  Per-port flag ATA_FLAG_ERROR is set here to
+>    prevent further command issuing.
+>
+> 4. Corresponding scmd's result code is set to
+>    SAM_STAT_CHECK_CONDITION and qc->scsidone() callback is called
+>    directly.  As we haven't filled sense data,
+>    scsi_determine_disposition() will return FAILED and SCSI EH will
+>    be scheduled.  Note that as we directly call qc->scsidone(), qc is
+>    left intact.
+>  
+>
 
-(with  drive attached)
-Aug 30 02:28:24 wes2 kernel: libata version 1.10 loaded.
-Aug 30 02:28:24 wes2 kernel: ata1: SATA max UDMA/133 cmd 0xDC00 ctl 
-0xE002 bmdma 0xEC00 irq 19
-Aug 30 02:28:24 wes2 kernel: ata2: SATA max UDMA/133 cmd 0xE400 ctl 
-0xE802 bmdma 0xEC08 irq 19
-Aug 30 02:28:24 wes2 kernel: ata1: no device found (phy stat 00000000)
-Aug 30 02:28:24 wes2 kernel: scsi2 : sata_sis
-Aug 30 02:28:24 wes2 kernel: ata2: no device found (phy stat 00000000)
-Aug 30 02:28:24 wes2 kernel: scsi3 : sata_sis
+Could we get the sense data before calling qc->scsidone()?  (Using the 
+proposed separate
+EH qc can keep the original qc intact.)
+
+The issue:
+When a DVD drive returns MEDIUM_ERROR in the sense data, libata doesn't 
+retry the command.
+
+For libata, when scsi_softirq() calls scsi_decide_disposition() and 
+scsi_check_sense() to determine
+how to handle the result, scsi_check_sense() always returns "fail" since 
+the sense data is not there
+yet. The sense data is requested later in the libata error handler. But 
+the command has already been
+considered as an "error".
+
+By having the sense data ready before calling qc->scsidone(), we can 
+make the
+NEEDS_RETRY work in scsi_softirq().  So, for things like MEDIUM_ERROR, 
+the device has
+a chance to retry/recover the error. This seems to be important for 
+devices with built-in
+defect management system.
+
+> After above function is complete, the following conditions are true.
+>
+> a. The qc has ATA_QCFLAG_ERROR set and no further normal qc
+>    processing will happen for the command.
+>
+> b. No new qc will be issued for the port.
+>
+> c. EH is scheduled.
+>
+> d. Corresponding scmd and qc are left alone until EH processes them.
+>
+> Note that to achieve above behavior, we need to modify other places
+>too.  e.g. ata_qc_complete() needs to be modified to ignore failed
+>qc's and command issuing part to fail issuing if ATA_FLAG_ERROR is
+>set.
+>
+>
+>  
+>
 
 
