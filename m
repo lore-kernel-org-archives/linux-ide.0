@@ -1,285 +1,547 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [RFC] libata new EH document
-Date: Tue, 30 Aug 2005 17:10:17 +0800
-Message-ID: <43142279.3070004@tw.ibm.com>
-References: <20050829061124.GA2725@htj.dyndns.org>
+From: "Ruben Moretti" <moretti@labor-enders.de>
+Subject: sata_sx4 Question
+Date: Tue, 30 Aug 2005 11:50:10 +0200
+Message-ID: <004d01c5ad48$36256c80$1e0a1eac@mmoretti>
+Reply-To: "Ruben Moretti" <moretti@labor-enders.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed	reply-type=original
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:32989 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751293AbVH3JLE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Aug 2005 05:11:04 -0400
-In-Reply-To: <20050829061124.GA2725@htj.dyndns.org>
+Received: from ad96e11b2.dsl.de.colt.net ([217.110.17.178]:37022 "EHLO
+	linus.labor-enders.de") by vger.kernel.org with ESMTP
+	id S1750796AbVH3Ju1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Aug 2005 05:50:27 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
+Hello Jeff and Co ;)
 
-> Hello, Jeff, Albert & ATA developers.
->
-> This is the final one of recent document series for libata EH - SCSI
->EH, ATA exceptions, libata EH and, this one - libata new EH.
->
-> This document tries to discuss how to implement new advanced EH.  It
->also describes some proposed mechanisms in detail.  I'm aware that
->things are vague without actual code, but I still think this document
->alone can at least help discussion if nothing else.  As long as some
->consensus is reached regarding general desing, I'll follow up with
->patches.
->
-> Jeff, a lot are from my previous new EH/NCQ patchset but also quite
->a bit has changed (for better, I hope).
->
-> Thanks.
->
->
->libata new EH
->======================================
->
-> As discussed in the previous libata EH doc, the current libata EH
->needs some improvements.  This document discusses goals of new libata
->EH and how to reach them.  Please read SCSI EH, ATA exceptions and
->libata EH documents first.
->
->TABLE OF CONTENTS
->
->[1] Goals & design choices
->    [1-1] Use SCSI hostt->eh_strategy_handler()
->    [1-2] Unified error path in an EH thread
->    [1-3] Synchronization
->    [1-4] Clean mechanism to hand off qc's to EH
->    [1-5] Separate EH qc
->    [1-6] SCSI/libata separation
->[2] Designs
->    [2-1] Handoff of failed qc's
->    [2-2] Timed out scmd's and qc's
->    [2-3] Summary of [2-1] and [2-2]
->    [2-4] EH processing & completion
->[3] Ideas
->    [3-1] Using EH for non-error exceptions and dynamic reconfiguration
->    [3-2] Using EH for host_set level exclusion
->[4] Implementation plan
->
->
->[1] Goals & design choices
->
-> The final goal is implementing advanced error handling as described
->in ATA exceptions document including NCQ EH, dynamic transport
->reconfiguration and non-error exception handling for power management
->and hot plugging.
->
-> The followings are sub goals and design choices to reach the final
->goal.
->
->
->[1-1] Use SCSI hostt->eh_strategy_handler()
->
->    We have two other alternatives here - one is using fine-grained
->    SCSI EH callbacks and the other is implementing separate EH for
->    libata.
->
->    Using fine-grained SCSI EH callbacks is possible, but it has too
->    much SCSI/SPI assumptions in it - ATA error handling can be quite
->    different from SCSI error handling.  Also, as described in the
->    SCSI EH doc, it issues several SCSI commands for recovery.  They
->    can be translated but recovery through translation is a bit
->    creepy, IMHO.
->
->    The second option - private EH implementation - is attractive in
->    that it will be better integrated into libata.  However,
->    implementing a full EH when a generic framwork is already in place
->    doesn't make a lot of people happy.  And, I think integration
->    problems can be worked around without too much trouble.
->
->    The basic semantics of eh_strategy_handler() are
->
->    - Full context EH.
->
->    - After EH is started, all normal command processing is suspended
->      until EH is complete.
->
->    - Once EH is determined to be necessary, active commands are
->      drained by suppressing all command issuing and waiting for
->      in-flight commands.  When EH is finally entered, all active
->      commands are failed commands.
->
->    IMO, above semantics are fairly fundamental to block device error
->    handling and, in the future, to whatever framework libata
->    migrates, assuming above semantics shouldn't hurt too much.
->
->
->[1-2] Unified error path in an EH thread
->
->    Currently EH is scattered around several places including the
->    interrupt handler and polling tasks.  This is problemetic for the
->    following reasons.
->
->    a. Full EH context is required for error handling.
->
->       Advanced recovery usually involves resetting, command issuing
->       and other blocking operations.
->
->    b. Simple errors may trigger complex error handling behavior.
->
->       For example, when an ABRT error occurs, reporting to upper
->       layer is sufficent for most cases; however, repeated ABRT
->       errors for known-to-be-supported commands might indicate too
->       high transmission speed.  In such cases, full EH context is
->       required to perform error handling.
->
->    c. Scattered complex EH is difficult to implement and maintain.
->
->       EH logic can be somewhat complex and scattering won't help
->       implementing and maintaining it.  Also, libata low level
->       drivers are allowed to override callbacks where part of EH
->       logic may reside making matters worse.
->
->
->[1-3] Synchronization
->
->    A simple & concrete qc synchronization model to make sure that EH
->    and any other processing don't occur concurrently is needed.
->
->
->[1-4] Clean mechanism to hand off qc's to EH
->
->    For EH to handle errors and timeouts, letting EH deal with and
->    complete both errored and timed out qc's is good for simplicity
->    and consistency.  To achieve this, we need a mechanism to hand off
->    a qc to EH.
->
->    Currently, libata EH has a similar mechanism to hand off a failed
->    ATAPI qc to EH.  As described in libata EH doc, such qc is
->    half-completed and used as place holder until EH is kicked in and
->    handles it.
->
->    This half-completion isn't very clean semantically and requires
->    calling splitted internal completion routines directly.  Also, as
->    such qc's are not explicitly marked as failed, not-very-intuitive
->    stuff has to be done to avoid spurious interrupts or other events
->    from messing with it after error has occurred.
->
->
->[1-5] Separate EH qc
->
->    EH needs to issue qc's for recovery.  There can be several ways to
->    allocate EH qc.
->
->    a. reserve one extra qc for internal/EH commands
->    b. reserve one of normal qc's
->    c. use failed qc
->    d. complete failed qc first and reuse it
->
->    The preferred choice is #a for the following reasons.
->
->    - Allowing only one concurrent internal command is okay as long as
->      proper allocation mechanism is implemented or only one user is
->      guaranteed.
->
->    - EH commands are restricted to non-NCQ commands, so reserving an
->      extra qc won't break qc to tag mapping.
->
->    - #b is impossible for non-NCQ devices because only one qc is
->      available.
->
->    - #c requires dancing with qc's internals.  No real nerd likes
->       dancing.
->
->    - It may be necessary to issue commands to determine whether to
->      finish or retry a qc, so #d is out.
->
->
->[1-6] SCSI/libata separation
->
->    Internal libata EH logic implementation should be free from SCSI
->    considerations.  All glueing work should be localized to EH
->    frontend and once in the actual error handling EH should only deal
->    with qc's.
->
->
->[2] Designs
->
-> This section proposes detailed design of several important mechanisms
->to help discussion and verification.
->
->
->[2-1] Handoff of failed qc's
->
-> As described above, when normal command processing determines that a
->qc has failed, those qc's have to be handed off to EH without being
->lost.
->
-> A new qc flag ATA_QCFLAG_ERROR is defined to mark qc's which have
->failed and ata_qc_error() is defined to be used by command processing
->to mark failed qc and schedule EH.  ata_qc_error() has to be called
->under the same condition as ata_qc_complete() - under host_lock - and
->performs the following.
->
-> 1. First check if the command is already marked with
->    ATA_QCFLAG_ERROR.  If so, this isn't the first error completion
->    attempt, just return.
->
-> 2. Mark the qc with ATA_QCFLAG_ERROR.
->
-> 3. As, currently, SCSI command issuing is not atomic with respect to
->    SHOST_RECOVERY flag, we need a separate atomic mechanism to plug
->    command issuing.  Per-port flag ATA_FLAG_ERROR is set here to
->    prevent further command issuing.
->
-> 4. Corresponding scmd's result code is set to
->    SAM_STAT_CHECK_CONDITION and qc->scsidone() callback is called
->    directly.  As we haven't filled sense data,
->    scsi_determine_disposition() will return FAILED and SCSI EH will
->    be scheduled.  Note that as we directly call qc->scsidone(), qc is
->    left intact.
->  
->
+ I'm running 2.6.12 /2.6.13 kernel on a single CPU (P4-Celeron)/Fedora.=
+=20
+Board  ASROCK 775V88 with 2 Sata ports onboard. (sata_via)
+With two promise SX4 cards serving seven SATA HDs on their seven channe=
+ls=20
+(RAID). [Card1 Port 2,3,4  - Card2 Port 2,3,4]
+Now  I added  HDDs to the controller 1 or 2. All HDs are connected as=20
+master; one HD per channel.
+Now wenn i add the HDDs on  Ports 1, I get errors for the  added HD,  a=
+nd=20
+for the previously installed ones.
+There's no irq problem and no HD or controller problem (checked this by=
+=20
+cross-changing).
+Tested with kernels 2.6.12 /2.6.13
+Log File, one with and one without HDD on Port 1 [Both Cards with HDDs =
+on=20
+Port 2,3,4]
 
-Could we get the sense data before calling qc->scsidone()?  (Using the 
-proposed separate
-EH qc can keep the original qc intact.)
+Any more ideas?
+Thanks in advance
 
-The issue:
-When a DVD drive returns MEDIUM_ERROR in the sense data, libata doesn't 
-retry the command.
+Ruben Moretti
 
-For libata, when scsi_softirq() calls scsi_decide_disposition() and 
-scsi_check_sense() to determine
-how to handle the result, scsi_check_sense() always returns "fail" since 
-the sense data is not there
-yet. The sense data is requested later in the libata error handler. But 
-the command has already been
-considered as an "error".
 
-By having the sense data ready before calling qc->scsidone(), we can 
-make the
-NEEDS_RETRY work in scsi_softirq().  So, for things like MEDIUM_ERROR, 
-the device has
-a chance to retry/recover the error. This seems to be important for 
-devices with built-in
-defect management system.
 
-> After above function is complete, the following conditions are true.
->
-> a. The qc has ATA_QCFLAG_ERROR set and no further normal qc
->    processing will happen for the command.
->
-> b. No new qc will be issued for the port.
->
-> c. EH is scheduled.
->
-> d. Corresponding scmd and qc are left alone until EH processes them.
->
-> Note that to achieve above behavior, we need to modify other places
->too.  e.g. ata_qc_complete() needs to be modified to ignore failed
->qc's and command issuing part to fail issuing if ATA_FLAG_ERROR is
->set.
->
->
->  
->
+--- Snip with HDD on Port 1 Card 1
+Linux version 2.6.12-1.1447_FC4 (bhcompile@decompose.build.redhat.com) =
+(gcc=20
+version 4.0.1 20050727 (Red Hat 4.0.1-5)) #1 Fri Aug 26 20:29:51 EDT 20=
+05
+BIOS-provided physical RAM map:
+ BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
+ BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
+ BIOS-e820: 00000000000e4000 - 0000000000100000 (reserved)
+ BIOS-e820: 0000000000100000 - 000000003ffb0000 (usable)
+ BIOS-e820: 000000003ffb0000 - 000000003ffc0000 (ACPI data)
+ BIOS-e820: 000000003ffc0000 - 000000003fff0000 (ACPI NVS)
+ BIOS-e820: 000000003fff0000 - 0000000040000000 (reserved)
+ BIOS-e820: 00000000fffc0000 - 0000000100000000 (reserved)
+127MB HIGHMEM available.
+896MB LOWMEM available.
+Using x86 segment limits to approximate NX protection
+DMI 2.3 present.
+Allocating PCI resources starting at 40000000 (gap: 40000000:bffc0000)
+Built 1 zonelists
+Kernel command line: ro root=3D/dev/md3 acpi=3Doff pci=3Dnoacpi ide=3Dn=
+odma=20
+console=3DttyS0 console=3Dtty0
+ide_setup: ide=3Dnodma : Prevented DMA
+Initializing CPU#0
+CPU 0 irqstacks, hard=3Dc0458000 soft=3Dc0457000
+PID hash table entries: 4096 (order: 12, 65536 bytes)
+Detected 2684.955 MHz processor.
+Using tsc for high-res timesource
+Console: colour VGA+ 80x25
+Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
+Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
+Memory: 1033384k/1048256k available (2518k kernel code, 14048k reserved=
+,=20
+690k data, 184k init, 130752k highmem)
+Checking if this processor honours the WP bit even in supervisor mode..=
+=2E Ok.
+Security Framework v1.0.0 initialized
+SELinux:  Initializing.
+SELinux:  Starting in permissive mode
+selinux_register_security:  Registering secondary module capability
+Capability LSM initialized as secondary
+Mount-cache hash table entries: 512
+monitor/mwait feature present.
+using mwait in idle threads.
+CPU: Trace cache: 12K uops, L1 D cache: 16K
+CPU: L2 cache: 256K
+Intel machine check architecture supported.
+Intel machine check reporting enabled on CPU#0.
+CPU0: Intel P4/Xeon Extended MCE MSRs (24) available
+CPU: Intel(R) Celeron(R) CPU 2.80GHz stepping 01
+Enabling fast FPU save and restore... done.
+Enabling unmasked SIMD FPU exception support... done.
+Checking 'hlt' instruction... OK.
+checking if image is initramfs... it is
+=46reeing initrd memory: 1199k freed
+NET: Registered protocol family 16
+PCI: Using configuration type 1
+mtrr: v2.0 (20020519)
+ACPI: Subsystem revision 20050729
+ACPI: Interpreter disabled.
+Linux Plug and Play Support v0.97 (c) Adam Belay
+pnp: PnP ACPI: disabled
+usbcore: registered new driver usbfs
+usbcore: registered new driver hub
+PCI: Probing PCI hardware
+PCI: Probing PCI hardware (bus 00)
+PCI: Using IRQ router default [1106/3227] at 0000:00:11.0
+PCI: IRQ 0 for device 0000:00:0f.1 doesn't match PIRQ mask - try=20
+pci=3Dusepirqmask
+apm: BIOS not found.
+audit: initializing netlink socket (disabled)
+audit(1125392498.474:1): initialized
+highmem bounce pool size: 64 pages
+Total HugeTLB memory allocated, 0
+VFS: Disk quotas dquot_6.5.1
+Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+SELinux:  Registering netfilter hooks
+Initializing Cryptographic API
+ksign: Installing public key data
+Loading keyring
+- Added public key 1C1942C715575330
+- User ID: Red Hat, Inc. (Kernel Module GPG key)
+pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+isapnp: Scanning for PnP cards...
+isapnp: No Plug & Play device found
+Real Time Clock Driver v1.12
+Linux agpgart interface v0.101 (c) Dave Jones
+agpgart: Detected VIA PT880 chipset
+agpgart: AGP aperture is 64M @ 0xf8000000
+PNP: No PS/2 controller found. Probing ports directly.
+serio: i8042 AUX port at 0x60,0x64 irq 12
+serio: i8042 KBD port at 0x60,0x64 irq 1
+Serial: 8250/16550 driver $Revision: 1.90 $ 76 ports, IRQ sharing enabl=
+ed
+=FFttyS0 at I/O 0x3f8 (irq =3D 4) is a 16550A
+io scheduler noop registered
+io scheduler anticipatory registered
+io scheduler deadline registered
+io scheduler cfq registered
+RAMDISK driver initialized: 16 RAM disks of 16384K size 1024 blocksize
+Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebu=
+s=3Dxx
+VP_IDE: IDE controller at PCI slot 0000:00:0f.1
+PCI: IRQ 0 for device 0000:00:0f.1 doesn't match PIRQ mask - try=20
+pci=3Dusepirqmask
+PCI: Via IRQ fixup for 0000:00:0f.1, from 255 to 0
+VP_IDE: chipset revision 6
+VP_IDE: not 100% native mode: will probe irqs later
+VP_IDE: VIA vt8237 (rev 00) IDE UDMA133 controller on pci0000:00:0f.1
+    ide0: BM-DMA at 0xfc00-0xfc07, BIOS settings: hda:DMA, hdb:pio
+    ide1: BM-DMA at 0xfc08-0xfc0f, BIOS settings: hdc:DMA, hdd:DMA
+hda: WDC WD400BB-23DEA0, ATA DISK drive
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+hdc: WDC WD400BB-23DEA0, ATA DISK drive
+hdd: GCR-8523B, ATAPI CD/DVD-ROM drive
+ide1 at 0x170-0x177,0x376 on irq 15
+hda: max request size: 128KiB
+hda: Host Protected Area detected.
+        current capacity is 78156288 sectors (40016 MB)
+        native  capacity is 78165360 sectors (40020 MB)
+hda: Host Protected Area disabled.
+hda: 78165360 sectors (40020 MB) w/2048KiB Cache, CHS=3D65535/16/63
+hda: cache flushes not supported
+ hda: hda1 hda2 hda3
+hdc: max request size: 128KiB
+hdc: Host Protected Area detected.
+        current capacity is 78156288 sectors (40016 MB)
+        native  capacity is 78165360 sectors (40020 MB)
+hdc: Host Protected Area disabled.
+hdc: 78165360 sectors (40020 MB) w/2048KiB Cache, CHS=3D65535/16/63
+hdc: cache flushes not supported
+ hdc: hdc1 hdc2 hdc3
+hdd: ATAPI 52X CD-ROM drive, 128kB Cache
+Uniform CD-ROM driver Revision: 3.20
+ide-floppy driver 0.99.newide
+usbcore: registered new driver hiddev
+usbcore: registered new driver usbhid
+drivers/usb/input/hid-core.c: v2.01:USB HID core driver
+mice: PS/2 mouse device common for all mice
+md: md driver 0.90.1 MAX_MD_DEVS=3D256, MD_SB_DISKS=3D27
+NET: Registered protocol family 2
+IP: routing cache hash table of 2048 buckets, 64Kbytes
+TCP established hash table entries: 262144 (order: 9, 2097152 bytes)
+TCP bind hash table entries: 65536 (order: 8, 1835008 bytes)
+TCP: Hash tables configured (established 262144 bind 65536)
+Initializing IPsec netlink socket
+NET: Registered protocol family 1
+NET: Registered protocol family 17
+=46reeing unused kernel memory: 184k freed
+input: AT Translated Set 2 keyboard on isa0060/serio0
+SCSI subsystem initialized
+sata_via(0000:00:0f.0): routed to hard irq line 10
+ata1: SATA max UDMA/133 cmd 0xEC00 ctl 0xE802 bmdma 0xDC00 irq 10
+ata2: SATA max UDMA/133 cmd 0xE400 ctl 0xE002 bmdma 0xDC08 irq 10
+logips2pp: Detected unknown logitech mouse model 1
+input: ImPS/2 Logitech Wheel Mouse on isa0060/serio1
+ata1: dev 0 ATA, max UDMA/133, 398297088 sectors: lba48
+ata1: dev 0 configured for UDMA/133
+scsi0 : sata_via
+ata2: dev 0 ATA, max UDMA/133, 398297088 sectors: lba48
+ata2: dev 0 configured for UDMA/133
+scsi1 : sata_via
+  Vendor: ATA       Model: Maxtor 6L200M0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sda: drive cache: write back
+SCSI device sda: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sda: drive cache: write back
+ sda: sda1
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+  Vendor: ATA       Model: Maxtor 6L200M0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdb: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdb: drive cache: write back
+SCSI device sdb: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdb: drive cache: write back
+ sdb: sdb1
+Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
+Local DIMM ECC Enabled
+ata3: SATA max UDMA/133 cmd 0xF89C0200 ctl 0xF89C0238 bmdma 0x0 irq 5
+ata4: SATA max UDMA/133 cmd 0xF89C0280 ctl 0xF89C02B8 bmdma 0x0 irq 5
+ata5: SATA max UDMA/133 cmd 0xF89C0300 ctl 0xF89C0338 bmdma 0x0 irq 5
+ata6: SATA max UDMA/133 cmd 0xF89C0380 ctl 0xF89C03B8 bmdma 0x0 irq 5
+ata3: dev 0 ATA, max UDMA/133, 398297088 sectors: lba48
+ata3: dev 0 configured for UDMA/133
+scsi2 : sata_sx4
+ata4: dev 0 ATA, max UDMA/133, 398297088 sectors: lba48
+ata4: dev 0 configured for UDMA/133
+scsi3 : sata_sx4
+ata5: dev 0 ATA, max UDMA/133, 398297088 sectors: lba48
+ata5: dev 0 configured for UDMA/133
+scsi4 : sata_sx4
+ata6: dev 0 ATA, max UDMA/133, 398297088 sectors: lba48
+ata6: dev 0 configured for UDMA/133
+scsi5 : sata_sx4
+  Vendor: ATA       Model: Maxtor 6L200M0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdc: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdc: drive cache: write back
+SCSI device sdc: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdc: drive cache: write back
+ sdc:<3>ata3: command timeout
+ata3: status=3D0x51 { DriveReady SeekComplete Error }
+ata3: called with no error (51)!
+SCSI error : <2 0 0 0> return code =3D 0x8000002
+sdc: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sdc, sector 8
+Buffer I/O error on device sdc, logical block 1
+ata3: command timeout
+ata3: status=3D0x51 { DriveReady SeekComplete Error }
+ata3: called with no error (51)!
+SCSI error : <2 0 0 0> return code =3D 0x8000002
+sdc: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sdc, sector 8
+Buffer I/O error on device sdc, logical block 1
+Dev sdc: unable to read RDB block 8
+ unknown partition table
+Attached scsi disk sdc at scsi2, channel 0, id 0, lun 0
+  Vendor: ATA       Model: Maxtor 6L200M0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdd: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdd: drive cache: write back
+SCSI device sdd: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdd: drive cache: write back
+ sdd:<3>ata4: command timeout
+ata4: status=3D0x51 { DriveReady SeekComplete Error }
+ata4: called with no error (51)!
+SCSI error : <3 0 0 0> return code =3D 0x8000002
+sdd: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sdd, sector 0
+Buffer I/O error on device sdd, logical block 0
+ata4: command timeout
+ata4: status=3D0x51 { DriveReady SeekComplete Error }
+ata4: called with no error (51)!
+SCSI error : <3 0 0 0> return code =3D 0x8000002
+sdd: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sdd, sector 0
+Buffer I/O error on device sdd, logical block 0
+ata4: command timeout
+ata4: status=3D0x51 { DriveReady SeekComplete Error }
+ata4: called with no error (51)!
+SCSI error : <3 0 0 0> return code =3D 0x8000002
+sdd: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sdd, sector 0
+Buffer I/O error on device sdd, logical block 0
+ unable to read partition table
+Attached scsi disk sdd at scsi3, channel 0, id 0, lun 0
+  Vendor: ATA       Model: Maxtor 6L200M0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sde: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sde: drive cache: write back
+SCSI device sde: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sde: drive cache: write back
+ sde:<3>ata5: command timeout
+ata5: status=3D0x51 { DriveReady SeekComplete Error }
+ata5: called with no error (51)!
+SCSI error : <4 0 0 0> return code =3D 0x8000002
+sde: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sde, sector 0
+Buffer I/O error on device sde, logical block 0
+ata5: command timeout
+ata5: status=3D0x51 { DriveReady SeekComplete Error }
+ata5: called with no error (51)!
+SCSI error : <4 0 0 0> return code =3D 0x8000002
+sde: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sde, sector 0
+Buffer I/O error on device sde, logical block 0
+ata5: command timeout
+ata5: status=3D0x51 { DriveReady SeekComplete Error }
+ata5: called with no error (51)!
+SCSI error : <4 0 0 0> return code =3D 0x8000002
+sde: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sde, sector 0
+Buffer I/O error on device sde, logical block 0
+ unable to read partition table
+Attached scsi disk sde at scsi4, channel 0, id 0, lun 0
+  Vendor: ATA       Model: Maxtor 6L200M0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdf: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdf: drive cache: write back
+SCSI device sdf: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdf: drive cache: write back
+ sdf:<3>ata6: command timeout
+ata6: status=3D0x51 { DriveReady SeekComplete Error }
+ata6: called with no error (51)!
+SCSI error : <5 0 0 0> return code =3D 0x8000002
+sdf: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sdf, sector 0
+Buffer I/O error on device sdf, logical block 0
+ata6: command timeout
+ata6: status=3D0x51 { DriveReady SeekComplete Error }
+ata6: called with no error (51)!
+SCSI error : <5 0 0 0> return code =3D 0x8000002
+sdf: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sdf, sector 0
+Buffer I/O error on device sdf, logical block 0
+ata6: command timeout
+ata6: status=3D0x51 { DriveReady SeekComplete Error }
+ata6: called with no error (51)!
+SCSI error : <5 0 0 0> return code =3D 0x8000002
+sdf: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sdf, sector 0
+Buffer I/O error on device sdf, logical block 0
+ unable to read partition table
+Attached scsi disk sdf at scsi5, channel 0, id 0, lun 0
+Local DIMM ECC Enabled
+ata7: SATA max UDMA/133 cmd 0xF8B40200 ctl 0xF8B40238 bmdma 0x0 irq 10
+ata8: SATA max UDMA/133 cmd 0xF8B40280 ctl 0xF8B402B8 bmdma 0x0 irq 10
+ata9: SATA max UDMA/133 cmd 0xF8B40300 ctl 0xF8B40338 bmdma 0x0 irq 10
+ata10: SATA max UDMA/133 cmd 0xF8B40380 ctl 0xF8B403B8 bmdma 0x0 irq 10
+ATA: abnormal status 0x7F on port 0xF8B4021C
+scsi6 : sata_sx4
+ata8: dev 0 ATA, max UDMA/133, 398297088 sectors: lba48
+ata8: dev 0 configured for UDMA/133
+scsi7 : sata_sx4
+ata9: dev 0 ATA, max UDMA/133, 398297088 sectors: lba48
+ata9: dev 0 configured for UDMA/133
+scsi8 : sata_sx4
+ata10: dev 0 ATA, max UDMA/133, 398297088 sectors: lba48
+ata10: dev 0 configured for UDMA/133
+scsi9 : sata_sx4
+  Vendor: ATA       Model: Maxtor 6L200M0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdg: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdg: drive cache: write back
+SCSI device sdg: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdg: drive cache: write back
+ sdg: unknown partition table
+Attached scsi disk sdg at scsi7, channel 0, id 0, lun 0
+  Vendor: ATA       Model: Maxtor 6L200M0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdh: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdh: drive cache: write back
+SCSI device sdh: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdh: drive cache: write back
+ sdh: sdh1
+Attached scsi disk sdh at scsi8, channel 0, id 0, lun 0
+  Vendor: ATA       Model: Maxtor 6L200M0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdi: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdi: drive cache: write back
+SCSI device sdi: 398297088 512-byte hdwr sectors (203928 MB)
+SCSI device sdi: drive cache: write back
+ sdi: sdi1
+Attached scsi disk sdi at scsi9, channel 0, id 0, lun 0
+md: raid1 personality registered as nr 3
+md: Autodetecting RAID arrays.
+md: autorun ...
+------
 
+lspci -v
+00:00.0 Host bridge: VIA Technologies, Inc.: Unknown device 0258
+        Subsystem: ASRock Incorporation: Unknown device 0258
+        Flags: bus master, 66Mhz, medium devsel, latency 8
+        Memory at f8000000 (32-bit, prefetchable) [size=3D64M]
+        Capabilities: [80] AGP version 3.5
+        Capabilities: [50] Power Management version 2
+
+00:00.1 Host bridge: VIA Technologies, Inc. PT880 Host Bridge
+        Subsystem: ASRock Incorporation: Unknown device 1258
+        Flags: bus master, medium devsel, latency 0
+
+00:00.2 Host bridge: VIA Technologies, Inc. PT880 Host Bridge
+        Subsystem: ASRock Incorporation: Unknown device 2258
+        Flags: bus master, medium devsel, latency 0
+
+00:00.3 Host bridge: VIA Technologies, Inc. PT880 Host Bridge
+        Subsystem: ASRock Incorporation: Unknown device 3258
+        Flags: bus master, medium devsel, latency 0
+
+00:00.4 Host bridge: VIA Technologies, Inc. PT880 Host Bridge
+        Subsystem: ASRock Incorporation: Unknown device 4258
+        Flags: bus master, medium devsel, latency 0
+
+00:00.7 Host bridge: VIA Technologies, Inc. PT880 Host Bridge
+        Subsystem: ASRock Incorporation: Unknown device 7258
+        Flags: bus master, medium devsel, latency 0
+
+00:01.0 PCI bridge: VIA Technologies, Inc. VT8237 PCI Bridge (prog-if 0=
+0=20
+[Normal decode])
+        Flags: bus master, 66Mhz, medium devsel, latency 0
+        Bus: primary=3D00, secondary=3D01, subordinate=3D01, sec-latenc=
+y=3D0
+        Memory behind bridge: fc600000-fe6fffff
+        Prefetchable memory behind bridge: f3f00000-f7efffff
+        Capabilities: [70] Power Management version 2
+
+00:0b.0 RAID bus controller: Promise Technology, Inc. PDC20621 [SATA150=
+ SX4]=20
+4 Channel IDE RAID Controller (rev 01)
+        Subsystem: Promise Technology, Inc. PDC20621 [SATA150 SX4] 4 Ch=
+annel=20
+IDE RAID Controller
+        Flags: bus master, 66Mhz, medium devsel, latency 96, IRQ 5
+        I/O ports at b000 [size=3D256]
+        I/O ports at a800 [size=3D256]
+        I/O ports at a400 [size=3D256]
+        Memory at fe900000 (32-bit, non-prefetchable) [size=3D1M]
+        Memory at febd8000 (32-bit, non-prefetchable) [size=3D32K]
+        Expansion ROM at febc0000 [disabled] [size=3D64K]
+        Capabilities: [60] Power Management version 1
+
+00:0d.0 RAID bus controller: Promise Technology, Inc. PDC20621 [SATA150=
+ SX4]=20
+4 Channel IDE RAID Controller (rev 01)
+        Subsystem: Promise Technology, Inc. PDC20621 [SATA150 SX4] 4 Ch=
+annel=20
+IDE RAID Controller
+        Flags: bus master, 66Mhz, medium devsel, latency 96, IRQ 10
+        I/O ports at c000 [size=3D256]
+        I/O ports at b800 [size=3D256]
+        I/O ports at b400 [size=3D256]
+        Memory at fea00000 (32-bit, non-prefetchable) [size=3D1M]
+        Memory at febf0000 (32-bit, non-prefetchable) [size=3D32K]
+        Expansion ROM at febe0000 [disabled] [size=3D64K]
+        Capabilities: [60] Power Management version 1
+
+00:0f.0 RAID bus controller: VIA Technologies, Inc. VIA VT6420 SATA RAI=
+D=20
+Controller (rev 80)
+        Subsystem: ASRock Incorporation: Unknown device 3149
+        Flags: bus master, medium devsel, latency 32, IRQ 10
+        I/O ports at ec00 [size=3D8]
+        I/O ports at e800 [size=3D4]
+        I/O ports at e400 [size=3D8]
+        I/O ports at e000 [size=3D4]
+        I/O ports at dc00 [size=3D16]
+        I/O ports at d800 [size=3D256]
+        Capabilities: [c0] Power Management version 2
+
+00:0f.1 IDE interface: VIA Technologies, Inc.=20
+VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06) (prog-=
+if 8a=20
+[Master SecP PriP])
+        Subsystem: ASRock Incorporation K7VT2 motherboard
+        Flags: bus master, medium devsel, latency 32
+        I/O ports at fc00 [size=3D16]
+        Capabilities: [c0] Power Management version 2
+
+00:11.0 ISA bridge: VIA Technologies, Inc. VT8237 ISA bridge=20
+[KT600/K8T800/K8T890 South]
+        Subsystem: ASRock Incorporation: Unknown device 3227
+        Flags: bus master, stepping, medium devsel, latency 0
+        Capabilities: [c0] Power Management version 2
+
+00:12.0 Ethernet controller: VIA Technologies, Inc. VT6102 [Rhine-II] (=
+rev=20
+78)
+        Subsystem: ASRock Incorporation: Unknown device 3065
+        Flags: bus master, medium devsel, latency 32, IRQ 11
+        I/O ports at d400 [size=3D256]
+        Memory at febffc00 (32-bit, non-prefetchable) [size=3D256]
+        Capabilities: [40] Power Management version 2
+
+01:00.0 VGA compatible controller: nVidia Corporation NV5M64 [RIVA TNT2=
+=20
+Model 64/Model 64 Pro] (rev 15) (prog-if 00 [VGA])
+        Subsystem: PROLINK Microsystems Corp Pixelview RIVA TNT2 M64
+        Flags: bus master, 66Mhz, medium devsel, latency 32, IRQ 11
+        Memory at fd000000 (32-bit, non-prefetchable) [size=3D16M]
+        Memory at f4000000 (32-bit, prefetchable) [size=3D32M]
+        Expansion ROM at fe6f0000 [disabled] [size=3D64K]
+        Capabilities: [60] Power Management version 1
+        Capabilities: [44] AGP version 2.0
+
+
+
+
+
+
+cat /proc/interrupts
+           CPU0
+  0:     217348          XT-PIC  timer
+  1:         44          XT-PIC  i8042
+  2:          0          XT-PIC  cascade
+  4:         12          XT-PIC  serial
+  5:        135          XT-PIC  libata
+  8:          1          XT-PIC  rtc
+ 10:        158          XT-PIC  libata, libata
+ 11:        513          XT-PIC  eth0
+ 12:        101          XT-PIC  i8042
+ 14:       4612          XT-PIC  ide0
+ 15:       5431          XT-PIC  ide1
+NMI:          0
+ERR:          0=20
 
