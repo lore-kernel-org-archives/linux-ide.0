@@ -1,49 +1,62 @@
-From: "Mueller Daniel" <daniel.mueller@siemens.com>
-Subject: patch: sata_promise.c
-Date: Wed, 31 Aug 2005 09:54:13 +0200
-Message-ID: <294F5689D10BCC41B35DD1F24BF210E402FB0E35@KHED163A.ww004.siemens.net>
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [RFC][PATCH 2.6.13] Marvell SATA support (PIO mode)
+Date: Wed, 31 Aug 2005 12:35:44 +0200
+Message-ID: <43158800.6010303@gmail.com>
+References: <20050830183625.BEE1520F4C@lns1058.lss.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dragon3.khe.siemens.de ([195.27.237.233]:33739 "EHLO
-	dragon3.khe.siemens.de") by vger.kernel.org with ESMTP
-	id S932472AbVHaHy3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2005 03:54:29 -0400
-Content-class: urn:content-classes:message
+Received: from wscnet.wsc.cz ([212.80.64.118]:10114 "EHLO wscnet.wsc.cz")
+	by vger.kernel.org with ESMTP id S932318AbVHaKiY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2005 06:38:24 -0400
+In-Reply-To: <20050830183625.BEE1520F4C@lns1058.lss.emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Brett Russ <russb@emc.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Jeff Garzik
- 
-The "Promise FastTrak TX2300 2-Port 3Gb/s SATA RAID 0/1 PCI-Adapter"
-was not detected correctly with vanilla Linux 2.6.13 kernel.
+Brett Russ napsal(a):
 
-With my 2 liner patch applied, the controller works fine.
+>This is the first public release of my libata compatible low level driver for
+>the Marvell SATA family.  Currently it successfully runs in PIO mode on a 6081
+>chip.  EDMA support is in the works and should be done shortly.  Review,
+>testing (especially on other flavors of Marvell), comments welcome.
+>  
+>
+[snip]
 
-some info:
-sata_promise.c - Promise SATA
-#define DRV_NAME        "sata_promise"
-#define DRV_VERSION     "1.02"
+>+static struct pci_device_id mv_pci_tbl[] = {
+>+	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x5040), 0, 0, chip_504x},
+>+	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x5041), 0, 0, chip_504x},
+>+	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x5080), 0, 0, chip_508x},
+>+	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x5081), 0, 0, chip_508x},
+>+
+>+	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x6040), 0, 0, chip_604x},
+>+	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x6041), 0, 0, chip_604x},
+>+	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x6080), 0, 0, chip_608x},
+>+	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x6081), 0, 0, chip_608x},
+>+	{}			/* terminate list */
+>+};
+> <http://localhost/lxr/ident?i=MODULE_DEVICE_TABLE>
+>
+MODULE_DEVICE_TABLE(pci, 
+<http://localhost/lxr/ident?i=MODULE_DEVICE_TABLE>mv_pci_tbl);  here for 
+hotplug
 
-Daniel Mueller
-Siemens AG
+>+
+>+static struct pci_driver mv_pci_driver = {
+>+	.name			= DRV_NAME,
+>+	.id_table		= mv_pci_tbl,
+>+	.probe			= mv_init_one,
+>+	.remove			= ata_pci_remove_one,
+>+};
+>  
+>
+[snip]
 
-------------------- attached udiff patch ----------------------
+-- 
+Jiri Slaby         www.fi.muni.cz/~xslaby
+~\-/~      jirislaby@gmail.com      ~\-/~
+241B347EC88228DE51EE A49C4A73A25004CB2A10
 
---- linux-2.6.13/drivers/scsi/sata_promise.c    2005-08-29
-01:41:01.000000000 +0200
-+++ linux-2.6.13-dm1/drivers/scsi/sata_promise.c        2005-08-31
-09:13:04.030142728 +0200
-@@ -164,6 +164,8 @@
- static struct pci_device_id pdc_ata_pci_tbl[] = {
-        { PCI_VENDOR_ID_PROMISE, 0x3371, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-          board_2037x },
-+       { PCI_VENDOR_ID_PROMISE, 0x3570, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+         board_2037x },
-        { PCI_VENDOR_ID_PROMISE, 0x3571, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-          board_2037x },
-        { PCI_VENDOR_ID_PROMISE, 0x3373, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
