@@ -1,84 +1,56 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Linux Kernel 2.6.13-rc7 (WORKS) (2.6.13, DRQ/System CRASH)
-Date: Wed, 31 Aug 2005 14:09:25 -0400 (EDT)
-Message-ID: <Pine.LNX.4.63.0508311408320.1945@p34>
-References: <Pine.LNX.4.63.0508311328230.1945@p34>
+From: Tyler <pml@dtbb.net>
+Subject: Re: Promise SATAII150 TX4: strange disk ordering
+Date: Wed, 31 Aug 2005 11:31:35 -0700
+Message-ID: <4315F787.3030003@dtbb.net>
+References: <VA.0000198c.018c7ed4@foxhill.co.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964917AbVHaSJ2@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.63.0508311328230.1945@p34>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, akpm@osdl.org, support@promise.com
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, apiszcz@lucidpixels.com
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.tor.primus.ca ([216.254.136.21]:61147 "EHLO
+	smtp-01.primus.ca") by vger.kernel.org with ESMTP id S932363AbVHaSbk
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 Aug 2005 14:31:40 -0400
+Received: from [216.86.99.21] (helo=[192.168.0.28])
+	by smtp-01.primus.ca with esmtpa (Exim 4.50)
+	id 1EAXMz-0003rJ-54
+	for linux-ide@vger.kernel.org; Wed, 31 Aug 2005 14:31:33 -0400
+In-Reply-To: <VA.0000198c.018c7ed4@foxhill.co.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-I do not even have IDE Taskfile Access enabled, so how is the kernel 
-printing these error messages before it freezes?
+First thing you can try Ian, is a vanilla kernel, to rule out ubuntu's 
+custom kernel.  I would suggest trying the vanilla kernel, and the -mm tree.
 
-linux-2.6.13/drivers/ide/ide-taskfile.c:                printk(KERN_ERR 
-"%s: no DRQ after issuing %sWRITE%s\n",
+Tyler.
 
+Ian Oliver wrote:
 
-   lqqqqqqqqqqqqqqqqqqqqqqq ATA/ATAPI/MFM/RLL support qqqqqqqqqqqqqqqqqqqqqqqk
-   x x[ ]     IDE Taskfile Access
-
-
-Anyone have any suggestions how I can solve this problem?
-
-
-On Wed, 31 Aug 2005, Justin Piszcz wrote:
-
-> All,
+>In article <17173.49068.154562.170503@Psilocybe.Update.UU.SE>, Thorild 
+>Selen wrote:
+>  
 >
-> I am trying to get everyone together on this to hopefully solve a serious bug 
-> that I have seen on multiple machines with:
+>>In that case, it could be that the problem only appears on SMP/HT
+>>systems, which would be interesting to know.
+>>    
+>>
 >
-> a) A Promise ATA/133 controller (ATA/100 works OK)
-> b) Kernel 2.6.12 or 2.6.13 (2.6.13-rc7 appears to be OK)
+>I have the problem (maybe!) with a TX2plus/PDC20375 on kernel 2.6.10 
+>(Ubuntu Hoary) on an Ahtlon system (so no HT or SMP)
 >
-> The drive is a Seagate 7200.8 400GB 7200RPM 8MB cache disk.
-> hde: ST3400832A, ATA DISK drive
+>See http://bugzilla.ubuntu.com/show_bug.cgi?id=13046
 >
-> With older kernels, if I *DO NOT ENABLE DMA* it does not crash.
-> If I *ENABLE DMA* then proceed to do anything with the disk, it will FREEZE 
-> the box, no oops, etc, *FREEZE*.
+>Regards
 >
-> hdparm -t /dev/hde
-> mkfs.xfs -f /dev/hde1
->
-> Will freeze the box.
->
-> -------
->
-> Linux Kernel 2.6.13 final experiences the same problems as 2.6.12.5.
->
-> I have e-mailed the list quite a few times with this issue, I am surprised 
-> very few people run into it.
->
-> Here is the error in the logs:
->
-> Aug 31 11:30:25 p34 kernel: hde: dma_timer_expiry: dma status == 0x20
-> Aug 31 11:30:25 p34 kernel: hde: DMA timeout retry
-> Aug 31 11:30:25 p34 kernel: PDC202XX: Primary channel reset.
-> Aug 31 11:30:25 p34 kernel: hde: timeout waiting for DMA
-> Aug 31 11:30:25 p34 kernel: hde: status error: status=0x58 { DriveReady
-> SeekComplete DataRequest }
-> Aug 31 11:30:25 p34 kernel: hde: drive not ready for command
-> Aug 31 11:30:25 p34 kernel: hde: status timeout: status=0xd0 { Busy }
-> Aug 31 11:30:25 p34 kernel: PDC202XX: Primary channel reset.
-> Aug 31 11:30:25 p34 kernel: hde: no DRQ after issuing MULTWRITE_EXT
-> Aug 31 11:30:25 p34 kernel: ide2: reset: success
->
-> After this, the machine locks up with 2.6.13.
->
-> With 2.6.13-rc7, I have not seen this once.
->
-> Can anyone offer any insight to why this is happening? I have a few machines 
-> with the ATA/133 controller and 400GB drives; therefore, I'd prefer to fix 
-> the problem rather than hooking up older, ATA/100 drives, just so I can run 
-> newer kernels...
->
-> Thanks.
+>Ian
 >
 >
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>  
 >
