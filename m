@@ -1,50 +1,47 @@
-From: Thorild Selen <thorild@Update.UU.SE>
-Subject: Re: Promise SATAII150 TX4: strange disk ordering
-Date: Wed, 31 Aug 2005 03:40:15 +0200
-Message-ID: <x3k1x4akhog.fsf@Psilocybe.Update.UU.SE>
-References: <EC70EFBFB6977A478BEB386684E8A7420CE728@pwfsbs01.pwf.local>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: add ATAPI module option
+Date: Tue, 30 Aug 2005 21:52:36 -0400
+Message-ID: <43150D64.1060208@pobox.com>
+References: <20050830215234.GA6991@havoc.gtf.org> <4314F1C8.8040706@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from elvira.ekonomikum.uu.se ([130.238.164.5]:53644 "EHLO
-	elvira.ekonomikum.uu.se") by vger.kernel.org with ESMTP
-	id S932329AbVHaBks convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Aug 2005 21:40:48 -0400
-Received: from Psilocybe.Update.UU.SE (Psilocybe.Update.UU.SE [130.238.19.25])
-	by elvira.ekonomikum.uu.se (Postfix) with ESMTP id A8DDD4CF
-	for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2005 03:40:15 +0200 (MSZ)
-In-Reply-To: <EC70EFBFB6977A478BEB386684E8A7420CE728@pwfsbs01.pwf.local>
-	(Allen Bolderoff's message of "26 Aug 05 03:05:20 GMT")
+Received: from mail.dvmed.net ([216.237.124.58]:41676 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932330AbVHaBwv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Aug 2005 21:52:51 -0400
+In-Reply-To: <4314F1C8.8040706@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-allen@gist.net.au (Allen Bolderoff) writes:
-> However - this card/driver is known to break when using more than 1
-> drive at a time (ie accessing 2 or 3 drives at once)=20
+Mark Lord wrote:
+> Jeff Garzik wrote:
+> 
+>>
+>> -#ifndef ATA_ENABLE_ATAPI
+>> -    if (unlikely(dev->class == ATA_DEV_ATAPI))
+>> -        return NULL;
+>> -#endif
+>> +    if (atapi_enabled) {
+>> +        if (unlikely(dev->class == ATA_DEV_ATAPI))
+>> +            return NULL;
+>> +    }
+> 
+> ..
+> 
+> Is that if-stmt the right way around?
+> At first glance, I'd expect it to read:
+> 
+>      if (!atapi_enabled) {
+>      ...
+> 
+> Cheers!
 
-I only have experience with the SATA150 TX4 (which uses the same
-driver), but it quite obviously breaks somewhere between 2.6.10 and
-2.6.11. Several people have been reporting problems with sata_promise,
-using several disks simultaneously with a kernel later than 2.6.10.
+Indeed, thanks, fixed.
 
-Moving the entire SCSI/libata code from 2.6.10 into a more recent
-kernel (i tried 2.6.12.3) works fine, and appears to fix the bug. So
-the bug should be in SCSI/libata somewhere (but I guess this was
-obvious anyway...).
-
-It would be great indeed if someone with a system that exhibits the
-problem and some time to spare could try moving SCSI/libata code piece
-by piece from 2.6.10 and 2.6.11 to try to pinpoint which change
-introduced the problem. (Does anyone have any better ideas?)
-
-(The changes in sata_promise between 2.6.10 and 2.6.11 are very small
--- the only significant changes appear to be some added PCI ids, a
-writel() added in pdc_interrupt(), and the addition and handling of
-the pci_dev_busy flag -- but I assume that the bug could as well hide
-elsewhere in the SCSI/libata code.)
+	Jeff
 
 
-Thorild Sel=E9n
-Datorf=F6reningen Update / Update Computer Club, Uppsala, SE
+
