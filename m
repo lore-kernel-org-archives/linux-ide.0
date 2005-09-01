@@ -1,34 +1,57 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.13] libata: Marvell SATA support (PIO mode)
-Date: Thu, 01 Sep 2005 16:28:11 -0400
-Message-ID: <4317645B.4080004@pobox.com>
-References: <20050830183625.BEE1520F4C@lns1058.lss.emc.com> <4314C604.4030208@pobox.com> <20050901142754.B93BF27137@lns1058.lss.emc.com> <20050901144038.GA25830@infradead.org> <43175B23.8040803@pobox.com> <20050901195832.GA14602@infradead.org> <43175E8F.7080700@pobox.com> <20050901200532.GA14650@infradead.org>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [RFC] libata new EH document
+Date: Thu, 01 Sep 2005 17:40:44 -0400
+Message-ID: <4317755C.5080700@adaptec.com>
+References: <20050901043850.15186.qmail@web51611.mail.yahoo.com>	 <43169520.6040008@gmail.com>  <20050901055421.GA23496@havoc.gtf.org> <1125581097.4834.5.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030376AbVIAU2Z@vger.kernel.org>
-In-Reply-To: <20050901200532.GA14650@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Brett Russ <russb@emc.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:15234 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1030412AbVIAVku (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Sep 2005 17:40:50 -0400
+In-Reply-To: <1125581097.4834.5.camel@mulgrave>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, ltuikov@yahoo.com, Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
-Christoph Hellwig wrote:
-> Stop that crap now please.  Adding "scsi.h" includes is _not_ allowed
-> for new drivers, period.  There's no exceptions, not even for
-> Jeff "I'm part of the calal" Garzik.
+On 09/01/05 09:24, James Bottomley wrote:
+> On Thu, 2005-09-01 at 01:54 -0400, Jeff Garzik wrote:
+> 
+>>The long term direction for the SCSI core seems to be that of
+>>requiring auto-sensing.
+> 
+> 
+> No, I don't see the mid-layer error thread handling of this ever going
+> away.
+> 
+>>libata is simply being lazy:  while the SCSI core continues to support
+>>kicking the EH thread when sense is missing, it's preferred for libata
+>>to reuse that infrastructure.
+> 
+> 
+> That makes the most sense ;-)
 
-There are solid technical reasons (a) why libata drivers include scsi.h, 
-and (b) why all libata drivers look similar.  It -impedes- maintenance 
-to have one libata driver different from all the others, and this is 
-what you are suggesting.
+For libata it doesn't really matter, since it is _ATA_.
 
-Your suggestion causes nothing but additional work, for zero gain:  as I 
-have explained, all the scsi.h includes will go away at the same time. 
-Such as sweep would catch all libata drivers, including sata_mv.
+> The current SCSI autosense in drivers doesn't require this because we
+> reuse the existing command that got the contingent allegiance condition.
 
-Until you're willing to step up and help with 2.4.x maintenance, you're 
-just being an impediment for non-technical reasons.  If you want to do 
-that, join politics and become a politician.  I have real work to do.
+Care to elaborate what "contingent allegiance condition" is,
+how SCSI Core got it, how SCSI Core is using it, and how SCSI Core set
+it up with the LU?
 
-	Jeff
+> This is the piece I'd like to get rid of because the extra fields and
+> extra setup to allow the command to be reused are a critical path hit.
+
+If you _do_ get rid of the extra fields, then you _really_ need
+LLDD/protocols to support autosense.
+
+> If you look at any driver that does this (53c700.c for instance) you'll
+> see that the command is turned around and resubmitted in the irq
+> routine).
+
+That's ok.
+
+	Luben
