@@ -1,52 +1,57 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
 Subject: Re: [RFC] libata new EH document
-Date: Wed, 31 Aug 2005 20:30:27 -0700 (PDT)
-Message-ID: <20050901033027.63466.qmail@web51605.mail.yahoo.com>
-References: <4316569B.6080406@gmail.com>
+Date: Wed, 31 Aug 2005 20:33:22 -0700 (PDT)
+Message-ID: <20050901033322.96752.qmail@web51609.mail.yahoo.com>
+References: <431665D9.7010500@pobox.com>
 Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web51605.mail.yahoo.com ([206.190.38.210]:47758 "HELO
-	web51605.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S965060AbVIADam (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Aug 2005 23:30:42 -0400
-In-Reply-To: <4316569B.6080406@gmail.com>
+Received: from web51609.mail.yahoo.com ([206.190.38.214]:22462 "HELO
+	web51609.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S965065AbVIADdX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 Aug 2005 23:33:23 -0400
+In-Reply-To: <431665D9.7010500@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Albert Lee <albertcc@tw.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
 
---- Tejun Heo <htejun@gmail.com> wrote:
->   IMHO, it's a good idea to maintain one qc to one ATA/ATAPI command 
-> mapping as long as possible.  And, in the suggested framework, it's 
+--- Jeff Garzik <jgarzik@pobox.com> wrote:
 
-Yes, that makes sense.
+> Tejun Heo wrote:
+> >  IMHO, it's a good idea to maintain one qc to one ATA/ATAPI command 
+> > mapping as long as possible.  And, in the suggested framework, it's 
+> > guaranteed that no other command can come inbetween CHECK_SENSE and 
+> > REQUEST_SENSE.
+> > 
+> >  Requesting sense from EH, calling scsi_decide_disposition() on the 
+> > sense and following the verdict should achieve the same effect as 
+> > emulating autosense.  Is there any compelling reason to break one qc to 
+> > one command mapping?
+> 
+> 
+> Yes, you should have one qc <-> one ATA/ATAPI command.  That's why, in 
 
-> guaranteed that no other command can come inbetween CHECK_SENSE and 
-> REQUEST_SENSE.
+Agree.
 
-That's good.
+> the NCQ scenario, I wanted to make sure that one qc was always reserved 
+> for error handling:  REQUEST SENSE or READ LOG EXT, most importantly.
 
->   Requesting sense from EH,
+Yes.
 
-Done in an ATA eh handler.
+> For SAT layer MODE SELECT translations, that implies multiple calls to 
+> qc_new/qc_issue/qc_complete before completing the overall SCSI command. 
+>   The same for handling sata_sil mod15write:  I am beginning to feel 
+> like the mod15write workaround might be best implemented in a manner 
+> that caused libata-scsi (not sata_sil) to create/issue/complete multiple 
+> ATA commands.
+> 
+> The only problem you run into is that a qc may be active during EH, when 
+> you need another qc.  So avoiding recursive details becomes an issue.
 
-> calling scsi_decide_disposition() on the 
-> sense 
-
-Done in SCSI Core.
-
-> and following the verdict should achieve the same effect as
-> emulating autosense.
-
-Yes, precisely.
-
-> Is there any compelling reason to break one qc to 
-> one command mapping?
-
-?
+Hmm...
 
      Luben
 
