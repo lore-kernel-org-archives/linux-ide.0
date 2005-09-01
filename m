@@ -1,54 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: linux@horizon.com
 Subject: Re: [PATCH 2.6.13] libata: Marvell SATA support (PIO mode)
-Date: Thu, 1 Sep 2005 21:05:32 +0100
-Message-ID: <20050901200532.GA14650@infradead.org>
-References: <20050830183625.BEE1520F4C@lns1058.lss.emc.com> <4314C604.4030208@pobox.com> <20050901142754.B93BF27137@lns1058.lss.emc.com> <20050901144038.GA25830@infradead.org> <43175B23.8040803@pobox.com> <20050901195832.GA14602@infradead.org> <43175E8F.7080700@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030355AbVIAUFk@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <43175E8F.7080700@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Brett Russ <russb@emc.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: 1 Sep 2005 16:19:31 -0400
+Message-ID: <20050901201931.32178.qmail@science.horizon.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from science.horizon.com ([192.35.100.1]:41530 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S1030354AbVIAUTe
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Sep 2005 16:19:34 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: hch@infradead.org, linux-ide@vger.kernel.org, russb@emc.com
 
-On Thu, Sep 01, 2005 at 04:03:27PM -0400, Jeff Garzik wrote:
-> Christoph Hellwig wrote:
-> >On Thu, Sep 01, 2005 at 03:48:51PM -0400, Jeff Garzik wrote:
-> >
-> >>Christoph Hellwig wrote:
-> >>
-> >>>>+#include <linux/kernel.h>
-> >>>>+#include <linux/module.h>
-> >>>>+#include <linux/pci.h>
-> >>>>+#include <linux/init.h>
-> >>>>+#include <linux/blkdev.h>
-> >>>>+#include <linux/delay.h>
-> >>>>+#include <linux/interrupt.h>
-> >>>>+#include <linux/sched.h>
-> >>>>+#include <linux/dma-mapping.h>
-> >>>>+#include "scsi.h"
-> >>>
-> >>>
-> >>>pleaese don't include "scsi.h" in new drivers.  It will go away soon.
-> >>>Use the <scsi/*.h> headers and get rid of usage of obsolete constucts
-> >>>in your driver.
-> >>
-> >>
-> >>It stays until the rest of the libata drivers lose the include.
-> >>
-> >>After ATAPI support is done, I can stop 2.4.x support, and this and 
-> >>several other compat-isms will go away.
-> >
-> >
-> >NACK.  Jeff, I accept that you don't want to convert old drivers yet,
-> >but this is not acceptable for new drivers.  We don't allow it for any
-> >new scsi LLDDs, and that includes libata drivers.
-> 
-> Sorry, you don't get to NAK that change, since it affects 2.4.x 
-> maintenance of this new driver.
+>> +static inline void writelfl(unsigned long data, void __iomem *addr)
+>> +{
+>> +	writel(data, addr);
+>> +	(void) readl(addr);	/* flush */
+>
+> no need for the (void) case.
 
-Stop that crap now please.  Adding "scsi.h" includes is _not_ allowed
-for new drivers, period.  There's no exceptions, not even for
-Jeff "I'm part of the calal" Garzik.
+Not strictly necessary, but a redundant (void) cast is a pretty standard
+way of documenting "yes, I really mean to ignore the return value."
+
+I'd like to suggest that it's helpful to the reader and should stay.
+(Maybe even, for those who don't know, change the comment to
+"Standard PCI flush trick.")
+
+On your other style comments, I agree.
+
+Well, except that "braces" are {}, while () are "parentheses" or "parens".
