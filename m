@@ -1,56 +1,91 @@
-From: Tyler <pml@dtbb.net>
-Subject: Re: Promise SATAII150 TX4: strange disk ordering
-Date: Wed, 31 Aug 2005 11:31:35 -0700
-Message-ID: <4315F787.3030003@dtbb.net>
-References: <VA.0000198c.018c7ed4@foxhill.co.uk>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [RFC] libata new EH document
+Date: Thu, 01 Sep 2005 10:17:15 +0900
+Message-ID: <4316569B.6080406@gmail.com>
+References: <20050829061124.GA2725@htj.dyndns.org> <43142279.3070004@tw.ibm.com> <43143461.7040606@gmail.com> <43146DE7.1070501@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:61147 "EHLO
-	smtp-01.primus.ca") by vger.kernel.org with ESMTP id S932363AbVHaSbk
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Aug 2005 14:31:40 -0400
-Received: from [216.86.99.21] (helo=[192.168.0.28])
-	by smtp-01.primus.ca with esmtpa (Exim 4.50)
-	id 1EAXMz-0003rJ-54
-	for linux-ide@vger.kernel.org; Wed, 31 Aug 2005 14:31:33 -0400
-In-Reply-To: <VA.0000198c.018c7ed4@foxhill.co.uk>
+Received: from wproxy.gmail.com ([64.233.184.195]:6939 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S965016AbVIABRa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2005 21:17:30 -0400
+Received: by wproxy.gmail.com with SMTP id i11so220935wra
+        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2005 18:17:24 -0700 (PDT)
+In-Reply-To: <43146DE7.1070501@adaptec.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Albert Lee <albertcc@tw.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
 
-First thing you can try Ian, is a vanilla kernel, to rule out ubuntu's 
-custom kernel.  I would suggest trying the vanilla kernel, and the -mm tree.
-
-Tyler.
-
-Ian Oliver wrote:
-
->In article <17173.49068.154562.170503@Psilocybe.Update.UU.SE>, Thorild 
->Selen wrote:
->  
->
->>In that case, it could be that the problem only appears on SMP/HT
->>systems, which would be interesting to know.
->>    
+Luben Tuikov wrote:
+> On 08/30/05 06:26, Tejun Heo wrote:
+> 
+>>Albert Lee wrote:
 >>
->
->I have the problem (maybe!) with a TX2plus/PDC20375 on kernel 2.6.10 
->(Ubuntu Hoary) on an Ahtlon system (so no HT or SMP)
->
->See http://bugzilla.ubuntu.com/show_bug.cgi?id=13046
->
->Regards
->
->Ian
->
->
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-ide" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->  
->
+>>
+>>>>4. Corresponding scmd's result code is set to
+>>>>  SAM_STAT_CHECK_CONDITION and qc->scsidone() callback is called
+>>>>  directly.  As we haven't filled sense data,
+>>>>  scsi_determine_disposition() will return FAILED and SCSI EH will
+>>>>  be scheduled.  Note that as we directly call qc->scsidone(), qc is
+>>>>  left intact.
+>>>>
+>>>>
+>>>
+>>>Could we get the sense data before calling qc->scsidone()?  (Using the 
+>>>proposed separate
+>>>EH qc can keep the original qc intact.)
+>>>
+>>>The issue:
+>>>When a DVD drive returns MEDIUM_ERROR in the sense data, libata doesn't 
+>>>retry the command.
+>>>
+>>>For libata, when scsi_softirq() calls scsi_decide_disposition() and 
+>>>scsi_check_sense() to determine
+>>>how to handle the result, scsi_check_sense() always returns "fail" since 
+>>>the sense data is not there
+>>>yet. The sense data is requested later in the libata error handler. But 
+>>>the command has already been
+>>>considered as an "error".
+>>>
+>>>By having the sense data ready before calling qc->scsidone(), we can 
+>>>make the
+>>>NEEDS_RETRY work in scsi_softirq().  So, for things like MEDIUM_ERROR, 
+>>>the device has
+>>>a chance to retry/recover the error. This seems to be important for 
+>>>devices with built-in
+>>>defect management system.
+>>
+>>
+>>  There are two ways a scmd can leave EH - retry by scsi_queue_insert() 
+>>and finish by scsi_finish_cmd().  I think the problem you described can 
+>>be easily solved by choosing the former method when finishing the qc 
+>>from EH.  Note that other advanced EH stuff like reconfiguring transport 
+>>speed also requires retrying, so we will surely have a mechanism for 
+>>retrying failed qc's from EH.
+> 
+> 
+> What is needed is autosense simulation for ATA, so that SCSI Core doesn't
+> know that the device doesn't support autosense.
+> 
+> So, before a failed command reaches SCSI Core recovery, it should pass by
+> ATA layer recovery to get sense.
+> 
+> Note: if you send another command for execution after the failed command
+> _and_ no autosense is provided, then any sense data is lost -- this is further
+> subject to more rules set forth in SAM and SPC.
+> 
+
+  IMHO, it's a good idea to maintain one qc to one ATA/ATAPI command 
+mapping as long as possible.  And, in the suggested framework, it's 
+guaranteed that no other command can come inbetween CHECK_SENSE and 
+REQUEST_SENSE.
+
+  Requesting sense from EH, calling scsi_decide_disposition() on the 
+sense and following the verdict should achieve the same effect as 
+emulating autosense.  Is there any compelling reason to break one qc to 
+one command mapping?
+
+-- 
+tejun
