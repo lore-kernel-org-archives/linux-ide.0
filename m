@@ -1,75 +1,44 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH 2.6.13] libata: Marvell SATA support (PIO mode)
-Date: Thu, 1 Sep 2005 15:40:38 +0100
-Message-ID: <20050901144038.GA25830@infradead.org>
-References: <20050830183625.BEE1520F4C@lns1058.lss.emc.com> <4314C604.4030208@pobox.com> <20050901142754.B93BF27137@lns1058.lss.emc.com>
+Date: Thu, 01 Sep 2005 15:48:51 -0400
+Message-ID: <43175B23.8040803@pobox.com>
+References: <20050830183625.BEE1520F4C@lns1058.lss.emc.com> <4314C604.4030208@pobox.com> <20050901142754.B93BF27137@lns1058.lss.emc.com> <20050901144038.GA25830@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965164AbVIAOlc@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050901142754.B93BF27137@lns1058.lss.emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Brett Russ <russb@emc.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:3284 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030327AbVIATtS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Sep 2005 15:49:18 -0400
+In-Reply-To: <20050901144038.GA25830@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Brett Russ <russb@emc.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +#include <linux/pci.h>
-> +#include <linux/init.h>
-> +#include <linux/blkdev.h>
-> +#include <linux/delay.h>
-> +#include <linux/interrupt.h>
-> +#include <linux/sched.h>
-> +#include <linux/dma-mapping.h>
-> +#include "scsi.h"
+Christoph Hellwig wrote:
+>>+#include <linux/kernel.h>
+>>+#include <linux/module.h>
+>>+#include <linux/pci.h>
+>>+#include <linux/init.h>
+>>+#include <linux/blkdev.h>
+>>+#include <linux/delay.h>
+>>+#include <linux/interrupt.h>
+>>+#include <linux/sched.h>
+>>+#include <linux/dma-mapping.h>
+>>+#include "scsi.h"
+> 
+> 
+> pleaese don't include "scsi.h" in new drivers.  It will go away soon.
+> Use the <scsi/*.h> headers and get rid of usage of obsolete constucts
+> in your driver.
 
-pleaese don't include "scsi.h" in new drivers.  It will go away soon.
-Use the <scsi/*.h> headers and get rid of usage of obsolete constucts
-in your driver.
 
-> +static inline void writelfl(unsigned long data, void __iomem *addr)
-> +{
-> +	writel(data, addr);
-> +	(void) readl(addr);	/* flush */
+It stays until the rest of the libata drivers lose the include.
 
-no need for the (void) case.
+After ATAPI support is done, I can stop 2.4.x support, and this and 
+several other compat-isms will go away.
 
-> +static void mv_irq_clear(struct ata_port *ap)
-> +{
-> +	return;
-> +}
+	Jeff
 
-no need for the return
 
-> +	return (ofs);
-
-please remove the braces around the return value
-
-> +		if (ap && 
-> +		    (NULL != (qc = ata_qc_from_tag(ap, ap->active_tag)))) {
-> +			VPRINTK("port %u IRQ found for qc, ata_status 0x%x\n",
-> +				port,ata_status);
-> +			BUG_ON(0xffU == ata_status);
-> +			/* mark qc status appropriately */
-> +			ata_qc_complete(qc, ata_status);
-> +		}
-
-the formatting looks rather odd.  What about;
-
-		if (ap) {
-			qc = ata_qc_from_tag(ap, ap->active_tag);
-			if (qc) {
-				VPRINTK("port %u IRQ found for qc, "
-					"ata_status 0x%x\n",
-					port, ata_status);
-				BUG_ON(0xffU == ata_status);
-				/* mark qc status appropriately */
-				ata_qc_complete(qc, ata_status);
-			}
-		}
-
-> +      err_out_hpriv:
-
-rather odd placement of the goto labels.  If you look at kernel code it's
-always either not indented at all, or indented a single space.
