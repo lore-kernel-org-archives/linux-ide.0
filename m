@@ -1,39 +1,36 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC] libata new EH document
-Date: Thu, 1 Sep 2005 01:54:21 -0400
-Message-ID: <20050901055421.GA23496@havoc.gtf.org>
-References: <20050901043850.15186.qmail@web51611.mail.yahoo.com> <43169520.6040008@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <43169520.6040008@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: ltuikov@yahoo.com, Luben Tuikov <luben_tuikov@adaptec.com>, Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
+From: Ian Oliver <lists@foxhill.co.uk>
+Subject: Re: Promise SATAII150 TX4: strange disk ordering
+Date: Thu, 01 Sep 2005 13:53:33 +0100
+Message-ID: <VA.00001996.00f02b9a@foxhill.co.uk>
+References: <4315F787.3030003@dtbb.net>
+Reply-To: linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from relay2.tidymail.co.uk ([217.146.107.7]:15076 "EHLO
+	relay2.tidymail.co.uk") by vger.kernel.org with ESMTP
+	id S965087AbVIAMxu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Sep 2005 08:53:50 -0400
+Received: from [217.146.124.254] (helo=foxhill.co.uk)
+	(from_AS 16353)
+	by relay2.tidymail.co.uk with esmtpa
+	(Exim 4.52)
+	id 1EAoZR-0000Bd-1Y
+	for linux-ide@vger.kernel.org; Thu, 01 Sep 2005 12:53:33 +0000
+In-Reply-To: <4315F787.3030003@dtbb.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Thu, Sep 01, 2005 at 02:44:00PM +0900, Tejun Heo wrote:
->  Can you please elaborate why getting sense data from EH is bad idea 
-> for ATAPI?  For more advanced SCSI transports, I agree with you that 
-> autosensing is necessary with queueing and multiple initiator and etc, 
-> but I don't really see how requesting sense from EH would be bad for ATAPI.
+In article <4315F787.3030003@dtbb.net>, Tyler wrote:
+> First thing you can try Ian, is a vanilla kernel, to rule out ubuntu's 
+> custom kernel.  I would suggest trying the vanilla kernel, and the -mm tree.
 
-The long term direction for the SCSI core seems to be that of
-requiring auto-sensing.
+Sadly, it's too late for tinkering now as I've had to switch to a hardware 
+configuration that works. However, guilt at not sticking with it may prompt me 
+to try recreating the setup at some point.
 
-libata is simply being lazy:  while the SCSI core continues to support
-kicking the EH thread when sense is missing, it's preferred for libata
-to reuse that infrastructure.
+Regards
 
-Auto-sensing (and READ LOG EXT for NCQ errors) requires either an
-FSM or a kernel thread, to initiate a secondary qc for REQUEST SENSE.
-Since the common infrastructure already exists for this, libata reuses
-the existing SCSI EH kernel thread.
-
-We should move libata-scsi to auto-sensing, but it's not an urgent priority.
-
-	Jeff
+Ian
 
 
 
