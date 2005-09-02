@@ -1,45 +1,39 @@
-From: Ray Lee <madrabbit@gmail.com>
-Subject: Re: [PATCH 2.6.13] libata: Marvell SATA support (PIO mode)
-Date: Fri, 2 Sep 2005 10:55:00 -0700
-Message-ID: <2c0942db05090210556ad0a7d@mail.gmail.com>
-References: <20050830183625.BEE1520F4C@lns1058.lss.emc.com>
-	 <4314C604.4030208@pobox.com>
-	 <20050901142754.B93BF27137@lns1058.lss.emc.com>
-	 <20050901144038.GA25830@infradead.org>
-	 <20050901222617.2455520F96@lns1058.lss.emc.com>
-Reply-To: ray@madrabbit.org
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: [PATCH 1/6] include, sound: pci_find_device remove (include/asm-i386/ide.h)
+Date: Fri, 2 Sep 2005 23:45:27 +0200
+Message-ID: <200509022145.j82LjRC0031385@wscnet.wsc.cz>
+References: <200509022122.j82LMMwV030426@wscnet.wsc.cz>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.193]:19236 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750755AbVIBRzC convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Sep 2005 13:55:02 -0400
-Received: by xproxy.gmail.com with SMTP id i31so398017wxd
-        for <linux-ide@vger.kernel.org>; Fri, 02 Sep 2005 10:55:00 -0700 (PDT)
-In-Reply-To: <20050901222617.2455520F96@lns1058.lss.emc.com>
-Content-Disposition: inline
+Received: from wscnet.wsc.cz ([212.80.64.118]:55685 "EHLO wscnet.wsc.cz")
+	by vger.kernel.org with ESMTP id S1161065AbVIBVpb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Sep 2005 17:45:31 -0400
+In-reply-to: <200509022122.j82LMMwV030426@wscnet.wsc.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brett Russ <russb@emc.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: Greg KH <gregkh@suse.de>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl
 
-On 9/1/05, Brett Russ <russb@emc.com> wrote:
-> More (non-functional) style modifications since the version 0.11
-> driver I sent out earlier today.  Removed most parens around return
-> value, 
+Generated in 2.6.13-mm1 kernel version.
 
-return is not a function call; you can safely remove them all.
+Signed-off-by: Jiri Slaby <xslaby@fi.muni.cz>
 
-> +       return ((void __iomem *)((unsigned long)port_mmio &
-> +                                (unsigned long)SATAHC_MASK));
-> +       return (base + MV_SATAHC0_REG_BASE + (hc * MV_SATAHC_REG_SZ));
-> +       return (mv_hc_base(base, port >> MV_PORT_HC_SHIFT) +
-> +               MV_SATAHC_ARBTR_REG_SZ +
-> +               ((port & MV_PORT_MASK) * MV_PORT_REG_SZ));
-> +       return ((flags & MV_FLAG_DUAL_HC) ? 2 : 1);
-> +       return (EDMA_EN & readl(port_mmio + EDMA_CMD_OFS));
-> +       return (ap->flags & MV_FLAG_BDMA);
+ ide.h |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletion(-)
 
-Ray
+diff --git a/include/asm-i386/ide.h b/include/asm-i386/ide.h
+--- a/include/asm-i386/ide.h
++++ b/include/asm-i386/ide.h
+@@ -41,7 +41,12 @@ static __inline__ int ide_default_irq(un
+ 
+ static __inline__ unsigned long ide_default_io_base(int index)
+ {
+-	if (pci_find_device(PCI_ANY_ID, PCI_ANY_ID, NULL) == NULL) {
++	struct pci_dev *pdev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, NULL);
++	unsigned int a = !pdev;
++
++	pci_dev_put(pdev);
++
++	if (a) {
+ 		switch(index) {
+ 			case 2: return 0x1e8;
+ 			case 3: return 0x168;
