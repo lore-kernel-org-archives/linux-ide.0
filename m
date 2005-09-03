@@ -1,113 +1,79 @@
-From: Brett Russ <russb@emc.com>
-Subject: [PATCH 2.6.13] libata: use common pci remove in ahci
-Date: Sat,  3 Sep 2005 03:18:52 -0400 (EDT)
-Message-ID: <20050903071852.95A10271C2@lns1058.lss.emc.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161178AbVICHS7@vger.kernel.org>
+From: Tyler <pml@dtbb.net>
+Subject: Re: [PATCH 2.6.13] libata: Marvell SATA support (PIO mode)
+Date: Sat, 03 Sep 2005 07:08:59 -0700
+Message-ID: <4319AE7B.3010304@dtbb.net>
+References: <20050830183625.BEE1520F4C@lns1058.lss.emc.com> <4314C604.4030208@pobox.com> <20050901142754.B93BF27137@lns1058.lss.emc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751193AbVICOJF@vger.kernel.org>
+In-Reply-To: <20050901142754.B93BF27137@lns1058.lss.emc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Brett Russ <russb@emc.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Jeff,
+Brett Russ wrote:
 
-This looked prime to cut since ahci_remove_one() was a functionally
-identical to ata_pci_remove_one() except for the interrupt disable
-(have_msi) bits, which fit nicely into ahci_host_stop().  However,
+>Some (non-functional) cleanup modifications since the version 0.10
+>driver I sent out 2005-08-30.  Also adding signed-off-by for Jeff's
+>upstream push.  This is my libata compatible low level driver for
+>the Marvell SATA family.  Currently it successfully runs in PIO mode
+>on a 6081 chip.  EDMA support is in the works and should be done
+>shortly.  Review, testing (especially on other flavors of Marvell),
+>comments welcome.
+>
+>Thank you,
+>BR
+>
+>Signed-off-by: Brett Russ <russb@emc.com>
+>
+>  
+>
+[snip..]
 
-1) Will it work?
+Please find attached patches that add the Adaptec 1420SA controller to 
+the PCI ID list in the driver, and a small note in the kernel config 
+option to state so.  This is untested as of currently, if anyone has a 
+1420SA to try, that would be great..  The one I had access to is now 
+gone to a remote location out of reach for testing.  I read in one post 
+I found with google, that the 1420SA uses a 6541 chip instead of a 6041, 
+but I am not able to verify this, and also don't know if it may still 
+work as a 6041.  The card is still a Sata2, PCI-X card, with 4 ports, 
+the same as the 6041 based cards.  This patch may or may not be 
+useful..  The card comes with a manufacturer ID of 9005 according to a 
+linux PCI-ID list, which is a secondary id of Adaptec's known as 
+ADAPTEC2, and an actual PCI Id of 0241.
 
-2) Isn't it wrong for the IRQ disable at the chip to occur *after*
-free_irq() is called to disconnect the handler (independent of
-question 1...since this is the case currently)?  Granted, all of the
-ports have gone through scsi_remove_host() but theoretically there
-still is a possibility the chip could interrupt.
-
-If I'm wrong on both counts I'll blame it on need for sleep... :-)
-BR
-
-This patch depends on the PCI INTx patch (but will probably work w/o):
-http://lkml.org/lkml/2005/8/15/165
-
-
-Signed-off-by: Brett Russ <russb@emc.com>
+Signed-off-by: Tyler Guthrie <pml@dtbb.net>
 
 
-Index: linux-2.6.13/drivers/scsi/ahci.c
-===================================================================
---- linux-2.6.13.orig/drivers/scsi/ahci.c
-+++ linux-2.6.13/drivers/scsi/ahci.c
-@@ -187,7 +187,6 @@ static void ahci_qc_prep(struct ata_queu
- static u8 ahci_check_status(struct ata_port *ap);
- static u8 ahci_check_err(struct ata_port *ap);
- static inline int ahci_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
--static void ahci_remove_one (struct pci_dev *pdev);
+--- linux-2.6.13.orig/drivers/scsi/Kconfig      2005-09-03 
+06:42:20.000000000 -0700
++++ linux-2.6.13drivers/scsi/Kconfig    2005-09-03 06:44:29.000000000 -0700
+@@ -466,6 +466,8 @@
+          This option enables support for the Marvell Serial ATA family.
+          Currently supports 88SX[56]0[48][01] chips.
  
- static Scsi_Host_Template ahci_sht = {
- 	.module			= THIS_MODULE,
-@@ -277,7 +276,7 @@ static struct pci_driver ahci_pci_driver
- 	.name			= DRV_NAME,
- 	.id_table		= ahci_pci_tbl,
- 	.probe			= ahci_init_one,
--	.remove			= ahci_remove_one,
-+	.remove			= ata_pci_remove_one,
++         Also Including Adaptec 1420SA Card (using marvell chip pci-id 
+0x0241).
++
+          If unsure, say N.
+ 
+ config SCSI_SATA_NV
+
+--- linux-2.6.13.orig/drivers/scsi/sata_mv.c    2005-09-03 
+06:40:07.000000000 -0700
++++ linux-2.6.13/drivers/scsi/sata_mv.c         2005-09-03 
+06:39:47.000000000 -0700
+@@ -286,6 +286,7 @@
+        {PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x6041), 0, 0, chip_604x},
+        {PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x6080), 0, 0, chip_608x},
+        {PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x6081), 0, 0, chip_608x},
++       {PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, 0x0241), 0, 0, chip_604x},
+        {}                      /* terminate list */
  };
- 
- 
-@@ -294,6 +293,13 @@ static inline void *ahci_port_base (void
- static void ahci_host_stop(struct ata_host_set *host_set)
- {
- 	struct ahci_host_priv *hpriv = host_set->private_data;
-+	struct pci_dev *pdev = to_pci_dev(host_set->dev);
-+
-+	if (hpriv->flags & AHCI_FLAG_MSI)
-+		pci_disable_msi(pdev);
-+	else
-+		pci_intx(pdev, 0);
-+
- 	kfree(hpriv);
- 
- 	ata_host_stop(host_set);
-@@ -1036,43 +1042,6 @@ err_out:
- 	return rc;
- }
- 
--static void ahci_remove_one (struct pci_dev *pdev)
--{
--	struct device *dev = pci_dev_to_dev(pdev);
--	struct ata_host_set *host_set = dev_get_drvdata(dev);
--	struct ahci_host_priv *hpriv = host_set->private_data;
--	struct ata_port *ap;
--	unsigned int i;
--	int have_msi;
--
--	for (i = 0; i < host_set->n_ports; i++) {
--		ap = host_set->ports[i];
--
--		scsi_remove_host(ap->host);
--	}
--
--	have_msi = hpriv->flags & AHCI_FLAG_MSI;
--	free_irq(host_set->irq, host_set);
--
--	for (i = 0; i < host_set->n_ports; i++) {
--		ap = host_set->ports[i];
--
--		ata_scsi_release(ap->host);
--		scsi_host_put(ap->host);
--	}
--
--	host_set->ops->host_stop(host_set);
--	kfree(host_set);
--
--	if (have_msi)
--		pci_disable_msi(pdev);
--	else
--		pci_intx(pdev, 0);
--	pci_release_regions(pdev);
--	pci_disable_device(pdev);
--	dev_set_drvdata(dev, NULL);
--}
--
- static int __init ahci_init(void)
- {
- 	return pci_module_init(&ahci_pci_driver);
+
+
+
+Tyler.
