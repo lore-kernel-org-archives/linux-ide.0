@@ -1,86 +1,140 @@
-From: Phil Dibowitz <phil@ipom.com>
-Subject: Re: Promise 20378
-Date: Sun, 04 Sep 2005 00:54:06 -0700
-Message-ID: <431AA81E.8000205@ipom.com>
-References: <42C7B584.401@ipom.com> <42C9F50B.4000508@pobox.com> <42E2AAE0.2090501@ipom.com>
+From: Abhijit Bhopatkar <bainonline@gmail.com>
+Subject: dma with libata and ATAPI in 2.6.13 ICH6M combined mode
+Date: Sun, 4 Sep 2005 05:50:32 -0400
+Message-ID: <2ff2162805090402506cad6416@mail.gmail.com>
+Reply-To: bainonline@gmail.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigC04B2855EFB77BFBDAA5985B"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from carbon.nocdirect.com ([69.73.156.63]:19598 "EHLO
-	carbon.nocdirect.com") by vger.kernel.org with ESMTP
-	id S1751239AbVIDHyP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 4 Sep 2005 03:54:15 -0400
-In-Reply-To: <42E2AAE0.2090501@ipom.com>
+Received: from zproxy.gmail.com ([64.233.162.192]:9061 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751323AbVIDJud convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 4 Sep 2005 05:50:33 -0400
+Received: by zproxy.gmail.com with SMTP id r28so528920nza
+        for <linux-ide@vger.kernel.org>; Sun, 04 Sep 2005 02:50:32 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phil Dibowitz <phil@ipom.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigC04B2855EFB77BFBDAA5985B
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+I have ACER TM4150NLCi with ICH6M chipset 
+The chipset is in combined mode by default and bios has no way to turn it off.
+It has a harddisk and dvd rom.
+With latest kernel the lib_ata is able to work with harddisk and the
+atapi also works fine for read and write (not thoroughly tested yet,
+but it didn't work at all in previous kernels)
+Unfortunately even though kernel reports UDMA capability the dma on
+both drives is disabled ( i can tell by the time it takes to read and
+write)
 
-I never did get a response to this - is this the known status (if so,
-that's fine I have a work around, but if I'm doing something stupid, i'd
-also like to know so I can start using this)...
+Is there any way to turn the dma on here?
 
-Thanks.
+Here is what i have....
+Upon reading that ATAPI support in libata is out for testing i
+downloaded 2.6.13 and diabled the ide_generic option in .config.
 
-Phil Dibowitz wrote:
-> I finally got a chance to test this.
-> 
-> So, the sata_promise driver seems to support the Promise 20378
-> controller, but it doesn't see PATA drives (the controller supports both
-> SATA and PATA drives).
-> 
-> I plugged a single PATA drive in - then in the promise BIOS I configured
-> a single "array" on the drive, and booted. This sata_promise sees the
-> PATA and SATA controller, but doesn't see the drives:
-> 
-> Jul 23 13:31:47 rider kernel: ata1: SATA max UDMA/133 cmd 0xF89E4200 ctl
-> 0xF89E4238 bmdma 0x0 irq 23
-> Jul 23 13:31:47 rider kernel: ata2: SATA max UDMA/133 cmd 0xF89E4280 ctl
-> 0xF89E42B8 bmdma 0x0 irq 23
-> Jul 23 13:31:47 rider kernel: ata1: no device found (phy stat 00000000)
-> Jul 23 13:31:47 rider kernel: scsi0 : sata_promise
-> Jul 23 13:31:47 rider kernel: ata2: no device found (phy stat 00000000)
-> Jul 23 13:31:47 rider kernel: scsi1 : sata_promise
-> 
-> It sees no drives there period. Further, while it the device has 2 SATA
-> chains, it only has 1 PATA, but as you can see, it seems to see 2.
-> 
-> Any ideas?
-> 
-> (PS. I'm not on the list, so please CC me).
-> 
-> Thanks,
+I also had to change drivers/scsi/ata_piix.c as
 
+50,51c50,51
+<       PIIX_COMB_PATA_P0       = (1 << 1),
+<       PIIX_COMB               = (1 << 2), /* combined mode enabled? */
+---
+>       PIIX_COMB_PATA_P0       = (1 << 0),
+>       PIIX_COMB               = (1 << 1), /* combined mode enabled? */
 
--- 
-Phil Dibowitz                             phil@ipom.com
-Freeware and Technical Pages              Insanity Palace of Metallica
-http://www.phildev.net/                   http://www.ipom.com/
+With this and following relevent .config part
+--
+#
+# SCSI device support
+#
+CONFIG_SCSI=y
+CONFIG_SCSI_PROC_FS=y
 
-"They that can give up essential liberty to obtain a little temporary
-safety deserve neither liberty nor safety."
- - Benjamin Franklin, 1759
+#
+# SCSI support type (disk, tape, CD-ROM)
+#
+CONFIG_BLK_DEV_SD=y
+CONFIG_CHR_DEV_ST=y
+CONFIG_CHR_DEV_OSST=y
+CONFIG_BLK_DEV_SR=y
+CONFIG_BLK_DEV_SR_VENDOR=y
+CONFIG_CHR_DEV_SG=y
+CONFIG_CHR_DEV_SCH=y
 
+#
+# Some SCSI devices (e.g. CD jukebox) support multiple LUNs
+#
+CONFIG_SCSI_MULTI_LUN=y
+CONFIG_SCSI_CONSTANTS=y
+CONFIG_SCSI_LOGGING=y
 
---------------enigC04B2855EFB77BFBDAA5985B
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+#
+# SCSI Transport Attributes
+#
+CONFIG_SCSI_SPI_ATTRS=y
+CONFIG_SCSI_FC_ATTRS=y
+CONFIG_SCSI_ISCSI_ATTRS=y
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+#
+# SCSI low-level drivers
+#
+...<snip>
+CONFIG_SCSI_SATA=y
+CONFIG_SCSI_SATA_AHCI=y
+CONFIG_SCSI_ATA_PIIX=y
+--
 
-iD8DBQFDGqgeN5XoxaHnMrsRAnjgAJ4jbZ9vKrBxuld15FaGKCOcHiC7zwCgkVUR
-89HZI+qRqXoM1Y2n2QOLtvU=
-=/hsq
------END PGP SIGNATURE-----
+The harddisk is now recognised as sda and the dvd rom as sr0.
+ata_piix version 1.04
+ata_piix: combined mode detected
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 18
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0x1100 irq 14
+ata1: SATA port has no device.
+scsi0 : ata_piix
+ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x1108 irq 15
+ata2: dev 0 cfg 49:0f00 82:746b 83:7fe8 84:4023 85:f468 86:3c48 87:4023 88:203f
+ata2: dev 0 ATA, max UDMA/100, 78140160 sectors: lba48
+ata2: dev 1 cfg 49:0f00 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:0000
+ata2: dev 1 ATAPI, max MWDMA2
+ata2: dev 0 configured for PIO4
+ata2: dev 1 configured for PIO4
+scsi1 : ata_piix
+  Vendor: ATA       Model: HTS424040M9AT00   Rev: MA2O
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: HL-DT-ST  Model: RW/DVD GCC-4243N  Rev: 1.02
+  Type:   CD-ROM                             ANSI SCSI revision: 05
+st: Version 20050501, fixed bufsize 32768, s/g segs 256
+osst :I: Tape driver with OnStream support version 0.99.3
+osst :I: $Id: osst.c,v 1.73 2005/01/01 21:13:34 wriede Exp $
+SCSI device sda: 78140160 512-byte hdwr sectors (40008 MB)
+SCSI device sda: drive cache: write back
+SCSI device sda: 78140160 512-byte hdwr sectors (40008 MB)
+SCSI device sda: drive cache: write back
+ sda: sda1 sda2 sda3 sda4
+Attached scsi disk sda at scsi1, channel 0, id 0, lun 0
+sr0: scsi3-mmc drive: 24x/24x writer cd/rw xa/form2 cdda tray
+Uniform CD-ROM driver Revision: 3.20
+Attached scsi CD-ROM sr0 at scsi1, channel 0, id 1, lun 0
+Attached scsi generic sg0 at scsi1, channel 0, id 0, lun 0,  type 0
+Attached scsi generic sg1 at scsi1, channel 0, id 1, lun 0,  type 5
+SCSI Media Changer driver v0.25
+--
 
---------------enigC04B2855EFB77BFBDAA5985B--
+#hdparm  /dev/sda
+/dev/sda:
+ IO_support   =  0 (default 16-bit)
+ readonly     =  0 (off)
+ readahead    = 256 (on)
+ geometry     = 4864/255/63, sectors = 78140160, start = 0
+
+# hdparm /dev/sr0
+/dev/sr0:
+ IO_support   =  0 (default 16-bit)
+ readonly     =  0 (off)
+ readahead    = 256 (on)
+ HDIO_GETGEO failed: Inappropriate ioctl for device
+
+Thanks and regards 
+Abhijit Bhopatkar
