@@ -1,90 +1,62 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: ide-floppy - software eject not working with LS-120 drive
-Date: Sun, 04 Sep 2005 14:25:49 +0200
-Message-ID: <431AE7CD.3040108@rainbow-software.org>
-References: <4318BA6C.8070707@rainbow-software.org> <200509031801.11356.vda@ilport.com.ua>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [sata_sil24] v0.10 works, v0.20 doesn't
+Date: Sun, 4 Sep 2005 23:02:39 +0900
+Message-ID: <20050904140239.GA11855@htj.dyndns.org>
+References: <loom.20050904T095233-120@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=_tic-53091-1125836751-0001-2"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp3.nextra.sk ([195.168.1.142]:7177 "EHLO mailhub3.nextra.sk")
-	by vger.kernel.org with ESMTP id S1750778AbVIDM0B (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Sep 2005 08:26:01 -0400
-In-Reply-To: <200509031801.11356.vda@ilport.com.ua>
+Received: from zproxy.gmail.com ([64.233.162.206]:12125 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750846AbVIDOCq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Sep 2005 10:02:46 -0400
+Received: by zproxy.gmail.com with SMTP id 13so686433nzn
+        for <linux-ide@vger.kernel.org>; Sun, 04 Sep 2005 07:02:44 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <loom.20050904T095233-120@post.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Denis Vlasenko <vda@ilport.com.ua>
-Cc: paul@paulbristow.net, linux-ide@vger.kernel.org
+To: Marc Bevand <mb@opensc.org>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+[CC'ing Jeff]
 
---=_tic-53091-1125836751-0001-2
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+ Hello, Marc.
 
-Denis Vlasenko wrote:
-> On Friday 02 September 2005 23:47, Ondrej Zary wrote:
-> 
->>Hello,
->>I've bought "new" LS-120 drive and found that software eject does not 
->>work with 2.6.13 kernel:
->>root@pentium:~# eject /dev/hdc
->>eject: unable to eject, last error: Invalid argument
->>
->>The drive spins up and after a while the command fails.
->>This appears in dmesg after each eject attempt:
->>  hdc: unknown partition table
->>ide-floppy: hdc: I/O error, pc = 1b, key =  5, asc = 24, ascq =  0
->>
->>When I boot 2.4.31, eject works fine.
-> 
-> 
-> Can you probive something narrower than 2.4.31 -> 2.6.13 jump?
+ Weird, I can tell you that 0.2 driver works for at least two sil24
+controllers - mine and Edward Falk's.  Can you please apply the
+following patch to the current ALL head and post dmesg?
 
-The problem is caused by idefloppy_ioctl() function which *first* tries
-generic_ide_ioctl() and *only* if it fails with -EINVAL, proceeds with
-the specific ioctls.
-This patch fixes it by first going through the internal ioctls and only
-trying generic_ide_ioctl() if none of them matches.
-
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-
--- 
-Ondrej Zary
-
-
-
---=_tic-53091-1125836751-0001-2
-Content-Type: text/plain; name="ide-floppy-eject.patch"; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ide-floppy-eject.patch"
-
---- linux-2.6.13-orig/drivers/ide/ide-floppy.c	2005-08-29 01:41:01.000000000 +0200
-+++ linux-2.6.13-pentium/drivers/ide/ide-floppy.c	2005-09-04 14:07:53.000000000 +0200
-@@ -2038,11 +2038,9 @@
- 	struct ide_floppy_obj *floppy = ide_floppy_g(bdev->bd_disk);
- 	ide_drive_t *drive = floppy->drive;
- 	void __user *argp = (void __user *)arg;
--	int err = generic_ide_ioctl(drive, file, bdev, cmd, arg);
-+	int err;
- 	int prevent = (arg) ? 1 : 0;
- 	idefloppy_pc_t pc;
--	if (err != -EINVAL)
--		return err;
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -512,6 +512,16 @@ static inline void sil24_host_intr(struc
  
- 	switch (cmd) {
- 	case CDROMEJECT:
-@@ -2094,7 +2092,7 @@
- 	case IDEFLOPPY_IOCTL_FORMAT_GET_PROGRESS:
- 		return idefloppy_get_format_progress(drive, argp);
- 	}
-- 	return -EINVAL;
-+	return generic_ide_ioctl(drive, file, bdev, cmd, arg);
- }
- 
- static int idefloppy_media_changed(struct gendisk *disk)
-
-
-
---=_tic-53091-1125836751-0001-2--
+ 	slot_stat = readl(port + PORT_SLOT_STAT);
+ 	if (!(slot_stat & HOST_SSTAT_ATTN)) {
++		u32 irq_stat, cmd_err, sstatus, serror;
++
++		irq_stat = readl(port + PORT_IRQ_STAT);
++		cmd_err = readl(port + PORT_CMD_ERR);
++		sstatus = readl(port + PORT_SSTATUS);
++		serror = readl(port + PORT_SERROR);
++		DPRINTK(DRV_NAME " ata%u: normal interrupt on port%d\n"
++			"  stat=0x%x irq=0x%x cmd_err=%d sstatus=0x%x serror=0x%x\n",
++			ap->id, ap->port_no, slot_stat, irq_stat, cmd_err, sstatus, serror);
++
+ 		if (qc)
+ 			ata_qc_complete(qc, 0);
+ 	} else
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -36,8 +36,8 @@
+ /*
+  * compile-time options
+  */
+-#undef ATA_DEBUG		/* debugging output */
+-#undef ATA_VERBOSE_DEBUG	/* yet more debugging output */
++#define ATA_DEBUG		/* debugging output */
++#define ATA_VERBOSE_DEBUG	/* yet more debugging output */
+ #undef ATA_IRQ_TRAP		/* define to ack screaming irqs */
+ #undef ATA_NDEBUG		/* define to disable quick runtime checks */
+ #undef ATA_ENABLE_ATAPI		/* define to enable ATAPI support */
