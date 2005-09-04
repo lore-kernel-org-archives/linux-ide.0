@@ -1,140 +1,158 @@
-From: Abhijit Bhopatkar <bainonline@gmail.com>
-Subject: dma with libata and ATAPI in 2.6.13 ICH6M combined mode
-Date: Sun, 4 Sep 2005 05:50:32 -0400
-Message-ID: <2ff2162805090402506cad6416@mail.gmail.com>
-Reply-To: bainonline@gmail.com
+From: Marc Bevand <mb@opensc.org>
+Subject: =?utf-8?b?W3NhdGFfc2lsMjRd?= v0.10 works, v0.20 doesn't
+Date: Sun, 4 Sep 2005 07:56:52 +0000 (UTC)
+Message-ID: <loom.20050904T095233-120@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.192]:9061 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751323AbVIDJud convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 4 Sep 2005 05:50:33 -0400
-Received: by zproxy.gmail.com with SMTP id r28so528920nza
-        for <linux-ide@vger.kernel.org>; Sun, 04 Sep 2005 02:50:32 -0700 (PDT)
-Content-Disposition: inline
+Received: from main.gmane.org ([80.91.229.2]:43953 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S1751304AbVIDKBX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Sep 2005 06:01:23 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1EBrIc-0005wz-Bt
+	for linux-ide@vger.kernel.org; Sun, 04 Sep 2005 12:00:30 +0200
+Received: from pool-71-105-101-137.lsanca.dsl-w.verizon.net ([71.105.101.137])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sun, 04 Sep 2005 12:00:30 +0200
+Received: from mb by pool-71-105-101-137.lsanca.dsl-w.verizon.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sun, 04 Sep 2005 12:00:30 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-I have ACER TM4150NLCi with ICH6M chipset 
-The chipset is in combined mode by default and bios has no way to turn it off.
-It has a harddisk and dvd rom.
-With latest kernel the lib_ata is able to work with harddisk and the
-atapi also works fine for read and write (not thoroughly tested yet,
-but it didn't work at all in previous kernels)
-Unfortunately even though kernel reports UDMA capability the dma on
-both drives is disabled ( i can tell by the time it takes to read and
-write)
+I gave a try to the new sata_sil24.ko module that recently appeared in
+the libata development tree.  I tested 3 branches which include 2 ver-
+sions of this driver: sil24 as well as ALL (new 0.20 driver from Tejun
+Heo) and sil24-original (old 0.10 driver from Silicon Image). I pulled
+libata-dev.git on September 2nd.
 
-Is there any way to turn the dma on here?
+The result is that only the v0.10 driver from Silicon Image is able to
+identify disks plugged on a SiI3124 adapter while the new v0.20 driver
+fails to do so. See below for details.
 
-Here is what i have....
-Upon reading that ATAPI support in libata is out for testing i
-downloaded 2.6.13 and diabled the ide_generic option in .config.
+Tejun, or Jeff:  do you think the issue in the v0.20 driver is related
+to these changes about making ata_bus_probe() an ops or not ?
 
-I also had to change drivers/scsi/ata_piix.c as
 
-50,51c50,51
-<       PIIX_COMB_PATA_P0       = (1 << 1),
-<       PIIX_COMB               = (1 << 2), /* combined mode enabled? */
----
->       PIIX_COMB_PATA_P0       = (1 << 0),
->       PIIX_COMB               = (1 << 1), /* combined mode enabled? */
+--oOo-- branch sil24:
 
-With this and following relevent .config part
---
-#
-# SCSI device support
-#
-CONFIG_SCSI=y
-CONFIG_SCSI_PROC_FS=y
+I plugged a disk on the 2nd port of the adapter (ata10):
 
-#
-# SCSI support type (disk, tape, CD-ROM)
-#
-CONFIG_BLK_DEV_SD=y
-CONFIG_CHR_DEV_ST=y
-CONFIG_CHR_DEV_OSST=y
-CONFIG_BLK_DEV_SR=y
-CONFIG_BLK_DEV_SR_VENDOR=y
-CONFIG_CHR_DEV_SG=y
-CONFIG_CHR_DEV_SCH=y
+  sata_sil24 version 0.20
+  ACPI: PCI Interrupt 0000:01:06.0[A] -> GSI 29 (level, low) -> IRQ 185
+  ata9: SATA max UDMA/100 cmd 0xFFFFC20000030000 ctl 0x0 bmdma 0x0 irq 185
+  ata10: SATA max UDMA/100 cmd 0xFFFFC20000032000 ctl 0x0 bmdma 0x0 irq 185
+  ata11: SATA max UDMA/100 cmd 0xFFFFC20000034000 ctl 0x0 bmdma 0x0 irq 185
+  ata12: SATA max UDMA/100 cmd 0xFFFFC20000036000 ctl 0x0 bmdma 0x0 irq 185
+  ata9: no device found (phy stat 00000000)
+  scsi8 : sata_sil24
+  ata10: dev 0 cfg 49:0000 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:0000
+  ata10: no dma/lba
+  ata10: dev 0 not supported, ignoring
+  scsi9 : sata_sil24
+  ata11: no device found (phy stat 00000000)
+  scsi10 : sata_sil24
+  ata12: no device found (phy stat 00000000)
+  scsi11 : sata_sil24
 
-#
-# Some SCSI devices (e.g. CD jukebox) support multiple LUNs
-#
-CONFIG_SCSI_MULTI_LUN=y
-CONFIG_SCSI_CONSTANTS=y
-CONFIG_SCSI_LOGGING=y
+There is apparently an issue when trying to identify the device because
+all words of the IDENTIFY reply contain NUL bytes  (especially word 49,
+which leads to "no dma/lba" and then "dev 0 not supported, ignoring").
 
-#
-# SCSI Transport Attributes
-#
-CONFIG_SCSI_SPI_ATTRS=y
-CONFIG_SCSI_FC_ATTRS=y
-CONFIG_SCSI_ISCSI_ATTRS=y
 
-#
-# SCSI low-level drivers
-#
-...<snip>
-CONFIG_SCSI_SATA=y
-CONFIG_SCSI_SATA_AHCI=y
-CONFIG_SCSI_ATA_PIIX=y
---
+--oOo-- branch ALL:
 
-The harddisk is now recognised as sda and the dvd rom as sr0.
-ata_piix version 1.04
-ata_piix: combined mode detected
-ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 18
-PCI: Setting latency timer of device 0000:00:1f.2 to 64
-ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0x1100 irq 14
-ata1: SATA port has no device.
-scsi0 : ata_piix
-ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x1108 irq 15
-ata2: dev 0 cfg 49:0f00 82:746b 83:7fe8 84:4023 85:f468 86:3c48 87:4023 88:203f
-ata2: dev 0 ATA, max UDMA/100, 78140160 sectors: lba48
-ata2: dev 1 cfg 49:0f00 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:0000
-ata2: dev 1 ATAPI, max MWDMA2
-ata2: dev 0 configured for PIO4
-ata2: dev 1 configured for PIO4
-scsi1 : ata_piix
-  Vendor: ATA       Model: HTS424040M9AT00   Rev: MA2O
+Exactly the same result than branch sil24:
+
+  sata_sil24 version 0.20
+  ACPI: PCI Interrupt 0000:01:06.0[A] -> GSI 29 (level, low) -> IRQ 185
+  ata9: SATA max UDMA/100 cmd 0xFFFFC20000030000 ctl 0x0 bmdma 0x0 irq 185
+  ata10: SATA max UDMA/100 cmd 0xFFFFC20000032000 ctl 0x0 bmdma 0x0 irq 185
+  ata11: SATA max UDMA/100 cmd 0xFFFFC20000034000 ctl 0x0 bmdma 0x0 irq 185
+  ata12: SATA max UDMA/100 cmd 0xFFFFC20000036000 ctl 0x0 bmdma 0x0 irq 185
+  ata9: no device found (phy stat 00000000)
+  scsi8 : sata_sil24
+  ata10: dev 0 cfg 49:0000 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:0000
+  ata10: no dma
+  ata10: dev 0 not supported, ignoring
+  scsi9 : sata_sil24
+  ata11: no device found (phy stat 00000000)
+  scsi10 : sata_sil24
+  ata12: no device found (phy stat 00000000)
+  scsi11 : sata_sil24
+
+
+--oOo-- branch sil24-original:
+
+This branch crashed my kernel. I understand that the driver contributed
+by Silicon Image makes ata_bus_probe an ops, but it seems that not all
+SATA drivers have been converted to use it. More particularly it happens
+that I have to load sata_sil because I have other disks on another SATA
+chip, and when loading it the kernel crashes in libata-core.c, function
+ata_device_add(), on this line of code:
+
+  rc = host_set->ops->bus_probe(ap);
+
+When loading sata_sil, bus_probe is a NULL pointer. So I have had to
+change this line to something like:
+
+  if (host_set->ops->bus_probe)
+    rc = host_set->ops->bus_probe(ap);
+  else
+    rc = ata_bus_probe(ap);
+
+This way I was able to load both sata_sil and sata_sil24. The good news
+is that the sil24-original driver is able to correctly identify my disk
+(still ata10):
+
+sata_sil24 version 0.10
+ACPI: PCI Interrupt 0000:01:06.0[A] -> GSI 29 (level, low) -> IRQ 201
+sata_sil24: mmio_base0=ffffc200000e6c00 base_len (hex)=80
+sata_sil24: mmio_base=ffffc20000490000 base_len  (hex)=8000
+sata_sil24: Found Port Ready
+sata_sil24: sil_port_start allocating Scatter Table, PRBs hex=840
+sata_sil24: sil_port_start virtual=ffff8100343fd000 physical=343fd000
+ata9: SATA max UDMA/100 cmd 0xFFFFC20000490000 ctl 0xFFFFC2000049000A bmdma
+0xFFFFC20000490000 irq 201
+sata_sil24: sil_port_start allocating Scatter Table, PRBs hex=840
+sata_sil24: sil_port_start virtual=ffff810033c05000 physical=33c05000
+ata10: SATA max UDMA/100 cmd 0xFFFFC20000492000 ctl 0xFFFFC2000049200A bmdma
+0xFFFFC20000490000 irq 201
+sata_sil24: sil_port_start allocating Scatter Table, PRBs hex=840
+sata_sil24: sil_port_start virtual=ffff81003397f000 physical=3397f000
+ata11: SATA max UDMA/100 cmd 0xFFFFC20000494000 ctl 0xFFFFC2000049400A bmdma
+0xFFFFC20000490000 irq 201
+sata_sil24: sil_port_start allocating Scatter Table, PRBs hex=840
+sata_sil24: sil_port_start virtual=ffff81003a6df000 physical=3a6df000
+ata12: SATA max UDMA/100 cmd 0xFFFFC20000496000 ctl 0xFFFFC2000049600A bmdma
+0xFFFFC20000490000 irq 201
+ata9: no device found (phy stat 00000000)
+scsi8 : sata_sil24
+sata_sil24: bus_probe ap=ffff810035c81360 trying to identify dev=0
+sata_sil24: sil_dev_identify speed=1
+ata10: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003 88:007f
+ata10: dev 0 ATA, max UDMA/133, 312581808 sectors: lba48
+sata_sil24: bus_probe FOUND DEVICE
+ata10: dev 0 configured for UDMA/100
+scsi9 : sata_sil24
+ata11: no device found (phy stat 00000000)
+scsi10 : sata_sil24
+ata12: no device found (phy stat 00000000)
+scsi11 : sata_sil24
+  Vendor: ATA       Model: ST3160023AS       Rev: 3.18
   Type:   Direct-Access                      ANSI SCSI revision: 05
-  Vendor: HL-DT-ST  Model: RW/DVD GCC-4243N  Rev: 1.02
-  Type:   CD-ROM                             ANSI SCSI revision: 05
-st: Version 20050501, fixed bufsize 32768, s/g segs 256
-osst :I: Tape driver with OnStream support version 0.99.3
-osst :I: $Id: osst.c,v 1.73 2005/01/01 21:13:34 wriede Exp $
-SCSI device sda: 78140160 512-byte hdwr sectors (40008 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 78140160 512-byte hdwr sectors (40008 MB)
-SCSI device sda: drive cache: write back
- sda: sda1 sda2 sda3 sda4
-Attached scsi disk sda at scsi1, channel 0, id 0, lun 0
-sr0: scsi3-mmc drive: 24x/24x writer cd/rw xa/form2 cdda tray
-Uniform CD-ROM driver Revision: 3.20
-Attached scsi CD-ROM sr0 at scsi1, channel 0, id 1, lun 0
-Attached scsi generic sg0 at scsi1, channel 0, id 0, lun 0,  type 0
-Attached scsi generic sg1 at scsi1, channel 0, id 1, lun 0,  type 5
-SCSI Media Changer driver v0.25
---
+SCSI device sdc: 312581808 512-byte hdwr sectors (160042 MB)
+SCSI device sdc: drive cache: write back
+SCSI device sdc: 312581808 512-byte hdwr sectors (160042 MB)
+SCSI device sdc: drive cache: write back
+ sdc: unknown partition table
+Attached scsi disk sdc at scsi9, channel 0, id 0, lun 0
+Attached scsi generic sg2 at scsi9, channel 0, id 0, lun 0,  type 0
+sata_sil24: found 4 Ports
 
-#hdparm  /dev/sda
-/dev/sda:
- IO_support   =  0 (default 16-bit)
- readonly     =  0 (off)
- readahead    = 256 (on)
- geometry     = 4864/255/63, sectors = 78140160, start = 0
+-- 
+Marc Bevand
 
-# hdparm /dev/sr0
-/dev/sr0:
- IO_support   =  0 (default 16-bit)
- readonly     =  0 (off)
- readahead    = 256 (on)
- HDIO_GETGEO failed: Inappropriate ioctl for device
-
-Thanks and regards 
-Abhijit Bhopatkar
