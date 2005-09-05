@@ -1,63 +1,51 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Linux Kernel 2.6.13-rc7 (WORKS) (2.6.13, DRQ/System CRASH)
-Date: Mon, 5 Sep 2005 13:23:54 -0400 (EDT)
-Message-ID: <Pine.LNX.4.63.0509051322400.3389@p34>
-References: <Pine.LNX.4.63.0508311328230.1945@p34>  <Pine.LNX.4.63.0508311408320.1945@p34>
-  <58cb370e050905002630a0e02e@mail.gmail.com> <1125923397.8714.22.camel@localhost.localdomain>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2.6.13] libata: use common pci remove in ahci
+Date: Mon, 05 Sep 2005 17:51:07 -0400
+Message-ID: <431CBDCB.40903@pobox.com>
+References: <20050903071852.95A10271C2@lns1058.lss.emc.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932351AbVIERXz@vger.kernel.org>
-In-Reply-To: <1125923397.8714.22.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964814AbVIEVvP@vger.kernel.org>
+In-Reply-To: <20050903071852.95A10271C2@lns1058.lss.emc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, akpm@osdl.org, linux-ide@vger.kernel.org, apiszcz@lucidpixels.com
+To: Brett Russ <russb@emc.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Also,
+Brett Russ wrote:
+> Jeff,
+> 
+> This looked prime to cut since ahci_remove_one() was a functionally
+> identical to ata_pci_remove_one() except for the interrupt disable
+> (have_msi) bits, which fit nicely into ahci_host_stop().  However,
+> 
+> 1) Will it work?
+> 
+> 2) Isn't it wrong for the IRQ disable at the chip to occur *after*
+> free_irq() is called to disconnect the handler (independent of
+> question 1...since this is the case currently)?  Granted, all of the
+> ports have gone through scsi_remove_host() but theoretically there
+> still is a possibility the chip could interrupt.
+> 
+> If I'm wrong on both counts I'll blame it on need for sleep... :-)
 
-Part of the problem may be that I have two ATA/133 Promise cards in one 
-box and only one ATA/133 in the other box.
 
-Kernel 2.6.13 has fixed the problem with one ATA/133 card in the box.
-Kernel 2.6.13 has not fixed the problem with two ATA/133 cards in the box.
+Moving AHCI away from ata_pci_remove_one() was actually intentional. 
+This gives the driver a bit more freedom:  legacy region handling and 
+->host_stop() became unnecessary.  Also, I was concerned that 
+ata_pci_remove_one() might grow into a one-size-fits-all unmaintainable 
+behemoth.
 
-FYI
+Short term, if one were being obsessive, a potential cleanup could be to 
+make common the two loops in ahci_remove_one()/ata_pci_remove_one().
 
-Justin.
+Long term, libata driver API should become more like the 
+register_foo()/unregister_foo() interfaces you see elsewhere in the 
+kernel.  That direction has the potential to shake up the current code 
+path through ata_pci_remove_one().
 
+So... your patch, while technically correct, is going in the opposite 
+direction to where I want to go :)
 
-On Mon, 5 Sep 2005, Alan Cox wrote:
-
-> On Llu, 2005-09-05 at 09:26 +0200, Bartlomiej Zolnierkiewicz wrote:
->> After DMA timeout driver reverted back to PIO,
->> ide-taskfile.c also holds PIO code besides IDE Taskfile Access.
->
->
-> On SMP after a DMA timeout it will potentially freeze. There are some
-> paths in that code which lead to double lock takes and hangs, plus some
-> timer races.
->
-> Justin can you make a backup (I mean that seriously), then build a
-> kernel with spin lock debug enabled and see if you can reproduce the
-> problem and get a trace.
->
-> If its the locking you'll get a trace and the kernel will continue. At
-> that point because the spinlock debug continues unsafely through a
-> double lock after the trace you are in the "danger zone" hence the
-> backup warning
->
-> [Yes the spin lock debug code really should warn you its dangerous for
-> non debug uses or get patched as it is in Fedora to trace and stop]
->
-> If its a hardware or other problem it will still hang
->
-> if its an unrelated lock problem it should still get a trace.
->
->
-> Why you see this only on 2.6.13 not 2.6.13-rc7 I don't know. It makes me
-> wonder if you have a bad drive - but then you imply going back to rc7
-> goes back to stable. Can you therefore also check the .config options
-> between the two kernels match.
->
-> Alan
->
+	Jeff
