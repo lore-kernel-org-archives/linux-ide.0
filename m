@@ -1,76 +1,98 @@
-From: Trevor Cordes <trevor@tecnopolis.ca>
-Subject: ide dma bug?
-Date: Sun, 4 Sep 2005 15:18:44 -0500
-Message-ID: <20050904201844.GA12464@pog.tecnopolis.ca>
+From: Marc Bevand <mb@opensc.org>
+Subject: Re: =?utf-8?b?W3NhdGFfc2lsMjRd?= v0.10 works, v0.20 doesn't
+Date: Mon, 5 Sep 2005 01:07:05 +0000 (UTC)
+Message-ID: <loom.20050905T024247-999@post.gmane.org>
+References: <loom.20050904T095233-120@post.gmane.org> <20050904140239.GA11855@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from S0106000092a70907.wp.shawcable.net ([24.76.183.245]:29569 "EHLO
-	pog.tecnopolis.ca") by vger.kernel.org with ESMTP id S1751086AbVIDUSp
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 4 Sep 2005 16:18:45 -0400
-Received: from pog.tecnopolis.ca (pog.tecnopolis.ca [127.0.0.1])
-	by pog.tecnopolis.ca (8.13.1/8.13.1) with ESMTP id j84KIi6k012672
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Sun, 4 Sep 2005 15:18:44 -0500
-Received: (from trevor@localhost)
-	by pog.tecnopolis.ca (8.13.1/8.13.1/Submit) id j84KIibB012671
-	for linux-ide@vger.kernel.org; Sun, 4 Sep 2005 15:18:44 -0500
-Content-Disposition: inline
+Received: from main.gmane.org ([80.91.229.2]:20102 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S932148AbVIEBJ0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Sep 2005 21:09:26 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1EC5T6-0006LQ-Ky
+	for linux-ide@vger.kernel.org; Mon, 05 Sep 2005 03:08:16 +0200
+Received: from pool-71-105-101-137.lsanca.dsl-w.verizon.net ([71.105.101.137])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 05 Sep 2005 03:08:16 +0200
+Received: from mb by pool-71-105-101-137.lsanca.dsl-w.verizon.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 05 Sep 2005 03:08:16 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-I'm getting a couple of times every couple of days:
+Tejun Heo writes:
+>
+>  Weird, I can tell you that 0.2 driver works for at least two sil24
+> controllers - mine and Edward Falk's.  Can you please apply the
+> following patch to the current ALL head and post dmesg?
 
-Sep  1 07:09:53 piles kernel: hdq: dma_intr: bad DMA status (dma_stat=75)
-Sep  1 07:09:53 piles kernel: hdq: dma_intr: status=0x50 { DriveReady SeekComplete }
-Sep  1 07:09:53 piles kernel: ide: failed opcode was: unknown
-Sep  1 07:10:26 piles kernel: hdr: dma_intr: bad DMA status (dma_stat=75)
-Sep  1 07:10:26 piles kernel: hdr: dma_intr: status=0x50 { DriveReady SeekComplete }
-Sep  1 07:10:26 piles kernel: ide: failed opcode was: unknown
-Sep  3 19:41:36 piles kernel: hdt: dma_intr: bad DMA status (dma_stat=75)
-Sep  3 19:41:36 piles kernel: hdt: dma_intr: status=0x50 { DriveReady SeekComplete }
-Sep  3 19:41:36 piles kernel: ide: failed opcode was: unknown
+Done. But dmesg is quite large (240 kB), so here it is:
+http://epita.fr/~bevand_m/pub/sata_sil24.dmesg
 
-It's my franken-computer file-server that has 12 IDE PATA drives running a
-combo of RAID6 and RAID0 (and a little RAID1).  They're running off of the
-onboard Intel 845D IDE, onboard Promise PDC20276 (used only as a simple
-IDE controller), 1 Promise Ultra100 TX2 PDC20268, and 2 CMD680-based
-cards.  8 drives are 250GB (3 diff brands -- on purpose!), 4 are 160GB. 
-The 8 250's are all IDE masters.  The 4 160's share 2 IDE channels
-(master+slave).
+Notes:
+o This time 2 disks were plugged (ata19 and ata20, on ports 2 and 3).
+o I had to #undef ATA_VERBOSE_DEBUG in your patch else the kernel freezes
+  when init(8) starts running all the initscripts, probably because too
+  many messages are printk()ed on the console. Let me know if you _really_
+  need ATA_VERBOSE_DEBUG, I can try with a serial console.
 
-The 160's are hdq, hdr, hds, and hdt.  Those are the ONLY drives that show
-these intermittent dma errors.  Obviously the problem has to do with using
-some drives as slaves.  I was reluctant to put in another IDE card (having
-so many already scares me), but have one on order right now.  I'm hoping
-having them all on master will alleviate this problem.
+Here is the relevant part of dmesg, for ata19:
 
-Note, besides the log messages, I see no other symptoms.  The RAID array 
-stays up and things seem to run fine.  However, a friend said to me the 
-following and so I write this email:
+  ata_device_add: ata19: probe begin
+  ata_dev_identify: ENTER, host 19, dev 0
+  ata_dev_identify: do ATA identify
+  ata_sg_setup_one: mapped buffer of 512 bytes for read
+  sil24_host_intr: sata_sil24 ata19: normal interrupt on port2
+    stat=0x0 irq=0xb00000 cmd_err=0 sstatus=0x113 serror=0x4050000
+  ata_sg_clean: unmapping 1 sg elements
+  ata19: dev 0 cfg 49:0000 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:0000
+  ata19: no dma
+  ata19: dev 0 not supported, ignoring
+  ata_dev_identify: EXIT, err
+  ata_dev_identify: ENTER/EXIT (host 19, dev 1) -- nodev
+  ata_device_add: ata19: probe end
 
-"Not good... means you've got DMA problems.  Possibly related to 
-having too many scatter-gather operations pending simultaneously all 
-being triggered off one or two IRQs... ???  I'd post to either ATA or 
-Kernel or RAID mailing lists and ask for opinions, since that's a 
-potential BIG problem in terms of CPU usage."
+There is definitely a problem when issuing the IDENTIFY DEVICE command.
+However I don't have any hardware doc so I can't interpert the "normal
+interrupt" log line.
 
-"What you're telling me about those disks tells me that there's a slight 
-bug in the driver code - basically straggler interrup handler looks for 
-DMA results, sees bogosity, checks drive for errors and print message 
-about bad-DMA-but-drives-are-fine."
+More information about my context:
+o My arch is x86_64, what is yours ?
+o The controller is using a SiI3124-2 chip (SATA 3.0 Gbps) not a
+  SiI 3124-1 one (1.5 Gbps); does it matter ?
+o I am using the controller in a 64-bit 133 MHz PCI-X bus.
+o lspci output:
+  $ lspci -vvs 1:6
+  0000:01:06.0 RAID bus controller: Silicon Image, Inc. (formerly CMD Technology
+Inc) SiI 3124 PCI-X Serial ATA Controller (rev 01)
+        Subsystem: Silicon Image, Inc. (formerly CMD Technology Inc): Unknown
+device 6124
+        Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr-
+Stepping+ SERR+ FastB2B-
+        Status: Cap+ 66Mhz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort-
+<TAbort- <MAbort- >SERR- <PERR-
+        Latency: 64
+        Interrupt: pin A routed to IRQ 193
+        Region 0: Memory at fc5ffc00 (64-bit, non-prefetchable) [size=128]
+        Region 2: Memory at fc5f0000 (64-bit, non-prefetchable) [size=32K]
+        Region 4: I/O ports at 8c00 [size=16]
+        Expansion ROM at fc500000 [disabled] [size=512K]
+        Capabilities: [64] Power Management version 2
+                Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=1 PME-
+        Capabilities: [40] PCI-X non-bridge device.
+                Command: DPERE- ERO+ RBC=0 OST=5
+                Status: Bus=0 Dev=0 Func=0 64bit- 133MHz- SCD- USC-, DC=simple,
+DMMRBC=0, DMOST=0, DMCRS=0, RSCEM-      Capabilities: [54] Message Signalled
+Interrupts: 64bit+ Queue=0/0 Enable-
+                Address: 0000000000000000  Data: 0000
 
-My kernel is 2.6.12-1.1372_FC3
+--
+Marc Bevand
 
-My hdparm's are all identical:
-#hdparm /dev/hds
-/dev/hds:
- multcount    = 16 (on)
- IO_support   =  1 (32-bit)
- unmaskirq    =  1 (on)
- using_dma    =  1 (on)
- keepsettings =  0 (off)
- readonly     =  0 (off)
- readahead    = 256 (on)
+
