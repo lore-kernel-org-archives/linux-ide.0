@@ -1,68 +1,52 @@
-From: Christoph Burger-Scheidlin <andersin@freenet.de>
-Subject: Re: ide dma bug?
-Date: Mon, 5 Sep 2005 12:39:14 +0100
-Message-ID: <200509051239.14713.andersin@freenet.de>
-References: <20050904201844.GA12464@pog.tecnopolis.ca>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Bug#321442: kernel-source-2.6.8: fails to compile on powerpc (drivers/ide/ppc/pmac.c)
+Date: Mon, 5 Sep 2005 14:42:43 +0200
+Message-ID: <58cb370e0509050542b512131@mail.gmail.com>
+References: <E1E13vT-0008G7-R1@arda.LT-P.net>
+	 <20050808085703.GE18551@verge.net.au>
+	 <20050814005430.2e26e627@arda.LT-P.net>
+	 <C2F63384-9CC2-4979-956B-8CB5DA77F4AE@mac.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hermes.iu-bremen.de ([212.201.44.23]:64395 "EHLO
-	hermes.iu-bremen.de") by vger.kernel.org with ESMTP
-	id S1750771AbVIELji (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 5 Sep 2005 07:39:38 -0400
-Received: from localhost (demetrius.iu-bremen.de [212.201.44.32])
-	by hermes.iu-bremen.de (Postfix) with ESMTP id 27F52393B2
-	for <linux-ide@vger.kernel.org>; Mon,  5 Sep 2005 13:39:26 +0200 (CEST)
-Received: from hermes.iu-bremen.de ([212.201.44.23])
- by localhost (demetrius [212.201.44.32]) (amavisd-new, port 10024) with ESMTP
- id 06023-01 for <linux-ide@vger.kernel.org>;
- Mon,  5 Sep 2005 13:39:25 +0200 (CEST)
-Received: from helena.world.iu-bremen.de (mailhost.world.iu-bremen.de [212.201.44.34])
-	by hermes.iu-bremen.de (Postfix) with ESMTP id F12D639182
-	for <linux-ide@vger.kernel.org>; Mon,  5 Sep 2005 13:39:24 +0200 (CEST)
-Received: from phoenix.burgerhome.de (p54861D46.dip0.t-ipconnect.de [84.134.29.70])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by helena.world.iu-bremen.de (Postfix) with ESMTP id AEEAA1EE0F
-	for <linux-ide@vger.kernel.org>; Mon,  5 Sep 2005 13:39:24 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by phoenix.burgerhome.de (Postfix) with ESMTP id D4D257ECB60
-	for <linux-ide@vger.kernel.org>; Mon,  5 Sep 2005 13:33:05 +0200 (CEST)
-Received: from phoenix.burgerhome.de ([127.0.0.1])
- by localhost (phoenix [127.0.0.1]) (amavisd-new, port 10024) with LMTP
- id 17806-10 for <linux-ide@vger.kernel.org>;
- Mon,  5 Sep 2005 13:33:02 +0200 (CEST)
-Received: from localhost (router.burgerhome.de [192.168.0.1])
-	by phoenix.burgerhome.de (Postfix) with ESMTP id 988307ECB3C
-	for <linux-ide@vger.kernel.org>; Mon,  5 Sep 2005 13:33:02 +0200 (CEST)
-In-Reply-To: <20050904201844.GA12464@pog.tecnopolis.ca>
+Received: from nproxy.gmail.com ([64.233.182.207]:53823 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751207AbVIEMmq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 5 Sep 2005 08:42:46 -0400
+Received: by nproxy.gmail.com with SMTP id x37so339806nfc
+        for <linux-ide@vger.kernel.org>; Mon, 05 Sep 2005 05:42:43 -0700 (PDT)
+In-Reply-To: <C2F63384-9CC2-4979-956B-8CB5DA77F4AE@mac.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Kyle Moffett <mrmacman_g4@mac.com>
+Cc: LT-P <LT-P@lt-p.net>, Horms <horms@debian.org>, 321442@bugs.debian.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sunday 04 September 2005 21:18, Trevor Cordes wrote:
-> I'm getting a couple of times every couple of days:
->
-> Sep  1 07:09:53 piles kernel: hdq: dma_intr: bad DMA status (dma_stat=75)
-> Sep  1 07:09:53 piles kernel: hdq: dma_intr: status=0x50 { DriveReady
-> SeekComplete } Sep  1 07:09:53 piles kernel: ide: failed opcode was:
-> unknown
->
-> They're running off of the onboard Intel 845D IDE, onboard Promise PDC20276 
-> [...] 2 CMD680-based cards. [...] The 8 250's are all IDE masters.  The 4 
-> 160's share 2 IDE channels (master+slave). 
+Should be fixed in 2.6.13.
 
-I had a similar problem with a SiI680 (and since lspci states that Silicon 
-Image was formerly CMD Tech. I thought it might be related). In my case, I 
-got lost interrupts and dma errors when I used both channels of the SiI680 
-simultaneously. I serialized both channels (kernel parameters ide2=serialize 
-ide3=serialize) and the problems went away (I am not sure though how much of 
-a performance impact it has).
-
-If you want more detailed info on my scenario to compare it to yours, please 
-check bug 5145: http://bugzilla.kernel.org/show_bug.cgi?id=5145 .
-
-Christoph Burger-Scheidlin
+On 8/16/05, Kyle Moffett <mrmacman_g4@mac.com> wrote:
+> On Aug 13, 2005, at 18:54:30, LT-P wrote:
+> > Le lun 08 ao=FB 2005 17:57:04 CEST, Horms <horms@debian.org> a =E9c=
+rit:
+> >> Can you please enable BLK_DEV_IDEDMA_PCI and see if that resolves
+> >> your
+> >> problem. If it does, then the following patch should fix Kconfig
+> >> so that BLK_DEV_IDEDMA_PCI needs to be enabled for BLK_DEV_IDE_PMA=
+C
+> >> to be enabled. It should patch cleanly against Debian's 2.6.8 and
+> >> Linus' current Git tree.
+> > It seems to solve the problem, thanks.
+> > Sometimes, I feel like I am the only person in the world to compile
+> > the kernel on
+> > powerpc... :)
+>=20
+> Actually, I ran into this same bug a day or so ago when updating to
+> 2.6.13-rc6,
+> it's just I noticed the error, fixed my config, then recompiled and
+> forgot
+> about it completely until now :-D.  Thanks for the bug report, though=
+!
+>=20
+> Cheers,
+> Kyle Moffett
