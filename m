@@ -1,41 +1,64 @@
 From: Ravikiran G Thirumalai <kiran@scalex86.org>
-Subject: [patch 0/4] ide: Break ide_lock to per-hwgroup lock
-Date: Tue, 6 Sep 2005 16:33:22 -0700
-Message-ID: <20050906233322.GA3642@localhost.localdomain>
+Subject: [patch 1/4] ide: Break ide_lock -- Move hwif tuning code after hwif_init
+Date: Tue, 6 Sep 2005 16:37:37 -0700
+Message-ID: <20050906233737.GB3642@localhost.localdomain>
+References: <20050906233322.GA3642@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from serv01.siteground.net ([70.85.91.68]:25066 "EHLO
+Received: from serv01.siteground.net ([70.85.91.68]:39110 "EHLO
 	serv01.siteground.net") by vger.kernel.org with ESMTP
-	id S1751033AbVIFXdZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Sep 2005 19:33:25 -0400
+	id S1751059AbVIFXhh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Sep 2005 19:37:37 -0400
 Content-Disposition: inline
+In-Reply-To: <20050906233322.GA3642@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Shai Fultheim (Shai@scalex86.org)" <shai@scalex86.org>, Alok Kataria <alokk@calsoftinc.com>
 
-The following patchset breaks down the global ide_lock to per-hwgroup lock.
-We have taken the following approach.
+Following patch moves the hwif tuning code from probe_hwif to ideprobe_init
+after ideprobe_init calls hwif_init so that all hwif's have associated
+hwgroups.  With this patch, we should always have hwgroups for hwifs during
+calls the drive tune routines.
 
-1. Move the hwif tuning code from probe_hwif to ideprobe_init, after
-hwif_init so that hwgroups are present for all the hwifs when the tune
-routines for the hwifs are invoked (patch 1)
 
-2. Change the core ide code to use hwgroup->lock instead of ide_lock.
-Deprecate ide_lock (patch 2)
+Signed-off-by: Alok N Kataria <alokk@calsoftinc.com>
+Signed-off-by: Ravikiran Thirumalai <kiran@scalex86.org>
 
-3. Change the host controllers to use hwgroup->lock (patch 3)
-
-4. Change host controller drivers to use per driver lock instead of ide_lock
-where needed or hwgroup->lock on case by case basis. This can be done 
-incrementally for various controllers and we will have working code between 
-patches -- this is done now for piix controller only.  Eventually, 
-we can change all controllers to remove ide_lock
-
-Thanks to Bartlomiej for comments and suggestions.
-
-Patchset follows.  Patchset tested on a smp box with a piix controller.
-
-Thanks,
-Kiran
+Index: linux-2.6.13/drivers/ide/ide-probe.c
+===================================================================
+--- linux-2.6.13.orig/drivers/ide/ide-probe.c	2005-09-06 11:22:29.000000000 -0700
++++ linux-2.6.13/drivers/ide/ide-probe.c	2005-09-06 15:12:58.000000000 -0700
+@@ -852,8 +852,15 @@
+ 
+ 	if (!hwif->present) {
+ 		ide_hwif_release_regions(hwif);
+-		return;
+ 	}
++}
++
++static void ide_tune_drives(ide_hwif_t * hwif)
++{
++	unsigned int unit;
++
++	if (!hwif->present)
++		return;
+ 
+ 	for (unit = 0; unit < MAX_DRIVES; ++unit) {
+ 		ide_drive_t *drive = &hwif->drives[unit];
+@@ -1443,9 +1450,12 @@
+ 	for (index = 0; index < MAX_HWIFS; ++index)
+ 		if (probe[index])
+ 			probe_hwif(&ide_hwifs[index]);
+-	for (index = 0; index < MAX_HWIFS; ++index)
+-		if (probe[index])
++	for (index = 0; index < MAX_HWIFS; ++index) {
++		if (probe[index]) {
+ 			hwif_init(&ide_hwifs[index]);
++			ide_tune_drives(&ide_hwifs[index]);
++		}
++	}
+ 	for (index = 0; index < MAX_HWIFS; ++index) {
+ 		if (probe[index]) {
+ 			ide_hwif_t *hwif = &ide_hwifs[index];
