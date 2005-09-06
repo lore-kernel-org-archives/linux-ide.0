@@ -1,44 +1,41 @@
-From: David Hinds <dhinds@sonic.net>
-Subject: Re: [PATCH] Make ide-cs work for hardware with 8-bit CF-Interface
-Date: Tue, 6 Sep 2005 15:20:35 -0700
-Message-ID: <20050906222035.GA26345@sonic.net>
-References: <431DC80C.8030706@maintech.de>
+From: Ravikiran G Thirumalai <kiran@scalex86.org>
+Subject: [patch 0/4] ide: Break ide_lock to per-hwgroup lock
+Date: Tue, 6 Sep 2005 16:33:22 -0700
+Message-ID: <20050906233322.GA3642@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751046AbVIFWVF@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from serv01.siteground.net ([70.85.91.68]:25066 "EHLO
+	serv01.siteground.net") by vger.kernel.org with ESMTP
+	id S1751033AbVIFXdZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Sep 2005 19:33:25 -0400
 Content-Disposition: inline
-In-Reply-To: <431DC80C.8030706@maintech.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Thomas Kleffel (LKML)" <lkml@maintech.de>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Shai Fultheim (Shai@scalex86.org)" <shai@scalex86.org>, Alok Kataria <alokk@calsoftinc.com>
 
-On Tue, Sep 06, 2005 at 06:47:08PM +0200, Thomas Kleffel (LKML) wrote:
-> 
-> The following patch is against vanilla 2.6.13.
-> 
-> ldiff -uprN a/drivers/ide/legacy/ide-cs.c b/drivers/ide/legacy/ide-cs.c
-> --- a/drivers/ide/legacy/ide-cs.c       2005-08-08 15:30:35.000000000 +0200
-> +++ b/drivers/ide/legacy/ide-cs.c       2005-09-05 02:09:47.000000000 +0200
-> @@ -186,7 +186,8 @@ static int idecs_register(unsigned long
->  {
->      hw_regs_t hw;
->      memset(&hw, 0, sizeof(hw));
-> -    ide_init_hwif_ports(&hw, io, ctl, NULL);
-> +    ide_std_init_ports(&hw, io, ctl);
-> +    hw.io_ports[IDE_DATA_OFFSET] = io + 0x08;
->      hw.irq = irq;
->      hw.chipset = ide_pci;
->      return ide_register_hw_with_fixup(&hw, NULL, ide_undecoded_slave);
+The following patchset breaks down the global ide_lock to per-hwgroup lock.
+We have taken the following approach.
 
-You can't do this, at least not exactly this way.  io + 0x08 may not
-be a mapped IO address; it is only valid when a card is mapped with
-one contiguous 16-bit IO window.  PCMCIA IDE cards are not necessarily
-mapped that way: they may be mapped with one 8-port window and one
-1-port window, to match standard IBM PC IDE port locations.  In that
-case, the registers at 0x08 and 0x09 are not available.  The CF spec
-may impose more uniformity here than the PCMCIA spec does.  I do know
-that some IDE cards do end up configured with discontiguous register
-allocations when used with ide-cs.c.
+1. Move the hwif tuning code from probe_hwif to ideprobe_init, after
+hwif_init so that hwgroups are present for all the hwifs when the tune
+routines for the hwifs are invoked (patch 1)
 
--- Dave
+2. Change the core ide code to use hwgroup->lock instead of ide_lock.
+Deprecate ide_lock (patch 2)
+
+3. Change the host controllers to use hwgroup->lock (patch 3)
+
+4. Change host controller drivers to use per driver lock instead of ide_lock
+where needed or hwgroup->lock on case by case basis. This can be done 
+incrementally for various controllers and we will have working code between 
+patches -- this is done now for piix controller only.  Eventually, 
+we can change all controllers to remove ide_lock
+
+Thanks to Bartlomiej for comments and suggestions.
+
+Patchset follows.  Patchset tested on a smp box with a piix controller.
+
+Thanks,
+Kiran
