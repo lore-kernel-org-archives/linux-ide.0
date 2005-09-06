@@ -1,65 +1,49 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: RE :sata_sil + UDMA CRC errors
-Date: Tue, 6 Sep 2005 20:56:59 +0900
-Message-ID: <20050906115659.GA16865@htj.dyndns.org>
-References: <1126006398.3097.9.camel@m00>
+From: Brett Russ <russb@emc.com>
+Subject: Re: [PATCH 2.6.13] libata: use common pci remove in ahci
+Date: Tue, 06 Sep 2005 11:09:27 -0400
+Message-ID: <431DB127.3010809@emc.com>
+References: <20050903071852.95A10271C2@lns1058.lss.emc.com> <431CBDCB.40903@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.204]:17226 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964831AbVIFL5G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Sep 2005 07:57:06 -0400
-Received: by zproxy.gmail.com with SMTP id 13so992230nzn
-        for <linux-ide@vger.kernel.org>; Tue, 06 Sep 2005 04:57:05 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1126006398.3097.9.camel@m00>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750713AbVIFPJy@vger.kernel.org>
+In-Reply-To: <431CBDCB.40903@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Shaposhnikov <shaposh@isp.nsc.ru>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "lbattraw@insightbb.com" <lbattraw@insightbb.com>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "Carlos.Pardo@siliconimage.com" <Carlos.Pardo@siliconimage.com>, Yuri Kirsanov <flash@rccb.ru>, Paul Taylor <Paul.Taylor@siliconimage.com>
 
-On Tue, Sep 06, 2005 at 06:33:18PM +0700, Alexander Shaposhnikov wrote:
+Jeff Garzik wrote:
+> Brett Russ wrote:
+>> 2) Isn't it wrong for the IRQ disable at the chip to occur *after*
+>> free_irq() is called to disconnect the handler (independent of
+>> question 1...since this is the case currently)?  Granted, all of the
+>> ports have gone through scsi_remove_host() but theoretically there
+>> still is a possibility the chip could interrupt.
+>>
+>> If I'm wrong on both counts I'll blame it on need for sleep... :-)
 > 
-> Hi again.
 > 
-> Some time ago i reported bugs in sata_sil driver.
 > 
-> It seems that latest kernel 2.6.13-git4 solved all the problems for my Seagate SATA drive.
-> However, nothing has changed with Samsung drive, i am still getting alot of CRC errors.
-> There is probably some unknown compatibility issue with Samsung drives and sil3114 controller.
+> Moving AHCI away from ata_pci_remove_one() was actually intentional. 
+> This gives the driver a bit more freedom:  legacy region handling and 
+> ->host_stop() became unnecessary.  Also, I was concerned that 
+> ata_pci_remove_one() might grow into a one-size-fits-all unmaintainable 
+> behemoth.
 > 
-> If somebody is interested in this, i can provide more detailed information.
+> Short term, if one were being obsessive, a potential cleanup could be to 
+> make common the two loops in ahci_remove_one()/ata_pci_remove_one().
+> 
+> Long term, libata driver API should become more like the 
+> register_foo()/unregister_foo() interfaces you see elsewhere in the 
+> kernel.  That direction has the potential to shake up the current code 
+> path through ata_pci_remove_one().
+> 
+> So... your patch, while technically correct, is going in the opposite 
+> direction to where I want to go :)
 
- Hello, Alexander.
 
- AFAIK, there has been no change since you reported the problem last
-time which can affect your CRC errors.  I think what you're seeing is
-a hardware problem - be it the controller, cable or whatever.
-Transfer errors due to hardware problems can come and go away with
-silly silly reasons.  For example, placing SATA cables differently
-inside your case can make CRC errors go away (especially because SATA
-cables are not shielded/twisted).
+Good to know, thanks for explaining the goals.  How about question #2 above?
 
- The thing is that CRC errors can be ignored and commands can be
-retried without much performance hit - the head is probably already
-there and only data needs to be transferred again.  I believe that's
-what's going on when you're on Windows.
-
-  Also, you've previously mentioned that you see much less errors with
-my m15w workaround applied.  That's not because the workaround does
-something to alleviate transfer errors.  All it does is reducing
-number of commands issued, thus reducing number of errors too.
-
- I have both Segate and Samsung drives and both work happily with my
-3112 (not 3114 but still...) controller.  From what you're reporting
-(disappearance of CRC errors on a drive without clear reasons), I'm
-very inclined to think that you have a faulty hardware.
-
- To verify, can you please try again the kernel you used when
-initially reporting this (2.6.12-rc6, right?) and see if it still
-produces CRC errors on the Seagate drive?
-
- Thanks.
-
--- 
-tejun
+Thanks,
+BR
