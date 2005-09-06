@@ -1,58 +1,44 @@
-From: Thomas Kleffel <tk@maintech.de>
-Subject: [PATCH] fix kernel oops with CF-Cards
-Date: Tue, 06 Sep 2005 21:13:21 +0200
-Message-ID: <431DEA51.1080100@maintech.de>
+From: David Hinds <dhinds@sonic.net>
+Subject: Re: [PATCH] Make ide-cs work for hardware with 8-bit CF-Interface
+Date: Tue, 6 Sep 2005 15:20:35 -0700
+Message-ID: <20050906222035.GA26345@sonic.net>
+References: <431DC80C.8030706@maintech.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from touchdown.wvpn.de ([212.227.64.97]:41168 "EHLO mail.wvpn.de")
-	by vger.kernel.org with ESMTP id S1750808AbVIFTNW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Sep 2005 15:13:22 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751046AbVIFWVF@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <431DC80C.8030706@maintech.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Thomas Kleffel (LKML)" <lkml@maintech.de>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+On Tue, Sep 06, 2005 at 06:47:08PM +0200, Thomas Kleffel (LKML) wrote:
+> 
+> The following patch is against vanilla 2.6.13.
+> 
+> ldiff -uprN a/drivers/ide/legacy/ide-cs.c b/drivers/ide/legacy/ide-cs.c
+> --- a/drivers/ide/legacy/ide-cs.c       2005-08-08 15:30:35.000000000 +0200
+> +++ b/drivers/ide/legacy/ide-cs.c       2005-09-05 02:09:47.000000000 +0200
+> @@ -186,7 +186,8 @@ static int idecs_register(unsigned long
+>  {
+>      hw_regs_t hw;
+>      memset(&hw, 0, sizeof(hw));
+> -    ide_init_hwif_ports(&hw, io, ctl, NULL);
+> +    ide_std_init_ports(&hw, io, ctl);
+> +    hw.io_ports[IDE_DATA_OFFSET] = io + 0x08;
+>      hw.irq = irq;
+>      hw.chipset = ide_pci;
+>      return ide_register_hw_with_fixup(&hw, NULL, ide_undecoded_slave);
 
-when a mounted CF-Card is removed from the system, inserted back into 
-the slot, removed again, and then umount is called for that device the 
-kernel oopes.
+You can't do this, at least not exactly this way.  io + 0x08 may not
+be a mapped IO address; it is only valid when a card is mapped with
+one contiguous 16-bit IO window.  PCMCIA IDE cards are not necessarily
+mapped that way: they may be mapped with one 8-port window and one
+1-port window, to match standard IBM PC IDE port locations.  In that
+case, the registers at 0x08 and 0x09 are not available.  The CF spec
+may impose more uniformity here than the PCMCIA spec does.  I do know
+that some IDE cards do end up configured with discontiguous register
+allocations when used with ide-cs.c.
 
-(This is a slightly different issue than noted in my last mail.)
-
-This happens because the reference counting gets confused. When a disk 
-gets released by ide_disk_release() it sets the driver_data member of 
-the corresponding drive to NULL. This is bad, as the pyhsical drive 
-could be assigned to another idkp structure in the meantime (happens, 
-when the drive is removed and inserted again).
-
-My fix is to simply leave the drive alone when a disk is released. This 
-shouldn't cause any side-effects - drive->driver_data isn't tested for 
-containing NULL anywhere.
-
-The following patch (against vanilla 2.6.13) fixes that problem:
-
-diff -uprN -X b/Documentation/dontdiff a/drivers/ide/ide-disk.c 
-b/drivers/ide/ide-disk.c
---- a/drivers/ide/ide-disk.c	2005-08-24 17:58:02.000000000 +0200
-+++ b/drivers/ide/ide-disk.c	2005-09-05 02:10:30.000000000 +0200
-@@ -1048,11 +1048,8 @@ static int ide_disk_remove(struct device
-  static void ide_disk_release(struct kref *kref)
-  {
-  	struct ide_disk_obj *idkp = to_ide_disk(kref);
--	ide_drive_t *drive = idkp->drive;
-  	struct gendisk *g = idkp->disk;
-
--	drive->driver_data = NULL;
--	drive->devfs_name[0] = '\0';
-  	g->private_data = NULL;
-  	put_disk(g);
-  	kfree(idkp);
-
-Signed-off-by: Thomas Kleffel <tk@maintech.de>
-
-Best regards,
-Thomas
-
+-- Dave
