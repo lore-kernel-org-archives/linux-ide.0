@@ -1,40 +1,58 @@
-From: Jim Ramsay <jim.ramsay@gmail.com>
-Subject: Re: [PATCH 3/3] Add disk hotswap support to libata RESEND #2
-Date: Tue, 6 Sep 2005 13:02:07 -0600
-Message-ID: <4789af9e05090612023fb8517c@mail.gmail.com>
-References: <355e5e5e05080103021a8239df@mail.gmail.com>
-	 <4789af9e050823124140eb924f@mail.gmail.com>
-	 <4789af9e050823154364c8e9eb@mail.gmail.com>
-	 <430BA990.9090807@mvista.com> <430BCB41.5070206@s5r6.in-berlin.de>
-	 <355e5e5e05082407031138120a@mail.gmail.com>
-	 <4789af9e05082408111c4a6294@mail.gmail.com>
-	 <4789af9e05082409121cc6870@mail.gmail.com>
-	 <4789af9e0508291223435f174@mail.gmail.com>
-Reply-To: jim.ramsay@gmail.com
+From: Thomas Kleffel <tk@maintech.de>
+Subject: [PATCH] fix kernel oops with CF-Cards
+Date: Tue, 06 Sep 2005 21:13:21 +0200
+Message-ID: <431DEA51.1080100@maintech.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4789af9e0508291223435f174@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: Lukasz Kosewski <lkosewsk@gmail.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from touchdown.wvpn.de ([212.227.64.97]:41168 "EHLO mail.wvpn.de")
+	by vger.kernel.org with ESMTP id S1750808AbVIFTNW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Sep 2005 15:13:22 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Regarding the sata_promise.c patch, I think I have found a bug in the
-interrupt handler:
+Hello,
 
-Just before the 'try_hotplug' label, you provide a check that will
-kick us out of the interrupt handler if the interrupt was just handled
-by a DMA command completing successfully.
+when a mounted CF-Card is removed from the system, inserted back into 
+the slot, removed again, and then umount is called for that device the 
+kernel oopes.
 
-However, I have seen the occasion where a single IRQ is used to signal
-both a DMA completion AND a hotplug event.  Of course in this case the
-hotplug event itself would be ignored completely.
+(This is a slightly different issue than noted in my last mail.)
 
-So I would recommend getting rid of that check entirely.
+This happens because the reference counting gets confused. When a disk 
+gets released by ide_disk_release() it sets the driver_data member of 
+the corresponding drive to NULL. This is bad, as the pyhsical drive 
+could be assigned to another idkp structure in the meantime (happens, 
+when the drive is removed and inserted again).
 
--- 
-Jim Ramsay
-"Me fail English?  That's unpossible!"
+My fix is to simply leave the drive alone when a disk is released. This 
+shouldn't cause any side-effects - drive->driver_data isn't tested for 
+containing NULL anywhere.
+
+The following patch (against vanilla 2.6.13) fixes that problem:
+
+diff -uprN -X b/Documentation/dontdiff a/drivers/ide/ide-disk.c 
+b/drivers/ide/ide-disk.c
+--- a/drivers/ide/ide-disk.c	2005-08-24 17:58:02.000000000 +0200
++++ b/drivers/ide/ide-disk.c	2005-09-05 02:10:30.000000000 +0200
+@@ -1048,11 +1048,8 @@ static int ide_disk_remove(struct device
+  static void ide_disk_release(struct kref *kref)
+  {
+  	struct ide_disk_obj *idkp = to_ide_disk(kref);
+-	ide_drive_t *drive = idkp->drive;
+  	struct gendisk *g = idkp->disk;
+
+-	drive->driver_data = NULL;
+-	drive->devfs_name[0] = '\0';
+  	g->private_data = NULL;
+  	put_disk(g);
+  	kfree(idkp);
+
+Signed-off-by: Thomas Kleffel <tk@maintech.de>
+
+Best regards,
+Thomas
+
