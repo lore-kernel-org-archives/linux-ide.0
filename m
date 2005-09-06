@@ -1,63 +1,133 @@
-From: "Thomas Kleffel (LKML)" <lkml@maintech.de>
-Subject: [PATCH] Make ide-cs work for hardware with 8-bit CF-Interface
-Date: Tue, 06 Sep 2005 18:47:08 +0200
-Message-ID: <431DC80C.8030706@maintech.de>
+From: Thomas Kleffel <tk@maintech.de>
+Subject: [PATCH] fix kernel oops, when IDE-Device (CF-Card) is removed while
+ mounted.
+Date: Tue, 06 Sep 2005 20:54:32 +0200
+Message-ID: <431DE5E8.8000703@maintech.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from touchdown.wvpn.de ([212.227.64.97]:60148 "EHLO mail.wvpn.de")
-	by vger.kernel.org with ESMTP id S1750760AbVIFQrK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Sep 2005 12:47:10 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750795AbVIFSyd@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 Hello,
 
-it is technically possible to access a CF-Card with an 8-bit width bus.
+when I physically remove a CF-Card while it is still mounted and 
+accessed, the result is a kernel oops. I traced the problem down to the 
+following situation:
 
-The problem with the current code is that the IDE code does a 16 (or 32) 
-bit read on the IDE data register. If the bus interface for a 8-bit bus 
-would then do two reads to offsets 0 and 1.
+1) Physical device is removed and the corresponding ide_trive_t gets 
+deleted, reference to the contained *queue is given back and queue gets 
+deleted.
 
-The second read (to offset 1) then reads the error register instead of 
-the data register's odd byte.
+2) struct block_device still exists, because the device is still 
+mounted, and points to a struct gendisk, which contains the - now 
+invalid - pointer to the queue that was destructed earlier.
 
-To fix this problem I've changed the ide-cs code to use the duplicated 
-data registers at offset 8 and 9 which are not overlapped with anything.
+3) As soon as a request is sent to the block device, the queue pointer 
+is used and the kernel oopses.
 
-According to the specs, those registers should be there in every CF 
-card. I've tested this with a couple of CFs, including SanDisk, 
-Microdrive and several NoNames.
+To fix this matter, I've made the following changes:
 
-The specific architechture I'm using this on is a AT91RM9200 with kernel 
-2.6.13 and the patches from http://maxim.org.za/AT91RM9200/2.6/.
+1a) When a queue is attached to a struct gendisk by ide_disk_probe(), 
+its reference counter shall be incremented by a blk_get_queue()-call.
 
-For more information on the overlapped / non-overlapped registers see 
-http://www.compactflash.org/cfspc3_0.pdf - page 96
+1b) When a disk is released by disk_release(), its queue's reference 
+count shall be decremented by calling blk_cleanup_queue().
 
-The following patch is against vanilla 2.6.13.
+2a) When a physical drive is released by drive_release_dev(), the 
+corresponding queue is marked dead, so that no further calls to the 
+physical device's queue-handler are made.
 
-ldiff -uprN a/drivers/ide/legacy/ide-cs.c b/drivers/ide/legacy/ide-cs.c
---- a/drivers/ide/legacy/ide-cs.c       2005-08-08 15:30:35.000000000 +0200
-+++ b/drivers/ide/legacy/ide-cs.c       2005-09-05 02:09:47.000000000 +0200
-@@ -186,7 +186,8 @@ static int idecs_register(unsigned long
+2b) When a request is submitted to a dead queue using 
+generic_make_request(), the request shall be failed immedaiately with 
+-ENXIO which causes the caller to recive a "Bus error". This is the same 
+beaviour as when a USB-Storage device gets pulled while in use.
+
+
+diff -uprN -X b/Documentation/dontdiff a/drivers/block/genhd.c 
+b/drivers/block/genhd.c
+--- a/drivers/block/genhd.c	2005-08-08 15:30:13.000000000 +0200
++++ b/drivers/block/genhd.c	2005-09-05 02:07:46.000000000 +0200
+@@ -415,6 +415,9 @@ static struct attribute * default_attrs[
+  static void disk_release(struct kobject * kobj)
   {
-      hw_regs_t hw;
-      memset(&hw, 0, sizeof(hw));
--    ide_init_hwif_ports(&hw, io, ctl, NULL);
-+    ide_std_init_ports(&hw, io, ctl);
-+    hw.io_ports[IDE_DATA_OFFSET] = io + 0x08;
-      hw.irq = irq;
-      hw.chipset = ide_pci;
-      return ide_register_hw_with_fixup(&hw, NULL, ide_undecoded_slave);
+  	struct gendisk *disk = to_disk(kobj);
++	
++	blk_cleanup_queue(disk->queue);
++	
+  	kfree(disk->random);
+  	kfree(disk->part);
+  	free_disk_stats(disk);
+diff -uprN -X b/Documentation/dontdiff a/drivers/block/ll_rw_blk.c 
+b/drivers/block/ll_rw_blk.c
+--- a/drivers/block/ll_rw_blk.c	2005-08-13 15:54:15.000000000 +0200
++++ b/drivers/block/ll_rw_blk.c	2005-09-05 02:08:35.000000000 +0200
+@@ -2877,15 +2877,26 @@ end_io:
+  		}
+
+  		if (unlikely(bio_sectors(bio) > q->max_hw_sectors)) {
+-			printk("bio too big device %s (%u > %u)\n",
++			printk(KERN_ERR
++				"generic_make_request: "
++				"bio too big device %s (%u > %u)\n",
+  				bdevname(bio->bi_bdev, b),
+  				bio_sectors(bio),
+  				q->max_hw_sectors);
+  			goto end_io;
+  		}
+
+-		if (unlikely(test_bit(QUEUE_FLAG_DEAD, &q->queue_flags)))
+-			goto end_io;
++		if (unlikely(test_bit(QUEUE_FLAG_DEAD, &q->queue_flags))) {
++			printk(KERN_ERR
++				"generic_make_request: access to "
++				"dead device %s (%Lu)\n",
++				bdevname(bio->bi_bdev, b),
++				(long long) bio->bi_sector);
++			bio_endio(bio, bio->bi_size, -ENXIO);
++			break;
++		}
+
+  		block_wait_queue_running(q);
+
+diff -uprN -X b/Documentation/dontdiff a/drivers/ide/ide-disk.c 
+b/drivers/ide/ide-disk.c
+--- a/drivers/ide/ide-disk.c	2005-08-24 17:58:02.000000000 +0200
++++ b/drivers/ide/ide-disk.c	2005-09-05 02:10:30.000000000 +0200
+@@ -1224,6 +1221,9 @@ static int ide_disk_probe(struct device
+  	if (!g)
+  		goto out_free_idkp;
+
++	if(0 != blk_get_queue(drive->queue))
++		goto out_free_idkp;
++
+  	ide_init_disk(g, drive);
+
+  	ide_register_subdriver(drive, &idedisk_driver);
+diff -uprN -X b/Documentation/dontdiff a/drivers/ide/ide-probe.c 
+b/drivers/ide/ide-probe.c
+--- a/drivers/ide/ide-probe.c	2005-08-24 17:58:02.000000000 +0200
++++ b/drivers/ide/ide-probe.c	2005-09-05 02:10:59.000000000 +0200
+@@ -1321,6 +1321,13 @@ static void drive_release_dev (struct de
+  		drive->id = NULL;
+  	}
+  	drive->present = 0;
++
++	/* Set the queue dead, so it won't call us anymore */
++	set_bit(QUEUE_FLAG_DEAD, &drive->queue->queue_flags);
++
++	/* remove pointer to ide drive as it will be gone, soon */
++	drive->queue->queuedata = NULL;
++
+  	/* Messed up locking ... */
+  	spin_unlock_irq(&ide_lock);
+  	blk_cleanup_queue(drive->queue);
 
 
 Signed-off-by: Thomas Kleffel <tk@maintech.de>
 
-
 Best regards,
-
 Thomas
