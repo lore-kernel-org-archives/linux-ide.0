@@ -1,254 +1,110 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC] current libata eh doc
-Date: Wed, 07 Sep 2005 04:17:16 -0400
-Message-ID: <431EA20C.7000108@pobox.com>
-References: <20050828024025.GA10501@htj.dyndns.org>
+Subject: Re: [RFC] libata new EH document
+Date: Wed, 07 Sep 2005 04:25:08 -0400
+Message-ID: <431EA3E4.5060402@pobox.com>
+References: <20050829061124.GA2725@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:29676 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751108AbVIGIRZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2005 04:17:25 -0400
-In-Reply-To: <20050828024025.GA10501@htj.dyndns.org>
+Received: from mail.dvmed.net ([216.237.124.58]:36076 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750839AbVIGIZQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2005 04:25:16 -0400
+In-Reply-To: <20050829061124.GA2725@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
->  Hello, libata developers.
+>  Hello, Jeff, Albert & ATA developers.
 > 
->  This document describes current libata EH.  (I have decided to keep
-> ATA exceptions doc, this and yet-to-be-posted new EH doc separate.)  I
-> hope this can help EH discussion.
-
-It would be nice to add this to Documentation/DocBook/libata.tmpl, and 
-update it as work in libata EH progresses...  If you were motivated... :)
-
-
-> libata EH
+>  This is the final one of recent document series for libata EH - SCSI
+> EH, ATA exceptions, libata EH and, this one - libata new EH.
+> 
+>  This document tries to discuss how to implement new advanced EH.  It
+> also describes some proposed mechanisms in detail.  I'm aware that
+> things are vague without actual code, but I still think this document
+> alone can at least help discussion if nothing else.  As long as some
+> consensus is reached regarding general desing, I'll follow up with
+> patches.
+> 
+>  Jeff, a lot are from my previous new EH/NCQ patchset but also quite
+> a bit has changed (for better, I hope).
+> 
+>  Thanks.
+> 
+> 
+> libata new EH
 > ======================================
 > 
->  This document describes how errors are handled under current libata.
-> Where current means ALL head of libata-dev-2.6 git tree as of
-> 2005-08-26, commit ab9b494f6aeab24eda2e6462e2fe73789c288e73.  Readers
-> are advised to read SCSI EH and ATA exceptions documents first.
+>  As discussed in the previous libata EH doc, the current libata EH
+> needs some improvements.  This document discusses goals of new libata
+> EH and how to reach them.  Please read SCSI EH, ATA exceptions and
+> libata EH documents first.
+> 
+> TABLE OF CONTENTS
+> 
+> [1] Goals & design choices
+>     [1-1] Use SCSI hostt->eh_strategy_handler()
+>     [1-2] Unified error path in an EH thread
+>     [1-3] Synchronization
+>     [1-4] Clean mechanism to hand off qc's to EH
+>     [1-5] Separate EH qc
+>     [1-6] SCSI/libata separation
+> [2] Designs
+>     [2-1] Handoff of failed qc's
+>     [2-2] Timed out scmd's and qc's
+>     [2-3] Summary of [2-1] and [2-2]
+>     [2-4] EH processing & completion
+> [3] Ideas
+>     [3-1] Using EH for non-error exceptions and dynamic reconfiguration
+>     [3-2] Using EH for host_set level exclusion
+> [4] Implementation plan
 > 
 > 
-> [1] Origins of commands
+> [1] Goals & design choices
 > 
->  In libata, a command is represented with struct ata_queued_cmd or qc.
-> qc's are preallocated during port initialization and repetitively used
-> for command executions.  Currently only one qc is allocated per port
-> but yet-to-be-merged NCQ branch allocates one for each tag and maps
-> each qc to NCQ tag 1-to-1.
+>  The final goal is implementing advanced error handling as described
+> in ATA exceptions document including NCQ EH, dynamic transport
+> reconfiguration and non-error exception handling for power management
+> and hot plugging.
 > 
->  libata commands can originate from two sources - libata itself and
-> SCSI midlayer.  libata internal commands are used for initialization
-> and error handling.  All normal blk requests and commands for SCSI
-> emulation are passed as SCSI commands through queuecommand callback of
-> SCSI host template.
+>  The followings are sub goals and design choices to reach the final
+> goal.
 > 
 > 
-> [2] How commands are issued
+> [1-1] Use SCSI hostt->eh_strategy_handler()
 > 
-> [2-1] Internal commands
+>     We have two other alternatives here - one is using fine-grained
+>     SCSI EH callbacks and the other is implementing separate EH for
+>     libata.
 > 
->  First, qc is allocated and initialized using ata_qc_new_init().
-> Although ata_qc_new_init() doesn't implement any wait or retry
-> mechanism when qc is not available, internal commands are currently
-> issued only during initialization and error recovery, so no other
-> command is active and allocation is guaranteed to succeed.
-> 
->  Once allocated qc's taskfile is initialized for the command to be
-> executed.  qc currently has two mechanisms to notify completion.  One
-> is via qc->complete_fn() callback and the other is completion
-> qc->waiting.  Internal commands always use qc->waiting.
+>     Using fine-grained SCSI EH callbacks is possible, but it has too
+>     much SCSI/SPI assumptions in it -
 
-I would note that ->complete_fn() is the asynchronous path, and 
-qc->waiting is the synchronous (sleeping in process context) path.
+Not really.  When you notice an error, and inform the SCSI stack of that, it
 
+- tries to abort the command using abort_handler
+- if that failed, tries to reset the device
+- if that failed, tries to reset the bus
+- if that failed, tries to reset the host
 
->  Once initialization is complete, host_set lock is acquired and the qc
-> is issued.
-> 
-> 
-> [2-2] SCSI commands
-> 
->  All libata drivers use ata_scsi_queuecmd() as hostt->queuecommand
-> callback.  scmds can either be simulated or translated.  No qc is
-> involved in processing a simulated scmd.  The result is computed right
-> away and the scmd is completed.
-> 
->  For a translated scmd, ata_qc_new_init() is invoked to allocate a qc
-> and the scmd is translated into the qc.  SCSI midlayer's completion
-> notification function pointer is stored into qc->scsidone.
-> 
->  qc->complete_fn() callback is used for completion notification.  ATA
-> commands use ata_scsi_qc_complete() while ATAPI commands use
-> atapi_qc_complete().  Both functions end up calling qc->scsidone to
-> notify upper layer when the qc is finished.  After translation is
-> completed, the qc is issued with ata_qc_issue().
-> 
->  Note that SCSI midlayer invokes hostt->queuecommand while holding
-> host_set lock, so all above occur while holding host_set lock.
-> 
-> 
-> [3] How commands are processed
-> 
->  Depending on which protocol and which controller are used, commands
-> are processed differently.  For the purpose of discussion, a
-> controller which uses taskfile interface and all standard callbacks is
-> assumed.
-> 
->  Currently 6 ATA command protocols are used.  They can be sorted into
-> the following four categories according to how they are processed.
-> 
->  a. ATA NO DATA or DMA
-> 
->     ATA_PROT_NODATA and ATA_PROT_DMA fall into this category.  These
->     types of commands don't require any software intervention once
->     issued.  Device will raise interrupt on completion.
-> 
->  b. ATA PIO
-> 
->     ATA_PROT_PIO is in this category.  libata currently implements PIO
->     with polling.  ATA_NIEN bit is set to turn off interrupt and
->     pio_task on ata_wq performs polling and IO.
-> 
->  c. ATAPI NODATA or DMA
-> 
->     ATA_PROT_ATAPI_NODATA and ATA_PROT_ATAPI_DMA are in this category.
->     packet_task is used to poll BSY bit after issuing PACKET command.
->     Once BSY is turned off by the device, packet_task transfers CDB
->     and hands off processing to interrupt handler.
-> 
->  d. ATAPI PIO
-> 
->     ATA_PROT_ATAPI is in this category.  ATA_NIEN bit is set and, as
->     in #c, packet_task submits cdb.  However, after submitting cdb,
->     further processing (data transfer) is handed off to pio_task.
-> 
-> 
-> [4] How commands are completed
-> 
->  Once issued, all qc's are either completed with ata_qc_complete() or
-> time out.  For commands which are handled by interrupts,
-> ata_host_intr() invokes ata_qc_complete(), and, for PIO tasks,
-> pio_task invokes ata_qc_complete().  In error cases, packet_task may
-> also complete commands.
-> 
->  ata_qc_complete() does the following.
-> 
->  1. DMA memory is unmapped.
->  2. ATA_QCFLAG_ACTIVE is clared from qc->flags.
->  3. qc->complete_fn() callback is invoked.  If the return value of the
->     callback is not zero.  Completion is short circuited and
->     ata_qc_complete() returns.
->  4. __ata_qc_complete() is called, which does
->     1. qc->flags is cleared to zero.
->     2. ap->active_tag and qc->tag are poisoned.
->     3. qc->waiting is claread & completed (in that order).
->     4. qc is deallocated by clearing appropriate bit in ap->qactive.
-> 
->  So, it basically notifies upper layer and deallocates qc.  One
-> exception is short-circuit path in #3 which is used by
-> atapi_qc_complete().
-> 
->  For all non-ATAPI commands, whether it fails or not, almost the same
-> code path is taken and very little error handling takes place.  A qc
-> is completed with success status if it succeeded, with failed status
-> otherwise.
-> 
->  However, failed ATAPI commands require more handling as REQUEST SENSE
-> is needed to acquire sense data.  If an ATAPI command fails,
-> ata_qc_complete() is invoked with error status, which in turn invokes
-> atapi_qc_complete() via qc->complete_fn() callback.
-> 
->  This makes atapi_qc_complete() set scmd->result to
-> SAM_STAT_CHECK_CONDITION, complete the scmd and return 1.  As the
-> sense data is empty but scmd->result is CHECK CONDITION, SCSI midlayer
-> will invoke EH for the scmd, and returning 1 makes ata_qc_complete()
-> to return without deallocating the qc.  This leads us to
-> ata_scsi_error() with partially completed qc.
-> 
-> 
-> [5] ata_scsi_error()
-> 
->  ata_scsi_error() is the current hostt->eh_strategy_handler() for
-> libata.  As discussed above, this will be entered in two cases -
-> timeout and ATAPI error completion.  This function calls low level
-> libata driver's eng_timeout() callback, the standard callback for
-> which is ata_eng_timeout().  It checks if a qc is active and calls
-> ata_qc_timeout() on the qc if so.  Actual error handling occurs in
-> ata_qc_timeout().
-> 
->  If EH is invoked for timeout, ata_qc_timeout() stops BMDMA and
-> completes the qc.  Note that as we're currently in EH, we cannot call
-> scsi_done.  As described in SCSI EH doc, a recovered scmd should be
-> either retried with scsi_queue_insert() or finished with
-> scsi_finish_command().  Here, we override qc->scsidone with
-> scsi_finish_command() and calls ata_qc_complete().
-> 
->  If EH is invoked due to a failed ATAPI qc, the qc here is completed
-> but not deallocated.  The purpose of this half-completion is to use
-> the qc as place holder to make EH code reach this place.  This is a
-> bit hackish, but it works.
-> 
->  Once control reaches here, the qc is deallocated by invoking
-> __ata_qc_complete() explicitly.  Then, internal qc for REQUEST SENSE
-> is issued.  Once sense data is acquired, scmd is finished by directly
-> invoking scsi_finish_command() on the scmd.  Note that as we already
-> have completed and deallocated the qc which was associated with the
-> scmd, we don't need to/cannot call ata_qc_complete() again.
-> 
-> 
-> [6] Problems with the current EH
-> 
->  - When handling timeouts, no action is taken to make device forget
->    about the timed out command and ready for new commands.
-> 
->  - EH handling via ata_scsi_error() is not properly protected from
->    usual command processing.  On EH entrance, the device is not in
->    quiescent state.  Timed out commands may succeed or fail any time.
->    pio_task and atapi_task may still be running.
+Nothing SPI-specific about that.
+Nothing SCSI-specific about that, either :)
 
-[tangent] we might want a flush_scheduled_work() in the EH
+That is the ordering that we would like to use, and it maps directly to 
+SCSI EH
 
 
->  - Too weak error recovery.  Devices / controllers causing HSM
->    mismatch errors and other errors quite often require reset to
->    return to known state.  Also, advanced error handling is necessary
->    to support features like NCQ and hotplug.
-> 
->  - ATA errors are directly handled in the interrupt handler and PIO
->    errors in pio_task.  This is problematic for advanced error
->    handling for the following reasons.
-> 
->    First, advanced error handling often requires context and internal
->    qc execution.
-> 
->    Second, even a simple failure (say, CRC error) needs information
->    gathering and could trigger complex error handling (say, resetting
->    & reconfiguring).  Having multiple code paths to gather
->    information, enter EH and trigger actions makes life painful.
-> 
->    Third, scattered EH code makes implementing low level drivers
->    difficult.  Low level drivers override libata callbacks.  If EH is
->    scattered over several places, each affected callbacks should
->    perform its part of error handling.  This can be error prone and
->    painful.
+>  Also, as described in the
+>     SCSI EH doc, it issues several SCSI commands for recovery.  They
+>     can be translated but recovery through translation is a bit
+>     creepy, IMHO.
 
-One of the biggest overall problems is the lack of distinction between 
-an ATA device error and other errors.  ATA device errors are easy, since 
-the device is in a known state.
+Agreed RE translation
 
-Currently libata fakes PCI/ATA bus errors by passing ATA_ERR to 
-ata_qc_complete(), and some of the associated machinery only knows about 
-ATA errors.  Passing ATA_ERR to ata_qc_completely() is definitely ugly, 
-and wants fixing.  And if the error is not an ATA device error, then the 
-device (and buses) are in an unknown state, at that point.
+I'll reply to more of this doc when I have some sleep :)
 
 	Jeff
 
