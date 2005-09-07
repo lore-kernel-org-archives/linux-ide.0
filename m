@@ -1,78 +1,42 @@
-From: Erik Slagter <erik@slagter.name>
-Subject: Re: Re:
-Date: Wed, 07 Sep 2005 11:28:26 +0200
-Message-ID: <1126085307.19250.26.camel@localhost.localdomain>
-References: <011401c5b2b2$becb3b40$1f01a8c0@Ric> <431D4C7A.3000908@yahoo.de>
-	 <016b01c5b2bc$c2cc93b0$1f01a8c0@Ric> <431D76CE.5090007@yahoo.de>
-	 <007301c5b38d$78f3c750$1f01a8c0@Ric>
+From: Marc Bevand <mb@opensc.org>
+Subject: Re: [sata_sil24] v0.10 works, v0.20 doesn't
+Date: Wed, 7 Sep 2005 11:37:12 +0200
+Message-ID: <20050907093712.GA20006@est.epita.fr>
+References: <20050904140239.GA11855@htj.dyndns.org> <loom.20050905T024247-999@post.gmane.org> <431BC732.2010907@gmail.com> <20050905134311.GA15419@est.epita.fr> <20050905230234.GA543@htj.dyndns.org> <20050905231753.GA1003@htj.dyndns.org> <20050906011254.GA23144@est.epita.fr> <20050906015428.GA13521@htj.dyndns.org> <20050906093659.GB14270@est.epita.fr> <20050907013917.GA2803@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-wZjq/QP9xzGRIObNhigc"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oldconomy.demon.nl ([212.238.217.56]:21635 "EHLO
-	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S1751116AbVIGJ3R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Sep 2005 05:29:17 -0400
-In-Reply-To: <007301c5b38d$78f3c750$1f01a8c0@Ric>
+Received: from deliver.epitech.net ([163.5.255.125]:10759 "HELO
+	deliver.epitech.net") by vger.kernel.org with SMTP id S932079AbVIGJhi
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Sep 2005 05:37:38 -0400
+Content-Disposition: inline
+In-Reply-To: <20050907013917.GA2803@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Riccardo Castellani <r.castellani@usl6.toscana.it>
-Cc: Stefan <gentoopower@yahoo.de>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
+Hi Tejun.
 
---=-wZjq/QP9xzGRIObNhigc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Tejun Heo wrote:
+| 
+|  Here's a big patch against sil24-original branch.  It contains the
+| followings.
+| 
+|  a. build fix & oops fix for sil24-original branch
+|  b. backported sata_sil24_new driver
+|  c. debug messages (you don't need to turn on ATA_DEBUG)
+|  d. 50ms sleep after completion of IDENTIFY before actually reading data
+| 
+|  Building both sata_sil24 and sata_sil24_new as modules and
+| loading/unloading them work on my machine.  Can you please try this
+| and let me know how it goes?
 
-On Wed, 2005-09-07 at 10:30 +0200, Riccardo Castellani wrote:
-> I'm sure that I replaced old 80-wire cable with "newer 80-wire IDE cable"=
-.
+Real quick update on this (it's 2:40 am here): sata_sil24_new still
+does not detects my disks while sata_sil24 works perfectly. I will post
+the full dmesg's + the various things I tried tomorrow.
 
-What happens if you use the cable you used previously (just for
-testing)?
-
---=-wZjq/QP9xzGRIObNhigc
-Content-Type: application/x-pkcs7-signature; name=smime.p7s
-Content-Disposition: attachment; filename=smime.p7s
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGFjCCAs8w
-ggI4oAMCAQICAw9TczANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
-d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
-YWlsIElzc3VpbmcgQ0EwHhcNMDUwODE4MTE1NDA1WhcNMDYwODE4MTE1NDA1WjBDMR8wHQYDVQQD
-ExZUaGF3dGUgRnJlZW1haWwgTWVtYmVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFt
-ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANAMKW15OgreNb+Wd++Xcw6uNJUXXIfX
-56u1rtTObMmbbDY2wNc4Iqwbuwaysvox3z+YElXBibE8BAyV1iMjhee4mOfAy38dGHtWDxhOGke8
-VpkyY8DSWgMN5p4egTiT6YNdHW75iiQ+Vh5zMHju1UXnIqgf5zkUGkNuxYp15jLZvRDbfA5H+Sil
-jbZGB2fiPOJHpyI61ZidcMgdow31qm70/oe6vXxhSZLzo7OLvExE+mQHwbCSIJMN/hPTK1z0lmQ1
-kkaEjHrefqIgoF9Dk/WfOtulzvR3xBzDL50GZ32BxT/OhXYe1SHEJpSM1S/aq8TBQJYwjzREWyDh
-0OYsmr0CAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFndGVyLm5hbWUwDAYDVR0TAQH/BAIw
-ADANBgkqhkiG9w0BAQQFAAOBgQCCpzoneRQIKsUO8zSnwQ7yhJTrS/EaDibiIVrkkCbzXwCiHFAi
-7nmTRF0DlLVF3Ssf97ITWT/RSdkj9Xke0OHH7724PJdfpA6OglMnx2i7IcJLzPgPjB+fOmfR0nYX
-UYKuzGxTOXmshLmPcwKdpFuRLLk7n+vrTAwJYJI++crhJzCCAz8wggKooAMCAQICAQ0wDQYJKoZI
-hvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQIEwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcT
-CUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmlj
-YXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMTG1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFp
-bCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJlZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3
-MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUg
-Q29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwg
-SXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAxKY8VXNV+065yplaHmjAdQRw
-nd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNaLIkVcI7dyfArhVqqP3FWy688Cwfn8R+R
-NiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUqVIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEA
-AaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1UdHwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwu
-dGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWlsQ0EuY3JsMAsGA1UdDwQEAwIBBjApBgNV
-HREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVsMi0xMzgwDQYJKoZIhvcNAQEFBQADgYEA
-SIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYfqi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6E
-sZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa9/eH1sYITq726jTlEBpbNU1341YheILc
-IRk13iSx0x1G/11fZU8xggHvMIIB6wIBATBpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3
-dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1h
-aWwgSXNzdWluZyBDQQIDD1NzMAkGBSsOAwIaBQCgXTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcB
-MBwGCSqGSIb3DQEJBTEPFw0wNTA5MDcwOTI4MjZaMCMGCSqGSIb3DQEJBDEWBBQEZ0dXfyWdvPzs
-CX7XNpZhSuSqFzANBgkqhkiG9w0BAQEFAASCAQBijcAsi2E7SSwFzbEPPYB4TfLNyaC13aY7XRGY
-ghKgHT7ONhwNWk8sueAoph/cpAnLf5UvYLKmsKNq38QnzWWZic+uT2mRek6AAqlTi51gPelYyhds
-FlMm3BYD+A7KlUkwS3HHTn2zXH+EaGDj5xAF7TjHoMVUWvVNSs0LgSlr+wznrurRkuWfXxdp+b5Z
-VJvC0v+IGdHlbwdgQMIRm+YzPVtJTbGRSv7ibASlPJcjjQB+lld36w+49OE2N8rLWDUoNX9yM037
-b3Zldk0P1BFqH6jPLcvgHkT6f/3wf66NM0uYvmzNWRuV8AhotjiV9x4rGrlN181IMEDa71HFij40
-AAAAAAAA
-
-
---=-wZjq/QP9xzGRIObNhigc--
+-- 
+ Marc Bevand                              http://epita.fr/~bevand_m
+ Computer Science School EPITA - System, Network and Security Dept.
