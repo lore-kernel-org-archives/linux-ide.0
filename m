@@ -1,37 +1,38 @@
-From: <gedmurphy@ntlworld.com>
-Subject: linux SIS SATA driver
-Date: Wed, 7 Sep 2005 19:53:22 +0000
-Message-ID: <20050907195322.ELLE25128.aamta09-winn.ispmail.ntl.com@smtp.ntlworld.com>
+From: Arnaud Patard <apatard@mandriva.com>
+Subject: Re: linux SIS SATA driver
+Date: Wed, 07 Sep 2005 22:57:07 +0200
+Message-ID: <m364tc61gc.fsf@anduin.mandrakesoft.com>
+References: <20050907195322.ELLE25128.aamta09-winn.ispmail.ntl.com@smtp.ntlworld.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta09-winn.ispmail.ntl.com ([81.103.221.49]:54458 "EHLO
-	mta09-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
-	id S1751232AbVIGTxX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Sep 2005 15:53:23 -0400
-Received: from aamta09-winn.ispmail.ntl.com ([81.103.221.35])
-          by mta09-winn.ispmail.ntl.com with ESMTP
-          id <20050907195322.WYVR9239.mta09-winn.ispmail.ntl.com@aamta09-winn.ispmail.ntl.com>
-          for <linux-ide@vger.kernel.org>; Wed, 7 Sep 2005 20:53:22 +0100
-Received: from smtp.ntlworld.com ([81.103.221.25])
-          by aamta09-winn.ispmail.ntl.com with SMTP
-          id <20050907195322.ELLE25128.aamta09-winn.ispmail.ntl.com@smtp.ntlworld.com>
-          for <linux-ide@vger.kernel.org>; Wed, 7 Sep 2005 20:53:22 +0100
+Received: from ezoffice.mandriva.com ([84.14.106.134]:64269 "EHLO
+	anduin.mandrakesoft.com") by vger.kernel.org with ESMTP
+	id S1751307AbVIGUvy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Sep 2005 16:51:54 -0400
+In-Reply-To: <20050907195322.ELLE25128.aamta09-winn.ispmail.ntl.com@smtp.ntlworld.com> (gedmurphy@ntlworld.com's
+ message of "Wed, 7 Sep 2005 19:53:22 +0000")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: gedmurphy@ntlworld.com
+Cc: linux-ide@vger.kernel.org
+
+<gedmurphy@ntlworld.com> writes:
+
+> Hi,
+>
 
 Hi,
 
-Is the SATA driver available on the SIS website for kernel 2.6.10 of any use with a 2.6.11 kernel?
-I really need a driver for the later kernel but am unable to locate one.
+> Is the SATA driver available on the SIS website for kernel 2.6.10 of any use with a 2.6.11 kernel?
+> I really need a driver for the later kernel but am unable to locate one.
 
-Thanks,
-Ged.
+If you are looking for patches for the 965L motherboards, take a look at
+theses patches : 
 
------------------------------------------
-Email sent from www.ntlworld.com
-Virus-checked using McAfee(R) Software 
-Visit www.ntlworld.com/security for more information
+* http://marc.theaimsgroup.com/?l=linux-ide&m=112534615716629&w=2
+* http://marc.theaimsgroup.com/?l=linux-ide&m=112446940129736&w=2
+
+Regards,
+Arnaud
 
