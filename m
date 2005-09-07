@@ -1,42 +1,58 @@
-From: Marc Bevand <mb@opensc.org>
-Subject: Re: [sata_sil24] v0.10 works, v0.20 doesn't
-Date: Wed, 7 Sep 2005 11:37:12 +0200
-Message-ID: <20050907093712.GA20006@est.epita.fr>
-References: <20050904140239.GA11855@htj.dyndns.org> <loom.20050905T024247-999@post.gmane.org> <431BC732.2010907@gmail.com> <20050905134311.GA15419@est.epita.fr> <20050905230234.GA543@htj.dyndns.org> <20050905231753.GA1003@htj.dyndns.org> <20050906011254.GA23144@est.epita.fr> <20050906015428.GA13521@htj.dyndns.org> <20050906093659.GB14270@est.epita.fr> <20050907013917.GA2803@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: RE :sata_sil + UDMA CRC errors
+Date: Wed, 07 Sep 2005 18:56:44 +0900
+Message-ID: <431EB95C.3070801@gmail.com>
+References: <200509070730.j877UxgA022401@ns.isp.nsc.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from deliver.epitech.net ([163.5.255.125]:10759 "HELO
-	deliver.epitech.net") by vger.kernel.org with SMTP id S932079AbVIGJhi
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Sep 2005 05:37:38 -0400
-Content-Disposition: inline
-In-Reply-To: <20050907013917.GA2803@htj.dyndns.org>
+Received: from zproxy.gmail.com ([64.233.162.202]:11803 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932093AbVIGJ4u (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2005 05:56:50 -0400
+Received: by zproxy.gmail.com with SMTP id r28so962534nza
+        for <linux-ide@vger.kernel.org>; Wed, 07 Sep 2005 02:56:50 -0700 (PDT)
+In-Reply-To: <200509070730.j877UxgA022401@ns.isp.nsc.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: 'Jeff Garzik' <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Carlos.Pardo@siliconimage.com, Paul.Taylor@siliconimage.com, lbattraw@insightbb.com, 'Yuri Kirsanov' <flash@rccb.ru>, 'Jeremy Smith' <alceste@xmission.com>, shaposh@isp.nsc.ru
 
-Hi Tejun.
 
-Tejun Heo wrote:
-| 
-|  Here's a big patch against sil24-original branch.  It contains the
-| followings.
-| 
-|  a. build fix & oops fix for sil24-original branch
-|  b. backported sata_sil24_new driver
-|  c. debug messages (you don't need to turn on ATA_DEBUG)
-|  d. 50ms sleep after completion of IDENTIFY before actually reading data
-| 
-|  Building both sata_sil24 and sata_sil24_new as modules and
-| loading/unloading them work on my machine.  Can you please try this
-| and let me know how it goes?
+  Hello, Alexander & Jeremy.
 
-Real quick update on this (it's 2:40 am here): sata_sil24_new still
-does not detects my disks while sata_sil24 works perfectly. I will post
-the full dmesg's + the various things I tried tomorrow.
+Alexander Shaposhnikov wrote:
+> Hellow Tejun
+> 
+> I tried your patch (by the way, it cannot be applied by patch utility -it
+> complains about malformed expression on line 19 and so on)
+> Default reads in 500mv. With 600mv, I am starting to get CRC errors for
+> Seagate drive (no errors with 2.6.13-git4). Samsung drive produces so many
+> errors, that it is unusable both with and without patch.
+
+  Ugh... that's ugly. :-/
+
+  Jeremy, apparantly my little patch doesn't do any good.  Please ignore it.
+
+> Concerning K8N-DL motherboard -current BIOS 1004 is very buggy. It has
+> screwed up ACPI APIC table. To use onboard lan and usb, I have to boot with 
+> pci=noacpi boot option. And I cannot use 1003, as I have DualCore Opterons, 
+> and 1004 the only one which supports them!
+> 
+> There is long problem with Nvidia CK804 southbridge sata under Linux.
+> Despite that the board was released some 8 month ago, it still cannot be
+> used! And nobody seems to care about this. ASUS in the least. 
+> I was able to boot from NVidia SATA with latest kernel and irqpoll option.
+> At first I thought that all my problems are gone at last, but the god
+> decided differently. It works at light disk load, but havy load lead to
+> system freeze. No errors, just dead freeze. I returned to silicon3114 sata.
+> At least, I have one working drive now:)
+> 
+
+  I fear that there's nothing much else I can do about this K8N-DL sil 
+CRC error.  I've read the hw doc but couldn't find anything which seems 
+helpful.  Let's hope something (BIOS update?) comes up soon.
+
+  Sorry.
 
 -- 
- Marc Bevand                              http://epita.fr/~bevand_m
- Computer Science School EPITA - System, Network and Security Dept.
+tejun
