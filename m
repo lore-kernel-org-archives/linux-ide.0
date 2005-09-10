@@ -1,174 +1,124 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Promise SATAII150 TX4 or raidreconf broken
-Date: Sat, 10 Sep 2005 11:29:45 +1000
-Message-ID: <43223709.8090002@eyal.emu.id.au>
-References: <430E4AB0.2060600@eyal.emu.id.au> <4313E433.1080602@pobox.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [sata_sil24] v0.10 works, v0.20 doesn't
+Date: Sat, 10 Sep 2005 22:53:50 +0900
+Message-ID: <20050910135350.GA20877@htj.dyndns.org>
+References: <loom.20050905T024247-999@post.gmane.org> <431BC732.2010907@gmail.com> <20050905134311.GA15419@est.epita.fr> <20050905230234.GA543@htj.dyndns.org> <20050905231753.GA1003@htj.dyndns.org> <20050906011254.GA23144@est.epita.fr> <20050906015428.GA13521@htj.dyndns.org> <20050906093659.GB14270@est.epita.fr> <20050907013917.GA2803@htj.dyndns.org> <20050907093712.GA20006@est.epita.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omta01ps.mx.bigpond.com ([144.140.82.153]:60550 "EHLO
-	omta01ps.mx.bigpond.com") by vger.kernel.org with ESMTP
-	id S1030414AbVIJB3y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Sep 2005 21:29:54 -0400
-In-Reply-To: <4313E433.1080602@pobox.com>
+Received: from zproxy.gmail.com ([64.233.162.201]:63906 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750872AbVIJNx7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Sep 2005 09:53:59 -0400
+Received: by zproxy.gmail.com with SMTP id 13so49937nzn
+        for <linux-ide@vger.kernel.org>; Sat, 10 Sep 2005 06:53:56 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20050907093712.GA20006@est.epita.fr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Marc Bevand <mb@opensc.org>
 Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Eyal Lebedinsky wrote:
+ Hi again, Marc.
+
+On Wed, Sep 07, 2005 at 11:37:12AM +0200, Marc Bevand wrote:
+> Hi Tejun.
 > 
->> I needed a 4-port SATA controller and this was was picked. It seems
->> to work OK, however I find that Linux (2.6.12.5 and .13-rc7) see
->> the disks in a different order than the labelled sockets (which do
->> match what the BIOS detection lists at bootup).
->>
->> It is not even the reverse order:
->>     TX4 socket    sata_promise ata*
->>     1        4
->>     2        2
->>     3        1
->>     4        3
->> This order looks stable - I connected a different number of disks
->> on some ports and this ordering was maintained.
+> Tejun Heo wrote:
+> | 
+> |  Here's a big patch against sil24-original branch.  It contains the
+> | followings.
+> | 
+> |  a. build fix & oops fix for sil24-original branch
+> |  b. backported sata_sil24_new driver
+> |  c. debug messages (you don't need to turn on ATA_DEBUG)
+> |  d. 50ms sleep after completion of IDENTIFY before actually reading data
+> | 
+> |  Building both sata_sil24 and sata_sil24_new as modules and
+> | loading/unloading them work on my machine.  Can you please try this
+> | and let me know how it goes?
 > 
-> sata_promise driver just presents the devices in the order that the
-> board maker has wired each port to the chip.  What may be labelled "port
-> 3" on the board might be wired to the chip's port-0.  sata_promise just
-> presents what it is given.
+> Real quick update on this (it's 2:40 am here): sata_sil24_new still
+> does not detects my disks while sata_sil24 works perfectly. I will post
+> the full dmesg's + the various things I tried tomorrow.
 > 
->     Jeff
 
-I am, for now, ignoring the ordering problem and moving on to using the
-array.
+ I compared original and new sil24 and here are things that are done
+differently upto the point where identify command is issued.
 
-I spent the last week attempting to build and test the array and I have
-a problem: the array is thrashed by raidreconf. I need to know if this
-is a hardware problem (TX4?), a raidreconf problem or a kernel issue.
+ a. Stuff done inside sil_init_pm() in the original driver is not done
+    in the new driver.  This includes clearing PM_EN and RESUME bits
+    in the ctrl/stat register and DVR_RST'ing the port.
 
-It is now becoming urgent for me to sort this out, any hints will be
-appreciated.
+ b. Original driver performs both SATA phy reset and soft reset.  New
+    driver performs only SATA phy reset.
 
-If this is a TX4 issue, which SATA controllers (4-way) are known to be
-supported and good on Linux?
+ c. New driver uses different order when initializing irq mask and
+    doesn't turn on phy status change interrupt.
 
-I have a test script that does this:
-	build a 3-disk raid-5
-	mkfs.ext3
-	copy data in
-		200+GB
-	fsck
-		OK
-	raidreconf
-		3->4 disks
-	fsck
-		failed
+ d. New driver doesn't turn off SATA link power management.
 
-The disks are 320GB SATA "WDC WD3200JD-00K  Rev: 08.0". Kernel 2.6.13
-vanilla.
+ We've already tried #d, and I don't think #c has anything to do with
+it as inserting 50ms sleep before reading data doesn't make any
+difference.  So, it leaves us with #a and #b.  Here's a patch for #a.
+If this doesn't work, I'll make a patch for #b.
 
-The test takes about 16h to complete.
+ This patch is on top of previous test patch which backported
+sil24_new.  Please try this one out and let me know the result.
 
-The rebuild messages:
-====================
-Sat Sep 10 01:19:07 EST 2005 mdbuild: checking the file system
-====================================
-/dev/md0: 4136/610560 files (2.7% non-contiguous), 55952642/156285568 blocks
-Sat Sep 10 01:25:51 EST 2005 mdbuild: reconfiguring RAID
-====================================
-Parsing /etc/raidtab.old
-Parsing /etc/raidtab.new
-Old raid-disk 0 has 1220981 chunks, 312571136 blocks
-Old raid-disk 1 has 1220981 chunks, 312571136 blocks
-Old raid-disk 2 has 1220981 chunks, 312571136 blocks
-New raid-disk 0 has 1220981 chunks, 312571136 blocks
-New raid-disk 1 has 1220981 chunks, 312571136 blocks
-New raid-disk 2 has 1220981 chunks, 312571136 blocks
-New raid-disk 3 has 1220981 chunks, 312571136 blocks
-Using 256 Kbyte blocks to move from 256 Kbyte chunks to 256 Kbyte chunks.
-Detected 1035336 KB of physical memory in system
-A maximum of 1181 outstanding requests is allowed
-Working with device /dev/md0
-Size of old array: 1875427344 blocks,  Size of new array: 2500569792 blocks
----------------------------------------------------
-I will grow your old device /dev/md0 of 2441962 blocks
-to a new device /dev/md0 of 3662943 blocks
-using a block-size of 256 KB
-Is this what you want? (yes/no): yes
-Converting 2441962 block device to 3662943 block device
-Allocated free block map for 3 disks
-4 unique disks detected.
-Working (/) [02441962/02441962] [############################################]
-Source drained, flushing sink.
-Reconfiguration succeeded, will update superblocks...
-Maximum friend-freeing depth:         8
-Total wishes hooked:            2441962
-Maximum wishes hooked:             1181
-Total gifts hooked:             2441962
-Maximum gifts hooked:               991
-Congratulations, your array has been reconfigured,
-and no errors seem to have occured.
-Updating superblocks...
-handling MD device /dev/md0
-analyzing super-block
-disk 0: /dev/sda, 312571224kB, raid superblock at 312571136kB
-disk 1: /dev/sdb, 312571224kB, raid superblock at 312571136kB
-disk 2: /dev/sdc, 312571224kB, raid superblock at 312571136kB
-disk 3: /dev/sdd, 312571224kB, raid superblock at 312571136kB
-Array is updated with kernel.
-Disks re-inserted in array... Hold on while starting the array...
-Sat Sep 10 10:30:19 EST 2005 mdbuild: checking the file system
-====================================
-/dev/md0: Inode 129 is in use, but has dtime set.  FIXED.
-/dev/md0: Inode 129 has imagic flag set.
-
-/dev/md0: UNEXPECTED INCONSISTENCY; RUN fsck MANUALLY.
-        (i.e., without -a or -p options)
+ Thanks.
 
 
-Inspecting the fs shows real corruption. It does not even look like full
-bad blocks but specific entries are bad. The some directories are completely
-missing and I (naturally) get errors reading the fs (mounted with errors).
-
-/data3/mythtv/tv_grab_au:
-========================
-total 2968465682
-drwxr-sr-x      2 mythtv     mythtv          8192 Sep  8 04:56 08092005
-drwxr-sr-x      2 mythtv     mythtv          8192 Sep  8 04:56 09092005
-drwxr-sr-x      2 mythtv     mythtv          8192 Sep  8 04:59 10092005
-drwxr-sr-x      2 mythtv     mythtv          8192 Sep  8 04:57 11092005
-drwxr-sr-x      2 mythtv     mythtv          8192 Sep  8 04:58 12092005
-?--xrws--T  31794 3359396242 982138100 1048034695 Oct  9  1972 13092005
-drwxr-sr-x      2 mythtv     mythtv          8192 Sep  8 04:59 14092005
-drwxr-sr-x      2 mythtv     mythtv          8192 Sep  9 04:52 15092005
-srw-----w-  26765  936675348 473714967 2355711621 Oct  5  1976 16092005
-drwxr-sr-x      2 mythtv     mythtv          8192 Aug 26 04:54 26082005
-drwxr-sr-x      2 mythtv     mythtv          8192 Aug 26 04:54 27082005
-drwxr-sr-x      2 mythtv     mythtv          8192 Aug 26 04:55 28082005
-drwxr-sr-x      2 mythtv     mythtv          8192 Aug 26 04:55 29082005
-drwxr-sr-x      2 mythtv     mythtv          8192 Aug 24 04:57 30082005
--rw-r--r--      1 mythtv     mythtv        362153 Nov  5  2004 guide.xml
-
-The original has:
-================
-drwxr-sr-x  2 mythtv mythtv   8192 Sep  8 04:56 09092005
-drwxr-sr-x  2 mythtv mythtv   8192 Sep  8 04:57 10092005
-drwxr-sr-x  2 mythtv mythtv   8192 Sep  8 04:57 11092005
-drwxr-sr-x  2 mythtv mythtv   8192 Sep  8 04:58 12092005
-drwxr-sr-x  2 mythtv mythtv   8192 Sep 10 04:58 13092005 <<<<<
-drwxr-sr-x  2 mythtv mythtv   8192 Sep  8 04:59 14092005
-drwxr-sr-x  2 mythtv mythtv   8192 Sep  9 04:52 15092005
-drwxr-sr-x  2 mythtv mythtv   8192 Sep 10 05:00 16092005 <<<<<
-drwxr-sr-x  2 mythtv mythtv   8192 Sep 10 05:00 17092005
-drwxr-sr-x  2 mythtv mythtv   8192 Aug 26 04:54 26082005
-drwxr-sr-x  2 mythtv mythtv   8192 Aug 26 04:54 27082005
-drwxr-sr-x  2 mythtv mythtv   8192 Aug 26 04:55 28082005
-drwxr-sr-x  2 mythtv mythtv   8192 Aug 26 04:55 29082005
-drwxr-sr-x  2 mythtv mythtv   8192 Aug 24 04:57 30082005
--rw-r--r--  1 mythtv mythtv 362153 Nov  5  2004 guide.xml
-
--- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
-	attach .zip as .dat
+diff --git a/drivers/scsi/sata_sil24_new.c b/drivers/scsi/sata_sil24_new.c
+--- a/drivers/scsi/sata_sil24_new.c
++++ b/drivers/scsi/sata_sil24_new.c
+@@ -431,15 +431,11 @@ static void sil24_irq_clear(struct ata_p
+ 	/* unused */
+ }
+ 
+-static void sil24_reset_controller(struct ata_port *ap)
++static int __sil24_reset_controller(void *port)
+ {
+-	void *port = (void *)ap->ioaddr.cmd_addr;
+ 	int cnt;
+ 	u32 tmp;
+ 
+-	printk(KERN_NOTICE DRV_NAME
+-	       " ata%u: resetting controller...\n", ap->id);
+-
+ 	/* Reset controller state.  Is this correct? */
+ 	writel(PORT_CS_DEV_RST, port + PORT_CTRL_STAT);
+ 	readl(port + PORT_CTRL_STAT);	/* sync */
+@@ -451,7 +447,17 @@ static void sil24_reset_controller(struc
+ 		if (!(tmp & PORT_CS_DEV_RST))
+ 			break;
+ 	}
++
+ 	if (tmp & PORT_CS_DEV_RST)
++		return -1;
++	return 0;
++}
++
++static void sil24_reset_controller(struct ata_port *ap)
++{
++	printk(KERN_NOTICE DRV_NAME
++	       " ata%u: resetting controller...\n", ap->id);
++	if (__sil24_reset_controller((void *)ap->ioaddr.cmd_addr))
+ 		printk(KERN_ERR DRV_NAME
+ 		       " ata%u: failed to reset controller\n", ap->id);
+ }
+@@ -745,6 +751,15 @@ static int sil24_init_one(struct pci_dev
+ 		/* Clear interrupts */
+ 		writel(0x0fff0fff, port + PORT_IRQ_STAT);
+ 		writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_CLR);
++
++		/* Clear port enable and resume bits */
++		writel(PORT_CS_PM_EN | PORT_CS_RESUME, port + PORT_CTRL_CLR);
++
++		/* Reset itself */
++		if (__sil24_reset_controller(port))
++			printk(KERN_ERR DRV_NAME
++			       "(%s): failed to reset controller\n",
++			       pci_name(pdev));
+ 	}
+ 
+ 	/* Turn on interrupts */
