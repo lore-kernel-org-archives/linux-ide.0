@@ -1,39 +1,39 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Grant Grundler <grundler@parisc-linux.org>
 Subject: Re: [PATCH] include: pci_find_device remove (include/asm-i386/ide.h)
-Date: Sat, 10 Sep 2005 20:47:52 -0400
-Message-ID: <43237EB8.90809@pobox.com>
-References: <200509102032.j8AKWxMC006246@localhost.localdomain> <4323482E.2090409@pobox.com> <20050910211932.GA13679@kroah.com> <432352A8.3010605@pobox.com> <20050910223333.GF4770@parisc-linux.org> <43236DAE.8000802@pobox.com> <20050911003409.GB25282@colo.lackof.org>
+Date: Sat, 10 Sep 2005 19:24:24 -0600
+Message-ID: <20050911012424.GD25282@colo.lackof.org>
+References: <200509102032.j8AKWxMC006246@localhost.localdomain> <4323482E.2090409@pobox.com> <20050910211932.GA13679@kroah.com> <432352A8.3010605@pobox.com> <20050910223333.GF4770@parisc-linux.org> <43236DAE.8000802@pobox.com> <20050911003409.GB25282@colo.lackof.org> <1126400817.30449.22.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:64662 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932737AbVIKAsG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Sep 2005 20:48:06 -0400
-In-Reply-To: <20050911003409.GB25282@colo.lackof.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964808AbVIKBSX@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1126400817.30449.22.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Grant Grundler <grundler@parisc-linux.org>, Jeff Garzik <jgarzik@pobox.com>, Matthew Wilcox <matthew@wil.cx>, Greg KH <greg@kroah.com>, Jiri Slaby <jirislaby@gmail.com>, Greg KH <gregkh@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, Greg KH <greg@kroah.com>, Jiri Slaby <jirislaby@gmail.com>, Greg KH <gregkh@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl
 
-Grant Grundler wrote:
-> On Sat, Sep 10, 2005 at 07:35:10PM -0400, Jeff Garzik wrote:
+On Sun, Sep 11, 2005 at 02:06:56AM +0100, Alan Cox wrote:
+> On Sad, 2005-09-10 at 18:34 -0600, Grant Grundler wrote:
+> > If ide_scan_pcibus() finds any pci device, it calls ide_scan_pcidev().
+> > ide_scan_pcidev() only seems to handle PCI devices.
+> > Are you saying there are PCI IDE devices out there that
+> > don't advertise PCI_CLASS_STORAGE_IDE?
 > 
->>>Why not change it to query whether any IDE device is present, perhaps
->>>using pci_get_class()?
->>
->>Because that's not what the code is attempting to discover.
-> 
-> 
-> If ide_scan_pcibus() finds any pci device, it calls ide_scan_pcidev().
-> ide_scan_pcidev() only seems to handle PCI devices.
-> Are you saying there are PCI IDE devices out there that
-> don't advertise PCI_CLASS_STORAGE_IDE?
+> Lots of them. We also want to know if PCI is present so we can know
+> whether to do the IDE tertiary scan which isn't safe on a PCI bus box.
 
-The code is not searching for PCI devices.  The code is searching for... 
-precisely what it is searching for:  presence of PCI in the system.
+ah ok. I'm not seeing where that happens.
 
-	Jeff
+Anyway, pci_present() could be as simple as "(pci_root_buses!=NULL)".
+
+ide_system_bus_speed() in drivers/ide/ide.c might want this too.
 
 
+BTW, I'm not convinced the current code does *exactly* what you want.
+Hypothetically, we can have a PCI bus but no PCI devices.
+Maybe no such system exists but I wouldn't bet on it.
 
+
+thanks,
+grant
