@@ -1,34 +1,87 @@
-From: Marc Bevand <mb@opensc.org>
-Subject: Re: [sata_sil24] v0.10 works, v0.20 doesn't
-Date: Sun, 11 Sep 2005 09:02:25 +0200
-Message-ID: <20050911070225.GA1266@wc.epita.fr>
-References: <20050905230234.GA543@htj.dyndns.org> <20050905231753.GA1003@htj.dyndns.org> <20050906011254.GA23144@est.epita.fr> <20050906015428.GA13521@htj.dyndns.org> <20050906093659.GB14270@est.epita.fr> <20050907013917.GA2803@htj.dyndns.org> <20050907093712.GA20006@est.epita.fr> <20050910135350.GA20877@htj.dyndns.org> <20050911050021.GA619@wc.epita.fr> <20050911061539.GA18393@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH libata-dev-2.6:sil24] sil24: initialization fix
+Date: Sun, 11 Sep 2005 16:15:06 +0900
+Message-ID: <20050911071506.GA19236@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from deliver.epitech.net ([163.5.255.125]:53510 "HELO
-	deliver.epitech.net") by vger.kernel.org with SMTP id S964790AbVIKHCo
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 11 Sep 2005 03:02:44 -0400
+Received: from zproxy.gmail.com ([64.233.162.197]:61604 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932426AbVIKHPQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Sep 2005 03:15:16 -0400
+Received: by zproxy.gmail.com with SMTP id 13so113303nzn
+        for <linux-ide@vger.kernel.org>; Sun, 11 Sep 2005 00:15:13 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20050911061539.GA18393@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: mb@opensc.org, linux-ide@vger.kernel.org, efalk@google.com
 
-Tejun Heo wrote:
-| 
-|  Everything looks dandy.  Here's a patch against the current sil24
-| head of libata-dev tree.  It should also apply cleanly to ALL head.
-| Please try this one and let me know how it works; then, the patch will
-| go to Jeff & upstream.
+ sil24 0.20 didn't use to perform (what seems to be) port multiplier
+initialization and controller reset 0.10 driver does.  This makes some
+sil24 controllers malfunction.  This patch adds PM initialization and
+controller resetting to initilization.  Please refer to the following
+thread for more information.
 
-I confirm that my disk is recognized when using this patch with
-libata-dev.git current, ALL head.
+http://marc.theaimsgroup.com/?l=linux-ide&m=112582819830324&w=2
+http://marc.theaimsgroup.com/?l=linux-ide&m=112636045531060&w=2
 
-Thank you for your hard work.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
--- 
- Marc Bevand                              http://epita.fr/~bevand_m
- Computer Science School EPITA - System, Network and Security Dept.
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -426,15 +426,11 @@ static void sil24_irq_clear(struct ata_p
+ 	/* unused */
+ }
+ 
+-static void sil24_reset_controller(struct ata_port *ap)
++static int __sil24_reset_controller(void *port)
+ {
+-	void *port = (void *)ap->ioaddr.cmd_addr;
+ 	int cnt;
+ 	u32 tmp;
+ 
+-	printk(KERN_NOTICE DRV_NAME
+-	       " ata%u: resetting controller...\n", ap->id);
+-
+ 	/* Reset controller state.  Is this correct? */
+ 	writel(PORT_CS_DEV_RST, port + PORT_CTRL_STAT);
+ 	readl(port + PORT_CTRL_STAT);	/* sync */
+@@ -446,9 +442,19 @@ static void sil24_reset_controller(struc
+ 		if (!(tmp & PORT_CS_DEV_RST))
+ 			break;
+ 	}
++
+ 	if (tmp & PORT_CS_DEV_RST)
+-		printk(KERN_ERR DRV_NAME
+-		       " ata%u: failed to reset controller\n", ap->id);
++		return -1;
++	return 0;
++}
++
++static void sil24_reset_controller(struct ata_port *ap)
++{
++	printk(KERN_NOTICE DRV_NAME
++	       " ata%u: resetting controller...\n", ap->id);
++	if (__sil24_reset_controller((void *)ap->ioaddr.cmd_addr))
++                printk(KERN_ERR DRV_NAME
++                       " ata%u: failed to reset controller\n", ap->id);
+ }
+ 
+ static void sil24_eng_timeout(struct ata_port *ap)
+@@ -740,6 +746,15 @@ static int sil24_init_one(struct pci_dev
+ 		/* Clear interrupts */
+ 		writel(0x0fff0fff, port + PORT_IRQ_STAT);
+ 		writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_CLR);
++
++		/* Clear port multiplier enable and resume bits */
++		writel(PORT_CS_PM_EN | PORT_CS_RESUME, port + PORT_CTRL_CLR);
++
++		/* Reset itself */
++		if (__sil24_reset_controller(port))
++			printk(KERN_ERR DRV_NAME
++			       "(%s): failed to reset controller\n",
++			       pci_name(pdev));
+ 	}
+ 
+ 	/* Turn on interrupts */
