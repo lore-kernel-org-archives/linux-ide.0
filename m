@@ -1,52 +1,44 @@
-From: Uwe Koziolek <uwe.koziolek@gmx.net>
-Subject: patch for sata_sis.c
-Date: Sun, 11 Sep 2005 17:03:35 +0200
-Message-ID: <43244747.3020504@gmx.net>
-References: <20050909031207.GA25014@havoc.gtf.org> <4321561A.7040904@gmx.net> <4321C16C.9000901@pobox.com>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: Promise SATAII150 TX4 or raidreconf broken
+Date: Mon, 12 Sep 2005 01:50:56 +1000
+Message-ID: <43245260.6030907@eyal.emu.id.au>
+References: <430E4AB0.2060600@eyal.emu.id.au> <4313E433.1080602@pobox.com>	<43223709.8090002@eyal.emu.id.au> <x3kfysdq846.fsf@Psilocybe.Update.UU.SE>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090300060201080307090403"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imap.gmx.net ([213.165.64.20]:50607 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S964799AbVIKPDi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Sep 2005 11:03:38 -0400
-In-Reply-To: <4321C16C.9000901@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------090300060201080307090403
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <x3kfysdq846.fsf@Psilocybe.Update.UU.SE>
+Sender: linux-raid-owner@vger.kernel.org
+To: Thorild Selen <thorild@Update.UU.SE>
+Cc: linux-ide@vger.kernel.org, linux-raid list <linux-raid@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-Hello Jeff,
+Thorild Selen wrote:
+> If you search a bit in the linux-ide and linux-kernel mailing list
+> archives, you will find that several people before have had problems
+> with SATA150-TX4 and SATAII150-TX4 (see for example posts by Jim
+> Ramsay, Joerg Sommrey and me).
 
-There is an uninitialized variable issue in sata_sis.c, version
-2.6.13-git10. Please check the patch.
+Following up on this information I did more testing.
 
-Uwe Koziolek
+I verified that creating a 2-disk raid-5 and extending it to 3 disks
+always works. 3-disk to 4-disk end up corrupted.
 
+BTW I had to change the check in raidreconf for a minimum of raid5
+disks from 3 to 2. It worked just fine.
 
---------------090300060201080307090403
-Content-Type: text/x-patch;
- name="sata_sis.c.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sata_sis.c.patch"
+I then moved the first two disks to the motherboard (sd[cd] left on
+the TX4). The situation remained the same (but I did get better
+performance).
 
-diff --git a/drivers/scsi/sata_sis.c b/drivers/scsi/sata_sis.c
---- a/drivers/scsi/sata_sis.c
-+++ b/drivers/scsi/sata_sis.c
-@@ -159,7 +159,7 @@ static u32 sis_scr_cfg_read (struct ata_
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
- 	unsigned int cfg_addr = get_scr_cfg_addr(ap->port_no, sc_reg, pdev->device);
--	u32 val, val2;
-+	u32 val, val2 = 0;
- 	u8 pmr;
- 
- 	if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
+I am now less inclined to blame the TX4 and lean more towards
+raidreconf.
 
---------------090300060201080307090403--
+I need to create a final test where I hit the disks concurrently
+without raidreconf to see how they fair...
+
+I did some tests and so far failed to provoke any i/o error.
+
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+	attach .zip as .dat
