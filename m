@@ -1,54 +1,32 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: [GIT PATCH] More PCI patches for 2.6.13
-Date: Sat, 10 Sep 2005 17:27:55 -0700 (PDT)
-Message-ID: <Pine.LNX.4.58.0509101723550.30958@g5.osdl.org>
-References: <Pine.LNX.4.44L0.0509101655520.7081-100000@netrider.rowland.org>
- <Pine.LNX.4.58.0509101410300.30958@g5.osdl.org> <43235707.7050909@pobox.com>
- <20050910153110.36a44eba.akpm@osdl.org> <Pine.LNX.4.58.0509101548230.30958@g5.osdl.org>
- <43236FD2.6010501@pobox.com> <Pine.LNX.4.58.0509101658080.30958@g5.osdl.org>
- <432377A3.5070805@pobox.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] include: pci_find_device remove
+	(include/asm-i386/ide.h)
+Date: Sun, 11 Sep 2005 02:06:56 +0100
+Message-ID: <1126400817.30449.22.camel@localhost.localdomain>
+References: <200509102032.j8AKWxMC006246@localhost.localdomain>
+	 <4323482E.2090409@pobox.com> <20050910211932.GA13679@kroah.com>
+	 <432352A8.3010605@pobox.com> <20050910223333.GF4770@parisc-linux.org>
+	 <43236DAE.8000802@pobox.com>  <20050911003409.GB25282@colo.lackof.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:7405 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932733AbVIKAeR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Sep 2005 20:34:17 -0400
-In-Reply-To: <432377A3.5070805@pobox.com>
+Received: from clock-tower.bc.nu ([81.2.110.250]:10156 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932504AbVIKAoP
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Sep 2005 20:44:15 -0400
+In-Reply-To: <20050911003409.GB25282@colo.lackof.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Grant Grundler <grundler@parisc-linux.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Matthew Wilcox <matthew@wil.cx>, Greg KH <greg@kroah.com>, Jiri Slaby <jirislaby@gmail.com>, Greg KH <gregkh@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl
 
+On Sad, 2005-09-10 at 18:34 -0600, Grant Grundler wrote:
+> If ide_scan_pcibus() finds any pci device, it calls ide_scan_pcidev().
+> ide_scan_pcidev() only seems to handle PCI devices.
+> Are you saying there are PCI IDE devices out there that
+> don't advertise PCI_CLASS_STORAGE_IDE?
 
+Lots of them. We also want to know if PCI is present so we can know
+whether to do the IDE tertiary scan which isn't safe on a PCI bus box.
 
-On Sat, 10 Sep 2005, Jeff Garzik wrote:
-> 
-> > happen, but still.. Relying on the legacy-value of the IO port instead of
-> > relying on whether you did a legacy request_region() is definitely at
-> > least conceptually wrong).
-> 
-> Its not that simple.  grep for ____request_region in both libata and the 
-> PCI quirks code.  libata grabs the SATA port on ICH boxes in combined 
-> mode... but has to do so before built-in IDE driver grabs them.
-
-That's not what I'm talking about.
-
-The _request_ side is fine, and yes, it needs to be done early.
-
-It's the module unload time that is broken - it doesn't remember whether
-it requested the legacy mode addresses, so instead it uses the address
-_values_ to determine if it did so or not, and that's broken: it is
-conceivable at least in theory that a PCI BAR would contain the legacy
-mode address value, without the legacy mode bit being set. In that case we 
-have _not_ done the legacy-mode "request_region()", but we _will_ do the 
-"release_region()".
-
-Exactly because the code checks the wrong thing. That's also the thing 
-that makes for problems for iomap. What used to be the wrong thing to test 
-now becomes _impossible_ to test.
-
-If the code had just saved the value of "legacy_mode" from the probing 
-phase, the release phase wouldn't have any ambiguous cases, and the iomap 
-code wouldn't have any issues either..
-
-		Linus
