@@ -1,97 +1,36 @@
-From: Esther <exactly@fardal.net>
-Subject: Have You Ever Profited From a Small-cap?
-Date: Mon, 12 Sep 2005 00:27:53 -0300
-Message-ID: <39217127168.30516597@200.43.134.203>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] include: pci_find_device remove
+	(include/asm-i386/ide.h)
+Date: Mon, 12 Sep 2005 11:17:21 +0100
+Message-ID: <1126520241.30449.42.camel@localhost.localdomain>
+References: <200509102032.j8AKWxMC006246@localhost.localdomain>
+	 <4323482E.2090409@pobox.com> <20050910211932.GA13679@kroah.com>
+	 <432352A8.3010605@pobox.com> <20050910223333.GF4770@parisc-linux.org>
+	 <43236DAE.8000802@pobox.com> <20050911003409.GB25282@colo.lackof.org>
+	 <1126400817.30449.22.camel@localhost.localdomain>
+	 <20050911013004.GI4770@parisc-linux.org>
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:4300 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1751147AbVILD2M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Sep 2005 23:28:12 -0400
-Received: from 200.43.134.203 ([200.43.134.203])
-	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id j8C3S0T2001302
-	for <linux-ide@vger.kernel.org>; Sun, 11 Sep 2005 20:28:05 -0700
-Received: from 90.205.231.202  (EHLO woodpecker)
-    by 200.43.134.203 with SMTP; Mon, 12 Sep 2005 00:27:54 -0300
-    id 1145256306mailmen65065
-    for linux-ide@vger.kernel.org; Mon, 12 Sep 2005 00:27:54 -0300
+Received: from [81.2.110.250] ([81.2.110.250]:42400 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S1751279AbVILJxD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Sep 2005 05:53:03 -0400
+In-Reply-To: <20050911013004.GI4770@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Grant Grundler <grundler@parisc-linux.org>, Jeff Garzik <jgarzik@pobox.com>, Greg KH <greg@kroah.com>, Jiri Slaby <jirislaby@gmail.com>, Greg KH <gregkh@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl
 
-China World Trade Corporation Reports Record Earnings 
-Inside Breaking News For Investors
-CHINA WORLD TRADE CORP.
+On Sad, 2005-09-10 at 19:30 -0600, Matthew Wilcox wrote:
+> > Lots of them. We also want to know if PCI is present so we can know
+> > whether to do the IDE tertiary scan which isn't safe on a PCI bus box.
+> 
+> surely this is worthy of a comment in the code.  there's at least 3
+> people on the cc who're confused bby what it's for.
 
-Ready to Run
-Is This One Ready to Explode Higher Move? 
-How Will it React To This News Being Released? 
-Good Luck and Succesful Trading.
+Thats because someone removed the obvious pci_present() function some
+time ago.
 
-CWTD News coming stock is ready to rock Company has already 
-facilitated the money it need's to continue it's rapid growth 
-
-
-***WATCH THIS ONE SEPT 12-15, AS WE KNOW MANY OF YOU 
-LIKE MOMENTUM AND EXCITEMENT***
-
-Timing  is everything!!!!!
-
-SYMBOL: CWTD
-(Ticker: CWTD)
-Price: $1.99
-STATUS: (BUY)
-RATING: 3-STAR
-
-Good day to all broker's, Day Trader's and Investor's World stock report 
-has become famous with some great stock picks in the otc, small cap 
-market's!!! Here at World Stock Report we work on what we here 
-from the street. Rumor's circulating and keeping the focus 
-on the company's news. We pick our companies based on there 
-growth potential. We focus on stocks that have great potential 
-to move up in price.!!! While giving you liquitity.
-
-HUGE PR campaign expected this week so grab as much as you can.
-
-
-
-***PRESS RELEASE***PRESS RELEASE***PRESS RELEASE***PRESS RELEASE***
-
-China World Trade Corporation Reports Record Earnings 
-in the Second Quarter 2005
-
-China World Trade Corporation (CWTC) has established its business 
-in three distinct areas: the club and business centers throughout 
-major cities in China, business travel-related services, 
-and business value-added services. The Club and Business Center Division 
-is devoted to the building of the World Trade brand throughout China 
-via the opening and operating of business clubs in China's major, 
-positioning the CWTC to act as a platform to facilitate trade 
-between China and the world markets. The acquisition of CEO 
-Clubs China Limited ("CEO Clubs") in May 2004 further complements 
-CWTC's offerings by targeting high-level corporate executives 
-from premier companies. The Business Traveling Services Division, 
-New Generation, provides CWTC access to the rapidly growing 
-travel-related industry. New Generation is a pioneer and market leader 
-in the travel agency business through its strong network 
-of ticketing sales operations throughout Southern China. 
-The Business Value-Added Services Division focuses on value-added services 
-of credit cards, merchant-related business services, as well 
-as consultancy services to CWTC members and clients. 
-Guangdong World Trade Link Information Services Limited ("WTC Link"), 
-a subsidiary of CWTC, manages the Company's co-branded credit card project 
-and is an active provider of CRM solutions and services in China.
-
-
-THIS COMPANY IS DOING INCREDIBLE THINGS. THAY HAVE CASH AND HAVE MADE 
-GREAT STRATEGIC AQUISITIONS. CURRENT PRICE $1.99. THEY HAVE DROPPED 
-BIG NEW'S IN THE PAST. WHO'S TO SAY THEY DON'T HAVE ANOTHER BIG ONE. 
-We see them on the AMEX very shortly.
-
-
-Do this often enough, and your portfolio can double, even TRIPLE in value.
-
-
-
+Alan
 
