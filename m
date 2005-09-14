@@ -1,78 +1,51 @@
-From: Erik Slagter <erik@slagter.name>
+From: Stefan <gentoopower@yahoo.de>
 Subject: Re: USB-Storage, slow speed with sync option
-Date: Wed, 14 Sep 2005 11:31:38 +0200
-Message-ID: <1126690298.4248.44.camel@localhost.localdomain>
-References: <43277485.6030802@yahoo.de>
+Date: Wed, 14 Sep 2005 12:27:56 +0200
+Message-ID: <4327FB2C.5000207@yahoo.de>
+References: <43277485.6030802@yahoo.de> <1126690298.4248.44.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-onVmdYLLK09Qa0h8hxcl"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oldconomy.demon.nl ([212.238.217.56]:55719 "EHLO
-	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S965112AbVINJcH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Sep 2005 05:32:07 -0400
-In-Reply-To: <43277485.6030802@yahoo.de>
+Received: from smtp104.mail.sc5.yahoo.com ([66.163.169.223]:64631 "HELO
+	smtp104.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S932700AbVINK3u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Sep 2005 06:29:50 -0400
+In-Reply-To: <1126690298.4248.44.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stefan <gentoopower@yahoo.de>
+To: Erik Slagter <erik@slagter.name>
 Cc: linux-ide@vger.kernel.org
 
+Erik Slagter wrote:
 
---=-onVmdYLLK09Qa0h8hxcl
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>On Wed, 2005-09-14 at 02:53 +0200, Stefan wrote:
+>  
+>
+>>When I copy files to my USB 2.0 Stick , my transferspeed are horrible in
+>>case I mount the device with sync option, the rates are around 50KB/s,
+>>doesn't really matter how big the files are.
+>>If I don't mount with option sync, then the speeds are as expected a
+>>couple of MB/s
+>>    
+>>
+>
+>Now do a complete benchmark and type "sync" after the cp command.
+>  
+>
 
-On Wed, 2005-09-14 at 02:53 +0200, Stefan wrote:
-> When I copy files to my USB 2.0 Stick , my transferspeed are horrible in
-> case I mount the device with sync option, the rates are around 50KB/s,
-> doesn't really matter how big the files are.
-> If I don't mount with option sync, then the speeds are as expected a
-> couple of MB/s
+I already did that:-)
 
-Now do a complete benchmark and type "sync" after the cp command.
+With sync option, a test directory takes about 15min to copy.
+Without sync option about 20s and running command sync afterwards takes
+about 5-10s.
 
---=-onVmdYLLK09Qa0h8hxcl
-Content-Type: application/x-pkcs7-signature; name=smime.p7s
-Content-Disposition: attachment; filename=smime.p7s
-Content-Transfer-Encoding: base64
+So roughly 15min compared to 30s
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGFjCCAs8w
-ggI4oAMCAQICAw9TczANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
-d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
-YWlsIElzc3VpbmcgQ0EwHhcNMDUwODE4MTE1NDA1WhcNMDYwODE4MTE1NDA1WjBDMR8wHQYDVQQD
-ExZUaGF3dGUgRnJlZW1haWwgTWVtYmVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFt
-ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANAMKW15OgreNb+Wd++Xcw6uNJUXXIfX
-56u1rtTObMmbbDY2wNc4Iqwbuwaysvox3z+YElXBibE8BAyV1iMjhee4mOfAy38dGHtWDxhOGke8
-VpkyY8DSWgMN5p4egTiT6YNdHW75iiQ+Vh5zMHju1UXnIqgf5zkUGkNuxYp15jLZvRDbfA5H+Sil
-jbZGB2fiPOJHpyI61ZidcMgdow31qm70/oe6vXxhSZLzo7OLvExE+mQHwbCSIJMN/hPTK1z0lmQ1
-kkaEjHrefqIgoF9Dk/WfOtulzvR3xBzDL50GZ32BxT/OhXYe1SHEJpSM1S/aq8TBQJYwjzREWyDh
-0OYsmr0CAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFndGVyLm5hbWUwDAYDVR0TAQH/BAIw
-ADANBgkqhkiG9w0BAQQFAAOBgQCCpzoneRQIKsUO8zSnwQ7yhJTrS/EaDibiIVrkkCbzXwCiHFAi
-7nmTRF0DlLVF3Ssf97ITWT/RSdkj9Xke0OHH7724PJdfpA6OglMnx2i7IcJLzPgPjB+fOmfR0nYX
-UYKuzGxTOXmshLmPcwKdpFuRLLk7n+vrTAwJYJI++crhJzCCAz8wggKooAMCAQICAQ0wDQYJKoZI
-hvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQIEwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcT
-CUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmlj
-YXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMTG1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFp
-bCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJlZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3
-MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUg
-Q29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwg
-SXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAxKY8VXNV+065yplaHmjAdQRw
-nd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNaLIkVcI7dyfArhVqqP3FWy688Cwfn8R+R
-NiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUqVIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEA
-AaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1UdHwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwu
-dGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWlsQ0EuY3JsMAsGA1UdDwQEAwIBBjApBgNV
-HREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVsMi0xMzgwDQYJKoZIhvcNAQEFBQADgYEA
-SIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYfqi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6E
-sZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa9/eH1sYITq726jTlEBpbNU1341YheILc
-IRk13iSx0x1G/11fZU8xggHvMIIB6wIBATBpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3
-dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1h
-aWwgSXNzdWluZyBDQQIDD1NzMAkGBSsOAwIaBQCgXTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcB
-MBwGCSqGSIb3DQEJBTEPFw0wNTA5MTQwOTMxMzRaMCMGCSqGSIb3DQEJBDEWBBSjbU0cC42SZbFJ
-v7cCPnaKrBOXpzANBgkqhkiG9w0BAQEFAASCAQAM5Ge/q9CvNgBf+0v+R+qpBHKbqcoIOH/FKezZ
-pdIYBhcUO+ouWFLmkIkktmUX4nJNvtULiaEIIi8hpnP+CmocnpGXFHy9zPe0yxDrCuxKsCrhVR+q
-gWS5A0sywa9IkE9qJzbNcZAOLhu4X28QHXSw7SyAP31yLFiSwjewAwups9Wez8isQzmGphCctT8V
-h/oPp1yfRHKcPPqB9Q3yRVcGhIyEv58sUOPG92gXzmnC3VsyLJNUQzo7GMkDgfZn2eR3+qlBkG/Q
-XNtR7qTDxm0TS2JWUkOeDlXkV38qUVSN3aPtO7Yc8I3koG9ZFohlZauC1j5JiDrTS+XB24J9phUv
-AAAAAAAA
+	
 
+	
+		
+___________________________________________________________ 
+Gesendet von Yahoo! Mail - Jetzt mit 1GB Speicher kostenlos - Hier anmelden: http://mail.yahoo.de
 
---=-onVmdYLLK09Qa0h8hxcl--
