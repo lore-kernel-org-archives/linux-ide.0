@@ -1,71 +1,35 @@
-From: Stefan <gentoopower@yahoo.de>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: USB-Storage, slow speed with sync option
-Date: Wed, 14 Sep 2005 15:37:24 +0200
-Message-ID: <43282794.7000707@yahoo.de>
-References: <43277485.6030802@yahoo.de>	 <1126690298.4248.44.camel@localhost.localdomain>	 <4327FB2C.5000207@yahoo.de> <1126694013.4248.49.camel@localhost.localdomain> <4327FEE7.7020707@yahoo.de> <43281B5E.2090702@bouton.name>
+Date: Wed, 14 Sep 2005 11:26:30 -0400
+Message-ID: <43284126.8040007@rtr.ca>
+References: <43277485.6030802@yahoo.de>	 <1126690298.4248.44.camel@localhost.localdomain>	 <4327FB2C.5000207@yahoo.de>	 <1126694013.4248.49.camel@localhost.localdomain>	 <4327FEE7.7020707@yahoo.de>  <43281B5E.2090702@bouton.name> <1126702271.4248.56.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp102.mail.sc5.yahoo.com ([216.136.174.140]:8783 "HELO
-	smtp102.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S965206AbVINNjM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Sep 2005 09:39:12 -0400
-In-Reply-To: <43281B5E.2090702@bouton.name>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:25476 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S965243AbVINP0c
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Sep 2005 11:26:32 -0400
+In-Reply-To: <1126702271.4248.56.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lionel Bouton <lionel-subscription@bouton.name>, linux-ide@vger.kernel.org
+To: Erik Slagter <erik@slagter.name>
+Cc: Lionel Bouton <lionel-subscription@bouton.name>, linux-ide@vger.kernel.org
 
-Lionel Bouton wrote:
-
-> Stefan wrote the following on 14.09.2005 12:43 :
+Erik Slagter wrote:
 >
->> Erik Slagter wrote:
->>  
->>
->>>
->>> Why would you _ever_ want to use the sync mount option on a flash
->>> device?
->>>
->>>
->>>   
->>
->> Don't ask me:-)
->>
->> I used to mount without sync option, but I switched to hal + dbus now
->> and with gentoo it automatically sets sync option in fstab :-(
->>  
->>
->
-> This is purely a PBKAK :
-> users want to remove the device as soon as they get feedback from
-> their UI telling them that their transfer is done (in fact they even
-> screw up and remove the device before it is done). sync in fstab isn't
-> particularly clever, but sync with automount is more useful : when
-> properly configured, as soon as the transfer is done the automounter
-> can cleanly umount the block device which is nearly instantaneous when
-> sync is used.
+> It's a very bad solution, because it's slow, but worse, it wears out
+> particular sectors, although the only good option (make the stick
+> non-removable when in use is not quite feasible).
 
+Bad, YES.  Slow, VERY.
 
-I guess that is what suse must have setup, since I just checked there
-and it works smooth although they use sync option.
+Wears out sectors?  Not really.
+These flash sticks, along with CF and SD cards, all include
+built-in controllers that do automatic wear-leveling.
 
-> Without sync there can be some awfully long delays with flash and huge
-> caches (on a 512M slow SD, I saw 30+ seconds after transfering 10s or
-> 100s of MB).
->
-> This is understandable, for all the removable devices without a clean
-> "eject" and VFAT formatted, using sync is probably the best safeguard
-> against badly screwed up filesystems.
->
-> Lionel.
->
+So rewriting a small group of "logical" sectors over and over
+does not, in fact, rewrite the same physical pages in flash.
 
-
-	
-
-	
-		
-___________________________________________________________ 
-Gesendet von Yahoo! Mail - Jetzt mit 1GB Speicher kostenlos - Hier anmelden: http://mail.yahoo.de
-
+But SYNC is still horrible for this application!
