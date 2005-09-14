@@ -1,39 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] fix sata_svw.c warnings for eeh_writeb, eeh_writew, eeh_readw
-Date: Wed, 14 Sep 2005 16:53:52 -0400
-Message-ID: <20050914205352.GA28124@havoc.gtf.org>
-References: <20050914204924.GA31498@kvasir.watson.ibm.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: USB-Storage, slow speed with sync option
+Date: Wed, 14 Sep 2005 17:38:36 -0400
+Message-ID: <4328985C.4000207@rtr.ca>
+References: <43277485.6030802@yahoo.de>	 <1126690298.4248.44.camel@localhost.localdomain>	 <4327FB2C.5000207@yahoo.de>	 <1126694013.4248.49.camel@localhost.localdomain>	 <4327FEE7.7020707@yahoo.de>  <43281B5E.2090702@bouton.name> <1126702271.4248.56.camel@localhost.localdomain> <43284126.8040007@rtr.ca> <432843E5.1060209@bouton.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:11966 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S932513AbVINUxz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Sep 2005 16:53:55 -0400
-Content-Disposition: inline
-In-Reply-To: <20050914204924.GA31498@kvasir.watson.ibm.com>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:25836 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S932774AbVINVii
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Sep 2005 17:38:38 -0400
+In-Reply-To: <432843E5.1060209@bouton.name>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Amos Waterland <apw@us.ibm.com>
-Cc: benh@kernel.crashing.org, linux-ide@vger.kernel.org
+To: Lionel Bouton <lionel-subscription@bouton.name>
+Cc: Erik Slagter <erik@slagter.name>, linux-ide@vger.kernel.org
 
-On Wed, Sep 14, 2005 at 04:49:24PM -0400, Amos Waterland wrote:
-> Right now drivers/scsi/sata_svw.c spews a lot of warnings like this:
+Lionel Bouton wrote:
+> Mark Lord wrote the following on 14.09.2005 17:26 :
+>> These flash sticks, along with CF and SD cards, all include
+>> built-in controllers that do automatic wear-leveling.
 > 
->  drivers/scsi/sata_svw.c: In function `k2_sata_tf_load':
->  drivers/scsi/sata_svw.c:111: warning: passing arg 2 of `eeh_writeb'
->                               makes pointer from integer without a cast
-> 
-> Looking at the definition for struct ata_ioports, the address fields are
-> defined seemingly quite deliberately as unsigned longs.  So here is a
-> patch that fixes the warnings by making the implicit cast explicit.
-> 
-> Signed-off-by: Amos Waterland <apw@us.ibm.com>
+> Do they all have such controllers now? Last time I checked, low quality 
+> parts didn't have them and it wasn't easy to verify which ones did.
 
-NAK, I reject this patch once every month or so.
+Pretty much all of them use NAND flash, which comes with 1-3%
+bad blocks from the factory.  So the onboard controllers already
+have to deal with *that* issue, and the same remapping logic is
+normally extended to allow them to do wear leveling as well.
 
-The proper fix is to use iomap in libata.
+Wear leveling is imperfect, in that they devices can only include
+sectors *known* by the *device* to be inactive, so as files are
+written and deleted many sectors are removed from the wear rotation
+until the next time they are logically rewritten (or until a CFA ERASE
+command, which Linux never does.  Sad.).
 
-	Jeff
+Cannot say for sure whether 100% of controllers are adequately intelligent,
+but that kind of control logic is pretty pervasive these days.
+It would be a very rare device indeed that lacks it.
 
-
-
+Cheers
