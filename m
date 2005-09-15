@@ -1,43 +1,44 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: USB-Storage, slow speed with sync option
-Date: Wed, 14 Sep 2005 17:38:36 -0400
-Message-ID: <4328985C.4000207@rtr.ca>
-References: <43277485.6030802@yahoo.de>	 <1126690298.4248.44.camel@localhost.localdomain>	 <4327FB2C.5000207@yahoo.de>	 <1126694013.4248.49.camel@localhost.localdomain>	 <4327FEE7.7020707@yahoo.de>  <43281B5E.2090702@bouton.name> <1126702271.4248.56.camel@localhost.localdomain> <43284126.8040007@rtr.ca> <432843E5.1060209@bouton.name>
+From: Lukasz Kosewski <lkosewsk@gmail.com>
+Subject: Re: [PATCH 3/3] Add disk hotswap support to libata RESEND #2
+Date: Thu, 15 Sep 2005 00:40:27 -0400
+Message-ID: <355e5e5e050914214025feee82@mail.gmail.com>
+References: <355e5e5e05080103021a8239df@mail.gmail.com>
+	 <4789af9e050823124140eb924f@mail.gmail.com>
+	 <4789af9e050823154364c8e9eb@mail.gmail.com>
+	 <430BA990.9090807@mvista.com> <430BCB41.5070206@s5r6.in-berlin.de>
+	 <355e5e5e05082407031138120a@mail.gmail.com>
+	 <4789af9e05082408111c4a6294@mail.gmail.com>
+	 <4789af9e05082409121cc6870@mail.gmail.com>
+	 <4789af9e0508291223435f174@mail.gmail.com>
+	 <4789af9e05090612023fb8517c@mail.gmail.com>
+Reply-To: lkosewsk@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:25836 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S932774AbVINVii
+Received: from zproxy.gmail.com ([64.233.162.207]:63054 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1030406AbVIOEka convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Sep 2005 17:38:38 -0400
-In-Reply-To: <432843E5.1060209@bouton.name>
+	Thu, 15 Sep 2005 00:40:30 -0400
+Received: by zproxy.gmail.com with SMTP id i11so191614nzi
+        for <linux-ide@vger.kernel.org>; Wed, 14 Sep 2005 21:40:28 -0700 (PDT)
+In-Reply-To: <4789af9e05090612023fb8517c@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lionel Bouton <lionel-subscription@bouton.name>
-Cc: Erik Slagter <erik@slagter.name>, linux-ide@vger.kernel.org
+To: jim.ramsay@gmail.com
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Lionel Bouton wrote:
-> Mark Lord wrote the following on 14.09.2005 17:26 :
->> These flash sticks, along with CF and SD cards, all include
->> built-in controllers that do automatic wear-leveling.
+On 9/6/05, Jim Ramsay <jim.ramsay@gmail.com> wrote:
+> However, I have seen the occasion where a single IRQ is used to signal
+> both a DMA completion AND a hotplug event.  Of course in this case the
+> hotplug event itself would be ignored completely.
 > 
-> Do they all have such controllers now? Last time I checked, low quality 
-> parts didn't have them and it wasn't easy to verify which ones did.
+> So I would recommend getting rid of that check entirely.
 
-Pretty much all of them use NAND flash, which comes with 1-3%
-bad blocks from the factory.  So the onboard controllers already
-have to deal with *that* issue, and the same remapping logic is
-normally extended to allow them to do wear leveling as well.
+Hey Jim,
 
-Wear leveling is imperfect, in that they devices can only include
-sectors *known* by the *device* to be inactive, so as files are
-written and deleted many sectors are removed from the wear rotation
-until the next time they are logically rewritten (or until a CFA ERASE
-command, which Linux never does.  Sad.).
+Not that I disbelieve you, but do you have an example of a controller
+where this happens?  I've done a lot of testing and never seen this...
 
-Cannot say for sure whether 100% of controllers are adequately intelligent,
-but that kind of control logic is pretty pervasive these days.
-It would be a very rare device indeed that lacks it.
-
-Cheers
+Luke Kosewski
