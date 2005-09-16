@@ -1,88 +1,41 @@
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Subject: [PATCH] IDE: move CONFIG_IDE_MAX_HWIFS into linux/ide.h
-Date: Fri, 16 Sep 2005 11:33:10 -0600
-Message-ID: <200509161133.10493.bjorn.helgaas@hp.com>
+From: "Matheus Izvekov" <izvekov@lps.ele.puc-rio.br>
+Subject: Re: libata sata_sil broken on 2.6.13.1
+Date: Fri, 16 Sep 2005 19:10:42 -0300 (BRT)
+Message-ID: <60542.200.141.101.221.1126908642.squirrel@correio.lps.ele.puc-rio.br>
+References: <61637.200.141.106.169.1126660632.squirrel@correio.lps.ele.puc-rio.br><60519.200.141.106.169.1126727337.squirrel@correio.lps.ele.puc-rio.br><43290893.7070207@pobox.com><1126790860.19133.75.camel@localhost.localdomain><61929.200.141.106.169.1126815191.squirrel@correio.lps.ele.puc-rio.br>
+       <1126823405.7034.14.camel@localhost.localdomain>
+    <61375.200.141.106.169.1126842173.squirrel@correio.lps.ele.puc-rio.br>
+    <432A6923.2070000@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from atlrel7.hp.com ([156.153.255.213]:2744 "EHLO atlrel7.hp.com")
-	by vger.kernel.org with ESMTP id S1030587AbVIPRdh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Sep 2005 13:33:37 -0400
-Content-Disposition: inline
+Received: from juno.lps.ele.puc-rio.br ([139.82.40.34]:23466 "EHLO
+	juno.lps.ele.puc-rio.br") by vger.kernel.org with ESMTP
+	id S1750720AbVIPWM6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Sep 2005 18:12:58 -0400
+In-Reply-To: <432A6923.2070000@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, rth@twiddle.net, ink@jurassic.park.msu.ru, lethal@linux-sh.org, kkojima@rr.iij4u.or.jp, linux-sh@m17n.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: izvekov@lps.ele.puc-rio.br, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-CONFIG_IDE_MAX_HWIFS is a generic thing, no need to have it duplicated
-by every arch that uses it.
+> Essentially that is what happened.  Albert's patch simply fixed it
+> another way.
+>
+> ATA is a bit annoying in that, we try to "know" when an interrupt is
+> expected.  There is no 100% solution that simply allows us to check for
+> pending interrupts, without side effects.
+>
+> Thus the explosion when unexpected interrupts are received.
+>
 
-Previous posts elicited no responses:
-    http://www.uwsg.iu.edu/hypermail/linux/kernel/0508.3/0111.html
-    http://www.uwsg.iu.edu/hypermail/linux/kernel/0508.3/1299.html
+What do you think would be proper fix, this patch from Albert, or maybe
+just trapping the interrupts (plus not have the IRQ shared with other
+devices?). Also, what keeps Albert's patch from making into mainline, it
+just needs more testing or are there any known problems?
 
-Signed-off-by: Bjorn Helgaas <bjorn.helgaas@hp.com>
+> 	Jeff
 
-Index: work-ide/include/asm-alpha/ide.h
-===================================================================
---- work-ide.orig/include/asm-alpha/ide.h	2005-08-24 09:36:41.000000000 -0600
-+++ work-ide/include/asm-alpha/ide.h	2005-08-24 09:37:12.000000000 -0600
-@@ -15,10 +15,6 @@
- 
- #include <linux/config.h>
- 
--#ifndef MAX_HWIFS
--#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
--#endif
--
- #define IDE_ARCH_OBSOLETE_DEFAULTS
- 
- static inline int ide_default_irq(unsigned long base)
-Index: work-ide/include/asm-sh/ide.h
-===================================================================
---- work-ide.orig/include/asm-sh/ide.h	2005-08-24 09:36:41.000000000 -0600
-+++ work-ide/include/asm-sh/ide.h	2005-08-24 09:37:12.000000000 -0600
-@@ -16,10 +16,6 @@
- 
- #include <linux/config.h>
- 
--#ifndef MAX_HWIFS
--#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
--#endif
--
- #define ide_default_io_ctl(base)	(0)
- 
- #include <asm-generic/ide_iops.h>
-Index: work-ide/include/asm-sh64/ide.h
-===================================================================
---- work-ide.orig/include/asm-sh64/ide.h	2005-08-24 09:36:41.000000000 -0600
-+++ work-ide/include/asm-sh64/ide.h	2005-08-24 09:37:12.000000000 -0600
-@@ -17,10 +17,6 @@
- 
- #include <linux/config.h>
- 
--#ifndef MAX_HWIFS
--#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
--#endif
--
- /* Without this, the initialisation of PCI IDE cards end up calling
-  * ide_init_hwif_ports, which won't work. */
- #ifdef CONFIG_BLK_DEV_IDEPCI
-Index: work-ide/include/linux/ide.h
-===================================================================
---- work-ide.orig/include/linux/ide.h	2005-08-24 09:37:03.000000000 -0600
-+++ work-ide/include/linux/ide.h	2005-08-24 09:37:24.000000000 -0600
-@@ -266,6 +266,10 @@
- 
- #include <asm/ide.h>
- 
-+#ifndef MAX_HWIFS
-+#define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
-+#endif
-+
- /* needed on alpha, x86/x86_64, ia64, mips, ppc32 and sh */
- #ifndef IDE_ARCH_OBSOLETE_DEFAULTS
- # define ide_default_io_base(index)	(0)
+Thanks for your support.
 
