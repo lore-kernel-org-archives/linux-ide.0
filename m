@@ -1,41 +1,43 @@
-From: "Matheus Izvekov" <izvekov@lps.ele.puc-rio.br>
-Subject: Re: libata sata_sil broken on 2.6.13.1
-Date: Fri, 16 Sep 2005 19:10:42 -0300 (BRT)
-Message-ID: <60542.200.141.101.221.1126908642.squirrel@correio.lps.ele.puc-rio.br>
-References: <61637.200.141.106.169.1126660632.squirrel@correio.lps.ele.puc-rio.br><60519.200.141.106.169.1126727337.squirrel@correio.lps.ele.puc-rio.br><43290893.7070207@pobox.com><1126790860.19133.75.camel@localhost.localdomain><61929.200.141.106.169.1126815191.squirrel@correio.lps.ele.puc-rio.br>
-       <1126823405.7034.14.camel@localhost.localdomain>
-    <61375.200.141.106.169.1126842173.squirrel@correio.lps.ele.puc-rio.br>
-    <432A6923.2070000@pobox.com>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: [PATCH] cs5520: fix return value of cs5520_init_one()
+Date: Sat, 17 Sep 2005 15:50:43 +0400
+Message-ID: <20050917115043.GB2768@mipter.zuzino.mipt.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from juno.lps.ele.puc-rio.br ([139.82.40.34]:23466 "EHLO
-	juno.lps.ele.puc-rio.br") by vger.kernel.org with ESMTP
-	id S1750720AbVIPWM6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 16 Sep 2005 18:12:58 -0400
-In-Reply-To: <432A6923.2070000@pobox.com>
+Received: from zproxy.gmail.com ([64.233.162.199]:16404 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751074AbVIQLkY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Sep 2005 07:40:24 -0400
+Received: by zproxy.gmail.com with SMTP id i11so307403nzi
+        for <linux-ide@vger.kernel.org>; Sat, 17 Sep 2005 04:40:19 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: izvekov@lps.ele.puc-rio.br, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <b.zolnierkiewicz@elka.pw.edu.pl>
+Cc: Amit Gud <amitg@calsoftinc.com>, linux-ide@vger.kernel.org
 
-> Essentially that is what happened.  Albert's patch simply fixed it
-> another way.
->
-> ATA is a bit annoying in that, we try to "know" when an interrupt is
-> expected.  There is no 100% solution that simply allows us to check for
-> pending interrupts, without side effects.
->
-> Thus the explosion when unexpected interrupts are received.
->
+From: Amit Gud <amitg@calsoftinc.com>
 
-What do you think would be proper fix, this patch from Albert, or maybe
-just trapping the interrupts (plus not have the IRQ shared with other
-devices?). Also, what keeps Albert's patch from making into mainline, it
-just needs more testing or are there any known problems?
+Patch follows from the suggestions by AC and Felipe W Damasio for
+fixing the return codes from IDE drivers.
 
-> 	Jeff
+Signed-off-by: Amit Gud <gud@eth.net>
+Signed-off-by: Domen Puncer <domen@coderock.org>
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+---
 
-Thanks for your support.
+ drivers/ide/pci/cs5520.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+--- a/drivers/ide/pci/cs5520.c
++++ b/drivers/ide/pci/cs5520.c
+@@ -225,7 +225,7 @@ static int __devinit cs5520_init_one(str
+ 	if(pci_enable_device_bars(dev, 1<<2))
+ 	{
+ 		printk(KERN_WARNING "%s: Unable to enable 55x0.\n", d->name);
+-		return 1;
++		return -ENODEV;
+ 	}
+ 	pci_set_master(dev);
+ 	if (pci_set_dma_mask(dev, DMA_32BIT_MASK)) {
 
