@@ -1,103 +1,97 @@
-From: Tyler <pml@dtbb.net>
-Subject: Re: Promise SATAII150 TX4 or raidreconf broken - answer
-Date: Sun, 18 Sep 2005 01:56:38 -0700
-Message-ID: <432D2BC6.50300@dtbb.net>
-References: <430E4AB0.2060600@eyal.emu.id.au> <4313E433.1080602@pobox.com>	<43223709.8090002@eyal.emu.id.au> <x3kfysdq846.fsf@Psilocybe.Update.UU.SE> <4326061D.1020002@eyal.emu.id.au>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: Promise SATAII150 TX4 ide errors
+Date: Sun, 18 Sep 2005 22:03:17 +1000
+Message-ID: <432D5785.8010709@eyal.emu.id.au>
+References: <430E4AB0.2060600@eyal.emu.id.au> <4313E433.1080602@pobox.com>	<43223709.8090002@eyal.emu.id.au> <x3kfysdq846.fsf@Psilocybe.Update.UU.SE>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:60623 "EHLO
-	smtp-06.primus.ca") by vger.kernel.org with ESMTP id S1750715AbVIRIyv
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 18 Sep 2005 04:54:51 -0400
-In-Reply-To: <4326061D.1020002@eyal.emu.id.au>
+Received: from omta02sl.mx.bigpond.com ([144.140.93.154]:14229 "EHLO
+	omta02sl.mx.bigpond.com") by vger.kernel.org with ESMTP
+	id S1751115AbVIRMD3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 18 Sep 2005 08:03:29 -0400
+In-Reply-To: <x3kfysdq846.fsf@Psilocybe.Update.UU.SE>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: linux-raid list <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Thorild Selen <thorild@Update.UU.SE>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-Eyal Lebedinsky wrote:
+Thorild Selen wrote:
+> If you search a bit in the linux-ide and linux-kernel mailing list
+> archives, you will find that several people before have had problems
+> with SATA150-TX4 and SATAII150-TX4 (see for example posts by Jim
+> Ramsay, Joerg Sommrey and me).
 
->Executive summary: it is not the TX4. It is not really raidreconf.
->You must specify the parity-algorithm in raidtab because the
->raidreconf default is not what one expects.
->
->I have now investigated the corrupted 3->4 disk raidreconf and I
->can see that there is a pattern to the problem. A similar pattern
->is seen with a 4->5 run.
->
->I wrote known values to the raid before the reconf and checked
->after. The process is
->	create /dev/md0
->	write to it
->	raidreconf it
->	read it and see which blocks show up where
->
->What I see is that the 2nd pair of each 6 blocks is swapped. Here
->is the error list for a test with 1 cyl (31 blocks) per disk:
->
->bad block 2 says it is 3
->bad block 3 says it is 2
->bad block 8 says it is 9
->bad block 9 says it is 8
->bad block 14 says it is 15
->bad block 15 says it is 14
->bad block 20 says it is 21
->bad block 21 says it is 20
->bad block 26 says it is 27
->bad block 27 says it is 26
->bad block 32 says it is 33
->bad block 33 says it is 32
->bad block 38 says it is 39
->bad block 39 says it is 38
->bad block 44 says it is 45
->bad block 45 says it is 44
->bad block 50 says it is 51
->bad block 51 says it is 50
->bad block 56 says it is 57
->bad block 57 says it is 56
->20 errors in 62 blocks
->
->At this point I decided that I must take the TX4 out of the equation.
->This is just too regular for a hardware problem. I created four
->partitions on one disk and repeated the test. It failed just the same.
->
->I was now reasonably convinced that it is raidreconf that gives me
->grief. Nevertheless, the pattern is just too regular. Maybe the program
->does not agree with md on the parity algorithm? The default is said
->to be left-symmetric (see man mdadm; man raidtab does not say), so I
->specified this explicitly in the raidtab and it started working.
->
->Good, but I needed to understand this.
->
->Looking at the raidtools code (where raidreconf is built), I think
->that it does not default to left-symmetric. It looks to me like the
->config struct is malloced and zeroed (with memset) meaning the .layout
->member is set to left-asymmetric (see top of parser.c) and I do not
->see that it is ever set to any other default (left-symmetric would
->be numeric 2).
->
->--
->Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
->	attach .zip as .dat
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->  
->
-Nice work Eyal :)
+Having sorted out the raidreconf I now have a working raid.
 
-Now all we need is a patch for raid-reconf to fix default behaviour? :D
+Well, sort of working, I now started seeing i/o errors that cause
+the raid to stop and required a re-assemble. It looks very much
+like the other reports, except that my details vary a bit.
+Here is what I get:
 
-Regards,
-Tyler.
+Sep 18 10:11:10 eyal kernel: [4294756.244000] irq 16: nobody cared (try booting with the "irqpoll" option)
+Sep 18 10:11:10 eyal kernel: [4294756.244000]  [__report_bad_irq+42/160] __report_bad_irq+0x2a/0xa0
+Sep 18 10:11:10 eyal kernel: [4294756.244000]  [handle_IRQ_event+48/112] handle_IRQ_event+0x30/0x70
+Sep 18 10:11:10 eyal kernel: [4294756.244000]  [note_interrupt+128/240] note_interrupt+0x80/0xf0
+Sep 18 10:11:10 eyal kernel: [4294756.244000]  [__do_IRQ+283/288] __do_IRQ+0x11b/0x120
+Sep 18 10:11:10 eyal kernel: [4294756.244000]  [do_IRQ+70/112] do_IRQ+0x46/0x70
+Sep 18 10:11:10 eyal kernel: [4294756.244000]  =======================
+Sep 18 10:11:10 eyal kernel: [4294756.244000]  [common_interrupt+26/32] common_interrupt+0x1a/0x20
+Sep 18 10:11:10 eyal kernel: [4294756.244000]  [default_idle+0/48] default_idle+0x0/0x30
+Sep 18 10:11:10 eyal kernel: [4294756.244000]  [default_idle+35/48] default_idle+0x23/0x30
+Sep 18 10:11:10 eyal kernel: [4294756.244000]  [cpu_idle+112/128] cpu_idle+0x70/0x80
+Sep 18 10:11:10 eyal kernel: [4294756.244000]  [start_kernel+366/400] start_kernel+0x16e/0x190
+Sep 18 10:11:10 eyal kernel: [4294756.244000]  [unknown_bootoption+0/480] unknown_bootoption+0x0/0x1e0
+Sep 18 10:11:10 eyal kernel: [4294756.244000] handlers:
+Sep 18 10:11:10 eyal kernel: [4294756.244000] [pg0+945037568/1068864512] (usb_hcd_irq+0x0/0x70 [usbcore])
+Sep 18 10:11:10 eyal kernel: [4294756.244000] [pg0+945383264/1068864512] (ata_interrupt+0x0/0x120 [libata])
+Sep 18 10:11:10 eyal kernel: [4294756.244000] [pg0+945587408/1068864512] (pdc_interrupt+0x0/0x1c0 [sata_promise])
+Sep 18 10:11:10 eyal kernel: [4294756.244000] [pg0+946374608/1068864512] (dc395x_interrupt+0x0/0x90 [dc395x])
+Sep 18 10:11:10 eyal kernel: [4294756.244000] [pg0+946191904/1068864512] (e1000_intr+0x0/0x100 [e1000])
+Sep 18 10:11:10 eyal kernel: [4294756.244000] Disabling IRQ #16
 
+Sep 18 10:11:39 eyal kernel: [4294785.495000] ata4: command timeout
+Sep 18 10:11:39 eyal kernel: [4294785.520000] ATA: abnormal status 0xFF on port 0xF8A4829C
+Sep 18 10:11:39 eyal kernel: [4294785.538000] ata4: status=0xff { Busy }
+Sep 18 10:11:39 eyal kernel: [4294785.551000] SCSI error : <3 0 0 0> return code = 0x8000002
+Sep 18 10:11:39 eyal kernel: [4294785.569000] sdd: Current: sense key: Aborted Command
+Sep 18 10:11:39 eyal kernel: [4294785.586000]     Additional sense: Scsi parity error
+Sep 18 10:11:39 eyal kernel: [4294785.603000] end_request: I/O error, dev sdd, sector 625137215
+Sep 18 10:11:39 eyal kernel: [4294785.622000] raid5: Disk failure on sdd1, disabling device. Operation continuing on 3 devices
+
+Then /dev/sdc goes down the same way (it is on the TX4 too) and the raid5
+goes offline.
+
+[trim]
+
+> The only fix I know of is grabbing the SCSI bits from 2.6.10, which
+> can be compiled into a later kernel.  2.6.10 doesn't contain the bug,
+> but (the kernel.org) 2.6.10 should be avoided due to security
+> issues. There are important fixes in later SCSI code which should
+> probably be applied if you attempt this.
+
+Looking at sata_promise.c, comparing 2.6.10 to 2.6.13 shows very
+little change:
+	- a few new devices added to the table
+	- a new device type 'board_20619'
+	- new code for the new type in pdc_ata_init_one() which is in
+	fact identical to the older 'board_20319
+	- handling of pci_dev_busy condition
+	- one line added in the interrupt handler:
+		writel(mask, mmio_base + PDC_INT_SEQMASK);
+
+There was no more changes in the -ac series.
+
+The maintainer may be able to judge if any of these could lead to
+these errors.
+
+So this may be due to changes outside the device driver, e.g. the
+ide/scsi layers.
+
+I cannot reliably reproduce the failure, but at least once it happened
+very soon after a boot when there was not much activity on the raid.
 
 -- 
-No virus found in this outgoing message.
-Checked by AVG Anti-Virus.
-Version: 7.0.344 / Virus Database: 267.11.1/104 - Release Date: 9/16/2005
-
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+	attach .zip as .dat
