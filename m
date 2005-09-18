@@ -1,30 +1,103 @@
-From: matthieu castet <castet.matthieu@free.fr>
-Subject: EZD driver and hdx=remap.
-Date: Sat, 17 Sep 2005 22:34:50 +0200
-Message-ID: <432C7DEA.9060103@free.fr>
+From: Tyler <pml@dtbb.net>
+Subject: Re: Promise SATAII150 TX4 or raidreconf broken - answer
+Date: Sun, 18 Sep 2005 01:56:38 -0700
+Message-ID: <432D2BC6.50300@dtbb.net>
+References: <430E4AB0.2060600@eyal.emu.id.au> <4313E433.1080602@pobox.com>	<43223709.8090002@eyal.emu.id.au> <x3kfysdq846.fsf@Psilocybe.Update.UU.SE> <4326061D.1020002@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp4-g19.free.fr ([212.27.42.30]:25742 "EHLO smtp4-g19.free.fr")
-	by vger.kernel.org with ESMTP id S1751191AbVIQUe4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Sep 2005 16:34:56 -0400
+Received: from mail.tor.primus.ca ([216.254.136.21]:60623 "EHLO
+	smtp-06.primus.ca") by vger.kernel.org with ESMTP id S1750715AbVIRIyv
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 18 Sep 2005 04:54:51 -0400
+In-Reply-To: <4326061D.1020002@eyal.emu.id.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux Kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: linux-raid list <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Hi,
+Eyal Lebedinsky wrote:
 
-I spend lot's of hours to figure that my kernel need hdx=remap to 
-understand EZD disk.
+>Executive summary: it is not the TX4. It is not really raidreconf.
+>You must specify the parity-algorithm in raidtab because the
+>raidreconf default is not what one expects.
+>
+>I have now investigated the corrupted 3->4 disk raidreconf and I
+>can see that there is a pattern to the problem. A similar pattern
+>is seen with a 4->5 run.
+>
+>I wrote known values to the raid before the reconf and checked
+>after. The process is
+>	create /dev/md0
+>	write to it
+>	raidreconf it
+>	read it and see which blocks show up where
+>
+>What I see is that the 2nd pair of each 6 blocks is swapped. Here
+>is the error list for a test with 1 cyl (31 blocks) per disk:
+>
+>bad block 2 says it is 3
+>bad block 3 says it is 2
+>bad block 8 says it is 9
+>bad block 9 says it is 8
+>bad block 14 says it is 15
+>bad block 15 says it is 14
+>bad block 20 says it is 21
+>bad block 21 says it is 20
+>bad block 26 says it is 27
+>bad block 27 says it is 26
+>bad block 32 says it is 33
+>bad block 33 says it is 32
+>bad block 38 says it is 39
+>bad block 39 says it is 38
+>bad block 44 says it is 45
+>bad block 45 says it is 44
+>bad block 50 says it is 51
+>bad block 51 says it is 50
+>bad block 56 says it is 57
+>bad block 57 says it is 56
+>20 errors in 62 blocks
+>
+>At this point I decided that I must take the TX4 out of the equation.
+>This is just too regular for a hardware problem. I created four
+>partitions on one disk and repeated the test. It failed just the same.
+>
+>I was now reasonably convinced that it is raidreconf that gives me
+>grief. Nevertheless, the pattern is just too regular. Maybe the program
+>does not agree with md on the parity algorithm? The default is said
+>to be left-symmetric (see man mdadm; man raidtab does not say), so I
+>specified this explicitly in the raidtab and it started working.
+>
+>Good, but I needed to understand this.
+>
+>Looking at the raidtools code (where raidreconf is built), I think
+>that it does not default to left-symmetric. It looks to me like the
+>config struct is malloced and zeroed (with memset) meaning the .layout
+>member is set to left-asymmetric (see top of parser.c) and I do not
+>see that it is ever set to any other default (left-symmetric would
+>be numeric 2).
+>
+>--
+>Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+>	attach .zip as .dat
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  
+>
+Nice work Eyal :)
 
-It was very long because I had to figure it have something to do with 
-EZD and then find the solution (easy).
+Now all we need is a patch for raid-reconf to fix default behaviour? :D
 
-If EZD drive are not remapped, why in fs/partitions/msdos.c, there 
-aren't some info in case of EZD driver about hdx=remap option ?
+Regards,
+Tyler.
 
-Futhermore it will much cleanner to panic in this case, as log spaming 
-could mask the message.
 
-Matthieu
+-- 
+No virus found in this outgoing message.
+Checked by AVG Anti-Virus.
+Version: 7.0.344 / Virus Database: 267.11.1/104 - Release Date: 9/16/2005
+
