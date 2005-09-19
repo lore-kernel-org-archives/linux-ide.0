@@ -1,238 +1,886 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] libata: ATA Information VPD page, lk 2.6.14-rc1+
-Date: Mon, 19 Sep 2005 18:52:24 +1000
-Message-ID: <432E7C48.8060205@torque.net>
-Reply-To: dougg@torque.net
+From: "Riccardo Castellani" <r.castellani@usl6.toscana.it>
+Subject: Re: UDMA5
+Date: Mon, 19 Sep 2005 11:19:26 +0200
+Message-ID: <01da01c5bcfb$3b69cd90$1f01a8c0@Ric>
+References: <011401c5b2b2$becb3b40$1f01a8c0@Ric> <431D4C7A.3000908@yahoo.de> <016b01c5b2bc$c2cc93b0$1f01a8c0@Ric> <431D76CE.5090007@yahoo.de> <007301c5b38d$78f3c750$1f01a8c0@Ric> <431F9236.1040801@yahoo.de> <000a01c5b445$f9570520$1f01a8c0@Ric> <431FF0EA.2090006@yahoo.de> <00a601c5b469$3a3cdc40$1f01a8c0@Ric> <43205F0C.10607@yahoo.de>
+Reply-To: "Riccardo Castellani" <r.castellani@usl6.toscana.it>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050400050105010106080308"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from lisa.usl6.toscana.it ([159.213.44.2]:6893 "EHLO
+	lisa.nord.usl6.toscana.it") by vger.kernel.org with ESMTP
+	id S932397AbVISJSi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Sep 2005 05:18:38 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Stefan <gentoopower@yahoo.de>, Riccardo Castellani <r.castellani@usl6.toscana.it>
+Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------050400050105010106080308
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Now I set CDROM as master on IDE 1 but I didn't find any BIOS settings to
+force UDMA value.
+I already replaced 80 wired IDE cable twice BUT NOTHING !
+dmesg:
 
-Jeff,
-This patch adds support for the ATA Information VPD page
-defined in sat-r05.pdf (at www.t10.org). This VPD page
-contains the response to the IDENTIFY (PACKET) DEVICE
-ATA command amongst of data.
+Linux version 2.6.12-1.1376_FC3 (bhcompile@tweety.build.redhat.com) (gcc 
+version 3.4.4 20050721 (Red Hat 3.4.4-2)) #1 Fri Aug 26 23:27:26 EDT 2005
+BIOS-provided physical RAM map:
+ BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
+ BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
+ BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
+ BIOS-e820: 0000000000100000 - 000000000fff0000 (usable)
+ BIOS-e820: 000000000fff0000 - 000000000fff8000 (ACPI data)
+ BIOS-e820: 000000000fff8000 - 0000000010000000 (ACPI NVS)
+ BIOS-e820: 00000000ffff0000 - 0000000100000000 (reserved)
+0MB HIGHMEM available.
+255MB LOWMEM available.
+Using x86 segment limits to approximate NX protection
+On node 0 totalpages: 65520
+  DMA zone: 4096 pages, LIFO batch:1
+  Normal zone: 61424 pages, LIFO batch:31
+  HighMem zone: 0 pages, LIFO batch:1
+DMI 2.3 present.
+ACPI: RSDP (v000 AMI                                   ) @ 0x000fc570
+ACPI: RSDT (v001 AMIINT VIA_P6   0x00000010 MSFT 0x00000097) @ 0x0fff0000
+ACPI: FADT (v001 AMIINT VIA_P6   0x00000011 MSFT 0x00000097) @ 0x0fff0030
+ACPI: DSDT (v001    VIA APOLLO-P 0x00001000 MSFT 0x0100000b) @ 0x00000000
+ACPI: BIOS age (2000) fails cutoff (2001), acpi=force is required to enable 
+ACPI
+ACPI: Disabling ACPI support
+Allocating PCI resources starting at 10000000 (gap: 10000000:efff0000)
+Built 1 zonelists
+Kernel command line: ro root=LABEL=/
+Initializing CPU#0
+CPU 0 irqstacks, hard=c0447000 soft=c0446000
+PID hash table entries: 1024 (order: 10, 16384 bytes)
+Detected 798.067 MHz processor.
+Using tsc for high-res timesource
+Console: colour VGA+ 80x25
+Dentry cache hash table entries: 65536 (order: 6, 262144 bytes)
+Inode-cache hash table entries: 32768 (order: 5, 131072 bytes)
+Memory: 254828k/262080k available (2450k kernel code, 6572k reserved, 694k 
+data, 180k init, 0k highmem)
+Checking if this processor honours the WP bit even in supervisor mode... Ok.
+Calibrating delay loop... 1568.76 BogoMIPS (lpj=784384)
+Security Framework v1.0.0 initialized
+SELinux:  Initializing.
+SELinux:  Starting in permissive mode
+selinux_register_security:  Registering secondary module capability
+Capability LSM initialized as secondary
+Mount-cache hash table entries: 512
+CPU: After generic identify, caps: 0383f9ff 00000000 00000000 00000000 
+00000000 00000000 00000000
+CPU: After vendor identify, caps: 0383f9ff 00000000 00000000 00000000 
+00000000 00000000 00000000
+CPU: L1 I cache: 16K, L1 D cache: 16K
+CPU: L2 cache: 256K
+CPU: After all inits, caps: 0383f1ff 00000000 00000000 00000040 00000000 
+00000000 00000000
+Intel machine check architecture supported.
+Intel machine check reporting enabled on CPU#0.
+CPU: Intel Pentium III (Coppermine) stepping 06
+Enabling fast FPU save and restore... done.
+Enabling unmasked SIMD FPU exception support... done.
+Checking 'hlt' instruction... OK.
+checking if image is initramfs... it is
+Freeing initrd memory: 399k freed
+NET: Registered protocol family 16
+PCI: PCI BIOS revision 2.10 entry at 0xfdaf1, last bus=1
+PCI: Using configuration type 1
+mtrr: v2.0 (20020519)
+ACPI: Subsystem revision 20050729
+ACPI: Interpreter disabled.
+Linux Plug and Play Support v0.97 (c) Adam Belay
+pnp: PnP ACPI: disabled
+usbcore: registered new driver usbfs
+usbcore: registered new driver hub
+PCI: Probing PCI hardware
+PCI: Probing PCI hardware (bus 00)
+Boot video device is 0000:01:00.0
+PCI: Using IRQ router VIA [1106/0686] at 0000:00:07.0
+apm: BIOS version 1.2 Flags 0x03 (Driver version 1.16ac)
+audit: initializing netlink socket (disabled)
+audit(1127121018.960:1): initialized
+Total HugeTLB memory allocated, 0
+VFS: Disk quotas dquot_6.5.1
+Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+SELinux:  Registering netfilter hooks
+Initializing Cryptographic API
+ksign: Installing public key data
+Loading keyring
+- Added public key ACD1A80A1D789A78
+- User ID: Red Hat, Inc. (Kernel Module GPG key)
+pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+isapnp: Scanning for PnP cards...
+isapnp: No Plug & Play device found
+Real Time Clock Driver v1.12
+Linux agpgart interface v0.101 (c) Dave Jones
+agpgart: Detected VIA Apollo Pro 133 chipset
+agpgart: AGP aperture is 64M @ 0xe0000000
+PNP: No PS/2 controller found. Probing ports directly.
+serio: i8042 AUX port at 0x60,0x64 irq 12
+serio: i8042 KBD port at 0x60,0x64 irq 1
+Serial: 8250/16550 driver $Revision: 1.90 $ 76 ports, IRQ sharing enabled
+ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
+ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
+io scheduler noop registered
+io scheduler anticipatory registered
+io scheduler deadline registered
+io scheduler cfq registered
+RAMDISK driver initialized: 16 RAM disks of 16384K size 1024 blocksize
+Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+VP_IDE: IDE controller at PCI slot 0000:00:07.1
+PCI: Via IRQ fixup for 0000:00:07.1, from 255 to 0
+VP_IDE: chipset revision 6
+VP_IDE: not 100% native mode: will probe irqs later
+VP_IDE: VIA vt82c686b (rev 40) IDE UDMA100 controller on pci0000:00:07.1
+    ide0: BM-DMA at 0xffa0-0xffa7, BIOS settings: hda:DMA, hdb:pio
+    ide1: BM-DMA at 0xffa8-0xffaf, BIOS settings: hdc:DMA, hdd:pio
+Probing IDE interface ide0...
+hda: Maxtor 6Y080L0, ATA DISK drive
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+Probing IDE interface ide1...
+hdc: LG CD-ROM CRD-8521B, ATAPI CD/DVD-ROM drive
+ide1 at 0x170-0x177,0x376 on irq 15
+hda: max request size: 128KiB
+hda: 160086528 sectors (81964 MB) w/2048KiB Cache, CHS=65535/16/63, UDMA(33)
+hda: cache flushes supported
+ hda: hda1 hda2 hda3 hda4 < hda5 hda6 hda7 hda8 >
+hdc: ATAPI 52X CD-ROM drive, 128kB Cache, DMA
+Uniform CD-ROM driver Revision: 3.20
+ide-floppy driver 0.99.newide
+usbcore: registered new driver hiddev
+usbcore: registered new driver usbhid
+drivers/usb/input/hid-core.c: v2.01:USB HID core driver
+mice: PS/2 mouse device common for all mice
+md: md driver 0.90.1 MAX_MD_DEVS=256, MD_SB_DISKS=27
+NET: Registered protocol family 2
+IP: routing cache hash table of 512 buckets, 16Kbytes
+TCP established hash table entries: 16384 (order: 5, 131072 bytes)
+TCP bind hash table entries: 16384 (order: 6, 458752 bytes)
+TCP: Hash tables configured (established 16384 bind 16384)
+Initializing IPsec netlink socket
+NET: Registered protocol family 1
+NET: Registered protocol family 17
+Freeing unused kernel memory: 180k freed
+input: AT Translated Set 2 keyboard on isa0060/serio0
+kjournald starting.  Commit interval 5 seconds
+EXT3-fs: mounted filesystem with ordered data mode.
+input: PS/2 Generic Mouse on isa0060/serio1
+SELinux:  Disabled at runtime.
+SELinux:  Unregistering netfilter hooks
+Floppy drive(s): fd0 is 1.44M
+FDC 0 is a post-1991 82077
+8139too Fast Ethernet driver 0.9.27
+PCI: Found IRQ 5 for device 0000:00:0a.0
+eth0: RealTek RTL8139 at 0xd800, 00:50:bf:5a:8d:bf, IRQ 5
+eth0:  Identified 8139 chip type 'RTL-8139C'
+USB Universal Host Controller Interface driver v2.2
+PCI: Found IRQ 11 for device 0000:00:07.2
+uhci_hcd 0000:00:07.2: UHCI Host Controller
+uhci_hcd 0000:00:07.2: new USB bus registered, assigned bus number 1
+uhci_hcd 0000:00:07.2: irq 11, io base 0x0000dc00
+hub 1-0:1.0: USB hub found
+hub 1-0:1.0: 2 ports detected
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: ... autorun DONE.
+EXT3 FS on hda5, internal journal
+device-mapper: 4.4.0-ioctl (2005-01-12) initialised: dm-devel@redhat.com
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on hda1, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on hda2, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on hda8, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on hda3, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+Adding 1052216k swap on /dev/hda7.  Priority:-1 extents:1
+parport_pc: VIA 686A/8231 detected
+parport_pc: probing current configuration
+parport_pc: Current parallel port base: 0x378
+parport0: PC-style at 0x378 (0x778), irq 7 [PCSPP,TRISTATE]
+parport_pc: VIA parallel port: io=0x378, irq=7
+ieee1394: Initialized config rom entry `ip1394'
+ip_tables: (C) 2000-2002 Netfilter core team
+ip_tables: (C) 2000-2002 Netfilter core team
+eth0: link up, 100Mbps, full-duplex, lpa 0x41E1
+i2c /dev entries driver
+NET: Registered protocol family 10
+Disabled Privacy Extensions on device c03d60a0(lo)
+IPv6 over IPv4 tunneling driver
+eth0: no IPv6 routers present
 
-It is against lk 2.6.14-rc1 plus my "libata: scsi error
-handling" patch that I just sent.
+Now I have also this message !
 
-The patch can be exercised with "sg_inq -a /dev/sda"
-(from sg3_utils-1.17 beta at http://www.torque.net/sg )
-or "sdparm --page=ai /dev/sda" (from the sdparm-0.95
-beta at http://www.torque.net/sg/sdparm.html ).
-smartmontools could use this information if it was
-available from linux.
+hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+hda: dma_intr: error=0x84 { DriveStatusError BadCRC }
+ide: failed opcode was: unknown
 
-As required by the sat-r05 draft, the code executes an
-IDENTIFY (PACKET) DEVICE ATA command to get the most
-recent values in dev->id . I know Tejun has been working
-in this area and may have a better way of doing this
-(e.g. the inside out spinlocks are a worry). The
-"signature" part is a hack; registers need to be read
-after a device reset and held.
 
-Changelog:
-  - add support for the ATA Information VPD page [0x89]
-  - add function to redo IDENTIFY (PACKET) DEVICE ATA
-    command to update the array dev->id, assumes
-    ata_dev_identify() has been called.
 
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
-Doug Gilbert
 
---------------050400050105010106080308
-Content-Type: text/x-patch;
- name="libata2614rc1err_ai.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata2614rc1err_ai.diff"
 
---- linux/drivers/scsi/libata-scsi.c	2005-09-16 22:00:05.000000000 +1000
-+++ linux/drivers/scsi/libata-scsi.c2614rc1err_ai	2005-09-19 13:37:44.000000000 +1000
-@@ -739,6 +739,84 @@
- 	return 0;
- }
- 
-+static int ata_qc_complete_s_noop(struct ata_queued_cmd *qc, u8 drv_stat)
-+{
-+        return 0;
-+}
-+
-+/**
-+ *	ata_dev_redo_identify - obtain IDENTIFY x DEVICE page again
-+ *	@ap: port on which device we wish to probe resides
-+ *	@device: device bus address, starting at zero
-+ *
-+ *	Following bus reset, we issue the IDENTIFY [PACKET] DEVICE
-+ *	command, and read back the 512-byte device information page.
-+ *	The device information page is fed to us via the standard
-+ *	PIO-IN protocol, but we hand-code it here. (TODO: investigate
-+ *	using standard PIO-IN paths)
-+ *
-+ *	LOCKING:
-+ *	Inherited from caller.  Some functions called by this function
-+ *	obtain the host_set lock.
-+ *
-+ *	RETURNS:
-+ *	Zero on success, -1 of failure
-+ */
-+
-+static int ata_dev_redo_identify(struct ata_port *ap, unsigned int device)
-+{
-+	struct ata_device *dev = &ap->device[device];
-+	u8 status;
-+	DECLARE_COMPLETION(wait);
-+	struct ata_queued_cmd *qc;
-+	unsigned long flags;
-+	int rc;
-+
-+	if (!ata_dev_present(dev)) {
-+		return -1;
-+	}
-+
-+	ata_dev_select(ap, device, 1, 1); /* select device 0/1 */
-+
-+	qc = ata_qc_new_init(ap, dev);
-+	BUG_ON(qc == NULL);
-+
-+	ata_sg_init_one(qc, dev->id, sizeof(dev->id));
-+	qc->dma_dir = DMA_FROM_DEVICE;
-+	qc->tf.protocol = ATA_PROT_PIO;
-+	qc->nsect = 1;
-+
-+	if (dev->class == ATA_DEV_ATA) {
-+		qc->tf.command = ATA_CMD_ID_ATA;
-+	} else {
-+		qc->tf.command = ATA_CMD_ID_ATAPI;
-+	}
-+
-+	qc->waiting = &wait;
-+	qc->complete_fn = ata_qc_complete_s_noop;
-+
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	rc = ata_qc_issue(qc);
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+	if (rc)
-+		goto err_out;
-+	else
-+		wait_for_completion(&wait);
-+
-+	status = ata_chk_status(ap);
-+	if (status & ATA_ERR) {
-+		goto err_out;
-+	}
-+
-+	swap_buf_le16(dev->id, ATA_ID_WORDS);
-+
-+	return 0;
-+
-+err_out:
-+	return -1;
-+}
-+
- /**
-  *	ata_scsi_translate - Translate then issue SCSI command to ATA device
-  *	@ap: ATA port to which the command is addressed
-@@ -1059,6 +1137,79 @@
- }
- 
- /**
-+ *	ata_scsiop_inq_89 - Simulate INQUIRY EVPD page 83, ATA information
-+ *	@args: device IDENTIFY data / SCSI command of interest.
-+ *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
-+ *	@buflen: Response buffer length.
-+ *
-+ *	Yields ATA (and SAT layer) information. Defined per sat-r05
-+ *	This function should also be called for S-ATAPI devices.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host_set lock)
-+ */
-+
-+unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf,
-+			       unsigned int buflen)
-+{
-+	struct ata_port *ap;
-+	struct ata_device *dev;
-+	struct scsi_cmnd *cmd = args->cmd;
-+	struct scsi_device *scsidev = cmd->device;
-+	u8 *scsicmd = cmd->cmnd;
-+	unsigned int out_len;
-+	int res;
-+	const int spec_page_len = 568;
-+	u8 b[60];
-+	int is_atapi_dev = 0;
-+
-+	out_len = (scsicmd[3] << 8) + scsicmd[4];
-+	out_len = (buflen < out_len) ? buflen : out_len;
-+	memset(b, 0, sizeof(b));
-+	ap = (struct ata_port *)&scsidev->host->hostdata[0];
-+	if (ap) {
-+		dev = ata_scsi_find_dev(ap, scsidev);
-+		if (dev && (dev->class != ATA_DEV_ATA)) {
-+			is_atapi_dev = 1;
-+			b[0] = 0x5;	/* assume MMC device, dubious */
-+		}
-+	} else
-+		dev = NULL;
-+	b[1] = 0x89;			/* this page code */
-+	b[2] = (spec_page_len >> 8) & 0xff;
-+	b[3] = spec_page_len & 0xff;
-+	strncpy(b + 8, "linux   ", 8);
-+	strncpy(b + 16, "libata          ", 16);
-+	strncpy(b + 32, "0001", 4);
-+	/* signature stuff goes here, where to fetch it from? */
-+	b[36] = 0x34;		/* FIS type */
-+	b[36 + 1] = 0x0;	/* interrupt + PM port */
-+	b[36 + 4] = 0x1;	/* lba low */
-+	b[36 + 5] = is_atapi_dev ? 0x14 : 0x0;	/* lba mid */
-+	b[36 + 6] = is_atapi_dev ? 0xeb : 0x0;	/* lba high */
-+	b[36 + 12] = 0x1;	/* sector count */
-+
-+	b[56] = is_atapi_dev ? 0xa1 : 0xec;	/* command code */
-+
-+	memcpy(rbuf, b, ((sizeof(b) < out_len) ? sizeof(b) : out_len));
-+	if ((out_len <= sizeof(b)) || (! ap) || (! dev))
-+	    return 0;
-+	
-+	spin_unlock_irq(&ap->host_set->lock);
-+	res = ata_dev_redo_identify(ap, scsidev->id);
-+	spin_lock_irq(&ap->host_set->lock);
-+	if (res) {
-+		/* sat-r05 says ok, leave IDENTIFY response all zeroes */
-+		DPRINTK("ata_dev_redo_identify failed\n");
-+		return 0;
-+	}
-+	out_len -= 60;
-+	memcpy(rbuf + 60, dev->id,
-+	       ((out_len < sizeof(dev->id)) ? out_len : sizeof(dev->id)));
-+	return 0;
-+}
-+
-+/**
-  *	ata_scsiop_noop - Command handler that simply returns success.
-  *	@args: device IDENTIFY data / SCSI command of interest.
-  *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
-@@ -1715,6 +1866,8 @@
- 				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_80);
- 			else if (scsicmd[2] == 0x83)
- 				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_83);
-+			else if (scsicmd[2] == 0x89)
-+				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_89);
- 			else
- 				ata_scsi_invalid_field(cmd, done);
- 			break;
+----- Original Message ----- 
+From: "Stefan" <gentoopower@yahoo.de>
+To: "Riccardo Castellani" <r.castellani@usl6.toscana.it>
+Cc: <linux-ide@vger.kernel.org>
+Sent: Thursday, September 08, 2005 5:55 PM
+Subject: Re:
 
---------------050400050105010106080308--
+
+> Looks quite good, I checked the source of the via driver for your board
+> and there is no code that would limit it to udma2, so linux definitely
+> would enable udma5 if the rest of the components would work alright.
+>
+> So in my opinion there are three possibilities now, either the drive is
+> set to udma2(UDMA 33) or the cable is broken or the connector on the
+> motherboard for ide is broken.
+> If you got a boxed harddrive then you shouzld have a maxtor diagnose
+> floppy and I think it also has the feature on boadr to check and set
+> udma level, if not it should be available on their website, I have used
+> this tool before.
+>
+>
+> Riccardo Castellani wrote:
+>
+>> Gigabyte
+>> GA-6VXC7-4X-P rev. 5.2
+>>
+>> I see in dmseg:
+>>
+>> Linux version 2.6.12-1.1376_FC3 (bhcompile@tweety.build.redhat.com)
+>> (gcc version 3.4.4 20050721 (Red Hat 3.4.4-2)) #1 Fri Aug 26 23:27:26
+>> EDT 2005
+>> BIOS-provided physical RAM map:
+>> BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
+>> BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
+>> BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
+>> BIOS-e820: 0000000000100000 - 000000000fff0000 (usable)
+>> BIOS-e820: 000000000fff0000 - 000000000fff8000 (ACPI data)
+>> BIOS-e820: 000000000fff8000 - 0000000010000000 (ACPI NVS)
+>> BIOS-e820: 00000000ffff0000 - 0000000100000000 (reserved)
+>> 0MB HIGHMEM available.
+>> 255MB LOWMEM available.
+>> Using x86 segment limits to approximate NX protection
+>> On node 0 totalpages: 65520
+>>  DMA zone: 4096 pages, LIFO batch:1
+>>  Normal zone: 61424 pages, LIFO batch:31
+>>  HighMem zone: 0 pages, LIFO batch:1
+>> DMI 2.3 present.
+>> ACPI: RSDP (v000 AMI                                   ) @ 0x000fc570
+>> ACPI: RSDT (v001 AMIINT VIA_P6   0x00000010 MSFT 0x00000097) @ 0x0fff0000
+>> ACPI: FADT (v001 AMIINT VIA_P6   0x00000011 MSFT 0x00000097) @ 0x0fff0030
+>> ACPI: DSDT (v001    VIA APOLLO-P 0x00001000 MSFT 0x0100000b) @ 0x00000000
+>> ACPI: BIOS age (2000) fails cutoff (2001), acpi=force is required to
+>> enable ACPI
+>> ACPI: Disabling ACPI support
+>> Allocating PCI resources starting at 10000000 (gap: 10000000:efff0000)
+>> Built 1 zonelists
+>> Kernel command line: ro root=LABEL=/
+>> Initializing CPU#0
+>> CPU 0 irqstacks, hard=c0447000 soft=c0446000
+>> PID hash table entries: 1024 (order: 10, 16384 bytes)
+>> Detected 798.155 MHz processor.
+>> Using tsc for high-res timesource
+>> Console: colour VGA+ 80x25
+>> Dentry cache hash table entries: 65536 (order: 6, 262144 bytes)
+>> Inode-cache hash table entries: 32768 (order: 5, 131072 bytes)
+>> Memory: 254828k/262080k available (2450k kernel code, 6572k reserved,
+>> 694k data, 180k init, 0k highmem)
+>> Checking if this processor honours the WP bit even in supervisor
+>> mode... Ok.
+>> Calibrating delay loop... 1568.76 BogoMIPS (lpj=784384)
+>> Security Framework v1.0.0 initialized
+>> SELinux:  Initializing.
+>> SELinux:  Starting in permissive mode
+>> selinux_register_security:  Registering secondary module capability
+>> Capability LSM initialized as secondary
+>> Mount-cache hash table entries: 512
+>> CPU: After generic identify, caps: 0383f9ff 00000000 00000000 00000000
+>> 00000000 00000000 00000000
+>> CPU: After vendor identify, caps: 0383f9ff 00000000 00000000 00000000
+>> 00000000 00000000 00000000
+>> CPU: L1 I cache: 16K, L1 D cache: 16K
+>> CPU: L2 cache: 256K
+>> CPU: After all inits, caps: 0383f1ff 00000000 00000000 00000040
+>> 00000000 00000000 00000000
+>> Intel machine check architecture supported.
+>> Intel machine check reporting enabled on CPU#0.
+>> CPU: Intel Pentium III (Coppermine) stepping 06
+>> Enabling fast FPU save and restore... done.
+>> Enabling unmasked SIMD FPU exception support... done.
+>> Checking 'hlt' instruction... OK.
+>> checking if image is initramfs... it is
+>> Freeing initrd memory: 399k freed
+>> NET: Registered protocol family 16
+>> PCI: PCI BIOS revision 2.10 entry at 0xfdaf1, last bus=1
+>> PCI: Using configuration type 1
+>> mtrr: v2.0 (20020519)
+>> ACPI: Subsystem revision 20050729
+>> ACPI: Interpreter disabled.
+>> Linux Plug and Play Support v0.97 (c) Adam Belay
+>> pnp: PnP ACPI: disabled
+>> usbcore: registered new driver usbfs
+>> usbcore: registered new driver hub
+>> PCI: Probing PCI hardware
+>> PCI: Probing PCI hardware (bus 00)
+>> Boot video device is 0000:01:00.0
+>> PCI: Using IRQ router VIA [1106/0686] at 0000:00:07.0
+>> apm: BIOS version 1.2 Flags 0x03 (Driver version 1.16ac)
+>> audit: initializing netlink socket (disabled)
+>> audit(1126182695.366:1): initialized
+>> Total HugeTLB memory allocated, 0
+>> VFS: Disk quotas dquot_6.5.1
+>> Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+>> SELinux:  Registering netfilter hooks
+>> Initializing Cryptographic API
+>> ksign: Installing public key data
+>> Loading keyring
+>> - Added public key ACD1A80A1D789A78
+>> - User ID: Red Hat, Inc. (Kernel Module GPG key)
+>> pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+>> isapnp: Scanning for PnP cards...
+>> isapnp: No Plug & Play device found
+>> Real Time Clock Driver v1.12
+>> Linux agpgart interface v0.101 (c) Dave Jones
+>> agpgart: Detected VIA Apollo Pro 133 chipset
+>> agpgart: AGP aperture is 64M @ 0xe0000000
+>> PNP: No PS/2 controller found. Probing ports directly.
+>> serio: i8042 AUX port at 0x60,0x64 irq 12
+>> serio: i8042 KBD port at 0x60,0x64 irq 1
+>> Serial: 8250/16550 driver $Revision: 1.90 $ 76 ports, IRQ sharing enabled
+>> ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
+>> ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
+>> io scheduler noop registered
+>> io scheduler anticipatory registered
+>> io scheduler deadline registered
+>> io scheduler cfq registered
+>> RAMDISK driver initialized: 16 RAM disks of 16384K size 1024 blocksize
+>> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+>> ide: Assuming 33MHz system bus speed for PIO modes; override with
+>> idebus=xx
+>> VP_IDE: IDE controller at PCI slot 0000:00:07.1
+>> PCI: Via IRQ fixup for 0000:00:07.1, from 255 to 0
+>> VP_IDE: chipset revision 6
+>> VP_IDE: not 100% native mode: will probe irqs later
+>> VP_IDE: VIA vt82c686b (rev 40) IDE UDMA100 controller on pci0000:00:07.1
+>>    ide0: BM-DMA at 0xffa0-0xffa7, BIOS settings: hda:DMA, hdb:pio
+>>    ide1: BM-DMA at 0xffa8-0xffaf, BIOS settings: hdc:pio, hdd:DMA
+>> Probing IDE interface ide0...
+>> hda: Maxtor 6Y080L0, ATA DISK drive
+>> ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+>> Probing IDE interface ide1...
+>> hdd: LG CD-ROM CRD-8521B, ATAPI CD/DVD-ROM drive
+>> ide1 at 0x170-0x177,0x376 on irq 15
+>> hda: max request size: 128KiB
+>> hda: 160086528 sectors (81964 MB) w/2048KiB Cache, CHS=65535/16/63,
+>> UDMA(33)
+>> hda: cache flushes supported
+>> hda: hda1 hda2 hda3 hda4 < hda5 hda6 hda7 hda8 >
+>> hdd: ATAPI 52X CD-ROM drive, 128kB Cache, DMA
+>> Uniform CD-ROM driver Revision: 3.20
+>> ide-floppy driver 0.99.newide
+>> usbcore: registered new driver hiddev
+>> usbcore: registered new driver usbhid
+>> drivers/usb/input/hid-core.c: v2.01:USB HID core driver
+>> mice: PS/2 mouse device common for all mice
+>> md: md driver 0.90.1 MAX_MD_DEVS=256, MD_SB_DISKS=27
+>> NET: Registered protocol family 2
+>> IP: routing cache hash table of 512 buckets, 16Kbytes
+>> TCP established hash table entries: 16384 (order: 5, 131072 bytes)
+>> TCP bind hash table entries: 16384 (order: 6, 458752 bytes)
+>> TCP: Hash tables configured (established 16384 bind 16384)
+>> Initializing IPsec netlink socket
+>> NET: Registered protocol family 1
+>> NET: Registered protocol family 17
+>> Freeing unused kernel memory: 180k freed
+>> input: AT Translated Set 2 keyboard on isa0060/serio0
+>> kjournald starting.  Commit interval 5 seconds
+>> EXT3-fs: mounted filesystem with ordered data mode.
+>> input: PS/2 Generic Mouse on isa0060/serio1
+>> SELinux:  Disabled at runtime.
+>> SELinux:  Unregistering netfilter hooks
+>> Floppy drive(s): fd0 is 1.44M
+>> FDC 0 is a post-1991 82077
+>> 8139too Fast Ethernet driver 0.9.27
+>> PCI: Found IRQ 5 for device 0000:00:0a.0
+>> eth0: RealTek RTL8139 at 0xd800, 00:50:bf:5a:8d:bf, IRQ 5
+>> eth0:  Identified 8139 chip type 'RTL-8139C'
+>> USB Universal Host Controller Interface driver v2.2
+>> PCI: Found IRQ 11 for device 0000:00:07.2
+>> uhci_hcd 0000:00:07.2: UHCI Host Controller
+>> uhci_hcd 0000:00:07.2: new USB bus registered, assigned bus number 1
+>> uhci_hcd 0000:00:07.2: irq 11, io base 0x0000dc00
+>> hub 1-0:1.0: USB hub found
+>> hub 1-0:1.0: 2 ports detected
+>> md: Autodetecting RAID arrays.
+>> md: autorun ...
+>> md: ... autorun DONE.
+>> EXT3 FS on hda5, internal journal
+>> device-mapper: 4.4.0-ioctl (2005-01-12) initialised: dm-devel@redhat.com
+>> kjournald starting.  Commit interval 5 seconds
+>> EXT3 FS on hda1, internal journal
+>> EXT3-fs: mounted filesystem with ordered data mode.
+>> kjournald starting.  Commit interval 5 seconds
+>> EXT3 FS on hda2, internal journal
+>> EXT3-fs: mounted filesystem with ordered data mode.
+>> kjournald starting.  Commit interval 5 seconds
+>> EXT3 FS on hda8, internal journal
+>> EXT3-fs: mounted filesystem with ordered data mode.
+>> kjournald starting.  Commit interval 5 seconds
+>> EXT3 FS on hda3, internal journal
+>> EXT3-fs: mounted filesystem with ordered data mode.
+>> Adding 1052216k swap on /dev/hda7.  Priority:-1 extents:1
+>> parport_pc: VIA 686A/8231 detected
+>> parport_pc: probing current configuration
+>> parport_pc: Current parallel port base: 0x378
+>> parport0: PC-style at 0x378 (0x778), irq 7 [PCSPP,TRISTATE]
+>> parport_pc: VIA parallel port: io=0x378, irq=7
+>> ieee1394: Initialized config rom entry `ip1394'
+>> ip_tables: (C) 2000-2002 Netfilter core team
+>> ip_tables: (C) 2000-2002 Netfilter core team
+>> eth0: link up, 100Mbps, full-duplex, lpa 0x41E1
+>> i2c /dev entries driver
+>> NET: Registered protocol family 10
+>> Disabled Privacy Extensions on device c03d60a0(lo)
+>> IPv6 over IPv4 tunneling driver
+>> eth0: no IPv6 routers present
+>>
+>>
+>> ----- Original Message ----- From: "Stefan" <gentoopower@yahoo.de>
+>> To: "Riccardo Castellani" <r.castellani@usl6.toscana.it>
+>> Cc: <linux-ide@vger.kernel.org>
+>> Sent: Thursday, September 08, 2005 10:06 AM
+>> Subject: Re:
+>>
+>>
+>>> Riccardo Castellani wrote:
+>>>
+>>>> That's good idea ! I tried to Knoppix but it detects UDMA at 33 Mhz.
+>>>> I read in mothearboard manual that it supports until to UDMA 100 Mhz
+>>>
+>>>
+>>>
+>>> What is the name of that motherboard and can you provide output of:
+>>>
+>>> lspci
+>>>
+>>>>
+>>>> ----- Original Message ----- From: "Stefan" <gentoopower@yahoo.de>
+>>>> To: "Riccardo Castellani" <r.castellani@usl6.toscana.it>
+>>>> Cc: <linux-ide@vger.kernel.org>
+>>>> Sent: Thursday, September 08, 2005 3:21 AM
+>>>> Subject: Re:
+>>>>
+>>>>
+>>>>> What happens if you check udma level with a live cd like knoppix?
+>>>>>
+>>>>> Riccardo Castellani wrote:
+>>>>>
+>>>>>> I'm sure that I replaced old 80-wire cable with "newer 80-wire IDE
+>>>>>> cable".
+>>>>>>
+>>>>>>
+>>>>>> ----- Original Message ----- From: "Stefan" <gentoopower@yahoo.de>
+>>>>>> To: "Riccardo Castellani" <r.castellani@usl6.toscana.it>
+>>>>>> Cc: <linux-ide@vger.kernel.org>
+>>>>>> Sent: Tuesday, September 06, 2005 1:00 PM
+>>>>>> Subject: Re:
+>>>>>>
+>>>>>>
+>>>>>>> Riccardo Castellani wrote:
+>>>>>>>
+>>>>>>>> I bought it directly from store.
+>>>>>>>> Several weeks ago I had problems with IDE cable and I could see
+>>>>>>>> UDMA5
+>>>>>>>> (with "hdparm" command) inside UDMA modes list. UDMA was the
+>>>>>>>> current
+>>>>>>>> active mode.
+>>>>>>>> Then I replaced 80- wire cable and I needed (for other reasons)
+>>>>>>>> again
+>>>>>>>> to reinstall operating system FC3 and now I'm here.
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> Well you probably answered the question yourself now, you must have
+>>>>>>> installed a cable only capable of udma2/udma 33.
+>>>>>>> The older ide cables have sligthly thicker lines than the >udma2
+>>>>>>> cables,
+>>>>>>> they have the same connector and of course there are mire connected
+>>>>>>> pins
+>>>>>>> on the >udma2
+>>>>>>> cables but you don't see that if looking at the connector.
+>>>>>>>
+>>>>>>>>
+>>>>>>>> ----- Original Message ----- From: "Stefan" <gentoopower@yahoo.de>
+>>>>>>>> To: "Riccardo Castellani" <r.castellani@usl6.toscana.it>
+>>>>>>>> Cc: <linux-ide@vger.kernel.org>
+>>>>>>>> Sent: Tuesday, September 06, 2005 9:59 AM
+>>>>>>>> Subject: Re:
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>> Riccardo Castellani wrote:
+>>>>>>>>>
+>>>>>>>>>> My HD supports  U-ATA 133 while motherboard supports U-ATA 100.
+>>>>>>>>>> (Fedora Core 3)
+>>>>>>>>>> DMA works at 33 Mhz (UDMA2) !?!
+>>>>>>>>>> WHY ? How Can I set to UDMA5 ?
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> To change to udma5 run:
+>>>>>>>>>
+>>>>>>>>> hdparm -X udma5
+>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> With  "hdparm -i /dev/hda" I can see:
+>>>>>>>>>>
+>>>>>>>>>> Model=Maxtor 6Y080L0, FwRev=YAR41BW0, SerialNo=Y23TZR2C
+>>>>>>>>>> Config={ Fixed }
+>>>>>>>>>> RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=57
+>>>>>>>>>> BuffType=DualPortCache, BuffSize=2048kB, MaxMultSect=16,
+>>>>>>>>>> MultSect=16
+>>>>>>>>>> CurCHS=4047/16/255, CurSects=16511760, LBA=yes,
+>>>>>>>>>> LBAsects=160086528
+>>>>>>>>>> IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+>>>>>>>>>> PIO modes:  pio0 pio1 pio2 pio3 pio4
+>>>>>>>>>> DMA modes:  mdma0 mdma1 mdma2
+>>>>>>>>>> UDMA modes: udma0 udma1 *udma2
+>>>>>>>>>> AdvancedPM=yes: disabled (255) WriteCache=enabled
+>>>>>>>>>> Drive conforms to: (null):
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> Looks like the drive  was switched to only support UDMA2, did you
+>>>>>>>>> buy
+>>>>>>>>> this drive directly from store?
+>>>>>>>>> This drive can be set to only support udma2 with the help of
+>>>>>>>>> maxtors
+>>>>>>>>> utility, this is sometimes needed to fix problems with older
+>>>>>>>>> boards,
+>>>>>>>>> so if you bought this drive from someone, there is a chance, that
+>>>>>>>>> this
+>>>>>>>>> person switched the udma mode for that drive.
+>>>>>>>>> If you got it directly from a store, then this should not be the
+>>>>>>>>> case.
+>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> dmesg gives:
+>>>>>>>>>>
+>>>>>>>>>> Linux version 2.6.12-1.1376_FC3
+>>>>>>>>>> (bhcompile@tweety.build.redhat.com)
+>>>>>>>>>> (gcc version 3.4.4 20050721 (Red Hat 3.4.4-2)) #1 Fri Aug 26
+>>>>>>>>>> 23:27:26
+>>>>>>>>>> EDT 2005
+>>>>>>>>>> BIOS-provided physical RAM map:
+>>>>>>>>>> BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
+>>>>>>>>>> BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
+>>>>>>>>>> BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
+>>>>>>>>>> BIOS-e820: 0000000000100000 - 000000000fff0000 (usable)
+>>>>>>>>>> BIOS-e820: 000000000fff0000 - 000000000fff8000 (ACPI data)
+>>>>>>>>>> BIOS-e820: 000000000fff8000 - 0000000010000000 (ACPI NVS)
+>>>>>>>>>> BIOS-e820: 00000000ffff0000 - 0000000100000000 (reserved)
+>>>>>>>>>> 0MB HIGHMEM available.
+>>>>>>>>>> 255MB LOWMEM available.
+>>>>>>>>>> Using x86 segment limits to approximate NX protection
+>>>>>>>>>> On node 0 totalpages: 65520
+>>>>>>>>>>  DMA zone: 4096 pages, LIFO batch:1
+>>>>>>>>>>  Normal zone: 61424 pages, LIFO batch:31
+>>>>>>>>>>  HighMem zone: 0 pages, LIFO batch:1
+>>>>>>>>>> DMI 2.3 present.
+>>>>>>>>>> ACPI: RSDP (v000 AMI                                   ) @
+>>>>>>>>>> 0x000fc570
+>>>>>>>>>> ACPI: RSDT (v001 AMIINT VIA_P6   0x00000010 MSFT 0x00000097) @
+>>>>>>>>>> 0x0fff0000
+>>>>>>>>>> ACPI: FADT (v001 AMIINT VIA_P6   0x00000011 MSFT 0x00000097) @
+>>>>>>>>>> 0x0fff0030
+>>>>>>>>>> ACPI: DSDT (v001    VIA APOLLO-P 0x00001000 MSFT 0x0100000b) @
+>>>>>>>>>> 0x00000000
+>>>>>>>>>> ACPI: BIOS age (2000) fails cutoff (2001), acpi=force is
+>>>>>>>>>> required to
+>>>>>>>>>> enable ACPI
+>>>>>>>>>> ACPI: Disabling ACPI support
+>>>>>>>>>> Allocating PCI resources starting at 10000000 (gap:
+>>>>>>>>>> 10000000:efff0000)
+>>>>>>>>>> Built 1 zonelists
+>>>>>>>>>> Kernel command line: ro root=LABEL=/
+>>>>>>>>>> Initializing CPU#0
+>>>>>>>>>> CPU 0 irqstacks, hard=c0447000 soft=c0446000
+>>>>>>>>>> PID hash table entries: 1024 (order: 10, 16384 bytes)
+>>>>>>>>>> Detected 798.270 MHz processor.
+>>>>>>>>>> Using tsc for high-res timesource
+>>>>>>>>>> Console: colour VGA+ 80x25
+>>>>>>>>>> Dentry cache hash table entries: 65536 (order: 6, 262144 bytes)
+>>>>>>>>>> Inode-cache hash table entries: 32768 (order: 5, 131072 bytes)
+>>>>>>>>>> Memory: 254828k/262080k available (2450k kernel code, 6572k
+>>>>>>>>>> reserved,
+>>>>>>>>>> 694k data, 180k init, 0k highmem)
+>>>>>>>>>> Checking if this processor honours the WP bit even in supervisor
+>>>>>>>>>> mode... Ok.
+>>>>>>>>>> Calibrating delay loop... 1568.76 BogoMIPS (lpj=784384)
+>>>>>>>>>> Security Framework v1.0.0 initialized
+>>>>>>>>>> SELinux:  Initializing.
+>>>>>>>>>> SELinux:  Starting in permissive mode
+>>>>>>>>>> selinux_register_security:  Registering secondary module
+>>>>>>>>>> capability
+>>>>>>>>>> Capability LSM initialized as secondary
+>>>>>>>>>> Mount-cache hash table entries: 512
+>>>>>>>>>> CPU: After generic identify, caps: 0383f9ff 00000000 00000000
+>>>>>>>>>> 00000000
+>>>>>>>>>> 00000000 00000000 00000000
+>>>>>>>>>> CPU: After vendor identify, caps: 0383f9ff 00000000 00000000
+>>>>>>>>>> 00000000
+>>>>>>>>>> 00000000 00000000 00000000
+>>>>>>>>>> CPU: L1 I cache: 16K, L1 D cache: 16K
+>>>>>>>>>> CPU: L2 cache: 256K
+>>>>>>>>>> CPU: After all inits, caps: 0383f1ff 00000000 00000000 00000040
+>>>>>>>>>> 00000000 00000000 00000000
+>>>>>>>>>> Intel machine check architecture supported.
+>>>>>>>>>> Intel machine check reporting enabled on CPU#0.
+>>>>>>>>>> CPU: Intel Pentium III (Coppermine) stepping 06
+>>>>>>>>>> Enabling fast FPU save and restore... done.
+>>>>>>>>>> Enabling unmasked SIMD FPU exception support... done.
+>>>>>>>>>> Checking 'hlt' instruction... OK.
+>>>>>>>>>> checking if image is initramfs... it is
+>>>>>>>>>> Freeing initrd memory: 399k freed
+>>>>>>>>>> NET: Registered protocol family 16
+>>>>>>>>>> PCI: PCI BIOS revision 2.10 entry at 0xfdaf1, last bus=1
+>>>>>>>>>> PCI: Using configuration type 1
+>>>>>>>>>> mtrr: v2.0 (20020519)
+>>>>>>>>>> ACPI: Subsystem revision 20050729
+>>>>>>>>>> ACPI: Interpreter disabled.
+>>>>>>>>>> Linux Plug and Play Support v0.97 (c) Adam Belay
+>>>>>>>>>> pnp: PnP ACPI: disabled
+>>>>>>>>>> usbcore: registered new driver usbfs
+>>>>>>>>>> usbcore: registered new driver hub
+>>>>>>>>>> PCI: Probing PCI hardware
+>>>>>>>>>> PCI: Probing PCI hardware (bus 00)
+>>>>>>>>>> Boot video device is 0000:01:00.0
+>>>>>>>>>> PCI: Using IRQ router VIA [1106/0686] at 0000:00:07.0
+>>>>>>>>>> apm: BIOS version 1.2 Flags 0x03 (Driver version 1.16ac)
+>>>>>>>>>> audit: initializing netlink socket (disabled)
+>>>>>>>>>> audit(1125948457.147:1): initialized
+>>>>>>>>>> Total HugeTLB memory allocated, 0
+>>>>>>>>>> VFS: Disk quotas dquot_6.5.1
+>>>>>>>>>> Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+>>>>>>>>>> SELinux:  Registering netfilter hooks
+>>>>>>>>>> Initializing Cryptographic API
+>>>>>>>>>> ksign: Installing public key data
+>>>>>>>>>> Loading keyring
+>>>>>>>>>> - Added public key ACD1A80A1D789A78
+>>>>>>>>>> - User ID: Red Hat, Inc. (Kernel Module GPG key)
+>>>>>>>>>> pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+>>>>>>>>>> isapnp: Scanning for PnP cards...
+>>>>>>>>>> isapnp: No Plug & Play device found
+>>>>>>>>>> Real Time Clock Driver v1.12
+>>>>>>>>>> Linux agpgart interface v0.101 (c) Dave Jones
+>>>>>>>>>> agpgart: Detected VIA Apollo Pro 133 chipset
+>>>>>>>>>> agpgart: AGP aperture is 64M @ 0xe0000000
+>>>>>>>>>> PNP: No PS/2 controller found. Probing ports directly.
+>>>>>>>>>> serio: i8042 AUX port at 0x60,0x64 irq 12
+>>>>>>>>>> serio: i8042 KBD port at 0x60,0x64 irq 1
+>>>>>>>>>> Serial: 8250/16550 driver $Revision: 1.90 $ 76 ports, IRQ sharing
+>>>>>>>>>> enabled
+>>>>>>>>>> ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
+>>>>>>>>>> ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
+>>>>>>>>>> io scheduler noop registered
+>>>>>>>>>> io scheduler anticipatory registered
+>>>>>>>>>> io scheduler deadline registered
+>>>>>>>>>> io scheduler cfq registered
+>>>>>>>>>> RAMDISK driver initialized: 16 RAM disks of 16384K size 1024
+>>>>>>>>>> blocksize
+>>>>>>>>>> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+>>>>>>>>>> ide: Assuming 33MHz system bus speed for PIO modes; override with
+>>>>>>>>>> idebus=xx
+>>>>>>>>>> VP_IDE: IDE controller at PCI slot 0000:00:07.1
+>>>>>>>>>> PCI: Via IRQ fixup for 0000:00:07.1, from 255 to 0
+>>>>>>>>>> VP_IDE: chipset revision 6
+>>>>>>>>>> VP_IDE: not 100% native mode: will probe irqs later
+>>>>>>>>>> VP_IDE: VIA vt82c686b (rev 40) IDE UDMA100 controller on
+>>>>>>>>>> pci0000:00:07.1
+>>>>>>>>>>    ide0: BM-DMA at 0xffa0-0xffa7, BIOS settings: hda:DMA, hdb:pio
+>>>>>>>>>>    ide1: BM-DMA at 0xffa8-0xffaf, BIOS settings: hdc:pio, hdd:DMA
+>>>>>>>>>> Probing IDE interface ide0...
+>>>>>>>>>> hda: Maxtor 6Y080L0, ATA DISK drive
+>>>>>>>>>> ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+>>>>>>>>>> Probing IDE interface ide1...
+>>>>>>>>>> hdd: LG CD-ROM CRD-8521B, ATAPI CD/DVD-ROM drive
+>>>>>>>>>> ide1 at 0x170-0x177,0x376 on irq 15
+>>>>>>>>>> hda: max request size: 128KiB
+>>>>>>>>>> hda: 160086528 sectors (81964 MB) w/2048KiB Cache,
+>>>>>>>>>> CHS=65535/16/63,
+>>>>>>>>>> UDMA(33)
+>>>>>>>>>> hda: cache flushes supported
+>>>>>>>>>> hda: hda1 hda2 hda3 hda4 < hda5 hda6 hda7 hda8 >
+>>>>>>>>>> hdd: ATAPI 52X CD-ROM drive, 128kB Cache, DMA
+>>>>>>>>>> Uniform CD-ROM driver Revision: 3.20
+>>>>>>>>>> ide-floppy driver 0.99.newide
+>>>>>>>>>> usbcore: registered new driver hiddev
+>>>>>>>>>> usbcore: registered new driver usbhid
+>>>>>>>>>> drivers/usb/input/hid-core.c: v2.01:USB HID core driver
+>>>>>>>>>> mice: PS/2 mouse device common for all mice
+>>>>>>>>>> md: md driver 0.90.1 MAX_MD_DEVS=256, MD_SB_DISKS=27
+>>>>>>>>>> NET: Registered protocol family 2
+>>>>>>>>>> IP: routing cache hash table of 512 buckets, 16Kbytes
+>>>>>>>>>> TCP established hash table entries: 16384 (order: 5, 131072
+>>>>>>>>>> bytes)
+>>>>>>>>>> TCP bind hash table entries: 16384 (order: 6, 458752 bytes)
+>>>>>>>>>> TCP: Hash tables configured (established 16384 bind 16384)
+>>>>>>>>>> Initializing IPsec netlink socket
+>>>>>>>>>> NET: Registered protocol family 1
+>>>>>>>>>> NET: Registered protocol family 17
+>>>>>>>>>> Freeing unused kernel memory: 180k freed
+>>>>>>>>>> input: AT Translated Set 2 keyboard on isa0060/serio0
+>>>>>>>>>> kjournald starting.  Commit interval 5 seconds
+>>>>>>>>>> EXT3-fs: mounted filesystem with ordered data mode.
+>>>>>>>>>> SELinux:  Disabled at runtime.
+>>>>>>>>>> SELinux:  Unregistering netfilter hooks
+>>>>>>>>>> Floppy drive(s): fd0 is 1.44M
+>>>>>>>>>> FDC 0 is a post-1991 82077
+>>>>>>>>>> 8139too Fast Ethernet driver 0.9.27
+>>>>>>>>>> PCI: Found IRQ 9 for device 0000:00:0a.0
+>>>>>>>>>> eth0: RealTek RTL8139 at 0xd800, 00:50:bf:5a:8d:bf, IRQ 9
+>>>>>>>>>> eth0:  Identified 8139 chip type 'RTL-8139C'
+>>>>>>>>>> USB Universal Host Controller Interface driver v2.2
+>>>>>>>>>> PCI: Found IRQ 11 for device 0000:00:07.2
+>>>>>>>>>> uhci_hcd 0000:00:07.2: UHCI Host Controller
+>>>>>>>>>> uhci_hcd 0000:00:07.2: new USB bus registered, assigned bus
+>>>>>>>>>> number 1
+>>>>>>>>>> uhci_hcd 0000:00:07.2: irq 11, io base 0x0000dc00
+>>>>>>>>>> hub 1-0:1.0: USB hub found
+>>>>>>>>>> hub 1-0:1.0: 2 ports detected
+>>>>>>>>>> md: Autodetecting RAID arrays.
+>>>>>>>>>> md: autorun ...
+>>>>>>>>>> md: ... autorun DONE.
+>>>>>>>>>> EXT3 FS on hda5, internal journal
+>>>>>>>>>> device-mapper: 4.4.0-ioctl (2005-01-12) initialised:
+>>>>>>>>>> dm-devel@redhat.com
+>>>>>>>>>> kjournald starting.  Commit interval 5 seconds
+>>>>>>>>>> EXT3 FS on hda1, internal journal
+>>>>>>>>>> EXT3-fs: mounted filesystem with ordered data mode.
+>>>>>>>>>> kjournald starting.  Commit interval 5 seconds
+>>>>>>>>>> EXT3 FS on hda2, internal journal
+>>>>>>>>>> EXT3-fs: mounted filesystem with ordered data mode.
+>>>>>>>>>> kjournald starting.  Commit interval 5 seconds
+>>>>>>>>>> EXT3 FS on hda8, internal journal
+>>>>>>>>>> EXT3-fs: mounted filesystem with ordered data mode.
+>>>>>>>>>> kjournald starting.  Commit interval 5 seconds
+>>>>>>>>>> EXT3 FS on hda3, internal journal
+>>>>>>>>>> EXT3-fs: mounted filesystem with ordered data mode.
+>>>>>>>>>> Adding 1052216k swap on /dev/hda7.  Priority:-1 extents:1
+>>>>>>>>>> parport_pc: VIA 686A/8231 detected
+>>>>>>>>>> parport_pc: probing current configuration
+>>>>>>>>>> parport_pc: Current parallel port base: 0x378
+>>>>>>>>>> parport0: PC-style at 0x378 (0x778), irq 7 [PCSPP,TRISTATE]
+>>>>>>>>>> parport_pc: VIA parallel port: io=0x378, irq=7
+>>>>>>>>>> ieee1394: Initialized config rom entry `ip1394'
+>>>>>>>>>> ip_tables: (C) 2000-2002 Netfilter core team
+>>>>>>>>>> ip_tables: (C) 2000-2002 Netfilter core team
+>>>>>>>>>> eth0: link up, 100Mbps, full-duplex, lpa 0x41E1
+>>>>>>>>>> i2c /dev entries driver
+>>>>>>>>>> NET: Registered protocol family 10
+>>>>>>>>>> Disabled Privacy Extensions on device c03d60a0(lo)
+>>>>>>>>>> IPv6 over IPv4 tunneling driver
+>>>>>>>>>> eth0: no IPv6 routers present
+>>>>>>>>>> -
+>>>>>>>>>> To unsubscribe from this list: send the line "unsubscribe
+>>>>>>>>>> linux-ide" in
+>>>>>>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>>>>>>> More majordomo info at
+>>>>>>>>>> http://vger.kernel.org/majordomo-info.html
+>>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> ___________________________________________________________
+>>>>>>>>> Gesendet von Yahoo! Mail - Jetzt mit 1GB Speicher kostenlos - Hier
+>>>>>>>>> anmelden: http://mail.yahoo.de
+>>>>>>>>>
+>>>>>>>>
+>>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> ___________________________________________________________
+>>>>>>> Gesendet von Yahoo! Mail - Jetzt mit 1GB Speicher kostenlos - Hier
+>>>>>>> anmelden: http://mail.yahoo.de
+>>>>>>>
+>>>>>>
+>>>>>> -
+>>>>>> To unsubscribe from this list: send the line "unsubscribe
+>>>>>> linux-ide" in
+>>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>>> ___________________________________________________________
+>>>>> Gesendet von Yahoo! Mail - Jetzt mit 1GB Speicher kostenlos - Hier
+>>>>> anmelden: http://mail.yahoo.de
+>>>>>
+>>>>
+>>>> -
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>>
+>>>
+>>>
+>>>
+>>>
+>>>
+>>> ___________________________________________________________
+>>> Gesendet von Yahoo! Mail - Jetzt mit 1GB Speicher kostenlos - Hier
+>>> anmelden: http://mail.yahoo.de
+>>> -
+>>> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
+>
+>
+>
+>
+> ___________________________________________________________
+> Gesendet von Yahoo! Mail - Jetzt mit 1GB Speicher kostenlos - Hier 
+> anmelden: http://mail.yahoo.de
+> 
+
