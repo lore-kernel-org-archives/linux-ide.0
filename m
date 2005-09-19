@@ -1,58 +1,41 @@
-From: David Lloyd <dmlloyd@tds.net>
-Subject: sata_promise and SATA+PATA controllers in general
-Date: Sun, 18 Sep 2005 17:21:44 -0500 (CDT)
-Message-ID: <Pine.LNX.4.62.0509181644210.10435@ultros>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: sata_promise and SATA+PATA controllers in general
+Date: Sun, 18 Sep 2005 22:11:55 -0400
+Message-ID: <432E1E6B.7040001@pobox.com>
+References: <Pine.LNX.4.62.0509181644210.10435@ultros>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound4.mail.tds.net ([216.170.230.94]:33722 "EHLO
-	outbound4.mail.tds.net") by vger.kernel.org with ESMTP
-	id S932224AbVIRWUd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 18 Sep 2005 18:20:33 -0400
-Received: from outaamta02.mail.tds.net (outaamta02.mail.tds.net [216.170.230.32])
-	by outbound4.mail.tds.net (8.13.4/8.12.2) with ESMTP id j8IMKWBR010306
-	for <linux-ide@vger.kernel.org>; Sun, 18 Sep 2005 17:20:32 -0500 (CDT)
-Received: from localhost ([216.165.178.90]) by outaamta02.mail.tds.net
-          with ESMTP
-          id <20050918222032.ZZRH30338.outaamta02.mail.tds.net@localhost>
-          for <linux-ide@vger.kernel.org>; Sun, 18 Sep 2005 17:20:32 -0500
+Received: from mail.dvmed.net ([216.237.124.58]:4998 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932291AbVISCMA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Sep 2005 22:12:00 -0400
+In-Reply-To: <Pine.LNX.4.62.0509181644210.10435@ultros>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: David Lloyd <dmlloyd@tds.net>
+Cc: linux-ide@vger.kernel.org
 
-I've got one of those promise controllers with 2 SATA ports and 1 PATA 
-port and I've been looking at a couple variations on how the driver has 
-been made to work with this setup.
+David Lloyd wrote:
+> Does this mean have e.g. a pata_port_ops member as well as a 
+> sata_port_ops member on the ata_probe_ent/ata_host_set, and mark each 
+> port as being either PATA or SATA with a flag of some sort?  Or, would 
 
-Gentoo has a patch (against 2.6.10) that allows this to work (as far as I 
-can tell) by putting an if statement in each operation that is different 
-between PATA and SATA, and making the decision at runtime on how to handle 
-each port.
+definitely not.
 
-This patch does not apply against 2.6.14-rc1 for various reasons.  The 
-2.6.14-rc1 driver has separate ata_port_operations structures for PATA and 
-SATA; however, since only one can be used at a time, my promise controller 
-(PDC20378) as well as any other SATA+PATA controller that follows this 
-structure cannot use the PATA port.  I hacked around this by simply using 
-the PATA structure exclusively (obviously making my SATA ports useless) to 
-allow me to boot, but it got me to thinking.
 
-A while back (almost a year ago, in fact) Jeff Garzik posted a message [1] 
-stating that the two things that need to be done to support these types of 
-controllers are to add support for multiple ata_port_operations structures 
-to both ata_probe_ent and ata_host_set.
+> it be best to have a port_ops pointer per port?
 
-I noticed that the sata_promise driver does in fact have separate port_ops 
-for pata and sata, but since each controller only supports one of these, 
-SATA+PATA controllers are still not fully functional in mainline.
+Each port should be able to export unique behavior.  That implies having 
+per-port hooks, since host-global hooks make it impossible for one port 
+to have different hooks from another port.
 
-Is this still the right direction to go?
+Establishing a global limit of two unique behaviors (sata_port_ops, 
+pata_port_ops) is not scalable at all.
 
-Does this mean have e.g. a pata_port_ops member as well as a sata_port_ops 
-member on the ata_probe_ent/ata_host_set, and mark each port as being 
-either PATA or SATA with a flag of some sort?  Or, would it be best to 
-have a port_ops pointer per port?
+Further complicating things, some hooks (such as ->irq_clear) are 
+host-wide hooks and not port-specific hooks.
 
-[1] http://marc.theaimsgroup.com/?l=linux-ide&m=109606830029825&w=2
+	Jeff
 
-- D
+
