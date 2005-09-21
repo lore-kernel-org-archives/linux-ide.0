@@ -1,56 +1,64 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: [RFC/BUG?] ide_cs's removable status
-Date: Wed, 21 Sep 2005 20:29:32 +0100
-Message-ID: <20050921192932.GB13246@flint.arm.linux.org.uk>
-References: <1127319328.8542.57.camel@localhost.localdomain> <1127321829.18840.18.camel@localhost.localdomain> <433196B6.8000607@rtr.ca> <1127327243.18840.34.camel@localhost.localdomain>
+From: "Robert Kesterson" <robertk@robertk.com>
+Subject: [PATCH 2.6.13] drivers/ide: Enable basic VIA VT6410 IDE functionality
+Date: Wed, 21 Sep 2005 16:38:11 -0500
+Message-ID: <op.sxg2dxd5wc4mme@new.robertk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:23817 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S1751397AbVIUT3p (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Sep 2005 15:29:45 -0400
-Content-Disposition: inline
-In-Reply-To: <1127327243.18840.34.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed	delsp=yes
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965026AbVIUViX@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mark Lord <liml@rtr.ca>, Richard Purdie <rpurdie@rpsys.net>, LKML <linux-kernel@vger.kernel.org>, Dominik Brodowski <linux@dominikbrodowski.net>, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-On Wed, Sep 21, 2005 at 07:27:23PM +0100, Alan Cox wrote:
-> On Mer, 2005-09-21 at 13:21 -0400, Mark Lord wrote:
-> > In the case of CF cards in ide-cs, removing the card is equivalent
-> > to removing the entire IDE controller, not just the media.
-> 
-> It isn't the same as removing the entire PCMCIA controller layer. As far
-> as PCMCIA is concerned there has been no change. Thus we have no media
-> change event and we need ->removable = 1
-> 
-> If the PCMCIA card disappeared each time it would be different
+This patch enables plain IDE functionality on the VIA VT6410 IDE controller
+(such as used on the Asus P4P800 Deluxe motherboard).  This is not a RAID
+driver, but you can use Linux's software RAID once the drives are visible.
+I did not write the original version of this patch, which I found on the
+internet back in the days of kernel 2.6.2.  I have been unable to identify
+the original author to give him/her proper credit.  I have been maintaining
+and updating this patch since then and have released several updates which
+have been successfully used by others who have downloaded it from my
+website.
 
-Last time I checked, with CF cards the media was an inherent part of
-the CF card and is not changable without removing the card, opening
-it, getting out the soldering iron... or alternatively plugging in
-a different CF card.
+It seems appropriate that this minimal functionality should be in the
+mainstream kernel.
 
-Of course, PCMCIA will detect removal of the CF card provided the
-PCMCIA hardware is working.  PCMCIA will also detect a CF card which
-has been changed while the system has been suspended _provided_ the
-CIS does not match the previous cards CIS.  It'll even do this if
-you use cardctl suspend/cardctl resume.
+Signed-off-by: Robert Kesterson <robertk@robertk.com>
 
-However, if you suspend your system, remove your CF card, put it in
-a different machine, use it (note: by doing this it could _already_
-be in an inconsistent state), and put it back in the original machine
-before resuming it, the cache on the original machine will disagree
-with what is on the card.  But then you have done something silly
-already by taking media in an inconsistent state to another machine
-- and modified that inconsistent filesystem state.
+diff -rup linux-2.6.13.2.orig/drivers/ide/pci/generic.c linux-2.6.13.2/drivers/ide/pci/generic.c
+--- linux-2.6.13.2.orig/drivers/ide/pci/generic.c	2005-09-16 20:02:12.000000000 -0500
++++ linux-2.6.13.2/drivers/ide/pci/generic.c	2005-09-21 16:27:38.000000000 -0500
+@@ -179,6 +179,12 @@ static ide_pci_device_t generic_chipsets
+  		.channels	= 2,
+  		.autodma	= AUTODMA,
+  		.bootable	= OFF_BOARD,
++	},{	/* 15 */
++		.name		= "VIA_610",
++		.init_hwif	= init_hwif_generic,
++		.channels	= 2,
++		.autodma	= AUTODMA,
++		.bootable	= ON_BOARD,
+  	}
+  };
 
-It sounds like you know of a case where this isn't true - maybe a bug
-report.  Can you expand on it?
-
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+@@ -238,6 +244,7 @@ static struct pci_device_id generic_pci_
+  	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 12},
+  	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 13},
+  	{ PCI_VENDOR_ID_NETCELL,PCI_DEVICE_ID_REVOLUTION,          PCI_ANY_ID, PCI_ANY_ID, 0, 0, 14},
++	{ PCI_VENDOR_ID_VIA,    PCI_DEVICE_ID_VIA_610,             PCI_ANY_ID, PCI_ANY_ID, 0, 0, 15},
+  	/* Must come last. If you add entries adjust this table appropriately and the init_one code */
+  	{ PCI_ANY_ID,		PCI_ANY_ID,			   PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL, 0},
+  	{ 0, },
+diff -rup linux-2.6.13.2.orig/include/linux/pci_ids.h linux-2.6.13.2/include/linux/pci_ids.h
+--- linux-2.6.13.2.orig/include/linux/pci_ids.h	2005-09-16 20:02:12.000000000 -0500
++++ linux-2.6.13.2/include/linux/pci_ids.h	2005-09-21 16:27:38.000000000 -0500
+@@ -1413,6 +1413,7 @@
+  #define PCI_DEVICE_ID_VIA_8703_51_0	0x3148
+  #define PCI_DEVICE_ID_VIA_8237_SATA	0x3149
+  #define PCI_DEVICE_ID_VIA_XN266		0x3156
++#define PCI_DEVICE_ID_VIA_610		0x3164
+  #define PCI_DEVICE_ID_VIA_8754C_0	0x3168
+  #define PCI_DEVICE_ID_VIA_8235		0x3177
+  #define PCI_DEVICE_ID_VIA_P4N333	0x3178
