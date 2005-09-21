@@ -1,30 +1,27 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC/BUG?] ide_cs's removable status
-Date: Wed, 21 Sep 2005 19:27:23 +0100
-Message-ID: <1127327243.18840.34.camel@localhost.localdomain>
-References: <1127319328.8542.57.camel@localhost.localdomain>
-	 <1127321829.18840.18.camel@localhost.localdomain> <433196B6.8000607@rtr.ca>
+From: Peter Marjai <pmarjai@mail.tvnet.hu>
+Subject: vt6421 driver
+Date: Wed, 21 Sep 2005 20:32:30 +0200
+Message-ID: <20050921203230.7242e612@pety>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:43956 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751221AbVIUSBO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Sep 2005 14:01:14 -0400
-In-Reply-To: <433196B6.8000607@rtr.ca>
+Received: from dumballah.tvnet.hu ([195.38.96.23]:52115 "EHLO
+	dumballah.tvnet.hu") by vger.kernel.org with ESMTP id S1751364AbVIUScd
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 21 Sep 2005 14:32:33 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Richard Purdie <rpurdie@rpsys.net>, LKML <linux-kernel@vger.kernel.org>, Dominik Brodowski <linux@dominikbrodowski.net>, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Mer, 2005-09-21 at 13:21 -0400, Mark Lord wrote:
-> In the case of CF cards in ide-cs, removing the card is equivalent
-> to removing the entire IDE controller, not just the media.
+Hello Jeff,
 
-It isn't the same as removing the entire PCMCIA controller layer. As far
-as PCMCIA is concerned there has been no change. Thus we have no media
-change event and we need ->removable = 1
+i would like to ask you about the VT6421 driver.
+I read that now it is not capable to use with ATA disks.
+Are you going to make driver for it? Do you know something
+about the driver's status?
 
-If the PCMCIA card disappeared each time it would be different
+Thank you in advance for your help.
+Your sincerely,
 
+Peter Marjai
