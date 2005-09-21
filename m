@@ -1,64 +1,149 @@
-From: "Robert Kesterson" <robertk@robertk.com>
-Subject: [PATCH 2.6.13] drivers/ide: Enable basic VIA VT6410 IDE functionality
-Date: Wed, 21 Sep 2005 16:38:11 -0500
-Message-ID: <op.sxg2dxd5wc4mme@new.robertk.com>
+From: Richard Purdie <rpurdie@rpsys.net>
+Subject: Re: [RFC/BUG?] ide_cs's removable status
+Date: Wed, 21 Sep 2005 22:52:44 +0100
+Message-ID: <1127339564.27462.7.camel@localhost.localdomain>
+References: <1127319328.8542.57.camel@localhost.localdomain>
+	 <1127321829.18840.18.camel@localhost.localdomain> <433196B6.8000607@rtr.ca>
+	 <1127327243.18840.34.camel@localhost.localdomain>
+	 <20050921192932.GB13246@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed	delsp=yes
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965026AbVIUViX@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from tim.rpsys.net ([194.106.48.114]:32437 "EHLO tim.rpsys.net")
+	by vger.kernel.org with ESMTP id S965047AbVIUVw7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Sep 2005 17:52:59 -0400
+In-Reply-To: <20050921192932.GB13246@flint.arm.linux.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com, Dominik Brodowski <linux@dominikbrodowski.net>, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Russell King <rmk+lkml@arm.linux.org.uk>
 
-This patch enables plain IDE functionality on the VIA VT6410 IDE controller
-(such as used on the Asus P4P800 Deluxe motherboard).  This is not a RAID
-driver, but you can use Linux's software RAID once the drives are visible.
-I did not write the original version of this patch, which I found on the
-internet back in the days of kernel 2.6.2.  I have been unable to identify
-the original author to give him/her proper credit.  I have been maintaining
-and updating this patch since then and have released several updates which
-have been successfully used by others who have downloaded it from my
-website.
+A proposed solution/patch:
+[One step further is to totally remove the drive->removable = 1]
 
-It seems appropriate that this minimal functionality should be in the
-mainstream kernel.
+This patch stops CompactFlash devices being marked as removable. They
+are not removable as the media and device are inseparable. When a card
+is removed, the device is removed from the system.
 
-Signed-off-by: Robert Kesterson <robertk@robertk.com>
+Further, once this change is made, there is no need for ide to
+differentiate between flash and other devices so the is_flash variable
+can be removed from ide_drive_t.
 
-diff -rup linux-2.6.13.2.orig/drivers/ide/pci/generic.c linux-2.6.13.2/drivers/ide/pci/generic.c
---- linux-2.6.13.2.orig/drivers/ide/pci/generic.c	2005-09-16 20:02:12.000000000 -0500
-+++ linux-2.6.13.2/drivers/ide/pci/generic.c	2005-09-21 16:27:38.000000000 -0500
-@@ -179,6 +179,12 @@ static ide_pci_device_t generic_chipsets
-  		.channels	= 2,
-  		.autodma	= AUTODMA,
-  		.bootable	= OFF_BOARD,
-+	},{	/* 15 */
-+		.name		= "VIA_610",
-+		.init_hwif	= init_hwif_generic,
-+		.channels	= 2,
-+		.autodma	= AUTODMA,
-+		.bootable	= ON_BOARD,
-  	}
-  };
+Signed-Off-By: Richard Purdie <rpurdie@rpsys.net> 
 
-@@ -238,6 +244,7 @@ static struct pci_device_id generic_pci_
-  	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 12},
-  	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 13},
-  	{ PCI_VENDOR_ID_NETCELL,PCI_DEVICE_ID_REVOLUTION,          PCI_ANY_ID, PCI_ANY_ID, 0, 0, 14},
-+	{ PCI_VENDOR_ID_VIA,    PCI_DEVICE_ID_VIA_610,             PCI_ANY_ID, PCI_ANY_ID, 0, 0, 15},
-  	/* Must come last. If you add entries adjust this table appropriately and the init_one code */
-  	{ PCI_ANY_ID,		PCI_ANY_ID,			   PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL, 0},
-  	{ 0, },
-diff -rup linux-2.6.13.2.orig/include/linux/pci_ids.h linux-2.6.13.2/include/linux/pci_ids.h
---- linux-2.6.13.2.orig/include/linux/pci_ids.h	2005-09-16 20:02:12.000000000 -0500
-+++ linux-2.6.13.2/include/linux/pci_ids.h	2005-09-21 16:27:38.000000000 -0500
-@@ -1413,6 +1413,7 @@
-  #define PCI_DEVICE_ID_VIA_8703_51_0	0x3148
-  #define PCI_DEVICE_ID_VIA_8237_SATA	0x3149
-  #define PCI_DEVICE_ID_VIA_XN266		0x3156
-+#define PCI_DEVICE_ID_VIA_610		0x3164
-  #define PCI_DEVICE_ID_VIA_8754C_0	0x3168
-  #define PCI_DEVICE_ID_VIA_8235		0x3177
-  #define PCI_DEVICE_ID_VIA_P4N333	0x3178
+Index: linux-2.6.13/drivers/ide/ide-probe.c
+===================================================================
+--- linux-2.6.13.orig/drivers/ide/ide-probe.c	2005-08-29 00:41:01.000000000 +0100
++++ linux-2.6.13/drivers/ide/ide-probe.c	2005-09-21 20:57:34.000000000 +0100
+@@ -125,45 +125,6 @@
+ }
+ 
+ /**
+- *	drive_is_flashcard	-	check for compact flash
+- *	@drive: drive to check
+- *
+- *	CompactFlash cards and their brethern pretend to be removable
+- *	hard disks, except:
+- * 		(1) they never have a slave unit, and
+- *		(2) they don't have doorlock mechanisms.
+- *	This test catches them, and is invoked elsewhere when setting
+- *	appropriate config bits.
+- *
+- *	FIXME: This treatment is probably applicable for *all* PCMCIA (PC CARD)
+- *	devices, so in linux 2.3.x we should change this to just treat all
+- *	PCMCIA  drives this way, and get rid of the model-name tests below
+- *	(too big of an interface change for 2.4.x).
+- *	At that time, we might also consider parameterizing the timeouts and
+- *	retries, since these are MUCH faster than mechanical drives. -M.Lord
+- */
+- 
+-static inline int drive_is_flashcard (ide_drive_t *drive)
+-{
+-	struct hd_driveid *id = drive->id;
+-
+-	if (drive->removable) {
+-		if (id->config == 0x848a) return 1;	/* CompactFlash */
+-		if (!strncmp(id->model, "KODAK ATA_FLASH", 15)	/* Kodak */
+-		 || !strncmp(id->model, "Hitachi CV", 10)	/* Hitachi */
+-		 || !strncmp(id->model, "SunDisk SDCFB", 13)	/* old SanDisk */
+-		 || !strncmp(id->model, "SanDisk SDCFB", 13)	/* SanDisk */
+-		 || !strncmp(id->model, "HAGIWARA HPC", 12)	/* Hagiwara */
+-		 || !strncmp(id->model, "LEXAR ATA_FLASH", 15)	/* Lexar */
+-		 || !strncmp(id->model, "ATA_FLASH", 9))	/* Simple Tech */
+-		{
+-			return 1;	/* yes, it is a flash memory card */
+-		}
+-	}
+-	return 0;	/* no, it is not a flash memory card */
+-}
+-
+-/**
+  *	do_identify	-	identify a drive
+  *	@drive: drive to identify 
+  *	@cmd: command used
+@@ -278,13 +239,17 @@
+ 	/*
+ 	 * Not an ATAPI device: looks like a "regular" hard disk
+ 	 */
+-	if (id->config & (1<<7))
+-		drive->removable = 1;
+ 
+-	if (drive_is_flashcard(drive))
+-		drive->is_flash = 1;
++	/* 
++	 * 0x848a = CompactFlash device 
++	 * These are *not* removable in Linux definition of the term
++	 */
++
++	if ((id->config != 0x848a) && (id->config & (1<<7)))
++		drive->removable = 1;
++
+ 	drive->media = ide_disk;
+-	printk("%s DISK drive\n", (drive->is_flash) ? "CFA" : "ATA" );
++	printk("%s DISK drive\n", (id->config == 0x848a) ? "CFA" : "ATA" );
+ 	QUIRK_LIST(drive);
+ 	return;
+ 
+Index: linux-2.6.13/drivers/ide/ide.c
+===================================================================
+--- linux-2.6.13.orig/drivers/ide/ide.c	2005-09-19 10:53:59.000000000 +0100
++++ linux-2.6.13/drivers/ide/ide.c	2005-09-21 20:52:53.000000000 +0100
+@@ -242,7 +242,6 @@
+ 		drive->name[2]			= 'a' + (index * MAX_DRIVES) + unit;
+ 		drive->max_failures		= IDE_DEFAULT_MAX_FAILURES;
+ 		drive->using_dma		= 0;
+-		drive->is_flash			= 0;
+ 		drive->vdma			= 0;
+ 		INIT_LIST_HEAD(&drive->list);
+ 		sema_init(&drive->gendev_rel_sem, 0);
+Index: linux-2.6.13/drivers/ide/ide-disk.c
+===================================================================
+--- linux-2.6.13.orig/drivers/ide/ide-disk.c	2005-09-19 10:53:59.000000000 +0100
++++ linux-2.6.13/drivers/ide/ide-disk.c	2005-09-21 20:51:31.000000000 +0100
+@@ -895,11 +895,7 @@
+ 	if (drive->id_read == 0)
+ 		return;
+ 
+-	/*
+-	 * CompactFlash cards and their brethern look just like hard drives
+-	 * to us, but they are removable and don't have a doorlock mechanism.
+-	 */
+-	if (drive->removable && !(drive->is_flash)) {
++	if (drive->removable) {
+ 		/*
+ 		 * Removable disks (eg. SYQUEST); ignore 'WD' drives 
+ 		 */
+Index: linux-2.6.13/include/linux/ide.h
+===================================================================
+--- linux-2.6.13.orig/include/linux/ide.h	2005-08-29 00:41:01.000000000 +0100
++++ linux-2.6.13/include/linux/ide.h	2005-09-21 20:56:29.000000000 +0100
+@@ -697,7 +697,6 @@
+ 	unsigned noprobe 	: 1;	/* from:  hdx=noprobe */
+ 	unsigned removable	: 1;	/* 1 if need to do check_media_change */
+ 	unsigned attach		: 1;	/* needed for removable devices */
+-	unsigned is_flash	: 1;	/* 1 if probed as flash */
+ 	unsigned forced_geom	: 1;	/* 1 if hdx=c,h,s was given at boot */
+ 	unsigned no_unmask	: 1;	/* disallow setting unmask bit */
+ 	unsigned no_io_32bit	: 1;	/* disallow enabling 32bit I/O */
+
