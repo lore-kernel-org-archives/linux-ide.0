@@ -1,132 +1,58 @@
-From: Richard Purdie <rpurdie@rpsys.net>
-Subject: [RFC/BUG?] ide_cs's removable status
-Date: Wed, 21 Sep 2005 17:15:28 +0100
-Message-ID: <1127319328.8542.57.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFC/BUG?] ide_cs's removable status
+Date: Wed, 21 Sep 2005 17:57:08 +0100
+Message-ID: <1127321829.18840.18.camel@localhost.localdomain>
+References: <1127319328.8542.57.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tim.rpsys.net ([194.106.48.114]:52128 "EHLO tim.rpsys.net")
-	by vger.kernel.org with ESMTP id S1751111AbVIUQPg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Sep 2005 12:15:36 -0400
+Received: from [81.2.110.250] ([81.2.110.250]:10150 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S1751130AbVIUQbD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Sep 2005 12:31:03 -0400
+In-Reply-To: <1127319328.8542.57.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Richard Purdie <rpurdie@rpsys.net>
+Cc: LKML <linux-kernel@vger.kernel.org>, Dominik Brodowski <linux@dominikbrodowski.net>, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-I have a handheld system that takes compact flash memory cards and uses
-ide_cs to interface to them. I've been trying to kill off a load of
-hotplug scripts and switch to using udev. As HAL is too bloated for the
-handheld, I hacked some evil auto-mount udev scripts together. When I
-insert a memory card, I see the disk get repeatedly mounted and
-unmounted in a loop.
+On Mer, 2005-09-21 at 17:15 +0100, Richard Purdie wrote:
+> As ide_cs only creates the block devices when a card is present, I think
+> it shouldn't be set as removable. As a point of reference, the MMC
+> system does not set the removable flag for exactly this reason (There is
+> an email from Russell King explaining this -
+> http://lkml.org/lkml/2005/1/8/165).
 
-I realise auto-mounting via udev is evil but I think this highlights a
-kernel driver issue.
+I can't comment on the MMC layer or its core requirements as I don't
+know them well. IDE PCMCIA does however encompass removal devices. The
+removable flag is set so that we get removable media behaviour - that is
+the media can change under us and we must not cache partition data. The
+current behavioiur in that sense is correct.
 
-I'm seeing the following sequence of events:
+> 
+> It is worth noting the MMC subsystem works with my evil udev script. If
+> I apply the patch below (which removes the removable flag for flash
+> devices), I don't see this loop.
 
-1. I insert the card
-2. The partitions are scanned and block devices are created
-3. udev creates the device nodes
-4. udev triggers my mount script which mounts the device
-5. mounting the device triggers check_disk_change() in block_dev.c
-6. The bd_invalidated flag is set
-7. rescan_partitions is hence called
-8. the block devices are destroyed
-9. goto 2
+But does MMC have a media change detect, and if not does the right thing
+occur if you swap cards with partition tables ?
 
-As ide_cs only creates the block devices when a card is present, I think
-it shouldn't be set as removable. As a point of reference, the MMC
-system does not set the removable flag for exactly this reason (There is
-an email from Russell King explaining this -
-http://lkml.org/lkml/2005/1/8/165).
+> 1. Can anyone provide details on what the bits in id->config really
+> mean?  
 
-It is worth noting the MMC subsystem works with my evil udev script. If
-I apply the patch below (which removes the removable flag for flash
-devices), I don't see this loop.
+ATA standards are all available for download.
 
-With the patch below, the is_flash variable can actually be removed as
-its only useful purpose is in ide-disk.c in a "if (drive->removable
-&& !(drive->is_flash)) {" statement...
+> 2. Which other drivers exploit the "if (id->config & (1<<7))
+> drive->removable = 1;" code? Is it just ide_cs?
 
-I'm wondering if one of the more experienced IDE developers could give
-some insight into which drivers use bits of code at the end of
-do_identify() in ide-probe.c. Some questions:
+It might be currently because the old IDE layer has no hotplug support
+(not even for PCMCIA - it happens to work some days) but that wasn't
+true in 2.4-ac or some 2.6-ac.
 
-1. Can anyone provide details on what the bits in id->config really
-mean?  
-2. Which other drivers exploit the "if (id->config & (1<<7))
-drive->removable = 1;" code? Is it just ide_cs?
-3. Do any other drivers expose flash interfaces in the same way ide_cs
-does but with "proper" removable media handling where the block device
-is persistent?
+It sounds like something needs to be smarter about whether the media has
+changed - could be kernel but it seems like a user space problem. I note
+that the standard Gnome tools "just work" in this case so perhaps you
+can see how they do it.
 
-If ide_cs is the only user of this code, there is scope for a reasonable
-amount of cleanup here. Other than the ATAPI drivers, I can't see any
-with special removable handling which leads me to believe none of this
-code is required.
-
-Comments welcome as I can't help feeling there's something I've missed.
-I'll write a neater patch if there is some agreement on what needs to be
-done.
-
-Richard
-
-
-Index: linux-2.6.13/drivers/ide/ide-probe.c
-===================================================================
---- linux-2.6.13.orig/drivers/ide/ide-probe.c	2005-08-29 00:41:01.000000000 +0100
-+++ linux-2.6.13/drivers/ide/ide-probe.c	2005-09-21 16:57:15.000000000 +0100
-@@ -147,19 +147,19 @@
- {
- 	struct hd_driveid *id = drive->id;
- 
--	if (drive->removable) {
--		if (id->config == 0x848a) return 1;	/* CompactFlash */
--		if (!strncmp(id->model, "KODAK ATA_FLASH", 15)	/* Kodak */
--		 || !strncmp(id->model, "Hitachi CV", 10)	/* Hitachi */
--		 || !strncmp(id->model, "SunDisk SDCFB", 13)	/* old SanDisk */
--		 || !strncmp(id->model, "SanDisk SDCFB", 13)	/* SanDisk */
--		 || !strncmp(id->model, "HAGIWARA HPC", 12)	/* Hagiwara */
--		 || !strncmp(id->model, "LEXAR ATA_FLASH", 15)	/* Lexar */
--		 || !strncmp(id->model, "ATA_FLASH", 9))	/* Simple Tech */
--		{
--			return 1;	/* yes, it is a flash memory card */
--		}
-+	if (id->config == 0x848a) return 1;	/* CompactFlash */
-+
-+	if (!strncmp(id->model, "KODAK ATA_FLASH", 15)	/* Kodak */
-+	 || !strncmp(id->model, "Hitachi CV", 10)	/* Hitachi */
-+	 || !strncmp(id->model, "SunDisk SDCFB", 13)	/* old SanDisk */
-+	 || !strncmp(id->model, "SanDisk SDCFB", 13)	/* SanDisk */
-+	 || !strncmp(id->model, "HAGIWARA HPC", 12)	/* Hagiwara */
-+	 || !strncmp(id->model, "LEXAR ATA_FLASH", 15)	/* Lexar */
-+	 || !strncmp(id->model, "ATA_FLASH", 9))	/* Simple Tech */
-+	{
-+		return 1;	/* yes, it is a flash memory card */
- 	}
-+
- 	return 0;	/* no, it is not a flash memory card */
- }
- 
-@@ -278,11 +278,15 @@
- 	/*
- 	 * Not an ATAPI device: looks like a "regular" hard disk
- 	 */
-+
- 	if (id->config & (1<<7))
- 		drive->removable = 1;
- 
--	if (drive_is_flashcard(drive))
-+	if (drive_is_flashcard(drive)) {
- 		drive->is_flash = 1;
-+		drive->removable = 0;
-+	}
-+	
- 	drive->media = ide_disk;
- 	printk("%s DISK drive\n", (drive->is_flash) ? "CFA" : "ATA" );
- 	QUIRK_LIST(drive);
-
-	
+Alan
 
