@@ -1,56 +1,132 @@
-From: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH libata-dev-2.6:passthru] passthru fixes
-Date: Wed, 21 Sep 2005 10:32:23 -0400
-Message-ID: <20050921143221.GB23290@tuxdriver.com>
-References: <20050913142636.GB5679@google.com>
+From: Richard Purdie <rpurdie@rpsys.net>
+Subject: [RFC/BUG?] ide_cs's removable status
+Date: Wed, 21 Sep 2005 17:15:28 +0100
+Message-ID: <1127319328.8542.57.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([24.172.12.4]:52492 "EHLO ra.tuxdriver.com")
-	by vger.kernel.org with ESMTP id S1751000AbVIUOcg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Sep 2005 10:32:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20050913142636.GB5679@google.com>
+Received: from tim.rpsys.net ([194.106.48.114]:52128 "EHLO tim.rpsys.net")
+	by vger.kernel.org with ESMTP id S1751111AbVIUQPg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Sep 2005 12:15:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Raubitschek <jhr@google.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-On Tue, Sep 13, 2005 at 07:26:36AM -0700, Jeff Raubitschek wrote:
-> Fix a few problems seen with the passthru branch:
-> 
-> - leaked scsi_request on buffer allocate failure
-> - passthru sense routines were refering to tf->command
->   which is not read in tf_read, instead use drv_stat for
->   status register.
-> - passthru sense passed back to user on ata_task_ioctl
-> 
-> Patch is against the current libata-dev passthru branch.
-> 
-> Signed-off-by: Jeff Raubitschek <jhr@google.com>
+I have a handheld system that takes compact flash memory cards and uses
+ide_cs to interface to them. I've been trying to kill off a load of
+hotplug scripts and switch to using udev. As HAL is too bloated for the
+handheld, I hacked some evil auto-mount udev scripts together. When I
+insert a memory card, I see the disk get repeatedly mounted and
+unmounted in a loop.
 
-Acked-by: John W. Linville <linville@tuxdriver.com>
+I realise auto-mounting via udev is evil but I think this highlights a
+kernel driver issue.
 
-The first hunk, in particular, looks like it could explain the
-mysterious lockups/failures when using smartctl/smartd w/ libata.
+I'm seeing the following sequence of events:
 
-> diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-> --- a/drivers/scsi/libata-scsi.c
-> +++ b/drivers/scsi/libata-scsi.c
-> @@ -116,8 +116,10 @@ int ata_cmd_ioctl(struct scsi_device *sc
->  	if (args[3]) {
->  		argsize = SECTOR_SIZE * args[3];
->  		argbuf = kmalloc(argsize, GFP_KERNEL);
-> -		if (argbuf == NULL)
-> -			return -ENOMEM;
-> +		if (argbuf == NULL) {
-> +			rc = -ENOMEM;
-> +			goto error;
-> +		}
->  
->  		scsi_cmd[1]  = (4 << 1); /* PIO Data-in */
->  		scsi_cmd[2]  = 0x0e;     /* no off.line or cc, read from dev,
+1. I insert the card
+2. The partitions are scanned and block devices are created
+3. udev creates the device nodes
+4. udev triggers my mount script which mounts the device
+5. mounting the device triggers check_disk_change() in block_dev.c
+6. The bd_invalidated flag is set
+7. rescan_partitions is hence called
+8. the block devices are destroyed
+9. goto 2
 
--- 
-John W. Linville
-linville@tuxdriver.com
+As ide_cs only creates the block devices when a card is present, I think
+it shouldn't be set as removable. As a point of reference, the MMC
+system does not set the removable flag for exactly this reason (There is
+an email from Russell King explaining this -
+http://lkml.org/lkml/2005/1/8/165).
+
+It is worth noting the MMC subsystem works with my evil udev script. If
+I apply the patch below (which removes the removable flag for flash
+devices), I don't see this loop.
+
+With the patch below, the is_flash variable can actually be removed as
+its only useful purpose is in ide-disk.c in a "if (drive->removable
+&& !(drive->is_flash)) {" statement...
+
+I'm wondering if one of the more experienced IDE developers could give
+some insight into which drivers use bits of code at the end of
+do_identify() in ide-probe.c. Some questions:
+
+1. Can anyone provide details on what the bits in id->config really
+mean?  
+2. Which other drivers exploit the "if (id->config & (1<<7))
+drive->removable = 1;" code? Is it just ide_cs?
+3. Do any other drivers expose flash interfaces in the same way ide_cs
+does but with "proper" removable media handling where the block device
+is persistent?
+
+If ide_cs is the only user of this code, there is scope for a reasonable
+amount of cleanup here. Other than the ATAPI drivers, I can't see any
+with special removable handling which leads me to believe none of this
+code is required.
+
+Comments welcome as I can't help feeling there's something I've missed.
+I'll write a neater patch if there is some agreement on what needs to be
+done.
+
+Richard
+
+
+Index: linux-2.6.13/drivers/ide/ide-probe.c
+===================================================================
+--- linux-2.6.13.orig/drivers/ide/ide-probe.c	2005-08-29 00:41:01.000000000 +0100
++++ linux-2.6.13/drivers/ide/ide-probe.c	2005-09-21 16:57:15.000000000 +0100
+@@ -147,19 +147,19 @@
+ {
+ 	struct hd_driveid *id = drive->id;
+ 
+-	if (drive->removable) {
+-		if (id->config == 0x848a) return 1;	/* CompactFlash */
+-		if (!strncmp(id->model, "KODAK ATA_FLASH", 15)	/* Kodak */
+-		 || !strncmp(id->model, "Hitachi CV", 10)	/* Hitachi */
+-		 || !strncmp(id->model, "SunDisk SDCFB", 13)	/* old SanDisk */
+-		 || !strncmp(id->model, "SanDisk SDCFB", 13)	/* SanDisk */
+-		 || !strncmp(id->model, "HAGIWARA HPC", 12)	/* Hagiwara */
+-		 || !strncmp(id->model, "LEXAR ATA_FLASH", 15)	/* Lexar */
+-		 || !strncmp(id->model, "ATA_FLASH", 9))	/* Simple Tech */
+-		{
+-			return 1;	/* yes, it is a flash memory card */
+-		}
++	if (id->config == 0x848a) return 1;	/* CompactFlash */
++
++	if (!strncmp(id->model, "KODAK ATA_FLASH", 15)	/* Kodak */
++	 || !strncmp(id->model, "Hitachi CV", 10)	/* Hitachi */
++	 || !strncmp(id->model, "SunDisk SDCFB", 13)	/* old SanDisk */
++	 || !strncmp(id->model, "SanDisk SDCFB", 13)	/* SanDisk */
++	 || !strncmp(id->model, "HAGIWARA HPC", 12)	/* Hagiwara */
++	 || !strncmp(id->model, "LEXAR ATA_FLASH", 15)	/* Lexar */
++	 || !strncmp(id->model, "ATA_FLASH", 9))	/* Simple Tech */
++	{
++		return 1;	/* yes, it is a flash memory card */
+ 	}
++
+ 	return 0;	/* no, it is not a flash memory card */
+ }
+ 
+@@ -278,11 +278,15 @@
+ 	/*
+ 	 * Not an ATAPI device: looks like a "regular" hard disk
+ 	 */
++
+ 	if (id->config & (1<<7))
+ 		drive->removable = 1;
+ 
+-	if (drive_is_flashcard(drive))
++	if (drive_is_flashcard(drive)) {
+ 		drive->is_flash = 1;
++		drive->removable = 0;
++	}
++	
+ 	drive->media = ide_disk;
+ 	printk("%s DISK drive\n", (drive->is_flash) ? "CFA" : "ATA" );
+ 	QUIRK_LIST(drive);
+
+	
+
