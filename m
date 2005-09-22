@@ -1,26 +1,45 @@
-From: Matthew Garrett <mgarrett@chiark.greenend.org.uk>
-Subject: Re: SATA suspend-to-ram patch - merge?
-Date: Thu, 22 Sep 2005 14:08:30 +0100
-Message-ID: <E1EIQoQ-0007FT-00@chiark.greenend.org.uk>
-References: <433104E0.4090308@triplehelix.org> <433221A1.5000600@pobox.com> <20050922061849.GJ7929@suse.de> <20050922061849.GJ7929@suse.de> <4332ABDC.3030106@rtr.ca>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chiark.greenend.org.uk ([193.201.200.170]:63155 "EHLO
-	chiark.greenend.org.uk") by vger.kernel.org with ESMTP
-	id S1030303AbVIVNIk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Sep 2005 09:08:40 -0400
-In-Reply-To: <4332ABDC.3030106@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFC/BUG?] ide_cs's removable status
+Date: Thu, 22 Sep 2005 14:39:42 +0100
+Message-ID: <1127396382.18840.79.camel@localhost.localdomain>
+References: <1127319328.8542.57.camel@localhost.localdomain>
+	 <1127321829.18840.18.camel@localhost.localdomain> <433196B6.8000607@rtr.ca>
+	 <1127327243.18840.34.camel@localhost.localdomain>
+	 <20050921192932.GB13246@flint.arm.linux.org.uk>
+	 <1127347845.18840.53.camel@localhost.localdomain>
+	 <20050922102221.GD16949@flint.arm.linux.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030310AbVIVNNe@vger.kernel.org>
+In-Reply-To: <20050922102221.GD16949@flint.arm.linux.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Russell King <rmk+lkml@arm.linux.org.uk>
+Cc: Mark Lord <liml@rtr.ca>, Richard Purdie <rpurdie@rpsys.net>, LKML <linux-kernel@vger.kernel.org>, Dominik Brodowski <linux@dominikbrodowski.net>, bzolnier@gmail.com, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Joshua Kwan <joshk@triplehelix.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Mark Lord <liml@rtr.ca> wrote:
+On Iau, 2005-09-22 at 11:22 +0100, Russell King wrote:
+> If you have a CF adapter which behaves as you describe above, could
+> you please check what happens as far as PCMCIA goes when you unplug
+> the CF card - particularly what happens to cardctl status / cardctl
+> ident ?
 
-> Rather than sitting around for another six months hoping the problem
-> will go away (it won't), perhaps we should just update/merge Jen's
-> patch as a sorely needed interim fix.
+If I remove the CF card I get garbage reported. I don't however get a
+card plug/unplug event. On the other card I have I get a card
+plug/unplug event. The pcmcia ide floppy (40MB clik! drive if anyone
+wants to play) I have always shows up as present. It triggers the same
+hotplug behaviour being complained about as far as I can see and
+correctly so.
 
-As a datapoint, we've been shipping it in Ubuntu for a month or so now
-and we haven't had any reported problems.
--- 
-Matthew Garrett | mjg59-chiark.mail.linux-rutgers.kernel@srcf.ucam.org
+I dug out some old emails - GNOME does indeed handle this correctly
+using HAL and the recursive probing problem is true for all removable
+media types. HAL handles this correctly although David Zeuthen wasn't
+exactly happy with the kernel behaviour.
+
+So I'm definitely against removing drive->removable when it should be
+set, although its less serious than 2.4 because we do more flushing
+anyway. There do seem to be a lot of people who would rather it didnt
+always generate hotplug events when rescanning partitions. Perhaps we
+need a ->same_media() check if the partitions match the old ones ?
+
+Alan
