@@ -1,32 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: SATA suspend-to-ram patch - merge?
-Date: Thu, 22 Sep 2005 15:28:55 +0100
-Message-ID: <20050922142855.GA29672@infradead.org>
-References: <433104E0.4090308@triplehelix.org> <433221A1.5000600@pobox.com> <20050922061849.GJ7929@suse.de> <4332ABDC.3030106@rtr.ca>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [RFC/BUG?] ide_cs's removable status
+Date: Thu, 22 Sep 2005 15:36:35 +0100
+Message-ID: <20050922143635.GD26438@flint.arm.linux.org.uk>
+References: <1127319328.8542.57.camel@localhost.localdomain> <1127321829.18840.18.camel@localhost.localdomain> <433196B6.8000607@rtr.ca> <1127327243.18840.34.camel@localhost.localdomain> <20050921192932.GB13246@flint.arm.linux.org.uk> <1127347845.18840.53.camel@localhost.localdomain> <20050922102221.GD16949@flint.arm.linux.org.uk> <1127396382.18840.79.camel@localhost.localdomain> <1127398876.8242.74.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:51929 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1030368AbVIVO3Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Sep 2005 10:29:16 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030379AbVIVOgm@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4332ABDC.3030106@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1127398876.8242.74.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Richard Purdie <rpurdie@rpsys.net>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, LKML <linux-kernel@vger.kernel.org>, Dominik Brodowski <linux@dominikbrodowski.net>, bzolnier@gmail.com, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jens Axboe <axboe@suse.de>, Jeff Garzik <jgarzik@pobox.com>, Joshua Kwan <joshk@triplehelix.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-On Thu, Sep 22, 2005 at 09:04:28AM -0400, Mark Lord wrote:
-> Rather than sitting around for another six months hoping the problem
-> will go away (it won't), perhaps we should just update/merge Jen's
-> patch as a sorely needed interim fix.
-> 
-> This might then prod James et al into looking more at the SCSI side of
-> things, and some year we might see this get replaced with a better scheme.
-> 
-> This is a real problem, and an immediate solution is needed last spring.
+On Thu, Sep 22, 2005 at 03:21:16PM +0100, Richard Purdie wrote:
+> 3. ide-cs sometimes can't/doesn't detect the removal of an ide
+> controller.
 
-Folks, bitching around on lkml on this won't get you far.  Send the
-patch to linux-scsi again, and explain what's the current stance on the
-disk synchronize cache and spindown issues.
+This is the one I'm particularly interested in, and I think it's
+responsible for a lot of problems in this area.
+
+"can't" is correct - from what I now understand from Alan, it seems
+that there are PCMCIA to CF adapters out there which tie the PCMCIA
+card detect lines to ground, rather than passing them through to the
+CF socket.
+
+This means that if you leave the PCMCIA to CF adapter in the slot,
+pull out the CF card, replace it with another CF card, PCMCIA will
+not notice the change.
+
+You could even plug this adapter into the slot with a CF IDE card in,
+unplug the CF IDE card and replace it with a CF network card.  Then
+watch the fun and games when IDE tries to access the CF network card!
+
+Therefore, it's completely unsafe to assume anything about what's
+plugged in with such a broken adapter... the only way you could be
+sure is to regularly check the CIS matches the PCMCIA cached version,
+provided you have enough of the CIS cached.
+
+I think this basically comes down to a buggy CF adapter which needs
+bining.
+
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 Serial core
