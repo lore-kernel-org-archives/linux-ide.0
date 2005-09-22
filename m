@@ -1,149 +1,48 @@
-From: Richard Purdie <rpurdie@rpsys.net>
-Subject: Re: [RFC/BUG?] ide_cs's removable status
-Date: Wed, 21 Sep 2005 22:52:44 +0100
-Message-ID: <1127339564.27462.7.camel@localhost.localdomain>
-References: <1127319328.8542.57.camel@localhost.localdomain>
-	 <1127321829.18840.18.camel@localhost.localdomain> <433196B6.8000607@rtr.ca>
-	 <1127327243.18840.34.camel@localhost.localdomain>
-	 <20050921192932.GB13246@flint.arm.linux.org.uk>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: libata sata_sil broken on 2.6.13.1
+Date: Wed, 21 Sep 2005 22:46:49 -0400
+Message-ID: <43321B19.7000302@pobox.com>
+References: <61637.200.141.106.169.1126660632.squirrel@correio.lps.ele.puc-rio.br><60519.200.141.106.169.1126727337.squirrel@correio.lps.ele.puc-rio.br><43290893.7070207@pobox.com><1126790860.19133.75.camel@localhost.localdomain><61929.200.141.106.169.1126815191.squirrel@correio.lps.ele.puc-rio.br>       <1126823405.7034.14.camel@localhost.localdomain>    <61375.200.141.106.169.1126842173.squirrel@correio.lps.ele.puc-rio.br>    <432A6923.2070000@pobox.com> <60542.200.141.101.221.1126908642.squirrel@correio.lps.ele.puc-rio.br>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tim.rpsys.net ([194.106.48.114]:32437 "EHLO tim.rpsys.net")
-	by vger.kernel.org with ESMTP id S965047AbVIUVw7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Sep 2005 17:52:59 -0400
-In-Reply-To: <20050921192932.GB13246@flint.arm.linux.org.uk>
+Received: from mail.dvmed.net ([216.237.124.58]:49831 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S965220AbVIVCqz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Sep 2005 22:46:55 -0400
+In-Reply-To: <60542.200.141.101.221.1126908642.squirrel@correio.lps.ele.puc-rio.br>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com, Dominik Brodowski <linux@dominikbrodowski.net>, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Russell King <rmk+lkml@arm.linux.org.uk>
+To: Matheus Izvekov <izvekov@lps.ele.puc-rio.br>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-A proposed solution/patch:
-[One step further is to totally remove the drive->removable = 1]
+Matheus Izvekov wrote:
+>>Essentially that is what happened.  Albert's patch simply fixed it
+>>another way.
+>>
+>>ATA is a bit annoying in that, we try to "know" when an interrupt is
+>>expected.  There is no 100% solution that simply allows us to check for
+>>pending interrupts, without side effects.
+>>
+>>Thus the explosion when unexpected interrupts are received.
+>>
+> 
+> 
+> What do you think would be proper fix, this patch from Albert, or maybe
 
-This patch stops CompactFlash devices being marked as removable. They
-are not removable as the media and device are inseparable. When a card
-is removed, the device is removed from the system.
+Albert's patch should be the proper fix.
 
-Further, once this change is made, there is no need for ide to
-differentiate between flash and other devices so the is_flash variable
-can be removed from ide_drive_t.
 
-Signed-Off-By: Richard Purdie <rpurdie@rpsys.net> 
+> just trapping the interrupts (plus not have the IRQ shared with other
+> devices?). Also, what keeps Albert's patch from making into mainline, it
+> just needs more testing or are there any known problems?
 
-Index: linux-2.6.13/drivers/ide/ide-probe.c
-===================================================================
---- linux-2.6.13.orig/drivers/ide/ide-probe.c	2005-08-29 00:41:01.000000000 +0100
-+++ linux-2.6.13/drivers/ide/ide-probe.c	2005-09-21 20:57:34.000000000 +0100
-@@ -125,45 +125,6 @@
- }
- 
- /**
-- *	drive_is_flashcard	-	check for compact flash
-- *	@drive: drive to check
-- *
-- *	CompactFlash cards and their brethern pretend to be removable
-- *	hard disks, except:
-- * 		(1) they never have a slave unit, and
-- *		(2) they don't have doorlock mechanisms.
-- *	This test catches them, and is invoked elsewhere when setting
-- *	appropriate config bits.
-- *
-- *	FIXME: This treatment is probably applicable for *all* PCMCIA (PC CARD)
-- *	devices, so in linux 2.3.x we should change this to just treat all
-- *	PCMCIA  drives this way, and get rid of the model-name tests below
-- *	(too big of an interface change for 2.4.x).
-- *	At that time, we might also consider parameterizing the timeouts and
-- *	retries, since these are MUCH faster than mechanical drives. -M.Lord
-- */
-- 
--static inline int drive_is_flashcard (ide_drive_t *drive)
--{
--	struct hd_driveid *id = drive->id;
--
--	if (drive->removable) {
--		if (id->config == 0x848a) return 1;	/* CompactFlash */
--		if (!strncmp(id->model, "KODAK ATA_FLASH", 15)	/* Kodak */
--		 || !strncmp(id->model, "Hitachi CV", 10)	/* Hitachi */
--		 || !strncmp(id->model, "SunDisk SDCFB", 13)	/* old SanDisk */
--		 || !strncmp(id->model, "SanDisk SDCFB", 13)	/* SanDisk */
--		 || !strncmp(id->model, "HAGIWARA HPC", 12)	/* Hagiwara */
--		 || !strncmp(id->model, "LEXAR ATA_FLASH", 15)	/* Lexar */
--		 || !strncmp(id->model, "ATA_FLASH", 9))	/* Simple Tech */
--		{
--			return 1;	/* yes, it is a flash memory card */
--		}
--	}
--	return 0;	/* no, it is not a flash memory card */
--}
--
--/**
-  *	do_identify	-	identify a drive
-  *	@drive: drive to identify 
-  *	@cmd: command used
-@@ -278,13 +239,17 @@
- 	/*
- 	 * Not an ATAPI device: looks like a "regular" hard disk
- 	 */
--	if (id->config & (1<<7))
--		drive->removable = 1;
- 
--	if (drive_is_flashcard(drive))
--		drive->is_flash = 1;
-+	/* 
-+	 * 0x848a = CompactFlash device 
-+	 * These are *not* removable in Linux definition of the term
-+	 */
-+
-+	if ((id->config != 0x848a) && (id->config & (1<<7)))
-+		drive->removable = 1;
-+
- 	drive->media = ide_disk;
--	printk("%s DISK drive\n", (drive->is_flash) ? "CFA" : "ATA" );
-+	printk("%s DISK drive\n", (id->config == 0x848a) ? "CFA" : "ATA" );
- 	QUIRK_LIST(drive);
- 	return;
- 
-Index: linux-2.6.13/drivers/ide/ide.c
-===================================================================
---- linux-2.6.13.orig/drivers/ide/ide.c	2005-09-19 10:53:59.000000000 +0100
-+++ linux-2.6.13/drivers/ide/ide.c	2005-09-21 20:52:53.000000000 +0100
-@@ -242,7 +242,6 @@
- 		drive->name[2]			= 'a' + (index * MAX_DRIVES) + unit;
- 		drive->max_failures		= IDE_DEFAULT_MAX_FAILURES;
- 		drive->using_dma		= 0;
--		drive->is_flash			= 0;
- 		drive->vdma			= 0;
- 		INIT_LIST_HEAD(&drive->list);
- 		sema_init(&drive->gendev_rel_sem, 0);
-Index: linux-2.6.13/drivers/ide/ide-disk.c
-===================================================================
---- linux-2.6.13.orig/drivers/ide/ide-disk.c	2005-09-19 10:53:59.000000000 +0100
-+++ linux-2.6.13/drivers/ide/ide-disk.c	2005-09-21 20:51:31.000000000 +0100
-@@ -895,11 +895,7 @@
- 	if (drive->id_read == 0)
- 		return;
- 
--	/*
--	 * CompactFlash cards and their brethern look just like hard drives
--	 * to us, but they are removable and don't have a doorlock mechanism.
--	 */
--	if (drive->removable && !(drive->is_flash)) {
-+	if (drive->removable) {
- 		/*
- 		 * Removable disks (eg. SYQUEST); ignore 'WD' drives 
- 		 */
-Index: linux-2.6.13/include/linux/ide.h
-===================================================================
---- linux-2.6.13.orig/include/linux/ide.h	2005-08-29 00:41:01.000000000 +0100
-+++ linux-2.6.13/include/linux/ide.h	2005-09-21 20:56:29.000000000 +0100
-@@ -697,7 +697,6 @@
- 	unsigned noprobe 	: 1;	/* from:  hdx=noprobe */
- 	unsigned removable	: 1;	/* 1 if need to do check_media_change */
- 	unsigned attach		: 1;	/* needed for removable devices */
--	unsigned is_flash	: 1;	/* 1 if probed as flash */
- 	unsigned forced_geom	: 1;	/* 1 if hdx=c,h,s was given at boot */
- 	unsigned no_unmask	: 1;	/* disallow setting unmask bit */
- 	unsigned no_io_32bit	: 1;	/* disallow enabling 32bit I/O */
+Albert's patch needs to be fleshed out a bit more.  No fundamental 
+problems, just the stuff I mentioned, plus a final review.
+
+It also needs to be tested on EVERY controller that we support, since 
+this is a fundamental change in how ALL sata devices are probed.
+
+	Jeff
+
 
