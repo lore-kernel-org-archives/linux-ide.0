@@ -1,49 +1,40 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: [RFC/BUG?] ide_cs's removable status
-Date: Thu, 22 Sep 2005 11:22:21 +0100
-Message-ID: <20050922102221.GD16949@flint.arm.linux.org.uk>
-References: <1127319328.8542.57.camel@localhost.localdomain> <1127321829.18840.18.camel@localhost.localdomain> <433196B6.8000607@rtr.ca> <1127327243.18840.34.camel@localhost.localdomain> <20050921192932.GB13246@flint.arm.linux.org.uk> <1127347845.18840.53.camel@localhost.localdomain>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH/RFC 3/3] libata: interrupt driven pio for LLD
+Date: Thu, 22 Sep 2005 08:56:31 -0400
+Message-ID: <4332A9FF.3010400@rtr.ca>
+References: <4321B4E0.8020801@tw.ibm.com> <4321C7DD.5050503@pobox.com> <43322C50.1060009@tw.ibm.com> <43322FBB.5060403@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:13322 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S1751465AbVIVKWf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Sep 2005 06:22:35 -0400
-Content-Disposition: inline
-In-Reply-To: <1127347845.18840.53.camel@localhost.localdomain>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:5269 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S1030290AbVIVM4b
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 22 Sep 2005 08:56:31 -0400
+In-Reply-To: <43322FBB.5060403@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mark Lord <liml@rtr.ca>, Richard Purdie <rpurdie@rpsys.net>, LKML <linux-kernel@vger.kernel.org>, Dominik Brodowski <linux@dominikbrodowski.net>, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>, Brett Russ <russb@emc.com>
 
-On Thu, Sep 22, 2005 at 01:10:44AM +0100, Alan Cox wrote:
-> With drive->removable = 0 if I insert a card I get partition tables, it
-> will then not rescan that in future even if the card changed, because
-> there is no "media change detect" line, unlike on a floppy.
+Albert Lee wrote:
+> Patch 3/3: interrupt driven pio patch for LLD
 > 
-> If I pull the CF adapter out it is fine because you get pcmcia level
-> hotplug but that is not neccessary for card changing on better designed
-> adapters or when the CF adapter is on the board itself with a CF slot
-> exposed to the user.
+> sata_qstor.c:
+>  Private irq handler, need modification to handle interrupt driven mode 
+> in the future.
+>  Use polling mode for the unsupported protocols for the time being.
+...
+  	default:
++		/* FIXME: qs_intr_mmio() doesn't handle
++		 * interrupt driven pio/atapi cdb intr yet.
 
-Interesting - all my CF adapters (and I have several, some cheapo
-noname things to some branded ones) are dumb pieces of hardware -
-they merely convert the PCMCIA connector to a CF connector, just as
-dumb as those 240V mains adapters.
+The qs_intr_mmio() handler is set up for interrupt driven
+pio/atapi usage, and should already be usable for that.
 
-Also, "CF" is just a different form factor of PCMCIA - don't get
-mislead by the term "Compact Flash" - you can get "CF" network
-cards, serial cards, bluetooth cards, etc as well.  They're exactly
-the same as PCMCIA network, serial, bluetooth cards, just in a
-smaller package.
+How do I cause a command to use "interrupt driven" PIO mode
+with these patches?  I could try it to make sure it still works.
 
-If you have a CF adapter which behaves as you describe above, could
-you please check what happens as far as PCMCIA goes when you unplug
-the CF card - particularly what happens to cardctl status / cardctl
-ident ?
+Cheers
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+Mark
