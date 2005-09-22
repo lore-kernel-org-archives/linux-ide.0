@@ -1,45 +1,47 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC/BUG?] ide_cs's removable status
-Date: Thu, 22 Sep 2005 14:39:42 +0100
-Message-ID: <1127396382.18840.79.camel@localhost.localdomain>
-References: <1127319328.8542.57.camel@localhost.localdomain>
-	 <1127321829.18840.18.camel@localhost.localdomain> <433196B6.8000607@rtr.ca>
-	 <1127327243.18840.34.camel@localhost.localdomain>
-	 <20050921192932.GB13246@flint.arm.linux.org.uk>
-	 <1127347845.18840.53.camel@localhost.localdomain>
-	 <20050922102221.GD16949@flint.arm.linux.org.uk>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: SATA suspend-to-ram patch - merge?
+Date: Thu, 22 Sep 2005 15:24:10 +0200
+Message-ID: <20050922132406.GH4262@suse.de>
+References: <433104E0.4090308@triplehelix.org> <433221A1.5000600@pobox.com> <20050922061849.GJ7929@suse.de> <4332ABDC.3030106@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030310AbVIVNNe@vger.kernel.org>
-In-Reply-To: <20050922102221.GD16949@flint.arm.linux.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Russell King <rmk+lkml@arm.linux.org.uk>
-Cc: Mark Lord <liml@rtr.ca>, Richard Purdie <rpurdie@rpsys.net>, LKML <linux-kernel@vger.kernel.org>, Dominik Brodowski <linux@dominikbrodowski.net>, bzolnier@gmail.com, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:29485 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1030325AbVIVNYK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Sep 2005 09:24:10 -0400
+Content-Disposition: inline
+In-Reply-To: <4332ABDC.3030106@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Joshua Kwan <joshk@triplehelix.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-On Iau, 2005-09-22 at 11:22 +0100, Russell King wrote:
-> If you have a CF adapter which behaves as you describe above, could
-> you please check what happens as far as PCMCIA goes when you unplug
-> the CF card - particularly what happens to cardctl status / cardctl
-> ident ?
+On Thu, Sep 22 2005, Mark Lord wrote:
+> >>So currently we are in limbo...
+> >
+> >Which is a shame, since it means that software suspend on sata is
+> >basically impossible :)
+> 
+> Except that it actually does work, with Jen's patch.
 
-If I remove the CF card I get garbage reported. I don't however get a
-card plug/unplug event. On the other card I have I get a card
-plug/unplug event. The pcmcia ide floppy (40MB clik! drive if anyone
-wants to play) I have always shows up as present. It triggers the same
-hotplug behaviour being complained about as far as I can see and
-correctly so.
+(Jens's, not Jen's!)
 
-I dug out some old emails - GNOME does indeed handle this correctly
-using HAL and the recursive probing problem is true for all removable
-media types. HAL handles this correctly although David Zeuthen wasn't
-exactly happy with the kernel behaviour.
+Yes, I'm very aware of that. The above note refers to what is currently
+shipping in Linus's tree, and sata suspend definitely does not work
+there.
 
-So I'm definitely against removing drive->removable when it should be
-set, although its less serious than 2.4 because we do more flushing
-anyway. There do seem to be a lot of people who would rather it didnt
-always generate hotplug events when rescanning partitions. Perhaps we
-need a ->same_media() check if the partitions match the old ones ?
+> Rather than sitting around for another six months hoping the problem
+> will go away (it won't), perhaps we should just update/merge Jen's
+> patch as a sorely needed interim fix.
+> 
+> This might then prod James et al into looking more at the SCSI side of
+> things, and some year we might see this get replaced with a better scheme.
+> 
+> This is a real problem, and an immediate solution is needed last spring.
 
-Alan
+Could not have said it better myself. It's not like the patch is hack
+either.
+
+-- 
+Jens Axboe
+
