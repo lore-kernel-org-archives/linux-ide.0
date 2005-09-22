@@ -1,39 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC/BUG?] ide_cs's removable status
-Date: Thu, 22 Sep 2005 16:08:53 +0100
-Message-ID: <1127401733.18840.116.camel@localhost.localdomain>
-References: <1127319328.8542.57.camel@localhost.localdomain>
-	 <1127321829.18840.18.camel@localhost.localdomain> <433196B6.8000607@rtr.ca>
-	 <1127327243.18840.34.camel@localhost.localdomain>
-	 <20050921192932.GB13246@flint.arm.linux.org.uk>
-	 <1127347845.18840.53.camel@localhost.localdomain>
-	 <20050922102221.GD16949@flint.arm.linux.org.uk>
-	 <1127396382.18840.79.camel@localhost.localdomain>
-	 <1127398876.8242.74.camel@localhost.localdomain>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: SATA suspend-to-ram patch - merge?
+Date: Thu, 22 Sep 2005 08:01:23 -0700 (PDT)
+Message-ID: <Pine.LNX.4.58.0509220759180.20059@shark.he.net>
+References: <433104E0.4090308@triplehelix.org> <433221A1.5000600@pobox.com>
+ <20050922061849.GJ7929@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:48320 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1030382AbVIVOmZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Sep 2005 10:42:25 -0400
-In-Reply-To: <1127398876.8242.74.camel@localhost.localdomain>
+Received: from xenotime.net ([66.160.160.81]:34954 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1030392AbVIVPBZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Sep 2005 11:01:25 -0400
+Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-ide@vger.kernel.org>; Thu, 22 Sep 2005 08:01:23 -0700
+In-Reply-To: <20050922061849.GJ7929@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Purdie <rpurdie@rpsys.net>
-Cc: Russell King <rmk+lkml@arm.linux.org.uk>, Mark Lord <liml@rtr.ca>, LKML <linux-kernel@vger.kernel.org>, Dominik Brodowski <linux@dominikbrodowski.net>, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Joshua Kwan <joshk@triplehelix.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-On Iau, 2005-09-22 at 15:21 +0100, Richard Purdie wrote:
-> 1. Are ide-cs devices removable or not. See above.
+On Thu, 22 Sep 2005, Jens Axboe wrote:
 
-Having done testing on the cards I have based on RMK's suggestion I
-agree they are not removable except for specific cases (IDE PCMCIA cable
-adapter plugged into a Syquest). That case is already handled in the
-core code.
+> On Wed, Sep 21 2005, Jeff Garzik wrote:
+> > Joshua Kwan wrote:
+> > >Is Jens' patch still relevant? If so, should it be rediffed and merged
+> > >into mainline? It doesn't seem to cause any weird side-effects.
+> > >
+> > >More importantly, I would be inclined to properly rediff Jens' patch and
+> > >merge it into Debian 2.6.12 kernel sources if there aren't any such
+> > >side-effects, since it benefits everyone using SATA and suspend-to-ram
+> > >(that is, users of relatively modern laptops.)
+> >
+> > Jens' patch is technical correct for SATA, but really we want to do more
+> > stuff at the SCSI layer (see James Bottomley's response to Jens' patch).
+> >
+> > Unfortunately, this also implies that we have to figure out which SCSI
+> > devices are available to be power-managed, and which SCSI devices are on
+> > a shared bus that should never be suspended.
+> >
+> > So currently we are in limbo...
+>
+> Which is a shame, since it means that software suspend on sata is
+> basically impossible :)
 
-The fact cache flushing is all odd now is I guess bug 4. on the list but
-easy to fix while fixing 1
+so just go with Jens's patch for SATA until SCSI knows more
+about power management??
 
-Alan
-
+-- 
+~Randy
