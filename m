@@ -1,62 +1,97 @@
-From: Brett Russ <russb@emc.com>
-Subject: Re: [PATCH] libata: scsi error handling, lk 2.6.14-rc1
-Date: Thu, 22 Sep 2005 15:21:02 -0400
-Message-ID: <4333041E.9000405@emc.com>
-References: <432E7A6A.4090209@torque.net>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: SATA Drive Information (vs hdparm -i)?
+Date: Fri, 23 Sep 2005 10:23:27 +1000
+Message-ID: <43334AFF.8010901@torque.net>
+References: <7744a2840509221206254d2109@mail.gmail.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <432E7A6A.4090209@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: dougg@torque.net
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from zorg.st.net.au ([203.16.233.9]:55209 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1751226AbVIWAXA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Sep 2005 20:23:00 -0400
+In-Reply-To: <7744a2840509221206254d2109@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Richard Bollinger <rabollinger@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Douglas Gilbert wrote:
-> Jeff,
-> This is a retransmission (and resync against lk 2.6.14-rc1)
-> of a patch that I sent on 2005/8/28 . I haven't seen a reply.
+Richard Bollinger wrote:
+> Is there a program for SATA drives which reveals the depth of
+> information that "hdparm -i" does for IDE drives?  sdparm reveals
+> almost nothing in comparison:
 > 
-> If it has be applied, then my following patch
-> ("[PATCH] libata: ATA Information VPD page, lk 2.6.14-rc1")
-> should apply.
+> # sdparm -i /dev/sda
+>     /dev/sda: ATA       WDC WD3200JD-00K  08.0
+> Device identification VPD page:
+>   Addressed logical unit:
+>     id_type: vendor specific [0x0],  code_set: ASCII
+>  00     4c 69 6e 75 78 20 41 54  41 2d 53 43 53 49 20 73    Linux ATA-SCSI s
+>  10     69 6d 75 6c 61 74 6f 72                             imulator
+
+Richard,
+libata needs to improve the information it provides for
+the Device Identification VPD page [0x83]. For example
+as defined in section 10.3.4.2 in the just released sat-r06 .
+Something approaching a world wide unique identifier is
+needed.
+
+> # hdparm -i /dev/hda
 > 
-> This patch adds more general error processing, typically for
-> problems (or an early finish) detected while a
-> SCSI command is being processed prior to an ATA
-> command being executed.
+> /dev/hda:
 > 
-> Changelog:
->   - add extern ata_scsi_set_sense() to build SCSI
->     sense data and corresponding status
->   - this allows removal of extern ata_scsi_badcmd()
->     and static inline ata_bad_scsiop() and ata_bad_cdb()
->   - change "xlat" functions in libata-scsi so they
->     are responsible for SCSI status and sense data
->     when they return 1. This allows GOOD status or a
->     specialized error to be set.
->   - set DRIVER_SENSE when SAM_STAT_CHECK_CONDITION
->     is flagged in scsi_cmnd::result
->   - yield an error for mode sense requests for saved
->     values [sat-r05]
->   - change recent rw_zero_length patch to do nothing
->     (yield GOOD status) when transfer_length==0 for
->     10 and 16 byte READ and WRITE commands (SBC-2).
+>  Model=WDC WD800BB-00JHC0, FwRev=05.01C05, SerialNo=WD-MAM96054404
+>  Config={ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs mtGapReq }
+>  RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=66
+>  BuffType=unknown, BuffSize=2048kB, MaxMultSect=16, MultSect=off
+>  CurCHS=16383/16/63, CurSects=-66060037, LBA=yes, LBAsects=156301488
+>  IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+>  PIO modes: pio0 pio3 pio4
+>  DMA modes: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
+>  AdvancedPM=no
+>  Drive Supports : Reserved : ATA-1 ATA-2 ATA-3 ATA-4 ATA-5 ATA-6
+
+However an improved "sdparm -i" is not what you seem to be
+asking for. Most of the above information is derived from
+the response to the IDENTIFY [PACKET] DEVICE ATA command.
+There seems to be two options for providing this:
+  1) libata to implement ioctls like HDIO_GET_IDENTITY
+  2) libata to implement SCSI ATA Translation [SAT]
+     facilities such as:
+       a) the ATA Information VPD page
+       b) SCSI ATA pass through commands
+       c) MODE SELECT SCSI command
+
+Option 1) is the simplest but it requires that the SAT layer
+is on the host computer [as it is in the case of libata].
+Hopefully external USB and Firewire storage enclosures will
+be enhanced to support the [draft] SAT standard and in
+that case the SAT layer will be in the enclosure. SATA
+disks [and S-ATAPI devices] in a SAS fabric may either
+tunnel through the SAS fabric [via SAS Tunnelling Protocol
+[STP]] or have a SAT layer in the fabric [typically in the
+enclosure holding the disks]. Only the STP route allows for
+option 1) .
+
+I have published some patches for 2 a) and 2 c) and someone
+else has published some patches for 2 b). I am unaware
+if any have been accepted into libata yet.
+
+Option 2) still needs an application client to output
+information like "hdparm -i". "sdparm --page=ai" will
+do this at a lower level if 2) a is implemented in
+libata. Another approach is to make the hdparm application
+libata aware and issue [shock horror] SCSI commands :-)
+
+hdparm has a "-Istdin" command line option which accepts
+the raw (binary) IDENTIFY x DEVICE response. So
+implementing option 2 a), using sg_inq, dd and finally
+hdparm could do it. That is a bit convoluted.
+
+Doug Gilbert
 
 
-Hi Doug,
 
-In March I got a bunch of patches in this same area into libata-dev; I'm 
-not sure where they sit now (definitely not in 2.6.14-rc).  Jeff would 
-probably know.
 
-See start of thread:
-http://lkml.org/lkml/2005/3/17/157
 
-So there would be conflicts if my stuff went forward--a lot of the 
-changes are similar.  I think the best bet would be to find the tree 
-with my patches and for you to look at it and find problems that you 
-solved in this patch that I didn't address.
-
-BR
