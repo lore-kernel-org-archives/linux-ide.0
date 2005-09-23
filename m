@@ -1,59 +1,60 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: SATA Drive Information (vs hdparm -i)?
-Date: Fri, 23 Sep 2005 10:22:47 -0400
-Message-ID: <43340FB7.3080708@adaptec.com>
-References: <7744a2840509221206254d2109@mail.gmail.com> <43334AFF.8010901@torque.net>
+From: "Cole Kross" <colekross@yahoo.com>
+Subject: Private And Confidential
+Date: Fri, 23 Sep 2005 10:58:33 -0400
+Message-ID: <200509231458.j8NEwXbT012603@host.thisisourserver.com>
+Reply-To: "Cole Kross" <colekross@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:50818 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1751016AbVIWOW5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Sep 2005 10:22:57 -0400
-In-Reply-To: <43334AFF.8010901@torque.net>
+Received: from host.thisisourserver.com ([209.239.37.192]:35284 "EHLO
+	host.thisisourserver.com") by vger.kernel.org with ESMTP
+	id S1751053AbVIWO6g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Sep 2005 10:58:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dougg@torque.net
-Cc: Richard Bollinger <rabollinger@gmail.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 09/22/05 20:23, Douglas Gilbert wrote:
-> However an improved "sdparm -i" is not what you seem to be
-> asking for. Most of the above information is derived from
-> the response to the IDENTIFY [PACKET] DEVICE ATA command.
-> There seems to be two options for providing this:
->   1) libata to implement ioctls like HDIO_GET_IDENTITY
->   2) libata to implement SCSI ATA Translation [SAT]
->      facilities such as:
->        a) the ATA Information VPD page
->        b) SCSI ATA pass through commands
->        c) MODE SELECT SCSI command
-> 
-> Option 1) is the simplest but it requires that the SAT layer
-> is on the host computer [as it is in the case of libata].
-> Hopefully external USB and Firewire storage enclosures will
-> be enhanced to support the [draft] SAT standard and in
-> that case the SAT layer will be in the enclosure. SATA
-> disks [and S-ATAPI devices] in a SAS fabric may either
-> tunnel through the SAS fabric [via SAS Tunnelling Protocol
-> [STP]] or have a SAT layer in the fabric [typically in the
-> enclosure holding the disks].
 
-There will be no SAT layer in a SAS fabric.  STP is just
-that, a _tunneling_ protocol.  Thus, either in Option 1,
-or Option 2 if you want to present the device to
-SCSI Core as a SCSI Device you need SAT somewhere below
-SCSI Core (on the host).
-
-In general, lower (hardware) layers want to do the
-_absolute_ minimum as far as their function is concerned.
-
-Thus, for example, you can expect an incomplete
-USB/IEEE1394 SAT layer on the device.
-
-> Only the STP route allows for option 1) .
-
-Option 2 as well: you'll just treat the device as
-SCSI and SAT will emulate as much as possible.
-
-	Luben
-
+Dear Sir:
+My Name is COLE KROSS, I am serving in Iraq,I will disclose/proof of my=
+=20
+identity to you when it is safe to do so.I have to urgently evacuate so=
+me money, totaling US$22,700,000(Twenty-Two Million,Seven Hundred Thous=
+and US Dollars) clean legal notes,and all in US$100 bills out of here t=
+o a safe country having found a secure way to do so.
+SOURCE OF MONEY:Some money in various currencies were discovered concea=
+led in barrels with piles of weapons and ammunitions at a location near=
+ one of=20
+Saddam=B4s old palaces during a rescue operation several months ago,and=
+ it was=20
+agreed by the few of us present that the money be shared amongst us, th=
+is was=20
+an illegal thing to do though, but I tell you what? no compensation can=
+=20
+make up for the risks we are taking with our lives in this hell hole.
+The above figure was given to me as my share, and for several reasons,c=
+oncealing this volume of cash here has been a big=20
+problem/source of distraction to me,I however found a temporary solutio=
+n with the help of a UN contact working here, whose office enjoys some =
+immunity, and was  able to get the package to a safe location entirely =
+out of trouble=20
+spot, where they have been for the past 8 months.
+She does not know the real contents of the packages,and must not know,b=
+ut believes that they belong to an Asian American who died in an=20
+air raid, and before giving up, trusted me to hand them over to his=20
+business associate in Europe.
+I have now found a secure way of getting the packageout of Iraq, and=20
+request for your assistance to work with me to complete this. I am=20
+ready to give you US$4M for the role you will play in this, but should =
+you=20
+have reasons  to reject this offer, please destroy this mail as any=20
+leakage will be too bad for us.
+I will continue with more details as soon as you let me know your=20
+position.But we have to take this up as soon as possible for reasons I=20
+will explain when I hear from you.Respond to me on email=20
+address(colekross2005@yahoo.com).
+Please respond to my email as soon as possible.
+Sincerely,
+COLE KROSS
+email address:colekross2005@yahoo.com
