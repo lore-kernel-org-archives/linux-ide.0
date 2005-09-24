@@ -1,196 +1,106 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [git patches] libata updates
-Date: Fri, 23 Sep 2005 19:11:06 -0400
-Message-ID: <20050923231106.GA3272@havoc.gtf.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: SATA Drive Information (vs hdparm -i)?
+Date: Sat, 24 Sep 2005 13:18:07 +1000
+Message-ID: <4334C56F.8010208@torque.net>
+References: <7744a2840509221206254d2109@mail.gmail.com> <43334AFF.8010901@torque.net> <43340FB7.3080708@adaptec.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:11436 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1750848AbVIWXLH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Sep 2005 19:11:07 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <43340FB7.3080708@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Richard Bollinger <rabollinger@gmail.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+Luben Tuikov wrote:
+> On 09/22/05 20:23, Douglas Gilbert wrote:
+> 
+>>However an improved "sdparm -i" is not what you seem to be
+>>asking for. Most of the above information is derived from
+>>the response to the IDENTIFY [PACKET] DEVICE ATA command.
+>>There seems to be two options for providing this:
+>>  1) libata to implement ioctls like HDIO_GET_IDENTITY
+>>  2) libata to implement SCSI ATA Translation [SAT]
+>>     facilities such as:
+>>       a) the ATA Information VPD page
+>>       b) SCSI ATA pass through commands
+>>       c) MODE SELECT SCSI command
+>>
+>>Option 1) is the simplest but it requires that the SAT layer
+>>is on the host computer [as it is in the case of libata].
+>>Hopefully external USB and Firewire storage enclosures will
+>>be enhanced to support the [draft] SAT standard and in
+>>that case the SAT layer will be in the enclosure. SATA
+>>disks [and S-ATAPI devices] in a SAS fabric may either
+>>tunnel through the SAS fabric [via SAS Tunnelling Protocol
+>>[STP]] or have a SAT layer in the fabric [typically in the
+>>enclosure holding the disks].
+> 
+> 
+> There will be no SAT layer in a SAS fabric.  STP is just
+> that, a _tunneling_ protocol.  Thus, either in Option 1,
+> or Option 2 if you want to present the device to
+> SCSI Core as a SCSI Device you need SAT somewhere below
+> SCSI Core (on the host).
+
+Luben,
+The folks at HP, Intel and WDC seemingly driving the
+SAT draft write in the overview [in sat-r06 section 5.1]
+of the SAT layer (SATL):
+
+"Examples of SATL implemented in accordance to this
+standard include:
+   a) a SATL contained within a SCSI target ...
+   b) An ATA/ATAPI Host Bus Adapter (HBA) directly
+      connected to ATA/ATAPI devices ...
+   c) A SAS STP initiator port to connect ATA/ATAPI
+      devices ...
+"
+
+There are figures (diagrams) of these three later in
+the draft: figure 7 (page 81), figure 5 (page 79) and
+figure 6 (page 80) respectively.
+
+For point a) they give as examples FCP, SPI and SBP-3
+(but not SAS). One reason for putting a SAT layer in
+a SAS target is multi-initiator and mult-port command
+queuing support (sat-r05 section 6.2.4). Converting
+port multipliers to luns may also be useful. [Perhaps
+you could confirm this: a 1.5 GB SATA disk chews up
+3 GB of SAS bandwidth when doing STP data transfers
+(thanks to ALIGNs inserted every other word).] A RAID
+of SATA disks in a SAS target (enclosure) would be
+another candidate for a SAT layer (with luns > 0 to
+access the individual disks (e.g. for SMART diagnostics)).
+
+> In general, lower (hardware) layers want to do the
+> _absolute_ minimum as far as their function is concerned.
+
+Some folks have reported beta testing disks that, via
+firmware download, can change between having a SATA and
+a SAS interface. So I think that what you say is
+basically true, but intelligence is being distributed
+as well. "Nice to have" features like SMART in disks
+must consume a lot of firmware (and flash) but support
+(and standard's compliance) seems to be improving.
+
+> Thus, for example, you can expect an incomplete
+> USB/IEEE1394 SAT layer on the device.
+
+Yep. Judging from my mail, lots of these users would
+be happy with START STOP UNIT (well, at least as a
+start).
+
+>>Only the STP route allows for option 1) .
+> 
+> 
+> Option 2 as well: you'll just treat the device as
+> SCSI and SAT will emulate as much as possible.
+
+True; point c) from the SAT overview.
+
+Doug Gilbert
 
 
-Please pull from 'upstream' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-
-to receive the following changes.
-
-The main fix is the change to include/linux/pci_ids.h, the rest is minor
-stuff.  The description "Add NVIDIA device ID" is incorrect -- my
-mistake.  It adds a device id, but also fixes another.
-
-
- drivers/scsi/ata_piix.c    |    1 
- drivers/scsi/libata-core.c |   81 +++++++++++++++++++++++++++------------------
- drivers/scsi/sata_nv.c     |    2 +
- include/linux/libata.h     |    1 
- include/linux/pci_ids.h    |    3 +
- 5 files changed, 54 insertions(+), 34 deletions(-)
-
-
-Alan Cox:
-  PATCH: silly in piix driver
-  PATCH: remove function for non-PCI as requested
-
-Andy Currid:
-  Add NVIDIA device ID in sata_nv
-
-
-diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
---- a/drivers/scsi/ata_piix.c
-+++ b/drivers/scsi/ata_piix.c
-@@ -442,7 +442,6 @@ static void piix_sata_phy_reset(struct a
-  *	piix_set_piomode - Initialize host controller PATA PIO timings
-  *	@ap: Port whose timings we are configuring
-  *	@adev: um
-- *	@pio: PIO mode, 0 - 4
-  *
-  *	Set PIO mode for device, in host controller PCI config space.
-  *
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -4132,6 +4132,53 @@ err_out:
- }
- 
- /**
-+ *	ata_host_set_remove - PCI layer callback for device removal
-+ *	@host_set: ATA host set that was removed
-+ *
-+ *	Unregister all objects associated with this host set. Free those 
-+ *	objects.
-+ *
-+ *	LOCKING:
-+ *	Inherited from calling layer (may sleep).
-+ */
-+
-+
-+void ata_host_set_remove(struct ata_host_set *host_set)
-+{
-+	struct ata_port *ap;
-+	unsigned int i;
-+
-+	for (i = 0; i < host_set->n_ports; i++) {
-+		ap = host_set->ports[i];
-+		scsi_remove_host(ap->host);
-+	}
-+
-+	free_irq(host_set->irq, host_set);
-+
-+	for (i = 0; i < host_set->n_ports; i++) {
-+		ap = host_set->ports[i];
-+
-+		ata_scsi_release(ap->host);
-+
-+		if ((ap->flags & ATA_FLAG_NO_LEGACY) == 0) {
-+			struct ata_ioports *ioaddr = &ap->ioaddr;
-+
-+			if (ioaddr->cmd_addr == 0x1f0)
-+				release_region(0x1f0, 8);
-+			else if (ioaddr->cmd_addr == 0x170)
-+				release_region(0x170, 8);
-+		}
-+
-+		scsi_host_put(ap->host);
-+	}
-+
-+	if (host_set->ops->host_stop)
-+		host_set->ops->host_stop(host_set);
-+
-+	kfree(host_set);
-+}
-+
-+/**
-  *	ata_scsi_release - SCSI layer callback hook for host unload
-  *	@host: libata host to be unloaded
-  *
-@@ -4471,39 +4518,8 @@ void ata_pci_remove_one (struct pci_dev 
- {
- 	struct device *dev = pci_dev_to_dev(pdev);
- 	struct ata_host_set *host_set = dev_get_drvdata(dev);
--	struct ata_port *ap;
--	unsigned int i;
--
--	for (i = 0; i < host_set->n_ports; i++) {
--		ap = host_set->ports[i];
--
--		scsi_remove_host(ap->host);
--	}
--
--	free_irq(host_set->irq, host_set);
--
--	for (i = 0; i < host_set->n_ports; i++) {
--		ap = host_set->ports[i];
--
--		ata_scsi_release(ap->host);
--
--		if ((ap->flags & ATA_FLAG_NO_LEGACY) == 0) {
--			struct ata_ioports *ioaddr = &ap->ioaddr;
--
--			if (ioaddr->cmd_addr == 0x1f0)
--				release_region(0x1f0, 8);
--			else if (ioaddr->cmd_addr == 0x170)
--				release_region(0x170, 8);
--		}
--
--		scsi_host_put(ap->host);
--	}
--
--	if (host_set->ops->host_stop)
--		host_set->ops->host_stop(host_set);
--
--	kfree(host_set);
- 
-+	ata_host_set_remove(host_set);
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
- 	dev_set_drvdata(dev, NULL);
-@@ -4573,6 +4589,7 @@ module_exit(ata_exit);
- EXPORT_SYMBOL_GPL(ata_std_bios_param);
- EXPORT_SYMBOL_GPL(ata_std_ports);
- EXPORT_SYMBOL_GPL(ata_device_add);
-+EXPORT_SYMBOL_GPL(ata_host_set_remove);
- EXPORT_SYMBOL_GPL(ata_sg_init);
- EXPORT_SYMBOL_GPL(ata_sg_init_one);
- EXPORT_SYMBOL_GPL(ata_qc_complete);
-diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
---- a/drivers/scsi/sata_nv.c
-+++ b/drivers/scsi/sata_nv.c
-@@ -158,6 +158,8 @@ static struct pci_device_id nv_pci_tbl[]
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, MCP51 },
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, MCP55 },
-+	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2,
-+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, MCP55 },
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
- 		PCI_ANY_ID, PCI_ANY_ID,
- 		PCI_CLASS_STORAGE_IDE<<8, 0xffff00, GENERIC },
-diff --git a/include/linux/libata.h b/include/linux/libata.h
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -393,6 +393,7 @@ extern int ata_pci_init_one (struct pci_
- extern void ata_pci_remove_one (struct pci_dev *pdev);
- #endif /* CONFIG_PCI */
- extern int ata_device_add(struct ata_probe_ent *ent);
-+extern void ata_host_set_remove(struct ata_host_set *host_set);
- extern int ata_scsi_detect(Scsi_Host_Template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1268,7 +1268,8 @@
- #define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA	0x0266
- #define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA2	0x0267
- #define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE	0x036E
--#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA	0x036F
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA	0x037E
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2	0x037F
- #define PCI_DEVICE_ID_NVIDIA_NVENET_12		0x0268
- #define PCI_DEVICE_ID_NVIDIA_NVENET_13		0x0269
- #define PCI_DEVICE_ID_NVIDIA_MCP51_AUDIO	0x026B
