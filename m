@@ -1,35 +1,23 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SATA suspend-to-ram patch - merge?
-Date: Sat, 24 Sep 2005 06:18:20 -0400
-Message-ID: <433527EC.8050503@pobox.com>
-References: <433104E0.4090308@triplehelix.org> <433221A1.5000600@pobox.com> <20050922103605.GA1527@openzaurus.ucw.cz>
+From: "Diana Perez" <d_perezhx@stallnore.de>
+Subject: New! cials-tabs at 70% discount
+Date: Sat, 24 Sep 2005 11:38:23 +0100
+Message-ID: <453601c5c0f4$cd87a659$7ac53574@cimbria-fidelitas.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:24766 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932155AbVIXKSi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Sep 2005 06:18:38 -0400
-In-Reply-To: <20050922103605.GA1527@openzaurus.ucw.cz>
+Received: from host0229.Dorm2.nsysu.edu.tw ([140.117.182.229]:39940 "HELO
+	cimbria-fidelitas.de") by vger.kernel.org with SMTP id S932174AbVIXLLV
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 Sep 2005 07:11:21 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@suse.cz>
-Cc: Joshua Kwan <joshk@triplehelix.org>, axboe@suse.de, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
-
-Pavel Machek wrote:
-> I think that shared buses are rare enough to be safely ignored.
-
-Hardly.  This potentially covers many enterprise installations that use 
-fibre channel, iSCSI, plus the upcoming SAS device networks.
-
-Desktop != the entire universe.
+To: linux-ide@vger.kernel.org
 
 
-> We could simply say "never ever suspend machine with some
-> disks on shared bus".
+Be ERECT in less than 15 mins
 
-This is indeed a fair statement, at least in the short term.
+PRlCE: $ 2 / use
 
-	Jeff
-
+visit us: greenones.com
 
