@@ -1,25 +1,24 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH/RFC 2/4] libata: rename host states
-Date: Tue, 27 Sep 2005 17:36:35 +0800
-Message-ID: <433912A3.4010502@tw.ibm.com>
+Subject: [PATCH/RFC 4/4] libata: interrupt driven pio for LLD
+Date: Tue, 27 Sep 2005 17:39:50 +0800
+Message-ID: <43391366.1010409@tw.ibm.com>
 References: <4321B4E0.8020801@tw.ibm.com> <4321C7DD.5050503@pobox.com> <43322C50.1060009@tw.ibm.com> <4333CF07.5010400@pobox.com> <4339116D.30908@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------040007010303060701000706"
+ boundary="------------060903080202060902030003"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:56280 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S964881AbVI0Jgm
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Sep 2005 05:36:42 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e33.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id j8R9ZF4S014712
-	for <linux-ide@vger.kernel.org>; Tue, 27 Sep 2005 05:35:15 -0400
+Received: from e33.co.us.ibm.com ([32.97.110.151]:219 "EHLO e33.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S964884AbVI0Jj4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Sep 2005 05:39:56 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id j8R9cU2C016079
+	for <linux-ide@vger.kernel.org>; Tue, 27 Sep 2005 05:38:30 -0400
 Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j8R9aZrJ440164
-	for <linux-ide@vger.kernel.org>; Tue, 27 Sep 2005 03:36:35 -0600
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j8R9eRHU551868
+	for <linux-ide@vger.kernel.org>; Tue, 27 Sep 2005 03:40:27 -0600
 Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j8R9aYFd006283
-	for <linux-ide@vger.kernel.org>; Tue, 27 Sep 2005 03:36:35 -0600
+	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j8R9dnng010595
+	for <linux-ide@vger.kernel.org>; Tue, 27 Sep 2005 03:39:50 -0600
 In-Reply-To: <4339116D.30908@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -27,14 +26,29 @@ To: Jeff Garzik <jgarzik@pobox.com>
 Cc: Linux IDE <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Brett Russ <russb@emc.com>
 
 This is a multi-part message in MIME format.
---------------040007010303060701000706
+--------------060903080202060902030003
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Patch 2/4: rename host states/variables
+Patch 4/4: interrupt driven pio patch for LLD
 
 Changes:
-s/PIO_ST_/HSM_ST_/ and s/pio_task_state/hsm_task_state/.
+
+libata.h:
+libata-core:
+  Add ATA_FLAG_PIO_POLLING flag for LLDs that expect interrupt for 
+command completion only.
+
+sata_nv.c:
+sata_vsc.c:
+  irq handler is wrapper around ata_host_intr(), can handle PIO interrupts.
+
+sata_promise.c:
+sata_sx4.c:
+sata_qstor.c:
+sata_mv.c:
+  Private irq handler.
+  Polling mode ATA_FLAG_PIO_POLLING used for compatibility.
 
 For your review, thanks.
 
@@ -43,269 +57,239 @@ Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
 
 
 
---------------040007010303060701000706
+--------------060903080202060902030003
 Content-Type: text/plain;
- name="idpio2.diff"
+ name="idpio4.diff"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="idpio2.diff"
+ filename="idpio4.diff"
 
---- id1/include/linux/libata.h	2005-09-26 14:08:20.000000000 +0800
-+++ id2/include/linux/libata.h	2005-09-26 14:23:20.000000000 +0800
-@@ -156,15 +156,15 @@ enum {
- 	ATA_SHIFT_PIO		= 11,
- };
+--- id3/include/linux/libata.h	2005-09-21 16:25:26.000000000 +0800
++++ id4/include/linux/libata.h	2005-09-27 14:14:41.000000000 +0800
+@@ -116,6 +116,8 @@ enum {
+ 	ATA_FLAG_MMIO		= (1 << 6), /* use MMIO, not PIO */
+ 	ATA_FLAG_SATA_RESET	= (1 << 7), /* use COMRESET */
+ 	ATA_FLAG_PIO_DMA	= (1 << 8), /* PIO cmds via DMA */
++	ATA_FLAG_PIO_POLLING	= (1 << 9), /* use polling PIO if LLD
++					     * doesn't handle PIO interrupts */
  
--enum pio_task_states {
--	PIO_ST_UNKNOWN,
--	PIO_ST_IDLE,
--	PIO_ST_POLL,
--	PIO_ST_TMOUT,
--	PIO_ST,
--	PIO_ST_LAST,
--	PIO_ST_LAST_POLL,
--	PIO_ST_ERR,
-+enum hsm_task_states {
-+	HSM_ST_UNKNOWN,
-+	HSM_ST_IDLE,
-+	HSM_ST_POLL,
-+	HSM_ST_TMOUT,
-+	HSM_ST,
-+	HSM_ST_LAST,
-+	HSM_ST_LAST_POLL,
-+	HSM_ST_ERR,
- };
- 
- /* forward declarations */
-@@ -319,7 +319,7 @@ struct ata_port {
- 	struct work_struct	packet_task;
- 
- 	struct work_struct	pio_task;
--	unsigned int		pio_task_state;
-+	unsigned int		hsm_task_state;
- 	unsigned long		pio_task_timeout;
- 
- 	void			*private_data;
---- id1/drivers/scsi/libata-core.c	2005-09-26 14:11:03.000000000 +0800
-+++ id2/drivers/scsi/libata-core.c	2005-09-26 14:25:15.000000000 +0800
-@@ -2425,20 +2425,20 @@ void ata_poll_qc_complete(struct ata_que
- static unsigned long ata_pio_poll(struct ata_port *ap)
+ 	ATA_QCFLAG_ACTIVE	= (1 << 1), /* cmd not yet ack'd to scsi lyer */
+ 	ATA_QCFLAG_SG		= (1 << 3), /* have s/g table? */
+--- id3/drivers/scsi/libata-core.c	2005-09-27 13:22:14.000000000 +0800
++++ id4/drivers/scsi/libata-core.c	2005-09-27 13:23:20.000000000 +0800
+@@ -3356,6 +3356,25 @@ int ata_qc_issue_prot(struct ata_queued_
  {
- 	u8 status;
--	unsigned int poll_state = PIO_ST_UNKNOWN;
--	unsigned int reg_state = PIO_ST_UNKNOWN;
--	const unsigned int tmout_state = PIO_ST_TMOUT;
--
--	switch (ap->pio_task_state) {
--	case PIO_ST:
--	case PIO_ST_POLL:
--		poll_state = PIO_ST_POLL;
--		reg_state = PIO_ST;
-+	unsigned int poll_state = HSM_ST_UNKNOWN;
-+	unsigned int reg_state = HSM_ST_UNKNOWN;
-+	const unsigned int tmout_state = HSM_ST_TMOUT;
+ 	struct ata_port *ap = qc->ap;
+ 
++	/* Use polling pio if the LLD doesn't handle
++	 * interrupt driven pio and atapi CDB interrupt.
++	 */
++	if (ap->flags & ATA_FLAG_PIO_POLLING) {
++		switch (qc->tf.protocol) {
++		case ATA_PROT_PIO:
++		case ATA_PROT_ATAPI:
++		case ATA_PROT_ATAPI_NODATA:
++			qc->tf.flags |= ATA_TFLAG_POLLING;
++			break;
++		case ATA_PROT_ATAPI_DMA:
++			if (qc->dev->flags & ATA_DFLAG_CDB_INTR)
++				BUG();
++			break;
++		default:
++			break;
++		}
++	}
 +
-+	switch (ap->hsm_task_state) {
-+	case HSM_ST:
-+	case HSM_ST_POLL:
-+		poll_state = HSM_ST_POLL;
-+		reg_state = HSM_ST;
- 		break;
--	case PIO_ST_LAST:
--	case PIO_ST_LAST_POLL:
--		poll_state = PIO_ST_LAST_POLL;
--		reg_state = PIO_ST_LAST;
-+	case HSM_ST_LAST:
-+	case HSM_ST_LAST_POLL:
-+		poll_state = HSM_ST_LAST_POLL;
-+		reg_state = HSM_ST_LAST;
- 		break;
- 	default:
- 		BUG();
-@@ -2448,14 +2448,14 @@ static unsigned long ata_pio_poll(struct
- 	status = ata_chk_status(ap);
- 	if (status & ATA_BUSY) {
- 		if (time_after(jiffies, ap->pio_task_timeout)) {
--			ap->pio_task_state = tmout_state;
-+			ap->hsm_task_state = tmout_state;
- 			return 0;
- 		}
--		ap->pio_task_state = poll_state;
-+		ap->hsm_task_state = poll_state;
- 		return ATA_SHORT_PAUSE;
- 	}
+ 	/* select the device */
+ 	ata_dev_select(ap, qc->dev->devno, 1, 0);
  
--	ap->pio_task_state = reg_state;
-+	ap->hsm_task_state = reg_state;
- 	return 0;
- }
+--- linux/drivers/scsi/sata_nv.c	2005-09-20 17:18:01.000000000 +0800
++++ id4/drivers/scsi/sata_nv.c	2005-09-21 17:21:02.000000000 +0800
+@@ -302,11 +302,11 @@ static irqreturn_t nv_interrupt (int irq
  
-@@ -2480,14 +2480,14 @@ static int ata_pio_complete (struct ata_
- 	 * we enter, BSY will be cleared in a chk-status or two.  If not,
- 	 * the drive is probably seeking or something.  Snooze for a couple
- 	 * msecs, then chk-status again.  If still busy, fall back to
--	 * PIO_ST_POLL state.
-+	 * HSM_ST_POLL state.
- 	 */
- 	drv_stat = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 10);
- 	if (drv_stat & (ATA_BUSY | ATA_DRQ)) {
- 		msleep(2);
- 		drv_stat = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 10);
- 		if (drv_stat & (ATA_BUSY | ATA_DRQ)) {
--			ap->pio_task_state = PIO_ST_LAST_POLL;
-+			ap->hsm_task_state = HSM_ST_LAST_POLL;
- 			ap->pio_task_timeout = jiffies + ATA_TMOUT_PIO;
- 			return 0;
- 		}
-@@ -2495,14 +2495,14 @@ static int ata_pio_complete (struct ata_
+ 		ap = host_set->ports[i];
+ 		if (ap &&
+-		    !(ap->flags & (ATA_FLAG_PORT_DISABLED | ATA_FLAG_NOINTR))) {
++		    !(ap->flags & ATA_FLAG_PORT_DISABLED)) {
+ 			struct ata_queued_cmd *qc;
  
- 	drv_stat = ata_wait_idle(ap);
- 	if (!ata_ok(drv_stat)) {
--		ap->pio_task_state = PIO_ST_ERR;
-+		ap->hsm_task_state = HSM_ST_ERR;
- 		return 0;
- 	}
- 
- 	qc = ata_qc_from_tag(ap, ap->active_tag);
- 	assert(qc != NULL);
- 
--	ap->pio_task_state = PIO_ST_IDLE;
-+	ap->hsm_task_state = HSM_ST_IDLE;
- 
- 	ata_poll_qc_complete(qc, drv_stat);
- 
-@@ -2662,7 +2662,7 @@ static void ata_pio_sector(struct ata_qu
- 	unsigned char *buf;
- 
- 	if (qc->cursect == (qc->nsect - 1))
--		ap->pio_task_state = PIO_ST_LAST;
-+		ap->hsm_task_state = HSM_ST_LAST;
- 
- 	page = sg[qc->cursg].page;
- 	offset = sg[qc->cursg].offset + qc->cursg_ofs * ATA_SECT_SIZE;
-@@ -2712,7 +2712,7 @@ static void __atapi_pio_bytes(struct ata
- 	unsigned int offset, count;
- 
- 	if (qc->curbytes + bytes >= qc->nbytes)
--		ap->pio_task_state = PIO_ST_LAST;
-+		ap->hsm_task_state = HSM_ST_LAST;
- 
- next_sg:
- 	if (unlikely(qc->cursg >= qc->n_elem)) {
-@@ -2734,7 +2734,7 @@ next_sg:
- 		for (i = 0; i < words; i++)
- 			ata_data_xfer(ap, (unsigned char*)pad_buf, 2, do_write);
- 
--		ap->pio_task_state = PIO_ST_LAST;
-+		ap->hsm_task_state = HSM_ST_LAST;
- 		return;
- 	}
- 
-@@ -2815,7 +2815,7 @@ static void atapi_pio_bytes(struct ata_q
- err_out:
- 	printk(KERN_INFO "ata%u: dev %u: ATAPI check failed\n",
- 	      ap->id, dev->devno);
--	ap->pio_task_state = PIO_ST_ERR;
-+	ap->hsm_task_state = HSM_ST_ERR;
- }
- 
- /**
-@@ -2837,14 +2837,14 @@ static void ata_pio_block(struct ata_por
- 	 * a chk-status or two.  If not, the drive is probably seeking
- 	 * or something.  Snooze for a couple msecs, then
- 	 * chk-status again.  If still busy, fall back to
--	 * PIO_ST_POLL state.
-+	 * HSM_ST_POLL state.
- 	 */
- 	status = ata_busy_wait(ap, ATA_BUSY, 5);
- 	if (status & ATA_BUSY) {
- 		msleep(2);
- 		status = ata_busy_wait(ap, ATA_BUSY, 10);
- 		if (status & ATA_BUSY) {
--			ap->pio_task_state = PIO_ST_POLL;
-+			ap->hsm_task_state = HSM_ST_POLL;
- 			ap->pio_task_timeout = jiffies + ATA_TMOUT_PIO;
- 			return;
- 		}
-@@ -2856,7 +2856,7 @@ static void ata_pio_block(struct ata_por
- 	if (is_atapi_taskfile(&qc->tf)) {
- 		/* no more data to transfer or unsupported ATAPI command */
- 		if ((status & ATA_DRQ) == 0) {
--			ap->pio_task_state = PIO_ST_LAST;
-+			ap->hsm_task_state = HSM_ST_LAST;
- 			return;
+ 			qc = ata_qc_from_tag(ap, ap->active_tag);
+-			if (qc && (!(qc->tf.ctl & ATA_NIEN)))
++			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)))
+ 				handled += ata_host_intr(ap, qc);
  		}
  
-@@ -2864,7 +2864,7 @@ static void ata_pio_block(struct ata_por
- 	} else {
- 		/* handle BSY=0, DRQ=0 as error */
- 		if ((status & ATA_DRQ) == 0) {
--			ap->pio_task_state = PIO_ST_ERR;
-+			ap->hsm_task_state = HSM_ST_ERR;
- 			return;
+--- linux/drivers/scsi/sata_vsc.c	2005-09-20 17:18:01.000000000 +0800
++++ id4/drivers/scsi/sata_vsc.c	2005-09-21 17:21:17.000000000 +0800
+@@ -193,12 +193,12 @@ static irqreturn_t vsc_sata_interrupt (i
+ 			struct ata_port *ap;
+ 
+ 			ap = host_set->ports[i];
+-			if (ap && !(ap->flags &
+-				    (ATA_FLAG_PORT_DISABLED|ATA_FLAG_NOINTR))) {
++			if (ap &&
++			    !(ap->flags & ATA_FLAG_PORT_DISABLED)) {
+ 				struct ata_queued_cmd *qc;
+ 
+ 				qc = ata_qc_from_tag(ap, ap->active_tag);
+-				if (qc && (!(qc->tf.ctl & ATA_NIEN)))
++				if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)))
+ 					handled += ata_host_intr(ap, qc);
+ 			}
  		}
+--- id1/drivers/scsi/sata_promise.c	2005-09-26 14:36:51.000000000 +0800
++++ id4/drivers/scsi/sata_promise.c	2005-09-27 10:33:55.000000000 +0800
+@@ -162,7 +162,8 @@ static struct ata_port_info pdc_port_inf
+ 	{
+ 		.sht		= &pdc_ata_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
++				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
++				  ATA_FLAG_PIO_POLLING,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -173,7 +174,8 @@ static struct ata_port_info pdc_port_inf
+ 	{
+ 		.sht		= &pdc_ata_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
++				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
++				  ATA_FLAG_PIO_POLLING,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -184,7 +186,8 @@ static struct ata_port_info pdc_port_inf
+ 	{
+ 		.sht		= &pdc_ata_sht,
+ 		.host_flags	= ATA_FLAG_NO_LEGACY | ATA_FLAG_SRST |
+-				  ATA_FLAG_MMIO | ATA_FLAG_SLAVE_POSS,
++				  ATA_FLAG_MMIO | ATA_FLAG_SLAVE_POSS |
++				  ATA_FLAG_PIO_POLLING,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -493,11 +496,11 @@ static irqreturn_t pdc_interrupt (int ir
+ 		ap = host_set->ports[i];
+ 		tmp = mask & (1 << (i + 1));
+ 		if (tmp && ap &&
+-		    !(ap->flags & (ATA_FLAG_PORT_DISABLED | ATA_FLAG_NOINTR))) {
++		    !(ap->flags & ATA_FLAG_PORT_DISABLED)) {
+ 			struct ata_queued_cmd *qc;
  
-@@ -2884,7 +2884,7 @@ static void ata_pio_error(struct ata_por
- 	printk(KERN_WARNING "ata%u: PIO error, drv_stat 0x%x\n",
- 	       ap->id, drv_stat);
- 
--	ap->pio_task_state = PIO_ST_IDLE;
-+	ap->hsm_task_state = HSM_ST_IDLE;
- 
- 	ata_poll_qc_complete(qc, drv_stat | ATA_ERR);
- }
-@@ -2899,25 +2899,25 @@ fsm_start:
- 	timeout = 0;
- 	qc_completed = 0;
- 
--	switch (ap->pio_task_state) {
--	case PIO_ST_IDLE:
-+	switch (ap->hsm_task_state) {
-+	case HSM_ST_IDLE:
- 		return;
- 
--	case PIO_ST:
-+	case HSM_ST:
- 		ata_pio_block(ap);
- 		break;
- 
--	case PIO_ST_LAST:
-+	case HSM_ST_LAST:
- 		qc_completed = ata_pio_complete(ap);
- 		break;
- 
--	case PIO_ST_POLL:
--	case PIO_ST_LAST_POLL:
-+	case HSM_ST_POLL:
-+	case HSM_ST_LAST_POLL:
- 		timeout = ata_pio_poll(ap);
- 		break;
- 
--	case PIO_ST_TMOUT:
--	case PIO_ST_ERR:
-+	case HSM_ST_TMOUT:
-+	case HSM_ST_ERR:
- 		ata_pio_error(ap);
- 		return;
+ 			qc = ata_qc_from_tag(ap, ap->active_tag);
+-			if (qc && (!(qc->tf.ctl & ATA_NIEN)))
++			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)))
+ 				handled += pdc_host_intr(ap, qc);
+ 		}
  	}
-@@ -3360,7 +3360,7 @@ int ata_qc_issue_prot(struct ata_queued_
- 	case ATA_PROT_PIO: /* load tf registers, initiate polling pio */
- 		ata_qc_set_polling(qc);
- 		ata_tf_to_host_nolock(ap, &qc->tf);
--		ap->pio_task_state = PIO_ST;
-+		ap->hsm_task_state = HSM_ST;
- 		queue_work(ata_wq, &ap->pio_task);
- 		break;
+--- linux/drivers/scsi/sata_sx4.c	2005-09-20 17:18:01.000000000 +0800
++++ id4/drivers/scsi/sata_sx4.c	2005-09-27 10:34:52.000000000 +0800
+@@ -219,7 +219,8 @@ static struct ata_port_info pdc_port_inf
+ 	{
+ 		.sht		= &pdc_sata_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
++				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
++				  ATA_FLAG_PIO_POLLING,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -832,11 +833,11 @@ static irqreturn_t pdc20621_interrupt (i
+ 		tmp = mask & (1 << i);
+ 		VPRINTK("seq %u, port_no %u, ap %p, tmp %x\n", i, port_no, ap, tmp);
+ 		if (tmp && ap &&
+-		    !(ap->flags & (ATA_FLAG_PORT_DISABLED | ATA_FLAG_NOINTR))) {
++		    !(ap->flags & ATA_FLAG_PORT_DISABLED)) {
+ 			struct ata_queued_cmd *qc;
  
-@@ -3806,7 +3806,7 @@ static void atapi_packet_task(void *_dat
- 		ata_data_xfer(ap, qc->cdb, ap->cdb_len, 1);
+ 			qc = ata_qc_from_tag(ap, ap->active_tag);
+-			if (qc && (!(qc->tf.ctl & ATA_NIEN)))
++			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)))
+ 				handled += pdc20621_host_intr(ap, qc, (i > 4),
+ 							      mmio_base);
+ 		}
+--- linux/drivers/scsi/sata_qstor.c	2005-09-20 17:18:01.000000000 +0800
++++ id4/drivers/scsi/sata_qstor.c	2005-09-26 17:35:08.000000000 +0800
+@@ -175,7 +175,7 @@ static struct ata_port_info qs_port_info
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_SATA_RESET |
+ 				  //FIXME ATA_FLAG_SRST |
+-				  ATA_FLAG_MMIO,
++				  ATA_FLAG_MMIO | ATA_FLAG_PIO_POLLING,
+ 		.pio_mask	= 0x10, /* pio4 */
+ 		.udma_mask	= 0x7f, /* udma0-6 */
+ 		.port_ops	= &qs_ata_ops,
+@@ -389,14 +389,13 @@ static inline unsigned int qs_intr_pkt(s
+ 			DPRINTK("SFF=%08x%08x: sCHAN=%u sHST=%d sDST=%02x\n",
+ 					sff1, sff0, port_no, sHST, sDST);
+ 			handled = 1;
+-			if (ap && !(ap->flags &
+-				    (ATA_FLAG_PORT_DISABLED|ATA_FLAG_NOINTR))) {
++			if (ap && !(ap->flags & ATA_FLAG_PORT_DISABLED)) {
+ 				struct ata_queued_cmd *qc;
+ 				struct qs_port_priv *pp = ap->private_data;
+ 				if (!pp || pp->state != qs_state_pkt)
+ 					continue;
+ 				qc = ata_qc_from_tag(ap, ap->active_tag);
+-				if (qc && (!(qc->tf.ctl & ATA_NIEN))) {
++				if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING))) {
+ 					switch (sHST) {
+ 					case 0: /* sucessful CPB */
+ 					case 3: /* device error */
+@@ -422,13 +421,13 @@ static inline unsigned int qs_intr_mmio(
+ 		struct ata_port *ap;
+ 		ap = host_set->ports[port_no];
+ 		if (ap &&
+-		    !(ap->flags & (ATA_FLAG_PORT_DISABLED | ATA_FLAG_NOINTR))) {
++		    !(ap->flags & ATA_FLAG_PORT_DISABLED)) {
+ 			struct ata_queued_cmd *qc;
+ 			struct qs_port_priv *pp = ap->private_data;
+ 			if (!pp || pp->state != qs_state_mmio)
+ 				continue;
+ 			qc = ata_qc_from_tag(ap, ap->active_tag);
+-			if (qc && (!(qc->tf.ctl & ATA_NIEN))) {
++			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING))) {
  
- 		/* PIO commands are handled by polling */
--		ap->pio_task_state = PIO_ST;
-+		ap->hsm_task_state = HSM_ST;
- 		queue_work(ata_wq, &ap->pio_task);
- 	}
- 
+ 				/* check main status, clearing INTRQ */
+ 				u8 status = ata_chk_status(ap);
+--- linux/drivers/scsi/sata_mv.c	2005-09-20 17:18:01.000000000 +0800
++++ id4/drivers/scsi/sata_mv.c	2005-09-26 17:36:09.000000000 +0800
+@@ -241,7 +241,8 @@ static struct ata_port_info mv_port_info
+ 	{  /* chip_504x */
+ 		.sht		= &mv_sht,
+ 		.host_flags	= (ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				   ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO),
++				   ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
++				   ATA_FLAG_PIO_POLLING),
+ 		.pio_mask	= 0x1f,	/* pio4-0 */
+ 		.udma_mask	= 0,	/* 0x7f (udma6-0 disabled for now) */
+ 		.port_ops	= &mv_ops,
+@@ -250,7 +251,7 @@ static struct ata_port_info mv_port_info
+ 		.sht		= &mv_sht,
+ 		.host_flags	= (ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				   ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO | 
+-				   MV_FLAG_DUAL_HC),
++				   ATA_FLAG_PIO_POLLING | MV_FLAG_DUAL_HC),
+ 		.pio_mask	= 0x1f,	/* pio4-0 */
+ 		.udma_mask	= 0,	/* 0x7f (udma6-0 disabled for now) */
+ 		.port_ops	= &mv_ops,
+@@ -259,6 +260,7 @@ static struct ata_port_info mv_port_info
+ 		.sht		= &mv_sht,
+ 		.host_flags	= (ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				   ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO | 
++				   ATA_FLAG_PIO_POLLING |
+ 				   MV_FLAG_IRQ_COALESCE | MV_FLAG_BDMA),
+ 		.pio_mask	= 0x1f,	/* pio4-0 */
+ 		.udma_mask	= 0,	/* 0x7f (udma6-0 disabled for now) */
+@@ -268,6 +270,7 @@ static struct ata_port_info mv_port_info
+ 		.sht		= &mv_sht,
+ 		.host_flags	= (ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				   ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
++				   ATA_FLAG_PIO_POLLING |
+ 				   MV_FLAG_IRQ_COALESCE | MV_FLAG_DUAL_HC |
+ 				   MV_FLAG_BDMA),
+ 		.pio_mask	= 0x1f,	/* pio4-0 */
 
---------------040007010303060701000706--
+--------------060903080202060902030003--
 
