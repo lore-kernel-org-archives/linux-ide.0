@@ -1,70 +1,85 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [resend] [patch] ide-floppy - software eject not working with LS-120
- drive
-Date: Wed, 28 Sep 2005 19:22:07 +0200
-Message-ID: <433AD13F.50508@rainbow-software.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/3] Add disk hotswap support to libata RESEND #5
+Date: Wed, 28 Sep 2005 14:55:39 -0400
+Message-ID: <433AE72B.1060708@pobox.com>
+References: <355e5e5e0509261801613c9bdb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=_tic-34602-1127928129-0001-2"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751445AbVI1RWN@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:31205 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750716AbVI1Szu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Sep 2005 14:55:50 -0400
+In-Reply-To: <355e5e5e0509261801613c9bdb@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Lukasz Kosewski <lkosewsk@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+Lukasz Kosewski wrote:
+> @@ -57,6 +57,7 @@ enum {
+>  	PDC_GLOBAL_CTL		= 0x48, /* Global control/status (per port) */
+>  	PDC_CTLSTAT		= 0x60,	/* IDE control and status (per port) */
+>  	PDC_SATA_PLUG_CSR	= 0x6C, /* SATA Plug control/status reg */
+> +	PDC2_SATA_PLUG_CSR	= 0X60, /* SATAII Plug control/status reg */
 
---=_tic-34602-1127928129-0001-2
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-This is a resend because I didn't get any reply before.
-
-The problem (eject not working on ATAPI LS-120 drive) is caused by 
-idefloppy_ioctl() function which *first* tries generic_ide_ioctl() and 
-*only* if it fails with -EINVAL, proceeds with the specific ioctls. The 
-generic eject command fails with something other than -EINVAL and the 
-specific one is never executed.
-This patch fixes it by first going through the internal ioctls and only
-trying generic_ide_ioctl() if none of them matches.
-
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-
--- 
-Ondrej Zary
-
---=_tic-34602-1127928129-0001-2
-Content-Type: text/plain; name="ide-floppy-eject.patch"; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ide-floppy-eject.patch"
-
---- linux-2.6.13-orig/drivers/ide/ide-floppy.c	2005-08-29 01:41:01.000000000 +0200
-+++ linux-2.6.13-pentium/drivers/ide/ide-floppy.c	2005-09-04 14:07:53.000000000 +0200
-@@ -2038,11 +2038,9 @@
- 	struct ide_floppy_obj *floppy = ide_floppy_g(bdev->bd_disk);
- 	ide_drive_t *drive = floppy->drive;
- 	void __user *argp = (void __user *)arg;
--	int err = generic_ide_ioctl(drive, file, bdev, cmd, arg);
-+	int err;
- 	int prevent = (arg) ? 1 : 0;
- 	idefloppy_pc_t pc;
--	if (err != -EINVAL)
--		return err;
- 
- 	switch (cmd) {
- 	case CDROMEJECT:
-@@ -2094,7 +2092,7 @@
- 	case IDEFLOPPY_IOCTL_FORMAT_GET_PROGRESS:
- 		return idefloppy_get_format_progress(drive, argp);
- 	}
-- 	return -EINVAL;
-+	return generic_ide_ioctl(drive, file, bdev, cmd, arg);
- }
- 
- static int idefloppy_media_changed(struct gendisk *disk)
+Did you actually compile and test this?  :)
 
 
+> @@ -690,6 +745,9 @@ static int pdc_ata_init_one (struct pci_
+>  
+>  	/* notice 4-port boards */
+>  	switch (board_idx) {
+> +	case board_40518:
+> +		/* Override hotplug offset for SATAII150 */
+> +		hp->hotplug_offset = PDC2_SATA_PLUG_CSR;
+
+add a comment /* fall through */ here
 
 
---=_tic-34602-1127928129-0001-2--
+>  	case board_20319:
+>         		probe_ent->n_ports = 4;
+>  
+> @@ -699,6 +757,9 @@ static int pdc_ata_init_one (struct pci_
+>  		probe_ent->port[2].scr_addr = base + 0x600;
+>  		probe_ent->port[3].scr_addr = base + 0x700;
+>  		break;
+> +	case board_2057x:
+> +		/* Override hotplug offset for SATAII150 */
+> +		hp->hotplug_offset = PDC2_SATA_PLUG_CSR;
+
+ditto
+
+
+>  	case board_2037x:
+>         		probe_ent->n_ports = 2;
+>  		break;
+> @@ -724,7 +785,7 @@ static int pdc_ata_init_one (struct pci_
+> 	/* initialize adapter */
+> 	pdc_host_init(board_idx, probe_ent);
+>  
+> -	/* FIXME: check ata_device_add return value */
+> +	/* FIXME: check ata_device_add return value.  If 0, kfree(hp) */
+> 	ata_device_add(probe_ent);
+
+Just leave the comment as is.  You made it worse:
+
+* if ata_device_add() returns zero, then everything is OK.
+
+* if ata_device_add() returns non-zero, then an error occured. 
+kfree(hp) is but one of several things that need to be cleaned up on 
+failure.
+
+
+Finally, please fix the format of your subject line per
+	http://linux.yyz.us/patch-format.html
+
+Most notably, each Subject should be unique for each patch.  e.g.
+
+[PATCH 1/3] sata_promise: fix hotplug register offset
+[PATCH 2/3] libata: add device hotplug infrastructure
+[PATCH 3/3] sata_promise: add device hotplug support
+
+	Jeff
+
+
