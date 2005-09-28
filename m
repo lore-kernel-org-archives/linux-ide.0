@@ -1,78 +1,32 @@
-From: Lukasz Kosewski <lkosewsk@gmail.com>
-Subject: Re: [PATCH 3/3] Add disk hotswap support to libata RESEND #5
-Date: Wed, 28 Sep 2005 15:58:50 -0400
-Message-ID: <355e5e5e0509281258536e4be4@mail.gmail.com>
-References: <355e5e5e050926180156e58f59@mail.gmail.com>
-	 <433AEB4F.7010502@pobox.com>
-Reply-To: Lukasz Kosewski <lkosewsk@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/3] Add disk hotswap support to libata RESEND #5
+Date: Wed, 28 Sep 2005 16:04:55 -0400
+Message-ID: <433AF767.205@pobox.com>
+References: <355e5e5e0509261801613c9bdb@mail.gmail.com>	 <433AE72B.1060708@pobox.com> <355e5e5e050928124651ba8947@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <433AEB4F.7010502@pobox.com>
-Content-Disposition: inline
+In-Reply-To: <355e5e5e050928124651ba8947@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Lukasz Kosewski <lkosewsk@gmail.com>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 9/28/05, Jeff Garzik <jgarzik@pobox.com> wrote:
-> > +/* Mask hotplug interrupts for one channel (ap) */
-> > +static inline void pdc_disable_channel_hotplug_interrupts(struct ata_port *ap)
-<snip>
-> > +/* Clear and unmask hotplug interrupts for one channel (ap) */
-> > +static inline void pdc_enable_channel_hotplug_interrupts(struct ata_port *ap)
+Lukasz Kosewski wrote:
+> No.  ata_device_add returns nonzero on success; so say the docs. 
 
-> Rather than two functions, I prefer one function that takes an 'enable'
-> boolean argument, just like pci_intx()
->
-> Also, the function names are way too long.
+Whoops, you're right.  I forget it was special.
 
-OK, I'll change that.
 
-> > -     sata_phy_reset(ap);
-> > +     if (ap->flags & ATA_FLAG_SATA_RESET) {
-> > +             pdc_disable_channel_hotplug_interrupts(ap);
-> > +             sata_phy_reset(ap);
-> > +             pdc_enable_channel_hotplug_interrupts(ap);
-> > +     } else
-> > +             sata_phy_reset(ap);
->
-> I don't see the point of this.  Might as well unconditionally disable
-> hotplug interrupts.
+> Since the return value is not checked here, and whether on success or
+> failure all of the data structures allocated in that method stick
+> around, I assumed that something was in the works for this.  I'll
+> change this to kfree(hp) on returning 0.  Please advise if I should do
+> something else.
 
-Sure.
+It still needs to clean up after pdc_host_init()...
 
-> > +     if (plugdata) {
-> > +             writeb(plugdata, mmio_base + hotplug_offset);
-> > +             for (i = 0; i < host_set->n_ports; ++i) {
-> > +                     ap = host_set->ports[i];
-> > +                     if (!(ap->flags & ATA_FLAG_SATA))
-> > +                             continue;  //No PATA support here... yet
-> > +                     // Check unplug flag
-> > +                     if (plugdata & 0x1) {
-> > +                             /* Do stuff related to unplugging a device */
-> > +                             ata_hotplug_unplug(ap);
-> > +                             handled = 1;
-> > +                     } else if ((plugdata >> 4) & 0x1) {  //Check plug flag
-> > +                             /* Do stuff related to plugging in a device */
-> > +                             ata_hotplug_plug(ap);
-> > +                             handled = 1;
->
-> What happens if both bits are set?  Seems like that could happen, if a
-> plug+unplug (cable blip?) occurs in rapid succession.
+	Jeff
 
-What IF both bits are set?  This is why we have a debounce timer to
-take care of the problem :P
 
-The way this is set up, unplugging will win out (plugging will come
-first, unplugging will come and destroy 'plug's timer, and then the
-unplug action will be performed on timer expiry).  Personally, I like
-it this way, but I can reverse the order of these two to make plugging
-the default action.  Which do you prefer?
-
-> The rest seems OK to me.
-
-Excellent.  I'll repost when the issues you point out have been addressed.
-
-Luke
