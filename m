@@ -1,47 +1,52 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] via82cxxx IDE: Remove /proc/via entry
-Date: Thu, 29 Sep 2005 09:27:37 +0200
-Message-ID: <58cb370e0509290027404f5224@mail.gmail.com>
-References: <43146CC3.4010005@gentoo.org>
-	 <58cb370e05083008121f2eb783@mail.gmail.com>
-	 <43179CC9.8090608@gentoo.org>
-	 <58cb370e050927062049be32f8@mail.gmail.com>
-	 <433B16BD.7040409@gentoo.org>
-	 <Pine.LNX.4.63.0509290042160.21130@alpha.polcom.net>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: SATA suspend/resume (was Re: [PATCH] updated version of Jens' SATA suspend-to-ram patch)
+Date: Thu, 29 Sep 2005 08:34:37 +0100
+Message-ID: <20050929073437.GC9669@infradead.org>
+References: <20050923163334.GA13567@triplehelix.org> <433B79D8.9080305@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.204]:3827 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932154AbVI2H1i convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Sep 2005 03:27:38 -0400
-Received: by nproxy.gmail.com with SMTP id x37so584615nfc
-        for <linux-ide@vger.kernel.org>; Thu, 29 Sep 2005 00:27:37 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.63.0509290042160.21130@alpha.polcom.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932080AbVI2Hen@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <433B79D8.9080305@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Joshua Kwan <joshk@triplehelix.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, torvalds@osdl.org, randy_dunlap <rdunlap@xenotime.net>
 List-Id: linux-ide@vger.kernel.org
-To: Grzegorz Kulewski <kangur@polcom.net>
-Cc: Daniel Drake <dsd@gentoo.org>, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, posting@blx4.net, vsu@altlinux.ru
 
-On 9/29/05, Grzegorz Kulewski <kangur@polcom.net> wrote:
-> On Wed, 28 Sep 2005, Daniel Drake wrote:
->
-> > This entry adds needless complication to the driver as it requires the use of
-> > global variables to be passed into via_get_info(), making things quite ugly
-> > when we try and make this driver support multiple controllers simultaneously.
-> >
-> > This patch removes /proc/via for simplicity.
->
-> Is similar data available from sysfs?
->
-> As a user of this controller, I think that if it is not then this patch
-> should be changed to export it or should be dropped. The data from that
-> file is really helpfull in debugging problems (for example related to bad
-> cables or breaking disks/cdroms).
+On Thu, Sep 29, 2005 at 01:21:28AM -0400, Jeff Garzik wrote:
+> Ah hah!  I found the other SCSI suspend patch:
+> 
+> 	http://lwn.net/Articles/97453/
+> 
+> Anybody (Joshua?) up for reconciling and testing the two?
+> 
+> The main change from Jens/Joshua's patch is that we use SCSI's 
+> sd_shutdown() to call sync cache, eliminating the need for 
+> ata_flush_cache(), since the SCSI layer would now perform that.
+> 
+> For bonus points,
+> 
+> 1) sd should call START STOP UNIT on suspend, which eliminates the need 
+> for ata_standby_drive(), and completely encompasses the suspend process 
+> in the SCSI layer.
+> 
+> 2) sd should call START STOP UNIT on resume -- and as a SUPER BONUS, the 
+> combination of these two changes ensures that there are no queue 
+> synchronization issues, the likes of which would require hacks like 
+> Jens' while-loop patch.
+> 
+> None of these are huge changes requiring a lot of thinking/planning...
+> 
+> Finally, ideally, we should be issuing a hardware or software reset on 
+> suspend.
 
-Could you please give some details (which data is useful)?
+I like this one much more than the other patch aswell, because suspsending
+is an ULDD operation, not an LLDD one, and this fits the layering model
+much better.  The only complaints here are cosmetics:
 
-Bartlomiej
+ - generic_scsi_suspend/generic_scsi_resume are misnamed, they should
+   probably be scsi_device_suspend/resume.
+ - while we're at it they could probably move to scsi_sysfs.c to keep
+   them static in one file - they're just a tiny bit of glue anyway.
+ - get rid of all the CONFIG_PM ifdefs - it just clutters thing up far
+   too much.
