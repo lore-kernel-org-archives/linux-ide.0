@@ -1,130 +1,38 @@
-From: David Ronis <ronis@ronispc.chem.mcgill.ca>
-Subject: Re: problem with 2.6.13.[0-2]
-Date: Thu, 29 Sep 2005 17:26:58 -0400
-Message-ID: <1128029218.15252.16.camel@montroll.chem.mcgill.ca>
-References: <Pine.WNT.4.63.0509272247550.2588@home-comp>
-	 <1127957830.6261.5.camel@montroll.chem.mcgill.ca>
-	 <20050929082048.0cca3f58.khali@linux-fr.org>
-Reply-To: David.Ronis@mcgill.ca
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: SATA suspend/resume (was Re: [PATCH] updated version of Jens'
+ SATA suspend-to-ram patch)
+Date: Thu, 29 Sep 2005 14:48:06 -0700 (PDT)
+Message-ID: <Pine.LNX.4.58.0509291446430.1424@shark.he.net>
+References: <20050923163334.GA13567@triplehelix.org> <433B79D8.9080305@pobox.com>
+ <Pine.LNX.4.58.0509291309050.1424@shark.he.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from torrent.CC.McGill.CA ([132.206.27.49]:35549 "EHLO
-	torrent.cc.mcgill.ca") by vger.kernel.org with ESMTP
-	id S1751334AbVI2Vad (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Sep 2005 17:30:33 -0400
-In-Reply-To: <20050929082048.0cca3f58.khali@linux-fr.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.58.0509291309050.1424@shark.he.net>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Joshua Kwan <joshk@triplehelix.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, torvalds@osdl.org
 List-Id: linux-ide@vger.kernel.org
-To: Jean Delvare <khali@linux-fr.org>
-Cc: David Ronis <David.Ronis@mcgill.ca>, LKML <linux-kernel@vger.kernel.org>, Parag Warudkar <kernel-stuff@comcast.net>, linux-ide@vger.kernel.org
 
-Hi Jean,
+On Thu, 29 Sep 2005, Randy.Dunlap wrote:
 
-I'm sending this to the linux-ide list as suggested, so first a very
-brief summary of the problem:
+> Here's Nathan Bryant's patch (from the lwn.ne article) updated
+> to 2.6.14-rc2-git7 + changes that Christoph suggested (except
+> that 'scsi_device_resume' name was already used, so I changed it
+> to 'scsi_device_wakeup' instead).
+>
+> I'll get back to Jeff's suggestion(s) and the sysfs flag next,
+> but others can use this as a basis if wanted.
+>
+> (also available from
+> http://www.xenotime.net/linux/scsi/scsi-suspend-resume.patch
+> )
 
-                I'm running a hp pavillion ZV5240ca laptop.  The kernel
-                has the ATIIXP driver installed, and this is what is
-                loaded for the hard-drive (according to lshw).  On
-                upgrading from 2.6.12.6 to 2.6.13.[0-2] I noticed a huge
-                slowdown in disk performance (see below for timings) and
-                have been getting some help tracking the problem down on
-                the linux-kernel list.  (I don't subscribe to either
-                list so please CC me).
-                
-Ok, bakc to Jean.  I tried your suggestion; here's what I get running
-hdparm -i /dev/hda
+The inline version of this patch is whitespace-damaged  :(
+(thanx to pine).
 
-On 2.6.12.6:
+It's ok for review, but please download the one above
+for applying or patching.
 
-/dev/hda:
-
- Model=ST9100823A, FwRev=3.00, SerialNo=3LG0V6AP
- Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs RotSpdTol>.5% }
- RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
- BuffType=unknown, BuffSize=8192kB, MaxMultSect=16, MultSect=16
- CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=195371568
- IORDY=on/off, tPIO={min:240,w/IORDY:120}, tDMA={min:120,rec:120}
- PIO modes:  pio0 pio1 pio2 pio3 pio4 
- DMA modes:  mdma0 mdma1 mdma2 
- UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5 
- AdvancedPM=yes: unknown setting WriteCache=enabled
- Drive conforms to: ATA/ATAPI-6 T13 1410D revision 2: 
-
- * signifies the current active mode
-
-On 2.6.13.2:
-
-/dev/hda:
-
- Model=ST9100823A, FwRev=3.00, SerialNo=3LG0V6AP
- Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs RotSpdTol>.5% }
- RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
- BuffType=unknown, BuffSize=8192kB, MaxMultSect=16, MultSect=off
- CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=195371568
- IORDY=on/off, tPIO={min:240,w/IORDY:120}, tDMA={min:120,rec:120}
- PIO modes:  pio0 pio1 pio2 pio3 pio4 
- DMA modes:  mdma0 mdma1 mdma2 
- UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5 
- AdvancedPM=yes: unknown setting WriteCache=enabled
- Drive conforms to: ATA/ATAPI-6 T13 1410D revision 2: 
-
- * signifies the current active mode
-
-They are identical except for the MultSect field (which was already
-apparent from the simple hdparm output).  As I wrote earlier, I tried
-changing it to 16 in 2.6.13.2, but it made a next to no change in the
-timings.
-
-I will post the full dmesg output next time I reboot, but greping for
-hda or ide0 shows nothing out of the ordinary, at least to me.
-
-
-David
-
-
-On Thu, 2005-09-29 at 08:20 +0200, Jean Delvare wrote:
-> Hi David,
-> 
-> [David Ronis]
-> > In 2.6.12.6:
-> > 
-> > /dev/hda:
-> >  Timing cached reads:   1140 MB in  2.00 seconds = 569.80 MB/sec
-> >  Timing buffered disk reads:  102 MB in  3.02 seconds =  33.80 MB/sec
-> > 
-> > In 2.6.13.2:
-> > 
-> > /dev/hda:
-> >  Timing cached reads:    28 MB in  2.15 seconds =  13.03 MB/sec
-> >  Timing buffered disk reads:   14 MB in  3.30 seconds =   4.24 MB/sec
-> > 
-> > and after hdparm -m 16 /dev/hda (recall this is the default in 2.6.12.6)
-> > 
-> > /dev/hda:
-> >  Timing cached reads:    24 MB in  2.05 seconds =  11.73 MB/sec
-> >  Timing buffered disk reads:   36 MB in  3.11 seconds =  11.56 MB/sec
-> > 
-> > I ran thing a few times in each case and the results were close.  There
-> > was nothing in dmesg.
-> 
-> Try hdparm -i /dev/hda on both kernels, this will tell you the
-> controller/drive operation mode:
-> 
->  PIO modes:  pio0 pio1 pio2 pio3 pio4 
->  DMA modes:  sdma0 sdma1 sdma2 mdma0 mdma1 mdma2 
->  UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5 
->  * signifies the current active mode
-> 
-> I expect you to find that your IDE controller is in UDMA mode on
-> 2.6.12.6 but not on 2.6.13.2. The figures you obtain for the latter
-> suggest mdma2 (those max throughput is 16 MB/sec IIRC) at best.
-> 
-> If I'm right, then you will have to find out which driver your IDE
-> controller uses, and why it decided that UDMA was no good for your
-> controller/driver combination. You may want to try the linux-ide list
-> for a more assistance, my own knowledge of that matter stops here ;)
-> 
-
+-- 
+~Randy
