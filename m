@@ -1,216 +1,130 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: SATA suspend/resume (was Re: [PATCH] updated version of Jens'
- SATA suspend-to-ram patch)
-Date: Thu, 29 Sep 2005 13:13:46 -0700 (PDT)
-Message-ID: <Pine.LNX.4.58.0509291309050.1424@shark.he.net>
-References: <20050923163334.GA13567@triplehelix.org> <433B79D8.9080305@pobox.com>
+From: David Ronis <ronis@ronispc.chem.mcgill.ca>
+Subject: Re: problem with 2.6.13.[0-2]
+Date: Thu, 29 Sep 2005 17:26:58 -0400
+Message-ID: <1128029218.15252.16.camel@montroll.chem.mcgill.ca>
+References: <Pine.WNT.4.63.0509272247550.2588@home-comp>
+	 <1127957830.6261.5.camel@montroll.chem.mcgill.ca>
+	 <20050929082048.0cca3f58.khali@linux-fr.org>
+Reply-To: David.Ronis@mcgill.ca
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964793AbVI2UNt@vger.kernel.org>
-In-Reply-To: <433B79D8.9080305@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Joshua Kwan <joshk@triplehelix.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, torvalds@osdl.org, randy_dunlap <rdunlap@xenotime.net>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from torrent.CC.McGill.CA ([132.206.27.49]:35549 "EHLO
+	torrent.cc.mcgill.ca") by vger.kernel.org with ESMTP
+	id S1751334AbVI2Vad (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Sep 2005 17:30:33 -0400
+In-Reply-To: <20050929082048.0cca3f58.khali@linux-fr.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jean Delvare <khali@linux-fr.org>
+Cc: David Ronis <David.Ronis@mcgill.ca>, LKML <linux-kernel@vger.kernel.org>, Parag Warudkar <kernel-stuff@comcast.net>, linux-ide@vger.kernel.org
 
-On Thu, 29 Sep 2005, Jeff Garzik wrote:
+Hi Jean,
 
-> Joshua Kwan wrote:
-> > Hello,
-> >
-> > I had some time yesterday and decided to help Jens out by rediffing the
-> > now-infamous SATA suspend-to-ram patch [1] against current git and
-> > test-building it.
-> >
-> > For posterity,
-> >
-> > This patch adds the ata_scsi_device_resume and ata_scsi_device_suspend
-> > functions (along with helpers) to put to sleep and wake up Serial ATA
-> > controllers when entering sleep states, and hooks the functions into
-> > each SATA controller driver so that suspend-to-RAM is possible.
-> >
-> > Note that this patch is a holdover patch until it is possible to
-> > generalize this concept for all SCSI devices, which requires more data
-> > on which devices need to be put to sleep and which don't.
-> >
-> > Signed-off-by: Joshua Kwan <joshk@triplehelix.org>
->
-> Ah hah!  I found the other SCSI suspend patch:
->
-> 	http://lwn.net/Articles/97453/
->
-> Anybody (Joshua?) up for reconciling and testing the two?
->
-> The main change from Jens/Joshua's patch is that we use SCSI's
-> sd_shutdown() to call sync cache, eliminating the need for
-> ata_flush_cache(), since the SCSI layer would now perform that.
->
-> For bonus points,
->
-> 1) sd should call START STOP UNIT on suspend, which eliminates the need
-> for ata_standby_drive(), and completely encompasses the suspend process
-> in the SCSI layer.
->
-> 2) sd should call START STOP UNIT on resume -- and as a SUPER BONUS, the
-> combination of these two changes ensures that there are no queue
-> synchronization issues, the likes of which would require hacks like
-> Jens' while-loop patch.
->
-> None of these are huge changes requiring a lot of thinking/planning...
->
-> Finally, ideally, we should be issuing a hardware or software reset on
-> suspend.
+I'm sending this to the linux-ide list as suggested, so first a very
+brief summary of the problem:
 
-Here's Nathan Bryant's patch (from the lwn.ne article) updated
-to 2.6.14-rc2-git7 + changes that Christoph suggested (except
-that 'scsi_device_resume' name was already used, so I changed it
-to 'scsi_device_wakeup' instead).
+                I'm running a hp pavillion ZV5240ca laptop.  The kernel
+                has the ATIIXP driver installed, and this is what is
+                loaded for the hard-drive (according to lshw).  On
+                upgrading from 2.6.12.6 to 2.6.13.[0-2] I noticed a huge
+                slowdown in disk performance (see below for timings) and
+                have been getting some help tracking the problem down on
+                the linux-kernel list.  (I don't subscribe to either
+                list so please CC me).
+                
+Ok, bakc to Jean.  I tried your suggestion; here's what I get running
+hdparm -i /dev/hda
 
-I'll get back to Jeff's suggestion(s) and the sysfs flag next,
-but others can use this as a basis if wanted.
+On 2.6.12.6:
 
-(also available from
-http://www.xenotime.net/linux/scsi/scsi-suspend-resume.patch
-)
--- 
-~Randy
+/dev/hda:
 
+ Model=ST9100823A, FwRev=3.00, SerialNo=3LG0V6AP
+ Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs RotSpdTol>.5% }
+ RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
+ BuffType=unknown, BuffSize=8192kB, MaxMultSect=16, MultSect=16
+ CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=195371568
+ IORDY=on/off, tPIO={min:240,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio1 pio2 pio3 pio4 
+ DMA modes:  mdma0 mdma1 mdma2 
+ UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5 
+ AdvancedPM=yes: unknown setting WriteCache=enabled
+ Drive conforms to: ATA/ATAPI-6 T13 1410D revision 2: 
 
+ * signifies the current active mode
 
+On 2.6.13.2:
+
+/dev/hda:
+
+ Model=ST9100823A, FwRev=3.00, SerialNo=3LG0V6AP
+ Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs RotSpdTol>.5% }
+ RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
+ BuffType=unknown, BuffSize=8192kB, MaxMultSect=16, MultSect=off
+ CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=195371568
+ IORDY=on/off, tPIO={min:240,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio1 pio2 pio3 pio4 
+ DMA modes:  mdma0 mdma1 mdma2 
+ UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5 
+ AdvancedPM=yes: unknown setting WriteCache=enabled
+ Drive conforms to: ATA/ATAPI-6 T13 1410D revision 2: 
+
+ * signifies the current active mode
+
+They are identical except for the MultSect field (which was already
+apparent from the simple hdparm output).  As I wrote earlier, I tried
+changing it to 16 in 2.6.13.2, but it made a next to no change in the
+timings.
+
+I will post the full dmesg output next time I reboot, but greping for
+hda or ide0 shows nothing out of the ordinary, at least to me.
 
 
- drivers/scsi/scsi_priv.h   |    2 +
- drivers/scsi/scsi_sysfs.c  |   39 +++++++++++++++++++++++++++++++++--
- drivers/scsi/sd.c          |   18 +++++++++++++++-
- include/scsi/scsi_driver.h |    2 +
- 4 files changed, 58 insertions(+), 3 deletions(-)
+David
 
-diff -Naurp -X linux-2614-rc2/Documentation/dontdiff linux-2614-rc2-git7-clean/drivers/scsi/scsi_priv.h linux-2614-rc2-git7-scsi/drivers/scsi/scsi_priv.h
---- linux-2614-rc2-git7-clean/drivers/scsi/scsi_priv.h	2005-09-29 12:58:21.000000000 -0700
-+++ linux-2614-rc2-git7-scsi/drivers/scsi/scsi_priv.h	2005-09-29 12:48:00.000000000 -0700
-@@ -55,6 +55,8 @@ static inline void scsi_log_send(struct
- static inline void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
- 	{ };
- #endif
-+extern int scsi_device_suspend(struct device *dev, pm_message_t state);
-+extern int scsi_device_wakeup(struct device *dev);
 
- /* scsi_devinfo.c */
- extern int scsi_get_device_flags(struct scsi_device *sdev,
-diff -Naurp -X linux-2614-rc2/Documentation/dontdiff linux-2614-rc2-git7-clean/drivers/scsi/scsi_sysfs.c linux-2614-rc2-git7-scsi/drivers/scsi/scsi_sysfs.c
---- linux-2614-rc2-git7-clean/drivers/scsi/scsi_sysfs.c	2005-09-29 12:58:25.000000000 -0700
-+++ linux-2614-rc2-git7-scsi/drivers/scsi/scsi_sysfs.c	2005-09-29 12:56:16.000000000 -0700
-@@ -14,6 +14,7 @@
+On Thu, 2005-09-29 at 08:20 +0200, Jean Delvare wrote:
+> Hi David,
+> 
+> [David Ronis]
+> > In 2.6.12.6:
+> > 
+> > /dev/hda:
+> >  Timing cached reads:   1140 MB in  2.00 seconds = 569.80 MB/sec
+> >  Timing buffered disk reads:  102 MB in  3.02 seconds =  33.80 MB/sec
+> > 
+> > In 2.6.13.2:
+> > 
+> > /dev/hda:
+> >  Timing cached reads:    28 MB in  2.15 seconds =  13.03 MB/sec
+> >  Timing buffered disk reads:   14 MB in  3.30 seconds =   4.24 MB/sec
+> > 
+> > and after hdparm -m 16 /dev/hda (recall this is the default in 2.6.12.6)
+> > 
+> > /dev/hda:
+> >  Timing cached reads:    24 MB in  2.05 seconds =  11.73 MB/sec
+> >  Timing buffered disk reads:   36 MB in  3.11 seconds =  11.56 MB/sec
+> > 
+> > I ran thing a few times in each case and the results were close.  There
+> > was nothing in dmesg.
+> 
+> Try hdparm -i /dev/hda on both kernels, this will tell you the
+> controller/drive operation mode:
+> 
+>  PIO modes:  pio0 pio1 pio2 pio3 pio4 
+>  DMA modes:  sdma0 sdma1 sdma2 mdma0 mdma1 mdma2 
+>  UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5 
+>  * signifies the current active mode
+> 
+> I expect you to find that your IDE controller is in UDMA mode on
+> 2.6.12.6 but not on 2.6.13.2. The figures you obtain for the latter
+> suggest mdma2 (those max throughput is 16 MB/sec IIRC) at best.
+> 
+> If I'm right, then you will have to find out which driver your IDE
+> controller uses, and why it decided that UDMA was no good for your
+> controller/driver combination. You may want to try the linux-ide list
+> for a more assistance, my own knowledge of that matter stops here ;)
+> 
 
- #include <scsi/scsi.h>
- #include <scsi/scsi_device.h>
-+#include <scsi/scsi_driver.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_transport.h>
-@@ -264,8 +265,10 @@ static int scsi_bus_match(struct device
- }
-
- struct bus_type scsi_bus_type = {
--        .name		= "scsi",
--        .match		= scsi_bus_match,
-+	.name		= "scsi",
-+	.match		= scsi_bus_match,
-+	.suspend	= scsi_device_suspend,
-+	.resume		= scsi_device_wakeup,
- };
-
- int scsi_sysfs_register(void)
-@@ -770,6 +773,38 @@ void scsi_remove_target(struct device *d
- }
- EXPORT_SYMBOL(scsi_remove_target);
-
-+int scsi_device_suspend(struct device *dev, pm_message_t state)
-+{
-+	int err;
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct scsi_driver *drv = to_scsi_driver(dev->driver);
-+
-+	err = scsi_device_quiesce(sdev);
-+	if (err)
-+		return err;
-+
-+	if (drv->suspend)
-+		return drv->suspend(dev, state);
-+
-+	return 0;
-+}
-+
-+int scsi_device_wakeup(struct device *dev)
-+{
-+	int err;
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct scsi_driver *drv = to_scsi_driver(dev->driver);
-+
-+	if (drv->resume) {
-+		err = drv->resume(dev);
-+		if (err)
-+			return err;
-+	}
-+
-+	scsi_device_resume(sdev);
-+	return 0;
-+}
-+
- int scsi_register_driver(struct device_driver *drv)
- {
- 	drv->bus = &scsi_bus_type;
-diff -Naurp -X linux-2614-rc2/Documentation/dontdiff linux-2614-rc2-git7-clean/drivers/scsi/sd.c linux-2614-rc2-git7-scsi/drivers/scsi/sd.c
---- linux-2614-rc2-git7-clean/drivers/scsi/sd.c	2005-09-29 12:58:25.000000000 -0700
-+++ linux-2614-rc2-git7-scsi/drivers/scsi/sd.c	2005-09-29 13:02:10.000000000 -0700
-@@ -117,6 +117,8 @@ static void sd_rw_intr(struct scsi_cmnd
-
- static int sd_probe(struct device *);
- static int sd_remove(struct device *);
-+static int sd_suspend(struct device *, pm_message_t);
-+static int sd_resume(struct device *);
- static void sd_shutdown(struct device *dev);
- static void sd_rescan(struct device *);
- static int sd_init_command(struct scsi_cmnd *);
-@@ -136,6 +138,8 @@ static struct scsi_driver sd_template =
- 	},
- 	.rescan			= sd_rescan,
- 	.init_command		= sd_init_command,
-+	.suspend		= sd_suspend,
-+	.resume			= sd_resume,
- 	.issue_flush		= sd_issue_flush,
- 	.prepare_flush		= sd_prepare_flush,
- 	.end_flush		= sd_end_flush,
-@@ -1691,7 +1695,19 @@ static void sd_shutdown(struct device *d
- 	printk(KERN_NOTICE "Synchronizing SCSI cache for disk %s: \n",
- 			sdkp->disk->disk_name);
- 	sd_sync_cache(sdp);
--}
-+}
-+
-+static int sd_suspend(struct device *dev, pm_message_t state)
-+{
-+	sd_shutdown(dev);
-+	return 0;
-+}
-+
-+static int sd_resume(struct device *dev)
-+{
-+	sd_rescan(dev);
-+	return 0;
-+}
-
- /**
-  *	init_sd - entry point for this driver (both when built in or when
-diff -Naurp -X linux-2614-rc2/Documentation/dontdiff linux-2614-rc2-git7-clean/include/scsi/scsi_driver.h linux-2614-rc2-git7-scsi/include/scsi/scsi_driver.h
---- linux-2614-rc2-git7-clean/include/scsi/scsi_driver.h	2005-08-28 16:41:01.000000000 -0700
-+++ linux-2614-rc2-git7-scsi/include/scsi/scsi_driver.h	2005-09-29 12:47:43.000000000 -0700
-@@ -13,6 +13,8 @@ struct scsi_driver {
-
- 	int (*init_command)(struct scsi_cmnd *);
- 	void (*rescan)(struct device *);
-+	int (*suspend)(struct device *dev, pm_message_t state);
-+	int (*resume)(struct device *dev);
- 	int (*issue_flush)(struct device *, sector_t *);
- 	int (*prepare_flush)(struct request_queue *, struct request *);
- 	void (*end_flush)(struct request_queue *, struct request *);
