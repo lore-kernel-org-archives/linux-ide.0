@@ -1,27 +1,65 @@
-From: linux@horizon.com
-Subject: Anything more recent than 2.6.13-rc7-netdev1.patch.bz2?
-Date: 28 Sep 2005 21:32:12 -0400
-Message-ID: <20050929013212.1792.qmail@science.horizon.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from science.horizon.com ([192.35.100.1]:15676 "HELO
-	science.horizon.com") by vger.kernel.org with SMTP id S1751297AbVI2BcX
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Sep 2005 21:32:23 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: SATA suspend/resume (was Re: [PATCH] updated version of Jens' SATA
+ suspend-to-ram patch)
+Date: Thu, 29 Sep 2005 01:21:28 -0400
+Message-ID: <433B79D8.9080305@pobox.com>
+References: <20050923163334.GA13567@triplehelix.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20050923163334.GA13567@triplehelix.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Joshua Kwan <joshk@triplehelix.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, torvalds@osdl.org, randy_dunlap <rdunlap@xenotime.net>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-I have a new AMD64 server running 2.6.13.2 + 2.6.13-rc7-netdev1.patch.bz2
-on some Sil3132 controllers, and I just got an assert fail in libata.
-(Unfortunately, it didn't get written down; I'm trying to reproduce it.
-I think the zcav I was runing on a 6-way RAID 0 might have caused it.)
+Joshua Kwan wrote:
+> Hello,
+> 
+> I had some time yesterday and decided to help Jens out by rediffing the
+> now-infamous SATA suspend-to-ram patch [1] against current git and
+> test-building it.
+> 
+> For posterity,
+> 
+> This patch adds the ata_scsi_device_resume and ata_scsi_device_suspend
+> functions (along with helpers) to put to sleep and wake up Serial ATA
+> controllers when entering sleep states, and hooks the functions into
+> each SATA controller driver so that suspend-to-RAM is possible.
+> 
+> Note that this patch is a holdover patch until it is possible to
+> generalize this concept for all SCSI devices, which requires more data
+> on which devices need to be put to sleep and which don't.
+> 
+> Signed-off-by: Joshua Kwan <joshk@triplehelix.org>
 
-Since I know libata development is rapid, it's quite possible that
-it's been fixed in the month since that patch was released.  Also, I'd
-like to try a 2.6.14-rc kernel, but I need a libata patch for the sim24
-sriver, and trying to apply  2.6.13-rc7-netdev1.patch results in a mess
-of conflicts; it looks like some of it has already been merged upstream.
+Ah hah!  I found the other SCSI suspend patch:
 
-Is there a more recent libata patch available somewhere?
+	http://lwn.net/Articles/97453/
 
-Thanks!
+Anybody (Joshua?) up for reconciling and testing the two?
+
+The main change from Jens/Joshua's patch is that we use SCSI's 
+sd_shutdown() to call sync cache, eliminating the need for 
+ata_flush_cache(), since the SCSI layer would now perform that.
+
+For bonus points,
+
+1) sd should call START STOP UNIT on suspend, which eliminates the need 
+for ata_standby_drive(), and completely encompasses the suspend process 
+in the SCSI layer.
+
+2) sd should call START STOP UNIT on resume -- and as a SUPER BONUS, the 
+combination of these two changes ensures that there are no queue 
+synchronization issues, the likes of which would require hacks like 
+Jens' while-loop patch.
+
+None of these are huge changes requiring a lot of thinking/planning...
+
+Finally, ideally, we should be issuing a hardware or software reset on 
+suspend.
+
+	Jeff
+
+
