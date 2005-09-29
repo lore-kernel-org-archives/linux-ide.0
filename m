@@ -1,47 +1,27 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: Re: [PATCH] via82cxxx IDE: Remove /proc/ide/via entry
-Date: Thu, 29 Sep 2005 00:00:17 +0100
-Message-ID: <433B2081.9050607@gentoo.org>
-References: <43146CC3.4010005@gentoo.org> <58cb370e05083008121f2eb783@mail.gmail.com> <43179CC9.8090608@gentoo.org> <58cb370e050927062049be32f8@mail.gmail.com> <433B16BD.7040409@gentoo.org> <20050928223718.GB7992@ftp.linux.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: linux@horizon.com
+Subject: Anything more recent than 2.6.13-rc7-netdev1.patch.bz2?
+Date: 28 Sep 2005 21:32:12 -0400
+Message-ID: <20050929013212.1792.qmail@science.horizon.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta09-winn.ispmail.ntl.com ([81.103.221.49]:8551 "EHLO
-	mta09-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
-	id S1751217AbVI1XLT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Sep 2005 19:11:19 -0400
-In-Reply-To: <20050928223718.GB7992@ftp.linux.org.uk>
+Received: from science.horizon.com ([192.35.100.1]:15676 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S1751297AbVI2BcX
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Sep 2005 21:32:23 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Al Viro <viro@ftp.linux.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, posting@blx4.net, vsu@altlinux.ru
+To: linux-ide@vger.kernel.org
 
-Hi Al,
+I have a new AMD64 server running 2.6.13.2 + 2.6.13-rc7-netdev1.patch.bz2
+on some Sil3132 controllers, and I just got an assert fail in libata.
+(Unfortunately, it didn't get written down; I'm trying to reproduce it.
+I think the zcav I was runing on a 6-way RAID 0 might have caused it.)
 
-(btw, original subject was wrong, I actually meant /proc/ide/via)
+Since I know libata development is rapid, it's quite possible that
+it's been fixed in the month since that patch was released.  Also, I'd
+like to try a 2.6.14-rc kernel, but I need a libata patch for the sim24
+sriver, and trying to apply  2.6.13-rc7-netdev1.patch results in a mess
+of conflicts; it looks like some of it has already been merged upstream.
 
-Al Viro wrote:
-> Care to explain
-> 	* where to get equivalent information?
+Is there a more recent libata patch available somewhere?
 
-I don't think there is anywhere else that provides the whole range, but I do 
-question the usefulness of most of it :)
-
-Here's my previous attempt at this patch:
-
-	http://marc.theaimsgroup.com/?l=linux-ide&m=112630444000358&w=2
-
-If you can point out a way to keep /proc/ide/via around without causing the 
-kind of ugliness found above, then maybe Bart can be persuaded to keep it 
-around :)
-
-> 	* what hardware setup has more than one of those controllers?
-
-I'm pushing to get a simple patch merged, which adds ID's for a VIA VT6410 
-controller. Apparently these are available in PCI-card form as well as 
-onboard-PCI-chip form. Bart raised the concern that this driver wouldn't cope 
-well with 2 different controllers in use, so I'm trying to address this.
-
-Thanks,
-Daniel
+Thanks!
