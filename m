@@ -1,24 +1,25 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH/RFC 1/4] irq-pio: add comments and cleanup
-Date: Fri, 30 Sep 2005 19:07:39 +0800
-Message-ID: <433D1C7B.90408@tw.ibm.com>
+Subject: [PATCH/RFC 3/4] irq-pio: simplify if condition in ata_dataout_task()
+Date: Fri, 30 Sep 2005 19:11:35 +0800
+Message-ID: <433D1D66.3060104@tw.ibm.com>
 References: <4321B4E0.8020801@tw.ibm.com> <4321C7DD.5050503@pobox.com>	 <43322C50.1060009@tw.ibm.com> <4333CF07.5010400@pobox.com>	 <4339116D.30908@tw.ibm.com> <433912FB.9000606@tw.ibm.com> <58cb370e05092903083e0d001c@mail.gmail.com> <433D1BC7.6060301@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------080800020407020700050708"
+ boundary="------------010903000208010305050308"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:63905 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1030270AbVI3LHi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Sep 2005 07:07:38 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e2.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j8UB7br7016684
-	for <linux-ide@vger.kernel.org>; Fri, 30 Sep 2005 07:07:37 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j8UB7bZQ088532
-	for <linux-ide@vger.kernel.org>; Fri, 30 Sep 2005 07:07:37 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j8UB7agA024897
-	for <linux-ide@vger.kernel.org>; Fri, 30 Sep 2005 07:07:37 -0400
+Received: from e33.co.us.ibm.com ([32.97.110.151]:44226 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030275AbVI3LLi
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 Sep 2005 07:11:38 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e33.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id j8UBA6Uk032514
+	for <linux-ide@vger.kernel.org>; Fri, 30 Sep 2005 07:10:06 -0400
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j8UBBWf4441068
+	for <linux-ide@vger.kernel.org>; Fri, 30 Sep 2005 05:11:32 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j8UBBV3S007053
+	for <linux-ide@vger.kernel.org>; Fri, 30 Sep 2005 05:11:31 -0600
 In-Reply-To: <433D1BC7.6060301@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -26,11 +27,15 @@ To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.c
 Cc: Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Brett Russ <russb@emc.com>
 
 This is a multi-part message in MIME format.
---------------080800020407020700050708
+--------------010903000208010305050308
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Patch 1/4: add comments and remove redundant code
+Patch 3/4: simplify if condition in ata_dataout_task()
+
+Changes:
+- Use if (qc->tf.protocol == ATA_PROT_PIO) instead of 
+if(is_atapi_taskfile()) in ata_dataout_task()
 
 For your review, thanks.
 
@@ -39,62 +44,43 @@ Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
 
 
 
---------------080800020407020700050708
+--------------010903000208010305050308
 Content-Type: text/plain;
- name="idpio1.diff"
+ name="idpio3.diff"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="idpio1.diff"
+ filename="idpio3.diff"
 
---- irq-pio/include/linux/libata.h	2005-09-30 10:00:31.000000000 +0800
-+++ id1/include/linux/libata.h	2005-09-30 17:49:24.000000000 +0800
-@@ -158,15 +158,16 @@ enum {
- };
+--- id2/drivers/scsi/libata-core.c	2005-09-30 18:04:29.000000000 +0800
++++ id3/drivers/scsi/libata-core.c	2005-09-30 18:04:42.000000000 +0800
+@@ -3994,13 +3994,7 @@ static void ata_dataout_task(void *_data
+ 	 */
+ 	spin_lock_irqsave(&ap->host_set->lock, flags);
  
- enum hsm_task_states {
--	HSM_ST_UNKNOWN,
--	HSM_ST_IDLE,
--	HSM_ST_POLL,
--	HSM_ST_TMOUT,
--	HSM_ST,
--	HSM_ST_LAST,
--	HSM_ST_LAST_POLL,
--	HSM_ST_ERR,
--	HSM_ST_FIRST,
-+	HSM_ST_UNKNOWN,		/* state unknown */
-+	HSM_ST_IDLE,		/* no command on going */
-+	HSM_ST_POLL,		/* same as HSM_ST, waits longer */
-+	HSM_ST_TMOUT,		/* timeout */
-+	HSM_ST,			/* (waiting the device to) transfer data */
-+	HSM_ST_LAST,		/* (waiting the device to) complete command */
-+	HSM_ST_LAST_POLL,	/* same as HSM_ST_LAST, waits longer */
-+	HSM_ST_ERR,		/* error */
-+	HSM_ST_FIRST,		/* (waiting the device to)
-+				   write CDB or first data block */
- };
- 
- /* forward declarations */
---- irq-pio/drivers/scsi/libata-core.c	2005-09-30 10:00:04.000000000 +0800
-+++ id1/drivers/scsi/libata-core.c	2005-09-30 14:31:28.000000000 +0800
-@@ -3430,18 +3430,6 @@ int ata_qc_issue_prot(struct ata_queued_
- 		break;
- 
- 	case ATA_PROT_ATAPI:
+-	if (is_atapi_taskfile(&qc->tf)) {
+-		/* send CDB */
+-		atapi_send_cdb(ap, qc);
+-
 -		if (qc->tf.flags & ATA_TFLAG_POLLING)
--			ata_qc_set_polling(qc);
--
--		ata_tf_to_host_nolock(ap, &qc->tf);
--		ap->hsm_task_state = HSM_ST_FIRST;
--
--		/* send cdb by polling if no cdb interrupt */
--		if ((!(qc->dev->flags & ATA_DFLAG_CDB_INTR)) ||
--		    (qc->tf.flags & ATA_TFLAG_POLLING))
--			queue_work(ata_wq, &ap->packet_task);
--		break;
--
- 	case ATA_PROT_ATAPI_NODATA:
- 		if (qc->tf.flags & ATA_TFLAG_POLLING)
- 			ata_qc_set_polling(qc);
+-			queue_work(ata_wq, &ap->pio_task);
+-	} else {
++	if (qc->tf.protocol == ATA_PROT_PIO) {
+ 		/* PIO data out protocol.
+ 		 * send first data block.
+ 		 */
+@@ -4013,6 +4007,12 @@ static void ata_dataout_task(void *_data
+ 		ata_altstatus(ap); /* flush */
+ 
+ 		/* interrupt handler takes over from here */
++	} else {
++		/* send CDB */
++		atapi_send_cdb(ap, qc);
++
++		if (qc->tf.flags & ATA_TFLAG_POLLING)
++			queue_work(ata_wq, &ap->pio_task);
+ 	}
+ 
+ 	spin_unlock_irqrestore(&ap->host_set->lock, flags);
 
---------------080800020407020700050708--
+--------------010903000208010305050308--
 
