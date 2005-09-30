@@ -1,88 +1,60 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: SATA150TX4 atat1:command timeout
-Date: Fri, 30 Sep 2005 11:40:38 +0100
-Message-ID: <433D1626.2000909@robinbowes.com>
-References: <42111B02.4010805@netmosphere.net> <4211279C.5070205@pobox.com> <421360ED.2040505@netmosphere.net> <42161A94.1020404@netmosphere.net>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH/RFC 0/4] libata: irq driven pio follow-up patches
+Date: Fri, 30 Sep 2005 19:04:39 +0800
+Message-ID: <433D1BC7.6060301@tw.ibm.com>
+References: <4321B4E0.8020801@tw.ibm.com> <4321C7DD.5050503@pobox.com>	 <43322C50.1060009@tw.ibm.com> <4333CF07.5010400@pobox.com>	 <4339116D.30908@tw.ibm.com> <433912FB.9000606@tw.ibm.com> <58cb370e05092903083e0d001c@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 83-216-145-213.pambow882.adsl.metronet.co.uk ([83.216.145.213]:17628
-	"HELO dude.robinbowes.com") by vger.kernel.org with SMTP
-	id S1030248AbVI3KkQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 Sep 2005 06:40:16 -0400
-In-Reply-To: <42161A94.1020404@netmosphere.net>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:22928 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1030263AbVI3LE4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Sep 2005 07:04:56 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j8UB4fCm019671
+	for <linux-ide@vger.kernel.org>; Fri, 30 Sep 2005 07:04:41 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j8UB4fZQ081986
+	for <linux-ide@vger.kernel.org>; Fri, 30 Sep 2005 07:04:41 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j8UB4eLU018539
+	for <linux-ide@vger.kernel.org>; Fri, 30 Sep 2005 07:04:41 -0400
+In-Reply-To: <58cb370e05092903083e0d001c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Francois Payette <francoisp@netmosphere.net>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Eric Mudama <edmudama@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Brett Russ <russb@emc.com>
 
-Hi,
+Dear all,
 
-I hope it's OK resurrecting an old thread, but I'm seeing similar problems.
+The irq driven PIO follow up patches per Bart's advice.
 
-My setup is as follows:
+patch 1/4:
+    - add comments for HSM_ST_*
 
-Epox EP-D3VA
-Dual PIII 1GHZ processors
-1.5GB RAM
-Two of Promise SATA150 TX4 controllers
-Six of Maxtor 250GB SATA drives (7Y250M0) - three per controller
+  ata_qc_issue_prot():
+    - remove the redundant code for the ATA_PROT_ATAPI case.
 
-Running Fedora Core 4 with "stock" FC4 kernel (kernel-smp-2.6.12-1.1456_FC4)
+patch 2/4:
+    - rename atapi_packet_task() to ata_dataout_task() and change comments
 
-I have four md arrays as follows:
+patch 3/4:
+    - simplify if condition in ata_dataout_task():
+      Use if (qc->tf.protocol == ATA_PROT_PIO) instead of 
+is_atapi_taskfile()
 
-/dev/md0 RAID1 /dev/sd[ad]
-/dev/md1 RAID1 /dev/sd[be]1
-/dev/md2 RAID1 /dev/sd[cf]1
-/dev/md5 RAID5 /dev/sd[abcef]2 (/dev/sdd2 is a hot spare)
+patch 4/4:
+  ata_qc_issue_prot():
+    - let the PIO data out case always go through the ata_dataout_task() 
+codepath.
 
-md[0-2] are 1.5 MB areas
-/dev/md0 is /
-/dev/md1 is swap
-/dev/md2 is currently not used
+  ata_dataout_task():
+    - handle the PIO data out + polling case.
 
-md5 is 929GB and I have used lvm to create:
+Patch against libata-dev irq-pio tree 
+(e50362eccd8809a224cda5f71714a088ba37b2ab).
 
-/home home_lv audio_vg -wi-ao 914.38G
-/usr  usr_lv  audio_vg -wi-ao  10.00G
-/var  var_lv  audio_vg -wi-ao   5.00G
+For your review and advice, thanks.
 
-Ok, onto the problem...
+Albert
 
-After a couple of power outages I recently got myself a UPS but 
-(typically) didn't get round to installing it before another outage (doh!).
-
-The server came back up OK with /dev/md5 dirty and needing to resync.
-
-However, during the re-sync, one or more of the disks clunked and I saw 
-an "ATAn Timeout" message on the console and the system froze. (n 
-varied, e.g. ATA2, ATA1, ATA4, etc.)  This seemed to be triggered by 
-doing something that caused disk activity during the resync.
-
-I've seen this before and done a hard-reset to start again - eventually 
-the resync has completed and everything's back to normal.
-
-However, this time, I had to drop to single-user mode and reduce the 
-RAID sync speed (echo 5000 > /proc/sys/dev/raid/speed_limit_max) to get 
-the resync to complete.
-
-Can anyone tell me if this is a bug somewhere or might it be a hardware 
-limitation, i.e. saturating the PCI bus when resyncing? Is there 
-anything I can do to prevent it from happening?
-
-I'm not too bothered about RAID performance - I mainly use it to store 
-.flac audio files which don't need great throuhgput to stream off the disk.
-
-Any suggestions (or fixes!) appreciated.
-
-Thanks,
-
-R.
--- 
-http://robinbowes.com
-
-If a man speaks in a forest,
-and his wife's not there,
-is he still wrong?
