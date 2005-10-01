@@ -1,156 +1,90 @@
-From: Jiri Slaby <lnx4us@gmail.com>
-Subject: Re: [PATCH] [IDE] kmalloc + memset -> kzalloc conversion
-Date: Sat, 1 Oct 2005 13:18:55 +0200
-Message-ID: <3888a5cd0510010418w4d31481fy757950a0ff32d764@mail.gmail.com>
-References: <20051001074415.GL25424@plexity.net> <433E6E26.5030305@gmail.com>
-Reply-To: Jiri Slaby <lnx4us@gmail.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/ide/: possible cleanups
+Date: Sat, 1 Oct 2005 17:53:57 +0200
+Message-ID: <20051001155357.GC4212@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.201]:47623 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750793AbVJALS4 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 1 Oct 2005 07:18:56 -0400
-Received: by wproxy.gmail.com with SMTP id 57so36642wri
-        for <linux-ide@vger.kernel.org>; Sat, 01 Oct 2005 04:18:55 -0700 (PDT)
-In-Reply-To: <433E6E26.5030305@gmail.com>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:60430 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1750769AbVJAPx7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 1 Oct 2005 11:53:59 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: dsaxena@plexity.net, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 10/1/05, Jiri Slaby <jirislaby@gmail.com> wrote:
-> Deepak Saxena napsal(a):
->
-> >Signed-off-by: Deepak Saxena <dsaxena@plexity.net>
-> >
-> >diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> >--- a/drivers/ide/ide-cd.c
-> >+++ b/drivers/ide/ide-cd.c
-> >@@ -3449,7 +3449,7 @@ static int ide_cd_probe(struct device *d
-> >               printk(KERN_INFO "ide-cd: passing drive %s to ide-scsi emulation.\n", drive->name);
-> >               goto failed;
-> >       }
-> >-      info = (struct cdrom_info *) kmalloc (sizeof (struct cdrom_info), GFP_KERNEL);
-> >+      info = (struct cdrom_info *) kzalloc (sizeof (struct cdrom_info), GFP_KERNEL);
-> >
-> >
-> no need to cast and 80 chars on a line is upper bound.
->
-> >       if (info == NULL) {
-> >               printk(KERN_ERR "%s: Can't allocate a cdrom structure\n", drive->name);
-> >               goto failed;
-> >@@ -3463,8 +3463,6 @@ static int ide_cd_probe(struct device *d
-> >
-> >       ide_register_subdriver(drive, &ide_cdrom_driver);
-> >
-> >-      memset(info, 0, sizeof (struct cdrom_info));
-> >-
-> >       kref_init(&info->kref);
-> >
-> >       info->drive = drive;
-> >diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-> >--- a/drivers/ide/ide-disk.c
-> >+++ b/drivers/ide/ide-disk.c
-> >@@ -1215,7 +1215,7 @@ static int ide_disk_probe(struct device
-> >       if (drive->media != ide_disk)
-> >               goto failed;
-> >
-> >-      idkp = kmalloc(sizeof(*idkp), GFP_KERNEL);
-> >+      idkp = kzalloc(sizeof(*idkp), GFP_KERNEL);
-> >       if (!idkp)
-> >               goto failed;
-> >
-> >@@ -1228,8 +1228,6 @@ static int ide_disk_probe(struct device
-> >
-> >       ide_register_subdriver(drive, &idedisk_driver);
-> >
-> >-      memset(idkp, 0, sizeof(*idkp));
-> >-
-> >       kref_init(&idkp->kref);
-> >
-> >       idkp->drive = drive;
-> >diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-> >--- a/drivers/ide/ide-floppy.c
-> >+++ b/drivers/ide/ide-floppy.c
-> >@@ -2146,7 +2146,7 @@ static int ide_floppy_probe(struct devic
-> >               printk("ide-floppy: passing drive %s to ide-scsi emulation.\n", drive->name);
-> >               goto failed;
-> >       }
-> >-      if ((floppy = (idefloppy_floppy_t *) kmalloc (sizeof (idefloppy_floppy_t), GFP_KERNEL)) == NULL) {
-> >+      if ((floppy = (idefloppy_floppy_t *) kzalloc (sizeof (idefloppy_floppy_t), GFP_KERNEL)) == NULL) {
-> >
-> >
-> detto
->
-> >               printk (KERN_ERR "ide-floppy: %s: Can't allocate a floppy structure\n", drive->name);
-> >               goto failed;
-> >       }
-> >@@ -2159,8 +2159,6 @@ static int ide_floppy_probe(struct devic
-> >
-> >       ide_register_subdriver(drive, &idefloppy_driver);
-> >
-> >-      memset(floppy, 0, sizeof(*floppy));
-> >-
-> >       kref_init(&floppy->kref);
-> >
-> >       floppy->drive = drive;
-> >diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-> >--- a/drivers/ide/ide-probe.c
-> >+++ b/drivers/ide/ide-probe.c
-> >@@ -596,14 +596,13 @@ static inline u8 probe_for_drive (ide_dr
-> >        *      Also note that 0 everywhere means "can't do X"
-> >        */
-> >
-> >-      drive->id = kmalloc(SECTOR_WORDS *4, GFP_KERNEL);
-> >+      drive->id = kzalloc(SECTOR_WORDS *4, GFP_KERNEL);
-> >       drive->id_read = 0;
-> >       if(drive->id == NULL)
-> >       {
-> >               printk(KERN_ERR "ide: out of memory for id data.\n");
-> >               return 0;
-> >       }
-> >-      memset(drive->id, 0, SECTOR_WORDS * 4);
-> >       strcpy(drive->id->model, "UNKNOWN");
-> >
-> >       /* skip probing? */
-> >@@ -1097,14 +1096,13 @@ static int init_irq (ide_hwif_t *hwif)
-> >               hwgroup->hwif->next = hwif;
-> >               spin_unlock_irq(&ide_lock);
-> >       } else {
-> >-              hwgroup = kmalloc_node(sizeof(ide_hwgroup_t), GFP_KERNEL,
-> >+              hwgroup = kzalloc_node(sizeof(ide_hwgroup_t), GFP_KERNEL,
-> >                                       hwif_to_node(hwif->drives[0].hwif));
-> >               if (!hwgroup)
-> >                       goto out_up;
-> >
-> >               hwif->hwgroup = hwgroup;
-> >
-> >-              memset(hwgroup, 0, sizeof(ide_hwgroup_t));
-> >               hwgroup->hwif     = hwif->next = hwif;
-> >               hwgroup->rq       = NULL;
-> >               hwgroup->handler  = NULL;
-> >diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-> >--- a/drivers/ide/ide-tape.c
-> >+++ b/drivers/ide/ide-tape.c
-> >@@ -4844,7 +4844,7 @@ static int ide_tape_probe(struct device
-> >               printk(KERN_WARNING "ide-tape: Use drive %s with ide-scsi emulation and osst.\n", drive->name);
-> >               printk(KERN_WARNING "ide-tape: OnStream support will be removed soon from ide-tape!\n");
-> >       }
-> >-      tape = (idetape_tape_t *) kmalloc (sizeof (idetape_tape_t), GFP_KERNEL);
-> >+      tape = (idetape_tape_t *) kzalloc (sizeof (idetape_tape_t), GFP_KERNEL);
-> >
-> >
-> ... and so on
->
-> regards,
->
-> --
-> Jiri Slaby         www.fi.muni.cz/~xslaby
-> ~\-/~      jirislaby@gmail.com      ~\-/~
-> 241B347EC88228DE51EE A49C4A73A25004CB2A10
+This patch contains the following possible cleanups:
+- pci/cy82c693.c: make a needlessly global function static
+- remove the following unneeded EXPORT_SYMBOL's:
+  - ide-taskfile.c: do_rw_taskfile
+  - ide-iops.c: default_hwif_iops
+  - ide-iops.c: default_hwif_transport
+  - ide-iops.c: wait_for_ready
 
-And one more time, the mail to some of recipients was rejected by their
-server, sorry.
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+---
+
+This patch was already sent on:
+- 20 Aug 2005
+
+ drivers/ide/ide-iops.c     |    6 ------
+ drivers/ide/ide-taskfile.c |    2 --
+ drivers/ide/pci/cy82c693.c |    2 +-
+ 3 files changed, 1 insertion(+), 9 deletions(-)
+
+--- linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c.old	2005-02-05 02:57:03.000000000 +0100
++++ linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c	2005-02-05 02:57:12.000000000 +0100
+@@ -161,8 +161,6 @@
+ 	return ide_stopped;
+ }
+ 
+-EXPORT_SYMBOL(do_rw_taskfile);
+-
+ /*
+  * set_multmode_intr() is invoked on completion of a WIN_SETMULT cmd.
+  */
+
+--- linux-2.6.12-rc2-mm3-full/drivers/ide/pci/cy82c693.c.old	2005-04-17 21:11:22.000000000 +0200
++++ linux-2.6.12-rc2-mm3-full/drivers/ide/pci/cy82c693.c	2005-04-17 21:11:30.000000000 +0200
+@@ -469,7 +469,7 @@
+ 
+ static __initdata ide_hwif_t *primary;
+ 
+-void __devinit init_iops_cy82c693(ide_hwif_t *hwif)
++static void __devinit init_iops_cy82c693(ide_hwif_t *hwif)
+ {
+ 	if (PCI_FUNC(hwif->pci_dev->devfn) == 1)
+ 		primary = hwif;
+--- linux-2.6.12-rc2-mm3-full/drivers/ide/ide-iops.c.old	2005-04-17 21:12:44.000000000 +0200
++++ linux-2.6.12-rc2-mm3-full/drivers/ide/ide-iops.c	2005-04-17 21:12:54.000000000 +0200
+@@ -104,8 +104,6 @@
+ 	hwif->INSL	= ide_insl;
+ }
+ 
+-EXPORT_SYMBOL(default_hwif_iops);
+-
+ /*
+  *	MMIO operations, typically used for SATA controllers
+  */
+@@ -329,8 +327,6 @@
+ 	hwif->atapi_output_bytes	= atapi_output_bytes;
+ }
+ 
+-EXPORT_SYMBOL(default_hwif_transport);
+-
+ /*
+  * Beginning of Taskfile OPCODE Library and feature sets.
+  */
+@@ -525,8 +525,6 @@
+ 	return 0;
+ }
+ 
+-EXPORT_SYMBOL(wait_for_ready);
+-
+ /*
+  * This routine busy-waits for the drive status to be not "busy".
+  * It then checks the status for all of the "good" bits and none
+
