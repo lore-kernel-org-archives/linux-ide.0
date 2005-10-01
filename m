@@ -1,90 +1,36 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/ide/: possible cleanups
-Date: Sat, 1 Oct 2005 17:53:57 +0200
-Message-ID: <20051001155357.GC4212@stusta.de>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: SATA suspend/resume (was Re: [PATCH] updated version of Jens'
+ SATA suspend-to-ram patch)
+Date: Sat, 01 Oct 2005 14:24:12 -0400
+Message-ID: <433ED44C.3060805@rtr.ca>
+References: <20050923163334.GA13567@triplehelix.org> <433B79D8.9080305@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:60430 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1750769AbVJAPx7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 1 Oct 2005 11:53:59 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750780AbVJASYa@vger.kernel.org>
+In-Reply-To: <433B79D8.9080305@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Joshua Kwan <joshk@triplehelix.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, torvalds@osdl.org, randy_dunlap <rdunlap@xenotime.net>
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-This patch contains the following possible cleanups:
-- pci/cy82c693.c: make a needlessly global function static
-- remove the following unneeded EXPORT_SYMBOL's:
-  - ide-taskfile.c: do_rw_taskfile
-  - ide-iops.c: default_hwif_iops
-  - ide-iops.c: default_hwif_transport
-  - ide-iops.c: wait_for_ready
+Jeff Garzik wrote:
+..
+> Ah hah!  I found the other SCSI suspend patch:
+>     http://lwn.net/Articles/97453/
+> Anybody (Joshua?) up for reconciling and testing the two?
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+I just now tried out *only* "the other SCSI suspend patch",
+and by itself it hangs on resume.  Laptop computer, blank screen,
+no serial ports, no printk()s visible.
 
----
+And there's one minor bug in that patch:  it uses GFP_KERNEL to
+alloc a buffer, but on resume it really should use GFP_ATOMIC instead,
+since the swap device is the same drive we're trying to resume..
 
-This patch was already sent on:
-- 20 Aug 2005
+> 2) sd should call START STOP UNIT on resume
 
- drivers/ide/ide-iops.c     |    6 ------
- drivers/ide/ide-taskfile.c |    2 --
- drivers/ide/pci/cy82c693.c |    2 +-
- 3 files changed, 1 insertion(+), 9 deletions(-)
+That's probably why it hangs when used as-is by itself.
+I may do some further testing.
 
---- linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c.old	2005-02-05 02:57:03.000000000 +0100
-+++ linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c	2005-02-05 02:57:12.000000000 +0100
-@@ -161,8 +161,6 @@
- 	return ide_stopped;
- }
- 
--EXPORT_SYMBOL(do_rw_taskfile);
--
- /*
-  * set_multmode_intr() is invoked on completion of a WIN_SETMULT cmd.
-  */
-
---- linux-2.6.12-rc2-mm3-full/drivers/ide/pci/cy82c693.c.old	2005-04-17 21:11:22.000000000 +0200
-+++ linux-2.6.12-rc2-mm3-full/drivers/ide/pci/cy82c693.c	2005-04-17 21:11:30.000000000 +0200
-@@ -469,7 +469,7 @@
- 
- static __initdata ide_hwif_t *primary;
- 
--void __devinit init_iops_cy82c693(ide_hwif_t *hwif)
-+static void __devinit init_iops_cy82c693(ide_hwif_t *hwif)
- {
- 	if (PCI_FUNC(hwif->pci_dev->devfn) == 1)
- 		primary = hwif;
---- linux-2.6.12-rc2-mm3-full/drivers/ide/ide-iops.c.old	2005-04-17 21:12:44.000000000 +0200
-+++ linux-2.6.12-rc2-mm3-full/drivers/ide/ide-iops.c	2005-04-17 21:12:54.000000000 +0200
-@@ -104,8 +104,6 @@
- 	hwif->INSL	= ide_insl;
- }
- 
--EXPORT_SYMBOL(default_hwif_iops);
--
- /*
-  *	MMIO operations, typically used for SATA controllers
-  */
-@@ -329,8 +327,6 @@
- 	hwif->atapi_output_bytes	= atapi_output_bytes;
- }
- 
--EXPORT_SYMBOL(default_hwif_transport);
--
- /*
-  * Beginning of Taskfile OPCODE Library and feature sets.
-  */
-@@ -525,8 +525,6 @@
- 	return 0;
- }
- 
--EXPORT_SYMBOL(wait_for_ready);
--
- /*
-  * This routine busy-waits for the drive status to be not "busy".
-  * It then checks the status for all of the "good" bits and none
-
+Anyone else out there playing with this yet?
