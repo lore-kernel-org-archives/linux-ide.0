@@ -1,54 +1,87 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: SATA suspend/resume (was Re: [PATCH] updated version of Jens'
- SATA suspend-to-ram patch)
-Date: Sat, 1 Oct 2005 11:39:06 -0700
-Message-ID: <20051001113906.2105f152.rdunlap@xenotime.net>
-References: <20050923163334.GA13567@triplehelix.org>
-	<433B79D8.9080305@pobox.com>
-	<433ED44C.3060805@rtr.ca>
+From: Uplink <advantis@gmx.net>
+Subject: drive appears confused (ireason = 0x01)
+Date: Sun, 02 Oct 2005 02:56:57 +0300
+Message-ID: <433F2249.30707@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <433ED44C.3060805@rtr.ca>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: jgarzik@pobox.com, joshk@triplehelix.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, torvalds@osdl.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.gmx.de ([213.165.64.20]:47260 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1750909AbVJAX5D (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Oct 2005 19:57:03 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sat, 01 Oct 2005 14:24:12 -0400 Mark Lord wrote:
+Hi,
 
-> Jeff Garzik wrote:
-> ..
-> > Ah hah!  I found the other SCSI suspend patch:
-> >     http://lwn.net/Articles/97453/
-> > Anybody (Joshua?) up for reconciling and testing the two?
-> 
-> I just now tried out *only* "the other SCSI suspend patch",
-> and by itself it hangs on resume.  Laptop computer, blank screen,
-> no serial ports, no printk()s visible.
-> 
-> And there's one minor bug in that patch:  it uses GFP_KERNEL to
-> alloc a buffer, but on resume it really should use GFP_ATOMIC instead,
-> since the swap device is the same drive we're trying to resume..
-> 
-> > 2) sd should call START STOP UNIT on resume
-> 
-> That's probably why it hangs when used as-is by itself.
-> I may do some further testing.
-> 
-> Anyone else out there playing with this yet?
+This may concern you in part. Parts that you feel that don't concern 
+IDE, please forward to the ones responsible.
 
-Not playing with it yet, just making some changes as suggested
-by Jeff and Christoph.  Patches are in
-  http://www.xenotime.net/linux/scsi/
+Since kernel 2.6.13 I get a "cdrom_pc_intr: The drive appears confused 
+(ireason = 0x01)" message when trying to access the DVD drive and I 
+can't read any disks.
 
-1.  http://www.xenotime.net/linux/scsi/scsi-suspend-resume.patch
-2.  http://www.xenotime.net/linux/scsi/scsi-susres-startstop2.patch
+I just booted 2.6.14-rc3 and I still get it. I also get some weird 
+things in syslog:
 
-and work-in-progress:  adding <spindown> ok/allowed to scsi
-targets:  http://www.xenotime.net/linux/scsi/scsi-susres-stst-spin.patch
-(this patch file includes 1. and 2. above)
+Oct  1 23:45:24 dcerouter kernel: hda: cde appears confused (ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdroe appears confused (ireason = 
+0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdroe appears confused (ireason = 
+0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdre appears confused (ireason = 
+0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_e appears confused 
+(ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr: The e appears 
+confused (ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr: Te appears 
+confused (ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr:e appears confused 
+(ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr:e appears confused 
+(ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intre appears confused 
+(ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr:e appears confused 
+(ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr: e appears confused 
+(ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda:e appears confused (ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_e appears confused 
+(ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr: The appears 
+confused (ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdre appears confused (ireason = 
+0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cde appears confused (ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdre appears confused (ireason = 
+0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdroe appears confused (ireason = 
+0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_e appears confused (ireason 
+= 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_inte appears confused 
+(ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr: The appears 
+confused (ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr: e appears confused 
+(ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr: e appears confused 
+(ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr: The appears 
+confused (ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr: e appears confused 
+(ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr: Te appears 
+confused (ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr: Thee appears 
+confused (ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr: Te appears 
+confused (ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_intr:e appears confused 
+(ireason = 0x01)
+Oct  1 23:45:24 dcerouter kernel: hda: cdrom_pc_inte appears confused 
+(ireason = 0x01)
 
----
-~Randy
