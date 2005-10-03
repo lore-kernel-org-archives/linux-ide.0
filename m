@@ -1,91 +1,47 @@
-From: Tom Rini <trini@kernel.crashing.org>
-Subject: Re: [PATCH, review] IDE driver for MIPS Toshiba RBTX4939
-Date: Mon, 3 Oct 2005 11:43:29 -0700
-Message-ID: <20051003184328.GC6735@smtp.west.cox.net>
-References: <20050929162228.GS18074@smtp.west.cox.net> <58cb370e0510030917q2bcb1790g6b9cd0456525bfae@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 5/7] AMD Geode GX/LX support
+Date: Mon, 3 Oct 2005 21:34:26 +0200
+Message-ID: <58cb370e0510031234h6ddef197od6c1efb5fa406435@mail.gmail.com>
+References: <20051003175851.GG29264@cosmic.amd.com>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fed1rmmtao08.cox.net ([68.230.241.31]:30893 "EHLO
-	fed1rmmtao08.cox.net") by vger.kernel.org with ESMTP
-	id S932559AbVJCSna (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Oct 2005 14:43:30 -0400
+Received: from nproxy.gmail.com ([64.233.182.192]:64542 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932652AbVJCTe2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Oct 2005 15:34:28 -0400
+Received: by nproxy.gmail.com with SMTP id x37so173482nfc
+        for <linux-ide@vger.kernel.org>; Mon, 03 Oct 2005 12:34:26 -0700 (PDT)
+In-Reply-To: <20051003175851.GG29264@cosmic.amd.com>
 Content-Disposition: inline
-In-Reply-To: <58cb370e0510030917q2bcb1790g6b9cd0456525bfae@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Hiroshi DOYU <hdoyu@mvista.com>
+To: Jordan Crouse <jordan.crouse@amd.com>
+Cc: linux-kernel@vger.kernel.org, info-linux@ldcmail.amd.com, linux-ide@vger.kernel.org
 
-On Mon, Oct 03, 2005 at 06:17:49PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On 9/29/05, Tom Rini <trini@kernel.crashing.org> wrote:
-[snip]
-> > +       /* save ata controller valiable */
-> > +       lo_bcnt = reg_rd16(&tx4939_ataptr(ch)->lo_bcnt);
-> > +       hi_bcnt = reg_rd16(&tx4939_ataptr(ch)->hi_bcnt);
-> 
-> Could I see tx4939_ataptr() (I guess it is in <asm/tx4939/tx4939.h>)?
+Hi,
 
-Indeed, sorry (lots of other stuff snipped out):
+On 10/3/05, Jordan Crouse <jordan.crouse@amd.com> wrote:
+> The following is a patch enabling IDE DMA for the CS5535 companion chip.
+> linux-ide folks, this is an updated version of the patch that was submitted
+> last night by Jaya Kumar.   Both patches share the same history, and probably
 
-Index: linux-2.6.10/include/asm-mips/tx4939/tx4939.h
-===================================================================
---- /dev/null
-+++ linux-2.6.10/include/asm-mips/tx4939/tx4939.h
-@@ -0,0 +1,1670 @@
-[snip]
-+/* TX4939 REGISTER ADDRESS MAP */
-+
-+#define TX4939_REG_BASE          0xff1f0000
-+#define TX4939_REG_SIZE          0x00010000
-+
-+#define TX4939_ATA_REG(ch)       (TX4939_REG_BASE + 0x3000 + (ch) * 0x1000)
-[snip]
-+#ifdef __BIG_ENDIAN
-+#define endian_def_s4(e1,e2,e3,e4)      \
-+        u16 e1,e2,e3,e4
-+#else
-+#define endian_def_s4(e1,e2,e3,e4)      \
-+        u16 e4,e3,e2,e1
-+#endif				/* __ASSEMBLY__ */
-+
-+/* TX4939 REGISTER STRUCTURE */
-+
-+#ifndef __ASSEMBLY__
-+
-+struct tx4939_ata_reg {
-+	u64 ata_shadow;
-+	u64 unused0[127];
-+	endian_def_b8(unused10, unused11, unused12, unused13, unused14,
-+		      alt_devctl, unused16, unused17);
-+	u64 unused1[127];
-+	endian_def_b8(unused20, unused21, unused22, prd_tbl, unused24,
-+		      dma_stat, unused26, dma_cmd);
-+	u64 unused2[127];
-+	endian_def_s4(unused30, unused31, sysctl2, sysctl1);	/* +0xc00 */
-+	endian_def_s4(unused32, unused33, xfer_cnt2, xfer_cnt1);
-+	endian_def_s4(unused34, unused35, unused36, sec_cnt);
-+	endian_def_s4(unused37, unused38, unused39, strt_addl);
-+	endian_def_s4(unused40, unused41, unused42, strt_addu);
-+	endian_def_s4(unused43, unused44, unused45, add_ctrl);
-+	endian_def_s4(unused46, unused47, unused48, lo_bcnt);
-+        endian_def_s4(unused49, unused50, unused51, hi_bcnt);
-+	volatile u64 unused52[9];
-+        endian_def_s4(unused53, unused54, unused55, pio_acc);
-+        endian_def_s4(unused56, unused57, unused58, h_rst_tim);
-+        endian_def_s4(unused59, unused60, unused61, int_ctl);
-+	volatile u64 unused62[3];
-+        endian_def_s4(unused63, unused64, unused65, pkt_cmd);
-+        endian_def_s4(unused66, unused67, unused68, bxfer_cnth);
-+        endian_def_s4(unused69, unused70, unused71, bxfer_cntl);
-+        endian_def_s4(unused72, unused73, unused74, dev_terr);
-+        endian_def_s4(unused75, unused76, unused77, pkt_xfer_ct);
-+        endian_def_s4(unused78, unused79, unused80, strt_addr);
-+};
-[snip]
-+#define tx4939_ataptr(ch)       \
-+        ((struct tx4939_ata_reg *)TX4939_ATA_REG(ch))
+Unfortunately it is not updated version of Jaya's patch but the updated version
+of the original 2.6.x patch and it misses 2 iterations of bugfixes/cleanups:
 
--- 
-Tom Rini
-http://gate.crashing.org/~trini/
+http://marc.theaimsgroup.com/?l=linux-ide&m=112832700817260&w=2
+
+>From what I see the main differences between _original_ patch and this one are:
+* /proc/ide/cs5535 (sorry but new /proc bloat won't be accepted)
+* different way of setting PIO command timings
+  (but this method won't ever set timings > 0 if initially timings were bad)
+* trusting BIOS to set correct mode also on drive's side (this breaks Power
+  Management support and I will prefer to have known state from Linux POV)
+
+It would be the best to join efforts so could somebody from AMD take a look
+at Jaya's latest patch and read related linux-ide ML thread?
+
+Thanks,
+Bartlomiej
