@@ -1,47 +1,86 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 5/7] AMD Geode GX/LX support
-Date: Mon, 3 Oct 2005 21:34:26 +0200
-Message-ID: <58cb370e0510031234h6ddef197od6c1efb5fa406435@mail.gmail.com>
-References: <20051003175851.GG29264@cosmic.amd.com>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH] libata: improve device scan
+Date: Mon, 03 Oct 2005 15:45:24 -0400
+Message-ID: <43418A54.8080709@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.192]:64542 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932652AbVJCTe2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Oct 2005 15:34:28 -0400
-Received: by nproxy.gmail.com with SMTP id x37so173482nfc
-        for <linux-ide@vger.kernel.org>; Mon, 03 Oct 2005 12:34:26 -0700 (PDT)
-In-Reply-To: <20051003175851.GG29264@cosmic.amd.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------090501050800040601080002"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jordan Crouse <jordan.crouse@amd.com>
-Cc: linux-kernel@vger.kernel.org, info-linux@ldcmail.amd.com, linux-ide@vger.kernel.org
 
-Hi,
+This is a multi-part message in MIME format.
+--------------090501050800040601080002
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 10/3/05, Jordan Crouse <jordan.crouse@amd.com> wrote:
-> The following is a patch enabling IDE DMA for the CS5535 companion chip.
-> linux-ide folks, this is an updated version of the patch that was submitted
-> last night by Jaya Kumar.   Both patches share the same history, and probably
 
-Unfortunately it is not updated version of Jaya's patch but the updated version
-of the original 2.6.x patch and it misses 2 iterations of bugfixes/cleanups:
+The attached patch changes libata device scanning from using the legacy 
+"bang at the door" method of probing devices, to one that calls 
+scsi_scan_target() for each target (ATA device) that the libata 
+transport layer found.
 
-http://marc.theaimsgroup.com/?l=linux-ide&m=112832700817260&w=2
+Completely untested, feedback welcome.  This should improve the speed of 
+SATA probing a tad, and certainly makes it quite a bit less ugly.
 
->From what I see the main differences between _original_ patch and this one are:
-* /proc/ide/cs5535 (sorry but new /proc bloat won't be accepted)
-* different way of setting PIO command timings
-  (but this method won't ever set timings > 0 if initially timings were bad)
-* trusting BIOS to set correct mode also on drive's side (this breaks Power
-  Management support and I will prefer to have known state from Linux POV)
+This might get moved, eventually, into an ATA transport class, depending 
+on how things shape up in the future.
 
-It would be the best to join efforts so could somebody from AMD take a look
-at Jaya's latest patch and read related linux-ide ML thread?
+	Jeff
 
-Thanks,
-Bartlomiej
+
+
+
+--------------090501050800040601080002
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -4113,7 +4113,7 @@ int ata_device_add(struct ata_probe_ent 
+ 	for (i = 0; i < count; i++) {
+ 		struct ata_port *ap = host_set->ports[i];
+ 
+-		scsi_scan_host(ap->host);
++		ata_scsi_scan_host(ap);
+ 	}
+ 
+ 	dev_set_drvdata(dev, host_set);
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -1678,3 +1678,15 @@ void ata_scsi_simulate(u16 *id,
+ 	}
+ }
+ 
++void ata_scsi_scan_host(struct ata_port *ap)
++{
++	unsigned int i;
++
++	if (ap->flags & ATA_FLAG_PORT_DISABLED)
++		return;
++
++	for (i = 0; i < ATA_MAX_DEVICES; i++)
++		if (ata_dev_present(&ap->device[i]))
++			scsi_scan_target(&ap->host->shost_gendev, 0, i, ~0, 0);
++}
++
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -51,6 +51,7 @@ extern void swap_buf_le16(u16 *buf, unsi
+ 
+ 
+ /* libata-scsi.c */
++extern void ata_scsi_scan_host(struct ata_port *ap);
+ extern void ata_to_sense_error(struct ata_queued_cmd *qc, u8 drv_stat);
+ extern int ata_scsi_error(struct Scsi_Host *host);
+ extern unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf,
+
+--------------090501050800040601080002--
