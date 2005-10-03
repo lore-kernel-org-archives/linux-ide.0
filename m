@@ -1,56 +1,22 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2/3] Add disk hotswap support to libata RESEND #5
-Date: Mon, 03 Oct 2005 11:53:26 -0400
-Message-ID: <434153F6.2050405@pobox.com>
-References: <355e5e5e05092618018840fc3@mail.gmail.com>	 <433AEAAE.2070003@pobox.com>	 <1127949651.26686.11.camel@localhost.localdomain> <355e5e5e0510030819od4ef8e5l93708588990081da@mail.gmail.com>
+From: "Jayne Archer" <archerjl@embassy.dntcj.ro>
+Subject: Buzy cials-tabs at Unbelievable Prices
+Date: Mon, 03 Oct 2005 15:52:58 +0100
+Message-ID: <ce8301c5c82a$9a0fa26d$9aaf2915@moebel.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <355e5e5e0510030819od4ef8e5l93708588990081da@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Lukasz Kosewski <lkosewsk@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bad183.neoplus.adsl.tpnet.pl ([83.27.167.183]:65263 "HELO
+	moebel.at") by vger.kernel.org with SMTP id S932336AbVJCP5o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Oct 2005 11:57:44 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Lukasz Kosewski wrote:
-> How about this; I want this SATA hotswapping stuff to be tested, so
-> I'll commit my patches for 'SATA only' for the time being.  I'll stare
-> at them for a while and then see what kind of PATA-specific if
-> statements and hooks are necessary in the code?
 
-Ideally we should just create hooks for any SATA-specific behavior, and 
-ensure that nothing SATA-specific is written into any of the core paths.
+Be ERECT in less than 15 mins
 
-One of the SATA controllers, Intel ICH5 & ICH6, does not have a hotplug 
-interrupt, but yet supports "coldplug":
+PRlCE: $ 2 / use
 
-	* user indicates to kernel, to disable the SATA port
-	* kernel says "OK, it's disabled"
-	* user disconnects hard drive
-and
-	* SATA port is disabled
-	* user connects hard drive
-	* user indicates to kernel, to enable SATA port
-	* kernel says "OK, I've turned it on" and probes it
-
-This is a real-world, high-volume SATA case, yet it functionally behaves 
-like PATA.
-
-So that causes us to consider various entry points:
-
-* {something}, be it a hot-unplug interrupt or user write(2) to sysfs, 
-tells us a device is gone
-* {something}, be it a hot-plug interrupt or user write(2) to sysfs, 
-tells us a new device appeared
-
-So for either SATA or PATA, it should look similar in the core:  we just 
-need a "kick", a function call that triggers one of these two actions. 
-The handling of those actions [your code] should hopefully be pretty 
-generic.  ;-)
-
-Thanks for working on this!
-
-	Jeff
-
+visit us: bookold.com
 
