@@ -1,183 +1,60 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: drive appears confused (ireason = 0x01)
-Date: Mon, 3 Oct 2005 09:33:46 +0200
-Message-ID: <20051003073342.GA3511@suse.de>
-References: <433F2249.30707@gmx.net>
+From: jayakumar ide <jayakumar.ide@gmail.com>
+Subject: Re: [RFC 2.6.13.1 1/1] Cleanup for CS5535 IDE driver
+Date: Mon, 3 Oct 2005 15:56:25 +0800
+Message-ID: <ed723e820510030056o36b4867drf0cfd724bb6e5f36@mail.gmail.com>
+References: <200509230301.j8N31n7W019129@localhost.localdomain>
+	 <58cb370e05092705114bf4504d@mail.gmail.com>
+Reply-To: jayakumar ide <jayakumar.ide@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:12046 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932172AbVJCHdL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Oct 2005 03:33:11 -0400
+Received: from zproxy.gmail.com ([64.233.162.207]:57663 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932183AbVJCH40 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Oct 2005 03:56:26 -0400
+Received: by zproxy.gmail.com with SMTP id 13so251177nzn
+        for <linux-ide@vger.kernel.org>; Mon, 03 Oct 2005 00:56:25 -0700 (PDT)
+In-Reply-To: <58cb370e05092705114bf4504d@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <433F2249.30707@gmx.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Uplink <advantis@gmx.net>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-On Sun, Oct 02 2005, Uplink wrote:
-> Hi,
-> 
-> This may concern you in part. Parts that you feel that don't concern 
-> IDE, please forward to the ones responsible.
-> 
-> Since kernel 2.6.13 I get a "cdrom_pc_intr: The drive appears confused 
-> (ireason = 0x01)" message when trying to access the DVD drive and I 
-> can't read any disks.
-> 
-> I just booted 2.6.14-rc3 and I still get it. I also get some weird 
-> things in syslog:
-> 
-> Oct  1 23:45:24 dcerouter kernel: hda: cde appears confused (ireason = 0x01)
-> Oct  1 23:45:24 dcerouter kernel: hda: cdroe appears confused (ireason = 
-> 0x01)
+On 9/27/05, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> On 9/23/05, jayakumar.ide@gmail.com <jayakumar.ide@gmail.com> wrote:
+> > I think we can leave this as is because the cs5535 is a SOC companion that
+> > doesn't have hotplug capability. Is that okay?
+>
+> Even if chipset itself doesn't have hotplug capability please
+> abstract cable detection code to match future IDE core changes.
 
-Can you try reversing this patch from 2.6.13/2.6.14-rc3 and see if it
-makes a difference?
+Ok. Will do.
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -431,7 +431,7 @@ void cdrom_analyze_sense_data(ide_drive_
- #if VERBOSE_IDE_CD_ERRORS
- 	{
- 		int i;
--		const char *s;
-+		const char *s = "bad sense key!";
- 		char buf[80];
- 
- 		printk ("ATAPI device %s:\n", drive->name);
-@@ -446,8 +446,6 @@ void cdrom_analyze_sense_data(ide_drive_
- 
- 		if (sense->sense_key < ARY_LEN(sense_key_texts))
- 			s = sense_key_texts[sense->sense_key];
--		else
--			s = "bad sense key!";
- 
- 		printk("%s -- (Sense key=0x%02x)\n", s, sense->sense_key);
- 
-@@ -2657,16 +2655,63 @@ int ide_cdrom_lock_door (struct cdrom_de
- }
- 
- static
-+int ide_cdrom_get_capabilities(ide_drive_t *drive, struct atapi_capabilities_page *cap)
-+{
-+	struct cdrom_info *info = drive->driver_data;
-+	struct cdrom_device_info *cdi = &info->devinfo;
-+	struct packet_command cgc;
-+	int stat, attempts = 3, size = sizeof(*cap);
-+
-+	/*
-+	 * ACER50 (and others?) require the full spec length mode sense
-+	 * page capabilities size, but older drives break.
-+	 */
-+	if (!(!strcmp(drive->id->model, "ATAPI CD ROM DRIVE 50X MAX") ||
-+	    !strcmp(drive->id->model, "WPI CDS-32X")))
-+		size -= sizeof(cap->pad);
-+
-+	init_cdrom_command(&cgc, cap, size, CGC_DATA_UNKNOWN);
-+	do { /* we seem to get stat=0x01,err=0x00 the first time (??) */
-+		stat = cdrom_mode_sense(cdi, &cgc, GPMODE_CAPABILITIES_PAGE, 0);
-+		if (!stat)
-+			break;
-+	} while (--attempts);
-+	return stat;
-+}
-+
-+static
-+void ide_cdrom_update_speed (ide_drive_t *drive, struct atapi_capabilities_page *cap)
-+{
-+	/* The ACER/AOpen 24X cdrom has the speed fields byte-swapped */
-+	if (!drive->id->model[0] &&
-+	    !strncmp(drive->id->fw_rev, "241N", 4)) {
-+		CDROM_STATE_FLAGS(drive)->current_speed  =
-+			(((unsigned int)cap->curspeed) + (176/2)) / 176;
-+		CDROM_CONFIG_FLAGS(drive)->max_speed =
-+			(((unsigned int)cap->maxspeed) + (176/2)) / 176;
-+	} else {
-+		CDROM_STATE_FLAGS(drive)->current_speed  =
-+			(ntohs(cap->curspeed) + (176/2)) / 176;
-+		CDROM_CONFIG_FLAGS(drive)->max_speed =
-+			(ntohs(cap->maxspeed) + (176/2)) / 176;
-+	}
-+}
-+
-+static
- int ide_cdrom_select_speed (struct cdrom_device_info *cdi, int speed)
- {
- 	ide_drive_t *drive = (ide_drive_t*) cdi->handle;
- 	struct request_sense sense;
-+	struct atapi_capabilities_page cap;
- 	int stat;
- 
- 	if ((stat = cdrom_select_speed(drive, speed, &sense)) < 0)
- 		return stat;
- 
--        cdi->speed = CDROM_STATE_FLAGS(drive)->current_speed;
-+	if (!ide_cdrom_get_capabilities(drive, &cap)) {
-+		ide_cdrom_update_speed(drive, &cap);
-+		cdi->speed = CDROM_STATE_FLAGS(drive)->current_speed;
-+	}
-         return 0;
- }
- 
-@@ -2869,31 +2914,6 @@ static int ide_cdrom_register (ide_drive
- }
- 
- static
--int ide_cdrom_get_capabilities(ide_drive_t *drive, struct atapi_capabilities_page *cap)
--{
--	struct cdrom_info *info = drive->driver_data;
--	struct cdrom_device_info *cdi = &info->devinfo;
--	struct packet_command cgc;
--	int stat, attempts = 3, size = sizeof(*cap);
--
--	/*
--	 * ACER50 (and others?) require the full spec length mode sense
--	 * page capabilities size, but older drives break.
--	 */
--	if (!(!strcmp(drive->id->model, "ATAPI CD ROM DRIVE 50X MAX") ||
--	    !strcmp(drive->id->model, "WPI CDS-32X")))
--		size -= sizeof(cap->pad);
--
--	init_cdrom_command(&cgc, cap, size, CGC_DATA_UNKNOWN);
--	do { /* we seem to get stat=0x01,err=0x00 the first time (??) */
--		stat = cdrom_mode_sense(cdi, &cgc, GPMODE_CAPABILITIES_PAGE, 0);
--		if (!stat)
--			break;
--	} while (--attempts);
--	return stat;
--}
--
--static
- int ide_cdrom_probe_capabilities (ide_drive_t *drive)
- {
- 	struct cdrom_info *info = drive->driver_data;
-@@ -2978,20 +2998,7 @@ int ide_cdrom_probe_capabilities (ide_dr
- 		}
- 	}
- 
--	/* The ACER/AOpen 24X cdrom has the speed fields byte-swapped */
--	if (!drive->id->model[0] &&
--	    !strncmp(drive->id->fw_rev, "241N", 4)) {
--		CDROM_STATE_FLAGS(drive)->current_speed  = 
--			(((unsigned int)cap.curspeed) + (176/2)) / 176;
--		CDROM_CONFIG_FLAGS(drive)->max_speed = 
--			(((unsigned int)cap.maxspeed) + (176/2)) / 176;
--	} else {
--		CDROM_STATE_FLAGS(drive)->current_speed  = 
--			(ntohs(cap.curspeed) + (176/2)) / 176;
--		CDROM_CONFIG_FLAGS(drive)->max_speed = 
--			(ntohs(cap.maxspeed) + (176/2)) / 176;
--	}
--
-+	ide_cdrom_update_speed(drive, &cap);
- 	/* don't print speed if the drive reported 0.
- 	 */
- 	printk(KERN_INFO "%s: ATAPI", drive->name);
+>
+> Please use __devinit:
+> * there is fake PCI hotplug driver which allows you to hot(un)plug any devices
+> * sparse complains about wrong __init usage
 
+Will do.
 
--- 
-Jens Axboe
+> > +       /* If no DMA speed was available then disable DMA and use PIO. */
+> > +       if (!speed) {
+> > +               speed = ide_get_best_pio_mode(drive, 255, 5, NULL);
+>
+> just return 0 and let cs5535_dma_check() take care of tuning PIO mode
+>
 
+Will do.
+
+> > +       } else if ((id->capability & 8) || (id->field_valid & 2)) {
+> > +fast_ata_pio:
+> > +               speed = ide_get_best_pio_mode(drive, 255, 5, NULL);
+>
+> wrong arguments (max PIO is 4 not 5)
+
+Oops. Corrected. I'll send these changes shortly.
+
+Thanks,
+jaya
