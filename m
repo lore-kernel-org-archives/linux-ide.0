@@ -1,131 +1,72 @@
 From: Lukasz Kosewski <lkosewsk@gmail.com>
 Subject: Re: [PATCH 2/3] Add disk hotswap support to libata RESEND #5
-Date: Mon, 3 Oct 2005 10:30:18 -0400
-Message-ID: <355e5e5e0510030730q2b3e295creaec6ebd129999f9@mail.gmail.com>
+Date: Mon, 3 Oct 2005 11:19:51 -0400
+Message-ID: <355e5e5e0510030819od4ef8e5l93708588990081da@mail.gmail.com>
 References: <355e5e5e05092618018840fc3@mail.gmail.com>
 	 <433AEAAE.2070003@pobox.com>
+	 <1127949651.26686.11.camel@localhost.localdomain>
 Reply-To: Lukasz Kosewski <lkosewsk@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <433AEAAE.2070003@pobox.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from zproxy.gmail.com ([64.233.162.192]:32576 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751104AbVJCPTw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Oct 2005 11:19:52 -0400
+Received: by zproxy.gmail.com with SMTP id i11so333056nzi
+        for <linux-ide@vger.kernel.org>; Mon, 03 Oct 2005 08:19:51 -0700 (PDT)
+In-Reply-To: <1127949651.26686.11.camel@localhost.localdomain>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 9/28/05, Jeff Garzik <jgarzik@pobox.com> wrote:
-> > +     dev->flags &= ~ATA_DFLAG_LBA48;
-> > +
+Hey Alan,
+
+On 9/28/05, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> For PATA the requirements I'm aware of are
 >
-> probably should just clear out all the flags...
+> -       Interface for user to say "am about to swap"
 
-I'll look into making this cleaner :)  During testing this was the
-only one that was necessary, but I'll do some clean-up foo on this.
+You mean something like "echo scsi-remove-single-device a b c d" >
+/proc/scsi/scsi?  I guess the sysfs equivalent?
 
-> is ata_chk_err() call in ata_to_sense_error() the only place that needs
-> to talk to the hardware?  If so, maybe we could work around that by
-> making sure it is passed register values, avoiding the need to poke the h/w.
+> -       Interface for user to say "have swapped"
 
-Yep, it is the only place as far as I can see.  As for passing
-register values, the reason I decided not to do that is because, say,
-a user unplugged his drive because there WAS some kind of error which
-set ATA_ERR.  This would attempt to perform some kind of error check
-which would compound the problem.  However, I agree this is dirty :)
-Should I just check the register values, & ~ATA_ERR, and then pass that in?
+I suppose ditto.
 
-> > +     spin_lock(&ap->host_set->lock);
-> > +     hotplug_todo = ap->plug; // Make sure we don't modify while reading!
-> > +     spin_unlock(&ap->host_set->lock);
->
-> this lock should always be acquired using spin_lock_irqsave()
+> -       Must quiesce both master and slave before swap (or one per cable)
 
-Oops.
+The way I've written my infrastructure, this seems as if it'll just
+require another carefully placed hook function.
 
-> > +             ata_scsi_handle_unplug(ap);
-> > +
-> > +             // The following flag is necessary on some Seagate drives.
-> > +             ap->flags |= ATA_FLAG_SATA_RESET;
->
-> we can't unconditionally set this for all controllers
->
-> For PATA hotplug, which this code will eventually handle, the SATA
-> SControl register doesn't even exist :)
+> -       Must reset to PIO_SLOW and then recompute modes for both devices
+> becuse it is possible that changing one changes the other timings
 
-if (ap & ATA_FLAG_SATA) ap->flags |= ATA_FLAG_SATA_RESET
-? :)
+This shouldn't be hard since I already do a similar reset by resetting
+udma_flags to a pre-init state.  Probably in an if (!(ap->flags &
+ATA_FLAG_SATA)).
 
-> > +             ap->udma_mask = ap->orig_udma_mask;
->
-> dumb question -- what is this for?
->
-> for hotplug we'll want to go through the entire probe sequence,
-> configuring pio/dma masks all over again.
+> -       The above is true for *unplug* too. A straight unplug may speed up the
+> other drive!
+> -       Post hotswap need to reconfigure both drives as if from scratch
 
-OK I'll admit I may not have looked through the code enough on that
-one, but here's a situation I remember about this:
-Had a drive which supported UDMA 5 max.  Unplugged it, plugged in a
-drive which supported UDMA 6, but libata reported UDMA 5 max.  Since
-the flags aren't reset, and ata_mode_string() works from slowest to
-fastest, this will always happen unless we reset the flags to some
-default value.  So... voila.  Do you have a suggestion for making this
-cleaner?
+Hmm, this seems far more complicated... basically during a swap
+operation, we have to shut down all I/O to the other drive on the
+cable (if there is one), if I read you correctly, and then reconfigure
+both drives once one is plugged in.
 
-> > +static void ata_hotplug_timer_func(unsigned long _data)
-> > +{
-> > +     struct ata_port *ap = (struct ata_port *)_data;
-> > +
-> > +     queue_work(ata_hotplug_wq, &ap->hotplug_task);
-> > +}
->
-> if this is all the timer function needs to do, then you can just use
-> queue_work_delayed()
+>From what you're saying, it seems to me that the infrastructure I put
+forth will work as is, plus some if statements and extraneous
+PATA-only functions (and functionality like shutting down the other
+disk on the cable until the user calls the 'warm-swap complete'
+function').
 
-I agree.
+How about this; I want this SATA hotswapping stuff to be tested, so
+I'll commit my patches for 'SATA only' for the time being.  I'll stare
+at them for a while and then see what kind of PATA-specific if
+statements and hooks are necessary in the code?
 
-> > +void ata_hotplug_plug(struct ata_port *ap)
-
-<snip>
-
-> > +void ata_hotplug_unplug(struct ata_port *ap)
->
-> I prefer the names ata_hot_plug() and ata_hot_unplug()
-
-Sure.
-
-> > +static int ata_scsi_qc_abort(struct ata_queued_cmd *qc, u8 drv_stat)
-> > +{
-> > +     struct scsi_cmnd *cmd = qc->scsicmd;
-> > +
-> > +     cmd->result = SAM_STAT_TASK_ABORTED; //FIXME:  Is this what we want?
->
-> Just trace through the error handling code, the answer should fall out
-> from there...
-
-Yeah... I put that fixme in there in August to remind myself to do
-that... apparently the reminder didn't help.  I'll look into it.
-
-> > +void ata_scsi_handle_plug(struct ata_port *ap)
-> > +{
-> > +     //Currently SATA only
->
-> Please change comments to follow the standard style in the rest of the
-> drivers:  /* foo */
-
-Righto.
-
-> > +void ata_scsi_handle_unplug(struct ata_port *ap)
-> > +{
-> > +     //SATA only, no PATA
->
-> why?  This function looks generic enough to work for PATA
-
-This just refers to the fact that I'm currently just looking for a
-drive with channel, id, and lun all equal to 0.  I'll remove the
-comment.
-
-OK, looks like I have my work cut out for me.  Thanks for the feedback
-Jeff, I'll resubmit this as soon as I've made changes and done some
-more testing to ensure it's still stable.
+Luke
