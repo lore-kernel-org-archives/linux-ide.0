@@ -1,59 +1,131 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: [PATCH/RFC 4/4] irq-pio: add read/write multiple support
-Date: Mon, 03 Oct 2005 09:35:02 -0400
-Message-ID: <43413386.6000203@pobox.com>
-References: <4321B4E0.8020801@tw.ibm.com> <4321C7DD.5050503@pobox.com>	 <43322C50.1060009@tw.ibm.com> <4333CF07.5010400@pobox.com>	 <4339116D.30908@tw.ibm.com> <433912FB.9000606@tw.ibm.com> <58cb370e05092903083e0d001c@mail.gmail.com> <433D1BC7.6060301@tw.ibm.com> <433D1FC7.2060401@pobox.com> <43411A1A.8050901@tw.ibm.com> <43412FF6.5030006@tw.ibm.com>
+From: Lukasz Kosewski <lkosewsk@gmail.com>
+Subject: Re: [PATCH 2/3] Add disk hotswap support to libata RESEND #5
+Date: Mon, 3 Oct 2005 10:30:18 -0400
+Message-ID: <355e5e5e0510030730q2b3e295creaec6ebd129999f9@mail.gmail.com>
+References: <355e5e5e05092618018840fc3@mail.gmail.com>
+	 <433AEAAE.2070003@pobox.com>
+Reply-To: Lukasz Kosewski <lkosewsk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:25288 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S932230AbVJCNfB
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Oct 2005 09:35:01 -0400
-In-Reply-To: <43412FF6.5030006@tw.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <433AEAAE.2070003@pobox.com>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>, Brett Russ <russb@emc.com>
 
-Albert Lee wrote:
-> Patch 4/4: add read/write multiple support
-> 
+On 9/28/05, Jeff Garzik <jgarzik@pobox.com> wrote:
+> > +     dev->flags &= ~ATA_DFLAG_LBA48;
+> > +
+>
+> probably should just clear out all the flags...
 
-One "fine point" when programming the R/W MULT commands
-is to remember that each register access is very costly
-in terms of processor time.
+I'll look into making this cleaner :)  During testing this was the
+only one that was necessary, but I'll do some clean-up foo on this.
 
-So whenever an access can be done with 28-bit LBA,
-it should not use the EXT versions of the instructions,
-even though the device may be LBA48 capable.
+> is ata_chk_err() call in ata_to_sense_error() the only place that needs
+> to talk to the hardware?  If so, maybe we could work around that by
+> making sure it is passed register values, avoiding the need to poke the h/w.
 
-The various drivers I have written for Linux and other OSs
-that deal with this always logic equivalen to this somewhere:
+Yep, it is the only place as far as I can see.  As for passing
+register values, the reason I decided not to do that is because, say,
+a user unplugged his drive because there WAS some kind of error which
+set ATA_ERR.  This would attempt to perform some kind of error check
+which would compound the problem.  However, I agree this is dirty :)
+Should I just check the register values, & ~ATA_ERR, and then pass that in?
 
-if (lba_sector < (1<<28) && sector_count <= 256) {
-     use LBA28
-} else if (device is lba48 capable) {
-     use LBA48
-} else {
-     error
-}
+> > +     spin_lock(&ap->host_set->lock);
+> > +     hotplug_todo = ap->plug; // Make sure we don't modify while reading!
+> > +     spin_unlock(&ap->host_set->lock);
+>
+> this lock should always be acquired using spin_lock_irqsave()
 
-For SATA drives, this is unlikely to make any difference,
-but for PATA it can reduce the CPU overhead of issuing
-a command by 40% or so --> saves three PCI bus transactions,
-which amounts to about 1-4us real-time, depending on the
-exact hardware in question.
+Oops.
 
-I'm really looking forward to having PIO in libata,
-so that we can support compactflash cards and the like.
-My Delkin 32-bit Cardbus Adapter driver (currently in 2.4.x IDE)
-will be one of the first new pure PIO drivers in libata..
+> > +             ata_scsi_handle_unplug(ap);
+> > +
+> > +             // The following flag is necessary on some Seagate drives.
+> > +             ap->flags |= ATA_FLAG_SATA_RESET;
+>
+> we can't unconditionally set this for all controllers
+>
+> For PATA hotplug, which this code will eventually handle, the SATA
+> SControl register doesn't even exist :)
 
-Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+if (ap & ATA_FLAG_SATA) ap->flags |= ATA_FLAG_SATA_RESET
+? :)
 
+> > +             ap->udma_mask = ap->orig_udma_mask;
+>
+> dumb question -- what is this for?
+>
+> for hotplug we'll want to go through the entire probe sequence,
+> configuring pio/dma masks all over again.
+
+OK I'll admit I may not have looked through the code enough on that
+one, but here's a situation I remember about this:
+Had a drive which supported UDMA 5 max.  Unplugged it, plugged in a
+drive which supported UDMA 6, but libata reported UDMA 5 max.  Since
+the flags aren't reset, and ata_mode_string() works from slowest to
+fastest, this will always happen unless we reset the flags to some
+default value.  So... voila.  Do you have a suggestion for making this
+cleaner?
+
+> > +static void ata_hotplug_timer_func(unsigned long _data)
+> > +{
+> > +     struct ata_port *ap = (struct ata_port *)_data;
+> > +
+> > +     queue_work(ata_hotplug_wq, &ap->hotplug_task);
+> > +}
+>
+> if this is all the timer function needs to do, then you can just use
+> queue_work_delayed()
+
+I agree.
+
+> > +void ata_hotplug_plug(struct ata_port *ap)
+
+<snip>
+
+> > +void ata_hotplug_unplug(struct ata_port *ap)
+>
+> I prefer the names ata_hot_plug() and ata_hot_unplug()
+
+Sure.
+
+> > +static int ata_scsi_qc_abort(struct ata_queued_cmd *qc, u8 drv_stat)
+> > +{
+> > +     struct scsi_cmnd *cmd = qc->scsicmd;
+> > +
+> > +     cmd->result = SAM_STAT_TASK_ABORTED; //FIXME:  Is this what we want?
+>
+> Just trace through the error handling code, the answer should fall out
+> from there...
+
+Yeah... I put that fixme in there in August to remind myself to do
+that... apparently the reminder didn't help.  I'll look into it.
+
+> > +void ata_scsi_handle_plug(struct ata_port *ap)
+> > +{
+> > +     //Currently SATA only
+>
+> Please change comments to follow the standard style in the rest of the
+> drivers:  /* foo */
+
+Righto.
+
+> > +void ata_scsi_handle_unplug(struct ata_port *ap)
+> > +{
+> > +     //SATA only, no PATA
+>
+> why?  This function looks generic enough to work for PATA
+
+This just refers to the fact that I'm currently just looking for a
+drive with channel, id, and lun all equal to 0.  I'll remove the
+comment.
+
+OK, looks like I have my work cut out for me.  Thanks for the feedback
+Jeff, I'll resubmit this as soon as I've made changes and done some
+more testing to ensure it's still stable.
