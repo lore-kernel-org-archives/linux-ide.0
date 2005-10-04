@@ -1,21 +1,46 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.14-rc2] libata: Marvell SATA support (DMA mode) (resend:
- v0.22)
-Date: Mon, 03 Oct 2005 22:08:32 -0400
-Message-ID: <4341E420.6070808@pobox.com>
-References: <20050930053600.F3B821CDD0@lns1058.lss.emc.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] ide-cd cleanup (casts, whitespace and codingstyle)
+Date: Tue, 4 Oct 2005 08:21:51 +0200
+Message-ID: <20051004062146.GD3511@suse.de>
+References: <200510040017.57168.jesper.juhl@gmail.com> <20051003230421.GE7554@mipter.zuzino.mipt.ru> <9a8748490510031557q26f41f78s84ad936d9e78756c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:2467 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932257AbVJDCIl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Oct 2005 22:08:41 -0400
-In-Reply-To: <20050930053600.F3B821CDD0@lns1058.lss.emc.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932379AbVJDGVW@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <9a8748490510031557q26f41f78s84ad936d9e78756c@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jesper Juhl <jesper.juhl@gmail.com>
+Cc: Alexey Dobriyan <adobriyan@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, andersen@codepoet.org
 List-Id: linux-ide@vger.kernel.org
-To: Brett Russ <russb@emc.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Pasi Pirhonen <upi@papat.org>, Michael Madore <Michael.Madore@aslab.com>, Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>, "Mr. Berkley Shands" <bshands@exegy.com>, Jim Edwards <jim@networkdesigning.com>, scott olson <scotto701@yahoo.com>, Lars Magne Ingebrigtsen <larsi@gnus.org>
 
-applied
+On Tue, Oct 04 2005, Jesper Juhl wrote:
+> On 10/4/05, Alexey Dobriyan <adobriyan@gmail.com> wrote:
+> > On Tue, Oct 04, 2005 at 12:17:56AM +0200, Jesper Juhl wrote:
+> > > --- linux-2.6.14-rc3-git3-orig/drivers/ide/ide-cd.c
+> > > +++ linux-2.6.14-rc3-git3/drivers/ide/ide-cd.c
+> >
+> > What was wrong with these ones? [snipping the rest]
+> >
+> 
+> Nothing much, simply that as far as I know, the common coding style is
+> that function declarations/definitions should be on one line and if
+> that line can't fit in 80 chars then arguments are moved to the next
+> line and indented by two tabs. That's the style I believe is the most
+> official one (if such a thing exists), so that's the style I changed
+> everything throughout the file to obey.
 
+That is by no means the common style. What I usually do is indent the
+arguments so the match up with the first line.
+
+> > >  static int cdrom_log_sense(ide_drive_t *drive, struct request *rq,
+> > > -                        struct request_sense *sense)
+> > > +             struct request_sense *sense)
+
+This is a mess. So NACK on this patch. And why are you changing the
+driver version for non-functional changes?
+
+And I prefer a space after a cast. And regardless of what others may
+think, I do indent cases in a switch unless it's tight for space.
+
+-- 
+Jens Axboe
