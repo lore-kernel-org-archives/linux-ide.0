@@ -1,56 +1,66 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Problems with SATA/AHCI with 'nosmp'  boot option
-Date: Tue, 04 Oct 2005 06:31:42 -0400
-Message-ID: <43425A0E.9050500@pobox.com>
-References: <43312397.9080501@reub.net>
+Subject: Re: [PATCH] libata: scsi error handling
+Date: Tue, 04 Oct 2005 07:33:52 -0400
+Message-ID: <434268A0.3080108@pobox.com>
+References: <43114DE1.7090406@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:18086 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932222AbVJDKbq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Oct 2005 06:31:46 -0400
-In-Reply-To: <43312397.9080501@reub.net>
+Received: from mail.dvmed.net ([216.237.124.58]:41126 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932293AbVJDLd5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Oct 2005 07:33:57 -0400
+In-Reply-To: <43114DE1.7090406@torque.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Reuben Farrelly <reuben-lkml@reub.net>
-Cc: linux-ide@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Reuben Farrelly wrote:
-> Hi,
+Douglas Gilbert wrote:
+> Jeff,
+> Here is a follow on patch based on lk 2.6.13-rc7
+> plus the start_stop_unit patch and the rw_zero_length
+> patch.
 > 
-> While trying to gather more info about a problem with the latest sky2.c 
-> Gig ethernet driver hanging, I thought I'd boot my SMP built kernel (on 
-> an SMP/HT machine) with the 'nosmp' boot option.
+> It adds more general error processing, typically for
+> problems (or an early finish) detected while a
+> SCSI command is being processed prior to an ATA
+> command being executed.
 > 
-> However when I did this, I could no longer boot the machine, because the 
-> ahci
-> driver reported timeouts when probing the drives attached to the SATA 
-> ports, like this:
-> 
-> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-> ICH6: IDE controller at PCI slot 0000:00:1f.1
-> ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, low) -> IRQ 73
-> ICH6: chipset revision 3
-> ICH6: not 100% native mode: will probe irqs later
->     ide0: BM-DMA at 0xffa0-0xffa7, BIOS settings: hda:pio, hdb:pio
->     ide1: BM-DMA at 0xffa8-0xffaf, BIOS settings: hdc:pio, hdd:pio
-> ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 81
-> ahci(0000:00:1f.2) AHCI 0001.0000 32 slots 4 ports 1.5 Gbps 0xf impl 
-> SATA mode
-> ahci(0000:00:1f.2) flags: 64bit ncq led slum part
-> ata1: SATA max UDMA/133 cmd 0xF8806D00 ctl 0x0 bmdma 0x0 irq 81
-> ata2: SATA max UDMA/133 cmd 0xF8806D80 ctl 0x0 bmdma 0x0 irq 81
-> ata3: SATA max UDMA/133 cmd 0xF8806E00 ctl 0x0 bmdma 0x0 irq 81
-> ata4: SATA max UDMA/133 cmd 0xF8806E80 ctl 0x0 bmdma 0x0 irq 81
-> ata1 is slow to respond, please be patient
-> ata1 failed to respond (30 secs)
-> scsi0 : ahci
-> ata2 is slow to respond, please be patient
-> ata2 failed to respond (30 secs)
+> Changelog:
+>   - add extern ata_scsi_set_sense() to build SCSI
+>     sense data and corresponding status
+>   - this allows removal of extern ata_scsi_badcmd()
+>     and static inline ata_bad_scsiop() and ata_bad_cdb()
+>   - change "xlat" functions in libata-scsi so they
+>     are responsible for SCSI status and sense data
+>     when they return 1. This allows GOOD status or a
+>     specialized error to be set.
+>   - set DRIVER_SENSE when SAM_STAT_CHECK_CONDITION
+>     is flagged in scsi_cmnd::result
+>   - yield an error for mode sense requests for saved
+>     values [sat-r05]
+>   - change recent rw_zero_length patch to do nothing
+>     (yield GOOD status) when transfer_length==0 for
+>     10 and 16 byte READ and WRITE commands (SBC-2).
 
-Sounds like AHCI or MSI is broken.
+All this is OK, though in the future, please split changes such as the 
+creation and explicit use of ata_scsi_set_sense() to a separate patch. 
+We need to separate logical changes.  Patches get applied more quickly 
+when they are split up, too.
+
+
+However, I really wanted to go ahead and merge the C/H/S support patch, 
+which updates the R/W xlat function, causing conflicts with your patch 
+in several places.  (as a side effect, C/H/S updates clean up the R/W 
+xlat function rather nicely)
+
+
+If you would be kind enough to rediff against the 'upstream' branch of
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+
+I would really appreciate it.  I'll merge it as soon as I receive the 
+rediff.
 
 	Jeff
 
