@@ -1,59 +1,83 @@
-From: Jesper Juhl <jesper.juhl@gmail.com>
-Subject: Re: [PATCH] ide-cd cleanup (casts, whitespace and codingstyle)
-Date: Tue, 4 Oct 2005 11:28:49 +0200
-Message-ID: <9a8748490510040228l13ecce46le8c2a5bec0530fcd@mail.gmail.com>
-References: <200510040017.57168.jesper.juhl@gmail.com>
-	 <20051003230421.GE7554@mipter.zuzino.mipt.ru>
-	 <9a8748490510031557q26f41f78s84ad936d9e78756c@mail.gmail.com>
-	 <20051004062146.GD3511@suse.de>
-Reply-To: Jesper Juhl <jesper.juhl@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH/RFC 4/4] irq-pio: add read/write multiple support
+Date: Tue, 04 Oct 2005 05:43:34 -0400
+Message-ID: <43424EC6.2040100@pobox.com>
+References: <4321B4E0.8020801@tw.ibm.com> <4321C7DD.5050503@pobox.com>	 <43322C50.1060009@tw.ibm.com> <4333CF07.5010400@pobox.com>	 <4339116D.30908@tw.ibm.com> <433912FB.9000606@tw.ibm.com> <58cb370e05092903083e0d001c@mail.gmail.com> <433D1BC7.6060301@tw.ibm.com> <433D1FC7.2060401@pobox.com> <43411A1A.8050901@tw.ibm.com> <43412FF6.5030006@tw.ibm.com> <43413386.6000203@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751204AbVJDJ2w@vger.kernel.org>
-In-Reply-To: <20051004062146.GD3511@suse.de>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Alexey Dobriyan <adobriyan@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, andersen@codepoet.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:58789 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750799AbVJDJnu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Oct 2005 05:43:50 -0400
+In-Reply-To: <43413386.6000203@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <mlord@pobox.com>
+Cc: Albert Lee <albertcc@tw.ibm.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>, Brett Russ <russb@emc.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On 10/4/05, Jens Axboe <axboe@suse.de> wrote:
-> On Tue, Oct 04 2005, Jesper Juhl wrote:
-> > On 10/4/05, Alexey Dobriyan <adobriyan@gmail.com> wrote:
-> > > On Tue, Oct 04, 2005 at 12:17:56AM +0200, Jesper Juhl wrote:
-> > > > --- linux-2.6.14-rc3-git3-orig/drivers/ide/ide-cd.c
-> > > > +++ linux-2.6.14-rc3-git3/drivers/ide/ide-cd.c
-> > >
-> > > What was wrong with these ones? [snipping the rest]
-> > >
-> >
-> > Nothing much, simply that as far as I know, the common coding style is
-> > that function declarations/definitions should be on one line and if
-> > that line can't fit in 80 chars then arguments are moved to the next
-> > line and indented by two tabs. That's the style I believe is the most
-> > official one (if such a thing exists), so that's the style I changed
-> > everything throughout the file to obey.
->
-> That is by no means the common style. What I usually do is indent the
-> arguments so the match up with the first line.
->
-> > > >  static int cdrom_log_sense(ide_drive_t *drive, struct request *rq,
-> > > > -                        struct request_sense *sense)
-> > > > +             struct request_sense *sense)
->
-> This is a mess. So NACK on this patch. And why are you changing the
-> driver version for non-functional changes?
->
-> And I prefer a space after a cast. And regardless of what others may
-> think, I do indent cases in a switch unless it's tight for space.
->
+Mark Lord wrote:
+> Albert Lee wrote:
+> 
+>> Patch 4/4: add read/write multiple support
+>>
+> 
+> One "fine point" when programming the R/W MULT commands
+> is to remember that each register access is very costly
+> in terms of processor time.
+> 
+> So whenever an access can be done with 28-bit LBA,
+> it should not use the EXT versions of the instructions,
+> even though the device may be LBA48 capable.
+> 
+> The various drivers I have written for Linux and other OSs
+> that deal with this always logic equivalen to this somewhere:
+> 
+> if (lba_sector < (1<<28) && sector_count <= 256) {
+>     use LBA28
+> } else if (device is lba48 capable) {
+>     use LBA48
+> } else {
+>     error
+> }
 
-Ok, fair enough.
+Alan lists this on his PATA should-do list, too.
 
-Thank you for the feedback.
+Since this is legacy hardware, I am a bit skeptical about doing this -- 
+and also 32-bit PIO, which is in the same category -- because this 
+increases the amount of code we have to deal with, for the same basic 
+function.  For rarely-hit situations, I don't mind paying some 
+performance penalty if it reduces long term maintenance.  I am willing 
+to push some ancient platforms in the "slow but working" category, to 
+keep the code small and easier to review/debug/maintain.
 
---
-Jesper Juhl <jesper.juhl@gmail.com>
-Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please      http://www.expita.com/nomime.html
+That said, it should be simple enough to push the logic into 
+libata-scsi.c, where it translates a SCSI READ/WRITE command into an ATA 
+read/write command.  Patches welcome...
+
+
+> For SATA drives, this is unlikely to make any difference,
+> but for PATA it can reduce the CPU overhead of issuing
+> a command by 40% or so --> saves three PCI bus transactions,
+> which amounts to about 1-4us real-time, depending on the
+> exact hardware in question.
+
+When running devices in PIO-only mode, the PCI bus transactions are very 
+noticeable even with SATA.
+
+Also, though this may be stating the obvious, all this discussion is 
+irrelevant for FIS-based chips, since the control flow is entirely 
+different there.
+
+
+> I'm really looking forward to having PIO in libata,
+> so that we can support compactflash cards and the like.
+> My Delkin 32-bit Cardbus Adapter driver (currently in 2.4.x IDE)
+> will be one of the first new pure PIO drivers in libata..
+
+Cool :)
+
+	Jeff
+
+
+
