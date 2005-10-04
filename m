@@ -1,257 +1,196 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [RFC 0/2] libata: support SATA devices on SAS HBAs
-Date: Tue, 4 Oct 2005 22:56:22 +0200
-Message-ID: <58cb370e0510041356h780e7a5aifda0c232f677471e@mail.gmail.com>
-References: <4341A91A.3020000@us.ibm.com> <434251E0.9060000@pobox.com>
-	 <58cb370e0510040322q1cb7a13bjfc6c7875140d20a9@mail.gmail.com>
-Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Uplink <advantis@gmx.net>
+Subject: Re: drive appears confused (ireason = 0x01)
+Date: Wed, 05 Oct 2005 01:06:13 +0300
+Message-ID: <4342FCD5.2000107@gmx.net>
+References: <433F2249.30707@gmx.net> <20051003073342.GA3511@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_8098_2944466.1128459382182"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.200]:551 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964975AbVJDU4Y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Oct 2005 16:56:24 -0400
-Received: by nproxy.gmail.com with SMTP id n15so3118nfc
-        for <linux-ide@vger.kernel.org>; Tue, 04 Oct 2005 13:56:22 -0700 (PDT)
-In-Reply-To: <58cb370e0510040322q1cb7a13bjfc6c7875140d20a9@mail.gmail.com>
+Received: from imap.gmx.net ([213.165.64.20]:925 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S965010AbVJDWGQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Oct 2005 18:06:16 -0400
+In-Reply-To: <20051003073342.GA3511@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: brking@us.ibm.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-------=_Part_8098_2944466.1128459382182
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+I found out what it was and it's not this. It's S-ATA vs. IRQ. I'm
+starting to hate these encounters. It's all about Legacy/Compatibily vs.
+Enhanced mode of operation. Something changes with the APIC when using
+Enhanced mode and isn't handled by the kernel.
 
-On 10/4/05, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> On 10/4/05, Jeff Garzik <jgarzik@pobox.com> wrote:
-> > Brian King wrote:
-> > > The following patches enhance libata to allow SAS device drivers
-> > > to utilize libata to talk to SATA devices. It introduces some
-> > > new APIs which allow libata to be used without allocating a
-> > > virtual scsi host. This is just a snapshot of what I've
-> > > come up with at this point and I figured I would post it to
-> > > see if I was heading in a reasonable direction or not, so
-> > > don't expect the code below to do anything useful at this point
-> > > as it is untested.
-> >
-> > hmmmm, neat.  My gut feeling feeling says a slightly better direction
-> > might be warranted, but I'll have to think a bit to put that feeling
-> > towords.
-> >
-> > * One thought is the desire to allocate a single ata_host_set for the
-> > HBA, rather than avoiding ata_host_set.
+This link shows, somewhat, what I mean:
+http://plutohome.com/support/phpbb2/viewtopic.php?p=1600#1600
+
+Jens Axboe wrote:
+
+>On Sun, Oct 02 2005, Uplink wrote:
+>  
 >
-> For SAS we should definitely avoid ata_host_set.
+>>Hi,
+>>
+>>This may concern you in part. Parts that you feel that don't concern 
+>>IDE, please forward to the ones responsible.
+>>
+>>Since kernel 2.6.13 I get a "cdrom_pc_intr: The drive appears confused 
+>>(ireason = 0x01)" message when trying to access the DVD drive and I 
+>>can't read any disks.
+>>
+>>I just booted 2.6.14-rc3 and I still get it. I also get some weird 
+>>things in syslog:
+>>
+>>Oct  1 23:45:24 dcerouter kernel: hda: cde appears confused (ireason = 0x01)
+>>Oct  1 23:45:24 dcerouter kernel: hda: cdroe appears confused (ireason = 
+>>0x01)
+>>    
+>>
 >
-> > * Another thought is the locking scheme -- Christoph once poked me abou=
-t
-> > libata's use of scsi_assign_lock(), which I rather like but he didn't :=
-)
-> >   So by the transitive(?) property, if libata's locking is useful, then
-> > your solution is probably OK.  And vice versa.
+>Can you try reversing this patch from 2.6.13/2.6.14-rc3 and see if it
+>makes a difference?
 >
-> host_set->lock is not useful for SAS et all and libata can
-> be easily fixed to not require it for SAS (I'll make a patch later).
+>diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+>--- a/drivers/ide/ide-cd.c
+>+++ b/drivers/ide/ide-cd.c
+>@@ -431,7 +431,7 @@ void cdrom_analyze_sense_data(ide_drive_
+> #if VERBOSE_IDE_CD_ERRORS
+> 	{
+> 		int i;
+>-		const char *s;
+>+		const char *s = "bad sense key!";
+> 		char buf[80];
+> 
+> 		printk ("ATAPI device %s:\n", drive->name);
+>@@ -446,8 +446,6 @@ void cdrom_analyze_sense_data(ide_drive_
+> 
+> 		if (sense->sense_key < ARY_LEN(sense_key_texts))
+> 			s = sense_key_texts[sense->sense_key];
+>-		else
+>-			s = "bad sense key!";
+> 
+> 		printk("%s -- (Sense key=0x%02x)\n", s, sense->sense_key);
+> 
+>@@ -2657,16 +2655,63 @@ int ide_cdrom_lock_door (struct cdrom_de
+> }
+> 
+> static
+>+int ide_cdrom_get_capabilities(ide_drive_t *drive, struct atapi_capabilities_page *cap)
+>+{
+>+	struct cdrom_info *info = drive->driver_data;
+>+	struct cdrom_device_info *cdi = &info->devinfo;
+>+	struct packet_command cgc;
+>+	int stat, attempts = 3, size = sizeof(*cap);
+>+
+>+	/*
+>+	 * ACER50 (and others?) require the full spec length mode sense
+>+	 * page capabilities size, but older drives break.
+>+	 */
+>+	if (!(!strcmp(drive->id->model, "ATAPI CD ROM DRIVE 50X MAX") ||
+>+	    !strcmp(drive->id->model, "WPI CDS-32X")))
+>+		size -= sizeof(cap->pad);
+>+
+>+	init_cdrom_command(&cgc, cap, size, CGC_DATA_UNKNOWN);
+>+	do { /* we seem to get stat=0x01,err=0x00 the first time (??) */
+>+		stat = cdrom_mode_sense(cdi, &cgc, GPMODE_CAPABILITIES_PAGE, 0);
+>+		if (!stat)
+>+			break;
+>+	} while (--attempts);
+>+	return stat;
+>+}
+>+
+>+static
+>+void ide_cdrom_update_speed (ide_drive_t *drive, struct atapi_capabilities_page *cap)
+>+{
+>+	/* The ACER/AOpen 24X cdrom has the speed fields byte-swapped */
+>+	if (!drive->id->model[0] &&
+>+	    !strncmp(drive->id->fw_rev, "241N", 4)) {
+>+		CDROM_STATE_FLAGS(drive)->current_speed  =
+>+			(((unsigned int)cap->curspeed) + (176/2)) / 176;
+>+		CDROM_CONFIG_FLAGS(drive)->max_speed =
+>+			(((unsigned int)cap->maxspeed) + (176/2)) / 176;
+>+	} else {
+>+		CDROM_STATE_FLAGS(drive)->current_speed  =
+>+			(ntohs(cap->curspeed) + (176/2)) / 176;
+>+		CDROM_CONFIG_FLAGS(drive)->max_speed =
+>+			(ntohs(cap->maxspeed) + (176/2)) / 176;
+>+	}
+>+}
+>+
+>+static
+> int ide_cdrom_select_speed (struct cdrom_device_info *cdi, int speed)
+> {
+> 	ide_drive_t *drive = (ide_drive_t*) cdi->handle;
+> 	struct request_sense sense;
+>+	struct atapi_capabilities_page cap;
+> 	int stat;
+> 
+> 	if ((stat = cdrom_select_speed(drive, speed, &sense)) < 0)
+> 		return stat;
+> 
+>-        cdi->speed = CDROM_STATE_FLAGS(drive)->current_speed;
+>+	if (!ide_cdrom_get_capabilities(drive, &cap)) {
+>+		ide_cdrom_update_speed(drive, &cap);
+>+		cdi->speed = CDROM_STATE_FLAGS(drive)->current_speed;
+>+	}
+>         return 0;
+> }
+> 
+>@@ -2869,31 +2914,6 @@ static int ide_cdrom_register (ide_drive
+> }
+> 
+> static
+>-int ide_cdrom_get_capabilities(ide_drive_t *drive, struct atapi_capabilities_page *cap)
+>-{
+>-	struct cdrom_info *info = drive->driver_data;
+>-	struct cdrom_device_info *cdi = &info->devinfo;
+>-	struct packet_command cgc;
+>-	int stat, attempts = 3, size = sizeof(*cap);
+>-
+>-	/*
+>-	 * ACER50 (and others?) require the full spec length mode sense
+>-	 * page capabilities size, but older drives break.
+>-	 */
+>-	if (!(!strcmp(drive->id->model, "ATAPI CD ROM DRIVE 50X MAX") ||
+>-	    !strcmp(drive->id->model, "WPI CDS-32X")))
+>-		size -= sizeof(cap->pad);
+>-
+>-	init_cdrom_command(&cgc, cap, size, CGC_DATA_UNKNOWN);
+>-	do { /* we seem to get stat=0x01,err=0x00 the first time (??) */
+>-		stat = cdrom_mode_sense(cdi, &cgc, GPMODE_CAPABILITIES_PAGE, 0);
+>-		if (!stat)
+>-			break;
+>-	} while (--attempts);
+>-	return stat;
+>-}
+>-
+>-static
+> int ide_cdrom_probe_capabilities (ide_drive_t *drive)
+> {
+> 	struct cdrom_info *info = drive->driver_data;
+>@@ -2978,20 +2998,7 @@ int ide_cdrom_probe_capabilities (ide_dr
+> 		}
+> 	}
+> 
+>-	/* The ACER/AOpen 24X cdrom has the speed fields byte-swapped */
+>-	if (!drive->id->model[0] &&
+>-	    !strncmp(drive->id->fw_rev, "241N", 4)) {
+>-		CDROM_STATE_FLAGS(drive)->current_speed  = 
+>-			(((unsigned int)cap.curspeed) + (176/2)) / 176;
+>-		CDROM_CONFIG_FLAGS(drive)->max_speed = 
+>-			(((unsigned int)cap.maxspeed) + (176/2)) / 176;
+>-	} else {
+>-		CDROM_STATE_FLAGS(drive)->current_speed  = 
+>-			(ntohs(cap.curspeed) + (176/2)) / 176;
+>-		CDROM_CONFIG_FLAGS(drive)->max_speed = 
+>-			(ntohs(cap.maxspeed) + (176/2)) / 176;
+>-	}
+>-
+>+	ide_cdrom_update_speed(drive, &cap);
+> 	/* don't print speed if the drive reported 0.
+> 	 */
+> 	printk(KERN_INFO "%s: ATAPI", drive->name);
+>
+>
+>  
+>
 
-Attached (sorry for that but I needed to push it through gmail).
-
-Please note that all other usages of host_set->lock are dependent on
-existence of hardware (S)ATA port which is simply not a case for SAS.
-We can also avoid using host_set entirely by allowing SAS layer to only
-register struct ata_port.
-
-Thanks,
-Bartlomiej
-
-------=_Part_8098_2944466.1128459382182
-Content-Type: text/x-patch; name="libata-qc_transport.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="libata-qc_transport.patch"
-
-W1BBVENIXSBsaWJhdGE6IGFkZCBvcHMtPnFjX3RyYW5zcG9ydCBmb3IgU0FTCgoqIGFkZCAtPnFj
-X3RyYW5zcG9ydCB0byBzdHJ1Y3QgYXRhX3BvcnRfb3BlcmF0aW9ucwoqIGFkZCBkZWZhdWx0IGF0
-YV9xY190cmFuc3BvcnQoKSBhbmQgdXBkYXRlIGFsbCBob3N0IGRyaXZlcnMKClRoYW5rcyB0byB0
-aGlzIGNoYW5nZSB3ZSB3b24ndCBoYXZlIHRvIGRlcGVuZCBvbiBob3N0X3NldAphbmQgaG9zdF9z
-ZXQtPmxvY2sgZm9yIGRldmljZXMgYXR0YWNoZWQgdG8gU0FTIEhCQXMuCgpTaWduZWQtb2ZmLWJ5
-OiBCYXJ0bG9taWVqIFpvbG5pZXJraWV3aWN6IDxiem9sbmllckBnbWFpbC5jb20+CgpJbmRleDog
-bGliYXRhLWRldi9kcml2ZXJzL3Njc2kvbGliYXRhLWNvcmUuYwo9PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaWJh
-dGEtZGV2Lm9yaWcvZHJpdmVycy9zY3NpL2xpYmF0YS1jb3JlLmMKKysrIGxpYmF0YS1kZXYvZHJp
-dmVycy9zY3NpL2xpYmF0YS1jb3JlLmMKQEAgLTExMzgsNyArMTEzOCw2IEBAIHN0YXRpYyB2b2lk
-IGF0YV9kZXZfaWRlbnRpZnkoc3RydWN0IGF0YV8KIAl1bnNpZ25lZCBpbnQgdXNpbmdfZWRkOwog
-CURFQ0xBUkVfQ09NUExFVElPTih3YWl0KTsKIAlzdHJ1Y3QgYXRhX3F1ZXVlZF9jbWQgKnFjOwot
-CXVuc2lnbmVkIGxvbmcgZmxhZ3M7CiAJaW50IHJjOwogCiAJaWYgKCFhdGFfZGV2X3ByZXNlbnQo
-ZGV2KSkgewpAQCAtMTE3OSw5ICsxMTc4LDcgQEAgcmV0cnk6CiAJcWMtPndhaXRpbmcgPSAmd2Fp
-dDsKIAlxYy0+Y29tcGxldGVfZm4gPSBhdGFfcWNfY29tcGxldGVfbm9vcDsKIAotCXNwaW5fbG9j
-a19pcnFzYXZlKCZhcC0+aG9zdF9zZXQtPmxvY2ssIGZsYWdzKTsKLQlyYyA9IGF0YV9xY19pc3N1
-ZShxYyk7Ci0Jc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmYXAtPmhvc3Rfc2V0LT5sb2NrLCBmbGFn
-cyk7CisJcmMgPSBhcC0+b3BzLT5xY190cmFuc3BvcnQocWMpOwogCiAJaWYgKHJjKQogCQlnb3Rv
-IGVycl9vdXQ7CkBAIC0yMTE0LDcgKzIxMTEsNiBAQCBzdGF0aWMgdm9pZCBhdGFfZGV2X3NldF94
-ZmVybW9kZShzdHJ1Y3QgCiAJREVDTEFSRV9DT01QTEVUSU9OKHdhaXQpOwogCXN0cnVjdCBhdGFf
-cXVldWVkX2NtZCAqcWM7CiAJaW50IHJjOwotCXVuc2lnbmVkIGxvbmcgZmxhZ3M7CiAKIAkvKiBz
-ZXQgdXAgc2V0LWZlYXR1cmVzIHRhc2tmaWxlICovCiAJRFBSSU5USygic2V0IGZlYXR1cmVzIC0g
-eGZlciBtb2RlXG4iKTsKQEAgLTIxMzEsOSArMjEyNyw3IEBAIHN0YXRpYyB2b2lkIGF0YV9kZXZf
-c2V0X3hmZXJtb2RlKHN0cnVjdCAKIAlxYy0+d2FpdGluZyA9ICZ3YWl0OwogCXFjLT5jb21wbGV0
-ZV9mbiA9IGF0YV9xY19jb21wbGV0ZV9ub29wOwogCi0Jc3Bpbl9sb2NrX2lycXNhdmUoJmFwLT5o
-b3N0X3NldC0+bG9jaywgZmxhZ3MpOwotCXJjID0gYXRhX3FjX2lzc3VlKHFjKTsKLQlzcGluX3Vu
-bG9ja19pcnFyZXN0b3JlKCZhcC0+aG9zdF9zZXQtPmxvY2ssIGZsYWdzKTsKKwlyYyA9IGFwLT5v
-cHMtPnFjX3RyYW5zcG9ydChxYyk7CiAKIAlpZiAocmMpCiAJCWF0YV9wb3J0X2Rpc2FibGUoYXAp
-OwpAQCAtMjkzMyw3ICsyOTI3LDYgQEAgc3RhdGljIHZvaWQgYXRhcGlfcmVxdWVzdF9zZW5zZShz
-dHJ1Y3QgYQogewogCURFQ0xBUkVfQ09NUExFVElPTih3YWl0KTsKIAlzdHJ1Y3QgYXRhX3F1ZXVl
-ZF9jbWQgKnFjOwotCXVuc2lnbmVkIGxvbmcgZmxhZ3M7CiAJaW50IHJjOwogCiAJRFBSSU5USygi
-QVRBUEkgcmVxdWVzdCBzZW5zZVxuIik7CkBAIC0yOTYyLDkgKzI5NTUsNyBAQCBzdGF0aWMgdm9p
-ZCBhdGFwaV9yZXF1ZXN0X3NlbnNlKHN0cnVjdCBhCiAJcWMtPndhaXRpbmcgPSAmd2FpdDsKIAlx
-Yy0+Y29tcGxldGVfZm4gPSBhdGFfcWNfY29tcGxldGVfbm9vcDsKIAotCXNwaW5fbG9ja19pcnFz
-YXZlKCZhcC0+aG9zdF9zZXQtPmxvY2ssIGZsYWdzKTsKLQlyYyA9IGF0YV9xY19pc3N1ZShxYyk7
-Ci0Jc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmYXAtPmhvc3Rfc2V0LT5sb2NrLCBmbGFncyk7CisJ
-cmMgPSBhcC0+b3BzLT5xY190cmFuc3BvcnQocWMpOwogCiAJaWYgKHJjKQogCQlhdGFfcG9ydF9k
-aXNhYmxlKGFwKTsKQEAgLTMzMjEsNiArMzMxMiwyOSBAQCBlcnJfb3V0OgogCXJldHVybiAtMTsK
-IH0KIAorLyoqCisgKglhdGFfcWNfdHJhbnNwb3J0IC0gdHJhbnNwb3J0IHRhc2tmaWxlIHRvIGRl
-dmljZQorICoJQHFjOiBjb21tYW5kIHRvIGlzc3VlIHRvIGRldmljZQorICoKKyAqCUxPQ0tJTkc6
-CisgKglPYnRhaW5zIGhvc3Rfc2V0IGxvY2suCisgKgorICoJUkVUVVJOUzoKKyAqCVplcm8gb24g
-c3VjY2VzcywgbmVnYXRpdmUgb24gZXJyb3IuCisgKi8KKworaW50IGF0YV9xY190cmFuc3BvcnQo
-c3RydWN0IGF0YV9xdWV1ZWRfY21kICpxYykKK3sKKwlzdHJ1Y3QgYXRhX3BvcnQgKmFwID0gcWMt
-PmFwOworCXVuc2lnbmVkIGxvbmcgZmxhZ3M7CisJaW50IHJjOworCisJc3Bpbl9sb2NrX2lycXNh
-dmUoJmFwLT5ob3N0X3NldC0+bG9jaywgZmxhZ3MpOworCXJjID0gYXRhX3FjX2lzc3VlKHFjKTsK
-KwlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZhcC0+aG9zdF9zZXQtPmxvY2ssIGZsYWdzKTsKKwor
-CXJldHVybiByYzsKK30KIAogLyoqCiAgKglhdGFfcWNfaXNzdWVfcHJvdCAtIGlzc3VlIHRhc2tm
-aWxlIHRvIGRldmljZSBpbiBwcm90by1kZXBlbmRlbnQgbWFubmVyCkBAIC00NTkzLDYgKzQ2MDcs
-NyBAQCBFWFBPUlRfU1lNQk9MX0dQTChhdGFfaG9zdF9zZXRfcmVtb3ZlKTsKIEVYUE9SVF9TWU1C
-T0xfR1BMKGF0YV9zZ19pbml0KTsKIEVYUE9SVF9TWU1CT0xfR1BMKGF0YV9zZ19pbml0X29uZSk7
-CiBFWFBPUlRfU1lNQk9MX0dQTChhdGFfcWNfY29tcGxldGUpOworRVhQT1JUX1NZTUJPTF9HUEwo
-YXRhX3FjX3RyYW5zcG9ydCk7CiBFWFBPUlRfU1lNQk9MX0dQTChhdGFfcWNfaXNzdWVfcHJvdCk7
-CiBFWFBPUlRfU1lNQk9MX0dQTChhdGFfZW5nX3RpbWVvdXQpOwogRVhQT1JUX1NZTUJPTF9HUEwo
-YXRhX3RmX2xvYWQpOwpJbmRleDogbGliYXRhLWRldi9pbmNsdWRlL2xpbnV4L2xpYmF0YS5oCj09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT0KLS0tIGxpYmF0YS1kZXYub3JpZy9pbmNsdWRlL2xpbnV4L2xpYmF0YS5oCisrKyBs
-aWJhdGEtZGV2L2luY2x1ZGUvbGludXgvbGliYXRhLmgKQEAgLTM1Miw2ICszNTIsNyBAQCBzdHJ1
-Y3QgYXRhX3BvcnRfb3BlcmF0aW9ucyB7CiAKIAl2b2lkICgqcWNfcHJlcCkgKHN0cnVjdCBhdGFf
-cXVldWVkX2NtZCAqcWMpOwogCWludCAoKnFjX2lzc3VlKSAoc3RydWN0IGF0YV9xdWV1ZWRfY21k
-ICpxYyk7CisJaW50ICgqcWNfdHJhbnNwb3J0KSAoc3RydWN0IGF0YV9xdWV1ZWRfY21kICpxYyk7
-CiAKIAl2b2lkICgqZW5nX3RpbWVvdXQpIChzdHJ1Y3QgYXRhX3BvcnQgKmFwKTsKIApAQCAtNDE5
-LDYgKzQyMCw3IEBAIGV4dGVybiB2b2lkIGF0YV9ob3N0X3N0b3AgKHN0cnVjdCBhdGFfaG8KIGV4
-dGVybiBpcnFyZXR1cm5fdCBhdGFfaW50ZXJydXB0IChpbnQgaXJxLCB2b2lkICpkZXZfaW5zdGFu
-Y2UsIHN0cnVjdCBwdF9yZWdzICpyZWdzKTsKIGV4dGVybiB2b2lkIGF0YV9xY19wcmVwKHN0cnVj
-dCBhdGFfcXVldWVkX2NtZCAqcWMpOwogZXh0ZXJuIGludCBhdGFfcWNfaXNzdWVfcHJvdChzdHJ1
-Y3QgYXRhX3F1ZXVlZF9jbWQgKnFjKTsKK2V4dGVybiBpbnQgYXRhX3FjX3RyYW5zcG9ydChzdHJ1
-Y3QgYXRhX3F1ZXVlZF9jbWQgKnFjKTsKIGV4dGVybiB2b2lkIGF0YV9zZ19pbml0X29uZShzdHJ1
-Y3QgYXRhX3F1ZXVlZF9jbWQgKnFjLCB2b2lkICpidWYsCiAJCXVuc2lnbmVkIGludCBidWZsZW4p
-OwogZXh0ZXJuIHZvaWQgYXRhX3NnX2luaXQoc3RydWN0IGF0YV9xdWV1ZWRfY21kICpxYywgc3Ry
-dWN0IHNjYXR0ZXJsaXN0ICpzZywKSW5kZXg6IGxpYmF0YS1kZXYvZHJpdmVycy9zY3NpL2FoY2ku
-Ywo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09Ci0tLSBsaWJhdGEtZGV2Lm9yaWcvZHJpdmVycy9zY3NpL2FoY2kuYworKysg
-bGliYXRhLWRldi9kcml2ZXJzL3Njc2kvYWhjaS5jCkBAIC0yMzAsNiArMjMwLDcgQEAgc3RhdGlj
-IHN0cnVjdCBhdGFfcG9ydF9vcGVyYXRpb25zIGFoY2lfbwogCiAJLnFjX3ByZXAJCT0gYWhjaV9x
-Y19wcmVwLAogCS5xY19pc3N1ZQkJPSBhaGNpX3FjX2lzc3VlLAorCS5xY190cmFuc3BvcnQJCT0g
-YXRhX3FjX3RyYW5zcG9ydCwKIAogCS5lbmdfdGltZW91dAkJPSBhaGNpX2VuZ190aW1lb3V0LAog
-CkluZGV4OiBsaWJhdGEtZGV2L2RyaXZlcnMvc2NzaS9hdGFfcGlpeC5jCj09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0t
-IGxpYmF0YS1kZXYub3JpZy9kcml2ZXJzL3Njc2kvYXRhX3BpaXguYworKysgbGliYXRhLWRldi9k
-cml2ZXJzL3Njc2kvYXRhX3BpaXguYwpAQCAtMTY2LDYgKzE2Niw3IEBAIHN0YXRpYyBzdHJ1Y3Qg
-YXRhX3BvcnRfb3BlcmF0aW9ucyBwaWl4X3AKIAkuYm1kbWFfc3RhdHVzCQk9IGF0YV9ibWRtYV9z
-dGF0dXMsCiAJLnFjX3ByZXAJCT0gYXRhX3FjX3ByZXAsCiAJLnFjX2lzc3VlCQk9IGF0YV9xY19p
-c3N1ZV9wcm90LAorCS5xY190cmFuc3BvcnQJCT0gYXRhX3FjX3RyYW5zcG9ydCwKIAogCS5lbmdf
-dGltZW91dAkJPSBhdGFfZW5nX3RpbWVvdXQsCiAKQEAgLTE5NCw2ICsxOTUsNyBAQCBzdGF0aWMg
-c3RydWN0IGF0YV9wb3J0X29wZXJhdGlvbnMgcGlpeF9zCiAJLmJtZG1hX3N0YXR1cwkJPSBhdGFf
-Ym1kbWFfc3RhdHVzLAogCS5xY19wcmVwCQk9IGF0YV9xY19wcmVwLAogCS5xY19pc3N1ZQkJPSBh
-dGFfcWNfaXNzdWVfcHJvdCwKKwkucWNfdHJhbnNwb3J0CQk9IGF0YV9xY190cmFuc3BvcnQsCiAK
-IAkuZW5nX3RpbWVvdXQJCT0gYXRhX2VuZ190aW1lb3V0LAogCkluZGV4OiBsaWJhdGEtZGV2L2Ry
-aXZlcnMvc2NzaS9zYXRhX212LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGliYXRhLWRldi5vcmlnL2RyaXZl
-cnMvc2NzaS9zYXRhX212LmMKKysrIGxpYmF0YS1kZXYvZHJpdmVycy9zY3NpL3NhdGFfbXYuYwpA
-QCAtMjIzLDYgKzIyMyw3IEBAIHN0YXRpYyBzdHJ1Y3QgYXRhX3BvcnRfb3BlcmF0aW9ucyBtdl9v
-cHMKIAogCS5xY19wcmVwCQk9IGF0YV9xY19wcmVwLAogCS5xY19pc3N1ZQkJPSBhdGFfcWNfaXNz
-dWVfcHJvdCwKKwkucWNfdHJhbnNwb3J0CQk9IGF0YV9xY190cmFuc3BvcnQsCiAKIAkuZW5nX3Rp
-bWVvdXQJCT0gYXRhX2VuZ190aW1lb3V0LAogCkluZGV4OiBsaWJhdGEtZGV2L2RyaXZlcnMvc2Nz
-aS9zYXRhX252LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGliYXRhLWRldi5vcmlnL2RyaXZlcnMvc2NzaS9z
-YXRhX252LmMKKysrIGxpYmF0YS1kZXYvZHJpdmVycy9zY3NpL3NhdGFfbnYuYwpAQCAtMjUyLDYg
-KzI1Miw3IEBAIHN0YXRpYyBzdHJ1Y3QgYXRhX3BvcnRfb3BlcmF0aW9ucyBudl9vcHMKIAkuYm1k
-bWFfc3RhdHVzCQk9IGF0YV9ibWRtYV9zdGF0dXMsCiAJLnFjX3ByZXAJCT0gYXRhX3FjX3ByZXAs
-CiAJLnFjX2lzc3VlCQk9IGF0YV9xY19pc3N1ZV9wcm90LAorCS5xY190cmFuc3BvcnQJCT0gYXRh
-X3FjX3RyYW5zcG9ydCwKIAkuZW5nX3RpbWVvdXQJCT0gYXRhX2VuZ190aW1lb3V0LAogCS5pcnFf
-aGFuZGxlcgkJPSBudl9pbnRlcnJ1cHQsCiAJLmlycV9jbGVhcgkJPSBhdGFfYm1kbWFfaXJxX2Ns
-ZWFyLApJbmRleDogbGliYXRhLWRldi9kcml2ZXJzL3Njc2kvc2F0YV9wcm9taXNlLmMKPT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PQotLS0gbGliYXRhLWRldi5vcmlnL2RyaXZlcnMvc2NzaS9zYXRhX3Byb21pc2UuYworKysg
-bGliYXRhLWRldi9kcml2ZXJzL3Njc2kvc2F0YV9wcm9taXNlLmMKQEAgLTEyNSw2ICsxMjUsNyBA
-QCBzdGF0aWMgc3RydWN0IGF0YV9wb3J0X29wZXJhdGlvbnMgcGRjX3NhCiAKIAkucWNfcHJlcAkJ
-PSBwZGNfcWNfcHJlcCwKIAkucWNfaXNzdWUJCT0gcGRjX3FjX2lzc3VlX3Byb3QsCisJLnFjX3Ry
-YW5zcG9ydAkJPSBhdGFfcWNfdHJhbnNwb3J0LAogCS5lbmdfdGltZW91dAkJPSBwZGNfZW5nX3Rp
-bWVvdXQsCiAJLmlycV9oYW5kbGVyCQk9IHBkY19pbnRlcnJ1cHQsCiAJLmlycV9jbGVhcgkJPSBw
-ZGNfaXJxX2NsZWFyLApAQCAtMTQ4LDYgKzE0OSw3IEBAIHN0YXRpYyBzdHJ1Y3QgYXRhX3BvcnRf
-b3BlcmF0aW9ucyBwZGNfcGEKIAogCS5xY19wcmVwCQk9IHBkY19xY19wcmVwLAogCS5xY19pc3N1
-ZQkJPSBwZGNfcWNfaXNzdWVfcHJvdCwKKwkucWNfdHJhbnNwb3J0CQk9IGF0YV9xY190cmFuc3Bv
-cnQsCiAJLmVuZ190aW1lb3V0CQk9IHBkY19lbmdfdGltZW91dCwKIAkuaXJxX2hhbmRsZXIJCT0g
-cGRjX2ludGVycnVwdCwKIAkuaXJxX2NsZWFyCQk9IHBkY19pcnFfY2xlYXIsCkluZGV4OiBsaWJh
-dGEtZGV2L2RyaXZlcnMvc2NzaS9zYXRhX3FzdG9yLmMKPT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGliYXRhLWRl
-di5vcmlnL2RyaXZlcnMvc2NzaS9zYXRhX3FzdG9yLmMKKysrIGxpYmF0YS1kZXYvZHJpdmVycy9z
-Y3NpL3NhdGFfcXN0b3IuYwpAQCAtMTU2LDYgKzE1Niw3IEBAIHN0YXRpYyBzdHJ1Y3QgYXRhX3Bv
-cnRfb3BlcmF0aW9ucyBxc19hdGEKIAkucGh5X3Jlc2V0CQk9IHFzX3BoeV9yZXNldCwKIAkucWNf
-cHJlcAkJPSBxc19xY19wcmVwLAogCS5xY19pc3N1ZQkJPSBxc19xY19pc3N1ZSwKKwkucWNfdHJh
-bnNwb3J0CQk9IGF0YV9xY190cmFuc3BvcnQsCiAJLmVuZ190aW1lb3V0CQk9IHFzX2VuZ190aW1l
-b3V0LAogCS5pcnFfaGFuZGxlcgkJPSBxc19pbnRyLAogCS5pcnFfY2xlYXIJCT0gcXNfaXJxX2Ns
-ZWFyLApJbmRleDogbGliYXRhLWRldi9kcml2ZXJzL3Njc2kvc2F0YV9zaWwuYwo9PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-Ci0tLSBsaWJhdGEtZGV2Lm9yaWcvZHJpdmVycy9zY3NpL3NhdGFfc2lsLmMKKysrIGxpYmF0YS1k
-ZXYvZHJpdmVycy9zY3NpL3NhdGFfc2lsLmMKQEAgLTE2Niw2ICsxNjYsNyBAQCBzdGF0aWMgc3Ry
-dWN0IGF0YV9wb3J0X29wZXJhdGlvbnMgc2lsX29wCiAJLmJtZG1hX3N0YXR1cwkJPSBhdGFfYm1k
-bWFfc3RhdHVzLAogCS5xY19wcmVwCQk9IGF0YV9xY19wcmVwLAogCS5xY19pc3N1ZQkJPSBhdGFf
-cWNfaXNzdWVfcHJvdCwKKwkucWNfdHJhbnNwb3J0CQk9IGF0YV9xY190cmFuc3BvcnQsCiAJLmVu
-Z190aW1lb3V0CQk9IGF0YV9lbmdfdGltZW91dCwKIAkuaXJxX2hhbmRsZXIJCT0gYXRhX2ludGVy
-cnVwdCwKIAkuaXJxX2NsZWFyCQk9IGF0YV9ibWRtYV9pcnFfY2xlYXIsCkluZGV4OiBsaWJhdGEt
-ZGV2L2RyaXZlcnMvc2NzaS9zYXRhX3Npcy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpYmF0YS1kZXYub3Jp
-Zy9kcml2ZXJzL3Njc2kvc2F0YV9zaXMuYworKysgbGliYXRhLWRldi9kcml2ZXJzL3Njc2kvc2F0
-YV9zaXMuYwpAQCAtMTE2LDYgKzExNiw3IEBAIHN0YXRpYyBzdHJ1Y3QgYXRhX3BvcnRfb3BlcmF0
-aW9ucyBzaXNfb3AKIAkuYm1kbWFfc3RhdHVzCQk9IGF0YV9ibWRtYV9zdGF0dXMsCiAJLnFjX3By
-ZXAJCT0gYXRhX3FjX3ByZXAsCiAJLnFjX2lzc3VlCQk9IGF0YV9xY19pc3N1ZV9wcm90LAorCS5x
-Y190cmFuc3BvcnQJCT0gYXRhX3FjX3RyYW5zcG9ydCwKIAkuZW5nX3RpbWVvdXQJCT0gYXRhX2Vu
-Z190aW1lb3V0LAogCS5pcnFfaGFuZGxlcgkJPSBhdGFfaW50ZXJydXB0LAogCS5pcnFfY2xlYXIJ
-CT0gYXRhX2JtZG1hX2lycV9jbGVhciwKSW5kZXg6IGxpYmF0YS1kZXYvZHJpdmVycy9zY3NpL3Nh
-dGFfc3Z3LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PQotLS0gbGliYXRhLWRldi5vcmlnL2RyaXZlcnMvc2NzaS9zYXRh
-X3N2dy5jCisrKyBsaWJhdGEtZGV2L2RyaXZlcnMvc2NzaS9zYXRhX3N2dy5jCkBAIC0zMTEsNiAr
-MzExLDcgQEAgc3RhdGljIHN0cnVjdCBhdGFfcG9ydF9vcGVyYXRpb25zIGsyX3NhdAogCS5ibWRt
-YV9zdGF0dXMJCT0gYXRhX2JtZG1hX3N0YXR1cywKIAkucWNfcHJlcAkJPSBhdGFfcWNfcHJlcCwK
-IAkucWNfaXNzdWUJCT0gYXRhX3FjX2lzc3VlX3Byb3QsCisJLnFjX3RyYW5zcG9ydAkJPSBhdGFf
-cWNfdHJhbnNwb3J0LAogCS5lbmdfdGltZW91dAkJPSBhdGFfZW5nX3RpbWVvdXQsCiAJLmlycV9o
-YW5kbGVyCQk9IGF0YV9pbnRlcnJ1cHQsCiAJLmlycV9jbGVhcgkJPSBhdGFfYm1kbWFfaXJxX2Ns
-ZWFyLApJbmRleDogbGliYXRhLWRldi9kcml2ZXJzL3Njc2kvc2F0YV9zeDQuYwo9PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-Ci0tLSBsaWJhdGEtZGV2Lm9yaWcvZHJpdmVycy9zY3NpL3NhdGFfc3g0LmMKKysrIGxpYmF0YS1k
-ZXYvZHJpdmVycy9zY3NpL3NhdGFfc3g0LmMKQEAgLTIwNiw2ICsyMDYsNyBAQCBzdGF0aWMgc3Ry
-dWN0IGF0YV9wb3J0X29wZXJhdGlvbnMgcGRjXzIwCiAJLnBoeV9yZXNldAkJPSBwZGNfMjA2MjFf
-cGh5X3Jlc2V0LAogCS5xY19wcmVwCQk9IHBkYzIwNjIxX3FjX3ByZXAsCiAJLnFjX2lzc3VlCQk9
-IHBkYzIwNjIxX3FjX2lzc3VlX3Byb3QsCisJLnFjX3RyYW5zcG9ydAkJPSBhdGFfcWNfdHJhbnNw
-b3J0LAogCS5lbmdfdGltZW91dAkJPSBwZGNfZW5nX3RpbWVvdXQsCiAJLmlycV9oYW5kbGVyCQk9
-IHBkYzIwNjIxX2ludGVycnVwdCwKIAkuaXJxX2NsZWFyCQk9IHBkYzIwNjIxX2lycV9jbGVhciwK
-SW5kZXg6IGxpYmF0YS1kZXYvZHJpdmVycy9zY3NpL3NhdGFfdWxpLmMKPT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0g
-bGliYXRhLWRldi5vcmlnL2RyaXZlcnMvc2NzaS9zYXRhX3VsaS5jCisrKyBsaWJhdGEtZGV2L2Ry
-aXZlcnMvc2NzaS9zYXRhX3VsaS5jCkBAIC0xMDcsNiArMTA3LDcgQEAgc3RhdGljIHN0cnVjdCBh
-dGFfcG9ydF9vcGVyYXRpb25zIHVsaV9vcAogCS5ibWRtYV9zdGF0dXMJCT0gYXRhX2JtZG1hX3N0
-YXR1cywKIAkucWNfcHJlcAkJPSBhdGFfcWNfcHJlcCwKIAkucWNfaXNzdWUJCT0gYXRhX3FjX2lz
-c3VlX3Byb3QsCisJLnFjX3RyYW5zcG9ydAkJPSBhdGFfcWNfdHJhbnNwb3J0LAogCiAJLmVuZ190
-aW1lb3V0CQk9IGF0YV9lbmdfdGltZW91dCwKIApJbmRleDogbGliYXRhLWRldi9kcml2ZXJzL3Nj
-c2kvc2F0YV92aWEuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaWJhdGEtZGV2Lm9yaWcvZHJpdmVycy9zY3Np
-L3NhdGFfdmlhLmMKKysrIGxpYmF0YS1kZXYvZHJpdmVycy9zY3NpL3NhdGFfdmlhLmMKQEAgLTEy
-Nyw2ICsxMjcsNyBAQCBzdGF0aWMgc3RydWN0IGF0YV9wb3J0X29wZXJhdGlvbnMgc3ZpYV9zCiAK
-IAkucWNfcHJlcAkJPSBhdGFfcWNfcHJlcCwKIAkucWNfaXNzdWUJCT0gYXRhX3FjX2lzc3VlX3By
-b3QsCisJLnFjX3RyYW5zcG9ydAkJPSBhdGFfcWNfdHJhbnNwb3J0LAogCiAJLmVuZ190aW1lb3V0
-CQk9IGF0YV9lbmdfdGltZW91dCwKIApJbmRleDogbGliYXRhLWRldi9kcml2ZXJzL3Njc2kvc2F0
-YV92c2MuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09Ci0tLSBsaWJhdGEtZGV2Lm9yaWcvZHJpdmVycy9zY3NpL3NhdGFf
-dnNjLmMKKysrIGxpYmF0YS1kZXYvZHJpdmVycy9zY3NpL3NhdGFfdnNjLmMKQEAgLTI0NSw2ICsy
-NDUsNyBAQCBzdGF0aWMgc3RydWN0IGF0YV9wb3J0X29wZXJhdGlvbnMgdnNjX3NhCiAJLmJtZG1h
-X3N0YXR1cwkJPSBhdGFfYm1kbWFfc3RhdHVzLAogCS5xY19wcmVwCQk9IGF0YV9xY19wcmVwLAog
-CS5xY19pc3N1ZQkJPSBhdGFfcWNfaXNzdWVfcHJvdCwKKwkucWNfdHJhbnNwb3J0CQk9IGF0YV9x
-Y190cmFuc3BvcnQsCiAJLmVuZ190aW1lb3V0CQk9IGF0YV9lbmdfdGltZW91dCwKIAkuaXJxX2hh
-bmRsZXIJCT0gdnNjX3NhdGFfaW50ZXJydXB0LAogCS5pcnFfY2xlYXIJCT0gYXRhX2JtZG1hX2ly
-cV9jbGVhciwK
-------=_Part_8098_2944466.1128459382182--
