@@ -1,46 +1,33 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC 0/2] libata: support SATA devices on SAS HBAs
-Date: Tue, 04 Oct 2005 05:56:48 -0400
-Message-ID: <434251E0.9060000@pobox.com>
-References: <4341A91A.3020000@us.ibm.com>
+Subject: Re: [PATCH/RFC 3/4] irq-pio: integrate ata_pio_first_block() with
+ ata_pio_task()
+Date: Tue, 04 Oct 2005 06:10:25 -0400
+Message-ID: <43425511.1040700@pobox.com>
+References: <4321B4E0.8020801@tw.ibm.com> <4321C7DD.5050503@pobox.com>	 <43322C50.1060009@tw.ibm.com> <4333CF07.5010400@pobox.com>	 <4339116D.30908@tw.ibm.com> <433912FB.9000606@tw.ibm.com> <58cb370e05092903083e0d001c@mail.gmail.com> <433D1BC7.6060301@tw.ibm.com> <433D1FC7.2060401@pobox.com> <43411A1A.8050901@tw.ibm.com> <43412F91.4040305@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:63653 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751201AbVJDJ4x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Oct 2005 05:56:53 -0400
-In-Reply-To: <4341A91A.3020000@us.ibm.com>
+Received: from mail.dvmed.net ([216.237.124.58]:3494 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751207AbVJDKKa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Oct 2005 06:10:30 -0400
+In-Reply-To: <43412F91.4040305@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: brking@us.ibm.com
-Cc: linux-ide@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Brett Russ <russb@emc.com>
 
-Brian King wrote:
-> The following patches enhance libata to allow SAS device drivers
-> to utilize libata to talk to SATA devices. It introduces some
-> new APIs which allow libata to be used without allocating a
-> virtual scsi host. This is just a snapshot of what I've
-> come up with at this point and I figured I would post it to
-> see if I was heading in a reasonable direction or not, so
-> don't expect the code below to do anything useful at this point
-> as it is untested.
+Albert Lee wrote:
+> Patch 3/4: integrate ata_pio_first_block() with ata_pio_task()
+> 
+> Changes:
+>    - change the return value of ata_pio_complete()
+>    - add return value for ata_pio_first_block() to avoid queuing another 
+> ata_pio_task()
+>    - rename variable "qc_completed" to "has_next" in ata_pio_task()
 
-hmmmm, neat.  My gut feeling feeling says a slightly better direction 
-might be warranted, but I'll have to think a bit to put that feeling 
-towords.
+seems OK.
 
-* One thought is the desire to allocate a single ata_host_set for the 
-HBA, rather than avoiding ata_host_set.
-* Another thought is the locking scheme -- Christoph once poked me about 
-libata's use of scsi_assign_lock(), which I rather like but he didn't :) 
-  So by the transitive(?) property, if libata's locking is useful, then 
-your solution is probably OK.  And vice versa.
-* I also wonder if there isn't any severe leakage or oops somewhere, 
-because you don't really use ata_host_set, just ata_port.
-
-But note again, these are 6am thoughts, not in-depth analysis.
-
-	Jeff
+not applied since patch #2 was not applied.
 
 
