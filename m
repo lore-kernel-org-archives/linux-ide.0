@@ -1,143 +1,63 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: ATA Information VPD page, lk 2.6.14-rc1+
-Date: Tue, 04 Oct 2005 07:40:38 -0400
-Message-ID: <43426A36.8050605@pobox.com>
-References: <432E7C48.8060205@torque.net>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [PATCH/RFC 2/4] irq-pio: remove ap->dataout_task
+Date: Tue, 04 Oct 2005 19:54:47 +0800
+Message-ID: <43426D87.7030908@tw.ibm.com>
+References: <4321B4E0.8020801@tw.ibm.com> <4321C7DD.5050503@pobox.com>	 <43322C50.1060009@tw.ibm.com> <4333CF07.5010400@pobox.com>	 <4339116D.30908@tw.ibm.com> <433912FB.9000606@tw.ibm.com> <58cb370e05092903083e0d001c@mail.gmail.com> <433D1BC7.6060301@tw.ibm.com> <433D1FC7.2060401@pobox.com> <43411A1A.8050901@tw.ibm.com> <43412BCF.4080408@tw.ibm.com> <434254D3.1050904@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <432E7C48.8060205@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:41676 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932370AbVJDLzP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Oct 2005 07:55:15 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j94Bt94U008047
+	for <linux-ide@vger.kernel.org>; Tue, 4 Oct 2005 07:55:09 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j94Bt96C089612
+	for <linux-ide@vger.kernel.org>; Tue, 4 Oct 2005 07:55:09 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j94Bt95i012235
+	for <linux-ide@vger.kernel.org>; Tue, 4 Oct 2005 07:55:09 -0400
+In-Reply-To: <434254D3.1050904@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Brett Russ <russb@emc.com>
 
-Douglas Gilbert wrote:
-> Jeff,
-> This patch adds support for the ATA Information VPD page
-> defined in sat-r05.pdf (at www.t10.org). This VPD page
-> contains the response to the IDENTIFY (PACKET) DEVICE
-> ATA command amongst of data.
-> 
-> It is against lk 2.6.14-rc1 plus my "libata: scsi error
-> handling" patch that I just sent.
-> 
-> The patch can be exercised with "sg_inq -a /dev/sda"
-> (from sg3_utils-1.17 beta at http://www.torque.net/sg )
-> or "sdparm --page=ai /dev/sda" (from the sdparm-0.95
-> beta at http://www.torque.net/sg/sdparm.html ).
-> smartmontools could use this information if it was
-> available from linux.
-> 
-> As required by the sat-r05 draft, the code executes an
-> IDENTIFY (PACKET) DEVICE ATA command to get the most
-> recent values in dev->id . I know Tejun has been working
-> in this area and may have a better way of doing this
-> (e.g. the inside out spinlocks are a worry). The
-> "signature" part is a hack; registers need to be read
-> after a device reset and held.
-> 
-> Changelog:
->   - add support for the ATA Information VPD page [0x89]
->   - add function to redo IDENTIFY (PACKET) DEVICE ATA
->     command to update the array dev->id, assumes
->     ata_dev_identify() has been called.
+Jeff Garzik wrote:
 
-Basic idea OK, patch rejected due to the following concerns.  Please 
-resend an updated patch.
+> Albert Lee wrote:
+>
+>> @@ -3018,7 +3017,8 @@ fsm_start:
+>>      qc_completed = 0;
+>>  
+>>      switch (ap->hsm_task_state) {
+>> -    case HSM_ST_IDLE:
+>> +    case HSM_ST_FIRST:
+>> +        ata_pio_first_block(ap);
+>>          return;
+>>  
+>>      case HSM_ST:
+>
+>
+> Am I missing something?  You're removing the handling of HSM_ST_IDLE, 
+> which looks very wrong.
 
+The qc_completed flag is introduced to replace the volatile HSM_ST_IDLE 
+state.
+If we access the port when ap->hsm_task_state is HSM_ST_IDLE, the 
+command is completed, next qc might be running on the same port and 
+changing ap->hsm_task_state. So, we cannot rely on ap->hsm_task_state 
+when it is HSM_ST_IDLE.
 
-> @@ -1059,6 +1137,79 @@
->  }
->  
->  /**
-> + *	ata_scsiop_inq_89 - Simulate INQUIRY EVPD page 83, ATA information
-> + *	@args: device IDENTIFY data / SCSI command of interest.
-> + *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
-> + *	@buflen: Response buffer length.
-> + *
-> + *	Yields ATA (and SAT layer) information. Defined per sat-r05
-> + *	This function should also be called for S-ATAPI devices.
-> + *
-> + *	LOCKING:
-> + *	spin_lock_irqsave(host_set lock)
-> + */
-> +
-> +unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf,
-> +			       unsigned int buflen)
-> +{
-> +	struct ata_port *ap;
-> +	struct ata_device *dev;
-> +	struct scsi_cmnd *cmd = args->cmd;
-> +	struct scsi_device *scsidev = cmd->device;
-> +	u8 *scsicmd = cmd->cmnd;
-> +	unsigned int out_len;
-> +	int res;
-> +	const int spec_page_len = 568;
-> +	u8 b[60];
-> +	int is_atapi_dev = 0;
-> +
-> +	out_len = (scsicmd[3] << 8) + scsicmd[4];
-> +	out_len = (buflen < out_len) ? buflen : out_len;
-> +	memset(b, 0, sizeof(b));
-> +	ap = (struct ata_port *)&scsidev->host->hostdata[0];
-> +	if (ap) {
-> +		dev = ata_scsi_find_dev(ap, scsidev);
-> +		if (dev && (dev->class != ATA_DEV_ATA)) {
+>
+> AFAICS, even after your patch is applied, the completion of a qc still 
+> transitions the state to HSM_ST_IDLE.  Perhaps your patch is missing 
+> some transitions -from- HSM_ST_IDLE to HSM_ST_FIRST?
+>
+Yes, the completion of a qc still transitions the state to HSM_ST_IDLE. 
+But we need another way - the qc_completed flag to finish the polling loop.
 
-test dev->class == ATA_DEV_ATAPI, as we may soon add port multiplier 
-device classes, breaking the assumption you're making here.
-
-
-> +			is_atapi_dev = 1;
-> +			b[0] = 0x5;	/* assume MMC device, dubious */
-> +		}
-> +	} else
-> +		dev = NULL;
-> +	b[1] = 0x89;			/* this page code */
-> +	b[2] = (spec_page_len >> 8) & 0xff;
-> +	b[3] = spec_page_len & 0xff;
-> +	strncpy(b + 8, "linux   ", 8);
-> +	strncpy(b + 16, "libata          ", 16);
-
-can we stuff DRV_VERSION in there too?
-
-
-> +	strncpy(b + 32, "0001", 4);
-> +	/* signature stuff goes here, where to fetch it from? */
-> +	b[36] = 0x34;		/* FIS type */
-> +	b[36 + 1] = 0x0;	/* interrupt + PM port */
-> +	b[36 + 4] = 0x1;	/* lba low */
-> +	b[36 + 5] = is_atapi_dev ? 0x14 : 0x0;	/* lba mid */
-> +	b[36 + 6] = is_atapi_dev ? 0xeb : 0x0;	/* lba high */
-> +	b[36 + 12] = 0x1;	/* sector count */
-
-this is a sufficient simulation for now.  for the future, when other 
-devices such as enclosure, port multipliers, and such are supported, 
-we'll probably want to cache the signature returned by the device.
-
-
-> +	b[56] = is_atapi_dev ? 0xa1 : 0xec;	/* command code */
-> +
-> +	memcpy(rbuf, b, ((sizeof(b) < out_len) ? sizeof(b) : out_len));
-> +	if ((out_len <= sizeof(b)) || (! ap) || (! dev))
-> +	    return 0;
-> +	
-> +	spin_unlock_irq(&ap->host_set->lock);
-> +	res = ata_dev_redo_identify(ap, scsidev->id);
-> +	spin_lock_irq(&ap->host_set->lock);
-> +	if (res) {
-> +		/* sat-r05 says ok, leave IDENTIFY response all zeroes */
-> +		DPRINTK("ata_dev_redo_identify failed\n");
-> +		return 0;
-> +	}
-
-Just eliminate this.  dev->id should be considered always current.  If 
-it is not, that should be fixed elsewhere in libata.
-
-The rest of the patch is OK.
-
-	Jeff
-
+Albert
 
