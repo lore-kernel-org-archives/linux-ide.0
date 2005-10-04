@@ -1,188 +1,59 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH/RFC 4/4] irq-pio: add read/write multiple support
-Date: Tue, 04 Oct 2005 06:19:56 -0400
-Message-ID: <4342574C.50900@pobox.com>
-References: <4321B4E0.8020801@tw.ibm.com> <4321C7DD.5050503@pobox.com>	 <43322C50.1060009@tw.ibm.com> <4333CF07.5010400@pobox.com>	 <4339116D.30908@tw.ibm.com> <433912FB.9000606@tw.ibm.com> <58cb370e05092903083e0d001c@mail.gmail.com> <433D1BC7.6060301@tw.ibm.com> <433D1FC7.2060401@pobox.com> <43411A1A.8050901@tw.ibm.com> <43412FF6.5030006@tw.ibm.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [RFC 0/2] libata: support SATA devices on SAS HBAs
+Date: Tue, 4 Oct 2005 12:22:35 +0200
+Message-ID: <58cb370e0510040322q1cb7a13bjfc6c7875140d20a9@mail.gmail.com>
+References: <4341A91A.3020000@us.ibm.com> <434251E0.9060000@pobox.com>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:10662 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932142AbVJDKUD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Oct 2005 06:20:03 -0400
-In-Reply-To: <43412FF6.5030006@tw.ibm.com>
+Received: from nproxy.gmail.com ([64.233.182.206]:59694 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932176AbVJDKWh convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Oct 2005 06:22:37 -0400
+Received: by nproxy.gmail.com with SMTP id x37so218899nfc
+        for <linux-ide@vger.kernel.org>; Tue, 04 Oct 2005 03:22:35 -0700 (PDT)
+In-Reply-To: <434251E0.9060000@pobox.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Brett Russ <russb@emc.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: brking@us.ibm.com, linux-ide@vger.kernel.org
 
-Albert Lee wrote:
-> Patch 4/4: add read/write multiple support
-> 
-> Changes:
->    - add ATA_CMD_READ_MULTI, etc. to ata.h
->    - add multi_count to ata_device and initialize it with device 
-> identify data
->    - merge ata_prot_to_cmd() with ata_dev_set_protocol()
->    - ata_pio_complete(): change the wait condition from (ATA_BUSY | 
-> ATA_DRQ) to ATA_BUSY
->    - add ata_pio_sectors() to support r/w multiple commands
->    - ata_pio_block(): add ata_altstatus(ap) to prevent reading device 
-> status before it is valid
-> 
-> 
-> For your review, thanks.
-> 
-> Albert
-> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-> 
-> 
-> ------------------------------------------------------------------------
-> 
-> --- id7/drivers/scsi/libata-core.c	2005-10-03 12:39:03.000000000 +0800
-> +++ id8/drivers/scsi/libata-core.c	2005-10-03 18:33:26.000000000 +0800
-> @@ -616,49 +616,6 @@ void ata_tf_from_fis(u8 *fis, struct ata
->  }
->  
->  /**
-> - *	ata_prot_to_cmd - determine which read/write opcodes to use
-> - *	@protocol: ATA_PROT_xxx taskfile protocol
-> - *	@lba48: true is lba48 is present
-> - *
-> - *	Given necessary input, determine which read/write commands
-> - *	to use to transfer data.
-> - *
-> - *	LOCKING:
-> - *	None.
-> - */
-> -static int ata_prot_to_cmd(int protocol, int lba48)
-> -{
-> -	int rcmd = 0, wcmd = 0;
-> -
-> -	switch (protocol) {
-> -	case ATA_PROT_PIO:
-> -		if (lba48) {
-> -			rcmd = ATA_CMD_PIO_READ_EXT;
-> -			wcmd = ATA_CMD_PIO_WRITE_EXT;
-> -		} else {
-> -			rcmd = ATA_CMD_PIO_READ;
-> -			wcmd = ATA_CMD_PIO_WRITE;
-> -		}
-> -		break;
-> -
-> -	case ATA_PROT_DMA:
-> -		if (lba48) {
-> -			rcmd = ATA_CMD_READ_EXT;
-> -			wcmd = ATA_CMD_WRITE_EXT;
-> -		} else {
-> -			rcmd = ATA_CMD_READ;
-> -			wcmd = ATA_CMD_WRITE;
-> -		}
-> -		break;
-> -
-> -	default:
-> -		return -1;
-> -	}
-> -
-> -	return rcmd | (wcmd << 8);
-> -}
-> -
-> -/**
->   *	ata_dev_set_protocol - set taskfile protocol and r/w commands
->   *	@dev: device to examine and configure
->   *
-> @@ -675,19 +632,42 @@ static void ata_dev_set_protocol(struct 
->  {
->  	int pio = (dev->flags & ATA_DFLAG_PIO);
->  	int lba48 = (dev->flags & ATA_DFLAG_LBA48);
-> -	int proto, cmd;
-> +	int rcmd, wcmd;
->  
-> -	if (pio)
-> -		proto = dev->xfer_protocol = ATA_PROT_PIO;
-> -	else
-> -		proto = dev->xfer_protocol = ATA_PROT_DMA;
-> +	if (pio) {
-> +		dev->xfer_protocol = ATA_PROT_PIO;
->  
-> -	cmd = ata_prot_to_cmd(proto, lba48);
-> -	if (cmd < 0)
-> -		BUG();
-> +		if (dev->multi_count) {
-> +			if (lba48) {
-> +				rcmd = ATA_CMD_READ_MULTI_EXT;
-> +				wcmd = ATA_CMD_WRITE_MULTI_EXT;
-> +			} else {
-> +				rcmd = ATA_CMD_READ_MULTI;
-> +				wcmd = ATA_CMD_WRITE_MULTI;
-> +			}
-> +		} else {
-> +			if (lba48) {
-> +				rcmd = ATA_CMD_PIO_READ_EXT;
-> +				wcmd = ATA_CMD_PIO_WRITE_EXT;
-> +			} else {
-> +				rcmd = ATA_CMD_PIO_READ;
-> +				wcmd = ATA_CMD_PIO_WRITE;
-> +			}
-> +		}
-> +	} else {
-> +		dev->xfer_protocol = ATA_PROT_DMA;
-> +
-> +		if (lba48) {
-> +			rcmd = ATA_CMD_READ_EXT;
-> +			wcmd = ATA_CMD_WRITE_EXT;
-> +		} else {
-> +			rcmd = ATA_CMD_READ;
-> +			wcmd = ATA_CMD_WRITE;
-> +		}
-> +	}
->  
-> -	dev->read_cmd = cmd & 0xff;
-> -	dev->write_cmd = (cmd >> 8) & 0xff;
-> +	dev->read_cmd = rcmd;
-> +	dev->write_cmd = wcmd;
->  }
->  
->  static const char * xfer_mode_str[] = {
+On 10/4/05, Jeff Garzik <jgarzik@pobox.com> wrote:
+> Brian King wrote:
+> > The following patches enhance libata to allow SAS device drivers
+> > to utilize libata to talk to SATA devices. It introduces some
+> > new APIs which allow libata to be used without allocating a
+> > virtual scsi host. This is just a snapshot of what I've
+> > come up with at this point and I figured I would post it to
+> > see if I was heading in a reasonable direction or not, so
+> > don't expect the code below to do anything useful at this point
+> > as it is untested.
+>
+> hmmmm, neat.  My gut feeling feeling says a slightly better direction
+> might be warranted, but I'll have to think a bit to put that feeling
+> towords.
+>
+> * One thought is the desire to allocate a single ata_host_set for the
+> HBA, rather than avoiding ata_host_set.
 
-I rather liked having ata_prot_to_cmd() separate, but your version is 
-OK.  No objection, just a twitch :)
+For SAS we should definitely avoid ata_host_set.
 
+> * Another thought is the locking scheme -- Christoph once poked me about
+> libata's use of scsi_assign_lock(), which I rather like but he didn't :)
+>   So by the transitive(?) property, if libata's locking is useful, then
+> your solution is probably OK.  And vice versa.
 
-> @@ -2483,13 +2469,13 @@ static int ata_pio_complete (struct ata_
->  	 * we enter, BSY will be cleared in a chk-status or two.  If not,
->  	 * the drive is probably seeking or something.  Snooze for a couple
->  	 * msecs, then chk-status again.  If still busy, fall back to
-> -	 * HSM_ST_POLL state.
-> +	 * HSM_ST_LAST_POLL state.
->  	 */
-> -	drv_stat = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 10);
-> -	if (drv_stat & (ATA_BUSY | ATA_DRQ)) {
-> +	drv_stat = ata_busy_wait(ap, ATA_BUSY, 10);
-> +	if (drv_stat & ATA_BUSY) {
->  		msleep(2);
-> -		drv_stat = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 10);
-> -		if (drv_stat & (ATA_BUSY | ATA_DRQ)) {
-> +		drv_stat = ata_busy_wait(ap, ATA_BUSY, 10);
-> +		if (drv_stat & ATA_BUSY) {
->  			ap->hsm_task_state = HSM_ST_LAST_POLL;
->  			ap->pio_task_timeout = jiffies + ATA_TMOUT_PIO;
->  			return 1;
+host_set->lock is not useful for SAS et all and libata can
+be easily fixed to not require it for SAS (I'll make a patch later).
 
-Eventually we should make sure that DRQ is cleared, at the end of the 
-transfer.  Does other code make this check?
+> * I also wonder if there isn't any severe leakage or oops somewhere,
+> because you don't really use ata_host_set, just ata_port.
+>
+> But note again, these are 6am thoughts, not in-depth analysis.
 
-Ideally, in _all_ cases where look at the status register, we should 
-check the DRDY and DF bits as well.  That's why in drivers/ide/ you find
+:)
 
-	check_bits = ATA_BSY | ATA_DRQ | ATA_DF | ATA_DRDY
-	ok_bits = ATA_DRDY
-	if ((Status & check_bits) == ok_bits)	# BUS IDLE
-		OK
-	else
-		error
-
-Patch is otherwise OK.
-
-Not applied, since patches #2 and #3 were not applied.
-
+Bartlomiej
