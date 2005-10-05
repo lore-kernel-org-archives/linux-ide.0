@@ -1,75 +1,70 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: Problems with SATA/AHCI with 'nosmp'  boot option
-Date: Tue, 4 Oct 2005 19:04:01 -0700
-Message-ID: <20051004190401.11bc4c7e.rdunlap@xenotime.net>
-References: <43312397.9080501@reub.net>
-	<43425A0E.9050500@pobox.com>
+From: "Sadie Holley" <sadie_holleywp@stamm-argonauten.de>
+Subject: LittleSt0cmks Are Coming Up Big
+Date: Wed, 05 Oct 2005 02:26:35 +0100
+Message-ID: <ffb101c5c94b$a05f90d8$96b86041@moerbel.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:26820 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1751163AbVJECEE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Oct 2005 22:04:04 -0400
-Received: from midway ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 4 Oct 2005 19:04:03 -0700
-In-Reply-To: <43425A0E.9050500@pobox.com>
+Received: from oky139.okanagan.bc.ca ([142.231.70.139]:58631 "HELO moerbel.de")
+	by vger.kernel.org with SMTP id S1751209AbVJECaq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Oct 2005 22:30:46 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: reuben-lkml@reub.net, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tue, 04 Oct 2005 06:31:42 -0400 Jeff Garzik wrote:
+ATTENTION INVESTING PUBLIC
 
-> Reuben Farrelly wrote:
-> > Hi,
-> > 
-> > While trying to gather more info about a problem with the latest sky2.c 
-> > Gig ethernet driver hanging, I thought I'd boot my SMP built kernel (on 
-> > an SMP/HT machine) with the 'nosmp' boot option.
-> > 
-> > However when I did this, I could no longer boot the machine, because the 
-> > ahci
-> > driver reported timeouts when probing the drives attached to the SATA 
-> > ports, like this:
-> > 
-> > Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-> > ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-> > ICH6: IDE controller at PCI slot 0000:00:1f.1
-> > ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, low) -> IRQ 73
-> > ICH6: chipset revision 3
-> > ICH6: not 100% native mode: will probe irqs later
-> >     ide0: BM-DMA at 0xffa0-0xffa7, BIOS settings: hda:pio, hdb:pio
-> >     ide1: BM-DMA at 0xffa8-0xffaf, BIOS settings: hdc:pio, hdd:pio
-> > ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 81
-> > ahci(0000:00:1f.2) AHCI 0001.0000 32 slots 4 ports 1.5 Gbps 0xf impl 
-> > SATA mode
-> > ahci(0000:00:1f.2) flags: 64bit ncq led slum part
-> > ata1: SATA max UDMA/133 cmd 0xF8806D00 ctl 0x0 bmdma 0x0 irq 81
-> > ata2: SATA max UDMA/133 cmd 0xF8806D80 ctl 0x0 bmdma 0x0 irq 81
-> > ata3: SATA max UDMA/133 cmd 0xF8806E00 ctl 0x0 bmdma 0x0 irq 81
-> > ata4: SATA max UDMA/133 cmd 0xF8806E80 ctl 0x0 bmdma 0x0 irq 81
-> > ata1 is slow to respond, please be patient
-> > ata1 failed to respond (30 secs)
-> > scsi0 : ahci
-> > ata2 is slow to respond, please be patient
-> > ata2 failed to respond (30 secs)
-> 
-> Sounds like AHCI or MSI is broken.
+ 
 
-Reuben, is AHCI trying to use MSI interrupts in this case?
-(reported in /proc/interrupts)
+ASCE . PK
+Recent Trading Range: $.80 - $.90
+Expected Trading Range: $1.50 - $2.00
+ASCE . PK
 
-If so, I've seen problems with Linux and MSI interrupts
-when "nomsp" is used too.  Can you disable CONFIG_PCI_MSI
-or is this a vendor kernel with it already enabled?
+ 
+BELLEVUE, WA. September 14, 2005 . Ascentia Biomedical Corporation (OTC Pink Sheets; ASCE), a leading researcher and developer of efficacious 
+pharmaceuticals, compounds and other products, announces it has received an initial commitment for up to $1 million in funding for continued research 
+particularly in anti-cancer compounds and for organizational growth.
 
-I posted a patch about 1 week ago that disables MSI interrupts
-if "nomsp" or some similar options are used.  It's in Andrew's
--mm patch set afaik.  or I just put it at
-  http://www.xenotime.net/linux/patches/msi_disable2.patch
-if you care to try it.
 
----
-~Randy
-You can't do anything without having to do something else first.
--- Belefant's Law
+BELLEVUE, WA. September 27th, 2005 . Ascentia Biomedical Corporation (OTC Pink Sheets; ASCE), a leading researcher and developer of efficacious 
+pharmaceuticals, compounds and other products, announces the addition of Dr. Philip Mease to its Scientific Advisory Board. Dr. James Clagett, 
+President and CEO of Ascentia said, .We are privileged to have such an internationally recognized rheumatologist who has a distinguished career in the 
+clinical development of therapies for rheumatic diseases.  Dr. Mease.s experience in clinical drug discovery along with his respected relationship with 
+drug regulatory agencies will greatly assist Ascentia in its drug discovery and commercialization program..
+
+
+Dr. Mease is Chief of the Rheumatology Clinical Research Division at Swedish Hospital, Clinical Professor at the University of Washington, and founder 
+of Seattle Rheumatology Associates.  Dr. Mease graduated from Stanford University Medical School and completed his medical training at University of 
+Washington, Seattle.
+
+ 
+About Ascentia Biomedical Corporation
+
+Our focus is SOLUTIONS through RESEARCH and DISCOVERY. Ascentia is developing and commercializing new pharmaceutical and biomedical products for 
+application in a number of areas, including treatment for asthma, arthritis, psoriasis and cancer.  Initially, a majority of these products will be 
+secured through direct purchase or through licensing. As the Company grows and evolves, more products will be developed internally. Ascentia is focused 
+on therapies for cancer and diseases of inflammation.
+
+
+Forward-Looking Statements
+
+ 
+
+This release may contain forward-looking statements that involve risks
+
+and uncertainties. These statements do not constitute representations
+
+or promises. Rather, these statements express opinions, hopes and
+
+desires that may not be based on objective or factual criteria or
+
+measurable results. No one should rely on such statements for any
+
+purpose except as specifically stated
+
+ 
+
+To get taken off the list email NOSTK@Yahoo.com
+
