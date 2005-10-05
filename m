@@ -1,271 +1,147 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH/RFC 2/4] CHS: calculate read/write commands and protocol on
- the fly
-Date: Wed, 05 Oct 2005 19:23:48 +0800
-Message-ID: <4343B7C4.3000700@tw.ibm.com>
+Subject: [PATCH/RFC 4/4] CHS: optimize LBA28/LBA48 usage
+Date: Wed, 05 Oct 2005 19:27:14 +0800
+Message-ID: <4343B892.80809@tw.ibm.com>
 References: <4321B4E0.8020801@tw.ibm.com> <4321C7DD.5050503@pobox.com>	 <43322C50.1060009@tw.ibm.com> <4333CF07.5010400@pobox.com>	 <4339116D.30908@tw.ibm.com> <433912FB.9000606@tw.ibm.com> <58cb370e05092903083e0d001c@mail.gmail.com> <433D1BC7.6060301@tw.ibm.com> <433D1FC7.2060401@pobox.com> <43411A1A.8050901@tw.ibm.com> <43412FF6.5030006@tw.ibm.com> <43413386.6000203@pobox.com> <43424EC6.2040100@pobox.com> <43426ED9.8030004@tw.ibm.com> <4342706B.3030608@pobox.com> <43427405.80502@tw.ibm.com> <434276B9.7080807@tw.ibm.com> <43427AFD.1020405@pobox.com> <4343B5F5.4090402@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:45000 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S932623AbVJELYC
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Oct 2005 07:24:02 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e31.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id j95BN5RJ001667
-	for <linux-ide@vger.kernel.org>; Wed, 5 Oct 2005 07:23:05 -0400
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j95BNu9W547728
-	for <linux-ide@vger.kernel.org>; Wed, 5 Oct 2005 05:23:56 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j95BNtfj008921
-	for <linux-ide@vger.kernel.org>; Wed, 5 Oct 2005 05:23:56 -0600
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:59287 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932617AbVJEL12 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Oct 2005 07:27:28 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j95BRM77010579
+	for <linux-ide@vger.kernel.org>; Wed, 5 Oct 2005 07:27:22 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j95BRMt2088948
+	for <linux-ide@vger.kernel.org>; Wed, 5 Oct 2005 07:27:22 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j95BRLYt009709
+	for <linux-ide@vger.kernel.org>; Wed, 5 Oct 2005 07:27:22 -0400
 In-Reply-To: <4343B5F5.4090402@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: Mark Lord <mlord@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>, Brett Russ <russb@emc.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Patch 2/4: calculate read/write commands and protocols on the fly
+Patch 4/4: optimize LBA28/LBA48 per Mark's advice.
 
-changes:
-    - merge ata_prot_to_cmd() and ata_dev_set_protocol() as 
-ata_rwcmd_protocol()
-    - pave road for read/write multiple support
-    - remove usage of pre-cached command and protocol values and call 
-ata_rwcmd_protocol() instead
-
+Changes:
+    - add lba_28_ok() and lba_48_ok() to ata.h
+    - use lba_28_ok() for CHS range check
+    - LBA28/LBA48 optimization
 
 For your review, thanks.
 
 Albert
 Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
 
-==============
+=====
 
---- upstream/include/linux/ata.h    2005-10-05 18:04:16.000000000 +0800
-+++ ch2/include/linux/ata.h    2005-10-05 18:11:12.000000000 +0800
-@@ -128,6 +128,10 @@ enum {
-     ATA_CMD_PIO_READ_EXT    = 0x24,
-     ATA_CMD_PIO_WRITE    = 0x30,
-     ATA_CMD_PIO_WRITE_EXT    = 0x34,
-+    ATA_CMD_READ_MULTI    = 0xC4,
-+    ATA_CMD_READ_MULTI_EXT    = 0x29,
-+    ATA_CMD_WRITE_MULTI    = 0xC5,
-+    ATA_CMD_WRITE_MULTI_EXT    = 0x39,
-     ATA_CMD_SET_FEATURES    = 0xEF,
-     ATA_CMD_PACKET        = 0xA0,
-     ATA_CMD_VERIFY        = 0x40,
---- upstream/include/linux/libata.h    2005-10-05 18:04:16.000000000 +0800
-+++ ch2/include/linux/libata.h    2005-10-05 18:11:12.000000000 +0800
-@@ -283,10 +283,8 @@ struct ata_device {
-     u8            xfer_mode;
-     unsigned int        xfer_shift;    /* ATA_SHIFT_xxx */
- 
--    /* cache info about current transfer mode */
--    u8            xfer_protocol;    /* taskfile xfer protocol */
--    u8            read_cmd;    /* opcode to use on read */
--    u8            write_cmd;    /* opcode to use on write */
-+    unsigned int        multi_count;    /* sectors count for
-+                           READ/WRITE MULTIPLE */
- 
-     /* for CHS addressing */
-     u16            cylinders;    /* Number of cylinders */
---- upstream/drivers/scsi/libata.h    2005-10-05 18:04:07.000000000 +0800
-+++ ch2/drivers/scsi/libata.h    2005-10-05 18:11:12.000000000 +0800
-@@ -41,6 +41,7 @@ struct ata_scsi_args {
- extern int atapi_enabled;
- extern struct ata_queued_cmd *ata_qc_new_init(struct ata_port *ap,
-                       struct ata_device *dev);
-+extern void ata_rwcmd_protocol(struct ata_queued_cmd *qc);
- extern void ata_qc_free(struct ata_queued_cmd *qc);
- extern int ata_qc_issue(struct ata_queued_cmd *qc);
- extern int ata_check_atapi_dma(struct ata_queued_cmd *qc);
---- ch1/drivers/scsi/libata-core.c    2005-10-05 18:10:28.000000000 +0800
-+++ ch2/drivers/scsi/libata-core.c    2005-10-05 18:11:12.000000000 +0800
-@@ -616,79 +616,68 @@ void ata_tf_from_fis(u8 *fis, struct ata
-     tf->hob_nsect    = fis[13];
+--- ch2/include/linux/ata.h    2005-10-05 18:11:12.000000000 +0800
++++ ch4/include/linux/ata.h    2005-10-05 18:12:09.000000000 +0800
+@@ -291,4 +291,14 @@ static inline int ata_ok(u8 status)
+             == ATA_DRDY);
  }
  
-+static const u8 ata_rw_cmds[] = {
-+    /* pio multi */
-+    ATA_CMD_READ_MULTI,
-+    ATA_CMD_WRITE_MULTI,
-+    ATA_CMD_READ_MULTI_EXT,
-+    ATA_CMD_WRITE_MULTI_EXT,
-+    /* pio */
-+    ATA_CMD_PIO_READ,
-+    ATA_CMD_PIO_WRITE,
-+    ATA_CMD_PIO_READ_EXT,
-+    ATA_CMD_PIO_WRITE_EXT,
-+    /* dma */
-+    ATA_CMD_READ,
-+    ATA_CMD_WRITE,
-+    ATA_CMD_READ_EXT,
-+    ATA_CMD_WRITE_EXT
-+};
++static inline int lba_28_ok(u64 block, u32 n_block)
++{
++    return (block < ((u64)1 << 28)) && (n_block <= 256);
++}
 +
- /**
-- *    ata_prot_to_cmd - determine which read/write opcodes to use
-- *    @protocol: ATA_PROT_xxx taskfile protocol
-- *    @lba48: true is lba48 is present
-+ *    ata_qc_rwcmd_protocol - set taskfile r/w commands and protocol
-+ *    @qc: command to examine and configure
-  *
-- *    Given necessary input, determine which read/write commands
-- *    to use to transfer data.
-+ *    Examine the device configuration and tf->flags to calculate
-+ *    the proper read/write commands and protocol to use.
-  *
-  *    LOCKING:
-- *    None.
-+ *    caller.
-  */
--static int ata_prot_to_cmd(int protocol, int lba48)
-+static void ata_qc_rwcmd_protocol(struct ata_queued_cmd *qc)
- {
--    int rcmd = 0, wcmd = 0;
--
--    switch (protocol) {
--    case ATA_PROT_PIO:
--        if (lba48) {
--            rcmd = ATA_CMD_PIO_READ_EXT;
--            wcmd = ATA_CMD_PIO_WRITE_EXT;
++static inline int lba_48_ok(u64 block, u32 n_block)
++{
++    return (block < ((u64)1 << 48)) && (n_block <= 65536);
++}
++
+ #endif /* __LINUX_ATA_H__ */
+--- ch3/drivers/scsi/libata-scsi.c    2005-10-05 18:11:12.000000000 +0800
++++ ch4/drivers/scsi/libata-scsi.c    2005-10-05 18:12:09.000000000 +0800
+@@ -633,8 +633,12 @@ static unsigned int ata_scsi_verify_xlat
+     if (dev->flags & ATA_DFLAG_LBA) {
+         tf->flags |= ATA_TFLAG_LBA;
+ 
+-        if (dev->flags & ATA_DFLAG_LBA48) {
+-            if (n_block > (64 * 1024))
++        if (lba_28_ok(block, n_block)) {
++            /* use LBA28 */
++            tf->command = ATA_CMD_VERIFY;
++            tf->device |= (block >> 24) & 0xf;
++        } else if (lba_48_ok(block, n_block)) {
++            if (!(dev->flags & ATA_DFLAG_LBA48))
+                 return 1;
+ 
+             /* use LBA48 */
+@@ -646,14 +650,9 @@ static unsigned int ata_scsi_verify_xlat
+             tf->hob_lbah = (block >> 40) & 0xff;
+             tf->hob_lbam = (block >> 32) & 0xff;
+             tf->hob_lbal = (block >> 24) & 0xff;
 -        } else {
--            rcmd = ATA_CMD_PIO_READ;
--            wcmd = ATA_CMD_PIO_WRITE;
+-            if (n_block > 256)
+-                return 1;
+-
+-            /* use LBA28 */
+-            tf->command = ATA_CMD_VERIFY;
+-            tf->device |= (block >> 24) & 0xf;
 -        }
--        break;
--
--    case ATA_PROT_DMA:
--        if (lba48) {
--            rcmd = ATA_CMD_READ_EXT;
--            wcmd = ATA_CMD_WRITE_EXT;
--        } else {
--            rcmd = ATA_CMD_READ;
--            wcmd = ATA_CMD_WRITE;
--        }
--        break;
-+    struct ata_taskfile *tf = &qc->tf;
-+    struct ata_device *dev = qc->dev;
++        } else
++            /* request too large even for LBA48 */
++            return 1;
  
--    default:
--        return -1;
-+    int index, lba48, write;
-+
-+    lba48 = (tf->flags & ATA_TFLAG_LBA48) ? 2 : 0;
-+    write = (tf->flags & ATA_TFLAG_WRITE) ? 1 : 0;
-+
-+    if (dev->flags & ATA_DFLAG_PIO) {
-+        tf->protocol = ATA_PROT_PIO;
-+        index = dev->multi_count ? 0 : 4;
-+    } else {
-+        tf->protocol = ATA_PROT_DMA;
-+        index = 8;
-     }
- 
--    return rcmd | (wcmd << 8);
-+    tf->command = ata_rw_cmds[index + lba48 + write];
- }
- 
- /**
-- *    ata_dev_set_protocol - set taskfile protocol and r/w commands
-- *    @dev: device to examine and configure
-+ *    ata_rwcmd_protocol - set taskfile r/w commands and protocol
-+ *    @qc: command to examine and configure
-  *
-- *    Examine the device configuration, after we have
-- *    read the identify-device page and configured the
-- *    data transfer mode.  Set internal state related to
-- *    the ATA taskfile protocol (pio, pio mult, dma, etc.)
-- *    and calculate the proper read/write commands to use.
-+ *    Examine the device configuration and tf->flags to calculate
-+ *    the proper read/write commands and protocol to use.
-  *
-  *    LOCKING:
-  *    caller.
-  */
--static void ata_dev_set_protocol(struct ata_device *dev)
-+void ata_rwcmd_protocol(struct ata_queued_cmd *qc)
- {
--    int pio = (dev->flags & ATA_DFLAG_PIO);
--    int lba48 = (dev->flags & ATA_DFLAG_LBA48);
--    int proto, cmd;
--
--    if (pio)
--        proto = dev->xfer_protocol = ATA_PROT_PIO;
--    else
--        proto = dev->xfer_protocol = ATA_PROT_DMA;
--
--    cmd = ata_prot_to_cmd(proto, lba48);
--    if (cmd < 0)
--        BUG();
--
--    dev->read_cmd = cmd & 0xff;
--    dev->write_cmd = (cmd >> 8) & 0xff;
-+    ata_qc_rwcmd_protocol(qc);
- }
- 
- static const char * xfer_mode_str[] = {
-@@ -1641,7 +1630,7 @@ static void ata_host_set_dma(struct ata_
-  */
- static void ata_set_mode(struct ata_port *ap)
- {
--    unsigned int i, xfer_shift;
-+    unsigned int xfer_shift;
-     u8 xfer_mode;
-     int rc;
- 
-@@ -1670,11 +1659,6 @@ static void ata_set_mode(struct ata_port
-     if (ap->ops->post_set_mode)
-         ap->ops->post_set_mode(ap);
- 
--    for (i = 0; i < 2; i++) {
--        struct ata_device *dev = &ap->device[i];
--        ata_dev_set_protocol(dev);
--    }
--
-     return;
- 
- err_out:
---- ch1/drivers/scsi/libata-scsi.c    2005-10-05 18:10:28.000000000 +0800
-+++ ch2/drivers/scsi/libata-scsi.c    2005-10-05 18:11:12.000000000 +0800
-@@ -724,15 +724,10 @@ static unsigned int ata_scsi_rw_xlat(str
-     u32 n_block;
- 
-     tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
--    tf->protocol = qc->dev->xfer_protocol;
- 
--    if (scsicmd[0] == READ_10 || scsicmd[0] == READ_6 ||
--        scsicmd[0] == READ_16) {
--        tf->command = qc->dev->read_cmd;
--    } else {
--        tf->command = qc->dev->write_cmd;
-+    if (scsicmd[0] == WRITE_10 || scsicmd[0] == WRITE_6 ||
-+        scsicmd[0] == WRITE_16)
-         tf->flags |= ATA_TFLAG_WRITE;
--    }
- 
-     /* Calculate the SCSI LBA and transfer length. */
-     switch (scsicmd[0]) {
-@@ -794,6 +789,8 @@ static unsigned int ata_scsi_rw_xlat(str
-             tf->device |= (block >> 24) & 0xf;
-         }
- 
-+        ata_rwcmd_protocol(qc);
-+
-         qc->nsect = n_block;
          tf->nsect = n_block & 0xff;
  
-@@ -810,6 +807,8 @@ static unsigned int ata_scsi_rw_xlat(str
-         if ((block >> 28) || (n_block > 256))
+@@ -666,7 +665,7 @@ static unsigned int ata_scsi_verify_xlat
+         /* CHS */
+         u32 sect, head, cyl, track;
+ 
+-        if (n_block > 256)
++        if (!lba_28_ok(block, n_block))
              return 1;
  
-+        ata_rwcmd_protocol(qc);
-+
          /* Convert LBA to CHS */
-         track = (u32)block / dev->sectors;
-         cyl   = track / dev->heads;
+@@ -766,9 +765,11 @@ static unsigned int ata_scsi_rw_xlat(str
+     if (dev->flags & ATA_DFLAG_LBA) {
+         tf->flags |= ATA_TFLAG_LBA;
+ 
+-        if (dev->flags & ATA_DFLAG_LBA48) {
+-            /* The request -may- be too large for LBA48. */
+-            if ((block >> 48) || (n_block > 65536))
++        if (lba_28_ok(block, n_block)) {
++            /* use LBA28 */
++            tf->device |= (block >> 24) & 0xf;
++        } else if (lba_48_ok(block, n_block)) {
++            if (!(dev->flags & ATA_DFLAG_LBA48))
+                 return 1;
+ 
+             /* use LBA48 */
+@@ -779,15 +780,9 @@ static unsigned int ata_scsi_rw_xlat(str
+             tf->hob_lbah = (block >> 40) & 0xff;
+             tf->hob_lbam = (block >> 32) & 0xff;
+             tf->hob_lbal = (block >> 24) & 0xff;
+-        } else {
+-            /* use LBA28 */
+-
+-            /* The request -may- be too large for LBA28. */
+-            if ((block >> 28) || (n_block > 256))
+-                return 1;
+-
+-            tf->device |= (block >> 24) & 0xf;
+-        }
++        } else
++            /* request too large even for LBA48 */
++            return 1;
+ 
+         ata_rwcmd_protocol(qc);
+ 
+@@ -804,7 +799,7 @@ static unsigned int ata_scsi_rw_xlat(str
+         u32 sect, head, cyl, track;
+ 
+         /* The request -may- be too large for CHS addressing. */
+-        if ((block >> 28) || (n_block > 256))
++        if (!lba_28_ok(block, n_block))
+             return 1;
+ 
+         ata_rwcmd_protocol(qc);
 
 
