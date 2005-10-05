@@ -1,56 +1,100 @@
-From: Nick Pasich <newsletters@NickAndBarb.net>
-Subject: no device found for TX4000
-Date: Wed, 5 Oct 2005 11:05:23 -0700
-Message-ID: <20051005180223.GA17900@10.1.0.5>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH] libata ATAPI command completion fixes and FIXMEs
+Date: Wed, 05 Oct 2005 15:03:50 -0400
+Message-ID: <43442396.1090308@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------090604070406050600070606"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.horizonsd.org ([64.154.95.82]:37998 "EHLO
-	mail.horizonsd.org") by vger.kernel.org with ESMTP id S1030306AbVJESFd
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Oct 2005 14:05:33 -0400
-Content-Disposition: inline
+Received: from mail.dvmed.net ([216.237.124.58]:61914 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030326AbVJETD4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Oct 2005 15:03:56 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+This is a multi-part message in MIME format.
+--------------090604070406050600070606
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Just checked this in:
+
+Author: Jeff Garzik <jgarzik@pobox.com>
+Date:   Wed Oct 5 15:02:14 2005 -0400
+
+   libata: ATAPI command completion tweaks and notes
+
+   1) note urgent bug, that completes command twice
+
+   2) only fix up INQUIRY data if the SCSI version is zero (typically
+   indicates ATAPI MMC-ish device)
+
+   3) if there is a problem on the ATA bus, don't bother with REQUEST
+   SENSE, just directly handle the error based on Status/Error registers.
+
+[patch attached]
 
 
-Jeff,
+--------------090604070406050600070606
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
 
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -1483,9 +1483,18 @@ static int atapi_qc_complete(struct ata_
+ {
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+ 
+-	if (unlikely(drv_stat & (ATA_ERR | ATA_BUSY | ATA_DRQ))) {
++	if (unlikely(drv_stat & (ATA_BUSY | ATA_DRQ)))
++		ata_to_sense_error(qc, drv_stat);
++	else if (unlikely(drv_stat & ATA_ERR)) {
+ 		DPRINTK("request check condition\n");
+ 
++		/* FIXME: command completion with check condition
++		 * but no sense causes the error handler to run,
++		 * which then issues REQUEST SENSE, fills in the sense 
++		 * buffer, and completes the command (for the second
++		 * time).  We need to issue REQUEST SENSE some other
++		 * way, to avoid completing the command twice.
++		 */
+ 		cmd->result = SAM_STAT_CHECK_CONDITION;
+ 
+ 		qc->scsidone(cmd);
+@@ -1499,10 +1508,26 @@ static int atapi_qc_complete(struct ata_
+ 			unsigned int buflen;
+ 
+ 			buflen = ata_scsi_rbuf_get(cmd, &buf);
+-			buf[2] = 0x5;
+-			buf[3] = (buf[3] & 0xf0) | 2;
++
++	/* ATAPI devices typically report zero for their SCSI version,
++	 * and sometimes deviate from the spec WRT response data
++	 * format.  If SCSI version is reported as zero like normal,
++	 * then we make the following fixups:  1) Fake MMC-5 version,
++	 * to indicate to the Linux scsi midlayer this is a modern
++	 * device.  2) Ensure response data format / ATAPI information
++	 * are always correct.
++	 */
++	/* FIXME: do we ever override EVPD pages and the like, with
++	 * this code?
++	 */
++			if (buf[2] == 0) {
++				buf[2] = 0x5;
++				buf[3] = 0x32;
++			}
++
+ 			ata_scsi_rbuf_put(cmd, buf);
+ 		}
++
+ 		cmd->result = SAM_STAT_GOOD;
+ 	}
+ 
 
-I'm running Slackware 10.1 and have compiled linux-2.6.13.3 kernel
-with the sata_promise.c as kernel resident.
-
-
-I received the following in the kernel log:
-
-********************************************************************************
-Oct  4 16:51:24 Server05 kernel: ata1: PATA max UDMA/133 cmd 0xF0800200 ctl 0xF0
-Oct  4 16:51:24 Server05 kernel: ata2: PATA max UDMA/133 cmd 0xF0800280 ctl 0xF0
-Oct  4 16:51:24 Server05 kernel: ata3: PATA max UDMA/133 cmd 0xF0800300 ctl 0xF0
-Oct  4 16:51:24 Server05 kernel: ata4: PATA max UDMA/133 cmd 0xF0800380 ctl 0xF0
-Oct  4 16:51:24 Server05 kernel: ata1: no device found (phy stat 00000000)
-Oct  4 16:51:24 Server05 kernel: scsi1 : sata_promise
-Oct  4 16:51:24 Server05 kernel: ata2: no device found (phy stat 00000000)
-Oct  4 16:51:24 Server05 kernel: scsi2 : sata_promise
-Oct  4 16:51:24 Server05 kernel: ata3: no device found (phy stat 00000000)
-Oct  4 16:51:24 Server05 kernel: scsi3 : sata_promise
-Oct  4 16:51:24 Server05 kernel: ata4: no device found (phy stat 00000000)
-Oct  4 16:51:24 Server05 kernel: scsi4 : sata_promise
-********************************************************************************
-
-
-
-I then compiled sata_promise.c as a module and received the same message
-on a modprobe....
-
-
-Any help would be appreciated.....
-
-
-        ---( Nick Pasich )---
-
-
-
-
+--------------090604070406050600070606--
