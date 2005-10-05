@@ -1,49 +1,29 @@
-From: Brett Russ <russb@emc.com>
-Subject: Re: [PATCH 2.6.14-rc2] libata: Marvell SATA support (DMA mode) (resend:
- v0.22)
-Date: Wed, 05 Oct 2005 13:10:45 -0400
-Message-ID: <43440915.7060405@emc.com>
-References: <20050930053600.F3B821CDD0@lns1058.lss.emc.com> <4341E420.6070808@pobox.com> <Pine.GSO.4.63.0510051912230.10241@ra.sai.msu.su> <434407A2.6010605@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Eddy Gunn <redesign@stefan-lenz.ch>
+Subject: Excellent everyday low prices on brand name and generic drugs
+Date: Wed, 5 Oct 2005 13:36:04 -0400
+Message-ID: <5689018222.108738106847@201.35.49.44>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030270AbVJERMJ@vger.kernel.org>
-In-Reply-To: <434407A2.6010605@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Evgeny Rodichev <er@sai.msu.su>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [201.35.49.44] ([201.35.49.44]:29196 "HELO 201.35.49.44")
+	by vger.kernel.org with SMTP id S1030287AbVJERgE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Oct 2005 13:36:04 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Evgeny Rodichev wrote:
-> 
->> On Mon, 3 Oct 2005, Jeff Garzik wrote:
->>
->>> applied
->>>
->>
->> This patch leads to freeze with Marvell MV88SX6041 4-port SATA II 
->> PCI-X Controller (rev 03), as I wrote already
->> (http://www.uwsg.iu.edu/hypermail/linux/kernel/0510.0/0203.html)
->>
->> It is impossible to reboot the system without  harware reset (after 
->> modprobe).
-> 
-> 
-> I'm betting a temporary workaround should be to disable CONFIG_SMP.
-> 
-> The first attached patch (patch.1) fixes one of the lockups.  The second 
-> attached patch (patch.2) should fix all the lockups, but that's just a 
-> guess, and it's a very ugly patch.
-> 
-> Note that patch.2 depends on patch.1.
+Strong enough for a men, but made for a women
+http://mung.cotj.com/pharmacy/dir/
 
 
-I'm testing a more extensive patch that should address these issues.  I 
-had sent something similar to the patches above to several users and it 
-fixed the lockup and brought 60xx to a working condition.
 
-BR
 
-PS...please CC the linux-ide mailing list in the future with these 
-problem reports, I am not subscribed to lkml.
+Anything you fully do is an alone journey.     
+I can resist anything but temptation.       
+Whatever advice you give, be brief.       
+Judgment is forced upon us by experience.      
+
+The woman of my dreams knows how to break into systems.  
+The Net interprets censorship as damage... and routes around it.   
+
+
