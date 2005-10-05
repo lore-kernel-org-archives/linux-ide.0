@@ -1,100 +1,60 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH] libata ATAPI command completion fixes and FIXMEs
-Date: Wed, 05 Oct 2005 15:03:50 -0400
-Message-ID: <43442396.1090308@pobox.com>
+From: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>
+Subject: Re: [PATCH 2.6.14-rc2] libata: Marvell SATA support (DMA mode)
+ (resend: v0.22)
+Date: Wed, 5 Oct 2005 21:14:44 +0200 (CEST)
+Message-ID: <Pine.LNX.4.44.0510052106580.23892-100000@kenzo.iwr.uni-heidelberg.de>
+References: <20050930053600.F3B821CDD0@lns1058.lss.emc.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090604070406050600070606"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:61914 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030326AbVJETD4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Oct 2005 15:03:56 -0400
+Received: from relay.uni-heidelberg.de ([129.206.100.212]:51145 "EHLO
+	relay.uni-heidelberg.de") by vger.kernel.org with ESMTP
+	id S965231AbVJETRD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Oct 2005 15:17:03 -0400
+In-Reply-To: <20050930053600.F3B821CDD0@lns1058.lss.emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Brett Russ <russb@emc.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Pasi Pirhonen <upi@papat.org>, Michael Madore <Michael.Madore@aslab.com>, "Mr. Berkley Shands" <bshands@exegy.com>, Jim Edwards <jim@networkdesigning.com>, scott olson <scotto701@yahoo.com>, Lars Magne Ingebrigtsen <larsi@gnus.org>
 
-This is a multi-part message in MIME format.
---------------090604070406050600070606
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Fri, 30 Sep 2005, Brett Russ wrote:
 
-Just checked this in:
+> The 5xxx series parts are not yet DMA capable in this driver because
+> the registers have differences that haven't been accounted for yet.
 
-Author: Jeff Garzik <jgarzik@pobox.com>
-Date:   Wed Oct 5 15:02:14 2005 -0400
+In my setup with a MV88SX5041, this new driver doesn't recognize any 
+disk connected to the controller. The controller seems to be 
+recognized fine, but nothing else:
 
-   libata: ATAPI command completion tweaks and notes
+sata_mv version 0.22
+ACPI: PCI interrupt 0000:02:08.0[A] -> GSI 26 (level, low) -> IRQ 209
+MSI INIT SUCCESS
+sata_mv(0000:02:08.0) 32 slots 4 ports SCSI mode IRQ via MSI
+ata3: SATA max PIO4 cmd 0x0 ctl 0xF8A22120 bmdma 0x0 irq 209
+ata4: SATA max PIO4 cmd 0x0 ctl 0xF8A24120 bmdma 0x0 irq 209
+ata5: SATA max PIO4 cmd 0x0 ctl 0xF8A26120 bmdma 0x0 irq 209
+ata6: SATA max PIO4 cmd 0x0 ctl 0xF8A28120 bmdma 0x0 irq 209
+ata3: no device found (phy stat 00000000)
+scsi2 : sata_mv
+ata4: no device found (phy stat 00000000)
+scsi3 : sata_mv
+ata5: no device found (phy stat 00000000)
+scsi4 : sata_mv
+ata6: no device found (phy stat 00000000)
+scsi5 : sata_mv
 
-   1) note urgent bug, that completes command twice
+(starting at scsi2 'cause the first 2 are on a ata_piix SATA).
+/proc/interrupts shows no interrupts received:
 
-   2) only fix up INQUIRY data if the SCSI version is zero (typically
-   indicates ATAPI MMC-ish device)
+209:          0          0   IO-APIC-level  libata
 
-   3) if there is a problem on the ATA bus, don't bother with REQUEST
-   SENSE, just directly handle the error based on Status/Error registers.
+Thanks!
 
-[patch attached]
+--
+Bogdan Costescu
 
+IWR - Interdisziplinaeres Zentrum fuer Wissenschaftliches Rechnen
+Universitaet Heidelberg, INF 368, D-69120 Heidelberg, GERMANY
+Telephone: +49 6221 54 8869, Telefax: +49 6221 54 8868
+E-mail: Bogdan.Costescu@IWR.Uni-Heidelberg.De
 
---------------090604070406050600070606
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -1483,9 +1483,18 @@ static int atapi_qc_complete(struct ata_
- {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 
--	if (unlikely(drv_stat & (ATA_ERR | ATA_BUSY | ATA_DRQ))) {
-+	if (unlikely(drv_stat & (ATA_BUSY | ATA_DRQ)))
-+		ata_to_sense_error(qc, drv_stat);
-+	else if (unlikely(drv_stat & ATA_ERR)) {
- 		DPRINTK("request check condition\n");
- 
-+		/* FIXME: command completion with check condition
-+		 * but no sense causes the error handler to run,
-+		 * which then issues REQUEST SENSE, fills in the sense 
-+		 * buffer, and completes the command (for the second
-+		 * time).  We need to issue REQUEST SENSE some other
-+		 * way, to avoid completing the command twice.
-+		 */
- 		cmd->result = SAM_STAT_CHECK_CONDITION;
- 
- 		qc->scsidone(cmd);
-@@ -1499,10 +1508,26 @@ static int atapi_qc_complete(struct ata_
- 			unsigned int buflen;
- 
- 			buflen = ata_scsi_rbuf_get(cmd, &buf);
--			buf[2] = 0x5;
--			buf[3] = (buf[3] & 0xf0) | 2;
-+
-+	/* ATAPI devices typically report zero for their SCSI version,
-+	 * and sometimes deviate from the spec WRT response data
-+	 * format.  If SCSI version is reported as zero like normal,
-+	 * then we make the following fixups:  1) Fake MMC-5 version,
-+	 * to indicate to the Linux scsi midlayer this is a modern
-+	 * device.  2) Ensure response data format / ATAPI information
-+	 * are always correct.
-+	 */
-+	/* FIXME: do we ever override EVPD pages and the like, with
-+	 * this code?
-+	 */
-+			if (buf[2] == 0) {
-+				buf[2] = 0x5;
-+				buf[3] = 0x32;
-+			}
-+
- 			ata_scsi_rbuf_put(cmd, buf);
- 		}
-+
- 		cmd->result = SAM_STAT_GOOD;
- 	}
- 
-
---------------090604070406050600070606--
