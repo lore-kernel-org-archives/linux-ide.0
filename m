@@ -1,52 +1,97 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Additions to libata patch archive
-Date: Wed, 05 Oct 2005 00:13:24 -0400
-Message-ID: <434352E4.8090002@pobox.com>
+Subject: libata queue, status report updated
+Date: Wed, 5 Oct 2005 00:26:23 -0400
+Message-ID: <20051005042623.GA7561@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:36052 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751210AbVJEEN3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Oct 2005 00:13:29 -0400
+Received: from havoc.gtf.org ([69.61.125.42]:31676 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S965073AbVJEE0Z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Oct 2005 00:26:25 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: akpm@osdl.org, linux-kernel@vger.kernel.org
 
 
-I just added a few more patches to the libata patch archive.  The patch 
-archive is a collection of libata patches that aren't being actively 
-maintained, but could potentially be useful as a reference for a better 
-patch in the future.
+Though I have been updating the libata-dev.git repository regularly, I
+haven't been posting updates to the lists very often, aside from the
+random 'applied' response from me.
+
+So, here are the changes currently in the 'ALL' branch of
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+
+You can generate a patch from this using the following recipe:
+
+	git clone $url libata-dev
+	cd libata-dev
+	git diff master..ALL > git-libata.patch
+
+All these changes auto-propagate into Andrew Morton's -mm tree, each
+time he generates a new one.  Many of these changes are in the
+'upstream' branch, which means it is queued for pushing upstream as soon
+as the 2.6.14-rc cycle ends.
+
+Finally, the SATA status reports at
+	http://linux.yyz.us/sata/
+have been updated in the past several days, to reflect movement in
+various drivers and features.
 
 
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/archive/2.6.12-rc5-git8-ioctl-get-identity.patch.bz2
-This patch adds support for the HDIO_GET_IDENTITY ioctl.  Bart (IDE 
-maintainer) raised some valid objections -- objections that I keep 
-forgetting once months pass -- and so the patch just sat.
 
+Alan Cox:
+  ata: re-order speeds sensibly.
+  libata: bitmask based pci init functions for one or two ports
 
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/archive/2.6.13-vsc-mwi.patch.bz2
-More properly configure Vitesse 7174 / Intel 31244 SATA controllers' 
-MSI, DMA burst, and cacheline size settings.  Jeremy Higdon tested this 
-patch and didn't see any problems, but since the current driver has been 
-working, I didn't see any need to rush this patch in.  Maybe someone 
-with hardware will become interested in it, as it does program the 
-hardware more correctly.
+Albert Lee:
+  [libata] C/H/S support, for older devices
+  libata: indent and whitespace change
+  libata: rename host states
+  libata: interrupt driven pio for libata-core
+  libata: interrupt driven pio for LLD
+  libata irq-pio: add comments and cleanup
+  libata irq-pio: rename atapi_packet_task() and comments
+  libata irq-pio: simplify if condition in ata_dataout_task()
+  libata irq-pio: cleanup ata_qc_issue_prot()
+  libata: move atapi_send_cdb() and ata_dataout_task()
+  libata: minor whitespace, comment, debug message updates
+  [libata scsi] tidy up SCSI lba and xfer len calculations
+  [libata scsi] add CHS support to ata_scsi_start_stop_xlat()
 
+Brett Russ:
+  libata: Marvell SATA support (DMA mode) (resend: v0.22)
 
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/archive/2.6.14-rc3-sil-lbt.patch.bz2
-This patch turns on the Silicon Image 311x "Large Block Transfer" 
-feature, which eliminates legacy PCI IDE DMA limitations such as 64k 
-boundary and 64k max DMA segment size.  This needs a lot of stress 
-testing, but really should get merged as soon as enough people verify 
-that it works for them.
+Erik Benada:
+  [libata sata_promise] support PATA ports on SATA controllers
 
+Jeff Garzik:
+  [libata] add new driver ata_adma
+  [libata adma] enable PCI MWI during controller initialization
+  [libata] ATA passthru (arbitrary ATA command execution)
+  [libata] ata_adma: update for recent ->host_stop() API changes
+  libata: Update 'passthru' branch for latest libata
+  [libata] update ata_adma license from OSL+GPL to GPL
+  [libata sata_promise] merge upstream into 'promise-sata-pata' branch by hand
+  libata: move EH docs to separate DocBook chapter
+  [libata] improve device scan
+  [libata] improve device scan even more
+  libata: fix build error (missing ata_pio_error prototype)
 
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/archive/2.6.14-rc3-sil24-original.patch.bz2
-Original Silicon Image 3124 driver contributed by Silicon Image.  Since 
-there is a newer driver, this is merely provided as a reference.
+Jeff Raubitschek:
+  [libata passthru] fix leak on error
 
-
+Tejun Heo:
+  SATA: rewritten sil24 driver
+  sil24: add FIXME comment above ata_device_add
+  sil24: remove irq disable code on spurious interrupt
+  sil24: add testing for PCI fault
+  sil24: move error handling out of hot interrupt path
+  sil24: remove PORT_TF
+  sil24: replace pp->port w/ ap->ioaddr.cmd_addr
+  sil24: fix PORT_CTRL_STAT constants
+  sil24: add more comments for constants
+  sil24: initialization fix
+  libata EH document update
+  libata: add ATA exceptions chapter to doc
 
