@@ -1,55 +1,44 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH libata-dev-2.6:sil24 00/03] sil24: update interrupt handling and implment tf reading
-Date: Thu,  6 Oct 2005 11:43:24 +0900 (KST)
-Message-ID: <20051006024322.E428BF34@htj.dyndns.org>
+Subject: Re: [PATCH libata-dev-2.6:sil24 02/03] sil24: remove CMDERR clearing
+Date: Thu,  6 Oct 2005 11:43:34 +0900 (KST)
+Message-ID: <20051006024322.38822A95@htj.dyndns.org>
+References: <20051006024322.E428BF34@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.197]:46984 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750714AbVJFCnd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Oct 2005 22:43:33 -0400
-Received: by xproxy.gmail.com with SMTP id i30so190580wxd
-        for <linux-ide@vger.kernel.org>; Wed, 05 Oct 2005 19:43:32 -0700 (PDT)
+Received: from wproxy.gmail.com ([64.233.184.198]:34222 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751201AbVJFCnl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Oct 2005 22:43:41 -0400
+Received: by wproxy.gmail.com with SMTP id i2so150566wra
+        for <linux-ide@vger.kernel.org>; Wed, 05 Oct 2005 19:43:40 -0700 (PDT)
+In-Reply-To: <20051006024322.E428BF34@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, efalk@google.com
 Cc: linux-ide@vger.kernel.org
 
- Hello, Jeff.  Hello, Edward.
-
- This patchset updates error interrupt handling and implements tf
-reading according to Edward's sample code.  Both success and failure
-cases seem to work fine on my machine.
-
- I still couldn't get signature after phy reset from my harddrive,
-but, as before, my dvd writer reports proper signature.  Well, as we
-still don't support SATA ATAPI, I don't think this is a showstopper.
-If you guys know how to do it, please fix it.
-
- Thanks Edward.
-
-[ Start of patch descriptions ]
-
-01_sil24_ignore-non-error-exception-irqs.patch
-	: ignore non-error exception irqs
-
-	Do not error-finish commands for non-error exception irqs -
-	just ignore them.  This is taken from Edward's driver.
-
 02_sil24_remove-cmderr-clearing.patch
-	: remove CMDERR clearing
 
 	CMDERR register doesn't need clearing.  This is from Edward's
 	driver.
 
-03_sil24_add-tf-reading.patch
-	: implement proper TF register reading & caching
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-	This patch implements proper TF register reading back and
-	caching and bumps up version to 0.22.  This is taken from
-	Edward's driver.
+ sata_sil24.c |    4 ----
+ 1 file changed, 4 deletions(-)
 
-[ End of patch descriptions ]
-
---
-tejun
+Index: work/drivers/scsi/sata_sil24.c
+===================================================================
+--- work.orig/drivers/scsi/sata_sil24.c	2005-10-06 11:43:21.000000000 +0900
++++ work/drivers/scsi/sata_sil24.c	2005-10-06 11:43:21.000000000 +0900
+@@ -502,10 +502,6 @@ static void sil24_error_intr(struct ata_
+ 	cmd_err = readl(port + PORT_CMD_ERR);
+ 	sstatus = readl(port + PORT_SSTATUS);
+ 	serror = readl(port + PORT_SERROR);
+-
+-	/* Clear IRQ/errors */
+-	if (cmd_err)
+-		writel(cmd_err, port + PORT_CMD_ERR);
+ 	if (serror)
+ 		writel(serror, port + PORT_SERROR);
+ 
 
