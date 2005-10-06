@@ -1,38 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sil24 AMD64 crash/lockup
-Date: Fri, 7 Oct 2005 01:48:50 +0900
-Message-ID: <20051006164850.GB8047@htj.dyndns.org>
-References: <20051004221450.18205.qmail@science.horizon.com> <4344CC61.8070609@gmail.com>
+From: Ravi Wijayaratne <ravi_wija@yahoo.com>
+Subject: Reading SATA command/status register (lib-ata)
+Date: Thu, 6 Oct 2005 09:55:44 -0700 (PDT)
+Message-ID: <20051006165544.71775.qmail@web32512.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.200]:59184 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751143AbVJFQs5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Oct 2005 12:48:57 -0400
-Received: by wproxy.gmail.com with SMTP id i2so233925wra
-        for <linux-ide@vger.kernel.org>; Thu, 06 Oct 2005 09:48:56 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <4344CC61.8070609@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751149AbVJFQzp@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux@horizon.com
-Cc: linux-ide@vger.kernel.org
 
- Hi,
+Hi all
 
- I posted the patch to implement sil24 ->tf_read callback (and cc'd to
-you) just now.  It should be applied on top of three patches I posted
-the other day.
+I am calling libata-core.c:sata_phy_reset(port) from a kernel thread
+to reset the hot plugged SATA drive. My machine locks up at the place
+where it reads the status from the device in ata_busy_sleep(..).
 
-http://marc.theaimsgroup.com/?l=linux-ide&m=112856662723993&w=2
-http://marc.theaimsgroup.com/?l=linux-ide&m=112856662716013&w=2
-http://marc.theaimsgroup.com/?l=linux-ide&m=112856662708456&w=2
+1494         while ((status & ATA_BUSY) && (time_before(jiffies, timeout))) {
+1495                 msleep(50);
+1496                 status = ata_chk_status(ap);
+1497         }
 
- After applying all four patches (above three plus the one I cc'd to
-you), when you hit a SATA error, you'll get proper report.  And we
-should be able to debug that from there.
+ata_chk_status simply does a readl(status_register). It is not clear to me 
+where the hang is. My machine locks up before I call msleep or ata_chk_status.
+(determined by printks) after iterating the above routine a few times. When it 
+locks up nothing responds. I cant even get to kdb to debug.
 
- Thanks.
+But what I noted is that every time it seem to lock up the when the ATA_BUSY status is
+removed. (State changes from 0xd0 to 0x50 in ATA Status register). The ATA spec says
+that each time this register is read any interrupts are cleared. I wander whether this
+would cause the machine to hang ? 
 
--- 
-tejun
+Some insight will be much appreciated.
+
+Thanks
+Ravi
+ 
+
+
+
+		
+__________________________________ 
+Yahoo! Mail - PC Magazine Editors' Choice 2005 
+http://mail.yahoo.com
