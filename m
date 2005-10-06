@@ -1,21 +1,37 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH libata-dev-2.6:sil24 01/03] sil24: ignore non-error exception
- irqs
-Date: Thu, 06 Oct 2005 05:51:33 -0400
-Message-ID: <4344F3A5.9060808@pobox.com>
-References: <20051006024322.E428BF34@htj.dyndns.org> <20051006024322.D78DDB65@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Ian Oliver <lists@foxhill.co.uk>
+Subject: Re: SATA150TX4 atat1:command timeout
+Date: Thu, 06 Oct 2005 10:55:43 +0100
+Message-ID: <VA.00001a40.00905eec@foxhill.co.uk>
+References: <433D1626.2000909@robinbowes.com>
+Reply-To: linux-ide@vger.kernel.org
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:55520 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750777AbVJFJvl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Oct 2005 05:51:41 -0400
-In-Reply-To: <20051006024322.D78DDB65@htj.dyndns.org>
+Received: from relay2.tidymail.co.uk ([217.146.107.7]:5270 "EHLO
+	relay2.tidymail.co.uk") by vger.kernel.org with ESMTP
+	id S1750778AbVJFJ41 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Oct 2005 05:56:27 -0400
+Received: from [217.146.124.254] (helo=foxhill.co.uk)
+	(from_AS 16353)
+	by relay2.tidymail.co.uk with esmtpa
+	(Exim 4.52)
+	id 1ENSU9-0007jx-RT
+	for linux-ide@vger.kernel.org; Thu, 06 Oct 2005 09:56:21 +0000
+In-Reply-To: <433D1626.2000909@robinbowes.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: efalk@google.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-applied 1-3
+In article  <433D1626.2000909@robinbowes.com>, Robin Bowes wrote:
+> However, during the re-sync, one or more of the disks clunked and I saw 
+> an "ATAn Timeout" message on the console and the system froze. (n 
+> varied, e.g. ATA2, ATA1, ATA4, etc.)
+
+I had this when hammering a software raid that was on four Promise TX2 
+cards. I pulled two of the cards and instead used a four-port SiL3114 and 
+the errors went away.
+
+Other have reported similar.  I haven't seen anything about a fix.
+
+Ian
+
+
 
