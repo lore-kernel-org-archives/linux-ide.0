@@ -1,84 +1,113 @@
-From: Erik Slagter <erik@slagter.name>
-Subject: Re: SATA150TX4 atat1:command timeout
-Date: Thu, 06 Oct 2005 12:44:45 +0200
-Message-ID: <1128595485.5964.41.camel@localhost.localdomain>
-References: <VA.00001a40.00905eec@foxhill.co.uk>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH/RFC 3/3] irq-pio: reorganize "buf + offset"
+Date: Thu, 06 Oct 2005 18:44:41 +0800
+Message-ID: <43450019.1000509@tw.ibm.com>
+References: <43438258.9080706@pobox.com> <4344FDED.1080402@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-pvtb3X3+iGD/nqF48s0a"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wlz.nl ([194.53.3.6]:58836 "HELO mx1.wlz.nl")
-	by vger.kernel.org with SMTP id S1750814AbVJFKpH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Oct 2005 06:45:07 -0400
-In-Reply-To: <VA.00001a40.00905eec@foxhill.co.uk>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:56805 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1750807AbVJFKow (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Oct 2005 06:44:52 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j96AikCS016463
+	for <linux-ide@vger.kernel.org>; Thu, 6 Oct 2005 06:44:46 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j96Aik08104524
+	for <linux-ide@vger.kernel.org>; Thu, 6 Oct 2005 06:44:46 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j96AijYZ004593
+	for <linux-ide@vger.kernel.org>; Thu, 6 Oct 2005 06:44:46 -0400
+In-Reply-To: <4344FDED.1080402@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>
+
+Patch 3/3:
+   use PageHighMem() to optimize the kmap_atomic() usage, as done in ide-scsi.c
+
+For your review, thanks.
+
+Albert
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+
+==========
+
+--- himem2/drivers/scsi/libata-core.c	2005-10-06 16:10:33.000000000 +0800
++++ himem3/drivers/scsi/libata-core.c	2005-10-06 16:08:43.000000000 +0800
+@@ -2748,7 +2748,6 @@ static void ata_pio_sector(struct ata_qu
+  	struct page *page;
+  	unsigned int offset;
+  	unsigned char *buf;
+-	unsigned long flags;
+
+  	if (qc->cursect == (qc->nsect - 1))
+  		ap->hsm_task_state = HSM_ST_LAST;
+@@ -2762,14 +2761,21 @@ static void ata_pio_sector(struct ata_qu
+
+  	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+
+-	local_irq_save(flags);
+-	buf = kmap_atomic(page, KM_IRQ0);
++	if (PageHighMem(page)) {
++		unsigned long flags;
++
++		local_irq_save(flags);
++		buf = kmap_atomic(page, KM_IRQ0);
+
+-	/* do the actual data transfer */
+-	ata_data_xfer(ap, buf + offset, ATA_SECT_SIZE, do_write);
++		/* do the actual data transfer */
++		ata_data_xfer(ap, buf + offset, ATA_SECT_SIZE, do_write);
+
+-	kunmap_atomic(buf, KM_IRQ0);
+-	local_irq_restore(flags);
++		kunmap_atomic(buf, KM_IRQ0);
++		local_irq_restore(flags);
++	} else {
++		buf = page_address(page);
++		ata_data_xfer(ap, buf + offset, ATA_SECT_SIZE, do_write);
++	}
+
+  	qc->cursect++;
+  	qc->cursg_ofs++;
+@@ -2908,7 +2914,6 @@ static void __atapi_pio_bytes(struct ata
+  	struct page *page;
+  	unsigned char *buf;
+  	unsigned int offset, count;
+-	unsigned long flags;
+
+  	if (qc->curbytes + bytes >= qc->nbytes)
+  		ap->hsm_task_state = HSM_ST_LAST;
+@@ -2954,14 +2959,21 @@ next_sg:
+
+  	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+
+-	local_irq_save(flags);
+-	buf = kmap_atomic(page, KM_IRQ0);
++	if (PageHighMem(page)) {
++		unsigned long flags;
++
++		local_irq_save(flags);
++		buf = kmap_atomic(page, KM_IRQ0);
+
+-	/* do the actual data transfer */
+-	ata_data_xfer(ap, buf + offset, count, do_write);
++		/* do the actual data transfer */
++		ata_data_xfer(ap, buf + offset, count, do_write);
+
+-	kunmap_atomic(buf, KM_IRQ0);
+-	local_irq_restore(flags);
++		kunmap_atomic(buf, KM_IRQ0);
++		local_irq_restore(flags);
++	} else {
++		buf = page_address(page);
++		ata_data_xfer(ap, buf + offset, count, do_write);
++	}
+
+  	bytes -= count;
+  	qc->curbytes += count;
 
 
---=-pvtb3X3+iGD/nqF48s0a
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2005-10-06 at 10:55 +0100, Ian Oliver wrote:
-> In article  <433D1626.2000909@robinbowes.com>, Robin Bowes wrote:
-> > However, during the re-sync, one or more of the disks clunked and I saw=
-=20
-> > an "ATAn Timeout" message on the console and the system froze. (n=20
-> > varied, e.g. ATA2, ATA1, ATA4, etc.)
->=20
-> I had this when hammering a software raid that was on four Promise TX2=20
-> cards. I pulled two of the cards and instead used a four-port SiL3114 and=
-=20
-> the errors went away.
->=20
-> Other have reported similar.  I haven't seen anything about a fix.
-
-That's not really a solution ;-) It looks you're also a victim of the
-promise problem.
-
---=-pvtb3X3+iGD/nqF48s0a
-Content-Type: application/x-pkcs7-signature; name=smime.p7s
-Content-Disposition: attachment; filename=smime.p7s
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGFjCCAs8w
-ggI4oAMCAQICAw9TczANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
-d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
-YWlsIElzc3VpbmcgQ0EwHhcNMDUwODE4MTE1NDA1WhcNMDYwODE4MTE1NDA1WjBDMR8wHQYDVQQD
-ExZUaGF3dGUgRnJlZW1haWwgTWVtYmVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFt
-ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANAMKW15OgreNb+Wd++Xcw6uNJUXXIfX
-56u1rtTObMmbbDY2wNc4Iqwbuwaysvox3z+YElXBibE8BAyV1iMjhee4mOfAy38dGHtWDxhOGke8
-VpkyY8DSWgMN5p4egTiT6YNdHW75iiQ+Vh5zMHju1UXnIqgf5zkUGkNuxYp15jLZvRDbfA5H+Sil
-jbZGB2fiPOJHpyI61ZidcMgdow31qm70/oe6vXxhSZLzo7OLvExE+mQHwbCSIJMN/hPTK1z0lmQ1
-kkaEjHrefqIgoF9Dk/WfOtulzvR3xBzDL50GZ32BxT/OhXYe1SHEJpSM1S/aq8TBQJYwjzREWyDh
-0OYsmr0CAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFndGVyLm5hbWUwDAYDVR0TAQH/BAIw
-ADANBgkqhkiG9w0BAQQFAAOBgQCCpzoneRQIKsUO8zSnwQ7yhJTrS/EaDibiIVrkkCbzXwCiHFAi
-7nmTRF0DlLVF3Ssf97ITWT/RSdkj9Xke0OHH7724PJdfpA6OglMnx2i7IcJLzPgPjB+fOmfR0nYX
-UYKuzGxTOXmshLmPcwKdpFuRLLk7n+vrTAwJYJI++crhJzCCAz8wggKooAMCAQICAQ0wDQYJKoZI
-hvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQIEwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcT
-CUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmlj
-YXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMTG1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFp
-bCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJlZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3
-MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUg
-Q29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwg
-SXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAxKY8VXNV+065yplaHmjAdQRw
-nd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNaLIkVcI7dyfArhVqqP3FWy688Cwfn8R+R
-NiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUqVIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEA
-AaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1UdHwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwu
-dGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWlsQ0EuY3JsMAsGA1UdDwQEAwIBBjApBgNV
-HREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVsMi0xMzgwDQYJKoZIhvcNAQEFBQADgYEA
-SIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYfqi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6E
-sZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa9/eH1sYITq726jTlEBpbNU1341YheILc
-IRk13iSx0x1G/11fZU8xggHvMIIB6wIBATBpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3
-dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1h
-aWwgSXNzdWluZyBDQQIDD1NzMAkGBSsOAwIaBQCgXTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcB
-MBwGCSqGSIb3DQEJBTEPFw0wNTEwMDYxMDQ0NDVaMCMGCSqGSIb3DQEJBDEWBBRg+TebFvzul5QZ
-8pNKY5LkiW7PLzANBgkqhkiG9w0BAQEFAASCAQB3RQxLI4SiLnJ9IxuWh2eDTasmVYVrNUEQVSLN
-/MCY1TNzSHTz7yCe6Upo5jbLluaJoM4tMrEb31eenmGF39gLlxj4OKf83eiW8REyrmdwuuo28s1U
-O0NTsMZVSDa4uLa3M23wwZ7mdqLduaxWC41ge8+zLQeI4hkkWiy5cXCc4PnYKEp+hVlG8b4SQuWN
-8E2rTzkLmpJUqC1NzMqdpl0kxAfV7A1L7J658f6mquujUYReB3hYSSbALry7AYIqD65vk21i2boG
-pCSmymtf1CPDclv2FcR6TN+21aqMMj5sa4ceCRsk5s6gvXVV/1BNzfuTxPqttBVeYtWD/Pg2tqIl
-AAAAAAAA
-
-
---=-pvtb3X3+iGD/nqF48s0a--
