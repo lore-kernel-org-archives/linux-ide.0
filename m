@@ -1,34 +1,58 @@
-From: Michael Madore <Michael.Madore@aslab.com>
-Subject: Re: [PATCH 2.6.14-rc2 1/2] libata: Marvell spinlock fixes and
-	simplification
-Date: Wed, 05 Oct 2005 15:35:44 -0700
-Message-ID: <1128551744.4041.7.camel@drevil.aslab.com>
-References: <20051005210610.EC31826369@lns1058.lss.emc.com>
-	 <20051005210842.F366B26369@lns1058.lss.emc.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: IDE issues with  "choose_drive"
+Date: Thu, 06 Oct 2005 10:36:59 +1000
+Message-ID: <1128559019.22073.19.camel@gaston>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ylpvm12-ext.prodigy.net ([207.115.57.43]:58264 "EHLO
-	ylpvm12.prodigy.net") by vger.kernel.org with ESMTP
-	id S1030408AbVJEWgF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Oct 2005 18:36:05 -0400
-In-Reply-To: <20051005210842.F366B26369@lns1058.lss.emc.com>
+Received: from gate.crashing.org ([63.228.1.57]:8387 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S1750700AbVJFAhw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Oct 2005 20:37:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brett Russ <russb@emc.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Pasi Pirhonen <upi@papat.org>, Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>, "Mr. Berkley Shands" <bshands@exegy.com>, Jim Edwards <jim@networkdesigning.com>, scott olson <scotto701@yahoo.com>, Lars Magne Ingebrigtsen <larsi@gnus.org>, Evgeny Rodichev <er@sai.msu.su>
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Jens Axboe <axboe@suse.de>, Linux Kernel list <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
 
-On Wed, 2005-10-05 at 17:08 -0400, Brett Russ wrote:
-> This patch should fix up lockups that people were seeing due to
-> improper spinlock placement.  Also, the start/stop DMA routines put
-> guarded trust in the cached state of DMA.
+There seem to be a certain amount of problems with ide_do_request() and
+more specifically choose_drive() to pick which drive to service, when
+more than one drive is on a given hwgroup (typically, when you have a
+slave drive)
 
-Hi Brett,
+The first one is the one I'm trying to fix, it's basically a hang on
+wakeup from sleep. What happens is that both drives are blocked
+(suspended, drive->blocked is set). Their IO queues contains some
+requests that haven't been serviced yet. We receive the resume()
+callback for one of them. We react by inserting a wakeup request at the
+head of the queue and waiting for it to complete. However, when we reach
+ide_do_request(), choose_drive() may return the other drive (the one
+that is still sleeping). In this case, we hit the test for blocked queue
+and just break out of the loop. We end up never servicing the other
+drive queue which is the one we are trying to wakeup, thus we hang.
 
-I assume this patch doesn't address the 'abnormal status 0x80' issue on
-the 6081.  On the 5081, I still get two machine checks followed by a
-hard lockup when I load the driver.
+In general, that uncovers a serie of problems with that code. That is,
+the 2 other cases where we "break" out of the loop may trigger a similar
+problem where we do not service the "other" drive, and thus unless
+something else happens to "kick" the hwgroup, a request pending on the
+other drive will be stuck there and the machine may hang.
 
-Mike
+In a similar vein, if we hit the codepath that does 
+ide_stall_queue() (which is meant as doing some fairness by blocking the
+slave for some time) we may end up also "missing" the opportunity to
+service at all on the next pass, thus hanging forever.  
+
+Also, I think there may be another problem with choose_drive() itself,
+though I'm not 100% sure, with the code that tests blk_queue_flushing()
+since we do the test on hwgroup->drive only, and thus we never test that
+for the slave drive.
+
+I'm not sure what is the best way to fix those issues except by
+completely rewriting that code. I was thinking about turning the "break"
+into a "continue" in the PM case to service the "other" drive but
+nothing guarantees that I'll make any forward progress since
+choose_drive() may just return the same drive over and over (since the
+queue is not serviced).
+
+Ben.
+
 
