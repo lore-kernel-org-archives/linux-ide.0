@@ -1,33 +1,29 @@
-From: linux@horizon.com
-Subject: Re: sata_sil24 AMD64 crash/lockup
-Date: 6 Oct 2005 15:10:00 -0400
-Message-ID: <20051006191000.4625.qmail@science.horizon.com>
-References: <4344CC61.8070609@gmail.com>
+From: Amy Brown <revolver@cosat.com>
+Subject: Personalising technology solutions.
+Date: Thu, 6 Oct 2005 15:19:41 -0400
+Message-ID: <2530539157.520396078@dsl5400B5C3.pool.t-online.hu>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from science.horizon.com ([192.35.100.1]:39239 "HELO
-	science.horizon.com") by vger.kernel.org with SMTP id S1751310AbVJFTKQ
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 Oct 2005 15:10:16 -0400
-In-Reply-To: <4344CC61.8070609@gmail.com>
+Received: from dsl5400B5C3.pool.t-online.hu ([84.0.181.195]:18956 "HELO
+	dsl5400B5C3.pool.t-online.hu") by vger.kernel.org with SMTP
+	id S1751320AbVJFTTl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Oct 2005 15:19:41 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com
-Cc: linux@horizon.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
->  Damn. I'm really late. :-)
-
-Well, thank you for taking the trouble to reply!
+Only our software is guaranteed 100% legal.
+http://kkibozu.ooubc3twunte6oojbo6jt6oo.eppieff.com/?uhprb
 
 
->  However, your kernel hitting that path means that some drives are 
-> actually generating errors.  Let's see about that after get tf_read 
-> thing fixed.
+Never believe anything until it has been officially denied.    
+When you have given nothing, ask for nothing.     
 
-Given that I'm reading about 2e+14 bits/day, and it takes a couple of
-days to reproduce the error, the occasional glitch is not too surprising.
+If you can't convince them, confuse them.      
+Oh, give us the man who sings at his work.   
 
-Thanks for the patches; I'm trying to see if I can get them by git
-right now, but they appear to not be on kernel.org yet, so I guess
-I'll have to try by hand.
+There are few minds to which tyranny is not delightful.   
+Even Bach comes down to the basic suck, blow, suck, suck, blow. 
 
-Results in a bit!
+
