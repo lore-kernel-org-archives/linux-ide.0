@@ -1,33 +1,75 @@
-From: Brett Russ <russb@emc.com>
-Subject: Re: [PATCH 2.6.14-rc2 1/2] libata: Marvell spinlock fixes and simplification
-Date: Thu, 06 Oct 2005 07:52:40 -0400
-Message-ID: <43451008.2090305@emc.com>
-References: <20051005210610.EC31826369@lns1058.lss.emc.com>	 <20051005210842.F366B26369@lns1058.lss.emc.com> <1128551744.4041.7.camel@drevil.aslab.com>
+From: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>
+Subject: Re: [PATCH 2.6.14-rc2 0/2] libata: Marvell SATA support (v0.23-0.24)
+Date: Thu, 6 Oct 2005 14:46:51 +0200 (CEST)
+Message-ID: <Pine.LNX.4.63.0510061441050.3140@dingo.iwr.uni-heidelberg.de>
+References: <20051005210610.EC31826369@lns1058.lss.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750838AbVJFLxR@vger.kernel.org>
-In-Reply-To: <1128551744.4041.7.camel@drevil.aslab.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750869AbVJFMrF@vger.kernel.org>
+In-Reply-To: <20051005210610.EC31826369@lns1058.lss.emc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Madore <Michael.Madore@aslab.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Pasi Pirhonen <upi@papat.org>, Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>, "Mr. Berkley Shands" <bshands@exegy.com>, Jim Edwards <jim@networkdesigning.com>, scott olson <scotto701@yahoo.com>, Lars Magne Ingebrigtsen <larsi@gnus.org>, Evgeny Rodichev <er@sai.msu.su>
+To: Brett Russ <russb@emc.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Michael Madore wrote:
-> I assume this patch doesn't address the 'abnormal status 0x80' issue on
-> the 6081.
+On Wed, 5 Oct 2005, Brett Russ wrote:
 
-Correct assumption.  This message seems benign as I've seen it and am 
-working fine despite it.  I'll take a look soon.
+> This patch series should fix up lockups that people were seeing due to
+> improper spinlock placement (nested==bad).  Additionally, there are
+> other changes to simplify things (complex=bad).  The second patch adds
+> comment headers to functions that need it.
 
-Is the driver working for you on the 6081?
+I guess that 0.24 was not supposed to fix any 50x1 problems, but I 
+just wanted to provide more debug output. The disk (this time another 
+one, but still connected to the first port) is still not detected:
 
-> On the 5081, I still get two machine checks followed by a
-> hard lockup when I load the driver.
+sata_mv version 0.24
+ACPI: PCI Interrupt 0000:02:08.0[A] -> GSI 26 (level, low) -> IRQ 201
+mv_port_init: EDMA cfg=0x0000011f EDMA IRQ err cause/mask=0x00000000/0x00001f7f
+mv_port_init: EDMA cfg=0x0000011f EDMA IRQ err cause/mask=0x00000000/0x00001f7f
+mv_port_init: EDMA cfg=0x0000011f EDMA IRQ err cause/mask=0x00000000/0x00001f7f
+mv_port_init: EDMA cfg=0x0000011f EDMA IRQ err cause/mask=0x00000000/0x00001f7f
+mv_host_init: HC0: HC config=0x11dcf013 HC IRQ cause (before clear)=0x00000111
+mv_host_init: HC MAIN IRQ cause/mask=0x00000000/0x0007ffff PCI int cause/mask=0x00000000/0x00577fe6
+mv_dump_pci_cfg: 00: 504111ab 02b00007 01000003 00002008 
+mv_dump_pci_cfg: 10: f5000004 00000000 00000000 00000000 
+mv_dump_pci_cfg: 20: 00000000 00000000 00000000 81241043 
+mv_dump_pci_cfg: 30: 00000000 00000040 00000000 00000109 
+mv_dump_pci_cfg: 40: 000a5001 00000000 00000000 00000000 
+mv_dump_pci_cfg: 50: 00816005 fee01004 00000000 000040d9 
+mv_dump_pci_cfg: 60: 00300007 01830240 
+sata_mv(0000:02:08.0) 32 slots 4 ports SCSI mode IRQ via MSI
+ata3: SATA max PIO4 cmd 0x0 ctl 0xF8A22120 bmdma 0x0 irq 201
+ata4: SATA max PIO4 cmd 0x0 ctl 0xF8A24120 bmdma 0x0 irq 201
+ata5: SATA max PIO4 cmd 0x0 ctl 0xF8A26120 bmdma 0x0 irq 201
+ata6: SATA max PIO4 cmd 0x0 ctl 0xF8A28120 bmdma 0x0 irq 201
+mv_phy_reset: ENTER, port 0, mmio 0xf8a22000
+mv_phy_reset: S-regs after ATA_RST: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+mv_phy_reset: S-regs after PHY wake: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+ata3: no device found (phy stat 00000000)
+scsi2 : sata_mv
+mv_phy_reset: ENTER, port 1, mmio 0xf8a24000
+mv_phy_reset: S-regs after ATA_RST: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+mv_phy_reset: S-regs after PHY wake: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+ata4: no device found (phy stat 00000000)
+scsi3 : sata_mv
+mv_phy_reset: ENTER, port 2, mmio 0xf8a26000
+mv_phy_reset: S-regs after ATA_RST: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+mv_phy_reset: S-regs after PHY wake: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+ata5: no device found (phy stat 00000000)
+scsi4 : sata_mv
+mv_phy_reset: ENTER, port 3, mmio 0xf8a28000
+mv_phy_reset: S-regs after ATA_RST: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+mv_phy_reset: S-regs after PHY wake: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+ata6: no device found (phy stat 00000000)
+scsi5 : sata_mv
 
-Would you turn on ATA_DEBUG and ATA_VERBOSE_DEBUG in 
-include/linux/libata.h and send along the console output when loading 
-the driver?
+Thanks for working on this driver !
 
-Thanks,
-BR
+-- 
+Bogdan Costescu
+
+IWR - Interdisziplinaeres Zentrum fuer Wissenschaftliches Rechnen
+Universitaet Heidelberg, INF 368, D-69120 Heidelberg, GERMANY
+Telephone: +49 6221 54 8869, Telefax: +49 6221 54 8868
+E-mail: Bogdan.Costescu@IWR.Uni-Heidelberg.De
