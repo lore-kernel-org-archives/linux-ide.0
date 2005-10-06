@@ -1,58 +1,68 @@
 From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: IDE issues with  "choose_drive"
-Date: Thu, 06 Oct 2005 10:36:59 +1000
-Message-ID: <1128559019.22073.19.camel@gaston>
+Subject: Re: IDE issues with  "choose_drive"
+Date: Thu, 06 Oct 2005 11:02:48 +1000
+Message-ID: <1128560569.22073.25.camel@gaston>
+References: <1128559019.22073.19.camel@gaston>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:8387 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S1750700AbVJFAhw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Oct 2005 20:37:52 -0400
+Received: from gate.crashing.org ([63.228.1.57]:17603 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S1751206AbVJFBDg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Oct 2005 21:03:36 -0400
+In-Reply-To: <1128559019.22073.19.camel@gaston>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 Cc: Jens Axboe <axboe@suse.de>, Linux Kernel list <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
 
-There seem to be a certain amount of problems with ide_do_request() and
-more specifically choose_drive() to pick which drive to service, when
-more than one drive is on a given hwgroup (typically, when you have a
-slave drive)
 
-The first one is the one I'm trying to fix, it's basically a hang on
-wakeup from sleep. What happens is that both drives are blocked
-(suspended, drive->blocked is set). Their IO queues contains some
-requests that haven't been serviced yet. We receive the resume()
-callback for one of them. We react by inserting a wakeup request at the
-head of the queue and waiting for it to complete. However, when we reach
-ide_do_request(), choose_drive() may return the other drive (the one
-that is still sleeping). In this case, we hit the test for blocked queue
-and just break out of the loop. We end up never servicing the other
-drive queue which is the one we are trying to wakeup, thus we hang.
+> The first one is the one I'm trying to fix, it's basically a hang on
+> wakeup from sleep. What happens is that both drives are blocked
+> (suspended, drive->blocked is set). Their IO queues contains some
+> requests that haven't been serviced yet. We receive the resume()
+> callback for one of them. We react by inserting a wakeup request at the
+> head of the queue and waiting for it to complete. However, when we reach
+> ide_do_request(), choose_drive() may return the other drive (the one
+> that is still sleeping). In this case, we hit the test for blocked queue
+> and just break out of the loop. We end up never servicing the other
+> drive queue which is the one we are trying to wakeup, thus we hang.
 
-In general, that uncovers a serie of problems with that code. That is,
-the 2 other cases where we "break" out of the loop may trigger a similar
-problem where we do not service the "other" drive, and thus unless
-something else happens to "kick" the hwgroup, a request pending on the
-other drive will be stuck there and the machine may hang.
+Oh, and here's the ugly workaround beeing tested by the users who are
+having the problem so far. Not really a proper fix though...
 
-In a similar vein, if we hit the codepath that does 
-ide_stall_queue() (which is meant as doing some fairness by blocking the
-slave for some time) we may end up also "missing" the opportunity to
-service at all on the next pass, thus hanging forever.  
-
-Also, I think there may be another problem with choose_drive() itself,
-though I'm not 100% sure, with the code that tests blk_queue_flushing()
-since we do the test on hwgroup->drive only, and thus we never test that
-for the slave drive.
-
-I'm not sure what is the best way to fix those issues except by
-completely rewriting that code. I was thinking about turning the "break"
-into a "continue" in the PM case to service the "other" drive but
-nothing guarantees that I'll make any forward progress since
-choose_drive() may just return the same drive over and over (since the
-queue is not serviced).
-
-Ben.
+--- linux-work.orig/drivers/ide/ide-io.c	2005-09-22 14:06:31.000000000 +1000
++++ linux-work/drivers/ide/ide-io.c	2005-10-06 10:49:53.000000000 +1000
+@@ -1101,6 +1101,7 @@
+ 	ide_hwif_t	*hwif;
+ 	struct request	*rq;
+ 	ide_startstop_t	startstop;
++	int             loops = 0;
+ 
+ 	/* for atari only: POSSIBLY BROKEN HERE(?) */
+ 	ide_get_lock(ide_intr, hwgroup);
+@@ -1153,6 +1154,7 @@
+ 			/* no more work for this hwgroup (for now) */
+ 			return;
+ 		}
++	again:
+ 		hwif = HWIF(drive);
+ 		if (hwgroup->hwif->sharing_irq &&
+ 		    hwif != hwgroup->hwif &&
+@@ -1192,8 +1194,14 @@
+ 		 * though. I hope that doesn't happen too much, hopefully not
+ 		 * unless the subdriver triggers such a thing in its own PM
+ 		 * state machine.
++		 *
++		 * We count how many times we loop here to make sure we service
++		 * all drives in the hwgroup without looping for ever
+ 		 */
+ 		if (drive->blocked && !blk_pm_request(rq) && !(rq->flags & REQ_PREEMPT)) {
++			drive = drive->next ? drive->next : hwgroup->drive;
++			if (loops++ < 4 && !blk_queue_plugged(drive->queue))
++				goto again;
+ 			/* We clear busy, there should be no pending ATA command at this point. */
+ 			hwgroup->busy = 0;
+ 			break;
 
 
