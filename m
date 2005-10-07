@@ -1,43 +1,54 @@
-From: Aurelien Jarno <aurelien@aurel32.net>
-Subject: Re: [PATCH 2.6.14-rc3] sis5513.c: enable ATA133 for the SiS965 southbridge
-Date: Fri, 7 Oct 2005 11:41:35 +0200
-Message-ID: <20051007094135.GA16386@farad.aurel32.net>
-References: <20051005205906.GA4320@farad.aurel32.net> <58cb370e0510060240x2f2e31c3kd0609a06172d86a4@mail.gmail.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [RFC] Hard disk protection revisited
+Date: Fri, 7 Oct 2005 12:02:22 +0200
+Message-ID: <20051007100219.GU2889@suse.de>
+References: <4345B24A.2080104@dresco.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from farad.aurel32.net ([82.232.2.251]:15311 "EHLO farad.aurel32.net")
-	by vger.kernel.org with ESMTP id S932267AbVJGJlr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Oct 2005 05:41:47 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:26921 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S932117AbVJGKBu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Oct 2005 06:01:50 -0400
 Content-Disposition: inline
-In-Reply-To: <58cb370e0510060240x2f2e31c3kd0609a06172d86a4@mail.gmail.com>
+In-Reply-To: <4345B24A.2080104@dresco.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Lionel.Bouton@inet6.fr, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jon Escombe <lists@dresco.co.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, hdaps-devel@lists.sourceforge.net
 
-On Thu, Oct 06, 2005 at 11:40:15AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> Hi,
+On Fri, Oct 07 2005, Jon Escombe wrote:
+> I would like to submit the latest disk protection (a.k.a. parking and 
+> freezing) code from the hdaps-devel side for comment, along with a brief 
+> overview of what's in the patch -
 > 
-> On 10/5/05, Aurelien Jarno <aurelien@aurel32.net> wrote:
-> > Hi,
-> >
-> > Here is a patch that enables the ATA133 mode for the SiS965 southbridge
-> > in the SiS5513 driver.
+> During initialisation, disk drivers with 'protect' helper functions 
+> (currently ide and libata) fill in two new function pointers in the 
+> queue structure. A sysfs 'protect' queue attribute is then created in 
+> the block layer for devices who's lower level drivers have registered 
+> these helpers.
 > 
-> The patch for SIS965(L) support is already in -mm tree:
-> http://kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.14-rc2/2.6.14-rc2-mm2/broken-out/sis5513-support-sis-965l.patch
+> When a value (in seconds) is written to the protect attribute, the block 
+> layer code calls the driver 'protect' helper function. This helper 
+> parks/suspends the disk, and then stops the queue. Control then returns 
+> to the block layer which re-uses the plugging timer to set an automatic 
+> timeout to restart the queue. When 0 is written to the protect 
+> attribute, or the timer expires, the queue is restarted using the 
+> 'unprotect' helper function, and the plugging timer is restored.
 > 
+> This interface is intended to be used by a daemon process, that monitors 
+> the hdaps driver output for excessive changes in acceleration, and keeps 
+> the device parked and the queue stopped until the values become normal.
+> 
+> Patch applies to 2.6.14-rc3 (also 2.6.13.x), and requires libata_passthru..
 
-Oops, I forget to look at the -mm tree for this driver. You're right, it
-works, and it seems the patch is cleaner than mine. So please ignore my
-patch.
+I have to nack this one for now, I still want the generic command types
+patch to go in first. We have far too many queue hooks already, adding
+two more for a relatively obscure use such as this one is not a good
+idea.
 
-Thanks,
-Aurelien
+My suggestion is to maintain this patch out of tree for now, it will be
+a few kernel release iterations before the command type patch is in.
 
 -- 
-  .''`.  Aurelien Jarno	            | GPG: 1024D/F1BCDB73
- : :' :  Debian developer           | Electrical Engineer
- `. `'   aurel32@debian.org         | aurelien@aurel32.net
-   `-    people.debian.org/~aurel32 | www.aurel32.net
+Jens Axboe
+
