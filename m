@@ -1,112 +1,45 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 3/3] irq-pio: use PageHighMem() to optimize the kmap_atomic()
- usage
-Date: Fri, 07 Oct 2005 14:20:59 +0800
-Message-ID: <434613CB.6010600@tw.ibm.com>
-References: <43438258.9080706@pobox.com> <4344FDED.1080402@tw.ibm.com> <4345089A.9020006@pobox.com>
+Subject: [PATCH 0/3] libata: CHS follow-up patches (resend #2)
+Date: Fri, 07 Oct 2005 14:53:53 +0800
+Message-ID: <43461B81.1090808@tw.ibm.com>
+References: <4321B4E0.8020801@tw.ibm.com> <4321C7DD.5050503@pobox.com>	 <43322C50.1060009@tw.ibm.com> <4333CF07.5010400@pobox.com>	 <4339116D.30908@tw.ibm.com> <433912FB.9000606@tw.ibm.com> <58cb370e05092903083e0d001c@mail.gmail.com> <433D1BC7.6060301@tw.ibm.com> <433D1FC7.2060401@pobox.com> <43411A1A.8050901@tw.ibm.com> <43412FF6.5030006@tw.ibm.com> <43413386.6000203@pobox.com> <43424EC6.2040100@pobox.com> <43426ED9.8030004@tw.ibm.com> <4342706B.3030608@pobox.com> <43427405.80502@tw.ibm.com> <434276B9.7080807@tw.ibm.com> <43427AFD.1020405@pobox.com> <4343B5F5.4090402@tw.ibm.com> <434509EF.3040307@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:23465 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751381AbVJGGVE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Oct 2005 02:21:04 -0400
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:49873 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1750940AbVJGGyK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Oct 2005 02:54:10 -0400
 Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j976L4dj005077
-	for <linux-ide@vger.kernel.org>; Fri, 7 Oct 2005 02:21:04 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j976L4vf081306
-	for <linux-ide@vger.kernel.org>; Fri, 7 Oct 2005 02:21:04 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j976L3LQ019032
-	for <linux-ide@vger.kernel.org>; Fri, 7 Oct 2005 02:21:04 -0400
-In-Reply-To: <4345089A.9020006@pobox.com>
+	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j976s1d0003786
+	for <linux-ide@vger.kernel.org>; Fri, 7 Oct 2005 02:54:01 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j976s1vf100096
+	for <linux-ide@vger.kernel.org>; Fri, 7 Oct 2005 02:54:01 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j976s0ol009479
+	for <linux-ide@vger.kernel.org>; Fri, 7 Oct 2005 02:54:01 -0400
+In-Reply-To: <434509EF.3040307@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>
+Cc: Mark Lord <mlord@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>, Brett Russ <russb@emc.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-(resend)
-Patch 3/3:
-   use PageHighMem() to optimize the kmap_atomic() usage, as done in ide-scsi.c
+Dear all,
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+CHS follow-up patches - resend #2 due to whitespace problem in the previous patches.
 
-==========
+patch 1/3: move the initialization of ATA_TFLAG_LBA and ATA_TFLAG_LBA48
+flags to the SCSI translation functions
 
---- himem2/drivers/scsi/libata-core.c	2005-10-06 16:10:33.000000000 +0800
-+++ himem3/drivers/scsi/libata-core.c	2005-10-06 16:08:43.000000000 +0800
-@@ -2748,7 +2748,6 @@ static void ata_pio_sector(struct ata_qu
- 	struct page *page;
- 	unsigned int offset;
- 	unsigned char *buf;
--	unsigned long flags;
+patch 2/3: calculate read/write commands and protocols on the fly
 
- 	if (qc->cursect == (qc->nsect - 1))
- 		ap->hsm_task_state = HSM_ST_LAST;
-@@ -2762,14 +2761,21 @@ static void ata_pio_sector(struct ata_qu
+patch 3/3: LBA28/LBA48 optimization
 
- 	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+Patch against libata-dev upstream branch
+(643736a58d2668af94aee05670c5e9ae76e7b85f).
 
--	local_irq_save(flags);
--	buf = kmap_atomic(page, KM_IRQ0);
-+	if (PageHighMem(page)) {
-+		unsigned long flags;
-+
-+		local_irq_save(flags);
-+		buf = kmap_atomic(page, KM_IRQ0);
+Thanks.
 
--	/* do the actual data transfer */
--	ata_data_xfer(ap, buf + offset, ATA_SECT_SIZE, do_write);
-+		/* do the actual data transfer */
-+		ata_data_xfer(ap, buf + offset, ATA_SECT_SIZE, do_write);
-
--	kunmap_atomic(buf, KM_IRQ0);
--	local_irq_restore(flags);
-+		kunmap_atomic(buf, KM_IRQ0);
-+		local_irq_restore(flags);
-+	} else {
-+		buf = page_address(page);
-+		ata_data_xfer(ap, buf + offset, ATA_SECT_SIZE, do_write);
-+	}
-
- 	qc->cursect++;
- 	qc->cursg_ofs++;
-@@ -2908,7 +2914,6 @@ static void __atapi_pio_bytes(struct ata
- 	struct page *page;
- 	unsigned char *buf;
- 	unsigned int offset, count;
--	unsigned long flags;
-
- 	if (qc->curbytes + bytes >= qc->nbytes)
- 		ap->hsm_task_state = HSM_ST_LAST;
-@@ -2954,14 +2959,21 @@ next_sg:
-
- 	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
-
--	local_irq_save(flags);
--	buf = kmap_atomic(page, KM_IRQ0);
-+	if (PageHighMem(page)) {
-+		unsigned long flags;
-+
-+		local_irq_save(flags);
-+		buf = kmap_atomic(page, KM_IRQ0);
-
--	/* do the actual data transfer */
--	ata_data_xfer(ap, buf + offset, count, do_write);
-+		/* do the actual data transfer */
-+		ata_data_xfer(ap, buf + offset, count, do_write);
-
--	kunmap_atomic(buf, KM_IRQ0);
--	local_irq_restore(flags);
-+		kunmap_atomic(buf, KM_IRQ0);
-+		local_irq_restore(flags);
-+	} else {
-+		buf = page_address(page);
-+		ata_data_xfer(ap, buf + offset, count, do_write);
-+	}
-
- 	bytes -= count;
- 	qc->curbytes += count;
-
+Albert
 
