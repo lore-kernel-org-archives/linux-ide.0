@@ -1,53 +1,116 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [RFC] Hard disk protection revisited
-Date: Fri, 7 Oct 2005 14:11:47 +0200
-Message-ID: <20051007121142.GV2889@suse.de>
-References: <4345B24A.2080104@dresco.co.uk> <20051007100219.GU2889@suse.de> <43466453.9070604@dresco.co.uk>
+From: Nick Pasich <NewsLetters@NickAndBarb.net>
+Subject: Re: no device found for TX4000
+Date: Fri, 7 Oct 2005 06:43:24 -0700
+Message-ID: <20051007134324.GA18871@69.17.112.251>
+References: <20051005180223.GA17900@10.1.0.5> <43445009.6010608@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:34113 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932115AbVJGMLM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Oct 2005 08:11:12 -0400
+Received: from dsl017-112-251.lax1.dsl.speakeasy.net ([69.17.112.251]:17384
+	"EHLO NickAndBarb.net") by vger.kernel.org with ESMTP
+	id S932577AbVJGNnd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Oct 2005 09:43:33 -0400
 Content-Disposition: inline
-In-Reply-To: <43466453.9070604@dresco.co.uk>
+In-Reply-To: <43445009.6010608@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jon Escombe <lists@dresco.co.uk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, hdaps-devel@lists.sourceforge.net
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-On Fri, Oct 07 2005, Jon Escombe wrote:
-> Jens Axboe wrote:
-> 
-> >I have to nack this one for now, I still want the generic command types
-> >patch to go in first. We have far too many queue hooks already, adding
-> >two more for a relatively obscure use such as this one is not a good
-> >idea.
-> >
-> >My suggestion is to maintain this patch out of tree for now, it will be
-> >a few kernel release iterations before the command type patch is in.
-> > 
-> >
-> 
-> That's a fair comment (and not entirely unexpected), I don't have a 
-> problem with looking after this out of tree for now...
-> 
-> One issue with the generic command approach occured to me while making 
-> this patch - although it's more likely an issue with my understanding ;)
-> 
-> I'm assuming that it would work like this -- the block layer still has 
-> the sysfs attribute, and queues the new command for the lower driver to 
-> pick up. The driver receives the command and does it's custom 
-> park/freeze work, then calls a common block layer function to setup the 
-> timer (all good so far). Where it gets hazy (for me) is how the block 
-> layer starts the queue up again - as this ended up needing to be driver 
-> specific & I can't see how the block layer would get another command 
-> down if the queue is stopped?
+Jeff,
 
-It just sends an unfreeze request. It's similar to how we have to allow
-suspend commands on an otherwise suspended queue. Since the block layer
-has control of the frozen queue, it should not be a problem.
+The sata_promise fixes in linux-2.6.14-rc3 "did the trick".
+
+All 4 drives are now accessible.
+
+*******************************************************************************************************
+*******************************************************************************************************
+Oct  6 15:09:49 Server05 kernel: ata1: PATA max UDMA/133 cmd 0xF0CE2200 ctl 0xF0CE2238 bmdma 0x0 irq 11
+Oct  6 15:09:49 Server05 kernel: ata2: PATA max UDMA/133 cmd 0xF0CE2280 ctl 0xF0CE22B8 bmdma 0x0 irq 11
+Oct  6 15:09:49 Server05 kernel: ata3: PATA max UDMA/133 cmd 0xF0CE2300 ctl 0xF0CE2338 bmdma 0x0 irq 11
+Oct  6 15:09:49 Server05 kernel: ata4: PATA max UDMA/133 cmd 0xF0CE2380 ctl 0xF0CE23B8 bmdma 0x0 irq 11
+Oct  6 15:09:49 Server05 kernel: ata1: dev 0 ATA, max UDMA/133, 490234752 sectors: lba48
+Oct  6 15:09:49 Server05 kernel: ata1: dev 0 configured for UDMA/33
+Oct  6 15:09:49 Server05 kernel: scsi1 : sata_promise
+Oct  6 15:09:49 Server05 kernel: ata2: dev 0 ATA, max UDMA/133, 490234752 sectors: lba48
+Oct  6 15:09:49 Server05 kernel: ata2: dev 0 configured for UDMA/33
+Oct  6 15:09:49 Server05 kernel: scsi2 : sata_promise
+Oct  6 15:09:49 Server05 kernel: ata3: dev 0 ATA, max UDMA/133, 490234752 sectors: lba48
+Oct  6 15:09:49 Server05 kernel: ata3: dev 0 configured for UDMA/33
+Oct  6 15:09:49 Server05 kernel: scsi3 : sata_promise
+Oct  6 15:09:49 Server05 kernel: ata4: dev 0 ATA, max UDMA/100, 488397168 sectors: lba48
+Oct  6 15:09:49 Server05 kernel: ata4: dev 0 configured for UDMA/33
+Oct  6 15:09:49 Server05 kernel: scsi4 : sata_promise
+Oct  6 15:09:49 Server05 kernel:   Vendor: ATA       Model: Maxtor 6Y250P0    Rev: YAR4
+Oct  6 15:09:49 Server05 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Oct  6 15:09:49 Server05 kernel: SCSI device sda: 490234752 512-byte hdwr sectors (251000 MB)
+Oct  6 15:09:49 Server05 kernel: SCSI device sda: drive cache: write through
+Oct  6 15:09:49 Server05 kernel: SCSI device sda: 490234752 512-byte hdwr sectors (251000 MB)
+Oct  6 15:09:49 Server05 kernel: SCSI device sda: drive cache: write through
+Oct  6 15:09:49 Server05 kernel:  sda: sda1
+Oct  6 15:09:49 Server05 kernel: Attached scsi disk sda at scsi1, channel 0, id 0, lun 0
+Oct  6 15:09:49 Server05 kernel: Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
+Oct  6 15:09:49 Server05 kernel:   Vendor: ATA       Model: Maxtor 6Y250P0    Rev: YAR4
+Oct  6 15:09:49 Server05 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Oct  6 15:09:50 Server05 kernel: SCSI device sdb: 490234752 512-byte hdwr sectors (251000 MB)
+Oct  6 15:09:50 Server05 kernel: SCSI device sdb: drive cache: write back
+Oct  6 15:09:50 Server05 kernel: SCSI device sdb: 490234752 512-byte hdwr sectors (251000 MB)
+Oct  6 15:09:50 Server05 kernel: SCSI device sdb: drive cache: write back
+Oct  6 15:09:50 Server05 kernel:  sdb: sdb1
+Oct  6 15:09:50 Server05 kernel: Attached scsi disk sdb at scsi2, channel 0, id 0, lun 0
+Oct  6 15:09:50 Server05 kernel: Attached scsi generic sg2 at scsi2, channel 0, id 0, lun 0,  type 0
+Oct  6 15:09:50 Server05 kernel:   Vendor: ATA       Model: Maxtor 6Y250P0    Rev: YAR4
+Oct  6 15:09:50 Server05 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Oct  6 15:09:50 Server05 kernel: SCSI device sdc: 490234752 512-byte hdwr sectors (251000 MB)
+Oct  6 15:09:50 Server05 kernel: SCSI device sdc: drive cache: write through
+Oct  6 15:09:50 Server05 kernel: SCSI device sdc: 490234752 512-byte hdwr sectors (251000 MB)
+Oct  6 15:09:50 Server05 kernel: SCSI device sdc: drive cache: write through
+Oct  6 15:09:50 Server05 kernel:  sdc: sdc1
+Oct  6 15:09:50 Server05 kernel: Attached scsi disk sdc at scsi3, channel 0, id 0, lun 0
+Oct  6 15:09:50 Server05 kernel: Attached scsi generic sg3 at scsi3, channel 0, id 0, lun 0,  type 0
+Oct  6 15:09:50 Server05 kernel:   Vendor: ATA       Model: WDC WD2500JB-00F  Rev: 15.0
+Oct  6 15:09:50 Server05 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Oct  6 15:09:50 Server05 kernel: SCSI device sdd: 488397168 512-byte hdwr sectors (250059 MB)
+Oct  6 15:09:50 Server05 kernel: SCSI device sdd: drive cache: write back
+Oct  6 15:09:50 Server05 kernel: SCSI device sdd: 488397168 512-byte hdwr sectors (250059 MB)
+Oct  6 15:09:50 Server05 kernel: SCSI device sdd: drive cache: write back
+Oct  6 15:09:50 Server05 kernel:  sdd: sdd1
+Oct  6 15:09:50 Server05 kernel: Attached scsi disk sdd at scsi4, channel 0, id 0, lun 0
+Oct  6 15:09:50 Server05 kernel: Attached scsi generic sg4 at scsi4, channel 0, id 0, lun 0,  type 0
+*******************************************************************************************************
+*******************************************************************************************************
+
+
+   Thanks for all your excellent work and quick response,
+
+	         ---( Nick Pasich )---
+
+
+
+>Thanks Jeff.....
+>
+>I'll compile 2.6.14-rc3 and let you know what happens...
+>
+>             ---( Nick Pasich )---
+>
+>
+>On Wed, Oct 05, 2005 at 06:13:29PM -0400, Jeff Garzik wrote:
+>> Nick Pasich wrote:
+>> >Jeff,
+>> >
+>> >
+>> >I'm running Slackware 10.1 and have compiled linux-2.6.13.3 kernel
+>> >with the sata_promise.c as kernel resident.
+>> 
+>> Should be fixed in 2.6.14-rcX...
+>> 
+>> 	Jeff
+>> 
+>> 
+>> 
 
 -- 
-Jens Axboe
+--------
+WebSite: http://NickAndBarb.net
+--------
 
