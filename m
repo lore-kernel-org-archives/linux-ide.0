@@ -1,392 +1,88 @@
-From: jayakumar.ide@gmail.com
-Subject: [PATCH 2.6.13.1 1/1] Updated CS5535 IDE driver
-Date: Sat, 8 Oct 2005 17:28:31 +0800
-Message-ID: <200510080928.j989SVEp007327@localhost.localdomain>
+From: Fabian Knittel <fabian.knittel@avona.com>
+Subject: Re: Problems with Promise SATAII TX4
+Date: Sat, 08 Oct 2005 15:12:01 +0200
+Message-ID: <4347C5A1.1020504@avona.com>
+References: <20050330001007.GA16954@cebitec.uni-bielefeld.de> <430404A5.7060000@avona.com> <430B1D5E.9070201@avona.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [203.121.86.58] ([203.121.86.58]:261 "EHLO
-	bserver.customer.clipsalportal.com") by vger.kernel.org with ESMTP
-	id S1750815AbVJHJcK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Oct 2005 05:32:10 -0400
+Received: from mail.lenk.info ([217.160.183.176]:25779 "EHLO mail.lenk.info")
+	by vger.kernel.org with ESMTP id S932112AbVJHNMY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Oct 2005 09:12:24 -0400
+Received: from smtp.lenk.info ([82.165.24.235] ident=Debian-exim)
+	by mail.lenk.info with esmtpsa
+	(Cipher TLS-1.0:RSA_AES_256_CBC_SHA:32) (Exim 4.50 1)
+	id 1EOEVV-0000Jy-Rv
+	for <linux-ide@vger.kernel.org>; Sat, 08 Oct 2005 15:12:57 +0200
+Received: from p54a34f4d.dip.t-dialin.net ([84.163.79.77] helo=am-nb01.am.local)
+	by smtp.lenk.info with esmtpsa
+	(Cipher TLS-1.0:DHE_RSA_3DES_EDE_CBC_SHA:24) (Exim 4.50 1)
+	id 1EOEVW-00037u-7p
+	for <linux-ide@vger.kernel.org>; Sat, 08 Oct 2005 15:12:58 +0200
+Received: from [127.0.0.1] (helo=[127.0.0.1])
+	by am-nb01.am.local with esmtp (Exim 3.35 #1 (Debian))
+	id 1EOEUd-0000xz-00
+	for <linux-ide@vger.kernel.org>; Sat, 08 Oct 2005 15:12:03 +0200
+In-Reply-To: <430B1D5E.9070201@avona.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi Bartlomiej, IDE, kernel folk,
+Hi again,
 
-As per thread with Jordan Crouse and Bartlomiej on lkml, this merges 
-AMD's changes with the changes from the following threads.
+to follow up on myself again and just for the record, the problems
+("nobody cared, disabling" interrupt errors while accessing several
+drives simultaneously on the same Promise SATAII TX4 controller)
+disappeared after hanging all drives on a seperate power supply unit. So
+now I'm happily running with a 430W PSU powering the system and a ~200W
+PSU powering the 4 drives.
 
-http://marc.theaimsgroup.com/?l=linux-ide&m=112832700817260&w=2
+I'm not sure why the system needs more than 430W, but with the new
+setup, I can read from 4 drives at once without any problems. Before
+this box was converted into a server we probably never tried to access
+several drives simultaneously, so I can't really blame anything in specific.
 
-The specific changes merged from AMD:
-- removes interface serialization (hwif->serialized) per Jordan and Alan
-- set doc source, copyright and author to AMD as per Jordan. I assume 
-  this is okay with Jens, also from AMD.
-- removes debug code
-- updates Kconfig description
+So, my thanks primarily go to Andrey Melnikoff for the right hint (in
+private mail). Thanks a lot!
 
-Thanks,
-Jaya Kumar
+Fabian
 
-Signed-off-by: Jaya Kumar <jayakumar.ide@gmail.com>
-
----
-
- drivers/ide/Kconfig      |    9 +
- drivers/ide/pci/Makefile |    1 
- drivers/ide/pci/cs5535.c |  308 +++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci_ids.h  |    1 
- 4 files changed, 319 insertions(+)
-diff -uprN -X dontdiff.13.1 linux-2.6.13.1-vanilla/drivers/ide/Kconfig linux-2.6.13.1-ide/drivers/ide/Kconfig
---- linux-2.6.13.1-vanilla/drivers/ide/Kconfig	2005-09-15 14:35:09.000000000 +0800
-+++ linux-2.6.13.1-ide/drivers/ide/Kconfig	2005-10-08 15:35:06.000000000 +0800
-@@ -539,6 +539,15 @@ config BLK_DEV_CS5530
- 
- 	  It is safe to say Y to this question.
- 
-+config BLK_DEV_CS5535
-+	tristate "AMD CS5535 chipset support"
-+	depends on X86 && !X86_64
-+	help
-+	  Include support for UDMA on the NSC/AMD CS5535 companion chipset. 
-+	  This will automatically be detected and configured if found. 
-+
-+	  It is safe to say Y to this question.
-+
- config BLK_DEV_HPT34X
- 	tristate "HPT34X chipset support"
- 	help
-diff -uprN -X dontdiff.13.1 linux-2.6.13.1-vanilla/drivers/ide/pci/cs5535.c linux-2.6.13.1-ide/drivers/ide/pci/cs5535.c
---- linux-2.6.13.1-vanilla/drivers/ide/pci/cs5535.c	1970-01-01 07:30:00.000000000 +0730
-+++ linux-2.6.13.1-ide/drivers/ide/pci/cs5535.c	2005-10-08 16:45:10.000000000 +0800
-@@ -0,0 +1,308 @@
-+/*
-+ * linux/drivers/ide/pci/cs5535.c       
-+ *
-+ * Copyright (C) 2004-2005 Advanced Micro Devices, Inc.
-+ *
-+ * History:
-+ * 09/20/2005 - Jaya Kumar <jayakumar.ide@gmail.com>
-+ * - Reworked tuneproc, set_drive, misc mods to prep for mainline 
-+ * - Work was sponsored by CIS (M) Sdn Bhd.
-+ * Ported to Kernel 2.6.11 on June 26, 2005 by
-+ *   Wolfgang Zuleger <wolfgang.zuleger@gmx.de>
-+ *   Alexander Kiausch <alex.kiausch@t-online.de>
-+ * Originally developed by AMD for 2.4   
-+ *
-+ * Development of this chipset driver was funded
-+ * by the nice folks at National Semiconductor.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License version 2 as published by
-+ * the Free Software Foundation.
-+ *
-+ * Documentation:
-+ *  CS5535 documentation available from AMD
-+ */
-+
-+#include <linux/config.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/ide.h>
-+
-+#include "ide-timing.h"
-+
-+#define MSR_ATAC_BASE    	0x51300000
-+#define ATAC_GLD_MSR_CAP 	(MSR_ATAC_BASE+0)
-+#define ATAC_GLD_MSR_CONFIG	(MSR_ATAC_BASE+0x01)
-+#define ATAC_GLD_MSR_SMI	(MSR_ATAC_BASE+0x02)
-+#define ATAC_GLD_MSR_ERROR	(MSR_ATAC_BASE+0x03)
-+#define ATAC_GLD_MSR_PM		(MSR_ATAC_BASE+0x04)
-+#define ATAC_GLD_MSR_DIAG	(MSR_ATAC_BASE+0x05)
-+#define ATAC_IO_BAR		(MSR_ATAC_BASE+0x08)
-+#define ATAC_RESET		(MSR_ATAC_BASE+0x10)
-+#define ATAC_CH0D0_PIO		(MSR_ATAC_BASE+0x20)
-+#define ATAC_CH0D0_DMA		(MSR_ATAC_BASE+0x21)
-+#define ATAC_CH0D1_PIO		(MSR_ATAC_BASE+0x22)
-+#define ATAC_CH0D1_DMA		(MSR_ATAC_BASE+0x23) 
-+#define ATAC_PCI_ABRTERR	(MSR_ATAC_BASE+0x24)
-+#define ATAC_BM0_CMD_PRIM	0x00
-+#define ATAC_BM0_STS_PRIM	0x02
-+#define ATAC_BM0_PRD		0x04
-+#define CS5535_CABLE_DETECT	0x48
-+
-+/* Format I PIO settings. We seperate out cmd and data for safer timings */
-+
-+static unsigned int cs5535_pio_cmd_timings[5] = 
-+{ 0xF7F4, 0x53F3, 0x13F1, 0x5131, 0x1131 };
-+static unsigned int cs5535_pio_dta_timings[5] = 
-+{ 0xF7F4, 0xF173, 0x8141, 0x5131, 0x1131 };
-+
-+static unsigned int cs5535_mwdma_timings[3] = 
-+{ 0x7F0FFFF3, 0x7F035352, 0x7f024241 };
-+
-+static unsigned int cs5535_udma_timings[5] = 
-+{ 0x7F7436A1, 0x7F733481, 0x7F723261, 0x7F713161, 0x7F703061 };
-+
-+/* Macros to check if the register is the reset value -  reset value is an
-+   invalid timing and indicates the register has not been set previously */
-+
-+#define CS5535_BAD_PIO(timings) ( (timings&~0x80000000UL) == 0x00009172 )
-+#define CS5535_BAD_DMA(timings) ( (timings & 0x000FFFFF) == 0x00077771 )
-+  
-+/**
-+ *	cs5535_set_speed         -     Configure the chipset to the new speed
-+ *	@drive: Drive to set up
-+ *	@speed: desired speed
-+ *
-+ *	cs5535_set_speed() configures the chipset to a new speed.
-+ */
-+static void cs5535_set_speed(ide_drive_t *drive, u8 speed) 
-+{
-+	
-+	u32 reg = 0, dummy;
-+	int unit = drive->select.b.unit;
-+
-+
-+	/* Set the PIO timings */
-+	
-+	if ((speed & XFER_MODE) == XFER_PIO) {
-+		u8 pioa; 
-+		u8 piob;
-+		u8 cmd; 
-+
-+		pioa = speed - XFER_PIO_0;
-+		piob = ide_get_best_pio_mode(&(drive->hwif->drives[!unit]), 
-+						255, 4, NULL);
-+		cmd = pioa < piob ? pioa : piob;
-+
-+		/* Write the speed of the current drive */
-+		reg = (cs5535_pio_cmd_timings[cmd] << 16) | 
-+			cs5535_pio_dta_timings[pioa];	
-+		wrmsr(unit ? ATAC_CH0D1_PIO : ATAC_CH0D0_PIO, reg, 0);
-+		
-+		/* And if nessesary - change the speed of the other drive */
-+		rdmsr(unit ?  ATAC_CH0D0_PIO : ATAC_CH0D1_PIO, reg, dummy);    
-+		
-+		if (((reg >> 16) & cs5535_pio_cmd_timings[cmd]) != 
-+			cs5535_pio_cmd_timings[cmd]) {
-+			reg &= 0x0000FFFF;
-+			reg |= cs5535_pio_cmd_timings[cmd] << 16;
-+			wrmsr(unit ? ATAC_CH0D0_PIO : ATAC_CH0D1_PIO, reg, 0);
-+		}
-+
-+		/* Set bit 31 of the DMA register for PIO format 1 timings */
-+		rdmsr(unit ?  ATAC_CH0D1_DMA : ATAC_CH0D0_DMA, reg, dummy);    
-+		wrmsr(unit ? ATAC_CH0D1_DMA : ATAC_CH0D0_DMA, 
-+					reg | 0x80000000UL, 0);
-+	} else {
-+		rdmsr(unit ? ATAC_CH0D1_DMA : ATAC_CH0D0_DMA, reg, dummy);
-+		
-+		reg &= 0x80000000UL;  /* Preserve the PIO format bit */
-+
-+		if (speed >= XFER_UDMA_0 && speed <= XFER_UDMA_7) 
-+			reg |= cs5535_udma_timings[speed - XFER_UDMA_0];
-+		else if (speed >= XFER_MW_DMA_0 && speed <= XFER_MW_DMA_2) 
-+			reg |= cs5535_mwdma_timings[speed - XFER_MW_DMA_0];
-+		else 
-+			return;
-+		
-+		wrmsr(unit ? ATAC_CH0D1_DMA : ATAC_CH0D0_DMA, reg, 0);
-+	}
-+}
-+
-+static u8 cs5535_ratemask(ide_drive_t *drive)
-+{
-+	/* eighty93 will return 1 if it's 80core and capable of
-+	exceeding udma2, 0 otherwise. we need ratemask to set
-+	the max speed and if we can > udma2 then we return 2
-+	which selects speed_max as udma4 which is the 5535's max
-+	speed, and 1 selects udma2 which is the max for 40c */
-+	if (!eighty_ninty_three(drive))
-+		return 1;
-+
-+	return 2;
-+}
-+
-+
-+/**
-+ *	cs5535_set_drive         -     Configure the drive to the new speed
-+ *	@drive: Drive to set up
-+ *	@speed: desired speed
-+ *
-+ *	cs5535_set_drive() configures the drive and the chipset to a
-+ *	new speed. It also can be called by upper layers.
-+ */
-+static int cs5535_set_drive(ide_drive_t *drive, u8 speed) 
-+{
-+	
-+
-+	speed = ide_rate_filter(cs5535_ratemask(drive), speed);
-+	ide_config_drive_speed(drive, speed);
-+	cs5535_set_speed(drive, speed);	
-+
-+	return 0;
-+}
-+
-+/**
-+ *	cs5535_tuneproc    -       PIO setup
-+ *	@drive: drive to set up
-+ *	@pio: mode to use (255 for 'best possible')
-+ *
-+ *	A callback from the upper layers for PIO-only tuning.
-+ */
-+static void cs5535_tuneproc(ide_drive_t *drive, u8 xferspeed) 
-+{ 	
-+	u8 modes[] = { 	XFER_PIO_0, XFER_PIO_1, XFER_PIO_2, XFER_PIO_3,
-+			XFER_PIO_4 };
-+
-+	/* cs5535 max pio is pio 4, best_pio will check the blacklist. 
-+	i think we don't need to rate_filter the incoming xferspeed 
-+	since we know we're only going to choose pio */
-+	xferspeed = ide_get_best_pio_mode(drive, xferspeed, 4, NULL);
-+	ide_config_drive_speed(drive, modes[xferspeed]);
-+	cs5535_set_speed(drive, xferspeed);
-+}
-+
-+static int cs5535_config_drive_for_dma(ide_drive_t *drive)
-+{
-+	u8 speed;
-+
-+	speed = ide_dma_speed(drive, cs5535_ratemask(drive));
-+
-+	/* If no DMA speed was available then let dma_check hit pio */
-+	if (!speed) {
-+		return 0;
-+	}
-+
-+	cs5535_set_drive(drive, speed);
-+	return ide_dma_enable(drive);
-+}
-+
-+static int cs5535_dma_check(ide_drive_t *drive)
-+{
-+	ide_hwif_t *hwif	= drive->hwif;
-+	struct hd_driveid *id	= drive->id;
-+	u8 speed;
-+
-+	drive->init_speed = 0;
-+
-+	if ((id->capability & 1) && drive->autodma) {
-+		if (ide_use_dma(drive)) {
-+			if (cs5535_config_drive_for_dma(drive))
-+				return hwif->ide_dma_on(drive);
-+		}
-+
-+		goto fast_ata_pio;
-+
-+	} else if ((id->capability & 8) || (id->field_valid & 2)) {
-+fast_ata_pio:
-+		speed = ide_get_best_pio_mode(drive, 255, 4, NULL);
-+		cs5535_set_drive(drive, speed);
-+		return hwif->ide_dma_off_quietly(drive);
-+	}
-+	/* IORDY not supported */
-+	return 0;
-+}
-+
-+static u8 __devinit cs5535_cable_detect(struct pci_dev *dev)
-+{
-+	u8 bit;
-+	
-+	/* if a 80 wire cable was detected */
-+	pci_read_config_byte(dev, CS5535_CABLE_DETECT, &bit);
-+	return (bit & 1);
-+}
-+
-+/**
-+ * 	init_hwif_cs5535        -       Initialize one ide cannel
-+ *	@hwif: Channel descriptor
-+ *
-+ *	This gets invoked by the IDE driver once for each channel. It
-+ *	performs channel-specific pre-initialization before drive probing.
-+ *
-+ */
-+static void __devinit init_hwif_cs5535(ide_hwif_t *hwif)
-+{
-+	int i;
-+
-+	hwif->autodma = 0;
-+
-+	hwif->tuneproc = &cs5535_tuneproc;
-+	hwif->speedproc = &cs5535_set_drive;
-+	hwif->ide_dma_check = &cs5535_dma_check;
-+
-+	hwif->atapi_dma = 1;
-+	hwif->ultra_mask = 0x1F;
-+	hwif->mwdma_mask = 0x07;
-+
-+
-+	hwif->udma_four = cs5535_cable_detect(hwif->pci_dev);
-+
-+	if (!noautodma) 
-+		hwif->autodma = 1;
-+
-+	/* just setting autotune and not worrying about bios timings */
-+	for (i = 0; i < 2; i++) {
-+		hwif->drives[i].autotune = 1;
-+		hwif->drives[i].autodma = hwif->autodma;
-+	}
-+}
-+
-+static ide_pci_device_t cs5535_chipset __devinitdata = {
-+	.name		= "CS5535",
-+	.init_hwif	= init_hwif_cs5535,
-+	.channels	= 1,
-+	.autodma	= AUTODMA,
-+	.bootable	= ON_BOARD,
-+};
-+
-+static int __devinit cs5535_init_one(struct pci_dev *dev, 
-+					const struct pci_device_id *id)
-+{
-+	return ide_setup_pci_device(dev, &cs5535_chipset);
-+}
-+
-+static struct pci_device_id cs5535_pci_tbl[] = 
-+{
-+	{ PCI_VENDOR_ID_NS, PCI_DEVICE_ID_NS_CS5535_IDE, PCI_ANY_ID, 
-+		PCI_ANY_ID, 0, 0, 0},
-+	{ 0, },
-+};
-+
-+MODULE_DEVICE_TABLE(pci, cs5535_pci_tbl);
-+
-+static struct pci_driver driver = {
-+	.name       = "CS5535_IDE",
-+	.id_table   = cs5535_pci_tbl,
-+	.probe      = cs5535_init_one,
-+};
-+
-+static int __init cs5535_ide_init(void)
-+{
-+	return ide_pci_register_driver(&driver);
-+}
-+
-+module_init(cs5535_ide_init);
-+
-+MODULE_AUTHOR("AMD");
-+MODULE_DESCRIPTION("PCI driver module for AMD/NS CS5535 IDE");
-+MODULE_LICENSE("GPL");
-diff -uprN -X dontdiff.13.1 linux-2.6.13.1-vanilla/drivers/ide/pci/Makefile linux-2.6.13.1-ide/drivers/ide/pci/Makefile
---- linux-2.6.13.1-vanilla/drivers/ide/pci/Makefile	2005-09-15 14:35:10.000000000 +0800
-+++ linux-2.6.13.1-ide/drivers/ide/pci/Makefile	2005-09-19 15:22:13.000000000 +0800
-@@ -6,6 +6,7 @@ obj-$(CONFIG_BLK_DEV_ATIIXP)		+= atiixp.
- obj-$(CONFIG_BLK_DEV_CMD64X)		+= cmd64x.o
- obj-$(CONFIG_BLK_DEV_CS5520)		+= cs5520.o
- obj-$(CONFIG_BLK_DEV_CS5530)		+= cs5530.o
-+obj-$(CONFIG_BLK_DEV_CS5535)		+= cs5535.o
- obj-$(CONFIG_BLK_DEV_SC1200)		+= sc1200.o
- obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
- obj-$(CONFIG_BLK_DEV_HPT34X)		+= hpt34x.o
-diff -uprN -X dontdiff.13.1 linux-2.6.13.1-vanilla/include/linux/pci_ids.h linux-2.6.13.1-ide/include/linux/pci_ids.h
---- linux-2.6.13.1-vanilla/include/linux/pci_ids.h	2005-09-15 14:36:19.000000000 +0800
-+++ linux-2.6.13.1-ide/include/linux/pci_ids.h	2005-09-19 15:22:13.000000000 +0800
-@@ -402,6 +402,7 @@
- #define PCI_DEVICE_ID_NS_SC1100_SMI	0x0511
- #define PCI_DEVICE_ID_NS_SC1100_XBUS	0x0515
- #define PCI_DEVICE_ID_NS_87410		0xd001
-+#define PCI_DEVICE_ID_NS_CS5535_IDE	0x002d
- 
- #define PCI_VENDOR_ID_TSENG		0x100c
- #define PCI_DEVICE_ID_TSENG_W32P_2	0x3202
+For reference, this is what I wrote some time ago:
+> I wrote:
+>>I'm experiencing problems with my Promise SATAII TX4 controller, quite
+>>similar to what Kim reported a few months ago.
+>>
+>>Using a fresh linux-2.6.12.5 upstream kernel to boot into a rescue shell
+>>(so there's no distribution specific stuff going on, nothing else
+>>loaded, etc.), I can access my three connected Maxtor 120GB drives just
+>>fine, as long as I do so individually.
+> 
+> [...]
+> 
+>>>Attached devices:
+>>>Host: scsi0 Channel: 00 Id: 00 Lun: 00
+>>> Vendor: ATA      Model: Maxtor 6Y120M0   Rev: YAR5
+>>> Type:   Direct-Access                    ANSI SCSI revision: 05
+>>>Host: scsi1 Channel: 00 Id: 00 Lun: 00
+>>> Vendor: ATA      Model: Maxtor 6Y120M0   Rev: YAR5
+>>> Type:   Direct-Access                    ANSI SCSI revision: 05
+>>>Host: scsi3 Channel: 00 Id: 00 Lun: 00
+>>> Vendor: ATA      Model: Maxtor 6Y120M0   Rev: YAR5
+>>> Type:   Direct-Access                    ANSI SCSI revision: 05
+> 
+> 
+> OK, apparently it's somewhat hardware related after all. I've added a
+> Seagate drive (Model: ST3120827AS, Rev: 3.42) and reading from this
+> drive together with two of the Maxtor drives (any two of the three)
+> currently works without problems (for now).
+> 
+> Switching ports and cables doesn't change anything, so it's not related
+> to that.
+> 
+> But how can that be? The individual drives don't reveal any problems and
+> (as reported in my previous mail) the drives worked seamlessly for a few
+> weeks ...
+> 
+> I'll have to do some more testing and this is probably off-topic by now,
+> so I'll stop with the noise now.
