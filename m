@@ -1,47 +1,122 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: Dreaded PDC irq nobody cared
-Date: Sat, 8 Oct 2005 13:17:55 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44.0510081313300.28615-100000@coffee.psychology.mcmaster.ca>
-References: <1128590441.5964.37.camel@localhost.localdomain>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: [PATCH] libata-core cleanups
+Date: Sat, 8 Oct 2005 12:17:00 -0700
+Message-ID: <20051008121700.698e7092.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from coriana6.CIS.McMaster.CA ([130.113.128.17]:51661 "EHLO
-	coriana6.cis.mcmaster.ca") by vger.kernel.org with ESMTP
-	id S932133AbVJHRR5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Oct 2005 13:17:57 -0400
-Received: from coffee.psychology.mcmaster.ca (coffee.Psychology.McMaster.CA [130.113.218.59])
-	by coriana6.cis.mcmaster.ca (8.12.11/8.12.11) with ESMTP id j98HHtc7018587
-	for <linux-ide@vger.kernel.org>; Sat, 8 Oct 2005 13:17:55 -0400 (EDT)
-Received: from localhost (localhost [127.0.0.1])
-	by coffee.psychology.mcmaster.ca (Postfix) with ESMTP id 42C6A8B25
-	for <linux-ide@vger.kernel.org>; Sat,  8 Oct 2005 13:17:55 -0400 (EDT)
-In-Reply-To: <1128590441.5964.37.camel@localhost.localdomain>
+Received: from xenotime.net ([66.160.160.81]:32399 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1751096AbVJHTRC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Oct 2005 15:17:02 -0400
+Received: from midway ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Sat, 8 Oct 2005 12:17:01 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: jgarzik <jgarzik@pobox.com>
 
-> > >  - The difference between having or having not the stuck interrupt seems
-> > > to be the forced cooling of the attached harddisks; I find this also
-...
->  - various people have this problem with various brands and models disks
->  - the temperature of the disks is ~40 C, without cooling, and also ~40
-> C with cooling (?!) according to smartctl attribute 195, so either the
-> temperature sensors are wrong (silly location?) or it really doesn't
-> matter?!
->  - I cannot pinpoint the problem to one harddisk, and probably never
-> will, because the problem only occurs with > 1 harddisk
-> connected :-( (as the other people experience)
->  - the temperature in the case is not very cool but also not extremely
-> hot, imho it shouldn't bother the harddisks.
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-you added ventilation to your case, and the problem went away.
-this doesn't mean the problem was disk temperature, especially
-since your disks report no real change.  instead, I suggest that 
-your PSU was too hot and regulating poorly.  greater airflow 
-resulted in better regulation, and made the disks happier.
-(note another recent message here regarding a similar problem machine
-which was fixed by providing better power...)
+libata cleanups:
+- fix some function coments;
+- use kzalloc() instead of kmalloc() + memset();
+- reduce exit paths in ata_device_add(); 
 
-regards, mark hahn.
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+---
 
+ drivers/scsi/libata-core.c |   22 +++++++++-------------
+ 1 files changed, 9 insertions(+), 13 deletions(-)
+
+diff -Naurp linux-2614-rc3-g7/drivers/scsi/libata-core.c~sata_clean linux-2614-rc3-g7/drivers/scsi/libata-core.c
+--- linux-2614-rc3-g7/drivers/scsi/libata-core.c~sata_clean	2005-10-08 11:44:13.000000000 -0700
++++ linux-2614-rc3-g7/drivers/scsi/libata-core.c	2005-10-08 11:59:48.000000000 -0700
+@@ -85,7 +85,7 @@ MODULE_LICENSE("GPL");
+ MODULE_VERSION(DRV_VERSION);
+ 
+ /**
+- *	ata_tf_load - send taskfile registers to host controller
++ *	ata_tf_load_pio - send taskfile registers to host controller
+  *	@ap: Port to which output is sent
+  *	@tf: ATA taskfile register set
+  *
+@@ -2819,7 +2819,7 @@ err_out:
+ }
+ 
+ /**
+- *	ata_pio_sector -
++ *	ata_pio_block -
+  *	@ap:
+  *
+  *	LOCKING:
+@@ -2832,7 +2832,7 @@ static void ata_pio_block(struct ata_por
+ 	u8 status;
+ 
+ 	/*
+-	 * This is purely hueristic.  This is a fast path.
++	 * This is purely heuristic.  This is a fast path.
+ 	 * Sometimes when we enter, BSY will be cleared in
+ 	 * a chk-status or two.  If not, the drive is probably seeking
+ 	 * or something.  Snooze for a couple msecs, then
+@@ -4021,11 +4021,10 @@ int ata_device_add(struct ata_probe_ent 
+ 
+ 	DPRINTK("ENTER\n");
+ 	/* alloc a container for our list of ATA ports (buses) */
+-	host_set = kmalloc(sizeof(struct ata_host_set) +
++	host_set = kzalloc(sizeof(struct ata_host_set) +
+ 			   (ent->n_ports * sizeof(void *)), GFP_KERNEL);
+ 	if (!host_set)
+ 		return 0;
+-	memset(host_set, 0, sizeof(struct ata_host_set) + (ent->n_ports * sizeof(void *)));
+ 	spin_lock_init(&host_set->lock);
+ 
+ 	host_set->dev = dev;
+@@ -4065,10 +4064,8 @@ int ata_device_add(struct ata_probe_ent 
+ 		count++;
+ 	}
+ 
+-	if (!count) {
+-		kfree(host_set);
+-		return 0;
+-	}
++	if (!count)
++		goto err_free_ret;
+ 
+ 	/* obtain irq, that is shared between channels */
+ 	if (request_irq(ent->irq, ent->port_ops->irq_handler, ent->irq_flags,
+@@ -4126,6 +4123,7 @@ err_out:
+ 		ata_host_remove(host_set->ports[i], 1);
+ 		scsi_host_put(host_set->ports[i]->host);
+ 	}
++err_free_ret:
+ 	kfree(host_set);
+ 	VPRINTK("EXIT, returning 0\n");
+ 	return 0;
+@@ -4236,15 +4234,13 @@ ata_probe_ent_alloc(struct device *dev, 
+ {
+ 	struct ata_probe_ent *probe_ent;
+ 
+-	probe_ent = kmalloc(sizeof(*probe_ent), GFP_KERNEL);
++	probe_ent = kzalloc(sizeof(*probe_ent), GFP_KERNEL);
+ 	if (!probe_ent) {
+ 		printk(KERN_ERR DRV_NAME "(%s): out of memory\n",
+ 		       kobject_name(&(dev->kobj)));
+ 		return NULL;
+ 	}
+ 
+-	memset(probe_ent, 0, sizeof(*probe_ent));
+-
+ 	INIT_LIST_HEAD(&probe_ent->node);
+ 	probe_ent->dev = dev;
+ 
+@@ -4505,7 +4501,7 @@ err_out:
+  *	@pdev: PCI device that was removed
+  *
+  *	PCI layer indicates to libata via this hook that
+- *	hot-unplug or module unload event has occured.
++ *	hot-unplug or module unload event has occurred.
+  *	Handle this by unregistering all objects associated
+  *	with this PCI device.  Free those objects.  Then finally
+  *	release PCI resources and disable device.
+
+---
