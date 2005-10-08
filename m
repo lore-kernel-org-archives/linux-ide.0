@@ -1,45 +1,46 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: IDE issues with  "choose_drive"
-Date: Sat, 08 Oct 2005 11:15:03 +1000
-Message-ID: <1128734104.17365.73.camel@gaston>
-References: <1128559019.22073.19.camel@gaston>
-	 <1128560569.22073.25.camel@gaston>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH libata-dev-2.6:sil24] nit pickings
+Date: Sat, 8 Oct 2005 12:10:43 +0900
+Message-ID: <20051008031043.GA13957@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:26585 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S1161035AbVJHBRT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Oct 2005 21:17:19 -0400
-In-Reply-To: <1128560569.22073.25.camel@gaston>
+Received: from zproxy.gmail.com ([64.233.162.200]:10873 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932679AbVJHDKx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Oct 2005 23:10:53 -0400
+Received: by zproxy.gmail.com with SMTP id 13so450569nzn
+        for <linux-ide@vger.kernel.org>; Fri, 07 Oct 2005 20:10:52 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Jens Axboe <axboe@suse.de>, Linux Kernel list <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>, efalk@google.com
+Cc: linux-ide@vger.kernel.org
 
-On Thu, 2005-10-06 at 11:02 +1000, Benjamin Herrenschmidt wrote:
-> > The first one is the one I'm trying to fix, it's basically a hang on
-> > wakeup from sleep. What happens is that both drives are blocked
-> > (suspended, drive->blocked is set). Their IO queues contains some
-> > requests that haven't been serviced yet. We receive the resume()
-> > callback for one of them. We react by inserting a wakeup request at the
-> > head of the queue and waiting for it to complete. However, when we reach
-> > ide_do_request(), choose_drive() may return the other drive (the one
-> > that is still sleeping). In this case, we hit the test for blocked queue
-> > and just break out of the loop. We end up never servicing the other
-> > drive queue which is the one we are trying to wakeup, thus we hang.
-> 
-> Oh, and here's the ugly workaround beeing tested by the users who are
-> having the problem so far. Not really a proper fix though...
+ Hello, Jeff & Edward.
 
-No reply ... it's a bit urgent as it may bite any system trying to
-suspend with a slave IDE disk at least (not including the other possible
-problems I've spotted  with this code).
+ This patch removes unused NR_PORTS macro and adds termination entry
+to sil24_pci_tbl.
 
-I'm tempted to just send my workaround patch to Linus & Andrew (might
-still make it into 2.6.14). That would at least fix the bug with resume
-from sleep. What do you think ?
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Ben.
-
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -43,8 +43,6 @@
+ #define DRV_NAME	"sata_sil24"
+ #define DRV_VERSION	"0.21"	/* Silicon Image's preview driver was 0.10 */
+ 
+-#define NR_PORTS	4
+-
+ /*
+  * Port request block (PRB) 32 bytes
+  */
+@@ -244,6 +242,7 @@ static int sil24_init_one(struct pci_dev
+ static struct pci_device_id sil24_pci_tbl[] = {
+ 	{ 0x1095, 0x3124, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3124 },
+ 	{ 0x1095, 0x3132, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3132 },
++	{ } /* terminate list */
+ };
+ 
+ static struct pci_driver sil24_pci_driver = {
 
