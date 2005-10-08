@@ -1,59 +1,45 @@
-From: Wes Newell <w.newell@verizon.net>
-Subject: Re: [PATCH 2.6.14-rc3] sis5513.c: enable ATA133 for the SiS965
- southbridge
-Date: Fri, 07 Oct 2005 11:36:46 -0500
-Message-ID: <4346A41E.3020505@verizon.net>
-References: <20051005205906.GA4320@farad.aurel32.net>
- <58cb370e0510060240x2f2e31c3kd0609a06172d86a4@mail.gmail.com>
- <20051007094135.GA16386@farad.aurel32.net>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: IDE issues with  "choose_drive"
+Date: Sat, 08 Oct 2005 11:15:03 +1000
+Message-ID: <1128734104.17365.73.camel@gaston>
+References: <1128559019.22073.19.camel@gaston>
+	 <1128560569.22073.25.camel@gaston>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030499AbVJGQg2@vger.kernel.org>
-In-reply-to: <20051007094135.GA16386@farad.aurel32.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Aurelien Jarno <aurelien@aurel32.net>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Lionel.Bouton@inet6.fr, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:26585 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S1161035AbVJHBRT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Oct 2005 21:17:19 -0400
+In-Reply-To: <1128560569.22073.25.camel@gaston>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: Jens Axboe <axboe@suse.de>, Linux Kernel list <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
 
-Aurelien Jarno wrote:
+On Thu, 2005-10-06 at 11:02 +1000, Benjamin Herrenschmidt wrote:
+> > The first one is the one I'm trying to fix, it's basically a hang on
+> > wakeup from sleep. What happens is that both drives are blocked
+> > (suspended, drive->blocked is set). Their IO queues contains some
+> > requests that haven't been serviced yet. We receive the resume()
+> > callback for one of them. We react by inserting a wakeup request at the
+> > head of the queue and waiting for it to complete. However, when we reach
+> > ide_do_request(), choose_drive() may return the other drive (the one
+> > that is still sleeping). In this case, we hit the test for blocked queue
+> > and just break out of the loop. We end up never servicing the other
+> > drive queue which is the one we are trying to wakeup, thus we hang.
+> 
+> Oh, and here's the ugly workaround beeing tested by the users who are
+> having the problem so far. Not really a proper fix though...
 
->On Thu, Oct 06, 2005 at 11:40:15AM +0200, Bartlomiej Zolnierkiewicz wrote:
->  
->
->>Hi,
->>
->>On 10/5/05, Aurelien Jarno <aurelien@aurel32.net> wrote:
->>    
->>
->>>Hi,
->>>
->>>Here is a patch that enables the ATA133 mode for the SiS965 southbridge
->>>in the SiS5513 driver.
->>>      
->>>
->>The patch for SIS965(L) support is already in -mm tree:
->>http://kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.14-rc2/2.6.14-rc2-mm2/broken-out/sis5513-support-sis-965l.patch
->>
->>    
->>
->
->Oops, I forget to look at the -mm tree for this driver. You're right, it
->works, and it seems the patch is cleaner than mine. So please ignore my
->patch.
->
->Thanks,
->Aurelien
->
->  
->
-It appears to me that this patch will try and apply itself to the real 
-SIS_180 which has the same true_id of 0x180. Can someone tell me what 
-will happen then?
+No reply ... it's a bit urgent as it may bite any system trying to
+suspend with a slave IDE disk at least (not including the other possible
+problems I've spotted  with this code).
+
+I'm tempted to just send my workaround patch to Linus & Andrew (might
+still make it into 2.6.14). That would at least fix the bug with resume
+from sleep. What do you think ?
+
+Ben.
 
 
--- 
-KT133 MB, CPU @2400MHz (24x100): SIS755 MB CPU @2330MHz (10x233)
-Need good help? Provide all system info with question.
-My server http://wesnewell.no-ip.com/cpu.php
-Verizon server http://mysite.verizon.net/res0exft/cpu.htm
