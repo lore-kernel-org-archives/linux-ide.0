@@ -1,26 +1,28 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 0/3] libata: scsi error handling, encore
-Date: Sun, 09 Oct 2005 13:43:20 -0400
-Message-ID: <434956B8.1050105@pobox.com>
-References: <43490BC8.9060504@torque.net> <434919E4.1080601@pobox.com> <434953C4.4000201@adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Cornelius Joyner <swiftly@lobuma.ch>
+Subject: This stuff is not really expensive as before...
+Date: Sun, 9 Oct 2005 14:27:41 -0400
+Message-ID: <3873338763.5875316912@80-195-197-242.cable.ubr01.perr.blueyonder.co.uk>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <434953C4.4000201@adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: dougg@torque.net, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com, russb@emc.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 80-195-197-242.cable.ubr01.perr.blueyonder.co.uk ([80.195.197.242]:23560
+	"HELO 80-195-197-242.cable.ubr01.perr.blueyonder.co.uk")
+	by vger.kernel.org with SMTP id S932217AbVJIS1l (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Oct 2005 14:27:41 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Luben Tuikov wrote:
-> * libata-scsi would need a _lot_ of changes to become SATL.  Would
-> it be more efficient to start from a clean slate (drivers/scsi/satl/satl.c)
-> or change libata-scsi beyond recognition?  What is the political stance
-> on this?
+Prescription meds to your door.
+http://qttcad.t2gdzfzvzqg1bbtmgbtmgbbt.printerig.com/?kbdwolk
 
-We don't need multiple ATA<->SCSI simulators in the kernel.
 
-	Jeff
+The art of progress is to preserve order amid change.   
+The poets have been mysteriously silent on the subject of cheese.  
+All professions are conspiracies against the laity.      
 
+We are advertis'd by our loving friends.      
+It is only to the individual that a soul is given.  
+Exterminate.            
+Observe your enemies, for they first find out your faults.   
 
