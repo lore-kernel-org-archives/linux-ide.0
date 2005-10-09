@@ -1,39 +1,93 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: IDE issues with "choose_drive"
-Date: Sun, 09 Oct 2005 08:18:33 +1000
-Message-ID: <1128809913.17365.78.camel@gaston>
-References: <1128559019.22073.19.camel@gaston>
-	 <1128560569.22073.25.camel@gaston> <1128734104.17365.73.camel@gaston>
-	 <58cb370e0510080129i80710c7gc2178b9330a1ee19@mail.gmail.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH 1/3] libata: scsi error handling, encore
+Date: Sun, 09 Oct 2005 22:24:46 +1000
+Message-ID: <43490C0E.50704@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751171AbVJHWU6@vger.kernel.org>
-In-Reply-To: <58cb370e0510080129i80710c7gc2178b9330a1ee19@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, Linux Kernel list <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
+Content-Type: multipart/mixed;
+ boundary="------------050600010407070505010203"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from zorg.st.net.au ([203.16.233.9]:5092 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S932281AbVJIMXu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Oct 2005 08:23:50 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com, russb@emc.com
+
+This is a multi-part message in MIME format.
+--------------050600010407070505010203
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+This patch is against Jeff's libata-dev git repository,
+upstream branch.
+
+Changelog:
+  - add extern ata_scsi_set_sense() to build SCSI
+    fixed sense data and corresponding SCSI status
+
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
+
+Doug Gilbert
 
 
-> It seems we need internal ide_dev_do_request(ide_drive_t *, int)
-> which will explicitly state which device we want to service as I see
-> no sane way to fix the problem in choose_drive().
 
-Not only that, but if you read my blurb, I wonder how even the
-non-targetted case can work properly if we ever hit a couple of the code
-path in there that either early exit because the elevator returned no
-request or the case where we "sleep" a drive to give more time to the
-other... I have the feeling that we may "miss" an opportunity to servive
-a drive, and thus this drive will stick around with a pending request
-not beeing serviced... I reckon those are corner cases, but I feel the
-whole thing need some serious revisiting.
+--------------050600010407070505010203
+Content-Type: text/x-patch;
+ name="libata_err1.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libata_err1.diff"
 
-> Your workaround is OK for 2.6.14 given that you will document it
-> now and later fix it properly for 2.6.15.
+--- linux/drivers/scsi/libata.h	2005-10-08 17:20:02.000000000 +1000
++++ linux/drivers/scsi/libata.h1	2005-10-09 15:46:14.000000000 +1000
+@@ -80,6 +80,8 @@
+ extern void ata_scsi_badcmd(struct scsi_cmnd *cmd,
+ 			    void (*done)(struct scsi_cmnd *),
+ 			    u8 asc, u8 ascq);
++extern void ata_scsi_set_sense(struct scsi_cmnd *cmd,
++			       u8 sk, u8 asc, u8 ascq);
+ extern void ata_scsi_rbuf_fill(struct ata_scsi_args *args,
+                         unsigned int (*actor) (struct ata_scsi_args *args,
+                                            u8 *rbuf, unsigned int buflen));
+--- linux/drivers/scsi/libata-scsi.c	2005-10-08 17:20:02.000000000 +1000
++++ linux/drivers/scsi/libata-scsi.c1	2005-10-09 15:46:22.000000000 +1000
+@@ -1451,6 +1451,34 @@
+ }
+ 
+ /**
++ *	ata_scsi_set_sense - Set SCSI sense data and status
++ *	@cmd: SCSI request to be handled
++ *	@sk: SCSI-defined sense key
++ *	@asc: SCSI-defined additional sense code
++ *	@ascq: SCSI-defined additional sense code qualifier
++ *
++ *	Helper function that builds a valid fixed format, current
++ *	response code and the given sense key (sk), additional sense
++ *	code (asc) and additional sense code qualifier (ascq) with
++ *	a SCSI command status of %SAM_STAT_CHECK_CONDITION and
++ *	DRIVER_SENSE set in the upper bits of scsi_cmnd::result .
++ *
++ *	LOCKING:
++ *	Not required
++ */
++
++void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq)
++{
++	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
++
++	cmd->sense_buffer[0] = 0x70;	/* fixed format, current */
++	cmd->sense_buffer[2] = sk;
++	cmd->sense_buffer[7] = 18 - 8;	/* additional sense length */
++	cmd->sense_buffer[12] = asc;
++	cmd->sense_buffer[13] = ascq;
++}
++
++/**
+  *	ata_scsi_badcmd - End a SCSI request with an error
+  *	@cmd: SCSI request to be handled
+  *	@done: SCSI command completion function
 
-Ok. Well, I'm not sure what is the right fix at the moment given the
-other issues I described above, but I'm definitely up to doign a proper
-fix for 2.6.15 with your help ;)
 
-Ben.
+--------------050600010407070505010203--
