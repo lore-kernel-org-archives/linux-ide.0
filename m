@@ -1,52 +1,57 @@
 From: Erik Slagter <erik@slagter.name>
-Subject: Re: Problems with Promise SATAII TX4
-Date: Mon, 10 Oct 2005 12:23:08 +0200
-Message-ID: <1128939788.4775.41.camel@localhost.localdomain>
-References: <20050330001007.GA16954@cebitec.uni-bielefeld.de>
-	 <430404A5.7060000@avona.com> <430B1D5E.9070201@avona.com>
-	 <4347C5A1.1020504@avona.com>
+Subject: Re: Dreaded PDC irq nobody cared
+Date: Mon, 10 Oct 2005 12:31:18 +0200
+Message-ID: <1128940278.4775.50.camel@localhost.localdomain>
+References: <Pine.LNX.4.44.0510081313300.28615-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-24XRNskvKn42YqD9hWXZ"
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-Wmp8mIR6MTnBOOGVMl1V"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wlz.nl ([194.53.3.6]:62085 "HELO mx1.wlz.nl")
-	by vger.kernel.org with SMTP id S1750733AbVJJKYH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Oct 2005 06:24:07 -0400
-In-Reply-To: <4347C5A1.1020504@avona.com>
+Received: from mx1.wlz.nl ([194.53.3.6]:3718 "HELO mx1.wlz.nl")
+	by vger.kernel.org with SMTP id S1750739AbVJJKcH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Oct 2005 06:32:07 -0400
+In-Reply-To: <Pine.LNX.4.44.0510081313300.28615-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fabian Knittel <fabian.knittel@avona.com>
-Cc: linux-ide@vger.kernel.org
+To: Mark Hahn <hahn@physics.mcmaster.ca>
+Cc: Linux IDE <linux-ide@vger.kernel.org>
 
 
---=-24XRNskvKn42YqD9hWXZ
+--=-Wmp8mIR6MTnBOOGVMl1V
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2005-10-08 at 15:12 +0200, Fabian Knittel wrote:
-> to follow up on myself again and just for the record, the problems
-> ("nobody cared, disabling" interrupt errors while accessing several
-> drives simultaneously on the same Promise SATAII TX4 controller)
-> disappeared after hanging all drives on a seperate power supply unit. So
-> now I'm happily running with a 430W PSU powering the system and a ~200W
-> PSU powering the 4 drives.
+On Sat, 2005-10-08 at 13:17 -0400, Mark Hahn wrote:
+> > > >  - The difference between having or having not the stuck interrupt =
+seems
+> > > > to be the forced cooling of the attached harddisks; I find this als=
+o
+> ...
+> >  - various people have this problem with various brands and models disk=
+s
+> >  - the temperature of the disks is ~40 C, without cooling, and also ~40
+> > C with cooling (?!) according to smartctl attribute 195, so either the
+> > temperature sensors are wrong (silly location?) or it really doesn't
+> > matter?!
+> >  - I cannot pinpoint the problem to one harddisk, and probably never
+> > will, because the problem only occurs with > 1 harddisk
+> > connected :-( (as the other people experience)
+> >  - the temperature in the case is not very cool but also not extremely
+> > hot, imho it shouldn't bother the harddisks.
 >=20
-> I'm not sure why the system needs more than 430W, but with the new
-> setup, I can read from 4 drives at once without any problems. Before
-> this box was converted into a server we probably never tried to access
-> several drives simultaneously, so I can't really blame anything in specif=
-ic.
+> you added ventilation to your case, and the problem went away.
+> this doesn't mean the problem was disk temperature, especially
+> since your disks report no real change.  instead, I suggest that=20
+> your PSU was too hot and regulating poorly.  greater airflow=20
+> resulted in better regulation, and made the disks happier.
+> (note another recent message here regarding a similar problem machine
+> which was fixed by providing better power...)
 
-Interesting, in relation to my setup and problems. I have a 300W PSU
-feeding 2/3 (one standby/spun down). It works with harddisk cooling fans
-installed (wow... noise!!!) and stops working with the fans removed.
+This may very well at least have something to do with the problem. I
+must say that the air coming from the PSU is rather warm. Anyway, new
+PSU is underway (high-tech/high quality, replacing existing no-name
+PSU).
 
-I guess harddisks (and IC's in general) start using more power when
-they're hotter)?!
-
-New PSU is underway, including more power (har, har) and better fans.
-I'll report when all is installed.
-
---=-24XRNskvKn42YqD9hWXZ
+--=-Wmp8mIR6MTnBOOGVMl1V
 Content-Type: application/x-pkcs7-signature; name=smime.p7s
 Content-Disposition: attachment; filename=smime.p7s
 Content-Transfer-Encoding: base64
@@ -82,13 +87,13 @@ sZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa9/eH1sYITq726jTlEBpbNU1341YheILc
 IRk13iSx0x1G/11fZU8xggHvMIIB6wIBATBpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3
 dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1h
 aWwgSXNzdWluZyBDQQIDD1NzMAkGBSsOAwIaBQCgXTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcB
-MBwGCSqGSIb3DQEJBTEPFw0wNTEwMTAxMDIzMDhaMCMGCSqGSIb3DQEJBDEWBBQcvgFxZK/NI+Se
-dm9my989RUCvhTANBgkqhkiG9w0BAQEFAASCAQC0ZNKqDqwAb/1abW9um0ti0bJQOY1XNpwojEBs
-KJVXXcw48G+NsO+XxzDlj0RtSfZDX+4ARRoHy4zBsvTLASiyqvJKhzsgtBw3+HEjgUyFGsmlEgUD
-mDl60U4EVQtlCZR2sS76tauimx5jWAo1Gtu5P/pcRw4D6DwlF2IowerGJXQZWI4lRI8wR3rvrLaG
-9DFB+EctG5chw712jgjbpXUfMW8r74ZqTr1m+aHxpNqUEwt+acKN4KBuJniBhyOz8X6L9pF9vcP0
-s7QBLtxzEd+60+f6Uo1BGI11G6rY3ymcg878+xOziRklJz7Qj3KK1jwokjqXiXkEjxi1IeoVH94d
+MBwGCSqGSIb3DQEJBTEPFw0wNTEwMTAxMDMxMThaMCMGCSqGSIb3DQEJBDEWBBRK6NU/ltcdRXMf
+H2buckPNdD3HbzANBgkqhkiG9w0BAQEFAASCAQABPstFERV6fCtF4G7VVTwF4/iUQW8lIJzlE/qs
+EtAli2u3zTgD8r9a/4jZwJunWxf8LA2nQCYLvYm99LIqL2NfS+vytWtCNE6JBD6VeenN0CoIdod8
+WR4yOuNJHy7ZqrWRC3MiFJ1w1Tc2ENaJOl686XBCafHPWUSWj8zXN570EJfrmxJn4bEPnsnE6ks4
+84Akxsx8qWLZGT+l3jlIx0ojbnwCu++Fv/oVQj/aT8bZbJ7NfpskioiTxhcW9P7PMmmotyxxSQw6
+AZFKPhACEDJcZQaUkhgnVhBhNgi2tU7Li14cVmuKNEmxGf5VofIA/uRKHsa0BmLgnnzJ7ou0qWgx
 AAAAAAAA
 
 
---=-24XRNskvKn42YqD9hWXZ--
+--=-Wmp8mIR6MTnBOOGVMl1V--
