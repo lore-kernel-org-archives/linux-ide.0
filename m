@@ -1,94 +1,108 @@
-From: Erik Slagter <erik@slagter.name>
-Subject: Re: Problems with Promise SATAII TX4
-Date: Mon, 10 Oct 2005 12:29:13 +0200
-Message-ID: <1128940153.4775.48.camel@localhost.localdomain>
-References: <Pine.LNX.4.44.0510081259090.28615-100000@coffee.psychology.mcmaster.ca>
+From: Velu Erwan <erwan@seanodes.com>
+Subject: [PATCH]: atiixp : Enabling UDMA5 on IXP200
+Date: Mon, 10 Oct 2005 14:02:05 +0200
+Message-ID: <434A583D.2030401@seanodes.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-UbNznDSvb0kTsD3KOY7B"
+Content-Type: multipart/mixed;
+ boundary="------------020200090707030309070405"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wlz.nl ([194.53.3.6]:2438 "HELO mx1.wlz.nl")
-	by vger.kernel.org with SMTP id S1750736AbVJJKaG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Oct 2005 06:30:06 -0400
-In-Reply-To: <Pine.LNX.4.44.0510081259090.28615-100000@coffee.psychology.mcmaster.ca>
+Received: from seanodes.co.fr.clara.net ([212.43.220.11]:35231 "EHLO
+	seanodes.co.fr.clara.net") by vger.kernel.org with ESMTP
+	id S1750758AbVJJMCM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Oct 2005 08:02:12 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by seanodes.co.fr.clara.net (Postfix) with ESMTP id 0DBC24F932
+	for <linux-ide@vger.kernel.org>; Mon, 10 Oct 2005 14:02:13 +0200 (CEST)
+Received: from seanodes.co.fr.clara.net ([127.0.0.1])
+	by localhost (seanodes [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id 09974-06-2 for <linux-ide@vger.kernel.org>;
+	Mon, 10 Oct 2005 14:02:12 +0200 (CEST)
+Received: from [192.168.100.1] (unknown [81.80.43.77])
+	by seanodes.co.fr.clara.net (Postfix) with ESMTP id 7F82C4F92C
+	for <linux-ide@vger.kernel.org>; Mon, 10 Oct 2005 14:02:12 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
+This is a multi-part message in MIME format.
+--------------020200090707030309070405
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
---=-UbNznDSvb0kTsD3KOY7B
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Sat, 2005-10-08 at 13:06 -0400, Mark Hahn wrote:
-> > I'm not sure why the system needs more than 430W, but with the new
->=20
-> unfortunately, total watts is inadequate for characterizing a PSU.
-> it's about like classifying cars by how tall they are.
->=20
-> in particular, many non-server higher-watt PSU's are designed to provide
-> extra power for systems which consume power mainly on the CPU/video volta=
-ges,
-> and may not provide enough power for disks.  further, modern motherboards
-> have voltage converters for the CPU and video which are less sensitive=20
-> to power quality, and will thus "brownout" some power buses.  after all,=20
-> a typical CPU wants 1.5V or so at an obscene current.  disk electronics,=20
-> as far as I have seen, tend to treat their supply as clean and regulated.
+I'm an "Asus Pundit-R" owner, and like many of them I had troubles using 
+the sata port (hdc).
+hparm -t /dev/hdc gave me 15MB/sec and hdparm -I gave me udma2.
 
-BTW my system has a 300W PSU but consumes about 195W according to a
-power meter on the primary (230V) side. Which of course is only
-comparable up to a certain level.
+I've read atiixp.c and found that in the IXP200 case, the 
+eighty_ninty_three() call fails so the slowest mode is selected.
 
-Also BTW note that besides a total max power, PSU's also have ratings
-per voltage and some even per outlet. Maybe that's where the pain comes
-from ;-)
+        if (!eighty_ninty_three(drive))
+                mode = min(mode, (u8)1);
+       }
 
-A nice "bogus power" error message in the (S)ATA standard would have
-been ehrm... beneficial.
+It sounds like on the IXP200 we must skip this test to reach the udma5. 
+I've tried manually and it works.
+I'm reaching 55MB/sec and hdparm -I give me udma5.
 
---=-UbNznDSvb0kTsD3KOY7B
-Content-Type: application/x-pkcs7-signature; name=smime.p7s
-Content-Disposition: attachment; filename=smime.p7s
-Content-Transfer-Encoding: base64
+I've made a patch which match the IXP200 and "hdc" configuration.
+In that case only, I'm skipping the eighty_ninty_three() call.
+The patch works and apply to 2.6.10 -> 2.6.14-rc3.
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGFjCCAs8w
-ggI4oAMCAQICAw9TczANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
-d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
-YWlsIElzc3VpbmcgQ0EwHhcNMDUwODE4MTE1NDA1WhcNMDYwODE4MTE1NDA1WjBDMR8wHQYDVQQD
-ExZUaGF3dGUgRnJlZW1haWwgTWVtYmVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFt
-ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANAMKW15OgreNb+Wd++Xcw6uNJUXXIfX
-56u1rtTObMmbbDY2wNc4Iqwbuwaysvox3z+YElXBibE8BAyV1iMjhee4mOfAy38dGHtWDxhOGke8
-VpkyY8DSWgMN5p4egTiT6YNdHW75iiQ+Vh5zMHju1UXnIqgf5zkUGkNuxYp15jLZvRDbfA5H+Sil
-jbZGB2fiPOJHpyI61ZidcMgdow31qm70/oe6vXxhSZLzo7OLvExE+mQHwbCSIJMN/hPTK1z0lmQ1
-kkaEjHrefqIgoF9Dk/WfOtulzvR3xBzDL50GZ32BxT/OhXYe1SHEJpSM1S/aq8TBQJYwjzREWyDh
-0OYsmr0CAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFndGVyLm5hbWUwDAYDVR0TAQH/BAIw
-ADANBgkqhkiG9w0BAQQFAAOBgQCCpzoneRQIKsUO8zSnwQ7yhJTrS/EaDibiIVrkkCbzXwCiHFAi
-7nmTRF0DlLVF3Ssf97ITWT/RSdkj9Xke0OHH7724PJdfpA6OglMnx2i7IcJLzPgPjB+fOmfR0nYX
-UYKuzGxTOXmshLmPcwKdpFuRLLk7n+vrTAwJYJI++crhJzCCAz8wggKooAMCAQICAQ0wDQYJKoZI
-hvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQIEwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcT
-CUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmlj
-YXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMTG1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFp
-bCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJlZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3
-MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUg
-Q29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwg
-SXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAxKY8VXNV+065yplaHmjAdQRw
-nd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNaLIkVcI7dyfArhVqqP3FWy688Cwfn8R+R
-NiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUqVIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEA
-AaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1UdHwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwu
-dGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWlsQ0EuY3JsMAsGA1UdDwQEAwIBBjApBgNV
-HREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVsMi0xMzgwDQYJKoZIhvcNAQEFBQADgYEA
-SIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYfqi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6E
-sZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa9/eH1sYITq726jTlEBpbNU1341YheILc
-IRk13iSx0x1G/11fZU8xggHvMIIB6wIBATBpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3
-dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1h
-aWwgSXNzdWluZyBDQQIDD1NzMAkGBSsOAwIaBQCgXTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcB
-MBwGCSqGSIb3DQEJBTEPFw0wNTEwMTAxMDI5MTNaMCMGCSqGSIb3DQEJBDEWBBRIRVEopqkqP2W8
-G8TrC4d7tdr2hDANBgkqhkiG9w0BAQEFAASCAQAWret1mYMigmZuq2aqsk0WZcIt7z+6yNVjBFz7
-9sAiK9Ms8zZwH4LXC0dJnkR5RUXLI2UPVTtDoLsEYnuVNWQAdvAzXCC++Z/zg+SOUrCbFLkRSqS0
-u+ncFH77MoY/urRvaw6KdDToEFxF75Tyx/kQBsFfs3JxRva2sYzuRfaAmcAoTrA0oxEwkO0tc5rO
-RpfYFo0QgPsmI3OtHUijpcdcL75bwh1zPRicWJkUSfyWPOJ8rYaaEOcaDk94eN/fcBmZFm6TyJ6Z
-x/jKMQKTnpLMWPjxavE5hCpMhwbZoWcTm03VYUMPwQWLyQRwVeVvWVLUKg3eBd0qFiMcrL0aw7A8
-AAAAAAAA
+I know that checking "hdc" is not very clean but I didn't find a more 
+generic way to test if the "ide_drive_t *drive" is the sata port of the 
+IXP200.
+In the "Pundit-R" case, that's always hdc.
 
+What do you think about that ?
+Please found attached, my patch for atiixp.c
 
---=-UbNznDSvb0kTsD3KOY7B--
+Regards,
+
+--------------020200090707030309070405
+Content-Type: text/x-patch;
+ name="atiixp.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="atiixp.patch"
+
+--- linux/drivers/ide/pci/atiixp.c.old	2005-10-09 18:02:16.136305632 +0200
++++ linux/drivers/ide/pci/atiixp.c	2005-10-09 19:38:37.917876664 +0200
+@@ -1,6 +1,10 @@
+ /*
++ *  linux/drivers/ide/pci/atiixp.c	Version 0.02		Oct. 09, 2005
+  *  linux/drivers/ide/pci/atiixp.c	Version 0.01-bart2	Feb. 26, 2004
+  *
++ *  Version 0.02		Workarounding 80pin cable detection
++ *  				on IXP200 sata's port : hdc (erwan.velu@free.fr)
++ *  Version 0.01-bart2		Initial Release
+  *  Copyright (C) 2003 ATI Inc. <hyu@ati.com>
+  *  Copyright (C) 2004 Bartlomiej Zolnierkiewicz
+  *
+@@ -56,10 +60,23 @@
+ 
+ static u8 atiixp_ratemask(ide_drive_t *drive)
+ {
++	struct pci_dev *dev     = HWIF(drive)->pci_dev;
+ 	u8 mode = 3;
+ 
++	switch (dev->device) {
++	case PCI_DEVICE_ID_ATI_IXP200_IDE:
++		/* Workarounding ATI IXP200 SATA BUG */
++		/* IXP200 always tell that hdc (the sata port) is not having a 80pin cable */
++		/* We must force to mode=3 (udma5) */
++		if (strncmp(drive->name,"hdc",strlen("hdc")) == 0) {
++			printk("ATIIXP: SATA drive detected (%s) on a IXP200 IDE controller,\
++			skipping cable detection, using ATA-100 transfert rate\n",drive->name);
++			break;
++		}
++	default:
+ 	if (!eighty_ninty_three(drive))
+ 		mode = min(mode, (u8)1);
++	}
+ 	return mode;
+ }
+ 
+
+--------------020200090707030309070405--
