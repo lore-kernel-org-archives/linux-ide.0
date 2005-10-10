@@ -1,57 +1,52 @@
 From: Erik Slagter <erik@slagter.name>
-Subject: Re: Dreaded PDC irq nobody cared
-Date: Mon, 10 Oct 2005 12:31:18 +0200
-Message-ID: <1128940278.4775.50.camel@localhost.localdomain>
-References: <Pine.LNX.4.44.0510081313300.28615-100000@coffee.psychology.mcmaster.ca>
+Subject: Re: Problems with Promise SATAII TX4
+Date: Mon, 10 Oct 2005 12:29:13 +0200
+Message-ID: <1128940153.4775.48.camel@localhost.localdomain>
+References: <Pine.LNX.4.44.0510081259090.28615-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-Wmp8mIR6MTnBOOGVMl1V"
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-UbNznDSvb0kTsD3KOY7B"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wlz.nl ([194.53.3.6]:3718 "HELO mx1.wlz.nl")
-	by vger.kernel.org with SMTP id S1750739AbVJJKcH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Oct 2005 06:32:07 -0400
-In-Reply-To: <Pine.LNX.4.44.0510081313300.28615-100000@coffee.psychology.mcmaster.ca>
+Received: from mx1.wlz.nl ([194.53.3.6]:2438 "HELO mx1.wlz.nl")
+	by vger.kernel.org with SMTP id S1750736AbVJJKaG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Oct 2005 06:30:06 -0400
+In-Reply-To: <Pine.LNX.4.44.0510081259090.28615-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: Linux IDE <linux-ide@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org
 
 
---=-Wmp8mIR6MTnBOOGVMl1V
+--=-UbNznDSvb0kTsD3KOY7B
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2005-10-08 at 13:17 -0400, Mark Hahn wrote:
-> > > >  - The difference between having or having not the stuck interrupt =
-seems
-> > > > to be the forced cooling of the attached harddisks; I find this als=
-o
-> ...
-> >  - various people have this problem with various brands and models disk=
-s
-> >  - the temperature of the disks is ~40 C, without cooling, and also ~40
-> > C with cooling (?!) according to smartctl attribute 195, so either the
-> > temperature sensors are wrong (silly location?) or it really doesn't
-> > matter?!
-> >  - I cannot pinpoint the problem to one harddisk, and probably never
-> > will, because the problem only occurs with > 1 harddisk
-> > connected :-( (as the other people experience)
-> >  - the temperature in the case is not very cool but also not extremely
-> > hot, imho it shouldn't bother the harddisks.
+On Sat, 2005-10-08 at 13:06 -0400, Mark Hahn wrote:
+> > I'm not sure why the system needs more than 430W, but with the new
 >=20
-> you added ventilation to your case, and the problem went away.
-> this doesn't mean the problem was disk temperature, especially
-> since your disks report no real change.  instead, I suggest that=20
-> your PSU was too hot and regulating poorly.  greater airflow=20
-> resulted in better regulation, and made the disks happier.
-> (note another recent message here regarding a similar problem machine
-> which was fixed by providing better power...)
+> unfortunately, total watts is inadequate for characterizing a PSU.
+> it's about like classifying cars by how tall they are.
+>=20
+> in particular, many non-server higher-watt PSU's are designed to provide
+> extra power for systems which consume power mainly on the CPU/video volta=
+ges,
+> and may not provide enough power for disks.  further, modern motherboards
+> have voltage converters for the CPU and video which are less sensitive=20
+> to power quality, and will thus "brownout" some power buses.  after all,=20
+> a typical CPU wants 1.5V or so at an obscene current.  disk electronics,=20
+> as far as I have seen, tend to treat their supply as clean and regulated.
 
-This may very well at least have something to do with the problem. I
-must say that the air coming from the PSU is rather warm. Anyway, new
-PSU is underway (high-tech/high quality, replacing existing no-name
-PSU).
+BTW my system has a 300W PSU but consumes about 195W according to a
+power meter on the primary (230V) side. Which of course is only
+comparable up to a certain level.
 
---=-Wmp8mIR6MTnBOOGVMl1V
+Also BTW note that besides a total max power, PSU's also have ratings
+per voltage and some even per outlet. Maybe that's where the pain comes
+from ;-)
+
+A nice "bogus power" error message in the (S)ATA standard would have
+been ehrm... beneficial.
+
+--=-UbNznDSvb0kTsD3KOY7B
 Content-Type: application/x-pkcs7-signature; name=smime.p7s
 Content-Disposition: attachment; filename=smime.p7s
 Content-Transfer-Encoding: base64
@@ -87,13 +82,13 @@ sZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa9/eH1sYITq726jTlEBpbNU1341YheILc
 IRk13iSx0x1G/11fZU8xggHvMIIB6wIBATBpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3
 dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1h
 aWwgSXNzdWluZyBDQQIDD1NzMAkGBSsOAwIaBQCgXTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcB
-MBwGCSqGSIb3DQEJBTEPFw0wNTEwMTAxMDMxMThaMCMGCSqGSIb3DQEJBDEWBBRK6NU/ltcdRXMf
-H2buckPNdD3HbzANBgkqhkiG9w0BAQEFAASCAQABPstFERV6fCtF4G7VVTwF4/iUQW8lIJzlE/qs
-EtAli2u3zTgD8r9a/4jZwJunWxf8LA2nQCYLvYm99LIqL2NfS+vytWtCNE6JBD6VeenN0CoIdod8
-WR4yOuNJHy7ZqrWRC3MiFJ1w1Tc2ENaJOl686XBCafHPWUSWj8zXN570EJfrmxJn4bEPnsnE6ks4
-84Akxsx8qWLZGT+l3jlIx0ojbnwCu++Fv/oVQj/aT8bZbJ7NfpskioiTxhcW9P7PMmmotyxxSQw6
-AZFKPhACEDJcZQaUkhgnVhBhNgi2tU7Li14cVmuKNEmxGf5VofIA/uRKHsa0BmLgnnzJ7ou0qWgx
+MBwGCSqGSIb3DQEJBTEPFw0wNTEwMTAxMDI5MTNaMCMGCSqGSIb3DQEJBDEWBBRIRVEopqkqP2W8
+G8TrC4d7tdr2hDANBgkqhkiG9w0BAQEFAASCAQAWret1mYMigmZuq2aqsk0WZcIt7z+6yNVjBFz7
+9sAiK9Ms8zZwH4LXC0dJnkR5RUXLI2UPVTtDoLsEYnuVNWQAdvAzXCC++Z/zg+SOUrCbFLkRSqS0
+u+ncFH77MoY/urRvaw6KdDToEFxF75Tyx/kQBsFfs3JxRva2sYzuRfaAmcAoTrA0oxEwkO0tc5rO
+RpfYFo0QgPsmI3OtHUijpcdcL75bwh1zPRicWJkUSfyWPOJ8rYaaEOcaDk94eN/fcBmZFm6TyJ6Z
+x/jKMQKTnpLMWPjxavE5hCpMhwbZoWcTm03VYUMPwQWLyQRwVeVvWVLUKg3eBd0qFiMcrL0aw7A8
 AAAAAAAA
 
 
---=-Wmp8mIR6MTnBOOGVMl1V--
+--=-UbNznDSvb0kTsD3KOY7B--
