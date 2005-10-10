@@ -1,28 +1,33 @@
-From: George Gillespie <unfounded@physioanalytics.com>
-Subject: Understanding OEM software
-Date: Mon, 10 Oct 2005 16:29:22 -0400
-Message-ID: <10950179228.84263128455@194.63.139.66>
-Content-Type: text/plain; charset=us-ascii
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH libata-dev-2.6:passthru] passthru fixes
+Date: Mon, 10 Oct 2005 16:39:06 -0400
+Message-ID: <434AD16A.8080200@rtr.ca>
+References: <20050913142636.GB5679@google.com> <43429028.5010901@pobox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [194.63.139.66] ([194.63.139.66]:1288 "HELO 194.63.139.66")
-	by vger.kernel.org with SMTP id S1751207AbVJJU3W (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Oct 2005 16:29:22 -0400
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:26544 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S1751189AbVJJUjK
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Oct 2005 16:39:10 -0400
+In-Reply-To: <43429028.5010901@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Jeff Raubitschek <jhr@google.com>, linux-ide@vger.kernel.org
 
-Download and Buy CDS all software under $15-$99
-You are not allowed to access this page from this IP address.
+Jeff Garzik wrote:
+> Jeff Raubitschek wrote:
+..
+>> - passthru sense routines were refering to tf->command
+>>   which is not read in tf_read, instead use drv_stat for
+>>   status register.
+>> - passthru sense passed back to user on ata_task_ioctl
+>  
+> ISTR there were some reported problems after applying this? 
 
+Yes.  smartctl stops working when those patches are applied
+(the buffer allocate failure patch was okay, though).
 
-The public interest is best served by the free exchange of ideas. 
-The truth is rarely pure and never simple.     
-
-While you're saving your face, you're losing your ass.    
-For every action there is an equal and opposite government program.  
-
-No man really becomes a fool until he stops asking questions.  
-Worries go down better with soup than without.     
-
-
+-ml
