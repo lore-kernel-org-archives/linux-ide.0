@@ -1,28 +1,32 @@
-From: Cornelius Joyner <swiftly@lobuma.ch>
-Subject: This stuff is not really expensive as before...
-Date: Sun, 9 Oct 2005 14:27:41 -0400
-Message-ID: <3873338763.5875316912@80-195-197-242.cable.ubr01.perr.blueyonder.co.uk>
+From: Patrick Suarez <plight@nelemans.com>
+Subject: Italian Crafted Rolex from $75 to $275 - Free Shipping
+Date: Sun, 9 Oct 2005 23:16:15 -0400
+Message-ID: <497751850.10922923930@200-205-4-133.oquei.com.br>
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 80-195-197-242.cable.ubr01.perr.blueyonder.co.uk ([80.195.197.242]:23560
-	"HELO 80-195-197-242.cable.ubr01.perr.blueyonder.co.uk")
-	by vger.kernel.org with SMTP id S932217AbVJIS1l (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Oct 2005 14:27:41 -0400
+Received: from 200-205-4-133.oquei.com.br ([200.205.4.133]:18 "HELO
+	200-205-4-133.oquei.com.br") by vger.kernel.org with SMTP
+	id S932331AbVJJDQP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 9 Oct 2005 23:16:15 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Prescription meds to your door.
-http://qttcad.t2gdzfzvzqg1bbtmgbtmgbbt.printerig.com/?kbdwolk
+Louis Vuitton Replicas
+http://mow.xenl.com/rep/as/
 
 
-The art of progress is to preserve order amid change.   
-The poets have been mysteriously silent on the subject of cheese.  
-All professions are conspiracies against the laity.      
+The family is one of nature's masterpieces.      
+A little inaccuracy sometimes saves tons of explanation.     
+To change and to change for the better are two different things. 
 
-We are advertis'd by our loving friends.      
-It is only to the individual that a soul is given.  
-Exterminate.            
-Observe your enemies, for they first find out your faults.   
+Egotism is the anesthetic that dulls the pain of stupidity.   
+The man who removes a mountain begins by carrying away small stones. 
+
+A static hero is a public liability. Progress grows out of motion. 
+Good taste is the flower of good sense.     
+Action is the last refuge of those who cannot dream.   
+A pound of pluck is worth a ton of luck.   
+
 
