@@ -1,29 +1,24 @@
-From: Doris Hancock <trucker@almagic.every1.net>
-Subject: Bigger, harder, and longer - lasting results NOW with a discreet little patch.
-Date: Mon, 10 Oct 2005 10:20:48 -0400
-Message-ID: <961924511.7092248769@200-171-100-230.dsl.telesp.net.br>
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: linux@horizon.com
+Subject: Re: sata_sil24 AMD64 crash/lockup
+Date: 10 Oct 2005 13:40:33 -0400
+Message-ID: <20051010174033.5473.qmail@science.horizon.com>
+References: <20051006164850.GB8047@htj.dyndns.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 200-171-100-230.dsl.telesp.net.br ([200.171.100.230]:59663 "HELO
-	200-171-100-230.dsl.telesp.net.br") by vger.kernel.org with SMTP
-	id S1750811AbVJJOUs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Oct 2005 10:20:48 -0400
+Received: from science.horizon.com ([192.35.100.1]:54062 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S1751050AbVJJRko
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Oct 2005 13:40:44 -0400
+In-Reply-To: <20051006164850.GB8047@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: htejun@gmail.com, linux@horizon.com
+Cc: linux-ide@vger.kernel.org
 
-Penis Growth Extreme
-http://www.levefo.com/pt/
+>  After applying all four patches (above three plus the one I cc'd to
+> you), when you hit a SATA error, you'll get proper report.  And we
+> should be able to debug that from there.
 
+Just an update - I've been running continuous disk for the last several
+days, and no error reports yet.
 
-
-If God did not exist, it would be necessary to invent him. 
-We must never assume that which is incapable of proof.   
-
-The ability to quote is a serviceable substitute for wit.   
-That's the problem with tradition, it's always dated.     
-
-This poem will never reach its destination.      
-
-
+So sata_sil24 is looking pretty good.  (I'm looking forward to NCQ!)
