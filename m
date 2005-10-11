@@ -1,63 +1,32 @@
-From: Keith Hobbs <pocketbook@bti.every1.net>
-Subject: Actual news
-Date: Tue, 11 Oct 2005 14:42:46 +0200
-Message-ID: <290029104.20051009143643@g3a-osk-tp.onecik.pl>
-Reply-To: Mike Levy <reefs@freerealtime.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 4/4] CHS: LBA28/LBA48 optimization (resend #5)
+Date: Tue, 11 Oct 2005 09:09:15 -0400
+Message-ID: <434BB97B.3070100@rtr.ca>
+References: <4321B4E0.8020801@tw.ibm.com> <4321C7DD.5050503@pobox.com>	 <43322C50.1060009@tw.ibm.com> <4333CF07.5010400@pobox.com>	 <4339116D.30908@tw.ibm.com> <433912FB.9000606@tw.ibm.com> <58cb370e05092903083e0d001c@mail.gmail.com> <433D1BC7.6060301@tw.ibm.com> <433D1FC7.2060401@pobox.com> <43411A1A.8050901@tw.ibm.com> <43412FF6.5030006@tw.ibm.com> <43413386.6000203@pobox.com> <43424EC6.2040100@pobox.com> <43426ED9.8030004@tw.ibm.com> <4342706B.3030608@pobox.com> <43427405.80502@tw.ibm.com> <434276B9.7080807@tw.ibm.com> <43427AFD.1020405@pobox.com> <4343B5F5.4090402@tw.ibm.com> <434509EF.3040307@pobox.com> <43461B81.1090808@tw.ibm.com> <43463296.3090007@tw.ibm.com> <43491E26.40508@pobox.com> <434B9C86.604@tw.ibm.com> <434BA048.3000905@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ip-213-17-232-130.netia.com.pl ([213.17.232.130]:26895 "HELO
-	g3a-osk-tp.onecik.pl") by vger.kernel.org with SMTP
-	id S1751133AbVJKMm6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 11 Oct 2005 08:42:58 -0400
-Received: from mumblings (unknown [192.168.146.204])
-	by g3a-osk-tp.onecik.pl (Postfix) with ESMTP id AFC75002BF8
-	for <linux-ide@vger.kernel.org>; Tue, 11 Oct 2005 14:42:47 +0200
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:34177 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S1751134AbVJKNJO
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 11 Oct 2005 09:09:14 -0400
+In-Reply-To: <434BA048.3000905@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-MOMENTUM ALERT ISSUED FOR OCTOBER 11, 2005
+Albert Lee wrote:
+> Patch 4/4: LBA28/LBA48 optimization per Mark's advice.
 
-EXPLOSIVE PICK FOR OUR MEMBERS
+I must confess I'm so far behind on following these patches
+that I don't know the answer to this, so..
 
-!!!RIDE THE STAIRWAY TO HEAVEN!!!!
+Does this patch compare the *ending* block number when
+checking for 28-bit LBA, or the *starting* block number?
 
-Date: 11 Oct 2005
-Stock Name: CWTD . OB
-Company Name: China World Trade Corporation
-Current Price: $2.06
-10 Day Target: $4
+It's the *ending* block number that should be used,
+because some drives don't deal well with boundary crossings.
 
-
-About China World Trade Corporation
-
-China World Trade Corporation (CWTC) has established its business
-in three distinct areas: the club and business centers throughout
-major cities in China, business travel-related services,
-and business value-added services. The Club and Business Center Division
-is devoted to the building of the World Trade brand throughout China
-via the opening and operating of business clubs in China's major,
-positioning the CWTC to act as a platform to facilitate trade
-between China and the world markets. The acquisition
-of CEO Clubs China Limited ("CEO Clubs") in May 2004
-further complements CWTC's offerings by targeting
-high-level corporate executives from premier companies.
-The Business Traveling Services Division, New Generation,
-provides CWTC access to the rapidly growing travel-related industry.
-New Generation is a pioneer and market leader in the travel agency business
-through its strong network of ticketing sales operations
-throughout Southern China. The Business Value- Added Services Division
-focuses on value-added services of credit cards, merchant-related
-business services, as well as consultancy services to CWTC members
-and clients. Guangdong World Trade Link Information Services Limited
-("WTC Link"), a subsidiary of CWTC, manages the Company's co-branded
-credit card project and is an active provider of CRM solutions
-and services in China.
-
-
-YOU COULD MAKE THOUSANDS OF DOLLARS TRADING.
-CWTD is ready to ROCK !!!!
-
-
-
+Cheers
