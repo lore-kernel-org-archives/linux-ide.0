@@ -1,33 +1,72 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH libata-dev-2.6:passthru] passthru fixes
-Date: Mon, 10 Oct 2005 16:39:06 -0400
-Message-ID: <434AD16A.8080200@rtr.ca>
-References: <20050913142636.GB5679@google.com> <43429028.5010901@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [git patch] libata driver fix
+Date: Tue, 11 Oct 2005 02:00:52 -0400
+Message-ID: <20051011060052.GA9375@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:26544 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S1751189AbVJJUjK
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Oct 2005 16:39:10 -0400
-In-Reply-To: <43429028.5010901@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751383AbVJKGAy@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Jeff Raubitschek <jhr@google.com>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Jeff Raubitschek wrote:
-..
->> - passthru sense routines were refering to tf->command
->>   which is not read in tf_read, instead use drv_stat for
->>   status register.
->> - passthru sense passed back to user on ata_task_ioctl
->  
-> ISTR there were some reported problems after applying this? 
 
-Yes.  smartctl stops working when those patches are applied
-(the buffer allocate failure patch was okay, though).
+Please pull from 'upstream-fixes' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
--ml
+Don't presume that newer NV SATA chips follow the same register scheme
+as older chips.
+
+ drivers/scsi/sata_nv.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
+
+
+commit 9621904012de3c8d0d4e2904dcc7170b3012119e
+Author: Jeff Garzik <jgarzik@pobox.com>
+Date:   Tue Oct 11 01:52:39 2005 -0400
+
+    sata_nv: Fixed bug introduced by 0.08's MCP51 and MCP55 support.
+
+
+diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
+--- a/drivers/scsi/sata_nv.c
++++ b/drivers/scsi/sata_nv.c
+@@ -29,6 +29,8 @@
+  *  NV-specific details such as register offsets, SATA phy location,
+  *  hotplug info, etc.
+  *
++ *  0.09
++ *     - Fixed bug introduced by 0.08's MCP51 and MCP55 support.
+  *
+  *  0.08
+  *     - Added support for MCP51 and MCP55.
+@@ -132,9 +134,7 @@ enum nv_host_type
+ 	GENERIC,
+ 	NFORCE2,
+ 	NFORCE3,
+-	CK804,
+-	MCP51,
+-	MCP55
++	CK804
+ };
+ 
+ static struct pci_device_id nv_pci_tbl[] = {
+@@ -153,13 +153,13 @@ static struct pci_device_id nv_pci_tbl[]
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_SATA2,
+ 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, CK804 },
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA,
+-		PCI_ANY_ID, PCI_ANY_ID, 0, 0, MCP51 },
++		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA2,
+-		PCI_ANY_ID, PCI_ANY_ID, 0, 0, MCP51 },
++		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA,
+-		PCI_ANY_ID, PCI_ANY_ID, 0, 0, MCP55 },
++		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2,
+-		PCI_ANY_ID, PCI_ANY_ID, 0, 0, MCP55 },
++		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 		PCI_ANY_ID, PCI_ANY_ID,
+ 		PCI_CLASS_STORAGE_IDE<<8, 0xffff00, GENERIC },
