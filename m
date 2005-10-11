@@ -1,28 +1,31 @@
-From: Elmer Alston <sojourn@nysveen.com>
-Subject: The supremacy in bed!
-Date: Tue, 11 Oct 2005 03:21:54 -0400
-Message-ID: <1004147702.8267487283@adsl-data-139.84-47-38.telecom.sk>
+From: Rudolph Pereira <rudolph@faex.net>
+Subject: Re: [PATCH 2.6.14-rc3] sis5513.c: enable ATA133 for the SiS965 southbridge
+Date: Tue, 11 Oct 2005 20:05:02 +1000
+Message-ID: <20051011100502.GB29008@delta.faex.net>
+References: <20051005205906.GA4320@farad.aurel32.net> <58cb370e0510060240x2f2e31c3kd0609a06172d86a4@mail.gmail.com> <20051007094135.GA16386@farad.aurel32.net> <4346A41E.3020505@verizon.net>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from adsl-data-139.84-47-38.telecom.sk ([84.47.38.139]:23055 "HELO
-	adsl-data-139.84-47-38.telecom.sk") by vger.kernel.org with SMTP
-	id S1751279AbVJKHVy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 11 Oct 2005 03:21:54 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751443AbVJKKFL@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4346A41E.3020505@verizon.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Wes Newell <w.newell@verizon.net>
+Cc: Aurelien Jarno <aurelien@aurel32.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Lionel.Bouton@inet6.fr, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Legal, prescription medications under the essential guidance of licensed medical
-http://drd.exkqj8kl202meeep1wepjwee.eurindicgj.com/?zsrvnqwfm
+On Fri, Oct 07, 2005 at 11:36:46AM -0500, Wes Newell wrote:
+> It appears to me that this patch will try and apply itself to the real 
+> SIS_180 which has the same true_id of 0x180. Can someone tell me what 
+> will happen then?
+Indeed, I've tried Aurelien's patch and it works fine for me (on an asus
+k8s-mx motherboard). Going back over the reasons for the patch that is
+in -mm that I submitted, which was a rework of
+a patch that Arnaud Patard/Uwe Koziolek sent to linux-ide, it seems that the
+thinking was that complex probing and/or configuration was required for
+this chipset. I don't have any specs to work from, and am not the expert
+in any case, but it would seem that this is not necessary, and
+just doing a standard detect of the southbridge id is fine.
 
-
-Be not ashamed of mistakes and thus make them crimes.   
-It is bad luck to be superstitious.      
-Immature poets imitate; mature poets steal.       
-
-Don't let it end like this. Tell them I said something.  
-I never cease being dumbfounded by the unbelievable things people believe  
-There's no underestimating the intelligence of the American public.    
-A little inaccuracy sometimes saves tons of explanation.     
-
+Unless anyone has stronger evidence/experience, it would seem that the
+simplest/cleanest solution is an update to SiSHostChipInfo[], as in Aurelien's
+patch.
