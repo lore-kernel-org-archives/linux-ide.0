@@ -1,154 +1,217 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 4/4] CHS: LBA28/LBA48 optimization (revise #6)
-Date: Wed, 12 Oct 2005 15:12:26 +0800
-Message-ID: <434CB75A.6010109@tw.ibm.com>
-References: <434CAF8E.5040607@tw.ibm.com>
+From: com bio <combiofriends@yahoo.com>
+Subject: unable to connect.. tcpdump output...
+Date: Wed, 12 Oct 2005 01:30:10 -0700 (PDT)
+Message-ID: <20051012083010.91162.qmail@web32802.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:17887 "EHLO
-	e36.co.us.ibm.com") by vger.kernel.org with ESMTP id S932398AbVJLHMj
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 12 Oct 2005 03:12:39 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id j9C7AtqZ019388
-	for <linux-ide@vger.kernel.org>; Wed, 12 Oct 2005 03:10:55 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j9C7DGtu490622
-	for <linux-ide@vger.kernel.org>; Wed, 12 Oct 2005 01:13:16 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j9C7CScN019248
-	for <linux-ide@vger.kernel.org>; Wed, 12 Oct 2005 01:12:28 -0600
-In-Reply-To: <434CAF8E.5040607@tw.ibm.com>
+Received: from web32802.mail.mud.yahoo.com ([68.142.206.32]:16718 "HELO
+	web32802.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S932120AbVJLIaO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 12 Oct 2005 04:30:14 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>
+To: RealTime_Systems@yahoogroups.com
 
-Patch 4/4: LBA28/LBA48 optimization per Mark's advice.
+Hello,
+  I am unable to connect from a remote machine to my
+machine throught ssh. My machine runs fedora core 3.
+and no firewall is running in my machine. The default
+firewall in fedora has been disabled. SE linux has
+been disabled. SSHD is running in my machine. I had
+pasted the tcpdump output here. I would like someone
+to diagnise this. Thanks
 
-Changes:
-     - add lba_28_ok() and lba_48_ok() to ata.h.
-     - check ending block number instead of staring block number.
-     - use lba_28_ok() for CHS range check
-     - LBA28/LBA48 optimization
+   1.
+       
+   2.
+      tcpdump: verbose output suppressed, use -v or
+-vv for full protocol decode
+   3.
+      listening on eth0, link-type EN10MB (Ethernet),
+capture size 96 bytes
+   4.
+      13:56:53.621153 IP 203.212.228.2.47830 >
+10.0.1.3.ssh: S 1286527220:1286527220(0
+   5.
+      ) win 5840 <mss 1380,sackOK,timestamp 7528651
+0,nop,wscale 2>
+   6.
+      13:56:53.622702 IP 10.0.1.3.ssh >
+203.212.228.2.47830: S 218882536:218882536(0)
+   7.
+      ack 1286527221 win 5792 <mss
+1460,sackOK,timestamp 50762500 7528651,nop,wscale 2
+   8.
+      >
+   9.
+      13:56:53.632750 IP 203.212.228.2.47830 >
+10.0.1.3.ssh: R 1:1(0) ack 1 win 5792 <
+  10.
+      mss 1460,sackOK,timestamp 50762500
+7528651,nop,wscale 2>
+  11.
+      13:56:56.620293 IP 203.212.228.2.47830 >
+10.0.1.3.ssh: S 1286527220:1286527220(0
+  12.
+      ) win 5840 <mss 1380,sackOK,timestamp 7531651
+0,nop,wscale 2>
+  13.
+      13:56:56.620383 IP 10.0.1.3.ssh >
+203.212.228.2.47830: S 221881892:221881892(0)
+  14.
+      ack 1286527221 win 5792 <mss
+1460,sackOK,timestamp 50765500 7531651,nop,wscale 2
+  15.
+      >
+  16.
+      13:56:56.628686 IP 203.212.228.2.47830 >
+10.0.1.3.ssh: R 1:1(0) ack 1 win 5792 <
+  17.
+      mss 1460,sackOK,timestamp 50765500
+7531651,nop,wscale 2>
+  18.
+      13:57:02.620108 IP 203.212.228.2.47830 >
+10.0.1.3.ssh: S 1286527220:1286527220(0
+  19.
+      ) win 5840 <mss 1380,sackOK,timestamp 7537651
+0,nop,wscale 2>
+  20.
+      13:57:02.620209 IP 10.0.1.3.ssh >
+203.212.228.2.47830: S 227881720:227881720(0)
+  21.
+      ack 1286527221 win 5792 <mss
+1460,sackOK,timestamp 50771500 7537651,nop,wscale 2
+  22.
+      >
+  23.
+      13:57:02.633006 IP 203.212.228.2.47830 >
+10.0.1.3.ssh: R 1:1(0) ack 1 win 5792 <
+  24.
+      mss 1460,sackOK,timestamp 50771500
+7537651,nop,wscale 2>
+  25.
+      13:57:14.617988 IP 203.212.228.2.47830 >
+10.0.1.3.ssh: S 1286527220:1286527220(0
+  26.
+      ) win 5840 <mss 1380,sackOK,timestamp 7549651
+0,nop,wscale 2>
+  27.
+      13:57:14.618071 IP 10.0.1.3.ssh >
+203.212.228.2.47830: S 239879584:239879584(0)
+  28.
+      ack 1286527221 win 5792 <mss
+1460,sackOK,timestamp 50783500 7549651,nop,wscale 2
+  29.
+      >
+  30.
+      13:57:14.627490 IP 203.212.228.2.47830 >
+10.0.1.3.ssh: R 1:1(0) ack 1 win 5792 <
+  31.
+      mss 1460,sackOK,timestamp 50783500
+7549651,nop,wscale 2>
+  32.
+      13:57:23.841359 IP 203.212.228.2.47831 >
+10.0.1.3.ssh: S 1316260936:1316260936(0
+  33.
+      ) win 5840 <mss 1380,sackOK,timestamp 7558875
+0,nop,wscale 2>
+  34.
+      13:57:23.841465 IP 10.0.1.3.ssh >
+203.212.228.2.47831: S 254860690:254860690(0)
+  35.
+      ack 1316260937 win 5792 <mss
+1460,sackOK,timestamp 50792725 7558875,nop,wscale 2
+  36.
+      >
+  37.
+      13:57:23.850002 IP 203.212.228.2.47831 >
+10.0.1.3.ssh: R 1:1(0) ack 1 win 5792 <
+  38.
+      mss 1460,sackOK,timestamp 50792725
+7558875,nop,wscale 2>
+  39.
+      13:57:26.841055 IP 203.212.228.2.47831 >
+10.0.1.3.ssh: S 1316260936:1316260936(0
+  40.
+      ) win 5840 <mss 1380,sackOK,timestamp 7561875
+0,nop,wscale 2>
+  41.
+      13:57:26.841164 IP 10.0.1.3.ssh >
+203.212.228.2.47831: S 257860388:257860388(0)
+  42.
+      ack 1316260937 win 5792 <mss
+1460,sackOK,timestamp 50795725 7561875,nop,wscale 2
+  43.
+      >
+  44.
+      13:57:26.851353 IP 203.212.228.2.47831 >
+10.0.1.3.ssh: R 1:1(0) ack 1 win 5792 <
+  45.
+      mss 1460,sackOK,timestamp 50795725
+7561875,nop,wscale 2>
+  46.
+      13:57:32.840365 IP 203.212.228.2.47831 >
+10.0.1.3.ssh: S 1316260936:1316260936(0
+  47.
+      ) win 5840 <mss 1380,sackOK,timestamp 7567875
+0,nop,wscale 2>
+  48.
+      13:57:32.840477 IP 10.0.1.3.ssh >
+203.212.228.2.47831: S 263859702:263859702(0)
+  49.
+      ack 1316260937 win 5792 <mss
+1460,sackOK,timestamp 50801725 7567875,nop,wscale 2
+  50.
+      >
+  51.
+      13:57:32.847324 IP 203.212.228.2.47831 >
+10.0.1.3.ssh: R 1:1(0) ack 1 win 5792 <
+  52.
+      mss 1460,sackOK,timestamp 50801725
+7567875,nop,wscale 2>
+  53.
+      13:57:44.839402 IP 203.212.228.2.47831 >
+10.0.1.3.ssh: S 1316260936:1316260936(0
+  54.
+      ) win 5840 <mss 1380,sackOK,timestamp 7579875
+0,nop,wscale 2>
+  55.
+      13:57:44.839510 IP 10.0.1.3.ssh >
+203.212.228.2.47831: S 275858733:275858733(0)
+  56.
+      ack 1316260937 win 5792 <mss
+1460,sackOK,timestamp 50813726 7579875,nop,wscale 2
+  57.
+      >
+  58.
+      13:57:44.847581 IP 203.212.228.2.47831 >
+10.0.1.3.ssh: R 1:1(0) ack 1 win 5792 <
+  59.
+      mss 1460,sackOK,timestamp 50813726
+7579875,nop,wscale 2> 
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-
-=====
-
---- ch2/include/linux/ata.h	2005-10-11 12:56:56.000000000 +0800
-+++ ch4/include/linux/ata.h	2005-10-12 14:26:59.000000000 +0800
-@@ -291,4 +291,16 @@ static inline int ata_ok(u8 status)
- 			== ATA_DRDY);
- }
- 
-+static inline int lba_28_ok(u64 block, u32 n_block)
-+{
-+	/* check the ending block number */
-+	return ((block + n_block - 1) < ((u64)1 << 28)) && (n_block <= 256);
-+}
-+
-+static inline int lba_48_ok(u64 block, u32 n_block)
-+{
-+	/* check the ending block number */
-+	return ((block + n_block - 1) < ((u64)1 << 48)) && (n_block <= 65536);
-+}
-+
- #endif /* __LINUX_ATA_H__ */
---- ch2/drivers/scsi/libata-scsi.c	2005-10-11 13:03:10.000000000 +0800
-+++ ch4/drivers/scsi/libata-scsi.c	2005-10-11 13:13:19.000000000 +0800
-@@ -636,9 +636,13 @@ static unsigned int ata_scsi_verify_xlat
- 	if (dev->flags & ATA_DFLAG_LBA) {
- 		tf->flags |= ATA_TFLAG_LBA;
- 
--		if (dev->flags & ATA_DFLAG_LBA48) {
--			if (n_block > (64 * 1024))
--				goto invalid_fld;
-+		if (lba_28_ok(block, n_block)) {
-+			/* use LBA28 */
-+			tf->command = ATA_CMD_VERIFY;
-+			tf->device |= (block >> 24) & 0xf;
-+		} else if (lba_48_ok(block, n_block)) {
-+			if (!(dev->flags & ATA_DFLAG_LBA48))
-+				goto out_of_range;
- 
- 			/* use LBA48 */
- 			tf->flags |= ATA_TFLAG_LBA48;
-@@ -649,15 +653,9 @@ static unsigned int ata_scsi_verify_xlat
- 			tf->hob_lbah = (block >> 40) & 0xff;
- 			tf->hob_lbam = (block >> 32) & 0xff;
- 			tf->hob_lbal = (block >> 24) & 0xff;
--		} else {
--			if (n_block > 256)
--				goto invalid_fld;
--
--			/* use LBA28 */
--			tf->command = ATA_CMD_VERIFY;
--
--			tf->device |= (block >> 24) & 0xf;
--		}
-+		} else
-+			/* request too large even for LBA48 */
-+			goto out_of_range;
- 
- 		tf->nsect = n_block & 0xff;
- 
-@@ -670,8 +668,8 @@ static unsigned int ata_scsi_verify_xlat
- 		/* CHS */
- 		u32 sect, head, cyl, track;
- 
--		if (n_block > 256)
--			goto invalid_fld;
-+		if (!lba_28_ok(block, n_block))
-+			goto out_of_range;
- 
- 		/* Convert LBA to CHS */
- 		track = (u32)block / dev->sectors;
-@@ -784,9 +782,11 @@ static unsigned int ata_scsi_rw_xlat(str
- 	if (dev->flags & ATA_DFLAG_LBA) {
- 		tf->flags |= ATA_TFLAG_LBA;
- 
--		if (dev->flags & ATA_DFLAG_LBA48) {
--			/* The request -may- be too large for LBA48. */
--			if ((block >> 48) || (n_block > 65536))
-+		if (lba_28_ok(block, n_block)) {
-+			/* use LBA28 */
-+			tf->device |= (block >> 24) & 0xf;
-+		} else if (lba_48_ok(block, n_block)) {
-+			if (!(dev->flags & ATA_DFLAG_LBA48))
- 				goto out_of_range;
- 
- 			/* use LBA48 */
-@@ -797,15 +797,9 @@ static unsigned int ata_scsi_rw_xlat(str
- 			tf->hob_lbah = (block >> 40) & 0xff;
- 			tf->hob_lbam = (block >> 32) & 0xff;
- 			tf->hob_lbal = (block >> 24) & 0xff;
--		} else { 
--			/* use LBA28 */
--
--			/* The request -may- be too large for LBA28. */
--			if ((block >> 28) || (n_block > 256))
--				goto out_of_range;
--
--			tf->device |= (block >> 24) & 0xf;
--		}
-+		} else
-+			/* request too large even for LBA48 */
-+			goto out_of_range;
- 
- 		ata_rwcmd_protocol(qc);
- 
-@@ -822,7 +816,7 @@ static unsigned int ata_scsi_rw_xlat(str
- 		u32 sect, head, cyl, track;
- 
- 		/* The request -may- be too large for CHS addressing. */
--		if ((block >> 28) || (n_block > 256))
-+		if (!lba_28_ok(block, n_block))
- 			goto out_of_range;
- 
- 		ata_rwcmd_protocol(qc);
 
 
+Thank you
 
+------------------------------------------------------------------
+HAVE FUN, SOLVER SUDOKU, SHARPEN YOUR BRAIN.
+Sudoku solver : http://users.kaski-net.net/~deepan/sudoku/sudoku.php
+------------------------------------------------------------------
+Deepan Chakravarthy N,
+College student by day, Programmer by nite.
+------------------------------------------------------------------
+Home Page: http://users.kaski-net.net/~deepan/
+Center for Biotechnology,
+Anna University, Chennai,
+Tamil Nadu, India.
+Ph 91-44-55127050
+
+
+		
+__________________________________ 
+Yahoo! Music Unlimited 
+Access over 1 million songs. Try it free.
+http://music.yahoo.com/unlimited/
