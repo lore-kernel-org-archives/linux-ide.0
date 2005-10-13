@@ -1,38 +1,32 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: SATA150TX4 atat1:command timeout
-Date: Thu, 13 Oct 2005 17:04:03 -0400
-Message-ID: <434ECBC3.3020802@rtr.ca>
-References: <VA.00001a56.00ccc058@foxhill.co.uk>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: Re: [PATCH] via82cxxx IDE: Remove /proc/via entry
+Date: Thu, 13 Oct 2005 23:52:36 +0100
+Message-ID: <434EE534.6010500@gentoo.org>
+References: <43146CC3.4010005@gentoo.org>  <58cb370e05083008121f2eb783@mail.gmail.com>  <43179CC9.8090608@gentoo.org>  <58cb370e050927062049be32f8@mail.gmail.com>  <433B16BD.7040409@gentoo.org>  <Pine.LNX.4.63.0509290042160.21130@alpha.polcom.net> <58cb370e0509290027404f5224@mail.gmail.com> <Pine.LNX.4.63.0510091707220.21130@alpha.polcom.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:60369 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S964805AbVJMVEA
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 Oct 2005 17:04:00 -0400
-Received: from [10.0.0.14] (silvy.localnet [10.0.0.14])
-	by mail.rtr.ca (Postfix) with ESMTP id 44D0C8302C8
-	for <linux-ide@vger.kernel.org>; Thu, 13 Oct 2005 17:03:59 -0400 (EDT)
-In-Reply-To: <VA.00001a56.00ccc058@foxhill.co.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964879AbVJMWwe@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.63.0510091707220.21130@alpha.polcom.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Grzegorz Kulewski <kangur@polcom.net>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, posting@blx4.net, vsu@altlinux.ru
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Ian Oliver wrote:
->
-> For the record, this is with Ubuntu 5.04 (Hoary) with all repo updates 
-> as of last weekend.
+Hi,
 
-The Ubuntu-5.04 kernels have the libata EH bug, whereby the entire
-machine locks up at random once in a blue-moon when EH is running.
+Grzegorz Kulewski wrote:
+>>> As a user of this controller, I think that if it is not then this patch
+>>> should be changed to export it or should be dropped. The data from that
+>>> file is really helpfull in debugging problems (for example related to 
+>>> bad
+>>> cables or breaking disks/cdroms).
 
-On the machines here, this bug is most often triggered by simply
-having an empty CD/DVD reader that is managed by libata -- polling for
-disc insertion triggers the EH code every couple of seconds, leading
-to random lockups.
+Per Bart's suggestion, I've created a user-space app which shows identical 
+data (and doesn't even rely on the via82cxxx IDE driver).
 
-Bug no longer present in newer kernels, but the Ubuntu-5.04 stock
-kernels still have it.
+http://www.reactivated.net/software/viaideinfo/
 
-Cheers
+So, I think we should be clear to drop /proc/ide/via now.
+
+Daniel
