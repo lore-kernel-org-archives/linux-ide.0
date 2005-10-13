@@ -1,39 +1,56 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH]: atiixp : Enabling UDMA5 on IXP200
-Date: Thu, 13 Oct 2005 19:58:08 +0200
-Message-ID: <58cb370e0510131058g23e956a8m7bb0a82d8f670ce6@mail.gmail.com>
-References: <434A583D.2030401@seanodes.com> <434E79BC.308@seanodes.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Ian Oliver <lists@foxhill.co.uk>
+Subject: Re: SATA150TX4 atat1:command timeout
+Date: Thu, 13 Oct 2005 21:37:07 +0100
+Message-ID: <VA.00001a56.00ccc058@foxhill.co.uk>
+References: <1128595485.5964.41.camel@localhost.localdomain>
+Reply-To: linux-ide@vger.kernel.org
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.201]:50653 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932143AbVJMR6M convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 Oct 2005 13:58:12 -0400
-Received: by nproxy.gmail.com with SMTP id n15so182814nfc
-        for <linux-ide@vger.kernel.org>; Thu, 13 Oct 2005 10:58:08 -0700 (PDT)
-In-Reply-To: <434E79BC.308@seanodes.com>
-Content-Disposition: inline
+Received: from relay2.tidymail.co.uk ([217.146.107.7]:26824 "EHLO
+	relay2.tidymail.co.uk") by vger.kernel.org with ESMTP
+	id S964801AbVJMUhU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Oct 2005 16:37:20 -0400
+Received: from ioliver.adsl.wizards.co.uk ([217.146.109.248] helo=foxhill.co.uk)
+	(from_AS 16353)
+	by relay2.tidymail.co.uk with esmtpa
+	(Exim 4.52)
+	id 1EQ9pA-0004Y9-Pb
+	for linux-ide@vger.kernel.org; Thu, 13 Oct 2005 20:37:12 +0000
+In-Reply-To: <1128595485.5964.41.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Velu Erwan <erwan@seanodes.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi,
+In article <1128595485.5964.41.camel@localhost.localdomain>, Erik 
+Slagter wrote:
+> That's not really a solution ;-) It looks you're also a victim of the
+> promise problem.
 
-I've seen your patch but I'm still thinking how to solve this problem
-because we can't just check for PCI device ID as it is a PATA controller
-(I guess that there is some PATA-SATA bridge on this particular
-motherboard).  One possible fix is to check if device is SATA using
-<linux/ata.h>:ata_id_is_sata() but I don't know how reliable it is,
-I need to check both ATA and SATA specs).
+For sale, 4x Promise TX2 (20375 based) cards, some light bullet damage 
+that should polish out. :-)
 
-Bartlomiej
+To elaborate, my fix of pulling two of the cards just made the problem 
+occur less often. But when the machine did eventually lock solid again, 
+it then needed to resync the raid 5 on reboot. As soon as the smart 
+demon kicked in with this level of activity, the machine locked solid. 
+I rebooted with the raid arrays pulled, disabled all things "smart", 
+and then rebooted.
 
-On 10/13/05, Velu Erwan <erwan@seanodes.com> wrote:
-> I've just sent this patch a few days ago but nobody seems to be
-> interested in testing it nor integrating it.
-> What could I do to help this process ?
-> Regards,
-> Erwan
+I could then boot, enjoy a working server, and open some wine. Quite 
+close to the bottom of the bottle, the sodding thing locked again. It's 
+now running with only one raid array, which is now re-cabled to the SiL 
+3114 and is rebuilding rather nicely (and far faster than on the 
+Promise cards)
+
+Assuming that all is sweetness and light, I will, 1) Order another SiL 
+card, 2) Subject the Promise cards to physical abuse, 3) Move on to 
+whisky, in no particular order.
+
+For the record, this is with Ubuntu 5.04 (Hoary) with all repo updates 
+as of last weekend.
+
+Regards
+
+Ian
+
+
+
