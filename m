@@ -1,31 +1,29 @@
-From: "Ms Liliana Rosario" <snmhmejauuzny@shawcable.net>
-Subject: Drugs that make life better
-Date: Fri, 14 Oct 2005 21:43:42 +0000 (UTC)
-Message-ID: <80208590881145.5706753E8A__11880.5606304251$1129326222$gmane$org@209.132.176.167>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+From: Joey Newton <photocopied@jesusislord.org>
+Subject: Need software? Click here.
+Date: Fri, 14 Oct 2005 17:48:39 -0400
+Message-ID: <2386888444.68206118349@201-14-231-205.paemt704.dsl.brasiltelecom.net.br>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pc-17-166-104-200.cm.vtr.net ([200.104.166.17]:56075 "HELO
-	pc-17-166-104-200.cm.vtr.net") by vger.kernel.org with SMTP
-	id S1750723AbVJNVlt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 Oct 2005 17:41:49 -0400
+Received: from 201-14-231-205.paemt704.dsl.brasiltelecom.net.br ([201.14.231.205]:46085
+	"HELO 201-14-231-205.paemt704.dsl.brasiltelecom.net.br")
+	by vger.kernel.org with SMTP id S1750915AbVJNVsj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Oct 2005 17:48:39 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-tape@vger.kernel.org
-Cc: linux-gcc@vger.kernel.org, linux-ppp@vger.kernel.org, linux-net@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-serial@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Ms Rosario referred this pharm store to me
-I was satified using this products, and
-recommending to you
-
-The Only online store verified by BBB and 
-approved by Visa Seal of Confidence
+Software paradise.
+http://xlecp.dnil15j7jo1lvvd80vd80ddv.hexercn.com/?murgyg
 
 
-http://21.superchaprx.com
+ARDOR, n. The quality that distinguishes love without knowledge.    
+Like swift water an active mind never stagnates.     
+
+Praise the bridge that carried you over.      
+The meek shall inherit the Earth, but not its mineral rights.  
+
+Go, and never darken my towels again.      
+Imagination is the one weapon in the war against reality.   
 
 
-my mistake?
-http://aty4x4ghywy2esalxss3xaas.carapaxjh.com/Liliana
