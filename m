@@ -1,37 +1,31 @@
-From: "Dario Oliva" <DOliva@ARCOIDE.COM>
-Subject: IDE Taskfile write blocks process on PPC
-Date: Fri, 14 Oct 2005 17:11:10 -0400
-Message-ID: <E656D53DA4B96C409683999F573A3607072FC5@sbs.ARCO.local>
+From: "Ms Liliana Rosario" <snmhmejauuzny@shawcable.net>
+Subject: Drugs that make life better
+Date: Fri, 14 Oct 2005 21:43:42 +0000 (UTC)
+Message-ID: <80208590881145.5706753E8A__11880.5606304251$1129326222$gmane$org@209.132.176.167>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 67.104.187.164.ptr.us.xo.net ([67.104.187.164]:38637 "EHLO
-	ARCOIDE.COM") by vger.kernel.org with ESMTP id S1750917AbVJNVLL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 Oct 2005 17:11:11 -0400
-Content-class: urn:content-classes:message
+Received: from pc-17-166-104-200.cm.vtr.net ([200.104.166.17]:56075 "HELO
+	pc-17-166-104-200.cm.vtr.net") by vger.kernel.org with SMTP
+	id S1750723AbVJNVlt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 Oct 2005 17:41:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-tape@vger.kernel.org
+Cc: linux-gcc@vger.kernel.org, linux-ppp@vger.kernel.org, linux-net@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-serial@vger.kernel.org
 
- 
-I am attempting to use the ioctl HDIO_TASKFILE_IOCTL under Linux to do
-raw writes to an IDE drive on a PPC. I recieve no error returns from the
-ioctl, but I have noticed that the drive is not being written to.
- 
-Further examination usin a protocol analyzer showed the following:
-	1. The drive recieves the write command and waits for DMA
-transfer
-	2. The Controller on the board waits for data from the drive, as
-if the command had been a read command.
+Ms Rosario referred this pharm store to me
+I was satified using this products, and
+recommending to you
 
-Now, if I try a read command from the drive everything works fine. Also,
-I've done this on an X86 and it works ok. Any ideas on this? Is there
-any other information I may provide?
+The Only online store verified by BBB and 
+approved by Visa Seal of Confidence
 
 
-Thanks in advance for any help.
+http://21.superchaprx.com
 
-Dario Oliva
+
+my mistake?
+http://aty4x4ghywy2esalxss3xaas.carapaxjh.com/Liliana
