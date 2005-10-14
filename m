@@ -1,32 +1,37 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: Re: [PATCH] via82cxxx IDE: Remove /proc/via entry
-Date: Thu, 13 Oct 2005 23:52:36 +0100
-Message-ID: <434EE534.6010500@gentoo.org>
-References: <43146CC3.4010005@gentoo.org>  <58cb370e05083008121f2eb783@mail.gmail.com>  <43179CC9.8090608@gentoo.org>  <58cb370e050927062049be32f8@mail.gmail.com>  <433B16BD.7040409@gentoo.org>  <Pine.LNX.4.63.0509290042160.21130@alpha.polcom.net> <58cb370e0509290027404f5224@mail.gmail.com> <Pine.LNX.4.63.0510091707220.21130@alpha.polcom.net>
+From: Erwan Velu <erwan@seanodes.com>
+Subject: Re: [PATCH]: atiixp : Enabling UDMA5 on IXP200
+Date: Fri, 14 Oct 2005 05:47:02 +0200
+Message-ID: <434F2A36.2010002@seanodes.com>
+References: <434A583D.2030401@seanodes.com> <434E79BC.308@seanodes.com> <58cb370e0510131058g23e956a8m7bb0a82d8f670ce6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964879AbVJMWwe@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.63.0510091707220.21130@alpha.polcom.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Grzegorz Kulewski <kangur@polcom.net>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, posting@blx4.net, vsu@altlinux.ru
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from seanodes.co.fr.clara.net ([212.43.220.11]:21932 "EHLO
+	seanodes.co.fr.clara.net") by vger.kernel.org with ESMTP
+	id S932501AbVJNDq3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Oct 2005 23:46:29 -0400
+In-Reply-To: <58cb370e0510131058g23e956a8m7bb0a82d8f670ce6@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+Bartlomiej Zolnierkiewicz wrote:
 
-Grzegorz Kulewski wrote:
->>> As a user of this controller, I think that if it is not then this patch
->>> should be changed to export it or should be dropped. The data from that
->>> file is really helpfull in debugging problems (for example related to 
->>> bad
->>> cables or breaking disks/cdroms).
+>Hi,
+>
+>I've seen your patch but I'm still thinking how to solve this problem
+>because we can't just check for PCI device ID as it is a PATA controller
+>(I guess that there is some PATA-SATA bridge on this particular
+>motherboard).  
+>
+By reading the pci device list, I can't find any of them :(
 
-Per Bart's suggestion, I've created a user-space app which shows identical 
-data (and doesn't even rely on the via82cxxx IDE driver).
-
-http://www.reactivated.net/software/viaideinfo/
-
-So, I think we should be clear to drop /proc/ide/via now.
-
-Daniel
+>One possible fix is to check if device is SATA using
+><linux/ata.h>:ata_id_is_sata() but I don't know how reliable it is,
+>I need to check both ATA and SATA specs).
+>
+>  
+>
+Do you know how can I check that if this call works on my system ?
