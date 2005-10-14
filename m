@@ -1,35 +1,38 @@
-From: "Dario Oliva" <DOliva@ARCOIDE.COM>
-Subject: Write Error on PowerPC
-Date: Fri, 14 Oct 2005 10:14:16 -0400
-Message-ID: <E656D53DA4B96C409683999F573A3607072F87@sbs.ARCO.local>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Ian Oliver <lists@foxhill.co.uk>
+Subject: Re: SATA150TX4 atat1:command timeout
+Date: Fri, 14 Oct 2005 17:00:28 +0100
+Message-ID: <VA.00001a59.01e2cffe@foxhill.co.uk>
+References: <1129284030.30961.4.camel@localhost.localdomain>
+Reply-To: linux-ide@vger.kernel.org
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 67.104.187.164.ptr.us.xo.net ([67.104.187.164]:35310 "EHLO
-	ARCOIDE.COM") by vger.kernel.org with ESMTP id S1750753AbVJNOOS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 Oct 2005 10:14:18 -0400
-Content-class: urn:content-classes:message
+Received: from relay2.tidymail.co.uk ([217.146.107.7]:49583 "EHLO
+	relay2.tidymail.co.uk") by vger.kernel.org with ESMTP
+	id S1750772AbVJNQAq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 Oct 2005 12:00:46 -0400
+Received: from [217.146.124.254] (helo=foxhill.co.uk)
+	(from_AS 16353)
+	by relay2.tidymail.co.uk with esmtpa
+	(Exim 4.52)
+	id 1EQRyu-0006nt-2S
+	for linux-ide@vger.kernel.org; Fri, 14 Oct 2005 16:00:28 +0000
+In-Reply-To: <1129284030.30961.4.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-I am attempting to use the ioctl HDIO_TASKFILE_IOCTL under Linux to do
-raw writes to an IDE drive on a PPC. I recieve no error returns from the
-ioctl, but I have noticed that the drive is not being written to.
- 
-Further examination showed the following:
-	1. The drive recieves the write command and waits for DMA
-transfer
-	2. The Controller on the board waits for data from the drive, as
-if the command had been a read command.
+In article <1129284030.30961.4.camel@localhost.localdomain>, Erik 
+Slagter wrote:
+> So either the PSU has solved my problem, or the disk cooler cools some
+> critical component on the disk better.
 
-Now, if I try a read command from the drive everything works fine. Any
-ideas on this? Is there any other information I may provide?
+My machine has two PSUs and the disks are shared between them. I doubt 
+that power is an issue.
+
+Will try an upgrade to Ubuntu Breezy (5.10) when I'm feeling brave!
+
+Regards
+
+Ian
 
 
-Thanks in advance for any help.
 
-Dario Oliva
