@@ -1,30 +1,35 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: SATA150TX4 atat1:command timeout
-Date: Fri, 14 Oct 2005 09:07:05 -0400
-Message-ID: <434FAD79.2030800@rtr.ca>
-References: <VA.00001a58.00a9337c@foxhill.co.uk>
+From: "Dario Oliva" <DOliva@ARCOIDE.COM>
+Subject: Write Error on PowerPC
+Date: Fri, 14 Oct 2005 10:14:16 -0400
+Message-ID: <E656D53DA4B96C409683999F573A3607072F87@sbs.ARCO.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:58808 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S1750736AbVJNNHF
+Received: from 67.104.187.164.ptr.us.xo.net ([67.104.187.164]:35310 "EHLO
+	ARCOIDE.COM") by vger.kernel.org with ESMTP id S1750753AbVJNOOS convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 Oct 2005 09:07:05 -0400
-Received: from [10.0.0.14] (silvy.localnet [10.0.0.14])
-	by mail.rtr.ca (Postfix) with ESMTP id D4191830245
-	for <linux-ide@vger.kernel.org>; Fri, 14 Oct 2005 09:07:04 -0400 (EDT)
-In-Reply-To: <VA.00001a58.00a9337c@foxhill.co.uk>
+	Fri, 14 Oct 2005 10:14:18 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Ian Oliver wrote:
-> In article <434ECBC3.3020802@rtr.ca>, Mark Lord wrote:
-> 
->>The Ubuntu-5.04 kernels have the libata EH bug, whereby the entire
->>machine locks up at random once in a blue-moon when EH is running.
->
-> What about 5.10?
+I am attempting to use the ioctl HDIO_TASKFILE_IOCTL under Linux to do
+raw writes to an IDE drive on a PPC. I recieve no error returns from the
+ioctl, but I have noticed that the drive is not being written to.
+ 
+Further examination showed the following:
+	1. The drive recieves the write command and waits for DMA
+transfer
+	2. The Controller on the board waits for data from the drive, as
+if the command had been a read command.
 
-Breezy (5.10) should be fine.
+Now, if I try a read command from the drive everything works fine. Any
+ideas on this? Is there any other information I may provide?
+
+
+Thanks in advance for any help.
+
+Dario Oliva
