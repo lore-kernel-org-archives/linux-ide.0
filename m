@@ -1,29 +1,48 @@
-From: Joey Newton <photocopied@jesusislord.org>
-Subject: Need software? Click here.
-Date: Fri, 14 Oct 2005 17:48:39 -0400
-Message-ID: <2386888444.68206118349@201-14-231-205.paemt704.dsl.brasiltelecom.net.br>
-Content-Type: text/plain; charset=us-ascii
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH 0/3] libata: scsi error handling, encore
+Date: Sat, 15 Oct 2005 12:30:59 +1000
+Message-ID: <435069E3.90306@torque.net>
+References: <43490BC8.9060504@torque.net> <434919E4.1080601@pobox.com>
+Reply-To: dougg@torque.net
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 201-14-231-205.paemt704.dsl.brasiltelecom.net.br ([201.14.231.205]:46085
-	"HELO 201-14-231-205.paemt704.dsl.brasiltelecom.net.br")
-	by vger.kernel.org with SMTP id S1750915AbVJNVsj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Oct 2005 17:48:39 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <434919E4.1080601@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com, russb@emc.com
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Software paradise.
-http://xlecp.dnil15j7jo1lvvd80vd80ddv.hexercn.com/?murgyg
+Jeff Garzik wrote:
+> Douglas Gilbert wrote:
+> 
+>> This is a series of patches that are equivalent to
+>> one sent on 2005/09/19:
+>> "[PATCH] libata: scsi error handling, lk 2.6.14-rc1"
+>> http://marc.theaimsgroup.com/?l=linux-scsi&m=112711945709949&w=2
+>>
+>> The aim is to build more general sense buffers for SCSI
+>> errors detected in the SCSI ATA translation layer in libata.
+>> These patches are against Jeff's libata-dev git repository,
+>> upstream branch.
+>> Patch 1:  adds ata_scsi_set_sense() extern declaration and
+>>           definition
+>> Patch 2:  switch error processing in libata-scsi.c to use
+>>           ata_scsi_set_sense()
+>> Patch 3:  remove static inline definitions in libata.h that
+>>           are no longer used after patch 2
+>>
+>> Signed-off-by: Douglas Gilbert <dougg@torque.net>
+> 
+> 
+> First and foremost, applied all three patches.  Thanks for your
+> patience.  'upstream' branch will reflect your changes as soon as
+> master.kernel.org propagates to the public mirrors.
 
+Jeff,
+Six days have passed and "git pull ..../libata-dev" still
+does not reflect these changes. Am I doing something
+wrong? Should I wait before submitting more changes?
 
-ARDOR, n. The quality that distinguishes love without knowledge.    
-Like swift water an active mind never stagnates.     
-
-Praise the bridge that carried you over.      
-The meek shall inherit the Earth, but not its mineral rights.  
-
-Go, and never darken my towels again.      
-Imagination is the one weapon in the war against reality.   
-
-
+Doug Gilbert
