@@ -1,73 +1,31 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 0/3] libata: scsi error handling, encore
-Date: Sat, 15 Oct 2005 12:55:44 +0900
-Message-ID: <43507DC0.90403@gmail.com>
-References: <43490BC8.9060504@torque.net> <434919E4.1080601@pobox.com> <435069E3.90306@torque.net> <43506AA3.3030502@pobox.com> <43507BA7.6090406@torque.net> <43507D5F.2050407@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Peg Childress <reworked@cnam.fr>
+Subject: 70% discounts on popular software
+Date: Sat, 15 Oct 2005 00:02:09 -0400
+Message-ID: <3647348586.1624169494@61.84.106.30>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <43507D5F.2050407@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: dougg@torque.net, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, russb@emc.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [61.84.106.30] ([61.84.106.30]:61194 "HELO 61.84.106.30")
+	by vger.kernel.org with SMTP id S1751063AbVJOECJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Oct 2005 00:02:09 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Douglas Gilbert wrote:
-> 
->> Jeff Garzik wrote:
->>
->>> Douglas Gilbert wrote:
->>>
->>>
->>>> Six days have passed and "git pull ..../libata-dev" still
->>>> does not reflect these changes. Am I doing something
->>>> wrong? Should I wait before submitting more changes?
->>>
->>>
->>>
->>> Your changes are committed to the 'upstream' branch.  Maybe you need 
->>> to do
->>>    git pull $url upstream
->>
->>
->>
->> Jeff,
->> Thanks, indeed I do. Obviously the fact the 'upstream'
->> was the active branch in the destination directory was
->> not sufficient. So do I need to do both
->> 'git pull $url' and 'git pull $url upstream' or is
->> the latter sufficient?
->>
->> "git" does seems an appropriate name :-)
->>
->> Doug Gilbert
->>
-> 
->  Hi, Doug,
-> 
->  I use the following script.
-> 
-> $ cat ~/bin/git-sync.sh
-> #!/bin/sh
-> 
-> if [ ! -r .git/origin ]; then
->         echo "not in git repo" 2>&1
->         exit 1
-> fi
-> 
-> rsync -avz --ignore-existing $(cat .git/origin)/ .git/
-> rsync -avz $(cat .git/origin)/refs/ .git/refs/
-> 
->  After syncing, you need to do 'git-read-tree -m upstream' 
-> 'git-checkout-cache -q -f -u -a'
-> 
+Microsoft FrontPage 2003 Pro plus 200 Templates - $29.95
+http://obviousness.misstip.com/
 
-  Oops, and my .git/origin contains url of the repository.
 
-$ cat .git/origin
-rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
--- 
-tejun
+Man is more ape than many of the apes.    
+
+Revolution, n. In politics, an abrupt change in the form of misgovernment. 
+Good manners sometimes means simply putting up with other people's bad manners. 
+
+It's so much more friendly with two.      
+Life's truest happiness is found in friendships we make along the way. 
+To love oneself is the beginning of a lifelong romance.   
+A free society is a place where it's safe to be unpopular. 
+
+
+
