@@ -1,92 +1,32 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Adaptec SAS integration notes
-Date: Sat, 15 Oct 2005 18:01:05 +0200
-Message-ID: <435127C1.3060600@s5r6.in-berlin.de>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7AED@xbl3.ma.emulex.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+From: Jack Allison <permissibility@falconar.com>
+Subject: Rolex Submariner Replica
+Date: Sat, 15 Oct 2005 12:45:09 -0400
+Message-ID: <5899527470.6332459483@host81-152-246-142.range81-152.btcentralplus.com>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7AED@xbl3.ma.emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Smart@Emulex.Com, ltuikov@yahoo.com, jgarzik@pobox.com, andmike@us.ibm.com, luben_tuikov@adaptec.com, James.Bottomley@steeleye.com, hch@infradead.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from host81-152-246-142.range81-152.btcentralplus.com ([81.152.246.142]:56585
+	"HELO host81-152-246-142.range81-152.btcentralplus.com")
+	by vger.kernel.org with SMTP id S1751184AbVJOQpJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Oct 2005 12:45:09 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-James.Smart@Emulex.Com wrote:
-> Luben,
-[Jeff Garzik wrote]
->>> * Adaptec SAS abuses Scsi_Host_Template.  The host template 
->>> is a set of ops for various layers, and it is fine as an
->>> interface.  No need to avoid it.
+Swiss watches online - only $150
+http://sentry.myyv.com/repli/as/
 
-The scsi_host_template is a set of ops for (and interface between) 
-exactly two layers. What is the abuse?
 
->>Neither the Host Adapter, nor the FW, implements anything which has
->>to do with the scsi host template.  What the Host Adapter 
->>(the hardware) and
->>the FW implement is access to the transport -- that' all.
->>
->>So in effect the LLDD is _access to the (SAS) transport_. Cf. 
->>the USB Storage code and SBP code.
->>
->>Putting the host template back into the LLDD is a step 
->>_backwards_, i.e. it's just a workaround, not a step forward.
-> 
-> This statement absolutely amazes me....
-> 
-> Your first comment "Host Adapter, nor the FW ..." is true of every
-> adapter.
-> 
-> The job of a Device Driver is to map between the interface presented
-> by the Host Adapter/FW and the interfaces of the host os. This is true
-> of whatever the technology is - SCSI, Ethernet, rs232, whatever.
-> 
-> As the current design of the scsi subsystem has SCSI-hba's attaching
-> via the host template - of course the LLDD will contain the host
-> template.
+It's not my Goddamn planet! Understand, Monkey-Boy?      
+Trapped, like a trap in a trap.      
+Mothers are a biological necessity; fathers are a social invention.   
 
-The current SCSI subsystem has "low level drivers" attaching via the 
-scsi_host_template ("low level" from the perspective of the SCSI 
-subsystem). The SCSI low level drivers
-     (1)  provide access to a transport
-and either
-     (2a) drive interconnect hardware
-or
-     (2b) rely on another driver or entire subsystem which provides
-          access to the interconnect.
-In addition, it may
-     (3)  expose means to manage the transport and/or interconnect
-          infrastructure.
+Genius hath electric power which earth can never tame.    
+Forgive many things in others; nothing in yourself.     
 
-The scsi_host_template only fulfills a role between the SCSI subsystem's 
-core driver and function (1) of the SCSI low level driver. As far as I 
-can tell, the scsi_host_template is irrelevant to any interface used for 
-(2b).
+In the right light, at the right time, everything is extraordinary.  
+The basis for optimism is sheer terror.      
+To know is not less than to feel.     
+The journey of a thousand leagues begins from beneath your feet.  
 
-In http://marc.theaimsgroup.com/?l=linux-scsi&m=112629423714248 , Luben 
-used the following terms:
-| The infrastructure is broken into
-| 	* SAS LLDD,
-| 	* SAS Layer.
 
-The SAS LLDD is not the SCSI low level driver. The SAS Layer is the SCSI 
-low level driver.
-
-Similarly, usbcore and ieee1394 (together with [eou]hci_hcd, ohci1394, 
-pcilynx) are not SCSI low level drivers. Usb-storage and sbp2 are SCSI 
-low level drivers.
-
-Whenever "LLDDs" are discussed, it should be clarified whether SCSI 
-LLDDs (like the SAS Layer) or other LLDDs (like the SAS LLDD) are meant, 
-if not apparent from context.
-
-> - of course the LLDD will contain the host template.
-
-Yes, a SCSI LLDD does contain it. A driver of interconnect hardware does 
-not necessarily contain it.
--- 
-Stefan Richter
--=====-=-=-= =-=- -====
-http://arcgraph.de/sr/
