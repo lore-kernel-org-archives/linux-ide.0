@@ -1,72 +1,29 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Adaptec SAS integration notes
-Date: Sun, 16 Oct 2005 11:05:07 +1000
-Message-ID: <4351A743.3040105@torque.net>
-References: <20051014180615.5604.qmail@web31808.mail.mud.yahoo.com> <43510FEA.6070109@s5r6.in-berlin.de>
-Reply-To: dougg@torque.net
-Mime-Version: 1.0
+From: Ethel Ervin <Perry@cain.net>
+Subject: Get rid of premature ejaculation and last longer
+Date: Sun, 16 Oct 2005 07:22:14 -0400
+Message-ID: <12735621886.454159464@user-12l2dtc.cable.mindspring.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <43510FEA.6070109@s5r6.in-berlin.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, ltuikov@yahoo.com, Jeff Garzik <jgarzik@pobox.com>, Mike Anderson <andmike@us.ibm.com>, Luben Tuikov <luben_tuikov@adaptec.com>, James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from user-12l2dtc.cable.mindspring.com ([69.81.55.172]:1293 "HELO
+	user-12l2dtc.cable.mindspring.com") by vger.kernel.org with SMTP
+	id S1751230AbVJPLWO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 16 Oct 2005 07:22:14 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Stefan Richter wrote:
-> Luben Tuikov wrote:
-> 
->> --- Jeff Garzik <jgarzik@pobox.com> wrote:
->>
->>> (HCIL should get marginalized, as all agree)
-> 
-> 
-> "Marginalized" was not the term that I remember.
-> 
->>> * Put HCIL mapping into top-level helper code, for sharing between FC
->>> and SAS (hopefully!)
->>
->>
->> One step further: eliminate the ugly legacy SPI-centric HCIL from
->> SCSI Core.  Minimise and streamline SCSI Core.
-> 
-> 
-> I agree. FC, SAS, USB, SBP et al do not need to _share_ some HCIL
-> mapping helpers --- they and the core need to get rid of HCIL mapping
-> entirely. Why spend energy on optimization of existing HCIL mappings?
-> 
-> usb-storage and sbp2 already implement the leanest possible HCIL mapping
-> (1 logical unit to 1 H).
+Good news men! All your problems with small penis and poor erections will become history!!!
+http://www.etumex.com/pt/
 
-Stefan,
-Here is a counter example from a USB multicard reader:
 
-$ lsscsi -v
-[0:0:0:0]    disk    Generic  USB SD Reader    1.00  /dev/sda
-  dir: /sys/bus/scsi/devices/0:0:0:0
-[/sys/devices/pci0000:00/0000:00:07.2/usb1/1-1/1-1:1.0/host0/target0:0:0/0:0:0:0]
-[0:0:0:1]    disk    Generic  USB CF Reader    1.01  /dev/sdb
-  dir: /sys/bus/scsi/devices/0:0:0:1
-[/sys/devices/pci0000:00/0000:00:07.2/usb1/1-1/1-1:1.0/host0/target0:0:0/0:0:0:1]
-[0:0:0:2]    disk    Generic  USB SM Reader    1.02  /dev/sdc
-  dir: /sys/bus/scsi/devices/0:0:0:2
-[/sys/devices/pci0000:00/0000:00:07.2/usb1/1-1/1-1:1.0/host0/target0:0:0/0:0:0:2]
-[0:0:0:3]    disk    Generic  USB MS Reader    1.03  /dev/sdd
-  dir: /sys/bus/scsi/devices/0:0:0:3
-[/sys/devices/pci0000:00/0000:00:07.2/usb1/1-1/1-1:1.0/host0/target0:0:0/0:0:0:3]
 
-That is 4 logical units to 1 host. [Since I'm often
-critical of USB mass storage device SCSI support, in
-this case it is good to see some thought went into the
-INQUIRY string namings.]
+Not all those who wonder are lost.      
+I'm out of ammunition on this.       
 
-There is an argument for the SCSI subsystem to keep
-at least the "l" part of the maligned <h:c:i:l> tuple
-because the "l" part really is SCSI (and should be u8[8]).
-SATA-II is beginning to struggle along that path as well
-with port multipliers of up to 15 devices. SCSI luns
-can easily cope with that.
+Things won are done; joy's soul lies in the doing.   
+You can't fight in here....this is the War Room!!    
 
-Doug Gilbert
+I love acting. It is so much more real than life.  
+
 
