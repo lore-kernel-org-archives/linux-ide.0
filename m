@@ -1,70 +1,44 @@
-From: thomas schorpp <t.schorpp@gmx.de>
-Subject: hdparm ATA Security Options return errors
-Date: Mon, 17 Oct 2005 19:14:25 +0200
-Message-ID: <4353DBF1.1060001@gmx.de>
-References: <S1750797AbVJQQjQ/20051017163916Z+71@vger.kernel.org>
-Reply-To: t.schorpp@gmx.de
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: fix broken Kconfig setup
+Date: Mon, 17 Oct 2005 13:16:44 -0400
+Message-ID: <4353DC7C.6090705@pobox.com>
+References: <20051017044606.GA1266@havoc.gtf.org> <200510170952.34174.jbarnes@virtuousgeek.org> <4353D96F.90805@pobox.com> <200510171006.39206.jbarnes@virtuousgeek.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:32419 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1750747AbVJQROr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Oct 2005 13:14:47 -0400
-In-Reply-To: <S1750797AbVJQQjQ/20051017163916Z+71@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751066AbVJQRQx@vger.kernel.org>
+In-Reply-To: <200510171006.39206.jbarnes@virtuousgeek.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, davej@redhat.com
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-hi,
+Jesse Barnes wrote:
+> So sometimes the legacy IDE driver will lock up when it tries to drive 
+> both ports in a combined configuration?  In that case, can't we just 
 
-hdparm
+-sometimes- When it tries to drive the SATA port, it locks up.  My best 
+guess is that this is due to the fact that SATA emulates IDE shadow 
+registers in silicon, and the IDE driver does something weird that 
+confused the silicon's IDE emulation logic.
 
-ATA Security Options:
- --security-unlock PWD          Unlock drive, using password PWD (DANGEROUS)
- --security-set-pass PWD        Lock drive, using password PWD (DANGEROUS)
- --security-disable PWD         Disable drive locking, using password
-PWD (DANGEROUS)
- --security-mode MODE           Specify user/master password and
-high/maximum security
-
-fail by returning errors "cannot allocate mem", "invalid argument", with
-
-hdparm binary from debian stable...sid / whax /knoppix with kernels
-2.6.11...2.6.13...latest debian sid image with
-
-usual via ide + sil680 controllers and
-
-ATA device, with non-removable media
-        Model Number:       Maxtor 6E040L0
-        Serial Number:      E14FQN5E
-        Firmware Revision:  NAR61590
-Standards:
-        Supported: 7 6 5 4
-
-ATA device, with non-removable media
-        Model Number:       ST3120026A
-        Serial Number:      3JT4RYCB
-        Firmware Revision:  8.01
-Standards:
-        Used: ATA/ATAPI-6 T13 1410D revision 2
-        Supported: 6 5 4 3
-
-.
-
-does it help to compile hdparm from source against the vanilla kernel?
-
-wheres the latest source? biblio? or is there a cvs?
-
-meanwhile ill take a look at the debian sid source package's code...
-
-y
-tom
+Under SATA, the IDE shadow registers are nothing but a buffer.  Writing 
+to the Command or Control registers causes this buffer to be batched 
+into a SATA frame (a "FIS"), and sent to the device.
 
 
+> disable the legacy IDE driver for these chips and force the use of the 
+> libata version?
 
+More than a little ugly:  The piix driver already excludes the SATA 
+device (unless CONFIG_BLK_DEV_IDE_SATA is defined), so the driver that 
+picks up the IDE is the non-PCI "generic IDE" legacy driver.
 
+You would need to add code somewhere in a non-PCI driver to specifically 
+exclude a few PCI devices.
 
+Removing the quirk means users/distros would simply have to know to 
+disable CONFIG_IDE completely.  Doable, but also guaranteed to generate 
+bug reports.
 
-
-
+	Jeff
