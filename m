@@ -1,56 +1,82 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: fix broken Kconfig setup
-Date: Mon, 17 Oct 2005 13:38:44 -0400
-Message-ID: <4353E1A4.4050404@pobox.com>
-References: <20051017044606.GA1266@havoc.gtf.org> <Pine.LNX.4.64.0510170754500.23590@g5.osdl.org> <4353C42A.3000005@pobox.com> <Pine.LNX.4.64.0510170848180.23590@g5.osdl.org> <4353CF7E.1090404@pobox.com> <Pine.LNX.4.64.0510170930420.23590@g5.osdl.org> <Pine.LNX.4.64.0510170946250.23590@g5.osdl.org> <4353DB2C.10905@pobox.com> <Pine.LNX.4.64.0510171017010.3369@g5.osdl.org>
+From: thomas schorpp <t.schorpp@gmx.de>
+Subject: Re: hdparm ATA Security Options return errors
+Date: Mon, 17 Oct 2005 19:41:43 +0200
+Message-ID: <4353E257.5060104@gmx.de>
+References: <S1750797AbVJQQjQ/20051017163916Z+71@vger.kernel.org> <4353DBF1.1060001@gmx.de>
+Reply-To: t.schorpp@gmx.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:3471 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751181AbVJQRis (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Oct 2005 13:38:48 -0400
-In-Reply-To: <Pine.LNX.4.64.0510171017010.3369@g5.osdl.org>
+Received: from pop.gmx.net ([213.165.64.20]:64734 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751046AbVJQRmC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Oct 2005 13:42:02 -0400
+In-Reply-To: <4353DBF1.1060001@gmx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, davej@redhat.com
+Cc: linux-ide@vger.kernel.org
 
-Linus Torvalds wrote:
-> The _best_ choice as far as I can tell, is to just dis-associate SATA from 
-> SCSI entirely. Even if it's an implementation choice, we could make it a 
-> "select SCSI" instead of "depends on SCSI", so that from a _logical_ 
-> standpoint the user could just select SATA support without even knowing 
-> that the kernel happens to need the SCSI layer for it.
+thomas schorpp wrote:
+> hi,
+> 
+> hdparm
+> 
+> ATA Security Options:
+>  --security-unlock PWD          Unlock drive, using password PWD (DANGEROUS)
+>  --security-set-pass PWD        Lock drive, using password PWD (DANGEROUS)
+>  --security-disable PWD         Disable drive locking, using password
+> PWD (DANGEROUS)
+>  --security-mode MODE           Specify user/master password and
+> high/maximum security
+> 
+> fail by returning errors "cannot allocate mem", "invalid argument", with
+> 
+> hdparm binary from debian stable...sid / whax /knoppix with kernels
+> 2.6.11...2.6.13...latest debian sid image with
+> 
+> usual via ide + sil680 controllers and
+> 
+> ATA device, with non-removable media
+>         Model Number:       Maxtor 6E040L0
+>         Serial Number:      E14FQN5E
+>         Firmware Revision:  NAR61590
+> Standards:
+>         Supported: 7 6 5 4
+> 
+> ATA device, with non-removable media
+>         Model Number:       ST3120026A
+>         Serial Number:      3JT4RYCB
+>         Firmware Revision:  8.01
+> Standards:
+>         Used: ATA/ATAPI-6 T13 1410D revision 2
+>         Supported: 6 5 4 3
+> 
+> .
+> 
+> does it help to compile hdparm from source against the vanilla kernel?
+> 
+> wheres the latest source? biblio? or is there a cvs?
+> 
+> meanwhile ill take a look at the debian sid source package's code...
+> 
+> y
+> tom
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-Yep.  That would happen as a side effect of moving the code to 
-drivers/ata, even.
+1.
+
+hdparm.c line 101
+
+static char security_password[64];
+
+shouldnt it be 128? passphrase + padding to 128 bytes?
 
 
-> Of course, eventually I still hope that SATA could be done on the block 
-> layer instead of even depending on SCSI at all, but hey, that's a totally 
-> different issue.
 
-If you look at libata-scsi, the code is simply a SCSI simulator that 
-calls a _clean_ and _separate_ libATA API.
-
-Other code -- such as a block-layer driver -- could use this same API. 
-I think Bart has mentioned he has early code to do this, or at least 
-ideas on how to do it.
-
-I made a promise to you, to do it at the block layer, and I intend to 
-keep my promise.  :)  It just takes years to get there.  The two main 
-reasons for using SCSI were/are:
-
-* provides a bunch of useful _generic_ infrastructure
-
-* has a very high Just Works(tm) value for distro installers and users, 
-where code already exists for /dev/sdX.  I learned the hard way with 
-drivers/block/sx8.c that adding a new block device involves coordination 
-with multiple distros :(
-
-I dream of a /dev/disk, perhaps reusing and expanding /dev/sdX's block 
-majors, but that may be unrealistic.
-
-	Jeff
 
