@@ -1,56 +1,38 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: fix broken Kconfig setup
-Date: Mon, 17 Oct 2005 07:20:17 -0400
-Message-ID: <435388F1.3050101@pobox.com>
-References: <20051017044606.GA1266@havoc.gtf.org> <pan.2005.10.17.11.10.03.734742@smurf.noris.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Ian Oliver <lists@foxhill.co.uk>
+Subject: Re: SATA150TX4 atat1:command timeout
+Date: Mon, 17 Oct 2005 14:01:32 +0100
+Message-ID: <VA.00001a6a.013b5949@foxhill.co.uk>
+References: <1129543730.5945.17.camel@localhost.localdomain>
+Reply-To: linux-ide@vger.kernel.org
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:59531 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751062AbVJQLUX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Oct 2005 07:20:23 -0400
-In-Reply-To: <pan.2005.10.17.11.10.03.734742@smurf.noris.de>
+Received: from relay2.tidymail.co.uk ([217.146.107.7]:41875 "EHLO
+	relay2.tidymail.co.uk") by vger.kernel.org with ESMTP
+	id S1751062AbVJQNBk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Oct 2005 09:01:40 -0400
+Received: from [217.146.124.254] (helo=foxhill.co.uk)
+	(from_AS 16353)
+	by relay2.tidymail.co.uk with esmtpa
+	(Exim 4.52)
+	id 1ERUcO-0002xf-Og
+	for linux-ide@vger.kernel.org; Mon, 17 Oct 2005 13:01:32 +0000
+In-Reply-To: <1129543730.5945.17.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthias Urlichs <smurf@smurf.noris.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Matthias Urlichs wrote:
+In article <1129543730.5945.17.camel@localhost.localdomain>, Erik Slagter 
+wrote:
+> > Will try an upgrade to Ubuntu Breezy (5.10) when I'm feeling brave!
+> 
+> Of course you could also try to compile your kernel yourself (like I do
+> and therefore I am not affected by bugs already solved)
 
-Please use the standard 'group reply' feature of your mailer, to ensure 
-that me and other people in the thread are CC'd.
+I've done this a few times, but I wasn't quite sure which of the bugs was 
+biting me.  Anyway, Breezy if downloaded and ready to go.
 
+Regards
 
-> Hi, Jeff Garzik wrote:
-> 
-> 
->> config SCSI_SATA
->>-	tristate "Serial ATA (SATA) support"
->>+	bool "Serial ATA (SATA) support"
->>	depends on SCSI
-> 
-> 
-> In other words, if SCSI is false then SCSI_SATA is false too.
-> 
-> So why are you doing
-> 
-> 
->>+if SCSI_SATA
->>+
->> config SCSI_SATA_AHCI
->> 	tristate "AHCI SATA support"
->>-	depends on SCSI_SATA && PCI
->>+	depends on SCSI && PCI
-> 
-> 
-> and not just
->   +     depends on PCI
-> 
-> ?
+Ian
 
-Because if SCSI==m, then a low-level driver cannot be ==y.
-
-	Jeff
 
 
