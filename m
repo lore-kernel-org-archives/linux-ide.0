@@ -1,38 +1,94 @@
-From: Ian Oliver <lists@foxhill.co.uk>
-Subject: Re: SATA150TX4 atat1:command timeout
-Date: Mon, 17 Oct 2005 14:01:32 +0100
-Message-ID: <VA.00001a6a.013b5949@foxhill.co.uk>
-References: <1129543730.5945.17.camel@localhost.localdomain>
-Reply-To: linux-ide@vger.kernel.org
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay2.tidymail.co.uk ([217.146.107.7]:41875 "EHLO
-	relay2.tidymail.co.uk") by vger.kernel.org with ESMTP
-	id S1751062AbVJQNBk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 Oct 2005 09:01:40 -0400
-Received: from [217.146.124.254] (helo=foxhill.co.uk)
-	(from_AS 16353)
-	by relay2.tidymail.co.uk with esmtpa
-	(Exim 4.52)
-	id 1ERUcO-0002xf-Og
-	for linux-ide@vger.kernel.org; Mon, 17 Oct 2005 13:01:32 +0000
-In-Reply-To: <1129543730.5945.17.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: [PATCH] libata: fix broken Kconfig setup
+Date: Mon, 17 Oct 2005 08:14:18 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0510170754500.23590@g5.osdl.org>
+References: <20051017044606.GA1266@havoc.gtf.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751393AbVJQPOk@vger.kernel.org>
+In-Reply-To: <20051017044606.GA1266@havoc.gtf.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, davej@redhat.com
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-In article <1129543730.5945.17.camel@localhost.localdomain>, Erik Slagter 
-wrote:
-> > Will try an upgrade to Ubuntu Breezy (5.10) when I'm feeling brave!
+
+
+On Mon, 17 Oct 2005, Jeff Garzik wrote:
 > 
-> Of course you could also try to compile your kernel yourself (like I do
-> and therefore I am not affected by bugs already solved)
+> CONFIG_SCSI_SATA is truly a boolean option, not a tristate.
+> Since the Kconfig dependencies are insufficient to describe this (2.4
+> had dep_mbool), we need to resort to 'if'.
 
-I've done this a few times, but I wasn't quite sure which of the bugs was 
-biting me.  Anyway, Breezy if downloaded and ready to go.
+Two problems:
 
-Regards
+ - this is ugly as hell
 
-Ian
+   First, you change SCSI_SATA to be boolean, then you change the 
+   depends-on to be "if". Which makes no sense. Once SCSI_SATA is a 
+   boolean, then the "depends on" works fine, since SCSI_SATA can no 
+   longer be "m" anyway (ie your comment about "dep_mbool" doesn't make 
+   sense).
 
+   Second, if you want "dep_mbool", then you can have dep_mbool in Kconfig 
+   too. Just do
 
+	depends on (XYZ != n)
 
+   which gets you what you want (ie if XYZ is "m", then the inequality 
+   will be "y")
+
+   So you might as well have just done something like
+
+	 config SCSI_SATA
+	-       tristate "Serial ATA (SATA) support"
+	-       depends on SCSI
+	+       bool "Serial ATA (SATA) support"
+	+       depends on SCSI != n
+
+   and then just added SCSI to the "depends on" lines to get the "m" 
+   config. No "if" needed.
+
+ - anything that depends on a module had better only be _inside_ that 
+   module. Ie the "dep_mbool" kind of behaviour should _not_ affect 
+   anything outside the module. The reason? Maybe you build the module 
+   _later_, and maybe you don't ever load it.
+
+   So it appears that your dependence on quirk_intel_ide_combined() is 
+   fundamentally broken for the "m" case _anyway_.
+
+Anyway, the second thing means that the whole configuration is somewhat 
+broken, but on the whole, why not this _much_ more trivial patch?
+
+It's still broken, exactly because it depends on the modules being defined 
+when compiling the whole kernel, but hey, we probably have other cases 
+like that.
+
+My suggestion being that we should make it unconditional, but maybe that 
+breaks the case where we don't actually load the SATA module?
+
+		Linus
+
+---
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 11ca443..cec631b 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1233,7 +1233,7 @@ static void __init quirk_alder_ioapic(st
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_EESSC,	quirk_alder_ioapic );
+ #endif
+ 
+-#ifdef CONFIG_SCSI_SATA
++#if defined(CONFIG_SCSI_SATA) || defined(CONFIG_SCSI_SATA_MODULE)
+ static void __devinit quirk_intel_ide_combined(struct pci_dev *pdev)
+ {
+ 	u8 prog, comb, tmp;
+@@ -1310,7 +1310,7 @@ static void __devinit quirk_intel_ide_co
+ 		request_region(0x170, 8, "libata");	/* port 1 */
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,    PCI_ANY_ID,	  quirk_intel_ide_combined );
+-#endif /* CONFIG_SCSI_SATA */
++#endif /* CONFIG_SCSI_SATA[_MODULE] */
+ 
+ 
+ int pcie_mch_quirk;
