@@ -1,14 +1,14 @@
 From: Linus Torvalds <torvalds@osdl.org>
 Subject: Re: [PATCH] libata: fix broken Kconfig setup
-Date: Mon, 17 Oct 2005 09:38:04 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0510170930420.23590@g5.osdl.org>
+Date: Mon, 17 Oct 2005 09:53:31 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0510170946250.23590@g5.osdl.org>
 References: <20051017044606.GA1266@havoc.gtf.org> <Pine.LNX.4.64.0510170754500.23590@g5.osdl.org>
  <4353C42A.3000005@pobox.com> <Pine.LNX.4.64.0510170848180.23590@g5.osdl.org>
- <4353CF7E.1090404@pobox.com>
+ <4353CF7E.1090404@pobox.com> <Pine.LNX.4.64.0510170930420.23590@g5.osdl.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750776AbVJQQiT@vger.kernel.org>
-In-Reply-To: <4353CF7E.1090404@pobox.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750874AbVJQQx4@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0510170930420.23590@g5.osdl.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, davej@redhat.com
@@ -16,65 +16,38 @@ List-Id: linux-ide@vger.kernel.org
 
 
 
-On Mon, 17 Oct 2005, Jeff Garzik wrote:
+On Mon, 17 Oct 2005, Linus Torvalds wrote:
 > 
-> The only operational difference between CONFIG_SCSI_SATA=y and
-> CONFIG_SCSI_SATA=m is that CONFIG_SCSI_SATA=m restricts the drivers from being
-> compiled in -- a silly and needless restriction.
+> >  And then with the quirk issue out of
+> > the way, CONFIG_SCSI_SATA becomes purely a boolean enable/disable-this-menu
+> > switch.
 > 
-> The elimination of 'y' as an option should propagate from CONFIG_SCSI.
+> No it does not. You continue to ignore the fact that it's not an 
+> enable/disable thing. It's a "can we enable SATA drivers" vs "can we 
+> enable SATA drivers as modules" vs "do we do any SATA drivers at all?" 
+> thing.
+> 
+> A tristate.
 
-Sure. You can do it that way too, as I mentioned in the original mail 
-about why it was ugly.
+Btw, if you want to have the _question_ always be y/n only, that's easy 
+enough to do, just make that one do
 
-But the point is:
+	config SATA_MENU
+		bool "Want to see SATA drivers"
+		depends on SCSI != n
 
- WHY?
+	config SCSI_SATA
+		tristate
+		depends on SCSI && SATA_MENU
+		default y
 
-Your insistence on CONFIG_SCSI_SATA being a boolean only results in uglier 
-configuration, for no gain. And it's not even TRUE. It's only true if you 
-consider it to be a "do we support SATA or not" thing. It's not true if 
-you consider it "how do we support SATA" thing.
+and now you have a totally sensible setup, where the low-level drivers can 
+depend on something sane. 
 
-In other words, a tristate makes total sense, if you say that 
-CONFIG_SCSI_SATA describes how SATA is supported.
+I don't think it _buys_ you anything, but hey, at least it's logical. 
 
-> Agreed this is a _theoretical_ problem.
-
-But it's just another sign of you thinking about that config variable the 
-wrong way.
-
-> CONFIG_SCSI_SATA is just a switch to enable listing a set of drivers, just
-> like CONFIG_NET_PCI (which I note is a bool), CONFIG_NET_ISA (a bool), ...
-
-No it's not.
-
-CONFIG_NET_BOOL is not a tristate, because it can't be a module. There's 
-nothing that forces network drivers to be modules only. Same goes for 
-NET_ISA.
-
-In contrast, CONFIG_SCSI=m _does_ force SATA drivers to be module only. 
-
-See? They are not the same at all.
-
-> At that point it seems easier to solve at the Kconfig level, perhaps defining
-> CONFIG_SATA_INTEL_COMBINED at the end.
-
-Sure, that makes sense.
-
->  And then with the quirk issue out of
-> the way, CONFIG_SCSI_SATA becomes purely a boolean enable/disable-this-menu
-> switch.
-
-No it does not. You continue to ignore the fact that it's not an 
-enable/disable thing. It's a "can we enable SATA drivers" vs "can we 
-enable SATA drivers as modules" vs "do we do any SATA drivers at all?" 
-thing.
-
-A tristate.
-
-Adding the SCSI config is a pure hack because you refuse to see the fact 
-that CONFIG_SCSI_SATA _is_ a tristate. Thinking it is a boolean causes you 
-to then have to mix in other issues.
+Btw, wouldn't it be much nicer to also have this all in a totally separate 
+Kconfig file? That SCSI Kconfig file is one of the biggest ones (yeah, 
+drivers/net/Kconfig is bigger, but hey, that's not a surprise, is it ;)
 
 		Linus
