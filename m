@@ -1,31 +1,54 @@
-From: Howard Black <sinusoid@salestrax.every1.net>
-Subject: DVD X Copy Platinum 4.0.38 - $19.95
-Date: Mon, 17 Oct 2005 13:19:14 -0400
-Message-ID: <2926788746.3302158288@84.219.25.36>
-Content-Type: text/plain; charset=us-ascii
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: fix broken Kconfig setup
+Date: Mon, 17 Oct 2005 13:22:39 -0400
+Message-ID: <4353DDDF.50000@pobox.com>
+References: <20051017044606.GA1266@havoc.gtf.org> <Pine.LNX.4.64.0510170754500.23590@g5.osdl.org> <4353C42A.3000005@pobox.com> <Pine.LNX.4.64.0510170848180.23590@g5.osdl.org> <4353CF7E.1090404@pobox.com> <Pine.LNX.4.64.0510171008120.3369@g5.osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [84.219.25.36] ([84.219.25.36]:59895 "HELO 84.219.25.36")
-	by vger.kernel.org with SMTP id S1751152AbVJQRTO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Oct 2005 13:19:14 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751179AbVJQRWr@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0510171008120.3369@g5.osdl.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jesse Barnes <jbarnes@virtuousgeek.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Branded softs
-http://rumbled.tusok.com/
+Linus Torvalds wrote:
+> 
+> On Mon, 17 Oct 2005, Jeff Garzik wrote:
+> 
+>>If IDE is compiled in, IDE SATA option is not enabled, and ata_piix or ahci
+>>are used.
+> 
+> 
+> How about this diff instead?
+
+Nope, it elides critical logic.
+
+1) The quirk should not be enabled if IDE driver is a module.  No reason 
+to perform the nasty hack at all, as the user controls module load order.
+
+2) The quirk should not be enabled if IDE driver is not built at all. 
+Standard resource reservation code works as expected here.
+
+3) The quirk should not be enabled if CONFIG_BLK_DEV_IDE_SATA is 
+enabled, which indicates that the IDE driver gets preference for the 
+Intel SATA hardware in question.
 
 
+> It's really quite clean and understandable, and it makes it very clear 
+> what's going on from a configuration standpoint, imnsho. And it does the 
+> right thing when AHCI/PIIX is compiled as a SATA module (well, as right as 
+> this approach ever can).
 
-A man's mother is his misfortune, but his wife is his fault. 
-
-I like to play saxophone because you don't inhale.    
-The minute one utters a certainty, the opposite comes to mind.  
-
-The medium is the message.        
-
-I'm from Iowa, I only work in space.     
-True art is characterized by an irresistible urge in the creative artist 
+My patch works fine when ahci/piix is compiled as a module.  That's the 
+configuration I personally tested.
 
 
+> Of course, somebody should check that it really is just the AHCI and PIIX 
+> drivers that want the quirk,
 
+It is.  I wrote 100% of the code, and further, the quirk specifically 
+enumerates which PCI IDs are affected, making it easy to verify.
+
+	Jeff
