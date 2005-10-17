@@ -1,94 +1,94 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] libata: fix broken Kconfig setup
-Date: Mon, 17 Oct 2005 08:14:18 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0510170754500.23590@g5.osdl.org>
-References: <20051017044606.GA1266@havoc.gtf.org>
+Date: Mon, 17 Oct 2005 11:32:58 -0400
+Message-ID: <4353C42A.3000005@pobox.com>
+References: <20051017044606.GA1266@havoc.gtf.org> <Pine.LNX.4.64.0510170754500.23590@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751393AbVJQPOk@vger.kernel.org>
-In-Reply-To: <20051017044606.GA1266@havoc.gtf.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751399AbVJQPdE@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0510170754500.23590@g5.osdl.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Linus Torvalds <torvalds@osdl.org>
 Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, davej@redhat.com
 List-Id: linux-ide@vger.kernel.org
 
-
-
-On Mon, 17 Oct 2005, Jeff Garzik wrote:
+Linus Torvalds wrote:
 > 
-> CONFIG_SCSI_SATA is truly a boolean option, not a tristate.
-> Since the Kconfig dependencies are insufficient to describe this (2.4
-> had dep_mbool), we need to resort to 'if'.
+> On Mon, 17 Oct 2005, Jeff Garzik wrote:
+> 
+>>CONFIG_SCSI_SATA is truly a boolean option, not a tristate.
+>>Since the Kconfig dependencies are insufficient to describe this (2.4
+>>had dep_mbool), we need to resort to 'if'.
+> 
+> 
+> Two problems:
+> 
+>  - this is ugly as hell
+> 
+>    First, you change SCSI_SATA to be boolean, then you change the 
+>    depends-on to be "if". Which makes no sense. Once SCSI_SATA is a 
+>    boolean, then the "depends on" works fine, since SCSI_SATA can no 
+>    longer be "m" anyway (ie your comment about "dep_mbool" doesn't make 
+>    sense).
+> 
+>    Second, if you want "dep_mbool", then you can have dep_mbool in Kconfig 
+>    too. Just do
+> 
+> 	depends on (XYZ != n)
+> 
+>    which gets you what you want (ie if XYZ is "m", then the inequality 
+>    will be "y")
+> 
+>    So you might as well have just done something like
+> 
+> 	 config SCSI_SATA
+> 	-       tristate "Serial ATA (SATA) support"
+> 	-       depends on SCSI
+> 	+       bool "Serial ATA (SATA) support"
+> 	+       depends on SCSI != n
+> 
+>    and then just added SCSI to the "depends on" lines to get the "m" 
+>    config. No "if" needed.
+> 
+>  - anything that depends on a module had better only be _inside_ that 
+>    module. Ie the "dep_mbool" kind of behaviour should _not_ affect 
+>    anything outside the module. The reason? Maybe you build the module 
+>    _later_, and maybe you don't ever load it.
+> 
+>    So it appears that your dependence on quirk_intel_ide_combined() is 
+>    fundamentally broken for the "m" case _anyway_.
 
-Two problems:
+CONFIG_SCSI_SATA does two things:
+* Enables/disables the display of the SATA driver menu.
+* Enables/disables the compiled-in PCI quirk.
 
- - this is ugly as hell
+Both of these are boolean, and have absolutely nothing to do with modules.
 
-   First, you change SCSI_SATA to be boolean, then you change the 
-   depends-on to be "if". Which makes no sense. Once SCSI_SATA is a 
-   boolean, then the "depends on" works fine, since SCSI_SATA can no 
-   longer be "m" anyway (ie your comment about "dep_mbool" doesn't make 
-   sense).
+The original problem that caused me to merge the problematic patch (my 
+fault for bad merge) was that Kconfig wouldn't allow SATA drivers to be 
+built as modules if you did
+	bool SCSI_SATA depends on SCSI
+	tristate SCSI_SATA_driver depends on SCSI_SATA
 
-   Second, if you want "dep_mbool", then you can have dep_mbool in Kconfig 
-   too. Just do
+That's why I used an 'if' in my patch.  I suppose we could split it into 
+two Kconfig options, one for the menu (CONFIG_SCSI_SATA) using 'if', and 
+one specifically for the PCI quirk.  Such a split would make it obvious 
+that CONFIG_SCSI_SATA controls display of a menu, and nothing more.
 
-	depends on (XYZ != n)
+Comments?
 
-   which gets you what you want (ie if XYZ is "m", then the inequality 
-   will be "y")
+The entire situation is a hack, because we're fighting the 
+always-built-in IDE driver for control of the hardware.  IDE driver 
+picks up the PATA+SATA device even though it isn't listed in 
+drivers/ide/pci/piix.c PCI table, because it blindly probes at the IDE 
+ports after exhausting other options.
 
-   So you might as well have just done something like
 
-	 config SCSI_SATA
-	-       tristate "Serial ATA (SATA) support"
-	-       depends on SCSI
-	+       bool "Serial ATA (SATA) support"
-	+       depends on SCSI != n
+> Anyway, the second thing means that the whole configuration is somewhat 
+> broken, but on the whole, why not this _much_ more trivial patch?
 
-   and then just added SCSI to the "depends on" lines to get the "m" 
-   config. No "if" needed.
+Because it's fundamental a boolean, and has -zero- to do with modules. 
+Encouraging people to think otherwise will just lead to more confusion.
 
- - anything that depends on a module had better only be _inside_ that 
-   module. Ie the "dep_mbool" kind of behaviour should _not_ affect 
-   anything outside the module. The reason? Maybe you build the module 
-   _later_, and maybe you don't ever load it.
-
-   So it appears that your dependence on quirk_intel_ide_combined() is 
-   fundamentally broken for the "m" case _anyway_.
-
-Anyway, the second thing means that the whole configuration is somewhat 
-broken, but on the whole, why not this _much_ more trivial patch?
-
-It's still broken, exactly because it depends on the modules being defined 
-when compiling the whole kernel, but hey, we probably have other cases 
-like that.
-
-My suggestion being that we should make it unconditional, but maybe that 
-breaks the case where we don't actually load the SATA module?
-
-		Linus
-
----
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 11ca443..cec631b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1233,7 +1233,7 @@ static void __init quirk_alder_ioapic(st
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_EESSC,	quirk_alder_ioapic );
- #endif
- 
--#ifdef CONFIG_SCSI_SATA
-+#if defined(CONFIG_SCSI_SATA) || defined(CONFIG_SCSI_SATA_MODULE)
- static void __devinit quirk_intel_ide_combined(struct pci_dev *pdev)
- {
- 	u8 prog, comb, tmp;
-@@ -1310,7 +1310,7 @@ static void __devinit quirk_intel_ide_co
- 		request_region(0x170, 8, "libata");	/* port 1 */
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,    PCI_ANY_ID,	  quirk_intel_ide_combined );
--#endif /* CONFIG_SCSI_SATA */
-+#endif /* CONFIG_SCSI_SATA[_MODULE] */
- 
- 
- int pcie_mch_quirk;
+	Jeff
