@@ -1,29 +1,28 @@
-From: Sue Ewing <Persephone@akerstrom.net>
-Subject: Take the office with you where ever you go...
-Date: Tue, 18 Oct 2005 08:17:08 -0400
-Message-ID: <12863844776.48008105777@host81-156-185-91.range81-156.btcentralplus.com>
-Content-Type: text/plain; charset=us-ascii
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: Adaptec SAS integration notes
+Date: Tue, 18 Oct 2005 11:06:57 -0400
+Message-ID: <43550F91.50307@adaptec.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7AED@xbl3.ma.emulex.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host81-156-185-91.range81-156.btcentralplus.com ([81.156.185.91]:63504
-	"HELO host81-156-185-91.range81-156.btcentralplus.com")
-	by vger.kernel.org with SMTP id S1750722AbVJRMRI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Oct 2005 08:17:08 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7AED@xbl3.ma.emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: ltuikov@yahoo.com, jgarzik@pobox.com, linux-scsi@vger.kernel.org, andmike@us.ibm.com, James.Bottomley@steeleye.com, hch@infradead.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Microsoft Localized Software.
-http://kikfj.79v1ubvgchcf777ku7p2u777.boleitegm.com/?meuyp
+On 10/15/05 10:21, James.Smart@Emulex.Com wrote:
+> Initially, I wanted to reitterate the "lead by example" statement.
+> But quite frankly, the language used repeatedly in these threads with
+> people that do not have the same opinion as you is repulsive. In this
+> case it's a bit subtle, in others it has not been.
+> 
+> Jeff is a very smart individual, as are you, and many others on this list.
+> Please try to treat everyone with dignity and respect. There are many
+> many ways to phrase things.
 
+Ok, sorry, you're right.
 
-MERCY, n. An attribute beloved of detected offenders.     
-You can't be truly rude until you understand good manners.   
-
-Reading musses up my mind.        
-Everyone is entitled to be stupid, but some abuse the privilege.  
-
-Egotism is the anesthetic that dulls the pain of stupidity.   
-Old wives don't dieif they're getting alimony      
-
-
+	Luben
