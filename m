@@ -1,77 +1,35 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Adaptec SAS integration notes
-Date: Tue, 18 Oct 2005 16:51:48 -0400
-Message-ID: <43556064.20104@pobox.com>
-References: <20051014180615.5604.qmail@web31808.mail.mud.yahoo.com> <43552650.2090104@pobox.com> <43555CC1.8040200@s5r6.in-berlin.de>
+Subject: Re: [PATCH] libata: fix broken Kconfig setup
+Date: Tue, 18 Oct 2005 16:56:05 -0400
+Message-ID: <43556165.1080307@pobox.com>
+References: <20051017044606.GA1266@havoc.gtf.org>	<Pine.LNX.4.64.0510170754500.23590@g5.osdl.org>	<4353C42A.3000005@pobox.com>	<Pine.LNX.4.64.0510170848180.23590@g5.osdl.org>	<4353CF7E.1090404@pobox.com>	<Pine.LNX.4.64.0510170930420.23590@g5.osdl.org>	<4353D905.3080400@pobox.com> <20051018151526.5f4deef6.vsu@altlinux.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <43555CC1.8040200@s5r6.in-berlin.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, ltuikov@yahoo.com, Mike Anderson <andmike@us.ibm.com>, Luben Tuikov <luben_tuikov@adaptec.com>, James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751500AbVJRU4Q@vger.kernel.org>
+In-Reply-To: <20051018151526.5f4deef6.vsu@altlinux.ru>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergey Vlasov <vsu@altlinux.ru>
+Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, davej@redhat.com, Jesse Barnes <jbarnes@virtuousgeek.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Stefan Richter wrote:
-> All transports implement HCIL mappings. (SPI drivers enjoy the easiest 
-> mapping, hcil<->HCIL.) They are all faced with the necessity of mapping 
-> and solve it in different ways, for different reasons. Why stop at FC + 
-> SAS and try to find a unified solution for just those two? Also, when 
-> you are working out how FC and SAS could interface to a common HCIL 
-> mapping library (or HCIL mapping layer?), you are effectively designing 
-> aspects of how an interface between FC|SAS and SCSI core should look 
-> like. Or, why not provide the HCIL mapping helpers in the core and 
-> subsequently make users of this new interface completely unaware of the 
-> existence of HCIL...?
+Sergey Vlasov wrote:
+> The IDE=y part seems to be incorrect - quirk_intel_ide_combined() is
+> needed even with modular IDE.  Without this quirk you will get one of
+> these configurations depending on the module load order:
+> 
+> 1) ata_piix loads first - it grabs the whole controller, including the
+> PATA port; the IDE module loaded later finds nothing.
+> 
+> 2) IDE modules are loaded first - without the quirk IDE drivers will
+> grab the whole controller, including the SATA part.
+> 
+> The binding you get with builtin IDE (ata_piix/ahci for SATA, generic
+> IDE driver for PATA) would be impossible to get with modular IDE without
+> the quirk, which does not seem to be good...
 
-Ignoring some legacy ioctls and bits of existing code...   The only 
-mapping that's _really_ required is an internal C pointer, used by the 
-device class to send messages to the transport class.
-
-Adaptec's code does a bit of that on the transport side, but we'd need 
-to update all the existing device classes (sd, sr, st, ...) before they 
-had been converted to a purely using pointers to connect the transport 
-to the device.
-
-Getting to the point where device classes need only to do
-
-	transport_instance->send_message(scsi command | TMF)
-
-and where the transport class replies with
-
-	device_instance->send_message(scsi response | TMF response)
-
-may be a long term goal.  Depends on where evolution takes us...
-
-
-> Moreover, HCIL mapping is but one aspect of a common problem. As an 
-> example, I think yet another aspect of the same problem is that device 
-> properties like target names and LUNs get lost below the 
-> transport<->core interface. We want to present these device properties 
-> to userspace in a unified manner. Here it becomes even more clear: 
-> Neither is it a problem for FC and SAS alone, nor are transport-level 
-> helpers a good solution to the problem.
-
-Target names are already in the generic device.  Luben has a good point, 
-though, that there may be multiple "labels" for the same addressible object.
-
-
-> I freely admit that I don't have a picture of where the real 
-> difficulties lie; I am far too unfamiliar with the innards of scsi core. 
-> But time spent on transport-level helpers which are meant to ease 
-> symptoms of the transport<->core difficulties seems to be spent rather 
-> ineffectively to me. More concrete, what is the ratio of benefit to cost 
-> of HCIL mapping code sharing between SAS and FC? Especially since that 
-> mapping is deemed obsolete already (in the long term or perhaps even mid 
-> term). And to completely go back to the subject: Will attempts on code 
-> sharing between FC layer and SAS layer bring things forward in the 
-> short-term goal of SAS integration?
-
-HCIL mapping is a simple and very small part of this task :)  There are 
-a bunch of line items to tackle, including SMP and SDI details, all 
-bundled up in this.
+This is a reasonable point, but the rare person who runs modular IDE on 
+these PATA/SATA combined mode beasts can certainly tell the IDE driver 
+to not probe certain ports.
 
 	Jeff
-
-
