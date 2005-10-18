@@ -1,38 +1,25 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 4/4] CHS: LBA28/LBA48 optimization (revise #6)
-Date: Tue, 18 Oct 2005 17:19:21 -0400
-Message-ID: <435566D9.2010300@pobox.com>
-References: <434CAF8E.5040607@tw.ibm.com> <434CB75A.6010109@tw.ibm.com>
+Subject: ADMA driver mothballed
+Date: Tue, 18 Oct 2005 18:14:51 -0400
+Message-ID: <435573DB.8040404@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:3995 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751509AbVJRVTZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Oct 2005 17:19:25 -0400
-In-Reply-To: <434CB75A.6010109@tw.ibm.com>
+Received: from mail.dvmed.net ([216.237.124.58]:41115 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932179AbVJRWOy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Oct 2005 18:14:54 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Mark Lord <mlord@pobox.com>
 
-Albert Lee wrote:
-> Patch 4/4: LBA28/LBA48 optimization per Mark's advice.
-> 
-> Changes:
->      - add lba_28_ok() and lba_48_ok() to ata.h.
->      - check ending block number instead of staring block number.
->      - use lba_28_ok() for CHS range check
->      - LBA28/LBA48 optimization
-> 
-> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+Since Mark Lord was kind enough to write an ADMA driver, I'm mothballing 
+mine.  As soon as the kernel.org mirrors catch up, it will live in the 
+libata archive at
 
-applied to the new lba48-opt branch of libata-dev.
-
-We'll probably merge this into the 'upstream' branch after 2.6.15-rc1 is 
-released, to enable lots of testing.
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/archive/2.6.14-adma.c.gz
 
 	Jeff
-
 
 
