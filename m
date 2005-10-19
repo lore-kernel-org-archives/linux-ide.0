@@ -1,54 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SCSI EH tidbit
-Date: Tue, 18 Oct 2005 23:56:23 -0400
-Message-ID: <4355C3E7.6090507@pobox.com>
-References: <434D263A.1070708@pobox.com> <434D2B57.4010806@gmail.com> <434D6B4C.3010001@pobox.com> <434DCBBC.70106@gmail.com>
+From: thomas schorpp <t.schorpp@gmx.de>
+Subject: Re: hdparm ATA Security Options return errors
+Date: Wed, 19 Oct 2005 09:56:24 +0200
+Message-ID: <4355FC28.2020704@gmx.de>
+References: <S1750797AbVJQQjQ/20051017163916Z+71@vger.kernel.org> <4353DBF1.1060001@gmx.de> <4353E257.5060104@gmx.de> <43540A36.2080404@rtr.ca>
+Reply-To: t.schorpp@gmx.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:45982 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932451AbVJSD43 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Oct 2005 23:56:29 -0400
-In-Reply-To: <434DCBBC.70106@gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:40161 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751566AbVJSH4m (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Oct 2005 03:56:42 -0400
+In-Reply-To: <43540A36.2080404@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> scsi_finish_command unconditionally completes the command, rather than 
->> running it through scsi_decide_disposition() decision tree again.  
->> That prevents us from using the standard command-retry path, for 
->> PCI/ATA bus errors where we want to resubmit the command.
+Mark Lord wrote:
+> I think the entire set of ATA security patches that were
+> sent to me for hdparm are bogus -- I lack the setup here
+> to try them, but another kind person is preparing patches
+> for hdparm to fix them.
+> 
+> Along the way, he has also discovered bugs in the ATA_TASKFILE
+> ioctls, but we have yet to work out a good description/patch
+> for the broken bits there.
+> 
+> Cheers
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 > 
->  That can be done by finishing with scsi_queue_insert as done by the 
-> current SCSI EH implementation.  And, yes, that also can be done by 
-> generating appropriate sense data and run it through __scsi_done again.
 
-good point.
+if no one mentioned before:
 
+these security features should be TODO for linux-usb, scsi-emu ata, too,
+to lock external usb harddrives or SATA for (relative secure) transport.
 
->  The thing is that I don't really see much difference between finishing 
-> with scsi_queue_insert/scsi_queue_insert and using __scsi_done.  I'm 
-> opting for not using __scsi_done mainly because that's how the current 
-> SCSI EH implementation is implemented and I don't really think it would 
-> be a good idea to do things differently from SCSI EH without clear reason.
+theres some work for enabling S.M.A.R.T for external usb drives and SATA
+going on.
 
-I like transport separation, since libata needs to be a bit closer to 
-its "pure" form:  an ATA API, which is used by libata-scsi client.
+suggest integrating the efforts, if not done yet.
 
-
->  The situation is similar when generating sense data.  We can always 
-> generate sense data for which scsi_decide_disposition() would never 
-> return FAILED.  But IMHO it doesn't look like a very good idea.
-
-SCSI keeps an internal counter to make sure that commands are not 
-retried forever.
-
-	Jeff
+y
+tom
 
 
 
