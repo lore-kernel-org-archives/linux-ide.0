@@ -1,52 +1,54 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 0/3] libata: scsi error handling, encore
-Date: Wed, 19 Oct 2005 12:47:05 +0900
-Message-ID: <4355C1B9.3080700@gmail.com>
-References: <43490BC8.9060504@torque.net> <434919E4.1080601@pobox.com> <435069E3.90306@torque.net> <43506AA3.3030502@pobox.com> <43507BA7.6090406@torque.net> <43507D5F.2050407@gmail.com> <435563D0.7050502@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: SCSI EH tidbit
+Date: Tue, 18 Oct 2005 23:56:23 -0400
+Message-ID: <4355C3E7.6090507@pobox.com>
+References: <434D263A.1070708@pobox.com> <434D2B57.4010806@gmail.com> <434D6B4C.3010001@pobox.com> <434DCBBC.70106@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.199]:53179 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932452AbVJSDrP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Oct 2005 23:47:15 -0400
-Received: by zproxy.gmail.com with SMTP id i11so1443402nzi
-        for <linux-ide@vger.kernel.org>; Tue, 18 Oct 2005 20:47:14 -0700 (PDT)
-In-Reply-To: <435563D0.7050502@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:45982 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932451AbVJSD43 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Oct 2005 23:56:29 -0400
+In-Reply-To: <434DCBBC.70106@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: dougg@torque.net, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, russb@emc.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
-> 
->> $ cat ~/bin/git-sync.sh
->> #!/bin/sh
->>
->> if [ ! -r .git/origin ]; then
->>         echo "not in git repo" 2>&1
->>         exit 1
->> fi
->>
->> rsync -avz --ignore-existing $(cat .git/origin)/ .git/
->> rsync -avz $(cat .git/origin)/refs/ .git/refs/
->>
->>  After syncing, you need to do 'git-read-tree -m upstream' 
->> 'git-checkout-cache -q -f -u -a'
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+>> scsi_finish_command unconditionally completes the command, rather than 
+>> running it through scsi_decide_disposition() decision tree again.  
+>> That prevents us from using the standard command-retry path, for 
+>> PCI/ATA bus errors where we want to resubmit the command.
 > 
 > 
-> 
-> In the fast-moving world of git, this is a bit outdated.  You should use
-> 
->     git checkout -f upstream
-> 
-> to check out a specific branch.
-> 
+>  That can be done by finishing with scsi_queue_insert as done by the 
+> current SCSI EH implementation.  And, yes, that also can be done by 
+> generating appropriate sense data and run it through __scsi_done again.
 
-  Oh.. there was the '-f' switch.  I always hit 'xxx changed' message 
-without the option and have gotten into the habit of using 
-read-tree/checkout-cache after a while.  Thanks for the tip.
+good point.
 
--- 
-tejun
+
+>  The thing is that I don't really see much difference between finishing 
+> with scsi_queue_insert/scsi_queue_insert and using __scsi_done.  I'm 
+> opting for not using __scsi_done mainly because that's how the current 
+> SCSI EH implementation is implemented and I don't really think it would 
+> be a good idea to do things differently from SCSI EH without clear reason.
+
+I like transport separation, since libata needs to be a bit closer to 
+its "pure" form:  an ATA API, which is used by libata-scsi client.
+
+
+>  The situation is similar when generating sense data.  We can always 
+> generate sense data for which scsi_decide_disposition() would never 
+> return FAILED.  But IMHO it doesn't look like a very good idea.
+
+SCSI keeps an internal counter to make sure that commands are not 
+retried forever.
+
+	Jeff
+
+
+
