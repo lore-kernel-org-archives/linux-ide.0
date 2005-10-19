@@ -1,32 +1,52 @@
-From: Financial Group <catherine@dbzmail.com>
-Subject: Oferta del trabajo
-Date: Tue, 18 Oct 2005 23:33:30 -0400
-Message-ID: <110001c5d45d$eeeea025$e78e9c63@dbzmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 0/3] libata: scsi error handling, encore
+Date: Wed, 19 Oct 2005 12:47:05 +0900
+Message-ID: <4355C1B9.3080700@gmail.com>
+References: <43490BC8.9060504@torque.net> <434919E4.1080601@pobox.com> <435069E3.90306@torque.net> <43506AA3.3030502@pobox.com> <43507BA7.6090406@torque.net> <43507D5F.2050407@gmail.com> <435563D0.7050502@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:5806 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932444AbVJSDdv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Oct 2005 23:33:51 -0400
-Received: from earthlink.com ([221.214.172.197])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id j9J3XOIh023266
-	for <linux-ide@vger.kernel.org>; Tue, 18 Oct 2005 20:33:27 -0700
-Received: from dbzmail.com (dbzmail-com.mr.outblaze.com [64.62.181.93])
-	by earthlink.com (Postfix) with ESMTP id 30394240E2
-	for <linux-ide@vger.kernel.org>; Tue, 18 Oct 2005 23:33:30 -0400
+Received: from zproxy.gmail.com ([64.233.162.199]:53179 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932452AbVJSDrP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Oct 2005 23:47:15 -0400
+Received: by zproxy.gmail.com with SMTP id i11so1443402nzi
+        for <linux-ide@vger.kernel.org>; Tue, 18 Oct 2005 20:47:14 -0700 (PDT)
+In-Reply-To: <435563D0.7050502@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: dougg@torque.net, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, russb@emc.com
 
-Estimado Sr./a:
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+> 
+>> $ cat ~/bin/git-sync.sh
+>> #!/bin/sh
+>>
+>> if [ ! -r .git/origin ]; then
+>>         echo "not in git repo" 2>&1
+>>         exit 1
+>> fi
+>>
+>> rsync -avz --ignore-existing $(cat .git/origin)/ .git/
+>> rsync -avz $(cat .git/origin)/refs/ .git/refs/
+>>
+>>  After syncing, you need to do 'git-read-tree -m upstream' 
+>> 'git-checkout-cache -q -f -u -a'
+> 
+> 
+> 
+> In the fast-moving world of git, this is a bit outdated.  You should use
+> 
+>     git checkout -f upstream
+> 
+> to check out a specific branch.
+> 
 
-Nuestra compania se llama E'Sellers Financial Group,Inc. y tiene dos oficinas en la EEUU e Inglaterra. 
+  Oh.. there was the '-f' switch.  I always hit 'xxx changed' message 
+without the option and have gotten into the habit of using 
+read-tree/checkout-cache after a while.  Thanks for the tip.
 
-Con motivo de la ampliacion de la compania, nuestra agencia tiene necesidad de trabajadores en Espana para conducir operaciones bancarias. Para este trabajo deberia tener Ud. cuenta en uno de los bancos espanoles. Recibira el dinero por cada transaccion una vez terminada esta. La comision por cada transaccion sera de 1100-4500 euros. 
-
-Si se interesa por la propuesta de nuestra compania, puede Ud. contactar con nuestro manager por su e-mail: sellers@km.ru <mailto:sellers@km.ru> o ICQ# 277705564 y conoñer todos los detalles mejor. 
-
-Hasta la vista! 
-
-
+-- 
+tejun
