@@ -1,35 +1,20 @@
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH] libata: fix broken Kconfig setup
-Date: Thu, 20 Oct 2005 09:45:21 -0700
-Message-ID: <200510200945.22022.jbarnes@virtuousgeek.org>
-References: <20051017044606.GA1266@havoc.gtf.org> <200510171006.39206.jbarnes@virtuousgeek.org> <1129817684.15200.11.camel@localhost.localdomain>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2.6.14-rc4] libata: Marvell endian fix
+Date: Thu, 20 Oct 2005 16:04:33 -0400
+Message-ID: <4357F851.9080301@pobox.com>
+References: <20051020123943.BF48C2757A@lns1058.lss.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rwcrmhc11.comcast.net ([216.148.227.117]:13986 "EHLO
-	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S932451AbVJTQp3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Oct 2005 12:45:29 -0400
-In-Reply-To: <1129817684.15200.11.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from mail.dvmed.net ([216.237.124.58]:50094 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932519AbVJTUEi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Oct 2005 16:04:38 -0400
+In-Reply-To: <20051020123943.BF48C2757A@lns1058.lss.emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, davej@redhat.com
+To: Brett Russ <russb@emc.com>
+Cc: linux-ide@vger.kernel.org
 
-On Thursday, October 20, 2005 7:14 am, Alan Cox wrote:
-> Now that libata is beginning to behave well I'd vote for that option,
-> however in kernel libata lacks several essential items for PATA
-> feature parity (HPA, ATAPI, suspend/resume, correct tuning). It's
-> getting there and I've got some more stuff waiting for Jeff, but it
-> isn't there yet
+applied
 
-Yeah, that seems like the best thing to do in the long run.  Of course it 
-has to wait until libata at least has ATAPI support I'd imagine.  Jeff 
-also mentioned that it would require changes to the legacy IDE driver to 
-prevent it from binding to certain PCI devices (and given that it just 
-uses I/O ports that might get hackish).
-
-Jesse
