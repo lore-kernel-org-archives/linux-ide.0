@@ -1,39 +1,49 @@
-From: Ryan Bourgeois <rgb005@latech.edu>
-Subject: Promise SX4[-M]
-Date: Wed, 19 Oct 2005 21:41:02 -0500
-Message-ID: <435703BE.602@latech.edu>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Promise SX4[-M]
+Date: Wed, 19 Oct 2005 22:58:02 -0400
+Message-ID: <435707BA.4050104@pobox.com>
+References: <435703BE.602@latech.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from selene.LaTech.edu ([138.47.18.25]:45524 "EHLO LaTech.edu")
-	by vger.kernel.org with ESMTP id S1751310AbVJTCc1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Oct 2005 22:32:27 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by LaTech.edu (Postfix) with ESMTP id 693CB309DBD
-	for <linux-ide@vger.kernel.org>; Wed, 19 Oct 2005 21:32:19 -0500 (CDT)
-Received: from LaTech.edu ([127.0.0.1])
- by localhost (selene.latech.edu [127.0.0.1]) (amavisd-new, port 10024)
- with LMTP id 61710-01-25 for <linux-ide@vger.kernel.org>;
- Wed, 19 Oct 2005 21:32:15 -0500 (CDT)
-Received: from LaTech.edu (localhost [127.0.0.1])
-	by LaTech.edu (Postfix) with ESMTP id 8C193309DAE
-	for <linux-ide@vger.kernel.org>; Wed, 19 Oct 2005 21:32:15 -0500 (CDT)
-Received: from [10.1.3.1] (ip70-173-81-133.fv.dl.cox.net [70.173.81.133])
-	by LaTech.edu (Postfix) with ESMTP id 6503D309D45
-	for <linux-ide@vger.kernel.org>; Wed, 19 Oct 2005 21:32:13 -0500 (CDT)
+Received: from mail.dvmed.net ([216.237.124.58]:33448 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751714AbVJTC6I (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Oct 2005 22:58:08 -0400
+In-Reply-To: <435703BE.602@latech.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE Mailing List <linux-ide@vger.kernel.org>
+To: Ryan Bourgeois <rgb005@latech.edu>
+Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>
 
-What's the latest status on the Promise SX4 cards?  Has anyone looked 
-into employing the onboard DRAM for anything yet?  I remember at one 
-point we had a nice little dialog going about this card, but I don't 
-know that it really amounted to anything.
+Ryan Bourgeois wrote:
+> What's the latest status on the Promise SX4 cards?  Has anyone looked 
+> into employing the onboard DRAM for anything yet?  I remember at one 
+> point we had a nice little dialog going about this card, but I don't 
+> know that it really amounted to anything.
+> 
+> Jeff, if nobody has done anything with this since back whenever, you 
+> could pass to me what documentation you have for it and some of the 
+> ideas you had for this card and I can see what I can do.  I think it'd 
+> be an interesting project for me to start, time permitting.
 
-Jeff, if nobody has done anything with this since back whenever, you 
-could pass to me what documentation you have for it and some of the 
-ideas you had for this card and I can see what I can do.  I think it'd 
-be an interesting project for me to start, time permitting.
+NDAs (legal stuff) prevents passing around documentation.
 
--Ryan Bourgeois
+I can certainly summarize what is public in the sata_sx4.c driver:
+
+* one ATA engine per port, for executing ATA commands.
+* each ATA engine operates on data in on-board RAM
+* one HDMA engine, for copying data between host RAM and board RAM
+* since there is only one HDMA engine but four ATA engines, its a bit of 
+a bottleneck
+* no SATA controls, the board uses PATA chips with a SATA bridge
+* driver code uses a static memory layout I designed.  This will need to 
+  be changed to a dynamic layout, most likely.
+
+I can certainly answer any questions about the driver, and can answer 
+questions about the hardware when it pertains to information necessary 
+to develop and maintain the open source driver.
+
+	Jeff
+
+
