@@ -1,21 +1,20 @@
-From: Chris Boot <bootc@bootc.net>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: Merging ATA passthru
-Date: Fri, 21 Oct 2005 21:01:31 +0100
-Message-ID: <4359491B.5040603@bootc.net>
+Date: Fri, 21 Oct 2005 16:04:24 -0400
+Message-ID: <435949C8.1030603@pobox.com>
 References: <43593E0A.4070801@pobox.com> <1129924714.2786.38.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from baldrick.bootc.net ([83.142.228.48]:33436 "EHLO
-	baldrick.bootc.net") by vger.kernel.org with ESMTP id S965152AbVJUUBh
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 Oct 2005 16:01:37 -0400
+Received: from mail.dvmed.net ([216.237.124.58]:36023 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S965157AbVJUUE1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Oct 2005 16:04:27 -0400
 In-Reply-To: <1129924714.2786.38.camel@laptopd505.fenrus.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Arjan van de Ven <arjan@infradead.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
 Arjan van de Ven wrote:
 > On Fri, 2005-10-21 at 15:14 -0400, Jeff Garzik wrote:
@@ -36,32 +35,10 @@ Arjan van de Ven wrote:
 > can you get a patch into -mm that default-on's them? That way the brave
 > of heart get it automatic while those who play safe get them
 > default-off. Expands your testingbase as well ;)
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
 
-It's already there:
+It currently defaults to on in -mm.  I'll make sure that doesn't change...
 
-arcadia ~ # uname -a
-Linux arcadia.lan 2.6.14-rc4-mm1 #2 Thu Oct 20 12:07:22 BST 2005 i686 
-AMD Athlon(tm) XP 2500+ AuthenticAMD GNU/Linux
+	Jeff
 
-arcadia ~ # smartctl -d ata -H /dev/sda
-smartctl version 5.33 [i686-pc-linux-gnu] Copyright (C) 2002-4 Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
 
-=== START OF READ SMART DATA SECTION ===
-SMART overall-health self-assessment test result: PASSED
 
-:-)
-
-Chris
-
--- 
-Chris Boot
-bootc@bootc.net
-http://www.bootc.net/
