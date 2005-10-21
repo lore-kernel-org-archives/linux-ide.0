@@ -1,43 +1,40 @@
-From: David Daney <ddaney@avtrex.com>
-Subject: Re: Patch: ATI Xilleon port 10/11 Xilleon IDE controller support
-Date: Fri, 21 Oct 2005 10:03:37 -0700
-Message-ID: <43591F69.60203@avtrex.com>
-References: <17239.48184.340986.463557@dl2.hq2.avtrex.com> <58cb370e0510210858k7fccc00fqd6fccffed441aae3@mail.gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Merging ATA passthru
+Date: Fri, 21 Oct 2005 15:14:18 -0400
+Message-ID: <43593E0A.4070801@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <58cb370e0510210858k7fccc00fqd6fccffed441aae3@mail.gmail.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:3511 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S965102AbVJUTOX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Oct 2005 15:14:23 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz wrote:
-> Hi,
-> 
-> Patch basically looks fine but needs some extra work.
-> Detailed comments below...
-> 
-> On 10/20/05, David Daney <ddaney@avtrex.com> wrote:
-> 
->>This is the tenth part of my Xilleon port.
->>
->>I am sending the full set of patches to linux-mips@linux-mips.org
->>which is archived at: http://www.linux-mips.org/archives/
->>
->>Only the patches that touch generic parts of the kernel are coming
->>here.
->>
->>This patch adds the Xilleon's IDE driver.
->>
->>Patch against 2.6.14-rc2 from linux-mips.org
->>
->>Signed-off-by: David Daney <ddaney@avtrex.com>
->>
 
-Thanks for reviewing this.  I am working on addressing the issues you 
-raised.
+Folks,
 
-David Daney.
+Taking Mark Lord's (and others) criticism to heart, I'm going to merge 
+the ATA passthru work upstream, once 2.6.14 is released.
+
+Since there are still some reported problems that I haven't had time to 
+track down, I'm going to -- like ATAPI -- introduce a module option that 
+enables passthru.  It will default to off.
+
+Other features that follow a similar pattern -- 98% there but needs a 
+few final tweaks -- will be treated in the same way.
+
+This gets lesser-used features upstream where they can get the most 
+testing, while defaulting them to off ensures that we won't perturb the 
+known-working code.
+
+This also will help me, in that I won't have to maintain a bunch of 
+parallel codebases.
+
+	Jeff
+
+
+
