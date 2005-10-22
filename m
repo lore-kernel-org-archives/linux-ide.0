@@ -1,70 +1,33 @@
-From: thomas schorpp <t.schorpp@gmx.de>
-Subject: Re: command error: error=0x54 { AbortedCommand LastFailedSense=0x05
- }
-Date: Sat, 22 Oct 2005 08:33:03 +0200
-Message-ID: <4359DD1F.9010507@gmx.de>
-References: <435994C2.6090701@ravelox.co.uk>
-Reply-To: linux-ide@vger.kernel.org
+From: Erwan Velu <erwan@seanodes.com>
+Subject: Re: [PATCH]: atiixp : Enabling UDMA5 on IXP200
+Date: Sat, 22 Oct 2005 09:22:25 +0200
+Message-ID: <4359E8B1.6070905@seanodes.com>
+References: <434A583D.2030401@seanodes.com> <434E79BC.308@seanodes.com> <58cb370e0510131058g23e956a8m7bb0a82d8f670ce6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:31452 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1751298AbVJVGdP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Oct 2005 02:33:15 -0400
-In-Reply-To: <435994C2.6090701@ravelox.co.uk>
+Received: from seanodes.co.fr.clara.net ([212.43.220.11]:32702 "EHLO
+	seanodes.co.fr.clara.net") by vger.kernel.org with ESMTP
+	id S1751309AbVJVHVp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 22 Oct 2005 03:21:45 -0400
+In-Reply-To: <58cb370e0510131058g23e956a8m7bb0a82d8f670ce6@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dave Kelly <dave@ravelox.co.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Dave Kelly wrote:
-> Hi,
-> 
-> I originally sent this to linux-kernel but it may have got lost in the
-> number of messages.
-> 
-> I have a large number of CD-Rs that I burned using Nero under Windows on
-> a CD writer that I no longer have ( and can't remember the model ). I'm
-> now having problems reading them with my Sony DRU-810A DVD+/-RW drive
-> using 2.6.13.4.
+Bartlomiej Zolnierkiewicz wrote:
 
-forget 2.6.13.4, wait for patches, it has countless bugs. complain about
-reading? try to burn something... kde+k3b lock up for 5 min. intervalls
-with cdrecord/cdrdao as root at full load with ide-cd. will test
-ide-scsi next, depreceated or not.
-
-and nvidia ide is new stuff, isnt it?
-
-> 
-> /var/log/messages starts to fill with:
-> 
-> Oct 15 02:30:03 desktop kernel: end_request: I/O error, dev hdc, sector
-> 5028
-> Oct 15 02:30:03 desktop kernel: hdc: command error: status=0x51 {
-> DriveReady SeekComplete Error }
-> Oct 15 02:30:03 desktop kernel: hdc: command error: error=0x54 {
-> AbortedCommand LastFailedSense=0x05 }
-
-> Oct 15 02:30:03 desktop kernel: ide: failed opcode was: unknown
-> 
-(busmaster dma transfer?)
-
-try disabling dma and/or try the ide-scsi driver and report
-
-> /dev/hdc:
-> 
->  Model=SONY DVD RW DRU-810A, FwRev=1.0a, SerialNo=815005574810A U30507
-
-this is a lite-on OEM? got a SOHW-832 reporting some "drive confused"
-messages but no problems with reading, maybe nvidia driver code bugs.
-
-latest stable manufacturer firmware on the drive? use such rpc-1 cracks
-on your own risk.
-
-> Cheers
-> 
-> Dave
-
-y
-tom
+>Hi,
+>
+>I've seen your patch but I'm still thinking how to solve this problem
+>because we can't just check for PCI device ID as it is a PATA controller
+>(I guess that there is some PATA-SATA bridge on this particular
+>motherboard).  One possible fix is to check if device is SATA using
+><linux/ata.h>:ata_id_is_sata() but I don't know how reliable it is,
+>I need to check both ATA and SATA specs).
+>  
+>
+Did you had any ideas on how to continue for fixing this issues with the 
+atiixp 200 chipset  ?
