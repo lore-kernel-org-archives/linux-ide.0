@@ -1,30 +1,43 @@
-From: Louise Amos <Tucson@scnovi.com>
-Subject: Avoid fake viagra get the real thing
-Date: Fri, 21 Oct 2005 22:06:38 -0400
-Message-ID: <6531380291.1208876958@67-41-93-100.cdrr.qwest.net>
-Content-Type: text/plain; charset=us-ascii
+From: Mark Lord <mlord@pobox.com>
+Subject: Re: [PATCH] libata: add ATAPI module option
+Date: Fri, 21 Oct 2005 23:25:32 -0400
+Message-ID: <4359B12C.5020800@pobox.com>
+References: <20050830215234.GA6991@havoc.gtf.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 67-41-93-100.cdrr.qwest.net ([67.41.93.100]:8462 "HELO
-	67-41-93-100.cdrr.qwest.net") by vger.kernel.org with SMTP
-	id S932554AbVJVCGi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 Oct 2005 22:06:38 -0400
+Received: from orb.pobox.com ([207.8.226.5]:22985 "EHLO orb.pobox.com")
+	by vger.kernel.org with ESMTP id S932575AbVJVDZl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Oct 2005 23:25:41 -0400
+In-Reply-To: <20050830215234.GA6991@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-10 minutes before sex, lasts for 24-36 hours
-http://Tuttle.a8k.net/pharm/as/
+Jeff Garzik wrote:
+>
+>  ATAPI is getting close to being ready.  To increase exposure, we enable
+>  the code in the upstream kernel, but default it to off (present
+>  behavior).  Users must pass atapi_enabled=1 as a module option (if
+>  module) or on the kernel command line (if built in) to turn on
+>  discovery of their ATAPI devices.
 
+Okay, I give.  How do I specify this option for the case
+of having libata + scsi BUILT-IN (no modules).
 
+I tried the usual /boot/grub/menu.lst thing:
 
+    kernel /boot/vmlinuz-2.6.14-rc5 root=/dev/sda5 ro atapi_enabled=1
 
-We can do no great things; only small things with great love. 
-Man is the only creature that refuses to be what he is. 
+But still no ATAPI drive.   ???
 
-You live and learn. Or you don't live long.    
+Hardcoding the modparm to "1" instead of "0" in libata-core.c works though.
 
-The key to your universe is that you can choose.   
-My tears stuck in their little ducts, refusing to be jerked.  
-
+Cheers
+-- 
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
 
