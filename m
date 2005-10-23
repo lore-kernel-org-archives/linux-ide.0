@@ -1,77 +1,53 @@
-From: "Dave Kelly" <dave@ravelox.co.uk>
-Subject: Re: command error: error=0x54 { AbortedCommand LastFailedSense=0x05 }
-Date: Sat, 22 Oct 2005 08:09:42 -0700
-Message-ID: <435A5636.6030801@ravelox.co.uk>
-References: <435994C2.6090701@ravelox.co.uk>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH 0/2] libata: MODE SELECT
+Date: Sun, 23 Oct 2005 16:23:03 +1000
+Message-ID: <435B2C47.8070708@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1";
-	format="flowed"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rwcrmhc11.comcast.net ([204.127.198.35]:6289 "EHLO
-	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S1751230AbVJVPJu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 22 Oct 2005 11:09:50 -0400
-Received: from ravelox.co.uk (localhost.localdomain [127.0.0.1])
-	by ravelox.co.uk (8.13.1/8.13.1) with ESMTP id j9MF9lRG017459
-	for <linux-ide@vger.kernel.org>; Sat, 22 Oct 2005 08:09:47 -0700
-Received: from ravelox.co.uk (root@localhost)
-	by ravelox.co.uk (8.13.1/8.13.1/Submit) with ESMTP id j9MF9krG017455
-	for <linux-ide@vger.kernel.org>; Sat, 22 Oct 2005 08:09:47 -0700
-In-Reply-To: <4359DD1F.9010507@gmx.de>
-References: <4359DD1F.9010507@gmx.de>
-Content-Disposition: inline
+Received: from zorg.st.net.au ([203.16.233.9]:50108 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1751408AbVJWGWH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Oct 2005 02:22:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com
 
-thomas schorpp wrote:
+Jeff,
+Here is another shot at adding MODE SELECT to
+libata. I have used sat-r06, sbc-3 and spc-4 as
+a guide. Compliance on the ATA side has some issues:
+  - no mechanism to issue 2 or more ATA commands
+    when translating a single SCSI command [in the
+    upstream branch, there have been patches ...]
+  - relies on the dev->id array (IDENTIFY DEVICE response)
+    always being up to date. Despite assurances I cannot
+    see how that is the case when multiple hosts
+    (initiators) can access a SATA disk.
 
->>/var/log/messages starts to fill with:
->>
->>Oct 15 02:30:03 desktop kernel: end_request: I/O error, dev hdc, sector
->>5028
->>Oct 15 02:30:03 desktop kernel: hdc: command error: status=0x51 {
->>DriveReady SeekComplete Error }
->>Oct 15 02:30:03 desktop kernel: hdc: command error: error=0x54 {
->>AbortedCommand LastFailedSense=0x05 }
->>    
->>
->
->  
->
->>Oct 15 02:30:03 desktop kernel: ide: failed opcode was: unknown
->>
->>    
->>
->(busmaster dma transfer?)
->
->try disabling dma and/or try the ide-scsi driver and report
->
->  
->
+This patch is broken into two parts and is against
+libata-dev's upstream branch:
+  1) strengthen MODE SENSE processing and make
+     default mode pages visible within libata-scsi.c
+  2) add MODE SELECT SCSI command support.
 
-I mentioned in my original message that I have already done this and 
-there is no improvement.
+Two attributes can be changed with these patches:
+  - WCE: write cache enable [cache mode page]
+  - DRA: disable read ahead [cache mode page]
 
->>/dev/hdc:
->>
->> Model=SONY DVD RW DRU-810A, FwRev=1.0a, SerialNo=815005574810A U30507
->>    
->>
->
->this is a lite-on OEM? got a SOHW-832 reporting some "drive confused"
->messages but no problems with reading, maybe nvidia driver code bugs.
->
->latest stable manufacturer firmware on the drive? use such rpc-1 cracks
->on your own risk.
->  
->
+Testing: upstream branch seems to be broken wrt SG_IO
+as the largest amount of data that can be sent per
+command is 4 KB. A 50 MB write (segmented to 4 KB per
+command) slowed down from 14 seconds with WCE=1 to
+107 seconds with WCE=0. sg_dd was used for the transfer
+and sdparm to change WCE. ST380013AS disk and
+sata_sil LLD.
 
-There is no other firmware version for this drive. The regular places 
-for getting RPC-1 cracks is waiting for Sony to release an update so 
-they can work out how to backup the original.
+The attachments are mime text because I wasn't able
+to do otherwise.
 
-Thanks for replying,
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
-Dave
+Doug Gilbert
