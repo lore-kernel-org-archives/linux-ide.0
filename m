@@ -1,45 +1,63 @@
-From: com bio <combiofriends@yahoo.com>
-Subject: strings /proc/kcore
-Date: Mon, 24 Oct 2005 15:12:57 -0700 (PDT)
-Message-ID: <20051024221257.43044.qmail__49406.3508384444$1130192068$gmane$org@web32811.mail.mud.yahoo.com>
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 0/2] libata: support SATA devices on SAS HBAs
+Date: Mon, 24 Oct 2005 17:17:39 -0500
+Message-ID: <435D5D83.1060201@us.ibm.com>
+References: <4341A91A.3020000@us.ibm.com> <434251E0.9060000@pobox.com>	 <58cb370e0510040322q1cb7a13bjfc6c7875140d20a9@mail.gmail.com> <58cb370e0510041356h780e7a5aifda0c232f677471e@mail.gmail.com> <43443E99.4090008@pobox.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web32811.mail.mud.yahoo.com ([68.142.206.41]:41317 "HELO
-	web32811.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751103AbVJXWNA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 24 Oct 2005 18:13:00 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <43443E99.4090008@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux@linuxkernel.com
 
-Hello,
-  When i do #strings /proc/kcore as root i get the
-following error.
-strings: /proc/kcore: Operation not permitted
+The following patches enhance libata to allow SAS device drivers
+to utilize libata to talk to SATA devices. It introduces some
+new APIs which allow libata to be used without allocating a
+virtual scsi host. In the context of SAS, a struct ata_port
+is not a physical port, but rather becomes a virtual construct.
 
-I run fedora core 3. My kernel version is 2.6.9-1.667.
-I would be happy if someone can help me diagnise this
-error. Thanks
-Deepan Chakravarthy
+Since my last post, I have removed the dependence on the host_set
+struct. The following two patches depend on the qc_transport patch:
 
-------------------------------------------------------------------
-HAVE FUN, SOLVE SUDOKU, SHARPEN YOUR BRAIN.
-Sudoku solver : http://users.kaski-net.net/~deepan/sudoku/sudokusolver.php
-------------------------------------------------------------------
-Deepan Chakravarthy N,
-College student by day, Programmer by nite.
-------------------------------------------------------------------
-Home Page: http://users.kaski-net.net/~deepan/
-Center for Biotechnology,
-Anna University, Chennai,
-Tamil Nadu, India.
-Ph 91-44-55127050
+http://marc.theaimsgroup.com/?l=linux-ide&m=112845939215286&w=2
+
+The API is the same as the last time I posted it to linux-ide,
+but here is the description again:
+
+New APIs:
+
+ata_sas_port_alloc - Allocate an ata_port 
+ata_sas_port_init - Initialize an ata_port (probe device, etc)
+ata_sas_port_destroy - Free an ata_port allocated by ata_sas_port_alloc
+ata_sas_slave_configure - configure scsi device
+ata_sas_queuecmd - queue a scsi command, similar to ata_scsi_queuecomand
+
+These new APIs can be used either directly by a SAS LLDD or could be used
+by the SAS transport class. 
+
+Possible usage for a SAS LLDD would be:
+
+scsi_scan_host
+	slave_alloc
+		ata_sas_port_alloc
+		ata_sas_port_init
+	slave_configure
+		ata_sas_slave_configure
+
+Commands received by the LLDD for SATA devices would call ata_sas_queuecmd.
+
+Device teardown would occur with:
+
+slave_destroy
+	ata_sas_port_destroy
 
 
-	
-		
-__________________________________ 
-Yahoo! Mail - PC Magazine Editors' Choice 2005 
-http://mail.yahoo.com
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
