@@ -1,76 +1,60 @@
-From: Eugene Crosser <crosser@rol.ru>
-Subject: Re: Status of Marvell SATA driver (was Re: Trying latest sata_mv
- - and getting freeze)
-Date: Wed, 26 Oct 2005 19:50:48 +0400
-Message-ID: <435FA5D8.2090406@rol.ru>
-References: <435F8AFF.3030404@rol.ru> <435F9737.3050409@emc.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigA975B36649782148FBD6379A"
+From: linux@horizon.com
+Subject: Re: sata_sil24 AMD64 crash/lockup
+Date: 26 Oct 2005 15:18:00 -0400
+Message-ID: <20051026191800.28120.qmail@science.horizon.com>
+References: <434F9F92.7060805@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.rol.ru ([194.67.1.9]:58931 "EHLO smtp.rol.ru")
-	by vger.kernel.org with ESMTP id S964797AbVJZPvA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Oct 2005 11:51:00 -0400
-In-Reply-To: <435F9737.3050409@emc.com>
+Received: from science.horizon.com ([192.35.100.1]:15916 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S964868AbVJZTSO
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 26 Oct 2005 15:18:14 -0400
+In-Reply-To: <434F9F92.7060805@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brett Russ <russb@emc.com>
-Cc: linux-ide@vger.kernel.org, multiman@rol.ru, linux-kernel@vger.kernel.org
+To: htejun@gmail.com
+Cc: linux@horizon.com, linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigA975B36649782148FBD6379A
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+It finaly puked!  Unfortulately, it did NOT survive and while it's less of
+a hard lock-up, the root file system is unhappy and I can't log in and copy
+the log files, so this is copied by hand.
 
-Brett, thanks for quick response.
+(Which is a bit odd, because I have the root file system on a RAID-10
+such that no controller is critical.  I.e. the mirror pairs are sdb/sdc,
+sdd/sde, and sdf/sda.  If the drive just returned -EIO, then the md
+layer could drop the drive and use the other mirror.)
 
->> My hardware is SMP Supermicro with 6 disks on
->> Marvell MV88SX6081 8-port SATA II PCI-X Controller (rev 03)
->> and the sata_mv.c is version 0.25 dated 22 Oct 2005
->>
->> The thing works with "old" mvsata340 driver, but the "new" kernel with
->> your driver freezes when it starts to probe disks.  Even Magic SysRq
->> does not work.  The last lines I see on screen are like this:
->>
->> sata_mv version 0.25
->> ACPI: PCI Interrupt 0000:02:03.0[A] -> GSI 56 (level, low) -> IRQ 185
->> sata_mv(0000:02:03.0) 32 slots 8 ports unknown mode IRQ via MSI
->> ata1: SATA max UDMA/133 cmd 0x0 ctl 0xF8C22120 bmdma 0x0 irq 185
->> ata2: .... <same things>            0xF8C24120 ...
->> ...
->> ata8: .... <same thing>             0xF8C38120 ...
->> ATA: abnormal status 0x80 on port 0xF8C2211C
->> ... <five more lines identical to the above>
->> ata1: dev 0 ATA-7, max UDMA/133, 781422768 sectors: LBA48
->>
->> - and at this point it freezes hard.
->> Any suggestions for me?  Any information I can collect to help
->> troubleshooting?
-[...]
-> In the meantime, try turning off SMP and seeing if that makes a
-> difference.  There still might be a problem with the spinlocks and if so
-> it should go away in uniprocessor mode.
+I have an entire scrollback buffer full of a mixture of ata3 and ata4
+error messages.
 
-'nosmp' makes no difference.
+The two errors are almost identical except for the "Info fld" value,
+whose value is a consistent function of the controller number.
 
-If somebody on the list has suggestions or questions, please CC to me as
-I am not subscribed to these maillists.
+ata3: command timeout
+ata3: status=0x50 { DriveReady SeekComplete }
+sdc: Current: sense key: No Sense
+    Additional sense: No additional sense information
+Info fld=0x78af38
+sata_sil24 ata3: resetting controller
 
-Eugene
+ata4: command timeout
+ata4: status=0x50 { DriveReady SeekComplete }
+sdd: Current: sense key: No Sense
+    Additional sense: No additional sense information
+Info fld=0xeb9712
+sata_sil24 ata4: resetting controller
 
---------------enigA975B36649782148FBD6379A
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.7 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+If it matters, the order of the errors I can see in the
+scrollback buffer (but there are clearly more off the top) is
+343434343444444433343434344444443.
 
-iD8DBQFDX6XctQFsU5rTNjcRAoOGAKCl1bqUTEKT0ZZQ8XYakItru3mLMgCdErk8
-3nMLudx8lFKfD0A4nIOtouI=
-=hlFB
------END PGP SIGNATURE-----
+I will hold the machine in the current state for a couple of hours
+in case there's any more debug information that can be retrieved
+from the console.
 
---------------enigA975B36649782148FBD6379A--
+Anyway, thanks a lot for any clues.  I'd really like to push this
+machine into production, but it's a bit difficult right now.
+
+Interestingly, the machine was not running any stress tests at the time
+of the problem, but pcbackup may have been doing its thing, and it was
+recently power-cycled (taken down as non-essential for Monday's hurricane).
