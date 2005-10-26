@@ -1,72 +1,40 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 1/2] libata: Remove dependence on host_set->dev for SAS
-Date: Tue, 25 Oct 2005 18:48:54 -0400
-Message-ID: <435EB656.1040502@adaptec.com>
-References: <4341A91A.3020000@us.ibm.com> <434251E0.9060000@pobox.com>	 <58cb370e0510040322q1cb7a13bjfc6c7875140d20a9@mail.gmail.com> <58cb370e0510041356h780e7a5aifda0c232f677471e@mail.gmail.com> <43443E99.4090008@pobox.com> <435D5D83.1060201@us.ibm.com> <435D5DE5.7010306@us.ibm.com> <435E7105.4010105@pobox.com> <435E87E8.9010506@us.ibm.com> <435E8AC7.1080407@pobox.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH/RFC] SCSI mid-layer suspend/resume
+Date: Wed, 26 Oct 2005 06:26:46 +0200
+Message-ID: <435F0586.8070803@s5r6.in-berlin.de>
+References: <20051024160531.7d879a7c.randy_d_dunlap@linux.intel.com>	<435D6E47.1030409@pobox.com> <20051025142529.7b23bbc0.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <435E8AC7.1080407@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: brking@us.ibm.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:52609 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S932537AbVJZE1m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 26 Oct 2005 00:27:42 -0400
+In-Reply-To: <20051025142529.7b23bbc0.randy_d_dunlap@linux.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, axboe@suse.de, hch@lst.de
 
-On 10/25/05 15:43, Jeff Garzik wrote:
-> Brian King wrote:
-> 
->>Or, we just live with the duplication...
-> 
-> 
-> That may be the best practical solution.
-> 
-> I wonder, additionally, if we need to be getting a reference each time 
-> we store the pointer.  Traditionally the struct device object lifetime 
-> has always been entirely within the bus device lifetime, but with this 
-> new work that may need rethinking.
+Randy Dunlap wrote:
+> How/where can I put low-level driver specific suspend/resume
+> code, for PATA or SATA or usb-storage or ieee1394 or SCSI?
+> What is the linkage (chain, pointers, whatever) thru the
+> SCSI stack to each driver's "methods"?  Or do those not
+> exist yet?
 
-Would it be a good idea to abstract most of this in
-say something like 
-
-	struct satl_device_struct {
-		-- data... ;
-		
-		/* The registering entity calls this for SATL to translate
-		   to an ATA task(s) and execute. Filled in by the SATL Layer. */
-		int (*execute_scsi_task)(struct satl_device_struct *, struct scsi_cmnd *);
-		
-		/* SATL layer calls this to send an ata_task to the device.
-		   Filled in by the registering entity. */
-		int (*execute_ata_task)(struct satl_device_struct *, struct ata_task *);
-
-		-- recovery methods common to SATA-over-anything; filled in by registering
-			\ entity
-	};
-
-(ata task to be properly constructed: FIS, sg lists, etc.)
-
-Then libata-scsi would only have to export two (2) functions:
-
-int  satl_register_device(struct satl_device_struct *);
-void satl_unregister_device(struct satl_device_struct *);
-
-EXPORT_SYMBOL_GPL(satl_register_device);
-EXPORT_SYMBOL_GPL(satl_unregister_device);
-
-And the rest are in the struct satl_device_struct for which
-translation is being provided.
-
-Thus, error handling can also be "commonalized" as per
-the entity registering for the service.
-
-The whole point is to have this at device level as opposed
-to libata's port level.  Plus it simplifies the code of entities
-registering for this service.
-
-<I was going to draw ascii art, but ran out of time>
-
-	Luben
+I will try to post a more concrete followup to my earlier comment
+about involvement of lower levels, notably ieee1394, at the end of
+the week. So far I have to say about ieee1394 that
+  - "internal power management" i.e. suspend/resume of the local 1394
+    host adapters seems not to fully work yet according to sparse
+    reports from users (I did not test it myself under Linux 2.6 yet),
+  - "external power management" i.e. management of power states of
+    attached 1394 nodes is not implemented yet. I hope to implement bus
+    manager contention (a prerequisite for bus-wide power management)
+    in late November or in December.
 -- 
-http://linux.adaptec.com/sas/
-http://www.adaptec.com/sas/
+Stefan Richter
+-=====-=-=-= =-=- ==-=-
+http://arcgraph.de/sr/
