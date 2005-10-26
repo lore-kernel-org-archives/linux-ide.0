@@ -1,39 +1,76 @@
-From: Velu Erwan <erwan@seanodes.com>
-Subject: Re: blktool git repo created
-Date: Wed, 26 Oct 2005 17:37:32 +0200
-Message-ID: <435FA2BC.4080304@seanodes.com>
-References: <435E868C.3010404@pobox.com>
+From: Eugene Crosser <crosser@rol.ru>
+Subject: Re: Status of Marvell SATA driver (was Re: Trying latest sata_mv
+ - and getting freeze)
+Date: Wed, 26 Oct 2005 19:50:48 +0400
+Message-ID: <435FA5D8.2090406@rol.ru>
+References: <435F8AFF.3030404@rol.ru> <435F9737.3050409@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigA975B36649782148FBD6379A"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from seanodes.co.fr.clara.net ([212.43.220.11]:11242 "EHLO
-	seanodes.co.fr.clara.net") by vger.kernel.org with ESMTP
-	id S964790AbVJZPiA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 26 Oct 2005 11:38:00 -0400
-In-Reply-To: <435E868C.3010404@pobox.com>
+Received: from smtp.rol.ru ([194.67.1.9]:58931 "EHLO smtp.rol.ru")
+	by vger.kernel.org with ESMTP id S964797AbVJZPvA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Oct 2005 11:51:00 -0400
+In-Reply-To: <435F9737.3050409@emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
+To: Brett Russ <russb@emc.com>
+Cc: linux-ide@vger.kernel.org, multiman@rol.ru, linux-kernel@vger.kernel.org
 
-Jeff Garzik a =E9crit :
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigA975B36649782148FBD6379A
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
->
-> After sitting around in a non-public subversion repo for far too long=
-,=20
-> I've stuffed the latest blktool source code into a git repository.  A=
-s=20
-> soon as it finished mirroring, it will be available at
->
-> rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/blktool.git
->
-> The ostensible home page of blktool is=20
-> http://sourceforge.net/projects/gkernel/
+Brett, thanks for quick response.
 
-I've made the rpm for mandriva linux. The rpm is available on cooker bu=
-t=20
-easily backportable to other distro and versions.
+>> My hardware is SMP Supermicro with 6 disks on
+>> Marvell MV88SX6081 8-port SATA II PCI-X Controller (rev 03)
+>> and the sata_mv.c is version 0.25 dated 22 Oct 2005
+>>
+>> The thing works with "old" mvsata340 driver, but the "new" kernel with
+>> your driver freezes when it starts to probe disks.  Even Magic SysRq
+>> does not work.  The last lines I see on screen are like this:
+>>
+>> sata_mv version 0.25
+>> ACPI: PCI Interrupt 0000:02:03.0[A] -> GSI 56 (level, low) -> IRQ 185
+>> sata_mv(0000:02:03.0) 32 slots 8 ports unknown mode IRQ via MSI
+>> ata1: SATA max UDMA/133 cmd 0x0 ctl 0xF8C22120 bmdma 0x0 irq 185
+>> ata2: .... <same things>            0xF8C24120 ...
+>> ...
+>> ata8: .... <same thing>             0xF8C38120 ...
+>> ATA: abnormal status 0x80 on port 0xF8C2211C
+>> ... <five more lines identical to the above>
+>> ata1: dev 0 ATA-7, max UDMA/133, 781422768 sectors: LBA48
+>>
+>> - and at this point it freezes hard.
+>> Any suggestions for me?  Any information I can collect to help
+>> troubleshooting?
+[...]
+> In the meantime, try turning off SMP and seeing if that makes a
+> difference.  There still might be a problem with the spinlocks and if so
+> it should go away in uniprocessor mode.
 
-Regards,
+'nosmp' makes no difference.
+
+If somebody on the list has suggestions or questions, please CC to me as
+I am not subscribed to these maillists.
+
+Eugene
+
+--------------enigA975B36649782148FBD6379A
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.7 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+
+iD8DBQFDX6XctQFsU5rTNjcRAoOGAKCl1bqUTEKT0ZZQ8XYakItru3mLMgCdErk8
+3nMLudx8lFKfD0A4nIOtouI=
+=hlFB
+-----END PGP SIGNATURE-----
+
+--------------enigA975B36649782148FBD6379A--
