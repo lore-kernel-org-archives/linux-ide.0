@@ -1,143 +1,98 @@
-From: Vladimir Lazarenko <vlad@lazarenko.net>
-Subject: Re: Status of Marvell SATA driver (was Re: Trying latest sata_mv
- - and getting freeze)
-Date: Thu, 27 Oct 2005 16:31:49 +0200
-Message-ID: <4360E4D5.9070505@lazarenko.net>
-References: <435F8AFF.3030404@rol.ru> <435F9737.3050409@emc.com> <435FA5D8.2090406@rol.ru> <20051027111650.GO4774@suse.de> <4360E3A0.70501@rol.ru>
+From: Erik Slagter <erik@slagter.name>
+Subject: Re: [PATCH/RFC] SCSI mid-layer suspend/resume
+Date: Thu, 27 Oct 2005 17:07:36 +0200
+Message-ID: <1130425656.8768.22.camel@localhost.localdomain>
+References: <20051024160531.7d879a7c.randy_d_dunlap@linux.intel.com>
+	 <435D6E47.1030409@pobox.com>
+	 <20051025142529.7b23bbc0.randy_d_dunlap@linux.intel.com>
+	 <435EA5AB.9010805@pobox.com>  <43604B14.7080903@rtr.ca>
+	 <1130404638.8768.4.camel@localhost.localdomain>  <4360CD57.7080208@rtr.ca>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms020902090503050106060304"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750814AbVJ0Obx@vger.kernel.org>
-In-Reply-To: <4360E3A0.70501@rol.ru>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Eugene Crosser <crosser@rol.ru>
-Cc: Jens Axboe <axboe@suse.de>, Brett Russ <russb@emc.com>, linux-ide@vger.kernel.org, multiman@rol.ru, linux-kernel@vger.kernel.org
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-0VCdmpVcq0fUeXz7oeP8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from erik-slagter.demon.nl ([83.161.107.130]:12722 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S1750917AbVJ0PIq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 27 Oct 2005 11:08:46 -0400
+In-Reply-To: <4360CD57.7080208@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org
 
-This is a cryptographically signed message in MIME format.
 
---------------ms020902090503050106060304
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+--=-0VCdmpVcq0fUeXz7oeP8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->>>>>My hardware is SMP Supermicro with 6 disks on
->>>>>Marvell MV88SX6081 8-port SATA II PCI-X Controller (rev 03)
->>>>>and the sata_mv.c is version 0.25 dated 22 Oct 2005
->>>>>
->>>>>The thing works with "old" mvsata340 driver, but the "new" kernel with
->>>>>your driver freezes when it starts to probe disks.  Even Magic SysRq
->>>>>does not work.  The last lines I see on screen are like this:
->>>>>
->>>>>sata_mv version 0.25
->>>>>ACPI: PCI Interrupt 0000:02:03.0[A] -> GSI 56 (level, low) -> IRQ 185
->>>>>sata_mv(0000:02:03.0) 32 slots 8 ports unknown mode IRQ via MSI
->>>>>ata1: SATA max UDMA/133 cmd 0x0 ctl 0xF8C22120 bmdma 0x0 irq 185
->>>>>ata2: .... <same things>            0xF8C24120 ...
->>>>>...
->>>>>ata8: .... <same thing>             0xF8C38120 ...
->>>>>ATA: abnormal status 0x80 on port 0xF8C2211C
->>>>>... <five more lines identical to the above>
->>>>>ata1: dev 0 ATA-7, max UDMA/133, 781422768 sectors: LBA48
->>>>>
->>>>>- and at this point it freezes hard.
->>>>>Any suggestions for me?  Any information I can collect to help
->>>>>troubleshooting?
->>>
->>>[...]
->>>
->>>
->>>>In the meantime, try turning off SMP and seeing if that makes a
->>>>difference.  There still might be a problem with the spinlocks and if so
->>>>it should go away in uniprocessor mode.
->>>
->>>'nosmp' makes no difference.
->>
->>
->>Booting with nosmp isn't enough, you need to compile the kernel with
->>CONFIG_SMP turned off. Otherwise the spinlocks will still be used and
->>could cause a hard hang.
-> 
-> 
-> Yeah, that was it!  It boots with the kernel compiled for UP.
-> (did not yet have a chance to check how it works).
-> Any chance that somebody competent would fix the driver for SMP?
+On Thu, 2005-10-27 at 08:51 -0400, Mark Lord wrote:
+> Erik Slagter wrote:
+> > On Wed, 2005-10-26 at 23:35 -0400, Mark Lord wrote:
+> > =20
+> >>I have an extra hard drive caddy for my Dell notebook,
+> >>with a different 2.5" drive mounted in it.
+> ..
+> > Any idea how this extra drive is actually connected? I was thinking PAT=
+A
+> > drive with SATA bridge, PATA directly (comes to mind...) or maybe it's
+> > even a SATA drive connected directly...
+>=20
+> Definitely, absolutely, I have it in the palm of my hand,
+> this is a PATA drive.
+>=20
+> Jeff suspects that there must be a SATA bridge
+> inside the notebook itself.
 
-Umm, that sounds freakingly familiar to what I just had with sata_nv... 
-Try "noapic" in smp mode, will that help?
+Ah, OK, I think I understand now (also read your other mail), this drive
+is a _replacement_ for the original drive, not additional, right?
 
-And just in case, did you try 2.6.14-rc5? That was the kernel that fixed 
-my similar problem "out-of-the-box".
+In that case it's a very strange phenomena indeed.
 
-Regards,
-Vladimir
+BTW I'd rather have an _extra_ drive to run mirroring on ;-)
 
---------------ms020902090503050106060304
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+--=-0VCdmpVcq0fUeXz7oeP8
+Content-Type: application/x-pkcs7-signature; name=smime.p7s
+Content-Disposition: attachment; filename=smime.p7s
 Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIJ2zCC
-Az8wggKooAMCAQICAQ0wDQYJKoZIhvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQI
-EwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcTCUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENv
-bnN1bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmljYXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAi
-BgNVBAMTG1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBDQTErMCkGCSqGSIb3DQEJARYccGVy
-c29uYWwtZnJlZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3MTcwMDAwMDBaFw0xMzA3MTYyMzU5
-NTlaMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBM
-dGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQTCBnzAN
-BgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAxKY8VXNV+065yplaHmjAdQRwnd/p/6Me7L3N9Vvy
-Gna9fww6YfK/Uc4B1OVQCjDXAmNaLIkVcI7dyfArhVqqP3FWy688Cwfn8R+RNiQqE88r1fOC
-dz0Dviv+uxg+B79AgAJk16emu59l0cUqVIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEAAaOBlDCB
-kTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1UdHwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwudGhh
-d3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWlsQ0EuY3JsMAsGA1UdDwQEAwIBBjApBgNV
-HREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVsMi0xMzgwDQYJKoZIhvcNAQEFBQAD
-gYEASIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYfqi2fNi/A9BxQIJNwPP2t4WFi
-w9k6GX6EsZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa9/eH1sYITq726jTlEBpb
-NU1341YheILcIRk13iSx0x1G/11fZU8wggNIMIICsaADAgECAgMPl0owDQYJKoZIhvcNAQEE
-BQAwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0
-ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMB4XDTA1
-MTAwNDE4Mjk1NloXDTA2MTAwNDE4Mjk1NlowgZgxEjAQBgNVBAQTCUxhemFyZW5rbzERMA8G
-A1UEKhMIVmxhZGltaXIxGzAZBgNVBAMTElZsYWRpbWlyIExhemFyZW5rbzEhMB8GCSqGSIb3
-DQEJARYSdmxhZEBsYXphcmVua28ubmV0MS8wLQYJKoZIhvcNAQkBFiB2bGFkaW1pci5sYXph
-cmVua29AbG9naWNhY21nLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMhN
-65wBwy12UD+rjqjhBDMm8/6sYE+YHQmJMgTb/Cxy+Sp00ISDel7/FiLvVtKAo667N43VeFzT
-p+7BWKxC0OJAFddayiWFw5sZCEL28qY2lHnolrpJMbVIzUoqrSkPjgZ9GNI93Ri7AWkMCF9X
-uRFW0I0Lbb2gYH2fnpdloO917DLyXVuBxOyPUpu1TeP+oHbi8whPdrhFx8Ep37sP13srk5tf
-ISzaXdJzEVWOaLTyIL5tMSlCuBJibmcDm9/2qCLW+c1eAxiQwmafH4tJ5WPch2wclEXlt7tw
-tGe6vK0Se2B8TvgZmOaY78wIp0DBVrP4+wsMnCbcPHtk+sY1d/8CAwEAAaNRME8wPwYDVR0R
-BDgwNoESdmxhZEBsYXphcmVua28ubmV0gSB2bGFkaW1pci5sYXphcmVua29AbG9naWNhY21n
-LmNvbTAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBBAUAA4GBACfGbOm/RbyWFmOR+w4Vk8XY
-umCjlfqb+icqbKENKvuG4DOQr6QaTtRT+/ATA3yrooYfQWuflDIEPS+SbNyjfpNyyFiYB8OS
-rfclJ+B+ikvEP7LweNoL3EV1SrzeyJ3YrcqHAhoNqvB66dVQCy04RFvaRI+fC3I79Zd748gf
-ESqyMIIDSDCCArGgAwIBAgIDD5dKMA0GCSqGSIb3DQEBBAUAMGIxCzAJBgNVBAYTAlpBMSUw
-IwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUg
-UGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQTAeFw0wNTEwMDQxODI5NTZaFw0wNjEwMDQx
-ODI5NTZaMIGYMRIwEAYDVQQEEwlMYXphcmVua28xETAPBgNVBCoTCFZsYWRpbWlyMRswGQYD
-VQQDExJWbGFkaW1pciBMYXphcmVua28xITAfBgkqhkiG9w0BCQEWEnZsYWRAbGF6YXJlbmtv
-Lm5ldDEvMC0GCSqGSIb3DQEJARYgdmxhZGltaXIubGF6YXJlbmtvQGxvZ2ljYWNtZy5jb20w
-ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDITeucAcMtdlA/q46o4QQzJvP+rGBP
-mB0JiTIE2/wscvkqdNCEg3pe/xYi71bSgKOuuzeN1Xhc06fuwVisQtDiQBXXWsolhcObGQhC
-9vKmNpR56Ja6STG1SM1KKq0pD44GfRjSPd0YuwFpDAhfV7kRVtCNC229oGB9n56XZaDvdewy
-8l1bgcTsj1KbtU3j/qB24vMIT3a4RcfBKd+7D9d7K5ObXyEs2l3ScxFVjmi08iC+bTEpQrgS
-Ym5nA5vf9qgi1vnNXgMYkMJmnx+LSeVj3IdsHJRF5be7cLRnurytEntgfE74GZjmmO/MCKdA
-wVaz+PsLDJwm3Dx7ZPrGNXf/AgMBAAGjUTBPMD8GA1UdEQQ4MDaBEnZsYWRAbGF6YXJlbmtv
-Lm5ldIEgdmxhZGltaXIubGF6YXJlbmtvQGxvZ2ljYWNtZy5jb20wDAYDVR0TAQH/BAIwADAN
-BgkqhkiG9w0BAQQFAAOBgQAnxmzpv0W8lhZjkfsOFZPF2Lpgo5X6m/onKmyhDSr7huAzkK+k
-Gk7UU/vwEwN8q6KGH0Frn5QyBD0vkmzco36TcshYmAfDkq33JSfgfopLxD+y8HjaC9xFdUq8
-3sid2K3KhwIaDarweunVUAstOERb2kSPnwtyO/WXe+PIHxEqsjGCAzswggM3AgEBMGkwYjEL
-MAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAq
-BgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAgMPl0owCQYFKw4D
-AhoFAKCCAacwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMDUx
-MDI3MTQzMTQ5WjAjBgkqhkiG9w0BCQQxFgQUwTP7fJlHysp9QZOEj6PazznkgTwwUgYJKoZI
-hvcNAQkPMUUwQzAKBggqhkiG9w0DBzAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAw
-BwYFKw4DAgcwDQYIKoZIhvcNAwICASgweAYJKwYBBAGCNxAEMWswaTBiMQswCQYDVQQGEwJa
-QTElMCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhh
-d3RlIFBlcnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0ECAw+XSjB6BgsqhkiG9w0BCRACCzFr
-oGkwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0
-ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAgMPl0ow
-DQYJKoZIhvcNAQEBBQAEggEABNz/gttwu+/L1R4TouOU04KEPvgwTHeht7W1DDKZpZ0/wMoP
-mxydteCeRN9ssqJOI7E3LAs53JgTIBCZCD3JNR/FxZz+MUqYRbQ/2isWeGR1M2s1DTPq8zd5
-kDZhpKNhQBAE+Zb10jCk3450uDfYJpzwfFNVu/l8TgIO374QkJhzcrqvQq7zGbjhP6/UCa/k
-7xRhjhgsudxSUFxj5IrfRgyJoizd/5rwr7PO0YZ8UV/wgrAMQ75eWastfMkIAOi5c7V27xX4
-wcl/89f811tjVQxCLqBP6KM/fDBk93zgnj9cCGzOUYD1ryTIrBY4HNuufkBOXHsUxsBkGLTm
-E+CzEwAAAAAAAA==
---------------ms020902090503050106060304--
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGFjCCAs8w
+ggI4oAMCAQICAw9TczANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
+d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
+YWlsIElzc3VpbmcgQ0EwHhcNMDUwODE4MTE1NDA1WhcNMDYwODE4MTE1NDA1WjBDMR8wHQYDVQQD
+ExZUaGF3dGUgRnJlZW1haWwgTWVtYmVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFt
+ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANAMKW15OgreNb+Wd++Xcw6uNJUXXIfX
+56u1rtTObMmbbDY2wNc4Iqwbuwaysvox3z+YElXBibE8BAyV1iMjhee4mOfAy38dGHtWDxhOGke8
+VpkyY8DSWgMN5p4egTiT6YNdHW75iiQ+Vh5zMHju1UXnIqgf5zkUGkNuxYp15jLZvRDbfA5H+Sil
+jbZGB2fiPOJHpyI61ZidcMgdow31qm70/oe6vXxhSZLzo7OLvExE+mQHwbCSIJMN/hPTK1z0lmQ1
+kkaEjHrefqIgoF9Dk/WfOtulzvR3xBzDL50GZ32BxT/OhXYe1SHEJpSM1S/aq8TBQJYwjzREWyDh
+0OYsmr0CAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFndGVyLm5hbWUwDAYDVR0TAQH/BAIw
+ADANBgkqhkiG9w0BAQQFAAOBgQCCpzoneRQIKsUO8zSnwQ7yhJTrS/EaDibiIVrkkCbzXwCiHFAi
+7nmTRF0DlLVF3Ssf97ITWT/RSdkj9Xke0OHH7724PJdfpA6OglMnx2i7IcJLzPgPjB+fOmfR0nYX
+UYKuzGxTOXmshLmPcwKdpFuRLLk7n+vrTAwJYJI++crhJzCCAz8wggKooAMCAQICAQ0wDQYJKoZI
+hvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQIEwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcT
+CUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmlj
+YXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMTG1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFp
+bCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJlZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3
+MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUg
+Q29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwg
+SXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAxKY8VXNV+065yplaHmjAdQRw
+nd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNaLIkVcI7dyfArhVqqP3FWy688Cwfn8R+R
+NiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUqVIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEA
+AaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1UdHwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwu
+dGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWlsQ0EuY3JsMAsGA1UdDwQEAwIBBjApBgNV
+HREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVsMi0xMzgwDQYJKoZIhvcNAQEFBQADgYEA
+SIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYfqi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6E
+sZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa9/eH1sYITq726jTlEBpbNU1341YheILc
+IRk13iSx0x1G/11fZU8xggHvMIIB6wIBATBpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3
+dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1h
+aWwgSXNzdWluZyBDQQIDD1NzMAkGBSsOAwIaBQCgXTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcB
+MBwGCSqGSIb3DQEJBTEPFw0wNTEwMjcxNTA3MzZaMCMGCSqGSIb3DQEJBDEWBBTxFIIfsAC+NvH8
+/giLRErXMAYIuDANBgkqhkiG9w0BAQEFAASCAQCOTwlBzG8PvhpPjW4n1X4Tyfl8jk0+53mSnom5
+zK3Uf/3Um9siifRevluJQ2sKSWQM+NTbDO5SwT5NGC3CiRAUtzMlXMzEbUFtoW3pL/b3SdR2ovjK
+jGivRa4OtCR0P7nZdQz1IP8or+r0MIkw1bctYG5uQfe0/qwc/yE1zcCucuWlTtv9fH0XFjO7msLK
+Prjgk46rLTB3MICx283mGV9l4NAHDil3d8xar+fDRzBTdRbS9O6bsvuc5zlySaDW4v+FRhTBAyEu
+DtUaYrMWVyHhCYOyEgsKPopPyTxP06AgV12O2U/FtVT5tHFc5dutVonL2B9zjte4WtQTdM9Bzxlj
+AAAAAAAA
+
+
+--=-0VCdmpVcq0fUeXz7oeP8--
