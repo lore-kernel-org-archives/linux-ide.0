@@ -1,57 +1,36 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Status of Marvell SATA driver (was Re: Trying latest sata_mv - and getting freeze)
-Date: Thu, 27 Oct 2005 13:16:51 +0200
-Message-ID: <20051027111650.GO4774@suse.de>
-References: <435F8AFF.3030404@rol.ru> <435F9737.3050409@emc.com> <435FA5D8.2090406@rol.ru>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH/RFC] SCSI mid-layer suspend/resume
+Date: Thu, 27 Oct 2005 08:51:35 -0400
+Message-ID: <4360CD57.7080208@rtr.ca>
+References: <20051024160531.7d879a7c.randy_d_dunlap@linux.intel.com>	 <435D6E47.1030409@pobox.com>	 <20051025142529.7b23bbc0.randy_d_dunlap@linux.intel.com>	 <435EA5AB.9010805@pobox.com>  <43604B14.7080903@rtr.ca> <1130404638.8768.4.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:65388 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1750718AbVJ0LQ2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Oct 2005 07:16:28 -0400
-Content-Disposition: inline
-In-Reply-To: <435FA5D8.2090406@rol.ru>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:28875 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S1750732AbVJ0Mvh
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 27 Oct 2005 08:51:37 -0400
+In-Reply-To: <1130404638.8768.4.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Eugene Crosser <crosser@rol.ru>
-Cc: Brett Russ <russb@emc.com>, linux-ide@vger.kernel.org, multiman@rol.ru, linux-kernel@vger.kernel.org
+To: Erik Slagter <erik@slagter.name>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Randy Dunlap <randy_d_dunlap@linux.intel.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, axboe@suse.de, hch@lst.de
 
-On Wed, Oct 26 2005, Eugene Crosser wrote:
-> Brett, thanks for quick response.
-> 
-> >> My hardware is SMP Supermicro with 6 disks on
-> >> Marvell MV88SX6081 8-port SATA II PCI-X Controller (rev 03)
-> >> and the sata_mv.c is version 0.25 dated 22 Oct 2005
-> >>
-> >> The thing works with "old" mvsata340 driver, but the "new" kernel with
-> >> your driver freezes when it starts to probe disks.  Even Magic SysRq
-> >> does not work.  The last lines I see on screen are like this:
-> >>
-> >> sata_mv version 0.25
-> >> ACPI: PCI Interrupt 0000:02:03.0[A] -> GSI 56 (level, low) -> IRQ 185
-> >> sata_mv(0000:02:03.0) 32 slots 8 ports unknown mode IRQ via MSI
-> >> ata1: SATA max UDMA/133 cmd 0x0 ctl 0xF8C22120 bmdma 0x0 irq 185
-> >> ata2: .... <same things>            0xF8C24120 ...
-> >> ...
-> >> ata8: .... <same thing>             0xF8C38120 ...
-> >> ATA: abnormal status 0x80 on port 0xF8C2211C
-> >> ... <five more lines identical to the above>
-> >> ata1: dev 0 ATA-7, max UDMA/133, 781422768 sectors: LBA48
-> >>
-> >> - and at this point it freezes hard.
-> >> Any suggestions for me?  Any information I can collect to help
-> >> troubleshooting?
-> [...]
-> > In the meantime, try turning off SMP and seeing if that makes a
-> > difference.  There still might be a problem with the spinlocks and if so
-> > it should go away in uniprocessor mode.
-> 
-> 'nosmp' makes no difference.
+Erik Slagter wrote:
+> On Wed, 2005-10-26 at 23:35 -0400, Mark Lord wrote:
+>  
+>>I have an extra hard drive caddy for my Dell notebook,
+>>with a different 2.5" drive mounted in it.
+..
+> Any idea how this extra drive is actually connected? I was thinking PATA
+> drive with SATA bridge, PATA directly (comes to mind...) or maybe it's
+> even a SATA drive connected directly...
 
-Booting with nosmp isn't enough, you need to compile the kernel with
-CONFIG_SMP turned off. Otherwise the spinlocks will still be used and
-could cause a hard hang.
+Definitely, absolutely, I have it in the palm of my hand,
+this is a PATA drive.
 
--- 
-Jens Axboe
+Jeff suspects that there must be a SATA bridge
+inside the notebook itself.
 
+Cheers
