@@ -1,28 +1,20 @@
-From: Sandy Bacon <robotics@ar-7.com>
-Subject: Get the most out of life! Viagra has helped millions of men!
-Date: Fri, 28 Oct 2005 16:56:49 -0400
-Message-ID: <12622751178.705761557@dsl-201-154-85-53.prod-infinitum.com.mx>
-Content-Type: text/plain; charset=us-ascii
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: patch: sata_promise.c
+Date: Fri, 28 Oct 2005 17:00:46 -0400
+Message-ID: <4362917E.9050208@pobox.com>
+References: <294F5689D10BCC41B35DD1F24BF210E402FB0E35@KHED163A.ww004.siemens.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsl-201-154-85-53.prod-infinitum.com.mx ([201.154.85.53]:11023
-	"HELO dsl-201-154-85-53.prod-infinitum.com.mx") by vger.kernel.org
-	with SMTP id S1751709AbVJ1U4t (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Oct 2005 16:56:49 -0400
+Received: from mail.dvmed.net ([216.237.124.58]:15488 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751724AbVJ1VAt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Oct 2005 17:00:49 -0400
+In-Reply-To: <294F5689D10BCC41B35DD1F24BF210E402FB0E35@KHED163A.ww004.siemens.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Mueller Daniel <daniel.mueller@siemens.com>
+Cc: linux-ide@vger.kernel.org
 
-Among the Net's only Approved Drug store and On line Pharmacy.
-You are not allowed to access this page from this IP address.
-
-
-No good deed goes unpunished.        
-Some editors are failed writers, but so are most writers.   
-If the Phone Doesn't Ring, It's Me      
-
-LAWYER, n. One skilled in circumvention of the law.    
-That's the secret to life... replace one worry with another....   
-It is bad luck to be superstitious.      
-To stand up -- or be setup?      
+applied
 
