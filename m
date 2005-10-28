@@ -1,74 +1,131 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: sil3112 problems
-Date: Fri, 28 Oct 2005 10:14:51 +1000
-Message-ID: <43616D7B.30100@eyal.emu.id.au>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [git patches] 2.6.x libata updates
+Date: Thu, 27 Oct 2005 20:49:06 -0400
+Message-ID: <20051028004906.GA16486@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ihug-mail.icp-qv1-irony1.iinet.net.au ([203.59.1.195]:36751
-	"EHLO mail-ihug.icp-qv1-irony1.iinet.net.au") by vger.kernel.org
-	with ESMTP id S965020AbVJ1APQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Oct 2005 20:15:16 -0400
-Received: from [192.168.3.7] (e7.eyal.emu.id.au [192.168.3.7])
-	by e4.eyal.emu.id.au (8.11.6/8.11.6) with ESMTP id j9S0Epo11769
-	for <linux-ide@vger.kernel.org>; Fri, 28 Oct 2005 10:14:51 +1000
+Received: from havoc.gtf.org ([69.61.125.42]:4049 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S965027AbVJ1AtH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Oct 2005 20:49:07 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: list linux-ide <linux-ide@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-After putting aside the Promise TX4 and replacing it with a SIL3112 based
-card, I now see the errors that others have reported:
 
-	ata4: status=0x51 { DriveReady SeekComplete Error }
-	ata4: error=0x04 { DriveStatusError }
+Please pull from 'upstream' branch of
+master.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-I have two SATA disk on the mobo (never seen an error there) and two on
-the SIL. Both ata3 and ata4 show these errors. I can provoke this by
-simply running concurrent dd reads from the two disks. I get anything from
-a few error in a second to no error for 10-15 seconds (rare). I get about
-66MB/s read rate on each mobo disk, a bit less on the SIL card.
+Broad changes:
+* improved PATA support
+* new drivers: pdc_adma, sata_sil24
+* vastly improved sata_mv driver (60xx only, alas)
+* small cleanups etc.
 
-Once in a while it will log a CRCerror too. I tried a more powerful
-power supply and replaced the cables with no improvement.
 
-This is on 2.6.13.4. I had the same with 2.6.14-rc5 but went off it
-because my i2c sensors failed to come up here (separate issue).
+ Documentation/DocBook/libata.tmpl | 1072 +++++++++++++++++++++++++++++++++++
+ drivers/scsi/Kconfig              |   22 
+ drivers/scsi/Makefile             |    2 
+ drivers/scsi/ahci.c               |   41 -
+ drivers/scsi/ata_piix.c           |    4 
+ drivers/scsi/libata-core.c        |  876 +++++++++++++++++++----------
+ drivers/scsi/libata-scsi.c        |  736 +++++++++++++++++-------
+ drivers/scsi/libata.h             |   19 
+ drivers/scsi/pdc_adma.c           |  739 ++++++++++++++++++++++++
+ drivers/scsi/sata_mv.c            | 1145 +++++++++++++++++++++++++++++++-------
+ drivers/scsi/sata_nv.c            |    8 
+ drivers/scsi/sata_promise.c       |   26 
+ drivers/scsi/sata_qstor.c         |    8 
+ drivers/scsi/sata_sil.c           |    6 
+ drivers/scsi/sata_sil24.c         |  875 +++++++++++++++++++++++++++++
+ drivers/scsi/sata_sis.c           |    4 
+ drivers/scsi/sata_svw.c           |    4 
+ drivers/scsi/sata_sx4.c           |   29 
+ drivers/scsi/sata_uli.c           |    4 
+ drivers/scsi/sata_via.c           |    4 
+ drivers/scsi/sata_vsc.c           |   14 
+ include/linux/ata.h               |   41 +
+ include/linux/libata.h            |  113 ++-
+ 23 files changed, 4973 insertions(+), 819 deletions(-)
 
-Reading the list I see no resolution, just conflicting comments (the
-"works for me" or "not" kind).
+Al Viro:
+      iomem annotations (sata_nv)
+      iomem annotations (ahci)
+      iomem annotations (sata_promise)
+      enum safety (sata_qstor)
+      iomem annotations (sata_sx4)
+      iomem annotations (sata_sil)
+      iomem annotations (sata_vsc)
 
-Is there a clear answer? If this card is again useless then what is
-a card that DOES work reliably. I just need dual SATA. I might as well
-bought a new mobo by now...
+Alan Cox:
+      ata: re-order speeds sensibly.
+      libata: bitmask based pci init functions for one or two ports
+      libata: handle early device PIO modes correctly
+      Add ide-timing functionality to libata.
+      [libata] ata_timing fix
 
-All four disks are identical
+Albert Lee:
+      [libata] C/H/S support, for older devices
+      libata: indent and whitespace change
+      libata: rename host states
+      libata: minor whitespace, comment, debug message updates
+      [libata scsi] tidy up SCSI lba and xfer len calculations
+      [libata scsi] add CHS support to ata_scsi_start_stop_xlat()
+      libata CHS: move the initialization of taskfile LBA flags (revise #6)
+      libata CHS: calculate read/write commands and protocol on the fly (revise #6)
+      libata CHS: reread device identify info (revise #6)
 
-ata3: SATA max UDMA/100 cmd 0xF8A94080 ctl 0xF8A9408A bmdma 0xF8A94000 irq 21
-ata4: SATA max UDMA/100 cmd 0xF8A940C0 ctl 0xF8A940CA bmdma 0xF8A94008 irq 21
-ata3: dev 0 ATA, max UDMA/100, 625142448 sectors: lba48
-ata3: dev 0 configured for UDMA/100
-scsi2 : sata_sil
-ata4: dev 0 ATA, max UDMA/100, 625142448 sectors: lba48
-ata4: dev 0 configured for UDMA/100
-scsi3 : sata_sil
-  Vendor: ATA       Model: WDC WD3200JD-00K  Rev: 08.0
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sdc: 625142448 512-byte hdwr sectors (320073 MB)
-SCSI device sdc: drive cache: write back
-SCSI device sdc: 625142448 512-byte hdwr sectors (320073 MB)
-SCSI device sdc: drive cache: write back
- sdc: sdc1
-Attached scsi disk sdc at scsi2, channel 0, id 0, lun 0
-  Vendor: ATA       Model: WDC WD3200JD-00K  Rev: 08.0
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sdd: 625142448 512-byte hdwr sectors (320073 MB)
-SCSI device sdd: drive cache: write back
-SCSI device sdd: 625142448 512-byte hdwr sectors (320073 MB)
-SCSI device sdd: drive cache: write back
- sdd: sdd1
-Attached scsi disk sdd at scsi3, channel 0, id 0, lun 0
+Andy Currid:
+      Fix sata_nv handling of NVIDIA MCP51/55
 
--- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
-	attach .zip as .dat
+Brett Russ:
+      libata: Marvell SATA support (DMA mode) (resend: v0.22)
+      libata: Marvell spinlock fixes and simplification
+      libata: Marvell function headers
+      libata: Marvell endian fix
+
+Douglas Gilbert:
+      [libata scsi] add ata_scsi_set_sense helper
+      [libata scsi] improve scsi error handling with ata_scsi_set_sense()
+
+Jeff Garzik:
+      libata: move EH docs to separate DocBook chapter
+      [libata] improve device scan
+      [libata] improve device scan even more
+      libata: add ata_ratelimit(), use it in AHCI driver irq handler
+      libata: ATAPI command completion tweaks and notes
+      libata: move atapi_request_sense() to libata-scsi module
+      [libata sata_mv] fix warning
+      libata: minor cleanups
+      [libata pdc_adma] license update, minor cleanup
+      libata: turn on block layer clustering
+      libata: const-ification bombing run
+
+Mark Lord:
+      libata: add new driver pdc_adma for PDC ADMA ATA cards
+
+Randy Dunlap:
+      libata kernel-doc fixes
+
+Tejun Heo:
+      SATA: rewritten sil24 driver
+      sil24: add FIXME comment above ata_device_add
+      sil24: remove irq disable code on spurious interrupt
+      sil24: add testing for PCI fault
+      sil24: move error handling out of hot interrupt path
+      sil24: remove PORT_TF
+      sil24: replace pp->port w/ ap->ioaddr.cmd_addr
+      sil24: fix PORT_CTRL_STAT constants
+      sil24: add more comments for constants
+      sil24: initialization fix
+      libata EH document update
+      libata: add ATA exceptions chapter to doc
+      sil24: ignore non-error exception irqs
+      sil24: remove CMDERR clearing
+      sil24: implement proper TF register reading & caching
+      sil24: implement tf_read callback
+      [libata sata_sil24] nit pickings
+      [libata sata_sil24] add support for 3131/3531
+
