@@ -1,30 +1,43 @@
-From: Al Viro <viro@ftp.linux.org.uk>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [git patches] 2.6.x libata updates
-Date: Sat, 29 Oct 2005 21:09:24 +0100
-Message-ID: <20051029200924.GM7992@ftp.linux.org.uk>
+Date: Sat, 29 Oct 2005 16:16:26 -0400
+Message-ID: <4363D89A.9080007@pobox.com>
 References: <20051029182228.GA14495@havoc.gtf.org> <20051029121454.5d27aecb.akpm@osdl.org> <4363CB60.2000201@pobox.com> <Pine.LNX.4.64.0510291229330.3348@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751294AbVJ2UJg@vger.kernel.org>
-Content-Disposition: inline
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:9094 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751203AbVJ2UQb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Oct 2005 16:16:31 -0400
 In-Reply-To: <Pine.LNX.4.64.0510291229330.3348@g5.osdl.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, Oct 29, 2005 at 12:37:58PM -0700, Linus Torvalds wrote:
-> Now, I've gotten several positive comments on how easy "git bisect" is to 
-> use, and I've used it myself, but this is the first time that patch users 
-> _really_ become very much second-class citizens, and you can't necessarily 
-> always do useful things with just the tar-trees and patches. That's sad, 
-> and possibly a really big downside.
-> 
-> Don't get me wrong - I personally think that the new merge policy is a 
-> clear improvement, but it does have this downside.
+Linus Torvalds wrote:
+> Side note: one of the downsides of the new "merge lots of stuff early in 
+> the development series" approach is that the first few daily snapshots end 
+> up being _huge_. 
 
-Well...  All it takes is extra patches when incremental gets too large;
-e.g. have a script pick idle interval close to splitting the thing in
-half until parts get less than <size>.  The question is, how much extra
-load would that create?  Another problem is that a lot of intermediates
-will not build, but that is just as true for -git<n> snapshots ;-/
+Yeah.  Back when I did the BK snapshots, I would occasionally do a 
+middle-of-the-day snapshot if there were a ton of incoming merges in a 
+24-hour span.
+
+If this "huge -git1" becomes a real problem, we could always
+
+* give you a manual "do snapshot" button
+
+* ask the maintainers to spread out their submits across multiple days, 
+as I am doing now
+
+* sell you on capping the daily push-to-kernel.org limit.  merge stuff 
+into "day1", "day2", etc. branches when the main branch "fills up" for 
+the day.
+
+None of these are terribly painful, but none are terribly appealing either.
+
+	Jeff
+
+
