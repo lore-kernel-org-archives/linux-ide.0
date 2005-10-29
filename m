@@ -1,53 +1,54 @@
-From: Andrew Morton <akpm@osdl.org>
+From: Linus Torvalds <torvalds@osdl.org>
 Subject: Re: [git patches] 2.6.x libata updates
-Date: Sat, 29 Oct 2005 15:21:57 -0700
-Message-ID: <20051029152157.01369c35.akpm@osdl.org>
-References: <20051029182228.GA14495@havoc.gtf.org>
-	<20051029121454.5d27aecb.akpm@osdl.org>
-	<4363CB60.2000201@pobox.com>
-	<Pine.LNX.4.64.0510291229330.3348@g5.osdl.org>
+Date: Sat, 29 Oct 2005 15:30:59 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0510291526040.3348@g5.osdl.org>
+References: <20051029182228.GA14495@havoc.gtf.org> <20051029121454.5d27aecb.akpm@osdl.org>
+ <4363CB60.2000201@pobox.com> <Pine.LNX.4.64.0510291229330.3348@g5.osdl.org>
+ <20051029152157.01369c35.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:51402 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932502AbVJ2WWf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Oct 2005 18:22:35 -0400
-In-Reply-To: <Pine.LNX.4.64.0510291229330.3348@g5.osdl.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932708AbVJ2WbF@vger.kernel.org>
+In-Reply-To: <20051029152157.01369c35.akpm@osdl.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
 Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Linus Torvalds <torvalds@osdl.org> wrote:
->
-> 
-> 
-> On Sat, 29 Oct 2005, Jeff Garzik wrote:
-> > 
-> > Even so, it's easy, to I'll ask him to test 2.6.14, 2.6.14-git1, and
-> > (tonight's upcoming) 2.6.14-git2 (with my latest pull included) to see if
-> > anything breaks.
-> 
-> Side note: one of the downsides of the new "merge lots of stuff early in 
-> the development series" approach is that the first few daily snapshots end 
-> up being _huge_. 
-> 
-> So the -git1 and -git2 patches are/will be very big indeed.
-> 
-> For example, patch-2.6.14-git1 literally ended up being a megabyte 
-> compressed. Right now my diff to 2.6.14 (after just two days) is 1.6MB 
-> compressed.
-> 
 
-However there's usually little overlap between the subsystems trees - with
-a net update, a USB update, a SCSI update and an ia64 update it's usually
-pretty obvious which one caused a particular regression.
 
-And given that the size of each individual subsystem update is unaltered,
-it doesn't really matter whether or not they all came on the same day.
+On Sat, 29 Oct 2005, Andrew Morton wrote:
+> 
+> However there's usually little overlap between the subsystems trees - with
+> a net update, a USB update, a SCSI update and an ia64 update it's usually
+> pretty obvious which one caused a particular regression.
 
-The individual -mm-only patches tend to be more scattered around the tree,
-which is why I send them as batches of 100-200 every couple of days: to get
-a bit of separation in the -git snapshots.  This hasn't actually proven to
-be very useful, though.
+Yes, that's true, but the subsystem trees themselves now tend to have more 
+time to grow, and tend to be merged more int one go.
+
+Which is all intentional, of course - the whole _point_ of the new thing 
+is that they should be in your tree and tested and then merged into my 
+tree during a short "merge window" for further testing.
+
+But it means that updates that used to "tricke in" to my kernel now tend 
+to be more of a "big merge", making the daily snapshot less effective.
+
+So when we get a "uhhuh, networking failed between daily snapshot X and 
+X+1" we now more often have a single biger merge of networking stuff that 
+was just waiting for the merge window to open..
+
+> The individual -mm-only patches tend to be more scattered around the tree,
+> which is why I send them as batches of 100-200 every couple of days: to get
+> a bit of separation in the -git snapshots.  This hasn't actually proven to
+> be very useful, though.
+
+One issue is of course that a lot of people doing reports don't actually
+even test the daily snapshots.
+
+Some bug reporters do, and I'm very grateful, and they are wonderful 
+people. Others do after some prodding, and yet others will never bother to 
+try a couple of different kernels at all ;/
+
+So the snapshot separation doesn't always necessarily help, even when it's 
+there.
+
+		Linus
