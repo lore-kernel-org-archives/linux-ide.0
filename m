@@ -1,49 +1,53 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [RFC PATCH] pmac ide doesn't properly cleanup hwif when
-	releasing controller
-Date: Sun, 30 Oct 2005 09:09:55 +1100
-Message-ID: <1130623795.29054.179.camel@gaston>
-References: <20051029044852.1a518908@Tatooine.r3z0>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [git patches] 2.6.x libata updates
+Date: Sat, 29 Oct 2005 15:21:57 -0700
+Message-ID: <20051029152157.01369c35.akpm@osdl.org>
+References: <20051029182228.GA14495@havoc.gtf.org>
+	<20051029121454.5d27aecb.akpm@osdl.org>
+	<4363CB60.2000201@pobox.com>
+	<Pine.LNX.4.64.0510291229330.3348@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:15081 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S932465AbVJ2WKi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Oct 2005 18:10:38 -0400
-In-Reply-To: <20051029044852.1a518908@Tatooine.r3z0>
+Received: from smtp.osdl.org ([65.172.181.4]:51402 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932502AbVJ2WWf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Oct 2005 18:22:35 -0400
+In-Reply-To: <Pine.LNX.4.64.0510291229330.3348@g5.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: Thibaut VARENE <T-Bone@parisc-linux.org>, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, 2005-10-29 at 04:48 +0200, Thibaut VARENE wrote:
-
-> I've been investigating the IDE code a bit, and it seems that it generally
-> assumes that an interface cannot be released once claimed. Cleaning up the
-> hwif without knowing its previous state in pmac.c is a big and potentially
-> dangerous job, and there seems to be no generic code interface that would
-> provide either a way to properly release an hwif or to clean it up.
+Linus Torvalds <torvalds@osdl.org> wrote:
+>
 > 
-> The rationale behind this is related to the value of MAX_HWIFS, which is
-> usually pretty low (usually between 2 and 10).
 > 
-> So the question is "what should be done (and how)"?
+> On Sat, 29 Oct 2005, Jeff Garzik wrote:
+> > 
+> > Even so, it's easy, to I'll ask him to test 2.6.14, 2.6.14-git1, and
+> > (tonight's upcoming) 2.6.14-git2 (with my latest pull included) to see if
+> > anything breaks.
+> 
+> Side note: one of the downsides of the new "merge lots of stuff early in 
+> the development series" approach is that the first few daily snapshots end 
+> up being _huge_. 
+> 
+> So the -git1 and -git2 patches are/will be very big indeed.
+> 
+> For example, patch-2.6.14-git1 literally ended up being a megabyte 
+> compressed. Right now my diff to 2.6.14 (after just two days) is 1.6MB 
+> compressed.
+> 
 
-Bart, the problem here is indeed the code in pmac IDE that tries to
-"release" HWIFs to the core if they are probed empty. For some reason,
-it used to work (I think ide-dma used to unconditionally override the
-callbacks) but not any more.
+However there's usually little overlap between the subsystems trees - with
+a net update, a USB update, a SCSI update and an ia64 update it's usually
+pretty obvious which one caused a particular regression.
 
-Thus my question: Should I
+And given that the size of each individual subsystem update is unaltered,
+it doesn't really matter whether or not they all came on the same day.
 
- - Manually in ide-pmac clean up all callbacks & revert everything in
-the HWIF when I want to hand it back
-
- - Call init_hwif_data() despite the nasty comment on top
-
- - Just don't release the interface...
-
-Ben.
-
-
+The individual -mm-only patches tend to be more scattered around the tree,
+which is why I send them as batches of 100-200 every couple of days: to get
+a bit of separation in the -git snapshots.  This hasn't actually proven to
+be very useful, though.
