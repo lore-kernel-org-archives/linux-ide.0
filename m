@@ -1,42 +1,63 @@
-From: Rob Landley <rob@landley.net>
-Subject: Re: [git patches] 2.6.x libata updates
-Date: Sun, 30 Oct 2005 17:31:46 -0600
-Message-ID: <200510301731.47825.rob@landley.net>
-References: <20051029182228.GA14495@havoc.gtf.org> <200510300644.20225.rob@landley.net> <Pine.LNX.4.64.0510301435520.27915@g5.osdl.org>
+From: Stefan <gentoopower@yahoo.de>
+Subject: Re: Serious IDE problem still present in 2.6.14
+Date: Mon, 31 Oct 2005 00:38:23 +0100
+Message-ID: <4365596F.4060105@yahoo.de>
+References: <Pine.LNX.4.44.0510301030120.26176-100000@coffee.psychology.mcmaster.ca>	 <1130689871.6348.3.camel@montroll.chem.mcgill.ca>	 <4365511C.7040903@yahoo.de> <1130713716.6348.7.camel@montroll.chem.mcgill.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsl092-053-140.phl1.dsl.speakeasy.net ([66.92.53.140]:65213
-	"EHLO grelber.thyrsus.com") by vger.kernel.org with ESMTP
-	id S932406AbVJ3XcB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 30 Oct 2005 18:32:01 -0500
-In-Reply-To: <Pine.LNX.4.64.0510301435520.27915@g5.osdl.org>
-Content-Disposition: inline
+Received: from smtp100.mail.sc5.yahoo.com ([216.136.174.138]:22885 "HELO
+	smtp100.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S1751225AbVJ3Xi0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 30 Oct 2005 18:38:26 -0500
+In-Reply-To: <1130713716.6348.7.camel@montroll.chem.mcgill.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David.Ronis@mcgill.ca
+Cc: Mark Hahn <hahn@physics.mcmaster.ca>, linux-ide@vger.kernel.org
 
-On Sunday 30 October 2005 16:36, Linus Torvalds wrote:
-> > Is this a viable option?
->
-> No.
->
-> There is no "ordering" in a distributed environment. We have things
-> happening in parallel, adn you can't really linearize the patches.
->
-> The closest you can get is "git bisect", which does the right thing.
->
->   Linus
+David Ronis wrote:
 
-I know there isn't an absolute or stable ordering, but can't a temporary 
-ordering be exported?
+>Hi Stefan,
+>
+>The lspci -v output is in the email I sent to Mark (and cc'd the list).
+>  
+>
 
-I was under the impression that the bk->cvs gateway squashed changes into a 
-sort of order, way back when.  Admittedly this order wasn't stable, and new 
-changes perturbed the whole list.  But just for debugging purposes with a 
-"patch vs last -rc"?
+Ah I missed that, just took a peek at the irqs
 
-Rob
+Can you try to unload those modules for the pccard stuff and usb and
+then check if that makes any difference?
+I have the feeling, your problem is caused by some other modules.
+
+>I diff'ed the output, and there are lots of differences; most seem
+>trivial (addresses & IRQ's).   As to switching to the lower modes I'll
+>try (maybe later tonight).
+>  
+>
+
+
+>Thanks for your help.
+>
+>David
+>
+>
+>  
+>
+>>
+>>    
+>>
+>
+>
+>  
+>
+
+
+	
+
+	
+		
+___________________________________________________________ 
+Gesendet von Yahoo! Mail - Jetzt mit 1GB Speicher kostenlos - Hier anmelden: http://mail.yahoo.de
+
