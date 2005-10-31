@@ -1,48 +1,80 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Rob Landley <rob@landley.net>
 Subject: Re: [git patches] 2.6.x libata updates
-Date: Sun, 30 Oct 2005 16:58:12 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0510301654310.27915@g5.osdl.org>
-References: <20051029182228.GA14495@havoc.gtf.org> <200510300644.20225.rob@landley.net>
- <Pine.LNX.4.64.0510301435520.27915@g5.osdl.org> <200510301731.47825.rob@landley.net>
+Date: Sun, 30 Oct 2005 20:35:26 -0600
+Message-ID: <200510302035.26523.rob@landley.net>
+References: <20051029182228.GA14495@havoc.gtf.org> <200510301731.47825.rob@landley.net> <Pine.LNX.4.64.0510301654310.27915@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:42978 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932390AbVJaA60 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Oct 2005 19:58:26 -0500
-In-Reply-To: <200510301731.47825.rob@landley.net>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Rob Landley <rob@landley.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751282AbVJaCfq@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0510301654310.27915@g5.osdl.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
 Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
+On Sunday 30 October 2005 18:58, Linus Torvalds wrote:
 
+> Using "git bisect" to generate successive bisections (and then building up
+> a linearization patch from that) would work, but it would result in some
+> _really_ strange things:
 
-On Sun, 30 Oct 2005, Rob Landley wrote:
-> 
-> I know there isn't an absolute or stable ordering, but can't a temporary 
-> ordering be exported?
+Which is fine for a debugging tool.
 
-Not generally, no. And definitely not easily.
+It sounds like any git user could make one of these patches now, and put them 
+up each time you cut a release.  (Hmmm, is this likely to be scriptable, or 
+does it require poking at the git source?  Coming up to speed on git is a 
+to-do item for me.  It has its own _vocabulary_, not exactly a trivial time 
+expenditure to understand what's going on for those of us who never got 
+around to using bitkeeper...)
 
-> I was under the impression that the bk->cvs gateway squashed changes into a 
-> sort of order, way back when.
+> it would basically have one patch do one thing, 
+> then the next patch might _undo_ that, and do another, and then the third
+> patch would re-do it and do them both together.
+>
+> And that's really sometimes the best linearization you can do. But that's
+> just too strange and confusing, I think. And the patches would be horribly
+> inefficient.
 
-I have to say that the bk->cvs gateway is actually a very impressive 
-linearization, and I don't even know how it did it. But even that one 
-wasn't perfect - occasionally it ended up with big patches for merges.
+"Horribly inefficient" seems pretty standard for a debugging tool.  Dwarf2 
+bloats executables by a factor of 10 or more.  If it's a big issue, perhaps 
+kernel.org could offer both "rc1-rc2.patch" (the "simple diff between trees" 
+version) and "rc1-rc2-bisect.patch" (the "ugly granular debugging" version).
 
-Using "git bisect" to generate successive bisections (and then building up 
-a linearization patch from that) would work, but it would result in some 
-_really_ strange things: it would basically have one patch do one thing, 
-then the next patch might _undo_ that, and do another, and then the third 
-patch would re-do it and do them both together.
+Also, the patch description in the bisect version could easily include a URL 
+to an online git diff viewer (can http://www.kernel.org/git do this?) in case 
+people want to see what it did, since the patch for artificially linearized 
+changes can easily be unintelligible, ala:
 
-And that's really sometimes the best linearization you can do. But that's 
-just too strange and confusing, I think. And the patches would be horribly 
-inefficient.
+The human readable version of this patch is at:
+http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=3e6716e748609a3a899e8d670e42832921bd45bc
 
-At that point I'd rather teach people to use "git bisect" natively. It 
-wouldn't be any less confusing than the patches ;)
+> At that point I'd rather teach people to use "git bisect" natively. It
+> wouldn't be any less confusing than the patches ;)
 
-		Linus
+The problem with teaching people to use "git bisect" is you have people who 
+aren't kernel developers who have a bug, and want to help track down the bug, 
+and you're telling them "Ok, to debug this you need to install git, use it to 
+check out the linux-kernel repository, then..."
+
+I suspect even the best-intentioned dilettantes seldom make it to "then".  
+Telling them to binary search through a downloadable text file on the marker 
+"===newpatch===" or some such sounds like a much easier sell.  It doesn't 
+even need a shell script:
+
+grep -n MARKER bisect.patch | less
+(pick a line number)
+head -n linenumber bisect.patch > test.patch
+
+If that's not it, revert test.patch and then try again.  Tell us the first 
+line number that failed, which is the end of the patch we want...
+
+Hmmm...  The logical place to put the URL to gitweb is at the _end_ of the 
+patch, attached to the marker.  So that's what they see in the grep, and the 
+last thing they test when they cut at that line with head -n...
+
+>   Linus
+
+Rob
