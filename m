@@ -1,98 +1,66 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] ide-scsi highmem cleanup
-Date: Sun, 30 Oct 2005 22:48:20 -0500
-Message-ID: <43659404.6050605@pobox.com>
-References: <200510310302.j9V32hO4009277@hera.kernel.org>
+From: David Lang <david.lang@digitalinsight.com>
+Subject: Re: [git patches] 2.6.x libata updates
+Date: Sun, 30 Oct 2005 19:55:40 -0800 (PST)
+Message-ID: <Pine.LNX.4.62.0510301952550.16065@qynat.qvtvafvgr.pbz>
+References: <20051029182228.GA14495@havoc.gtf.org> <20051029121454.5d27aecb.akpm@osdl.org><4363CB60.2000201@pobox.com> <Pine.LNX.4.64.0510291229330.3348@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:12172 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751319AbVJaDsc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Oct 2005 22:48:32 -0500
-In-Reply-To: <200510310302.j9V32hO4009277@hera.kernel.org>
+Received: from warden2-p.diginsite.com ([209.195.52.120]:47031 "HELO
+	warden2.diginsite.com") by vger.kernel.org with SMTP
+	id S1751329AbVJaD4R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 30 Oct 2005 22:56:17 -0500
+In-Reply-To: <Pine.LNX.4.64.0510291229330.3348@g5.osdl.org>
+In-Reply-To: <Pine.LNX.4.64.0510291229330.3348@g5.osdl.org>
+References: <20051029182228.GA14495@havoc.gtf.org>
+ <20051029121454.5d27aecb.akpm@osdl.org><4363CB60.2000201@pobox.com>
+ <Pine.LNX.4.64.0510291229330.3348@g5.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Linux Kernel Mailing List wrote:
-> tree c6016a8741a2527acac0ceb6e6ce431a798d6708
-> parent f1fc78a8c7f3a784b9fd1e07cc1438a0ea569555
-> author Andrew Morton <akpm@osdl.org> Mon, 31 Oct 2005 07:00:13 -0800
-> committer Linus Torvalds <torvalds@g5.osdl.org> Mon, 31 Oct 2005 09:37:17 -0800
-> 
-> [PATCH] ide-scsi highmem cleanup
-> 
-> It's not necessary to test PageHighmem in here - kmap_atomic() does the right
-> thing.
-> 
-> Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-> Signed-off-by: Andrew Morton <akpm@osdl.org>
-> Signed-off-by: Linus Torvalds <torvalds@osdl.org>
-> 
->  drivers/scsi/ide-scsi.c |   38 ++++++++++++--------------------------
->  1 files changed, 12 insertions(+), 26 deletions(-)
-> 
-> diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
-> --- a/drivers/scsi/ide-scsi.c
-> +++ b/drivers/scsi/ide-scsi.c
-> @@ -180,19 +180,12 @@ static void idescsi_input_buffers (ide_d
->  			return;
->  		}
->  		count = min(pc->sg->length - pc->b_count, bcount);
-> -		if (PageHighMem(pc->sg->page)) {
-> -			unsigned long flags;
-> -
-> -			local_irq_save(flags);
-> -			buf = kmap_atomic(pc->sg->page, KM_IRQ0) + pc->sg->offset;
-> -			drive->hwif->atapi_input_bytes(drive, buf + pc->b_count, count);
-> -			kunmap_atomic(buf - pc->sg->offset, KM_IRQ0);
-> -			local_irq_restore(flags);
-> -		} else {
-> -			buf = page_address(pc->sg->page) + pc->sg->offset;
-> -			drive->hwif->atapi_input_bytes(drive, buf + pc->b_count, count);
-> -		}
-> -		bcount -= count; pc->b_count += count;
-> +		buf = kmap_atomic(pc->sg->page, KM_IRQ0);
-> +		drive->hwif->atapi_input_bytes(drive,
-> +				buf + pc->b_count + pc->sg->offset, count);
-> +		kunmap_atomic(buf, KM_IRQ0);
-> +		bcount -= count;
-> +		pc->b_count += count;
->  		if (pc->b_count == pc->sg->length) {
->  			pc->sg++;
->  			pc->b_count = 0;
-> @@ -212,19 +205,12 @@ static void idescsi_output_buffers (ide_
->  			return;
->  		}
->  		count = min(pc->sg->length - pc->b_count, bcount);
-> -		if (PageHighMem(pc->sg->page)) {
-> -			unsigned long flags;
-> -
-> -			local_irq_save(flags);
-> -			buf = kmap_atomic(pc->sg->page, KM_IRQ0) + pc->sg->offset;
-> -			drive->hwif->atapi_output_bytes(drive, buf + pc->b_count, count);
-> -			kunmap_atomic(buf - pc->sg->offset, KM_IRQ0);
-> -			local_irq_restore(flags);
-> -		} else {
-> -			buf = page_address(pc->sg->page) + pc->sg->offset;
-> -			drive->hwif->atapi_output_bytes(drive, buf + pc->b_count, count);
-> -		}
-> -		bcount -= count; pc->b_count += count;
-> +		buf = kmap_atomic(pc->sg->page, KM_IRQ0);
-> +		drive->hwif->atapi_output_bytes(drive,
-> +				buf + pc->b_count + pc->sg->offset, count);
-> +		kunmap_atomic(buf, KM_IRQ0);
-> +		bcount -= count;
-> +		pc->b_count += count;
+On Sat, 29 Oct 2005, Linus Torvalds wrote:
 
-Unless I'm missing something, this patch looks very wrong.
+> On Sat, 29 Oct 2005, Jeff Garzik wrote:
+>>
+>> Even so, it's easy, to I'll ask him to test 2.6.14, 2.6.14-git1, and
+>> (tonight's upcoming) 2.6.14-git2 (with my latest pull included) to see if
+>> anything breaks.
+>
+> Side note: one of the downsides of the new "merge lots of stuff early in
+> the development series" approach is that the first few daily snapshots end
+> up being _huge_.
+>
+> So the -git1 and -git2 patches are/will be very big indeed.
+>
+> For example, patch-2.6.14-git1 literally ended up being a megabyte
+> compressed. Right now my diff to 2.6.14 (after just two days) is 1.6MB
+> compressed.
+>
+> Admittedly, some of it is due to things like the MIPS merge, but the point
+> I'm trying to make is that it makes the daily snapshot diffs a lot less
+> useful to people who try to figure out where something broke.
+>
+> Now, I've gotten several positive comments on how easy "git bisect" is to
+> use, and I've used it myself, but this is the first time that patch users
+> _really_ become very much second-class citizens, and you can't necessarily
+> always do useful things with just the tar-trees and patches. That's sad,
+> and possibly a really big downside.
+>
+> Don't get me wrong - I personally think that the new merge policy is a
+> clear improvement, but it does have this downside.
+>
+> 			Linus
 
-kmap_atomic(..., KM_IRQx) needs to be inside local_irq_save().
+how about setting up something on a webserver (ideally kernel.org) to do 
+the git bisect and output patches against the daily snapshots.
 
-As such, the PageHighMem() does have clear benefits.
+if a lot of people used it the load would be an issue, but if it's only 
+used by a relativly few people tracking down bugs it's probably worth it.
 
-	Jeff
+David Lang
 
-
+-- 
+There are two ways of constructing a software design. One way is to make it so simple that there are obviously no deficiencies. And the other way is to make it so complicated that there are no obvious deficiencies.
+  -- C.A.R. Hoare
