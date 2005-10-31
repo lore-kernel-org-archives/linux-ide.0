@@ -1,80 +1,98 @@
-From: Rob Landley <rob@landley.net>
-Subject: Re: [git patches] 2.6.x libata updates
-Date: Sun, 30 Oct 2005 20:35:26 -0600
-Message-ID: <200510302035.26523.rob@landley.net>
-References: <20051029182228.GA14495@havoc.gtf.org> <200510301731.47825.rob@landley.net> <Pine.LNX.4.64.0510301654310.27915@g5.osdl.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] ide-scsi highmem cleanup
+Date: Sun, 30 Oct 2005 22:48:20 -0500
+Message-ID: <43659404.6050605@pobox.com>
+References: <200510310302.j9V32hO4009277@hera.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751282AbVJaCfq@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0510301654310.27915@g5.osdl.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:12172 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751319AbVJaDsc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Oct 2005 22:48:32 -0500
+In-Reply-To: <200510310302.j9V32hO4009277@hera.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Sunday 30 October 2005 18:58, Linus Torvalds wrote:
+Linux Kernel Mailing List wrote:
+> tree c6016a8741a2527acac0ceb6e6ce431a798d6708
+> parent f1fc78a8c7f3a784b9fd1e07cc1438a0ea569555
+> author Andrew Morton <akpm@osdl.org> Mon, 31 Oct 2005 07:00:13 -0800
+> committer Linus Torvalds <torvalds@g5.osdl.org> Mon, 31 Oct 2005 09:37:17 -0800
+> 
+> [PATCH] ide-scsi highmem cleanup
+> 
+> It's not necessary to test PageHighmem in here - kmap_atomic() does the right
+> thing.
+> 
+> Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+> Signed-off-by: Andrew Morton <akpm@osdl.org>
+> Signed-off-by: Linus Torvalds <torvalds@osdl.org>
+> 
+>  drivers/scsi/ide-scsi.c |   38 ++++++++++++--------------------------
+>  1 files changed, 12 insertions(+), 26 deletions(-)
+> 
+> diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
+> --- a/drivers/scsi/ide-scsi.c
+> +++ b/drivers/scsi/ide-scsi.c
+> @@ -180,19 +180,12 @@ static void idescsi_input_buffers (ide_d
+>  			return;
+>  		}
+>  		count = min(pc->sg->length - pc->b_count, bcount);
+> -		if (PageHighMem(pc->sg->page)) {
+> -			unsigned long flags;
+> -
+> -			local_irq_save(flags);
+> -			buf = kmap_atomic(pc->sg->page, KM_IRQ0) + pc->sg->offset;
+> -			drive->hwif->atapi_input_bytes(drive, buf + pc->b_count, count);
+> -			kunmap_atomic(buf - pc->sg->offset, KM_IRQ0);
+> -			local_irq_restore(flags);
+> -		} else {
+> -			buf = page_address(pc->sg->page) + pc->sg->offset;
+> -			drive->hwif->atapi_input_bytes(drive, buf + pc->b_count, count);
+> -		}
+> -		bcount -= count; pc->b_count += count;
+> +		buf = kmap_atomic(pc->sg->page, KM_IRQ0);
+> +		drive->hwif->atapi_input_bytes(drive,
+> +				buf + pc->b_count + pc->sg->offset, count);
+> +		kunmap_atomic(buf, KM_IRQ0);
+> +		bcount -= count;
+> +		pc->b_count += count;
+>  		if (pc->b_count == pc->sg->length) {
+>  			pc->sg++;
+>  			pc->b_count = 0;
+> @@ -212,19 +205,12 @@ static void idescsi_output_buffers (ide_
+>  			return;
+>  		}
+>  		count = min(pc->sg->length - pc->b_count, bcount);
+> -		if (PageHighMem(pc->sg->page)) {
+> -			unsigned long flags;
+> -
+> -			local_irq_save(flags);
+> -			buf = kmap_atomic(pc->sg->page, KM_IRQ0) + pc->sg->offset;
+> -			drive->hwif->atapi_output_bytes(drive, buf + pc->b_count, count);
+> -			kunmap_atomic(buf - pc->sg->offset, KM_IRQ0);
+> -			local_irq_restore(flags);
+> -		} else {
+> -			buf = page_address(pc->sg->page) + pc->sg->offset;
+> -			drive->hwif->atapi_output_bytes(drive, buf + pc->b_count, count);
+> -		}
+> -		bcount -= count; pc->b_count += count;
+> +		buf = kmap_atomic(pc->sg->page, KM_IRQ0);
+> +		drive->hwif->atapi_output_bytes(drive,
+> +				buf + pc->b_count + pc->sg->offset, count);
+> +		kunmap_atomic(buf, KM_IRQ0);
+> +		bcount -= count;
+> +		pc->b_count += count;
 
-> Using "git bisect" to generate successive bisections (and then building up
-> a linearization patch from that) would work, but it would result in some
-> _really_ strange things:
+Unless I'm missing something, this patch looks very wrong.
 
-Which is fine for a debugging tool.
+kmap_atomic(..., KM_IRQx) needs to be inside local_irq_save().
 
-It sounds like any git user could make one of these patches now, and put them 
-up each time you cut a release.  (Hmmm, is this likely to be scriptable, or 
-does it require poking at the git source?  Coming up to speed on git is a 
-to-do item for me.  It has its own _vocabulary_, not exactly a trivial time 
-expenditure to understand what's going on for those of us who never got 
-around to using bitkeeper...)
+As such, the PageHighMem() does have clear benefits.
 
-> it would basically have one patch do one thing, 
-> then the next patch might _undo_ that, and do another, and then the third
-> patch would re-do it and do them both together.
->
-> And that's really sometimes the best linearization you can do. But that's
-> just too strange and confusing, I think. And the patches would be horribly
-> inefficient.
+	Jeff
 
-"Horribly inefficient" seems pretty standard for a debugging tool.  Dwarf2 
-bloats executables by a factor of 10 or more.  If it's a big issue, perhaps 
-kernel.org could offer both "rc1-rc2.patch" (the "simple diff between trees" 
-version) and "rc1-rc2-bisect.patch" (the "ugly granular debugging" version).
 
-Also, the patch description in the bisect version could easily include a URL 
-to an online git diff viewer (can http://www.kernel.org/git do this?) in case 
-people want to see what it did, since the patch for artificially linearized 
-changes can easily be unintelligible, ala:
-
-The human readable version of this patch is at:
-http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=3e6716e748609a3a899e8d670e42832921bd45bc
-
-> At that point I'd rather teach people to use "git bisect" natively. It
-> wouldn't be any less confusing than the patches ;)
-
-The problem with teaching people to use "git bisect" is you have people who 
-aren't kernel developers who have a bug, and want to help track down the bug, 
-and you're telling them "Ok, to debug this you need to install git, use it to 
-check out the linux-kernel repository, then..."
-
-I suspect even the best-intentioned dilettantes seldom make it to "then".  
-Telling them to binary search through a downloadable text file on the marker 
-"===newpatch===" or some such sounds like a much easier sell.  It doesn't 
-even need a shell script:
-
-grep -n MARKER bisect.patch | less
-(pick a line number)
-head -n linenumber bisect.patch > test.patch
-
-If that's not it, revert test.patch and then try again.  Tell us the first 
-line number that failed, which is the end of the patch we want...
-
-Hmmm...  The logical place to put the URL to gitweb is at the _end_ of the 
-patch, attached to the marker.  So that's what they see in the grep, and the 
-last thing they test when they cut at that line with head -n...
-
->   Linus
-
-Rob
