@@ -1,152 +1,59 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH/RFC 4/4] irq-pio: add read/write multiple support
-Date: Tue, 01 Nov 2005 19:33:20 +0800
-Message-ID: <43675280.2050400@tw.ibm.com>
-References: <43674D9A.9010007@tw.ibm.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: Asus A8V , via vt8251 AHCI
+Date: Tue, 1 Nov 2005 07:40:06 -0800 (PST)
+Message-ID: <Pine.LNX.4.58.0511010736550.11761@shark.he.net>
+References: <20051101064058.GA4902@vcr.star-c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:48301 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750755AbVKALdX
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Nov 2005 06:33:23 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e31.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id jA1BXHCo009260
-	for <linux-ide@vger.kernel.org>; Tue, 1 Nov 2005 06:33:17 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id jA1BXHfJ480744
-	for <linux-ide@vger.kernel.org>; Tue, 1 Nov 2005 04:33:17 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id jA1BXGq0032117
-	for <linux-ide@vger.kernel.org>; Tue, 1 Nov 2005 04:33:17 -0700
-In-Reply-To: <43674D9A.9010007@tw.ibm.com>
+Received: from xenotime.net ([66.160.160.81]:12493 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1750902AbVKAPkI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Nov 2005 10:40:08 -0500
+Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 1 Nov 2005 07:40:06 -0800
+In-Reply-To: <20051101064058.GA4902@vcr.star-c.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Doug Maxey <dwm@maxeymade.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <mlord@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>
+To: ibedonc@star-c.comibedonc@star-c.com
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-patch 4/4: 
-  add read/write multiple support
+On Tue, 1 Nov 2005, Don Carroll wrote:
 
-Changes:
-   - add is_multi_taskfile() to ata.h
-   - initialize ata_device->multi_count with device identify data
-   - use ata_pio_sectors() to support r/w multiple commands
+> Hi , I added pci id 3349 to achi.c and I get it to load now
+> ahci version 1.00
+> ACPI: PCI Interrupt 0000:00:0f.0[B] -> GSI 21 (level, low) -> IRQ 217
+> PCI: Via IRQ fixup for 0000:00:0f.0, from 10 to 9
+> ahci(0000:00:0f.0) AHCI 0001.0000 32 slots 4 ports 3 Gbps 0xf impl SATA mode
+> ahci(0000:00:0f.0) flags: 64bit ncq pm led clo pmp pio slum part
+> ata3: SATA max UDMA/133 cmd 0xFFFFC20000038900 ctl 0x0 bmdma 0x0 irq 217
+> ata4: SATA max UDMA/133 cmd 0xFFFFC20000038980 ctl 0x0 bmdma 0x0 irq 217
+> ata5: SATA max UDMA/133 cmd 0xFFFFC20000038A00 ctl 0x0 bmdma 0x0 irq 217
+> ata6: SATA max UDMA/133 cmd 0xFFFFC20000038A80 ctl 0x0 bmdma 0x0 irq 217
+> ata3: no device found (phy stat 00000000)
+> scsi2 : ahci
+> ata4: no device found (phy stat 00000000)
+> scsi3 : ahci
+> ata5: no device found (phy stat 00000000)
+> scsi4 : ahci
+> ata6 is slow to respond, please be patient
+> ata6 failed to respond (30 secs)
+> scsi5 : ahci
+>
+> I have a drive on ata6 , but it does not respond , timesout
+>
+> this is Mandriva 2006 x86_64 and it has 2.6.12 I have not been able to get .14
+> to compile yet , does this look like something that ahci 1.01 would help , any
+> ideas ?
 
-For your review, thanks.
+Yes.
+(a) boot with "irqpoll" added to the kernel command line to see
+if the kernel can route the missed interrupts.
 
-Albert
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+different test:
+(b) Disable CONFIG_PCI_MSI and reboot/retest (without "irqpoll").
 
-========
+and report the results of those.
 
---- linux-ori/include/linux/ata.h	2005-11-01 17:22:45.000000000 +0800
-+++ id4/include/linux/ata.h	2005-11-01 18:27:08.000000000 +0800
-@@ -293,6 +293,14 @@ static inline int is_atapi_taskfile(cons
- 	       (tf->protocol == ATA_PROT_ATAPI_DMA);
- }
- 
-+static inline int is_multi_taskfile(struct ata_taskfile *tf)
-+{
-+	return (tf->command == ATA_CMD_READ_MULTI) ||
-+	       (tf->command == ATA_CMD_WRITE_MULTI) ||
-+	       (tf->command == ATA_CMD_READ_MULTI_EXT) ||
-+	       (tf->command == ATA_CMD_WRITE_MULTI_EXT);
-+}
-+
- static inline int ata_ok(u8 status)
- {
- 	return ((status & (ATA_BUSY | ATA_DRDY | ATA_DF | ATA_DRQ | ATA_ERR))
---- id3/drivers/scsi/libata-core.c	2005-11-01 18:45:50.000000000 +0800
-+++ id4/drivers/scsi/libata-core.c	2005-11-01 18:36:08.000000000 +0800
-@@ -1261,6 +1261,12 @@ retry:
- 
- 		}
- 
-+		if (dev->id[59] & 0x100) {
-+			dev->multi_count = dev->id[59] & 0xff;
-+			DPRINTK("ata%u: dev %u multi count %u\n",
-+				ap->id, device, dev->multi_count);
-+		}
-+
- 		ap->host->max_cmd_len = 16;
- 	}
- 
-@@ -2711,7 +2717,7 @@ static int ata_pio_complete (struct ata_
- 	 * we enter, BSY will be cleared in a chk-status or two.  If not,
- 	 * the drive is probably seeking or something.  Snooze for a couple
- 	 * msecs, then chk-status again.  If still busy, fall back to
--	 * HSM_ST_POLL state.
-+	 * HSM_ST_LAST_POLL state.
- 	 */
- 	drv_stat = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 10);
- 	if (drv_stat & (ATA_BUSY | ATA_DRQ)) {
-@@ -2928,6 +2934,32 @@ static void ata_pio_sector(struct ata_qu
- }
- 
- /**
-+ *	ata_pio_sectors - Transfer one or many 512-byte sectors.
-+ *	@qc: Command on going
-+ *
-+ *	Transfer one or many ATA_SECT_SIZE of data from/to the 
-+ *	ATA device for the DRQ request.
-+ *
-+ *	LOCKING:
-+ *	Inherited from caller.
-+ */
-+
-+static void ata_pio_sectors(struct ata_queued_cmd *qc)
-+{
-+	if (is_multi_taskfile(&qc->tf)) {
-+		/* READ/WRITE MULTIPLE */
-+		unsigned int nsect;
-+
-+		assert(qc->dev->multi_count);
-+
-+		nsect = min(qc->nsect - qc->cursect, qc->dev->multi_count);
-+		while (nsect--)
-+			ata_pio_sector(qc);
-+	} else
-+		ata_pio_sector(qc);
-+}
-+
-+/**
-  *	atapi_send_cdb - Write CDB bytes to hardware
-  *	@ap: Port to which ATAPI device is attached.
-  *	@qc: Taskfile currently active
-@@ -3025,11 +3057,11 @@ static int ata_pio_first_block(struct at
- 		 * send first data block.
- 		 */
- 
--		/* ata_pio_sector() might change the state to HSM_ST_LAST.
--		 * so, the state is changed here before ata_pio_sector().
-+		/* ata_pio_sectors() might change the state to HSM_ST_LAST.
-+		 * so, the state is changed here before ata_pio_sectors().
- 		 */
- 		ap->hsm_task_state = HSM_ST;
--		ata_pio_sector(qc);
-+		ata_pio_sectors(qc);
- 		ata_altstatus(ap); /* flush */
- 	} else
- 		/* send CDB */
-@@ -3234,7 +3266,7 @@ static void ata_pio_block(struct ata_por
- 			return;
- 		}
- 
--		ata_pio_sector(qc);
-+		ata_pio_sectors(qc);
- 	}
- 
- 	ata_altstatus(ap); /* flush */
-@@ -4120,7 +4152,7 @@ fsm_start:
- 				goto fsm_start;
- 			}
- 
--			ata_pio_sector(qc);
-+			ata_pio_sectors(qc);
- 
- 			if (ap->hsm_task_state == HSM_ST_LAST &&
- 			    (!(qc->tf.flags & ATA_TFLAG_WRITE))) {
+What are your configs for SMP and APIC options?
 
-
+-- 
+~Randy
