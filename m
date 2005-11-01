@@ -1,88 +1,46 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: Asus A8V , via vt8251 AHCI
-Date: Tue, 1 Nov 2005 12:42:02 -0800 (PST)
-Message-ID: <Pine.LNX.4.58.0511011237080.11761@shark.he.net>
-References: <20051101064058.GA4902@vcr.star-c.com> <Pine.LNX.4.58.0511010736550.11761@shark.he.net>
- <20051101192449.GA9719@vcr.star-c.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [RFC PATCH] pmac ide doesn't properly cleanup hwif when
+	releasing controller
+Date: Wed, 02 Nov 2005 08:00:23 +1100
+Message-ID: <1130878823.29054.449.camel@gaston>
+References: <20051029044852.1a518908@Tatooine.r3z0>
+	 <1130623795.29054.179.camel@gaston>
+	 <58cb370e0511010820p77bd47c9wa566f3d356291733@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:63360 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1751182AbVKAUmJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Nov 2005 15:42:09 -0500
-Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 1 Nov 2005 12:42:02 -0800
-In-Reply-To: <20051101192449.GA9719@vcr.star-c.com>
+Received: from gate.crashing.org ([63.228.1.57]:52388 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S1751219AbVKAVDC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Nov 2005 16:03:02 -0500
+In-Reply-To: <58cb370e0511010820p77bd47c9wa566f3d356291733@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ibedonc@star-c.comibedonc@star-c.com
-Cc: linux-ide@vger.kernel.org, "Randy.Dunlap" <rdunlap@xenotime.net>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Thibaut VARENE <T-Bone@parisc-linux.org>, linux-ide@vger.kernel.org
 
 
-Please don't drop cc's and/or to's.
-Back to the mailing list now...
-
-On Tue, 1 Nov 2005, Don Carroll wrote:
-
-> kernel = Mandriva default Linux vcr.star-c.com 2.6.12-12mdksmp #1 SMP Fri Sep 9
-> 17:20:34 CEST 2005 x86_64 AMD Athlon(tm) 64 X2 Dual Core Processor 3800+
-> unknown GNU/Linux
-> attaching default config for mandriva linux , I just edited the ahci.c and
-> built the module from that , did not do a complete kernel install
-
-The default config is uniprocessor, not SMP.  But your kernel
-verison string above says SMP...
-
-In either case it looks like it is using local APIC and IO APIC.
-That's all that's required to cause the problem that I am
-familiar with.
-
-You can at least do test (a) below (boot with the "irqpoll"
-option on the kernel command line) and report on that.
-(without rebuilding the kernel)
-
-Test (b) requires rebuilding the kernel, which is going
-to be needed to fix this problem (if I'm right about it).
-
-
-> On Tue, Nov 01, 2005 at 07:40:06AM -0800, Randy.Dunlap wrote:
-> > On Tue, 1 Nov 2005, Don Carroll wrote:
+> > Thus my question: Should I
 > >
-> > > Hi , I added pci id 3349 to achi.c and I get it to load now
-> > > ahci version 1.00
-> > > ACPI: PCI Interrupt 0000:00:0f.0[B] -> GSI 21 (level, low) -> IRQ 217
-> > > PCI: Via IRQ fixup for 0000:00:0f.0, from 10 to 9
-> > > ahci(0000:00:0f.0) AHCI 0001.0000 32 slots 4 ports 3 Gbps 0xf impl SATA mode
-> > > ahci(0000:00:0f.0) flags: 64bit ncq pm led clo pmp pio slum part
-> > > ata3: SATA max UDMA/133 cmd 0xFFFFC20000038900 ctl 0x0 bmdma 0x0 irq 217
-> > > ata4: SATA max UDMA/133 cmd 0xFFFFC20000038980 ctl 0x0 bmdma 0x0 irq 217
-> > > ata5: SATA max UDMA/133 cmd 0xFFFFC20000038A00 ctl 0x0 bmdma 0x0 irq 217
-> > > ata6: SATA max UDMA/133 cmd 0xFFFFC20000038A80 ctl 0x0 bmdma 0x0 irq 217
-> > > ata3: no device found (phy stat 00000000)
-> > > scsi2 : ahci
-> > > ata4: no device found (phy stat 00000000)
-> > > scsi3 : ahci
-> > > ata5: no device found (phy stat 00000000)
-> > > scsi4 : ahci
-> > > ata6 is slow to respond, please be patient
-> > > ata6 failed to respond (30 secs)
-> > > scsi5 : ahci
-> > >
-> > > I have a drive on ata6 , but it does not respond , timesout
-> > >
-> > > this is Mandriva 2006 x86_64 and it has 2.6.12 I have not been able to get .14
-> > > to compile yet , does this look like something that ahci 1.01 would help , any
-> > > ideas ?
+> >  - Manually in ide-pmac clean up all callbacks & revert everything in
+> > the HWIF when I want to hand it back
 > >
-> > Yes.
-> > (a) boot with "irqpoll" added to the kernel command line to see
-> > if the kernel can route the missed interrupts.
+> >  - Call init_hwif_data() despite the nasty comment on top
 > >
-> > different test:
-> > (b) Disable CONFIG_PCI_MSI and reboot/retest (without "irqpoll").
-> >
-> > and report the results of those.
-> >
-> > What are your configs for SMP and APIC options?
-> >
-> > --
-> > ~Randy
+> >  - Just don't release the interface...
+> 
+> Just don't release it - it is the simplest solution and also
+> as the easiest to maintain in future (hotplug).
+
+Well, not exactly :) If I start to add unplug of that driver, the
+problem will be back, trying to release an interface or rmmod the module
+will leave all sort of crap in the HWIF ... So I think you need to
+exposrt something from the IDE core to totally cleanup a HWIF (return it
+to pristine state) for use in those cases.
+
+The exact same goes with ide-cd btw. It's not changing as many fields
+as, afaik, it doesn't do DMA, but still. When the CS is removed, all
+HWIF fields should be reverted to their initial state
+
+Ben.
+
