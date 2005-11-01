@@ -1,79 +1,44 @@
-From: <news@pcquote.com>
-Subject: Immediate Radar Alert
-Date: Mon, 31 Oct 2005 22:37:12 -0500
-Message-ID: <7931533632.79041125921@218.188.1.49>
+From: Don Carroll <ibedonc@star-c.com>
+Subject: Asus A8V , via vt8251 AHCI
+Date: Tue, 1 Nov 2005 00:40:58 -0600
+Message-ID: <20051101064058.GA4902@vcr.star-c.com>
+Reply-To: ibedonc@star-c.com, ibedonc@star-c.com
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [218.188.1.49] ([218.188.1.49]:54319 "HELO 218.188.1.49")
-	by vger.kernel.org with SMTP id S964979AbVKADhM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2005 22:37:12 -0500
+Received: from dpc6935171158.direcpc.com ([69.35.171.158]:50881 "EHLO
+	vcr.star-c.com") by vger.kernel.org with ESMTP id S932400AbVKAGlu
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Nov 2005 01:41:50 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: garzik@pobox.com, linux-ide@vger.kernel.org
 
-The Solvis Group Strategic Alliance Agreement With SSL Expected 
-to Provide $25 Million in Additional Revenues in 90 Days 
+Hi , I added pci id 3349 to achi.c and I get it to load now
+ahci version 1.00
+ACPI: PCI Interrupt 0000:00:0f.0[B] -> GSI 21 (level, low) -> IRQ 217
+PCI: Via IRQ fixup for 0000:00:0f.0, from 10 to 9
+ahci(0000:00:0f.0) AHCI 0001.0000 32 slots 4 ports 3 Gbps 0xf impl SATA mode
+ahci(0000:00:0f.0) flags: 64bit ncq pm led clo pmp pio slum part
+ata3: SATA max UDMA/133 cmd 0xFFFFC20000038900 ctl 0x0 bmdma 0x0 irq 217
+ata4: SATA max UDMA/133 cmd 0xFFFFC20000038980 ctl 0x0 bmdma 0x0 irq 217
+ata5: SATA max UDMA/133 cmd 0xFFFFC20000038A00 ctl 0x0 bmdma 0x0 irq 217
+ata6: SATA max UDMA/133 cmd 0xFFFFC20000038A80 ctl 0x0 bmdma 0x0 irq 217
+ata3: no device found (phy stat 00000000)
+scsi2 : ahci
+ata4: no device found (phy stat 00000000)
+scsi3 : ahci
+ata5: no device found (phy stat 00000000)
+scsi4 : ahci
+ata6 is slow to respond, please be patient
+ata6 failed to respond (30 secs)
+scsi5 : ahci
 
-Immediate Radar Alert
-The Solvis Group Inc. **SLVG**
-The Solvis Group is a subsidiary of Dalrada Financial Corporation 
+I have a drive on ata6 , but it does not respond , timesout
 
-0.07 <-- ridiculous in our opinion 
-Ride this wave starting Now 
-
-Why you ask?  Let's start right here. Recent news releases...
-Talk about flying under the radar?  Isn't that what we look for? 
-
-
-Recent News Headlines!  No dreaming here! 
-The Solvis Group Strategic Alliance Agreement With SSL Expected 
-to Provide $25 Million in Additional Revenues in 90 Days 
-The agreement calls for SSL to refer a minimum of $25 million in business 
-to The Solvis Group within the next 90 days. The alliance has already generated 
-more than $7.5 million in new business, on an annualized basis. 
-
-The Solvis Group, Formerly Quik Pix Inc., Announces Sale of Subsidiary 
-to Global Food Technologies James Bouskos, Chairman and CEO of Global Food Technologies 
-said that "our company is pleased to report that our transaction with The Solvis Group 
-for the acquisition of Boulevard Acquisition Corporation, the publicly-reporting shell 
-and wholly owned subsidiary of The Solvis Group, has closed. 
-
-The Solvis Group Launches 'Benefits Bank' Program to Bring Employees at All Compensation 
-Levels Key Benefits  "The Benefits Bank represents a comprehensive response 
-by The Solvis Group to address the needs of employees at all compensation levels 
-to participate in benefits generally available only to large corporations," 
-said Brian Bonar, CEO. 
-
-
-About The Solvis Group: 
-
-The Solvis Group, a subsidiary of Dalrada Financial Corporation includes a number 
-of operating units, including M&M Nursing Services, CallCenterHR(TM), and Jackson Staffing. 
-The Company provides a variety of innovative financial services to businesses, 
-including comprehensive human resource administration including payroll 
-and workers compensation insurance; and employee benefits such as health insurance, 
-supplemental insurance, HSA savings plans, 125 cafeteria plans, and 401(k) plans. 
-The Company also offers debit card payroll accounts and payroll advances. 
-These services enable small employers to offer benefits and services to their employees 
-that are generally available only to large companies. 
-
-The Company also includes an imaging products and services unit, Imaging Tech, Inc., 
-which provides a variety of innovating products and services associated with graphics, 
-photography, and color management. Its technologies include ColorBlindr software 
-and PhotoMotion Images(TM). 
-
-How many times have you seen issues explode but you couldn't get your hands on them? 
-Here is a special company that may be set to make a move in the near future - 
-this could be your opportunity to be ahead of the curve!  Start your research now! 
-
-TheStreet reported on Nov. 1, 2004, that "Large-cap stocks make the headlines, 
-but lately [small-cap] stocks have been making investors money." 
-
-Mary Lisanti, of AH Lisanti Capital Growth said these stocks "will rule the world 
-for a while. I don't see anything to change that." 
-
-We agree! Pay attention this coming week and do not take your eyes off **SLVG**
-
+this is Mandriva 2006 x86_64 and it has 2.6.12 I have not been able to get .14
+to compile yet , does this look like something that ahci 1.01 would help , any
+ideas ?
 
 
