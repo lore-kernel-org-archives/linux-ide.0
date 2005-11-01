@@ -1,44 +1,62 @@
-From: Don Carroll <ibedonc@star-c.com>
-Subject: Asus A8V , via vt8251 AHCI
-Date: Tue, 1 Nov 2005 00:40:58 -0600
-Message-ID: <20051101064058.GA4902@vcr.star-c.com>
-Reply-To: ibedonc@star-c.com, ibedonc@star-c.com
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH/RFC 0/4] libata: more irq driven pio follow-up patches
+Date: Tue, 01 Nov 2005 19:12:26 +0800
+Message-ID: <43674D9A.9010007@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dpc6935171158.direcpc.com ([69.35.171.158]:50881 "EHLO
-	vcr.star-c.com") by vger.kernel.org with ESMTP id S932400AbVKAGlu
+Received: from e32.co.us.ibm.com ([32.97.110.150]:53162 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750745AbVKALMb
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Nov 2005 01:41:50 -0500
-Content-Disposition: inline
+	Tue, 1 Nov 2005 06:12:31 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e32.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id jA1BCPVK009532
+	for <linux-ide@vger.kernel.org>; Tue, 1 Nov 2005 06:12:25 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id jA1BDSv3549590
+	for <linux-ide@vger.kernel.org>; Tue, 1 Nov 2005 04:13:28 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id jA1BCOQF005485
+	for <linux-ide@vger.kernel.org>; Tue, 1 Nov 2005 04:12:24 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: garzik@pobox.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Doug Maxey <dwm@maxeymade.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <mlord@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-Hi , I added pci id 3349 to achi.c and I get it to load now
-ahci version 1.00
-ACPI: PCI Interrupt 0000:00:0f.0[B] -> GSI 21 (level, low) -> IRQ 217
-PCI: Via IRQ fixup for 0000:00:0f.0, from 10 to 9
-ahci(0000:00:0f.0) AHCI 0001.0000 32 slots 4 ports 3 Gbps 0xf impl SATA mode
-ahci(0000:00:0f.0) flags: 64bit ncq pm led clo pmp pio slum part
-ata3: SATA max UDMA/133 cmd 0xFFFFC20000038900 ctl 0x0 bmdma 0x0 irq 217
-ata4: SATA max UDMA/133 cmd 0xFFFFC20000038980 ctl 0x0 bmdma 0x0 irq 217
-ata5: SATA max UDMA/133 cmd 0xFFFFC20000038A00 ctl 0x0 bmdma 0x0 irq 217
-ata6: SATA max UDMA/133 cmd 0xFFFFC20000038A80 ctl 0x0 bmdma 0x0 irq 217
-ata3: no device found (phy stat 00000000)
-scsi2 : ahci
-ata4: no device found (phy stat 00000000)
-scsi3 : ahci
-ata5: no device found (phy stat 00000000)
-scsi4 : ahci
-ata6 is slow to respond, please be patient
-ata6 failed to respond (30 secs)
-scsi5 : ahci
+Dear all,
 
-I have a drive on ata6 , but it does not respond , timesout
+More irq driven PIO follow-up patches (revised).
 
-this is Mandriva 2006 x86_64 and it has 2.6.12 I have not been able to get .14
-to compile yet , does this look like something that ahci 1.01 would help , any
-ideas ?
+Changes:
+  1. merge the ata_dataout_task workqueue with the ata_pio_task workqueue
+  2. add read/write multiple support
+
+patch 1/4: misc fixes
+   - ata_pio_block(): add ata_altstatus(ap) to prevent reading device status before it is valid
+   - remove the unnecessary HSM_ST_IDLE state from ata_pio_task()
+   - raise BUG() when unknown state is found in ata_pio_task()
+
+patch 2/4: merge the ata_dataout_task workqueue with the ata_pio_task workqueue
+   - remove ap->dataout_task from struct ata_port
+   - let ata_pio_task() handle the HSM_ST_FIRST state.
+   - rename ata_dataout_task() to ata_pio_first_block()
+
+patch 3/4: eliminate unnecessary queuing in ata_pio_first_block()
+   - change the return value of ata_pio_complete()
+   - add return value to ata_pio_first_block()
+   - rename the variable "qc_completed" to "has_next" in ata_pio_task()
+   - use "has_next" to eliminate unnecessary queuing in ata_pio_first_block()
+
+patch 4/4: add read/write multiple support
+   - add is_multi_taskfile() to ata.h
+   - initialize ata_device->multi_count with device identify data
+   - use ata_pio_sectors() to support r/w multiple commands
+
+Patch against the libata-dev irq-pio branch (cd8200e6d4f9f05e6ea48f7c000be890337396ac).
+
+For your review and advice, thanks.
+
+Albert
 
 
