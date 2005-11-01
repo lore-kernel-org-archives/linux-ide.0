@@ -1,58 +1,79 @@
-From: "Timothy Thelin" <Timothy.Thelin@wdc.com>
-Subject: RE: [PATCH 2.6.14]: ide: Enable larger taskfile transfers
-Date: Mon, 31 Oct 2005 18:41:12 -0800
-Message-ID: <CA45571DE57E1C45BF3552118BA92C9D69BF26@WDSCEXBECL03.sc.wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: <news@pcquote.com>
+Subject: Immediate Radar Alert
+Date: Mon, 31 Oct 2005 22:37:12 -0500
+Message-ID: <7931533632.79041125921@218.188.1.49>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wdscexfe02.sc.wdc.com ([129.253.170.52]:26803 "EHLO
-	wdscexfe02.sc.wdc.com") by vger.kernel.org with ESMTP
-	id S964936AbVKAClQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2005 21:41:16 -0500
-Content-class: urn:content-classes:message
+Received: from [218.188.1.49] ([218.188.1.49]:54319 "HELO 218.188.1.49")
+	by vger.kernel.org with SMTP id S964979AbVKADhM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2005 22:37:12 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+The Solvis Group Strategic Alliance Agreement With SSL Expected 
+to Provide $25 Million in Additional Revenues in 90 Days 
+
+Immediate Radar Alert
+The Solvis Group Inc. **SLVG**
+The Solvis Group is a subsidiary of Dalrada Financial Corporation 
+
+0.07 <-- ridiculous in our opinion 
+Ride this wave starting Now 
+
+Why you ask?  Let's start right here. Recent news releases...
+Talk about flying under the radar?  Isn't that what we look for? 
 
 
-> On Mon, 31 Oct 2005, Timothy Thelin wrote:
-> 
-> > IDE taskfile passthru was limited to 128K data transfers
-> > because of its use of a single kmalloc. This patch makes
-> > the passthru use a single __get_free_pages instead so the
-> > codepath remains conceptually the same but the data
-> > transfer limit is raised to 2MB.  This new limit is
-> > needed for firmware updates (download microcode) and
-> > extended commands with larger transfers.
-> 
-> You tested this, with 1-2 MB transfers?  Just want confirmation.
+Recent News Headlines!  No dreaming here! 
+The Solvis Group Strategic Alliance Agreement With SSL Expected 
+to Provide $25 Million in Additional Revenues in 90 Days 
+The agreement calls for SSL to refer a minimum of $25 million in business 
+to The Solvis Group within the next 90 days. The alliance has already generated 
+more than $7.5 million in new business, on an annualized basis. 
 
-We'll testing was limited to read sectors extended and write
-sectors extended, but it does work. I can read and write
-4MB of sectors just fine on my x86.  Other archs untested.
+The Solvis Group, Formerly Quik Pix Inc., Announces Sale of Subsidiary 
+to Global Food Technologies James Bouskos, Chairman and CEO of Global Food Technologies 
+said that "our company is pleased to report that our transaction with The Solvis Group 
+for the acquisition of Boulevard Acquisition Corporation, the publicly-reporting shell 
+and wholly owned subsidiary of The Solvis Group, has closed. 
 
-> After lots of memory usage, multi-order allocs in Linux
-> aren't very much of a sure thing.
-> 
-
-True, and I probably should have said "the data transfer limit
-is raised to a theoritical 2MB or 4MB depending on architecture"
-
-Even though it can't be guarenteed, the patch at least provides
-the possibility of larger transfers. However, is __get_free_pages
-less likely to return a valid chunk compared to kmalloc for the
-same requested size (so up to 128K)?
+The Solvis Group Launches 'Benefits Bank' Program to Bring Employees at All Compensation 
+Levels Key Benefits  "The Benefits Bank represents a comprehensive response 
+by The Solvis Group to address the needs of employees at all compensation levels 
+to participate in benefits generally available only to large corporations," 
+said Brian Bonar, CEO. 
 
 
-> Please read/study kernel CodingStyle so that we can
-> review the patch content and functionality instead
-> of nit-picking the incorrect style.
-> 
+About The Solvis Group: 
 
-Sorry, I'll make sure to fix it.
+The Solvis Group, a subsidiary of Dalrada Financial Corporation includes a number 
+of operating units, including M&M Nursing Services, CallCenterHR(TM), and Jackson Staffing. 
+The Company provides a variety of innovative financial services to businesses, 
+including comprehensive human resource administration including payroll 
+and workers compensation insurance; and employee benefits such as health insurance, 
+supplemental insurance, HSA savings plans, 125 cafeteria plans, and 401(k) plans. 
+The Company also offers debit card payroll accounts and payroll advances. 
+These services enable small employers to offer benefits and services to their employees 
+that are generally available only to large companies. 
 
-Regards,
-Tim Thelin
+The Company also includes an imaging products and services unit, Imaging Tech, Inc., 
+which provides a variety of innovating products and services associated with graphics, 
+photography, and color management. Its technologies include ColorBlindr software 
+and PhotoMotion Images(TM). 
+
+How many times have you seen issues explode but you couldn't get your hands on them? 
+Here is a special company that may be set to make a move in the near future - 
+this could be your opportunity to be ahead of the curve!  Start your research now! 
+
+TheStreet reported on Nov. 1, 2004, that "Large-cap stocks make the headlines, 
+but lately [small-cap] stocks have been making investors money." 
+
+Mary Lisanti, of AH Lisanti Capital Growth said these stocks "will rule the world 
+for a while. I don't see anything to change that." 
+
+We agree! Pay attention this coming week and do not take your eyes off **SLVG**
+
+
+
