@@ -1,90 +1,62 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH] libata kernel-doc fixes
-Date: Tue, 1 Nov 2005 21:29:27 -0800
-Message-ID: <20051101212927.6af151f3.rdunlap@xenotime.net>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [RFC PATCH] pmac ide doesn't properly cleanup hwif when releasing controller
+Date: Wed, 2 Nov 2005 09:05:49 +0100
+Message-ID: <58cb370e0511020005q27acb8fdg16acb1f307fafe7b@mail.gmail.com>
+References: <20051029044852.1a518908@Tatooine.r3z0>
+	 <1130623795.29054.179.camel@gaston>
+	 <58cb370e0511010820p77bd47c9wa566f3d356291733@mail.gmail.com>
+	 <1130878823.29054.449.camel@gaston>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:25771 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1751510AbVKBFhR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Nov 2005 00:37:17 -0500
-Received: from midway ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 1 Nov 2005 21:37:16 -0800
+Received: from nproxy.gmail.com ([64.233.182.201]:558 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932636AbVKBIFu convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Nov 2005 03:05:50 -0500
+Received: by nproxy.gmail.com with SMTP id q29so10680nfc
+        for <linux-ide@vger.kernel.org>; Wed, 02 Nov 2005 00:05:49 -0800 (PST)
+In-Reply-To: <1130878823.29054.449.camel@gaston>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik <jgarzik@pobox.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Thibaut VARENE <T-Bone@parisc-linux.org>, linux-ide@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+On 11/1/05, Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+>
+> > > Thus my question: Should I
+> > >
+> > >  - Manually in ide-pmac clean up all callbacks & revert everything in
+> > > the HWIF when I want to hand it back
+> > >
+> > >  - Call init_hwif_data() despite the nasty comment on top
+> > >
+> > >  - Just don't release the interface...
+> >
+> > Just don't release it - it is the simplest solution and also
+> > as the easiest to maintain in future (hotplug).
+>
+> Well, not exactly :) If I start to add unplug of that driver, the
+> problem will be back, trying to release an interface or rmmod the module
 
-Fix all reported kernel-doc errors in libata.
+Current behavior is such that pmac driver releases port which
+doesn't have devices connected so new behavior will be step forward
+(although small).
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
----
+> will leave all sort of crap in the HWIF ... So I think you need to
+> exposrt something from the IDE core to totally cleanup a HWIF (return it
+> to pristine state) for use in those cases.
+>
+> The exact same goes with ide-cd btw. It's not changing as many fields
+> as, afaik, it doesn't do DMA, but still. When the CS is removed, all
+> HWIF fields should be reverted to their initial state.
 
- drivers/scsi/libata-core.c |    4 ++--
- drivers/scsi/libata-scsi.c |    7 ++++---
- 2 files changed, 6 insertions(+), 5 deletions(-)
+"in future" we won't be doing brain-damaged restoring of HWIF
+fields in ide_unregister() and the problem will go away.  If you
+want to go ahead feel free to but remember to separate 2 states
+(HWIF is unregistered by ioctl and HWIF is really going away)
+which are currently both handled by ide_unregister().
 
-diff -Naurp linux-2614-g4/drivers/scsi/libata-core.c~kdoc_libata linux-2614-g4/drivers/scsi/libata-core.c
---- linux-2614-g4/drivers/scsi/libata-core.c~kdoc_libata	2005-11-01 20:35:13.000000000 -0800
-+++ linux-2614-g4/drivers/scsi/libata-core.c	2005-11-01 21:17:42.000000000 -0800
-@@ -2620,7 +2620,7 @@ static int ata_sg_setup(struct ata_queue
- /**
-  *	ata_poll_qc_complete - turn irq back on and finish qc
-  *	@qc: Command to complete
-- *	@drv_stat: ATA status register content
-+ *	@err_mask: ATA status register content
-  *
-  *	LOCKING:
-  *	None.  (grabs host lock)
-@@ -3385,7 +3385,7 @@ void ata_qc_free(struct ata_queued_cmd *
- /**
-  *	ata_qc_complete - Complete an active ATA command
-  *	@qc: Command to complete
-- *	@drv_stat: ATA Status register contents
-+ *	@err_mask: ATA Status register contents
-  *
-  *	Indicate to the mid and upper layers that an ATA
-  *	command has completed, with either an ok or not-ok status.
-diff -Naurp linux-2614-g4/drivers/scsi/libata-scsi.c~kdoc_libata linux-2614-g4/drivers/scsi/libata-scsi.c
---- linux-2614-g4/drivers/scsi/libata-scsi.c~kdoc_libata	2005-11-01 20:35:13.000000000 -0800
-+++ linux-2614-g4/drivers/scsi/libata-scsi.c	2005-11-01 21:20:46.000000000 -0800
-@@ -131,7 +131,7 @@ int ata_std_bios_param(struct scsi_devic
- 
- /**
-  *	ata_cmd_ioctl - Handler for HDIO_DRIVE_CMD ioctl
-- *	@dev: Device to whom we are issuing command
-+ *	@scsidev: Device to which we are issuing command
-  *	@arg: User provided data for issuing command
-  *
-  *	LOCKING:
-@@ -217,7 +217,7 @@ error:
- 
- /**
-  *	ata_task_ioctl - Handler for HDIO_DRIVE_TASK ioctl
-- *	@dev: Device to whom we are issuing command
-+ *	@scsidev: Device to which we are issuing command
-  *	@arg: User provided data for issuing command
-  *
-  *	LOCKING:
-@@ -416,6 +416,7 @@ void ata_dump_status(unsigned id, struct
- 
- /**
-  *	ata_to_sense_error - convert ATA error to SCSI error
-+ *	@id: ATA device number
-  *	@drv_stat: value contained in ATA status register
-  *	@drv_err: value contained in ATA error register
-  *	@sk: the sense key we'll fill out
-@@ -2221,7 +2222,7 @@ ata_scsi_map_proto(u8 byte1)
- /**
-  *	ata_scsi_pass_thru - convert ATA pass-thru CDB to taskfile
-  *	@qc: command structure to be initialized
-- *	@cmd: SCSI command to convert
-+ *	@scsicmd: SCSI command to convert
-  *
-  *	Handles either 12 or 16-byte versions of the CDB.
-  *
-
-
----
+Thanks,
+Bartlomiej
