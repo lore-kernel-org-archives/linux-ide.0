@@ -1,35 +1,72 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [RFC PATCH] pmac ide doesn't properly cleanup hwif when
-	releasing controller
-Date: Wed, 02 Nov 2005 21:21:28 +1100
-Message-ID: <1130926888.20136.21.camel@gaston>
-References: <20051029044852.1a518908@Tatooine.r3z0>
-	 <1130623795.29054.179.camel@gaston>
-	 <58cb370e0511010820p77bd47c9wa566f3d356291733@mail.gmail.com>
-	 <1130878823.29054.449.camel@gaston>
-	 <58cb370e0511020005q27acb8fdg16acb1f307fafe7b@mail.gmail.com>
+From: thomas schorpp <t.schorpp@gmx.de>
+Subject: [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage
+ driver
+Date: Wed, 02 Nov 2005 15:08:17 +0100
+Message-ID: <4368C851.80203@gmx.de>
+Reply-To: t.schorpp@gmx.de
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:42156 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S1751544AbVKBKYa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Nov 2005 05:24:30 -0500
-In-Reply-To: <58cb370e0511020005q27acb8fdg16acb1f307fafe7b@mail.gmail.com>
+Received: from imap.gmx.net ([213.165.64.20]:54740 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S932708AbVKBOIV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Nov 2005 09:08:21 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Thibaut VARENE <T-Bone@parisc-linux.org>, linux-ide@vger.kernel.org
+To: usb-storage@lists.one-eyed-alien.net
+Cc: linux-ide@vger.kernel.org
+
+hi,
+
+i'll try integrating SMART/ATA-Security in usb-storage driver for usb2
+ide disks.
+
+other people working on it yet? ive read something on SMART efforts for
+SATA.
+
+i think of using the passthrough code (libata?) or module in
+usb-storage.ko like the SATA driver for ATA-Security.
+
+comments?
+
+thx
+y
+tom
 
 
-> "in future" we won't be doing brain-damaged restoring of HWIF
-> fields in ide_unregister() and the problem will go away.  If you
-> want to go ahead feel free to but remember to separate 2 states
-> (HWIF is unregistered by ioctl and HWIF is really going away)
-> which are currently both handled by ide_unregister().
+-------- Original Message --------
+Subject: Merging ATA passthru
+Date: Fri, 21 Oct 2005 15:14:18 -0400
+From: Jeff Garzik <jgarzik@pobox.com>
+To: linux-ide@vger.kernel.org <linux-ide@vger.kernel.org>
+CC: Linux Kernel <linux-kernel@vger.kernel.org>
 
-Yup... maybe I should do ide_unregister() :)
 
-Ben.
+Folks,
 
+Taking Mark Lord's (and others) criticism to heart, I'm going to merge
+the ATA passthru work upstream, once 2.6.14 is released.
+
+Since there are still some reported problems that I haven't had time to
+track down, I'm going to -- like ATAPI -- introduce a module option that
+enables passthru.  It will default to off.
+
+Other features that follow a similar pattern -- 98% there but needs a
+few final tweaks -- will be treated in the same way.
+
+This gets lesser-used features upstream where they can get the most
+testing, while defaulting them to off ensures that we won't perturb the
+known-working code.
+
+This also will help me, in that I won't have to maintain a bunch of
+parallel codebases.
+
+	Jeff
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
