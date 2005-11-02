@@ -1,27 +1,33 @@
-From: "Deanne Simms" <jxpqtvjyekjq@yahoo.com>
-Subject: Expel Disgusting Fats B1VmN
-Date: Wed, 02 Nov 2005 18:54:32 +0100
-Message-ID: <5289277.103133jxpqtvjyekjq@yahoo.com>
+From: linux@horizon.com
+Subject: Re: sata_sil24 AMD64 crash/lockup
+Date: 2 Nov 2005 13:58:22 -0500
+Message-ID: <20051102185822.27745.qmail@science.horizon.com>
+References: <20051026191800.28120.qmail@science.horizon.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chello212017065209.4.15.vie.surfer.at ([212.17.66.209]:47633
-	"HELO chello212017065209.4.15.vie.surfer.at") by vger.kernel.org
-	with SMTP id S965141AbVKBSEW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Nov 2005 13:04:22 -0500
+Received: from science.horizon.com ([192.35.100.1]:40500 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S965180AbVKBS6d
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Nov 2005 13:58:33 -0500
+In-Reply-To: <20051026191800.28120.qmail@science.horizon.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-gcc@vger.kernel.org, linux-hams@vger.kernel.org, linux-ia64@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-laptop@vger.kernel.org, linux-net@vger.kernel.org, linux-newbie@vger.kernel.org
+To: htejun@gmail.com
+Cc: linux-ide@vger.kernel.org, linux@horizon.com
 
+An additional data point: it doesn't appear to have failed "fast", given
+that it left the XFS file system in a confused state.
+See http://marc.theaimsgroup.com/?l=linux-xfs&m=113081816804458
 
+So while it did lock up and refuse to proceed further, at least one
+write got reordered, misdirected, or miswritten as part of the locking-up
+procedure.
 
-Revolutionary "Transform" which works
-effectively burning fats without hunger,
-chemicals intake or heavy exercise.
-Suppress your appetite and enjoying your
-very nice V-Shape body in just a week.
+(Actually, theoretically it could have been a read which returned bad
+metadata and led to an incorrect following write, but I would expect
+a 150G file system on a 2G machine to have all such core journaling
+metadata cached, so there should be on such read.)
 
-You won't regret.
+As before, thanks for any suggestions or patches.
 
-http://go2mania.info
-
-
-8zLwm
+I'm now attempting to repair the XFS file system and move to a
+post-2.6.14 libata kernel.
