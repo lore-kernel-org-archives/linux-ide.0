@@ -1,74 +1,90 @@
-From: Don Carroll <ibedonc@star-c.com>
-Subject: Re: Asus A8V , via vt8251 AHCI
-Date: Tue, 1 Nov 2005 23:22:02 -0600
-Message-ID: <20051102052202.GB7057@vcr.star-c.com>
-References: <20051101064058.GA4902@vcr.star-c.com> <Pine.LNX.4.58.0511010736550.11761@shark.he.net> <20051101192449.GA9719@vcr.star-c.com> <Pine.LNX.4.58.0511011237080.11761@shark.he.net> <20051102034151.GA7583@vcr.star-c.com> <20051101195715.212ea264.rdunlap@xenotime.net> <20051102043643.GA5577@vcr.star-c.com> <20051101205659.7e97c145.rdunlap@xenotime.net> <20051102051343.GA7057@vcr.star-c.com> <20051101211203.68f1e119.rdunlap@xenotime.net>
-Reply-To: ibedonc@star-c.com, ibedonc@star-c.com
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: [PATCH] libata kernel-doc fixes
+Date: Tue, 1 Nov 2005 21:29:27 -0800
+Message-ID: <20051101212927.6af151f3.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dpc6935171158.direcpc.com ([69.35.171.158]:18084 "EHLO
-	vcr.star-c.com") by vger.kernel.org with ESMTP id S932285AbVKBFWX
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Nov 2005 00:22:23 -0500
-Content-Disposition: inline
-In-Reply-To: <20051101211203.68f1e119.rdunlap@xenotime.net>
+Received: from xenotime.net ([66.160.160.81]:25771 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1751510AbVKBFhR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Nov 2005 00:37:17 -0500
+Received: from midway ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 1 Nov 2005 21:37:16 -0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: jgarzik <jgarzik@pobox.com>
 
-On Tue, Nov 01, 2005 at 09:12:03PM -0800, Randy.Dunlap wrote:
-> On Tue, 1 Nov 2005 23:13:43 -0600 Don Carroll wrote:
-> 
-> > On Tue, Nov 01, 2005 at 08:56:59PM -0800, Randy.Dunlap wrote:
-> > > On Tue, 1 Nov 2005 22:36:43 -0600 Don Carroll wrote:
-> > > 
-> > > > I think it was , I can try again
-> > > > 
-> > > > the next one is without MSI
-> > > > 
-> > > 
-> > > I'm sorry to put you to all of that trouble.
-> > Hey I want to get it working :)
-> > was no trouble  (I am systems Eng)
-> 
-> OK, good.
-> 
-> > > I've seen some very similar issues which turned out to be MSI-related,
-> > > but this one doesn't seem to be that way -- unless MSI + irqpoll
-> > > (your next test) happens to work for you -- then manybe it will
-> > > give us some more evidence.  If it does boot, please send us
-> > > the contents of /proc/interrupts .
-> > nope , still times out  
-> > 
-> > here is /proc/interrupts anyway
-> > irq 19 is the ahci
-> 
-> and irq 16 also (libata on both of them).
-when I rmmod ahci it, libata drops from 19
-> How do you know which one is for which controller/drive(s)?
-> 
-> Anyone else out there have ideas??
-> 
-> 
-> >           CPU0       CPU1
-> >   0:        333     459694    IO-APIC-edge  timer
-> >   1:          3       4244    IO-APIC-edge  i8042
-> >   8:          0          0    IO-APIC-edge  rtc
-> >   9:          0          0   IO-APIC-level  acpi
-> >  12:         31      51463    IO-APIC-edge  i8042
-> >  15:          5      14079    IO-APIC-edge  ide1
-> >  16:         26      72751   IO-APIC-level  libata
-> >  17:          0          0   IO-APIC-level  uhci_hcd:usb1
-> >  18:          0         77   IO-APIC-level  uhci_hcd:usb2, ehci_hcd:usb5,
-> > VIA8237
-> >  19:          0          0   IO-APIC-level  uhci_hcd:usb3, libata
-> >  20:          2       2824   IO-APIC-level  uhci_hcd:usb4, eth0
-> > NMI:        641       1026
-> > LOC:     459992     459969
-> > ERR:          0
-> > MIS:          0
-> 
-> 
-> ---
-> ~Randy
+From: Randy Dunlap <rdunlap@xenotime.net>
+
+Fix all reported kernel-doc errors in libata.
+
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+---
+
+ drivers/scsi/libata-core.c |    4 ++--
+ drivers/scsi/libata-scsi.c |    7 ++++---
+ 2 files changed, 6 insertions(+), 5 deletions(-)
+
+diff -Naurp linux-2614-g4/drivers/scsi/libata-core.c~kdoc_libata linux-2614-g4/drivers/scsi/libata-core.c
+--- linux-2614-g4/drivers/scsi/libata-core.c~kdoc_libata	2005-11-01 20:35:13.000000000 -0800
++++ linux-2614-g4/drivers/scsi/libata-core.c	2005-11-01 21:17:42.000000000 -0800
+@@ -2620,7 +2620,7 @@ static int ata_sg_setup(struct ata_queue
+ /**
+  *	ata_poll_qc_complete - turn irq back on and finish qc
+  *	@qc: Command to complete
+- *	@drv_stat: ATA status register content
++ *	@err_mask: ATA status register content
+  *
+  *	LOCKING:
+  *	None.  (grabs host lock)
+@@ -3385,7 +3385,7 @@ void ata_qc_free(struct ata_queued_cmd *
+ /**
+  *	ata_qc_complete - Complete an active ATA command
+  *	@qc: Command to complete
+- *	@drv_stat: ATA Status register contents
++ *	@err_mask: ATA Status register contents
+  *
+  *	Indicate to the mid and upper layers that an ATA
+  *	command has completed, with either an ok or not-ok status.
+diff -Naurp linux-2614-g4/drivers/scsi/libata-scsi.c~kdoc_libata linux-2614-g4/drivers/scsi/libata-scsi.c
+--- linux-2614-g4/drivers/scsi/libata-scsi.c~kdoc_libata	2005-11-01 20:35:13.000000000 -0800
++++ linux-2614-g4/drivers/scsi/libata-scsi.c	2005-11-01 21:20:46.000000000 -0800
+@@ -131,7 +131,7 @@ int ata_std_bios_param(struct scsi_devic
+ 
+ /**
+  *	ata_cmd_ioctl - Handler for HDIO_DRIVE_CMD ioctl
+- *	@dev: Device to whom we are issuing command
++ *	@scsidev: Device to which we are issuing command
+  *	@arg: User provided data for issuing command
+  *
+  *	LOCKING:
+@@ -217,7 +217,7 @@ error:
+ 
+ /**
+  *	ata_task_ioctl - Handler for HDIO_DRIVE_TASK ioctl
+- *	@dev: Device to whom we are issuing command
++ *	@scsidev: Device to which we are issuing command
+  *	@arg: User provided data for issuing command
+  *
+  *	LOCKING:
+@@ -416,6 +416,7 @@ void ata_dump_status(unsigned id, struct
+ 
+ /**
+  *	ata_to_sense_error - convert ATA error to SCSI error
++ *	@id: ATA device number
+  *	@drv_stat: value contained in ATA status register
+  *	@drv_err: value contained in ATA error register
+  *	@sk: the sense key we'll fill out
+@@ -2221,7 +2222,7 @@ ata_scsi_map_proto(u8 byte1)
+ /**
+  *	ata_scsi_pass_thru - convert ATA pass-thru CDB to taskfile
+  *	@qc: command structure to be initialized
+- *	@cmd: SCSI command to convert
++ *	@scsicmd: SCSI command to convert
+  *
+  *	Handles either 12 or 16-byte versions of the CDB.
+  *
+
+
+---
