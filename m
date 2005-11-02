@@ -1,16 +1,16 @@
 From: Don Carroll <ibedonc@star-c.com>
 Subject: Re: Asus A8V , via vt8251 AHCI
-Date: Tue, 1 Nov 2005 22:36:43 -0600
-Message-ID: <20051102043643.GA5577@vcr.star-c.com>
+Date: Tue, 1 Nov 2005 22:47:08 -0600
+Message-ID: <20051102044708.GA4303@vcr.star-c.com>
 References: <20051101064058.GA4902@vcr.star-c.com> <Pine.LNX.4.58.0511010736550.11761@shark.he.net> <20051101192449.GA9719@vcr.star-c.com> <Pine.LNX.4.58.0511011237080.11761@shark.he.net> <20051102034151.GA7583@vcr.star-c.com> <20051101195715.212ea264.rdunlap@xenotime.net>
 Reply-To: ibedonc@star-c.com, ibedonc@star-c.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="n8g4imXOkfNTN/H1"
+Content-Type: multipart/mixed; boundary="huq684BweRXVnRxX"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dpc6935171158.direcpc.com ([69.35.171.158]:3233 "EHLO
-	vcr.star-c.com") by vger.kernel.org with ESMTP id S1751492AbVKBEhL
+Received: from dpc6935171158.direcpc.com ([69.35.171.158]:51347 "EHLO
+	vcr.star-c.com") by vger.kernel.org with ESMTP id S1751495AbVKBErb
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Nov 2005 23:37:11 -0500
+	Tue, 1 Nov 2005 23:47:31 -0500
 Content-Disposition: inline
 In-Reply-To: <20051101195715.212ea264.rdunlap@xenotime.net>
 Sender: linux-ide-owner@vger.kernel.org
@@ -18,19 +18,20 @@ List-Id: linux-ide@vger.kernel.org
 To: "Randy.Dunlap" <rdunlap@xenotime.net>, linux-ide@vger.kernel.org
 
 
---n8g4imXOkfNTN/H1
+--huq684BweRXVnRxX
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
-I think it was , I can try again
+> This boot log isn't the one where you tried irqpoll, right?
 
-the next one is without MSI
+you are correct , this one is , also with no MSI  , now will go build kernel
+with MSI back on
 
---n8g4imXOkfNTN/H1
+--huq684BweRXVnRxX
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="dmesg-no-msi.txt"
+Content-Disposition: attachment; filename="dmesg-no-msi-and-irq-poll.txt"
 
-Bootdata ok (command line is root=/dev/sda1 resume=/dev/sda5)
+Bootdata ok (command line is root=/dev/sda1 resume=/dev/sda5 irqpoll)
 Linux version 2.6.14 (root@vcr.star-c.com) (gcc version 4.0.1 (4.0.1-5mdk for Mandriva Linux release 2006.0)) #2 SMP Tue Nov 1 21:56:43 CST 2005
 BIOS-provided physical RAM map:
  BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
@@ -76,9 +77,11 @@ Setting APIC routing to flat
 Using ACPI (MADT) for SMP configuration information
 Allocating PCI resources starting at 88000000 (gap: 80000000:60000000)
 Checking aperture...
-CPU 0: aperture @ d8000000 size 128 MB
+CPU 0: aperture @ dc000000 size 64 MB
 Built 1 zonelists
-Kernel command line: root=/dev/sda1 resume=/dev/sda5
+Kernel command line: root=/dev/sda1 resume=/dev/sda5 irqpoll
+Misrouted IRQ fixup and polling support enabled
+This may significantly impact system performance
 Initializing CPU#0
 PID hash table entries: 4096 (order: 12, 131072 bytes)
 time.c: Using 3.579545 MHz PM timer.
@@ -87,7 +90,7 @@ Console: colour VGA+ 80x25
 Dentry cache hash table entries: 524288 (order: 10, 4194304 bytes)
 Inode-cache hash table entries: 262144 (order: 9, 2097152 bytes)
 Memory: 2057440k/2096832k available (2142k kernel code, 39004k reserved, 755k data, 232k init)
-Calibrating delay using timer specific routine.. 4007.36 BogoMIPS (lpj=8014724)
+Calibrating delay using timer specific routine.. 4011.50 BogoMIPS (lpj=8023008)
 Mount-cache hash table entries: 256
 CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
 CPU: L2 Cache: 512K (64 bytes/line)
@@ -98,7 +101,7 @@ Detected 12.501 MHz APIC timer.
 softlockup thread 0 started up.
 Booting processor 1/2 APIC 0x1
 Initializing CPU#1
-Calibrating delay using timer specific routine.. 4000.47 BogoMIPS (lpj=8000946)
+Calibrating delay using timer specific routine.. 4000.34 BogoMIPS (lpj=8000690)
 CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
 CPU: L2 Cache: 512K (64 bytes/line)
 CPU 1(2) -> Node 0 -> Core 1
@@ -136,12 +139,12 @@ ACPI: PCI Interrupt Link [LNKH] (IRQs 3 4 5 6 7 10 11 12 14 15) *0, disabled.
 PCI: Using ACPI for IRQ routing
 PCI: If a device doesn't work, try "pci=routeirq".  If it helps, post a report
 agpgart: Detected AGP bridge 0
-agpgart: AGP aperture is 128M @ 0xd8000000
+agpgart: AGP aperture is 64M @ 0xdc000000
 PCI-DMA: Disabling IOMMU.
 PCI: Bridge: 0000:00:01.0
   IO window: disabled.
   MEM window: fa900000-fe9fffff
-  PREFETCH window: aff00000-cfefffff
+  PREFETCH window: b7f00000-d7efffff
 PCI: Bridge: 0000:02:00.0
   IO window: disabled.
   MEM window: disabled.
@@ -160,7 +163,7 @@ PCI: Setting latency timer of device 0000:02:00.0 to 64
 PCI: Setting latency timer of device 0000:02:00.1 to 64
 IA32 emulation $Id: sys_ia32.c,v 1.32 2002/03/24 13:02:28 ak Exp $
 audit: initializing netlink socket (disabled)
-audit(1130905345.620:1): initialized
+audit(1130906505.388:1): initialized
 VFS: Disk quotas dquot_6.5.1
 Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
 Initializing Cryptographic API
@@ -324,9 +327,6 @@ hdc: ATAPI 40X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache
 Uniform CD-ROM driver Revision: 3.20
 floppy0: no floppy controllers found
 floppy0: no floppy controllers found
-usbcore: registered new driver hiddev
-usbcore: registered new driver usbhid
-drivers/usb/input/hid-core.c: v2.6:USB HID core driver
 NET: Registered protocol family 17
 via-rhine.c:v1.10-LK1.2.0-2.6 June-10-2004 Written by Donald Becker
 ACPI: PCI Interrupt 0000:00:12.0[A] -> GSI 23 (level, low) -> IRQ 20
@@ -362,14 +362,5 @@ powernow-k8:    0 : fid 0xc (2000 MHz), vid 0x8 (1350 mV)
 powernow-k8:    1 : fid 0xa (1800 MHz), vid 0xa (1300 mV)
 powernow-k8:    2 : fid 0x2 (1000 MHz), vid 0x12 (1100 mV)
 cpu_init done, current fid 0xc, vid 0x8
-floppy0: no floppy controllers found
-floppy0: no floppy controllers found
-kdm[3134]: segfault at 0000000000000000 rip 000000000040a90b rsp 00007fffffa9c800 error 4
-floppy0: no floppy controllers found
-floppy0: no floppy controllers found
-floppy0: no floppy controllers found
-floppy0: no floppy controllers found
-Attached scsi generic sg0 at scsi1, channel 0, id 0, lun 0,  type 0
-kdm[4438]: segfault at 0000000000000000 rip 000000000040a90b rsp 00007fffff8671a0 error 4
 
---n8g4imXOkfNTN/H1--
+--huq684BweRXVnRxX--
