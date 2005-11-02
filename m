@@ -1,54 +1,48 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security
- in usb-storage driver
-Date: Wed, 2 Nov 2005 14:26:09 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0511021422450.5719-100000@iolanthe.rowland.org>
-References: <43690F8B.5000605@gmx.de>
+From: "Timothy Thelin" <Timothy.Thelin@wdc.com>
+Subject: RE: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
+Date: Wed, 2 Nov 2005 12:33:09 -0800
+Message-ID: <CA45571DE57E1C45BF3552118BA92C9D69BF37@WDSCEXBECL03.sc.wdc.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:5762 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S965192AbVKBT0L
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Nov 2005 14:26:11 -0500
-In-Reply-To: <43690F8B.5000605@gmx.de>
+Received: from wdscexfe02.sc.wdc.com ([129.253.170.52]:28861 "EHLO
+	wdscexfe02.sc.wdc.com") by vger.kernel.org with ESMTP
+	id S965227AbVKBUdP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Nov 2005 15:33:15 -0500
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: thomas schorpp <t.schorpp@gmx.de>
+To: Alan Stern <stern@rowland.harvard.edu>, thomas schorpp <t.schorpp@gmx.de>
 Cc: usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org
 
-On Wed, 2 Nov 2005, thomas schorpp wrote:
 
-> Alan Stern wrote:
-
-> > Is there any standard way to pass ATA commands over a USB transport?  I've 
-> > never heard of one.
+> They aren't ATA read/write commands; they are SCSI commands.  
+> If there is 
+> a version of SMART that runs over SCSI, you might be able to use it.
+> 
+> > and sata is short of smart support. both use scsi-emu(?).
 > > 
-> > Alan Stern
-> > 
-> > 
+> > i dont think theres a hardware problem.
 > 
-> yes, ive read on the smartmontools page theres none, at present.
+> Yes there is.  The USB interface on the drive won't recognize 
+> an ATA SMART
+> command and won't pass it on to the drive controller.
 > 
-> since therere rw-commands issued, why not possible to issue other, too?
 
-They aren't ATA read/write commands; they are SCSI commands.  If there is 
-a version of SMART that runs over SCSI, you might be able to use it.
+To expand on this, its really the USB device firmware which needs
+the passthru mechanism implmented, since (as stated) it expects
+to be getting scsi commands.  Now there are many vendor specific
+ways to embed ATA commands inside of scsi cdbs, and then there are
+two public methods that I'm aware of: SAT and the At2lp (cypress
+bridge board, docs on their website).
 
-> and sata is short of smart support. both use scsi-emu(?).
-> 
-> i dont think theres a hardware problem.
+And to send these commands, user-space already has SG_IO.
 
-Yes there is.  The USB interface on the drive won't recognize an ATA SMART
-command and won't pass it on to the drive controller.
+So I'm not sure usb-storage can do much, since it can't force a usb
+device to accept passthru cdbs, and SG_IO already allows cdbs
+to be sent to usb devices.
 
-> i'll look at sata/libata/smartctl code and trial'n'error.
-> 
-> maybe i find a way and you can propose it as standard then :)
-> why wait for it?
-
-Because if you don't wait, then no vendors will have implemented it and so 
-it won't work.
-
-Alan Stern
-
+Regards,
+Tim Thelin
