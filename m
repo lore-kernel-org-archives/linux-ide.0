@@ -1,62 +1,116 @@
-From: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
-Date: Wed, 2 Nov 2005 15:45:32 -0800
-Message-ID: <20051102234532.GC26148@one-eyed-alien.net>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BF3A@WDSCEXBECL03.sc.wdc.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] Incorrect device link for ide-cs
+Date: Thu, 03 Nov 2005 10:21:23 +0100
+Message-ID: <4369D693.4040500@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="PNTmBPCT7hxwcZjr"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CA45571DE57E1C45BF3552118BA92C9D69BF3A@WDSCEXBECL03.sc.wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Timothy Thelin <Timothy.Thelin@wdc.com>
-Cc: t.schorpp@gmx.de, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
+Content-Type: multipart/mixed;
+ boundary="------------040104080100090507080704"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932246AbVKCJV2@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 List-Id: linux-ide@vger.kernel.org
 
-
---PNTmBPCT7hxwcZjr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+This is a multi-part message in MIME format.
+--------------040104080100090507080704
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Nov 02, 2005 at 02:18:52PM -0800, Timothy Thelin wrote:
->=20
-> If you had time to spare, instead of touching usb-storage,
-> it might be better spent resurecting SG_FLAG_LUN_INHIBIT to
-> stop the above behavior so that SG_IO cdbs can be passed
-> through untouched.
-> (SG_FLAG_FUN_INHIBIT was a flag SG_IO used to support a long
-> time ago, and I have no idea why it was dropped, but it was)
+Hi Bartlomiej,
 
-I didn't realize that had been removed.  Anyone that sends a
-vendor-specific command to a device needs this flag to make sure it goes
-through unmangled.
+I just came across a patch which appearently never made it anywhere near
+mainline. It is, however, still valid.
 
-Perhaps someone on linux-scsi can comment on why this was removed and how
-we might get it back?
+Problem is that devices driven by ide-cs will appear under /sys/devices
+instead of the appropriate PCMCIA device. To fix this I had to extend
+the hw_regs_t structure with a 'struct device' field, which allows us to
+set the parent link for the appropriate hwif.
 
-Matt
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 
+Cheers,
+
+Hannes
 --=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstra=DFe 5				+49 911 74053 688
+90409 N=FCrnberg				http://www.suse.de
 
-We can customize our colonels.
-					-- Tux
-User Friendly, 12/1/1998
+--------------040104080100090507080704
+Content-Type: text/plain;
+ name="ide-cs-correct-device-link"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ide-cs-correct-device-link"
 
---PNTmBPCT7hxwcZjr
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+From: Hannes Reinecke <hare@suse.de>
+Subject: Incorrect device link for ide-cs
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+Devices driven by ide-cs will appear under /sys/devices instead of the
+appropriate PCMCIA device. To fix this I had to extend the hw_regs_t
+structure with a 'struct device' field, which allows us to set the
+parent link for the appropriate hwif.
 
-iD8DBQFDaU+cHL9iwnUZqnkRAisdAJ0Wf12qSDjyXG4HIVhLFEz3ctzrDwCfXmXP
-7H9nxo1rXSTeT8CqvzjtMks=
-=OBZX
------END PGP SIGNATURE-----
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Jens Axboe <axboe@suse.com>
 
---PNTmBPCT7hxwcZjr--
+diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -803,6 +803,7 @@ found:
+ 	hwif->irq = hw->irq;
+ 	hwif->noprobe = 0;
+ 	hwif->chipset = hw->chipset;
++	hwif->gendev.parent = hw->dev;
+ 
+ 	if (!initializing) {
+ 		probe_hwif_init_with_fixup(hwif, fixup);
+diff --git a/drivers/ide/legacy/ide-cs.c b/drivers/ide/legacy/ide-cs.c
+--- a/drivers/ide/legacy/ide-cs.c
++++ b/drivers/ide/legacy/ide-cs.c
+@@ -182,13 +182,14 @@ static void ide_detach(dev_link_t *link)
+     
+ } /* ide_detach */
+ 
+-static int idecs_register(unsigned long io, unsigned long ctl, unsigned long irq)
++static int idecs_register(unsigned long io, unsigned long ctl, unsigned long irq, struct pcmcia_device *handle)
+ {
+     hw_regs_t hw;
+     memset(&hw, 0, sizeof(hw));
+-    ide_init_hwif_ports(&hw, io, ctl, NULL);
++    ide_std_init_ports(&hw, io, ctl);
+     hw.irq = irq;
+     hw.chipset = ide_pci;
++    hw.dev = &handle->dev;
+     return ide_register_hw_with_fixup(&hw, NULL, ide_undecoded_slave);
+ }
+ 
+@@ -328,12 +329,12 @@ static void ide_config(dev_link_t *link)
+ 
+     /* retry registration in case device is still spinning up */
+     for (hd = -1, i = 0; i < 10; i++) {
+-	hd = idecs_register(io_base, ctl_base, link->irq.AssignedIRQ);
++	hd = idecs_register(io_base, ctl_base, link->irq.AssignedIRQ, handle);
+ 	if (hd >= 0) break;
+ 	if (link->io.NumPorts1 == 0x20) {
+ 	    outb(0x02, ctl_base + 0x10);
+ 	    hd = idecs_register(io_base + 0x10, ctl_base + 0x10,
+-				link->irq.AssignedIRQ);
++				link->irq.AssignedIRQ, handle);
+ 	    if (hd >= 0) {
+ 		io_base += 0x10;
+ 		ctl_base += 0x10;
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -230,6 +230,7 @@ typedef struct hw_regs_s {
+ 	int		dma;			/* our dma entry */
+ 	ide_ack_intr_t	*ack_intr;		/* acknowledge interrupt */
+ 	hwif_chipset_t  chipset;
++	struct device	*dev;
+ } hw_regs_t;
+ 
+ /*
+
+--------------040104080100090507080704--
