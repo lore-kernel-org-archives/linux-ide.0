@@ -1,91 +1,38 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/ide/: possible cleanups
-Date: Thu, 3 Nov 2005 19:14:15 +0100
-Message-ID: <20051103181414.GD23366@stusta.de>
+From: Martin Murray <mmurray@deepthought.org>
+Subject: Re: [UPDATED][PATCH 2.6.14]: ide: Enable larger taskfile transfers
+Date: Thu, 3 Nov 2005 16:43:55 -0500
+Message-ID: <20051103214355.GA3516@deepthought.org>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BF2F@WDSCEXBECL03.sc.wdc.com> <20051102084917.GM26049@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:59663 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1030406AbVKCSO0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Nov 2005 13:14:26 -0500
+Received: from carbon.deepthought.org ([66.180.175.50]:53407 "EHLO
+	carbon.deepthought.org") by vger.kernel.org with ESMTP
+	id S1030504AbVKCVoB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Nov 2005 16:44:01 -0500
 Content-Disposition: inline
+In-Reply-To: <20051102084917.GM26049@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This patch contains the following possible cleanups:
-- pci/cy82c693.c: make a needlessly global function static
-- remove the following unneeded EXPORT_SYMBOL's:
-  - ide-taskfile.c: do_rw_taskfile
-  - ide-iops.c: default_hwif_iops
-  - ide-iops.c: default_hwif_transport
-  - ide-iops.c: wait_for_ready
+Just a few quick questions:
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+regarding HDIO_DRIVE_TASKFILE:
+    I don't see any exact information, however, from what I can infer
+from the code, it appears that while the user can specify an
+input buffer and/or an output buffer, only one of the buffers would be
+filled with useful information. Is it reasonable to assume that
+req_task->out_size == 0 req_task->in_size == 0? Or, more specifically,
+is it reasonable to return -EINVAL if both are non zero?
 
----
+    If I were to do zero_copy IO using blk_rq_map_user, should I verify
+the user buffer is valid with access_ok() ?
 
-This patch was already sent on:
-- 1 Oct 2005
-- 20 Aug 2005
+    Why does ide_diag_taskfile() allocate a custom request structure
+instead of using blk_get_request(drive->queue, ...) ?
 
- drivers/ide/ide-iops.c     |    6 ------
- drivers/ide/ide-taskfile.c |    2 --
- drivers/ide/pci/cy82c693.c |    2 +-
- 3 files changed, 1 insertion(+), 9 deletions(-)
+    Given HDIO_DRIVE_TASKFILE, what is the purpose of HDIO_DRIVE_TASK
+and HDIO_DRIVE_CMD?
 
---- linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c.old	2005-02-05 02:57:03.000000000 +0100
-+++ linux-2.6.11-rc3-mm1-full/drivers/ide/ide-taskfile.c	2005-02-05 02:57:12.000000000 +0100
-@@ -161,8 +161,6 @@
- 	return ide_stopped;
- }
- 
--EXPORT_SYMBOL(do_rw_taskfile);
--
- /*
-  * set_multmode_intr() is invoked on completion of a WIN_SETMULT cmd.
-  */
-
---- linux-2.6.12-rc2-mm3-full/drivers/ide/pci/cy82c693.c.old	2005-04-17 21:11:22.000000000 +0200
-+++ linux-2.6.12-rc2-mm3-full/drivers/ide/pci/cy82c693.c	2005-04-17 21:11:30.000000000 +0200
-@@ -469,7 +469,7 @@
- 
- static __initdata ide_hwif_t *primary;
- 
--void __devinit init_iops_cy82c693(ide_hwif_t *hwif)
-+static void __devinit init_iops_cy82c693(ide_hwif_t *hwif)
- {
- 	if (PCI_FUNC(hwif->pci_dev->devfn) == 1)
- 		primary = hwif;
---- linux-2.6.12-rc2-mm3-full/drivers/ide/ide-iops.c.old	2005-04-17 21:12:44.000000000 +0200
-+++ linux-2.6.12-rc2-mm3-full/drivers/ide/ide-iops.c	2005-04-17 21:12:54.000000000 +0200
-@@ -104,8 +104,6 @@
- 	hwif->INSL	= ide_insl;
- }
- 
--EXPORT_SYMBOL(default_hwif_iops);
--
- /*
-  *	MMIO operations, typically used for SATA controllers
-  */
-@@ -329,8 +327,6 @@
- 	hwif->atapi_output_bytes	= atapi_output_bytes;
- }
- 
--EXPORT_SYMBOL(default_hwif_transport);
--
- /*
-  * Beginning of Taskfile OPCODE Library and feature sets.
-  */
-@@ -525,8 +525,6 @@
- 	return 0;
- }
- 
--EXPORT_SYMBOL(wait_for_ready);
--
- /*
-  * This routine busy-waits for the drive status to be not "busy".
-  * It then checks the status for all of the "good" bits and none
-
+Thank you, Martin
