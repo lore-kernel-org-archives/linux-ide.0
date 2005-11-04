@@ -1,111 +1,86 @@
-From: Bruno Harbulot <bruno_harbulot@yahoo.co.uk>
-Subject: ATIIXP and libata
-Date: Thu, 03 Nov 2005 23:53:14 +0000
-Message-ID: <436AA2EA.2040508@yahoo.co.uk>
+From: Don Carroll <ibedonc@star-c.com>
+Subject: Asus A8V , via vt8251 AHCI time
+Date: Thu, 3 Nov 2005 20:36:36 -0600
+Message-ID: <20051104023636.GA19368@vcr.star-c.com>
+References: <20051101064058.GA4902@vcr.star-c.com> <Pine.LNX.4.58.0511010736550.11761@shark.he.net> <20051101192449.GA9719@vcr.star-c.com> <Pine.LNX.4.58.0511011237080.11761@shark.he.net> <20051102034151.GA7583@vcr.star-c.com> <20051101195715.212ea264.rdunlap@xenotime.net> <20051102043643.GA5577@vcr.star-c.com> <20051101205659.7e97c145.rdunlap@xenotime.net> <20051102051343.GA7057@vcr.star-c.com> <20051101211203.68f1e119.rdunlap@xenotime.net>
+Reply-To: ibedonc@star-c.com, ibedonc@star-c.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sp0152.sc1.cp.net ([64.97.136.152]:17499 "EHLO n064.sc1.cp.net")
-	by vger.kernel.org with ESMTP id S1030552AbVKCXxS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Nov 2005 18:53:18 -0500
+Received: from dpc6935171158.direcpc.com ([69.35.171.158]:3543 "EHLO
+	vcr.star-c.com") by vger.kernel.org with ESMTP id S1161115AbVKDCh3
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Nov 2005 21:37:29 -0500
+Received: from vcr.star-c.com ([192.168.1.2])
+	by vcr.star-c.com (8.13.4/8.13.1) with ESMTP id jA42at7f026783
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Thu, 3 Nov 2005 20:37:04 -0600
+Received: (from don@localhost)
+	by vcr.star-c.com (8.12.9-20030917/8.13.4/Submit) id jA42aavo026649
+	for linux-ide@vger.kernel.org; Thu, 3 Nov 2005 20:36:36 -0600
+Content-Disposition: inline
+In-Reply-To: <20051101211203.68f1e119.rdunlap@xenotime.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Velu Erwan <erwan@seanodes.com>
 
-Hello,
+anyone alse got any ideas
+on this
 
-
-I am trying to make a SATA drive work (fast) on an Asus Pundit-R (P4R8L 
-motherboard).
-I have tried the patch posted on linux-ide by Erwan Velu on 10/10/05. It
-works and hdparm indicates about 55MB/s (thanks Erwan).
-
-However, Erwan's patch relies on testing the name of the pci device, in
-drivers/ide/pci/atiixp.c:
-if (strncmp(drive->name,"hdc",strlen("hdc")) == 0)
-
-This solution is obviously not very generic. (Perhaps I should say that,
-at least in my case, hda is a DVD drive on the IDE connector and hdc is
-the SATA drive). As Bartlomiej Zolnierkiewicz replied to Erwan's
-message, using libata's ata_id_is_sata would probably be a better route.
-
-I have tried to have a look at this (in kernel 2.6.14), but I think
-there is a major problem: atiixp is under ide/pci and doesn't seem to 
-have anything to do with libata and the sata modules under the scsi 
-directory. (Please feel free to correct me, linux-ide something very new 
-to me.)
-I have added some "printk"s in libata-core.c, in "ata_dev_config", where
-it seems that the "ata_dev_knobble" test is made, but it is never called
-(even when I make sure that ata_xiip and libata are loaded first in my
-initrd image). Would this mean that this IDE/SATA(/PATA?) controller is
-not handled my libata at all? Should it be?
-(I don't know much about the subject, but I presume that workarounds to
-get ata_id_is_sata "to work somehow" from atiixp.c would not be the
-right thing to do, even if feasible.)
+Jeff Garzik  ??
 
 
-
-I have also got another similar problem with this controller, which may 
-or may not be related. This problem is more or less point number 3 of:
-<http://www.debian.org/devel/debian-installer/errata>
-("SATA driver can block access to CD drive in installations from CD").
-When installing this machine, the hard drive and the DVD drive were
-"conflicting", so I had to load a much as I could from the install CD
-before loading the modules for the disk and subsequently proceeding with 
-a network installation.
-Moreover, once the system installed and running, I have not managed to 
-mount a CD after booting from the hard drive. Even after using "hdparm 
--d 0 /dev/hda", I get errors such as this:
-hda: DMA disabled
-hda: DMA timeout retry
-hda: timeout waiting for DMA
-hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-ide: failed opcode was: unknown
-hda: drive not ready for command
-
-
-
-Regards,
-
-Bruno.
-
-
-
-
-In case it may help, here are the relevant lines from dmesg:
-
-Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-ATIIXP: IDE controller at PCI slot 0000:00:14.1
-ACPI: PCI Interrupt 0000:00:14.1[A] -> GSI 16 (level, low) -> IRQ 177
-ATIIXP: chipset revision 0
-ATIIXP: not 100% native mode: will probe irqs later
-     ide0: BM-DMA at 0xff00-0xff07, BIOS settings: hda:DMA, hdb:pio
-     ide1: BM-DMA at 0xff08-0xff0f, BIOS settings: hdc:DMA, hdd:pio
-Probing IDE interface ide0...
-hda: HL-DT-ST DVDRAM GSA-4167B, ATAPI CD/DVD-ROM drive
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-Probing IDE interface ide1...
-hdc: Maxtor 6L200S0, ATA DISK drive
-ATIIXP: SATA drive detected (hdc) on a IXP200 IDE controller, 
-         skipping cable detection, using ATA-100 transfert rate
-ATIIXP: SATA drive detected (hdc) on a IXP200 IDE controller, 
-         skipping cable detection, using ATA-100 transfert rate
-ide1 at 0x170-0x177,0x376 on irq 15
-Probing IDE interface ide2...
-Probing IDE interface ide3...
-Probing IDE interface ide4...
-Probing IDE interface ide5...
-hdc: max request size: 1024KiB
-hdc: 398297088 sectors (203928 MB) w/16384KiB Cache, CHS=24792/255/63
-hdc: cache flushes supported
-  /dev/ide/host0/bus1/target0/lun0: p1 p2 p3 p4 < p5 >
-kjournald starting.  Commit interval 5 seconds
-EXT3-fs: mounted filesystem with ordered data mode.
-Adding 1951888k swap on /dev/hdc2.  Priority:-1 extents:1
-EXT3 FS on hdc3, internal journal
-hda: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache, UDMA(33)
-Uniform CD-ROM driver Revision: 3.20
-
+On Tue, Nov 01, 2005 at 09:12:03PM -0800, Randy.Dunlap wrote:
+> On Tue, 1 Nov 2005 23:13:43 -0600 Don Carroll wrote:
+> 
+> > On Tue, Nov 01, 2005 at 08:56:59PM -0800, Randy.Dunlap wrote:
+> > > On Tue, 1 Nov 2005 22:36:43 -0600 Don Carroll wrote:
+> > > 
+> > > > I think it was , I can try again
+> > > > 
+> > > > the next one is without MSI
+> > > > 
+> > > 
+> > > I'm sorry to put you to all of that trouble.
+> > Hey I want to get it working :)
+> > was no trouble  (I am systems Eng)
+> 
+> OK, good.
+> 
+> > > I've seen some very similar issues which turned out to be MSI-related,
+> > > but this one doesn't seem to be that way -- unless MSI + irqpoll
+> > > (your next test) happens to work for you -- then manybe it will
+> > > give us some more evidence.  If it does boot, please send us
+> > > the contents of /proc/interrupts .
+> > nope , still times out  
+> > 
+> > here is /proc/interrupts anyway
+> > irq 19 is the ahci
+> 
+> and irq 16 also (libata on both of them).
+> How do you know which one is for which controller/drive(s)?
+> 
+> Anyone else out there have ideas??
+> 
+> 
+> >           CPU0       CPU1
+> >   0:        333     459694    IO-APIC-edge  timer
+> >   1:          3       4244    IO-APIC-edge  i8042
+> >   8:          0          0    IO-APIC-edge  rtc
+> >   9:          0          0   IO-APIC-level  acpi
+> >  12:         31      51463    IO-APIC-edge  i8042
+> >  15:          5      14079    IO-APIC-edge  ide1
+> >  16:         26      72751   IO-APIC-level  libata
+> >  17:          0          0   IO-APIC-level  uhci_hcd:usb1
+> >  18:          0         77   IO-APIC-level  uhci_hcd:usb2, ehci_hcd:usb5,
+> > VIA8237
+> >  19:          0          0   IO-APIC-level  uhci_hcd:usb3, libata
+> >  20:          2       2824   IO-APIC-level  uhci_hcd:usb4, eth0
+> > NMI:        641       1026
+> > LOC:     459992     459969
+> > ERR:          0
+> > MIS:          0
+> 
+> 
+> ---
+> ~Randy
