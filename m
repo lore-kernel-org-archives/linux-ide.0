@@ -1,40 +1,41 @@
-From: Andries Brouwer <Andries.Brouwer@cwi.nl>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
-Date: Sat, 5 Nov 2005 00:56:46 +0100
-Message-ID: <20051104235646.GE27090@apps.cwi.nl>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BF3F@WDSCEXBECL03.sc.wdc.com> <1131130707.3532.45.camel@mulgrave> <20051104203004.GF12384@one-eyed-alien.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: ATA thru SCSI thru USB
+Date: Fri, 4 Nov 2005 16:41:09 -0800
+Message-ID: <A804F15E-41D6-45C1-A35F-D7A0AF010435@ieee.org>
+References: <Pine.LNX.4.44L0.0511021104020.4928-100000@iolanthe.rowland.org>
+Mime-Version: 1.0 (Apple Message framework v734)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:35769 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S1751150AbVKDX4z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Nov 2005 18:56:55 -0500
-Content-Disposition: inline
-In-Reply-To: <20051104203004.GF12384@one-eyed-alien.net>
+Received: from sccrmhc13.comcast.net ([204.127.202.64]:35778 "EHLO
+	sccrmhc13.comcast.net") by vger.kernel.org with ESMTP
+	id S1751386AbVKEAl6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Nov 2005 19:41:58 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0511021104020.4928-100000@iolanthe.rowland.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Timothy Thelin <Timothy.Thelin@wdc.com>, t.schorpp@gmx.de, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-ide@vger.kernel.org
 
-On Fri, Nov 04, 2005 at 12:30:04PM -0800, Matthew Dharm wrote:
-> On Fri, Nov 04, 2005 at 12:58:27PM -0600, James Bottomley wrote:
+> Date: 2 November 2005 08:05:18 GMT-08:00
+> Subject: Re: [usb-storage] [Merging ATA passthru] on   
+> integratingSMART/ATA-Security in usb-storage driver
+> ...
+> Is there any standard way to pass ATA commands over a USB  
+> transport?  I've
+> never heard of one.
 
-> > What happens if you prevent USB mangling the scsi_level?  I think, for
-> > the most part, we would handle 0 in about the same way as we handle 2.
-> > However, we could gate the if around the CDB[1] mangling as
-> > 
-> > if (scsi_level != SCSI_UNKNOWN && scsi_level <= SCSI_2)
-> > 
-> > which should fix your problem, I think.
-> 
-> A long time ago, usb-storage didn't mangle the scsi_level.  And almost
-> nothing worked.  Without a SCSI level, 6-byte commands get sent; only
-> 10-byte commands will do.
+T10.org has drafts of an ATA thru SCSI, thus USB thru SCSI real soon  
+now will have an ATA thru SCSI thru USB.
 
-Yes, that was long ago. Haven't things improved?
+I remember recently there I asked if I could pass ATA Locking By  
+Password thru SCSI.
 
-(For example, I seem to recall adding stuff like use_10_for_{ms,rw}
-to make it possible for usb storage to tell the SCSI layer that it
-prefers 10-byte commands. Maybe no cheating with SCSI level is needed
-anymore?)
+The answer I got sounded like yes the casual observer can intuit how  
+to construct the bits and yes reasonably transparent bridges will  
+actually pass them thru but technically that draft specification is  
+intentionally opaque, guaranteeing results only for what it lists,  
+and that list doesn't yet include ATA Locking By Password, vendor- 
+specific requests, newly standard requests, etc. etc.
 
-Andries
+I didn't care myself enough to request authoritative confirmation of  
+that paraphrase of what I thought I heard ...
