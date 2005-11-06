@@ -1,88 +1,84 @@
-From: Molle Bestefich <molle.bestefich@gmail.com>
-Subject: atalib regressions in 2.6.14
-Date: Sun, 6 Nov 2005 15:35:34 +0000
-Message-ID: <62b0912f0511060735j3039bf6dve3d22e97ad75cf37@mail.gmail.com>
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
+Date: Sun, 6 Nov 2005 13:58:56 -0800
+Message-ID: <20051106215856.GA28452@one-eyed-alien.net>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BF3F@WDSCEXBECL03.sc.wdc.com> <1131130707.3532.45.camel@mulgrave> <20051104203004.GF12384@one-eyed-alien.net> <1131137395.3532.57.camel@mulgrave> <20051105235522.GA21733@one-eyed-alien.net> <1131238146.9430.7.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.202]:49496 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932067AbVKFPff convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 6 Nov 2005 10:35:35 -0500
-Received: by nproxy.gmail.com with SMTP id q29so49298nfc
-        for <linux-ide@vger.kernel.org>; Sun, 06 Nov 2005 07:35:34 -0800 (PST)
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="LQksG6bCIzRHxTLp"
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1131238146.9430.7.camel@mulgrave>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Timothy Thelin <Timothy.Thelin@wdc.com>, t.schorpp@gmx.de, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-
-Seems there is a couple of regressions in atalib in 2.6.14 (vs. 2.6.12).
-
-It no longer detects SATA ports without devices, instead it now throw
-warnings about abnormal stati.
-
-Also, the kernel oopses on startup from time to time.
-
-Here's an excerpt:
-
-libata version 1.12 loaded.
-ata_piix version 1.04
-PCI: Setting latency timer of device 0000:00:1f.2 to 64
-ata1: SATA max UDMA/133 cmd 0xE400 ctl 0xE502 bmdma 0xE800 irq 18
-ata2: SATA max UDMA/133 cmd 0xE600 ctl 0xE702 bmdma 0xE808 irq 18
-ATA: abnormal status 0x7F on port 0xE407
-scsi0 : ata_piix
-ATA: abnormal status 0x7F on port 0xE607
-scsi1 : ata_piix
-Unable to handle kernel NULL pointer dereference at virtual address 00000000
-st: Version 20050830, fixed bufsize 32768, s/g segs 256
-mice: PS/2 mouse device common for all mice
- printing eip:
-device-mapper: 4.4.0-ioctl (2005-01-12) initialised: dm-devel@redhat.com
- c03e6f00
-*pde = 00000000
-NET: Registered protocol family 2
-Oops: 0000 [#1]
-PREEMPT SMP
-Modules linked in:
-CPU: 0
-EIP: 0060:[<c036f00>] Not tainted VLI
-EFLAGS: 00010282 (2.6.14)
-EIP is at scsi_run_queue+0x10/0xb0
-eax: 0000000  ebx: c17de6bc  ecx: dffef500  edx: 00000001
-esi: df86b00  edi: 00000202  ebp: c17ec0cd  esp: dfea7ec0
-ds: 007b  es: 007b  ss: 0068
-
-Process ksoftirqd/0 (pid: 3, threadinfo=dfea6000 task=dfec8a70
-Stack: c17ec0c0 c17de6bc df86eb00 00000202 c17ec0c0 c03e7112 df86cb00
-00000000 00000000 00000024 c03e7487 00000001 c1403060 dfec4c30
-dfec8a70 00000000 00000000 00000000 c17ec0c0 00000024 00040000
-00000024 00000000
-
-Call Trace:
-[<c03e7112>] scsi_end_request+0xb2/0xd0
-[<c03e7487>] scsi_io_completion+0x247/0x7f0
-[<c03e2749>] scsi_finish_command+0x79/0xa0
-[<c03e2619>] scsi_softirq+0xc9/0x140
-[<c0124084>] __do_softieq+0x35/0x40
-[<c01240d5>] do_softirq+0x35/0xf0
-[<c0124675>] ksoftirqd+0x85/0xf0
-[<c01245f0>] ksoftirqd+0x0/0xf0
-[<c0132d84>] kthread+0xa4/0xb0
-[<c0132cc0>] kthread+0x0/0xb0
-[<c0101195>] kernel_thread_helper+0x5/0x10
-
-Code: 0b 00 89 04 24 89 d8 e8 bf ba ff ff eb ac 8d 55 57 56 53 83 ec
-04 89 04 24 8b 80 f8 00 00 00 <8b> 38 f6 80 7d 01 00 00 80 0f 85 83 00
-00 00 8b 47 34 8d 6f 24
-
-<0>:Kernel panic - not syncing: fatal exception in interrupt
 
 
-As can be seen, it says "ATA: abnormal status 0x7F on port" instead of
-"ATA: no devices on port" (or some such).
+--LQksG6bCIzRHxTLp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-No clue what's going on with the Oops?
+On Sat, Nov 05, 2005 at 06:49:05PM -0600, James Bottomley wrote:
+> On Sat, 2005-11-05 at 15:55 -0800, Matthew Dharm wrote:
+> > On Fri, Nov 04, 2005 at 02:49:55PM -0600, James Bottomley wrote:=20
+> > > Can you just try it with a modern kernel and see if anything still
+> > > breaks?
+> >=20
+> > I just realized this plan has a problem...
+> >=20
+> > The reported SCSI level of a device is mostly garbage, but not always.
+> > I've seen 0, 1, 2, 3, and 0xff all reported.  HOWEVER, the reported val=
+ue
+> > seems independent of what devices have vendor-specific commands (and th=
+us
+> > need the CDB[1] not messed with).
+> >=20
+> > It is an interesting experiment to remove the force-to-SCSI_2 part of t=
+he
+> > usb-storage code (on the general principal of "we shouldn't be messing =
+with
+> > the data passed through the driver), but it doesn't solve the original
+> > question of needing a way to pass commands without CDB[1] getting alter=
+ed.
+>=20
+> Well, that might be a problem if it weren't for the fact that this
+> LUN_INHIBIT flag was removed in 2002.  If it's taken three years to find
+> a device that has a problem with it, I don't really think it's a
+> particularly widespread problem.  And since the device that now shows
+> the problem is setting the level to 0, it looks like we have a potential
+> solution that fits all known cases.
 
-Vanilla 2.6.14, nothing fancy.
+Was it really removed that long ago?  I guess there are still a lot of
+people using 2.4 kernels, then.
+
+I've been recommending this flag to people as recently as 6 months ago
+(i.e. the last time someone asked me).   It comes up 2-3 times a year.
+
+The last time it came up, the device set SCSI_2.
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+It was a new hope.
+					-- Dust Puppy
+User Friendly, 12/25/1998
+
+--LQksG6bCIzRHxTLp
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFDbnygHL9iwnUZqnkRAsDZAKCWxKRxiXzCkqhT8MYIgGSj1M31CACgiI8h
+nzW+LvcTctS8JrJgm19hKvQ=
+=OFgk
+-----END PGP SIGNATURE-----
+
+--LQksG6bCIzRHxTLp--
