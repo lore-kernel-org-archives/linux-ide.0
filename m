@@ -1,69 +1,77 @@
-From: thomas schorpp <t.schorpp@gmx.de>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating	SMART/ATA-Security
- in usb-storage driver
-Date: Sun, 06 Nov 2005 04:38:35 +0100
-Message-ID: <436D7ABB.6070706@gmx.de>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BF3F@WDSCEXBECL03.sc.wdc.com>	 <1131130707.3532.45.camel@mulgrave>	 <20051104203004.GF12384@one-eyed-alien.net>	 <1131137395.3532.57.camel@mulgrave>	 <20051105235522.GA21733@one-eyed-alien.net> <1131238146.9430.7.camel@mulgrave>
-Reply-To: t.schorpp@gmx.de
+From: Vladimir Dergachev <volodya@mindspring.com>
+Subject: sil3112
+Date: Sun, 6 Nov 2005 03:32:57 -0500 (EST)
+Message-ID: <Pine.LNX.4.62.0511060316570.8945@node2.an-vo.com>
+Reply-To: Vladimir Dergachev <volodya@mindspring.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:19681 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S932236AbVKFDjQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 Nov 2005 22:39:16 -0500
-In-Reply-To: <1131238146.9430.7.camel@mulgrave>
+Received: from ylpvm12-ext.prodigy.net ([207.115.57.43]:29071 "EHLO
+	ylpvm12.prodigy.net") by vger.kernel.org with ESMTP id S932332AbVKFIdE
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 6 Nov 2005 03:33:04 -0500
+Received: from pimout5-ext.prodigy.net (pimout5-int.prodigy.net [207.115.4.21])
+	by ylpvm12.prodigy.net (8.12.10 outbound/8.12.10) with ESMTP id jA68XQin003255
+	for <linux-ide@vger.kernel.org>; Sun, 6 Nov 2005 03:33:27 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Timothy Thelin <Timothy.Thelin@wdc.com>, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
-
-James Bottomley wrote:
-> On Sat, 2005-11-05 at 15:55 -0800, Matthew Dharm wrote:
-> 
->>On Fri, Nov 04, 2005 at 02:49:55PM -0600, James Bottomley wrote: 
->>
->>>Can you just try it with a modern kernel and see if anything still
->>>breaks?
->>
->>I just realized this plan has a problem...
->>
->>The reported SCSI level of a device is mostly garbage, but not always.
->>I've seen 0, 1, 2, 3, and 0xff all reported.  HOWEVER, the reported value
->>seems independent of what devices have vendor-specific commands (and thus
->>need the CDB[1] not messed with).
->>
->>It is an interesting experiment to remove the force-to-SCSI_2 part of the
->>usb-storage code (on the general principal of "we shouldn't be messing with
->>the data passed through the driver), but it doesn't solve the original
->>question of needing a way to pass commands without CDB[1] getting altered.
-> 
-> 
-> Well, that might be a problem if it weren't for the fact that this
-> LUN_INHIBIT flag was removed in 2002.  If it's taken three years to find
-> a device that has a problem with it, I don't really think it's a
-> particularly widespread problem.  And since the device that now shows
-> the problem is setting the level to 0, it looks like we have a potential
-> solution that fits all known cases.
-> 
-> Anyway, the goal should be to handle devices in a standards compliant
-> manner first and then worry about quirk tables when that doesn't
-> work ... we have an incredibly broad quirk infrastructure in SCSI for
-> this.
-> 
-> James
-> 
-
-ok, ive just ordered 2 cypress CY7C68300B samples and will replace the discont'd A type in my device.
-datasheet for A says nothing about ATACB and security. sheet for B does guarantee.
-
-cypress windows driver reports no security, too.
-
-so i will replace the chip to have a testing base.
-
-tom
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
 
+Hi Jeff,
 
+   I got myself a Sil3112 controller (cardbus card) with a Seagate SATA
+driver (250 GB, .8 revision, with NCQ) and I read the status page on your 
+site.
 
+   Before I delve deeper, could you let me know whether there was any 
+progress with this combination since you last updated the webpages ?
 
+   Also, just in case, the little info I gathered so far:
+
+      1. The seagate drive is in external SATA enclosure which came with
+         a longer SATA cable. When I am using this cable the driver does
+         not see the hard disk at all.
+
+         When I use shorter cable I can get the sata_sil.c to see the
+         drive.
+
+      2. siimage.c driver (older one) does not appear to recognize the
+         controller at all, despite valid PCI entry.
+
+      3. There is a mysterious printout about "cache line size not set",
+         not sure whether this is relevant as I saw it in other logs
+         on the web. This might have to do with the fact that I have
+         cardbus card.
+
+      4. If I force IDE mode to UDMA5 (by forcing Maxtor fix) the
+         drive access is more stable, I can do hdparm -t (with abysmal
+         rates on the order of 0.5 MB/sec) and mke2fs gets along somewhat
+         ok.
+
+      5. mke2fs seems to freeze when trying to read some directory (not
+         sure what exactly it is doing). I know this because when it
+         froze I tried pulling out the cardbus card and after a while
+         mke2fs printed out the call that failed.
+
+      6. forcing mode below UDMA5 does not appear to have any effect.
+
+      7. I have not tried using UDMA5 with longer SATA cable yet.
+
+      8. forcing "Seagate fix" does not appear to do anything,
+         but I could be wrong.
+
+      9. Syba (the manufacturer of the card) has a "Redhat tweaker" that
+         appears to be written by Andre Hendrik. This file forces the
+         mode to UDMA5.
+
+     10. Silicon image has binary drivers on their website which seem to
+         come with some sort of bios file. This might be needed only for
+         raid though..
+
+   Any advice and hints are much appreciated :)
+
+                  thank you !
+
+                       Vladimir Dergachev
