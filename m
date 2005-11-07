@@ -1,95 +1,53 @@
-From: Chris Studholme <cvs@cs.utoronto.ca>
-Subject: Re: BUG: spinlock recursion on CPU#0, scsi_eh_3/737
-Date: Mon, 7 Nov 2005 14:11:51 -0500
-Message-ID: <20051107191151.GA24154@cs.utoronto.ca>
-References: <20051107025428.GA2611@cs.utoronto.ca> <436F0F45.5010907@pobox.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security
+ in usb-storage driver
+Date: Mon, 7 Nov 2005 14:33:40 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0511071427580.5078-100000@iolanthe.rowland.org>
+References: <436F97BE.1030406@gmx.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+QahgC5+KEYLbs62"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cliff.cs.toronto.edu ([128.100.3.120]:23710 "EHLO
-	cliff.cs.toronto.edu") by vger.kernel.org with ESMTP
-	id S965318AbVKGTLx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Nov 2005 14:11:53 -0500
-Content-Disposition: inline
-In-Reply-To: <436F0F45.5010907@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <436F97BE.1030406@gmx.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: thomas schorpp <t.schorpp@gmx.de>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, Timothy Thelin <Timothy.Thelin@wdc.com>, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
 
+On Mon, 7 Nov 2005, thomas schorpp wrote:
 
---+QahgC5+KEYLbs62
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> > I don't think blacklisting is a good way to do this.  In principle any USB 
+> > mass storage device -- any SCSI device, in fact -- might have a 
+> > vendor-specific pass-thru needing special handling.
+> 
+> no. that would be not industry best practice and uneconomical sw effort.
 
-Hi Jeff,
+Adding vendor-specific codes to SCSI devices isn't industry best practice?  
+I can't argue with that, but it is very common nevertheless.
 
-With 2.6.14-git5, the BUG doesn't happen, but I still have errors that=20
-are equally bad.  First I get:
+Is it an uneconomical software effort?  Ridiculous -- it's not software at 
+all, it's part of the firmware.
 
-ATA: abnormal status 0xFF on port 0xF880239C
-ata4: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata4: status=3D0xff { Busy }
+> remember this devices are mainly "designed for windows" and WHQL certification 
+> is expensive for every single driver. and ms has only one driver for all usb storage 
+> right now, all boxes and sticks i had here use it.
 
-followed by a series of messages:
+I think you have a very limited view of how devices are "designed".  
+Besides, I specifically said I was talking about _all_ SCSI devices, not 
+just USB ones.
 
-ata4: command timeout
-ATA: abnormal status 0xFF on port 0xF880239C
-ata4: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata4: status=3D0xff { Busy }
-sd 3:0:0:0: SCSI error: return code =3D 0x8000002
-sda: Current: sense key=3D0xb
-    ASC=3D0x47 ASCQ=3D0x0
-end_request: I/O error, dev sda, sector 9523967
+> >  It doesn't have to be 
+> > correlated with the vendor, the product, the SCSI level, the transport, or 
+> > anything else.
+> 
+> yes. the sheet for design recommended cypress chips state all ATACB and ATA-Security.
+> i would be make no sense to implement different behaviuors in chips for the same purpose.
 
-continuing for sectors: 9523967 9523975 9523983 9523991 9523999 9524007
-   9524015 9524023 9524031 ... (every 8th sector)
+That's what Cypress does, sure.  But who says that other vendors have to 
+copy Cypress?  For the most part they don't.  Neither does T10.
 
-At this point the machine is pretty much useless.  I cannot login.  I
-can get a shell from a mutt process that was running before I started
-the test, but I can't su to root and cat /proc/mdstat hangs.  All I
-could do is reboot from my serial console using break-s (emergency sync)
-followed by break-b.
+As for whether it makes no sense -- you have your point of view.  Business 
+people have a very different point of view; to them it might make 
+excellent sense, to help secure a competitive advantage.
 
-And here's another datapoint.  Sometimes when I boot, my second
-processor fails to initialize and I just reboot again to get it started.=20
-This happened today but I left the machine up with just a single
-processor running.  The tar|gzip test completed without any failures in
-this case (tried it twice).
+Alan Stern
 
-Chris.
-
-
-On Monday, November  7, Jeff Garzik wrote:
-> Chris Studholme wrote:
-> >Hi,
-> >
-> >I'm having the fillowing problem.
-> >
-> >
-> >[1.] One line summary of the problem:
-> >
-> >BUG: spinlock recursion on CPU#0, scsi_eh_3/737
->=20
-> Can you verify that 2.6.14-git5+ fixes it?
->=20
-> 	Jeff
->=20
->=20
-
---+QahgC5+KEYLbs62
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFDb6b3wTYpZrwvqLQRAvA/AJ0dO4LGI4rmiykWG7x4nXIXEwH/eQCg4+tJ
-HQsWblXojpqGeeBD/M1dLtk=
-=Gk+u
------END PGP SIGNATURE-----
-
---+QahgC5+KEYLbs62--
