@@ -1,51 +1,95 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
-Date: Mon, 7 Nov 2005 10:57:18 -0800
-Message-ID: <20051107185718.GA16791@us.ibm.com>
-References: <20051104203004.GF12384@one-eyed-alien.net> <1131137395.3532.57.camel@mulgrave> <20051105235522.GA21733@one-eyed-alien.net> <1131238146.9430.7.camel@mulgrave> <20051106215856.GA28452@one-eyed-alien.net> <436E8394.2010600@gmx.de> <20051106235213.GA479@us.ibm.com> <20051107170525.GB26509@one-eyed-alien.net> <20051107172421.GA15710@us.ibm.com> <436F94F2.2080306@gmx.de>
+From: Chris Studholme <cvs@cs.utoronto.ca>
+Subject: Re: BUG: spinlock recursion on CPU#0, scsi_eh_3/737
+Date: Mon, 7 Nov 2005 14:11:51 -0500
+Message-ID: <20051107191151.GA24154@cs.utoronto.ca>
+References: <20051107025428.GA2611@cs.utoronto.ca> <436F0F45.5010907@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="+QahgC5+KEYLbs62"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cliff.cs.toronto.edu ([128.100.3.120]:23710 "EHLO
+	cliff.cs.toronto.edu") by vger.kernel.org with ESMTP
+	id S965318AbVKGTLx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Nov 2005 14:11:53 -0500
 Content-Disposition: inline
-In-Reply-To: <436F94F2.2080306@gmx.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: thomas schorpp <t.schorpp@gmx.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Timothy Thelin <Timothy.Thelin@wdc.com>, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
+In-Reply-To: <436F0F45.5010907@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Nov 07, 2005 at 06:54:58PM +0100, thomas schorpp wrote:
-> Bus 004 Device 003: ID 04b4:6830 Cypress Semiconductor Corp. USB-2.0 IDE Adapter
-> Device Descriptor:
->   bLength                18
->   bDescriptorType         1
->   bcdUSB               2.00
->   bDeviceClass            0 (Defined at Interface level)
->   bDeviceSubClass         0
->   bDeviceProtocol         0
->   bMaxPacketSize0        64
->   idVendor           0x04b4 Cypress Semiconductor Corp.
->   idProduct          0x6830 USB-2.0 IDE Adapter
 
-So this is a USB to ATA/ATAPI bridge?
+--+QahgC5+KEYLbs62
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Can we trigger black listing based on the above vendor/product values?
-i.e. can you check for these values in usb-storage slave_configure code?
+Hi Jeff,
 
-I am ATA ignorant ... how does this thing pass multi-lun values to the ATA
-side? Is it just effectively not allowed in ATA?
+With 2.6.14-git5, the BUG doesn't happen, but I still have errors that=20
+are equally bad.  First I get:
 
-Per earlier email, datasheet is here:
+ATA: abnormal status 0xFF on port 0xF880239C
+ata4: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata4: status=3D0xff { Busy }
 
-http://www.cypress.com/portal/server.pt?space=CommunityPage&control=SetCommunity&CommunityID=209&PageID=259&fid=14&rpn=CY7C68320
+followed by a series of messages:
 
-On page 13 of datasheet:
+ata4: command timeout
+ATA: abnormal status 0xFF on port 0xF880239C
+ata4: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata4: status=3D0xff { Busy }
+sd 3:0:0:0: SCSI error: return code =3D 0x8000002
+sda: Current: sense key=3D0xb
+    ASC=3D0x47 ASCQ=3D0x0
+end_request: I/O error, dev sda, sector 9523967
 
-Sounds like this device has special snooping of cdb[1], so if it sees 0x24
-in there it looks for an embedded ATA command, and translates and sends
-that to the underlying device, so we can never black list based on the
-device that we are using to send the SG_IO ioctl.
+continuing for sectors: 9523967 9523975 9523983 9523991 9523999 9524007
+   9524015 9524023 9524031 ... (every 8th sector)
 
-Yeh, some other hardware might want lun inihibit in the future, and that
-could still be added back, but IMHO black list is better.
+At this point the machine is pretty much useless.  I cannot login.  I
+can get a shell from a mutt process that was running before I started
+the test, but I can't su to root and cat /proc/mdstat hangs.  All I
+could do is reboot from my serial console using break-s (emergency sync)
+followed by break-b.
 
--- Patrick Mansfield
+And here's another datapoint.  Sometimes when I boot, my second
+processor fails to initialize and I just reboot again to get it started.=20
+This happened today but I left the machine up with just a single
+processor running.  The tar|gzip test completed without any failures in
+this case (tried it twice).
+
+Chris.
+
+
+On Monday, November  7, Jeff Garzik wrote:
+> Chris Studholme wrote:
+> >Hi,
+> >
+> >I'm having the fillowing problem.
+> >
+> >
+> >[1.] One line summary of the problem:
+> >
+> >BUG: spinlock recursion on CPU#0, scsi_eh_3/737
+>=20
+> Can you verify that 2.6.14-git5+ fixes it?
+>=20
+> 	Jeff
+>=20
+>=20
+
+--+QahgC5+KEYLbs62
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFDb6b3wTYpZrwvqLQRAvA/AJ0dO4LGI4rmiykWG7x4nXIXEwH/eQCg4+tJ
+HQsWblXojpqGeeBD/M1dLtk=
+=Gk+u
+-----END PGP SIGNATURE-----
+
+--+QahgC5+KEYLbs62--
