@@ -1,34 +1,149 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: BUG: spinlock recursion on CPU#0, scsi_eh_3/737
-Date: Mon, 07 Nov 2005 03:24:37 -0500
-Message-ID: <436F0F45.5010907@pobox.com>
-References: <20051107025428.GA2611@cs.utoronto.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: linux@horizon.com
+Subject: sata_sil24 corruption details
+Date: 7 Nov 2005 04:59:56 -0500
+Message-ID: <20051107095956.27387.qmail@science.horizon.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:3789 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751313AbVKGIYq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Nov 2005 03:24:46 -0500
-In-Reply-To: <20051107025428.GA2611@cs.utoronto.ca>
+Received: from science.horizon.com ([192.35.100.1]:54579 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S932473AbVKGKAH
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Nov 2005 05:00:07 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chris Studholme <cvs@cs.utoronto.ca>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux@horizon.com
 
-Chris Studholme wrote:
-> Hi,
-> 
-> I'm having the fillowing problem.
-> 
-> 
-> [1.] One line summary of the problem:
-> 
-> BUG: spinlock recursion on CPU#0, scsi_eh_3/737
+I just compared the two halves of my RAID-1 mirrors and found something
+very interesting...
 
-Can you verify that 2.6.14-git5+ fixes it?
+sector 95958 of the two halves looks like:
 
-	Jeff
+ 0000000: 9db4 87cf 4e2f cba7 c727 1feb 5f08 b7cf  ....N/...'.._...
+ 0000010: 9f7f 0d18 c4c1 b3b4 bffd 3579 6cfa d13d  ..........5yl..=
+ 0000020: d2c7 10eb 61ab 7dd7 d070 eb16 cb91 81bf  ....a.}..p......
+ 0000030: 839f 8067 f724 b4eb bf5f e2ff 8077 472f  ...g.$..._...wG/
+ 0000040: fcf7 cbb8 ab0e 3837 2359 8dfb 5225 9b4c  ......87#Y..R%.L
+ 0000050: ea7d c6d6 7df8 3f53 3ce3 4e33 98ee 3eff  .}..}.?S<.N3..>.
+ 0000060: 52b3 057e 9324 f71b 0d96 279a d9f5 654d  R..~.$....'...eM
+ 0000070: af9d 2bc7 e6eb 5585 b97d f187 f131 a364  ..+...U..}...1.d
+ 0000080: aef9 a464 cdcf 3b0b 5e83 35df a67e 683c  ...d..;.^.5..~h<
+ 0000090: 03e0 0a57 49bc e5fa 3501 8d2f becb 5ebd  ...WI...5../..^.
+ 00000a0: ccad fc7c 2756 d861 5548 ee39 41ff 1e13  ...|'V.aUH.9A...
+ 00000b0: 0693 a3ca 103c 0d25 918d 62e1 d1a7 8c22  .....<.%..b...."
+ 00000c0: a126 af84 5e6f c0f3 9567 8967 89a9 d7c2  .&..^o...g.g....
+ 00000d0: 90a0 68ce 0cde 1ec0 1652 3064 348e d7b0  ..h......R0d4...
+ 00000e0: cf0a f014 2a90 9143 6a62 b29a 3578 3ec0  ....*..Cjb..5x>.
+ 00000f0: fcf0 9a18 1bbd 208b 1468 9072 cc95 2ea8  ...... ..h.r....
+ 0000100: 9f02 573c f339 0348 dbc4 52b0 1f93 ffa4  ..W<.9.H..R.....
+ 0000110: 3bf8 6478 525a c509 ea41 0c8d 3c7c 7610  ;.dxRZ...A..<|v.
+ 0000120: 1ad6 02a3 769f 5b64 b066 aae9 f47a d463  ....v.[d.f...z.c
+ 0000130: 7839 1172 9622 5b54 975f f450 98a4 c733  x9.r."[T._.P...3
+ 0000140: b959 339e f47a d786 f0bd 4c7e 74f6 8f7b  .Y3..z....L~t..{
+ 0000150: 5d70 fc7b aa06 146c cea1 fbac ff33 d73f  ]p.{...l.....3.?
+ 0000160: 40cc f31f 30f1 5957 bffe 3b93 fbc1 ac68  @...0.YW..;....h
+ 0000170: 90fe 94bf 6770 ded7 17bf c77e 4be8 15af  ....gp.....~K...
+-0000180: 4a2b 371e 8a1c baf5 7ab0 7998 84cb bfae  J+7.....z.y.....
++0000180: 6dd2 09ec b42b 0638 996e e914 7a7c d353  m....+.8.n..z|.S
+ 0000190: 0f5e e234 e488 997d 5564 a630 e7ad c3db  .^.4...}Ud.0....
+ 00001a0: b1f0 3a4b 4958 a9ac 7632 4edd 5d8d 60c3  ..:KIX..v2N.].`.
+ 00001b0: 6877 cf3c 26fb 50d2 fe3a 67f2 b69d a7be  hw.<&.P..:g.....
+ 00001c0: ee8b 39e9 a52d b3ee 8970 77e3 2b2b be13  ..9..-...pw.++..
+ 00001d0: 6abf 66eb 6b81 2319 185b 404a 8bef cee9  j.f.k.#..[@J....
+ 00001e0: 7efd 556e 93fc 5360 054d e436 d5f7 4774  ~.Un..S`.M.6..Gt
+ 00001f0: f5a3 a63a eb3c 6156 6eaf e23f eece 6450  ...:.<aVn..?..dP
+
+Then sector 129547:
+ 0000000: 494e 41e8 0101 0002 0000 0065 0000 0069  INA........e...i
+ 0000010: 0000 0002 0000 0000 0000 0000 0000 00a1  ................
+ 0000020: 4358 32f1 361f 2dfc 4358 32f1 361f 2dfc  CX2.6.-.CX2.6.-.
+ 0000030: 4358 32f1 361f 2dfc 0000 0000 0000 0006  CX2.6.-.........
+ 0000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+ 0000050: 0000 0002 0000 0000 0000 0000 0000 0006  ................
+ 0000060: ffff ffff 0000 04a5 042a 0700 3066 5769  .........*..0fWi
+ 0000070: 6e4d 696c 02f7 1438 0900 4866 4461 7461  nMil...8..HfData
+ 0000080: 6261 7365 1203 3827 0600 6061 7474 7269  base..8'..`attri
+ 0000090: 6200 2a48 2200 0000 0001 0000 0000 003c  b.*H"..........<
+ 00000a0: c800 0080 0000 0000 0002 0000 0000 003c  ...............<
+ 00000b0: 0000 0000 0001 cc3f 0002 8000 0000 0039  .......?.......9
+ 00000c0: b000 0040 0000 0000 0003 0000 0000 0039  ...@...........9
+ 00000d0: a800 0040 0000 0000 0003 8000 0000 0039  ...@...........9
+ 00000e0: 9800 0040 0000 0000 0004 0000 0000 0039  ...@...........9
+ 00000f0: 9000 0040 ffff ffff 1801 0000 0000 0000  ...@............
+ 0000100: 494e 81a4 0102 0001 0000 0000 0000 0000  IN..............
+-0000110: 0000 0001 0000 0000 0000 0000 0000 055a  ...............Z
+-0000120: 435f 2276 096e bf0e 4345 8a5f 34e9 60ae  C_"v.n..CE._4.`.
++0000110: 0000 0001 0000 0000 0000 0000 0000 0557  ...............W
++0000120: 435e e888 066b 4474 4345 8a5f 34e9 60ae  C^...kDtCE._4.`.
+ 0000130: 4345 8a5f 34e9 60ae 0000 0000 0000 01f2  CE._4.`.........
+ 0000140: 0000 0000 0000 0001 0000 0000 0000 0001  ................
+ 0000150: 0000 0002 0000 0000 0000 0000 0000 0001  ................
+ 0000160: ffff ffff 0000 0000 0000 0000 0000 0017  ................
+ 0000170: caa0 0001 0000 0000 0000 0000 0000 0000  ................
+ 0000180: 7070 5100 0000 0000 ef1d 2dab aa2a 0000  ppQ.......-..*..
+ 0000190: 0051 1c00 0000 0000 1100 0000 0000 0000  .Q..............
+ 00001a0: 4895 5100 0000 0000 0000 0000 0000 0000  H.Q.............
+ 00001b0: 0051 2c80 ffff ffff 0600 0000 0000 0000  .Q,.............
+ 00001c0: cf8d 0200 0000 0000 0200 0000 0100 0000  ................
+ 00001d0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+ 00001e0: 7070 5100 0000 0000 031c 2dab aa2a 0000  ppQ.......-..*..
+ 00001f0: 80f8 0200 0000 0000 0100 0100 0000 0000  ................
+
+And sector 195094:
+ 0000000: 494e 41e8 0102 0019 0000 0065 0000 0069  INA........e...i
+ 0000010: 0000 0019 0000 0000 0000 0000 0000 0002  ................
+ 0000020: 4355 94a0 0530 68f2 4355 94af 0434 3c90  CU...0h.CU...4<.
+ 0000030: 4355 94af 0434 3c90 0000 0000 0000 1000  CU...4<.........
+ 0000040: 0000 0000 0000 0001 0000 0000 0000 0001  ................
+ 0000050: 0000 0002 0000 0000 0000 0000 0000 0000  ................
+ 0000060: ffff ffff 0000 0000 0000 0000 0000 0023  ...............#
+ 0000070: b6e0 0001 5302 3100 0d09 0048 6652 4543  ....S.1....HfREC
+ 0000080: 5943 4c45 441a 17b4 3e0d 0060 664d 7920  YCLED...>..`fMy 
+ 0000090: 446f 6375 6d65 6e74 731e e758 000e 0078  Documents..X...x
+ 00000a0: 6650 726f 6772 616d 2046 696c 6573 0c1f  fProgram Files..
+ 00000b0: 9825 0000 0000 0000 0000 0000 0000 0000  .%..............
+ 00000c0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+ 00000d0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+ 00000e0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+ 00000f0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+ 0000100: 494e 41e8 0101 0002 0000 0065 0000 0069  INA........e...i
+-0000110: 0000 0002 0000 0000 0000 0000 0000 0010  ................
+-0000120: 435f 1c9a 0be9 b322 4355 9502 1f35 8dad  C_....."CU...5..
++0000110: 0000 0002 0000 0000 0000 0000 0000 000e  ................
++0000120: 435d 942d 069a 8c21 4355 9502 1f35 8dad  C].-...!CU...5..
+ 0000130: 4355 9502 1f35 8dad 0000 0000 0000 0062  CU...5.........b
+ 0000140: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+ 0000150: 0000 0002 0000 0000 0000 0000 0000 0001  ................
+ 0000160: ffff ffff 0500 141f 303a 0c00 3066 436f  ........0:..0fCo
+ 0000170: 6e6e 4f72 6967 2e30 3100 8554 090e 0048  nnOrig.01..T...H
+ 0000180: 6645 7843 746c 725f 4944 432e 3031 0085  fExCtlr_IDC.01..
+ 0000190: 5c05 0f00 6866 4672 616d 6545 785f 4944  \...hfFrameEx_ID
+ 00001a0: 432e 3031 0085 5c06 0a00 8866 646c 3266  C.01..\....fdl2f
+ 00001b0: 732e 6c6f 6700 855c 0706 00a0 6174 7472  s.log..\....attr
+ 00001c0: 6962 0085 5c08 0000 0000 0000 0000 0000  ib..\...........
+ 00001d0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+ 00001e0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+ 00001f0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+
+These shorts bursts of inconsistencies are alarming.  The number of error bits
+doesn't look like RAM errors, and in any case, the machine has ECC
+memory, not overclocked, and was burned in with memtest86+ and prime95
+for multiple days to make sure RAM was reliable.
+
+FWIW, those sectors numbers are relative to the partition, which itself starts on
+raw disk sector 3903795, so the device-level partition numbers are
+partition-relative.  The partition
+3903795 + 95958 = 3999753 = 0x3D0809
+3903795 + 129547 = 4033342 = 0x3D8B3E
+3903795 + 195094 = 4098889 = 0x3E8B49
+
+Hardware is single-core AMD64 processor, nForce chipset, generic motherboard,
+2x1 GB ECC SDRAM, 3x Sil3132 SATA controllers, 6x 400 GB 7200.8 drives.
 
 
+I finished "badblocks -b 4096 -c 65536 -s -v -w -t random" run on 350 G of one drive
+without seeing problems, and am working on the other 5.
+(In parallel, just to stress the driver.)
 
+Does anyone have any recommended diagnostics for seeing whether a drive reliably
+remembers data you give to it?  Ones that particularly abuse the disk driver?
+
+Thanks!
