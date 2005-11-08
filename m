@@ -1,35 +1,30 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: hpt366 driver oops or panic with HighPoint RocketRAID 1520
-	SATA (HPT372N)
-Date: Tue, 08 Nov 2005 16:37:56 +0000
-Message-ID: <1131467876.25192.51.camel@localhost.localdomain>
-References: <436FB350.6020309@inap.se>
+Subject: Re: PATCH: libata PATA patches
+Date: Tue, 08 Nov 2005 16:46:24 +0000
+Message-ID: <1131468384.25192.56.camel@localhost.localdomain>
+References: <1131460386.25192.45.camel@localhost.localdomain>
+	 <20051108141340.GT3847@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030231AbVKHQHR@vger.kernel.org>
-In-Reply-To: <436FB350.6020309@inap.se>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932409AbVKHQRl@vger.kernel.org>
+In-Reply-To: <20051108141340.GT3847@stusta.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johan Palmqvist <johan.palmqvist@inap.se>
+To: Adrian Bunk <bunk@stusta.de>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Llu, 2005-11-07 at 21:04 +0100, Johan Palmqvist wrote:
-> When used with a HighPoint RocketRAID 1520 SATA (HPT372N) the hpt366 
-> driver, compiled as a module, oops'es on loading. If the driver is 
-> compiled into the kernel it causes a kernel panic on boot while 
-> detecting the card. Kernels tested: 2.6.13.2, 2.6.13.4 and 2.6.14. 
-> Please CC any answers to me since I'm not on the list.
+On Maw, 2005-11-08 at 15:13 +0100, Adrian Bunk wrote:
+> Shouldn't the following at the top of arch/i386/Makefile already do the 
+> same?
+> 
+> HAS_BIARCH      := $(call cc-option-yn, -m32)
+> ifeq ($(HAS_BIARCH),y)
+> AS              := $(AS) --32
+> LD              := $(LD) -m elf_i386
+> CC              := $(CC) -m32
+> endif
+> 
 
-I'm working on this with the new libata drivers. The list of what is
-broken in the old driver for 372N/302N is rather large as they are
-actually very different to the other chips.
-
-I've got the correct timing tables and PLL tune information for the 302N
-now which appears to be very similar if not identical for these needs so
-if someone wants to hack the old drivers/ide/pci driver a bit I can
-provide reasonably accurate chip id and chip pll base information to
-enable a fix.
-
-PS: Anyone got a 371N (specifically 371N) can send me the pci id and
-rev.
+Its just left overs from my old build patches I forgot to clean out.
+Harmless however.
