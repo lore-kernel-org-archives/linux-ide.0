@@ -1,31 +1,49 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@dev.rtsoft.ru>
 Subject: Re: Highpoint IDE types
-Date: Tue, 08 Nov 2005 20:02:20 +0000
-Message-ID: <1131480140.25192.98.camel@localhost.localdomain>
+Date: Tue, 08 Nov 2005 22:40:06 +0300
+Message-ID: <4370FF16.5000205@dev.rtsoft.ru>
 References: <1131471483.25192.76.camel@localhost.localdomain>
-	 <pan.2005.11.08.19.02.09.190896@sci.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965296AbVKHTbb@vger.kernel.org>
-In-Reply-To: <pan.2005.11.08.19.02.09.190896@sci.fi>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ville =?ISO-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtsoft2.corbina.net ([85.21.88.2]:24246 "HELO
+	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S965211AbVKHTiX
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 8 Nov 2005 14:38:23 -0500
+In-Reply-To: <1131471483.25192.76.camel@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Maw, 2005-11-08 at 21:02 +0200, Ville Syrj=C3=A4l=C3=A4 wrote:
-> >  *      HPT372                  4 (HPT366)      5    =20
-> >  *      HPT372N                 4 (HPT366)      6    =20
-> >  *      HPT372                  5 (HPT372)      0
->           ^^^^^^
->=20
-> This one is called HPT372A by Highpoint's BIOS/Win drivers.
->=20
-> Also I'm not sure if it's relevant but PCI ID 5 chips use a different
-> BIOS image than PCI ID 4 chips.
+Hello.
 
-I suspect it is relevant because the "372A" appears to have a different
-base clock to the HPT372.
+Alan Cox wrote:
 
-Added to the list.
+> Ok thanks to Sergei I can now post what I think is the complete table of
+> HPT chip versions:
+
+    Sent 371N ID to you more than a month ago already. :-)
+
+> The base clocks for the devices are as follows (note this means most of
+> the drivers/ide/pci detection code for frequency is wrong). Also for PLL
+> mode the 3x2N PLL stabilization code is subtly different.
+
+    Can somebody please tell me what this "base clock" thing is? Where it is
+derived from? I see those different figures in Highpoint's driver PLL setup
+code but failed to understand how that clock detection thing works...
+   And that's after I even saw a couple of their datasheets. :-/
+
+> 371N/372N/302N		77
+> 302/371/372A		66
+> 372			55
+> 370/374			48
+> 
+> The DPLLs are
+> 	48, 50, 66, 75Mhz
+> 
+> 75 is only available on the later chips and used with PATA/SATA bridge
+> chips for UDMA7.
+
+WBR, Sergei
+
