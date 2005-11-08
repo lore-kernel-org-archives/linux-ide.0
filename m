@@ -1,55 +1,34 @@
-From: "Timothy Thelin" <Timothy.Thelin@wdc.com>
-Subject: RE: [usb-storage] [Merging ATA passthru] on integratingSMART/ATA-Security in usb-storage driver
-Date: Mon, 7 Nov 2005 14:50:09 -0800
-Message-ID: <CA45571DE57E1C45BF3552118BA92C9D69BF46@WDSCEXBECL03.sc.wdc.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: sata spindown
+Date: Tue, 08 Nov 2005 00:31:18 -0500
+Message-ID: <43703826.2020801@rtr.ca>
+References: <20051107220452.GD25098@chrislansdown.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wdscexfe02.sc.wdc.com ([129.253.170.52]:65249 "EHLO
-	wdscexfe02.sc.wdc.com") by vger.kernel.org with ESMTP
-	id S965212AbVKGWuP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Nov 2005 17:50:15 -0500
-Content-class: urn:content-classes:message
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:13509 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S965208AbVKHFbW
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 8 Nov 2005 00:31:22 -0500
+In-Reply-To: <20051107220452.GD25098@chrislansdown.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Alan Stern <stern@rowland.harvard.edu>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, thomas schorpp <t.schorpp@gmx.de>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Christopher Lansdown <chris@powerblogs.com>
+Cc: linux-ide@vger.kernel.org
 
+Christopher Lansdown wrote:
+>
+> Having a laptop with a SATA hard drive (with an intel ICH6M chipset), I've
+> been trying to find out the status both of spindown (a la 'hdparm -S') and
+> suspend/resume....
 
+Just keep doing it the way you have in the past:
 
+"hdparm -C" gives the power status, and "hdparm -S" sets the spindown timeout.
 
-> On Mon, 2005-11-07 at 15:59 -0500, Alan Stern wrote:
-> > > That is, is usb-storage forcing scsi-2 when the device 
-> tells us it is
-> > > scsi-3 compliant, or is the hardware reporting devices 
-> are scsi-2, yet
-> > > requiring non-LUN value in cdb[1]?
-> > 
-> > I think we may have both.  However I don't know how this 
-> Cypress chip
-> > reports itself.  A system log showing the INQUIRY data would be very
-> > helpful.
-> 
-> We were told in prior emails that it actually reports a level of zero
-> (i.e. no compliance with any SCSI standard).  My original proposal was
-> just not to modify the CDB[1] for this case if we could get 
-> the INQUIRY
-> passed through unmangled.
+This requires the "libata passthru" feature set, which most distro's patch
+in by default these days.  Jeff is finally sending it upstream for future
+kernels, too, and Andrew already has had it in -mm for some time now.
 
-Here is the inquiry data on my CY7C68300B:
-00-03: 00 00 00 00
-04-07: 1F 00 00 00
-08-11: 57 44 43 20
-12-15: 57 44 34 30
-16-19: 30 55 45 2D
-20-23: 30 30 48 43
-24-27: 54 30 20 20
-28-31: 20 20 20 20
-32-35: 30 30 30 30
-36-39: 00 00 00 00
-40-43: 00 00 00 00
-
-Regards,
-Tim Thelin
+Cheers
