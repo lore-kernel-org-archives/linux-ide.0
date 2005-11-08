@@ -1,49 +1,33 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
-Date: Tue, 8 Nov 2005 15:05:36 -0800
-Message-ID: <20051108230536.GB5388@us.ibm.com>
-References: <1131401153.3333.6.camel@mulgrave> <Pine.LNX.4.44L0.0511081203280.4438-100000@iolanthe.rowland.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Highpoint IDE types
+Date: Tue, 08 Nov 2005 23:38:30 +0000
+Message-ID: <1131493110.25192.112.camel@localhost.localdomain>
+References: <1131471483.25192.76.camel@localhost.localdomain>
+	 <pan.2005.11.08.19.02.09.190896@sci.fi>
+	 <1131480140.25192.98.camel@localhost.localdomain>  <43712830.90805@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0511081203280.4438-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Patrick Mansfield <patmans@us.ibm.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, thomas schorpp <t.schorpp@gmx.de>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Timothy Thelin <Timothy.Thelin@wdc.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030400AbVKHXHo@vger.kernel.org>
+In-Reply-To: <43712830.90805@tmr.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Alan Stern <stern@rowland.harvard.edu> wrote:
-> ===================================================================
-> --- usb-2.6.orig/include/scsi/scsi_device.h
-> +++ usb-2.6/include/scsi/scsi_device.h
-> @@ -161,7 +161,8 @@ struct scsi_target {
->  	unsigned int		channel;
->  	unsigned int		id; /* target id ... replace
->  				     * scsi_device.id eventually */
-> -	unsigned long		create:1; /* signal that it needs to be added */
-> +	unsigned int		create:1; /* signal that it needs to be added */
-> +	unsigned int		no_report_lun:1; /* do not use REPORT LUNS */
->  	char			scsi_level;
->  	void 			*hostdata; /* available to low-level driver */
->  	unsigned long		starget_data[0]; /* for the transport */
+On Maw, 2005-11-08 at 17:35 -0500, Bill Davidsen wrote:
+> May we assume that this information was gathered in the interest of 
+> something beyond pedantic curiousity? Will this simplify the driver 
+> code, improve performance or reliability, etc?
 
-Alan,
+Something like that
 
-Instead of adding a new bit field to scsi_target could we utilize bflags
-in the scsi_target. Currently we have sdev_bflags in the scsi_device which
-we are not utilizing. We could remove sdev_bflags and add a bflags to
-scsi_target
+I've been collecting the data to get the libata driver right, and in
+doing so even with the partial data I had came across some chunks of
+data that are wrong in the ide/pci driver.
 
-In the usb slave configure we could "or" in BLIST_NOREPORTLUN.
+Its not made easier by the fact hpt seem to have taken down their own
+drivers for older (now "unsupported" I suspect) chips.
 
-Then in the function scsi_get_device_flags we could reference the
-scsi_target bflags instead of sdev_bflags.
-
-The bflags check in scsi_scan.c for BLIST_NOREPORTLUN could stay the same
-and we would not have two flags for a similar no report luns check.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+The frequency and chip id data is needed to correctly tune the PLLs and
+to identify the right base frequency for timing.
