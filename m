@@ -1,69 +1,66 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Buggy IDE / ATA drive on 2.6? DMA timeouts, 2.4 is fine
-Date: Tue, 8 Nov 2005 14:17:13 +0100
-Message-ID: <58cb370e0511080517p282b9c52l85ae6081f1616623@mail.gmail.com>
-References: <1131453301.43709b75ddbbf@imp2-g19.free.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [usb-storage] [Merging ATA passthru] on  integratingSMART/ATA-Security in usb-storage driver
+Date: Tue, 8 Nov 2005 05:51:20 -0800
+Message-ID: <464EE07F-3B48-4AD5-9F01-3B51EE0E3E5C@ieee.org>
+References: <20051107185718.GA16791@us.ibm.com><Pine.LNX.4.44L0.051107144956 0.5078-100000@iolanthe.rowland.org> <20051107204720.GA18608@us.ibm.com>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.205]:35483 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S965025AbVKHNRP convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 8 Nov 2005 08:17:15 -0500
-Received: by nproxy.gmail.com with SMTP id q29so162568nfc
-        for <linux-ide@vger.kernel.org>; Tue, 08 Nov 2005 05:17:13 -0800 (PST)
-In-Reply-To: <1131453301.43709b75ddbbf@imp2-g19.free.fr>
-Content-Disposition: inline
+Received: from rwcrmhc11.comcast.net ([204.127.198.35]:45515 "EHLO
+	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S1030185AbVKHNve (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 8 Nov 2005 08:51:34 -0500
+In-Reply-To: <20051107204720.GA18608@us.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rahul Siddharthan <rsidd@online.fr>
-Cc: linux-ide@vger.kernel.org
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@SteelEye.com>, linux-ide@vger.kernel.org, Patrick Mansfield <patmans@us.ibm.com>, Timothy Thelin <Timothy.Thelin@wdc.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-On 11/8/05, Rahul Siddharthan <rsidd@online.fr> wrote:
-> I have a HP Pavilion ze5385us laptop bought in 2003, which has a
-> ALi15X3 IDE controller and a Toshiba MK6021GAS ATA disk.  For about
-> two months, since an upgrade to kernel 2.6.10+, I'd been noticing
-> occasional sluggishness with the laptop, and occasionally "DMA timeout"
-> errors.  But until a week ago they were rather rare, and never occurred
-> with the other kernel/OS's I have on the machine: Linux 2.4.27, Windows XP,
-> DragonFly BSD.    The exact error is:
->
-> hda: dma_timer_expiry: dma status == 0x21
-> hda: DMA timeout error
-> hda: dma timeout error: status=0xd0 (busy)
->
-> ide: failed opcode was: unknown
-> hda: DMA disabled
-> ide0: reset: success
->
-> Last night the timeouts became so severe to be unmanageable and started
-> occurring under Linux 2.4 too (I was trying to burn a CD but these timeouts
-> caused buffer underruns).  Soon both linux 2.4 and 2.6 became unbootable,
-> and Windows XP too hung when booting.  I did manage to boot DragonFly
-> (which takes a tiny fraction of the time ubuntu linux does), and this
-> also constantly reported timeout errors (but didn't mention DMA).  The
-> messages were:
->
-> ad0: READ command timeout tag=0 serv=0 - resetting
-> ata0: resetting devices .. ata0-slave: ATA identify retries exceeded
-> done
->
-> This morning I brought the laptop to back it up on a work machine, using
-> DragonFly with the Linux partition mounted.  For about an hour the machine
-> stumbled along, timing out and occasionally refusing to read directories,
-> reporting read errors at particular sectors etc.
->
-> Then suddenly all seemed to be ok and the remaining backup happened
-> rapidly.  I was even able to back up the directories it refused to read earlier.
->
-> Now I have been running the laptop on DragonFly and Linux 2.4 for about
-> 3 hours each and there have been no problems whatever.  I even successfully
-> burned a CD in dummy mode and then in real mode.
->
-> I have no clue what's going on but I am convinced that the 2.6 IDE driver is
-> somehow bad for my laptop.
->
-> Any ideas?
+> ... is usb-storage forcing scsi-2 when the device tells us it is
+> scsi-3 compliant, or is the hardware reporting devices are scsi-2, yet
+> requiring non-LUN value in cdb[1]?
 
-http://smartmontools.sf.net
+The very newest devices that pass info thru mask xE0 of cdb[1] may be  
+reporting SCSI zero, especially when the cable is not SPI &  
+especially when Peripheral Device Type (mask x1F of byte 0 of Inquiry  
+data) is nonzero.
+
+> We were told in prior emails that it actually reports a level of zero
+> (i.e. no compliance with any SCSI standard)
+
+People dispute what zero means in byte 2 of SCSI Inquiry data.  Here  
+are five widely disseminated opinions:
+
+a) T10 s1-r17b: "Version is unspecified.  (Use this code if you are  
+implementing to this document - it is not published, yet.)"
+
+b) T10 s1-r17b: "does not claim compliance to the ISO or ECMA  
+versions of SCSI".
+
+c) T10 s2-r10l.pdf: "might or might not comply to an ANSI-approved  
+standard"
+
+d) T10 s2-r10l.pdf: "does not claim compliance to the ISO or ECMA  
+versions of SCSI".
+
+e) SFF sff8020i.pdf: [mask x07] "must contain a zero to comply with  
+this version of the Specification"
+
+See that?  Often, the very same document disagrees with itself.
+
+Nowadays, the SFF heresy has grown to where T10 simultaneous  
+publishes two or more distinct definitions of Inquiry - the SPC  
+definition and the MMC definition.
+
+SPC Inquiry data bytes 58 and following now have "version descriptor"  
+definitions that let a device that zeroes byte 2 say more, in  
+theory.  I haven't actually seen anyone populate those fields in a  
+mass market product?
+
+> ...
+
+I'd think that everyone should accept that trying to reclaim mask xFF  
+in the last CDB byte and mask xE0 of CDB byte 1 is rude ... I'm not  
+sure what rationally motivates those movements in device design that  
+demand greater transparency of a pass thru SCSI host.
