@@ -1,38 +1,20 @@
-From: David Lloyd <dmlloyd@tds.net>
-Subject: Re: sata_promise and SATA+PATA controllers in general
-Date: Tue, 8 Nov 2005 23:50:03 -0600 (CST)
-Message-ID: <Pine.LNX.4.64.0511082339510.20633@ultros>
-References: <Pine.LNX.4.62.0509181644210.10435@ultros> <432E1E6B.7040001@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata kernel-doc fixes
+Date: Wed, 09 Nov 2005 01:11:28 -0500
+Message-ID: <43719310.2070309@pobox.com>
+References: <20051101212927.6af151f3.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound2.mail.tds.net ([216.170.230.92]:7400 "EHLO
-	outbound2.mail.tds.net") by vger.kernel.org with ESMTP
-	id S932465AbVKIFuK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 9 Nov 2005 00:50:10 -0500
-In-Reply-To: <432E1E6B.7040001@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:38367 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030413AbVKIGLh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Nov 2005 01:11:37 -0500
+In-Reply-To: <20051101212927.6af151f3.rdunlap@xenotime.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
 Cc: linux-ide@vger.kernel.org
 
-On Sun, 18 Sep 2005, Jeff Garzik wrote:
+applied
 
-> Further complicating things, some hooks (such as ->irq_clear) are 
-> host-wide hooks and not port-specific hooks.
-
-Looks like what is needed is a host_ops kind of structure that would 
-contain irq_handler, irq_clear (it seems as if irq_clear generally 
-operates on a port, however, so that makes it kinda odd), and host_stop, 
-maybe others too; then these members would be moved there, and 
-ata_probe_ent would get a pointer to this structure, as would 
-ata_host_set.
-
-As an aside, is ata_probe_ent supposed to represent the entire controller 
-or simply a single port?  It looks like sometimes it does one role, 
-sometimes the other.  If the former, then I guess the port_ops pointer 
-should become an array of size ATA_MAX_PORTS.
-
-Answers or comments appreciated.
-
-- D
