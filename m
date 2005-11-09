@@ -1,20 +1,33 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating	SMART/ATA-Security
- in usb-storage driver
-Date: Wed, 09 Nov 2005 08:21:07 -0500
-Message-ID: <4371F7C3.5080702@rtr.ca>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com> <4371BB82.3090208@gmx.de> <4371C557.80807@gmx.de>
+From: Sergei Shtylylov <sshtylyov@ru.mvista.com>
+Subject: Re: PATCH: libata PATA patches
+Date: Wed, 09 Nov 2005 16:31:51 +0300
+Message-ID: <4371FA47.1070806@ru.mvista.com>
+References: <1131460386.25192.45.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4371C557.80807@gmx.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: t.schorpp@gmx.de
-Cc: USB Storage list <usb-storage@lists.one-eyed-alien.net>, Timothy Thelin <Timothy.Thelin@wdc.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Patrick Mansfield <patmans@us.ibm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtsoft2.corbina.net ([85.21.88.2]:19917 "HELO
+	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S1750741AbVKINaG
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Nov 2005 08:30:06 -0500
+In-Reply-To: <1131460386.25192.45.camel@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
- >no change with smartctl:
- >tom1:/usr/src/sm5/debug# ./smartctl -a -r ioctl,2 -T verypermissive /dev/sda
+Hello.
 
-Shouldn't there be a "-d ata" flag on those smartctl commands?
+Alan Cox wrote:
+
+> I've put a new patch versus 2.6.14-mm1 on 
+> http://zeniv.linux.org.uk/~alan/IDE
+
+    I found somewhat strange that you check for 0xABCDExxx signature in 32-bit 
+PCI config. reg. 0x78 while HighPoint's own drivers read BM reg. 0x90 (i.e. 
+PCI config. 0x70) for that. PCI reg. 0x7A is DPLL precision adjust reg. and 
+0x7B is the input clock select and IRQ reg., so it'd be quite strange if the 
+BIOS used them for any kind of signature...
+
+WBR, Sergei
