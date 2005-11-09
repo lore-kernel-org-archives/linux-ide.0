@@ -1,53 +1,117 @@
-From: thomas schorpp <t.schorpp@gmx.de>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating	SMART/ATA-Security
- in usb-storage driver
-Date: Wed, 09 Nov 2005 11:05:09 +0100
-Message-ID: <4371C9D5.1010202@gmx.de>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>	<4371BB82.3090208@gmx.de> <4371C557.80807@gmx.de>
-Reply-To: t.schorpp@gmx.de
+From: Karsten Desler <kdesler@soohrt.org>
+Subject: Re: Highpoint IDE types
+Date: Wed, 9 Nov 2005 11:27:59 +0100
+Message-ID: <20051109102759.GA19222@soohrt.org>
+References: <1131471483.25192.76.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:51893 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1751362AbVKIKFN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Nov 2005 05:05:13 -0500
-In-Reply-To: <4371C557.80807@gmx.de>
+Received: from soohrt.org ([85.131.246.150]:54195 "EHLO quickstop.soohrt.org")
+	by vger.kernel.org with ESMTP id S1030455AbVKIK2G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Nov 2005 05:28:06 -0500
+Content-Disposition: inline
+In-Reply-To: <1131471483.25192.76.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: USB Storage list <usb-storage@lists.one-eyed-alien.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-ide@vger.kernel.org, Timothy Thelin <Timothy.Thelin@wdc.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Patrick Mansfield <patmans@us.ibm.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-thomas schorpp wrote:
-> thomas schorpp wrote:
+* Alan Cox wrote:
+> Ok thanks to Sergei I can now post what I think is the complete table of
+> HPT chip versions:
 > 
->>Timothy Thelin wrote:
->>
->>
->>>>On Mon, 7 Nov 2005, James Bottomley wrote:
->>>>
->>>
->>>It was generated against Linus' git repo after
->>>applying Alan's patch.
->>>
->>>With both patches applied I can now do passthru cdbs on the
->>>cypress part without issue, and I still don't see any IO issues.
->>>
->>>Anyone out there have a better selection of hardware to test with?
->>>
->>
->>
->>first i need better software, the 2.6.14-git-11 snapshot wont boot, cause
->>it tries to mount root without detecting partitions before :/
->>
->>did i miss some patch since this snapshot?
->>
+>         Chip                    PCI ID          Rev
+>  *      HPT374                  8 (HPT374)      *     
+>
+> The base clocks for the devices are as follows (note this means most of
+> the drivers/ide/pci detection code for frequency is wrong). Also for PLL
+> mode the 3x2N PLL stabilization code is subtly different.
 > 
+> 371N/372N/302N		77
+> 302/371/372A		66
+> 372			55
+> 370/374			48
 > 
-> ok, applies against 2.6.14.0. device: cypress -A- bridge.
+> The DPLLs are
+> 	48, 50, 66, 75Mhz
 > 
-> no change with smartctl:
-> 
+> 75 is only available on the later chips and used with PATA/SATA bridge
+> chips for UDMA7.
 
-err, ok, surely not with missing ata-passthru code ;)
+I've got the following HPT374 controllers on my mainboard and the
+default freq value never worked for me (OOPS during boot).
 
+0000:00:0e.0 0104: 1103:0008 (rev 07)
+        Subsystem: 1103:0001
+        Flags: bus master, 66MHz, medium devsel, latency 120, IRQ 10
+        I/O ports at b000 [size=8]
+        I/O ports at b400 [size=4]
+        I/O ports at b800 [size=8]
+        I/O ports at bc00 [size=4]
+        I/O ports at c000 [size=256]
+        Expansion ROM at 30020000 [disabled] [size=128K]
+        Capabilities: [60] Power Management version 2
+
+0000:00:0e.1 0104: 1103:0008 (rev 07)
+        Subsystem: 1103:0001
+        Flags: bus master, 66MHz, medium devsel, latency 120, IRQ 10
+        I/O ports at c400 [size=8]
+        I/O ports at c800 [size=4]
+        I/O ports at cc00 [size=8]
+        I/O ports at d000 [size=4]
+        I/O ports at d400 [size=256]
+        Capabilities: [60] Power Management version 2
+
+[   34.230429] HPT374: IDE controller at PCI slot 0000:00:0e.0
+[   34.230461] PCI: Enabling device 0000:00:0e.0 (0005 -> 0007)
+[   34.230491] PCI: Found IRQ 10 for device 0000:00:0e.0
+[   34.230525] PCI: Sharing IRQ 10 with 0000:00:0e.1
+[   34.230555] HPT374: chipset revision 7
+[   34.230584] HPT374: 100% native mode on irq 10
+[   34.230613] HPT37X: using 33MHz PCI clock
+[   34.230723]     ide2: BM-DMA at 0xc000-0xc007, BIOS settings: hde:DMA, hdf:DMA
+[   34.230779] HPT37X: using 33MHz PCI clock
+[   34.230887]     ide3: BM-DMA at 0xc008-0xc00f, BIOS settings: hdg:pio, hdh:pio
+[   34.230949] PCI: Found IRQ 10 for device 0000:00:0e.1
+[   34.230980] PCI: Sharing IRQ 10 with 0000:00:0e.0
+[   34.231023] HPT37X: using 33MHz PCI clock
+[   34.231131]     ide4: BM-DMA at 0xd400-0xd407, BIOS settings: hdi:DMA, hdj:DMA
+[   34.231188] HPT37X: using 33MHz PCI clock
+[   34.231296]     ide5: BM-DMA at 0xd408-0xd40f, BIOS settings: hdk:DMA, hdl:DMA
+
+
+I have to use this patch. I'm not sure if it does the right thing,
+but at least it works without OOPS and without data corruption.
+
+--- linux/drivers/ide/pci/hpt366.c~     2005-07-24 01:51:31.000000000 +0200
++++ linux/drivers/ide/pci/hpt366.c      2005-07-26 14:22:42.000000000 +0200
+@@ -1188,7 +1188,7 @@
+        }
+        else
+        {
+-               if(freq < 0x9C)
++               if(freq < 0xA4)
+                        pll = F_LOW_PCI_33;
+                else if(freq < 0xb0)
+                        pll = F_LOW_PCI_40;
+
+Here's a history of freq values:
+/var/log/kern.log.1.gz:Oct 18 05:04:12 pikelot kernel: freq: 9c
+/var/log/kern.log.1.gz:Oct 18 05:04:12 pikelot kernel: freq: 97
+/var/log/kern.log.1.gz:Oct 18 09:59:54 pikelot kernel: freq: 9f
+/var/log/kern.log.1.gz:Oct 18 09:59:54 pikelot kernel: freq: 9e
+/var/log/kern.log.1.gz:Oct 20 10:29:40 pikelot kernel: freq: 92
+/var/log/kern.log.1.gz:Oct 20 10:29:40 pikelot kernel: freq: 9e
+/var/log/kern.log.3.gz:Oct  6 10:27:52 pikelot kernel: freq: 99
+/var/log/kern.log.3.gz:Oct  6 10:27:52 pikelot kernel: freq: a1
+/var/log/kern.log.3.gz:Oct  8 15:17:59 pikelot kernel: freq: 9c
+/var/log/kern.log.3.gz:Oct  8 15:17:59 pikelot kernel: freq: a2
+/var/log/kern.log.3.gz:Oct  8 16:08:26 pikelot kernel: freq: 9b
+/var/log/kern.log.3.gz:Oct  8 16:08:26 pikelot kernel: freq: 9e
+/var/log/kern.log.3.gz:Oct  9 06:02:15 pikelot kernel: freq: 9d
+/var/log/kern.log.3.gz:Oct  9 06:02:15 pikelot kernel: freq: 98
+
+The machine is not and never has been overclocked.
+
+Best Regards,
+ Karsten Desler
