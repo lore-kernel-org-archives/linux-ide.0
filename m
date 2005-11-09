@@ -1,74 +1,29 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security
- in usb-storage driver
-Date: Wed, 9 Nov 2005 10:35:52 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0511091015200.5129-100000@iolanthe.rowland.org>
-References: <20051108230536.GB5388@us.ibm.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] Incorrect device link for ide-cs
+Date: Wed, 9 Nov 2005 22:40:34 +0100
+Message-ID: <58cb370e0511091340m74e54bb4g7029512a4cd5ba53@mail.gmail.com>
+References: <4369D693.4040500@suse.de>
+	 <58cb370e0511030157l5e47a15h25832fb98e46173a@mail.gmail.com>
+	 <4369E4BF.4010706@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20051108230536.GB5388@us.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Patrick Mansfield <patmans@us.ibm.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, thomas schorpp <t.schorpp@gmx.de>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Timothy Thelin <Timothy.Thelin@wdc.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nproxy.gmail.com ([64.233.182.205]:65422 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1161235AbVKIVkf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Nov 2005 16:40:35 -0500
+Received: by nproxy.gmail.com with SMTP id c29so75245nfb
+        for <linux-ide@vger.kernel.org>; Wed, 09 Nov 2005 13:40:34 -0800 (PST)
+In-Reply-To: <4369E4BF.4010706@suse.de>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
-On Tue, 8 Nov 2005, Mike Anderson wrote:
+On 11/3/05, Hannes Reinecke <hare@suse.de> wrote:
 
-> Alan,
-> 
-> Instead of adding a new bit field to scsi_target could we utilize bflags
-> in the scsi_target. Currently we have sdev_bflags in the scsi_device which
-> we are not utilizing. We could remove sdev_bflags and add a bflags to
-> scsi_target
-> 
-> In the usb slave configure we could "or" in BLIST_NOREPORTLUN.
-> 
-> Then in the function scsi_get_device_flags we could reference the
-> scsi_target bflags instead of sdev_bflags.
-> 
-> The bflags check in scsi_scan.c for BLIST_NOREPORTLUN could stay the same
-> and we would not have two flags for a similar no report luns check.
+> Updated patch attached.
 
-That's a good idea.  Except that we should keep sdev_bflags while adding 
-target_bflags.
-
-I see there's a comment in scsi_probe_lun:
-
-                /*
-                 * Get any flags for this device.
-                 *
-                 * XXX add a bflags to Scsi_Device, and replace the
-                 * corresponding bit fields in Scsi_Device, so bflags
-                 * need not be passed as an argument.
-                 */
-
-Does that need to be updated?
-
-There are several other flags in scsi_device that are duplicates of things
-in bflags:
-
-	lockable		BLIST_NOT_LOCKABLE
-	use_10_for_ms		BLIST_USE_10_BYTE_MS
-	use_192_bytes_for_3f	BLIST_MS_192_BYTES_FOR_3F
-	skip_ms_page_8		BLIST_MS_SKIP_PAGE_08
-	skip_ms_page_3f		BLIST_MS_SKIP_PAGE_3F
-	no_start_on_add		BLIST_NOSTARTONADD
-	retry_hwerr		BLIST_RETRY_HWERROR
-
-Maybe I've missed some.  Then there are flags which aren't used any more,
-like BLIST_INQUIRY_36 (although for backward compatibility we should try
-to keep them).  Note also that some of these flags apply to individual
-LUNs while others apply to entire targets.
-
-There's a good reason for storing these flags in the device or target.  
-If they're available only in the blacklist database then drivers can't 
-adjust them for specific devices.  Ideally, once that structures have been 
-set up and the blacklist flags copied into them, there will be no need to 
-refer back to the original database entry.
-
-The whole situation is thoroughly disorganized.  If you would like to 
-rearrange everything, you've got my support.
-
-Alan Stern
-
+applied
