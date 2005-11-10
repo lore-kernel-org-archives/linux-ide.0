@@ -1,37 +1,47 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [RFC PATCH] pmac ide doesn't properly cleanup hwif when
-	releasing controller
-Date: Thu, 10 Nov 2005 22:13:17 +1100
-Message-ID: <1131621197.24637.180.camel@gaston>
-References: <20051029044852.1a518908@Tatooine.r3z0>
-	 <1130623795.29054.179.camel@gaston>
-	 <58cb370e0511010820p77bd47c9wa566f3d356291733@mail.gmail.com>
-	 <1130878823.29054.449.camel@gaston>
-	 <58cb370e0511020005q27acb8fdg16acb1f307fafe7b@mail.gmail.com>
-	 <1130926888.20136.21.camel@gaston>
-	 <58cb370e0511100256n6fed6267v4c14b92dbd41680f@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Serious IDE problem still present in 2.6.14
+Date: Thu, 10 Nov 2005 14:34:35 +0100
+Message-ID: <58cb370e0511100534tead9e71u189666789b3f4da1@mail.gmail.com>
+References: <Pine.LNX.4.44.0510301030120.26176-100000@coffee.psychology.mcmaster.ca>
+	 <1130689871.6348.3.camel@montroll.chem.mcgill.ca>
+	 <4365511C.7040903@yahoo.de>
+	 <1130713716.6348.7.camel@montroll.chem.mcgill.ca>
+	 <4365596F.4060105@yahoo.de>
+	 <1130785344.5932.6.camel@montroll.chem.mcgill.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:12728 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S1750749AbVKJLPg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2005 06:15:36 -0500
-In-Reply-To: <58cb370e0511100256n6fed6267v4c14b92dbd41680f@mail.gmail.com>
+Received: from nproxy.gmail.com ([64.233.182.201]:35253 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750714AbVKJNeg convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Nov 2005 08:34:36 -0500
+Received: by nproxy.gmail.com with SMTP id x29so108064nfb
+        for <linux-ide@vger.kernel.org>; Thu, 10 Nov 2005 05:34:35 -0800 (PST)
+In-Reply-To: <1130785344.5932.6.camel@montroll.chem.mcgill.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Thibaut VARENE <T-Bone@parisc-linux.org>, linux-ide@vger.kernel.org
+To: David.Ronis@mcgill.ca
+Cc: Stefan <gentoopower@yahoo.de>, Mark Hahn <hahn@physics.mcmaster.ca>, linux-ide@vger.kernel.org
 
-On Thu, 2005-11-10 at 11:56 +0100, Bartlomiej Zolnierkiewicz wrote:
-> Hi Ben,
-> 
-> Thibaut's change is fine with me so unless you've better one I would
-> like to merge it for 2.6.15.
+I would suggest doing binary search on -rc and snapshot releases.
 
-Yup, go for it !
+http://kernel.org/pub/linux/kernel/v2.6/testing/patch-2.6.14-rc*
+http://kernel.org/pub/linux/kernel/v2.6/snapshots/old/patch-2.6.14-*
 
-Thanks,
-Ben.
+Otherwise we can only guess what is wrong.
 
+Moreover it doesn't look like an IDE problem the real performance
+regression is in cached reads not the buffered ones.
 
+On 10/31/05, David Ronis <ronis@ronispc.chem.mcgill.ca> wrote:
+> Hi Stefan,
+>
+> I tried removing the modules you suggested and reran hdparm -tT /dev/hda
+> after each.  No difference.  I also played a bit more by going to
+> single-user mode and killing off various things (like udevd).   I turned
+> off networking and removed the ethernet driver--still no change.  What
+> seemed to make a difference was to turn of the firewall and remove all
+> the ipt_ drivers, although the performance was still about 4 times less
+> than what I get with the 2.6.13.6 kernel.
