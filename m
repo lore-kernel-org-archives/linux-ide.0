@@ -1,41 +1,39 @@
-From: thomas schorpp <t.schorpp@gmx.de>
-Subject: Re: [DOC PATCH]  T10/04-262r8
-Date: Thu, 10 Nov 2005 07:19:27 +0100
-Message-ID: <4372E66F.5070802@gmx.de>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>	 <4371BB82.3090208@gmx.de> <4371C557.80807@gmx.de> <4371F7C3.5080702@rtr.ca>	 <43720232.6090609@gmx.de> <4372172A.50003@gmx.de>	 <43721C3C.1010103@pobox.com> <1131553363.3271.1.camel@mulgrave>
-Reply-To: t.schorpp@gmx.de
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: linux@horizon.com
+Subject: Re: sata_sil24 corruption details
+Date: 10 Nov 2005 02:17:36 -0500
+Message-ID: <20051110071736.23747.qmail@science.horizon.com>
+References: <20051107095956.27387.qmail@science.horizon.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:35027 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1751122AbVKJGUS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2005 01:20:18 -0500
-In-Reply-To: <1131553363.3271.1.camel@mulgrave>
+Received: from science.horizon.com ([192.35.100.1]:24636 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S1751265AbVKJHSG
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Nov 2005 02:18:06 -0500
+In-Reply-To: <20051107095956.27387.qmail@science.horizon.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux SCSI list <linux-scsi@vger.kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux@horizon.com
 
-James Bottomley wrote:
->>> #define	ATA_16		      0x85	/* 16-byte pass-thru */
->>> #define	ATA_12		      0xa1	/* 12-byte pass-thru */
->>
+Three days ago, I wrote:
+> I finished "badblocks -b 4096 -c 65536 -s -v -w -t random" run on 350
+> G of one drive without seeing problems, and am working on the other 5.
+> (In parallel, just to stress the driver.)
 
-is this all, or do we have a preliminary SATL in kernel yet? cant find.
+My parallel -p1 badblocks runs (I shrunk the chunk size to -c 16384)
+finished on 3 of the 5 drives, but after 69 hours and I don't know how
+many passes, it's still running on one pair of drives.  Interestingly,
+the pair (sdc4 & sdd4) is connected to a single controller.
 
-how about full definitions of the pasthru cdb's in kernel structs and approbiate ioctls?
+Thus, it might not be a multiple-controller issue (I don't know how
+many other people have 3 Sil3132s in a system), but perhaps an issue
+with simultaneous activity on the 2 ports of a single controller.
 
-for hdparm ata-security theres ide taskfile used, can scsi command sequences combined with ide taskfiles 
-which use own ioctls?
-are taskfiles needed for this in any case?
+Is there anything else I could do to help debug this problem?  Any additional
+debugging I can enable?
 
-for smartctl theres sg_cmnd_io() with (user definable?) struct io_hdr. 
-so i would try passthru test first with smartctl by adding passthru opcode ATA_12 to smartctl struct scsi_cmd_io io_hdr.
-later combining scsi ioparm structs and passthru opcode with usable contents of ide taskfile parm structs in user space.
+It would take me a while to clean the backups off the system and move
+it outside the firewall to allow remote access if someone wants access
+to that particular hardware, but it's just an expensive bit bucket at
+the moment, so ask if it would help...
 
-the passthru cdb is also not clear enough to me:
-according to sat-r06 spec byte 0-2 is scsi, 3-9 are ata, 11 is scsi, yes?
-
-thx
-tom
+Thanks!
