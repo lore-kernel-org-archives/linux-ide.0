@@ -1,72 +1,38 @@
-From: linux@horizon.com
-Subject: Re: sata_sil24 corruption details
-Date: 10 Nov 2005 10:26:42 -0500
-Message-ID: <20051110152642.30875.qmail@science.horizon.com>
-References: <43735C19.4040402@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from science.horizon.com ([192.35.100.1]:49724 "HELO
-	science.horizon.com") by vger.kernel.org with SMTP id S1750837AbVKJP0s
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Nov 2005 10:26:48 -0500
-In-Reply-To: <43735C19.4040402@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [DOC PATCH]  T10/04-262r8
+Date: Thu, 10 Nov 2005 10:58:39 -0500
+Message-ID: <1131638319.3336.9.camel@mulgrave>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>
+	 <4371BB82.3090208@gmx.de> <4371C557.80807@gmx.de> <4371F7C3.5080702@rtr.ca>
+		 <43720232.6090609@gmx.de> <4372172A.50003@gmx.de>
+		 <43721C3C.1010103@pobox.com> <1131553363.3271.1.camel@mulgrave>
+	  <4372E66F.5070802@gmx.de>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4372E66F.5070802@gmx.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: t.schorpp@gmx.de
+Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: axboe@suse.de, greg.freemyer@gmail.com, htejun@gmail.com
-Cc: linux-ide@vger.kernel.org, linux@horizon.com
 
-> I'll run single drive test on sil3112 tonight, but can you please try 
-> 2.6.14?  IIRC, there have been some PCI FIFO setting change.  Hmmm.. 
-> oh.. it was the following commit.
+On Thu, 2005-11-10 at 07:19 +0100, thomas schorpp wrote:
+> how about full definitions of the pasthru cdb's in kernel structs and approbiate ioctls?
 
-I was running a post-2.6.14 libata-dev kernel, but my root file system
-got corrupted, and the "emergency backup" boot image that I've
-been using is 2.6.13 + libata patches.
+Why would we want to do that?  The whole point about pass through is
+that it is designed to use the existing SCSI infrastructure
+transparently (hence use SG_IO to send an ATA command to a bridge that
+understands it---but the key point here is that the device so addressed
+must understand the opcodes).
 
-You asked about bad block patterns...
+> the passthru cdb is also not clear enough to me:
+> according to sat-r06 spec byte 0-2 is scsi, 3-9 are ata, 11 is scsi, yes?
 
-I ran the test on three dirves at once (hdb, hdc, hdd), and the former
-had no problems, while the latter two reported the following
-bad blocks.  Note that these are 4096-byte block numbers relative to
-a partition starting at sector 91795410.
+Actually, no; byte 0 is the opcode, so you could call that SCSI and byte
+11 (or 15) is the control as defined by SAM; the rest all contain SAT
+specific fields.
 
-The whole partition has 687662325 sectors, or 85957790.625 blocks.
-
-Of those, the first pass of "badblocks -b 4096 -c 32768 -w -t random -p1"
-found:
-
-11 "bad blocks" in one pass over /dev/sdc4:
- 4265401 
-23598860
-31564978
-33854103
-35258513
-44588559
-45069578
-59358213
-59554821
-70448351
-73983236
-
-and 13 "bad blocks" in one pass over /dev/sdd4:
-  226244  
- 6595957 
- 7402436 
- 9464777 
-14395278
-14862235
-15085611
-16072105
-16796706
-26095323
-39376782
-46807588
-51765692
-
-It's doing a second write pass now.
+James
 
 
-It found no problems on /dev/sdb4 while there was no particular traffic on
-/dev/sda.  I'm doing a run with sda and sdb in parallel.
-
-
-Anyway, thanks a lot for the attention.
