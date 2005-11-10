@@ -1,123 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sil24 corruption details
-Date: Thu, 10 Nov 2005 23:41:29 +0900
-Message-ID: <43735C19.4040402@gmail.com>
-References: <20051110071736.23747.qmail@science.horizon.com>	 <43730C55.7030808@gmail.com> <87f94c370511100615u1eba1baai9d91df8ad2556510@mail.gmail.com>
+From: thomas schorpp <t.schorpp@gmx.de>
+Subject: (SAT) libata + hdparm/smartctl
+Date: Thu, 10 Nov 2005 16:05:51 +0100
+Message-ID: <437361CF.2040909@gmx.de>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>	 <4371BB82.3090208@gmx.de> <4371C557.80807@gmx.de> <4371F7C3.5080702@rtr.ca>	 <43720232.6090609@gmx.de> <4372172A.50003@gmx.de>	 <43721C3C.1010103@pobox.com> <1131553363.3271.1.camel@mulgrave> <4372E66F.5070802@gmx.de> <437358EA.3090406@rtr.ca>
+Reply-To: t.schorpp@gmx.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.201]:40939 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750823AbVKJOli (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2005 09:41:38 -0500
-Received: by zproxy.gmail.com with SMTP id 13so410599nzn
-        for <linux-ide@vger.kernel.org>; Thu, 10 Nov 2005 06:41:38 -0800 (PST)
-In-Reply-To: <87f94c370511100615u1eba1baai9d91df8ad2556510@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <437358EA.3090406@rtr.ca>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Linux SCSI list <linux-scsi@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>, Jens Axboe <axboe@suse.de>
-Cc: linux@horizon.com, linux-ide@vger.kernel.org
 
-Greg Freemyer wrote:
-> On 11/10/05, Tejun Heo <htejun@gmail.com> wrote:
+Mark Lord wrote:
+> thomas schorpp wrote:
 > 
->>linux@horizon.com wrote:
 >>
->>>Three days ago, I wrote:
->>>
->>>
->>>>I finished "badblocks -b 4096 -c 65536 -s -v -w -t random" run on 350
->>>>G of one drive without seeing problems, and am working on the other 5.
->>>>(In parallel, just to stress the driver.)
->>>
->>>
->>>My parallel -p1 badblocks runs (I shrunk the chunk size to -c 16384)
->>>finished on 3 of the 5 drives, but after 69 hours and I don't know how
->>>many passes, it's still running on one pair of drives.  Interestingly,
->>>the pair (sdc4 & sdd4) is connected to a single controller.
->>>
->>>Thus, it might not be a multiple-controller issue (I don't know how
->>>many other people have 3 Sil3132s in a system), but perhaps an issue
->>>with simultaneous activity on the 2 ports of a single controller.
->>>
->>>Is there anything else I could do to help debug this problem?  Any additional
->>>debugging I can enable?
->>>
->>>It would take me a while to clean the backups off the system and move
->>>it outside the firewall to allow remote access if someone wants access
->>>to that particular hardware, but it's just an expensive bit bucket at
->>>the moment, so ask if it would help...
->>
->>Hello, there.
->>
->>I'll soon try to tackle this one.  However, I currently have only one
->>3124 controller and one harddisk to hook to that controller, so I cannot
->>reproduce your setup over here.  Here are things that I think might help
->>in diagnosing the problem.
->>
->>* Trying other drivers
->>        * Trying the original driver.  I'll port the original driver
->>          from sii to the current tree and post the patch.
->>        * Performing similar test under Windows.
->>
->>* Ruling out disk problem
->>        * Trying other harddisks.  All harddisk drives perform error
->>          detection/correction when data are read from the media, but
->>          ruling out the possibility would still be helpful.
->>
->>* If you have log of failed sectors, finding patterns will be helpful.
->>  If the errors occur at random places, it's likely that we have
->>  controller/driver issues.  If errors are localized over multiple runs,
->>  maybe the disk is at fault.
->>
->>--
->>tejun
+>> for hdparm ata-security theres ide taskfile used, can scsi command
+>> sequences combined with ide taskfiles which use own ioctls?
 > 
 > 
-> Tejun,
+> As Jeff said, libata translates some of the HDIO_TASK* functions
+> into SCSI passthru commands, which then get translated back
+> into ATA commands at the time of issue to the device.
 > 
-> I assume you saw my e-mail that with a 3112 and a single SATA drive we
-> were seeing corruption as well.  That being the case I think you
-> should first verify that corruption is not occuring in the single SATA
-> drive case.
+> Once passthru makes it out into the wild (Linus kernels),
+> I'll update hdparm to have it use SCSI passthru instead
+> when available/appropriate.
 > 
-> Our test was to create a bunch of 2 GB files on a PATA drive.
+> There will have to be about a year or so of full overlap
+> (hdparm, smartmontools, and kernel), to give distros time
+> to update/release with all of the affected components.
 > 
-> We simply used a drive with real data as the source of our test files.
-> ie. IIRC: cd test_dir; dd if=/dev/hde conv=noerror,sync | split -b 2000m
+> After that, I imagine Jeff may want to remove the HDIO_TASK*
+> calls again.
 > 
-> Then we calculated the md5 of all the 2 GB pieces.  All of this done
-> in a pure PATA setup.
-> 
-> Then we connected a SATA drive to a 3112 and simply copied the files
-> from the PATA drive to the SATA drive and verified the md5 values.  We
-> found corruption in 1 - 3% of the files copied.
-> 
-> FYI: The above are all very common steps for a computer forensic
-> examine, thus we found this issue in our attempts to qualify the 3112
-> as part of our forensic equipment.  We have not tested since 2.6.11
-> and that was with a SUSE kernel.
-> 
+> Cheers
 
-Hi,
+ive tried the whole day to make this driver helper libata or parts of it available to the user space
+and it didnt work out, sorry, you cant include the header in user-space apps and theres no interface to it.
 
-I'll run single drive test on sil3112 tonight, but can you please try 
-2.6.14?  IIRC, there have been some PCI FIFO setting change.  Hmmm.. 
-oh.. it was the following commit.
+but if You say so, i'll take a closer look at libatas HDIO_TASKs but this has to be utilized automatic then,
+at this time libata.ko does not get loaded or used by usbstorage devices.
 
----
-$ git-cat-file commit e1dd23a0012c3929737798fda9fede0e783f4ff3
-tree c7f808b6433ef1015f55418e7f11f432943bdefd
-parent 5273a00d9c763108397658d440618f7ac3e40f83
-author Jens Axboe <axboe@suse.de> 1118228545 +0200
-committer Jeff Garzik <jgarzik@pobox.com> 1118300782 -0400
+when it is a driver library i will use it with drivers, as it should be:
 
-[PATCH] sata_sil: Fix FIFO PCI Bus Arbitration kernel oops
+so i look if i can modify sg, sd_mod or/and usb-storage to detect passthru needing devices automatic and to
+take action on passthru needing functionality, then none of the user space apps should need to be worked on.
 
-Correct this.
----
+(hopefully) 
 
-Jens, is it possible that above change fixes data corruption?
-
--- 
-tejun
+y
+tom
