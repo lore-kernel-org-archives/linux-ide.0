@@ -1,79 +1,69 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH/RFC 4/4] libata: determine the err_mask directly in atapi_packet_task()
-Date: Thu, 10 Nov 2005 16:05:53 +0800
-Message-ID: <4372FF61.4010807@tw.ibm.com>
-References: <437181D5.8070903@tw.ibm.com> <43718400.5000409@tw.ibm.com> <43719670.20708@pobox.com> <4372FD45.8080404@tw.ibm.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata_sil24 corruption details
+Date: Thu, 10 Nov 2005 18:01:09 +0900
+Message-ID: <43730C55.7030808@gmail.com>
+References: <20051110071736.23747.qmail@science.horizon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:44988 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751385AbVKJIGA
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Nov 2005 03:06:00 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e32.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id jAA85tAP030692
-	for <linux-ide@vger.kernel.org>; Thu, 10 Nov 2005 03:05:55 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id jAA85oxP063976
-	for <linux-ide@vger.kernel.org>; Thu, 10 Nov 2005 01:05:50 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id jAA85sqm007737
-	for <linux-ide@vger.kernel.org>; Thu, 10 Nov 2005 01:05:54 -0700
-In-Reply-To: <4372FD45.8080404@tw.ibm.com>
+Received: from xproxy.gmail.com ([66.249.82.200]:1199 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751205AbVKJJBT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2005 04:01:19 -0500
+Received: by xproxy.gmail.com with SMTP id s14so506049wxc
+        for <linux-ide@vger.kernel.org>; Thu, 10 Nov 2005 01:01:18 -0800 (PST)
+In-Reply-To: <20051110071736.23747.qmail@science.horizon.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>
+To: linux@horizon.com
+Cc: linux-ide@vger.kernel.org
 
-Patch 4/4:
-  determine the err_mask directly in atapi_packet_task()
+linux@horizon.com wrote:
+> Three days ago, I wrote:
+> 
+>>I finished "badblocks -b 4096 -c 65536 -s -v -w -t random" run on 350
+>>G of one drive without seeing problems, and am working on the other 5.
+>>(In parallel, just to stress the driver.)
+> 
+> 
+> My parallel -p1 badblocks runs (I shrunk the chunk size to -c 16384)
+> finished on 3 of the 5 drives, but after 69 hours and I don't know how
+> many passes, it's still running on one pair of drives.  Interestingly,
+> the pair (sdc4 & sdd4) is connected to a single controller.
+> 
+> Thus, it might not be a multiple-controller issue (I don't know how
+> many other people have 3 Sil3132s in a system), but perhaps an issue
+> with simultaneous activity on the 2 ports of a single controller.
+> 
+> Is there anything else I could do to help debug this problem?  Any additional
+> debugging I can enable?
+> 
+> It would take me a while to clean the backups off the system and move
+> it outside the firewall to allow remote access if someone wants access
+> to that particular hardware, but it's just an expensive bit bucket at
+> the moment, so ask if it would help...
 
-Changes:
-  - set qc->err_mask directly when we found the error
-  - remove the code to determine err_mask from the device status
+Hello, there.
 
-For your review and advice, thanks.
+I'll soon try to tackle this one.  However, I currently have only one
+3124 controller and one harddisk to hook to that controller, so I cannot
+reproduce your setup over here.  Here are things that I think might help
+in diagnosing the problem.
 
-Albert
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com> 
+* Trying other drivers
+	* Trying the original driver.  I'll port the original driver
+	  from sii to the current tree and post the patch.
+	* Performing similar test under Windows.
 
-============
+* Ruling out disk problem
+	* Trying other harddisks.  All harddisk drives perform error
+	  detection/correction when data are read from the media, but
+	  ruling out the possibility would still be helpful.
 
---- err_mask3/drivers/scsi/libata-core.c	2005-11-10 15:09:52.000000000 +0800
-+++ err_mask4/drivers/scsi/libata-core.c	2005-11-10 15:10:13.000000000 +0800
-@@ -4053,13 +4053,17 @@ static void atapi_packet_task(void *_dat
- 
- 	/* sleep-wait for BSY to clear */
- 	DPRINTK("busy wait\n");
--	if (ata_busy_sleep(ap, ATA_TMOUT_CDB_QUICK, ATA_TMOUT_CDB))
--		goto err_out_status;
-+	if (ata_busy_sleep(ap, ATA_TMOUT_CDB_QUICK, ATA_TMOUT_CDB)) {
-+		qc->err_mask |= AC_ERR_ATA_BUS;
-+		goto err_out;
-+	}
- 
- 	/* make sure DRQ is set */
- 	status = ata_chk_status(ap);
--	if ((status & (ATA_BUSY | ATA_DRQ)) != ATA_DRQ)
-+	if ((status & (ATA_BUSY | ATA_DRQ)) != ATA_DRQ) {
-+		qc->err_mask |= AC_ERR_ATA_BUS;
- 		goto err_out;
-+	}
- 
- 	/* send SCSI cdb */
- 	DPRINTK("send cdb\n");
-@@ -4091,10 +4095,7 @@ static void atapi_packet_task(void *_dat
- 
- 	return;
- 
--err_out_status:
--	status = ata_chk_status(ap);
- err_out:
--	qc->err_mask |= __ac_err_mask(status);
- 	ata_poll_qc_complete(qc);
- }
- 
+* If you have log of failed sectors, finding patterns will be helpful.
+  If the errors occur at random places, it's likely that we have
+  controller/driver issues.  If errors are localized over multiple runs,
+  maybe the disk is at fault.
 
-
-
+-- 
+tejun
