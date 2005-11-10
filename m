@@ -1,39 +1,45 @@
-From: linux@horizon.com
-Subject: Re: sata_sil24 corruption details
-Date: 10 Nov 2005 02:17:36 -0500
-Message-ID: <20051110071736.23747.qmail@science.horizon.com>
-References: <20051107095956.27387.qmail@science.horizon.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [DOC PATCH]  T10/04-262r8
+Date: Thu, 10 Nov 2005 02:44:42 -0500
+Message-ID: <4372FA6A.3090903@pobox.com>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>	 <4371BB82.3090208@gmx.de> <4371C557.80807@gmx.de> <4371F7C3.5080702@rtr.ca>	 <43720232.6090609@gmx.de> <4372172A.50003@gmx.de>	 <43721C3C.1010103@pobox.com> <1131553363.3271.1.camel@mulgrave> <4372E66F.5070802@gmx.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from science.horizon.com ([192.35.100.1]:24636 "HELO
-	science.horizon.com") by vger.kernel.org with SMTP id S1751265AbVKJHSG
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Nov 2005 02:18:06 -0500
-In-Reply-To: <20051107095956.27387.qmail@science.horizon.com>
+Received: from mail.dvmed.net ([216.237.124.58]:19435 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751038AbVKJHop (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2005 02:44:45 -0500
+In-Reply-To: <4372E66F.5070802@gmx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux@horizon.com
+To: t.schorpp@gmx.de
+Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Three days ago, I wrote:
-> I finished "badblocks -b 4096 -c 65536 -s -v -w -t random" run on 350
-> G of one drive without seeing problems, and am working on the other 5.
-> (In parallel, just to stress the driver.)
+thomas schorpp wrote:
+> James Bottomley wrote:
+> 
+>>>>#define	ATA_16		      0x85	/* 16-byte pass-thru */
+>>>>#define	ATA_12		      0xa1	/* 12-byte pass-thru */
+>>>
+> 
+> is this all, or do we have a preliminary SATL in kernel yet? cant find.
 
-My parallel -p1 badblocks runs (I shrunk the chunk size to -c 16384)
-finished on 3 of the 5 drives, but after 69 hours and I don't know how
-many passes, it's still running on one pair of drives.  Interestingly,
-the pair (sdc4 & sdd4) is connected to a single controller.
+It's been there for more than a year:  drivers/scsi/libata-scsi.c
 
-Thus, it might not be a multiple-controller issue (I don't know how
-many other people have 3 Sil3132s in a system), but perhaps an issue
-with simultaneous activity on the 2 ports of a single controller.
 
-Is there anything else I could do to help debug this problem?  Any additional
-debugging I can enable?
+> how about full definitions of the pasthru cdb's in kernel structs and approbiate ioctls?
 
-It would take me a while to clean the backups off the system and move
-it outside the firewall to allow remote access if someone wants access
-to that particular hardware, but it's just an expensive bit bucket at
-the moment, so ask if it would help...
+upstream as of 2.6.14-git
 
-Thanks!
+
+> for hdparm ata-security theres ide taskfile used, can scsi command sequences combined with ide taskfiles 
+> which use own ioctls?
+> are taskfiles needed for this in any case?
+
+in libata, the HDIO ioctls are implemented by creating issuing a SCSI 
+command (ATA passthru).
+
+	Jeff
+
+
