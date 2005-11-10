@@ -1,17 +1,32 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [resend] [patch] ide-floppy - software eject not working with LS-120 drive
-Date: Thu, 10 Nov 2005 00:23:58 +0100
-Message-ID: <58cb370e0511091523r4d73db24vd159011f88b79b84@mail.gmail.com>
-References: <433AD13F.50508@rainbow-software.org>
+From: Matthias Urlichs <smurf@smurf.noris.de>
+Subject: Re: [git patches] 2.6.x libata updates
+Date: Thu, 10 Nov 2005 01:36:59 +0100
+Message-ID: <pan.2005.11.10.00.36.56.947377@smurf.noris.de>
+References: <20051029182228.GA14495@havoc.gtf.org> <200510300644.20225.rob@landley.net> <Pine.LNX.4.64.0510301435520.27915@g5.osdl.org> <200510301731.47825.rob@landley.net> <Pine.LNX.4.64.0510301654310.27915@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750933AbVKIXYA@vger.kernel.org>
-In-Reply-To: <433AD13F.50508@rainbow-software.org>
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751132AbVKJAkj@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-applied
+Hi, Linus Torvalds wrote:
+
+> I have to say that the bk->cvs gateway is actually a very impressive 
+> linearization, and I don't even know how it did it.
+
+That's easy -- it found the longest path from A to B and generated patches
+between each step.
+
+Looking at the latest tree with gitk, I'd guess that the previous rate
+of roughly 50% is no longer achievable; linearizing would aggregate
+some large chunks of patch-series and subtree merges (no surprise there).
+
+-- 
+Matthias Urlichs   |   {M:U} IT Design @ m-u-it.de   |  smurf@smurf.noris.de
+Disclaimer: The quote was selected randomly. Really. | http://smurf.noris.de
+ - -
+Automobile, n.:
+	A four-wheeled vehicle that runs up hills and down pedestrians.
