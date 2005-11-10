@@ -1,47 +1,33 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Serious IDE problem still present in 2.6.14
-Date: Thu, 10 Nov 2005 14:34:35 +0100
-Message-ID: <58cb370e0511100534tead9e71u189666789b3f4da1@mail.gmail.com>
-References: <Pine.LNX.4.44.0510301030120.26176-100000@coffee.psychology.mcmaster.ca>
-	 <1130689871.6348.3.camel@montroll.chem.mcgill.ca>
-	 <4365511C.7040903@yahoo.de>
-	 <1130713716.6348.7.camel@montroll.chem.mcgill.ca>
-	 <4365596F.4060105@yahoo.de>
-	 <1130785344.5932.6.camel@montroll.chem.mcgill.ca>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: PATA libata patches (and HPT)
+Date: Thu, 10 Nov 2005 14:23:35 +0000
+Message-ID: <1131632615.20099.32.camel@localhost.localdomain>
+References: <1131471483.25192.76.camel@localhost.localdomain>
+	 <pan.2005.11.08.19.02.09.190896@sci.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.201]:35253 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750714AbVKJNeg convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Nov 2005 08:34:36 -0500
-Received: by nproxy.gmail.com with SMTP id x29so108064nfb
-        for <linux-ide@vger.kernel.org>; Thu, 10 Nov 2005 05:34:35 -0800 (PST)
-In-Reply-To: <1130785344.5932.6.camel@montroll.chem.mcgill.ca>
-Content-Disposition: inline
+Received: from clock-tower.bc.nu ([81.2.110.250]:45470 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1750878AbVKJNwf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Nov 2005 08:52:35 -0500
+In-Reply-To: <pan.2005.11.08.19.02.09.190896@sci.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David.Ronis@mcgill.ca
-Cc: Stefan <gentoopower@yahoo.de>, Mark Hahn <hahn@physics.mcmaster.ca>, linux-ide@vger.kernel.org
+To: Ville =?ISO-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-I would suggest doing binary search on -rc and snapshot releases.
+I've put a new patch up which fixes the enablebits problems. It's not
+really there for people to run off and test but because it now has a
+full set of "first guess" hpt3xx driver code.
 
-http://kernel.org/pub/linux/kernel/v2.6/testing/patch-2.6.14-rc*
-http://kernel.org/pub/linux/kernel/v2.6/snapshots/old/patch-2.6.14-*
+I've been through various drivers and tried to work out what we actually
+should be doing with these chips. I'd appreciate review of that and
+opinions from other folks hacking on hpt pata stuff.
 
-Otherwise we can only guess what is wrong.
+Alan
 
-Moreover it doesn't look like an IDE problem the real performance
-regression is in cached reads not the buffered ones.
+http://zeniv.linux.org.uk/~alan/IDE
 
-On 10/31/05, David Ronis <ronis@ronispc.chem.mcgill.ca> wrote:
-> Hi Stefan,
->
-> I tried removing the modules you suggested and reran hdparm -tT /dev/hda
-> after each.  No difference.  I also played a bit more by going to
-> single-user mode and killing off various things (like udevd).   I turned
-> off networking and removed the ethernet driver--still no change.  What
-> seemed to make a difference was to turn of the firewall and remove all
-> the ipt_ drivers, although the performance was still about 4 times less
-> than what I get with the 2.6.13.6 kernel.
+
