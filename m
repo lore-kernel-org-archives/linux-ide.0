@@ -1,25 +1,35 @@
-From: Don Carroll <ibedonc@star-c.com>
-Subject: AHCI and VT8251
-Date: Fri, 11 Nov 2005 14:33:23 -0600
-Message-ID: <20051111203323.GA18003@vcr.star-c.com>
-Reply-To: ibedonc@star-c.com, ibedonc@star-c.com
+From: Sergei Shtylylov <sshtylyov@ru.mvista.com>
+Subject: Re: hpt366 driver oops or panic with HighPoint RocketRAID 1520	SATA
+ (HPT372N)
+Date: Sat, 12 Nov 2005 00:08:33 +0300
+Message-ID: <43750851.1080306@ru.mvista.com>
+References: <436FB350.6020309@inap.se> <1131467876.25192.51.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dpc6935171158.direcpc.com ([69.35.171.158]:32450 "EHLO
-	vcr.star-c.com") by vger.kernel.org with ESMTP id S1751171AbVKKUeD
+Received: from rtsoft2.corbina.net ([85.21.88.2]:41391 "HELO
+	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S1751134AbVKKVGm
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Nov 2005 15:34:03 -0500
-Received: from vcr.star-c.com ([192.168.1.2])
-	by vcr.star-c.com (8.13.4/8.13.1) with ESMTP id jABKXYfK018011
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Fri, 11 Nov 2005 14:33:36 -0600
-Received: (from don@localhost)
-	by vcr.star-c.com (8.12.9-20030917/8.13.4/Submit) id jABKXNeq018010
-	for linux-ide@vger.kernel.org; Fri, 11 Nov 2005 14:33:23 -0600
-Content-Disposition: inline
+	Fri, 11 Nov 2005 16:06:42 -0500
+In-Reply-To: <1131467876.25192.51.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jeff, disabling PCI MSI does not help
+Hello.
+
+Alan Cox wrote:
+
+> I've got the correct timing tables and PLL tune information for the 302N
+> now which appears to be very similar if not identical for these needs so
+> if someone wants to hack the old drivers/ide/pci driver a bit I can
+> provide reasonably accurate chip id and chip pll base information to
+> enable a fix.
+
+    I'm currently working on the old driver to bring in the HPT371N support 
+and fix HPT371 clock setup (and make the other chip's clock setups correct 
+along the way). Unfortunately I can test only on 371N and 370A, the board with 
+371 soldered in has PCI contreoller fried.
+
+WBR, Sergei
