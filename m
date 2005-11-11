@@ -1,42 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: AHCI and VT8251
-Date: Thu, 10 Nov 2005 18:47:08 -0500
-Message-ID: <4373DBFC.5050208@pobox.com>
-References: <1131592459.30236.30.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: linux@horizon.com
+Subject: Re: sata_sil24 corruption details
+Date: 10 Nov 2005 21:16:16 -0500
+Message-ID: <20051111021616.28929.qmail@science.horizon.com>
+References: <4373843E.2030308@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:15236 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751198AbVKJXrN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2005 18:47:13 -0500
-In-Reply-To: <1131592459.30236.30.camel@localhost.localdomain>
+Received: from science.horizon.com ([192.35.100.1]:54057 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S1751242AbVKKCQX
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Nov 2005 21:16:23 -0500
+In-Reply-To: <4373843E.2030308@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Joyce <joyce@webcreations.ca>
-Cc: linux-ide@vger.kernel.org
+To: htejun@gmail.com
+Cc: axboe@suse.de, greg.freemyer@gmail.com, linux-ide@vger.kernel.org, linux@horizon.com
 
-Andrew Joyce wrote:
-> I am trying to get a system using a VIA VT8251 chipset up and running.
-> The chip claims to comply to the AHCI standard so, much like a previous
-> poster, I added the PCI ID of the controller into the AHCI driver,
-> compiled the 2.6.14 kernel and crossed my fingers.  I met with the same
-> problems as were found earlier.  I am fairly certain this is an issue
-> with the kernel driver and the new VT8251 chipset.  As far as I can tell
-> this is the first board the chip is shipping in and the board has only
-> been on the market for about a month at this stage.
-> 
-> I am presently unsure how to proceed in order to diagnose or address
-> this problem.  My experience with kernel hacking is pretty limited but I
-> would be willing to help out by testing whatever I can and I am happy to
-> do some legwork and research to get this going.  Would anyone be
-> interested in helping me address this problem?
-> 
-> I have attached the relevant portions of kernel messages below.
+>>> * Ruling out disk problem
+>>>        * Trying other harddisks.  All harddisk drives perform error
+>>>          detection/correction when data are read from the media, but
+>>>          ruling out the possibility would still be helpful.
+>>>
+>>> * If you have log of failed sectors, finding patterns will be helpful.
+>>>  If the errors occur at random places, it's likely that we have
+>>>  controller/driver issues.  If errors are localized over multiple runs,
+>>>  maybe the disk is at fault.
 
-Does disabling PCI MSI fix things?
+Well, I've been an idiot.  My problems are NOT solved, but the problems
+are isolated to one of the three controller cards (sdc and sdd), and
+by doing all my testing through the RAID layer which spread out those
+errors across all the different logical volumes, I wasn't seeing it.
 
-	Jeff
+Damn it, I had the mirrors carefully shared across controllers for better
+tolerance to hard errors, and that meant that these silent errors
+got into everything.
 
+So I went whining for help before I applied elementary debugging logic
+to the problem and now have to publicly apologize for suspecting the
+software.
 
-
+There will now follow a period of drive, cable, and controller swapping
+while I figure out WTF is going on here.
