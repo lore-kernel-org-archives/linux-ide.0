@@ -1,41 +1,32 @@
-From: linux@horizon.com
-Subject: Re: sata_sil24 corruption details
-Date: 10 Nov 2005 21:16:16 -0500
-Message-ID: <20051111021616.28929.qmail@science.horizon.com>
-References: <4373843E.2030308@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Marvell MV88SX6041 SATA Driver PIO4 Mode Not DMA
+Date: Fri, 11 Nov 2005 05:26:24 -0500
+Message-ID: <437471D0.3090404@pobox.com>
+References: <1131648518.26701.247242836@webmail.messagingengine.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from science.horizon.com ([192.35.100.1]:54057 "HELO
-	science.horizon.com") by vger.kernel.org with SMTP id S1751242AbVKKCQX
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Nov 2005 21:16:23 -0500
-In-Reply-To: <4373843E.2030308@gmail.com>
+Received: from mail.dvmed.net ([216.237.124.58]:2183 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751270AbVKKK0r (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Nov 2005 05:26:47 -0500
+In-Reply-To: <1131648518.26701.247242836@webmail.messagingengine.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com
-Cc: axboe@suse.de, greg.freemyer@gmail.com, linux-ide@vger.kernel.org, linux@horizon.com
+To: Spencer Tuttle <rodeojones@fastmail.fm>
+Cc: linux-ide@vger.kernel.org
 
->>> * Ruling out disk problem
->>>        * Trying other harddisks.  All harddisk drives perform error
->>>          detection/correction when data are read from the media, but
->>>          ruling out the possibility would still be helpful.
->>>
->>> * If you have log of failed sectors, finding patterns will be helpful.
->>>  If the errors occur at random places, it's likely that we have
->>>  controller/driver issues.  If errors are localized over multiple runs,
->>>  maybe the disk is at fault.
+Spencer Tuttle wrote:
+> I have just compiled the new 2.6.14 kernel from the gentoo-sources tree.
+> 
+> I can access the drives just fine, but it seems really slow.  Here is
+> the dmesg output when I load the kernel module
 
-Well, I've been an idiot.  My problems are NOT solved, but the problems
-are isolated to one of the three controller cards (sdc and sdd), and
-by doing all my testing through the RAID layer which spread out those
-errors across all the different logical volumes, I wasn't seeing it.
+That's expected, since the driver in 2.6.14 only does PIO mode.
 
-Damn it, I had the mirrors carefully shared across controllers for better
-tolerance to hard errors, and that meant that these silent errors
-got into everything.
+Try 2.6.14-gitN which supports EDMA.
 
-So I went whining for help before I applied elementary debugging logic
-to the problem and now have to publicly apologize for suspecting the
-software.
+	Jeff
 
-There will now follow a period of drive, cable, and controller swapping
-while I figure out WTF is going on here.
+
+
