@@ -1,307 +1,285 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [git patches] 2.6.x libata updates
-Date: Fri, 11 Nov 2005 11:23:35 -0500
-Message-ID: <20051111162335.GA25840@havoc.gtf.org>
+From: Thibaut VARENE <T-Bone@parisc-linux.org>
+Subject: Re: [PATCH] Restore support for AEC6285M cards in aec62xx.c
+Date: Fri, 11 Nov 2005 17:35:30 +0100
+Message-ID: <20051111173530.725484ea@Tatooine.r3z0>
+References: <20051029050124.3cee081c@Tatooine.r3z0>
+	<58cb370e0511020902r2f031e7ewa9331723d4183e3c@mail.gmail.com>
+	<20051106144033.45deb874@Tatooine.r3z0>
+	<58cb370e0511100250q319b32eame8112d2412aba659@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750847AbVKKQXi@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary=Multipart_Fri__11_Nov_2005_17_35_30_+0100_Jwkezu9giOL_riy3
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp2-g19.free.fr ([212.27.42.28]:25026 "EHLO smtp2-g19.free.fr")
+	by vger.kernel.org with ESMTP id S1750849AbVKKQf5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Nov 2005 11:35:57 -0500
+In-Reply-To: <58cb370e0511100250q319b32eame8112d2412aba659@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
+--Multipart_Fri__11_Nov_2005_17_35_30_+0100_Jwkezu9giOL_riy3
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+On Fri, 11 Nov 2005 16:13:57 +0100
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-to receive the following updates:
+> On 11/6/05, Thibaut VARENE <T-Bone@parisc-linux.org> wrote:
 
- drivers/scsi/ahci.c         |    2 +-
- drivers/scsi/ata_piix.c     |    2 +-
- drivers/scsi/libata-core.c  |    2 ++
- drivers/scsi/libata-scsi.c  |    2 ++
- drivers/scsi/pdc_adma.c     |    2 +-
- drivers/scsi/sata_mv.c      |    4 +++-
- drivers/scsi/sata_nv.c      |    2 +-
- drivers/scsi/sata_promise.c |    2 +-
- drivers/scsi/sata_qstor.c   |    2 +-
- drivers/scsi/sata_sil.c     |    2 +-
- drivers/scsi/sata_sil24.c   |    2 +-
- drivers/scsi/sata_sis.c     |    2 +-
- drivers/scsi/sata_svw.c     |    2 +-
- drivers/scsi/sata_sx4.c     |    2 +-
- drivers/scsi/sata_uli.c     |    2 +-
- drivers/scsi/sata_via.c     |    2 +-
- drivers/scsi/sata_vsc.c     |    2 +-
- include/linux/libata.h      |    2 ++
- 18 files changed, 23 insertions(+), 15 deletions(-)
+> Thanks but obvious cleanups and functional changes (conversion
+> to use __ide_dma_timout() and PIO fixes) are still mixed.
 
-Alan Cox:
-      libata: Note a nasty ATA quirk
-      libata: propogate host private data from probe function
+my bad. I've split the remaining changes in three incremental patches,
+hope that's enough granularity ;)
 
-Andrew Morton:
-      libata.h needs dma-mapping.h
+> Just change ->tuneproc() argument in aec62xx_config_drive_xfer_rate()
+> from '5' to '255' so best PIO mode will still be tuned correctly.
 
-Jeff Garzik:
-      [libata] constify PCI ID table in several drivers
-      [libata sata_mv] add Adaptec 1420SA PCI ID
+done
 
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 10c470e..57ef7ae 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -255,7 +255,7 @@ static struct ata_port_info ahci_port_in
- 	},
- };
+> > > Please note that this code-path is not executed by default
+> > > because drive->autotune is set only if DMA base cannot be
+> > > obtained (his incorrect because we need PIO to be configured
+> > > properly even if DMA is going to be used).  That would be great
+> > > if you could also fix this.
+> 
+> by adding
+> 
+> hwif->drives[0].autotune = 1;
+> hwif->drives[1].autotune = 1;
+> 
+> to init_hwif_aec62xx() and testing this change
+> (please note that it depends on fixing ->tuneproc() discussed earlier)
+
+I removed the wrong 
+	if (!hwif->dma_base) {
+test
+
+> > patch-1--aec62xxx.c-maccards.diff:
+> > - Add missing Macintosh-specific cards initialization sequence
+> 
+> I will add this to development tree (which will show in -mm kernels
+> soon), thanks.
+
+np, you're welcome.
+
+> > - Update aec62xxx_tune_drive()
+> > - Update aec62xxx_dma_timeout()
+> 
+> These should belong to the last patch in the patch series.
+> 
+> Please also try adding some meaningful descriptions to the patches.
+
+yeah my bad again, i've been a little quick at writing the previous email
+:)
+
+The following patches apply on top of 2.6.14+maccards.diff
+Built and booted fine.
+
+HTH
+
+T-Bone
+
+PS: please CC me
+
+patch-1-aec62xx.c-remove-dead-code.diff
+- remove all dead (#if0'd) code
+
+Signed-off-by: Thibaut VARENE <varenet@parisc-linux.org>
+
+patch-2-aec62xx.c-convert-dma_timeout.diff
+- convert aec62xx_irq_timeout() to aec62xx_dma_timeout():
+  * removed NOOP code
+  * changed 'return 0;' to 'return __ide_dma_timeout(drive);'
+  * removed unnecessary hwif->ide_dma_lostirq assignement
+
+Signed-off-by: Thibaut VARENE <varenet@parisc-linux.org>
+
+patch-3-aec62xx.c-fix-tuneproc.diff
+- fix a bug in tuneproc logic that would set an incorrect PIO mode
+- fix aec62xx_config_drive_xfer_rate() to properly call tuneproc()
+- remove unnecessary test in init_hwif_aec62xx(), so that
+drives[].autotune is always set to 1
+
+Signed-off-by: Thibaut VARENE <varenet@parisc-linux.org>
+--Multipart_Fri__11_Nov_2005_17_35_30_+0100_Jwkezu9giOL_riy3
+Content-Type: text/plain; name=patch-1-aec62xx.c-remove-dead-code.diff
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename=patch-1-aec62xx.c-remove-dead-code.diff
+
+--- linux-2.6.14/drivers/ide/pci/aec62xx.c.orig	2005-11-06 13:32:50.000000000 +0100
++++ linux-2.6.14/drivers/ide/pci/aec62xx.c	2005-11-11 17:07:30.000000000 +0100
+@@ -65,23 +65,6 @@
+ #define BUSCLOCK(D)	\
+ 	((struct chipset_bus_clock_list_entry *) pci_get_drvdata((D)))
  
--static struct pci_device_id ahci_pci_tbl[] = {
-+static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_INTEL, 0x2652, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_ahci }, /* ICH6 */
- 	{ PCI_VENDOR_ID_INTEL, 0x2653, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-index a1bd8d9..855428f 100644
---- a/drivers/scsi/ata_piix.c
-+++ b/drivers/scsi/ata_piix.c
-@@ -95,7 +95,7 @@ static void piix_set_dmamode (struct ata
+-#if 0
+-		if (dev->device == PCI_DEVICE_ID_ARTOP_ATP850UF) {
+-			(void) pci_read_config_byte(dev, 0x54, &art);
+-			p += sprintf(p, "DMA Mode:       %s(%s)",
+-				(c0&0x20)?((art&0x03)?"UDMA":" DMA"):" PIO",
+-				(art&0x02)?"2":(art&0x01)?"1":"0");
+-			p += sprintf(p, "          %s(%s)",
+-				(c0&0x40)?((art&0x0c)?"UDMA":" DMA"):" PIO",
+-				(art&0x08)?"2":(art&0x04)?"1":"0");
+-			p += sprintf(p, "         %s(%s)",
+-				(c1&0x20)?((art&0x30)?"UDMA":" DMA"):" PIO",
+-				(art&0x20)?"2":(art&0x10)?"1":"0");
+-			p += sprintf(p, "           %s(%s)\n",
+-				(c1&0x40)?((art&0xc0)?"UDMA":" DMA"):" PIO",
+-				(art&0x80)?"2":(art&0x40)?"1":"0");
+-		} else {
+-#endif
  
- static unsigned int in_module_init = 1;
+ /*
+  * TO DO: active tuning and correction of cards without a bios.
+@@ -112,13 +95,9 @@
+ 	switch(hwif->pci_dev->device) {
+ 		case PCI_DEVICE_ID_ARTOP_ATP865:
+ 		case PCI_DEVICE_ID_ARTOP_ATP865R:
+-#if 0
+-			mode = (hwif->INB(hwif->dma_master) & 0x10) ? 4 : 3;
+-#else
+ 			mode = (hwif->INB(((hwif->channel) ?
+ 					hwif->mate->dma_status :
+ 					hwif->dma_status)) & 0x10) ? 4 : 3;
+-#endif
+ 			break;
+ 		case PCI_DEVICE_ID_ARTOP_ATP860:
+ 		case PCI_DEVICE_ID_ARTOP_ATP860R:
+@@ -263,35 +242,9 @@
+ 		case PCI_DEVICE_ID_ARTOP_ATP865:
+ 		case PCI_DEVICE_ID_ARTOP_ATP865R:
+ 			printk(" AEC62XX time out ");
+-#if 0
+-			{
+-				int i = 0;
+-				u8 reg49h = 0;
+-				pci_read_config_byte(HWIF(drive)->pci_dev, 0x49, &reg49h);
+-				for (i=0;i<256;i++)
+-					pci_write_config_byte(HWIF(drive)->pci_dev, 0x49, reg49h|0x10);
+-				pci_write_config_byte(HWIF(drive)->pci_dev, 0x49, reg49h & ~0x10);
+-			}
+-			return 0;
+-#endif
+ 		default:
+ 			break;
+ 	}
+-#if 0
+-	{
+-		ide_hwif_t *hwif	= HWIF(drive);
+-		struct pci_dev *dev	= hwif->pci_dev;
+-		u8 tmp1 = 0, tmp2 = 0, mode6 = 0;
+-
+-		pci_read_config_byte(dev, 0x44, &tmp1);
+-		pci_read_config_byte(dev, 0x45, &tmp2);
+-		printk(" AEC6280 r44=%x r45=%x ",tmp1,tmp2);
+-		mode6 = HWIF(drive)->INB(((hwif->channel) ?
+-					   hwif->mate->dma_status :
+-					   hwif->dma_status));
+-		printk(" AEC6280 133=%x ", (mode6 & 0x10));
+-	}
+-#endif
+ 	return 0;
+ }
  
--static struct pci_device_id piix_pci_tbl[] = {
-+static const struct pci_device_id piix_pci_tbl[] = {
- #ifdef ATA_ENABLE_PATA
- 	{ 0x8086, 0x7111, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix4_pata },
- 	{ 0x8086, 0x24db, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_pata },
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index a74b407..e51d9a8 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -4563,6 +4563,7 @@ ata_pci_init_native_mode(struct pci_dev 
+
+--Multipart_Fri__11_Nov_2005_17_35_30_+0100_Jwkezu9giOL_riy3
+Content-Type: text/plain; name=patch-2-aec62xx.c-convert-dma_timeout.diff
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename=patch-2-aec62xx.c-convert-dma_timeout.diff
+
+--- linux-2.6.14/drivers/ide/pci/aec62xx.c.orig	2005-11-11 17:07:30.000000000 +0100
++++ linux-2.6.14/drivers/ide/pci/aec62xx.c	2005-11-11 17:11:57.000000000 +0100
+@@ -231,21 +231,9 @@
+ 	return 0;
+ }
  
- 	probe_ent->irq = pdev->irq;
- 	probe_ent->irq_flags = SA_SHIRQ;
-+	probe_ent->private_data = port[0]->private_data;
+-static int aec62xx_irq_timeout (ide_drive_t *drive)
++static int aec62xx_dma_timeout (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-	struct pci_dev *dev	= hwif->pci_dev;
+-
+-	switch(dev->device) {
+-		case PCI_DEVICE_ID_ARTOP_ATP860:
+-		case PCI_DEVICE_ID_ARTOP_ATP860R:
+-		case PCI_DEVICE_ID_ARTOP_ATP865:
+-		case PCI_DEVICE_ID_ARTOP_ATP865R:
+-			printk(" AEC62XX time out ");
+-		default:
+-			break;
+-	}
+-	return 0;
++	return __ide_dma_timeout(drive);
+ }
  
- 	if (ports & ATA_PORT_PRIMARY) {
- 		probe_ent->port[p].cmd_addr = pci_resource_start(pdev, 0);
-@@ -4599,6 +4600,7 @@ static struct ata_probe_ent *ata_pci_ini
- 	probe_ent->legacy_mode = 1;
- 	probe_ent->n_ports = 1;
- 	probe_ent->hard_port_no = port_num;
-+	probe_ent->private_data = port->private_data;
+ static unsigned int __devinit init_chipset_aec62xx(struct pci_dev *dev, const char *name)
+@@ -305,8 +293,7 @@
+ 	hwif->swdma_mask = 0x07;
  
- 	switch(port_num)
- 	{
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index bb30fcd..7e37f48 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -1129,6 +1129,8 @@ static unsigned int ata_scsi_rw_xlat(str
- 		 * length 0 means transfer 0 block of data.
- 		 * However, for ATA R/W commands, sector count 0 means
- 		 * 256 or 65536 sectors, not 0 sectors as in SCSI.
-+		 *
-+		 * WARNING: one or two older ATA drives treat 0 as 0...
- 		 */
- 		goto nothing_to_do;
+ 	hwif->ide_dma_check	= &aec62xx_config_drive_xfer_rate;
+-	hwif->ide_dma_lostirq	= &aec62xx_irq_timeout;
+-	hwif->ide_dma_timeout	= &aec62xx_irq_timeout;
++	hwif->ide_dma_timeout	= &aec62xx_dma_timeout;
+ 	if (!noautodma)
+ 		hwif->autodma = 1;
+ 	hwif->drives[0].autodma = hwif->autodma;
+
+--Multipart_Fri__11_Nov_2005_17_35_30_+0100_Jwkezu9giOL_riy3
+Content-Type: text/plain; name=patch-3-aec62xx.c-fix-tuneproc.diff
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename=patch-3-aec62xx.c-fix-tuneproc.diff
+
+--- linux-2.6.14/drivers/ide/pci/aec62xx.c.orig	2005-11-11 17:28:12.000000000 +0100
++++ linux-2.6.14/drivers/ide/pci/aec62xx.c	2005-11-11 17:30:32.000000000 +0100
+@@ -194,17 +194,8 @@
  
-diff --git a/drivers/scsi/pdc_adma.c b/drivers/scsi/pdc_adma.c
-index 78b4ff1..f557f17 100644
---- a/drivers/scsi/pdc_adma.c
-+++ b/drivers/scsi/pdc_adma.c
-@@ -190,7 +190,7 @@ static struct ata_port_info adma_port_in
- 	},
- };
+ static void aec62xx_tune_drive (ide_drive_t *drive, u8 pio)
+ {
+-	u8 speed = 0;
+-	u8 new_pio = XFER_PIO_0 + ide_get_best_pio_mode(drive, 255, 5, NULL);
++	u8 speed = XFER_PIO_0 + ide_get_best_pio_mode(drive, pio, 4, NULL);
  
--static struct pci_device_id adma_ata_pci_tbl[] = {
-+static const struct pci_device_id adma_ata_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_PDC, 0x1841, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_1841_idx },
+-	switch(pio) {
+-		case 5:		speed = new_pio; break;
+-		case 4:		speed = XFER_PIO_4; break;
+-		case 3:		speed = XFER_PIO_3; break;
+-		case 2:		speed = XFER_PIO_2; break;
+-		case 1:		speed = XFER_PIO_1; break;
+-		default:	speed = XFER_PIO_0; break;
+-	}
+ 	(void) aec62xx_tune_chipset(drive, speed);
+ }
  
-diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
-index 93d5523..257c128 100644
---- a/drivers/scsi/sata_mv.c
-+++ b/drivers/scsi/sata_mv.c
-@@ -349,7 +349,7 @@ static struct ata_port_info mv_port_info
- 	},
- };
+@@ -224,7 +215,7 @@
  
--static struct pci_device_id mv_pci_tbl[] = {
-+static const struct pci_device_id mv_pci_tbl[] = {
- 	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x5040), 0, 0, chip_504x},
- 	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x5041), 0, 0, chip_504x},
- 	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x5080), 0, 0, chip_508x},
-@@ -359,6 +359,8 @@ static struct pci_device_id mv_pci_tbl[]
- 	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x6041), 0, 0, chip_604x},
- 	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x6080), 0, 0, chip_608x},
- 	{PCI_DEVICE(PCI_VENDOR_ID_MARVELL, 0x6081), 0, 0, chip_608x},
-+
-+	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, 0x0241), 0, 0, chip_604x},
- 	{}			/* terminate list */
- };
+ 	} else if ((id->capability & 8) || (id->field_valid & 2)) {
+ fast_ata_pio:
+-		aec62xx_tune_drive(drive, 5);
++		aec62xx_tune_drive(drive, 255);
+ 		return hwif->ide_dma_off_quietly(drive);
+ 	}
+ 	/* IORDY not supported */
+@@ -282,11 +273,8 @@
+ 	if (hwif->mate)
+ 		hwif->mate->serialized = hwif->serialized;
  
-diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
-index 37a4fae..4954896 100644
---- a/drivers/scsi/sata_nv.c
-+++ b/drivers/scsi/sata_nv.c
-@@ -137,7 +137,7 @@ enum nv_host_type
- 	CK804
- };
+-	if (!hwif->dma_base) {
+-		hwif->drives[0].autotune = 1;
+-		hwif->drives[1].autotune = 1;
+-		return;
+-	}
++	hwif->drives[0].autotune = 1;
++	hwif->drives[1].autotune = 1;
  
--static struct pci_device_id nv_pci_tbl[] = {
-+static const struct pci_device_id nv_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE2S_SATA,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, NFORCE2 },
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE3S_SATA,
-diff --git a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
-index 9edc9d9..242d906 100644
---- a/drivers/scsi/sata_promise.c
-+++ b/drivers/scsi/sata_promise.c
-@@ -193,7 +193,7 @@ static struct ata_port_info pdc_port_inf
- 	},
- };
- 
--static struct pci_device_id pdc_ata_pci_tbl[] = {
-+static const struct pci_device_id pdc_ata_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_PROMISE, 0x3371, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_2037x },
- 	{ PCI_VENDOR_ID_PROMISE, 0x3570, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-diff --git a/drivers/scsi/sata_qstor.c b/drivers/scsi/sata_qstor.c
-index d274ab2..b2f6324 100644
---- a/drivers/scsi/sata_qstor.c
-+++ b/drivers/scsi/sata_qstor.c
-@@ -184,7 +184,7 @@ static struct ata_port_info qs_port_info
- 	},
- };
- 
--static struct pci_device_id qs_ata_pci_tbl[] = {
-+static const struct pci_device_id qs_ata_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_PDC, 0x2068, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_2068_idx },
- 
-diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
-index d0e3c3c..3609186 100644
---- a/drivers/scsi/sata_sil.c
-+++ b/drivers/scsi/sata_sil.c
-@@ -87,7 +87,7 @@ static void sil_scr_write (struct ata_po
- static void sil_post_set_mode (struct ata_port *ap);
- 
- 
--static struct pci_device_id sil_pci_tbl[] = {
-+static const struct pci_device_id sil_pci_tbl[] = {
- 	{ 0x1095, 0x3112, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112_m15w },
- 	{ 0x1095, 0x0240, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112_m15w },
- 	{ 0x1095, 0x3512, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sil_3112 },
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index 4682a50..d3198d9 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -240,7 +240,7 @@ static void sil24_port_stop(struct ata_p
- static void sil24_host_stop(struct ata_host_set *host_set);
- static int sil24_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
- 
--static struct pci_device_id sil24_pci_tbl[] = {
-+static const struct pci_device_id sil24_pci_tbl[] = {
- 	{ 0x1095, 0x3124, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3124 },
- 	{ 0x1095, 0x3132, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3132 },
- 	{ 0x1095, 0x3131, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3131 },
-diff --git a/drivers/scsi/sata_sis.c b/drivers/scsi/sata_sis.c
-index 42d7c4e..32e1262 100644
---- a/drivers/scsi/sata_sis.c
-+++ b/drivers/scsi/sata_sis.c
-@@ -67,7 +67,7 @@ static int sis_init_one (struct pci_dev 
- static u32 sis_scr_read (struct ata_port *ap, unsigned int sc_reg);
- static void sis_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
- 
--static struct pci_device_id sis_pci_tbl[] = {
-+static const struct pci_device_id sis_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_SI, 0x180, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
- 	{ PCI_VENDOR_ID_SI, 0x181, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
- 	{ PCI_VENDOR_ID_SI, 0x182, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
-diff --git a/drivers/scsi/sata_svw.c b/drivers/scsi/sata_svw.c
-index 9895d1c..57e5a9d 100644
---- a/drivers/scsi/sata_svw.c
-+++ b/drivers/scsi/sata_svw.c
-@@ -466,7 +466,7 @@ err_out:
-  * 0x24a is device ID for BCM5785 (aka HT1000) HT southbridge integrated SATA
-  * controller
-  * */
--static struct pci_device_id k2_sata_pci_tbl[] = {
-+static const struct pci_device_id k2_sata_pci_tbl[] = {
- 	{ 0x1166, 0x0240, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4 },
- 	{ 0x1166, 0x0241, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4 },
- 	{ 0x1166, 0x0242, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 8 },
-diff --git a/drivers/scsi/sata_sx4.c b/drivers/scsi/sata_sx4.c
-index d5a3878..b4bbe48 100644
---- a/drivers/scsi/sata_sx4.c
-+++ b/drivers/scsi/sata_sx4.c
-@@ -229,7 +229,7 @@ static struct ata_port_info pdc_port_inf
- 
- };
- 
--static struct pci_device_id pdc_sata_pci_tbl[] = {
-+static const struct pci_device_id pdc_sata_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_PROMISE, 0x6622, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_20621 },
- 	{ }	/* terminate list */
-diff --git a/drivers/scsi/sata_uli.c b/drivers/scsi/sata_uli.c
-index cf0baaa..b2422a0 100644
---- a/drivers/scsi/sata_uli.c
-+++ b/drivers/scsi/sata_uli.c
-@@ -55,7 +55,7 @@ static int uli_init_one (struct pci_dev 
- static u32 uli_scr_read (struct ata_port *ap, unsigned int sc_reg);
- static void uli_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
- 
--static struct pci_device_id uli_pci_tbl[] = {
-+static const struct pci_device_id uli_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_AL, 0x5289, PCI_ANY_ID, PCI_ANY_ID, 0, 0, uli_5289 },
- 	{ PCI_VENDOR_ID_AL, 0x5287, PCI_ANY_ID, PCI_ANY_ID, 0, 0, uli_5287 },
- 	{ PCI_VENDOR_ID_AL, 0x5281, PCI_ANY_ID, PCI_ANY_ID, 0, 0, uli_5281 },
-diff --git a/drivers/scsi/sata_via.c b/drivers/scsi/sata_via.c
-index ab19d2b..c762156 100644
---- a/drivers/scsi/sata_via.c
-+++ b/drivers/scsi/sata_via.c
-@@ -75,7 +75,7 @@ static int svia_init_one (struct pci_dev
- static u32 svia_scr_read (struct ata_port *ap, unsigned int sc_reg);
- static void svia_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
- 
--static struct pci_device_id svia_pci_tbl[] = {
-+static const struct pci_device_id svia_pci_tbl[] = {
- 	{ 0x1106, 0x3149, PCI_ANY_ID, PCI_ANY_ID, 0, 0, vt6420 },
- 	{ 0x1106, 0x3249, PCI_ANY_ID, PCI_ANY_ID, 0, 0, vt6421 },
- 
-diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
-index ce8a2fd..77a6e4b 100644
---- a/drivers/scsi/sata_vsc.c
-+++ b/drivers/scsi/sata_vsc.c
-@@ -400,7 +400,7 @@ err_out:
-  * 0x8086/0x3200 is the Intel 31244, which is supposed to be identical
-  * compatibility is untested as of yet
-  */
--static struct pci_device_id vsc_sata_pci_tbl[] = {
-+static const struct pci_device_id vsc_sata_pci_tbl[] = {
- 	{ 0x1725, 0x7174, PCI_ANY_ID, PCI_ANY_ID, 0x10600, 0xFFFFFF, 0 },
- 	{ 0x8086, 0x3200, PCI_ANY_ID, PCI_ANY_ID, 0x10600, 0xFFFFFF, 0 },
- 	{ }
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 6f07522..1464a75 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -29,6 +29,7 @@
- #include <linux/delay.h>
- #include <linux/interrupt.h>
- #include <linux/pci.h>
-+#include <linux/dma-mapping.h>
- #include <asm/io.h>
- #include <linux/ata.h>
- #include <linux/workqueue.h>
-@@ -404,6 +405,7 @@ struct ata_port_info {
- 	unsigned long		mwdma_mask;
- 	unsigned long		udma_mask;
- 	const struct ata_port_operations *port_ops;
-+	void 			*private_data;
- };
- 
- struct ata_timing {
+ 	hwif->ultra_mask = 0x7f;
+ 	hwif->mwdma_mask = 0x07;
+
+--Multipart_Fri__11_Nov_2005_17_35_30_+0100_Jwkezu9giOL_riy3--
