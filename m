@@ -1,38 +1,69 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Marvell MV88SX6041 SATA Driver PIO4 Mode Not DMA
-Date: Fri, 11 Nov 2005 13:14:47 +0100
-Message-ID: <20051111121447.GQ3699@suse.de>
-References: <1131648518.26701.247242836@webmail.messagingengine.com> <437471D0.3090404@pobox.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Buggy IDE / ATA drive on 2.6? DMA timeouts, 2.4 is fine
+Date: Fri, 11 Nov 2005 14:33:18 +0100
+Message-ID: <58cb370e0511110533y51f1b6dbl514680f315cca1f3@mail.gmail.com>
+References: <1131459964.4370b57cdfbc5@imp1-g19.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:42353 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1750703AbVKKMNn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Nov 2005 07:13:43 -0500
+Received: from nproxy.gmail.com ([64.233.182.206]:10638 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750744AbVKKNdU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Nov 2005 08:33:20 -0500
+Received: by nproxy.gmail.com with SMTP id x37so151035nfc
+        for <linux-ide@vger.kernel.org>; Fri, 11 Nov 2005 05:33:18 -0800 (PST)
+In-Reply-To: <1131459964.4370b57cdfbc5@imp1-g19.free.fr>
 Content-Disposition: inline
-In-Reply-To: <437471D0.3090404@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Spencer Tuttle <rodeojones@fastmail.fm>, linux-ide@vger.kernel.org
+To: Rahul Siddharthan <rsidd@online.fr>
+Cc: linux-ide@vger.kernel.org
 
-On Fri, Nov 11 2005, Jeff Garzik wrote:
-> Spencer Tuttle wrote:
-> >I have just compiled the new 2.6.14 kernel from the gentoo-sources tree.
+On 11/8/05, Rahul Siddharthan <rsidd@online.fr> wrote:
+> Bartlomiej Zolnierkiewicz said on Nov  8, 2005 at 14:17:13:
+> > On 11/8/05, Rahul Siddharthan <rsidd@online.fr> wrote:
+> > > I have a HP Pavilion ze5385us laptop bought in 2003, which has a
+> > > ALi15X3 IDE controller and a Toshiba MK6021GAS ATA disk.  For about
+> > > two months, since an upgrade to kernel 2.6.10+, I'd been noticing
+> > > occasional sluggishness with the laptop, and occasionally "DMA timeout"
+> > > errors.  But until a week ago they were rather rare, and never occurred
+> > > with the other kernel/OS's I have on the machine: Linux 2.4.27, Windows XP,
+> > > DragonFly BSD.    The exact error is:
+> > >
+> > > hda: dma_timer_expiry: dma status == 0x21
+> > > hda: DMA timeout error
+> > > hda: dma timeout error: status=0xd0 (busy)
+> > >
+> > > ide: failed opcode was: unknown
+> > > hda: DMA disabled
+> > > ide0: reset: success
+>
+> [snip]
+> > > Now I have been running the laptop on DragonFly and Linux 2.4 for about
+> > > 3 hours each and there have been no problems whatever.  I even successfully
+> > > burned a CD in dummy mode and then in real mode.
+> > >
+> > > I have no clue what's going on but I am convinced that the 2.6 IDE driver is
+> > > somehow bad for my laptop.
+
+Does 2.4 kernel work reliably for you now?
+
+If so please do more testing and find the latest kernel version
+which works for you, otherwise it is very unlikely that somebody
+will be able to help you as going from 2.4.27->2.6.10 means going
+through insane amount of changes.
+
+> > > Any ideas?
 > >
-> >I can access the drives just fine, but it seems really slow.  Here is
-> >the dmesg output when I load the kernel module
-> 
-> That's expected, since the driver in 2.6.14 only does PIO mode.
-> 
-> Try 2.6.14-gitN which supports EDMA.
+> > http://smartmontools.sf.net
+>
+> OK, smartctl -a says
+> SMART overall-health self-assessment test result: PASSED
+> and reports 14 errors, the most recent 2 at 7287 hours, (303 days + 15
+> hrs) so the DMA timeout errors aren't here.  Do you need the full
+> output?
 
-Did you see these as well:
+Yes.
 
-blk_queue_max_hw_segments: set to minimum 1
-
-Could it be forgetting to set ->sg_tablesize as well?
-
--- 
-Jens Axboe
-
+Bartlomiej
