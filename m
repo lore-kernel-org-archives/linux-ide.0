@@ -1,183 +1,182 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sil24 corruption details
-Date: Sat, 12 Nov 2005 11:59:04 +0900
-Message-ID: <43755A78.3040005@gmail.com>
-References: <20051110071736.23747.qmail@science.horizon.com>	 <43730C55.7030808@gmail.com>	 <87f94c370511100615u1eba1baai9d91df8ad2556510@mail.gmail.com>	 <43735C19.4040402@gmail.com> <4373843E.2030308@gmail.com>	 <87f94c370511101234v7a20c0daic907c41ccc61482c@mail.gmail.com> <87f94c370511111649j41d1832dhe7820376f96059a1@mail.gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH] ahci, qstor fixes
+Date: Sat, 12 Nov 2005 02:30:02 -0500
+Message-ID: <20051112073002.GA31699@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.194]:2736 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751031AbVKLC7M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Nov 2005 21:59:12 -0500
-Received: by zproxy.gmail.com with SMTP id 13so799710nzn
-        for <linux-ide@vger.kernel.org>; Fri, 11 Nov 2005 18:59:11 -0800 (PST)
-In-Reply-To: <87f94c370511111649j41d1832dhe7820376f96059a1@mail.gmail.com>
+Received: from havoc.gtf.org ([69.61.125.42]:8923 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S932186AbVKLHaG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Nov 2005 02:30:06 -0500
+Received: from havoc.gtf.org (havoc.gtf.org [127.0.0.1])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by havoc.gtf.org (Postfix) with ESMTP id 28D2C1C011EB
+	for <linux-ide@vger.kernel.org>; Sat, 12 Nov 2005 02:30:03 -0500 (EST)
+Received: (from garzik@localhost)
+	by havoc.gtf.org (8.13.1/8.13.1/Submit) id jAC7U2K3031742
+	for linux-ide@vger.kernel.org; Sat, 12 Nov 2005 02:30:02 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, linux@horizon.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Greg Freemyer wrote:
-> On 11/10/05, Greg Freemyer <greg.freemyer@gmail.com> wrote:
-> 
->>On 11/10/05, Tejun Heo <htejun@gmail.com> wrote:
->>
->>>Tejun Heo wrote:
->>>
->>>>Greg Freemyer wrote:
->>>>
->>>>
->>>>>On 11/10/05, Tejun Heo <htejun@gmail.com> wrote:
->>>>>
->>>>>
->>>>>>Hello, there.
->>>>>>
->>>>>>I'll soon try to tackle this one.  However, I currently have only one
->>>>>>3124 controller and one harddisk to hook to that controller, so I cannot
->>>>>>reproduce your setup over here.  Here are things that I think might help
->>>>>>in diagnosing the problem.
->>>>>>
->>>>>>* Trying other drivers
->>>>>>       * Trying the original driver.  I'll port the original driver
->>>>>>         from sii to the current tree and post the patch.
->>>>>>       * Performing similar test under Windows.
->>>>>>
->>>>>>* Ruling out disk problem
->>>>>>       * Trying other harddisks.  All harddisk drives perform error
->>>>>>         detection/correction when data are read from the media, but
->>>>>>         ruling out the possibility would still be helpful.
->>>>>>
->>>>>>* If you have log of failed sectors, finding patterns will be helpful.
->>>>>> If the errors occur at random places, it's likely that we have
->>>>>> controller/driver issues.  If errors are localized over multiple runs,
->>>>>> maybe the disk is at fault.
->>>>>>
->>>>>>--
->>>>>>tejun
->>>>>
->>>>>Tejun,
->>>>>
->>>>>I assume you saw my e-mail that with a 3112 and a single SATA drive we
->>>>>were seeing corruption as well.  That being the case I think you
->>>>>should first verify that corruption is not occuring in the single SATA
->>>>>drive case.
->>>>>
->>>>>Our test was to create a bunch of 2 GB files on a PATA drive.
->>>>>
->>>>>We simply used a drive with real data as the source of our test files.
->>>>>ie. IIRC: cd test_dir; dd if=/dev/hde conv=noerror,sync | split -b 2000m
->>>>>
->>>>>Then we calculated the md5 of all the 2 GB pieces.  All of this done
->>>>>in a pure PATA setup.
->>>>>
->>>>>Then we connected a SATA drive to a 3112 and simply copied the files
->>>>>from the PATA drive to the SATA drive and verified the md5 values.  We
->>>>>found corruption in 1 - 3% of the files copied.
->>>>>
->>>>>FYI: The above are all very common steps for a computer forensic
->>>>>examine, thus we found this issue in our attempts to qualify the 3112
->>>>>as part of our forensic equipment.  We have not tested since 2.6.11
->>>>>and that was with a SUSE kernel.
->>>>>
->>>>
->>>>Hi,
->>>>
->>>>I'll run single drive test on sil3112 tonight, but can you please try
->>>>2.6.14?  IIRC, there have been some PCI FIFO setting change.  Hmmm..
->>>>oh.. it was the following commit.
->>>>
->>>>---
->>>>$ git-cat-file commit e1dd23a0012c3929737798fda9fede0e783f4ff3
->>>>tree c7f808b6433ef1015f55418e7f11f432943bdefd
->>>>parent 5273a00d9c763108397658d440618f7ac3e40f83
->>>>author Jens Axboe <axboe@suse.de> 1118228545 +0200
->>>>committer Jeff Garzik <jgarzik@pobox.com> 1118300782 -0400
->>>>
->>>>[PATCH] sata_sil: Fix FIFO PCI Bus Arbitration kernel oops
->>>>
->>>>Correct this.
->>>>---
->>>>
->>>>Jens, is it possible that above change fixes data corruption?
->>>>
->>>
->>>Greg, first pass of 'badblocks -t random -v -w' on 100G partion of 160G
->>>disk just finished without any error.  This is samsung hd160jj drive on
->>>sil3112 controller.  I'll let badblocks run thorough the night and
->>>perform file copy & md5sum test tomorrow.  But my hunch is that there is
->>>no common data corruption problem with sil3112.  It's just in too
->>>wide-spread use to have such data corruption problem with so few reportings.
->>>
->>>What exact controller/disk did you use?  Care to retest your setup with
->>>2.6.14?
->>>
->>>--
->>>tejun
->>>
->>
->>Tejun
->>
->>The corruption I was seeing was on the order of a few bytes per 100
->>GB.  I'm not sure that most users would realize they were having
->>problems with that small of an error rate.
->>
->>I'm not sure what the OPs error rate was, but maybe he can tell us.
->>
->>I will attempt to retest with 2.6.14 vanilla.  Not sure if that will
->>be today or tomorrow.
->>
->>I don't have the old disk any more, but I will report what I use this time.
->>
->>I also have a CoolGear SATA to USB bridge, so if corruption is still
->>occuring I can retry the process with a USB connection to the
->>computer.  http://www.cooldrives.com/seatatousb20.html   If that works
->>it should rule out the Drive.
->>
->>Thanks for taking the time.
->>
->>Greg
->>--
->>Greg Freemyer
->>The Norcross Group
->>Forensics for the 21st Century
->>
-> 
-> 
-> Tejun,
-> 
-> Success report:
-> 
-> I did a 80 GB test copy with 2.6.14.1 and a Maxtor 80GB SATA drive and
-> a 3112A.  I had 3 drives connected to my server, one PATA for booting,
-> one PATA for to hold the source data, and the SATA drive.  Let me know
-> if you want want details about the setup.
-> 
-> I found no corruption.  Given that my error rate was very low it is
-> possible that the corruption simply did not happen, but for now I'm
-> assuming my earlier issues were either a disk problem or a kernel
-> issue that was resolved by the latest kernel.
-> 
-> I'm going to continue to test this setup.  I'll report any problems I find.
-> 
 
-Hi, Greg.
+Just checked these into the 'upstream-fixes' branch of
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-I also have been continuing corruption test on 3112 during last two 
-days.  It's being performed on 100GB partition of a 160GB harddisk 
-(samsung hd160jj).  Nine passes of 'badblocks -t random -v -w /dev/sdb2' 
-succeeded without any problem.  To replicate your test, I created a 4GB 
-random file by dd'ing from /dev/urandom in a separate IDE disk and 
-copied it to the partition 24times (24 different files of course), then 
-I md5sum'd all copied files twice.  This test succeeded five times 
-without any problem, and it's in the sixth run now.
 
-Above badblocks and file copy tests amount to about 1.4TB of writes and 
-1.9TB of reads without any data corruption.
+ drivers/scsi/ahci.c       |   32 +++++++++++++++++++++++++++-----
+ drivers/scsi/sata_qstor.c |    9 ++++++---
+ 2 files changed, 33 insertions(+), 8 deletions(-)
 
-Let me know how your test turns out.
+Jeff Garzik:
+      [libata ahci, qstor] fix miscount of [ATAPI] scatter/gather entries
+      [libata ahci] set port ATAPI bit correctly
 
-Thanks.
-
--- 
-tejun
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index 57ef7ae..4e96ec5 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -134,6 +134,7 @@ enum {
+ 				  PORT_IRQ_D2H_REG_FIS,
+ 
+ 	/* PORT_CMD bits */
++	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
+ 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
+ 	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
+ 	PORT_CMD_FIS_RX		= (1 << 4), /* Enable FIS receive DMA engine */
+@@ -441,7 +442,7 @@ static void ahci_phy_reset(struct ata_po
+ 	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
+ 	struct ata_taskfile tf;
+ 	struct ata_device *dev = &ap->device[0];
+-	u32 tmp;
++	u32 new_tmp, tmp;
+ 
+ 	__sata_phy_reset(ap);
+ 
+@@ -455,8 +456,21 @@ static void ahci_phy_reset(struct ata_po
+ 	tf.nsect	= (tmp)		& 0xff;
+ 
+ 	dev->class = ata_dev_classify(&tf);
+-	if (!ata_dev_present(dev))
++	if (!ata_dev_present(dev)) {
+ 		ata_port_disable(ap);
++		return;
++	}
++
++	/* Make sure port's ATAPI bit is set appropriately */
++	new_tmp = tmp = readl(port_mmio + PORT_CMD);
++	if (dev->class == ATA_DEV_ATAPI)
++		new_tmp |= PORT_CMD_ATAPI;
++	else
++		new_tmp &= ~PORT_CMD_ATAPI;
++	if (new_tmp != tmp) {
++		writel(new_tmp, port_mmio + PORT_CMD);
++		readl(port_mmio + PORT_CMD); /* flush */
++	}
+ }
+ 
+ static u8 ahci_check_status(struct ata_port *ap)
+@@ -474,11 +488,12 @@ static void ahci_tf_read(struct ata_port
+ 	ata_tf_from_fis(d2h_fis, tf);
+ }
+ 
+-static void ahci_fill_sg(struct ata_queued_cmd *qc)
++static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc)
+ {
+ 	struct ahci_port_priv *pp = qc->ap->private_data;
+ 	struct scatterlist *sg;
+ 	struct ahci_sg *ahci_sg;
++	unsigned int n_sg = 0;
+ 
+ 	VPRINTK("ENTER\n");
+ 
+@@ -493,8 +508,12 @@ static void ahci_fill_sg(struct ata_queu
+ 		ahci_sg->addr = cpu_to_le32(addr & 0xffffffff);
+ 		ahci_sg->addr_hi = cpu_to_le32((addr >> 16) >> 16);
+ 		ahci_sg->flags_size = cpu_to_le32(sg_len - 1);
++
+ 		ahci_sg++;
++		n_sg++;
+ 	}
++
++	return n_sg;
+ }
+ 
+ static void ahci_qc_prep(struct ata_queued_cmd *qc)
+@@ -503,13 +522,14 @@ static void ahci_qc_prep(struct ata_queu
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	u32 opts;
+ 	const u32 cmd_fis_len = 5; /* five dwords */
++	unsigned int n_elem;
+ 
+ 	/*
+ 	 * Fill in command slot information (currently only one slot,
+ 	 * slot 0, is currently since we don't do queueing)
+ 	 */
+ 
+-	opts = (qc->n_elem << 16) | cmd_fis_len;
++	opts = cmd_fis_len;
+ 	if (qc->tf.flags & ATA_TFLAG_WRITE)
+ 		opts |= AHCI_CMD_WRITE;
+ 	if (is_atapi_taskfile(&qc->tf))
+@@ -533,7 +553,9 @@ static void ahci_qc_prep(struct ata_queu
+ 	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
+ 		return;
+ 
+-	ahci_fill_sg(qc);
++	n_elem = ahci_fill_sg(qc);
++
++	pp->cmd_slot[0].opts |= cpu_to_le32(n_elem << 16);
+ }
+ 
+ static void ahci_intr_error(struct ata_port *ap, u32 irq_stat)
+diff --git a/drivers/scsi/sata_qstor.c b/drivers/scsi/sata_qstor.c
+index b2f6324..4a6d306 100644
+--- a/drivers/scsi/sata_qstor.c
++++ b/drivers/scsi/sata_qstor.c
+@@ -268,7 +268,7 @@ static void qs_scr_write (struct ata_por
+ 	writel(val, (void __iomem *)(ap->ioaddr.scr_addr + (sc_reg * 8)));
+ }
+ 
+-static void qs_fill_sg(struct ata_queued_cmd *qc)
++static unsigned int qs_fill_sg(struct ata_queued_cmd *qc)
+ {
+ 	struct scatterlist *sg;
+ 	struct ata_port *ap = qc->ap;
+@@ -296,6 +296,8 @@ static void qs_fill_sg(struct ata_queued
+ 					(unsigned long long)addr, len);
+ 		nelem++;
+ 	}
++
++	return nelem;
+ }
+ 
+ static void qs_qc_prep(struct ata_queued_cmd *qc)
+@@ -304,6 +306,7 @@ static void qs_qc_prep(struct ata_queued
+ 	u8 dflags = QS_DF_PORD, *buf = pp->pkt;
+ 	u8 hflags = QS_HF_DAT | QS_HF_IEN | QS_HF_VLD;
+ 	u64 addr;
++	unsigned int nelem;
+ 
+ 	VPRINTK("ENTER\n");
+ 
+@@ -313,7 +316,7 @@ static void qs_qc_prep(struct ata_queued
+ 		return;
+ 	}
+ 
+-	qs_fill_sg(qc);
++	nelem = qs_fill_sg(qc);
+ 
+ 	if ((qc->tf.flags & ATA_TFLAG_WRITE))
+ 		hflags |= QS_HF_DIRO;
+@@ -324,7 +327,7 @@ static void qs_qc_prep(struct ata_queued
+ 	buf[ 0] = QS_HCB_HDR;
+ 	buf[ 1] = hflags;
+ 	*(__le32 *)(&buf[ 4]) = cpu_to_le32(qc->nsect * ATA_SECT_SIZE);
+-	*(__le32 *)(&buf[ 8]) = cpu_to_le32(qc->n_elem);
++	*(__le32 *)(&buf[ 8]) = cpu_to_le32(nelem);
+ 	addr = ((u64)pp->pkt_dma) + QS_CPB_BYTES;
+ 	*(__le64 *)(&buf[16]) = cpu_to_le64(addr);
+ 
