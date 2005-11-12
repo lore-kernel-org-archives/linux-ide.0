@@ -1,41 +1,35 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH] cs5520: fix return value of cs5520_init_one()
-Date: Sat, 12 Nov 2005 22:59:41 +0300
-Message-ID: <20051112195941.GC19876@mipter.zuzino.mipt.ru>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: libata-passthrough problem.
+Date: Sat, 12 Nov 2005 14:53:55 -0500
+Message-ID: <43764853.5050306@rtr.ca>
+References: <4375CA38.9000905@superbug.demon.co.uk> <437607B5.7060605@rtr.ca> <43762CEF.2070704@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.198]:19479 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932481AbVKLTqF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Nov 2005 14:46:05 -0500
-Received: by wproxy.gmail.com with SMTP id i22so756536wra
-        for <linux-ide@vger.kernel.org>; Sat, 12 Nov 2005 11:46:04 -0800 (PST)
-Content-Disposition: inline
+Received: from rtr.ca ([64.26.128.89]:50345 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S932484AbVKLTyA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Nov 2005 14:54:00 -0500
+In-Reply-To: <43762CEF.2070704@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-ide@vger.kernel.org, Amit Gud <amitg@calsoftinc.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: James Courtier-Dutton <James@superbug.demon.co.uk>, linux-ide@vger.kernel.org
 
-From: Amit Gud <amitg@calsoftinc.com>
+Jeff Garzik wrote:
+>
+> Just download 2.6.15-rc1.
+>
 
-Patch follows from the suggestions by AC and Felipe W Damasio for fixing the
-return codes from IDE drivers.
+Okay, got it.
 
-Signed-off-by: Amit Gud <gud@eth.net>
-Signed-off-by: Domen Puncer <domen@coderock.org>
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+Jeff:  I cannot find anywhere in libata code,
+where the ATA unit number gets ORed into tf->device.
 
-Index: linux-kj/drivers/ide/pci/cs5520.c
-===================================================================
---- linux-kj.orig/drivers/ide/pci/cs5520.c	2005-11-12 15:37:19.000000000 +0300
-+++ linux-kj/drivers/ide/pci/cs5520.c	2005-11-12 15:41:54.000000000 +0300
-@@ -225,7 +225,7 @@ static int __devinit cs5520_init_one(str
- 	if(pci_enable_device_bars(dev, 1<<2))
- 	{
- 		printk(KERN_WARNING "%s: Unable to enable 55x0.\n", d->name);
--		return 1;
-+		return -ENODEV;
- 	}
- 	pci_set_master(dev);
- 	if (pci_set_dma_mask(dev, DMA_32BIT_MASK)) {
+If this is not done, then no PATA slave devices will
+be addressed correctly, even for regular I/O.
 
+Where is setting that bit done?
+I'm sure it must be in there, I just don't see it.
+
+Cheers
