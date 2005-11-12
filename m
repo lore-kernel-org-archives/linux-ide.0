@@ -1,165 +1,76 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: sata_sil24 corruption details
-Date: Fri, 11 Nov 2005 19:49:27 -0500
-Message-ID: <87f94c370511111649j41d1832dhe7820376f96059a1@mail.gmail.com>
-References: <20051110071736.23747.qmail@science.horizon.com>
-	 <43730C55.7030808@gmail.com>
-	 <87f94c370511100615u1eba1baai9d91df8ad2556510@mail.gmail.com>
-	 <43735C19.4040402@gmail.com> <4373843E.2030308@gmail.com>
-	 <87f94c370511101234v7a20c0daic907c41ccc61482c@mail.gmail.com>
+From: =?iso-8859-1?q?Ville_Syrj=E4l=E4?= <syrjala@sci.fi>
+Subject: Re: Highpoint IDE types
+Date: Sat, 12 Nov 2005 04:15:02 +0200
+Message-ID: <pan.2005.11.12.02.15.00.646462@sci.fi>
+References: <1131471483.25192.76.camel@localhost.localdomain> <pan.2005.11.08.19.02.09.190896@sci.fi> <4374F633.6020006@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.196]:55334 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750819AbVKLAt2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Nov 2005 19:49:28 -0500
-Received: by zproxy.gmail.com with SMTP id 40so736920nzk
-        for <linux-ide@vger.kernel.org>; Fri, 11 Nov 2005 16:49:27 -0800 (PST)
-In-Reply-To: <87f94c370511101234v7a20c0daic907c41ccc61482c@mail.gmail.com>
-Content-Disposition: inline
+Received: from main.gmane.org ([80.91.229.2]:30680 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S1750978AbVKLCRn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Nov 2005 21:17:43 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1EakwD-00025s-TA
+	for linux-ide@vger.kernel.org; Sat, 12 Nov 2005 03:16:17 +0100
+Received: from cs181093116.pp.htv.fi ([82.181.93.116])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 12 Nov 2005 03:16:17 +0100
+Received: from syrjala by cs181093116.pp.htv.fi with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 12 Nov 2005 03:16:17 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, linux@horizon.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On 11/10/05, Greg Freemyer <greg.freemyer@gmail.com> wrote:
-> On 11/10/05, Tejun Heo <htejun@gmail.com> wrote:
-> > Tejun Heo wrote:
-> > > Greg Freemyer wrote:
-> > >
-> > >> On 11/10/05, Tejun Heo <htejun@gmail.com> wrote:
-> > >>
-> > >>> Hello, there.
-> > >>>
-> > >>> I'll soon try to tackle this one.  However, I currently have only one
-> > >>> 3124 controller and one harddisk to hook to that controller, so I cannot
-> > >>> reproduce your setup over here.  Here are things that I think might help
-> > >>> in diagnosing the problem.
-> > >>>
-> > >>> * Trying other drivers
-> > >>>        * Trying the original driver.  I'll port the original driver
-> > >>>          from sii to the current tree and post the patch.
-> > >>>        * Performing similar test under Windows.
-> > >>>
-> > >>> * Ruling out disk problem
-> > >>>        * Trying other harddisks.  All harddisk drives perform error
-> > >>>          detection/correction when data are read from the media, but
-> > >>>          ruling out the possibility would still be helpful.
-> > >>>
-> > >>> * If you have log of failed sectors, finding patterns will be helpful.
-> > >>>  If the errors occur at random places, it's likely that we have
-> > >>>  controller/driver issues.  If errors are localized over multiple runs,
-> > >>>  maybe the disk is at fault.
-> > >>>
-> > >>> --
-> > >>> tejun
-> > >>
-> > >> Tejun,
-> > >>
-> > >> I assume you saw my e-mail that with a 3112 and a single SATA drive we
-> > >> were seeing corruption as well.  That being the case I think you
-> > >> should first verify that corruption is not occuring in the single SATA
-> > >> drive case.
-> > >>
-> > >> Our test was to create a bunch of 2 GB files on a PATA drive.
-> > >>
-> > >> We simply used a drive with real data as the source of our test files.
-> > >> ie. IIRC: cd test_dir; dd if=/dev/hde conv=noerror,sync | split -b 2000m
-> > >>
-> > >> Then we calculated the md5 of all the 2 GB pieces.  All of this done
-> > >> in a pure PATA setup.
-> > >>
-> > >> Then we connected a SATA drive to a 3112 and simply copied the files
-> > >> from the PATA drive to the SATA drive and verified the md5 values.  We
-> > >> found corruption in 1 - 3% of the files copied.
-> > >>
-> > >> FYI: The above are all very common steps for a computer forensic
-> > >> examine, thus we found this issue in our attempts to qualify the 3112
-> > >> as part of our forensic equipment.  We have not tested since 2.6.11
-> > >> and that was with a SUSE kernel.
-> > >>
-> > >
-> > > Hi,
-> > >
-> > > I'll run single drive test on sil3112 tonight, but can you please try
-> > > 2.6.14?  IIRC, there have been some PCI FIFO setting change.  Hmmm..
-> > > oh.. it was the following commit.
-> > >
-> > > ---
-> > > $ git-cat-file commit e1dd23a0012c3929737798fda9fede0e783f4ff3
-> > > tree c7f808b6433ef1015f55418e7f11f432943bdefd
-> > > parent 5273a00d9c763108397658d440618f7ac3e40f83
-> > > author Jens Axboe <axboe@suse.de> 1118228545 +0200
-> > > committer Jeff Garzik <jgarzik@pobox.com> 1118300782 -0400
-> > >
-> > > [PATCH] sata_sil: Fix FIFO PCI Bus Arbitration kernel oops
-> > >
-> > > Correct this.
-> > > ---
-> > >
-> > > Jens, is it possible that above change fixes data corruption?
-> > >
-> >
-> > Greg, first pass of 'badblocks -t random -v -w' on 100G partion of 160G
-> > disk just finished without any error.  This is samsung hd160jj drive on
-> > sil3112 controller.  I'll let badblocks run thorough the night and
-> > perform file copy & md5sum test tomorrow.  But my hunch is that there is
-> > no common data corruption problem with sil3112.  It's just in too
-> > wide-spread use to have such data corruption problem with so few reportings.
-> >
-> > What exact controller/disk did you use?  Care to retest your setup with
-> > 2.6.14?
-> >
-> > --
-> > tejun
-> >
-> Tejun
->
-> The corruption I was seeing was on the order of a few bytes per 100
-> GB.  I'm not sure that most users would realize they were having
-> problems with that small of an error rate.
->
-> I'm not sure what the OPs error rate was, but maybe he can tell us.
->
-> I will attempt to retest with 2.6.14 vanilla.  Not sure if that will
-> be today or tomorrow.
->
-> I don't have the old disk any more, but I will report what I use this time.
->
-> I also have a CoolGear SATA to USB bridge, so if corruption is still
-> occuring I can retry the process with a USB connection to the
-> computer.  http://www.cooldrives.com/seatatousb20.html   If that works
-> it should rule out the Drive.
->
-> Thanks for taking the time.
->
-> Greg
-> --
-> Greg Freemyer
-> The Norcross Group
-> Forensics for the 21st Century
->
+On Fri, 11 Nov 2005 22:51:15 +0300, Sergei Shtylylov wrote:
 
-Tejun,
+> Hello.
+>=20
+> Ville Syrj=E4l=E4 wrote:
+>> On Tue, 08 Nov 2005 17:38:02 +0000, Alan Cox wrote:
+>=20
+>>>Ok thanks to Sergei I can now post what I think is the complete tabl=
+e of
+>>>HPT chip versions:
+>=20
+>     Another correction coming in... :-)
+>=20
+>>>        Chip                    PCI ID          Rev
+>>> *      HPT366                  4 (HPT366)      0
+>>> *      HPT366                  4 (HPT366)      1   =20
+>>> *      HPT368                  4 (HPT366)      2     =20
+>>> *      HPT370                  4 (HPT366)      3     =20
+>>> *      HPT370A                 4 (HPT366)      4     =20
+>>> *      HPT372                  4 (HPT366)      5    =20
+>>> *      HPT372N                 4 (HPT366)      6    =20
+>>> *      HPT372                  5 (HPT372)      0
+>>=20
+>>           ^^^^^^
+>>=20
+>> This one is called HPT372A by Highpoint's BIOS/Win drivers.
+>=20
+>     According to Highpoint's driver code 372A has rev. ID 1...
+>=20
+>> Also I'm not sure if it's relevant but PCI ID 5 chips use a differen=
+t
+>> BIOS image than PCI ID 4 chips.
+>>       =20
+>>=20
+>>> *      HPT372N                 5 (HPT372)      > 0    =20
+>=20
+>     And 372N has rev. ID 2...
 
-Success report:
+Right you are. Their opensource driver doesn't list any PCI ID 5,6 or 7
+chips with revision 0. All rev 1 chips are apparently non-N models and =
+all
+rev 2 chips are N models.
 
-I did a 80 GB test copy with 2.6.14.1 and a Maxtor 80GB SATA drive and
-a 3112A.  I had 3 drives connected to my server, one PATA for booting,
-one PATA for to hold the source data, and the SATA drive.  Let me know
-if you want want details about the setup.
+--=20
+Ville Syrj=E4l=E4
+syrjala@sci.fi
+http://www.sci.fi/~syrjala/
 
-I found no corruption.  Given that my error rate was very low it is
-possible that the corruption simply did not happen, but for now I'm
-assuming my earlier issues were either a disk problem or a kernel
-issue that was resolved by the latest kernel.
 
-I'm going to continue to test this setup.  I'll report any problems I find.
-
-Greg
---
-Greg Freemyer
-The Norcross Group
-Forensics for the 21st Century
