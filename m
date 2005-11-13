@@ -1,34 +1,60 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sil24: add missing ata_pad_free()
-Date: Mon, 14 Nov 2005 00:24:18 +0900
-Message-ID: <20051113152418.GA14697@htj.dyndns.org>
+From: James Courtier-Dutton <James@superbug.demon.co.uk>
+Subject: Re: libata-passthrough problem.
+Date: Sun, 13 Nov 2005 15:13:25 +0000
+Message-ID: <43775815.2090204@superbug.demon.co.uk>
+References: <4375CA38.9000905@superbug.demon.co.uk> <437607B5.7060605@rtr.ca> <43762CEF.2070704@pobox.com> <43764853.5050306@rtr.ca> <4376786F.2090503@pobox.com> <43767D75.6090204@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.199]:30340 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964920AbVKMPYj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Nov 2005 10:24:39 -0500
-Received: by zproxy.gmail.com with SMTP id 14so1047695nzn
-        for <linux-ide@vger.kernel.org>; Sun, 13 Nov 2005 07:24:39 -0800 (PST)
-Content-Disposition: inline
+Received: from anchor-post-35.mail.demon.net ([194.217.242.85]:33286 "EHLO
+	anchor-post-35.mail.demon.net") by vger.kernel.org with ESMTP
+	id S964924AbVKMQNT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 13 Nov 2005 11:13:19 -0500
+In-Reply-To: <43767D75.6090204@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-sil24_port_stop() is missing call to ata_pad_free() thus leaking pad
-buffer when a port is stopped.  This patch adds it.
+Mark Lord wrote:
+> Jeff Garzik wrote:
+> 
+>>
+>> ata_tf_init() in include/linux/libata.h.
+>>
+>> I admit with guilt that I had to search around a bit for it, too :)
+> 
+> 
+> Thanks, Jeff.
+> 
+> In that case, the bug with passthru is obvious:
+> 
+> static unsigned int
+> ata_scsi_pass_thru(struct ata_queued_cmd *qc, const u8 *scsicmd)
+> {
+> ...
+>         tf->device = scsicmd[13];    <<--- always forces ATA "master" 
+> unit 0
+> ...
+>         tf->device = scsicmd[13];    <<--- always forces ATA "master" 
+> unit 0
+> ...
+> 
+> 
+> Those lines should each do this instead:
+> 
+>         tf->device = qc->dev->devno ? (scsicmd[13] |  ATA_DEV1)
+>                         : (scsicmd[13] & ~ATA_DEV1);
+> 
+> I'll see about a patch for that shortly.
+> 
+> Cheers
+> 
+> 
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Please tell me when you have fixed this, so that I could try it.
+Please tell me where the fix will go, git libata-dev or linux-2.6
 
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index d3198d9..55e744d 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -687,6 +687,7 @@ static void sil24_port_stop(struct ata_p
- 	struct sil24_port_priv *pp = ap->private_data;
- 
- 	sil24_cblk_free(pp, dev);
-+	ata_pad_free(ap, dev);
- 	kfree(pp);
- }
- 
+James
+
