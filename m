@@ -1,15 +1,15 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH 2.6.15-rc1] libata: fix passthru for slave devices
-Date: Sat, 12 Nov 2005 19:15:33 -0500
-Message-ID: <437685A5.3020804@pobox.com>
+Date: Sat, 12 Nov 2005 19:16:51 -0500
+Message-ID: <437685F3.6080801@pobox.com>
 References: <4375CA38.9000905@superbug.demon.co.uk> <437607B5.7060605@rtr.ca> <43762CEF.2070704@pobox.com> <43764853.5050306@rtr.ca> <43764904.5030309@rtr.ca> <4376788E.9010503@pobox.com> <437680BA.40707@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:20626 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964870AbVKMAPj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Nov 2005 19:15:39 -0500
+Received: from mail.dvmed.net ([216.237.124.58]:22418 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964892AbVKMAQy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Nov 2005 19:16:54 -0500
 In-Reply-To: <437680BA.40707@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -39,18 +39,12 @@ Mark Lord wrote:
 > +	 * If applicable, enforce a correct master/slave bit for this device:
 > +	 */
 > +	if ((qc->ap->flags & ATA_FLAG_SLAVE_POSS))
-
-kill the extra parens
-
 > +		tf->command = qc->dev->devno ?
 > +			(tf->command | ATA_DEV1) : (tf->command & ~ATA_DEV1);
 
-tf->command?  ;-)
-
-Also, see if you figure out a way to send patches inline, without MIME 
-attachments.
+also, I would think you'd want to ditch the ATA_FLAG_SLAVE_POSS test. 
+Otherwise userspace could pass an invalid bit through unimpeded.
 
 	Jeff
-
 
 
