@@ -1,30 +1,50 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 2.6.15-rc1] libata: fix passthru for slave devices
-Date: Sat, 12 Nov 2005 23:37:47 -0500
-Message-ID: <4376C31B.1010507@rtr.ca>
-References: <4375CA38.9000905@superbug.demon.co.uk> <437607B5.7060605@rtr.ca> <43762CEF.2070704@pobox.com> <43764853.5050306@rtr.ca> <43764904.5030309@rtr.ca> <4376788E.9010503@pobox.com> <437680BA.40707@rtr.ca> <437685A5.3020804@pobox.com> <4376A9DB.9080107@rtr.ca> <4376B119.6030303@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+From: linux@horizon.com
+Subject: Re: sata_sil24 corruption details
+Date: 13 Nov 2005 01:11:42 -0500
+Message-ID: <20051113061142.19627.qmail@science.horizon.com>
+References: <20051111021616.28929.qmail@science.horizon.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:17089 "EHLO
-	mail.rtr.ca") by vger.kernel.org with ESMTP id S1751342AbVKMEht
+Received: from science.horizon.com ([192.35.100.1]:35889 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S1750997AbVKMGLz
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 12 Nov 2005 23:37:49 -0500
-In-Reply-To: <4376B119.6030303@pobox.com>
+	Sun, 13 Nov 2005 01:11:55 -0500
+In-Reply-To: <20051111021616.28929.qmail@science.horizon.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: James Courtier-Dutton <James@superbug.demon.co.uk>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: htejun@gmail.com, linux@horizon.com
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->
->> No.  Those parens are needed, to help gcc distinguish between
->> a common programming error and intentional use of "&" rather than "&&".
-> 
-> How is this different from any other 'flags' test in libata?
+> There will now follow a period of drive, cable, and controller swapping
+> while I figure out WTF is going on here.
 
-ACK.  Go for it.
+In case anyone's following this saga...
+The motherboard has 6 slots, starting from the CPU:
 
-Cheers
+PCIe x1		(/dev/sde and /dev/sdf)
+PCIe x16
+PCIe x1		(/dev/sda and /dev/sdb)
+PCIe x1		(/dev/sdc and /dev/sdd)	<=== THE CULPRIT
+PCI
+PCI
+
+I've tried all three controller cards in the "culprit" slot, and
+all read data from the disk unreliably.
+
+Interestingly, I can still *write* data to the disk reliably.  I copied
+350 GB to /dev/sdc4, swapped it to the sdf slot, and verified it was all
+correct.  Then I swapped the sde+sdf controller card (and the attached
+cables and drives) into the sdc+sdd slot and got tons of verify errors.
+
+So right now, I'm blaming the motherboard.  (Albatron K8NF4U, if anyone cares)
+
+The fact it's the slot furthest from the bridge seems suggestive, but
+PCIe is packetized with link-level CRCs and retransmission, so
+transmission problems shouldn't be capable of causing corruption.
+Might I have a bad bridge chip?
+
+I'm currently reading the PCIe spec looking for link error logging
+registers.
+
+
+This isn't hugely IDE software related, but I figured it was worth
+sharing some progress, as I've been talking about it rather a lot.
