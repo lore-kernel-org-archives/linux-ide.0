@@ -1,50 +1,77 @@
-From: James Courtier-Dutton <James@superbug.demon.co.uk>
-Subject: Re: libata-passthrough problem.
-Date: Sun, 13 Nov 2005 20:17:53 +0000
-Message-ID: <43779F71.2080000@superbug.demon.co.uk>
-References: <4375CA38.9000905@superbug.demon.co.uk> <437607B5.7060605@rtr.ca> <43762CEF.2070704@pobox.com> <43764853.5050306@rtr.ca> <4376786F.2090503@pobox.com> <43767D75.6090204@rtr.ca> <43775815.2090204@superbug.demon.co.uk> <43777183.5030208@rtr.ca> <437771FB.3020704@rtr.ca>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [git patches] 2.6.x libata fixes
+Date: Sun, 13 Nov 2005 16:23:56 -0500
+Message-ID: <20051113212356.GA2649@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anchor-post-34.mail.demon.net ([194.217.242.92]:49165 "EHLO
-	anchor-post-34.mail.demon.net") by vger.kernel.org with ESMTP
-	id S1750710AbVKMVRp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 13 Nov 2005 16:17:45 -0500
-In-Reply-To: <437771FB.3020704@rtr.ca>
+Received: from havoc.gtf.org ([69.61.125.42]:5767 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1750711AbVKMVYA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Nov 2005 16:24:00 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-
-Mark Lord wrote:
-> And again, as an attachment, for people with modern mail clients.
-> 
-> Cheers
-> 
-
-Thank you
-
-I have tested the patch against 2.6.15-rc1, and it seems to work fine.
-Notice the different model numbers and serial numbers below, when before 
-they were identical.
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-# hdparm -I /dev/sda
+Please pull from 'upstream-fixes' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-/dev/sda:
+to receive the following fixes:
 
-ATA device, with non-removable media
-	Model Number:       ST3300831AS
-	Serial Number:      3NF0A9CQ
-	Firmware Revision:  3.01
+ drivers/scsi/libata-core.c |    3 +--
+ drivers/scsi/libata-scsi.c |    6 ++++++
+ drivers/scsi/sata_sil24.c  |    1 +
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
-# hdparm -I /dev/sdb
+Mark Lord:
+      libata: fix comments on ata_tf_from_fis()
+      [libata passthru] address slave devices correctly
 
-/dev/sdb:
+Tejun Heo:
+      sil24: add missing ata_pad_free()
 
-ATA device, with non-removable media
-	Model Number:       ST3160023AS
-	Serial Number:      3JS2ZRPZ
-	Firmware Revision:  3.18
-
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index e51d9a8..d81db3a 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -532,8 +532,7 @@ void ata_tf_to_fis(const struct ata_task
+  *	@fis: Buffer from which data will be input
+  *	@tf: Taskfile to output
+  *
+- *	Converts a standard ATA taskfile to a Serial ATA
+- *	FIS structure (Register - Host to Device).
++ *	Converts a serial ATA FIS structure to a standard ATA taskfile.
+  *
+  *	LOCKING:
+  *	Inherited from caller.
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index 261be24..0df4b68 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -2276,6 +2276,12 @@ ata_scsi_pass_thru(struct ata_queued_cmd
+ 		tf->device = scsicmd[8];
+ 		tf->command = scsicmd[9];
+ 	}
++	/*
++	 * If slave is possible, enforce correct master/slave bit
++	*/
++	if (qc->ap->flags & ATA_FLAG_SLAVE_POSS)
++		tf->device = qc->dev->devno ?
++			tf->device | ATA_DEV1 : tf->device & ~ATA_DEV1;
+ 
+ 	/*
+ 	 * Filter SET_FEATURES - XFER MODE command -- otherwise,
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index d3198d9..55e744d 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -687,6 +687,7 @@ static void sil24_port_stop(struct ata_p
+ 	struct sil24_port_priv *pp = ap->private_data;
+ 
+ 	sil24_cblk_free(pp, dev);
++	ata_pad_free(ap, dev);
+ 	kfree(pp);
+ }
+ 
