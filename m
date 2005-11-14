@@ -1,70 +1,94 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Marvell MV88SX6041 SATA Driver PIO4 Mode Not DMA
-Date: Mon, 14 Nov 2005 16:35:17 -0500
-Message-ID: <43790315.7000804@pobox.com>
-References: <1131648518.26701.247242836@webmail.messagingengine.com> <437471D0.3090404@pobox.com> <20051111121447.GQ3699@suse.de> <4374A4AC.8010007@pobox.com> <20051111142905.GV3699@suse.de> <20051111143850.GX3699@suse.de>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: sata_sil24 corruption details
+Date: Mon, 14 Nov 2005 18:30:48 -0500
+Message-ID: <87f94c370511141530h1c2d64e6kdb512f54c3c7b981@mail.gmail.com>
+References: <20051110071736.23747.qmail@science.horizon.com>
+	 <43730C55.7030808@gmail.com>
+	 <87f94c370511100615u1eba1baai9d91df8ad2556510@mail.gmail.com>
+	 <43735C19.4040402@gmail.com> <4373843E.2030308@gmail.com>
+	 <87f94c370511101234v7a20c0daic907c41ccc61482c@mail.gmail.com>
+	 <87f94c370511111649j41d1832dhe7820376f96059a1@mail.gmail.com>
+	 <43755A78.3040005@gmail.com> <43771338.6010000@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:5281 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932147AbVKNVfW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Nov 2005 16:35:22 -0500
-In-Reply-To: <20051111143850.GX3699@suse.de>
+Received: from zproxy.gmail.com ([64.233.162.205]:40595 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751321AbVKNXau convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Nov 2005 18:30:50 -0500
+Received: by zproxy.gmail.com with SMTP id 40so1232102nzk
+        for <linux-ide@vger.kernel.org>; Mon, 14 Nov 2005 15:30:49 -0800 (PST)
+In-Reply-To: <43771338.6010000@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Spencer Tuttle <rodeojones@fastmail.fm>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <axboe@suse.de>, linux@horizon.com, linux-ide@vger.kernel.org
 
-Jens Axboe wrote:
-> On Fri, Nov 11 2005, Jens Axboe wrote:
-> 
->>On Fri, Nov 11 2005, Jeff Garzik wrote:
->>
->>>Jens Axboe wrote:
->>>
->>>>On Fri, Nov 11 2005, Jeff Garzik wrote:
->>>>
->>>>
->>>>>Spencer Tuttle wrote:
->>>>>
->>>>>
->>>>>>I have just compiled the new 2.6.14 kernel from the gentoo-sources tree.
->>>>>>
->>>>>>I can access the drives just fine, but it seems really slow.  Here is
->>>>>>the dmesg output when I load the kernel module
->>>>>
->>>>>That's expected, since the driver in 2.6.14 only does PIO mode.
->>>>>
->>>>>Try 2.6.14-gitN which supports EDMA.
->>>>
->>>>
->>>>Did you see these as well:
->>>>
->>>>blk_queue_max_hw_segments: set to minimum 1
->>>>
->>>>Could it be forgetting to set ->sg_tablesize as well?
->>>
->>>[jgarzik@sata linux-2.6]$ grep MV_MAX_SG_CT drivers/scsi/sata_mv.c
->>>        MV_MAX_SG_CT            = 176,
->>>        MV_SG_TBL_SZ            = (16 * MV_MAX_SG_CT),
->>>        .sg_tablesize           = MV_MAX_SG_CT,
->>
->>It was just a guess, clearly someone is calling scsi_alloc_queue() with
->>an sdev->host->sg_tablesize of 0. While that wont make PIO a whole lot
->>faster, it's clearly a bug and would certainly hurt DMA performance.
-> 
-> 
-> Before commit 31961943e3110c5a1c36b1e0069c29f7c4380e51, sata_mv had
-> ->sg_tablesize set to MV_UNDEF which was defined to 0. Just checking,
-> 2.6.14 ships with that.
+On 11/13/05, Tejun Heo <htejun@gmail.com> wrote:
+> Tejun Heo wrote:
+> > Greg Freemyer wrote:
+> >>
+> >> Tejun,
+> >>
+> >> Success report:
+> >>
+> >> I did a 80 GB test copy with 2.6.14.1 and a Maxtor 80GB SATA drive and
+> >> a 3112A.  I had 3 drives connected to my server, one PATA for booting,
+> >> one PATA for to hold the source data, and the SATA drive.  Let me know
+> >> if you want want details about the setup.
+> >>
+> >> I found no corruption.  Given that my error rate was very low it is
+> >> possible that the corruption simply did not happen, but for now I'm
+> >> assuming my earlier issues were either a disk problem or a kernel
+> >> issue that was resolved by the latest kernel.
+> >>
+> >> I'm going to continue to test this setup.  I'll report any problems I
+> >> find.
+> >>
+> >
+> > Hi, Greg.
+> >
+> > I also have been continuing corruption test on 3112 during last two
+> > days.  It's being performed on 100GB partition of a 160GB harddisk
+> > (samsung hd160jj).  Nine passes of 'badblocks -t random -v -w /dev/sdb2'
+> > succeeded without any problem.  To replicate your test, I created a 4GB
+> > random file by dd'ing from /dev/urandom in a separate IDE disk and
+> > copied it to the partition 24times (24 different files of course), then
+> > I md5sum'd all copied files twice.  This test succeeded five times
+> > without any problem, and it's in the sixth run now.
+> >
+> > Above badblocks and file copy tests amount to about 1.4TB of writes and
+> > 1.9TB of reads without any data corruption.
+> >
+> > Let me know how your test turns out.
+> >
+>
+> The 4G file test has been running through last two days and it finished
+> thirteen more runs without any hickup.  So, my 3112 + hd160jj
+> combination finshed 9 runs of 'badblocks -t random -v -w' and 22 runs of
+> 4G file copy & verify twice test.  That's > 3TB of writes and > 5TB of
+> reads without any error.
+>
+> I guess my setup doesn't have the problem you used to experience.  How's
+> your testing going?
+>
+> --
+> tejun
+>
 
-OK, that version has no DMA support, so that makes sense.
+Tejun,
 
-I guess the gist of the thread is, sg_tablesize should never be less 
-than one, even if "it would hurt DMA performance"?
+We still have not experienced any problems with 2.6.14.1.  I'm going
+to put the 3112 into limited production use for drives over 200GB.  We
+verify md5's as part of our standard protocol, so if anything is out
+of whack we should find it.  Unfortunately we don't process a lot of
+200+ GB drives, but enough that we will likely exercise it a couple
+times a month.
 
-	Jeff
-
-
-
+Greg
+--
+Greg Freemyer
+The Norcross Group
+Forensics for the 21st Century
