@@ -1,201 +1,77 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata error handling fixes (ATAPI)
-Date: Tue, 15 Nov 2005 16:41:48 +0900
-Message-ID: <20051115074148.GA17459@htj.dyndns.org>
-References: <20051114195717.GA24373@havoc.gtf.org>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Marvell MV88SX6041 SATA Driver PIO4 Mode Not DMA
+Date: Tue, 15 Nov 2005 08:57:25 +0100
+Message-ID: <20051115075724.GT3699@suse.de>
+References: <1131648518.26701.247242836@webmail.messagingengine.com> <437471D0.3090404@pobox.com> <20051111121447.GQ3699@suse.de> <4374A4AC.8010007@pobox.com> <20051111142905.GV3699@suse.de> <20051111143850.GX3699@suse.de> <43790315.7000804@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.205]:21583 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751357AbVKOHl5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2005 02:41:57 -0500
-Received: by zproxy.gmail.com with SMTP id 13so1433593nzn
-        for <linux-ide@vger.kernel.org>; Mon, 14 Nov 2005 23:41:56 -0800 (PST)
+Received: from ns.virtualhost.dk ([195.184.98.160]:1828 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S932325AbVKOH4U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2005 02:56:20 -0500
 Content-Disposition: inline
-In-Reply-To: <20051114195717.GA24373@havoc.gtf.org>
+In-Reply-To: <43790315.7000804@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Spencer Tuttle <rodeojones@fastmail.fm>, linux-ide@vger.kernel.org
 
-On Mon, Nov 14, 2005 at 02:57:17PM -0500, Jeff Garzik wrote:
+On Mon, Nov 14 2005, Jeff Garzik wrote:
+> Jens Axboe wrote:
+> >On Fri, Nov 11 2005, Jens Axboe wrote:
+> >
+> >>On Fri, Nov 11 2005, Jeff Garzik wrote:
+> >>
+> >>>Jens Axboe wrote:
+> >>>
+> >>>>On Fri, Nov 11 2005, Jeff Garzik wrote:
+> >>>>
+> >>>>
+> >>>>>Spencer Tuttle wrote:
+> >>>>>
+> >>>>>
+> >>>>>>I have just compiled the new 2.6.14 kernel from the gentoo-sources 
+> >>>>>>tree.
+> >>>>>>
+> >>>>>>I can access the drives just fine, but it seems really slow.  Here is
+> >>>>>>the dmesg output when I load the kernel module
+> >>>>>
+> >>>>>That's expected, since the driver in 2.6.14 only does PIO mode.
+> >>>>>
+> >>>>>Try 2.6.14-gitN which supports EDMA.
+> >>>>
+> >>>>
+> >>>>Did you see these as well:
+> >>>>
+> >>>>blk_queue_max_hw_segments: set to minimum 1
+> >>>>
+> >>>>Could it be forgetting to set ->sg_tablesize as well?
+> >>>
+> >>>[jgarzik@sata linux-2.6]$ grep MV_MAX_SG_CT drivers/scsi/sata_mv.c
+> >>>       MV_MAX_SG_CT            = 176,
+> >>>       MV_SG_TBL_SZ            = (16 * MV_MAX_SG_CT),
+> >>>       .sg_tablesize           = MV_MAX_SG_CT,
+> >>
+> >>It was just a guess, clearly someone is calling scsi_alloc_queue() with
+> >>an sdev->host->sg_tablesize of 0. While that wont make PIO a whole lot
+> >>faster, it's clearly a bug and would certainly hurt DMA performance.
+> >
+> >
+> >Before commit 31961943e3110c5a1c36b1e0069c29f7c4380e51, sata_mv had
+> >->sg_tablesize set to MV_UNDEF which was defined to 0. Just checking,
+> >2.6.14 ships with that.
 > 
-> I finally got ATAPI working on my x86-64 AHCI box.
-> 
-> Just checked the following changes into the 'upstream-fixes' branch of
-> rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-> 
+> OK, that version has no DMA support, so that makes sense.
 
-Hi, Jeff.
+sg_tablesize isn't necessarily tied to dma support, but the performance
+difference should be marginal so...
 
-I've been trying to do about the same thing and here's my version
-which only fixes error/sense handling.  This patch makes ahci's
-eng_timeout act correctly w.r.t ATAPI sense requesting.  libata ATAPI
-request sensing mechanism was not broken.  What's broken was AHCI's
-eng_timeout handler.  And, yes, this problem disappears with request
-sensing via active qc turn-around in your patch.
+> I guess the gist of the thread is, sg_tablesize should never be less 
+> than one, even if "it would hurt DMA performance"?
 
-As I've written several times, I'm not a big fan of sense requesting
-by turning around active qc.  For libata's EH to work any better,
-handing-over failed commands to EH is necessary with or without
-request sensing.  Hmm... It's true that the current implementation
-used for ATAPI request sensing needs improvements.  Remember those
-patches which implement generic failed command handover and perform
-request sensing from EH with proper timeout and synchronization?
+Precisely, a request with zero segments doesn't make sense for any
+request carrying data.
 
-Ah.. also, I'm working on sil24 ATAPI support.  However, it seems that
-I need to do a little bit more; unfortunately, I'm not sure which....
-INQUIRY succeeds and then my drive fails the first TUR with SK 6h
-(UNIT ATTENTION) which is probably due to previous phy reset.  Then,
-my drive fails to repsond to following REQUEST SENSE.
+-- 
+Jens Axboe
 
-With my patched AHCI, REQUEST SENSE works and after SK 06h and several
-SK 02h's (NOT READY), it comes online and works okay.
-
-As INQUIRY works okay, my hunch is that I'm not performing TUR
-properly (that is ATAPI command with no data) and the drive locks up
-after it.  I'll fool around with this more and report.
-
-Thanks.
-
-
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 4e96ec5..2d13699 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -611,16 +611,18 @@ static void ahci_eng_timeout(struct ata_
- 	struct ata_host_set *host_set = ap->host_set;
- 	void __iomem *mmio = host_set->mmio_base;
- 	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
--	struct ata_queued_cmd *qc;
-+	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
- 	unsigned long flags;
- 
- 	DPRINTK("ENTER\n");
- 
-+	if (ata_qc_atapi_timeout(qc))
-+		goto out;
-+
- 	spin_lock_irqsave(&host_set->lock, flags);
- 
- 	ahci_intr_error(ap, readl(port_mmio + PORT_IRQ_STAT));
- 
--	qc = ata_qc_from_tag(ap, ap->active_tag);
- 	if (!qc) {
- 		printk(KERN_ERR "ata%u: BUG: timeout without command\n",
- 		       ap->id);
-@@ -636,6 +638,9 @@ static void ahci_eng_timeout(struct ata_
- 	}
- 
- 	spin_unlock_irqrestore(&host_set->lock, flags);
-+
-+ out:
-+	DPRINTK("LEAVE\n");
- }
- 
- static inline int ahci_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
-@@ -660,8 +665,18 @@ static inline int ahci_host_intr(struct 
- 
- 	if (status & PORT_IRQ_FATAL) {
- 		ahci_intr_error(ap, status);
--		if (qc)
--			ata_qc_complete(qc, AC_ERR_OTHER);
-+		if (qc) {
-+			unsigned int err;
-+			if (status & PORT_IRQ_TF_ERR)
-+				err = AC_ERR_DEV;
-+			else if (status & (PORT_IRQ_HBUS_ERR | PORT_IRQ_HBUS_DATA_ERR))
-+				err = AC_ERR_HOST_BUS;
-+			else if (status & (PORT_IRQ_IF_ERR))
-+				err = AC_ERR_ATA_BUS;
-+			else
-+				err = AC_ERR_OTHER;
-+			ata_qc_complete(qc, err);
-+		}
- 	}
- 
- 	return 1;
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index f606bdd..1bf8479 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -3421,6 +3421,33 @@ fsm_start:
- 		goto fsm_start;
- }
- 
-+int ata_qc_atapi_timeout(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	struct ata_host_set *host_set = ap->host_set;
-+	struct ata_device *dev = qc->dev;
-+	struct scsi_cmnd *cmd = qc->scsicmd;
-+	unsigned long flags;
-+
-+	if (qc->dev->class != ATA_DEV_ATAPI || cmd == NULL)
-+		return 0;
-+
-+	if (cmd->eh_eflags & SCSI_EH_CANCEL_CMD)
-+		return 0;
-+
-+	/* finish completing original command */
-+	spin_lock_irqsave(&host_set->lock, flags);
-+	__ata_qc_complete(qc);
-+	spin_unlock_irqrestore(&host_set->lock, flags);
-+
-+	atapi_request_sense(ap, dev, cmd);
-+
-+	cmd->result = (CHECK_CONDITION << 1) | (DID_OK << 16);
-+	scsi_finish_command(cmd);
-+
-+	return 1;
-+}
-+
- /**
-  *	ata_qc_timeout - Handle timeout of queued command
-  *	@qc: Command that timed out
-@@ -3444,31 +3471,13 @@ static void ata_qc_timeout(struct ata_qu
- {
- 	struct ata_port *ap = qc->ap;
- 	struct ata_host_set *host_set = ap->host_set;
--	struct ata_device *dev = qc->dev;
- 	u8 host_stat = 0, drv_stat;
- 	unsigned long flags;
- 
- 	DPRINTK("ENTER\n");
- 
--	/* FIXME: doesn't this conflict with timeout handling? */
--	if (qc->dev->class == ATA_DEV_ATAPI && qc->scsicmd) {
--		struct scsi_cmnd *cmd = qc->scsicmd;
--
--		if (!(cmd->eh_eflags & SCSI_EH_CANCEL_CMD)) {
--
--			/* finish completing original command */
--			spin_lock_irqsave(&host_set->lock, flags);
--			__ata_qc_complete(qc);
--			spin_unlock_irqrestore(&host_set->lock, flags);
--
--			atapi_request_sense(ap, dev, cmd);
--
--			cmd->result = (CHECK_CONDITION << 1) | (DID_OK << 16);
--			scsi_finish_command(cmd);
--
--			goto out;
--		}
--	}
-+	if (ata_qc_atapi_timeout(qc))
-+		goto out;
- 
- 	spin_lock_irqsave(&host_set->lock, flags);
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 79b7e6f..a10be07 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -478,6 +478,7 @@ extern u8   ata_bmdma_status(struct ata_
- extern void ata_bmdma_irq_clear(struct ata_port *ap);
- extern void ata_qc_complete(struct ata_queued_cmd *qc, unsigned int err_mask);
- extern void ata_eng_timeout(struct ata_port *ap);
-+extern int ata_qc_atapi_timeout(struct ata_queued_cmd *qc);
- extern void ata_scsi_simulate(u16 *id, struct scsi_cmnd *cmd,
- 			      void (*done)(struct scsi_cmnd *));
- extern int ata_std_bios_param(struct scsi_device *sdev,
