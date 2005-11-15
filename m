@@ -1,141 +1,438 @@
-From: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>
-Subject: Re: [PATCH] Marvell SATA fixes v2
-Date: Tue, 15 Nov 2005 20:03:30 +0100 (CET)
-Message-ID: <Pine.LNX.4.63.0511151956040.3015@dingo.iwr.uni-heidelberg.de>
-References: <20051114050404.GA18144@havoc.gtf.org>
- <Pine.LNX.4.63.0511151437320.3015@dingo.iwr.uni-heidelberg.de>
- <4379F31D.4000508@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [git patches] 2.6.x libata fixes
+Date: Tue, 15 Nov 2005 14:28:21 -0500
+Message-ID: <20051115192821.GA15571@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay.uni-heidelberg.de ([129.206.100.212]:7131 "EHLO
-	relay.uni-heidelberg.de") by vger.kernel.org with ESMTP
-	id S964993AbVKOTDg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Nov 2005 14:03:36 -0500
-In-Reply-To: <4379F31D.4000508@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965019AbVKOT20@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-On Tue, 15 Nov 2005, Jeff Garzik wrote:
 
-> any chance you could obtain additional debugging output by turning on
-> #undef ATA_DEBUG                /* debugging output */
-> #undef ATA_VERBOSE_DEBUG        /* yet more debugging output */
+Please pull from 'upstream-fixes' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-With these 2 defined and CONFIG_PCI_MSI turned off (and root FS on an 
-IDE disk...), insmod finishes properly, but there is a failed 
-assertion and the disk is not found anymore :-(
+to receive the following fixes:
 
-sata_mv 0000:02:08.0: version 0.25
-ACPI: PCI Interrupt 0000:02:08.0[A] -> GSI 26 (level, low) -> IRQ 20
-mv_port_init: EDMA cfg=0x0000011f EDMA IRQ err cause/mask=0x00000000/0x00001f7f
-mv_port_init: EDMA cfg=0x0000011f EDMA IRQ err cause/mask=0x00000000/0x00001f7f
-mv_port_init: EDMA cfg=0x0000011f EDMA IRQ err cause/mask=0x00000000/0x00001f7f
-mv_port_init: EDMA cfg=0x0000011f EDMA IRQ err cause/mask=0x00000000/0x00001f7f
-mv_init_host: HC0: HC config=0x11dcf013 HC IRQ cause (before clear)=0x00000000
-mv_init_host: HC MAIN IRQ cause/mask=0x00000000/0x0007ffff PCI int cause/mask=0x00000000/0x00577fe6
-mv_dump_pci_cfg: 00: 504111ab 02b00003 01000003 00002008 
-mv_dump_pci_cfg: 10: f5000004 00000000 00000000 00000000 
-mv_dump_pci_cfg: 20: 00000000 00000000 00000000 81241043 
-mv_dump_pci_cfg: 30: 00000000 00000040 00000000 00000109 
-mv_dump_pci_cfg: 40: 000a5001 00000000 00000000 00000000 
-mv_dump_pci_cfg: 50: 00806005 00000000 00000000 00000000 
-mv_dump_pci_cfg: 60: 00300007 01830240 
-sata_mv 0000:02:08.0: 32 slots 4 ports SCSI mode IRQ via INTx
-ata_device_add: ENTER
-ata_host_add: ENTER
-ata5: SATA max UDMA/133 cmd 0x0 ctl 0xF8BA2120 bmdma 0x0 irq 20
-ata_host_add: ENTER
-ata6: SATA max UDMA/133 cmd 0x0 ctl 0xF8BA4120 bmdma 0x0 irq 20
-ata_host_add: ENTER
-ata7: SATA max UDMA/133 cmd 0x0 ctl 0xF8BA6120 bmdma 0x0 irq 20
-ata_host_add: ENTER
-ata8: SATA max UDMA/133 cmd 0x0 ctl 0xF8BA8120 bmdma 0x0 irq 20
-ata_device_add: probe begin
-ata_device_add: ata5: probe begin
-mv_phy_reset: ENTER, port 0, mmio 0xf8ba2000
-mv_phy_reset: S-regs after ATA_RST: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
-mv_phy_reset: S-regs after PHY wake: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
-ata_dev_classify: found ATA device by sig
-mv_phy_reset: EXIT
-ata_dev_identify: ENTER, host 5, dev 0
-ata_dev_select: ENTER, ata5: device 0, wait 1
-ATA: abnormal status 0x80 on port 0xF8BA211C
-ata_dev_identify: do ATA identify
-ata_dev_select: ENTER, ata5: device 0, wait 1
-ata_exec_command_mmio: ata5: cmd 0xEC
-mv_host_intr: ENTER, hc0 relevant=0x00000002 HC IRQ cause=0x00000100
-mv_host_intr: port 0 IRQ found for qc, ata_status 0x58
-ata_qc_complete: EXIT
-mv_host_intr: EXIT
-mv_host_intr: ENTER, hc0 relevant=0x00000002 HC IRQ cause=0x00000100
-mv_host_intr: EXIT
-ata5: dev 0 cfg 49:0000 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:0000
-ata5: no dma
-ata5: dev 0 not supported, ignoring
-ata_dev_identify: EXIT, err
-ata_dev_identify: ENTER/EXIT (host 5, dev 1) -- nodev
-Assertion failed! qc != NULL,drivers/scsi/libata-core.c,ata_pio_block,line=3170
-Unable to handle kernel NULL pointer dereference at virtual address 00000014
-  printing eip:
-f886da39
-*pde = 3ea2c067
-Oops: 0000 [#1]
-SMP 
-Modules linked in: sata_mv(U) sunrpc dm_mod video button battery ac hfc_usb hisax crc_ccitt isdn slhc uhci_hcd ehci_hcd shpchp i6300esb i2c_i801 i2c_core e1000 ext3 jbd ata_piix libata sd_mod scsi_mod
-CPU:    1
-EIP:    0060:[<f886da39>]    Not tainted VLI
-EFLAGS: 00010292   (2.6.14-1.1665_FC5nomsismp) 
-EIP is at ata_pio_block+0x54/0x131 [libata]
-eax: 00000056   ebx: 00000058   ecx: 00020000   edx: 00000246
-esi: f6fa1314   edi: 00000000   ebp: f6fa1314   esp: f7ecdf3c
-ds: 007b   es: 007b   ss: 0068
-Process ata/1 (pid: 380, threadinfo=f7ecd000 task=f7ed2030)
-Stack: f8871f88 f8872c86 f88728fa f887926a 00000c62 f6fa1314 f6fa18cc f780111c
-        f886dbbb 00000212 c0136d06 00000000 f7ecd000 00000000 f7801134 f780113c
-        f7801154 f7ecd000 f6fa18c8 f886db8f 00000001 00000000 00000000 00010000 
-Call Trace:
-  [<f886dbbb>] ata_pio_task+0x2c/0x59 [libata]
-  [<c0136d06>] worker_thread+0x184/0x235
-  [<f886db8f>] ata_pio_task+0x0/0x59 [libata]
-  [<c0122363>] default_wake_function+0x0/0xc
-  [<c0136b82>] worker_thread+0x0/0x235
-  [<c013acd9>] kthread+0x93/0x97
-  [<c013ac46>] kthread+0x0/0x97
-  [<c010243d>] kernel_thread_helper+0x5/0xb
-Code: 0f 95 c0 84 d0 75 dd 89 cb 84 c9 78 58 31 ff 8b 86 70 05 00 00 85 c0 0f 85 ba 00 00 00 89 f7 81 c7 d4 04 00 00 0f 84 ac 00 00 00 <0f> b6 47 14 2c 05 3c 02 77 1a 80 e3 08 0f 85 8c 00 00 00 c7 86
-  <3>ata_device_add: ata5: probe end
-scsi4 : sata_mv
-ata_device_add: ata6: probe begin
-mv_phy_reset: ENTER, port 1, mmio 0xf8ba4000
-mv_phy_reset: S-regs after ATA_RST: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
-mv_phy_reset: S-regs after PHY wake: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
-ata6: no device found (phy stat 00000000)
-ata_device_add: ata6: probe end
-scsi5 : sata_mv
-ata_device_add: ata7: probe begin
-mv_phy_reset: ENTER, port 2, mmio 0xf8ba6000
-mv_phy_reset: S-regs after ATA_RST: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
-mv_phy_reset: S-regs after PHY wake: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
-ata7: no device found (phy stat 00000000)
-ata_device_add: ata7: probe end
-scsi6 : sata_mv
-ata_device_add: ata8: probe begin
-mv_phy_reset: ENTER, port 3, mmio 0xf8ba8000
-mv_phy_reset: S-regs after ATA_RST: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
-mv_phy_reset: S-regs after PHY wake: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
-ata8: no device found (phy stat 00000000)
-ata_device_add: ata8: probe end
-scsi7 : sata_mv
-ata_device_add: probe begin
-ata_device_add: EXIT, returning 4
+ drivers/scsi/ahci.c        |   31 ++++++++++++++----
+ drivers/scsi/libata-core.c |   64 ++++++++++++++++---------------------
+ drivers/scsi/libata-scsi.c |   77 +++++++++++++++++++++++++--------------------
+ drivers/scsi/libata.h      |    2 -
+ include/linux/libata.h     |   14 ++++++++
+ 5 files changed, 111 insertions(+), 77 deletions(-)
 
--- 
-Bogdan Costescu
+Jeff Garzik:
+      [libata ahci] error handling fixes
+      [libata] fix bugs in ATAPI padding DMA mapping code
+      [libata] minor fixes, new helpers
+      [libata] REQUEST SENSE handling fixes
+      [libata ahci] command completion fixes, improved debug msgs
 
-IWR - Interdisziplinaeres Zentrum fuer Wissenschaftliches Rechnen
-Universitaet Heidelberg, INF 368, D-69120 Heidelberg, GERMANY
-Telephone: +49 6221 54 8869, Telefax: +49 6221 54 8868
-E-mail: Bogdan.Costescu@IWR.Uni-Heidelberg.De
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index 4e96ec5..894e711 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -565,6 +565,17 @@ static void ahci_intr_error(struct ata_p
+ 	u32 tmp;
+ 	int work;
+ 
++	printk(KERN_WARNING "ata%u: port reset, "
++	       "p_is %x is %x pis %x cmd %x tf %x ss %x se %x\n",
++		ap->id,
++		irq_stat,
++		readl(mmio + HOST_IRQ_STAT),
++		readl(port_mmio + PORT_IRQ_STAT),
++		readl(port_mmio + PORT_CMD),
++		readl(port_mmio + PORT_TFDATA),
++		readl(port_mmio + PORT_SCR_STAT),
++		readl(port_mmio + PORT_SCR_ERR));
++
+ 	/* stop DMA */
+ 	tmp = readl(port_mmio + PORT_CMD);
+ 	tmp &= ~PORT_CMD_START;
+@@ -602,8 +613,6 @@ static void ahci_intr_error(struct ata_p
+ 	tmp |= PORT_CMD_START;
+ 	writel(tmp, port_mmio + PORT_CMD);
+ 	readl(port_mmio + PORT_CMD); /* flush */
+-
+-	printk(KERN_WARNING "ata%u: error occurred, port reset\n", ap->id);
+ }
+ 
+ static void ahci_eng_timeout(struct ata_port *ap)
+@@ -614,17 +623,17 @@ static void ahci_eng_timeout(struct ata_
+ 	struct ata_queued_cmd *qc;
+ 	unsigned long flags;
+ 
+-	DPRINTK("ENTER\n");
++	printk(KERN_WARNING "ata%u: handling error/timeout\n", ap->id);
+ 
+ 	spin_lock_irqsave(&host_set->lock, flags);
+ 
+-	ahci_intr_error(ap, readl(port_mmio + PORT_IRQ_STAT));
+-
+ 	qc = ata_qc_from_tag(ap, ap->active_tag);
+ 	if (!qc) {
+ 		printk(KERN_ERR "ata%u: BUG: timeout without command\n",
+ 		       ap->id);
+ 	} else {
++		ahci_intr_error(ap, readl(port_mmio + PORT_IRQ_STAT));
++
+ 		/* hack alert!  We cannot use the supplied completion
+ 	 	 * function from inside the ->eh_strategy_handler() thread.
+ 	 	 * libata is the only user of ->eh_strategy_handler() in
+@@ -659,9 +668,19 @@ static inline int ahci_host_intr(struct 
+ 	}
+ 
+ 	if (status & PORT_IRQ_FATAL) {
++		unsigned int err_mask;
++		if (status & PORT_IRQ_TF_ERR)
++			err_mask = AC_ERR_DEV;
++		else if (status & PORT_IRQ_IF_ERR)
++			err_mask = AC_ERR_ATA_BUS;
++		else
++			err_mask = AC_ERR_HOST_BUS;
++
++		/* command processing has stopped due to error; restart */
+ 		ahci_intr_error(ap, status);
++
+ 		if (qc)
+-			ata_qc_complete(qc, AC_ERR_OTHER);
++			ata_qc_complete(qc, err_mask);
+ 	}
+ 
+ 	return 1;
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index d81db3a..ba1eb8b 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -1263,7 +1263,7 @@ retry:
+ 	}
+ 
+ 	/* ATAPI-specific feature tests */
+-	else {
++	else if (dev->class == ATA_DEV_ATAPI) {
+ 		if (ata_id_is_ata(dev->id))		/* sanity check */
+ 			goto err_out_nosup;
+ 
+@@ -2399,7 +2399,7 @@ static void ata_sg_clean(struct ata_queu
+ 	if (qc->flags & ATA_QCFLAG_SINGLE)
+ 		assert(qc->n_elem == 1);
+ 
+-	DPRINTK("unmapping %u sg elements\n", qc->n_elem);
++	VPRINTK("unmapping %u sg elements\n", qc->n_elem);
+ 
+ 	/* if we padded the buffer out to 32-bit bound, and data
+ 	 * xfer direction is from-device, we must copy from the
+@@ -2409,7 +2409,8 @@ static void ata_sg_clean(struct ata_queu
+ 		pad_buf = ap->pad + (qc->tag * ATA_DMA_PAD_SZ);
+ 
+ 	if (qc->flags & ATA_QCFLAG_SG) {
+-		dma_unmap_sg(ap->host_set->dev, sg, qc->n_elem, dir);
++		if (qc->n_elem)
++			dma_unmap_sg(ap->host_set->dev, sg, qc->n_elem, dir);
+ 		/* restore last sg */
+ 		sg[qc->orig_n_elem - 1].length += qc->pad_len;
+ 		if (pad_buf) {
+@@ -2419,8 +2420,10 @@ static void ata_sg_clean(struct ata_queu
+ 			kunmap_atomic(psg->page, KM_IRQ0);
+ 		}
+ 	} else {
+-		dma_unmap_single(ap->host_set->dev, sg_dma_address(&sg[0]),
+-				 sg_dma_len(&sg[0]), dir);
++		if (sg_dma_len(&sg[0]) > 0)
++			dma_unmap_single(ap->host_set->dev,
++				sg_dma_address(&sg[0]), sg_dma_len(&sg[0]),
++				dir);
+ 		/* restore sg */
+ 		sg->length += qc->pad_len;
+ 		if (pad_buf)
+@@ -2619,6 +2622,11 @@ static int ata_sg_setup_one(struct ata_q
+ 			sg->length, qc->pad_len);
+ 	}
+ 
++	if (!sg->length) {
++		sg_dma_address(sg) = 0;
++		goto skip_map;
++	}
++
+ 	dma_address = dma_map_single(ap->host_set->dev, qc->buf_virt,
+ 				     sg->length, dir);
+ 	if (dma_mapping_error(dma_address)) {
+@@ -2628,6 +2636,7 @@ static int ata_sg_setup_one(struct ata_q
+ 	}
+ 
+ 	sg_dma_address(sg) = dma_address;
++skip_map:
+ 	sg_dma_len(sg) = sg->length;
+ 
+ 	DPRINTK("mapped buffer of %d bytes for %s\n", sg_dma_len(sg),
+@@ -2655,7 +2664,7 @@ static int ata_sg_setup(struct ata_queue
+ 	struct ata_port *ap = qc->ap;
+ 	struct scatterlist *sg = qc->__sg;
+ 	struct scatterlist *lsg = &sg[qc->n_elem - 1];
+-	int n_elem, dir;
++	int n_elem, pre_n_elem, dir, trim_sg = 0;
+ 
+ 	VPRINTK("ENTER, ata%u\n", ap->id);
+ 	assert(qc->flags & ATA_QCFLAG_SG);
+@@ -2689,13 +2698,24 @@ static int ata_sg_setup(struct ata_queue
+ 		sg_dma_len(psg) = ATA_DMA_PAD_SZ;
+ 		/* trim last sg */
+ 		lsg->length -= qc->pad_len;
++		if (lsg->length == 0)
++			trim_sg = 1;
+ 
+ 		DPRINTK("padding done, sg[%d].length=%u pad_len=%u\n",
+ 			qc->n_elem - 1, lsg->length, qc->pad_len);
+ 	}
+ 
++	pre_n_elem = qc->n_elem;
++	if (trim_sg && pre_n_elem)
++		pre_n_elem--;
++
++	if (!pre_n_elem) {
++		n_elem = 0;
++		goto skip_map;
++	}
++
+ 	dir = qc->dma_dir;
+-	n_elem = dma_map_sg(ap->host_set->dev, sg, qc->n_elem, dir);
++	n_elem = dma_map_sg(ap->host_set->dev, sg, pre_n_elem, dir);
+ 	if (n_elem < 1) {
+ 		/* restore last sg */
+ 		lsg->length += qc->pad_len;
+@@ -2704,6 +2724,7 @@ static int ata_sg_setup(struct ata_queue
+ 
+ 	DPRINTK("%d sg elements mapped\n", n_elem);
+ 
++skip_map:
+ 	qc->n_elem = n_elem;
+ 
+ 	return 0;
+@@ -3263,32 +3284,11 @@ static void ata_qc_timeout(struct ata_qu
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	struct ata_host_set *host_set = ap->host_set;
+-	struct ata_device *dev = qc->dev;
+ 	u8 host_stat = 0, drv_stat;
+ 	unsigned long flags;
+ 
+ 	DPRINTK("ENTER\n");
+ 
+-	/* FIXME: doesn't this conflict with timeout handling? */
+-	if (qc->dev->class == ATA_DEV_ATAPI && qc->scsicmd) {
+-		struct scsi_cmnd *cmd = qc->scsicmd;
+-
+-		if (!(cmd->eh_eflags & SCSI_EH_CANCEL_CMD)) {
+-
+-			/* finish completing original command */
+-			spin_lock_irqsave(&host_set->lock, flags);
+-			__ata_qc_complete(qc);
+-			spin_unlock_irqrestore(&host_set->lock, flags);
+-
+-			atapi_request_sense(ap, dev, cmd);
+-
+-			cmd->result = (CHECK_CONDITION << 1) | (DID_OK << 16);
+-			scsi_finish_command(cmd);
+-
+-			goto out;
+-		}
+-	}
+-
+ 	spin_lock_irqsave(&host_set->lock, flags);
+ 
+ 	/* hack alert!  We cannot use the supplied completion
+@@ -3327,7 +3327,6 @@ static void ata_qc_timeout(struct ata_qu
+ 
+ 	spin_unlock_irqrestore(&host_set->lock, flags);
+ 
+-out:
+ 	DPRINTK("EXIT\n");
+ }
+ 
+@@ -3411,16 +3410,11 @@ struct ata_queued_cmd *ata_qc_new_init(s
+ 
+ 	qc = ata_qc_new(ap);
+ 	if (qc) {
+-		qc->__sg = NULL;
+-		qc->flags = 0;
+ 		qc->scsicmd = NULL;
+ 		qc->ap = ap;
+ 		qc->dev = dev;
+-		qc->cursect = qc->cursg = qc->cursg_ofs = 0;
+-		qc->nsect = 0;
+-		qc->nbytes = qc->curbytes = 0;
+ 
+-		ata_tf_init(ap, &qc->tf, dev->devno);
++		ata_qc_reinit(qc);
+ 	}
+ 
+ 	return qc;
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index 0df4b68..3b4ca55 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -1955,22 +1955,44 @@ void ata_scsi_badcmd(struct scsi_cmnd *c
+ 	done(cmd);
+ }
+ 
+-void atapi_request_sense(struct ata_port *ap, struct ata_device *dev,
+-			 struct scsi_cmnd *cmd)
++static int atapi_sense_complete(struct ata_queued_cmd *qc,unsigned int err_mask)
+ {
+-	DECLARE_COMPLETION(wait);
+-	struct ata_queued_cmd *qc;
+-	unsigned long flags;
+-	int rc;
++	if (err_mask && ((err_mask & AC_ERR_DEV) == 0))
++		/* FIXME: not quite right; we don't want the
++		 * translation of taskfile registers into
++		 * a sense descriptors, since that's only
++		 * correct for ATA, not ATAPI
++		 */
++		ata_gen_ata_desc_sense(qc);
+ 
+-	DPRINTK("ATAPI request sense\n");
++	qc->scsidone(qc->scsicmd);
++	return 0;
++}
++
++/* is it pointless to prefer PIO for "safety reasons"? */
++static inline int ata_pio_use_silly(struct ata_port *ap)
++{
++	return (ap->flags & ATA_FLAG_PIO_DMA);
++}
+ 
+-	qc = ata_qc_new_init(ap, dev);
+-	BUG_ON(qc == NULL);
++static void atapi_request_sense(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct scsi_cmnd *cmd = qc->scsicmd;
++
++	DPRINTK("ATAPI request sense\n");
+ 
+ 	/* FIXME: is this needed? */
+ 	memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
+ 
++	ap->ops->tf_read(ap, &qc->tf);
++
++	/* fill these in, for the case where they are -not- overwritten */
++	cmd->sense_buffer[0] = 0x70;
++	cmd->sense_buffer[2] = qc->tf.feature >> 4;
++
++	ata_qc_reinit(qc);
++
+ 	ata_sg_init_one(qc, cmd->sense_buffer, sizeof(cmd->sense_buffer));
+ 	qc->dma_dir = DMA_FROM_DEVICE;
+ 
+@@ -1981,22 +2003,20 @@ void atapi_request_sense(struct ata_port
+ 	qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	qc->tf.command = ATA_CMD_PACKET;
+ 
+-	qc->tf.protocol = ATA_PROT_ATAPI;
+-	qc->tf.lbam = (8 * 1024) & 0xff;
+-	qc->tf.lbah = (8 * 1024) >> 8;
++	if (ata_pio_use_silly(ap)) {
++		qc->tf.protocol = ATA_PROT_ATAPI_DMA;
++		qc->tf.feature |= ATAPI_PKT_DMA;
++	} else {
++		qc->tf.protocol = ATA_PROT_ATAPI;
++		qc->tf.lbam = (8 * 1024) & 0xff;
++		qc->tf.lbah = (8 * 1024) >> 8;
++	}
+ 	qc->nbytes = SCSI_SENSE_BUFFERSIZE;
+ 
+-	qc->waiting = &wait;
+-	qc->complete_fn = ata_qc_complete_noop;
+-
+-	spin_lock_irqsave(&ap->host_set->lock, flags);
+-	rc = ata_qc_issue(qc);
+-	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++	qc->complete_fn = atapi_sense_complete;
+ 
+-	if (rc)
+-		ata_port_disable(ap);
+-	else
+-		wait_for_completion(&wait);
++	if (ata_qc_issue(qc))
++		ata_qc_complete(qc, AC_ERR_OTHER);
+ 
+ 	DPRINTK("EXIT\n");
+ }
+@@ -2008,19 +2028,8 @@ static int atapi_qc_complete(struct ata_
+ 	VPRINTK("ENTER, err_mask 0x%X\n", err_mask);
+ 
+ 	if (unlikely(err_mask & AC_ERR_DEV)) {
+-		DPRINTK("request check condition\n");
+-
+-		/* FIXME: command completion with check condition
+-		 * but no sense causes the error handler to run,
+-		 * which then issues REQUEST SENSE, fills in the sense 
+-		 * buffer, and completes the command (for the second
+-		 * time).  We need to issue REQUEST SENSE some other
+-		 * way, to avoid completing the command twice.
+-		 */
+ 		cmd->result = SAM_STAT_CHECK_CONDITION;
+-
+-		qc->scsidone(cmd);
+-
++		atapi_request_sense(qc);
+ 		return 1;
+ 	}
+ 
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index fad051c..74a84e0 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -54,8 +54,6 @@ extern int ata_cmd_ioctl(struct scsi_dev
+ 
+ 
+ /* libata-scsi.c */
+-extern void atapi_request_sense(struct ata_port *ap, struct ata_device *dev,
+-			 struct scsi_cmnd *cmd);
+ extern void ata_scsi_scan_host(struct ata_port *ap);
+ extern int ata_scsi_error(struct Scsi_Host *host);
+ extern unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf,
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index ad59961..f2dbb68 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -59,6 +59,8 @@
+ #define VPRINTK(fmt, args...)
+ #endif	/* ATA_DEBUG */
+ 
++#define BPRINTK(fmt, args...) if (ap->flags & ATA_FLAG_DEBUGMSG) printk(KERN_ERR "%s: " fmt, __FUNCTION__, ## args)
++
+ #ifdef ATA_NDEBUG
+ #define assert(expr)
+ #else
+@@ -119,6 +121,7 @@ enum {
+ 	ATA_FLAG_PIO_DMA	= (1 << 8), /* PIO cmds via DMA */
+ 	ATA_FLAG_NOINTR		= (1 << 9), /* FIXME: Remove this once
+ 					     * proper HSM is in place. */
++	ATA_FLAG_DEBUGMSG	= (1 << 10),
+ 
+ 	ATA_QCFLAG_ACTIVE	= (1 << 1), /* cmd not yet ack'd to scsi lyer */
+ 	ATA_QCFLAG_SG		= (1 << 3), /* have s/g table? */
+@@ -659,6 +662,17 @@ static inline void ata_tf_init(struct at
+ 		tf->device = ATA_DEVICE_OBS | ATA_DEV1;
+ }
+ 
++static inline void ata_qc_reinit(struct ata_queued_cmd *qc)
++{
++	qc->__sg = NULL;
++	qc->flags = 0;
++	qc->cursect = qc->cursg = qc->cursg_ofs = 0;
++	qc->nsect = 0;
++	qc->nbytes = qc->curbytes = 0;
++
++	ata_tf_init(qc->ap, &qc->tf, qc->dev->devno);
++}
++
+ 
+ /**
+  *	ata_irq_on - Enable interrupts on a port.
