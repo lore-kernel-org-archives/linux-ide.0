@@ -1,74 +1,47 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata error handling fixes (ATAPI)
-Date: Tue, 15 Nov 2005 04:28:59 -0500
-Message-ID: <4379AA5B.1060900@pobox.com>
-References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org>
+From: "SMALL, Timothy" <timothy.small@astrium.eads.net>
+Subject: RE: sata_sil24 corruption details
+Date: Tue, 15 Nov 2005 09:30:43 -0000
+Message-ID: <C2D16922D674664C9CCA61127AC9B77B03E0EE@auk52177.ukr.astrium.corp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932326AbVKOJ3E@vger.kernel.org>
-In-Reply-To: <20051115074148.GA17459@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from viruswall.astrium.eads.net ([194.203.13.70]:59914 "EHLO
+	viruswall.astrium.eads.net") by vger.kernel.org with ESMTP
+	id S1751408AbVKOJa7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Nov 2005 04:30:59 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-Tejun Heo wrote:
-> I've been trying to do about the same thing and here's my version
-> which only fixes error/sense handling.  This patch makes ahci's
-> eng_timeout act correctly w.r.t ATAPI sense requesting.  libata ATAPI
-> request sensing mechanism was not broken.  What's broken was AHCI's
-> eng_timeout handler.  And, yes, this problem disappears with request
-> sensing via active qc turn-around in your patch.
-
-Yes, that's intentional.  I fixed the problem in AHCI by copying code 
-from libata-core's ata_qc_timeout(), similar to what you did.  Didn't 
-like that solution at all, so I started over from scratch.
+To: "'linux@horizon.com'" <linux@horizon.com>, linux-ide@vger.kernel.org
+Cc: htejun@gmail.com
 
 
-> As I've written several times, I'm not a big fan of sense requesting
-> by turning around active qc.  For libata's EH to work any better,
-> handing-over failed commands to EH is necessary with or without
-> request sensing.  Hmm... It's true that the current implementation
-> used for ATAPI request sensing needs improvements.  Remember those
-> patches which implement generic failed command handover and perform
-> request sensing from EH with proper timeout and synchronization?
 
-We'll see how things shake out in the future.
-
-One of the reasons I haven't responded to your ATA exceptions doc RFC is 
-that I don't like to plan.  Linux isn't about roadmaps, it's about 
-what's the next-best-step.  I think my current EH fixes are the next 
-best step, as it cleans up the error handler a lot, and gets things 
-working.  Next step after that?  No idea.  I just go on gut feeling I 
-have based on direction.
-
-The current feeling is that we should move away from complex 
-dependencies on the SCSI EH layer, and do all our own error handling 
-(perhaps in ata_wq).  This will allow use of libata as a block driver.
-
-
-> Ah.. also, I'm working on sil24 ATAPI support.  However, it seems that
-> I need to do a little bit more; unfortunately, I'm not sure which....
-> INQUIRY succeeds and then my drive fails the first TUR with SK 6h
-> (UNIT ATTENTION) which is probably due to previous phy reset.  Then,
-> my drive fails to repsond to following REQUEST SENSE.
+> The fact it's the slot furthest from the bridge seems 
+> suggestive, but PCIe is packetized with link-level CRCs and 
+> retransmission, so transmission problems shouldn't be capable 
+> of causing corruption. Might I have a bad bridge chip?
 > 
-> With my patched AHCI, REQUEST SENSE works and after SK 06h and several
-> SK 02h's (NOT READY), it comes online and works okay.
-> 
-> As INQUIRY works okay, my hunch is that I'm not performing TUR
-> properly (that is ATAPI command with no data) and the drive locks up
-> after it.  I'll fool around with this more and report.
+> I'm currently reading the PCIe spec looking for link error 
+> logging registers.
 
-TUR fails for me, too.  It triggers the EH code, which is why I wound up 
-needing to fix it :)
+This is already (at least partly) implemented in the PCI error reporting
+stuff from:
 
-Have you dumped the D2H FIS returned by the drive, when the TUR fails? 
-What does it look like?  What does the D2H FIS look like after REQUEST 
-SENSE?
+http://bluesmoke.sourceforge.net/
 
-I bet there is some "clear error" actions we need to take on sil24, 
-before it work there.
+Just to verify this...  The developers don't have many cases of real PCI
+errors, so it'd certainly be useful for the bluesmoke/EDAC project if you
+could see if this notices your data corruption trouble.
 
-	Jeff
+Thanks,
+
+Tim.
+
+This email is for the intended addressee only.
+If you have received it in error then you must not use, retain, disseminate or otherwise deal with it.
+Please notify the sender by return email.
+The views of the author may not necessarily constitute the views of EADS Astrium Limited.
+Nothing in this email shall bind EADS Astrium Limited in any contract or obligation.
+
+EADS Astrium Limited, Registered in England and Wales No. 2449259
+Registered Office: Gunnels Wood Road, Stevenage, Hertfordshire, SG1 2AS, England
