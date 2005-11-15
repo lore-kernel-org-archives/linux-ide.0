@@ -1,108 +1,60 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata error handling fixes (ATAPI)
-Date: Tue, 15 Nov 2005 06:02:58 -0500
-Message-ID: <4379C062.3010302@pobox.com>
-References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379B28E.9070708@gmail.com>
+From: Rahul Siddharthan <rsidd@online.fr>
+Subject: Re: Buggy IDE / ATA drive on 2.6? DMA timeouts, 2.4 is fine
+Date: Tue, 15 Nov 2005 12:42:05 +0100
+Message-ID: <1132054925.4379c98d390e4@imp4-g19.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:45479 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751423AbVKOLDF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2005 06:03:05 -0500
-In-Reply-To: <4379B28E.9070708@gmail.com>
+Received: from smtp4-g19.free.fr ([212.27.42.30]:23789 "EHLO smtp4-g19.free.fr")
+	by vger.kernel.org with ESMTP id S1751426AbVKOLmL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2005 06:42:11 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> My RFC was written *after* the patches to ease the reviewing/integration 
-> process.  Well, that was the intention.  I understand your point but I 
-> think that EH needs some big changes, so it might be beneficial to 
+Bartlomiej Zolnierkiewicz said on Nov 11, 2005 at 14:33:18:
+> On 11/8/05, Rahul Siddharthan <rsidd@online.fr> wrote:
+> > Bartlomiej Zolnierkiewicz said on Nov  8, 2005 at 14:17:13:
+> > > On 11/8/05, Rahul Siddharthan <rsidd@online.fr> wrote:
+[snip]
+> > > > hda: dma_timer_expiry: dma status == 0x21
+> > > > hda: DMA timeout error
+> > > > hda: dma timeout error: status=0xd0 (busy)
+> > > >
+> > > > ide: failed opcode was: unknown
+> > > > hda: DMA disabled
+> > > > ide0: reset: success
+[snip]
+> Does 2.4 kernel work reliably for you now?
 
-Agreed, libata EH still needs a lot of work.  ATA device error handling 
-could better, ATA bus and PCI bus errors need to be handled a lot 
-better, etc.
+To the limited extent that I've been running it, yes.  Mainly I've been
+running BSD since then though, which also works reliably.  I haven't
+run linux 2.6 for several days now.
 
+> If so please do more testing and find the latest kernel version
+> which works for you, otherwise it is very unlikely that somebody
+> will be able to help you as going from 2.4.27->2.6.10 means going
+> through insane amount of changes.
 
-> establish some consensus such that other developers can do stuff that 
-> can be accepted.
-> 
->>
->> The current feeling is that we should move away from complex 
->> dependencies on the SCSI EH layer, and do all our own error handling 
->> (perhaps in ata_wq).  This will allow use of libata as a block driver.
->>
-> 
-> For departure of libata from SCSI, I was thinking more of another more 
-> generic block device framework in which libata can live in.  And I 
-> thought that it was reasonable to assume that the framework would supply 
-> a EH mechanism which supports queue stalling/draining and separate 
-> thread.  So, my EH patches tried to make the same environment for libata 
+I'm pretty sure that I noticed this after upgrading from 2.6.8.1 to
+2.6.12, but don't want to do a "binary search".  It looks like, after
+the symptoms appear under linux 2.6, they also appear for a while under
+linux 2.4 and BSD, and take a while to go away.  I'm worried about
+permanently damaging the machine.
 
-A big reason why libata uses the SCSI layer is infrastructure like this. 
-  It would certainly be nice to see timeouts and EH at the block layer. 
-  The block layer itself already supports queue stalling/draining.
+The other reports I see on the net also seem to refer to 2.6.10 and above,
+so perhaps something happened in 2.6.10.
 
+> > OK, smartctl -a says
+> > SMART overall-health self-assessment test result: PASSED
+> > and reports 14 errors, the most recent 2 at 7287 hours, (303 days + 15
+> > hrs) so the DMA timeout errors aren't here.  Do you need the full
+> > output?
+>
+> Yes.
 
-> so that it doesn't have to be changed drastically later.  All those 
-> glueing codes were separated in one or two functions.
-> 
-> The point I'm trying to make here is not that my EH design should be 
-> accepted or anything but that without established consensus it's very 
-> difficult for contributing developers like me to develop substantial 
-> part for libata.
-> 
-> One more thing that bothers me is that even with splitted patches and 
-> detailed document, I couldn't get a discussion started on the mailing 
-> list.  No discussion, no consensus.  I think we need to improve things 
-> on this front.
+http://rsidd.online.fr/smartctl.out
 
-Honestly there isn't a ton of discussion beforehand about anything in 
-libata :)  It's mainly just like Linux itself...  no roadmap, its more 
-just about what patches are accepted.  The consensus is the code.  I 
-have a general idea of where I want libata to go, in my mind, but that 
-picture is very rough and fuzzy :)  I let evolution sort out the details.
-
-Speaking specifically, changes to libata's error handling should have 
-very practical, observable effects.  Error handling code paths are 
-travelled so infrequently by users, that changes for the general purpose 
-of "improve something ugly" are not interesting.  Changes which address 
-problems people are seeing in the field are top priority:
-
-* kicking the device with SRST, if it continues to signal BSY.  If that 
-fails, do a hard reset with SATA COMRESET or <some hardware-specific 
-method>.  Note we really really really want to prefer SRST to other 
-methods of reset, as SRST is much nicer to the device, and gives the 
-device the opportunity to flush its writeback cache.
-
-Note that some hardware may prefer that you use a hardware-specific 
-method of issuing SRST, so that it can reset internal state machines 
-along with actually issuing the SRST to the device.  This probably means 
-a new protocol, ATA_PROT_SRST (which aligns nicely with SCSI SAT spec).
-
-* retrying rather than cancelling commands that fail due to pci/dma/crc 
-error.  some hardware (PCI IDE BMDMA) indicates DMA/PCI errors via 
-timeout.  Other hardware is nicer, and indicates such via interrupt.
-
-This may involve exporting scsi_eh_finish_cmd() and 
-scsi_eh_flush_done_q(), and un-exporting scsi_finish_command().  Hence 
-my reluctance to expand the use of scsi_finish_command(), which is 
-really inadequate for our purposes.
-
-This is also necessary for NCQ error handling.
-
-* better use of SError.  some vendor drivers read+write SError on every 
-disk transaction, but I think that's overkill.  Reading SError to check 
-for errors, against a stored mask, might not be a bad idea.
-
-* longer term:  add logic to "downshift" UDMA mode and/or SATA speed, if 
-CRC/DMA errors persist.
-
-I'm much less inclined to take patches which don't make progress towards 
-any of these IMO critical areas of EH importance.
-
-	Jeff
-
-
+Rahul
