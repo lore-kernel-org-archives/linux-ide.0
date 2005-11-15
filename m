@@ -1,63 +1,87 @@
-From: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>
-Subject: Re: [PATCH] Marvell SATA fixes v2
-Date: Tue, 15 Nov 2005 15:01:55 +0100 (CET)
-Message-ID: <Pine.LNX.4.63.0511151437320.3015@dingo.iwr.uni-heidelberg.de>
-References: <20051114050404.GA18144@havoc.gtf.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata error handling fixes (ATAPI)
+Date: Tue, 15 Nov 2005 09:11:14 -0500
+Message-ID: <4379EC82.1030509@pobox.com>
+References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379E5F7.6000107@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay.uni-heidelberg.de ([129.206.100.212]:25575 "EHLO
-	relay.uni-heidelberg.de") by vger.kernel.org with ESMTP
-	id S932529AbVKOOCF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Nov 2005 09:02:05 -0500
-In-Reply-To: <20051114050404.GA18144@havoc.gtf.org>
+Received: from mail.dvmed.net ([216.237.124.58]:39080 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932389AbVKOOLT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2005 09:11:19 -0500
+In-Reply-To: <4379E5F7.6000107@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
-On Mon, 14 Nov 2005, Jeff Garzik wrote:
+Tejun Heo wrote:
+> * prb->fis doesn't contain proper signature after phy reset.  I just 
 
-> Finally got Marvell 50XX SATA to the point where it, too, complains
-> about "ATA: abnormal status 0x80 on port ...11C"... which is progress :)
+This makes sense.  Each PRB slot in the card's RAM only contains 
+something useful after you have submitted a PRB, and had some results 
+returned.
 
-Thanks for picking up the sata_mv development, Jeff!
 
-I can confirm your results on a 5041 controller:
+> * As all commands hang after failed TUR, which BTW fails rightfully with 
+> 06h (UNIT ATTENTION due to prior reset) and then 02h's (NOT READY), I 
+> avoided TUR failures by issuing REQUEST SENSE first, which returns NO 
+> SENSE but does clear UA condition, and then waiting for more than 10secs 
+> to give the drive time to become ready.
 
-sata_mv 0000:02:08.0: version 0.25
-ACPI: PCI Interrupt 0000:02:08.0[A] -> GSI 26 (level, low) -> IRQ 177
-sata_mv 0000:02:08.0: 32 slots 4 ports SCSI mode IRQ via MSI
-ata11: SATA max UDMA/133 cmd 0x0 ctl 0xF8C22120 bmdma 0x0 irq 177
-ata12: SATA max UDMA/133 cmd 0x0 ctl 0xF8C24120 bmdma 0x0 irq 177
-ata13: SATA max UDMA/133 cmd 0x0 ctl 0xF8C26120 bmdma 0x0 irq 177
-ata14: SATA max UDMA/133 cmd 0x0 ctl 0xF8C28120 bmdma 0x0 irq 177
-ATA: abnormal status 0x80 on port 0xF8C2211C
-ata11: dev 0 cfg 49:2f00 82:74eb 83:7feb 84:4123 85:74e9 86:3c03 87:4123 88:007f
-ata11: dev 0 ATA-7, max UDMA/133, 781422768 sectors: LBA48
+10 seconds is certainly a long time.
 
-(there is a 400GB Hitachi disk attached to the first port)
+grep for msleep(150) in libata code, though.
 
-However, when running 'insmod ./sata_mv.ko' with a disk attched, 
-insmod doesn't return, it gets blocked into "D" state (gdb says 
-"ptrace: Operation not permitted." while strace attaches but doesn't 
-show anything and cannot be detached). This is with the 2.6.15-rc1 
-based FC devel kernel (2.6.14-1.1665), using up-to-date FC4 user 
-space, if that helps... This is not an one-off, I was able to 
-reproduce it three times out of three :-(
 
-Another thing that I noticed and don't know if it's normal is that the 
-ataXX ports remain "allocated" even after rmmod; I have two ICH6 ports 
-(ata1 and 2) and then insmod-ed the sata_mv driver 2 times without 
-disks attached (which took ata3-6 and ata7-10) and then the insmod 
-shown above.
+> * With above two changes, no command fails and I can mount the cdrom.
+> 
+> ------------------
+> 
+> And here are things that I've found out so far....
+> 
+> * ATAPI commands without data (TEST_UNIT_READY, ALLOW_MEDIUM_REMOVAL...) 
+> work happily with any prb->ctrl flag (no flag, PRB_CTRL_PACKET_READ or 
+> PRB_CTRL_PACKET_WRITE).
 
-Thanks again!
+I suppose no-flag is the right answer, then...
 
---
-Bogdan Costescu
 
-IWR - Interdisziplinaeres Zentrum fuer Wissenschaftliches Rechnen
-Universitaet Heidelberg, INF 368, D-69120 Heidelberg, GERMANY
-Telephone: +49 6221 54 8869, Telefax: +49 6221 54 8868
-E-mail: Bogdan.Costescu@IWR.Uni-Heidelberg.De
+> * Currently, sil24_reset_controller() is called on every error interrupt 
+> to make sure the controller is ready for further operation. 
+> Unfortunately, the current reset_controller() seems to reset PHY too. 
+> The drive becomes NOT READY after reset_controller().  So, when TUR 
+> fails, it falls into TUR, fail with NOT READY, reset which makes the 
+> drive NOT READY again cycle.
+
+Standard init sequence includes checking SStatus, then if a device is 
+present, waiting until Port Ready (bit 31) of PORT_CTRL_STAT is set.  It 
+doesn't look like sata_sil24 does that.
+
+
+> * Wihtout sil24_reset_controller(), no further command can be issued. 
+> The controller doesn't seem to be operating normally after DEV_ERR.
+
+The port stops, when any error occurs.  For device errors, set 
+PORT_CS_INIT bit in PORT_CTRL_STAT, then wait for Port Ready (bit 31, 
+see above).
+
+
+> So, what we need to know to make sil24 work happily with ATAPI devices.
+> 
+> * How to get device signature on initialization.
+
+AFAICS, you _must_ send a soft reset PRB.  This will be needed anyway, 
+for port multiplier support.
+
+
+> * How to make the controller operational again after a DEV_ERR without 
+> affecting the attached device.
+
+Assert PORT_CS_INIT, then wait for Port Ready.  __ONLY__ do this for 
+errors PORT_CERR_DEV and PORT_CERR_SDB.
+
+	Jeff
+
+
