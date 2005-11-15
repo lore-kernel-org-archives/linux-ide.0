@@ -1,77 +1,141 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata error handling fixes (ATAPI)
-Date: Tue, 15 Nov 2005 19:41:31 +0100
-Message-ID: <20051115184131.GJ7787@suse.de>
-References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379B28E.9070708@gmail.com> <4379C062.3010302@pobox.com> <20051115120016.GD7787@suse.de> <437A2814.1060308@cs.wisc.edu>
+From: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>
+Subject: Re: [PATCH] Marvell SATA fixes v2
+Date: Tue, 15 Nov 2005 20:03:30 +0100 (CET)
+Message-ID: <Pine.LNX.4.63.0511151956040.3015@dingo.iwr.uni-heidelberg.de>
+References: <20051114050404.GA18144@havoc.gtf.org>
+ <Pine.LNX.4.63.0511151437320.3015@dingo.iwr.uni-heidelberg.de>
+ <4379F31D.4000508@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <437A2814.1060308@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from relay.uni-heidelberg.de ([129.206.100.212]:7131 "EHLO
+	relay.uni-heidelberg.de") by vger.kernel.org with ESMTP
+	id S964993AbVKOTDg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Nov 2005 14:03:36 -0500
+In-Reply-To: <4379F31D.4000508@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Nov 15 2005, Mike Christie wrote:
-> Jens Axboe wrote:
-> >On Tue, Nov 15 2005, Jeff Garzik wrote:
-> >
-> >>>For departure of libata from SCSI, I was thinking more of another more 
-> >>>generic block device framework in which libata can live in.  And I 
-> >>>thought that it was reasonable to assume that the framework would supply 
-> >>>a EH mechanism which supports queue stalling/draining and separate 
-> >>>thread.  So, my EH patches tried to make the same environment for libata 
-> >>
-> >>A big reason why libata uses the SCSI layer is infrastructure like this. 
-> >>It would certainly be nice to see timeouts and EH at the block layer. 
-> >>The block layer itself already supports queue stalling/draining.
-> >
-> >
-> >I have a pretty simple plan for this:
-> >
-> >- Add a timer to struct request. It already has a timeout field for
-> >  SG_IO originated requests, we could easily utilize this in general.
-> >  I'm not sure how the querying of timeout would happen so far, it would
-> >  probably require a q->set_rq_timeout() hook to ask the low level
-> >  driver to set/return rq->timeout for a given request.
-> >
-> >- Add a timeout hook to struct request_queue that would get invoked from
-> >  the timeout handler. Something along the lines of:
-> >
-> >        - Timeout on a request happens. Freeze the queue and use
-> >          kblockd to take the actual timeout into process context, where
-> >          we call the queue ->rq_timeout() hook. Unfreeze/reschedule
-> >          queue operations based on what the ->rq_timeout() hook tells
-> >          us.
-> >
-> >That is generic enough to be able to arm the timeout automatically from
-> >->elevator_activate_req_fn() and dearm it when it completes or gets
-> >deactivated. It should also be possible to implement the SCSI error
-> >handling on top of that.
-> >
-> 
-> To disable the timeout would you then have scsi_done call a block layer 
-> function to disarm it then follow the current flow where or do you think 
-> it would be nice to move the scsi softirq code up to block layer. So 
-> scsi_done would call a block layer function that would disarm the timer, 
-> add the request to a block layer softirq list (a list like scsi-ml's 
-> scsi_done_q), and then in the block layer softirq function it could call 
-> a request_queue callout which for scsi-ml's device queue would call 
-> scsi_decide_disposition and return if it wanted the request requeued or 
-> how many sectors completed or to kick off the eh. I had stated on this 
-> for my block layer multipath driver, but can seperate the patches if 
-> this would be useful.
+On Tue, 15 Nov 2005, Jeff Garzik wrote:
 
-Yeah, that was part of my plan as well. I did post such a patch a year
-or so ago, in a thread about decreasing ide completion latencies.
+> any chance you could obtain additional debugging output by turning on
+> #undef ATA_DEBUG                /* debugging output */
+> #undef ATA_VERBOSE_DEBUG        /* yet more debugging output */
 
-> Would ide benefit from running from a softirq and would it be able to 
-> use such a thing?
+With these 2 defined and CONFIG_PCI_MSI turned off (and root FS on an 
+IDE disk...), insmod finishes properly, but there is a failed 
+assertion and the disk is not found anymore :-(
 
-It's generally useful as it allows lock free completion from the irq
-path, so that's goodness.
+sata_mv 0000:02:08.0: version 0.25
+ACPI: PCI Interrupt 0000:02:08.0[A] -> GSI 26 (level, low) -> IRQ 20
+mv_port_init: EDMA cfg=0x0000011f EDMA IRQ err cause/mask=0x00000000/0x00001f7f
+mv_port_init: EDMA cfg=0x0000011f EDMA IRQ err cause/mask=0x00000000/0x00001f7f
+mv_port_init: EDMA cfg=0x0000011f EDMA IRQ err cause/mask=0x00000000/0x00001f7f
+mv_port_init: EDMA cfg=0x0000011f EDMA IRQ err cause/mask=0x00000000/0x00001f7f
+mv_init_host: HC0: HC config=0x11dcf013 HC IRQ cause (before clear)=0x00000000
+mv_init_host: HC MAIN IRQ cause/mask=0x00000000/0x0007ffff PCI int cause/mask=0x00000000/0x00577fe6
+mv_dump_pci_cfg: 00: 504111ab 02b00003 01000003 00002008 
+mv_dump_pci_cfg: 10: f5000004 00000000 00000000 00000000 
+mv_dump_pci_cfg: 20: 00000000 00000000 00000000 81241043 
+mv_dump_pci_cfg: 30: 00000000 00000040 00000000 00000109 
+mv_dump_pci_cfg: 40: 000a5001 00000000 00000000 00000000 
+mv_dump_pci_cfg: 50: 00806005 00000000 00000000 00000000 
+mv_dump_pci_cfg: 60: 00300007 01830240 
+sata_mv 0000:02:08.0: 32 slots 4 ports SCSI mode IRQ via INTx
+ata_device_add: ENTER
+ata_host_add: ENTER
+ata5: SATA max UDMA/133 cmd 0x0 ctl 0xF8BA2120 bmdma 0x0 irq 20
+ata_host_add: ENTER
+ata6: SATA max UDMA/133 cmd 0x0 ctl 0xF8BA4120 bmdma 0x0 irq 20
+ata_host_add: ENTER
+ata7: SATA max UDMA/133 cmd 0x0 ctl 0xF8BA6120 bmdma 0x0 irq 20
+ata_host_add: ENTER
+ata8: SATA max UDMA/133 cmd 0x0 ctl 0xF8BA8120 bmdma 0x0 irq 20
+ata_device_add: probe begin
+ata_device_add: ata5: probe begin
+mv_phy_reset: ENTER, port 0, mmio 0xf8ba2000
+mv_phy_reset: S-regs after ATA_RST: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+mv_phy_reset: S-regs after PHY wake: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+ata_dev_classify: found ATA device by sig
+mv_phy_reset: EXIT
+ata_dev_identify: ENTER, host 5, dev 0
+ata_dev_select: ENTER, ata5: device 0, wait 1
+ATA: abnormal status 0x80 on port 0xF8BA211C
+ata_dev_identify: do ATA identify
+ata_dev_select: ENTER, ata5: device 0, wait 1
+ata_exec_command_mmio: ata5: cmd 0xEC
+mv_host_intr: ENTER, hc0 relevant=0x00000002 HC IRQ cause=0x00000100
+mv_host_intr: port 0 IRQ found for qc, ata_status 0x58
+ata_qc_complete: EXIT
+mv_host_intr: EXIT
+mv_host_intr: ENTER, hc0 relevant=0x00000002 HC IRQ cause=0x00000100
+mv_host_intr: EXIT
+ata5: dev 0 cfg 49:0000 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:0000
+ata5: no dma
+ata5: dev 0 not supported, ignoring
+ata_dev_identify: EXIT, err
+ata_dev_identify: ENTER/EXIT (host 5, dev 1) -- nodev
+Assertion failed! qc != NULL,drivers/scsi/libata-core.c,ata_pio_block,line=3170
+Unable to handle kernel NULL pointer dereference at virtual address 00000014
+  printing eip:
+f886da39
+*pde = 3ea2c067
+Oops: 0000 [#1]
+SMP 
+Modules linked in: sata_mv(U) sunrpc dm_mod video button battery ac hfc_usb hisax crc_ccitt isdn slhc uhci_hcd ehci_hcd shpchp i6300esb i2c_i801 i2c_core e1000 ext3 jbd ata_piix libata sd_mod scsi_mod
+CPU:    1
+EIP:    0060:[<f886da39>]    Not tainted VLI
+EFLAGS: 00010292   (2.6.14-1.1665_FC5nomsismp) 
+EIP is at ata_pio_block+0x54/0x131 [libata]
+eax: 00000056   ebx: 00000058   ecx: 00020000   edx: 00000246
+esi: f6fa1314   edi: 00000000   ebp: f6fa1314   esp: f7ecdf3c
+ds: 007b   es: 007b   ss: 0068
+Process ata/1 (pid: 380, threadinfo=f7ecd000 task=f7ed2030)
+Stack: f8871f88 f8872c86 f88728fa f887926a 00000c62 f6fa1314 f6fa18cc f780111c
+        f886dbbb 00000212 c0136d06 00000000 f7ecd000 00000000 f7801134 f780113c
+        f7801154 f7ecd000 f6fa18c8 f886db8f 00000001 00000000 00000000 00010000 
+Call Trace:
+  [<f886dbbb>] ata_pio_task+0x2c/0x59 [libata]
+  [<c0136d06>] worker_thread+0x184/0x235
+  [<f886db8f>] ata_pio_task+0x0/0x59 [libata]
+  [<c0122363>] default_wake_function+0x0/0xc
+  [<c0136b82>] worker_thread+0x0/0x235
+  [<c013acd9>] kthread+0x93/0x97
+  [<c013ac46>] kthread+0x0/0x97
+  [<c010243d>] kernel_thread_helper+0x5/0xb
+Code: 0f 95 c0 84 d0 75 dd 89 cb 84 c9 78 58 31 ff 8b 86 70 05 00 00 85 c0 0f 85 ba 00 00 00 89 f7 81 c7 d4 04 00 00 0f 84 ac 00 00 00 <0f> b6 47 14 2c 05 3c 02 77 1a 80 e3 08 0f 85 8c 00 00 00 c7 86
+  <3>ata_device_add: ata5: probe end
+scsi4 : sata_mv
+ata_device_add: ata6: probe begin
+mv_phy_reset: ENTER, port 1, mmio 0xf8ba4000
+mv_phy_reset: S-regs after ATA_RST: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+mv_phy_reset: S-regs after PHY wake: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+ata6: no device found (phy stat 00000000)
+ata_device_add: ata6: probe end
+scsi5 : sata_mv
+ata_device_add: ata7: probe begin
+mv_phy_reset: ENTER, port 2, mmio 0xf8ba6000
+mv_phy_reset: S-regs after ATA_RST: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+mv_phy_reset: S-regs after PHY wake: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+ata7: no device found (phy stat 00000000)
+ata_device_add: ata7: probe end
+scsi6 : sata_mv
+ata_device_add: ata8: probe begin
+mv_phy_reset: ENTER, port 3, mmio 0xf8ba8000
+mv_phy_reset: S-regs after ATA_RST: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+mv_phy_reset: S-regs after PHY wake: SStat 0x00000000 SErr 0x00000000 SCtrl 0x00000000
+ata8: no device found (phy stat 00000000)
+ata_device_add: ata8: probe end
+scsi7 : sata_mv
+ata_device_add: probe begin
+ata_device_add: EXIT, returning 4
 
 -- 
-Jens Axboe
+Bogdan Costescu
 
+IWR - Interdisziplinaeres Zentrum fuer Wissenschaftliches Rechnen
+Universitaet Heidelberg, INF 368, D-69120 Heidelberg, GERMANY
+Telephone: +49 6221 54 8869, Telefax: +49 6221 54 8868
+E-mail: Bogdan.Costescu@IWR.Uni-Heidelberg.De
