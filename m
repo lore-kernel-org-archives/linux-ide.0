@@ -1,115 +1,108 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] libata error handling fixes (ATAPI)
-Date: Tue, 15 Nov 2005 19:03:58 +0900
-Message-ID: <4379B28E.9070708@gmail.com>
-References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com>
+Date: Tue, 15 Nov 2005 06:02:58 -0500
+Message-ID: <4379C062.3010302@pobox.com>
+References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379B28E.9070708@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.197]:9636 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932331AbVKOKEI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2005 05:04:08 -0500
-Received: by zproxy.gmail.com with SMTP id 14so1532375nzn
-        for <linux-ide@vger.kernel.org>; Tue, 15 Nov 2005 02:04:07 -0800 (PST)
-In-Reply-To: <4379AA5B.1060900@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:45479 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751423AbVKOLDF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2005 06:03:05 -0500
+In-Reply-To: <4379B28E.9070708@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
-> 
->> I've been trying to do about the same thing and here's my version
->> which only fixes error/sense handling.  This patch makes ahci's
->> eng_timeout act correctly w.r.t ATAPI sense requesting.  libata ATAPI
->> request sensing mechanism was not broken.  What's broken was AHCI's
->> eng_timeout handler.  And, yes, this problem disappears with request
->> sensing via active qc turn-around in your patch.
-> 
-> 
-> Yes, that's intentional.  I fixed the problem in AHCI by copying code 
-> from libata-core's ata_qc_timeout(), similar to what you did.  Didn't 
-> like that solution at all, so I started over from scratch.
-> 
-> 
->> As I've written several times, I'm not a big fan of sense requesting
->> by turning around active qc.  For libata's EH to work any better,
->> handing-over failed commands to EH is necessary with or without
->> request sensing.  Hmm... It's true that the current implementation
->> used for ATAPI request sensing needs improvements.  Remember those
->> patches which implement generic failed command handover and perform
->> request sensing from EH with proper timeout and synchronization?
-> 
-> 
-> We'll see how things shake out in the future.
-> 
-> One of the reasons I haven't responded to your ATA exceptions doc RFC is 
-> that I don't like to plan.  Linux isn't about roadmaps, it's about 
-> what's the next-best-step.  I think my current EH fixes are the next 
-> best step, as it cleans up the error handler a lot, and gets things 
-> working.  Next step after that?  No idea.  I just go on gut feeling I 
-> have based on direction.
+Tejun Heo wrote:
+> My RFC was written *after* the patches to ease the reviewing/integration 
+> process.  Well, that was the intention.  I understand your point but I 
+> think that EH needs some big changes, so it might be beneficial to 
 
-My RFC was written *after* the patches to ease the reviewing/integration 
-process.  Well, that was the intention.  I understand your point but I 
-think that EH needs some big changes, so it might be beneficial to 
-establish some consensus such that other developers can do stuff that 
-can be accepted.
+Agreed, libata EH still needs a lot of work.  ATA device error handling 
+could better, ATA bus and PCI bus errors need to be handled a lot 
+better, etc.
 
+
+> establish some consensus such that other developers can do stuff that 
+> can be accepted.
 > 
-> The current feeling is that we should move away from complex 
-> dependencies on the SCSI EH layer, and do all our own error handling 
-> (perhaps in ata_wq).  This will allow use of libata as a block driver.
-> 
-
-For departure of libata from SCSI, I was thinking more of another more 
-generic block device framework in which libata can live in.  And I 
-thought that it was reasonable to assume that the framework would supply 
-a EH mechanism which supports queue stalling/draining and separate 
-thread.  So, my EH patches tried to make the same environment for libata 
-so that it doesn't have to be changed drastically later.  All those 
-glueing codes were separated in one or two functions.
-
-The point I'm trying to make here is not that my EH design should be 
-accepted or anything but that without established consensus it's very 
-difficult for contributing developers like me to develop substantial 
-part for libata.
-
-One more thing that bothers me is that even with splitted patches and 
-detailed document, I couldn't get a discussion started on the mailing 
-list.  No discussion, no consensus.  I think we need to improve things 
-on this front.
-
-> 
->> Ah.. also, I'm working on sil24 ATAPI support.  However, it seems that
->> I need to do a little bit more; unfortunately, I'm not sure which....
->> INQUIRY succeeds and then my drive fails the first TUR with SK 6h
->> (UNIT ATTENTION) which is probably due to previous phy reset.  Then,
->> my drive fails to repsond to following REQUEST SENSE.
 >>
->> With my patched AHCI, REQUEST SENSE works and after SK 06h and several
->> SK 02h's (NOT READY), it comes online and works okay.
+>> The current feeling is that we should move away from complex 
+>> dependencies on the SCSI EH layer, and do all our own error handling 
+>> (perhaps in ata_wq).  This will allow use of libata as a block driver.
 >>
->> As INQUIRY works okay, my hunch is that I'm not performing TUR
->> properly (that is ATAPI command with no data) and the drive locks up
->> after it.  I'll fool around with this more and report.
 > 
-> 
-> TUR fails for me, too.  It triggers the EH code, which is why I wound up 
-> needing to fix it :)
-> 
-> Have you dumped the D2H FIS returned by the drive, when the TUR fails? 
-> What does it look like?  What does the D2H FIS look like after REQUEST 
-> SENSE?
-> 
-> I bet there is some "clear error" actions we need to take on sil24, 
-> before it work there.
+> For departure of libata from SCSI, I was thinking more of another more 
+> generic block device framework in which libata can live in.  And I 
+> thought that it was reasonable to assume that the framework would supply 
+> a EH mechanism which supports queue stalling/draining and separate 
+> thread.  So, my EH patches tried to make the same environment for libata 
 
-Working on it, will report soon.
+A big reason why libata uses the SCSI layer is infrastructure like this. 
+  It would certainly be nice to see timeouts and EH at the block layer. 
+  The block layer itself already supports queue stalling/draining.
 
-Thanks. :-)
 
--- 
-tejun
+> so that it doesn't have to be changed drastically later.  All those 
+> glueing codes were separated in one or two functions.
+> 
+> The point I'm trying to make here is not that my EH design should be 
+> accepted or anything but that without established consensus it's very 
+> difficult for contributing developers like me to develop substantial 
+> part for libata.
+> 
+> One more thing that bothers me is that even with splitted patches and 
+> detailed document, I couldn't get a discussion started on the mailing 
+> list.  No discussion, no consensus.  I think we need to improve things 
+> on this front.
+
+Honestly there isn't a ton of discussion beforehand about anything in 
+libata :)  It's mainly just like Linux itself...  no roadmap, its more 
+just about what patches are accepted.  The consensus is the code.  I 
+have a general idea of where I want libata to go, in my mind, but that 
+picture is very rough and fuzzy :)  I let evolution sort out the details.
+
+Speaking specifically, changes to libata's error handling should have 
+very practical, observable effects.  Error handling code paths are 
+travelled so infrequently by users, that changes for the general purpose 
+of "improve something ugly" are not interesting.  Changes which address 
+problems people are seeing in the field are top priority:
+
+* kicking the device with SRST, if it continues to signal BSY.  If that 
+fails, do a hard reset with SATA COMRESET or <some hardware-specific 
+method>.  Note we really really really want to prefer SRST to other 
+methods of reset, as SRST is much nicer to the device, and gives the 
+device the opportunity to flush its writeback cache.
+
+Note that some hardware may prefer that you use a hardware-specific 
+method of issuing SRST, so that it can reset internal state machines 
+along with actually issuing the SRST to the device.  This probably means 
+a new protocol, ATA_PROT_SRST (which aligns nicely with SCSI SAT spec).
+
+* retrying rather than cancelling commands that fail due to pci/dma/crc 
+error.  some hardware (PCI IDE BMDMA) indicates DMA/PCI errors via 
+timeout.  Other hardware is nicer, and indicates such via interrupt.
+
+This may involve exporting scsi_eh_finish_cmd() and 
+scsi_eh_flush_done_q(), and un-exporting scsi_finish_command().  Hence 
+my reluctance to expand the use of scsi_finish_command(), which is 
+really inadequate for our purposes.
+
+This is also necessary for NCQ error handling.
+
+* better use of SError.  some vendor drivers read+write SError on every 
+disk transaction, but I think that's overkill.  Reading SError to check 
+for errors, against a stored mask, might not be a bad idea.
+
+* longer term:  add logic to "downshift" UDMA mode and/or SATA speed, if 
+CRC/DMA errors persist.
+
+I'm much less inclined to take patches which don't make progress towards 
+any of these IMO critical areas of EH importance.
+
+	Jeff
+
+
