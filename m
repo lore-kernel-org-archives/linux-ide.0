@@ -1,87 +1,38 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata error handling fixes (ATAPI)
-Date: Tue, 15 Nov 2005 09:11:14 -0500
-Message-ID: <4379EC82.1030509@pobox.com>
-References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379E5F7.6000107@gmail.com>
+From: Rahul Siddharthan <rsidd@online.fr>
+Subject: Re: Buggy IDE / ATA drive on 2.6? DMA timeouts, 2.4 is fine
+Date: Tue, 15 Nov 2005 15:27:58 +0100
+Message-ID: <1132064878.4379f06eb17e4@imp4-g19.free.fr>
+References: <1132054925.4379c98d390e4@imp4-g19.free.fr> <58cb370e0511150458t1748b396sd70c7a27d93111a5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:39080 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932389AbVKOOLT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2005 09:11:19 -0500
-In-Reply-To: <4379E5F7.6000107@gmail.com>
+Received: from smtp6-g19.free.fr ([212.27.42.36]:5021 "EHLO smtp6-g19.free.fr")
+	by vger.kernel.org with ESMTP id S1751425AbVKOO2B (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2005 09:28:01 -0500
+In-Reply-To: <58cb370e0511150458t1748b396sd70c7a27d93111a5@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Carlos Pardo <Carlos.Pardo@siliconimage.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> * prb->fis doesn't contain proper signature after phy reset.  I just 
+> > The other reports I see on the net also seem to refer to 2.6.10 and above,
+> > so perhaps something happened in 2.6.10.
+>
+> Care to give some pointers?
 
-This makes sense.  Each PRB slot in the card's RAM only contains 
-something useful after you have submitted a PRB, and had some results 
-returned.
-
-
-> * As all commands hang after failed TUR, which BTW fails rightfully with 
-> 06h (UNIT ATTENTION due to prior reset) and then 02h's (NOT READY), I 
-> avoided TUR failures by issuing REQUEST SENSE first, which returns NO 
-> SENSE but does clear UA condition, and then waiting for more than 10secs 
-> to give the drive time to become ready.
-
-10 seconds is certainly a long time.
-
-grep for msleep(150) in libata code, though.
+Eg,
+http://lists.debian.org/debian-kernel/2005/08/msg00104.html
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=132584
+(I don't get the "losing ticks" message in the latter report but
+otherwise the error is just the same)
 
 
-> * With above two changes, no command fails and I can mount the cdrom.
-> 
-> ------------------
-> 
-> And here are things that I've found out so far....
-> 
-> * ATAPI commands without data (TEST_UNIT_READY, ALLOW_MEDIUM_REMOVAL...) 
-> work happily with any prb->ctrl flag (no flag, PRB_CTRL_PACKET_READ or 
-> PRB_CTRL_PACKET_WRITE).
+> It seems that your drive is failing (reallocated sectors) and you've noticed
+> it with linux-2.6 because it stresses the hardware the most...
 
-I suppose no-flag is the right answer, then...
+Ok... I'll take regular backups
 
-
-> * Currently, sil24_reset_controller() is called on every error interrupt 
-> to make sure the controller is ready for further operation. 
-> Unfortunately, the current reset_controller() seems to reset PHY too. 
-> The drive becomes NOT READY after reset_controller().  So, when TUR 
-> fails, it falls into TUR, fail with NOT READY, reset which makes the 
-> drive NOT READY again cycle.
-
-Standard init sequence includes checking SStatus, then if a device is 
-present, waiting until Port Ready (bit 31) of PORT_CTRL_STAT is set.  It 
-doesn't look like sata_sil24 does that.
-
-
-> * Wihtout sil24_reset_controller(), no further command can be issued. 
-> The controller doesn't seem to be operating normally after DEV_ERR.
-
-The port stops, when any error occurs.  For device errors, set 
-PORT_CS_INIT bit in PORT_CTRL_STAT, then wait for Port Ready (bit 31, 
-see above).
-
-
-> So, what we need to know to make sil24 work happily with ATAPI devices.
-> 
-> * How to get device signature on initialization.
-
-AFAICS, you _must_ send a soft reset PRB.  This will be needed anyway, 
-for port multiplier support.
-
-
-> * How to make the controller operational again after a DEV_ERR without 
-> affecting the attached device.
-
-Assert PORT_CS_INIT, then wait for Port Ready.  __ONLY__ do this for 
-errors PORT_CERR_DEV and PORT_CERR_SDB.
-
-	Jeff
-
+Thanks
+Rahul
 
