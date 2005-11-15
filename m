@@ -1,94 +1,201 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: sata_sil24 corruption details
-Date: Mon, 14 Nov 2005 18:30:48 -0500
-Message-ID: <87f94c370511141530h1c2d64e6kdb512f54c3c7b981@mail.gmail.com>
-References: <20051110071736.23747.qmail@science.horizon.com>
-	 <43730C55.7030808@gmail.com>
-	 <87f94c370511100615u1eba1baai9d91df8ad2556510@mail.gmail.com>
-	 <43735C19.4040402@gmail.com> <4373843E.2030308@gmail.com>
-	 <87f94c370511101234v7a20c0daic907c41ccc61482c@mail.gmail.com>
-	 <87f94c370511111649j41d1832dhe7820376f96059a1@mail.gmail.com>
-	 <43755A78.3040005@gmail.com> <43771338.6010000@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata error handling fixes (ATAPI)
+Date: Tue, 15 Nov 2005 16:41:48 +0900
+Message-ID: <20051115074148.GA17459@htj.dyndns.org>
+References: <20051114195717.GA24373@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.205]:40595 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751321AbVKNXau convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Nov 2005 18:30:50 -0500
-Received: by zproxy.gmail.com with SMTP id 40so1232102nzk
-        for <linux-ide@vger.kernel.org>; Mon, 14 Nov 2005 15:30:49 -0800 (PST)
-In-Reply-To: <43771338.6010000@gmail.com>
+Received: from zproxy.gmail.com ([64.233.162.205]:21583 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751357AbVKOHl5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2005 02:41:57 -0500
+Received: by zproxy.gmail.com with SMTP id 13so1433593nzn
+        for <linux-ide@vger.kernel.org>; Mon, 14 Nov 2005 23:41:56 -0800 (PST)
 Content-Disposition: inline
+In-Reply-To: <20051114195717.GA24373@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, linux@horizon.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/13/05, Tejun Heo <htejun@gmail.com> wrote:
-> Tejun Heo wrote:
-> > Greg Freemyer wrote:
-> >>
-> >> Tejun,
-> >>
-> >> Success report:
-> >>
-> >> I did a 80 GB test copy with 2.6.14.1 and a Maxtor 80GB SATA drive and
-> >> a 3112A.  I had 3 drives connected to my server, one PATA for booting,
-> >> one PATA for to hold the source data, and the SATA drive.  Let me know
-> >> if you want want details about the setup.
-> >>
-> >> I found no corruption.  Given that my error rate was very low it is
-> >> possible that the corruption simply did not happen, but for now I'm
-> >> assuming my earlier issues were either a disk problem or a kernel
-> >> issue that was resolved by the latest kernel.
-> >>
-> >> I'm going to continue to test this setup.  I'll report any problems I
-> >> find.
-> >>
-> >
-> > Hi, Greg.
-> >
-> > I also have been continuing corruption test on 3112 during last two
-> > days.  It's being performed on 100GB partition of a 160GB harddisk
-> > (samsung hd160jj).  Nine passes of 'badblocks -t random -v -w /dev/sdb2'
-> > succeeded without any problem.  To replicate your test, I created a 4GB
-> > random file by dd'ing from /dev/urandom in a separate IDE disk and
-> > copied it to the partition 24times (24 different files of course), then
-> > I md5sum'd all copied files twice.  This test succeeded five times
-> > without any problem, and it's in the sixth run now.
-> >
-> > Above badblocks and file copy tests amount to about 1.4TB of writes and
-> > 1.9TB of reads without any data corruption.
-> >
-> > Let me know how your test turns out.
-> >
->
-> The 4G file test has been running through last two days and it finished
-> thirteen more runs without any hickup.  So, my 3112 + hd160jj
-> combination finshed 9 runs of 'badblocks -t random -v -w' and 22 runs of
-> 4G file copy & verify twice test.  That's > 3TB of writes and > 5TB of
-> reads without any error.
->
-> I guess my setup doesn't have the problem you used to experience.  How's
-> your testing going?
->
-> --
-> tejun
->
+On Mon, Nov 14, 2005 at 02:57:17PM -0500, Jeff Garzik wrote:
+> 
+> I finally got ATAPI working on my x86-64 AHCI box.
+> 
+> Just checked the following changes into the 'upstream-fixes' branch of
+> rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+> 
 
-Tejun,
+Hi, Jeff.
 
-We still have not experienced any problems with 2.6.14.1.  I'm going
-to put the 3112 into limited production use for drives over 200GB.  We
-verify md5's as part of our standard protocol, so if anything is out
-of whack we should find it.  Unfortunately we don't process a lot of
-200+ GB drives, but enough that we will likely exercise it a couple
-times a month.
+I've been trying to do about the same thing and here's my version
+which only fixes error/sense handling.  This patch makes ahci's
+eng_timeout act correctly w.r.t ATAPI sense requesting.  libata ATAPI
+request sensing mechanism was not broken.  What's broken was AHCI's
+eng_timeout handler.  And, yes, this problem disappears with request
+sensing via active qc turn-around in your patch.
 
-Greg
---
-Greg Freemyer
-The Norcross Group
-Forensics for the 21st Century
+As I've written several times, I'm not a big fan of sense requesting
+by turning around active qc.  For libata's EH to work any better,
+handing-over failed commands to EH is necessary with or without
+request sensing.  Hmm... It's true that the current implementation
+used for ATAPI request sensing needs improvements.  Remember those
+patches which implement generic failed command handover and perform
+request sensing from EH with proper timeout and synchronization?
+
+Ah.. also, I'm working on sil24 ATAPI support.  However, it seems that
+I need to do a little bit more; unfortunately, I'm not sure which....
+INQUIRY succeeds and then my drive fails the first TUR with SK 6h
+(UNIT ATTENTION) which is probably due to previous phy reset.  Then,
+my drive fails to repsond to following REQUEST SENSE.
+
+With my patched AHCI, REQUEST SENSE works and after SK 06h and several
+SK 02h's (NOT READY), it comes online and works okay.
+
+As INQUIRY works okay, my hunch is that I'm not performing TUR
+properly (that is ATAPI command with no data) and the drive locks up
+after it.  I'll fool around with this more and report.
+
+Thanks.
+
+
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index 4e96ec5..2d13699 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -611,16 +611,18 @@ static void ahci_eng_timeout(struct ata_
+ 	struct ata_host_set *host_set = ap->host_set;
+ 	void __iomem *mmio = host_set->mmio_base;
+ 	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
+-	struct ata_queued_cmd *qc;
++	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
+ 	unsigned long flags;
+ 
+ 	DPRINTK("ENTER\n");
+ 
++	if (ata_qc_atapi_timeout(qc))
++		goto out;
++
+ 	spin_lock_irqsave(&host_set->lock, flags);
+ 
+ 	ahci_intr_error(ap, readl(port_mmio + PORT_IRQ_STAT));
+ 
+-	qc = ata_qc_from_tag(ap, ap->active_tag);
+ 	if (!qc) {
+ 		printk(KERN_ERR "ata%u: BUG: timeout without command\n",
+ 		       ap->id);
+@@ -636,6 +638,9 @@ static void ahci_eng_timeout(struct ata_
+ 	}
+ 
+ 	spin_unlock_irqrestore(&host_set->lock, flags);
++
++ out:
++	DPRINTK("LEAVE\n");
+ }
+ 
+ static inline int ahci_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
+@@ -660,8 +665,18 @@ static inline int ahci_host_intr(struct 
+ 
+ 	if (status & PORT_IRQ_FATAL) {
+ 		ahci_intr_error(ap, status);
+-		if (qc)
+-			ata_qc_complete(qc, AC_ERR_OTHER);
++		if (qc) {
++			unsigned int err;
++			if (status & PORT_IRQ_TF_ERR)
++				err = AC_ERR_DEV;
++			else if (status & (PORT_IRQ_HBUS_ERR | PORT_IRQ_HBUS_DATA_ERR))
++				err = AC_ERR_HOST_BUS;
++			else if (status & (PORT_IRQ_IF_ERR))
++				err = AC_ERR_ATA_BUS;
++			else
++				err = AC_ERR_OTHER;
++			ata_qc_complete(qc, err);
++		}
+ 	}
+ 
+ 	return 1;
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index f606bdd..1bf8479 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -3421,6 +3421,33 @@ fsm_start:
+ 		goto fsm_start;
+ }
+ 
++int ata_qc_atapi_timeout(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct ata_host_set *host_set = ap->host_set;
++	struct ata_device *dev = qc->dev;
++	struct scsi_cmnd *cmd = qc->scsicmd;
++	unsigned long flags;
++
++	if (qc->dev->class != ATA_DEV_ATAPI || cmd == NULL)
++		return 0;
++
++	if (cmd->eh_eflags & SCSI_EH_CANCEL_CMD)
++		return 0;
++
++	/* finish completing original command */
++	spin_lock_irqsave(&host_set->lock, flags);
++	__ata_qc_complete(qc);
++	spin_unlock_irqrestore(&host_set->lock, flags);
++
++	atapi_request_sense(ap, dev, cmd);
++
++	cmd->result = (CHECK_CONDITION << 1) | (DID_OK << 16);
++	scsi_finish_command(cmd);
++
++	return 1;
++}
++
+ /**
+  *	ata_qc_timeout - Handle timeout of queued command
+  *	@qc: Command that timed out
+@@ -3444,31 +3471,13 @@ static void ata_qc_timeout(struct ata_qu
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	struct ata_host_set *host_set = ap->host_set;
+-	struct ata_device *dev = qc->dev;
+ 	u8 host_stat = 0, drv_stat;
+ 	unsigned long flags;
+ 
+ 	DPRINTK("ENTER\n");
+ 
+-	/* FIXME: doesn't this conflict with timeout handling? */
+-	if (qc->dev->class == ATA_DEV_ATAPI && qc->scsicmd) {
+-		struct scsi_cmnd *cmd = qc->scsicmd;
+-
+-		if (!(cmd->eh_eflags & SCSI_EH_CANCEL_CMD)) {
+-
+-			/* finish completing original command */
+-			spin_lock_irqsave(&host_set->lock, flags);
+-			__ata_qc_complete(qc);
+-			spin_unlock_irqrestore(&host_set->lock, flags);
+-
+-			atapi_request_sense(ap, dev, cmd);
+-
+-			cmd->result = (CHECK_CONDITION << 1) | (DID_OK << 16);
+-			scsi_finish_command(cmd);
+-
+-			goto out;
+-		}
+-	}
++	if (ata_qc_atapi_timeout(qc))
++		goto out;
+ 
+ 	spin_lock_irqsave(&host_set->lock, flags);
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 79b7e6f..a10be07 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -478,6 +478,7 @@ extern u8   ata_bmdma_status(struct ata_
+ extern void ata_bmdma_irq_clear(struct ata_port *ap);
+ extern void ata_qc_complete(struct ata_queued_cmd *qc, unsigned int err_mask);
+ extern void ata_eng_timeout(struct ata_port *ap);
++extern int ata_qc_atapi_timeout(struct ata_queued_cmd *qc);
+ extern void ata_scsi_simulate(u16 *id, struct scsi_cmnd *cmd,
+ 			      void (*done)(struct scsi_cmnd *));
+ extern int ata_std_bios_param(struct scsi_device *sdev,
