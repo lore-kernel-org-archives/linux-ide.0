@@ -1,39 +1,115 @@
-From: "SMALL, Timothy" <timothy.small@astrium.eads.net>
-Subject: RE: Questions about ATA Command Timeouts and kernel lockups
-Date: Tue, 15 Nov 2005 10:00:56 -0000
-Message-ID: <C2D16922D674664C9CCA61127AC9B77B03E0F0@auk52177.ukr.astrium.corp>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata error handling fixes (ATAPI)
+Date: Tue, 15 Nov 2005 19:03:58 +0900
+Message-ID: <4379B28E.9070708@gmail.com>
+References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from viruswall.astrium.eads.net ([194.203.13.70]:44048 "EHLO
-	viruswall.astrium.eads.net") by vger.kernel.org with ESMTP
-	id S1751417AbVKOKBI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Nov 2005 05:01:08 -0500
+Received: from zproxy.gmail.com ([64.233.162.197]:9636 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932331AbVKOKEI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2005 05:04:08 -0500
+Received: by zproxy.gmail.com with SMTP id 14so1532375nzn
+        for <linux-ide@vger.kernel.org>; Tue, 15 Nov 2005 02:04:07 -0800 (PST)
+In-Reply-To: <4379AA5B.1060900@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Chase Venters' <chase.venters@clientec.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+> 
+>> I've been trying to do about the same thing and here's my version
+>> which only fixes error/sense handling.  This patch makes ahci's
+>> eng_timeout act correctly w.r.t ATAPI sense requesting.  libata ATAPI
+>> request sensing mechanism was not broken.  What's broken was AHCI's
+>> eng_timeout handler.  And, yes, this problem disappears with request
+>> sensing via active qc turn-around in your patch.
+> 
+> 
+> Yes, that's intentional.  I fixed the problem in AHCI by copying code 
+> from libata-core's ata_qc_timeout(), similar to what you did.  Didn't 
+> like that solution at all, so I started over from scratch.
+> 
+> 
+>> As I've written several times, I'm not a big fan of sense requesting
+>> by turning around active qc.  For libata's EH to work any better,
+>> handing-over failed commands to EH is necessary with or without
+>> request sensing.  Hmm... It's true that the current implementation
+>> used for ATAPI request sensing needs improvements.  Remember those
+>> patches which implement generic failed command handover and perform
+>> request sensing from EH with proper timeout and synchronization?
+> 
+> 
+> We'll see how things shake out in the future.
+> 
+> One of the reasons I haven't responded to your ATA exceptions doc RFC is 
+> that I don't like to plan.  Linux isn't about roadmaps, it's about 
+> what's the next-best-step.  I think my current EH fixes are the next 
+> best step, as it cleans up the error handler a lot, and gets things 
+> working.  Next step after that?  No idea.  I just go on gut feeling I 
+> have based on direction.
 
------Original Message-----
-> From: Chase Venters [mailto:chase.venters@clientec.com]
-> kernel and the bus over DMA, but it seems to me that since this diagnostic
+My RFC was written *after* the patches to ease the reviewing/integration 
+process.  Well, that was the intention.  I understand your point but I 
+think that EH needs some big changes, so it might be beneficial to 
+establish some consensus such that other developers can do stuff that 
+can be accepted.
 
-> information *does* get printed, followed by a total lockup, that the
-kernel 
-> may be falling into a tight loop with interrupts disabled. To this end,
-I'm 
-> building the kernel that will run on my system once it's rebuilt to
-include 
-> sleep while holding spinlock checking.
-> 	Is there anything else I can do, in case this crash hits me again?
+> 
+> The current feeling is that we should move away from complex 
+> dependencies on the SCSI EH layer, and do all our own error handling 
+> (perhaps in ata_wq).  This will allow use of libata as a block driver.
+> 
 
-Enable the NMI watchdog?
+For departure of libata from SCSI, I was thinking more of another more 
+generic block device framework in which libata can live in.  And I 
+thought that it was reasonable to assume that the framework would supply 
+a EH mechanism which supports queue stalling/draining and separate 
+thread.  So, my EH patches tried to make the same environment for libata 
+so that it doesn't have to be changed drastically later.  All those 
+glueing codes were separated in one or two functions.
 
-This email is for the intended addressee only.
-If you have received it in error then you must not use, retain, disseminate or otherwise deal with it.
-Please notify the sender by return email.
-The views of the author may not necessarily constitute the views of EADS Astrium Limited.
-Nothing in this email shall bind EADS Astrium Limited in any contract or obligation.
+The point I'm trying to make here is not that my EH design should be 
+accepted or anything but that without established consensus it's very 
+difficult for contributing developers like me to develop substantial 
+part for libata.
 
-EADS Astrium Limited, Registered in England and Wales No. 2449259
-Registered Office: Gunnels Wood Road, Stevenage, Hertfordshire, SG1 2AS, England
+One more thing that bothers me is that even with splitted patches and 
+detailed document, I couldn't get a discussion started on the mailing 
+list.  No discussion, no consensus.  I think we need to improve things 
+on this front.
+
+> 
+>> Ah.. also, I'm working on sil24 ATAPI support.  However, it seems that
+>> I need to do a little bit more; unfortunately, I'm not sure which....
+>> INQUIRY succeeds and then my drive fails the first TUR with SK 6h
+>> (UNIT ATTENTION) which is probably due to previous phy reset.  Then,
+>> my drive fails to repsond to following REQUEST SENSE.
+>>
+>> With my patched AHCI, REQUEST SENSE works and after SK 06h and several
+>> SK 02h's (NOT READY), it comes online and works okay.
+>>
+>> As INQUIRY works okay, my hunch is that I'm not performing TUR
+>> properly (that is ATAPI command with no data) and the drive locks up
+>> after it.  I'll fool around with this more and report.
+> 
+> 
+> TUR fails for me, too.  It triggers the EH code, which is why I wound up 
+> needing to fix it :)
+> 
+> Have you dumped the D2H FIS returned by the drive, when the TUR fails? 
+> What does it look like?  What does the D2H FIS look like after REQUEST 
+> SENSE?
+> 
+> I bet there is some "clear error" actions we need to take on sil24, 
+> before it work there.
+
+Working on it, will report soon.
+
+Thanks. :-)
+
+-- 
+tejun
