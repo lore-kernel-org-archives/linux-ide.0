@@ -1,72 +1,44 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Buggy IDE / ATA drive on 2.6? DMA timeouts, 2.4 is fine
-Date: Tue, 15 Nov 2005 13:58:04 +0100
-Message-ID: <58cb370e0511150458t1748b396sd70c7a27d93111a5@mail.gmail.com>
-References: <1132054925.4379c98d390e4@imp4-g19.free.fr>
+Subject: Re: 2.6.15-rc1: IDE: fix potential data corruption with SL82C105 interfaces
+Date: Tue, 15 Nov 2005 14:27:08 +0100
+Message-ID: <58cb370e0511150527r415a1916t4fbadfc654a2bd18@mail.gmail.com>
+References: <20051112165548.GB28987@flint.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.206]:54035 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932467AbVKOM6H convert rfc822-to-8bit
+Received: from nproxy.gmail.com ([64.233.182.200]:64386 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932521AbVKON1J convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Nov 2005 07:58:07 -0500
-Received: by nproxy.gmail.com with SMTP id c29so296587nfb
-        for <linux-ide@vger.kernel.org>; Tue, 15 Nov 2005 04:58:05 -0800 (PST)
-In-Reply-To: <1132054925.4379c98d390e4@imp4-g19.free.fr>
+	Tue, 15 Nov 2005 08:27:09 -0500
+Received: by nproxy.gmail.com with SMTP id o60so279591nfa
+        for <linux-ide@vger.kernel.org>; Tue, 15 Nov 2005 05:27:08 -0800 (PST)
+In-Reply-To: <20051112165548.GB28987@flint.arm.linux.org.uk>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rahul Siddharthan <rsidd@online.fr>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On 11/15/05, Rahul Siddharthan <rsidd@online.fr> wrote:
-> Bartlomiej Zolnierkiewicz said on Nov 11, 2005 at 14:33:18:
-> > On 11/8/05, Rahul Siddharthan <rsidd@online.fr> wrote:
-> > > Bartlomiej Zolnierkiewicz said on Nov  8, 2005 at 14:17:13:
-> > > > On 11/8/05, Rahul Siddharthan <rsidd@online.fr> wrote:
-> [snip]
-> > > > > hda: dma_timer_expiry: dma status == 0x21
-> > > > > hda: DMA timeout error
-> > > > > hda: dma timeout error: status=0xd0 (busy)
-> > > > >
-> > > > > ide: failed opcode was: unknown
-> > > > > hda: DMA disabled
-> > > > > ide0: reset: success
-> [snip]
-> > Does 2.4 kernel work reliably for you now?
+On 11/12/05, Russell King <rmk+lkml@arm.linux.org.uk> wrote:
+> We must _never_ _ever_ on pain of death enable IDE DMA on SL82C105
+> chipsets where the southbridge revision is <= 5, otherwise data
+> corruption will occur.
 >
-> To the limited extent that I've been running it, yes.  Mainly I've been
-> running BSD since then though, which also works reliably.  I haven't
-> run linux 2.6 for several days now.
->
-> > If so please do more testing and find the latest kernel version
-> > which works for you, otherwise it is very unlikely that somebody
-> > will be able to help you as going from 2.4.27->2.6.10 means going
-> > through insane amount of changes.
->
-> I'm pretty sure that I noticed this after upgrading from 2.6.8.1 to
-> 2.6.12, but don't want to do a "binary search".  It looks like, after
-> the symptoms appear under linux 2.6, they also appear for a while under
-> linux 2.4 and BSD, and take a while to go away.  I'm worried about
-> permanently damaging the machine.
->
-> The other reports I see on the net also seem to refer to 2.6.10 and above,
-> so perhaps something happened in 2.6.10.
+> Strangely this used to work, but something has changed in the upper
+> echelons of the IDE layer to break the hosts decision to deny DMA.
+> Let's make it crystal clear to the IDE layer that we know best.
 
-Care to give some pointers?
+Has it changed recently?
 
-> > > OK, smartctl -a says
-> > > SMART overall-health self-assessment test result: PASSED
-> > > and reports 14 errors, the most recent 2 at 7287 hours, (303 days + 15
-> > > hrs) so the DMA timeout errors aren't here.  Do you need the full
-> > > output?
-> >
-> > Yes.
->
-> http://rsidd.online.fr/smartctl.out
+AFAICS this bug was introduced long time ago in the sl82c105
+driver itself by setting hwif->autodma in init_hwif_sl82c105()
+without checking for bridge revision:
 
-It seems that your drive is failing (reallocated sectors) and you've noticed
-it with linux-2.6 because it stresses the hardware the most...
+http://linux.bkbits.net:8080/linux-2.6/patch@1.497.94.23?nav=index.html|src/|src/drivers|src/drivers/ide|src/drivers/ide/pci|related/drivers/ide/pci/sl82c105.c|cset@1.497.94.23
+
+> Note: due to the urgency of this fix, I will be applying this to the
+> ARM tree.  Any comments/criticisms can be dealt with further patches.
+
+Fine with me.
 
 Bartlomiej
