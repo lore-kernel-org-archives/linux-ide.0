@@ -1,71 +1,65 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: PROBLEM: Tyan s2822 and SATA slowness / erratic speeds kernel
- 2.6
-Date: Wed, 16 Nov 2005 13:57:02 +0900
-Message-ID: <437ABC1E.7040301@gmail.com>
-References: <BAY108-F7B49C0F56D3AF2CD03DF4C05D0@phx.gbl>
+Subject: [PATCH] sil24: add constants
+Date: Wed, 16 Nov 2005 16:56:49 +0900
+Message-ID: <20051116075649.GA22807@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.195]:49364 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932577AbVKPE5L (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2005 23:57:11 -0500
-Received: by zproxy.gmail.com with SMTP id 13so1684425nzn
-        for <linux-ide@vger.kernel.org>; Tue, 15 Nov 2005 20:57:10 -0800 (PST)
-In-Reply-To: <BAY108-F7B49C0F56D3AF2CD03DF4C05D0@phx.gbl>
+Received: from zproxy.gmail.com ([64.233.162.197]:22214 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1030213AbVKPH44 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 02:56:56 -0500
+Received: by zproxy.gmail.com with SMTP id 13so1709577nzn
+        for <linux-ide@vger.kernel.org>; Tue, 15 Nov 2005 23:56:56 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jones Joneser <joneserstein@hotmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Jones Joneser wrote:
-> Machine:
-> Tyan s2822G3NR-D
-> Silicon Image, Inc. SiI 3114
-> SATA Drives: Western Digital 300gb / seagate 80 gb
-> 
-> Initially we thought we had a network issue because we were seeing a 
-> slowdown when transferring files > 512Mb in size (by whatever method: 
-> rsync, cp, scp, etc.) between two of the Tyan servers, we see the first 
-> 512Mb go at a decent rate (tens of megabytes per second) and then the 
-> rate plummets to below 500k/sec.   However we reproduce the issue 
-> locally on a machine thus eliminating the network card issue. We also 
-> had tried with different ethernet cards and x-over cable.
-> 
-> 
-> We are using CentOS 4 and have tried both 4.1 and 4.2 (the latest 
-> edition) 64 and 32 bit.  We have tried ubuntu, gentoo, and vanilla 
-> kernels.  We have upgraded our BIOS to the latest and experimented with 
-> different BIOS settings (from 'safe' to 'optimal' with many variants in 
-> between.) We have tried it with ACPI switched off, with 4gb of RAM and 
-> with 8gb of RAM. We have upgraded the BIOS to 3.04 & then 3.05.  The 
-> best we get is that under the ubuntu, gentoo, and a 2.4 kernel we can 
-> see stable performance that is well below what we should be getting 
-> ~20MiB/s.
-> 
-> No matter what combination of configuration we try, we consistently see 
-> this issue.  We have even tried and LSI SATA controller w/ Tyan 
-> motherboard and experienced the same issues.
-> 
-> We moved the SATA controller to a Dell PE 1750 and experience none of 
-> the slowdowns, consistent ly 45-50MiB/s performance with no erraticness 
-> in speed or drops in performance.
-> 
-> We suspect the issue is related to the combo of the Tyan mobo with the 
-> SATA controller subsystem but need some assistance in further nailing 
-> down the cause and solution to this issue.
-> 
-> Let me know of any additional information that I can provide to assist 
-> with the debugging of this issue.
-> 
-> Thanks,
-> -asher
-> 
+Adds constants for ATAPI support to sata_sil24.  This patch is
+originally from Jeff Garzik <jgarzik@pobox.com>.
 
-i. posting boot message would help.
-ii. Can you try vanilla 2.6.14 kernel?  If it's sil m15w problem and
-your card is 3114 but not 3112, the problem should disappear on 2.6.14.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
--- 
-tejun
+Index: work/drivers/scsi/sata_sil24.c
+===================================================================
+--- work.orig/drivers/scsi/sata_sil24.c	2005-11-16 16:40:50.000000000 +0900
++++ work/drivers/scsi/sata_sil24.c	2005-11-16 16:54:10.000000000 +0900
+@@ -139,6 +139,7 @@ enum {
+ 	PORT_CS_DEV_RST		= (1 << 1), /* device reset */
+ 	PORT_CS_INIT		= (1 << 2), /* port initialize */
+ 	PORT_CS_IRQ_WOC		= (1 << 3), /* interrupt write one to clear */
++	PORT_CS_CDB16		= (1 << 5), /* 0=12b cdb, 1=16b cdb */
+ 	PORT_CS_RESUME		= (1 << 6), /* port resume */
+ 	PORT_CS_32BIT_ACTV	= (1 << 10), /* 32-bit activation */
+ 	PORT_CS_PM_EN		= (1 << 13), /* port multiplier enable */
+@@ -188,11 +189,29 @@ enum {
+ 	PORT_CERR_XFR_PCIPERR	= 35, /* PSD ecode 11 - PCI prity err during transfer */
+ 	PORT_CERR_SENDSERVICE	= 36, /* FIS received while sending service */
+ 
++	/* bits of PRB control field */
++	PRB_CTRL_PROTOCOL	= (1 << 0), /* override def. ATA protocol */
++	PRB_CTRL_PACKET_READ	= (1 << 4), /* PACKET cmd read */
++	PRB_CTRL_PACKET_WRITE	= (1 << 5), /* PACKET cmd write */
++	PRB_CTRL_NIEN		= (1 << 6), /* Mask completion irq */
++	PRB_CTRL_SRST		= (1 << 7), /* Soft reset request (ign BSY?) */
++
++	/* PRB protocol field */
++	PRB_PROT_PACKET		= (1 << 0),
++	PRB_PROT_TCQ		= (1 << 1),
++	PRB_PROT_NCQ		= (1 << 2),
++	PRB_PROT_READ		= (1 << 3),
++	PRB_PROT_WRITE		= (1 << 4),
++	PRB_PROT_TRANSPARENT	= (1 << 5),
++
+ 	/*
+ 	 * Other constants
+ 	 */
+ 	SGE_TRM			= (1 << 31), /* Last SGE in chain */
+-	PRB_SOFT_RST		= (1 << 7),  /* Soft reset request (ign BSY?) */
++	SGE_LNK			= (1 << 30), /* linked list
++						Points to SGT, not SGE */
++	SGE_DRD			= (1 << 29), /* discard data read (/dev/null)
++						data address ignored */
+ 
+ 	/* board id */
+ 	BID_SIL3124		= 0,
