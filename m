@@ -1,66 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 3/5] sil24: use SRST for phy_reset
-Date: Wed, 16 Nov 2005 10:03:34 -0500
-Message-ID: <437B4A46.4070501@pobox.com>
-References: <20051116080505.GC22807@htj.dyndns.org> <437B462F.80205@rtr.ca>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: ata_port->device[] question
+Date: Wed, 16 Nov 2005 16:13:14 +0100
+Message-ID: <58cb370e0511160713l1f888d8bhe7d9433c744f67e9@mail.gmail.com>
+References: <Pine.LNX.4.58.0511151328070.28745@shark.he.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:41140 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030357AbVKPPDl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 10:03:41 -0500
-In-Reply-To: <437B462F.80205@rtr.ca>
+Received: from nproxy.gmail.com ([64.233.182.203]:45874 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1030362AbVKPPNP convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Nov 2005 10:13:15 -0500
+Received: by nproxy.gmail.com with SMTP id k26so348653nfc
+        for <linux-ide@vger.kernel.org>; Wed, 16 Nov 2005 07:13:14 -0800 (PST)
+In-Reply-To: <Pine.LNX.4.58.0511151328070.28745@shark.he.net>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Tejun Heo wrote:
-> 
->> There seems to be no way to obtain device signature from sil24 after
->> SATA phy reset and SRST is needed anyway for later port multiplier
->> suppport.  This patch converts sil24_phy_reset to use SRST instaed.
-> 
-> 
-> Mmm.. I doubt that sil24 is the only SATA controller with
-> this issue.  The sata_qstor device, for example, requires PHY reset
-> *followed* by SRST if one wants to reliably detect a port multiplier.
-> 
-> Maybe the chipset drivers should simply do PHY / SRST as they're told,
-> and have libata-core ensure PHY + SRST before doing PM detection?
+On 11/15/05, Randy.Dunlap <rdunlap@xenotime.net> wrote:
+>
+> libata-core.c, around line 1299, says:
+>
+> static inline u8 ata_dev_knobble(const struct ata_port *ap)
+> {
+>         return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(ap->device->id)));
+> }
+>
+> That's the same as this: (right?)
+>
+>         return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(ap->device[0]->id)));
+>                                                                         ~~~
+>
+> and is this intentional?
+> I.e., always using device[0] for this bridge check?
 
-Well, there is a hardware-dependent component, and a PM-dependent component.
+Yes, this is only valid for SATA (=> only primary device).
 
-Hardware:  some controller hardware cannot reliably provide the 
-signature from the post-COMRESET D2H Register FIS to the OS driver, so 
-an SRST is required in any case.
-
-PM:  The SATA PM docs clearly state in two places, that SRST should be 
-used to obtain the port multiplier signature, and from there proceed 
-with probing.
-
-Thus, if we take the docs at face value, it sounds like sata reset 
-should look like
-
-	take iface active (write 0x300 to scontrol)
-	poll sstatus for device detection
-	clear serror
-	issue srst
-	get signature
-	do useful stuff with signature
-
-That's also a bit nicer to the hardware too, for two reasons:
-* COMRESET in general is a hard reset
-* often, advanced host controllers issue COMRESET anyway, so we're 
-likely doing it twice
-
-Patches welcome ;-)  I am a bit nervous about making this change 
-globally, since some early phys may need a COMRESET kick (0x301 to 
-SControl)...  so maybe we could phase this in on the advanced 
-controllers first (libata's API permits this), and then roll it out to 
-the dumber controllers if nothing breaks.
-
-	Jeff
-
+Bartlomiej
