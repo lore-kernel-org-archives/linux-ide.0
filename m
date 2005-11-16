@@ -1,69 +1,109 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2/5] sil24: add sil24_restart_controller
-Date: Wed, 16 Nov 2005 07:20:50 -0500
-Message-ID: <437B2422.6040107@pobox.com>
-References: <20051116080244.GB22807@htj.dyndns.org>
+Subject: Re: [PATCH 3/5] sil24: use SRST for phy_reset
+Date: Wed, 16 Nov 2005 07:28:01 -0500
+Message-ID: <437B25D1.3000805@pobox.com>
+References: <20051116080505.GC22807@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:29619 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030301AbVKPMUx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 07:20:53 -0500
-In-Reply-To: <20051116080244.GB22807@htj.dyndns.org>
+Received: from mail.dvmed.net ([216.237.124.58]:32435 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030304AbVKPM2F (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 07:28:05 -0500
+In-Reply-To: <20051116080505.GC22807@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> When an error condition is raised by device via D2H FIS or SDB.  sil24
-> controller should be restarted by setting PORT_CS_INIT and waiting
-> until PORT_CS_RDY is asserted instead of resetting the controller.
-> This patch implements sil24_restart_controller for those cases.  This
-> patch also makes sure that PORT_CS_RDY is asserted on
-> sil24_reset_controller completion.
+> There seems to be no way to obtain device signature from sil24 after
+> SATA phy reset and SRST is needed anyway for later port multiplier
+> suppport.  This patch converts sil24_phy_reset to use SRST instaed.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
 > 
-> --
-> 
-> Jeff, the patch named "sil24: add constants" is 1/5 and should be
-> applied first.  Sorry.
-> 
 > Index: work/drivers/scsi/sata_sil24.c
 > ===================================================================
-> --- work.orig/drivers/scsi/sata_sil24.c	2005-11-16 16:54:10.000000000 +0900
-> +++ work/drivers/scsi/sata_sil24.c	2005-11-16 16:58:01.000000000 +0900
-> @@ -486,6 +486,31 @@ static void sil24_irq_clear(struct ata_p
->  	/* unused */
+> --- work.orig/drivers/scsi/sata_sil24.c	2005-11-16 16:58:01.000000000 +0900
+> +++ work/drivers/scsi/sata_sil24.c	2005-11-16 17:02:56.000000000 +0900
+> @@ -333,7 +333,7 @@ static struct ata_port_info sil24_port_i
+>  	{
+>  		.sht		= &sil24_sht,
+>  		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+> -				  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
+> +				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
+>  				  ATA_FLAG_PIO_DMA | SIL24_NPORTS2FLAG(4),
+>  		.pio_mask	= 0x1f,			/* pio0-4 */
+>  		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+> @@ -344,7 +344,7 @@ static struct ata_port_info sil24_port_i
+>  	{
+>  		.sht		= &sil24_sht,
+>  		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+> -				  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
+> +				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
+>  				  ATA_FLAG_PIO_DMA | SIL24_NPORTS2FLAG(2),
+>  		.pio_mask	= 0x1f,			/* pio0-4 */
+>  		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+> @@ -355,7 +355,7 @@ static struct ata_port_info sil24_port_i
+>  	{
+>  		.sht		= &sil24_sht,
+>  		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+> -				  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
+> +				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
+>  				  ATA_FLAG_PIO_DMA | SIL24_NPORTS2FLAG(1),
+>  		.pio_mask	= 0x1f,			/* pio0-4 */
+>  		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+
+This is not only OK, it is preferred, since 3124 port reset issues 
+COMRESET for us.
+
+
+> @@ -415,16 +415,69 @@ static void sil24_tf_read(struct ata_por
+>  	*tf = pp->tf;
 >  }
 >  
-> +static int __sil24_restart_controller(void __iomem *port)
+> +static int sil24_issue_SRST(struct ata_port *ap)
 > +{
-> +	u32 tmp;
+> +	void __iomem *port = (void __iomem *)ap->ioaddr.cmd_addr;
+> +	struct sil24_port_priv *pp = ap->private_data;
+> +	struct sil24_prb *prb = &pp->cmd_block[0].prb;
+> +	dma_addr_t paddr = pp->cmd_block_dma;
+> +	u32 irq_enable, irq_stat;
 > +	int cnt;
 > +
-> +	writel(PORT_CS_INIT, port + PORT_CTRL_STAT);
+> +	/* temporarily turn off IRQs during SRST */
+> +	irq_enable = readl(port + PORT_IRQ_ENABLE_SET);
+> +	writel(irq_enable, port + PORT_IRQ_ENABLE_CLR);
 > +
-> +	/* Max ~100ms */
-> +	for (cnt = 0; cnt < 1000; cnt++) {
-> +		tmp = readl(port + PORT_CTRL_STAT);
-> +		if (tmp & PORT_CS_RDY)
-> +			return 0;
-> +		udelay(100);
-> +	}
+> +	/* delay 10 ms */
+> +	udelay(10000);
+
+NAK:
+* long udelay (always NAK'd), as they chew processor and lock out other 
+things, for no reason.
+* passing 1000 or more to udelay() means you should use mdelay() instead
+* in this case, msleep() works just fine
+* I don't see why this delay is needed at all?
+
+
+> +	prb->ctrl = PRB_CTRL_SRST;
+> +	prb->fis[1] = 0; /* no PM yet */
 > +
-> +	return -1;
-> +}
+> +	writel((u32)paddr, port + PORT_CMD_ACTIVATE);
+> +
+> +	for (cnt = 0; cnt < 100; cnt++) {
+> +		irq_stat = readl(port + PORT_IRQ_STAT);
+> +		writel(irq_stat, port + PORT_IRQ_STAT);		/* clear irq */
+> +
+> +		irq_stat >>= PORT_IRQ_RAW_SHIFT;
+> +		if (irq_stat & (PORT_IRQ_COMPLETE | PORT_IRQ_ERROR))
+> +			break;
+> +
+> +		udelay(1000);
 
-NAK, this potentially soaks up an entire timer tick (~100ms).
-
-It's probably better to schedule_work(), and poll using msleep().  Or 
-you could cut the worst case down to 10ms.
-
-FWIW, I have no idea what the max is, I don't see it in the docs :(
-
-	Jeff
-
+NAK:
+* long udelay (always NAK'd)
+* passing 1000 or more to udelay() means you should use mdelay() instead
+* in this case, msleep() works just fine
 
