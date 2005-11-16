@@ -1,65 +1,102 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sil24: add constants
-Date: Wed, 16 Nov 2005 16:56:49 +0900
-Message-ID: <20051116075649.GA22807@htj.dyndns.org>
+Subject: [PATCH 2/5] sil24: add sil24_restart_controller
+Date: Wed, 16 Nov 2005 17:02:44 +0900
+Message-ID: <20051116080244.GB22807@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.197]:22214 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030213AbVKPH44 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 02:56:56 -0500
-Received: by zproxy.gmail.com with SMTP id 13so1709577nzn
-        for <linux-ide@vger.kernel.org>; Tue, 15 Nov 2005 23:56:56 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.203]:32303 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1030213AbVKPICv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 03:02:51 -0500
+Received: by zproxy.gmail.com with SMTP id 18so1631181nzp
+        for <linux-ide@vger.kernel.org>; Wed, 16 Nov 2005 00:02:50 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Adds constants for ATAPI support to sata_sil24.  This patch is
-originally from Jeff Garzik <jgarzik@pobox.com>.
+When an error condition is raised by device via D2H FIS or SDB.  sil24
+controller should be restarted by setting PORT_CS_INIT and waiting
+until PORT_CS_RDY is asserted instead of resetting the controller.
+This patch implements sil24_restart_controller for those cases.  This
+patch also makes sure that PORT_CS_RDY is asserted on
+sil24_reset_controller completion.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
+--
+
+Jeff, the patch named "sil24: add constants" is 1/5 and should be
+applied first.  Sorry.
+
 Index: work/drivers/scsi/sata_sil24.c
 ===================================================================
---- work.orig/drivers/scsi/sata_sil24.c	2005-11-16 16:40:50.000000000 +0900
-+++ work/drivers/scsi/sata_sil24.c	2005-11-16 16:54:10.000000000 +0900
-@@ -139,6 +139,7 @@ enum {
- 	PORT_CS_DEV_RST		= (1 << 1), /* device reset */
- 	PORT_CS_INIT		= (1 << 2), /* port initialize */
- 	PORT_CS_IRQ_WOC		= (1 << 3), /* interrupt write one to clear */
-+	PORT_CS_CDB16		= (1 << 5), /* 0=12b cdb, 1=16b cdb */
- 	PORT_CS_RESUME		= (1 << 6), /* port resume */
- 	PORT_CS_32BIT_ACTV	= (1 << 10), /* 32-bit activation */
- 	PORT_CS_PM_EN		= (1 << 13), /* port multiplier enable */
-@@ -188,11 +189,29 @@ enum {
- 	PORT_CERR_XFR_PCIPERR	= 35, /* PSD ecode 11 - PCI prity err during transfer */
- 	PORT_CERR_SENDSERVICE	= 36, /* FIS received while sending service */
+--- work.orig/drivers/scsi/sata_sil24.c	2005-11-16 16:54:10.000000000 +0900
++++ work/drivers/scsi/sata_sil24.c	2005-11-16 16:58:01.000000000 +0900
+@@ -486,6 +486,31 @@ static void sil24_irq_clear(struct ata_p
+ 	/* unused */
+ }
  
-+	/* bits of PRB control field */
-+	PRB_CTRL_PROTOCOL	= (1 << 0), /* override def. ATA protocol */
-+	PRB_CTRL_PACKET_READ	= (1 << 4), /* PACKET cmd read */
-+	PRB_CTRL_PACKET_WRITE	= (1 << 5), /* PACKET cmd write */
-+	PRB_CTRL_NIEN		= (1 << 6), /* Mask completion irq */
-+	PRB_CTRL_SRST		= (1 << 7), /* Soft reset request (ign BSY?) */
++static int __sil24_restart_controller(void __iomem *port)
++{
++	u32 tmp;
++	int cnt;
 +
-+	/* PRB protocol field */
-+	PRB_PROT_PACKET		= (1 << 0),
-+	PRB_PROT_TCQ		= (1 << 1),
-+	PRB_PROT_NCQ		= (1 << 2),
-+	PRB_PROT_READ		= (1 << 3),
-+	PRB_PROT_WRITE		= (1 << 4),
-+	PRB_PROT_TRANSPARENT	= (1 << 5),
++	writel(PORT_CS_INIT, port + PORT_CTRL_STAT);
 +
- 	/*
- 	 * Other constants
- 	 */
- 	SGE_TRM			= (1 << 31), /* Last SGE in chain */
--	PRB_SOFT_RST		= (1 << 7),  /* Soft reset request (ign BSY?) */
-+	SGE_LNK			= (1 << 30), /* linked list
-+						Points to SGT, not SGE */
-+	SGE_DRD			= (1 << 29), /* discard data read (/dev/null)
-+						data address ignored */
++	/* Max ~100ms */
++	for (cnt = 0; cnt < 1000; cnt++) {
++		tmp = readl(port + PORT_CTRL_STAT);
++		if (tmp & PORT_CS_RDY)
++			return 0;
++		udelay(100);
++	}
++
++	return -1;
++}
++
++static void sil24_restart_controller(struct ata_port *ap)
++{
++	if (__sil24_restart_controller((void __iomem *)ap->ioaddr.cmd_addr))
++		printk(KERN_ERR DRV_NAME
++		       " ata%u: failed to restart controller\n", ap->id);
++}
++
+ static int __sil24_reset_controller(void __iomem *port)
+ {
+ 	int cnt;
+@@ -505,7 +530,11 @@ static int __sil24_reset_controller(void
  
- 	/* board id */
- 	BID_SIL3124		= 0,
+ 	if (tmp & PORT_CS_DEV_RST)
+ 		return -1;
+-	return 0;
++
++	if (tmp & PORT_CS_RDY)
++		return 0;
++
++	return __sil24_restart_controller(port);
+ }
+ 
+ static void sil24_reset_controller(struct ata_port *ap)
+@@ -577,6 +606,7 @@ static void sil24_error_intr(struct ata_
+ 		 */
+ 		sil24_update_tf(ap);
+ 		err_mask = ac_err_mask(pp->tf.command);
++		sil24_restart_controller(ap);
+ 	} else {
+ 		/*
+ 		 * Other errors.  libata currently doesn't have any
+@@ -584,12 +614,11 @@ static void sil24_error_intr(struct ata_
+ 		 * ATA_ERR.
+ 		 */
+ 		err_mask = AC_ERR_OTHER;
++		sil24_reset_controller(ap);
+ 	}
+ 
+ 	if (qc)
+ 		ata_qc_complete(qc, err_mask);
+-
+-	sil24_reset_controller(ap);
+ }
+ 
+ static inline void sil24_host_intr(struct ata_port *ap)
