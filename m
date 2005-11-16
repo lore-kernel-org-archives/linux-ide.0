@@ -1,93 +1,128 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH/RFC] libata: honor the transfer cycle time speficied by the
- EIDE device
-Date: Wed, 16 Nov 2005 17:06:18 +0800
-Message-ID: <437AF68A.6020702@tw.ibm.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata test-unit-ready for ATAPI devices
+Date: Wed, 16 Nov 2005 19:01:17 +0900
+Message-ID: <20051116100117.GA22225@htj.dyndns.org>
+References: <20051116044841.GA11722@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:4488 "EHLO e34.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1030250AbVKPJGf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 04:06:35 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id jAG96TI9011735
-	for <linux-ide@vger.kernel.org>; Wed, 16 Nov 2005 04:06:29 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id jAG97k0i052266
-	for <linux-ide@vger.kernel.org>; Wed, 16 Nov 2005 02:07:46 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id jAG96Sdv018911
-	for <linux-ide@vger.kernel.org>; Wed, 16 Nov 2005 02:06:29 -0700
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20051116044841.GA11722@havoc.gtf.org>
+Sender: linux-scsi-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>, Vojtech Pavlik <vojtech@suse.cz>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Jeff,
+On Tue, Nov 15, 2005 at 11:48:41PM -0500, Jeff Garzik wrote:
+> 
+> The following patch clears the "I was just reset" condition from an
+> ATAPI device, and waits for it to come online, before continuing with
+> the probe.
+> 
+> Not checking this into any upstream-bound branch, as I'm not yet
+> convinced of its value.
+> 
 
-  The following code segment is not functional because the transfer cycle time speficied by 
-  the EIDE device is later overwritten by ata_timing_quantize():
+How about the following one?  It doesn't make libata wait for the
+device to become ready before trying to configure ATA stuff.  It just
+makes sr wait for the device to become ready before performing SCSI
+configuration.  Maybe both are needed?
 
-	/*
-	 * If the drive is an EIDE drive, it can tell us it needs extended
-	 * PIO/MW_DMA cycle timing.
-	 */
-	if (adev->id[ATA_ID_FIELD_VALID] & 2) {	/* EIDE drive */
-		memset(&p, 0, sizeof(p));
-		(snip)
-		ata_timing_merge(&p, t, t, ATA_TIMING_CYCLE | ATA_TIMING_CYC8B);
-               <== uninitialized "t" is used here
-	}
-
-	/*
-	 * Convert the timing to bus clock counts.
-	 */
-	ata_timing_quantize(s, t, T, UT);  <== t is overwritten by quantized s
-
-  The patch has been submitted for ide-timing.h before:
-  http://marc.theaimsgroup.com/?l=linux-ide&m=110820013425454&w=2
-  Resubmitted for libata.
-
-Changes:
-  - Minor fix to honor the following transfer cycle time speficied by the device
-    - id[65]: Minimum Multiword DMA transfer cycle time per word
-    - id[67]: Minimum PIO transfer cycle time without flow control
-    - id[68]: Minimum PIO transfer cycle time with IORDY
-
-Patch against the mainline tree
-(f6ff56cd56b83d8edf4b3cffc5c53c56b37a5081)
-For your review, thanks.
-
-Albert
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-
-=======
-
---- linux/drivers/scsi/libata-core.c	2005-11-16 16:26:39.000000000 +0800
-+++ time/drivers/scsi/libata-core.c	2005-11-16 16:30:59.000000000 +0800
-@@ -1570,11 +1570,13 @@ int ata_timing_compute(struct ata_device
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index d68cea7..9656421 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -44,6 +44,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/init.h>
+ #include <linux/blkdev.h>
++#include <linux/delay.h>
+ #include <asm/uaccess.h>
  
- 	/*
- 	 * Find the mode. 
--	*/
-+	 */
+ #include <scsi/scsi.h>
+@@ -721,14 +722,53 @@ Enomem:
+ 	goto out;
+ }
  
- 	if (!(s = ata_timing_find_mode(speed)))
- 		return -EINVAL;
- 
-+	memcpy(t, s, sizeof(*s));
+-static void get_capabilities(struct scsi_cd *cd)
++static int initial_test_unit_ready(struct scsi_cd *cd)
+ {
+-	unsigned char *buffer;
+-	struct scsi_mode_data data;
+ 	unsigned char cmd[MAX_COMMAND_SIZE];
+ 	struct scsi_sense_hdr sshdr;
+ 	unsigned int the_result;
+-	int retries, rc, n;
++	int retries = 5, becoming_ready = 0, first_becoming_ready = 1;
 +
- 	/*
- 	 * If the drive is an EIDE drive, it can tell us it needs extended
- 	 * PIO/MW_DMA cycle timing.
-@@ -1595,7 +1597,7 @@ int ata_timing_compute(struct ata_device
- 	 * Convert the timing to bus clock counts.
- 	 */
++	memset((void *)cmd, 0, MAX_COMMAND_SIZE);
++	cmd[0] = TEST_UNIT_READY;
++
++	while (--retries) {
++		the_result = scsi_execute_req (cd->device, cmd, DMA_NONE, NULL,
++					       0, &sshdr, SR_TIMEOUT,
++					       MAX_RETRIES);
++
++		if (scsi_status_is_good(the_result))
++			return 0;
++
++		if (!scsi_sense_valid(&sshdr))
++			continue;
++
++		becoming_ready = sshdr.sense_key == NOT_READY &&
++			sshdr.asc == 0x04 && sshdr.ascq == 0x01;
++
++		if (becoming_ready) {
++			if (first_becoming_ready) {
++				printk("%s: device is becoming ready, please "
++				       "be patient\n", cd->cdi.name);
++				retries = 30;	/* 15secs */
++				first_becoming_ready = 0;
++			}
++			msleep(500);
++		} else if (sshdr.sense_key != UNIT_ATTENTION)
++			break;
++	}
++
++	if (becoming_ready)
++		printk(KERN_WARNING "%s: device failed to become ready\n",
++		       cd->cdi.name);
++	return -1;
++}
++
++static void get_capabilities(struct scsi_cd *cd)
++{
++	unsigned char *buffer;
++	struct scsi_mode_data data;
++	int rc, n;
  
--	ata_timing_quantize(s, t, T, UT);
-+	ata_timing_quantize(t, t, T, UT);
+ 	static char *loadmech[] =
+ 	{
+@@ -750,23 +790,8 @@ static void get_capabilities(struct scsi
+ 		return;
+ 	}
  
- 	/*
- 	 * Even in DMA/UDMA modes we still use PIO access for IDENTIFY, S.M.A.R.T
+-	/* issue TEST_UNIT_READY until the initial startup UNIT_ATTENTION
+-	 * conditions are gone, or a timeout happens
+-	 */
+-	retries = 0;
+-	do {
+-		memset((void *)cmd, 0, MAX_COMMAND_SIZE);
+-		cmd[0] = TEST_UNIT_READY;
+-
+-		the_result = scsi_execute_req (cd->device, cmd, DMA_NONE, NULL,
+-					       0, &sshdr, SR_TIMEOUT,
+-					       MAX_RETRIES);
+-
+-		retries++;
+-	} while (retries < 5 && 
+-		 (!scsi_status_is_good(the_result) ||
+-		  (scsi_sense_valid(&sshdr) &&
+-		   sshdr.sense_key == UNIT_ATTENTION)));
++	/* test for readiness */
++	initial_test_unit_ready(cd);
+ 
+ 	/* ask for mode page 0x2a */
+ 	rc = scsi_mode_sense(cd->device, 0, 0x2a, buffer, 128,
+diff --git a/include/linux/libata.h b/include/linux/libata.h
 
