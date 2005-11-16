@@ -1,49 +1,66 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] libata error handling fixes (ATAPI)
-Date: Wed, 16 Nov 2005 16:04:05 +0100
-Message-ID: <58cb370e0511160704w4803a085h7bd6ab352d8c94e6@mail.gmail.com>
-References: <20051114195717.GA24373@havoc.gtf.org>
-	 <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com>
-	 <4379B28E.9070708@gmail.com> <4379C062.3010302@pobox.com>
-	 <20051115120016.GD7787@suse.de> <437A2814.1060308@cs.wisc.edu>
-	 <20051115184131.GJ7787@suse.de> <20051116124035.GX7787@suse.de>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 3/5] sil24: use SRST for phy_reset
+Date: Wed, 16 Nov 2005 10:03:34 -0500
+Message-ID: <437B4A46.4070501@pobox.com>
+References: <20051116080505.GC22807@htj.dyndns.org> <437B462F.80205@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.203]:61316 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030350AbVKPPEH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Nov 2005 10:04:07 -0500
-Received: by nproxy.gmail.com with SMTP id k26so348117nfc
-        for <linux-ide@vger.kernel.org>; Wed, 16 Nov 2005 07:04:06 -0800 (PST)
-In-Reply-To: <20051116124035.GX7787@suse.de>
-Content-Disposition: inline
+Received: from mail.dvmed.net ([216.237.124.58]:41140 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030357AbVKPPDl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 10:03:41 -0500
+In-Reply-To: <437B462F.80205@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-On 11/16/05, Jens Axboe <axboe@suse.de> wrote:
+Mark Lord wrote:
+> Tejun Heo wrote:
+> 
+>> There seems to be no way to obtain device signature from sil24 after
+>> SATA phy reset and SRST is needed anyway for later port multiplier
+>> suppport.  This patch converts sil24_phy_reset to use SRST instaed.
+> 
+> 
+> Mmm.. I doubt that sil24 is the only SATA controller with
+> this issue.  The sata_qstor device, for example, requires PHY reset
+> *followed* by SRST if one wants to reliably detect a port multiplier.
+> 
+> Maybe the chipset drivers should simply do PHY / SRST as they're told,
+> and have libata-core ensure PHY + SRST before doing PM detection?
 
-> I updated that patch, and converted IDE and SCSI to use it. See the
-> results here:
->
-> http://brick.kernel.dk/git/?p=linux-2.6-block.git;a=shortlog;h=blk-softirq
+Well, there is a hardware-dependent component, and a PM-dependent component.
 
-I like it but:
+Hardware:  some controller hardware cannot reliably provide the 
+signature from the post-COMRESET D2H Register FIS to the OS driver, so 
+an SRST is required in any case.
 
-* "we know it's either an FS or PC request" assumption in
-  ide_softirq_done() is really wrong
-* same with "uptodate = rq->errors"
-* blk_complete_request() is called with ide_lock hold but
-  ide_softirq_done() also takes ide_lock - is this correct?
+PM:  The SATA PM docs clearly state in two places, that SRST should be 
+used to obtain the port multiplier signature, and from there proceed 
+with probing.
 
-"There's still room for improvement, as __ide_end_request() really
-could drop the lock after getting HWGROUP->rq (why does it need to
-hold it in the first place? If ->rq access isn't serialized, we are
-screwed anyways)."
+Thus, if we take the docs at face value, it sounds like sata reset 
+should look like
 
-ide_preempt?  and yes we are screwed...
+	take iface active (write 0x300 to scontrol)
+	poll sstatus for device detection
+	clear serror
+	issue srst
+	get signature
+	do useful stuff with signature
 
-Bartlomiej
+That's also a bit nicer to the hardware too, for two reasons:
+* COMRESET in general is a hard reset
+* often, advanced host controllers issue COMRESET anyway, so we're 
+likely doing it twice
+
+Patches welcome ;-)  I am a bit nervous about making this change 
+globally, since some early phys may need a COMRESET kick (0x301 to 
+SControl)...  so maybe we could phase this in on the advanced 
+controllers first (libata's API permits this), and then roll it out to 
+the dumber controllers if nothing breaks.
+
+	Jeff
+
