@@ -1,109 +1,56 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 3/5] sil24: use SRST for phy_reset
-Date: Wed, 16 Nov 2005 07:28:01 -0500
-Message-ID: <437B25D1.3000805@pobox.com>
-References: <20051116080505.GC22807@htj.dyndns.org>
+Subject: Re: [PATCH 4/5] sil24: add ATAPI support
+Date: Wed, 16 Nov 2005 07:35:22 -0500
+Message-ID: <437B278A.6050201@pobox.com>
+References: <20051116080759.GD22807@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:32435 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030304AbVKPM2F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 07:28:05 -0500
-In-Reply-To: <20051116080505.GC22807@htj.dyndns.org>
+Received: from mail.dvmed.net ([216.237.124.58]:33971 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030306AbVKPMfZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 07:35:25 -0500
+In-Reply-To: <20051116080759.GD22807@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 Tejun Heo wrote:
-> There seems to be no way to obtain device signature from sil24 after
-> SATA phy reset and SRST is needed anyway for later port multiplier
-> suppport.  This patch converts sil24_phy_reset to use SRST instaed.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> Index: work/drivers/scsi/sata_sil24.c
-> ===================================================================
-> --- work.orig/drivers/scsi/sata_sil24.c	2005-11-16 16:58:01.000000000 +0900
-> +++ work/drivers/scsi/sata_sil24.c	2005-11-16 17:02:56.000000000 +0900
-> @@ -333,7 +333,7 @@ static struct ata_port_info sil24_port_i
->  	{
->  		.sht		= &sil24_sht,
->  		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-> -				  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
-> +				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
->  				  ATA_FLAG_PIO_DMA | SIL24_NPORTS2FLAG(4),
->  		.pio_mask	= 0x1f,			/* pio0-4 */
->  		.mwdma_mask	= 0x07,			/* mwdma0-2 */
-> @@ -344,7 +344,7 @@ static struct ata_port_info sil24_port_i
->  	{
->  		.sht		= &sil24_sht,
->  		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-> -				  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
-> +				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
->  				  ATA_FLAG_PIO_DMA | SIL24_NPORTS2FLAG(2),
->  		.pio_mask	= 0x1f,			/* pio0-4 */
->  		.mwdma_mask	= 0x07,			/* mwdma0-2 */
-> @@ -355,7 +355,7 @@ static struct ata_port_info sil24_port_i
->  	{
->  		.sht		= &sil24_sht,
->  		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-> -				  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
-> +				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
->  				  ATA_FLAG_PIO_DMA | SIL24_NPORTS2FLAG(1),
->  		.pio_mask	= 0x1f,			/* pio0-4 */
->  		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+> +	case ATA_PROT_ATAPI:
+> +	case ATA_PROT_ATAPI_DMA:
+> +	case ATA_PROT_ATAPI_NODATA:
+> +		prb = &cb->atapi.prb;
+> +		sge = cb->atapi.sge;
+> +		memset(cb->atapi.cdb, 0, 32);
+> +		memcpy(cb->atapi.cdb, qc->cdb, ap->cdb_len);
+> +
+> +		if (unlikely((ap->cdb_len == 16) ^ pp->cdb16)) {
+> +			pp->cdb16 = ap->cdb_len == 16;
+> +			if (pp->cdb16)
+> +				writel(PORT_CS_CDB16, port + PORT_CTRL_STAT);
+> +			else
+> +				writel(PORT_CS_CDB16, port + PORT_CTRL_CLR);
+> +		}
 
-This is not only OK, it is preferred, since 3124 port reset issues 
-COMRESET for us.
+NAK:
+* you should set PORT_CS_CDB16 from ->dev_config(), not needlessly test 
+inside the fast path
+* thus, no need to cache cdb16 flag.  just tell the hardware once, and 
+then everybody agrees on the correct value.
 
 
-> @@ -415,16 +415,69 @@ static void sil24_tf_read(struct ata_por
->  	*tf = pp->tf;
->  }
+> @@ -772,6 +802,9 @@ static int sil24_port_start(struct ata_p
 >  
-> +static int sil24_issue_SRST(struct ata_port *ap)
-> +{
-> +	void __iomem *port = (void __iomem *)ap->ioaddr.cmd_addr;
-> +	struct sil24_port_priv *pp = ap->private_data;
-> +	struct sil24_prb *prb = &pp->cmd_block[0].prb;
-> +	dma_addr_t paddr = pp->cmd_block_dma;
-> +	u32 irq_enable, irq_stat;
-> +	int cnt;
+>  	ap->private_data = pp;
+>  
+> +	/* default to 12byte CDB */
+> +	writel(PORT_CS_CDB16, port + PORT_CTRL_CLR);
 > +
-> +	/* temporarily turn off IRQs during SRST */
-> +	irq_enable = readl(port + PORT_IRQ_ENABLE_SET);
-> +	writel(irq_enable, port + PORT_IRQ_ENABLE_CLR);
-> +
-> +	/* delay 10 ms */
-> +	udelay(10000);
+>  	return 0;
 
-NAK:
-* long udelay (always NAK'd), as they chew processor and lock out other 
-things, for no reason.
-* passing 1000 or more to udelay() means you should use mdelay() instead
-* in this case, msleep() works just fine
-* I don't see why this delay is needed at all?
+If you set it in ->dev_config(), this should go away.
 
+	Jeff
 
-> +	prb->ctrl = PRB_CTRL_SRST;
-> +	prb->fis[1] = 0; /* no PM yet */
-> +
-> +	writel((u32)paddr, port + PORT_CMD_ACTIVATE);
-> +
-> +	for (cnt = 0; cnt < 100; cnt++) {
-> +		irq_stat = readl(port + PORT_IRQ_STAT);
-> +		writel(irq_stat, port + PORT_IRQ_STAT);		/* clear irq */
-> +
-> +		irq_stat >>= PORT_IRQ_RAW_SHIFT;
-> +		if (irq_stat & (PORT_IRQ_COMPLETE | PORT_IRQ_ERROR))
-> +			break;
-> +
-> +		udelay(1000);
-
-NAK:
-* long udelay (always NAK'd)
-* passing 1000 or more to udelay() means you should use mdelay() instead
-* in this case, msleep() works just fine
 
