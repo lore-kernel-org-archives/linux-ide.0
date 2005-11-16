@@ -1,46 +1,80 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata error handling fixes (ATAPI)
-Date: Wed, 16 Nov 2005 14:13:33 +0100
-Message-ID: <20051116131333.GA7787@suse.de>
-References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379B28E.9070708@gmail.com> <4379C062.3010302@pobox.com> <20051115120016.GD7787@suse.de> <437A2814.1060308@cs.wisc.edu> <20051115184131.GJ7787@suse.de> <20051116124035.GX7787@suse.de> <437B2C61.7080605@pobox.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2/5] sil24: add sil24_restart_controller
+Date: Wed, 16 Nov 2005 22:20:58 +0900
+Message-ID: <437B323A.7010107@gmail.com>
+References: <20051116080244.GB22807@htj.dyndns.org> <437B2422.6040107@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:4896 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S965042AbVKPNMe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 08:12:34 -0500
-Content-Disposition: inline
-In-Reply-To: <437B2C61.7080605@pobox.com>
+Received: from zproxy.gmail.com ([64.233.162.201]:11457 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1030319AbVKPNVF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 08:21:05 -0500
+Received: by zproxy.gmail.com with SMTP id 13so1768554nzn
+        for <linux-ide@vger.kernel.org>; Wed, 16 Nov 2005 05:21:04 -0800 (PST)
+In-Reply-To: <437B2422.6040107@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, Nov 16 2005, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >I updated that patch, and converted IDE and SCSI to use it. See the
-> >results here:
-> >
-> >http://brick.kernel.dk/git/?p=linux-2.6-block.git;a=shortlog;h=blk-softirq
-> >
-> >The main change from the version posted last october is killing the
-> >'slightly' overdesigned completion queue hashing.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
 > 
-> Nifty, I like.  Comments:
+>> When an error condition is raised by device via D2H FIS or SDB.  sil24
+>> controller should be restarted by setting PORT_CS_INIT and waiting
+>> until PORT_CS_RDY is asserted instead of resetting the controller.
+>> This patch implements sil24_restart_controller for those cases.  This
+>> patch also makes sure that PORT_CS_RDY is asserted on
+>> sil24_reset_controller completion.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>
+>> -- 
+>>
+>> Jeff, the patch named "sil24: add constants" is 1/5 and should be
+>> applied first.  Sorry.
+>>
+>> Index: work/drivers/scsi/sata_sil24.c
+>> ===================================================================
+>> --- work.orig/drivers/scsi/sata_sil24.c    2005-11-16 
+>> 16:54:10.000000000 +0900
+>> +++ work/drivers/scsi/sata_sil24.c    2005-11-16 16:58:01.000000000 +0900
+>> @@ -486,6 +486,31 @@ static void sil24_irq_clear(struct ata_p
+>>      /* unused */
+>>  }
+>>  
+>> +static int __sil24_restart_controller(void __iomem *port)
+>> +{
+>> +    u32 tmp;
+>> +    int cnt;
+>> +
+>> +    writel(PORT_CS_INIT, port + PORT_CTRL_STAT);
+>> +
+>> +    /* Max ~100ms */
+>> +    for (cnt = 0; cnt < 1000; cnt++) {
+>> +        tmp = readl(port + PORT_CTRL_STAT);
+>> +        if (tmp & PORT_CS_RDY)
+>> +            return 0;
+>> +        udelay(100);
+>> +    }
+>> +
+>> +    return -1;
+>> +}
 > 
-> * use of spin_lock_irq() in all completion paths now makes me nervous.
+> 
+> NAK, this potentially soaks up an entire timer tick (~100ms).
+> 
+> It's probably better to schedule_work(), and poll using msleep().  Or 
+> you could cut the worst case down to 10ms.
+> 
+> FWIW, I have no idea what the max is, I don't see it in the docs :(
+> 
 
-Should be fine from the paths originating from blk_done_softirq(), as we
-know interrupts are enabled in the first place. But generally I agree,
-whenever in doubt always always use the irq saving variants.
-
-> * certainly it's what SCSI does now, but is a softirq really necessary? 
->  Using a tasklet would kill all that per-cpu code, and notifier.
-
-It would work fine with a tasklet of course, but it's going to generate
-a _lot_ of traffic on io busy systems so I felt a dedicated softirq was
-the way to go.
+Yeap, it might consume quite some ticks.  So did 
+sili24_reset_controller.  I almost infinitely prefer to take all these 
+resume/reset/request sense stuff into EH thread rather than using 
+separate mechanism.  No?
 
 -- 
-Jens Axboe
-
+tejun
