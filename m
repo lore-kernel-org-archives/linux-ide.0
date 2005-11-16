@@ -1,102 +1,131 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/5] sil24: add sil24_restart_controller
-Date: Wed, 16 Nov 2005 17:02:44 +0900
-Message-ID: <20051116080244.GB22807@htj.dyndns.org>
+Subject: [PATCH 3/5] sil24: use SRST for phy_reset
+Date: Wed, 16 Nov 2005 17:05:05 +0900
+Message-ID: <20051116080505.GC22807@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.203]:32303 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030213AbVKPICv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 03:02:51 -0500
-Received: by zproxy.gmail.com with SMTP id 18so1631181nzp
-        for <linux-ide@vger.kernel.org>; Wed, 16 Nov 2005 00:02:50 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.194]:58944 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1030211AbVKPIFM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 03:05:12 -0500
+Received: by zproxy.gmail.com with SMTP id 13so1710744nzn
+        for <linux-ide@vger.kernel.org>; Wed, 16 Nov 2005 00:05:12 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-When an error condition is raised by device via D2H FIS or SDB.  sil24
-controller should be restarted by setting PORT_CS_INIT and waiting
-until PORT_CS_RDY is asserted instead of resetting the controller.
-This patch implements sil24_restart_controller for those cases.  This
-patch also makes sure that PORT_CS_RDY is asserted on
-sil24_reset_controller completion.
+There seems to be no way to obtain device signature from sil24 after
+SATA phy reset and SRST is needed anyway for later port multiplier
+suppport.  This patch converts sil24_phy_reset to use SRST instaed.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
---
-
-Jeff, the patch named "sil24: add constants" is 1/5 and should be
-applied first.  Sorry.
-
 Index: work/drivers/scsi/sata_sil24.c
 ===================================================================
---- work.orig/drivers/scsi/sata_sil24.c	2005-11-16 16:54:10.000000000 +0900
-+++ work/drivers/scsi/sata_sil24.c	2005-11-16 16:58:01.000000000 +0900
-@@ -486,6 +486,31 @@ static void sil24_irq_clear(struct ata_p
- 	/* unused */
+--- work.orig/drivers/scsi/sata_sil24.c	2005-11-16 16:58:01.000000000 +0900
++++ work/drivers/scsi/sata_sil24.c	2005-11-16 17:02:56.000000000 +0900
+@@ -333,7 +333,7 @@ static struct ata_port_info sil24_port_i
+ 	{
+ 		.sht		= &sil24_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
++				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
+ 				  ATA_FLAG_PIO_DMA | SIL24_NPORTS2FLAG(4),
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+@@ -344,7 +344,7 @@ static struct ata_port_info sil24_port_i
+ 	{
+ 		.sht		= &sil24_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
++				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
+ 				  ATA_FLAG_PIO_DMA | SIL24_NPORTS2FLAG(2),
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+@@ -355,7 +355,7 @@ static struct ata_port_info sil24_port_i
+ 	{
+ 		.sht		= &sil24_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
++				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
+ 				  ATA_FLAG_PIO_DMA | SIL24_NPORTS2FLAG(1),
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+@@ -415,16 +415,69 @@ static void sil24_tf_read(struct ata_por
+ 	*tf = pp->tf;
  }
  
-+static int __sil24_restart_controller(void __iomem *port)
++static int sil24_issue_SRST(struct ata_port *ap)
 +{
-+	u32 tmp;
++	void __iomem *port = (void __iomem *)ap->ioaddr.cmd_addr;
++	struct sil24_port_priv *pp = ap->private_data;
++	struct sil24_prb *prb = &pp->cmd_block[0].prb;
++	dma_addr_t paddr = pp->cmd_block_dma;
++	u32 irq_enable, irq_stat;
 +	int cnt;
 +
-+	writel(PORT_CS_INIT, port + PORT_CTRL_STAT);
++	/* temporarily turn off IRQs during SRST */
++	irq_enable = readl(port + PORT_IRQ_ENABLE_SET);
++	writel(irq_enable, port + PORT_IRQ_ENABLE_CLR);
 +
-+	/* Max ~100ms */
-+	for (cnt = 0; cnt < 1000; cnt++) {
-+		tmp = readl(port + PORT_CTRL_STAT);
-+		if (tmp & PORT_CS_RDY)
-+			return 0;
-+		udelay(100);
++	/* delay 10 ms */
++	udelay(10000);
++
++	prb->ctrl = PRB_CTRL_SRST;
++	prb->fis[1] = 0; /* no PM yet */
++
++	writel((u32)paddr, port + PORT_CMD_ACTIVATE);
++
++	for (cnt = 0; cnt < 100; cnt++) {
++		irq_stat = readl(port + PORT_IRQ_STAT);
++		writel(irq_stat, port + PORT_IRQ_STAT);		/* clear irq */
++
++		irq_stat >>= PORT_IRQ_RAW_SHIFT;
++		if (irq_stat & (PORT_IRQ_COMPLETE | PORT_IRQ_ERROR))
++			break;
++
++		udelay(1000);
 +	}
 +
-+	return -1;
++	/* restore IRQs */
++	writel(irq_enable, port + PORT_IRQ_ENABLE_SET);
++
++	if (!(irq_stat & PORT_IRQ_COMPLETE))
++		return -1;
++
++	/* update TF */
++	sil24_update_tf(ap);
++	return 0;
 +}
 +
-+static void sil24_restart_controller(struct ata_port *ap)
-+{
-+	if (__sil24_restart_controller((void __iomem *)ap->ioaddr.cmd_addr))
-+		printk(KERN_ERR DRV_NAME
-+		       " ata%u: failed to restart controller\n", ap->id);
-+}
-+
- static int __sil24_reset_controller(void __iomem *port)
+ static void sil24_phy_reset(struct ata_port *ap)
  {
- 	int cnt;
-@@ -505,7 +530,11 @@ static int __sil24_reset_controller(void
- 
- 	if (tmp & PORT_CS_DEV_RST)
- 		return -1;
--	return 0;
++	struct sil24_port_priv *pp = ap->private_data;
 +
-+	if (tmp & PORT_CS_RDY)
-+		return 0;
+ 	__sata_phy_reset(ap);
+-	/*
+-	 * No ATAPI yet.  Just unconditionally indicate ATA device.
+-	 * If ATAPI device is attached, it will fail ATA_CMD_ID_ATA
+-	 * and libata core will ignore the device.
+-	 */
+-	if (!(ap->flags & ATA_FLAG_PORT_DISABLED))
+-		ap->device[0].class = ATA_DEV_ATA;
++	if (ap->flags & ATA_FLAG_PORT_DISABLED)
++		return;
 +
-+	return __sil24_restart_controller(port);
++	if (sil24_issue_SRST(ap) < 0) {
++		printk(KERN_ERR DRV_NAME
++		       " ata%u: SRST failed, disabling port\n", ap->id);
++		ap->ops->port_disable(ap);
++		return;
++	}
++
++	ap->device->class = ata_dev_classify(&pp->tf);
++
++	/* No ATAPI yet */
++	if (ap->device->class == ATA_DEV_ATAPI)
++		ap->ops->port_disable(ap);
  }
  
- static void sil24_reset_controller(struct ata_port *ap)
-@@ -577,6 +606,7 @@ static void sil24_error_intr(struct ata_
- 		 */
- 		sil24_update_tf(ap);
- 		err_mask = ac_err_mask(pp->tf.command);
-+		sil24_restart_controller(ap);
- 	} else {
- 		/*
- 		 * Other errors.  libata currently doesn't have any
-@@ -584,12 +614,11 @@ static void sil24_error_intr(struct ata_
- 		 * ATA_ERR.
- 		 */
- 		err_mask = AC_ERR_OTHER;
-+		sil24_reset_controller(ap);
- 	}
- 
- 	if (qc)
- 		ata_qc_complete(qc, err_mask);
--
--	sil24_reset_controller(ap);
- }
- 
- static inline void sil24_host_intr(struct ata_port *ap)
+ static inline void sil24_fill_sg(struct ata_queued_cmd *qc,
