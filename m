@@ -1,90 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2/5] sil24: add sil24_restart_controller
-Date: Wed, 16 Nov 2005 08:34:47 -0500
-Message-ID: <437B3577.60902@pobox.com>
-References: <20051116080244.GB22807@htj.dyndns.org> <437B2422.6040107@pobox.com> <437B323A.7010107@gmail.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] libata error handling fixes (ATAPI)
+Date: Wed, 16 Nov 2005 14:47:11 +0100
+Message-ID: <20051116134711.GC7787@suse.de>
+References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379B28E.9070708@gmail.com> <4379C062.3010302@pobox.com> <20051115120016.GD7787@suse.de> <437A2814.1060308@cs.wisc.edu> <20051115184131.GJ7787@suse.de> <20051116124035.GX7787@suse.de> <437B34C9.8050105@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:59315 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030331AbVKPNex (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 08:34:53 -0500
-In-Reply-To: <437B323A.7010107@gmail.com>
+Received: from ns.virtualhost.dk ([195.184.98.160]:63801 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1030319AbVKPNqT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 08:46:19 -0500
+Content-Disposition: inline
+In-Reply-To: <437B34C9.8050105@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
+On Wed, Nov 16 2005, Jeff Garzik wrote:
+> Jens Axboe wrote:
+> >I updated that patch, and converted IDE and SCSI to use it. See the
+> >results here:
+> >
+> >http://brick.kernel.dk/git/?p=linux-2.6-block.git;a=shortlog;h=blk-softirq
+> >
+> >The main change from the version posted last october is killing the
+> >'slightly' overdesigned completion queue hashing.
 > 
->> Tejun Heo wrote:
->>
->>> When an error condition is raised by device via D2H FIS or SDB.  sil24
->>> controller should be restarted by setting PORT_CS_INIT and waiting
->>> until PORT_CS_RDY is asserted instead of resetting the controller.
->>> This patch implements sil24_restart_controller for those cases.  This
->>> patch also makes sure that PORT_CS_RDY is asserted on
->>> sil24_reset_controller completion.
->>>
->>> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>>
->>> -- 
->>>
->>> Jeff, the patch named "sil24: add constants" is 1/5 and should be
->>> applied first.  Sorry.
->>>
->>> Index: work/drivers/scsi/sata_sil24.c
->>> ===================================================================
->>> --- work.orig/drivers/scsi/sata_sil24.c    2005-11-16 
->>> 16:54:10.000000000 +0900
->>> +++ work/drivers/scsi/sata_sil24.c    2005-11-16 16:58:01.000000000 
->>> +0900
->>> @@ -486,6 +486,31 @@ static void sil24_irq_clear(struct ata_p
->>>      /* unused */
->>>  }
->>>  
->>> +static int __sil24_restart_controller(void __iomem *port)
->>> +{
->>> +    u32 tmp;
->>> +    int cnt;
->>> +
->>> +    writel(PORT_CS_INIT, port + PORT_CTRL_STAT);
->>> +
->>> +    /* Max ~100ms */
->>> +    for (cnt = 0; cnt < 1000; cnt++) {
->>> +        tmp = readl(port + PORT_CTRL_STAT);
->>> +        if (tmp & PORT_CS_RDY)
->>> +            return 0;
->>> +        udelay(100);
->>> +    }
->>> +
->>> +    return -1;
->>> +}
->>
->>
->>
->> NAK, this potentially soaks up an entire timer tick (~100ms).
->>
->> It's probably better to schedule_work(), and poll using msleep().  Or 
->> you could cut the worst case down to 10ms.
->>
->> FWIW, I have no idea what the max is, I don't see it in the docs :(
->>
-> 
-> Yeap, it might consume quite some ticks.  So did 
-> sili24_reset_controller.  I almost infinitely prefer to take all these 
-> resume/reset/request sense stuff into EH thread rather than using 
-> separate mechanism.  No?
+> Oh yeah:  you shouldn't need to make scsi_retry_command() exported. 
+> It's private to scsi, to just publish it in scsi_priv.h.
 
-Well, I clearly like autosensing over doing it in the EH thread.  :)
+Oh right, I'll make that change. Thanks!
 
-But in general, as long as its done in a way that is maintainable across 
-all drivers that implement ->eng_timeout, I am definitely open to 
-approaches using the EH thread.  The concept of the EH thread should 
-continue to exist even after SCSI is made optional.
+> Tangent:  As part of my libata work, I'm thinking about un-exporting 
+> scsi_finish_command(), and instead exporting scsi_eh_flush_done_q() and 
+> scsi_eh_finish_cmd().
 
-	Jeff
+Sounds ok.
 
+-- 
+Jens Axboe
 
