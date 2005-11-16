@@ -1,42 +1,31 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata error handling fixes (ATAPI)
-Date: Wed, 16 Nov 2005 14:47:11 +0100
-Message-ID: <20051116134711.GC7787@suse.de>
-References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379B28E.9070708@gmail.com> <4379C062.3010302@pobox.com> <20051115120016.GD7787@suse.de> <437A2814.1060308@cs.wisc.edu> <20051115184131.GJ7787@suse.de> <20051116124035.GX7787@suse.de> <437B34C9.8050105@pobox.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 3/5] sil24: use SRST for phy_reset
+Date: Wed, 16 Nov 2005 09:46:07 -0500
+Message-ID: <437B462F.80205@rtr.ca>
+References: <20051116080505.GC22807@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:63801 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1030319AbVKPNqT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 08:46:19 -0500
-Content-Disposition: inline
-In-Reply-To: <437B34C9.8050105@pobox.com>
+Received: from rtr.ca ([64.26.128.89]:48557 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1030350AbVKPOqI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 09:46:08 -0500
+In-Reply-To: <20051116080505.GC22807@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Wed, Nov 16 2005, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >I updated that patch, and converted IDE and SCSI to use it. See the
-> >results here:
-> >
-> >http://brick.kernel.dk/git/?p=linux-2.6-block.git;a=shortlog;h=blk-softirq
-> >
-> >The main change from the version posted last october is killing the
-> >'slightly' overdesigned completion queue hashing.
-> 
-> Oh yeah:  you shouldn't need to make scsi_retry_command() exported. 
-> It's private to scsi, to just publish it in scsi_priv.h.
+Tejun Heo wrote:
+> There seems to be no way to obtain device signature from sil24 after
+> SATA phy reset and SRST is needed anyway for later port multiplier
+> suppport.  This patch converts sil24_phy_reset to use SRST instaed.
 
-Oh right, I'll make that change. Thanks!
+Mmm.. I doubt that sil24 is the only SATA controller with
+this issue.  The sata_qstor device, for example, requires PHY reset
+*followed* by SRST if one wants to reliably detect a port multiplier.
 
-> Tangent:  As part of my libata work, I'm thinking about un-exporting 
-> scsi_finish_command(), and instead exporting scsi_eh_flush_done_q() and 
-> scsi_eh_finish_cmd().
+Maybe the chipset drivers should simply do PHY / SRST as they're told,
+and have libata-core ensure PHY + SRST before doing PM detection?
 
-Sounds ok.
-
--- 
-Jens Axboe
-
+Cheers
