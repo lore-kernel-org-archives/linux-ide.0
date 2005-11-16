@@ -1,127 +1,55 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 3/5] sil24: use SRST for phy_reset
-Date: Wed, 16 Nov 2005 22:24:01 +0900
-Message-ID: <437B32F1.6000103@gmail.com>
-References: <20051116080505.GC22807@htj.dyndns.org> <437B25D1.3000805@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata error handling fixes (ATAPI)
+Date: Wed, 16 Nov 2005 08:23:49 -0500
+Message-ID: <437B32E5.5030707@pobox.com>
+References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379B28E.9070708@gmail.com> <4379C062.3010302@pobox.com> <20051115120016.GD7787@suse.de> <437A2814.1060308@cs.wisc.edu> <20051115184131.GJ7787@suse.de> <20051116124035.GX7787@suse.de> <437B2C61.7080605@pobox.com> <20051116131333.GA7787@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.206]:59399 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030322AbVKPNYK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 08:24:10 -0500
-Received: by zproxy.gmail.com with SMTP id 14so1856473nzn
-        for <linux-ide@vger.kernel.org>; Wed, 16 Nov 2005 05:24:09 -0800 (PST)
-In-Reply-To: <437B25D1.3000805@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:51891 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030321AbVKPNYD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 08:24:03 -0500
+In-Reply-To: <20051116131333.GA7787@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
+Jens Axboe wrote:
+> On Wed, Nov 16 2005, Jeff Garzik wrote:
 > 
->> There seems to be no way to obtain device signature from sil24 after
->> SATA phy reset and SRST is needed anyway for later port multiplier
->> suppport.  This patch converts sil24_phy_reset to use SRST instaed.
+>>Jens Axboe wrote:
 >>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>>I updated that patch, and converted IDE and SCSI to use it. See the
+>>>results here:
+>>>
+>>>http://brick.kernel.dk/git/?p=linux-2.6-block.git;a=shortlog;h=blk-softirq
+>>>
+>>>The main change from the version posted last october is killing the
+>>>'slightly' overdesigned completion queue hashing.
 >>
->> Index: work/drivers/scsi/sata_sil24.c
->> ===================================================================
->> --- work.orig/drivers/scsi/sata_sil24.c    2005-11-16 
->> 16:58:01.000000000 +0900
->> +++ work/drivers/scsi/sata_sil24.c    2005-11-16 17:02:56.000000000 +0900
->> @@ -333,7 +333,7 @@ static struct ata_port_info sil24_port_i
->>      {
->>          .sht        = &sil24_sht,
->>          .host_flags    = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
->> -                  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
->> +                  ATA_FLAG_SRST | ATA_FLAG_MMIO |
->>                    ATA_FLAG_PIO_DMA | SIL24_NPORTS2FLAG(4),
->>          .pio_mask    = 0x1f,            /* pio0-4 */
->>          .mwdma_mask    = 0x07,            /* mwdma0-2 */
->> @@ -344,7 +344,7 @@ static struct ata_port_info sil24_port_i
->>      {
->>          .sht        = &sil24_sht,
->>          .host_flags    = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
->> -                  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
->> +                  ATA_FLAG_SRST | ATA_FLAG_MMIO |
->>                    ATA_FLAG_PIO_DMA | SIL24_NPORTS2FLAG(2),
->>          .pio_mask    = 0x1f,            /* pio0-4 */
->>          .mwdma_mask    = 0x07,            /* mwdma0-2 */
->> @@ -355,7 +355,7 @@ static struct ata_port_info sil24_port_i
->>      {
->>          .sht        = &sil24_sht,
->>          .host_flags    = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
->> -                  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
->> +                  ATA_FLAG_SRST | ATA_FLAG_MMIO |
->>                    ATA_FLAG_PIO_DMA | SIL24_NPORTS2FLAG(1),
->>          .pio_mask    = 0x1f,            /* pio0-4 */
->>          .mwdma_mask    = 0x07,            /* mwdma0-2 */
+>>Nifty, I like.  Comments:
+>>
+>>* use of spin_lock_irq() in all completion paths now makes me nervous.
 > 
 > 
-> This is not only OK, it is preferred, since 3124 port reset issues 
-> COMRESET for us.
+> Should be fine from the paths originating from blk_done_softirq(), as we
+> know interrupts are enabled in the first place. But generally I agree,
+> whenever in doubt always always use the irq saving variants.
 > 
 > 
->> @@ -415,16 +415,69 @@ static void sil24_tf_read(struct ata_por
->>      *tf = pp->tf;
->>  }
->>  
->> +static int sil24_issue_SRST(struct ata_port *ap)
->> +{
->> +    void __iomem *port = (void __iomem *)ap->ioaddr.cmd_addr;
->> +    struct sil24_port_priv *pp = ap->private_data;
->> +    struct sil24_prb *prb = &pp->cmd_block[0].prb;
->> +    dma_addr_t paddr = pp->cmd_block_dma;
->> +    u32 irq_enable, irq_stat;
->> +    int cnt;
->> +
->> +    /* temporarily turn off IRQs during SRST */
->> +    irq_enable = readl(port + PORT_IRQ_ENABLE_SET);
->> +    writel(irq_enable, port + PORT_IRQ_ENABLE_CLR);
->> +
->> +    /* delay 10 ms */
->> +    udelay(10000);
+>>* certainly it's what SCSI does now, but is a softirq really necessary? 
+>> Using a tasklet would kill all that per-cpu code, and notifier.
 > 
 > 
-> NAK:
-> * long udelay (always NAK'd), as they chew processor and lock out other 
-> things, for no reason.
-> * passing 1000 or more to udelay() means you should use mdelay() instead
-> * in this case, msleep() works just fine
-> * I don't see why this delay is needed at all?
-> 
+> It would work fine with a tasklet of course, but it's going to generate
+> a _lot_ of traffic on io busy systems so I felt a dedicated softirq was
+> the way to go.
 
-The delay is from the original driver and I wasn't really sure whether 
-we're allowed to sleep in phy_reset handlers.  IIRC, it didn't use to. 
-I'll convert it to msleep.
+fair enough.  ACK.
 
-> 
->> +    prb->ctrl = PRB_CTRL_SRST;
->> +    prb->fis[1] = 0; /* no PM yet */
->> +
->> +    writel((u32)paddr, port + PORT_CMD_ACTIVATE);
->> +
->> +    for (cnt = 0; cnt < 100; cnt++) {
->> +        irq_stat = readl(port + PORT_IRQ_STAT);
->> +        writel(irq_stat, port + PORT_IRQ_STAT);        /* clear irq */
->> +
->> +        irq_stat >>= PORT_IRQ_RAW_SHIFT;
->> +        if (irq_stat & (PORT_IRQ_COMPLETE | PORT_IRQ_ERROR))
->> +            break;
->> +
->> +        udelay(1000);
-> 
-> 
-> NAK:
-> * long udelay (always NAK'd)
-> * passing 1000 or more to udelay() means you should use mdelay() instead
-> * in this case, msleep() works just fine
-> 
+	Jeff
 
-ditto.
 
--- 
-tejun
+
