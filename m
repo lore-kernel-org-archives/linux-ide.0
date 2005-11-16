@@ -1,62 +1,85 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 5/5] sil24:  make error_intr less verbose
-Date: Wed, 16 Nov 2005 07:38:52 -0500
-Message-ID: <437B285C.8020809@pobox.com>
-References: <20051116080935.GE22807@htj.dyndns.org>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] libata error handling fixes (ATAPI)
+Date: Wed, 16 Nov 2005 13:40:36 +0100
+Message-ID: <20051116124035.GX7787@suse.de>
+References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379B28E.9070708@gmail.com> <4379C062.3010302@pobox.com> <20051115120016.GD7787@suse.de> <437A2814.1060308@cs.wisc.edu> <20051115184131.GJ7787@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:36787 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750740AbVKPMiz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2005 07:38:55 -0500
-In-Reply-To: <20051116080935.GE22807@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750740AbVKPMjj@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20051115184131.GJ7787@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> sil24_error_intr is too verbose.  Shut it up.
+On Tue, Nov 15 2005, Jens Axboe wrote:
+> On Tue, Nov 15 2005, Mike Christie wrote:
+> > Jens Axboe wrote:
+> > >On Tue, Nov 15 2005, Jeff Garzik wrote:
+> > >
+> > >>>For departure of libata from SCSI, I was thinking more of another more 
+> > >>>generic block device framework in which libata can live in.  And I 
+> > >>>thought that it was reasonable to assume that the framework would supply 
+> > >>>a EH mechanism which supports queue stalling/draining and separate 
+> > >>>thread.  So, my EH patches tried to make the same environment for libata 
+> > >>
+> > >>A big reason why libata uses the SCSI layer is infrastructure like this. 
+> > >>It would certainly be nice to see timeouts and EH at the block layer. 
+> > >>The block layer itself already supports queue stalling/draining.
+> > >
+> > >
+> > >I have a pretty simple plan for this:
+> > >
+> > >- Add a timer to struct request. It already has a timeout field for
+> > >  SG_IO originated requests, we could easily utilize this in general.
+> > >  I'm not sure how the querying of timeout would happen so far, it would
+> > >  probably require a q->set_rq_timeout() hook to ask the low level
+> > >  driver to set/return rq->timeout for a given request.
+> > >
+> > >- Add a timeout hook to struct request_queue that would get invoked from
+> > >  the timeout handler. Something along the lines of:
+> > >
+> > >        - Timeout on a request happens. Freeze the queue and use
+> > >          kblockd to take the actual timeout into process context, where
+> > >          we call the queue ->rq_timeout() hook. Unfreeze/reschedule
+> > >          queue operations based on what the ->rq_timeout() hook tells
+> > >          us.
+> > >
+> > >That is generic enough to be able to arm the timeout automatically from
+> > >->elevator_activate_req_fn() and dearm it when it completes or gets
+> > >deactivated. It should also be possible to implement the SCSI error
+> > >handling on top of that.
+> > >
+> > 
+> > To disable the timeout would you then have scsi_done call a block layer 
+> > function to disarm it then follow the current flow where or do you think 
+> > it would be nice to move the scsi softirq code up to block layer. So 
+> > scsi_done would call a block layer function that would disarm the timer, 
+> > add the request to a block layer softirq list (a list like scsi-ml's 
+> > scsi_done_q), and then in the block layer softirq function it could call 
+> > a request_queue callout which for scsi-ml's device queue would call 
+> > scsi_decide_disposition and return if it wanted the request requeued or 
+> > how many sectors completed or to kick off the eh. I had stated on this 
+> > for my block layer multipath driver, but can seperate the patches if 
+> > this would be useful.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Yeah, that was part of my plan as well. I did post such a patch a year
+> or so ago, in a thread about decreasing ide completion latencies.
 > 
-> Index: work/drivers/scsi/sata_sil24.c
-> ===================================================================
-> --- work.orig/drivers/scsi/sata_sil24.c	2005-11-16 17:05:19.000000000 +0900
-> +++ work/drivers/scsi/sata_sil24.c	2005-11-16 17:08:05.000000000 +0900
-> @@ -678,9 +678,9 @@ static void sil24_error_intr(struct ata_
->  	if (serror)
->  		writel(serror, port + PORT_SERROR);
->  
-> -	printk(KERN_ERR DRV_NAME " ata%u: error interrupt on port%d\n"
-> -	       "  stat=0x%x irq=0x%x cmd_err=%d sstatus=0x%x serror=0x%x\n",
-> -	       ap->id, ap->port_no, slot_stat, irq_stat, cmd_err, sstatus, serror);
-> +	DPRINTK("ata%u: error interrupt on port%d\n"
-> +		"  stat=0x%x irq=0x%x cmd_err=%d sstatus=0x%x serror=0x%x\n",
-> +		ap->id, ap->port_no, slot_stat, irq_stat, cmd_err, sstatus, serror);
+> > Would ide benefit from running from a softirq and would it be able to 
+> > use such a thing?
+> 
+> It's generally useful as it allows lock free completion from the irq
+> path, so that's goodness.
 
-Mild NAK.
+I updated that patch, and converted IDE and SCSI to use it. See the
+results here:
 
-I am grappling with this on AHCI too :)  This is because ATA_ERR is much 
-more common on ATAPI, yes?
+http://brick.kernel.dk/git/?p=linux-2.6-block.git;a=shortlog;h=blk-softirq
 
-My preferred change would be
+The main change from the version posted last october is killing the
+'slightly' overdesigned completion queue hashing.
 
-	if ((class != ATA_DEV_ATAPI) ||
-	    (sil24_cmd_err > PORT_CERR_SDB))
-		printk()
-
-so that truly uncommon errors are always printed, but users logs are not 
-spammed.
-
-Another option is to do
-
-	if (ata_ratelimit())
-		printk()
-
-Regards,
-
-	Jeff
-
-
+-- 
+Jens Axboe
