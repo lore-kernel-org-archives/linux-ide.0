@@ -1,132 +1,147 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH 5/5] sil24:  make error_intr less verbose
-Date: Thu, 17 Nov 2005 11:03:57 +0800
-Message-ID: <437BF31D.8010600@tw.ibm.com>
-References: <20051116080935.GE22807@htj.dyndns.org> <437B285C.8020809@pobox.com>
+From: "James O. Rose, III" <james.o.rose@gmail.com>
+Subject: Re: sata_sil24 test support
+Date: Wed, 16 Nov 2005 23:51:30 -0600
+Message-ID: <200511162351.30872.james.o.rose@gmail.com>
+References: <46377.137.32.101.32.1132172329.squirrel@www.stubbornroses.com> <437C0F2D.1000406@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:61571 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1161089AbVKQDEM
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Nov 2005 22:04:12 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e32.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id jAH34BYT025524
-	for <linux-ide@vger.kernel.org>; Wed, 16 Nov 2005 22:04:11 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id jAH35Sie062890
-	for <linux-ide@vger.kernel.org>; Wed, 16 Nov 2005 20:05:28 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id jAH34BXP028086
-	for <linux-ide@vger.kernel.org>; Wed, 16 Nov 2005 20:04:11 -0700
-In-Reply-To: <437B285C.8020809@pobox.com>
+Received: from mxsf23.cluster1.charter.net ([209.225.28.223]:27073 "EHLO
+	mxsf23.cluster1.charter.net") by vger.kernel.org with ESMTP
+	id S932481AbVKQFvg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Nov 2005 00:51:36 -0500
+Received: from mxip20a.cluster1.charter.net (mxip20a.cluster1.charter.net [209.225.28.150])
+	by mxsf23.cluster1.charter.net (8.12.11/8.12.11) with ESMTP id jAH5pWPq024358
+	for <linux-ide@vger.kernel.org>; Thu, 17 Nov 2005 00:51:34 -0500
+In-Reply-To: <437C0F2D.1000406@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
+On Wednesday 16 November 2005 11:03 pm, you wrote:
+
+I'm keeping this mail intact for reference on linux-ide.
+
+> James Rose wrote:
+> > Mr. Heo:
+> > 
+> > I have a couple of questions regarding the sata_sil24 driver, and 
+I would
+> > also like to offer up some test support.
+> > 
+> > I'm by no means any kind of kernel hacker and only have a 
+rudimentary
+> > understanding of C at best, so I can't provide any code help.  I 
+am
+> > interested in running whatever tests you think could help you with 
+the
+> > driver development.  This box is basically not doing anything, so 
+I can
+> > run automated testing for days at a time.
+> > 
+> > Here's my h/w specs:
+> > --------------------
+> > Intel SE7620AF2 Motherboard
+> > Dual XEON 3.2 GHz with HyperThreading
+> > 4 Gig Memory
+> > Silicon Image 3124
+> > Silicon Image 3132
+> > Rancho Technologies MiniStor 3 (Silicon Image 3726 Port Multiplier 
+Chip)
+> > with 4 100GB Hitachi Travelstar SATA Drives
+> > SteelVine 2000 (Silicon Image 3726 Port Port Multiplier Chip) with 
+5 400GB
+> > Hitachi SATA Drives
+> > Various External 500G SATA2 Drives
+> > 
+> > NOTE: All the hard drives are essentially blank, and can be set up 
+as
+> > RAID/LVM/Whatever, on a per test basis.
+> > 
+> > Here's my s/w specs:
+> > --------------------
+> > kernel 2.6.15rc1-netdev
+> > Debian Sarge for x86 (with udev v0.056-3) [I'm working on getting 
+64 bit
+> > working as well, I'm just not there yet].
+> > 
+> > I regret I'm unable to provide any kind of shell access (corporate
+> > firewall), but I will happily run whatever you think can help.  
+I'm very
+> > interested in seeing a fully functional (if it already is, my 
+apologies. 
+> > I need to figure out some stuff still) driver released into the 
+kernel.
+> > 
+> > I'll happily provide lspci's, .configs, etc. upon request.
 > 
->> sil24_error_intr is too verbose.  Shut it up.
->>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>
->> Index: work/drivers/scsi/sata_sil24.c
->> ===================================================================
->> --- work.orig/drivers/scsi/sata_sil24.c    2005-11-16
->> 17:05:19.000000000 +0900
->> +++ work/drivers/scsi/sata_sil24.c    2005-11-16 17:08:05.000000000 +0900
->> @@ -678,9 +678,9 @@ static void sil24_error_intr(struct ata_
->>      if (serror)
->>          writel(serror, port + PORT_SERROR);
->>  
->> -    printk(KERN_ERR DRV_NAME " ata%u: error interrupt on port%d\n"
->> -           "  stat=0x%x irq=0x%x cmd_err=%d sstatus=0x%x serror=0x%x\n",
->> -           ap->id, ap->port_no, slot_stat, irq_stat, cmd_err,
->> sstatus, serror);
->> +    DPRINTK("ata%u: error interrupt on port%d\n"
->> +        "  stat=0x%x irq=0x%x cmd_err=%d sstatus=0x%x serror=0x%x\n",
->> +        ap->id, ap->port_no, slot_stat, irq_stat, cmd_err, sstatus,
->> serror);
+> One thing I wanna verify on sil24 is data integrity with multiple 
+disks 
+> attached.  It would be very helpful if you can do some parallel data 
+> stress testing with multiple disks.
 > 
+> * Parallel 'badblocks -w -t random' on all attached disks.  Maybe 
+repeat 
+> it for a few days and verify no corrupted IO occurs.
 > 
-> Mild NAK.
-> 
-> I am grappling with this on AHCI too :)  This is because ATA_ERR is much
-> more common on ATAPI, yes?
-> 
-> My preferred change would be
-> 
->     if ((class != ATA_DEV_ATAPI) ||
->         (sil24_cmd_err > PORT_CERR_SDB))
->         printk()
-> 
-> so that truly uncommon errors are always printed, but users logs are not
-> spammed.
-> 
-> Another option is to do
-> 
->     if (ata_ratelimit())
->         printk()
+> * Create a random 2G or 4G file on a disk (dd if=/dev/urandom 
+> of=testfile bs=1M count=4K) and parallely fill all disks with the 
+file 
+> (for ((i=0;i<20;i++)); do cp testfile /mnt/sdx/testfile$i; done).  
+After 
+> disks are filled, calculate md5sum of all copies and verify that 
+they 
+> haven't corrupted.  Repeat for a few days.
 > 
 
-The "PIO error" messages from ata_pio_error() are also noisy for ATAPI devices.
+Thanks for getting back to me on this.  I'll try to set something up 
+tomorrow.  BTW, is there any particular filesystem you'd prefer I 
+test on (at least initially)?  I've currently got ext3 compiled in, 
+but I can reconfigure to whatever.  I'll send results as I get them.
 
-Ex.
-scsi278 : pata_pdc2027x
-  Vendor: ASUS      Model: CRW-5232AS        Rev: 1.02
-  Type:   CD-ROM                             ANSI SCSI revision: 05
-Attached scsi generic sg3 at scsi277, channel 0, id 0, lun 0,  type 5
-ata1: PIO error, drv_stat 0x51  <==
-  Vendor: BENQ      Model: DVD DD DW1620     Rev: B7T9
-  Type:   CD-ROM                             ANSI SCSI revision: 05
-ata1: PIO error, drv_stat 0x51  <==
-ata1: PIO error, drv_stat 0x51  <==
-sr0: scsi3-mmc drive: 40x/40x writer cd/rw xa/form2 cdda tray
-Attached scsi CD-ROM sr0 at scsi277, channel 0, id 0, lun 0
-ata1: PIO error, drv_stat 0x51  <==
-ata1: PIO error, drv_stat 0x51  <==
-sr1: scsi3-mmc drive: 40x/40x writer cd/rw xa/form2 cdda tray
-Attached scsi CD-ROM sr1 at scsi277, channel 0, id 1, lun 0
-Attached scsi generic sg4 at scsi277, channel 0, id 1, lun 0,  type 5
-ata1: PIO error, drv_stat 0x51  <==
-ata1: PIO error, drv_stat 0x51  <==
+> > 
+> > One Problem:
+> > ------------
+> > I am able to see the first drive on each of the port multipliers, 
+but I
+> > cannot seem to find a way to locate the other drives.  Is there an 
+option
+> > I can pass through modprobe, or some other kind of magic?
+> 
+> Unfortunately, port multiplier support is not implemented yet.  
+Edward 
+> Falk (CC'd above, Hi! Edward) used to work on PM support for sil24 a 
+> while ago and might be able to help you out.
+> 
 
-Seven "PIO error" messages were logged during module loading simply
-because the hot-plug scripts are reading mode page unsupported by the ATAPI devices.
-These are not errors that needs much attention.
+Depressing news.  I'm willing to do what I can to help someone out 
+with this.
 
-Could we print out the error only for the non-packet commands?
-(as in the attached patch)
+> > If I should have sent this to someone else, please forward this 
+along.  I
+> > didn't know if this was appropriate for me to send to the LKML, so 
+I sent
+> > it to you instead (apologies if I was mistaken).  Please let me 
+know what
+> > I can (or can't) do.
+> 
+> If you have certain requests/questions regarding SATA in general or 
+> specific SATA driver in particular, write a mail TO the maintainer 
+and 
+> CC linux-ide@vger.kernel.org.  And your mail is completely 
+appropriate 
+> for linux-ide.
+> 
 
-Another idea, maybe we should not print out the error message in ata_pio_error().
-ata_pio_error() doesn't have enough information to tell trivial errors from severe errors.
-How about moving the prink() to the complete functions or EH?
+will do
 
-Albert
+> -- 
+> tejun
+> 
+Regards,
 
-==========
-
---- linux/drivers/scsi/libata-core.c	2005-11-17 10:08:02.000000000 +0800
-+++ pio_err_msg/drivers/scsi/libata-core.c	2005-11-17 10:26:18.000000000 +0800
-@@ -3212,11 +3212,12 @@ static void ata_pio_error(struct ata_por
- {
- 	struct ata_queued_cmd *qc;
- 
--	printk(KERN_WARNING "ata%u: PIO error\n", ap->id);
--
- 	qc = ata_qc_from_tag(ap, ap->active_tag);
- 	assert(qc != NULL);
- 
-+	if (qc->tf.command != ATA_CMD_PACKET)
-+		printk(KERN_WARNING "ata%u: PIO error\n", ap->id);
-+
- 	ap->hsm_task_state = HSM_ST_IDLE;
- 
- 	ata_poll_qc_complete(qc, AC_ERR_ATA_BUS);
-
-
-
-
+James Rose
