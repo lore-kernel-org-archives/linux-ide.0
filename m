@@ -1,45 +1,73 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2/5] sil24: add sil24_restart_controller
-Date: Fri, 18 Nov 2005 12:21:29 +0900
-Message-ID: <20051118032129.GA27358@htj.dyndns.org>
-References: <20051116080244.GB22807@htj.dyndns.org> <437B79BA.2040200@google.com>
+From: Reuben Farrelly <reuben-lkml@reub.net>
+Subject: Re: Problems with SATA/AHCI with 'nosmp'  boot option
+Date: Fri, 18 Nov 2005 17:53:10 +1300
+Message-ID: <437D5E36.7000103@reub.net>
+References: <43312397.9080501@reub.net> <43425A0E.9050500@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.202]:11053 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751446AbVKRDVq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Nov 2005 22:21:46 -0500
-Received: by zproxy.gmail.com with SMTP id 40so90743nzk
-        for <linux-ide@vger.kernel.org>; Thu, 17 Nov 2005 19:21:45 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <437B79BA.2040200@google.com>
+Received: from tornado.reub.net ([202.89.145.182]:1261 "EHLO tornado.reub.net")
+	by vger.kernel.org with ESMTP id S1751509AbVKRExN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Nov 2005 23:53:13 -0500
+In-Reply-To: <43425A0E.9050500@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Edward Falk <efalk@google.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, Nov 16, 2005 at 10:26:02AM -0800, Edward Falk wrote:
+Hi,
+
+On 4/10/2005 11:31 p.m., Jeff Garzik wrote:
+> Reuben Farrelly wrote:
+>> Hi,
+>>
+>> While trying to gather more info about a problem with the latest 
+>> sky2.c Gig ethernet driver hanging, I thought I'd boot my SMP built 
+>> kernel (on an SMP/HT machine) with the 'nosmp' boot option.
+>>
+>> However when I did this, I could no longer boot the machine, because 
+>> the ahci
+>> driver reported timeouts when probing the drives attached to the SATA 
+>> ports, like this:
+>>
+>> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+>> ide: Assuming 33MHz system bus speed for PIO modes; override with 
+>> idebus=xx
+>> ICH6: IDE controller at PCI slot 0000:00:1f.1
+>> ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, low) -> IRQ 73
+>> ICH6: chipset revision 3
+>> ICH6: not 100% native mode: will probe irqs later
+>>     ide0: BM-DMA at 0xffa0-0xffa7, BIOS settings: hda:pio, hdb:pio
+>>     ide1: BM-DMA at 0xffa8-0xffaf, BIOS settings: hdc:pio, hdd:pio
+>> ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 81
+>> ahci(0000:00:1f.2) AHCI 0001.0000 32 slots 4 ports 1.5 Gbps 0xf impl 
+>> SATA mode
+>> ahci(0000:00:1f.2) flags: 64bit ncq led slum part
+>> ata1: SATA max UDMA/133 cmd 0xF8806D00 ctl 0x0 bmdma 0x0 irq 81
+>> ata2: SATA max UDMA/133 cmd 0xF8806D80 ctl 0x0 bmdma 0x0 irq 81
+>> ata3: SATA max UDMA/133 cmd 0xF8806E00 ctl 0x0 bmdma 0x0 irq 81
+>> ata4: SATA max UDMA/133 cmd 0xF8806E80 ctl 0x0 bmdma 0x0 irq 81
+>> ata1 is slow to respond, please be patient
+>> ata1 failed to respond (30 secs)
+>> scsi0 : ahci
+>> ata2 is slow to respond, please be patient
+>> ata2 failed to respond (30 secs)
 > 
+> Sounds like AHCI or MSI is broken.
 > 
-> >+static int __sil24_restart_controller(void __iomem *port)
-> 
-> Hi; I'm curious:  why the leading underscores in the function name?
-> 
-> 	-ed falk
+>     Jeff
 
-Hi, Edward.
+I am still seeing this on 2.6.15-rc1-mm1.  I don't think we got any further 
+than to conclude it _might_ be AHCI or MSI.
 
-It's the same as sil24_reset_controller.  __sil24_restart_controller
-takes 'void __iomem *port' and sil24_restart_controller takes 'struct
-ata_port *ap)' and prints error message when it fails.  The
-underscored versions are needed as they are called from sil24_init_one
-where we don't have ap yet.  __sil24_restart_controller isn't directly
- called from sil24_init_one but __sil24_reset_controller calls it to
-kick the controller if the controller doesn't turn on PORT_CS_RDY
-after reset is complete.
+What other information is required for me to be able to help someone look 
+closer and/or resolve this bug?
 
-I don't know if this is necessary.  I was just trying to be on the
-safe side.
+I have information about my system up at http://www.reub.net/kernel/ including 
+some system specifications and my .config.  (It's a lot easier to put it there 
+than attaching to every email)
 
--- 
-tejun
+Thanks,
+Reuben
+
