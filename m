@@ -1,60 +1,43 @@
-From: Stephan Arrington <sarrington@smythco.com>
-Subject: Kernel bug #5047 - sata_sil  w/ seagate drives
-Date: Fri, 18 Nov 2005 10:12:38 -0500
-Message-ID: <F6215E23-92E3-4E7A-A5C9-B69E6422EE5B@smythco.com>
-Mime-Version: 1.0 (Apple Message framework v746.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] Marvell SATA fixes v2
+Date: Fri, 18 Nov 2005 11:08:06 -0500
+Message-ID: <437DFC66.3040209@pobox.com>
+References: <20051114050404.GA18144@havoc.gtf.org>	 <Pine.LNX.4.63.0511151437320.3015@dingo.iwr.uni-heidelberg.de>	 <4379F31D.4000508@pobox.com>	 <Pine.LNX.4.63.0511152108140.3015@dingo.iwr.uni-heidelberg.de>	 <437D2DED.5030602@pobox.com> <f990dfce0511180537i4becb5f1k611a58874e9bf972@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fireball.bedford.smythco.com ([65.210.78.98]:19382 "EHLO
-	mail-bed.smythco.com") by vger.kernel.org with ESMTP
-	id S1750828AbVKRPM2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Nov 2005 10:12:28 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932302AbVKRQI0@vger.kernel.org>
+In-Reply-To: <f990dfce0511180537i4becb5f1k611a58874e9bf972@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Brett Russ <bruss@alum.wpi.edu>
+Cc: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
 
-Hello,
+Brett Russ wrote:
+> On 11/17/05, Jeff Garzik <jgarzik@pobox.com> wrote:
+> 
+>>See if you can give the latest git tree a try (what will be
+>>2.6.15-rc1-git6, later tonight).  I think I've killed most of the
+>>sata_mv bugs, and have it working here on both 50xx and 60xx.
+> 
+> 
+> Hey Jeff,
+> 
+> Been reading the patches you've been sending.  Thanks for picking it
+> up--there's no way I have time to work on it lately.  Glad to hear you
+> got it working on 50xx.  Some comments:
+> 
+> -in the future, can you separate whitespace only patch mailings with
+> functional patches?  I know that's something you request of others,
+> but it helps us too.
 
-I am also experiencing this behavior with sata_sil and large seagate  
-drives.
-Under heavy activity this bug surfaces (as mentioned in #5047) and it  
-requires a reboot to fix.
-
-Would adding the drive's firmware to the sil_blacklist [] be a  
-possible workaround?
-
-I am using kernel version 2.6.12-5.
+They are separated out in the git repo, and also in the automated 
+mailing list git-commits-head@vger.kernel.org.
 
 
+> -the version # of sata_mv doesn't look like it was bumped.  Did I miss it?
 
-///
-  Vendor: ATA       Model: ST3300831AS       Rev: 3.02
-///
+That was intentional:  since sata_mv just went upstream in this upcoming 
+release (2.6.15), the version number was already bumped.
 
-///
-00:0d.0 RAID bus controller: Silicon Image, Inc. SiI 3114 [SATALink/ 
-SATARaid] Serial ATA Controller (rev 02)
-         Subsystem: Silicon Image, Inc. SiI 3114 SATARaid Controller
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-  
-ParErr- Stepping- SERR- FastB2B-
-         Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium  
- >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-         Latency: 32, Cache Line Size 08
-         Interrupt: pin A routed to IRQ 12
-         Region 0: I/O ports at ac00 [size=8]
-         Region 1: I/O ports at b000 [size=4]
-         Region 2: I/O ports at b400 [size=8]
-         Region 3: I/O ports at b800 [size=4]
-         Region 4: I/O ports at bc00 [size=16]
-         Region 5: Memory at e3047000 (32-bit, non-prefetchable)  
-[size=1K]
-         Capabilities: [60] Power Management version 2
-                 Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME 
-(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 PME-Enable- DSel=0 DScale=2 PME-
-///
-
-Thanks,
-Stephan Arrington
+	Jeff
