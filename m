@@ -1,25 +1,45 @@
-From: linux@horizon.com
-Subject: sata_sil24 corruption FIXED by motherboard swap
-Date: 17 Nov 2005 21:23:49 -0500
-Message-ID: <20051118022349.12316.qmail@science.horizon.com>
-References: <87f94c370511141530h1c2d64e6kdb512f54c3c7b981@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2/5] sil24: add sil24_restart_controller
+Date: Fri, 18 Nov 2005 12:21:29 +0900
+Message-ID: <20051118032129.GA27358@htj.dyndns.org>
+References: <20051116080244.GB22807@htj.dyndns.org> <437B79BA.2040200@google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from science.horizon.com ([192.35.100.1]:39230 "HELO
-	science.horizon.com") by vger.kernel.org with SMTP id S1750785AbVKRCX7
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Nov 2005 21:23:59 -0500
-In-Reply-To: <87f94c370511141530h1c2d64e6kdb512f54c3c7b981@mail.gmail.com>
+Received: from zproxy.gmail.com ([64.233.162.202]:11053 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751446AbVKRDVq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Nov 2005 22:21:46 -0500
+Received: by zproxy.gmail.com with SMTP id 40so90743nzk
+        for <linux-ide@vger.kernel.org>; Thu, 17 Nov 2005 19:21:45 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <437B79BA.2040200@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com, linux-ide@vger.kernel.org
-Cc: linux@horizon.com
+To: Edward Falk <efalk@google.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-For anybody who's been following my saga, what I thought was software
-problems turned out to be a hardware problem with one PCI-express slot
-on an Albatron K8NF4U motherboard.  (Whose support folks still haven't
-gotten back to me...)
+On Wed, Nov 16, 2005 at 10:26:02AM -0800, Edward Falk wrote:
+> 
+> 
+> >+static int __sil24_restart_controller(void __iomem *port)
+> 
+> Hi; I'm curious:  why the leading underscores in the function name?
+> 
+> 	-ed falk
 
-I swapped in a new motherboard this morning, and have been running disk
-tests all afternoon with no problems.
+Hi, Edward.
 
-My sincere apologies for the false alarm.
+It's the same as sil24_reset_controller.  __sil24_restart_controller
+takes 'void __iomem *port' and sil24_restart_controller takes 'struct
+ata_port *ap)' and prints error message when it fails.  The
+underscored versions are needed as they are called from sil24_init_one
+where we don't have ap yet.  __sil24_restart_controller isn't directly
+ called from sil24_init_one but __sil24_reset_controller calls it to
+kick the controller if the controller doesn't turn on PORT_CS_RDY
+after reset is complete.
+
+I don't know if this is necessary.  I was just trying to be on the
+safe side.
+
+-- 
+tejun
