@@ -1,35 +1,29 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Roland Dreier <rolandd@cisco.com>
 Subject: Re: [PATCH] Marvell SATA fixes v2
-Date: Fri, 18 Nov 2005 16:52:09 -0500
-Message-ID: <20051118215209.GA9425@havoc.gtf.org>
-References: <437D2DED.5030602@pobox.com> <Pine.LNX.4.44.0511182241420.5095-100000@kenzo.iwr.uni-heidelberg.de>
+Date: Fri, 18 Nov 2005 13:57:03 -0800
+Message-ID: <52veyp39hs.fsf@cisco.com>
+References: <437D2DED.5030602@pobox.com>
+	<Pine.LNX.4.44.0511182241420.5095-100000@kenzo.iwr.uni-heidelberg.de>
+	<20051118215209.GA9425@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:54174 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1161263AbVKRVwL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Nov 2005 16:52:11 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0511182241420.5095-100000@kenzo.iwr.uni-heidelberg.de>
+Received: from ams-iport-1.cisco.com ([144.254.224.140]:18223 "EHLO
+	ams-iport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S1161251AbVKRV5M (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 18 Nov 2005 16:57:12 -0500
+In-Reply-To: <20051118215209.GA9425@havoc.gtf.org> (Jeff Garzik's message of
+ "Fri, 18 Nov 2005 16:52:09 -0500")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Nov 18, 2005 at 10:50:04PM +0100, Bogdan Costescu wrote:
-> On Thu, 17 Nov 2005, Jeff Garzik wrote:
-> 
-> > See if you can give the latest git tree a try (what will be 
-> > 2.6.15-rc1-git6, later tonight).  I think I've killed most of the 
-> > sata_mv bugs, and have it working here on both 50xx and 60xx.
-> 
-> I can report success as well on a 504x. However it only works without 
-> MSI, with MSI I get the same insmod blocked in D state as before.
+    Jeff> Yes, for both 50xx and 60xx, I had to turn off MSI in order
+    Jeff> to get sata_mv to work...
 
-Yes, for both 50xx and 60xx, I had to turn off MSI in order to get
-sata_mv to work...
+Sounds like MSI is broken in the Marvell chip.  This is exactly the
+type of knowledge that needs to be in the low-level driver: which
+devices/revisions don't have working MSI.
 
-	Jeff
-
-
-
+ - R.
