@@ -1,45 +1,60 @@
-From: Brett Russ <bruss@alum.wpi.edu>
-Subject: Re: [PATCH] Marvell SATA fixes v2
-Date: Fri, 18 Nov 2005 08:37:09 -0500
-Message-ID: <f990dfce0511180537i4becb5f1k611a58874e9bf972@mail.gmail.com>
-References: <20051114050404.GA18144@havoc.gtf.org>
-	 <Pine.LNX.4.63.0511151437320.3015@dingo.iwr.uni-heidelberg.de>
-	 <4379F31D.4000508@pobox.com>
-	 <Pine.LNX.4.63.0511152108140.3015@dingo.iwr.uni-heidelberg.de>
-	 <437D2DED.5030602@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Stephan Arrington <sarrington@smythco.com>
+Subject: Kernel bug #5047 - sata_sil  w/ seagate drives
+Date: Fri, 18 Nov 2005 10:12:38 -0500
+Message-ID: <F6215E23-92E3-4E7A-A5C9-B69E6422EE5B@smythco.com>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.198]:41572 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750729AbVKRNhK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Nov 2005 08:37:10 -0500
-Received: by wproxy.gmail.com with SMTP id i1so356762wra
-        for <linux-ide@vger.kernel.org>; Fri, 18 Nov 2005 05:37:09 -0800 (PST)
-In-Reply-To: <437D2DED.5030602@pobox.com>
-Content-Disposition: inline
+Received: from fireball.bedford.smythco.com ([65.210.78.98]:19382 "EHLO
+	mail-bed.smythco.com") by vger.kernel.org with ESMTP
+	id S1750828AbVKRPM2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 18 Nov 2005 10:12:28 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-On 11/17/05, Jeff Garzik <jgarzik@pobox.com> wrote:
-> See if you can give the latest git tree a try (what will be
-> 2.6.15-rc1-git6, later tonight).  I think I've killed most of the
-> sata_mv bugs, and have it working here on both 50xx and 60xx.
+Hello,
 
-Hey Jeff,
+I am also experiencing this behavior with sata_sil and large seagate  
+drives.
+Under heavy activity this bug surfaces (as mentioned in #5047) and it  
+requires a reboot to fix.
 
-Been reading the patches you've been sending.  Thanks for picking it
-up--there's no way I have time to work on it lately.  Glad to hear you
-got it working on 50xx.  Some comments:
+Would adding the drive's firmware to the sil_blacklist [] be a  
+possible workaround?
 
--in the future, can you separate whitespace only patch mailings with
-functional patches?  I know that's something you request of others,
-but it helps us too.
+I am using kernel version 2.6.12-5.
 
--the version # of sata_mv doesn't look like it was bumped.  Did I miss it?
 
-thanks,
-BR
+
+///
+  Vendor: ATA       Model: ST3300831AS       Rev: 3.02
+///
+
+///
+00:0d.0 RAID bus controller: Silicon Image, Inc. SiI 3114 [SATALink/ 
+SATARaid] Serial ATA Controller (rev 02)
+         Subsystem: Silicon Image, Inc. SiI 3114 SATARaid Controller
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-  
+ParErr- Stepping- SERR- FastB2B-
+         Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium  
+ >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+         Latency: 32, Cache Line Size 08
+         Interrupt: pin A routed to IRQ 12
+         Region 0: I/O ports at ac00 [size=8]
+         Region 1: I/O ports at b000 [size=4]
+         Region 2: I/O ports at b400 [size=8]
+         Region 3: I/O ports at b800 [size=4]
+         Region 4: I/O ports at bc00 [size=16]
+         Region 5: Memory at e3047000 (32-bit, non-prefetchable)  
+[size=1K]
+         Capabilities: [60] Power Management version 2
+                 Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME 
+(D0-,D1-,D2-,D3hot-,D3cold-)
+                 Status: D0 PME-Enable- DSel=0 DScale=2 PME-
+///
+
+Thanks,
+Stephan Arrington
