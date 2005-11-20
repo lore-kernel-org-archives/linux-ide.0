@@ -1,96 +1,88 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/libata-*: make some functions static
-Date: Sun, 20 Nov 2005 03:45:57 +0100
-Message-ID: <20051120024557.GW16060@stusta.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: (SAT) libata + hdparm/smartctl
+Date: Sun, 20 Nov 2005 17:10:36 +1000
+Message-ID: <4380216C.5090408@torque.net>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>	 <4371BB82.3090208@gmx.de> <4371C557.80807@gmx.de> <4371F7C3.5080702@rtr.ca>	 <43720232.6090609@gmx.de> <4372172A.50003@gmx.de>	 <43721C3C.1010103@pobox.com> <1131553363.3271.1.camel@mulgrave> <4372E66F.5070802@gmx.de> <437358EA.3090406@rtr.ca> <437361CF.2040909@gmx.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:59399 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1751149AbVKTCp6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 Nov 2005 21:45:58 -0500
-Content-Disposition: inline
+Received: from zorg.st.net.au ([203.16.233.9]:438 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1750707AbVKTHJV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Nov 2005 02:09:21 -0500
+In-Reply-To: <437361CF.2040909@gmx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: t.schorpp@gmx.de
+Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-This patch makes some needlesly global functions static.
+thomas schorpp wrote:
+> Mark Lord wrote:
+> 
+>>thomas schorpp wrote:
+>>
+>>
+>>>for hdparm ata-security theres ide taskfile used, can scsi command
+>>>sequences combined with ide taskfiles which use own ioctls?
+>>
+>>
+>>As Jeff said, libata translates some of the HDIO_TASK* functions
+>>into SCSI passthru commands, which then get translated back
+>>into ATA commands at the time of issue to the device.
+>>
+>>Once passthru makes it out into the wild (Linus kernels),
+>>I'll update hdparm to have it use SCSI passthru instead
+>>when available/appropriate.
+>>
+>>There will have to be about a year or so of full overlap
+>>(hdparm, smartmontools, and kernel), to give distros time
+>>to update/release with all of the affected components.
+>>
+>>After that, I imagine Jeff may want to remove the HDIO_TASK*
+>>calls again.
+>>
+>>Cheers
+> 
+> 
+> ive tried the whole day to make this driver helper libata or parts of it available to the user space
+> and it didnt work out, sorry, you cant include the header in user-space apps and theres no interface to it.
+> 
+> but if You say so, i'll take a closer look at libatas HDIO_TASKs but this has to be utilized automatic then,
+> at this time libata.ko does not get loaded or used by usbstorage devices.
+> 
+> when it is a driver library i will use it with drivers, as it should be:
+> 
+> so i look if i can modify sg, sd_mod or/and usb-storage to detect passthru needing devices automatic and to
+> take action on passthru needing functionality, then none of the user space apps should need to be worked on.
+BTW The ATA COMMAND PASS THROUGH (12) SCSI command shares its
+opcode (0xa1) with the MMC BLANK command. According to sat-r07
+a SAT layer should identify itself by using "ATA     " as
+the vendor string of its standard INQUIRY response.
 
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
----
+For those not aware in lk 2.6.15-rc1 smartctl (from smartmontools)
+works. First you see:
 
- drivers/scsi/libata-core.c |    3 ++-
- drivers/scsi/libata-scsi.c |   18 +++++++++---------
- 2 files changed, 11 insertions(+), 10 deletions(-)
+# smartctl -a /dev/sda
+smartctl version 5.34 [i686-pc-linux-gnu] Copyright (C) 2002-5 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
 
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/libata-core.c.old	2005-11-20 03:05:43.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/libata-core.c	2005-11-20 03:06:02.000000000 +0100
-@@ -2775,7 +2775,8 @@
-  *	None.  (grabs host lock)
-  */
- 
--void ata_poll_qc_complete(struct ata_queued_cmd *qc, unsigned int err_mask)
-+static void ata_poll_qc_complete(struct ata_queued_cmd *qc,
-+				 unsigned int err_mask)
- {
- 	struct ata_port *ap = qc->ap;
- 	unsigned long flags;
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/libata-scsi.c.old	2005-11-20 03:06:38.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/libata-scsi.c	2005-11-20 03:08:34.000000000 +0100
-@@ -325,10 +325,10 @@
-  *	RETURNS:
-  *	Command allocated, or %NULL if none available.
-  */
--struct ata_queued_cmd *ata_scsi_qc_new(struct ata_port *ap,
--				       struct ata_device *dev,
--				       struct scsi_cmnd *cmd,
--				       void (*done)(struct scsi_cmnd *))
-+static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_port *ap,
-+					      struct ata_device *dev,
-+					      struct scsi_cmnd *cmd,
-+					      void (*done)(struct scsi_cmnd *))
- {
- 	struct ata_queued_cmd *qc;
- 
-@@ -364,7 +364,7 @@
-  *	LOCKING:
-  *	inherited from caller
-  */
--void ata_dump_status(unsigned id, struct ata_taskfile *tf)
-+static void ata_dump_status(unsigned id, struct ata_taskfile *tf)
- {
- 	u8 stat = tf->command, err = tf->feature;
- 
-@@ -413,8 +413,8 @@
-  *	LOCKING:
-  *	spin_lock_irqsave(host_set lock)
-  */
--void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk, u8 *asc, 
--			u8 *ascq)
-+static void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err,
-+			       u8 *sk, u8 *asc, u8 *ascq)
- {
- 	int i;
- 
-@@ -524,7 +524,7 @@
-  *	LOCKING:
-  *	spin_lock_irqsave(host_set lock)
-  */
--void ata_gen_ata_desc_sense(struct ata_queued_cmd *qc)
-+static void ata_gen_ata_desc_sense(struct ata_queued_cmd *qc)
- {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	struct ata_taskfile *tf = &qc->tf;
-@@ -600,7 +600,7 @@
-  *	LOCKING:
-  *	inherited from caller
-  */
--void ata_gen_fixed_sense(struct ata_queued_cmd *qc)
-+static void ata_gen_fixed_sense(struct ata_queued_cmd *qc)
- {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	struct ata_taskfile *tf = &qc->tf;
+Device: ATA      ST380013AS       Version: 3.18
+
+In Linux, SATA disks accessed via libata are not currently supported
+by smartmontools. By the time you read this, support may have been added
+in recent kernels. Try an additional '-d ata' argument.
+
+
+Following that advice:
+
+# smartctl -a -d ata /dev/sda
+<output just like an (p)ATA disk>
+
+
+Recent versions of hdparm also work (e.g. "hdparm -I /dev/sda").
+
+Doug Gilbert
 
