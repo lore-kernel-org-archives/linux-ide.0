@@ -1,88 +1,103 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: (SAT) libata + hdparm/smartctl
-Date: Sun, 20 Nov 2005 17:10:36 +1000
-Message-ID: <4380216C.5090408@torque.net>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>	 <4371BB82.3090208@gmx.de> <4371C557.80807@gmx.de> <4371F7C3.5080702@rtr.ca>	 <43720232.6090609@gmx.de> <4372172A.50003@gmx.de>	 <43721C3C.1010103@pobox.com> <1131553363.3271.1.camel@mulgrave> <4372E66F.5070802@gmx.de> <437358EA.3090406@rtr.ca> <437361CF.2040909@gmx.de>
-Reply-To: dougg@torque.net
+From: Andres Meyer <andres.meyer@computer.org>
+Subject: Marvell SATA 5081 success
+Date: Sun, 20 Nov 2005 14:18:14 +0100
+Message-ID: <43807796.4090002@computer.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:438 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1750707AbVKTHJV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Nov 2005 02:09:21 -0500
-In-Reply-To: <437361CF.2040909@gmx.de>
+Received: from mxout.hispeed.ch ([62.2.95.247]:51586 "EHLO smtp.hispeed.ch")
+	by vger.kernel.org with ESMTP id S1751204AbVKTOPL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Nov 2005 09:15:11 -0500
+Received: from mail.cputoasters.com (84-73-58-247.dclient.hispeed.ch [84.73.58.247])
+	(authenticated bits=0)
+	by smtp.hispeed.ch (8.12.6/8.12.6/taifun-1.0) with ESMTP id jAKEF9jr030872
+	for <linux-ide@vger.kernel.org>; Sun, 20 Nov 2005 15:15:10 +0100
+Received: from [IPv6:2001:960:75e:0:80d5:70aa:5ecf:bc68] (unknown [IPv6:2001:960:75e:0:80d5:70aa:5ecf:bc68])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.cputoasters.com (Postfix) with ESMTP id 94B565CD264
+	for <linux-ide@vger.kernel.org>; Sun, 20 Nov 2005 14:17:20 +0100 (CET)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: t.schorpp@gmx.de
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-thomas schorpp wrote:
-> Mark Lord wrote:
-> 
->>thomas schorpp wrote:
->>
->>
->>>for hdparm ata-security theres ide taskfile used, can scsi command
->>>sequences combined with ide taskfiles which use own ioctls?
->>
->>
->>As Jeff said, libata translates some of the HDIO_TASK* functions
->>into SCSI passthru commands, which then get translated back
->>into ATA commands at the time of issue to the device.
->>
->>Once passthru makes it out into the wild (Linus kernels),
->>I'll update hdparm to have it use SCSI passthru instead
->>when available/appropriate.
->>
->>There will have to be about a year or so of full overlap
->>(hdparm, smartmontools, and kernel), to give distros time
->>to update/release with all of the affected components.
->>
->>After that, I imagine Jeff may want to remove the HDIO_TASK*
->>calls again.
->>
->>Cheers
-> 
-> 
-> ive tried the whole day to make this driver helper libata or parts of it available to the user space
-> and it didnt work out, sorry, you cant include the header in user-space apps and theres no interface to it.
-> 
-> but if You say so, i'll take a closer look at libatas HDIO_TASKs but this has to be utilized automatic then,
-> at this time libata.ko does not get loaded or used by usbstorage devices.
-> 
-> when it is a driver library i will use it with drivers, as it should be:
-> 
-> so i look if i can modify sg, sd_mod or/and usb-storage to detect passthru needing devices automatic and to
-> take action on passthru needing functionality, then none of the user space apps should need to be worked on.
-BTW The ATA COMMAND PASS THROUGH (12) SCSI command shares its
-opcode (0xa1) with the MMC BLANK command. According to sat-r07
-a SAT layer should identify itself by using "ATA     " as
-the vendor string of its standard INQUIRY response.
+Just wanted to confirm that my Highpoint 1820 (PCI-X)  works fine with 
+2x300GB disks on  a dual Opteron, 2.6.15-rc2 x86_64 with 4GB RAM. I have 
+been constantly compiling kernels and transferring files for 12h now 
+without a problem.
 
+Thx a lot,
+Andres
 
+lspci:
+0000:02:04.0 SCSI storage controller: Marvell Technology Group Ltd. 
+MV88SX5081 8-port SATA I PCI-X Controller
 
-For those not aware in lk 2.6.15-rc1 smartctl (from smartmontools)
-works. First you see:
-
-# smartctl -a /dev/sda
-smartctl version 5.34 [i686-pc-linux-gnu] Copyright (C) 2002-5 Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
-
-Device: ATA      ST380013AS       Version: 3.18
-
-In Linux, SATA disks accessed via libata are not currently supported
-by smartmontools. By the time you read this, support may have been added
-in recent kernels. Try an additional '-d ata' argument.
-
-
-Following that advice:
-
-# smartctl -a -d ata /dev/sda
-<output just like an (p)ATA disk>
-
-
-Recent versions of hdparm also work (e.g. "hdparm -I /dev/sda").
-
-Doug Gilbert
+dmesg:
+libata version 1.20 loaded.
+sata_mv 0000:02:04.0: version 0.5
+GSI 21 sharing vector 0xD1 and IRQ 21
+ACPI: PCI Interrupt 0000:02:04.0[A] -> GSI 25 (level, low) -> IRQ 21
+sata_mv 0000:02:04.0: 32 slots 8 ports SCSI mode IRQ via INTx
+ata1: SATA max UDMA/133 cmd 0x0 ctl 0xFFFFC200003A2120 bmdma 0x0 irq 21
+ata2: SATA max UDMA/133 cmd 0x0 ctl 0xFFFFC200003A4120 bmdma 0x0 irq 21
+ata3: SATA max UDMA/133 cmd 0x0 ctl 0xFFFFC200003A6120 bmdma 0x0 irq 21
+ata4: SATA max UDMA/133 cmd 0x0 ctl 0xFFFFC200003A8120 bmdma 0x0 irq 21
+ata5: SATA max UDMA/133 cmd 0x0 ctl 0xFFFFC200003B2120 bmdma 0x0 irq 21
+ata6: SATA max UDMA/133 cmd 0x0 ctl 0xFFFFC200003B4120 bmdma 0x0 irq 21
+ata7: SATA max UDMA/133 cmd 0x0 ctl 0xFFFFC200003B6120 bmdma 0x0 irq 21
+ata8: SATA max UDMA/133 cmd 0x0 ctl 0xFFFFC200003B8120 bmdma 0x0 irq 21
+ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4023 85:3469 86:3c01 87:4023 
+88:207f
+ata1: dev 0 ATA-7, max UDMA/133, 586072368 sectors: LBA48
+ata1: dev 0 configured for UDMA/133
+scsi0 : sata_mv
+ata2: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4063 85:7c69 86:3e01 87:4063 
+88:007f
+ata2: dev 0 ATA-7, max UDMA/133, 586114704 sectors: LBA48
+ata2: dev 0 configured for UDMA/133
+scsi1 : sata_mv
+ata3: no device found (phy stat 00000000)
+scsi2 : sata_mv
+ata4: no device found (phy stat 00000000)
+scsi3 : sata_mv
+ata5: no device found (phy stat 00000000)
+scsi4 : sata_mv
+ata6: no device found (phy stat 00000000)
+scsi5 : sata_mv
+ata7: no device found (phy stat 00000000)
+scsi6 : sata_mv
+ata8: no device found (phy stat 00000000)
+scsi7 : sata_mv
+  Vendor: ATA       Model: ST3300831AS       Rev: 3.01
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 586072368 512-byte hdwr sectors (300069 MB)
+SCSI device sda: drive cache: write back
+SCSI device sda: 586072368 512-byte hdwr sectors (300069 MB)
+SCSI device sda: drive cache: write back
+ sda: sda1
+sd 0:0:0:0: Attached scsi disk sda
+sd 0:0:0:0: Attached scsi generic sg0 type 0
+  Vendor: ATA       Model: Maxtor 6L300S0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdb: 586114704 512-byte hdwr sectors (300091 MB)
+SCSI device sdb: drive cache: write back
+SCSI device sdb: 586114704 512-byte hdwr sectors (300091 MB)
+SCSI device sdb: drive cache: write back
+ sdb: sdb1 < sdb5 >
+sd 1:0:0:0: Attached scsi disk sdb
+sd 1:0:0:0: Attached scsi generic sg1 type 0
+SCSI device sda: 586072368 512-byte hdwr sectors (300069 MB)
+SCSI device sda: drive cache: write back
+ sda:
+SCSI device sda: 586072368 512-byte hdwr sectors (300069 MB)
+SCSI device sda: drive cache: write back
+ sda:
+SCSI device sda: 586072368 512-byte hdwr sectors (300069 MB)
+SCSI device sda: drive cache: write back
+ sda: sda1 < sda5 >
+SCSI device sda: 586072368 512-byte hdwr sectors (300069 MB)
+SCSI device sda: drive cache: write back
+ sda: sda1 < sda5 >
 
