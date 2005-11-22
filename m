@@ -1,98 +1,71 @@
-From: Horms <horms@verge.net.au>
-Subject: [PATCH, IDE] Blacklist CD-912E/ATK
-Date: Tue, 22 Nov 2005 11:44:26 +0900 (JST)
-Message-ID: <20051122024426.8C16A34043@koto.vergenet.net>
-References: <E1EeJoy-0001LS-DG__45201.7337469899$1132611644$gmane$org@iglo.domek.prywatny>
+From: Andrew Joyce <joyce@webcreations.ca>
+Subject: Re: VIA VT8251 on Asus A8V-MV
+Date: Tue, 22 Nov 2005 03:09:56 +0000 (UTC)
+Message-ID: <loom.20051122T040228-399@post.gmane.org>
+References: <43808DAC.9030806@mgmservers.com> <20051121235516.GA8515@midnight.suse.cz> <43827C76.3000703@mgmservers.com> <20051122021604.GA32312@havoc.gtf.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from koto.vergenet.net ([210.128.90.7]:39820 "EHLO koto.vergenet.net")
-	by vger.kernel.org with ESMTP id S964878AbVKVCof (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Nov 2005 21:44:35 -0500
-In-Reply-To: <E1EeJoy-0001LS-DG__45201.7337469899$1132611644$gmane$org@iglo.domek.prywatny>
+Received: from main.gmane.org ([80.91.229.2]:17071 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S1750702AbVKVDX3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Nov 2005 22:23:29 -0500
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1EeOiB-0003Nl-6U
+	for linux-ide@vger.kernel.org; Tue, 22 Nov 2005 04:20:51 +0100
+Received: from d226-53-149.home.cgocable.net ([24.226.53.149])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 22 Nov 2005 04:20:51 +0100
+Received: from joyce by d226-53-149.home.cgocable.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 22 Nov 2005 04:20:51 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Karol Lewandowski <klz@o2.pl>, 340228@bugs.debian.org
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-    URL: http://bugs.debian.org/340228
-    From: Karol Lewandowski <klz@o2.pl>
-    
-    Package: kernel-image-2.6.8-2-k7
-    Version: 2.6.8-16
-    Severity: important
-    
-    Linux kernel 2.6.(everything) panics when mounting cdrom when DMA
-    transfers are enabled (default).  It works fine if DMA is disabled.
-    
-    The drive is clearly broken.  Adding blacklist to drivers/ide/ide-dma.c
-    for this model ("CD-912E/ATK") fixes this problem.
-    
-    Messages gathered on panic condition:
-    
-    --- Begin kernel messages ---
-    
-    ide-cd: cmd 0x28 timed out
-    hdc: DMA interrupt recovery
-    hdc: lost interrupt
-    hdc: cdrom_decode_status: status=0xd0 { Busy }
-    ide: failed opcode was: unknown
-    hdc: DMA disabled
-    ------------[ cut here ]------------
-    kernel BUG at drivers/ide/ide-iops.c:949!
-    invalid operand: 0000 [#1]
-    Modules linked in:
-    CPU:    0
-    EIP:    0060:[<c01ece82>]    Not tainted VLI
-    EFLAGS: 00010086   (2.6.14-eve1)
-    EIP is at ide_execute_command+0x22/0x90
-    eax: c01ecef0   ebx: c02fed38   ecx: 00008000   edx: c3f81580
-    esi: c02feca8   edi: 00000286   ebp: c01f9000   esp: c02c7e50
-    ds: 007b   es: 007b   ss: 0068
-    Process swapper (pid: 0, threadinfo=c02c6000 task=c028eba0)
-    Stack: 00000082 00808000 c01179e5 a00ce600 c10ce600 c02fed38 c02feca8 c01f8869
-    c02fed38 000000a0 c01f9000 00001770 c01f86e0 c10d8ec4 c02fed38 c10d8ec4
-    c10ce600 00000004 c01f938a c02fed38 00008000 c01f9000 c02fed38 c10d8ec4
-    Call Trace:
-    [<c01179e5>] update_process_times+0x85/0x130
-    [<c01f8869>] cdrom_start_packet_command+0x119/0x1a0
-    [<c01f9000>] cdrom_start_read_continuation+0x0/0xb0
-    [<c01f86e0>] cdrom_timer_expiry+0x0/0x70
-    [<c01f938a>] cdrom_start_read+0xca/0xd0
-    [<c01f9000>] cdrom_start_read_continuation+0x0/0xb0
-    [<c01fa075>] ide_do_rw_cdrom+0x95/0x1b0
-    [<c01eb1b6>] start_request+0x156/0x240
-    [<c01eb4fa>] ide_do_request+0x22a/0x380
-    [<c01eb867>] ide_timer_expiry+0xd7/0x1c0
-    [<c01eb790>] ide_timer_expiry+0x0/0x1c0
-    [<c0117b66>] run_timer_softirq+0xb6/0x1b0
-    [<c0113deb>] __do_softirq+0x7b/0x90
-    [<c0113e26>] do_softirq+0x26/0x30
-    [<c010415e>] do_IRQ+0x1e/0x30
-    [<c0102a46>] common_interrupt+0x1a/0x20
-    [<c0100920>] default_idle+0x0/0x30
-    [<c0100943>] default_idle+0x23/0x30
-    [<c01009e0>] cpu_idle+0x50/0x60
-    [<c02c87f6>] start_kernel+0x146/0x170
-    [<c02c8380>] unknown_bootoption+0x0/0x1e0
-    Code: c3 90 8d b4 26 00 00 00 00 57 56 53 83 ec 10 8b 5c 24 20 0f b6 44 24 24 88 44 24 0f 8b 73 6c 8b 56 08 9c 5f fa 8b 02 85 c0 74 08 <0f> 0b b5 03 9c 08 27 c0 8b 44 24 28 89 02 8b 44 24 30 89 82 dc
-    <0>Kernel panic - not syncing: Fatal exception in interrupt
-    
-    --- End ---
-    
-    Thanks, I'm forwarding the patch you suggest to the IDE maintainers for
-    consideration. It seems to apply to current 2.6 head as well
-    as the somewhat ancient 2.6.8.
-    
-    Signed-off-by: Horms <horms@verge.net.au>
+Jeff Garzik <jgarzik <at> pobox.com> writes:
 
-diff --git a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
-index 1e15313..e430717 100644
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -126,6 +126,7 @@ static const struct drive_list_entry dri
- 	{ "HITACHI CDR-8435"	,	"ALL"		},
- 	{ "Toshiba CD-ROM XM-6202B"	,	"ALL"		},
- 	{ "CD-532E-A"		,	"ALL"		},
-+	{ "CD-912E/ATK"		,	"ALL"		},
- 	{ "E-IDE CD-ROM CR-840",	"ALL"		},
- 	{ "CD-ROM Drive/F5A",	"ALL"		},
- 	{ "WPI CDD-820",		"ALL"		},
+> 
+> On Mon, Nov 21, 2005 at 09:03:34PM -0500, Jason Cribbins wrote:
+> > Can you explain the situation in the following URL?
+> > http://forums.viaarena.com/messageview.aspx?catid=28&threadid=68455
+> > 
+> > Also as I try to install fedora it reports that it is unable to find any 
+> > installed HDs.  I have found an OpenBSD patch that does get it to work 
+> > there but nothing for Linux that works as of right now.
+> > My BIOS has the controller set to SATA mode right now and its not 
+> > visible.  Even if I set it to RAID mode or AHCI modes I get the same 
+> > result using fedora core4 and what ever kernel comes bundled with their 
+> > installer.
+> 
+> The AHCI driver certainly won't work without adding PCI IDs to it...
+> 
+> did you try that?
+> 
+> These threads seem to indicate that AHCI needs updating for VIA.
+> 
+> 	Jeff 
+
+I hate to spoil the suspense but I imagine you will meet with the same results
+others have.  There have been a few posts to this list regarding the chipset and
+so far no concrete ideas about what may be going on.  The following will patch
+your ahci.c file to provide the correct PCI ID and, if my experience holds, the
+chip will be recognized but communicating with the drives will timeout.
+
+--- ahci.c      2005-11-21 21:52:38.000000000 -0500
++++ ahci.c      2005-11-21 21:52:41.000000000 -0500
+@@ -277,6 +277,8 @@
+          board_ahci }, /* ESB2 */
+        { PCI_VENDOR_ID_INTEL, 0x27c6, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+          board_ahci }, /* ICH7-M DH */
++       { PCI_VENDOR_ID_VIA, 0x3349, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++         board_ahci }, /* VT8251 */
+        { }     /* terminate list */
+ };
+
+Best of luck and please post your results of adding this ID to the AHCI driver.
+
+Andrew
+
+
