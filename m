@@ -1,35 +1,38 @@
-From: Vojtech Pavlik <vojtech@suse.cz>
-Subject: Re: VIA VT8251 on Asus A8V-MV
-Date: Tue, 22 Nov 2005 00:55:16 +0100
-Message-ID: <20051121235516.GA8515@midnight.suse.cz>
-References: <43808DAC.9030806@mgmservers.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: linux@horizon.com
+Subject: Re: sata_sil24 test support
+Date: 21 Nov 2005 19:23:33 -0500
+Message-ID: <20051122002333.9619.qmail@science.horizon.com>
+References: <20051118193652.6403.qmail@science.horizon.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:64728 "EHLO mail.suse.cz")
-	by vger.kernel.org with ESMTP id S1750777AbVKUXzY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Nov 2005 18:55:24 -0500
-Content-Disposition: inline
-In-Reply-To: <43808DAC.9030806@mgmservers.com>
+Received: from science.horizon.com ([192.35.100.1]:57639 "HELO
+	science.horizon.com") by vger.kernel.org with SMTP id S964781AbVKVAXl
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Nov 2005 19:23:41 -0500
+In-Reply-To: <20051118193652.6403.qmail@science.horizon.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jason Cribbins <jason.cribbins@mgmservers.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: htejun@gmail.com
+Cc: linux@horizon.com, linux-ide@vger.kernel.org
 
-On Sun, Nov 20, 2005 at 09:52:28AM -0500, Jason Cribbins wrote:
-
-> I was wondering if its possible to find someone to create a driver 
-> support for the Via VT8251 South Bridge chipset which appears to have 
-> been around for about a year now.  I am unable to get any form of Linux 
-> to see my HDs connected to that on board controller.  Although I have 
-> successfully used it in non-raid mode on FreeBSD.  I need this for 
-> fedora if possible.
+> One thing I wanna verify on sil24 is data integrity with multiple disks 
+> attached.  It would be very helpful if you can do some parallel data 
+> stress testing with multiple disks.
 > 
-> Is something like this possible?  And if so would it cost anything?
- 
-The vt8251 is supported for quite some time by the IDE driver and its
-vt82cxxx.c chipset driver.
+> * Parallel 'badblocks -w -t random' on all attached disks.  Maybe repeat 
+> it for a few days and verify no corrupted IO occurs.
 
--- 
-Vojtech Pavlik
-SuSE Labs, SuSE CR
+Just completed 6 passes x 6 drives x 350 GB = 12.6 TB of badblocks (10^14
+bits) with no errors.  That's in addition to a previous 5 passes that
+was interrupted by timeout problems on one drive, but that's an error
+handling issue and not a data corruption problem, and it did resolve
+itself eventually after I killed the badblocks run.
+
+That's several days of solid disk access at > 300 MB/sec.
+(Some silly people asked me why I ingored the Sil3114 that came with
+the motherboard...)
+
+Thanks for a great driver!  I'll have even more fun testing NCQ one of
+these days. :-)
+
+Now rebooting to 2.6.14-rc2.  Now that it's stable, this system is going
+into production Very Very Soon.  If you want any more testing, speak up!
