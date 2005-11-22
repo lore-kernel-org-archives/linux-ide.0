@@ -1,65 +1,34 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/2] libata: Remove dependence on host_set->dev for SAS
-Date: Thu, 24 Nov 2005 09:12:04 +0100
-Message-ID: <58cb370e0511240012r64ad150eo90553b230992424e@mail.gmail.com>
-References: <4341A91A.3020000@us.ibm.com> <435D5D83.1060201@us.ibm.com>
-	 <435D5DE5.7010306@us.ibm.com> <435E7105.4010105@pobox.com>
-	 <435E87E8.9010506@us.ibm.com> <435E8AC7.1080407@pobox.com>
-	 <435EB656.1040502@adaptec.com> <4360FAC1.8020409@us.ibm.com>
-	 <43850F0D.7040907@torque.net> <43851262.7020807@pobox.com>
+From: Mark Lord <lkml@rtr.ca>
+Subject: 2.6.15-rc2: hundreds of "make sure there is a disc" messages
+Date: Tue, 22 Nov 2005 10:38:34 -0500
+Message-ID: <43833B7A.5020700@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <43851262.7020807@pobox.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: dougg@torque.net, brking@us.ibm.com, Luben Tuikov <luben_tuikov@adaptec.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, t.schorpp@gmx.de
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:36532 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S932528AbVKXJOV
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Nov 2005 04:14:21 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On 11/24/05, Jeff Garzik <jgarzik@pobox.com> wrote:
-> Douglas Gilbert wrote:
-> > I don't think a SATL is that easy. One SCSI command can
-> > translate into zero or more ATA commands. If it translates
-> > to multiple commands, then there is the possibility of an
-> > error prior to the last in the sequence of ATA commands
-> > (how to report; rollback needed ?). The SATL needs to hold
-> > state and needs a service thread if it is to support the
-> > IMMED bit on some commands (e.g. START STOP UNIT).
->
-> It needs a conceptual service thread, not necessarily an explicit one.
->
-> With REQUEST SENSE, I've demonstrated how to report errors with each
-> step in the sequence.  With demo patches I've posted, I've demonstrated
-> (using qc->private_data) how to hold state.
->
->
-> > libata still has a ways to go to catch up to SAT rev 7
-> > but has made some good progress lately with the addition
-> > of the ATA pass through commands (lk 2.6.15-rc1 and onward).
-> > smartmontools (just prior to 5.34) now works with '-d ata'
-> > on libata-connected SATA disks. The '-d ata' ** overrides
-> > the guess of a SCSI disk based on the device node (e.g.
-> > /dev/sda) and uses the HDIO_DRIVE_CMD and HDIO_DRIVE_TASK
-> > ioctls. The absence of support for the HDIO_DRIVE_TASKFILE
-> > ioctl means that "selective" self-test can't be done.
-> > I'm not sure if moving smartmontools to the ATA PASS THROUGH
-> > SCSI commands will win back the "selective" self-test
-> > capability. Anyway, going to those ATA PASS THROUGH SCSI
->
-> ATA passthru can do anything the legacy IDE ioctls can do (and more).
+When playing a DVD movie (xine), I get hundreds of these
+messages from the kernel, flooding my syslogs:
 
-[ definitely ATA passthru is the way to go but... ]
+sr0: CDROM not ready.  Make sure there is a disc in the drive.
+sr0: CDROM not ready.  Make sure there is a disc in the drive.
+sr0: CDROM not ready.  Make sure there is a disc in the drive.
+sr0: CDROM not ready.  Make sure there is a disc in the drive.
+sr0: CDROM not ready.  Make sure there is a disc in the drive.
+sr0: CDROM not ready.  Make sure there is a disc in the drive.
+sr0: CDROM not ready.  Make sure there is a disc in the drive.
+sr0: CDROM not ready.  Make sure there is a disc in the drive.
+sr0: CDROM not ready.  Make sure there is a disc in the drive.
 
-discrete taskfiles?
-multi-PIO?
-setting transfer speed?
+The kernel probably doesn't need to be issuing these,
+but rather it should leave it up to the application
+to report/log drive conditions like this.
 
-and if you are talking about IDE ioctls there is (unfortunately)
-much more than HDIO_DRIVE_[CMD,TASK,TASKFILE]
-
->From extra things that it can do I see support
-for LBA48 transfers, is there anything more?
-
-Bartlomiej
+???
