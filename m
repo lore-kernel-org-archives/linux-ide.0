@@ -1,58 +1,50 @@
-From: "Hoodia Testimonials" <kfvecspio@verizon.net>
-Subject: Hoodia - why we are the best
-Date: Tue, 22 Nov 2005 01:46:59 +0000 (UTC)
-Message-ID: <500965i8vw3d$36z6x0m0$4102f2u6@chaperon>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata_sil24 test support
+Date: Tue, 22 Nov 2005 10:52:02 +0900
+Message-ID: <438279C2.6030002@gmail.com>
+References: <20051122002333.9619.qmail@science.horizon.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h227.157.141.67.ip.alltel.net ([67.141.157.227]:36112 "HELO
-	h227.157.141.67.ip.alltel.net") by vger.kernel.org with SMTP
-	id S964844AbVKVBqO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Nov 2005 20:46:14 -0500
+Received: from xproxy.gmail.com ([66.249.82.196]:18739 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964874AbVKVBwK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Nov 2005 20:52:10 -0500
+Received: by xproxy.gmail.com with SMTP id s14so838902wxc
+        for <linux-ide@vger.kernel.org>; Mon, 21 Nov 2005 17:52:10 -0800 (PST)
+In-Reply-To: <20051122002333.9619.qmail@science.horizon.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-x25@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-tape@vger.kernel.org, linux-newbie@vger.kernel.org, linux-assembly@vger.kernel.org, linux-laptop@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux@horizon.com
+Cc: linux-ide@vger.kernel.org
 
-FINALLY A NATURALL SUPPRESSANT THAT WORKS FOR EVERYONE
+linux@horizon.com wrote:
+>>One thing I wanna verify on sil24 is data integrity with multiple disks 
+>>attached.  It would be very helpful if you can do some parallel data 
+>>stress testing with multiple disks.
+>>
+>>* Parallel 'badblocks -w -t random' on all attached disks.  Maybe repeat 
+>>it for a few days and verify no corrupted IO occurs.
+> 
+> 
+> Just completed 6 passes x 6 drives x 350 GB = 12.6 TB of badblocks (10^14
+> bits) with no errors.  That's in addition to a previous 5 passes that
+> was interrupted by timeout problems on one drive, but that's an error
+> handling issue and not a data corruption problem, and it did resolve
+> itself eventually after I killed the badblocks run.
+> 
+> That's several days of solid disk access at > 300 MB/sec.
+> (Some silly people asked me why I ingored the Sil3114 that came with
+> the motherboard...)
+> 
+> Thanks for a great driver!  I'll have even more fun testing NCQ one of
+> these days. :-)
+> 
+> Now rebooting to 2.6.14-rc2.  Now that it's stable, this system is going
+> into production Very Very Soon.  If you want any more testing, speak up!
 
-What if you could fool your brain into believing that you are full? 
-Amazing, but true! 
-http://candiet.com
+I'm very glad to here the good news.  I'll let you know when more
+testing is needed.  Thanks for doing this.
 
-Imagine the weight that you could lose if you could JUST REDUCE your 
-appetite. This miracle drug has been around for thousands of years but 
-only recently has it been made available to the general population. 
-Hoodia is an ugly cactus that grows deep inside the African Kalahari desert 
-thriving in extremely high temperatures. The San Bushmen of the 
-Kalahari, one of the world's oldest and most primitive tribes, have been 
-eating the Hoodia plant for more than 100,00 years to stave off hunger 
-during long hunting trips. 
-
-After 30 years of scientific research, Hoodia is finally available for 
-modern man! 
-
-http://silverdiet.com
-
-Suppress your appetite and feel full and satisfied all day long 
-Increase your energy levels 
-Lose excess weight 
-Increase your metabolism 
-Burn body fat 
-Burn calories 
-Attack obesity 
-No known side effects 
-Maximum results seen after only a few weeks 
-Suitable for vegetarians and vegans 
-MAINTAIN your weight loss 
-Make losing weight a sure guarantee 
-Look your best during the summer months 
-
-You've seen it on "60 Minutes" and read the BBC News report . now find 
-out just what everyone is talking about and get yourself some Hoodia 
-Maximum Strength today!
-http://vigorserious.com
+-- 
+tejun
