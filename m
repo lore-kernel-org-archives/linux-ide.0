@@ -1,161 +1,87 @@
-From: y3kniceday <y3kniceday@tin.it>
-Subject: Re: vt8251 patch= dma works
-Date: Wed, 23 Nov 2005 11:43:23 +0000
-Message-ID: <dm1gu4$vi0$1@sea.gmane.org>
-References: <loom.20051122T191414-917@post.gmane.org>
+From: kl@jasmine.eu.org
+Subject: Re: [PATCH, IDE] Blacklist CD-912E/ATK
+Date: Wed, 23 Nov 2005 12:11:27 +0100
+Message-ID: <20051123111127.GA1823@iglo.domek.prywatny>
+References: <20051122024426.8C16A34043@koto.vergenet.net> <1132691179.20233.77.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030308000104030105010803"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:57265 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S1030392AbVKWKnv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Nov 2005 05:43:51 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1Ees4v-0000uJ-BE
-	for linux-ide@vger.kernel.org; Wed, 23 Nov 2005 11:42:17 +0100
-Received: from ppp-62-11-132-41.dialup.tiscali.it ([62.11.132.41])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 23 Nov 2005 11:42:17 +0100
-Received: from y3kniceday by ppp-62-11-132-41.dialup.tiscali.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 23 Nov 2005 11:42:17 +0100
-In-Reply-To: <loom.20051122T191414-917@post.gmane.org>
+Received: from d213-102-147-102.cust.tele2.pl ([213.102.147.102]:18048 "EHLO
+	iglo.domek.prywatny") by vger.kernel.org with ESMTP
+	id S1030398AbVKWLQr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Nov 2005 06:16:47 -0500
+Content-Disposition: inline
+In-Reply-To: <1132691179.20233.77.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Horms <horms@verge.net.au>, Karol Lewandowski <klz@o2.pl>, 340228@bugs.debian.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------030308000104030105010803
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-y3kniceday wrote:
-> DMA works with this patch on kernel 2.6.12.4 but sata don't works!
-> dmesg says:
-> libata version 1.11 loaded.
-> sata_via version 1.1
-> sata_via(0000:00:0f.0): routed to hard irq line 10
-> ata1: SATA max UDMA/133 cmd 0xEC00 ctl 0xEC0A bmdma 0xE400 irq 10
-> ata2: SATA max UDMA/133 cmd 0xE880 ctl 0xE88A bmdma 0xE408 irq 10
-> ata1: no device found (phy stat 00200008)
-> scsi0 : sata_via
-> ata2: no device found (phy stat ffffffff)
-> scsi1 : sata_via
-> 
-> and i have an hd on ata1. 
-> 
-> patch:
-> http://prcsanmarco.altervista.org/dma-sata.diff
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-the patch:
-
-
---------------030308000104030105010803
-Content-Type: text/plain;
- name="dma-sata.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="dma-sata.diff"
-
---- drivers/ide/pci/via82cxxx.c	2005-08-08 11:10:03.000000000 +0000
-+++ drivers/ide/pci/via82cxxx.c	2005-11-22 14:37:42.000000000 +0000
-@@ -81,6 +81,7 @@
- } via_isa_bridges[] = {
- 	{ "vt8237",	PCI_DEVICE_ID_VIA_8237,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
- 	{ "vt8235",	PCI_DEVICE_ID_VIA_8235,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
-+	{ "vt8251",	PCI_DEVICE_ID_VIA_8251,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
- 	{ "vt8233a",	PCI_DEVICE_ID_VIA_8233A,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
- 	{ "vt8233c",	PCI_DEVICE_ID_VIA_8233C_0,  0x00, 0x2f, VIA_UDMA_100 },
- 	{ "vt8233",	PCI_DEVICE_ID_VIA_8233_0,   0x00, 0x2f, VIA_UDMA_100 },
-
---- include/linux/pci_ids.h	2005-08-08 11:10:15.000000000 +0000
-+++ include/linux/pci_ids.h	2005-11-22 14:24:47.000000000 +0000
-@@ -1405,6 +1405,7 @@
- #define PCI_DEVICE_ID_VIA_8783_0	0x3208
- #define PCI_DEVICE_ID_VIA_P4M400	0x3209
- #define PCI_DEVICE_ID_VIA_8237		0x3227
-+#define PCI_DEVICE_ID_VIA_8251          0x3287
- #define PCI_DEVICE_ID_VIA_3296_0	0x0296
- #define PCI_DEVICE_ID_VIA_86C100A	0x6100
- #define PCI_DEVICE_ID_VIA_8231		0x8231
-
---- drivers/pci/pci.ids	2005-08-08 11:10:07.000000000 +0000
-+++ drivers/pci/pci.ids	2005-11-22 13:08:12.000000000 +0000
-@@ -4027,6 +4027,7 @@
- 1106  VIA Technologies, Inc.
- 	0102  Embedded VIA Ethernet Controller
- 	0130  VT6305 1394.A Controller
-+	0204  K8M800
- 	0305  VT8363/8365 [KT133/KM133]
- 		1043 8033  A7V Mainboard
- 		1043 803e  A7V-E Mainboard
-@@ -4085,8 +4086,10 @@
- 	0926  VT82C926 [Amazon]
- 	1000  VT82C570MV
- 	1106  VT82C570MV
-+	1204  K8M800
- 	1571  VT82C576M/VT82C586
- 	1595  VT82C595/97 [Apollo VP2/97]
-+	2204  K8M800
- 	3022  CLE266
- # This is *not* USB 2.0 as the existing entry suggests
- 	3038  VT82xxxxx UHCI USB 1.1 Controller
-@@ -4221,7 +4224,10 @@
- 		1458 5001  GA-7VT600 Motherboard
- 		147b 1407  KV8-MAX3 motherboard
- 	3249  VT6421 IDE RAID Controller
-+	3287  VT8251 ISA
-+	3349  VT8251 SATA
- 	4149  VIA VT6420 (ATA133) Controller
-+	4204  K8M800
- 	5030  VT82C596 ACPI [Apollo PRO]
- 	6100  VT85C100A [Rhine II]
- 	7204  K8M800
-
---- drivers/scsi/sata_via.c	2005-08-08 11:10:09.000000000 +0000
-+++ drivers/scsi/sata_via.c	2005-11-22 17:04:14.000000000 +0000
-@@ -48,6 +48,7 @@
- enum board_ids_enum {
- 	vt6420,
- 	vt6421,
-+	vt8251,
- };
+On Tue, Nov 22, 2005 at 08:26:19 +0000, Alan Cox wrote:
  
- enum {
-@@ -74,6 +75,8 @@
- static struct pci_device_id svia_pci_tbl[] = {
- 	{ 0x1106, 0x3149, PCI_ANY_ID, PCI_ANY_ID, 0, 0, vt6420 },
- 	{ 0x1106, 0x3249, PCI_ANY_ID, PCI_ANY_ID, 0, 0, vt6421 },
-+	{ 0x1106, 0x3349, PCI_ANY_ID, PCI_ANY_ID, 0, 0, vt8251 },
-+
+> >     The drive is clearly broken.  Adding blacklist to drivers/ide/ide-dma.c
+> >     for this model ("CD-912E/ATK") fixes this problem.
  
- 	{ }	/* terminate list */
- };
-@@ -170,6 +173,10 @@
- 	8, 4, 8, 4, 16, 256
- };
- 
-+static const unsigned int vt8251_bar_sizes[] = {
-+	8, 4, 8, 4, 16, 256
-+};
-+
- static const unsigned int vt6421_bar_sizes[] = {
- 	16, 16, 16, 16, 32, 128
- };
-@@ -322,7 +329,7 @@
- 
- 		bar_sizes = &svia_bar_sizes[0];
- 	} else {
--		bar_sizes = &vt6421_bar_sizes[0];
-+		bar_sizes = &vt8251_bar_sizes[0];//bar_sizes = &vt6421_bar_sizes[0];
- 	}
- 
- 	for (i = 0; i < ARRAY_SIZE(svia_bar_sizes); i++)
---------------030308000104030105010803--
+> That may be the case but knowing if th drive is the problem is more
+> tricky.
 
+By saying that drive is broken I meant "it never worked with DMA", at
+least for me.  Sorry for not being clear.
+
+I have more to add -- IMHO blacklisting the drive doesn't fix the
+problem, but just works around it.  As I written in my original bug
+report[1] I thought panic shouldn't happen anyway.  I also noted that
+kernels 2.4.* handle this situation gracefully, and pointed out that
+the time between panic (in 2.6), and graceful recovery (in 2.4)
+differs between kernels.
+
+[1] http://bugs.debian.org/340228
+
+ 
+> Firstly try it on a different controller
+
+I tested it on two controllers:
+0000:00:07.1 IDE interface: Intel Corp. 82371SB PIIX3 IDE [Natoma/Triton II]
+0000:00:07.1 IDE interface: Intel Corp. 82371AB/EB/MB PIIX4 IDE (rev 01)
+
+Kernel panics as before on both of them.
+
+
+> Secondly check for other firmware revisions 
+> Thirdly blacklist only your firmware rev if there are others
+
+Here goes output of "hdparm -i" for said drive.
+
+ Model=CD-912E/ATK, FwRev=17A, SerialNo=
+ Config={ SpinMotCtl Removeable DTR<=5Mbs DTR>10Mbs nonMagnetic }
+ RawCHS=0/0/0, TrkSize=0, SectSize=0, ECCbytes=0
+ BuffType=DualPortCache, BuffSize=128kB, MaxMultSect=0
+ (maybe): CurCHS=0/0/0, CurSects=0, LBA=yes, LBAsects=0
+ IORDY=yes, tPIO={min:209,w/IORDY:180}, tDMA={min:150,rec:150}
+ PIO modes:  pio0 pio1 pio2 pio3 
+ DMA modes:  sdma0 sdma1 sdma2 mdma0 *mdma1 
+ AdvancedPM=no
+
+As things are more clear now, I think there is no reason to search for
+newer firmware for this drive?  (This is Generic-IDE bug, right?)
+
+
+> >     hdc: DMA disabled
+> >     ------------[ cut here ]------------
+> >     kernel BUG at drivers/ide/ide-iops.c:949!
+> >     invalid operand: 0000 [#1]
+ 
+> That is an IDE layer bug not a drive incompatibility. It may be one
+> triggered the other but until the BUG the kernel was correctly behaving
+> and had just turned off DMA anyway.
+
+This is what I thought in the first place, and this is what I
+suggested in my original bug report.  Debian kernel mainainer shortened
+the report somewhat, probably because it was too long and too boring.
+Additionaly I incorrectly stated that blacklisting _fixes_ the
+problem, which was even not what I personally thought. ;)
+
+Sorry for that.
+
+-- 
+This signature intentionally says nothing.
