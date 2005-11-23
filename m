@@ -1,30 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] Marvell SATA fixes v2
-Date: Wed, 23 Nov 2005 16:40:57 -0500
-Message-ID: <4384E1E9.2070309@pobox.com>
-References: <437D2DED.5030602@pobox.com>	<Pine.LNX.4.44.0511182241420.5095-100000@kenzo.iwr.uni-heidelberg.de>	<20051118215209.GA9425@havoc.gtf.org> <52veyp39hs.fsf@cisco.com>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: [RFC 0/5] ACPI methods for SATA
+Date: Wed, 23 Nov 2005 15:40:55 -0800
+Message-ID: <20051123154055.6ab5cab2.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932547AbVKWVlG@vger.kernel.org>
-In-Reply-To: <52veyp39hs.fsf@cisco.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Roland Dreier <rolandd@cisco.com>
-Cc: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fmr20.intel.com ([134.134.136.19]:3204 "EHLO
+	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1030552AbVKWXxf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Nov 2005 18:53:35 -0500
+Received: from orsfmr101.jf.intel.com (orsfmr101.jf.intel.com [10.7.209.17])
+	by orsfmr005.jf.intel.com (8.12.10/8.12.10/d: major-outer.mc,v 1.1 2004/09/17 17:50:56 root Exp $) with ESMTP id jANNrZjK031190
+	for <linux-ide@vger.kernel.org>; Wed, 23 Nov 2005 23:53:35 GMT
+Received: from vortex.site (vortex.co.intel.com [10.10.212.123])
+	by orsfmr101.jf.intel.com (8.12.10/8.12.10/d: major-inner.mc,v 1.2 2004/09/17 18:05:01 root Exp $) with ESMTP id jANNrZV1025271
+	for <linux-ide@vger.kernel.org>; Wed, 23 Nov 2005 23:53:35 GMT
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: ide <linux-ide@vger.kernel.org>
 
-Roland Dreier wrote:
->     Jeff> Yes, for both 50xx and 60xx, I had to turn off MSI in order
->     Jeff> to get sata_mv to work...
-> 
-> Sounds like MSI is broken in the Marvell chip.  This is exactly the
 
-No, it could be any one of
+This is my current work-in-progress for comments on
+ACPI methods for SATA (and PATA later on, unless a patch
+from Shaohua Li on the mailing list handles PATA).
 
-* broken Marvell chip
-* broken system
-* driver bug
+Quick status:
 
-It hasn't been narrowed down yet.
+Working:
+- find devices in namespace
+- evaluate _SDD
+- evaluate _GTF
+- simulate writing taskfile to device
 
-	Jeff
+TODO:
+- write taskfile to device in a generic, non-controller-specific way
+- add more usage events for _SDD and _GTF (SATA) per
+  ACPI 3.0 spec, section 9.9.3.3, page 288.
+
+---
+~Randy
