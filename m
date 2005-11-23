@@ -1,21 +1,35 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: Re: [PATCH] PATA support for Intel ICH7 (intel 945G chipset) - 2.6.14.2
-Date: Wed, 23 Nov 2005 11:34:33 +0000
-Message-ID: <438453C9.4050200@gentoo.org>
-References: <4383DC5E.3050601@panoch.net>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: Re: [PATCH] PATA support for Intel ICH7 (intel 945G chipset)
+Date: Wed, 23 Nov 2005 12:31:48 -0800
+Message-ID: <26CEE2C804D7BE47BC4686CDE863D0F50574A62D@orsmsx410>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta07-winn.ispmail.ntl.com ([81.103.221.47]:2813 "EHLO
-	mta07-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
-	id S965210AbVKWLej (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 Nov 2005 06:34:39 -0500
-In-Reply-To: <4383DC5E.3050601@panoch.net>
+Received: from fmr19.intel.com ([134.134.136.18]:45762 "EHLO
+	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
+	id S932381AbVKWUci convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Nov 2005 15:32:38 -0500
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Panoch <jan@panoch.net>
+To: jan@panoch.net
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+
+Jan,
+
+DeviceID 0x27c0 is the ICH7 SATA controller DID.  It should not be added
+to the PATA IDE piix driver.  It is already supported in the SATA
+ata_piix driver.  If you are not seeing the PATA controller DID 0x27df,
+then your BIOS is most likely set to combined mode.  Change your BIOS to
+SATA enhanced mode.  If your BIOS does not support enhanced mode,
+contact your motherboard manufacturer.
+
+Thanks,
+
+Jason
+
 
 Jan Panoch wrote:
 > Hi,
@@ -25,13 +39,6 @@ Jan Panoch wrote:
 > I need to add PATA support for new intel 945G chipset on Asus
 > motherboard P5LD2-VM.
 > If acceptable, please apply.
-
-PCI_DEVICE_ID_INTEL_ICH7_2 has been removed in 2.6.15 as it was unused.
-Your patch is whitespace damaged (mailer ate the tabs?). You also need to send 
-it to the linux-ide list and the IDE maintainer (see 
-Documentation/SubmittingPatches). I don't think it will be accepted because 
-this hardware is already supported by the ata_piix libata driver.
-
 > 
 > --- piix.c.orig 2005-11-23 11:46:12.000000000 +0100
 > +++ piix.c      2005-11-23 11:13:02.000000000 +0100
@@ -60,11 +67,13 @@ this hardware is already supported by the ata_piix libata driver.
 > 
 >  /**
 > @@ -651,6 +654,7 @@
->         { PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH7_21, PCI_ANY_ID,
+>         { PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH7_21,
+PCI_ANY_ID,
 > PCI_ANY_ID, 0, 0, 21},
 >         { PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801DB_1,
 > PCI_ANY_ID, PCI_ANY_ID, 0, 0, 22},
->         { PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ESB2_18, PCI_ANY_ID,
+>         { PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ESB2_18,
+PCI_ANY_ID,
 > PCI_ANY_ID, 0, 0, 23},
 > +       { PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH7_2, PCI_ANY_ID,
 > PCI_ANY_ID, 0, 0, 24},
