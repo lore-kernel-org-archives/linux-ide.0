@@ -1,32 +1,62 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] PATA support for Intel ICH7 (intel 945G chipset) - 2.6.14.2
-Date: Thu, 24 Nov 2005 11:46:43 -0500
-Message-ID: <4385EE73.1020709@pobox.com>
-References: <4383DC5E.3050601@panoch.net> <438453C9.4050200@gentoo.org> <4385D79E.5060107@rtr.ca>
+From: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>
+Subject: Re: [PATCH] Marvell SATA fixes v2
+Date: Thu, 24 Nov 2005 21:21:13 +0100 (CET)
+Message-ID: <Pine.LNX.4.63.0511241834390.28034@dingo.iwr.uni-heidelberg.de>
+References: <437D2DED.5030602@pobox.com>
+ <Pine.LNX.4.44.0511182241420.5095-100000@kenzo.iwr.uni-heidelberg.de>
+ <20051118215209.GA9425@havoc.gtf.org> <Pine.LNX.4.63.0511211311260.22263@dingo.iwr.uni-heidelberg.de>
+ <Pine.LNX.4.63.0511221809430.24388@dingo.iwr.uni-heidelberg.de>
+ <4384E1BC.4090708@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932390AbVKXQqz@vger.kernel.org>
-In-Reply-To: <4385D79E.5060107@rtr.ca>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932653AbVKXUVY@vger.kernel.org>
+In-Reply-To: <4384E1BC.4090708@pobox.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Daniel Drake <dsd@gentoo.org>, Jan Panoch <jan@panoch.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Daniel Drake wrote:
-> 
->>
->> Documentation/SubmittingPatches). I don't think it will be accepted 
->> because this hardware is already supported by the ata_piix libata driver.
-> 
-> 
-> That is not a valid reason to reject -- libata is still considered
-> very experimental for ATAPI devices, which are not enabled by default.
-> 
-> Jeff has said that he prefers (at present) for people with ATAPI drives
-> to use the IDE layer rather than libata, where possible.
+On Wed, 23 Nov 2005, Jeff Garzik wrote:
 
-PATA ATAPI, not all ATAPI...
+>> 1. several badblocks tests finished fine; the speed is also fine (about 
+>> 50Mbytes/s both read and write as reported by both iostat during badblocks 
+>> and bonnie++ on an ext2 FS).
+> cool
 
-	Jeff
+... and it's getting even cooler: with 4 WD Raptor 74GB, I get about 
+65MB/s per disk up to 3 disks accessed simultaneously; only when also 
+using the 4th disk, the speed per disk decreases to about 50MB/s. 
+Given than 3*65 ~ 4*50, I might reach some hidden limit, but it's 
+already quite good. So I'd appreciate if people with similar hardware 
+could test this, to see if there's a limit in the controller or in my 
+system ;-)
+
+I have to mention that the above figures were obtained not with RAID0, 
+but with individual reading from each drive. RAID0 somehow made reads 
+slower, I got only 120-130 MB/s total speed; writes over RAID0 were as 
+expected about 200MB/s (I only tried RAID0 with 128k and 1024k chunk 
+sizes).
+
+When creating the array (with mdadm --create), I got these messages 
+which I haven't seen before, although I played with SATA and RAID0 
+with some older kernels:
+
+ata4: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata4: status=0xd0 { Busy }
+ata3: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata3: status=0xd0 { Busy }
+ata2: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata2: status=0xd0 { Busy }
+ata1: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata1: status=0xd0 { Busy }
+
+(in this order, although the order specified on the mdadm command line 
+was the opposite).
+
+-- 
+Bogdan Costescu
+
+IWR - Interdisziplinaeres Zentrum fuer Wissenschaftliches Rechnen
+Universitaet Heidelberg, INF 368, D-69120 Heidelberg, GERMANY
+Telephone: +49 6221 54 8869, Telefax: +49 6221 54 8868
+E-mail: Bogdan.Costescu@IWR.Uni-Heidelberg.De
