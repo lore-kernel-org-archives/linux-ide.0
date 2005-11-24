@@ -1,57 +1,48 @@
 From: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>
 Subject: Re: [PATCH] Marvell SATA fixes v2
-Date: Thu, 24 Nov 2005 21:21:13 +0100 (CET)
-Message-ID: <Pine.LNX.4.63.0511241834390.28034@dingo.iwr.uni-heidelberg.de>
+Date: Thu, 24 Nov 2005 21:31:59 +0100 (CET)
+Message-ID: <Pine.LNX.4.63.0511242121290.28034@dingo.iwr.uni-heidelberg.de>
 References: <437D2DED.5030602@pobox.com>
  <Pine.LNX.4.44.0511182241420.5095-100000@kenzo.iwr.uni-heidelberg.de>
  <20051118215209.GA9425@havoc.gtf.org> <Pine.LNX.4.63.0511211311260.22263@dingo.iwr.uni-heidelberg.de>
- <Pine.LNX.4.63.0511221809430.24388@dingo.iwr.uni-heidelberg.de>
- <4384E1BC.4090708@pobox.com>
+ <4384E184.3040304@pobox.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932653AbVKXUVY@vger.kernel.org>
-In-Reply-To: <4384E1BC.4090708@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from relay.uni-heidelberg.de ([129.206.100.212]:48872 "EHLO
+	relay.uni-heidelberg.de") by vger.kernel.org with ESMTP
+	id S932654AbVKXUcH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Nov 2005 15:32:07 -0500
+In-Reply-To: <4384E184.3040304@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 On Wed, 23 Nov 2005, Jeff Garzik wrote:
 
->> 1. several badblocks tests finished fine; the speed is also fine (about 
->> 50Mbytes/s both read and write as reported by both iostat during badblocks 
->> and bonnie++ on an ext2 FS).
-> cool
+> Bogdan Costescu wrote:
+>> With MSI and libata DEBUG turned off I had a crash
+>
+> I wonder if the global reset disables MSI...  may be a driver bug.
 
-... and it's getting even cooler: with 4 WD Raptor 74GB, I get about 
-65MB/s per disk up to 3 disks accessed simultaneously; only when also 
-using the 4th disk, the speed per disk decreases to about 50MB/s. 
-Given than 3*65 ~ 4*50, I might reach some hidden limit, but it's 
-already quite good. So I'd appreciate if people with similar hardware 
-could test this, to see if there's a limit in the controller or in my 
-system ;-)
+I'm sorry, but I don't follow you here: I have specified that MSI was 
+disabled, so why do you expect this to have any effect ? (I could have 
+made it clearer by adding a "both" before "turned off"...)
 
-I have to mention that the above figures were obtained not with RAID0, 
-but with individual reading from each drive. RAID0 somehow made reads 
-slower, I got only 120-130 MB/s total speed; writes over RAID0 were as 
-expected about 200MB/s (I only tried RAID0 with 128k and 1024k chunk 
-sizes).
+> You could play around with moving the pci_enable_msi until after the global 
+> reset...
 
-When creating the array (with mdadm --create), I got these messages 
-which I haven't seen before, although I played with SATA and RAID0 
-with some older kernels:
+I also don't follow:
 
-ata4: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata4: status=0xd0 { Busy }
-ata3: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata3: status=0xd0 { Busy }
-ata2: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata2: status=0xd0 { Busy }
-ata1: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata1: status=0xd0 { Busy }
+pci_enable_msi() is only called from mv_init_one(); I think that the 
+global reset that you refer to is part of mv_init_host(), but this is 
+already called in mv_init_one() before pci_enable_msi().
 
-(in this order, although the order specified on the mdadm command line 
-was the opposite).
+Anyway, during all the speed testing, I was running the exact same 
+kernel that crashed - with more disks and more activity, and I 
+couldn't crash it anymore. Could you suggest, based on the stack dump, 
+how to make it more likely to crash again ?
 
 -- 
 Bogdan Costescu
