@@ -1,36 +1,122 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Assorted bugs in the PIIX drivers
-Date: Fri, 25 Nov 2005 17:12:38 +0000
-Message-ID: <1132938758.3298.45.camel@localhost.localdomain>
-References: <1132929808.3298.18.camel@localhost.localdomain>
-	 <20051125153601.GA6814@stiffy.osknowledge.org>
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: [PATCH] IDE compat_semaphore to completion
+Date: Fri, 25 Nov 2005 16:40:52 -0500
+Message-ID: <1132954852.24417.20.camel@localhost.localdomain>
+References: <438709F5.1050801@dev.rtsoft.ru>
+	 <1132929218.11915.2.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:1678 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1161110AbVKYQjo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Nov 2005 11:39:44 -0500
-In-Reply-To: <20051125153601.GA6814@stiffy.osknowledge.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751484AbVKYVlc@vger.kernel.org>
+In-Reply-To: <1132929218.11915.2.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Daniel Walker <dwalker@mvista.com>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Aleksey Makarov <amakarov@dev.rtsoft.ru>
 List-Id: linux-ide@vger.kernel.org
-To: Marc Koschewski <marc@osknowledge.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Gwe, 2005-11-25 at 16:36 +0100, Marc Koschewski wrote:
-> 	could it be possible to again drop the ide=nodma kernel parameter in my
-> configs that use reiserfs? reiserfs just bails out when I mount devices on ide
-> busses that miss that parameter. I somtimes had to --rebuild-tree after a boot
-> with DMA enabled.
+The following patch is from Montavista.  I modified it slightly.
+Semaphores are currently being used where it makes more sense for
+completions.  This patch corrects that.
 
-One to ask the IDE maintainer about for the drivers/ide/pci code.
-However the bugs and questions from my check only affect non hardisk
-devices and very early slow PIO devices so wouldn't explain problems
-seen with modern drive configurations.
+-- Steve
 
-The setup for modern (UDMA) while horribly convoluted appears to be
-totally correct.
+Signed-off-by: Steven Rostedt <rostedt@goodmis.org>
 
-Alan
+Source: MontaVista Software, Inc.
+Signed-off-by: Aleksey Makarov <amakarov@ru.mvista.com>
+Description:
+	The patch changes semaphores that are initialized as 
+	locked to complete().
 
+Index: linux-2.6.15-rc2-git5/drivers/ide/ide-probe.c
+===================================================================
+--- linux-2.6.15-rc2-git5.orig/drivers/ide/ide-probe.c	2005-11-23 07:59:15.000000000 -0500
++++ linux-2.6.15-rc2-git5/drivers/ide/ide-probe.c	2005-11-25 16:15:01.000000000 -0500
+@@ -655,7 +655,7 @@
+ {
+ 	ide_hwif_t *hwif = container_of(dev, ide_hwif_t, gendev);
+ 
+-	up(&hwif->gendev_rel_sem);
++	complete(&hwif->gendev_rel_comp);
+ }
+ 
+ static void hwif_register (ide_hwif_t *hwif)
+@@ -1325,7 +1325,7 @@
+ 	drive->queue = NULL;
+ 	spin_unlock_irq(&ide_lock);
+ 
+-	up(&drive->gendev_rel_sem);
++	complete(&drive->gendev_rel_comp);
+ }
+ 
+ /*
+Index: linux-2.6.15-rc2-git5/drivers/ide/ide.c
+===================================================================
+--- linux-2.6.15-rc2-git5.orig/drivers/ide/ide.c	2005-11-23 07:59:15.000000000 -0500
++++ linux-2.6.15-rc2-git5/drivers/ide/ide.c	2005-11-25 16:15:01.000000000 -0500
+@@ -222,7 +222,7 @@
+ 	hwif->mwdma_mask = 0x80;	/* disable all mwdma */
+ 	hwif->swdma_mask = 0x80;	/* disable all swdma */
+ 
+-	sema_init(&hwif->gendev_rel_sem, 0);
++	init_completion(&hwif->gendev_rel_comp);
+ 
+ 	default_hwif_iops(hwif);
+ 	default_hwif_transport(hwif);
+@@ -245,7 +245,7 @@
+ 		drive->is_flash			= 0;
+ 		drive->vdma			= 0;
+ 		INIT_LIST_HEAD(&drive->list);
+-		sema_init(&drive->gendev_rel_sem, 0);
++		init_completion(&drive->gendev_rel_comp);
+ 	}
+ }
+ 
+@@ -602,7 +602,7 @@
+ 		}
+ 		spin_unlock_irq(&ide_lock);
+ 		device_unregister(&drive->gendev);
+-		down(&drive->gendev_rel_sem);
++		wait_for_completion(&drive->gendev_rel_comp);
+ 		spin_lock_irq(&ide_lock);
+ 	}
+ 	hwif->present = 0;
+@@ -662,7 +662,7 @@
+ 	/* More messed up locking ... */
+ 	spin_unlock_irq(&ide_lock);
+ 	device_unregister(&hwif->gendev);
+-	down(&hwif->gendev_rel_sem);
++	wait_for_completion(&hwif->gendev_rel_comp);
+ 
+ 	/*
+ 	 * Remove us from the kernel's knowledge
+Index: linux-2.6.15-rc2-git5/include/linux/ide.h
+===================================================================
+--- linux-2.6.15-rc2-git5.orig/include/linux/ide.h	2005-11-23 07:59:21.000000000 -0500
++++ linux-2.6.15-rc2-git5/include/linux/ide.h	2005-11-25 16:25:21.000000000 -0500
+@@ -18,6 +18,7 @@
+ #include <linux/bio.h>
+ #include <linux/device.h>
+ #include <linux/pci.h>
++#include <linux/completion.h>
+ #include <asm/byteorder.h>
+ #include <asm/system.h>
+ #include <asm/io.h>
+@@ -759,7 +760,7 @@
+ 	int		crc_count;	/* crc counter to reduce drive speed */
+ 	struct list_head list;
+ 	struct device	gendev;
+-	struct semaphore gendev_rel_sem;	/* to deal with device release() */
++	struct completion gendev_rel_comp;	/* to deal with device release() */
+ } ide_drive_t;
+ 
+ #define to_ide_device(dev)container_of(dev, ide_drive_t, gendev)
+@@ -915,7 +916,7 @@
+ 	unsigned	sg_mapped  : 1;	/* sg_table and sg_nents are ready */
+ 
+ 	struct device	gendev;
+-	struct semaphore gendev_rel_sem; /* To deal with device release() */
++	struct completion gendev_rel_comp; /* To deal with device release() */
+ 
+ 	void		*hwif_data;	/* extra hwif data */
+ 
