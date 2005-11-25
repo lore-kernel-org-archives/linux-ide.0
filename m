@@ -1,37 +1,33 @@
-From: "Mr Anthony Strickland" <nzgmvdxjhrch@patmedia.net>
-Subject: To grow thinner, diminish your dinner
-Date: Fri, 25 Nov 2005 09:28:20 +0000 (UTC)
-Message-ID: <202179o0hs0u$20r6a0o0$6245g1h5__2889.33115448362$1132910900$gmane$org@rowboat>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Assorted bugs in the PIIX drivers
+Date: Fri, 25 Nov 2005 14:43:28 +0000
+Message-ID: <1132929808.3298.18.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsl-201-137-230-30.prod-infinitum.com.mx ([201.137.230.30]:34575
-	"HELO dsl-201-137-230-30.prod-infinitum.com.mx") by vger.kernel.org
-	with SMTP id S1751430AbVKYJ1x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Nov 2005 04:27:53 -0500
+Received: from clock-tower.bc.nu ([81.2.110.250]:12504 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1161087AbVKYOKc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Nov 2005 09:10:32 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-newbie@vger.kernel.org
-Cc: linux-assembly@vger.kernel.org, linux-laptop@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-We have received your request for information on natural 
-suppressants to help l0se weight.Our company Nutritionist's
-Susan Miers & Mary-Anne McWhirter have found a solution for 
-your weight problem.
+I finally got all the documents rounded up to try and redo Jgarzik's
+PIIX driver a bit more completely (I'm short MPIIX if anyone has it ?)
 
-Solution:
+I then started reading the docs and the code and noticing a couple of
+problems
 
-Susan & Mary-Anne reccommend a 2-4 month supply of MS-HOODIA©.
-Most of our clients have L0ST anywhere from 10-30 Ibs within 
-2-3 weeks.
+1.	We set IE1 on PIO0-2 which the docs say is for PIO3+
 
-Recommended Supplier:
+2.	The ata_piix one (but not the ide/pci one) have shifts wrong so that
+the secondary slave timings are half loaded into the primary slave
 
-http://advicefound.com
 
-*This recommendation is not available in retail stores until 
-February 28th, 2006. This is one website that carries the product. 
+I'm also not clear if the "no MWDMA0" list has been updated correctly
+for the newer chipsets.
+
+I've yet to review the DMA programming, just the PIO so far.
+
