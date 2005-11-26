@@ -1,71 +1,52 @@
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Subject: cpu consumption
-Date: Sat, 26 Nov 2005 05:45:24 -0800
-Message-ID: <5d96567b0511260545j61970a01j3b5c435766a51a6d@mail.gmail.com>
+From: Dominic Ijichi <dom@ijichi.org>
+Subject: sata suspend status?
+Date: Sat, 26 Nov 2005 15:56:22 +0000
+Message-ID: <1133020582.438885a6615dc@www.ijichi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.206]:16174 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964769AbVKZNpZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 26 Nov 2005 08:45:25 -0500
-Received: by wproxy.gmail.com with SMTP id 70so1422235wra
-        for <linux-ide@vger.kernel.org>; Sat, 26 Nov 2005 05:45:25 -0800 (PST)
+Received: from buffy.ijichi.org ([213.161.76.94]:19706 "EHLO buffy.ijichi.org")
+	by vger.kernel.org with ESMTP id S964799AbVKZP42 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Nov 2005 10:56:28 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by buffy.ijichi.org (Postfix) with ESMTP id B8ADC183E7
+	for <linux-ide@vger.kernel.org>; Sat, 26 Nov 2005 15:56:26 +0000 (GMT)
+Received: from buffy.ijichi.org ([127.0.0.1])
+ by localhost (buffy.ijichi.org [127.0.0.1]) (amavisd-new, port 10024)
+ with LMTP id 04079-05 for <linux-ide@vger.kernel.org>;
+ Sat, 26 Nov 2005 15:56:22 +0000 (GMT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello Jeff.
-Here is my problem.
+hello
 
-When I issue a READ operation over a SATA disk in linux i have
-huge cpu consumption , about 90% cpu usage.
+i've been trying to get my laptop s3 suspend working - its all working except I
+believe for sata.  it resumes and you can do type in, interact with the kernel
+but as soon as you do anything that requires disk access it hangs. sorry if this
+isn't very technical description, i can provide anything if told roughly what to do!
 
-I am using MAXTOR disks in a supermicro machine.
-the cpu test was made when i "raw read" from the DISK using DIRECT_IO.
+i've searched extensively for patches, tried all the various incantations, and
+currently running 2.6.15-rc2 which is supposed to provide support for ata
+passthrough and basic scsi suspend, but still same problem. i have:
 
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+Intel Corporation 82801FBM (ICH6M) SATA Controller (rev 04)
 
-this is my dmesg.
-ata1: SATA max UDMA/133 cmd 0xE900 ctl 0xEA02 bmdma 0xED00 irq 10
-ata2: SATA max UDMA/133 cmd 0xEB00 ctl 0xEC02 bmdma 0xED08 irq 10
-ata1: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4673 85:7c69 86:3e01 87:4663 88:207f
-ata1: dev 0 ATA, max UDMA/133, 490234752 sectors: lba48
-ata1: dev 0 configured for UDMA/133
-scsi0 : ata_piix
-ata2: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4673 85:7c69 86:3e01 87:4663 88:207f
-ata2: dev 0 ATA, max UDMA/133, 490234752 sectors: lba48
-ata2: dev 0 configured for UDMA/133
-scsi1 : ata_piix
-  Vendor: ATA       Model: Maxtor 7L250S0    Rev: BANC
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-  Vendor: ATA       Model: Maxtor 7L250S0    Rev: BANC
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sda: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sda: drive cache: write back
- /dev/scsi/host0/bus0/target0/lun0: p1 p2
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-SCSI device sdb: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdb: drive cache: write back
-SCSI device sdb: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdb: drive cache: write back
- /dev/scsi/host1/bus0/target0/lun0:
-Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
-Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
-Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
-mice: PS/2 mouse device common for all mice
-i2c /dev entries driver
-md: linear personality registered as nr 1
-md: raid0 personality registered as nr 2
-md: raid1 personality registered as nr 3
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+/dev/sda = HITACHI_DK23FA-60
 
+hdparm -I /dev/sda works fine.
 
-Thank you.
---
-Raz
+I note recent patches from randy dunlap from intel to do with this controller
+and acpi but not sure what kernel this is against or whether it's relevent.
+
+i believe there are many people out there who would love to get sata
+suspend/resume working, its a major problem for all recent laptops and us folks
+who love running linux.  what's the current status please?
+
+thanks
+dom
+
+------------------------------------------
+This message was penned by the hand of Dom
