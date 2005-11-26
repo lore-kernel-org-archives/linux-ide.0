@@ -1,94 +1,139 @@
-From: Reuben Farrelly <reuben-lkml@reub.net>
-Subject: Re: Problems with SATA/AHCI with 'nosmp'  boot option
-Date: Sat, 26 Nov 2005 22:09:47 +1300
-Message-ID: <4388265B.8020309@reub.net>
-References: <43312397.9080501@reub.net>	<43425A0E.9050500@pobox.com>	<437D5E36.7000103@reub.net> <20051117230701.1684a43e.rdunlap@xenotime.net>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Q: IDE->SATA adaptor
+Date: Sat, 26 Nov 2005 20:10:58 +1100
+Message-ID: <438826A2.2020204@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tornado.reub.net ([202.89.145.182]:26308 "EHLO tornado.reub.net")
-	by vger.kernel.org with ESMTP id S1750704AbVKZJJt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Nov 2005 04:09:49 -0500
-In-Reply-To: <20051117230701.1684a43e.rdunlap@xenotime.net>
+Received: from ihug-mail.icp-qv1-irony5.iinet.net.au ([203.59.1.199]:56496
+	"EHLO mail-ihug.icp-qv1-irony5.iinet.net.au") by vger.kernel.org
+	with ESMTP id S1750701AbVKZJLD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Nov 2005 04:11:03 -0500
+Received: from [192.168.3.7] (e7.eyal.emu.id.au [192.168.3.7])
+	by e4.eyal.emu.id.au (8.11.6/8.11.6) with ESMTP id jAQ9AxP14893
+	for <linux-ide@vger.kernel.org>; Sat, 26 Nov 2005 20:10:59 +1100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: list linux-ide <linux-ide@vger.kernel.org>
 
-Hi again Randy and others,
+I am still looking for a working setup for adding more SATA
+disks to my machine. I acquired a small PCB that plugs into
+the IDE socket on the mobo and provides two SATA sockets.
 
-On 18/11/2005 8:07 p.m., Randy.Dunlap wrote:
-> On Fri, 18 Nov 2005 17:53:10 +1300 Reuben Farrelly wrote:
-> 
->> Hi,
->>
->> On 4/10/2005 11:31 p.m., Jeff Garzik wrote:
->>> Reuben Farrelly wrote:
->>>> Hi,
->>>>
->>>> While trying to gather more info about a problem with the latest 
->>>> sky2.c Gig ethernet driver hanging, I thought I'd boot my SMP built 
->>>> kernel (on an SMP/HT machine) with the 'nosmp' boot option.
->>>>
->>>> However when I did this, I could no longer boot the machine, because 
->>>> the ahci
->>>> driver reported timeouts when probing the drives attached to the SATA 
->>>> ports, like this:
->>>>
->>>> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
->>>> ide: Assuming 33MHz system bus speed for PIO modes; override with 
->>>> idebus=xx
->>>> ICH6: IDE controller at PCI slot 0000:00:1f.1
->>>> ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, low) -> IRQ 73
->>>> ICH6: chipset revision 3
->>>> ICH6: not 100% native mode: will probe irqs later
->>>>     ide0: BM-DMA at 0xffa0-0xffa7, BIOS settings: hda:pio, hdb:pio
->>>>     ide1: BM-DMA at 0xffa8-0xffaf, BIOS settings: hdc:pio, hdd:pio
->>>> ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 81
->>>> ahci(0000:00:1f.2) AHCI 0001.0000 32 slots 4 ports 1.5 Gbps 0xf impl 
->>>> SATA mode
->>>> ahci(0000:00:1f.2) flags: 64bit ncq led slum part
->>>> ata1: SATA max UDMA/133 cmd 0xF8806D00 ctl 0x0 bmdma 0x0 irq 81
->>>> ata2: SATA max UDMA/133 cmd 0xF8806D80 ctl 0x0 bmdma 0x0 irq 81
->>>> ata3: SATA max UDMA/133 cmd 0xF8806E00 ctl 0x0 bmdma 0x0 irq 81
->>>> ata4: SATA max UDMA/133 cmd 0xF8806E80 ctl 0x0 bmdma 0x0 irq 81
->>>> ata1 is slow to respond, please be patient
->>>> ata1 failed to respond (30 secs)
->>>> scsi0 : ahci
->>>> ata2 is slow to respond, please be patient
->>>> ata2 failed to respond (30 secs)
->>> Sounds like AHCI or MSI is broken.
->>>
->>>     Jeff
->> I am still seeing this on 2.6.15-rc1-mm1.  I don't think we got any further 
->> than to conclude it _might_ be AHCI or MSI.
->>
->> What other information is required for me to be able to help someone look 
->> closer and/or resolve this bug?
->>
->> I have information about my system up at http://www.reub.net/kernel/ including 
->> some system specifications and my .config.  (It's a lot easier to put it there 
->> than attaching to every email)
-> 
-> Hi,
-> 
-> Jeff sent a message to lkml yesterday that he is seeing some
-> bad results with MSI interrupts:
->   http://lkml.org/lkml/2005/11/17/4
-> 
-> Hopefully that will get some results, although not yet AFAIK.
-> 
-> ---
-> ~Randy
+It worked out of the box, except that it only does udma2. Not
+what I want.
 
-I've just compiled up a 2.6.15-rc2-mm1 but without PCI-X and also without MSI 
-support, and I'm seeing the same problem of AHCI timing out when booting with 
-the nosmp option.
+If I try to set it to a higher mode I get the message
+	hdc: Speed warnings UDMA 3/4/5 is not functional.
 
-I guess this looks more like an AHCI issue rather than MSI?
+After some digging into the ide code I identified the problem
+as 'id->hw_config' being zero. In two places it is checked
+before allowing higher udma modes. One bit seems to be related
+to the 80c (which has no meaning here and should probably
+be hardwired on the board) and the other I am not sure.
 
-I have put up an updated boot dump on http://www.reub.net/files/kernel/
+I patched ide-iops.c to not check hw_config in the two funcs
+where it does so:
+	eighty_ninty_three
+	ide_ata66_check
 
-Reuben
 
+BTW my .config says:
+	CONFIG_BLK_DEV_IDEDMA=y
+	CONFIG_IDEDMA_IVB=y
+	CONFIG_IDEDMA_AUTO=y
+
+but the IVB is not enough here.
+
+
+Does anyone know what is the correct way to get this adapter going without
+a patch?
+
+
+I should say that the disks do identify themselves correctly (see below)
+but the kernel only accept some modes:
+
+# hdparm -i /dev/hdc
+  ==================
+/dev/hdc:
+
+ Model=WDC WD3200JD-00KLB0, FwRev=08.05J08, SerialNo=WD-WCAMR1427570
+ Config={ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs FmtGapReq }
+ RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
+ BuffType=unknown, BuffSize=8192kB, MaxMultSect=16, MultSect=16
+ CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
+ IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio3 pio4
+ DMA modes:  mdma0 mdma1 mdma2
+ UDMA modes: udma0 udma1 udma2
+ AdvancedPM=no WriteCache=enabled
+ Drive conforms to: device does not report version:
+
+ * signifies the current active mode
+
+
+# hdparm -I /dev/hdc
+  ==================
+/dev/hdc:
+
+ATA device, with non-removable media
+        Model Number:       WDC WD3200JD-00KLB0
+        Serial Number:      WD-WCAMR1427570
+        Firmware Revision:  08.05J08
+Standards:
+        Supported: 6 5 4 3
+        Likely used: 6
+Configuration:
+        Logical         max     current
+        cylinders       16383   65535
+        heads           16      1
+        sectors/track   63      63
+        --
+        CHS current addressable sectors:    4128705
+        LBA    user addressable sectors:  268435455
+        LBA48  user addressable sectors:  625142448
+        device size with M = 1024*1024:      305245 MBytes
+        device size with M = 1000*1000:      320072 MBytes (320 GB)
+Capabilities:
+        LBA, IORDY(can be disabled)
+        bytes avail on r/w long: 4      Queue depth: 1
+        Standby timer values: spec'd by Standard, with device specific minimum
+        R/W multiple sector transfer: Max = 16  Current = 16
+        Recommended acoustic management value: 128, current value: 254
+        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
+             Cycle time: min=120ns recommended=120ns
+        PIO: pio0 pio1 pio2 pio3 pio4
+             Cycle time: no flow control=120ns  IORDY flow control=120ns
+Commands/features:
+        Enabled Supported:
+           *    READ BUFFER cmd
+           *    WRITE BUFFER cmd
+           *    Host Protected Area feature set
+           *    Look-ahead
+           *    Write cache
+           *    Power Management feature set
+                Security Mode feature set
+                SMART feature set
+           *    FLUSH CACHE EXT command
+           *    Mandatory FLUSH CACHE command
+           *    Device Configuration Overlay feature set
+           *    48-bit Address feature set
+                Automatic Acoustic Management feature set
+                SET MAX security extension
+           *    DOWNLOAD MICROCODE cmd
+           *    SMART self-test
+           *    SMART error logging
+Security:
+        Master password revision code = 65534
+                supported
+        not     enabled
+        not     locked
+        not     frozen
+        not     expired: security count
+        not     supported: enhanced erase
+Checksum: correct
+
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+	attach .zip as .dat
