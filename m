@@ -1,33 +1,27 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.15-rc2-mm1] scsi: fix compiler-warning for sata_vsc.c
-Date: Sat, 26 Nov 2005 19:55:31 -0500
-Message-ID: <20051127005531.GB2246@havoc.gtf.org>
-References: <4388F170.9050703@student.ltu.se>
-Mime-Version: 1.0
+From: Gordon Espinoza <shareholders@7315.com>
+Subject: Get rid of premature ejaculation and last longer
+Date: Sun, 27 Nov 2005 05:15:03 -0500
+Message-ID: <4947497480.13064572210@218-101-70-22.dialup.clear.net.nz>
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:3801 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1750802AbVK0Azc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Nov 2005 19:55:32 -0500
-Content-Disposition: inline
-In-Reply-To: <4388F170.9050703@student.ltu.se>
+Received: from 218-101-70-22.dialup.clear.net.nz ([218.101.70.22]:24078 "HELO
+	218-101-70-22.dialup.clear.net.nz") by vger.kernel.org with SMTP
+	id S1750977AbVK0KPD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Nov 2005 05:15:03 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Knutsson <ricknu-0@student.ltu.se>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sun, Nov 27, 2005 at 12:36:16AM +0100, Richard Knutsson wrote:
-> From: Richard Knutsson <ricknu-0@student.ltu.se>
-> 
-> Fix compiler-warning "... makes pointer from integer without a cast".
-> 
-> Signed-off-by: Richard Knutsson <ricknu-0@student.ltu.se>
-> ---
-> Jeremy Higdon, sorry but I couldn't find your mail-address.
+Finally a Patch that works!
+http://www.larensm.net/pt/
 
-NAK, check the archives and fix the real problem.
 
-	Jeff
 
+Politics is the skilled use of blunt objects.     
+Delay is preferable to error.        
+You are only as wise as others perceive you to be.  
+Anybody can win unless there happens to be a second entry.  
+A little nonsense now and then, is cherished by the wisest men. 
 
 
