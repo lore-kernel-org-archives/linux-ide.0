@@ -1,15 +1,15 @@
 From: Matt Darcy <kernel-lists@projecthugo.co.uk>
-Subject: Sata_MV 2.6.15 release
-Date: Mon, 28 Nov 2005 10:03:58 +0000
-Message-ID: <438AD60E.8050200@projecthugo.co.uk>
+Subject: sata_mv 2.6.15 development/debugging
+Date: Mon, 28 Nov 2005 10:05:03 +0000
+Message-ID: <438AD64F.90203@projecthugo.co.uk>
 Reply-To: kernel-lists@projecthugo.co.uk
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from beng-03.stn.ab2.ifl.net ([194.238.49.3]:35086 "EHLO [127.0.0.1]")
-	by vger.kernel.org with ESMTP id S1751161AbVK1KEC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Nov 2005 05:04:02 -0500
+Received: from beng-03.stn.ab2.ifl.net ([194.238.49.3]:35598 "EHLO [127.0.0.1]")
+	by vger.kernel.org with ESMTP id S1751239AbVK1KFF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Nov 2005 05:05:05 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -51,5 +51,4 @@ normally has a set of pre-requs, distro/version/config/certain libs etc etc.
 Many thanks,
 
 Matt
-
 
