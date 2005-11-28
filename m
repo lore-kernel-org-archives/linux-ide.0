@@ -1,68 +1,55 @@
-From: Dominic Ijichi <dom@ijichi.org>
-Subject: Re: sata suspend status?
-Date: Mon, 28 Nov 2005 09:10:49 +0000
-Message-ID: <1133169049.438ac999da2ab@www.ijichi.org>
-References: <1133020582.438885a6615dc@www.ijichi.org> <20051127205613.18f48772.rdunlap@xenotime.net>
+From: Matt Darcy <kernel-lists@projecthugo.co.uk>
+Subject: Sata_MV 2.6.15 release
+Date: Mon, 28 Nov 2005 10:03:58 +0000
+Message-ID: <438AD60E.8050200@projecthugo.co.uk>
+Reply-To: kernel-lists@projecthugo.co.uk
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from buffy.ijichi.org ([213.161.76.94]:31667 "EHLO buffy.ijichi.org")
-	by vger.kernel.org with ESMTP id S1751243AbVK1JK4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Nov 2005 04:10:56 -0500
-In-Reply-To: <20051127205613.18f48772.rdunlap@xenotime.net>
-Content-Disposition: inline
+Received: from beng-03.stn.ab2.ifl.net ([194.238.49.3]:35086 "EHLO [127.0.0.1]")
+	by vger.kernel.org with ESMTP id S1751161AbVK1KEC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Nov 2005 05:04:02 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Quoting "Randy.Dunlap" <rdunlap@xenotime.net>:
+Hi all,
 
-> On Sat, 26 Nov 2005 15:56:22 +0000 Dominic Ijichi wrote:
-> 
-> > hello
-> >
-> > i've been trying to get my laptop s3 suspend working - its all working
-> except I
-> > believe for sata.  it resumes and you can do type in, interact with the
-> kernel
-> > but as soon as you do anything that requires disk access it hangs. sorry if
-> this
-> > isn't very technical description, i can provide anything if told roughly
-> what to do!
-> >
-> > i've searched extensively for patches, tried all the various incantations,
-> and
-> > currently running 2.6.15-rc2 which is supposed to provide support for ata
-> > passthrough and basic scsi suspend, but still same problem. i have:
-> >
-> > Intel Corporation 82801FBM (ICH6M) SATA Controller (rev 04)
-> >
-> > /dev/sda = HITACHI_DK23FA-60
-> >
-> > hdparm -I /dev/sda works fine.love
-> >
-> > I note recent patches from randy dunlap from intel to do with this
-> controller
-> > and acpi but not sure what kernel this is against or whether it's relevent.
-> >
-> > i believe there are many people out there who would love to get sata
-> > suspend/resume working, its a major problem for all recent laptops and us
-> folks
-> > who love running linux.  what's the current status please?
-> 
-> Hi,
-> It seems to work for some people.  I don't know if that's just
-> good luck or that some controllers don't need the SATA ACPI methods
-> that I am working on.  We should know more about that in the next
-> few weeks, I hope.
+I've been using the propritary sata_mv driver for some time with good 
+stability and reasonable performance. It has been a pain though due to 
+using it for software raid configuration, and the fact that it is a 
+module that has to be loaded at boot time, plus I cannot use it in a 
+kernel after 2.6.12.6
 
-hiya
-can't work out how to apply your patches, have tried against 2.6.15-rc2 with
-symlinked directories but everything rejects.  sorry for my ignorance, would
-like to try these out!
+I was delighted to see the inclusion and development of this driver in 
+the 2.6.15 kernel. I decided to give this a try.
+
+I was pleased to note it worked straight out of the box - with regard to 
+detecting the disks attatched and making them available for raid startup 
+at boot.
+
+However I had problems using lvm2 with the meta devices, the driver 
+actually hangs the system, and for some reason includes cdrom devices 
+when trying to create a volume group (note the cdrom drives are IDE 
+based, on a VIA chip - so I don't know why the sata driver probes them - 
+or at least thats how it appears)
+
+I noted that the driver is maked as very experimental, and I would like 
+to feed into this drivers testing and debugging, as to be honest the 
+sooner this driver becomes stable and usable, the easier my life will be.
+
+the note at the header of the driver says to use this mailing list for 
+development/bugs, however it does seem a little strange mailing 
+linux-ide when sata is classed as SCSI in the kernel.
+
+Is this the correct mailing list to discuss/report bugs on ?
+
+If so, what information is needed to report bugs effectivly - each list 
+normally has a set of pre-requs, distro/version/config/certain libs etc etc.
+
+Many thanks,
+
+Matt
 
 
-------------------------------------------
-This message was penned by the hand of Dom
