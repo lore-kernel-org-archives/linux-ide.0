@@ -1,17 +1,27 @@
-From: Matt Darcy <kernel-lists@projecthugo.co.uk>
-Subject: help
-Date: Sun, 27 Nov 2005 20:30:29 +0000
-Message-ID: <438A1765.8010704@projecthugo.co.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Isabella Payton <mantissas@domusag.ch>
+Subject: We focus on OEM and Retail Box for Microsoft, Adobe, Macromedia, Corel, Symantec and more.
+Date: Sun, 27 Nov 2005 19:34:29 -0500
+Message-ID: <4138435346.10934648130@cpe-24-168-129-10.nj.res.rr.com>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host81-138-64-234.in-addr.btopenworld.com ([81.138.64.234]:21430
-	"HELO alesi.projecthugo.co.uk") by vger.kernel.org with SMTP
-	id S1750834AbVK0Uad (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 27 Nov 2005 15:30:33 -0500
+Received: from cpe-24-168-129-10.nj.res.rr.com ([24.168.129.10]:13067 "HELO
+	cpe-24-168-129-10.nj.res.rr.com") by vger.kernel.org with SMTP
+	id S1751161AbVK1Ae3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Nov 2005 19:34:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-subscribe
+The world's best software for research, science and engineering.
+http://goe.fr37lm28lx35fffakxfskfxx.mothlessbh.com/?gaviq
+
+
+The universe is made of stories, not atoms.     
+ACTUALLY, adv. Perhaps; possibly.         
+
+
+He who despises himself esteems himself as a self-despiser.    
+It is the way we react to circumstances that determines our feelings. 
+
+
