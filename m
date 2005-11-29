@@ -1,461 +1,224 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/2] libata: implement ata_exec_internal()
-Date: Tue, 29 Nov 2005 22:17:17 +0900
-Message-ID: <20051129131717.GA8505@htj.dyndns.org>
-References: <20051128164201.GA7530@htj.dyndns.org> <438C0645.3020301@tw.ibm.com>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: CPU usage is very high while io'ing a sata disk
+Date: Tue, 29 Nov 2005 23:23:20 +0200
+Message-ID: <5d96567b0511291323j4fa468d7t66d1cdd7e47061a7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----=_Part_7078_15171067.1133299400625"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.201]:20520 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751343AbVK2NRZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Nov 2005 08:17:25 -0500
-Received: by zproxy.gmail.com with SMTP id 13so123622nzn
-        for <linux-ide@vger.kernel.org>; Tue, 29 Nov 2005 05:17:24 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <438C0645.3020301@tw.ibm.com>
+Received: from wproxy.gmail.com ([64.233.184.196]:13433 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932410AbVK2VXV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Nov 2005 16:23:21 -0500
+Received: by wproxy.gmail.com with SMTP id 71so3979wri
+        for <linux-ide@vger.kernel.org>; Tue, 29 Nov 2005 13:23:20 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Each user libata internal commands initializes a qc, issues it, waits
-for its completion and checks for errors.  This patch factors internal
-command execution sequence into ata_qc_exec_internal().  This change
-fixes the following bugs.
+------=_Part_7078_15171067.1133299400625
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-* qc not freed on issue failure
-* ap->qactive clearing could race with the next internal command
-* race between timeout handling and irq
-* ignoring error condition not represented in tf->status
+I am using a maxtor sata disk. whenever an io is made to the disk
+there is a huge impact over the cpu usage.
+i am using kernel 2.6.12 but i have seen in 2.6.11 as well.
+the folllwing test was made:
 
-Also, qc & hardware are not accessed anymore once it's completed,
-making internal commands more conformant with general semantics.  This
-change also makes it easy to issue internal commands from multiple
-threads if that becomes necessary.
+dd if=3D/dev/sdb of=3D/dev/zero bs=3D1M count=3D1000
+it ended after 16 seconds.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+during that time cpu usage was nearly 100% usage.
+the bellow is a  "vmstat 1" output during the "dd'ing " time. as u can
+see wait time  is high but idle is actully  zero.
+i have also profile the  kernel with opprofile during that time but i
+have found out
+that most of the time it spends in mwait_idle ( 98%) which is vert odd
+considering
+the fact that vmstat reports the opposite.
+I have seen it happen in HITACHI disks as well as MAXTOR and whenver i
+use a hardware raid the cpu usage is logically low ( since it is a
+scsi driver ).
+Also, the kernel PREMPT flag is on ( if that really matters ?).
+
+the driver is sata_piix which i believe has something to do with this probl=
+em.
+
+A kernel profiling output is added to this posting.
+thank u
+Raz.
+
+
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in    cs us sy id=
+ wa
+ 1  1      0 1867128  88308  57996    0    0  2546    20 1022   151  0  1 9=
+4  5
+ 1  1      0 1801780 152820  57996    0    0 64512     0 1263   533  0  8  =
+0 92
+ 0  1      0 1736060 217588  57996    0    0 64768     0 1260   535  0 10  =
+0 90
+ 0  1      0 1670340 282356  57996    0    0 64768     0 1261   537  0  9  =
+0 91
+ 0  1      0 1604744 347132  57996    0    0 64768    72 1262   539  1  9  =
+0 90
+ 0  1      0 1539272 411644  57996    0    0 64512     0 1261   537  0  6  =
+0 94
+ 0  1      0 1474048 475900  57996    0    0 64256     0 1261   529  0  9  =
+0 91
+ 0  1      0 1408328 540668  57996    0    0 64768     0 1260   537  0  7  =
+0 93
+ 0  1      0 1343476 604668  57996    0    0 64000     0 1263   530  0  9  =
+0 91
+ 0  1      0 1277756 669436  57996    0    0 64768     0 1261   535  0  9  =
+0 91
+ 0  1      0 1212036 734204  57996    0    0 64768     0 1258   534  0  9  =
+0 91
+ 0  1      0 1146564 798716  57996    0    0 64512     0 1265   532  0  9  =
+0 91
+ 0  1      0 1085756 858688  57996    0    0 64768     0 1265   547  0  9  =
+0 91
+ 0  1      0 1086372 858048  57996    0    0 64768     0 1262   721  0  8  =
+0 92
+ 0  1      0 1085756 858688  57996    0    0 64768     0 1260   708  0  8  =
+0 92
+1
 
 --
+Raz
 
-This is take #2 of ata_exec_internal().  qc allocation and tf
-reading-back have also been moved into ata_exec_internal().  Now all
-qc handling is done while properly holding host_set lock removing
-above mentioned rare race conditon (the second item).
+------=_Part_7078_15171067.1133299400625
+Content-Type: application/octet-stream; name=prof.out
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="prof.out"
 
-Index: work/drivers/scsi/libata-core.c
-===================================================================
---- work.orig/drivers/scsi/libata-core.c	2005-11-29 22:04:15.000000000 +0900
-+++ work/drivers/scsi/libata-core.c	2005-11-29 22:06:20.000000000 +0900
-@@ -1047,28 +1047,119 @@ static unsigned int ata_pio_modes(const 
- 	return modes;
- }
- 
--static int ata_qc_wait_err(struct ata_queued_cmd *qc,
--			   struct completion *wait)
-+struct ata_exec_internal_arg {
-+	unsigned int err_mask;
-+	struct ata_taskfile *tf;
-+	struct completion *waiting;
-+};
-+
-+int ata_qc_complete_internal(struct ata_queued_cmd *qc, unsigned int err_mask)
- {
--	int rc = 0;
-+	struct ata_exec_internal_arg *arg = qc->complete_data;
-+	struct completion *waiting = arg->waiting;
- 
--	if (wait_for_completion_timeout(wait, 30 * HZ) < 1) {
--		/* timeout handling */
--		unsigned int err_mask = ac_err_mask(ata_chk_status(qc->ap));
--
--		if (!err_mask) {
--			printk(KERN_WARNING "ata%u: slow completion (cmd %x)\n",
--			       qc->ap->id, qc->tf.command);
--		} else {
--			printk(KERN_WARNING "ata%u: qc timeout (cmd %x)\n",
--			       qc->ap->id, qc->tf.command);
--			rc = -EIO;
--		}
-+	if (!(err_mask & ~AC_ERR_DEV))
-+		qc->ap->ops->tf_read(qc->ap, arg->tf);
-+	arg->err_mask = err_mask;
-+	arg->waiting = NULL;
-+	complete(waiting);
-+
-+	return 0;
-+}
-+
-+/**
-+ *	ata_exec_internal - execute libata internal command
-+ *	@ap: Port to which the command is sent
-+ *	@dev: Device to which the command is sent
-+ *	@tf: Taskfile registers for the command and the result
-+ *	@dma_dir: Data tranfer direction of the command
-+ *	@buf: Data buffer of the command
-+ *	@buflen: Length of data buffer
-+ *
-+ *	Executes libata internal command with timeout.  @tf contains
-+ *	command on entry and result on return.  Timeout and error
-+ *	conditions are reported via return value.  No recovery action
-+ *	is taken after a command times out.  It's caller's duty to
-+ *	clean up after timeout.
-+ *
-+ *	LOCKING:
-+ *	None.  Should be called with kernel context, might sleep.
-+ */
-+
-+static unsigned
-+ata_exec_internal(struct ata_port *ap, struct ata_device *dev,
-+		  struct ata_taskfile *tf,
-+		  int dma_dir, void *buf, unsigned int buflen)
-+{
-+	u8 command = tf->command;
-+	struct ata_queued_cmd *qc;
-+	DECLARE_COMPLETION(wait);
-+	unsigned long flags;
-+	struct ata_exec_internal_arg arg;
-+
-+	if (ata_busy_sleep(ap, ATA_TMOUT_INTERNAL_QUICK, ATA_TMOUT_INTERNAL))
-+		return AC_ERR_OTHER;
-+
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+
-+	qc = ata_qc_new_init(ap, dev);
-+	BUG_ON(qc == NULL);
-+
-+	qc->tf = *tf;
-+	qc->dma_dir = dma_dir;
-+	if (dma_dir != DMA_NONE) {
-+		ata_sg_init_one(qc, buf, buflen);
-+		qc->nsect = buflen / ATA_SECT_SIZE;
-+		printk("dma_dir=%d buflen=%u nsect=%d\n",
-+		       dma_dir, buflen, qc->nsect);
-+	}
-+
-+	arg.waiting = &wait;
-+	arg.tf = tf;
-+	qc->complete_data = &arg;
-+	qc->complete_fn = ata_qc_complete_internal;
-+
-+	if (ata_qc_issue(qc))
-+		goto issue_fail;
-+
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+	if (!wait_for_completion_timeout(&wait, ATA_TMOUT_INTERNAL)) {
-+		int timedout;
-+
-+		spin_lock_irqsave(&ap->host_set->lock, flags);
-+
-+		/* We're racing with irq here.  If we lose, the
-+		 * following test prevents us from completing the qc
-+		 * again.  If completion irq occurs after here but
-+		 * before the caller cleans up, it will result in a
-+		 * spurious interrupt.  We can live with that.
-+		 */
-+		timedout = arg.waiting != NULL;
-+		if (timedout)
-+			ata_qc_complete(qc, 0);
-+
-+		spin_unlock_irqrestore(&ap->host_set->lock, flags);
- 
--		ata_qc_complete(qc, err_mask);
-+		if (timedout) {
-+			arg.err_mask = ac_err_mask(tf->command);
-+			if (!arg.err_mask)
-+				printk(KERN_WARNING
-+				       "ata%u: slow completion (cmd %x)\n",
-+				       ap->id, command);
-+			else
-+				printk(KERN_WARNING
-+				       "ata%u: qc timeout (cmd %x)\n",
-+				       ap->id, command);
-+		}
- 	}
- 
--	return rc;
-+	return arg.err_mask;
-+
-+ issue_fail:
-+	ata_qc_free(qc);
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+	return AC_ERR_OTHER;
- }
- 
- /**
-@@ -1100,9 +1191,8 @@ static void ata_dev_identify(struct ata_
- 	u16 tmp;
- 	unsigned long xfer_modes;
- 	unsigned int using_edd;
--	DECLARE_COMPLETION(wait);
--	struct ata_queued_cmd *qc;
--	unsigned long flags;
-+	struct ata_taskfile tf;
-+	unsigned int err_mask;
- 	int rc;
- 
- 	if (!ata_dev_present(dev)) {
-@@ -1123,40 +1213,26 @@ static void ata_dev_identify(struct ata_
- 
- 	ata_dev_select(ap, device, 1, 1); /* select device 0/1 */
- 
--	qc = ata_qc_new_init(ap, dev);
--	BUG_ON(qc == NULL);
--
--	ata_sg_init_one(qc, dev->id, sizeof(dev->id));
--	qc->dma_dir = DMA_FROM_DEVICE;
--	qc->tf.protocol = ATA_PROT_PIO;
--	qc->nsect = 1;
--
- retry:
-+	ata_tf_init(ap, &tf, device);
-+
- 	if (dev->class == ATA_DEV_ATA) {
--		qc->tf.command = ATA_CMD_ID_ATA;
-+		tf.command = ATA_CMD_ID_ATA;
- 		DPRINTK("do ATA identify\n");
- 	} else {
--		qc->tf.command = ATA_CMD_ID_ATAPI;
-+		tf.command = ATA_CMD_ID_ATAPI;
- 		DPRINTK("do ATAPI identify\n");
- 	}
- 
--	qc->waiting = &wait;
--	qc->complete_fn = ata_qc_complete_noop;
-+	tf.protocol = ATA_PROT_PIO;
- 
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	rc = ata_qc_issue(qc);
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+	err_mask = ata_exec_internal(ap, dev, &tf, DMA_FROM_DEVICE,
-+				     dev->id, sizeof(dev->id));
- 
--	if (rc)
--		goto err_out;
--	else
--		ata_qc_wait_err(qc, &wait);
--
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	ap->ops->tf_read(ap, &qc->tf);
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+	if (err_mask) {
-+		if (err_mask & ~AC_ERR_DEV)
-+			goto err_out;
- 
--	if (qc->tf.command & ATA_ERR) {
- 		/*
- 		 * arg!  EDD works for all test cases, but seems to return
- 		 * the ATA signature for some ATAPI devices.  Until the
-@@ -1169,13 +1245,9 @@ retry:
- 		 * to have this problem.
- 		 */
- 		if ((using_edd) && (dev->class == ATA_DEV_ATA)) {
--			u8 err = qc->tf.feature;
-+			u8 err = tf.feature;
- 			if (err & ATA_ABORTED) {
- 				dev->class = ATA_DEV_ATAPI;
--				qc->cursg = 0;
--				qc->cursg_ofs = 0;
--				qc->cursect = 0;
--				qc->nsect = 1;
- 				goto retry;
- 			}
- 		}
-@@ -2288,34 +2360,23 @@ static int ata_choose_xfer_mode(const st
- 
- static void ata_dev_set_xfermode(struct ata_port *ap, struct ata_device *dev)
- {
--	DECLARE_COMPLETION(wait);
--	struct ata_queued_cmd *qc;
--	int rc;
--	unsigned long flags;
-+	struct ata_taskfile tf;
- 
- 	/* set up set-features taskfile */
- 	DPRINTK("set features - xfer mode\n");
- 
--	qc = ata_qc_new_init(ap, dev);
--	BUG_ON(qc == NULL);
--
--	qc->tf.command = ATA_CMD_SET_FEATURES;
--	qc->tf.feature = SETFEATURES_XFER;
--	qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
--	qc->tf.protocol = ATA_PROT_NODATA;
--	qc->tf.nsect = dev->xfer_mode;
--
--	qc->waiting = &wait;
--	qc->complete_fn = ata_qc_complete_noop;
--
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	rc = ata_qc_issue(qc);
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+	ata_tf_init(ap, &tf, dev->devno);
-+	tf.command = ATA_CMD_SET_FEATURES;
-+	tf.feature = SETFEATURES_XFER;
-+	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-+	tf.protocol = ATA_PROT_NODATA;
-+	tf.nsect = dev->xfer_mode;
- 
--	if (rc)
-+	if (ata_exec_internal(ap, dev, &tf, DMA_NONE, NULL, 0)) {
-+		printk(KERN_ERR "ata%u: failed to set xfermode, disabled\n",
-+		       ap->id);
- 		ata_port_disable(ap);
--	else
--		ata_qc_wait_err(qc, &wait);
-+	}
- 
- 	DPRINTK("EXIT\n");
- }
-@@ -2330,41 +2391,25 @@ static void ata_dev_set_xfermode(struct 
- 
- static void ata_dev_reread_id(struct ata_port *ap, struct ata_device *dev)
- {
--	DECLARE_COMPLETION(wait);
--	struct ata_queued_cmd *qc;
--	unsigned long flags;
--	int rc;
--
--	qc = ata_qc_new_init(ap, dev);
--	BUG_ON(qc == NULL);
-+	struct ata_taskfile tf;
- 
--	ata_sg_init_one(qc, dev->id, sizeof(dev->id));
--	qc->dma_dir = DMA_FROM_DEVICE;
-+	ata_tf_init(ap, &tf, dev->devno);
- 
- 	if (dev->class == ATA_DEV_ATA) {
--		qc->tf.command = ATA_CMD_ID_ATA;
-+		tf.command = ATA_CMD_ID_ATA;
- 		DPRINTK("do ATA identify\n");
- 	} else {
--		qc->tf.command = ATA_CMD_ID_ATAPI;
-+		tf.command = ATA_CMD_ID_ATAPI;
- 		DPRINTK("do ATAPI identify\n");
- 	}
- 
--	qc->tf.flags |= ATA_TFLAG_DEVICE;
--	qc->tf.protocol = ATA_PROT_PIO;
--	qc->nsect = 1;
--
--	qc->waiting = &wait;
--	qc->complete_fn = ata_qc_complete_noop;
-+	tf.flags |= ATA_TFLAG_DEVICE;
-+	tf.protocol = ATA_PROT_PIO;
- 
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	rc = ata_qc_issue(qc);
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
--
--	if (rc)
-+	if (ata_exec_internal(ap, dev, &tf, DMA_FROM_DEVICE,
-+			      dev->id, sizeof(dev->id)))
- 		goto err_out;
- 
--	ata_qc_wait_err(qc, &wait);
--
- 	swap_buf_le16(dev->id, ATA_ID_WORDS);
- 
- 	ata_dump_id(dev);
-@@ -2373,6 +2418,7 @@ static void ata_dev_reread_id(struct ata
- 
- 	return;
- err_out:
-+	printk(KERN_ERR "ata%u: failed to reread ID, disabled\n", ap->id);
- 	ata_port_disable(ap);
- }
- 
-@@ -2386,10 +2432,7 @@ err_out:
- 
- static void ata_dev_init_params(struct ata_port *ap, struct ata_device *dev)
- {
--	DECLARE_COMPLETION(wait);
--	struct ata_queued_cmd *qc;
--	int rc;
--	unsigned long flags;
-+	struct ata_taskfile tf;
- 	u16 sectors = dev->id[6];
- 	u16 heads   = dev->id[3];
- 
-@@ -2400,26 +2443,18 @@ static void ata_dev_init_params(struct a
- 	/* set up init dev params taskfile */
- 	DPRINTK("init dev params \n");
- 
--	qc = ata_qc_new_init(ap, dev);
--	BUG_ON(qc == NULL);
--
--	qc->tf.command = ATA_CMD_INIT_DEV_PARAMS;
--	qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
--	qc->tf.protocol = ATA_PROT_NODATA;
--	qc->tf.nsect = sectors;
--	qc->tf.device |= (heads - 1) & 0x0f; /* max head = num. of heads - 1 */
--
--	qc->waiting = &wait;
--	qc->complete_fn = ata_qc_complete_noop;
--
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	rc = ata_qc_issue(qc);
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+	ata_tf_init(ap, &tf, dev->devno);
-+	tf.command = ATA_CMD_INIT_DEV_PARAMS;
-+	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-+	tf.protocol = ATA_PROT_NODATA;
-+	tf.nsect = sectors;
-+	tf.device |= (heads - 1) & 0x0f; /* max head = num. of heads - 1 */
- 
--	if (rc)
-+	if (ata_exec_internal(ap, dev, &tf, DMA_NONE, NULL, 0)) {
-+		printk(KERN_ERR "ata%u: failed to init parameters, disabled\n",
-+		       ap->id);
- 		ata_port_disable(ap);
--	else
--		ata_qc_wait_err(qc, &wait);
-+	}
- 
- 	DPRINTK("EXIT\n");
- }
-@@ -3641,11 +3676,6 @@ struct ata_queued_cmd *ata_qc_new_init(s
- 	return qc;
- }
- 
--int ata_qc_complete_noop(struct ata_queued_cmd *qc, unsigned int err_mask)
--{
--	return 0;
--}
--
- static void __ata_qc_complete(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
-Index: work/drivers/scsi/libata.h
-===================================================================
---- work.orig/drivers/scsi/libata.h	2005-11-29 22:04:15.000000000 +0900
-+++ work/drivers/scsi/libata.h	2005-11-29 22:05:26.000000000 +0900
-@@ -39,7 +39,6 @@ struct ata_scsi_args {
- 
- /* libata-core.c */
- extern int atapi_enabled;
--extern int ata_qc_complete_noop(struct ata_queued_cmd *qc, unsigned int err_mask);
- extern struct ata_queued_cmd *ata_qc_new_init(struct ata_port *ap,
- 				      struct ata_device *dev);
- extern void ata_rwcmd_protocol(struct ata_queued_cmd *qc);
-Index: work/include/linux/libata.h
-===================================================================
---- work.orig/include/linux/libata.h	2005-11-29 22:04:15.000000000 +0900
-+++ work/include/linux/libata.h	2005-11-29 22:06:20.000000000 +0900
-@@ -136,6 +136,8 @@ enum {
- 	ATA_TMOUT_BOOT_QUICK	= 7 * HZ,	/* hueristic */
- 	ATA_TMOUT_DATAOUT	= 30 * HZ,
- 	ATA_TMOUT_DATAOUT_QUICK	= 5 * HZ,
-+	ATA_TMOUT_INTERNAL	= 30 * HZ,
-+	ATA_TMOUT_INTERNAL_QUICK = 5 * HZ,
- 
- 	/* ATA bus states */
- 	BUS_UNKNOWN		= 0,
-@@ -284,6 +286,7 @@ struct ata_queued_cmd {
- 	struct scatterlist	*__sg;
- 
- 	ata_qc_cb_t		complete_fn;
-+	void			*complete_data;
- 
- 	struct completion	*waiting;
- 
+CPU: CPU with timer interrupt, speed 0 MHz (estimated)
+Profiling through timer interrupt
+samples  %        symbol name
+87831    98.3297  mwait_idle
+741       0.8296  __copy_to_user_ll
+61        0.0683  __make_request
+51        0.0571  kmem_cache_free
+46        0.0515  handle_IRQ_event
+42        0.0470  kmem_cache_alloc
+39        0.0437  buffered_rmqueue
+33        0.0369  invalidate_complete_page
+26        0.0291  end_buffer_async_read
+25        0.0280  file_read_actor
+24        0.0269  __mod_page_state
+24        0.0269  free_hot_cold_page
+23        0.0257  find_get_page
+22        0.0246  scsi_request_fn
+19        0.0213  block_read_full_page
+13        0.0146  kmap_atomic
+13        0.0146  shrink_list
+11        0.0123  add_to_page_cache
+11        0.0123  submit_bh
+9         0.0101  ahci_interrupt
+9         0.0101  scsi_dispatch_cmd
+9         0.0101  test_clear_page_dirty
+8         0.0090  drop_buffers
+8         0.0090  release_pages
+7         0.0078  __do_page_cache_readahead
+7         0.0078  alloc_page_buffers
+7         0.0078  init_buffer_head
+7         0.0078  mempool_alloc
+7         0.0078  schedule
+6         0.0067  __alloc_pages
+6         0.0067  __do_softirq
+6         0.0067  __wake_up_bit
+6         0.0067  generic_make_request
+6         0.0067  page_address
+6         0.0067  read_pages
+6         0.0067  try_to_free_buffers
+5         0.0056  do_generic_mapping_read
+5         0.0056  do_page_fault
+5         0.0056  unlock_page
+4         0.0045  __pagevec_lru_add
+4         0.0045  __wake_up
+4         0.0045  bio_alloc_bioset
+4         0.0045  create_empty_buffers
+4         0.0045  max_block
+3         0.0034  __d_lookup
+3         0.0034  __end_that_request_first
+3         0.0034  blkdev_get_block
+3         0.0034  find_get_pages
+3         0.0034  free_buffer_head
+3         0.0034  page_waitqueue
+3         0.0034  zap_pte_range
+2         0.0022  __kmalloc
+2         0.0022  bad_range
+2         0.0022  bio_endio
+2         0.0022  cond_resched
+2         0.0022  del_timer
+2         0.0022  do_wp_page
+2         0.0022  finish_wait
+2         0.0022  invalidate_mapping_pages
+2         0.0022  kunmap_atomic
+2         0.0022  mark_buffer_async_read
+2         0.0022  page_cache_readahead
+2         0.0022  prep_new_page
+2         0.0022  recalc_bh_state
+2         0.0022  scsi_finish_command
+2         0.0022  strncpy_from_user
+2         0.0022  submit_bio
+2         0.0022  tg3_poll
+1         0.0011  __find_get_block
+1         0.0011  __insert_vm_struct
+1         0.0011  __link_path_walk
+1         0.0011  __mod_timer
+1         0.0011  __pagevec_lru_add_active
+1         0.0011  _atomic_dec_and_lock
+1         0.0011  bio_alloc
+1         0.0011  bio_destructor
+1         0.0011  bio_put
+1         0.0011  blk_run_queue
+1         0.0011  cache_init_objs
+1         0.0011  cap_bprm_apply_creds
+1         0.0011  copy_process
+1         0.0011  copy_pte_range
+1         0.0011  dcache_readdir
+1         0.0011  do_lookup
+1         0.0011  dput
+1         0.0011  ext3_htree_store_dirent
+1         0.0011  fget
+1         0.0011  fget_light
+1         0.0011  filldir64
+1         0.0011  find_vma_prev
+1         0.0011  fput
+1         0.0011  free_pgd_range
+1         0.0011  get_io_context
+1         0.0011  get_request
+1         0.0011  handle_mm_fault
+1         0.0011  invalidate_inode_buffers
+1         0.0011  ip_nat_setup_info
+1         0.0011  ipt_do_table
+1         0.0011  journal_add_journal_head
+1         0.0011  kmem_getpages
+1         0.0011  make_ahead_window
+1         0.0011  mark_page_accessed
+1         0.0011  mempool_free
+1         0.0011  mempool_free_slab
+1         0.0011  nat_packet
+1         0.0011  pagebuf_daemon
+1         0.0011  prune_dcache
+1         0.0011  put_device
+1         0.0011  rb_insert_color
+1         0.0011  scsi_decide_disposition
+1         0.0011  scsi_init_cmd_errh
+1         0.0011  sha_transform
+1         0.0011  shrink_cache
+1         0.0011  shrink_slab
+1         0.0011  shrink_zone
+1         0.0011  start_this_handle
+1         0.0011  sys_mprotect
+1         0.0011  sysenter_past_esp
+1         0.0011  tcp_clean_rtx_queue
+1         0.0011  tg3_rx
+1         0.0011  tg3_start_xmit
+1         0.0011  tiocspgrp
+1         0.0011  udp_pkt_to_tuple
+1         0.0011  unmap_vmas
+1         0.0011  vfs_fstat
+1         0.0011  zone_watermark_ok
+
+------=_Part_7078_15171067.1133299400625--
