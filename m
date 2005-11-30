@@ -1,18 +1,18 @@
 From: "plink" <plink0025@fmail.co.uk>
-Subject: (unknown)
-Date: Tue, 29 Nov 2005 16:15:01 -0800
-Message-ID: <1133309701.4513.248621618@webmail.messagingengine.com>
+Subject: hda and ide errors after acpi s3 resume, ich4-m controller, PIIX driver
+Date: Tue, 29 Nov 2005 16:19:03 -0800
+Message-ID: <1133309943.4904.248622863@webmail.messagingengine.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:60367 "EHLO
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:24277 "EHLO
 	out4.smtp.messagingengine.com") by vger.kernel.org with ESMTP
-	id S1751423AbVK3API (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Nov 2005 19:15:08 -0500
+	id S1751419AbVK3ATE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Nov 2005 19:19:04 -0500
 Received: from frontend1.internal (mysql-sessions.internal [10.202.2.149])
-	by frontend1.messagingengine.com (Postfix) with ESMTP id CD3CDD195C3
-	for <linux-ide@vger.kernel.org>; Tue, 29 Nov 2005 19:15:00 -0500 (EST)
+	by frontend1.messagingengine.com (Postfix) with ESMTP id 2BCE7D19839
+	for <linux-ide@vger.kernel.org>; Tue, 29 Nov 2005 19:19:03 -0500 (EST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -24,8 +24,8 @@ inaccessible for about a minute and a half. dmesg shows these hda and
 ide errors immdediately after a resume from s3:
 
 hda: lost interrupt
- evevent-0299: *** Error: No installed handler for fixed event
- [00000002]
+evevent-0299: *** Error: No installed handler for fixed event
+[00000002]
 Restarting tasks... done
 hda: dma_timer_expiry: dma status == 0x21
 hda: DMA timeout error
@@ -60,6 +60,6 @@ me, I'd really appreciate it.
 -Jaime Kitsmiller
 
 -- 
-http://www.fastmail.fm - One of many happy users:
-  http://www.fastmail.fm/docs/quotes.html
+http://www.fastmail.fm - Faster than the air-speed velocity of an
+                          unladen european swallow
 
