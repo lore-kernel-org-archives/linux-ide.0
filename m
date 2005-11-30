@@ -1,44 +1,58 @@
-From: "Crummiest F. Cotillions" <enquiries@goaiken.com>
-Subject: Software
-Date: Wed, 30 Nov 2005 13:21:20 -0600
-Message-ID: <1816504877.20051130132120@goaiken.com>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: [PATCH] ide-tape: use time_after(), time_after_eq()
+Date: Thu, 1 Dec 2005 00:41:19 +0300
+Message-ID: <20051130214119.GC12551@mipter.zuzino.mipt.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:1746 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1751547AbVK3TWr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Nov 2005 14:22:47 -0500
-Received: from -1210189784 ([200.217.107.205])
-	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id jAUJJKmF030761
-	for <linux-ide@vger.kernel.org>; Wed, 30 Nov 2005 11:22:35 -0800
-Received: from goaiken.com (-1215805000 [-1215412688])
-	by graymar.com (Qmailv1) with ESMTP id 43ED6EF8EB
-	for <linux-ide@vger.kernel.org>; Wed, 30 Nov 2005 13:21:20 -0600
+Received: from nproxy.gmail.com ([64.233.182.200]:53673 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750769AbVK3V0e (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Nov 2005 16:26:34 -0500
+Received: by nproxy.gmail.com with SMTP id x4so30757nfb
+        for <linux-ide@vger.kernel.org>; Wed, 30 Nov 2005 13:26:33 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux <linux-ide@vger.kernel.org>
+To: Gadi Oxman <gadio@netvision.net.il>
+Cc: Marcelo Feitoza Parisi <marcelo@feitoza.com.br>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
 
-Software taking a bite out of your budget? Try 0EM!
-Looking for cheap high-quality software? 
+From: Marcelo Feitoza Parisi <marcelo@feitoza.com.br>
 
-New software on our site:
+They deal with wrapping correctly and are nicer to read.
 
-Visio 2003 Professional - $69.95
-Fireworks MX 2004 - $69.95
-PageMaker 7 (2CD) - $69.95
-Freehand MX 11 - $69.95
-Works 7 - $69.95
-PhotoRetouch Pro 3.0 - $59.95
-Works 7 - $69.95
-Encarta Encyclopedia Delux 2004 (3CD) - $89.95
-Office 2000 Premium Edition PE (2CD) - $59.95
-After Effects 6 - $69.95
-Borland Delphi 7 Enterprise Edition (2CD) - $69.95
-Creative Suite Standard (3 CD) - $129.95
-Photoshop CS with ImageReady CS - $99.95
-Norton System Works 2003 - $59.95
+Signed-off-by: Marcelo Feitoza Parisi <marcelo@feitoza.com.br>
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+---
 
-Our site:
-http://togzh1hxzbzocbtoytb6gbbb.freyadi.com
+ drivers/ide/ide-tape.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -443,6 +443,7 @@
+ #include <linux/smp_lock.h>
+ #include <linux/completion.h>
+ #include <linux/bitops.h>
++#include <linux/jiffies.h>
+ 
+ #include <asm/byteorder.h>
+ #include <asm/irq.h>
+@@ -2335,7 +2336,7 @@ static ide_startstop_t idetape_rw_callba
+ 	}
+ 	if (time_after(jiffies, tape->insert_time))
+ 		tape->insert_speed = tape->insert_size / 1024 * HZ / (jiffies - tape->insert_time);
+-	if (jiffies - tape->avg_time >= HZ) {
++	if (time_after_eq(jiffies, tape->avg_time + HZ)) {
+ 		tape->avg_speed = tape->avg_size * HZ / (jiffies - tape->avg_time) / 1024;
+ 		tape->avg_size = 0;
+ 		tape->avg_time = jiffies;
+@@ -2496,7 +2497,7 @@ static ide_startstop_t idetape_do_reques
+ 			} else {
+ 				return ide_do_reset(drive);
+ 			}
+-		} else if (jiffies - tape->dsc_polling_start > IDETAPE_DSC_MA_THRESHOLD)
++		} else if (time_after(jiffies, tape->dsc_polling_start + IDETAPE_DSC_MA_THRESHOLD))
+ 			tape->dsc_polling_frequency = IDETAPE_DSC_MA_SLOW;
+ 		idetape_postpone_request(drive);
+ 		return ide_stopped;
 
