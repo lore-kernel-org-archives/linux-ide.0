@@ -1,46 +1,65 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: CPU usage is very high while io'ing a sata disk
-Date: Tue, 29 Nov 2005 18:16:49 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0511291810180.30872-100000@coffee.psychology.mcmaster.ca>
-References: <5d96567b0511291323j4fa468d7t66d1cdd7e47061a7@mail.gmail.com>
+From: "plink" <plink0025@fmail.co.uk>
+Subject: (unknown)
+Date: Tue, 29 Nov 2005 16:15:01 -0800
+Message-ID: <1133309701.4513.248621618@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sigma957.CIS.McMaster.CA ([130.113.64.83]:11261 "EHLO
-	sigma957.cis.mcmaster.ca") by vger.kernel.org with ESMTP
-	id S1751424AbVK3AQI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Nov 2005 19:16:08 -0500
-In-Reply-To: <5d96567b0511291323j4fa468d7t66d1cdd7e47061a7@mail.gmail.com>
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:60367 "EHLO
+	out4.smtp.messagingengine.com") by vger.kernel.org with ESMTP
+	id S1751423AbVK3API (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Nov 2005 19:15:08 -0500
+Received: from frontend1.internal (mysql-sessions.internal [10.202.2.149])
+	by frontend1.messagingengine.com (Postfix) with ESMTP id CD3CDD195C3
+	for <linux-ide@vger.kernel.org>; Tue, 29 Nov 2005 19:15:00 -0500 (EST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-> there is a huge impact over the cpu usage.
+I have a laptop and i'm having a problem concerning acpi s3 and my ide
+driver. basically, after resume from acpi s3, the hard drive is
+inaccessible for about a minute and a half. dmesg shows these hda and
+ide errors immdediately after a resume from s3:
 
-nah.
+hda: lost interrupt
+ evevent-0299: *** Error: No installed handler for fixed event
+ [00000002]
+Restarting tasks... done
+hda: dma_timer_expiry: dma status == 0x21
+hda: DMA timeout error
+hda: dma timeout error: status=0x50 { DriveReady SeekComplete }
+ide: failed opcode was: unknown
+hda: status error: status=0x50 { DriveReady SeekComplete }
+ide: failed opcode was: unknown
+hda: no DRQ after issuing MULTWRITE_EXT
+hda: status error: status=0x50 { DriveReady SeekComplete }
+ide: failed opcode was: unknown
+hda: no DRQ after issuing MULTWRITE_EXT
+hda: lost interrupt
+hda: status error: status=0x50 { DriveReady SeekComplete }
+ide: failed opcode was: unknown
+hda: no DRQ after issuing MULTWRITE_EXT
+hda: status error: status=0x50 { DriveReady SeekComplete }
+ide: failed opcode was: unknown
+hda: no DRQ after issuing MULTWRITE_EXT
+ide0: reset: success
 
-> dd if=/dev/sdb of=/dev/zero bs=1M count=1000
-> it ended after 16 seconds.
+I posted this on the acpi-devel mailing list and was told that it
+sounded like a problem with the ide driver and directed to this list. I
+have an ich4-m ide controller and i'm using the PIIX ide driver, kernel
+2.6.13.4. I'm no expert, but it looks like the acpi resume routine is
+trying to wake up the hard drive in a way that the ide isn't compatible
+with, and after a few tries just resets the drive. After the reset
+everything, the drive is fine, but i'm worried about these errors, isn't
+reseting the drive bad for it? hdparm has it marked as dangerous, and it
+adds time that i cant do anything after s3 resume. If anybody can help
+me, I'd really appreciate it.
 
-66 MB/s, which is OK.
+-Jaime Kitsmiller
 
-> during that time cpu usage was nearly 100% usage.
-
-no, that's the only problem: you're misunderstanding the output.
-during the dd, one process (dd, of course) was almost always in 
-short wait, which is traditionally counted towards loadavg,
-and shows up in your 'wa' column.  note that the actual cpu used
-(us+sy) is fairly low, around 9%.
-
-> that most of the time it spends in mwait_idle ( 98%) which is vert odd
-
-not so odd, since the machine _is_ idle.  vmstat and related user-level
-tools simply report an IO-blocked process as in wait.
-
-> use a hardware raid the cpu usage is logically low ( since it is a
-> scsi driver ).
-
-no: the nature of the driver would not effect this, which is purely
-a semantic issue of how to interpret processes blocked on IO.
+-- 
+http://www.fastmail.fm - One of many happy users:
+  http://www.fastmail.fm/docs/quotes.html
 
