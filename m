@@ -1,120 +1,103 @@
-From: =?ISO-8859-1?Q?Jean-Fran=E7ois_Stenuit?= <jfs@keytradebank.com>
-Subject: Re: totally random "VFS: Cannot open root device"
-Date: Thu, 01 Dec 2005 10:42:48 +0100
-Message-ID: <438EC598.8050803@keytradebank.com>
-References: <438B6E05.8070009@eq.cz> <438D2C19.3030008@gmail.com> <438D6B73.2060902@keytradebank.com> <Pine.LNX.4.58.0511300827410.18317@shark.he.net>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: libata queue updated
+Date: Thu, 1 Dec 2005 05:01:17 -0500
+Message-ID: <20051201100117.GA23762@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms080206070300040501050205"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail91.messagelabs.com ([194.106.220.35]:29662 "HELO
-	mail91.messagelabs.com") by vger.kernel.org with SMTP
-	id S932121AbVLAJnA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Dec 2005 04:43:00 -0500
-In-Reply-To: <Pine.LNX.4.58.0511300827410.18317@shark.he.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751680AbVLAKBU@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, akpm@osdl.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: Linux-ide <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, "0602@eq.cz" <0602@eq.cz>
 
-This is a cryptographically signed message in MIME format.
+Here is the current contents of libata-dev.git#ALL, which is
+auto-propagated to Andrew Morton's -mm tree.
 
---------------ms080206070300040501050205
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/patchkits/2.6/2.6.15-rc4-libata1.patch.bz2
 
+A lot of this stuff is the 'pata-drivers' branch, which is available for
+testing, but not bound for upstream anytime soon.
 
-Hi Randy,
+Alan Cox:
+      Add libata CMD/SI680 driver
+      [libata] Add PATA driver for Compaq Triflex
+      [libata] Add PATA VIA driver.
+      [libata] Add driver for PATA AMD/NVIDIA chips.
+      libata: Update the AMD driver to support the AMD CS5536.
+      libata: Add enablebits support to the triflex driver
+      libata: Add enablebits to via driver
+      [libata] Add new PATA driver pata_opti
+      libata: AMD pata fixes
+      libata: Fix opti pci enable bits as with the AMD bug
+      libata: Fix enable bits for triflex
+      libata: Clean up and fix the VIA PATA libata driver
 
-Booting with irqpoll does not help. I guess we'll need to dig a little 
-further ;-)
+Albert Lee:
+      [libata] add driver for Promise PATA 2027x
+      libata-dev-2.6: pdc2027x add ata_scsi_ioctl
+      libata-dev-2.6: pdc2027x change comments
+      libata-dev-2.6: pdc2027x move the PLL counter reading code
+      libata-dev-2.6: pdc2027x PLL input clock detection fix
+      libata-dev: Convert pdc2027x from PIO to MMIO
+      libata-dev: pdc2027x use "long" for counter data type
+      libata-dev: pdc2027x ATAPI DMA lost irq problem workaround
+      libata: interrupt driven pio for libata-core
+      libata: interrupt driven pio for LLD
+      libata irq-pio: add comments and cleanup
+      libata irq-pio: rename atapi_packet_task() and comments
+      libata irq-pio: simplify if condition in ata_dataout_task()
+      libata irq-pio: cleanup ata_qc_issue_prot()
+      libata: move atapi_send_cdb() and ata_dataout_task()
+      [libata irq-pio] reorganize ata_pio_sector() and __atapi_pio_bytes()
+      [libata irq-pio] reorganize "buf + offset" in ata_pio_sector()
+      [libata irq-pio] use PageHighMem() to optimize the kmap_atomic() usage
+      libata CHS: LBA28/LBA48 optimization (revise #6)
+      libata irq-pio: misc fixes
+      libata irq-pio: merge the ata_dataout_task workqueue with ata_pio_task workqueue
+      libata irq-pio: eliminate unnecessary queuing in ata_pio_first_block()
+      libata irq-pio: add read/write multiple support
+      libata: pata_pdc2027x minor fix
 
-Randy.Dunlap wrote:
+Erik Benada:
+      [libata sata_promise] support PATA ports on SATA controllers
 
->On Wed, 30 Nov 2005, [ISO-8859-2] Jean-François Stenuit wrote:
->  
->
->>Note that I experienced the same problem yesterday evening with a
->>2.6.15-rc3 on HP Proliant DL140, which has an ICH-5 based controller and
->>a Maxtor drive
->>    
->>
->I've seen this a few times.
->If you were using MSI interrupts, I would blame that,
->but you aren't AFAICT, so try booting with the "irqpoll" kernel
->boot option to see if the kernel can reroute the (seemingly)
->lost interrupts.  Maybe we can deduce something from that.
->If it works, please post the /proc/interrupts file.
->  
->
--- 
-Jean-François "Jef" Stenuit
-Network & Security manager
-Keytrade Bank SA
+Jeff Garzik:
+      [libata] pata_pdc2027x: update for recent ->host_stop() API changes
+      [libata pata_pdc2027x] add documentation ref in header; trim trailing whitespace
+      [libata irq-pio] build fix
+      [libata pdc_adma] update for removal of ATA_FLAG_NOINTR
+      [libata pata_sil680] add to Makefile/Kconfig
+      libata: Add makefile rules for pata_via driver.
+      [libata pdc_adma] fix for new irq-driven PIO code
+      [libata] minor updates to PATA drivers
+      [libata] constify PCI tables in PATA drivers
+      [libata] remove two unused fields from struct ata_port
+      [libata ata_piix] cleanup: remove duplicate ata_port_info records
+      [libata sata_mv] IRQ PIO build fix
+      [libata pata_via] fix warning
+      [libata] Print out SATA speed, if link is up
+      [libata sata_promise] minor whitespace cleanup
 
-
---------------ms080206070300040501050205
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIII9TCC
-AtUwggI+oAMCAQICAw940zANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UE
-ChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNv
-bmFsIEZyZWVtYWlsIElzc3VpbmcgQ0EwHhcNMDUwOTEzMTU0NDM0WhcNMDYwOTEzMTU0NDM0
-WjBGMR8wHQYDVQQDExZUaGF3dGUgRnJlZW1haWwgTWVtYmVyMSMwIQYJKoZIhvcNAQkBFhRq
-ZnNAa2V5dHJhZGViYW5rLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAJvF
-EsxKTbVcg2evoxzm3Gs2PErR2jLXLyAosTiTvopWw3HZAKTD+3rVBQKZA4ykdbC4Spk7ca05
-2ENgt3naP/6bJ8gWCrgd9AQ0CRRDNuyE1A0YWjM4G8SYaKNXC+yjhrhaobmKcBQhtysQxHMo
-s0+SDVbNAOdYjK7rdjN+WGZQpbjJ3E8LtP4Vqv4YoA5LpyumVGq1aCcRNvHC0EbNfGi9p6R6
-sIjMglPH0ZAa9YGcX9U6qz/je8ImvL/k9B7Hys8YAN8uLDol9qMKXkys7Nc2UA/V6Qy3/vME
-PkQ6mnx8m30a1IAHK8zxvpRSpY/SmdSGIk3PGrOwXnCazsAKyX8CAwEAAaMxMC8wHwYDVR0R
-BBgwFoEUamZzQGtleXRyYWRlYmFuay5jb20wDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQF
-AAOBgQC0RNI63E0hHdNOy1ffX2Vg+qddH4vJDdtKHcYbI6B3/C8OJTCQLWRRZpOPwVQqNpVL
-8OzsDYTX1ARzlzMA9H0grN5AD3hLZxSsNJj0X47SpEq8OyVPlACaKa1YAulRg5QL57gCDSGf
-9xPO1nrA9sdlRG0fZLSauFLf4IOdnF7hJzCCAtUwggI+oAMCAQICAw940zANBgkqhkiG9w0B
-AQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkg
-THRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0EwHhcN
-MDUwOTEzMTU0NDM0WhcNMDYwOTEzMTU0NDM0WjBGMR8wHQYDVQQDExZUaGF3dGUgRnJlZW1h
-aWwgTWVtYmVyMSMwIQYJKoZIhvcNAQkBFhRqZnNAa2V5dHJhZGViYW5rLmNvbTCCASIwDQYJ
-KoZIhvcNAQEBBQADggEPADCCAQoCggEBAJvFEsxKTbVcg2evoxzm3Gs2PErR2jLXLyAosTiT
-vopWw3HZAKTD+3rVBQKZA4ykdbC4Spk7ca052ENgt3naP/6bJ8gWCrgd9AQ0CRRDNuyE1A0Y
-WjM4G8SYaKNXC+yjhrhaobmKcBQhtysQxHMos0+SDVbNAOdYjK7rdjN+WGZQpbjJ3E8LtP4V
-qv4YoA5LpyumVGq1aCcRNvHC0EbNfGi9p6R6sIjMglPH0ZAa9YGcX9U6qz/je8ImvL/k9B7H
-ys8YAN8uLDol9qMKXkys7Nc2UA/V6Qy3/vMEPkQ6mnx8m30a1IAHK8zxvpRSpY/SmdSGIk3P
-GrOwXnCazsAKyX8CAwEAAaMxMC8wHwYDVR0RBBgwFoEUamZzQGtleXRyYWRlYmFuay5jb20w
-DAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQC0RNI63E0hHdNOy1ffX2Vg+qddH4vJ
-DdtKHcYbI6B3/C8OJTCQLWRRZpOPwVQqNpVL8OzsDYTX1ARzlzMA9H0grN5AD3hLZxSsNJj0
-X47SpEq8OyVPlACaKa1YAulRg5QL57gCDSGf9xPO1nrA9sdlRG0fZLSauFLf4IOdnF7hJzCC
-Az8wggKooAMCAQICAQ0wDQYJKoZIhvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQI
-EwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcTCUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENv
-bnN1bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmljYXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAi
-BgNVBAMTG1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBDQTErMCkGCSqGSIb3DQEJARYccGVy
-c29uYWwtZnJlZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3MTcwMDAwMDBaFw0xMzA3MTYyMzU5
-NTlaMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBM
-dGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQTCBnzAN
-BgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAxKY8VXNV+065yplaHmjAdQRwnd/p/6Me7L3N9Vvy
-Gna9fww6YfK/Uc4B1OVQCjDXAmNaLIkVcI7dyfArhVqqP3FWy688Cwfn8R+RNiQqE88r1fOC
-dz0Dviv+uxg+B79AgAJk16emu59l0cUqVIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEAAaOBlDCB
-kTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1UdHwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwudGhh
-d3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWlsQ0EuY3JsMAsGA1UdDwQEAwIBBjApBgNV
-HREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVsMi0xMzgwDQYJKoZIhvcNAQEFBQAD
-gYEASIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYfqi2fNi/A9BxQIJNwPP2t4WFi
-w9k6GX6EsZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa9/eH1sYITq726jTlEBpb
-NU1341YheILcIRk13iSx0x1G/11fZU8xggM7MIIDNwIBATBpMGIxCzAJBgNVBAYTAlpBMSUw
-IwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUg
-UGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD3jTMAkGBSsOAwIaBQCgggGnMBgGCSqG
-SIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA1MTIwMTA5NDI0OFowIwYJ
-KoZIhvcNAQkEMRYEFLcZ8UvABZOJeaLF3Xj/gueZGWGkMFIGCSqGSIb3DQEJDzFFMEMwCgYI
-KoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcGBSsOAwIHMA0GCCqG
-SIb3DQMCAgEoMHgGCSsGAQQBgjcQBDFrMGkwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRo
-YXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBG
-cmVlbWFpbCBJc3N1aW5nIENBAgMPeNMwegYLKoZIhvcNAQkQAgsxa6BpMGIxCzAJBgNVBAYT
-AlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNU
-aGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD3jTMA0GCSqGSIb3DQEBAQUA
-BIIBAGd8RmA50qtz3ZED3tzXaGLgPdzq8brWl4DD/906OaS0ERwyYMQy3LZq1DxXonuiT+0R
-sLctE0Enueg7ORMViANnYR3Fhxx8QdtaA9djQh1jyq4uEO3QRD5N9NG+0p8VtfPUcwh6wI23
-FQQRZL86mUaG1tGw0AfoM22CGkLnHJDTSrgDgSn2Uqd7p6oLF+CZoHSye0sSEafc0GWwxjBk
-Ev+HqQhXDMS8B7cbBeej1+UvhN59KyKEQD84dh0sF4oR33m9U2n1t6BeAHSzq6sxnwqoX0kg
-QCv030xJtFHwvtMuj5POZ8xQ74u+UXIbqElCUv272OMjDnYumhlxrNEw6tQAAAAAAAA=
---------------ms080206070300040501050205--
+ drivers/scsi/Kconfig         |   52 ++
+ drivers/scsi/Makefile        |    6 
+ drivers/scsi/ata_piix.c      |   40 --
+ drivers/scsi/libata-core.c   |  571 +++++++++++++++++++++-------
+ drivers/scsi/libata-scsi.c   |   48 +-
+ drivers/scsi/pata_amd.c      |  644 ++++++++++++++++++++++++++++++++
+ drivers/scsi/pata_opti.c     |  267 +++++++++++++
+ drivers/scsi/pata_pdc2027x.c |  855 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/pata_sil680.c   |  361 ++++++++++++++++++
+ drivers/scsi/pata_triflex.c  |  267 +++++++++++++
+ drivers/scsi/pata_via.c      |  511 +++++++++++++++++++++++++
+ drivers/scsi/pdc_adma.c      |    8 
+ drivers/scsi/sata_mv.c       |    8 
+ drivers/scsi/sata_nv.c       |    4 
+ drivers/scsi/sata_promise.c  |   67 ++-
+ drivers/scsi/sata_qstor.c    |   11 
+ drivers/scsi/sata_sx4.c      |    7 
+ drivers/scsi/sata_vsc.c      |    6 
+ include/linux/ata.h          |   23 +
+ include/linux/libata.h       |   32 -
+ include/linux/pci_ids.h      |    8 
+ 21 files changed, 3539 insertions(+), 257 deletions(-)
