@@ -1,71 +1,62 @@
-From: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Subject: sata performance with 2.4.32 + latest libata
-Date: Fri, 2 Dec 2005 17:28:35 +0100
-Message-ID: <200512021728.35130.thomas.jarosch@intra2net.com>
+From: Giulio Orsero <giulioo@gmail.com>
+Subject: writing to ide dvd-ram: terrible slow-downs
+Date: Fri, 02 Dec 2005 19:09:23 +0100
+Message-ID: <20051202180923.B6A74F817@i3.golden.dom>
+Reply-To: giulioo@pobox.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750815AbVLBQ2t@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wnx-5a.seeweb.it ([212.25.170.113]:24452 "EHLO wnx-5a.seeweb.it")
+	by vger.kernel.org with ESMTP id S1750781AbVLBSMF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Dec 2005 13:12:05 -0500
+Received: from i3.golden.dom (xs-213-255-43-90.to1.albacom.net [213.255.43.90] (may be forged))
+	(authenticated bits=0)
+	by wnx-5a.seeweb.it (8.12.3/8.12.3/Debian-7.1) with ESMTP id jB2IBvDr024049
+	for <linux-ide@vger.kernel.org>; Fri, 2 Dec 2005 19:11:58 +0100
+Received: from pc93 (pc93 [192.168.1.193])
+	by i3.golden.dom (Postfix) with SMTP id B6A74F817
+	for <linux-ide@vger.kernel.org>; Fri,  2 Dec 2005 19:09:23 +0100 (CET)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello,
+1st system:
+kernel 2.4.32
+2 SATA HDs on intel sata using ata_piix (bios is enhanced mode)
+1 IDE DVD-RAM/-RW/+RW (LG 4163B) on hda.
+DVD-RAM media
 
-I just tried kernel 2.4.32 + latest libata patches from 2005-12-01
-after my performance problems described here:
+When writing to the DVD-RAM (I have ext2 fs on it), accessed via ide-scsi,
+there are terrible slow-downs on the 2 sata disks like writing to and ide
+device would affect the 2 sata channels, is this normal behavior?
 
-http://marc.theaimsgroup.com/?l=3Dlinux-kernel&m=3D113171290329839
+===========
+2ns system:
+kernel 2.6.15-<latest rc>
+1 HD on hda
+1 IDE DVD-RAM (LG 4163B) on hdc.
 
-Now the machine is performing very fast :-)
+When writing to the DVD-RAM (I have ext2 fs on it) accessed via ide-cd,
+there are terrible slow-downs on the ide disk like writing to an ide device
+on 2nd ide channel would affect the 1st ide channel (different ide cable) is
+this normal behavior?
 
-Results with 2.4.32 + libata latest:
-Version  1.03       ------Sequential Output------ --Sequential Input- -=
--Random-
-                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- -=
--Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  =
-/sec %CP
-proliant         2G 33294  91 57592  20 26778   5 30885  77 56081   5 1=
-74.2   0
-                    ------Sequential Create------ --------Random Create=
---------
-                    -Create-- --Read--- -Delete-- -Create-- --Read--- -=
-Delete--
-              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  =
-/sec %CP
-                 16 27313 100 +++++ +++ 26421  99 27285 101 +++++ +++ 2=
-1477  89
-proliant,2G,33294,91,57592,20,26778,5,30885,77,56081,5,174.2,0,16,27313=
-,100,+++++,+++,26421,99,27285,101,+++++,+++,21477,89
+In bot cases I write to the dvd-ram this way:
+mount -t ext2 /dev/scd0 /mnt/dvd (kernel 24)
+or
+mount -t ext2 /dev/hdc /mnt/dvd  (kernel 26)
 
-Previous results with kernel 2.4.32-rc3:
-Version =A01.03 =A0 =A0 =A0 ------Sequential Output------ --Sequential =
-Input- --Random-
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 -Per Chr- --Block-- -Rewrite- -=
-Per Chr- --Block-- --Seeks--
-Machine =A0 =A0 =A0 =A0Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/s=
-ec %CP =A0/sec %CP
-proliant =A0 =A0 =A0 =A0 2G 10523 =A028 11532 =A0 3 =A07162 =A0 1 24271=
- =A060 53495 =A0 5 164.3 =A0 0
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ------Sequential Create------ -=
--------Random Create--------
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 -Create-- --Read--- -Delete-- -=
-Create-- --Read--- -Delete--
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 files =A0/sec %CP =A0/sec %CP =A0/sec %CP =A0=
-/sec %CP =A0/sec %CP =A0/sec %CP
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A016 30498 100 +++++ +++ 27244 =A098 2=
-9630 =A099 +++++ +++ 11587 =A046
-proliant,2G,10523,28,11532,3,7162,1,24271,60,53495,5,164.3,0,16,30498,1=
-00,+++++,+++,27244,98,29630,99,+++++,+++,11587,46
-
-A RAID1 rebuild went from 6-8 mb/s to this:
-[=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>...]  recovery =3D=
- 85.9% (2202816/2562240) finish=3D0.1min speed=3D56280K/sec
+and then
+cp data /mnt/dvd/
 
 
-Thanks Jeff, you rock.
+I remember having similar problems when using cdrecord to write cd-rw in the
+past  which I could solve using the cdrecord "-immed" flag.
 
-Thomas
+Before flogging the list with long dmesg I wanted to be certain this is not
+the way it's supposed to work.
+
+Suggestions?
+
+Thanks
