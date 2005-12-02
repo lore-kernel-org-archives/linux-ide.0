@@ -1,45 +1,91 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Promise SATA oops
-Date: Fri, 02 Dec 2005 00:29:01 -0500
-Message-ID: <438FDB9D.2030201@pobox.com>
-References: <20051202045853.GD3677@vitelus.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/2] libata: Remove dependence on host_set->dev for SAS
+Date: Fri, 2 Dec 2005 09:07:29 +0100
+Message-ID: <58cb370e0512020007n67f7ba30g7cae84c66b18859@mail.gmail.com>
+References: <4341A91A.3020000@us.ibm.com> <435E7105.4010105@pobox.com>
+	 <435E87E8.9010506@us.ibm.com> <435E8AC7.1080407@pobox.com>
+	 <435EB656.1040502@adaptec.com> <4360FAC1.8020409@us.ibm.com>
+	 <43850F0D.7040907@torque.net> <43851262.7020807@pobox.com>
+	 <58cb370e0511240012r64ad150eo90553b230992424e@mail.gmail.com>
+	 <438FABF8.3020802@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:8415 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751315AbVLBF3K (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Dec 2005 00:29:10 -0500
-In-Reply-To: <20051202045853.GD3677@vitelus.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <438FABF8.3020802@pobox.com>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: dougg@torque.net, brking@us.ibm.com, Luben Tuikov <luben_tuikov@adaptec.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, t.schorpp@gmx.de
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lehmann <aaronl@vitelus.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Aaron Lehmann wrote:
-> I'm running 2.6.14.2 on an x86_64 (Athlon X2, i.e. SMP) with a Promise
-> TX4 SATAII 150 controller. The night I set up the machine, I got a
-> Promise-related oops (null pointer dereference IIRC), but was foolish
-> enough not to write it down.  Since then, the machine has been
-> unstable, and I've suspected the same thing is recurring, but since I
-> use X it's very difficult to actually get at the oops. I ended up
-> setting up a ramdisk with a static busybox that I could use to poke
-> around if anything interesting happened. Just now everything using the
-> filesystem went into D-state, so I checked dmesg and saw uncorrectable
-> errors being reported on /dev/sdd. The system froze completely within
-> a minute. When I rebooted, I got the oops at the end of this message.
-> I was only able to copy the portion that fit on the screen. A second
-> reboot was sucessful. My RAID5 arrays are resyncing now, and I expect
-> that to complete normally because I've had to go through a lot of
-> resyncs since I set this system up and they were all sucessful. Once
-> that's done, I guess I'll run badblocks on sdd and see if anything
-> turns up. It would be a shame if that drive is bad, considering that
-> my 4 hard drives are brand new ones to replace a failed array I had
-> lots of problems with.
+On 12/2/05, Jeff Garzik <jgarzik@pobox.com> wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > On 11/24/05, Jeff Garzik <jgarzik@pobox.com> wrote:
+> >
+> >>Douglas Gilbert wrote:
+> >>
+> >>>I don't think a SATL is that easy. One SCSI command can
+> >>>translate into zero or more ATA commands. If it translates
+> >>>to multiple commands, then there is the possibility of an
+> >>>error prior to the last in the sequence of ATA commands
+> >>>(how to report; rollback needed ?). The SATL needs to hold
+> >>>state and needs a service thread if it is to support the
+> >>>IMMED bit on some commands (e.g. START STOP UNIT).
+> >>
+> >>It needs a conceptual service thread, not necessarily an explicit one.
+> >>
+> >>With REQUEST SENSE, I've demonstrated how to report errors with each
+> >>step in the sequence.  With demo patches I've posted, I've demonstrated
+> >>(using qc->private_data) how to hold state.
+> >>
+> >>
+> >>
+> >>>libata still has a ways to go to catch up to SAT rev 7
+> >>>but has made some good progress lately with the addition
+> >>>of the ATA pass through commands (lk 2.6.15-rc1 and onward).
+> >>>smartmontools (just prior to 5.34) now works with '-d ata'
+> >>>on libata-connected SATA disks. The '-d ata' ** overrides
+> >>>the guess of a SCSI disk based on the device node (e.g.
+> >>>/dev/sda) and uses the HDIO_DRIVE_CMD and HDIO_DRIVE_TASK
+> >>>ioctls. The absence of support for the HDIO_DRIVE_TASKFILE
+> >>>ioctl means that "selective" self-test can't be done.
+> >>>I'm not sure if moving smartmontools to the ATA PASS THROUGH
+> >>>SCSI commands will win back the "selective" self-test
+> >>>capability. Anyway, going to those ATA PASS THROUGH SCSI
+> >>
+> >>ATA passthru can do anything the legacy IDE ioctls can do (and more).
+> >
+> >
+> > [ definitely ATA passthru is the way to go but... ]
+> >
+> > discrete taskfiles?
+>
+> what is this?
 
-This should be fixed in 2.6.15-rcX...
+flagged taskfiles
 
-	Jeff
+yes, this is a low priority but your statement is oversimplification
+and I don't even mentioned other "IDE ioctl", so:
 
+ATA passthru can do anything _important_ that legacy IDE ioctls
+can do (write cache [dis,en]abling?)
 
+> > multi-PIO?
+>
+> what is this?  multi-sector PIO, such as READ MULTIPLE SECTORS?  ATA
 
+short for multi sector-sector PIO
+
+> passthru can do that.
+
+not in the mainline, I've just checked libata-dev and it is OK
+
+> > setting transfer speed?
+>
+> That's not a limitation of passthru, but a limitation of the driver.  I
+> don't yet see the value...
+
+Same for me...
+
+Bartlomiej
