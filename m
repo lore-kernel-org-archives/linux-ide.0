@@ -1,33 +1,34 @@
 From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: [PATCH 0/6] SATA use ACPI methods for PM
-Date: Fri, 2 Dec 2005 10:16:37 -0800
-Message-ID: <20051202101637.2167851a.randy_d_dunlap@linux.intel.com>
+Subject: Re: [PATCH 0/6] SATA use ACPI methods for PM
+Date: Fri, 2 Dec 2005 10:15:04 -0800
+Message-ID: <20051202101504.27d0dfc0.randy_d_dunlap@linux.intel.com>
+References: <20051202100119.032b242e.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr19.intel.com ([134.134.136.18]:50851 "EHLO
-	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1750850AbVLBSNp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Dec 2005 13:13:45 -0500
+Received: from fmr18.intel.com ([134.134.136.17]:35464 "EHLO
+	orsfmr003.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1750894AbVLBSOF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Dec 2005 13:14:05 -0500
+In-Reply-To: <20051202100119.032b242e.randy_d_dunlap@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: ide <linux-ide@vger.kernel.org>
-Cc: axboe <axboe@suse.de>, jgarzik <jgarzik@pobox.com>
+Cc: axboe@suse.de, jgarzik@pobox.com
 
 
-This is an update to the SATA suspend/resume patches
-to use ACPI methods (specifically _SDD and _GTF).
-This patch series applies to 2.6.15-rc4.
+more comments:
 
-It boots but needs lots of testing & review/comments,
-as well as adding a call to write taskfiles on
-COMRESET event(s) (at least on async. loss of signal).
+Yes, the patch still contains some debugging code.
+If you try it out and have problems, please give me as much of
+the debug output as possible.  It is likely that I will also
+want to see your ACPI tables.  To dump those, use
+'acpidump' from the latest pmtools release at:
+  http://www.kernel.org/pub/linux/kernel/people/lenb/acpi/utils/
 
-This is not intended to be a final patch for merging.
-
-The patchset begins with the libata suspend/resume patch from
-Jens Axboe and builds on that.
+The patch series is available at:
+  http://www.xenotime.net/linux/SATA/2.6.15-rc/
 
 ---
 ~Randy
