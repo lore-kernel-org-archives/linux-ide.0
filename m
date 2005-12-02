@@ -1,26 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/2] libata: Remove dependence on host_set->dev for SAS
-Date: Fri, 02 Dec 2005 05:48:16 -0500
-Message-ID: <43902670.6000607@pobox.com>
-References: <4341A91A.3020000@us.ibm.com> <435E7105.4010105@pobox.com>	 <435E87E8.9010506@us.ibm.com> <435E8AC7.1080407@pobox.com>	 <435EB656.1040502@adaptec.com> <4360FAC1.8020409@us.ibm.com>	 <43850F0D.7040907@torque.net> <43851262.7020807@pobox.com>	 <58cb370e0511240012r64ad150eo90553b230992424e@mail.gmail.com>	 <438FABF8.3020802@pobox.com> <58cb370e0512020007n67f7ba30g7cae84c66b18859@mail.gmail.com> <439021E0.9040203@torque.net>
+From: Velu Erwan <erwan@seanodes.com>
+Subject: Re: ATIIXP and libata
+Date: Fri, 02 Dec 2005 11:54:38 +0100
+Message-ID: <439027EE.6010202@seanodes.com>
+References: <436AA2EA.2040508@yahoo.co.uk> <58cb370e0511040217y778fab7cj47d198b53126f9d7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <439021E0.9040203@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: dougg@torque.net
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, brking@us.ibm.com, Luben Tuikov <luben_tuikov@adaptec.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, t.schorpp@gmx.de
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from seanodes.co.fr.clara.net ([212.43.220.11]:21149 "EHLO
+	seanodes.co.fr.clara.net") by vger.kernel.org with ESMTP
+	id S1751776AbVLBKym (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Dec 2005 05:54:42 -0500
+In-Reply-To: <58cb370e0511040217y778fab7cj47d198b53126f9d7@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Bruno Harbulot <bruno_harbulot@yahoo.co.uk>, linux-ide@vger.kernel.org
 
-Douglas Gilbert wrote:
-> I noticed that the protocol field in the ATA_12 and
-> ATA_16 pass through commands included hard reset,
-> SRST and device reset. Would it be useful to implement
-> these?
+Bartlomiej Zolnierkiewicz a =E9crit :
 
-Yes, at least SRST should be implemented.
+> =20
+>
+>>(I don't know much about the subject, but I presume that workarounds =
+to
+>>get ata_id_is_sata "to work somehow" from atiixp.c would not be the
+>>right thing to do, even if feasible.)
+>>   =20
+>>
+>
+><linux/ata.h> include is used by both IDE and libata
+>driver, however ata_id_is_sata() shouldn't be used
+>directly in atiixp.c but similar check should be added
+>to eighty_ninty_three() from ide-iops.c.
+> =20
+>
+Is there any chance to have a fix for this troubles in some recent kern=
+el ?
+I don't know how to help to make this fixed upstream. I would like not=20
+to have a personnal patch for making my system running.
 
-	Jeff
-
-
+Erwan,
