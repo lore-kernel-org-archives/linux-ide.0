@@ -1,62 +1,46 @@
-From: Giulio Orsero <giulioo@gmail.com>
-Subject: writing to ide dvd-ram: terrible slow-downs
-Date: Fri, 02 Dec 2005 19:09:23 +0100
-Message-ID: <20051202180923.B6A74F817@i3.golden.dom>
-Reply-To: giulioo@pobox.com
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: [PATCH 5/6] SATA ACPI: kernel-doc
+Date: Fri, 2 Dec 2005 10:07:54 -0800
+Message-ID: <20051202100754.6194bfb2.randy_d_dunlap@linux.intel.com>
+References: <20051202100119.032b242e.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wnx-5a.seeweb.it ([212.25.170.113]:24452 "EHLO wnx-5a.seeweb.it")
-	by vger.kernel.org with ESMTP id S1750781AbVLBSMF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Dec 2005 13:12:05 -0500
-Received: from i3.golden.dom (xs-213-255-43-90.to1.albacom.net [213.255.43.90] (may be forged))
-	(authenticated bits=0)
-	by wnx-5a.seeweb.it (8.12.3/8.12.3/Debian-7.1) with ESMTP id jB2IBvDr024049
-	for <linux-ide@vger.kernel.org>; Fri, 2 Dec 2005 19:11:58 +0100
-Received: from pc93 (pc93 [192.168.1.193])
-	by i3.golden.dom (Postfix) with SMTP id B6A74F817
-	for <linux-ide@vger.kernel.org>; Fri,  2 Dec 2005 19:09:23 +0100 (CET)
+Received: from fmr19.intel.com ([134.134.136.18]:63651 "EHLO
+	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1750886AbVLBSOC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Dec 2005 13:14:02 -0500
+In-Reply-To: <20051202100119.032b242e.randy_d_dunlap@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: ide <linux-ide@vger.kernel.org>
+Cc: axboe@suse.de, jgarzik@pobox.com
 
-1st system:
-kernel 2.4.32
-2 SATA HDs on intel sata using ata_piix (bios is enhanced mode)
-1 IDE DVD-RAM/-RW/+RW (LG 4163B) on hda.
-DVD-RAM media
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 
-When writing to the DVD-RAM (I have ext2 fs on it), accessed via ide-scsi,
-there are terrible slow-downs on the 2 sata disks like writing to and ide
-device would affect the 2 sata channels, is this normal behavior?
+Add ata_acpi.c to libata kernel-doc template file.
 
-===========
-2ns system:
-kernel 2.6.15-<latest rc>
-1 HD on hda
-1 IDE DVD-RAM (LG 4163B) on hdc.
+Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+---
+ Documentation/DocBook/libata.tmpl |    6 ++++++
+ 1 files changed, 6 insertions(+)
 
-When writing to the DVD-RAM (I have ext2 fs on it) accessed via ide-cd,
-there are terrible slow-downs on the ide disk like writing to an ide device
-on 2nd ide channel would affect the 1st ide channel (different ide cable) is
-this normal behavior?
-
-In bot cases I write to the dvd-ram this way:
-mount -t ext2 /dev/scd0 /mnt/dvd (kernel 24)
-or
-mount -t ext2 /dev/hdc /mnt/dvd  (kernel 26)
-
-and then
-cp data /mnt/dvd/
+--- linux-2615-rc4.orig/Documentation/DocBook/libata.tmpl
++++ linux-2615-rc4/Documentation/DocBook/libata.tmpl
+@@ -787,6 +787,12 @@ and other resources, etc.
+ !Idrivers/scsi/libata-scsi.c
+   </chapter>
+ 
++  <chapter id="libataAcpi">
++     <title>libata ACPI interfaces/methods</title>
++!Edrivers/scsi/ata_acpi.c
++!Idrivers/scsi/ata_acpi.c
++  </chapter>
++
+   <chapter id="ataExceptions">
+      <title>ATA errors &amp; exceptions</title>
+ 
 
 
-I remember having similar problems when using cdrecord to write cd-rw in the
-past  which I could solve using the cdrecord "-immed" flag.
-
-Before flogging the list with long dmesg I wanted to be certain this is not
-the way it's supposed to work.
-
-Suggestions?
-
-Thanks
+---
