@@ -1,54 +1,25 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: [PATCH 3/6] SATA ACPI: libata.h changes
-Date: Fri, 2 Dec 2005 10:05:41 -0800
-Message-ID: <20051202100541.1dfb3db4.randy_d_dunlap@linux.intel.com>
-References: <20051202100119.032b242e.randy_d_dunlap@linux.intel.com>
+From: Aaron Lehmann <aaronl@vitelus.com>
+Subject: Re: Promise SATA oops
+Date: Fri, 2 Dec 2005 11:51:09 -0800
+Message-ID: <20051202195109.GE3677@vitelus.com>
+References: <20051202045853.GD3677@vitelus.com> <438FDB9D.2030201@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr20.intel.com ([134.134.136.19]:51857 "EHLO
-	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1750897AbVLBSOD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Dec 2005 13:14:03 -0500
-In-Reply-To: <20051202100119.032b242e.randy_d_dunlap@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751000AbVLBTvM@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <438FDB9D.2030201@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>
-Cc: axboe@suse.de, jgarzik@pobox.com
 
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+On Fri, Dec 02, 2005 at 12:29:01AM -0500, Jeff Garzik wrote:
+> This should be fixed in 2.6.15-rcX...
 
-Add ACPI data pointer/length holders.
+Still isn't stable. It froze within hours after announcing in all
+terminals that it was disabling a certain IRQ. Now the RAID is so
+degraded that root can't even be mounted. Was the Promise controller a
+bad choice for a reliable setup?
 
-Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
----
- include/linux/libata.h |    6 ++++++
- 1 files changed, 6 insertions(+)
-
---- linux-2615-rc4.orig/include/linux/libata.h
-+++ linux-2615-rc4/include/linux/libata.h
-@@ -33,6 +33,7 @@
- #include <asm/io.h>
- #include <linux/ata.h>
- #include <linux/workqueue.h>
-+#include <acpi/acpi.h>
- 
- /*
-  * compile-time options
-@@ -311,6 +312,11 @@ struct ata_device {
- 	u16			cylinders;	/* Number of cylinders */
- 	u16			heads;		/* Number of heads */
- 	u16			sectors;	/* Number of sectors per track */
-+
-+	/* ACPI objects info */
-+	acpi_handle		obj_handle;
-+	acpi_size		gtf_length;
-+	u8			*gtf_address;
- };
- 
- struct ata_port {
-
-
-
----
+I may not have time to look at this further until late next week, but
+I'll follow up with whatever I learn.
