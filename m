@@ -1,25 +1,27 @@
-From: Aaron Lehmann <aaronl@vitelus.com>
-Subject: Re: Promise SATA oops
-Date: Fri, 2 Dec 2005 11:51:09 -0800
-Message-ID: <20051202195109.GE3677@vitelus.com>
-References: <20051202045853.GD3677@vitelus.com> <438FDB9D.2030201@pobox.com>
-Mime-Version: 1.0
+From: Mag Atkins <sterilization@gabi.com>
+Subject: Seven days - seven ways to save! 10% off hard drivres & point of sale.
+Date: Fri, 2 Dec 2005 15:23:34 -0500
+Message-ID: <10241738091.84628117099@host-84-9-58-247.bulldogdsl.com>
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751000AbVLBTvM@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <438FDB9D.2030201@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from host-84-9-58-247.bulldogdsl.com ([84.9.58.247]:34574 "HELO
+	host-84-9-58-247.bulldogdsl.com") by vger.kernel.org with SMTP
+	id S1751044AbVLBUXe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Dec 2005 15:23:34 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Fri, Dec 02, 2005 at 12:29:01AM -0500, Jeff Garzik wrote:
-> This should be fixed in 2.6.15-rcX...
+Looking for quality oem software bundles? Try us at affordable wholesale rates for your business.
+http://aqo.2eqa8x8vqipa2k2xp22f7kkk.ferriif.com/?ygsdd
 
-Still isn't stable. It froze within hours after announcing in all
-terminals that it was disabling a certain IRQ. Now the RAID is so
-degraded that root can't even be mounted. Was the Promise controller a
-bad choice for a reliable setup?
 
-I may not have time to look at this further until late next week, but
-I'll follow up with whatever I learn.
+For every action there is an equal and opposite government program.  
+There is nothing stronger in the world than gentleness.    
+If you can't take the heat, get out of the gene pool. 
+A lie told often enough becomes the truth.     
+To make pleasures pleasant, shorten them.       
+England has forty-two religions and only two sauces.     
+
+
