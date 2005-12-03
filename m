@@ -1,180 +1,92 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH] sata_sil: improved interrupt handling
-Date: Sat, 3 Dec 2005 00:41:27 -0500
-Message-ID: <20051203054127.GA11208@havoc.gtf.org>
+From: Erik Slagter <erik@slagter.name>
+Subject: Re: Promise SATA oops
+Date: Sat, 03 Dec 2005 11:09:45 +0100
+Message-ID: <1133604585.5424.54.camel@localhost.localdomain>
+References: <20051202045853.GD3677@vitelus.com> <438FDB9D.2030201@pobox.com>
+	 <20051202195109.GE3677@vitelus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:38051 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1751179AbVLCFlb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Dec 2005 00:41:31 -0500
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-siO76wC1joLZq27uUFrT"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750905AbVLCKKE@vger.kernel.org>
+In-Reply-To: <20051202195109.GE3677@vitelus.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Aaron Lehmann <aaronl@vitelus.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Ethan Chen <thanatoz@ucla.edu>, Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
 
-Just committed the following to the 'sii-irq' branch of libata-dev.git,
-and verified it on an Adaptec 1210SA (3112).
+--=-siO76wC1joLZq27uUFrT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Haven't decided whether I will push it upstream or not, but I think I
-will.  It does a bit better job of handling handling errors, and should
-be more efficient (less CPU usage) than the standard ATA interrupt
-handler as well.
+On Fri, 2005-12-02 at 11:51 -0800, Aaron Lehmann wrote:
+> On Fri, Dec 02, 2005 at 12:29:01AM -0500, Jeff Garzik wrote:
+> > This should be fixed in 2.6.15-rcX...
+>=20
+> Still isn't stable. It froze within hours after announcing in all
+> terminals that it was disabling a certain IRQ. Now the RAID is so
+> degraded that root can't even be mounted. Was the Promise controller a
+> bad choice for a reliable setup?
+>=20
+> I may not have time to look at this further until late next week, but
+> I'll follow up with whatever I learn.
 
-For users seeing sata_sil problems, this may make them happy.
+This look very similar to the problem I had. It vanished completely when
+I exchanged the power supply for a high-end one.
+
+--=-siO76wC1joLZq27uUFrT
+Content-Type: application/x-pkcs7-signature; name=smime.p7s
+Content-Disposition: attachment; filename=smime.p7s
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIILzCCAnIw
+ggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
+d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
+YWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYDVQQE
+EwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlqbiBT
+bGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0BAQEF
+AAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGYNW5L
+vevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI0gVv
+gY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFn
+dGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8WcuJ7Q1
+eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xNdkFU
+mhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPkyITCC
+AnIwggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMc
+VGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZy
+ZWVtYWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYD
+VQQEEwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlq
+biBTbGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0B
+AQEFAAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGY
+NW5Lvevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI
+0gVvgY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0Bz
+bGFndGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8Wcu
+J7Q1eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xN
+dkFUmhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPky
+ITCCAz8wggKooAMCAQICAQ0wDQYJKoZIhvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQI
+EwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcTCUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1
+bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmljYXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMT
+G1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJl
+ZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNV
+BAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNU
+aGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
+gYkCgYEAxKY8VXNV+065yplaHmjAdQRwnd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNa
+LIkVcI7dyfArhVqqP3FWy688Cwfn8R+RNiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUq
+VIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEAAaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1Ud
+HwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwudGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWls
+Q0EuY3JsMAsGA1UdDwQEAwIBBjApBgNVHREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVs
+Mi0xMzgwDQYJKoZIhvcNAQEFBQADgYEASIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYf
+qi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6EsZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa
+9/eH1sYITq726jTlEBpbNU1341YheILcIRk13iSx0x1G/11fZU8xggJmMIICYgIBATBpMGIxCzAJ
+BgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQD
+EyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMAkGBSsOAwIaBQCgggFT
+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA1MTIwMzEwMDk0NVow
+IwYJKoZIhvcNAQkEMRYEFGP7Qk8/DUJF7z9+Oqtwu6yZ8Y1rMHgGCSsGAQQBgjcQBDFrMGkwYjEL
+MAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNV
+BAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAgMP8QQwegYLKoZIhvcNAQkQ
+Agsxa6BpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBM
+dGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMA0G
+CSqGSIb3DQEBAQUABIGAQwjQWvzAqiV7Cv18R7SubJ61e4MVH/jMSDRpq7FRNm874nc9ePQqYF4e
+TFJc1q63iZ05tlcTt5nHc27G8crV2M/jdlcqXt5W0rKdG5whs/zkeri8UUTCORDkH1lIuzfW9TIG
+4Eu2S7V+Em9OH0FuUaog6QplTPo8EiqajuXiLqcAAAAAAAA=
 
 
-commit b6abf7755a79383f0e5f108d23a0394f156c54c1
-Author: Jeff Garzik <jgarzik@pobox.com>
-Date:   Sat Dec 3 00:30:57 2005 -0500
-
-    [libata sata_sil] improved interrupt handling
-
- drivers/scsi/sata_sil.c |  118 +++++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 117 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
-index 3609186..37398a5 100644
---- a/drivers/scsi/sata_sil.c
-+++ b/drivers/scsi/sata_sil.c
-@@ -85,6 +85,7 @@ static void sil_dev_config(struct ata_po
- static u32 sil_scr_read (struct ata_port *ap, unsigned int sc_reg);
- static void sil_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
- static void sil_post_set_mode (struct ata_port *ap);
-+static irqreturn_t sil_irq (int irq, void *dev_instance, struct pt_regs *regs);
- 
- 
- static const struct pci_device_id sil_pci_tbl[] = {
-@@ -167,7 +168,7 @@ static const struct ata_port_operations 
- 	.qc_prep		= ata_qc_prep,
- 	.qc_issue		= ata_qc_issue_prot,
- 	.eng_timeout		= ata_eng_timeout,
--	.irq_handler		= ata_interrupt,
-+	.irq_handler		= sil_irq,
- 	.irq_clear		= ata_bmdma_irq_clear,
- 	.scr_read		= sil_scr_read,
- 	.scr_write		= sil_scr_write,
-@@ -233,6 +234,121 @@ MODULE_DEVICE_TABLE(pci, sil_pci_tbl);
- MODULE_VERSION(DRV_VERSION);
- 
- 
-+static inline void sil_port_irq(struct ata_port *ap, void __iomem *mmio,
-+				u8 dma_stat, u8 dma_stat_mask)
-+{
-+	struct ata_queued_cmd *qc = NULL;
-+	unsigned int err_mask = AC_ERR_OTHER;
-+	int complete = 1;
-+	u8 dev_stat;
-+
-+	/* Exit now, if port or port's irqs are disabled */
-+	if (ap->flags & (ATA_FLAG_PORT_DISABLED | ATA_FLAG_NOINTR)) {
-+		complete = 0;
-+		goto out;
-+	}
-+
-+	/* Get active command */
-+	qc = ata_qc_from_tag(ap, ap->active_tag);
-+	if ((!qc) || (qc->tf.ctl & ATA_NIEN)) {
-+		complete = 0;
-+		goto out;
-+	}
-+
-+	/* Stop DMA, if doing DMA */
-+	switch (qc->tf.protocol) {
-+	case ATA_PROT_DMA:
-+	case ATA_PROT_ATAPI_DMA:
-+		ata_bmdma_stop(qc);
-+		break;
-+
-+	default:
-+		/* do nothing */
-+		break;
-+	}
-+
-+	/* Catch PCI bus errors */
-+	if (unlikely(dma_stat_mask & ATA_DMA_ERR)) {
-+		struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
-+		u16 pci_stat;
-+
-+		pci_read_config_word(pdev, PCI_STATUS, &pci_stat);
-+		pci_write_config_word(pdev, PCI_STATUS, pci_stat);
-+
-+		err_mask = AC_ERR_HOST_BUS;
-+
-+		printk(KERN_ERR "ata%u: PCI error, pci %x, dma %x\n",
-+			ap->id, pci_stat, dma_stat);
-+		goto out;
-+	}
-+
-+	/* Read device Status, clear device interrupt */
-+	dev_stat = ata_check_status(ap);
-+
-+	/* Let timeout handler handle stuck BSY */
-+	if (unlikely(dev_stat & ATA_BUSY)) {
-+		complete = 0;
-+		goto out;
-+	}
-+
-+	/* Did S/G table specify a size smaller than the transfer size?  */
-+	if (unlikely(dma_stat_mask == 0)) {
-+		printk(KERN_ERR "ata%u: BUG: SG size underflow\n", ap->id);
-+		err_mask = AC_ERR_OTHER; /* only occurs due to coder error? */
-+		goto out;
-+	}
-+
-+	/* Clear 311x DMA completion indicator */
-+	writeb(ATA_DMA_INTR, mmio + ATA_DMA_STATUS);
-+
-+	/* Finally, complete the ATA command transaction */
-+	ata_qc_complete(qc, ac_err_mask(dev_stat));
-+	return;
-+
-+out:
-+	ata_chk_status(ap);
-+	writeb(dma_stat_mask, mmio + ATA_DMA_STATUS);
-+	if (complete)
-+		ata_qc_complete(qc, err_mask);
-+}
-+
-+static irqreturn_t sil_irq (int irq, void *dev_instance, struct pt_regs *regs)
-+{
-+	struct ata_host_set *host_set = dev_instance;
-+	unsigned int i, handled = 0;
-+
-+	spin_lock(&host_set->lock);
-+
-+	for (i = 0; i < host_set->n_ports; i++) {
-+		struct ata_port *ap;
-+		void __iomem *mmio;
-+		u8 status, mask;
-+		u32 serr;
-+
-+		ap = host_set->ports[i];
-+		if (!ap)
-+			continue;
-+
-+		mmio = (void __iomem *) ap->ioaddr.bmdma_addr;
-+		status = readb(mmio + ATA_DMA_STATUS);
-+		mask = status & (ATA_DMA_INTR | ATA_DMA_ERR | ATA_DMA_ACTIVE);
-+		if (mask == ATA_DMA_ACTIVE)
-+			continue;
-+
-+		handled = 1;
-+
-+		sil_port_irq(ap, mmio, status, mask);
-+
-+		serr = sil_scr_read(ap, SCR_ERROR);
-+		if (serr)
-+			sil_scr_write(ap, SCR_ERROR, serr);
-+	}
-+
-+	spin_unlock(&host_set->lock);
-+
-+	return IRQ_RETVAL(handled);
-+}
-+
- static unsigned char sil_get_device_cache_line(struct pci_dev *pdev)
- {
- 	u8 cache_line = 0;
+--=-siO76wC1joLZq27uUFrT--
