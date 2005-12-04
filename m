@@ -1,27 +1,243 @@
-From: Francis Cooley <ankle@hartcenter.com>
-Subject: Seven days - seven ways to save! 10% off hard drivres & point of sale.
-Date: Sun, 4 Dec 2005 02:37:48 -0500
-Message-ID: <9384193661.5142854600@tp-s2-c108-19.router.hinet.net>
-Content-Type: text/plain; charset=us-ascii
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 1/2] libata: implement ata_exec_internal()
+Date: Sun, 04 Dec 2005 23:04:58 +0900
+Message-ID: <4392F78A.2040209@gmail.com>
+References: <20051128164201.GA7530@htj.dyndns.org> <438C0645.3020301@tw.ibm.com> <20051129131717.GA8505@htj.dyndns.org> <43924B5A.1070904@pobox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 218-161-16-112.dynamic.hinet.net ([218.161.16.112]:16646 "HELO
-	tp-s2-c108-19.router.hinet.net") by vger.kernel.org with SMTP
-	id S1751321AbVLDHhs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 4 Dec 2005 02:37:48 -0500
+Received: from zproxy.gmail.com ([64.233.162.192]:32588 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932228AbVLDOFE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Dec 2005 09:05:04 -0500
+Received: by zproxy.gmail.com with SMTP id 14so740445nzn
+        for <linux-ide@vger.kernel.org>; Sun, 04 Dec 2005 06:05:03 -0800 (PST)
+In-Reply-To: <43924B5A.1070904@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org
 
-Only our software is guaranteed 100% legal.
-http://nwes.htnp5una5f4phzzumhhc4zhz.caduahk.com/?tavwaeiv
+Hello, Jeff.
 
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+> 
+>> Each user libata internal commands initializes a qc, issues it, waits
+>> for its completion and checks for errors.  This patch factors internal
+>> command execution sequence into ata_qc_exec_internal().  This change
+>> fixes the following bugs.
+>>
+>> * qc not freed on issue failure
+>> * ap->qactive clearing could race with the next internal command
+>> * race between timeout handling and irq
+>> * ignoring error condition not represented in tf->status
+>>
+>> Also, qc & hardware are not accessed anymore once it's completed,
+>> making internal commands more conformant with general semantics.  This
+>> change also makes it easy to issue internal commands from multiple
+>> threads if that becomes necessary.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> 
+> This is OK in concept, but there are problems in implementation...
+> 
+> General comment:  would be nice split up as 'implement 
+> ata.exec.internal' and 'use ata.exec.internal' patches.
+> 
 
-Gossip is sometimes referred to as halitosis of the mind   
-Mankind's worst enemy is fear of work.      
-Life is pleasant. Death is peaceful. It's the transition that's troublesome.  
-Nancy Reagan fell down and broke her hair.     
+Sure.
 
-Intolerance of ambiguity is the mark of an authoritarian personality.   
+> 
+>> This is take #2 of ata_exec_internal().  qc allocation and tf
+>> reading-back have also been moved into ata_exec_internal().  Now all
+>> qc handling is done while properly holding host_set lock removing
+>> above mentioned rare race conditon (the second item).
+>>
+>> Index: work/drivers/scsi/libata-core.c
+>> ===================================================================
+>> --- work.orig/drivers/scsi/libata-core.c    2005-11-29 
+>> 22:04:15.000000000 +0900
+>> +++ work/drivers/scsi/libata-core.c    2005-11-29 22:06:20.000000000 
+>> +0900
+>> @@ -1047,28 +1047,119 @@ static unsigned int ata_pio_modes(const      
+>> return modes;
+>>  }
+>>  
+>> -static int ata_qc_wait_err(struct ata_queued_cmd *qc,
+>> -               struct completion *wait)
+>> +struct ata_exec_internal_arg {
+>> +    unsigned int err_mask;
+>> +    struct ata_taskfile *tf;
+>> +    struct completion *waiting;
+>> +};
+>> +
+>> +int ata_qc_complete_internal(struct ata_queued_cmd *qc, unsigned int 
+>> err_mask)
+>>  {
+>> -    int rc = 0;
+>> +    struct ata_exec_internal_arg *arg = qc->complete_data;
+> 
+> 
+> This is what private_data is for.  No need to add 'complete_data'.
+> 
 
+Hmmm... As there currently isn't any in-kernel user of qc->private_data, 
+its ownership status isn't very clear.  However, ap->private_data is 
+used by most low-level drivers to store its private data, so I assumed 
+that qc->private_data belongs to low-level driver too.
 
+Actually, the m15w workaround I'm maintaining uses qc->private_data to 
+store context for qc iteration.  This can be substitued easily but I 
+think it would be nice / more consistent to reserve private_data fields 
+for low-level drivers.
+
+> 
+>> +    struct completion *waiting = arg->waiting;
+>>  
+>> -    if (wait_for_completion_timeout(wait, 30 * HZ) < 1) {
+>> -        /* timeout handling */
+>> -        unsigned int err_mask = ac_err_mask(ata_chk_status(qc->ap));
+>> -
+>> -        if (!err_mask) {
+>> -            printk(KERN_WARNING "ata%u: slow completion (cmd %x)\n",
+>> -                   qc->ap->id, qc->tf.command);
+>> -        } else {
+>> -            printk(KERN_WARNING "ata%u: qc timeout (cmd %x)\n",
+>> -                   qc->ap->id, qc->tf.command);
+>> -            rc = -EIO;
+>> -        }
+>> +    if (!(err_mask & ~AC_ERR_DEV))
+>> +        qc->ap->ops->tf_read(qc->ap, arg->tf);
+>> +    arg->err_mask = err_mask;
+>> +    arg->waiting = NULL;
+>> +    complete(waiting);
+>> +
+>> +    return 0;
+>> +}
+>> +
+>> +/**
+>> + *    ata_exec_internal - execute libata internal command
+>> + *    @ap: Port to which the command is sent
+>> + *    @dev: Device to which the command is sent
+>> + *    @tf: Taskfile registers for the command and the result
+>> + *    @dma_dir: Data tranfer direction of the command
+>> + *    @buf: Data buffer of the command
+>> + *    @buflen: Length of data buffer
+>> + *
+>> + *    Executes libata internal command with timeout.  @tf contains
+>> + *    command on entry and result on return.  Timeout and error
+>> + *    conditions are reported via return value.  No recovery action
+>> + *    is taken after a command times out.  It's caller's duty to
+>> + *    clean up after timeout.
+>> + *
+>> + *    LOCKING:
+>> + *    None.  Should be called with kernel context, might sleep.
+>> + */
+>> +
+>> +static unsigned
+>> +ata_exec_internal(struct ata_port *ap, struct ata_device *dev,
+>> +          struct ata_taskfile *tf,
+>> +          int dma_dir, void *buf, unsigned int buflen)
+>> +{
+>> +    u8 command = tf->command;
+>> +    struct ata_queued_cmd *qc;
+>> +    DECLARE_COMPLETION(wait);
+>> +    unsigned long flags;
+>> +    struct ata_exec_internal_arg arg;
+>> +
+>> +    if (ata_busy_sleep(ap, ATA_TMOUT_INTERNAL_QUICK, 
+>> ATA_TMOUT_INTERNAL))
+>> +        return AC_ERR_OTHER;
+> 
+> 
+> NAK.  This sort of thing really belongs in the execution engine for each 
+> driver.  Advanced controllers have zero need for this.
+> 
+> Moreover, why are you adding this, anyway?  This is a distinct 
+> regression from the nice "do everything inside ata_qc_issue" model 
+> that's been sprouting.
+> 
+
+I was thinking that as these internal commands are used for 
+initialization and possibly eh in the future, it would be better to give 
+drives longer time to get ready for commands.  So, the ata_busy_sleep 
+with ATA_TMOUT_INTERNAL_QUICK, ATA_TMOUT_INTERNAL timeouts.  Too 
+paranoid / unnecessary?
+
+> 
+>> +    spin_lock_irqsave(&ap->host_set->lock, flags);
+>> +
+>> +    qc = ata_qc_new_init(ap, dev);
+>> +    BUG_ON(qc == NULL);
+>> +
+>> +    qc->tf = *tf;
+>> +    qc->dma_dir = dma_dir;
+>> +    if (dma_dir != DMA_NONE) {
+>> +        ata_sg_init_one(qc, buf, buflen);
+>> +        qc->nsect = buflen / ATA_SECT_SIZE;
+>> +        printk("dma_dir=%d buflen=%u nsect=%d\n",
+>> +               dma_dir, buflen, qc->nsect);
+>> +    }
+>> +
+>> +    arg.waiting = &wait;
+>> +    arg.tf = tf;
+>> +    qc->complete_data = &arg;
+>> +    qc->complete_fn = ata_qc_complete_internal;
+>> +
+>> +    if (ata_qc_issue(qc))
+>> +        goto issue_fail;
+>> +
+>> +    spin_unlock_irqrestore(&ap->host_set->lock, flags);
+>> +
+>> +    if (!wait_for_completion_timeout(&wait, ATA_TMOUT_INTERNAL)) {
+>> +        int timedout;
+>> +
+>> +        spin_lock_irqsave(&ap->host_set->lock, flags);
+>> +
+>> +        /* We're racing with irq here.  If we lose, the
+>> +         * following test prevents us from completing the qc
+>> +         * again.  If completion irq occurs after here but
+>> +         * before the caller cleans up, it will result in a
+>> +         * spurious interrupt.  We can live with that.
+>> +         */
+>> +        timedout = arg.waiting != NULL;
+>> +        if (timedout)
+>> +            ata_qc_complete(qc, 0);
+> 
+> 
+> This is not very wise, to pass 'nothing is wrong' to ata_qc_complete() 
+> upon timeout.
+> 
+
+The problem is that we may or may not complete the command successfully 
+due to the following slow completion handling.  So, completing with 
+AC_ERR_OTHER isn't very correct either.  This matters because the tf 
+registers are read from the completion callback and the completion 
+callback does so only on device errors.  The solutions are....
+
+1. leaving as it is with more comments
+2. completing with AC_ERR_OTHER but always reading back tf regs in the 
+completion callback
+
+I prefer #1, but I'm okay with #2, too.
+
+On a side note, I'm sort of doubtful about slow completion handling in 
+ata_exec_internal() and also in eng_timeout().  For example, if some 
+kind of electrical / cabling glitch occurs during command execution and 
+results in device internal reset, the device's reset status can easily 
+be interpreted as successful completion by slow completion handling.
+
+Actually, in the current libata, this can be easily triggered by just 
+unplugging and replugging the cable on a busy drive as we don't handle 
+those events.
+
+IMHO, timed out commands should always be finished with AC_ERR_OTHER.  I 
+don't really see a lot of benefits in successfully completing a command 
+after 30sec timeout.
+
+Thanks for reviewing this.
+
+-- 
+tejun
