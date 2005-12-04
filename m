@@ -1,39 +1,77 @@
-From: "Dave Mcnally" <LowellDaltoncelebrant@peterdemel.de>
-Subject: Xmas gifts
-Date: Sun, 04 Dec 2005 09:44:43 -0700
-Message-ID: <CFE8.9A3.3066798B8C__35786.6423474208$1133714843$gmane$org@mopalinux.com>
+From: Willy Tarreau <willy@w.ods.org>
+Subject: [PATCH] 2.4.x SATA with highmem
+Date: Sun, 4 Dec 2005 18:42:40 +0100
+Message-ID: <20051204174240.GA6191@alpha.home.local>
+References: <20051201214837.GA25256@havoc.gtf.org> <20051201231008.GA7921@codepoet.org> <438FA62D.2040707@pobox.com> <20051204155911.GA5924@alpha.home.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:30956 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S932282AbVLDQpe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Dec 2005 11:45:34 -0500
+Received: from willy.net1.nerim.net ([62.212.114.60]:47375 "EHLO
+	willy.net1.nerim.net") by vger.kernel.org with ESMTP
+	id S1751143AbVLDRnd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 4 Dec 2005 12:43:33 -0500
+Content-Disposition: inline
+In-Reply-To: <20051204155911.GA5924@alpha.home.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org, linux-net@vger.kernel.org, postmaster@vger.kernel.org, linux-ppp@vger.kernel.org, linux-kernel@vger.kernel.org, linux-sound@vger.kernel.org, 2239@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: andersen@codepoet.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
 
-ur favorite brands of replica 
+Hi Jeff,
 
-come and see our large selection 
+On Sun, Dec 04, 2005 at 04:59:11PM +0100, Willy Tarreau wrote:
+> > >libata-core.c:2427: error: for each function it appears in.)
+> > >libata-core.c: In function `ata_sg_setup':
+> > >libata-core.c:2701: error: `KM_IRQ0' undeclared (first use in this 
+> > >function)
+> > >make[2]: *** [libata-core.o] Error 1
+> > 
+> > hmmm, interesting.  Easy enough to fix.  I guess I didn't build on a 
+> > highmem box.
+> 
+> Same problem for me, but unfortunately, I don't know how to fix this. I've
+> seen that KM_IRQ* are not defined on x86. I don't know if I can use other
+> ones, not what would be the consequences. Would you please enlighten me a
+> bit on this, I'm willing to test it but don't know how to build it first.
 
-Visit us: http://051.pistachiopack.com
+Well, after finding a good doc on kmap_atomic on lwn.net, I think I
+understood how to fix this. I grepped the whole kernel for kmap_atomic()
+and found that KM_BIO_IRQ was only used by ntfs, which had a comment
+stating that it was used to support highmem. So I thought we could share
+the same type and rediffed the patch, and now the kernel builds.
+
+Here is my proposal, I hope it's correct.
+
+Cheers,
+Willy
 
 
+diff -urN linux-2.4.32-libata1/drivers/scsi/libata-core.c linux-2.4.32-libata1-highmem/drivers/scsi/libata-core.c
+--- linux-2.4.32-libata1/drivers/scsi/libata-core.c	2005-12-04 16:32:33.000000000 +0100
++++ linux-2.4.32-libata1-highmem/drivers/scsi/libata-core.c	2005-12-04 18:37:28.000000000 +0100
+@@ -2424,9 +2424,9 @@
+ 		sg[qc->orig_n_elem - 1].length += qc->pad_len;
+ 		if (pad_buf) {
+ 			struct scatterlist *psg = &qc->pad_sgent;
+-			void *addr = kmap_atomic(psg->page, KM_IRQ0);
++			void *addr = kmap_atomic(psg->page, KM_BIO_IRQ);
+ 			memcpy(addr + psg->offset, pad_buf, qc->pad_len);
+-			kunmap_atomic(psg->page, KM_IRQ0);
++			kunmap_atomic(psg->page, KM_BIO_IRQ);
+ 		}
+ 	} else {
+ 		if (sg_dma_len(&sg[0]) > 0)
+@@ -2698,9 +2698,9 @@
+ 		psg->offset = offset_in_page(offset);
+ 
+ 		if (qc->tf.flags & ATA_TFLAG_WRITE) {
+-			void *addr = kmap_atomic(psg->page, KM_IRQ0);
++			void *addr = kmap_atomic(psg->page, KM_BIO_IRQ);
+ 			memcpy(pad_buf, addr + psg->offset, qc->pad_len);
+-			kunmap_atomic(psg->page, KM_IRQ0);
++			kunmap_atomic(psg->page, KM_BIO_IRQ);
+ 		}
+ 
+ 		sg_dma_address(psg) = ap->pad_dma + (qc->tag * ATA_DMA_PAD_SZ);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-deadlock you hypocritic me, accuse abernathy degree countervail . resistible you sac me, insightful beauregard concomitant mimetic . largemouth you mercantile me, bestial intervene conspicuous authenticate . 
-forfeit you gym me, verbatim periclean reservoir conspiracy . chad you lubbock me, felicitous stroll misanthropic embrittle . 
-http://www.pistachiopack.com/rm/
