@@ -1,121 +1,104 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_sil: improved interrupt handling
-Date: Sun, 04 Dec 2005 14:30:04 -0500
-Message-ID: <439343BC.902@pobox.com>
-References: <20051203054127.GA11208@havoc.gtf.org> <439319ED.8050303@gmail.com>
+From: Akira Tsukamoto <akira-t@s9.dion.ne.jp>
+Subject: [PATH 2.4] ide: add recent ATI IXP300/400 PATA support
+Date: Mon, 05 Dec 2005 11:30:29 +0900
+Message-ID: <20051205103343.701A.AKIRA-T@s9.dion.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932306AbVLDTaL@vger.kernel.org>
-In-Reply-To: <439319ED.8050303@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Ethan Chen <thanatoz@ucla.edu>, Carlos Pardo <Carlos.Pardo@siliconimage.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nm02mta.dion.ne.jp ([61.117.3.79]:33796 "HELO
+	nm02omta028.dion.ne.jp") by vger.kernel.org with SMTP
+	id S1750983AbVLECaA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 4 Dec 2005 21:30:00 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-Tejun Heo wrote:
-> Hi, Jeff.
-> 
-> Jeff Garzik wrote:
-> 
->> Just committed the following to the 'sii-irq' branch of libata-dev.git,
->> and verified it on an Adaptec 1210SA (3112).
->>
->> Haven't decided whether I will push it upstream or not, but I think I
->> will.  It does a bit better job of handling handling errors, and should
->> be more efficient (less CPU usage) than the standard ATA interrupt
->> handler as well.
->>
->> For users seeing sata_sil problems, this may make them happy.
->>
-> 
-> This patch doesn't make any difference on my sil3114 controller.  I'll 
-> write about it in the m15w thread.
-
-"doesn't make any difference" I will interpret to mean there are no 
-regressions.
+To: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
 
 
-> Also, this patch doesn't implement proper handling of PIO protocols and 
-> thus breaks ALL branch.
+This patch just adds recent ATI IXP300/400 ATA133 controler to ide, atiixp.c 
+for 2.4 kernel.
 
-PIO should work fine, modulo the obvious changes for ATA_FLAG_NOINTR 
-disappearance.
+People in my lab been using it for a while and seems to have no problem, 
+so I decided to post it here.
 
-
-> It seems to me that the changes made by the new interrupt handler is not 
-> very sil3112 specific.  Is there any reason this change is sil3112 
-> specific?
-
-There is nothing 3112-specific about this new code.
+If acceptable, please apply.
 
 
->> commit b6abf7755a79383f0e5f108d23a0394f156c54c1
->> Author: Jeff Garzik <jgarzik@pobox.com>
->> Date:   Sat Dec 3 00:30:57 2005 -0500
->>
->>     [libata sata_sil] improved interrupt handling
->>
->>  drivers/scsi/sata_sil.c |  118 
->> +++++++++++++++++++++++++++++++++++++++++++++++-
->>  1 files changed, 117 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
->> index 3609186..37398a5 100644
->> --- a/drivers/scsi/sata_sil.c
->> +++ b/drivers/scsi/sata_sil.c
->> @@ -85,6 +85,7 @@ static void sil_dev_config(struct ata_po
->>  static u32 sil_scr_read (struct ata_port *ap, unsigned int sc_reg);
->>  static void sil_scr_write (struct ata_port *ap, unsigned int sc_reg, 
->> u32 val);
->>  static void sil_post_set_mode (struct ata_port *ap);
->> +static irqreturn_t sil_irq (int irq, void *dev_instance, struct 
->> pt_regs *regs);
->>  
->>  
->>  static const struct pci_device_id sil_pci_tbl[] = {
->> @@ -167,7 +168,7 @@ static const struct ata_port_operations      
->> .qc_prep        = ata_qc_prep,
->>      .qc_issue        = ata_qc_issue_prot,
->>      .eng_timeout        = ata_eng_timeout,
->> -    .irq_handler        = ata_interrupt,
->> +    .irq_handler        = sil_irq,
->>      .irq_clear        = ata_bmdma_irq_clear,
->>      .scr_read        = sil_scr_read,
->>      .scr_write        = sil_scr_write,
->> @@ -233,6 +234,121 @@ MODULE_DEVICE_TABLE(pci, sil_pci_tbl);
->>  MODULE_VERSION(DRV_VERSION);
->>  
->>  
->> +static inline void sil_port_irq(struct ata_port *ap, void __iomem *mmio,
->> +                u8 dma_stat, u8 dma_stat_mask)
->> +{
->> +    struct ata_queued_cmd *qc = NULL;
->> +    unsigned int err_mask = AC_ERR_OTHER;
->> +    int complete = 1;
->> +    u8 dev_stat;
->> +
->> +    /* Exit now, if port or port's irqs are disabled */
->> +    if (ap->flags & (ATA_FLAG_PORT_DISABLED | ATA_FLAG_NOINTR)) {
->> +        complete = 0;
->> +        goto out;
->> +    }
-> 
-> 
-> Hmmm... By performing this test here, we end up reading bmdma status 
-> registers of all ports everytime an interrupt occurs.  Is this to 
-> prevent screaming IRQ problem?
+Signed-off-by: Akira Tsukamoto <akira-t@s9.dion.ne.jp>
 
-That's the preferred way to handle interrupts on this hardware.  Normal 
-ATA is broken due to the lack of a way to ask "did I receive an 
-interrupt?" without unduly affecting state.  311x, like AHCI, sata_sil24 
-and other hardware, provides a method to easily determine if a PCI 
-interrupt is owned by the hardware or not.
+diff -NurpX dontdiff linux-2.4.31/drivers/ide/pci/atiixp.c linux-2.4.31-ixp/drivers/ide/pci/atiixp.c
+--- linux-2.4.31/drivers/ide/pci/atiixp.c	2004-04-14 22:05:29.000000000 +0900
++++ linux-2.4.31-ixp/drivers/ide/pci/atiixp.c	2005-11-28 02:02:48.000000000 +0900
+@@ -467,15 +467,35 @@ static void __devinit init_hwif_atiixp(i
+ static ide_pci_device_t atiixp_pci_info[] __devinitdata = {
+ 	{	/* 0 */
+ 		.vendor		= PCI_VENDOR_ID_ATI,
+-		.device		= PCI_DEVICE_ID_ATI_IXP_IDE,
+-		.name		= "ATIIXP",
++		.device		= PCI_DEVICE_ID_ATI_IXP200_IDE,
++		.name		= "ATI-IXP200",
+ 		.init_chipset	= init_chipset_atiixp,
+ 		.init_hwif	= init_hwif_atiixp,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+ 		.enablebits	= {{0x48,0x01,0x00}, {0x48,0x08,0x00}},
+ 		.bootable	= ON_BOARD,
+-	}
++	},{	/* 1 */
++		.vendor		= PCI_VENDOR_ID_ATI,
++		.device		= PCI_DEVICE_ID_ATI_IXP300_IDE,
++		.name		= "ATI-IXP300",
++		.init_chipset	= init_chipset_atiixp,
++		.init_hwif	= init_hwif_atiixp,
++		.channels	= 2,
++		.autodma	= AUTODMA,
++		.enablebits	= {{0x48,0x01,0x00}, {0x48,0x08,0x00}},
++		.bootable	= ON_BOARD,
++	},{	/* 2 */
++		.vendor		= PCI_VENDOR_ID_ATI,
++		.device		= PCI_DEVICE_ID_ATI_IXP400_IDE,
++		.name		= "ATI-IXP400",
++		.init_chipset	= init_chipset_atiixp,
++		.init_hwif	= init_hwif_atiixp,
++		.channels	= 2,
++		.autodma	= AUTODMA,
++		.enablebits	= {{0x48,0x01,0x00}, {0x48,0x08,0x00}},
++		.bootable	= ON_BOARD,
++        }
+ };
+ 
+ /**
+@@ -498,7 +518,9 @@ static int __devinit atiixp_init_one(str
+ }
+ 
+ static struct pci_device_id atiixp_pci_tbl[] = {
+-	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
++	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP200_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
++	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP300_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
++	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
+ 	{ 0, },
+ };
+ 
+diff -NurpX dontdiff linux-2.4.31/include/linux/pci_ids.h linux-2.4.31-ixp/include/linux/pci_ids.h
+--- linux-2.4.31/include/linux/pci_ids.h	2005-06-01 09:56:56.000000000 +0900
++++ linux-2.4.31-ixp/include/linux/pci_ids.h	2005-11-28 01:00:17.000000000 +0900
+@@ -319,7 +319,11 @@
+ /* RadeonIGP */
+ #define PCI_DEVICE_ID_ATI_RADEON_IGP	0xCAB0
+ /* ATI IXP Chipset */
+-#define PCI_DEVICE_ID_ATI_IXP_IDE	0x4349
++#define PCI_DEVICE_ID_ATI_IXP200_IDE	0x4349
++#define PCI_DEVICE_ID_ATI_IXP300_IDE	0x4369
++#define PCI_DEVICE_ID_ATI_IXP300_SATA	0x436e
++#define PCI_DEVICE_ID_ATI_IXP400_IDE	0x4376
++#define PCI_DEVICE_ID_ATI_IXP400_SATA	0x4379
+ 
+ #define PCI_VENDOR_ID_VLSI		0x1004
+ #define PCI_DEVICE_ID_VLSI_82C592	0x0005
+Binary files linux-2.4.31/initrd.img and linux-2.4.31-ixp/initrd.img differ
 
-The code should eliminate all screaming interrupt problems, yes.
 
-As an aside, 3114 should use a single 32-bit read of the Interrupt 
-Summary register, rather than the four separate 8-bit reads that this 
-code does.
+-- 
+Akira Tsukamoto <akira-t@s9.dion.ne.jp> <at541@columbia.edu>
 
-	Jeff
+
