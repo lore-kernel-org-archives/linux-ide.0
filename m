@@ -1,78 +1,38 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 4/4] libata: determine the err_mask directly in atapi_packet_task()
-Date: Mon, 05 Dec 2005 15:42:17 +0800
-Message-ID: <4393EF59.8080805@tw.ibm.com>
-References: <437181D5.8070903@tw.ibm.com> <43718400.5000409@tw.ibm.com> <43719670.20708@pobox.com> <4372FD45.8080404@tw.ibm.com> <43924E11.60500@pobox.com> <4393E513.5070203@tw.ibm.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATH 2.4] ide: add recent ATI IXP300/400 PATA support
+Date: Mon, 5 Dec 2005 09:16:57 +0100
+Message-ID: <58cb370e0512050016x7e4ed716qe3237c249471e400@mail.gmail.com>
+References: <20051205103343.701A.AKIRA-T@s9.dion.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:49309 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751323AbVLEHmU
+Received: from nproxy.gmail.com ([64.233.182.198]:28022 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932293AbVLEIRA convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 5 Dec 2005 02:42:20 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e34.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id jB57gEDl029555
-	for <linux-ide@vger.kernel.org>; Mon, 5 Dec 2005 02:42:14 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id jB57faaN067530
-	for <linux-ide@vger.kernel.org>; Mon, 5 Dec 2005 00:41:36 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id jB57gEOv026275
-	for <linux-ide@vger.kernel.org>; Mon, 5 Dec 2005 00:42:14 -0700
-In-Reply-To: <4393E513.5070203@tw.ibm.com>
+	Mon, 5 Dec 2005 03:17:00 -0500
+Received: by nproxy.gmail.com with SMTP id o25so383592nfa
+        for <linux-ide@vger.kernel.org>; Mon, 05 Dec 2005 00:16:57 -0800 (PST)
+In-Reply-To: <20051205103343.701A.AKIRA-T@s9.dion.ne.jp>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>
+To: Akira Tsukamoto <akira-t@s9.dion.ne.jp>
+Cc: linux-ide@vger.kernel.org, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
 
-Patch 4/4:
-  determine the err_mask directly in atapi_packet_task()
+Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Changes:
-  - set qc->err_mask directly when we found the error
-  - remove the code to determine err_mask from device status
+Marcelo, please apply.
 
-For your review, thanks.
-
-Albert
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com> 
-
-============
-
---- err_mask3/drivers/scsi/libata-core.c	2005-12-05 12:42:06.000000000 +0800
-+++ err_mask4/drivers/scsi/libata-core.c	2005-12-05 12:44:28.000000000 +0800
-@@ -4083,13 +4083,17 @@ static void atapi_packet_task(void *_dat
- 
- 	/* sleep-wait for BSY to clear */
- 	DPRINTK("busy wait\n");
--	if (ata_busy_sleep(ap, ATA_TMOUT_CDB_QUICK, ATA_TMOUT_CDB))
--		goto err_out_status;
-+	if (ata_busy_sleep(ap, ATA_TMOUT_CDB_QUICK, ATA_TMOUT_CDB)) {
-+		qc->err_mask |= AC_ERR_ATA_BUS;
-+		goto err_out;
-+	}
- 
- 	/* make sure DRQ is set */
- 	status = ata_chk_status(ap);
--	if ((status & (ATA_BUSY | ATA_DRQ)) != ATA_DRQ)
-+	if ((status & (ATA_BUSY | ATA_DRQ)) != ATA_DRQ) {
-+		qc->err_mask |= AC_ERR_ATA_BUS;
- 		goto err_out;
-+	}
- 
- 	/* send SCSI cdb */
- 	DPRINTK("send cdb\n");
-@@ -4121,10 +4125,7 @@ static void atapi_packet_task(void *_dat
- 
- 	return;
- 
--err_out_status:
--	status = ata_chk_status(ap);
- err_out:
--	qc->err_mask |= __ac_err_mask(status);
- 	ata_poll_qc_complete(qc);
- }
- 
-
-
+On 12/5/05, Akira Tsukamoto <akira-t@s9.dion.ne.jp> wrote:
+>
+> This patch just adds recent ATI IXP300/400 ATA133 controler to ide, atiixp.c
+> for 2.4 kernel.
+>
+> People in my lab been using it for a while and seems to have no problem,
+> so I decided to post it here.
+>
+> If acceptable, please apply.
+>
+>
+> Signed-off-by: Akira Tsukamoto <akira-t@s9.dion.ne.jp>
