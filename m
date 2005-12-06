@@ -1,67 +1,82 @@
-From: Thomas Backlund <tmb@mandriva.org>
-Subject: Re: [PATCH] sata_sil: greatly improve DMA handling
-Date: Tue, 6 Dec 2005 13:41:02 +0200
-Message-ID: <200512061341.02863.tmb@mandriva.org>
-References: <20051203200438.GA3770@havoc.gtf.org> <dn297e$aip$1@sea.gmane.org> <439554A3.7000305@pobox.com>
+From: Scott James Remnant <scott@ubuntu.com>
+Subject: Re: Problem with IDE driver not claiming the disk
+Date: Tue, 06 Dec 2005 12:39:30 +0000
+Message-ID: <1133872770.8181.99.camel@localhost.localdomain>
+References: <1133826994.8181.68.camel@localhost.localdomain>
+	 <58cb370e0512051634l323e922cxabb713a96ec72cab@mail.gmail.com>
+	 <1133832984.8181.87.camel@localhost.localdomain>
+	 <58cb370e0512060023w3ce35e9bk316ff6eb3f7e43f9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964953AbVLFLlF@vger.kernel.org>
-In-Reply-To: <439554A3.7000305@pobox.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GuK+yEfKulVHjvduCu9p"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from populous.netsplit.com ([62.49.129.34]:55179 "EHLO
+	mailgate.netsplit.com") by vger.kernel.org with ESMTP
+	id S1751463AbVLFMji (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Dec 2005 07:39:38 -0500
+In-Reply-To: <58cb370e0512060023w3ce35e9bk316ff6eb3f7e43f9@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-tisdag 06 december 2005 11:06 skrev Jeff Garzik:
-> Thomas Backlund wrote:
-> > Jeff Garzik wrote:
-> >>To make it easy for others to test, since there are merge conflicts,
-> >>I've combined the two previous sata_sil patches into a single patch.
-> >>
-> >>Verified here on my 3112 (Adaptec 1210SA).
-> >>
-> >>I'm especially interested to hear from anyone willing to test on a
-> >>SI 3114 (4-port).
-> >
-> > Please cc me as I'm not subscribed....
-> >
-> >
-> > ASUS K8N-E-Deluxe, nForce3 250Gb chipset, AMD Athlon64 3200+ running
-> > x86_64
-> >
-> > Sil 3114A with 3 Maxtor MaxLine III+ 250GBSATA disks running in linux
-> > raid1, linux raid0 and linux LVM2
-> >
-> > Boots and runs without problem with 2.6.15-rc5-git1,
-> >
-> > Applying this patch lets it boot, but I cant login either locally or with
-> > ssh, no output on VT12 or in the logs, but the hd led is lit all the
-> > time...
->
-> Thanks for testing.
->
-> > only way to reboot is the reset button...
-> >
-> >
-> > Distribution is Mandriva Linux 2006 x86_64, gcc 4.0.1
-> >
-> > attached are config and /var/log/messages parts that got logged
->
-> Didn't receive any attachments...
->
-> 	Jeff
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, Ben Collins <ben.collins@ubuntu.com>
 
 
-And just to add...
-as you can see from the messages file the kernel is capable of writing logging 
-of the whole bootup to the disks, but it stopped logging pretty much directly 
-as the kernel was fully started...
+--=-GuK+yEfKulVHjvduCu9p
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Any more tests you want?? more debugging enabled? or what?...
---
-Regards
+On Tue, 2005-12-06 at 09:23 +0100, Bartlomiej Zolnierkiewicz wrote:
 
-Thomas
+> On 12/6/05, Scott James Remnant <scott@ubuntu.com> wrote:
+> > I was first hoping it was a glaringly obvious thing we were doing wrong=
+,
+> > and wouldn't come to comparing kernel code;  the kernel is the current
+> > Ubuntu one, it's based off 2.6.15 -- our patches are all in git:
+> >
+> > http://www.kernel.org/git/?p=3Dlinux/kernel/git/bcollins/ubuntu-2.6.git
+> >
+> > I'm not best placed to answer the patches that are in the exact version
+> > I used ("our" 2.6.15-6.8), Ben Collins is (Cc'd).
+>=20
+> You have IDE patches in your tree, please try vanilla 2.6.15.
+>=20
+Yeah, one was compiling over night (still waiting for my AMD64 beast to
+arrive) and I tried it out this morning ... I see your point, it works
+exactly as advertised in vanilla 2.6.15-rc5 -- loading the real IDE
+driver finds the devices itself, and there's no need to load
+ide-generic.
+
+> Changes to setup-pci.c and ide-generic.c in the following patch are wrong=
+:
+> http://www.kernel.org/git/?p=3Dlinux/kernel/git/bcollins/ubuntu-2.6.git;a=
+=3Dcommitdiff;h=3D149744c1475cdaf2c6babfd92f163cca8f10c540;hp=3D5a373d68631=
+531fff09047364be4565d67335f08
+>=20
+> It seems that with this patch 'pre_init' in setup-pci.c. will
+> become '0' (it equals '1' initially) only after ide-generic is loaded...
+> and ide_pci_register_driver() checks 'pre_init' value.
+>=20
+> Sigh, this patch was NACK-ed upstream for some (important) reasons...
+>=20
+I'll go bludgeon our kernel guy for a bit then!
+
+Thanks for your time,
+
+Scott
+--=20
+Scott James Remnant
+scott@ubuntu.com
+
+--=-GuK+yEfKulVHjvduCu9p
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQBDlYaCSnQiFMl4yK4RAs9lAJ49WAfQ6uOr4xWjTu6JPiH6BxJ3OwCfVXyX
+fmWhqxpWRUr/55IpPTmLtUM=
+=sa/n
+-----END PGP SIGNATURE-----
+
+--=-GuK+yEfKulVHjvduCu9p--
+
