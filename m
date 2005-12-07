@@ -1,27 +1,34 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [RFC]add ACPI hooks for IDE suspend/resume
-Date: Wed, 7 Dec 2005 13:14:54 +0000
-Message-ID: <20051207131454.GA16558@srcf.ucam.org>
-References: <1133849404.3026.10.camel@sli10-mobl.sh.intel.com> <20051206222001.GA14171@srcf.ucam.org> <58cb370e0512070017u606ee22fse207b9a859856dd4@mail.gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: spin up + down disk, lk 2.4.32
+Date: Wed, 07 Dec 2005 08:57:55 -0500
+Message-ID: <4396EA63.2040009@pobox.com>
+References: <4396D764.6020905@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([217.147.92.49]:34274 "EHLO
-	vavatch.codon.org.uk") by vger.kernel.org with ESMTP
-	id S1751038AbVLGNPB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Dec 2005 08:15:01 -0500
-Content-Disposition: inline
-In-Reply-To: <58cb370e0512070017u606ee22fse207b9a859856dd4@mail.gmail.com>
+Received: from mail.dvmed.net ([216.237.124.58]:58271 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751060AbVLGN6A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Dec 2005 08:58:00 -0500
+In-Reply-To: <4396D764.6020905@torque.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Shaohua Li <shaohua.li@intel.com>, linux-ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, pavel <pavel@ucw.cz>, Len Brown <len.brown@intel.com>, akpm <akpm@osdl.org>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, Dec 07, 2005 at 09:17:31AM +0100, Bartlomiej Zolnierkiewicz wrote:
+Douglas Gilbert wrote:
+> I was asked recently to port the START STOP UNIT
+> SCSI command in libata back to lk 2.4.32 .
+> 
+> Changelog:
+>   - add START STOP UNIT SCSI command to libata
+>     allowing SATA disks to be spun down and up
+> 
+> Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
-> Isn't ide-io.c:ide_{start,complete}_power_step() enough?
+It's already backported...
 
-No.
+	Jeff
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+
+
