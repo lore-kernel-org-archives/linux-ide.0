@@ -1,112 +1,53 @@
 From: Shaohua Li <shaohua.li@intel.com>
 Subject: Re: [RFC]add ACPI hooks for IDE suspend/resume
-Date: Wed, 07 Dec 2005 09:15:57 +0800
-Message-ID: <1133918157.2936.5.camel@sli10-mobl.sh.intel.com>
+Date: Wed, 07 Dec 2005 09:22:03 +0800
+Message-ID: <1133918523.2936.12.camel@sli10-mobl.sh.intel.com>
 References: <1133849404.3026.10.camel@sli10-mobl.sh.intel.com>
-	 <Pine.LNX.4.58.0512061557420.5519@shark.he.net>
+	 <20051206222001.GA14171@srcf.ucam.org>
+	 <58cb370e0512070017u606ee22fse207b9a859856dd4@mail.gmail.com>
+	 <20051207131454.GA16558@srcf.ucam.org>
+	 <58cb370e0512070619k17022317v8e871dc3f9cafb9@mail.gmail.com>
+	 <20051207143337.GA16938@srcf.ucam.org>
+	 <58cb370e0512070645o78569e82y63483a9ae5511f52@mail.gmail.com>
+	 <1133970074.544.69.camel@localhost.localdomain>
+	 <58cb370e0512070749y68b2f9e9t1c68a3e03f91baa0@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr13.intel.com ([192.55.52.67]:21383 "EHLO
-	fmsfmr001.fm.intel.com") by vger.kernel.org with ESMTP
-	id S1751214AbVLGRQO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Dec 2005 12:16:14 -0500
-In-Reply-To: <Pine.LNX.4.58.0512061557420.5519@shark.he.net>
+Received: from fmr15.intel.com ([192.55.52.69]:12470 "EHLO
+	fmsfmr005.fm.intel.com") by vger.kernel.org with ESMTP
+	id S1751219AbVLGRWV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Dec 2005 12:22:21 -0500
+In-Reply-To: <58cb370e0512070749y68b2f9e9t1c68a3e03f91baa0@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: linux-ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, pavel <pavel@ucw.cz>, Len Brown <len.brown@intel.com>, Matthew Garrett <mjg59@srcf.ucam.org>, akpm <akpm@osdl.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Matthew Garrett <mjg59@srcf.ucam.org>, linux-ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, pavel <pavel@ucw.cz>, Len Brown <len.brown@intel.com>, akpm <akpm@osdl.org>
 
-On Tue, 2005-12-06 at 16:11 -0800, Randy.Dunlap wrote:
-> On Tue, 6 Dec 2005, Shaohua Li wrote:
+On Wed, 2005-12-07 at 16:49 +0100, Bartlomiej Zolnierkiewicz wrote:
+> On 12/7/05, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> > On Mer, 2005-12-07 at 15:45 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > > OK, I understand it now - when using 'ide-generic' host driver for IDE
+> > > PCI device, resume fails (for obvious reason - IDE PCI device is not
+> > > re-configured) and this patch fixes it through using ACPI methods.
 > 
-> > Hi,
-> > Adding ACPI IDE hook in IDE suspend/resume. The ACPI spec
-> > explicitly says we must call some ACPI methods to restore IDE drives.
-> > The sequences defined by ACPI spec are:
-> > suspend:
-> > 1. Get the DMA and PIO info from IDE channel's _GTM method.
-> >
-> > resume:
-> > 1. Calling IDE channel's _STM to set the transfer timing setting.
-> > 2. For each drive on the IDE channel, running drive's _GTF to get the
-> > ATA commands required to reinitialize each drive.
-> > 3. Sending the ATA commands gotton from step 2 to drives.
-> >
-> > TODO: invoking ATA commands.
-> >
-> > Though we didn't invoke ATA commands, this patch fixes the bug at
-> > http://bugzilla.kernel.org/show_bug.cgi?id=5604. And Matthew said this
-> > actually fixes a lot of systems in his test.
-> > I'm not familiar with IDE, so comments/suggestions are welcome.
-> >
-> > ---
-> >
-> >  linux-2.6.15-rc5-root/drivers/ide/ide.c |  282 ++++++++++++++++++++++++++++++++
-> >  1 files changed, 282 insertions(+)
-> >
-> > diff -puN drivers/ide/ide.c~acpi-ide drivers/ide/ide.c
-> > --- linux-2.6.15-rc5/drivers/ide/ide.c~acpi-ide	2005-12-07 03:01:36.000000000 +0800
-> > +++ linux-2.6.15-rc5-root/drivers/ide/ide.c	2005-12-07 03:01:36.000000000 +0800
-> > @@ -155,6 +155,10 @@
-> >  #include <linux/device.h>
-> >  #include <linux/bitops.h>
-> >
-> > +#ifdef CONFIG_ACPI
-> > +#include <linux/acpi.h>
-> > +#endif
+> I was talking about bugzilla bug #5604.
+Sorry for my ignorance in IDE side. From the ACPI spec, there isn't a
+generic way to save/restore IDE's configuration. That's why ACPI
+provides such methods. I suppose all IDE drivers need call the methods,
+wrong?
+
+> > Even in the piix case some devices need it because the bios wants to
+> > issue commands such as password control if the laptop is set up in
+> > secure modes.
 > 
-> Shouldn't need or use ifdef/endif for #includes.
-Ok.
-
-> > +
-> > +/* The _GTM return package length is 5 dwords */
-> > +#define GTM_LEN (sizeof(u32) * 5)
-> > +struct acpi_ide_state {
-> > +	acpi_handle handle; /* channel device's handle */
-> > +	u32 gtm[GTM_LEN/sizeof(u32)]; /* info from _GTM */
-> > +	struct hd_driveid id_buff[2]; /* one chanel has two drives */
-> 
-> s/2/MAX_DRIVES/
-> s/chanel/channel/
-:), thanks!
-
-> > +	if (!handle) {
-> > +		printk(KERN_DEBUG "IDE device's ACPI handler is NULL\n");
-> 
-> s/handler/handle/ ??
-A typo.
-
-
-> > +	status = acpi_evaluate_object(parent_handle, "_GTM", NULL, &buffer);
-> > +	if (ACPI_FAILURE(status)) {
-> > +		printk(KERN_ERR "Error evaluating _GTM\n");
-> 
-> I don't read the ACPI spec. as saying that _GTM is required, (?)
-> so I would make this a KERN_DEBUG instead of KERN_ERR.
-Yes, _GTM is required.
-
-
-> > +	status = acpi_evaluate_object(state->handle, "_STM", &input, NULL);
-> > +	if (ACPI_FAILURE(status)) {
-> > +		printk(KERN_ERR "Evaluating _STM error\n");
-> 
-> Same as for _GTM, KERN_DEBUG instead of KERN_ERR.
-_STM also is required.
-
-> > +	acpi_status status;
-> > +
-> > +	status = acpi_evaluate_object(handle, "_GTF", NULL, &output);
-> > +	if (ACPI_FAILURE(status)) {
-> > +		printk(KERN_ERR "evaluate _GTF error\n");
-> 
-> KERN_DEBUG if not present since it's not required AFAIK.
-Actually it's required, but I have no idea how to invoke the ata
-commands gotten from _GTF.
-
-Thanks for your time. I'll update this patch as you suggested after the
-IDE gurus think it's ok.
+> I completely agree.  However at the moment this patch doesn't seem
+> to issue any ATA commands (code is commented out in _GTF) so
+> this is not a case for bugzilla bug #5604.
+I actually tried to invoke ATA commands using IDE APIs, but can't find
+any available one. I'd be very happy if you can give me any hint how to
+do it or even you can fix it.
 
 Thanks,
 Shaohua
