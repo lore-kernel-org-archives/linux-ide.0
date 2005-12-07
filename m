@@ -1,48 +1,127 @@
-From: Prakash Punnoor <prakash@punnoor.de>
-Subject: Re: [PATCH] sata_sil: combined irq + LBT DMA patch for testing
-Date: Wed, 7 Dec 2005 13:35:41 +0100
-Message-ID: <200512071335.42016.prakash@punnoor.de>
-References: <20051204011953.GA16381@havoc.gtf.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] libata: spin up + down disk, lk 2.4.32
+Date: Wed, 07 Dec 2005 22:36:52 +1000
+Message-ID: <4396D764.6020905@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3100709.MfkPN4uTuv";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750963AbVLGMec@vger.kernel.org>
-In-Reply-To: <20051204011953.GA16381@havoc.gtf.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------010203070104050006020503"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from zorg.st.net.au ([203.16.233.9]:51880 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1750980AbVLGMfm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Dec 2005 07:35:42 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
---nextPart3100709.MfkPN4uTuv
-Content-Type: text/plain;
-  charset="iso-8859-1"
+This is a multi-part message in MIME format.
+--------------010203070104050006020503
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
-Am Sonntag Dezember 4 2005 02:19 schrieb Jeff Garzik:
-> To make it easy for others to test, since there are merge conflicts,
-> I've combined the two previous sata_sil patches into a single patch.
->
-> Verified here on my 3112 (Adaptec 1210SA).
+I was asked recently to port the START STOP UNIT
+SCSI command in libata back to lk 2.4.32 .
 
-Seems to work fine here with my 3112 on nforce2 board, as well.
+Changelog:
+  - add START STOP UNIT SCSI command to libata
+    allowing SATA disks to be spun down and up
 
-Cheers,
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
-Prakash
+Doug Gilbert
 
---nextPart3100709.MfkPN4uTuv
-Content-Type: application/pgp-signature
+--------------010203070104050006020503
+Content-Type: text/x-patch;
+ name="libata2432ss.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libata2432ss.diff"
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
+--- linux/include/linux/ata.h	2005-11-23 22:17:01.000000000 +1000
++++ linux/include/linux/ata.h2432ss	2005-11-24 16:52:06.000000000 +1000
+@@ -108,6 +108,8 @@
+ 
+ 	/* ATA device commands */
+ 	ATA_CMD_CHK_POWER	= 0xE5, /* check power mode */
++	ATA_CMD_STANDBY		= 0xE2, /* place in standby power mode */
++	ATA_CMD_IDLE		= 0xE3, /* place in idle power mode */
+ 	ATA_CMD_EDD		= 0x90,	/* execute device diagnostic */
+ 	ATA_CMD_FLUSH		= 0xE7,
+ 	ATA_CMD_FLUSH_EXT	= 0xEA,
+--- linux/drivers/scsi/libata-scsi.c	2005-11-23 22:17:01.000000000 +1000
++++ linux/drivers/scsi/libata-scsi.c2432ss	2005-11-24 17:09:21.000000000 +1000
+@@ -350,6 +350,63 @@
+ }
+ 
+ /**
++ *	ata_scsi_start_stop_xlat - Translate SCSI START STOP UNIT command
++ *	@qc: Storage for translated ATA taskfile
++ *	@scsicmd: SCSI command to translate
++ *
++ *	Sets up an ATA taskfile to issue STANDBY (to stop) or READ VERIFY
++ *	(to start). Perhaps these commands should be preceded by
++ *	CHECK POWER MODE to see what power mode the device is already in.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ *
++ *	RETURNS:
++ *	Zero on success, non-zero on error.
++ */
++
++static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc,
++					     u8 *scsicmd)
++{
++	struct ata_taskfile *tf = &qc->tf;
++
++	/*
++	 * Should probably precede any commands to change power mode with
++	 * CHECK POWER MODE to see what the current state of the device is.
++	 * The patch author does not know how to do this.
++	 * D. Gilbert 20050731
++	 */
++	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
++	tf->protocol = ATA_PROT_NODATA;
++	if (scsicmd[1] & 0x1) {
++		;	/* ignore IMMED bit, violates sat-r04 */
++	}
++	if (scsicmd[4] & 0x2)
++		return 1;	/* LOEJ bit set not supported */
++	if (((scsicmd[4] >> 4) & 0xf) != 0)
++		return 1;	/* power conditions not supported */
++	if (scsicmd[4] & 0x1) {
++		tf->nsect = 1;	/* 1 sector, lba=0 */
++		tf->lbah = 0x0;
++		tf->lbam = 0x0;
++		tf->lbal = 0x0;
++		tf->device |= ATA_LBA;
++		tf->command = ATA_CMD_VERIFY;	/* READ VERIFY */
++	} else {
++		tf->nsect = 0;	/* time period value (0 implies now) */
++		tf->command = ATA_CMD_STANDBY;
++	}
++	/*
++	 * Standby and Idle condition timers could be implemented but that
++	 * would require libata to implement the Power condition mode page
++	 * and allow the user to change it. Changing mode pages requires
++	 * MODE SELECT to be implemented.
++	 */
++
++	return 0;
++}
++
++/**
+  *	ata_scsi_flush_xlat - Translate SCSI SYNCHRONIZE CACHE command
+  *	@qc: Storage for translated ATA taskfile
+  *	@scsicmd: SCSI command to translate (ignored)
+@@ -1393,6 +1450,8 @@
+ 	case VERIFY:
+ 	case VERIFY_16:
+ 		return ata_scsi_verify_xlat;
++	case START_STOP:
++		return ata_scsi_start_stop_xlat;
+ 	}
+ 
+ 	return NULL;
 
-iD8DBQBDltcdxU2n/+9+t5gRAlTUAKDwDFYH8nhJvmZrWV8jPv8slqdApACgqBcx
-z58V7KweYA1FCHlO1zWZUBo=
-=ogX/
------END PGP SIGNATURE-----
-
---nextPart3100709.MfkPN4uTuv--
+--------------010203070104050006020503--
