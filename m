@@ -1,34 +1,27 @@
-From: Tejun <htejun@gmail.com>
-Subject: Re: 2.6.15-rc5-mm1 sata_sil regression
-Date: Wed, 07 Dec 2005 21:48:09 +0900
-Message-ID: <4396DA09.8040800@gmail.com>
-References: <4396CB79.5040408@bootc.net>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [RFC]add ACPI hooks for IDE suspend/resume
+Date: Wed, 7 Dec 2005 13:14:54 +0000
+Message-ID: <20051207131454.GA16558@srcf.ucam.org>
+References: <1133849404.3026.10.camel@sli10-mobl.sh.intel.com> <20051206222001.GA14171@srcf.ucam.org> <58cb370e0512070017u606ee22fse207b9a859856dd4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.204]:26439 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751020AbVLGMsV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Dec 2005 07:48:21 -0500
-Received: by zproxy.gmail.com with SMTP id 13so361892nzn
-        for <linux-ide@vger.kernel.org>; Wed, 07 Dec 2005 04:48:21 -0800 (PST)
-In-Reply-To: <4396CB79.5040408@bootc.net>
+Received: from cavan.codon.org.uk ([217.147.92.49]:34274 "EHLO
+	vavatch.codon.org.uk") by vger.kernel.org with ESMTP
+	id S1751038AbVLGNPB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Dec 2005 08:15:01 -0500
+Content-Disposition: inline
+In-Reply-To: <58cb370e0512070017u606ee22fse207b9a859856dd4@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chris Boot <bootc@bootc.net>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Shaohua Li <shaohua.li@intel.com>, linux-ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, pavel <pavel@ucw.cz>, Len Brown <len.brown@intel.com>, akpm <akpm@osdl.org>
 
-Chris Boot wrote:
-> Hi all,
-> 
-> I just upgraded to 2.6.15-rc5-mm1 from 2.6.15-rc2-mm1 and sata_sil 
-> refused to recognise the two SATA drives that are connected to it:
-> 
+On Wed, Dec 07, 2005 at 09:17:31AM +0100, Bartlomiej Zolnierkiewicz wrote:
 
-The sata_sil driver in the current ALL branch doesn't work due to the 
-collision between pio changes and sata_sil irq handling improvements.
+> Isn't ide-io.c:ide_{start,complete}_power_step() enough?
 
-Jeff, maybe the sil branch shouldn't be merged into ALL for the time being?
+No.
 
 -- 
-tejun
+Matthew Garrett | mjg59@srcf.ucam.org
