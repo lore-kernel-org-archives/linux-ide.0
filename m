@@ -1,52 +1,113 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: Re: [PATCH 6/6 update] SATA ACPI: ata_acpi functions
-Date: Wed, 7 Dec 2005 09:16:39 -0800
-Message-ID: <20051207091639.00a7a232.randy_d_dunlap@linux.intel.com>
-References: <20051202100119.032b242e.randy_d_dunlap@linux.intel.com>
-	<20051202100850.11b831ea.randy_d_dunlap@linux.intel.com>
-	<20051206135815.5026647c.randy_d_dunlap@linux.intel.com>
-	<1133973407.43970f9fdf6dd@www.ijichi.org>
+From: Shaohua Li <shaohua.li@intel.com>
+Subject: Re: [RFC]add ACPI hooks for IDE suspend/resume
+Date: Wed, 07 Dec 2005 09:15:57 +0800
+Message-ID: <1133918157.2936.5.camel@sli10-mobl.sh.intel.com>
+References: <1133849404.3026.10.camel@sli10-mobl.sh.intel.com>
+	 <Pine.LNX.4.58.0512061557420.5519@shark.he.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr17.intel.com ([134.134.136.16]:34219 "EHLO
-	orsfmr002.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1751212AbVLGRNp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Dec 2005 12:13:45 -0500
-In-Reply-To: <1133973407.43970f9fdf6dd@www.ijichi.org>
+Received: from fmr13.intel.com ([192.55.52.67]:21383 "EHLO
+	fmsfmr001.fm.intel.com") by vger.kernel.org with ESMTP
+	id S1751214AbVLGRQO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Dec 2005 12:16:14 -0500
+In-Reply-To: <Pine.LNX.4.58.0512061557420.5519@shark.he.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dominic Ijichi <dom@ijichi.org>
-Cc: linux-ide@vger.kernel.org, axboe@suse.de, jgarzik@pobox.com
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: linux-ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, pavel <pavel@ucw.cz>, Len Brown <len.brown@intel.com>, Matthew Garrett <mjg59@srcf.ucam.org>, akpm <akpm@osdl.org>
 
-On Wed, 07 Dec 2005 16:36:47 +0000
-Dominic Ijichi <dom@ijichi.org> wrote:
-
-> I get a segfault when applying these patches to 2.6.15-rc4.  ahci compiled as
-> module and inserted through initrd so the module fails with segfault and kernel
-> doesnt go any further through boot, hence no logging.  last thing screen shows is:
+On Tue, 2005-12-06 at 16:11 -0800, Randy.Dunlap wrote:
+> On Tue, 6 Dec 2005, Shaohua Li wrote:
 > 
-> Code: e3 36 34 c0 c7 44 24 18 29 02 00 00 59 5b 5e 5f 5d e9 f3 05 00 00 53 8b 5c
-> 2408 e8 e9 03 00 00 a1 dc 0c 42 c0 eb 04 39 d8 74 07 <8b> 40 04 85 c0 75 f5 5b
-> c3 55 57 56 53 50 8b 44 24 20 8b 5c 24
+> > Hi,
+> > Adding ACPI IDE hook in IDE suspend/resume. The ACPI spec
+> > explicitly says we must call some ACPI methods to restore IDE drives.
+> > The sequences defined by ACPI spec are:
+> > suspend:
+> > 1. Get the DMA and PIO info from IDE channel's _GTM method.
+> >
+> > resume:
+> > 1. Calling IDE channel's _STM to set the transfer timing setting.
+> > 2. For each drive on the IDE channel, running drive's _GTF to get the
+> > ATA commands required to reinitialize each drive.
+> > 3. Sending the ATA commands gotton from step 2 to drives.
+> >
+> > TODO: invoking ATA commands.
+> >
+> > Though we didn't invoke ATA commands, this patch fixes the bug at
+> > http://bugzilla.kernel.org/show_bug.cgi?id=5604. And Matthew said this
+> > actually fixes a lot of systems in his test.
+> > I'm not familiar with IDE, so comments/suggestions are welcome.
+> >
+> > ---
+> >
+> >  linux-2.6.15-rc5-root/drivers/ide/ide.c |  282 ++++++++++++++++++++++++++++++++
+> >  1 files changed, 282 insertions(+)
+> >
+> > diff -puN drivers/ide/ide.c~acpi-ide drivers/ide/ide.c
+> > --- linux-2.6.15-rc5/drivers/ide/ide.c~acpi-ide	2005-12-07 03:01:36.000000000 +0800
+> > +++ linux-2.6.15-rc5-root/drivers/ide/ide.c	2005-12-07 03:01:36.000000000 +0800
+> > @@ -155,6 +155,10 @@
+> >  #include <linux/device.h>
+> >  #include <linux/bitops.h>
+> >
+> > +#ifdef CONFIG_ACPI
+> > +#include <linux/acpi.h>
+> > +#endif
+> 
+> Shouldn't need or use ifdef/endif for #includes.
+Ok.
 
-Can you provide any more of the segfault messages?  That one
-isn't particularly helpful.
+> > +
+> > +/* The _GTM return package length is 5 dwords */
+> > +#define GTM_LEN (sizeof(u32) * 5)
+> > +struct acpi_ide_state {
+> > +	acpi_handle handle; /* channel device's handle */
+> > +	u32 gtm[GTM_LEN/sizeof(u32)]; /* info from _GTM */
+> > +	struct hd_driveid id_buff[2]; /* one chanel has two drives */
+> 
+> s/2/MAX_DRIVES/
+> s/chanel/channel/
+:), thanks!
 
-Is this on your Fujitsu notebook, with the same hardware
-configuration as last week?
+> > +	if (!handle) {
+> > +		printk(KERN_DEBUG "IDE device's ACPI handler is NULL\n");
+> 
+> s/handler/handle/ ??
+A typo.
 
-> also, is there a working archive for this list?  the MARC archive died on 25th
-> november.
 
-I contacted them.  It appears that their subscription to linux-ide
-was dropped, so they resubscribed.  However, they are missing
-linux-ide archives from Nov. 25 - Dec. 7, so if anyone has those,
-they would like to get them and stuff those into the archives.
-If you have linux-ide archives from that period, please let me
-know or (even better) send them to hlein at progressive-comp.com .
+> > +	status = acpi_evaluate_object(parent_handle, "_GTM", NULL, &buffer);
+> > +	if (ACPI_FAILURE(status)) {
+> > +		printk(KERN_ERR "Error evaluating _GTM\n");
+> 
+> I don't read the ACPI spec. as saying that _GTM is required, (?)
+> so I would make this a KERN_DEBUG instead of KERN_ERR.
+Yes, _GTM is required.
+
+
+> > +	status = acpi_evaluate_object(state->handle, "_STM", &input, NULL);
+> > +	if (ACPI_FAILURE(status)) {
+> > +		printk(KERN_ERR "Evaluating _STM error\n");
+> 
+> Same as for _GTM, KERN_DEBUG instead of KERN_ERR.
+_STM also is required.
+
+> > +	acpi_status status;
+> > +
+> > +	status = acpi_evaluate_object(handle, "_GTF", NULL, &output);
+> > +	if (ACPI_FAILURE(status)) {
+> > +		printk(KERN_ERR "evaluate _GTF error\n");
+> 
+> KERN_DEBUG if not present since it's not required AFAIK.
+Actually it's required, but I have no idea how to invoke the ata
+commands gotten from _GTF.
+
+Thanks for your time. I'll update this patch as you suggested after the
+IDE gurus think it's ok.
 
 Thanks,
----
-~Randy
+Shaohua
+
