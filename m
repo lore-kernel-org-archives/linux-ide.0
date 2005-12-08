@@ -1,45 +1,58 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Thu, 8 Dec 2005 17:19:01 +0000
-Message-ID: <20051208171901.GA22451@srcf.ucam.org>
-References: <20051208030242.GA19923@srcf.ucam.org> <20051208091542.GA9538@infradead.org> <20051208132657.GA21529@srcf.ucam.org> <20051208133308.GA13267@infradead.org> <20051208133945.GA21633@srcf.ucam.org> <1134050498.17102.2.camel@localhost.localdomain> <20051208141811.GB21715@srcf.ucam.org> <1134052433.17102.17.camel@localhost.localdomain> <20051208145257.GB21946@srcf.ucam.org>
+From: Thomas Backlund <tmb@mandriva.org>
+Subject: Re: [PATCH] sata_sil: combined irq + LBT DMA patch for testing
+Date: Thu, 08 Dec 2005 20:23:36 +0200
+Message-ID: <43987A28.8070509@mandriva.org>
+References: <20051204011953.GA16381@havoc.gtf.org> <7744a2840512061147i5c101455g9ed99624aca344dd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20051208145257.GB21946@srcf.ucam.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mbox1.netikka.net ([213.250.81.202]:16825 "EHLO
+	mbox1.netikka.net") by vger.kernel.org with ESMTP id S932231AbVLHSXl
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Dec 2005 13:23:41 -0500
+In-Reply-To: <7744a2840512061147i5c101455g9ed99624aca344dd@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Dec 08, 2005 at 02:52:57PM +0000, Matthew Garrett wrote:
+Richard Bollinger wrote:
+> On 12/3/05, Jeff Garzik <jgarzik@pobox.com> wrote:
+>> To make it easy for others to test, since there are merge conflicts,
+>> I've combined the two previous sata_sil patches into a single patch.
+>>
+>> Verified here on my 3112 (Adaptec 1210SA).
+>>
+>> I'm especially interested to hear from anyone willing to test on a
+>> SI 3114 (4-port).
+>>
+>>
+>> The 'sii' branch of
+>> rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+>>
+>> contains the following updates:
+>>
+>>  drivers/scsi/sata_sil.c |  233 +++++++++++++++++++++++++++++++++++++++++++++---
+>>  1 files changed, 219 insertions(+), 14 deletions(-)
+>>
+>> Jeff Garzik:
+>>      [libata sata_sil] improved interrupt handling
+>>      [libata sata_sil] Greatly improve DMA handling
+>>
+>> diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+>> index 3609186..9e4630f 100644
+>> --- a/drivers/scsi/sata_sil.c
+>> +++ b/drivers/scsi/sata_sil.c
+>> ...
+> 
+> Not so well on my Gigabyte GA-K8N Ultra 9.  lspci -v says:
 
-> Hrm. I guess this can be implemented pretty much just by cutting and 
-> pasting the code into drivers/acpi rather than drivers/scsi. Would that 
-> be considered an improvement?
+Same for me...
+After some more tests i managed to see some error output before the 
+freeze, and this is what I also saw:
 
-This turns out to be quite difficult, and I can't see a clean way of 
-doing it without touching scsi or rewriting chunks of the ACPI glue 
-code.
+>> ata1: BUG: SG size underflow
+>> ata1: status=0x50 { DriveReady SeekComplete }
 
-The basic flow of code required here is:
-
-1) scsi layer registers a new device
-2) platform_notify is called, which is (in this case) 
-acpi_platform_notify
-3) acpi_platform_notify checks whether it knows dev->bus. If so, it 
-calls appropriate callbacks.
-
-Without touching scsi, there doesn't seem to be any way for (3) to work 
-if scsi is a module. Would a simple
-
-#ifdef CONFIG_ACPI
-acpi_scsi_init(&scsi_bus_type)
-#endif
-
-in the scsi code be acceptable? If not, then we have some difficulty. 
-The acpi glue code has to be statically linked in, so it can't rely on 
-anything that directly references the scsi code.
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+and onde by one the raid devices got deactivated until the full freeze...
