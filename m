@@ -1,24 +1,33 @@
-From: "Michael Tyler" <jabobciayp@msn.com>
-Subject: Everyone Need This Linux-ia64
-Date: Thu, 08 Dec 2005 12:56:05 -0700
-Message-ID: <161.72e558d5.2a9WGR44__26855.9667551473$1134072168$gmane$org@sol.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] sata_sil: combined irq + LBT DMA patch for testing
+Date: Thu, 08 Dec 2005 15:38:14 -0500
+Message-ID: <439899B6.2000302@pobox.com>
+References: <20051204011953.GA16381@havoc.gtf.org> <7744a2840512061147i5c101455g9ed99624aca344dd@mail.gmail.com> <43987A28.8070509@mandriva.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from c915538b.virtua.com.br ([201.21.83.139]:18694 "HELO
-	c915538b.virtua.com.br") by vger.kernel.org with SMTP
-	id S932308AbVLHUA4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Dec 2005 15:00:56 -0500
+Received: from mail.dvmed.net ([216.237.124.58]:683 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932361AbVLHUiT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2005 15:38:19 -0500
+In-Reply-To: <43987A28.8070509@mandriva.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ia64@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-laptop@vger.kernel.org, linux-net@vger.kernel.org, linux-newbie@vger.kernel.org
+To: Thomas Backlund <tmb@mandriva.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+Thomas Backlund wrote:
+> Richard Bollinger wrote:
+>>> ata1: BUG: SG size underflow
+>>> ata1: status=0x50 { DriveReady SeekComplete }
+> 
+> 
+> and onde by one the raid devices got deactivated until the full freeze...
 
 
-Huge selection of meds available
-at attractive prices. 
-Highest quality assured.
+I think I know what's going on with the 'SG size underflow' thingy, give 
+me a few days to come up with a fix.
 
-Try us out today..
-
-http://midwindow.net
+	Jeff
 
 
-rckG0Y
