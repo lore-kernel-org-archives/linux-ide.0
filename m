@@ -1,58 +1,64 @@
-From: Thomas Backlund <tmb@mandriva.org>
-Subject: Re: [PATCH] sata_sil: combined irq + LBT DMA patch for testing
-Date: Thu, 08 Dec 2005 20:23:36 +0200
-Message-ID: <43987A28.8070509@mandriva.org>
-References: <20051204011953.GA16381@havoc.gtf.org> <7744a2840512061147i5c101455g9ed99624aca344dd@mail.gmail.com>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: [PATCH RESEND] via82cxxx IDE: Add VT8251 ISA bridge
+Date: Thu, 08 Dec 2005 19:44:17 +0000
+Message-ID: <43988D11.80809@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020308030704030504000600"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mbox1.netikka.net ([213.250.81.202]:16825 "EHLO
-	mbox1.netikka.net") by vger.kernel.org with ESMTP id S932231AbVLHSXl
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Dec 2005 13:23:41 -0500
-In-Reply-To: <7744a2840512061147i5c101455g9ed99624aca344dd@mail.gmail.com>
+Received: from mta09-winn.ispmail.ntl.com ([81.103.221.49]:24219 "EHLO
+	mta09-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
+	id S932277AbVLHTcp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Dec 2005 14:32:45 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Richard Bollinger wrote:
-> On 12/3/05, Jeff Garzik <jgarzik@pobox.com> wrote:
->> To make it easy for others to test, since there are merge conflicts,
->> I've combined the two previous sata_sil patches into a single patch.
->>
->> Verified here on my 3112 (Adaptec 1210SA).
->>
->> I'm especially interested to hear from anyone willing to test on a
->> SI 3114 (4-port).
->>
->>
->> The 'sii' branch of
->> rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
->>
->> contains the following updates:
->>
->>  drivers/scsi/sata_sil.c |  233 +++++++++++++++++++++++++++++++++++++++++++++---
->>  1 files changed, 219 insertions(+), 14 deletions(-)
->>
->> Jeff Garzik:
->>      [libata sata_sil] improved interrupt handling
->>      [libata sata_sil] Greatly improve DMA handling
->>
->> diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
->> index 3609186..9e4630f 100644
->> --- a/drivers/scsi/sata_sil.c
->> +++ b/drivers/scsi/sata_sil.c
->> ...
-> 
-> Not so well on my Gigabyte GA-K8N Ultra 9.  lspci -v says:
+This is a multi-part message in MIME format.
+--------------020308030704030504000600
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Same for me...
-After some more tests i managed to see some error output before the 
-freeze, and this is what I also saw:
+Some motherboards (such as the Asus P5V800-MX) ship a
+PCI_DEVICE_ID_VIA_82C586_1 IDE controller alongside a VT8251 southbridge.
 
->> ata1: BUG: SG size underflow
->> ata1: status=0x50 { DriveReady SeekComplete }
+This southbridge is currently unrecognised in the via82cxxx IDE driver,
+preventing those users from getting DMA access to disks.
 
-and onde by one the raid devices got deactivated until the full freeze...
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+
+--
+
+Bart, I submitted this 2 weeks ago but sent it to your old pw.edu.pl address 
+by accident. Sorry about that!
+
+--------------020308030704030504000600
+Content-Type: text/x-patch;
+ name="via82cxxx-vt8251-southbridge.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="via82cxxx-vt8251-southbridge.patch"
+
+--- linux-2.6.15-rc2/include/linux/pci_ids.h.orig	2005-11-22 22:29:42.000000000 +0000
++++ linux-2.6.15-rc2/include/linux/pci_ids.h	2005-11-22 22:30:13.000000000 +0000
+@@ -1243,6 +1243,7 @@
+ #define PCI_DEVICE_ID_VIA_8378_0	0x3205
+ #define PCI_DEVICE_ID_VIA_8783_0	0x3208
+ #define PCI_DEVICE_ID_VIA_8237		0x3227
++#define PCI_DEVICE_ID_VIA_8251		0x3287
+ #define PCI_DEVICE_ID_VIA_3296_0	0x0296
+ #define PCI_DEVICE_ID_VIA_8231		0x8231
+ #define PCI_DEVICE_ID_VIA_8231_4	0x8235
+--- linux-2.6.15-rc2/drivers/ide/pci/via82cxxx.c.orig	2005-11-22 22:29:05.000000000 +0000
++++ linux-2.6.15-rc2/drivers/ide/pci/via82cxxx.c	2005-11-22 22:29:27.000000000 +0000
+@@ -80,6 +80,7 @@ static struct via_isa_bridge {
+ 	u16 flags;
+ } via_isa_bridges[] = {
+ 	{ "vt6410",	PCI_DEVICE_ID_VIA_6410,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
++	{ "vt8251",	PCI_DEVICE_ID_VIA_8251,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+ 	{ "vt8237",	PCI_DEVICE_ID_VIA_8237,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+ 	{ "vt8235",	PCI_DEVICE_ID_VIA_8235,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+ 	{ "vt8233a",	PCI_DEVICE_ID_VIA_8233A,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+
+--------------020308030704030504000600--
