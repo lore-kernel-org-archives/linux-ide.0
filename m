@@ -1,36 +1,31 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Thu, 8 Dec 2005 08:52:25 -0500
-Message-ID: <20051208135225.GA13122@havoc.gtf.org>
-References: <20051208030242.GA19923@srcf.ucam.org> <20051208091542.GA9538@infradead.org> <20051208132657.GA21529@srcf.ucam.org> <20051208133308.GA13267@infradead.org> <20051208133945.GA21633@srcf.ucam.org>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: RFC: ACPI/scsi/libata integration and hotswap
+Date: Thu, 8 Dec 2005 08:57:15 -0500
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01EE9D15@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20051208133945.GA21633@srcf.ucam.org>
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Christoph Hellwig <hch@infradead.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+To: Christoph Hellwig <hch@infradead.org>, Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Dec 08, 2005 at 01:39:45PM +0000, Matthew Garrett wrote:
-> On Thu, Dec 08, 2005 at 01:33:08PM +0000, Christoph Hellwig wrote:
-> 
-> > Don't do it at all.  We don't need to fuck up every layer and driver for
-> > intels braindamage.
-> 
-> Doing SATA suspend/resume properly on x86 depends on knowing the ACPI 
-> object that corresponds to a host or target.
+Christoph Hellwig writes:
+> Why oh why do our chipset friends at intel have to fuck up 
+> everything they can?  I wish they'd learn a lesson or two from their
+cpu collegues.
 
-Not true.
+The patch doesn't look like too much of a hack, pretty clean
+implementation in support of a hot-swap of an adapter using ACPI hooks.
+It is not specific to x86 platforms. I'd prefer that it looked more like
+a suspend/resume interface rather than a raw ACPI event.
 
+There needs to be a power management interface to SCSI and to the LLD's
+in support of hot-swap of PCI attached devices. Otherwise you are asking
+for the driver to be blindsided on any platform that supports this
+necessary service feature.
 
-> It's also the only way to 
-> support hotswap on this hardware[1],
-
-Not true.
-
-	Jeff
-
-
-
+Sincerely -- Mark Salyzyn
