@@ -1,30 +1,57 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Thu, 8 Dec 2005 14:18:11 +0000
-Message-ID: <20051208141811.GB21715@srcf.ucam.org>
-References: <20051208030242.GA19923@srcf.ucam.org> <20051208091542.GA9538@infradead.org> <20051208132657.GA21529@srcf.ucam.org> <20051208133308.GA13267@infradead.org> <20051208133945.GA21633@srcf.ucam.org> <1134050498.17102.2.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [ACPI] Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Thu, 08 Dec 2005 14:30:57 +0000
+Message-ID: <1134052257.17102.13.camel@localhost.localdomain>
+References: <20051208030242.GA19923@srcf.ucam.org>
+	 <20051208091542.GA9538@infradead.org>
+	 <20051208132657.GA21529@srcf.ucam.org>
+	 <20051208133308.GA13267@infradead.org>
+	 <20051208133945.GA21633@srcf.ucam.org>
+	 <20051208135225.GA13122@havoc.gtf.org>
+	 <1134050863.17102.5.camel@localhost.localdomain>
+	 <43983FC6.6050108@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1134050498.17102.2.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932087AbVLHOc1@vger.kernel.org>
+In-Reply-To: <43983FC6.6050108@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>, Christoph Hellwig <hch@infradead.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Dec 08, 2005 at 02:01:38PM +0000, Alan Cox wrote:
+On Iau, 2005-12-08 at 09:14 -0500, Jeff Garzik wrote:
+> These are only for PATA.  We don't care about _GTM/_STM on SATA.
 
-> Something like  "pci_to_acpi(struct pcidev *)" belongs in arch specific
-> code even if we do add a generic "void * pm_device" type pointer to
-> struct pci_dev or struct device for such a purpose.
+Even your piix driver supports PATA. Put the foaming (justified ;))
+hatred for ACPI aside for a moment and take a look at the real world as
+it unfortunately is right now.
 
-pci_to_acpi is already implemented in the PCI layer (see 
-drivers/pci/pci-acpi.c), with struct device.firmware_data being where 
-the acpi_handle ends up. I guess there's no problem in moving my code 
-out to scsi-acpi.c and adding an arch_initcall for it. Would that be 
-more acceptable? The only problem then is working out a clean way of 
-setting up the notification structure.
+> Further, SATA completely resets and re-initializes the device as if from 
+> a hardware reset (except on ata_piix, which doesn't support COMRESET, 
+> and PATA).  This makes _GTF uninteresting, as well.
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+You don't know what the sequences the resume method is concerned about
+actually are.
+
+> suspend/resume works just fine with Jens' out-of-tree patch.
+
+Only on some systems.
+
+> > If you don't run the resume methods your disk subsystem status after a
+> > resume is simply undefined and unsafe.
+> 
+> I initialize the hardware to a defined state.
+
+Sure, but sometimes the *wrong* defined state. The BIOS ACPI methods
+include things like unlocking drive passwords on restore with some
+systems. You don't handle that at all.
+
+Having said that I still think ACPI awareness doesn't belong in libata
+or scsi because we'd then have awareness of every pm scheme in the wrong
+layer and a dozen pm systems all with scsi hooks. Gak...
+
+SCSI/libata can go easily from ata channel to pci device to device. The
+rest of the logic belongs outside of scsi/libata.
+
+Alan
