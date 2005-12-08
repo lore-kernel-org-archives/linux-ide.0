@@ -1,38 +1,56 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: PATCH: libata driver for MPIIX
-Date: Thu, 08 Dec 2005 14:41:48 +0000
-Message-ID: <1134052908.17102.23.camel@localhost.localdomain>
+Subject: PATCH: libata - oldpiix driver
+Date: Thu, 08 Dec 2005 14:48:49 +0000
+Message-ID: <1134053330.17102.28.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:51594 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932118AbVLHOm3
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Dec 2005 09:42:29 -0500
+Received: from clock-tower.bc.nu ([81.2.110.250]:25749 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1750914AbVLHOtf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Dec 2005 09:49:35 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-This is the first cut for the MPIIX driver. This chip isn't actually
-handled by the existing drivers/ide/pci code which grabs the device then
-skips all meaningful tuning of it.
+Early PIIX devices are quite different to the later ones and have some
+more awkward constraints, notably the lack of SITRE and seperate slave
+timing. 
 
-Its actually sufficiently different to the PIIX and friends that it
-makes sense to have a seperate driver for it.
+In the old IDE drivers this chipset is handled (badly) by the piix
+driver. For libata I've split it out so that all the detail differences
+that piix doesn't handle and which make it scribble into wrong registers
+and stuff don't end up mucking up the piix4/ich driver code with a
+million conditions.
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.14-mm2/drivers/scsi/pata_mpiix.c linux-2.6.14-mm2/drivers/scsi/pata_mpiix.c
---- linux.vanilla-2.6.14-mm2/drivers/scsi/pata_mpiix.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.14-mm2/drivers/scsi/pata_mpiix.c	2005-12-08 14:32:30.546301224 +0000
-@@ -0,0 +1,223 @@
+I'll post some updates to the ata_piix driver later today hopefully as
+I'm still debugging that one, but have added MWDMA, errata and other
+chipset support plus fixed a couple of bugs with slave devices and a pci
+config space scribble when using pre ICH chips.
+
+Thanks to Maciej for having the data sheet around.
+
+Alan
+
+
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.14-mm2/drivers/scsi/pata_oldpiix.c linux-2.6.14-mm2/drivers/scsi/pata_oldpiix.c
+--- linux.vanilla-2.6.14-mm2/drivers/scsi/pata_oldpiix.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-2.6.14-mm2/drivers/scsi/pata_oldpiix.c	2005-12-07 17:26:37.000000000 +0000
+@@ -0,0 +1,337 @@
 +/*
-+ * pata_mpiix.c 	- Intel MPIIX PATA for new ATA layer
-+ *			  (C) 2005 Red Hat Inc
-+ *			  Alan Cox <alan@redhat.com>
++ *    pata_oldpiix.c - Intel PATA/SATA controllers
 + *
-+ * The MPIIX is different enough to the PIIX4 and friends that we give it
-+ * a separate driver. The old ide/pci code handles this by just not tuning
-+ * MPIIX at all. May also handle original PIIX but need data sheets.
++ *	(C) 2005 Red Hat <alan@redhat.com>
++ *
++ *    Some parts based on ata_piix.c by Jeff Garzik and others.
++ *
++ *    Early PIIX differs significantly from the later PIIX as it lacks
++ *    SITRE and the slave timing registers. This means that you have to
++ *    set timing per channel, or be clever. Libata tells us whenever it
++ *    does drive selection and we use this to reload the timings. 
++ *
++ *    Because of these behaviour differences PIIX gets its own driver module.
 + */
 +
 +#include <linux/kernel.h>
@@ -41,30 +59,31 @@ diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6
 +#include <linux/init.h>
 +#include <linux/blkdev.h>
 +#include <linux/delay.h>
++#include <linux/device.h>
 +#include <scsi/scsi_host.h>
 +#include <linux/libata.h>
++#include <linux/ata.h>
 +
-+#define DRV_NAME "pata_mpiix"
-+#define DRV_VERSION "0.1"
++#define DRV_NAME	"pata_oldpiix"
++#define DRV_VERSION	"0.1"
 +
 +/**
-+ *	mpiix_phy_reset		-	probe reset
-+ *	@ap: ATA port
++ *	oldpiix_pata_phy_reset - Probe specified port on PATA host controller
++ *	@ap: Port to probe
 + *
-+ *	Perform the ATA probe and bus reset sequence plus specific handling
-+ *	for this hardware. The MPIIX has the enable bits in a different place
-+ *	to PIIX4 and friends. As a pure PIO device it has no cable detect
++ *	LOCKING:
++ *	None (inherited from caller).
 + */
 +
-+static void mpiix_phy_reset(struct ata_port *ap)
++static void oldpiix_pata_phy_reset(struct ata_port *ap)
 +{
 +	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
-+	static const struct pci_bits mpiix_enable_bits[] = {
-+		{ 0x6D, 1, 0x80, 0x00 },
-+		{ 0x6F, 1, 0x08, 0x00 }
++	static struct pci_bits oldpiix_enable_bits[] = {
++		{ 0x41U, 1U, 0x80UL, 0x80UL },	/* port 0 */
++		{ 0x43U, 1U, 0x80UL, 0x80UL },	/* port 1 */
 +	};
 +
-+	if (!pci_test_config_bits(pdev, &mpiix_enable_bits[ap->hard_port_no])) {
++	if (!pci_test_config_bits(pdev, &oldpiix_enable_bits[ap->hard_port_no])) {
 +		ata_port_disable(ap);
 +		printk(KERN_INFO "ata%u: port disabled. ignoring.\n", ap->id);
 +		return;
@@ -75,26 +94,30 @@ diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6
 +}
 +
 +/**
-+ *	mpiix_set_piomode	-	set initial PIO mode data
-+ *	@ap: ATA interface
-+ *	@adev: ATA device
++ *	oldpiix_set_piomode - Initialize host controller PATA PIO timings
++ *	@ap: Port whose timings we are configuring
++ *	@adev: um
 + *
-+ *	Called to do the PIO mode setup. The MPIIX allows us to program the
-+ *	IORDY sample point (2-5 clocks), recovery 1-4 clocks and whether
-+ *	prefetching or iordy are used.
++ *	Set PIO mode for device, in host controller PCI config space.
 + *
-+ *	This would get very ugly because we can only program timing for one
-+ *	device at a time, the other gets PIO0. Fortunately libata calls 
-+ *	our qc_issue_prot command before a command is issued so we can
-+ *	flip the timings back and forth to reduce the pain.
++ *	LOCKING:
++ *	None (inherited from caller).
 + */
 +
-+static void mpiix_set_piomode(struct ata_port *ap, struct ata_device *adev)
++static void oldpiix_set_piomode (struct ata_port *ap, struct ata_device *adev)
 +{
++	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
++	struct pci_dev *dev	= to_pci_dev(ap->host_set->dev);
++	unsigned int idetm_port= ap->hard_port_no ? 0x42 : 0x40;
++	u16 idetm_data;
 +	int control = 0;
-+	int pio = adev->pio_mode - XFER_PIO_0;
-+	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
-+	u16 idetim;
++	
++	/*
++	 *	See Intel Document 298600-004 for the timing programing rules
++	 *	for PIIX/ICH. Note that the early PIIX does not have the slave
++	 *	timing port at 0x44.
++	 */
++
 +	static const	 /* ISP  RTC */
 +	u8 timings[][2]	= { { 0, 0 },
 +			    { 0, 0 },
@@ -102,31 +125,107 @@ diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6
 +			    { 2, 1 },
 +			    { 2, 3 }, };
 +
-+	pci_read_config_word(pdev, 0x6C, &idetim);
-+	/* Mask the IORDY/TIME/PPE0 bank for this device */
-+	if(adev->class == ATA_DEV_ATA)
-+		control |= 4;	/* PPE enable for disk */
-+	/* As with PIIX we need libata core code for pio/iordy */
-+	if(pio > 2)
-+		control |= 2;	/* IORDY */
-+	if(pio > 0)
-+		control |= 1;	/* This drive is on the fast timing bank */
++	if (pio > 2)
++		control |= 1;	/* TIME1 enable */
++	if (pio > 2)	/* PIO 3/4 require IORDY */
++		control |= 2;	/* IE enable */
++	/* FIXME: Check for PIO2 if the required timing needs IORDY
++	   We should push this up into libata and have a requires_iordy() */
 +
-+	/* Mask out timing and clear both TIME bank selects */
-+	idetim &= 0xCCEE;
-+	idetim &= ~(0x07  << (2 * adev->devno));
-+	idetim |= (control << (2 * adev->devno));
-+	
-+	idetim |= (timings[pio][0] << 12) | (timings[pio][1] << 8);
-+	pci_write_config_word(pdev, 0x6C, idetim);
-+	
-+	/* We use ap->private_data as a pointer to the device currently
-+	   loaded for timing */
++	/* Intel specifies that the PPE functionality is for disk only */	   
++	if (adev->class == ATA_DEV_ATA)
++		control |= 4;	/* PPE enable */
++		
++	pci_read_config_word(dev, idetm_port, &idetm_data);
++
++	/* Enable PPE, IE and TIME as appropriate. Clear the other
++	   drive timing bits */
++	if(adev->devno == 0) {
++		idetm_data &= 0xCCE0;
++		idetm_data |= control;
++	} else {
++		idetm_data &= 0xCC0E;
++		idetm_data |= (control << 4);
++	}
++	idetm_data |= (timings[pio][0] << 12) |
++			(timings[pio][1] << 8);
++	pci_write_config_word(dev, idetm_port, idetm_data);
++
++	/* Track which port is configured */
 +	ap->private_data = adev;
 +}
 +
 +/**
-+ *	mpiix_qc_issue_prot	-	command issue
++ *	oldpiix_set_dmamode - Initialize host controller PATA DMA timings
++ *	@ap: Port whose timings we are configuring
++ *	@adev: Device to program
++ *	@isich: True if the device is an ICH and has IOCFG registers
++ *
++ *	Set MWDMA mode for device, in host controller PCI config space.
++ *
++ *	LOCKING:
++ *	None (inherited from caller).
++ */
++
++static void oldpiix_set_dmamode (struct ata_port *ap, struct ata_device *adev)
++{
++	struct pci_dev *dev	= to_pci_dev(ap->host_set->dev);
++	u8 idetm_port		= ap->hard_port_no ? 0x42 : 0x40;
++	u16 idetm_data;
++	
++	static const	 /* ISP  RTC */
++	u8 timings[][2]	= { { 0, 0 },
++			    { 0, 0 },
++			    { 1, 0 },
++			    { 2, 1 },
++			    { 2, 3 }, };
++
++	/*
++	 * MWDMA is driven by the PIO timings. We must also enable
++	 * IORDY unconditionally along with TIME1. PPE has already
++	 * been set when the PIO timing was set.
++	 */
++
++	unsigned int mwdma	= adev->dma_mode - XFER_MW_DMA_0;
++	unsigned int control;
++	const unsigned int needed_pio[3] = {
++		XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
++	};
++	int pio = needed_pio[mwdma] - XFER_PIO_0;
++
++	pci_read_config_word(dev, idetm_port, &idetm_data);
++	
++
++	control = 3;	/* IORDY|TIME0 */
++	/* Intel specifies that the PPE functionality is for disk only */	   
++	if (adev->class == ATA_DEV_ATA)
++		control |= 4;	/* PPE enable */
++	
++	/* If the drive MWDMA is faster than it can do PIO then
++	   we must force PIO into PIO0 */
++	   
++	if (adev->pio_mode < needed_pio[mwdma])
++		/* Enable DMA timing only */
++		control |= 8;	/* PIO cycles in PIO0 */
++
++	/* Mask out the relevant control and timing bits we will load. Also
++	   clear the other drive TIME register as a precaution */
++	if(adev->devno == 0) {
++		idetm_data &= 0xCCE0;	
++		idetm_data |= control;
++	} else {
++		idetm_data &= 0xCC0E;
++		idetm_data |= (control << 4);
++	}
++	idetm_data |= (timings[pio][0] << 12) | (timings[pio][1] << 8);
++	pci_write_config_word(dev, idetm_port, idetm_data);
++
++	/* Track which port is configured */
++	ap->private_data = adev;
++}
++
++/**
++ *	oldpiix_qc_issue_prot	-	command issue
 + *	@qc: command pending
 + *
 + *	Called when the libata layer is about to issue a command. We wrap
@@ -136,17 +235,22 @@ diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6
 + *	be made PIO0.
 + */
 +
-+static int mpiix_qc_issue_prot(struct ata_queued_cmd *qc)
++static int oldpiix_qc_issue_prot(struct ata_queued_cmd *qc)
 +{
 +	struct ata_port *ap = qc->ap;
-+
-+	if(qc->dev != ap->private_data)
-+		mpiix_set_piomode(ap, qc->dev);
-+		
++	struct ata_device *adev = qc->dev;
++	
++	if(adev != ap->private_data) {
++		if(adev->dma_mode)
++			oldpiix_set_dmamode(ap, adev);
++		else
++			oldpiix_set_dmamode(ap, adev);
++	}
 +	return ata_qc_issue_prot(qc);
 +}
 +
-+static struct scsi_host_template mpiix_sht = {
++
++static struct scsi_host_template oldpiix_sht = {
 +	.module			= THIS_MODULE,
 +	.name			= DRV_NAME,
 +	.ioctl			= ata_scsi_ioctl,
@@ -166,86 +270,109 @@ diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6
 +	.ordered_flush		= 1,
 +};
 +
-+static struct ata_port_operations mpiix_port_ops = {
-+	.port_disable	= ata_port_disable,
-+	.set_piomode	= mpiix_set_piomode,
++static const struct ata_port_operations oldpiix_pata_ops = {
++	.port_disable		= ata_port_disable,
++	.set_piomode		= oldpiix_set_piomode,
++	.set_dmamode		= oldpiix_set_dmamode,
 +
-+	.tf_load	= ata_tf_load,
-+	.tf_read	= ata_tf_read,
-+	.check_status 	= ata_check_status,
-+	.exec_command	= ata_exec_command,
-+	.dev_select 	= ata_std_dev_select,
++	.tf_load		= ata_tf_load,
++	.tf_read		= ata_tf_read,
++	.check_status		= ata_check_status,
++	.exec_command		= ata_exec_command,
++	.dev_select		= ata_std_dev_select,
 +
-+	.phy_reset	= mpiix_phy_reset,
++	.phy_reset		= oldpiix_pata_phy_reset,
 +
-+	.qc_prep 	= ata_qc_prep,
-+	.qc_issue	= mpiix_qc_issue_prot,
-+	.eng_timeout	= ata_eng_timeout,
++	.bmdma_setup		= ata_bmdma_setup,
++	.bmdma_start		= ata_bmdma_start,
++	.bmdma_stop		= ata_bmdma_stop,
++	.bmdma_status		= ata_bmdma_status,
++	.qc_prep		= ata_qc_prep,
++	.qc_issue		= oldpiix_qc_issue_prot,
 +
-+	.irq_handler	= ata_interrupt,
-+	.irq_clear	= ata_bmdma_irq_clear,
++	.eng_timeout		= ata_eng_timeout,
 +
-+	.port_start	= ata_port_start,
-+	.port_stop	= ata_port_stop,
-+	.host_stop	= ata_host_stop
++	.irq_handler		= ata_interrupt,
++	.irq_clear		= ata_bmdma_irq_clear,
++
++	.port_start		= ata_port_start,
++	.port_stop		= ata_port_stop,
++	.host_stop		= ata_host_stop,
 +};
 +
-+static int mpiix_init_one(struct pci_dev *dev, const struct pci_device_id *id)
++
++/**
++ *	oldpiix_init_one - Register PIIX ATA PCI device with kernel services
++ *	@pdev: PCI device to register
++ *	@ent: Entry in oldpiix_pci_tbl matching with @pdev
++ *
++ *	Called from kernel PCI layer.  We probe for combined mode (sigh),
++ *	and then hand over control to libata, for it to do the rest.
++ *
++ *	LOCKING:
++ *	Inherited from PCI layer (may sleep).
++ *
++ *	RETURNS:
++ *	Zero on success, or -ERRNO value.
++ */
++
++static int oldpiix_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
 +{
++	static int printed_version;
 +	static struct ata_port_info info = {
-+		.sht = &mpiix_sht,
-+		.host_flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
-+		.pio_mask = 0x1f,
-+		.port_ops = &mpiix_port_ops
++		.sht		= &oldpiix_sht,
++		.host_flags	= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++		.pio_mask	= 0x1f,	/* pio0-4 */
++		.mwdma_mask	= 0x07, /* mwdma1-2 */
++		.port_ops	= &oldpiix_pata_ops,
 +	};
 +	static struct ata_port_info *port_info[2] = { &info, &info };
-+	static int printed_version;
-+	u16 idetim;
-+	
++
 +	if (!printed_version++)
-+		dev_printk(KERN_DEBUG, &dev->dev, "version " DRV_VERSION "\n");
-+		
-+	/* MPIIX has many functions which can be turned on or off according
-+	   to other devices present. Make sure IDE is enabled before we try
-+	   and use it */
-+	   
-+	pci_read_config_word(dev, 0x6C, &idetim);
-+	if(!(idetim & 0x8000))
-+		return -ENODEV;
++		dev_printk(KERN_DEBUG, &pdev->dev,
++			   "version " DRV_VERSION "\n");
 +
-+	return ata_pci_init_one(dev, port_info, 2);
++	return ata_pci_init_one(pdev, port_info, 2);
 +}
 +
-+static const struct pci_device_id mpiix[] = {
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82371MX, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-+	{ 0, },
++static const struct pci_device_id oldpiix_pci_tbl[] = {
++	{ 0x8086, 0x1230, PCI_ANY_ID, PCI_ANY_ID, },
++	{ }	/* terminate list */
 +};
 +
-+static struct pci_driver mpiix_pci_driver = {
-+        .name 		= DRV_NAME,
-+	.id_table	= mpiix,
-+	.probe 		= mpiix_init_one,
-+	.remove		= ata_pci_remove_one
++static struct pci_driver oldpiix_pci_driver = {
++	.name			= DRV_NAME,
++	.id_table		= oldpiix_pci_tbl,
++	.probe			= oldpiix_init_one,
++	.remove			= ata_pci_remove_one,
 +};
 +
-+static int __init mpiix_init(void)
++static int __init oldpiix_init(void)
 +{
-+	return pci_module_init(&mpiix_pci_driver);
++	int rc;
++
++	DPRINTK("pci_module_init\n");
++	rc = pci_module_init(&oldpiix_pci_driver);
++	if (rc)
++		return rc;
++
++	DPRINTK("done\n");
++	return 0;
++}
++
++static void __exit oldpiix_exit(void)
++{
++	pci_unregister_driver(&oldpiix_pci_driver);
 +}
 +
 +
-+static void __exit mpiix_exit(void)
-+{
-+	pci_unregister_driver(&mpiix_pci_driver);
-+}
-+
++module_init(oldpiix_init);
++module_exit(oldpiix_exit);
 +
 +MODULE_AUTHOR("Alan Cox");
-+MODULE_DESCRIPTION("low-level driver for Intel MPIIX");
++MODULE_DESCRIPTION("SCSI low-level driver for early PIIX series controllers");
 +MODULE_LICENSE("GPL");
-+MODULE_DEVICE_TABLE(pci, mpiix);
++MODULE_DEVICE_TABLE(pci, oldpiix_pci_tbl);
 +MODULE_VERSION(DRV_VERSION);
 +
-+module_init(mpiix_init);
-+module_exit(mpiix_exit);
 
