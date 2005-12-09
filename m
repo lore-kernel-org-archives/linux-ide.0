@@ -1,61 +1,28 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: Re: [PATCH 6/6 update] SATA ACPI: ata_acpi functions
-Date: Fri, 9 Dec 2005 10:52:38 -0800
-Message-ID: <20051209105238.61e1a137.randy_d_dunlap@linux.intel.com>
-References: <20051202100119.032b242e.randy_d_dunlap@linux.intel.com>
-	<20051202100850.11b831ea.randy_d_dunlap@linux.intel.com>
-	<20051206135815.5026647c.randy_d_dunlap@linux.intel.com>
-	<1133973407.43970f9fdf6dd@www.ijichi.org>
-	<20051207091639.00a7a232.randy_d_dunlap@linux.intel.com>
-	<1133976270.43971ace1c015@www.ijichi.org>
-	<20051207103449.2922faf3.randy_d_dunlap@linux.intel.com>
-	<1134035010.4398004299a80@www.ijichi.org>
-	<20051208161601.14a07dca.randy_d_dunlap@linux.intel.com>
-	<1134087622.4398cdc67c72b@www.ijichi.org>
-	<20051208170302.4acc426d.randy_d_dunlap@linux.intel.com>
-	<20051208171008.47c688a9.randy_d_dunlap@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Joan Cramer <barfly@debonis.ch>
+Subject: Cialis will help you. Get erection whenever you want.
+Date: Fri, 9 Dec 2005 16:16:14 -0500
+Message-ID: <77763119388.3644384476@200.48.130.64>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr19.intel.com ([134.134.136.18]:36235 "EHLO
-	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
-	id S932513AbVLIStd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Dec 2005 13:49:33 -0500
-In-Reply-To: <20051208171008.47c688a9.randy_d_dunlap@linux.intel.com>
+Received: from [200.48.130.64] ([200.48.130.64]:56082 "HELO 200.48.130.64")
+	by vger.kernel.org with SMTP id S932432AbVLIVQO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Dec 2005 16:16:14 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Cc: dom@ijichi.org, linux-ide@vger.kernel.org, axboe@suse.de, jgarzik@pobox.com
+To: linux-ide@vger.kernel.org
 
-On Thu, 8 Dec 2005 17:10:08 -0800
-Randy Dunlap <randy_d_dunlap@linux.intel.com> wrote:
+refill your prescription online
+http://pantheism.rrve.com/pharm/lib/
 
-> > > 
-> > > ACPI_DEBUG in .config and also applied your debug patch
-> > 
-> > Yes, easy to reproduce with CONFIG_ACPI_DEBUG=y.
-> > 
-> > My new code frees a buffer that it does not own.
-> > 
-> > Just comment out or delete line 156 in drivers/scsi/ata_acpi.c,
-> > which is:
-> > 		ACPI_MEM_FREE(dinfo);
-> > 
-> > It shouldn't be there.
-> 
-> That's not quite correct.  It will boot & run with that
-> change, but now the buffer isn't being freed at all.
-> I'll rethink that and post a patch.
 
-Dom,
 
-I've updated the ata_apci.patch file to fix this bug.
-I was misusing some of the ACPI memory alloc/free interfaces.
 
-Updated file is at
-http://www.xenotime.net/linux/SATA/2.6.15-rc/ata_acpi.patch
+Oh, what lies there are in kisses!      
+BILLINGSGATE, n. The invective of an opponent.      
+All the knowledge in the world is found within you.   
+If God wanted us to fly, He would have given us tickets. 
 
-Thanks,
----
-~Randy
+You never realize how short a month is until you pay alimony. 
+
+
