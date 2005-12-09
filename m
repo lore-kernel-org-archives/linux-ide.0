@@ -1,76 +1,61 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Fri, 9 Dec 2005 14:22:31 +0100
-Message-ID: <58cb370e0512090522h1e6a2c94r45ed652fd3a30da3@mail.gmail.com>
-References: <20051208134438.GA13507@infradead.org> <43989B00.5040503@pobox.com>
-	 <20051208133144.0f39cb37.randy_d_dunlap@linux.intel.com>
-	 <1134121522.27633.7.camel@localhost.localdomain>
-	 <20051209103937.GE26185@suse.de>
-	 <1134125145.27633.32.camel@localhost.localdomain>
-	 <43996A26.8060700@pobox.com>
-	 <1134128127.27633.39.camel@localhost.localdomain>
-	 <20051209114641.GH26185@suse.de>
-	 <20051209115511.GA25842@srcf.ucam.org>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: Re: [PATCH 6/6 update] SATA ACPI: ata_acpi functions
+Date: Fri, 9 Dec 2005 10:52:38 -0800
+Message-ID: <20051209105238.61e1a137.randy_d_dunlap@linux.intel.com>
+References: <20051202100119.032b242e.randy_d_dunlap@linux.intel.com>
+	<20051202100850.11b831ea.randy_d_dunlap@linux.intel.com>
+	<20051206135815.5026647c.randy_d_dunlap@linux.intel.com>
+	<1133973407.43970f9fdf6dd@www.ijichi.org>
+	<20051207091639.00a7a232.randy_d_dunlap@linux.intel.com>
+	<1133976270.43971ace1c015@www.ijichi.org>
+	<20051207103449.2922faf3.randy_d_dunlap@linux.intel.com>
+	<1134035010.4398004299a80@www.ijichi.org>
+	<20051208161601.14a07dca.randy_d_dunlap@linux.intel.com>
+	<1134087622.4398cdc67c72b@www.ijichi.org>
+	<20051208170302.4acc426d.randy_d_dunlap@linux.intel.com>
+	<20051208171008.47c688a9.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Return-path: <acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-In-Reply-To: <20051209115511.GA25842-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org>
-Content-Disposition: inline
-Sender: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-Errors-To: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
-	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Post: <mailto:acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
-	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=acpi-devel>
-To: Matthew Garrett <mjg59-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org>
-Cc: Jens Axboe <axboe-l3A5Bk7waGM@public.gmane.org>, Erik Slagter <erik-KW7PGP3XNp7a5EbDDlwbIw@public.gmane.org>, Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, Randy Dunlap <randy_d_dunlap-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fmr19.intel.com ([134.134.136.18]:36235 "EHLO
+	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
+	id S932513AbVLIStd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Dec 2005 13:49:33 -0500
+In-Reply-To: <20051208171008.47c688a9.randy_d_dunlap@linux.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Cc: dom@ijichi.org, linux-ide@vger.kernel.org, axboe@suse.de, jgarzik@pobox.com
 
-On 12/9/05, Matthew Garrett <mjg59-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org> wrote:
-> On Fri, Dec 09, 2005 at 12:46:42PM +0100, Jens Axboe wrote:
-> > On Fri, Dec 09 2005, Erik Slagter wrote:
-> > > I case this (still) isn't clear, I am addressing the attitude of "It'=
-s
-> > > ACPI so it's not going to be used, period".
-> >
-> > The problem seems to be that you are misunderstanding the 'attitude',
-> > which was mainly based on the initial patch sent out which stuffs acpi
-> > directly in everywhere. That seems to be a good trigger for curt/direct
-> > replies.
->
-> I was just following the example set by the ide acpi suspend/resume
-> patch, which people didn't seem to object to nearly as much. I guess
-> IDE's such a hack anyway that people aren't as worried :) I'll try
-> produce a patch that just inserts platform-independent code into scsi
-> around the start of next week.
+On Thu, 8 Dec 2005 17:10:08 -0800
+Randy Dunlap <randy_d_dunlap@linux.intel.com> wrote:
 
-Sigh, it seems this is what you get for being nice... ;)
+> > > 
+> > > ACPI_DEBUG in .config and also applied your debug patch
+> > 
+> > Yes, easy to reproduce with CONFIG_ACPI_DEBUG=y.
+> > 
+> > My new code frees a buffer that it does not own.
+> > 
+> > Just comment out or delete line 156 in drivers/scsi/ata_acpi.c,
+> > which is:
+> > 		ACPI_MEM_FREE(dinfo);
+> > 
+> > It shouldn't be there.
+> 
+> That's not quite correct.  It will boot & run with that
+> change, but now the buffer isn't being freed at all.
+> I'll rethink that and post a patch.
 
-Don't get it wrong IDE people (at least me) are also worried but
-they know that there are cases in which ACPI support will help
-(even if the main method should be talking to hardware directly)
-NOW not in X years when we will have proper, architecture
-independent suspend/resume handling (we can live with
-"ide_acpi=3Don" kernel parameter before it happens happily).
+Dom,
 
-I also pointed out that I would like to have generic code which
-can be shared between libata and IDE drivers (after all both
-can provide you with struct pci_dev * and port/device number).
+I've updated the ata_apci.patch file to fix this bug.
+I was misusing some of the ACPI memory alloc/free interfaces.
 
-It would be even better if this code will stay in drivers/acpi/ata.c
-(?) and libata/IDE will just use the same functions (which will turn
-to NOP if CONFIG_ACPI=3Dn) for PATA.
+Updated file is at
+http://www.xenotime.net/linux/SATA/2.6.15-rc/ata_acpi.patch
 
 Thanks,
-Bartlomiej
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
+---
+~Randy
