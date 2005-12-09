@@ -1,85 +1,169 @@
-From: Dominic Ijichi <dom-YBbObg1AmBkdnm+yROfE0A@public.gmane.org>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Thu, 08 Dec 2005 21:34:03 +0000
-Message-ID: <1134077643.4398a6cb5bc78@www.ijichi.org>
-References: <20051208030242.GA19923@srcf.ucam.org>  <20051208091542.GA9538@infradead.org>  <20051208132657.GA21529@srcf.ucam.org>  <20051208133308.GA13267@infradead.org>  <20051208133945.GA21633@srcf.ucam.org>  <20051208134438.GA13507@infradead.org> <1134062330.1732.9.camel@localhost.localdomain> <43989B00.5040503@pobox.com> <1134075808.43989fa0e0404@www.ijichi.org> <4398A0F9.9050900@pobox.com>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: Re: [PATCH 6/6 update] SATA ACPI: ata_acpi functions
+Date: Thu, 8 Dec 2005 16:16:01 -0800
+Message-ID: <20051208161601.14a07dca.randy_d_dunlap@linux.intel.com>
+References: <20051202100119.032b242e.randy_d_dunlap@linux.intel.com>
+	<20051202100850.11b831ea.randy_d_dunlap@linux.intel.com>
+	<20051206135815.5026647c.randy_d_dunlap@linux.intel.com>
+	<1133973407.43970f9fdf6dd@www.ijichi.org>
+	<20051207091639.00a7a232.randy_d_dunlap@linux.intel.com>
+	<1133976270.43971ace1c015@www.ijichi.org>
+	<20051207103449.2922faf3.randy_d_dunlap@linux.intel.com>
+	<1134035010.4398004299a80@www.ijichi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-In-Reply-To: <4398A0F9.9050900-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-Sender: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-Errors-To: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
-	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Post: <mailto:acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
-	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=acpi-devel>
-To: Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>
-Cc: Erik Slagter <erik-KW7PGP3XNp7a5EbDDlwbIw@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Matthew Garrett <mjg59-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org>, randy_d_dunlap-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fmr20.intel.com ([134.134.136.19]:11491 "EHLO
+	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
+	id S932762AbVLIANU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Dec 2005 19:13:20 -0500
+In-Reply-To: <1134035010.4398004299a80@www.ijichi.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Dominic Ijichi <dom@ijichi.org>
+Cc: linux-ide@vger.kernel.org, axboe@suse.de, jgarzik@pobox.com
 
-Quoting Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>:
+On Thu, 08 Dec 2005 09:43:30 +0000
+Dominic Ijichi <dom@ijichi.org> wrote:
 
-> Dominic Ijichi wrote:
-> > Quoting Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>:
-> >
-> >
-> >>Erik Slagter wrote:
-> >>
-> >>>'guess You're not interested in having suspend/resume actually work on
-> >>>laptops (or other PC's). That's your prerogative but imho it's a bit
-> >>>narrow-minded to withhold this functionality from other people who
-> >>>actually would like to have this working, just because you happen to not
-> >>>like ACPI.
-> >>
-> >>It works just fine on laptops, with Jens' suspend/resume patch.
-> >
-> >
-> > not on my fujitsu sonoma/ih6 based laptop it doesn't.  in my travels trying
-> to
-> > fix this problem it appears there are many others it doesnt work for
-> either.
-> > suspend/resume is incredibly important for day-to-day practical use of a
-> laptop,
-> > particularly using linux. the sole reason i still have a windows partition
-> is
-> > because suspend doesnt work in linux and i'm sick of firing everything up
-> again
-> > 3 times a day.
-> >
-> > thank you very much to all on this list who are pursuing a solution
-> sensibly and
-> > not making unhelpful blanket statements against the most widely used laptop
-> > chipset maker - *particularly* when they are actively contributing to
-> > development on this list.  we (laptop users) dont care about religious
-> > standpoints, we just want it to work.
+> Quoting Randy Dunlap <randy_d_dunlap@linux.intel.com>:
 > 
-> I've personally tested it on fuji ich5 and ich6 laptops.  What model do
-> you have?  What kernel version did you test?  When did you apply the
-> suspend/resume patch?
+> > On Wed, 07 Dec 2005 17:24:30 +0000
+> > Dominic Ijichi <dom@ijichi.org> wrote:
+> > 
+> > > Quoting Randy Dunlap <randy_d_dunlap@linux.intel.com>:
+> > >
+> > > > On Wed, 07 Dec 2005 16:36:47 +0000
+> > > > Dominic Ijichi <dom@ijichi.org> wrote:
+> > > >
+> > > > > I get a segfault when applying these patches to 2.6.15-rc4.  ahci
+> > compiled
+> > > > as
+> > > > > module and inserted through initrd so the module fails with segfault
+> > and
+> > > > kernel
+> > > > > doesnt go any further through boot, hence no logging.  last thing
+> > screen
+> > > > shows is:
+> > > > >
+> > > > > Code: e3 36 34 c0 c7 44 24 18 29 02 00 00 59 5b 5e 5f 5d e9 f3 05 00 00
+> > 53
+> > > > 8b 5c
+> > > > > 2408 e8 e9 03 00 00 a1 dc 0c 42 c0 eb 04 39 d8 74 07 <8b> 40 04 85 c0
+> > 75 f5
+> > > > 5b
+> > > > > c3 55 57 56 53 50 8b 44 24 20 8b 5c 24
+> > > >
+> > > > Can you provide any more of the segfault messages?  That one
+> > > > isn't particularly helpful.
+> > >
+> > > ok, see below. this is typed in on another computer, i'll try to minimise
+> > typos!
+> > 
+> > OK, well, that's a little better, but the top of the backtrace
+> > is where the nitty gritty info is.
+> > Is it possible for you to use any other method of capturing
+> > more fault messages, like serial console, netconsole,
+> > or even higher resolution video (and smaller font)
+> > so that I can see where the fault is actually happening?
+> > 
+> > Thanks.
+> 
+> ok.  eye-watering font, but here's what it says:
 
-N3510, 60gb sata model.  2.6.14,2.6.15-rc[1..5], with and without mm patches,
-and various suspend patches sent to me by people on the linux-ide list.  in
-particular, Jens Axboe's libata_suspend.patch and Randy Dunlap's patches here:
-http://www.xenotime.net/linux/SATA/2.6.15-rc/, plus patches from your site:
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/patchkits/2.6/.  every
-permutation and combination tried!  all with same result - laptop resumes but
-hangs on first disk access.
+Thanks for doing that.
+Did you enable ACPI debug output?  If so, how?
+(in .config or by modifying a header file?
+if by modifying a header file, please tell us
+exactly.)
 
-cheers
-dom
+> ata1: dev 0 configured for UDMA/100
+> Unable to handle kernel paging request at virtual address eaeaeaee
+>  printing eip:
+> c0218c67
+> *pde = 00000000
+> Oops: 0000 [#1]
+> PREEMPT
+> Modules linked in: ahci piix ide_disk ide_core
+> CPU: 0
+> EIP: 0060:[<c0218c67>] Not tainted VLI
+> EFLAGS: 00010202 (2.6.15-rc4)
+> EIP is at acpi_ut_find_allocation+0x15/0x1e
+> eax: eaeaeaea ebx: df0d8c00 ec: 00000000 edx: 00000007
+> esi: c0388b0d edi: 00000000 ebp: dffd0e40 esp: c17e9bdc
+> ds: 007b es: 007b ss: 0068
+> Process modprobe (pid: 1353, threadinfo=c17e8000 task=deeb3070)
+> Stack: df0d8c00 c0218cd8 df0d8c00 0000001 df0d8c00 000001ef 00000010 c0388b0d
+>  c0218b04 df0d8c00 00000008 00000001 00000010 c0388b0d 000001ef c03890d5
+>  c17e9c40 c17e9c74 c03890d5 c020ea16 00000008 00000010 c0388b0d 000001ef
+> Call Trace:
+> [<c0218cd8>] acpi_ut_track_allocation+0x68/0x127
+> [<c0218b04>] acpi_ut_callocate_and_track+0x55/0x83
+> [<c020ea16>] acpi_ns_internalize_name+0x82/0x113
+> [<c020dcf6>] acpi_ns_evaluate_relatvie+0x66/0x1ca
+> [<c02195de>] acpi_ut_evaluate_object+0x46/0x22a
+> [<c0219ba3>] acpi_ut_execute_STA+0x35/0xc4
+> [<c020d468>] acpi_ns_get_device_callback+0x4e/0x151
+> [<c02104ec>] acpi_ns_walk_namespace+0xbb/0x1b7
+> [<c020d604>] acpi_get_devices+0x99/0xc4
+> [<c020d41a>] acpi_ns_get_device_callback+0x0/0x151
+> [<c0277280>] get_devices+0x0/0x220
+> [<c0277539>] get_sata_adr+0x99/0x110
+> [<c0277280>] get_devices+0x0/0x220
+> [<c02778e6>] do_drive_get_GTF+0x136/0x200
+> [<c0277d8f>] do_drive_update_taskfiles+0x2f/0x70
+> [<c0270578>] ata_set_mode+0x98/0xb0
+> [<c026fc0b>] ata_bus_probe+0xab/0xc0
+> > > [<c02516c9>] ata_device_add+0x1e9/0x2b0
+> > > [<e082d850>] ahci_interrupt+0x0/0x1e0 [achi]
+> > > [<e082e263>] ahci_init_one+0x1a3/0x270 [achi]
+> > > [<c01cb5d6>] __pci_device_probe+0x56/0x70
+> > > [<c01cb61f>] pci_device_probe+0x2f/0x50
+> > > [<c023b313>] driver_probe_device+0x43/0xd0
+> > > [<c023b420>] __driver_attach+0x0/0x50
+> > > [<c023b461>] __driver_attach+0x41/0x50
+> > > [<c023a84d>] bus_for_each_dev+0x5d/0x80
+> > > [<c023b495>] driver_attach+0x25/0x30
+> > > [<c023b420>] __driver_attach+0x0/0x50
+> > > [<c023ada9>] bus_add_driver+0x89/0xf0
+> > > [<c01cb8a4>] __pci_register_driver+0x74/0xa0
+> > > [<e0832018>] ahci_init+0x18/0x1c [achi]
+> > > [c01364c2>] sys_init_module+0xd/0x210
+> > > [<c0103291>] syscall_call+0x7/0xb
+> 
+> 
+> > 
+> > > > Is this on your Fujitsu notebook, with the same hardware
+> > > > configuration as last week?
+> > >
+> > > yup
+> > >
+> > > --
+> > >
+> > > [<c02516c9>] ata_device_add+0x1e9/0x2b0
+> > > [<e082d850>] ahci_interrupt+0x0/0x1e0 [achi]
+> > > [<e082e263>] ahci_init_one+0x1a3/0x270 [achi]
+> > > [<c01cb5d6>] __pci_device_probe+0x56/0x70
+> > > [<c01cb61f>] pci_device_probe+0x2f/0x50
+> > > [<c023b313>] driver_probe_device+0x43/0xd0
+> > > [<c023b420>] __driver_attach+0x0/0x50
+> > > [<c023b461>] __driver_attach+0x41/0x50
+> > > [<c023a84d>] bus_for_each_dev+0x5d/0x80
+> > > [<c023b495>] driver_attach+0x25/0x30
+> > > [<c023b420>] __driver_attach+0x0/0x50
+> > > [<c023ada9>] bus_add_driver+0x89/0xf0
+> > > [<c01cb8a4>] __pci_register_driver+0x74/0xa0
+> > > [<e0832018>] ahci_init+0x18/0x1c [achi]
+> > > [c01364c2>] sys_init_module+0xd/0x210
+> > > [<c0103291>] syscall_call+0x7/0xb
+> > >
+> > > then the Code: line
+> > >
+> > > thats all that's left on the screen unfortunately, the rest scrolls off the
+> > top.
+> > 
+> > ---
 
-
-------------------------------------------
-This message was penned by the hand of Dom
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
+---
+~Randy
