@@ -1,28 +1,36 @@
-From: Joan Cramer <barfly@debonis.ch>
-Subject: Cialis will help you. Get erection whenever you want.
-Date: Fri, 9 Dec 2005 16:16:14 -0500
-Message-ID: <77763119388.3644384476@200.48.130.64>
-Content-Type: text/plain; charset=us-ascii
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Fri, 09 Dec 2005 19:40:08 -0500
+Message-ID: <439A23E8.3080407@pobox.com>
+References: <20051208141811.GB21715@srcf.ucam.org> <1134052433.17102.17.camel@localhost.localdomain> <20051208145257.GB21946@srcf.ucam.org> <20051208171901.GA22451@srcf.ucam.org> <20051209114246.GB16945@infradead.org> <20051209114944.GA1068@havoc.gtf.org> <20051209115235.GB25771@srcf.ucam.org> <43997171.9060105@pobox.com> <20051209121124.GA25974@srcf.ucam.org> <439975AB.5000902@pobox.com> <20051209122457.GB26070@srcf.ucam.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [200.48.130.64] ([200.48.130.64]:56082 "HELO 200.48.130.64")
-	by vger.kernel.org with SMTP id S932432AbVLIVQO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Dec 2005 16:16:14 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932688AbVLJAkZ@vger.kernel.org>
+In-Reply-To: <20051209122457.GB26070@srcf.ucam.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-refill your prescription online
-http://pantheism.rrve.com/pharm/lib/
+Matthew Garrett wrote:
+> On Fri, Dec 09, 2005 at 07:16:43AM -0500, Jeff Garzik wrote:
+> 
+> 
+>>libata will immediately notice the ejection without ACPI's help.
+> 
+> 
+> http://linux.yyz.us/sata/sata-status.html claims that ICH6 doesn't 
+> support hotswap. The Intel docs seem to say the same thing. Pulling the 
+> drive out generates an ACPI interrupt but not a PCI one. I'm really 
+> happy to be wrong here, it's just that everything I've been able to find 
+> so far suggests that ACPI is the only way to get a notification that the 
+> drive has gone missing :)
 
+ICH6 and ICH7 support it just fine, through the normal SATA PHY 
+registers.  ICH5 only support it if you are clever :)
 
+Further, although one can detect hot-unplug on ICH5, hotplug is probably 
+not detectable without polling or SMI.
 
-
-Oh, what lies there are in kisses!      
-BILLINGSGATE, n. The invective of an opponent.      
-All the knowledge in the world is found within you.   
-If God wanted us to fly, He would have given us tickets. 
-
-You never realize how short a month is until you pay alimony. 
-
-
+	Jeff
