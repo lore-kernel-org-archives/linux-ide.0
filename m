@@ -1,16 +1,16 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/4] libata: use ata_exec_internal()
-Date: Sun, 11 Dec 2005 13:24:26 +0900
-Message-ID: <20051211042426.GB29403@htj.dyndns.org>
+Subject: [PATCH 3/4] libata: removed unused functions
+Date: Sun, 11 Dec 2005 13:25:22 +0900
+Message-ID: <20051211042522.GC29403@htj.dyndns.org>
 References: <20051128164201.GA7530@htj.dyndns.org> <438C0645.3020301@tw.ibm.com> <20051129131717.GA8505@htj.dyndns.org> <43924B5A.1070904@pobox.com> <4392F78A.2040209@gmail.com> <439341C2.5090205@pobox.com> <43994F85.7040300@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.192]:24669 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932772AbVLKEYc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Dec 2005 23:24:32 -0500
-Received: by zproxy.gmail.com with SMTP id 34so1194424nzf
-        for <linux-ide@vger.kernel.org>; Sat, 10 Dec 2005 20:24:31 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.201]:11121 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932786AbVLKEZa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Dec 2005 23:25:30 -0500
+Received: by zproxy.gmail.com with SMTP id i11so1213459nzi
+        for <linux-ide@vger.kernel.org>; Sat, 10 Dec 2005 20:25:29 -0800 (PST)
 Content-Disposition: inline
 In-Reply-To: <43994F85.7040300@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -18,244 +18,67 @@ List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org
 
-This patch converts all users of libata internal commands to use
-ata_exec_internal().
+There is no user of ata_qc_wait_err() and ata_qc_complete_noop() after
+ata_exec_internal() changes.  Remove unused functions.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 Index: work/drivers/scsi/libata-core.c
 ===================================================================
---- work.orig/drivers/scsi/libata-core.c	2005-12-11 12:54:07.000000000 +0900
-+++ work/drivers/scsi/libata-core.c	2005-12-11 12:58:39.000000000 +0900
-@@ -1201,9 +1201,8 @@ static void ata_dev_identify(struct ata_
- 	u16 tmp;
- 	unsigned long xfer_modes;
- 	unsigned int using_edd;
--	DECLARE_COMPLETION(wait);
--	struct ata_queued_cmd *qc;
--	unsigned long flags;
-+	struct ata_taskfile tf;
-+	unsigned int err_mask;
- 	int rc;
- 
- 	if (!ata_dev_present(dev)) {
-@@ -1224,40 +1223,26 @@ static void ata_dev_identify(struct ata_
- 
- 	ata_dev_select(ap, device, 1, 1); /* select device 0/1 */
- 
--	qc = ata_qc_new_init(ap, dev);
--	BUG_ON(qc == NULL);
--
--	ata_sg_init_one(qc, dev->id, sizeof(dev->id));
--	qc->dma_dir = DMA_FROM_DEVICE;
--	qc->tf.protocol = ATA_PROT_PIO;
--	qc->nsect = 1;
--
- retry:
-+	ata_tf_init(ap, &tf, device);
-+
- 	if (dev->class == ATA_DEV_ATA) {
--		qc->tf.command = ATA_CMD_ID_ATA;
-+		tf.command = ATA_CMD_ID_ATA;
- 		DPRINTK("do ATA identify\n");
- 	} else {
--		qc->tf.command = ATA_CMD_ID_ATAPI;
-+		tf.command = ATA_CMD_ID_ATAPI;
- 		DPRINTK("do ATAPI identify\n");
- 	}
- 
--	qc->waiting = &wait;
--	qc->complete_fn = ata_qc_complete_noop;
--
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	rc = ata_qc_issue(qc);
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+	tf.protocol = ATA_PROT_PIO;
- 
--	if (rc)
--		goto err_out;
--	else
--		ata_qc_wait_err(qc, &wait);
-+	err_mask = ata_exec_internal(ap, dev, &tf, DMA_FROM_DEVICE,
-+				     dev->id, sizeof(dev->id));
- 
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	ap->ops->tf_read(ap, &qc->tf);
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+	if (err_mask) {
-+		if (err_mask & ~AC_ERR_DEV)
-+			goto err_out;
- 
--	if (qc->tf.command & ATA_ERR) {
- 		/*
- 		 * arg!  EDD works for all test cases, but seems to return
- 		 * the ATA signature for some ATAPI devices.  Until the
-@@ -1270,14 +1255,9 @@ retry:
- 		 * to have this problem.
- 		 */
- 		if ((using_edd) && (dev->class == ATA_DEV_ATA)) {
--			u8 err = qc->tf.feature;
-+			u8 err = tf.feature;
- 			if (err & ATA_ABORTED) {
- 				dev->class = ATA_DEV_ATAPI;
--				qc->cursg = 0;
--				qc->cursg_ofs = 0;
--				qc->cursect = 0;
--				qc->nsect = 1;
--				qc->err_mask = 0;
- 				goto retry;
- 			}
- 		}
-@@ -2390,34 +2370,23 @@ static int ata_choose_xfer_mode(const st
- 
- static void ata_dev_set_xfermode(struct ata_port *ap, struct ata_device *dev)
- {
--	DECLARE_COMPLETION(wait);
--	struct ata_queued_cmd *qc;
--	int rc;
--	unsigned long flags;
-+	struct ata_taskfile tf;
- 
- 	/* set up set-features taskfile */
- 	DPRINTK("set features - xfer mode\n");
- 
--	qc = ata_qc_new_init(ap, dev);
--	BUG_ON(qc == NULL);
--
--	qc->tf.command = ATA_CMD_SET_FEATURES;
--	qc->tf.feature = SETFEATURES_XFER;
--	qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
--	qc->tf.protocol = ATA_PROT_NODATA;
--	qc->tf.nsect = dev->xfer_mode;
--
--	qc->waiting = &wait;
--	qc->complete_fn = ata_qc_complete_noop;
--
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	rc = ata_qc_issue(qc);
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+	ata_tf_init(ap, &tf, dev->devno);
-+	tf.command = ATA_CMD_SET_FEATURES;
-+	tf.feature = SETFEATURES_XFER;
-+	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-+	tf.protocol = ATA_PROT_NODATA;
-+	tf.nsect = dev->xfer_mode;
- 
--	if (rc)
-+	if (ata_exec_internal(ap, dev, &tf, DMA_NONE, NULL, 0)) {
-+		printk(KERN_ERR "ata%u: failed to set xfermode, disabled\n",
-+		       ap->id);
- 		ata_port_disable(ap);
--	else
--		ata_qc_wait_err(qc, &wait);
-+	}
- 
- 	DPRINTK("EXIT\n");
- }
-@@ -2432,41 +2401,25 @@ static void ata_dev_set_xfermode(struct 
- 
- static void ata_dev_reread_id(struct ata_port *ap, struct ata_device *dev)
- {
--	DECLARE_COMPLETION(wait);
--	struct ata_queued_cmd *qc;
--	unsigned long flags;
--	int rc;
--
--	qc = ata_qc_new_init(ap, dev);
--	BUG_ON(qc == NULL);
-+	struct ata_taskfile tf;
- 
--	ata_sg_init_one(qc, dev->id, sizeof(dev->id));
--	qc->dma_dir = DMA_FROM_DEVICE;
-+	ata_tf_init(ap, &tf, dev->devno);
- 
- 	if (dev->class == ATA_DEV_ATA) {
--		qc->tf.command = ATA_CMD_ID_ATA;
-+		tf.command = ATA_CMD_ID_ATA;
- 		DPRINTK("do ATA identify\n");
- 	} else {
--		qc->tf.command = ATA_CMD_ID_ATAPI;
-+		tf.command = ATA_CMD_ID_ATAPI;
- 		DPRINTK("do ATAPI identify\n");
- 	}
- 
--	qc->tf.flags |= ATA_TFLAG_DEVICE;
--	qc->tf.protocol = ATA_PROT_PIO;
--	qc->nsect = 1;
-+	tf.flags |= ATA_TFLAG_DEVICE;
-+	tf.protocol = ATA_PROT_PIO;
- 
--	qc->waiting = &wait;
--	qc->complete_fn = ata_qc_complete_noop;
--
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	rc = ata_qc_issue(qc);
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
--
--	if (rc)
-+	if (ata_exec_internal(ap, dev, &tf, DMA_FROM_DEVICE,
-+			      dev->id, sizeof(dev->id)))
- 		goto err_out;
- 
--	ata_qc_wait_err(qc, &wait);
--
- 	swap_buf_le16(dev->id, ATA_ID_WORDS);
- 
- 	ata_dump_id(dev);
-@@ -2475,6 +2428,7 @@ static void ata_dev_reread_id(struct ata
- 
- 	return;
- err_out:
-+	printk(KERN_ERR "ata%u: failed to reread ID, disabled\n", ap->id);
- 	ata_port_disable(ap);
+--- work.orig/drivers/scsi/libata-core.c	2005-12-11 12:58:39.000000000 +0900
++++ work/drivers/scsi/libata-core.c	2005-12-11 12:58:59.000000000 +0900
+@@ -1148,30 +1148,6 @@ ata_exec_internal(struct ata_port *ap, s
+ 	return AC_ERR_OTHER;
  }
  
-@@ -2488,10 +2442,7 @@ err_out:
- 
- static void ata_dev_init_params(struct ata_port *ap, struct ata_device *dev)
- {
--	DECLARE_COMPLETION(wait);
--	struct ata_queued_cmd *qc;
--	int rc;
--	unsigned long flags;
-+	struct ata_taskfile tf;
- 	u16 sectors = dev->id[6];
- 	u16 heads   = dev->id[3];
- 
-@@ -2502,26 +2453,18 @@ static void ata_dev_init_params(struct a
- 	/* set up init dev params taskfile */
- 	DPRINTK("init dev params \n");
- 
--	qc = ata_qc_new_init(ap, dev);
--	BUG_ON(qc == NULL);
+-static int ata_qc_wait_err(struct ata_queued_cmd *qc,
+-			   struct completion *wait)
+-{
+-	int rc = 0;
 -
--	qc->tf.command = ATA_CMD_INIT_DEV_PARAMS;
--	qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
--	qc->tf.protocol = ATA_PROT_NODATA;
--	qc->tf.nsect = sectors;
--	qc->tf.device |= (heads - 1) & 0x0f; /* max head = num. of heads - 1 */
+-	if (wait_for_completion_timeout(wait, 30 * HZ) < 1) {
+-		/* timeout handling */
+-		qc->err_mask |= ac_err_mask(ata_chk_status(qc->ap));
 -
--	qc->waiting = &wait;
--	qc->complete_fn = ata_qc_complete_noop;
+-		if (!qc->err_mask) {
+-			printk(KERN_WARNING "ata%u: slow completion (cmd %x)\n",
+-			       qc->ap->id, qc->tf.command);
+-		} else {
+-			printk(KERN_WARNING "ata%u: qc timeout (cmd %x)\n",
+-			       qc->ap->id, qc->tf.command);
+-			rc = -EIO;
+-		}
 -
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	rc = ata_qc_issue(qc);
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+	ata_tf_init(ap, &tf, dev->devno);
-+	tf.command = ATA_CMD_INIT_DEV_PARAMS;
-+	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-+	tf.protocol = ATA_PROT_NODATA;
-+	tf.nsect = sectors;
-+	tf.device |= (heads - 1) & 0x0f; /* max head = num. of heads - 1 */
- 
--	if (rc)
-+	if (ata_exec_internal(ap, dev, &tf, DMA_NONE, NULL, 0)) {
-+		printk(KERN_ERR "ata%u: failed to init parameters, disabled\n",
-+		       ap->id);
- 		ata_port_disable(ap);
--	else
--		ata_qc_wait_err(qc, &wait);
-+	}
- 
- 	DPRINTK("EXIT\n");
+-		ata_qc_complete(qc);
+-	}
+-
+-	return rc;
+-}
+-
+ /**
+  *	ata_dev_identify - obtain IDENTIFY x DEVICE page
+  *	@ap: port on which device we wish to probe resides
+@@ -3709,11 +3685,6 @@ struct ata_queued_cmd *ata_qc_new_init(s
+ 	return qc;
  }
+ 
+-int ata_qc_complete_noop(struct ata_queued_cmd *qc)
+-{
+-	return 0;
+-}
+-
+ static void __ata_qc_complete(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+Index: work/drivers/scsi/libata.h
+===================================================================
+--- work.orig/drivers/scsi/libata.h	2005-12-11 12:34:20.000000000 +0900
++++ work/drivers/scsi/libata.h	2005-12-11 12:58:59.000000000 +0900
+@@ -39,7 +39,6 @@ struct ata_scsi_args {
+ 
+ /* libata-core.c */
+ extern int atapi_enabled;
+-extern int ata_qc_complete_noop(struct ata_queued_cmd *qc);
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_port *ap,
+ 				      struct ata_device *dev);
+ extern void ata_rwcmd_protocol(struct ata_queued_cmd *qc);
