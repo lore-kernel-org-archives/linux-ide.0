@@ -1,25 +1,20 @@
-From: "Marc Barrera" <mbarreragy@modernplast.it>
-Subject: Get cials-tabs - no prior prescription needed
-Date: Mon, 12 Dec 2005 12:21:05 +0100
-Message-ID: <83a501c5ff0e$185c24f0$1b3c85c2@stannescastle.freeserve.co.uk>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH/RFC 1/1] libata: err_mask misc fix
+Date: Mon, 12 Dec 2005 15:26:56 -0500
+Message-ID: <439DDD10.4060105@pobox.com>
+References: <437181D5.8070903@tw.ibm.com> <43718400.5000409@tw.ibm.com> <43719670.20708@pobox.com> <4372FD45.8080404@tw.ibm.com> <43924E11.60500@pobox.com> <4393E513.5070203@tw.ibm.com> <439506E3.2080202@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=iso-8859-1; reply-type=original
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:53216 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751147AbVLLMkD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Dec 2005 07:40:03 -0500
-Received: from stannescastle.freeserve.co.uk (BSN-210-248-77.dial-up.dsl.siol.net [195.210.248.77])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jBCCdgjK019276
-	for <linux-ide@vger.kernel.org>; Mon, 12 Dec 2005 04:39:46 -0800
+Received: from mail.dvmed.net ([216.237.124.58]:36804 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750944AbVLLU1D (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Dec 2005 15:27:03 -0500
+In-Reply-To: <439506E3.2080202@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>
 
-
-Be ERECT in less than 15 mins
-
-PRlCE: $ 2 / use
-
-visit our website --> worldamoure.com
+applied patches 1-4, and this fix, to 'upstream'
 
