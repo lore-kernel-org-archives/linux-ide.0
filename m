@@ -1,35 +1,52 @@
-From: Shem Multinymous <multinymous@gmail.com>
-Subject: Re: tp_smapi conflict with IDE, hdaps
-Date: Tue, 13 Dec 2005 20:41:00 +0200
-Message-ID: <41840b750512131041i5ae5f021h29eed3492bad88ca@mail.gmail.com>
-References: <41840b750512130635p45591633ya1df731f24a87658@mail.gmail.com>
-	 <1134486203.11732.60.camel@localhost.localdomain>
-	 <41840b750512130729y49903791xc9ceba4e6a18322e@mail.gmail.com>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Tue, 13 Dec 2005 11:07:27 -0800
+Message-ID: <20051213110727.2bef7d80.randy_d_dunlap@linux.intel.com>
+References: <20051208030242.GA19923@srcf.ucam.org>
+	<20051213101417.13fdb14c.randy_d_dunlap@linux.intel.com>
+	<20051213182651.GA14645@srcf.ucam.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.195]:36627 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030204AbVLMSli convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Dec 2005 13:41:38 -0500
-Received: by zproxy.gmail.com with SMTP id 34so1799105nzf
-        for <linux-ide@vger.kernel.org>; Tue, 13 Dec 2005 10:41:37 -0800 (PST)
-In-Reply-To: <41840b750512130729y49903791xc9ceba4e6a18322e@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030191AbVLMTEK@vger.kernel.org>
+In-Reply-To: <20051213182651.GA14645@srcf.ucam.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux kernel mailing list <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Rovert Love <rlove@rlove.org>, Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org
 
-On 12/13/05, Shem Multinymous <multinymous@gmail.com> wrote:
-> ThinkPad T43 BIOS 1.24, Hitahi HTS726060M9AT00 firmware MH4OA6GA.
+On Tue, 13 Dec 2005 18:26:51 +0000
+Matthew Garrett <mjg59@srcf.ucam.org> wrote:
 
-Oops, sorry, that's the hard disk. The drive is a Matshita UJ-822S
-firmware 1.61 (branded by IBM as "UltraBay Slim DVD Multi-Burner
-Plus").
+> On Tue, Dec 13, 2005 at 10:14:17AM -0800, Randy Dunlap wrote:
+> 
+> > 7.  Most important:  What good does the ACPI interface do/add?
+> >     What I mean is that acpi_get_child() in scsi_acpi_find_channel()
+> >     always returns a handle value of 0, so it doesn't get us
+> >     any closer to determining the ACPI address (_ADR) of the SATA
+> >     devices.  The acpi_get_devices() technique in my patch (basically
+> >     walking the ACPI namespace, looking at all "devices") is the
+> >     only way that I know of doing this, but I would certainly
+> >     like to find a better way.
+> 
+> When the PCI bus is registered, acpi walks it and finds the appropriate 
+> acpi handle for each PCI device. This is shoved in the 
+> firmware_data field of the device structure. Later on, we register the 
+> scsi bus. As each item on the bus is added, the acpi callback gets 
+> called. If it's not an endpoint, scsi_acpi_find_channel gets called. 
+> We're worried about the host case. The host number will correspond to 
+> the appropriate _ADR underneath the PCI device that the host is on, so 
+> we simply get the handle of the PCI device and then ask for the child 
+> with the appropriate _ADR. That gives us the handle for the device, and 
+> returning that sticks it back in the child's firmware_data field.
+> 
+> At least, that's how it works here. If acpi_get_child always returns 0 
+> for you, then it sounds like something's going horribly wrong. Do you 
+> have a copy of the DSDT?
 
-Meanwhile, I found out that with this drive, "hdparm -E" does affect
-CD-R discs, but not DVD-R discs. The SMAPI BIOS command affects both.
+Thanks for the explanation.
+The 136 KB DSDT is at:
+  http://www.xenotime.net/linux/SATA/acpitbl.out .
 
-  Shem
+---
+~Randy
