@@ -1,54 +1,90 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH 1/4] libata: implement ata_exec_internal()
-Date: Wed, 14 Dec 2005 18:01:30 +0800
-Message-ID: <439FED7A.2020405@tw.ibm.com>
-References: <438C0645.3020301@tw.ibm.com> <20051129131717.GA8505@htj.dyndns.org> <43924B5A.1070904@pobox.com> <4392F78A.2040209@gmail.com> <439341C2.5090205@pobox.com> <43994F85.7040300@gmail.com> <20051211042303.GA29403@htj.dyndns.org> <439E54F8.8020304@pobox.com> <439E56E1.1070109@gmail.com> <439E59C1.6090002@pobox.com> <20051213054831.GA20810@htj.dyndns.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: tp_smapi conflict with IDE, hdaps
+Date: Tue, 13 Dec 2005 16:16:15 +0000
+Message-ID: <1134490575.11732.104.camel@localhost.localdomain>
+References: <41840b750512130635p45591633ya1df731f24a87658@mail.gmail.com>
+	 <1134486203.11732.60.camel@localhost.localdomain>
+	 <41840b750512130729y49903791xc9ceba4e6a18322e@mail.gmail.com>
+	 <1134488305.11732.74.camel@localhost.localdomain>
+	 <41840b750512130804s32fe543xa11933f681973281@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:18918 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S932133AbVLNKBg
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Dec 2005 05:01:36 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e34.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id jBEA1WbA005397
-	for <linux-ide@vger.kernel.org>; Wed, 14 Dec 2005 05:01:32 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id jBEA0fNh141398
-	for <linux-ide@vger.kernel.org>; Wed, 14 Dec 2005 03:00:41 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id jBEA1V0E018570
-	for <linux-ide@vger.kernel.org>; Wed, 14 Dec 2005 03:01:31 -0700
-In-Reply-To: <20051213054831.GA20810@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932279AbVLNKW6@vger.kernel.org>
+In-Reply-To: <41840b750512130804s32fe543xa11933f681973281@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shem Multinymous <multinymous@gmail.com>
+Cc: linux kernel mailing list <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Rovert Love <rlove@rlove.org>, Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> This patch implements ata_exec_internal() function which performs
-> libata internal command execution.  Previously, this was done by each
-> user by manually initializing a qc, issueing it, waiting for its
-> completion and handling errors.  In addition to obvious code
-> factoring, using ata_exec_internal() fixes the following bugs.
+On Maw, 2005-12-13 at 18:04 +0200, Shem Multinymous wrote:
+> > What else does that code do, what else might it confuse, what rules and
+> > locking are hidden in the windows driver that are unknown. Want to risk
+> > everyones data for that ?
 > 
-> * qc not freed on issue failure
-> * ap->qactive clearing could race with the next internal command
-> * race between timeout handling and irq
-> * ignoring error condition not represented in tf->status
+> We already take that risk to some degree, since the SMAPI BIOS is also
+> invoked by the ACPI DSDT and by external events.
 
-Thanks, this fixes the "phantom slave device" problem on my machine. :)
+But the ACPI DSDT is OS independant in theory and in practice to a fair
+extent. It can't make assumptions about windows drivers.
 
+> > HDAPS doesn't need it btw.
 > 
-> Also, qc & hardware are not accessed anymore once it's completed,
-> making internal commands more conformant with general semantics.
-> ata_exec_internal() also makes it easy to issue internal commands from
-> multiple threads if that becomes necessary.
-> 
-> This patch only implements ata_exec_internal().  A following patch
-> will convert all users.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
+> It's not implemented yet, but I gather it's necessary for preventing
+> the disk from spinning back up as the laptop slides off the table.
+> Maybe I missed some subsequent discussion?
 
+HDAPS wants to be able to talk with the IDE/libata layer to request it
+to hold off requests, thats very different to "gee I wonder what the
+bios did"
+
+> You write "command" values into IO ports 0x1610 and 0x161F and, in
+> some cases, read some results from ports 0x1610-0x161F. Throughout
+> that, you inspect various bits (whose meaning we don't understand) in
+> the status port 0x1604. The details of the commands, scheduling and
+> status bits differ between the drivers. I don't think a full-blown
+> ownership and expansion infrastructure is necessary, or even possible
+> without better understanding.
+
+Ok
+
+
+> Thanks for the pointers. I guess the minimal approach is probably
+> ideal here; are there any such dumb drivers lying around?
+
+Its probably easier to write than go find one
+
+
+I mean you need
+
+
+tp_hw_init() {
+   if (not a thinkpad) return -ENODEV
+   request_region(...)
+   return 0
+}
+
+tp_hw_exit() {
+   release_region(...)
+}
+
+EXPORT_SYMBOL_GPL(tp_hw_lock); 
+EXPORT_SYMBOL_GPL(tp_hw_unlock);
+
+tp_hw_lock() {
+    down(&tp_sem);
+}
+
+tp_hw_unlock() {
+    up(&tp_sem);
+}
+
+/* And perhaps if the port varies by machine */
+
+EXPORT_SYMBOL_GPL(tp_hw_addr);
+
+tp_hw_addr() {
+    return 0x1600;
+}
+
+It can really be that simple
