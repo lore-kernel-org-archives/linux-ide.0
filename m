@@ -1,38 +1,47 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/4] libata: implement ata_exec_internal()
-Date: Tue, 13 Dec 2005 00:22:03 -0500
-Message-ID: <439E5A7B.2040105@pobox.com>
-References: <20051128164201.GA7530@htj.dyndns.org> <438C0645.3020301@tw.ibm.com> <20051129131717.GA8505@htj.dyndns.org> <43924B5A.1070904@pobox.com> <4392F78A.2040209@gmail.com> <439341C2.5090205@pobox.com> <43994F85.7040300@gmail.com> <20051211042303.GA29403@htj.dyndns.org> <439E54F8.8020304@pobox.com> <439E56E1.1070109@gmail.com>
+Subject: [git patches] libata fix
+Date: Tue, 13 Dec 2005 00:32:32 -0500
+Message-ID: <20051213053232.GA26669@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:60872 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932460AbVLMFWR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Dec 2005 00:22:17 -0500
-In-Reply-To: <439E56E1.1070109@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751321AbVLMFce@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org
-
-Tejun Heo wrote:
-> Oh... Sorry, all patches are against the ALL branch.  Do you want me to 
-> regenerate them against upstream?
-
-Yes, please.
 
 
-> Also, I'm currently working on a series of EH improvement patches 
-> against the ALL branch.  Would generating patches against upstream be 
-> better?
+Please pull from 'upstream-fixes' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-Diffing against ALL means that your patches become dependent on all 
-libata-dev.git branches, even ones that aren't going upstream for a long 
-time.  Plus, ALL is routinely blown away and recreated, when the merge 
-gets too messy.
+to receive the following updates:
 
-	Jeff
+ drivers/scsi/libata-core.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
+Mark Lord:
+      libata-core.c:  fix parameter bug on kunmap_atomic() calls
 
-
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 665ae79..d0a0fdb 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -2443,7 +2443,7 @@ static void ata_sg_clean(struct ata_queu
+ 			struct scatterlist *psg = &qc->pad_sgent;
+ 			void *addr = kmap_atomic(psg->page, KM_IRQ0);
+ 			memcpy(addr + psg->offset, pad_buf, qc->pad_len);
+-			kunmap_atomic(psg->page, KM_IRQ0);
++			kunmap_atomic(addr, KM_IRQ0);
+ 		}
+ 	} else {
+ 		if (sg_dma_len(&sg[0]) > 0)
+@@ -2717,7 +2717,7 @@ static int ata_sg_setup(struct ata_queue
+ 		if (qc->tf.flags & ATA_TFLAG_WRITE) {
+ 			void *addr = kmap_atomic(psg->page, KM_IRQ0);
+ 			memcpy(pad_buf, addr + psg->offset, qc->pad_len);
+-			kunmap_atomic(psg->page, KM_IRQ0);
++			kunmap_atomic(addr, KM_IRQ0);
+ 		}
+ 
+ 		sg_dma_address(psg) = ap->pad_dma + (qc->tag * ATA_DMA_PAD_SZ);
