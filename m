@@ -1,89 +1,132 @@
-From: Shem Multinymous <multinymous@gmail.com>
-Subject: Re: tp_smapi conflict with IDE, hdaps
-Date: Tue, 13 Dec 2005 18:04:37 +0200
-Message-ID: <41840b750512130804s32fe543xa11933f681973281@mail.gmail.com>
-References: <41840b750512130635p45591633ya1df731f24a87658@mail.gmail.com>
-	 <1134486203.11732.60.camel@localhost.localdomain>
-	 <41840b750512130729y49903791xc9ceba4e6a18322e@mail.gmail.com>
-	 <1134488305.11732.74.camel@localhost.localdomain>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [git patch] libata ATAPI fix
+Date: Tue, 13 Dec 2005 11:39:19 -0500
+Message-ID: <20051213163919.GA23659@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.204]:27753 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932338AbVLMQEj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Dec 2005 11:04:39 -0500
-Received: by zproxy.gmail.com with SMTP id 34so1758284nzf
-        for <linux-ide@vger.kernel.org>; Tue, 13 Dec 2005 08:04:38 -0800 (PST)
-In-Reply-To: <1134488305.11732.74.camel@localhost.localdomain>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932411AbVLMQjV@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux kernel mailing list <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Rovert Love <rlove@rlove.org>, Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org
-
-Hi,
-
-On 12/13/05, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> Sounds like it needs someone with an ATA bus analyser, or of course
-> someone from IBM to be helpful
-
-(I wonder which is more implausible...)
 
 
-> > > Trying to arbitrate libata access with unknown bios behaviour isn't going to have a
-> > > sane resolution.
-> >
-> > Why? BTW, isn't this similar to the queue freeze functionality needed
-> > by the disk park part of the ThinkPad HDAPS?
->
-> What else does that code do, what else might it confuse, what rules and
-> locking are hidden in the windows driver that are unknown. Want to risk
-> everyones data for that ?
+Please pull from 'upstream-fixes' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-We already take that risk to some degree, since the SMAPI BIOS is also
-invoked by the ACPI DSDT and by external events.
+to receive the following updates:
 
+ drivers/scsi/libata-scsi.c  |    7 +++++--
+ drivers/scsi/sata_mv.c      |    3 ++-
+ drivers/scsi/sata_promise.c |   12 ++++++------
+ drivers/scsi/sata_sx4.c     |    3 ++-
+ include/linux/libata.h      |    1 +
+ 5 files changed, 16 insertions(+), 10 deletions(-)
 
-> HDAPS doesn't need it btw.
+Jeff Garzik:
+      [libata] mark certain hardware (or drivers) with a no-atapi flag
 
-It's not implemented yet, but I gather it's necessary for preventing
-the disk from spinning back up as the laptop slides off the table.
-Maybe I missed some subsequent discussion?
-
-
-> > We don't understand the controller interface sufficiently well to
-> > fully abstract it (no specs, and the two conflicting drivers do things
-> > somewhat differently), so for now the low-level driver may only handle
-> > locking... Is there an easier way to just share a mutex?
->
-> Yes but that isn't neccessarily the right thing to do. You want the
-> abstraction for the resource ownership and expansion. Can you summarize
-> the two drivers interaction with the ports ?
-
-You write "command" values into IO ports 0x1610 and 0x161F and, in
-some cases, read some results from ports 0x1610-0x161F. Throughout
-that, you inspect various bits (whose meaning we don't understand) in
-the status port 0x1604. The details of the commands, scheduling and
-status bits differ between the drivers. I don't think a full-blown
-ownership and expansion infrastructure is necessary, or even possible
-without better understanding.
-
-
-> One large scale example is the i2c bus code which has to deal with
-> multiple devices on multiple busses all being used by multiple people at
-> the same time.
->
-> Another is I2O where the I2O core code owns the I2O controller and the
-> detail for it and is used by various device drivers on top. That one is
-> fairly high level however and not exactly minimal.
->
-> It may well be that in your case the 'core' module can only identify the
-> ports, claim them, release them on unload and provide 'lock' and
-> 'unlock' functions and the base address.
-
-Thanks for the pointers. I guess the minimal approach is probably
-ideal here; are there any such dumb drivers lying around?
-
-  Shem
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index 379e870..72ddba9 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -2173,9 +2173,12 @@ ata_scsi_find_dev(struct ata_port *ap, c
+ 	if (unlikely(!ata_dev_present(dev)))
+ 		return NULL;
+ 
+-	if (!atapi_enabled) {
+-		if (unlikely(dev->class == ATA_DEV_ATAPI))
++	if (!atapi_enabled || (ap->flags & ATA_FLAG_NO_ATAPI)) {
++		if (unlikely(dev->class == ATA_DEV_ATAPI)) {
++			printk(KERN_WARNING "ata%u(%u): WARNING: ATAPI is %s, device ignored.\n",
++			       ap->id, dev->devno, atapi_enabled ? "not supported with this driver" : "disabled");
+ 			return NULL;
++		}
+ 	}
+ 
+ 	return dev;
+diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
+index ab7432a..9321cdf 100644
+--- a/drivers/scsi/sata_mv.c
++++ b/drivers/scsi/sata_mv.c
+@@ -86,7 +86,8 @@ enum {
+ 	MV_FLAG_DUAL_HC		= (1 << 30),  /* two SATA Host Controllers */
+ 	MV_FLAG_IRQ_COALESCE	= (1 << 29),  /* IRQ coalescing capability */
+ 	MV_COMMON_FLAGS		= (ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				   ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO),
++				   ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
++				   ATA_FLAG_NO_ATAPI),
+ 	MV_6XXX_FLAGS		= MV_FLAG_IRQ_COALESCE,
+ 
+ 	CRQB_FLAG_READ		= (1 << 0),
+diff --git a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
+index 8a8e3e3..2691625 100644
+--- a/drivers/scsi/sata_promise.c
++++ b/drivers/scsi/sata_promise.c
+@@ -70,6 +70,9 @@ enum {
+ 	PDC_HAS_PATA		= (1 << 1), /* PDC20375 has PATA */
+ 
+ 	PDC_RESET		= (1 << 11), /* HDMA reset */
++
++	PDC_COMMON_FLAGS	= ATA_FLAG_NO_LEGACY | ATA_FLAG_SRST |
++				  ATA_FLAG_MMIO | ATA_FLAG_NO_ATAPI,
+ };
+ 
+ 
+@@ -162,8 +165,7 @@ static struct ata_port_info pdc_port_inf
+ 	/* board_2037x */
+ 	{
+ 		.sht		= &pdc_ata_sht,
+-		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
++		.host_flags	= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -173,8 +175,7 @@ static struct ata_port_info pdc_port_inf
+ 	/* board_20319 */
+ 	{
+ 		.sht		= &pdc_ata_sht,
+-		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
++		.host_flags	= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -184,8 +185,7 @@ static struct ata_port_info pdc_port_inf
+ 	/* board_20619 */
+ 	{
+ 		.sht		= &pdc_ata_sht,
+-		.host_flags	= ATA_FLAG_NO_LEGACY | ATA_FLAG_SRST |
+-				  ATA_FLAG_MMIO | ATA_FLAG_SLAVE_POSS,
++		.host_flags	= PDC_COMMON_FLAGS | ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+diff --git a/drivers/scsi/sata_sx4.c b/drivers/scsi/sata_sx4.c
+index dcc3ad9..ac7b0d8 100644
+--- a/drivers/scsi/sata_sx4.c
++++ b/drivers/scsi/sata_sx4.c
+@@ -220,7 +220,8 @@ static struct ata_port_info pdc_port_inf
+ 	{
+ 		.sht		= &pdc_sata_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_SRST | ATA_FLAG_MMIO,
++				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
++				  ATA_FLAG_NO_ATAPI,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index f2dbb68..41ea7db 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -122,6 +122,7 @@ enum {
+ 	ATA_FLAG_NOINTR		= (1 << 9), /* FIXME: Remove this once
+ 					     * proper HSM is in place. */
+ 	ATA_FLAG_DEBUGMSG	= (1 << 10),
++	ATA_FLAG_NO_ATAPI	= (1 << 11), /* No ATAPI support */
+ 
+ 	ATA_QCFLAG_ACTIVE	= (1 << 1), /* cmd not yet ack'd to scsi lyer */
+ 	ATA_QCFLAG_SG		= (1 << 3), /* have s/g table? */
