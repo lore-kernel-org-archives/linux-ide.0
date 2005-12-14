@@ -1,29 +1,27 @@
-From: Violet Poe <patriotism@goldcoastchurch.com>
-Subject: QuickBooks Pro Edition 2004 - $49.95
-Date: Wed, 14 Dec 2005 01:52:00 -0500
-Message-ID: <14928120610.7965618804@213.42.2.22>
+From: Owen Mackey <legitimate@glbgroup.com>
+Subject: Prescription medicine through an easy, secure and confidential environment.
+Date: Wed, 14 Dec 2005 04:45:28 -0500
+Message-ID: <12964210838.82313104310@dsl.static8596175102.ttnet.net.tr>
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [83.110.21.75] ([83.110.21.75]:12242 "HELO 213.42.2.22")
-	by vger.kernel.org with SMTP id S1751258AbVLNGwA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Dec 2005 01:52:00 -0500
+Received: from dsl.static8596175102.ttnet.net.tr ([85.96.175.102]:40516 "HELO
+	dsl.static8596175102.ttnet.net.tr") by vger.kernel.org with SMTP
+	id S932257AbVLNJp2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Dec 2005 04:45:28 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Adobe Photoshop CS2 9.0 - $54.95
-http://forearm.oempx.com/
+Upgrade your life with our lifestyle medications!
+http://uebm.s2gdylg5ggyisaamxsamxass.dogebn.com/?hottj
 
 
-
-A paranoid is someone who knows a little of what's going on. 
-Never advise anyone to go to war or to marry.   
-J.F.K.--The Man and the Airport        
-I am not young enough to know everything.     
-Life's most urgent question is: what are you doing for others?  
-Joy is not a thing, it is in us.    
-The cruelest lies are often told in silence.     
-
+Traffic signals in New York are just rough guidelines.    
+An idea is salvation by imagination.       
+Pride the first peer and president of hell.     
+Words without actions are the assassins of idealism.     
+What you will do matters. All you need is to do it. 
+Science has proof without any certainty. Creationists have certainty without any proof. 
 
 
