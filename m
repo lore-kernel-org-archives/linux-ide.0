@@ -1,324 +1,92 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: [PATCH 1/7] SATA suspend/resume support (Jens)
-Date: Tue, 13 Dec 2005 16:02:45 -0800
-Message-ID: <20051213160245.020457a4.randy_d_dunlap@linux.intel.com>
-References: <20051213160110.193e3f61.randy_d_dunlap@linux.intel.com>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [RFC][PATCH] Necessary evil to get sata_vsc to initialize with Intel iq3124h
+Date: Tue, 13 Dec 2005 16:39:24 -0800
+Message-ID: <20051214003924.GD184894@sgi.com>
+References: <e9c3a7c20512131100v3def8760o2017d3da1a7e5b3e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr17.intel.com ([134.134.136.16]:38585 "EHLO
-	orsfmr002.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1030362AbVLNAHx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Dec 2005 19:07:53 -0500
-In-Reply-To: <20051213160110.193e3f61.randy_d_dunlap@linux.intel.com>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:29106 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1030402AbVLNAja (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Dec 2005 19:39:30 -0500
+Content-Disposition: inline
+In-Reply-To: <e9c3a7c20512131100v3def8760o2017d3da1a7e5b3e@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>
-Cc: axboe@suse.de, jgarzik@pobox.com
+To: Dan Williams <dan.j.williams@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-From: Jens Axboe <axboe@suse.de>
+On Tue, Dec 13, 2005 at 12:00:57PM -0700, Dan Williams wrote:
+> The following patch works around "irq nobody cared" problems
+> encountered while using sata_vsc with the Intel iq3124h.  It seems the
+> unexpected interrupts are only generated at initialization time, but
+> more testing is required.  Patch is against 2.6.14.3
+> 
+> Dan
 
-Add libata suspend/resume support.
+I think you'll have to resend this but not wrap the lines this
+time.  This patch won't apply.
 
- drivers/scsi/ata_piix.c    |    4 +
- drivers/scsi/libata-core.c |  122 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/libata-scsi.c |   16 +++++
- drivers/scsi/scsi_sysfs.c  |   35 ++++++++++++
- include/linux/ata.h        |    2 
- include/linux/libata.h     |    7 ++
- include/scsi/scsi_host.h   |    6 ++
- 7 files changed, 190 insertions(+), 2 deletions(-)
----
+jeremy
 
---- linux-2615-rc5g3.orig/drivers/scsi/ata_piix.c
-+++ linux-2615-rc5g3/drivers/scsi/ata_piix.c
-@@ -125,6 +125,8 @@ static struct pci_driver piix_pci_driver
- 	.id_table		= piix_pci_tbl,
- 	.probe			= piix_init_one,
- 	.remove			= ata_pci_remove_one,
-+	.suspend		= ata_pci_device_suspend,
-+	.resume			= ata_pci_device_resume,
- };
- 
- static struct scsi_host_template piix_sht = {
-@@ -145,6 +147,8 @@ static struct scsi_host_template piix_sh
- 	.slave_configure	= ata_scsi_slave_config,
- 	.bios_param		= ata_std_bios_param,
- 	.ordered_flush		= 1,
-+	.suspend		= ata_scsi_device_suspend,
-+	.resume			= ata_scsi_device_resume,
- };
- 
- static const struct ata_port_operations piix_pata_ops = {
---- linux-2615-rc5g3.orig/drivers/scsi/libata-core.c
-+++ linux-2615-rc5g3/drivers/scsi/libata-core.c
-@@ -4099,6 +4099,104 @@ err_out:
- }
- 
- 
-+/*
-+ * Execute a 'simple' command, that only consists of the opcode 'cmd' itself,
-+ * without filling any other registers
-+ */
-+static int ata_do_simple_cmd(struct ata_port *ap, struct ata_device *dev,
-+			     u8 cmd)
-+{
-+	DECLARE_COMPLETION(wait);
-+	struct ata_queued_cmd *qc;
-+	unsigned long flags;
-+	int rc;
-+
-+	while ((qc = ata_qc_new_init(ap, dev)) == NULL)
-+		msleep(10);
-+
-+	qc->tf.command = cmd;
-+	qc->tf.flags |= ATA_TFLAG_DEVICE;
-+	qc->tf.protocol = ATA_PROT_NODATA;
-+
-+	qc->waiting = &wait;
-+	qc->complete_fn = ata_qc_complete_noop;
-+
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	rc = ata_qc_issue(qc);
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+	if (!rc)
-+		wait_for_completion(&wait);
-+
-+	return rc;
-+}
-+
-+static int ata_flush_cache(struct ata_port *ap, struct ata_device *dev)
-+{
-+	u8 cmd;
-+
-+	if (!ata_try_flush_cache(dev))
-+		return 0;
-+
-+	if (ata_id_has_flush_ext(dev->id))
-+		cmd = ATA_CMD_FLUSH_EXT;
-+	else
-+		cmd = ATA_CMD_FLUSH;
-+
-+	return ata_do_simple_cmd(ap, dev, cmd);
-+}
-+
-+static int ata_standby_drive(struct ata_port *ap, struct ata_device *dev)
-+{
-+	return ata_do_simple_cmd(ap, dev, ATA_CMD_STANDBYNOW1);
-+}
-+
-+static int ata_start_drive(struct ata_port *ap, struct ata_device *dev)
-+{
-+	return ata_do_simple_cmd(ap, dev, ATA_CMD_IDLEIMMEDIATE);
-+}
-+
-+/**
-+ *	ata_device_resume - wakeup a previously suspended devices
-+ *
-+ *	Kick the drive back into action, by sending it an idle immediate
-+ *	command and making sure its transfer mode matches between drive
-+ *	and host.
-+ *
-+ */
-+int ata_device_resume(struct ata_port *ap, struct ata_device *dev)
-+{
-+	if (ap->flags & ATA_FLAG_SUSPENDED) {
-+		ap->flags &= ~ATA_FLAG_SUSPENDED;
-+		ata_set_mode(ap);
-+	}
-+	if (!ata_dev_present(dev))
-+		return 0;
-+	if (dev->class == ATA_DEV_ATA)
-+		ata_start_drive(ap, dev);
-+
-+	return 0;
-+}
-+
-+/**
-+ *	ata_device_suspend - prepare a device for suspend
-+ *
-+ *	Flush the cache on the drive, if appropriate, then issue a
-+ *	standbynow command.
-+ *
-+ */
-+int ata_device_suspend(struct ata_port *ap, struct ata_device *dev)
-+{
-+	if (!ata_dev_present(dev))
-+		return 0;
-+	if (dev->class == ATA_DEV_ATA)
-+		ata_flush_cache(ap, dev);
-+
-+	ata_standby_drive(ap, dev);
-+	ap->flags |= ATA_FLAG_SUSPENDED;
-+	return 0;
-+}
-+
- /**
-  *	ata_port_start - Set port up for dma.
-  *	@ap: Port to initialize
-@@ -4860,6 +4958,23 @@ int pci_test_config_bits(struct pci_dev 
- 
- 	return (tmp == bits->val) ? 1 : 0;
- }
-+
-+int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t state)
-+{
-+	pci_save_state(pdev);
-+	pci_disable_device(pdev);
-+	pci_set_power_state(pdev, PCI_D3hot);
-+	return 0;
-+}
-+
-+int ata_pci_device_resume(struct pci_dev *pdev)
-+{
-+	pci_set_power_state(pdev, PCI_D0);
-+	pci_restore_state(pdev);
-+	pci_enable_device(pdev);
-+	pci_set_master(pdev);
-+	return 0;
-+}
- #endif /* CONFIG_PCI */
- 
- 
-@@ -4963,4 +5078,11 @@ EXPORT_SYMBOL_GPL(ata_pci_host_stop);
- EXPORT_SYMBOL_GPL(ata_pci_init_native_mode);
- EXPORT_SYMBOL_GPL(ata_pci_init_one);
- EXPORT_SYMBOL_GPL(ata_pci_remove_one);
-+EXPORT_SYMBOL_GPL(ata_pci_device_suspend);
-+EXPORT_SYMBOL_GPL(ata_pci_device_resume);
- #endif /* CONFIG_PCI */
-+
-+EXPORT_SYMBOL_GPL(ata_device_suspend);
-+EXPORT_SYMBOL_GPL(ata_device_resume);
-+EXPORT_SYMBOL_GPL(ata_scsi_device_suspend);
-+EXPORT_SYMBOL_GPL(ata_scsi_device_resume);
---- linux-2615-rc5g3.orig/drivers/scsi/libata-scsi.c
-+++ linux-2615-rc5g3/drivers/scsi/libata-scsi.c
-@@ -396,6 +396,22 @@ void ata_dump_status(unsigned id, struct
- 	}
- }
- 
-+int ata_scsi_device_resume(struct scsi_device *sdev)
-+{
-+	struct ata_port *ap = (struct ata_port *) &sdev->host->hostdata[0];
-+	struct ata_device *dev = &ap->device[sdev->id];
-+
-+	return ata_device_resume(ap, dev);
-+}
-+
-+int ata_scsi_device_suspend(struct scsi_device *sdev)
-+{
-+	struct ata_port *ap = (struct ata_port *) &sdev->host->hostdata[0];
-+	struct ata_device *dev = &ap->device[sdev->id];
-+
-+	return ata_device_suspend(ap, dev);
-+}
-+
- /**
-  *	ata_to_sense_error - convert ATA error to SCSI error
-  *	@id: ATA device number
---- linux-2615-rc5g3.orig/drivers/scsi/scsi_sysfs.c
-+++ linux-2615-rc5g3/drivers/scsi/scsi_sysfs.c
-@@ -263,9 +263,40 @@ static int scsi_bus_match(struct device 
- 	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
- }
- 
-+static int scsi_bus_suspend(struct device * dev, pm_message_t state)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct scsi_host_template *sht = sdev->host->hostt;
-+	int err;
-+
-+	err = scsi_device_quiesce(sdev);
-+	if (err)
-+		return err;
-+
-+	if (sht->suspend)
-+		err = sht->suspend(sdev);
-+
-+	return err;
-+}
-+
-+static int scsi_bus_resume(struct device * dev)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct scsi_host_template *sht = sdev->host->hostt;
-+	int err = 0;
-+
-+	if (sht->resume)
-+		err = sht->resume(sdev);
-+
-+	scsi_device_resume(sdev);
-+	return err;
-+}
-+
- struct bus_type scsi_bus_type = {
--        .name		= "scsi",
--        .match		= scsi_bus_match,
-+	.name		= "scsi",
-+	.match		= scsi_bus_match,
-+	.suspend	= scsi_bus_suspend,
-+	.resume		= scsi_bus_resume,
- };
- 
- int scsi_sysfs_register(void)
---- linux-2615-rc5g3.orig/include/linux/ata.h
-+++ linux-2615-rc5g3/include/linux/ata.h
-@@ -141,6 +141,8 @@ enum {
- 	ATA_CMD_PACKET		= 0xA0,
- 	ATA_CMD_VERIFY		= 0x40,
- 	ATA_CMD_VERIFY_EXT	= 0x42,
-+ 	ATA_CMD_STANDBYNOW1	= 0xE0,
-+ 	ATA_CMD_IDLEIMMEDIATE	= 0xE1,
- 	ATA_CMD_INIT_DEV_PARAMS	= 0x91,
- 
- 	/* SETFEATURES stuff */
---- linux-2615-rc5g3.orig/include/linux/libata.h
-+++ linux-2615-rc5g3/include/linux/libata.h
-@@ -122,6 +122,7 @@ enum {
- 	ATA_FLAG_NOINTR		= (1 << 9), /* FIXME: Remove this once
- 					     * proper HSM is in place. */
- 	ATA_FLAG_DEBUGMSG	= (1 << 10),
-+	ATA_FLAG_SUSPENDED	= (1 << 11), /* port is suspended */
- 
- 	ATA_QCFLAG_ACTIVE	= (1 << 1), /* cmd not yet ack'd to scsi lyer */
- 	ATA_QCFLAG_SG		= (1 << 3), /* have s/g table? */
-@@ -435,6 +436,8 @@ extern void ata_std_ports(struct ata_iop
- extern int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
- 			     unsigned int n_ports);
- extern void ata_pci_remove_one (struct pci_dev *pdev);
-+extern int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t state);
-+extern int ata_pci_device_resume(struct pci_dev *pdev);
- #endif /* CONFIG_PCI */
- extern int ata_device_add(const struct ata_probe_ent *ent);
- extern void ata_host_set_remove(struct ata_host_set *host_set);
-@@ -444,6 +447,10 @@ extern int ata_scsi_queuecmd(struct scsi
- extern int ata_scsi_error(struct Scsi_Host *host);
- extern int ata_scsi_release(struct Scsi_Host *host);
- extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
-+extern int ata_scsi_device_resume(struct scsi_device *);
-+extern int ata_scsi_device_suspend(struct scsi_device *);
-+extern int ata_device_resume(struct ata_port *, struct ata_device *);
-+extern int ata_device_suspend(struct ata_port *, struct ata_device *);
- extern int ata_ratelimit(void);
- 
- /*
---- linux-2615-rc5g3.orig/include/scsi/scsi_host.h
-+++ linux-2615-rc5g3/include/scsi/scsi_host.h
-@@ -296,6 +296,12 @@ struct scsi_host_template {
- 	int (*proc_info)(struct Scsi_Host *, char *, char **, off_t, int, int);
- 
- 	/*
-+	 * suspend support
-+	 */
-+	int (*suspend)(struct scsi_device *);
-+	int (*resume)(struct scsi_device *);
-+
-+	/*
- 	 * Name of proc directory
- 	 */
- 	char *proc_name;
-
----
+> diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
+> index cf94e01..7dcc486 100644
+> --- a/drivers/scsi/sata_vsc.c
+> +++ b/drivers/scsi/sata_vsc.c
+> @@ -81,6 +81,19 @@
+>  /* Port stride */
+>  #define VSC_SATA_PORT_OFFSET           0x200
+> 
+> +/* Error interrupt status bit offsets */
+> +#define VSC_SATA_INT_ERROR_E_OFFSET    2
+> +#define VSC_SATA_INT_ERROR_P_OFFSET    4
+> +#define VSC_SATA_INT_ERROR_T_OFFSET    5
+> +#define VSC_SATA_INT_ERROR_M_OFFSET    1
+> +#define is_vsc_sata_int_err(port_idx, int_status) \
+> +        (int_status & ((1 << (VSC_SATA_INT_ERROR_E_OFFSET + (8 *
+> port_idx))) | \
+> +                       (1 << (VSC_SATA_INT_ERROR_P_OFFSET + (8 *
+> port_idx))) | \
+> +                       (1 << (VSC_SATA_INT_ERROR_T_OFFSET + (8 *
+> port_idx))) | \
+> +                       (1 << (VSC_SATA_INT_ERROR_M_OFFSET + (8 *
+> port_idx)))   \
+> +                      )\
+> +        )
+> +
+> 
+>   static u32 vsc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
+>  {
+> @@ -193,13 +206,28 @@ static irqreturn_t vsc_sata_interrupt (i
+>                         struct ata_port *ap;
+> 
+>                         ap = host_set->ports[i];
+> +
+> +                       if (is_vsc_sata_int_err(i, int_status)) {
+> +                               u32 err_status;
+> +                               printk(KERN_DEBUG "%s: ignoring
+> interrupt(s)\n", __FUNCTION__);
+> +                               err_status = ap ?
+> vsc_sata_scr_read(ap, SCR_ERROR) : 0;
+> +                               vsc_sata_scr_write(ap, SCR_ERROR, err_status);
+> +                               handled++;
+> +                       }
+> +
+>                         if (ap && !(ap->flags &
+>                                     (ATA_FLAG_PORT_DISABLED|ATA_FLAG_NOINTR))) {
+>                                 struct ata_queued_cmd *qc;
+> 
+>                                 qc = ata_qc_from_tag(ap, ap->active_tag);
+> -                               if (qc && (!(qc->tf.ctl & ATA_NIEN)))
+> +                               if (qc && (!(qc->tf.ctl & ATA_NIEN))) {
+>                                         handled += ata_host_intr(ap, qc);
+> +                               } else {
+> +                                       printk(KERN_DEBUG "%s:
+> ignoring interrupt(s)\n", __FUNCTION__);
+> +                                       ata_chk_status(ap);
+> +                                       handled++;
+> +                               }
+> +
+>                         }
+>                 }
+>         }
