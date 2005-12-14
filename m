@@ -1,45 +1,86 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Problems in the SiS IDE driver
-Date: Wed, 14 Dec 2005 19:15:05 +0000
-Message-ID: <1134587705.25663.67.camel@localhost.localdomain>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 2.6.14.3] Necessary evil to get sata_vsc to initialize with Intel iq3124h hba
+Date: Wed, 14 Dec 2005 13:10:49 -0700
+Message-ID: <20051214201049.GA20640@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964894AbVLNTPB@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fmr13.intel.com ([192.55.52.67]:55276 "EHLO
+	fmsfmr001.fm.intel.com") by vger.kernel.org with ESMTP
+	id S964862AbVLNUKz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Dec 2005 15:10:55 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: jeremy@sgi.com
 
-I've been writing/porting over SIS support to the libata code and in
-doing so I've hit a couple of corner cases that appear broken in the SiS
-code in ide/pci. 
+* libata does not care about error interrupts, so handle them locally
+* the interrupts that are ignored only appear to happen at init time
 
-If you have a prehistoric device that only does PIO0 and you plug it
-into the SiS IDE ports then the earlier SiS (pre ATA133) drivers don't
-have cases for PIO0. Fortunately PIO0 only devices are kind of rare
-nowdays.
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-The early SiS loads 0 into both timing registers. I'm not sure if that
-is a bug or correct behaviour that isn't commented. The ATA100
-generation however stuff an unset 16bit variable into the timing
-registers which seems to be very wrong indeed.
+---
 
-viz:
+ drivers/scsi/sata_vsc.c |   30 +++++++++++++++++++++++++++++-
+ 1 files changed, 29 insertions(+), 1 deletions(-)
 
-test1 is unset on entry
+applies-to: 90d8277c8775f3c09655df3b48c37fe07504d162
+710b992dc354832bb854b9fb05c8fc73c15664d8
+diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
+index cf94e01..7dcc486 100644
+--- a/drivers/scsi/sata_vsc.c
++++ b/drivers/scsi/sata_vsc.c
+@@ -81,6 +81,19 @@
+ /* Port stride */
+ #define VSC_SATA_PORT_OFFSET		0x200
+ 
++/* Error interrupt status bit offsets */
++#define VSC_SATA_INT_ERROR_E_OFFSET	2
++#define VSC_SATA_INT_ERROR_P_OFFSET	4
++#define VSC_SATA_INT_ERROR_T_OFFSET	5
++#define VSC_SATA_INT_ERROR_M_OFFSET	1
++#define is_vsc_sata_int_err(port_idx, int_status) \
++	 (int_status & ((1 << (VSC_SATA_INT_ERROR_E_OFFSET + (8 * port_idx))) | \
++		        (1 << (VSC_SATA_INT_ERROR_P_OFFSET + (8 * port_idx))) | \
++		        (1 << (VSC_SATA_INT_ERROR_T_OFFSET + (8 * port_idx))) | \
++		        (1 << (VSC_SATA_INT_ERROR_M_OFFSET + (8 * port_idx)))   \
++		       )\
++ 	 )
++
+ 
+ static u32 vsc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
+ {
+@@ -193,13 +206,28 @@ static irqreturn_t vsc_sata_interrupt (i
+ 			struct ata_port *ap;
+ 
+ 			ap = host_set->ports[i];
++
++			if (is_vsc_sata_int_err(i, int_status)) {
++				u32 err_status;
++				printk(KERN_DEBUG "%s: ignoring interrupt(s)\n", __FUNCTION__);
++				err_status = ap ? vsc_sata_scr_read(ap, SCR_ERROR) : 0;
++				vsc_sata_scr_write(ap, SCR_ERROR, err_status);
++				handled++;
++			}
++
+ 			if (ap && !(ap->flags &
+ 				    (ATA_FLAG_PORT_DISABLED|ATA_FLAG_NOINTR))) {
+ 				struct ata_queued_cmd *qc;
+ 
+ 				qc = ata_qc_from_tag(ap, ap->active_tag);
+-				if (qc && (!(qc->tf.ctl & ATA_NIEN)))
++				if (qc && (!(qc->tf.ctl & ATA_NIEN))) {
+ 					handled += ata_host_intr(ap, qc);
++				} else {
++					printk(KERN_DEBUG "%s: ignoring interrupt(s)\n", __FUNCTION__);
++					ata_chk_status(ap);
++					handled++;
++				}
++
+ 			}
+ 		}
+ 	}
+---
+0.99.9a
 
-            switch(timing) { /*             active  recovery
-                                                  v     v */
-                        case 4:         test1 = 0x30|0x01; break;
-                        case 3:         test1 = 0x30|0x03; break;
-                        case 2:         test1 = 0x40|0x04; break;
-                        case 1:         test1 = 0x60|0x07; break;
-                        default:        break;
-                }
-                pci_write_config_byte(dev, drive_pci, test1);
-
-
-And timing can be zero....
-
-Would be useful to know if this is a bug, and also what the correct
-behaviour is at this point as I don't have all the SiS data sheets.
