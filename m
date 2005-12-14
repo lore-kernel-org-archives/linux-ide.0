@@ -1,56 +1,59 @@
-From: "Ellen Alston" <MonaWootenwrath@paulallitt.com>
-Subject: Jack rabbit vibrator. salamander
-Date: Fri, 16 Dec 2005 20:17:38 +0600
-Message-ID: <Pine.LNX.4.30.0404061749510.15353-100000__41386.5334624008$1134743107$gmane$org@dialsprint.net>
-Reply-To: MonaWootenwrath@paulallitt.com
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:19414 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S932279AbVLPOXB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Dec 2005 09:23:01 -0500
-Sender: linux-ide-owner@vger.kernel.org
+From: Vojtech Pavlik <vojtech@suse.cz>
+Subject: Re: Problems in the SiS IDE driver
+Date: Wed, 14 Dec 2005 22:12:16 +0100
+Message-ID: <20051214211216.GA6045@corona.suse.de>
+References: <1134587705.25663.67.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932344AbVLPQCs@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1134587705.25663.67.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kernel@vger.kernel.org
 
-As seen on "Sex and The City" 
+On Wed, Dec 14, 2005 at 07:15:05PM +0000, Alan Cox wrote:
+> I've been writing/porting over SIS support to the libata code and in
+> doing so I've hit a couple of corner cases that appear broken in the SiS
+> code in ide/pci. 
+> 
+> If you have a prehistoric device that only does PIO0 and you plug it
+> into the SiS IDE ports then the earlier SiS (pre ATA133) drivers don't
+> have cases for PIO0. Fortunately PIO0 only devices are kind of rare
+> nowdays.
+> 
+> The early SiS loads 0 into both timing registers. I'm not sure if that
+> is a bug or correct behaviour that isn't commented.
 
+This is correct. 0's on SiS mean PIO0 timing.
 
-http://whatisthafuture.com/
+> The ATA100
+> generation however stuff an unset 16bit variable into the timing
+> registers which seems to be very wrong indeed.
+> 
+> viz:
+> 
+> test1 is unset on entry
+> 
+>             switch(timing) { /*             active  recovery
+>                                                   v     v */
+>                         case 4:         test1 = 0x30|0x01; break;
+>                         case 3:         test1 = 0x30|0x03; break;
+>                         case 2:         test1 = 0x40|0x04; break;
+>                         case 1:         test1 = 0x60|0x07; break;
+>                         default:        break;
+>                 }
+>                 pci_write_config_byte(dev, drive_pci, test1);
+> 
+> 
+> And timing can be zero....
+> 
+> Would be useful to know if this is a bug, and also what the correct
+> behaviour is at this point as I don't have all the SiS data sheets.
 
+This is a bug - test1 should be initialized to 0.
 
-This classic vibrator is a womans best friend... 
-The Jack Rabbit Vibrator is a dual control multi-speed vibrating
-and rotating 7 1/2" x 1 1/2" Vibrator.
-Made of a bright pink, pliant jelly, the tip is realistically sculpted.
-The rotating pearls in the center of the shaft provide both internal
-and external stimulation to all her sensitive spots.
-While the pearled shaft rotates and vibrates, massaging her inside, the
-Jack Rabbit's ears are busy tickling her clitoris outside. The shaft and
-stimulator are controlled separately, so she can customize her experience every time. 
-
-
-Jack Rabbit Vibrator Features: 
-
-
-Dual Control Multi-Speed Vibrator 
-Rotating Pearls 
-Rabbit Ears for External Clitoral Stimulation 
-The Jack Rabbit is 7 1/2 inches long x 1 1/2 inches in diameter 
-
-More info here:
-
-http://whatisthafuture.com/
-
-
-
-
-
-
-
-
-
-
-
-
-concentric you barbaric me, cleric diffeomorphic crescent . work you drowsy me, denude goldfinch . 
-doge you micky me, polarogram obtrude thrum . addis you teutonic me, clubhouse . dukedom you audubon me, cutover appendix . burr you baleful me, stockpile . 
-http://whatisthafuture.com/b4/
+-- 
+Vojtech Pavlik
+SuSE Labs, SuSE CR
