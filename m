@@ -1,46 +1,29 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: [PATCH 2.6.15-rc5 1/1] sgiioc4: check for no hwifs available
-Date: Tue, 13 Dec 2005 17:17:28 -0800
-Message-ID: <20051214011728.GA184713@sgi.com>
-Mime-Version: 1.0
+From: Violet Poe <patriotism@goldcoastchurch.com>
+Subject: QuickBooks Pro Edition 2004 - $49.95
+Date: Wed, 14 Dec 2005 01:52:00 -0500
+Message-ID: <14928120610.7965618804@213.42.2.22>
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.25]:15764 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S1030409AbVLNBRa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Dec 2005 20:17:30 -0500
-Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [192.26.80.2])
-	by omx3.sgi.com (8.12.11/8.12.9/linux-outbound_gateway-1.1) with ESMTP id jBE1grRZ028190
-	for <linux-ide@vger.kernel.org>; Tue, 13 Dec 2005 17:42:53 -0800
-Content-Disposition: inline
+Received: from [83.110.21.75] ([83.110.21.75]:12242 "HELO 213.42.2.22")
+	by vger.kernel.org with SMTP id S1751258AbVLNGwA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Dec 2005 01:52:00 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: jrn@sgi.com, maule@sgi.com
 
-Add a check to the sgiioc4 driver for the case where all available
-ide_hwifs structures are in use.
+Adobe Photoshop CS2 9.0 - $54.95
+http://forearm.oempx.com/
 
-Signed-off-by: Jeremy Higdon <jeremy@sgi.com>
 
---- linux-2.6.15-rc5/drivers/ide/pci/sgiioc4.c	2005-12-03 21:10:42.000000000 -0800
-+++ linux-2.6.15-rc5-new/drivers/ide/pci/sgiioc4.c	2005-12-13 01:03:52.000000000 -0800
-@@ -622,12 +622,18 @@
- 	ide_hwif_t *hwif;
- 	int h;
- 
-+	/*
-+	 * Find an empty HWIF; if none available, return -ENOMEM.
-+	 */
- 	for (h = 0; h < MAX_HWIFS; ++h) {
- 		hwif = &ide_hwifs[h];
--		/* Find an empty HWIF */
- 		if (hwif->chipset == ide_unknown)
- 			break;
- 	}
-+	if (h == MAX_HWIFS) {
-+		printk(KERN_ERR "%s: too many IDE interfaces, no room in table\n", d->name);
-+		return -ENOMEM;
-+	}
- 
- 	/*  Get the CmdBlk and CtrlBlk Base Registers */
- 	base = pci_resource_start(dev, 0) + IOC4_CMD_OFFSET;
+
+A paranoid is someone who knows a little of what's going on. 
+Never advise anyone to go to war or to marry.   
+J.F.K.--The Man and the Airport        
+I am not young enough to know everything.     
+Life's most urgent question is: what are you doing for others?  
+Joy is not a thing, it is in us.    
+The cruelest lies are often told in silence.     
+
+
+
