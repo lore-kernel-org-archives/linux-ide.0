@@ -1,86 +1,36 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2.6.14.3] Necessary evil to get sata_vsc to initialize with Intel iq3124h hba
-Date: Wed, 14 Dec 2005 13:10:49 -0700
-Message-ID: <20051214201049.GA20640@dwillia2-linux.ch.intel.com>
+From: Matthew Wilcox <matthew-Ztpu424NOJ8@public.gmane.org>
+Subject: Re: Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Wed, 14 Dec 2005 13:52:16 -0700
+Message-ID: <20051214205216.GZ9286@parisc-linux.org>
+References: <20051208133945.GA21633@srcf.ucam.org> <20051208134438.GA13507@infradead.org> <1134062330.1732.9.camel@localhost.localdomain> <43989B00.5040503@pobox.com> <20051208133144.0f39cb37.randy_d_dunlap@linux.intel.com> <1134121522.27633.7.camel@localhost.localdomain> <20051209103937.GE26185@suse.de> <1134125145.27633.32.camel@localhost.localdomain> <43996A26.8060700@pobox.com> <439A3B15.5010608@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr13.intel.com ([192.55.52.67]:55276 "EHLO
-	fmsfmr001.fm.intel.com") by vger.kernel.org with ESMTP
-	id S964862AbVLNUKz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Dec 2005 15:10:55 -0500
+Return-path: <acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <439A3B15.5010608-c4O3jRSCrQ+sTnJN9+BGXg@public.gmane.org>
+Sender: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+Errors-To: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
+	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
+List-Post: <mailto:acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Help: <mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
+	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=acpi-devel>
+To: Douglas Gilbert <dougg-c4O3jRSCrQ+sTnJN9+BGXg@public.gmane.org>
+Cc: Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, Erik Slagter <erik-KW7PGP3XNp7a5EbDDlwbIw@public.gmane.org>, Jens Axboe <axboe-l3A5Bk7waGM@public.gmane.org>, Randy Dunlap <randy_d_dunlap-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mjg59-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jeremy@sgi.com
 
-* libata does not care about error interrupts, so handle them locally
-* the interrupts that are ignored only appear to happen at init time
+On Sat, Dec 10, 2005 at 12:19:01PM +1000, Douglas Gilbert wrote:
+> I used to think that SCSI was the most maligned part of the
+> linux kernel, but that no longer seems to be the case.
+> Can ACPI be really that bad ...
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Yes.
 
----
 
- drivers/scsi/sata_vsc.c |   30 +++++++++++++++++++++++++++++-
- 1 files changed, 29 insertions(+), 1 deletions(-)
-
-applies-to: 90d8277c8775f3c09655df3b48c37fe07504d162
-710b992dc354832bb854b9fb05c8fc73c15664d8
-diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
-index cf94e01..7dcc486 100644
---- a/drivers/scsi/sata_vsc.c
-+++ b/drivers/scsi/sata_vsc.c
-@@ -81,6 +81,19 @@
- /* Port stride */
- #define VSC_SATA_PORT_OFFSET		0x200
- 
-+/* Error interrupt status bit offsets */
-+#define VSC_SATA_INT_ERROR_E_OFFSET	2
-+#define VSC_SATA_INT_ERROR_P_OFFSET	4
-+#define VSC_SATA_INT_ERROR_T_OFFSET	5
-+#define VSC_SATA_INT_ERROR_M_OFFSET	1
-+#define is_vsc_sata_int_err(port_idx, int_status) \
-+	 (int_status & ((1 << (VSC_SATA_INT_ERROR_E_OFFSET + (8 * port_idx))) | \
-+		        (1 << (VSC_SATA_INT_ERROR_P_OFFSET + (8 * port_idx))) | \
-+		        (1 << (VSC_SATA_INT_ERROR_T_OFFSET + (8 * port_idx))) | \
-+		        (1 << (VSC_SATA_INT_ERROR_M_OFFSET + (8 * port_idx)))   \
-+		       )\
-+ 	 )
-+
- 
- static u32 vsc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
- {
-@@ -193,13 +206,28 @@ static irqreturn_t vsc_sata_interrupt (i
- 			struct ata_port *ap;
- 
- 			ap = host_set->ports[i];
-+
-+			if (is_vsc_sata_int_err(i, int_status)) {
-+				u32 err_status;
-+				printk(KERN_DEBUG "%s: ignoring interrupt(s)\n", __FUNCTION__);
-+				err_status = ap ? vsc_sata_scr_read(ap, SCR_ERROR) : 0;
-+				vsc_sata_scr_write(ap, SCR_ERROR, err_status);
-+				handled++;
-+			}
-+
- 			if (ap && !(ap->flags &
- 				    (ATA_FLAG_PORT_DISABLED|ATA_FLAG_NOINTR))) {
- 				struct ata_queued_cmd *qc;
- 
- 				qc = ata_qc_from_tag(ap, ap->active_tag);
--				if (qc && (!(qc->tf.ctl & ATA_NIEN)))
-+				if (qc && (!(qc->tf.ctl & ATA_NIEN))) {
- 					handled += ata_host_intr(ap, qc);
-+				} else {
-+					printk(KERN_DEBUG "%s: ignoring interrupt(s)\n", __FUNCTION__);
-+					ata_chk_status(ap);
-+					handled++;
-+				}
-+
- 			}
- 		}
- 	}
----
-0.99.9a
-
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
