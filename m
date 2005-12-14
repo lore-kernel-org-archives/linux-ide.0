@@ -1,45 +1,44 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH/RFC 0/7] SATA ACPI suspend/resume support
-Date: Wed, 14 Dec 2005 17:29:02 -0500
-Message-ID: <43A09CAE.8090302@pobox.com>
-References: <20051213161058.594e93e6.randy_d_dunlap@linux.intel.com>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: Re: [PATCH 7/7] SATA ACPI debug-only output
+Date: Wed, 14 Dec 2005 14:42:43 -0800
+Message-ID: <20051214144243.0bc1b1ac.randy_d_dunlap@linux.intel.com>
+References: <20051213160110.193e3f61.randy_d_dunlap@linux.intel.com>
+	<20051213161028.7b459b23.randy_d_dunlap@linux.intel.com>
+	<43A09B7E.8020402@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:34009 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750745AbVLNW3F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Dec 2005 17:29:05 -0500
-In-Reply-To: <20051213161058.594e93e6.randy_d_dunlap@linux.intel.com>
+Received: from fmr18.intel.com ([134.134.136.17]:27837 "EHLO
+	orsfmr003.jf.intel.com") by vger.kernel.org with ESMTP
+	id S965036AbVLNWj2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Dec 2005 17:39:28 -0500
+In-Reply-To: <43A09B7E.8020402@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Cc: ide <linux-ide@vger.kernel.org>, axboe <axboe@suse.de>, Andrew Morton <akpm@osdl.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, axboe@suse.de
 
-Randy Dunlap wrote:
-> This is an update to the SATA suspend/resume patches
-> to use ACPI methods (specifically _SDD and _GTF).
-> This patch series applies to 2.6.15-rc5-git3.
+On Wed, 14 Dec 2005 17:23:58 -0500
+Jeff Garzik <jgarzik@pobox.com> wrote:
+
+> Randy Dunlap wrote:
+> > From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+> > 
+> > Add some extra debug-only output.
+> > 
+> >  
+> >  	status = acpi_get_devices(NULL, get_devices, winfo, NULL);
+> > -	if (ACPI_FAILURE(status))
+> > +	if (ACPI_FAILURE(status)) {
+> > +		DEBPRINT("acpi_get_devices failed\n");
 > 
-> It boots but needs lots of testing & review/comments,
-> as well as adding a call to write taskfiles on
-> COMRESET event(s) (at least on async. loss of signal) and
-> freeing ata_device->gtf_address on module unload.
-> 
-> The patchset begins with the libata suspend/resume patch from
-> Jens Axboe and builds on that.
+> don't invent your own debugprint, use libata's
 
-overall:
+DPRINTK() is too verbose for me.  Would you accept something
+that just does debug printing for probe/discovery/enumeration and
+not on every I/O?  then I could use the probe/discovery/enumeration
+level of debug printing.
 
-* we do need some way of sending BIOS settings to the devices, so I 
-grudgingly accept this, in concept.
-
-* needs a command line arg that disables ACPI use.  libata=noacpi[, 
-option...] would be my suggestion.
-
-* currently assumes that to_pci_dev(struct device *) is valid for all 
-cases.  so, need some way to limit calling the ATA ACPI functions, 
-depending on runtime hardware configuration.
-
-* at least one endian bug spotted
-
+---
+~Randy
