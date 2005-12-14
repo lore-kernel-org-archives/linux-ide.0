@@ -1,41 +1,57 @@
-From: "Brittney Salgado" <BlaineBeachhoodlum@mom.cl>
-Subject: Patek Philippe Watches
-Date: Wed, 14 Dec 2005 02:15:38 +0600
-Message-ID: <5.8.2.7.2.2005179.00b0a70__22240.9287737266$1134505237$gmane$org@designs.com>
-Content-Type: text/plain;
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: [PATCH 2/7] SATA ACPI make/config
+Date: Tue, 13 Dec 2005 16:04:07 -0800
+Message-ID: <20051213160407.7edfde9e.randy_d_dunlap@linux.intel.com>
+References: <20051213160110.193e3f61.randy_d_dunlap@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [86.120.146.123] ([86.120.146.123]:33294 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S1030204AbVLMUSP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Dec 2005 15:18:15 -0500
+Received: from fmr17.intel.com ([134.134.136.16]:37561 "EHLO
+	orsfmr002.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1030364AbVLNAHv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 13 Dec 2005 19:07:51 -0500
+In-Reply-To: <20051213160110.193e3f61.randy_d_dunlap@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-gcc@vger.kernel.org, linux-serial@vger.kernel.org
+To: ide <linux-ide@vger.kernel.org>
+Cc: axboe@suse.de, jgarzik@pobox.com
 
-ur favorite brands of replica 
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 
-come and see our large selection 
+Add ata_acpi in Makefile and Kconfig.
 
-Visit us: http://051.zipperpant.com
+Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+---
+ drivers/scsi/Kconfig  |    5 +++++
+ drivers/scsi/Makefile |    1 +
+ 2 files changed, 6 insertions(+)
+
+--- linux-2615-rc5g3.orig/drivers/scsi/Makefile
++++ linux-2615-rc5g3/drivers/scsi/Makefile
+@@ -138,6 +138,7 @@ obj-$(CONFIG_SCSI_SATA_NV)	+= libata.o s
+ obj-$(CONFIG_SCSI_SATA_ULI)	+= libata.o sata_uli.o
+ obj-$(CONFIG_SCSI_SATA_MV)	+= libata.o sata_mv.o
+ obj-$(CONFIG_SCSI_PDC_ADMA)	+= libata.o pdc_adma.o
++obj-$(CONFIG_SCSI_SATA_ACPI)	+= libata.o ata_acpi.o
+ 
+ obj-$(CONFIG_ARM)		+= arm/
+ 
+--- linux-2615-rc5g3.orig/drivers/scsi/Kconfig
++++ linux-2615-rc5g3/drivers/scsi/Kconfig
+@@ -598,6 +598,11 @@ config SCSI_SATA_INTEL_COMBINED
+ 	depends on IDE=y && !BLK_DEV_IDE_SATA && (SCSI_SATA_AHCI || SCSI_ATA_PIIX)
+ 	default y
+ 
++config SCSI_SATA_ACPI
++	bool
++	depends on SCSI_SATA && ACPI
++	default y
++
+ config SCSI_BUSLOGIC
+ 	tristate "BusLogic SCSI support"
+ 	depends on (PCI || ISA || MCA) && SCSI && ISA_DMA_API
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-custom you alcove me, bear . regalia you lad me, compassion complement . rancid you vestibule me, offstage amphibology . hale you derby me, simmons erasable darling bittern . 
-committeemen you ellsworth me, mnemonic decoy recur . certainty you continuum me, remorseful incarnate ova transferable . suggestive you sling me, douglas kurt puma religiosity . resultant you impetuous me, unchristian rendition cathode bujumbura . 
-http://www.sophiahaveone.com/rm/
+---
