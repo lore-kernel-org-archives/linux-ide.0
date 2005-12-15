@@ -1,25 +1,46 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: tp_smapi conflict with IDE, hdaps
-Date: Wed, 14 Dec 2005 22:05:46 -0500
-Message-ID: <43A0DD8A.1000203@rtr.ca>
-References: <41840b750512130635p45591633ya1df731f24a87658@mail.gmail.com>	 <1134486203.11732.60.camel@localhost.localdomain>	 <41840b750512130729y49903791xc9ceba4e6a18322e@mail.gmail.com>	 <41840b750512131041i5ae5f021h29eed3492bad88ca@mail.gmail.com>	 <1134501504.11732.120.camel@localhost.localdomain> <41840b750512140703q5c45417ag31dc79ee30d589e3@mail.gmail.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: [PATCH/RFC 0/7] SATA ACPI suspend/resume support
+Date: Wed, 14 Dec 2005 19:31:06 -0800
+Message-ID: <20051214193106.6402d56d.rdunlap@xenotime.net>
+References: <20051213161058.594e93e6.randy_d_dunlap@linux.intel.com>
+	<43A0DD3B.7070605@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:27868 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S965141AbVLODFx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Dec 2005 22:05:53 -0500
-In-Reply-To: <41840b750512140703q5c45417ag31dc79ee30d589e3@mail.gmail.com>
+Received: from xenotime.net ([66.160.160.81]:44194 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1161000AbVLODaf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Dec 2005 22:30:35 -0500
+Received: from midway ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Wed, 14 Dec 2005 19:30:34 -0800
+In-Reply-To: <43A0DD3B.7070605@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shem Multinymous <multinymous@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux kernel mailing list <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Rovert Love <rlove@rlove.org>, Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, axboe@suse.de, jgarzik@pobox.com
 
-Shem Multinymous wrote:
-..
-> Duh! It's set via SET_STREAMING instead of SELECT_SPEED.
+On Wed, 14 Dec 2005 22:04:27 -0500 Mark Lord wrote:
 
-Now added onto my TO-DO list for hdparm.
+> Randy Dunlap wrote:
+> > This is an update to the SATA suspend/resume patches
+> > to use ACPI methods (specifically _SDD and _GTF).
+> > This patch series applies to 2.6.15-rc5-git3.
+> ...
+> 
+> Randy,
+> 
+> Jeff is obviously a bit too overworked,
 
-Thanks!
+Yes, clearly, but he does good stuff.
+
+> so I'll save him the trouble by THANKING YOU
+> for working on this!
+> 
+> Keep at it, and it'll make it in.
+> Lots of us need it.  LONG overdue.
+> 
+> Cheers!
+
+Thanks, I'll make the changes that he suggested and resend them.
+
+---
+~Randy
