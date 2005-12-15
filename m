@@ -1,60 +1,55 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: Re: [PATCH 7/7] SATA ACPI debug-only output
-Date: Wed, 14 Dec 2005 15:08:17 -0800
-Message-ID: <20051214150817.5dcd12ac.randy_d_dunlap@linux.intel.com>
-References: <20051213160110.193e3f61.randy_d_dunlap@linux.intel.com>
-	<20051213161028.7b459b23.randy_d_dunlap@linux.intel.com>
-	<43A09B7E.8020402@pobox.com>
-	<20051214144243.0bc1b1ac.randy_d_dunlap@linux.intel.com>
-	<43A09FB8.2070700@pobox.com>
+From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Subject: [git patches] ide update
+Date: Thu, 15 Dec 2005 03:03:23 +0100 (CET)
+Message-ID: <Pine.GSO.4.64.0512150224180.19479@mion.elka.pw.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr20.intel.com ([134.134.136.19]:20422 "EHLO
-	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
-	id S965042AbVLNXEt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Dec 2005 18:04:49 -0500
-In-Reply-To: <43A09FB8.2070700@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030384AbVLOCui@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, axboe@suse.de, petkov@uni-muenster.de
 
-On Wed, 14 Dec 2005 17:42:00 -0500
-Jeff Garzik <jgarzik@pobox.com> wrote:
 
-> Randy Dunlap wrote:
-> > On Wed, 14 Dec 2005 17:23:58 -0500
-> > Jeff Garzik <jgarzik@pobox.com> wrote:
-> > 
-> > 
-> >>Randy Dunlap wrote:
-> >>
-> >>>From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-> >>>
-> >>>Add some extra debug-only output.
-> >>>
-> >>> 
-> >>> 	status = acpi_get_devices(NULL, get_devices, winfo, NULL);
-> >>>-	if (ACPI_FAILURE(status))
-> >>>+	if (ACPI_FAILURE(status)) {
-> >>>+		DEBPRINT("acpi_get_devices failed\n");
-> >>
-> >>don't invent your own debugprint, use libata's
-> > 
-> > 
-> > DPRINTK() is too verbose for me.  Would you accept something
-> > that just does debug printing for probe/discovery/enumeration and
-> > not on every I/O?  then I could use the probe/discovery/enumeration
-> > level of debug printing.
-> 
-> Dig up the patches from Borislav Petkov on linux-ide that made debug 
-> messages more fine-grained.  Then we can specific things on and off at 
-> runtime...
+Some missing bits for 2.6.15.
 
-OK, I found 1/2 in the archive but not 2/2.
-Borislav, did you send 2/2?  Can you resend it, please?
 
----
-~Randy
+Please pull from:
+
+master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
+
+to obtain following changes:
+
+Bartlomiej Zolnierkiewicz:
+   ide-disk: flush cache after calling del_gendisk()
+   ide: cleanup ide.h
+   ide: cleanup ide_driver_t
+   ide-cd: remove write-only cmd field from struct cdrom_info
+
+Daniel Drake:
+   via82cxxx IDE: Add VT8251 ISA bridge
+
+Jeremy Higdon:
+   sgiioc4: check for no hwifs available
+
+Jordan Crouse:
+   ide: core modifications for AU1200
+   ide: AU1200 IDE update
+
+Marcelo Tosatti:
+   ide: MPC8xx IDE depends on IDE=y && BLK_DEV_IDE=y
+
+
+  drivers/ide/Kconfig                       |   10
+  drivers/ide/ide-cd.c                      |    7
+  drivers/ide/ide-cd.h                      |    1
+  drivers/ide/ide-disk.c                    |    4
+  drivers/ide/ide-dma.c                     |   15
+  drivers/ide/mips/Makefile                 |    3
+  drivers/ide/mips/au1xxx-ide.c             | 1496 ++++++++++--------------------
+  drivers/ide/pci/sgiioc4.c                 |    8
+  drivers/ide/pci/via82cxxx.c               |    1
+  include/asm-mips/mach-au1x00/au1xxx_ide.h |   22
+  include/linux/ide.h                       |  131 --
+  include/linux/pci_ids.h                   |    1
+  12 files changed, 566 insertions(+), 1133 deletions(-)
