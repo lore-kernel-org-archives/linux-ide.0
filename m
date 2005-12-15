@@ -1,34 +1,25 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH/RFC 0/7] SATA ACPI suspend/resume support
-Date: Wed, 14 Dec 2005 22:04:27 -0500
-Message-ID: <43A0DD3B.7070605@rtr.ca>
-References: <20051213161058.594e93e6.randy_d_dunlap@linux.intel.com>
+Subject: Re: tp_smapi conflict with IDE, hdaps
+Date: Wed, 14 Dec 2005 22:05:46 -0500
+Message-ID: <43A0DD8A.1000203@rtr.ca>
+References: <41840b750512130635p45591633ya1df731f24a87658@mail.gmail.com>	 <1134486203.11732.60.camel@localhost.localdomain>	 <41840b750512130729y49903791xc9ceba4e6a18322e@mail.gmail.com>	 <41840b750512131041i5ae5f021h29eed3492bad88ca@mail.gmail.com>	 <1134501504.11732.120.camel@localhost.localdomain> <41840b750512140703q5c45417ag31dc79ee30d589e3@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:27356 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S965141AbVLODEe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Dec 2005 22:04:34 -0500
-In-Reply-To: <20051213161058.594e93e6.randy_d_dunlap@linux.intel.com>
+Received: from rtr.ca ([64.26.128.89]:27868 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S965141AbVLODFx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Dec 2005 22:05:53 -0500
+In-Reply-To: <41840b750512140703q5c45417ag31dc79ee30d589e3@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Cc: ide <linux-ide@vger.kernel.org>, axboe <axboe@suse.de>, jgarzik <jgarzik@pobox.com>
+To: Shem Multinymous <multinymous@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux kernel mailing list <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Rovert Love <rlove@rlove.org>, Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org
 
-Randy Dunlap wrote:
-> This is an update to the SATA suspend/resume patches
-> to use ACPI methods (specifically _SDD and _GTF).
-> This patch series applies to 2.6.15-rc5-git3.
-...
+Shem Multinymous wrote:
+..
+> Duh! It's set via SET_STREAMING instead of SELECT_SPEED.
 
-Randy,
+Now added onto my TO-DO list for hdparm.
 
-Jeff is obviously a bit too overworked,
-so I'll save him the trouble by THANKING YOU
-for working on this!
-
-Keep at it, and it'll make it in.
-Lots of us need it.  LONG overdue.
-
-Cheers!
+Thanks!
