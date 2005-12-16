@@ -1,36 +1,43 @@
-From: Francois Romieu <romieu@fr.zoreil.com>
-Subject: Re: PATCH: libata - oldpiix driver
-Date: Fri, 16 Dec 2005 21:59:55 +0100
-Message-ID: <20051216205955.GA21669@electric-eye.fr.zoreil.com>
-References: <1134053330.17102.28.camel@localhost.localdomain>
+From: Sebastian Kuzminsky <seb.kuzminsky@gmail.com>
+Subject: do I have a bad cable?
+Date: Fri, 16 Dec 2005 14:29:57 -0700
+Message-ID: <7f55de720512161329n79873a3s3f9b7f79db29e0d4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from electric-eye.fr.zoreil.com ([213.41.134.224]:37002 "EHLO
-	fr.zoreil.com") by vger.kernel.org with ESMTP id S1750823AbVLPVBJ
+Received: from wproxy.gmail.com ([64.233.184.202]:3118 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932457AbVLPV36 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 16 Dec 2005 16:01:09 -0500
+	Fri, 16 Dec 2005 16:29:58 -0500
+Received: by wproxy.gmail.com with SMTP id 57so675931wri
+        for <linux-ide@vger.kernel.org>; Fri, 16 Dec 2005 13:29:58 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1134053330.17102.28.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Alan Cox <alan@lxorguk.ukuu.org.uk> :
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.14-mm2/drivers/scsi/pata_oldpiix.c linux-2.6.14-mm2/drivers/scsi/pata_oldpiix.c
-> --- linux.vanilla-2.6.14-mm2/drivers/scsi/pata_oldpiix.c	1970-01-01 01:00:00.000000000 +0100
-> +++ linux-2.6.14-mm2/drivers/scsi/pata_oldpiix.c	2005-12-07 17:26:37.000000000 +0000
-[...]
-> +static int oldpiix_qc_issue_prot(struct ata_queued_cmd *qc)
-> +{
-[...]
-> +		if(adev->dma_mode)
-> +			oldpiix_set_dmamode(ap, adev);
-> +		else
-> +			oldpiix_set_dmamode(ap, adev);
+I've got a system with a pair of Promise TX2 cards (Promise 20269
+chipset, PCI card, 2xPATA controller on each).  Each PATA channel has
+a master only, no slave.  All four drives are Maxtor 5A300J0 (300 GB,
+5400 RPM, 2 MB Cache, ATA133).  This is run as a RAID5 and works fine.
+ This is with 2.6.15-rc5, compiled with Debian's gcc 4.0.3 prerelease
+(4.0.2-5 20051201).
 
-Where is the difference ?
+Very occasionally I'll get this error:
+
+Dec 15 22:04:16 snappy kernel: hdk: dma_intr: status=0x51 { DriveReady
+SeekComplete Error }
+Dec 15 22:04:16 snappy kernel: hdk: dma_intr: error=0x84 {
+DriveStatusError BadCRC }
+Dec 15 22:04:16 snappy kernel: ide: failed opcode was: unknown
+
+I'm guessing the BadCRC means I'm getting CRC errors between the drive
+and the HBA?  And I'm guessing that means I have a bad cable?  It's a
+pretty nice rounded 80-pin cable, FWIW.
+
+Any advice is appreciated...
+
 
 --
-Ueimor
+Sebastian Kuzminsky
