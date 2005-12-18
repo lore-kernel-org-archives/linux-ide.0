@@ -1,16 +1,16 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 11/14] ahci: convert to new reset mechanism
-Date: Sun, 18 Dec 2005 22:49:24 +0900
-Message-ID: <20051218134924.GL31571@htj.dyndns.org>
+Subject: [PATCH 13/14] ahci: add constants for SRST
+Date: Sun, 18 Dec 2005 22:51:10 +0900
+Message-ID: <20051218135110.GN31571@htj.dyndns.org>
 References: <20051218133305.GA31571@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.207]:52348 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S965116AbVLRNt3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Dec 2005 08:49:29 -0500
-Received: by zproxy.gmail.com with SMTP id 14so1716240nzn
-        for <linux-ide@vger.kernel.org>; Sun, 18 Dec 2005 05:49:29 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.206]:4788 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S965135AbVLRNvP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Dec 2005 08:51:15 -0500
+Received: by zproxy.gmail.com with SMTP id 14so1716461nzn
+        for <linux-ide@vger.kernel.org>; Sun, 18 Dec 2005 05:51:14 -0800 (PST)
 Content-Disposition: inline
 In-Reply-To: <20051218133305.GA31571@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
@@ -18,148 +18,37 @@ List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, albertcc@tw.ibm.com, liml@rtr.ca
 Cc: linux-ide@vger.kernel.org
 
-Convert ahci ->phy_reset to ->hard_reset.  The original ->phy_reset
-simply called __sata_phy_reset() to perform reset; however, AHCI spec
-mandates to turn off START bit during reset.  New ->hard_reset method
-properly follows AHCI reset procedure.
+Add constants needed to perform SRST.  This is preparation for adding
+softreset method.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 Index: work/drivers/scsi/ahci.c
 ===================================================================
---- work.orig/drivers/scsi/ahci.c	2005-12-18 22:23:38.000000000 +0900
-+++ work/drivers/scsi/ahci.c	2005-12-18 22:24:04.000000000 +0900
-@@ -186,7 +186,8 @@ static void ahci_scr_write (struct ata_p
- static int ahci_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
- static int ahci_qc_issue(struct ata_queued_cmd *qc);
- static irqreturn_t ahci_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
--static void ahci_phy_reset(struct ata_port *ap);
-+static int ahci_hardreset(struct ata_port *ap, unsigned int *classes);
-+static void ahci_postreset(struct ata_port *ap, const unsigned int *classes);
- static void ahci_irq_clear(struct ata_port *ap);
- static void ahci_eng_timeout(struct ata_port *ap);
- static int ahci_port_start(struct ata_port *ap);
-@@ -226,7 +227,8 @@ static const struct ata_port_operations 
+--- work.orig/drivers/scsi/ahci.c	2005-12-18 20:11:01.000000000 +0900
++++ work/drivers/scsi/ahci.c	2005-12-18 20:12:01.000000000 +0900
+@@ -66,6 +66,8 @@ enum {
+ 	AHCI_IRQ_ON_SG		= (1 << 31),
+ 	AHCI_CMD_ATAPI		= (1 << 5),
+ 	AHCI_CMD_WRITE		= (1 << 6),
++	AHCI_CMD_RESET		= (1 << 8),
++	AHCI_CMD_CLR_BUSY	= (1 << 10),
  
- 	.tf_read		= ahci_tf_read,
+ 	RX_FIS_D2H_REG		= 0x40,	/* offset of D2H Register FIS data */
  
--	.phy_reset		= ahci_phy_reset,
-+	.hard_reset		= ahci_hardreset,
-+	.post_reset		= ahci_postreset,
+@@ -85,6 +87,7 @@ enum {
  
- 	.qc_prep		= ahci_qc_prep,
- 	.qc_issue		= ahci_qc_issue,
-@@ -248,8 +250,7 @@ static const struct ata_port_info ahci_p
- 	{
- 		.sht		= &ahci_sht,
- 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
--				  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
--				  ATA_FLAG_PIO_DMA,
-+				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
- 		.port_ops	= &ahci_ops,
-@@ -474,17 +475,30 @@ static void ahci_start_engine(struct ata
- 	readl(port_mmio + PORT_CMD); /* flush */
- }
+ 	/* HOST_CAP bits */
+ 	HOST_CAP_64		= (1 << 31), /* PCI DAC (64-bit DMA) support */
++	HOST_CAP_CLO		= (1 << 24), /* Command List Override support */
  
--static void ahci_phy_reset(struct ata_port *ap)
-+static int ahci_wait_for_bit(void __iomem *reg, u32 mask, u32 val,
-+			     unsigned long interval_msec,
-+			     unsigned long timeout_msec)
- {
--	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
--	struct ata_taskfile tf;
--	struct ata_device *dev = &ap->device[0];
--	u32 new_tmp, tmp;
-+	unsigned long timeout;
-+	u32 tmp;
-+
-+	timeout = jiffies + (timeout_msec * HZ) / 1000;
-+	do {
-+		tmp = readl(reg);
-+		if ((tmp & mask) != val)
-+			return 0;
-+		msleep(interval_msec);
-+	} while (time_before(jiffies, timeout));
- 
--	__sata_phy_reset(ap);
-+	return -1;
-+}
- 
--	if (ap->flags & ATA_FLAG_PORT_DISABLED)
--		return;
-+static unsigned int ahci_dev_classify(struct ata_port *ap)
-+{
-+	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
-+	struct ata_taskfile tf;
-+	unsigned int class;
-+	u32 tmp;
- 
- 	tmp = readl(port_mmio + PORT_SIG);
- 	tf.lbah		= (tmp >> 24)	& 0xff;
-@@ -492,15 +506,58 @@ static void ahci_phy_reset(struct ata_po
- 	tf.lbal		= (tmp >> 8)	& 0xff;
- 	tf.nsect	= (tmp)		& 0xff;
- 
--	dev->class = ata_dev_classify(&tf);
--	if (!ata_dev_present(dev)) {
--		ata_port_disable(ap);
--		return;
--	}
-+	class = ata_dev_classify(&tf);
-+	if (class == ATA_DEV_UNKNOWN)
-+		class = ATA_DEV_NONE;
-+	return class;
-+}
-+
-+static int ahci_hardreset(struct ata_port *ap, unsigned int *classes)
-+{
-+	void __iomem *mmio = ap->host_set->mmio_base;
-+	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
-+	u32 tmp;
-+
-+	DPRINTK("ENTER\n");
-+
-+	/* stop engine */
-+	ahci_stop_engine(ap);
-+
-+	/* issue COMRESET */
-+	writel(0x301, port_mmio + PORT_SCR_CTL);
-+	readl(port_mmio + PORT_SCR_CTL); /* flush */
-+	msleep(1);
-+	writel(0x300, port_mmio + PORT_SCR_CTL);
-+	readl(port_mmio + PORT_SCR_CTL); /* flush */
-+
-+	msleep(200);
-+	ahci_wait_for_bit(port_mmio + PORT_SCR_STAT, 0xf, 0x1, 1, 5000);
-+
-+	/* clear SATA phy error, if any */
-+	tmp = readl(port_mmio + PORT_SCR_ERR);
-+	writel(tmp, port_mmio + PORT_SCR_ERR);
-+
-+	/* re-start engine */
-+	ahci_start_engine(ap);
-+
-+	classes[0] = ATA_DEV_NONE;
-+	if (sata_dev_present(ap))
-+		classes[0] = ahci_dev_classify(ap);
-+
-+	DPRINTK("EXIT, class=%u\n", classes[0]);
-+	return 0;
-+}
-+
-+static void ahci_postreset(struct ata_port *ap, const unsigned int *classes)
-+{
-+	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
-+	u32 new_tmp, tmp;
-+
-+	ata_std_postreset(ap, classes);
- 
- 	/* Make sure port's ATAPI bit is set appropriately */
- 	new_tmp = tmp = readl(port_mmio + PORT_CMD);
--	if (dev->class == ATA_DEV_ATAPI)
-+	if (classes[0] == ATA_DEV_ATAPI)
- 		new_tmp |= PORT_CMD_ATAPI;
- 	else
- 		new_tmp &= ~PORT_CMD_ATAPI;
+ 	/* registers for each SATA port */
+ 	PORT_LST_ADDR		= 0x00, /* command list DMA addr */
+@@ -138,6 +141,7 @@ enum {
+ 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
+ 	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
+ 	PORT_CMD_FIS_RX		= (1 << 4), /* Enable FIS receive DMA engine */
++	PORT_CMD_CLO		= (1 << 3), /* Command list override */
+ 	PORT_CMD_POWER_ON	= (1 << 2), /* Power up device */
+ 	PORT_CMD_SPIN_UP	= (1 << 1), /* Spin up device */
+ 	PORT_CMD_START		= (1 << 0), /* Enable port DMA engine */
