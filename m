@@ -1,175 +1,168 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] ata_piix: fix MAP VALUE interpretation for for ICH6/7
-Date: Sun, 18 Dec 2005 17:17:07 +0900
-Message-ID: <20051218081707.GA4129@htj.dyndns.org>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [PATCH 2.6.14.3] Necessary evil to get sata_vsc to initialize with Intel iq3124h hba
+Date: Sun, 18 Dec 2005 01:19:04 -0800
+Message-ID: <20051218091904.GA39033@sgi.com>
+References: <20051214201049.GA20640@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.200]:20679 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932511AbVLRIRM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Dec 2005 03:17:12 -0500
-Received: by zproxy.gmail.com with SMTP id 14so1682186nzn
-        for <linux-ide@vger.kernel.org>; Sun, 18 Dec 2005 00:17:12 -0800 (PST)
+Received: from omx2-ext.sgi.com ([192.48.171.19]:12164 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S932511AbVLRJTL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Dec 2005 04:19:11 -0500
 Content-Disposition: inline
+In-Reply-To: <20051214201049.GA20640@dwillia2-linux.ch.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Dan Williams <dan.j.williams@intel.com>
 Cc: linux-ide@vger.kernel.org
 
-Unlike their older siblings, ICH6 and 7 use different scheme for MAP
-VALUE.  This patch makes ata_piix interpret MV properly on ICH6/7.
+On Wed, Dec 14, 2005 at 01:10:49PM -0700, Dan Williams wrote:
+> * libata does not care about error interrupts, so handle them locally
+> * the interrupts that are ignored only appear to happen at init time
+> 
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-Pre-ICH6/7
+Okay, I finally had some time to look at this.  A few comments . . . .
 
- The value of these bits indicate the address range the SATA port
- responds to, and whether or not the SATA and IDE functions are
- combined.
+> ---
+> 
+>  drivers/scsi/sata_vsc.c |   30 +++++++++++++++++++++++++++++-
+>  1 files changed, 29 insertions(+), 1 deletions(-)
+> 
+> applies-to: 90d8277c8775f3c09655df3b48c37fe07504d162
+> 710b992dc354832bb854b9fb05c8fc73c15664d8
+> diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
+> index cf94e01..7dcc486 100644
+> --- a/drivers/scsi/sata_vsc.c
+> +++ b/drivers/scsi/sata_vsc.c
+> @@ -81,6 +81,19 @@
+>  /* Port stride */
+>  #define VSC_SATA_PORT_OFFSET		0x200
+>  
+> +/* Error interrupt status bit offsets */
+> +#define VSC_SATA_INT_ERROR_E_OFFSET	2
+> +#define VSC_SATA_INT_ERROR_P_OFFSET	4
+> +#define VSC_SATA_INT_ERROR_T_OFFSET	5
+> +#define VSC_SATA_INT_ERROR_M_OFFSET	1
+> +#define is_vsc_sata_int_err(port_idx, int_status) \
+> +	 (int_status & ((1 << (VSC_SATA_INT_ERROR_E_OFFSET + (8 * port_idx))) | \
+> +		        (1 << (VSC_SATA_INT_ERROR_P_OFFSET + (8 * port_idx))) | \
+> +		        (1 << (VSC_SATA_INT_ERROR_T_OFFSET + (8 * port_idx))) | \
+> +		        (1 << (VSC_SATA_INT_ERROR_M_OFFSET + (8 * port_idx)))   \
+> +		       )\
+> + 	 )
+> +
 
- 000 = Non-combined. P0 is primary master. P1 is secondary master.
- 001 = Non-combined. P0 is secondary master. P1 is primary master.
- 100 = Combined. P0 is primary master. P1 is primary slave. P-ATA is
-       2:0 Map Value secondary.
- 101 = Combined. P0 is primary slave. P1 is primary master. P-ATA is
-       secondary.
- 110 = Combined. P-ATA is primary. P0 is secondary master. P1 is
-       secondary slave.
- 111 = Combined. P-ATA is primary. P0 is secondary slave. P1 is
-       secondary master.
+I just want to be sure I'm getting this right.
+Here you're specifying an interest in the "Data Integrity", "Unrecognized FIS
+Reception", "FIFO" errors, and "PHY went from Not-Ready to Ready" bits (text
+is using names in VSC7174 manual).  Are these the four bits that have caused
+you trouble, and you haven't had problems with the "CRC Error" and "RERR Received",
+and "PHY Ready Change-Of-State" bits?
 
-ICH6/7
+>  static u32 vsc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
+>  {
+> @@ -193,13 +206,28 @@ static irqreturn_t vsc_sata_interrupt (i
+>  			struct ata_port *ap;
+>  
+>  			ap = host_set->ports[i];
+> +
+> +			if (is_vsc_sata_int_err(i, int_status)) {
+> +				u32 err_status;
+> +				printk(KERN_DEBUG "%s: ignoring interrupt(s)\n", __FUNCTION__);
+> +				err_status = ap ? vsc_sata_scr_read(ap, SCR_ERROR) : 0;
+> +				vsc_sata_scr_write(ap, SCR_ERROR, err_status);
+> +				handled++;
+> +			}
+> +
 
- Map Value - R/W. Map Value (MV): The value in the bits below indicate
-the address range the SATA ports responds to, and whether or not the
-PATA and SATA functions are combined. When in combined mode, the AHCI
-memory space is not available and AHCI may not be used.
+This is short circuiting the normal LIBATA interrupt handling, right?
+Later, if LIBATA becomes interested in these bits, they'll already be
+cleared.
 
- 00 = Non-combined. P0 is primary master, P2 is the primary slave. P1
-      is secondary master, P3 is the 1:0 secondary slave (desktop
-      only). P0 is primary master, P2 is the primary slave (mobile
-      only).
- 01 = Combined. IDE is primary. P1 is secondary master, P3 is the
-      secondary slave. (desktop only)
- 10 = Combined. P0 is primary master. P2 is primary slave. IDE is secondary
- 11 = Reserved
+Also, if ap actually is NULL, the vsc_sata_scr_write() call will fail
+when it tries to dereference ap.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
 
---
+>  			if (ap && !(ap->flags &
+>  				    (ATA_FLAG_PORT_DISABLED|ATA_FLAG_NOINTR))) {
+>  				struct ata_queued_cmd *qc;
+>  
+>  				qc = ata_qc_from_tag(ap, ap->active_tag);
+> -				if (qc && (!(qc->tf.ctl & ATA_NIEN)))
+> +				if (qc && (!(qc->tf.ctl & ATA_NIEN))) {
+>  					handled += ata_host_intr(ap, qc);
+> +				} else {
+> +					printk(KERN_DEBUG "%s: ignoring interrupt(s)\n", __FUNCTION__);
+> +					ata_chk_status(ap);
+> +					handled++;
+> +				}
+> +
 
-Jeff, without this patch, ata_piix misdetects my ICH7's combined mode,
-ending up not applying bridge limits to PX-710SA and configuring IDE
-drive on 40-c cable to UDMA/66.
+I don't think I fully understand the problem you're trying to solve, but
+the gist seems to be that you're taking endless interrupts even when
+ATA_NIEN is set.  So you add the dummy ata_chk_status call to clear
+interrupts that the libata core isn't interested in.  But ata_chk_status
+doesn't actually clear it unless you first write to the SCR_ERROR
+register above?
 
-Thanks.
+FWIW, on my Vitesse chip, the int_status and SCR_ERROR bits that are set and
+when this code is called this code are 0x83 and 0x50002, respectively.  But
+not clearing them doesn't seem to cause a problem . . . this must be different
+behavior in your chip (presumably the Intel branch).
 
-Index: work/drivers/scsi/ata_piix.c
-===================================================================
---- work.orig/drivers/scsi/ata_piix.c	2005-12-18 16:32:04.000000000 +0900
-+++ work/drivers/scsi/ata_piix.c	2005-12-18 16:55:28.000000000 +0900
-@@ -101,9 +101,11 @@ enum {
- 	ICH5_PCS		= 0x92,	/* port control and status */
- 	PIIX_SCC		= 0x0A, /* sub-class code register */
+Can you try this redo of your patch?  I get this printed with it:
+
+vsc_sata_interrupt: clearing interrupt,status 8300; sata err status 50002
+
+jeremy
+
+--- linux-2.6.15-rc5/drivers/scsi/sata_vsc.c	2005-12-03 21:10:42.000000000 -0800
++++ linux-2.6.15-rc5-new/drivers/scsi/sata_vsc.c	2005-12-18 00:41:29.000000000 -0800
+@@ -81,6 +81,19 @@
+ /* Port stride */
+ #define VSC_SATA_PORT_OFFSET		0x200
  
--	PIIX_FLAG_AHCI		= (1 << 28), /* AHCI possible */
--	PIIX_FLAG_CHECKINTR	= (1 << 29), /* make sure PCI INTx enabled */
--	PIIX_FLAG_COMBINED	= (1 << 30), /* combined mode possible */
-+	PIIX_FLAG_AHCI		= (1 << 27), /* AHCI possible */
-+	PIIX_FLAG_CHECKINTR	= (1 << 28), /* make sure PCI INTx enabled */
-+	PIIX_FLAG_COMBINED	= (1 << 29), /* combined mode possible */
-+	/* ICH6/7 use different scheme for map value */
-+	PIIX_FLAG_COMBINED_ICH6	= PIIX_FLAG_COMBINED | (1 << 30),
- 
- 	/* combined mode.  if set, PATA is channel 0.
- 	 * if clear, PATA is channel 1.
-@@ -291,8 +293,8 @@ static struct ata_port_info piix_port_in
- 	{
- 		.sht		= &piix_sht,
- 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
--				  PIIX_FLAG_COMBINED | PIIX_FLAG_CHECKINTR |
--				  ATA_FLAG_SLAVE_POSS,
-+				  PIIX_FLAG_COMBINED_ICH6 |
-+				  PIIX_FLAG_CHECKINTR | ATA_FLAG_SLAVE_POSS,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f,	/* udma0-6 */
-@@ -303,8 +305,9 @@ static struct ata_port_info piix_port_in
- 	{
- 		.sht		= &piix_sht,
- 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
--				  PIIX_FLAG_COMBINED | PIIX_FLAG_CHECKINTR |
--				  ATA_FLAG_SLAVE_POSS | PIIX_FLAG_AHCI,
-+				  PIIX_FLAG_COMBINED_ICH6 |
-+				  PIIX_FLAG_CHECKINTR | ATA_FLAG_SLAVE_POSS |
-+				  PIIX_FLAG_AHCI,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f,	/* udma0-6 */
-@@ -674,6 +677,7 @@ static int piix_init_one (struct pci_dev
- 	struct ata_port_info *port_info[2];
- 	unsigned int combined = 0;
- 	unsigned int pata_chan = 0, sata_chan = 0;
-+	unsigned long host_flags;
- 
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &pdev->dev,
-@@ -686,7 +690,9 @@ static int piix_init_one (struct pci_dev
- 	port_info[0] = &piix_port_info[ent->driver_data];
- 	port_info[1] = &piix_port_info[ent->driver_data];
- 
--	if (port_info[0]->host_flags & PIIX_FLAG_AHCI) {
-+	host_flags = port_info[0]->host_flags;
++/* Error interrupt status bit offsets */
++#define VSC_SATA_INT_ERROR_E_OFFSET	2
++#define VSC_SATA_INT_ERROR_P_OFFSET	4
++#define VSC_SATA_INT_ERROR_T_OFFSET	5
++#define VSC_SATA_INT_ERROR_M_OFFSET	1
++#define is_vsc_sata_int_err(port_idx, int_status) \
++	 (int_status & ((1 << (VSC_SATA_INT_ERROR_E_OFFSET + (8 * port_idx))) | \
++		        (1 << (VSC_SATA_INT_ERROR_P_OFFSET + (8 * port_idx))) | \
++		        (1 << (VSC_SATA_INT_ERROR_T_OFFSET + (8 * port_idx))) | \
++		        (1 << (VSC_SATA_INT_ERROR_M_OFFSET + (8 * port_idx)))   \
++		       )\
++ 	 )
 +
-+	if (host_flags & PIIX_FLAG_AHCI) {
- 		u8 tmp;
- 		pci_read_config_byte(pdev, PIIX_SCC, &tmp);
- 		if (tmp == PIIX_AHCI_DEVICE) {
-@@ -696,16 +702,35 @@ static int piix_init_one (struct pci_dev
+ 
+ static u32 vsc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
+ {
+@@ -206,8 +219,25 @@
+ 				struct ata_queued_cmd *qc;
+ 
+ 				qc = ata_qc_from_tag(ap, ap->active_tag);
+-				if (qc && (!(qc->tf.ctl & ATA_NIEN)))
++				if (qc && (!(qc->tf.ctl & ATA_NIEN))) {
+ 					handled += ata_host_intr(ap, qc);
++				} else if (is_vsc_sata_int_err(i, int_status)) {
++					/*
++					 * On some chips, there will be an endless
++					 * interrupt loop if the SCR_ERROR interrupts
++					 * are not cleared.
++					 */
++					u32 err_status;
++					err_status = vsc_sata_scr_read(ap, SCR_ERROR);
++					printk(KERN_DEBUG "%s: clearing interrupt,"
++					       "status %x; sata err status %x\n",
++					       __FUNCTION__,
++					       int_status, err_status);
++					vsc_sata_scr_write(ap, SCR_ERROR, err_status);
++					/* Clear interrupt status */
++					ata_chk_status(ap);
++					handled++;
++				}
+ 			}
  		}
  	}
- 
--	if (port_info[0]->host_flags & PIIX_FLAG_COMBINED) {
-+	if (host_flags & PIIX_FLAG_COMBINED) {
- 		u8 tmp;
- 		pci_read_config_byte(pdev, ICH5_PMR, &tmp);
- 
--		if (tmp & PIIX_COMB) {
--			combined = 1;
--			if (tmp & PIIX_COMB_PATA_P0)
-+		if (host_flags & PIIX_FLAG_COMBINED_ICH6) {
-+			switch (tmp) {
-+			case 0:
-+				break;
-+			case 1:
-+				combined = 1;
- 				sata_chan = 1;
--			else
-+				break;
-+			case 2:
-+				combined = 1;
- 				pata_chan = 1;
-+				break;
-+			case 3:
-+				dev_printk(KERN_WARNING, &pdev->dev,
-+					   "invalid MAP value %u\n", tmp);
-+				break;
-+			}
-+		} else {
-+			if (tmp & PIIX_COMB) {
-+				combined = 1;
-+				if (tmp & PIIX_COMB_PATA_P0)
-+					sata_chan = 1;
-+				else
-+					pata_chan = 1;
-+			}
- 		}
- 	}
- 
-@@ -715,7 +740,7 @@ static int piix_init_one (struct pci_dev
- 	 * MSI is disabled (and it is disabled, as we don't use
- 	 * message-signalled interrupts currently).
- 	 */
--	if (port_info[0]->host_flags & PIIX_FLAG_CHECKINTR)
-+	if (host_flags & PIIX_FLAG_CHECKINTR)
- 		pci_intx(pdev, 1);
- 
- 	if (combined) {
