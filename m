@@ -1,16 +1,16 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 10/14] ahci: separate out ahci_stop/start_engine()
-Date: Sun, 18 Dec 2005 22:48:22 +0900
-Message-ID: <20051218134822.GK31571@htj.dyndns.org>
+Subject: [PATCH 09/14] ata_piix: convert sata to new reset mechanism
+Date: Sun, 18 Dec 2005 22:47:17 +0900
+Message-ID: <20051218134717.GJ31571@htj.dyndns.org>
 References: <20051218133305.GA31571@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.194]:31465 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S965115AbVLRNs1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Dec 2005 08:48:27 -0500
-Received: by zproxy.gmail.com with SMTP id 14so1716120nzn
-        for <linux-ide@vger.kernel.org>; Sun, 18 Dec 2005 05:48:27 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.193]:40656 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S965114AbVLRNrW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Dec 2005 08:47:22 -0500
+Received: by zproxy.gmail.com with SMTP id 14so1715993nzn
+        for <linux-ide@vger.kernel.org>; Sun, 18 Dec 2005 05:47:22 -0800 (PST)
 Content-Disposition: inline
 In-Reply-To: <20051218133305.GA31571@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
@@ -18,98 +18,99 @@ List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, albertcc@tw.ibm.com, liml@rtr.ca
 Cc: linux-ide@vger.kernel.org
 
-Separate out ahci_stop/start_engine() from ahci_restart_port().  This
-is preparation for conversion to new reset mechanism.
+Convert ata_piix sata ->phy_reset to ->soft_reset.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Index: work/drivers/scsi/ahci.c
+Index: work/drivers/scsi/ata_piix.c
 ===================================================================
---- work.orig/drivers/scsi/ahci.c	2005-12-18 16:32:04.000000000 +0900
-+++ work/drivers/scsi/ahci.c	2005-12-18 19:54:50.000000000 +0900
-@@ -437,6 +437,43 @@ static void ahci_scr_write (struct ata_p
- 	writel(val, (void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
+--- work.orig/drivers/scsi/ata_piix.c	2005-12-18 19:06:17.000000000 +0900
++++ work/drivers/scsi/ata_piix.c	2005-12-18 19:33:56.000000000 +0900
+@@ -133,7 +133,7 @@ static int piix_init_one (struct pci_dev
+ 
+ static int piix_pata_softreset(struct ata_port *ap, unsigned int *classes);
+ static void piix_pata_postreset(struct ata_port *ap, const unsigned int *classes);
+-static void piix_sata_phy_reset(struct ata_port *ap);
++static int piix_sata_softreset(struct ata_port *ap, unsigned int *classes);
+ static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev);
+ static void piix_set_dmamode (struct ata_port *ap, struct ata_device *adev);
+ 
+@@ -231,7 +231,8 @@ static const struct ata_port_operations 
+ 	.exec_command		= ata_exec_command,
+ 	.dev_select		= ata_std_dev_select,
+ 
+-	.phy_reset		= piix_sata_phy_reset,
++	.soft_reset		= piix_sata_softreset,
++	.post_reset		= ata_std_postreset,
+ 
+ 	.bmdma_setup		= ata_bmdma_setup,
+ 	.bmdma_start		= ata_bmdma_start,
+@@ -268,8 +269,8 @@ static struct ata_port_info piix_port_in
+ 	/* ich5_sata */
+ 	{
+ 		.sht		= &piix_sht,
+-		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
+-				  PIIX_FLAG_COMBINED | PIIX_FLAG_CHECKINTR,
++		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED |
++				  PIIX_FLAG_CHECKINTR,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f,	/* udma0-6 */
+@@ -293,8 +294,7 @@ static struct ata_port_info piix_port_in
+ 	/* ich6_sata */
+ 	{
+ 		.sht		= &piix_sht,
+-		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
+-				  PIIX_FLAG_COMBINED_ICH6 |
++		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED_ICH6 |
+ 				  PIIX_FLAG_CHECKINTR | ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+@@ -305,8 +305,7 @@ static struct ata_port_info piix_port_in
+ 	/* ich6_sata_ahci */
+ 	{
+ 		.sht		= &piix_sht,
+-		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
+-				  PIIX_FLAG_COMBINED_ICH6 |
++		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED_ICH6 |
+ 				  PIIX_FLAG_CHECKINTR | ATA_FLAG_SLAVE_POSS |
+ 				  PIIX_FLAG_AHCI,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+@@ -450,28 +449,26 @@ static int piix_sata_probe (struct ata_p
  }
  
-+static int ahci_stop_engine(struct ata_port *ap)
-+{
-+	void __iomem *mmio = ap->host_set->mmio_base;
-+	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
-+	int work;
-+	u32 tmp;
-+
-+	tmp = readl(port_mmio + PORT_CMD);
-+	tmp &= ~PORT_CMD_START;
-+	writel(tmp, port_mmio + PORT_CMD);
-+
-+	/* wait for engine to stop.  TODO: this could be
-+	 * as long as 500 msec
-+	 */
-+	work = 1000;
-+	while (work-- > 0) {
-+		tmp = readl(port_mmio + PORT_CMD);
-+		if ((tmp & PORT_CMD_LIST_ON) == 0)
-+			return 0;
-+		udelay(10);
-+	}
-+
-+	return -EIO;
-+}
-+
-+static void ahci_start_engine(struct ata_port *ap)
-+{
-+	void __iomem *mmio = ap->host_set->mmio_base;
-+	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
-+	u32 tmp;
-+
-+	tmp = readl(port_mmio + PORT_CMD);
-+	tmp |= PORT_CMD_START;
-+	writel(tmp, port_mmio + PORT_CMD);
-+	readl(port_mmio + PORT_CMD); /* flush */
-+}
-+
- static void ahci_phy_reset(struct ata_port *ap)
+ /**
+- *	piix_sata_phy_reset - Probe specified port on SATA host controller
+- *	@ap: Port to probe
++ *	piix_sata_softreset - Perform SRST softreset on SATA host controller
++ *	@ap: Port to reset
++ *	@classes: Resulting classes of attached devices
+  *
+- *	Probe SATA phy.
++ *	Softreset SATA phy.
+  *
+  *	LOCKING:
+  *	None (inherited from caller).
+  */
+ 
+-static void piix_sata_phy_reset(struct ata_port *ap)
++static int piix_sata_softreset(struct ata_port *ap, unsigned int *classes)
  {
- 	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
-@@ -563,7 +600,6 @@ static void ahci_restart_port(struct ata
- 	void __iomem *mmio = ap->host_set->mmio_base;
- 	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
- 	u32 tmp;
--	int work;
- 
- 	if ((ap->device[0].class != ATA_DEV_ATAPI) ||
- 	    ((irq_stat & PORT_IRQ_TF_ERR) == 0))
-@@ -579,20 +615,7 @@ static void ahci_restart_port(struct ata
- 			readl(port_mmio + PORT_SCR_ERR));
- 
- 	/* stop DMA */
--	tmp = readl(port_mmio + PORT_CMD);
--	tmp &= ~PORT_CMD_START;
--	writel(tmp, port_mmio + PORT_CMD);
--
--	/* wait for engine to stop.  TODO: this could be
--	 * as long as 500 msec
--	 */
--	work = 1000;
--	while (work-- > 0) {
--		tmp = readl(port_mmio + PORT_CMD);
--		if ((tmp & PORT_CMD_LIST_ON) == 0)
--			break;
--		udelay(10);
--	}
-+	ahci_stop_engine(ap);
- 
- 	/* clear SATA phy error, if any */
- 	tmp = readl(port_mmio + PORT_SCR_ERR);
-@@ -611,10 +634,7 @@ static void ahci_restart_port(struct ata
+ 	if (!piix_sata_probe(ap)) {
+-		ata_port_disable(ap);
++		classes[0] = ATA_DEV_NONE;
++		classes[1] = ATA_DEV_NONE;
+ 		printk(KERN_INFO "ata%u: SATA port has no device.\n", ap->id);
+-		return;
++		return 0;
  	}
  
- 	/* re-start DMA */
--	tmp = readl(port_mmio + PORT_CMD);
--	tmp |= PORT_CMD_START;
--	writel(tmp, port_mmio + PORT_CMD);
--	readl(port_mmio + PORT_CMD); /* flush */
-+	ahci_start_engine(ap);
+-	ap->cbl = ATA_CBL_SATA;
+-
+-	ata_port_probe(ap);
+-
+-	ata_bus_reset(ap);
++	return ata_std_softreset_srst(ap, classes);
  }
  
- static void ahci_eng_timeout(struct ata_port *ap)
+ /**
