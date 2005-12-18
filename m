@@ -1,16 +1,16 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 02/14] libata: implement new reset mechanism
-Date: Sun, 18 Dec 2005 22:38:33 +0900
-Message-ID: <20051218133833.GC31571@htj.dyndns.org>
+Subject: [PATCH 03/14] libata: implement standard reset methods
+Date: Sun, 18 Dec 2005 22:40:30 +0900
+Message-ID: <20051218134030.GD31571@htj.dyndns.org>
 References: <20051218133305.GA31571@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.197]:4134 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932706AbVLRNij (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Dec 2005 08:38:39 -0500
-Received: by zproxy.gmail.com with SMTP id 14so1714877nzn
-        for <linux-ide@vger.kernel.org>; Sun, 18 Dec 2005 05:38:38 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.193]:18833 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932706AbVLRNkf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Dec 2005 08:40:35 -0500
+Received: by zproxy.gmail.com with SMTP id 14so1715080nzn
+        for <linux-ide@vger.kernel.org>; Sun, 18 Dec 2005 05:40:35 -0800 (PST)
 Content-Disposition: inline
 In-Reply-To: <20051218133305.GA31571@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
@@ -18,226 +18,258 @@ List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, albertcc@tw.ibm.com, liml@rtr.ca
 Cc: linux-ide@vger.kernel.org
 
-Implement new reset mechanism.  This patch adds the following ata
-operations.
-
-int (*soft_reset) (struct ata_port *ap, unsigned int *classes);
-int (*hard_reset) (struct ata_port *ap, unsigned int *classes);
-void (*post_reset) (struct ata_port *ap, const unsigned int *classes);
-
-In a reset trial, ->soft_reset and ->hard_reset may be called
-multiple times before succeeding and post_reset is called only once
-after reset finally succeeds.
-
-A new function ata_reset() is added.  This function intelligently
-drives reset process using above operations.  All resets must be
-performed by calling ata_reset() with appropriate flags.  ata_reset()
-prefers ->soft_reset but can fall back to ->hard_reset and knows how
-to deal with reset methods which can't report signature.
-
-ata_reset() does not modify any libata data structure, it just
-performs reset using requested methods and report completion status
-and classes to the caller, making it easily useable from EH.
+Implement ata_std_softreset_srst, ata_std_softreset_edd,
+ata_std_hardreset_sata and ata_std_postreset.  These routines are to
+new reset mechanism what sata_phy_reset and ata_bus_reset are to
+->phy_reset mechanism.  Most low level drivers should be able to use
+these directly or with some wrapping.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 Index: work/drivers/scsi/libata-core.c
 ===================================================================
---- work.orig/drivers/scsi/libata-core.c	2005-12-18 17:58:18.000000000 +0900
-+++ work/drivers/scsi/libata-core.c	2005-12-18 17:59:44.000000000 +0900
-@@ -1424,7 +1424,24 @@ static int ata_bus_probe(struct ata_port
- {
- 	unsigned int i, found = 0;
- 
--	ap->ops->phy_reset(ap);
-+	if (ap->ops->phy_reset)
-+		ap->ops->phy_reset(ap);
-+	else {
-+		unsigned int classes[2];
-+		int ret;
-+
-+		ata_port_probe(ap);
-+
-+		ret = ata_reset(ap, ATA_RESET_ANY|ATA_RESET_CLASSIFY, classes);
-+		if (ret == 0) {
-+			ap->device[0].class = classes[0];
-+			ap->device[1].class = classes[1];
-+		} else {
-+			printk("ata%u: reset failed, disabling port\n", ap->id);
-+			ata_port_disable(ap);
-+		}
-+	}
-+
- 	if (ap->flags & ATA_FLAG_PORT_DISABLED)
- 		goto err_out;
- 
-@@ -2134,6 +2151,111 @@ err_out:
- 	DPRINTK("EXIT\n");
+--- work.orig/drivers/scsi/libata-core.c	2005-12-18 20:49:54.000000000 +0900
++++ work/drivers/scsi/libata-core.c	2005-12-18 20:50:33.000000000 +0900
+@@ -2152,6 +2152,216 @@ err_out:
  }
  
-+/**
-+ *	ata_reset - reset host port and associated ATA channel
+ /**
++ *	ata_std_softreset_srst - reset host port via ATA SRST
 + *	@ap: port to reset
-+ *	@flags: ATA_RESET_* flags
-+ *	@r_classes: resulting classes of attached devices
++ *	@classes: resulting classes of attached devices
 + *
-+ *	This function tries to reset the given port.  Low-level
-+ *	drivers may supply either one or both of hard and soft reset
-+ *	methods, and the caller can tell ata_reset() which ones to use
-+ *	via ATA_RESET_SOFT, HARD and ANY flags.  ata_reset() always
-+ *	tries to use softreset if possible.
-+ *
-+ *	If ATA_RESET_CLASSIFY flag is given, ata_reset() will try
-+ *	allowed reset methods until classification is done.
-+ *
-+ *	Reset methods may or may not classify attached devices.  For
-+ *	example, it's not possible to obtain signature after hard
-+ *	reset on some SATA controllers.  However, at least one reset
-+ *	method should classify attached devices.
-+ *
-+ *	If a reset method doesn't support classification, it just
-+ *	leaves @classes unmodified on return.  Also, it's allowed for
-+ *	reset methods to classify only the first device.  If the first
-+ *	one is classifed but the second isn't, the second device is
-+ *	considered to be ATA_DEV_NONE.
-+ *
-+ *	This function returns 0 on success, -EINVAL if the ap doesn't
-+ *	support specified reset methods, -ENODEV if ATA_RESET_CLASSIFY
-+ *	is specified but classification fails, and any error code from
-+ *	reset methods if reset fails.
++ *	Reset host port using ATA SRST.
 + */
-+
-+int ata_reset(struct ata_port *ap, unsigned int flags, unsigned int *r_classes)
++int ata_std_softreset_srst(struct ata_port *ap, unsigned int *classes)
 +{
-+	const unsigned int unknown[2] = { ATA_DEV_UNKNOWN, ATA_DEV_UNKNOWN };
-+	unsigned int classes[2];
-+	int ret = 0;
++	unsigned int slave_possible = ap->flags & ATA_FLAG_SLAVE_POSS;
++	unsigned int devmask = 0;
++	u8 err;
 +
 +	DPRINTK("ENTER\n");
 +
-+	if (ap->ops->soft_reset == NULL)
-+		flags &= ~ATA_RESET_SOFT;
-+	if (ap->ops->hard_reset == NULL)
-+		flags &= ~ATA_RESET_HARD;
++	/* determine if device 0/1 are present */
++	if (ata_devchk(ap, 0))
++		devmask |= (1 << 0);
++	if (slave_possible && ata_devchk(ap, 1))
++		devmask |= (1 << 1);
 +
-+	if (!(flags & (ATA_RESET_SOFT | ATA_RESET_HARD))) {
-+		ret = -EINVAL;
-+		goto out;
++	/* devchk reports device presence without actual device on
++	 * most SATA controllers.  Check SStatus and turn devmask off
++	 * if link is offline.  Note that we should continue resetting
++	 * even when it seems like there's no device.
++	 */
++	if (ap->ops->scr_read && !sata_dev_present(ap))
++		devmask = 0;
++
++	/* select device 0 again */
++	ap->ops->dev_select(ap, 0);
++
++	/* issue bus reset */
++	DPRINTK("about to softreset, devmask=%x\n", devmask);
++	if (ata_bus_softreset(ap, devmask)) {
++		DPRINTK("EXIT, softreset failed\n");
++		return -EIO;
 +	}
 +
-+ retry:
-+	if (flags & ATA_RESET_SOFT) {
-+		memcpy(classes, unknown, sizeof(classes));
-+		ret = ap->ops->soft_reset(ap, classes);
-+		if (ret == 0) {
-+			if (!(flags & ATA_RESET_CLASSIFY) ||
-+			    classes[0] != ATA_DEV_UNKNOWN)
-+				goto success;
-+			/* no signature on SRST, try HRST */
-+			flags &= ~ATA_RESET_SOFT;
-+			ret = -ENODEV;	/* no sigature */
-+		}
-+		/* SRST failed, try HRST */
-+	}
++	/* determine by signature whether we have ATA or ATAPI devices */
++	classes[0] = ata_dev_try_classify(ap, 0, &err);
++	if (slave_possible && err != 0x81)
++		classes[1] = ata_dev_try_classify(ap, 1, &err);
 +
-+	if (flags & ATA_RESET_HARD) {
-+		memcpy(classes, unknown, sizeof(classes));
-+		ret = ap->ops->hard_reset(ap, classes);
-+		if (ret == 0) {
-+			if (!(flags & ATA_RESET_CLASSIFY) ||
-+			    classes[0] != ATA_DEV_UNKNOWN)
-+				goto success;
-+			/* no signature on HRST, retry SRST */
-+			flags &= ~ATA_RESET_HARD;
-+			ret = -ENODEV;	/* no sigature */
-+			goto retry;
-+		}
-+		/* HRST failed, give up */
-+	}
-+
-+	goto out;
-+
-+ success:
-+	if (classes[0] == ATA_DEV_UNKNOWN) {
-+		/* classification not performed, use old values */
-+		classes[0] = ap->device[0].class;
-+		classes[1] = ap->device[1].class;
-+	} else if (classes[1] == ATA_DEV_UNKNOWN) {
-+		/* only dev0 is classifed, assume NONE for dev1 */
-+		classes[1] = ATA_DEV_NONE;
-+	}
-+
-+	if (ap->ops->post_reset)
-+		ap->ops->post_reset(ap, classes);
-+
-+	if (r_classes) {
-+		r_classes[0] = classes[0];
-+		r_classes[1] = classes[1];
-+	}
-+
-+ out:
-+	DPRINTK("EXIT, ret=%d\n", ret);
-+	return ret;
++	DPRINTK("EXIT, classes[0]=%u [1]=%u\n", classes[0], classes[1]);
++	return 0;
 +}
 +
- static void ata_pr_blacklisted(const struct ata_port *ap,
- 			       const struct ata_device *dev)
- {
-@@ -4985,6 +5107,7 @@ EXPORT_SYMBOL_GPL(ata_port_probe);
- EXPORT_SYMBOL_GPL(sata_phy_reset);
- EXPORT_SYMBOL_GPL(__sata_phy_reset);
- EXPORT_SYMBOL_GPL(ata_bus_reset);
-+EXPORT_SYMBOL_GPL(ata_reset);
- EXPORT_SYMBOL_GPL(ata_port_disable);
- EXPORT_SYMBOL_GPL(ata_ratelimit);
- EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
++/**
++ *	ata_std_softreset_edd - perform EDD and classify devices
++ *	@ap: port to perform EDD on
++ *	@classes: resulting classes of attached devices
++ *
++ *	This isn't really a softreset method.  It just performs EDD
++ *	and classify devices.  If a controller doesn't support SRST
++ *	and hardreset cannot classify, this function can be used as
++ *	softreset method for classification.
++ */
++int ata_std_softreset_edd(struct ata_port *ap, unsigned int *classes)
++{
++	struct ata_ioports *ioaddr = &ap->ioaddr;
++	unsigned int slave_possible = ap->flags & ATA_FLAG_SLAVE_POSS;
++	u8 err;
++
++	DPRINTK("ENTER\n");
++
++	/* select device 0 */
++	ap->ops->dev_select(ap, 0);
++
++	/* set up device control */
++	if (ap->flags & ATA_FLAG_MMIO)
++		writeb(ap->ctl, (void __iomem *) ioaddr->ctl_addr);
++	else
++		outb(ap->ctl, ioaddr->ctl_addr);
++
++	if (ata_bus_edd(ap)) {
++		DPRINTK("EXIT, edd failed\n");
++		return -EIO;
++	}
++
++	/* determine by signature whether we have ATA or ATAPI devices */
++	classes[0] = ata_dev_try_classify(ap, 0, &err);
++	if (slave_possible && err != 0x81)
++		classes[1] = ata_dev_try_classify(ap, 1, &err);
++
++	DPRINTK("EXIT, classes[0]=%u [1]=%u\n", classes[0], classes[1]);
++	return 0;
++}
++
++/**
++ *	ata_std_hardreset_sata - reset host port via SATA phy reset
++ *	@ap: port to reset
++ *	@classes: resulting classes of attached devices
++ *
++ *	SATA phy-reset host port using DET bits of SControl register.
++ */
++int ata_std_hardreset_sata(struct ata_port *ap, unsigned int *classes)
++{
++	u32 sstatus;
++	unsigned long timeout = jiffies + (HZ * 5);
++
++	DPRINTK("ENTER\n");
++
++	/* issue phy wake/reset */
++	scr_write_flush(ap, SCR_CONTROL, 0x301);
++
++	/* Couldn't find anything in SATA I/II specs, but
++	 * AHCI-1.1 10.4.2 says at least 1 ms.
++	 */
++	msleep(1);
++
++	scr_write_flush(ap, SCR_CONTROL, 0x300);
++
++	/* wait for phy to become ready, if necessary */
++	do {
++		msleep(200);
++		sstatus = scr_read(ap, SCR_STATUS);
++		if ((sstatus & 0xf) != 1)
++			break;
++	} while (time_before(jiffies, timeout));
++
++	/* TODO: phy layer with polling, timeouts, etc. */
++	if (!sata_dev_present(ap)) {
++		classes[0] = ATA_DEV_NONE;
++		DPRINTK("EXIT, link offline\n");
++		return 0;
++	}
++
++	if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT)) {
++		DPRINTK("EXIT, device not ready\n");
++		return -EIO;
++	}
++
++	classes[0] = ata_dev_try_classify(ap, 0, NULL);
++
++	DPRINTK("EXIT, class=%u\n", classes[0]);
++	return 0;
++}
++
++static void ata_sata_print_link_status(struct ata_port *ap)
++{
++	u32 sstatus, tmp;
++	const char *speed;
++
++	if (!ap->ops->scr_read)
++		return;
++
++	sstatus = scr_read(ap, SCR_STATUS);
++
++	if (sata_dev_present(ap)) {
++		tmp = (sstatus >> 4) & 0xf;
++		if (tmp & (1 << 0))
++			speed = "1.5";
++		else if (tmp & (1 << 1))
++			speed = "3.0";
++		else
++			speed = "<unknown>";
++		printk(KERN_INFO "ata%u: SATA link up %s Gbps (SStatus %X)\n",
++		       ap->id, speed, sstatus);
++	} else {
++		printk(KERN_INFO "ata%u: SATA link down (SStatus %X)\n",
++		       ap->id, sstatus);
++	}
++}
++
++/**
++ *	ata_std_postreset - standard postreset method
++ *	@ap: the target ata_port
++ *	@classes: classes of attached devices
++ *
++ *	post_reset method is invoked after a successful reset.  Note
++ *	that the device might have been reset more than once using
++ *	different reset methods before post_reset is invoked.
++ *	post_reset is reponsible for setting cable type.
++ *
++ *	ata_std_postreset() is the standard post_reset method.  It
++ *	sets cable type according to ATA_FLAG_SATA and performs other
++ *	standard choirs.
++ */
++void ata_std_postreset(struct ata_port *ap, const unsigned int *classes)
++{
++	DPRINTK("ENTER\n");
++
++	/* set cable type */
++	if (ap->cbl == ATA_CBL_NONE && ap->flags & ATA_FLAG_SATA)
++		ap->cbl = ATA_CBL_SATA;
++
++	/* print link status */
++	if (ap->cbl == ATA_CBL_SATA)
++		ata_sata_print_link_status(ap);
++
++	/* bail out if no device is present */
++	if (classes[0] == ATA_DEV_NONE && classes[1] == ATA_DEV_NONE) {
++		DPRINTK("EXIT, no device\n");
++		return;
++	}
++
++	/* is double-select really necessary? */
++	if (classes[0] != ATA_DEV_NONE)
++		ap->ops->dev_select(ap, 1);
++	if (classes[1] != ATA_DEV_NONE)
++		ap->ops->dev_select(ap, 0);
++
++	/* re-enable interrupts & set up device control */
++	if (ap->ioaddr.ctl_addr)	/* FIXME: hack. create a hook instead */
++		ata_irq_on(ap);
++
++	DPRINTK("EXIT\n");
++}
++
++/**
+  *	ata_reset - reset host port and associated ATA channel
+  *	@ap: port to reset
+  *	@flags: ATA_RESET_* flags
+@@ -5093,6 +5303,10 @@ EXPORT_SYMBOL_GPL(ata_tf_from_fis);
+ EXPORT_SYMBOL_GPL(ata_check_status);
+ EXPORT_SYMBOL_GPL(ata_altstatus);
+ EXPORT_SYMBOL_GPL(ata_exec_command);
++EXPORT_SYMBOL_GPL(ata_std_hardreset_sata);
++EXPORT_SYMBOL_GPL(ata_std_softreset_srst);
++EXPORT_SYMBOL_GPL(ata_std_softreset_edd);
++EXPORT_SYMBOL_GPL(ata_std_postreset);
+ EXPORT_SYMBOL_GPL(ata_port_start);
+ EXPORT_SYMBOL_GPL(ata_port_stop);
+ EXPORT_SYMBOL_GPL(ata_host_stop);
 Index: work/include/linux/libata.h
 ===================================================================
---- work.orig/include/linux/libata.h	2005-12-18 17:58:10.000000000 +0900
-+++ work/include/linux/libata.h	2005-12-18 18:00:31.000000000 +0900
-@@ -115,9 +115,9 @@ enum {
- 	ATA_FLAG_PORT_DISABLED	= (1 << 2), /* port is disabled, ignore it */
- 	ATA_FLAG_SATA		= (1 << 3),
- 	ATA_FLAG_NO_LEGACY	= (1 << 4), /* no legacy mode check */
--	ATA_FLAG_SRST		= (1 << 5), /* use ATA SRST, not E.D.D. */
-+	ATA_FLAG_SRST		= (1 << 5), /* (obsolete) use ATA SRST, not E.D.D. */
- 	ATA_FLAG_MMIO		= (1 << 6), /* use MMIO, not PIO */
--	ATA_FLAG_SATA_RESET	= (1 << 7), /* use COMRESET */
-+	ATA_FLAG_SATA_RESET	= (1 << 7), /* (obsolete) use COMRESET */
- 	ATA_FLAG_PIO_DMA	= (1 << 8), /* PIO cmds via DMA */
- 	ATA_FLAG_NOINTR		= (1 << 9), /* FIXME: Remove this once
- 					     * proper HSM is in place. */
-@@ -170,6 +170,12 @@ enum {
- 	/* Masks for port functions */
- 	ATA_PORT_PRIMARY	= (1 << 0),
- 	ATA_PORT_SECONDARY	= (1 << 1),
-+
-+	/* Flags for reset function */
-+	ATA_RESET_SOFT		= (1 << 0),
-+	ATA_RESET_HARD		= (1 << 1),
-+	ATA_RESET_ANY		= ATA_RESET_SOFT | ATA_RESET_HARD,
-+	ATA_RESET_CLASSIFY	= (1 << 2),
- };
- 
- enum hsm_task_states {
-@@ -373,7 +379,11 @@ struct ata_port_operations {
- 	u8   (*check_altstatus)(struct ata_port *ap);
- 	void (*dev_select)(struct ata_port *ap, unsigned int device);
- 
--	void (*phy_reset) (struct ata_port *ap);
-+	void (*phy_reset) (struct ata_port *ap); /* obsolete */
-+
-+	int (*soft_reset) (struct ata_port *ap, unsigned int *classes);
-+	int (*hard_reset) (struct ata_port *ap, unsigned int *classes);
-+	void (*post_reset) (struct ata_port *ap, const unsigned int *classes);
- 	void (*post_set_mode) (struct ata_port *ap);
- 
- 	int (*check_atapi_dma) (struct ata_queued_cmd *qc);
-@@ -430,6 +440,7 @@ extern void ata_port_probe(struct ata_po
- extern void __sata_phy_reset(struct ata_port *ap);
- extern void sata_phy_reset(struct ata_port *ap);
- extern void ata_bus_reset(struct ata_port *ap);
-+extern int ata_reset(struct ata_port *ap, unsigned int flags, unsigned int *classes);
- extern void ata_port_disable(struct ata_port *);
- extern void ata_std_ports(struct ata_ioports *ioaddr);
- #ifdef CONFIG_PCI
+--- work.orig/include/linux/libata.h	2005-12-18 20:49:54.000000000 +0900
++++ work/include/linux/libata.h	2005-12-18 20:50:33.000000000 +0900
+@@ -470,6 +470,10 @@ extern void ata_std_dev_select (struct a
+ extern u8 ata_check_status(struct ata_port *ap);
+ extern u8 ata_altstatus(struct ata_port *ap);
+ extern void ata_exec_command(struct ata_port *ap, const struct ata_taskfile *tf);
++extern int ata_std_softreset_srst(struct ata_port *ap, unsigned int *classes);
++extern int ata_std_softreset_edd(struct ata_port *ap, unsigned int *classes);
++extern int ata_std_hardreset_sata(struct ata_port *ap, unsigned int *classes);
++extern void ata_std_postreset(struct ata_port *ap, const unsigned int *classes);
+ extern int ata_port_start (struct ata_port *ap);
+ extern void ata_port_stop (struct ata_port *ap);
+ extern void ata_host_stop (struct ata_host_set *host_set);
