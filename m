@@ -1,89 +1,121 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 14/14] ahci: add softreset
-Date: Mon, 19 Dec 2005 16:13:38 +0900
-Message-ID: <43A65DA2.2080402@gmail.com>
-References: <20051218133305.GA31571@htj.dyndns.org> <20051218135149.GO31571@htj.dyndns.org> <43A646C7.3050503@pobox.com> <43A64F5A.1010002@gmail.com> <43A655C4.10300@pobox.com>
+Subject: [PATCH 01/05] libata: separate out ata_sata_print_link_status
+Date: Mon, 19 Dec 2005 22:35:02 +0900
+Message-ID: <20051219133502.GA26769@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.194]:15803 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030275AbVLSHNo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Dec 2005 02:13:44 -0500
-Received: by zproxy.gmail.com with SMTP id 13so1237089nzn
-        for <linux-ide@vger.kernel.org>; Sun, 18 Dec 2005 23:13:44 -0800 (PST)
-In-Reply-To: <43A655C4.10300@pobox.com>
+Received: from zproxy.gmail.com ([64.233.162.197]:56854 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932068AbVLSNfI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Dec 2005 08:35:08 -0500
+Received: by zproxy.gmail.com with SMTP id 14so1921107nzn
+        for <linux-ide@vger.kernel.org>; Mon, 19 Dec 2005 05:35:07 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: albertcc@tw.ibm.com, liml@rtr.ca, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
-> 
->> Jeff Garzik wrote:
->>
->>> Tejun Heo wrote:
->>>
->>>> Now that libata is smart enought to handle both soft and hard resets,
->>>> add softreset method.
->>>
->>>
->>>
->>>
->>> I'm a bit skeptical that polling is what should be done here.  SATA 
->>> is inherently event-driven...
->>>
->>
->> Well, I'm a bit skeptical the other way around.  :-)
->>
->> What benefits would making softreset event-driven bring?
-> 
-> 
-> The underlying operations are inherently event-driven, as I stated 
-> above.  You send a packet, wait for the ACK.  Send another packet.  Wait 
-> for the ACK.
-> 
+Separate out ata_sata_print_link_status() from __sata_phy_reset().
 
-Okay.  Hmmm... I don't really see the point you're trying to make here. 
-  I'll describe AHCI COMRESET sequence in detail to communicate myself 
-better.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-The following is mainly from section 10.4.1 of AHCI spec rev 1.1.
-
-1. clear PxCMD.ST and wait for PxCMD.CR to clear to 0.  If PxCMD.CR 
-doesn't clear within 500msec, the interface might be hung (fall back to 
-hardreset).
-
-	- no interrupt generated on CR clearing, polling required
-
-2. if BSY or DRQ is set, they need to be cleared using PxCMD.CLO if 
-supported.  CLO is performed by setting PxCMD.CLO and waiting for the 
-controller to clear it.  The spec doesn't say how long it may take.
-
-	- no interrupt generated on CLO clearing, polling required.
-
-3. set PxCMD.ST
-
-4. issue the first H2D Register FIS (SRST on).  This command needs to 
-have CH[R] (SYNC escaping) and CH[C] (clear BSY on R_OK) set.  The CH[C] 
-is needed because the device won't generate D2H Register FIS after 
-receiving SRST.  The controller clears BSY when the device says it 
-received the packet okay (R_OK).  This won't generate an interrupt.
-
-	- no interrupt generated on BSY clearing, polling needed.
-
-5. issue the second H2D Register FIS (SRST off).  The device will clear 
-BSY when reporting signature with D2H FIS.  I cannot find whether the 
-device is supposed to assert INTRQ on completion or not but it seems not.
-
-	- (probably) no interrupt generated on signature reporting.
-
-
-So, AFAICS, most steps need polling and some are rather long, too.  Am I 
-missing something here?
-
-Thanks.  :-)
-
--- 
-tejun
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 9ea1025..fb1e186 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -1466,6 +1466,41 @@ void ata_port_probe(struct ata_port *ap)
+ }
+ 
+ /**
++ *	ata_sata_print_link_status - Print SATA link status
++ *	@ap: SATA port to printk link status about
++ *
++ *	This function prints link speed and status of a SATA link.
++ *
++ *	LOCKING:
++ *	None.
++ */
++void ata_sata_print_link_status(struct ata_port *ap)
++{
++	u32 sstatus, tmp;
++	const char *speed;
++
++	if (!ap->ops->scr_read)
++		return;
++
++	sstatus = scr_read(ap, SCR_STATUS);
++
++	if (sata_dev_present(ap)) {
++		tmp = (sstatus >> 4) & 0xf;
++		if (tmp & (1 << 0))
++			speed = "1.5";
++		else if (tmp & (1 << 1))
++			speed = "3.0";
++		else
++			speed = "<unknown>";
++		printk(KERN_INFO "ata%u: SATA link up %s Gbps (SStatus %X)\n",
++		       ap->id, speed, sstatus);
++	} else {
++		printk(KERN_INFO "ata%u: SATA link down (SStatus %X)\n",
++		       ap->id, sstatus);
++	}
++}
++
++/**
+  *	__sata_phy_reset - Wake/reset a low-level SATA PHY
+  *	@ap: SATA port associated with target SATA PHY.
+  *
+@@ -1499,27 +1534,14 @@ void __sata_phy_reset(struct ata_port *a
+ 			break;
+ 	} while (time_before(jiffies, timeout));
+ 
+-	/* TODO: phy layer with polling, timeouts, etc. */
+-	sstatus = scr_read(ap, SCR_STATUS);
+-	if (sata_dev_present(ap)) {
+-		const char *speed;
+-		u32 tmp;
++	/* print link status */
++	ata_sata_print_link_status(ap);
+ 
+-		tmp = (sstatus >> 4) & 0xf;
+-		if (tmp & (1 << 0))
+-			speed = "1.5";
+-		else if (tmp & (1 << 1))
+-			speed = "3.0";
+-		else
+-			speed = "<unknown>";
+-		printk(KERN_INFO "ata%u: SATA link up %s Gbps (SStatus %X)\n",
+-		       ap->id, speed, sstatus);
++	/* TODO: phy layer with polling, timeouts, etc. */
++	if (sata_dev_present(ap))
+ 		ata_port_probe(ap);
+-	} else {
+-		printk(KERN_INFO "ata%u: SATA link down (SStatus %X)\n",
+-		       ap->id, sstatus);
++	else
+ 		ata_port_disable(ap);
+-	}
+ 
+ 	if (ap->flags & ATA_FLAG_PORT_DISABLED)
+ 		return;
+@@ -4980,6 +5002,7 @@ EXPORT_SYMBOL_GPL(ata_bmdma_irq_clear);
+ EXPORT_SYMBOL_GPL(ata_bmdma_status);
+ EXPORT_SYMBOL_GPL(ata_bmdma_stop);
+ EXPORT_SYMBOL_GPL(ata_port_probe);
++EXPORT_SYMBOL_GPL(ata_sata_print_link_status);
+ EXPORT_SYMBOL_GPL(sata_phy_reset);
+ EXPORT_SYMBOL_GPL(__sata_phy_reset);
+ EXPORT_SYMBOL_GPL(ata_bus_reset);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index e828e17..7e38705 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -427,6 +427,7 @@ struct ata_timing {
+ #define FIT(v,vmin,vmax)	max_t(short,min_t(short,v,vmax),vmin)
+ 
+ extern void ata_port_probe(struct ata_port *);
++extern void ata_sata_print_link_status(struct ata_port *ap);
+ extern void __sata_phy_reset(struct ata_port *ap);
+ extern void sata_phy_reset(struct ata_port *ap);
+ extern void ata_bus_reset(struct ata_port *ap);
