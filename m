@@ -1,152 +1,62 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 14/14] ahci: add softreset
-Date: Sun, 18 Dec 2005 22:51:49 +0900
-Message-ID: <20051218135149.GO31571@htj.dyndns.org>
-References: <20051218133305.GA31571@htj.dyndns.org>
+From: James Steward <james.steward@dynamicratings.com>
+Subject: Execute from CF causes segmentation faults
+Date: Mon, 19 Dec 2005 10:47:27 +1000
+Message-ID: <9DA102EC128AD511BED000306E0766C70180487A@WTCNT4GW>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.193]:30214 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S965136AbVLRNvy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Dec 2005 08:51:54 -0500
-Received: by zproxy.gmail.com with SMTP id 13so1085519nzn
-        for <linux-ide@vger.kernel.org>; Sun, 18 Dec 2005 05:51:54 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <20051218133305.GA31571@htj.dyndns.org>
+Received: from WTCGW.WTC.COM.AU ([203.44.93.226]:32946 "EHLO
+	wtcnt4gw.wtc.com.au") by vger.kernel.org with ESMTP id S965308AbVLRXrg
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 18 Dec 2005 18:47:36 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, albertcc@tw.ibm.com, liml@rtr.ca
-Cc: linux-ide@vger.kernel.org
+To: "'linux-ide@vger.kernel.org'" <linux-ide@vger.kernel.org>
 
-Now that libata is smart enought to handle both soft and hard resets,
-add softreset method.
+G'day all,
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+The message below is a response from Russell King on the arm 
+linux mailing lists regarding a problem I encountered, and as
+it turns out has been encountered before.  I'm not sure if anyone
+from the IDE development group is working on this but as it is
+more ide specific it may be best handled by some clever guru 
+from this mail list. 
 
-Index: work/drivers/scsi/ahci.c
-===================================================================
---- work.orig/drivers/scsi/ahci.c	2005-12-18 22:24:15.000000000 +0900
-+++ work/drivers/scsi/ahci.c	2005-12-18 22:24:17.000000000 +0900
-@@ -190,6 +190,7 @@ static void ahci_scr_write (struct ata_p
- static int ahci_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
- static int ahci_qc_issue(struct ata_queued_cmd *qc);
- static irqreturn_t ahci_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
-+static int ahci_softreset(struct ata_port *ap, unsigned int *classes);
- static int ahci_hardreset(struct ata_port *ap, unsigned int *classes);
- static void ahci_postreset(struct ata_port *ap, const unsigned int *classes);
- static void ahci_irq_clear(struct ata_port *ap);
-@@ -231,6 +232,7 @@ static const struct ata_port_operations 
- 
- 	.tf_read		= ahci_tf_read,
- 
-+	.soft_reset		= ahci_softreset,
- 	.hard_reset		= ahci_hardreset,
- 	.post_reset		= ahci_postreset,
- 
-@@ -526,6 +528,106 @@ static unsigned int ahci_dev_classify(st
- 	return class;
- }
- 
-+static int ahci_softreset(struct ata_port *ap, unsigned int *classes)
-+{
-+	struct ahci_host_priv *hpriv = ap->host_set->private_data;
-+	struct ahci_port_priv *pp = ap->private_data;
-+	void __iomem *mmio = ap->host_set->mmio_base;
-+	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
-+	const u32 cmd_fis_len = 5; /* five dwords */
-+	struct ata_taskfile tf;
-+	u8 *fis;
-+	int ret;
-+
-+	DPRINTK("ENTER\n");
-+
-+	/* prepare for SRST (AHCI-1.1 10.4.1) */
-+	ret = ahci_stop_engine(ap);
-+	if (ret)
-+		goto out_restart;
-+
-+	/* check BUSY/DRQ, perform Command List Override if necessary */
-+	ahci_tf_read(ap, &tf);
-+	if (tf.command & (ATA_BUSY | ATA_DRQ)) {
-+		u32 tmp;
-+
-+		ret = -EIO;
-+		if (!(hpriv->cap & HOST_CAP_CLO))
-+			goto out_restart;
-+
-+		tmp = readl(port_mmio + PORT_CMD);
-+		tmp |= PORT_CMD_CLO;
-+		writel(tmp, port_mmio + PORT_CMD);
-+		readl(port_mmio + PORT_CMD); /* flush */
-+
-+		ret = -EIO;
-+		if (ahci_wait_for_bit(port_mmio + PORT_CMD,
-+				      PORT_CMD_CLO, PORT_CMD_CLO, 1, 500))
-+			goto out_restart;
-+	}
-+
-+	/* restart engine */
-+	ahci_start_engine(ap);
-+
-+	ata_tf_init(ap, &tf, 0);
-+	fis = pp->cmd_tbl;
-+
-+	/* issue the first D2H Register FIS */
-+	ahci_cmd_prep(ap, cmd_fis_len | AHCI_CMD_RESET | AHCI_CMD_CLR_BUSY);
-+
-+	tf.ctl |= ATA_SRST;
-+	ata_tf_to_fis(&tf, fis, 0);
-+	fis[1] &= ~(1 << 7);	/* turn off Command FIS bit */
-+
-+	writel(1, port_mmio + PORT_CMD_ISSUE);
-+	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
-+
-+	if (ahci_wait_for_bit(port_mmio + PORT_CMD_ISSUE, 0x1, 0x1, 1, 500)) {
-+		DPRINTK("EXIT, 1st FIS failed\n");
-+		return -EIO;
-+	}
-+
-+	/* spec says at least 5us, but be generous and sleep for 1ms */
-+	msleep(1);
-+
-+	/* issue the second D2H Register FIS */
-+	ahci_cmd_prep(ap, cmd_fis_len);
-+
-+	tf.ctl &= ~ATA_SRST;
-+	ata_tf_to_fis(&tf, fis, 0);
-+	fis[1] &= ~(1 << 7);	/* turn off Command FIS bit */
-+
-+	writel(1, port_mmio + PORT_CMD_ISSUE);
-+	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
-+
-+	/* spec mandates ">= 2ms" before checking status.
-+	 * We wait 150ms, because that was the magic delay used for
-+	 * ATAPI devices in Hale Landis's ATADRVR, for the period of time
-+	 * between when the ATA command register is written, and then
-+	 * status is checked.  Because waiting for "a while" before
-+	 * checking status is fine, post SRST, we perform this magic
-+	 * delay here as well.
-+	 */
-+	msleep(150);
-+
-+	classes[0] = ATA_DEV_NONE;
-+	if (sata_dev_present(ap)) {
-+		if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT)) {
-+			DPRINTK("EXIT, device not ready\n");
-+			return -EIO;
-+		}
-+		classes[0] = ahci_dev_classify(ap);
-+	}
-+
-+	DPRINTK("EXIT, class=%u\n", classes[0]);
-+	return 0;
-+
-+ out_restart:
-+	DPRINTK("EXIT, error=%d\n", ret);
-+	ahci_start_engine(ap);
-+	return ret;
-+}
-+
- static int ahci_hardreset(struct ata_port *ap, unsigned int *classes)
- {
- 	void __iomem *mmio = ap->host_set->mmio_base;
+The symptom I see is that executing code from a CF disk causes
+SEGVs and other nasties.  The workaround is to add a kernel
+command line arg "cachepolicy=writethrough".  This is seen as a
+bit of a bandaid and not a "good" solution.
+
+Could someone please take a look?
+
+Regards,
+James.
+
+
+On Thu, Dec 01, 2005 at 01:44:59PM +1300, Charles Manning wrote:
+> Something that confuses me lightly is why this problem should exist at
+> all.
+>
+> It seems that the problem is caused by stale data in the cache.
+> Surely cache data should never be stale (ie. Anything in the cache
+> should be current).
+
+No.  I think what is happening is:
+* the page we submit to the block layer has some cache lines already
+  associated with the kernel mapping.
+* the IDE driver uses PIO to read from CF and hits these cache lines
+  making them dirty.
+* the page is then mapped into userspace via a page fault.
+* userspace reads the page.  Because some of the data is sitting in
+  the cache corresponding with the kernel mapping of the page,
+  userspace doesn't see the up to date data until later.
+
+> It also seems odd to me that this requires fixes at the block driver
+> level. I'd have thought this would get resolved at the page cache
+> level, or fs level at absolute lowest.
+
+If you do it there, you hurt DMA performance.  The DMA model ensures
+cache coherency.  The IDE PIO IO model does not.
+
+Basically, the problem stems from IDE PIO IO not providing the same
+cache guarantees as other block device drivers do. 
