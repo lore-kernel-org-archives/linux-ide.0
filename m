@@ -1,109 +1,45 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: Re: [PATCH/RFC 0/7] SATA ACPI suspend/resume support
-Date: Tue, 20 Dec 2005 10:55:14 -0800
-Message-ID: <20051220105514.01815cba.randy_d_dunlap@linux.intel.com>
-References: <871x09nmin.fsf@marrow.phys.tohoku.ac.jp>
+From: Aaron Lehmann <aaronl@vitelus.com>
+Subject: Re: Promise SATA oops
+Date: Tue, 20 Dec 2005 12:17:19 -0800
+Message-ID: <20051220201719.GC15466@vitelus.com>
+References: <20051202045853.GD3677@vitelus.com> <438FDB9D.2030201@pobox.com> <20051202195109.GE3677@vitelus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr19.intel.com ([134.134.136.18]:63376 "EHLO
-	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1750762AbVLTSyt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Dec 2005 13:54:49 -0500
-In-Reply-To: <871x09nmin.fsf@marrow.phys.tohoku.ac.jp>
+Received: from dsl081-060-252.sfo1.dsl.speakeasy.net ([64.81.60.252]:42880
+	"EHLO vitelus.com") by vger.kernel.org with ESMTP id S932075AbVLTURV
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Dec 2005 15:17:21 -0500
+Content-Disposition: inline
+In-Reply-To: <20051202195109.GE3677@vitelus.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 20 Dec 2005 00:18:24 +0900
-Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp> wrote:
+On Fri, Dec 02, 2005 at 11:51:09AM -0800, Aaron Lehmann wrote:
+> Still isn't stable. It froze within hours after announcing in all
+> terminals that it was disabling a certain IRQ. Now the RAID is so
+> degraded that root can't even be mounted. Was the Promise controller a
+> bad choice for a reliable setup?
+> 
+> I may not have time to look at this further until late next week, but
+> I'll follow up with whatever I learn.
 
-> This patch set does not work on my ThinkPad X41 Tablet.  I applied the
-> seven patches to kernel 2.6.15-rc5-git3.  I added "acpi_sleep=s3_bios"
-> to the kernel command line.
-> 
-> Let me describe how I tested in the following.  I suspend my laptop
-> with the following commands:
-> 
-> # init 1
-> # sync
-> # echo -n mem > /sys/power/state
-> 
-> The screen is cleared and the following is displayed:
-> 
-> Stopping tasks: ==========|
-> acpi_bus-0201 [57] bus_set_power         : Device is not power manageable
-> PM: Entering mem sleep
+Argh, died again!! It had been stable for over 12 days. Same error
+message, and the root md is degraded and dirty just like last time.
+This is a very severe state with high risk of data loss. When things
+went sour, terminals and most applications still kept working, but
+anything that touched the filesystem froze up. I had a shell open in a
+chroot on a ramdisk, but dmesg just hung for a few minutes and then
+exited with a "Bus error". I had no other way of examining the kernel
+log since the machine runs X.
 
-I've asked for some clarification on this message, including
-how serious (problematic) it is to the suspend process,
-but have received no answer yet (on the acpi-devel mailing
-list).  It appears to mostly be a debugging information message.
+This was running 2.6.15-rc4. Crashes seem to happen less frequently
+with it than with 2.6.14.x, but when they happen they leave the RAID
+in a severe state. I also don't think 2.6.14.2 said anything about
+disabling the IRQ.
 
-> I suspect that the line "acpi_bus ..." indicates an error relevant to
-> this wakeup problem, although I don't know anything about kernel
-> hacking.  After a second, the laptop is suspended.  If I press the Fn
-> key to wake up the machine, it prints messages including:
-> 
-> ...
-> acpi_bus-0201 [60] bus_set_power         : Device is not power manageable
-> ...
-> ATA: abnormal status 0x80 on port 0x1F7
-> ATA: abnormal status 0x80 on port 0x1F7
-> ATA: abnormal status 0x80 on port 0x1F7
-> 
-> After a few tens of seconds, the screen before sleep is restored
-> showing the commands that I gave.  At this time, the hard disk LED is
-> off.
-> 
-> After I try to read the hard disk, for example by
-> 
-> # ls /usr/src
-> 
-> the hard disk LED stays on.  After a while the following message is
-> repeatedly printed:
-> 
-> ata1: command 0xc8 timeout, stat 0xd0 host_stat 0x1
-> ata1: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> ata1: status=0xd0 { Busy }
-> sd 0:0:0:0: SCSI error: return code = 0x8000002
-> sda: Current: sense key: Aborted Command
->     Additional sense: Scsi parity error
-> Info fld=28f6944
-> end_request: I/O error, dev sda, sector 29379684
-> ATA: abnormal status 0xD0 on port 0x1F7
-> ATA: abnormal status 0xD0 on port 0x1F7
-> ATA: abnormal status 0xD0 on port 0x1F7
-> 
-> ata1: command 0xca timeout, stat 0xd0 host_stat 0x1
-> ata1: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> ata1: status=0xd0 { Busy }
-> sd 0:0:0:0: SCSI error: return code = 0x8000002
-> sda: Current: sense key: Aborted Command
->     Additional sense: Scsi parity error
-> Info fld=28f6944
-> end_request: I/O error, dev sda, sector 29379692
-> ATA: abnormal status 0xD0 on port 0x1F7
-> ATA: abnormal status 0xD0 on port 0x1F7
-> ATA: abnormal status 0xD0 on port 0x1F7
-> 
-> It is confusing that the symptom after an unsuccessful wakeup
-> basically appears to be the same as the one described in the posting,
-> http://marc.theaimsgroup.com/?l=linux-kernel&m=111409309804068&w=2
-> FYI, software suspend 2 works okay on this machine with SATA resume
-> patch.
-> 
-> Any ideas?  Thanks in advance.
-
-I've read your mail several times now and don't have any real
-ideas for you, but I wanted to reply so that you wouldn't feel
-like you were being ignored.
-
-I'll have a new patch series in another day or so.  Please try
-it again and let me/us know how it goes.
-
-Thanks,
----
-~Randy
+I'm very desperate now. About every week I experience a crash that
+damages my RAID array to the point where it can't boot, as if the
+instability wasn't bad enough. Do I need to buy a hardware RAID card?
