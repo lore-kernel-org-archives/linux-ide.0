@@ -1,124 +1,109 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Execute from CF causes segmentation faults
-Date: Tue, 20 Dec 2005 17:23:45 +0100
-Message-ID: <58cb370e0512200823g50de6e14n148e27e4a4c267f7@mail.gmail.com>
-References: <9DA102EC128AD511BED000306E0766C70180487A@WTCNT4GW>
-	 <43A7FE89.4040909@gmail.com>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: Re: [PATCH/RFC 0/7] SATA ACPI suspend/resume support
+Date: Tue, 20 Dec 2005 10:55:14 -0800
+Message-ID: <20051220105514.01815cba.randy_d_dunlap@linux.intel.com>
+References: <871x09nmin.fsf@marrow.phys.tohoku.ac.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.203]:11666 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750785AbVLTQXs convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Dec 2005 11:23:48 -0500
-Received: by nproxy.gmail.com with SMTP id m18so440048nfc
-        for <linux-ide@vger.kernel.org>; Tue, 20 Dec 2005 08:23:46 -0800 (PST)
-In-Reply-To: <43A7FE89.4040909@gmail.com>
-Content-Disposition: inline
+Received: from fmr19.intel.com ([134.134.136.18]:63376 "EHLO
+	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1750762AbVLTSyt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Dec 2005 13:54:49 -0500
+In-Reply-To: <871x09nmin.fsf@marrow.phys.tohoku.ac.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James Steward <james.steward@dynamicratings.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, rmk+lkml@arm.linux.org.uk
+To: Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+On 20 Dec 2005 00:18:24 +0900
+Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp> wrote:
 
-On 12/20/05, Tejun Heo <htejun@gmail.com> wrote:
-> James Steward wrote:
-> > G'day all,
-> >
-> > The message below is a response from Russell King on the arm
-> > linux mailing lists regarding a problem I encountered, and as
-> > it turns out has been encountered before.  I'm not sure if anyone
-> > from the IDE development group is working on this but as it is
-> > more ide specific it may be best handled by some clever guru
-> > from this mail list.
-> >
-> > The symptom I see is that executing code from a CF disk causes
-> > SEGVs and other nasties.  The workaround is to add a kernel
-> > command line arg "cachepolicy=writethrough".  This is seen as a
-> > bit of a bandaid and not a "good" solution.
-> >
-> > Could someone please take a look?
-> >
-> > Regards,
-> > James.
-> >
-> >
-> > On Thu, Dec 01, 2005 at 01:44:59PM +1300, Charles Manning wrote:
-> >
-> >>Something that confuses me lightly is why this problem should exist at
-> >>all.
-> >>
-> >>It seems that the problem is caused by stale data in the cache.
-> >>Surely cache data should never be stale (ie. Anything in the cache
-> >>should be current).
-> >
-> >
-> > No.  I think what is happening is:
-> > * the page we submit to the block layer has some cache lines already
-> >   associated with the kernel mapping.
+> This patch set does not work on my ThinkPad X41 Tablet.  I applied the
+> seven patches to kernel 2.6.15-rc5-git3.  I added "acpi_sleep=s3_bios"
+> to the kernel command line.
+> 
+> Let me describe how I tested in the following.  I suspend my laptop
+> with the following commands:
+> 
+> # init 1
+> # sync
+> # echo -n mem > /sys/power/state
+> 
+> The screen is cleared and the following is displayed:
+> 
+> Stopping tasks: ==========|
+> acpi_bus-0201 [57] bus_set_power         : Device is not power manageable
+> PM: Entering mem sleep
 
-I'm not familiar with cache coherency issues so please help me...
+I've asked for some clarification on this message, including
+how serious (problematic) it is to the suspend process,
+but have received no answer yet (on the acpi-devel mailing
+list).  It appears to mostly be a debugging information message.
 
-I see that flush_dcache_page() call in filemap.c:do_generic_mapping_read()
-takes care of user virtual mapping but there is no code to take care of kernel
-virtual mapping?  But how could this happen in the first place that some
-cache lines are associated with the kernel mapping?
+> I suspect that the line "acpi_bus ..." indicates an error relevant to
+> this wakeup problem, although I don't know anything about kernel
+> hacking.  After a second, the laptop is suspended.  If I press the Fn
+> key to wake up the machine, it prints messages including:
+> 
+> ...
+> acpi_bus-0201 [60] bus_set_power         : Device is not power manageable
+> ...
+> ATA: abnormal status 0x80 on port 0x1F7
+> ATA: abnormal status 0x80 on port 0x1F7
+> ATA: abnormal status 0x80 on port 0x1F7
+> 
+> After a few tens of seconds, the screen before sleep is restored
+> showing the commands that I gave.  At this time, the hard disk LED is
+> off.
+> 
+> After I try to read the hard disk, for example by
+> 
+> # ls /usr/src
+> 
+> the hard disk LED stays on.  After a while the following message is
+> repeatedly printed:
+> 
+> ata1: command 0xc8 timeout, stat 0xd0 host_stat 0x1
+> ata1: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> ata1: status=0xd0 { Busy }
+> sd 0:0:0:0: SCSI error: return code = 0x8000002
+> sda: Current: sense key: Aborted Command
+>     Additional sense: Scsi parity error
+> Info fld=28f6944
+> end_request: I/O error, dev sda, sector 29379684
+> ATA: abnormal status 0xD0 on port 0x1F7
+> ATA: abnormal status 0xD0 on port 0x1F7
+> ATA: abnormal status 0xD0 on port 0x1F7
+> 
+> ata1: command 0xca timeout, stat 0xd0 host_stat 0x1
+> ata1: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> ata1: status=0xd0 { Busy }
+> sd 0:0:0:0: SCSI error: return code = 0x8000002
+> sda: Current: sense key: Aborted Command
+>     Additional sense: Scsi parity error
+> Info fld=28f6944
+> end_request: I/O error, dev sda, sector 29379692
+> ATA: abnormal status 0xD0 on port 0x1F7
+> ATA: abnormal status 0xD0 on port 0x1F7
+> ATA: abnormal status 0xD0 on port 0x1F7
+> 
+> It is confusing that the symptom after an unsuccessful wakeup
+> basically appears to be the same as the one described in the posting,
+> http://marc.theaimsgroup.com/?l=linux-kernel&m=111409309804068&w=2
+> FYI, software suspend 2 works okay on this machine with SATA resume
+> patch.
+> 
+> Any ideas?  Thanks in advance.
 
-> > * the IDE driver uses PIO to read from CF and hits these cache lines
-> >   making them dirty.
-> > * the page is then mapped into userspace via a page fault.
-> > * userspace reads the page.  Because some of the data is sitting in
-> >   the cache corresponding with the kernel mapping of the page,
-> >   userspace doesn't see the up to date data until later.
-> >
-> >
-> >>It also seems odd to me that this requires fixes at the block driver
-> >>level. I'd have thought this would get resolved at the page cache
-> >>level, or fs level at absolute lowest.
-> >
-> >
-> > If you do it there, you hurt DMA performance.  The DMA model ensures
-> > cache coherency.  The IDE PIO IO model does not.
-> >
-> > Basically, the problem stems from IDE PIO IO not providing the same
-> > cache guarantees as other block device drivers do.
+I've read your mail several times now and don't have any real
+ideas for you, but I wanted to reply so that you wouldn't feel
+like you were being ignored.
 
-Could you point me at such block device drivers
-or explain how it should be done properly?
-
-I tried looking at mmc, libata and scsi drivers and I couldn't find
-any driver which actually does provide such guarantees...
-
-> [CC'ing Bartlomiej and Russell King]
->
-> Hello, all.
->
-> kmap/kunmap are to PIO what dma_map/unmap are to DMA.  dma_map/unmap do
-> the following two things.
->
-> 1. make the pages accessible to the DMA'ing device
-> 2. take care of cache consistency
->
-> kmap/unmap currently performs the counterpart of #1.
->
-> 1. make the pages accessible to the accessing device (CPU)
->
-> So, adding cache consistency handling to kmap/unmap seems more logical
-> solution than handling cache consistency in all places where PIO occurs
-> (there are quite a few and some are buried pretty deep).
->
-> Hmmm... I'm not really sure whether the places where cache consistency
-> handling is needed coincides with kmap/unmap.  Would the said scheme
-> unnecessrily perform cache consistency operations in some places and
-> thus degrade performance?
-
->From what I understand:
-* DMA API provides coherency w.r.t. to write buffers not cache aliasing issues
-* k(un)map() is also used for addresses which have only kernel mappings
-
-?
+I'll have a new patch series in another day or so.  Please try
+it again and let me/us know how it goes.
 
 Thanks,
-Bartlomiej
+---
+~Randy
