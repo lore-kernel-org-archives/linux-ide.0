@@ -1,135 +1,124 @@
-From: kenneth topp <caught@prodigy.net>
-Subject: via sata issues
-Date: Tue, 20 Dec 2005 10:41:42 -0500 (EST)
-Message-ID: <Pine.LNX.4.63.0512201030300.4462@static>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Execute from CF causes segmentation faults
+Date: Tue, 20 Dec 2005 17:23:45 +0100
+Message-ID: <58cb370e0512200823g50de6e14n148e27e4a4c267f7@mail.gmail.com>
+References: <9DA102EC128AD511BED000306E0766C70180487A@WTCNT4GW>
+	 <43A7FE89.4040909@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pop-satin.atl.sa.earthlink.net ([207.69.195.63]:8159 "EHLO
-	pop-satin.atl.sa.earthlink.net") by vger.kernel.org with ESMTP
-	id S1751099AbVLTPlp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Dec 2005 10:41:45 -0500
-Received: from user-12ldo29.cable.mindspring.com ([69.86.224.73] helo=bllue.dyndns.org)
-	by pop-satin.atl.sa.earthlink.net with esmtp (Exim 3.36 #10)
-	id 1EojcV-0004zM-00
-	for linux-ide@vger.kernel.org; Tue, 20 Dec 2005 10:41:44 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by bllue.dyndns.org (Postfix) with ESMTP id 6E7818A784
-	for <linux-ide@vger.kernel.org>; Tue, 20 Dec 2005 10:41:42 -0500 (EST)
+Received: from nproxy.gmail.com ([64.233.182.203]:11666 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750785AbVLTQXs convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Dec 2005 11:23:48 -0500
+Received: by nproxy.gmail.com with SMTP id m18so440048nfc
+        for <linux-ide@vger.kernel.org>; Tue, 20 Dec 2005 08:23:46 -0800 (PST)
+In-Reply-To: <43A7FE89.4040909@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James Steward <james.steward@dynamicratings.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, rmk+lkml@arm.linux.org.uk
 
+Hi,
 
-1) why use ataN instead of sdX in messages, it just makes it more 
-difficult to track, especially since there are holes, and you cannot see 
-the mapping in sysfs...
+On 12/20/05, Tejun Heo <htejun@gmail.com> wrote:
+> James Steward wrote:
+> > G'day all,
+> >
+> > The message below is a response from Russell King on the arm
+> > linux mailing lists regarding a problem I encountered, and as
+> > it turns out has been encountered before.  I'm not sure if anyone
+> > from the IDE development group is working on this but as it is
+> > more ide specific it may be best handled by some clever guru
+> > from this mail list.
+> >
+> > The symptom I see is that executing code from a CF disk causes
+> > SEGVs and other nasties.  The workaround is to add a kernel
+> > command line arg "cachepolicy=writethrough".  This is seen as a
+> > bit of a bandaid and not a "good" solution.
+> >
+> > Could someone please take a look?
+> >
+> > Regards,
+> > James.
+> >
+> >
+> > On Thu, Dec 01, 2005 at 01:44:59PM +1300, Charles Manning wrote:
+> >
+> >>Something that confuses me lightly is why this problem should exist at
+> >>all.
+> >>
+> >>It seems that the problem is caused by stale data in the cache.
+> >>Surely cache data should never be stale (ie. Anything in the cache
+> >>should be current).
+> >
+> >
+> > No.  I think what is happening is:
+> > * the page we submit to the block layer has some cache lines already
+> >   associated with the kernel mapping.
 
-2) I've got tons of these messages, and I had some drive failures, but I 
-cannot imagine theyt are all drive failures.  the system still hangs 
-mostly on ata1/2 command time outs, which is why I'm going to move those 
-disks from onboard via to another tx4.    Any advice?  I'm getting system 
-hangs even for disks on the promise (I have to swear off the WDC HDD). 
-Running: kernel-smp-2.6.14-1.1775_FC5 which is 2.6.15-rc6.  The newer 
-kernel from davej panics on the via (getting a seial cable for the dump).
+I'm not familiar with cache coherency issues so please help me...
 
-this is a sort | uniq of messages:
+I see that flush_dcache_page() call in filemap.c:do_generic_mapping_read()
+takes care of user virtual mapping but there is no code to take care of kernel
+virtual mapping?  But how could this happen in the first place that some
+cache lines are associated with the kernel mapping?
 
-  kernel: ata3: status=0x50 { DriveReady SeekComplete }
-  kernel: ata4: status=0x50 { DriveReady SeekComplete }
-  kernel: ata4: status=0x52 { DriveReady SeekComplete Index }
-  kernel: ata5: status=0x50 { DriveReady SeekComplete }
-  kernel: ata6: status=0x50 { DriveReady SeekComplete }
-  kernel: ata1: command 0x25 timeout, stat 0x50 host_stat 0x4
-  kernel: ata1: command 0x35 timeout, stat 0x50 host_stat 0x4
-  kernel: ata1: command 0xea timeout, stat 0x50 host_stat 0x0
-  kernel: ata2: command 0x35 timeout, stat 0x50 host_stat 0x4
-  kernel: ata3: command timeout
-  kernel: ata4: command timeout
-  kernel: ata5: command timeout
-  kernel: ata6: command timeout
+> > * the IDE driver uses PIO to read from CF and hits these cache lines
+> >   making them dirty.
+> > * the page is then mapped into userspace via a page fault.
+> > * userspace reads the page.  Because some of the data is sitting in
+> >   the cache corresponding with the kernel mapping of the page,
+> >   userspace doesn't see the up to date data until later.
+> >
+> >
+> >>It also seems odd to me that this requires fixes at the block driver
+> >>level. I'd have thought this would get resolved at the page cache
+> >>level, or fs level at absolute lowest.
+> >
+> >
+> > If you do it there, you hurt DMA performance.  The DMA model ensures
+> > cache coherency.  The IDE PIO IO model does not.
+> >
+> > Basically, the problem stems from IDE PIO IO not providing the same
+> > cache guarantees as other block device drivers do.
 
--- boot up messages -- 
-SCSI subsystem initialized
-libata version 1.20 loaded.
-sata_via 0000:00:0f.0: version 1.1
-ACPI: PCI Interrupt 0000:00:0f.0[B] -> Link [ALKA] -> GSI 20 (level, low) 
--> IRQ 169
-PCI: Via IRQ fixup for 0000:00:0f.0, from 11 to 9
-sata_via 0000:00:0f.0: routed to hard irq line 9
-ata1: SATA max UDMA/133 cmd 0xB800 ctl 0xBC02 bmdma 0xC800 irq 169
-ata2: SATA max UDMA/133 cmd 0xC000 ctl 0xC402 bmdma 0xC808 irq 169
-ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4023 85:3469 86:3c01 87:4023 
-88:407f
-ata1: dev 0 ATA-7, max UDMA/133, 488397168 sectors: LBA48
-ata1: dev 0 configured for UDMA/133
-scsi0 : sata_via
-ata2: dev 0 cfg 49:2f00 82:346b 83:7f61 84:4003 85:3469 86:3c41 87:4003 
-88:407f
-ata2: dev 0 ATA-6, max UDMA/133, 488397168 sectors: LBA48
-ata2: dev 0 configured for UDMA/133
-scsi1 : sata_via
-   Vendor: ATA       Model: ST3250823AS       Rev: 3.03
-   Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
-SCSI device sda: drive cache: write back
-  sda: sda1
-sd 0:0:0:0: Attached scsi disk sda
-   Vendor: ATA       Model: WDC WD2500JD-00H  Rev: 08.0
-   Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sdb: 488397168 512-byte hdwr sectors (250059 MB)
-SCSI device sdb: drive cache: write back
-SCSI device sdb: 488397168 512-byte hdwr sectors (250059 MB)
-SCSI device sdb: drive cache: write back
-  sdb: sdb1
-sd 1:0:0:0: Attached scsi disk sdb
-sata_promise 0000:00:07.0: version 1.03
-ACPI: PCI Interrupt 0000:00:07.0[A] -> GSI 18 (level, low) -> IRQ 177
-ata3: SATA max UDMA/133 cmd 0xF8862200 ctl 0xF8862238 bmdma 0x0 irq 177
-ata4: SATA max UDMA/133 cmd 0xF8862280 ctl 0xF88622B8 bmdma 0x0 irq 177
-ata5: SATA max UDMA/133 cmd 0xF8862300 ctl 0xF8862338 bmdma 0x0 irq 177
-ata6: SATA max UDMA/133 cmd 0xF8862380 ctl 0xF88623B8 bmdma 0x0 irq 177
-ata3: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023 
-88:407f
-ata3: dev 0 ATA-7, max UDMA/133, 781422768 sectors: LBA48
-ata3: dev 0 configured for UDMA/133
-scsi2 : sata_promise
-ata4: dev 0 cfg 49:2f00 82:74eb 83:7fea 84:4023 85:74e8 86:3c02 87:4023 
-88:203f
-ata4: dev 0 ATA-6, max UDMA/100, 488397168 sectors: LBA48
-ata4: dev 0 configured for UDMA/100
-scsi3 : sata_promise
-ata5: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023 
-88:407f
-ata5: dev 0 ATA-7, max UDMA/133, 781422768 sectors: LBA48
-ata5: dev 0 configured for UDMA/133
-scsi4 : sata_promise
-ata6: no device found (phy stat 00000000)
-scsi5 : sata_promise
-   Vendor: ATA       Model: WDC WD4000YR-01P  Rev: 01.0
-   Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sdc: 781422768 512-byte hdwr sectors (400088 MB)
-SCSI device sdc: drive cache: write back
-SCSI device sdc: 781422768 512-byte hdwr sectors (400088 MB)
-SCSI device sdc: drive cache: write back
-  sdc: sdc1
-sd 2:0:0:0: Attached scsi disk sdc
-   Vendor: ATA       Model: HDS722525VLSA80   Rev: V36O
-   Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sdd: 488397168 512-byte hdwr sectors (250059 MB)
-SCSI device sdd: drive cache: write back
-SCSI device sdd: 488397168 512-byte hdwr sectors (250059 MB)
-SCSI device sdd: drive cache: write back
-  sdd: sdd1
-sd 3:0:0:0: Attached scsi disk sdd
-   Vendor: ATA       Model: WDC WD4000KD-00N  Rev: 01.0
-   Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sde: 781422768 512-byte hdwr sectors (400088 MB)
-SCSI device sde: drive cache: write back
-SCSI device sde: 781422768 512-byte hdwr sectors (400088 MB)
-SCSI device sde: drive cache: write back
-  sde: sde1
-sd 4:0:0:0: Attached scsi disk sde
+Could you point me at such block device drivers
+or explain how it should be done properly?
 
+I tried looking at mmc, libata and scsi drivers and I couldn't find
+any driver which actually does provide such guarantees...
+
+> [CC'ing Bartlomiej and Russell King]
+>
+> Hello, all.
+>
+> kmap/kunmap are to PIO what dma_map/unmap are to DMA.  dma_map/unmap do
+> the following two things.
+>
+> 1. make the pages accessible to the DMA'ing device
+> 2. take care of cache consistency
+>
+> kmap/unmap currently performs the counterpart of #1.
+>
+> 1. make the pages accessible to the accessing device (CPU)
+>
+> So, adding cache consistency handling to kmap/unmap seems more logical
+> solution than handling cache consistency in all places where PIO occurs
+> (there are quite a few and some are buried pretty deep).
+>
+> Hmmm... I'm not really sure whether the places where cache consistency
+> handling is needed coincides with kmap/unmap.  Would the said scheme
+> unnecessrily perform cache consistency operations in some places and
+> thus degrade performance?
+
+>From what I understand:
+* DMA API provides coherency w.r.t. to write buffers not cache aliasing issues
+* k(un)map() is also used for addresses which have only kernel mappings
+
+?
+
+Thanks,
+Bartlomiej
