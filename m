@@ -1,93 +1,121 @@
-From: Terrence Martin <tmartin@physics.ucsd.edu>
-Subject: Re: Kernel or patch suggestions for DMA enables Marvell Driver
-Date: Tue, 20 Dec 2005 21:08:49 -0800
-Message-ID: <43A8E361.5060503@physics.ucsd.edu>
-References: <43A86AF2.2080508@physics.ucsd.edu> <E1EooUH-0008VA-Vj@highlab.com> <43A87273.2060403@physics.ucsd.edu> <43A88218.1040205@physics.ucsd.edu> <E1Eoq94-00009u-SS@highlab.com> <43A8BF6B.1090006@physics.ucsd.edu> <E1Eovpp-0000XC-S5@highlab.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Execute from CF causes segmentation faults
+Date: Wed, 21 Dec 2005 18:48:47 +0900
+Message-ID: <20051221094847.GA12279@htj.dyndns.org>
+References: <9DA102EC128AD511BED000306E0766C70180487A@WTCNT4GW> <43A7FE89.4040909@gmail.com> <58cb370e0512200823g50de6e14n148e27e4a4c267f7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsl093-032-179.snd1.dsl.speakeasy.net ([66.93.32.179]:25805
-	"EHLO partlyharmless.local") by vger.kernel.org with ESMTP
-	id S1751084AbVLUFIx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Dec 2005 00:08:53 -0500
-In-Reply-To: <E1Eovpp-0000XC-S5@highlab.com>
+Received: from zproxy.gmail.com ([64.233.162.192]:1382 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932345AbVLUJsx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Dec 2005 04:48:53 -0500
+Received: by zproxy.gmail.com with SMTP id 14so110936nzn
+        for <linux-ide@vger.kernel.org>; Wed, 21 Dec 2005 01:48:52 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <58cb370e0512200823g50de6e14n148e27e4a4c267f7@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sebastian Kuzminsky <seb@highlab.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: James Steward <james.steward@dynamicratings.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, rmk+lkml@arm.linux.org.uk
 
-In my case this is actually an onboard Marvell Sata controller. There is 
-nothing in the two PCI-X slots at all. :(
+On Tue, Dec 20, 2005 at 05:23:45PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> Hi,
+> 
+> On 12/20/05, Tejun Heo <htejun@gmail.com> wrote:
+> > >
+> > > No.  I think what is happening is:
+> > > * the page we submit to the block layer has some cache lines already
+> > >   associated with the kernel mapping.
+> 
+> I'm not familiar with cache coherency issues so please help me...
+> 
+> I see that flush_dcache_page() call in filemap.c:do_generic_mapping_read()
+> takes care of user virtual mapping but there is no code to take care of kernel
+> virtual mapping?  But how could this happen in the first place that some
+> cache lines are associated with the kernel mapping?
 
-I am going to ask Supermicro what the story is. Even the driver from 
-Marvell that I have code for, of which I have found several versions, 
-refuses to work correctly either on the Xeon system below or some new 
-Opteron systems.
+When filling page cache, cache coherency is driver's reponsibility,
+which is logical as in most cases only the driver knows what's
+necessary to achieve coherency.  This usually doesn't require any
+extra care as dma mapping/unmapping functions automatically take care
+of coherency.
 
-In any case I am happy to work with whoever is making the linux kernel 
-driver for marvell to try to get to the bottom of the issue. I could 
-even provide a login on a dedicated system if that would help.
+However, when performing PIO, kmap/unmap are used to access the pages
+but they don't do any automatic cache flushing operations.  I've
+grepped through the source and it seems that it's the caller's
+responsibility to explicitly flush kernel mapping's cache before
+unmapping when modifying possibly-user-mapped pages.
 
-Cheers,
+> > > * the IDE driver uses PIO to read from CF and hits these cache lines
+> > >   making them dirty.
+> > > * the page is then mapped into userspace via a page fault.
+> > > * userspace reads the page.  Because some of the data is sitting in
+> > >   the cache corresponding with the kernel mapping of the page,
+> > >   userspace doesn't see the up to date data until later.
+> > >
+> > >
+> > >>It also seems odd to me that this requires fixes at the block driver
+> > >>level. I'd have thought this would get resolved at the page cache
+> > >>level, or fs level at absolute lowest.
+> > >
+> > >
+> > > If you do it there, you hurt DMA performance.  The DMA model ensures
+> > > cache coherency.  The IDE PIO IO model does not.
+> > >
+> > > Basically, the problem stems from IDE PIO IO not providing the same
+> > > cache guarantees as other block device drivers do.
+> 
+> Could you point me at such block device drivers
+> or explain how it should be done properly?
+> 
+> I tried looking at mmc, libata and scsi drivers and I couldn't find
+> any driver which actually does provide such guarantees...
 
-Terrence
+Yeap, they all seem to need fixing.
 
+> 
+> > [CC'ing Bartlomiej and Russell King]
+> >
+> > Hello, all.
+> >
+> > kmap/kunmap are to PIO what dma_map/unmap are to DMA.  dma_map/unmap do
+> > the following two things.
+> >
+> > 1. make the pages accessible to the DMA'ing device
+> > 2. take care of cache consistency
+> >
+> > kmap/unmap currently performs the counterpart of #1.
+> >
+> > 1. make the pages accessible to the accessing device (CPU)
+> >
+> > So, adding cache consistency handling to kmap/unmap seems more logical
+> > solution than handling cache consistency in all places where PIO occurs
+> > (there are quite a few and some are buried pretty deep).
+> >
+> > Hmmm... I'm not really sure whether the places where cache consistency
+> > handling is needed coincides with kmap/unmap.  Would the said scheme
+> > unnecessrily perform cache consistency operations in some places and
+> > thus degrade performance?
+> 
+> From what I understand:
+> * DMA API provides coherency w.r.t. to write buffers not cache aliasing issues
 
+DMA API provides all needed coherency.  It's responsible for evicting
+all related cpu cachelines before starting DMA.
 
-Sebastian Kuzminsky wrote:
+> * k(un)map() is also used for addresses which have only kernel mappings
 
->Terrence Martin <tmartin@physics.ucsd.edu> wrote:
->  
->
->>ata8: dev 0 ATA-7, max UDMA/133, 390721968 sectors: LBA48
->>ata8: slow completion (cmd ef)
->>ata8: dev 0 configured for UDMA/133
->>    
->>
->...
->  
->
->>SCSI device sdc: drive cache: write back
->> sdc:<3>ata8: Entering mv_eng_timeout
->>mmio_base f8880000 ap f6b91314 qc f6b917f0 scsi_cmnd f6393e00 &cmnd f6393e44
->>ata8: status=0x50 { DriveReady SeekComplete }
->>ata8: error=0x01 { AddrMarkNotFound }
->>sdc: Current: sense key: No Sense
->>    Additional sense: No additional sense information
->> unknown partition table
->>    
->>
->
->I've seen this error on my system.  It went away and things work well now.
->I did two things at the same time and I'm not sure which one fixed things.
->
->My system has two PCI 32/33 slots and three PCI-X 64/66 slots.
->
->
->Non-working configuration:
->
->      PCI slot 1: Promise TX2 
->      PCI slot 2: Adaptec 2930 (5V card)
->    PCI-X slot 1: Promise TX2
->    PCI-X slot 2: Marvell 6081
->    PCI-X slot 3: empty
->
->
->Working configuration:
->
->      PCI slot 1: Promise TX2
->      PCI slot 2: Promise TX2
->    PCI-X slot 1: empty
->    PCI-X slot 2: empty
->    PCI-X slot 3: Marvell 6081
->
->
->Could be getting rid of the 5V Adaptec card, could be taking all the
->non-PCI-X cards out of the PCI-X slots.  Could be something else.
->I'm not sure.  Good luck!
->
->
->  
->
+Yes, it seems that the correct way to fix this is adding
+flush_dcache_page prior to kunmap in all drivers which perform PIO -
+IDE, libata, SCSI, mmc...
 
+I originally thought that performing some extra flush_dcach_page
+should be okay considering most mainstream architectures have
+physically indexed cache.  But as this kind of problems are already
+handled by manually performing flushe in other places, it seems that
+block drivers should do the same.
+
+I'll follow up with patches soon.
+
+-- 
+tejun
