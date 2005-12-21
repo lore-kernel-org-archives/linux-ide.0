@@ -1,105 +1,69 @@
-From: Russell King <rmk@arm.linux.org.uk>
-Subject: Re: Execute from CF causes segmentation faults
-Date: Wed, 21 Dec 2005 15:01:02 +0000
-Message-ID: <20051221150102.GC1736@flint.arm.linux.org.uk>
-References: <9DA102EC128AD511BED000306E0766C70180487A@WTCNT4GW> <43A7FE89.4040909@gmail.com> <58cb370e0512200823g50de6e14n148e27e4a4c267f7@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide: add dcache flushing after PIO
+Date: Wed, 21 Dec 2005 16:57:05 +0100
+Message-ID: <58cb370e0512210757n25ddd614p33f3d70c8ff813cd@mail.gmail.com>
+References: <9DA102EC128AD511BED000306E0766C70180487A@WTCNT4GW>
+	 <43A7FE89.4040909@gmail.com>
+	 <58cb370e0512200823g50de6e14n148e27e4a4c267f7@mail.gmail.com>
+	 <20051221094847.GA12279@htj.dyndns.org>
+	 <20051221140022.GA25001@htj.dyndns.org>
+	 <20051221140344.GA1736@flint.arm.linux.org.uk>
+	 <43A969FD.3090106@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:36361 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S932440AbVLUPBM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Dec 2005 10:01:12 -0500
+Received: from nproxy.gmail.com ([64.233.182.204]:30172 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932456AbVLUP5H convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 21 Dec 2005 10:57:07 -0500
+Received: by nproxy.gmail.com with SMTP id x29so57851nfb
+        for <linux-ide@vger.kernel.org>; Wed, 21 Dec 2005 07:57:05 -0800 (PST)
+In-Reply-To: <43A969FD.3090106@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <58cb370e0512200823g50de6e14n148e27e4a4c267f7@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, James Steward <james.steward@dynamicratings.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Russell King <rmk@arm.linux.org.uk>, James Steward <james.steward@dynamicratings.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Tue, Dec 20, 2005 at 05:23:45PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> I'm not familiar with cache coherency issues so please help me...
+On 12/21/05, Tejun Heo <htejun@gmail.com> wrote:
+> Russell King wrote:
+> > On Wed, Dec 21, 2005 at 11:00:22PM +0900, Tejun Heo wrote:
+> >
+> >>Block drivers are responsible for cache coherency before and after IO.
+> >>When using DMA, DMA API takes care of it but drivers should do manual
+> >>flushing with PIO.
+> >
+> >
+> > Are you sure you need the ones in the write path?  No other driver
+> > seems to do this.
+> >
+>
+> Unfortunately, I'm not.  I was trying to be on the safe side.
+>
+> Are the page caches guaranteed to have no dirty alias on entry to block
+> layer for write?  I can see that aliases are handled for read(2)s and
+> write(2)s but I don't know much about mmap writebacks.
+>
+> Another question is whether or not it's guaranteed that there's no
+> user-mapped dirty cachelines on entry to block layer for read.  DMA API
 
-I'll do my best, but I'm not very familiar with the issues, even
-less familiar with the Linux MM internals.  So what follows is a
-fairly vague explaination.
+It seems to be guaranteed for read() and write() but not for mmap().
 
-Maybe some of the Linux MM gurus can fill in some of the bits as
-well.
+> clears all cpu caches before IO and, as DMA IO doesn't touch any cpu
+> caches, it doesn't do anything after IO.  The previous patch adds a
+> flush_dcache_page after IO which makes sure that the kernel cache line
+> is gone, but it doesn't do anything to make sure that there's no dirty
+> user-mapped cachelines hanging around before IO.
+>
+> I couldn't find an exemplary driver doing this kind of things with page
+> caches.  Most other flush_dcache_page usages I looked at didn't deal
+> with user mapped page caches.
 
-> I see that flush_dcache_page() call in filemap.c:do_generic_mapping_read()
-> takes care of user virtual mapping but there is no code to take care
-> of kernel virtual mapping?  But how could this happen in the first place
-> that some cache lines are associated with the kernel mapping?
+After reading excellent explanation by rmk I think that it should be
+fixed at VM layer (filemap_nopage() perhaps).
 
-What does do_generic_mapping_read do and where's it called from?
-It looks like it's called in response to the read() syscall.  If
-that's so, that's not directly a problem for cache coherency.
+Could you move the discussion to LKML (with some generic "subject")
+so we can get some help from MM hackers?
 
-When a driver using PIO reads data into the page cache, it uses the
-CPU write instructions.  In the process of doing this, we may hit
-some already allocated cache lines corresponding with this page, or
-in the case of a write-allocating cache, we may allocate cache lines
-in doing this.
-
-When the read() syscall reads data from the page into userspace,
-it reads data out of the page using the same address as the PIO
-driver used to write data there.  Hence, there is no coherency
-problem.
-
-The problem comes when you have a mmap() mapping of a file.  For
-this you want to look at filemap_nopage().  In this case, a PIO
-driver reads data into the page cache as described above.
-
-However, that page may eventually be mapped into user space.  Because
-it will be mapped at a different address from the kernel mapping, you
-can have cache aliasing occuring depending on the type of CPU cache.
-
-> Could you point me at such block device drivers
-> or explain how it should be done properly?
-
-ramdisks and md are the only two at present.
-
-> I tried looking at mmc, libata and scsi drivers and I couldn't find
-> any driver which actually does provide such guarantees...
-
-I've just been trying to sort out the mmc mmci driver, but the
-hardware I've been trying to test it out on appears to have decided
-to throw an instability fit today.
-
-scsi drivers aren't popular on ARM, so if there's any bugs lurking
-in there, they'll go unnoticed.  libata?  pass.
-
-> >From what I understand:
-> * DMA API provides coherency w.r.t. to write buffers not cache
->   aliasing issues
-
-The DMA API solves the coherency issues between the device doing DMA
-and the kernel mapping of the data.
-
-For read, the guarantee it provides is that any data read from the device
-will be placed in physical RAM and will be visible to the CPU via the
-kernel mapping once the DMA has been unmapped.
-
-Conversely, for write, the guarantee it provides is that any data placed
-by the CPU into the kernel mapping will be visible to the DMA device
-for writing.
-
-> * k(un)map() is also used for addresses which have only kernel mappings
-
-k*map have nothing to do with cache coherency.  Their only function is
-to deal with highmem pages.
-
-All that said, I don't think I'm the best person to explain these
-issues to you - I only have a very superficial understanding of the
-Linux MM.  I'm sure there's others with a more detailed understanding
-who would be able to convey the requirements far better than my
-attempt above.
-
-Nevertheless, I hope you find the above useful in trying to understand
-the problem.
-
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+Bartlomiej
