@@ -1,52 +1,51 @@
-From: Terrence Martin <tmartin@physics.ucsd.edu>
-Subject: Re: Kernel or patch suggestions for DMA enables Marvell Driver
-Date: Wed, 21 Dec 2005 12:26:53 -0800
-Message-ID: <43A9BA8D.9040200@physics.ucsd.edu>
-References: <43A86AF2.2080508@physics.ucsd.edu> <E1EooUH-0008VA-Vj@highlab.com> <43A87273.2060403@physics.ucsd.edu> <43A88218.1040205@physics.ucsd.edu> <E1Eoq94-00009u-SS@highlab.com> <43A8BF6B.1090006@physics.ucsd.edu> <Pine.LNX.4.63.0512211451500.7522@dingo.iwr.uni-heidelberg.de>
+From: David Dasenbrook <david@daviddasenbrook.de>
+Subject: Kernel hangs trying to speak to DVD-ROM
+Date: Wed, 21 Dec 2005 22:24:23 +0100
+Message-ID: <43A9C807.7010306@daviddasenbrook.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from newport.ucsd.edu ([132.239.73.89]:385 "EHLO newport.ucsd.edu")
-	by vger.kernel.org with ESMTP id S932497AbVLUU1B (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Dec 2005 15:27:01 -0500
-In-Reply-To: <Pine.LNX.4.63.0512211451500.7522@dingo.iwr.uni-heidelberg.de>
+Received: from s176.evanzo-server.de ([62.67.235.176]:37968 "EHLO
+	mx12.evanzo-server.de") by vger.kernel.org with ESMTP
+	id S932159AbVLUVQR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 21 Dec 2005 16:16:17 -0500
+Received: from [192.168.178.21] (Iad4f.i.pppool.de [85.73.173.79])
+	by mx12.evanzo-server.de (Postfix) with ESMTP id 1E047CA297
+	for <linux-ide@vger.kernel.org>; Wed, 21 Dec 2005 22:16:04 +0100 (CET)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>
-Cc: Sebastian Kuzminsky <seb@highlab.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Bogdan Costescu wrote:
-> On Tue, 20 Dec 2005, Terrence Martin wrote:
->
->> sata_mv 0000:03:04.0: 32 slots 4 ports unknown mode IRQ via MSI
->
-> This line seems to suggest that you have MSI enabled in your kernel 
-> config. Both me and Jeff Garzik had to disable it in order to get the 
-> driver to work with our Marvell controllers. However, your log shows 
-> the driver proceeding further than in my case, so maybe you have a 
-> setup that would allow using MSI - what mainboard is this ? (you 
-> mentioned Supermicro, but not the model number, unless I missed it...)
->
-I am not sure if the email I sent got through. I am resending the 
-motherboard info as well as I have some good news.
+Hello,
+I have this weird problem, and I would appreciate if someone could give
+me a hint on how to solve it:
+Whenever I connect a DVD-ROM drive (ANY DVD-Drive, not just a specific
+one) to my computer via the onboard IDE-connector, I cannot boot any
+more. The last message the kernel prints (actually, I think it's the
+ide-cd module) after getting hung up is this:
 
-The are three motherboards
+hdc: packet command error: status=0x51 { DriveReady SeekComplete Error }
+hdc: packet command error: error=0x04
+hdc: request sense failure: status=0x51 { DriveReady SeekComplete Error }
+hdc: request sense failure: error=0x04Aborted Command
 
-Supermicro X6DVL-EG2 EM64T
-Supermicro X6DHR-TG EM64T
-Supermicro  H8DAR-T Opteron
-
-So I compiled 2.6.15-r5 without MSI enabled. The system booted and the 
-disks are up and running. hdparm gives 65MB/s for a single disk. I am 
-going to raid0 these disks and see what I can get when actually writing 
-data.
-
-Looking at MSI though it seems to indicate that without it I cannot get 
-PCI-Express to work? It is not critical but I would like to be able to 
-use PCI-E on the motherboard that supports it (two PCI-E Slots). I am 
-happy to help with figuring out why there is this incompatibility with 
-this feature.
-
-Terrence
+I tried using the first and the second IDE channel, using the drive as
+master and slave. The strange thing is that CD-drives work perfectly
+fine, this happens just with DVD-Drives. Those DVD-Drives work fine in
+another computer with the exact same kernel.
+My mainboard is a AK70 by DFI, I think the onboard IDE-controller is the
+AMD7409 (that's what the kernel says.) I use Linux 2.6.8-2.
+2.4.x kernels don't work either, real old distributions with kernel 2.2
+or lower do.
+After playing around a bit, I found the DVD works when I type
+"hdc=noprobe hdc=cdrom" on the kernel command line. But still, I cannot
+do that when trying to run the debian installer or installers of debian
+derivatives. When detecting the DVD-ROM drive, the installer just hangs
+and I can't do anything any more but reboot.
+I find this really strange, maybe someone has a clue. If not, thanks
+anyway for taking the time to read this message.
+If you reply to this, please send me a CC.
+Thank you,
+David Dasenbrook
 
