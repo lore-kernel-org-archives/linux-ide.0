@@ -1,36 +1,31 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: ATA Write Error and Time-out Notification in User Space
-Date: Thu, 22 Dec 2005 01:09:16 +0000
-Message-ID: <1135213756.10383.9.camel@localhost.localdomain>
-References: <BAY101-F33B48301330A7FFF7849A4DF3E0@phx.gbl>
-	 <1135119036.25010.21.camel@localhost.localdomain>
-	 <200512201831.38592.raw@dslr.net>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Sebastian Kuzminsky <seb@highlab.com>
+Subject: Re: Interesting Performance with Marvell
+Date: Wed, 21 Dec 2005 20:25:59 -0700
+Message-ID: <E1EpH5b-0001UY-D5@highlab.com>
+References: <43A9FA5A.7000704@physics.ucsd.edu>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:27577 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964998AbVLVBIb
+Received: from ecae158-153-dhcp.colorado.edu ([128.138.158.153]:35241 "EHLO
+	highlab.com") by vger.kernel.org with ESMTP id S965051AbVLVDZb
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Dec 2005 20:08:31 -0500
-In-Reply-To: <200512201831.38592.raw@dslr.net>
+	Wed, 21 Dec 2005 22:25:31 -0500
+Received: from seb (helo=highlab.com)
+	by highlab.com with local-esmtp (Exim 4.50)
+	id 1EpH5b-0001UY-D5
+	for linux-ide@vger.kernel.org; Wed, 21 Dec 2005 20:25:59 -0700
+In-reply-to: <43A9FA5A.7000704@physics.ucsd.edu> 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Drew Winstel <raw@dslr.net>
-Cc: linux-ide@vger.kernel.org, John Treubig <jtreubig@hotmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Maw, 2005-12-20 at 18:31 -0600, Drew Winstel wrote:
-> With the application that John is using (namely, it delivers reads and writes 
-> directly to the drive via various SG ioctls), the file system is not an 
-> issue, hence wanting the errors to be returned to userspace.  
-> 
-> I presume this means that John would have to look at the block level error 
-> handling as opposed to the SCSI level?
+Terrence Martin <tmartin@physics.ucsd.edu> wrote:
+> Sebastian what are the mfg of the Marvell controller you are using?
 
-If you are using the sg ioctls then the commands are dispatched and the
-results come through the request queues but not the block layer above. 
+Sonnet.  It's their "Tempo-X 8 SATA" card.  PCI-X, 8 external SATA
+ports and no internal ports.  I'll post performance numbers soon or
+after Newtonmas.
 
-In that case you really shouldn't be seeing a hang.
+Who made you 8-port card?
 
-Alan
 
+-- 
+Sebastian Kuzminsky
