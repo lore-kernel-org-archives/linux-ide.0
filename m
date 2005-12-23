@@ -1,24 +1,27 @@
-From: "Isaac Couch" <isaac_couchsf@cimlec.fr>
-Subject: cials-tabs, limited supply available
-Date: Fri, 23 Dec 2005 14:24:18 +0100
-Message-ID: <9a5701c607c4$a9dc1bde$e8a3ecee@stahag.ch>
-Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=iso-8859-1; reply-type=original
+From: Caroline Merritt <uninsulated@felixsherman.com>
+Subject: Download and Buy CDS all software under $15-$99
+Date: Fri, 23 Dec 2005 12:43:27 -0500
+Message-ID: <4465186186.111125768@dvp82.internetdsl.tpnet.pl>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from adsl-68-125-75-137.dsl.pltn13.pacbell.net ([68.125.75.137]:54793
-	"HELO stahag.ch") by vger.kernel.org with SMTP id S1030551AbVLWPBt
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Dec 2005 10:01:49 -0500
+Received: from dvp82.internetdsl.tpnet.pl ([83.19.253.82]:19722 "HELO
+	dvp82.internetdsl.tpnet.pl") by vger.kernel.org with SMTP
+	id S1030589AbVLWRn1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Dec 2005 12:43:27 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
+Only our software is guaranteed 100% legal.
+http://ltwwp.w6kdjwk5ktj4wew9jwer1wew.egoizerjd.com/?sew
 
-Be ERECT in under 15 mins
 
-C0ST: $ 2 / use
 
-check our megasite --> onlineclear.com
+Happiness isn't something you experience; it's something you remember.    
+The Promised Land always lies on the other side of a Wilderness. 
+Perhaps too much of everything is as bad as too little.  
+Distributed file systems are a cruel hoax.      
+Success covers a multitude of blunders.       
 
 
