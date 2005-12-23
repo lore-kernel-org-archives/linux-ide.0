@@ -1,72 +1,70 @@
-From: Chris Paulson-Ellis <chris@edesix.com>
-Subject: libata SCSI page 0x83 query
-Date: Fri, 23 Dec 2005 00:27:27 +0000
-Message-ID: <43AB446F.6000900@edesix.com>
+From: "Mirazol" <mahal1970@excite.com>
+Subject: Catch up the LATEST and a VERY GOOD opportunity too...
+Date: Fri, 23 Dec 2005 09:51:12
+Message-ID: <200512230149.jBN1nABX019898@zeus1.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from astro.systems.pipex.net ([62.241.163.6]:45963 "EHLO
-	astro.systems.pipex.net") by vger.kernel.org with ESMTP
-	id S1751224AbVLWAZz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Dec 2005 19:25:55 -0500
+Received: from zeus1.kernel.org ([204.152.191.4]:30593 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S965188AbVLWBtS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Dec 2005 20:49:18 -0500
+Received: from Idol (210.213.152.86.pldt.net [210.213.152.86] (may be forged))
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jBN1nABX019898
+	for <linux-ide@vger.kernel.org>; Thu, 22 Dec 2005 17:49:11 -0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi,
+To all Networkers and Customers
 
-I have a problem with udev persistent device naming for SATA drives that 
-is caused by the libata implementation of the page 0x83 SCSI device 
-identifier query. See this thead from hotplug-devel:
+Good day.
 
-http://marc.theaimsgroup.com/?t=113518947900002&r=1&w=2
+I have found a brand new company with a new product that has just started up. 
+Be among the first 1,000 leaders worldwide. Moreover, it is beneficial to us as 
+leaders and marketers, not only monetarily, but, also in support of their members. 
+Unlike other companies, where you have to pay them to sell their product, 
+this company pays you to sell their product with added bonuses and incentives.
 
-I can work around the problem using /etc/scsi_id.config or udev rules 
-(see the thread), but here is a patch to fix the problem at source. What 
-do you think?
+Selling a liquid vitamin and mineral supplement. Now would be a perfect time 
+to join this real business opportunity with a company that is willing to 
+back us and support us in this new market.
 
-Regards,
-Chris.
+For the leaders who come on board at this time in this virgin market, 
+the monetary potential will be unlimited.
 
---- drivers/scsi/libata-scsi.c.orig     2005-12-22 23:23:55.000000000 +0000
-+++ drivers/scsi/libata-scsi.c  2005-12-22 23:56:14.000000000 +0000
-@@ -1532,16 +1532,13 @@
-        return 0;
- }
+Your FREE No Obligation 30 Day Trial Proves How Simple It Can BE For You 
+To Earn An Extra $2,000+ Per Month In As Little As 90 Days
 
--static const char *inq_83_str = "Linux ATA-SCSI simulator";
--
- /**
-  *     ata_scsiop_inq_83 - Simulate INQUIRY EVPD page 83, device identity
-  *     @args: device IDENTIFY data / SCSI command of interest.
-  *     @rbuf: Response buffer, to which simulated SCSI cmd output is sent.
-  *     @buflen: Response buffer length.
-  *
-- *     Returns device identification.  Currently hardcoded to
-- *     return "Linux ATA-SCSI simulator".
-+ *     Returns ATA device serial number (as for page 80).
-  *
-  *     LOCKING:
-  *     spin_lock_irqsave(host_set lock)
-@@ -1551,13 +1548,14 @@
-                              unsigned int buflen)
- {
-        rbuf[1] = 0x83;                 /* this page code */
--       rbuf[3] = 4 + strlen(inq_83_str);       /* page len */
-+       rbuf[3] = 4 + ATA_SERNO_LEN;    /* page len */
+Take Our FREE Tour now and LOCK your POSITION NOW.
 
-        /* our one and only identification descriptor (vendor-specific) */
--       if (buflen > (strlen(inq_83_str) + 4 + 4 - 1)) {
-+       if (buflen > (ATA_SERNO_LEN + 4 + 4 - 1)) {
-                rbuf[4 + 0] = 2;        /* code set: ASCII */
--               rbuf[4 + 3] = strlen(inq_83_str);
--               memcpy(rbuf + 4 + 4, inq_83_str, strlen(inq_83_str));
-+               rbuf[4 + 3] = ATA_SERNO_LEN;
-+               ata_dev_id_string(args->id, (unsigned char *) rbuf + 4 + 4,
-+                                 ATA_ID_SERNO_OFS, ATA_SERNO_LEN);
-        }
+    http://tinyurl.com/7ny2s
 
-        return 0;
+See you at the top!
 
+Mirazol
+mahal1970@excite.com
+
+======================================================
+FOR YOUR CHEAP AND FRESH LEADS
+     http://tinyurl.com/8b873
+
+ WERE THE TOP NETWORKERS CHOICE;
+
+======================================================
+FOR (FUTURE) PURCHASE OR FOR MAKING MONEY, YOU CAN 
+JOIN HERE FOR FREE...A VERY GOOD PRODUCT...PLS. CHECK;
+
+   http://shmyl.com/rhimson
+
+======================================================
+(DISCLAIMER AND REMOVAL INSTRUCTIONS)
+======================================================
+If you dont want to received this message again, please
+request its removal at the above email address,putting 
+REMOVE in the subject.
+
+Please allow 48 hours for your email to be removed.
+
+Thank You!
+
+------------------------------------------------------------
