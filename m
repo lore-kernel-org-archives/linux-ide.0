@@ -1,27 +1,51 @@
-From: Leonora Randolph <nap@contractsconsultancy.com>
-Subject: Improve sexual health with viagra!
-Date: Sat, 24 Dec 2005 09:02:25 -0500
-Message-ID: <4519955913.4058981696@p508372D6.dip.t-dialin.net>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [git patch] libata fix
+Date: Sat, 24 Dec 2005 10:13:57 -0500
+Message-ID: <20051224151357.GA16841@havoc.gtf.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from p508372D6.dip.t-dialin.net ([80.131.114.214]:53764 "HELO
-	p508372D6.dip.t-dialin.net") by vger.kernel.org with SMTP
-	id S1751238AbVLXOCZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Dec 2005 09:02:25 -0500
+Received: from havoc.gtf.org ([69.61.125.42]:64937 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1750968AbVLXPOB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Dec 2005 10:14:01 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-Do you want to know the secret of success in sexual life?
-http://qjgldpr.boyzz6z5z3h1bbtmgttmgbtt.taboodk.com/?fdosmso
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Moderation is a fatal thing. Nothing succeeds like excess.    
-There is nothing more exhilarating than to be shot at without result. 
-The art of progress is to preserve order amid change.   
-All the world's a cage.        
-Justice cannot be for one side alone, but must be for both. 
-Have more than thou showest; Speak less than thou knowest.   
+Please pull from 'upstream-fixes' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
+to receive the following updates:
 
+ drivers/scsi/libata-scsi.c |    5 +----
+ 1 files changed, 1 insertion(+), 4 deletions(-)
+
+Tony Battersby:
+      fix libata inquiry VPD for ATAPI devices
+
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index 72ddba9..2282c04 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -2044,7 +2044,7 @@ static int atapi_qc_complete(struct ata_
+ 	else {
+ 		u8 *scsicmd = cmd->cmnd;
+ 
+-		if (scsicmd[0] == INQUIRY) {
++		if ((scsicmd[0] == INQUIRY) && ((scsicmd[1] & 0x03) == 0)) {
+ 			u8 *buf = NULL;
+ 			unsigned int buflen;
+ 
+@@ -2058,9 +2058,6 @@ static int atapi_qc_complete(struct ata_
+ 	 * device.  2) Ensure response data format / ATAPI information
+ 	 * are always correct.
+ 	 */
+-	/* FIXME: do we ever override EVPD pages and the like, with
+-	 * this code?
+-	 */
+ 			if (buf[2] == 0) {
+ 				buf[2] = 0x5;
+ 				buf[3] = 0x32;
