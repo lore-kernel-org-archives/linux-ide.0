@@ -1,35 +1,27 @@
-From: "Rusty Cain" <JFSWZWYQJUUORG@yahoo.com>
-Subject: Pay Less Today bb
-Date: Sun, 25 Dec 2005 22:04:47 +0400
-Message-ID: <CFE7.9A9.3038498B8C__35042.8730519072$1135534377$gmane$org@mopalinux.com>
+From: Ik Spivey <Hibbard@besconcrete.com>
+Subject: Full version of the software.
+Date: Sun, 25 Dec 2005 14:27:10 -0500
+Message-ID: <140643892.549739955@200-103-89-26.cbace702.dsl.brasiltelecom.net.br>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:54937 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1750890AbVLYSMr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Dec 2005 13:12:47 -0500
+Received: from 200-103-89-26.cbace702.dsl.brasiltelecom.net.br ([200.103.89.26]:31486
+	"HELO 200-103-89-26.cbace702.dsl.brasiltelecom.net.br")
+	by vger.kernel.org with SMTP id S1750901AbVLYT1K (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Dec 2005 14:27:10 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ia64@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+Let your child grow with the best software... 
+http://yntxx.iaoz5ior6xn8iiiv5i0vnii0.entropyhj.com/?ervui
 
 
-Hey Guys,
-
-I was so happy I took adavantage of this Refinance offer,
-I thought I would share it with you.I locked in a 3.75 Rate
-before the increases started and got the cash I needed before the Holiday.
-It took me less than 1 Min to fill out this form and get started.
-
-http://Ui.kedhouse.com/af
+Never trouble another for what you can do for yourself.   
+Nobody's interested in sweetness and light.       
+Reputations are created every day and every minute.     
+In time we hate that which we often fear.    
+Show me a hero and I will write you a tragedy.  
+Civilization exists by geological consent, subject to change without notice.   
 
 
-
-
-
-
-
-
-
-out of maaei ling:
-http://kedhouse.com/rm
-
-5Qpb0c
