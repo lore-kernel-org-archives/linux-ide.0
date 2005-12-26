@@ -1,69 +1,42 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH] libata: fix sparse warnings
-Date: Sun, 25 Dec 2005 19:34:27 -0800
-Message-ID: <20051225193427.0962fdea.rdunlap@xenotime.net>
+From: Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp>
+Subject: Re: [PATCH/RFC 0/7] SATA ACPI suspend/resume support
+Date: 26 Dec 2005 14:10:12 +0900
+Message-ID: <87wthsqw97.fsf@marrow.phys.tohoku.ac.jp>
+References: <871x09nmin.fsf@marrow.phys.tohoku.ac.jp>
+	<20051220105514.01815cba.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:33497 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1750987AbVLZDdw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Dec 2005 22:33:52 -0500
-Received: from midway ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Sun, 25 Dec 2005 19:33:50 -0800
+Received: from tuhepnat.phys.tohoku.ac.jp ([130.34.123.133]:25107 "EHLO
+	izanagi.tuhep.physp") by vger.kernel.org with ESMTP
+	id S1751017AbVLZFKS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Dec 2005 00:10:18 -0500
+In-Reply-To: <20051220105514.01815cba.randy_d_dunlap@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik <jgarzik@pobox.com>
+To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Cc: linux-ide@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+Randy Dunlap <randy_d_dunlap@linux.intel.com> writes:
 
-Question:  in patch block 2, what are the semantics of the user <arg>?
-Does it point to an input u8 args[4] which must be immediately followed
-by an output u8 args[4]?  That's what it seems to be.  Just checking.
+> On 20 Dec 2005 00:18:24 +0900
+> Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp> wrote:
+> 
+> > This patch set does not work on my ThinkPad X41 Tablet.  I applied the
+> > seven patches to kernel 2.6.15-rc5-git3.  I added "acpi_sleep=s3_bios"
+> > to the kernel command line.
+> > 
+> 
+> I've read your mail several times now and don't have any real
+> ideas for you, but I wanted to reply so that you wouldn't feel
+> like you were being ignored.
+> 
 
+I found that ACPI sleep/wakeup works if I (compile and) insert the
+snd_intel8x0m module, which I don't need normally.  If I have rmmod-ed
+snd_intel8x0m, wakeup fails.  As you said, the message "device is not
+power manageable" was not a critical error.
 
-Fix sparse warnings:
-drivers/scsi/libata-scsi.c:154:15: warning: cast removes address space of expression
-drivers/scsi/libata-scsi.c:204:20: warning: cast removes address space of expression
-drivers/scsi/libata-scsi.c:204:20: warning: incorrect type in argument 1 (different address spaces)
-drivers/scsi/libata-scsi.c:204:20:    expected void [noderef] *to<asn:1>
-drivers/scsi/libata-scsi.c:204:20:    got void *<noident>
-drivers/scsi/libata-scsi.c:231:15: warning: cast removes address space of expression
+Thanks,
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
----
- drivers/scsi/libata-scsi.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
---- linux-2615-rc7.orig/drivers/scsi/libata-scsi.c
-+++ linux-2615-rc7/drivers/scsi/libata-scsi.c
-@@ -151,7 +151,7 @@ int ata_cmd_ioctl(struct scsi_device *sc
- 	struct scsi_sense_hdr sshdr;
- 	enum dma_data_direction data_dir;
- 
--	if (NULL == (void *)arg)
-+	if (arg == NULL)
- 		return -EINVAL;
- 
- 	if (copy_from_user(args, arg, sizeof(args)))
-@@ -201,7 +201,7 @@ int ata_cmd_ioctl(struct scsi_device *sc
- 	/* Need code to retrieve data from check condition? */
- 
- 	if ((argbuf)
--	 && copy_to_user((void *)(arg + sizeof(args)), argbuf, argsize))
-+	 && copy_to_user(arg + sizeof(args), argbuf, argsize))
- 		rc = -EFAULT;
- error:
- 	if (argbuf)
-@@ -228,7 +228,7 @@ int ata_task_ioctl(struct scsi_device *s
- 	u8 args[7];
- 	struct scsi_sense_hdr sshdr;
- 
--	if (NULL == (void *)arg)
-+	if (arg == NULL)
- 		return -EINVAL;
- 
- 	if (copy_from_user(args, arg, sizeof(args)))
-
-
----
+Jae-hyeon
