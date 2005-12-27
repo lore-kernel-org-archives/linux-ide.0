@@ -1,127 +1,99 @@
 From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: [PATCH 3/5] libata debugging macros support
-Date: Tue, 27 Dec 2005 15:30:47 -0800
-Message-ID: <20051227153047.1ddd733f.randy_d_dunlap@linux.intel.com>
+Subject: [PATCH 2/5] SATA/ACPI Make/Kconfig/docs
+Date: Tue, 27 Dec 2005 15:29:41 -0800
+Message-ID: <20051227152941.44652c9d.randy_d_dunlap@linux.intel.com>
 References: <20051227152613.25d580ff.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr20.intel.com ([134.134.136.19]:16013 "EHLO
-	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
-	id S932396AbVL0XeX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Dec 2005 18:34:23 -0500
+Received: from fmr19.intel.com ([134.134.136.18]:50633 "EHLO
+	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
+	id S932393AbVL0XeV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Dec 2005 18:34:21 -0500
 In-Reply-To: <20051227152613.25d580ff.randy_d_dunlap@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, axboe <axboe@suse.de>
 
-From: Borislav Petkov <petkov@uni-muenster.de>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 
-libata new debugging macro definitions
+Add ata_acpi in Makefile and Kconfig.
+Add ACPI obj_handle.
+Add ata_acpi.c to libata kernel-doc template file.
 
-Signed-off-by: Borislav Petkov <petkov@uni-muenster.de>
 Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 ---
- include/linux/libata.h |   52 ++++++++++++++++++++++++++++++++++++++++++-------
- 1 files changed, 45 insertions(+), 7 deletions(-)
+ Documentation/DocBook/libata.tmpl |    6 ++++++
+ drivers/scsi/Kconfig              |    5 +++++
+ drivers/scsi/Makefile             |    3 +++
+ include/linux/libata.h            |    6 ++++++
+ 4 files changed, 20 insertions(+)
 
+--- linux-2615-rc7-sat.orig/drivers/scsi/Makefile
++++ linux-2615-rc7-sat/drivers/scsi/Makefile
+@@ -164,6 +164,9 @@ CFLAGS_ncr53c8xx.o	:= $(ncr53c8xx-flags-
+ zalon7xx-objs	:= zalon.o ncr53c8xx.o
+ NCR_Q720_mod-objs	:= NCR_Q720.o ncr53c8xx.o
+ libata-objs	:= libata-core.o libata-scsi.o
++ifeq ($(CONFIG_SCSI_SATA_ACPI),y)
++  libata-objs	+= libata-acpi.o
++endif
+ 
+ # Files generated that shall be removed upon make clean
+ clean-files :=	53c7xx_d.h 53c700_d.h	\
+--- linux-2615-rc7-sat.orig/drivers/scsi/Kconfig
++++ linux-2615-rc7-sat/drivers/scsi/Kconfig
+@@ -598,6 +598,11 @@ config SCSI_SATA_INTEL_COMBINED
+ 	depends on IDE=y && !BLK_DEV_IDE_SATA && (SCSI_SATA_AHCI || SCSI_ATA_PIIX)
+ 	default y
+ 
++config SCSI_SATA_ACPI
++	bool
++	depends on SCSI_SATA && ACPI
++	default y
++
+ config SCSI_BUSLOGIC
+ 	tristate "BusLogic SCSI support"
+ 	depends on (PCI || ISA || MCA) && SCSI && ISA_DMA_API
 --- linux-2615-rc7-sat.orig/include/linux/libata.h
 +++ linux-2615-rc7-sat/include/linux/libata.h
-@@ -36,7 +36,8 @@
- #include <acpi/acpi.h>
+@@ -33,6 +33,7 @@
+ #include <asm/io.h>
+ #include <linux/ata.h>
+ #include <linux/workqueue.h>
++#include <acpi/acpi.h>
  
  /*
-- * compile-time options
-+ * compile-time options: to be removed as soon as all the drivers are
-+ * converted to the new debugging mechanism
-  */
- #undef ATA_DEBUG		/* debugging output */
- #undef ATA_VERBOSE_DEBUG	/* yet more debugging output */
-@@ -72,6 +73,38 @@
-         }
- #endif
- 
-+/* NEW: debug levels */
-+#define HAVE_LIBATA_MSG 1
+  * compile-time options
+@@ -312,6 +313,11 @@ struct ata_device {
+ 	u16			cylinders;	/* Number of cylinders */
+ 	u16			heads;		/* Number of heads */
+ 	u16			sectors;	/* Number of sectors per track */
 +
-+enum {
-+	ATA_MSG_DRV	= 0x0001,
-+	ATA_MSG_INFO	= 0x0002,
-+	ATA_MSG_PROBE	= 0x0004,
-+	ATA_MSG_WARN	= 0x0008,
-+	ATA_MSG_MALLOC	= 0x0010,
-+	ATA_MSG_CTL	= 0x0020,
-+	ATA_MSG_INTR	= 0x0040,
-+	ATA_MSG_ERR	= 0x0080,
-+};
-+
-+#define ata_msg_drv(p)    ((p)->msg_enable & ATA_MSG_DRV)
-+#define ata_msg_info(p)   ((p)->msg_enable & ATA_MSG_INFO)
-+#define ata_msg_probe(p)  ((p)->msg_enable & ATA_MSG_PROBE)
-+#define ata_msg_warn(p)   ((p)->msg_enable & ATA_MSG_WARN)
-+#define ata_msg_malloc(p) ((p)->msg_enable & ATA_MSG_MALLOC)
-+#define ata_msg_ctl(p)    ((p)->msg_enable & ATA_MSG_CTL)
-+#define ata_msg_intr(p)   ((p)->msg_enable & ATA_MSG_INTR)
-+#define ata_msg_err(p)    ((p)->msg_enable & ATA_MSG_ERR)
-+
-+static inline u32 ata_msg_init(int dval, int default_msg_enable_bits)
-+{
-+	if (dval < 0 || dval >= (sizeof(u32) * 8))
-+		return default_msg_enable_bits; /* should be 0x1 - only driver info msgs */
-+	if (!dval)
-+		return 0;
-+	return (1 << dval) - 1;
-+}
-+
- /* defines only for the constants which don't work well as enums */
- #define ATA_TAG_POISON		0xfafbfcfdU
- 
-@@ -361,6 +394,8 @@ struct ata_port {
- 	unsigned int		hsm_task_state;
- 	unsigned long		pio_task_timeout;
- 
-+	u32			msg_enable;
-+
- 	void			*private_data;
++#ifdef CONFIG_SCSI_SATA_ACPI
++	/* ACPI objects info */
++	acpi_handle		obj_handle;
++#endif
  };
  
-@@ -644,9 +679,9 @@ static inline u8 ata_wait_idle(struct at
+ struct ata_port {
+--- linux-2615-rc7-sat.orig/Documentation/DocBook/libata.tmpl
++++ linux-2615-rc7-sat/Documentation/DocBook/libata.tmpl
+@@ -787,6 +787,12 @@ and other resources, etc.
+ !Idrivers/scsi/libata-scsi.c
+   </chapter>
  
- 	if (status & (ATA_BUSY | ATA_DRQ)) {
- 		unsigned long l = ap->ioaddr.status_addr;
--		printk(KERN_WARNING
--		       "ATA: abnormal status 0x%X on port 0x%lX\n",
--		       status, l);
-+		if (ata_msg_warn(ap))
-+			printk(KERN_WARNING "ATA: abnormal status 0x%X on port 0x%lX\n",
-+				status, l);
- 	}
++  <chapter id="libataAcpi">
++     <title>libata ACPI interfaces/methods</title>
++!Edrivers/scsi/ata_acpi.c
++!Idrivers/scsi/ata_acpi.c
++  </chapter>
++
+   <chapter id="ataExceptions">
+      <title>ATA errors &amp; exceptions</title>
  
- 	return status;
-@@ -737,7 +772,8 @@ static inline u8 ata_irq_ack(struct ata_
- 
- 	status = ata_busy_wait(ap, bits, 1000);
- 	if (status & bits)
--		DPRINTK("abnormal status 0x%X\n", status);
-+		if (ata_msg_err(ap))
-+			printk(KERN_ERR "abnormal status 0x%X\n", status);
- 
- 	/* get controller status; clear intr, err bits */
- 	if (ap->flags & ATA_FLAG_MMIO) {
-@@ -755,8 +791,10 @@ static inline u8 ata_irq_ack(struct ata_
- 		post_stat = inb(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
- 	}
- 
--	VPRINTK("irq ack: host_stat 0x%X, new host_stat 0x%X, drv_stat 0x%X\n",
--		host_stat, post_stat, status);
-+	if (ata_msg_intr(ap))
-+		printk(KERN_INFO "%s: irq ack: host_stat 0x%X, new host_stat 0x%X, drv_stat 0x%X\n",
-+			__FUNCTION__,
-+			host_stat, post_stat, status);
- 
- 	return status;
- }
 
 ---
+
