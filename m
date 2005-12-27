@@ -1,326 +1,59 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: [PATCH 1/5] libata suspend/resume support (Jens)
-Date: Tue, 27 Dec 2005 15:28:19 -0800
-Message-ID: <20051227152819.49988fd8.randy_d_dunlap@linux.intel.com>
-References: <20051227152613.25d580ff.randy_d_dunlap@linux.intel.com>
+From: Peter Smith <peter.smith@utsouthwestern.edu>
+Subject: Re: Promise SATA oops
+Date: Tue, 27 Dec 2005 17:51:16 -0600
+Message-ID: <43B1D374.5070307@utsouthwestern.edu>
+References: <20051202045853.GD3677@vitelus.com> <438FDB9D.2030201@pobox.com> <20051202195109.GE3677@vitelus.com> <20051220201719.GC15466@vitelus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr19.intel.com ([134.134.136.18]:51145 "EHLO
-	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
-	id S932396AbVL0XeW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Dec 2005 18:34:22 -0500
-In-Reply-To: <20051227152613.25d580ff.randy_d_dunlap@linux.intel.com>
+Received: from swlx166.swmed.edu ([199.165.152.166]:7045 "EHLO
+	swlx166.swmed.edu") by vger.kernel.org with ESMTP id S932403AbVL0XvS
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Dec 2005 18:51:18 -0500
+Received: from peters.swmed.org ([129.112.118.137])
+	by swlx166.swmed.edu with esmtp (Exim 4.44)
+	id 1ErOb6-0005n2-Ry
+	for linux-ide@vger.kernel.org; Tue, 27 Dec 2005 17:51:18 -0600
+In-Reply-To: <20051220201719.GC15466@vitelus.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, axboe@suse.de
+To: linux-ide@vger.kernel.org
 
-From: Jens Axboe <axboe@suse.de>
+Aaron Lehmann wrote:
 
-Add libata suspend/resume support.
+>Argh, died again!! It had been stable for over 12 days. Same error
+>message, and the root md is degraded and dirty just like last time.
+>This is a very severe state with high risk of data loss. When things
+>went sour, terminals and most applications still kept working, but
+>anything that touched the filesystem froze up. I had a shell open in a
+>chroot on a ramdisk, but dmesg just hung for a few minutes and then
+>exited with a "Bus error". I had no other way of examining the kernel
+>log since the machine runs X.
+>
+>This was running 2.6.15-rc4. Crashes seem to happen less frequently
+>with it than with 2.6.14.x, but when they happen they leave the RAID
+>in a severe state. I also don't think 2.6.14.2 said anything about
+>disabling the IRQ.
+>
+>I'm very desperate now. About every week I experience a crash that
+>damages my RAID array to the point where it can't boot, as if the
+>instability wasn't bad enough. Do I need to buy a hardware RAID card?
+>
+>  
+>
+I personally wouldn't recommend a hardware RAID card.. Are you still 
+experiencing difficulties? Have you *tried* an i386 build? Can you work 
+on getting more data out of the Ooops'es--this would involve setting up 
+a serial console connection to another box and receiving dumps that way, 
+there are How-tos out there on this setup.. Another possibility is the 
+Kernel Crash Dump project [1]... Btw, I have (fairly simple) setup here 
+at my office, using Fedora Core 3, 2.6.12-1.1381_FC3smp kernel, dual 
+P3-500mz, 512MB ram, two Promise Sata2-150 TX4s, and five Seagate 200GB 
+drives.. I haven't had any problems with it since it was installed. 
+Granted the hardware and software are a bit behind the curve, it has 
+been sailling along quietly and steadily, so it is possible.
 
-Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
----
- drivers/scsi/ata_piix.c    |    4 +
- drivers/scsi/libata-core.c |  122 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/libata-scsi.c |   16 +++++
- drivers/scsi/scsi_sysfs.c  |   35 ++++++++++++
- include/linux/ata.h        |    2 
- include/linux/libata.h     |    7 ++
- include/scsi/scsi_host.h   |    6 ++
- 7 files changed, 190 insertions(+), 2 deletions(-)
---- linux-2615-rc7-sat.orig/drivers/scsi/ata_piix.c
-+++ linux-2615-rc7-sat/drivers/scsi/ata_piix.c
-@@ -125,6 +125,8 @@ static struct pci_driver piix_pci_driver
- 	.id_table		= piix_pci_tbl,
- 	.probe			= piix_init_one,
- 	.remove			= ata_pci_remove_one,
-+	.suspend		= ata_pci_device_suspend,
-+	.resume			= ata_pci_device_resume,
- };
- 
- static struct scsi_host_template piix_sht = {
-@@ -145,6 +147,8 @@ static struct scsi_host_template piix_sh
- 	.slave_configure	= ata_scsi_slave_config,
- 	.bios_param		= ata_std_bios_param,
- 	.ordered_flush		= 1,
-+	.suspend		= ata_scsi_device_suspend,
-+	.resume			= ata_scsi_device_resume,
- };
- 
- static const struct ata_port_operations piix_pata_ops = {
---- linux-2615-rc7-sat.orig/drivers/scsi/libata-core.c
-+++ linux-2615-rc7-sat/drivers/scsi/libata-core.c
-@@ -4099,6 +4099,104 @@ err_out:
- }
- 
- 
-+/*
-+ * Execute a 'simple' command, that only consists of the opcode 'cmd' itself,
-+ * without filling any other registers
-+ */
-+static int ata_do_simple_cmd(struct ata_port *ap, struct ata_device *dev,
-+			     u8 cmd)
-+{
-+	DECLARE_COMPLETION(wait);
-+	struct ata_queued_cmd *qc;
-+	unsigned long flags;
-+	int rc;
-+
-+	while ((qc = ata_qc_new_init(ap, dev)) == NULL)
-+		msleep(10);
-+
-+	qc->tf.command = cmd;
-+	qc->tf.flags |= ATA_TFLAG_DEVICE;
-+	qc->tf.protocol = ATA_PROT_NODATA;
-+
-+	qc->waiting = &wait;
-+	qc->complete_fn = ata_qc_complete_noop;
-+
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	rc = ata_qc_issue(qc);
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+	if (!rc)
-+		wait_for_completion(&wait);
-+
-+	return rc;
-+}
-+
-+static int ata_flush_cache(struct ata_port *ap, struct ata_device *dev)
-+{
-+	u8 cmd;
-+
-+	if (!ata_try_flush_cache(dev))
-+		return 0;
-+
-+	if (ata_id_has_flush_ext(dev->id))
-+		cmd = ATA_CMD_FLUSH_EXT;
-+	else
-+		cmd = ATA_CMD_FLUSH;
-+
-+	return ata_do_simple_cmd(ap, dev, cmd);
-+}
-+
-+static int ata_standby_drive(struct ata_port *ap, struct ata_device *dev)
-+{
-+	return ata_do_simple_cmd(ap, dev, ATA_CMD_STANDBYNOW1);
-+}
-+
-+static int ata_start_drive(struct ata_port *ap, struct ata_device *dev)
-+{
-+	return ata_do_simple_cmd(ap, dev, ATA_CMD_IDLEIMMEDIATE);
-+}
-+
-+/**
-+ *	ata_device_resume - wakeup a previously suspended devices
-+ *
-+ *	Kick the drive back into action, by sending it an idle immediate
-+ *	command and making sure its transfer mode matches between drive
-+ *	and host.
-+ *
-+ */
-+int ata_device_resume(struct ata_port *ap, struct ata_device *dev)
-+{
-+	if (ap->flags & ATA_FLAG_SUSPENDED) {
-+		ap->flags &= ~ATA_FLAG_SUSPENDED;
-+		ata_set_mode(ap);
-+	}
-+	if (!ata_dev_present(dev))
-+		return 0;
-+	if (dev->class == ATA_DEV_ATA)
-+		ata_start_drive(ap, dev);
-+
-+	return 0;
-+}
-+
-+/**
-+ *	ata_device_suspend - prepare a device for suspend
-+ *
-+ *	Flush the cache on the drive, if appropriate, then issue a
-+ *	standbynow command.
-+ *
-+ */
-+int ata_device_suspend(struct ata_port *ap, struct ata_device *dev)
-+{
-+	if (!ata_dev_present(dev))
-+		return 0;
-+	if (dev->class == ATA_DEV_ATA)
-+		ata_flush_cache(ap, dev);
-+
-+	ata_standby_drive(ap, dev);
-+	ap->flags |= ATA_FLAG_SUSPENDED;
-+	return 0;
-+}
-+
- /**
-  *	ata_port_start - Set port up for dma.
-  *	@ap: Port to initialize
-@@ -4860,6 +4958,23 @@ int pci_test_config_bits(struct pci_dev 
- 
- 	return (tmp == bits->val) ? 1 : 0;
- }
-+
-+int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t state)
-+{
-+	pci_save_state(pdev);
-+	pci_disable_device(pdev);
-+	pci_set_power_state(pdev, PCI_D3hot);
-+	return 0;
-+}
-+
-+int ata_pci_device_resume(struct pci_dev *pdev)
-+{
-+	pci_set_power_state(pdev, PCI_D0);
-+	pci_restore_state(pdev);
-+	pci_enable_device(pdev);
-+	pci_set_master(pdev);
-+	return 0;
-+}
- #endif /* CONFIG_PCI */
- 
- 
-@@ -4963,4 +5078,11 @@ EXPORT_SYMBOL_GPL(ata_pci_host_stop);
- EXPORT_SYMBOL_GPL(ata_pci_init_native_mode);
- EXPORT_SYMBOL_GPL(ata_pci_init_one);
- EXPORT_SYMBOL_GPL(ata_pci_remove_one);
-+EXPORT_SYMBOL_GPL(ata_pci_device_suspend);
-+EXPORT_SYMBOL_GPL(ata_pci_device_resume);
- #endif /* CONFIG_PCI */
-+
-+EXPORT_SYMBOL_GPL(ata_device_suspend);
-+EXPORT_SYMBOL_GPL(ata_device_resume);
-+EXPORT_SYMBOL_GPL(ata_scsi_device_suspend);
-+EXPORT_SYMBOL_GPL(ata_scsi_device_resume);
---- linux-2615-rc7-sat.orig/drivers/scsi/libata-scsi.c
-+++ linux-2615-rc7-sat/drivers/scsi/libata-scsi.c
-@@ -396,6 +396,22 @@ void ata_dump_status(unsigned id, struct
- 	}
- }
- 
-+int ata_scsi_device_resume(struct scsi_device *sdev)
-+{
-+	struct ata_port *ap = (struct ata_port *) &sdev->host->hostdata[0];
-+	struct ata_device *dev = &ap->device[sdev->id];
-+
-+	return ata_device_resume(ap, dev);
-+}
-+
-+int ata_scsi_device_suspend(struct scsi_device *sdev)
-+{
-+	struct ata_port *ap = (struct ata_port *) &sdev->host->hostdata[0];
-+	struct ata_device *dev = &ap->device[sdev->id];
-+
-+	return ata_device_suspend(ap, dev);
-+}
-+
- /**
-  *	ata_to_sense_error - convert ATA error to SCSI error
-  *	@id: ATA device number
---- linux-2615-rc7-sat.orig/drivers/scsi/scsi_sysfs.c
-+++ linux-2615-rc7-sat/drivers/scsi/scsi_sysfs.c
-@@ -263,9 +263,40 @@ static int scsi_bus_match(struct device 
- 	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
- }
- 
-+static int scsi_bus_suspend(struct device * dev, pm_message_t state)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct scsi_host_template *sht = sdev->host->hostt;
-+	int err;
-+
-+	err = scsi_device_quiesce(sdev);
-+	if (err)
-+		return err;
-+
-+	if (sht->suspend)
-+		err = sht->suspend(sdev);
-+
-+	return err;
-+}
-+
-+static int scsi_bus_resume(struct device * dev)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct scsi_host_template *sht = sdev->host->hostt;
-+	int err = 0;
-+
-+	if (sht->resume)
-+		err = sht->resume(sdev);
-+
-+	scsi_device_resume(sdev);
-+	return err;
-+}
-+
- struct bus_type scsi_bus_type = {
--        .name		= "scsi",
--        .match		= scsi_bus_match,
-+	.name		= "scsi",
-+	.match		= scsi_bus_match,
-+	.suspend	= scsi_bus_suspend,
-+	.resume		= scsi_bus_resume,
- };
- 
- int scsi_sysfs_register(void)
---- linux-2615-rc7-sat.orig/include/linux/ata.h
-+++ linux-2615-rc7-sat/include/linux/ata.h
-@@ -141,6 +141,8 @@ enum {
- 	ATA_CMD_PACKET		= 0xA0,
- 	ATA_CMD_VERIFY		= 0x40,
- 	ATA_CMD_VERIFY_EXT	= 0x42,
-+ 	ATA_CMD_STANDBYNOW1	= 0xE0,
-+ 	ATA_CMD_IDLEIMMEDIATE	= 0xE1,
- 	ATA_CMD_INIT_DEV_PARAMS	= 0x91,
- 
- 	/* SETFEATURES stuff */
---- linux-2615-rc7-sat.orig/include/linux/libata.h
-+++ linux-2615-rc7-sat/include/linux/libata.h
-@@ -123,6 +123,7 @@ enum {
- 					     * proper HSM is in place. */
- 	ATA_FLAG_DEBUGMSG	= (1 << 10),
- 	ATA_FLAG_NO_ATAPI	= (1 << 11), /* No ATAPI support */
-+	ATA_FLAG_SUSPENDED	= (1 << 12), /* port is suspended */
- 
- 	ATA_QCFLAG_ACTIVE	= (1 << 1), /* cmd not yet ack'd to scsi lyer */
- 	ATA_QCFLAG_SG		= (1 << 3), /* have s/g table? */
-@@ -436,6 +437,8 @@ extern void ata_std_ports(struct ata_iop
- extern int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
- 			     unsigned int n_ports);
- extern void ata_pci_remove_one (struct pci_dev *pdev);
-+extern int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t state);
-+extern int ata_pci_device_resume(struct pci_dev *pdev);
- #endif /* CONFIG_PCI */
- extern int ata_device_add(const struct ata_probe_ent *ent);
- extern void ata_host_set_remove(struct ata_host_set *host_set);
-@@ -445,6 +448,10 @@ extern int ata_scsi_queuecmd(struct scsi
- extern int ata_scsi_error(struct Scsi_Host *host);
- extern int ata_scsi_release(struct Scsi_Host *host);
- extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
-+extern int ata_scsi_device_resume(struct scsi_device *);
-+extern int ata_scsi_device_suspend(struct scsi_device *);
-+extern int ata_device_resume(struct ata_port *, struct ata_device *);
-+extern int ata_device_suspend(struct ata_port *, struct ata_device *);
- extern int ata_ratelimit(void);
- 
- /*
---- linux-2615-rc7-sat.orig/include/scsi/scsi_host.h
-+++ linux-2615-rc7-sat/include/scsi/scsi_host.h
-@@ -296,6 +296,12 @@ struct scsi_host_template {
- 	int (*proc_info)(struct Scsi_Host *, char *, char **, off_t, int, int);
- 
- 	/*
-+	 * suspend support
-+	 */
-+	int (*suspend)(struct scsi_device *);
-+	int (*resume)(struct scsi_device *);
-+
-+	/*
- 	 * Name of proc directory
- 	 */
- 	char *proc_name;
+Peter
 
-
----
-~Randy
+[1] http://www.kernel.org/pub/linux/kernel/v2.6/ChangeLog-2.6.11google.com
