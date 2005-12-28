@@ -1,59 +1,70 @@
-From: Peter Smith <peter.smith@utsouthwestern.edu>
-Subject: Re: Promise SATA oops
-Date: Tue, 27 Dec 2005 17:51:16 -0600
-Message-ID: <43B1D374.5070307@utsouthwestern.edu>
-References: <20051202045853.GD3677@vitelus.com> <438FDB9D.2030201@pobox.com> <20051202195109.GE3677@vitelus.com> <20051220201719.GC15466@vitelus.com>
+From: Rafal Krzewski <Rafal.Krzewski@caltha.pl>
+Subject: SATA I/O error problems
+Date: Wed, 28 Dec 2005 09:30:12 +0100
+Message-ID: <43B24D14.1020603@caltha.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from swlx166.swmed.edu ([199.165.152.166]:7045 "EHLO
-	swlx166.swmed.edu") by vger.kernel.org with ESMTP id S932403AbVL0XvS
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Dec 2005 18:51:18 -0500
-Received: from peters.swmed.org ([129.112.118.137])
-	by swlx166.swmed.edu with esmtp (Exim 4.44)
-	id 1ErOb6-0005n2-Ry
-	for linux-ide@vger.kernel.org; Tue, 27 Dec 2005 17:51:18 -0600
-In-Reply-To: <20051220201719.GC15466@vitelus.com>
+Received: from robur.caltha.pl ([80.72.33.166]:11485 "EHLO robur.caltha.pl")
+	by vger.kernel.org with ESMTP id S932492AbVL1IaQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Dec 2005 03:30:16 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Aaron Lehmann wrote:
+Hi all,
 
->Argh, died again!! It had been stable for over 12 days. Same error
->message, and the root md is degraded and dirty just like last time.
->This is a very severe state with high risk of data loss. When things
->went sour, terminals and most applications still kept working, but
->anything that touched the filesystem froze up. I had a shell open in a
->chroot on a ramdisk, but dmesg just hung for a few minutes and then
->exited with a "Bus error". I had no other way of examining the kernel
->log since the machine runs X.
->
->This was running 2.6.15-rc4. Crashes seem to happen less frequently
->with it than with 2.6.14.x, but when they happen they leave the RAID
->in a severe state. I also don't think 2.6.14.2 said anything about
->disabling the IRQ.
->
->I'm very desperate now. About every week I experience a crash that
->damages my RAID array to the point where it can't boot, as if the
->instability wasn't bad enough. Do I need to buy a hardware RAID card?
->
->  
->
-I personally wouldn't recommend a hardware RAID card.. Are you still 
-experiencing difficulties? Have you *tried* an i386 build? Can you work 
-on getting more data out of the Ooops'es--this would involve setting up 
-a serial console connection to another box and receiving dumps that way, 
-there are How-tos out there on this setup.. Another possibility is the 
-Kernel Crash Dump project [1]... Btw, I have (fairly simple) setup here 
-at my office, using Fedora Core 3, 2.6.12-1.1381_FC3smp kernel, dual 
-P3-500mz, 512MB ram, two Promise Sata2-150 TX4s, and five Seagate 200GB 
-drives.. I haven't had any problems with it since it was installed. 
-Granted the hardware and software are a bit behind the curve, it has 
-been sailling along quietly and steadily, so it is possible.
+I am having problems with SATA disks in one of my servers. I tried 
+googling up info about it and I found it was reported by several people 
+over the past few months, but no answers/solutions were given.
 
-Peter
+Once in a while (several hours/days) the kernel starts spitting out 
+messages included below to the console and the machine becomes 
+completely non-responsive:
 
-[1] http://www.kernel.org/pub/linux/kernel/v2.6/ChangeLog-2.6.11google.com
+ATA: abnormal status 0xD0 on port 0xEFF7
+ATA: abnormal status 0xD0 on port 0xEFF7
+ATA: abnormal status 0xD0 on port 0xEFF7
+ata1: command 0xca timeout, stat 0xd0 host_stat 0x21
+ata1: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata1: status=0xd0 { Busy }
+sd 0:0:0:0 SCSI error: return code = 0x8000002
+sda: Current: sense key=0xb
+     ASC=0x47 ASCQ=0x0
+Info fld=0x559a48
+end_request: I/O error, dev sda, sector 5613328
+
+There is a 30s pause between writing the first 3 lines and the rest of 
+the message. Next batch of messages follows immediately. Sector number 
+increases each time in the increments of 8.
+
+Rebooting the machine brings things back to normal - provided that it is 
+left alone for the time the MD array resyncs. Putting some load on 
+machine during the resync makes the another I/O error flood very 
+probable. OTOH I have seen the problem occurring at night when the 
+machine is completely idle (or maybe it was triggered by the early 
+morning cron jobs?)
+
+The problem persists for a long time now - I was using kernels 2.6.12.1, 
+  2.6.13.4 and recently 2.6.15-rc6 hoping it would go away with another 
+upgrade, but no luck.
+It is also independent from SMP - the machine has dual core P4, but the 
+problem happens just as often with SMP on and off.
+
+Machine info:
+Asus P4P800-X mobo, 865PE / ICH5 chipset 
+(http://www.asus.com/products.aspx?l1=3&l2=12&l3=31&model=181&modelmenu=1)
+2xWD Caviar WD800JD disks 
+(http://www.westerndigital.com/en/products/Products.asp?DriveID=83)
+Linux 2.6.16-rc6, config: http://caltha.pl/~rafal/morus-oops/config,
+dmesg http://caltha.pl/~rafal/morus-oops/dmesg,
+PCI http://caltha.pl/~rafal/morus-oops/config
+
+I'd be happy to provide other information as necessary, and am willing 
+to test patches on my box (yes, I have the data backed up ;-)).
+
+Thanks in advance!
+Rafal
+
+PS. I'd appreciate CCing answers to me - I am not this list's regular.
