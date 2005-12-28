@@ -1,31 +1,51 @@
-From: "Arron Rainey" <pzfmmkgs@yahoo.com>
-Subject: Get Bigger Pennis aV
-Date: Wed, 28 Dec 2005 20:09:46 +0400
-Message-ID: <4A577EE3.7684.6015C2D5@localhost>
+From: JIMMY NELSON <jimmynelson@walla.com>
+Subject: ASSIST MY CHARITY EFFORT
+Date: Wed, 28 Dec 2005 21:23:41 +0100
+Message-ID: <200512282023.jBSKNYTu022002@zeus1.kernel.org>
+Reply-To: jimmynelson@walla.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: multipart/mixed; boundary="02772678-593c-470f-9218-461f39f03a91"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 200-126-70-194.bk5-dsl.surnet.cl ([200.126.70.194]:5901 "HELO
-	200-126-70-194.bk5-dsl.surnet.cl") by vger.kernel.org with SMTP
-	id S932435AbVL1QLE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Dec 2005 11:11:04 -0500
+Received: from zeus1.kernel.org ([204.152.191.4]:32471 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S964900AbVL1UXp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Dec 2005 15:23:45 -0500
+Received: from walla2184.com (135.Red-81-38-32.dynamicIP.rima-tde.net [81.38.32.135])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jBSKNYTu022002
+	for <linux-ide@vger.kernel.org>; Wed, 28 Dec 2005 12:23:41 -0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-laptop@vger.kernel.org
 
 
+This is a multi-part message in MIME format
 
+--02772678-593c-470f-9218-461f39f03a91
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Here's latest "Thunder" formula has been proven
-to add inches to the sizes while multiplying
-orgasms like never had before. 
-Our products is light years ahead of our competitors
-which has millions of happy users.
+Dear Son of God,
+My name is  Mr Jimmy Nelson ,an old time businessman from Mauritius . I would =
+like to share my pain with you . I have been diagnosed with cancer of the =
+brain.I have tried all my best with all the money i have to treat it , but to =
+no avail. It has defiled all forms of medical treatment, it is getting worse =
+day by day
 
-Check us out..You won't regret.
+I have given enough of my wealth to my family members,and i do not trust =
+their competent to help me distribute the rest of my welth to charity which =
+happens to be my last wish, so i decided to contact you. I have about  =
+US$2,000,000,00 ( Two million Dollars ) which i depostied with a security =
+bank so long ago in Spain that only my lawyer knows about and 
+none of my family members know about it. I wish you as a child of God to help =
+me collect this deposit and dispatched it to charity organizations.
 
-http://thunder14.erectus.biz
+Also i have decided that you should take  15%  from the fund for yourself for =
+any expenses incured  during this endeavour.
+.
+Contact me: jimmynelson@walla.com  ,  jimmynelson@latinmail.com
 
+                                            
+May the lord be with you.
+ 
+Mr Jimmy Nelson  
+--02772678-593c-470f-9218-461f39f03a91--
 
-xqUk
