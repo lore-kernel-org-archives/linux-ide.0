@@ -1,31 +1,22 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: [PATCH 0/5] SATA/ACPI suspend/resume support
-Date: Tue, 3 Jan 2006 12:11:04 -0800
-Message-ID: <20060103121104.68ce2cca.randy_d_dunlap@linux.intel.com>
-References: <20051227153428.4eaad244.randy_d_dunlap@linux.intel.com>
-	<87vex7rnfn.fsf@marrow.phys.tohoku.ac.jp>
-	<20060103090847.43c2a00d.randy_d_dunlap@linux.intel.com>
-	<20060103172649.GV2772@suse.de>
-	<20060103190346.GY2772@suse.de>
-	<20060103115712.5ac7ec47.randy_d_dunlap@linux.intel.com>
-	<20060103200603.GA3472@suse.de>
+Date: Tue, 3 Jan 2006 21:13:12 +0100
+Message-ID: <20060103201312.GB3472@suse.de>
+References: <20051227153428.4eaad244.randy_d_dunlap@linux.intel.com> <87vex7rnfn.fsf@marrow.phys.tohoku.ac.jp> <20060103090847.43c2a00d.randy_d_dunlap@linux.intel.com> <20060103172649.GV2772@suse.de> <20060103190346.GY2772@suse.de> <20060103115712.5ac7ec47.randy_d_dunlap@linux.intel.com> <20060103200603.GA3472@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr17.intel.com ([134.134.136.16]:52697 "EHLO
-	orsfmr002.jf.intel.com") by vger.kernel.org with ESMTP
-	id S932519AbWACUKc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jan 2006 15:10:32 -0500
+Received: from ns.virtualhost.dk ([195.184.98.160]:29787 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S932517AbWACUL3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jan 2006 15:11:29 -0500
+Content-Disposition: inline
 In-Reply-To: <20060103200603.GA3472@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
+To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 Cc: jhpark@tuhep.phys.tohoku.ac.jp, linux-ide@vger.kernel.org, jgarzik@pobox.com, chris@powerblogs.com
 
-On Tue, 3 Jan 2006 21:06:03 +0100
-Jens Axboe <axboe@suse.de> wrote:
-
+On Tue, Jan 03 2006, Jens Axboe wrote:
 > On Tue, Jan 03 2006, Randy Dunlap wrote:
 > > > ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0x18C0 irq 14
 > > > ata1: dev 0 cfg 49:2f00 82:346b 83:7d09 84:6003 85:3469 86:3c09 87:6003
@@ -46,9 +37,7 @@ Jens Axboe <axboe@suse.de> wrote:
 > reference), the problem goes away? That smells more like return-on-error
 > without setting it at all, hence kfree() blows up when passed a bogus
 > stack filled variable.
-
-Yes, I'll fix that part also.
-
+> 
 > > Jae-hyeon,
 > > 
 > > Please send me a dump of your ACPI tables (acpidump).
@@ -62,10 +51,15 @@ Yes, I'll fix that part also.
 > > getting that is invalid?
 > 
 > Sure, will reboot it after posting this message.
-> 
-> -- 
-> Jens Axboe
 
+It's just 0 (because I fill it as such). do_drive_get_GTF() looks
+suspicious, at least with noacpi != 0 it will return success without
+filling gtf_address. Perhaps you want to treat that as an error, or
+check for it earlier?
 
----
-~Randy
+Anyways, I'm pretty sure do_drive_get_GTF() needs some fixing. I'll
+leave that to you, let me know if you want me to test anything.
+
+-- 
+Jens Axboe
+
