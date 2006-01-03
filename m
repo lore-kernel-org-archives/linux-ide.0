@@ -1,34 +1,49 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: ATA Write Error and Time-out Notification in User Space
-Date: Tue, 03 Jan 2006 21:48:04 +0000
-Message-ID: <1136324884.22598.51.camel@localhost.localdomain>
-References: <BAY101-F32BC19A49EC86F6FED361BDF2C0@phx.gbl>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: Re: [PATCH 0/5] SATA/ACPI suspend/resume support
+Date: Tue, 3 Jan 2006 14:02:52 -0800
+Message-ID: <20060103140252.52ebd7d9.randy_d_dunlap@linux.intel.com>
+References: <20051227153428.4eaad244.randy_d_dunlap@linux.intel.com>
+	<87vex7rnfn.fsf@marrow.phys.tohoku.ac.jp>
+	<20060103090847.43c2a00d.randy_d_dunlap@linux.intel.com>
+	<20060103172649.GV2772@suse.de>
+	<20060103190346.GY2772@suse.de>
+	<20060103115712.5ac7ec47.randy_d_dunlap@linux.intel.com>
+	<20060103200603.GA3472@suse.de>
+	<20060103201312.GB3472@suse.de>
+	<20060103130027.44bb8897.randy_d_dunlap@linux.intel.com>
+	<20060103211608.GF3472@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:37578 "EHLO lxorguk.ukuu.org.uk")
-	by vger.kernel.org with ESMTP id S964952AbWACVrE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jan 2006 16:47:04 -0500
-In-Reply-To: <BAY101-F32BC19A49EC86F6FED361BDF2C0@phx.gbl>
+Received: from fmr20.intel.com ([134.134.136.19]:50602 "EHLO
+	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1751017AbWACWCR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jan 2006 17:02:17 -0500
+In-Reply-To: <20060103211608.GF3472@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Treubig <jtreubig@hotmail.com>
-Cc: raw@dslr.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: jhpark@tuhep.phys.tohoku.ac.jp, linux-ide@vger.kernel.org, jgarzik@pobox.com, chris@powerblogs.com
 
-On Maw, 2006-01-03 at 13:27 -0600, John Treubig wrote:
-> I receive this as great news, only I don't know where the -mm tree is 
-> located to see if I can get the patch or fix!  Can you give me a few 
-> pointers?!
+On Tue, 3 Jan 2006 22:16:11 +0100
+Jens Axboe <axboe@suse.de> wrote:
 
-The -mm patches live on kernel.org in pub/linux/kernel/people/akpm/
+> > At least it shows that there is no _GTF at all for SATA devices,
+> > only for PATA (which my patch does not address).
+> 
+> Aren't they the same thing? Any plans on checking that as well, I think
+> there's a fair share of pata-on-sata laptops out there.
 
-The patch you want is the one to drivers/ide/ide-io.c although be aware
-it will make non PCI ATA controllers crash on errors if applied. The
-"right" fix for this is probably to have a hwif->flush_data() function
-that defaults to try_to_flush_leftover_data() so that the knowledge
-involved is not hacked into the ide core but kept in the driver.
+It certainly would be Good to have that supported.
+I'll take a look at the ACPI (3.0) spec to see what (more)
+is needed.
 
+BTW, there's a different IDE-ACPI patch from
+Shaohua Li <shaohua.li@intel.com>.  Have you seen it?
+Has anyone here tested it?
+http://marc.theaimsgroup.com/?l=linux-kernel&m=113390716128790&w=2
 
-Alan
-
+Thanks,
+---
+~Randy
