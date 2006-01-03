@@ -1,39 +1,35 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: PATCH: Small fixes backported to old IDE SiS driver
-Date: Tue, 3 Jan 2006 17:54:14 +0100
-Message-ID: <58cb370e0601030854j45f9af79gd594850926061326@mail.gmail.com>
-References: <1136301581.22598.5.camel@localhost.localdomain>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [git patches] 2.6.x libata updates
+Date: Tue, 3 Jan 2006 11:56:56 -0500
+Message-ID: <20060103165656.GA1270@havoc.gtf.org>
+References: <20060103164319.GA402@havoc.gtf.org> <58cb370e0601030851w62fc917bibe0fd5069b2f3e44@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.198]:16453 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932436AbWACQyP convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jan 2006 11:54:15 -0500
-Received: by nproxy.gmail.com with SMTP id l35so893020nfa
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jan 2006 08:54:14 -0800 (PST)
-In-Reply-To: <1136301581.22598.5.camel@localhost.localdomain>
+Received: from havoc.gtf.org ([69.61.125.42]:48770 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1751468AbWACQ45 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jan 2006 11:56:57 -0500
 Content-Disposition: inline
+In-Reply-To: <58cb370e0601030851w62fc917bibe0fd5069b2f3e44@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 1/3/06, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> Some quick backport bits from the libata PATA work to fix things found
-> in the sis driver. The piix driver needs some fixes too but those are
-> way to large and need someone working on old IDE with time to do them.
->
-> This patch fixes the case where random bits get loaded into SIS timing
-> registers according to the description of the correct behaviour from
-> Vojtech Pavlik. It also adds the SiS5517 ATA16 chipset which is not
-> currently supported by the driver. Thanks to Conrad Harriss for loaning
-> me the machine with the 5517 chipset.
+On Tue, Jan 03, 2006 at 05:51:57PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> On 1/3/06, Jeff Garzik <jgarzik@pobox.com> wrote:
+> 
+> > --- a/drivers/scsi/ata_piix.c
+> > +++ b/drivers/scsi/ata_piix.c
+> 
+> > + * with SITRE and the 0x44 timing register). See pata_oldpiix and pata_mpiix
+> > + * for the early chip drivers.
+> 
+> pata_oldpiix and pata_mpiix are not in the mainline
 
-Looks obviously correct.  Andrew, could you add it to -mm?
+Good point.  I'll update to say "in libata-dev#pata-drivers".
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+	Jeff
 
-Thanks,
-Bartlomiej
+
+
