@@ -1,52 +1,108 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: Happy New Year, libata hackers
-Date: Tue, 3 Jan 2006 11:35:03 -0800 (PST)
-Message-ID: <Pine.LNX.4.58.0601031132230.16308@shark.he.net>
-References: <43BAB977.3010203@pobox.com>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: Re: [PATCH 0/5] SATA/ACPI suspend/resume support
+Date: Tue, 3 Jan 2006 11:57:12 -0800
+Message-ID: <20060103115712.5ac7ec47.randy_d_dunlap@linux.intel.com>
+References: <20051227153428.4eaad244.randy_d_dunlap@linux.intel.com>
+	<87vex7rnfn.fsf@marrow.phys.tohoku.ac.jp>
+	<20060103090847.43c2a00d.randy_d_dunlap@linux.intel.com>
+	<20060103172649.GV2772@suse.de>
+	<20060103190346.GY2772@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:22962 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S932420AbWACTfE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jan 2006 14:35:04 -0500
-Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 3 Jan 2006 11:35:03 -0800
-In-Reply-To: <43BAB977.3010203@pobox.com>
+Received: from fmr19.intel.com ([134.134.136.18]:49615 "EHLO
+	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
+	id S932509AbWACT4a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jan 2006 14:56:30 -0500
+In-Reply-To: <20060103190346.GY2772@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: jhpark@tuhep.phys.tohoku.ac.jp, linux-ide@vger.kernel.org, jgarzik@pobox.com, chris@powerblogs.com
 
-On Tue, 3 Jan 2006, Jeff Garzik wrote:
+On Tue, 3 Jan 2006 20:03:47 +0100
+Jens Axboe <axboe@suse.de> wrote:
 
->
-> Well, another year has passed, and somehow the duct tape that keeps our
-> hard drives together has remained intact.  After a nice and refreshing
-> holiday, I have a bunch of patches pending, that will probably take a
-> week or two to sort through.
->
-> For 2.6.16, my main goals are getting irq-pio upstream and supporting
-> iomap -- which will kill all those annoying warnings finally.  And
-> probably some EH work from Tejun will go in too.  The suspend/resume
-> stuff is shaping up nicely, and device hotplug work suddenly reappeared.
->   Fun for all.
+> On Tue, Jan 03 2006, Jens Axboe wrote:
+> > On Tue, Jan 03 2006, Randy Dunlap wrote:
+> > > On 30 Dec 2005 17:36:44 +0900
+> > > Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp> wrote:
+> > > 
+> > > > I tested kernel 2.6.15-rc7 with your patch applied on my ThinkPad X41.
+> > > > While booting, it locks up after printing
+> > > > 
+> > > >     ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0x1810 irq 14
+> > > >     ata1: dev 0 ATA-6, max UDMA/100, 117210240 sectors: LBA
+> > > >     ata1(0): applying bridge limits
+> > > >     ata1: dev 0 configured for UDMA/100
+> > > > 
+> > > > If I select CONFIG_SCSI_SATA_AHCI, then the kernel emits an oops and
+> > > > panics during boot.
+> > > 
+> > > Hi,
+> > > 
+> > > Can you capture the kernel oops & panic messages?
+> > 
+> > I think I triggered the same oops on my T43, I'll try applying your sata
+> > acpi patches and see if it reproduces.
+> 
+> It's crashing here:
+> 
+>                 acpi_os_free((void *)gtf_address);
+> 
+> in ata_acpi_exec_tfs(), looks like it's trying to free an uninitialized
+> gtf_address. Setting to 0 and doing:
+> 
+>         if (gtf_address)
+>                 acpi_os_free((void *)gtf_address);
+> 
+> fixes it. Probably due to a nasty warning that it spews on boot:
+> 
+> ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0x18C0 irq 14
+> ata1: dev 0 cfg 49:2f00 82:346b 83:7d09 84:6003 85:3469 86:3c09 87:6003
+> 88:203f
+> ata1: dev 0 ATA-7, max UDMA/100, 156301488 sectors: LBA48
+> ata1(0): applying bridge limits
+> ata1: dev 0 configured for UDMA/100
+> ata_acpi_exec_tfs: call get_GTF, ix=0
+> ata_acpi_exec_tfs: call set_taskfiles, ix=0
+> do_drive_set_taskfiles: unexpected GTF length (-271707516)
 
-+ selectable debugging macros etc.
-  (used in ACPI suspend/resume patches, but can be used in all of libata)
+Ugh.  So the ACPI taskfile data looks like crap??
+I guess that I'll just invalidate gtf_address (set to NULL)
+if gtf_length looks invalid.  Is there something better to do?
 
-> Port multiplier and NCQ (queueing) support are the two other big to-do
-> items on the list.
->
-> I updated the hardware status report at
-> 	http://linux.yyz.us/sata/
->
-> and will update the software status report in a week or two.
->
-> Everybody wants to play in the same sandbox, so please be patient as we
-> sort it all out.
->
-> Cheers and happy new year,
+Jae-hyeon,
 
-Likewise.
+Please send me a dump of your ACPI tables (acpidump).
+'acpidump' is at
+http://www.kernel.org/pub/linux/kernel/people/lenb/acpi/utils/ .
+Use the latest pmtools tarball.
 
--- 
+BTW, to enable more debugging messages, boot the kernel with this
+additional option:
+  libata.printk=0xffff
+(This is part of my patchset.)
+
+Jens, could you see that <gtf_address> your system is
+getting that is invalid?
+
+> scsi0 : ata_piix
+>   Vendor: ATA       Model: ST980825A         Rev: 3.04
+>   Type:   Direct-Access                      ANSI SCSI revision: 05
+> 
+> note the 'unexpected GTF length' message. Doing a suspend/resume cycle
+> doesn't trigger that error:
+> 
+> [...]
+> eth1: Coming out of suspend...
+> ACPI: PCI Interrupt 0000:04:02.0[A] -> GSI 21 (level, low) -> IRQ 23
+> ata1: dev 0 configured for UDMA/100
+> ata_acpi_exec_tfs: call get_GTF, ix=0
+> ata_acpi_exec_tfs: call set_taskfiles, ix=0
+> Restarting tasks... done
+
+Thanks,
+---
 ~Randy
