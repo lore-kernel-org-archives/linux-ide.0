@@ -1,51 +1,31 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH 0/5] SATA/ACPI suspend/resume support
-Date: Tue, 3 Jan 2006 18:26:49 +0100
-Message-ID: <20060103172649.GV2772@suse.de>
-References: <20051227153428.4eaad244.randy_d_dunlap@linux.intel.com> <87vex7rnfn.fsf@marrow.phys.tohoku.ac.jp> <20060103090847.43c2a00d.randy_d_dunlap@linux.intel.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [git patches] 2.6.x libata updates
+Date: Tue, 03 Jan 2006 17:32:35 +0000
+Message-ID: <1136309555.22598.10.camel@localhost.localdomain>
+References: <20060103164319.GA402@havoc.gtf.org>
+	 <58cb370e0601030851w62fc917bibe0fd5069b2f3e44@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:15445 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932460AbWACRZQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jan 2006 12:25:16 -0500
-Content-Disposition: inline
-In-Reply-To: <20060103090847.43c2a00d.randy_d_dunlap@linux.intel.com>
+Received: from [81.2.110.250] ([81.2.110.250]:41375 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S932463AbWACRbD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jan 2006 12:31:03 -0500
+In-Reply-To: <58cb370e0601030851w62fc917bibe0fd5069b2f3e44@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Cc: Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp>, linux-ide@vger.kernel.org, jgarzik@pobox.com, chris@powerblogs.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jan 03 2006, Randy Dunlap wrote:
-> On 30 Dec 2005 17:36:44 +0900
-> Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp> wrote:
+On Maw, 2006-01-03 at 17:51 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > + * with SITRE and the 0x44 timing register). See pata_oldpiix and pata_mpiix
+> > + * for the early chip drivers.
 > 
-> > I tested kernel 2.6.15-rc7 with your patch applied on my ThinkPad X41.
-> > While booting, it locks up after printing
-> > 
-> >     ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0x1810 irq 14
-> >     ata1: dev 0 ATA-6, max UDMA/100, 117210240 sectors: LBA
-> >     ata1(0): applying bridge limits
-> >     ata1: dev 0 configured for UDMA/100
-> > 
-> > If I select CONFIG_SCSI_SATA_AHCI, then the kernel emits an oops and
-> > panics during boot.
-> 
-> Hi,
-> 
-> Can you capture the kernel oops & panic messages?
+> pata_oldpiix and pata_mpiix are not in the mainline
 
-I think I triggered the same oops on my T43, I'll try applying your sata
-acpi patches and see if it reproduces.
+They are probably ready for mainline and since Linux currently has no
+support for either it might be nice to get them in. Anything specific
+they need polishing for Jeff ?
 
-> Please send me your .config also.
-> 
-> Is this on your Fujitsu notebook with some kind of hybrid
-> PATA/SATA?
-
-He notes it's an X41 - by the messages above, it is indeed a PATA drive
-hidden behind a SATA bridge. The T43 uses the same kind of setup.
-
--- 
-Jens Axboe
+Alan
 
