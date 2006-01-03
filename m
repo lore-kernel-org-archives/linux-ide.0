@@ -1,33 +1,62 @@
-From: mreuther@umich.edu
-Subject: Re: Happy New Year, libata hackers
-Date: Tue, 03 Jan 2006 14:08:51 -0500
-Message-ID: <20060103140851.ebi8ey9ha0w4ok04@engin.mail.umich.edu>
+From: "John Treubig" <jtreubig@hotmail.com>
+Subject: Re: ATA Write Error and Time-out Notification in User Space
+Date: Tue, 03 Jan 2006 13:27:28 -0600
+Message-ID: <BAY101-F32BC19A49EC86F6FED361BDF2C0@phx.gbl>
+References: <1136314722.22598.36.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from penobscot.web.itd.umich.edu ([141.211.144.185]:57792 "EHLO
-	penobscot.web.itd.umich.edu") by vger.kernel.org with ESMTP
-	id S1751403AbWACTIy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jan 2006 14:08:54 -0500
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1136314722.22598.36.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
+To: alan@lxorguk.ukuu.org.uk
+Cc: raw@dslr.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
 
-Hi, Jeff.
+I receive this as great news, only I don't know where the -mm tree is 
+located to see if I can get the patch or fix!  Can you give me a few 
+pointers?!
 
-I am confused a bit by the SATA status.
 
-I have a Promise SATA TX2plus, which has a channel for PATA along with SATA.
 
-The status report seems to say there is no support for the PATA side, 
-but then says there was, at least in September.
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: John Treubig <jtreubig@hotmail.com>
+CC: raw@dslr.net, linux-ide@vger.kernel.org,linux-kernel@vger.kernel.org, 
+linux-scsi@vger.kernel.org
+Subject: Re: ATA Write Error and Time-out Notification in User Space
+Date: Tue, 03 Jan 2006 18:58:42 +0000
 
-Is there PATA+SATA support or was it removed for some reason?
+On Maw, 2006-01-03 at 12:29 -0600, John Treubig wrote:
+ > failure point.  I put a drive on the Secondary IDE bus hanging off the
+ > motherboard Nvidia NForce 2 controller, began an access and pulled the 
+plug.
+ >   Sure enough the failures occured and were passed back to user level, 
+but
+ > the system did not hang.  I've repeated this a number of times.  I moved 
+the
+ > same drive to the Promise Controller and the hang occurs.  Thus it seems 
+we
+ > have proved the Promise sub-system is my problem.
 
-Best regards,
-Matt Reuther
+
+Bingo. Yes I know why this is occuring now.
+
+There is a known old bug with error handling in some cases on promise
+chips. The core kernel code tries to clean up any remaining data after
+an error (to handle chip prefetch/postwrite FIFOs) if DRQ_STAT is
+asserted. Its a nice trick, saves on resets and slow recovery but isn't
+compatible with some promise controllers.
+
+The -mm tree has a partial but incomplete fix to this implemented, the
+base kernel does not have this fixed.
+
+Its been known for some time so perhaps the ide maintainers have patches
+waiting for 2.6.16 now its opened ?
+
+Alan
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
