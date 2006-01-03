@@ -1,55 +1,60 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [git patches] 2.6.x libata updates
-Date: Tue, 3 Jan 2006 19:35:39 +0100
-Message-ID: <58cb370e0601031035x89bd6cbw1e1efb3f7a93bb41@mail.gmail.com>
+Date: Tue, 03 Jan 2006 18:50:29 +0000
+Message-ID: <1136314229.22598.27.camel@localhost.localdomain>
 References: <20060103164319.GA402@havoc.gtf.org>
 	 <58cb370e0601030851w62fc917bibe0fd5069b2f3e44@mail.gmail.com>
 	 <1136309555.22598.10.camel@localhost.localdomain>
 	 <43BAB7D4.4050204@pobox.com>
+	 <58cb370e0601031035x89bd6cbw1e1efb3f7a93bb41@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.194]:48282 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932467AbWACSfl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jan 2006 13:35:41 -0500
-Received: by nproxy.gmail.com with SMTP id n15so923613nfc
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jan 2006 10:35:40 -0800 (PST)
-In-Reply-To: <43BAB7D4.4050204@pobox.com>
-Content-Disposition: inline
+Received: from [81.2.110.250] ([81.2.110.250]:31676 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S932476AbWACSsq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jan 2006 13:48:46 -0500
+In-Reply-To: <58cb370e0601031035x89bd6cbw1e1efb3f7a93bb41@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 1/3/06, Jeff Garzik <jgarzik@pobox.com> wrote:
-> Alan Cox wrote:
-> > On Maw, 2006-01-03 at 17:51 +0100, Bartlomiej Zolnierkiewicz wrote:
-> >
-> >>>+ * with SITRE and the 0x44 timing register). See pata_oldpiix and pata_mpiix
-> >>>+ * for the early chip drivers.
-> >>
-> >>pata_oldpiix and pata_mpiix are not in the mainline
-> >
-> >
-> > They are probably ready for mainline and since Linux currently has no
-> > support for either it might be nice to get them in. Anything specific
-> > they need polishing for Jeff ?
->
-> Not really.  If there's no support in mainline, I'm ok with pushing them
-> upstream...  provided that they have been tested and verified to work on
-> at least one machine?  :)
+On Maw, 2006-01-03 at 19:35 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > Not really.  If there's no support in mainline, I'm ok with pushing them
+> > upstream...  provided that they have been tested and verified to work on
+> > at least one machine?  :)
+> 
+> All chipsets are supported by piix.c driver but:
 
-All chipsets are supported by piix.c driver but:
+No they are not. The drivers claim the PCI identifiers but that is not
+the same thing as working.
 
-* we depend on BIOS to program correct PIO timings and set drives
-  (mpiix chipset)
+> * we depend on BIOS to program correct PIO timings and set drives
+>   (mpiix chipset)
 
-* PIO tuning code is buggy and needs fixing (oldpiix chipsets)
+It doesn't work except for PIO0. I've tested it on a thinkpad.
 
-I don't think that this alone justify adding new drivers instead of fixing
-old one as both issues can be fixed quite easily by almost cut'n'pasting
-new tuning code from Alan's drivers and adding it to piix.c.
+> * PIO tuning code is buggy and needs fixing (oldpiix chipsets)
 
-Bartlomiej
+It crashes. I've tested it.
+
+> I don't think that this alone justify adding new drivers instead of fixing
+> old one as both issues can be fixed quite easily by almost cut'n'pasting
+> new tuning code from Alan's drivers and adding it to piix.c.
+
+Hardly. The existing PIIX drivers in drivers/ide/pci are *very* buggy.
+Some of the bugs are careless but alarming like scribbles to wrong PCI
+registers and easily fixed. Others like the mishandling of fifos are
+corruptors that thankfully aren't biting writable media. The handling of
+pre SITRE capable chipsets in the current driver is broken to the point
+it needs a rewrite that quite frankly I don't think can be done without
+fixing the locking in the core code.
+
+Please spend your effort improving the ide/pci drivers rather than
+trying to block their future replacement with better technology. I've
+posted detailed summaries of flaws in several chipsets but no fixes have
+appeared.
+
+Alan
+
