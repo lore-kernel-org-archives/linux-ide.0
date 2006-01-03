@@ -1,77 +1,59 @@
-From: =?ISO-8859-15?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
-Subject: Kernel Oops with 2.6.15
-Date: Tue, 03 Jan 2006 15:32:14 +0100
-Message-ID: <43BA8AEE.8010608@bj-ig.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: PATCH: Small fixes backported to old IDE SiS driver
+Date: Tue, 03 Jan 2006 15:19:41 +0000
+Message-ID: <1136301581.22598.5.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tower.bj-ig.de ([194.127.182.2]:16097 "EHLO fs.bj-ig.de")
-	by vger.kernel.org with ESMTP id S1751435AbWACOcM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jan 2006 09:32:12 -0500
+Received: from [81.2.110.250] ([81.2.110.250]:43712 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S932398AbWACPR5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jan 2006 10:17:57 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, akpm@osdl.org
 
-The kernel oops reported for 2.6.15-rc7 when calling hddtemp on a sata 
-drive which is in standby mode is still present in 2.6.15. Maybe someone 
-is interested.
+Some quick backport bits from the libata PATA work to fix things found
+in the sis driver. The piix driver needs some fixes too but those are
+way to large and need someone working on old IDE with time to do them.
 
-Regards
-Ralf
+This patch fixes the case where random bits get loaded into SIS timing
+registers according to the description of the correct behaviour from
+Vojtech Pavlik. It also adds the SiS5517 ATA16 chipset which is not
+currently supported by the driver. Thanks to Conrad Harriss for loaning
+me the machine with the 5517 chipset.
 
-Jan  3 15:21:35 DatenGrab kernel: ata1: unknown timeout, cmd 0xb0 stat 0xff
-Jan  3 15:21:35 DatenGrab kernel: ata1: translated ATA stat/err 0xff/00 
-to SCSI SK/ASC/ASCQ 0xb/47/00
-Jan  3 15:21:35 DatenGrab kernel: ata1: status=0xff { Busy }
-Jan  3 15:21:35 DatenGrab kernel: Assertion failed! qc != 
-NULL,drivers/scsi/libata-core.c,ata_pio_block,line=3216
-Jan  3 15:21:35 DatenGrab kernel: Unable to handle kernel NULL pointer 
-dereference at virtual address 00000014
-Jan  3 15:21:35 DatenGrab kernel:  printing eip:
-Jan  3 15:21:35 DatenGrab kernel: e02d9a3e
-Jan  3 15:21:35 DatenGrab kernel: *pde = 00000000
-Jan  3 15:21:35 DatenGrab kernel: Oops: 0000 [#1]
-Jan  3 15:21:35 DatenGrab kernel: Modules linked in: edd ipv6 nfsd 
-w83627hf hwmon_vid hwmon eeprom i2c_isa button battery ac af_packet xfs 
-exportfs reiserfs ohci1394 ieee1394 sk98lin i2c_i801 i2c_core generic 
-i8xx_tco shpchp pci_hotplug uhci_hcd intel_agp agpgart raid5 xor 
-parport_pc lp parport sata_promise libata dm_mod sg skge ohci_hcd 
-ehci_hcd usb_storage usbcore fan thermal processor piix sd_mod scsi_mod 
-ide_disk ide_core
-Jan  3 15:21:35 DatenGrab kernel: CPU:    0
-Jan  3 15:21:35 DatenGrab kernel: EIP:    0060:[<e02d9a3e>]    Not 
-tainted VLI
-Jan  3 15:21:35 DatenGrab kernel: EFLAGS: 00010292   (2.6.15-default)
-Jan  3 15:21:35 DatenGrab kernel: EIP is at ata_pio_block+0xb9/0xfd [libata]
-Jan  3 15:21:35 DatenGrab kernel: eax: 00000056   ebx: c14d6284   ecx: 
-00000000   edx: 00000000
-Jan  3 15:21:35 DatenGrab kernel: esi: 55b17c50   edi: 00000000   ebp: 
-c14d6284   esp: def3df70
-Jan  3 15:21:35 DatenGrab kernel: ds: 007b   es: 007b   ss: 0068
-Jan  3 15:21:35 DatenGrab kernel: Process ata/0 (pid: 2179, 
-threadinfo=def3c000 task=deefc580)
-Jan  3 15:21:35 DatenGrab kernel: Stack: c14d6284 deefb3c0 00000287 
-e02d9b00 c14d683c c01230b6 e02d9ae3 00000001
-Jan  3 15:21:35 DatenGrab kernel:        00000000 00000000 00010000 
-00000000 00000000 deefc580 c01150bc 00100100
-Jan  3 15:21:35 DatenGrab kernel:        00200200 ffffffff ffffffff 
-def3c000 de189f54 deefb3c0 c0122f77 c0125c9f
-Jan  3 15:21:35 DatenGrab kernel: Call Trace:
-Jan  3 15:21:35 DatenGrab kernel:  [<e02d9b00>] ata_pio_task+0x1d/0x54 
-[libata]
-Jan  3 15:21:35 DatenGrab kernel:  [<c01230b6>] worker_thread+0x13f/0x19d
-Jan  3 15:21:35 DatenGrab kernel:  [<e02d9ae3>] ata_pio_task+0x0/0x54 
-[libata]
-Jan  3 15:21:35 DatenGrab kernel:  [<c01150bc>] 
-default_wake_function+0x0/0xc
-Jan  3 15:21:35 DatenGrab kernel:  [<c0122f77>] worker_thread+0x0/0x19d
-Jan  3 15:21:35 DatenGrab kernel:  [<c0125c9f>] kthread+0x63/0x8f
-Jan  3 15:21:35 DatenGrab kernel:  [<c0125c3c>] kthread+0x0/0x8f
-Jan  3 15:21:35 DatenGrab kernel:  [<c0101281>] kernel_thread_helper+0x5/0xb
-Jan  3 15:21:35 DatenGrab kernel: Code: 89 df 81 c7 d4 04 00 00 75 21 68 
-90 0c 00 00 68 fb cd 2d e0 68 ef cf 2d e0 68 b0 d5 2d e0 68 61 d0 2d e0 
-e8 19 e1 e3 df 83 c4 14 <8a> 47 14 83 e8 05 3c 02 77 1b 83 e6 08 75 0c 
-c7 83 e4 05 00 00
+Alan
+
+
+Signed-off-by: Alan Cox <alan@redhat.com>
+
+--- drivers/ide/pci/sis5513.c~	2006-01-03 15:01:24.753952872 +0000
++++ drivers/ide/pci/sis5513.c	2006-01-03 15:01:24.753952872 +0000
+@@ -111,6 +111,7 @@
+ 
+ 	{ "SiS5596",	PCI_DEVICE_ID_SI_5596,	ATA_16   },
+ 	{ "SiS5571",	PCI_DEVICE_ID_SI_5571,	ATA_16   },
++	{ "SiS5517",	PCI_DEVICE_ID_SI_5517,	ATA_16   },
+ 	{ "SiS551x",	PCI_DEVICE_ID_SI_5511,	ATA_16   },
+ };
+ 
+@@ -523,6 +524,7 @@
+ 			case 3:		test1 = 0x30|0x03; break;
+ 			case 2:		test1 = 0x40|0x04; break;
+ 			case 1:		test1 = 0x60|0x07; break;
++			case 0:		test1 = 0x00; break;
+ 			default:	break;
+ 		}
+ 		pci_write_config_byte(dev, drive_pci, test1);
+--- include/linux/pci_ids.h~	2006-01-03 15:00:52.835805168 +0000
++++ include/linux/pci_ids.h	2006-01-03 15:00:52.836805016 +0000
+@@ -632,6 +632,7 @@
+ #define PCI_DEVICE_ID_SI_963		0x0963
+ #define PCI_DEVICE_ID_SI_5511		0x5511
+ #define PCI_DEVICE_ID_SI_5513		0x5513
++#define PCI_DEVICE_ID_SI_5517		0x5517
+ #define PCI_DEVICE_ID_SI_5518		0x5518
+ #define PCI_DEVICE_ID_SI_5571		0x5571
+ #define PCI_DEVICE_ID_SI_5581		0x5581
 
