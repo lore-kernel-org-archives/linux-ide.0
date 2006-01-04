@@ -1,7 +1,7 @@
 From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 Subject: Re: [PATCH 0/5] SATA/ACPI suspend/resume support
-Date: Wed, 4 Jan 2006 10:57:05 -0800
-Message-ID: <20060104105705.0afa3e0e.randy_d_dunlap@linux.intel.com>
+Date: Wed, 4 Jan 2006 11:42:22 -0800
+Message-ID: <20060104114222.25182742.randy_d_dunlap@linux.intel.com>
 References: <20051227153428.4eaad244.randy_d_dunlap@linux.intel.com>
 	<87vex7rnfn.fsf@marrow.phys.tohoku.ac.jp>
 	<20060103090847.43c2a00d.randy_d_dunlap@linux.intel.com>
@@ -15,31 +15,17 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr20.intel.com ([134.134.136.19]:21922 "EHLO
+Received: from fmr20.intel.com ([134.134.136.19]:34989 "EHLO
 	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
-	id S965268AbWADS40 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Jan 2006 13:56:26 -0500
+	id S965271AbWADTlc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Jan 2006 14:41:32 -0500
 In-Reply-To: <87ek3o22z8.fsf@marrow.phys.tohoku.ac.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp>
 Cc: axboe@suse.de, linux-ide@vger.kernel.org, jgarzik@pobox.com, chris@powerblogs.com
 
-On 04 Jan 2006 10:31:23 +0900
-Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp> wrote:
 
-> Randy Dunlap <randy_d_dunlap@linux.intel.com> writes:
-> 
-> > On 04 Jan 2006 07:40:00 +0900
-> > Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp> wrote:
-> > > Randy Dunlap <randy_d_dunlap@linux.intel.com> writes:
-> > > > On Tue, 3 Jan 2006 20:03:47 +0100
-> > > > Jens Axboe <axboe@suse.de> wrote:
-> > > > > On Tue, Jan 03 2006, Jens Axboe wrote:
-> > > > > > On Tue, Jan 03 2006, Randy Dunlap wrote:
-> > > > > > > On 30 Dec 2005 17:36:44 +0900
-> > > > > > > Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp> wrote:
-> > > > > > > 
 > > > > > > > > I tested kernel 2.6.15-rc7 with your patch applied on my ThinkPad X41.
 > > > 
 > > > My laptop is ThinkPad X41 Tablet, which has the same SATA controller
@@ -87,28 +73,40 @@ Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp> wrote:
 > SCSI device sda: 117210240 512-byte hdwr sectors (60012 MB)
 > SCSI device sda: drive cache: write back
 >  sda:<1>Unable to handle kernel NULL pointer dereference at virtual address 00000172
->  ...
-> 
-> > I don't quite understand what CONFIG_SCSI_SATA_AHCI has to do
-> > with this.  I see ata_interrupt() [from libata-core.c],
-> > but ahci.c contains ahci_interrupt(), which isn't in this
-> > stack dump.  Nevertheless, it looks like complete() is
-> > being passed a NULL struct completion...  Maybe I'm misusing
-> > the completion API and don't know it (?).
 
-Jae-hyeon,
+Jae-Hyeon,
 
-Does your system work without using the AHCI driver?
-or is it required?
-Of course, even if the AHCI driver is not needed,
-it shouldn't be oopsing like this.
-
-It looks like the ata_piix driver is the one that is
-actually being used, from what I can see here.
-
-Please send your /proc/interrupts, /proc/iomem, /proc/ioports,
-and 'lspci -v'.
+If you are up to it, please enable libata verbose debugging
+and then boot & cause this bug again and send me as much
+output as you can collect.
+Patch is below.
 
 Thanks,
 ---
 ~Randy
+
+
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+
+Enable libata verbose debugging output.
+
+Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+---
+
+ include/linux/libata.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff -Naurp linux-2615-work/include/linux/libata.h~debugs linux-2615-work/include/linux/libata.h
+--- linux-2615-work/include/linux/libata.h~debugs	2006-01-02 19:21:10.000000000 -0800
++++ linux-2615-work/include/linux/libata.h	2006-01-04 11:40:05.000000000 -0800
+@@ -37,8 +37,8 @@
+ /*
+  * compile-time options
+  */
+-#undef ATA_DEBUG		/* debugging output */
+-#undef ATA_VERBOSE_DEBUG	/* yet more debugging output */
++#define ATA_DEBUG		/* debugging output */
++#define ATA_VERBOSE_DEBUG	/* yet more debugging output */
+ #undef ATA_IRQ_TRAP		/* define to ack screaming irqs */
+ #undef ATA_NDEBUG		/* define to disable quick runtime checks */
+ #undef ATA_ENABLE_PATA		/* define to enable PATA support in some
