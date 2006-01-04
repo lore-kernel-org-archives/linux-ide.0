@@ -1,121 +1,112 @@
-From: Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp>
-Subject: Re: [PATCH 0/5] SATA/ACPI suspend/resume support
-Date: 04 Jan 2006 10:31:23 +0900
-Message-ID: <87ek3o22z8.fsf@marrow.phys.tohoku.ac.jp>
-References: <20051227153428.4eaad244.randy_d_dunlap@linux.intel.com>
-	<87vex7rnfn.fsf@marrow.phys.tohoku.ac.jp>
-	<20060103090847.43c2a00d.randy_d_dunlap@linux.intel.com>
-	<20060103172649.GV2772@suse.de> <20060103190346.GY2772@suse.de>
-	<20060103115712.5ac7ec47.randy_d_dunlap@linux.intel.com>
-	<87wthh0wcf.fsf@marrow.phys.tohoku.ac.jp>
-	<20060103164009.1c7418a7.randy_d_dunlap@linux.intel.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: Kernel Oops with 2.6.15
+Date: Wed, 04 Jan 2006 11:10:50 +0800
+Message-ID: <43BB3CBA.5010908@tw.ibm.com>
+References: <43BA8AEE.8010608@bj-ig.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tuhepnat.phys.tohoku.ac.jp ([130.34.123.133]:21509 "EHLO
-	izanagi.tuhep.physp") by vger.kernel.org with ESMTP id S965121AbWADBbb
+Received: from e32.co.us.ibm.com ([32.97.110.150]:18347 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S965179AbWADDLC
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jan 2006 20:31:31 -0500
-In-Reply-To: <20060103164009.1c7418a7.randy_d_dunlap@linux.intel.com>
+	Tue, 3 Jan 2006 22:11:02 -0500
+In-Reply-To: <43BA8AEE.8010608@bj-ig.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Cc: axboe@suse.de, linux-ide@vger.kernel.org, jgarzik@pobox.com, chris@powerblogs.com
+To: =?ISO-8859-15?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
+Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Randy Dunlap <randy_d_dunlap@linux.intel.com> writes:
+Ralf M=FCller wrote:
+> The kernel oops reported for 2.6.15-rc7 when calling hddtemp on a sat=
+a
+> drive which is in standby mode is still present in 2.6.15. Maybe some=
+one
+> is interested.
+>=20
+> Regards
+> Ralf
+>=20
 
-> On 04 Jan 2006 07:40:00 +0900
-> Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp> wrote:
-> > Randy Dunlap <randy_d_dunlap@linux.intel.com> writes:
-> > > On Tue, 3 Jan 2006 20:03:47 +0100
-> > > Jens Axboe <axboe@suse.de> wrote:
-> > > > On Tue, Jan 03 2006, Jens Axboe wrote:
-> > > > > On Tue, Jan 03 2006, Randy Dunlap wrote:
-> > > > > > On 30 Dec 2005 17:36:44 +0900
-> > > > > > Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp> wrote:
-> > > > > > 
-> > > > > > > I tested kernel 2.6.15-rc7 with your patch applied on my ThinkPad X41.
-> > 
-> > My laptop is ThinkPad X41 Tablet, which has the same SATA controller
-> > as X41.
-> > 
-> > > > > > > While booting, it locks up after printing
-> > > > > > > 
-> > > > > > >     ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0x1810 irq 14
-> > > > > > >     ata1: dev 0 ATA-6, max UDMA/100, 117210240 sectors: LBA
-> > > > > > >     ata1(0): applying bridge limits
-> > > > > > >     ata1: dev 0 configured for UDMA/100
-> > > > > > > 
-> > > > > > > If I select CONFIG_SCSI_SATA_AHCI, then the kernel emits an oops and
-> > > > > > > panics during boot.
-> 
-> This certainly isn't the same failure that Jens saw.
-> 
-> Could there be any informative & helpful messages missing
-> before these messages, e.g., an assert() failure?
+Hi Ralf,
 
-Let me copy as far as I can setting the video mode to 80x60.
-Scrolling back does not work after kernel panic.
+It looks like the command is running in PIO polling thread.
+The timeout handler is called and the qc is cleared.
+So, the PIO polling thread got NULL qc.
 
-highmem bounce pool size: 64 pages
-Initializing Cryptographic API
-io scheduler noop registered
-io scheduler anticipatory registered
-serio: i8042 AUX port at 0x60,0x64 irq 12
-serio: i8042 KBD port at 0x60,0x64 irq 1
-acpi_bus-0201 [27] bus_set_power         : Device is not power manageable
-ahci: probe of 0000:00:1f.2 failed with error -12
-ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0x1810 irq 14
-ata1: dev 0 ATA-6, max UDMA/100, 117210240 sectors: LBA
-ata1(0): applying bridge limits
-ata1: dev 0 configured for UDMA/100
-do_drive_set_taskfiles: unexpected GTF length (-1040297340)
-scsi0: ata_piix
-  Vendor: ATA       Model: HTC426060G9AT00   Rev: 00P3
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-ata2: SATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0x1818 irq 15
-ata2: disabling port
-scsi1 : ata_piix
-SCSI device sda: 117210240 512-byte hdwr sectors (60012 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 117210240 512-byte hdwr sectors (60012 MB)
-SCSI device sda: drive cache: write back
- sda:<1>Unable to handle kernel NULL pointer dereference at virtual address 00000172
- ...
+Could you post more trace before the timeout occurs, thanks,
 
-> I don't quite understand what CONFIG_SCSI_SATA_AHCI has to do
-> with this.  I see ata_interrupt() [from libata-core.c],
-> but ahci.c contains ahci_interrupt(), which isn't in this
-> stack dump.  Nevertheless, it looks like complete() is
-> being passed a NULL struct completion...  Maybe I'm misusing
-> the completion API and don't know it (?).
-> 
-> BTW, .config file, please.
+Albert
 
-.config was already included in my previous posting, with the name
-config-2.6.15-rc7.bz2.
 
-> > > New patch series is at
-> > >   http://www.xenotime.net/linux/SATA/2.6.15/
-> > > with a combined patch at
-> > >   http://www.xenotime.net/linux/SATA/2.6.15/libata-combine-2615.patch
-> > 
-> > With this patch series, resume still fails with snd_intel8x0m
-> > rmmod-ed.  Resume works if the snd_intel8x0m module has been inserted.
-> > I am curious about this, too.
-> 
-> Wow, interesting, but I have no idea about that.
+> Jan  3 15:21:35 DatenGrab kernel: ata1: unknown timeout, cmd 0xb0 sta=
+t 0xff
+> Jan  3 15:21:35 DatenGrab kernel: ata1: translated ATA stat/err 0xff/=
+00
+> to SCSI SK/ASC/ASCQ 0xb/47/00
+> Jan  3 15:21:35 DatenGrab kernel: ata1: status=3D0xff { Busy }
+> Jan  3 15:21:35 DatenGrab kernel: Assertion failed! qc !=3D
+> NULL,drivers/scsi/libata-core.c,ata_pio_block,line=3D3216
+> Jan  3 15:21:35 DatenGrab kernel: Unable to handle kernel NULL pointe=
+r
+> dereference at virtual address 00000014
+> Jan  3 15:21:35 DatenGrab kernel:  printing eip:
+> Jan  3 15:21:35 DatenGrab kernel: e02d9a3e
+> Jan  3 15:21:35 DatenGrab kernel: *pde =3D 00000000
+> Jan  3 15:21:35 DatenGrab kernel: Oops: 0000 [#1]
+> Jan  3 15:21:35 DatenGrab kernel: Modules linked in: edd ipv6 nfsd
+> w83627hf hwmon_vid hwmon eeprom i2c_isa button battery ac af_packet x=
+fs
+> exportfs reiserfs ohci1394 ieee1394 sk98lin i2c_i801 i2c_core generic
+> i8xx_tco shpchp pci_hotplug uhci_hcd intel_agp agpgart raid5 xor
+> parport_pc lp parport sata_promise libata dm_mod sg skge ohci_hcd
+> ehci_hcd usb_storage usbcore fan thermal processor piix sd_mod scsi_m=
+od
+> ide_disk ide_core
+> Jan  3 15:21:35 DatenGrab kernel: CPU:    0
+> Jan  3 15:21:35 DatenGrab kernel: EIP:    0060:[<e02d9a3e>]    Not
+> tainted VLI
+> Jan  3 15:21:35 DatenGrab kernel: EFLAGS: 00010292   (2.6.15-default)
+> Jan  3 15:21:35 DatenGrab kernel: EIP is at ata_pio_block+0xb9/0xfd
+> [libata]
+> Jan  3 15:21:35 DatenGrab kernel: eax: 00000056   ebx: c14d6284   ecx=
+:
+> 00000000   edx: 00000000
+> Jan  3 15:21:35 DatenGrab kernel: esi: 55b17c50   edi: 00000000   ebp=
+:
+> c14d6284   esp: def3df70
+> Jan  3 15:21:35 DatenGrab kernel: ds: 007b   es: 007b   ss: 0068
+> Jan  3 15:21:35 DatenGrab kernel: Process ata/0 (pid: 2179,
+> threadinfo=3Ddef3c000 task=3Ddeefc580)
+> Jan  3 15:21:35 DatenGrab kernel: Stack: c14d6284 deefb3c0 00000287
+> e02d9b00 c14d683c c01230b6 e02d9ae3 00000001
+> Jan  3 15:21:35 DatenGrab kernel:        00000000 00000000 00010000
+> 00000000 00000000 deefc580 c01150bc 00100100
+> Jan  3 15:21:35 DatenGrab kernel:        00200200 ffffffff ffffffff
+> def3c000 de189f54 deefb3c0 c0122f77 c0125c9f
+> Jan  3 15:21:35 DatenGrab kernel: Call Trace:
+> Jan  3 15:21:35 DatenGrab kernel:  [<e02d9b00>] ata_pio_task+0x1d/0x5=
+4
+> [libata]
+> Jan  3 15:21:35 DatenGrab kernel:  [<c01230b6>] worker_thread+0x13f/0=
+x19d
+> Jan  3 15:21:35 DatenGrab kernel:  [<e02d9ae3>] ata_pio_task+0x0/0x54
+> [libata]
+> Jan  3 15:21:35 DatenGrab kernel:  [<c01150bc>]
+> default_wake_function+0x0/0xc
+> Jan  3 15:21:35 DatenGrab kernel:  [<c0122f77>] worker_thread+0x0/0x1=
+9d
+> Jan  3 15:21:35 DatenGrab kernel:  [<c0125c9f>] kthread+0x63/0x8f
+> Jan  3 15:21:35 DatenGrab kernel:  [<c0125c3c>] kthread+0x0/0x8f
+> Jan  3 15:21:35 DatenGrab kernel:  [<c0101281>]
+> kernel_thread_helper+0x5/0xb
+> Jan  3 15:21:35 DatenGrab kernel: Code: 89 df 81 c7 d4 04 00 00 75 21=
+ 68
+> 90 0c 00 00 68 fb cd 2d e0 68 ef cf 2d e0 68 b0 d5 2d e0 68 61 d0 2d =
+e0
+> e8 19 e1 e3 df 83 c4 14 <8a> 47 14 83 e8 05 3c 02 77 1b 83 e6 08 75 0=
+c
+> c7 83 e4 05 00 00
+>=20
 
-As I said in a previous posting, 2.6.15-rc7 + git-libata-all.patch +
-libata_resume_fix.patch + libata_suspend-fix.patch +
-libata_suspend.patch, solved the problem, irrespective of the presence
-of snd_intel8x0m.  Among these four, libata_suspend.patch is Jens'
-patch.  So probably snd_intel8x0m issue is not related to your
-(modification of Jens') code.  Looks like one of the above four
-patches has the fix.
 
-Another point that I observed is that your patch against 2.6.15-rc7,
-did not work together with suspend2 patch, even if snd_intel8x0m was
-inserted.  Again, the above combination works with suspend2.
-
-Jae-hyeon
