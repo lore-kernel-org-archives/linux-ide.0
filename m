@@ -1,75 +1,67 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] documentation typo
-Date: Thu, 5 Jan 2006 15:43:53 +0100
-Message-ID: <58cb370e0601050643q3147cfc8g46e3d17990b196a8@mail.gmail.com>
-References: <20060105132014.d72f61db.diegocg@gmail.com>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: Re: [PATCH 0/5] SATA/ACPI suspend/resume support
+Date: Thu, 5 Jan 2006 10:36:04 -0800
+Message-ID: <20060105103604.4b785239.randy_d_dunlap@linux.intel.com>
+References: <20051227153428.4eaad244.randy_d_dunlap@linux.intel.com>
+	<87vex7rnfn.fsf@marrow.phys.tohoku.ac.jp>
+	<20060103090847.43c2a00d.randy_d_dunlap@linux.intel.com>
+	<20060103172649.GV2772@suse.de>
+	<20060103190346.GY2772@suse.de>
+	<20060103115712.5ac7ec47.randy_d_dunlap@linux.intel.com>
+	<87wthh0wcf.fsf@marrow.phys.tohoku.ac.jp>
+	<20060103164009.1c7418a7.randy_d_dunlap@linux.intel.com>
+	<87ek3o22z8.fsf@marrow.phys.tohoku.ac.jp>
+	<20060104114222.25182742.randy_d_dunlap@linux.intel.com>
+	<87aceag437.fsf@marrow.phys.tohoku.ac.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.192]:23501 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751185AbWAEOoE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Jan 2006 09:44:04 -0500
-Received: by nproxy.gmail.com with SMTP id l35so1115509nfa
-        for <linux-ide@vger.kernel.org>; Thu, 05 Jan 2006 06:43:53 -0800 (PST)
-In-Reply-To: <20060105132014.d72f61db.diegocg@gmail.com>
-Content-Disposition: inline
+Received: from fmr20.intel.com ([134.134.136.19]:6592 "EHLO
+	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1751881AbWAESfT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Jan 2006 13:35:19 -0500
+In-Reply-To: <87aceag437.fsf@marrow.phys.tohoku.ac.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Diego Calleja <diegocg@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp>
+Cc: axboe@suse.de, linux-ide@vger.kernel.org, jgarzik@pobox.com, chris@powerblogs.com
+
+On 05 Jan 2006 23:08:12 +0900
+Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp> wrote:
+
+> Randy Dunlap <randy_d_dunlap@linux.intel.com> writes:
+> >
+> > Does your system work without using the AHCI driver?
+> > or is it required?
+> 
+> I tested turning off AHCI with 2.6.15-rc7 + git-libata-all.patch +
+> libata_resume_fix.patch + libata_suspend-fix.patch +
+> libata_suspend.patch.  The system runs okay, and ACPI suspend/resume
+> and suspend2 work, without AHCI.
+> 
+> > Of course, even if the AHCI driver is not needed,
+> > it shouldn't be oopsing like this.
+> > 
+> > It looks like the ata_piix driver is the one that is
+> > actually being used, from what I can see here.
+> > 
+> > Please send your /proc/interrupts, /proc/iomem, /proc/ioports,
+> > and 'lspci -v'.
+> 
+> They are enclosed below.
 
 Hi,
+While I'm looking over this, do you have a mode in which
+the AHCI driver loads successfully?  If so, look for a
+kernel message similar to this one:
 
-On 1/5/06, Diego Calleja <diegocg@gmail.com> wrote:
-> According to a bug reported in bugzilla...
->
-> --- 2.6/Documentation/ide.txt.wrong     2006-01-05 13:16:06.000000000 +0100
-> +++ 2.6/Documentation/ide.txt   2006-01-05 13:16:10.000000000 +0100
-> @@ -244,7 +244,7 @@ Summary of ide driver parameters for ker
->
->   "hdx=bswap"           : same as above..........
->
-> - "hdx=scsi"            : the return of the ide-scsi flag, this is useful for
-> + "hdx=ide-scsi"                : the return of the ide-scsi flag, this is useful for
->                           allowing ide-floppy, ide-tape, and ide-cdrom|writers
->                           to use ide-scsi emulation on a device specific option.
+ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 4 ports 1.5 Gbps 0x5 impl SATA mode
 
-This is not quite correct: ide-scsi is a separate device driver and
-"hdx=ide-scsi" tells IDE core to try this driver first for device
-"hdx" (OTOH "ide=scsi" tells other device drivers to not bind to
-device "hdx").  Both options are confusing and IDE specific.
-
-In recent kernels you can use generic sysfs interface to
-bind/unbind device to drivers _dynamically_ without using
-"hdx=scsi" and "hdx=ide-scsi" et all (these option can die):
-
-[root@trik /]# cd /sys/bus/ide/drivers/
-[root@trik drivers]# ls
-ide-cdrom  ide-disk  ide-scsi
-[root@trik drivers]# ls ide-cdrom ide-scsi
-ide-cdrom:
-1.0  bind  module  unbind
-
-ide-scsi:
-bind  module  unbind
-[root@trik drivers]# echo -n "1.0">ide-cdrom/unbind
-[root@trik drivers]# ls ide-cdrom ide-scsi
-ide-cdrom:
-bind  module  unbind
-
-ide-scsi:
-bind  module  unbind
-[root@trik drivers]# echo -n "1.0">ide-scsi/bind
-[root@trik drivers]# ls ide-cdrom ide-scsi
-ide-cdrom:
-bind  module  unbind
-
-ide-scsi:
-1.0  bind  module  unbind
-
-I would greatly appreciate if you update ide.txt accordingly.
+and post it, please.  (I think that it won't say "SATA mode".)
+The "prog-if" value of 80 from your lspci output is interesting to me:
+0000:00:1f.2 IDE interface: Intel Corporation 82801FBM (ICH6M) SATA Controller (rev 03) (prog-if 80 [Master])
 
 Thanks,
-Bartlomiej
+---
+~Randy
