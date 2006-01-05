@@ -1,109 +1,87 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: SATA: Panic in SCSI subsystem
-Date: Wed, 4 Jan 2006 23:26:13 +0100
-Message-ID: <20060104222613.GW3831@stusta.de>
-References: <20060102133507.GA1664@fox.lan>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [PATCH 2.6.14.3] Necessary evil to get sata_vsc to initialize with Intel iq3124h hba
+Date: Wed, 4 Jan 2006 23:57:32 -0800
+Message-ID: <20060105075732.GA323621@sgi.com>
+References: <20051214201049.GA20640@dwillia2-linux.ch.intel.com> <20051218091904.GA39033@sgi.com> <e9c3a7c20512271127v36eb56c9m54568a79784412e@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:57867 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1030306AbWADW0O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Jan 2006 17:26:14 -0500
+Received: from omx3-ext.sgi.com ([192.48.171.26]:198 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S1752109AbWAEH5j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jan 2006 02:57:39 -0500
 Content-Disposition: inline
-In-Reply-To: <20060102133507.GA1664@fox.lan>
+In-Reply-To: <e9c3a7c20512271127v36eb56c9m54568a79784412e@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Haakon Riiser <haakon.riiser@fys.uio.no>, jgarzik@pobox.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Dan Williams <dan.j.williams@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Jeff, do you have any idea what might cause Haakon's problem?
+On Tue, Dec 27, 2005 at 12:27:57PM -0700, Dan Williams wrote:
+> On 12/18/05, Jeremy Higdon <jeremy@sgi.com> wrote:
+> >
+> > I don't think I fully understand the problem you're trying to solve, but
+> > the gist seems to be that you're taking endless interrupts even when
+> > ATA_NIEN is set.
+> Yes...
+> 
+> > So you add the dummy ata_chk_status call to clear
+> > interrupts that the libata core isn't interested in.  But ata_chk_status
+> > doesn't actually clear it unless you first write to the SCR_ERROR
+> > register above?
+> 
+> Actually I added the dummy ata_chk_status because just clearing the
+> SCR_ERROR bits did not stop the stream of interrupts.  Upon further
+> investigation it appears that clearing the SCR_ERRORS is not
+> _required_ and all that is necessary is the ata_chk_status() call. 
+> however not clearing the SCR_ERROR results in the error interrupt
+> recurring everytime the disk is accessed.
+> 
+> For example:
+> vsc_sata_interrupt: clearing interrupt, status 30383; sata err status 50002
+> vsc_sata_interrupt: clearing interrupt, status 30383; sata err status 50002
+> Adding 136512k swap on /dev/sda1.  Priority:-1 extents:1 across:136512k
+> vsc_sata_interrupt: clearing interrupt, status 38303; sata err status 50002
+> vsc_sata_interrupt: clearing interrupt, status 38303; sata err status 50002
+> Adding 125456k swap on /dev/sdb1.  Priority:-2 extents:1 across:125456k
+> vsc_sata_interrupt: clearing interrupt, status 830303; sata err status 50002
+> vsc_sata_interrupt: clearing interrupt, status 830303; sata err status 50002
+> Adding 136512k swap on /dev/sdc1.  Priority:-3 extents:1 across:136512k
+> 
+> > FWIW, on my Vitesse chip, the int_status and SCR_ERROR bits that are set and
+> > when this code is called this code are 0x83 and 0x50002, respectively.  But
+> > not clearing them doesn't seem to cause a problem . . . this must be different
+> > behavior in your chip (presumably the Intel branch).
+> 
+> Yes, with your patch I get the same output, perhaps the Vitesse part
+> does not tie these bits to the error interrupt, or they are masked by
+> default?
 
-TIA
-Adrian
+Dan, please trim trailing whitespace from your patch, if you would.  Other
+than that, your patch to sata_vsc.c and Kconfig looks fine to me.  I'm not sure
+about the patch to libata-scsi.c, but jgarzik can review that one.
 
-On Mon, Jan 02, 2006 at 02:35:07PM +0100, Haakon Riiser wrote:
-> First of all, a little information on my current system:
-> 
->   Distro: Fedora Core 3 (fully updated)
->   Kernel: 2.6.12-1.1381_FC3 (the bug also occurs on the latest 2.6.14 kernel
->           from Fedora Core 4)
->   Motherboard: Asus K8V SE Deluxe (Socket 754, VIA K8T800)
->   CPU: Sempron 3000+
->   Memory: 2 x TwinMOS 256 MB DDR400 (CL2.5)
->   PATA disk: Maxtor 6Y160P0
->   SATA disks: 4 x 250 GB Seagate Barracuda 7200.8 SATA NCQ
->   SATA controller: Promise SATA-II 150 TX4 PCI
-> 
-> The system boots from the PATA disk, which among other things
-> contains the OS.  The four SATA disks are set up in a software
-> RAID5 array using mdadm, and this is where I store all my important
-> data.
-> 
-> Until recently, this file server contained a 650 MHz Pentium III
-> CPU and an Asus P3B-F motherboard.  This configuration worked
-> flawlessly.
-> 
-> After upgrading the motherboard/CPU/memory on my file server to
-> the configuration listed on top, I started getting kernel panics
-> in the SCSI subsystem.  Once it happens, the machine freezes
-> completely, so I only have the logs that appear on screen.
-> The following is copied down by hand, so I left out the full
-> memory adresses preceeding each line in the stack trace:
-> 
->   ata7: called with no error (51)!
->   Kernel panic - not syncing: drivers/scsi/scsi.c:297: spin_is_locked
->    on uninitialized spinlock deadc014. (Not tainted)
-> 
->   panic+0x42/0x1c0
->   scsi_put_command+0x19c/0x2bf [scsi_mod]
->   scsi_next_command+0xc/0x14 [scsi_mod]
->   scsi_end_request+0xed/0x200 [scsi_mod]
->   mempool_free+0x67/0x1aa
->   scsi_io_completion+0x151/0x4d4 [scsi_mod]
->   sd_rw_intr+0x156/0x30f [sd_mod]
->   scsi_finish_command+0x8e/0xc1 [scsi_mod]
->   net_rx_action+0xbb/0x2bc
->   scsi_softirq+0x9d/0xcd [scsi_mod]
->   __do_softirq+0x3e/0x8a
->   do_softirq+0x39/0x40
->   =======================================
->   do_IRQ+0x53/0x85
->   common_interrupt+0x1a/0x20
->   acpi_processor_idle+0x01/0x27f
->   acpi_processor_idle+0x101/0x27f
->   cpu_idle+0x3c/0x51
->   start_kernel+0x175/0x1b1
->   unknown_bootoption+0x0/0x1b0
-> 
-> The above log isn't the same every time, but it always includes
-> SCSI related stuff like scsi_finish_command.  I upgraded around
-> a month ago, and until yesterday, it only crashed three or four
-> times.  Now, after the last crash, the time between crashes has
-> been reduced from about a week to about five minutes -- the system
-> is completely unusable!  I noticed that every time I boot the
-> system, the RAID array starts the resyncing process.  It always
-> crashes before finishing, forcing it to start from scratch on
-> every boot.  I'm guessing that the stress from the resync operation
-> is what's causing it to crash within five minutes.  I don't know
-> what prompted it to start resyncing in the first place, though.
-> (Btw, how dangerous is a crash in the resync process?  Is there
-> a high risk of data corruption?)
-> 
-> Until I know more, I have downgraded to my old CPU/motherboard.
-> It's still resyncing, so I don't know if the problem has gone away,
-> but it's been up for almost 100 minutes, and I still haven't seen a
-> single "ataN: called with no error (51)!" that usually preceeds the
-> kernel panic, so I think it's still working with my old hardware.
-> 
-> One last thing:  The new motherboard actually has four SATA
-> connectors (two that connects to an onboard Promise TX2 controller,
-> and two that connects to an onboard VIA controller), so I tried
-> taking out my Promise TX4 card, and connecting the disks to the
-> onboard connectors.  This didn't make any difference -- the system
-> panics in exactly the same way as before.
-> 
-> Any help is greatly appreciated!
-> 
-> -- 
->  Haakon
+I checked both the Intel and Vitesse documentation, and they both indicate
+that the error interrupts are masked by default.  Perhaps your PROM/BIOS
+software is enabling them.  Ours does not, and the sata_vsc driver doesn't
+either.  Perhaps it should -- though since we're just ignoring them, that
+doesn't make much sense.  Maybe we should explicitly mask them off?  Or
+explicitly enable them, rather than leaving the chip in whatever state
+the PROM/BIOS leaves it.  Perhaps this patch is all you really need.
+Can you try it?
+
+--- linux-2.6.15/drivers/scsi/sata_vsc.c	2006-01-02 19:21:10.000000000 -0800
++++ linux-2.6.15-mask/drivers/scsi/sata_vsc.c	2006-01-04 23:55:16.000000000 -0800
+@@ -108,9 +108,9 @@
+ 		VSC_SATA_INT_MASK_OFFSET + ap->port_no;
+ 	mask = readb(mask_addr);
+ 	if (ctl & ATA_NIEN)
+-		mask |= 0x80;
++		mask = 0x80;
+ 	else
+-		mask &= 0x7F;
++		mask = 0;
+ 	writeb(mask, mask_addr);
+ }
+ 
+
+jeremy
