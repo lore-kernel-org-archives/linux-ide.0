@@ -1,264 +1,324 @@
-From: "John Treubig" <jtreubig@hotmail.com>
-Subject: Re: ATA Write Error and Time-out Notification in User Space
-Date: Thu, 05 Jan 2006 14:27:03 -0600
-Message-ID: <BAY101-F359229E916F544AB7A726FDF2E0@phx.gbl>
+From: Roman Gischig <Roman@Gischig.com>
+Subject: Re: [git patches] 2.6.x libata updates
+Date: Thu, 5 Jan 2006 20:29:21 +0000 (UTC)
+Message-ID: <loom.20060105T211008-914@post.gmane.org>
+References: <20060103164319.GA402@havoc.gtf.org> <43BC3186.8060103@projecthugo.co.uk> <43BD6918.6000601@physics.ucsd.edu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="----=_NextPart_000_3de6_e7d_1aa9"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bay101-f35.bay101.hotmail.com ([64.4.56.45]:9614 "EHLO
-	hotmail.com") by vger.kernel.org with ESMTP id S932151AbWAEU1G
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Jan 2006 15:27:06 -0500
+Received: from main.gmane.org ([80.91.229.2]:52179 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S932225AbWAEVV3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jan 2006 16:21:29 -0500
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1EucXi-0001sI-RJ
+	for linux-ide@vger.kernel.org; Thu, 05 Jan 2006 22:21:06 +0100
+Received: from 84-73-58-247.dclient.hispeed.ch ([84.73.58.247])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 05 Jan 2006 22:21:06 +0100
+Received: from Roman by 84-73-58-247.dclient.hispeed.ch with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 05 Jan 2006 22:21:06 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: raw@dslr.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
+Hi,
 
-------=_NextPart_000_3de6_e7d_1aa9
-Content-Type: text/plain; format=flowed
+I can only confirm waht you guys are taling about!
 
-I applied the patch to the mm and yes, we have no more hangs!  The bad news 
-is the application gets no notification that there has been any error in the 
-drive subsystem.  I have only had one instance that I got a notification 
-back, but this was due to me adding a BUG_ON statement prior to the PRINTKs.
+I have a dual Opteron with a HighPoint 1820 PCI-X controller.
 
-Here's the details of what occurs:  With the application running, and I 
-unplug the drive, my app still tries to read and write because it has gotten 
-no error from the SG calls.  Is there a way that we can notify the kernel 
-that this device is dead and cause all future accesses to result in an 
-error?
+I have 7 disks attached to the controller:
+scsi7 : sata_mv
+  Vendor: ATA       Model: Maxtor 6L300S0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: ST3300831AS       Rev: 3.01
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: HDS725050KLA360   Rev: K2AO
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: Maxtor 7Y250M0    Rev: YAR5
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: Maxtor 7Y250M0    Rev: YAR5
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: Maxtor 7Y250M0    Rev: YAR5
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: v    Rev: YAR5
+  Type:   Direct-Access                      ANSI SCSI revision: 05
 
-I have had great difficulty getting the PRINTKs to output anything for this 
-specific error, yet I've been able to get other PRINTKs in the IDE-IO.C to 
-output.  I have attached the messages that do result.
+History...
 
+A) copying from only one disk to an other (200GB, mostly big files) works quite 
+well. When doing a 2nd copy from an other disk onto the same disk, one of the 
+source disks failed.
 
-
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: John Treubig <jtreubig@hotmail.com>
-CC: raw@dslr.net, linux-ide@vger.kernel.org,linux-kernel@vger.kernel.org, 
-linux-scsi@vger.kernel.org
-Subject: Re: ATA Write Error and Time-out Notification in User Space
-Date: Tue, 03 Jan 2006 21:48:04 +0000
-
-On Maw, 2006-01-03 at 13:27 -0600, John Treubig wrote:
- > I receive this as great news, only I don't know where the -mm tree is
- > located to see if I can get the patch or fix!  Can you give me a few
- > pointers?!
-
-The -mm patches live on kernel.org in pub/linux/kernel/people/akpm/
-
-The patch you want is the one to drivers/ide/ide-io.c although be aware
-it will make non PCI ATA controllers crash on errors if applied. The
-"right" fix for this is probably to have a hwif->flush_data() function
-that defaults to try_to_flush_leftover_data() so that the knowledge
-involved is not hacked into the ide core but kept in the driver.
+The system still works, no crash, as the / is on a different drive :-)
 
 
-Alan
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-------=_NextPart_000_3de6_e7d_1aa9
-Content-Type: text/plain; name="junk1.txt"; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment; filename="junk1.txt"
-
-Jan  5 08:28:26 localhost kernel: [  204.399120] ata_scsi_translate: EXIT
-Jan  5 08:28:26 localhost kernel: [  204.408979] ata_host_intr: ata2: 
-host_stat 0x4
-Jan  5 08:28:26 localhost kernel: [  204.408987] ata_host_intr: ata2: 
-protocol 4 (dev_stat 0x50)
-Jan  5 08:28:26 localhost kernel: [  204.408991] ata_sg_clean: unmapping 1 
-sg elements
-Jan  5 08:28:26 localhost kernel: [  204.408993] ata_qc_complete: EXIT
-Jan  5 08:28:26 localhost kernel: [  204.409010] ata_scsi_dump_cdb: CDB 
-(2:0,0,0) 28 00 01 ca 9f 15 00 00 08
-Jan  5 08:28:26 localhost kernel: [  204.409013] ata_scsi_translate: ENTER
-Jan  5 08:28:26 localhost kernel: [  204.409015] scsi_10_lba_len: ten-byte 
-command
-Jan  5 08:28:26 localhost kernel: [  204.409017] ata_sg_setup_one: mapped 
-buffer of 4096 bytes for read
-Jan  5 08:28:26 localhost kernel: [  204.409020] ata_fill_sg: PRD[0] = 
-(0xD048000, 0x1000)
-Jan  5 08:28:26 localhost kernel: [  204.409022] ata_dev_select: ENTER, 
-ata2: device 0, wait 1
-Jan  5 08:28:26 localhost kernel: [  204.409050] ata_tf_load_mmio: feat 0x0 
-nsect 0x8 lba 0x15 0x9F 0xCA
-Jan  5 08:28:26 localhost kernel: [  204.409052] ata_tf_load_mmio: device 
-0xE1
-Jan  5 08:28:26 localhost kernel: [  204.409067] ata_exec_command_mmio: 
-ata2: cmd 0xC8
-Jan  5 08:28:26 localhost kernel: [  204.409072] ata_scsi_translate: EXIT
-Jan  5 08:28:26 localhost kernel: [  204.409146] ata_host_intr: ata2: 
-host_stat 0x4
-Jan  5 08:28:26 localhost kernel: [  204.409154] ata_host_intr: ata2: 
-protocol 4 (dev_stat 0x50)
-Jan  5 08:28:26 localhost kernel: [  204.409158] ata_sg_clean: unmapping 1 
-sg elements
-Jan  5 08:28:26 localhost kernel: [  204.409160] ata_qc_complete: EXIT
-Jan  5 08:28:26 localhost kernel: [  204.409211] ata_scsi_dump_cdb: CDB 
-(2:0,0,0) 25 00 00 00 00 00 00 00 00
-Jan  5 08:28:26 localhost kernel: [  204.409214] ata_scsiop_read_cap: ENTER
-Jan  5 08:28:26 localhost kernel: [  204.409244] ata_scsi_dump_cdb: CDB 
-(2:0,0,0) 2a 00 00 d9 65 fb 00 00 08
-Jan  5 08:28:26 localhost kernel: [  204.409246] ata_scsi_translate: ENTER
-Jan  5 08:28:26 localhost kernel: [  204.409248] scsi_10_lba_len: ten-byte 
-command
-Jan  5 08:28:26 localhost kernel: [  204.409251] ata_sg_setup_one: mapped 
-buffer of 4096 bytes for write
-Jan  5 08:28:26 localhost kernel: [  204.409253] ata_fill_sg: PRD[0] = 
-(0xD048000, 0x1000)
-Jan  5 08:28:26 localhost kernel: [  204.409256] ata_dev_select: ENTER, 
-ata2: device 0, wait 1
-Jan  5 08:28:26 localhost kernel: [  204.409283] ata_tf_load_mmio: feat 0x0 
-nsect 0x8 lba 0xFB 0x65 0xD9
-Jan  5 08:28:26 localhost kernel: [  204.409285] ata_tf_load_mmio: device 
-0xE0
-Jan  5 08:28:26 localhost kernel: [  204.409300] ata_exec_command_mmio: 
-ata2: cmd 0xCA
-Jan  5 08:28:26 localhost kernel: [  204.409305] ata_scsi_translate: EXIT
-Jan  5 08:28:26 localhost kernel: [  204.462137] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:26 localhost kernel: [  205.135110] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:26 localhost kernel: [  205.211290] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  218.368667] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  218.449054] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  218.691283] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  218.946905] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  218.948318] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  219.194021] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  219.214175] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:41 localhost kernel: [  219.696113] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:41 localhost kernel: [  219.697451] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:41 localhost kernel: [  219.742827] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:41 localhost kernel: [  219.937038] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:41 localhost kernel: [  219.985139] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  220.445205] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  220.797927] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  220.816866] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  220.907329] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  221.089499] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  221.090284] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  221.238775] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:43 localhost kernel: [  221.267263] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:43 localhost kernel: [  221.536527] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:43 localhost kernel: [  221.611554] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:43 localhost kernel: [  221.938468] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:44 localhost kernel: [  222.373794] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:44 localhost kernel: [  222.374695] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:44 localhost kernel: [  223.162135] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:44 localhost kernel: [  223.163329] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:44 localhost kernel: [  223.164521] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:45 localhost kernel: [  223.813787] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:45 localhost kernel: [  224.140885] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:46 localhost kernel: [  224.353850] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:46 localhost kernel: [  224.379358] ata_scsi_error: ENTER
-Jan  5 08:28:46 localhost kernel: [  224.379361] ata_eng_timeout: ENTER
-Jan  5 08:28:46 localhost kernel: [  224.379363] ata_qc_timeout: ENTER
-Jan  5 08:28:46 localhost kernel: [  224.379374] ata2: command 0xca timeout, 
-stat 0x7f host_stat 0x1
-Jan  5 08:28:46 localhost kernel: [  224.379377] ata_sg_clean: unmapping 1 
-sg elements
-Jan  5 08:28:46 localhost kernel: [  224.379391] ata2: translated ATA 
-stat/err 0x7f/7f to SCSI SK/ASC/ASCQ 0x4/00/00
-Jan  5 08:28:46 localhost kernel: [  224.379394] ata2: status=0x7f { 
-DriveReady DeviceFault SeekComplete DataRequest CorrectedError Index Error }
-Jan  5 08:28:46 localhost kernel: [  224.379399] ata2: error=0x7f { 
-DriveStatusError UncorrectableError SectorIdNotFound TrackZeroNotFound 
-AddrMarkNotFound }
-Jan  5 08:28:46 localhost kernel: [  224.379411] ata_qc_complete: EXIT
-Jan  5 08:28:46 localhost kernel: [  224.379413] ata_qc_timeout: EXIT
-Jan  5 08:28:46 localhost kernel: [  224.379414] ata_eng_timeout: EXIT
-Jan  5 08:28:46 localhost kernel: [  224.379416] ata_scsi_error: EXIT
-Jan  5 08:28:46 localhost kernel: [  224.400243] ata_scsi_dump_cdb: CDB 
-(2:0,0,0) 25 00 00 00 00 00 00 00 00
-Jan  5 08:28:46 localhost kernel: [  224.400249] ata_scsiop_read_cap: ENTER
-Jan  5 08:28:46 localhost kernel: [  224.400423] ata_scsi_dump_cdb: CDB 
-(2:0,0,0) 2a 00 03 af fd 18 00 00 08
-Jan  5 08:28:46 localhost kernel: [  224.400426] ata_scsi_translate: ENTER
-Jan  5 08:28:46 localhost kernel: [  224.400430] scsi_10_lba_len: ten-byte 
-command
-Jan  5 08:28:46 localhost kernel: [  224.400435] ata_sg_setup_one: mapped 
-buffer of 4096 bytes for write
-Jan  5 08:28:46 localhost kernel: [  224.400438] ata_fill_sg: PRD[0] = 
-(0xD048000, 0x1000)
-Jan  5 08:28:46 localhost kernel: [  224.400441] ata_dev_select: ENTER, 
-ata2: device 0, wait 1
-Jan  5 08:28:46 localhost kernel: [  224.410486] ATA: abnormal status 0x7F 
-on port 0xD08195DF
-Jan  5 08:28:46 localhost kernel: [  224.410504] ata_tf_load_mmio: feat 0x0 
-nsect 0x8 lba 0x18 0xFD 0xAF
-Jan  5 08:28:46 localhost kernel: [  224.410506] ata_tf_load_mmio: device 
-0xE3
-Jan  5 08:28:46 localhost kernel: [  224.410522] ata_exec_command_mmio: 
-ata2: cmd 0xCA
-Jan  5 08:28:46 localhost kernel: [  224.410527] ata_scsi_translate: EXIT
-Jan  5 08:28:46 localhost kernel: [  224.658874] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:46 localhost kernel: [  224.753952] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:46 localhost kernel: [  224.874626] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:46 localhost kernel: [  225.186896] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:47 localhost kernel: [  226.040653] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:47 localhost kernel: [  226.191764] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:48 localhost kernel: [  226.348601] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:48 localhost kernel: [  226.415600] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:48 localhost kernel: [  226.878584] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:48 localhost kernel: [  226.909086] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:48 localhost kernel: [  226.933143] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:49 localhost kernel: [  227.240286] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:49 localhost kernel: [  227.458131] ata_host_intr: ata2: 
-host_stat 0x1
+Jan  5 19:29:28 twin ata5: Entering mv_eng_timeout
+Jan  5 19:29:28 twin mmio_base ffffc20000080000 ap ffff810002d12488 qc 
+ffff810002d129c8 scsi_cmnd ffff8100b31b72c0 &cmnd ffff8100b31b7330
+Jan  5 19:29:29 twin ata5: status=0x50 { DriveReady SeekComplete }
+Jan  5 19:29:29 twin ata5: error=0x01 { AddrMarkNotFound }
+Jan  5 19:29:30 twin Assertion failed! qc->flags & 
+ATA_QCFLAG_ACTIVE,drivers/scsi/libata-core.c,ata_qc_complete,line=3513
+Jan  5 19:29:30 twin ata5: status=0x50 { DriveReady SeekComplete }
+Jan  5 19:29:30 twin ata5: error=0x01 { AddrMarkNotFound }
+Jan  5 19:29:30 twin sdd: Current: sense key: No Sense
+Jan  5 19:29:30 twin Additional sense: No additional sense information
 
 
-------=_NextPart_000_3de6_e7d_1aa9--
+B) After removing all data from the 250GB disks I've created RAID 5 with the 
+four Maxtor 7Y250M0
+
+Having 2 instances of bonnie++ running and the rebuilt in the background, it 
+happened again....
+
+the rebuilt never completet:
+
+dude@twin /vol/twin/raid5 $ cat /proc/mdstat
+Personalities : [raid1] [raid5] [multipath]
+md0 : active raid5 sdg5[4] sdf5[2] sde5[1] sdd5[0]
+      735334656 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
+      [=======>.............]  recovery = 36.3% (88984344/245111552) 
+finish=54303.2min speed=47K/sec
+
+unused devices: <none>
+
+System:
+Linux twin 2.6.15-am0-g88026842 #1 SMP Wed Jan 4 20:51:58 CET 2006 x86_64 AMD 
+Opteron(tm) Processor 240 AuthenticAMD GNU/Linux
+
+twin ~ # lspci
+0000:00:06.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8111 PCI (rev 07)
+0000:00:07.0 ISA bridge: Advanced Micro Devices [AMD] AMD-8111 LPC (rev 05)
+0000:00:07.1 IDE interface: Advanced Micro Devices [AMD] AMD-8111 IDE (rev 03)
+0000:00:07.2 SMBus: Advanced Micro Devices [AMD] AMD-8111 SMBus 2.0 (rev 02)
+0000:00:07.3 Bridge: Advanced Micro Devices [AMD] AMD-8111 ACPI (rev 05)
+0000:00:0a.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8131 PCI-X Bridge 
+(rev 12)
+0000:00:0a.1 PIC: Advanced Micro Devices [AMD] AMD-8131 PCI-X IOAPIC (rev 01)
+0000:00:0b.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8131 PCI-X Bridge 
+(rev 12)
+0000:00:0b.1 PIC: Advanced Micro Devices [AMD] AMD-8131 PCI-X IOAPIC (rev 01)
+0000:00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
+HyperTransport Technology Configuration
+0000:00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
+Address Map
+0000:00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
+DRAM Controller
+0000:00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
+Miscellaneous Control
+0000:00:19.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
+HyperTransport Technology Configuration
+0000:00:19.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
+Address Map
+0000:00:19.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
+DRAM Controller
+0000:00:19.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
+Miscellaneous Control
+0000:01:00.0 USB Controller: Advanced Micro Devices [AMD] AMD-8111 USB (rev 0b)
+0000:01:00.1 USB Controller: Advanced Micro Devices [AMD] AMD-8111 USB (rev 0b)
+0000:01:08.0 Multimedia audio controller: Creative Labs SB Live! EMU10k1 (rev 
+07)
+0000:01:08.1 Input device controller: Creative Labs SB Live! MIDI/Game Port 
+(rev 07)
+0000:02:04.0 SCSI storage controller: Marvell Technology Group Ltd. MV88SX5081 
+8-port SATA I PCI-X Controller
+0000:03:01.0 VGA compatible controller: ATI Technologies Inc Radeon RV100 QY 
+[Radeon 7000/VE]
+0000:03:02.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5704 
+Gigabit Ethernet (rev 03)
+0000:03:02.1 Ethernet controller: Broadcom Corporation NetXtreme BCM5704 
+Gigabit Ethernet (rev 03)
+
+
+
+
+# Kernel hacking
+#
+# CONFIG_PRINTK_TIME is not set
+CONFIG_DEBUG_KERNEL=y
+# CONFIG_MAGIC_SYSRQ is not set
+CONFIG_LOG_BUF_SHIFT=17
+CONFIG_DETECT_SOFTLOCKUP=y
+
+CONFIG_X86_64=y
+CONFIG_64BIT=y
+CONFIG_X86=y
+CONFIG_SEMAPHORE_SLEEPERS=y
+CONFIG_MMU=y
+CONFIG_RWSEM_GENERIC_SPINLOCK=y
+CONFIG_GENERIC_CALIBRATE_DELAY=y
+CONFIG_X86_CMPXCHG=y
+CONFIG_EARLY_PRINTK=y
+CONFIG_GENERIC_ISA_DMA=y
+CONFIG_GENERIC_IOMAP=y
+CONFIG_ARCH_MAY_HAVE_PC_FDC=y
+
+#
+# Processor type and features
+#
+CONFIG_MK8=y
+# CONFIG_MPSC is not set
+# CONFIG_GENERIC_CPU is not set
+CONFIG_X86_L1_CACHE_BYTES=64
+CONFIG_X86_L1_CACHE_SHIFT=6
+CONFIG_X86_TSC=y
+CONFIG_X86_GOOD_APIC=y
+# CONFIG_MICROCODE is not set
+CONFIG_X86_MSR=y
+CONFIG_X86_CPUID=y
+CONFIG_X86_IO_APIC=y
+CONFIG_X86_LOCAL_APIC=y
+CONFIG_MTRR=y
+CONFIG_SMP=y
+# CONFIG_SCHED_SMT is not set
+CONFIG_PREEMPT_NONE=y
+# CONFIG_PREEMPT_VOLUNTARY is not set
+# CONFIG_PREEMPT is not set
+CONFIG_PREEMPT_BKL=y
+CONFIG_NUMA=y
+CONFIG_K8_NUMA=y
+CONFIG_X86_64_ACPI_NUMA=y
+# CONFIG_NUMA_EMU is not set
+CONFIG_ARCH_DISCONTIGMEM_ENABLE=y
+CONFIG_ARCH_DISCONTIGMEM_DEFAULT=y
+CONFIG_ARCH_SPARSEMEM_ENABLE=y
+CONFIG_SELECT_MEMORY_MODEL=y
+# CONFIG_FLATMEM_MANUAL is not set
+CONFIG_DISCONTIGMEM_MANUAL=y
+# CONFIG_SPARSEMEM_MANUAL is not set
+CONFIG_DISCONTIGMEM=y
+CONFIG_FLAT_NODE_MEM_MAP=y
+CONFIG_NEED_MULTIPLE_NODES=y
+# CONFIG_SPARSEMEM_STATIC is not set
+CONFIG_SPLIT_PTLOCK_CPUS=4
+CONFIG_HAVE_ARCH_EARLY_PFN_TO_NID=y
+CONFIG_NR_CPUS=8
+# CONFIG_HOTPLUG_CPU is not set
+CONFIG_HPET_TIMER=y
+CONFIG_X86_PM_TIMER=y
+CONFIG_HPET_EMULATE_RTC=y
+CONFIG_GART_IOMMU=y
+CONFIG_SWIOTLB=y
+CONFIG_X86_MCE=y
+# CONFIG_X86_MCE_INTEL is not set
+CONFIG_X86_MCE_AMD=y
+CONFIG_PHYSICAL_START=0x100000
+# CONFIG_KEXEC is not set
+CONFIG_SECCOMP=y
+# CONFIG_HZ_100 is not set
+CONFIG_HZ_250=y
+# CONFIG_HZ_1000 is not set
+CONFIG_HZ=250
+CONFIG_GENERIC_HARDIRQS=y
+CONFIG_GENERIC_IRQ_PROBE=y
+CONFIG_ISA_DMA_API=y
+CONFIG_GENERIC_PENDING_IRQ=y
+
+#
+# Power management options
+#
+CONFIG_PM=y
+CONFIG_PM_LEGACY=y
+# CONFIG_PM_DEBUG is not set
+
+#
+# ACPI (Advanced Configuration and Power Interface) Support
+#
+CONFIG_ACPI=y
+# CONFIG_ACPI_AC is not set
+# CONFIG_ACPI_BATTERY is not set
+CONFIG_ACPI_BUTTON=y
+CONFIG_ACPI_VIDEO=m
+# CONFIG_ACPI_HOTKEY is not set
+CONFIG_ACPI_FAN=y
+CONFIG_ACPI_PROCESSOR=y
+CONFIG_ACPI_THERMAL=y
+CONFIG_ACPI_NUMA=y
+# CONFIG_ACPI_ASUS is not set
+# CONFIG_ACPI_IBM is not set
+# CONFIG_ACPI_TOSHIBA is not set
+CONFIG_ACPI_BLACKLIST_YEAR=0
+CONFIG_ACPI_DEBUG=y
+CONFIG_ACPI_EC=y
+CONFIG_ACPI_POWER=y
+CONFIG_ACPI_SYSTEM=y
+CONFIG_ACPI_CONTAINER=y
+
+#
+# CPU Frequency scaling
+#
+CONFIG_CPU_FREQ=y
+CONFIG_CPU_FREQ_TABLE=y
+# CONFIG_CPU_FREQ_DEBUG is not set
+CONFIG_CPU_FREQ_STAT=y
+# CONFIG_CPU_FREQ_STAT_DETAILS is not set
+CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y
+# CONFIG_CPU_FREQ_DEFAULT_GOV_USERSPACE is not set
+CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
+# CONFIG_CPU_FREQ_GOV_POWERSAVE is not set
+# CONFIG_CPU_FREQ_GOV_USERSPACE is not set
+# CONFIG_CPU_FREQ_GOV_ONDEMAND is not set
+CONFIG_CPU_FREQ_GOV_CONSERVATIVE=y
+
+#
+# CPUFreq processor drivers
+#
+CONFIG_X86_POWERNOW_K8=y
+CONFIG_X86_POWERNOW_K8_ACPI=y
+# CONFIG_X86_SPEEDSTEP_CENTRINO is not set
+# CONFIG_X86_ACPI_CPUFREQ is not set
+
+#
+# shared options
+#
+# CONFIG_X86_ACPI_CPUFREQ_PROC_INTF is not set
+# CONFIG_X86_SPEEDSTEP_LIB is not set
+
+#
+# Bus options (PCI etc.)
+#
+CONFIG_PCI=y
+CONFIG_PCI_DIRECT=y
+CONFIG_PCI_MMCONFIG=y
+# CONFIG_UNORDERED_IO is not set
+# CONFIG_PCIEPORTBUS is not set
+# CONFIG_PCI_MSI is not set
+# CONFIG_PCI_LEGACY_PROC is not set
+# CONFIG_PCI_DEBUG is not set
+
+# SCSI device support
+#
+# CONFIG_RAID_ATTRS is not set
+CONFIG_SCSI=y
+# CONFIG_SCSI_PROC_FS is not set
+
+#
+# SCSI support type (disk, tape, CD-ROM)
+#
+CONFIG_BLK_DEV_SD=y
+CONFIG_CHR_DEV_SG=y
+# CONFIG_CHR_DEV_SCH is not set
+
+#
+# Some SCSI devices (e.g. CD jukebox) support multiple LUNs
+#
+# CONFIG_SCSI_MULTI_LUN is not set
+CONFIG_SCSI_CONSTANTS=y
+CONFIG_SCSI_LOGGING=y
+
+
+#
+# SCSI low-level drivers
+#
+# CONFIG_ISCSI_TCP is not set
+CONFIG_SCSI_SATA=y
+CONFIG_SCSI_SATA_MV=y
+CONFIG_SCSI_QLA2XXX=y
+
+
+Cheers Roman
+
