@@ -1,92 +1,117 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH/RFC] libata-dev: update timeout for PIO polling
-Date: Fri, 06 Jan 2006 11:41:31 +0800
-Message-ID: <43BDE6EB.9090106@tw.ibm.com>
-References: <43BA8AEE.8010608@bj-ig.de> <43BB3CBA.5010908@tw.ibm.com> <43BB9568.6010000@bj-ig.de>
+From: Helmut Toplitzer <pvrusb2@toplitzer.net>
+Subject: USB EHCI VIA disconnect problem
+Date: Fri, 6 Jan 2006 09:59:00 +0100
+Message-ID: <200601060959.00891.pvrusb2@toplitzer.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:17544 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S932246AbWAFDlm
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Jan 2006 22:41:42 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e31.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k063fXEW010817
-	for <linux-ide@vger.kernel.org>; Thu, 5 Jan 2006 22:41:33 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k063eDxC111320
-	for <linux-ide@vger.kernel.org>; Thu, 5 Jan 2006 20:40:13 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k063fWJo021953
-	for <linux-ide@vger.kernel.org>; Thu, 5 Jan 2006 20:41:33 -0700
-In-Reply-To: <43BB9568.6010000@bj-ig.de>
+Received: from toplitzer.net ([83.151.30.110]:45711 "EHLO toplitzer.net")
+	by vger.kernel.org with ESMTP id S932173AbWAFI7N (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Jan 2006 03:59:13 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by toplitzer.net (SX Mail) with ESMTP id 595F8BC40
+	for <linux-ide@vger.kernel.org>; Fri,  6 Jan 2006 09:58:54 +0100 (CET)
+Received: from [10.0.0.140] (pc057-adsl.adsl.uni-klu.ac.at [143.205.236.57])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(No client certificate requested)
+	by toplitzer.net (SX Mail) with ESMTP id 6EB04BBE9
+	for <linux-ide@vger.kernel.org>; Fri,  6 Jan 2006 09:58:53 +0100 (CET)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>, Doug Maxey <dwm@maxeymade.com>, Linux IDE <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Jeff,
+Hi!
 
-In the bug reported by Ralf M=FCller:
-  (http://marc.theaimsgroup.com/?l=3Dlinux-ide&m=3D113629906809278&w=3D=
-2)
+I forward this mail to this list because there might be a connection to
+the VIA IDE drivers. Maybe the two described problems are related,
+maybe not. Transferrates experiment is however influenced by ehci-hcd.
+In one post from Alan Stern it's however noticed that the disconnect
+problem maybe solved in an other way.
 
-  When the command times out, the qc is completed by the time
-out handler. This might cause null pointer dereference if
-the command is running in the PIO polling thread.
+The mail originates on the linux-usb-devel list:
+http://marc.theaimsgroup.com/?l=linux-usb-devel&w=2&r=1&s=USB+EHCI+VIA&q=b
 
-Changes:
-- Update the timeout for PIO polling to 5 minutes.
-  This should be long enough to prevent the timeout handler from
-  interfering with the PIO polling thread. =20
+Maybe someone has at least an explanation about this.
 
-Patch against the libata-dev irq-pio branch=20
-(61420e147a706ee7c7a902008045547fb2a2a330).
+TIA
+Helmut
 
-=46or your review, thanks.
+----------  Forwarded Message  ----------
 
-Albert
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [linux-usb-devel] Re: [Linux-usb-users] USB EHCI VIA disconnect 
+problem
+Date: Thursday 05 January 2006 23:09
+From: Helmut Toplitzer <pvrusb2@toplitzer.net>
+To: scalfee@healthhero.com
+Cc: linux-usb-devel@lists.sourceforge.net, Rene Herman 
+<rene.herman@keyaccess.nl>, David Brownell <david-b@pacbell.net>
 
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+Ok because of the long thread a short summary:
 
---- irq-pio/include/linux/libata.h	2006-01-05 15:16:32.000000000 +0800
-+++ update_tmout/include/linux/libata.h	2006-01-06 10:17:34.000000000 +=
-0800
-@@ -141,6 +141,7 @@ enum {
- 	ATA_TMOUT_CDB_QUICK	=3D 5 * HZ,
- 	ATA_TMOUT_INTERNAL	=3D 30 * HZ,
- 	ATA_TMOUT_INTERNAL_QUICK =3D 5 * HZ,
-+	ATA_TMOUT_LONG		=3D 300 * HZ,	/* looks long enough */
-=20
- 	/* ATA bus states */
- 	BUS_UNKNOWN		=3D 0,
---- irq-pio/drivers/scsi/libata-core.c	2006-01-05 15:16:29.000000000 +0=
-800
-+++ update_tmout/drivers/scsi/libata-core.c	2006-01-06 10:41:23.0000000=
-00 +0800
-@@ -3866,6 +3866,21 @@ int ata_qc_issue_prot(struct ata_queued_
- 		}
- 	}
-=20
-+	/* The PIO polling thread has its own timeout handling.
-+	 * It won't loop forever. Even if it takes a long time,
-+	 * we can wait the PIO polling thread to finish its work.
-+	 * No need to stop the polling thread from the timeout handler.
-+	 * So the timeout is updated to a long time here. This can prevent
-+	 * the timeout handler from interfering with the PIO polling thread.
-+	 */
-+	if (qc->tf.flags & ATA_TFLAG_POLLING &&
-+	    qc->scsicmd &&
-+	    qc->scsicmd->eh_timeout.function) {
-+		DPRINTK("ata%u: timer updated for PIO polling\n", ap->id);
-+		mod_timer(&qc->scsicmd->eh_timeout,
-+			  jiffies + ATA_TMOUT_LONG);
-+	}
-+
- 	/* select the device */
- 	ata_dev_select(ap, qc->dev->devno, 1, 0);
-=20
+My transferrate tests were running on a normal IDE device.
+
+VIA IDE, USB and so on ... systems are intefering.
+USB-system affects IDE system, sometimes in
+a dramatic way (diff. 20MB/s on IDE transferrate).
+
+Beside this sometimes the ehci-driver disconnects USB devices
+without any reason. This is a big problem in streaming data etc.
+It looks like this:
+22:36 kernel: hub 4-0:1.0: state 5 ports 6 chg 0000 evt 0008
+22:36 kernel: ehci_hcd 0000:00:10.3: GetStatus port 3 status 00180b POWER
+sig=j PEC \
+CSC CONNECT 22:36 kernel: hub 4-0:1.0: port 3, status 0501, change 0003, 480
+Mb/s
+22:36 kernel: usb 4-3: USB disconnect, address 2
+22:36 kernel: usb 4-3: usb_disable_device nuking all URBs
+22:36 kernel: ehci_hcd 0000:00:10.3: shutdown urb ca6e53c0 pipe c0420280
+ep4in-bulk
+22:36 kernel: ehci_hcd 0000:00:10.3: shutdown urb ca6e5440 pipe c0420280
+ep4in-bulk
+22:36 kernel: ehci_hcd 0000:00:10.3: shutdown urb ce69ce20 pipe c0420280
+ep4in-bulk
+22:36 kernel: ehci_hcd 0000:00:10.3: shutdown urb c0417f60 pipe c0420280
+ep4in-bulk
+....
 
 
+All VIA motherboards with the IDE problem have
+the problem with the disconnects to (AFAIK).
+That's the story. It was startet by Rene Hermann on linux-devel without
+solution, when I came up with my usb-disconnect problem and we found
+the similarities about this. See the same thread on linux-usb-user
+http://marc.theaimsgroup.com/?t=113506436100003&r=1&w=2
+and thread "External USB2 HDD affects speed hda"
+http://marc.theaimsgroup.com/?t=111749614000002&r=1&w=2
+on linux-devel about this.
+
+So. The question is: How broken is the VIAchipset/driver/etc.
+How to solve this? What's the role of the usb-driver in this story.
+
+- E.g. Loading/Unloading ehci-hcd uhci-hcd affects ide-transferrates.
+- Making the CPU utilized !!!increases!!!! the IDE transfer rate.
+- Streaming data on ehci-hcd causes disconnects of devices after some time.
+
+Normal IDE transferrate                 : 36MB/s
+lircd with lirc_i2c and lirc_dev loaded : 14MB/s
+ehci-hcd loaded and once used           : 22MB/s
+cpu 100% utilized                       : 55MB/s
+
+This is "just" doubling transfer rates with a snip.
+So whats going on here? It looks like DMA/BusMastering is
+taking place when CPU is utilized (Not realy knowing).
+But what happens when ehci-hcd, lircd are loaded which only use the
+usb-system?
+
+Any ideas?
+
+Helmut
+
+--
+My GNUpg fingerprint http://www.gnupg.org
+4563 F4FB 0B7E 8698 53CD  00E9 E319 35BD 6A91 1656
+
+-------------------------------------------------------
