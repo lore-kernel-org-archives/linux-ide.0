@@ -1,71 +1,92 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: /dev/disk/by-id incomplete and unhelpful for SATA drives
-Date: Fri, 06 Jan 2006 12:57:50 +1000
-Message-ID: <43BDDCAE.7000506@torque.net>
-References: <doc5jl$acv$1@sea.gmane.org> <20051221185518.GA9100@vrfy.org> <43A9CFE0.2070103@edesix.com> <20051222043527.GA13175@vrfy.org> <43AA8D0B.10504@edesix.com> <20051222183525.GA17871@devserv.devel.redhat.com> <43AB40E2.1050009@edesix.com> <20060106013640.GA27841@aracnet.com>
-Reply-To: dougg@torque.net
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH/RFC] libata-dev: update timeout for PIO polling
+Date: Fri, 06 Jan 2006 11:41:31 +0800
+Message-ID: <43BDE6EB.9090106@tw.ibm.com>
+References: <43BA8AEE.8010608@bj-ig.de> <43BB3CBA.5010908@tw.ibm.com> <43BB9568.6010000@bj-ig.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20060106013640.GA27841@aracnet.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: patman@aracnet.com
-Cc: Chris Paulson-Ellis <chris@edesix.com>, Bill Nottingham <notting@redhat.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:17544 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S932246AbWAFDlm
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Jan 2006 22:41:42 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e31.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k063fXEW010817
+	for <linux-ide@vger.kernel.org>; Thu, 5 Jan 2006 22:41:33 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k063eDxC111320
+	for <linux-ide@vger.kernel.org>; Thu, 5 Jan 2006 20:40:13 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k063fWJo021953
+	for <linux-ide@vger.kernel.org>; Thu, 5 Jan 2006 20:41:33 -0700
+In-Reply-To: <43BB9568.6010000@bj-ig.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>, Doug Maxey <dwm@maxeymade.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-patman@aracnet.com wrote:
-> On Fri, Dec 23, 2005 at 12:12:18AM +0000, Chris Paulson-Ellis wrote:
-> 
-> 
->>>Why not just fix the kernel when it's filling in the page 83
->>>data to pull the serial from page 80 instead of putting *that* there?
->>>
->>>Bill
->>
->>Indeed. Here's the patch. Now I have 3 ways to fix this. Any more anyone?
-> 
-> 
-> This is the best approach, I think you could even remove page 0x83 support
-> and still be SCSI compliant.
+Jeff,
 
-Pat,
-Not since 2000/2001 ... The VPD device identification page
-(0x83) and the "Supported VPD pages" page (0x0) are
-mandatory in SPC-2 (ANSI INCITS 351-2001), SPC-3 (soon
-to be a standard) and SPC-4. Recent SCSI to ATA
-Translation drafts (e.g. sat-r07a.pdf) define a mapping
-for the naa-5 identifier defined in ATA/ATAPI-7 and
-ATA/ATAPI-8 (IDENTIFY DEVICE response words 108 to 111)
-to VPD page 0x83. There are also moves afoot to get a
-similar wwn identifier into the IDENTIFY PACKET DEVICE
-response.
+In the bug reported by Ralf M=FCller:
+  (http://marc.theaimsgroup.com/?l=3Dlinux-ide&m=3D113629906809278&w=3D=
+2)
 
-SAT defines two device id descriptors for VPD page 0x83:
-  - based on WWN naa-5 (described above)
-  - based on model number and serial number (IDENTIFY
-    DEVICE response words 27-46 and 10-19)
+  When the command times out, the qc is completed by the time
+out handler. This might cause null pointer dereference if
+the command is running in the PIO polling thread.
 
-So removing VPD page 0x83 would be a retrograde step
-IMO. The libata implementation should be enhanced to
-support one or both of the above descriptors as they
-have a defined format (unlike serial number VPD page (0x80)).
-libata's current approach to yield "Linux ATA-SCSI simulator"
-for the loosely formatted ASCII identification descriptor
-is just a place holder.
+Changes:
+- Update the timeout for PIO polling to 5 minutes.
+  This should be long enough to prevent the timeout handler from
+  interfering with the PIO polling thread. =20
 
-libata should do a lot more work in the VPD 0x83 page
-area. For example when SATA disk is connected via SAS
-(behind an expander rather that directly connected)
-then a "device port" association descriptor should have
-the SAS address (also naa-5) of the SATA bridge (in the
-expander).
+Patch against the libata-dev irq-pio branch=20
+(61420e147a706ee7c7a902008045547fb2a2a330).
 
-libata is not the only way that the SCSI subsystem
-will be seeing SATA disks. There are FC exclosures
-out there filled with SATA disks that have a SAT
-layer in the enclosure.
+=46or your review, thanks.
+
+Albert
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+--- irq-pio/include/linux/libata.h	2006-01-05 15:16:32.000000000 +0800
++++ update_tmout/include/linux/libata.h	2006-01-06 10:17:34.000000000 +=
+0800
+@@ -141,6 +141,7 @@ enum {
+ 	ATA_TMOUT_CDB_QUICK	=3D 5 * HZ,
+ 	ATA_TMOUT_INTERNAL	=3D 30 * HZ,
+ 	ATA_TMOUT_INTERNAL_QUICK =3D 5 * HZ,
++	ATA_TMOUT_LONG		=3D 300 * HZ,	/* looks long enough */
+=20
+ 	/* ATA bus states */
+ 	BUS_UNKNOWN		=3D 0,
+--- irq-pio/drivers/scsi/libata-core.c	2006-01-05 15:16:29.000000000 +0=
+800
++++ update_tmout/drivers/scsi/libata-core.c	2006-01-06 10:41:23.0000000=
+00 +0800
+@@ -3866,6 +3866,21 @@ int ata_qc_issue_prot(struct ata_queued_
+ 		}
+ 	}
+=20
++	/* The PIO polling thread has its own timeout handling.
++	 * It won't loop forever. Even if it takes a long time,
++	 * we can wait the PIO polling thread to finish its work.
++	 * No need to stop the polling thread from the timeout handler.
++	 * So the timeout is updated to a long time here. This can prevent
++	 * the timeout handler from interfering with the PIO polling thread.
++	 */
++	if (qc->tf.flags & ATA_TFLAG_POLLING &&
++	    qc->scsicmd &&
++	    qc->scsicmd->eh_timeout.function) {
++		DPRINTK("ata%u: timer updated for PIO polling\n", ap->id);
++		mod_timer(&qc->scsicmd->eh_timeout,
++			  jiffies + ATA_TMOUT_LONG);
++	}
++
+ 	/* select the device */
+ 	ata_dev_select(ap, qc->dev->devno, 1, 0);
+=20
 
 
-Doug Gilbert
-cc-ed to linux-ide
