@@ -1,338 +1,170 @@
-From: Russell King <rmk@arm.linux.org.uk>
-Subject: [CFT 1/3] Add ide_bus_type probe and remove methods
-Date: Fri, 06 Jan 2006 11:41:00 +0000
-Message-ID: <20060106114059.13.30@flint.arm.linux.org.uk>
-References: <20060105142951.13.01@flint.arm.linux.org.uk>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] /dev/disk/by-id incomplete and unhelpful for SATA drives
+Date: Fri, 06 Jan 2006 22:39:34 +1000
+Message-ID: <43BE6506.7090901@torque.net>
+References: <doc5jl$acv$1@sea.gmane.org> <20051221185518.GA9100@vrfy.org> <43A9CFE0.2070103@edesix.com> <20051222043527.GA13175@vrfy.org> <43AA8D0B.10504@edesix.com> <20051222183525.GA17871@devserv.devel.redhat.com> <43AB40E2.1050009@edesix.com> <20060106013640.GA27841@aracnet.com> <43BDDCAE.7000506@torque.net>
+Reply-To: dougg@torque.net
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------030402000300020802090505"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:41232 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S932430AbWAFLlJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 Jan 2006 06:41:09 -0500
-In-reply-to: <20060105142951.13.01@flint.arm.linux.org.uk>
+Received: from zorg.st.net.au ([203.16.233.9]:51891 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1750795AbWAFMjJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Jan 2006 07:39:09 -0500
+In-Reply-To: <43BDDCAE.7000506@torque.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Greg K-H <greg@kroah.com>, IDE <linux-ide@vger.kernel.org>
+To: dougg@torque.net
+Cc: patman@aracnet.com, Chris Paulson-Ellis <chris@edesix.com>, Bill Nottingham <notting@redhat.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+This is a multi-part message in MIME format.
+--------------030402000300020802090505
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-(This is an additional patch - on lkml, see
- "[CFT 1/29] Add bus_type probe, remove, shutdown methods.")
+Douglas Gilbert wrote:
+> patman@aracnet.com wrote:
+> 
+>>On Fri, Dec 23, 2005 at 12:12:18AM +0000, Chris Paulson-Ellis wrote:
+>>
+>>
+>>
+>>>>Why not just fix the kernel when it's filling in the page 83
+>>>>data to pull the serial from page 80 instead of putting *that* there?
+>>>>
+>>>>Bill
+>>>
+>>>Indeed. Here's the patch. Now I have 3 ways to fix this. Any more anyone?
+>>
+>>
+>>This is the best approach, I think you could even remove page 0x83 support
+>>and still be SCSI compliant.
+> 
+> 
+> Pat,
+> Not since 2000/2001 ... The VPD device identification page
+> (0x83) and the "Supported VPD pages" page (0x0) are
+> mandatory in SPC-2 (ANSI INCITS 351-2001), SPC-3 (soon
+> to be a standard) and SPC-4. Recent SCSI to ATA
+> Translation drafts (e.g. sat-r07a.pdf) define a mapping
+> for the naa-5 identifier defined in ATA/ATAPI-7 and
+> ATA/ATAPI-8 (IDENTIFY DEVICE response words 108 to 111)
+> to VPD page 0x83. There are also moves afoot to get a
+> similar wwn identifier into the IDENTIFY PACKET DEVICE
+> response.
+> 
+> SAT defines two device id descriptors for VPD page 0x83:
+>   - based on WWN naa-5 (described above)
+>   - based on model number and serial number (IDENTIFY
+>     DEVICE response words 27-46 and 10-19)
+> 
+> So removing VPD page 0x83 would be a retrograde step
+> IMO. The libata implementation should be enhanced to
+> support one or both of the above descriptors as they
+> have a defined format (unlike serial number VPD page (0x80)).
+> libata's current approach to yield "Linux ATA-SCSI simulator"
+> for the loosely formatted ASCII identification descriptor
+> is just a place holder.
 
----
- drivers/ide/ide-cd.c     |   14 +++++---------
- drivers/ide/ide-disk.c   |   22 ++++++++--------------
- drivers/ide/ide-floppy.c |   14 +++++---------
- drivers/ide/ide-tape.c   |   18 +++++++-----------
- drivers/ide/ide.c        |   31 +++++++++++++++++++++++++++++++
- include/linux/ide.h      |    5 +++++
- 6 files changed, 61 insertions(+), 43 deletions(-)
+The attachment adds the second item above to the patch
+suggested by Chris Paulson-Ellis <chris@edesix.com> in:
+http://marc.theaimsgroup.com/?l=linux-hotplug-devel&m=113529667019652&w=2
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -3264,9 +3264,8 @@ sector_t ide_cdrom_capacity (ide_drive_t
+The patch is against lk 2.6.15 and was tested on a sil
+controller with a Seagate ST380013AS sata disk.
+
+Changelog:
+  - make existing libata VPD device identification page (0x83)
+    supply the ATA serial number in the libata "vendor
+    specific" designator (from Chris Paulson-Ellis)
+  - add a "t10 vendor id based" designator as defined in
+    SAT rev 07a (section 10.3.4.2.3) that supplies ATA
+    model and serial numbers
+  - make the libata VPD page 0x83 more extensible (for
+    adding more designators in the future).
+
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
+
+Doug Gilbert
+
+
+--------------030402000300020802090505
+Content-Type: text/x-patch;
+ name="libata_vpd83_2615.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libata_vpd83_2615.diff"
+
+--- linux/drivers/scsi/libata-scsi.c	2006-01-04 08:50:42.000000000 +1000
++++ linux/drivers/scsi/libata-scsi.c2615vpd	2006-01-06 20:16:25.000000000 +1000
+@@ -1532,16 +1532,16 @@
+ 	return 0;
  }
- #endif
  
--static int ide_cd_remove(struct device *dev)
-+static void ide_cd_remove(ide_drive_t *drive)
- {
--	ide_drive_t *drive = to_ide_device(dev);
- 	struct cdrom_info *info = drive->driver_data;
- 
- 	ide_unregister_subdriver(drive, info->driver);
-@@ -3274,8 +3273,6 @@ static int ide_cd_remove(struct device *
- 	del_gendisk(info->disk);
- 
- 	ide_cd_put(info);
+-static const char *inq_83_str = "Linux ATA-SCSI simulator";
 -
--	return 0;
- }
- 
- static void ide_cd_release(struct kref *kref)
-@@ -3299,7 +3296,7 @@ static void ide_cd_release(struct kref *
- 	kfree(info);
- }
- 
--static int ide_cd_probe(struct device *);
-+static int ide_cd_probe(ide_drive_t *);
- 
- #ifdef CONFIG_PROC_FS
- static int proc_idecd_read_capacity
-@@ -3325,9 +3322,9 @@ static ide_driver_t ide_cdrom_driver = {
- 		.owner		= THIS_MODULE,
- 		.name		= "ide-cdrom",
- 		.bus		= &ide_bus_type,
--		.probe		= ide_cd_probe,
--		.remove		= ide_cd_remove,
- 	},
-+	.probe			= ide_cd_probe,
-+	.remove			= ide_cd_remove,
- 	.version		= IDECD_VERSION,
- 	.media			= ide_cdrom,
- 	.supports_dsc_overlap	= 1,
-@@ -3421,9 +3418,8 @@ static char *ignore = NULL;
- module_param(ignore, charp, 0400);
- MODULE_DESCRIPTION("ATAPI CD-ROM Driver");
- 
--static int ide_cd_probe(struct device *dev)
-+static int ide_cd_probe(ide_drive_t *drive)
+ /**
+  *	ata_scsiop_inq_83 - Simulate INQUIRY EVPD page 83, device identity
+  *	@args: device IDENTIFY data / SCSI command of interest.
+  *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
+  *	@buflen: Response buffer length.
+  *
+- *	Returns device identification.  Currently hardcoded to
+- *	return "Linux ATA-SCSI simulator".
++ *	Yields two logocal unit device identification designators:
++ *	  - vendor specific ASCII containing the ATA serial number
++ *	  - SAT defined "t10 vendor id based" containing ASCII vendor
++ *	    name ("ATA     "), model and serial numbers.
+  *
+  *	LOCKING:
+  *	spin_lock_irqsave(host_set lock)
+@@ -1550,16 +1550,39 @@
+ unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf,
+ 			      unsigned int buflen)
  {
--	ide_drive_t *drive = to_ide_device(dev);
- 	struct cdrom_info *info;
- 	struct gendisk *g;
- 	struct request_sense sense;
-diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -1028,9 +1028,8 @@ static void ide_cacheflush_p(ide_drive_t
- 		printk(KERN_INFO "%s: wcache flush failed!\n", drive->name);
- }
++	int num;
++	const int sat_model_serial_desc_len = 68;
++	const int ata_model_byte_len = 40;
++
+ 	rbuf[1] = 0x83;			/* this page code */
+-	rbuf[3] = 4 + strlen(inq_83_str);	/* page len */
++	num = 4;
  
--static int ide_disk_remove(struct device *dev)
-+static void ide_disk_remove(ide_drive_t *drive)
- {
--	ide_drive_t *drive = to_ide_device(dev);
- 	struct ide_disk_obj *idkp = drive->driver_data;
- 	struct gendisk *g = idkp->disk;
- 
-@@ -1041,8 +1040,6 @@ static int ide_disk_remove(struct device
- 	ide_cacheflush_p(drive);
- 
- 	ide_disk_put(idkp);
--
--	return 0;
- }
- 
- static void ide_disk_release(struct kref *kref)
-@@ -1058,12 +1055,10 @@ static void ide_disk_release(struct kref
- 	kfree(idkp);
- }
- 
--static int ide_disk_probe(struct device *dev);
-+static int ide_disk_probe(ide_drive_t *drive);
- 
--static void ide_device_shutdown(struct device *dev)
-+static void ide_device_shutdown(ide_drive_t *drive)
- {
--	ide_drive_t *drive = container_of(dev, ide_drive_t, gendev);
--
- #ifdef	CONFIG_ALPHA
- 	/* On Alpha, halt(8) doesn't actually turn the machine off,
- 	   it puts you into the sort of firmware monitor. Typically,
-@@ -1085,7 +1080,7 @@ static void ide_device_shutdown(struct d
+-	/* our one and only identification descriptor (vendor-specific) */
+-	if (buflen > (strlen(inq_83_str) + 4 + 4 - 1)) {
+-		rbuf[4 + 0] = 2;	/* code set: ASCII */
+-		rbuf[4 + 3] = strlen(inq_83_str);
+-		memcpy(rbuf + 4 + 4, inq_83_str, strlen(inq_83_str));
++	if (buflen > (ATA_SERNO_LEN + num + 3)) {
++		/* piv=0, assoc=lu, code_set=ACSII, designator=vendor */
++		rbuf[num + 0] = 2;	
++		rbuf[num + 3] = ATA_SERNO_LEN;
++		num += 4;
++		ata_dev_id_string(args->id, (unsigned char *) rbuf + num,
++				  ATA_ID_SERNO_OFS, ATA_SERNO_LEN);
++		num += ATA_SERNO_LEN;
  	}
- 
- 	printk("Shutdown: %s\n", drive->name);
--	dev->bus->suspend(dev, PMSG_SUSPEND);
-+	drive->gendev.bus->suspend(&drive->gendev, PMSG_SUSPEND);
- }
- 
- static ide_driver_t idedisk_driver = {
-@@ -1093,10 +1088,10 @@ static ide_driver_t idedisk_driver = {
- 		.owner		= THIS_MODULE,
- 		.name		= "ide-disk",
- 		.bus		= &ide_bus_type,
--		.probe		= ide_disk_probe,
--		.remove		= ide_disk_remove,
--		.shutdown	= ide_device_shutdown,
- 	},
-+	.probe			= ide_disk_probe,
-+	.remove			= ide_disk_remove,
-+	.shutdown		= ide_device_shutdown,
- 	.version		= IDEDISK_VERSION,
- 	.media			= ide_disk,
- 	.supports_dsc_overlap	= 0,
-@@ -1201,9 +1196,8 @@ static struct block_device_operations id
- 
- MODULE_DESCRIPTION("ATA DISK Driver");
- 
--static int ide_disk_probe(struct device *dev)
-+static int ide_disk_probe(ide_drive_t *drive)
- {
--	ide_drive_t *drive = to_ide_device(dev);
- 	struct ide_disk_obj *idkp;
- 	struct gendisk *g;
- 
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -1871,9 +1871,8 @@ static void idefloppy_setup (ide_drive_t
- 	idefloppy_add_settings(drive);
- }
- 
--static int ide_floppy_remove(struct device *dev)
-+static void ide_floppy_remove(ide_drive_t *drive)
- {
--	ide_drive_t *drive = to_ide_device(dev);
- 	idefloppy_floppy_t *floppy = drive->driver_data;
- 	struct gendisk *g = floppy->disk;
- 
-@@ -1882,8 +1881,6 @@ static int ide_floppy_remove(struct devi
- 	del_gendisk(g);
- 
- 	ide_floppy_put(floppy);
 -
--	return 0;
++	if (buflen > (sat_model_serial_desc_len + num + 3)) {
++		/* SAT defined lu model and serial numbers descriptor */
++		/* piv=0, assoc=lu, code_set=ACSII, designator=t10 vendor id */
++		rbuf[num + 0] = 2;	
++		rbuf[num + 1] = 1;	
++		rbuf[num + 3] = sat_model_serial_desc_len;
++		num += 4;
++		strncpy(rbuf + num, "ATA     ", 8);
++		num += 8;
++		ata_dev_id_string(args->id, (unsigned char *) rbuf + num,
++				  ATA_ID_PROD_OFS, ata_model_byte_len);
++		num += ata_model_byte_len;
++		ata_dev_id_string(args->id, (unsigned char *) rbuf + num,
++				  ATA_ID_SERNO_OFS, ATA_SERNO_LEN);
++		num += ATA_SERNO_LEN;
++	}
++	rbuf[3] = num - 4;    /* page len (assume less than 256 bytes) */
+ 	return 0;
  }
  
- static void ide_floppy_release(struct kref *kref)
-@@ -1922,16 +1919,16 @@ static ide_proc_entry_t idefloppy_proc[]
- 
- #endif	/* CONFIG_PROC_FS */
- 
--static int ide_floppy_probe(struct device *);
-+static int ide_floppy_probe(ide_drive_t *);
- 
- static ide_driver_t idefloppy_driver = {
- 	.gen_driver = {
- 		.owner		= THIS_MODULE,
- 		.name		= "ide-floppy",
- 		.bus		= &ide_bus_type,
--		.probe		= ide_floppy_probe,
--		.remove		= ide_floppy_remove,
- 	},
-+	.probe			= ide_floppy_probe,
-+	.remove			= ide_floppy_remove,
- 	.version		= IDEFLOPPY_VERSION,
- 	.media			= ide_floppy,
- 	.supports_dsc_overlap	= 0,
-@@ -2124,9 +2121,8 @@ static struct block_device_operations id
- 	.revalidate_disk= idefloppy_revalidate_disk
- };
- 
--static int ide_floppy_probe(struct device *dev)
-+static int ide_floppy_probe(ide_drive_t *drive)
- {
--	ide_drive_t *drive = to_ide_device(dev);
- 	idefloppy_floppy_t *floppy;
- 	struct gendisk *g;
- 
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -4682,9 +4682,8 @@ static void idetape_setup (ide_drive_t *
- 	idetape_add_settings(drive);
- }
- 
--static int ide_tape_remove(struct device *dev)
-+static void ide_tape_remove(ide_drive_t *drive)
- {
--	ide_drive_t *drive = to_ide_device(dev);
- 	idetape_tape_t *tape = drive->driver_data;
- 
- 	ide_unregister_subdriver(drive, tape->driver);
-@@ -4692,8 +4691,6 @@ static int ide_tape_remove(struct device
- 	ide_unregister_region(tape->disk);
- 
- 	ide_tape_put(tape);
--
--	return 0;
- }
- 
- static void ide_tape_release(struct kref *kref)
-@@ -4745,16 +4742,16 @@ static ide_proc_entry_t idetape_proc[] =
- 
- #endif
- 
--static int ide_tape_probe(struct device *);
-+static int ide_tape_probe(ide_drive_t *);
- 
- static ide_driver_t idetape_driver = {
- 	.gen_driver = {
- 		.owner		= THIS_MODULE,
- 		.name		= "ide-tape",
- 		.bus		= &ide_bus_type,
--		.probe		= ide_tape_probe,
--		.remove		= ide_tape_remove,
- 	},
-+	.probe			= ide_tape_probe,
-+	.remove			= ide_tape_remove,
- 	.version		= IDETAPE_VERSION,
- 	.media			= ide_tape,
- 	.supports_dsc_overlap 	= 1,
-@@ -4825,9 +4822,8 @@ static struct block_device_operations id
- 	.ioctl		= idetape_ioctl,
- };
- 
--static int ide_tape_probe(struct device *dev)
-+static int ide_tape_probe(ide_drive_t *drive)
- {
--	ide_drive_t *drive = to_ide_device(dev);
- 	idetape_tape_t *tape;
- 	struct gendisk *g;
- 	int minor;
-@@ -4883,9 +4879,9 @@ static int ide_tape_probe(struct device 
- 	idetape_setup(drive, tape, minor);
- 
- 	class_device_create(idetape_sysfs_class, NULL,
--			MKDEV(IDETAPE_MAJOR, minor), dev, "%s", tape->name);
-+			MKDEV(IDETAPE_MAJOR, minor), &drive->gendev, "%s", tape->name);
- 	class_device_create(idetape_sysfs_class, NULL,
--			MKDEV(IDETAPE_MAJOR, minor + 128), dev, "n%s", tape->name);
-+			MKDEV(IDETAPE_MAJOR, minor + 128), &drive->gendev, "n%s", tape->name);
- 
- 	devfs_mk_cdev(MKDEV(HWIF(drive)->major, minor),
- 			S_IFCHR | S_IRUGO | S_IWUGO,
-diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -1904,9 +1904,40 @@ static int ide_bus_match(struct device *
- 	return 1;
- }
- 
-+static int generic_ide_probe(struct device *dev)
-+{
-+	ide_drive_t *drive = to_ide_device(dev);
-+	ide_driver_t *drv = to_ide_driver(dev->driver);
-+
-+	return drv->probe ? drv->probe(drive) : -ENODEV;
-+}
-+
-+static int generic_ide_remove(struct device *dev)
-+{
-+	ide_drive_t *drive = to_ide_device(dev);
-+	ide_driver_t *drv = to_ide_driver(dev->driver);
-+
-+	if (drv->remove)
-+		drv->remove(drive);
-+
-+	return 0;
-+}
-+
-+static void generic_ide_shutdown(struct device *dev)
-+{
-+	ide_drive_t *drive = to_ide_device(dev);
-+	ide_driver_t *drv = to_ide_driver(dev->driver);
-+
-+	if (dev->driver && drv->shutdown)
-+		drv->shutdown(drive);
-+}
-+
- struct bus_type ide_bus_type = {
- 	.name		= "ide",
- 	.match		= ide_bus_match,
-+	.probe		= generic_ide_probe,
-+	.remove		= generic_ide_remove,
-+	.shutdown	= generic_ide_shutdown,
- 	.suspend	= generic_ide_suspend,
- 	.resume		= generic_ide_resume,
- };
-diff --git a/include/linux/ide.h b/include/linux/ide.h
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -982,8 +982,13 @@ typedef struct ide_driver_s {
- 	ide_startstop_t	(*abort)(ide_drive_t *, struct request *rq);
- 	ide_proc_entry_t	*proc;
- 	struct device_driver	gen_driver;
-+	int		(*probe)(ide_drive_t *);
-+	void		(*remove)(ide_drive_t *);
-+	void		(*shutdown)(ide_drive_t *);
- } ide_driver_t;
- 
-+#define to_ide_driver(drv) container_of(drv, ide_driver_t, gen_driver)
-+
- int generic_ide_ioctl(ide_drive_t *, struct file *, struct block_device *, unsigned, unsigned long);
- 
- /*
+
+
+--------------030402000300020802090505--
