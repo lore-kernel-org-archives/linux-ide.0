@@ -1,118 +1,84 @@
-From: Patrick Mansfield <patman@aracnet.com>
-Subject: Re: [PATCH] /dev/disk/by-id incomplete and unhelpful for SATA drives
-Date: Fri, 6 Jan 2006 11:46:52 -0800
-Message-ID: <20060106194652.GB6404@aracnet.com>
-References: <doc5jl$acv$1@sea.gmane.org> <20051221185518.GA9100@vrfy.org> <43A9CFE0.2070103@edesix.com> <20051222043527.GA13175@vrfy.org> <43AA8D0B.10504@edesix.com> <20051222183525.GA17871@devserv.devel.redhat.com> <43AB40E2.1050009@edesix.com> <20060106013640.GA27841@aracnet.com> <43BDDCAE.7000506@torque.net> <43BE6506.7090901@torque.net>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: Re: [PATCH 0/5] SATA/ACPI suspend/resume support
+Date: Fri, 6 Jan 2006 12:43:10 -0800
+Message-ID: <20060106124310.10157732.randy_d_dunlap@linux.intel.com>
+References: <20051227153428.4eaad244.randy_d_dunlap@linux.intel.com>
+	<87vex7rnfn.fsf@marrow.phys.tohoku.ac.jp>
+	<20060103090847.43c2a00d.randy_d_dunlap@linux.intel.com>
+	<20060103172649.GV2772@suse.de>
+	<20060103190346.GY2772@suse.de>
+	<20060103115712.5ac7ec47.randy_d_dunlap@linux.intel.com>
+	<87wthh0wcf.fsf@marrow.phys.tohoku.ac.jp>
+	<20060103164009.1c7418a7.randy_d_dunlap@linux.intel.com>
+	<87ek3o22z8.fsf@marrow.phys.tohoku.ac.jp>
+	<20060104114222.25182742.randy_d_dunlap@linux.intel.com>
+	<87aceag437.fsf@marrow.phys.tohoku.ac.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-hotplug-devel-admin@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <43BE6506.7090901@torque.net>
-Sender: linux-hotplug-devel-admin@lists.sourceforge.net
-Errors-To: linux-hotplug-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Chris Paulson-Ellis <chris@edesix.com>, Bill Nottingham <notting@redhat.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fmr18.intel.com ([134.134.136.17]:23758 "EHLO
+	orsfmr003.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1752556AbWAFUnW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 6 Jan 2006 15:43:22 -0500
+In-Reply-To: <87aceag437.fsf@marrow.phys.tohoku.ac.jp>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp>
+Cc: axboe@suse.de, linux-ide@vger.kernel.org, jgarzik@pobox.com, chris@powerblogs.com
 
-On Fri, Jan 06, 2006 at 10:39:34PM +1000, Douglas Gilbert wrote:
+On 05 Jan 2006 23:08:12 +0900
+Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp> wrote:
 
-> Changelog:
->   - make existing libata VPD device identification page (0x83)
->     supply the ATA serial number in the libata "vendor
->     specific" designator (from Chris Paulson-Ellis)
->   - add a "t10 vendor id based" designator as defined in
->     SAT rev 07a (section 10.3.4.2.3) that supplies ATA
->     model and serial numbers
+> Randy Dunlap <randy_d_dunlap@linux.intel.com> writes:
+> >
+> > Does your system work without using the AHCI driver?
+> > or is it required?
+> 
+> I tested turning off AHCI with 2.6.15-rc7 + git-libata-all.patch +
+> libata_resume_fix.patch + libata_suspend-fix.patch +
+> libata_suspend.patch.  The system runs okay, and ACPI suspend/resume
+> and suspend2 work, without AHCI.
+> 
+> > Of course, even if the AHCI driver is not needed,
+> > it shouldn't be oopsing like this.
+> > 
+> > It looks like the ata_piix driver is the one that is
+> > actually being used, from what I can see here.
+> > 
+> > Please send your /proc/interrupts, /proc/iomem, /proc/ioports,
+> > and 'lspci -v'.
+> 
+> They are enclosed below.
+> 
+> > If you are up to it, please enable libata verbose debugging
+> > and then boot & cause this bug again and send me as much
+> > output as you can collect.
+> > Patch is below.
+> 
+> Let me remind you that I used kernel 2.6.15-rc7 +
+> http://www.xenotime.net/linux/SATA/2.6.15-rc7/libata-combine.patch +
+> libata verbose debug patch.  libata-combine-2615.patch does not cause
+> kernel panic.
 
-> --- linux/drivers/scsi/libata-scsi.c	2006-01-04 08:50:42.000000000 +1000
-> +++ linux/drivers/scsi/libata-scsi.c2615vpd	2006-01-06 20:16:25.000000000 +1000
+Thanks for that clarification.
+So enabling ATA debugging via:
+-#undef ATA_VERBOSE_DEBUG	/* yet more debugging output */
++#define ATA_DEBUG		/* debugging output */
++#define ATA_VERBOSE_DEBUG	/* yet more debugging output */
 
->  unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf,
->  			      unsigned int buflen)
->  {
-> +	int num;
-> +	const int sat_model_serial_desc_len = 68;
-> +	const int ata_model_byte_len = 40;
-> +
->  	rbuf[1] = 0x83;			/* this page code */
-> -	rbuf[3] = 4 + strlen(inq_83_str);	/* page len */
-> +	num = 4;
->  
-> -	/* our one and only identification descriptor (vendor-specific) */
-> -	if (buflen > (strlen(inq_83_str) + 4 + 4 - 1)) {
-> -		rbuf[4 + 0] = 2;	/* code set: ASCII */
-> -		rbuf[4 + 3] = strlen(inq_83_str);
-> -		memcpy(rbuf + 4 + 4, inq_83_str, strlen(inq_83_str));
-> +	if (buflen > (ATA_SERNO_LEN + num + 3)) {
-> +		/* piv=0, assoc=lu, code_set=ACSII, designator=vendor */
-> +		rbuf[num + 0] = 2;	
-> +		rbuf[num + 3] = ATA_SERNO_LEN;
-> +		num += 4;
-> +		ata_dev_id_string(args->id, (unsigned char *) rbuf + num,
-> +				  ATA_ID_SERNO_OFS, ATA_SERNO_LEN);
-> +		num += ATA_SERNO_LEN;
->  	}
-> -
-> +	if (buflen > (sat_model_serial_desc_len + num + 3)) {
-> +		/* SAT defined lu model and serial numbers descriptor */
-> +		/* piv=0, assoc=lu, code_set=ACSII, designator=t10 vendor id */
-> +		rbuf[num + 0] = 2;	
-> +		rbuf[num + 1] = 1;	
-> +		rbuf[num + 3] = sat_model_serial_desc_len;
-> +		num += 4;
-> +		strncpy(rbuf + num, "ATA     ", 8);
-> +		num += 8;
-> +		ata_dev_id_string(args->id, (unsigned char *) rbuf + num,
-> +				  ATA_ID_PROD_OFS, ata_model_byte_len);
-> +		num += ata_model_byte_len;
-> +		ata_dev_id_string(args->id, (unsigned char *) rbuf + num,
-> +				  ATA_ID_SERNO_OFS, ATA_SERNO_LEN);
-> +		num += ATA_SERNO_LEN;
-> +	}
-> +	rbuf[3] = num - 4;    /* page len (assume less than 256 bytes) */
+is causing this particular Oops.  Hmph.
 
 
-I was trying to figure out if we are guranteed will have unique values
-across all ATA devices with Doug's patch. I am not familiar with ATA and
-IDENTIFY DEVICE.
+> I copied boot up messages below for cases with CONFIG_SCSI_SATA_AHCI
+> turned off and on.  After turning on verbose debugging messages, the
+> call trace has changed, and the kernel panics for
+> CONFIG_SCSI_SATA_AHCI=n as well.
 
-For page 0x83, Doug's change above gives us:
+To clarify more (for me):
+Without the libata verbose debugging patch, do you (still)
+have a problem with the AHCI driver causing an Oops?
 
-	ATA + 40 bytes of model/product (must have white space) + serial number
-
-Under "10.3.4.2.3 Logical unit name derived from the model number and
-serial number" the spec says:
-
-	NOTE 9 The logical unit name using the T10 vendor identification
-	format is not guaranteed to be worldwide unique, since ATA/ATAPI-7
-	only requires the combination of the MODEL NUMBER field and SERIAL
-	NUMBER field to be unique for a given manufacturer but defines no
-	manufacturer identification field.
-
-I don't know why they have this given the above. So it is possible (though
-unlikely?) that model numbers will overlap, and so scsi_id values too?
-
-If we put had an actual vendor in the sdev->vendor, we could use page 0x83
-type 0 with no name collisions (if that vendor + model actually gives us
-unique serial numbers). 
-
-Why does the SAT translation spec have the vendor identification of ATA???
-
-The "logical unit name derived from the world wide name" looks nicer, but I
-assume not all vendors support that.
-
--- Patrick Mansfield
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
+Thanks,
+---
+~Randy
