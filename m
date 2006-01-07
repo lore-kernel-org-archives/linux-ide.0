@@ -1,72 +1,54 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH 0/5] SATA/ACPI suspend/resume support
-Date: Sat, 7 Jan 2006 08:55:13 -0800
-Message-ID: <20060107085513.7147cb11.rdunlap@xenotime.net>
-References: <20051227153428.4eaad244.randy_d_dunlap@linux.intel.com>
-	<87vex7rnfn.fsf@marrow.phys.tohoku.ac.jp>
-	<20060103090847.43c2a00d.randy_d_dunlap@linux.intel.com>
-	<20060103172649.GV2772@suse.de>
-	<20060103190346.GY2772@suse.de>
-	<20060103115712.5ac7ec47.randy_d_dunlap@linux.intel.com>
-	<87wthh0wcf.fsf@marrow.phys.tohoku.ac.jp>
-	<20060103164009.1c7418a7.randy_d_dunlap@linux.intel.com>
-	<87ek3o22z8.fsf@marrow.phys.tohoku.ac.jp>
-	<20060104114222.25182742.randy_d_dunlap@linux.intel.com>
-	<87aceag437.fsf@marrow.phys.tohoku.ac.jp>
-	<20060106124310.10157732.randy_d_dunlap@linux.intel.com>
-	<87d5j418uz.fsf@marrow.phys.tohoku.ac.jp>
+From: Russell King <rmk@arm.linux.org.uk>
+Subject: Re: [PATCH] ide: add dcache flushing after PIO
+Date: Sat, 7 Jan 2006 17:06:23 +0000
+Message-ID: <20060107170623.GA15171@flint.arm.linux.org.uk>
+References: <9DA102EC128AD511BED000306E0766C70180487A@WTCNT4GW> <43A7FE89.4040909@gmail.com> <58cb370e0512200823g50de6e14n148e27e4a4c267f7@mail.gmail.com> <20051221094847.GA12279@htj.dyndns.org> <20051221140022.GA25001@htj.dyndns.org> <20051221140344.GA1736@flint.arm.linux.org.uk> <43A969FD.3090106@gmail.com> <58cb370e0512210757n25ddd614p33f3d70c8ff813cd@mail.gmail.com> <20051221175416.GH1736@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:8868 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1030507AbWAGQzQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Jan 2006 11:55:16 -0500
-Received: from midway ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Sat, 7 Jan 2006 08:55:14 -0800
-In-Reply-To: <87d5j418uz.fsf@marrow.phys.tohoku.ac.jp>
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:10504 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S1030511AbWAGRGd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 7 Jan 2006 12:06:33 -0500
+Content-Disposition: inline
+In-Reply-To: <20051221175416.GH1736@flint.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jae-hyeon Park <jhpark@tuhep.phys.tohoku.ac.jp>
-Cc: randy_d_dunlap@linux.intel.com, axboe@suse.de, linux-ide@vger.kernel.org, jgarzik@pobox.com, chris@powerblogs.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, James Steward <james.steward@dynamicratings.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On 07 Jan 2006 22:11:00 +0900 Jae-hyeon Park wrote:
+On Wed, Dec 21, 2005 at 05:54:16PM +0000, Russell King wrote:
+> On Wed, Dec 21, 2005 at 04:57:05PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > On 12/21/05, Tejun Heo <htejun@gmail.com> wrote:
+> > > clears all cpu caches before IO and, as DMA IO doesn't touch any cpu
+> > > caches, it doesn't do anything after IO.  The previous patch adds a
+> > > flush_dcache_page after IO which makes sure that the kernel cache line
+> > > is gone, but it doesn't do anything to make sure that there's no dirty
+> > > user-mapped cachelines hanging around before IO.
+> > >
+> > > I couldn't find an exemplary driver doing this kind of things with page
+> > > caches.  Most other flush_dcache_page usages I looked at didn't deal
+> > > with user mapped page caches.
+> > 
+> > After reading excellent explanation by rmk I think that it should be
+> > fixed at VM layer (filemap_nopage() perhaps).
+> 
+> DaveM vetoed that with good reason - the VM layer doesn't know whether
+> the driver is doing PIO or not.  If it is doing PIO, it needs the
+> cache flush.  If it's doing DMA, the cache flush is entirely a
+> performance bottleneck.
 
-> Randy Dunlap <randy_d_dunlap@linux.intel.com> writes:
-> 
-> > To clarify more (for me):
-> > Without the libata verbose debugging patch, do you (still)
-> > have a problem with the AHCI driver causing an Oops?
-> 
-> I compiled six versions of kernels anew and tested again.
-> The results are as follows:
-> 
->     2.6.15-rc7 + libata-combine.patch AHCI=n
->         Kernel panics.  Symbols in call trace are as in
->         http://marc.theaimsgroup.com/?l=linux-ide&m=113632815321896&w=2
->     
->     2.6.15-rc7 + libata-combine.patch AHCI=y
->         Kernel panics.  Symbols in call trace are as in
->         http://marc.theaimsgroup.com/?l=linux-ide&m=113632815321896&w=2
->     
->     2.6.15-rc7 + libata-combine.patch + verbose patch AHCI=n
->         Kernel panics.  Symbols in call trace are as in
->         http://marc.theaimsgroup.com/?l=linux-ide&m=113647020707839&w=2
->     
->     2.6.15-rc7 + libata-combine.patch + verbose patch AHCI=y
->         Kernel panics.  Symbols in call trace are as in
->         http://marc.theaimsgroup.com/?l=linux-ide&m=113647020707839&w=2
->     
->     2.6.15 + libata-combine-2615.patch AHCI=n
->         Resume works if snd_intel8x0m has been loaded.
->     
->     2.6.15 + libata-combine-2615.patch AHCI=y
->         Resume works if snd_intel8x0m has been loaded.
-> 
-> It turned out that kernel panic is independent of AHCI option.  I made
-> a wrong statement in the bug report perhaps because I was compiling
-> too many kernels.  I am sorry for the confusion.
+Bart,
 
-No problem.  I'll take a look at those panics again.
+Did you miss my message, or have you decided to pay no further
+attention to this issue?
 
----
-~Randy
+If the latter, I will mark IDE with a dependency of BROKEN || !ARM
+until it's fixed.  It's not fair on folk to lead them to think that
+PIO-based IDE might work for them when the subsystem is technically
+broken on ARM architectures.
+
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 Serial core
