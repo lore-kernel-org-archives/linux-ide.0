@@ -1,30 +1,22 @@
-From: "Becky Oliver" <ymdbwctco@hotmail.com>
-Subject: How To Multiple Cum NUa5LF
-Date: Sun, 08 Jan 2006 12:12:24 +0400
-Message-ID: <CFE6.9A1.3071198B8C@mopalinux.com>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: what is sata buffer transfer size ?
+Date: Sun, 8 Jan 2006 13:48:51 -0800
+Message-ID: <5d96567b0601081348j26e43a6cj5e5818b284834fad@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [220.187.193.104] ([220.187.193.104]:11535 "HELO
-	209.132.176.167") by vger.kernel.org with SMTP id S1030533AbWAHISn
+Received: from wproxy.gmail.com ([64.233.184.199]:20977 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964951AbWAHVsw convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 8 Jan 2006 03:18:43 -0500
+	Sun, 8 Jan 2006 16:48:52 -0500
+Received: by wproxy.gmail.com with SMTP id 71so3025894wra
+        for <linux-ide@vger.kernel.org>; Sun, 08 Jan 2006 13:48:51 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-hams@vger.kernel.org
-Cc: linux-ia64@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-laptop@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-
-Suffering from short penniss?
-Introduce revolution "Thunder" formula which
-gauranteees sizes increase or moneey baack.
-
-Users reported:
-- 2 inches extra in size
-- 3x pleasurable orgasms
-- 27% thicker
-
-Why waiting?
-
-http://thunder14.myherb.biz
-
-
-CD
+can i adjust it ?
+--
+Raz
