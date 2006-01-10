@@ -1,72 +1,53 @@
-From: Andrew Morton <akpm@osdl.org>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: Adaptec 1420SA issues with MSI
-Date: Mon, 9 Jan 2006 22:13:23 -0800
-Message-ID: <20060109221323.65f6987d.akpm@osdl.org>
-References: <1136667984.2799.0.camel@obelisk.thedillows.org>
+Date: Tue, 10 Jan 2006 01:31:16 -0500
+Message-ID: <43C354B4.2070505@pobox.com>
+References: <1136667984.2799.0.camel@obelisk.thedillows.org> <20060109221323.65f6987d.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:23211 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932068AbWAJGNt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jan 2006 01:13:49 -0500
-In-Reply-To: <1136667984.2799.0.camel@obelisk.thedillows.org>
+Received: from mail.dvmed.net ([216.237.124.58]:49093 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932077AbWAJGbW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jan 2006 01:31:22 -0500
+In-Reply-To: <20060109221323.65f6987d.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dave Dillow <dave@thedillows.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: Andrew Morton <akpm@osdl.org>
+Cc: Dave Dillow <dave@thedillows.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Dave Dillow <dave@thedillows.org> wrote:
->
-> [ Doh! Forgot to cc LKML since it may be more of an MSI issue. ]
-> 
->  I'm having some issues with sata_mv and my 1420SA card on an ASUS
->  CUV4X-D motherboard (2x PIII 1GHz, Via VT82C693A/694x Apollo PRO133x).
-> 
->  If I build 2.6.15 with CONFIG_MSI=y, I get mv_eng_timeout() calls in the
->  log, and cannot talk to the disks. No interrupts are reported for libata
->  in /proc/interrupts. I've also tried pci=routeirq on the command line,
->  to no avail.
-> 
->  If I build with CONFIG_MSI=n, then all seems to be well.
-> 
->  I'd like to help find a fix, since Fedora uses CONFIG_MSI=y on their
->  kernels, and I eventually want to return this box to a non-custom
->  kernel. To that end, here's lspci and dmesg output. If you need any more
->  info, or have something for me to try, then please let me know.
-> 
->  Thanks!
-> 
->  lspci -vvv on CONFIG_MSI=y, pci=routeirq:
->  00:0a.0 RAID bus controller: Adaptec Serial ATA II RAID 1420SA (rev 01)
->          Subsystem: Adaptec Serial ATA II RAID 1420SA
->          Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR- FastB2B-
->          Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
->          Latency: 32, Cache Line Size 08
->          Interrupt: pin A routed to IRQ 209
->          Region 0: Memory at ed000000 (64-bit, non-prefetchable) [size=1M]
->          Region 2: I/O ports at a000 [size=256]
->          Capabilities: [40] Power Management version 2
->                  Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
->                  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
->          Capabilities: [50] Message Signalled Interrupts: 64bit+ Queue=0/0 Enable+
->                  Address: 00000000fee03000  Data: 40d1
+Andrew Morton wrote:
+> Andi says "It's more likely a hardware bug that needs to be handled by the
+> driver maintainer.  sata_mv has an pci_enable_msi().  Hardware that reports
+> MSI capability but breaks when it's actually used is not unheard of."
 
-Andi says "It's more likely a hardware bug that needs to be handled by the
-driver maintainer.  sata_mv has an pci_enable_msi().  Hardware that reports
-MSI capability but breaks when it's actually used is not unheard of."
 
--sata_mv 0000:00:0a.0: 32 slots 4 ports unknown mode IRQ via MSI
--ata1: SATA max UDMA/133 cmd 0x0 ctl 0xE0A22120 bmdma 0x0 irq 177
--ata2: SATA max UDMA/133 cmd 0x0 ctl 0xE0A24120 bmdma 0x0 irq 177
--ata3: SATA max UDMA/133 cmd 0x0 ctl 0xE0A26120 bmdma 0x0 irq 177
--ata4: SATA max UDMA/133 cmd 0x0 ctl 0xE0A28120 bmdma 0x0 irq 177
-+sata_mv 0000:00:0a.0: 32 slots 4 ports unknown mode IRQ via INTx
-+ata1: SATA max UDMA/133 cmd 0x0 ctl 0xE0A22120 bmdma 0x0 irq 18
-+ata2: SATA max UDMA/133 cmd 0x0 ctl 0xE0A24120 bmdma 0x0 irq 18
-+ata3: SATA max UDMA/133 cmd 0x0 ctl 0xE0A26120 bmdma 0x0 irq 18
-+ata4: SATA max UDMA/133 cmd 0x0 ctl 0xE0A28120 bmdma 0x0 irq 18
+> It seems strange that pci_enable_msi() succeeded if the device is not
+> MSI-capable?
 
-It seems strange that pci_enable_msi() succeeded if the device is not
-MSI-capable?
+Unfortunately this is not strange :(  People have been coding interrupt 
+tests into MSI drivers -- shades of the early 90's -- because 
+pci_enable_msi() does not fail for systems that do not support MSI. 
+-Sometimes- it will fail as expected, if system does not support MSI, 
+sometimes not.
+
+For this case -- 32bit non-Intel mobo chipset -- the cause of the 
+failure is likely the poor pci_enable_msi() test.
+
+However, I know of at least one MSI-related sata_mv hardware bug that 
+needs working around, but that only affects 64-bit.  Given that MSI 
+works with this chip on other systems, I'm leaning towards blaming the 
+system.
+
+The following are reasonable workarounds:
+
+* Add pci=nomsi kernel parameter... we really need this
+* Add 'msi' module option to sata_mv
+
+I'll try to get around to committing the errata to source code. 
+Marvell's triple-layered vendor driver is GPL'd, so anyone can steal 
+this task from me...
+
+	Jeff
+
 
