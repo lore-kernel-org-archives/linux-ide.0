@@ -1,28 +1,37 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: libata SATA+ATAPI status?
-Date: Tue, 10 Jan 2006 17:58:14 +0000
-Message-ID: <43C3F5B6.7050703@gentoo.org>
+From: "John Treubig" <jtreubig@hotmail.com>
+Subject: Error handling in LibATA
+Date: Tue, 10 Jan 2006 16:30:35 -0600
+Message-ID: <BAY101-F102837A76FADACF6F37DBBDF250@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta07-winn.ispmail.ntl.com ([81.103.221.47]:56532 "EHLO
-	mta07-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
-	id S1751019AbWAJR6j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Jan 2006 12:58:39 -0500
+Received: from bay101-f10.bay101.hotmail.com ([64.4.56.20]:27634 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S932579AbWAJWai
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Jan 2006 17:30:38 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi Jeff,
+I've been working on a problem with Promise 20269 PATA adapter under LibATA 
+that if the drive has a write error or time-out, the application that is 
+accessing the drive using SG should see some sort of error.  My first 
+problem was my system hung.  After patching the IDE-IO.C, with a recognized 
+patch, I have been able to keep my system from hanging.  Now the only 
+problem is the application gets no notification that the drive has been 
+rendered inaccessible.  (Test case is to run a system with my app going, and 
+then pull the power from the drive.  System log shows the errors, but 
+nothing gets back to the app).  The app does get notifications if I perform 
+the same type of test on a drive attached to the motherboard secondary IDE 
+adapter, so we know the app is correctly implemented.
 
-Gentoo are preparing new release media and I am considering enabling 
-libata.atapi_enabled by default, so that users can install from SATA 
-cdrom drives.
+I've traced the errors down to the fact that the errors are caught in 
+libata-core.c (ata_qc_timeout).  I'd like to put a call in libata-core.c 
+that would cause an error to be reflected back to the application.  Can you 
+suggest the function or method that would do this?
 
-What are your views on this? Is ATAPI support now stable enough for 
-general use?
+Best wishes,
+John Treubig
+VT Miltope Corporation
 
-Thanks,
-Daniel
+
