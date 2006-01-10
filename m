@@ -1,46 +1,28 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH]trivial: add CDC_RAM to ide-cd capabilities mask
-Date: Tue, 10 Jan 2006 11:13:46 +0100
-Message-ID: <20060110101346.GO3389@suse.de>
-References: <200601092316.47938.arvidjaar@mail.ru>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: libata SATA+ATAPI status?
+Date: Tue, 10 Jan 2006 17:58:14 +0000
+Message-ID: <43C3F5B6.7050703@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:57708 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1751039AbWAJKLs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jan 2006 05:11:48 -0500
-Content-Disposition: inline
-In-Reply-To: <200601092316.47938.arvidjaar@mail.ru>
+Received: from mta07-winn.ispmail.ntl.com ([81.103.221.47]:56532 "EHLO
+	mta07-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
+	id S1751019AbWAJR6j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Jan 2006 12:58:39 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Jan 09 2006, Andrey Borzenkov wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
-> 
-> Add CDC-RAM to capability mask. This prevents udev incorrectly reporting RAM 
-> capabilities for device.
-> 
-> Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
-> 
-> - ---
-> 
-> - --- linux-2.6.15/drivers/ide/ide-cd.c.orig	2006-01-03 06:21:10.000000000 +0300
-> +++ linux-2.6.15/drivers/ide/ide-cd.c	2006-01-09 00:31:32.000000000 +0300
-> @@ -2905,6 +2905,8 @@ static int ide_cdrom_register (ide_drive
->  		devinfo->mask |= CDC_CLOSE_TRAY;
->  	if (!CDROM_CONFIG_FLAGS(drive)->mo_drive)
->  		devinfo->mask |= CDC_MO_DRIVE;
-> +	if (!CDROM_CONFIG_FLAGS(drive)->ram)
-> +		devinfo->mask |= CDC_RAM;
->  
->  	devinfo->disk = info->disk;
->  	return register_cdrom(devinfo);
+Hi Jeff,
 
-Thanks, patch is correct.
+Gentoo are preparing new release media and I am considering enabling 
+libata.atapi_enabled by default, so that users can install from SATA 
+cdrom drives.
 
--- 
-Jens Axboe
+What are your views on this? Is ATAPI support now stable enough for 
+general use?
 
+Thanks,
+Daniel
