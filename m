@@ -1,96 +1,75 @@
 From: Matt Darcy <kernel-lists@projecthugo.co.uk>
-Subject: Re: 2.6.15-rc5-mm3 sata_mv raid5 array failure to start
-Date: Wed, 11 Jan 2006 10:11:38 +0000
-Message-ID: <43C4D9DA.4030008@projecthugo.co.uk>
-References: <43B82D22.7080705@projecthugo.co.uk> <17347.3596.845986.167120@cse.unsw.edu.au>
+Subject: Re: [git patch] 2.6.x libata fix
+Date: Wed, 11 Jan 2006 10:18:46 +0000
+Message-ID: <43C4DB86.7030603@projecthugo.co.uk>
+References: <20060109171104.GA25793@havoc.gtf.org>
 Reply-To: kernel-lists@projecthugo.co.uk
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17347.3596.845986.167120@cse.unsw.edu.au>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.ifl.net ([213.18.248.104]:9957 "EHLO mx1.ifl.net")
+	by vger.kernel.org with ESMTP id S932382AbWAKKTz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jan 2006 05:19:55 -0500
+In-Reply-To: <20060109171104.GA25793@havoc.gtf.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Neil Brown wrote:
+Jeff Garzik wrote:
 
->On Sunday January 1, kernel-lists@projecthugo.co.uk wrote:
+>Please pull from 'upstream-linus' branch of
+>master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+>
+>to receive the following updates:
+>
+> drivers/scsi/sata_nv.c |   30 ++++++++++++++++++++++++------
+> 1 files changed, 24 insertions(+), 6 deletions(-)
+>
+>Andrew Chew:
+>      sata_nv, spurious interrupts at system startup with MAXTOR 6H500F0 drive
+>
+>diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
+>index c0cf52c..bbbb55e 100644
+>--- a/drivers/scsi/sata_nv.c
+>+++ b/drivers/scsi/sata_nv.c
+>
+> <snip reset of patch>
 >  
 >
->>Hello all,
->>
->>I am still persisting with my quest for a usable sata_mv driver.
->>
->>The 2.5.15-rc5-m3 kernel appear to have been good to me.
->>
->>Before I attempt moving to later releases of the 2.6.15 tree I thought 
->>I'd get feedback from the people in the know
->>
->>This is an intentional cross-post as I'm not %100 sure if the problems 
->>sits in the raid error or the actual libata/driver area (more probable)
->>
->>I have 7 SATA disks hanging of an 8 port controller which uses the 
->>sata_mv driver.
->>
->>I create a raid 5 array consisting of 6 disks (using 1 full disk 
->>partition) and 1 spare
->>    
->>
->
->"1 full disk partition"... So I would expect the array consist of
->   sdc1 sdd1 sde1 ...
->
->but..
->  
->
->>The array builds fine - although it takes 300 minutes so its not a quick 
->>process to run through tests.
->>
->>
->>md6 : active raid5 sdh[5] sdi[6](S) sdg[4] sdf[3] sde[2] sdd[1] sdc[0]
->>      1225586560 blocks level 5, 64k chunk, algorithm 2 [6/6] [UUUUUU]
->>
->>    
->>
->
->It doesn't.  It is created using the full disks (sdc, sdd, ... No partitioning).
->  
->
+Hi Jeff, et all
 
-My mistake in this example (I've built this array <15 times - this 
-occasion was a typo - %100 my mistake)
+I pulled this down last night from 
+git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+as I don't have an account on master.kernel.org, I assume these are the 
+same physical tree.
 
-however.......
+This built fine and seemed aware of all the SATA disks on my controller 
+(as did previous git branches).
 
->and them on reboot, md tried to assemble an array from the partitions,
->presumably because you set the partition type to raid-auto-detect.
->This doesn't work because the array wasn't made from partitions.
->
->I suggest you recreate the array using partitions and see how that
->goes:
->
->  mdadm -C /dev/md6 -l5 -n6 -x1 /dev/sd[cdefghi]1
->
->NeilBrown
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->  
->
+Again using my raid5 (7 disks 1.4tb) example, I am unable to build an 
+array without the machine hanging.
 
-using the partitions for the array (which I had done in previous tests 
-despite my typo mentioned above on this case) I get the same problem,
+I am able to access the individual disks for a short period of time 
+before the box hangs totally which I assume is why the raid array will 
+not build as the access for the disks hangs, not the actual building of 
+the array.
 
-the array starts to build, gets around %35-ish through and then the 
-system hangs.
+I havn't got any output yet on the errors (if there are any) as I left 
+the array building overnight (300+ minutes) and when I woke up this 
+morning the box had hung, but power saver had come on the screen so I 
+couldn't see the messages.
 
-I don't believe this is a raid issue, more a case of the sata_mv driver.
+I'll do another test this afternoon and try to get some output for you, 
+but I just thought I'd let you know this was coming.
 
-Thanks for the input.
+Aslo FYI: I'm using maxtor SATA disks, so your patch was of particular 
+interesting to me.
+
+Many thanks,
 
 Matt
+
 
 
