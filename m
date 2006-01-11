@@ -1,75 +1,33 @@
-From: Matt Darcy <kernel-lists@projecthugo.co.uk>
-Subject: Re: [git patch] 2.6.x libata fix
-Date: Wed, 11 Jan 2006 10:18:46 +0000
-Message-ID: <43C4DB86.7030603@projecthugo.co.uk>
-References: <20060109171104.GA25793@havoc.gtf.org>
-Reply-To: kernel-lists@projecthugo.co.uk
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: convert some IDE semaphores to mutexes
+Date: Wed, 11 Jan 2006 12:15:43 +0100
+Message-ID: <58cb370e0601110315y7623e019t33d0569b0d8b5fc6@mail.gmail.com>
+References: <1136973401.2929.27.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.ifl.net ([213.18.248.104]:9957 "EHLO mx1.ifl.net")
-	by vger.kernel.org with ESMTP id S932382AbWAKKTz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jan 2006 05:19:55 -0500
-In-Reply-To: <20060109171104.GA25793@havoc.gtf.org>
+Received: from nproxy.gmail.com ([64.233.182.206]:35304 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751439AbWAKLPv convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Jan 2006 06:15:51 -0500
+Received: by nproxy.gmail.com with SMTP id o25so80830nfa
+        for <linux-ide@vger.kernel.org>; Wed, 11 Jan 2006 03:15:44 -0800 (PST)
+In-Reply-To: <1136973401.2929.27.camel@laptopd505.fenrus.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: linux-ide@vger.kernel.org, mingo@elte.hu
 
-Jeff Garzik wrote:
-
->Please pull from 'upstream-linus' branch of
->master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+On 1/11/06, Arjan van de Ven <arjan@infradead.org> wrote:
+> IDE uses some semaphores only in a mutex way; use the new
+> mutexes for this
 >
->to receive the following updates:
->
-> drivers/scsi/sata_nv.c |   30 ++++++++++++++++++++++++------
-> 1 files changed, 24 insertions(+), 6 deletions(-)
->
->Andrew Chew:
->      sata_nv, spurious interrupts at system startup with MAXTOR 6H500F0 drive
->
->diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
->index c0cf52c..bbbb55e 100644
->--- a/drivers/scsi/sata_nv.c
->+++ b/drivers/scsi/sata_nv.c
->
-> <snip reset of patch>
->  
->
-Hi Jeff, et all
+> Signed-off-by: Arjan van de Ven <arjan@infradead.org>
 
-I pulled this down last night from 
-git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-as I don't have an account on master.kernel.org, I assume these are the 
-same physical tree.
+Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-This built fine and seemed aware of all the SATA disks on my controller 
-(as did previous git branches).
+Could you also convert drivers/scsi/ide-scsi.c and add it to the patch?
 
-Again using my raid5 (7 disks 1.4tb) example, I am unable to build an 
-array without the machine hanging.
-
-I am able to access the individual disks for a short period of time 
-before the box hangs totally which I assume is why the raid array will 
-not build as the access for the disks hangs, not the actual building of 
-the array.
-
-I havn't got any output yet on the errors (if there are any) as I left 
-the array building overnight (300+ minutes) and when I woke up this 
-morning the box had hung, but power saver had come on the screen so I 
-couldn't see the messages.
-
-I'll do another test this afternoon and try to get some output for you, 
-but I just thought I'd let you know this was coming.
-
-Aslo FYI: I'm using maxtor SATA disks, so your patch was of particular 
-interesting to me.
-
-Many thanks,
-
-Matt
-
-
-
+Bartlomiej
