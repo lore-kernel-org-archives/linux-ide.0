@@ -1,84 +1,64 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: convert some IDE semaphores to mutexes
-Date: Thu, 12 Jan 2006 23:48:58 +0100
-Message-ID: <20060112224858.GB8237@elte.hu>
-References: <1136973401.2929.27.camel@laptopd505.fenrus.org> <58cb370e0601110315y7623e019t33d0569b0d8b5fc6@mail.gmail.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: Error handling in LibATA
+Date: Fri, 13 Jan 2006 13:45:22 +0800
+Message-ID: <43C73E72.6090400@tw.ibm.com>
+References: <BAY101-F347AF31FA4399257978B64DF270@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:14053 "EHLO mx3.mail.elte.hu")
-	by vger.kernel.org with ESMTP id S1161384AbWALWsp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jan 2006 17:48:45 -0500
-Content-Disposition: inline
-In-Reply-To: <58cb370e0601110315y7623e019t33d0569b0d8b5fc6@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <BAY101-F347AF31FA4399257978B64DF270@phx.gbl>
+Sender: linux-scsi-owner@vger.kernel.org
+To: John Treubig <jtreubig@hotmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk, dougg@torque.net, dwm@maxeymade.com
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org
 
 
-* Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-
-> On 1/11/06, Arjan van de Ven <arjan@infradead.org> wrote:
-> > IDE uses some semaphores only in a mutex way; use the new
-> > mutexes for this
-> >
-> > Signed-off-by: Arjan van de Ven <arjan@infradead.org>
 > 
-> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> Could you also convert drivers/scsi/ide-scsi.c and add it to the patch?
+> I began to try your patch and noticed that the code was different than
+> my copy of 2.6.15 rc5, so I downloaded 2.6.15 (release) and still see
+> that the base copy of libata-core.c is different.  A good indicator was
+> that ata_qc_complete() requires 2 parameters in the code from 2.6.15. 
+> Can you tell me where I can find the copy your working off and if I have
+> to have any other files to support it?
 
-yeah - we've got that patch in our conversion patch-queue:
+Hi John,
 
------
-From: Arjan van de Ven <arjan@infradead.org>
+Attached please find the patch for the 2.6.15 tree.
+Also please turn on the ATA_DEBUG and ATA_VERBOSE_DEBUG in libata.h
+for detailed log during the test, thanks.
 
- drivers/scsi/ide-scsi.c |   11 ++++++-----
- 1 files changed, 6 insertions(+), 5 deletions(-)
+Albert
 
-Index: linux/drivers/scsi/ide-scsi.c
-===================================================================
---- linux.orig/drivers/scsi/ide-scsi.c
-+++ linux/drivers/scsi/ide-scsi.c
-@@ -47,6 +47,7 @@
- #include <linux/ide.h>
- #include <linux/scatterlist.h>
- #include <linux/delay.h>
-+#include <linux/mutex.h>
+=================
+
+--- linux-2.6.15/drivers/scsi/libata-core.c	2006-01-03 11:21:10.000000000 +0800
++++ errmask/drivers/scsi/libata-core.c	2006-01-13 13:27:12.000000000 +0800
+@@ -3312,6 +3312,7 @@ static void ata_qc_timeout(struct ata_qu
+ 	struct ata_host_set *host_set = ap->host_set;
+ 	u8 host_stat = 0, drv_stat;
+ 	unsigned long flags;
++	unsigned int err_mask = 0;
  
- #include <asm/io.h>
- #include <asm/bitops.h>
-@@ -109,7 +110,7 @@ typedef struct ide_scsi_obj {
- 	unsigned long log;			/* log flags */
- } idescsi_scsi_t;
+ 	DPRINTK("ENTER\n");
  
--static DECLARE_MUTEX(idescsi_ref_sem);
-+static DEFINE_MUTEX(idescsi_ref_mutex);
+@@ -3346,8 +3347,15 @@ static void ata_qc_timeout(struct ata_qu
+ 		printk(KERN_ERR "ata%u: command 0x%x timeout, stat 0x%x host_stat 0x%x\n",
+ 		       ap->id, qc->tf.command, drv_stat, host_stat);
  
- #define ide_scsi_g(disk) \
- 	container_of((disk)->private_data, struct ide_scsi_obj, driver)
-@@ -118,19 +119,19 @@ static struct ide_scsi_obj *ide_scsi_get
- {
- 	struct ide_scsi_obj *scsi = NULL;
++		/* If drv_stat looks ok (0x50 normally), we treat this
++		 * as lost interrupt and complete the qc as normal.
++		 * If drv_stat looks bad (0x00, 0xff, etc), err_mask is set.
++		 */
++		if (!ata_ok(drv_stat))
++			err_mask |= __ac_err_mask(drv_stat);
++
+ 		/* complete taskfile transaction */
+-		ata_qc_complete(qc, ac_err_mask(drv_stat));
++		ata_qc_complete(qc, err_mask);
+ 		break;
+ 	}
  
--	down(&idescsi_ref_sem);
-+	mutex_lock(&idescsi_ref_mutex);
- 	scsi = ide_scsi_g(disk);
- 	if (scsi)
- 		scsi_host_get(scsi->host);
--	up(&idescsi_ref_sem);
-+	mutex_unlock(&idescsi_ref_mutex);
- 	return scsi;
- }
- 
- static void ide_scsi_put(struct ide_scsi_obj *scsi)
- {
--	down(&idescsi_ref_sem);
-+	mutex_lock(&idescsi_ref_mutex);
- 	scsi_host_put(scsi->host);
--	up(&idescsi_ref_sem);
-+	mutex_unlock(&idescsi_ref_mutex);
- }
- 
- static inline idescsi_scsi_t *scsihost_to_idescsi(struct Scsi_Host *host)
+
+
+
