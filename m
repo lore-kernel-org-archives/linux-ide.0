@@ -1,86 +1,35 @@
-From: "John Treubig" <jtreubig@hotmail.com>
-Subject: Re: Error handling in LibATA
-Date: Fri, 13 Jan 2006 09:41:10 -0600
-Message-ID: <BAY101-F341851C04E8543045525FDDF260@phx.gbl>
-References: <43C73E72.6090400@tw.ibm.com>
+From: Rashkae <rashkae@tigershaunt.com>
+Subject: Re: Fwd: ide-cd turning off DMA when verifying DVD-R
+Date: Fri, 13 Jan 2006 10:51:49 -0500
+Message-ID: <20060113155149.GC12360@tigershaunt.com>
+References: <5ujmU-1UQ-665@gated-at.bofh.it> <5uoqr-Qq-7@gated-at.bofh.it> <43C72F41.5060207@shaw.ca> <20060113083009.GE12338@paradise.net.nz> <58cb370e0601130119g5c62b749r1bc5da59a0d4a56c@mail.gmail.com> <1137162265.4419.6.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bay101-f34.bay101.hotmail.com ([64.4.56.44]:18671 "EHLO
-	hotmail.com") by vger.kernel.org with ESMTP id S1161555AbWAMPlN
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Jan 2006 10:41:13 -0500
-In-Reply-To: <43C73E72.6090400@tw.ibm.com>
+Received: from CPE0050fc332afc-CM00407b861c34.cpe.net.cable.rogers.com ([69.197.25.155]:38538
+	"EHLO nuku.localdomain") by vger.kernel.org with ESMTP
+	id S1422718AbWAMPvw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 Jan 2006 10:51:52 -0500
+Content-Disposition: inline
+In-Reply-To: <1137162265.4419.6.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertcc@tw.ibm.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk, dougg@torque.net, dwm@maxeymade.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>, Ondrej Zary <linux@rainbow-software.org>, Robert Hancock <hancockr@shaw.ca>, Volker Kuhlmann <list0570@paradise.net.nz>, Jens Axboe <axboe@suse.de>, linux-ide <linux-ide@vger.kernel.org>, linux-kernel@lkml.org
 
-Thanks Albert for the quick reply.  The patch you sent fixed the problem.  
-To recap, from a base of 2.6.15, I have had to apply your patch (to permit 
-errors to be seen by my application) plus a patch to ide-io.c (to prevent 
-the kernel from hanging).  Hope these can be incorporated in future 
-releases.
+On Fri, Jan 13, 2006 at 02:24:25PM +0000, Alan Cox wrote:
 
-Best wishes,
-John Treubig
-VT Miltope
+> On Gwe, 2006-01-13 at 14:33 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > The patch was NACK-ed by Alan Cox and I agree with him (this should be
+> > done differently).  This __ide_dma_off() chunk looks sensible but does it fix
+> > the issue?  I was under impression that after a reset drive looses its DMA
+> > xfer mode and needs to be reprogrammed (ATA spec has the answer).
+> 
+> Yes and the behaviour is determined by hdparm -k/-K. Its all a bit
 
+Great theory, but unfortunately, as things are now, -k does not preserve DMA setting, contrary to it's documented function.
 
-From: Albert Lee <albertcc@tw.ibm.com>
-To: John Treubig <jtreubig@hotmail.com>
-CC: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,        
-linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk, dougg@torque.net,      
-   dwm@maxeymade.com
-Subject: Re: Error handling in LibATA
-Date: Fri, 13 Jan 2006 13:45:22 +0800
+Quote from Bartlomiej Zolnierkiewicz:
 
-
- >
- > I began to try your patch and noticed that the code was different than
- > my copy of 2.6.15 rc5, so I downloaded 2.6.15 (release) and still see
- > that the base copy of libata-core.c is different.  A good indicator was
- > that ata_qc_complete() requires 2 parameters in the code from 2.6.15.
- > Can you tell me where I can find the copy your working off and if I have
- > to have any other files to support it?
-
-Hi John,
-
-Attached please find the patch for the 2.6.15 tree.
-Also please turn on the ATA_DEBUG and ATA_VERBOSE_DEBUG in libata.h
-for detailed log during the test, thanks.
-
-Albert
-
-=================
-
---- linux-2.6.15/drivers/scsi/libata-core.c	2006-01-03 11:21:10.000000000 
-+0800
-+++ errmask/drivers/scsi/libata-core.c	2006-01-13 13:27:12.000000000 +0800
-@@ -3312,6 +3312,7 @@ static void ata_qc_timeout(struct ata_qu
-  	struct ata_host_set *host_set = ap->host_set;
-  	u8 host_stat = 0, drv_stat;
-  	unsigned long flags;
-+	unsigned int err_mask = 0;
-
-  	DPRINTK("ENTER\n");
-
-@@ -3346,8 +3347,15 @@ static void ata_qc_timeout(struct ata_qu
-  		printk(KERN_ERR "ata%u: command 0x%x timeout, stat 0x%x host_stat 
-0x%x\n",
-  		       ap->id, qc->tf.command, drv_stat, host_stat);
-
-+		/* If drv_stat looks ok (0x50 normally), we treat this
-+		 * as lost interrupt and complete the qc as normal.
-+		 * If drv_stat looks bad (0x00, 0xff, etc), err_mask is set.
-+		 */
-+		if (!ata_ok(drv_stat))
-+			err_mask |= __ac_err_mask(drv_stat);
-+
-  		/* complete taskfile transaction */
--		ata_qc_complete(qc, ac_err_mask(drv_stat));
-+		ata_qc_complete(qc, err_mask);
-  		break;
-  	}
-
-
+AFAIR (2.5/2.6 and probably 2.4 also) it never worked w.r.t. to DMA
+as documented in hdparm manual.
