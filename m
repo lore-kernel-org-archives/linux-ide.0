@@ -1,64 +1,66 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: Error handling in LibATA
-Date: Fri, 13 Jan 2006 13:45:22 +0800
-Message-ID: <43C73E72.6090400@tw.ibm.com>
-References: <BAY101-F347AF31FA4399257978B64DF270@phx.gbl>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: ide-cd turning off DMA when verifying DVD-R
+Date: Fri, 13 Jan 2006 10:19:17 +0100
+Message-ID: <58cb370e0601130119g5c62b749r1bc5da59a0d4a56c@mail.gmail.com>
+References: <5ujmU-1UQ-665@gated-at.bofh.it> <5uoqr-Qq-7@gated-at.bofh.it>
+	 <43C72F41.5060207@shaw.ca> <20060113083009.GE12338@paradise.net.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <BAY101-F347AF31FA4399257978B64DF270@phx.gbl>
-Sender: linux-scsi-owner@vger.kernel.org
-To: John Treubig <jtreubig@hotmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk, dougg@torque.net, dwm@maxeymade.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from uproxy.gmail.com ([66.249.92.195]:23621 "EHLO uproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1161507AbWAMJTV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 Jan 2006 04:19:21 -0500
+Received: by uproxy.gmail.com with SMTP id s2so2815uge
+        for <linux-ide@vger.kernel.org>; Fri, 13 Jan 2006 01:19:18 -0800 (PST)
+In-Reply-To: <20060113083009.GE12338@paradise.net.nz>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Volker Kuhlmann <list0570@paradise.net.nz>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
+Hi,
 
-> 
-> I began to try your patch and noticed that the code was different than
-> my copy of 2.6.15 rc5, so I downloaded 2.6.15 (release) and still see
-> that the base copy of libata-core.c is different.  A good indicator was
-> that ata_qc_complete() requires 2 parameters in the code from 2.6.15. 
-> Can you tell me where I can find the copy your working off and if I have
-> to have any other files to support it?
+On 1/13/06, Volker Kuhlmann <list0570@paradise.net.nz> wrote:
+> On Fri 13 Jan 2006 17:40:33 NZDT +1300, Robert Hancock wrote:
+>
+> > I'm thinking the IDE code is too aggressive in assuming that the failure
+> >  is because of a DMA problem and disabling it.. Most likely all that's
+> > happening is the drive is taking a long time to complete the current
+> > command.
 
-Hi John,
+What actually happened is that normal command timed out
+and because of that driver reset the device which caused
+it to loose DMA:
 
-Attached please find the patch for the 2.6.15 tree.
-Also please turn on the ATA_DEBUG and ATA_VERBOSE_DEBUG in libata.h
-for detailed log during the test, thanks.
+->ide_atapi_error()
+    ->ide_do_reset()
+      ->pre_reset()
+        ->check_dma_crc()
+          ->__ide_dma_off()
 
-Albert
+Somebody needs to investigate why __ide_dma_off() is called
+et all and if we need to restore DMA after reset (don't count ATM
+on me, I'm buried by bugreports).  Ondrej, could you fill the bug at
+http://bugzilla.kernel.org so we don't lose it?
 
-=================
+> Yes! Each time when inserting a faulty CD/DVD, or whenever the drive
+> gives read errors for whatever reason, the kernel decides to turn DMA
+> off and try again, fail (again) and leave DMA off. And this after having
+> successfully used DMA before - so it's not that the device is
+> DMA-incapable.
 
---- linux-2.6.15/drivers/scsi/libata-core.c	2006-01-03 11:21:10.000000000 +0800
-+++ errmask/drivers/scsi/libata-core.c	2006-01-13 13:27:12.000000000 +0800
-@@ -3312,6 +3312,7 @@ static void ata_qc_timeout(struct ata_qu
- 	struct ata_host_set *host_set = ap->host_set;
- 	u8 host_stat = 0, drv_stat;
- 	unsigned long flags;
-+	unsigned int err_mask = 0;
- 
- 	DPRINTK("ENTER\n");
- 
-@@ -3346,8 +3347,15 @@ static void ata_qc_timeout(struct ata_qu
- 		printk(KERN_ERR "ata%u: command 0x%x timeout, stat 0x%x host_stat 0x%x\n",
- 		       ap->id, qc->tf.command, drv_stat, host_stat);
- 
-+		/* If drv_stat looks ok (0x50 normally), we treat this
-+		 * as lost interrupt and complete the qc as normal.
-+		 * If drv_stat looks bad (0x00, 0xff, etc), err_mask is set.
-+		 */
-+		if (!ata_ok(drv_stat))
-+			err_mask |= __ac_err_mask(drv_stat);
-+
- 		/* complete taskfile transaction */
--		ata_qc_complete(qc, ac_err_mask(drv_stat));
-+		ata_qc_complete(qc, err_mask);
- 		break;
- 	}
- 
+This is a separate issue and is related to retrying failed DMA
+commands.  Driver doesn't know what was the cause of the timeout
+and it shouldn't disable DMA for the device (only the failed request
+should be retried in PIO mode).
 
+Any takers? :)
 
+PS1 please don't trim cc: list
+PS2 please use linux-ide@vger.kernel.org for ATA problem
 
+Thanks,
+Bartlomiej
