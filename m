@@ -1,69 +1,86 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: ide-cd turning off DMA when verifying DVD-R
-Date: Fri, 13 Jan 2006 15:16:51 +0100
-Message-ID: <58cb370e0601130616l25e0e25ai6b7d2025d9774eff@mail.gmail.com>
-References: <5ujmU-1UQ-665@gated-at.bofh.it> <5uoqr-Qq-7@gated-at.bofh.it>
-	 <43C72F41.5060207@shaw.ca> <20060113083009.GE12338@paradise.net.nz>
-	 <58cb370e0601130119g5c62b749r1bc5da59a0d4a56c@mail.gmail.com>
-	 <20060113140618.GB12360@tigershaunt.com>
+From: "John Treubig" <jtreubig@hotmail.com>
+Subject: Re: Error handling in LibATA
+Date: Fri, 13 Jan 2006 09:41:10 -0600
+Message-ID: <BAY101-F341851C04E8543045525FDDF260@phx.gbl>
+References: <43C73E72.6090400@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422695AbWAMOX7@vger.kernel.org>
-In-Reply-To: <20060113140618.GB12360@tigershaunt.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rashkae <rashkae@tigershaunt.com>
-Cc: =?ISO-8859-1?Q?Ville_Syrj=E4l=E4?= <syrjala@sci.fi>, Ondrej Zary <linux@rainbow-software.org>, Robert Hancock <hancockr@shaw.ca>, Volker Kuhlmann <list0570@paradise.net.nz>, Jens Axboe <axboe@suse.de>, linux-ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bay101-f34.bay101.hotmail.com ([64.4.56.44]:18671 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S1161555AbWAMPlN
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 Jan 2006 10:41:13 -0500
+In-Reply-To: <43C73E72.6090400@tw.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: albertcc@tw.ibm.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk, dougg@torque.net, dwm@maxeymade.com
 
-On 1/13/06, Rashkae <rashkae@tigershaunt.com> wrote:
-> On Fri, Jan 13, 2006 at 10:19:17AM +0100, Bartlomiej Zolnierkiewicz w=
-rote:
->
->
-> > On 1/13/06, Volker Kuhlmann <list0570@paradise.net.nz> wrote:
-> > > On Fri 13 Jan 2006 17:40:33 NZDT +1300, Robert Hancock wrote:
-> > >
-> > > > I'm thinking the IDE code is too aggressive in assuming that th=
-e failure
-> > > >  is because of a DMA problem and disabling it.. Most likely all=
- that's
-> > > > happening is the drive is taking a long time to complete the cu=
-rrent
-> > > > command.
-> >
-> > What actually happened is that normal command timed out
-> > and because of that driver reset the device which caused
-> > it to loose DMA:
-> >
-> > ->ide_atapi_error()
-> >     ->ide_do_reset()
-> >       ->pre_reset()
-> >         ->check_dma_crc()
-> >           ->__ide_dma_off()
-> >
-> > Somebody needs to investigate why __ide_dma_off() is called
-> > et all and if we need to restore DMA after reset (don't count ATM
-> > on me, I'm buried by bugreports).  Ondrej, could you fill the bug a=
-t
-> > http://bugzilla.kernel.org so we don't lose it?
->
-> Shouldn't whether DMA is restored after reset be governed by keepsett=
-ings flag?
+Thanks Albert for the quick reply.  The patch you sent fixed the problem.  
+To recap, from a base of 2.6.15, I have had to apply your patch (to permit 
+errors to be seen by my application) plus a patch to ide-io.c (to prevent 
+the kernel from hanging).  Hope these can be incorporated in future 
+releases.
 
-settings should always be preserved and keepsettings flag should die
+Best wishes,
+John Treubig
+VT Miltope
 
-> From the hdparm man page:
->
->       -k     Get/set  the  keep_settings_over_reset flag for the
->               drive.  When this flag is set, the driver will pre=AD
->               serve  the -dmu options over a soft reset, (as done
->               during the error  recovery  sequence).
->
-> I was a little disapointed that this didn't work as advertised.
 
-AFAIR (2.5/2.6 and probably 2.4 also) it never worked w.r.t. to DMA
-as documented in hdparm manual.
+From: Albert Lee <albertcc@tw.ibm.com>
+To: John Treubig <jtreubig@hotmail.com>
+CC: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,        
+linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk, dougg@torque.net,      
+   dwm@maxeymade.com
+Subject: Re: Error handling in LibATA
+Date: Fri, 13 Jan 2006 13:45:22 +0800
 
-Bartlomiej
+
+ >
+ > I began to try your patch and noticed that the code was different than
+ > my copy of 2.6.15 rc5, so I downloaded 2.6.15 (release) and still see
+ > that the base copy of libata-core.c is different.  A good indicator was
+ > that ata_qc_complete() requires 2 parameters in the code from 2.6.15.
+ > Can you tell me where I can find the copy your working off and if I have
+ > to have any other files to support it?
+
+Hi John,
+
+Attached please find the patch for the 2.6.15 tree.
+Also please turn on the ATA_DEBUG and ATA_VERBOSE_DEBUG in libata.h
+for detailed log during the test, thanks.
+
+Albert
+
+=================
+
+--- linux-2.6.15/drivers/scsi/libata-core.c	2006-01-03 11:21:10.000000000 
++0800
++++ errmask/drivers/scsi/libata-core.c	2006-01-13 13:27:12.000000000 +0800
+@@ -3312,6 +3312,7 @@ static void ata_qc_timeout(struct ata_qu
+  	struct ata_host_set *host_set = ap->host_set;
+  	u8 host_stat = 0, drv_stat;
+  	unsigned long flags;
++	unsigned int err_mask = 0;
+
+  	DPRINTK("ENTER\n");
+
+@@ -3346,8 +3347,15 @@ static void ata_qc_timeout(struct ata_qu
+  		printk(KERN_ERR "ata%u: command 0x%x timeout, stat 0x%x host_stat 
+0x%x\n",
+  		       ap->id, qc->tf.command, drv_stat, host_stat);
+
++		/* If drv_stat looks ok (0x50 normally), we treat this
++		 * as lost interrupt and complete the qc as normal.
++		 * If drv_stat looks bad (0x00, 0xff, etc), err_mask is set.
++		 */
++		if (!ata_ok(drv_stat))
++			err_mask |= __ac_err_mask(drv_stat);
++
+  		/* complete taskfile transaction */
+-		ata_qc_complete(qc, ac_err_mask(drv_stat));
++		ata_qc_complete(qc, err_mask);
+  		break;
+  	}
+
+
