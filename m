@@ -1,66 +1,57 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: ide-cd turning off DMA when verifying DVD-R
-Date: Fri, 13 Jan 2006 10:19:17 +0100
-Message-ID: <58cb370e0601130119g5c62b749r1bc5da59a0d4a56c@mail.gmail.com>
-References: <5ujmU-1UQ-665@gated-at.bofh.it> <5uoqr-Qq-7@gated-at.bofh.it>
-	 <43C72F41.5060207@shaw.ca> <20060113083009.GE12338@paradise.net.nz>
+From: Matt Darcy <kernel-lists@projecthugo.co.uk>
+Subject: Re: [git patch] 2.6.x libata fix
+Date: Fri, 13 Jan 2006 09:26:03 +0000
+Message-ID: <43C7722B.2060408@projecthugo.co.uk>
+References: <20060109171104.GA25793@havoc.gtf.org> <43C4DB86.7030603@projecthugo.co.uk> <43C628FE.9020303@projecthugo.co.uk> <op.s29h2nbncigqcu@apollo13>
+Reply-To: kernel-lists@projecthugo.co.uk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.195]:23621 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1161507AbWAMJTV convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Jan 2006 04:19:21 -0500
-Received: by uproxy.gmail.com with SMTP id s2so2815uge
-        for <linux-ide@vger.kernel.org>; Fri, 13 Jan 2006 01:19:18 -0800 (PST)
-In-Reply-To: <20060113083009.GE12338@paradise.net.nz>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <op.s29h2nbncigqcu@apollo13>
+Sender: linux-raid-owner@vger.kernel.org
+To: PFC <lists@peufeu.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Volker Kuhlmann <list0570@paradise.net.nz>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
-Hi,
+PFC wrote:
 
-On 1/13/06, Volker Kuhlmann <list0570@paradise.net.nz> wrote:
-> On Fri 13 Jan 2006 17:40:33 NZDT +1300, Robert Hancock wrote:
 >
-> > I'm thinking the IDE code is too aggressive in assuming that the failure
-> >  is because of a DMA problem and disabling it.. Most likely all that's
-> > happening is the drive is taking a long time to complete the current
-> > command.
+>     Hello,
+>
+>     I've had a lot of problems with nv_sata (nforce3) and Maxtor 
+> harddrives.  Basically it always boils down to :
+>
+> Dec 24 23:04:34 apollo13 ata3: command 0x35 timeout, stat 0xd0 
+> host_stat  0x21
+> Dec 24 23:04:34 apollo13 ata3: translated ATA stat/err 0x35/00 to 
+> SCSI  SK/ASC/ASCQ 0x4/00/00
+> Dec 24 23:04:34 apollo13 ata3: status=0x35 { DeviceFault SeekComplete  
+> CorrectedError Error }
+> Dec 24 23:04:34 apollo13 sd 2:0:0:0: SCSI error: return code = 0x8000002
+> Dec 24 23:04:34 apollo13 sdc: Current: sense key=0x4
+> Dec 24 23:04:34 apollo13 ASC=0x0 ASCQ=0x0
+> Dec 24 23:04:34 apollo13 end_request: I/O error, dev sdc, sector 
+> 490223295
+> Dec 24 23:04:34 apollo13 raid5: Disk failure on sdc1, disabling 
+> device.  Operation continuing on 3 devices
+>
+>     Plugging the Maxtor drives on the not-nv SATA sockets solved it 
+> (thanks  god I have 2 maxtor and 2 seagate drives)...
+>
+>
 
-What actually happened is that normal command timed out
-and because of that driver reset the device which caused
-it to loose DMA:
+Thanks for the message,
 
-->ide_atapi_error()
-    ->ide_do_reset()
-      ->pre_reset()
-        ->check_dma_crc()
-          ->__ide_dma_off()
+I'm not using nv_sata, I'm using sata_mv,
 
-Somebody needs to investigate why __ide_dma_off() is called
-et all and if we need to restore DMA after reset (don't count ATM
-on me, I'm buried by bugreports).  Ondrej, could you fill the bug at
-http://bugzilla.kernel.org so we don't lose it?
+just to clarify.
 
-> Yes! Each time when inserting a faulty CD/DVD, or whenever the drive
-> gives read errors for whatever reason, the kernel decides to turn DMA
-> off and try again, fail (again) and leave DMA off. And this after having
-> successfully used DMA before - so it's not that the device is
-> DMA-incapable.
+Could we please try to keep this thread on topic.
 
-This is a separate issue and is related to retrying failed DMA
-commands.  Driver doesn't know what was the cause of the timeout
-and it shouldn't disable DMA for the device (only the failed request
-should be retried in PIO mode).
+Regards,
 
-Any takers? :)
+Matt
 
-PS1 please don't trim cc: list
-PS2 please use linux-ide@vger.kernel.org for ATA problem
 
-Thanks,
-Bartlomiej
+
