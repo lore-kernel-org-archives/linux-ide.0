@@ -1,44 +1,46 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH 1/4] SATA ACPI build (applies to 2.6.16-git9)
-Date: Fri, 13 Jan 2006 23:30:44 -0800
-Message-ID: <20060113233044.248bcd1d.rdunlap@xenotime.net>
-References: <20060113224252.38d8890f.rdunlap@xenotime.net>
-	<20060114072810.GA7866@mars.ravnborg.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: additional PCI device ID for the sata_svw driver
+Date: Sat, 14 Jan 2006 18:35:56 +1100
+Message-ID: <1137224156.4854.59.camel@localhost.localdomain>
+References: <1716960.1137003815347.SLOX.WebMail.wwwrun@exchange.deltacomputer.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:48331 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1751268AbWANHas (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jan 2006 02:30:48 -0500
-Received: from midway ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Fri, 13 Jan 2006 23:30:46 -0800
-In-Reply-To: <20060114072810.GA7866@mars.ravnborg.org>
+Received: from gate.crashing.org ([63.228.1.57]:9616 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S932763AbWANHgV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jan 2006 02:36:21 -0500
+In-Reply-To: <1716960.1137003815347.SLOX.WebMail.wwwrun@exchange.deltacomputer.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, jgarzik@pobox.com
+To: Oliver Weihe <o.weihe@deltacomputer.de>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Sat, 14 Jan 2006 08:28:10 +0100 Sam Ravnborg wrote:
-
-> Hi Randy
->  
-> > --- linux-2615-g9.orig/drivers/scsi/Makefile
-> > +++ linux-2615-g9/drivers/scsi/Makefile
-> > @@ -164,6 +164,9 @@ CFLAGS_ncr53c8xx.o	:= $(ncr53c8xx-flags-
-> >  zalon7xx-objs	:= zalon.o ncr53c8xx.o
-> >  NCR_Q720_mod-objs	:= NCR_Q720.o ncr53c8xx.o
-> >  libata-objs	:= libata-core.o libata-scsi.o
-> > +ifeq ($(CONFIG_SCSI_SATA_ACPI),y)
-> > +  libata-objs	+= libata-acpi.o
-> > +endif
+On Wed, 2006-01-11 at 19:23 +0100, Oliver Weihe wrote:
+> Hello,
 > 
-> How about:
-> libata-y	:= libata-core.o libata-scsi.o
-> libata-$(CONFIG_SCSI_SATA_ACPI) += libata-acpi.o
+> please add the following device ID into the sata_svw driver:
 
-Hi Sam,
-OK, I'll change that.
+Jeff, you'll take care of it or do you want me to submit a patch ? I'm
+more than happy to leave you maintainership of this driver ;)
 
-Thanks.
----
-~Randy
+Ben.
+
+> [root@localhost ~]# lspci -d 1166:024b
+> 01:0e.0 IDE interface: Broadcom: Unknown device 024b
+> 01:0e.1 IDE interface: Broadcom: Unknown device 024b
+> 
+> Broadcom (Serverworks) HT2000/HT1000 chipset
+> 
+> I've _MINIMALLY_ tested it with a vanilla 2.6.15 (x86_64) and it seems
+> to work
+> (created some partitions and filesystems, wrote and read some files).
+> 
+> Regards,
+>   Oliver Weihe
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
