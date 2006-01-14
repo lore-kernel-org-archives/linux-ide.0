@@ -1,66 +1,118 @@
-From: Paul Ionescu <i_p_a_u_l@yahoo.com>
-Subject: Re: cold plug support
-Date: Sat, 14 Jan 2006 12:13:55 +0200
-Message-ID: <pan.2006.01.14.10.13.55.774705@yahoo.com>
-References: <43AAA75A.8080303@conterra.de>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] Fix PDC202XX_FORCE kconfig selection
+Date: Sat, 14 Jan 2006 16:21:19 +0100
+Message-ID: <20060114152119.GN29663@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:29407 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S1751676AbWANKQF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jan 2006 05:16:05 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1ExiRu-00023t-6r
-	for linux-ide@vger.kernel.org; Sat, 14 Jan 2006 11:15:54 +0100
-Received: from ibmrom-dt.b.astral.ro ([195.7.6.182])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sat, 14 Jan 2006 11:15:54 +0100
-Received: from i_p_a_u_l by ibmrom-dt.b.astral.ro with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sat, 14 Jan 2006 11:15:54 +0100
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964778AbWANPVW@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, "Andrey J. Melnikoff" <temnota@kmv.ru>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-On Thu, 22 Dec 2005 14:17:14 +0100, Dieter St=FCken wrote:
+Split PDC202XX_FORCE selection into two independ option and allow user
+select it only for specific driver.
 
-> I followed the recent discussion about ACPI and hotplug and understan=
-d
-> some of the complications with ACPI if the event is triggered by the
-> device itself, if it is disrupted unexpectedly.
->=20
-> What I need, however, would be the possibility, just to replace a dis=
-ks
-> without reboot. I will umount it first and then suspend/shutdown it
-> somehow, so it should disappear from /sys/block. Thus I can safely un=
-plug
-> it and attach a new disk. If my hardware is unable to recognize the n=
-ew
-> disk instantaneously this is not a problem. I may easily activate som=
-e
-> scanning process to find and activate the new disk. To accomplish thi=
-s,
-> IMHO there is no need to solve all the hotplug problems first.
->=20
-> This would be a BIG enhancement for me (and may be others) to keep my=
- disk
-> servers up and running. May be some of these steps are already
-> implemented, but then I'm missing some HOWTO. Else I like to hear if =
-his
-> kind of cold-plug is aimed some day, or if nobody really needs this
-> besides be :-)
->=20
-> Dieter.
 
-Hello Dieter,
+Signed-off-by: Andrey Melnikov <temnota@kmv.ru>
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-You are not alone,
-Me and some of my friends also will benefit from some sort of cold-plug=
- if
-possible. If you found something, please let us know.
+---
 
-Thanks,
-Paul
+This patch was sent by Andrey J. Melnikoff on:
+- 28 Dec 2005
 
+ drivers/ide/Kconfig            |    9 +++++++--
+ drivers/ide/pci/pdc202xx_new.c |    4 ++--
+ drivers/ide/pci/pdc202xx_old.c |   10 +++++-----
+ 3 files changed, 14 insertions(+), 9 deletions(-)
+
+--- linux/drivers/ide/Kconfig~	2005-12-28 21:51:52.000000000 +0300
++++ linux/drivers/ide/Kconfig	2005-12-28 21:51:52.000000000 +0300
+@@ -670,11 +670,16 @@
+ 
+ 	  If unsure, say N.
+ 
++config PDC202XX_OLD_FORCE
++	bool "Enable controller even if disabled by BIOS"
++	depends on BLK_DEV_PDC202XX_OLD
++	help
++	  Enable the PDC202xx controller even if it has been disabled in the BIOS setup.
++
+ config BLK_DEV_PDC202XX_NEW
+ 	tristate "PROMISE PDC202{68|69|70|71|75|76|77} support"
+ 
+-# FIXME - probably wants to be one for old and for new
+-config PDC202XX_FORCE
++config PDC202XX_NEW_FORCE
+ 	bool "Enable controller even if disabled by BIOS"
+ 	depends on BLK_DEV_PDC202XX_NEW
+ 	help
+--- linux/drivers/ide/pci/pdc202xx_new.c~	2005-12-28 21:52:32.000000000 +0300
++++ linux/drivers/ide/pci/pdc202xx_new.c	2005-12-28 21:52:32.000000000 +0300
+@@ -420,7 +420,7 @@
+ 		.init_hwif	= init_hwif_pdc202new,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
++#ifndef CONFIG_PDC202XX_NEW_FORCE
+ 		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+ #endif
+ 		.bootable	= OFF_BOARD,
+@@ -447,7 +447,7 @@
+ 		.init_hwif	= init_hwif_pdc202new,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
++#ifndef CONFIG_PDC202XX_NEW_FORCE
+ 		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+ #endif
+ 		.bootable	= OFF_BOARD,
+--- linux/drivers/ide/pci/pdc202xx_old.c~	2005-12-28 21:53:26.000000000 +0300
++++ linux/drivers/ide/pci/pdc202xx_old.c	2005-12-28 21:53:26.000000000 +0300
+@@ -786,7 +786,7 @@
+ 		.init_dma	= init_dma_pdc202xx,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
++#ifndef CONFIG_PDC202XX_OLD_FORCE
+ 		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+ #endif
+ 		.bootable	= OFF_BOARD,
+@@ -799,7 +799,7 @@
+ 		.init_dma	= init_dma_pdc202xx,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
++#ifndef CONFIG_PDC202XX_OLD_FORCE
+ 		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+ #endif
+ 		.bootable	= OFF_BOARD,
+@@ -813,7 +813,7 @@
+ 		.init_dma	= init_dma_pdc202xx,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
++#ifndef CONFIG_PDC202XX_OLD_FORCE
+ 		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+ #endif
+ 		.bootable	= OFF_BOARD,
+@@ -826,7 +826,7 @@
+ 		.init_dma	= init_dma_pdc202xx,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
++#ifndef CONFIG_PDC202XX_OLD_FORCE
+ 		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+ #endif
+ 		.bootable	= OFF_BOARD,
+@@ -840,7 +840,7 @@
+ 		.init_dma	= init_dma_pdc202xx,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
++#ifndef CONFIG_PDC202XX_OLD_FORCE
+ 		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+ #endif
+ 		.bootable	= OFF_BOARD,
