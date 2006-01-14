@@ -1,44 +1,97 @@
-From: "Surprised K. Clement" <firasz@grany.net>
-Subject: Software
-Date: Sat, 14 Jan 2006 01:47:30 -0500
-Message-ID: <3260401926.20060114014730@grany.net>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: [PATCH 1/4] SATA ACPI build (applies to 2.6.16-git9)
+Date: Fri, 13 Jan 2006 22:42:52 -0800
+Message-ID: <20060113224252.38d8890f.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:42158 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S932733AbWANGnq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jan 2006 01:43:46 -0500
-Received: from -1212608656 ([219.154.106.177])
-	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id k0E6hAuR005038
-	for <linux-ide@vger.kernel.org>; Fri, 13 Jan 2006 22:43:36 -0800
-Received: from grany.net (-1210158608 [-1209735872])
-	by goudis.com (Qmailv1) with ESMTP id 854AAB186F
-	for <linux-ide@vger.kernel.org>; Sat, 14 Jan 2006 01:47:30 -0500
+Received: from xenotime.net ([66.160.160.81]:19349 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S932767AbWANGqH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jan 2006 01:46:07 -0500
+Received: from midway ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Fri, 13 Jan 2006 22:46:07 -0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux <linux-ide@vger.kernel.org>
+To: ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
+Cc: akpm <akpm@osdl.org>, jgarzik <jgarzik@pobox.com>
 
-soft at incredibly low prices 
-Learn to build simple and clean websites that can bring in the dough... 
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 
-New software on our site:
+Add ata_acpi in Makefile and Kconfig.
+Add ACPI obj_handle.
+Add ata_acpi.c to libata kernel-doc template file.
 
-Fireworks MX 2004 - $69.95
-Plus! XP - $59.95
-Encarta Encyclopedia Delux 2004 (3CD) - $89.95
-Office XP Professional - $79.95
-Premiere 7 - $69.95
-Fireworks MX 2004 - $69.95
-Photoshop 7 - $69.95 
-Photoshop Elements 3.0 Windows - $59.95
-Photoshop 7 - $69.95 
-Quark Xpress 6 Passport Multilanguage - $69.95
-Encarta Encyclopedia Delux 2004 (3CD) - $89.95
-Dreamweaver MX 2004 $69.95
-Studio MX 2004 with Director MX 2004 - $139.95
-Picture It Premium 9 - $59.95
+Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+---
+ Documentation/DocBook/libata.tmpl |    6 ++++++
+ drivers/scsi/Kconfig              |    5 +++++
+ drivers/scsi/Makefile             |    3 +++
+ include/linux/libata.h            |    6 ++++++
+ 4 files changed, 20 insertions(+)
 
-Our site:
-http://riddamna.com
+--- linux-2615-g9.orig/drivers/scsi/Makefile
++++ linux-2615-g9/drivers/scsi/Makefile
+@@ -164,6 +164,9 @@ CFLAGS_ncr53c8xx.o	:= $(ncr53c8xx-flags-
+ zalon7xx-objs	:= zalon.o ncr53c8xx.o
+ NCR_Q720_mod-objs	:= NCR_Q720.o ncr53c8xx.o
+ libata-objs	:= libata-core.o libata-scsi.o
++ifeq ($(CONFIG_SCSI_SATA_ACPI),y)
++  libata-objs	+= libata-acpi.o
++endif
+ oktagon_esp_mod-objs	:= oktagon_esp.o oktagon_io.o
+ 
+ # Files generated that shall be removed upon make clean
+--- linux-2615-g9.orig/drivers/scsi/Kconfig
++++ linux-2615-g9/drivers/scsi/Kconfig
+@@ -599,6 +599,11 @@ config SCSI_SATA_INTEL_COMBINED
+ 	depends on IDE=y && !BLK_DEV_IDE_SATA && (SCSI_SATA_AHCI || SCSI_ATA_PIIX)
+ 	default y
+ 
++config SCSI_SATA_ACPI
++	bool
++	depends on SCSI_SATA && ACPI
++	default y
++
+ config SCSI_BUSLOGIC
+ 	tristate "BusLogic SCSI support"
+ 	depends on (PCI || ISA || MCA) && SCSI && ISA_DMA_API
+--- linux-2615-g9.orig/include/linux/libata.h
++++ linux-2615-g9/include/linux/libata.h
+@@ -33,6 +33,7 @@
+ #include <asm/io.h>
+ #include <linux/ata.h>
+ #include <linux/workqueue.h>
++#include <acpi/acpi.h>
+ 
+ /*
+  * compile-time options
+@@ -315,6 +316,11 @@ struct ata_device {
+ 	u16			cylinders;	/* Number of cylinders */
+ 	u16			heads;		/* Number of heads */
+ 	u16			sectors;	/* Number of sectors per track */
++
++#ifdef CONFIG_SCSI_SATA_ACPI
++	/* ACPI objects info */
++	acpi_handle		obj_handle;
++#endif
+ };
+ 
+ struct ata_port {
+--- linux-2615-g9.orig/Documentation/DocBook/libata.tmpl
++++ linux-2615-g9/Documentation/DocBook/libata.tmpl
+@@ -787,6 +787,12 @@ and other resources, etc.
+ !Idrivers/scsi/libata-scsi.c
+   </chapter>
+ 
++  <chapter id="libataAcpi">
++     <title>libata ACPI interfaces/methods</title>
++!Edrivers/scsi/ata_acpi.c
++!Idrivers/scsi/ata_acpi.c
++  </chapter>
++
+   <chapter id="ataExceptions">
+      <title>ATA errors &amp; exceptions</title>
+ 
 
+
+---
