@@ -1,159 +1,127 @@
 From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH 4/4] additional libata parameters
-Date: Fri, 13 Jan 2006 22:45:57 -0800
-Message-ID: <20060113224557.1fd8257e.rdunlap@xenotime.net>
+Subject: [PATCH 2/4] libata debugging support
+Date: Fri, 13 Jan 2006 22:44:14 -0800
+Message-ID: <20060113224414.20509944.rdunlap@xenotime.net>
 References: <20060113224252.38d8890f.rdunlap@xenotime.net>
-	<20060113224414.20509944.rdunlap@xenotime.net>
-	<20060113224503.5e8a71fb.rdunlap@xenotime.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:22677 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S932779AbWANGqM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jan 2006 01:46:12 -0500
-Received: from midway ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Fri, 13 Jan 2006 22:46:12 -0800
-In-Reply-To: <20060113224503.5e8a71fb.rdunlap@xenotime.net>
+Received: from xenotime.net ([66.160.160.81]:20629 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S932775AbWANGqK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jan 2006 01:46:10 -0500
+Received: from midway ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Fri, 13 Jan 2006 22:46:08 -0800
+In-Reply-To: <20060113224252.38d8890f.rdunlap@xenotime.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: ide <linux-ide@vger.kernel.org>
 Cc: linux-kernel@vger.kernel.org, akpm@osdl.org, jgarzik@pobox.com
 
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+From: Borislav Petkov <petkov@uni-muenster.de>
 
-Add and use 'noacpi' parameter for libata-acpi.
-Add and use 'printk' parameter for libata (parts).
-Update Documentation/kernel-parameters.txt, including atapi_enabled.
+libata new debugging macro definitions
 
+Signed-off-by: Borislav Petkov <petkov@uni-muenster.de>
 Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 ---
- Documentation/kernel-parameters.txt |   13 +++++++++++++
- drivers/scsi/libata-acpi.c          |   12 ++++++++++++
- drivers/scsi/libata-core.c          |   10 ++++++++++
- drivers/scsi/libata.h               |    2 ++
- 4 files changed, 37 insertions(+)
+ include/linux/libata.h |   52 ++++++++++++++++++++++++++++++++++++++++++-------
+ 1 files changed, 45 insertions(+), 7 deletions(-)
 
---- linux-2615-g9.orig/drivers/scsi/libata-core.c
-+++ linux-2615-g9/drivers/scsi/libata-core.c
-@@ -82,6 +82,14 @@ int atapi_enabled = 0;
- module_param(atapi_enabled, int, 0444);
- MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
+--- linux-2615-g9.orig/include/linux/libata.h
++++ linux-2615-g9/include/linux/libata.h
+@@ -36,7 +36,8 @@
+ #include <acpi/acpi.h>
  
-+int noacpi = 0;
-+module_param(noacpi, int, 0444);
-+MODULE_PARM_DESC(noacpi, "Disables use of ACPI in suspend/resume when set");
+ /*
+- * compile-time options
++ * compile-time options: to be removed as soon as all the drivers are
++ * converted to the new debugging mechanism
+  */
+ #undef ATA_DEBUG		/* debugging output */
+ #undef ATA_VERBOSE_DEBUG	/* yet more debugging output */
+@@ -72,6 +73,38 @@
+         }
+ #endif
+ 
++/* NEW: debug levels */
++#define HAVE_LIBATA_MSG 1
 +
-+int libata_printk = ATA_MSG_DRV;
-+module_param_named(printk, libata_printk, int, 0644);
-+MODULE_PARM_DESC(printk, "Set libata printk flags"); /* in linux/libata.h */
++enum {
++	ATA_MSG_DRV	= 0x0001,
++	ATA_MSG_INFO	= 0x0002,
++	ATA_MSG_PROBE	= 0x0004,
++	ATA_MSG_WARN	= 0x0008,
++	ATA_MSG_MALLOC	= 0x0010,
++	ATA_MSG_CTL	= 0x0020,
++	ATA_MSG_INTR	= 0x0040,
++	ATA_MSG_ERR	= 0x0080,
++};
 +
- MODULE_AUTHOR("Jeff Garzik");
- MODULE_DESCRIPTION("Library module for ATA devices");
- MODULE_LICENSE("GPL");
-@@ -4492,6 +4500,8 @@ int ata_device_add(const struct ata_prob
- 				(ap->mwdma_mask << ATA_SHIFT_MWDMA) |
- 				(ap->pio_mask << ATA_SHIFT_PIO);
- 
-+		ap->msg_enable = libata_printk;
++#define ata_msg_drv(p)    ((p)->msg_enable & ATA_MSG_DRV)
++#define ata_msg_info(p)   ((p)->msg_enable & ATA_MSG_INFO)
++#define ata_msg_probe(p)  ((p)->msg_enable & ATA_MSG_PROBE)
++#define ata_msg_warn(p)   ((p)->msg_enable & ATA_MSG_WARN)
++#define ata_msg_malloc(p) ((p)->msg_enable & ATA_MSG_MALLOC)
++#define ata_msg_ctl(p)    ((p)->msg_enable & ATA_MSG_CTL)
++#define ata_msg_intr(p)   ((p)->msg_enable & ATA_MSG_INTR)
++#define ata_msg_err(p)    ((p)->msg_enable & ATA_MSG_ERR)
 +
- 		/* print per-port info to dmesg */
- 		printk(KERN_INFO "ata%u: %cATA max %s cmd 0x%lX ctl 0x%lX "
- 				 "bmdma 0x%lX irq %lu\n",
---- linux-2615-g9.orig/Documentation/kernel-parameters.txt
-+++ linux-2615-g9/Documentation/kernel-parameters.txt
-@@ -41,6 +41,7 @@ restrictions referred to are that the re
- 	ISAPNP	ISA PnP code is enabled.
- 	ISDN	Appropriate ISDN support is enabled.
- 	JOY	Appropriate joystick support is enabled.
-+	LIBATA	libata driver is enabled.
- 	LP	Printer support is enabled.
- 	LOOP	Loopback device support is enabled.
- 	M68k	M68k architecture is enabled.
-@@ -242,6 +243,9 @@ running once the system is up.
- 
- 	ataflop=	[HW,M68k]
- 
-+	atapi_enabled=	[LIBATA] Enable discovery & support of ATAPI devices
-+			Format: <value> (0=off, 1=on)
-+
- 	atarimouse=	[HW,MOUSE] Atari Mouse
- 
- 	atascsi=	[HW,SCSI] Atari SCSI
-@@ -968,6 +972,10 @@ running once the system is up.
- 			emulation library even if a 387 maths coprocessor
- 			is present.
- 
-+	noacpi=		[LIBATA] Disables use of ACPI in libata suspend/resume
-+			when set.
-+			Format: <int>
-+
- 	noalign		[KNL,ARM]
- 
- 	noapic		[SMP,APIC] Tells the kernel to not make use of any
-@@ -1212,6 +1220,11 @@ running once the system is up.
- 			autoconfiguration.
- 			Ranges are in pairs (memory base and size).
- 
-+	printk=		[LIBATA] Set libata printk level (mask).
-+			The values are defined in include/linux/libata.h.
-+			The default value is 1 (ATA_MSG_DRV).
-+			Format: <int>
-+
- 	profile=	[KNL] Enable kernel profiling via /proc/profile
- 			Format: [schedule,]<number>
- 			Param: "schedule" - profile schedule points.
---- linux-2615-g9.orig/drivers/scsi/libata-acpi.c
-+++ linux-2615-g9/drivers/scsi/libata-acpi.c
-@@ -212,6 +212,9 @@ int ata_acpi_push_id(struct ata_port *ap
- 	struct acpi_object_list		input;
- 	union acpi_object 		in_params[1];
- 
-+	if (noacpi)
++static inline u32 ata_msg_init(int dval, int default_msg_enable_bits)
++{
++	if (dval < 0 || dval >= (sizeof(u32) * 8))
++		return default_msg_enable_bits; /* should be 0x1 - only driver info msgs */
++	if (!dval)
 +		return 0;
++	return (1 << dval) - 1;
++}
 +
- 	if (ata_msg_probe(ap))
- 		printk(KERN_DEBUG
- 			"%s: ap->id: %d, ix = %d, port#: %d, hard_port#: %d\n",
-@@ -319,6 +322,9 @@ int do_drive_get_GTF(struct ata_port *ap
- 	*gtf_length = 0;
- 	*gtf_address = 0UL;
+ /* defines only for the constants which don't work well as enums */
+ #define ATA_TAG_POISON		0xfafbfcfdU
  
-+	if (noacpi)
-+		return 0;
+@@ -362,6 +395,8 @@ struct ata_port {
+ 	unsigned int		hsm_task_state;
+ 	unsigned long		pio_task_timeout;
+ 
++	u32			msg_enable;
 +
- 	if (!ata_dev_present(atadev) ||
- 	    (ap->flags & ATA_FLAG_PORT_DISABLED)) {
- 		if (ata_msg_probe(ap))
-@@ -493,6 +499,9 @@ int do_drive_set_taskfiles(struct ata_po
- 			__FUNCTION__, ap->id,
- 			ap->port_no, ap->hard_port_no);
+ 	void			*private_data;
+ };
  
-+	if (noacpi)
-+		return 0;
-+
- 	if (!ata_dev_present(atadev) ||
- 	    (ap->flags & ATA_FLAG_PORT_DISABLED))
- 		goto out;
-@@ -540,6 +549,9 @@ int ata_acpi_exec_tfs(struct ata_port *a
- 	if (ata_msg_probe(ap))
- 		printk(KERN_DEBUG "%s: ENTER:\n", __FUNCTION__);
+@@ -646,9 +681,9 @@ static inline u8 ata_wait_idle(struct at
  
-+	if (noacpi)
-+		return 0;
-+
- 	for (ix = 0; ix < ATA_MAX_DEVICES; ix++) {
- 		printk(KERN_DEBUG "%s: call get_GTF, ix=%d\n",
- 			__FUNCTION__, ix);
---- linux-2615-g9.orig/drivers/scsi/libata.h
-+++ linux-2615-g9/drivers/scsi/libata.h
-@@ -41,6 +41,8 @@ struct ata_scsi_args {
+ 	if (status & (ATA_BUSY | ATA_DRQ)) {
+ 		unsigned long l = ap->ioaddr.status_addr;
+-		printk(KERN_WARNING
+-		       "ATA: abnormal status 0x%X on port 0x%lX\n",
+-		       status, l);
++		if (ata_msg_warn(ap))
++			printk(KERN_WARNING "ATA: abnormal status 0x%X on port 0x%lX\n",
++				status, l);
+ 	}
  
- /* libata-core.c */
- extern int atapi_enabled;
-+extern int noacpi;
-+extern int libata_printk;
- extern struct ata_queued_cmd *ata_qc_new_init(struct ata_port *ap,
- 				      struct ata_device *dev);
- extern int ata_rwcmd_protocol(struct ata_queued_cmd *qc);
+ 	return status;
+@@ -740,7 +775,8 @@ static inline u8 ata_irq_ack(struct ata_
+ 
+ 	status = ata_busy_wait(ap, bits, 1000);
+ 	if (status & bits)
+-		DPRINTK("abnormal status 0x%X\n", status);
++		if (ata_msg_err(ap))
++			printk(KERN_ERR "abnormal status 0x%X\n", status);
+ 
+ 	/* get controller status; clear intr, err bits */
+ 	if (ap->flags & ATA_FLAG_MMIO) {
+@@ -758,8 +794,10 @@ static inline u8 ata_irq_ack(struct ata_
+ 		post_stat = inb(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
+ 	}
+ 
+-	VPRINTK("irq ack: host_stat 0x%X, new host_stat 0x%X, drv_stat 0x%X\n",
+-		host_stat, post_stat, status);
++	if (ata_msg_intr(ap))
++		printk(KERN_INFO "%s: irq ack: host_stat 0x%X, new host_stat 0x%X, drv_stat 0x%X\n",
++			__FUNCTION__,
++			host_stat, post_stat, status);
+ 
+ 	return status;
+ }
 
 ---
