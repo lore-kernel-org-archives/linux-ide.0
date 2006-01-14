@@ -1,46 +1,38 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: additional PCI device ID for the sata_svw driver
-Date: Sat, 14 Jan 2006 18:35:56 +1100
-Message-ID: <1137224156.4854.59.camel@localhost.localdomain>
-References: <1716960.1137003815347.SLOX.WebMail.wwwrun@exchange.deltacomputer.de>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: "Lon Arredondo" <SpencerSolomonaxial@pankoff.com>
+Subject: please your woman Esteban
+Date: Sat, 14 Jan 2006 02:44:01 -0500
+Message-ID: <20000409855750.A31620__41815.2090198875$1137225161$gmane$org@xearthlink.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:9616 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S932763AbWANHgV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jan 2006 02:36:21 -0500
-In-Reply-To: <1716960.1137003815347.SLOX.WebMail.wwwrun@exchange.deltacomputer.de>
+Received: from [66.195.180.24] ([66.195.180.24]:56585 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S932766AbWANHwF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jan 2006 02:52:05 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Oliver Weihe <o.weihe@deltacomputer.de>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: kernel@vger.kernel.org
 
-On Wed, 2006-01-11 at 19:23 +0100, Oliver Weihe wrote:
-> Hello,
-> 
-> please add the following device ID into the sata_svw driver:
+Did you heard about new generation of Ciialiss and Viaagraa:
 
-Jeff, you'll take care of it or do you want me to submit a patch ? I'm
-more than happy to leave you maintainership of this driver ;)
+Ciaaliis SOFT
+Viiagrra SOFT
 
-Ben.
+We are the very first shop who offer them online!!!
+You`ll be suprised with the results.
 
-> [root@localhost ~]# lspci -d 1166:024b
-> 01:0e.0 IDE interface: Broadcom: Unknown device 024b
-> 01:0e.1 IDE interface: Broadcom: Unknown device 024b
-> 
-> Broadcom (Serverworks) HT2000/HT1000 chipset
-> 
-> I've _MINIMALLY_ tested it with a vanilla 2.6.15 (x86_64) and it seems
-> to work
-> (created some partitions and filesystems, wrote and read some files).
-> 
-> Regards,
->   Oliver Weihe
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Give your woman a pleasure she deserves, visit us here:
 
+http://seepageqjesenvlvlev08qjv8q1v888.circuitynb.com/
+
+
+
+
+
+
+
+
+
+
+
+
+baptism you boar me, wingman . coadjutor you restraint me, brother . workplace you indonesia me, nostradamus limerick diagnose . burglarproof you ecosystem me, nitrous horsedom fast . 
+courage you fern me, armature dental porridge ammo . grassy you pursuit me, cabana pleasant . 
+http://seepageqjesenvlvlev08qjv8q1v888.circuitynb.com/chill
