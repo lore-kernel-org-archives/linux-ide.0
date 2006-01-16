@@ -1,43 +1,66 @@
-From: Helmut Toplitzer <pvrusb2@toplitzer.net>
-Subject: Re: BUG?: VIA IDE transfer-rate problem
-Date: Mon, 16 Jan 2006 18:49:59 +0100
-Message-ID: <200601161849.59629.pvrusb2@toplitzer.net>
-References: <200601131909.07981.pvrusb2@toplitzer.net> <200601131910.11382.pvrusb2@toplitzer.net>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [PATCH 1/4] SATA ACPI build (applies to 2.6.16-git9)
+Date: Mon, 16 Jan 2006 22:04:18 +0100
+Message-ID: <20060116210418.GG29663@stusta.de>
+References: <20060113224252.38d8890f.rdunlap@xenotime.net> <20060116115607.GA18307@harddisk-recovery.nl> <20060116140713.GB18307@harddisk-recovery.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from toplitzer.net ([83.151.30.110]:64476 "EHLO toplitzer.net")
-	by vger.kernel.org with ESMTP id S1750841AbWAPRuF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jan 2006 12:50:05 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by toplitzer.net (SX Mail) with ESMTP id 811DABC8B
-	for <linux-ide@vger.kernel.org>; Mon, 16 Jan 2006 18:49:38 +0100 (CET)
-Received: from [10.0.0.140] (pc057-adsl.adsl.uni-klu.ac.at [143.205.236.57])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(No client certificate requested)
-	by toplitzer.net (SX Mail) with ESMTP id D9BB3BC40
-	for <linux-ide@vger.kernel.org>; Mon, 16 Jan 2006 18:49:30 +0100 (CET)
-In-Reply-To: <200601131910.11382.pvrusb2@toplitzer.net>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:7693 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1751197AbWAPVES (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Jan 2006 16:04:18 -0500
 Content-Disposition: inline
+In-Reply-To: <20060116140713.GB18307@harddisk-recovery.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Erik Mouw <erik@harddisk-recovery.com>
+Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, jgarzik <jgarzik@pobox.com>
 
+On Mon, Jan 16, 2006 at 03:07:13PM +0100, Erik Mouw wrote:
+> On Mon, Jan 16, 2006 at 12:56:07PM +0100, Erik Mouw wrote:
+> > On Fri, Jan 13, 2006 at 10:42:52PM -0800, Randy.Dunlap wrote:
+> > > --- linux-2615-g9.orig/drivers/scsi/Kconfig
+> > > +++ linux-2615-g9/drivers/scsi/Kconfig
+> > > @@ -599,6 +599,11 @@ config SCSI_SATA_INTEL_COMBINED
+> > >  	depends on IDE=y && !BLK_DEV_IDE_SATA && (SCSI_SATA_AHCI || SCSI_ATA_PIIX)
+> > >  	default y
+> > >  
+> > > +config SCSI_SATA_ACPI
+> > > +	bool
+> > > +	depends on SCSI_SATA && ACPI
+> > > +	default y
+> > > +
+> > 
+> > Could you add some help text over here? At first glance I got the
+> > impression this was a host driver that works through ACPI calls, but by
+> > reading the rest of your patches it turns out it is a suspend/resume
+> > helper.
+> 
+> Something like this should already be enough:
+> 
+>   This option enables support for SATA suspend/resume using ACPI.
+> 
+> If you really need this enabled to be able to use suspend/resume at
+> all, you could add a line like:
+> 
+>   It's safe to say Y. If you say N, you might get serious disk
+>   corruption when you suspend your machine.
+>...
 
-HELP!
+Why?
 
-No one answered my question, that's why I'm asking once again:
+This is not a user-visible option...
 
-Is there someone who can tell me what causes the problem
-or at least tell me whom I should ask about it?
-http://marc.theaimsgroup.com/?l=linux-ide&m=113717636923888&w=2
+> Erik
 
-
-TIA
-Helmut
+cu
+Adrian
 
 -- 
-My GNUpg fingerprint http://www.gnupg.org
-4563 F4FB 0B7E 8698 53CD  00E9 E319 35BD 6A91 1656
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
