@@ -1,97 +1,47 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Fw: [Bug 5880] Transcend CF pcmcia card no longer works
-Date: Mon, 16 Jan 2006 10:55:42 +0100
-Message-ID: <58cb370e0601160155i68538f2ftd3a46cd22ababeb2@mail.gmail.com>
-References: <20060113113922.23ce6d78.akpm@osdl.org> <43C87CF2.30402@gmail.com>
-	 <43C88509.7090009@yahoo.com.au> <43C88FBB.3000607@gmail.com>
-	 <20060113215218.68a68f4e.akpm@osdl.org>
-	 <43C896F0.1080005@yahoo.com.au> <43CB5D43.8080301@gmail.com>
+From: Erik Mouw <erik@harddisk-recovery.com>
+Subject: Re: [PATCH 1/4] SATA ACPI build (applies to 2.6.16-git9)
+Date: Mon, 16 Jan 2006 12:56:07 +0100
+Message-ID: <20060116115607.GA18307@harddisk-recovery.nl>
+References: <20060113224252.38d8890f.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.202]:18788 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932304AbWAPJzo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Jan 2006 04:55:44 -0500
-Received: by uproxy.gmail.com with SMTP id s2so580974uge
-        for <linux-ide@vger.kernel.org>; Mon, 16 Jan 2006 01:55:42 -0800 (PST)
-In-Reply-To: <43CB5D43.8080301@gmail.com>
+Received: from dtp.xs4all.nl ([80.126.206.180]:18475 "HELO abra2.bitwizard.nl")
+	by vger.kernel.org with SMTP id S1750703AbWAPL4L (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jan 2006 06:56:11 -0500
 Content-Disposition: inline
+In-Reply-To: <20060113224252.38d8890f.rdunlap@xenotime.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@osdl.org>, axboe@suse.de, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, Linux-ide <linux-ide@vger.kernel.org>
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, jgarzik <jgarzik@pobox.com>
 
-On 1/16/06, Tejun Heo <htejun@gmail.com> wrote:
-> Nick Piggin wrote:
-> > Andrew Morton wrote:
-> >
-> >> (Adding bugzilla back to cc)
-> >>
-> >> Tejun Heo <htejun@gmail.com> wrote:
-> >>
-> >
-> >>>> I'm not sure that it has been deallocated, rather something has
-> >>>> overwritten
-> >>>> it, no?
-> >>>
-> >>>
-> >>> The ldm validation or failure seems irrelevant.  From the original
-> >>> bug report.
-> >>>
-> >
-> > Looks like you're right.
-> >
-> > It was just odd that the ldm check worked and the msdos one
-> > oopsed; both attempt to read the same block in the same manner.
-> >
-> > Perhaps it may be that the queue was freed long before then, and
-> > only just gets reused for something else and overwritten at this
-> > point.
-> >
-> > slab debugging might help?
-> >
->
-> [CC'ing Bartlomiej and linux-ide]
->
-> Hello, Bartlomiej.
->
-> This thread started by Andrew forwarding bugzilla #5880 to as-iosched
-> related people as the machine oopsed in anticipatory scheduler.  After
-> diagnosis, it seems to be premature device release problem of IDE
-> driver.  The original bug entry is
->
-> http://bugzilla.kernel.org/show_bug.cgi?id=5880
->
-> The original bug is about CF device unuseable.  The oops occurs after
-> yanking out the CF device during partition check is in progress (all are
-> failing due to IO error).
->
-> I've glanced through the IDE code and the problem seems to be in
-> ide_disk_get().  This function doesn't get the IDE generic device
-> (ide_drive_t->gendev) and so if a device is yanked out while it's still
-> open, the gendev doesn't wait for the open fd's to be closed.  This
-> results in dangling open block device and thus above oops.  I'm not very
-> sure about this analysis and currently don't have access to
-> hot-unpluggable IDE devices.
->
-> Can you please confirm this?
+On Fri, Jan 13, 2006 at 10:42:52PM -0800, Randy.Dunlap wrote:
+> --- linux-2615-g9.orig/drivers/scsi/Kconfig
+> +++ linux-2615-g9/drivers/scsi/Kconfig
+> @@ -599,6 +599,11 @@ config SCSI_SATA_INTEL_COMBINED
+>  	depends on IDE=y && !BLK_DEV_IDE_SATA && (SCSI_SATA_AHCI || SCSI_ATA_PIIX)
+>  	default y
+>  
+> +config SCSI_SATA_ACPI
+> +	bool
+> +	depends on SCSI_SATA && ACPI
+> +	default y
+> +
 
-Hi Tejun,
+Could you add some help text over here? At first glance I got the
+impression this was a host driver that works through ACPI calls, but by
+reading the rest of your patches it turns out it is a suspend/resume
+helper.
 
-Confirmed, we need to get/put generic device in ide_disk_{get,put}()
-similarly like drivers/scsi/sd.c driver does it (the same also applies to
-ide-{cd,floppy,tape,scsi} drivers).
-
-I would happily apply a patch fixing it (*hint*, *hint*).
+For quite some time we had no help text with the mysterious
+"ACPI0004,PNP0A05 and PNP0A06 Container Driver", no need to add another
+mysterious ACPI feature.
 
 
-Now back to the original problem ("ghost" slave device):
+Erik
 
-Pavel, is there any way to recognize this PCMCIA IDE controller
-in ide-cs driver so we could tell IDE subsystem not to probe slave
-devices?
-
-Thanks,
-Bartlomiej
+-- 
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
+| Data lost? Stay calm and contact Harddisk-recovery.com
