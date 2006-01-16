@@ -1,67 +1,47 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH 1/4] SATA ACPI build (applies to 2.6.16-git9)
-Date: Mon, 16 Jan 2006 14:48:13 -0800 (PST)
-Message-ID: <Pine.LNX.4.58.0601161447230.24990@shark.he.net>
+Date: Mon, 16 Jan 2006 23:00:36 +0000
+Message-ID: <1137452436.15553.93.camel@localhost.localdomain>
 References: <20060113224252.38d8890f.rdunlap@xenotime.net>
- <20060116115607.GA18307@harddisk-recovery.nl> <20060116140713.GB18307@harddisk-recovery.com>
- <20060116224626.GS3945@suse.de>
+	 <20060116115607.GA18307@harddisk-recovery.nl>
+	 <20060116140713.GB18307@harddisk-recovery.com>
+	 <20060116224626.GS3945@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:43654 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1751243AbWAPWsN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jan 2006 17:48:13 -0500
-Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-ide@vger.kernel.org>; Mon, 16 Jan 2006 14:48:13 -0800
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:8915 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751250AbWAPW45 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Jan 2006 17:56:57 -0500
 In-Reply-To: <20060116224626.GS3945@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>
 Cc: Erik Mouw <erik@harddisk-recovery.com>, "Randy.Dunlap" <rdunlap@xenotime.net>, ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, jgarzik <jgarzik@pobox.com>
 
-On Mon, 16 Jan 2006, Jens Axboe wrote:
-
-> On Mon, Jan 16 2006, Erik Mouw wrote:
-> > On Mon, Jan 16, 2006 at 12:56:07PM +0100, Erik Mouw wrote:
-> > > On Fri, Jan 13, 2006 at 10:42:52PM -0800, Randy.Dunlap wrote:
-> > > > --- linux-2615-g9.orig/drivers/scsi/Kconfig
-> > > > +++ linux-2615-g9/drivers/scsi/Kconfig
-> > > > @@ -599,6 +599,11 @@ config SCSI_SATA_INTEL_COMBINED
-> > > >  	depends on IDE=y && !BLK_DEV_IDE_SATA && (SCSI_SATA_AHCI || SCSI_ATA_PIIX)
-> > > >  	default y
-> > > >
-> > > > +config SCSI_SATA_ACPI
-> > > > +	bool
-> > > > +	depends on SCSI_SATA && ACPI
-> > > > +	default y
-> > > > +
-> > >
-> > > Could you add some help text over here? At first glance I got the
-> > > impression this was a host driver that works through ACPI calls, but by
-> > > reading the rest of your patches it turns out it is a suspend/resume
-> > > helper.
-> >
-> > Something like this should already be enough:
-> >
-> >   This option enables support for SATA suspend/resume using ACPI.
-> >
+On Llu, 2006-01-16 at 23:46 +0100, Jens Axboe wrote:
 > > If you really need this enabled to be able to use suspend/resume at
 > > all, you could add a line like:
-> >
+> > 
 > >   It's safe to say Y. If you say N, you might get serious disk
 > >   corruption when you suspend your machine.
->
+> 
 > That's simply not true. If you say N (if you could), you could risk
 > having a non-responsive disk after resume. However, it would have been
 > synced a suspend time so you wont corrupt anything.
->
-> Maybe you don't know what the patch actually does. The main
-> suspend/resume support is in libata, all this adds is the ability to
-> retrieve the taskfiles that the BIOS/acpi thinks should be issued on
-> resume. That may be things like security unlocking the drive. There are
-> no data consistency issues involved.
 
-Right.  Some examples that I have seen are for performance (caching),
-power management options, and security.
+If you do not execute the ACPI taskfiles for the device and you are
+doing an ACPI suspend you are in completely undefined space. Whether it
+eats your disk or not is a question of probabilities only. Yes its
+unlikely but you are in undefined space so "won't corrupt anything"
+indicates an inappropriate level of certainty.
 
--- 
-~Randy
+Fortunately it is better than the old PATA layer where as far as I can
+tell if the BIOS resume restores the BIOS HPA setup you may actually end
+up doing more damage by running ACPI taskfiles as we don't appear to
+restore enough drive state.
+
+Alan
+
+
