@@ -1,57 +1,36 @@
-From: Jens Axboe <axboe@suse.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH 1/4] SATA ACPI build (applies to 2.6.16-git9)
-Date: Mon, 16 Jan 2006 16:44:50 +0100
-Message-ID: <20060116154450.GK3945@suse.de>
-References: <20060113224252.38d8890f.rdunlap@xenotime.net> <20060116123112.GZ3945@suse.de> <Pine.LNX.4.58.0601160736360.24990@shark.he.net>
+Date: Mon, 16 Jan 2006 15:51:50 +0000
+Message-ID: <1137426710.15553.0.camel@localhost.localdomain>
+References: <20060113224252.38d8890f.rdunlap@xenotime.net>
+	 <20060116123112.GZ3945@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:60260 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1751003AbWAPPmy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jan 2006 10:42:54 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0601160736360.24990@shark.he.net>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37032 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751034AbWAPPs2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Jan 2006 10:48:28 -0500
+In-Reply-To: <20060116123112.GZ3945@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, jgarzik <jgarzik@pobox.com>
+To: Jens Axboe <axboe@suse.de>
+Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, jgarzik <jgarzik@pobox.com>
 
-On Mon, Jan 16 2006, Randy.Dunlap wrote:
-> On Mon, 16 Jan 2006, Jens Axboe wrote:
+On Llu, 2006-01-16 at 13:31 +0100, Jens Axboe wrote:
+> On Fri, Jan 13 2006, Randy.Dunlap wrote:
+> > From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+> > 
+> > Add ata_acpi in Makefile and Kconfig.
+> > Add ACPI obj_handle.
+> > Add ata_acpi.c to libata kernel-doc template file.
 > 
-> > On Fri, Jan 13 2006, Randy.Dunlap wrote:
-> > > From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-> > >
-> > > Add ata_acpi in Makefile and Kconfig.
-> > > Add ACPI obj_handle.
-> > > Add ata_acpi.c to libata kernel-doc template file.
-> >
-> > Randy,
-> >
-> > Any chance you can add PATA support as well for this? Many of the
-> > notebooks out there with SATA controllers really have PATA devices
-> > behind a bridge, I think it's pretty much a pre-requisite for this to be
-> > considered complete that this is supported as well. The code should be
-> > the same, it just needs to lookup the right taskfiles. Right now on this
-> > T43, it finds nothing.
+> Randy,
 > 
-> I'll add that to my list but I don't yet think that it's quite
-> as simple as you make it sound...
+> Any chance you can add PATA support as well for this? 
 
-It might not be, I'm totally acpi clueless :-)
+It should just work with pata devices using libata.
 
-But the code factoring should look something like this:
-
-- Lookup taskfiles needed for resume (and suspend might need some,
-  too?). This step requires looking for sata and pata taskfiles listed,
-  so you'd need code for both.
-
-- Submit and check status of said taskfiles. This step is independent of
-  the drive type.
-
-So step 1 is the one that needs extending, how much work that is I
-dunno since I have no clue on the actual lookup or the acpi data.
-
--- 
-Jens Axboe
+Alan
 
