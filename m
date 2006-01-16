@@ -1,55 +1,44 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: Re: [PATCH 1/4] SATA ACPI build (applies to 2.6.16-git9)
-Date: Mon, 16 Jan 2006 15:07:13 +0100
-Message-ID: <20060116140713.GB18307@harddisk-recovery.com>
-References: <20060113224252.38d8890f.rdunlap@xenotime.net> <20060116115607.GA18307@harddisk-recovery.nl>
+From: "Malefactors G. Woodsier" <merlyn@googoodollsrock.com>
+Subject: Software
+Date: Mon, 16 Jan 2006 10:44:31 -0600
+Message-ID: <3970879517.20060116104431@googoodollsrock.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dtp.xs4all.nl ([80.126.206.180]:15445 "HELO abra2.bitwizard.nl")
-	by vger.kernel.org with SMTP id S1750791AbWAPOHP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jan 2006 09:07:15 -0500
-Content-Disposition: inline
-In-Reply-To: <20060116115607.GA18307@harddisk-recovery.nl>
+Received: from zeus2.kernel.org ([204.152.191.36]:9946 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1750988AbWAPPDC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jan 2006 10:03:02 -0500
+Received: from 141003192 (@[222.245.120.200])
+	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id k0GF0TbF025533
+	for <linux-ide@vger.kernel.org>; Mon, 16 Jan 2006 07:02:50 -0800
+Received: from googoodollsrock.com (145338552 [144784728])
+	by globalunolog.com (Qmailv1) with ESMTP id DB9D3AC3EA
+	for <linux-ide@vger.kernel.org>; Mon, 16 Jan 2006 10:44:31 -0600
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, jgarzik <jgarzik@pobox.com>
+To: Linux <linux-ide@vger.kernel.org>
 
-On Mon, Jan 16, 2006 at 12:56:07PM +0100, Erik Mouw wrote:
-> On Fri, Jan 13, 2006 at 10:42:52PM -0800, Randy.Dunlap wrote:
-> > --- linux-2615-g9.orig/drivers/scsi/Kconfig
-> > +++ linux-2615-g9/drivers/scsi/Kconfig
-> > @@ -599,6 +599,11 @@ config SCSI_SATA_INTEL_COMBINED
-> >  	depends on IDE=y && !BLK_DEV_IDE_SATA && (SCSI_SATA_AHCI || SCSI_ATA_PIIX)
-> >  	default y
-> >  
-> > +config SCSI_SATA_ACPI
-> > +	bool
-> > +	depends on SCSI_SATA && ACPI
-> > +	default y
-> > +
-> 
-> Could you add some help text over here? At first glance I got the
-> impression this was a host driver that works through ACPI calls, but by
-> reading the rest of your patches it turns out it is a suspend/resume
-> helper.
+Photoshop, Windows, Office. CHEAP. 
+Software Compatibility....ain't it great? 
 
-Something like this should already be enough:
+New software on our site:
 
-  This option enables support for SATA suspend/resume using ACPI.
+Creative Suite Standard (3 CD) - $129.95
+Fireworks MX 2004 - $69.95
+Painter 8 - $59.95
+Windows NT 4.0 Server - $49.95
+Creative Suite Standard (3 CD) - $129.95
+Painter 8 - $59.95
+Photoshop CS $99.95
+Exchange 2003 Enterprise Server - $69.95
+Office 97 SR2 - $49.95
+FileMaker 7.0 Professional - $69.95
+WordPerfect Office 10 - $69.95
+Picture It Premium 9 - $59.95
+Borland Delphi 7 Enterprise Edition (2CD) - $69.95
+Works 7 - $69.95
 
-If you really need this enabled to be able to use suspend/resume at
-all, you could add a line like:
+Our site:
+http://worldyli.com
 
-  It's safe to say Y. If you say N, you might get serious disk
-  corruption when you suspend your machine.
-
-(Insert extra warnings about wolves and bears at will ;)
-
-
-Erik
-
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
