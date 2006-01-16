@@ -1,47 +1,43 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH 1/4] SATA ACPI build (applies to 2.6.16-git9)
-Date: Mon, 16 Jan 2006 08:08:33 -0800 (PST)
-Message-ID: <Pine.LNX.4.58.0601160807470.24990@shark.he.net>
-References: <20060113224252.38d8890f.rdunlap@xenotime.net> <20060116123112.GZ3945@suse.de>
- <1137426710.15553.0.camel@localhost.localdomain> <Pine.LNX.4.58.0601160757480.24990@shark.he.net>
- <20060116160224.GM3945@suse.de>
+From: Helmut Toplitzer <pvrusb2@toplitzer.net>
+Subject: Re: BUG?: VIA IDE transfer-rate problem
+Date: Mon, 16 Jan 2006 18:49:59 +0100
+Message-ID: <200601161849.59629.pvrusb2@toplitzer.net>
+References: <200601131909.07981.pvrusb2@toplitzer.net> <200601131910.11382.pvrusb2@toplitzer.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751084AbWAPQIj@vger.kernel.org>
-In-Reply-To: <20060116160224.GM3945@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, Alan Cox <alan@lxorguk.ukuu.org.uk>, ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, jgarzik <jgarzik@pobox.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from toplitzer.net ([83.151.30.110]:64476 "EHLO toplitzer.net")
+	by vger.kernel.org with ESMTP id S1750841AbWAPRuF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jan 2006 12:50:05 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by toplitzer.net (SX Mail) with ESMTP id 811DABC8B
+	for <linux-ide@vger.kernel.org>; Mon, 16 Jan 2006 18:49:38 +0100 (CET)
+Received: from [10.0.0.140] (pc057-adsl.adsl.uni-klu.ac.at [143.205.236.57])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(No client certificate requested)
+	by toplitzer.net (SX Mail) with ESMTP id D9BB3BC40
+	for <linux-ide@vger.kernel.org>; Mon, 16 Jan 2006 18:49:30 +0100 (CET)
+In-Reply-To: <200601131910.11382.pvrusb2@toplitzer.net>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Mon, 16 Jan 2006, Jens Axboe wrote:
 
-> On Mon, Jan 16 2006, Randy.Dunlap wrote:
-> > On Mon, 16 Jan 2006, Alan Cox wrote:
-> >
-> > > On Llu, 2006-01-16 at 13:31 +0100, Jens Axboe wrote:
-> > > > On Fri, Jan 13 2006, Randy.Dunlap wrote:
-> > > > > From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-> > > > >
-> > > > > Add ata_acpi in Makefile and Kconfig.
-> > > > > Add ACPI obj_handle.
-> > > > > Add ata_acpi.c to libata kernel-doc template file.
-> > > >
-> > > > Randy,
-> > > >
-> > > > Any chance you can add PATA support as well for this?
-> > >
-> > > It should just work with pata devices using libata.
-> >
-> > ACPI namespace is different for PATA and SATA devices.
-> > Once the device is found in the namespace, it may be very
-> > similar (or it may not, I dunno yet).
->
-> The naming seems different (eg IDEC -> PRID on SATA, IDE0 -> MSTR on
-> PATA).
+HELP!
 
-The names are just placeholders.  They can't be used by any
-source code.  They could just as well be ASDF and QWER.
+No one answered my question, that's why I'm asking once again:
+
+Is there someone who can tell me what causes the problem
+or at least tell me whom I should ask about it?
+http://marc.theaimsgroup.com/?l=linux-ide&m=113717636923888&w=2
+
+
+TIA
+Helmut
 
 -- 
-~Randy
+My GNUpg fingerprint http://www.gnupg.org
+4563 F4FB 0B7E 8698 53CD  00E9 E319 35BD 6A91 1656
