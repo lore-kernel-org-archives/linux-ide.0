@@ -1,222 +1,113 @@
-From: Diego Calleja <diegocg@gmail.com>
-Subject: Re: [PATCH] documentation typo
-Date: Sun, 15 Jan 2006 23:24:03 +0100
-Message-ID: <20060115232403.a8f970d1.diegocg@gmail.com>
-References: <20060105132014.d72f61db.diegocg@gmail.com>
-	<58cb370e0601050643q3147cfc8g46e3d17990b196a8@mail.gmail.com>
-	<20060113171057.3541db55.diegocg@gmail.com>
-	<58cb370e0601130817i5f65c93fx469a49259b86d592@mail.gmail.com>
+From: James McMechan <James_McMechan@hotmail.com>
+Subject: problems with siimage.c
+Date: Sun, 15 Jan 2006 17:43:51 -0800
+Message-ID: <200601151743.52068.James_McMechan@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.197]:42219 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750960AbWAOWYz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Jan 2006 17:24:55 -0500
-Received: by uproxy.gmail.com with SMTP id s2so466919uge
-        for <linux-ide@vger.kernel.org>; Sun, 15 Jan 2006 14:24:53 -0800 (PST)
-In-Reply-To: <58cb370e0601130817i5f65c93fx469a49259b86d592@mail.gmail.com>
+Received: from mail2.sea.safepages.com ([216.127.148.222]:10448 "EHLO
+	mail2.sea.safepages.com") by vger.kernel.org with ESMTP
+	id S932158AbWAPBzr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 15 Jan 2006 20:55:47 -0500
+Received: from [192.168.1.46] (pool-71-105-49-236.lsanca.dsl-w.verizon.net [71.105.49.236])
+	by mail2.sea.safepages.com (Postfix) with ESMTP id 975A8CC033
+	for <linux-ide@vger.kernel.org>; Mon, 16 Jan 2006 01:44:55 +0000 (GMT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-El Fri, 13 Jan 2006 17:17:33 +0100,
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> escribi=F3:
+I have googled for this but it does not seem to have any resolution I can 
+find
 
-> Well, examples are fine but some explanation would be needed.
-> I'll wait for revised version (please also add that you need
-> CONFIG_HOTPLUG=3Dy for using sysfs interface - this is due
-> one of the recent changes in the kernel driver core).
+When I do a modprobe siimage if I have a drive on the second channel of the 
+last card I get several "Disabling IRQ #10"s on the display.
 
-Of, this is not 100% perfect but it's much better:
+What I am guessing happens is that the first channel is setup and then the 
+interrupts are enabled but the second channel is not yet set up, or does 
+not have its interrupt service routine registered yet.
 
-- I added a CONFIG_HOTPLUG dependeny for ide-scsi. If the sysfs interfa=
-ce
-  is the Right Way of doing it and the boot parameters are going to be
-  removed some day, it has sense no?
+Then the second channel has a interrupt that is never serviced the irq is 
+disabled and then the first channel fails with lost interrupt.
 
-- I "deprecated" the boot parameters by adding a printk and a entry to
-  feature-removal-schedule.txt. I don't know if this is what you want
-  but I though it was the right thing
+Note I am using a standard IDE disk not a SATA disk, and the other 
+controllers start fine, I have swaped disks, cables and controllers and 
+the problem remains, I am guessing the BIOS does not finish setting up 
+this controller and the linux driver does not either.
 
-Index: test/Documentation/ide.txt
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- test.orig/Documentation/ide.txt	2006-01-13 16:58:28.000000000 +0100
-+++ test/Documentation/ide.txt	2006-01-15 23:08:34.000000000 +0100
-@@ -244,9 +244,15 @@
-=20
-  "hdx=3Dbswap"		: same as above..........
-=20
-- "hdx=3Dscsi"		: the return of the ide-scsi flag, this is useful for
-+ "hdx=3Dide-scsi"		: the return of the ide-scsi flag, this is useful f=
-or
-  			  allowing ide-floppy, ide-tape, and ide-cdrom|writers
-  			  to use ide-scsi emulation on a device specific option.
-+			  NOTE: This boot option is deprecated (*) and may be
-+			  removed in the future
-+
-+ "hdx=3Dscsi"		: This option tells IDE drivers not to bind to device
-+			  "hdx". NOTE: This boot option is deprecated (*) and
-+			  may be removed in the future.
-=20
-  "idebus=3Dxx"		: inform IDE driver of VESA/PCI bus speed in MHz,
- 			  where "xx" is between 20 and 66 inclusive,
-@@ -317,8 +323,44 @@
-=20
- Everything else is rejected with a "BAD OPTION" message.
-=20
-+
-+(*): hdx=3Dide-scsi and hdx=3Dscsi boot options: These two boot option=
-s have been
-+deprecated by a new sysfs interface, which allows to bind/unbind devic=
-es to
-+drivers dinamically. Notice that you need to enable CONFIG_HOTPLUG (Ho=
-tplug
-+support) to use this:
-+
-+For every IDE bus in the system, there's a /sys/devices/$PCIBUS/$PCIID=
-/idex/
-+subdirectory (where $PCIBUS is the identifier of the PCI bus, somethin=
-g like
-+"pci0000:00", and $PCIID is the PCI ID of the ide bus device - the sam=
-e you get
-+when you run lspci - something like "0000:00:0f.1". idex is ide0, ide1=
-, etc)
-+
-+In each one of those subdirectories, there's another subdirectory with=
- a name
-+like "0.0", "1.0", etc: The first number identifies the IDE bus (ide0,=
- ide1
-+etc) and the second one the device connected at that bus. That subdire=
-ctory
-+has some information about your device and more subdirectories pointin=
-g to
-+other places in the sysfs tree where you can find information related =
-with
-+that device. You can also get those names by running "systool -b ide".
-+
-+The ide-disk, ide-cdrom and ide-scsi drivers also have their own sysfs
-+subdirectory at /sys/bus/ide/drivers/ide-disk/, /sys/bus/ide/drivers/i=
-de-scsi/,
-+etc. In each one of those subdirectories there's a bind and a unbind f=
-ile. The
-+way to bind/unbind a device to a driver dinamically is to write the "n=
-ame"
-+of those files; ej: echo "1.0" > /sys/bus/ide/drivers/ide-scsi/bind to=
- bind
-+the device 1.0 to the ide-scsi driver. A symlink named "1.0" will appe=
-ar in the
-+ide-scsi/ directory pointing to the /sys/devices/$PCIBUS/$PCIID/ide1/1=
-=2E0/
-+directory. In that directory, you'll also "driver" symlink pointing ba=
-ck
-+to the ide-scsi subdirectory. Alternatively, you can see the current s=
-tate
-+of all the ide interfaces by running "systools -b ide -D"
-+
-+While this is more complex than adding a boot parameter, this allows t=
-o
-+change the device/driver bindings dynamically so no static boot parame=
-ters
-+are needed (which is useful for distros so they can run in different
-+hardware configurations where devices are detected dinamically and
-+binded/unbinded to different interfaces dinamically)
-+
- =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D
-=20
-+
- IDE ATAPI streaming tape driver
- -------------------------------
-=20
-Index: test/drivers/ide/ide.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- test.orig/drivers/ide/ide.c	2006-01-13 02:40:44.000000000 +0100
-+++ test/drivers/ide/ide.c	2006-01-15 22:00:14.000000000 +0100
-@@ -1554,6 +1554,9 @@
- 		hwif =3D &ide_hwifs[hw];
- 		drive =3D &hwif->drives[unit];
- 		if (strncmp(s + 4, "ide-", 4) =3D=3D 0) {
-+			printk("hd%c: \"hdx=3Dide-scsi\" boot parameter has been
-+			    obsoleted by a better mechanism and may be removed
-+			    in the future, check Documentation/ide.txt\n", unit);
- 			strlcpy(drive->driver_req, s + 4, sizeof(drive->driver_req));
- 			goto done;
- 		}
-@@ -1593,6 +1596,10 @@
- 				drive->sect0 =3D 63;
- 				goto done;
- 			case -14: /* "scsi" */
-+				printk("hd%c: \"hdx=3Dscsi\" boot parameter has
-+				    been obsoleted by a better mechanism and may
-+				    be removed in the future, check
-+				    Documentation/ide.txt\n", unit);
- 				drive->scsi =3D 1;
- 				goto done;
- 			case 3: /* cyl,head,sect */
-Index: test/Documentation/feature-removal-schedule.txt
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- test.orig/Documentation/feature-removal-schedule.txt	2006-01-13 02:=
-40:41.000000000 +0100
-+++ test/Documentation/feature-removal-schedule.txt	2006-01-15 22:07:28=
-=2E000000000 +0100
-@@ -139,3 +139,12 @@
- 	brother on Alchemy SOCs.  The loss of features is not considered an
- 	issue.
- Who:	Ralf Baechle <ralf@linux-mips.org>
-+
-+---------------------------
-+
-+What:	hdx=3Dide-scsi/hdx=3Dscsi boot parameters
-+When:	June 2006
-+Why:	In current kernels there's a sysfs interface to bind/unbind devic=
-es
-+	to drivers dynamically which replaces those parameters, see
-+	Documentation/ide.txt
-+Who:	Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Index: test/drivers/ide/Kconfig
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- test.orig/drivers/ide/Kconfig	2006-01-13 02:40:44.000000000 +0100
-+++ test/drivers/ide/Kconfig	2006-01-15 23:13:41.000000000 +0100
-@@ -234,7 +234,7 @@
-=20
- config BLK_DEV_IDESCSI
- 	tristate "SCSI emulation support"
--	depends on SCSI
-+	depends on SCSI && HOTPLUG
- 	---help---
- 	  WARNING: ide-scsi is no longer needed for cd writing applications!
- 	  The 2.6 kernel supports direct writing to ide-cd, which eliminates
-@@ -249,12 +249,10 @@
- 	  driver has been written (for example, an ATAPI PD-CD drive);
- 	  you can then use this emulation together with an appropriate SCSI
- 	  device driver. In order to do this, say Y here and to "SCSI support=
-"
--	  and "SCSI generic support", below. You must then provide the kernel
--	  command line "hdx=3Dide-scsi" (try "man bootparam" or see the
--	  documentation of your boot loader (lilo or loadlin) about how to
--	  pass options to the kernel at boot time) for devices if you want th=
-e
--	  native EIDE sub-drivers to skip over the native support, so that
--	  this SCSI emulation can be used instead.
-+	  and "SCSI generic support", below. To force a device to use this
-+	  SCSI emulation interface you can use sysfs to do it at runtime as
-+	  explained in <file:Documentation/ide.txt> (notice that this needs
-+	  CONFIG_HOTPLUG)
-=20
- 	  Note that this option does NOT allow you to attach SCSI devices to =
-a
- 	  box that doesn't have a SCSI host adapter installed.
+here are what I think is the interesting bits of 8 __report_bad_irq dumps
+they are in order
+1) Probing IDE interface ide8...
+   hdq: Maxtor 6B200R0, ATA DISK drive
+   irq 10: nobody cared!
+2) Disabling IRQ #10
+   ide8 at 0xd088a080-0xd088a087,0xd088a08a on irq 10
+   hdq: max request size: 64KiB
+   hdq: lost interrupt
+   irq 10: nobody cared!
+3) Disabling IRQ #10
+   hdq: lost interrupt
+   irq 10: nobody cared!
+4) Disabling IRQ #10
+   hdq: lost interrupt
+   irq 10: nobody cared!
+5) Disabling IRQ #10
+   hdq: lost interrupt
+   irq 10: nobody cared!
+6) Disabling IRQ #10
+   hdq: 398297088 sectors (203928 MB) w/16384KiB Cache, CHS=24792/255/63, 
+UDMA(133)
+   hdq: lost interrupt
+   irq 10: nobody cared!
+7) Disabling IRQ #10
+   hdq: cache flushes supported
+   hdq:<4>hdq: dma_timer_expiry: dma status == 0x24
+   hdq: DMA interrupt recovery
+   hdq: lost interrupt
+   irq 10: nobody cared!
+8) Disabling IRQ #10
+   unknown partition table
+   hdq: lost interrupt
+   irq 10: nobody cared!
 
+And then it tries the second channel which comes right up no problems...
+here is the fist one with its backtrace
+
+SiI680: IDE controller at PCI slot 0000:00:0b.0
+PCI: Found IRQ 10 for device 0000:00:0b.0
+SiI680: chipset revision 2
+SiI680: BASE CLOCK == 133
+SiI680: 100% native mode on irq 10
+ide8: MMIO-DMA , BIOS settings: hdq:pio, hdr:pio
+ide9: MMIO-DMA , BIOS settings: hds:pio, hdt:pio
+Probing IDE interface ide8...
+hdq: Maxtor 6B200R0, ATA DISK drive
+irq 10: nobody cared!
+[<c01383aa>] __report_bad_irq+0x2a/0x90
+[<c0137ea0>] handle_IRQ_event+0[<c02339d9>] init_irq+0x149/0x3d0
+[<c022fbe0>] ide_intr+0x0/0x130
+[<c023412c>] hwif_init+0xdc/0x250
+[<c023690f>] do_ide_setup_pci_device+0x8f/0x160
+[<d088e780>] siimage_fixup+0x0/0x50 [siimage]
+[<c023364c>] probe_hwif_init_with_fixup+0x2c/0x90
+[<c0236a43>] ide_setup_pci_device+0x63/0xb0
+[<d088e780>] siimage_fixup+0x0/0x50 [siimage]
+[<c01c2e82>] pci_device_probe_static+0x52/0x70
+[<c01c2edb>] __pci_device_probe+0x3b/0x50
+[<c01c2f1c>] pci_device_probe+0x2c/0x50
+[<c0217e6f>] driver_probe_device+0x2f/0x80
+[<c0217fb9>] driver_attach+0x59/0x90
+[<c02184b8>] bus_add_driver+0x98/0xd0
+[<c01c31cb>] pci_register_driver+0x6b/0x90
+[<d088ea2f>] siimage_ide_init+0xf/0x14 [siimage]
+[<c0136077>] sys_init_module+0x137/0x1c0
+[<c0103095>] syscall_call+0x7/0xb
+handlers:
+[<c022fbe0>] (ide_intr+0x0/0x130)
+Disabling IRQ #10
+ide8 at 0xd088a080-0xd088a087,0xd088a08a on irq 10
+hdq: max request size: 64KiB
+hdq: lost interrupt
+irq 10: nobody cared!
