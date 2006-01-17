@@ -1,70 +1,52 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: [PATCH 3/3] libata-acpi: update Makefile & Kconfig
-Date: Tue, 17 Jan 2006 12:14:06 -0800
-Message-ID: <20060117121406.3053913a.randy_d_dunlap@linux.intel.com>
+From: James McMechan <James_McMechan@hotmail.com>
+Subject: Re: problems with siimage.c
+Date: Tue, 17 Jan 2006 12:45:10 -0800
+Message-ID: <200601171245.10163.James_McMechan@hotmail.com>
+References: <200601151743.52068.James_McMechan@hotmail.com> <58cb370e0601170434w545671a9l7f3fc4df472bad07@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964807AbWAQUNi@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mathieu =?ISO-8859-1?B?QulyYXJk?= <Mathieu.Berard@crans.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, jgarzik <jgarzik@pobox.com>, akpm <akpm@osdl.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail10.mdx.safepages.com ([216.127.133.33]:45575 "EHLO
+	mail10.mdx.safepages.com") by vger.kernel.org with ESMTP
+	id S932436AbWAQUpK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Jan 2006 15:45:10 -0500
+In-Reply-To: <58cb370e0601170434w545671a9l7f3fc4df472bad07@mail.gmail.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+On Tuesday 17 January 2006 04:34 am, Bartlomiej Zolnierkiewicz wrote:
+....
+> > irq 10: nobody cared!
+> 
+> Part about probing ide9 is missing from the above log.
+> 
+> What kernel version are you using?
+> 
+> Please fill a bug at http://bugzilla.kernel.org and at least provide some
+> minimal useful data (full dmesg, 'cat /proc/interrupts' output, kernel 
+config).
+> 
+> Bartlomiej
+Sorry about that, it occured on 2.6.12.5 2.6.14.2 and a fresh kernel.org 
+2.6.15.1 kernel 
+ide9 just had after all 8 copies of __report_bad_irq
+Probing IDE interface ide9...
+hds: Maxtor 6B200R0, ATA DISK drive
+ide9 at 0xd08820c0-0xd08820c7,0xd08820ca on irq 10
+hds: max request size: 64KiB
+hds: 398297088 sectors (203928 MB) w/16384KiB Cache, CHS=24792/255/63, 
+UDMA(133)
+hds: cache flushes supported
+ hds: unknown partition table
 
-Simplify Makefile.
-Add Kconfig help.
+and the "Disabling IRQ #10" messages did not occur after that point.
 
-Changelog addition:
+It is now bug 5911
+dmesg, /proc/interrupts, zcat /proc/config.gz included
 
-This option adds support for SATA-related ACPI objects.
-These ACPI objects add the ability to retrieve taskfiles
-from the ACPI BIOS and write them to the disk controller.
-These objects may be related to performance, security,
-power management, or other areas.
-You can disable this at kernel boot time by using the
-option 'libata.noacpi'.
-
-Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
----
- drivers/scsi/Kconfig  |    8 ++++++++
- drivers/scsi/Makefile |    6 ++----
- 2 files changed, 10 insertions(+), 4 deletions(-)
-
---- linux-2615-mm4.orig/drivers/scsi/Makefile
-+++ linux-2615-mm4/drivers/scsi/Makefile
-@@ -166,10 +166,8 @@ ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
- CFLAGS_ncr53c8xx.o	:= $(ncr53c8xx-flags-y) $(ncr53c8xx-flags-m)
- zalon7xx-objs	:= zalon.o ncr53c8xx.o
- NCR_Q720_mod-objs	:= NCR_Q720.o ncr53c8xx.o
--libata-objs	:= libata-core.o libata-scsi.o
--ifeq ($(CONFIG_SCSI_SATA_ACPI),y)
--  libata-objs	+= libata-acpi.o
--endif
-+libata-y	:= libata-core.o libata-scsi.o
-+libata-$(CONFIG_SCSI_SATA_ACPI) += libata-acpi.o
- oktagon_esp_mod-objs	:= oktagon_esp.o oktagon_io.o
- 
- # Files generated that shall be removed upon make clean
---- linux-2615-mm4.orig/drivers/scsi/Kconfig
-+++ linux-2615-mm4/drivers/scsi/Kconfig
-@@ -620,6 +620,14 @@ config SCSI_SATA_ACPI
- 	bool
- 	depends on SCSI_SATA && ACPI
- 	default y
-+	help
-+	  This option adds support for SATA-related ACPI objects.
-+	  These ACPI objects add the ability to retrieve taskfiles
-+	  from the ACPI BIOS and write them to the disk controller.
-+	  These objects may be related to performance, security,
-+	  power management, or other areas.
-+	  You can disable this at kernel boot time by using the
-+	  option 'libata.noacpi'.
- 
- config SCSI_BUSLOGIC
- 	tristate "BusLogic SCSI support"
-
-
----
-~Randy [MPG MPAD MSAE SSA]
+James McMechan
