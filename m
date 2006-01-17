@@ -1,59 +1,124 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [PATCH 1/4] SATA ACPI build (applies to 2.6.16-git9)
-Date: Tue, 17 Jan 2006 12:27:36 +0100
-Message-ID: <20060117112736.GK29663@stusta.de>
-References: <20060113224252.38d8890f.rdunlap@xenotime.net> <20060116115607.GA18307@harddisk-recovery.nl> <20060116140713.GB18307@harddisk-recovery.com> <20060116210418.GG29663@stusta.de> <20060117090101.GA25963@harddisk-recovery.nl>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: problems with siimage.c
+Date: Tue, 17 Jan 2006 13:34:22 +0100
+Message-ID: <58cb370e0601170434w545671a9l7f3fc4df472bad07@mail.gmail.com>
+References: <200601151743.52068.James_McMechan@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:63506 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S932401AbWAQL1f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Jan 2006 06:27:35 -0500
+Received: from uproxy.gmail.com ([66.249.92.207]:1924 "EHLO uproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932454AbWAQMeZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Jan 2006 07:34:25 -0500
+Received: by uproxy.gmail.com with SMTP id m3so987221uge
+        for <linux-ide@vger.kernel.org>; Tue, 17 Jan 2006 04:34:23 -0800 (PST)
+In-Reply-To: <200601151743.52068.James_McMechan@hotmail.com>
 Content-Disposition: inline
-In-Reply-To: <20060117090101.GA25963@harddisk-recovery.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Erik Mouw <erik@harddisk-recovery.com>
-Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, jgarzik <jgarzik@pobox.com>
+To: James McMechan <James_McMechan@hotmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Tue, Jan 17, 2006 at 10:01:01AM +0100, Erik Mouw wrote:
-> On Mon, Jan 16, 2006 at 10:04:18PM +0100, Adrian Bunk wrote:
-> > On Mon, Jan 16, 2006 at 03:07:13PM +0100, Erik Mouw wrote:
-> > > On Mon, Jan 16, 2006 at 12:56:07PM +0100, Erik Mouw wrote:
-> > > > Could you add some help text over here? At first glance I got the
-> > > > impression this was a host driver that works through ACPI calls, but by
-> > > > reading the rest of your patches it turns out it is a suspend/resume
-> > > > helper.
-> > > 
-> > > Something like this should already be enough:
-> > > 
-> > >   This option enables support for SATA suspend/resume using ACPI.
-> > > 
-> > > If you really need this enabled to be able to use suspend/resume at
-> > > all, you could add a line like:
-> > > 
-> > >   It's safe to say Y. If you say N, you might get serious disk
-> > >   corruption when you suspend your machine.
-> > >...
-> > 
-> > Why?
-> > 
-> > This is not a user-visible option...
-> 
-> Just curious, how do you see it's not user visible?
+On 1/16/06, James McMechan <James_McMechan@hotmail.com> wrote:
+> I have googled for this but it does not seem to have any resolution I can
+> find
+>
+> When I do a modprobe siimage if I have a drive on the second channel of the
+> last card I get several "Disabling IRQ #10"s on the display.
+>
+> What I am guessing happens is that the first channel is setup and then the
+> interrupts are enabled but the second channel is not yet set up, or does
+> not have its interrupt service routine registered yet.
+>
+> Then the second channel has a interrupt that is never serviced the irq is
+> disabled and then the first channel fails with lost interrupt.
+>
+> Note I am using a standard IDE disk not a SATA disk, and the other
+> controllers start fine, I have swaped disks, cables and controllers and
+> the problem remains, I am guessing the BIOS does not finish setting up
+> this controller and the linux driver does not either.
+>
+> here are what I think is the interesting bits of 8 __report_bad_irq dumps
+> they are in order
+> 1) Probing IDE interface ide8...
+>    hdq: Maxtor 6B200R0, ATA DISK drive
+>    irq 10: nobody cared!
+> 2) Disabling IRQ #10
+>    ide8 at 0xd088a080-0xd088a087,0xd088a08a on irq 10
+>    hdq: max request size: 64KiB
+>    hdq: lost interrupt
+>    irq 10: nobody cared!
+> 3) Disabling IRQ #10
+>    hdq: lost interrupt
+>    irq 10: nobody cared!
+> 4) Disabling IRQ #10
+>    hdq: lost interrupt
+>    irq 10: nobody cared!
+> 5) Disabling IRQ #10
+>    hdq: lost interrupt
+>    irq 10: nobody cared!
+> 6) Disabling IRQ #10
+>    hdq: 398297088 sectors (203928 MB) w/16384KiB Cache, CHS=24792/255/63,
+> UDMA(133)
+>    hdq: lost interrupt
+>    irq 10: nobody cared!
+> 7) Disabling IRQ #10
+>    hdq: cache flushes supported
+>    hdq:<4>hdq: dma_timer_expiry: dma status == 0x24
+>    hdq: DMA interrupt recovery
+>    hdq: lost interrupt
+>    irq 10: nobody cared!
+> 8) Disabling IRQ #10
+>    unknown partition table
+>    hdq: lost interrupt
+>    irq 10: nobody cared!
+>
+> And then it tries the second channel which comes right up no problems...
+> here is the fist one with its backtrace
+>
+> SiI680: IDE controller at PCI slot 0000:00:0b.0
+> PCI: Found IRQ 10 for device 0000:00:0b.0
+> SiI680: chipset revision 2
+> SiI680: BASE CLOCK == 133
+> SiI680: 100% native mode on irq 10
+> ide8: MMIO-DMA , BIOS settings: hdq:pio, hdr:pio
+> ide9: MMIO-DMA , BIOS settings: hds:pio, hdt:pio
+> Probing IDE interface ide8...
+> hdq: Maxtor 6B200R0, ATA DISK drive
+> irq 10: nobody cared!
+> [<c01383aa>] __report_bad_irq+0x2a/0x90
+> [<c0137ea0>] handle_IRQ_event+0[<c02339d9>] init_irq+0x149/0x3d0
+> [<c022fbe0>] ide_intr+0x0/0x130
+> [<c023412c>] hwif_init+0xdc/0x250
+> [<c023690f>] do_ide_setup_pci_device+0x8f/0x160
+> [<d088e780>] siimage_fixup+0x0/0x50 [siimage]
+> [<c023364c>] probe_hwif_init_with_fixup+0x2c/0x90
+> [<c0236a43>] ide_setup_pci_device+0x63/0xb0
+> [<d088e780>] siimage_fixup+0x0/0x50 [siimage]
+> [<c01c2e82>] pci_device_probe_static+0x52/0x70
+> [<c01c2edb>] __pci_device_probe+0x3b/0x50
+> [<c01c2f1c>] pci_device_probe+0x2c/0x50
+> [<c0217e6f>] driver_probe_device+0x2f/0x80
+> [<c0217fb9>] driver_attach+0x59/0x90
+> [<c02184b8>] bus_add_driver+0x98/0xd0
+> [<c01c31cb>] pci_register_driver+0x6b/0x90
+> [<d088ea2f>] siimage_ide_init+0xf/0x14 [siimage]
+> [<c0136077>] sys_init_module+0x137/0x1c0
+> [<c0103095>] syscall_call+0x7/0xb
+> handlers:
+> [<c022fbe0>] (ide_intr+0x0/0x130)
+> Disabling IRQ #10
+> ide8 at 0xd088a080-0xd088a087,0xd088a08a on irq 10
+> hdq: max request size: 64KiB
+> hdq: lost interrupt
+> irq 10: nobody cared!
 
-There's neither a "prompt" line nor a string after the "bool".
+Part about probing ide9 is missing from the above log.
 
-> Erik
+What kernel version are you using?
 
-cu
-Adrian
+Please fill a bug at http://bugzilla.kernel.org and at least provide some
+minimal useful data (full dmesg, 'cat /proc/interrupts' output, kernel config).
 
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Bartlomiej
