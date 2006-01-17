@@ -1,124 +1,35 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: problems with siimage.c
-Date: Tue, 17 Jan 2006 13:34:22 +0100
-Message-ID: <58cb370e0601170434w545671a9l7f3fc4df472bad07@mail.gmail.com>
-References: <200601151743.52068.James_McMechan@hotmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [patch 1/2] ata_piix: add Intel ICH8 device IDs
+Date: Tue, 17 Jan 2006 07:53:26 -0500
+Message-ID: <43CCE8C6.4010103@pobox.com>
+References: <200601170526.k0H5QpuM026968@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.207]:1924 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932454AbWAQMeZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Jan 2006 07:34:25 -0500
-Received: by uproxy.gmail.com with SMTP id m3so987221uge
-        for <linux-ide@vger.kernel.org>; Tue, 17 Jan 2006 04:34:23 -0800 (PST)
-In-Reply-To: <200601151743.52068.James_McMechan@hotmail.com>
-Content-Disposition: inline
+Received: from mail.dvmed.net ([216.237.124.58]:37802 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932468AbWAQMxd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2006 07:53:33 -0500
+In-Reply-To: <200601170526.k0H5QpuM026968@shell0.pdx.osdl.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James McMechan <James_McMechan@hotmail.com>
-Cc: linux-ide@vger.kernel.org
+To: akpm@osdl.org, jason.d.gaston@intel.com
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On 1/16/06, James McMechan <James_McMechan@hotmail.com> wrote:
-> I have googled for this but it does not seem to have any resolution I can
-> find
->
-> When I do a modprobe siimage if I have a drive on the second channel of the
-> last card I get several "Disabling IRQ #10"s on the display.
->
-> What I am guessing happens is that the first channel is setup and then the
-> interrupts are enabled but the second channel is not yet set up, or does
-> not have its interrupt service routine registered yet.
->
-> Then the second channel has a interrupt that is never serviced the irq is
-> disabled and then the first channel fails with lost interrupt.
->
-> Note I am using a standard IDE disk not a SATA disk, and the other
-> controllers start fine, I have swaped disks, cables and controllers and
-> the problem remains, I am guessing the BIOS does not finish setting up
-> this controller and the linux driver does not either.
->
-> here are what I think is the interesting bits of 8 __report_bad_irq dumps
-> they are in order
-> 1) Probing IDE interface ide8...
->    hdq: Maxtor 6B200R0, ATA DISK drive
->    irq 10: nobody cared!
-> 2) Disabling IRQ #10
->    ide8 at 0xd088a080-0xd088a087,0xd088a08a on irq 10
->    hdq: max request size: 64KiB
->    hdq: lost interrupt
->    irq 10: nobody cared!
-> 3) Disabling IRQ #10
->    hdq: lost interrupt
->    irq 10: nobody cared!
-> 4) Disabling IRQ #10
->    hdq: lost interrupt
->    irq 10: nobody cared!
-> 5) Disabling IRQ #10
->    hdq: lost interrupt
->    irq 10: nobody cared!
-> 6) Disabling IRQ #10
->    hdq: 398297088 sectors (203928 MB) w/16384KiB Cache, CHS=24792/255/63,
-> UDMA(133)
->    hdq: lost interrupt
->    irq 10: nobody cared!
-> 7) Disabling IRQ #10
->    hdq: cache flushes supported
->    hdq:<4>hdq: dma_timer_expiry: dma status == 0x24
->    hdq: DMA interrupt recovery
->    hdq: lost interrupt
->    irq 10: nobody cared!
-> 8) Disabling IRQ #10
->    unknown partition table
->    hdq: lost interrupt
->    irq 10: nobody cared!
->
-> And then it tries the second channel which comes right up no problems...
-> here is the fist one with its backtrace
->
-> SiI680: IDE controller at PCI slot 0000:00:0b.0
-> PCI: Found IRQ 10 for device 0000:00:0b.0
-> SiI680: chipset revision 2
-> SiI680: BASE CLOCK == 133
-> SiI680: 100% native mode on irq 10
-> ide8: MMIO-DMA , BIOS settings: hdq:pio, hdr:pio
-> ide9: MMIO-DMA , BIOS settings: hds:pio, hdt:pio
-> Probing IDE interface ide8...
-> hdq: Maxtor 6B200R0, ATA DISK drive
-> irq 10: nobody cared!
-> [<c01383aa>] __report_bad_irq+0x2a/0x90
-> [<c0137ea0>] handle_IRQ_event+0[<c02339d9>] init_irq+0x149/0x3d0
-> [<c022fbe0>] ide_intr+0x0/0x130
-> [<c023412c>] hwif_init+0xdc/0x250
-> [<c023690f>] do_ide_setup_pci_device+0x8f/0x160
-> [<d088e780>] siimage_fixup+0x0/0x50 [siimage]
-> [<c023364c>] probe_hwif_init_with_fixup+0x2c/0x90
-> [<c0236a43>] ide_setup_pci_device+0x63/0xb0
-> [<d088e780>] siimage_fixup+0x0/0x50 [siimage]
-> [<c01c2e82>] pci_device_probe_static+0x52/0x70
-> [<c01c2edb>] __pci_device_probe+0x3b/0x50
-> [<c01c2f1c>] pci_device_probe+0x2c/0x50
-> [<c0217e6f>] driver_probe_device+0x2f/0x80
-> [<c0217fb9>] driver_attach+0x59/0x90
-> [<c02184b8>] bus_add_driver+0x98/0xd0
-> [<c01c31cb>] pci_register_driver+0x6b/0x90
-> [<d088ea2f>] siimage_ide_init+0xf/0x14 [siimage]
-> [<c0136077>] sys_init_module+0x137/0x1c0
-> [<c0103095>] syscall_call+0x7/0xb
-> handlers:
-> [<c022fbe0>] (ide_intr+0x0/0x130)
-> Disabling IRQ #10
-> ide8 at 0xd088a080-0xd088a087,0xd088a08a on irq 10
-> hdq: max request size: 64KiB
-> hdq: lost interrupt
-> irq 10: nobody cared!
+akpm@osdl.org wrote:
+> From: Jason Gaston <jason.d.gaston@intel.com>
+> 
+> Add the Intel ICH8 DID's to the ata_piix.c and quirks.c file for IDE mode SATA
+> support.
+> 
+> Signed-off-by:  Jason Gaston <Jason.d.gaston@intel.com>
+> Signed-off-by: Andrew Morton <akpm@osdl.org>
 
-Part about probing ide9 is missing from the above log.
+NAK, adds a duplicate entry to the locally declared struct ata_port_info.
 
-What kernel version are you using?
+Otherwise, OK.
 
-Please fill a bug at http://bugzilla.kernel.org and at least provide some
-minimal useful data (full dmesg, 'cat /proc/interrupts' output, kernel config).
+	Jeff
 
-Bartlomiej
+
+
