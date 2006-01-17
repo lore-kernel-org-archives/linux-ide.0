@@ -1,51 +1,41 @@
-From: Helmut Toplitzer <pvrusb2@toplitzer.net>
-Subject: Re: BUG?: VIA IDE transfer-rate problem
-Date: Tue, 17 Jan 2006 17:03:42 +0100
-Message-ID: <200601171703.42509.pvrusb2@toplitzer.net>
-References: <200601131909.07981.pvrusb2@toplitzer.net> <58cb370e0601170517v6fe68992ma5bdc67d5eb1e6f1@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Sebastian Kuzminsky <seb@highlab.com>
+Subject: Re: sata_mv important note
+Date: Tue, 17 Jan 2006 09:24:26 -0700
+Message-ID: <E1EytdC-0006DE-IS@highlab.com>
+References: <43CD07D5.30302@pobox.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from toplitzer.net ([83.151.30.110]:24995 "EHLO toplitzer.net")
-	by vger.kernel.org with ESMTP id S1751285AbWAQQDx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2006 11:03:53 -0500
-In-Reply-To: <58cb370e0601170517v6fe68992ma5bdc67d5eb1e6f1@mail.gmail.com>
-Content-Disposition: inline
+Received: from rwcrmhc11.comcast.net ([204.127.198.35]:27356 "EHLO
+	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S932110AbWAQQXi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Jan 2006 11:23:38 -0500
+In-reply-to: <43CD07D5.30302@pobox.com> 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, dbrownell@users.sourceforge.net, linux-usb-devel@lists.sourceforge.net
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Hi!
+Jeff Garzik <jgarzik@pobox.com> wrote:
+> For sata_mv users, you should be aware of three things:
+> 
+> 1) The Marvell driver is experimental, and not yet considered ready for 
+> production use.  As Kconfig notes: HIGHLY EXPERIMENTAL.
 
-> >
-> > 37MB/s with CPU not utilized
-> > 55MB/s with CPU 100% utilized
->
-> I can't reproduce this locally, please send me your kernel
-> config.  Although I have Intel chipset it is still worth a try
-> if it is generic kernel bug.  I don't remember seeing anything
-> like that on my old VIA system which also had VT8235
-> southbridge - if somebody has similar machine to Helmut's
-> please try to reproduce this behavior (thanks!).
->
+Right, understood.
 
-Ok. I made one more test: disabling all usb in the bios.
-(Sorry, can not unplug. It's onboard.)
-Booting to init 1 without loading the usb-drivers.
-Same results. 37MB/s initial, 55MB/s after loading the
-burnK7 programm in background. Unloading bunrK7 and
-transfer-rate is back to 37.
-So this time no USB-device is connected and no driver
-loaded. USB-ports disabled selected in the bios.
+Can anyone recommend a 4xSATA (or more) controller on a PCI-X card that
+_is_ ready for production use?  eSATA ports are prefered but not required.
+Support for hotplug, power management (spindown) and SMART is prefered
+but not required.
 
-If you still think this is a usb-thingy I will shift
-my communication to linux-usb-devel.
+Anyone?
 
-Helmut
+
+> Rest assured that all problem reports are read, even if you don't 
+> receive a reply.  After enough feedback is received, the exact problem 
+> becomes more clear.
+
+Thanks Jeff!
+
 
 -- 
-My GNUpg fingerprint http://www.gnupg.org
-4563 F4FB 0B7E 8698 53CD  00E9 E319 35BD 6A91 1656
+Sebastian Kuzminsky
