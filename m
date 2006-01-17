@@ -1,37 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: sata_mv important note
-Date: Tue, 17 Jan 2006 10:05:57 -0500
-Message-ID: <43CD07D5.30302@pobox.com>
+From: Helmut Toplitzer <pvrusb2@toplitzer.net>
+Subject: Re: BUG?: VIA IDE transfer-rate problem
+Date: Tue, 17 Jan 2006 17:03:42 +0100
+Message-ID: <200601171703.42509.pvrusb2@toplitzer.net>
+References: <200601131909.07981.pvrusb2@toplitzer.net> <58cb370e0601170517v6fe68992ma5bdc67d5eb1e6f1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:50091 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750915AbWAQPGA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2006 10:06:00 -0500
+Received: from toplitzer.net ([83.151.30.110]:24995 "EHLO toplitzer.net")
+	by vger.kernel.org with ESMTP id S1751285AbWAQQDx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2006 11:03:53 -0500
+In-Reply-To: <58cb370e0601170517v6fe68992ma5bdc67d5eb1e6f1@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
-Cc: Andrew Morton <akpm@osdl.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, dbrownell@users.sourceforge.net, linux-usb-devel@lists.sourceforge.net
 
+Hi!
 
-For sata_mv users, you should be aware of three things:
+> >
+> > 37MB/s with CPU not utilized
+> > 55MB/s with CPU 100% utilized
+>
+> I can't reproduce this locally, please send me your kernel
+> config.  Although I have Intel chipset it is still worth a try
+> if it is generic kernel bug.  I don't remember seeing anything
+> like that on my old VIA system which also had VT8235
+> southbridge - if somebody has similar machine to Helmut's
+> please try to reproduce this behavior (thanks!).
+>
 
-1) The Marvell driver is experimental, and not yet considered ready for 
-production use.  As Kconfig notes: HIGHLY EXPERIMENTAL.
+Ok. I made one more test: disabling all usb in the bios.
+(Sorry, can not unplug. It's onboard.)
+Booting to init 1 without loading the usb-drivers.
+Same results. 37MB/s initial, 55MB/s after loading the
+burnK7 programm in background. Unloading bunrK7 and
+transfer-rate is back to 37.
+So this time no USB-device is connected and no driver
+loaded. USB-ports disabled selected in the bios.
 
-2) There are PCI Message Signalled Interrupt (MSI) problems that are not 
-yet diagnosed.  Workaround is to disable MSI.
+If you still think this is a usb-thingy I will shift
+my communication to linux-usb-devel.
 
-3) There are still some errata that are not yet implemented.  Thus, for 
-some systems, you may see either lockups or data corruption.  That's the 
-price of running a HIGHLY EXPERIMENTAL driver.
+Helmut
 
-Rest assured that all problem reports are read, even if you don't 
-receive a reply.  After enough feedback is received, the exact problem 
-becomes more clear.
-
-	Jeff
-
-
-
+-- 
+My GNUpg fingerprint http://www.gnupg.org
+4563 F4FB 0B7E 8698 53CD  00E9 E319 35BD 6A91 1656
