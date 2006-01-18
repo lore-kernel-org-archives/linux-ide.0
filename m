@@ -1,49 +1,30 @@
-From: Junio C Hamano <junkio@cox.net>
-Subject: Re: PATCH: pata_oldpiix rev 0.2
-Date: Tue, 17 Jan 2006 13:40:24 -0800
-Message-ID: <7vpsmq7ctz.fsf@assigned-by-dhcp.cox.net>
-References: <1136387989.4121.4.camel@localhost.localdomain>
-	<43CCEF25.2090902@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2/4] libata debugging support
+Date: Tue, 17 Jan 2006 19:35:30 -0500
+Message-ID: <43CD8D52.30509@pobox.com>
+References: <20060113224252.38d8890f.rdunlap@xenotime.net> <20060113224414.20509944.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fed1rmmtao08.cox.net ([68.230.241.31]:42132 "EHLO
-	fed1rmmtao08.cox.net") by vger.kernel.org with ESMTP
-	id S1751271AbWAQVk1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Jan 2006 16:40:27 -0500
-In-Reply-To: <43CCEF25.2090902@pobox.com> (Jeff Garzik's message of "Tue, 17
-	Jan 2006 08:20:37 -0500")
+Received: from mail.dvmed.net ([216.237.124.58]:55216 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964958AbWARAfe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2006 19:35:34 -0500
+In-Reply-To: <20060113224414.20509944.rdunlap@xenotime.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: ide <linux-ide@vger.kernel.org>, linux-kernel@vger.kernel.org, akpm@osdl.org
 
-Jeff Garzik <jgarzik@pobox.com> writes:
+Randy.Dunlap wrote:
+> From: Borislav Petkov <petkov@uni-muenster.de>
+> 
+> libata new debugging macro definitions
+> 
+> Signed-off-by: Borislav Petkov <petkov@uni-muenster.de>
+> Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 
-> Alan Cox wrote:
->> static void oldpiix_pata_phy_reset(struct ata_port *ap)
->...
->> static void oldpiix_set_piomode (struct ata_port *ap, struct
->>...
->> 	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
->> 	struct pci_dev *dev	= to_pci_dev(ap->host_set->dev);
->> 	unsigned int idetm_port= ap->hard_port_no ? 0x42 : 0x40;
->
-> space after '='?
+applied to 'debug' branch of libata-dev.git, and will soon move it to an 
+'upstream' branch.
 
-I think you meant space before '='.
-
-Did you have to quote the entire patch?  It was quite annoying
-to read.
-
-Ideally, "this applies on top of your patch, to address these
-issues", would be the easiest to read, but that would require
-you to actually apply Alan's patch on your tree, do your
-modifications and produce another patch (IOW, it would be more
-work on your part).  Just to provide quick comments, if you
-trimmed the patch you quoted from Alan's when commenting,
-leaving enough material for Alan and others to identify the
-pieces you are commenting on, it would have been a lot easier to
-read (it would be more work for the contributor, but it is his
-patch after all).
 
