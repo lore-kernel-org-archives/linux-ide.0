@@ -1,98 +1,54 @@
-From: Erik Slagter <erik@slagter.name>
-Subject: Re: sata_mv important note
-Date: Wed, 18 Jan 2006 20:45:05 +0100
-Message-ID: <1137613505.25727.6.camel@localhost.localdomain>
-References: <43CD07D5.30302@pobox.com> <E1EytdC-0006DE-IS@highlab.com>
-	 <43CD46B7.4000907@rtr.ca> <1137581636.10890.81.camel@localhost.localdomain>
-	 <43CE6965.9040408@pobox.com>
+From: Helmut Toplitzer <pvrusb2@toplitzer.net>
+Subject: Re: BUG?: VIA IDE transfer-rate problem
+Date: Thu, 19 Jan 2006 00:41:35 +0100
+Message-ID: <200601190041.36138.pvrusb2@toplitzer.net>
+References: <200601131909.07981.pvrusb2@toplitzer.net> <200601181536.16868.pvrusb2@toplitzer.net> <58cb370e0601180813pfb6baffr953e5be26223ea1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-9KUOJa5dmwRakGSQX4Hs"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from erik-slagter.demon.nl ([83.161.107.130]:31893 "EHLO
-	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S932356AbWARTpO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Jan 2006 14:45:14 -0500
-Received: from skylla.slagter.name (skylla.slagter.name [172.31.4.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "skylla.slagter.name", Issuer "CA Cert Signing Authority" (verified OK))
-	by artemis.slagter.name (Postfix) with ESMTP id 68BCC1434003
-	for <linux-ide@vger.kernel.org>; Wed, 18 Jan 2006 20:45:07 +0100 (CET)
-In-Reply-To: <43CE6965.9040408@pobox.com>
+Received: from toplitzer.net ([83.151.30.110]:47751 "EHLO toplitzer.net")
+	by vger.kernel.org with ESMTP id S1030461AbWARXlp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jan 2006 18:41:45 -0500
+In-Reply-To: <58cb370e0601180813pfb6baffr953e5be26223ea1@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, dbrownell@users.sourceforge.net, linux-usb-devel@lists.sourceforge.net
+
+>
+> Did disabling ACPI change something?
+>
+
+No, it didn't
+
+>
+> When CPU is idle HLT instruction is used by default (for power saving).
+> Probably chipset detects when CPU is entering low power mode and
+> also enters low power mode.  Switching between low and normal power
+> modes is slow and results in degraded performance.
+>
+> The question is whether/how we can program chipset to not enter
+> low power mode.
+>
 
 
---=-9KUOJa5dmwRakGSQX4Hs
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ok. Was just a bit digging through the sourcecode. Found a
+function called disable_hlt. Some further digging.
+Found in drivers/block/floppy.c a usage of disable_hlt.
+It's called (if I haven't missunderstood something) 
+whenever a DMA transfer is setup. enable_hlt is called
+when a transfer stops/is cancled etc...
 
-On Wed, 2006-01-18 at 11:14 -0500, Jeff Garzik wrote:
-> >>The Pacific Digital QStor cards come in PCIX variants,
-> >>and support SATA2.  Hotplug et al is supported in the hardware,
-> >>but not in the Libata driver.  ATAPI is not supported at all.
-> >=20
-> >=20
-> > Using which driver? (just curious)
->=20
-> sata_qstor
-
-Bummer. I silently hoped it would be using ahci, but I will dream on ;-)
-
---=-9KUOJa5dmwRakGSQX4Hs
-Content-Type: application/x-pkcs7-signature; name=smime.p7s
-Content-Disposition: attachment; filename=smime.p7s
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIILzCCAnIw
-ggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
-d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
-YWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYDVQQE
-EwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlqbiBT
-bGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0BAQEF
-AAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGYNW5L
-vevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI0gVv
-gY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFn
-dGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8WcuJ7Q1
-eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xNdkFU
-mhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPkyITCC
-AnIwggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMc
-VGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZy
-ZWVtYWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYD
-VQQEEwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlq
-biBTbGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0B
-AQEFAAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGY
-NW5Lvevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI
-0gVvgY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0Bz
-bGFndGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8Wcu
-J7Q1eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xN
-dkFUmhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPky
-ITCCAz8wggKooAMCAQICAQ0wDQYJKoZIhvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQI
-EwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcTCUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1
-bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmljYXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMT
-G1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJl
-ZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNV
-BAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNU
-aGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
-gYkCgYEAxKY8VXNV+065yplaHmjAdQRwnd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNa
-LIkVcI7dyfArhVqqP3FWy688Cwfn8R+RNiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUq
-VIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEAAaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1Ud
-HwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwudGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWls
-Q0EuY3JsMAsGA1UdDwQEAwIBBjApBgNVHREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVs
-Mi0xMzgwDQYJKoZIhvcNAQEFBQADgYEASIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYf
-qi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6EsZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa
-9/eH1sYITq726jTlEBpbNU1341YheILcIRk13iSx0x1G/11fZU8xggJmMIICYgIBATBpMGIxCzAJ
-BgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQD
-EyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMAkGBSsOAwIaBQCgggFT
-MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA2MDExODE5NDUwNVow
-IwYJKoZIhvcNAQkEMRYEFB0XQXsoU+KDWZEgfwTZm1KhK+3IMHgGCSsGAQQBgjcQBDFrMGkwYjEL
-MAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNV
-BAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAgMP8QQwegYLKoZIhvcNAQkQ
-Agsxa6BpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBM
-dGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMA0G
-CSqGSIb3DQEBAQUABIGAcxZt0pCnEvGWFAcoux866E7G/Ey8tMbntKqNZwEspjOVDbr22MpyC1O9
-6c3nry1uAW+HBC/QbJzy7EeiLFRUDJDNLIu0dKqajO3z2DB4C7HrgSOJV5GD7w2UbMeNRPfIvLgJ
-fQBMwsoVx9jW0086cXmNr3rsBM31bdKIZaJZfd0AAAAAAAA=
+Does such thing makes sense for IDE DMA-transfers too? 
+(Maybe I've missed something)
 
 
---=-9KUOJa5dmwRakGSQX4Hs--
+Cheers
+Helmut
+
+-- 
+My GNUpg fingerprint http://www.gnupg.org
+4563 F4FB 0B7E 8698 53CD  00E9 E319 35BD 6A91 1656
