@@ -1,45 +1,66 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: [PATCH 1/4] SATA ACPI build (applies to 2.6.16-git9)
-Date: Wed, 18 Jan 2006 13:24:09 +0100
-Message-ID: <20060118122409.GA17046@elf.ucw.cz>
-References: <20060113224252.38d8890f.rdunlap@xenotime.net> <20060116115607.GA18307@harddisk-recovery.nl> <20060116140713.GB18307@harddisk-recovery.com> <20060116224626.GS3945@suse.de> <1137452436.15553.93.camel@localhost.localdomain>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: PATCH: (For review) Teach libata to tune master/slave seperately
+Date: Wed, 18 Jan 2006 13:44:01 +0100
+Message-ID: <58cb370e0601180444i1af5a6c7y51156877db1ae826@mail.gmail.com>
+References: <1137531678.14135.105.camel@localhost.localdomain>
+	 <58cb370e0601180340v529c04fdq5dc962285a6fc1c0@mail.gmail.com>
+	 <1137585865.25819.27.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:41378 "EHLO amd.ucw.cz")
-	by vger.kernel.org with ESMTP id S932324AbWARMY2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jan 2006 07:24:28 -0500
+Received: from uproxy.gmail.com ([66.249.92.203]:14372 "EHLO uproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932481AbWARMoD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Jan 2006 07:44:03 -0500
+Received: by uproxy.gmail.com with SMTP id s2so291658uge
+        for <linux-ide@vger.kernel.org>; Wed, 18 Jan 2006 04:44:01 -0800 (PST)
+In-Reply-To: <1137585865.25819.27.camel@localhost.localdomain>
 Content-Disposition: inline
-In-Reply-To: <1137452436.15553.93.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jens Axboe <axboe@suse.de>, Erik Mouw <erik@harddisk-recovery.com>, "Randy.Dunlap" <rdunlap@xenotime.net>, ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, jgarzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com
 
-Hi!
+On 1/18/06, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> On Mer, 2006-01-18 at 12:40 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > The core logic is changed (in the positive way): ata_pio_modes()
+> > is finally used for obtaining PIO mask to be used.
+>
+> Ah yes, Jeff hadn't previously merged the small version of that change.
+> Indeed description is a little incorrect.
+>
+> > Please update the patch description or make it a separate change.
+> >
+> > The other functional change is the ordering of programming host/devices:
+> >
+> > previously:
+> > * program PIO for device 0 [host]
+> > * program PIO for device 1 [host]
+> > * program DMA for device 0 [host]
+> > * program DMA for device 1 [host]
+> > * program xfer mode for device 0 [device]
+> > * program xfer mode for device 1 [device]
+> >
+> > now:
+> > * program PIO for device 0 [host]
+> > * program DMA for device 0 [host]
+> > * program xfer mode for device 0 [device]
+> > * program PIO for device 1 [host]
+> > * program DMA for device 1 [host]
+> > * program xfer mode for device 0 [device]
+> >
+> > This change is OK but I wonder what is the reason for it?
+>
+> It simply how suffling the code re-ordered it. I don't think its a
+> problem but if anyone has a problem I can go and re-re-order it.
 
-> > > If you really need this enabled to be able to use suspend/resume at
-> > > all, you could add a line like:
-> > > 
-> > >   It's safe to say Y. If you say N, you might get serious disk
-> > >   corruption when you suspend your machine.
-> > 
-> > That's simply not true. If you say N (if you could), you could risk
-> > having a non-responsive disk after resume. However, it would have been
-> > synced a suspend time so you wont corrupt anything.
-> 
-> If you do not execute the ACPI taskfiles for the device and you are
-> doing an ACPI suspend you are in completely undefined space. Whether it
-> eats your disk or not is a question of probabilities only. Yes its
-> unlikely but you are in undefined space so "won't corrupt anything"
-> indicates an inappropriate level of certainty.
+I think it is fine, no need for change.
 
-Okay, but being in undefined state still does not warrant "you might
-get serious disk corruption when you suspend your machine." . What about:
+> libata also really should do adev->pio_mode = XFER_PIO_0; ->set_piomode
+> before doing its initial identify etc because there is no guarantee the
+> BIOS didn't leave the hardware in a bogus state.
 
-It's safe to say Y. If you say N, you may run into problems after you
-suspend your machine.
+seconded
 
-								Pavel
--- 
-Thanks, Sharp!
+Bartlomiej
