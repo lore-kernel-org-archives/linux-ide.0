@@ -1,30 +1,51 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2/4] libata debugging support
-Date: Tue, 17 Jan 2006 19:35:30 -0500
-Message-ID: <43CD8D52.30509@pobox.com>
-References: <20060113224252.38d8890f.rdunlap@xenotime.net> <20060113224414.20509944.rdunlap@xenotime.net>
+Subject: Re: [PATCH] sata_sil: combined irq + LBT DMA patch for testing
+Date: Tue, 17 Jan 2006 19:40:02 -0500
+Message-ID: <43CD8E62.7060301@pobox.com>
+References: <20051204011953.GA16381@havoc.gtf.org> <7744a2840512061147i5c101455g9ed99624aca344dd@mail.gmail.com> <43987A28.8070509@mandriva.org> <439899B6.2000302@pobox.com> <43B16B06.3000401@mandriva.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:55216 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964958AbWARAfe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2006 19:35:34 -0500
-In-Reply-To: <20060113224414.20509944.rdunlap@xenotime.net>
+Received: from mail.dvmed.net ([216.237.124.58]:63920 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964994AbWARAkF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2006 19:40:05 -0500
+In-Reply-To: <43B16B06.3000401@mandriva.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: ide <linux-ide@vger.kernel.org>, linux-kernel@vger.kernel.org, akpm@osdl.org
+To: Thomas Backlund <tmb@mandriva.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Randy.Dunlap wrote:
-> From: Borislav Petkov <petkov@uni-muenster.de>
+Thomas Backlund wrote:
+> Jeff Garzik wrote:
 > 
-> libata new debugging macro definitions
-> 
-> Signed-off-by: Borislav Petkov <petkov@uni-muenster.de>
-> Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+>> Thomas Backlund wrote:
+>>
+>>> Richard Bollinger wrote:
+>>>
+>>>>> ata1: BUG: SG size underflow
+>>>>> ata1: status=0x50 { DriveReady SeekComplete }
+>>>
+>>>
+>>>
+>>> and onde by one the raid devices got deactivated until the full 
+>>> freeze...
+>>
+>>
+>>
+>> I think I know what's going on with the 'SG size underflow' thingy, 
+>> give me a few days to come up with a fix.
+>>
+>>     Jeff
+>>
+>>
+>>
+> Any news on this?
+> or is it already fixed ?
 
-applied to 'debug' branch of libata-dev.git, and will soon move it to an 
-'upstream' branch.
+Back-burner for the moment :(
+
+	Jeff
+
 
 
