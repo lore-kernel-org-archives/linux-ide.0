@@ -1,31 +1,98 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: Re: [PATCH 1/3] libata-acpi:more debugging
-Date: Wed, 18 Jan 2006 08:58:19 -0800
-Message-ID: <20060118085819.707776a8.randy_d_dunlap@linux.intel.com>
-References: <43C948D1.9010007@crans.org>
-	<20060117121348.2f40e672.randy_d_dunlap@linux.intel.com>
-	<43CE72D0.4070000@crans.org>
+From: Erik Slagter <erik@slagter.name>
+Subject: Re: sata_mv important note
+Date: Wed, 18 Jan 2006 20:45:05 +0100
+Message-ID: <1137613505.25727.6.camel@localhost.localdomain>
+References: <43CD07D5.30302@pobox.com> <E1EytdC-0006DE-IS@highlab.com>
+	 <43CD46B7.4000907@rtr.ca> <1137581636.10890.81.camel@localhost.localdomain>
+	 <43CE6965.9040408@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751344AbWARQ5p@vger.kernel.org>
-In-Reply-To: <43CE72D0.4070000@crans.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mathieu =?ISO-8859-1?B?QulyYXJk?= <Mathieu.Berard@crans.org>
-Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, akpm@osdl.org
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-9KUOJa5dmwRakGSQX4Hs"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from erik-slagter.demon.nl ([83.161.107.130]:31893 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S932356AbWARTpO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Jan 2006 14:45:14 -0500
+Received: from skylla.slagter.name (skylla.slagter.name [172.31.4.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "skylla.slagter.name", Issuer "CA Cert Signing Authority" (verified OK))
+	by artemis.slagter.name (Postfix) with ESMTP id 68BCC1434003
+	for <linux-ide@vger.kernel.org>; Wed, 18 Jan 2006 20:45:07 +0100 (CET)
+In-Reply-To: <43CE6965.9040408@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Wed, 18 Jan 2006 17:54:40 +0100
-Mathieu B=E9rard <Mathieu.Berard@crans.org> wrote:
 
-> Hi,
-> I've just tested 2.6.16-rc1-mm1 which includes these three patches.
-> The oops is actually fixed, furthermore, both suspend-to-disk and
-> suspend-to-ram are now basically working on my Toshiba M70.
-> (this laptop was previously locking on resume due to its SATA disk)
-> Many thanks.
+--=-9KUOJa5dmwRakGSQX4Hs
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for your feedback (all of it:  oops and this message).
+On Wed, 2006-01-18 at 11:14 -0500, Jeff Garzik wrote:
+> >>The Pacific Digital QStor cards come in PCIX variants,
+> >>and support SATA2.  Hotplug et al is supported in the hardware,
+> >>but not in the Libata driver.  ATAPI is not supported at all.
+> >=20
+> >=20
+> > Using which driver? (just curious)
+>=20
+> sata_qstor
 
----
-~Randy [MPG MPAD MSAE SSA]
+Bummer. I silently hoped it would be using ahci, but I will dream on ;-)
+
+--=-9KUOJa5dmwRakGSQX4Hs
+Content-Type: application/x-pkcs7-signature; name=smime.p7s
+Content-Disposition: attachment; filename=smime.p7s
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIILzCCAnIw
+ggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
+d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
+YWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYDVQQE
+EwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlqbiBT
+bGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0BAQEF
+AAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGYNW5L
+vevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI0gVv
+gY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFn
+dGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8WcuJ7Q1
+eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xNdkFU
+mhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPkyITCC
+AnIwggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMc
+VGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZy
+ZWVtYWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYD
+VQQEEwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlq
+biBTbGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0B
+AQEFAAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGY
+NW5Lvevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI
+0gVvgY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0Bz
+bGFndGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8Wcu
+J7Q1eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xN
+dkFUmhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPky
+ITCCAz8wggKooAMCAQICAQ0wDQYJKoZIhvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQI
+EwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcTCUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1
+bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmljYXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMT
+G1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJl
+ZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNV
+BAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNU
+aGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
+gYkCgYEAxKY8VXNV+065yplaHmjAdQRwnd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNa
+LIkVcI7dyfArhVqqP3FWy688Cwfn8R+RNiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUq
+VIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEAAaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1Ud
+HwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwudGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWls
+Q0EuY3JsMAsGA1UdDwQEAwIBBjApBgNVHREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVs
+Mi0xMzgwDQYJKoZIhvcNAQEFBQADgYEASIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYf
+qi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6EsZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa
+9/eH1sYITq726jTlEBpbNU1341YheILcIRk13iSx0x1G/11fZU8xggJmMIICYgIBATBpMGIxCzAJ
+BgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQD
+EyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMAkGBSsOAwIaBQCgggFT
+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA2MDExODE5NDUwNVow
+IwYJKoZIhvcNAQkEMRYEFB0XQXsoU+KDWZEgfwTZm1KhK+3IMHgGCSsGAQQBgjcQBDFrMGkwYjEL
+MAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNV
+BAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAgMP8QQwegYLKoZIhvcNAQkQ
+Agsxa6BpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBM
+dGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMA0G
+CSqGSIb3DQEBAQUABIGAcxZt0pCnEvGWFAcoux866E7G/Ey8tMbntKqNZwEspjOVDbr22MpyC1O9
+6c3nry1uAW+HBC/QbJzy7EeiLFRUDJDNLIu0dKqajO3z2DB4C7HrgSOJV5GD7w2UbMeNRPfIvLgJ
+fQBMwsoVx9jW0086cXmNr3rsBM31bdKIZaJZfd0AAAAAAAA=
+
+
+--=-9KUOJa5dmwRakGSQX4Hs--
