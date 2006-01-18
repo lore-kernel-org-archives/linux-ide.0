@@ -1,59 +1,100 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: BUG?: VIA IDE transfer-rate problem
-Date: Wed, 18 Jan 2006 11:27:53 +0100
-Message-ID: <58cb370e0601180227q4807c531pc2319ff569d9e449@mail.gmail.com>
-References: <200601131909.07981.pvrusb2@toplitzer.net>
-	 <58cb370e0601170517v6fe68992ma5bdc67d5eb1e6f1@mail.gmail.com>
-	 <200601171703.42509.pvrusb2@toplitzer.net>
+From: Erik Slagter <erik@slagter.name>
+Subject: Re: sata_mv important note
+Date: Wed, 18 Jan 2006 11:53:56 +0100
+Message-ID: <1137581636.10890.81.camel@localhost.localdomain>
+References: <43CD07D5.30302@pobox.com> <E1EytdC-0006DE-IS@highlab.com>
+	 <43CD46B7.4000907@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-Afre4uWTww4aotV6mFKI"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.204]:26952 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932342AbWARK14 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Jan 2006 05:27:56 -0500
-Received: by uproxy.gmail.com with SMTP id s2so239486uge
-        for <linux-ide@vger.kernel.org>; Wed, 18 Jan 2006 02:27:54 -0800 (PST)
-In-Reply-To: <200601171703.42509.pvrusb2@toplitzer.net>
-Content-Disposition: inline
+Received: from erik-slagter.demon.nl ([83.161.107.130]:21633 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S1030211AbWARKyC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Jan 2006 05:54:02 -0500
+Received: from skylla.slagter.name (skylla.slagter.name [172.31.4.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "skylla.slagter.name", Issuer "CA Cert Signing Authority" (verified OK))
+	by artemis.slagter.name (Postfix) with ESMTP id A48381434003
+	for <linux-ide@vger.kernel.org>; Wed, 18 Jan 2006 11:54:00 +0100 (CET)
+In-Reply-To: <43CD46B7.4000907@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Helmut Toplitzer <pvrusb2@toplitzer.net>
-Cc: linux-ide@vger.kernel.org, dbrownell@users.sourceforge.net, linux-usb-devel@lists.sourceforge.net
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On 1/17/06, Helmut Toplitzer <pvrusb2@toplitzer.net> wrote:
-> Hi!
->
-> > >
-> > > 37MB/s with CPU not utilized
-> > > 55MB/s with CPU 100% utilized
+
+--=-Afre4uWTww4aotV6mFKI
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2006-01-17 at 14:34 -0500, Mark Lord wrote:
+> Sebastian Kuzminsky wrote:
 > >
-> > I can't reproduce this locally, please send me your kernel
-> > config.  Although I have Intel chipset it is still worth a try
-> > if it is generic kernel bug.  I don't remember seeing anything
-> > like that on my old VIA system which also had VT8235
-> > southbridge - if somebody has similar machine to Helmut's
-> > please try to reproduce this behavior (thanks!).
-> >
->
-> Ok. I made one more test: disabling all usb in the bios.
-> (Sorry, can not unplug. It's onboard.)
-> Booting to init 1 without loading the usb-drivers.
-> Same results. 37MB/s initial, 55MB/s after loading the
-> burnK7 programm in background. Unloading bunrK7 and
-> transfer-rate is back to 37.
-> So this time no USB-device is connected and no driver
-> loaded. USB-ports disabled selected in the bios.
+> > Can anyone recommend a 4xSATA (or more) controller on a PCI-X card that
+> > _is_ ready for production use?  eSATA ports are prefered but not requir=
+ed.
+> > Support for hotplug, power management (spindown) and SMART is prefered
+> > but not required.
+>=20
+> The Pacific Digital QStor cards come in PCIX variants,
+> and support SATA2.  Hotplug et al is supported in the hardware,
+> but not in the Libata driver.  ATAPI is not supported at all.
 
-Just wild guesses but please try:
-* booting with "cpu=poll" parameter
-* kernel with ACPI and Power Management disabled
+Using which driver? (just curious)
 
-> If you still think this is a usb-thingy I will shift
-> my communication to linux-usb-devel.
+--=-Afre4uWTww4aotV6mFKI
+Content-Type: application/x-pkcs7-signature; name=smime.p7s
+Content-Disposition: attachment; filename=smime.p7s
+Content-Transfer-Encoding: base64
 
-Please keep linux-ide@ and me in cc:.
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIILzCCAnIw
+ggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
+d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
+YWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYDVQQE
+EwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlqbiBT
+bGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0BAQEF
+AAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGYNW5L
+vevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI0gVv
+gY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFn
+dGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8WcuJ7Q1
+eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xNdkFU
+mhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPkyITCC
+AnIwggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMc
+VGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZy
+ZWVtYWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYD
+VQQEEwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlq
+biBTbGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0B
+AQEFAAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGY
+NW5Lvevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI
+0gVvgY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0Bz
+bGFndGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8Wcu
+J7Q1eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xN
+dkFUmhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPky
+ITCCAz8wggKooAMCAQICAQ0wDQYJKoZIhvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQI
+EwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcTCUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1
+bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmljYXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMT
+G1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJl
+ZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNV
+BAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNU
+aGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
+gYkCgYEAxKY8VXNV+065yplaHmjAdQRwnd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNa
+LIkVcI7dyfArhVqqP3FWy688Cwfn8R+RNiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUq
+VIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEAAaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1Ud
+HwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwudGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWls
+Q0EuY3JsMAsGA1UdDwQEAwIBBjApBgNVHREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVs
+Mi0xMzgwDQYJKoZIhvcNAQEFBQADgYEASIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYf
+qi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6EsZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa
+9/eH1sYITq726jTlEBpbNU1341YheILcIRk13iSx0x1G/11fZU8xggJmMIICYgIBATBpMGIxCzAJ
+BgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQD
+EyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMAkGBSsOAwIaBQCgggFT
+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA2MDExODEwNTM1Nlow
+IwYJKoZIhvcNAQkEMRYEFG3B4u5HmrBF7pVfSjDy4W9fjE4ZMHgGCSsGAQQBgjcQBDFrMGkwYjEL
+MAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNV
+BAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAgMP8QQwegYLKoZIhvcNAQkQ
+Agsxa6BpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBM
+dGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMA0G
+CSqGSIb3DQEBAQUABIGAKXhwnub+9CmoWRfJ5Cc3gwpd9BGlhHXO6pkNX6q/9oPvTGIY2xTVmx88
+3vGvRIotU/d07u8kWnfDruhu3RiZtHtrqBypwN0B2ShiOU+bpDzC/3fsh6ZqIroXr9TrtIbxOoh3
+XaQvyZ6NmF4ZIfBXipXaRHOf96/H8h4MQu3g/MIAAAAAAAA=
 
-Thanks.
-Bartlomiej
+
+--=-Afre4uWTww4aotV6mFKI--
