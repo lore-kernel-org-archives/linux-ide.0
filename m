@@ -1,46 +1,59 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH] libata-scsi: fix sparse warnings
-Date: Tue, 17 Jan 2006 21:33:51 -0800
-Message-ID: <20060117213351.56f7d3f2.rdunlap@xenotime.net>
-References: <20060117213114.59ac90ad.rdunlap@xenotime.net>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: BUG?: VIA IDE transfer-rate problem
+Date: Wed, 18 Jan 2006 11:27:53 +0100
+Message-ID: <58cb370e0601180227q4807c531pc2319ff569d9e449@mail.gmail.com>
+References: <200601131909.07981.pvrusb2@toplitzer.net>
+	 <58cb370e0601170517v6fe68992ma5bdc67d5eb1e6f1@mail.gmail.com>
+	 <200601171703.42509.pvrusb2@toplitzer.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:42173 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1030257AbWARFdy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jan 2006 00:33:54 -0500
-Received: from zx64.site ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 17 Jan 2006 21:33:53 -0800
-In-Reply-To: <20060117213114.59ac90ad.rdunlap@xenotime.net>
+Received: from uproxy.gmail.com ([66.249.92.204]:26952 "EHLO uproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932342AbWARK14 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Jan 2006 05:27:56 -0500
+Received: by uproxy.gmail.com with SMTP id s2so239486uge
+        for <linux-ide@vger.kernel.org>; Wed, 18 Jan 2006 02:27:54 -0800 (PST)
+In-Reply-To: <200601171703.42509.pvrusb2@toplitzer.net>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik <jgarzik@pobox.com>
-Cc: ide <linux-ide@vger.kernel.org>
+To: Helmut Toplitzer <pvrusb2@toplitzer.net>
+Cc: linux-ide@vger.kernel.org, dbrownell@users.sourceforge.net, linux-usb-devel@lists.sourceforge.net
 
+On 1/17/06, Helmut Toplitzer <pvrusb2@toplitzer.net> wrote:
+> Hi!
+>
+> > >
+> > > 37MB/s with CPU not utilized
+> > > 55MB/s with CPU 100% utilized
+> >
+> > I can't reproduce this locally, please send me your kernel
+> > config.  Although I have Intel chipset it is still worth a try
+> > if it is generic kernel bug.  I don't remember seeing anything
+> > like that on my old VIA system which also had VT8235
+> > southbridge - if somebody has similar machine to Helmut's
+> > please try to reproduce this behavior (thanks!).
+> >
+>
+> Ok. I made one more test: disabling all usb in the bios.
+> (Sorry, can not unplug. It's onboard.)
+> Booting to init 1 without loading the usb-drivers.
+> Same results. 37MB/s initial, 55MB/s after loading the
+> burnK7 programm in background. Unloading bunrK7 and
+> transfer-rate is back to 37.
+> So this time no USB-device is connected and no driver
+> loaded. USB-ports disabled selected in the bios.
 
-I had a question about the patch block below:
+Just wild guesses but please try:
+* booting with "cpu=poll" parameter
+* kernel with ACPI and Power Management disabled
 
-> drivers/scsi/libata-scsi.c:204:20: warning: cast removes address space of expression
-> ---
->  drivers/scsi/libata-scsi.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> --- linux-2616-rc1.orig/drivers/scsi/libata-scsi.c
-> +++ linux-2616-rc1/drivers/scsi/libata-scsi.c
-> @@ -201,7 +201,7 @@ int ata_cmd_ioctl(struct scsi_device *sc
->  	/* Need code to retrieve data from check condition? */
->  
->  	if ((argbuf)
-> -	 && copy_to_user((void *)(arg + sizeof(args)), argbuf, argsize))
-> +	 && copy_to_user(arg + sizeof(args), argbuf, argsize))
->  		rc = -EFAULT;
->  error:
->  	if (argbuf)
+> If you still think this is a usb-thingy I will shift
+> my communication to linux-usb-devel.
 
-What are the semantics of the user <arg>?
-Does it point to an input u8 args[4] which must be immediately followed
-by an output u8 args[4]?  That's what it seems to be.  Just checking.
+Please keep linux-ide@ and me in cc:.
 
-Thanks,
----
-~Randy
+Thanks.
+Bartlomiej
