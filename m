@@ -1,127 +1,152 @@
-From: Pasha <opa@nsib.ru>
-Subject: sata_mv @ asus PSCH-SR/SATA doesnt work
-Date: Thu, 19 Jan 2006 18:23:01 +0600
-Message-ID: <200601191823.01254.opa@nsib.ru>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: sata_mv Driver Problems Summery.
+Date: Thu, 19 Jan 2006 14:12:08 +0100
+Message-ID: <58cb370e0601190512t2169ec05l1bf20d80bf2900d9@mail.gmail.com>
+References: <43CF697B.6040309@projecthugo.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="koi8-r"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fw2.tstinc.ru ([80.66.95.148]:58372 "EHLO fw2.tstinc.ru")
-	by vger.kernel.org with ESMTP id S1161146AbWASMX2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jan 2006 07:23:28 -0500
+Received: from uproxy.gmail.com ([66.249.92.205]:11232 "EHLO uproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1161137AbWASNML convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Jan 2006 08:12:11 -0500
+Received: by uproxy.gmail.com with SMTP id s2so214657uge
+        for <linux-ide@vger.kernel.org>; Thu, 19 Jan 2006 05:12:09 -0800 (PST)
+In-Reply-To: <43CF697B.6040309@projecthugo.co.uk>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com
+To: Matt Darcy <kernel-lists@projecthugo.co.uk>
+Cc: linux-ide@vger.kernel.org
 
-I has asus PSCH-SR/SATA with aic-8110 RAID chip, detected as 11ab:5041 
-(Marvell 5041) and covered by sata_mv
-Linux: slackware 9.1
-kernel is 2.6.15 SMP with 2.6.15-libata1.patch.bz2
+Hi,
 
-lspci -vn:
-02:08.0 Class 0100: 11ab:5041 (rev 03)
-        Subsystem: 1043:8124
-        Flags: 66Mhz, medium devsel, IRQ 225
-        Memory at f3000000 (64-bit, non-prefetchable) [size=512K]
-        Capabilities: [40] Power Management version 2
-        Capabilities: [50] Message Signalled Interrupts: 64bit+ Queue=0/0 
-Enable+
-        Capabilities: [60] PCI-X non-bridge device.
+On 1/19/06, Matt Darcy <kernel-lists@projecthugo.co.uk> wrote:
+> All,
+>
+> I/others have posted quite a few posts with regard to the sata_mv
+> experimental driver included in the <2.6.15 kernels.
+>
+> I thought a breif summery and update of my personal experiences may
+> benifit others contributing their own information and help keep a record
+> of where things are up to.
 
-but at driver load system wait till 30 sec and doesnt create /dev/sda on 
-modprobe sd_mod. dmesg is:
+Could you open a bug at http://bugzilla.kernel.org
+and accumulate information there?
 
-sata_mv 0000:02:08.0: version 0.5
-ACPI: PCI Interrupt 0000:02:08.0[A] -> GSI 26 (level, low) -> IRQ 209
-sata_mv 0000:02:08.0: 32 slots 4 ports SCSI mode IRQ via MSI
-ata1: SATA max UDMA/133 cmd 0x0 ctl 0xE0AA2120 bmdma 0x0 irq 209
-ata2: SATA max UDMA/133 cmd 0x0 ctl 0xE0AA4120 bmdma 0x0 irq 209
-ata3: SATA max UDMA/133 cmd 0x0 ctl 0xE0AA6120 bmdma 0x0 irq 209
-ata4: SATA max UDMA/133 cmd 0x0 ctl 0xE0AA8120 bmdma 0x0 irq 209
-ata1: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023 
-88:40ff
-ata1: dev 0 ATA-7, max UDMA7, 390721968 sectors: LBA48
-ata1: qc timeout (cmd 0xef)
-ata1: failed to set xfermode, disabled
-^^^^^^^^^^^^^^^^^
-ata1: dev 0 configured for UDMA/133
-scsi0 : sata_mv
-ata2: no device found (phy stat 00000000)
-scsi1 : sata_mv
-ata3: no device found (phy stat 00000000)
-scsi2 : sata_mv
-ata4: no device found (phy stat 00000000)
-scsi3 : sata_mv
+I think that I'm seeing that report 3rd time and each time
+I have to read it entirely to verify if there is some new data.
 
-at unload:
+Mails to the list are still fine but for people already knowing
+background of the issue (this includes developers who are short
+on time) the only thing is whether something have changed recently.
 
-ACPI: PCI interrupt for device 0000:02:08.0 disabled
+Thanks,
+Bartlomiej
 
-
-
-PS.
-
-FC5 kernel (2.6.15-1.1826.2.10_FC5smp) also wait for a long.
-
-sata_mv 0000:02:08.0: version 0.5
-ACPI: PCI Interrupt 0000:02:08.0[A] -> GSI 26 (level, low) -> IRQ 209
-sata_mv 0000:02:08.0: 32 slots 4 ports SCSI mode IRQ via MSI
-ata3: SATA max UDMA/133 cmd 0x0 ctl 0xE0CA2120 bmdma 0x0 irq 209
-ata4: SATA max UDMA/133 cmd 0x0 ctl 0xE0CA4120 bmdma 0x0 irq 209
-ata5: SATA max UDMA/133 cmd 0x0 ctl 0xE0CA6120 bmdma 0x0 irq 209
-ata6: SATA max UDMA/133 cmd 0x0 ctl 0xE0CA8120 bmdma 0x0 irq 209
-ata3: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023 
-88:40ff
-ata3: dev 0 ATA-7, max UDMA7, 390721968 sectors: LBA48
-ata3: slow completion (cmd ef)
-ata3: dev 0 configured for UDMA/133
-scsi2 : sata_mv
-ata4: no device found (phy stat 00000000)
-scsi3 : sata_mv
-ata5: no device found (phy stat 00000000)
-scsi4 : sata_mv
-ata6: no device found (phy stat 00000000)
-scsi5 : sata_mv
-  Vendor: ATA       Model: SAMSUNG SP2004C   Rev: VM10
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-
-
-sd_mod also slow and says
-
-SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
-SCSI device sdb: drive cache: write back
-SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
-SCSI device sdb: drive cache: write back
- sdb:<3>ata3: Entering mv_eng_timeout
-mmio_base e0c80000 ap def75314 qc def757f0 scsi_cmnd df335770 &cmnd df3357b4
-ata3: status=0x50 { DriveReady SeekComplete }
-ata3: error=0x01 { AddrMarkNotFound }
-sdb: Current: sense key: No Sense
-    Additional sense: No additional sense information
-ata3: Entering mv_eng_timeout
-mmio_base e0c80000 ap def75314 qc def757f0 scsi_cmnd df335770 &cmnd df3357b4
-ata3: status=0x50 { DriveReady SeekComplete }
-ata3: error=0x01 { AddrMarkNotFound }
-sdb: Current: sense key: No Sense
-    Additional sense: No additional sense information
- unknown partition table
-sd 2:0:0:0: Attached scsi disk sdb
-
-now you can do some operations like fdisk but with error=0x01 
-{ AddrMarkNotFound } and 30 sec per request. :(
-
-
-
-
-kernel 1.6.14.4-ck1 (sata_mv v0.12) loads fast but says
-
-sata_mv version 0.12
-ACPI: PCI Interrupt 0000:02:08.0[A] -> GSI 26 (level, low) -> IRQ 209
-sata_mvPCI master won't flush
-ACPI: PCI interrupt for device 0000:02:08.0 disabled
-
-PPS. I can give ssh for debug/improve driver.
-
+> First of all - I have been working through kernels and patches from
+> 2.6.15-rc3 to 2.6.15-latestgit (at the last attempt it was git-11)
+>
+> I'm using  a Super Micro 8 port sata controller - which is displauyed as
+>
+> 00:0c.0 SCSI storage controller: Marvell Technology Group Ltd.
+> MV88SX5081 8-port SATA I PCI-X Controller (rev 03)
+>
+> through out the 2.6.15 kernel progression I've seen this driver get more
+> an more usable.
+>
+> Up until 2.6.15-rc5-mm3 the driver was unusable, I'just just get random
+> hangs pretty much as soon as the disk was accessed.
+>
+> Post 2.6.15-rc5-mm3 the driver appeared usable, I've been able to use
+> the disks as individual devices with quite reasonalbe performance
+> (maxtor Diamond 10 250GB ATA disks) no data loss, and no real problems.
+> I also did some basic tests using LVM2 which appears to work fine
+> although performance did have a drop off, but hey the drivers still
+> early so no problems.
+>
+> The configuration I want to use the driver in is to have a larage raid 5
+> array thats within an lvm2 volume group. This should could me a bit of
+> hardware resillience and the ability to manage file systems for my own
+> project as they grow or new ones come along.
+>
+> The problem I have here, is that when I try to build a 7 disk array with
+> 1 spare disk the array gets to around %30 completion and then hangs.
+> this is with any kernal post 2.6.15-rc5-mm3.
+>
+> the machine just locks and hangs - no warnings, no logging no real
+> indications any where.
+> on occasion I do get errors within 2.6.15-rc5-mm3 during the raid creation.
+>
+> quick example
+>
+>
+> Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
+> berger kernel:  [<c041321f>] mv_channel_reset+0xff/0x120
+>
+> Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
+> berger kernel:  [<c041327a>] mv_stop_and_reset+0x3a/0x60
+>
+> Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
+> berger kernel:  [<c04128ab>] mv_host_intr+0x13b/0x180
+>
+> Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
+> berger kernel:  [<c041298d>] mv_interrupt+0x9d/0x130
+>
+> Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
+> berger kernel:  [<c014080d>] handle_IRQ_event+0x3d/0x70
+>
+> Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
+> berger kernel:  [<c01408b6>] __do_IRQ+0x76/0x100
+>
+> Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
+> berger kernel:  [<c0105089>] do_IRQ+0x19/0x30
+>
+> Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
+> berger kernel:  [<c01033ee>] common_interrupt+0x1a/0x20
+>
+> the full output of this debug is in other posts from me
+>
+> on a little investigation myself and with someone input from others, I
+> found that the through put on the actually building or the array gets to
+> a point where it starts to slow very quickly until it gets so slow the
+> machine hangs totally, and is unsable.
+>
+> [small example again]
+> [=====>...............]  recovery = 29.6% (72787968/245111616)
+> finish=153.4min speed=18720K/sec
+> [=====>...............]  recovery = 29.7% (72971136/245111616)
+> finish=153.2min speed=18717K/sec [=====>...............]  recovery =
+> 29.8% (73139388/245111616) finish=157.3min speed=18210K/sec
+> [=====>...............]  recovery = 29.8% (73139388/245111616)
+> finish=208.1min speed=13769K/sec
+> [=====>...............]  recovery = 29.8% (73139388/245111616)
+> finish=258.9min speed=11069K/sec
+> [=====>...............]  recovery = 29.8% (73139388/245111616)
+> finish=309.6min speed=9254K/sec
+>
+> I then tried the same test setting the disks to half speed
+> where it again did the same thing and died at almost exactly the same point.
+> [=====>...............]  recovery = 29.8% (73139200/245111616)
+> finish=251.8min speed=11381K/sec
+>
+> I've tried removing disks and replacing them with others, as the fact
+> that it hung at the same point each time suggested a possible hardware
+> issue, but I've had the same results using more/less disks, different disks.
+>
+> i've tried to watch the memory of the machine while the array is
+> building, and it does go up and down a little, but it never really
+> gradually falls in the same way that the disk throughput does.
+>
+> I'd love to see what the memory is when the box hangs but its just not
+> possible.
+>
+> I've also tried partitioning the disks into smaller chunks as suggested,
+> rather than 1x250gb partition per disk, and this too made no difference.
+>
+> I'd be interested in hearing how others have progressed with this situation.
+>
+> thanks
+>
+> Matt.
