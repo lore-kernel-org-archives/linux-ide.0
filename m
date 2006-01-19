@@ -1,138 +1,55 @@
-From: Matt Darcy <kernel-lists@projecthugo.co.uk>
-Subject: sata_mv Driver Problems Summery.
-Date: Thu, 19 Jan 2006 10:27:07 +0000
-Message-ID: <43CF697B.6040309@projecthugo.co.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: SATA passthrough fails to differentiate between SCSI devices
+Date: Thu, 19 Jan 2006 12:28:33 +0100
+Message-ID: <58cb370e0601190328j1fc3b2b4r8f27a956f097e2ef@mail.gmail.com>
+References: <43CB4908.90502@mit.edu> <43CD4A94.2000708@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host81-138-64-234.in-addr.btopenworld.com ([81.138.64.234]:58528
-	"HELO alesi.projecthugo.co.uk") by vger.kernel.org with SMTP
-	id S1161216AbWASK1K (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Jan 2006 05:27:10 -0500
+Received: from uproxy.gmail.com ([66.249.92.194]:21136 "EHLO uproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1161137AbWASL2g convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Jan 2006 06:28:36 -0500
+Received: by uproxy.gmail.com with SMTP id s2so183346uge
+        for <linux-ide@vger.kernel.org>; Thu, 19 Jan 2006 03:28:34 -0800 (PST)
+In-Reply-To: <43CD4A94.2000708@rtr.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: O <xsdg@mit.edu>, linux-ide@vger.kernel.org
 
-All,
+Hi,
 
-I/others have posted quite a few posts with regard to the sata_mv 
-experimental driver included in the <2.6.15 kernels.
+On 1/17/06, Mark Lord <liml@rtr.ca> wrote:
+> O wrote:
+> > So, if I do `for dev in /dev/sd?; do smartctl -d ata -i $dev; done`, I get identical output for all 8 SCSI disk devices available (excluding timestamps).  Additionally, if I do `for dev in /dev/sd?1; ...`, I get the identical output for all of the devices with a filesystem probed, but this set of output is for a _different drive_ than the /dev/sd? output.  Output is listed below, after some info about my drives.  lspci and dmesg excerpts follow.
+> >
+> > All SCSI disk access (including usb-storage) seems to work properly.  Fetching smart data from my ATA drives seems to work fine as well (that is, hda works, and hdc and hdd are reported as not having any SMART data, which is correct also).  As far as I can tell, this problem only arises when the libata passthrough is used.
+>
+>
+> Mmmm.. looks nasty.  Looks impossible, too, after glancing through the code.
+> I wonder where the bug is hiding..
 
-I thought a breif summery and update of my personal experiences may 
-benifit others contributing their own information and help keep a record 
-of where things are up to.
+Here?
 
+$ls -Hl /dev/sd*
+brw-rw----  1 root disk 8, 16 2006-01-16 03:20 /dev/sda
+brw-rw----  1 root disk 8, 33 2006-01-16 03:20 /dev/sda1
+brw-rw----  1 root disk 8, 16 2006-01-16 03:20 /dev/sdb
+brw-rw----  1 root disk 8, 33 2006-01-16 03:20 /dev/sdb1
+brw-rw----  1 root disk 8, 16 2006-01-16 03:20 /dev/sdc
+brw-rw----  1 root disk 8, 33 2006-01-16 03:20 /dev/sdc1
+brw-rw----  1 root disk 8, 16 2006-01-16 03:20 /dev/sdd
+brw-rw----  1 root disk 8, 33 2006-01-16 03:20 /dev/sdd1
+brw-rw----  1 root disk 8, 16 2006-01-16 03:20 /dev/sde
+brw-rw----  1 root disk 8, 33 2006-01-16 03:20 /dev/sde1
+brw-rw----  1 root disk 8, 16 2006-01-16 03:20 /dev/sdf
+brw-rw----  1 root disk 8, 16 2006-01-16 03:20 /dev/sdg
+brw-rw----  1 root disk 8, 16 2006-01-16 03:20 /dev/sdh
 
-First of all - I have been working through kernels and patches from 
-2.6.15-rc3 to 2.6.15-latestgit (at the last attempt it was git-11)
+If these device nodes are dynamically created by udev
+please check your udev rules.
 
-I'm using  a Super Micro 8 port sata controller - which is displauyed as
-
-00:0c.0 SCSI storage controller: Marvell Technology Group Ltd. 
-MV88SX5081 8-port SATA I PCI-X Controller (rev 03)
-
-through out the 2.6.15 kernel progression I've seen this driver get more 
-an more usable.
-
-Up until 2.6.15-rc5-mm3 the driver was unusable, I'just just get random 
-hangs pretty much as soon as the disk was accessed.
-
-Post 2.6.15-rc5-mm3 the driver appeared usable, I've been able to use 
-the disks as individual devices with quite reasonalbe performance 
-(maxtor Diamond 10 250GB ATA disks) no data loss, and no real problems.
-I also did some basic tests using LVM2 which appears to work fine 
-although performance did have a drop off, but hey the drivers still 
-early so no problems.
-
-The configuration I want to use the driver in is to have a larage raid 5 
-array thats within an lvm2 volume group. This should could me a bit of 
-hardware resillience and the ability to manage file systems for my own 
-project as they grow or new ones come along.
-
-The problem I have here, is that when I try to build a 7 disk array with 
-1 spare disk the array gets to around %30 completion and then hangs. 
-this is with any kernal post 2.6.15-rc5-mm3.
-
-the machine just locks and hangs - no warnings, no logging no real 
-indications any where.
-on occasion I do get errors within 2.6.15-rc5-mm3 during the raid creation.
-
-quick example
-
-
-Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
-berger kernel:  [<c041321f>] mv_channel_reset+0xff/0x120
-
-Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
-berger kernel:  [<c041327a>] mv_stop_and_reset+0x3a/0x60
-
-Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
-berger kernel:  [<c04128ab>] mv_host_intr+0x13b/0x180
-
-Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
-berger kernel:  [<c041298d>] mv_interrupt+0x9d/0x130
-
-Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
-berger kernel:  [<c014080d>] handle_IRQ_event+0x3d/0x70
-
-Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
-berger kernel:  [<c01408b6>] __do_IRQ+0x76/0x100
-
-Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
-berger kernel:  [<c0105089>] do_IRQ+0x19/0x30
-
-Message from syslogd@berger at Fri Jan 13 20:59:05 2006 ...
-berger kernel:  [<c01033ee>] common_interrupt+0x1a/0x20
-
-the full output of this debug is in other posts from me
-
-on a little investigation myself and with someone input from others, I 
-found that the through put on the actually building or the array gets to 
-a point where it starts to slow very quickly until it gets so slow the 
-machine hangs totally, and is unsable.
-
-[small example again]
-[=====>...............]  recovery = 29.6% (72787968/245111616) 
-finish=153.4min speed=18720K/sec
-[=====>...............]  recovery = 29.7% (72971136/245111616) 
-finish=153.2min speed=18717K/sec [=====>...............]  recovery = 
-29.8% (73139388/245111616) finish=157.3min speed=18210K/sec
-[=====>...............]  recovery = 29.8% (73139388/245111616) 
-finish=208.1min speed=13769K/sec
-[=====>...............]  recovery = 29.8% (73139388/245111616) 
-finish=258.9min speed=11069K/sec
-[=====>...............]  recovery = 29.8% (73139388/245111616) 
-finish=309.6min speed=9254K/sec
-
-I then tried the same test setting the disks to half speed
-where it again did the same thing and died at almost exactly the same point.
-[=====>...............]  recovery = 29.8% (73139200/245111616) 
-finish=251.8min speed=11381K/sec
-
-I've tried removing disks and replacing them with others, as the fact 
-that it hung at the same point each time suggested a possible hardware 
-issue, but I've had the same results using more/less disks, different disks.
-
-i've tried to watch the memory of the machine while the array is 
-building, and it does go up and down a little, but it never really 
-gradually falls in the same way that the disk throughput does.
-
-I'd love to see what the memory is when the box hangs but its just not 
-possible.
-
-I've also tried partitioning the disks into smaller chunks as suggested, 
-rather than 1x250gb partition per disk, and this too made no difference.
-
-I'd be interested in hearing how others have progressed with this situation.
-
-thanks
-
-Matt.
-
-
-
-
-
-
-
+Bartlomiej
