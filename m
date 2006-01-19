@@ -1,127 +1,96 @@
-From: Helmut Toplitzer <pvrusb2@toplitzer.net>
-Subject: Re: BUG?: VIA IDE transfer-rate problem
-Date: Thu, 19 Jan 2006 20:59:39 +0100
-Message-ID: <200601192059.40161.pvrusb2@toplitzer.net>
-References: <200601131909.07981.pvrusb2@toplitzer.net> <58cb370e0601190419u36e2509bmf11ccc90ef244c0e@mail.gmail.com> <200601191431.05126.pvrusb2@toplitzer.net>
-Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_s++zDITcYVs702p"
+From: Matt Gillette <Matt.Gillette@netcell.com>
+Subject: Re: ATA passthrough questions
+Date: Thu, 19 Jan 2006 12:43:32 -0800
+Message-ID: <DF42C291-57BB-4645-99F5-ED86D7CF22FC@netcell.com>
+References: <867ae21dff5bea23500e8489161916d3@Netcell.com> <58cb370e0601190354g54d54f3j4fdb5240ccd21917@mail.gmail.com>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from toplitzer.net ([83.151.30.110]:22700 "EHLO toplitzer.net")
-	by vger.kernel.org with ESMTP id S1161359AbWAST77 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jan 2006 14:59:59 -0500
-In-Reply-To: <200601191431.05126.pvrusb2@toplitzer.net>
+Received: from 64-60-240-146.cust.telepacific.net ([64.60.240.146]:2531 "EHLO
+	Netcell.com") by vger.kernel.org with ESMTP id S1161401AbWASUnL
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Jan 2006 15:43:11 -0500
+In-Reply-To: <58cb370e0601190354g54d54f3j4fdb5240ccd21917@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, dbrownell@users.sourceforge.net, linux-usb-devel@lists.sourceforge.net, Rene Herman <rene.herman@keyaccess.nl>
+Cc: linux-ide@vger.kernel.org
 
---Boundary-00=_s++zDITcYVs702p
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Bartlomiej,
 
+Thank you for answering my questions - responses inline
 
-Is this adequate?
-You need a VIA82xxx board, HLT and pass disableviahlt on boot.
-Tested on my system with success. Please check for 
-errors.
+On Jan 19, 2006, at 3:54 AM, Bartlomiej Zolnierkiewicz wrote:
+> Hi,
+> On 1/9/06, Matt Gillette <Matt.Gillette@netcell.com> wrote:
+>> Hi,
+>> I have a few questions about ata passthrough. Our controller creates
+>> its own ATA commands to configure the device, so I need full  
+>> access to
+>> the taskfile when sending commands to the controller/drive.
+> What do you need to configure using non-standard commands?  RAID?
 
-Helmut
+RAID. The netcell controller is a hardware raid. We have two ways to  
+configure it - through bios and using vendor specific ata commands.
 
+>> Could someone tell me why CONFIG_IDE_TASKFILE is disabled by default?
+>
+> Well, because it is experimental/dangerous/unfinished.
+> However some distributions enable it by default.
 
--- 
-My GNUpg fingerprint http://www.gnupg.org
-4563 F4FB 0B7E 8698 53CD  00E9 E319 35BD 6A91 1656
+Is this still being worked on (ie, will it ever be enabled by default)?
 
---Boundary-00=_s++zDITcYVs702p
-Content-Type: text/x-diff;
-  charset="iso-8859-15";
-  name="viahltpatch.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="viahltpatch.diff"
+Also, if you know the distributions, could you name a couple that  
+enable it?
 
---- linux-2.6.15/drivers/ide/ide-dma.c	2006-01-19 20:53:01.000000000 +0100
-+++ linux-2.6.15.viahlt/drivers/ide/ide-dma.c	2006-01-19 20:50:45.000000000 +0100
-@@ -90,6 +90,57 @@
- #include <asm/io.h>
- #include <asm/irq.h>
- 
-+
-+
-+#ifdef CONFIG_BLK_DEV_VIA82CXXX
-+static DEFINE_SPINLOCK(ide_hlt_lock);
-+static int hlt_disabled;
-+static int disableviahlt;
-+static void ide_disable_hlt(void)
-+{
-+	unsigned long flags;
-+	
-+	spin_lock_irqsave(&ide_hlt_lock, flags);
-+	if(!hlt_disabled && disableviahlt) {
-+		hlt_disabled = 1;
-+#ifdef HAVE_DISABLE_HLT
-+		disable_hlt();
-+#endif
-+	}
-+	spin_unlock_irqrestore(&ide_hlt_lock, flags);
-+}
-+
-+static void ide_enable_hlt(void)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ide_hlt_lock, flags);
-+	if(hlt_disabled && disableviahlt){
-+		hlt_disabled = 0;
-+#ifdef HAVE_DISABLE_HLT
-+		enable_hlt();
-+#endif
-+	}
-+	spin_unlock_irqrestore(&ide_hlt_lock, flags);
-+}
-+
-+static int __init disableviahlt(char *str)
-+{
-+    printk(KERN_WARNING "DISABLE VIA HLT  activated\n");
-+    disableviahlt = 1;
-+    return 1;
-+}
-+
-+__setup("disableviahlt", disableviahlt);
-+
-+
-+#else
-+static void ide_disable_hlt(void)
-+{}
-+static void ide_enable_hlt(void)
-+{}
-+#endif
-+
- static const struct drive_list_entry drive_whitelist [] = {
- 
- 	{ "Micropolis 2112A"	,       "ALL"		},
-@@ -303,6 +354,9 @@
- 	if (count) {
- 		if (!is_trm290)
- 			*--table |= cpu_to_le32(0x80000000);
-+#ifdef CONFIG_BLK_DEV_VIA82CXXX
-+		ide_disable_hlt();
-+#endif
- 		return count;
- 	}
- 	printk(KERN_ERR "%s: empty DMA table?\n", drive->name);
-@@ -334,6 +388,9 @@
- 	int nents = HWIF(drive)->sg_nents;
- 
- 	pci_unmap_sg(dev, sg, nents, HWIF(drive)->sg_dma_direction);
-+#ifdef CONFIG_BLK_DEV_VIA82CXXX
-+	ide_enable_hlt();
-+#endif
- }
- 
- EXPORT_SYMBOL_GPL(ide_destroy_dmatable);
+>> Is www.kernel.org/pub/linux/kernel/people/jgarzik/libata the place to
+>> get information on libata? Or are there other places anyone can
+>> recommend?After glancing at the pdf, it looks like the function
+>
+> http://linux.yyz.us/sata/
 
---Boundary-00=_s++zDITcYVs702p--
+Exactly what I was looking for - thanks.
+
+>> HDIO_DRIVE_TASKFILE is called ata_tf_to_host in libata - is this
+>> right?Does this command need to be enabled in the kernel  
+>> configuration
+>> options ala CONFIG_IDE_TASKFILE? Is there any open source code that
+>> uses theata_tf_to_host command so I can see it in action?
+>
+> Do you need to this from driver of from user-space application?
+>
+> If the former please give some link to the source code
+> so we could see what libata functions are needed.
+
+We are hoping to send these commands from a user-space application.  
+Currently we don't have our own driver. We added our vendor/device  
+ids to ide-generic so everything is handled by that driver. Now that  
+our ids are in kernel.org, I was hoping to find a way to send these  
+ATA commands down to our card without requiring another change to the  
+kernel.
+
+One question that I have is what's the difference between the older  
+ide drivers and libata. What is the future of the ide driver - is it  
+going to be phased out and replaced by libata, or will they both  
+remain in the kernel and developed in parallel.
+
+Also, I'm unclear about using libata - do we need to have a driver in  
+libata to use its functionality, or does our current driver (ide- 
+generic) allow us to use libata's passthrough. Our card currently  
+doesn't implement any sata features, but it could in the future. If  
+we wanted to use these features (say Command Queueing) what is needed  
+to get support.
+
+> If the latter than are using ATA pass-through interface
+> you need to issue specially prepared SG_IO ioctl instead.
+
+This looks like it could do the trick. Two questions - is this  
+enabled by default, and are there any open source projects where I  
+can see it being used?
+
+> Thanks,
+> Bartlomiej
+
+Thanks,
+Matt
