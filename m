@@ -1,34 +1,36 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: ATA passthrough questions
-Date: Thu, 19 Jan 2006 15:51:57 -0500
-Message-ID: <43CFFBED.8030202@rtr.ca>
-References: <867ae21dff5bea23500e8489161916d3@Netcell.com> <58cb370e0601190354g54d54f3j4fdb5240ccd21917@mail.gmail.com> <DF42C291-57BB-4645-99F5-ED86D7CF22FC@netcell.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] Re: BUG?: VIA IDE transfer-rate problem
+Date: Thu, 19 Jan 2006 16:29:04 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0601191623570.4622-100000@iolanthe.rowland.org>
+References: <200601192059.40161.pvrusb2@toplitzer.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:37340 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1161422AbWASUwN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jan 2006 15:52:13 -0500
-In-Reply-To: <DF42C291-57BB-4645-99F5-ED86D7CF22FC@netcell.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:31929 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1161434AbWASV3G (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Jan 2006 16:29:06 -0500
+In-Reply-To: <200601192059.40161.pvrusb2@toplitzer.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matt Gillette <Matt.Gillette@netcell.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Helmut Toplitzer <pvrusb2@toplitzer.net>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, dbrownell@users.sourceforge.net, linux-usb-devel@lists.sourceforge.net, Rene Herman <rene.herman@keyaccess.nl>
 
-Matt Gillette wrote:
- >
-> One question that I have is what's the difference between the older  ide 
-> drivers and libata. What is the future of the ide driver - is it  going 
-> to be phased out and replaced by libata, or will they both  remain in 
-> the kernel and developed in parallel.
+On Thu, 19 Jan 2006, Helmut Toplitzer wrote:
 
-The older IDE layer, which I once wrote and maintained, is on the way out.
-The original code there wasn't designed for a hotplug world, and has lots
-of issues nowadays from years of neglect, bloat, and a changed world.
+> Is this adequate?
+> You need a VIA82xxx board, HLT and pass disableviahlt on boot.
+> Tested on my system with success. Please check for 
+> errors.
 
-Anything new should really target libata, or have its own native block driver.
+Some stylistic suggestions.  The new routines should be surrounded by
 
-Cheers
+#if defined(CONFIG_BLK_DEV_VIA82CXXX) and defined(HAVE_VIA_HALT)
 
-Mark
+In the #else part, make ide_disable_hlt and ide_enable_hlt inline.
+
+You don't need the #ifdef protecting the calls to to ide_disable_hlt and 
+ide_enable_hlt.
+
+Alan Stern
+
