@@ -1,53 +1,32 @@
-From: Matt Darcy <kernel-lists@projecthugo.co.uk>
-Subject: Re: sata_mv Driver Problems Summery.
-Date: Thu, 19 Jan 2006 13:33:06 +0000
-Message-ID: <43CF9512.1080808@projecthugo.co.uk>
-References: <43CF697B.6040309@projecthugo.co.uk> <58cb370e0601190512t2169ec05l1bf20d80bf2900d9@mail.gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: sata_mv important note
+Date: Thu, 19 Jan 2006 12:05:06 -0500
+Message-ID: <43CFC6C2.60607@rtr.ca>
+References: <43CD07D5.30302@pobox.com> <E1EytdC-0006DE-IS@highlab.com>	 <43CD46B7.4000907@rtr.ca> <1137581636.10890.81.camel@localhost.localdomain>	 <43CE6965.9040408@pobox.com> <1137613505.25727.6.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host81-138-64-234.in-addr.btopenworld.com ([81.138.64.234]:51090
-	"HELO alesi.projecthugo.co.uk") by vger.kernel.org with SMTP
-	id S1161196AbWASNdN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Jan 2006 08:33:13 -0500
-In-Reply-To: <58cb370e0601190512t2169ec05l1bf20d80bf2900d9@mail.gmail.com>
+Received: from rtr.ca ([64.26.128.89]:46496 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S932539AbWASRFW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jan 2006 12:05:22 -0500
+In-Reply-To: <1137613505.25727.6.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Erik Slagter <erik@slagter.name>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz wrote:
+Erik Slagter wrote:
+>
+>>sata_qstor
+>
+> Bummer. I silently hoped it would be using ahci, but I will dream on ;-)
 
->Hi,
->
->
->  
->
->Could you open a bug at http://bugzilla.kernel.org
->and accumulate information there?
->
->I think that I'm seeing that report 3rd time and each time
->I have to read it entirely to verify if there is some new data.
->
->Mails to the list are still fine but for people already knowing
->background of the issue (this includes developers who are short
->on time) the only thing is whether something have changed recently.
->
->Thanks,
->Bartlomiej
->
->  
->
+It has a UHCI interface rather than AHCI.
 
-Happy to log a bug report for this.
+There is an alternative SCSI LLD for it that supports all of the goodies
+(native and legacy tagged queuing, RAID 0/1/10, hot ("live") insertion/removal,
+etc.. but it is probably a bit out of date now.  Last updated a year ago.
+And not in the main tree.
 
-I only sent out a summery as mails have got a little dissjointed and not 
-all the informaiton was clear and on some occasions if not read proprely 
-implied conflicting data, plus in one of my tests that Neil Brown 
-corrected I made a typo so submitted wrong data to the list. I just 
-wanted to make the current situation, facts and info clear in a one hit 
-mail that could be referenced instead of the disjointed threads.
-
-Matt
-
+Cheers
