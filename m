@@ -1,64 +1,37 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [RFC: 2.6 patch] drivers/ide/ide-io.c: make __ide_end_request() static
-Date: Thu, 19 Jan 2006 23:10:36 +0100
-Message-ID: <20060119221036.GA19398@stusta.de>
+From: Bogdan Costescu <Bogdan.Costescu@iwr.uni-heidelberg.de>
+Subject: Re: sata_mv @ asus PSCH-SR/SATA doesnt work
+Date: Thu, 19 Jan 2006 23:38:02 +0100 (CET)
+Message-ID: <Pine.LNX.4.44.0601192333300.23973-100000@kenzo.iwr.uni-heidelberg.de>
+References: <200601191823.01254.opa@nsib.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:27143 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1422656AbWASWKh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Jan 2006 17:10:37 -0500
-Content-Disposition: inline
+Received: from relay2.uni-heidelberg.de ([129.206.210.211]:4045 "EHLO
+	relay2.uni-heidelberg.de") by vger.kernel.org with ESMTP
+	id S1161380AbWASWj2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Jan 2006 17:39:28 -0500
+In-Reply-To: <200601191823.01254.opa@nsib.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Pasha <opa@nsib.ru>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Since there's no longer any external user, we can make 
-__ide_end_request() static.
+On Thu, 19 Jan 2006, Pasha wrote:
 
+> I has asus PSCH-SR/SATA with aic-8110 RAID chip
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Some of my previous results posted on this list were obtained on
+exactly this type of mainboard.
 
----
+> sata_mv 0000:02:08.0: 32 slots 4 ports SCSI mode IRQ via MSI
 
-This patch was already sent on:
-- 7 Jan 2006
+You need to disable MSI in the kernel config and recompile.
 
- drivers/ide/ide-io.c |    5 ++---
- include/linux/ide.h  |    1 -
- 2 files changed, 2 insertions(+), 4 deletions(-)
+--
+Bogdan Costescu
 
---- linux-2.6.15-mm2-full/include/linux/ide.h.old	2006-01-07 17:49:26.000000000 +0100
-+++ linux-2.6.15-mm2-full/include/linux/ide.h	2006-01-07 17:49:31.000000000 +0100
-@@ -1000,7 +1000,6 @@
- extern int noautodma;
- 
- extern int ide_end_request (ide_drive_t *drive, int uptodate, int nrsecs);
--extern int __ide_end_request (ide_drive_t *drive, struct request *rq, int uptodate, int nrsecs);
- 
- /*
-  * This is used on exit from the driver to designate the next irq handler
---- linux-2.6.15-mm2-full/drivers/ide/ide-io.c.old	2006-01-07 17:49:38.000000000 +0100
-+++ linux-2.6.15-mm2-full/drivers/ide/ide-io.c	2006-01-07 17:50:13.000000000 +0100
-@@ -55,8 +55,8 @@
- #include <asm/io.h>
- #include <asm/bitops.h>
- 
--int __ide_end_request(ide_drive_t *drive, struct request *rq, int uptodate,
--		      int nr_sectors)
-+static int __ide_end_request(ide_drive_t *drive, struct request *rq,
-+			     int uptodate, int nr_sectors)
- {
- 	int ret = 1;
- 
-@@ -94,7 +94,6 @@
- 	}
- 	return ret;
- }
--EXPORT_SYMBOL(__ide_end_request);
- 
- /**
-  *	ide_end_request		-	complete an IDE I/O
+IWR - Interdisziplinaeres Zentrum fuer Wissenschaftliches Rechnen
+Universitaet Heidelberg, INF 368, D-69120 Heidelberg, GERMANY
+Telephone: +49 6221 54 8869, Telefax: +49 6221 54 8868
+E-mail: Bogdan.Costescu@IWR.Uni-Heidelberg.De
 
