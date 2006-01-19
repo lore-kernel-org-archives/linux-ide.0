@@ -1,41 +1,56 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [linux-usb-devel] Re: BUG?: VIA IDE transfer-rate problem
-Date: Thu, 19 Jan 2006 01:05:02 +0000
-Message-ID: <1137632702.1760.29.camel@localhost.localdomain>
-References: <200601131909.07981.pvrusb2@toplitzer.net>
-	 <200601181536.16868.pvrusb2@toplitzer.net>
-	 <58cb370e0601180813pfb6baffr953e5be26223ea1@mail.gmail.com>
-	 <200601190041.36138.pvrusb2@toplitzer.net>
+From: Helmut Toplitzer <pvrusb2@toplitzer.net>
+Subject: Re: BUG?: VIA IDE transfer-rate problem
+Date: Thu, 19 Jan 2006 08:21:50 +0100
+Message-ID: <200601190821.51702.pvrusb2@toplitzer.net>
+References: <200601131909.07981.pvrusb2@toplitzer.net> <200601181536.16868.pvrusb2@toplitzer.net> <58cb370e0601180813pfb6baffr953e5be26223ea1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:4799 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1161130AbWASBFt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Jan 2006 20:05:49 -0500
-In-Reply-To: <200601190041.36138.pvrusb2@toplitzer.net>
+Received: from toplitzer.net ([83.151.30.110]:37266 "EHLO toplitzer.net")
+	by vger.kernel.org with ESMTP id S1161080AbWASHV7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Jan 2006 02:21:59 -0500
+In-Reply-To: <58cb370e0601180813pfb6baffr953e5be26223ea1@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Helmut Toplitzer <pvrusb2@toplitzer.net>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, dbrownell@users.sourceforge.net, linux-usb-devel@lists.sourceforge.net
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, dbrownell@users.sourceforge.net, linux-usb-devel@lists.sourceforge.net
 
-On Iau, 2006-01-19 at 00:41 +0100, Helmut Toplitzer wrote:
-> Ok. Was just a bit digging through the sourcecode. Found a
-> function called disable_hlt. Some further digging.
-> Found in drivers/block/floppy.c a usage of disable_hlt.
-> It's called (if I haven't missunderstood something) 
-> whenever a DMA transfer is setup. enable_hlt is called
-> when a transfer stops/is cancled etc...
 
-Yes this deals with some errata cases
+Ok. I found another possible reason, did I?
 
-> Does such thing makes sense for IDE DMA-transfers too? 
-> (Maybe I've missed something)
+I read in several forums that HLT in KT333 chipsets
+of VIA is not enough to get the processor in powersafe
+and to disconnect from the FSB. You need to issuse
+the STPGNT command which also needs first
+to set some registers (because it degrades overall performance and
+so it's normaly disabled by BIOS).
+http://www.planet3dnow.de/vbulletin/archive/index.php/t-80854.html
+(German)
 
-Only for the CS5510 Cyrix as far as I know, and I really ought to fix
-that in the new libata driver.
+It's called "Disconnect Enable when STPGNT Detected". And may cause
+other problems like sound distortion etc. because of high fluctuation
+in power current.
 
-Generally speaking hlt is good, it takes the CPU off the bus and frees
-it up for the other users.
+There should also be a simmilar register for the HLT command. ???
 
+http://www.rhcf.com/sis-bin/ultimatebb.cgi?ubb=3Dget_topic;f=3D7;t=3D00=
+0078;p=3D0
+VIA KT266/KT266A/KM266/KM266A/KT333
+Rx92[bit 7 =E2=80=93 enable] =3D Disconnect Enable When STPGNT Detected
+Rx95[bit 1 =E2=80=93 enable] =3D HALT Command Detect
+offset 92 set to E8 or E9
+
+VIA KT333CF/KT400/KT400A/KM400/KM400A/KT600
+RxD2[bit 7 =E2=80=93 enable] =3D Disconnect Enable When STPGNT Detected
+RxD5[bit 1 =E2=80=93 enable] =3D HALT Command Detect
+offset D2 set to E8 or E9
+
+Does this help?
+Helmut
+
+--=20
+My GNUpg fingerprint http://www.gnupg.org
+4563 F4FB 0B7E 8698 53CD  00E9 E319 35BD 6A91 1656
