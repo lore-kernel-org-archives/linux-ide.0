@@ -1,97 +1,112 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH] Re: [linux-usb-devel] Re: 2.6.15-mm3 [USB lost interrupt
+From: Reuben Farrelly <reuben-lkml@reub.net>
+Subject: Re: [PATCH] Re: [linux-usb-devel] Re: 2.6.15-mm3 [USB lost interrupt
  bug]
-Date: Sat, 21 Jan 2006 03:32:18 -0500
-Message-ID: <43D1F192.3060406@pobox.com>
-References: <Pine.LNX.4.44L0.0601152243330.1929-100000@netrider.rowland.org>	<43D1C4E9.7030901@reub.net> <20060120214723.79111715.akpm@osdl.org> <43D1E9A4.8090504@reub.net>
+Date: Sat, 21 Jan 2006 23:41:34 +1300
+Message-ID: <43D20FDE.8070700@reub.net>
+References: <Pine.LNX.4.44L0.0601152243330.1929-100000@netrider.rowland.org>	<43D1C4E9.7030901@reub.net> <20060120214723.79111715.akpm@osdl.org> <43D1E9A4.8090504@reub.net> <43D1F192.3060406@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040803060803060209030702"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:51671 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751135AbWAUIcg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Jan 2006 03:32:36 -0500
-In-Reply-To: <43D1E9A4.8090504@reub.net>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Reuben Farrelly <reuben-lkml@reub.net>, Andrew Morton <akpm@osdl.org>
-Cc: stern@rowland.harvard.edu, linux-kernel@vger.kernel.org, greg@kroah.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, neilb@cse.unsw.edu.au, linux-acpi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------040803060803060209030702
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <43D1F192.3060406@pobox.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andrew Morton <akpm@osdl.org>, stern@rowland.harvard.edu, linux-kernel@vger.kernel.org, greg@kroah.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, neilb@cse.unsw.edu.au, linux-acpi@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 
-On the libata side of things, does this patch produce any useful results?
 
-	Jeff
+On 21/01/2006 9:32 p.m., Jeff Garzik wrote:
+> 
+> On the libata side of things, does this patch produce any useful results?
+> 
+>     Jeff
+> 
+> 
+> 
+> 
+> ------------------------------------------------------------------------
+> 
+> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+> index 46c4cdb..4691f8d 100644
+> --- a/drivers/scsi/libata-core.c
+> +++ b/drivers/scsi/libata-core.c
+> @@ -4794,7 +4794,14 @@ ata_pci_init_native_mode(struct pci_dev 
+>  			pci_resource_start(pdev, 1) | ATA_PCI_CTL_OFS;
+>  		probe_ent->port[p].bmdma_addr = pci_resource_start(pdev, 4);
+>  		ata_std_ports(&probe_ent->port[p]);
+> -		p++;
+
+I've patched 2.6.15-mm4 with this, and yes, this patch changed the behaviour:
+
+OK TIMEOUT OK OK TIMEOUT TIMEOUT TIMEOUT TIMEOUT OK TIMEOUT TIMEOUT OK TIMEOUT 
+TIMEOUT TIMEOUT
+
+OK was when we got through to completion of single user mode, TIMEOUT - see below.
+
+So no oopsing with that patch applied, which is a definite improvement. 
+Previously to this I was seeing the OOPSing most of the time and the TIMEOUTS 
+more occasionally.
+
+---
+
+Now, looking at the timeouts, here's the log from a boot:
+
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 193
+ahci 0000:00:1f.2: AHCI 0001.0000 32 slots 4 ports 1.5 Gbps 0xf impl SATA mode
+ahci 0000:00:1f.2: flags: 64bit ncq led slum part
+ata1: SATA max UDMA/133 cmd 0xF8804D00 ctl 0x0 bmdma 0x0 irq 50
+ata2: SATA max UDMA/133 cmd 0xF8804D80 ctl 0x0 bmdma 0x0 irq 50
+ata3: SATA max UDMA/133 cmd 0xF8804E00 ctl 0x0 bmdma 0x0 irq 50
+ata4: SATA max UDMA/133 cmd 0xF8804E80 ctl 0x0 bmdma 0x0 irq 50
+ata1: SATA link up 1.5 Gbps (SStatus 113)
+ata1 is slow to respond, please be patient
+ata1 failed to respond (30 secs)
+scsi0 : ahci
+ata2: SATA link up 1.5 Gbps (SStatus 113)
+ata2 is slow to respond, please be patient
+ata2 failed to respond (30 secs)
+scsi1 : ahci
+ata3: SATA link up 1.5 Gbps (SStatus 113)
+ata3 is slow to respond, please be patient
+ata3 failed to respond (30 secs)
+scsi2 : ahci
+ata4: SATA link down (SStatus 0)
+scsi3 : ahci
+
+When there is no timeout it looks like this:
+
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 193
+ahci 0000:00:1f.2: AHCI 0001.0000 32 slots 4 ports 1.5 Gbps 0xf impl SATA mode
+ahci 0000:00:1f.2: flags: 64bit ncq led slum part
+ata1: SATA max UDMA/133 cmd 0xF8804D00 ctl 0x0 bmdma 0x0 irq 193
+ata2: SATA max UDMA/133 cmd 0xF8804D80 ctl 0x0 bmdma 0x0 irq 193
+ata3: SATA max UDMA/133 cmd 0xF8804E00 ctl 0x0 bmdma 0x0 irq 193
+ata4: SATA max UDMA/133 cmd 0xF8804E80 ctl 0x0 bmdma 0x0 irq 193
+ata1: SATA link up 1.5 Gbps (SStatus 113)
+ata1: dev 0 ATA-6, max UDMA/133, 156301488 sectors: LBA48
+ata1: dev 0 configured for UDMA/133
+scsi0 : ahci
+ata2: SATA link up 1.5 Gbps (SStatus 113)
+ata2: dev 0 ATA-6, max UDMA/133, 156301488 sectors: LBA48
+ata2: dev 0 configured for UDMA/133
+scsi1 : ahci
+ata3: SATA link up 1.5 Gbps (SStatus 113)
+ata3: dev 0 ATA-6, max UDMA/133, 156299375 sectors: LBA48
+ata3: dev 0 configured for UDMA/133
+scsi2 : ahci
+ata4: SATA link down (SStatus 0)
+scsi3 : ahci
+
+Note the different IRQ numbers (50, 193) and how when it breaks, the ATA 
+interfaces have a different IRQ to the AHCI controller.
+
+There's a full log up at http://lkml.org/lkml/2006/1/11/492 from when I posted 
+on lkml and at http://www.reub.net/files/kernel/ when the box isn't down for 
+testing ;-)
+
+This may be a separate but related problem to the oops, I guess.
+
+reuben
 
 
-
-
---------------040803060803060209030702
-Content-Type: text/plain;
- name="patch.pci-region-check"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch.pci-region-check"
-
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 46c4cdb..4691f8d 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -4794,7 +4794,14 @@ ata_pci_init_native_mode(struct pci_dev 
- 			pci_resource_start(pdev, 1) | ATA_PCI_CTL_OFS;
- 		probe_ent->port[p].bmdma_addr = pci_resource_start(pdev, 4);
- 		ata_std_ports(&probe_ent->port[p]);
--		p++;
-+
-+		if (pci_resource_start(pdev, 0) &&
-+		    pci_resource_len(pdev, 0) &&
-+		    pci_resource_start(pdev, 1) &&
-+		    pci_resource_len(pdev, 1) &&
-+		    pci_resource_start(pdev, 4) &&
-+		    pci_resource_len(pdev, 4))
-+			p++;
- 	}
- 
- 	if (ports & ATA_PORT_SECONDARY) {
-@@ -4804,10 +4811,23 @@ ata_pci_init_native_mode(struct pci_dev 
- 			pci_resource_start(pdev, 3) | ATA_PCI_CTL_OFS;
- 		probe_ent->port[p].bmdma_addr = pci_resource_start(pdev, 4) + 8;
- 		ata_std_ports(&probe_ent->port[p]);
--		p++;
-+
-+		if (pci_resource_start(pdev, 2) &&
-+		    pci_resource_len(pdev, 2) &&
-+		    pci_resource_start(pdev, 3) &&
-+		    pci_resource_len(pdev, 3) &&
-+		    pci_resource_start(pdev, 4) &&
-+		    pci_resource_len(pdev, 4) > 8)
-+			p++;
- 	}
- 
- 	probe_ent->n_ports = p;
-+
-+	if (p == 0) {
-+		kfree(probe_ent);
-+		probe_ent = NULL;
-+	}
-+
- 	return probe_ent;
- }
- 
-@@ -4815,6 +4835,10 @@ static struct ata_probe_ent *ata_pci_ini
- {
- 	struct ata_probe_ent *probe_ent;
- 
-+	if (!pci_resource_start(pdev, 4) ||
-+	    !pci_resource_len(pdev, 4))
-+		return NULL;
-+
- 	probe_ent = ata_probe_ent_alloc(pci_dev_to_dev(pdev), port);
- 	if (!probe_ent)
- 		return NULL;
-
---------------040803060803060209030702--
