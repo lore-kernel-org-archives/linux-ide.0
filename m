@@ -1,51 +1,30 @@
-From: Arjan van de Ven <arjan@infradead.org>
+From: Chase Venters <chase.venters@clientec.com>
 Subject: Re: memory leak in scsi_cmd_cache 2.6.15
-Date: Sun, 22 Jan 2006 20:07:21 +0100
-Message-ID: <1137956841.3328.36.camel@laptopd505.fenrus.org>
-References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz>
-	 <1137917798.3328.2.camel@laptopd505.fenrus.org>
-	 <1137918044.3328.6.camel@laptopd505.fenrus.org>
-	 <Pine.LNX.4.62.0601221251340.30208@pureeloreel.qftzy.pbz>
+Date: Sun, 22 Jan 2006 13:16:54 -0600
+Message-ID: <200601221317.17124.chase.venters@clientec.com>
+References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz> <Pine.LNX.4.62.0601221251340.30208@pureeloreel.qftzy.pbz> <1137956841.3328.36.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-6"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:51392 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751314AbWAVTHX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Jan 2006 14:07:23 -0500
-In-Reply-To: <Pine.LNX.4.62.0601221251340.30208@pureeloreel.qftzy.pbz>
+Received: from relay01.pair.com ([209.68.5.15]:49929 "HELO relay01.pair.com")
+	by vger.kernel.org with SMTP id S1750859AbWAVTRW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Jan 2006 14:17:22 -0500
+In-Reply-To: <1137956841.3328.36.camel@laptopd505.fenrus.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ariel <askernel2615@dsgml.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Ariel <askernel2615@dsgml.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, 2006-01-22 at 13:51 -0500, Ariel wrote:
-> On Sun, 22 Jan 2006, Arjan van de Ven wrote:
-> 
-> > On Sun, 2006-01-22 at 09:16 +0100, Arjan van de Ven wrote:
-> >> On Sat, 2006-01-21 at 21:13 -0500, Ariel wrote:
-> >>> I have a memory leak in scsi_cmd_cache.
-> 
-> >> does this happen without the binary nvidia driver too? (it appears
-> >> you're using that). That's a good datapoint to have if so...
-> 
-> I had the exact same nvidia driver with 2.6.12 (just recompiled) and it 
-> didn't happen there.
-> 
-> But just in case I used slabtop to watch scsi_cmd_cache grow by 1.24KB per 
-> second (104MB per day), then I rmmoded nvidia and watched it grow by 
-> 1.16KB per 
+On Sunday 22 January 2006 13:06, Arjan van de Ven wrote:
+> I see you also use vmware. The other person who reported this also uses
+> vmware. Could you please repeat the test without BOTH the nvidia and
+> vmware modules?
 
-please repeat this without nvidia ever being loaded. Just having a
-module loaded before can already cause corruption that ripples through
-later, so just unloading is not enough to get a clean result.
+Arjan,
+	FYI - I reported this as well and I do not use VMWare.
 
-<lsmod snipped>
-
-I see you also use vmware. The other person who reported this also uses
-vmware. Could you please repeat the test without BOTH the nvidia and
-vmware modules?
-
-
-
+Cheers,
+Chase
