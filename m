@@ -1,41 +1,49 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: memory leak in scsi_cmd_cache 2.6.15
-Date: Sun, 22 Jan 2006 09:20:44 +0100
-Message-ID: <1137918044.3328.6.camel@laptopd505.fenrus.org>
-References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz>
-	 <1137917798.3328.2.camel@laptopd505.fenrus.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCHSET] libata: various fixes related to EH
+Date: Sun, 22 Jan 2006 04:10:42 -0500
+Message-ID: <43D34C12.6050108@pobox.com>
+References: <11379167103055-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:54243 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932197AbWAVIUp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Jan 2006 03:20:45 -0500
-In-Reply-To: <1137917798.3328.2.camel@laptopd505.fenrus.org>
+Received: from mail.dvmed.net ([216.237.124.58]:10726 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932236AbWAVJKw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Jan 2006 04:10:52 -0500
+In-Reply-To: <11379167103055-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ariel <askernel2615@dsgml.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 
-On Sun, 2006-01-22 at 09:16 +0100, Arjan van de Ven wrote:
-> On Sat, 2006-01-21 at 21:13 -0500, Ariel wrote:
-> > I have a memory leak in scsi_cmd_cache.
-> > 
-> > Attached is a pretty graph made by munin, and you can see slab_cache 
-> > growing constantly since last reboot. Also attached is /proc/config.gz
-> > 
-> > And here is a copy of /proc/meminfo and /proc/slabinfo
-> > 
-> > I'm rebooting now since my system is all but unusable (so the mem stats 
-> > will reset), but if you need any more info let me know.
+Tejun Heo wrote:
+> Hello, Jeff, Albert.
 > 
+> This patchset is composed of 12 patches fixing/updating various EH
+> related stuff in libata.  Although not all of the patches are
+> logically related, they need to be ordered because they modify
+> similar parts of code.
 > 
-> does this happen without the binary nvidia driver too? (it appears
-> you're using that). That's a good datapoint to have if so...
+> #01	: cosmetic
+> #02	: ata_qc_new/free model
+> #03	: ata_qc_issue() error handling fix
+> #04	: detailed AC_ERR_* flags
+> #05	: return AC_ERR_* from issue functions
+> #06-07	: ata_eh_qc_retry/complete
+> #08-12	: eh synchronization (#12 is the pio/eh sync patch I talked
+> 	  about in the thread "update timer for PIO polling - revised")
+> 
+> Jeff, these are hopefully more acceptable patches from my recent EH
+> work.  I'll soon follow up with more pervasive patches.  My working
+> version of new EH now does most things described in ATA EH doc
+> including reset, revalidation and gearing down.  I've also ported
+> Jen's NCQ support over it, and, although it has a few issues, it's
+> generally working okay.
+
+At first glance, all 12 patches look pretty good.  Definitely moving in 
+the right direction, though I noticed a few things.  Comments will follow...
+
+	Jeff
 
 
-btw please post an lsmod, so that we can find "common" things with the
-other reporters of this issue, and thus maybe are able to get closer to
-the issue by reducing the candidates...
 
