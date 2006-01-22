@@ -1,63 +1,122 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 12/12] libata: EH / pio tasks synchronization
-Date: Sun, 22 Jan 2006 04:58:11 -0500
-Message-ID: <43D35733.1040609@pobox.com>
-References: <11379167111043-git-send-email-htejun@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 02/12] libata: make the owner of a qc responsible for
+ freeing it
+Date: Sun, 22 Jan 2006 19:16:03 +0900
+Message-ID: <43D35B63.6010704@gmail.com>
+References: <1137916710182-git-send-email-htejun@gmail.com> <43D35274.2060402@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:34022 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932349AbWAVJ6O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Jan 2006 04:58:14 -0500
-In-Reply-To: <11379167111043-git-send-email-htejun@gmail.com>
+Received: from xproxy.gmail.com ([66.249.82.192]:13802 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932347AbWAVKQJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Jan 2006 05:16:09 -0500
+Received: by xproxy.gmail.com with SMTP id s14so519949wxc
+        for <linux-ide@vger.kernel.org>; Sun, 22 Jan 2006 02:16:08 -0800 (PST)
+In-Reply-To: <43D35274.2060402@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 
-Tejun Heo wrote:
-> This patch makes sure that pio tasks are flushed before proceeding
-> with EH.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> --- a/drivers/scsi/libata-scsi.c
+>> +++ b/drivers/scsi/libata-scsi.c
+>> @@ -1219,7 +1219,7 @@ nothing_to_do:
+>>      return 1;
+>>  }
+>>  
+>> -static int ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+>> +static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+>>  {
+>>      struct scsi_cmnd *cmd = qc->scsicmd;
+>>      u8 *cdb = cmd->cmnd;
+>> @@ -1256,7 +1256,7 @@ static int ata_scsi_qc_complete(struct a
+>>  
+>>      qc->scsidone(cmd);
+>>  
+>> -    return 0;
+>> +    ata_qc_free(qc);
+>>  }
+>>  
+>>  /**
+>> @@ -1982,7 +1982,7 @@ void ata_scsi_badcmd(struct scsi_cmnd *c
+>>      done(cmd);
+>>  }
+>>  
+>> -static int atapi_sense_complete(struct ata_queued_cmd *qc)
+>> +static void atapi_sense_complete(struct ata_queued_cmd *qc)
+>>  {
+>>      if (qc->err_mask && ((qc->err_mask & AC_ERR_DEV) == 0))
+>>          /* FIXME: not quite right; we don't want the
+>> @@ -1993,7 +1993,7 @@ static int atapi_sense_complete(struct a
+>>          ata_gen_ata_desc_sense(qc);
+>>  
+>>      qc->scsidone(qc->scsicmd);
+>> -    return 0;
+>> +    ata_qc_free(qc);
+>>  }
+>>  
+>>  /* is it pointless to prefer PIO for "safety reasons"? */
+>> @@ -2050,7 +2050,7 @@ static void atapi_request_sense(struct a
+>>      DPRINTK("EXIT\n");
+>>  }
+>>  
+>> -static int atapi_qc_complete(struct ata_queued_cmd *qc)
+>> +static void atapi_qc_complete(struct ata_queued_cmd *qc)
+>>  {
+>>      struct scsi_cmnd *cmd = qc->scsicmd;
+>>      unsigned int err_mask = qc->err_mask;
+>> @@ -2060,7 +2060,7 @@ static int atapi_qc_complete(struct ata_
+>>      if (unlikely(err_mask & AC_ERR_DEV)) {
+>>          cmd->result = SAM_STAT_CHECK_CONDITION;
+>>          atapi_request_sense(qc);
+>> -        return 1;
+>> +        return;
+>>      }
+>>  
+>>      else if (unlikely(err_mask))
+>> @@ -2100,7 +2100,7 @@ static int atapi_qc_complete(struct ata_
+>>      }
+>>  
+>>      qc->scsidone(cmd);
+>> -    return 0;
+>> +    ata_qc_free(qc);
+> 
+> 
+> 
+> Can you describe the ATAPI error handling flow, after applying these two 
+> changes (patch #1 and this one, patch #2)?
+> 
 
-> +static void ata_flush_pio_tasks(struct ata_port *ap)
-> +{
-> +	int tmp = 0;
-> +	unsigned long flags;
-> +
-> +	DPRINTK("ENTER\n");
-> +
-> +	spin_lock_irqsave(&ap->host_set->lock, flags);
-> +	ap->flags |= ATA_FLAG_FLUSH_PIO_TASK;
-> +	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-> +
-> +	DPRINTK("flush #1\n");
-> +	flush_workqueue(ata_wq);
-> +
-> +	/*
-> +	 * At this point, if a task is running, it's guaranteed to see
-> +	 * the FLUSH flag; thus, it will never queue pio tasks again.
-> +	 * Cancel and flush.
-> +	 */
-> +	tmp |= cancel_delayed_work(&ap->pio_task);
-> +	tmp |= cancel_delayed_work(&ap->packet_task);
-> +	if (!tmp) {
-> +		DPRINTK("flush #2\n");
-> +		flush_workqueue(ata_wq);
-> +	}
-> +
-> +	spin_lock_irqsave(&ap->host_set->lock, flags);
-> +	ap->flags &= ~ATA_FLAG_FLUSH_PIO_TASK;
-> +	ap->hsm_task_state = HSM_ST_IDLE;
-> +	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+Sure.  Except for where ata_qc_free() is called, it isn't different from 
+the original.
 
-Mostly ok, except
+A. Before change.
 
-1) forcing hsm_task_state to HSM_ST_IDLE seems unlikely to be correct. 
-The error handling code should already be doing that.
+1. ATAPI qc completes with ERR_DEV.
+2. ata_qc_complete calls atapi_qc_complete which in turn sees AC_ERR_DEV 
+and calls atapi_request_sense.
+3. atapi_request_sense re-init qc and issues it again for REQUEST SENSE
+4. atapi_qc_complete returns 1 to instruct ata_qc_complete to not call 
+ata_qc_free().
+5. REQUEST_SENSE completes.  ata_qc_complete is called and it calls 
+atapi_sense_complete() which notifies SCSI layer and returns 0.
+6. ata_qc_complete sees return value 0 and calls ata_qc_free().
 
-2) should break this patch up into two pieces:  add and use new helpers, 
-and add flush code.
+B. After change.
 
+1. ATAPI qc completes with ERR_DEV.
+2. ata_qc_complete calls atapi_qc_complete which in turn sees AC_ERR_DEV 
+and calls atapi_request_sense.
+3. atapi_request_sense re-init qc and issues it again for REQUEST SENSE.
+4. atapi_qc_complete returns without calling ata_qc_free. 
+ata_qc_complete finishes.  qc isn't freed and still in-flight.
+5. REQUEST_SENSE completes.  ata_qc_complete is called and it calls 
+atapi_sense_complete() which notifies SCSI layer, free's the qc and returns.
+6. ata_qc_complete returns.
+
+-- 
+tejun
