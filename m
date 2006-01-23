@@ -1,88 +1,53 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 07/13] SCSI: export scsi_eh_finish_cmd() and scsi_eh_flush_done_q()
+Subject: [PATCHSET] libata: various fixes related to EH, take #2
 Date: Mon, 23 Jan 2006 13:09:36 +0900
-Message-ID: <11379893764141-git-send-email-htejun@gmail.com>
-References: <11379893762140-git-send-email-htejun@gmail.com>
+Message-ID: <11379893762140-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <11379893762140-git-send-email-htejun@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
-Cc: Tejun Heo <htejun@gmail.com>, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wproxy.gmail.com ([64.233.184.202]:65043 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751394AbWAWEJl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Jan 2006 23:09:41 -0500
+Received: by wproxy.gmail.com with SMTP id 57so810375wri
+        for <linux-ide@vger.kernel.org>; Sun, 22 Jan 2006 20:09:41 -0800 (PST)
+In-Reply-To: 
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
+Cc: htejun@gmail.com
 
-Export two SCSI EH command handling functions.  To be used by libata EH.
+Hello, again.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Changes from the last posting.
 
----
+* 1-3 are unchanged (my previous comment about missing ata_qc_free was
+  false alarm)
 
-James, this patch is a part of libata-EH related updates.  After the
-update, libata EH uses functions exported from this patch to retry or
-complete failed commands.
+* the detailed AC_ERR_* patch is fixed and splitted into two - AHCI
+  qc->err_mask fix and detailed AC_ERR_* change.
 
- drivers/scsi/scsi_error.c |    7 ++++---
- include/scsi/scsi_eh.h    |    3 +++
- 2 files changed, 7 insertions(+), 3 deletions(-)
+* added CC to James and linux-scsi for SCSI change
 
-296dd6345057f576a875e6a140f0fd11e2b1d54f
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index a2333d2..6bac3d2 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -584,8 +584,7 @@ static int scsi_request_sense(struct scs
-  *    keep a list of pending commands for final completion, and once we
-  *    are ready to leave error handling we handle completion for real.
-  **/
--static void scsi_eh_finish_cmd(struct scsi_cmnd *scmd,
--			       struct list_head *done_q)
-+void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head *done_q)
- {
- 	scmd->device->host->host_failed--;
- 	scmd->eh_eflags = 0;
-@@ -597,6 +596,7 @@ static void scsi_eh_finish_cmd(struct sc
- 	scsi_setup_cmd_retry(scmd);
- 	list_move_tail(&scmd->eh_entry, done_q);
- }
-+EXPORT_SYMBOL(scsi_eh_finish_cmd);
- 
- /**
-  * scsi_eh_get_sense - Get device sense data.
-@@ -1425,7 +1425,7 @@ static void scsi_eh_ready_devs(struct Sc
-  * @done_q:	list_head of processed commands.
-  *
-  **/
--static void scsi_eh_flush_done_q(struct list_head *done_q)
-+void scsi_eh_flush_done_q(struct list_head *done_q)
- {
- 	struct scsi_cmnd *scmd, *next;
- 
-@@ -1454,6 +1454,7 @@ static void scsi_eh_flush_done_q(struct 
- 		}
- 	}
- }
-+EXPORT_SYMBOL(scsi_eh_flush_done_q);
- 
- /**
-  * scsi_unjam_host - Attempt to fix a host which has a cmd that failed.
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index fabd879..d160880 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -35,6 +35,9 @@ static inline int scsi_sense_valid(struc
- }
- 
- 
-+extern void scsi_eh_finish_cmd(struct scsi_cmnd *scmd,
-+			       struct list_head *done_q);
-+extern void scsi_eh_flush_done_q(struct list_head *done_q);
- extern void scsi_report_bus_reset(struct Scsi_Host *, int);
- extern void scsi_report_device_reset(struct Scsi_Host *, int, int);
- extern int scsi_block_when_processing_errors(struct scsi_device *);
--- 
-1.0.8
+* the not-yet-agreed-upon ignore-normal-qc-completion-during-EH patch
+  is dropped.  I'll give it more thoughts and visit it again soon.
 
+* eh-pio-sync patch is splitted into two as suggested and HSM resetting
+  is moved into ->eng_timeout.
+
+The following issues remain in this take.
+
+* In detailed AC_ERR_* patch, I haven't added AC_ERR_ATA_BUS on timeout
+  cases.  I still think leaving it as it is is better (heh, two
+  consecutive is'es).  If you think AC_ERR_ATA_BUS must be set there,
+  I'm okay with that too.  I'll do another take.
+
+* patch #9 which fixes race between timeout and completion isn't exactly
+  acked yet.
+
+Thanks.
+
+--
+tejun
 
