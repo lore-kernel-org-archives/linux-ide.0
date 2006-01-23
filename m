@@ -1,39 +1,33 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] ahci: stop engine during hard reset
-Date: Mon, 23 Jan 2006 16:31:53 +0900
-Message-ID: <20060123073153.GA27470@htj.dyndns.org>
+Subject: Re: [PATCH 07/13] SCSI: export scsi_eh_finish_cmd() and	scsi_eh_flush_done_q()
+Date: Mon, 23 Jan 2006 17:20:42 +0900
+Message-ID: <43D491DA.4020603@gmail.com>
+References: <11379893764141-git-send-email-htejun@gmail.com> <1138001160.2977.14.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=EUC-KR
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.207]:20176 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964879AbWAWHi7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2006 02:38:59 -0500
-Received: by zproxy.gmail.com with SMTP id o1so1001330nzf
-        for <linux-ide@vger.kernel.org>; Sun, 22 Jan 2006 23:38:59 -0800 (PST)
-Content-Disposition: inline
+Received: from xproxy.gmail.com ([66.249.82.196]:39963 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751417AbWAWIUt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2006 03:20:49 -0500
+Received: by xproxy.gmail.com with SMTP id i30so602171wxd
+        for <linux-ide@vger.kernel.org>; Mon, 23 Jan 2006 00:20:48 -0800 (PST)
+In-Reply-To: <1138001160.2977.14.camel@laptopd505.fenrus.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-AHCI spec mandates engine to be stopped during hard resets.
+Arjan van de Ven wrote:
+> On Mon, 2006-01-23 at 13:09 +0900, Tejun Heo wrote:
+> 
+>>Export two SCSI EH command handling functions.  To be used by libata EH.
+> 
+> since these are pretty much internal, can we make these _GPL exports?
+> 
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+It's SCSI developers' decision.  I chose EXPORT_SYMBOL because all other
+exported symbols in scsi_error.c were using it.  James?
 
----
-
-Jeff, saner version of stopping engine during AHCI hard reset.
-
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 604c4d1..b378cde 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -504,7 +504,9 @@ static void ahci_phy_reset(struct ata_po
- 	struct ata_device *dev = &ap->device[0];
- 	u32 new_tmp, tmp;
- 
-+	ahci_stop_engine(ap);
- 	__sata_phy_reset(ap);
-+	ahci_start_engine(ap);
- 
- 	if (ap->flags & ATA_FLAG_PORT_DISABLED)
- 		return;
+-- 
+tejun
