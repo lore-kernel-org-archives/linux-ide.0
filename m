@@ -1,22 +1,39 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 07/13] SCSI: export scsi_eh_finish_cmd() and
-	scsi_eh_flush_done_q()
-Date: Mon, 23 Jan 2006 08:26:00 +0100
-Message-ID: <1138001160.2977.14.camel@laptopd505.fenrus.org>
-References: <11379893764141-git-send-email-htejun@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] ahci: stop engine during hard reset
+Date: Mon, 23 Jan 2006 16:31:53 +0900
+Message-ID: <20060123073153.GA27470@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <11379893764141-git-send-email-htejun@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, jgarzik@pobox.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from zproxy.gmail.com ([64.233.162.207]:20176 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964879AbWAWHi7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2006 02:38:59 -0500
+Received: by zproxy.gmail.com with SMTP id o1so1001330nzf
+        for <linux-ide@vger.kernel.org>; Sun, 22 Jan 2006 23:38:59 -0800 (PST)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Mon, 2006-01-23 at 13:09 +0900, Tejun Heo wrote:
-> Export two SCSI EH command handling functions.  To be used by libata EH.
+AHCI spec mandates engine to be stopped during hard resets.
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-since these are pretty much internal, can we make these _GPL exports?
+---
 
+Jeff, saner version of stopping engine during AHCI hard reset.
+
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index 604c4d1..b378cde 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -504,7 +504,9 @@ static void ahci_phy_reset(struct ata_po
+ 	struct ata_device *dev = &ap->device[0];
+ 	u32 new_tmp, tmp;
+ 
++	ahci_stop_engine(ap);
+ 	__sata_phy_reset(ap);
++	ahci_start_engine(ap);
+ 
+ 	if (ap->flags & ATA_FLAG_PORT_DISABLED)
+ 		return;
