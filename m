@@ -1,70 +1,113 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 07/13] SCSI: export scsi_eh_finish_cmd() and	scsi_eh_flush_done_q()
-Date: Mon, 23 Jan 2006 19:05:59 +0900
-Message-ID: <43D4AA87.9080408@gmail.com>
-References: <11379893764141-git-send-email-htejun@gmail.com> <1138001160.2977.14.camel@laptopd505.fenrus.org> <43D491DA.4020603@gmail.com> <20060123093653.GB9157@infradead.org>
+From: David Greaves <david@dgreaves.com>
+Subject: Possible libata/sata/Asus problem (was Re: Need to upgrade to latest
+ stable mdadm version?)
+Date: Mon, 23 Jan 2006 12:31:24 +0000
+Message-ID: <43D4CC9C.9060500@dgreaves.com>
+References: <Pine.LNX.4.44.0601221719020.24057-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.205]:31597 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932442AbWAWKNR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2006 05:13:17 -0500
-Received: by zproxy.gmail.com with SMTP id x7so876663nzc
-        for <linux-ide@vger.kernel.org>; Mon, 23 Jan 2006 02:13:16 -0800 (PST)
-In-Reply-To: <20060123093653.GB9157@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44.0601221719020.24057-100000@coffee.psychology.mcmaster.ca>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mark Hahn <hahn@physics.mcmaster.ca>
+Cc: Mitchell Laks <mlaks@verizon.net>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, IDE Linux <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Arjan van de Ven <arjan@infradead.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Christoph Hellwig wrote:
-> On Mon, Jan 23, 2006 at 05:20:42PM +0900, Tejun Heo wrote:
-> 
->>Arjan van de Ven wrote:
+Mark Hahn wrote:
+
+>>>and with the ETCH testing 2.6.12:  the sata_via module fails with
+>>>      
+>>>
+>I'm sure you know that no kernel developer really cares about distro-hacked 
+>kernels.  why not test a real (kernel.org) kernel?
+>  
+>
+Only because if the problem exists on the stock kernel and not on the
+distro kernel then there could be assistance in determining which patch
+solves (or hides!) the problem. This may or may not actually be helpful.
+
+
+>>>ata1: status=0x51 { DriveReady SeekComplete Error }
+>>>ata1: error=0x84 { DriveStatusError BadCRC }
+>>>      
+>>>
+>badcrc's are a sign that the link is failing - bad cable, bad power,
+>overclocking,
+>
+OK
+
+>possibly an error in the driver's timing config.
+>  
+>
+A-ha!
+
+>it cannot possibly be an mdadm problem, and cannot be related to 
+>other software (kernel memory management, say.)
+>  
+>
+Agreed.
+
+> I don't see how driver interaction could cause the BadCRC, unless one
+> driver
+>
+>is screwing with the timing registers of the other's hardware.
+>  
+>
+And maybe, on a lightly loaded system, RAID causes concurrent access
+(and potentially triggers problems) more often than a non-RAID solution?
+
+> mdadm cannot possibly have anything to do with causing BadCRC's.
+> upgrade if
+>
+>you feel like it, but not because of this problem.
+>  
+>
+Completely agree.
+
+>>I am running the *stock* 2.6.15 and get the same problems (ata timeouts etc)
+>>    
 >>
->>>On Mon, 2006-01-23 at 13:09 +0900, Tejun Heo wrote:
->>>
->>>
->>>>Export two SCSI EH command handling functions.  To be used by libata EH.
->>>
->>>since these are pretty much internal, can we make these _GPL exports?
->>>
->>
->>It's SCSI developers' decision.  I chose EXPORT_SYMBOL because all other
->>exported symbols in scsi_error.c were using it.  James?
-> 
-> 
-> These are internal functions.  If we're going to export them at all then
-> as _GPL (which is grossly misnamed and should be _INTERNAL)
+>is there a reason you call this a timeout, rather than a BadCRC?
+>  
+>
+I had:
+  ata2: command 0x25 timeout, stat 0x51 host_stat 0x0
 
-And from the other thread created by my mistake.
+It stuck in my head. It's not that representative. My bad.
 
- > What do you need it for?  Please send the whole patch series (and
- > generally anything in libata that interacts with the scsi midlayer) to
- > linux-scsi, please.
+most errors (for me) were:
 
-It's rather large patchset consisting of 13 libata-eh related patches. 
-Only two of the patches are relevant to SCSI.  I'm not sure whether 
-cross-posting the whole thing is appropriate.
+Jan 19 15:23:05 haze kernel: ata1: PIO error
+Jan 19 15:23:05 haze kernel: ata1: status=0x50 { DriveReady SeekComplete }
+Jan 19 15:23:05 haze kernel: ata1: PIO error
+Jan 19 15:23:05 haze kernel: ata1: status=0x50 { DriveReady SeekComplete }
+Jan 19 15:23:05 haze kernel: ata1: PIO error
 
-The first one exports two scsi_eh functions (this thread) and the second 
-one uses these two to implement ata_eh_retry/complete helpers.
 
-http://marc.theaimsgroup.com/?l=linux-ide&m=113798939719926&w=2
-http://marc.theaimsgroup.com/?l=linux-ide&m=113798939627887&w=2
+But if you look at:
+http://marc.theaimsgroup.com/?l=linux-kernel&m=113769509617034&w=2
 
-These are used because libata implements shost->eh_strategy_handler for 
-error handling.  libata's ->eh_strategy_handler should do everything 
-scsi_unjam_host() does and one chunk is to retry or complete failed SCSI 
-commands during or after EH completes.  libata used to do this by 
-calling scsi_finish_command() directly, which is an internal interface 
-too.  Directly calling scsi_finish_command() also used to have deadlock 
-problem when libata shared SCSI's host lock.
+you'll see that I had what looked like a 'spurious' bad-block error -
+and I have an Asus motherboard, am using the via_sata driver, have
+another sata driver loaded and am using md - all under 2.6.15 .... hence
+the tentative association of the problems :)
 
-As what has to be done is identical, above two patches make libata share 
-that part of code with scsi_unjam_host().  And, as Jeff commented, once 
-these are settled scsi_fini_command() can be unexported.
+Oh, and libata's error handling is embryonic - maybe it should be
+retrying. I dunno.
+
+I've seen other potentially related problems in the
+sata/motherboard/raid area.
+Personally I suspect buggy Asus motherboards.
+I wonder if the bug is triggered by multiple drivers or some concurrency
+- hence raid's involvment...
+(Since I suspect md is actually tickling it, not causing it moving to
+lkml and linux-ide too)
+
+Of course I plan to do some tests - but mentioning it may give others
+ideas too... And maybe I/we'll get suggestions as to what to try next...
+
+David
 
 -- 
-tejun
+
