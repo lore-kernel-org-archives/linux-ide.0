@@ -1,113 +1,38 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Possible libata/sata/Asus problem (was Re: Need to upgrade to latest
- stable mdadm version?)
-Date: Mon, 23 Jan 2006 12:31:24 +0000
-Message-ID: <43D4CC9C.9060500@dgreaves.com>
-References: <Pine.LNX.4.44.0601221719020.24057-100000@coffee.psychology.mcmaster.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] ata_piix: fix MAP VALUE interpretation for for ICH6/7
+Date: Mon, 23 Jan 2006 21:25:53 +0900
+Message-ID: <43D4CB51.90506@gmail.com>
+References: <20051218081707.GA4129@htj.dyndns.org> <43A64738.4090402@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0601221719020.24057-100000@coffee.psychology.mcmaster.ca>
-Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: Mitchell Laks <mlaks@verizon.net>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, IDE Linux <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wproxy.gmail.com ([64.233.184.205]:27407 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751356AbWAWMcu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2006 07:32:50 -0500
+Received: by wproxy.gmail.com with SMTP id i32so904426wra
+        for <linux-ide@vger.kernel.org>; Mon, 23 Jan 2006 04:32:50 -0800 (PST)
+In-Reply-To: <43A64738.4090402@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Mark Hahn wrote:
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+> 
+>> Unlike their older siblings, ICH6 and 7 use different scheme for MAP
+>> VALUE.  This patch makes ata_piix interpret MV properly on ICH6/7.
+> 
+> 
+> Patch is OK, if tested has verified borne this out?
+> 
+> If this is not just a documentation error, it sounds like some of the 
+> ata_piix problems could be attributed to this.  We intentionally drive 
+> SATA and PATA differently...
+> 
 
->>>and with the ETCH testing 2.6.12:  the sata_via module fails with
->>>      
->>>
->I'm sure you know that no kernel developer really cares about distro-hacked 
->kernels.  why not test a real (kernel.org) kernel?
->  
->
-Only because if the problem exists on the stock kernel and not on the
-distro kernel then there could be assistance in determining which patch
-solves (or hides!) the problem. This may or may not actually be helpful.
-
-
->>>ata1: status=0x51 { DriveReady SeekComplete Error }
->>>ata1: error=0x84 { DriveStatusError BadCRC }
->>>      
->>>
->badcrc's are a sign that the link is failing - bad cable, bad power,
->overclocking,
->
-OK
-
->possibly an error in the driver's timing config.
->  
->
-A-ha!
-
->it cannot possibly be an mdadm problem, and cannot be related to 
->other software (kernel memory management, say.)
->  
->
-Agreed.
-
-> I don't see how driver interaction could cause the BadCRC, unless one
-> driver
->
->is screwing with the timing registers of the other's hardware.
->  
->
-And maybe, on a lightly loaded system, RAID causes concurrent access
-(and potentially triggers problems) more often than a non-RAID solution?
-
-> mdadm cannot possibly have anything to do with causing BadCRC's.
-> upgrade if
->
->you feel like it, but not because of this problem.
->  
->
-Completely agree.
-
->>I am running the *stock* 2.6.15 and get the same problems (ata timeouts etc)
->>    
->>
->is there a reason you call this a timeout, rather than a BadCRC?
->  
->
-I had:
-  ata2: command 0x25 timeout, stat 0x51 host_stat 0x0
-
-It stuck in my head. It's not that representative. My bad.
-
-most errors (for me) were:
-
-Jan 19 15:23:05 haze kernel: ata1: PIO error
-Jan 19 15:23:05 haze kernel: ata1: status=0x50 { DriveReady SeekComplete }
-Jan 19 15:23:05 haze kernel: ata1: PIO error
-Jan 19 15:23:05 haze kernel: ata1: status=0x50 { DriveReady SeekComplete }
-Jan 19 15:23:05 haze kernel: ata1: PIO error
-
-
-But if you look at:
-http://marc.theaimsgroup.com/?l=linux-kernel&m=113769509617034&w=2
-
-you'll see that I had what looked like a 'spurious' bad-block error -
-and I have an Asus motherboard, am using the via_sata driver, have
-another sata driver loaded and am using md - all under 2.6.15 .... hence
-the tentative association of the problems :)
-
-Oh, and libata's error handling is embryonic - maybe it should be
-retrying. I dunno.
-
-I've seen other potentially related problems in the
-sata/motherboard/raid area.
-Personally I suspect buggy Asus motherboards.
-I wonder if the bug is triggered by multiple drivers or some concurrency
-- hence raid's involvment...
-(Since I suspect md is actually tickling it, not causing it moving to
-lkml and linux-ide too)
-
-Of course I plan to do some tests - but mentioning it may give others
-ideas too... And maybe I/we'll get suggestions as to what to try next...
-
-David
+Jeff, any reason why this isn't committed yet?
 
 -- 
-
+tejun
