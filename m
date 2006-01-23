@@ -1,83 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 07/13] SCSI: export scsi_eh_finish_cmd() and scsi_eh_flush_done_q()
-Date: Mon, 23 Jan 2006 23:52:12 +0900
-Message-ID: <20060123145212.GA1595@htj.dyndns.org>
-References: <11379893762140-git-send-email-htejun@gmail.com> <11379893764141-git-send-email-htejun@gmail.com>
+From: Rodrigo Ventura <yoda@isr.ist.utl.pt>
+Subject: support for Lindy 51130?
+Date: Mon, 23 Jan 2006 17:01:07 +0000
+Message-ID: <m3r76yop4c.fsf@pixie.isrnet>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.206]:61254 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751458AbWAWPAH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2006 10:00:07 -0500
-Received: by wproxy.gmail.com with SMTP id i11so1903230wra
-        for <linux-ide@vger.kernel.org>; Mon, 23 Jan 2006 07:00:06 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <11379893764141-git-send-email-htejun@gmail.com>
+Received: from omni.isr.ist.utl.pt ([193.136.138.3]:59279 "EHLO
+	omni.isr.ist.utl.pt") by vger.kernel.org with ESMTP id S964817AbWAWRBg
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Jan 2006 12:01:36 -0500
+Received: from pixie.isrnet (gtisr.isr.ist.utl.pt [193.136.138.62])
+	by omni.isr.ist.utl.pt (8.13.3/8.13.3) with ESMTP id k0NH181f020236
+	for <linux-ide@vger.kernel.org>; Mon, 23 Jan 2006 17:01:08 GMT
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org, albertcc@tw.ibm.com, hch@infradead.org, arjan@infradead.org
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: linux-ide@vger.kernel.org
 
-[PATCH] SCSI: export scsi_eh_finish_cmd() and scsi_eh_flush_done_q()
 
-Export two SCSI EH command handling functions.  To be used by libata EH.
+Hello. I'm think about buying a Lindy 51130 SATA II controller. Does
+anyone know what chipset does it use? Well, what I really wanna know
+is whether it is supported by linux kernels.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cheers,
 
----
+Rodrigo Ventura
 
-Respin of the patch with EXPORT_SYMBOL_GPL.
+-- 
 
-Index: work1/drivers/scsi/scsi_error.c
-===================================================================
---- work1.orig/drivers/scsi/scsi_error.c	2006-01-23 23:48:55.000000000 +0900
-+++ work1/drivers/scsi/scsi_error.c	2006-01-23 23:49:32.000000000 +0900
-@@ -584,8 +584,7 @@ static int scsi_request_sense(struct scs
-  *    keep a list of pending commands for final completion, and once we
-  *    are ready to leave error handling we handle completion for real.
-  **/
--static void scsi_eh_finish_cmd(struct scsi_cmnd *scmd,
--			       struct list_head *done_q)
-+void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head *done_q)
- {
- 	scmd->device->host->host_failed--;
- 	scmd->eh_eflags = 0;
-@@ -597,6 +596,7 @@ static void scsi_eh_finish_cmd(struct sc
- 	scsi_setup_cmd_retry(scmd);
- 	list_move_tail(&scmd->eh_entry, done_q);
- }
-+EXPORT_SYMBOL_GPL(scsi_eh_finish_cmd);
- 
- /**
-  * scsi_eh_get_sense - Get device sense data.
-@@ -1425,7 +1425,7 @@ static void scsi_eh_ready_devs(struct Sc
-  * @done_q:	list_head of processed commands.
-  *
-  **/
--static void scsi_eh_flush_done_q(struct list_head *done_q)
-+void scsi_eh_flush_done_q(struct list_head *done_q)
- {
- 	struct scsi_cmnd *scmd, *next;
- 
-@@ -1454,6 +1454,7 @@ static void scsi_eh_flush_done_q(struct 
- 		}
- 	}
- }
-+EXPORT_SYMBOL_GPL(scsi_eh_flush_done_q);
- 
- /**
-  * scsi_unjam_host - Attempt to fix a host which has a cmd that failed.
-Index: work1/include/scsi/scsi_eh.h
-===================================================================
---- work1.orig/include/scsi/scsi_eh.h	2006-01-23 23:48:55.000000000 +0900
-+++ work1/include/scsi/scsi_eh.h	2006-01-23 23:49:02.000000000 +0900
-@@ -35,6 +35,9 @@ static inline int scsi_sense_valid(struc
- }
- 
- 
-+extern void scsi_eh_finish_cmd(struct scsi_cmnd *scmd,
-+			       struct list_head *done_q);
-+extern void scsi_eh_flush_done_q(struct list_head *done_q);
- extern void scsi_report_bus_reset(struct Scsi_Host *, int);
- extern void scsi_report_device_reset(struct Scsi_Host *, int, int);
- extern int scsi_block_when_processing_errors(struct scsi_device *);
+*** Rodrigo Martins de Matos Ventura <yoda@isr.ist.utl.pt>
+***  Web page: http://www.isr.ist.utl.pt/~yoda
+***   Teaching Assistant and PhD Student at ISR:
+***    Instituto de Sistemas e Robotica, Polo de Lisboa
+***     Instituto Superior Tecnico, Lisboa, PORTUGAL
+*** PGP fingerprint = 0119 AD13 9EEE 264A 3F10  31D3 89B3 C6C4 60C6 4585
