@@ -1,134 +1,107 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 13/13] libata: EH / pio tasks synchronization
-Date: Mon, 23 Jan 2006 13:09:37 +0900
-Message-ID: <1137989377788-git-send-email-htejun@gmail.com>
+Subject: [PATCH 03/13] libata: fix ata_qc_issue() error handling
+Date: Mon, 23 Jan 2006 13:09:36 +0900
+Message-ID: <11379893763049-git-send-email-htejun@gmail.com>
 References: <11379893762140-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.204]:63374 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932082AbWAWEP7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Jan 2006 23:15:59 -0500
-Received: by wproxy.gmail.com with SMTP id 71so756996wra
-        for <linux-ide@vger.kernel.org>; Sun, 22 Jan 2006 20:15:58 -0800 (PST)
+Received: from wproxy.gmail.com ([64.233.184.203]:37267 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932133AbWAWEQ4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Jan 2006 23:16:56 -0500
+Received: by wproxy.gmail.com with SMTP id 58so897863wri
+        for <linux-ide@vger.kernel.org>; Sun, 22 Jan 2006 20:16:55 -0800 (PST)
 In-Reply-To: <11379893762140-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 Cc: Tejun Heo <htejun@gmail.com>
 
-This patch makes sure that pio tasks are flushed before proceeding
-with EH.
+When ata_qc_issue() fails, the qc might have been dma mapped or not.
+So, performing only ata_qc_free() results in dma map leak.  This patch
+makes ata_qc_issue() mark dma map flags correctly on failure and calls
+ata_qc_complete() after ata_qc_issue() fails.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   56 ++++++++++++++++++++++++++++++++++++++++++--
- include/linux/libata.h     |    3 ++
- 2 files changed, 55 insertions(+), 4 deletions(-)
+ drivers/scsi/libata-core.c |   18 ++++++++----------
+ drivers/scsi/libata-scsi.c |    6 ++++--
+ 2 files changed, 12 insertions(+), 12 deletions(-)
 
-118d94ccf284d59d967ff40f52d2d6148e0fcfc6
+cea7412270f60847981a01eebbb12b4a940ec5fb
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 10e07db..a6be973 100644
+index 15df633..43a2328 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -1075,19 +1075,66 @@ static unsigned int ata_pio_modes(const 
- static inline void
- ata_queue_packet_task(struct ata_port *ap)
- {
--	queue_work(ata_wq, &ap->packet_task);
-+	if (!(ap->flags & ATA_FLAG_FLUSH_PIO_TASK))
-+		queue_work(ata_wq, &ap->packet_task);
- }
+@@ -1125,8 +1125,10 @@ ata_exec_internal(struct ata_port *ap, s
+ 	qc->private_data = &wait;
+ 	qc->complete_fn = ata_qc_complete_internal;
  
- static inline void
- ata_queue_pio_task(struct ata_port *ap)
- {
--	queue_work(ata_wq, &ap->pio_task);
-+	if (!(ap->flags & ATA_FLAG_FLUSH_PIO_TASK))
-+		queue_work(ata_wq, &ap->pio_task);
- }
- 
- static inline void
- ata_queue_delayed_pio_task(struct ata_port *ap, unsigned long delay)
- {
--	queue_delayed_work(ata_wq, &ap->pio_task, delay);
-+	if (!(ap->flags & ATA_FLAG_FLUSH_PIO_TASK))
-+		queue_delayed_work(ata_wq, &ap->pio_task, delay);
-+}
-+
-+/**
-+ *	ata_flush_pio_tasks - Flush pio_task and packet_task
-+ *	@ap: the target ata_port
-+ *
-+ *	After this function completes, pio_task and packet_task are
-+ *	guranteed not to be running or scheduled.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ */
-+
-+static void ata_flush_pio_tasks(struct ata_port *ap)
-+{
-+	int tmp = 0;
-+	unsigned long flags;
-+
-+	DPRINTK("ENTER\n");
-+
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	ap->flags |= ATA_FLAG_FLUSH_PIO_TASK;
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+	DPRINTK("flush #1\n");
-+	flush_workqueue(ata_wq);
-+
-+	/*
-+	 * At this point, if a task is running, it's guaranteed to see
-+	 * the FLUSH flag; thus, it will never queue pio tasks again.
-+	 * Cancel and flush.
-+	 */
-+	tmp |= cancel_delayed_work(&ap->pio_task);
-+	tmp |= cancel_delayed_work(&ap->packet_task);
-+	if (!tmp) {
-+		DPRINTK("flush #2\n");
-+		flush_workqueue(ata_wq);
+-	if (ata_qc_issue(qc))
+-		goto issue_fail;
++	if (ata_qc_issue(qc)) {
++		qc->err_mask = AC_ERR_OTHER;
++		ata_qc_complete(qc);
 +	}
-+
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	ap->flags &= ~ATA_FLAG_FLUSH_PIO_TASK;
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+	DPRINTK("EXIT\n");
+ 
+ 	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+ 
+@@ -1155,11 +1157,6 @@ ata_exec_internal(struct ata_port *ap, s
+ 	ata_qc_free(qc);
+ 
+ 	return err_mask;
+-
+- issue_fail:
+-	ata_qc_free(qc);
+-	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+-	return AC_ERR_OTHER;
  }
  
- void ata_qc_complete_internal(struct ata_queued_cmd *qc)
-@@ -3465,6 +3512,9 @@ static void ata_qc_timeout(struct ata_qu
+ /**
+@@ -3687,10 +3684,10 @@ int ata_qc_issue(struct ata_queued_cmd *
+ 	if (ata_should_dma_map(qc)) {
+ 		if (qc->flags & ATA_QCFLAG_SG) {
+ 			if (ata_sg_setup(qc))
+-				goto err_out;
++				goto sg_err;
+ 		} else if (qc->flags & ATA_QCFLAG_SINGLE) {
+ 			if (ata_sg_setup_one(qc))
+-				goto err_out;
++				goto sg_err;
+ 		}
+ 	} else {
+ 		qc->flags &= ~ATA_QCFLAG_DMAMAP;
+@@ -3703,7 +3700,8 @@ int ata_qc_issue(struct ata_queued_cmd *
  
- 	DPRINTK("ENTER\n");
+ 	return ap->ops->qc_issue(qc);
  
-+	ata_flush_pio_tasks(ap);
-+	ap->hsm_task_state = HSM_ST_IDLE;
-+
- 	spin_lock_irqsave(&host_set->lock, flags);
+-err_out:
++sg_err:
++	qc->flags &= ~ATA_QCFLAG_DMAMAP;
+ 	return -1;
+ }
  
- 	switch (qc->tf.protocol) {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 063221d..7837ba3 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -162,7 +162,8 @@ enum {
- 	ATA_FLAG_PIO_LBA48	= (1 << 13), /* Host DMA engine is LBA28 only */
- 	ATA_FLAG_IRQ_MASK	= (1 << 14), /* Mask IRQ in PIO xfers */
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index ce3fe92..c496309 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -1322,8 +1322,10 @@ static void ata_scsi_translate(struct at
+ 		goto early_finish;
  
--	ATA_FLAG_IN_EH		= (1 << 15), /* EH in progress */
-+	ATA_FLAG_FLUSH_PIO_TASK	= (1 << 15), /* Flush PIO task */
-+	ATA_FLAG_IN_EH		= (1 << 16), /* EH in progress */
+ 	/* select device, send command to hardware */
+-	if (ata_qc_issue(qc))
+-		goto err_did;
++	if (ata_qc_issue(qc)) {
++		qc->err_mask |= AC_ERR_OTHER;
++		ata_qc_complete(qc);
++	}
  
- 	ATA_QCFLAG_ACTIVE	= (1 << 1), /* cmd not yet ack'd to scsi lyer */
- 	ATA_QCFLAG_SG		= (1 << 3), /* have s/g table? */
+ 	VPRINTK("EXIT\n");
+ 	return;
 -- 
 1.0.8
 
