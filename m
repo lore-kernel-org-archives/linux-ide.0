@@ -1,41 +1,35 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Rodrigo Ventura <yoda@isr.ist.utl.pt>
 Subject: Re: support for Lindy 51130?
-Date: Mon, 23 Jan 2006 18:19:21 +0100
-Message-ID: <58cb370e0601230919m6f78fb28h35a4470b4e92b785@mail.gmail.com>
+Date: Mon, 23 Jan 2006 18:03:59 +0000
+Message-ID: <m3mzhmom7k.fsf@pixie.isrnet>
 References: <m3r76yop4c.fsf@pixie.isrnet>
+	<58cb370e0601230919m6f78fb28h35a4470b4e92b785@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.192]:53667 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964832AbWAWRTX convert rfc822-to-8bit
+Received: from omni.isr.ist.utl.pt ([193.136.138.3]:24996 "EHLO
+	omni.isr.ist.utl.pt") by vger.kernel.org with ESMTP id S964857AbWAWSEg
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Jan 2006 12:19:23 -0500
-Received: by uproxy.gmail.com with SMTP id s2so2817uge
-        for <linux-ide@vger.kernel.org>; Mon, 23 Jan 2006 09:19:21 -0800 (PST)
-In-Reply-To: <m3r76yop4c.fsf@pixie.isrnet>
-Content-Disposition: inline
+	Mon, 23 Jan 2006 13:04:36 -0500
+In-Reply-To: <58cb370e0601230919m6f78fb28h35a4470b4e92b785@mail.gmail.com> (Bartlomiej Zolnierkiewicz's message of "Mon, 23 Jan 2006 18:19:21 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rodrigo Ventura <yoda@isr.ist.utl.pt>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Hi,
 
-According to http://www.lindy.com/de/downloads/manuals/51130.pdf
-this card uses Sil3124 chipset.
+Thanks. According to the second link you gave, it seems well
+supported.
 
-http://linux.yyz.us/sata/sata-status.html#sii3124
+Cheers,
 
-Probably others know more details about current status
-of Sil3124 support (Tejun?).
+Rodrigo
 
-Bartlomiej
+-- 
 
-On 1/23/06, Rodrigo Ventura <yoda@isr.ist.utl.pt> wrote:
->
-> Hello. I'm think about buying a Lindy 51130 SATA II controller. Does
-> anyone know what chipset does it use? Well, what I really wanna know
-> is whether it is supported by linux kernels.
->
-> Cheers,
+*** Rodrigo Martins de Matos Ventura <yoda@isr.ist.utl.pt>
+***  Web page: http://www.isr.ist.utl.pt/~yoda
+***   Teaching Assistant and PhD Student at ISR:
+***    Instituto de Sistemas e Robotica, Polo de Lisboa
+***     Instituto Superior Tecnico, Lisboa, PORTUGAL
+*** PGP fingerprint = 0119 AD13 9EEE 264A 3F10  31D3 89B3 C6C4 60C6 4585
