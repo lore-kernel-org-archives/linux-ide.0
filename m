@@ -1,74 +1,185 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 11/13] libata: implement ATA_FLAG_IN_EH port flag
+Subject: [PATCH 10/13] libata: kill NULL qc handling from ->eng_timeout callbacks
 Date: Mon, 23 Jan 2006 13:09:37 +0900
-Message-ID: <11379893773050-git-send-email-htejun@gmail.com>
+Message-ID: <11379893773779-git-send-email-htejun@gmail.com>
 References: <11379893762140-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.207]:44714 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751409AbWAWEJu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Jan 2006 23:09:50 -0500
-Received: by xproxy.gmail.com with SMTP id s14so595550wxc
-        for <linux-ide@vger.kernel.org>; Sun, 22 Jan 2006 20:09:50 -0800 (PST)
+Received: from wproxy.gmail.com ([64.233.184.200]:64019 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751410AbWAWEJr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Jan 2006 23:09:47 -0500
+Received: by wproxy.gmail.com with SMTP id 57so810385wri
+        for <linux-ide@vger.kernel.org>; Sun, 22 Jan 2006 20:09:46 -0800 (PST)
 In-Reply-To: <11379893762140-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 Cc: Tejun Heo <htejun@gmail.com>
 
-ATA_FLAG_IN_EH flag is set on entry to EH and cleared on completion.
-This patch just sets and clears the flag.  Following patches will
-build normal qc execution / EH synchronization aroung this flag.
+->eng_timeout is not invoked with NULL qc anymore.  Kill NULL qc
+handling from all ->eng_timeout callbacks.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-scsi.c |    6 ++++++
- include/linux/libata.h     |    2 ++
- 2 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/scsi/ahci.c         |   12 +++---------
+ drivers/scsi/libata-core.c  |   12 +-----------
+ drivers/scsi/sata_mv.c      |    9 ++-------
+ drivers/scsi/sata_promise.c |    9 +--------
+ drivers/scsi/sata_sil24.c   |    5 -----
+ drivers/scsi/sata_sx4.c     |    9 +--------
+ 6 files changed, 8 insertions(+), 48 deletions(-)
 
-e4869b2aeea09c839ee8b291fcc286479d57c21d
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index accb63a..cf54536 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -738,6 +738,8 @@ int ata_scsi_error(struct Scsi_Host *hos
+7fe3cc73fb7f92c06c71e1798edefc2be6a6723c
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index 5a6b230..604c4d1 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -666,19 +666,13 @@ static void ahci_eng_timeout(struct ata_
+ 
+ 	spin_lock_irqsave(&host_set->lock, flags);
+ 
++	ahci_restart_port(ap, readl(port_mmio + PORT_IRQ_STAT));
+ 	qc = ata_qc_from_tag(ap, ap->active_tag);
+-	if (!qc) {
+-		printk(KERN_ERR "ata%u: BUG: timeout without command\n",
+-		       ap->id);
+-	} else {
+-		ahci_restart_port(ap, readl(port_mmio + PORT_IRQ_STAT));
+-		qc->err_mask |= AC_ERR_TIMEOUT;
+-	}
++	qc->err_mask |= AC_ERR_TIMEOUT;
+ 
+ 	spin_unlock_irqrestore(&host_set->lock, flags);
+ 
+-	if (qc)
+-		ata_eh_qc_complete(qc);
++	ata_eh_qc_complete(qc);
+ }
+ 
+ static inline int ahci_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 93ae2dc..b2f51bb 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -3503,20 +3503,10 @@ static void ata_qc_timeout(struct ata_qu
+ 
+ void ata_eng_timeout(struct ata_port *ap)
+ {
+-	struct ata_queued_cmd *qc;
+-
  	DPRINTK("ENTER\n");
  
- 	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	assert(!(ap->flags & ATA_FLAG_IN_EH));
-+	ap->flags |= ATA_FLAG_IN_EH;
- 	qc = ata_qc_from_tag(ap, ap->active_tag);
- 	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+-	qc = ata_qc_from_tag(ap, ap->active_tag);
+-	if (qc)
+-		ata_qc_timeout(qc);
+-	else {
+-		printk(KERN_ERR "ata%u: BUG: timeout without command\n",
+-		       ap->id);
+-		goto out;
+-	}
++	ata_qc_timeout(ata_qc_from_tag(ap, ap->active_tag));
  
-@@ -778,6 +780,10 @@ int ata_scsi_error(struct Scsi_Host *hos
- 
- 	scsi_eh_flush_done_q(&ap->eh_done_q);
- 
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	ap->flags &= ~ATA_FLAG_IN_EH;
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
+-out:
  	DPRINTK("EXIT\n");
- 	return 0;
  }
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 576788d..063221d 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -162,6 +162,8 @@ enum {
- 	ATA_FLAG_PIO_LBA48	= (1 << 13), /* Host DMA engine is LBA28 only */
- 	ATA_FLAG_IRQ_MASK	= (1 << 14), /* Mask IRQ in PIO xfers */
  
-+	ATA_FLAG_IN_EH		= (1 << 15), /* EH in progress */
-+
- 	ATA_QCFLAG_ACTIVE	= (1 << 1), /* cmd not yet ack'd to scsi lyer */
- 	ATA_QCFLAG_SG		= (1 << 3), /* have s/g table? */
- 	ATA_QCFLAG_SINGLE	= (1 << 4), /* no s/g, just a single buffer */
+diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
+index d9a554c..9b56f9b 100644
+--- a/drivers/scsi/sata_mv.c
++++ b/drivers/scsi/sata_mv.c
+@@ -1853,13 +1853,8 @@ static void mv_eng_timeout(struct ata_po
+ 	mv_err_intr(ap);
+ 	mv_stop_and_reset(ap);
+ 
+-	if (!qc) {
+-		printk(KERN_ERR "ata%u: BUG: timeout without command\n",
+-		       ap->id);
+-	} else {
+-		qc->err_mask |= AC_ERR_TIMEOUT;
+-		ata_eh_qc_complete(qc);
+-	}
++	qc->err_mask |= AC_ERR_TIMEOUT;
++	ata_eh_qc_complete(qc);
+ }
+ 
+ /**
+diff --git a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
+index 77ef646..9fc9cbf 100644
+--- a/drivers/scsi/sata_promise.c
++++ b/drivers/scsi/sata_promise.c
+@@ -394,11 +394,6 @@ static void pdc_eng_timeout(struct ata_p
+ 	spin_lock_irqsave(&host_set->lock, flags);
+ 
+ 	qc = ata_qc_from_tag(ap, ap->active_tag);
+-	if (!qc) {
+-		printk(KERN_ERR "ata%u: BUG: timeout without command\n",
+-		       ap->id);
+-		goto out;
+-	}
+ 
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA:
+@@ -418,10 +413,8 @@ static void pdc_eng_timeout(struct ata_p
+ 		break;
+ 	}
+ 
+-out:
+ 	spin_unlock_irqrestore(&host_set->lock, flags);
+-	if (qc)
+-		ata_eh_qc_complete(qc);
++	ata_eh_qc_complete(qc);
+ 	DPRINTK("EXIT\n");
+ }
+ 
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 7222fc7..1160fda 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -638,11 +638,6 @@ static void sil24_eng_timeout(struct ata
+ 	struct ata_queued_cmd *qc;
+ 
+ 	qc = ata_qc_from_tag(ap, ap->active_tag);
+-	if (!qc) {
+-		printk(KERN_ERR "ata%u: BUG: timeout without command\n",
+-		       ap->id);
+-		return;
+-	}
+ 
+ 	printk(KERN_ERR "ata%u: command timeout\n", ap->id);
+ 	qc->err_mask |= AC_ERR_TIMEOUT;
+diff --git a/drivers/scsi/sata_sx4.c b/drivers/scsi/sata_sx4.c
+index 9f992fb..b4ffa3f 100644
+--- a/drivers/scsi/sata_sx4.c
++++ b/drivers/scsi/sata_sx4.c
+@@ -866,11 +866,6 @@ static void pdc_eng_timeout(struct ata_p
+ 	spin_lock_irqsave(&host_set->lock, flags);
+ 
+ 	qc = ata_qc_from_tag(ap, ap->active_tag);
+-	if (!qc) {
+-		printk(KERN_ERR "ata%u: BUG: timeout without command\n",
+-		       ap->id);
+-		goto out;
+-	}
+ 
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA:
+@@ -889,10 +884,8 @@ static void pdc_eng_timeout(struct ata_p
+ 		break;
+ 	}
+ 
+-out:
+ 	spin_unlock_irqrestore(&host_set->lock, flags);
+-	if (qc)
+-		ata_eh_qc_complete(qc);
++	ata_eh_qc_complete(qc);
+ 	DPRINTK("EXIT\n");
+ }
+ 
 -- 
 1.0.8
 
