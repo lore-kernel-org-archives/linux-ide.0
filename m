@@ -1,49 +1,120 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [COORDINATE] INIC-1620TA/1622TA2/1623TA2 SATA controllers from initio
-Date: Tue, 24 Jan 2006 17:27:01 +0100
-Message-ID: <58cb370e0601240827n771e660bkb1fb3e8589ce1633@mail.gmail.com>
-References: <43D646C2.6040104@gmail.com>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: Re: PATCH convert libata-core to the new debugging scheme
+Date: Tue, 24 Jan 2006 08:30:23 -0800
+Message-ID: <20060124083023.14df7ce0.randy_d_dunlap@linux.intel.com>
+References: <20060117105702.5e5a5cb5.randy_d_dunlap@linux.intel.com>
+	<20060124090724.GA7897@gollum.tnic>
+	<43D626D6.60507@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.200]:64328 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030358AbWAXQ1E convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Jan 2006 11:27:04 -0500
-Received: by uproxy.gmail.com with SMTP id s2so185200uge
-        for <linux-ide@vger.kernel.org>; Tue, 24 Jan 2006 08:27:02 -0800 (PST)
-In-Reply-To: <43D646C2.6040104@gmail.com>
-Content-Disposition: inline
+Received: from fmr17.intel.com ([134.134.136.16]:38312 "EHLO
+	orsfmr002.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1030338AbWAXQ3H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Jan 2006 11:29:07 -0500
+In-Reply-To: <43D626D6.60507@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux-ide <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: bbpetkov@yahoo.de, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hi Tejun,
+On Tue, 24 Jan 2006 22:08:38 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-It may be a good idea to ask Jeff to update his excellent status web-page:
+> Borislav Petkov wrote:
+> > On Tue, Jan 17, 2006 at 10:57:02AM -0800, Randy Dunlap wrote:
+> > Hi Jeff, Randy,
+> >    
+> >    here's a rehash against 2.6.16-rc1 of the 2nd patch I sent then but it somehow 
+> >    got lost along the way. It converts the libata-core.c to the new debugging scheme.
+> > 
+> >    Problem: In the ata_dev_classify() function we don't have access to an 
+> >    ata_host struct probably because we're still probing so maybe we'll have to 
+> >    print debugging statements in a different manner. Same for early init 
+> >    routines like ata_device_add(),  ata_probe_ent_alloc(), ata_pci_init_one().
+> > 
+> >    Also, Jeff, if you'd still like to have a way of setting/getting debugging 
+> >    levels from userspace, please elaborate more on that so that I have some
+> >    directions (ioctl, proc, etc).
+> 
+> I'm not Jeff, but my 5 Won (that's like half a cent) would be on sysfs. 
+>   People hate ioctl and proc these days.
+> 
+> > 
+> >    Thanks,
+> >    Boris.
+> > 
+> >    p.s. Please CC me since I'm not subscribed to the linux-ide ML.
+> > 
+> >    Signed-off-by: Borislav Petkov <petkov@uni-muenster.de>
+> > 
+> > 
+> > --- 16-rc1/drivers/scsi/libata-core.c.orig	2006-01-21 09:42:53.000000000 +0100
+> > +++ 16-rc1/drivers/scsi/libata-core.c	2006-01-24 09:58:00.000000000 +0100
+> > @@ -115,13 +115,15 @@ static void ata_tf_load_pio(struct ata_p
+> >  		outb(tf->hob_lbal, ioaddr->lbal_addr);
+> >  		outb(tf->hob_lbam, ioaddr->lbam_addr);
+> >  		outb(tf->hob_lbah, ioaddr->lbah_addr);
+> > -		VPRINTK("hob: feat 0x%X nsect 0x%X, lba 0x%X 0x%X 0x%X\n",
+> > -			tf->hob_feature,
+> > -			tf->hob_nsect,
+> > -			tf->hob_lbal,
+> > -			tf->hob_lbam,
+> > -			tf->hob_lbah);
+> > -	}
+> > +		if (ata_msg_ctl(ap)) 
+> > +			printk(KERN_DEBUG "%s: hob: feat 0x%X nsect 0x%X, lba 0x%X 0x%X 0x%X\n",
+> > +				__FUNCTION__,
+> > +				tf->hob_feature,
+> > +				tf->hob_nsect,
+> > +				tf->hob_lbal,
+> > +				tf->hob_lbam,
+> > +				tf->hob_lbah);
+> > +		}
+> 
+> Wouldn't it be better to wrap 'if (ata_msg_ctl(ap)) printk' into some 
+> pretty macro?  Debug messages tend to be long and 8 characters can be 
+> used better.  IMHO, 'if' clauses for debug messages lower readability a bit.
 
-http://linux.yyz.us/sata/sata-status.html
+I agree that a wrapper would be nice.
+Without a wrapper (in this current patch), I see some (new) lines
+that are indented too much, e.g.:
 
-I guess that patch updating html file is fine but verify that with Jeff.
+	if (ata_msg_err(ap))
+			printk(KERN_WARNING "%s: ata%u: PIO error\n", __FUNCTION__, ap->id);
 
-Bartlomiej
+Secondly, we usually try to make source lines fit into 80
+columns, so using a line break after the first comma would be
+Good.
 
-On 1/24/06, Tejun Heo <htejun@gmail.com> wrote:
-> Hello, fellow ATA developers.
->
-> I've just bought this brand-new/quite affordable INIC-1622TA2
-> controller.  AFAIK, there's no driver yet.  Initio has kindly posted
-> document of this controller on their website[1].  I skimmed through the
-> doc and it seems to be a pretty decent piece of hardware with NCQ support.
->
-> I'm gonna work on this driver probably from next week or the week after.
->   So, please let me know if someone is already working or planning to
-> work on it.  I'll be happy to be a tester in that case.  The other way
-> around would be helpful, too.  If you have this type of controller and
-> feeling like to participate in testing, please let me know.
->
-> Thanks.
->
-> [1] http://initio.com/products/sata.htm
+Both of these points apply to multiple places in the patch.
+
+And here:
+-	DPRINTK("init dev params \n");
++	if (ata_msg_ctl(ap))
++			printk(KERN_DEBUG "%s: init dev params \n", __FUNCTION__);
+
+Drop the space after "params".
+
+Anyway, back to the more important point.  How can we make
+this more compact (Tejun's wrapper recommendation)?
+
+Maybe something like (when <ap> is available):
+
+#define ATA_MSG_CTL(ap, fmt, args)			\
+			do { if (ata_msg_ctl(ap))	\
+				printk(KERN_DEBUG "%s: " fmt, \
+					__FUNCTION__, ## args); \
+			} while(0)
+
+or for "?:" fans like me, prints even when <ap> is NULL:
+
+#define ATA_MSG_CTL(ap, fmt, args)			\
+			do { if (ap ? ata_msg_ctl(ap) : 1) \
+				printk(KERN_DEBUG "%s: " fmt, \
+					__FUNCTION__, ## args); \
+			} while(0)
+
+---
+~Randy
