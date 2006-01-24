@@ -1,285 +1,187 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 05/12] libata: implement standard reset component operations and ->probe_reset
+Subject: [PATCH 12/12] ahci: add softreset
 Date: Tue, 24 Jan 2006 17:05:22 +0900
-Message-ID: <1138089922407-git-send-email-htejun@gmail.com>
+Message-ID: <11380899221842-git-send-email-htejun@gmail.com>
 References: <1138089921565-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.199]:8856 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030361AbWAXIFh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jan 2006 03:05:37 -0500
-Received: by zproxy.gmail.com with SMTP id n1so1283671nzf
-        for <linux-ide@vger.kernel.org>; Tue, 24 Jan 2006 00:05:36 -0800 (PST)
+Received: from wproxy.gmail.com ([64.233.184.193]:57906 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932466AbWAXIZu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jan 2006 03:25:50 -0500
+Received: by wproxy.gmail.com with SMTP id i3so1038078wra
+        for <linux-ide@vger.kernel.org>; Tue, 24 Jan 2006 00:25:49 -0800 (PST)
 In-Reply-To: <1138089921565-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement SRST, COMRESET and standard postreset component operations
-for ata_drive_probe_reset(), and use these three functions to
-implement ata_std_probe_reset.
+Now that libata is smart enought to handle both soft and hard resets,
+add softreset method.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |  206 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h     |    6 +
- 2 files changed, 212 insertions(+), 0 deletions(-)
+ drivers/scsi/ahci.c |  134 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 133 insertions(+), 1 deletions(-)
 
-254523d00d03d4948a7452b0cbf04af7cb11f4fe
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 48aa57e..f6511bd 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -2280,6 +2280,208 @@ err_out:
- 	DPRINTK("EXIT\n");
+8796cd07b5183339240083c14714700a46821ae7
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index c5a1ba6..81ba5f5 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -510,6 +510,138 @@ static inline void ahci_fill_cmd_slot(st
+ 	pp->cmd_slot[0].tbl_addr_hi = cpu_to_le32((pp->cmd_tbl_dma >> 16) >> 16);
  }
  
-+/**
-+ *	ata_std_softreset - reset host port via ATA SRST
-+ *	@ap: port to reset
-+ *	@verbose: fail verbosely
-+ *	@classes: resulting classes of attached devices
-+ *
-+ *	Reset host port using ATA SRST.  This function is to be used
-+ *	as standard callback for ata_drive_*_reset() functions.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise.
-+ */
-+int ata_std_softreset(struct ata_port *ap, int verbose, unsigned int *classes)
++static int ahci_wait_for_bit(void __iomem *reg, u32 mask, u32 val,
++			     unsigned long interval_msec,
++			     unsigned long timeout_msec)
 +{
-+	unsigned int slave_possible = ap->flags & ATA_FLAG_SLAVE_POSS;
-+	unsigned int devmask = 0, err_mask;
-+	u8 err;
++	unsigned long timeout;
++	u32 tmp;
 +
-+	DPRINTK("ENTER\n");
-+
-+	/* determine if device 0/1 are present */
-+	if (ata_devchk(ap, 0))
-+		devmask |= (1 << 0);
-+	if (slave_possible && ata_devchk(ap, 1))
-+		devmask |= (1 << 1);
-+
-+	/* devchk reports device presence without actual device on
-+	 * most SATA controllers.  Check SStatus and turn devmask off
-+	 * if link is offline.  Note that we should continue resetting
-+	 * even when it seems like there's no device.
-+	 */
-+	if (ap->ops->scr_read && !sata_dev_present(ap))
-+		devmask = 0;
-+
-+	/* select device 0 again */
-+	ap->ops->dev_select(ap, 0);
-+
-+	/* issue bus reset */
-+	DPRINTK("about to softreset, devmask=%x\n", devmask);
-+	err_mask = ata_bus_softreset(ap, devmask);
-+	if (err_mask) {
-+		if (verbose)
-+			printk(KERN_ERR "ata%u: SRST failed (err_mask=0x%x)\n",
-+			       ap->id, err_mask);
-+		else
-+			DPRINTK("EXIT, softreset failed (err_mask=0x%x)\n",
-+				err_mask);
-+		return -EIO;
-+	}
-+
-+	/* determine by signature whether we have ATA or ATAPI devices */
-+	classes[0] = ata_dev_try_classify(ap, 0, &err);
-+	if (slave_possible && err != 0x81)
-+		classes[1] = ata_dev_try_classify(ap, 1, &err);
-+
-+	DPRINTK("EXIT, classes[0]=%u [1]=%u\n", classes[0], classes[1]);
-+	return 0;
-+}
-+
-+/**
-+ *	sata_std_hardreset - reset host port via SATA phy reset
-+ *	@ap: port to reset
-+ *	@verbose: fail verbosely
-+ *	@class: resulting class of attached device
-+ *
-+ *	SATA phy-reset host port using DET bits of SControl register.
-+ *	This function is to be used as standard callback for
-+ *	ata_drive_*_reset().
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise.
-+ */
-+int sata_std_hardreset(struct ata_port *ap, int verbose, unsigned int *class)
-+{
-+	u32 sstatus, serror;
-+	unsigned long timeout = jiffies + (HZ * 5);
-+
-+	DPRINTK("ENTER\n");
-+
-+	/* Issue phy wake/reset */
-+	scr_write_flush(ap, SCR_CONTROL, 0x301);
-+
-+	/*
-+	 * Couldn't find anything in SATA I/II specs, but AHCI-1.1
-+	 * 10.4.2 says at least 1 ms.
-+	 */
-+	msleep(1);
-+
-+	scr_write_flush(ap, SCR_CONTROL, 0x300);
-+
-+	/* Wait for phy to become ready, if necessary. */
++	timeout = jiffies + (timeout_msec * HZ) / 1000;
 +	do {
-+		msleep(200);
-+		sstatus = scr_read(ap, SCR_STATUS);
-+		if ((sstatus & 0xf) != 1)
-+			break;
++		tmp = readl(reg);
++		if ((tmp & mask) != val)
++			return 0;
++		msleep(interval_msec);
 +	} while (time_before(jiffies, timeout));
 +
-+	/* Clear SError */
-+	serror = scr_read(ap, SCR_ERROR);
-+	scr_write(ap, SCR_ERROR, serror);
++	return -1;
++}
 +
-+	/* TODO: phy layer with polling, timeouts, etc. */
-+	if (!sata_dev_present(ap)) {
-+		*class = ATA_DEV_NONE;
-+		DPRINTK("EXIT, link offline\n");
-+		return 0;
++static int ahci_softreset(struct ata_port *ap, int verbose, unsigned int *class)
++{
++	struct ahci_host_priv *hpriv = ap->host_set->private_data;
++	struct ahci_port_priv *pp = ap->private_data;
++	void __iomem *mmio = ap->host_set->mmio_base;
++	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
++	const u32 cmd_fis_len = 5; /* five dwords */
++	const char *reason = NULL;
++	struct ata_taskfile tf;
++	u8 *fis;
++	int rc;
++
++	DPRINTK("ENTER\n");
++
++	/* prepare for SRST (AHCI-1.1 10.4.1) */
++	rc = ahci_stop_engine(ap);
++	if (rc) {
++		reason = "failed to stop engine";
++		goto fail_restart;
 +	}
 +
-+	if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT)) {
-+		if (verbose)
-+			printk(KERN_ERR "ata%u: COMRESET failed "
-+			       "(device not ready)\n", ap->id);
-+		else
-+			DPRINTK("EXIT, device not ready\n");
-+		return -EIO;
++	/* check BUSY/DRQ, perform Command List Override if necessary */
++	ahci_tf_read(ap, &tf);
++	if (tf.command & (ATA_BUSY | ATA_DRQ)) {
++		u32 tmp;
++
++		if (!(hpriv->cap & HOST_CAP_CLO)) {
++			rc = -EIO;
++			reason = "port busy but no CLO";
++			goto fail_restart;
++		}
++
++		tmp = readl(port_mmio + PORT_CMD);
++		tmp |= PORT_CMD_CLO;
++		writel(tmp, port_mmio + PORT_CMD);
++		readl(port_mmio + PORT_CMD); /* flush */
++
++		if (ahci_wait_for_bit(port_mmio + PORT_CMD,
++				      PORT_CMD_CLO, PORT_CMD_CLO, 1, 500)) {
++			rc = -EIO;
++			reason = "CLO failed";
++			goto fail_restart;
++		}
 +	}
 +
-+	*class = ata_dev_try_classify(ap, 0, NULL);
++	/* restart engine */
++	ahci_start_engine(ap);
++
++	ata_tf_init(ap, &tf, 0);
++	fis = pp->cmd_tbl;
++
++	/* issue the first D2H Register FIS */
++	ahci_fill_cmd_slot(ap, cmd_fis_len | AHCI_CMD_RESET | AHCI_CMD_CLR_BUSY);
++
++	tf.ctl |= ATA_SRST;
++	ata_tf_to_fis(&tf, fis, 0);
++	fis[1] &= ~(1 << 7);	/* turn off Command FIS bit */
++
++	writel(1, port_mmio + PORT_CMD_ISSUE);
++	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
++
++	if (ahci_wait_for_bit(port_mmio + PORT_CMD_ISSUE, 0x1, 0x1, 1, 500)) {
++		rc = -EIO;
++		reason = "1st FIS failed";
++		goto fail;
++	}
++
++	/* spec says at least 5us, but be generous and sleep for 1ms */
++	msleep(1);
++
++	/* issue the second D2H Register FIS */
++	ahci_fill_cmd_slot(ap, cmd_fis_len);
++
++	tf.ctl &= ~ATA_SRST;
++	ata_tf_to_fis(&tf, fis, 0);
++	fis[1] &= ~(1 << 7);	/* turn off Command FIS bit */
++
++	writel(1, port_mmio + PORT_CMD_ISSUE);
++	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
++
++	/* spec mandates ">= 2ms" before checking status.
++	 * We wait 150ms, because that was the magic delay used for
++	 * ATAPI devices in Hale Landis's ATADRVR, for the period of time
++	 * between when the ATA command register is written, and then
++	 * status is checked.  Because waiting for "a while" before
++	 * checking status is fine, post SRST, we perform this magic
++	 * delay here as well.
++	 */
++	msleep(150);
++
++	*class = ATA_DEV_NONE;
++	if (sata_dev_present(ap)) {
++		if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT)) {
++			rc = -EIO;
++			reason = "device not ready";
++			goto fail;
++		}
++		*class = ahci_dev_classify(ap);
++	}
 +
 +	DPRINTK("EXIT, class=%u\n", *class);
 +	return 0;
++
++ fail_restart:
++	ahci_start_engine(ap);
++ fail:
++	if (verbose)
++		printk(KERN_ERR "ata%u: softreset failed (%s)\n",
++		       ap->id, reason);
++	else
++		DPRINTK("EXIT, rc=%d reason=\"%s\"\n", rc, reason);
++	return rc;
 +}
 +
-+/**
-+ *	ata_std_postreset - standard postreset callback
-+ *	@ap: the target ata_port
-+ *	@classes: classes of attached devices
-+ *
-+ *	This function is invoked after a successful reset.  Note that
-+ *	the device might have been reset more than once using
-+ *	different reset methods before postreset is invoked.
-+ *	postreset is also reponsible for setting cable type.
-+ *
-+ *	This function is to be used as standard callback for
-+ *	ata_drive_*_reset().
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ */
-+void ata_std_postreset(struct ata_port *ap, unsigned int *classes)
-+{
-+	DPRINTK("ENTER\n");
-+
-+	/* set cable type */
-+	if (ap->cbl == ATA_CBL_NONE && ap->flags & ATA_FLAG_SATA)
-+		ap->cbl = ATA_CBL_SATA;
-+
-+	/* print link status */
-+	if (ap->cbl == ATA_CBL_SATA)
-+		sata_print_link_status(ap);
-+
-+	/* bail out if no device is present */
-+	if (classes[0] == ATA_DEV_NONE && classes[1] == ATA_DEV_NONE) {
-+		DPRINTK("EXIT, no device\n");
-+		return;
-+	}
-+
-+	/* is double-select really necessary? */
-+	if (classes[0] != ATA_DEV_NONE)
-+		ap->ops->dev_select(ap, 1);
-+	if (classes[1] != ATA_DEV_NONE)
-+		ap->ops->dev_select(ap, 0);
-+
-+	/* re-enable interrupts & set up device control */
-+	if (ap->ioaddr.ctl_addr)	/* FIXME: hack. create a hook instead */
-+		ata_irq_on(ap);
-+
-+	DPRINTK("EXIT\n");
-+}
-+
-+/**
-+ *	ata_std_probe_reset - standard probe reset method
-+ *	@ap: prot to perform probe-reset
-+ *	@classes: resulting classes of attached devices
-+ *
-+ *	The stock off-the-shelf ->probe_reset method.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise.
-+ */
-+int ata_std_probe_reset(struct ata_port *ap, unsigned int *classes)
-+{
-+	ata_reset_fn_t hardreset;
-+
-+	hardreset = NULL;
-+	if (ap->cbl == ATA_CBL_SATA && ap->ops->scr_read)
-+		hardreset = sata_std_hardreset;
-+
-+	return ata_drive_probe_reset(ap, ata_std_softreset, hardreset,
-+				     ata_std_postreset, classes);
-+}
-+
- static int do_probe_reset(struct ata_port *ap, ata_reset_fn_t reset,
- 			  ata_postreset_fn_t postreset,
- 			  unsigned int *classes)
-@@ -5308,6 +5510,10 @@ EXPORT_SYMBOL_GPL(ata_port_probe);
- EXPORT_SYMBOL_GPL(sata_phy_reset);
- EXPORT_SYMBOL_GPL(__sata_phy_reset);
- EXPORT_SYMBOL_GPL(ata_bus_reset);
-+EXPORT_SYMBOL_GPL(ata_std_softreset);
-+EXPORT_SYMBOL_GPL(sata_std_hardreset);
-+EXPORT_SYMBOL_GPL(ata_std_postreset);
-+EXPORT_SYMBOL_GPL(ata_std_probe_reset);
- EXPORT_SYMBOL_GPL(ata_drive_probe_reset);
- EXPORT_SYMBOL_GPL(ata_port_disable);
- EXPORT_SYMBOL_GPL(ata_ratelimit);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 3d7392e..f4cd1eb 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -486,6 +486,11 @@ extern void ata_bus_reset(struct ata_por
- extern int ata_drive_probe_reset(struct ata_port *ap,
- 			ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
- 			ata_postreset_fn_t postreset, unsigned int *classes);
-+extern int ata_std_softreset(struct ata_port *ap, int verbose,
-+			     unsigned int *classes);
-+extern int sata_std_hardreset(struct ata_port *ap, int verbose,
-+			      unsigned int *class);
-+extern void ata_std_postreset(struct ata_port *ap, unsigned int *classes);
- extern void ata_port_disable(struct ata_port *);
- extern void ata_std_ports(struct ata_ioports *ioaddr);
- #ifdef CONFIG_PCI
-@@ -526,6 +531,7 @@ extern void ata_std_dev_select (struct a
- extern u8 ata_check_status(struct ata_port *ap);
- extern u8 ata_altstatus(struct ata_port *ap);
- extern void ata_exec_command(struct ata_port *ap, const struct ata_taskfile *tf);
-+extern int ata_std_probe_reset(struct ata_port *ap, unsigned int *classes);
- extern int ata_port_start (struct ata_port *ap);
- extern void ata_port_stop (struct ata_port *ap);
- extern void ata_host_stop (struct ata_host_set *host_set);
+ static int ahci_hardreset(struct ata_port *ap, int verbose, unsigned int *class)
+ {
+ 	int rc;
+@@ -550,7 +682,7 @@ static void ahci_postreset(struct ata_po
+ 
+ static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes)
+ {
+-	return ata_drive_probe_reset(ap, NULL, ahci_hardreset,
++	return ata_drive_probe_reset(ap, ahci_softreset, ahci_hardreset,
+ 				     ahci_postreset, classes);
+ }
+ 
 -- 
 1.1.3
 
