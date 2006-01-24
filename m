@@ -1,120 +1,33 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: Re: PATCH convert libata-core to the new debugging scheme
-Date: Tue, 24 Jan 2006 08:30:23 -0800
-Message-ID: <20060124083023.14df7ce0.randy_d_dunlap@linux.intel.com>
-References: <20060117105702.5e5a5cb5.randy_d_dunlap@linux.intel.com>
-	<20060124090724.GA7897@gollum.tnic>
-	<43D626D6.60507@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [COORDINATE] INIC-1620TA/1622TA2/1623TA2 SATA controllers from initio
+Date: Tue, 24 Jan 2006 11:33:33 -0500
+Message-ID: <20060124163333.GE23269@havoc.gtf.org>
+References: <43D646C2.6040104@gmail.com> <58cb370e0601240827n771e660bkb1fb3e8589ce1633@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr17.intel.com ([134.134.136.16]:38312 "EHLO
-	orsfmr002.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1030338AbWAXQ3H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Jan 2006 11:29:07 -0500
-In-Reply-To: <43D626D6.60507@gmail.com>
+Received: from havoc.gtf.org ([69.61.125.42]:59028 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1030373AbWAXQdg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jan 2006 11:33:36 -0500
+Content-Disposition: inline
+In-Reply-To: <58cb370e0601240827n771e660bkb1fb3e8589ce1633@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: bbpetkov@yahoo.de, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, Linux-ide <linux-ide@vger.kernel.org>
 
-On Tue, 24 Jan 2006 22:08:38 +0900
-Tejun Heo <htejun@gmail.com> wrote:
-
-> Borislav Petkov wrote:
-> > On Tue, Jan 17, 2006 at 10:57:02AM -0800, Randy Dunlap wrote:
-> > Hi Jeff, Randy,
-> >    
-> >    here's a rehash against 2.6.16-rc1 of the 2nd patch I sent then but it somehow 
-> >    got lost along the way. It converts the libata-core.c to the new debugging scheme.
-> > 
-> >    Problem: In the ata_dev_classify() function we don't have access to an 
-> >    ata_host struct probably because we're still probing so maybe we'll have to 
-> >    print debugging statements in a different manner. Same for early init 
-> >    routines like ata_device_add(),  ata_probe_ent_alloc(), ata_pci_init_one().
-> > 
-> >    Also, Jeff, if you'd still like to have a way of setting/getting debugging 
-> >    levels from userspace, please elaborate more on that so that I have some
-> >    directions (ioctl, proc, etc).
+On Tue, Jan 24, 2006 at 05:27:01PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> Hi Tejun,
 > 
-> I'm not Jeff, but my 5 Won (that's like half a cent) would be on sysfs. 
->   People hate ioctl and proc these days.
+> It may be a good idea to ask Jeff to update his excellent status web-page:
 > 
-> > 
-> >    Thanks,
-> >    Boris.
-> > 
-> >    p.s. Please CC me since I'm not subscribed to the linux-ide ML.
-> > 
-> >    Signed-off-by: Borislav Petkov <petkov@uni-muenster.de>
-> > 
-> > 
-> > --- 16-rc1/drivers/scsi/libata-core.c.orig	2006-01-21 09:42:53.000000000 +0100
-> > +++ 16-rc1/drivers/scsi/libata-core.c	2006-01-24 09:58:00.000000000 +0100
-> > @@ -115,13 +115,15 @@ static void ata_tf_load_pio(struct ata_p
-> >  		outb(tf->hob_lbal, ioaddr->lbal_addr);
-> >  		outb(tf->hob_lbam, ioaddr->lbam_addr);
-> >  		outb(tf->hob_lbah, ioaddr->lbah_addr);
-> > -		VPRINTK("hob: feat 0x%X nsect 0x%X, lba 0x%X 0x%X 0x%X\n",
-> > -			tf->hob_feature,
-> > -			tf->hob_nsect,
-> > -			tf->hob_lbal,
-> > -			tf->hob_lbam,
-> > -			tf->hob_lbah);
-> > -	}
-> > +		if (ata_msg_ctl(ap)) 
-> > +			printk(KERN_DEBUG "%s: hob: feat 0x%X nsect 0x%X, lba 0x%X 0x%X 0x%X\n",
-> > +				__FUNCTION__,
-> > +				tf->hob_feature,
-> > +				tf->hob_nsect,
-> > +				tf->hob_lbal,
-> > +				tf->hob_lbam,
-> > +				tf->hob_lbah);
-> > +		}
+> http://linux.yyz.us/sata/sata-status.html
 > 
-> Wouldn't it be better to wrap 'if (ata_msg_ctl(ap)) printk' into some 
-> pretty macro?  Debug messages tend to be long and 8 characters can be 
-> used better.  IMHO, 'if' clauses for debug messages lower readability a bit.
+> I guess that patch updating html file is fine but verify that with Jeff.
 
-I agree that a wrapper would be nice.
-Without a wrapper (in this current patch), I see some (new) lines
-that are indented too much, e.g.:
+Yes, patches to those web pages are welcome...
 
-	if (ata_msg_err(ap))
-			printk(KERN_WARNING "%s: ata%u: PIO error\n", __FUNCTION__, ap->id);
+	Jeff
 
-Secondly, we usually try to make source lines fit into 80
-columns, so using a line break after the first comma would be
-Good.
 
-Both of these points apply to multiple places in the patch.
 
-And here:
--	DPRINTK("init dev params \n");
-+	if (ata_msg_ctl(ap))
-+			printk(KERN_DEBUG "%s: init dev params \n", __FUNCTION__);
-
-Drop the space after "params".
-
-Anyway, back to the more important point.  How can we make
-this more compact (Tejun's wrapper recommendation)?
-
-Maybe something like (when <ap> is available):
-
-#define ATA_MSG_CTL(ap, fmt, args)			\
-			do { if (ata_msg_ctl(ap))	\
-				printk(KERN_DEBUG "%s: " fmt, \
-					__FUNCTION__, ## args); \
-			} while(0)
-
-or for "?:" fans like me, prints even when <ap> is NULL:
-
-#define ATA_MSG_CTL(ap, fmt, args)			\
-			do { if (ap ? ata_msg_ctl(ap) : 1) \
-				printk(KERN_DEBUG "%s: " fmt, \
-					__FUNCTION__, ## args); \
-			} while(0)
-
----
-~Randy
