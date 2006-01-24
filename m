@@ -1,70 +1,137 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH 07/13] SCSI: export scsi_eh_finish_cmd() and scsi_eh_flush_done_q()
-Date: Tue, 24 Jan 2006 10:53:43 -0800 (PST)
-Message-ID: <20060124185343.39546.qmail@web31805.mail.mud.yahoo.com>
-References: <20060124173021.GF23269@havoc.gtf.org>
-Reply-To: ltuikov@yahoo.com
+From: Borislav Petkov <bbpetkov@yahoo.de>
+Subject: Re: PATCH convert libata-core to the new debugging scheme
+Date: Tue, 24 Jan 2006 20:43:43 +0100
+Message-ID: <20060124194343.GB25402@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web31805.mail.mud.yahoo.com ([68.142.207.68]:57249 "HELO
-	web31805.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1161029AbWAXSxo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Jan 2006 13:53:44 -0500
-In-Reply-To: <20060124173021.GF23269@havoc.gtf.org>
+Received: from smtp102.mail.sc5.yahoo.com ([216.136.174.140]:32868 "HELO
+	smtp102.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S1030232AbWAXTnr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Jan 2006 14:43:47 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, Christoph Hellwig <hch@infradead.org>, Arjan van de Ven <arjan@infradead.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: htejun@gmail.com, randy_d_dunlap@linux.intel.com
 
---- Jeff Garzik <jgarzik@pobox.com> wrote:
-> On Tue, Jan 24, 2006 at 09:11:17AM -0800, Luben Tuikov wrote:
-> > So when scsi_finish_command() is unexported, then _all_ EH strategies
-> > would have to define local done_q, and splice eh_cmd_q into local work_q,
-> > then from local work_q into local done_q and then that is passed
-> > to SCSI Core, via scsi_eh_flush_done_q().
+On Tue, 24 Jan 2006 22:08:38 +0900
+Tejun Heo <htejun@gmail.com> wrote:
+
+First of all, sorry for this "generated" reply but I was not subscribed until
+now...
+
+> > Borislav Petkov wrote:
+> > > On Tue, Jan 17, 2006 at 10:57:02AM -0800, Randy Dunlap wrote:
+> > > Hi Jeff, Randy,
+> > >    
+> > >    here's a rehash against 2.6.16-rc1 of the 2nd patch I sent then but it somehow 
+> > >    got lost along the way. It converts the libata-core.c to the new debugging scheme.
+> > > 
+> > >    Problem: In the ata_dev_classify() function we don't have access to an 
+> > >    ata_host struct probably because we're still probing so maybe we'll have to 
+> > >    print debugging statements in a different manner. Same for early init 
+> > >    routines like ata_device_add(),  ata_probe_ent_alloc(), ata_pci_init_one().
+> > > 
+> > >    Also, Jeff, if you'd still like to have a way of setting/getting debugging 
+> > >    levels from userspace, please elaborate more on that so that I have some
+> > >    directions (ioctl, proc, etc).
 > > 
-> > Is it possible that this is done asynchrounously?  Since EH recovery is
-> > per host, but you may have only a single device which is misbehaving?
+> > I'm not Jeff, but my 5 Won (that's like half a cent) would be on sysfs. 
+> >   People hate ioctl and proc these days.
+> >
+I'll get on it.
+> > > 
+> > >    Thanks,
+> > >    Boris.
+> > > 
+> > >    p.s. Please CC me since I'm not subscribed to the linux-ide ML.
+> > > 
+> > >    Signed-off-by: Borislav Petkov <petkov@uni-muenster.de>
+> > > 
+> > > 
+> > > --- 16-rc1/drivers/scsi/libata-core.c.orig	2006-01-21 09:42:53.000000000 +0100
+> > > +++ 16-rc1/drivers/scsi/libata-core.c	2006-01-24 09:58:00.000000000 +0100
+> > > @@ -115,13 +115,15 @@ static void ata_tf_load_pio(struct ata_p
+> > >  		outb(tf->hob_lbal, ioaddr->lbal_addr);
+> > >  		outb(tf->hob_lbam, ioaddr->lbam_addr);
+> > >  		outb(tf->hob_lbah, ioaddr->lbah_addr);
+> > > -		VPRINTK("hob: feat 0x%X nsect 0x%X, lba 0x%X 0x%X 0x%X\n",
+> > > -			tf->hob_feature,
+> > > -			tf->hob_nsect,
+> > > -			tf->hob_lbal,
+> > > -			tf->hob_lbam,
+> > > -			tf->hob_lbah);
+> > > -	}
+> > > +		if (ata_msg_ctl(ap)) 
+> > > +			printk(KERN_DEBUG "%s: hob: feat 0x%X nsect 0x%X, lba 0x%X 0x%X 0x%X\n",
+> > > +				__FUNCTION__,
+> > > +				tf->hob_feature,
+> > > +				tf->hob_nsect,
+> > > +				tf->hob_lbal,
+> > > +				tf->hob_lbam,
+> > > +				tf->hob_lbah);
+> > > +		}
+> > 
+> > Wouldn't it be better to wrap 'if (ata_msg_ctl(ap)) printk' into some 
+> > pretty macro?  Debug messages tend to be long and 8 characters can be 
+> > used better.  IMHO, 'if' clauses for debug messages lower readability a bit.
 > 
-> No, because the host is stopped during EH, and only restarted after your
-> EH code completes its run.
-
-Look at my sentence above, I just said "Since EH recovery is per host". You're
-repeating  what I had just said.
-
-Maybe I was too subtle saying "Since EH recovery is per host, but you may
-have only a single device which is misbehaving":  the whole point is not to have
-to stop the "host" in order to do error recovery.  Finer grained recovery would
-be better, obviously for many reasons, both technologically and logistically.
- 
-> > I.e. is it possible, in a such and such EH strategy, not necessarily
-> > SCSI Cores's or libata's, to _not_ have a local done_q?  So that,
-> > we have only local work_q (after splicing eh_cmd_q) and after each
-> > command is looked at, we "return" that command back to SCSI Core, so
-> > that SCSI Core can "finish" it. (In effect "per-command", as opposed to
-> > "per-queue-of-commands".)
+> I agree that a wrapper would be nice.
+> Without a wrapper (in this current patch), I see some (new) lines
+> that are indented too much, e.g.:
 > 
-> done_q is simply a method for returning one or more commands back to the
-> SCSI Core, so that the SCSI Core can finish it.
+> 	if (ata_msg_err(ap))
+> 			printk(KERN_WARNING "%s: ata%u: PIO error\n", __FUNCTION__, ap->id);
+> Secondly, we usually try to make source lines fit into 80
+> columns, so using a line break after the first comma would be
+> Good.
+Will do.
+> 
+> Both of these points apply to multiple places in the patch.
+> 
+> And here:
+> -	DPRINTK("init dev params \n");
+> +	if (ata_msg_ctl(ap))
+> +			printk(KERN_DEBUG "%s: init dev params \n", __FUNCTION__);
+> 
+> Drop the space after "params".
+> 
+> Anyway, back to the more important point.  How can we make
+> this more compact (Tejun's wrapper recommendation)?
+> 
+> Maybe something like (when <ap> is available):
+> 
+> #define ATA_MSG_CTL(ap, fmt, args)			\
+> 			do { if (ata_msg_ctl(ap))	\
+> 				printk(KERN_DEBUG "%s: " fmt, \
+> 					__FUNCTION__, ## args); \
+> 			} while(0)
+> 
+> or for "?:" fans like me, prints even when <ap> is NULL:
+> 
+> #define ATA_MSG_CTL(ap, fmt, args)			\
+> 			do { if (ap ? ata_msg_ctl(ap) : 1) \
+> 				printk(KERN_DEBUG "%s: " fmt, \
+> 					__FUNCTION__, ## args); \
+> 			} while(0)
 
-Thank you for pointing the obvious.
+Hm, don't know about that, the idea was actually that we implement a sliding
+scale for debugging messages in the manner Donald Becker has described in
+http://www.scyld.com/pipermail/vortex/2001-November/001426.html. Since we have
+different debugging levels we have also different debugging macros of the sort
+ata_msg_xxx() and for that matter we'll also have to do different wrapper macros
+for the debugging macros which to me _is_ kinda too much. In addition, the
+ata_msg_xxx() macros are going to be pretty useless if we wrap them one more
+time into other macros but this is only my opinion.
 
-> Per-command is irrelevant during EH, because queue processing is not
-> restarted until your EH handler ends completely.
+Regards,
+		Boris.
 
-Which would not be the case if finer grained recovery is to be attained.
+	
 
-> One alternative strategy for EH is to override the ->eh_timed_out()
-> function.  Its ugly, but you may effectively eliminate EH handling via
-> ->eh_strategy_handler(), by moving the error handling completely within
-> (a) the interrupt handler or (b) ->eh_timed_out().
-
-Neither.  There's per protocol recovery EHs which override both
-eh_timed_out() _and_ eh_strategy_handler(), in order to implement
-protocol recovery.
-
-     Luben
-
+	
+		
+___________________________________________________________ 
+Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
 
