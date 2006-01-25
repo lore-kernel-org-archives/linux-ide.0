@@ -1,49 +1,61 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: PATCH convert libata-core to the new debugging scheme
-Date: Wed, 25 Jan 2006 16:04:04 +0100
-Message-ID: <58cb370e0601250704v4aa89fc2n5f7194bbacd4a278@mail.gmail.com>
-References: <20060124194343.GB25402@gollum.tnic>
-	 <20060124194741.GG23269@havoc.gtf.org>
+From: "Bryan Lucas" <bryanlucas@cu.maz.uasnet.mx>
+Subject: Yukos oil company in Russia
+Date: Wed, 25 Jan 2006 02:16:50 -0700
+Message-ID: <20060125091558.M30020__17870.2822224752$1138201571$gmane$org@cu.maz.uasnet.mx>
+Reply-To: bryanans1965@satellite-email.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset=iso-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.196]:4898 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751190AbWAYPEK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Jan 2006 10:04:10 -0500
-Received: by uproxy.gmail.com with SMTP id s2so202638uge
-        for <linux-ide@vger.kernel.org>; Wed, 25 Jan 2006 07:04:06 -0800 (PST)
-In-Reply-To: <20060124194741.GG23269@havoc.gtf.org>
-Content-Disposition: inline
+Received: from [148.227.224.9] ([148.227.224.9]:21177 "EHLO cu.maz.uasnet.mx")
+	by vger.kernel.org with ESMTP id S1751195AbWAYPEc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jan 2006 10:04:32 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Borislav Petkov <bbpetkov@yahoo.de>, linux-ide@vger.kernel.org, htejun@gmail.com, randy_d_dunlap@linux.intel.com
 
-On 1/24/06, Jeff Garzik <jgarzik@pobox.com> wrote:
-> On Tue, Jan 24, 2006 at 08:43:43PM +0100, Borislav Petkov wrote:
-> > for the debugging macros which to me _is_ kinda too much. In addition, the
-> > ata_msg_xxx() macros are going to be pretty useless if we wrap them one more
-> > time into other macros but this is only my opinion.
->
-> Yes, I like the current stuff, and am not really interested in further
-> macros.
 
-What about using Randy's suggestion the other way around:
-embedding printk-s into ata_msg_* macros?
 
-This way we would get rid of all these if-s in the code
-without adding more macros.
+--
+Correo UAS - Campus Mazatlán
+Servidor: usuario@cu.maz.uasnet.mxMr. Brian Bacon Evans  (Agent)
+Representing Mr. Mikhail Khordokovsky 
+Yukos Oil Company in Russia. 
 
-i.e. we would have
+Dear Friend,
 
-+       ata_msg_ctl(ap, "ata%u: cmd 0x%X\n", ap->id, tf->command);
+I am Mr. Brian Bacon Evans and I represent Mr. Mikhail Khordokovsky the 
+former C.E.O of Yukos Oil Company and Mentap bank (Russia).
 
-instead of
+I have a very sensitive and confidential brief from him to ask for your 
+partnership in liquidating funds in Gibraltar.
 
-+       if (ata_msg_ctl(ap))
-+                       printk(KERN_DEBUG "%s: ata%u: cmd 0x%X\n",
-+                               __FUNCTION__, ap->id, tf->command);
+I will give the details, but in summary, the funds are coming via private 
+security investment in Gibraltar. This is a legitimate transaction. You will 
+be paid 30% of the portfolio investment value as your "management fees". If 
+you are interested, please write back to me via my private E-
+mail.bryanans1965@satellite-email.com.
 
-Bartlomiej
+Kindly, provide me with your confidential telephone number, fax number and 
+email address and I will provide further details and if you are satisfied I 
+can proceed with the instructions.
+
+Please we cannot afford any political problems because of recent events in 
+Russia. So I will advice you keep this to your self.
+
+Finally, please note that this must be concluded within reasonable time 
+frame therefore your prompt reply is essential.
+
+Write me back. I look forward to it.
+
+Wishing   you a prosperous New Year,
+
+
+Best Regards
+Mr. Brian Bacon Evans 
+Reply To:bryanans1965@satellite-email.com
+
+
+Universidad Autónoma de Sinaloa - Campus Mazatlán
+Visítenos en: http://www.maz.uasnet.mx
+
+ 
