@@ -1,30 +1,44 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: ANN: SiI opens more SATA chipsets
-Date: Wed, 25 Jan 2006 19:18:30 +0100
-Message-ID: <20060125181830.GY4212@suse.de>
-References: <20060125154920.GE14225@havoc.gtf.org>
+From: Christopher Smith <csmith@nighthawkrad.net>
+Subject: Re: Problems with multiple Promise SATA150 TX4 cards
+Date: Thu, 26 Jan 2006 11:26:56 +1100
+Message-ID: <43D81750.3060405@nighthawkrad.net>
+References: <Pine.LNX.4.44.0601240132560.32305-100000@coffee.psychology.mcmaster.ca>	 <43D5EF58.9010807@wasp.net.au>  <43D66681.708@dgreaves.com> <1138183485.27604.49.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932089AbWAYSQT@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060125154920.GE14225@havoc.gtf.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.syd.nighthawkrad.net ([203.166.121.124]:48328 "EHLO
+	mail.syd.nighthawkrad.net") by vger.kernel.org with ESMTP
+	id S1751255AbWAZA1A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Jan 2006 19:27:00 -0500
+In-Reply-To: <1138183485.27604.49.camel@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Erik Slagter <erik@slagter.name>
+Cc: linux-raid@vger.kernel.org, IDE Linux <linux-ide@vger.kernel.org>
 
-On Wed, Jan 25 2006, Jeff Garzik wrote:
+Erik Slagter wrote:
+> On Tue, 2006-01-24 at 17:40 +0000, David Greaves wrote:
+>>>> sounds like a spinup time on marginal power to me.
 > 
-> Silicon Image has kindly granted permission to me, to post hardware
-> documentation for the 3114 and 3124 chipsets:
+>>> No, it's a limitation of the Promise BIOS on the cards, it will only
+>>> detect a maximum of 8 drives. I had a quick convo with tech support
+>>> from Promise over this and they told me they don't support more than
+>>> one card in a machine in any case. (Which is odd given they advertise
+>>> the ability to RAID-5 across 2 cards!)
 > 
-> http://gkernel.sourceforge.net/specs/sii/DS-0103A_3114.pdf.bz2
-> http://gkernel.sourceforge.net/specs/sii/SiI-DS-0113_3124-1_full.pdf.bz2
+>>> <snipped the rest about power issues>
 > 
-> I'll update the SATA web pages, to add to the list of open chipsets,
-> when I return from my current biz trip.
+> I'd really consider the PSU. I had all sorts of weird problems with my
+> promise SATA150 TX2plus until I replaced the PSU. Apparently it doesn't
+> suffice to supply _enough_ power.
 
-Great news! That opens the door for sil ncq support as well.
+I've since setup the machine so only the motherboard and boot drive are 
+powered from the system PSU and the 12 SATA drives are powered from a 
+separate PSU.
 
--- 
-Jens Axboe
+Since the machine has previously been running with 8 drives fine on just 
+the system PSU, I feel confident saying power supply has nothing to do 
+with my problems.
+
+CS
