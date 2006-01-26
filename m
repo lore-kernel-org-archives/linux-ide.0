@@ -1,122 +1,67 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [akpm@osdl.org: Re: 2.6.16 eating filesystems]
-Date: Thu, 26 Jan 2006 19:52:41 +0100
-Message-ID: <20060126185240.GJ4311@suse.de>
-References: <20060125185320.GL14225@havoc.gtf.org> <43D8373B.1070802@gmail.com> <20060126080544.GH4212@suse.de> <43D8FDA5.3000701@gmail.com>
+From: Nicolas Mailhot <nicolas.mailhot@laposte.net>
+Subject: Re: regarding bug #5914 - fs corruption on SATA
+Date: Thu, 26 Jan 2006 22:04:55 +0100
+Message-ID: <1138309495.3968.3.camel@rousalka.dyndns.org>
+References: <20060126055050.GA4737@htj.dyndns.org>
+	 <43D8637F.5030207@gmail.com>
+	 <37416.192.54.193.25.1138266889.squirrel@rousalka.dyndns.org>
+	 <20060126092120.GP4212@suse.de>
+	 <5840.192.54.193.25.1138269692.squirrel@rousalka.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8jCu1L8aJ/3omMtw+pC4"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:43549 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S964774AbWAZSzn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 13:55:43 -0500
-Content-Disposition: inline
-In-Reply-To: <43D8FDA5.3000701@gmail.com>
+Received: from mx.laposte.net ([81.255.54.11]:25740 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S964890AbWAZVGC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 16:06:02 -0500
+In-Reply-To: <5840.192.54.193.25.1138269692.squirrel@rousalka.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Nicolas.Mailhot@LaPoste.net, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>
 
-On Fri, Jan 27 2006, Tejun wrote:
-> Jens Axboe wrote:
-> >On Thu, Jan 26 2006, Tejun Heo wrote:
+
+--=-8jCu1L8aJ/3omMtw+pC4
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Le jeudi 26 janvier 2006 =C3=A0 11:01 +0100, Nicolas Mailhot a =C3=A9crit :
+> Le Jeu 26 janvier 2006 10:21, Jens Axboe a =C3=A9crit :
+> > On Thu, Jan 26 2006, Nicolas Mailhot wrote:
+>=20
+> >> What parts can be done one a pre-breakage kernel and what parts on a
+> >> problem kernel (I ask this because a problem kernel will corrupt
+> >> basically
+> >> any file it writes to, even in single login mode the damage is
+> >> significant
+> >> so I need to limit the corruption window to minimum).
 > >
-> >>Jeff Garzik wrote:
-> >>
-> >>>----- Forwarded message from Andrew Morton <akpm@osdl.org> -----
-> >>>
-> >>>From: Andrew Morton <akpm@osdl.org>
-> >>>To: Jeff Garzik <jgarzik@pobox.com>
-> >>>Subject: Re: 2.6.16 eating filesystems
-> >>>Date: Wed, 25 Jan 2006 10:51:15 -0800
-> >>>X-Mailer: Sylpheed version 1.0.4 (GTK+ 1.2.10; i386-redhat-linux-gnu)
-> >>>
-> >>>Jeff Garzik <jgarzik@pobox.com> wrote:
-> >>>
-> >>>
-> >>>>Returning from a biz trip today, and will be looking (and/or passing the
-> >>>>buck to Tejun/Jens) at the stuff you mentioned.
-> >>>>
-> >>>>Was there just the one case of filesystem eating?
-> >>>>Pointers / message-ids / URLs?
-> >>>
-> >>>
-> >>>http://bugzilla.kernel.org/show_bug.cgi?id=5914
-> >>>
-> >>
-> >>The device reports FUA support.
-> >>
-> >>SCSI device sda: drive cache: write back w/ FUA
-> >>SCSI device sda: 586114704 512-byte hdwr sectors (300091 MB)
-> >>
-> >>This is my first time to see an ATA drive which supports FUA, great. 
-> >>Anyways, my guess is...
-> >
-> >
-> >Really? I've seen several of them, in fact the Maxtor in my workstation
-> >here supports it.
-> 
-> [CC'ing Nicolas & linux-ide]
-> 
-> Hmm.. I just bought three SATA-II drives 7200.9, samsung and WD, and I 
-> have two NCQ maxtor drives Eric sent me (the ones with read log page 10h 
-> bug).  None of these reports FUA capability.  Can you let me know the 
-> model names of FUA-capable drives you have?
+> > You need a new kernel (after the barrier rework), so 2.6.16-rc1 for
+> > instance.
+>=20
+> Ok, I'll do the test this evening (CET) with the rawhide/davej kernel-of
+> the day.
 
-My Seagate doesn't either, but all the Maxtors I've seen (two different
-firmwares tested here) do and the Hitachi I have also does. They are:
+I applied the fua backout patch and the kernel booted beautifully.
+Now I guess I need to see if Maxtor released a fixed firmware right ?
+(is it possible to change the firmware on a running system ?)
 
-Model Number:       Maxtor 6B250S0
-Firmware Revision:  BANC1B70
+Regards,
 
-Model Number:       Maxtor 7B300S0
-Firmware Revision:  BANC1BM0
+--=20
+Nicolas Mailhot
 
-Model Number:       HDT722516DLA380
-Firmware Revision:  V430
+--=-8jCu1L8aJ/3omMtw+pC4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Ceci est une partie de message
+	=?ISO-8859-1?Q?num=E9riquement?= =?ISO-8859-1?Q?_sign=E9e?=
 
-I have a bunch of other drives I can test as well (pata, sata, sas,
-scsi), but out of the ones I have 'online' at this moment 4 out of 6
-support it :-)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
 
-> >>1. I screwed up libata FUA part.
-> >>2. Maxtor screwed up.  It reports FUA but chokes when one is given.
-> >>
-> >>Both will result in failure of all barrier requests and that won't be 
-> >>very good for filesystem integrity.
-> >
-> >
-> >Auch, test case?
-> >
-> 
-> It's just a guess.  Weird thing with Nicolas's case is that the 
-> supposedly FUA failures resulted in filesystem corruption.  Plain ext3 
-> just backs out if it meets an error during barrier operation and no 
-> corruption occurs due to the failure.  It seems like dm/md isn't 
-> reacting very well to barrier failures.  I'm not sure at all.
+iEYEABECAAYFAkPZOXcACgkQI2bVKDsp8g2upACg5R+z3GQvmsUVM3K2kE72fAuW
+tH8AoI8O74ZJVTqP4Ca4hEyRWnQ+Q1V8
+=D/RE
+-----END PGP SIGNATURE-----
 
-I could not reproduce anything bad with raid1 on a FUA capable drive as
-well. The fs fallback have been pretty well tested in the past, so I'm
-fairly confident that they work.
-
-> What do you think about implementing auto-fallback?  If FUA-write gets 
-> aborted, the queue is switched to non-FUA mode and the barrier is 
-> retried.  This feature was in the first few drafts of the new barrier 
-> implementation but I dropped it because it was difficult to get right 
-> for ordered tags and is pretty clearly an over-design.  Hmmm... still 
-> doesn't sound right.
-
-I'd rather blacklist if we have to, a drive lying about working FUA
-support is down right buggy.
-
-> Anyways, it's clear that we need to do something to prevent data 
-> corruption on barrier failures.  Nicolas's case is just too scary.  It 
-> should warn and turn off barrier, not corrupt whole fs.  Maybe we should 
-> turn off libata FUA support until this issue is resolved?
-
-Lets wait a day and find out what this bug is precisely, I still think
-it's pretty weird if the FUA write doesn't work at all (perhaps it's
-just tossing out writes? sounds too buggy to be true).
-
--- 
-Jens Axboe
+--=-8jCu1L8aJ/3omMtw+pC4--
 
