@@ -1,33 +1,43 @@
-From: Hans Kristian Rosbach <hk@isphuset.no>
-Subject: Re: Problems with multiple Promise SATA150 TX4 cards
-Date: Thu, 26 Jan 2006 15:44:30 +0100
-Message-ID: <1138286670.28634.448.camel@linux>
-References: <Pine.LNX.4.44.0601240132560.32305-100000@coffee.psychology.mcmaster.ca>
-	 <43D5EF58.9010807@wasp.net.au>  <43D66681.708@dgreaves.com>
-	 <1138183485.27604.49.camel@localhost.localdomain>
-	 <43D81750.3060405@nighthawkrad.net>  <43D8DB09.2010005@dgreaves.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCHSET] libata: fixes regarding configuration
+Date: Fri, 27 Jan 2006 00:24:02 +0900
+Message-ID: <11382890422935-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43D8DB09.2010005@dgreaves.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Christopher Smith <csmith@nighthawkrad.net>, Erik Slagter <erik@slagter.name>, linux-raid@vger.kernel.org, IDE Linux <linux-ide@vger.kernel.org>, hahn@physics.mcmaster.ca, mlaks@verizon.net, Soeren Sonnenburg <kernel@nn7.de>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from zproxy.gmail.com ([64.233.162.192]:60563 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932361AbWAZPYJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 10:24:09 -0500
+Received: by zproxy.gmail.com with SMTP id 34so368593nzf
+        for <linux-ide@vger.kernel.org>; Thu, 26 Jan 2006 07:24:08 -0800 (PST)
+In-Reply-To: 
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk
+Cc: htejun@gmail.com
 
-On Thu, 2006-01-26 at 14:22 +0000, David Greaves wrote:
-> Christopher Smith wrote:
+Hello, guys.
 
-> PPS Note that Mitchell's on verizon.net and mails to him from non-US
-> ISPs may bounce (grr)
+These are five small fix / cleanup patches regarding device
+configuration.  These are against
 
-verizon.net hasn't liked us Europeans for a good while now actually.
+upstream-2.6.17 (7db74a4780cf9cc6b2ea97582cdc8031d5f22ccd)
+ + various fixes related to EH patchset [1]
+ + three AHCI updates [2][3][4]
+ + new reset mechanism patchset [5]
 
-But at least a good friend of mine is still reachable by appending
-"online" to the domain. ie: someuser@verizononline.net
-I have no idea whether all users have this kind of alias, but that
-is the workaround I've been using for the last 1-2 months.
+Except for #2, all deal with making per-dev configuration per-dev
+instead of per-port.  These are largely in preparation for
+soon-to-be-posted ata_dev_configure/revalidate patchset.
 
--HK
+[1] http://marc.theaimsgroup.com/?l=linux-ide&m=113798939526779&w=2
+[2] http://marc.theaimsgroup.com/?l=linux-ide&m=113800194919594&w=2
+[3] http://marc.theaimsgroup.com/?l=linux-ide&m=113800459922438&w=2
+[4] http://marc.theaimsgroup.com/?l=linux-ide&m=113804195925385&w=2
+[5] http://marc.theaimsgroup.com/?l=linux-ide&m=113809002924734&w=2
+
+--
+tejun
 
