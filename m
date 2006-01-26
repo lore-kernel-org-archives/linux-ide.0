@@ -1,44 +1,97 @@
-From: Christopher Smith <csmith@nighthawkrad.net>
-Subject: Re: Problems with multiple Promise SATA150 TX4 cards
-Date: Thu, 26 Jan 2006 11:26:56 +1100
-Message-ID: <43D81750.3060405@nighthawkrad.net>
-References: <Pine.LNX.4.44.0601240132560.32305-100000@coffee.psychology.mcmaster.ca>	 <43D5EF58.9010807@wasp.net.au>  <43D66681.708@dgreaves.com> <1138183485.27604.49.camel@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: regarding bug #5914 - fs corruption on SATA
+Date: Thu, 26 Jan 2006 14:50:50 +0900
+Message-ID: <20060126055050.GA4737@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.syd.nighthawkrad.net ([203.166.121.124]:48328 "EHLO
-	mail.syd.nighthawkrad.net") by vger.kernel.org with ESMTP
-	id S1751255AbWAZA1A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Jan 2006 19:27:00 -0500
-In-Reply-To: <1138183485.27604.49.camel@localhost.localdomain>
+Received: from wproxy.gmail.com ([64.233.184.201]:27776 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750813AbWAZFu6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 00:50:58 -0500
+Received: by wproxy.gmail.com with SMTP id i3so355362wra
+        for <linux-ide@vger.kernel.org>; Wed, 25 Jan 2006 21:50:57 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Erik Slagter <erik@slagter.name>
-Cc: linux-raid@vger.kernel.org, IDE Linux <linux-ide@vger.kernel.org>
+To: Nicolas.Mailhot@LaPoste.net
+Cc: Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@suse.de>, Linux-ide <linux-ide@vger.kernel.org>
 
-Erik Slagter wrote:
-> On Tue, 2006-01-24 at 17:40 +0000, David Greaves wrote:
->>>> sounds like a spinup time on marginal power to me.
-> 
->>> No, it's a limitation of the Promise BIOS on the cards, it will only
->>> detect a maximum of 8 drives. I had a quick convo with tech support
->>> from Promise over this and they told me they don't support more than
->>> one card in a machine in any case. (Which is odd given they advertise
->>> the ability to RAID-5 across 2 cards!)
-> 
->>> <snipped the rest about power issues>
-> 
-> I'd really consider the PSU. I had all sorts of weird problems with my
-> promise SATA150 TX2plus until I replaced the PSU. Apparently it doesn't
-> suffice to supply _enough_ power.
+Hello, Nicolas.  Hello, all.
 
-I've since setup the machine so only the motherboard and boot drive are 
-powered from the system PSU and the 12 SATA drives are powered from a 
-separate PSU.
+Nicolas, I'm probably the guy who broke your filesystem.  :-p This FUA
+(forced-unit-access)thing made into the mainline lately, and it seems
+that your drive is reporting FUA support but doesn't really do it
+properly when it's asked to.
 
-Since the machine has previously been running with 8 drives fine on just 
-the system PSU, I feel confident saying power supply has nothing to do 
-with my problems.
+Can you try the followings to verify the problem?
 
-CS
+1. make a small partition on the affected drive and do mkfs.ext3 on it.
+2. mount -o barrier new_partition /mnt/tmp
+3. cd /mnt/tmp; touch asdf; sync
+
+This should give something like the following.
+
+======
+ata2: port reset, p_is 40000001 is 2 pis 0 cmd 44017 tf 451 ss 123 se 0
+ata2: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata2: error=0x04 { DriveStatusError }
+ata2: port reset, p_is 40000001 is 2 pis 0 cmd 44017 tf 451 ss 123 se 0
+ata2: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata2: error=0x04 { DriveStatusError }
+ata2: port reset, p_is 40000001 is 2 pis 0 cmd 44017 tf 451 ss 123 se 0
+ata2: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata2: error=0x04 { DriveStatusError }
+ata2: port reset, p_is 40000001 is 2 pis 0 cmd 44017 tf 451 ss 123 se 0
+ata2: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata2: error=0x04 { DriveStatusError }
+ata2: port reset, p_is 40000001 is 2 pis 0 cmd 44017 tf 451 ss 123 se 0
+ata2: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata2: error=0x04 { DriveStatusError }
+sd 2:0:0:0: SCSI error: return code = 0x8000002
+sdc: Current: sense key: Aborted Command
+    Additional sense: No additional sense information
+end_request: I/O error, dev sdc, sector 4359
+Buffer I/O error on device sdc1, logical block 537
+lost page write due to I/O error on sdc1
+Aborting journal on device sdc1.
+journal commit I/O error
+======
+
+The ext3 fs will back off and won't use any barrier from this point.
+
+If this is what you see, please apply the patch at the end of this
+mail, which makes libata issue non-FUA commmands even if FUA commands
+are asked for.  After recompiling repeat above, create some files,
+unmount, mount, verify stuff, unmount and fsck...  All should succeed
+without any complaint from the kernel.
+
+If my guess turns out to be true, we'll need a blacklist for those
+lying drives.  Damn it.
+
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 46c4cdb..6ba6ad2 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -565,7 +565,7 @@ static const u8 ata_rw_cmds[] = {
+ 	0,
+ 	0,
+ 	0,
+-	ATA_CMD_WRITE_MULTI_FUA_EXT,
++	ATA_CMD_WRITE_MULTI_EXT,
+ 	/* pio */
+ 	ATA_CMD_PIO_READ,
+ 	ATA_CMD_PIO_WRITE,
+@@ -583,7 +583,7 @@ static const u8 ata_rw_cmds[] = {
+ 	0,
+ 	0,
+ 	0,
+-	ATA_CMD_WRITE_FUA_EXT
++	ATA_CMD_WRITE_EXT
+ };
+ 
+ /**
