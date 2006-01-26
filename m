@@ -1,82 +1,110 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 04/16] libata: separate out ata_id_major_version()
+Subject: [PATCH 12/16] libata: reorganize ata_bus_probe()
 Date: Fri, 27 Jan 2006 00:39:11 +0900
-Message-ID: <11382899513003-git-send-email-htejun@gmail.com>
+Message-ID: <11382899511457-git-send-email-htejun@gmail.com>
 References: <1138289951261-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.198]:21074 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932324AbWAZPjV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 10:39:21 -0500
-Received: by zproxy.gmail.com with SMTP id 34so372383nzf
-        for <linux-ide@vger.kernel.org>; Thu, 26 Jan 2006 07:39:18 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.197]:61520 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964776AbWAZPj3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 10:39:29 -0500
+Received: by zproxy.gmail.com with SMTP id 34so372373nzf
+        for <linux-ide@vger.kernel.org>; Thu, 26 Jan 2006 07:39:28 -0800 (PST)
 In-Reply-To: <1138289951261-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk
 Cc: Tejun Heo <htejun@gmail.com>
 
-Separate out ATA major version calculation from ata_dev_identify()
-into ata_id_major_version().  It's preparation for splitting
-ata_dev_identify().
+Now that reset and configure are converted such that they don't modify
+or disable libata core data structures, reorganize ata_bus_probe() to
+reflect this change.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    6 +-----
- include/linux/ata.h        |   10 ++++++++++
- 2 files changed, 11 insertions(+), 5 deletions(-)
+ drivers/scsi/libata-core.c |   39 +++++++++++++++++++++------------------
+ 1 files changed, 21 insertions(+), 18 deletions(-)
 
-4bb86c7dff884e19b8d611950c9928d38837c905
+20afcd17a5a534cf8ca54b381822368d8eb69ba2
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 5719e4c..dd31f3b 100644
+index 7bc3a59..ab6b38c 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -1325,7 +1325,6 @@ static void ata_dev_identify(struct ata_
+@@ -1587,32 +1587,36 @@ err_out_nosup:
+ 
+ static int ata_bus_probe(struct ata_port *ap)
  {
- 	struct ata_device *dev = &ap->device[device];
- 	unsigned int major_version;
--	u16 tmp;
- 	unsigned long xfer_modes;
- 	unsigned int using_edd;
- 	struct ata_taskfile tf;
-@@ -1429,10 +1428,7 @@ retry:
- 			goto err_out_nosup;
+-	unsigned int i, found = 0;
++	unsigned int classes[ATA_MAX_DEVICES];
++	unsigned int i, rc, found = 0;
  
- 		/* get major version */
--		tmp = dev->id[ATA_ID_MAJOR_VER];
--		for (major_version = 14; major_version >= 1; major_version--)
--			if (tmp & (1 << major_version))
--				break;
-+		major_version = ata_id_major_version(dev->id);
+-	if (ap->ops->probe_reset) {
+-		unsigned int classes[ATA_MAX_DEVICES];
+-		int rc;
+-
+-		ata_port_probe(ap);
++	ata_port_probe(ap);
  
- 		/*
- 		 * The exact sequence expected by certain pre-ATA4 drives is:
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index a8155ca..b02a16c 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -267,6 +267,16 @@ struct ata_taskfile {
- 	  ((u64) (id)[(n) + 1] << 16) |	\
- 	  ((u64) (id)[(n) + 0]) )
++	/* reset */
++	if (ap->ops->probe_reset) {
+ 		rc = ap->ops->probe_reset(ap, classes);
+-		if (rc == 0) {
+-			for (i = 0; i < ATA_MAX_DEVICES; i++)
+-				ap->device[i].class = classes[i];
+-		} else {
+-			printk(KERN_ERR "ata%u: probe reset failed, "
+-			       "disabling port\n", ap->id);
+-			ata_port_disable(ap);
++		if (rc) {
++			printk("ata%u: reset failed (errno=%d)\n", ap->id, rc);
++			return rc;
+ 		}
+-	} else
++	} else {
+ 		ap->ops->phy_reset(ap);
  
-+static inline unsigned int ata_id_major_version(const u16 *id)
-+{
-+	unsigned int mver;
+-	if (ap->flags & ATA_FLAG_PORT_DISABLED)
+-		goto err_out;
++		for (i = 0; i < ATA_MAX_DEVICES; i++) {
++			if (!(ap->flags & ATA_FLAG_PORT_DISABLED))
++				classes[i] = ap->device[i].class;
++			else
++				ap->device[i].class = ATA_DEV_UNKNOWN;
++		}
++		ata_port_probe(ap);
++	}
+ 
++	/* read IDENTIFY page and configure devices */
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->device[i];
+ 
++		dev->class = classes[i];
 +
-+	for (mver = 14; mver >= 1; mver--)
-+		if (id[ATA_ID_MAJOR_VER] & (1 << mver))
-+			break;
-+	return mver;
-+}
-+
- static inline int ata_id_current_chs_valid(const u16 *id)
- {
- 	/* For ATA-1 devices, if the INITIALIZE DEVICE PARAMETERS command 
+ 		if (!ata_dev_present(dev))
+ 			continue;
+ 
+@@ -1629,7 +1633,7 @@ static int ata_bus_probe(struct ata_port
+ 		found = 1;
+ 	}
+ 
+-	if ((!found) || (ap->flags & ATA_FLAG_PORT_DISABLED))
++	if (!found)
+ 		goto err_out_disable;
+ 
+ 	ata_set_mode(ap);
+@@ -1640,7 +1644,6 @@ static int ata_bus_probe(struct ata_port
+ 
+ err_out_disable:
+ 	ap->ops->port_disable(ap);
+-err_out:
+ 	return -1;
+ }
+ 
 -- 
 1.1.3
 
