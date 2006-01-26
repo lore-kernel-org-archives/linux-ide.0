@@ -1,50 +1,66 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: regarding bug #5914 - fs corruption on SATA
-Date: Thu, 26 Jan 2006 15:11:17 +0100
-Message-ID: <58cb370e0601260611y67abe723w6085ab30e7e6274e@mail.gmail.com>
-References: <20060126055050.GA4737@htj.dyndns.org>
-	 <20060126091805.GO4212@suse.de>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Problems with multiple Promise SATA150 TX4 cards
+Date: Thu, 26 Jan 2006 14:22:01 +0000
+Message-ID: <43D8DB09.2010005@dgreaves.com>
+References: <Pine.LNX.4.44.0601240132560.32305-100000@coffee.psychology.mcmaster.ca>	 <43D5EF58.9010807@wasp.net.au>  <43D66681.708@dgreaves.com> <1138183485.27604.49.camel@localhost.localdomain> <43D81750.3060405@nighthawkrad.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.201]:54295 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932324AbWAZOLx convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Jan 2006 09:11:53 -0500
-Received: by nproxy.gmail.com with SMTP id x29so129915nfb
-        for <linux-ide@vger.kernel.org>; Thu, 26 Jan 2006 06:11:18 -0800 (PST)
-In-Reply-To: <20060126091805.GO4212@suse.de>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <43D81750.3060405@nighthawkrad.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: Christopher Smith <csmith@nighthawkrad.net>
+Cc: Erik Slagter <erik@slagter.name>, linux-raid@vger.kernel.org, IDE Linux <linux-ide@vger.kernel.org>, hahn@physics.mcmaster.ca, mlaks@verizon.net, Soeren Sonnenburg <kernel@nn7.de>
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Tejun Heo <htejun@gmail.com>, Nicolas.Mailhot@laposte.net, Jeff Garzik <jgarzik@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>
 
-On 1/26/06, Jens Axboe <axboe@suse.de> wrote:
-> On Thu, Jan 26 2006, Tejun Heo wrote:
-> > Hello, Nicolas.  Hello, all.
-> >
-> > Nicolas, I'm probably the guy who broke your filesystem.  :-p This FUA
-> > (forced-unit-access)thing made into the mainline lately, and it seems
-> > that your drive is reporting FUA support but doesn't really do it
-> > properly when it's asked to.
+Christopher Smith wrote:
+
+> Erik Slagter wrote:
 >
-> It's strange. I have 3 out of 4 drives in a box here reporting FUA
-> capability, and I have now tested all three of them both with plain FUA
-> writes and NCQ FUA tagged writes. I used data integrity verifying
-> writes, and the data is sound as well. fs likewise, I used ext3 mounted
-> with barriers enabled.
+>> On Tue, 2006-01-24 at 17:40 +0000, David Greaves wrote:
+>>
+>>>>> sounds like a spinup time on marginal power to me.
+>>>>
+>>>> No, it's a limitation of the Promise BIOS on the cards, it will only
+>>>> detect a maximum of 8 drives. I had a quick convo with tech support
+>>>> from Promise over this and they told me they don't support more than
+>>>> one card in a machine in any case. (Which is odd given they advertise
+>>>> the ability to RAID-5 across 2 cards!)
+>>>
+>>>> <snipped the rest about power issues>
+>>>
+>> I'd really consider the PSU. I had all sorts of weird problems with my
+>> promise SATA150 TX2plus until I replaced the PSU. Apparently it doesn't
+>> suffice to supply _enough_ power.
+>
+>
+> I've since setup the machine so only the motherboard and boot drive
+> are powered from the system PSU and the 12 SATA drives are powered
+> from a separate PSU.
+>
+> Since the machine has previously been running with 8 drives fine on
+> just the system PSU, I feel confident saying power supply has nothing
+> to do with my problems.
 
-You are just lucky ;-).  There are drives out there having buggy NCQ
-support.  Windows driver for Sil have them listed in .inf file, you can also
-find discussions on various internet forums about problems (including
-data corruption) with these drives and controllers supporting NCQ.
+And I've bought a new (expensive and high quality) 460W PSU and have
+exactly the same problems I had previously.
+(http://marc.theaimsgroup.com/?l=linux-kernel&m=113769509617034&w=2)
 
-However there is official firmware update so hopefully it can be fixed
-(unfortunately we still need to blacklist buggy firmware revisions).
+and I'm not running Promise - I'm running sata_via and sata_sil (not as
+modules)
 
-I wouldn't be surprised if there is similar situation with FUA support.
-Does anybody know if Windows use FUA?
+David
 
-Bartlomiej
+PS A Bit rushed as in a few hours I'm away on holiday for a week - if
+someone has time to have a scan through recent postings on the ide and
+raid lists they'll find quite a few problems that seem - to my untrained
+eye - to be similar. I've gathered some individuals together on the cc
+(hope that's OK) to see if the symptoms could be compared. If this isn't
+done next week then I'll try and do it when I get back (or maybe if I
+get net access next week)
+
+PPS Note that Mitchell's on verizon.net and mails to him from non-US
+ISPs may bounce (grr)
+
+-- 
+
