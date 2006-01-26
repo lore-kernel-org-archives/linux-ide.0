@@ -1,41 +1,52 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCHSET] libata: reorganize configuration and implement revalidation
-Date: Thu, 26 Jan 2006 12:42:37 -0500
-Message-ID: <43D90A0D.6000900@rtr.ca>
-References: <1138289951261-git-send-email-htejun@gmail.com>
+From: Ariel <askernel2615@dsgml.com>
+Subject: Re: memory leak in scsi_cmd_cache 2.6.15
+Date: Thu, 26 Jan 2006 13:12:42 -0500 (EST)
+Message-ID: <Pine.LNX.4.62.0601261312160.1174@pureeloreel.qftzy.pbz>
+References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz>
+ <Pine.LNX.4.62.0601222045180.12815@pureeloreel.qftzy.pbz>
+ <1137997104.2977.7.camel@laptopd505.fenrus.org> <200601230029.12674.chase.venters@clientec.com>
+ <Pine.LNX.4.62.0601230136080.22979@pureeloreel.qftzy.pbz>
+ <20060123072556.GC15490@fifty-fifty.audible.transient.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:49382 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1751317AbWAZRnR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 12:43:17 -0500
-In-Reply-To: <1138289951261-git-send-email-htejun@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20060123072556.GC15490@fifty-fifty.audible.transient.net>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jamie Heilman <jamie@audible.transient.net>
+Cc: Chase Venters <chase.venters@clientec.com>, Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk
 
-Tejun Heo wrote:
->
-> Also, please pay attention to the following.  It's taken from #08's
-> description.
-> 
->   This function is probably the place to set transfer mode to PIO0
->   before IDENTIFY.  However, reset -> identify -> init_dev_params
->   order should be kept for pre-ATA4 devices so we cannot set transfer
->   mode before IDENTIFY for them.  How do we know if a device is
->   post-ATA4 before IDENTIFY?
-> 
-> How should we do this?  Ignore pre-ATA4 devices?
 
-It should be more a matter of setting the chipset to PIO0
-before doing the IDENTIFY.
+On Sun, 22 Jan 2006, Jamie Heilman wrote:
 
-The drives themselves should "just work", as the RESET would
-have bumped them back to their default (slow) PIO timing mode.
+> Ariel wrote:
 
-IDENTIFY has to be the very first drive command, so there's no
-way to do a SET_FEATURES/XFER_MODE beforehand.
+>> ata_piix seems like it's in common for all, but this is not a lot of
 
--ml
+> Hmm.  I just moved my sata_sil stuff out of the way and rebooted:
+
+> $ uptime; grep scsi_cmd_cache /proc/slabinfo
+> 23:22:16 up 4 min,  1 user,  load average: 0.00, 0.03, 0.00
+> scsi_cmd_cache      1200   1200    384   10    1 : tunables   54   27 
+8 : slabdata    120    120    $
+
+Is this good or bad? I'm guessing it means it's still leaking. So it's
+really starting to look like ata_piix is the problem. But we need someone
+who has the leak to remove that and see if it helps. I can't, since my
+drives are connected to it.
+
+And developers:
+
+Can anyone PLEASE take a look at this? We've got 4 confirmed reports of
+it, and it's nothing to do with a tainted module. Take a look at this
+slabtop output:
+
+    OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
+1230120 1230120 100%   0.38K 123012      10    492048K scsi_cmd_cache
+
+I have a 492MB leak! And notice how objects never become unused - that
+looks like the problem.
+
+         -Ariel
+
+
