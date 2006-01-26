@@ -1,62 +1,41 @@
-From: Soeren Sonnenburg <kernel@nn7.de>
-Subject: Re: regarding bug #5914 - fs corruption on SATA
-Date: Thu, 26 Jan 2006 18:20:15 +0100
-Message-ID: <1138296016.9413.72.camel@localhost>
-References: <20060126055050.GA4737@htj.dyndns.org>
-	 <43D8FBBD.6070205@dgreaves.com>  <43D8FF9A.4020805@pobox.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCHSET] libata: reorganize configuration and implement revalidation
+Date: Thu, 26 Jan 2006 12:42:37 -0500
+Message-ID: <43D90A0D.6000900@rtr.ca>
+References: <1138289951261-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from prosun.first.fraunhofer.de ([194.95.168.2]:47082 "EHLO
-	prosun.first.fraunhofer.de") by vger.kernel.org with ESMTP
-	id S932360AbWAZRUq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Jan 2006 12:20:46 -0500
-Received: from fortknox (localhost [127.0.0.1])
-	by prosun.first.fraunhofer.de (8.12.10/8.12.10) with ESMTP id k0QHKgTI019508
-	for <linux-ide@vger.kernel.org>; Thu, 26 Jan 2006 18:20:42 +0100 (MET)
-In-Reply-To: <43D8FF9A.4020805@pobox.com>
+Received: from rtr.ca ([64.26.128.89]:49382 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751317AbWAZRnR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 12:43:17 -0500
+In-Reply-To: <1138289951261-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: David Greaves <david@dgreaves.com>, Tejun Heo <htejun@gmail.com>, Nicolas.Mailhot@LaPoste.net, Jens Axboe <axboe@suse.de>, Linux-ide <linux-ide@vger.kernel.org>, Christopher Smith <csmith@nighthawkrad.net>, Erik Slagter <erik@slagter.name>, hahn@physics.mcmaster.ca, mlaks@verizon.net, mlaks@verizononline.net
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk
 
-On Thu, 2006-01-26 at 11:58 -0500, Jeff Garzik wrote:
-> David Greaves wrote:
-> > Have a look for subjects such as
-> >   Problems with multiple Promise SATA150 TX4 cards
+Tejun Heo wrote:
+>
+> Also, please pay attention to the following.  It's taken from #08's
+> description.
 > 
-> This is almost certainly either a power or PCI bus/slot issue.
-
-So you mean the freeze I am observing when I copy files from the sata
-disk to some
-ieee1394 device (they are sharing interrupt 16)
-
- 16:     430796   IO-APIC-level  ide2, ide3, libata, ohci1394
-
-leading to lots of output as...
-
-ata2: translated ATA stat/err 0x51/0c to SCSI SK/ASC/ASCQ 0xb/00/00
-ata2: status=0x51 { DriveReady SeekComplete Error }
-ata2: error=0x0c { DriveStatusError }
-
-could be a cause of just that ?
-
-> >   Possible libata/sata/Asus problem (was Re: Need to upgrade to latest
-> > stable mdadm version?)
+>   This function is probably the place to set transfer mode to PIO0
+>   before IDENTIFY.  However, reset -> identify -> init_dev_params
+>   order should be kept for pre-ATA4 devices so we cannot set transfer
+>   mode before IDENTIFY for them.  How do we know if a device is
+>   post-ATA4 before IDENTIFY?
 > 
-> Highly likely to be a motherboard/BIOS issue related to properly tuning 
-> and timing the hardware.
-> 
-> HOWEVER, libata can help (via Tejun's recent patches) by properly 
-> handling the error when throw to us by hardware.
+> How should we do this?  Ignore pre-ATA4 devices?
 
-So it could help in the first case but also with this: I can freeze the
-system bei hdparm -y /dev/sda ... will this patch also help in that
-case ?
+It should be more a matter of setting the chipset to PIO0
+before doing the IDENTIFY.
 
-Soeren.
--- 
-Sometimes, there's a moment as you're waking, when you become aware of
-the real world around you, but you're still dreaming.
+The drives themselves should "just work", as the RESET would
+have bumped them back to their default (slow) PIO timing mode.
 
+IDENTIFY has to be the very first drive command, so there's no
+way to do a SET_FEATURES/XFER_MODE beforehand.
+
+-ml
