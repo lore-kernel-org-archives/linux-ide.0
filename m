@@ -1,44 +1,98 @@
-From: "Nicolas Mailhot" <nicolas.mailhot@laposte.net>
-Subject: Re: regarding bug #5914 - fs corruption on SATA
-Date: Thu, 26 Jan 2006 11:01:29 +0100 (CET)
-Message-ID: <5840.192.54.193.25.1138269689.squirrel@rousalka.dyndns.org>
-References: <20060126055050.GA4737@htj.dyndns.org>
-    <43D8637F.5030207@gmail.com>
-    <37416.192.54.193.25.1138266889.squirrel@rousalka.dyndns.org>
-    <20060126092120.GP4212@suse.de>
+From: Erik Slagter <erik@slagter.name>
+Subject: Re: Problems with multiple Promise SATA150 TX4 cards
+Date: Thu, 26 Jan 2006 12:35:59 +0100
+Message-ID: <1138275359.8140.35.camel@localhost.localdomain>
+References: <Pine.LNX.4.44.0601240132560.32305-100000@coffee.psychology.mcmaster.ca>
+	 <43D5EF58.9010807@wasp.net.au>  <43D66681.708@dgreaves.com>
+	 <1138183485.27604.49.camel@localhost.localdomain>
+	 <43D81750.3060405@nighthawkrad.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-ebE/0R+scNQWxc2TiN+X"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx.laposte.net ([81.255.54.11]:29771 "EHLO mx.laposte.net")
-	by vger.kernel.org with ESMTP id S932252AbWAZKDX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 05:03:23 -0500
-In-Reply-To: <20060126092120.GP4212@suse.de>
+Received: from erik-slagter.demon.nl ([83.161.107.130]:48829 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S932302AbWAZLgN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Jan 2006 06:36:13 -0500
+In-Reply-To: <43D81750.3060405@nighthawkrad.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>
+To: Christopher Smith <csmith@nighthawkrad.net>
+Cc: linux-raid@vger.kernel.org, IDE Linux <linux-ide@vger.kernel.org>
 
 
-Le Jeu 26 janvier 2006 10:21, Jens Axboe a =C3=A9crit :
-> On Thu, Jan 26 2006, Nicolas Mailhot wrote:
+--=-ebE/0R+scNQWxc2TiN+X
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->> What parts can be done one a pre-breakage kernel and what parts on a
->> problem kernel (I ask this because a problem kernel will corrupt
->> basically
->> any file it writes to, even in single login mode the damage is
->> significant
->> so I need to limit the corruption window to minimum).
->
-> You need a new kernel (after the barrier rework), so 2.6.16-rc1 for
-> instance.
+On Thu, 2006-01-26 at 11:26 +1100, Christopher Smith wrote:
+> > I'd really consider the PSU. I had all sorts of weird problems with my
+> > promise SATA150 TX2plus until I replaced the PSU. Apparently it doesn't
+> > suffice to supply _enough_ power.
+>=20
+> I've since setup the machine so only the motherboard and boot drive are=20
+> powered from the system PSU and the 12 SATA drives are powered from a=20
+> separate PSU.
+>=20
+> Since the machine has previously been running with 8 drives fine on just=20
+> the system PSU, I feel confident saying power supply has nothing to do=20
+> with my problems.
 
-Ok, I'll do the test this evening (CET) with the rawhide/davej kernel-o=
-f
-the day.
+I'd still be _very_ suspicous.
 
-Regards,
+--=-ebE/0R+scNQWxc2TiN+X
+Content-Type: application/x-pkcs7-signature; name=smime.p7s
+Content-Disposition: attachment; filename=smime.p7s
+Content-Transfer-Encoding: base64
 
---=20
-Nicolas Mailhot
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIILzCCAnIw
+ggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
+d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
+YWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYDVQQE
+EwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlqbiBT
+bGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0BAQEF
+AAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGYNW5L
+vevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI0gVv
+gY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFn
+dGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8WcuJ7Q1
+eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xNdkFU
+mhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPkyITCC
+AnIwggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMc
+VGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZy
+ZWVtYWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYD
+VQQEEwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlq
+biBTbGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0B
+AQEFAAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGY
+NW5Lvevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI
+0gVvgY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0Bz
+bGFndGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8Wcu
+J7Q1eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xN
+dkFUmhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPky
+ITCCAz8wggKooAMCAQICAQ0wDQYJKoZIhvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQI
+EwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcTCUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1
+bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmljYXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMT
+G1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJl
+ZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNV
+BAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNU
+aGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
+gYkCgYEAxKY8VXNV+065yplaHmjAdQRwnd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNa
+LIkVcI7dyfArhVqqP3FWy688Cwfn8R+RNiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUq
+VIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEAAaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1Ud
+HwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwudGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWls
+Q0EuY3JsMAsGA1UdDwQEAwIBBjApBgNVHREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVs
+Mi0xMzgwDQYJKoZIhvcNAQEFBQADgYEASIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYf
+qi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6EsZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa
+9/eH1sYITq726jTlEBpbNU1341YheILcIRk13iSx0x1G/11fZU8xggJmMIICYgIBATBpMGIxCzAJ
+BgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQD
+EyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMAkGBSsOAwIaBQCgggFT
+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA2MDEyNjExMzU1OVow
+IwYJKoZIhvcNAQkEMRYEFCQRxLI3J3P9eyuEgCekc6kAT5xjMHgGCSsGAQQBgjcQBDFrMGkwYjEL
+MAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNV
+BAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAgMP8QQwegYLKoZIhvcNAQkQ
+Agsxa6BpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBM
+dGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMA0G
+CSqGSIb3DQEBAQUABIGAaDaipGPm2ROs98wFzcCk5U+0/xbo0Lay8BrVgU+teQPehaJwaj4sj2N4
+jYd+Ucm0kQOO/xw8xafSs/sJSpvMI/TJ7BxIKRJRNsHnWO+9ECGqVlBoVY3ilv+wbAkDL3Hhwza8
+p3wvX/H6G0Hi6hnZGFferYbfwGBkS6GfI9On1XMAAAAAAAA=
 
+
+--=-ebE/0R+scNQWxc2TiN+X--
