@@ -1,59 +1,33 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: regarding bug #5914 - fs corruption on SATA
-Date: Thu, 26 Jan 2006 15:27:14 +0100
-Message-ID: <20060126142714.GA4290@suse.de>
-References: <20060126055050.GA4737@htj.dyndns.org> <20060126091805.GO4212@suse.de> <58cb370e0601260611y67abe723w6085ab30e7e6274e@mail.gmail.com>
+From: Hans Kristian Rosbach <hk@isphuset.no>
+Subject: Re: Problems with multiple Promise SATA150 TX4 cards
+Date: Thu, 26 Jan 2006 15:44:30 +0100
+Message-ID: <1138286670.28634.448.camel@linux>
+References: <Pine.LNX.4.44.0601240132560.32305-100000@coffee.psychology.mcmaster.ca>
+	 <43D5EF58.9010807@wasp.net.au>  <43D66681.708@dgreaves.com>
+	 <1138183485.27604.49.camel@localhost.localdomain>
+	 <43D81750.3060405@nighthawkrad.net>  <43D8DB09.2010005@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:836 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932342AbWAZOf3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 09:35:29 -0500
-Content-Disposition: inline
-In-Reply-To: <58cb370e0601260611y67abe723w6085ab30e7e6274e@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <43D8DB09.2010005@dgreaves.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: Christopher Smith <csmith@nighthawkrad.net>, Erik Slagter <erik@slagter.name>, linux-raid@vger.kernel.org, IDE Linux <linux-ide@vger.kernel.org>, hahn@physics.mcmaster.ca, mlaks@verizon.net, Soeren Sonnenburg <kernel@nn7.de>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, Nicolas.Mailhot@laposte.net, Jeff Garzik <jgarzik@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>
 
-On Thu, Jan 26 2006, Bartlomiej Zolnierkiewicz wrote:
-> On 1/26/06, Jens Axboe <axboe@suse.de> wrote:
-> > On Thu, Jan 26 2006, Tejun Heo wrote:
-> > > Hello, Nicolas.  Hello, all.
-> > >
-> > > Nicolas, I'm probably the guy who broke your filesystem.  :-p This FUA
-> > > (forced-unit-access)thing made into the mainline lately, and it seems
-> > > that your drive is reporting FUA support but doesn't really do it
-> > > properly when it's asked to.
-> >
-> > It's strange. I have 3 out of 4 drives in a box here reporting FUA
-> > capability, and I have now tested all three of them both with plain FUA
-> > writes and NCQ FUA tagged writes. I used data integrity verifying
-> > writes, and the data is sound as well. fs likewise, I used ext3 mounted
-> > with barriers enabled.
-> 
-> You are just lucky ;-).  There are drives out there having buggy NCQ
-> support.  Windows driver for Sil have them listed in .inf file, you can also
+On Thu, 2006-01-26 at 14:22 +0000, David Greaves wrote:
+> Christopher Smith wrote:
 
-Oh yeah, I'm very well aware of NCQ firmware issues. Interesting about
-the Sil inf file having them listed, I started a blacklist myself for
-NCQ and I'll be sure to look at theirs!
+> PPS Note that Mitchell's on verizon.net and mails to him from non-US
+> ISPs may bounce (grr)
 
-> find discussions on various internet forums about problems (including
-> data corruption) with these drives and controllers supporting NCQ.
+verizon.net hasn't liked us Europeans for a good while now actually.
 
-But that's a seperate story, it's just plain FUA that is the case here.
+But at least a good friend of mine is still reachable by appending
+"online" to the domain. ie: someuser@verizononline.net
+I have no idea whether all users have this kind of alias, but that
+is the workaround I've been using for the last 1-2 months.
 
-> However there is official firmware update so hopefully it can be fixed
-> (unfortunately we still need to blacklist buggy firmware revisions).
-> 
-> I wouldn't be surprised if there is similar situation with FUA support.
-> Does anybody know if Windows use FUA?
-
-Actually I'm a little surprised, honestly. It's a pretty simple feature.
-It's not like NCQ where I can understand that bugs can creap into the
-firmware (although some are so buggy it's unbelivable).
-
--- 
-Jens Axboe
+-HK
 
