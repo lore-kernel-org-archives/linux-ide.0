@@ -1,67 +1,56 @@
-From: Nicolas Mailhot <nicolas.mailhot@laposte.net>
-Subject: Re: regarding bug #5914 - fs corruption on SATA
-Date: Thu, 26 Jan 2006 22:04:55 +0100
-Message-ID: <1138309495.3968.3.camel@rousalka.dyndns.org>
-References: <20060126055050.GA4737@htj.dyndns.org>
-	 <43D8637F.5030207@gmail.com>
-	 <37416.192.54.193.25.1138266889.squirrel@rousalka.dyndns.org>
-	 <20060126092120.GP4212@suse.de>
-	 <5840.192.54.193.25.1138269692.squirrel@rousalka.dyndns.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: kobject_register failed for Promise_Old_IDE (-17)
+Date: Fri, 27 Jan 2006 00:01:52 +0100
+Message-ID: <20060126230152.GP3668@stusta.de>
+References: <1138093728.5828.8.camel@lyra.home.ludost.net> <20060124223527.GA26337@kroah.com> <58cb370e0601241458y6cdf702ey9caa261702a7948a@mail.gmail.com> <1138175680.5857.4.camel@lyra.home.ludost.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8jCu1L8aJ/3omMtw+pC4"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx.laposte.net ([81.255.54.11]:25740 "EHLO mx.laposte.net")
-	by vger.kernel.org with ESMTP id S964890AbWAZVGC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 16:06:02 -0500
-In-Reply-To: <5840.192.54.193.25.1138269692.squirrel@rousalka.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030196AbWAZXB4@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1138175680.5857.4.camel@lyra.home.ludost.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vasil Kolev <vasil@ludost.net>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, andre@linux-ide.org, frankt@promise.com, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>
 
+On Wed, Jan 25, 2006 at 09:54:40AM +0200, Vasil Kolev wrote:
+> ?? ????, 2006-01-24 ?? 23:58 +0100, Bartlomiej Zolnierkiewicz ????????????:
+> > On 1/24/06, Greg KH <greg@kroah.com> wrote:
+> > > On Tue, Jan 24, 2006 at 11:08:47AM +0200, Vasil Kolev wrote:
+> > > > Hello,
+> > > > I have a machine that's currently running 2.4.28 with the promise_old
+> > > > driver, which runs ok. I tried upgrading it last night to 2.6.15, and
+> > > > the following error occured, and no drives were detected/made available:
+> > > >
+> > > >  [17179598.940000] kobject_register failed for Promise_Old_IDE (-17)
+> > > >  [17179598.940000]  [dump_stack+21/23] dump_stack+0x15/0x17
+> > > >  [17179598.940000]  [kobject_register+52/64] kobject_register+0x34/0x40
+> > > >  [17179598.940000]  [bus_add_driver+69/163] bus_add_driver+0x45/0xa3
+> > > >  [17179598.940000]  [driver_register+57/60] driver_register+0x39/0x3c
+> > > >  [17179598.940000]  [__pci_register_driver+125/132] __pci_register_driver+0x7d/0x84
+> > > >  [17179598.940000]  [__ide_pci_register_driver+19/53] __ide_pci_register_driver+0x13/0x35
+> > > >  [17179598.940000]  [pg0+945449588/1069855744] pdc202xx_ide_init+0x12/0x16 [pdc202xx_old]
+> > > >  [17179598.940000]  [sys_init_module+193/430] sys_init_module+0xc1/0x1ae
+> > > >  [17179598.940000]  [syscall_call+7/11] syscall_call+0x7/0xb
+> > >
+> > > This means that some other driver tried to register with the same exact
+> > > name for the same bus.  As it looks like this is the ide bus, I suggest
+> > > asking on the linux ide mailing list.
+> > 
+> 
+> Well, now I remember that in /sys in the proper place there were two
+> directories called Promise_Old_IDE, maybe the driver tried to register
+> twice?
+>...
 
---=-8jCu1L8aJ/3omMtw+pC4
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Greg, IIRC, weren't there plans to turn this case into a BUG()?
 
-Le jeudi 26 janvier 2006 =C3=A0 11:01 +0100, Nicolas Mailhot a =C3=A9crit :
-> Le Jeu 26 janvier 2006 10:21, Jens Axboe a =C3=A9crit :
-> > On Thu, Jan 26 2006, Nicolas Mailhot wrote:
->=20
-> >> What parts can be done one a pre-breakage kernel and what parts on a
-> >> problem kernel (I ask this because a problem kernel will corrupt
-> >> basically
-> >> any file it writes to, even in single login mode the damage is
-> >> significant
-> >> so I need to limit the corruption window to minimum).
-> >
-> > You need a new kernel (after the barrier rework), so 2.6.16-rc1 for
-> > instance.
->=20
-> Ok, I'll do the test this evening (CET) with the rawhide/davej kernel-of
-> the day.
+cu
+Adrian
 
-I applied the fua backout patch and the kernel booted beautifully.
-Now I guess I need to see if Maxtor released a fixed firmware right ?
-(is it possible to change the firmware on a running system ?)
+-- 
 
-Regards,
-
---=20
-Nicolas Mailhot
-
---=-8jCu1L8aJ/3omMtw+pC4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: Ceci est une partie de message
-	=?ISO-8859-1?Q?num=E9riquement?= =?ISO-8859-1?Q?_sign=E9e?=
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iEYEABECAAYFAkPZOXcACgkQI2bVKDsp8g2upACg5R+z3GQvmsUVM3K2kE72fAuW
-tH8AoI8O74ZJVTqP4Ca4hEyRWnQ+Q1V8
-=D/RE
------END PGP SIGNATURE-----
-
---=-8jCu1L8aJ/3omMtw+pC4--
-
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
