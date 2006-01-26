@@ -1,30 +1,71 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [akpm@osdl.org: Re: 2.6.16 eating filesystems]
-Date: Thu, 26 Jan 2006 12:05:19 -0500
-Message-ID: <43D9014F.8090004@pobox.com>
-References: <20060125185320.GL14225@havoc.gtf.org> <43D8373B.1070802@gmail.com> <20060126080544.GH4212@suse.de> <43D8FDA5.3000701@gmail.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: regarding bug #5914 - fs corruption on SATA
+Date: Thu, 26 Jan 2006 17:15:24 +0000
+Message-ID: <43D903AC.5000309@dgreaves.com>
+References: <20060126055050.GA4737@htj.dyndns.org> <43D8FBBD.6070205@dgreaves.com> <43D8FF9A.4020805@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:52661 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932156AbWAZRFY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 12:05:24 -0500
-In-Reply-To: <43D8FDA5.3000701@gmail.com>
+Received: from s2.ukfsn.org ([217.158.120.143]:3764 "EHLO mail.ukfsn.org")
+	by vger.kernel.org with ESMTP id S932342AbWAZRPZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 12:15:25 -0500
+In-Reply-To: <43D8FF9A.4020805@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun <htejun@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, Nicolas.Mailhot@LaPoste.net, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <htejun@gmail.com>, Nicolas.Mailhot@LaPoste.net, Jens Axboe <axboe@suse.de>, Linux-ide <linux-ide@vger.kernel.org>, Christopher Smith <csmith@nighthawkrad.net>, Erik Slagter <erik@slagter.name>, hahn@physics.mcmaster.ca, mlaks@verizon.net, Soeren Sonnenburg <kernel@nn7.de>, mlaks@verizononline.net
 
-Tejun wrote:
-> Anyways, it's clear that we need to do something to prevent data 
-> corruption on barrier failures.  Nicolas's case is just too scary.  It 
-> should warn and turn off barrier, not corrupt whole fs.  Maybe we should 
-> turn off libata FUA support until this issue is resolved?
+Jeff Garzik wrote:
 
-If the problem can't be fixed in the short term, that's what we'll have 
-to do.  Add a 'fua' module parameter or something.
+> David Greaves wrote:
+>
+>>   Possible libata/sata/Asus problem (was Re: Need to upgrade to latest
+>> stable mdadm version?)
+>
+> Highly likely to be a motherboard/BIOS issue related to properly
+> tuning and timing the hardware.
+>
+> HOWEVER, libata can help (via Tejun's recent patches) by properly
+> handling the error when throw to us by hardware.
 
-	Jeff
+OK - I thought my messages:
 
+Jan 20 06:25:04 haze kernel: ata2: status=0x51 { DriveReady SeekComplete
+Error }
+Jan 20 06:25:04 haze kernel: ata2: error=0x04 { DriveStatusError }
+Jan 20 06:25:10 haze kernel: ata2: no sense translation for status: 0x51
+Jan 20 06:25:10 haze kernel: ata2: status=0x51 { DriveReady SeekComplete
+Error }
+Jan 20 06:25:18 haze kernel: ata2: no sense translation for status: 0x51
+Jan 20 06:25:18 haze kernel: ata2: status=0x51 { DriveReady SeekComplete
+Error }
+Jan 20 06:25:18 haze kernel: ata2: no sense translation for status: 0x51
+Jan 20 06:25:18 haze kernel: ata2: status=0x51 { DriveReady SeekComplete
+Error }
+Jan 20 06:25:20 haze kernel: ata2: no sense translation for status: 0x51
+Jan 20 06:25:20 haze kernel: ata2: status=0x51 { DriveReady SeekComplete
+Error }
+Jan 20 06:25:22 haze kernel: ata2: no sense translation for status: 0x51
+Jan 20 06:25:22 haze kernel: ata2: status=0x51 { DriveReady SeekComplete
+Error }
+Jan 20 06:25:52 haze kernel: ata2: no sense translation for status: 0x51
+Jan 20 06:25:52 haze kernel: ata2: status=0x51 { DriveReady SeekComplete
+Error }
+Jan 20 06:25:52 haze kernel: sd 1:0:0:0: SCSI error: return code = 0x8000002
+Jan 20 06:25:52 haze kernel: sdb: Current: sense key: Medium Error
+Jan 20 06:25:52 haze kernel:     Additional sense: Unrecovered read
+error - auto reallocate failed
+Jan 20 06:25:52 haze kernel: end_request: I/O error, dev sdb, sector
+390787713
+
+bore a certain similarity to those in Tejun/Nicolas' mail:
+
+Different problem? as irq might ask: "does anybody care?" :)
+
+(and yes badblocks and SMART reports all is well)
+
+David
+
+-- 
 
