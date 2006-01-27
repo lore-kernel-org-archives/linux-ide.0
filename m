@@ -1,122 +1,56 @@
-From: Richard Bollinger <rabollinger@gmail.com>
-Subject: Re: [PATCH] sata_sil: combined irq + LBT DMA patch for testing
-Date: Fri, 27 Jan 2006 11:29:37 -0500
-Message-ID: <7744a2840601270829o135bb1c9ld0283042a0849abd@mail.gmail.com>
-References: <20051204011953.GA16381@havoc.gtf.org>
-	 <7744a2840512061147i5c101455g9ed99624aca344dd@mail.gmail.com>
-	 <43987A28.8070509@mandriva.org> <439899B6.2000302@pobox.com>
-	 <43B16B06.3000401@mandriva.org> <43CD8E62.7060301@pobox.com>
-	 <58cb370e0601250826m330984g576839345ed908de@mail.gmail.com>
+From: Mr Chang Lee <mrchanglee14@msn.com>
+Subject: Business Proposal!
+Date: Fri, 27 Jan 2006 10:59:28 -0600
+Message-ID: <E1F2Wwa-0003sX-Vy@dover.micfo.com>
+Reply-To: mrchanglee_11@yahoo.com.cn
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.192]:23387 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751502AbWA0Q3j convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 27 Jan 2006 11:29:39 -0500
-Received: by uproxy.gmail.com with SMTP id s2so146980uge
-        for <linux-ide@vger.kernel.org>; Fri, 27 Jan 2006 08:29:37 -0800 (PST)
-In-Reply-To: <58cb370e0601250826m330984g576839345ed908de@mail.gmail.com>
-Content-Disposition: inline
+Received: from dover.micfo.com ([205.234.198.2]:24771 "EHLO dover.micfo.com")
+	by vger.kernel.org with ESMTP id S1751523AbWA0Q7o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jan 2006 11:59:44 -0500
+Received: from nobody by dover.micfo.com with local (Exim 4.52)
+	id 1F2Wwa-0003sX-Vy
+	for linux-ide@vger.kernel.org; Fri, 27 Jan 2006 10:59:29 -0600
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Thomas Backlund <tmb@mandriva.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 1/25/06, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> Hi,
-> ...
-> I think I have finally found the bug
-> after auditing the patch for x times...
->
-> +       /* Stop DMA, if doing DMA */
-> +       switch (qc->tf.protocol) {
-> +       case ATA_PROT_DMA:
-> +       case ATA_PROT_ATAPI_DMA:
-> +               ata_bmdma_stop(qc);
->
-> It should be sil_bmdma_stop()...
->
-> By accident ata_bmdma_stop() is OK for sil3112 so that would
-> explain why only people with sil3114 reported problems.
->
-> My theory is that using ata_bmdma_stop() for sil3114 results
-> in IRQs for port 2 and 3 not being delivered (because
-> SIL_INTR_STEERING bit is cleared) and we end up with
-> dma_stat_mask == 0.
->
-> Rest of the patch looks perfectly fine for me.  Could somebody
-> reporting problems with this patch retest with the above change?
-> ...
-> Bartlomiej
->
-Still no joy... after a normal looking set of startup messages,
-Jan 27 10:46:03 LS09 kernel: ata1: SATA max UDMA/100 cmd 0xF8800080
-ctl 0xF880008A bmdma 0xF8800010 irq 5
-Jan 27 10:46:03 LS09 kernel: ata2: SATA max UDMA/100 cmd 0xF88000C0
-ctl 0xF88000CA bmdma 0xF8800018 irq 5
-Jan 27 10:46:03 LS09 kernel: ata3: SATA max UDMA/100 cmd 0xF8800280
-ctl 0xF880028A bmdma 0xF8800210 irq 5
-Jan 27 10:46:03 LS09 kernel: ata4: SATA max UDMA/100 cmd 0xF88002C0
-ctl 0xF88002CA bmdma 0xF8800218 irq 5
-Jan 27 10:46:03 LS09 kernel: ata1: dev 0 ATA-6, max UDMA/100,
-625142448 sectors: LBA48
-Jan 27 10:46:03 LS09 kernel: ata1: dev 0 configured for UDMA/100
-Jan 27 10:46:03 LS09 kernel: scsi0 : sata_sil
-Jan 27 10:46:03 LS09 kernel: ata2: dev 0 ATA-6, max UDMA/100,
-625142448 sectors: LBA48
-Jan 27 10:46:03 LS09 kernel: ata2: dev 0 configured for UDMA/100
-Jan 27 10:46:03 LS09 kernel: scsi1 : sata_sil
-Jan 27 10:46:03 LS09 kernel: ata3: dev 0 ATA-6, max UDMA/100,
-625142448 sectors: LBA48
-Jan 27 10:46:03 LS09 kernel: ata3: dev 0 configured for UDMA/100
-Jan 27 10:46:03 LS09 kernel: scsi2 : sata_sil
-Jan 27 10:46:03 LS09 kernel: ata4: dev 0 ATA-6, max UDMA/100,
-625142448 sectors: LBA48
-Jan 27 10:46:03 LS09 kernel: ata4: dev 0 configured for UDMA/100
-Jan 27 10:46:03 LS09 kernel: scsi3 : sata_sil
-Jan 27 10:46:03 LS09 kernel:   Vendor: ATA       Model: WDC
-WD3200JD-00K  Rev: 08.0
-Jan 27 10:46:03 LS09 kernel:   Type:   Direct-Access                  
-   ANSI SCSI revision: 05
-Jan 27 10:46:03 LS09 kernel:   Vendor: ATA       Model: WDC
-WD3200JD-00K  Rev: 08.0
-Jan 27 10:46:03 LS09 kernel:   Type:   Direct-Access                  
-   ANSI SCSI revision: 05
-Jan 27 10:46:03 LS09 kernel:   Vendor: ATA       Model: WDC
-WD3200JD-00K  Rev: 08.0
-Jan 27 10:46:03 LS09 kernel:   Type:   Direct-Access                  
-   ANSI SCSI revision: 05
-Jan 27 10:46:03 LS09 kernel:   Vendor: ATA       Model: WDC
-WD3200JD-00K  Rev: 08.0
-Jan 27 10:46:03 LS09 kernel:   Type:   Direct-Access                  
-   ANSI SCSI revision: 05
+Dear Intended partner, 
 
-Once I actually start doing output to with a drive I get these messages:
-Jan 27 10:47:05 LS09 kernel: sdc: Current: sense key: No Sense
-Jan 27 10:47:05 LS09 kernel:     Additional sense: No additional sense
-information
-Jan 27 10:47:06 LS09 kernel: sdb: Current: sense key: No Sense
-Jan 27 10:47:06 LS09 kernel:     Additional sense: No additional sense
-information
-Jan 27 10:47:07 LS09 in.rshd[1607]: connect from root@128.1.50.1
-Jan 27 10:47:07 LS09 rshd[1608]: root@JE-LS1 as root: cmd='/sbin/ifconfig'
-Jan 27 10:47:08 LS09 kernel: sdc: Current: sense key: No Sense
-Jan 27 10:47:08 LS09 kernel:     Additional sense: No additional sense
-information
-Jan 27 10:47:10 LS09 kernel: sdd: Current: sense key: No Sense
-Jan 27 10:47:10 LS09 kernel:     Additional sense: No additional sense
-information
-Jan 27 10:47:10 LS09 kernel: sdb: Current: sense key: No Sense
-Jan 27 10:47:10 LS09 kernel:     Additional sense: No additional sense
-information
-Jan 27 10:47:40 LS09 kernel: sd 1:0:0:0: SCSI error: return code = 0x8000002
-Jan 27 10:47:40 LS09 kernel: sdb: Current: sense key: Aborted Command
-Jan 27 10:47:40 LS09 kernel:     Additional sense: Scsi parity error
-Jan 27 10:47:40 LS09 kernel: sdc: Current: sense key: No Sense
-Jan 27 10:47:40 LS09 kernel:     Additional sense: No additional sense
-information
-Jan 27 10:48:10 LS09 kernel: sd 1:0:0:0: SCSI error: return code = 0x8000002
-Jan 27 10:48:10 LS09 kernel: sdb: Current: sense key: Aborted Command
-Jan 27 10:48:10 LS09 kernel:     Additional sense: Scsi parity error
+On behalf of China HuaMao Arts & Crafts  Organisation, its our pleasure to  introduce to you 
+
+our new sales/marketing  initiative as we are world leading producer  and export of artificial 
+
+arts and  crafts.  The company maintains a comprehensive  database of inter-national trade in  
+
+artificial arts and  crafts, we export into   Canada/America and some parts of Europe. 
+
+We are suffering for genuine and honest  agents who are capable of sales and  marketing of our 
+
+goods and services in what  ever location they are. 
+
+Our motive is to start off from collections  of outstanding accounts owed by various  customers 
+
+willing to make out payments now  after which  agents shall be promoted to  sales/marketing 
+
+section of this programme  based on their  credibilities/accountabilities of accounts  
+
+collected/retrieved. 
+
+Please if you are interested reply by email with  your phone/fax  number and your full contact  
+
+addresses and note,there is no obligation  whatsoever. 
+
+A remuneration can be worked out for your  services as our overseas representative. We  
+
+anticipate your earliest response in this  regard. 
+Mr Chang Lee
+mrchanglee_11@yahoo.com.cn 
+CEO HuaMao Arts & Crafts 
+No.46 Shangnan Road, Shanggan Town 
+Minhou County Fujian,China
+
+
+
