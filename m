@@ -1,40 +1,48 @@
-From: Jamie Heilman <jamie@audible.transient.net>
-Subject: Re: memory leak in scsi_cmd_cache 2.6.15
-Date: Fri, 27 Jan 2006 03:28:46 -0800
-Message-ID: <20060127112846.GA29829@fifty-fifty.audible.transient.net>
-References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz> <Pine.LNX.4.62.0601222045180.12815@pureeloreel.qftzy.pbz> <1137997104.2977.7.camel@laptopd505.fenrus.org> <200601230029.12674.chase.venters@clientec.com> <Pine.LNX.4.62.0601230136080.22979@pureeloreel.qftzy.pbz> <20060123072556.GC15490@fifty-fifty.audible.transient.net> <20060123083347.GA12773@suse.de>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: regarding bug #5914 - fs corruption on SATA
+Date: Fri, 27 Jan 2006 07:12:47 -0500
+Message-ID: <43DA0E3F.7000507@emc.com>
+References: <20060126055050.GA4737@htj.dyndns.org> <43D8637F.5030207@gmail.com> <37416.192.54.193.25.1138266889.squirrel@rousalka.dyndns.org> <20060126092120.GP4212@suse.de> <5840.192.54.193.25.1138269692.squirrel@rousalka.dyndns.org> <1138309495.3968.3.camel@rousalka.dyndns.org> <20060127081319.GU4311@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060123083347.GA12773@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Ariel <askernel2615@dsgml.com>, Chase Venters <chase.venters@clientec.com>, Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mexforward.lss.emc.com ([168.159.213.200]:27598 "EHLO
+	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
+	id S932487AbWA0MSB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 27 Jan 2006 07:18:01 -0500
+In-Reply-To: <20060127081319.GU4311@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Nicolas Mailhot <nicolas.mailhot@laposte.net>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>
 
 Jens Axboe wrote:
-> On Sun, Jan 22 2006, Jamie Heilman wrote:
-> > Ariel wrote:
-> > > ata_piix seems like it's in common for all, but this is not a lot of 
-> > > systems, so it could just be a coincidence and the problem caused by 
-> > > something that's not chipset specific.
-> > 
-> > Hmm.  I just moved my sata_sil stuff out of the way and rebooted:
-> > 
-> > $ uptime; grep scsi_cmd_cache /proc/slabinfo
-> >  23:22:16 up 4 min,  1 user,  load average: 0.00, 0.03, 0.00
-> > scsi_cmd_cache      1200   1200    384   10    1 : tunables   54   27   8 : slabdata    120    120      0
-> > 
-> > My other workstation also runs 2.6.15.1 but uses sata_nv and doesn't
-> > exhibit the problem.
-> 
-> The SATA low level driver is very unlikely to play a role in this. But
-> you are both using md (raid1 to be specific) on top of scsi, I'd say
-> that's the best clue. I'd very much doubt the nvidia module as well.
 
-True, my sata_nv box doesn't use md.  OTOH, my machines running raid1
-on an LSI (MPT Fusion driver) SCSI controller don't have this leak.
+>On Thu, Jan 26 2006, Nicolas Mailhot wrote:
+>  
+>
+>>
+>>I applied the fua backout patch and the kernel booted beautifully.
+>>Now I guess I need to see if Maxtor released a fixed firmware right ?
+>>(is it possible to change the firmware on a running system ?)
+>>    
+>>
+>
+>If you can get an update firmware, it is usually done by booting from
+>DOS floppy and running a special flash utility from there. Can you send
+>me the hdparm -I /dev/sdX output of the problem drive? I think we should
+>just blacklist it for FUA. This bug is so obscure I think it's a better
+>solution than adding a FUA disable module parameter at this point.
+>
+>  
+>
+I am not sure that drive vendors support firmware upgrades - the 
+downside is that you can produce a nice paper weight if the firmware 
+upgrade fails ;-)
 
--- 
-Jamie Heilman                     http://audible.transient.net/~jamie/
+Also, there are specific versions where I know that you cannot jump from 
+firmware version X to version X + 1. 
+
+ric
+
