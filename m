@@ -1,29 +1,31 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: kobject_register failed for Promise_Old_IDE (-17)
-Date: Fri, 27 Jan 2006 00:56:54 +0100
-Message-ID: <58cb370e0601261556h727b2828r7216e2a8cb34ea0f@mail.gmail.com>
-References: <1138093728.5828.8.camel@lyra.home.ludost.net>
-	 <20060124223527.GA26337@kroah.com>
-	 <58cb370e0601241458y6cdf702ey9caa261702a7948a@mail.gmail.com>
-	 <1138175680.5857.4.camel@lyra.home.ludost.net>
+From: Diego Calleja <diegocg@gmail.com>
+Subject: Re: [PATCH] documentation typo
+Date: Fri, 27 Jan 2006 01:08:31 +0100
+Message-ID: <20060127010831.e07ebc64.diegocg@gmail.com>
+References: <20060105132014.d72f61db.diegocg@gmail.com>
+	<58cb370e0601050643q3147cfc8g46e3d17990b196a8@mail.gmail.com>
+	<20060113171057.3541db55.diegocg@gmail.com>
+	<58cb370e0601130817i5f65c93fx469a49259b86d592@mail.gmail.com>
+	<20060115232403.a8f970d1.diegocg@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.200]:6890 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751159AbWAZX44 convert rfc822-to-8bit
+Received: from uproxy.gmail.com ([66.249.92.207]:61970 "EHLO uproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751336AbWA0AI4 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Jan 2006 18:56:56 -0500
-Received: by nproxy.gmail.com with SMTP id l35so225093nfa
-        for <linux-ide@vger.kernel.org>; Thu, 26 Jan 2006 15:56:54 -0800 (PST)
-In-Reply-To: <1138175680.5857.4.camel@lyra.home.ludost.net>
-Content-Disposition: inline
+	Thu, 26 Jan 2006 19:08:56 -0500
+Received: by uproxy.gmail.com with SMTP id s2so64568uge
+        for <linux-ide@vger.kernel.org>; Thu, 26 Jan 2006 16:08:54 -0800 (PST)
+In-Reply-To: <20060115232403.a8f970d1.diegocg@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: linux-kernel@vger.kernel.org, andre@linux-ide.org, frankt@promise.com, linux-ide@vger.kernel.org, Vasil Kolev <vasil@ludost.net>
+To: Diego Calleja <diegocg@gmail.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-This problem cannot be reproduced now (as reported by
-Vasil in private mail) so it seems that it is not a kernel bug.
+El Sun, 15 Jan 2006 23:24:03 +0100,
+Diego Calleja <diegocg@gmail.com> escribi=F3:
 
-Bartlomiej
+
+Did you like the patch? I can remove everything but the documentation
+if you want
