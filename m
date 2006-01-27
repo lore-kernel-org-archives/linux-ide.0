@@ -1,42 +1,27 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 09/13] libata: fix handling of race between timeout and
- completion
-Date: Thu, 26 Jan 2006 22:58:56 -0500
-Message-ID: <43D99A80.1060904@pobox.com>
-References: <11379893774038-git-send-email-htejun@gmail.com> <43D999CF.7020707@pobox.com>
+Subject: Re: [PATCH 11/13] libata: implement ATA_FLAG_IN_EH port flag
+Date: Thu, 26 Jan 2006 23:00:44 -0500
+Message-ID: <43D99AEC.9050506@pobox.com>
+References: <11379893773050-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:5306 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750808AbWA0D7F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 22:59:05 -0500
-In-Reply-To: <43D999CF.7020707@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:7098 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750851AbWA0EAr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2006 23:00:47 -0500
+In-Reply-To: <11379893773050-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
+Tejun Heo wrote:
+> ATA_FLAG_IN_EH flag is set on entry to EH and cleared on completion.
+> This patch just sets and clears the flag.  Following patches will
+> build normal qc execution / EH synchronization aroung this flag.
 > 
->> If a qc completes after SCSI timer expires but before libata EH kicks
->> in, the qc gets completed but the scsicmd still gets passed to libata
->> EH resulting in ->eng_timeout invocation with NULL qc.  Currently none
->> of ->eng_timeout callbacks handles this properly.  This patch makes
->> ata_scsi_error() bypass ->eng_timeout and handle this rare case.
->>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> 
-> Doesn't look right to me.  If the qc gets completed, then the SCSI 
-> command should have also been completed.
-> 
-> AFAICS the race is this:  if the qc is completed, then there is no 
-> active tag, so ata_qc_from_tag() correctly returns NULL.  This case is 
-> really an "error has already been handled" case.  It looks really wrong 
-> to even touch a scsicmd.  I would just clear the eh_cmd list and be done 
-> with it.
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-dropped patches 9-10
+patches 11-12 OK, but failed to apply due to previous dropped patches
 
