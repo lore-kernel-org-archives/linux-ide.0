@@ -1,76 +1,125 @@
-From: "Nicolas Mailhot" <nicolas.mailhot@laposte.net>
-Subject: Re: regarding bug #5914 - fs corruption on SATA
-Date: Fri, 27 Jan 2006 09:53:03 +0100 (CET)
-Message-ID: <65391.192.54.193.25.1138351983.squirrel@rousalka.dyndns.org>
-References: <20060126055050.GA4737@htj.dyndns.org>
-    <43D8637F.5030207@gmail.com>
-    <37416.192.54.193.25.1138266889.squirrel@rousalka.dyndns.org>
-    <20060126092120.GP4212@suse.de>
-    <5840.192.54.193.25.1138269692.squirrel@rousalka.dyndns.org>
-    <1138309495.3968.3.camel@rousalka.dyndns.org>
-    <20060127081319.GU4311@suse.de>
+From: Prakash Punnoor <prakash@punnoor.de>
+Subject: Re: libata support for JMicron JMB360 ?
+Date: Fri, 27 Jan 2006 10:08:22 +0100
+Message-ID: <200601271008.25812.prakash@punnoor.de>
+References: <200512301541.36483.prakash@punnoor.de> <200512311047.54929.prakash@punnoor.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed;
+  boundary="nextPart19973450.pgB6uOvJAf";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx.laposte.net ([81.255.54.11]:2415 "EHLO mx.laposte.net")
-	by vger.kernel.org with ESMTP id S932424AbWA0JFM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jan 2006 04:05:12 -0500
-In-Reply-To: <20060127081319.GU4311@suse.de>
+Received: from moutng.kundenserver.de ([212.227.126.171]:30408 "EHLO
+	moutng.kundenserver.de") by vger.kernel.org with ESMTP
+	id S932429AbWA0JFr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 27 Jan 2006 04:05:47 -0500
+In-Reply-To: <200512311047.54929.prakash@punnoor.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>
+To: jgarzik@pobox.com
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
+--nextPart19973450.pgB6uOvJAf
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Le Ven 27 janvier 2006 09:13, Jens Axboe a =C3=A9crit :
-> On Thu, Jan 26 2006, Nicolas Mailhot wrote:
->> Le jeudi 26 janvier 2006 =C3=A0 11:01 +0100, Nicolas Mailhot a =C3=A9=
-crit :
->> > Le Jeu 26 janvier 2006 10:21, Jens Axboe a =C3=A9crit :
->> > > On Thu, Jan 26 2006, Nicolas Mailhot wrote:
->> >
->> > >> What parts can be done one a pre-breakage kernel and what parts=
- on
->> a
->> > >> problem kernel (I ask this because a problem kernel will corrup=
-t
->> > >> basically
->> > >> any file it writes to, even in single login mode the damage is
->> > >> significant
->> > >> so I need to limit the corruption window to minimum).
->> > >
->> > > You need a new kernel (after the barrier rework), so 2.6.16-rc1 =
-for
->> > > instance.
->> >
->> > Ok, I'll do the test this evening (CET) with the rawhide/davej
->> kernel-of
->> > the day.
->>
->> I applied the fua backout patch and the kernel booted beautifully.
->> Now I guess I need to see if Maxtor released a fixed firmware right =
-?
->> (is it possible to change the firmware on a running system ?)
+Am Samstag Dezember 31 2005 10:47 schrieb Prakash Punnoor:
+> Am Freitag Dezember 30 2005 15:41 schrieb Prakash Punnoor:
+> > Hi,
+> >
+> > I read in an old thread that this question was asked once and you repli=
+ed
+> > you never heard of this chip. Maybe now the situation has changed? If
+> > not, please take a look here:
+> >
+> > http://www.jmicron.com/product/jmb360.htm
+> >
+> > It claims the chip is ahci compatible, but the libata ahci driver can't
+> > detect it (tried 2.6.14.2 and 2.6.15-rc7).
+> >
+> > Maybe just adding some ids or such is enough for supporting it?
+> > Following lspci -vvv -xxx regrading the Jmicron stuff:
 >
-> If you can get an update firmware, it is usually done by booting from
-> DOS floppy and running a special flash utility from there. Can you se=
-nd
-> me the hdparm -I /dev/sdX output of the problem drive? I think we sho=
-uld
-> just blacklist it for FUA. This bug is so obscure I think it's a bett=
-er
-> solution than adding a FUA disable module parameter at this point.
+> [...]
+>
+> Well, I tried adding the ids into ahci.c, but this wasn't enough:
+>
+> --- linux-2.6.15-rc7/drivers/scsi/ahci.c.old	2005-12-31 10:36:35.000000000
+> +0100
+> +++ linux-2.6.15-rc7/drivers/scsi/ahci.c	2005-12-31 10:36:45.000000000
+> +0100 @@ -277,6 +277,8 @@
+>  	  board_ahci }, /* ESB2 */
+>  	{ PCI_VENDOR_ID_INTEL, 0x27c6, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+>  	  board_ahci }, /* ICH7-M DH */
+> +	{ 0x197b, 0x2360, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+> +	  board_ahci }, /* JMicron JMB360 */
+>  	{ }	/* terminate list */
+>  };
+>
+> dmesg gives:
+> libata version 1.20 loaded.
+> ahci 0000:03:00.0: version 1.2
+> ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 35 (level, low) -> IRQ 50
+> PCI: Setting latency timer of device 0000:03:00.0 to 64
+> ahci 0000:03:00.0: AHCI 0001.0000 32 slots 1 ports 3 Gbps 0x1 impl SATA
+> mode ahci 0000:03:00.0: flags: 64bit ncq pm led clo pmp pio slum part
+> ata1: SATA max UDMA/133 cmd 0xF8804100 ctl 0x0 bmdma 0x0 irq 50
+> ata1 is slow to respond, please be patient
+> ata1 failed to respond (30 secs)
+> scsi0 : ahci
 
-There is already fairly complete smart info available in
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=3D177951
-(https://bugzilla.redhat.com/bugzilla/attachment.cgi?id=3D123604
-https://bugzilla.redhat.com/bugzilla/attachment.cgi?id=3D123605)
 
-I'll add hdparm info this evening if it's not sufficient
+Hi Jeff,
 
-Regards,
+I still haven't got a reply from lkml, but an JMicron employee contacted me=
+=20
+and told me how to get this working:
 
---=20
-Nicolas Mailhot
+> //=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=20
+> Root Cause:=20
+> Although AsRock reserves AHCI/IDE mode for JMB360, AsRock sets JMB360 in =
+=20
+> IDE mode actually when boot.=20
+> JMB360 needs a Reset mechanism to switch to AHCI mode on AsRock MB for =20
+> your Linux driver porting.=20
+> =20
+> Reset Mechanism:=20
+> 1. At PCI Configuration Address h'41, write value h'a1 (default is h'f1)=
+=20
+> 2. At AHCI Base address+offset h'04, write 1'b1 at bit 0 location. It is =
+=20
+> "HBA Reset" bit.=20
+> 3. And then JMB360 come back to AHCI mode=20
+> //=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+ =20
+Unfortunately my kernel knowledge is next to none, so I cannot implement th=
+is.=20
+But I guess it should be easy for you or anyone else having done similar. T=
+he=20
+employee actually told me that he mailed above to you, so was it just lack =
+of=20
+time, you didn't made a quirk or any other reason?
 
+Cheers,
+=2D-=20
+(=C2=B0=3D                 =3D=C2=B0)
+//\ Prakash Punnoor /\\
+V_/                 \_V
+
+--nextPart19973450.pgB6uOvJAf
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQBD2eMJxU2n/+9+t5gRAmj+AKDb0c3bbRSHHaezOfxpM8Q5JoYNwQCePIfD
+3A8sgLQ0qYOBxmln9qRqc7Y=
+=CNy0
+-----END PGP SIGNATURE-----
+
+--nextPart19973450.pgB6uOvJAf--
