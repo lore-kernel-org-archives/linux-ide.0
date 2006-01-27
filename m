@@ -1,91 +1,64 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: kobject_register failed for Promise_Old_IDE (-17)
-Date: Fri, 27 Jan 2006 10:58:32 -0800
-Message-ID: <20060127185832.GB31555@kroah.com>
-References: <1138093728.5828.8.camel@lyra.home.ludost.net> <20060124223527.GA26337@kroah.com> <58cb370e0601241458y6cdf702ey9caa261702a7948a@mail.gmail.com> <1138175680.5857.4.camel@lyra.home.ludost.net> <20060126230152.GP3668@stusta.de> <20060126232140.GA15742@kroah.com> <20060126234830.GQ3668@stusta.de>
+From: Nicolas Mailhot <nicolas.mailhot@laposte.net>
+Subject: Re: regarding bug #5914 - fs corruption on SATA
+Date: Fri, 27 Jan 2006 20:37:16 +0100
+Message-ID: <1138390636.3017.2.camel@rousalka.dyndns.org>
+References: <43D8637F.5030207@gmail.com>
+	 <37416.192.54.193.25.1138266889.squirrel@rousalka.dyndns.org>
+	 <20060126092120.GP4212@suse.de>
+	 <5840.192.54.193.25.1138269692.squirrel@rousalka.dyndns.org>
+	 <1138309495.3968.3.camel@rousalka.dyndns.org>
+	 <20060127081319.GU4311@suse.de>
+	 <65391.192.54.193.25.1138351983.squirrel@rousalka.dyndns.org>
+	 <20060127091002.GX4311@suse.de> <20060127092046.GY4311@suse.de>
+	 <58cb370e0601270146n40a5b249v53a736a8021c82f4@mail.gmail.com>
+	 <20060127095039.GA4311@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6cdgvgaUgfyNbyuZoU/z"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsl093-040-174.pdx1.dsl.speakeasy.net ([66.93.40.174]:11236
-	"EHLO aria.kroah.org") by vger.kernel.org with ESMTP
-	id S932218AbWA0S7A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 27 Jan 2006 13:59:00 -0500
-Content-Disposition: inline
-In-Reply-To: <20060126234830.GQ3668@stusta.de>
+Received: from mx.laposte.net ([81.255.54.11]:58158 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S932102AbWA0Thp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jan 2006 14:37:45 -0500
+In-Reply-To: <20060127095039.GA4311@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Vasil Kolev <vasil@ludost.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, andre@linux-ide.org, frankt@promise.com, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>
 
-On Fri, Jan 27, 2006 at 12:48:30AM +0100, Adrian Bunk wrote:
-> On Thu, Jan 26, 2006 at 03:21:40PM -0800, Greg KH wrote:
-> > On Fri, Jan 27, 2006 at 12:01:52AM +0100, Adrian Bunk wrote:
-> > > On Wed, Jan 25, 2006 at 09:54:40AM +0200, Vasil Kolev wrote:
-> > > > ?? ????, 2006-01-24 ?? 23:58 +0100, Bartlomiej Zolnierkiewicz ????????????:
-> > > > > On 1/24/06, Greg KH <greg@kroah.com> wrote:
-> > > > > > On Tue, Jan 24, 2006 at 11:08:47AM +0200, Vasil Kolev wrote:
-> > > > > > > Hello,
-> > > > > > > I have a machine that's currently running 2.4.28 with the promise_old
-> > > > > > > driver, which runs ok. I tried upgrading it last night to 2.6.15, and
-> > > > > > > the following error occured, and no drives were detected/made available:
-> > > > > > >
-> > > > > > >  [17179598.940000] kobject_register failed for Promise_Old_IDE (-17)
-> > > > > > >  [17179598.940000]  [dump_stack+21/23] dump_stack+0x15/0x17
-> > > > > > >  [17179598.940000]  [kobject_register+52/64] kobject_register+0x34/0x40
-> > > > > > >  [17179598.940000]  [bus_add_driver+69/163] bus_add_driver+0x45/0xa3
-> > > > > > >  [17179598.940000]  [driver_register+57/60] driver_register+0x39/0x3c
-> > > > > > >  [17179598.940000]  [__pci_register_driver+125/132] __pci_register_driver+0x7d/0x84
-> > > > > > >  [17179598.940000]  [__ide_pci_register_driver+19/53] __ide_pci_register_driver+0x13/0x35
-> > > > > > >  [17179598.940000]  [pg0+945449588/1069855744] pdc202xx_ide_init+0x12/0x16 [pdc202xx_old]
-> > > > > > >  [17179598.940000]  [sys_init_module+193/430] sys_init_module+0xc1/0x1ae
-> > > > > > >  [17179598.940000]  [syscall_call+7/11] syscall_call+0x7/0xb
-> > > > > >
-> > > > > > This means that some other driver tried to register with the same exact
-> > > > > > name for the same bus.  As it looks like this is the ide bus, I suggest
-> > > > > > asking on the linux ide mailing list.
-> > > > > 
-> > > > 
-> > > > Well, now I remember that in /sys in the proper place there were two
-> > > > directories called Promise_Old_IDE, maybe the driver tried to register
-> > > > twice?
-> > > >...
-> > > 
-> > > Greg, IIRC, weren't there plans to turn this case into a BUG()?
-> > 
-> > No, we dump the stack trace so that people can see what is happening,
-> > but if the caller has done their error handling correctly, the kernel
-> > will not crash.
-> > 
-> > I don't like adding BUG() calls for stuff that it should not be needed
-> > for (like this.)
-> 
-> 
-> Yes, this was my thinko (-17 is -EEXIST).
-> 
-> 
-> The interesting question is why he sees two directories although the 
-> second register failed.
-> 
-> 
-> I'm not sure whether I understand the problem and the code correctly, 
-> but perhaps the problem is something like the following:
-> 
-> 
-> In fs/sysfs/dir.c:create_dir(), sysfs_make_dirent() was already called 
-> when sysfs_create() fails.
-> 
-> In the (error == -EEXIST) case, we therefore need to call 
-> sysfs_remove_dir().
 
-Hm, yeah, by using my little test module for these things, I can create
-two directories in sysfs without the core complaining:
- $ ls /sys/class/gregkh/ -li
- total 0
- 4371756 drwxr-xr-x 2 root root 0 Jan 27 10:56 greg1
- 4371756 drwxr-xr-x 2 root root 0 Jan 27 10:56 greg1
- 4371758 drwxr-xr-x 5 root root 0 Jan 27 10:56 greg2
- 4371760 drwxr-xr-x 2 root root 0 Jan 27 10:56 greg3
+--=-6cdgvgaUgfyNbyuZoU/z
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-I'll work on this.  Thanks for pointing it out.
+Le vendredi 27 janvier 2006 =C3=A0 10:50 +0100, Jens Axboe a =C3=A9crit :
 
-greg k-h
+> Of course, silly typo! Thanks for catching that. Update patch below.
+=20
+...
+
+a patched kernel reboots before finishing to initialize (Just before it
+prints a line starting with SCSI - the rest is too fast for me to catch)
+
+Now the kernel base is slightly different from yesterday, so the bug may
+be in the base not the patch. I'll rebuild a new kernel with the same
+base and yesterday's patch to check this now
+
+Regards,
+
+--=20
+Nicolas Mailhot
+
+--=-6cdgvgaUgfyNbyuZoU/z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Ceci est une partie de message
+	=?ISO-8859-1?Q?num=E9riquement?= =?ISO-8859-1?Q?_sign=E9e?=
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iEYEABECAAYFAkPadmwACgkQI2bVKDsp8g1ziwCeM6pssl6taJZjGjmHmV/OrmvE
+ovsAoMGr9ZQ7mgzCMpNxNynKGp8oZ77A
+=psQf
+-----END PGP SIGNATURE-----
+
+--=-6cdgvgaUgfyNbyuZoU/z--
+
