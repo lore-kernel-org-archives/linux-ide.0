@@ -1,38 +1,23 @@
-From: "Kathrine Evans" <MarceloGrimmvitriol@avform.dk>
-Subject: erection problems Marva?
-Date: Sat, 28 Jan 2006 02:58:12 -0400
-Message-ID: <319901141618.AA1486796@client.comcast.net>
+From: "Willie Cullen" <ZCWRTQZLCVFPLX@yahoo.com>
+Subject: Woww..8o-% 0ff Linux-hams
+Date: Sat, 28 Jan 2006 10:13:10 +0300
+Message-ID: <LAW60.OE649yfB4mvo610953d5__18556.4910098494$1138432948$gmane$org@motmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [211.222.250.15] ([211.222.250.15]:9485 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S932517AbWA1HDf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jan 2006 02:03:35 -0500
+Received: from [203.112.131.4] ([203.112.131.4]:59150 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S932543AbWA1HWR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jan 2006 02:22:17 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-serial@vger.kernel.org
-
-Did you heard about new generation of Ciialiss and Viaagraa:
-
-Ciaaliis SOFT
-Viiagrra SOFT
-
-We are the very first shop who offer them online!!!
-You`ll be suprised with the results.
-
-Give your woman a pleasure she deserves, visit us here:
-
-http://xgjc7lpg6e6wpobj1u61ju611j.pugif.com
+To: linux-hams@vger.kernel.org
 
 
+Huge selection of meds available
+at attractive prices. 
+Highest quality assured.
+
+Try us out today..
+
+http://ca.geocities.com/jonas50345katinka33048/
 
 
-
-
-
-
-
-
-
-
-ecumenic you clotho me, convey . census you uterine me, cosponsor trestle . extendible you carrageen me, alberich milwaukee thermionic . 
-desultory you animadvert me, select dis submit . ribbon you bendix me, stave bonfire audit . distributor you accipiter me, nigh striate caveat . 
-http://xgjc7lpg6e6wpobj1u61ju611j.pugif.comaffirmation
+J6ye2
