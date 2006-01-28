@@ -1,119 +1,68 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] always enable CONFIG_PDC202XX_FORCE
-Date: Sun, 29 Jan 2006 00:04:56 +0100
-Message-ID: <20060128230456.GW3777@stusta.de>
+From: Tejun <htejun@gmail.com>
+Subject: Re: [PATCH 06/12] sata_sil: convert to new reset mechanism
+Date: Sun, 29 Jan 2006 08:17:04 +0900
+Message-ID: <43DBFB70.4050002@gmail.com>
+References: <1138089922913-git-send-email-htejun@gmail.com> <43DBB34B.1050302@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750784AbWA1XFP@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from xproxy.gmail.com ([66.249.82.206]:15119 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750778AbWA1XRJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jan 2006 18:17:09 -0500
+Received: by xproxy.gmail.com with SMTP id s14so539828wxc
+        for <linux-ide@vger.kernel.org>; Sat, 28 Jan 2006 15:17:08 -0800 (PST)
+In-Reply-To: <43DBB34B.1050302@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 
-This patch removes the CONFIG_PDC202XX_FORCE=n case.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+> 
+>> Convert sata_sil to use new reset mechanism.  sata_sil is fairly
+>> generic and can directly use std routine.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> 
+> Major NAK.
+> 
+> The placement of every hardware register read/write has been very 
+> carefully laid out, and your reset hardware re-orders a lot of that. 
+> Code re-ordering is fine.  Changing the order of I/O operations is not. 
+>  With this patch, sata_sil fails to wake up and initialize the SATA phy!
+> 
+> Proper code transformation is art.  You're doing really well, but this 
+> was a bit of a hiccup.  You should have presented a series of patches 
+> which changed over to your new ata_drive_probe_reset() stuff, while -not 
+> changing the hardware operations at all-.  Like a mathematical solution, 
+> your code is then provably correct.  If there is a regression, then you 
+> know it is a driver bug, and not a problem with hardware acting weird.
+> 
+> If the driver can access the SATA PHY registers, the very first thing it 
+> should usually do is the code in sata_std_hardreset()... everything 
+> except the 0x301 value write.  Or in other words, follow the code in 
+> __sata_phy_reset() PRECISELY (presuming that ATA_FLAG_SATA_RESET is not 
+> set).
+> 
+> sata_sil hardware initialization order and behavior should not change at 
+> all [though certainly you will change it sometime in the future].
 
+Okay, I see.  I'll rewrite those parts such that it acts in the same way 
+as the original reset.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> So...   I will drop all other patches from you, let you resync with the 
+> latest stuff in libata-dev.git#upstream (NOTE: renamed from 
+> upstream-2.6.17 to upstream), and wait for your next barrage of patches ;-)
 
----
+It's lunar new year here and I am away from office until 1st Feb, so it 
+will take me some time.
 
-This patch was already sent on:
-- 22 Jan 2006
-- 14 Jan 2006
+Thanks a lot for all your help and guidance.  It's been a great year.
 
- drivers/ide/Kconfig            |    7 -------
- drivers/ide/pci/pdc202xx_new.c |    6 ------
- drivers/ide/pci/pdc202xx_old.c |   15 ---------------
- 3 files changed, 28 deletions(-)
+Happy (lunar) new year, guys.  :-)
 
---- linux-2.6.15-mm4-full/drivers/ide/Kconfig.old	2006-01-14 20:43:13.000000000 +0100
-+++ linux-2.6.15-mm4-full/drivers/ide/Kconfig	2006-01-14 20:43:23.000000000 +0100
-@@ -673,13 +673,6 @@
- config BLK_DEV_PDC202XX_NEW
- 	tristate "PROMISE PDC202{68|69|70|71|75|76|77} support"
- 
--# FIXME - probably wants to be one for old and for new
--config PDC202XX_FORCE
--	bool "Enable controller even if disabled by BIOS"
--	depends on BLK_DEV_PDC202XX_NEW
--	help
--	  Enable the PDC202xx controller even if it has been disabled in the BIOS setup.
--
- config BLK_DEV_SVWKS
- 	tristate "ServerWorks OSB4/CSB5/CSB6 chipsets support"
- 	help
---- linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_new.c.old	2006-01-14 20:43:30.000000000 +0100
-+++ linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_new.c	2006-01-14 20:43:51.000000000 +0100
-@@ -420,9 +420,6 @@
- 		.init_hwif	= init_hwif_pdc202new,
- 		.channels	= 2,
- 		.autodma	= AUTODMA,
--#ifndef CONFIG_PDC202XX_FORCE
--		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
--#endif
- 		.bootable	= OFF_BOARD,
- 	},{	/* 3 */
- 		.name		= "PDC20271",
-@@ -447,9 +444,6 @@
- 		.init_hwif	= init_hwif_pdc202new,
- 		.channels	= 2,
- 		.autodma	= AUTODMA,
--#ifndef CONFIG_PDC202XX_FORCE
--		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
--#endif
- 		.bootable	= OFF_BOARD,
- 	},{	/* 6 */
- 		.name		= "PDC20277",
---- linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_old.c.old	2006-01-14 20:44:01.000000000 +0100
-+++ linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_old.c	2006-01-14 20:44:21.000000000 +0100
-@@ -786,9 +786,6 @@
- 		.init_dma	= init_dma_pdc202xx,
- 		.channels	= 2,
- 		.autodma	= AUTODMA,
--#ifndef CONFIG_PDC202XX_FORCE
--		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
--#endif
- 		.bootable	= OFF_BOARD,
- 		.extra		= 16,
- 	},{	/* 1 */
-@@ -799,9 +796,6 @@
- 		.init_dma	= init_dma_pdc202xx,
- 		.channels	= 2,
- 		.autodma	= AUTODMA,
--#ifndef CONFIG_PDC202XX_FORCE
--		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
--#endif
- 		.bootable	= OFF_BOARD,
- 		.extra		= 48,
- 		.flags		= IDEPCI_FLAG_FORCE_PDC,
-@@ -813,9 +807,6 @@
- 		.init_dma	= init_dma_pdc202xx,
- 		.channels	= 2,
- 		.autodma	= AUTODMA,
--#ifndef CONFIG_PDC202XX_FORCE
--		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
--#endif
- 		.bootable	= OFF_BOARD,
- 		.extra		= 48,
- 	},{	/* 3 */
-@@ -826,9 +817,6 @@
- 		.init_dma	= init_dma_pdc202xx,
- 		.channels	= 2,
- 		.autodma	= AUTODMA,
--#ifndef CONFIG_PDC202XX_FORCE
--		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
--#endif
- 		.bootable	= OFF_BOARD,
- 		.extra		= 48,
- 		.flags		= IDEPCI_FLAG_FORCE_PDC,
-@@ -840,9 +828,6 @@
- 		.init_dma	= init_dma_pdc202xx,
- 		.channels	= 2,
- 		.autodma	= AUTODMA,
--#ifndef CONFIG_PDC202XX_FORCE
--		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
--#endif
- 		.bootable	= OFF_BOARD,
- 		.extra		= 48,
- 	}
+-- 
+tejun
