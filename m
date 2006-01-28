@@ -1,32 +1,119 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: memory leak in scsi_cmd_cache 2.6.15
-Date: Sat, 28 Jan 2006 22:29:12 +0100
-Message-ID: <20060128212911.GC13084@suse.de>
-References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz> <87ek2td4i9.fsf@amaterasu.srvr.nix> <20060128192714.GI9750@suse.de> <200601281347.10531.chase.venters@clientec.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] always enable CONFIG_PDC202XX_FORCE
+Date: Sun, 29 Jan 2006 00:04:56 +0100
+Message-ID: <20060128230456.GW3777@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:60275 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1750737AbWA1VfX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jan 2006 16:35:23 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750784AbWA1XFP@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200601281347.10531.chase.venters@clientec.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chase Venters <chase.venters@clientec.com>
-Cc: Nix <nix@esperi.org.uk>, Ariel <askernel2615@dsgml.com>, Jamie Heilman <jamie@audible.transient.net>, Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, Jan 28 2006, Chase Venters wrote:
-> On Saturday 28 January 2006 13:26, Jens Axboe wrote:
-> > It's not a bad data point, it just confirms that setting ->ordered_flush
-> > to 0 in the SATA drivers will fix the leak. So really, it's as expected.
-> > So far apparently nobody tried it, suggested it twice.
-> 
-> In case you still wanted the data point, I just set ordered_flush to 0 on my 
-> ata_piix and the slab leak disappeared.
+This patch removes the CONFIG_PDC202XX_FORCE=n case.
 
-Thanks for confirming!
 
--- 
-Jens Axboe
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
+---
+
+This patch was already sent on:
+- 22 Jan 2006
+- 14 Jan 2006
+
+ drivers/ide/Kconfig            |    7 -------
+ drivers/ide/pci/pdc202xx_new.c |    6 ------
+ drivers/ide/pci/pdc202xx_old.c |   15 ---------------
+ 3 files changed, 28 deletions(-)
+
+--- linux-2.6.15-mm4-full/drivers/ide/Kconfig.old	2006-01-14 20:43:13.000000000 +0100
++++ linux-2.6.15-mm4-full/drivers/ide/Kconfig	2006-01-14 20:43:23.000000000 +0100
+@@ -673,13 +673,6 @@
+ config BLK_DEV_PDC202XX_NEW
+ 	tristate "PROMISE PDC202{68|69|70|71|75|76|77} support"
+ 
+-# FIXME - probably wants to be one for old and for new
+-config PDC202XX_FORCE
+-	bool "Enable controller even if disabled by BIOS"
+-	depends on BLK_DEV_PDC202XX_NEW
+-	help
+-	  Enable the PDC202xx controller even if it has been disabled in the BIOS setup.
+-
+ config BLK_DEV_SVWKS
+ 	tristate "ServerWorks OSB4/CSB5/CSB6 chipsets support"
+ 	help
+--- linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_new.c.old	2006-01-14 20:43:30.000000000 +0100
++++ linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_new.c	2006-01-14 20:43:51.000000000 +0100
+@@ -420,9 +420,6 @@
+ 		.init_hwif	= init_hwif_pdc202new,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
+-		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+-#endif
+ 		.bootable	= OFF_BOARD,
+ 	},{	/* 3 */
+ 		.name		= "PDC20271",
+@@ -447,9 +444,6 @@
+ 		.init_hwif	= init_hwif_pdc202new,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
+-		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+-#endif
+ 		.bootable	= OFF_BOARD,
+ 	},{	/* 6 */
+ 		.name		= "PDC20277",
+--- linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_old.c.old	2006-01-14 20:44:01.000000000 +0100
++++ linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_old.c	2006-01-14 20:44:21.000000000 +0100
+@@ -786,9 +786,6 @@
+ 		.init_dma	= init_dma_pdc202xx,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
+-		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+-#endif
+ 		.bootable	= OFF_BOARD,
+ 		.extra		= 16,
+ 	},{	/* 1 */
+@@ -799,9 +796,6 @@
+ 		.init_dma	= init_dma_pdc202xx,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
+-		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+-#endif
+ 		.bootable	= OFF_BOARD,
+ 		.extra		= 48,
+ 		.flags		= IDEPCI_FLAG_FORCE_PDC,
+@@ -813,9 +807,6 @@
+ 		.init_dma	= init_dma_pdc202xx,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
+-		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+-#endif
+ 		.bootable	= OFF_BOARD,
+ 		.extra		= 48,
+ 	},{	/* 3 */
+@@ -826,9 +817,6 @@
+ 		.init_dma	= init_dma_pdc202xx,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
+-		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+-#endif
+ 		.bootable	= OFF_BOARD,
+ 		.extra		= 48,
+ 		.flags		= IDEPCI_FLAG_FORCE_PDC,
+@@ -840,9 +828,6 @@
+ 		.init_dma	= init_dma_pdc202xx,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-#ifndef CONFIG_PDC202XX_FORCE
+-		.enablebits	= {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+-#endif
+ 		.bootable	= OFF_BOARD,
+ 		.extra		= 48,
+ 	}
