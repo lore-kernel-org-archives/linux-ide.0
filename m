@@ -1,28 +1,26 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 04/12] libata: implement ata_drive_probe_reset()
-Date: Fri, 27 Jan 2006 20:58:45 -0500
-Message-ID: <43DACFD5.6020507@pobox.com>
-References: <11380899221448-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH 05/12] libata: implement standard reset component operations
+ and ->probe_reset
+Date: Fri, 27 Jan 2006 20:58:54 -0500
+Message-ID: <43DACFDE.3070703@pobox.com>
+References: <1138089922407-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:16068 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1422788AbWA1B6w (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jan 2006 20:58:52 -0500
-In-Reply-To: <11380899221448-git-send-email-htejun@gmail.com>
+Received: from mail.dvmed.net ([216.237.124.58]:17860 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1422789AbWA1B65 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jan 2006 20:58:57 -0500
+In-Reply-To: <1138089922407-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 
 Tejun Heo wrote:
-> Most low level drivers share supported reset/classify actions and
-> sequence.  This patch implements ata_drive_probe_reset() which helps
-> constructing ->probe_reset from three component operations -
-> softreset, hardreset and postreset.  This minimizes duplicate code and
-> yet allows flexibility if needed. The three component operations can
-> also be shared by EH later.
+> Implement SRST, COMRESET and standard postreset component operations
+> for ata_drive_probe_reset(), and use these three functions to
+> implement ata_std_probe_reset.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
 
