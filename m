@@ -1,28 +1,25 @@
-From: "Bryan Workman" <jynoutiiqxdssn@hotmail.com>
-Subject: Everyone Need This Autoanswer
-Date: Sat, 28 Jan 2006 09:04:37 -0700
-Message-ID: <3A867EE3.7684.3615C2D5__46043.728295672$1138464623$gmane$org@localhost>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2.6.15-rc7-git3 1/3] sata_promise: add correct read/write
+ of hotplug registers for SATAII devices
+Date: Sat, 28 Jan 2006 12:39:48 -0500
+Message-ID: <43DBAC64.1070902@pobox.com>
+References: <355e5e5e0512291523h508fe0c8j459a9377d52d5529@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [218.18.200.41] ([218.18.200.41]:33031 "HELO CAI")
-	by vger.kernel.org with SMTP id S1751451AbWA1QKG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jan 2006 11:10:06 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <355e5e5e0512291523h508fe0c8j459a9377d52d5529@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Lukasz Kosewski <lkosewsk@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: autoanswer@vger.kernel.org
 
+Lukasz Kosewski wrote:
+> This patch adds support for correctly masking out and knowing about
+> hotplug events on Promise SATAII150 Tx4/Tx2 Plus controllers.
+> 
+> Signed-off-by:  Luke Kosewski <lkosewsk@gmail.com>
 
+applied
 
-
-The most complete Phar macy Online
-We carry all major medds at bargain price
-Coodeinne, Viggra, Ci ialis, VaIium, Xa naax
-Phantermiine, Ulltraam and etc...
-SatiisfactIon Gua ranteeed
-
-http://ca.geocities.com/tisha41048melania66304/
-
-
-uoIQqz
 
