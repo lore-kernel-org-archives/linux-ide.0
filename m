@@ -1,30 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 06/12] sata_sil: convert to new reset mechanism
-Date: Sat, 28 Jan 2006 13:27:59 -0500
-Message-ID: <43DBB7AF.1060408@pobox.com>
-References: <1138089922913-git-send-email-htejun@gmail.com> <43DBB34B.1050302@pobox.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: memory leak in scsi_cmd_cache 2.6.15
+Date: Sat, 28 Jan 2006 20:27:44 +0100
+Message-ID: <20060128192744.GJ9750@suse.de>
+References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz> <Pine.LNX.4.62.0601222045180.12815@pureeloreel.qftzy.pbz> <1137997104.2977.7.camel@laptopd505.fenrus.org> <200601230029.12674.chase.venters@clientec.com> <Pine.LNX.4.62.0601230136080.22979@pureeloreel.qftzy.pbz> <20060123072556.GC15490@fifty-fifty.audible.transient.net> <20060123083347.GA12773@suse.de> <20060127112846.GA29829@fifty-fifty.audible.transient.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:47049 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932442AbWA1S2E (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jan 2006 13:28:04 -0500
-In-Reply-To: <43DBB34B.1050302@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060127112846.GA29829@fifty-fifty.audible.transient.net>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Ariel <askernel2615@dsgml.com>, Chase Venters <chase.venters@clientec.com>, Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 
-Jeff Garzik wrote:
-> If the driver can access the SATA PHY registers, the very first thing it 
-> should usually do is the code in sata_std_hardreset()... everything 
-> except the 0x301 value write.
+On Fri, Jan 27 2006, Jamie Heilman wrote:
+> Jens Axboe wrote:
+> > On Sun, Jan 22 2006, Jamie Heilman wrote:
+> > > Ariel wrote:
+> > > > ata_piix seems like it's in common for all, but this is not a lot of 
+> > > > systems, so it could just be a coincidence and the problem caused by 
+> > > > something that's not chipset specific.
+> > > 
+> > > Hmm.  I just moved my sata_sil stuff out of the way and rebooted:
+> > > 
+> > > $ uptime; grep scsi_cmd_cache /proc/slabinfo
+> > >  23:22:16 up 4 min,  1 user,  load average: 0.00, 0.03, 0.00
+> > > scsi_cmd_cache      1200   1200    384   10    1 : tunables   54   27   8 : slabdata    120    120      0
+> > > 
+> > > My other workstation also runs 2.6.15.1 but uses sata_nv and doesn't
+> > > exhibit the problem.
+> > 
+> > The SATA low level driver is very unlikely to play a role in this. But
+> > you are both using md (raid1 to be specific) on top of scsi, I'd say
+> > that's the best clue. I'd very much doubt the nvidia module as well.
+> 
+> True, my sata_nv box doesn't use md.  OTOH, my machines running raid1
+> on an LSI (MPT Fusion driver) SCSI controller don't have this leak.
 
-...and possibly the device classification.  Probably want to do a soft 
-reset, then get the signature.  Read the port multiplier spec PM 
-initialization sequence...  that is a highly relevant description.
+Those SCSI LLD don't support ordered flush barriers, that's why.
 
-	Jeff
-
+-- 
+Jens Axboe
 
