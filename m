@@ -1,82 +1,54 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] ata_piix: ignore all zero PCS value on ICH5's
-Date: Sun, 29 Jan 2006 00:22:18 -0500
-Message-ID: <43DC510A.1090101@pobox.com>
-References: <438B6E05.8070009@eq.cz> <438D2C19.3030008@gmail.com> <438DA3FA.2010809@eq.cz> <a762e240511301405s433109b7n93e7fdcc7409bef5@mail.gmail.com> <438EC502.1090103@keytradebank.com> <20051201112015.GA10462@htj.dyndns.org> <438EF3B6.7020007@keytradebank.com> <438EFAA5.3070901@gmail.com> <438FA924.1090005@pobox.com> <438FB8B5.8070505@gmail.com> <20051202032605.GA15528@htj.dyndns.org>
+From: Prakash Punnoor <prakash@punnoor.de>
+Subject: Re: [PATCH] ahci: get JMicron JMB360 working
+Date: Sun, 29 Jan 2006 10:16:26 +0100
+Message-ID: <200601291016.30459.prakash@punnoor.de>
+References: <20060129050434.GA19047@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart1243907.OphOC9yPZf";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:37071 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750827AbWA2FW2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jan 2006 00:22:28 -0500
-In-Reply-To: <20051202032605.GA15528@htj.dyndns.org>
+Received: from moutng.kundenserver.de ([212.227.126.183]:10945 "EHLO
+	moutng.kundenserver.de") by vger.kernel.org with ESMTP
+	id S1750759AbWA2JLp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 29 Jan 2006 04:11:45 -0500
+In-Reply-To: <20060129050434.GA19047@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jean-Fran?ois Stenuit <jfs@keytradebank.com>, Keith Mannthey <kmannth@gmail.com>, "0602@eq.cz" <0602@eq.cz>, Linux-ide <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
-> Some ICH5's report 0 for PCS even when they have active working ports.
-> This patch makes piix_sata_probe() ignore 0 PCS value on ICH5's and
-> probe all ports in such cases.  And while at it, remove bogus
-> assignment to mask.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> --
-> 
-> Hi, Jean-Francois (sorry, cannot type that character) and 0602.
-> 
-> Can you guys please verify that this patch works?  This patch is
-> supposed to do the same thing as my previous patch with
-> override_PCS=1.
-> 
-> 
-> diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-> index 887b2b9..482995b 100644
-> --- a/drivers/scsi/ata_piix.c
-> +++ b/drivers/scsi/ata_piix.c
-> @@ -58,6 +58,7 @@ enum {
->  	ICH5_PCS		= 0x92,	/* port control and status */
->  	PIIX_SCC		= 0x0A, /* sub-class code register */
->  
-> +	PIIX_FLAG_UNRELIABLE_PCS= (1 << 27), /* PCS bits are unreliable */
->  	PIIX_FLAG_AHCI		= (1 << 28), /* AHCI possible */
->  	PIIX_FLAG_CHECKINTR	= (1 << 29), /* make sure PCI INTx enabled */
->  	PIIX_FLAG_COMBINED	= (1 << 30), /* combined mode possible */
-> @@ -223,7 +224,8 @@ static struct ata_port_info piix_port_in
->  	{
->  		.sht		= &piix_sht,
->  		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
-> -				  PIIX_FLAG_COMBINED | PIIX_FLAG_CHECKINTR,
-> +				  PIIX_FLAG_COMBINED | PIIX_FLAG_CHECKINTR |
-> +				  PIIX_FLAG_UNRELIABLE_PCS,
->  		.pio_mask	= 0x1f,	/* pio0-4 */
->  		.mwdma_mask	= 0x07, /* mwdma0-2 */
->  		.udma_mask	= 0x7f,	/* udma0-6 */
-> @@ -362,12 +364,15 @@ static int piix_sata_probe (struct ata_p
->  	int orig_mask, mask, i;
->  	u8 pcs;
->  
-> -	mask = (PIIX_PORT_PRESENT << ap->hard_port_no) |
-> -	       (PIIX_PORT_ENABLED << ap->hard_port_no);
-> -
->  	pci_read_config_byte(pdev, ICH5_PCS, &pcs);
->  	orig_mask = (int) pcs & 0xff;
->  
-> +	if (orig_mask == 0 && ap->flags & PIIX_FLAG_UNRELIABLE_PCS) {
-> +		printk(KERN_INFO "ata%u: PIIX PCS reports 0x00, ignoring PCS\n",
-> +		       ap->id);
-> +		return 1;
-> +	}
-> +
+--nextPart1243907.OphOC9yPZf
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I'm just not too thrilled about this.  I wonder if its an isolated 
-incident related to power or something.  I would wait for more problem 
-reports, before applying this.
+Am Sonntag Januar 29 2006 06:04 schrieb Jeff Garzik:
 
-	Jeff
+> This patch, against latest 2.6.16-rc-git, adds support for JMicron and
+> fixes some code that should be Intel-only, but was being executed for
+> all vendors.
 
+Thx, works nicely here with JMicron jMB360 on an Asrock board.
 
+Cheers,
+=2D-=20
+(=B0=3D                 =3D=B0)
+//\ Prakash Punnoor /\\
+V_/                 \_V
 
+--nextPart1243907.OphOC9yPZf
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQBD3IfuxU2n/+9+t5gRAi2bAKCIjpK15ZvjpgsS9c/YH43zvE4XrwCeMRdb
+ZnLvUPom94ClXXV21Eu4fFQ=
+=3Kmj
+-----END PGP SIGNATURE-----
+
+--nextPart1243907.OphOC9yPZf--
