@@ -1,67 +1,82 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC/PATCHSET] libata: new reset mechanism
-Date: Sun, 29 Jan 2006 00:20:52 -0500
-Message-ID: <43DC50B4.6040902@pobox.com>
-References: <20051218133305.GA31571@htj.dyndns.org> <43A64334.7010500@pobox.com> <43A64D42.2080700@gmail.com>
+Subject: Re: [PATCH] ata_piix: ignore all zero PCS value on ICH5's
+Date: Sun, 29 Jan 2006 00:22:18 -0500
+Message-ID: <43DC510A.1090101@pobox.com>
+References: <438B6E05.8070009@eq.cz> <438D2C19.3030008@gmail.com> <438DA3FA.2010809@eq.cz> <a762e240511301405s433109b7n93e7fdcc7409bef5@mail.gmail.com> <438EC502.1090103@keytradebank.com> <20051201112015.GA10462@htj.dyndns.org> <438EF3B6.7020007@keytradebank.com> <438EFAA5.3070901@gmail.com> <438FA924.1090005@pobox.com> <438FB8B5.8070505@gmail.com> <20051202032605.GA15528@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:33999 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750826AbWA2FVA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jan 2006 00:21:00 -0500
-In-Reply-To: <43A64D42.2080700@gmail.com>
+Received: from mail.dvmed.net ([216.237.124.58]:37071 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750827AbWA2FW2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jan 2006 00:22:28 -0500
+In-Reply-To: <20051202032605.GA15528@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: albertcc@tw.ibm.com, liml@rtr.ca, linux-ide@vger.kernel.org
+Cc: Jean-Fran?ois Stenuit <jfs@keytradebank.com>, Keith Mannthey <kmannth@gmail.com>, "0602@eq.cz" <0602@eq.cz>, Linux-ide <linux-ide@vger.kernel.org>
 
 Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Hard and soft reset should be implemented as
->>
->>     qc = ata_qc_new_init()
->>     qc->tf.protocol = ATA_PROT_HARD_RESET;
->>     ... ata_qc_issue() ...
->>
->> which automatically takes advantage of the ability to specify a 
->> behavior using the qc_prep/qc_issue driver hooks.  The ATA passthru 
->> CDB supports this method of programming (hard and soft reset are 
->> specified protocols), and this is very similar to how the SiI 3124 
->> behaves.  Other FIS-based controllers will implement qc_issue/qc_prep 
->> such that they send two Control FIS's.  Taskfile-based controllers use 
->> the currently implemented method.
+> Some ICH5's report 0 for PCS even when they have active working ports.
+> This patch makes piix_sata_probe() ignore 0 PCS value on ICH5's and
+> probe all ports in such cases.  And while at it, remove bogus
+> assignment to mask.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> --
+> 
+> Hi, Jean-Francois (sorry, cannot type that character) and 0602.
+> 
+> Can you guys please verify that this patch works?  This patch is
+> supposed to do the same thing as my previous patch with
+> override_PCS=1.
 > 
 > 
-> I don't really agree with you.  IMHO, resets are too different from 
-> standard qc execution (ie. standard ATA command execution) to be a qc 
-> protocol.  Also, how are we gonna represent host reset with qc?  I like 
-> the "everything via qc" idea but I think making resets protocols of qc 
-> is pushing too far.  Please consider...
-> 
-> * If we go with qc_prep/issue, we don't have context while executing 
-> resets.  Even though SATA is pretty much event-driven, many controllers 
-> still need quite some amount of polling during resets.  Even though a 
-> controller can be reset using interrupts/events, the code will be much 
-> more complex.  I think it's MUCH better to perform resets with context.
-> 
-> * If we perform resets with context, we can use ata_exec_internal() 
-> while performing resets.  If a controller can perform resets by issuing 
-> qc's or wants to do some post-reset configuration commands, it can do so 
-> by simply invoking ata_exec_internal().  If resets become qc protocols, 
-> we'll need to dance _really_ hard to do anything similar.  Please 
-> consider the state of IDE driver regarding resets / reconfiguration.
-> 
-> * Resets must be followed by a series of configuration commands.  i.e. 
-> we need context after performing reset anyway.  So, the context needs to 
-> be there whether or not resets are performed with contexts.
+> diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
+> index 887b2b9..482995b 100644
+> --- a/drivers/scsi/ata_piix.c
+> +++ b/drivers/scsi/ata_piix.c
+> @@ -58,6 +58,7 @@ enum {
+>  	ICH5_PCS		= 0x92,	/* port control and status */
+>  	PIIX_SCC		= 0x0A, /* sub-class code register */
+>  
+> +	PIIX_FLAG_UNRELIABLE_PCS= (1 << 27), /* PCS bits are unreliable */
+>  	PIIX_FLAG_AHCI		= (1 << 28), /* AHCI possible */
+>  	PIIX_FLAG_CHECKINTR	= (1 << 29), /* make sure PCI INTx enabled */
+>  	PIIX_FLAG_COMBINED	= (1 << 30), /* combined mode possible */
+> @@ -223,7 +224,8 @@ static struct ata_port_info piix_port_in
+>  	{
+>  		.sht		= &piix_sht,
+>  		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
+> -				  PIIX_FLAG_COMBINED | PIIX_FLAG_CHECKINTR,
+> +				  PIIX_FLAG_COMBINED | PIIX_FLAG_CHECKINTR |
+> +				  PIIX_FLAG_UNRELIABLE_PCS,
+>  		.pio_mask	= 0x1f,	/* pio0-4 */
+>  		.mwdma_mask	= 0x07, /* mwdma0-2 */
+>  		.udma_mask	= 0x7f,	/* udma0-6 */
+> @@ -362,12 +364,15 @@ static int piix_sata_probe (struct ata_p
+>  	int orig_mask, mask, i;
+>  	u8 pcs;
+>  
+> -	mask = (PIIX_PORT_PRESENT << ap->hard_port_no) |
+> -	       (PIIX_PORT_ENABLED << ap->hard_port_no);
+> -
+>  	pci_read_config_byte(pdev, ICH5_PCS, &pcs);
+>  	orig_mask = (int) pcs & 0xff;
+>  
+> +	if (orig_mask == 0 && ap->flags & PIIX_FLAG_UNRELIABLE_PCS) {
+> +		printk(KERN_INFO "ata%u: PIIX PCS reports 0x00, ignoring PCS\n",
+> +		       ap->id);
+> +		return 1;
+> +	}
+> +
 
-That's fine, we can do without it for now.  I definitely want to see 
-that portion of the ATA passthru SCSI command supported.  The spec lists 
-soft and hard reset among the protocols.  You could just hard-code a 
-call to the libata reset machinery for those two protocols.  Handle it 
-in the simulator.
+I'm just not too thrilled about this.  I wonder if its an isolated 
+incident related to power or something.  I would wait for more problem 
+reports, before applying this.
 
 	Jeff
+
 
 
