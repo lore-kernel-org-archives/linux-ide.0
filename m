@@ -1,60 +1,45 @@
-From: Prakash Punnoor <prakash@punnoor.de>
-Subject: Re: [PATCH] ahci: get JMicron JMB360 working
-Date: Sun, 29 Jan 2006 14:43:48 +0100
-Message-ID: <200601291443.48769.prakash@punnoor.de>
-References: <20060129050434.GA19047@havoc.gtf.org> <pan.2006.01.29.11.01.17.108084@tbdnetworks.com>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: memory leak in scsi_cmd_cache 2.6.15
+Date: Sun, 29 Jan 2006 17:50:09 +0200
+Message-ID: <20060129155009.GT28738@edu.joroinen.fi>
+References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz> <Pine.LNX.4.62.0601222045180.12815@pureeloreel.qftzy.pbz> <1137997104.2977.7.camel@laptopd505.fenrus.org> <200601230029.12674.chase.venters@clientec.com> <Pine.LNX.4.62.0601230136080.22979@pureeloreel.qftzy.pbz> <20060123072556.GC15490@fifty-fifty.audible.transient.net> <Pine.LNX.4.62.0601261312160.1174@pureeloreel.qftzy.pbz> <87ek2td4i9.fsf@amaterasu.srvr.nix> <20060128192714.GI9750@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1239875.nJYeblnhQx";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750984AbWA2Nhd@vger.kernel.org>
-In-Reply-To: <pan.2006.01.29.11.01.17.108084@tbdnetworks.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Norbert Kiesel <nkiesel@tbdnetworks.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-
---nextPart1239875.nJYeblnhQx
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from edu.joroinen.fi ([194.89.68.130]:46044 "EHLO edu.joroinen.fi")
+	by vger.kernel.org with ESMTP id S1751049AbWA2PuK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jan 2006 10:50:10 -0500
 Content-Disposition: inline
+In-Reply-To: <20060128192714.GI9750@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Nix <nix@esperi.org.uk>, Ariel <askernel2615@dsgml.com>, Jamie Heilman <jamie@audible.transient.net>, Chase Venters <chase.venters@clientec.com>, Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Am Sonntag Januar 29 2006 12:01 schrieb Norbert Kiesel:
-> On Sun, 29 Jan 2006 00:04:34 -0500, Jeff Garzik wrote:
-> > I'll be sending this upstream sooner rather than later, since part of
-> > this is a needed bugfix.  This is also a minor milestone:  the first
-> > non-Intel AHCI implementation is working with the AHCI driver.  AHCI is
-> > a nice SATA controller interface, and it's good to see other vendors
-> > using it.  VIA is using it as well, and I hope to integrate a patch for
-> > VIA AHCI SATA support soon.
-> >
-> > This patch, against latest 2.6.16-rc-git, adds support for JMicron and
-> > fixes some code that should be Intel-only, but was being executed for
-> > all vendors.
->
-> Sounds very good, thanks! Does that mean the ASRock MB
-> http://www.asrock.com/product/product_939Dual-SATA2.htm will work? Docu
-> says "1 x SATA2 connector (based on PCI E SATA2 controller JMB360)".
+On Sat, Jan 28, 2006 at 08:27:14PM +0100, Jens Axboe wrote:
+> On Fri, Jan 27 2006, Nix wrote:
+> > On 26 Jan 2006, Ariel noted:
+> > > Is this good or bad? I'm guessing it means it's still leaking. So it's
+> > > really starting to look like ata_piix is the problem. But we need someone
+> > > who has the leak to remove that and see if it helps. I can't, since my
+> > > drives are connected to it.
+> > 
+> > FWIW, a bit of negative-confirmatory evidence: I have a sym53c875
+> > and non-SATA IDE drive on this 2.6.15.1, and there is no leak,
+> > nor was there in 2.6.15:
+> > 
+> >     11     11 100%    0.34K      1       11         4K scsi_cmd_cache
+> 
+> It's not a bad data point, it just confirms that setting ->ordered_flush
+> to 0 in the SATA drivers will fix the leak. So really, it's as expected.
+> So far apparently nobody tried it, suggested it twice.
+> 
 
-Yes, I tested it a few hours ago.
+Are all sata drivers affected by this bug in 2.6.15?
 
-=2D-=20
-(=B0=3D                 =3D=B0)
-//\ Prakash Punnoor /\\
-V_/                 \_V
+Any 'official' patch available?
 
---nextPart1239875.nJYeblnhQx
-Content-Type: application/pgp-signature
+Or is the recommended workaround to set ordered_flush to 0 to fix this..
+does that have any downsides?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQBD3MaUxU2n/+9+t5gRAm/qAJ9RRxLVBSF9tB9jR/ScVl61AToVBwCg1Z4G
-RWrPm845aeql1rZ1aU8kEFw=
-=48ul
------END PGP SIGNATURE-----
-
---nextPart1239875.nJYeblnhQx--
+-- Pasi
