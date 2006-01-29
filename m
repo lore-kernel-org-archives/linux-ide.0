@@ -1,45 +1,50 @@
-From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
-Subject: Re: memory leak in scsi_cmd_cache 2.6.15
-Date: Sun, 29 Jan 2006 17:50:09 +0200
-Message-ID: <20060129155009.GT28738@edu.joroinen.fi>
-References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz> <Pine.LNX.4.62.0601222045180.12815@pureeloreel.qftzy.pbz> <1137997104.2977.7.camel@laptopd505.fenrus.org> <200601230029.12674.chase.venters@clientec.com> <Pine.LNX.4.62.0601230136080.22979@pureeloreel.qftzy.pbz> <20060123072556.GC15490@fifty-fifty.audible.transient.net> <Pine.LNX.4.62.0601261312160.1174@pureeloreel.qftzy.pbz> <87ek2td4i9.fsf@amaterasu.srvr.nix> <20060128192714.GI9750@suse.de>
+From: Ingo Oeser <ioe-lkml@rameria.de>
+Subject: Re: [PATCH] libata queue updated
+Date: Sun, 29 Jan 2006 17:11:42 +0100
+Message-ID: <200601291711.43426.ioe-lkml@rameria.de>
+References: <20060128182522.GA31458@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from edu.joroinen.fi ([194.89.68.130]:46044 "EHLO edu.joroinen.fi")
-	by vger.kernel.org with ESMTP id S1751049AbWA2PuK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jan 2006 10:50:10 -0500
+Received: from smtprelay03.ispgateway.de ([80.67.18.15]:42717 "EHLO
+	smtprelay03.ispgateway.de") by vger.kernel.org with ESMTP
+	id S1751056AbWA2QLq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 29 Jan 2006 11:11:46 -0500
+In-Reply-To: <20060128182522.GA31458@havoc.gtf.org>
 Content-Disposition: inline
-In-Reply-To: <20060128192714.GI9750@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Nix <nix@esperi.org.uk>, Ariel <askernel2615@dsgml.com>, Jamie Heilman <jamie@audible.transient.net>, Chase Venters <chase.venters@clientec.com>, Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Sat, Jan 28, 2006 at 08:27:14PM +0100, Jens Axboe wrote:
-> On Fri, Jan 27 2006, Nix wrote:
-> > On 26 Jan 2006, Ariel noted:
-> > > Is this good or bad? I'm guessing it means it's still leaking. So it's
-> > > really starting to look like ata_piix is the problem. But we need someone
-> > > who has the leak to remove that and see if it helps. I can't, since my
-> > > drives are connected to it.
-> > 
-> > FWIW, a bit of negative-confirmatory evidence: I have a sym53c875
-> > and non-SATA IDE drive on this 2.6.15.1, and there is no leak,
-> > nor was there in 2.6.15:
-> > 
-> >     11     11 100%    0.34K      1       11         4K scsi_cmd_cache
-> 
-> It's not a bad data point, it just confirms that setting ->ordered_flush
-> to 0 in the SATA drivers will fix the leak. So really, it's as expected.
-> So far apparently nobody tried it, suggested it twice.
-> 
+Hi Jeff,
 
-Are all sata drivers affected by this bug in 2.6.15?
 
-Any 'official' patch available?
+On Saturday 28 January 2006 19:25, Jeff Garzik wrote:
+> Testing and merge point in Tejun's flood of patches :)  The patch
+> below is against current linux-2.6.git.
 
-Or is the recommended workaround to set ordered_flush to 0 to fix this..
-does that have any downsides?
+These "function(unsigned int *classes)" style functions in 
+"libata-core.c" worry me somewhat.  Esp. that sometimes you have one class,
+sometimes two.
+This looks like a bug waiting to happen for me.
 
--- Pasi
+Could we somehow get a 
+
+struct ata_classes {
+	unsigned int master;
+	unsigned int slave;
+}
+
+here (or similiar), before this is in used everywhere?
+
+Usage would be function(struct ata_classes *classes) then.
+
+
+Thanks & Regards
+
+Ingo Oeser
+
+
