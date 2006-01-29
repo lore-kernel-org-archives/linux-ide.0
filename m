@@ -1,54 +1,34 @@
-From: Prakash Punnoor <prakash@punnoor.de>
+From: Norbert Kiesel <nkiesel@tbdnetworks.com>
 Subject: Re: [PATCH] ahci: get JMicron JMB360 working
-Date: Sun, 29 Jan 2006 10:16:26 +0100
-Message-ID: <200601291016.30459.prakash@punnoor.de>
+Date: Sun, 29 Jan 2006 03:01:18 -0800
+Message-ID: <pan.2006.01.29.11.01.17.108084@tbdnetworks.com>
 References: <20060129050434.GA19047@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1243907.OphOC9yPZf";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.183]:10945 "EHLO
-	moutng.kundenserver.de") by vger.kernel.org with ESMTP
-	id S1750759AbWA2JLp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Jan 2006 04:11:45 -0500
-In-Reply-To: <20060129050434.GA19047@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750932AbWA2Law@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
---nextPart1243907.OphOC9yPZf
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Sun, 29 Jan 2006 00:04:34 -0500, Jeff Garzik wrote:
 
-Am Sonntag Januar 29 2006 06:04 schrieb Jeff Garzik:
-
+> 
+> I'll be sending this upstream sooner rather than later, since part of
+> this is a needed bugfix.  This is also a minor milestone:  the first
+> non-Intel AHCI implementation is working with the AHCI driver.  AHCI is
+> a nice SATA controller interface, and it's good to see other vendors
+> using it.  VIA is using it as well, and I hope to integrate a patch for
+> VIA AHCI SATA support soon.
+> 
 > This patch, against latest 2.6.16-rc-git, adds support for JMicron and
 > fixes some code that should be Intel-only, but was being executed for
 > all vendors.
 
-Thx, works nicely here with JMicron jMB360 on an Asrock board.
+Sounds very good, thanks! Does that mean the ASRock MB 
+http://www.asrock.com/product/product_939Dual-SATA2.htm will work? Docu
+says "1 x SATA2 connector (based on PCI E SATA2 controller JMB360)".
 
-Cheers,
-=2D-=20
-(=B0=3D                 =3D=B0)
-//\ Prakash Punnoor /\\
-V_/                 \_V
-
---nextPart1243907.OphOC9yPZf
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQBD3IfuxU2n/+9+t5gRAi2bAKCIjpK15ZvjpgsS9c/YH43zvE4XrwCeMRdb
-ZnLvUPom94ClXXV21Eu4fFQ=
-=3Kmj
------END PGP SIGNATURE-----
-
---nextPart1243907.OphOC9yPZf--
+Best,
+  Norbert
