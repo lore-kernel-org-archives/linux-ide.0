@@ -1,32 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 06/12] sata_sil: convert to new reset mechanism
-Date: Sat, 28 Jan 2006 21:41:27 -0500
-Message-ID: <43DC2B57.7080202@pobox.com>
-References: <1138089922913-git-send-email-htejun@gmail.com> <43DBB34B.1050302@pobox.com> <43DBFB70.4050002@gmail.com>
+From: Aaron Gyes <floam@sh.nu>
+Subject: ATAPI works on via_sata, but only sort of.
+Date: Sat, 28 Jan 2006 20:07:47 -0800
+Message-ID: <1138507667.9669.6.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:65230 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750810AbWA2Clh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jan 2006 21:41:37 -0500
-In-Reply-To: <43DBFB70.4050002@gmail.com>
+Received: from ns1.mcdownloads.com ([216.239.132.98]:59578 "EHLO
+	mail.3gstech.com") by vger.kernel.org with ESMTP id S1750799AbWA2EHw
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 28 Jan 2006 23:07:52 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.3gstech.com (Postfix) with ESMTP id AC96784DC7A
+	for <linux-ide@vger.kernel.org>; Sat, 28 Jan 2006 20:07:51 -0800 (PST)
+Received: from mail.3gstech.com ([216.239.132.98])
+ by localhost (fungus [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+ id 32585-03 for <linux-ide@vger.kernel.org>;
+ Sat, 28 Jan 2006 20:07:51 -0800 (PST)
+Received: from [192.168.1.103] (c-24-20-99-84.hsd1.wa.comcast.net [24.20.99.84])
+	by mail.3gstech.com (Postfix) with ESMTP id 478A784DC77
+	for <linux-ide@vger.kernel.org>; Sat, 28 Jan 2006 20:07:51 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, albertcc@tw.ibm.com
+To: linux-ide@vger.kernel.org
 
-Tejun wrote:
-> Thanks a lot for all your help and guidance.  It's been a great year.
-> 
-> Happy (lunar) new year, guys.  :-)
+Hi,
 
+I recently tried out 2.6.16-rc1-mm3 to see if my Plextor PX716-SA would
+magically come to life, it did. It had previously not worked in 2.6.15
+with the correct parameters being passed to libata. I can seem to read
+CDs okay, however every single attempt at burning a CD thus far has
+resulted in either a CD that doesn't work or a CD with CRC errors. Is
+this expected/known? Can I do anything to fix it or help diagnose the
+problem further?
 
-Definitely!  Once we get EH/reset stuff taken care of, hotplug, NCQ and 
-other fun will be a lot easier to implement.
+My motherboard is a Asus A8V, VIA K8T800Pro.
 
-Thanks,
-
-	Jeff
-
+Aaron Gyes
 
