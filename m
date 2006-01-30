@@ -1,54 +1,60 @@
-From: "FRANK OWEN" <frankowen001@msn.com>
-Subject: Reply:ASAP
-Date: Mon, 30 Jan 2006 17:24:43 +0000
-Message-ID: <BAY5-F1D4F10F1C2C3CE4CEA4D897090@phx.gbl>
-Reply-To: frankowen002@yahoo.com.hk
+From: Nicolas Mailhot <nicolas.mailhot@laposte.net>
+Subject: Re: regarding bug #5914 - fs corruption on SATA
+Date: Tue, 31 Jan 2006 00:33:46 +0100
+Message-ID: <1138664026.3065.0.camel@rousalka.dyndns.org>
+References: <5840.192.54.193.25.1138269692.squirrel@rousalka.dyndns.org>
+	 <1138309495.3968.3.camel@rousalka.dyndns.org>
+	 <20060127081319.GU4311@suse.de>
+	 <65391.192.54.193.25.1138351983.squirrel@rousalka.dyndns.org>
+	 <20060127091002.GX4311@suse.de> <20060127092046.GY4311@suse.de>
+	 <58cb370e0601270146n40a5b249v53a736a8021c82f4@mail.gmail.com>
+	 <20060127095039.GA4311@suse.de>
+	 <1138390636.3017.2.camel@rousalka.dyndns.org>
+	 <1138406042.2953.0.camel@rousalka.dyndns.org>
+	 <20060130150843.GS4209@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JG11FJqiMDuOIrrC2RLC"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omc1-s8.bay6.hotmail.com ([65.54.248.210]:1144 "EHLO
-	omc1-s8.bay6.hotmail.com") by vger.kernel.org with ESMTP
-	id S964822AbWA3RYq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Jan 2006 12:24:46 -0500
+Received: from mx.laposte.net ([81.255.54.11]:58349 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S1030224AbWA3XfY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2006 18:35:24 -0500
+In-Reply-To: <20060130150843.GS4209@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>
 
-Dear friend,
 
-I am Owen Frank, a management staff of standard chartered bank. This email 
-follows my discovery of an account that was last operated on 28th March,1996 
-with a balance of US$8.5 million . By provisions of operational banking 
-rules and guidelines, an account that is not operated for straight 10 years 
-ceases to exist as it will be forfeited to the federal treasury.
+--=-JG11FJqiMDuOIrrC2RLC
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Since the 10 years deadline is just few months away I decided to see the 
-account owner and draw his attention to this important banking provision.To 
-this end I called at the residential address he provided, where I met a 
-completely burnt down house.People I asked confirmed he lived in that house 
-and was burnt to death with his entire family on 30th March,1996 in a fire 
-that started with cooking gas explosion.
+Le lundi 30 janvier 2006 =C3=A0 16:08 +0100, Jens Axboe a =C3=A9crit :
+> On Sat, Jan 28 2006, Nicolas Mailhot wrote:
+> > I can confirm today's patch is not OK. The same baseline with
+> > yesterday's patch boot fine.
+>=20
+> Is this any better?
 
-Careful study of his banking records show that he did not fill in details of 
-next of kin in  portions provided. This money will therefore continue 
-floating until it is due to be forfeited to the federal treasury.This 
-situation however presents a rare opportunity for me to collaborate with 
-someone with the same country of the deceased and claim this money.
+This one seems to work fine.
 
-For this reason I decided to seek your assistance and support so that we can 
-share the money equally (50%/50%) when it is released and remitted into your 
-account. I have already worked out simple legal procedures which we shall 
-facilitate for us to achieve this safely and efficiently.
+Regards,
 
-To enable me start in earnest, do make the following information available 
-immediately to me :
+--=20
+Nicolas Mailhot
 
-(1.) Contact address.
-(2.) Private telephone and fax numbers.
+--=-JG11FJqiMDuOIrrC2RLC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Ceci est une partie de message
+	=?ISO-8859-1?Q?num=E9riquement?= =?ISO-8859-1?Q?_sign=E9e?=
 
-Fell free to furnish me with the requirements via email to enable me 
-commence the transfer process into your account forthwith.
-Anticipating your enthusiastic response.
-Kind regards,
-Mr Owen Frank
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
 
+iEYEABECAAYFAkPeoloACgkQI2bVKDsp8g0dZQCguG+j8AQIOkRCE0OOELC0m5eW
+6rcAoMij/mR9JA0N0wmEQjadMqU/DW65
+=M3pp
+-----END PGP SIGNATURE-----
+
+--=-JG11FJqiMDuOIrrC2RLC--
 
