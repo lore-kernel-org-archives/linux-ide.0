@@ -1,40 +1,63 @@
-From: Mattias Wadenstein <maswan@acc.umu.se>
-Subject: Re: [PATCH v2] sata_sil: combined irq + LBT DMA patch for testing
-Date: Mon, 30 Jan 2006 11:27:53 +0100 (MET)
-Message-ID: <Pine.GSO.4.62.0601301107410.14030@shaka.acc.umu.se>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata queue updated
+Date: Mon, 30 Jan 2006 10:01:27 -0500
+Message-ID: <43DE2A47.2030607@pobox.com>
+References: <20060128182522.GA31458@havoc.gtf.org> <200601291711.43426.ioe-lkml@rameria.de> <43DDBA71.6040402@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.acc.umu.se ([130.239.18.156]:62081 "EHLO mail.acc.umu.se")
-	by vger.kernel.org with ESMTP id S932202AbWA3K1z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2006 05:27:55 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by amavisd-new (Postfix) with ESMTP id C7F312E
-	for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2006 11:27:54 +0100 (MET)
-Received: from shaka.acc.umu.se (shaka.acc.umu.se [130.239.18.148])
-	by mail.acc.umu.se (Postfix) with ESMTP id 0F6B72B
-	for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2006 11:27:54 +0100 (MET)
-Received: from localhost (localhost [127.0.0.1])
-	by shaka.acc.umu.se (Postfix) with ESMTP id 9F6EDD3D1
-	for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2006 11:27:53 +0100 (MET)
+Received: from mail.dvmed.net ([216.237.124.58]:37085 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932301AbWA3PBn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2006 10:01:43 -0500
+In-Reply-To: <43DDBA71.6040402@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Ingo Oeser <ioe-lkml@rameria.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-I just tried this patch because I have instability problems with my setup 
-with two Sil3114 with 6 drives in total (running md raid5).
+Tejun Heo wrote:
+> Ingo Oeser wrote:
+> 
+>> Hi Jeff,
+>>
+>>
+>> On Saturday 28 January 2006 19:25, Jeff Garzik wrote:
+>>
+>>> Testing and merge point in Tejun's flood of patches :)  The patch
+>>> below is against current linux-2.6.git.
+>>
+>>
+>> These "function(unsigned int *classes)" style functions in 
+>> "libata-core.c" worry me somewhat.  Esp. that sometimes you have one 
+>> class,
+>> sometimes two.
+>> This looks like a bug waiting to happen for me.
+>>
+>> Could we somehow get a
+>> struct ata_classes {
+>>     unsigned int master;
+>>     unsigned int slave;
+>> }
+>>
+>> here (or similiar), before this is in used everywhere?
+>>
+>> Usage would be function(struct ata_classes *classes) then.
+>>
+> 
+> Hello,
+> 
+> I object.  Using array is intentional.  Slave aware controllers (PATA / 
+> ata_piix) will use [0..1], most SATA controllers will use only [0], and 
+> PM aware ones will use [0..15].  The intention was requiring low level 
+> drivers of only what they know and normalize them in the core layer.
 
-At first things looked fine, and reading from the md device went fine. But 
-as soon as I tried writing anything to it I got hard errors which then 
-dropped all disks and reported read errors from the md device. This was 
-reproducable over two reboots (after which I reverted to 2.6.15).
+Yep, that's fine.
 
-What kind of debugging information do you need to figure out what goes 
-wrong?
+We don't need to be writing code for the case where somebody doesn't 
+know the C language.
 
-The setup kind of works on 2.6.15, except that on lots of IO to those 
-disks the system locks up hard efter half an hour to a day. This seems 
-related to sata_sil, since I can stress the other disks in the system for 
-days without any stability problems.
+	Jeff
 
-/Mattias Wadenstein (not subscribed to list, please Cc:)
+
+
