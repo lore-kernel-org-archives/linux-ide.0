@@ -1,60 +1,32 @@
-From: Prakash Punnoor <prakash@punnoor.de>
-Subject: Re: [PATCH] ahci: get JMicron JMB360 working
-Date: Sun, 29 Jan 2006 23:27:58 +0100
-Message-ID: <200601292327.58267.prakash@punnoor.de>
-References: <20060129050434.GA19047@havoc.gtf.org> <200601291016.30459.prakash@punnoor.de> <43DD0850.8090705@vip.cybercity.dk>
+From: Aaron Gyes <floam@sh.nu>
+Subject: Re: ATAPI works on via_sata, but only sort of.
+Date: Sun, 29 Jan 2006 21:39:05 -0800
+Message-ID: <1138599545.10953.0.camel@localhost.localdomain>
+References: <1138507667.9669.6.camel@localhost.localdomain>
+	 <43DCFEAF.2010900@vip.cybercity.dk>  <43DD070C.7010205@vip.cybercity.dk>
+	 <1138563714.7059.2.camel@localhost.localdomain>
+	 <43DD31B4.9000806@vip.cybercity.dk>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1166515.DCrsk5b16Z";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:46063 "EHLO
-	moutng.kundenserver.de") by vger.kernel.org with ESMTP
-	id S1751187AbWA2WTi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Jan 2006 17:19:38 -0500
-In-Reply-To: <43DD0850.8090705@vip.cybercity.dk>
+Received: from ns1.mcdownloads.com ([216.239.132.98]:23263 "EHLO
+	mail.3gstech.com") by vger.kernel.org with ESMTP id S1751247AbWA3FjG
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Jan 2006 00:39:06 -0500
+In-Reply-To: <43DD31B4.9000806@vip.cybercity.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: mogensv@vip.cybercity.dk
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
---nextPart1166515.DCrsk5b16Z
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Sun, 2006-01-29 at 22:20 +0100, Mogens Valentin wrote:
+> > Yeah, hard drives are no issue. I've been using this WD Raptor for quite
+> > some time, never an issue.
+> 
+> That's not a SATA-2 disk, right?
 
-Am Sonntag Januar 29 2006 19:24 schrieb Mogens Valentin:
-[...]
->
-> 939Dual-SATA2 is interesting as an upgrade board due to performance,
-> price, working PCIe/AGP and provisions for socket M2 via an adapter.
-> Whether this will actually work is of cause to be seen...
+Sorry, it's not.
 
-Well, it at least seems to work nicely with an Athlon X2 and 4GB of RAM. :-)
+Aaron Gyes
 
-> Now having libata SATA support gets it back into my thoughts.
->
-> @Prakash: Did you test with a SATA-2 disk?
-
-Nope, just plain SATA (I).
-
-=2D-=20
-(=B0=3D                 =3D=B0)
-//\ Prakash Punnoor /\\
-V_/                 \_V
-
---nextPart1166515.DCrsk5b16Z
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQBD3UFuxU2n/+9+t5gRAoMFAKCP2dXirbxuCmxGAwM8cL1ZB3WkwQCg2iTj
-VksF9Xglci7td8t+E9UHEkc=
-=iEmu
------END PGP SIGNATURE-----
-
---nextPart1166515.DCrsk5b16Z--
