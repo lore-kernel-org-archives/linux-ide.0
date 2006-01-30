@@ -1,51 +1,96 @@
-From: Tejun <htejun@gmail.com>
-Subject: Re: I/O errors while dding between 2 SATA drives
-Date: Tue, 31 Jan 2006 00:04:52 +0900
-Message-ID: <43DE2B14.7090309@gmail.com>
-References: <aa4c40ff0601261021m1fe746feq172f0a34b6afd9ad@mail.gmail.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: regarding bug #5914 - fs corruption on SATA
+Date: Mon, 30 Jan 2006 16:08:43 +0100
+Message-ID: <20060130150843.GS4209@suse.de>
+References: <5840.192.54.193.25.1138269692.squirrel@rousalka.dyndns.org> <1138309495.3968.3.camel@rousalka.dyndns.org> <20060127081319.GU4311@suse.de> <65391.192.54.193.25.1138351983.squirrel@rousalka.dyndns.org> <20060127091002.GX4311@suse.de> <20060127092046.GY4311@suse.de> <58cb370e0601270146n40a5b249v53a736a8021c82f4@mail.gmail.com> <20060127095039.GA4311@suse.de> <1138390636.3017.2.camel@rousalka.dyndns.org> <1138406042.2953.0.camel@rousalka.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.199]:8230 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932302AbWA3PFC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2006 10:05:02 -0500
-Received: by zproxy.gmail.com with SMTP id 13so1151567nzn
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2006 07:05:01 -0800 (PST)
-In-Reply-To: <aa4c40ff0601261021m1fe746feq172f0a34b6afd9ad@mail.gmail.com>
+Received: from ns.virtualhost.dk ([195.184.98.160]:41328 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S932304AbWA3PKU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Jan 2006 10:10:20 -0500
+Content-Disposition: inline
+In-Reply-To: <1138406042.2953.0.camel@rousalka.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Lamanna <jlamanna@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Nicolas Mailhot <nicolas.mailhot@laposte.net>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>
 
-James Lamanna wrote:
-> I received the following errors while executing a
-> dd if=/dev/sdb of=/dev/sda bs=1M
-> between 2 500GB SATA Seagate Barracuda drives on 2.6.12 (Gentoo 2005.1
-> "Live" CD)
-> 
-> ata1: command 0x35 timeout stat 0xd1 host_stat 0x21
-> ata1: status=0xd1 { Busy }
-> end request: I/O Error dev sda, sector 51188392
-> Buffer I/O Error on device sda, logical block 6398549
-> lost page write due to I/O Error on sda
-> ATA: abnormal status 0xD1 on port 0x9F7
-> ATA: abnormal status 0xD1 on port 0x9F7
-> ATA: abnormal status 0xD1 on port 0x9F7
-> 
-> The message repeats every so often with the sector count increasing by
-> 8 and logical block count increasing by 1.
-> 
-> Is it bad hardware? (sda is brand new)
-> And is the copy hosed?
-> 
+On Sat, Jan 28 2006, Nicolas Mailhot wrote:
+> Le vendredi 27 janvier 2006 =E0 20:37 +0100, Nicolas Mailhot a =E9cri=
+t :
+> > Le vendredi 27 janvier 2006 =E0 10:50 +0100, Jens Axboe a =E9crit :
+> >=20
+> > > Of course, silly typo! Thanks for catching that. Update patch bel=
+ow.
+> > =20
+> > ...
+> >=20
+> > a patched kernel reboots before finishing to initialize (Just befor=
+e it
+> > prints a line starting with SCSI - the rest is too fast for me to c=
+atch)
+> >=20
+> > Now the kernel base is slightly different from yesterday, so the bu=
+g may
+> > be in the base not the patch. I'll rebuild a new kernel with the sa=
+me
+> > base and yesterday's patch to check this now
+>=20
+> I can confirm today's patch is not OK. The same baseline with
+> yesterday's patch boot fine.
 
-[CC'ing linux-ide]
+Is this any better?
 
-Hi, James.
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index cfbceb5..07b1e7c 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -1700,6 +1700,31 @@ static unsigned int ata_msense_rw_recove
+ 	return sizeof(def_rw_recovery_mpage);
+ }
+=20
++/*
++ * We can turn this into a real blacklist if it's needed, for now just
++ * blacklist any Maxtor BANC1G10 revision firmware
++ */
++static int ata_dev_supports_fua(u16 *id)
++{
++	unsigned char model[41], fw[9];
++
++	if (!ata_id_has_fua(id))
++		return 0;
++
++	model[40] =3D '\0';
++	fw[8] =3D '\0';
++
++	ata_dev_id_string(id, model, ATA_ID_PROD_OFS, sizeof(model) - 1);
++	ata_dev_id_string(id, fw, ATA_ID_FW_REV_OFS, sizeof(fw) - 1);
++
++	if (strncmp(model, "Maxtor", 6))
++		return 1;
++	if (strncmp(fw, "BANC1G10", 8))
++		return 1;
++
++	return 0; /* blacklisted */
++}
++
+ /**
+  *	ata_scsiop_mode_sense - Simulate MODE SENSE 6, 10 commands
+  *	@args: device IDENTIFY data / SCSI command of interest.
+@@ -1797,7 +1822,7 @@ unsigned int ata_scsiop_mode_sense(struc
+ 		return 0;
+=20
+ 	dpofua =3D 0;
+-	if (ata_id_has_fua(args->id) && dev->flags & ATA_DFLAG_LBA48 &&
++	if (ata_dev_supports_fua(args->id) && dev->flags & ATA_DFLAG_LBA48 &&
+ 	    (!(dev->flags & ATA_DFLAG_PIO) || dev->multi_count))
+ 		dpofua =3D 1 << 4;
+=20
 
-Please post full dmesg and yeah the copy is probably hosed.  dd's exit 
-code will tell you.  Do 'echo $$'.
 
--- 
-tejun
+--=20
+Jens Axboe
+
