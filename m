@@ -1,47 +1,57 @@
-From: Nicolas Mailhot <nicolas.mailhot@laposte.net>
-Subject: Re: regarding bug #5914 - fs corruption on SATA
-Date: Tue, 31 Jan 2006 23:54:09 +0100
-Message-ID: <43DFEA91.9090405@laposte.net>
-References: <20060127091002.GX4311@suse.de> <20060127092046.GY4311@suse.de> <58cb370e0601270146n40a5b249v53a736a8021c82f4@mail.gmail.com> <20060127095039.GA4311@suse.de> <1138390636.3017.2.camel@rousalka.dyndns.org> <1138406042.2953.0.camel@rousalka.dyndns.org> <20060130150843.GS4209@suse.de> <1138664026.3065.0.camel@rousalka.dyndns.org> <20060131072618.GH4215@suse.de> <5558.192.54.193.25.1138696781.squirrel@rousalka.dyndns.org> <20060131084736.GP4215@suse.de>
+From: Richard Purdie <rpurdie@rpsys.net>
+Subject: Re: [PATCH 10/11] LED: Add IDE disk activity LED trigger
+Date: Tue, 31 Jan 2006 23:39:17 +0000
+Message-ID: <1138750757.6869.324.camel@localhost.localdomain>
+References: <1138714918.6869.139.camel@localhost.localdomain>
+	 <58cb370e0601310646y263acb96h62c422435e7016e@mail.gmail.com>
+	 <1138724479.6869.201.camel@localhost.localdomain>
+	 <58cb370e0601310944l421174f8j1802d94f1ae93a01@mail.gmail.com>
+	 <1138745323.4934.17.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx.laposte.net ([81.255.54.11]:56341 "EHLO mx.laposte.net")
-	by vger.kernel.org with ESMTP id S1750915AbWAaXAf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2006 18:00:35 -0500
-In-Reply-To: <20060131084736.GP4215@suse.de>
+Received: from tim.rpsys.net ([194.106.48.114]:43439 "EHLO tim.rpsys.net")
+	by vger.kernel.org with ESMTP id S932151AbWAaXjk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2006 18:39:40 -0500
+In-Reply-To: <1138745323.4934.17.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
-Jens Axboe a =C3=A9crit :
+On Wed, 2006-02-01 at 09:08 +1100, Benjamin Herrenschmidt wrote:
+> > Isn't ->end_request hook in ide_driver_t enough?
+> > 
+> > I see no reason why the custom ->end_request function cannot
+> > be added to ide-disk.  All needed infrastructure is there.
+> 
+> I'm not sure ide-disk is the right spot ... what if one wants LEDs for
+> CD-ROMs or other IDE devices like flash cards ?
 
-> Sounds like it works, if you saw the errors so quickly.
+Flash cards mainly go through ide-cs which uses ide-disk.
 
-Well you know while I was testing broken kernels the problem was more t=
-o=20
-keep the finger on reset on boot and act before too much damage was don=
-e=20
-rather than waiting for hard-to-spot symptoms. Seems root on md1+lvm is=
-=20
-very good to flush fua problems.
+There are several options:
 
-> Just trying to
-> be absolutely sure, if you could check for the "w/ FUA" prints not be=
-ing
-> there now it would confirm that the blacklist does its job.
+1. Have the trigger on ide-disk activity (confined to ide-disk.c).
 
-The patched kernel ran for a day without hiccups. I've attached its=20
-demesg to the redhat bug - you can check if it's ok for you (yes I've=20
-rebooted since and no it was not a ata problem - just you=20
-run-of-the-mill rawhide xorg freeze)
+2. Have the trigger on ide-io activity (confined to ide-io.c).
 
-https://bugzilla.redhat.com/bugzilla/attachment.cgi?id=3D123941
+3. Do something else.
 
-Regards,
+4. Don't add disk activity (or any?) triggers in mainline.
 
---=20
-Nicolas Mailhot
+Thanks to a generic API, adding triggers anywhere is fairly trivial but
+probably not without controversy so they need to be carefully placed, if
+at all.
+
+We could always wait and see which of the above there is demand for. I
+suspect options 1 or 2 would cover most people's needs. We're never
+going to satisfy everyone (but anyone is free to apply simple patches to
+get their desired trigger).
+
+I'd rather go with option 4 than block all the led class/driver code
+over any controversial triggers.
+
+Richard
+
