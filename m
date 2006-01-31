@@ -1,57 +1,83 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH 10/11] LED: Add IDE disk activity LED trigger
-Date: Tue, 31 Jan 2006 21:29:45 +0100
-Message-ID: <20060131202944.GE4215@suse.de>
-References: <1138714918.6869.139.camel@localhost.localdomain> <58cb370e0601310646y263acb96h62c422435e7016e@mail.gmail.com> <1138724479.6869.201.camel@localhost.localdomain> <58cb370e0601310944l421174f8j1802d94f1ae93a01@mail.gmail.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/scsi/libata-scsi.c: make some functions static
+Date: Tue, 31 Jan 2006 22:33:01 +0100
+Message-ID: <20060131213301.GF3986@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:63077 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1751458AbWAaU1a (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2006 15:27:30 -0500
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:20239 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1751514AbWAaVdE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 31 Jan 2006 16:33:04 -0500
 Content-Disposition: inline
-In-Reply-To: <58cb370e0601310944l421174f8j1802d94f1ae93a01@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Richard Purdie <rpurdie@rpsys.net>, LKML <linux-kernel@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linux-ide <linux-ide@vger.kernel.org>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jan 31 2006, Bartlomiej Zolnierkiewicz wrote:
-> Hi,
-> 
-> On 1/31/06, Richard Purdie <rpurdie@rpsys.net> wrote:
-> > Hi,
-> >
-> > On Tue, 2006-01-31 at 15:46 +0100, Bartlomiej Zolnierkiewicz wrote:
-> > >
-> > > Why cannot existing block layer hook be used for this?
-> >
-> > The trigger is supposed to be reflecting actual hardware activity, not
-> > block layer activity.
-> 
-> Ben, code in pmac.c (+ block layer) seems to be doing something
-> different then Kconfig help entry states ("Blink laptop LED on drive
-> activity")?
+This patch makes some needlesly global functions static.
 
-I doubt it really matters a lot, since either the activity will be done
-right after (the LED will likely still be on), or the drive is already
-busy doing stuff (in which case the LED is on anyways). So while the
-trigger point might not be at the instant we start drive activity, it's
-really close.
 
-You could move the block layer trigger from add_request() to
-elevator.c:elv_next_request() instead, right where it sets REQ_STARTED
-to improve the start trigger point. Since that can happen at irq time
-(whereas the add_request() cannot), it's likely more expensive.
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-The goal of the activity led for powerbook was not really to be 100%
-accurate, but be able to tell whether the drive was doing io or not.
-It's nice feedback to have for the user.
+---
 
-That said, the LED stuff should be able to handle pmac as well, so why
-not add it generically instead of clamping it into the ide layer in odd
-places?
+ drivers/scsi/libata-scsi.c |   19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
 
--- 
-Jens Axboe
+--- linux-2.6.15-rc1-mm2-full/drivers/scsi/libata-scsi.c.old	2005-11-20 03:06:38.000000000 +0100
++++ linux-2.6.15-rc1-mm2-full/drivers/scsi/libata-scsi.c	2005-11-20 03:08:34.000000000 +0100
+@@ -325,10 +325,10 @@
+  *	RETURNS:
+  *	Command allocated, or %NULL if none available.
+  */
+-struct ata_queued_cmd *ata_scsi_qc_new(struct ata_port *ap,
+-				       struct ata_device *dev,
+-				       struct scsi_cmnd *cmd,
+-				       void (*done)(struct scsi_cmnd *))
++static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_port *ap,
++					      struct ata_device *dev,
++					      struct scsi_cmnd *cmd,
++					      void (*done)(struct scsi_cmnd *))
+ {
+ 	struct ata_queued_cmd *qc;
+ 
+@@ -364,7 +364,7 @@
+  *	LOCKING:
+  *	inherited from caller
+  */
+-void ata_dump_status(unsigned id, struct ata_taskfile *tf)
++static void ata_dump_status(unsigned id, struct ata_taskfile *tf)
+ {
+ 	u8 stat = tf->command, err = tf->feature;
+ 
+@@ -413,8 +413,8 @@
+  *	LOCKING:
+  *	spin_lock_irqsave(host_set lock)
+  */
+-void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk, u8 *asc, 
+-			u8 *ascq)
++static void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err,
++			       u8 *sk, u8 *asc, u8 *ascq)
+ {
+ 	int i;
+ 
+@@ -524,7 +524,7 @@
+  *	LOCKING:
+  *	spin_lock_irqsave(host_set lock)
+  */
+-void ata_gen_ata_desc_sense(struct ata_queued_cmd *qc)
++static void ata_gen_ata_desc_sense(struct ata_queued_cmd *qc)
+ {
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+ 	struct ata_taskfile *tf = &qc->tf;
+@@ -600,7 +600,7 @@
+  *	LOCKING:
+  *	inherited from caller
+  */
+-void ata_gen_fixed_sense(struct ata_queued_cmd *qc)
++static void ata_gen_fixed_sense(struct ata_queued_cmd *qc)
+ {
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+ 	struct ata_taskfile *tf = &qc->tf;
 
