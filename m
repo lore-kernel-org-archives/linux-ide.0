@@ -1,25 +1,44 @@
-From: IntertravelInc <stevef@kellychen.com>
-Subject: ***NEW JOB FOR HARD WORKING PERSON 1000 - 2000 EUR PER WEEK
-Date: Tue, 31 Jan 2006 05:06:04 -0800
-Message-ID: <6605830829.20060131050604@kellychen.com>
+From: Tejun <htejun@gmail.com>
+Subject: Re: PATA vs. SATA
+Date: Tue, 31 Jan 2006 11:47:26 +0900
+Message-ID: <43DECFBE.30300@gmail.com>
+References: <Pine.LNX.4.58.0601301639270.6538@shark.he.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:22955 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S965055AbWAaBHP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2006 20:07:15 -0500
-Received: from -1236982048 (52.Red-81-39-131.dynamicIP.rima-tde.net [81.39.131.52])
-	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id k0V16tv8003063
-	for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2006 17:07:09 -0800
-Received: from kellychen.com (-1237026152 [-1236959424])
-	by 52.Red-81-39-131.dynamicIP.rima-tde.net (Qmailv1) with ESMTP id A2C362DFD4
-	for <linux-ide@vger.kernel.org>; Tue, 31 Jan 2006 05:06:04 -0800
+Received: from xproxy.gmail.com ([66.249.82.204]:28300 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932276AbWAaCrj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2006 21:47:39 -0500
+Received: by xproxy.gmail.com with SMTP id s14so798992wxc
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2006 18:47:38 -0800 (PST)
+In-Reply-To: <Pine.LNX.4.58.0601301639270.6538@shark.he.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux <linux-ide@vger.kernel.org>
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: linux-ide@vger.kernel.org
 
-Dear Sirs! New offer from the International tour company Intertravel Inc.( 78 York Street, London, W1H 1DP)! We offer you cooperation in new sphere of services. Our company develops fast, and we need new employees in sphere of services .Special interest for your country. If you want to work without wasting  time and forces, we are ready to offer work of managers in sphere of processing the orders.
-Basic requirements: age of 21-55 years, computer knowledge, access to Internet.The salary 1000-2000 EUR per week.Special interest to your country!
-Please, send  your CV and profiles acording this address: IntertravelInc@aol.com
+Randy.Dunlap wrote:
+> It's confusing enough using libata for PATA/IDE instead of
+> drivers/ide/* and using a PIIX driver for SATA.  :)
+> 
+> Yes, it Works For Me.  However, I see this one little thing
+> that still seems odd to me.
+> 
+> 
+> Intel SATA controller in IDE mode:  libata-core says:
+> 
+> ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0x18B0 irq 14
+> ata2: SATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0x18B8 irq 15
+>       ~~~~
+>  This ^^^^ is the confusing part to me.
 
+I'm not sure whether I understood your problem correctly but if your 
+ata_piix is reporting SATA for a PATA port and the controller is ICH6 or 
+7, there's a patch which recently made into the devel tree which fixes 
+MAP register value interpretation on ICH6/7's (which BTW was slightly 
+broken and fixed again by Jeff's patch).  Can you try the latest 
+upstream branch?
+
+-- 
+tejun
