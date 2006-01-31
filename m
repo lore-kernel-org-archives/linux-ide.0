@@ -1,102 +1,57 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: [PATCH 10/11] LED: Add IDE disk activity LED trigger
-Date: Tue, 31 Jan 2006 18:44:41 +0100
-Message-ID: <58cb370e0601310944l421174f8j1802d94f1ae93a01@mail.gmail.com>
-References: <1138714918.6869.139.camel@localhost.localdomain>
-	 <58cb370e0601310646y263acb96h62c422435e7016e@mail.gmail.com>
-	 <1138724479.6869.201.camel@localhost.localdomain>
+Date: Tue, 31 Jan 2006 21:29:45 +0100
+Message-ID: <20060131202944.GE4215@suse.de>
+References: <1138714918.6869.139.camel@localhost.localdomain> <58cb370e0601310646y263acb96h62c422435e7016e@mail.gmail.com> <1138724479.6869.201.camel@localhost.localdomain> <58cb370e0601310944l421174f8j1802d94f1ae93a01@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.192]:3617 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751303AbWAaRoo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Jan 2006 12:44:44 -0500
-Received: by uproxy.gmail.com with SMTP id q2so345226uge
-        for <linux-ide@vger.kernel.org>; Tue, 31 Jan 2006 09:44:41 -0800 (PST)
-In-Reply-To: <1138724479.6869.201.camel@localhost.localdomain>
+Received: from ns.virtualhost.dk ([195.184.98.160]:63077 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1751458AbWAaU1a (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2006 15:27:30 -0500
 Content-Disposition: inline
+In-Reply-To: <58cb370e0601310944l421174f8j1802d94f1ae93a01@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Purdie <rpurdie@rpsys.net>
-Cc: LKML <linux-kernel@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linux-ide <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Richard Purdie <rpurdie@rpsys.net>, LKML <linux-kernel@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linux-ide <linux-ide@vger.kernel.org>
 
-Hi,
-
-On 1/31/06, Richard Purdie <rpurdie@rpsys.net> wrote:
+On Tue, Jan 31 2006, Bartlomiej Zolnierkiewicz wrote:
 > Hi,
->
-> On Tue, 2006-01-31 at 15:46 +0100, Bartlomiej Zolnierkiewicz wrote:
+> 
+> On 1/31/06, Richard Purdie <rpurdie@rpsys.net> wrote:
+> > Hi,
 > >
-> > Why cannot existing block layer hook be used for this?
->
-> The trigger is supposed to be reflecting actual hardware activity, not
-> block layer activity.
+> > On Tue, 2006-01-31 at 15:46 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > >
+> > > Why cannot existing block layer hook be used for this?
+> >
+> > The trigger is supposed to be reflecting actual hardware activity, not
+> > block layer activity.
+> 
+> Ben, code in pmac.c (+ block layer) seems to be doing something
+> different then Kconfig help entry states ("Blink laptop LED on drive
+> activity")?
 
-Ben, code in pmac.c (+ block layer) seems to be doing something
-different then Kconfig help entry states ("Blink laptop LED on drive
-activity")?
+I doubt it really matters a lot, since either the activity will be done
+right after (the LED will likely still be on), or the drive is already
+busy doing stuff (in which case the LED is on anyways). So while the
+trigger point might not be at the instant we start drive activity, it's
+really close.
 
-> I'll experiment with the feasibility of the block later as I've always
-> been uneasy about the hooks into the lower level layers. There are a
-> number of issues to consider though.
+You could move the block layer trigger from add_request() to
+elevator.c:elv_next_request() instead, right where it sets REQ_STARTED
+to improve the start trigger point. Since that can happen at irq time
+(whereas the add_request() cannot), it's likely more expensive.
 
-At worst it should be handled at host driver level not device driver
-(like pmac.c and hwif->act_led).
+The goal of the activity led for powerbook was not really to be 100%
+accurate, but be able to tell whether the drive was doing io or not.
+It's nice feedback to have for the user.
 
-> 1. The block layer isn't always aware of device activity (eg. flash
-> block erasing in mtd devices) (is this the case for IDE?).
+That said, the LED stuff should be able to handle pmac as well, so why
+not add it generically instead of clamping it into the ide layer in odd
+places?
 
-Same is true for ide-disk changes - they are aware only of filesystem
-activity (no flush cache, special commands, I/O taskfiles etc.).
+-- 
+Jens Axboe
 
-> 2. Default trigger naming becomes problematic for led devices. Currently
-> an MMC card reader's LED could set its trigger to say "mmc-disk" and end
-> up with some kind of sensible activity light. (ignoring the more than
-> one card reader case where all the lights would be synced :).
->
-> A potential solution would be to add individual gendisk triggers by
-> hooking add_disk/del_disk. The MMC read would presumably know its
-> major/minor number before registering its LED.
->
-> I'm not sure how to intercept disk activity for a given gendisk offhand.
-> There is also a question of where the led_trigger pointers end up.
-> struct gendisk may or may not be acceptable.
-
-gendisk presents device at filesystem layer and it is
-probably not the appropriate place to add LED handling
-
-> 3. Matching something like all IDE disks becomes hard (and is actually
-> more desirable than individual devices at times - see below).
->
-> At first glance a potential solution would be to hook
-> register_blkdev/unregister_blkdev and create yet more triggers but where
-> do you hook the activity? There is no data structure the led trigger
-> pointer can be part of either.
->
-> These solutions are going to end up with a lot of unused led triggers on
-> any given system.
->
-> > Why are you adding LED_FULL event handling to a specific
-> > device driver (ide-disk) but LED_OFF event handling to a generic
-> > IDE end request function?
->
-> The trigger started out as just being ide-disk.c based but there is no
-> place where the IDE end request function could be hooked within it due
-> to its use of generic functions. The trigger therefore had to move into
-> more generic code. If there was a point in ide-disk where an IDE end
-> request could be hooked it, it could be confined to that file.
-
-Isn't ->end_request hook in ide_driver_t enough?
-
-I see no reason why the custom ->end_request function cannot
-be added to ide-disk.  All needed infrastructure is there.
-
-> Alternatively it could be made to apply to all ide activity if a
-> suitable start request point was found to hook into.
-
-start_request() in ide-io.c
-
-Thanks,
-Bartlomiej
