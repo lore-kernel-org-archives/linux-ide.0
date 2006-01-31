@@ -1,44 +1,54 @@
-From: Tejun <htejun@gmail.com>
-Subject: Re: PATA vs. SATA
-Date: Tue, 31 Jan 2006 11:47:26 +0900
-Message-ID: <43DECFBE.30300@gmail.com>
-References: <Pine.LNX.4.58.0601301639270.6538@shark.he.net>
+From: Kurt Wall <kwall@kurtwerks.com>
+Subject: Fix make mandocs for libata-core.c
+Date: Mon, 30 Jan 2006 22:20:29 -0500
+Message-ID: <20060131032029.GO1501@kurtwerks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.204]:28300 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932276AbWAaCrj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2006 21:47:39 -0500
-Received: by xproxy.gmail.com with SMTP id s14so798992wxc
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2006 18:47:38 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.58.0601301639270.6538@shark.he.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030284AbWAaDOX@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: linux-ide@vger.kernel.org
 
-Randy.Dunlap wrote:
-> It's confusing enough using libata for PATA/IDE instead of
-> drivers/ide/* and using a PIIX driver for SATA.  :)
-> 
-> Yes, it Works For Me.  However, I see this one little thing
-> that still seems odd to me.
-> 
-> 
-> Intel SATA controller in IDE mode:  libata-core says:
-> 
-> ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0x18B0 irq 14
-> ata2: SATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0x18B8 irq 15
->       ~~~~
->  This ^^^^ is the confusing part to me.
+"make mandocs" complains when on libata-core.c because several
+functions have undescribed parameters. This patch adds silences those
+warnings by adding descriptions for the undescribed parameters.
 
-I'm not sure whether I understood your problem correctly but if your 
-ata_piix is reporting SATA for a PATA port and the controller is ICH6 or 
-7, there's a patch which recently made into the devel tree which fixes 
-MAP register value interpretation on ICH6/7's (which BTW was slightly 
-broken and fixed again by Jeff's patch).  Can you try the latest 
-upstream branch?
+Signed-off-by: Kurt Wall <kwall@kurtwerks.com>
 
+
+--- ./linux-2.6.16-rc1/drivers/scsi/libata-core.c.orig	2006-01-21 09:30:59.000000000 -0500
++++ ./linux-2.6.16-rc1/drivers/scsi/libata-core.c	2006-01-30 22:18:32.000000000 -0500
+@@ -4163,6 +4163,8 @@
+ /**
+  *	ata_port_start - Set port up for dma.
+  *	@ap: Port to initialize
++ *  @dev: Device whose port will be prepared for DMA
++ *  @cmd: Command to issue
+  *
+  *	Called just after data structures for each port are
+  *	initialized.  Allocates space for PRD table.
+@@ -4224,6 +4226,8 @@
+ 
+ /**
+  *	ata_device_resume - wakeup a previously suspended devices
++ *  @ap: port to which command is being issued
++ *  @dev: device to wake up from suspended state
+  *
+  *	Kick the drive back into action, by sending it an idle immediate
+  *	command and making sure its transfer mode matches between drive
+@@ -4246,6 +4250,8 @@
+ 
+ /**
+  *	ata_device_suspend - prepare a device for suspend
++ *  @ap: port to wich command is being issued
++ *  @dev: device to prepare for suspend
+  *
+  *	Flush the cache on the drive, if appropriate, then issue a
+  *	standbynow command.
 -- 
-tejun
+Critic, n.:
+	A person who boasts himself hard to please because nobody tries
+to please him.
+		-- Ambrose Bierce, "The Devil's Dictionary"
