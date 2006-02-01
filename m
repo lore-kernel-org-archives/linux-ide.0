@@ -1,124 +1,113 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [git patch] 2.6.x libata fix
-Date: Mon, 9 Jan 2006 12:11:04 -0500
-Message-ID: <20060109171104.GA25793@havoc.gtf.org>
+From: Erik Slagter <erik@slagter.name>
+Subject: Re: [PATCH] amd76x_pm: C3 powersaving for AMD K7
+Date: Wed, 01 Feb 2006 11:25:16 +0100
+Message-ID: <1138789516.4449.14.camel@localhost.localdomain>
+References: <20060131185516.GA21769@sommrey.de>
+	 <20060131193446.7904ac6f.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030190AbWAIRLH@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-QDvErafG8h0ffd0QHAcf"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from erik-slagter.demon.nl ([83.161.107.130]:7624 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S932397AbWBAKZU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Feb 2006 05:25:20 -0500
+In-Reply-To: <20060131193446.7904ac6f.akpm@osdl.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Joerg Sommrey <jo@sommrey.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, arjan@infradead.org, Tony Lindgren <tony@atomide.com>
 
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+--=-QDvErafG8h0ffd0QHAcf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-to receive the following updates:
+On Tue, 2006-01-31 at 19:34 -0800, Andrew Morton wrote:
+> > This is a processor idle module for AMD SMP 760MP(X) based systems.
+> >  The patch was originally written by Tony Lindgren and has been around
+> >  since 2002.  It enables C2 mode on AMD SMP systems and thus saves
+> >  about 70 - 90 W of energy in the idle mode compared to the default idl=
+e
+> >  mode.  The idle function has been rewritten and is now free of locking
+> >  issues and is independent from the number of CPUs.  The impact
+> >  from this module on the system clock and on i/o transfer are now fairl=
+y
+> >  low.
 
- drivers/scsi/sata_nv.c |   30 ++++++++++++++++++++++++------
- 1 files changed, 24 insertions(+), 6 deletions(-)
+Very nice, but I do have problems with it (last tested version about a
+month ago).
 
-Andrew Chew:
-      sata_nv, spurious interrupts at system startup with MAXTOR 6H500F0 drive
+I have a Tyan S2466 (760/8MPX) motherboard with a Promise PDC20575
+(SATAII150 TX2plus), with two disks configured as raid-1. As soon as C2
+starts to kick in (or C3 that doesn't matter) my syslog/dmesg starts to
+fill up with error messages from the attached disks and one of the two
+(at random) disks is kicked out of the raid. It looks like the other
+disk keeps functioning although it keeps spewing lots of error messages.
 
-diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
-index c0cf52c..bbbb55e 100644
---- a/drivers/scsi/sata_nv.c
-+++ b/drivers/scsi/sata_nv.c
-@@ -29,6 +29,12 @@
-  *  NV-specific details such as register offsets, SATA phy location,
-  *  hotplug info, etc.
-  *
-+ *  0.10
-+ *     - Fixed spurious interrupts issue seen with the Maxtor 6H500F0 500GB
-+ *       drive.  Also made the check_hotplug() callbacks return whether there
-+ *       was a hotplug interrupt or not.  This was not the source of the
-+ *       spurious interrupts, but is the right thing to do anyway.
-+ *
-  *  0.09
-  *     - Fixed bug introduced by 0.08's MCP51 and MCP55 support.
-  *
-@@ -124,10 +130,10 @@ static void nv_scr_write (struct ata_por
- static void nv_host_stop (struct ata_host_set *host_set);
- static void nv_enable_hotplug(struct ata_probe_ent *probe_ent);
- static void nv_disable_hotplug(struct ata_host_set *host_set);
--static void nv_check_hotplug(struct ata_host_set *host_set);
-+static int nv_check_hotplug(struct ata_host_set *host_set);
- static void nv_enable_hotplug_ck804(struct ata_probe_ent *probe_ent);
- static void nv_disable_hotplug_ck804(struct ata_host_set *host_set);
--static void nv_check_hotplug_ck804(struct ata_host_set *host_set);
-+static int nv_check_hotplug_ck804(struct ata_host_set *host_set);
- 
- enum nv_host_type
- {
-@@ -176,7 +182,7 @@ struct nv_host_desc
- 	enum nv_host_type	host_type;
- 	void			(*enable_hotplug)(struct ata_probe_ent *probe_ent);
- 	void			(*disable_hotplug)(struct ata_host_set *host_set);
--	void			(*check_hotplug)(struct ata_host_set *host_set);
-+	int			(*check_hotplug)(struct ata_host_set *host_set);
- 
- };
- static struct nv_host_desc nv_device_tbl[] = {
-@@ -309,12 +315,16 @@ static irqreturn_t nv_interrupt (int irq
- 			qc = ata_qc_from_tag(ap, ap->active_tag);
- 			if (qc && (!(qc->tf.ctl & ATA_NIEN)))
- 				handled += ata_host_intr(ap, qc);
-+			else
-+				// No request pending?  Clear interrupt status
-+				// anyway, in case there's one pending.
-+				ap->ops->check_status(ap);
- 		}
- 
- 	}
- 
- 	if (host->host_desc->check_hotplug)
--		host->host_desc->check_hotplug(host_set);
-+		handled += host->host_desc->check_hotplug(host_set);
- 
- 	spin_unlock_irqrestore(&host_set->lock, flags);
- 
-@@ -497,7 +507,7 @@ static void nv_disable_hotplug(struct at
- 	outb(intr_mask, host_set->ports[0]->ioaddr.scr_addr + NV_INT_ENABLE);
- }
- 
--static void nv_check_hotplug(struct ata_host_set *host_set)
-+static int nv_check_hotplug(struct ata_host_set *host_set)
- {
- 	u8 intr_status;
- 
-@@ -522,7 +532,11 @@ static void nv_check_hotplug(struct ata_
- 		if (intr_status & NV_INT_STATUS_SDEV_REMOVED)
- 			printk(KERN_WARNING "nv_sata: "
- 				"Secondary device removed\n");
-+
-+		return 1;
- 	}
-+
-+	return 0;
- }
- 
- static void nv_enable_hotplug_ck804(struct ata_probe_ent *probe_ent)
-@@ -560,7 +574,7 @@ static void nv_disable_hotplug_ck804(str
- 	pci_write_config_byte(pdev, NV_MCP_SATA_CFG_20, regval);
- }
- 
--static void nv_check_hotplug_ck804(struct ata_host_set *host_set)
-+static int nv_check_hotplug_ck804(struct ata_host_set *host_set)
- {
- 	u8 intr_status;
- 
-@@ -585,7 +599,11 @@ static void nv_check_hotplug_ck804(struc
- 		if (intr_status & NV_INT_STATUS_SDEV_REMOVED)
- 			printk(KERN_WARNING "nv_sata: "
- 				"Secondary device removed\n");
-+
-+		return 1;
- 	}
-+
-+	return 0;
- }
- 
- static int __init nv_init(void)
+To me it looks like the Promise controller goes totally bunkus when one
+single interrupt is not served, or when it cannot bus master within a
+certain time interval. I have tried to work around this problem by using
+_very_ conservative values for the irq-watcher. This works well for some
+time, but sooner or later the problem re-appears.
+
+So it looks like the only way is to tackle the source of the problem. I
+already reported this on linux-ide, but no response. I assume they think
+it's a amd76x_pm specific issue.
+
+--=-QDvErafG8h0ffd0QHAcf
+Content-Type: application/x-pkcs7-signature; name=smime.p7s
+Content-Disposition: attachment; filename=smime.p7s
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIILzCCAnIw
+ggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
+d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
+YWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYDVQQE
+EwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlqbiBT
+bGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0BAQEF
+AAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGYNW5L
+vevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI0gVv
+gY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFn
+dGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8WcuJ7Q1
+eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xNdkFU
+mhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPkyITCC
+AnIwggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMc
+VGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZy
+ZWVtYWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYD
+VQQEEwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlq
+biBTbGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0B
+AQEFAAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGY
+NW5Lvevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI
+0gVvgY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0Bz
+bGFndGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8Wcu
+J7Q1eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xN
+dkFUmhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPky
+ITCCAz8wggKooAMCAQICAQ0wDQYJKoZIhvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQI
+EwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcTCUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1
+bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmljYXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMT
+G1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJl
+ZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNV
+BAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNU
+aGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
+gYkCgYEAxKY8VXNV+065yplaHmjAdQRwnd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNa
+LIkVcI7dyfArhVqqP3FWy688Cwfn8R+RNiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUq
+VIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEAAaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1Ud
+HwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwudGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWls
+Q0EuY3JsMAsGA1UdDwQEAwIBBjApBgNVHREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVs
+Mi0xMzgwDQYJKoZIhvcNAQEFBQADgYEASIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYf
+qi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6EsZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa
+9/eH1sYITq726jTlEBpbNU1341YheILcIRk13iSx0x1G/11fZU8xggJmMIICYgIBATBpMGIxCzAJ
+BgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQD
+EyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMAkGBSsOAwIaBQCgggFT
+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA2MDIwMTEwMjUxMlow
+IwYJKoZIhvcNAQkEMRYEFHe0T7HGPAvdNT1WBeNeOUwWKZAaMHgGCSsGAQQBgjcQBDFrMGkwYjEL
+MAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNV
+BAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAgMP8QQwegYLKoZIhvcNAQkQ
+Agsxa6BpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBM
+dGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMA0G
+CSqGSIb3DQEBAQUABIGARhU9tvfiE81OElmzgGMv8MNvZS0Ac5b7wW7N1GqATeKN8Roequp8jwf7
+meS5eoQyHcrWMoN5qRvPLSVzeNRnw7boSl2no+GKzq9baEP0mbGamdT6tWQp6i7S9xS0HTNUT6jR
+ENcTSCy2cBsPkh45llof7QHt0ZNhH9hFgBAiqEEAAAAAAAA=
+
+
+--=-QDvErafG8h0ffd0QHAcf--
