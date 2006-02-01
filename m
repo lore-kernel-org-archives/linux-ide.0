@@ -1,182 +1,96 @@
-From: Mathieu Chouquet-Stringer <mchouque@free.fr>
-Subject: libata-core and pccard CF card reader
-Date: Wed, 1 Feb 2006 11:31:01 +0100
-Message-ID: <20060201103101.GA14737@localhost>
+From: Erik Slagter <erik@slagter.name>
+Subject: Re: AHCI driver for ICH6M
+Date: Wed, 01 Feb 2006 12:29:31 +0100
+Message-ID: <1138793371.4449.27.camel@localhost.localdomain>
+References: <1138771289.15467.9.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-hxIbIcKRiJzatFOM6FN2"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp13.wanadoo.fr ([193.252.22.54]:36646 "EHLO
-	smtp13.wanadoo.fr") by vger.kernel.org with ESMTP id S932397AbWBAKcE
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Feb 2006 05:32:04 -0500
-Received: from me-wanadoo.net (localhost [127.0.0.1])
-	by mwinf1301.wanadoo.fr (SMTP Server) with ESMTP id 037E47000085
-	for <linux-ide@vger.kernel.org>; Wed,  1 Feb 2006 11:32:03 +0100 (CET)
-Content-Disposition: inline
+Received: from erik-slagter.demon.nl ([83.161.107.130]:49383 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S932413AbWBAL3f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Feb 2006 06:29:35 -0500
+In-Reply-To: <1138771289.15467.9.camel@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-	Hello,
-
-During the last couple of month I've been using extensively Mark Lord's
-driver for my flash card reader (downloadable at [1]).
-
-Not too long ago he posted an skeleton [2] that was close to work with
-the lastest libata release...
-
-In a private email, he made me aware that because of time constraint, h=
-e
-wasn't sure when he would have the time to fix it.
-
-So I started hacking and made some progress, I fixed a bunch of
-functions whose prototypes had changed, add some more bits here and
-there and was finally able to compile and to load my kernel module.
+To: Michael Spiegle <mike@nauticaltech.com>
+Cc: linux-ide@vger.kernel.org
 
 
-The host now registers itself with libata (using standard function
-ata_device_add), I see it in dmesg but it fails to register the CF card=
-:
+--=-hxIbIcKRiJzatFOM6FN2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-ata1: dev 0 not supported, ignoring
+> I was trying to use the AHCI driver included in kernel 2.6.15 to drive
+> the SATA controller on my Asus Z71V laptop which supposedly has an ICH6M
+> controller.  I noticed that the PCI ID of my controller shows up in the
+> AHCI source code, so I assume that means I should have support.  I'm not
+> terribly good with linux or C, but I think I was able to troubleshoot my
+> issue down to a specific line of code.  Ultimately, I get the error:
+>=20
+> ahci: probe of 0000:00:1f.2 failed with error -12
 
+A very familiar problem. It means that your bios configures your ICH
+chipset for legacy (or whatever name it has) mode, which means it will
+respond to the old-fashioned IDE ports and IRQs. This also means you
+cannot drive it in AHCI mode :-( unless there is an option in your BIOS
+to switch between legacy and ahci mode, but afaik no single laptop has
+this option. So you're on your own here :-( (just like me, btw).
 
-Browsing the source, here's what happens:
-- the code call ata_device_add (I guess it was originally coded like
-  this because ata_pci_init_one which calls ata_pci_init_native_mode or
-  ata_pci_init_native_mode would overwrite the special cmd_addr,
-  altstatus_addr and ctl_addr)
-- this function does some processing then calls ata_bus_probe
-- which itself calls ata_dev_identify
+--=-hxIbIcKRiJzatFOM6FN2
+Content-Type: application/x-pkcs7-signature; name=smime.p7s
+Content-Disposition: attachment; filename=smime.p7s
+Content-Transfer-Encoding: base64
 
-I put some debug statements and found my 'problem' in
-drivers/scsi/libata-core.c, function ata_dev_identify, around line 1329
-(of the latest git). Here's a snippet of code:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D
-	/* ATA-specific feature tests */
-	if (dev->class =3D=3D ATA_DEV_ATA) {
-		if (!ata_id_is_ata(dev->id)) /* sanity check */
-			goto err_out_nosup;
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D
-
-Problem is my device sets bit 15 of word 0 when you send it a "DEVICE
-IDENTIFY" command; the ata_id_is_ata macro expanding to:
-(((id)[0] & (1 << 15)) =3D=3D 0)
-
-I then proceeded by removing this check and if you abstract the debug
-messages I put here and there in the code, here's what I got in the
-logs:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D
-ata1: dev 0 cfg 49:0300 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000=
- 88:0000
-class is ATA_DEV_ATA
-ata id isn't ata, 0x848a
-ata1: dev 0 not supported, ignoring
-scsi20 : delkin_cb
-libata version 1.20 loaded.
-delkin_cb version 0.01
-ACPI: PCI Interrupt 0000:03:00.0[A] -> Link [LNKA] -> GSI 11 (level, lo=
-w) -> IRQ 11
-ata1: PATA max PIO4 cmd 0x4010 ctl 0x401E bmdma 0xD2000000 irq 11
-delkin_cb: id hasn't dma
-delkin_cb: phy_reset, c50b2310
-ata1: dev 0 cfg 49:0300 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000=
- 88:0000
-class is ATA_DEV_ATA
-ata id isn't ata, 0x848a
-ata1: dev 0 ATA-10, max MWDMA2, 4001760 sectors: LBA
-ata1: dev 0 configured for PIO4
-scsi21 : delkin_cb
-  Vendor: ATA       Model: SanDisk SDCFH-20  Rev: HDX=20
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sda: 4001760 512-byte hdwr sectors (2049 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write through
-SCSI device sda: 4001760 512-byte hdwr sectors (2049 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write through
- sda: sda1
-sd 21:0:0:0: Attached scsi removable disk sda
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D
-
-So PIO modes appear to be working correctly (forget the bmdma value,
-it's totally bogus...). I mounted the device and started reading stuff
-(mainly comparing sha1sums of files I also had on disk): it worked.
-
-But now, I wanted to know more about this bit 15 so I went googling.
-
-On t13.org, I found this old description for bit 15 under "IDENTIFY
-DRIVE" command:
-15      0 reserved for non-magnetic drive
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIILzCCAnIw
+ggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
+d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
+YWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYDVQQE
+EwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlqbiBT
+bGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0BAQEF
+AAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGYNW5L
+vevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI0gVv
+gY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFn
+dGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8WcuJ7Q1
+eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xNdkFU
+mhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPkyITCC
+AnIwggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMc
+VGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZy
+ZWVtYWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYD
+VQQEEwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlq
+biBTbGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0B
+AQEFAAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGY
+NW5Lvevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI
+0gVvgY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0Bz
+bGFndGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8Wcu
+J7Q1eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xN
+dkFUmhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPky
+ITCCAz8wggKooAMCAQICAQ0wDQYJKoZIhvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQI
+EwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcTCUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1
+bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmljYXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMT
+G1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJl
+ZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNV
+BAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNU
+aGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
+gYkCgYEAxKY8VXNV+065yplaHmjAdQRwnd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNa
+LIkVcI7dyfArhVqqP3FWy688Cwfn8R+RNiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUq
+VIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEAAaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1Ud
+HwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwudGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWls
+Q0EuY3JsMAsGA1UdDwQEAwIBBjApBgNVHREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVs
+Mi0xMzgwDQYJKoZIhvcNAQEFBQADgYEASIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYf
+qi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6EsZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa
+9/eH1sYITq726jTlEBpbNU1341YheILcIRk13iSx0x1G/11fZU8xggJmMIICYgIBATBpMGIxCzAJ
+BgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQD
+EyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMAkGBSsOAwIaBQCgggFT
+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA2MDIwMTExMjkzMVow
+IwYJKoZIhvcNAQkEMRYEFCjFeH3gZZcn8dawKZifQ0VPTJ6YMHgGCSsGAQQBgjcQBDFrMGkwYjEL
+MAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNV
+BAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAgMP8QQwegYLKoZIhvcNAQkQ
+Agsxa6BpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBM
+dGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMA0G
+CSqGSIb3DQEBAQUABIGApaisCXpMJDbzI4bu5h+7Q8pUmiihfPeYIik8AAxJ93hDNYlt5fUf545L
+yTdU3oy16zoPOfn0L0vlwFlNTXeoLo86KAO57hLhUxAOzASNiQU3KWgcV2cNkDJGqvOvAnfQrozT
+ain9mk7mMl3blJVVFlxkJZsDc3CLszBDusapXAsAAAAAAAA=
 
 
-Then in a revision made in 95 (http://www.t13.org/ballots/d96112r0.pdf)=
-,
-the bit meaning was changed to:
-- Word 0 - Bit 15 set in ATA-2 meant non-magnetic media. Now means
-  ATAPI. This breaks use with PCMCIA Flash ATA devices which set this
-  bit.
-
-  This was done to be compatible with ATAPI devices as currently
-  specified in SFF8020. Since ATA-3 devices and ATAPI SFF8020 devices
-  must coexist on the same physical cable with different device drivers=
-,
-  this compatibility is required. In the case of most if not all PCMCIA
-  PC Card ATA devices today, a unique PCMCIA PC Card ATA aware device
-  driver is used and this PCMCIA PC Card ATA aware device driver will
-  never encounter an ATAPI device.
-
-
-And now in the latest draft for ATA-8, they say:
-15      0 =3D ATA Device
-with a comment reading:
-Devices that conform to this standard shall clear bit 15 to zero.
-
-(note the "shall" here)
-
-
-In the logs, I saw my device returned 0x848a. After reading some more
-ATA documents, I found it's in fact a known ID and is defined as:
-"CompactFlash=E2=84=A2Association (CFA) feature set" (found in a bunch =
-of
-different working drafts of ATA-x).
-
-So now the questions are:
-- is this test in libata-core.c/ata_dev_identify correct?
-- if it isn't, should we OR it with something like
-  || dev->id[0] =3D=3D 0x848a
-- or should we just test bit 7 of word 0 ("removable media device")?
-- or did I just open a new can of worms that will lead to adding a new
-  subclass of device (CFA feature set) in ata_dev_identify?
-
-
-Any pointers or ideas would be great, I'd like to get this thing merged
-eventually...
-
-Thanks.
-
-[1] http://rtr.ca/delkin_cb-2.6.11.patch
-[2] http://lkml.org/lkml/2006/1/19/150
-
---=20
-Mathieu Chouquet-Stringer                         mchouque@free.fr
-    "Le disparu, si l'on v=C3=A9n=C3=A8re sa m=C3=A9moire, est plus pr=C3=
-=A9sent et
-                 plus puissant que le vivant".
-           -- Antoine de Saint-Exup=C3=A9ry, Citadelle --
-
+--=-hxIbIcKRiJzatFOM6FN2--
