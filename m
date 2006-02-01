@@ -1,62 +1,43 @@
-From: Francois Romieu <romieu@fr.zoreil.com>
-Subject: Re: [COORDINATE] INIC-1620TA/1622TA2/1623TA2 SATA controllers from initio
-Date: Wed, 1 Feb 2006 23:29:00 +0100
-Message-ID: <20060201222900.GA32598@electric-eye.fr.zoreil.com>
-References: <43D646C2.6040104@gmail.com> <58cb370e0601240827n771e660bkb1fb3e8589ce1633@mail.gmail.com> <20060124163333.GE23269@havoc.gtf.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Broken sata (VIA) on Asus A8V (kernel 2.6.14+)
+Date: Thu, 02 Feb 2006 08:08:07 +0900
+Message-ID: <43E13F57.40808@gmail.com>
+References: <20060201162800.GA32196@tentacle.sectorb.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from electric-eye.fr.zoreil.com ([213.41.134.224]:25774 "EHLO
-	fr.zoreil.com") by vger.kernel.org with ESMTP id S1422987AbWBAWg5
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Feb 2006 17:36:57 -0500
-Content-Disposition: inline
-In-Reply-To: <20060124163333.GE23269@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1423012AbWBAXIR@vger.kernel.org>
+In-Reply-To: <20060201162800.GA32196@tentacle.sectorb.msk.ru>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Vladimir B. Savkin" <master@sectorb.msk.ru>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Tejun Heo <htejun@gmail.com>, Linux-ide <linux-ide@vger.kernel.org>
 
-Jeff Garzik <jgarzik@pobox.com> :
-[...]
-> Yes, patches to those web pages are welcome...
+Vladimir B. Savkin wrote:
+> Hello!
+> 
+> My system based on Asus A8V (VIA chipset) works fine with 2.6.13.3,
+> but after upgrading (kernels 2.6.14.7 and 2.6.15.1 tried) it
+> gaves error messages some minutes after boot.
+> 
+> The messages are as following:
+>   ata2: command 0xXX timeout, stat 0x50 host_stat 0x4
+> where XX gets different values from time to time, 0x25 mostly.
+> I/O to this controller halts after that.
+> 
+> Attached are boot dmesg log and lspci output.
+> 
 
---- a/sata/sata-status.html	2006-01-25 17:50:33.000000000 +0100
-+++ b/sata/sata-status.html	2006-02-01 23:25:58.000000000 +0100
-@@ -14,7 +14,7 @@ urchinTracker();
- 
- <center>
- <h1>Serial ATA (SATA) Linux status report</h1>
--<h2>January 25, 2006</h2>
-+<h2>February 1, 2006</h2>
- </center>
- 
- <P>
-@@ -42,6 +42,7 @@ google_ad_channel ="9598368507";
- <li><a href="#recent_updates">Recent updates</a>
- <li><a href="#hw_support">Hardware support</a>
- 	<ul>
-+	<li><a href="#inic">Initio INI-1623</a></li>
- 	<li><a href="#ich5">Intel ICH "IDE mode"</a>
- 	<li><a href="#ahci">AHCI (newer Intel ICH, ULi, others)</a>
- 	<li><a href="#tx2">Promise TX2/TX4</a>
-@@ -77,7 +78,18 @@ Recent updates have concentrated on bug 
- <hr>
- <h2><a name="hw_support">2. Hardware support</a></h2>
- 
--
-+<h3><a name="inic">Initio INI-1623</a></h3>
-+<p>
-+Tejun Heo coordinates the development. See the
-+<a href="http://marc.theaimsgroup.com/?l=linux-ide">linux-ide</a> mailing-list
-+archive to get in touch with him. The hardware documentation is available:
-+<ul>
-+<li><a href="http://initio.com/images/products/sata/Initio INIC-1623 Databook v1.3.pdf">INIC-1623 1st generation</a></li>
-+<li><a
-+href="http://initio.com/pdfs/Initio INIC-1620TA2_1622TA2_1623TA2 Databook v1.4.pdf">INIC-1623TA2 2nd generation</a></li>
-+</ul>
-+</p>
-+<hr />
- <h3><a name="ich5">Intel ICH "IDE" mode</a></h3>
- 
- Summary: No TCQ/NCQ. Looks like a PATA controller, but with a few added,
+[CC'ing linux-ide]
+
+Hello, Vladimir.
+
+How reproducible is the problem?  With how much certainty can you say 
+the problem is introduced by newer kernels?  e.g. If the problem occurs 
+most of the time with 2.5.15.1 but it stops happending after switching 
+back to 2.6.13.3, you can be pretty sure.
+
+Can you also please post dmesg of 2.6.13.3?
+
+-- 
+tejun
