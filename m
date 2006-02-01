@@ -1,96 +1,48 @@
-From: Erik Slagter <erik@slagter.name>
+From: "Dominic ES. Ijichi" <dom@ijichi.org>
 Subject: Re: AHCI driver for ICH6M
-Date: Wed, 01 Feb 2006 12:29:31 +0100
-Message-ID: <1138793371.4449.27.camel@localhost.localdomain>
-References: <1138771289.15467.9.camel@localhost>
+Date: Wed, 1 Feb 2006 11:33:48 +0000 (GMT)
+Message-ID: <25396560.2171138793628353.JavaMail.root@willow.ijichi.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-hxIbIcKRiJzatFOM6FN2"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from erik-slagter.demon.nl ([83.161.107.130]:49383 "EHLO
-	artemis.slagter.name") by vger.kernel.org with ESMTP
-	id S932413AbWBAL3f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Feb 2006 06:29:35 -0500
-In-Reply-To: <1138771289.15467.9.camel@localhost>
+Received: from willow.ijichi.org ([217.206.220.50]:21965 "EHLO
+	willow.ijichi.org") by vger.kernel.org with ESMTP id S932450AbWBALdt
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Feb 2006 06:33:49 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Spiegle <mike@nauticaltech.com>
-Cc: linux-ide@vger.kernel.org
+To: Erik Slagter <erik@slagter.name>
+Cc: linux-ide@vger.kernel.org, Michael Spiegle <mike@nauticaltech.com>
 
 
---=-hxIbIcKRiJzatFOM6FN2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+----- Erik Slagter <erik@slagter.name> wrote:
+> > I was trying to use the AHCI driver included in kernel 2.6.15 to
+> drive
+> > the SATA controller on my Asus Z71V laptop which supposedly has an
+> ICH6M
+> > controller.  I noticed that the PCI ID of my controller shows up in
+> the
+> > AHCI source code, so I assume that means I should have support.  I'm
+> not
+> > terribly good with linux or C, but I think I was able to
+> troubleshoot my
+> > issue down to a specific line of code.  Ultimately, I get the
+> error:
+> > 
+> > ahci: probe of 0000:00:1f.2 failed with error -12
+> 
+> A very familiar problem. It means that your bios configures your ICH
+> chipset for legacy (or whatever name it has) mode, which means it
+> will
+> respond to the old-fashioned IDE ports and IRQs. This also means you
+> cannot drive it in AHCI mode :-( unless there is an option in your
+> BIOS
+> to switch between legacy and ahci mode, but afaik no single laptop
+> has
+> this option. So you're on your own here :-( (just like me, btw).
 
-> I was trying to use the AHCI driver included in kernel 2.6.15 to drive
-> the SATA controller on my Asus Z71V laptop which supposedly has an ICH6M
-> controller.  I noticed that the PCI ID of my controller shows up in the
-> AHCI source code, so I assume that means I should have support.  I'm not
-> terribly good with linux or C, but I think I was able to troubleshoot my
-> issue down to a specific line of code.  Ultimately, I get the error:
->=20
-> ahci: probe of 0000:00:1f.2 failed with error -12
+i had same problem - fujitsu laptop with ich6 sata controller but with pata disk putting it into 'legacy/ide' mode.  ahci module would drive the controller/disk but suspend didn't work.  removing ahci module and adding ata_piix module resolved this issue for me, now i get full s3 suspend as well :)  device naming stays the same so you might just get away with removing ahci module and redoing mkinitrd.
 
-A very familiar problem. It means that your bios configures your ICH
-chipset for legacy (or whatever name it has) mode, which means it will
-respond to the old-fashioned IDE ports and IRQs. This also means you
-cannot drive it in AHCI mode :-( unless there is an option in your BIOS
-to switch between legacy and ahci mode, but afaik no single laptop has
-this option. So you're on your own here :-( (just like me, btw).
+dom
 
---=-hxIbIcKRiJzatFOM6FN2
-Content-Type: application/x-pkcs7-signature; name=smime.p7s
-Content-Disposition: attachment; filename=smime.p7s
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIILzCCAnIw
-ggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
-d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
-YWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYDVQQE
-EwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlqbiBT
-bGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0BAQEF
-AAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGYNW5L
-vevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI0gVv
-gY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFn
-dGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8WcuJ7Q1
-eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xNdkFU
-mhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPkyITCC
-AnIwggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMc
-VGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZy
-ZWVtYWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYD
-VQQEEwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlq
-biBTbGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0B
-AQEFAAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGY
-NW5Lvevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI
-0gVvgY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0Bz
-bGFndGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8Wcu
-J7Q1eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xN
-dkFUmhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPky
-ITCCAz8wggKooAMCAQICAQ0wDQYJKoZIhvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQI
-EwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcTCUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1
-bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmljYXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMT
-G1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJl
-ZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNV
-BAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNU
-aGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
-gYkCgYEAxKY8VXNV+065yplaHmjAdQRwnd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNa
-LIkVcI7dyfArhVqqP3FWy688Cwfn8R+RNiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUq
-VIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEAAaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1Ud
-HwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwudGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWls
-Q0EuY3JsMAsGA1UdDwQEAwIBBjApBgNVHREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVs
-Mi0xMzgwDQYJKoZIhvcNAQEFBQADgYEASIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYf
-qi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6EsZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa
-9/eH1sYITq726jTlEBpbNU1341YheILcIRk13iSx0x1G/11fZU8xggJmMIICYgIBATBpMGIxCzAJ
-BgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQD
-EyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMAkGBSsOAwIaBQCgggFT
-MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA2MDIwMTExMjkzMVow
-IwYJKoZIhvcNAQkEMRYEFCjFeH3gZZcn8dawKZifQ0VPTJ6YMHgGCSsGAQQBgjcQBDFrMGkwYjEL
-MAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNV
-BAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAgMP8QQwegYLKoZIhvcNAQkQ
-Agsxa6BpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBM
-dGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMA0G
-CSqGSIb3DQEBAQUABIGApaisCXpMJDbzI4bu5h+7Q8pUmiihfPeYIik8AAxJ93hDNYlt5fUf545L
-yTdU3oy16zoPOfn0L0vlwFlNTXeoLo86KAO57hLhUxAOzASNiQU3KWgcV2cNkDJGqvOvAnfQrozT
-ain9mk7mMl3blJVVFlxkJZsDc3CLszBDusapXAsAAAAAAAA=
-
-
---=-hxIbIcKRiJzatFOM6FN2--
