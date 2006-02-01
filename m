@@ -1,7 +1,7 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/4] libata: implement ATA_FLAG_IN_EH port flag
+Subject: [PATCH 3/4] libata: fix handling of race between timeout and completion
 Date: Thu, 2 Feb 2006 00:56:10 +0900
-Message-ID: <11388093701287-git-send-email-htejun@gmail.com>
+Message-ID: <11388093703309-git-send-email-htejun@gmail.com>
 References: <11388093703495-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
@@ -9,69 +9,88 @@ Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from zproxy.gmail.com ([64.233.162.202]:34000 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1161104AbWBAP4Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Feb 2006 10:56:16 -0500
+	by vger.kernel.org with ESMTP id S1161103AbWBAP4P (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Feb 2006 10:56:15 -0500
 Received: by zproxy.gmail.com with SMTP id 14so166954nzn
-        for <linux-ide@vger.kernel.org>; Wed, 01 Feb 2006 07:56:16 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Wed, 01 Feb 2006 07:56:14 -0800 (PST)
 In-Reply-To: <11388093703495-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 Cc: Tejun Heo <htejun@gmail.com>
 
-ATA_FLAG_IN_EH flag is set on entry to EH and cleared on completion.
-This patch just sets and clears the flag.  Following patches will
-build normal qc execution / EH synchronization aroung this flag.
+If a qc completes after SCSI timer expires but before libata EH kicks
+in, the qc gets completed but the scsicmd still gets passed to libata
+EH resulting in ->eng_timeout invocation with NULL qc.  Currently none
+of ->eng_timeout callbacks handles this properly.  This patch makes
+ata_scsi_error() bypass ->eng_timeout and handle this rare case.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-scsi.c |    9 +++++++++
- include/linux/libata.h     |    2 ++
- 2 files changed, 11 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-scsi.c |   39 ++++++++++++++++++++++++++++++++++++---
+ 1 files changed, 36 insertions(+), 3 deletions(-)
 
-402b1d5c510fe7f9ad0457bcedb3a4742e79d649
+22f1716710352b49e5a1598b0c4efdebfa33014b
 diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 6df8293..0e14259 100644
+index 0e14259..9435645 100644
 --- a/drivers/scsi/libata-scsi.c
 +++ b/drivers/scsi/libata-scsi.c
-@@ -735,6 +735,11 @@ int ata_scsi_error(struct Scsi_Host *hos
+@@ -731,17 +731,50 @@ int ata_scsi_slave_config(struct scsi_de
+ 
+ int ata_scsi_error(struct Scsi_Host *host)
+ {
+-	struct ata_port *ap;
++	struct ata_port *ap = (struct ata_port *) &host->hostdata[0];
++	struct ata_queued_cmd *qc;
++	unsigned long flags;
  
  	DPRINTK("ENTER\n");
  
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	assert(!(ap->flags & ATA_FLAG_IN_EH));
-+	ap->flags |= ATA_FLAG_IN_EH;
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+ 	spin_lock_irqsave(&ap->host_set->lock, flags);
++	qc = ata_qc_from_tag(ap, ap->active_tag);
+ 	assert(!(ap->flags & ATA_FLAG_IN_EH));
+ 	ap->flags |= ATA_FLAG_IN_EH;
+ 	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+ 
+-	ap = (struct ata_port *) &host->hostdata[0];
+-	ap->ops->eng_timeout(ap);
++	if (qc) {
++		ap->ops->eng_timeout(ap);
++	} else {
++		struct scsi_cmnd *scmd;
++		unsigned char *sb;
 +
- 	ap = (struct ata_port *) &host->hostdata[0];
- 	ap->ops->eng_timeout(ap);
- 
-@@ -742,6 +747,10 @@ int ata_scsi_error(struct Scsi_Host *hos
- 
- 	scsi_eh_flush_done_q(&ap->eh_done_q);
- 
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	ap->flags &= ~ATA_FLAG_IN_EH;
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++		/* The scmd had timed out but the corresponding qc
++		 * completed successfully inbetween timer expiration
++		 * and here.  Retry if possible.
++		 *
++		 * It is better to enter eng_timeout and perform EH
++		 * before retrying the command, but this case should
++		 * be _very_ rare and eng_timeout isn't ready for
++		 * NULL-qc case.
++		 */
++		scmd = list_entry(host->eh_cmd_q.next,
++				  struct scsi_cmnd, eh_entry);
++		sb = scmd->sense_buffer;
 +
- 	DPRINTK("EXIT\n");
- 	return 0;
- }
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 474cdfa..55176df 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -162,6 +162,8 @@ enum {
- 	ATA_FLAG_PIO_LBA48	= (1 << 13), /* Host DMA engine is LBA28 only */
- 	ATA_FLAG_IRQ_MASK	= (1 << 14), /* Mask IRQ in PIO xfers */
- 
-+	ATA_FLAG_IN_EH		= (1 << 15), /* EH in progress */
++		/* Timeout, fake parity for now */
++		scmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
++		sb[0] = 0x70;
++		sb[7] = 0x0a;
++		sb[2] = ABORTED_COMMAND;
++		sb[12] = 0x47;
++		sb[13] = 0x00;
 +
- 	ATA_QCFLAG_ACTIVE	= (1 << 1), /* cmd not yet ack'd to scsi lyer */
- 	ATA_QCFLAG_SG		= (1 << 3), /* have s/g table? */
- 	ATA_QCFLAG_SINGLE	= (1 << 4), /* no s/g, just a single buffer */
++		printk(KERN_WARNING "ata%u: interrupt and timer raced for "
++		       "scsicmd %p\n", ap->id, scmd);
++
++		scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
++	}
+ 
+ 	assert(host->host_failed == 0 && list_empty(&host->eh_cmd_q));
+ 
 -- 
 1.1.3
 
