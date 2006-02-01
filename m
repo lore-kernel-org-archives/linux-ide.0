@@ -1,57 +1,42 @@
-From: Richard Purdie <rpurdie@rpsys.net>
-Subject: Re: [PATCH 10/11] LED: Add IDE disk activity LED trigger
-Date: Tue, 31 Jan 2006 23:39:17 +0000
-Message-ID: <1138750757.6869.324.camel@localhost.localdomain>
-References: <1138714918.6869.139.camel@localhost.localdomain>
-	 <58cb370e0601310646y263acb96h62c422435e7016e@mail.gmail.com>
-	 <1138724479.6869.201.camel@localhost.localdomain>
-	 <58cb370e0601310944l421174f8j1802d94f1ae93a01@mail.gmail.com>
-	 <1138745323.4934.17.camel@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] ata_piix: ignore all zero PCS value on ICH5's
+Date: Wed, 01 Feb 2006 11:01:53 +0900
+Message-ID: <43E01691.9040600@gmail.com>
+References: <438B6E05.8070009@eq.cz> <438D2C19.3030008@gmail.com> <438DA3FA.2010809@eq.cz> <a762e240511301405s433109b7n93e7fdcc7409bef5@mail.gmail.com> <438EC502.1090103@keytradebank.com> <20051201112015.GA10462@htj.dyndns.org> <438EF3B6.7020007@keytradebank.com> <438EFAA5.3070901@gmail.com> <438FA924.1090005@pobox.com> <438FB8B5.8070505@gmail.com> <20051202032605.GA15528@htj.dyndns.org> <43DC510A.1090101@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tim.rpsys.net ([194.106.48.114]:43439 "EHLO tim.rpsys.net")
-	by vger.kernel.org with ESMTP id S932151AbWAaXjk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2006 18:39:40 -0500
-In-Reply-To: <1138745323.4934.17.camel@localhost.localdomain>
+Received: from wproxy.gmail.com ([64.233.184.196]:41706 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964859AbWBACCB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2006 21:02:01 -0500
+Received: by wproxy.gmail.com with SMTP id 69so262866wri
+        for <linux-ide@vger.kernel.org>; Tue, 31 Jan 2006 18:02:00 -0800 (PST)
+In-Reply-To: <43DC510A.1090101@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <axboe@suse.de>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Jean-Fran?ois Stenuit <jfs@keytradebank.com>, Keith Mannthey <kmannth@gmail.com>, "0602@eq.cz" <0602@eq.cz>, Linux-ide <linux-ide@vger.kernel.org>
 
-On Wed, 2006-02-01 at 09:08 +1100, Benjamin Herrenschmidt wrote:
-> > Isn't ->end_request hook in ide_driver_t enough?
-> > 
-> > I see no reason why the custom ->end_request function cannot
-> > be added to ide-disk.  All needed infrastructure is there.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
 > 
-> I'm not sure ide-disk is the right spot ... what if one wants LEDs for
-> CD-ROMs or other IDE devices like flash cards ?
+>> Some ICH5's report 0 for PCS even when they have active working ports.
+>> This patch makes piix_sata_probe() ignore 0 PCS value on ICH5's and
+>> probe all ports in such cases.  And while at it, remove bogus
+>> assignment to mask.
+>>
+> 
+> I'm just not too thrilled about this.  I wonder if its an isolated 
+> incident related to power or something.  I would wait for more problem 
+> reports, before applying this.
+> 
 
-Flash cards mainly go through ide-cs which uses ide-disk.
+I'm not too sure about this one either, but we have two independent 
+consistent bug reports and PCS handling in ata_piix isn't that necessary 
+or strict to begin with, so....
 
-There are several options:
+How about making it a driver option?  ata_piix.ignore_PCS maybe?
 
-1. Have the trigger on ide-disk activity (confined to ide-disk.c).
-
-2. Have the trigger on ide-io activity (confined to ide-io.c).
-
-3. Do something else.
-
-4. Don't add disk activity (or any?) triggers in mainline.
-
-Thanks to a generic API, adding triggers anywhere is fairly trivial but
-probably not without controversy so they need to be carefully placed, if
-at all.
-
-We could always wait and see which of the above there is demand for. I
-suspect options 1 or 2 would cover most people's needs. We're never
-going to satisfy everyone (but anyone is free to apply simple patches to
-get their desired trigger).
-
-I'd rather go with option 4 than block all the led class/driver code
-over any controversial triggers.
-
-Richard
-
+-- 
+tejun
