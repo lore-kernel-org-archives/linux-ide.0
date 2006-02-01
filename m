@@ -1,41 +1,107 @@
-From: Michael Spiegle <mike@nauticaltech.com>
-Subject: Re: AHCI driver for ICH6M
-Date: Wed, 01 Feb 2006 08:15:51 -0800
-Message-ID: <1138810551.9300.0.camel@localhost>
-References: <1138771289.15467.9.camel@localhost>
-	 <1138793371.4449.27.camel@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] ahci: separate out ahci_fill_cmd_slot()
+Date: Thu, 2 Feb 2006 02:04:52 +0900
+Message-ID: <20060201170452.GA22989@htj.dyndns.org>
+References: <20060123081626.GA664@htj.dyndns.org> <43D99CBA.4090801@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from blue.nauticaltech.com ([64.71.32.16]:50181 "EHLO
-	blue.nauticaltech.com") by vger.kernel.org with ESMTP
-	id S964982AbWBAQP5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Feb 2006 11:15:57 -0500
-In-Reply-To: <1138793371.4449.27.camel@localhost.localdomain>
+Received: from zproxy.gmail.com ([64.233.162.197]:38151 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932088AbWBARFA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Feb 2006 12:05:00 -0500
+Received: by zproxy.gmail.com with SMTP id l1so182919nzf
+        for <linux-ide@vger.kernel.org>; Wed, 01 Feb 2006 09:04:59 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <43D99CBA.4090801@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Erik Slagter <erik@slagter.name>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
-On Wed, 2006-02-01 at 12:29 +0100, Erik Slagter wrote:
-> > I was trying to use the AHCI driver included in kernel 2.6.15 to drive
-> > the SATA controller on my Asus Z71V laptop which supposedly has an ICH6M
-> > controller.  I noticed that the PCI ID of my controller shows up in the
-> > AHCI source code, so I assume that means I should have support.  I'm not
-> > terribly good with linux or C, but I think I was able to troubleshoot my
-> > issue down to a specific line of code.  Ultimately, I get the error:
-> > 
-> > ahci: probe of 0000:00:1f.2 failed with error -12
-> 
-> A very familiar problem. It means that your bios configures your ICH
-> chipset for legacy (or whatever name it has) mode, which means it will
-> respond to the old-fashioned IDE ports and IRQs. This also means you
-> cannot drive it in AHCI mode :-( unless there is an option in your BIOS
-> to switch between legacy and ahci mode, but afaik no single laptop has
-> this option. So you're on your own here :-( (just like me, btw).
+Separate out ahci_fill_cmd_slot() from ahci_qc_prep().
+ahci_fill_cmd_slot() can later be used to issue non-standard commands.
+(e.g. softreset)
 
-thank you for your reply!  Looks like i'll need to wait for my laptop
-manufacturer to realize this is an important feature.... or load up my
-hex editor =)
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
+---
+
+Here's the fixed version.  Thanks for finding the bug.
+
+Index: work1/drivers/scsi/ahci.c
+===================================================================
+--- work1.orig/drivers/scsi/ahci.c	2006-02-02 01:52:05.000000000 +0900
++++ work1/drivers/scsi/ahci.c	2006-02-02 02:00:15.000000000 +0900
+@@ -506,6 +506,15 @@ static unsigned int ahci_dev_classify(st
+ 	return ata_dev_classify(&tf);
+ }
+ 
++static inline void ahci_fill_cmd_slot(struct ata_port *ap, u32 opts)
++{
++	struct ahci_port_priv *pp = ap->private_data;
++	pp->cmd_slot[0].opts = cpu_to_le32(opts);
++	pp->cmd_slot[0].status = 0;
++	pp->cmd_slot[0].tbl_addr = cpu_to_le32(pp->cmd_tbl_dma & 0xffffffff);
++	pp->cmd_slot[0].tbl_addr_hi = cpu_to_le32((pp->cmd_tbl_dma >> 16) >> 16);
++}
++
+ static void ahci_phy_reset(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
+@@ -584,42 +593,35 @@ static void ahci_qc_prep(struct ata_queu
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	struct ahci_port_priv *pp = ap->private_data;
++	int is_atapi = is_atapi_taskfile(&qc->tf);
+ 	u32 opts;
+ 	const u32 cmd_fis_len = 5; /* five dwords */
+ 	unsigned int n_elem;
+ 
+ 	/*
+-	 * Fill in command slot information (currently only one slot,
+-	 * slot 0, is currently since we don't do queueing)
+-	 */
+-
+-	opts = cmd_fis_len;
+-	if (qc->tf.flags & ATA_TFLAG_WRITE)
+-		opts |= AHCI_CMD_WRITE;
+-	if (is_atapi_taskfile(&qc->tf))
+-		opts |= AHCI_CMD_ATAPI;
+-
+-	pp->cmd_slot[0].opts = cpu_to_le32(opts);
+-	pp->cmd_slot[0].status = 0;
+-	pp->cmd_slot[0].tbl_addr = cpu_to_le32(pp->cmd_tbl_dma & 0xffffffff);
+-	pp->cmd_slot[0].tbl_addr_hi = cpu_to_le32((pp->cmd_tbl_dma >> 16) >> 16);
+-
+-	/*
+ 	 * Fill in command table information.  First, the header,
+ 	 * a SATA Register - Host to Device command FIS.
+ 	 */
+ 	ata_tf_to_fis(&qc->tf, pp->cmd_tbl, 0);
+-	if (opts & AHCI_CMD_ATAPI) {
++	if (is_atapi) {
+ 		memset(pp->cmd_tbl + AHCI_CMD_TBL_CDB, 0, 32);
+ 		memcpy(pp->cmd_tbl + AHCI_CMD_TBL_CDB, qc->cdb, ap->cdb_len);
+ 	}
+ 
+-	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
+-		return;
++	n_elem = 0;
++	if (qc->flags & ATA_QCFLAG_DMAMAP)
++		n_elem = ahci_fill_sg(qc);
+ 
+-	n_elem = ahci_fill_sg(qc);
++	/*
++	 * Fill in command slot information.
++	 */
++	opts = cmd_fis_len | n_elem << 16;
++	if (qc->tf.flags & ATA_TFLAG_WRITE)
++		opts |= AHCI_CMD_WRITE;
++	if (is_atapi)
++		opts |= AHCI_CMD_ATAPI;
+ 
+-	pp->cmd_slot[0].opts |= cpu_to_le32(n_elem << 16);
++	ahci_fill_cmd_slot(ap, opts);
+ }
+ 
+ static void ahci_restart_port(struct ata_port *ap, u32 irq_stat)
