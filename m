@@ -1,96 +1,134 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 3/4] libata: fix handling of race between timeout and completion
+Subject: [PATCH 2/4] libata: EH / pio tasks synchronization
 Date: Thu, 2 Feb 2006 00:56:10 +0900
-Message-ID: <11388093703309-git-send-email-htejun@gmail.com>
+Message-ID: <11388093702671-git-send-email-htejun@gmail.com>
 References: <11388093703495-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.202]:34000 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1161103AbWBAP4P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Feb 2006 10:56:15 -0500
-Received: by zproxy.gmail.com with SMTP id 14so166954nzn
-        for <linux-ide@vger.kernel.org>; Wed, 01 Feb 2006 07:56:14 -0800 (PST)
+Received: from wproxy.gmail.com ([64.233.184.202]:12688 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1161101AbWBAP4R (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Feb 2006 10:56:17 -0500
+Received: by wproxy.gmail.com with SMTP id 69so383025wri
+        for <linux-ide@vger.kernel.org>; Wed, 01 Feb 2006 07:56:16 -0800 (PST)
 In-Reply-To: <11388093703495-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 Cc: Tejun Heo <htejun@gmail.com>
 
-If a qc completes after SCSI timer expires but before libata EH kicks
-in, the qc gets completed but the scsicmd still gets passed to libata
-EH resulting in ->eng_timeout invocation with NULL qc.  Currently none
-of ->eng_timeout callbacks handles this properly.  This patch makes
-ata_scsi_error() bypass ->eng_timeout and handle this rare case.
+This patch makes sure that pio tasks are flushed before proceeding
+with EH.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-scsi.c |   39 ++++++++++++++++++++++++++++++++++++---
- 1 files changed, 36 insertions(+), 3 deletions(-)
+ drivers/scsi/libata-core.c |   56 ++++++++++++++++++++++++++++++++++++++++++--
+ include/linux/libata.h     |    3 ++
+ 2 files changed, 55 insertions(+), 4 deletions(-)
 
-22f1716710352b49e5a1598b0c4efdebfa33014b
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 0e14259..9435645 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -731,17 +731,50 @@ int ata_scsi_slave_config(struct scsi_de
- 
- int ata_scsi_error(struct Scsi_Host *host)
+8bf3455f64987bfb33a304113b98085f67e5ef62
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 249e67f..9a785cf 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -1074,19 +1074,66 @@ static unsigned int ata_pio_modes(const 
+ static inline void
+ ata_queue_packet_task(struct ata_port *ap)
  {
--	struct ata_port *ap;
-+	struct ata_port *ap = (struct ata_port *) &host->hostdata[0];
-+	struct ata_queued_cmd *qc;
+-	queue_work(ata_wq, &ap->packet_task);
++	if (!(ap->flags & ATA_FLAG_FLUSH_PIO_TASK))
++		queue_work(ata_wq, &ap->packet_task);
+ }
+ 
+ static inline void
+ ata_queue_pio_task(struct ata_port *ap)
+ {
+-	queue_work(ata_wq, &ap->pio_task);
++	if (!(ap->flags & ATA_FLAG_FLUSH_PIO_TASK))
++		queue_work(ata_wq, &ap->pio_task);
+ }
+ 
+ static inline void
+ ata_queue_delayed_pio_task(struct ata_port *ap, unsigned long delay)
+ {
+-	queue_delayed_work(ata_wq, &ap->pio_task, delay);
++	if (!(ap->flags & ATA_FLAG_FLUSH_PIO_TASK))
++		queue_delayed_work(ata_wq, &ap->pio_task, delay);
++}
++
++/**
++ *	ata_flush_pio_tasks - Flush pio_task and packet_task
++ *	@ap: the target ata_port
++ *
++ *	After this function completes, pio_task and packet_task are
++ *	guranteed not to be running or scheduled.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep)
++ */
++
++static void ata_flush_pio_tasks(struct ata_port *ap)
++{
++	int tmp = 0;
 +	unsigned long flags;
++
++	DPRINTK("ENTER\n");
++
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	ap->flags |= ATA_FLAG_FLUSH_PIO_TASK;
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++
++	DPRINTK("flush #1\n");
++	flush_workqueue(ata_wq);
++
++	/*
++	 * At this point, if a task is running, it's guaranteed to see
++	 * the FLUSH flag; thus, it will never queue pio tasks again.
++	 * Cancel and flush.
++	 */
++	tmp |= cancel_delayed_work(&ap->pio_task);
++	tmp |= cancel_delayed_work(&ap->packet_task);
++	if (!tmp) {
++		DPRINTK("flush #2\n");
++		flush_workqueue(ata_wq);
++	}
++
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	ap->flags &= ~ATA_FLAG_FLUSH_PIO_TASK;
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++
++	DPRINTK("EXIT\n");
+ }
+ 
+ void ata_qc_complete_internal(struct ata_queued_cmd *qc)
+@@ -3767,6 +3814,9 @@ static void ata_qc_timeout(struct ata_qu
  
  	DPRINTK("ENTER\n");
  
- 	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	qc = ata_qc_from_tag(ap, ap->active_tag);
- 	assert(!(ap->flags & ATA_FLAG_IN_EH));
- 	ap->flags |= ATA_FLAG_IN_EH;
- 	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++	ata_flush_pio_tasks(ap);
++	ap->hsm_task_state = HSM_ST_IDLE;
++
+ 	spin_lock_irqsave(&host_set->lock, flags);
  
--	ap = (struct ata_port *) &host->hostdata[0];
--	ap->ops->eng_timeout(ap);
-+	if (qc) {
-+		ap->ops->eng_timeout(ap);
-+	} else {
-+		struct scsi_cmnd *scmd;
-+		unsigned char *sb;
-+
-+		/* The scmd had timed out but the corresponding qc
-+		 * completed successfully inbetween timer expiration
-+		 * and here.  Retry if possible.
-+		 *
-+		 * It is better to enter eng_timeout and perform EH
-+		 * before retrying the command, but this case should
-+		 * be _very_ rare and eng_timeout isn't ready for
-+		 * NULL-qc case.
-+		 */
-+		scmd = list_entry(host->eh_cmd_q.next,
-+				  struct scsi_cmnd, eh_entry);
-+		sb = scmd->sense_buffer;
-+
-+		/* Timeout, fake parity for now */
-+		scmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
-+		sb[0] = 0x70;
-+		sb[7] = 0x0a;
-+		sb[2] = ABORTED_COMMAND;
-+		sb[12] = 0x47;
-+		sb[13] = 0x00;
-+
-+		printk(KERN_WARNING "ata%u: interrupt and timer raced for "
-+		       "scsicmd %p\n", ap->id, scmd);
-+
-+		scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
-+	}
+ 	switch (qc->tf.protocol) {
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 55176df..f4cd1eb 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -162,7 +162,8 @@ enum {
+ 	ATA_FLAG_PIO_LBA48	= (1 << 13), /* Host DMA engine is LBA28 only */
+ 	ATA_FLAG_IRQ_MASK	= (1 << 14), /* Mask IRQ in PIO xfers */
  
- 	assert(host->host_failed == 0 && list_empty(&host->eh_cmd_q));
+-	ATA_FLAG_IN_EH		= (1 << 15), /* EH in progress */
++	ATA_FLAG_FLUSH_PIO_TASK	= (1 << 15), /* Flush PIO task */
++	ATA_FLAG_IN_EH		= (1 << 16), /* EH in progress */
  
+ 	ATA_QCFLAG_ACTIVE	= (1 << 1), /* cmd not yet ack'd to scsi lyer */
+ 	ATA_QCFLAG_SG		= (1 << 3), /* have s/g table? */
 -- 
 1.1.3
 
