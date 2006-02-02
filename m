@@ -1,129 +1,89 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 09/11] ata_piix: convert sata to new reset mechanism
+Subject: [PATCH 04/11] libata: implement ata_std_probeinit()
 Date: Thu, 2 Feb 2006 18:20:00 +0900
-Message-ID: <11388720001547-git-send-email-htejun@gmail.com>
+Message-ID: <11388720001073-git-send-email-htejun@gmail.com>
 References: <11388720003793-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.197]:30455 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1423398AbWBBJUJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Feb 2006 04:20:09 -0500
-Received: by xproxy.gmail.com with SMTP id s14so246549wxc
-        for <linux-ide@vger.kernel.org>; Thu, 02 Feb 2006 01:20:09 -0800 (PST)
+Received: from wproxy.gmail.com ([64.233.184.195]:10653 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1423404AbWBBJUF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Feb 2006 04:20:05 -0500
+Received: by wproxy.gmail.com with SMTP id i30so336637wra
+        for <linux-ide@vger.kernel.org>; Thu, 02 Feb 2006 01:20:05 -0800 (PST)
 In-Reply-To: <11388720003793-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Convert ata_piix sata ->phy_reset to new reset mechanism.
+This patch implements the off-the-shelf probeinit component operation.
+Currently, all it does is waking up the PHY if it's a SATA port.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/ata_piix.c |   39 +++++++++++++++++++--------------------
- 1 files changed, 19 insertions(+), 20 deletions(-)
+ drivers/scsi/libata-core.c |   16 +++++++++++++++-
+ include/linux/libata.h     |    1 +
+ 2 files changed, 16 insertions(+), 1 deletions(-)
 
-bd10b2138fbcf1c8c7741f92f3f10bf65b6899c3
-diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-index f4215c9..c2561f7 100644
---- a/drivers/scsi/ata_piix.c
-+++ b/drivers/scsi/ata_piix.c
-@@ -132,7 +132,7 @@ static int piix_init_one (struct pci_dev
- 				    const struct pci_device_id *ent);
- 
- static int piix_pata_probe_reset(struct ata_port *ap, unsigned int *classes);
--static void piix_sata_phy_reset(struct ata_port *ap);
-+static int piix_sata_probe_reset(struct ata_port *ap, unsigned int *classes);
- static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev);
- static void piix_set_dmamode (struct ata_port *ap, struct ata_device *adev);
- 
-@@ -235,7 +235,7 @@ static const struct ata_port_operations 
- 	.exec_command		= ata_exec_command,
- 	.dev_select		= ata_std_dev_select,
- 
--	.phy_reset		= piix_sata_phy_reset,
-+	.probe_reset		= piix_sata_probe_reset,
- 
- 	.bmdma_setup		= ata_bmdma_setup,
- 	.bmdma_start		= ata_bmdma_start,
-@@ -272,8 +272,8 @@ static struct ata_port_info piix_port_in
- 	/* ich5_sata */
- 	{
- 		.sht		= &piix_sht,
--		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
--				  PIIX_FLAG_COMBINED | PIIX_FLAG_CHECKINTR,
-+		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED |
-+				  PIIX_FLAG_CHECKINTR,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f,	/* udma0-6 */
-@@ -297,8 +297,7 @@ static struct ata_port_info piix_port_in
- 	/* ich6_sata */
- 	{
- 		.sht		= &piix_sht,
--		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
--				  PIIX_FLAG_COMBINED_ICH6 |
-+		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED_ICH6 |
- 				  PIIX_FLAG_CHECKINTR | ATA_FLAG_SLAVE_POSS,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
-@@ -309,8 +308,7 @@ static struct ata_port_info piix_port_in
- 	/* ich6_sata_ahci */
- 	{
- 		.sht		= &piix_sht,
--		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
--				  PIIX_FLAG_COMBINED_ICH6 |
-+		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED_ICH6 |
- 				  PIIX_FLAG_CHECKINTR | ATA_FLAG_SLAVE_POSS |
- 				  PIIX_FLAG_AHCI,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
-@@ -455,28 +453,29 @@ static int piix_sata_probe (struct ata_p
+9be7440acf08c8100e70ab3406a956c5d8086c0a
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 8bd197d..fac9677 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -2296,6 +2296,19 @@ static int sata_phy_resume(struct ata_po
  }
  
  /**
-- *	piix_sata_phy_reset - Probe specified port on SATA host controller
-- *	@ap: Port to probe
-+ *	piix_sata_probe_reset - Perform reset on SATA port and classify
-+ *	@ap: Port to reset
-+ *	@classes: Resulting classes of attached devices
-  *
-- *	Probe SATA phy.
-+ *	Reset SATA phy and classify attached devices.
-  *
-  *	LOCKING:
-  *	None (inherited from caller).
-  */
--
--static void piix_sata_phy_reset(struct ata_port *ap)
-+static int piix_sata_probe_reset(struct ata_port *ap, unsigned int *classes)
- {
-+	int i;
++ *	ata_std_probeinit - initialize probing
++ *	@ap: port to be probed
++ *
++ *	@ap is about to be probed.  Initialize it.  This function is
++ *	to be used as standard callback for ata_drive_probe_reset().
++ */
++extern void ata_std_probeinit(struct ata_port *ap)
++{
++	if (ap->flags & ATA_FLAG_SATA && ap->ops->scr_read)
++		sata_phy_resume(ap);
++}
 +
- 	if (!piix_sata_probe(ap)) {
--		ata_port_disable(ap);
-+		for (i = 0; i < ATA_MAX_DEVICES; i++)
-+			classes[i] = ATA_DEV_NONE;
- 		printk(KERN_INFO "ata%u: SATA port has no device.\n", ap->id);
--		return;
-+		return 0;
- 	}
++/**
+  *	ata_std_softreset - reset host port via ATA SRST
+  *	@ap: port to reset
+  *	@verbose: fail verbosely
+@@ -2485,7 +2498,7 @@ int ata_std_probe_reset(struct ata_port 
+ 	if (ap->flags & ATA_FLAG_SATA && ap->ops->scr_read)
+ 		hardreset = sata_std_hardreset;
  
--	ap->cbl = ATA_CBL_SATA;
--
--	ata_port_probe(ap);
--
--	ata_bus_reset(ap);
+-	return ata_drive_probe_reset(ap, NULL,
 +	return ata_drive_probe_reset(ap, ata_std_probeinit,
-+				     ata_std_softreset, NULL,
-+				     ata_std_postreset, classes);
+ 				     ata_std_softreset, hardreset,
+ 				     ata_std_postreset, classes);
  }
- 
- /**
+@@ -5525,6 +5538,7 @@ EXPORT_SYMBOL_GPL(ata_port_probe);
+ EXPORT_SYMBOL_GPL(sata_phy_reset);
+ EXPORT_SYMBOL_GPL(__sata_phy_reset);
+ EXPORT_SYMBOL_GPL(ata_bus_reset);
++EXPORT_SYMBOL_GPL(ata_std_probeinit);
+ EXPORT_SYMBOL_GPL(ata_std_softreset);
+ EXPORT_SYMBOL_GPL(sata_std_hardreset);
+ EXPORT_SYMBOL_GPL(ata_std_postreset);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index e8f29ce..68b3fe6 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -488,6 +488,7 @@ extern int ata_drive_probe_reset(struct 
+ 			ata_probeinit_fn_t probeinit,
+ 			ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+ 			ata_postreset_fn_t postreset, unsigned int *classes);
++extern void ata_std_probeinit(struct ata_port *ap);
+ extern int ata_std_softreset(struct ata_port *ap, int verbose,
+ 			     unsigned int *classes);
+ extern int sata_std_hardreset(struct ata_port *ap, int verbose,
 -- 
 1.1.3
 
