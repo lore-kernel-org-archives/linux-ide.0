@@ -1,62 +1,44 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 07/11] sata_sil24: add hardreset
-Date: Thu, 2 Feb 2006 18:20:00 +0900
-Message-ID: <11388720002336-git-send-email-htejun@gmail.com>
-References: <11388720003793-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+Subject: Re: Broken sata (VIA) on Asus A8V (kernel 2.6.14+)
+Date: Thu, 02 Feb 2006 19:17:34 +0900
+Message-ID: <43E1DC3E.5090007@gmail.com>
+References: <20060201162800.GA32196@tentacle.sectorb.msk.ru> <43E13F57.40808@gmail.com> <20060201231911.GA5463@tentacle.sectorb.msk.ru> <43E145B8.6090404@gmail.com> <43E1C6E7.6090506@projecthugo.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.195]:10653 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1423409AbWBBJUM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Feb 2006 04:20:12 -0500
-Received: by wproxy.gmail.com with SMTP id i30so336637wra
-        for <linux-ide@vger.kernel.org>; Thu, 02 Feb 2006 01:20:11 -0800 (PST)
-In-Reply-To: <11388720003793-git-send-email-htejun@gmail.com>
+Received: from wproxy.gmail.com ([64.233.184.203]:5596 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932453AbWBBKRj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Feb 2006 05:17:39 -0500
+Received: by wproxy.gmail.com with SMTP id i32so479365wra
+        for <linux-ide@vger.kernel.org>; Thu, 02 Feb 2006 02:17:38 -0800 (PST)
+In-Reply-To: <43E1C6E7.6090506@projecthugo.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: kernel-lists@projecthugo.co.uk
+Cc: linux-ide@vger.kernel.org
 
-Now that libata is smart enough to handle both soft and hard resets,
-add hardreset method.  Note that sil24 hardreset doesn't supply
-signature; still, the new reset mechanism can make good use of it.
+Matt Darcy wrote:
+> 
+>>
+>> Your BMDMA controller is reporting raised interrupt (0x4) and your 
+>> drive is saying that it's ready for the next command, yet interrupt 
+>> handler of sata_via hasn't run and thus the timeout.  It looks like 
+>> some kind of IRQ routing problem to me although I have no idea how the 
+>> problem doesn't affect the boot process.
+>>
+>> Can you try to boot with boot parameter pci=noacpi?
+> 
+> 
+> 
+> I have got 2.6.13 - 2.6.14 and 2.6.15 working on the a8v board in both 
+> 32 and 64bit mode.
+> 
+> Matt
+> 
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Are you also using dual core processor?  It seems like interrupts get 
+lost when routed to one of the processors.  Can you post your dmesg?
 
----
-
- drivers/scsi/sata_sil24.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
-
-8ef9da7d26ee574c1d719609c86b6c86543ab496
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index a529628..c2df4b6 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -484,10 +484,19 @@ static int sil24_softreset(struct ata_po
- 	return 0;
- }
- 
-+static int sil24_hardreset(struct ata_port *ap, int verbose,
-+			   unsigned int *class)
-+{
-+	unsigned int dummy_class;
-+
-+	/* sil24 doesn't report device signature after hard reset */
-+	return sata_std_hardreset(ap, verbose, &dummy_class);
-+}
-+
- static int sil24_probe_reset(struct ata_port *ap, unsigned int *classes)
- {
- 	return ata_drive_probe_reset(ap, ata_std_probeinit,
--				     sil24_softreset, NULL,
-+				     sil24_softreset, sil24_hardreset,
- 				     ata_std_postreset, classes);
- }
- 
 -- 
-1.1.3
-
-
+tejun
