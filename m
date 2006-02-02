@@ -1,39 +1,37 @@
-From: Jes Sorensen <jes@sgi.com>
-Subject: Re: [patch] Fix DMA timeouts with sgiioc4
-Date: Thu, 02 Feb 2006 09:45:09 +0100
-Message-ID: <43E1C695.1080102@sgi.com>
-References: <yq0vevzpi8r.fsf@jaguar.mkp.net> <58cb370e0602010234p62521a00h6d8920c84cac44d5@mail.gmail.com> <20060201104913.GA152005@sgi.com> <58cb370e0602010308o4cde24aeg8d629b1b3d45cdd3@mail.gmail.com> <20060201111754.GB152005@sgi.com> <58cb370e0602010326k265ef278k4010df13fb5adf8c@mail.gmail.com> <20060201113607.GF152005@sgi.com> <58cb370e0602010444m46a39705q4a3043778df1628d@mail.gmail.com> <20060202080046.GB157213@sgi.com>
+From: Matt Darcy <kernel-lists@projecthugo.co.uk>
+Subject: Re: Broken sata (VIA) on Asus A8V (kernel 2.6.14+)
+Date: Thu, 02 Feb 2006 08:46:31 +0000
+Message-ID: <43E1C6E7.6090506@projecthugo.co.uk>
+References: <20060201162800.GA32196@tentacle.sectorb.msk.ru> <43E13F57.40808@gmail.com> <20060201231911.GA5463@tentacle.sectorb.msk.ru> <43E145B8.6090404@gmail.com>
+Reply-To: kernel-lists@projecthugo.co.uk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omx1-ext.sgi.com ([192.48.179.11]:10124 "EHLO
-	omx1.americas.sgi.com") by vger.kernel.org with ESMTP
-	id S1423383AbWBBIpc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Feb 2006 03:45:32 -0500
-In-Reply-To: <20060202080046.GB157213@sgi.com>
+Received: from mx3.ifl.net ([213.18.248.106]:55455 "EHLO mx3.ifl.net")
+	by vger.kernel.org with ESMTP id S1423058AbWBBIqj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Feb 2006 03:46:39 -0500
+Received: from [194.238.49.3] (beng-03.stn.ab2.ifl.net [194.238.49.3])
+	by mx3.ifl.net (8.12.10/8.12.10) with ESMTP id k128kV92025868
+	for <linux-ide@vger.kernel.org>; Thu, 2 Feb 2006 08:46:34 GMT
+In-Reply-To: <43E145B8.6090404@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@redhat.com>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Jeremy Higdon wrote:
-> Thanks Bartlomiej.  You're correct in that it is ATAPI only (and
-> read-only also).
-> 
-> In this case, this is the final patch (last night's with a copyright
-> update and removing spurious whitespace at end of line).
 
-Hi Jeremy,
+>
+> Your BMDMA controller is reporting raised interrupt (0x4) and your 
+> drive is saying that it's ready for the next command, yet interrupt 
+> handler of sata_via hasn't run and thus the timeout.  It looks like 
+> some kind of IRQ routing problem to me although I have no idea how the 
+> problem doesn't affect the boot process.
+>
+> Can you try to boot with boot parameter pci=noacpi?
 
-Just ack'ing for completeness! Please discard my previous patch and use
-this one instead.
 
-Cheers,
-Jes
+I have got 2.6.13 - 2.6.14 and 2.6.15 working on the a8v board in both 
+32 and 64bit mode.
 
-> 
-> jeremy
-> 
-> Signed-off-by: Jeremy Higdon <jeremy@sgi.com>
-Acked-by: Jes Sorensen <jes@sgi.com>
+Matt
+
