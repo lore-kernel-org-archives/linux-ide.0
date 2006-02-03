@@ -1,63 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [git patch] libata: sata_mv MSI workaround
-Date: Thu, 2 Feb 2006 16:20:11 -0500
-Message-ID: <20060202212011.GA18990@havoc.gtf.org>
+From: Andy Helten <andy.helten@dot21rts.com>
+Subject: SATA hotplug status (sii3114) -- 2.6 kernel
+Date: Thu, 02 Feb 2006 18:01:07 -0600
+Message-ID: <43E29D43.1070800@dot21rts.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:59367 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1751195AbWBBVUN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Feb 2006 16:20:13 -0500
-Content-Disposition: inline
+Received: from centrmmtao02.cox.net ([70.168.83.82]:34003 "EHLO
+	centrmmtao02.cox.net") by vger.kernel.org with ESMTP
+	id S932497AbWBCABQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Feb 2006 19:01:16 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
+I asked about the status of SATA hotplug about one year ago for the 2.4 
+kernel.  I am now moving onto the 2.6 kernel and was wondering if anyone 
+can give me an update.  I see the list traffic in Oct and Dec of 2005 
+related to Lukasz Kosewski's work, but lost the trail after that.  I 
+understand it is actively being developed and that there may be 
+something in the "upstream" branch of libata that kind of supports hotplug.
 
-Please pull from 'upstream-fixes' branch of
+If so, how do I get the upstream branch of libata?  I did the below and 
+got something but not sure what:
+
+cg-clone git://git.kernel.org/pub/scm/linux/kernel/git/sam/kbuild.git
+
+I tried getting it from here, but this server required a password:
+
 master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-to receive the following updates:
+If the latest hotplug changes are not in the source repo, where are they 
+(I'm guessing the mailing list)?  I specifically would like to target 
+the 2.6.9 kernel in RedHat EL4, but would be willing to work with 
+something newer if necessary.  For what it's worth, I did get hotplug 
+working in the 2.4.25 kernel for the SII3114.
 
- drivers/scsi/sata_mv.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletion(-)
+Thanks,
+Andy
 
-Jeff Garzik:
-      [libata sata_mv] do not enable PCI MSI by default
-
-diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
-index cd54244..6fddf17 100644
---- a/drivers/scsi/sata_mv.c
-+++ b/drivers/scsi/sata_mv.c
-@@ -510,6 +510,12 @@ static const struct mv_hw_ops mv6xxx_ops
- };
- 
- /*
-+ * module options
-+ */
-+static int msi;	      /* Use PCI msi; either zero (off, default) or non-zero */
-+
-+
-+/*
-  * Functions
-  */
- 
-@@ -2191,7 +2197,7 @@ static int mv_init_one(struct pci_dev *p
- 	}
- 
- 	/* Enable interrupts */
--	if (pci_enable_msi(pdev) == 0) {
-+	if (msi && pci_enable_msi(pdev) == 0) {
- 		hpriv->hp_flags |= MV_HP_FLAG_MSI;
- 	} else {
- 		pci_intx(pdev, 1);
-@@ -2246,5 +2252,8 @@ MODULE_LICENSE("GPL");
- MODULE_DEVICE_TABLE(pci, mv_pci_tbl);
- MODULE_VERSION(DRV_VERSION);
- 
-+module_param(msi, int, 0444);
-+MODULE_PARM_DESC(msi, "Enable use of PCI MSI (0=off, 1=on)");
-+
- module_init(mv_init);
- module_exit(mv_exit);
