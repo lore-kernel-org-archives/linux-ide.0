@@ -1,18 +1,20 @@
 From: Papp Tamas <tompos@martos.bme.hu>
-Subject: sata_mv lockup
-Date: Fri, 3 Feb 2006 16:56:37 +0100
-Message-ID: <20060203155636.GA25255@martos.bme.hu>
+Subject: sata_mv issues
+Date: Fri, 3 Feb 2006 17:01:24 +0100
+Message-ID: <20060203160124.GA26300@martos.bme.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gaia.martos.bme.hu ([152.66.234.180]:3231 "EHLO martos.bme.hu")
-	by vger.kernel.org with ESMTP id S1750842AbWBCP4n (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Feb 2006 10:56:43 -0500
+Received: from gaia.martos.bme.hu ([152.66.234.180]:12703 "EHLO martos.bme.hu")
+	by vger.kernel.org with ESMTP id S1750981AbWBCQB1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Feb 2006 11:01:27 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: russb@emc.co
+To: russb@emc.com
 Cc: linux-ide@vger.kernel.org
+
+[Sorry, first time Brett's  email address was not the right.]
 
 Dear All,
 
@@ -70,3 +72,5 @@ Can you help me? Do you have any idea?
 Thank you,
 
 tamas
+
+----- End forwarded message -----
