@@ -1,57 +1,72 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: open bugzilla reports
-Date: Sat, 4 Feb 2006 09:50:23 +0000
-Message-ID: <20060204095023.GA11140@flint.arm.linux.org.uk>
-References: <20060203151150.3d9aa8b3.akpm@osdl.org>
+From: Richard Purdie <rpurdie@rpsys.net>
+Subject: Re: [PATCH 10/11] LED: Add IDE disk activity LED trigger
+Date: Sat, 04 Feb 2006 15:29:54 +0000
+Message-ID: <1139066994.8064.12.camel@localhost.localdomain>
+References: <1138714918.6869.139.camel@localhost.localdomain>
+	 <58cb370e0601310646y263acb96h62c422435e7016e@mail.gmail.com>
+	 <1138724479.6869.201.camel@localhost.localdomain>
+	 <58cb370e0601310944l421174f8j1802d94f1ae93a01@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1945987AbWBDJun@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060203151150.3d9aa8b3.akpm@osdl.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel@vger.kernel.org, video4linux-list@redhat.com, linux-fbdev-devel@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, netdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from tim.rpsys.net ([194.106.48.114]:20124 "EHLO tim.rpsys.net")
+	by vger.kernel.org with ESMTP id S932519AbWBDPaF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Feb 2006 10:30:05 -0500
+In-Reply-To: <58cb370e0601310944l421174f8j1802d94f1ae93a01@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linux-ide <linux-ide@vger.kernel.org>
 
-On Fri, Feb 03, 2006 at 03:11:50PM -0800, Andrew Morton wrote:
-> serial
-> ======
+Hi,
+
+On Tue, 2006-01-31 at 18:44 +0100, Bartlomiej Zolnierkiewicz wrote: 
+> > The trigger started out as just being ide-disk.c based but there is no
+> > place where the IDE end request function could be hooked within it due
+> > to its use of generic functions. The trigger therefore had to move into
+> > more generic code. If there was a point in ide-disk where an IDE end
+> > request could be hooked it, it could be confined to that file.
 > 
-> [Bug 5832] Enabling ACPI Plug and Play in kernels
-> 	http://bugzilla.kernel.org/show_bug.cgi?id=5832
+> Isn't ->end_request hook in ide_driver_t enough?
+> 
+> I see no reason why the custom ->end_request function cannot
+> be added to ide-disk.  All needed infrastructure is there.
 
-This seems to be misfiled.  Why do you think this is a serial bug?
-It seems to be talking about parallel ports.
+Not quite as I tried that once and it didn't intercept every
+->end_request call. I've just traced this to an explicit call to
+ide_end_request() rather than drv->end_request() in ide-taskfile.c
 
-> [Bug 5875] quad RS232 port card detected as 8,
-> 	http://bugzilla.kernel.org/show_bug.cgi?id=5875
+The patch below might or might not be an appropriate fix. With this
+applied, the led trigger simplifies to:
+http://www.rpsys.net/openzaurus/patches/led_ide-r3.patch
 
-This seems to be because we have an explicit vendor/device ID listed
-in 8250_pci for (according to this bug report) something which isn't
-a serial device.  What I don't know is if these vendor/device IDs
-also exist for something which is a serial device.  Hence, removing
-them could cause more problems than keeping them.  Since it has no
-effect other than causing extra ports to appear, this is low priority.
+Richard
 
-> [Bug 5942] serial driver gives up and we get IRQ3
-> 	http://bugzilla.kernel.org/show_bug.cgi?id=5942
 
-No idea what's happening here.  No one else seems to be using IRQ3,
-we've disabled the interrupt at the UART, yet we get a stuck IRQ3.
-Don't think it's serial related, it just happens that closing the
-serial port shows it.
+Ensure ide-taskfile.c calls any driver specific end_request function
+if present.
 
-> [Bug 5958] CF bluetooth card oopses machine when
-> 	http://bugzilla.kernel.org/show_bug.cgi?id=5958
+Signed-off-by: Richard Purdie <rpurdie@rpsys.net>
 
-This isn't a serial bug - it's a bluetooth ldisc bug.  I reported it
-to the bluetooth folk back when it first got raised by Pavel.  However,
-they seem to be completely disinterested in fixing it.
+Index: linux-2.6.15/drivers/ide/ide-taskfile.c
+===================================================================
+--- linux-2.6.15.orig/drivers/ide/ide-taskfile.c	2006-01-03 03:21:10.000000000 +0000
++++ linux-2.6.15/drivers/ide/ide-taskfile.c	2006-02-04 14:02:23.000000000 +0000
+@@ -372,7 +372,13 @@
+ 		}
+ 	}
+ 
+-	ide_end_request(drive, 1, rq->hard_nr_sectors);
++	if (rq->rq_disk) {
++		ide_driver_t *drv;
++
++		drv = *(ide_driver_t **)rq->rq_disk->private_data;;
++		drv->end_request(drive, 1, rq->hard_nr_sectors);
++	} else
++		ide_end_request(drive, 1, rq->hard_nr_sectors);
+ }
+ 
+ /*
 
-Unfortunately, there isn't a category for bt crap in bugzilla, otherwise
-I'd reassign it.  Please kick the bt folk.
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
