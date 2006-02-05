@@ -1,39 +1,43 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: open bugzilla reports
-Date: Sat, 4 Feb 2006 23:14:26 +0000
-Message-ID: <20060204231425.GA24887@flint.arm.linux.org.uk>
-References: <20060203151150.3d9aa8b3.akpm@osdl.org> <20060204095023.GA11140@flint.arm.linux.org.uk> <20060204084729.defc7c19.mbligh@mbligh.org>
+From: Richard Purdie <rpurdie@rpsys.net>
+Subject: [PATCH 12/12] Ensure ide-taskfile calls any driver specific
+	end_request function
+Date: Sun, 05 Feb 2006 15:55:15 +0000
+Message-ID: <1139154916.14624.18.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060204084729.defc7c19.mbligh@mbligh.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: "Martin J. Bligh" <mbligh@mbligh.org>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, video4linux-list@redhat.com, linux-fbdev-devel@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, netdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from tim.rpsys.net ([194.106.48.114]:48797 "EHLO tim.rpsys.net")
+	by vger.kernel.org with ESMTP id S1751782AbWBEPzX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Feb 2006 10:55:23 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux-ide <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-On Sat, Feb 04, 2006 at 08:47:29AM -0800, Martin J. Bligh wrote:
-> 
-> > > [Bug 5958] CF bluetooth card oopses machine when
-> > > 	http://bugzilla.kernel.org/show_bug.cgi?id=5958
-> > 
-> > This isn't a serial bug - it's a bluetooth ldisc bug.  I reported it
-> > to the bluetooth folk back when it first got raised by Pavel.  However,
-> > they seem to be completely disinterested in fixing it.
-> > 
-> > Unfortunately, there isn't a category for bt crap in bugzilla, otherwise
-> > I'd reassign it.  Please kick the bt folk.
-> 
-> Stick it under Drivers/Other if you want ...
+Ensure ide-taskfile.c calls any driver specific end_request function
+if present.
 
-It _is_ under Networking/Other, yet akpm still thinks it's a serial
-bug.  I'm not sure why though, I've fully explained why it isn't
-a serial problem in the bug comments.
+Signed-off-by: Richard Purdie <rpurdie@rpsys.net>
 
-akpm is buggy and needs fixing.  Where do I file this bug? 8)
+Index: linux-2.6.15/drivers/ide/ide-taskfile.c
+===================================================================
+--- linux-2.6.15.orig/drivers/ide/ide-taskfile.c	2006-01-03 03:21:10.000000000 +0000
++++ linux-2.6.15/drivers/ide/ide-taskfile.c	2006-02-04 14:02:23.000000000 +0000
+@@ -372,7 +372,13 @@
+ 		}
+ 	}
+ 
+-	ide_end_request(drive, 1, rq->hard_nr_sectors);
++	if (rq->rq_disk) {
++		ide_driver_t *drv;
++
++		drv = *(ide_driver_t **)rq->rq_disk->private_data;;
++		drv->end_request(drive, 1, rq->hard_nr_sectors);
++	} else
++		ide_end_request(drive, 1, rq->hard_nr_sectors);
+ }
+ 
+ /*
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+
