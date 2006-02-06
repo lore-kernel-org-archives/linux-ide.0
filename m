@@ -1,102 +1,140 @@
-From: brking@us.ibm.com
-Subject: [patch 03/15] libata: Remove dependence on host_set->dev for SAS
-Date: Mon, 06 Feb 2006 09:42:22 -0600
-Message-ID: <200602061542.k16FgSYn009049@d01av02.pok.ibm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:18640 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932154AbWBFPma (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Feb 2006 10:42:30 -0500
-Sender: linux-ide-owner@vger.kernel.org
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [patch 14/15] ipr: printk macro cleanup/removal
+Date: Mon, 06 Feb 2006 10:06:04 -0600
+Message-ID: <43E773EC.2090109@us.ibm.com>
+References: <200602061542.k16FgdZM002580@d01av01.pok.ibm.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------060504040706000404040903"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200602061542.k16FgdZM002580@d01av01.pok.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: brking@us.ibm.com
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
+
+This is a multi-part message in MIME format.
+--------------060504040706000404040903
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Missed a backslash...
 
 
-Remove some of the dependence on the host_set struct
-in preparation for supporting SAS HBAs. Adds a struct device
-pointer to the ata_port struct.
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
+
+--------------060504040706000404040903
+Content-Type: text/x-patch;
+ name="ipr_printk_fixes.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ipr_printk_fixes.patch"
+
+
+Remove some unused printk macros, make some more robust, and
+convert some to use standard printk macros when possible.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- drivers/scsi/libata-core.c |   13 +++++++------
- include/linux/libata.h     |    1 +
- 2 files changed, 8 insertions(+), 6 deletions(-)
+ linux-2.6-bjking1/drivers/scsi/ipr.c |   13 +++++++------
+ linux-2.6-bjking1/drivers/scsi/ipr.h |   25 ++++++-------------------
+ 2 files changed, 13 insertions(+), 25 deletions(-)
 
-diff -puN include/linux/libata.h~libata_host_set_dev include/linux/libata.h
---- libata-dev/include/linux/libata.h~libata_host_set_dev	2006-02-03 12:37:07.000000000 -0600
-+++ libata-dev-bjking1/include/linux/libata.h	2006-02-03 12:37:07.000000000 -0600
-@@ -393,6 +393,7 @@ struct ata_port {
+diff -puN drivers/scsi/ipr.h~ipr_printk_fixes drivers/scsi/ipr.h
+--- linux-2.6/drivers/scsi/ipr.h~ipr_printk_fixes	2006-01-31 16:53:45.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.h	2006-01-31 17:35:20.000000000 -0600
+@@ -1193,30 +1193,17 @@ struct ipr_ucode_image_header {
+  */
+ #define ipr_err(...) printk(KERN_ERR IPR_NAME ": "__VA_ARGS__)
+ #define ipr_info(...) printk(KERN_INFO IPR_NAME ": "__VA_ARGS__)
+-#define ipr_crit(...) printk(KERN_CRIT IPR_NAME ": "__VA_ARGS__)
+-#define ipr_warn(...) printk(KERN_WARNING IPR_NAME": "__VA_ARGS__)
+ #define ipr_dbg(...) IPR_DBG_CMD(printk(KERN_INFO IPR_NAME ": "__VA_ARGS__))
  
- 	struct ata_host_stats	stats;
- 	struct ata_host_set	*host_set;
-+	struct device 		*dev;
+-#define ipr_sdev_printk(level, sdev, fmt, args...) \
+-	sdev_printk(level, sdev, fmt, ## args)
++#define ipr_ra_printk(level, ioa_cfg, ra, fmt, ...) \
++	printk(level IPR_NAME ": %d:%d:%d:%d: " fmt, (ioa_cfg)->host->host_no, \
++		(ra).bus, (ra).target, (ra).lun, ##__VA_ARGS__)
  
- 	struct work_struct	packet_task;
+-#define ipr_sdev_err(sdev, fmt, ...) \
+-	ipr_sdev_printk(KERN_ERR, sdev, fmt, ##__VA_ARGS__)
+-
+-#define ipr_sdev_info(sdev, fmt, ...) \
+-	ipr_sdev_printk(KERN_INFO, sdev, fmt, ##__VA_ARGS__)
+-
+-#define ipr_sdev_dbg(sdev, fmt, ...) \
+-	IPR_DBG_CMD(ipr_sdev_printk(KERN_INFO, sdev, fmt, ##__VA_ARGS__))
+-
+-#define ipr_res_printk(level, ioa_cfg, res, fmt, ...) \
+-	printk(level IPR_NAME ": %d:%d:%d:%d: " fmt, ioa_cfg->host->host_no, \
+-		res.bus, res.target, res.lun, ##__VA_ARGS__)
++#define ipr_ra_err(ioa_cfg, ra, fmt, ...) \
++	ipr_ra_printk(KERN_ERR, ioa_cfg, ra, fmt, ##__VA_ARGS__)
  
-diff -puN drivers/scsi/libata-core.c~libata_host_set_dev drivers/scsi/libata-core.c
---- libata-dev/drivers/scsi/libata-core.c~libata_host_set_dev	2006-02-03 12:37:07.000000000 -0600
-+++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-02-03 12:37:07.000000000 -0600
-@@ -2855,7 +2855,7 @@ static void ata_sg_clean(struct ata_queu
+ #define ipr_res_err(ioa_cfg, res, fmt, ...) \
+-	ipr_res_printk(KERN_ERR, ioa_cfg, res, fmt, ##__VA_ARGS__)
+-#define ipr_res_dbg(ioa_cfg, res, fmt, ...) \
+-	IPR_DBG_CMD(ipr_res_printk(KERN_INFO, ioa_cfg, res, fmt, ##__VA_ARGS__))
++	ipr_ra_err(ioa_cfg, (res)->cfgte.res_addr, fmt, ##__VA_ARGS__)
  
- 	if (qc->flags & ATA_QCFLAG_SG) {
- 		if (qc->n_elem)
--			dma_unmap_sg(ap->host_set->dev, sg, qc->n_elem, dir);
-+			dma_unmap_sg(ap->dev, sg, qc->n_elem, dir);
- 		/* restore last sg */
- 		sg[qc->orig_n_elem - 1].length += qc->pad_len;
- 		if (pad_buf) {
-@@ -2866,7 +2866,7 @@ static void ata_sg_clean(struct ata_queu
- 		}
+ #define ipr_phys_res_err(ioa_cfg, res, fmt, ...)			\
+ {									\
+diff -puN drivers/scsi/ipr.c~ipr_printk_fixes drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_printk_fixes	2006-01-31 16:53:45.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2006-01-31 17:35:45.000000000 -0600
+@@ -1333,8 +1333,8 @@ static void ipr_handle_log_data(struct i
+ 		return;
+ 
+ 	if (ipr_is_device(&hostrcb->hcam.u.error.failing_dev_res_addr)) {
+-		ipr_res_err(ioa_cfg, hostrcb->hcam.u.error.failing_dev_res_addr,
+-			    "%s\n", ipr_error_table[error_index].error);
++		ipr_ra_err(ioa_cfg, hostrcb->hcam.u.error.failing_dev_res_addr,
++			   "%s\n", ipr_error_table[error_index].error);
  	} else {
- 		if (sg_dma_len(&sg[0]) > 0)
--			dma_unmap_single(ap->host_set->dev,
-+			dma_unmap_single(ap->dev,
- 				sg_dma_address(&sg[0]), sg_dma_len(&sg[0]),
- 				dir);
- 		/* restore sg */
-@@ -3073,7 +3073,7 @@ static int ata_sg_setup_one(struct ata_q
- 		goto skip_map;
+ 		dev_err(&ioa_cfg->pdev->dev, "%s\n",
+ 			ipr_error_table[error_index].error);
+@@ -3332,7 +3332,7 @@ static int __ipr_eh_dev_reset(struct scs
+ 	cmd_pkt->request_type = IPR_RQTYPE_IOACMD;
+ 	cmd_pkt->cdb[0] = IPR_RESET_DEVICE;
+ 
+-	ipr_sdev_err(scsi_cmd->device, "Resetting device\n");
++	sdev_printk(KERN_ERR, scsi_cmd->device, "Resetting device\n");
+ 	ipr_send_blocking_cmd(ipr_cmd, ipr_timeout, IPR_DEVICE_RESET_TIMEOUT);
+ 
+ 	ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
+@@ -3417,7 +3417,7 @@ static void ipr_abort_timeout(struct ipr
+ 		return;
  	}
  
--	dma_address = dma_map_single(ap->host_set->dev, qc->buf_virt,
-+	dma_address = dma_map_single(ap->dev, qc->buf_virt,
- 				     sg->length, dir);
- 	if (dma_mapping_error(dma_address)) {
- 		/* restore sg */
-@@ -3161,7 +3161,7 @@ static int ata_sg_setup(struct ata_queue
- 	}
+-	ipr_sdev_err(ipr_cmd->u.sdev, "Abort timed out. Resetting bus\n");
++	sdev_printk(KERN_ERR, ipr_cmd->u.sdev, "Abort timed out. Resetting bus.n");
+ 	reset_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
+ 	ipr_cmd->sibling = reset_cmd;
+ 	reset_cmd->sibling = ipr_cmd;
+@@ -3481,7 +3481,8 @@ static int ipr_cancel_op(struct scsi_cmn
+ 	cmd_pkt->cdb[0] = IPR_CANCEL_ALL_REQUESTS;
+ 	ipr_cmd->u.sdev = scsi_cmd->device;
  
- 	dir = qc->dma_dir;
--	n_elem = dma_map_sg(ap->host_set->dev, sg, pre_n_elem, dir);
-+	n_elem = dma_map_sg(ap->dev, sg, pre_n_elem, dir);
- 	if (n_elem < 1) {
- 		/* restore last sg */
- 		lsg->length += qc->pad_len;
-@@ -4625,7 +4625,7 @@ int ata_device_suspend(struct ata_port *
+-	ipr_sdev_err(scsi_cmd->device, "Aborting command: %02X\n", scsi_cmd->cmnd[0]);
++	sdev_printk(KERN_ERR, scsi_cmd->device, "Aborting command: %02X\n",
++		    scsi_cmd->cmnd[0]);
+ 	ipr_send_blocking_cmd(ipr_cmd, ipr_abort_timeout, IPR_CANCEL_ALL_TIMEOUT);
+ 	ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
  
- int ata_port_start (struct ata_port *ap)
- {
--	struct device *dev = ap->host_set->dev;
-+	struct device *dev = ap->dev;
- 	int rc;
+@@ -3792,7 +3793,7 @@ static void ipr_erp_done(struct ipr_cmnd
  
- 	ap->prd = dma_alloc_coherent(dev, ATA_PRD_TBL_SZ, &ap->prd_dma, GFP_KERNEL);
-@@ -4658,7 +4658,7 @@ int ata_port_start (struct ata_port *ap)
- 
- void ata_port_stop (struct ata_port *ap)
- {
--	struct device *dev = ap->host_set->dev;
-+	struct device *dev = ap->dev;
- 
- 	dma_free_coherent(dev, ATA_PRD_TBL_SZ, ap->prd, ap->prd_dma);
- 	ata_pad_free(ap, dev);
-@@ -4725,6 +4725,7 @@ static void ata_host_init(struct ata_por
- 	ap->host = host;
- 	ap->ctl = ATA_DEVCTL_OBS;
- 	ap->host_set = host_set;
-+	ap->dev = ent->dev;
- 	ap->port_no = port_no;
- 	ap->hard_port_no =
- 		ent->legacy_mode ? ent->hard_port_no : port_no;
+ 	if (IPR_IOASC_SENSE_KEY(ioasc) > 0) {
+ 		scsi_cmd->result |= (DID_ERROR << 16);
+-		ipr_sdev_err(scsi_cmd->device,
++		sdev_printk(KERN_ERR, scsi_cmd->device,
+ 			     "Request Sense failed with IOASC: 0x%08X\n", ioasc);
+ 	} else {
+ 		memcpy(scsi_cmd->sense_buffer, ipr_cmd->sense_buffer,
 _
+
+--------------060504040706000404040903--
