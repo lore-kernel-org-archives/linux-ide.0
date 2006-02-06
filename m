@@ -1,140 +1,50 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [patch 14/15] ipr: printk macro cleanup/removal
-Date: Mon, 06 Feb 2006 10:06:04 -0600
-Message-ID: <43E773EC.2090109@us.ibm.com>
-References: <200602061542.k16FgdZM002580@d01av01.pok.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: libATA  PATA status report, new patch
+Date: Mon, 06 Feb 2006 16:46:52 +0000
+Message-ID: <1139244412.10437.32.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060504040706000404040903"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200602061542.k16FgdZM002580@d01av01.pok.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: brking@us.ibm.com
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:17617 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932206AbWBFQoy
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Feb 2006 11:44:54 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------060504040706000404040903
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Missed a backslash...
-
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
-
---------------060504040706000404040903
-Content-Type: text/x-patch;
- name="ipr_printk_fixes.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ipr_printk_fixes.patch"
+Main changes this time
+- Initial driver code for PCMCIA
+- Initial driver code for ISAPnP
+- Legacy support including VLB driver bits (mostly to test non PCI
+cases)
+- Replace IRQ masking awareness in core with a ->data_xfer method
+- Use ->data_xfer to move IRQ masking, VLB sync and other chip 
+  whackiness back *outside* of the core libata code.
+- Simplex DMA is now supported
+- Remove PCI quirk junk for IDE stuff (its buggy in places and a mess)
+- Teach core PCI code about the IDE legacy mess in the PCI spec
+- Merge with other libata changes to 2.6.16-rc2
+- ARTOP driver now knows how to init Macintosh cards
+- Initial netcell driver bits
+- CMD64x support (except 640)
+- Initial incomplete Cypress Alpha IDE
 
 
-Remove some unused printk macros, make some more robust, and
-convert some to use standard printk macros when possible.
+With the exception of HPA and serialize support its now pretty close to
+a straight replacement for drivers/ide on x86 systems (and boxes using
+PCI devices only). There is other stuff that wants improving still like
+error recovery on CRC, but its getting close.
 
-Signed-off-by: Brian King <brking@us.ibm.com>
----
+Please remember that functionality equivalence, and much cleaner code
+doesn't mean less bugs yet, there is a *lot* of testing and hammering on
+the code needed before it is production ready for switching.
 
- linux-2.6-bjking1/drivers/scsi/ipr.c |   13 +++++++------
- linux-2.6-bjking1/drivers/scsi/ipr.h |   25 ++++++-------------------
- 2 files changed, 13 insertions(+), 25 deletions(-)
+	http://zeniv.linux.org.uk/~alan/IDE
 
-diff -puN drivers/scsi/ipr.h~ipr_printk_fixes drivers/scsi/ipr.h
---- linux-2.6/drivers/scsi/ipr.h~ipr_printk_fixes	2006-01-31 16:53:45.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ipr.h	2006-01-31 17:35:20.000000000 -0600
-@@ -1193,30 +1193,17 @@ struct ipr_ucode_image_header {
-  */
- #define ipr_err(...) printk(KERN_ERR IPR_NAME ": "__VA_ARGS__)
- #define ipr_info(...) printk(KERN_INFO IPR_NAME ": "__VA_ARGS__)
--#define ipr_crit(...) printk(KERN_CRIT IPR_NAME ": "__VA_ARGS__)
--#define ipr_warn(...) printk(KERN_WARNING IPR_NAME": "__VA_ARGS__)
- #define ipr_dbg(...) IPR_DBG_CMD(printk(KERN_INFO IPR_NAME ": "__VA_ARGS__))
- 
--#define ipr_sdev_printk(level, sdev, fmt, args...) \
--	sdev_printk(level, sdev, fmt, ## args)
-+#define ipr_ra_printk(level, ioa_cfg, ra, fmt, ...) \
-+	printk(level IPR_NAME ": %d:%d:%d:%d: " fmt, (ioa_cfg)->host->host_no, \
-+		(ra).bus, (ra).target, (ra).lun, ##__VA_ARGS__)
- 
--#define ipr_sdev_err(sdev, fmt, ...) \
--	ipr_sdev_printk(KERN_ERR, sdev, fmt, ##__VA_ARGS__)
--
--#define ipr_sdev_info(sdev, fmt, ...) \
--	ipr_sdev_printk(KERN_INFO, sdev, fmt, ##__VA_ARGS__)
--
--#define ipr_sdev_dbg(sdev, fmt, ...) \
--	IPR_DBG_CMD(ipr_sdev_printk(KERN_INFO, sdev, fmt, ##__VA_ARGS__))
--
--#define ipr_res_printk(level, ioa_cfg, res, fmt, ...) \
--	printk(level IPR_NAME ": %d:%d:%d:%d: " fmt, ioa_cfg->host->host_no, \
--		res.bus, res.target, res.lun, ##__VA_ARGS__)
-+#define ipr_ra_err(ioa_cfg, ra, fmt, ...) \
-+	ipr_ra_printk(KERN_ERR, ioa_cfg, ra, fmt, ##__VA_ARGS__)
- 
- #define ipr_res_err(ioa_cfg, res, fmt, ...) \
--	ipr_res_printk(KERN_ERR, ioa_cfg, res, fmt, ##__VA_ARGS__)
--#define ipr_res_dbg(ioa_cfg, res, fmt, ...) \
--	IPR_DBG_CMD(ipr_res_printk(KERN_INFO, ioa_cfg, res, fmt, ##__VA_ARGS__))
-+	ipr_ra_err(ioa_cfg, (res)->cfgte.res_addr, fmt, ##__VA_ARGS__)
- 
- #define ipr_phys_res_err(ioa_cfg, res, fmt, ...)			\
- {									\
-diff -puN drivers/scsi/ipr.c~ipr_printk_fixes drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_printk_fixes	2006-01-31 16:53:45.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2006-01-31 17:35:45.000000000 -0600
-@@ -1333,8 +1333,8 @@ static void ipr_handle_log_data(struct i
- 		return;
- 
- 	if (ipr_is_device(&hostrcb->hcam.u.error.failing_dev_res_addr)) {
--		ipr_res_err(ioa_cfg, hostrcb->hcam.u.error.failing_dev_res_addr,
--			    "%s\n", ipr_error_table[error_index].error);
-+		ipr_ra_err(ioa_cfg, hostrcb->hcam.u.error.failing_dev_res_addr,
-+			   "%s\n", ipr_error_table[error_index].error);
- 	} else {
- 		dev_err(&ioa_cfg->pdev->dev, "%s\n",
- 			ipr_error_table[error_index].error);
-@@ -3332,7 +3332,7 @@ static int __ipr_eh_dev_reset(struct scs
- 	cmd_pkt->request_type = IPR_RQTYPE_IOACMD;
- 	cmd_pkt->cdb[0] = IPR_RESET_DEVICE;
- 
--	ipr_sdev_err(scsi_cmd->device, "Resetting device\n");
-+	sdev_printk(KERN_ERR, scsi_cmd->device, "Resetting device\n");
- 	ipr_send_blocking_cmd(ipr_cmd, ipr_timeout, IPR_DEVICE_RESET_TIMEOUT);
- 
- 	ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
-@@ -3417,7 +3417,7 @@ static void ipr_abort_timeout(struct ipr
- 		return;
- 	}
- 
--	ipr_sdev_err(ipr_cmd->u.sdev, "Abort timed out. Resetting bus\n");
-+	sdev_printk(KERN_ERR, ipr_cmd->u.sdev, "Abort timed out. Resetting bus.n");
- 	reset_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
- 	ipr_cmd->sibling = reset_cmd;
- 	reset_cmd->sibling = ipr_cmd;
-@@ -3481,7 +3481,8 @@ static int ipr_cancel_op(struct scsi_cmn
- 	cmd_pkt->cdb[0] = IPR_CANCEL_ALL_REQUESTS;
- 	ipr_cmd->u.sdev = scsi_cmd->device;
- 
--	ipr_sdev_err(scsi_cmd->device, "Aborting command: %02X\n", scsi_cmd->cmnd[0]);
-+	sdev_printk(KERN_ERR, scsi_cmd->device, "Aborting command: %02X\n",
-+		    scsi_cmd->cmnd[0]);
- 	ipr_send_blocking_cmd(ipr_cmd, ipr_abort_timeout, IPR_CANCEL_ALL_TIMEOUT);
- 	ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
- 
-@@ -3792,7 +3793,7 @@ static void ipr_erp_done(struct ipr_cmnd
- 
- 	if (IPR_IOASC_SENSE_KEY(ioasc) > 0) {
- 		scsi_cmd->result |= (DID_ERROR << 16);
--		ipr_sdev_err(scsi_cmd->device,
-+		sdev_printk(KERN_ERR, scsi_cmd->device,
- 			     "Request Sense failed with IOASC: 0x%08X\n", ioasc);
- 	} else {
- 		memcpy(scsi_cmd->sense_buffer, ipr_cmd->sense_buffer,
-_
+for 2.6.16-rc2 patches.
 
---------------060504040706000404040903--
+Alan
+
+
