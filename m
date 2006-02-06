@@ -1,50 +1,37 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: libATA  PATA status report, new patch
-Date: Mon, 06 Feb 2006 16:46:52 +0000
-Message-ID: <1139244412.10437.32.camel@localhost.localdomain>
+From: Robert Borkowski <rborkows@novator.com>
+Subject: [PATCH] updated sata_promise.c with new device id
+Date: Mon, 06 Feb 2006 14:17:08 -0500
+Message-ID: <43E7A0B4.4050908@novator.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:17617 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932206AbWBFQoy
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Feb 2006 11:44:54 -0500
+Received: from tor149-99-58-114.dedicated.sprintdsl.ca ([149.99.58.114]:50117
+	"EHLO mail.novator.com") by vger.kernel.org with ESMTP
+	id S932281AbWBFTRW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Feb 2006 14:17:22 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Main changes this time
-- Initial driver code for PCMCIA
-- Initial driver code for ISAPnP
-- Legacy support including VLB driver bits (mostly to test non PCI
-cases)
-- Replace IRQ masking awareness in core with a ->data_xfer method
-- Use ->data_xfer to move IRQ masking, VLB sync and other chip 
-  whackiness back *outside* of the core libata code.
-- Simplex DMA is now supported
-- Remove PCI quirk junk for IDE stuff (its buggy in places and a mess)
-- Teach core PCI code about the IDE legacy mess in the PCI spec
-- Merge with other libata changes to 2.6.16-rc2
-- ARTOP driver now knows how to init Macintosh cards
-- Initial netcell driver bits
-- CMD64x support (except 640)
-- Initial incomplete Cypress Alpha IDE
+patch is against kernel 2.4.32
+card is a Promise SATAII 300 TX4, PDC40718-GP printed on the main chip
 
+Tested by making md raid5 on four drives and stressing with bonnie++.
+Any other tests I should run?
 
-With the exception of HPA and serialize support its now pretty close to
-a straight replacement for drivers/ide on x86 systems (and boxes using
-PCI devices only). There is other stuff that wants improving still like
-error recovery on CRC, but its getting close.
+Signed-off-by: Robert Borkowski <rborkows@novator.com>
+--- drivers/scsi/sata_promise.c.orig    Mon Feb  6 11:45:06 2006
++++ drivers/scsi/sata_promise.c Mon Feb  6 11:45:39 2006
+@@ -181,6 +181,8 @@
+           board_20319 },
+         { PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+           board_20319 },
++       { PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++         board_20319 },
+         { PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+           board_20319 },
 
-Please remember that functionality equivalence, and much cleaner code
-doesn't mean less bugs yet, there is a *lot* of testing and hammering on
-the code needed before it is production ready for switching.
-
-	http://zeniv.linux.org.uk/~alan/IDE
-
-for 2.6.16-rc2 patches.
-
-Alan
-
-
+-- 
+Robert Borkowski
