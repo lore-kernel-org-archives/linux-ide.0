@@ -1,47 +1,45 @@
-From: Chris Wright <chrisw@sous-sol.org>
-Subject: [PATCH 01/23] SCSI: turn off ordered flush barriers
-Date: Tue, 07 Feb 2006 22:45:04 -0800
-Message-ID: <20060208064843.927207000@sorel.sous-sol.org>
-References: <20060208064503.924238000@sorel.sous-sol.org>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: SMART on SATA reporting errors? (was Re: regarding bug #5914
+ - fs corruption on SATA)
+Date: Wed, 08 Feb 2006 07:21:21 +0000
+Message-ID: <43E99BF1.6050207@dgreaves.com>
+References: <20060126055050.GA4737@htj.dyndns.org> <43D8FBBD.6070205@dgreaves.com> <43D8FF9A.4020805@pobox.com> <43D903AC.5000309@dgreaves.com> <43E8E85F.5000905@dgreaves.com> <43E8F558.4040002@pobox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 216-99-217-87.dsl.aracnet.com ([216.99.217.87]:46979 "EHLO
-	sorel.sous-sol.org") by vger.kernel.org with ESMTP id S1161020AbWBHGnI
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Feb 2006 01:43:08 -0500
-Content-Disposition: inline; filename=scsi-turn-off-ordered-flush-barriers.patch
+Received: from s2.ukfsn.org ([217.158.120.143]:20664 "EHLO mail.ukfsn.org")
+	by vger.kernel.org with ESMTP id S1161066AbWBHHVV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Feb 2006 02:21:21 -0500
+In-Reply-To: <43E8F558.4040002@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, torvalds@osdl.org, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, Jens Axboe <axboe@suse.de>, Pasi <pasik@iki.fi>, Nix <nix@esperi.org.uk>, Ariel <askernel2615@dsgml.com>, Jamie Heilman <jamie@audible.transient.net>, Chase Venters <chase.venters@clientec.com>, Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux-ide <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Nicolas.Mailhot@LaPoste.net, Jens Axboe <axboe@suse.de>, Christopher Smith <csmith@nighthawkrad.net>, Erik Slagter <erik@slagter.name>, hahn@physics.mcmaster.ca, mlaks@verizon.net, Soeren Sonnenburg <kernel@nn7.de>, mlaks@verizononline.net, smartmontools-support@lists.sourceforge.net
 
--stable review patch.  If anyone has any objections, please let us know.
-------------------
+Jeff Garzik wrote:
 
-Turn off ordered flush barriers for SCSI driver, since the SCSI barrier
-code has a command leak.
+> David Greaves wrote:
+>
+>> I did a little investigation and I see that when I do:
+>> # smartctl -o on -data /dev/sdb
+>
+<snip>
 
-Signed-off-by: Jens Axboe <axboe@suse.de>
-Signed-off-by: Chris Wright <chrisw@sous-sol.org>
----
+> All of your commands are missing "-d ata"
 
- drivers/scsi/scsi_lib.c |    5 -----
- 1 files changed, 5 deletions(-)
+well, technically yes, I used -data in all of them, is the space or option order important?
 
-Index: linux-2.6.15.3/drivers/scsi/scsi_lib.c
-===================================================================
---- linux-2.6.15.3.orig/drivers/scsi/scsi_lib.c
-+++ linux-2.6.15.3/drivers/scsi/scsi_lib.c
-@@ -1534,11 +1534,6 @@ struct request_queue *scsi_alloc_queue(s
- 	 */
- 	if (shost->ordered_tag)
- 		blk_queue_ordered(q, QUEUE_ORDERED_TAG);
--	else if (shost->ordered_flush) {
--		blk_queue_ordered(q, QUEUE_ORDERED_FLUSH);
--		q->prepare_flush_fn = scsi_prepare_flush_fn;
--		q->end_flush_fn = scsi_end_flush_fn;
--	}
- 
- 	if (!shost->use_clustering)
- 		clear_bit(QUEUE_FLAG_CLUSTER, &q->queue_flags);
 
---
+David Greaves wrote:
+# smartctl -o on -data /dev/sdb
+# smartctl -o off -data /dev/sda
+# smartctl -s on -data /dev/sda
+# smartctl -s off -data /dev/sda
+# smartctl -S off -data /dev/sdc
+
+David
+
+
+-- 
+
