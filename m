@@ -1,51 +1,48 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 1/4] libata-dev: Fix array index value in ata_rwcmd_protocol()
-Date: Wed, 08 Feb 2006 16:37:43 +0800
-Message-ID: <43E9ADD7.6070406@tw.ibm.com>
-References: <43DA2CFB.4010605@pobox.com> <43E9AAE0.8020302@tw.ibm.com> <43E9AD00.8070900@tw.ibm.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: irq-pio branch updated with Tejun's patches
+Date: Wed, 08 Feb 2006 17:46:39 +0900
+Message-ID: <43E9AFEF.4010909@gmail.com>
+References: <43DA2CFB.4010605@pobox.com> <43E9AAE0.8020302@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:56744 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030179AbWBHIhx
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Feb 2006 03:37:53 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k188blB7026535
-	for <linux-ide@vger.kernel.org>; Wed, 8 Feb 2006 03:37:47 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k188eD5b173906
-	for <linux-ide@vger.kernel.org>; Wed, 8 Feb 2006 01:40:14 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k188bkWq006275
-	for <linux-ide@vger.kernel.org>; Wed, 8 Feb 2006 01:37:46 -0700
-In-Reply-To: <43E9AD00.8070900@tw.ibm.com>
+Received: from pproxy.gmail.com ([64.233.166.180]:59095 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1030575AbWBHIqp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Feb 2006 03:46:45 -0500
+Received: by pproxy.gmail.com with SMTP id f25so255222pyf
+        for <linux-ide@vger.kernel.org>; Wed, 08 Feb 2006 00:46:44 -0800 (PST)
+In-Reply-To: <43E9AAE0.8020302@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Doug Maxey <dwm@maxeymade.com>
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
-Patch 1/4:
+Albert Lee wrote:
+> Jeff Garzik wrote:
+> 
+>>I updated the libata irq-pio branch with Tejun's patches.  I would
+>>appreciate it if you could check my work, and make sure that everything
+>>continues to function properly.
+>>
+> 
+> 
+> Sorry for the late reply.
+> Still checking Tejun's patches, especially the EH vs polling PIO racing fix.
+> 
+> Fixed minor compiliation problem in the irq-pio branch with Tejun and your patches.
+> Will submit those minor patches first.
+> 
 
-  - Fix the array index value in ata_rwcmd_protocol() for the added FUA commands.
+Hello, Albert.
 
-For your review, thanks.
+This is sort of OT, but would it be possible to separate PIO 
+issuing/interrupt handling from ata_qc_issue_prot and ata_host_intr?
 
-Albert
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com> 
+As PIO implementation currently stands, a lldd must use those standard 
+methods to use PIO, but some controllers need PIO handling but the stock 
+issue and interrupt routines don't really fit. e.g. not-yet-working 
+sata_inic162x.  Something like ata_qc_issue_pio and ata_qc_pio_intr maybe?
 
-===
-
---- irq-pio/drivers/scsi/libata-core.c	2006-02-07 16:59:14.000000000 +0800
-+++ rwcmd/drivers/scsi/libata-core.c	2006-02-08 13:39:34.000000000 +0800
-@@ -611,7 +611,7 @@ int ata_rwcmd_protocol(struct ata_queued
- 	} else if (lba48 && (qc->ap->flags & ATA_FLAG_PIO_LBA48)) {
- 		/* Unable to use DMA due to host limitation */
- 		tf->protocol = ATA_PROT_PIO;
--		index = dev->multi_count ? 0 : 4;
-+		index = dev->multi_count ? 0 : 8;
- 	} else {
- 		tf->protocol = ATA_PROT_DMA;
- 		index = 16;
-
-
+-- 
+tejun
