@@ -1,54 +1,48 @@
-From: Tejun <htejun@gmail.com>
-Subject: Re: [patch 09/15] libata: Improved ata_exec_internal timeout handling
-Date: Thu, 09 Feb 2006 02:21:41 +0900
-Message-ID: <43EA28A5.5020803@gmail.com>
-References: <200602061542.k16FgYf0002182@d01av01.pok.ibm.com> <43E9D328.7020109@gmail.com> <43EA256B.5050000@us.ibm.com>
+From: Gabriele Gorla <gorlik@yahoo.com>
+Subject: SIL3114 problem on alpha
+Date: Wed, 8 Feb 2006 14:31:41 -0800 (PST)
+Message-ID: <20060208223141.18180.qmail@web53709.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <43EA256B.5050000@us.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: brking@us.ibm.com
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from web53709.mail.yahoo.com ([206.190.37.30]:28565 "HELO
+	web53709.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S965210AbWBHWbm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Feb 2006 17:31:42 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Brian King wrote:
-> Tejun Heo wrote:
-> 
->>brking@us.ibm.com wrote:
->>
->>>Currently ata_exec_internal does very minimal cleanup if
->>>the executing command times out. This works for most usage
->>>scenarios, but can cause problems for hosts that set
->>>ATA_FLAG_PIO_DMA. For these users, the DMA buffer gets unmapped
->>>while the timed out out command is still active, which has
->>>the potential to cause PCI DMA errors if the command is
->>>still in progress. The following patch modifies ata_exec_internal
->>>to invoke eng_timeout on a timeout to allow for the timed out
->>>command to be cleaned up better before proceeding further.
->>>This patch is also in preparation for SAS attached SATA devices.
->>>
->>
->>Hello, again.
->>
->>ata_exec_internal() will be used during EH, so if you call error handler
->>from ata_exec_internal()....  In my pending EH patchset, there's a patch
->>to implement ->post_internal() callback which cleans up after an
->>internal command (successful or not).  Hopefully, it will be merged in
->>not too distant future.  Can ata_exec_internal() timeout handling wait
->>till then?
-> 
-> 
-> Do you have a pointer to this patchset? I did a quick search for
-> post_internal on the archive and didn't find anything.
-> 
+Hello Jeff,
+I tried to use a SIL3114 based card on my PC164SX
+alpha based motherboard.
 
-Hi,
+Channel 0 and 1 seem to work fine but 2 and 3 report
+frequent read errors.
+Adding the SIL_FLAG_MOD15WRITE makes everything happy.
+However the same card and drives on a standard PC i386
+platform do not require the SIL_FLAG_MOD15WRITE flag
+for proper operaion.
 
-No, not posted yet.  It's pretty simple though.  Hmmm... I'll post the
-patch against the current upstream tomorrow.  It's pretty much
-independent from other changes anyway.
+The only difference I can think of is that on the
+alpha platform the add-on card bios is not executed.
+I suspect that the card BIOS is adjusting some
+register to workaround the MOD15WRITE issue.
 
--- 
-tejun
+do you have any suggestion and/or tools to compare the
+register seetings to help figuring out how the bios is
+working around the issue?
+thanks,
+GG
+
+system config:
+Alpha 21164PC-533 512Mb
+linux 2.6.15.3
+3x ST380023AS
+
+__________________________________________________
+Do You Yahoo!?
+Tired of spam?  Yahoo! Mail has the best spam protection around 
+http://mail.yahoo.com 
