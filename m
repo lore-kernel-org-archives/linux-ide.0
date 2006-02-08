@@ -1,45 +1,43 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: SMART on SATA reporting errors? (was Re: regarding bug #5914
- - fs corruption on SATA)
-Date: Wed, 08 Feb 2006 07:21:21 +0000
-Message-ID: <43E99BF1.6050207@dgreaves.com>
-References: <20060126055050.GA4737@htj.dyndns.org> <43D8FBBD.6070205@dgreaves.com> <43D8FF9A.4020805@pobox.com> <43D903AC.5000309@dgreaves.com> <43E8E85F.5000905@dgreaves.com> <43E8F558.4040002@pobox.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: irq-pio branch updated with Tejun's patches
+Date: Wed, 08 Feb 2006 16:25:04 +0800
+Message-ID: <43E9AAE0.8020302@tw.ibm.com>
+References: <43DA2CFB.4010605@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:20664 "EHLO mail.ukfsn.org")
-	by vger.kernel.org with ESMTP id S1161066AbWBHHVV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Feb 2006 02:21:21 -0500
-In-Reply-To: <43E8F558.4040002@pobox.com>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:1236 "EHLO e33.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1161070AbWBHIZP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Feb 2006 03:25:15 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e33.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k188PEEr007572
+	for <linux-ide@vger.kernel.org>; Wed, 8 Feb 2006 03:25:14 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k188NAn7201980
+	for <linux-ide@vger.kernel.org>; Wed, 8 Feb 2006 01:23:10 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k188PEa8016790
+	for <linux-ide@vger.kernel.org>; Wed, 8 Feb 2006 01:25:14 -0700
+In-Reply-To: <43DA2CFB.4010605@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux-ide <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Nicolas.Mailhot@LaPoste.net, Jens Axboe <axboe@suse.de>, Christopher Smith <csmith@nighthawkrad.net>, Erik Slagter <erik@slagter.name>, hahn@physics.mcmaster.ca, mlaks@verizon.net, Soeren Sonnenburg <kernel@nn7.de>, mlaks@verizononline.net, smartmontools-support@lists.sourceforge.net
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Doug Maxey <dwm@maxeymade.com>
 
 Jeff Garzik wrote:
+> 
+> I updated the libata irq-pio branch with Tejun's patches.  I would
+> appreciate it if you could check my work, and make sure that everything
+> continues to function properly.
+> 
 
-> David Greaves wrote:
->
->> I did a little investigation and I see that when I do:
->> # smartctl -o on -data /dev/sdb
->
-<snip>
+Sorry for the late reply.
+Still checking Tejun's patches, especially the EH vs polling PIO racing fix.
 
-> All of your commands are missing "-d ata"
+Fixed minor compiliation problem in the irq-pio branch with Tejun and your patches.
+Will submit those minor patches first.
 
-well, technically yes, I used -data in all of them, is the space or option order important?
+Albert
 
-
-David Greaves wrote:
-# smartctl -o on -data /dev/sdb
-# smartctl -o off -data /dev/sda
-# smartctl -s on -data /dev/sda
-# smartctl -s off -data /dev/sda
-# smartctl -S off -data /dev/sdc
-
-David
-
-
--- 
 
