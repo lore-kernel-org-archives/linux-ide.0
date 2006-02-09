@@ -1,68 +1,103 @@
-From: "JaniD++" <djani22@dynamicweb.hu>
-Subject: promise driver stability question (bugreport?)
-Date: Thu, 9 Feb 2006 12:11:34 +0100
-Message-ID: <005801c62d69$99298950$9d00a8c0@dcccs>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [git patches] libata fixes
+Date: Thu, 9 Feb 2006 13:47:36 -0500
+Message-ID: <20060209184736.GA8409@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-2"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.enternet.hu ([62.112.192.21]:50183 "EHLO smtp.enternet.hu")
-	by vger.kernel.org with ESMTP id S1422743AbWBILFI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Feb 2006 06:05:08 -0500
-Received: from [62.68.179.10] (helo=dcccs)
-	by smtp.enternet.hu with esmtpa (Exim 4)
-	id 1F79bX-0001Ca-IM
-	for linux-ide@vger.kernel.org; Thu, 09 Feb 2006 12:04:51 +0100
+Received: from havoc.gtf.org ([69.61.125.42]:57524 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1750701AbWBISri (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Feb 2006 13:47:38 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Jeff, list,
 
-10 days ago i have upgrade my system from 8TB to 13.2TB (the system info is
-the bottom of mail), and now i have seriously problem with my 2 disk node.
+The following changes add module parameters to two SATA drivers.  The
+first, sata_mv, fixes the driver so that it works for a larger set of
+users (MSI is too immature to use by default).  The second gives the
+user an option to work around various bios/system[/driver?] problems
+that are occasionally reported.
 
-(first i try the sil3112 based cards, but this looks like wery unstable,
-makes data lost, very worst write speed with multiple cards and i have
-replaced these cards with promise controllers.)
+[the sata_mv change is a resend, it didn't get pulled the first time]
 
-Currently i use the ICH5 , promise sata 300 TX4 and promise sata 300 TX2
-cards/chips only.
+Both are definitely -rc material.
 
-I use 2.6.16-rc2-git5, because only this kernel knows what i need.
+Please pull from 'upstream-fixes' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-The problem is, one of my disk nodes seriously reboots. (about 4-8 hourly)
-I try to catch the error message with remote syslogd, but i cannot see any
-valuable info.
+to receive the following updates:
 
-At this time i can see the reboot only happens, when  the concentrator is
-writing to nodes.
+ drivers/scsi/sata_mv.c  |   11 ++++++++++-
+ drivers/scsi/sata_sil.c |   10 ++++++++--
+ 2 files changed, 18 insertions(+), 3 deletions(-)
 
-The reboot is newer happens, when  the node is resyncing, doing  recovery
-for a long time (~6 hours) and have no other work.
-The reboot makes no data lost, except the dirty buffer. (looks like reset)
+Jeff Garzik:
+      [libata sata_sil] implement 'slow_down' module parameter
+      [libata sata_mv] do not enable PCI MSI by default
 
-First i try to track down the problem to hardware, but this looks like good.
-(after the system upgrade on the prevously stable nodes, the new hardware is
-only the HDD, and the promise cards, plus the kernel.)
-
-Today i try to replace the e1000 nic driver in the kernel with the old, and
-known to be stable version, but the reboot happened again. :-(
-
-Is there any info or known bug about promise driver? (or 2.6.16-rc kernels)
-What do you recommend to do or try?
-
-Thanks,
-Janos
-
-The system info:
-
-4x 3.3TB disk nodes, and one concentrator, without disks.
-The nodes:
-Abit IS7 motherboard (i865), P4 3G, 1G ram, Intel Gigabit Pro NIC.
-4x IDE maxtor 300GB in ICH5
-2x SATA maxtor 300GB in ICH5-sata
-4x SATA maxtor 300GB in Promise sata 300 TX4
-2x SATA maxtor 300GB in Promise sata 300 TX2
-
+diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
+index cd54244..6fddf17 100644
+--- a/drivers/scsi/sata_mv.c
++++ b/drivers/scsi/sata_mv.c
+@@ -510,6 +510,12 @@ static const struct mv_hw_ops mv6xxx_ops
+ };
+ 
+ /*
++ * module options
++ */
++static int msi;	      /* Use PCI msi; either zero (off, default) or non-zero */
++
++
++/*
+  * Functions
+  */
+ 
+@@ -2191,7 +2197,7 @@ static int mv_init_one(struct pci_dev *p
+ 	}
+ 
+ 	/* Enable interrupts */
+-	if (pci_enable_msi(pdev) == 0) {
++	if (msi && pci_enable_msi(pdev) == 0) {
+ 		hpriv->hp_flags |= MV_HP_FLAG_MSI;
+ 	} else {
+ 		pci_intx(pdev, 1);
+@@ -2246,5 +2252,8 @@ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, mv_pci_tbl);
+ MODULE_VERSION(DRV_VERSION);
+ 
++module_param(msi, int, 0444);
++MODULE_PARM_DESC(msi, "Enable use of PCI MSI (0=off, 1=on)");
++
+ module_init(mv_init);
+ module_exit(mv_exit);
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index b017f85..17f74d3 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -231,6 +231,10 @@ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, sil_pci_tbl);
+ MODULE_VERSION(DRV_VERSION);
+ 
++static int slow_down = 0;
++module_param(slow_down, int, 0444);
++MODULE_PARM_DESC(slow_down, "Sledgehammer used to work around random problems, by limiting commands to 15 sectors (0=off, 1=on)");
++
+ 
+ static unsigned char sil_get_device_cache_line(struct pci_dev *pdev)
+ {
+@@ -354,8 +358,10 @@ static void sil_dev_config(struct ata_po
+ 		}
+ 
+ 	/* limit requests to 15 sectors */
+-	if ((ap->flags & SIL_FLAG_MOD15WRITE) && (quirks & SIL_QUIRK_MOD15WRITE)) {
+-		printk(KERN_INFO "ata%u(%u): applying Seagate errata fix\n",
++	if (slow_down ||
++	    ((ap->flags & SIL_FLAG_MOD15WRITE) &&
++	     (quirks & SIL_QUIRK_MOD15WRITE))) {
++		printk(KERN_INFO "ata%u(%u): applying Seagate errata fix (mod15write workaround)\n",
+ 		       ap->id, dev->devno);
+ 		ap->host->max_sectors = 15;
+ 		ap->host->hostt->max_sectors = 15;
