@@ -1,115 +1,57 @@
-From: Tejun <htejun@gmail.com>
-Subject: Re: [PATCHSET] libata: [PATCHSET] libata: new reset mechanism, take#3
-Date: Thu, 09 Feb 2006 18:20:18 +0900
-Message-ID: <43EB0952.6090409@gmail.com>
-References: <11388720003793-git-send-email-htejun@gmail.com> <43EAE67D.6010304@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: irq-pio branch updated with Tejun's patches
+Date: Thu, 09 Feb 2006 04:21:29 -0500
+Message-ID: <43EB0999.9060204@pobox.com>
+References: <43DA2CFB.4010605@pobox.com> <43E9AAE0.8020302@tw.ibm.com> <43E9AFEF.4010909@gmail.com> <43EAB5BA.3050204@tw.ibm.com> <43EABDFB.8000505@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.195]:1138 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030622AbWBIJUY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Feb 2006 04:20:24 -0500
-Received: by wproxy.gmail.com with SMTP id i11so262847wra
-        for <linux-ide@vger.kernel.org>; Thu, 09 Feb 2006 01:20:23 -0800 (PST)
-In-Reply-To: <43EAE67D.6010304@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:8350 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030191AbWBIJVd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Feb 2006 04:21:33 -0500
+In-Reply-To: <43EABDFB.8000505@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Albert Lee <albertcc@tw.ibm.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Brian King <brking@us.ibm.com>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
+Tejun Heo wrote:
+> Hello, Albert.
 > 
->> 1. For softreset
+> Albert Lee wrote:
+> 
+>>>
+>>> This is sort of OT, but would it be possible to separate PIO
+>>> issuing/interrupt handling from ata_qc_issue_prot and ata_host_intr?
+>>>
 >>
-[--snip--]
->> I thought the ata_busy_sleep() in #a2 was for SATA_RESET case and left
->> it out.  Do you think it's necessary for SRST too?
+>> Isn't overriding the ->qc_issue() and ->irq_handle() in LLDD good enough?
 > 
-> Yes.  You want to check status before dev_select() to ensure that we are 
-> at bus-idle in the HSM.
+> 
+> The driver needs its own ->qc_issue() and ->irq_handler() but it also 
+> needs PIO support.  AFAICS, the current PIO implementation is rather 
+> strongly tied into ata_qc_issue_prot() and ata_host_intr() making it 
+> difficult to use PIO support in drivers which use private ->qc_issue() 
+> and ->irq_handler().  So, what I was asking was to separate out PIO 
+> handling from ata_qc_issue_prot() and ata_host_intr() such that other 
+> issue and intr routines can use PIO.
 
-Yes, I'll add that back.
+What needs this separation?  initio?
 
-> Follow the register I/O operations in Hale Landis's ATADRDR 
-> (http://www.ata-atapi.com/atadrvr.htm).  For PATA probing, I consider 
-> his code darn near canonical.
 
-Will do.
+> Separating out traditional driving logic from libata-core.c would 
+> require another level of indirection such that traditional low level 
+> drivers still can mix & match different legacy operations.  I thought 
+> about it and wasn't really sure whether the added abstraction was worth 
+> the clean up.  We currently don't have too many controllers which are 
+> legacy-free, it seems.
 
-> 
->> 2. For hardreset
-[--snip--]
->> #b1 is there as probeinit operation and as most controllers implement
->> softreset, there will be softreset operations between #b1 and #b2 in
->> most cases.  The dev_select(ap, 0) in #a4 is actually for SRST and
->> EDD.  For SATA_RESET, double dev_select()'s are soon done later in
->> ata_bus_reset() with only ata_irq_on() inbetween.
-> 
-> I agree RE double select.
-> 
-> However, I don't want to mess with the reset/wake phy sequence at all. 
-> It works now, and changing it is really unnecessary churn.
-> 
+IMO the solution is time.  Time and evolution will determine what's 
+best.  When a particular section of code get particularly large (PCI IDE 
+driver helper code), it certainly makes sense to split it out.  "Do what 
+you must, and no more" is the Linux maxim :)
 
-I'll add double select back.  But removing additional PHY wakup before 
-hardreset would require changes to reset_drive function.  Currently 
-->probe_init is called to prep ports for probing (in this case, waking 
-up PHY) for both hard and soft reset cases and that's why there's PHY 
-wake up before hardreset.  I'd really like to waking up PHY out of reset 
-component operations.  I'll figure something out.
+	Jeff
 
-> 
->> 3. During postreset
->>
->> The original code does ata_irq_on() if ctl_addr is non-NULL, double
->> select and ctl setup.  The new code does double select and
->> ata_irq_on() if ctl_addr is non-NULL.
->>
->>     Original            New
->> -----------------------------------------------------------------
->> a1. ata_irq_on() if ctl_addr
->>
->> a2. double select        b1. double select
->>
->> a3. ctl setup
->>                 b2. ata_irq_on() if ctl_addr
->>
->>
->> ata_irq_on() actually implies ctl setup.  Also, in the original code,
->> 'if ctl_addr' test in #a1 is bogus because in #a3, ctl_addr is used
->> unchecked.  New code just does ata_irq_on() at the end.
-> 
-> 
-> This (though probably not double select) was largely based on ATADRVR, 
-> so I would rather not change the ata_irq_on() order without a good reason.
-> 
-> 
->> IMHO, the remaining differences seem harmless and mainly due to the
->> fact that new code splits soft and hard resets explicitly whereas the
->> original code shared a lot of code path.  If any of above changes
->> seems suspicious, please let me know.
-> 
-> 
-> Life is FAR easier in the long run if you don't change the hardware 
-> register read/write order at all, when switching libata to your new 
-> reset mechanism.  You are welcome to experiment with that -- but in 
-> separate patches, at the end of the patch series.  The ATA host state 
-> machine, with added SATA complexities, is way too fragile to mess with 
-> without lots of testing.
- >
-> Your software will be more robust if you don't change the register I/O 
-> order at all.  Doing so means you leverage all the existing field 
-> testing done with the original probe/reset code.
 
-I see your point.  I'll submit another patch to make probing sequence 
-register-wise identical to before.
-
-> Thanks for your continued work and patience on this...  we're getting 
-> there.
-
-Thanks for reviewing.
-
--- 
-tejun
