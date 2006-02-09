@@ -1,78 +1,68 @@
 From: Tejun <htejun@gmail.com>
-Subject: Re: irq-pio branch updated with Tejun's patches
-Date: Thu, 09 Feb 2006 18:31:54 +0900
-Message-ID: <43EB0C0A.5070408@gmail.com>
-References: <43DA2CFB.4010605@pobox.com> <43E9AAE0.8020302@tw.ibm.com> <43E9AFEF.4010909@gmail.com> <43EAB5BA.3050204@tw.ibm.com> <43EABDFB.8000505@gmail.com> <43EB0999.9060204@pobox.com>
+Subject: Re: [PATCH 03/11] libata: add probeinit component operation to ata_drive_probe_reset()
+Date: Thu, 09 Feb 2006 18:39:58 +0900
+Message-ID: <43EB0DEE.7030202@gmail.com>
+References: <11388720002859-git-send-email-htejun@gmail.com> <43EAE8F3.7000505@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.195]:18625 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030327AbWBIJcF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Feb 2006 04:32:05 -0500
-Received: by xproxy.gmail.com with SMTP id i30so85726wxd
-        for <linux-ide@vger.kernel.org>; Thu, 09 Feb 2006 01:32:05 -0800 (PST)
-In-Reply-To: <43EB0999.9060204@pobox.com>
+Received: from xproxy.gmail.com ([66.249.82.206]:33852 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S965120AbWBIJkE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Feb 2006 04:40:04 -0500
+Received: by xproxy.gmail.com with SMTP id i30so86886wxd
+        for <linux-ide@vger.kernel.org>; Thu, 09 Feb 2006 01:40:03 -0800 (PST)
+In-Reply-To: <43EAE8F3.7000505@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Albert Lee <albertcc@tw.ibm.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Brian King <brking@us.ibm.com>
+Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
 Jeff Garzik wrote:
 > Tejun Heo wrote:
 > 
->> Hello, Albert.
+>> This patch adds probeinit component operation to
+>> ata_drive_probe_reset().  If present, this new operation is called
+>> before performing any reset.  The operations's roll is to prepare @ap
+>> for following probe-reset operations.
 >>
->> Albert Lee wrote:
->>
->>>>
->>>> This is sort of OT, but would it be possible to separate PIO
->>>> issuing/interrupt handling from ata_qc_issue_prot and ata_host_intr?
->>>>
->>>
->>> Isn't overriding the ->qc_issue() and ->irq_handle() in LLDD good 
->>> enough?
->>
->>
->>
->> The driver needs its own ->qc_issue() and ->irq_handler() but it also 
->> needs PIO support.  AFAICS, the current PIO implementation is rather 
->> strongly tied into ata_qc_issue_prot() and ata_host_intr() making it 
->> difficult to use PIO support in drivers which use private ->qc_issue() 
->> and ->irq_handler().  So, what I was asking was to separate out PIO 
->> handling from ata_qc_issue_prot() and ata_host_intr() such that other 
->> issue and intr routines can use PIO.
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> [...]
+> 
+>>  extern int ata_drive_probe_reset(struct ata_port *ap,
+>> +            ata_probeinit_fn_t probeinit,
+>>              ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+>>              ata_postreset_fn_t postreset, unsigned int *classes);
 > 
 > 
-> What needs this separation?  initio?
+> Applied patches 3-4, although I dislike that ata_drive_probe_reset() is 
+> growing a ton of function pointer arguments.  Please consider a better 
+> approach when you have some free time.  Perhaps these need to be added 
+> to ata_port_operations?  Perhaps another ata_reset_operations struct? 
+> What do you think?
 > 
 
-Yeah, it seems.  Its broken driver currently emulates BMDMA status to 
-work with standard issue/intr functions, but it seems fragile.  In 
-addition, for NCQ commands, the controller operates in different mode 
-and the code will have to be distorted more than now.  So, I think it's 
-better to use separate issue/intr handler and calling PIO helpers when 
-needed.  Well, if that driver ever works, that is.  I'll contact Initio 
-support again.  Hmmm.. I might even call them.  Heh heh. :-)
+I thought about adding the component operations to ata_port_operations, 
+but those callbacks would only be used if ->probe_reset uses 
+ata_drive_probe_reset() and layering ends up weird.  BTW, the same thing 
+is true for ->bmdma_* callbacks and a few more, I think.
 
-> 
->> Separating out traditional driving logic from libata-core.c would 
->> require another level of indirection such that traditional low level 
->> drivers still can mix & match different legacy operations.  I thought 
->> about it and wasn't really sure whether the added abstraction was 
->> worth the clean up.  We currently don't have too many controllers 
->> which are legacy-free, it seems.
-> 
-> IMO the solution is time.  Time and evolution will determine what's 
-> best.  When a particular section of code get particularly large (PCI IDE 
-> driver helper code), it certainly makes sense to split it out.  "Do what 
-> you must, and no more" is the Linux maxim :)
+So, I'm a little bit unconformatble with clamming multi levels of 
+operations into ata_port_operations or adding ata_reset_operations to 
+ata_port.  So, the wrap-with-drive-function thing was my compromise, 
+which isn't very pretty but keeps the functionality.
 
-Being a stupid over-designer, I'm sometimes a bit unconformtable with 
-the approach but I guess I'll finally adapt.  I'll talk about this more 
-in the thread regarding probe_reset component operatons.
+A problem with clamming multi-level callbacks into one structure is that 
+it's not clear which callbacks should be implemented and with core code 
+constantly changing, the requirements also changes along.  Changing API 
+is actually good thing but in this case it's difficult to know what end 
+effects changes have on low-level drivers.  (remember ->dev_select 
+breakage last year?)
 
-Thanks.
+So, IMHO we should not add more layered operations to top-level.  It 
+would be nice if we can come up with some simple way to separate out 
+layered callbacks.  Do you agree with this line of thought?
 
 -- 
 tejun
