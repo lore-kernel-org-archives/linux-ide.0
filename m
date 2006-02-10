@@ -1,189 +1,75 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 9/9] ahci: add softreset
-Date: Fri, 10 Feb 2006 23:58:49 +0900
-Message-ID: <11395835292651-git-send-email-htejun@gmail.com>
+Subject: Re: Sorry, wrong PATCHSET name, it should be [PATCHSET] libata: various
+ fixes related to EH, take #4
+Date: Sat, 11 Feb 2006 00:01:23 +0900
+Message-ID: <43ECAAC3.10904@gmail.com>
 References: <11395835282719-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.182]:12776 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932115AbWBJO7B (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Feb 2006 09:59:01 -0500
-Received: by pproxy.gmail.com with SMTP id o67so262867pye
-        for <linux-ide@vger.kernel.org>; Fri, 10 Feb 2006 06:58:59 -0800 (PST)
+Received: from pproxy.gmail.com ([64.233.166.181]:55786 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932125AbWBJPB1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Feb 2006 10:01:27 -0500
+Received: by pproxy.gmail.com with SMTP id o67so263224pye
+        for <linux-ide@vger.kernel.org>; Fri, 10 Feb 2006 07:01:26 -0800 (PST)
 In-Reply-To: <11395835282719-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-Now that libata is smart enought to handle both soft and hard resets,
-add softreset method.
+Tejun Heo wrote:
+> Hello, Jeff.
+> 
+> < %nn denotes patch nn from the last iteration, #nn in this iteration >
+> 
+> This is the fourth take of new reset mechanism.  4 (%01-%04) out of 11
+> patches made into upstream in the last iteration [1].  The rest are
+> acked but haven't been applied because standard reset operations need
+> more changes before being used.
+> 
+> This patchset is composed of 9 patches.
+> 
+> #01-02	: modify std reset operations such that they act almost
+> 	  identically with ->phy_reset register-wise.
+> #03-09	: These seven patches are %05-%09 with minor changes.
+> 
+> After #01, the only meaningful difference of the new reset mechanism
+> from ->phy_reset is that SError is cleared after SATA hardreset.  This
+> difference is removed by #02.  #02 is separated to make the change
+> optional.  If #02 gets into upstream, I'll have to submit another
+> patch to resurrect it later for EH.  Jeff, it's your call.
+> 
+> After #01 and #02, the following differences remain.
+> 
+> 1. SStatus access for sata_print_link_status() in ata_std_postreset()
+>    is at different postion register-wise compared to ->phy_reset.
+> 
+> 2. ->phy_reset doesn't proceed with softreset if ata_busy_sleep()
+>    fails after PHY is waken, but new reset mechanism proceeds anyway.
+>    Note that the original code is not very consistent regarding this.
+>    Some drivers (e.g. ata_piix), uses ata_bus_reset() instead of
+>    sata_phy_reset() and thus doesn't perform ata_busy_sleep() before
+>    SRST in the first place.
+> 
+> If a low level driver uses ata_std_probeinit() but doesn't implement
+> softreset, it will end up performing extra phy_resume and
+> ata_busy_sleep before the actual hardreset sequence compared to
+> ->phy_reset.  This is noted int the comment above ata_std_probeinit().
+> 
+> #08 has been modified not to use ata_std_probeinit() because it only
+> implements hardreset, but #09 implements softreset and adds
+> ata_std_probeinit() back; thus, the end result is unchanged.
+> 
+> Thanks.
+> 
+> --
+> tejun
+> 
+> [1] http://article.gmane.org/gmane.linux.ide/7804
+> 
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
 
----
-
- drivers/scsi/ahci.c |  135 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 134 insertions(+), 1 deletions(-)
-
-264f1acba3f46c66575e135e521d83000c7ccf01
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 9fb97ff..2789274 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -515,6 +515,138 @@ static void ahci_fill_cmd_slot(struct at
- 	pp->cmd_slot[0].tbl_addr_hi = cpu_to_le32((pp->cmd_tbl_dma >> 16) >> 16);
- }
- 
-+static int ahci_wait_for_bit(void __iomem *reg, u32 mask, u32 val,
-+			     unsigned long interval_msec,
-+			     unsigned long timeout_msec)
-+{
-+	unsigned long timeout;
-+	u32 tmp;
-+
-+	timeout = jiffies + (timeout_msec * HZ) / 1000;
-+	do {
-+		tmp = readl(reg);
-+		if ((tmp & mask) != val)
-+			return 0;
-+		msleep(interval_msec);
-+	} while (time_before(jiffies, timeout));
-+
-+	return -1;
-+}
-+
-+static int ahci_softreset(struct ata_port *ap, int verbose, unsigned int *class)
-+{
-+	struct ahci_host_priv *hpriv = ap->host_set->private_data;
-+	struct ahci_port_priv *pp = ap->private_data;
-+	void __iomem *mmio = ap->host_set->mmio_base;
-+	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
-+	const u32 cmd_fis_len = 5; /* five dwords */
-+	const char *reason = NULL;
-+	struct ata_taskfile tf;
-+	u8 *fis;
-+	int rc;
-+
-+	DPRINTK("ENTER\n");
-+
-+	/* prepare for SRST (AHCI-1.1 10.4.1) */
-+	rc = ahci_stop_engine(ap);
-+	if (rc) {
-+		reason = "failed to stop engine";
-+		goto fail_restart;
-+	}
-+
-+	/* check BUSY/DRQ, perform Command List Override if necessary */
-+	ahci_tf_read(ap, &tf);
-+	if (tf.command & (ATA_BUSY | ATA_DRQ)) {
-+		u32 tmp;
-+
-+		if (!(hpriv->cap & HOST_CAP_CLO)) {
-+			rc = -EIO;
-+			reason = "port busy but no CLO";
-+			goto fail_restart;
-+		}
-+
-+		tmp = readl(port_mmio + PORT_CMD);
-+		tmp |= PORT_CMD_CLO;
-+		writel(tmp, port_mmio + PORT_CMD);
-+		readl(port_mmio + PORT_CMD); /* flush */
-+
-+		if (ahci_wait_for_bit(port_mmio + PORT_CMD,
-+				      PORT_CMD_CLO, PORT_CMD_CLO, 1, 500)) {
-+			rc = -EIO;
-+			reason = "CLO failed";
-+			goto fail_restart;
-+		}
-+	}
-+
-+	/* restart engine */
-+	ahci_start_engine(ap);
-+
-+	ata_tf_init(ap, &tf, 0);
-+	fis = pp->cmd_tbl;
-+
-+	/* issue the first D2H Register FIS */
-+	ahci_fill_cmd_slot(ap, cmd_fis_len | AHCI_CMD_RESET | AHCI_CMD_CLR_BUSY);
-+
-+	tf.ctl |= ATA_SRST;
-+	ata_tf_to_fis(&tf, fis, 0);
-+	fis[1] &= ~(1 << 7);	/* turn off Command FIS bit */
-+
-+	writel(1, port_mmio + PORT_CMD_ISSUE);
-+	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
-+
-+	if (ahci_wait_for_bit(port_mmio + PORT_CMD_ISSUE, 0x1, 0x1, 1, 500)) {
-+		rc = -EIO;
-+		reason = "1st FIS failed";
-+		goto fail;
-+	}
-+
-+	/* spec says at least 5us, but be generous and sleep for 1ms */
-+	msleep(1);
-+
-+	/* issue the second D2H Register FIS */
-+	ahci_fill_cmd_slot(ap, cmd_fis_len);
-+
-+	tf.ctl &= ~ATA_SRST;
-+	ata_tf_to_fis(&tf, fis, 0);
-+	fis[1] &= ~(1 << 7);	/* turn off Command FIS bit */
-+
-+	writel(1, port_mmio + PORT_CMD_ISSUE);
-+	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
-+
-+	/* spec mandates ">= 2ms" before checking status.
-+	 * We wait 150ms, because that was the magic delay used for
-+	 * ATAPI devices in Hale Landis's ATADRVR, for the period of time
-+	 * between when the ATA command register is written, and then
-+	 * status is checked.  Because waiting for "a while" before
-+	 * checking status is fine, post SRST, we perform this magic
-+	 * delay here as well.
-+	 */
-+	msleep(150);
-+
-+	*class = ATA_DEV_NONE;
-+	if (sata_dev_present(ap)) {
-+		if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT)) {
-+			rc = -EIO;
-+			reason = "device not ready";
-+			goto fail;
-+		}
-+		*class = ahci_dev_classify(ap);
-+	}
-+
-+	DPRINTK("EXIT, class=%u\n", *class);
-+	return 0;
-+
-+ fail_restart:
-+	ahci_start_engine(ap);
-+ fail:
-+	if (verbose)
-+		printk(KERN_ERR "ata%u: softreset failed (%s)\n",
-+		       ap->id, reason);
-+	else
-+		DPRINTK("EXIT, rc=%d reason=\"%s\"\n", rc, reason);
-+	return rc;
-+}
-+
- static int ahci_hardreset(struct ata_port *ap, int verbose, unsigned int *class)
- {
- 	int rc;
-@@ -555,7 +687,8 @@ static void ahci_postreset(struct ata_po
- 
- static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes)
- {
--	return ata_drive_probe_reset(ap, NULL, NULL, ahci_hardreset,
-+	return ata_drive_probe_reset(ap, ata_std_probeinit,
-+				     ahci_softreset, ahci_hardreset,
- 				     ahci_postreset, classes);
- }
- 
 -- 
-1.1.5
-
-
+tejun
