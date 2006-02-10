@@ -1,62 +1,229 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [patch 03/15] libata: Remove dependence on host_set->dev for
- SAS
-Date: Thu, 09 Feb 2006 16:21:22 -0600
-Message-ID: <43EBC062.3040304@us.ibm.com>
-References: <200602061542.k16FgSYn009049@d01av02.pok.ibm.com> <43EAECD3.30505@pobox.com>
-Reply-To: brking@us.ibm.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 3/4] libata: use ata_scsi_timed_out()
+Date: Fri, 10 Feb 2006 15:10:48 +0900
+Message-ID: <11395518483304-git-send-email-htejun@gmail.com>
+References: <11395518482722-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:46556 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1750810AbWBIWVZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Feb 2006 17:21:25 -0500
-In-Reply-To: <43EAECD3.30505@pobox.com>
+Received: from zproxy.gmail.com ([64.233.162.203]:9721 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751161AbWBJGKx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Feb 2006 01:10:53 -0500
+Received: by zproxy.gmail.com with SMTP id 14so369990nzn
+        for <linux-ide@vger.kernel.org>; Thu, 09 Feb 2006 22:10:53 -0800 (PST)
+In-Reply-To: <11395518482722-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Jeff Garzik wrote:
-> brking@us.ibm.com wrote:
->> Remove some of the dependence on the host_set struct
->> in preparation for supporting SAS HBAs. Adds a struct device
->> pointer to the ata_port struct.
->>
->> Signed-off-by: Brian King <brking@us.ibm.com>
-> 
-> Seems like a good idea independent of SAS.  My only "objection" is 
-> wondering about struct device reference counts, and wondering if we need 
-> to worry about that.  Did you look over the object lifetimes, to make 
-> sure nothing overlaps?
+Make all libata low level drivers use ata_scsi_timed_out().
 
-I don't see any object lifetime problems being introduced as a result of
-this patchset. I did spend some time looking through object lifetimes for
-SAS users (existing users should be unaffected by these changes)
-and I did have some problems in this regard in previous iterations
-of this patchset. (I did some SATA device hotplug testing with this
-patchset)
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-The two rules that need to be followed by any new users of this patchset
-in order to not run into object lifetime problems are:
+---
 
-1. Prior to calling ata_sas_port_destroy, caller must guarantee that
-   there are no outstanding references to the scsi_device. I accomplished
-   this by calling ata_sas_port_destroy in target_destroy.
-2. Before the pci_dev struct goes away (e.g. pci hotplug remove), all
-   oustanding commands must be returned to libata and any new requests
-   that come in through qc_issue should fail. This solves any lifetime
-   issues that could have resulted from having the dev pointer for the
-   PCI device in ata_port.
+ drivers/scsi/ahci.c         |    1 +
+ drivers/scsi/ata_piix.c     |    1 +
+ drivers/scsi/pdc_adma.c     |    1 +
+ drivers/scsi/sata_mv.c      |    1 +
+ drivers/scsi/sata_nv.c      |    1 +
+ drivers/scsi/sata_promise.c |    1 +
+ drivers/scsi/sata_qstor.c   |    1 +
+ drivers/scsi/sata_sil.c     |    1 +
+ drivers/scsi/sata_sil24.c   |    1 +
+ drivers/scsi/sata_sis.c     |    1 +
+ drivers/scsi/sata_svw.c     |    1 +
+ drivers/scsi/sata_sx4.c     |    1 +
+ drivers/scsi/sata_uli.c     |    1 +
+ drivers/scsi/sata_via.c     |    1 +
+ drivers/scsi/sata_vsc.c     |    1 +
+ 15 files changed, 15 insertions(+), 0 deletions(-)
 
-I was thinking at one point that I would need to add reference counting
-to the ata_port, but was able to avoid that complexity with the solution
-above.
-
-
+f8ba8f199f983312d2d2191e8af1e18954f410a3
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index c840d5e..c67189a 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -206,6 +206,7 @@ static struct scsi_host_template ahci_sh
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
+index 49cc420..4933ba2 100644
+--- a/drivers/scsi/ata_piix.c
++++ b/drivers/scsi/ata_piix.c
+@@ -180,6 +180,7 @@ static struct scsi_host_template piix_sh
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/pdc_adma.c b/drivers/scsi/pdc_adma.c
+index 3a6bf58..d0ad3eb 100644
+--- a/drivers/scsi/pdc_adma.c
++++ b/drivers/scsi/pdc_adma.c
+@@ -143,6 +143,7 @@ static struct scsi_host_template adma_at
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
+index 3e91632..1db05f2 100644
+--- a/drivers/scsi/sata_mv.c
++++ b/drivers/scsi/sata_mv.c
+@@ -378,6 +378,7 @@ static struct scsi_host_template mv_sht 
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= MV_USE_Q_DEPTH,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
+index bbbb55e..cdfeb9a 100644
+--- a/drivers/scsi/sata_nv.c
++++ b/drivers/scsi/sata_nv.c
+@@ -229,6 +229,7 @@ static struct scsi_host_template nv_sht 
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
+index 0950a8e..5d4ed54 100644
+--- a/drivers/scsi/sata_promise.c
++++ b/drivers/scsi/sata_promise.c
+@@ -111,6 +111,7 @@ static struct scsi_host_template pdc_ata
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/sata_qstor.c b/drivers/scsi/sata_qstor.c
+index 2afbeb7..82c3df7 100644
+--- a/drivers/scsi/sata_qstor.c
++++ b/drivers/scsi/sata_qstor.c
+@@ -132,6 +132,7 @@ static struct scsi_host_template qs_ata_
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index 17f74d3..f40f25e 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -135,6 +135,7 @@ static struct scsi_host_template sil_sht
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 7222fc7..f4742ad 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -280,6 +280,7 @@ static struct scsi_host_template sil24_s
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/sata_sis.c b/drivers/scsi/sata_sis.c
+index 2df8c56..2f18157 100644
+--- a/drivers/scsi/sata_sis.c
++++ b/drivers/scsi/sata_sis.c
+@@ -87,6 +87,7 @@ static struct scsi_host_template sis_sht
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/sata_svw.c b/drivers/scsi/sata_svw.c
+index d847256..f369c30 100644
+--- a/drivers/scsi/sata_svw.c
++++ b/drivers/scsi/sata_svw.c
+@@ -288,6 +288,7 @@ static struct scsi_host_template k2_sata
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/sata_sx4.c b/drivers/scsi/sata_sx4.c
+index 9f992fb..3319f03 100644
+--- a/drivers/scsi/sata_sx4.c
++++ b/drivers/scsi/sata_sx4.c
+@@ -182,6 +182,7 @@ static struct scsi_host_template pdc_sat
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/sata_uli.c b/drivers/scsi/sata_uli.c
+index 9635ca7..c500f24 100644
+--- a/drivers/scsi/sata_uli.c
++++ b/drivers/scsi/sata_uli.c
+@@ -75,6 +75,7 @@ static struct scsi_host_template uli_sht
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/sata_via.c b/drivers/scsi/sata_via.c
+index 6d5b0a7..2e20887 100644
+--- a/drivers/scsi/sata_via.c
++++ b/drivers/scsi/sata_via.c
+@@ -94,6 +94,7 @@ static struct scsi_host_template svia_sh
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
+index 2e2c3b7..cf1f8a6 100644
+--- a/drivers/scsi/sata_vsc.c
++++ b/drivers/scsi/sata_vsc.c
+@@ -223,6 +223,7 @@ static struct scsi_host_template vsc_sat
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.eh_timed_out		= ata_scsi_timed_out,
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+1.1.5
+
 
