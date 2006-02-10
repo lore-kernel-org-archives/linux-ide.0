@@ -1,86 +1,27 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/libata-scsi.c: make some functions static
-Date: Fri, 10 Feb 2006 12:12:17 +0100
-Message-ID: <20060210111217.GB19918@stusta.de>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: libata janitor project
+Date: Fri, 10 Feb 2006 06:54:35 -0500
+Message-ID: <43EC7EFB.5020100@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:4875 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1750895AbWBJLMT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Feb 2006 06:12:19 -0500
-Content-Disposition: inline
+Received: from mail.dvmed.net ([216.237.124.58]:15296 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751087AbWBJLyk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Feb 2006 06:54:40 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-
-This patch makes some needlesly global functions static.
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
 
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Long term, we should work to replace the assert() in libata with 
+standard kernel WARN_ON().
 
----
+If someone wanted to handle that conversion, that would be useful.  Make 
+sure to pay attention, the sense of each test must be reversed.
 
-This patch was already sent on:
-- 31 Jan 2006
+	Jeff
 
- drivers/scsi/libata-scsi.c |   19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
 
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/libata-scsi.c.old	2005-11-20 03:06:38.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/libata-scsi.c	2005-11-20 03:08:34.000000000 +0100
-@@ -325,10 +325,10 @@
-  *	RETURNS:
-  *	Command allocated, or %NULL if none available.
-  */
--struct ata_queued_cmd *ata_scsi_qc_new(struct ata_port *ap,
--				       struct ata_device *dev,
--				       struct scsi_cmnd *cmd,
--				       void (*done)(struct scsi_cmnd *))
-+static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_port *ap,
-+					      struct ata_device *dev,
-+					      struct scsi_cmnd *cmd,
-+					      void (*done)(struct scsi_cmnd *))
- {
- 	struct ata_queued_cmd *qc;
- 
-@@ -364,7 +364,7 @@
-  *	LOCKING:
-  *	inherited from caller
-  */
--void ata_dump_status(unsigned id, struct ata_taskfile *tf)
-+static void ata_dump_status(unsigned id, struct ata_taskfile *tf)
- {
- 	u8 stat = tf->command, err = tf->feature;
- 
-@@ -413,8 +413,8 @@
-  *	LOCKING:
-  *	spin_lock_irqsave(host_set lock)
-  */
--void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk, u8 *asc, 
--			u8 *ascq)
-+static void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err,
-+			       u8 *sk, u8 *asc, u8 *ascq)
- {
- 	int i;
- 
-@@ -524,7 +524,7 @@
-  *	LOCKING:
-  *	spin_lock_irqsave(host_set lock)
-  */
--void ata_gen_ata_desc_sense(struct ata_queued_cmd *qc)
-+static void ata_gen_ata_desc_sense(struct ata_queued_cmd *qc)
- {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	struct ata_taskfile *tf = &qc->tf;
-@@ -600,7 +600,7 @@
-  *	LOCKING:
-  *	inherited from caller
-  */
--void ata_gen_fixed_sense(struct ata_queued_cmd *qc)
-+static void ata_gen_fixed_sense(struct ata_queued_cmd *qc)
- {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	struct ata_taskfile *tf = &qc->tf;
 
