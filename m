@@ -1,28 +1,33 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/3] ahci: make ahci_fill_cmd_slot() take *pp instead
- of *ap
-Date: Sat, 11 Feb 2006 17:53:51 -0500
-Message-ID: <43EE6AFF.5070205@pobox.com>
-References: <11396427621762-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH] libata: fix kernel-doc warnings
+Date: Sat, 11 Feb 2006 18:24:03 -0500
+Message-ID: <43EE7213.40300@pobox.com>
+References: <20060210215832.58107a0f.rdunlap@xenotime.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:56784 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750805AbWBKWx6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Feb 2006 17:53:58 -0500
-In-Reply-To: <11396427621762-git-send-email-htejun@gmail.com>
+Received: from mail.dvmed.net ([216.237.124.58]:22481 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750813AbWBKXYG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Feb 2006 18:24:06 -0500
+In-Reply-To: <20060210215832.58107a0f.rdunlap@xenotime.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: ide <linux-ide@vger.kernel.org>, akpm <akpm@osdl.org>
 
-Tejun Heo wrote:
-> Make ahci_fill_cmd_slot() take struct ahci_port_priv *pp instead of
-> struct ata_port *ap as suggested by Jeff Garzik.
+Randy.Dunlap wrote:
+> From: Randy Dunlap <rdunlap@xenotime.net>
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Fix kernel-doc warnings in libata drivers.
+> One of them was in the wrong place.
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
 
-applied 1-2
+I'm afraid I'm gonna have to ask you to wait a bit, until kernel.org 
+pushes this latest libata-dev.git#upstream update to the outside world, 
+and rediff.
+
+	Jeff
 
 
