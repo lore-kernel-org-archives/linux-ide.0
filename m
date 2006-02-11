@@ -1,118 +1,137 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH] libata: fix kernel-doc warnings
-Date: Fri, 10 Feb 2006 21:58:32 -0800
-Message-ID: <20060210215832.58107a0f.rdunlap@xenotime.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: inline ata_qc_complete()
+Date: Sat, 11 Feb 2006 15:13:49 +0900
+Message-ID: <20060211061349.GA2905@htj.dyndns.org>
+References: <11395518482722-git-send-email-htejun@gmail.com> <43EC8077.4080003@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:47524 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1751218AbWBKF5t (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Feb 2006 00:57:49 -0500
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Fri, 10 Feb 2006 21:57:48 -0800
+Received: from zproxy.gmail.com ([64.233.162.196]:50204 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751251AbWBKGNx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Feb 2006 01:13:53 -0500
+Received: by zproxy.gmail.com with SMTP id i1so746657nzh
+        for <linux-ide@vger.kernel.org>; Fri, 10 Feb 2006 22:13:53 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <43EC8077.4080003@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>
-Cc: jgarzik <jgarzik@pobox.com>, akpm <akpm@osdl.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+This patch inlines ata_qc_complete() and uninlines __ata_qc_complete()
+as suggested by Jeff Garzik.
 
-Fix kernel-doc warnings in libata drivers.
-One of them was in the wrong place.
-
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/scsi/ata_piix.c    |    3 ++-
- drivers/scsi/libata-core.c |   30 +++++++++++++++++-------------
- drivers/scsi/libata-scsi.c |    3 ++-
- 3 files changed, 21 insertions(+), 15 deletions(-)
 
---- linux-2616-rc2g9.orig/drivers/scsi/ata_piix.c
-+++ linux-2616-rc2g9/drivers/scsi/ata_piix.c
-@@ -627,9 +627,10 @@ static int piix_disable_ahci(struct pci_
- 
- /**
-  *	piix_check_450nx_errata	-	Check for problem 450NX setup
-+ *	@ata_dev: the PCI device to check
-  *	
-  *	Check for the present of 450NX errata #19 and errata #25. If
-- *	they are found return an error code so we can turn off DMA
-+ *	they are found return an error code so we can turn off DMA.
-  */
- 
- static int __devinit piix_check_450nx_errata(struct pci_dev *ata_dev)
---- linux-2616-rc2g9.orig/drivers/scsi/libata-core.c
-+++ linux-2616-rc2g9/drivers/scsi/libata-core.c
-@@ -4212,19 +4212,6 @@ err_out:
+Jeff, later EH patches might add one or two more condition tests to
+ata_qc_complete().  I don't know whether ata_qc_complete will still
+fit as an inline function after EH changes but if it doesn't, it
+should be converted then, I guess.  This patch is against the current
+upstream (489ff4c7d167be954f715128790bd80d3c888322).
+
+Thanks.
+
+ drivers/scsi/libata-core.c |   23 ++---------------------
+ drivers/scsi/libata.h      |    1 -
+ include/linux/libata.h     |   20 +++++++++++++++++++-
+ 3 files changed, 21 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 38e72c1..fffbaa9 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -3621,7 +3621,7 @@ void ata_qc_free(struct ata_queued_cmd *
+ 	}
  }
  
+-inline void __ata_qc_complete(struct ata_queued_cmd *qc)
++void __ata_qc_complete(struct ata_queued_cmd *qc)
+ {
+ 	assert(qc != NULL);	/* ata_qc_from_tag _might_ return NULL */
+ 	assert(qc->flags & ATA_QCFLAG_ACTIVE);
+@@ -3639,25 +3639,6 @@ inline void __ata_qc_complete(struct ata
+ 	qc->complete_fn(qc);
+ }
  
 -/**
-- *	ata_port_start - Set port up for dma.
-- *	@ap: Port to initialize
+- *	ata_qc_complete - Complete an active ATA command
+- *	@qc: Command to complete
+- *	@err_mask: ATA Status register contents
 - *
-- *	Called just after data structures for each port are
-- *	initialized.  Allocates space for PRD table.
-- *
-- *	May be used as the port_start() entry in ata_port_operations.
+- *	Indicate to the mid and upper layers that an ATA
+- *	command has completed, with either an ok or not-ok status.
 - *
 - *	LOCKING:
-- *	Inherited from caller.
+- *	spin_lock_irqsave(host_set lock)
 - */
+-void ata_qc_complete(struct ata_queued_cmd *qc)
+-{
+-	if (unlikely(qc->flags & ATA_QCFLAG_EH_SCHEDULED))
+-		return;
 -
- /*
-  * Execute a 'simple' command, that only consists of the opcode 'cmd' itself,
-  * without filling any other registers
-@@ -4276,6 +4263,8 @@ static int ata_start_drive(struct ata_po
- 
- /**
-  *	ata_device_resume - wakeup a previously suspended devices
-+ *	@ap: target ata_port
-+ *	@dev: target ata_device
-  *
-  *	Kick the drive back into action, by sending it an idle immediate
-  *	command and making sure its transfer mode matches between drive
-@@ -4298,6 +4287,8 @@ int ata_device_resume(struct ata_port *a
- 
- /**
-  *	ata_device_suspend - prepare a device for suspend
-+ *	@ap: target ata_port
-+ *	@dev: target ata_device
-  *
-  *	Flush the cache on the drive, if appropriate, then issue a
-  *	standbynow command.
-@@ -4315,6 +4306,19 @@ int ata_device_suspend(struct ata_port *
- 	return 0;
+-	__ata_qc_complete(qc);
+-}
+-
+ static inline int ata_should_dma_map(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+@@ -4877,7 +4858,7 @@ EXPORT_SYMBOL_GPL(ata_device_add);
+ EXPORT_SYMBOL_GPL(ata_host_set_remove);
+ EXPORT_SYMBOL_GPL(ata_sg_init);
+ EXPORT_SYMBOL_GPL(ata_sg_init_one);
+-EXPORT_SYMBOL_GPL(ata_qc_complete);
++EXPORT_SYMBOL_GPL(__ata_qc_complete);
+ EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
+ EXPORT_SYMBOL_GPL(ata_eng_timeout);
+ EXPORT_SYMBOL_GPL(ata_tf_load);
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index 1cd071a..9d76923 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -46,7 +46,6 @@ extern struct ata_queued_cmd *ata_qc_new
+ extern int ata_rwcmd_protocol(struct ata_queued_cmd *qc);
+ extern void ata_qc_free(struct ata_queued_cmd *qc);
+ extern unsigned int ata_qc_issue(struct ata_queued_cmd *qc);
+-extern void __ata_qc_complete(struct ata_queued_cmd *qc);
+ extern int ata_check_atapi_dma(struct ata_queued_cmd *qc);
+ extern void ata_dev_select(struct ata_port *ap, unsigned int device,
+                            unsigned int wait, unsigned int can_sleep);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index c1e1986..695d9ae 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -556,7 +556,7 @@ extern void ata_bmdma_start (struct ata_
+ extern void ata_bmdma_stop(struct ata_queued_cmd *qc);
+ extern u8   ata_bmdma_status(struct ata_port *ap);
+ extern void ata_bmdma_irq_clear(struct ata_port *ap);
+-extern void ata_qc_complete(struct ata_queued_cmd *qc);
++extern void __ata_qc_complete(struct ata_queued_cmd *qc);
+ extern void ata_eng_timeout(struct ata_port *ap);
+ extern void ata_scsi_simulate(struct ata_port *ap, struct ata_device *dev,
+ 			      struct scsi_cmnd *cmd,
+@@ -756,6 +756,24 @@ static inline void ata_qc_reinit(struct 
+ 	ata_tf_init(qc->ap, &qc->tf, qc->dev->devno);
  }
  
 +/**
-+ *	ata_port_start - Set port up for dma.
-+ *	@ap: Port to initialize
++ *	ata_qc_complete - Complete an active ATA command
++ *	@qc: Command to complete
++ *	@err_mask: ATA Status register contents
 + *
-+ *	Called just after data structures for each port are
-+ *	initialized.  Allocates space for PRD table.
-+ *
-+ *	May be used as the port_start() entry in ata_port_operations.
++ *	Indicate to the mid and upper layers that an ATA
++ *	command has completed, with either an ok or not-ok status.
 + *
 + *	LOCKING:
-+ *	Inherited from caller.
++ *	spin_lock_irqsave(host_set lock)
 + */
++static inline void ata_qc_complete(struct ata_queued_cmd *qc)
++{
++	if (unlikely(qc->flags & ATA_QCFLAG_EH_SCHEDULED))
++		return;
 +
- int ata_port_start (struct ata_port *ap)
- {
- 	struct device *dev = ap->host_set->dev;
---- linux-2616-rc2g9.orig/drivers/scsi/libata-scsi.c
-+++ linux-2616-rc2g9/drivers/scsi/libata-scsi.c
-@@ -2517,7 +2517,8 @@ out_unlock:
++	__ata_qc_complete(qc);
++}
  
  /**
-  *	ata_scsi_simulate - simulate SCSI command on ATA device
-- *	@id: current IDENTIFY data for target device.
-+ *	@ap: target ata_port
-+ *	@dev: target ata_device
-  *	@cmd: SCSI command being sent to device.
-  *	@done: SCSI command completion function.
-  *
-
-
----
+  *	ata_irq_on - Enable interrupts on a port.
