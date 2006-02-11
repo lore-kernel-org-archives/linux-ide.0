@@ -1,17 +1,17 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/3] ahci: convert to new reset mechanism
-Date: Sat, 11 Feb 2006 16:26:02 +0900
-Message-ID: <11396427624014-git-send-email-htejun@gmail.com>
+Subject: [PATCH 3/3] ahci: add softreset
+Date: Sat, 11 Feb 2006 16:26:03 +0900
+Message-ID: <11396427632078-git-send-email-htejun@gmail.com>
 References: <11396427621534-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.177]:7324 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932257AbWBKH0H (ORCPT
+Received: from zproxy.gmail.com ([64.233.162.206]:41871 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932245AbWBKH0H (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Feb 2006 02:26:07 -0500
-Received: by pproxy.gmail.com with SMTP id x66so368339pye
+Received: by zproxy.gmail.com with SMTP id 14so632886nzn
         for <linux-ide@vger.kernel.org>; Fri, 10 Feb 2006 23:26:06 -0800 (PST)
 In-Reply-To: <11396427621534-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -19,110 +19,170 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Convert ahci ->phy_reset to new reset mechanism.
+Now that libata is smart enought to handle both soft and hard resets,
+add softreset method.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/ahci.c |   46 +++++++++++++++++++++++++++++-----------------
- 1 files changed, 29 insertions(+), 17 deletions(-)
+ drivers/scsi/ahci.c |  135 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 134 insertions(+), 1 deletions(-)
 
-6f3211bfdb66aa3a0b1e703736dc445b10ac4a2d
+1edad0c8fc8e36457ac1f7c68ba4d86ff63986e3
 diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 72bdd43..86bccb7 100644
+index 86bccb7..a65895f 100644
 --- a/drivers/scsi/ahci.c
 +++ b/drivers/scsi/ahci.c
-@@ -190,7 +190,7 @@ static void ahci_scr_write (struct ata_p
- static int ahci_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
- static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
- static irqreturn_t ahci_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
--static void ahci_phy_reset(struct ata_port *ap);
-+static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes);
- static void ahci_irq_clear(struct ata_port *ap);
- static void ahci_eng_timeout(struct ata_port *ap);
- static int ahci_port_start(struct ata_port *ap);
-@@ -230,7 +230,7 @@ static const struct ata_port_operations 
- 
- 	.tf_read		= ahci_tf_read,
- 
--	.phy_reset		= ahci_phy_reset,
-+	.probe_reset		= ahci_probe_reset,
- 
- 	.qc_prep		= ahci_qc_prep,
- 	.qc_issue		= ahci_qc_issue,
-@@ -252,8 +252,7 @@ static const struct ata_port_info ahci_p
- 	{
- 		.sht		= &ahci_sht,
- 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
--				  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
--				  ATA_FLAG_PIO_DMA,
-+				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
- 		.port_ops	= &ahci_ops,
-@@ -515,28 +514,35 @@ static void ahci_fill_cmd_slot(struct ah
+@@ -514,6 +514,138 @@ static void ahci_fill_cmd_slot(struct ah
  	pp->cmd_slot[0].tbl_addr_hi = cpu_to_le32((pp->cmd_tbl_dma >> 16) >> 16);
  }
  
--static void ahci_phy_reset(struct ata_port *ap)
-+static int ahci_hardreset(struct ata_port *ap, int verbose, unsigned int *class)
- {
--	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
--	struct ata_device *dev = &ap->device[0];
--	u32 new_tmp, tmp;
++static int ahci_wait_for_bit(void __iomem *reg, u32 mask, u32 val,
++			     unsigned long interval_msec,
++			     unsigned long timeout_msec)
++{
++	unsigned long timeout;
++	u32 tmp;
++
++	timeout = jiffies + (timeout_msec * HZ) / 1000;
++	do {
++		tmp = readl(reg);
++		if ((tmp & mask) != val)
++			return 0;
++		msleep(interval_msec);
++	} while (time_before(jiffies, timeout));
++
++	return -1;
++}
++
++static int ahci_softreset(struct ata_port *ap, int verbose, unsigned int *class)
++{
++	struct ahci_host_priv *hpriv = ap->host_set->private_data;
++	struct ahci_port_priv *pp = ap->private_data;
++	void __iomem *mmio = ap->host_set->mmio_base;
++	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
++	const u32 cmd_fis_len = 5; /* five dwords */
++	const char *reason = NULL;
++	struct ata_taskfile tf;
++	u8 *fis;
 +	int rc;
 +
 +	DPRINTK("ENTER\n");
- 
- 	ahci_stop_engine(ap);
--	__sata_phy_reset(ap);
-+	rc = sata_std_hardreset(ap, verbose, class);
- 	ahci_start_engine(ap);
- 
--	if (ap->flags & ATA_FLAG_PORT_DISABLED)
--		return;
-+	if (rc == 0)
++
++	/* prepare for SRST (AHCI-1.1 10.4.1) */
++	rc = ahci_stop_engine(ap);
++	if (rc) {
++		reason = "failed to stop engine";
++		goto fail_restart;
++	}
++
++	/* check BUSY/DRQ, perform Command List Override if necessary */
++	ahci_tf_read(ap, &tf);
++	if (tf.command & (ATA_BUSY | ATA_DRQ)) {
++		u32 tmp;
++
++		if (!(hpriv->cap & HOST_CAP_CLO)) {
++			rc = -EIO;
++			reason = "port busy but no CLO";
++			goto fail_restart;
++		}
++
++		tmp = readl(port_mmio + PORT_CMD);
++		tmp |= PORT_CMD_CLO;
++		writel(tmp, port_mmio + PORT_CMD);
++		readl(port_mmio + PORT_CMD); /* flush */
++
++		if (ahci_wait_for_bit(port_mmio + PORT_CMD,
++				      PORT_CMD_CLO, PORT_CMD_CLO, 1, 500)) {
++			rc = -EIO;
++			reason = "CLO failed";
++			goto fail_restart;
++		}
++	}
++
++	/* restart engine */
++	ahci_start_engine(ap);
++
++	ata_tf_init(ap, &tf, 0);
++	fis = pp->cmd_tbl;
++
++	/* issue the first D2H Register FIS */
++	ahci_fill_cmd_slot(pp, cmd_fis_len | AHCI_CMD_RESET | AHCI_CMD_CLR_BUSY);
++
++	tf.ctl |= ATA_SRST;
++	ata_tf_to_fis(&tf, fis, 0);
++	fis[1] &= ~(1 << 7);	/* turn off Command FIS bit */
++
++	writel(1, port_mmio + PORT_CMD_ISSUE);
++	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
++
++	if (ahci_wait_for_bit(port_mmio + PORT_CMD_ISSUE, 0x1, 0x1, 1, 500)) {
++		rc = -EIO;
++		reason = "1st FIS failed";
++		goto fail;
++	}
++
++	/* spec says at least 5us, but be generous and sleep for 1ms */
++	msleep(1);
++
++	/* issue the second D2H Register FIS */
++	ahci_fill_cmd_slot(pp, cmd_fis_len);
++
++	tf.ctl &= ~ATA_SRST;
++	ata_tf_to_fis(&tf, fis, 0);
++	fis[1] &= ~(1 << 7);	/* turn off Command FIS bit */
++
++	writel(1, port_mmio + PORT_CMD_ISSUE);
++	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
++
++	/* spec mandates ">= 2ms" before checking status.
++	 * We wait 150ms, because that was the magic delay used for
++	 * ATAPI devices in Hale Landis's ATADRVR, for the period of time
++	 * between when the ATA command register is written, and then
++	 * status is checked.  Because waiting for "a while" before
++	 * checking status is fine, post SRST, we perform this magic
++	 * delay here as well.
++	 */
++	msleep(150);
++
++	*class = ATA_DEV_NONE;
++	if (sata_dev_present(ap)) {
++		if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT)) {
++			rc = -EIO;
++			reason = "device not ready";
++			goto fail;
++		}
 +		*class = ahci_dev_classify(ap);
-+	if (*class == ATA_DEV_UNKNOWN)
-+		*class = ATA_DEV_NONE;
- 
--	dev->class = ahci_dev_classify(ap);
--	if (!ata_dev_present(dev)) {
--		ata_port_disable(ap);
--		return;
--	}
-+	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
++	}
++
++	DPRINTK("EXIT, class=%u\n", *class);
++	return 0;
++
++ fail_restart:
++	ahci_start_engine(ap);
++ fail:
++	if (verbose)
++		printk(KERN_ERR "ata%u: softreset failed (%s)\n",
++		       ap->id, reason);
++	else
++		DPRINTK("EXIT, rc=%d reason=\"%s\"\n", rc, reason);
 +	return rc;
 +}
 +
-+static void ahci_postreset(struct ata_port *ap, unsigned int *class)
-+{
-+	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
-+	u32 new_tmp, tmp;
-+
-+	ata_std_postreset(ap, class);
+ static int ahci_hardreset(struct ata_port *ap, int verbose, unsigned int *class)
+ {
+ 	int rc;
+@@ -554,7 +686,8 @@ static void ahci_postreset(struct ata_po
  
- 	/* Make sure port's ATAPI bit is set appropriately */
- 	new_tmp = tmp = readl(port_mmio + PORT_CMD);
--	if (dev->class == ATA_DEV_ATAPI)
-+	if (*class == ATA_DEV_ATAPI)
- 		new_tmp |= PORT_CMD_ATAPI;
- 	else
- 		new_tmp &= ~PORT_CMD_ATAPI;
-@@ -546,6 +552,12 @@ static void ahci_phy_reset(struct ata_po
- 	}
+ static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes)
+ {
+-	return ata_drive_probe_reset(ap, NULL, NULL, ahci_hardreset,
++	return ata_drive_probe_reset(ap, ata_std_probeinit,
++				     ahci_softreset, ahci_hardreset,
+ 				     ahci_postreset, classes);
  }
  
-+static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes)
-+{
-+	return ata_drive_probe_reset(ap, NULL, NULL, ahci_hardreset,
-+				     ahci_postreset, classes);
-+}
-+
- static u8 ahci_check_status(struct ata_port *ap)
- {
- 	void __iomem *mmio = (void __iomem *) ap->ioaddr.cmd_addr;
 -- 
 1.1.5
 
