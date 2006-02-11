@@ -1,188 +1,34 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 09/15] libata: Improved ata_exec_internal timeout handling
-Date: Sat, 11 Feb 2006 19:56:04 +0900
-Message-ID: <20060211105604.GA27161@htj.dyndns.org>
-References: <200602061542.k16FgYf0002182@d01av01.pok.ibm.com> <43E9D328.7020109@gmail.com> <43EA256B.5050000@us.ibm.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: inline ata_qc_complete()
+Date: Sat, 11 Feb 2006 17:53:39 -0500
+Message-ID: <43EE6AF3.2060008@pobox.com>
+References: <11395518482722-git-send-email-htejun@gmail.com> <43EC8077.4080003@pobox.com> <20060211061349.GA2905@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <43EA256B.5050000@us.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:54992 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750827AbWBKWx5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Feb 2006 17:53:57 -0500
+In-Reply-To: <20060211061349.GA2905@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-On Wed, Feb 08, 2006 at 11:07:55AM -0600, Brian King wrote:
-> Tejun Heo wrote:
-> > brking@us.ibm.com wrote:
-> >> Currently ata_exec_internal does very minimal cleanup if
-> >> the executing command times out. This works for most usage
-> >> scenarios, but can cause problems for hosts that set
-> >> ATA_FLAG_PIO_DMA. For these users, the DMA buffer gets unmapped
-> >> while the timed out out command is still active, which has
-> >> the potential to cause PCI DMA errors if the command is
-> >> still in progress. The following patch modifies ata_exec_internal
-> >> to invoke eng_timeout on a timeout to allow for the timed out
-> >> command to be cleaned up better before proceeding further.
-> >> This patch is also in preparation for SAS attached SATA devices.
-> >>
-> > 
-> > Hello, again.
-> > 
-> > ata_exec_internal() will be used during EH, so if you call error handler
-> > from ata_exec_internal()....  In my pending EH patchset, there's a patch
-> > to implement ->post_internal() callback which cleans up after an
-> > internal command (successful or not).  Hopefully, it will be merged in
-> > not too distant future.  Can ata_exec_internal() timeout handling wait
-> > till then?
+Tejun Heo wrote:
+> This patch inlines ata_qc_complete() and uninlines __ata_qc_complete()
+> as suggested by Jeff Garzik.
 > 
-> Do you have a pointer to this patchset? I did a quick search for
-> post_internal on the archive and didn't find anything.
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
 > 
+> Jeff, later EH patches might add one or two more condition tests to
+> ata_qc_complete().  I don't know whether ata_qc_complete will still
+> fit as an inline function after EH changes but if it doesn't, it
+> should be converted then, I guess.  This patch is against the current
+> upstream (489ff4c7d167be954f715128790bd80d3c888322).
 
-Hello, Brian.
+applied
 
-Sorry it took long.  Here's the patch against the current upstream.
-I've just cut & pasted related part from my working tree and as
-earlier bits of EH changes aren't in the upstream, the following patch
-doesn't compile, let alone work.  But it should give enough idea about
-->post_internal().
 
-Thanks.
-
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 81ba5f5..87ffd80 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -193,6 +193,7 @@ static irqreturn_t ahci_interrupt (int i
- static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes);
- static void ahci_irq_clear(struct ata_port *ap);
- static void ahci_eng_timeout(struct ata_port *ap);
-+static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
- static int ahci_port_start(struct ata_port *ap);
- static void ahci_port_stop(struct ata_port *ap);
- static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
-@@ -235,6 +236,7 @@ static const struct ata_port_operations 
- 	.qc_issue		= ahci_qc_issue,
- 
- 	.eng_timeout		= ahci_eng_timeout,
-+	.post_internal_cmd	= ahci_post_internal_cmd,
- 
- 	.irq_handler		= ahci_interrupt,
- 	.irq_clear		= ahci_irq_clear,
-@@ -827,6 +829,20 @@ static void ahci_eng_timeout(struct ata_
- 	ata_eh_qc_complete(qc);
- }
- 
-+static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
-+{
-+	struct ahci_port_priv *pp = qc->ap->private_data;
-+
-+	if (!qc->err_mask)
-+		return;
-+
-+	if (qc->err_mask & AC_ERR_PSEUDO && pp->eh_irq_stat & PORT_IRQ_TF_ERR)
-+		qc->err_mask |= AC_ERR_DEV;
-+
-+	ahci_stop_engine(qc->ap);
-+	ahci_start_engine(qc->ap);
-+}
-+
- static inline int ahci_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
- {
- 	void __iomem *mmio = ap->host_set->mmio_base;
-diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-index f312ea9..a81b38e 100644
---- a/drivers/scsi/ata_piix.c
-+++ b/drivers/scsi/ata_piix.c
-@@ -215,6 +215,7 @@ static const struct ata_port_operations 
- 	.qc_issue		= ata_qc_issue_prot,
- 
- 	.eng_timeout		= ata_eng_timeout,
-+	.post_internal_cmd	= ata_std_post_internal_cmd,
- 
- 	.irq_handler		= ata_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index f6511bd..53550fd 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -1214,6 +1214,9 @@ ata_exec_internal(struct ata_port *ap, s
- 		spin_unlock_irqrestore(&ap->host_set->lock, flags);
- 	}
- 
-+	if (qc->ap->ops->post_internal_cmd)
-+		qc->ap->ops->post_internal_cmd(qc);
-+
- 	*tf = qc->tf;
- 	err_mask = qc->err_mask;
- 
-@@ -5471,6 +5474,38 @@ int ata_ratelimit(void)
- 	return rc;
- }
- 
-+/**
-+ *	ata_std_post_internal_cmd - Clean up after an internal command
-+ *	@qc: Internal command to clean up
-+ *
-+ *	Stock ->post_internal_cmd handler.  It's supposed to clean up
-+ *	after an internal command which could have succeeded or not.
-+ *	This function cleans up BMDMA status after a failed internal
-+ *	command.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ */
-+void ata_std_post_internal_cmd(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+
-+	if (!qc->err_mask)
-+		return;
-+
-+	ata_flush_pio_tasks(ap);
-+
-+	/* Stop DMA engine */
-+	if (qc && (qc->tf.protocol == ATA_PROT_DMA ||
-+		   qc->tf.protocol == ATA_PROT_ATAPI_DMA))
-+		ap->ops->bmdma_stop(qc);
-+
-+	/* clear irq and ack bmdma irq events */
-+	ata_altstatus(ap);
-+	ata_chk_status(ap);
-+	ap->ops->irq_clear(ap);
-+}
-+
- /*
-  * libata is essentially a library of internal helper functions for
-  * low-level ATA host controller drivers.  As such, the API/ABI is
-@@ -5487,6 +5522,7 @@ EXPORT_SYMBOL_GPL(ata_sg_init_one);
- EXPORT_SYMBOL_GPL(ata_qc_complete);
- EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
- EXPORT_SYMBOL_GPL(ata_eng_timeout);
-+EXPORT_SYMBOL_GPL(ata_std_post_internal_cmd);
- EXPORT_SYMBOL_GPL(ata_tf_load);
- EXPORT_SYMBOL_GPL(ata_tf_read);
- EXPORT_SYMBOL_GPL(ata_noop_dev_select);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index f4cd1eb..f0e6ba7 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -439,6 +439,8 @@ struct ata_port_operations {
- 
- 	void (*eng_timeout) (struct ata_port *ap);
- 
-+	void (*post_internal_cmd) (struct ata_queued_cmd *qc);
-+
- 	irqreturn_t (*irq_handler)(int, void *, struct pt_regs *);
- 	void (*irq_clear) (struct ata_port *);
- 
-@@ -553,6 +555,7 @@ extern u8   ata_bmdma_status(struct ata_
- extern void ata_bmdma_irq_clear(struct ata_port *ap);
- extern void ata_qc_complete(struct ata_queued_cmd *qc);
- extern void ata_eng_timeout(struct ata_port *ap);
-+extern void ata_std_post_internal_cmd(struct ata_queued_cmd *qc);
- extern void ata_scsi_simulate(struct ata_port *ap, struct ata_device *dev,
- 			      struct scsi_cmnd *cmd,
- 			      void (*done)(struct scsi_cmnd *));
