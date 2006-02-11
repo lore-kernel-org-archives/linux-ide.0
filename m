@@ -1,137 +1,129 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: inline ata_qc_complete()
-Date: Sat, 11 Feb 2006 15:13:49 +0900
-Message-ID: <20060211061349.GA2905@htj.dyndns.org>
-References: <11395518482722-git-send-email-htejun@gmail.com> <43EC8077.4080003@pobox.com>
+Subject: [PATCH 2/3] ahci: convert to new reset mechanism
+Date: Sat, 11 Feb 2006 16:26:02 +0900
+Message-ID: <11396427624014-git-send-email-htejun@gmail.com>
+References: <11396427621534-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.196]:50204 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751251AbWBKGNx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Feb 2006 01:13:53 -0500
-Received: by zproxy.gmail.com with SMTP id i1so746657nzh
-        for <linux-ide@vger.kernel.org>; Fri, 10 Feb 2006 22:13:53 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <43EC8077.4080003@pobox.com>
+Received: from pproxy.gmail.com ([64.233.166.177]:7324 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932257AbWBKH0H (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Feb 2006 02:26:07 -0500
+Received: by pproxy.gmail.com with SMTP id x66so368339pye
+        for <linux-ide@vger.kernel.org>; Fri, 10 Feb 2006 23:26:06 -0800 (PST)
+In-Reply-To: <11396427621534-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-This patch inlines ata_qc_complete() and uninlines __ata_qc_complete()
-as suggested by Jeff Garzik.
+Convert ahci ->phy_reset to new reset mechanism.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
+
 ---
 
-Jeff, later EH patches might add one or two more condition tests to
-ata_qc_complete().  I don't know whether ata_qc_complete will still
-fit as an inline function after EH changes but if it doesn't, it
-should be converted then, I guess.  This patch is against the current
-upstream (489ff4c7d167be954f715128790bd80d3c888322).
+ drivers/scsi/ahci.c |   46 +++++++++++++++++++++++++++++-----------------
+ 1 files changed, 29 insertions(+), 17 deletions(-)
 
-Thanks.
-
- drivers/scsi/libata-core.c |   23 ++---------------------
- drivers/scsi/libata.h      |    1 -
- include/linux/libata.h     |   20 +++++++++++++++++++-
- 3 files changed, 21 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 38e72c1..fffbaa9 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -3621,7 +3621,7 @@ void ata_qc_free(struct ata_queued_cmd *
+6f3211bfdb66aa3a0b1e703736dc445b10ac4a2d
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index 72bdd43..86bccb7 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -190,7 +190,7 @@ static void ahci_scr_write (struct ata_p
+ static int ahci_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
+ static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
+ static irqreturn_t ahci_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
+-static void ahci_phy_reset(struct ata_port *ap);
++static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes);
+ static void ahci_irq_clear(struct ata_port *ap);
+ static void ahci_eng_timeout(struct ata_port *ap);
+ static int ahci_port_start(struct ata_port *ap);
+@@ -230,7 +230,7 @@ static const struct ata_port_operations 
+ 
+ 	.tf_read		= ahci_tf_read,
+ 
+-	.phy_reset		= ahci_phy_reset,
++	.probe_reset		= ahci_probe_reset,
+ 
+ 	.qc_prep		= ahci_qc_prep,
+ 	.qc_issue		= ahci_qc_issue,
+@@ -252,8 +252,7 @@ static const struct ata_port_info ahci_p
+ 	{
+ 		.sht		= &ahci_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_SATA_RESET | ATA_FLAG_MMIO |
+-				  ATA_FLAG_PIO_DMA,
++				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+ 		.port_ops	= &ahci_ops,
+@@ -515,28 +514,35 @@ static void ahci_fill_cmd_slot(struct ah
+ 	pp->cmd_slot[0].tbl_addr_hi = cpu_to_le32((pp->cmd_tbl_dma >> 16) >> 16);
+ }
+ 
+-static void ahci_phy_reset(struct ata_port *ap)
++static int ahci_hardreset(struct ata_port *ap, int verbose, unsigned int *class)
+ {
+-	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
+-	struct ata_device *dev = &ap->device[0];
+-	u32 new_tmp, tmp;
++	int rc;
++
++	DPRINTK("ENTER\n");
+ 
+ 	ahci_stop_engine(ap);
+-	__sata_phy_reset(ap);
++	rc = sata_std_hardreset(ap, verbose, class);
+ 	ahci_start_engine(ap);
+ 
+-	if (ap->flags & ATA_FLAG_PORT_DISABLED)
+-		return;
++	if (rc == 0)
++		*class = ahci_dev_classify(ap);
++	if (*class == ATA_DEV_UNKNOWN)
++		*class = ATA_DEV_NONE;
+ 
+-	dev->class = ahci_dev_classify(ap);
+-	if (!ata_dev_present(dev)) {
+-		ata_port_disable(ap);
+-		return;
+-	}
++	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
++	return rc;
++}
++
++static void ahci_postreset(struct ata_port *ap, unsigned int *class)
++{
++	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
++	u32 new_tmp, tmp;
++
++	ata_std_postreset(ap, class);
+ 
+ 	/* Make sure port's ATAPI bit is set appropriately */
+ 	new_tmp = tmp = readl(port_mmio + PORT_CMD);
+-	if (dev->class == ATA_DEV_ATAPI)
++	if (*class == ATA_DEV_ATAPI)
+ 		new_tmp |= PORT_CMD_ATAPI;
+ 	else
+ 		new_tmp &= ~PORT_CMD_ATAPI;
+@@ -546,6 +552,12 @@ static void ahci_phy_reset(struct ata_po
  	}
  }
  
--inline void __ata_qc_complete(struct ata_queued_cmd *qc)
-+void __ata_qc_complete(struct ata_queued_cmd *qc)
- {
- 	assert(qc != NULL);	/* ata_qc_from_tag _might_ return NULL */
- 	assert(qc->flags & ATA_QCFLAG_ACTIVE);
-@@ -3639,25 +3639,6 @@ inline void __ata_qc_complete(struct ata
- 	qc->complete_fn(qc);
- }
- 
--/**
-- *	ata_qc_complete - Complete an active ATA command
-- *	@qc: Command to complete
-- *	@err_mask: ATA Status register contents
-- *
-- *	Indicate to the mid and upper layers that an ATA
-- *	command has completed, with either an ok or not-ok status.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host_set lock)
-- */
--void ata_qc_complete(struct ata_queued_cmd *qc)
--{
--	if (unlikely(qc->flags & ATA_QCFLAG_EH_SCHEDULED))
--		return;
--
--	__ata_qc_complete(qc);
--}
--
- static inline int ata_should_dma_map(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
-@@ -4877,7 +4858,7 @@ EXPORT_SYMBOL_GPL(ata_device_add);
- EXPORT_SYMBOL_GPL(ata_host_set_remove);
- EXPORT_SYMBOL_GPL(ata_sg_init);
- EXPORT_SYMBOL_GPL(ata_sg_init_one);
--EXPORT_SYMBOL_GPL(ata_qc_complete);
-+EXPORT_SYMBOL_GPL(__ata_qc_complete);
- EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
- EXPORT_SYMBOL_GPL(ata_eng_timeout);
- EXPORT_SYMBOL_GPL(ata_tf_load);
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index 1cd071a..9d76923 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -46,7 +46,6 @@ extern struct ata_queued_cmd *ata_qc_new
- extern int ata_rwcmd_protocol(struct ata_queued_cmd *qc);
- extern void ata_qc_free(struct ata_queued_cmd *qc);
- extern unsigned int ata_qc_issue(struct ata_queued_cmd *qc);
--extern void __ata_qc_complete(struct ata_queued_cmd *qc);
- extern int ata_check_atapi_dma(struct ata_queued_cmd *qc);
- extern void ata_dev_select(struct ata_port *ap, unsigned int device,
-                            unsigned int wait, unsigned int can_sleep);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index c1e1986..695d9ae 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -556,7 +556,7 @@ extern void ata_bmdma_start (struct ata_
- extern void ata_bmdma_stop(struct ata_queued_cmd *qc);
- extern u8   ata_bmdma_status(struct ata_port *ap);
- extern void ata_bmdma_irq_clear(struct ata_port *ap);
--extern void ata_qc_complete(struct ata_queued_cmd *qc);
-+extern void __ata_qc_complete(struct ata_queued_cmd *qc);
- extern void ata_eng_timeout(struct ata_port *ap);
- extern void ata_scsi_simulate(struct ata_port *ap, struct ata_device *dev,
- 			      struct scsi_cmnd *cmd,
-@@ -756,6 +756,24 @@ static inline void ata_qc_reinit(struct 
- 	ata_tf_init(qc->ap, &qc->tf, qc->dev->devno);
- }
- 
-+/**
-+ *	ata_qc_complete - Complete an active ATA command
-+ *	@qc: Command to complete
-+ *	@err_mask: ATA Status register contents
-+ *
-+ *	Indicate to the mid and upper layers that an ATA
-+ *	command has completed, with either an ok or not-ok status.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host_set lock)
-+ */
-+static inline void ata_qc_complete(struct ata_queued_cmd *qc)
++static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes)
 +{
-+	if (unlikely(qc->flags & ATA_QCFLAG_EH_SCHEDULED))
-+		return;
-+
-+	__ata_qc_complete(qc);
++	return ata_drive_probe_reset(ap, NULL, NULL, ahci_hardreset,
++				     ahci_postreset, classes);
 +}
- 
- /**
-  *	ata_irq_on - Enable interrupts on a port.
++
+ static u8 ahci_check_status(struct ata_port *ap)
+ {
+ 	void __iomem *mmio = (void __iomem *) ap->ioaddr.cmd_addr;
+-- 
+1.1.5
+
+
