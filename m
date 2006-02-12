@@ -1,115 +1,97 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 7/9] ata_piix: convert sata to new reset mechanism
-Date: Sat, 11 Feb 2006 18:30:09 -0500
-Message-ID: <43EE7381.8070809@pobox.com>
-References: <11395835282018-git-send-email-htejun@gmail.com>
+From: Tejun <htejun@gmail.com>
+Subject: Re: [PATCH 3/3] ahci: add softreset
+Date: Sun, 12 Feb 2006 13:58:11 +0900
+Message-ID: <43EEC063.6050704@gmail.com>
+References: <11396427632078-git-send-email-htejun@gmail.com> <43EE72D5.1050005@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:28113 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750838AbWBKXaN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Feb 2006 18:30:13 -0500
-In-Reply-To: <11395835282018-git-send-email-htejun@gmail.com>
+Received: from zproxy.gmail.com ([64.233.162.203]:40945 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932209AbWBLE6T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Feb 2006 23:58:19 -0500
+Received: by zproxy.gmail.com with SMTP id 16so725681nzp
+        for <linux-ide@vger.kernel.org>; Sat, 11 Feb 2006 20:58:18 -0800 (PST)
+In-Reply-To: <43EE72D5.1050005@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Convert ata_piix sata ->phy_reset to new reset mechanism.
+Jeff Garzik wrote:
+>> +static int ahci_wait_for_bit(void __iomem *reg, u32 mask, u32 val,
+>> +                 unsigned long interval_msec,
+>> +                 unsigned long timeout_msec)
+>> +{
+>> +    unsigned long timeout;
+>> +    u32 tmp;
+>> +
+>> +    timeout = jiffies + (timeout_msec * HZ) / 1000;
+>> +    do {
+>> +        tmp = readl(reg);
+>> +        if ((tmp & mask) != val)
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
 > 
-> ---
+> IMO the sense of this test should be reversed, as the above line of code 
+> is the opposite of what the function name implies.
+
+It didn't use to have @mask and just tested for a single bit to clear. 
+Some piece of currently dropped code needed @mask, @val stuff and the 
+changed function got left I think.  I'll reverse the testing logic and 
+rename the function to something more appropriate - probably 
+ahci_poll_register().
+
 > 
->  drivers/scsi/ata_piix.c |   39 +++++++++++++++++++--------------------
->  1 files changed, 19 insertions(+), 20 deletions(-)
+>> +            return 0;
+>> +        msleep(interval_msec);
+>> +    } while (time_before(jiffies, timeout));
+>> +
+>> +    return -1;
+>> +}
+>> +
+>> +static int ahci_softreset(struct ata_port *ap, int verbose, unsigned 
+>> int *class)
+>> +{
+[--snip--]
+>> +    /* issue the second D2H Register FIS */
+>> +    ahci_fill_cmd_slot(pp, cmd_fis_len);
+>> +
+>> +    tf.ctl &= ~ATA_SRST;
+>> +    ata_tf_to_fis(&tf, fis, 0);
+>> +    fis[1] &= ~(1 << 7);    /* turn off Command FIS bit */
+>> +
+>> +    writel(1, port_mmio + PORT_CMD_ISSUE);
+>> +    readl(port_mmio + PORT_CMD_ISSUE);    /* flush */
+>> +
+>> +    /* spec mandates ">= 2ms" before checking status.
+>> +     * We wait 150ms, because that was the magic delay used for
+>> +     * ATAPI devices in Hale Landis's ATADRVR, for the period of time
+>> +     * between when the ATA command register is written, and then
+>> +     * status is checked.  Because waiting for "a while" before
+>> +     * checking status is fine, post SRST, we perform this magic
+>> +     * delay here as well.
+>> +     */
+>> +    msleep(150);
+>> +
+>> +    *class = ATA_DEV_NONE;
+>> +    if (sata_dev_present(ap)) {
+>> +        if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT)) {
+>> +            rc = -EIO;
+>> +            reason = "device not ready";
+>> +            goto fail;
+>> +        }
 > 
-> 9314defd1d310a822bf491b60cddbf9d652ab6e0
-> diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-> index 650c687..0da8076 100644
-> --- a/drivers/scsi/ata_piix.c
-> +++ b/drivers/scsi/ata_piix.c
-> @@ -132,7 +132,7 @@ static int piix_init_one (struct pci_dev
->  				    const struct pci_device_id *ent);
->  
->  static int piix_pata_probe_reset(struct ata_port *ap, unsigned int *classes);
-> -static void piix_sata_phy_reset(struct ata_port *ap);
-> +static int piix_sata_probe_reset(struct ata_port *ap, unsigned int *classes);
->  static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev);
->  static void piix_set_dmamode (struct ata_port *ap, struct ata_device *adev);
->  
-> @@ -236,7 +236,7 @@ static const struct ata_port_operations 
->  	.exec_command		= ata_exec_command,
->  	.dev_select		= ata_std_dev_select,
->  
-> -	.phy_reset		= piix_sata_phy_reset,
-> +	.probe_reset		= piix_sata_probe_reset,
->  
->  	.bmdma_setup		= ata_bmdma_setup,
->  	.bmdma_start		= ata_bmdma_start,
-> @@ -273,8 +273,8 @@ static struct ata_port_info piix_port_in
->  	/* ich5_sata */
->  	{
->  		.sht		= &piix_sht,
-> -		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
-> -				  PIIX_FLAG_COMBINED | PIIX_FLAG_CHECKINTR,
-> +		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED |
-> +				  PIIX_FLAG_CHECKINTR,
->  		.pio_mask	= 0x1f,	/* pio0-4 */
->  		.mwdma_mask	= 0x07, /* mwdma0-2 */
->  		.udma_mask	= 0x7f,	/* udma0-6 */
-> @@ -298,8 +298,7 @@ static struct ata_port_info piix_port_in
->  	/* ich6_sata */
->  	{
->  		.sht		= &piix_sht,
-> -		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
-> -				  PIIX_FLAG_COMBINED_ICH6 |
-> +		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED_ICH6 |
->  				  PIIX_FLAG_CHECKINTR | ATA_FLAG_SLAVE_POSS,
->  		.pio_mask	= 0x1f,	/* pio0-4 */
->  		.mwdma_mask	= 0x07, /* mwdma0-2 */
-> @@ -310,8 +309,7 @@ static struct ata_port_info piix_port_in
->  	/* ich6_sata_ahci */
->  	{
->  		.sht		= &piix_sht,
-> -		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SRST |
-> -				  PIIX_FLAG_COMBINED_ICH6 |
-> +		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED_ICH6 |
->  				  PIIX_FLAG_CHECKINTR | ATA_FLAG_SLAVE_POSS |
->  				  PIIX_FLAG_AHCI,
->  		.pio_mask	= 0x1f,	/* pio0-4 */
-> @@ -456,28 +454,29 @@ static int piix_sata_probe (struct ata_p
->  }
->  
->  /**
-> - *	piix_sata_phy_reset - Probe specified port on SATA host controller
-> - *	@ap: Port to probe
-> + *	piix_sata_probe_reset - Perform reset on SATA port and classify
-> + *	@ap: Port to reset
-> + *	@classes: Resulting classes of attached devices
->   *
-> - *	Probe SATA phy.
-> + *	Reset SATA phy and classify attached devices.
->   *
->   *	LOCKING:
->   *	None (inherited from caller).
->   */
-> -
-> -static void piix_sata_phy_reset(struct ata_port *ap)
-> +static int piix_sata_probe_reset(struct ata_port *ap, unsigned int *classes)
->  {
-> +	int i;
-> +
->  	if (!piix_sata_probe(ap)) {
-> -		ata_port_disable(ap);
-> +		for (i = 0; i < ATA_MAX_DEVICES; i++)
-> +			classes[i] = ATA_DEV_NONE;
+> 
+> On AHCI, are you sure this busy_sleep is even necessary?
+> 
 
-Same comment as previous patch.
+We should wait for something before proceeding with classfication.  The 
+second FIS turns off SRST and the device will respond with class 
+signature when it gets out of reset status, which ends up clearing BUSY. 
+  We can either wait for the issue bit to clear as in the the first FIS 
+or above.  Do you think waiting for issue bit clearance is better?
 
-	Jeff
+Thanks.
 
-
-
+-- 
+tejun
