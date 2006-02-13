@@ -1,40 +1,49 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
 Subject: Re: [PATCH] Replace assert() with WARN_ON in drivers/scsi/libata-core.c
-Date: Mon, 13 Feb 2006 18:44:16 -0500
-Message-ID: <43F119D0.5080103@pobox.com>
+Date: Mon, 13 Feb 2006 15:45:18 -0800 (PST)
+Message-ID: <Pine.LNX.4.58.0602131543270.18300@shark.he.net>
 References: <20060213233518.15196.57162.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:56300 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964885AbWBMXoa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2006 18:44:30 -0500
+Received: from xenotime.net ([66.160.160.81]:45034 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1030299AbWBMXpU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2006 18:45:20 -0500
+Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-ide@vger.kernel.org>; Mon, 13 Feb 2006 15:45:18 -0800
 In-Reply-To: <20060213233518.15196.57162.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Aubin LaBrosse <aubin@stormboxes.com>
-Cc: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Aubin LaBrosse wrote:
+On Mon, 13 Feb 2006, Aubin LaBrosse wrote:
+
+>
 > Replace assert() with WARN_ON in drivers/scsi/libata-core.c
-> 
+>
 > This is my first patch to the kernel - this work was suggested by Jeff Garzik as a janitorial task for libata.  If I could get some feedback letting me know that this is the correct format and my tools are setup right, I'll do the rest of these.
-> 
+>
 > Signed-off-by: Aubin LaBrosse <aubin@stormboxes.com>
-> ---
-> 
->  drivers/scsi/libata-core.c |   46 ++++++++++++++++++++++----------------------
->  1 files changed, 23 insertions(+), 23 deletions(-)
 
-Someone already beat you to it :)
+Jeff wrote an email a couple of days ago that he already has
+several of these patches...
 
-I looked over your patch anyway.  It looks acceptable, except we avoid 
-the '~' style in such tests:
+> @@ -1251,8 +1251,8 @@ static void ata_dev_identify(struct ata_
+>
+>  	DPRINTK("ENTER, host %u, dev %u\n", ap->id, device);
+>
+> -	assert (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ATAPI ||
+> -		dev->class == ATA_DEV_NONE);
+> +	WARN_ON(dev->class != ATA_DEV_ATA &&&dev->class != ATA_DEV_ATAPI &&
+> +		dev->class != ATA_DEV_NONE);
 
-+	WARN_ON(qc == NULL);	/* ata_qc_from_tag _might_ return NULL */
-+	WARN_ON(~qc->flags & ATA_QCFLAG_ACTIVE);
+Does that one compile cleanly?
 
-	Jeff
+>
+>  	ata_dev_select(ap, device, 1, 1); /* select device 0/1 */
+>
 
+Otherwise it looks pretty good to me.
 
+-- 
+~Randy
