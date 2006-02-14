@@ -1,28 +1,37 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ide: Allow IDE interface to specify its not capable of
-	32-bit operations
-Date: Tue, 14 Feb 2006 16:50:28 +0000
-Message-ID: <1139935828.10394.44.camel@localhost.localdomain>
-References: <Pine.LNX.4.44.0602141022000.27351-100000@gate.crashing.org>
+Subject: Re: RFC: Compact Flash True IDE Mode Driver
+Date: Tue, 14 Feb 2006 16:58:11 +0000
+Message-ID: <1139936291.10394.47.camel@localhost.localdomain>
+References: <Pine.LNX.4.44.0602010113210.5670-100000@gate.crashing.org>
+	 <58cb370e0602130235h3ab521cep47584ee634e8fc7f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422646AbWBNQrl@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0602141022000.27351-100000@gate.crashing.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kumar Gala <galak@kernel.crashing.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:3217 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1422649AbWBNQzE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Feb 2006 11:55:04 -0500
+In-Reply-To: <58cb370e0602130235h3ab521cep47584ee634e8fc7f@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Kumar Gala <galak@kernel.crashing.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Maw, 2006-02-14 at 10:22 -0600, Kumar Gala wrote:
-> In some embedded systems the IDE hardware interface may only support 16-bit
-> or smaller accesses.  Allow the interface to specify if this is the case
-> and don't allow the drive or user to override the setting.
+On Llu, 2006-02-13 at 11:35 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > +static void cfide_outsl(unsigned long port, void *addr, u32 count)
+> > +{
+> > +       panic("outsl unsupported");
+> > +}
+> 
+> This will panic as soon as somebody tries to enable 32-bit I/O
+> using hdparm.  Please add ide_hwif_t.no_io_32bit flag and teach
+> ide-disk.c:ide_disk_setup() about it (separate patch).
 
-The "no_io_32bit" is just a dead leftover. It has no effect at all
-anyway so this patch is a bit pointless.
+Seems a lot of effort for little reward. Just make cfide_outsl generate
+word sized I/O instead. Ditto insl. Or even leave the panic. Only
+superusers can hack around with that value and they can equally crash
+the box a thousand other ways.
 
+Alan
 
-
-Do a grep over the code for no_io_32bit and you will see its essentially
-a private variable in the CMD640 driver.
