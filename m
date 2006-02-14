@@ -1,66 +1,67 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Kumar Gala <galak@kernel.crashing.org>
 Subject: Re: RFC: Compact Flash True IDE Mode Driver
-Date: Tue, 14 Feb 2006 16:57:37 +0100
-Message-ID: <58cb370e0602140757r5b265f25wc9f1f2e44d5f075c@mail.gmail.com>
-References: <58cb370e0602130235h3ab521cep47584ee634e8fc7f@mail.gmail.com>
-	 <Pine.LNX.4.44.0602131020370.30316-100000@gate.crashing.org>
-	 <58cb370e0602130853s4ce767c6j57337a9587cc2963@mail.gmail.com>
-	 <9E02DAB4-8DCE-42AA-8F47-080636F78E4C@kernel.crashing.org>
-	 <58cb370e0602131221k60e23cffo480fbec812b6560e@mail.gmail.com>
-	 <4EAA9C9B-947B-493D-B3D9-CFA1EC0A71CA@kernel.crashing.org>
-	 <58cb370e0602131435u317d1f2fxec9f156328807e9e@mail.gmail.com>
-	 <A9DB3731-BF2F-4C52-BFBB-7E247E646FA6@kernel.crashing.org>
+Date: Tue, 14 Feb 2006 10:07:47 -0600 (CST)
+Message-ID: <Pine.LNX.4.44.0602141007090.27351-100000@gate.crashing.org>
+References: <58cb370e0602140757r5b265f25wc9f1f2e44d5f075c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.202]:1638 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1161100AbWBNP5j convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Feb 2006 10:57:39 -0500
-Received: by nproxy.gmail.com with SMTP id l23so441628nfc
-        for <linux-ide@vger.kernel.org>; Tue, 14 Feb 2006 07:57:37 -0800 (PST)
-In-Reply-To: <A9DB3731-BF2F-4C52-BFBB-7E247E646FA6@kernel.crashing.org>
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:9367 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S1161110AbWBNQQe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Feb 2006 11:16:34 -0500
+In-Reply-To: <58cb370e0602140757r5b265f25wc9f1f2e44d5f075c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kumar Gala <galak@kernel.crashing.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 2/14/06, Kumar Gala <galak@kernel.crashing.org> wrote:
-> >> Now I'm confused.  If I understand the code, what I want is for the
-> >> "io_32bit" setting to have its RW field set to SETTING_READ, such
-> >> that drive->no_io_32bit can NOT be changed.  Additionally, I want it
-> >> set to 1 if hwif->no_io_32bit is 1.
-> >
-> > Yes.
-> >
-> >> Are you saying that at the end of probe_hwif() I should iterate over
-> >> the drives for that hwif and set drive->no_io_32bit to 1 if hwif-
-> >>> no_io_32bit is 1?  If so, can I do this in the last loop that
-> >> already exists that iterates over the drives?
-> >
-> > Well, no - this loop is for tuning and is already over-complicated.
-> >
-> >> Will I not also want to test hwif->no_io_32bit in idedisk_setup() to
-> >> ensure that it can only set driver->no_io_32bit to 0 if hwif-
-> >>> no_io32bit is 0?
-> >
-> > No, you want to move this code to ide-probe.c because of the
-> > reason given in my last mail: setting drive->no_io_32bit in ide-disk
-> > is too late w.r.t. ide_add_generic_settings():
-> >
-> > init_gendisk()->hwif_init()->ide_add_generic_settings()
-> >
-> > so drive->no_io_32bit flag needs to be set earlier
-> > (probe_hwif() is OK).
->
-> Will drive->id->dword_io be valid by the end of probe_hwif()?
+If this looks good, I'll send a more official patch with an signed-off-by.
 
-Yes.
+- k
 
-> > And yes, this IDE stuff is complicated... :)
->
-> That it is ;)
->
-> - kumar
+diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+index 09086b8..359f659 100644
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -977,8 +977,6 @@ static void idedisk_setup (ide_drive_t *
+ 		ide_dma_verbose(drive);
+ 	printk("\n");
+ 
+-	drive->no_io_32bit = id->dword_io ? 1 : 0;
+-
+ 	/* write cache enabled? */
+ 	if ((id->csfo & 1) || (id->cfs_enable_1 & (1 << 5)))
+ 		drive->wcache = 1;
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index 427d1c2..1b7b4c5 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -858,6 +858,15 @@ static void probe_hwif(ide_hwif_t *hwif)
+ 			}
+ 		}
+ 	}
++
++	for (unit = 0; unit < MAX_DRIVES; ++unit) {
++		ide_drive_t *drive = &hwif->drives[unit];
++
++		if (hwif->no_io_32bit)
++			drive->no_io_32bit = 1;
++		else
++			drive->no_io_32bit = drive->id->dword_io ? 1 : 0;
++	}
+ }
+ 
+ static int hwif_init(ide_hwif_t *hwif);
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index a7fc4cc..8d2db41 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -792,6 +792,7 @@ typedef struct hwif_s {
+ 	unsigned	no_dsc     : 1;	/* 0 default, 1 dsc_overlap disabled */
+ 	unsigned	auto_poll  : 1; /* supports nop auto-poll */
+ 	unsigned	sg_mapped  : 1;	/* sg_table and sg_nents are ready */
++	unsigned	no_io_32bit : 1; /* 1 = can not do 32-bit IO ops */
+ 
+ 	struct device	gendev;
+ 	struct completion gendev_rel_comp; /* To deal with device release() */
+
