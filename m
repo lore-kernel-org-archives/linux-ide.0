@@ -1,38 +1,62 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide: Allow IDE interface to specify its not capable of 32-bit operations
-Date: Tue, 14 Feb 2006 18:00:41 +0100
-Message-ID: <58cb370e0602140900n4558d608p36e73a58c132b8ac@mail.gmail.com>
-References: <Pine.LNX.4.44.0602141022000.27351-100000@gate.crashing.org>
-	 <1139935828.10394.44.camel@localhost.localdomain>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Tue, 14 Feb 2006 12:12:09 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0602141211350.10793@p34>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F1EE4A.3050107@rtr.ca>
+ <43F2050B.8020006@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.202]:59219 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1422664AbWBNRAp convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Feb 2006 12:00:45 -0500
-Received: by nproxy.gmail.com with SMTP id m18so455839nfc
-        for <linux-ide@vger.kernel.org>; Tue, 14 Feb 2006 09:00:42 -0800 (PST)
-In-Reply-To: <1139935828.10394.44.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from lucidpixels.com ([66.45.37.187]:21978 "EHLO lucidpixels.com")
+	by vger.kernel.org with ESMTP id S1422685AbWBNRMZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Feb 2006 12:12:25 -0500
+In-Reply-To: <43F2050B.8020006@dgreaves.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Kumar Gala <galak@kernel.crashing.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: Mark Lord <lkml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On 2/14/06, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> On Maw, 2006-02-14 at 10:22 -0600, Kumar Gala wrote:
-> > In some embedded systems the IDE hardware interface may only support 16-bit
-> > or smaller accesses.  Allow the interface to specify if this is the case
-> > and don't allow the drive or user to override the setting.
+I would like to try the patch too, if available.
+
+I got these errors when nothing (apparent) was going on.
+
+[25158.676998] ata3: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
+0xb/00/00
+[25158.677005] ata3: status=0x51 { DriveReady SeekComplete Error }
+[25158.677009] ata3: error=0x04 { DriveStatusError }
+[27306.663556] ata3: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
+0xb/00/00
+[27306.663563] ata3: status=0x51 { DriveReady SeekComplete Error }
+[27306.663567] ata3: error=0x04 { DriveStatusError }
+
+
+On Tue, 14 Feb 2006, David Greaves wrote:
+
+> Mark Lord wrote:
 >
-> The "no_io_32bit" is just a dead leftover. It has no effect at all
-> anyway so this patch is a bit pointless.
+>> Justin Piszcz wrote:
+>> ..
+>>
+>>>  ata3: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+>>>  ata3: status=0x51 { DriveReady SeekComplete Error }
+>>>  ata3: error=0x04 { DriveStatusError }
+>>
+>>
+>> I wonder if the FUA logic is inserting cache-flush commands
+>> and perhaps the drive is rejecting those?
+>>
+>> Jeff, we really ought to be including the failed ATA opcode
+>> in those error messages!!
+>>
+> If such a thing were available as a patch then I too would apply it and
+> hopefully could provide useful feedback.
 >
-> Do a grep over the code for no_io_32bit and you will see its essentially
-> a private variable in the CMD640 driver.
-
-Please grep ide.c for "no_io_32bit".  Thank you.
-
-Bartlomiej
+> David
+> PS My problems:
+>
+> http://marc.theaimsgroup.com/?l=linux-kernel&m=113769509617034&w=2
+> http://marc.theaimsgroup.com/?l=linux-ide&m=113828551519727&w=2
+> http://marc.theaimsgroup.com/?l=linux-ide&m=113829573105369&w=2
+> http://marc.theaimsgroup.com/?l=linux-ide&m=113933732903205&w=2
+>
+>
