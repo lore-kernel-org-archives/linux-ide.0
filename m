@@ -1,72 +1,62 @@
 From: Aubin LaBrosse <aubin@stormboxes.com>
 Subject: Re: [PATCH] Replace assert() with WARN_ON in drivers/scsi/libata-core.c
-Date: Mon, 13 Feb 2006 18:56:46 -0500
-Message-ID: <43F11CBE.10107@stormboxes.com>
-References: <20060213233518.15196.57162.stgit@localhost.localdomain> <Pine.LNX.4.58.0602131543270.18300@shark.he.net>
+Date: Mon, 13 Feb 2006 19:20:38 -0500
+Message-ID: <43F12256.1050702@stormboxes.com>
+References: <20060213233518.15196.57162.stgit@localhost.localdomain> <43F119D0.5080103@pobox.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------020209050401000909020106"
+ boundary="------------070003090206050903040401"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.stormboxes.com ([207.234.184.232]:46485 "EHLO
+Received: from mail.stormboxes.com ([207.234.184.232]:47253 "EHLO
 	dedicated.stormboxes.com") by vger.kernel.org with ESMTP
-	id S1030313AbWBMX4t (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Feb 2006 18:56:49 -0500
-In-Reply-To: <Pine.LNX.4.58.0602131543270.18300@shark.he.net>
+	id S1030331AbWBNAUk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Feb 2006 19:20:40 -0500
+In-Reply-To: <43F119D0.5080103@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------020209050401000909020106
+--------------070003090206050903040401
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Randy.Dunlap wrote:
-> On Mon, 13 Feb 2006, Aubin LaBrosse wrote:
->
->   
+Jeff Garzik wrote:
+> Aubin LaBrosse wrote:
 >> Replace assert() with WARN_ON in drivers/scsi/libata-core.c
 >>
->> This is my first patch to the kernel - this work was suggested by Jeff Garzik as a janitorial task for libata.  If I could get some feedback letting me know that this is the correct format and my tools are setup right, I'll do the rest of these.
+>> This is my first patch to the kernel - this work was suggested by 
+>> Jeff Garzik as a janitorial task for libata.  If I could get some 
+>> feedback letting me know that this is the correct format and my tools 
+>> are setup right, I'll do the rest of these.
 >>
 >> Signed-off-by: Aubin LaBrosse <aubin@stormboxes.com>
->>     
->
-> Jeff wrote an email a couple of days ago that he already has
-> several of these patches...
->
->   
->> @@ -1251,8 +1251,8 @@ static void ata_dev_identify(struct ata_
+>> ---
 >>
->>  	DPRINTK("ENTER, host %u, dev %u\n", ap->id, device);
->>
->> -	assert (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ATAPI ||
->> -		dev->class == ATA_DEV_NONE);
->> +	WARN_ON(dev->class != ATA_DEV_ATA &&&dev->class != ATA_DEV_ATAPI &&
->> +		dev->class != ATA_DEV_NONE);
->>     
+>>  drivers/scsi/libata-core.c |   46 
+>> ++++++++++++++++++++++----------------------
+>>  1 files changed, 23 insertions(+), 23 deletions(-)
 >
-> Does that one compile cleanly?
+> Someone already beat you to it :)
 >
->   
->>  	ata_dev_select(ap, device, 1, 1); /* select device 0/1 */
->>
->>     
+> I looked over your patch anyway.  It looks acceptable, except we avoid 
+> the '~' style in such tests:
 >
-> Otherwise it looks pretty good to me.
+> +    WARN_ON(qc == NULL);    /* ata_qc_from_tag _might_ return NULL */
+> +    WARN_ON(~qc->flags & ATA_QCFLAG_ACTIVE);
 >
->   
-Oops.  I guess it wouldn't have compiled. :(  I was so fixated on 
-getting the tools to work right I didn't even try.  thanks for the 
-feedback, even if someone beat me to it. guess i'll go check out 
-kernelnewbies for other janitorial type stuff to work on (and won't 
-forget to compile and boot-test my patches, sorry!)
-
+>     Jeff
+>
+So what would be the proper way to invert that type of test?  (!(field & 
+flag)) will do the same, right?  is that preferred for anything other 
+than aesthetic reasons? (which is a fine reason to prefer something, of 
+course, I'm just wondering if there's any other reasons, performance or 
+otherwise
 
 -aubin
 
---------------020209050401000909020106
+--------------070003090206050903040401
 Content-Type: text/x-vcard; charset=utf-8;
  name="aubin.vcf"
 Content-Transfer-Encoding: 7bit
@@ -84,4 +74,4 @@ version:2.1
 end:vcard
 
 
---------------020209050401000909020106--
+--------------070003090206050903040401--
