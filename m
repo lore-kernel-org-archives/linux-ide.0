@@ -1,39 +1,38 @@
-From: Kumar Gala <galak@kernel.crashing.org>
-Subject: Re: RFC: Compact Flash True IDE Mode Driver
-Date: Tue, 14 Feb 2006 10:48:47 -0600 (CST)
-Message-ID: <Pine.LNX.4.44.0602141047130.28596-100000@gate.crashing.org>
-References: <1139936291.10394.47.camel@localhost.localdomain>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide: Allow IDE interface to specify its not capable of 32-bit operations
+Date: Tue, 14 Feb 2006 18:00:41 +0100
+Message-ID: <58cb370e0602140900n4558d608p36e73a58c132b8ac@mail.gmail.com>
+References: <Pine.LNX.4.44.0602141022000.27351-100000@gate.crashing.org>
+	 <1139935828.10394.44.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:62871 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S1422665AbWBNQ5h (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Feb 2006 11:57:37 -0500
-In-Reply-To: <1139936291.10394.47.camel@localhost.localdomain>
+Received: from nproxy.gmail.com ([64.233.182.202]:59219 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1422664AbWBNRAp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Feb 2006 12:00:45 -0500
+Received: by nproxy.gmail.com with SMTP id m18so455839nfc
+        for <linux-ide@vger.kernel.org>; Tue, 14 Feb 2006 09:00:42 -0800 (PST)
+In-Reply-To: <1139935828.10394.44.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Kumar Gala <galak@kernel.crashing.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 14 Feb 2006, Alan Cox wrote:
+On 2/14/06, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> On Maw, 2006-02-14 at 10:22 -0600, Kumar Gala wrote:
+> > In some embedded systems the IDE hardware interface may only support 16-bit
+> > or smaller accesses.  Allow the interface to specify if this is the case
+> > and don't allow the drive or user to override the setting.
+>
+> The "no_io_32bit" is just a dead leftover. It has no effect at all
+> anyway so this patch is a bit pointless.
+>
+> Do a grep over the code for no_io_32bit and you will see its essentially
+> a private variable in the CMD640 driver.
 
-> On Llu, 2006-02-13 at 11:35 +0100, Bartlomiej Zolnierkiewicz wrote:
-> > > +static void cfide_outsl(unsigned long port, void *addr, u32 count)
-> > > +{
-> > > +       panic("outsl unsupported");
-> > > +}
-> > 
-> > This will panic as soon as somebody tries to enable 32-bit I/O
-> > using hdparm.  Please add ide_hwif_t.no_io_32bit flag and teach
-> > ide-disk.c:ide_disk_setup() about it (separate patch).
-> 
-> Seems a lot of effort for little reward. Just make cfide_outsl generate
-> word sized I/O instead. Ditto insl. Or even leave the panic. Only
-> superusers can hack around with that value and they can equally crash
-> the box a thousand other ways.
+Please grep ide.c for "no_io_32bit".  Thank you.
 
-Well, there's a patch now and its pretty simple.  Now we have one less way 
-superuser can kill things ;)
-
-- k
-
+Bartlomiej
