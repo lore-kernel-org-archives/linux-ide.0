@@ -1,48 +1,57 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET] libata: implement and use ata_dev_revalidate()
+Subject: [PATCH 1/4] libata: re-initialize parameters before configuring
 Date: Wed, 15 Feb 2006 19:02:45 +0900
-Message-ID: <11399977652752-git-send-email-htejun@gmail.com>
+Message-ID: <11399977653668-git-send-email-htejun@gmail.com>
+References: <11399977652752-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.181]:1291 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751091AbWBOKCu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 05:02:50 -0500
-Received: by pproxy.gmail.com with SMTP id e30so1495847pya
-        for <linux-ide@vger.kernel.org>; Wed, 15 Feb 2006 02:02:49 -0800 (PST)
-In-Reply-To: 
+Received: from pproxy.gmail.com ([64.233.166.180]:3851 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751091AbWBOKCv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 05:02:51 -0500
+Received: by pproxy.gmail.com with SMTP id f25so1437086pyf
+        for <linux-ide@vger.kernel.org>; Wed, 15 Feb 2006 02:02:51 -0800 (PST)
+In-Reply-To: <11399977652752-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
-Cc: htejun@gmail.com
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello, Jeff.  Hello, Albert.
+In ata_dev_configure(), reinitialize parameters before configuring.
+This change is for revalidation and hotplug.  As ata_dev_configure()
+can be entered multiple times, parameters need to be reinitialized.
 
-This patchset is the fourth and last part of divided 'reorganize
-configuration and implement revalidation' patchset[1].  The third part
-was posted about half an hour ago[2].
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-This patchset is against
-  the current upstream (254a5c45f8e53775a1e1dd7498a8dcd665341f1e)
-  + rename ata_dev_id_[c_]string() patch [3]
-  + reorganize ata_dev_identify() patchset [2]
+---
 
-Note: Jeff, I generated patches over the rename patch as the patch
-      make naming not only shorter but also more consistent.  If you
-      don't like the rename, I'll regenerate this patchset without it.
+ drivers/scsi/libata-core.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-This patchset implements ata_dev_revalidate() and use it after
-configuring transfer mode.
-
-Thanks.
-
---
-tejun
-
-[1] http://article.gmane.org/gmane.linux.ide/7632
-[2] http://article.gmane.org/gmane.linux.ide/8048
-[3] http://article.gmane.org/gmane.linux.ide/7997
+1f2bfa33d83b17398e8207a2fa0926f7454592de
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 8c0d48f..abb08c5 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -1082,6 +1082,15 @@ static int ata_dev_configure(struct ata_
+ 
+ 	DPRINTK("ENTER, host %u, dev %u\n", ap->id, dev->devno);
+ 
++	/* initialize to-be-configured parameters */
++	dev->flags = 0;
++	dev->max_sectors = 0;
++	dev->cdb_len = 0;
++	dev->n_sectors = 0;
++	dev->cylinders = 0;
++	dev->heads = 0;
++	dev->sectors = 0;
++
+ 	/*
+ 	 * common ATA, ATAPI feature tests
+ 	 */
+-- 
+1.1.5
 
 
