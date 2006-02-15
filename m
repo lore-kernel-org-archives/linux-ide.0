@@ -1,165 +1,71 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: [PATCH] shutdown processing
-Date: Wed, 15 Feb 2006 11:46:05 -0800
-Message-ID: <20060215114605.1568c8cc.randy_d_dunlap@linux.intel.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: increase LBA48 max sectors to 65535
+Date: Wed, 15 Feb 2006 15:21:29 -0500
+Message-ID: <43F38D49.4080601@pobox.com>
+References: <1139754779159-git-send-email-htejun@gmail.com> <43EF8E61.5040409@pobox.com> <43EFD73D.4070207@gmail.com> <43F011DF.6020203@pobox.com> <20060215072449.GA31691@htj.dyndns.org> <20060215130725.GP4203@suse.de> <43F342E6.9060909@gmail.com> <20060215151200.GW4203@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr18.intel.com ([134.134.136.17]:32744 "EHLO
-	orsfmr003.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1750954AbWBOTn6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Feb 2006 14:43:58 -0500
+Received: from mail.dvmed.net ([216.237.124.58]:44948 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751283AbWBOUVt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 15:21:49 -0500
+In-Reply-To: <20060215151200.GW4203@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: ide <linux-ide@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Tejun Heo <htejun@gmail.com>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>
 
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Jens Axboe wrote:
+> On Thu, Feb 16 2006, Tejun Heo wrote:
+> 
+>>Jens Axboe wrote:
+>>
+>>>On Wed, Feb 15 2006, Tejun Heo wrote:
+>>>
+>>>
+>>>>max_hw_sectors/max_sectors separation patch made into the tree,
+>>>>increase max_sectors to its hardware limit.
+>>>>
+>>>>Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>>>
+>>>>---
+>>>>
+>>>>Jeff, first of all, thanks for the pointer.  I have two more
+>>>>questions.
+>>>>
+>>>>* I make ATA_MAX_SECTORS_LBA48 65535 (the 0000h case is supposed to be
+>>>>broken, right?); however, the comment says 65534.  Should it be
+>>>>65534?
+>>>
+>>>
+>>>Since we never noticed any breakage on !sectors on lba28, I think we can
+>>>safely assume that !sectors will work fine for lba48 as well. So why not
+>>>just make it full 64k, eg 65536? ->max_hw_sectors is an unsigned int
+>>>now, so 64k wont overflow it.
+>>>
+>>
+>>Hello, Jens.
+>>
+>>libata currently sets max_sectors to 200 (ATA_MAX_SECTORS) on lba28. 
+>>Are you talking about IDE driver?  IDE driver seems to set max_sectors 
+>>to 256 on probe and make it 2048 while setting up ide disk if lba48.
+> 
+> 
+> Yes I mean the IDE driver. The 200 sector value in libata has always
+> struck me as being extremely odd and a very bad choice. It's somewhere
+> in between reasonable defaults, which isn't very nice. I'd suggest just
+> making it 256 as well, unless Jeff has a reason why it's set to 200.
 
-Add ability for SCSI drivers to invoke a shutdown method.
-This allows drivers to make drives safe for shutdown/poweroff,
-for example.  Some drives need this to prevent possible problems.
+Its set to 200 for a libata-related reason that I now forget :(
 
-Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
----
- drivers/scsi/ahci.c        |    1 +
- drivers/scsi/ata_piix.c    |    1 +
- drivers/scsi/libata-core.c |   23 +++++++++++++++++++++++
- drivers/scsi/libata-scsi.c |    8 ++++++++
- drivers/scsi/scsi_sysfs.c  |   16 ++++++++++++++++
- include/linux/libata.h     |    2 ++
- include/scsi/scsi_host.h   |    1 +
- 7 files changed, 52 insertions(+)
+It had nothing to do with controllers or devices, hence the FIXME.
 
---- linux-2616-rc3-standby.orig/drivers/scsi/libata-scsi.c
-+++ linux-2616-rc3-standby/drivers/scsi/libata-scsi.c
-@@ -412,6 +412,14 @@ int ata_scsi_device_suspend(struct scsi_
- 	return ata_device_suspend(ap, dev);
- }
- 
-+int ata_scsi_device_shutdown(struct scsi_device *sdev)
-+{
-+	struct ata_port *ap = (struct ata_port *) &sdev->host->hostdata[0];
-+	struct ata_device *dev = &ap->device[sdev->id];
-+
-+	return ata_device_shutdown(ap, dev);
-+}
-+
- /**
-  *	ata_to_sense_error - convert ATA error to SCSI error
-  *	@id: ATA device number
---- linux-2616-rc3-standby.orig/drivers/scsi/libata-core.c
-+++ linux-2616-rc3-standby/drivers/scsi/libata-core.c
-@@ -4315,6 +4315,27 @@ int ata_device_suspend(struct ata_port *
- 	return 0;
- }
- 
-+/**
-+ *	ata_device_shutdown - send Standby Immediate command to drive
-+ *	@ap: target ata_port
-+ *	@dev: target device on the ata_port
-+ *
-+ *	This command makes it safe to power-off a drive.
-+ *	Otherwise the heads may be flying at the wrong place
-+ *	when the power is removed.
-+ */
-+int ata_device_shutdown(struct ata_port *ap, struct ata_device *dev)
-+{
-+
-+	if (!ata_dev_present(dev))
-+		return 0;
-+
-+	ata_standby_drive(ap, dev);
-+	ap->flags |= ATA_FLAG_SUSPENDED;
-+
-+	return 0;
-+}
-+
- int ata_port_start (struct ata_port *ap)
- {
- 	struct device *dev = ap->host_set->dev;
-@@ -5190,5 +5211,7 @@ EXPORT_SYMBOL_GPL(ata_pci_device_resume)
- 
- EXPORT_SYMBOL_GPL(ata_device_suspend);
- EXPORT_SYMBOL_GPL(ata_device_resume);
-+EXPORT_SYMBOL_GPL(ata_device_shutdown);
- EXPORT_SYMBOL_GPL(ata_scsi_device_suspend);
- EXPORT_SYMBOL_GPL(ata_scsi_device_resume);
-+EXPORT_SYMBOL_GPL(ata_scsi_device_shutdown);
---- linux-2616-rc3-standby.orig/include/linux/libata.h
-+++ linux-2616-rc3-standby/include/linux/libata.h
-@@ -454,8 +454,10 @@ extern int ata_scsi_release(struct Scsi_
- extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
- extern int ata_scsi_device_resume(struct scsi_device *);
- extern int ata_scsi_device_suspend(struct scsi_device *);
-+extern int ata_scsi_device_shutdown(struct scsi_device *);
- extern int ata_device_resume(struct ata_port *, struct ata_device *);
- extern int ata_device_suspend(struct ata_port *, struct ata_device *);
-+extern int ata_device_shutdown(struct ata_port *, struct ata_device *);
- extern int ata_ratelimit(void);
- 
- /*
---- linux-2616-rc3-standby.orig/drivers/scsi/scsi_sysfs.c
-+++ linux-2616-rc3-standby/drivers/scsi/scsi_sysfs.c
-@@ -295,11 +295,27 @@ static int scsi_bus_resume(struct device
- 	return err;
- }
- 
-+static void scsi_bus_shutdown(struct device * dev)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct scsi_host_template *sht = sdev->host->hostt;
-+	int err;
-+
-+	err = scsi_device_quiesce(sdev);
-+	if (err)
-+		printk(KERN_DEBUG "%s: error (0x%x) during shutdown\n",
-+			__FUNCTION__, err);
-+
-+	if (sht->shutdown)
-+		sht->shutdown(sdev);
-+}
-+
- struct bus_type scsi_bus_type = {
-         .name		= "scsi",
-         .match		= scsi_bus_match,
- 	.suspend	= scsi_bus_suspend,
- 	.resume		= scsi_bus_resume,
-+	.shutdown	= scsi_bus_shutdown,
- };
- 
- int scsi_sysfs_register(void)
---- linux-2616-rc3-standby.orig/include/scsi/scsi_host.h
-+++ linux-2616-rc3-standby/include/scsi/scsi_host.h
-@@ -301,6 +301,7 @@ struct scsi_host_template {
- 	 */
- 	int (*resume)(struct scsi_device *);
- 	int (*suspend)(struct scsi_device *);
-+	int (*shutdown)(struct scsi_device *);
- 
- 	/*
- 	 * Name of proc directory
---- linux-2616-rc3-standby.orig/drivers/scsi/ahci.c
-+++ linux-2616-rc3-standby/drivers/scsi/ahci.c
-@@ -214,6 +214,7 @@ static struct scsi_host_template ahci_sh
- 	.dma_boundary		= AHCI_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
- 	.bios_param		= ata_std_bios_param,
-+	.shutdown		= ata_scsi_device_shutdown,
- };
- 
- static const struct ata_port_operations ahci_ops = {
---- linux-2616-rc3-standby.orig/drivers/scsi/ata_piix.c
-+++ linux-2616-rc3-standby/drivers/scsi/ata_piix.c
-@@ -192,6 +192,7 @@ static struct scsi_host_template piix_sh
- 	.bios_param		= ata_std_bios_param,
- 	.resume			= ata_scsi_device_resume,
- 	.suspend		= ata_scsi_device_suspend,
-+	.shutdown		= ata_scsi_device_shutdown,
- };
- 
- static const struct ata_port_operations piix_pata_ops = {
+As an aside, I wonder if the PRD limit is unnecessarily low.  I don't 
+remember seeing anything that claimed we were limited to 256 s/g entries 
+in the old IDE docs?
+
+	Jeff
 
 
----
+
