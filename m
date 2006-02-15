@@ -1,33 +1,37 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: rename ata_dev_id_[c_]string()
-Date: Wed, 15 Feb 2006 11:00:32 +0900
-Message-ID: <43F28B40.4050608@gmail.com>
-References: <11397520242535-git-send-email-htejun@gmail.com> <43EF8BB8.2020609@pobox.com> <20060213010246.GA9621@htj.dyndns.org>
+Subject: [PATCHSET] libata: convert ata_piix to use new reset mechanism
+Date: Wed, 15 Feb 2006 15:01:42 +0900
+Message-ID: <11399833022059-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.202]:23109 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932072AbWBOCAf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Feb 2006 21:00:35 -0500
-Received: by xproxy.gmail.com with SMTP id h26so1004873wxd
-        for <linux-ide@vger.kernel.org>; Tue, 14 Feb 2006 18:00:35 -0800 (PST)
-In-Reply-To: <20060213010246.GA9621@htj.dyndns.org>
+Received: from pproxy.gmail.com ([64.233.166.178]:9527 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1422990AbWBOGBr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 01:01:47 -0500
+Received: by pproxy.gmail.com with SMTP id i49so1378326pyi
+        for <linux-ide@vger.kernel.org>; Tue, 14 Feb 2006 22:01:46 -0800 (PST)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: htejun@gmail.com
 
-Tejun Heo wrote:
-> This patch renames ata_dev_id_[c_]string() to ata_id_[c_]string().
-> All other functions which read data from ATA ID data start with ata_id
-> and those two function names were getting too long.
-> 
 
-Jeff, can you ACK or NACK it?  So I can base following patches 
-accordingly.  BTW, thanks a lot for the prompt reviews!
+Hello, Jeff.
 
-:-)
+This patchset is re-spin of [1].  This patchset performs cable detection
+before proceeding with probe reset as pointed out [2].  This patchset
+contains three patches.  The first one fixes comment above std postreset
+which indicated that setting cable type is the responsibility of
+postreset.  The last two patches are the piix conversion patches.
 
--- 
+Thanks.  :-)
+
+--
 tejun
+
+[1] http://article.gmane.org/gmane.linux.ide/7968
+[2] http://article.gmane.org/gmane.linux.ide/7986
+
