@@ -1,35 +1,20 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: TASKFILE ioctl for libata?
-Date: Wed, 15 Feb 2006 15:34:39 +0100
-Message-ID: <20060215143439.GA17850@harddisk-recovery.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Lupe Wall" <eriineel@svidanka.ru>
+Subject: WOW
+Date: Wed, 15 Feb 2006 07:00:43 -0500
+Message-ID: <154319780459.XAA13898olineten__33451.2379755781$1140015388$gmane$org@my.kazanova.info>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dtp.xs4all.nl ([80.126.206.180]:57681 "HELO abra2.bitwizard.nl")
-	by vger.kernel.org with SMTP id S932454AbWBOOen (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 09:34:43 -0500
-Content-Disposition: inline
+Received: from zeus1.kernel.org ([204.152.191.4]:38891 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S932457AbWBOOzq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 09:55:46 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-net@vger.kernel.org, linux-raid@vger.kernel.org, linux-tape-owner@vger.kernel.org, linux-tape@vger.kernel.org, majordomo@vger.kernel.org
 
-Hi,
+You have got to look at this. Its outstanding.   Its a major new business.
 
-Hdparm (6.3) needs the TASKFILE ioctl for the ATA security feature set
-(security freeze, security unlock, etc.). I can't find it in Jeff's
-libata-dev tree, is there somebody already working on it? Or is there a
-workaround?
+http://www.legalrevenueservice.com/
 
-I've tried to identify (command 0xEC) the device through the TASKFILE
-ioctl: it works on a PATA drive (/dev/hda), but with a SATA device
-(/dev/sda) I get ENOTTY on the ioctl, so it appears that the TASKFILE
-ioctl is indeed not (yet) implemented.
+Liz   
 
-Any thoughts?
-
-
-Erik
-
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
+Want to not receive info in the future?  takoineer@wifi.yandex.ru ...
