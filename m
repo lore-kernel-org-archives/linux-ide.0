@@ -1,69 +1,52 @@
-From: Matt Gillette <matt.gillette@netcell.com>
-Subject: Re: TASKFILE ioctl for libata?
-Date: Wed, 15 Feb 2006 13:10:52 -0800
-Message-ID: <A09A4133-860C-4ABF-952E-0BB41FCA2109@netcell.com>
-References: <20060215143439.GA17850@harddisk-recovery.com> <43F37A5E.1090301@rtr.ca> <a3d8b0a0602151257x52f6011bs1b37d9ac43b26619@mail.gmail.com>
-Mime-Version: 1.0 (Apple Message framework v746.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Mark Lord <mlord@pobox.com>
+Subject: Re: [PATCH] libata: increase LBA48 max sectors to 65535
+Date: Wed, 15 Feb 2006 18:05:50 -0500
+Message-ID: <43F3B3CE.5060105@pobox.com>
+References: <1139754779159-git-send-email-htejun@gmail.com> <43EF8E61.5040409@pobox.com> <43EFD73D.4070207@gmail.com> <43F011DF.6020203@pobox.com> <20060215072449.GA31691@htj.dyndns.org> <20060215130725.GP4203@suse.de> <43F342E6.9060909@gmail.com> <20060215151200.GW4203@suse.de> <43F38D49.4080601@pobox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 64-60-240-146.cust.telepacific.net ([64.60.240.146]:27121 "EHLO
-	Netcell.com") by vger.kernel.org with ESMTP id S932170AbWBOVLy
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Feb 2006 16:11:54 -0500
-In-Reply-To: <a3d8b0a0602151257x52f6011bs1b37d9ac43b26619@mail.gmail.com>
+Received: from mx2.magma.ca ([206.191.0.250]:35716 "EHLO mx2.magma.ca")
+	by vger.kernel.org with ESMTP id S1751156AbWBOXHO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 18:07:14 -0500
+In-Reply-To: <43F38D49.4080601@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Erik Mouw <erik@harddisk-recovery.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Jens Axboe <axboe@suse.de>, Tejun Heo <htejun@gmail.com>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-Mark,
-
-Thanks to Alan Cox, I now have a libata driver for my IDE controller.  
-Now I'm looking into the next problem I have, which seems to be the  
-same problem you're running into. I need a generic ATA passthru  
-mechanism to configure our raid controller and need to send both non- 
-data and data commands (with PIO and DMA).
-
-Bartlomiej suggested using SGIO, but I haven't found any good  
-documentation or examples on what I would need to do to prepare and  
-send the command.
-
-I'm not sure how much I could help (I'm still a beginner), but I just  
-wanted to put in the fact that I'm interested in seeing a working  
-example of the SGIO protocol and am willing to offer any help I can.
-
-Matt
-
-
-> From: Mark Lord <liml@rtr.ca>
-> Date: Feb 15, 2006 11:00 AM
-> Subject: Re: TASKFILE ioctl for libata?
-> To: Erik Mouw <erik@harddisk-recovery.com>
-> Cc: linux-ide@vger.kernel.org
->
->
-> Erik Mouw wrote:
->> Hi,
+Jeff Garzik wrote:
+> Jens Axboe wrote:
+>> On Thu, Feb 16 2006, Tejun Heo wrote:
 >>
->> Hdparm (6.3) needs the TASKFILE ioctl for the ATA security feature  
->> set
->> (security freeze, security unlock, etc.). I can't find it in Jeff's
->> libata-dev tree, is there somebody already working on it? Or is  
->> there a
->> workaround?
->>
->
-> If that ioctl is missing in libata, then I'll have to convert hdparm
-> to use SGIO to submit ATA Passthru packets instead for libata devices.
->
-> That's on my TO-DO list, and rising more quickly to the top now, it  
-> seems.
->
-> Cheers
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux- 
-> ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> Jens Axboe wrote:
+>>>
+>>>> On Wed, Feb 15 2006, Tejun Heo wrote:
+>>>>
+>>>>
+>>>>> max_hw_sectors/max_sectors separation patch made into the tree,
+>>>>> increase max_sectors to its hardware limit.
+..
+> Its set to 200 for a libata-related reason that I now forget :(
+> 
+> It had nothing to do with controllers or devices, hence the FIXME.
+> 
+> As an aside, I wonder if the PRD limit is unnecessarily low.  I don't 
+> remember seeing anything that claimed we were limited to 256 s/g entries 
+> in the old IDE docs?
+> 
+>     Jeff
 
+Well, originally I wrote ide-dma.c with a 256 PRD limit,
+because that corresponds to the absolute worst case of
+only one sector per PRD.  The pre-LBA48 protocol cannot
+read/write more than that with a single command.
+
+But nowadays..
+
+Cheers
+-- 
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
