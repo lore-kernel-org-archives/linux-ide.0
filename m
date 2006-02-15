@@ -1,98 +1,117 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/7] libata: convert dev->id to pointer
+Subject: [PATCH 7/7] libata: reorganize ata_bus_probe()
 Date: Wed, 15 Feb 2006 18:24:09 +0900
-Message-ID: <11399954493649-git-send-email-htejun@gmail.com>
+Message-ID: <113999544950-git-send-email-htejun@gmail.com>
 References: <11399954493467-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.183]:34486 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1945907AbWBOJYN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 04:24:13 -0500
-Received: by pproxy.gmail.com with SMTP id t32so1467044pyc
-        for <linux-ide@vger.kernel.org>; Wed, 15 Feb 2006 01:24:12 -0800 (PST)
+Received: from pproxy.gmail.com ([64.233.166.177]:37558 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1945909AbWBOJYT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 04:24:19 -0500
+Received: by pproxy.gmail.com with SMTP id f25so1427413pyf
+        for <linux-ide@vger.kernel.org>; Wed, 15 Feb 2006 01:24:19 -0800 (PST)
 In-Reply-To: <11399954493467-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Convert dev->id from array to pointer.  This is to accomodate
-revalidation.  During revalidation, both old and new IDENTIFY pages
-should be accessible and single ->id array doesn't cut it.
+Now that reset and configure are converted such that they don't modify
+or disable libata core data structures, reorganize ata_bus_probe() to
+reflect this change.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   11 +++++++++--
- include/linux/libata.h     |    2 +-
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/scsi/libata-core.c |   46 ++++++++++++++++++++++++--------------------
+ 1 files changed, 25 insertions(+), 21 deletions(-)
 
-437d923fd2bb8020b4a5cdaa8080bcf9f20698cd
+04a9356ddbbfafba7ec9b6b71db30ccad2190e02
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index f97ead8..a435454 100644
+index 761186d..8c0d48f 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -953,6 +953,10 @@ static void ata_dev_identify(struct ata_
+@@ -1207,35 +1207,40 @@ err_out_nosup:
  
- 	ata_dev_select(ap, device, 1, 1); /* select device 0/1 */
- 
-+	dev->id = kmalloc(sizeof(dev->id[0]) * ATA_ID_WORDS, GFP_KERNEL);
-+	if (dev->id == NULL)
-+		goto err_out;
-+
- retry:
- 	ata_tf_init(ap, &tf, device);
- 
-@@ -967,7 +971,7 @@ retry:
- 	tf.protocol = ATA_PROT_PIO;
- 
- 	err_mask = ata_exec_internal(ap, dev, &tf, DMA_FROM_DEVICE,
--				     dev->id, sizeof(dev->id));
-+				     dev->id, sizeof(dev->id[0]) * ATA_ID_WORDS);
- 
- 	if (err_mask) {
- 		if (err_mask & ~AC_ERR_DEV)
-@@ -2515,7 +2519,7 @@ static void ata_dev_reread_id(struct ata
- 	tf.protocol = ATA_PROT_PIO;
- 
- 	if (ata_exec_internal(ap, dev, &tf, DMA_FROM_DEVICE,
--			      dev->id, sizeof(dev->id)))
-+			      dev->id, sizeof(dev->id[0]) * ATA_ID_WORDS))
- 		goto err_out;
- 
- 	swap_buf_le16(dev->id, ATA_ID_WORDS);
-@@ -4722,11 +4726,14 @@ void ata_host_set_remove(struct ata_host
- int ata_scsi_release(struct Scsi_Host *host)
+ static int ata_bus_probe(struct ata_port *ap)
  {
- 	struct ata_port *ap = (struct ata_port *) &host->hostdata[0];
-+	int i;
+-	unsigned int i, found = 0;
++	unsigned int classes[ATA_MAX_DEVICES];
++	unsigned int i, rc, found = 0;
  
- 	DPRINTK("ENTER\n");
+-	if (ap->ops->probe_reset) {
+-		unsigned int classes[ATA_MAX_DEVICES];
+-		int rc;
+-
+-		ata_port_probe(ap);
++	ata_port_probe(ap);
  
++	/* reset */
++	if (ap->ops->probe_reset) {
+ 		rc = ap->ops->probe_reset(ap, classes);
+-		if (rc == 0) {
+-			for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-				if (classes[i] == ATA_DEV_UNKNOWN)
+-					classes[i] = ATA_DEV_NONE;
+-				ap->device[i].class = classes[i];
+-			}
+-		} else {
+-			printk(KERN_ERR "ata%u: probe reset failed, "
+-			       "disabling port\n", ap->id);
+-			ata_port_disable(ap);
++		if (rc) {
++			printk("ata%u: reset failed (errno=%d)\n", ap->id, rc);
++			return rc;
+ 		}
+-	} else
++
++		for (i = 0; i < ATA_MAX_DEVICES; i++)
++			if (classes[i] == ATA_DEV_UNKNOWN)
++				classes[i] = ATA_DEV_NONE;
++	} else {
+ 		ap->ops->phy_reset(ap);
+ 
+-	if (ap->flags & ATA_FLAG_PORT_DISABLED)
+-		goto err_out;
++		for (i = 0; i < ATA_MAX_DEVICES; i++) {
++			if (!(ap->flags & ATA_FLAG_PORT_DISABLED))
++				classes[i] = ap->device[i].class;
++			else
++				ap->device[i].class = ATA_DEV_UNKNOWN;
++		}
++		ata_port_probe(ap);
++	}
+ 
++	/* read IDENTIFY page and configure devices */
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->device[i];
+ 
++		dev->class = classes[i];
++
+ 		if (!ata_dev_present(dev))
+ 			continue;
+ 
+@@ -1252,7 +1257,7 @@ static int ata_bus_probe(struct ata_port
+ 		found = 1;
+ 	}
+ 
+-	if ((!found) || (ap->flags & ATA_FLAG_PORT_DISABLED))
++	if (!found)
+ 		goto err_out_disable;
+ 
+ 	ata_set_mode(ap);
+@@ -1263,7 +1268,6 @@ static int ata_bus_probe(struct ata_port
+ 
+ err_out_disable:
  	ap->ops->port_disable(ap);
- 	ata_host_remove(ap, 0);
-+	for (i = 0; i < ATA_MAX_DEVICES; i++)
-+		kfree(ap->device[i].id);
+-err_out:
+ 	return -1;
+ }
  
- 	DPRINTK("EXIT\n");
- 	return 1;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 0d6bf50..1f15666 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -339,7 +339,7 @@ struct ata_device {
- 	unsigned long		flags;		/* ATA_DFLAG_xxx */
- 	unsigned int		class;		/* ATA_DEV_xxx */
- 	unsigned int		devno;		/* 0 or 1 */
--	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
-+	u16			*id;		/* IDENTIFY xxx DEVICE data */
- 	u8			pio_mode;
- 	u8			dma_mode;
- 	u8			xfer_mode;
 -- 
 1.1.5
 
