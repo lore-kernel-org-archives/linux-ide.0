@@ -1,42 +1,35 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata: increase LBA48 max sectors to 65535
-Date: Wed, 15 Feb 2006 14:07:25 +0100
-Message-ID: <20060215130725.GP4203@suse.de>
-References: <1139754779159-git-send-email-htejun@gmail.com> <43EF8E61.5040409@pobox.com> <43EFD73D.4070207@gmail.com> <43F011DF.6020203@pobox.com> <20060215072449.GA31691@htj.dyndns.org>
+From: Erik Mouw <erik@harddisk-recovery.com>
+Subject: TASKFILE ioctl for libata?
+Date: Wed, 15 Feb 2006 15:34:39 +0100
+Message-ID: <20060215143439.GA17850@harddisk-recovery.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:40210 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1945928AbWBONIl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 08:08:41 -0500
+Received: from dtp.xs4all.nl ([80.126.206.180]:57681 "HELO abra2.bitwizard.nl")
+	by vger.kernel.org with SMTP id S932454AbWBOOen (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 09:34:43 -0500
 Content-Disposition: inline
-In-Reply-To: <20060215072449.GA31691@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wed, Feb 15 2006, Tejun Heo wrote:
-> max_hw_sectors/max_sectors separation patch made into the tree,
-> increase max_sectors to its hardware limit.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> ---
-> 
-> Jeff, first of all, thanks for the pointer.  I have two more
-> questions.
-> 
-> * I make ATA_MAX_SECTORS_LBA48 65535 (the 0000h case is supposed to be
->   broken, right?); however, the comment says 65534.  Should it be
->   65534?
+Hi,
 
-Since we never noticed any breakage on !sectors on lba28, I think we can
-safely assume that !sectors will work fine for lba48 as well. So why not
-just make it full 64k, eg 65536? ->max_hw_sectors is an unsigned int
-now, so 64k wont overflow it.
+Hdparm (6.3) needs the TASKFILE ioctl for the ATA security feature set
+(security freeze, security unlock, etc.). I can't find it in Jeff's
+libata-dev tree, is there somebody already working on it? Or is there a
+workaround?
 
+I've tried to identify (command 0xEC) the device through the TASKFILE
+ioctl: it works on a PATA drive (/dev/hda), but with a SATA device
+(/dev/sda) I get ENOTTY on the ioctl, so it appears that the TASKFILE
+ioctl is indeed not (yet) implemented.
+
+Any thoughts?
+
+
+Erik
 
 -- 
-Jens Axboe
-
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
