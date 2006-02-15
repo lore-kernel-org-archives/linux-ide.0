@@ -1,135 +1,98 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 6/7] libata: fold ata_dev_config() into ata_dev_configure()
+Subject: [PATCH 2/7] libata: convert dev->id to pointer
 Date: Wed, 15 Feb 2006 18:24:09 +0900
-Message-ID: <11399954492986-git-send-email-htejun@gmail.com>
+Message-ID: <11399954493649-git-send-email-htejun@gmail.com>
 References: <11399954493467-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.181]:40886 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1945911AbWBOJYQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 04:24:16 -0500
-Received: by pproxy.gmail.com with SMTP id x31so1470956pye
-        for <linux-ide@vger.kernel.org>; Wed, 15 Feb 2006 01:24:16 -0800 (PST)
+Received: from pproxy.gmail.com ([64.233.166.183]:34486 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1945907AbWBOJYN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 04:24:13 -0500
+Received: by pproxy.gmail.com with SMTP id t32so1467044pyc
+        for <linux-ide@vger.kernel.org>; Wed, 15 Feb 2006 01:24:12 -0800 (PST)
 In-Reply-To: <11399954493467-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-ata_dev_config() needs to be done everytime a device is configured.
-Fold it into ata_dev_configure().
+Convert dev->id from array to pointer.  This is to accomodate
+revalidation.  During revalidation, both old and new IDENTIFY pages
+should be accessible and single ->id array doesn't cut it.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   48 ++++++++++++++++----------------------------
- include/linux/libata.h     |    1 -
- 2 files changed, 17 insertions(+), 32 deletions(-)
+ drivers/scsi/libata-core.c |   11 +++++++++--
+ include/linux/libata.h     |    2 +-
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-74bf76a028e19e725d788e332486ce0b2dfcca36
+437d923fd2bb8020b4a5cdaa8080bcf9f20698cd
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index bb575d2..761186d 100644
+index f97ead8..a435454 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -1049,6 +1049,12 @@ static int ata_dev_read_id(struct ata_po
- 	return rc;
- }
+@@ -953,6 +953,10 @@ static void ata_dev_identify(struct ata_
  
-+static inline u8 ata_dev_knobble(const struct ata_port *ap,
-+				 struct ata_device *dev)
-+{
-+	return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev->id)));
-+}
+ 	ata_dev_select(ap, device, 1, 1); /* select device 0/1 */
+ 
++	dev->id = kmalloc(sizeof(dev->id[0]) * ATA_ID_WORDS, GFP_KERNEL);
++	if (dev->id == NULL)
++		goto err_out;
 +
- /**
-  *	ata_dev_configure - Configure the specified ATA/ATAPI device
-  *	@ap: Port on which target device resides
-@@ -1163,6 +1169,17 @@ static int ata_dev_configure(struct ata_
- 					      ap->host->max_cmd_len,
- 					      ap->device[i].cdb_len);
+ retry:
+ 	ata_tf_init(ap, &tf, device);
  
-+	/* limit bridge transfers to udma5, 200 sectors */
-+	if (ata_dev_knobble(ap, dev)) {
-+		printk(KERN_INFO "ata%u(%u): applying bridge limits\n",
-+		       ap->id, dev->devno);
-+		ap->udma_mask &= ATA_UDMA5;
-+		dev->max_sectors = ATA_MAX_SECTORS;
-+	}
-+
-+	if (ap->ops->dev_config)
-+		ap->ops->dev_config(ap, dev);
-+
- 	DPRINTK("EXIT, drv_stat = 0x%x\n", ata_chk_status(ap));
- 	return 0;
+@@ -967,7 +971,7 @@ retry:
+ 	tf.protocol = ATA_PROT_PIO;
  
-@@ -1173,35 +1190,6 @@ err_out_nosup:
- 	return rc;
- }
+ 	err_mask = ata_exec_internal(ap, dev, &tf, DMA_FROM_DEVICE,
+-				     dev->id, sizeof(dev->id));
++				     dev->id, sizeof(dev->id[0]) * ATA_ID_WORDS);
  
--
--static inline u8 ata_dev_knobble(const struct ata_port *ap,
--				 struct ata_device *dev)
--{
--	return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev->id)));
--}
--
--/**
-- * ata_dev_config - Run device specific handlers & check for SATA->PATA bridges
-- * @ap: Bus
-- * @i:  Device
-- *
-- * LOCKING:
-- */
--
--void ata_dev_config(struct ata_port *ap, unsigned int i)
--{
--	/* limit bridge transfers to udma5, 200 sectors */
--	if (ata_dev_knobble(ap, &ap->device[i])) {
--		printk(KERN_INFO "ata%u(%u): applying bridge limits\n",
--		       ap->id, i);
--		ap->udma_mask &= ATA_UDMA5;
--		ap->device[i].max_sectors = ATA_MAX_SECTORS;
--	}
--
--	if (ap->ops->dev_config)
--		ap->ops->dev_config(ap, &ap->device[i]);
--}
--
- /**
-  *	ata_bus_probe - Reset and probe ATA bus
-  *	@ap: Bus to probe
-@@ -1261,7 +1249,6 @@ static int ata_bus_probe(struct ata_port
- 			continue;
- 		}
+ 	if (err_mask) {
+ 		if (err_mask & ~AC_ERR_DEV)
+@@ -2515,7 +2519,7 @@ static void ata_dev_reread_id(struct ata
+ 	tf.protocol = ATA_PROT_PIO;
  
--		ata_dev_config(ap, i);
- 		found = 1;
- 	}
+ 	if (ata_exec_internal(ap, dev, &tf, DMA_FROM_DEVICE,
+-			      dev->id, sizeof(dev->id)))
++			      dev->id, sizeof(dev->id[0]) * ATA_ID_WORDS))
+ 		goto err_out;
  
-@@ -4959,7 +4946,6 @@ EXPORT_SYMBOL_GPL(ata_host_intr);
- EXPORT_SYMBOL_GPL(ata_dev_classify);
- EXPORT_SYMBOL_GPL(ata_id_string);
- EXPORT_SYMBOL_GPL(ata_id_c_string);
--EXPORT_SYMBOL_GPL(ata_dev_config);
- EXPORT_SYMBOL_GPL(ata_scsi_simulate);
- EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
- EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
+ 	swap_buf_le16(dev->id, ATA_ID_WORDS);
+@@ -4722,11 +4726,14 @@ void ata_host_set_remove(struct ata_host
+ int ata_scsi_release(struct Scsi_Host *host)
+ {
+ 	struct ata_port *ap = (struct ata_port *) &host->hostdata[0];
++	int i;
+ 
+ 	DPRINTK("ENTER\n");
+ 
+ 	ap->ops->port_disable(ap);
+ 	ata_host_remove(ap, 0);
++	for (i = 0; i < ATA_MAX_DEVICES; i++)
++		kfree(ap->device[i].id);
+ 
+ 	DPRINTK("EXIT\n");
+ 	return 1;
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 1f15666..e8e02a0 100644
+index 0d6bf50..1f15666 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -542,7 +542,6 @@ extern void ata_id_string(const u16 *id,
- 			  unsigned int ofs, unsigned int len);
- extern void ata_id_c_string(const u16 *id, unsigned char *s,
- 			    unsigned int ofs, unsigned int len);
--extern void ata_dev_config(struct ata_port *ap, unsigned int i);
- extern void ata_bmdma_setup (struct ata_queued_cmd *qc);
- extern void ata_bmdma_start (struct ata_queued_cmd *qc);
- extern void ata_bmdma_stop(struct ata_queued_cmd *qc);
+@@ -339,7 +339,7 @@ struct ata_device {
+ 	unsigned long		flags;		/* ATA_DFLAG_xxx */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+ 	unsigned int		devno;		/* 0 or 1 */
+-	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
++	u16			*id;		/* IDENTIFY xxx DEVICE data */
+ 	u8			pio_mode;
+ 	u8			dma_mode;
+ 	u8			xfer_mode;
 -- 
 1.1.5
 
