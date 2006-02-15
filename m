@@ -1,65 +1,33 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Tue, 14 Feb 2006 18:58:37 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0602141857500.5959@p34>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F1EE4A.3050107@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: rename ata_dev_id_[c_]string()
+Date: Wed, 15 Feb 2006 11:00:32 +0900
+Message-ID: <43F28B40.4050608@gmail.com>
+References: <11397520242535-git-send-email-htejun@gmail.com> <43EF8BB8.2020609@pobox.com> <20060213010246.GA9621@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:32128 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S1422888AbWBNX6i (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Feb 2006 18:58:38 -0500
-In-Reply-To: <43F1EE4A.3050107@rtr.ca>
+Received: from xproxy.gmail.com ([66.249.82.202]:23109 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932072AbWBOCAf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Feb 2006 21:00:35 -0500
+Received: by xproxy.gmail.com with SMTP id h26so1004873wxd
+        for <linux-ide@vger.kernel.org>; Tue, 14 Feb 2006 18:00:35 -0800 (PST)
+In-Reply-To: <20060213010246.GA9621@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-FYI:
+Tejun Heo wrote:
+> This patch renames ata_dev_id_[c_]string() to ata_id_[c_]string().
+> All other functions which read data from ATA ID data start with ata_id
+> and those two function names were getting too long.
+> 
 
-Make a 100GB file, md5sum it, copy it to 'problem' drive and md5sum it, 
-same MD5SUMS.
+Jeff, can you ACK or NACK it?  So I can base following patches 
+accordingly.  BTW, thanks a lot for the prompt reviews!
 
-box:/x8# /usr/bin/time dd if=/dev/zero of=100gb bs=1M count=100000 ; 
-/usr/bin/time md5sum 100gb; /usr/bin/time cp 100gb /x4 ; cd /x4 ; 
-/usr/bin/time md5sum 100gb
-100000+0 records in
-100000+0 records out
-104857600000 bytes transferred in 4735.034107 seconds (22145057 bytes/sec)
-0.29user 245.59system 1:18:55elapsed 5%CPU (0avgtext+0avgdata 
-0maxresident)k
-0inputs+0outputs (0major+210minor)pagefaults 0swaps
-1e95cd44e2cb773f483ea7b2f676258d  100gb
-248.24user 98.17system 32:50.97elapsed 17%CPU (0avgtext+0avgdata 
-0maxresident)k
-0inputs+0outputs (1major+188minor)pagefaults 0swaps
-14.75user 341.92system 35:25.25elapsed 16%CPU (0avgtext+0avgdata 
-0maxresident)k
-0inputs+0outputs (4major+183minor)pagefaults 0swaps
-1e95cd44e2cb773f483ea7b2f676258d  100gb
-246.95user 110.41system 28:06.49elapsed 21%CPU (0avgtext+0avgdata 
-0maxresident)k
-0inputs+0outputs (1major+190minor)pagefaults 0swaps
-box:/x4#
+:-)
 
-Also, all SMART tests passed with flying colors..
-
-(FYI)
-
-
-On Tue, 14 Feb 2006, Mark Lord wrote:
-
-> Justin Piszcz wrote:
-> ..
->>  ata3: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
->>  ata3: status=0x51 { DriveReady SeekComplete Error }
->>  ata3: error=0x04 { DriveStatusError }
->
-> I wonder if the FUA logic is inserting cache-flush commands
-> and perhaps the drive is rejecting those?
->
-> Jeff, we really ought to be including the failed ATA opcode
-> in those error messages!!
->
-> Cheers
->
+-- 
+tejun
