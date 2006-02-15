@@ -1,17 +1,17 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/3] libata: fix comment regarding setting cable type
+Subject: [PATCH 2/3] ata_piix: convert pata to new reset mechanism
 Date: Wed, 15 Feb 2006 15:01:42 +0900
-Message-ID: <1139983302106-git-send-email-htejun@gmail.com>
+Message-ID: <11399833023925-git-send-email-htejun@gmail.com>
 References: <11399833022059-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.201]:56468 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1422992AbWBOGBr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 01:01:47 -0500
-Received: by zproxy.gmail.com with SMTP id 14so1504425nzn
+Received: from pproxy.gmail.com ([64.233.166.176]:7991 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1422994AbWBOGBs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 01:01:48 -0500
+Received: by pproxy.gmail.com with SMTP id w49so1416416pyg
         for <linux-ide@vger.kernel.org>; Tue, 14 Feb 2006 22:01:46 -0800 (PST)
 In-Reply-To: <11399833022059-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -19,42 +19,111 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-The comment above ata_std_postreset() specified that setting cable
-type is the responsibility of postreset(), which isn't possible /
-optimal depending on controller / driver.  This patch kills the
-comment.  Setting cable type is responsibility of ->probe_reset.
-libata doesn't care whether it's done in probeinit, reset or
-postreset.
+Convert ata_piix pata ->phy_reset to new reset mechanism.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/scsi/ata_piix.c |   43 +++++++++++++++++++++++++++----------------
+ 1 files changed, 27 insertions(+), 16 deletions(-)
 
-823d5f6f8de896e7b6437a4f140d807bbab1e7bd
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 61cba39..51191d1 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -2106,7 +2106,6 @@ int sata_std_hardreset(struct ata_port *
-  *	This function is invoked after a successful reset.  Note that
-  *	the device might have been reset more than once using
-  *	different reset methods before postreset is invoked.
-- *	postreset is also reponsible for setting cable type.
+79d2bec55755a2941f289a3e0fad5d5922fd00b4
+diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
+index 4cc1108..d79c252 100644
+--- a/drivers/scsi/ata_piix.c
++++ b/drivers/scsi/ata_piix.c
+@@ -131,7 +131,7 @@ enum {
+ static int piix_init_one (struct pci_dev *pdev,
+ 				    const struct pci_device_id *ent);
+ 
+-static void piix_pata_phy_reset(struct ata_port *ap);
++static int piix_pata_probe_reset(struct ata_port *ap, unsigned int *classes);
+ static void piix_sata_phy_reset(struct ata_port *ap);
+ static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev);
+ static void piix_set_dmamode (struct ata_port *ap, struct ata_device *adev);
+@@ -207,7 +207,7 @@ static const struct ata_port_operations 
+ 	.exec_command		= ata_exec_command,
+ 	.dev_select		= ata_std_dev_select,
+ 
+-	.phy_reset		= piix_pata_phy_reset,
++	.probe_reset		= piix_pata_probe_reset,
+ 
+ 	.bmdma_setup		= ata_bmdma_setup,
+ 	.bmdma_start		= ata_bmdma_start,
+@@ -258,8 +258,7 @@ static struct ata_port_info piix_port_in
+ 	/* ich5_pata */
+ 	{
+ 		.sht		= &piix_sht,
+-		.host_flags	= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST |
+-				  PIIX_FLAG_CHECKINTR,
++		.host_flags	= ATA_FLAG_SLAVE_POSS | PIIX_FLAG_CHECKINTR,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ #if 0
+ 		.mwdma_mask	= 0x06, /* mwdma1-2 */
+@@ -284,7 +283,7 @@ static struct ata_port_info piix_port_in
+ 	/* piix4_pata */
+ 	{
+ 		.sht		= &piix_sht,
+-		.host_flags	= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++		.host_flags	= ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ #if 0
+ 		.mwdma_mask	= 0x06, /* mwdma1-2 */
+@@ -366,30 +365,42 @@ cbl40:
+ }
+ 
+ /**
+- *	piix_pata_phy_reset - Probe specified port on PATA host controller
+- *	@ap: Port to probe
++ *	piix_pata_probeinit - probeinit for PATA host controller
++ *	@ap: Target port
   *
-  *	This function is to be used as standard callback for
-  *	ata_drive_*_reset().
-@@ -2118,7 +2117,7 @@ void ata_std_postreset(struct ata_port *
+- *	Probe PATA phy.
++ *	Probeinit including cable detection.
+  *
+  *	LOCKING:
+  *	None (inherited from caller).
+  */
++static void piix_pata_probeinit(struct ata_port *ap)
++{
++	piix_pata_cbl_detect(ap);
++	ata_std_probeinit(ap);
++}
+ 
+-static void piix_pata_phy_reset(struct ata_port *ap)
++/**
++ *	piix_pata_probe_reset - Perform reset on PATA port and classify
++ *	@ap: Port to reset
++ *	@classes: Resulting classes of attached devices
++ *
++ *	Reset PATA phy and classify attached devices.
++ *
++ *	LOCKING:
++ *	None (inherited from caller).
++ */
++static int piix_pata_probe_reset(struct ata_port *ap, unsigned int *classes)
  {
- 	DPRINTK("ENTER\n");
+ 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
  
--	/* set cable type */
-+	/* set cable type if it isn't already set */
- 	if (ap->cbl == ATA_CBL_NONE && ap->flags & ATA_FLAG_SATA)
- 		ap->cbl = ATA_CBL_SATA;
+ 	if (!pci_test_config_bits(pdev, &piix_enable_bits[ap->hard_port_no])) {
+-		ata_port_disable(ap);
+ 		printk(KERN_INFO "ata%u: port disabled. ignoring.\n", ap->id);
+-		return;
++		return 0;
+ 	}
  
+-	piix_pata_cbl_detect(ap);
+-
+-	ata_port_probe(ap);
+-
+-	ata_bus_reset(ap);
++	return ata_drive_probe_reset(ap, piix_pata_probeinit,
++				     ata_std_softreset, NULL,
++				     ata_std_postreset, classes);
+ }
+ 
+ /**
 -- 
 1.1.5
 
