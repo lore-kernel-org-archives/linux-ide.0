@@ -1,56 +1,34 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: Re: [PATCH] shutdown processing
-Date: Thu, 16 Feb 2006 11:12:08 -0800
-Message-ID: <20060216111208.2367829b.randy_d_dunlap@linux.intel.com>
-References: <20060215114605.1568c8cc.randy_d_dunlap@linux.intel.com>
-	<43F43EB9.40406@s5r6.in-berlin.de>
-	<20060216104007.67cf613f.randy_d_dunlap@linux.intel.com>
-	<43F4CAF4.1070004@s5r6.in-berlin.de>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: ATA website moved...
+Date: Thu, 16 Feb 2006 16:46:25 -0500
+Message-ID: <43F4F2B1.40401@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr20.intel.com ([134.134.136.19]:8353 "EHLO
-	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1030625AbWBPTKD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Feb 2006 14:10:03 -0500
-In-Reply-To: <43F4CAF4.1070004@s5r6.in-berlin.de>
+Received: from mail.dvmed.net ([216.237.124.58]:51904 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932355AbWBPVqd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Feb 2006 16:46:33 -0500
+Received: from cpe-069-134-188-146.nc.res.rr.com ([69.134.188.146] helo=[10.10.10.99])
+	by mail.dvmed.net with esmtpsa (Exim 4.52 #1 (Red Hat Linux))
+	id 1F9qxK-0002iZ-A1
+	for linux-ide@vger.kernel.org; Thu, 16 Feb 2006 21:46:30 +0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Thu, 16 Feb 2006 19:56:52 +0100
-Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+(Just for the linux-ide folks, for now, since this is a "beta" announcement)
 
-> Randy Dunlap wrote:
-> > On Thu, 16 Feb 2006 09:58:33 +0100
-> > Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> >>Why are you calling these from SCSI? Wouldn't ahci_pci_driver.remove() 
-> >>and piix_pci_driver.remove() be a proper place to perform what you are 
-> >>doing in ata_device_shutdown?
-> > 
-> > Mostly to have the scsi_device pointers available.
-> 
-> Note that roughly as long a scsi_device exists, SCSI high-level drivers 
-> expect to be able to send commands to them. In particular, when 
-> scsi_remove_device is called, (or scsi_remove_host, which calls 
-> scsi_remove_device for all still existing devices of a host), the SCSI 
-> high-level drivers' shutdwon methods get executed. Some of them send 
-> SCSI commands. The upshot is, a SCSI low-level driver has to be able to 
-> handle newly enqueued command while it is calling 
-> scsi_remove_{device,host}. Moreover it must not block a SCSI host at 
-> this moment.
-> 
-> IOW the most natural order for layers to shut down would be first SCSI, 
-> then ATA. (But then, I don't really comprehend whether your shutdown 
-> code would actually collide with that of the SCSI subsystem at all.)
 
-OK, now it seems like you just told me why I shouldn't use
-the pci_driver.remove() interface.  But thanks for your comments,
-I do appreciate them and will dig deeper [into a twisty maze :].
+I moved the SATA pages over to
 
-anyone else care to comment on this?
+	http://linux-ata.org/
 
----
-~Randy
+to make the site a bit easier to remember.
+
+People are welcome to submit PATA information, and I am also pondering 
+the addition of a wiki.
+
+	Jeff
+
+
