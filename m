@@ -1,34 +1,60 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: ATA website moved...
-Date: Thu, 16 Feb 2006 16:46:25 -0500
-Message-ID: <43F4F2B1.40401@pobox.com>
+From: Dave Jones <davej@redhat.com>
+Subject: Fix IDE locking error.
+Date: Thu, 16 Feb 2006 17:39:16 -0500
+Message-ID: <20060216223916.GA8463@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:51904 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932355AbWBPVqd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Feb 2006 16:46:33 -0500
-Received: from cpe-069-134-188-146.nc.res.rr.com ([69.134.188.146] helo=[10.10.10.99])
-	by mail.dvmed.net with esmtpsa (Exim 4.52 #1 (Red Hat Linux))
-	id 1F9qxK-0002iZ-A1
-	for linux-ide@vger.kernel.org; Thu, 16 Feb 2006 21:46:30 +0000
+Received: from mx1.redhat.com ([66.187.233.31]:27346 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1750749AbWBPWjR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Feb 2006 17:39:17 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-(Just for the linux-ide folks, for now, since this is a "beta" announcement)
+This bit us a few kernels ago, and for some reason never made it's way
+upstream.
 
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=144743
+Kernel panic - not syncing: drivers/ide/pci/piix.c:231:
+spin_lock(drivers/ide/ide.c:c03cef28) already locked by driver/ide/ide-iops.c/1153.
 
-I moved the SATA pages over to
+From: Alan Cox <alan@redhat.com>
+Signed-off-by: Dave Jones <davej@redhat.com>
 
-	http://linux-ata.org/
-
-to make the site a bit easier to remember.
-
-People are welcome to submit PATA information, and I am also pondering 
-the addition of a wiki.
-
-	Jeff
-
-
+--- linux-2.6.12/drivers/ide/pci/piix.c~	2005-07-11 10:23:24.637181320 +0100
++++ linux-2.6.12/drivers/ide/pci/piix.c	2005-07-11 10:23:24.637181320 +0100
+@@ -203,6 +203,8 @@
+ 	}
+ }
+ 
++static spinlock_t tune_lock = SPIN_LOCK_UNLOCKED;
++
+ /**
+  *	piix_tune_drive		-	tune a drive attached to a PIIX
+  *	@drive: drive to tune
+@@ -229,7 +231,12 @@
+ 			    { 2, 3 }, };
+ 
+ 	pio = ide_get_best_pio_mode(drive, pio, 5, NULL);
+-	spin_lock_irqsave(&ide_lock, flags);
++	
++	/* Master v slave is synchronized above us but the slave register is
++	   shared by the two hwifs so the corner case of two slave timeouts in
++	   parallel must be locked */
++	   
++	spin_lock_irqsave(&tune_lock, flags);
+ 	pci_read_config_word(dev, master_port, &master_data);
+ 	if (is_slave) {
+ 		master_data = master_data | 0x4000;
+@@ -249,7 +256,7 @@
+ 	pci_write_config_word(dev, master_port, master_data);
+ 	if (is_slave)
+ 		pci_write_config_byte(dev, slave_port, slave_data);
+-	spin_unlock_irqrestore(&ide_lock, flags);
++	spin_unlock_irqrestore(&tune_lock, flags);
+ }
+ 
+ /**
