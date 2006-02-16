@@ -1,47 +1,35 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: TASKFILE ioctl for libata?
-Date: Wed, 15 Feb 2006 21:20:46 -0500
-Message-ID: <43F3E17E.1090701@pobox.com>
-References: <20060215143439.GA17850@harddisk-recovery.com> <43F37A5E.1090301@rtr.ca> <20060216005643.GA28396@harddisk-recovery.com>
+From: Nicholas Miell <nmiell@comcast.net>
+Subject: SATA timeouts with Seagate disk on VIA VT6420 controller
+Date: Wed, 15 Feb 2006 21:44:14 -0800
+Message-ID: <1140068654.3274.12.camel@entropy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:33694 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750963AbWBPCU4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 21:20:56 -0500
-In-Reply-To: <20060216005643.GA28396@harddisk-recovery.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932481AbWBPFoS@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Erik Mouw <erik@harddisk-recovery.com>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-Erik Mouw wrote:
-> On Wed, Feb 15, 2006 at 02:00:46PM -0500, Mark Lord wrote:
-> 
->>Erik Mouw wrote:
->>
->>>Hdparm (6.3) needs the TASKFILE ioctl for the ATA security feature set
->>>(security freeze, security unlock, etc.). I can't find it in Jeff's
->>>libata-dev tree, is there somebody already working on it? Or is there a
->>>workaround?
->>
->>If that ioctl is missing in libata, then I'll have to convert hdparm
->>to use SGIO to submit ATA Passthru packets instead for libata devices.
-> 
-> 
-> If SGIO can be used for ATA Passthru, then why are the HDIO_DRIVE_CMD
-> and HDIO_DRIVE_TASK ioctl()s implemented in libata? AFAICS, the same
-> functionality can be accomplished through SGIO ATA Passthru.
+>From time to time, I've been experiencing timeouts with my SATA disk (a
+Seagate ST3300831AS) attached to a VIA VT6420 controller on a VIA
+K8T800-based MSI motherboard. This has happened somewhat rarely on a
+variety of Fedora kernel versions.
 
-For compatibility :)  The HDIO compat ioctls are implemented internally 
-via the ATA passthru SCSI command.
+Basically, sometimes IO will get really slow and I'll start getting
+"ata1: command 0x35 timeout, stat 0x50 host_stat 0x4" in my logs, with
+the occasional "ata1: command 0x25 timeout, stat 0x50 host_stat 0x4" and
+"ata1: command 0xb0 timeout, stat 0x50 host_stat 0x0" thrown in for good
+measure.
 
-Although in general I resist adding compat ioctls, I think avoiding 
-TASKFILE when we have TASK/CMD ioctls would be inconsistent.  If 
-somebody wants to submit a tested patch...
+The disk (and/or controller) isn't unresponsive -- I can do a smartctl
+-a -d ata /dev/sda and it'll complete (eventually), and IO to the disk
+continues (very slowly), but it's generally unusable until the next
+reboot.
 
-	Jeff
+Any help would be appreciated.
 
+	Thanks, Nicholas.
 
-
+-- 
+Nicholas Miell <nmiell@comcast.net>
