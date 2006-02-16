@@ -1,52 +1,45 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: [PATCH] libata: increase LBA48 max sectors to 65535
-Date: Wed, 15 Feb 2006 18:05:50 -0500
-Message-ID: <43F3B3CE.5060105@pobox.com>
-References: <1139754779159-git-send-email-htejun@gmail.com> <43EF8E61.5040409@pobox.com> <43EFD73D.4070207@gmail.com> <43F011DF.6020203@pobox.com> <20060215072449.GA31691@htj.dyndns.org> <20060215130725.GP4203@suse.de> <43F342E6.9060909@gmail.com> <20060215151200.GW4203@suse.de> <43F38D49.4080601@pobox.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: TASKFILE ioctl for libata?
+Date: Thu, 16 Feb 2006 09:06:03 +0900
+Message-ID: <43F3C1EB.3040006@gmail.com>
+References: <20060215143439.GA17850@harddisk-recovery.com> <43F37A5E.1090301@rtr.ca> <a3d8b0a0602151257x52f6011bs1b37d9ac43b26619@mail.gmail.com> <A09A4133-860C-4ABF-952E-0BB41FCA2109@netcell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.magma.ca ([206.191.0.250]:35716 "EHLO mx2.magma.ca")
-	by vger.kernel.org with ESMTP id S1751156AbWBOXHO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 18:07:14 -0500
-In-Reply-To: <43F38D49.4080601@pobox.com>
+Received: from wproxy.gmail.com ([64.233.184.196]:7568 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751356AbWBPAGP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 19:06:15 -0500
+Received: by wproxy.gmail.com with SMTP id i3so241786wra
+        for <linux-ide@vger.kernel.org>; Wed, 15 Feb 2006 16:06:15 -0800 (PST)
+In-Reply-To: <A09A4133-860C-4ABF-952E-0BB41FCA2109@netcell.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Jens Axboe <axboe@suse.de>, Tejun Heo <htejun@gmail.com>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: Matt Gillette <matt.gillette@netcell.com>
+Cc: Mark Lord <liml@rtr.ca>, Erik Mouw <erik@harddisk-recovery.com>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Jens Axboe wrote:
->> On Thu, Feb 16 2006, Tejun Heo wrote:
->>
->>> Jens Axboe wrote:
->>>
->>>> On Wed, Feb 15 2006, Tejun Heo wrote:
->>>>
->>>>
->>>>> max_hw_sectors/max_sectors separation patch made into the tree,
->>>>> increase max_sectors to its hardware limit.
-..
-> Its set to 200 for a libata-related reason that I now forget :(
+Matt Gillette wrote:
+> Mark,
 > 
-> It had nothing to do with controllers or devices, hence the FIXME.
+> Thanks to Alan Cox, I now have a libata driver for my IDE controller. 
+> Now I'm looking into the next problem I have, which seems to be the same 
+> problem you're running into. I need a generic ATA passthru mechanism to 
+> configure our raid controller and need to send both non-data and data 
+> commands (with PIO and DMA).
 > 
-> As an aside, I wonder if the PRD limit is unnecessarily low.  I don't 
-> remember seeing anything that claimed we were limited to 256 s/g entries 
-> in the old IDE docs?
+> Bartlomiej suggested using SGIO, but I haven't found any good 
+> documentation or examples on what I would need to do to prepare and send 
+> the command.
 > 
->     Jeff
+> I'm not sure how much I could help (I'm still a beginner), but I just 
+> wanted to put in the fact that I'm interested in seeing a working 
+> example of the SGIO protocol and am willing to offer any help I can.
 
-Well, originally I wrote ide-dma.c with a 256 PRD limit,
-because that corresponds to the absolute worst case of
-only one sector per PRD.  The pre-LBA48 protocol cannot
-read/write more than that with a single command.
+Hello, Matt.
 
-But nowadays..
+If you're looking for ATA SGIO example, smartctl source should have it. 
+  smartctl uses ATA SGIO when given -d ATA option.  And, plesase don't 
+top post.
 
-Cheers
 -- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+tejun
