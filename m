@@ -1,80 +1,49 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata: increase LBA48 max sectors to 65535
-Date: Thu, 16 Feb 2006 08:42:58 +0100
-Message-ID: <20060216074258.GF4203@suse.de>
-References: <1139754779159-git-send-email-htejun@gmail.com> <43EF8E61.5040409@pobox.com> <43EFD73D.4070207@gmail.com> <43F011DF.6020203@pobox.com> <20060215072449.GA31691@htj.dyndns.org> <20060215130725.GP4203@suse.de> <43F342E6.9060909@gmail.com> <20060215151200.GW4203@suse.de> <43F38D49.4080601@pobox.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] shutdown processing
+Date: Thu, 16 Feb 2006 09:58:33 +0100
+Message-ID: <43F43EB9.40406@s5r6.in-berlin.de>
+References: <20060215114605.1568c8cc.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:29231 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932504AbWBPHnf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Feb 2006 02:43:35 -0500
-Content-Disposition: inline
-In-Reply-To: <43F38D49.4080601@pobox.com>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:29112 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1751379AbWBPI76 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Feb 2006 03:59:58 -0500
+In-Reply-To: <20060215114605.1568c8cc.randy_d_dunlap@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>
+To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Cc: scsi <linux-scsi@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
 
-On Wed, Feb 15 2006, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >On Thu, Feb 16 2006, Tejun Heo wrote:
-> >
-> >>Jens Axboe wrote:
-> >>
-> >>>On Wed, Feb 15 2006, Tejun Heo wrote:
-> >>>
-> >>>
-> >>>>max_hw_sectors/max_sectors separation patch made into the tree,
-> >>>>increase max_sectors to its hardware limit.
-> >>>>
-> >>>>Signed-off-by: Tejun Heo <htejun@gmail.com>
-> >>>>
-> >>>>---
-> >>>>
-> >>>>Jeff, first of all, thanks for the pointer.  I have two more
-> >>>>questions.
-> >>>>
-> >>>>* I make ATA_MAX_SECTORS_LBA48 65535 (the 0000h case is supposed to be
-> >>>>broken, right?); however, the comment says 65534.  Should it be
-> >>>>65534?
-> >>>
-> >>>
-> >>>Since we never noticed any breakage on !sectors on lba28, I think we can
-> >>>safely assume that !sectors will work fine for lba48 as well. So why not
-> >>>just make it full 64k, eg 65536? ->max_hw_sectors is an unsigned int
-> >>>now, so 64k wont overflow it.
-> >>>
-> >>
-> >>Hello, Jens.
-> >>
-> >>libata currently sets max_sectors to 200 (ATA_MAX_SECTORS) on lba28. 
-> >>Are you talking about IDE driver?  IDE driver seems to set max_sectors 
-> >>to 256 on probe and make it 2048 while setting up ide disk if lba48.
-> >
-> >
-> >Yes I mean the IDE driver. The 200 sector value in libata has always
-> >struck me as being extremely odd and a very bad choice. It's somewhere
-> >in between reasonable defaults, which isn't very nice. I'd suggest just
-> >making it 256 as well, unless Jeff has a reason why it's set to 200.
+Randy Dunlap wrote:
+> From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 > 
-> Its set to 200 for a libata-related reason that I now forget :(
+> Add ability for SCSI drivers to invoke a shutdown method.
+> This allows drivers to make drives safe for shutdown/poweroff,
+> for example.  Some drives need this to prevent possible problems.
+> 
+> Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 
-Tsk tsk :-)
+Why are you calling these from SCSI? Wouldn't ahci_pci_driver.remove() 
+and piix_pci_driver.remove() be a proper place to perform what you are 
+doing in ata_device_shutdown?
 
-> It had nothing to do with controllers or devices, hence the FIXME.
+[...]
+>  EXPORT_SYMBOL_GPL(ata_device_suspend);
+>  EXPORT_SYMBOL_GPL(ata_device_resume);
+> +EXPORT_SYMBOL_GPL(ata_device_shutdown);
+>  EXPORT_SYMBOL_GPL(ata_scsi_device_suspend);
+>  EXPORT_SYMBOL_GPL(ata_scsi_device_resume);
+> +EXPORT_SYMBOL_GPL(ata_scsi_device_shutdown);
+[...]
 
-How about making it 256 at the start of a kernel cycle and see if
-anything falls apart? If IDE works, then surely SATA should as well.
-
-> As an aside, I wonder if the PRD limit is unnecessarily low.  I don't 
-> remember seeing anything that claimed we were limited to 256 s/g entries 
-> in the old IDE docs?
-
-As Mark mentions it doesn't matter for lba28, for lba48 it'll typically
-gives us at least 256*4k == 1meg of transfer, which is above/at the soft
-limit we'll use anyways.
-
+Side note: If you would prepare the host template in libata, you 
+wouldn't need to export these and other symbols. As was AFAIR discussed 
+by other people before, libata could certainly hide scsi_host_template 
+from ATA drivers entirely.
 -- 
-Jens Axboe
-
+Stefan Richter
+-=====-=-==- --=- =----
+http://arcgraph.de/sr/
