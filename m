@@ -1,45 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Erik Mouw <erik@harddisk-recovery.com>
 Subject: Re: TASKFILE ioctl for libata?
-Date: Thu, 16 Feb 2006 09:06:03 +0900
-Message-ID: <43F3C1EB.3040006@gmail.com>
-References: <20060215143439.GA17850@harddisk-recovery.com> <43F37A5E.1090301@rtr.ca> <a3d8b0a0602151257x52f6011bs1b37d9ac43b26619@mail.gmail.com> <A09A4133-860C-4ABF-952E-0BB41FCA2109@netcell.com>
+Date: Thu, 16 Feb 2006 01:56:43 +0100
+Message-ID: <20060216005643.GA28396@harddisk-recovery.com>
+References: <20060215143439.GA17850@harddisk-recovery.com> <43F37A5E.1090301@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.196]:7568 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751356AbWBPAGP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 19:06:15 -0500
-Received: by wproxy.gmail.com with SMTP id i3so241786wra
-        for <linux-ide@vger.kernel.org>; Wed, 15 Feb 2006 16:06:15 -0800 (PST)
-In-Reply-To: <A09A4133-860C-4ABF-952E-0BB41FCA2109@netcell.com>
+Received: from dtp.xs4all.nl ([80.126.206.180]:15086 "HELO abra2.bitwizard.nl")
+	by vger.kernel.org with SMTP id S932201AbWBPA4p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2006 19:56:45 -0500
+Content-Disposition: inline
+In-Reply-To: <43F37A5E.1090301@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matt Gillette <matt.gillette@netcell.com>
-Cc: Mark Lord <liml@rtr.ca>, Erik Mouw <erik@harddisk-recovery.com>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org
 
-Matt Gillette wrote:
-> Mark,
+On Wed, Feb 15, 2006 at 02:00:46PM -0500, Mark Lord wrote:
+> Erik Mouw wrote:
+> >Hdparm (6.3) needs the TASKFILE ioctl for the ATA security feature set
+> >(security freeze, security unlock, etc.). I can't find it in Jeff's
+> >libata-dev tree, is there somebody already working on it? Or is there a
+> >workaround?
 > 
-> Thanks to Alan Cox, I now have a libata driver for my IDE controller. 
-> Now I'm looking into the next problem I have, which seems to be the same 
-> problem you're running into. I need a generic ATA passthru mechanism to 
-> configure our raid controller and need to send both non-data and data 
-> commands (with PIO and DMA).
-> 
-> Bartlomiej suggested using SGIO, but I haven't found any good 
-> documentation or examples on what I would need to do to prepare and send 
-> the command.
-> 
-> I'm not sure how much I could help (I'm still a beginner), but I just 
-> wanted to put in the fact that I'm interested in seeing a working 
-> example of the SGIO protocol and am willing to offer any help I can.
+> If that ioctl is missing in libata, then I'll have to convert hdparm
+> to use SGIO to submit ATA Passthru packets instead for libata devices.
 
-Hello, Matt.
+If SGIO can be used for ATA Passthru, then why are the HDIO_DRIVE_CMD
+and HDIO_DRIVE_TASK ioctl()s implemented in libata? AFAICS, the same
+functionality can be accomplished through SGIO ATA Passthru.
 
-If you're looking for ATA SGIO example, smartctl source should have it. 
-  smartctl uses ATA SGIO when given -d ATA option.  And, plesase don't 
-top post.
+> That's on my TO-DO list, and rising more quickly to the top now, it seems.
+
+OK, great.
+
+
+Erik
 
 -- 
-tejun
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
