@@ -1,54 +1,58 @@
-From: Timothy Thelin <timothy.thelin@wdc.com>
-Subject: Re: TASKFILE ioctl for libata?
-Date: Fri, 17 Feb 2006 10:27:12 -0800
-Message-ID: <1140200833.7509.101.camel@localhost>
-References: <20060215143439.GA17850@harddisk-recovery.com>
-	 <43F37A5E.1090301@rtr.ca> <20060216005643.GA28396@harddisk-recovery.com>
-	 <43F3E17E.1090701@pobox.com> <43F4461C.1080501@gmail.com>
-	 <43F58B7E.4000401@pobox.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] shutdown processing
+Date: Fri, 17 Feb 2006 20:15:28 +0100
+Message-ID: <43F620D0.7050502@s5r6.in-berlin.de>
+References: <20060215114605.1568c8cc.randy_d_dunlap@linux.intel.com>	<43F43EB9.40406@s5r6.in-berlin.de>	<20060216104007.67cf613f.randy_d_dunlap@linux.intel.com>	<43F4CAF4.1070004@s5r6.in-berlin.de> <20060216111208.2367829b.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wdscexfe01.sc.wdc.com ([129.253.170.53]:32903 "EHLO
-	wdscexfe01.sc.wdc.com") by vger.kernel.org with ESMTP
-	id S1750821AbWBQS3m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Feb 2006 13:29:42 -0500
-In-Reply-To: <43F58B7E.4000401@pobox.com>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:29060 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1751207AbWBQTR4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Feb 2006 14:17:56 -0500
+In-Reply-To: <20060216111208.2367829b.randy_d_dunlap@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, Erik Mouw <erik@harddisk-recovery.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: Randy Dunlap <randy_d_dunlap@linux.intel.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, 2006-02-17 at 03:38 -0500, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> > Just a side note.  Taskfile has finer granuality regarding which 
-> > registers are written and read back than current libata does and IDE 
-> > taskfile implementation is somewhat broken/weird in a few delicate fun 
-> > ways, so... be careful.  Whoever tries it.
-> 
-> Yes -- it opens the question about whether we care enough to fully 
-> support flagged taskfiles, and if not, how to best emulate that support 
-> under libata.
-> 
-> I'm told that flagging individual ATA shadow registers for modification 
-> (or not) is required for issuing certain specialized PATA 
-> vendor-specific commands.  SATA, OTOH, transmits all ATA shadow 
-> registers in a FIS, so flagged taskfiles are useless.
-> 
-> So, I'm now thinking the best route is to leave the code as it is ;-) 
-> Rather than imperfectly implementing the flagged taskfile ioctl, punt 
-> the remaining userland users to SG_IO.
-> 
-> I don't see lack of full flagged taskfile support as a big stumbling 
-> block to libata use.
-> 
-> 	Jeff
+Randy Dunlap wrote:
+> On Thu, 16 Feb 2006 19:56:52 +0100
+> Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+...
+>>Note that roughly as long a scsi_device exists, SCSI high-level drivers 
+>>expect to be able to send commands to them.
+...
+> OK, now it seems like you just told me why I shouldn't use
+> the pci_driver.remove() interface.
 
-FYI, Western Digital doesn't need flagged taskfile access to use its
-vendor specific commands; SAT passthru works fine (although we'd
-appreciate more of the protocols implemented, or at least a way to
-discover at runtime which ones are implemented before trying to use
-them).
+:-) Really? Depends on what you are trying to solve. From what I 
+understood, the function you require does not interact with a scsi_device.
 
-- Tim Thelin
+You could also have a look into scsi_host_template.slave_destroy. This 
+is called from SCSI core when a scsi_device is being removed. In 
+particular, it is called _after_ the upper SCSI layers finished all 
+their business with your device.
+
+BTW, ata_scsi_release looks suspicious WRT what I said above. I see
+
+	ap->ops->port_disable(ap);
+	ata_host_remove(ap, 0);
+
+there. Since libata apparently never uses scsi_remove_device, 
+ata_host_remove's call to scsi_remove_host will call scsi_remove_device 
+which will cause SCSI high-level drivers to run their shutdown methods. 
+It looks wrong to me to place something like ata_port_disable before 
+that, judging from what the comment at the definition of 
+ata_port_disable says.
+
+Another suspicious code: ahci_remove_one calls free_irq before 
+ata_scsi_release.
+
+I never looked at this code before, never even used it --- am I missing 
+something fundamental?
+-- 
+Stefan Richter
+-=====-=-==- --=- =---=
+http://arcgraph.de/sr/
