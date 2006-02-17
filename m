@@ -1,43 +1,38 @@
 From: Erik Mouw <erik@harddisk-recovery.com>
 Subject: Re: TASKFILE ioctl for libata?
-Date: Fri, 17 Feb 2006 18:17:43 +0100
-Message-ID: <20060217171743.GE14959@harddisk-recovery.com>
-References: <20060215143439.GA17850@harddisk-recovery.com> <43F37A5E.1090301@rtr.ca> <20060216005643.GA28396@harddisk-recovery.com> <43F3E17E.1090701@pobox.com> <43F4461C.1080501@gmail.com> <43F58B7E.4000401@pobox.com>
+Date: Fri, 17 Feb 2006 18:28:04 +0100
+Message-ID: <20060217172804.GF14959@harddisk-recovery.com>
+References: <20060215143439.GA17850@harddisk-recovery.com> <43F37A5E.1090301@rtr.ca> <20060216005643.GA28396@harddisk-recovery.com> <43F3E17E.1090701@pobox.com> <43F4461C.1080501@gmail.com> <20060217170524.GC14959@harddisk-recovery.com> <58cb370e0602170915mda252e5qc3b0f0a65fd12022@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dtp.xs4all.nl ([80.126.206.180]:55516 "HELO abra2.bitwizard.nl")
-	by vger.kernel.org with SMTP id S1751143AbWBQRRp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Feb 2006 12:17:45 -0500
+Received: from dtp.xs4all.nl ([80.126.206.180]:6367 "HELO abra2.bitwizard.nl")
+	by vger.kernel.org with SMTP id S1750811AbWBQR2G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Feb 2006 12:28:06 -0500
 Content-Disposition: inline
-In-Reply-To: <43F58B7E.4000401@pobox.com>
+In-Reply-To: <58cb370e0602170915mda252e5qc3b0f0a65fd12022@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-On Fri, Feb 17, 2006 at 03:38:22AM -0500, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> >Just a side note.  Taskfile has finer granuality regarding which 
-> >registers are written and read back than current libata does and IDE 
-> >taskfile implementation is somewhat broken/weird in a few delicate fun 
-> >ways, so... be careful.  Whoever tries it.
+On Fri, Feb 17, 2006 at 06:15:12PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> On 2/17/06, Erik Mouw <erik@harddisk-recovery.com> wrote:
+> > What kind of delicate broken things are you referring to? The commands
+> > I've tried so far (identify, read sector, etc.) just work.
 > 
-> Yes -- it opens the question about whether we care enough to fully 
-> support flagged taskfiles, and if not, how to best emulate that support 
-> under libata.
-> 
-> I'm told that flagging individual ATA shadow registers for modification 
-> (or not) is required for issuing certain specialized PATA 
-> vendor-specific commands.  SATA, OTOH, transmits all ATA shadow 
-> registers in a FIS, so flagged taskfiles are useless.
+> Documentation/ioctl/hdio.txt
 
-I'd have to look at our own software to see if it's required or not.
-For PATA it doesn't really matter, you can always fiddle the registers
-using inb() and outb().
+I actually meant "broken things beyond what is documented in hdio.txt"
+;-)
 
-You're right about SATA, it doesn't make sense to use flagged
-taskfiles.
+> TASKFILE ioctl will be hopefully removed from drivers/ide
+> in few months time (and replaced by SG_IO).
+
+Note that there are two widely used programs that use TASKFILE: hdparm
+and smartcl. We'd rather don't have many complaining users on this list
+(or on linux-kernel), so please put the announcement in
+Documentation/feature-removal-schedule.txt .
 
 
 Erik
