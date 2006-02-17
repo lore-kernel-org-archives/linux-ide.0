@@ -1,35 +1,39 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: TASKFILE ioctl for libata?
-Date: Fri, 17 Feb 2006 09:50:51 -0500
-Message-ID: <43F5E2CB.6040804@rtr.ca>
-References: <20060215143439.GA17850@harddisk-recovery.com> <43F37A5E.1090301@rtr.ca> <20060216005643.GA28396@harddisk-recovery.com> <43F3E17E.1090701@pobox.com> <43F4461C.1080501@gmail.com> <43F58B7E.4000401@pobox.com> <43F5951B.3020605@gmail.com>
+From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
+Subject: Re: Fix IDE locking error.
+Date: Fri, 17 Feb 2006 15:53:04 +0100
+Message-ID: <58cb370e0602170653g30bd36f3j4b1a0e95f64ecbeb@mail.gmail.com>
+References: <20060216223916.GA8463@redhat.com>
+	 <58cb370e0602170057x59b23957n3e858d5ac4918326@mail.gmail.com>
+	 <1140186532.4283.2.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:58566 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S964913AbWBQOut (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Feb 2006 09:50:49 -0500
-In-Reply-To: <43F5951B.3020605@gmail.com>
+Received: from nproxy.gmail.com ([64.233.182.198]:56309 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964920AbWBQOxH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Feb 2006 09:53:07 -0500
+Received: by nproxy.gmail.com with SMTP id a4so285126nfc
+        for <linux-ide@vger.kernel.org>; Fri, 17 Feb 2006 06:53:05 -0800 (PST)
+In-Reply-To: <1140186532.4283.2.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Erik Mouw <erik@harddisk-recovery.com>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
+On 2/17/06, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> On Gwe, 2006-02-17 at 09:57 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > Could we get a decent description of the problem and of the patch?
 >
-> Also, as you pointed out, it's hardware-wise impossible to do 
-> register-level granuality with SATA and I'll be surprised if any more 
-> need for register-level granuality arises than there currently is.
+> Audit the lock state on all entries to the tune function and it
+> certainly was the case that the old IDE layer could call it with the
+> lock either already held or not.
 
-I hope we can keep in mind that libata is about much more than
-plain old SATA these days -- it appears about to displace my long
-lost IDE subsystem and all of the PATA, Cardbus, and PC-Card devices
-that it has long been the sole interface for.
+Thank you but this is not a patch description, this is a recipe
+for me to spend nice friday's evening staring all over IDE code
+and making patch description myself...
 
-Far be it from me to favour trying to implement the crazy TASKFILE
-ioctl() here, though.   We just need to nudge the Passthru mechanism
-in the right directions so that it can cover everyone's needs,
-including those for low-level vendor commands (for drive test etc..).
+http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt ?
 
-Cheers
+Bartlomiej
