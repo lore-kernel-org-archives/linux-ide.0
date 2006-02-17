@@ -1,39 +1,117 @@
-From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
-Subject: Re: Fix IDE locking error.
-Date: Fri, 17 Feb 2006 15:53:04 +0100
-Message-ID: <58cb370e0602170653g30bd36f3j4b1a0e95f64ecbeb@mail.gmail.com>
-References: <20060216223916.GA8463@redhat.com>
-	 <58cb370e0602170057x59b23957n3e858d5ac4918326@mail.gmail.com>
-	 <1140186532.4283.2.camel@localhost.localdomain>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Fri, 17 Feb 2006 09:59:40 -0500
+Message-ID: <200602170959.40286.lkml@rtr.ca>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F1EE4A.3050107@rtr.ca> <43F58D29.3040608@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.198]:56309 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964920AbWBQOxH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Feb 2006 09:53:07 -0500
-Received: by nproxy.gmail.com with SMTP id a4so285126nfc
-        for <linux-ide@vger.kernel.org>; Fri, 17 Feb 2006 06:53:05 -0800 (PST)
-In-Reply-To: <1140186532.4283.2.camel@localhost.localdomain>
+Received: from rtr.ca ([64.26.128.89]:52454 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1030600AbWBQO7k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Feb 2006 09:59:40 -0500
+In-Reply-To: <43F58D29.3040608@pobox.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On 2/17/06, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> On Gwe, 2006-02-17 at 09:57 +0100, Bartlomiej Zolnierkiewicz wrote:
-> > Could we get a decent description of the problem and of the patch?
->
-> Audit the lock state on all entries to the tune function and it
-> certainly was the case that the old IDE layer could call it with the
-> lock either already held or not.
+On Friday 17 February 2006 03:45, Jeff Garzik wrote:
+>Submit a patch... 
 
-Thank you but this is not a patch description, this is a recipe
-for me to spend nice friday's evening staring all over IDE code
-and making patch description myself...
+You mean, something like this one?
+Untested at present, as I was hoping to hear
+back from one of the original problem reporters
+after they tested it.
 
-http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt ?
+Cheers!
 
-Bartlomiej
+
+
+-------- Original Message --------
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Tue, 14 Feb 2006 13:00:36 -0500
+From: Mark Lord <lkml@rtr.ca>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+CC: David Greaves <david@dgreaves.com>,	Jeff Garzik <jgarzik@pobox.com>, 
+linux-kernel@vger.kernel.org,	IDE/ATA development list 
+<linux-ide@vger.kernel.org>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> 
+<43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34>
+
+On Tuesday 14 February 2006 12:12, Justin Piszcz wrote:
+> I would like to try the patch too, if available.
+
+Something like this:  (for 2.6.16-rc3-git2, but should be okay on 2.6.15 
+also).
+
+Untested:  include the original SCSI opcode in printk's for libata SCSI 
+errors,
+to help understand where the errors are coming from.
+
+Signed-Off-By:  Mark Lord <mlord@pobox.com>
+
+--- linux/drivers/scsi/libata-scsi.c.orig	2006-02-12 19:27:25.000000000 -0500
++++ linux/drivers/scsi/libata-scsi.c	2006-02-14 12:54:17.000000000 -0500
+@@ -420,6 +420,7 @@
+  *	@sk: the sense key we'll fill out
+  *	@asc: the additional sense code we'll fill out
+  *	@ascq: the additional sense code qualifier we'll fill out
++ *	@opcode: the original SCSI command opcode byte
+  *
+  *	Converts an ATA error into a SCSI error.  Fill out pointers to
+  *	SK, ASC, and ASCQ bytes for later use in fixed or descriptor
+@@ -429,7 +430,7 @@
+  *	spin_lock_irqsave(host_set lock)
+  */
+ void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk, u8 
+*asc, 
+-			u8 *ascq)
++			u8 *ascq, u8 opcode)
+ {
+ 	int i;
+ 
+@@ -508,8 +509,8 @@
+ 		}
+ 	}
+ 	/* No error?  Undecoded? */
+-	printk(KERN_WARNING "ata%u: no sense translation for status: 0x%02x\n", 
+-	       id, drv_stat);
++	printk(KERN_WARNING "ata%u: no sense translation for op=0x%02x status: 
+0x%02x\n", 
++	       id, opcode, drv_stat);
+ 
+ 	/* For our last chance pick, use medium read error because
+ 	 * it's much more common than an ATA drive telling you a write
+@@ -520,8 +521,8 @@
+ 	*ascq = 0x04; /*  "auto-reallocation failed" */
+ 
+  translate_done:
+-	printk(KERN_ERR "ata%u: translated ATA stat/err 0x%02x/%02x to "
+-	       "SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n", id, drv_stat, drv_err,
++	printk(KERN_ERR "ata%u: translated op=0x%02x ATA stat/err 0x%02x/%02x to "
++	       "SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n", id, opcode, drv_stat, drv_err,
+ 	       *sk, *asc, *ascq);
+ 	return;
+ }
+@@ -562,7 +563,7 @@
+ 	 */
+ 	if (tf->command & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
+ 		ata_to_sense_error(qc->ap->id, tf->command, tf->feature,
+-				   &sb[1], &sb[2], &sb[3]);
++				   &sb[1], &sb[2], &sb[3], cmd->cmnd[0]);
+ 		sb[1] &= 0x0f;
+ 	}
+ 
+@@ -637,7 +638,7 @@
+ 	 */
+ 	if (tf->command & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
+ 		ata_to_sense_error(qc->ap->id, tf->command, tf->feature,
+-				   &sb[2], &sb[12], &sb[13]);
++				   &sb[2], &sb[12], &sb[13], cmd->cmnd[0]);
+ 		sb[2] &= 0x0f;
+ 	}
+ 
+-
