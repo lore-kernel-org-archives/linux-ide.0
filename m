@@ -1,84 +1,86 @@
-From: Matthias Andree <matthias.andree@gmx.de>
-Subject: 2.6.15.4 ide-cd causes drive complaints from NEC ND-4550A?
-Date: Sat, 18 Feb 2006 18:02:26 +0100
-Message-ID: <20060218170226.GA9272@merlin.emma.line.org>
+From: Sander <sander@humilis.net>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Sat, 18 Feb 2006 21:43:40 +0100
+Message-ID: <20060218204340.GA2984@favonius>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F1EE4A.3050107@rtr.ca> <43F58D29.3040608@pobox.com> <200602170959.40286.lkml@rtr.ca>
+Reply-To: sander@humilis.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:61101 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S932088AbWBRRC3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Feb 2006 12:02:29 -0500
+Received: from ookhoi.xs4all.nl ([213.84.114.66]:60238 "EHLO
+	favonius.humilis.net") by vger.kernel.org with ESMTP
+	id S932140AbWBRUnb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 18 Feb 2006 15:43:31 -0500
 Content-Disposition: inline
+In-Reply-To: <200602170959.40286.lkml@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: axboe@suse.de, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Mark Lord <lkml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Greetings,
+Mark Lord wrote (ao):
+> On Friday 17 February 2006 03:45, Jeff Garzik wrote:
+> >Submit a patch... 
+> 
+> You mean, something like this one?
+> Untested at present, as I was hoping to hear
+> back from one of the original problem reporters
+> after they tested it.
 
-I'm resending to -ide@ since on -kernel@ this caused no reaction.
+Not the original reporter, but your patch Works For Me.
+I get these:
 
-All three of
+[  633.449961] md: md1: sync done.
+[  633.456070] RAID5 conf printout:
+[  633.456117]  --- rd:9 wd:9 fd:0
+[  633.456164]  disk 0, o:1, dev:sda2
+[  633.456208]  disk 1, o:1, dev:sdb2
+[  633.456250]  disk 2, o:1, dev:sdc2
+[  633.456298]  disk 3, o:1, dev:sdd2
+[  633.456340]  disk 4, o:1, dev:sde2
+[  633.456383]  disk 5, o:1, dev:sdf2
+[  633.456427]  disk 6, o:1, dev:sdg2
+[  633.456470]  disk 7, o:1, dev:sdh2
+[  633.456514]  disk 8, o:1, dev:sdi2
+[  787.639858] kjournald starting.  Commit interval 5 seconds
+[  787.657991] EXT3 FS on md1, internal journal
+[  787.658023] EXT3-fs: mounted filesystem with writeback data mode.
+[ 1872.338185] ata6: translated op=0x2a ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+[ 1872.338239] ata6: status=0xd0 { Busy }
+[ 5749.285084] ata8: translated op=0x2a ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+[ 5749.285138] ata8: status=0xd0 { Busy }
+[ 5906.008461] ata6: translated op=0x2a ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+[ 5906.008515] ata6: status=0xd0 { Busy }
+[ 9892.904205] ata6: translated op=0x2a ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+[ 9892.904259] ata6: status=0xd0 { Busy }
+[10146.084687] ata5: translated op=0x2a ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+[10146.084740] ata5: status=0xd0 { Busy }
+[10293.949040] ata5: translated op=0x2a ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+[10293.949093] ata5: status=0xd0 { Busy }
 
-SUSE Linux kernel 2.6.13-15.7,
-SUSE Linux kernel 2.6.13-15.8 (both SUSE Linux 10.0 i586) and
-Vanilla    kernel 2.6.15.4
+Can you tell from this what they mean?
 
-BUT NOT
+This is with 2.6.16-rc3, your patch, and running nine Maxtors disks
+over onboard nForce4 and MV88SX6081 8-port SATA II PCI-X Controller (rev 09).
 
-FreeBSD 6.1-PRERELEASE
+for i in `seq 10`
+do dd if=/dev/zero of=bigfile.$i bs=1024k count=10000
+done
+md5sum bigfile.*
 
-cause "local unit communication failure" when running "readcd -c2scan"
-on my NEC ND-4550A CD/DVD drive (VIA KT8237, Athlon XP 2500+, 1 GB RAM)
-after at most two seconds of reading.
+The errors mostly seem to happen during the md5sum (not during the dd).
 
-I am aware of three ways to trigger the problem currently:
+I do not see data corruption or slowdown.
 
-1. as little as switching to a different tab in GNOME-Terminal.
+I do need a chunksize of 512k for the raid5. With anything lower (I tried
+the default 64k, 128k, 256k, 512k and 4096k) I get data corruption and
+the errors reported in:
+http://marc.theaimsgroup.com/?l=linux-ide&m=114016903530007&w=2
 
-2. hald-addon-storage's poll with CDROM_MEDIA_CHANGED and
-   CDROM_DRIVE_STATUS ioctls cause the same problem (hald-addon-storage
-   doesn't do anything else except opening and closing the device and
-   sleeping for two seconds).
+Thanks!
 
-3. running two readcd -c2scan dev=/dev/hdc commands on the same drive
-   triggers the problem, too.  One might argue this isn't very sensible,
-   but it shouldn't confuse the drive either.
-
-The problem is invariant to hdparm -d0 (or -d1) /dev/hdc, and hdparm -u0
-or -u1 make no difference either.
-
-A Plextor PX-W4824TA (/dev/hdd) on the same cable as the NEC works like
-a charm, and with FreeBSD 6-STABLE, both work like a charm with (3.).
-(This is a dualboot machine, so it's the very same hardware.)
-
-readcd uses commands like these:
-
-Executing 'read_cd' command on Bus 1 Target 0, Lun 0 timeout 40s
-CDB:  BE 00 00 00 02 7D 00 00 31 FA 00 00
-ioctl(3, SG_IO, 0xbfa5b2ac)             = 0
-
-In a second run -- I needed to capture the output ;-) -- I get this:
-
-CDB:  BE 00 00 00 00 31 00 00 31 FA 00 00
-status: 0x2 (CHECK CONDITION)
-Sense Bytes: 70 00 04 00 00 00 00 0A 00 00 00 00 08 00 00 00
-Sense Key: 0x4 Hardware Error, Segment 0
-Sense Code: 0x08 Qual 0x00 (logical unit communication failure) Fru 0x0
-Sense flags: Blk 0 (not valid)
-resid: 123748
-cmd finished after 6.408s timeout 40s
-readcd: Success. read_cd: scsi sendcmd: no error
-
-I'd been using "sudo" to run this with ruid == euid == 0 to rule out
-command filtering issues. I hope that was the right approach.
-
-What else do you need to debug this? Is there some low-level debugging
-output I could enable to see what the kernel sends and gets to/from the
-drive?
-
-Some unimportant person suspected (on cdwrite(#)other,debian!org) this
-might be a DMA problem, but the problem persists after hdparm -d0
-so I wonder if it's really a DMA issue or something else.
+	Sander
 
 -- 
-Matthias Andree
+Humilis IT Services and Solutions
+http://www.humilis.net
