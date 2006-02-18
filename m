@@ -1,37 +1,84 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] rate-limit libata-scsi status/error message
-Date: Sat, 18 Feb 2006 09:13:04 -0500
-Message-ID: <43F72B70.5040107@rtr.ca>
-References: <20060217213733.36040150.rdunlap@xenotime.net>
+From: Matthias Andree <matthias.andree@gmx.de>
+Subject: 2.6.15.4 ide-cd causes drive complaints from NEC ND-4550A?
+Date: Sat, 18 Feb 2006 18:02:26 +0100
+Message-ID: <20060218170226.GA9272@merlin.emma.line.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:50624 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1751280AbWBRONG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Feb 2006 09:13:06 -0500
-In-Reply-To: <20060217213733.36040150.rdunlap@xenotime.net>
+Received: from mail.gmx.net ([213.165.64.20]:61101 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S932088AbWBRRC3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Feb 2006 12:02:29 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: ide <linux-ide@vger.kernel.org>, jgarzik <jgarzik@pobox.com>
+To: axboe@suse.de, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Randy.Dunlap wrote:
-> From: Randy Dunlap <rdunlap@xenotime.net>
-> 
-> Rate-limit a translated ATA status/error message.
-> I have a kernel log that is 2/3 full of these messages
-> due to a CD/DVD drive being empty.
-...
-> -	printk(KERN_ERR "ata%u: translated ATA stat/err 0x%02x/%02x to "
-> -	       "SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n", id, drv_stat, drv_err,
-> -	       *sk, *asc, *ascq);
-> +	if (printk_ratelimit())
-> +		printk(KERN_ERR "ata%u: translated ATA stat/err 0x%02x/%02x to "
-> +			"SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n",
-> +			id, drv_stat, drv_err, *sk, *asc, *ascq);
+Greetings,
 
-That message shouldn't even be enabled for non DEBUG cases.
-I suspect Jeff will remove it for 2.6.17..
+I'm resending to -ide@ since on -kernel@ this caused no reaction.
 
--ml
+All three of
+
+SUSE Linux kernel 2.6.13-15.7,
+SUSE Linux kernel 2.6.13-15.8 (both SUSE Linux 10.0 i586) and
+Vanilla    kernel 2.6.15.4
+
+BUT NOT
+
+FreeBSD 6.1-PRERELEASE
+
+cause "local unit communication failure" when running "readcd -c2scan"
+on my NEC ND-4550A CD/DVD drive (VIA KT8237, Athlon XP 2500+, 1 GB RAM)
+after at most two seconds of reading.
+
+I am aware of three ways to trigger the problem currently:
+
+1. as little as switching to a different tab in GNOME-Terminal.
+
+2. hald-addon-storage's poll with CDROM_MEDIA_CHANGED and
+   CDROM_DRIVE_STATUS ioctls cause the same problem (hald-addon-storage
+   doesn't do anything else except opening and closing the device and
+   sleeping for two seconds).
+
+3. running two readcd -c2scan dev=/dev/hdc commands on the same drive
+   triggers the problem, too.  One might argue this isn't very sensible,
+   but it shouldn't confuse the drive either.
+
+The problem is invariant to hdparm -d0 (or -d1) /dev/hdc, and hdparm -u0
+or -u1 make no difference either.
+
+A Plextor PX-W4824TA (/dev/hdd) on the same cable as the NEC works like
+a charm, and with FreeBSD 6-STABLE, both work like a charm with (3.).
+(This is a dualboot machine, so it's the very same hardware.)
+
+readcd uses commands like these:
+
+Executing 'read_cd' command on Bus 1 Target 0, Lun 0 timeout 40s
+CDB:  BE 00 00 00 02 7D 00 00 31 FA 00 00
+ioctl(3, SG_IO, 0xbfa5b2ac)             = 0
+
+In a second run -- I needed to capture the output ;-) -- I get this:
+
+CDB:  BE 00 00 00 00 31 00 00 31 FA 00 00
+status: 0x2 (CHECK CONDITION)
+Sense Bytes: 70 00 04 00 00 00 00 0A 00 00 00 00 08 00 00 00
+Sense Key: 0x4 Hardware Error, Segment 0
+Sense Code: 0x08 Qual 0x00 (logical unit communication failure) Fru 0x0
+Sense flags: Blk 0 (not valid)
+resid: 123748
+cmd finished after 6.408s timeout 40s
+readcd: Success. read_cd: scsi sendcmd: no error
+
+I'd been using "sudo" to run this with ruid == euid == 0 to rule out
+command filtering issues. I hope that was the right approach.
+
+What else do you need to debug this? Is there some low-level debugging
+output I could enable to see what the kernel sends and gets to/from the
+drive?
+
+Some unimportant person suspected (on cdwrite(#)other,debian!org) this
+might be a DMA problem, but the problem persists after hdparm -d0
+so I wonder if it's really a DMA issue or something else.
+
+-- 
+Matthias Andree
