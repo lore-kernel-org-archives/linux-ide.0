@@ -1,55 +1,47 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: make ata_sg_setup_one() trim zero length sg
-Date: Sat, 18 Feb 2006 11:35:53 +0900
-Message-ID: <43F68809.8040700@gmail.com>
-References: <20060217075309.GA31835@htj.dyndns.org> <43F6416D.50807@pobox.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: [PATCH] rate-limit libata-scsi status/error message
+Date: Fri, 17 Feb 2006 21:37:33 -0800
+Message-ID: <20060217213733.36040150.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.203]:26804 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750715AbWBRCgF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Feb 2006 21:36:05 -0500
-Received: by xproxy.gmail.com with SMTP id h30so373729wxd
-        for <linux-ide@vger.kernel.org>; Fri, 17 Feb 2006 18:36:02 -0800 (PST)
-In-Reply-To: <43F6416D.50807@pobox.com>
+Received: from xenotime.net ([66.160.160.81]:46828 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1750830AbWBRFgi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Feb 2006 00:36:38 -0500
+Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Fri, 17 Feb 2006 21:36:37 -0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: ide <linux-ide@vger.kernel.org>
+Cc: jgarzik <jgarzik@pobox.com>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
-> 
->> This patch makes ata_sg_setup_one() trim sg entry (thus making
->> qc->n_elem zero) if padding results in zero length sg entry.
->>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>
->> ---
->>
->> Jeff, currently, in both sg_setup() and sg_setup_one() cases, zero
->> length sg entry can reach low level driver fill_sg() function which
->> could possibly cause weird problems.  This and a following patch kill
->> such cases.
-> 
-> 
-> Can you redo this series against vanilla upstream (and/or #upstream-fixes)?
-> 
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-Hello, Jeff.
+Rate-limit a translated ATA status/error message.
+I have a kernel log that is 2/3 full of these messages
+due to a CD/DVD drive being empty.
 
-Actually, this series is already against the vanilla upstream[1].  The 
-order is...
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+---
+ drivers/scsi/libata-scsi.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-libata: fix WARN_ON() condition in *_fill_sg() [2]
-libata: make ata_sg_setup_one() trim zero length sg [3]
-libata: fix qc->n_elem == 0 case handling in ata_qc_next_sg [4]
+--- linux-2616-rc4.orig/drivers/scsi/libata-scsi.c
++++ linux-2616-rc4/drivers/scsi/libata-scsi.c
+@@ -520,9 +520,10 @@ void ata_to_sense_error(unsigned id, u8 
+ 	*ascq = 0x04; /*  "auto-reallocation failed" */
+ 
+  translate_done:
+-	printk(KERN_ERR "ata%u: translated ATA stat/err 0x%02x/%02x to "
+-	       "SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n", id, drv_stat, drv_err,
+-	       *sk, *asc, *ascq);
++	if (printk_ratelimit())
++		printk(KERN_ERR "ata%u: translated ATA stat/err 0x%02x/%02x to "
++			"SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n",
++			id, drv_stat, drv_err, *sk, *asc, *ascq);
+ 	return;
+ }
+ 
 
--- 
-tejun
 
-[1] f1b318793dcd2d9ff6b5ac06e7762098fa079cee
-[2] http://article.gmane.org/gmane.linux.ide/8090
-[3] http://article.gmane.org/gmane.linux.ide/8091
-[4] http://article.gmane.org/gmane.linux.ide/8092
+---
