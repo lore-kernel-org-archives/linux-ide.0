@@ -1,51 +1,40 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Sun, 19 Feb 2006 10:30:56 -0500
-Message-ID: <43F88F30.1070208@rtr.ca>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F1EE4A.3050107@rtr.ca> <43F58D29.3040608@pobox.com> <200602170959.40286.lkml@rtr.ca> <20060218204340.GA2984@favonius> <43F794D8.7000406@rtr.ca> <20060219071414.GA31299@favonius>
+From: Daniel <impulze@impulze.de>
+Subject: siimage.c{,.ko} Linux Kernel IDE/PCI driver
+Date: Sun, 19 Feb 2006 17:53:41 +0100
+Message-ID: <200602191753.41819.impulze@impulze.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:53157 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1750715AbWBSPbB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Feb 2006 10:31:01 -0500
-In-Reply-To: <20060219071414.GA31299@favonius>
+Received: from mail2.kontent.de ([81.88.34.59]:3201 "EHLO Mail2.KONTENT.De")
+	by vger.kernel.org with ESMTP id S932102AbWBSQwv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Feb 2006 11:52:51 -0500
+Received: from istari.mordor.net (p54A95EE9.dip.t-dialin.net [84.169.94.233])
+	by Mail2.KONTENT.De (Postfix) with ESMTP id 31D2938801A
+	for <linux-ide@vger.kernel.org>; Sun, 19 Feb 2006 17:52:35 +0100 (CET)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sander@humilis.net
-Cc: Jeff Garzik <jgarzik@pobox.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Sander wrote:
-> Mark Lord wrote (ao):
->> Sander wrote:
->>> Mark Lord wrote (ao):
->>>> On Friday 17 February 2006 03:45, Jeff Garzik wrote:
->>>>> Submit a patch... 
->>>> You mean, something like this one?
->> ...
->>> [  633.449961] md: md1: sync done.
->>> [  633.456070] RAID5 conf printout:
->>> [  633.456117]  --- rd:9 wd:9 fd:0
->> ...
->>> [ 1872.338185] ata6: translated op=0x2a ATA stat/err 0xd0/00 to SCSI 
->>> SK/ASC/ASCQ 0xb/47/00
->>> [ 1872.338239] ata6: status=0xd0 { Busy }
->>> [ 5749.285084] ata8: translated op=0x2a ATA stat/err 0xd0/00 to SCSI 
->>> SK/ASC/ASCQ 0xb/47/00
->>> [ 5749.285138] ata8: status=0xd0 { Busy }
->>> [ 5906.008461] ata6: translated op=0x2a ATA stat/err 0xd0/00 to SCSI 
->>> SK/ASC/ASCQ 0xb/47/00
->>> [ 5906.008515] ata6: status=0xd0 { Busy }
-...
->> SCSI opcode 0x2a is WRITE_10, so the errors are being reported
->> in response to the writes to bigfile.$i.
-...
-> I am using the sata_mv driver, which is beta. That might explain why it
-> behaves not totally as expected in your eyes. I have no clue anyway :-)
-
-Ahh.. that's useful to know.  I expect to be taking a long hard look
-at the innards of the sata_mv code in the near future, so whatever is
-wrong here just might get fixed soon.
-
-Cheers
+Hi there,
+i first wrote this e-mail to alan@red-hat.com who replied that i should mail 
+you about this. I never did this before, so i hope i'm catching the right 
+person finally. First of all thanks for your work with the siimage module for 
+the linux kernel.
+I was just wondering if the problem i'm having is known to you or if 
+it's new. My current kernel version 2.6.14 and when i compile this module 
+into the kernel (not modular) then my kernel is trying to access sectors on 
+both hard drives (which are connected to the pci adapter) which don't even 
+exist (when mounting the device nodes in /dev).
+If i compile it as modular part of the kernel and load the module after boot i 
+can safely mount those without any errors. A log of what produces the output 
+is somewhat not possible because it won't boot when i directly compile it 
+into the kernel. 
+It's reproduceable but not log-able. In your module you guys also state that 
+i should check the SI support guides when i got a nVidia chipset 
+(motherboard) which i do have but i couldn't find anything useful in those 
+documentations. My BIOS is also up to date. Any useful information would be 
+appreciated. Thanks for your time.
+Greets Daniel
