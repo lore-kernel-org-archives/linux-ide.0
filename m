@@ -1,57 +1,51 @@
-From: Michael =?iso-8859-1?Q?M=FCller?= <mueller_michael@nikocity.de>
-Subject: Using PATA port from Promise SATA 300 TX2 plus
-Date: Sun, 19 Feb 2006 13:42:58 +0100
-Message-ID: <20060219124258.GH4858@mueller_michael.de>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Sun, 19 Feb 2006 10:30:56 -0500
+Message-ID: <43F88F30.1070208@rtr.ca>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F1EE4A.3050107@rtr.ca> <43F58D29.3040608@pobox.com> <200602170959.40286.lkml@rtr.ca> <20060218204340.GA2984@favonius> <43F794D8.7000406@rtr.ca> <20060219071414.GA31299@favonius>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.177]:41412 "EHLO
-	moutng.kundenserver.de") by vger.kernel.org with ESMTP
-	id S932414AbWBSMnD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 19 Feb 2006 07:43:03 -0500
-Content-Disposition: inline
+Received: from rtr.ca ([64.26.128.89]:53157 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1750715AbWBSPbB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Feb 2006 10:31:01 -0500
+In-Reply-To: <20060219071414.GA31299@favonius>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: sander@humilis.net
+Cc: Jeff Garzik <jgarzik@pobox.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hi Jeff,
-
-I want to tell you that I was able to use the two SATA ports and the
-PATA port from my Promise SATA 300 TX2 plus under linux 2.6.16-rc1 and
-your patch 2.6.16-rc1-libata1.patch.bz2. The only problem I had that
-it didn't worked when I compiled it into the kernel. It didn't find
-neither the SATA drives nor the PATA drive. After creating the module
-everything worked fine without any further changes.
-
-I'm booting from a hard drive (120GB) connected to the IDE controller
-on the mainboard.
-Here are some lines from syslog:
+Sander wrote:
+> Mark Lord wrote (ao):
+>> Sander wrote:
+>>> Mark Lord wrote (ao):
+>>>> On Friday 17 February 2006 03:45, Jeff Garzik wrote:
+>>>>> Submit a patch... 
+>>>> You mean, something like this one?
+>> ...
+>>> [  633.449961] md: md1: sync done.
+>>> [  633.456070] RAID5 conf printout:
+>>> [  633.456117]  --- rd:9 wd:9 fd:0
+>> ...
+>>> [ 1872.338185] ata6: translated op=0x2a ATA stat/err 0xd0/00 to SCSI 
+>>> SK/ASC/ASCQ 0xb/47/00
+>>> [ 1872.338239] ata6: status=0xd0 { Busy }
+>>> [ 5749.285084] ata8: translated op=0x2a ATA stat/err 0xd0/00 to SCSI 
+>>> SK/ASC/ASCQ 0xb/47/00
+>>> [ 5749.285138] ata8: status=0xd0 { Busy }
+>>> [ 5906.008461] ata6: translated op=0x2a ATA stat/err 0xd0/00 to SCSI 
+>>> SK/ASC/ASCQ 0xb/47/00
+>>> [ 5906.008515] ata6: status=0xd0 { Busy }
 ...
-Feb 19 08:27:04 grizzly kernel: scsi2 : sata_promise
-Feb 19 08:27:04 grizzly kernel:   Vendor: ATA       Model: ST3250823AS       Rev: 3.03
-Feb 19 08:27:04 grizzly kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
-Feb 19 08:27:04 grizzly kernel:   Vendor: ATA       Model: ST3250823AS       Rev: 3.03
-Feb 19 08:27:04 grizzly kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
-Feb 19 08:27:04 grizzly kernel:   Vendor: ATA       Model: IC35L060AVER07-0  Rev: ER6O
-Feb 19 08:27:04 grizzly kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+>> SCSI opcode 0x2a is WRITE_10, so the errors are being reported
+>> in response to the writes to bigfile.$i.
 ...
-Feb 19 08:27:04 grizzly kernel: SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
-...
-Feb 19 08:27:04 grizzly kernel: SCSI device sdb: 488397168 512-byte hdwr sectors (250059 MB)
-...
-Feb 19 08:27:04 grizzly kernel: SCSI device sdc: 120103200 512-byte hdwr sectors (61493 MB)
-...
-sda and sdb are the SATA discs and sdc is the PATA drive.
+> I am using the sata_mv driver, which is beta. That might explain why it
+> behaves not totally as expected in your eyes. I have no clue anyway :-)
 
-I'm using software RAID and LVM2 on top of this.
+Ahh.. that's useful to know.  I expect to be taking a long hard look
+at the innards of the sata_mv code in the near future, so whatever is
+wrong here just might get fixed soon.
 
-Can you point me to some informations how to tune the TCQ parameter?
-
-I'm not on the list. So if you reply please CC me.
-
-Thanks for your work!
-
-Regards
-
-Michael
+Cheers
