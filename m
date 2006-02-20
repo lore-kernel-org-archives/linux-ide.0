@@ -1,87 +1,27 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/libata-scsi.c: make some functions static
-Date: Mon, 20 Feb 2006 23:36:32 +0100
-Message-ID: <20060220223632.GQ4661@stusta.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: PATCH: blacklist update
+Date: Mon, 20 Feb 2006 22:57:49 +0000
+Message-ID: <1140476269.26526.45.camel@localhost.localdomain>
+References: <1140449118.26526.21.camel@localhost.localdomain>
+	 <43FA28CD.8080603@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:13 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1161053AbWBTWge (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Feb 2006 17:36:34 -0500
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:206 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932697AbWBTWyA
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 20 Feb 2006 17:54:00 -0500
+In-Reply-To: <43FA28CD.8080603@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-This patch makes some needlesly global functions static.
+On Llu, 2006-02-20 at 15:38 -0500, Jeff Garzik wrote:
+> Could you gin up the same patch for libata?
 
+Have done although its rather more invasive as the existing libata code
+doesn't handle versions. Will push it when I've done some testing.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
----
-
-This patch was already sent on:
-- 10 Feb 2006
-- 31 Jan 2006
-
- drivers/scsi/libata-scsi.c |   19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
-
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/libata-scsi.c.old	2005-11-20 03:06:38.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/libata-scsi.c	2005-11-20 03:08:34.000000000 +0100
-@@ -325,10 +325,10 @@
-  *	RETURNS:
-  *	Command allocated, or %NULL if none available.
-  */
--struct ata_queued_cmd *ata_scsi_qc_new(struct ata_port *ap,
--				       struct ata_device *dev,
--				       struct scsi_cmnd *cmd,
--				       void (*done)(struct scsi_cmnd *))
-+static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_port *ap,
-+					      struct ata_device *dev,
-+					      struct scsi_cmnd *cmd,
-+					      void (*done)(struct scsi_cmnd *))
- {
- 	struct ata_queued_cmd *qc;
- 
-@@ -364,7 +364,7 @@
-  *	LOCKING:
-  *	inherited from caller
-  */
--void ata_dump_status(unsigned id, struct ata_taskfile *tf)
-+static void ata_dump_status(unsigned id, struct ata_taskfile *tf)
- {
- 	u8 stat = tf->command, err = tf->feature;
- 
-@@ -413,8 +413,8 @@
-  *	LOCKING:
-  *	spin_lock_irqsave(host_set lock)
-  */
--void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk, u8 *asc, 
--			u8 *ascq)
-+static void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err,
-+			       u8 *sk, u8 *asc, u8 *ascq)
- {
- 	int i;
- 
-@@ -524,7 +524,7 @@
-  *	LOCKING:
-  *	spin_lock_irqsave(host_set lock)
-  */
--void ata_gen_ata_desc_sense(struct ata_queued_cmd *qc)
-+static void ata_gen_ata_desc_sense(struct ata_queued_cmd *qc)
- {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	struct ata_taskfile *tf = &qc->tf;
-@@ -600,7 +600,7 @@
-  *	LOCKING:
-  *	inherited from caller
-  */
--void ata_gen_fixed_sense(struct ata_queued_cmd *qc)
-+static void ata_gen_fixed_sense(struct ata_queued_cmd *qc)
- {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	struct ata_taskfile *tf = &qc->tf;
 
