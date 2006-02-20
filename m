@@ -1,50 +1,38 @@
-From: "Brian Marete" <bgmarete@gmail.com>
-Subject: `Max Request Size' -- A Query
-Date: Mon, 20 Feb 2006 13:09:16 +0000
-Message-ID: <6dd519ae0602200509s45b8fc0awe4fce40c973ddaa5@mail.gmail.com>
+From: Mark Lord <mlord@pobox.com>
+Subject: Re: [PATCH] libata: increase LBA48 max sectors to 65535
+Date: Mon, 20 Feb 2006 08:54:24 -0500
+Message-ID: <43F9CA10.8000206@pobox.com>
+References: <1139754779159-git-send-email-htejun@gmail.com> <43EF8E61.5040409@pobox.com> <43EFD73D.4070207@gmail.com> <43F011DF.6020203@pobox.com> <20060215072449.GA31691@htj.dyndns.org> <20060215130725.GP4203@suse.de> <43F342E6.9060909@gmail.com> <20060215151200.GW4203@suse.de> <43F38D49.4080601@pobox.com> <43F3B3CE.5060105@pobox.com> <43F9A6A8.4020606@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.195]:41502 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932615AbWBTNJR convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Feb 2006 08:09:17 -0500
-Received: by wproxy.gmail.com with SMTP id i28so603280wra
-        for <linux-ide@vger.kernel.org>; Mon, 20 Feb 2006 05:09:16 -0800 (PST)
-Content-Disposition: inline
+Received: from mx3.magma.ca ([206.191.0.239]:42451 "EHLO mx3.magma.ca")
+	by vger.kernel.org with ESMTP id S1030229AbWBTNyh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Feb 2006 08:54:37 -0500
+In-Reply-To: <43F9A6A8.4020606@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Jens Axboe <axboe@suse.de>, Tejun Heo <htejun@gmail.com>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-Hello all,
+Jeff Garzik wrote:
+>
+> Indeed.  I am paranoid about controllers assuming that no more than 256 
+> PRD entries will be submitted.  But I have never seen any document that 
+> says PCI IDE BMDMA hardware can -only- do 256 PRD entries.  Never tested 
+> it, either...
 
-This is more of a query than a bug report. After upgrading my kernel from
-2.6.15.1 to 2.6.16-rc4, I noticed, by having a look at dmesg(1), that the
-`max request size' for my hard disk had changed from 1024KiB to 512KiB, as
-evidenced by the following short diff.
+The hardware vendors I have worked with have never had any limit
+on PRD count -- they'd happily keep reading through an infinite
+list of PRDs if we could supply one.
 
---------------------------------------------------------
- Probing IDE interface ide1...
- hdc: LITE-ON CD-RW SOHR-5238S, ATAPI CD/DVD-ROM drive
- ide1 at 0x170-0x177,0x376 on irq 15
--hda: max request size: 1024KiB
-+hda: max request size: 512KiB
- hda: 80293248 sectors (41110 MB) w/2048KiB Cache, CHS=16383/255/63, UDMA(133)
- hda: cache flushes supported
-  hda: hda1 hda2 hda3 hda4
---------------------------------------------------------
+A number of them did have issues with 64KB boundary crossings,
+and it is generally VERY unsafe to have a single PRD "wrap"
+into a fresh 64KB segment mid-stride.
 
-My question is whether I should worry at all about this. Should I expect a
-performance drop? In short, is it a good thing, a bad thing or entirely
-indifferent for my purposes as a user?
-
-Perhaps I should add that I have `CONFIG_BLK_DEV_VIA82CXXX' compiled into the
-kernel.
-
-Thanks,
-
---
-B. Gitonga Marete
-Tel: +254-722-151-590
+Cheers
+-- 
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
