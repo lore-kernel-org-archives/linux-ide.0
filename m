@@ -1,36 +1,50 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata: increase LBA48 max sectors to 65535
-Date: Mon, 20 Feb 2006 12:44:23 +0100
-Message-ID: <20060220114423.GF8852@suse.de>
-References: <43EF8E61.5040409@pobox.com> <43EFD73D.4070207@gmail.com> <43F011DF.6020203@pobox.com> <20060215072449.GA31691@htj.dyndns.org> <20060215130725.GP4203@suse.de> <43F342E6.9060909@gmail.com> <20060215151200.GW4203@suse.de> <43F38D49.4080601@pobox.com> <20060216074258.GF4203@suse.de> <43F9A718.1060008@pobox.com>
+From: "Brian Marete" <bgmarete@gmail.com>
+Subject: `Max Request Size' -- A Query
+Date: Mon, 20 Feb 2006 13:09:16 +0000
+Message-ID: <6dd519ae0602200509s45b8fc0awe4fce40c973ddaa5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:53345 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932603AbWBTLor (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Feb 2006 06:44:47 -0500
+Received: from wproxy.gmail.com ([64.233.184.195]:41502 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932615AbWBTNJR convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 20 Feb 2006 08:09:17 -0500
+Received: by wproxy.gmail.com with SMTP id i28so603280wra
+        for <linux-ide@vger.kernel.org>; Mon, 20 Feb 2006 05:09:16 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <43F9A718.1060008@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>
+To: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Feb 20 2006, Jeff Garzik wrote:
-> >How about making it 256 at the start of a kernel cycle and see if
-> >anything falls apart? If IDE works, then surely SATA should as well.
-> 
-> As I said, it had nothing to do with hardware.  The variable in the 
-> equation is the driver code itself, so IDE working implies nothing here, 
-> alas.
-> 
-> Sigh...  I'll search through some old emails.
+Hello all,
 
-Hmmm, I'm having a hard time imagining what such a bug would look like
-that would cause breakage with 256 sectors and work with 200. Especially
-since we already do > 256 for lba48. But let me/us know what you dig up
-from the email archives!
+This is more of a query than a bug report. After upgrading my kernel from
+2.6.15.1 to 2.6.16-rc4, I noticed, by having a look at dmesg(1), that the
+`max request size' for my hard disk had changed from 1024KiB to 512KiB, as
+evidenced by the following short diff.
 
--- 
-Jens Axboe
+--------------------------------------------------------
+ Probing IDE interface ide1...
+ hdc: LITE-ON CD-RW SOHR-5238S, ATAPI CD/DVD-ROM drive
+ ide1 at 0x170-0x177,0x376 on irq 15
+-hda: max request size: 1024KiB
++hda: max request size: 512KiB
+ hda: 80293248 sectors (41110 MB) w/2048KiB Cache, CHS=16383/255/63, UDMA(133)
+ hda: cache flushes supported
+  hda: hda1 hda2 hda3 hda4
+--------------------------------------------------------
 
+My question is whether I should worry at all about this. Should I expect a
+performance drop? In short, is it a good thing, a bad thing or entirely
+indifferent for my purposes as a user?
+
+Perhaps I should add that I have `CONFIG_BLK_DEV_VIA82CXXX' compiled into the
+kernel.
+
+Thanks,
+
+--
+B. Gitonga Marete
+Tel: +254-722-151-590
