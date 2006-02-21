@@ -1,64 +1,149 @@
-From: Aaron Lehmann <aaronl@vitelus.com>
-Subject: Re: Promise SATA oops
-Date: Mon, 20 Feb 2006 20:21:27 -0800
-Message-ID: <20060221042127.GC11106@vitelus.com>
-References: <20051202045853.GD3677@vitelus.com> <438FDB9D.2030201@pobox.com> <20051202195109.GE3677@vitelus.com> <20051220201719.GC15466@vitelus.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Tue, 21 Feb 2006 00:17:14 -0500
+Message-ID: <20060221051714.GA25302@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsl081-060-252.sfo1.dsl.speakeasy.net ([64.81.60.252]:65166
-	"EHLO vitelus.com") by vger.kernel.org with ESMTP id S932701AbWBUEVa
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Feb 2006 23:21:30 -0500
+Received: from havoc.gtf.org ([69.61.125.42]:4309 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1161374AbWBUFRS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Feb 2006 00:17:18 -0500
 Content-Disposition: inline
-In-Reply-To: <20051220201719.GC15466@vitelus.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This crash kept happening for months, across all versions of the
-kernel I tried (up through early 2.6.16 git snapshots). I ended up
-buying a different SATA card, and this seems to have fixed the
-problem. At around the same frequency as I experienced the nasty
-hanging, I'm seeing this error message:
 
-ata1: command 0xea timeout, stat 0x51 host_stat 0x0
-ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
-ata1: status=0x51 { DriveReady SeekComplete Error }
-ata1: error=0x04 { DriveStatusError }
+Please pull from 'upstream-fixes' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-...but the system continues running fine. This leads me to believe
-that there's a bug in the Promise SATA driver that prevents it from
-gracefully handling this error condition, whatever it is. The hard
-drives are model WDC WD3200JD-60K, and I couldn't find any bad blocks
-on them.
+to receive the following updates:
 
+ drivers/scsi/libata-core.c |   15 +++++++++------
+ drivers/scsi/sata_qstor.c  |    2 +-
+ include/linux/libata.h     |   16 ++++++++++++++--
+ 3 files changed, 24 insertions(+), 9 deletions(-)
 
-On Tue, Dec 20, 2005 at 12:17:19PM -0800, Aaron Lehmann wrote:
-> On Fri, Dec 02, 2005 at 11:51:09AM -0800, Aaron Lehmann wrote:
-> > Still isn't stable. It froze within hours after announcing in all
-> > terminals that it was disabling a certain IRQ. Now the RAID is so
-> > degraded that root can't even be mounted. Was the Promise controller a
-> > bad choice for a reliable setup?
-> > 
-> > I may not have time to look at this further until late next week, but
-> > I'll follow up with whatever I learn.
-> 
-> Argh, died again!! It had been stable for over 12 days. Same error
-> message, and the root md is degraded and dirty just like last time.
-> This is a very severe state with high risk of data loss. When things
-> went sour, terminals and most applications still kept working, but
-> anything that touched the filesystem froze up. I had a shell open in a
-> chroot on a ramdisk, but dmesg just hung for a few minutes and then
-> exited with a "Bus error". I had no other way of examining the kernel
-> log since the machine runs X.
-> 
-> This was running 2.6.15-rc4. Crashes seem to happen less frequently
-> with it than with 2.6.14.x, but when they happen they leave the RAID
-> in a severe state. I also don't think 2.6.14.2 said anything about
-> disabling the IRQ.
-> 
-> I'm very desperate now. About every week I experience a crash that
-> damages my RAID array to the point where it can't boot, as if the
-> instability wasn't bad enough. Do I need to buy a hardware RAID card?
+Tejun Heo:
+      libata: fix WARN_ON() condition in *_fill_sg()
+      libata: fix qc->n_elem == 0 case handling in ata_qc_next_sg
+      libata: make ata_sg_setup_one() trim zero length sg
+
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 7ddd5a6..5f1d758 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -2514,7 +2514,7 @@ static void ata_sg_clean(struct ata_queu
+ 	assert(sg != NULL);
+ 
+ 	if (qc->flags & ATA_QCFLAG_SINGLE)
+-		assert(qc->n_elem == 1);
++		assert(qc->n_elem <= 1);
+ 
+ 	VPRINTK("unmapping %u sg elements\n", qc->n_elem);
+ 
+@@ -2537,7 +2537,7 @@ static void ata_sg_clean(struct ata_queu
+ 			kunmap_atomic(addr, KM_IRQ0);
+ 		}
+ 	} else {
+-		if (sg_dma_len(&sg[0]) > 0)
++		if (qc->n_elem)
+ 			dma_unmap_single(ap->host_set->dev,
+ 				sg_dma_address(&sg[0]), sg_dma_len(&sg[0]),
+ 				dir);
+@@ -2570,7 +2570,7 @@ static void ata_fill_sg(struct ata_queue
+ 	unsigned int idx;
+ 
+ 	assert(qc->__sg != NULL);
+-	assert(qc->n_elem > 0);
++	assert(qc->n_elem > 0 || qc->pad_len > 0);
+ 
+ 	idx = 0;
+ 	ata_for_each_sg(sg, qc) {
+@@ -2715,6 +2715,7 @@ static int ata_sg_setup_one(struct ata_q
+ 	int dir = qc->dma_dir;
+ 	struct scatterlist *sg = qc->__sg;
+ 	dma_addr_t dma_address;
++	int trim_sg = 0;
+ 
+ 	/* we must lengthen transfers to end on a 32-bit boundary */
+ 	qc->pad_len = sg->length & 3;
+@@ -2734,13 +2735,15 @@ static int ata_sg_setup_one(struct ata_q
+ 		sg_dma_len(psg) = ATA_DMA_PAD_SZ;
+ 		/* trim sg */
+ 		sg->length -= qc->pad_len;
++		if (sg->length == 0)
++			trim_sg = 1;
+ 
+ 		DPRINTK("padding done, sg->length=%u pad_len=%u\n",
+ 			sg->length, qc->pad_len);
+ 	}
+ 
+-	if (!sg->length) {
+-		sg_dma_address(sg) = 0;
++	if (trim_sg) {
++		qc->n_elem--;
+ 		goto skip_map;
+ 	}
+ 
+@@ -2753,9 +2756,9 @@ static int ata_sg_setup_one(struct ata_q
+ 	}
+ 
+ 	sg_dma_address(sg) = dma_address;
+-skip_map:
+ 	sg_dma_len(sg) = sg->length;
+ 
++skip_map:
+ 	DPRINTK("mapped buffer of %d bytes for %s\n", sg_dma_len(sg),
+ 		qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+ 
+diff --git a/drivers/scsi/sata_qstor.c b/drivers/scsi/sata_qstor.c
+index de05e28..80480f0 100644
+--- a/drivers/scsi/sata_qstor.c
++++ b/drivers/scsi/sata_qstor.c
+@@ -277,7 +277,7 @@ static unsigned int qs_fill_sg(struct at
+ 	u8 *prd = pp->pkt + QS_CPB_BYTES;
+ 
+ 	assert(qc->__sg != NULL);
+-	assert(qc->n_elem > 0);
++	assert(qc->n_elem > 0 || qc->pad_len > 0);
+ 
+ 	nelem = 0;
+ 	ata_for_each_sg(sg, qc) {
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 9e5db29..c91be5e 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -557,17 +557,29 @@ ata_sg_is_last(struct scatterlist *sg, s
+ }
+ 
+ static inline struct scatterlist *
++ata_qc_first_sg(struct ata_queued_cmd *qc)
++{
++	if (qc->n_elem)
++		return qc->__sg;
++	if (qc->pad_len)
++		return &qc->pad_sgent;
++	return NULL;
++}
++
++static inline struct scatterlist *
+ ata_qc_next_sg(struct scatterlist *sg, struct ata_queued_cmd *qc)
+ {
+ 	if (sg == &qc->pad_sgent)
+ 		return NULL;
+ 	if (++sg - qc->__sg < qc->n_elem)
+ 		return sg;
+-	return qc->pad_len ? &qc->pad_sgent : NULL;
++	if (qc->pad_len)
++		return &qc->pad_sgent;
++	return NULL;
+ }
+ 
+ #define ata_for_each_sg(sg, qc) \
+-	for (sg = qc->__sg; sg; sg = ata_qc_next_sg(sg, qc))
++	for (sg = ata_qc_first_sg(qc); sg; sg = ata_qc_next_sg(sg, qc))
+ 
+ static inline unsigned int ata_tag_valid(unsigned int tag)
+ {
