@@ -1,155 +1,65 @@
 From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: [PATCH 4/13] ATA ACPI: add params/docs.
-Date: Wed, 22 Feb 2006 13:54:03 -0800
-Message-ID: <20060222135403.55086107.randy_d_dunlap@linux.intel.com>
-References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
+Subject: [PATCH 0/13] ACPI objects for SATA/PATA
+Date: Wed, 22 Feb 2006 14:12:38 -0800
+Message-ID: <20060222141238.4d2effa8.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr19.intel.com ([134.134.136.18]:59016 "EHLO
+Received: from fmr19.intel.com ([134.134.136.18]:59528 "EHLO
 	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1751517AbWBVWLm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Feb 2006 17:11:42 -0500
-In-Reply-To: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
+	id S1751519AbWBVWLq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Feb 2006 17:11:46 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: lkml <linux-kernel@vger.kernel.org>
-Cc: linux-ide@vger.kernel.org, akpm@osdl.org, jgarzik@pobox.com
+To: lkml <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
+Cc: akpm <akpm@osdl.org>, jgarzik <jgarzik@pobox.com>
 
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+This patch series is primarily ACPI objects support for SATA/PATA.
+It applies to 2.6.16-rc4.
 
-Add and use 'noacpi' parameter for libata-acpi.
-Add and use 'printk' parameter for libata (parts).
-Update Documentation/kernel-parameters.txt, including atapi_enabled.
+ACPI objects for SATA/PATA add support for the _GTF, _SDD,
+_GTM, and _STM ACPI methods.  ACPI methods are used to:
 
-Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+PATA:  get and set channel timings and modes and taskfiles
+SATA:  get and set drive data and taskfiles
+
+Taskfile operations are not limited.  Examples that I have
+seen are (not limited to):
+- power management:
+  . enable or disable drive-initiated power management
+- performance:
+  . enable drive cache; set transfer mode (PIO/DMA)
+- security
+  . lock the disk access password
+
+There is also an addition here to send a Standby Immediate
+command to SATA/PATA drives during shutdown.  This should be
+done (at least for some drives) to cause a safe and orderly
+shutdown of the drive heads (i.e., protect data).
+
+Caveat:  Some people are reporting good results from these
+patches.  Unfortunately I have problems with them myself.
+My test platforms usually suspend successfully but they
+don't resume successfully.  Oh, and there may be a BUG
+during sleep-shutdown processing where a sleep happens
+while a spinlock is held.
+
+These patches definitely need some time in -mm, but be
+prepared to revert them or to use
+	libata.noacpi=1
+to disable them.  Also, please use
+	libata.printk=0xff
+to enable full debug messages.
+
+If you want to test this without using -mm, you can either
+apply the patch series (13 patches) or one rolled-up
+(combined) patch.  The combined patch is available at:
+http://www.xenotime.net/linux/SATA/2.6.16-rc4/libata-rollup-2616-rc4.patch
+
+Still TBD:  more calls to ata_acpi_push_timing(), e.g.,
+during resume, to set PATA hard drive timing and mode.
+And fix the BUG above.
+
 ---
- Documentation/kernel-parameters.txt |   13 +++++++++++++
- drivers/scsi/libata-acpi.c          |   12 ++++++++++++
- drivers/scsi/libata-core.c          |   10 ++++++++++
- drivers/scsi/libata.h               |    2 ++
- 4 files changed, 37 insertions(+)
-
---- linux-2616-rc4-ata.orig/drivers/scsi/libata-core.c
-+++ linux-2616-rc4-ata/drivers/scsi/libata-core.c
-@@ -82,6 +82,14 @@ int atapi_enabled = 0;
- module_param(atapi_enabled, int, 0444);
- MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
- 
-+int noacpi = 0;
-+module_param(noacpi, int, 0444);
-+MODULE_PARM_DESC(noacpi, "Disables use of ACPI in suspend/resume when set");
-+
-+int libata_printk = ATA_MSG_DRV;
-+module_param_named(printk, libata_printk, int, 0644);
-+MODULE_PARM_DESC(printk, "Set libata printk flags"); /* in linux/libata.h */
-+
- MODULE_AUTHOR("Jeff Garzik");
- MODULE_DESCRIPTION("Library module for ATA devices");
- MODULE_LICENSE("GPL");
-@@ -4545,6 +4553,8 @@ int ata_device_add(const struct ata_prob
- 				(ap->mwdma_mask << ATA_SHIFT_MWDMA) |
- 				(ap->pio_mask << ATA_SHIFT_PIO);
- 
-+		ap->msg_enable = libata_printk;
-+
- 		/* print per-port info to dmesg */
- 		printk(KERN_INFO "ata%u: %cATA max %s cmd 0x%lX ctl 0x%lX "
- 				 "bmdma 0x%lX irq %lu\n",
---- linux-2616-rc4-ata.orig/Documentation/kernel-parameters.txt
-+++ linux-2616-rc4-ata/Documentation/kernel-parameters.txt
-@@ -41,6 +41,7 @@ restrictions referred to are that the re
- 	ISAPNP	ISA PnP code is enabled.
- 	ISDN	Appropriate ISDN support is enabled.
- 	JOY	Appropriate joystick support is enabled.
-+	LIBATA	libata driver is enabled.
- 	LP	Printer support is enabled.
- 	LOOP	Loopback device support is enabled.
- 	M68k	M68k architecture is enabled.
-@@ -242,6 +243,9 @@ running once the system is up.
- 
- 	ataflop=	[HW,M68k]
- 
-+	atapi_enabled=	[LIBATA] Enable discovery & support of ATAPI devices
-+			Format: <value> (0=off, 1=on)
-+
- 	atarimouse=	[HW,MOUSE] Atari Mouse
- 
- 	atascsi=	[HW,SCSI] Atari SCSI
-@@ -981,6 +985,10 @@ running once the system is up.
- 			emulation library even if a 387 maths coprocessor
- 			is present.
- 
-+	noacpi=		[LIBATA] Disables use of ACPI in libata suspend/resume
-+			when set.
-+			Format: <int>
-+
- 	noalign		[KNL,ARM]
- 
- 	noapic		[SMP,APIC] Tells the kernel to not make use of any
-@@ -1227,6 +1235,11 @@ running once the system is up.
- 			autoconfiguration.
- 			Ranges are in pairs (memory base and size).
- 
-+	printk=		[LIBATA] Set libata printk level (mask).
-+			The values are defined in include/linux/libata.h.
-+			The default value is 1 (ATA_MSG_DRV).
-+			Format: <int>
-+
- 	profile=	[KNL] Enable kernel profiling via /proc/profile
- 			Format: [schedule,]<number>
- 			Param: "schedule" - profile schedule points.
---- linux-2616-rc4-ata.orig/drivers/scsi/libata-acpi.c
-+++ linux-2616-rc4-ata/drivers/scsi/libata-acpi.c
-@@ -212,6 +212,9 @@ int ata_acpi_push_id(struct ata_port *ap
- 	struct acpi_object_list		input;
- 	union acpi_object 		in_params[1];
- 
-+	if (noacpi)
-+		return 0;
-+
- 	if (ata_msg_probe(ap))
- 		printk(KERN_DEBUG
- 			"%s: ap->id: %d, ix = %d, port#: %d, hard_port#: %d\n",
-@@ -319,6 +322,9 @@ int do_drive_get_GTF(struct ata_port *ap
- 	*gtf_length = 0;
- 	*gtf_address = 0UL;
- 
-+	if (noacpi)
-+		return 0;
-+
- 	if (!ata_dev_present(atadev) ||
- 	    (ap->flags & ATA_FLAG_PORT_DISABLED)) {
- 		if (ata_msg_probe(ap))
-@@ -493,6 +499,9 @@ int do_drive_set_taskfiles(struct ata_po
- 			__FUNCTION__, ap->id,
- 			ap->port_no, ap->hard_port_no);
- 
-+	if (noacpi)
-+		return 0;
-+
- 	if (!ata_dev_present(atadev) ||
- 	    (ap->flags & ATA_FLAG_PORT_DISABLED))
- 		goto out;
-@@ -540,6 +549,9 @@ int ata_acpi_exec_tfs(struct ata_port *a
- 	if (ata_msg_probe(ap))
- 		printk(KERN_DEBUG "%s: ENTER:\n", __FUNCTION__);
- 
-+	if (noacpi)
-+		return 0;
-+
- 	for (ix = 0; ix < ATA_MAX_DEVICES; ix++) {
- 		printk(KERN_DEBUG "%s: call get_GTF, ix=%d\n",
- 			__FUNCTION__, ix);
---- linux-2616-rc4-ata.orig/drivers/scsi/libata.h
-+++ linux-2616-rc4-ata/drivers/scsi/libata.h
-@@ -41,6 +41,8 @@ struct ata_scsi_args {
- 
- /* libata-core.c */
- extern int atapi_enabled;
-+extern int noacpi;
-+extern int libata_printk;
- extern struct ata_queued_cmd *ata_qc_new_init(struct ata_port *ap,
- 				      struct ata_device *dev);
- extern int ata_rwcmd_protocol(struct ata_queued_cmd *qc);
+~Randy
