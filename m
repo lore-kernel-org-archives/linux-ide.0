@@ -1,16 +1,16 @@
 From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: [PATCH 9/13] ATA ACPI: check SATA/PATA more carefully
-Date: Wed, 22 Feb 2006 14:00:08 -0800
-Message-ID: <20060222140008.3832951a.randy_d_dunlap@linux.intel.com>
+Subject: [PATCH 7/13] ATA ACPI: more Makefile/Kconfig
+Date: Wed, 22 Feb 2006 13:58:02 -0800
+Message-ID: <20060222135802.60ab42ab.randy_d_dunlap@linux.intel.com>
 References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr17.intel.com ([134.134.136.16]:52885 "EHLO
-	orsfmr002.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1751484AbWBVWK6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Feb 2006 17:10:58 -0500
+Received: from fmr19.intel.com ([134.134.136.18]:51080 "EHLO
+	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1751489AbWBVWLL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Feb 2006 17:11:11 -0500
 In-Reply-To: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -19,39 +19,47 @@ Cc: linux-ide@vger.kernel.org, akpm@osdl.org, jgarzik@pobox.com
 
 From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 
-Use 'legacy_mode' to check for SATA vs. PATA mode.
+Simplify Makefile.
+Add Kconfig help.
 
 Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 ---
- drivers/scsi/libata-acpi.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/Kconfig  |   10 +++++++++-
+ drivers/scsi/Makefile |    6 ++----
+ 2 files changed, 11 insertions(+), 5 deletions(-)
 
---- linux-2616-rc4-ata.orig/drivers/scsi/libata-acpi.c
-+++ linux-2616-rc4-ata/drivers/scsi/libata-acpi.c
-@@ -437,7 +437,7 @@ int do_drive_get_GTF(struct ata_port *ap
+--- linux-2616-rc4-ata.orig/drivers/scsi/Makefile
++++ linux-2616-rc4-ata/drivers/scsi/Makefile
+@@ -163,10 +163,8 @@ ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
+ CFLAGS_ncr53c8xx.o	:= $(ncr53c8xx-flags-y) $(ncr53c8xx-flags-m)
+ zalon7xx-objs	:= zalon.o ncr53c8xx.o
+ NCR_Q720_mod-objs	:= NCR_Q720.o ncr53c8xx.o
+-libata-objs	:= libata-core.o libata-scsi.o
+-ifeq ($(CONFIG_SCSI_SATA_ACPI),y)
+-  libata-objs	+= libata-acpi.o
+-endif
++libata-y	:= libata-core.o libata-scsi.o
++libata-$(CONFIG_SCSI_SATA_ACPI) += libata-acpi.o
+ oktagon_esp_mod-objs	:= oktagon_esp.o oktagon_io.o
  
- 	/* Don't continue if device has no _ADR method.
- 	 * _GTF is intended for known motherboard devices. */
--	if (ata_id_is_ata(atadev->id)) {
-+	if (ap->legacy_mode) {
- 		err = pata_get_dev_handle(dev, &dev_handle, &pcidevfn);
- 		if (err < 0) {
- 			if (ata_msg_probe(ap))
-@@ -459,7 +459,7 @@ int do_drive_get_GTF(struct ata_port *ap
+ # Files generated that shall be removed upon make clean
+--- linux-2616-rc4-ata.orig/drivers/scsi/Kconfig
++++ linux-2616-rc4-ata/drivers/scsi/Kconfig
+@@ -601,8 +601,16 @@ config SCSI_SATA_INTEL_COMBINED
  
- 	/* Get this drive's _ADR info. if not already known. */
- 	if (!atadev->obj_handle) {
--		if (ata_id_is_ata(atadev->id)) {
-+		if (ap->legacy_mode) {
- 			/* get child objects of dev_handle == channel objects,
- 	 		 * + _their_ children == drive objects */
- 			/* channel is ap->hard_port_no */
-@@ -655,7 +655,7 @@ int do_drive_set_taskfiles(struct ata_po
+ config SCSI_SATA_ACPI
+ 	bool
+-	depends on SCSI_SATA && ACPI
++	depends on SCSI_SATA && ACPI && PCI
+ 	default y
++	help
++	  This option adds support for SATA-related ACPI objects.
++	  These ACPI objects add the ability to retrieve taskfiles
++	  from the ACPI BIOS and write them to the disk controller.
++	  These objects may be related to performance, security,
++	  power management, or other areas.
++	  You can disable this at kernel boot time by using the
++	  option 'libata.noacpi'.
  
- 	if (noacpi)
- 		return 0;
--	if (!ata_id_is_sata(atadev->id)) {
-+	if (ap->legacy_mode) {
- 		printk(KERN_DEBUG "%s: skipping non-SATA drive\n",
- 			__FUNCTION__);
- 		return 0;
+ config SCSI_BUSLOGIC
+ 	tristate "BusLogic SCSI support"
