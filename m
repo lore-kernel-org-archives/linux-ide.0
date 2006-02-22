@@ -1,58 +1,57 @@
-From: Jon =?utf-8?b?S8OlcmU=?= Hellan <hellan@acm.org>
-Subject: =?utf-8?b?c2F0YV9zaWwuYyw=?= 3512 and =?utf-8?b?U0lMX1FVSVJLX01PRDE1V1JJVEU=?=
-Date: Wed, 22 Feb 2006 18:03:35 +0000 (UTC)
-Message-ID: <loom.20060222T182150-518@post.gmane.org>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: [PATCH 9/13] ATA ACPI: check SATA/PATA more carefully
+Date: Wed, 22 Feb 2006 14:00:08 -0800
+Message-ID: <20060222140008.3832951a.randy_d_dunlap@linux.intel.com>
+References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:7386 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S1750755AbWBVSUn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Feb 2006 13:20:43 -0500
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1FBybL-0000Xr-9Y
-	for linux-ide@vger.kernel.org; Wed, 22 Feb 2006 19:20:35 +0100
-Received: from 158.38.145.115 ([158.38.145.115])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 19:20:35 +0100
-Received: from hellan by 158.38.145.115 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 19:20:35 +0100
+Received: from fmr17.intel.com ([134.134.136.16]:52885 "EHLO
+	orsfmr002.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1751484AbWBVWK6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Feb 2006 17:10:58 -0500
+In-Reply-To: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: lkml <linux-kernel@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, akpm@osdl.org, jgarzik@pobox.com
 
-My Shuttle SN85G4V2 with Silicon Image 3512 SATA controller has been locking up
-frequently for a while. Console message:
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 
-ata1: command 0x35 timeout, stat 0x58 host_stat 0x61
-ata1: status=0x58 { DriveReady SeekComplete DataRequest }
-sd 0:0:0:0: SCSI error: return code = 0x8000002
-sda: Current: sense key: Aborted Command
-    Additional sense: Scsi parity error
-end_request: I/O error, dev sda, sector 57582833
-Buffer I/O error on device sda6, logical block 3097255
-lost page write due to I/O error on sda6
-ATA: abnormal status 0x58 on port 0xF8802087
-ATA: abnormal status 0x58 on port 0xF8802087
+Use 'legacy_mode' to check for SATA vs. PATA mode.
 
-I have a Seagate ST3200822AS disk, which is on the blacklist in sata_sil.
-In sil_pci_tbl in drivers/sata/sata_sil.c, I changed 3512 from sil_3112 to
-sil_3112_m15w, enabling SIL_QUIRK_MOD15WRITE for my controller. With this, the
-lockups are gone.
+Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+---
+ drivers/scsi/libata-acpi.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Looks like MOD15WRITE was turned off for the 3512 between 2.6.13 and 2.6.14.
-This may have been a mistake, or else my system is unusually flaky. 
-
-See also my Debian bug report
- http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=353790
-
-(I wrote there that I saw the lockups in the 2.6.8 kernel as well. Back then,
-the blacklist affected my controller, but my disk drive didn't get on the
-blacklist until 2.6.11).
-
-Regards
-
-Jon
-
+--- linux-2616-rc4-ata.orig/drivers/scsi/libata-acpi.c
++++ linux-2616-rc4-ata/drivers/scsi/libata-acpi.c
+@@ -437,7 +437,7 @@ int do_drive_get_GTF(struct ata_port *ap
+ 
+ 	/* Don't continue if device has no _ADR method.
+ 	 * _GTF is intended for known motherboard devices. */
+-	if (ata_id_is_ata(atadev->id)) {
++	if (ap->legacy_mode) {
+ 		err = pata_get_dev_handle(dev, &dev_handle, &pcidevfn);
+ 		if (err < 0) {
+ 			if (ata_msg_probe(ap))
+@@ -459,7 +459,7 @@ int do_drive_get_GTF(struct ata_port *ap
+ 
+ 	/* Get this drive's _ADR info. if not already known. */
+ 	if (!atadev->obj_handle) {
+-		if (ata_id_is_ata(atadev->id)) {
++		if (ap->legacy_mode) {
+ 			/* get child objects of dev_handle == channel objects,
+ 	 		 * + _their_ children == drive objects */
+ 			/* channel is ap->hard_port_no */
+@@ -655,7 +655,7 @@ int do_drive_set_taskfiles(struct ata_po
+ 
+ 	if (noacpi)
+ 		return 0;
+-	if (!ata_id_is_sata(atadev->id)) {
++	if (ap->legacy_mode) {
+ 		printk(KERN_DEBUG "%s: skipping non-SATA drive\n",
+ 			__FUNCTION__);
+ 		return 0;
