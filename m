@@ -1,75 +1,59 @@
-From: Chisato Yamauchi <cyamauch@plamo.linet.gr.jp>
-Subject: PIO mode of sata_sil.c
-Date: Wed, 22 Feb 2006 09:25:38 +0900 (JST)
-Message-ID: <20060222.092538.74739539.cyamauch@plamo.linet.gr.jp>
+From: Oliver Joa <oliver@j-o-a.de>
+Subject: promise sata 300 TX4 and Samsung HD (SP2004C) -> Sector errors
+Date: Wed, 22 Feb 2006 13:02:39 +0100 (CET)
+Message-ID: <Pine.LNX.4.63.0602221302210.2270@majestix.gallier.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from PPPbf382.hyogo-ip.dti.ne.jp ([210.170.214.132]:7997 "EHLO
-	plamo.linet.gr.jp") by vger.kernel.org with ESMTP id S1161286AbWBVAZ4
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Feb 2006 19:25:56 -0500
+Received: from mail.gatrixx.com ([217.111.11.44]:18321 "EHLO mail.gatrixx.com")
+	by vger.kernel.org with ESMTP id S1750860AbWBVMCl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Feb 2006 07:02:41 -0500
+Received: from majestix.gallier.de (majestix [127.0.0.1])
+	by majestix.gallier.de (8.13.5/8.13.5/Debian-3) with ESMTP id k1MC2dnD006312
+	for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 13:02:39 +0100
+Received: from localhost (olli@localhost)
+	by majestix.gallier.de (8.13.5/8.13.5/Submit) with ESMTP id k1MC2dlP006307
+	for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 13:02:39 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: linux-ide@vger.kernel.org
 
+Hi,
 
-  Hi,
+i have a brandnew Promise SATA 300 TX4 Controller and 2 Samsung HD
+(SP2004C). I am using Linux 2.6.15 and also tried 2.6.15.4 with
+sata_promise-driver. I get sector-errors:
 
-  I have a defective device, ARAID 99 2000 (RAID0 mode).  
-I want to use this RAID system connected with the Sil3112A PCI
-card.  However, this RAID system does not work on DMA mode.  
+ata2: PIO error
+ata2: status=0x50 { DriveReady SeekComplete }
+ata2: PIO error
+ata2: status=0x50 { DriveReady SeekComplete }
+ata2: PIO error
+ata2: status=0x50 { DriveReady SeekComplete }
+ata2: PIO error
+ata2: status=0x50 { DriveReady SeekComplete }
+hdd: ATAPI 48X DVD-ROM drive, 512kB Cache, UDMA(33)
+Uniform CD-ROM driver Revision: 3.20
+ATA: abnormal status 0xFF on port 0xF880029C
+ata2: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata2: status=0xff { Busy }
+ata2: command timeout
+ATA: abnormal status 0xFF on port 0xF880029C
+ata2: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata2: status=0xff { Busy }
+sd 1:0:0:0: SCSI error: return code = 0x8000002
+sda: Current: sense key: Aborted Command
+     Additional sense: Scsi parity error
+end_request: I/O error, dev sda, sector 9482176
+Buffer I/O error on device sda, logical block 1185272
 
-  So I modified the kernel code (sata_sil.c) to use the PIO 
-mode as follows. However, the kernel reports `kernel NULL pointer 
-dereference at virtual address 0000002c' in the dmesg.  The
-screen shot is here:
-  http://www.a.phys.nagoya-u.ac.jp/~cyamauch/p1030021.jpg
+I get the error at heavy hd-usage, and also on both harddisks. So i think
+it is not a problem of the harddisks. I use softwareraid, but it does not
+work. I think it should take out the harddisk with the error, but it does
+not. The system is hanging....
 
+Do you have any idea?
 
-  Doesn't Sil3112A support PIO mode?
+Thanks a lot
 
-
-*** /usr/src/linux-2.4.31/drivers/scsi/sata_sil.c._orig_	Wed Jun  1 09:56:34 2005
---- /usr/src/linux-2.4.31/drivers/scsi/sata_sil.c	Wed Feb 22 08:49:03 2006
-***************
-*** 67,72 ****
---- 67,73 ----
-  	SIL_INTR_STEERING	= (1 << 1),
-  	SIL_QUIRK_MOD15WRITE	= (1 << 0),
-  	SIL_QUIRK_UDMA5MAX	= (1 << 1),
-+ 	SIL_QUIRK_ARAID		= (1 << 2),
-  };
-  
-  static int sil_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
-***************
-*** 106,111 ****
---- 107,113 ----
-  	{ "ST380011ASL",	SIL_QUIRK_MOD15WRITE },
-  	{ "ST3120022ASL",	SIL_QUIRK_MOD15WRITE },
-  	{ "ST3160021ASL",	SIL_QUIRK_MOD15WRITE },
-+ 	{ "ASI ARAID99 2000",	SIL_QUIRK_ARAID },
-  	{ "Maxtor 4D060H3",	SIL_QUIRK_UDMA5MAX },
-  	{ }
-  };
-***************
-*** 345,350 ****
---- 347,360 ----
-  		ap->udma_mask &= ATA_UDMA5;
-  		return;
-  	}
-+ 
-+ 	if (quirks & SIL_QUIRK_ARAID) {
-+ 		printk(KERN_INFO "ata%u(%u): applying ASI ARAID99 errata fix %s\n",
-+ 		       ap->id, dev->devno, s);
-+ 		ap->udma_mask = 0;
-+ 		ap->mwdma_mask = 0;
-+ 		return;
-+ 	}
-  }
-  
-  static int sil_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
-
-
-==  Chisato Yamauchi  =================================
+Olli
