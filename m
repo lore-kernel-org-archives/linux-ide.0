@@ -1,59 +1,30 @@
-From: Oliver Joa <oliver@j-o-a.de>
-Subject: promise sata 300 TX4 and Samsung HD (SP2004C) -> Sector errors
-Date: Wed, 22 Feb 2006 13:02:39 +0100 (CET)
-Message-ID: <Pine.LNX.4.63.0602221302210.2270@majestix.gallier.de>
+From: Ansgar Knappheide <aknapphe@uos.de>
+Subject: ATAPI on Promise SATAII 150 TX4
+Date: Wed, 22 Feb 2006 13:41:08 +0100
+Message-ID: <43FC5BE4.5030308@uos.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gatrixx.com ([217.111.11.44]:18321 "EHLO mail.gatrixx.com")
-	by vger.kernel.org with ESMTP id S1750860AbWBVMCl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Feb 2006 07:02:41 -0500
-Received: from majestix.gallier.de (majestix [127.0.0.1])
-	by majestix.gallier.de (8.13.5/8.13.5/Debian-3) with ESMTP id k1MC2dnD006312
-	for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 13:02:39 +0100
-Received: from localhost (olli@localhost)
-	by majestix.gallier.de (8.13.5/8.13.5/Submit) with ESMTP id k1MC2dlP006307
-	for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 13:02:39 +0100
+Received: from sanode5eth1.rz.Uni-Osnabrueck.DE ([131.173.17.105]:42391 "EHLO
+	sanode5eth1.rz.uni-osnabrueck.de") by vger.kernel.org with ESMTP
+	id S1751258AbWBVMlN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Feb 2006 07:41:13 -0500
+Received: from sanode11.rz.uni-osnabrueck.de (sanode11eth0.rz.Uni-Osnabrueck.DE [131.173.17.151])
+	by sanode5eth1.rz.uni-osnabrueck.de (8.12.11/8.12.11) with ESMTP id k1MCfBsE010534
+	for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 13:41:11 +0100
+Received: from [131.173.12.120] (cip40.informatik.Uni-Osnabrueck.DE [131.173.12.120])
+	by sanode11.rz.uni-osnabrueck.de (8.13.0/8.13.0) with ESMTP id k1MCf8FU008154
+	for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 13:41:09 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Linux IDE-Kernelliste <linux-ide@vger.kernel.org>
 
-Hi,
+I'm using a Promise SATAII 150 TX4 and a Samsung SH W163A DVD-Writer 
+(SATA) and would like to know, when ATAPI support will be added to the 
+sata_promise driver.
 
-i have a brandnew Promise SATA 300 TX4 Controller and 2 Samsung HD
-(SP2004C). I am using Linux 2.6.15 and also tried 2.6.15.4 with
-sata_promise-driver. I get sector-errors:
+P.S. My first email on this subject was ignored, if I'm of topic on this 
+list please somebody tell me.
 
-ata2: PIO error
-ata2: status=0x50 { DriveReady SeekComplete }
-ata2: PIO error
-ata2: status=0x50 { DriveReady SeekComplete }
-ata2: PIO error
-ata2: status=0x50 { DriveReady SeekComplete }
-ata2: PIO error
-ata2: status=0x50 { DriveReady SeekComplete }
-hdd: ATAPI 48X DVD-ROM drive, 512kB Cache, UDMA(33)
-Uniform CD-ROM driver Revision: 3.20
-ATA: abnormal status 0xFF on port 0xF880029C
-ata2: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata2: status=0xff { Busy }
-ata2: command timeout
-ATA: abnormal status 0xFF on port 0xF880029C
-ata2: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata2: status=0xff { Busy }
-sd 1:0:0:0: SCSI error: return code = 0x8000002
-sda: Current: sense key: Aborted Command
-     Additional sense: Scsi parity error
-end_request: I/O error, dev sda, sector 9482176
-Buffer I/O error on device sda, logical block 1185272
-
-I get the error at heavy hd-usage, and also on both harddisks. So i think
-it is not a problem of the harddisks. I use softwareraid, but it does not
-work. I think it should take out the harddisk with the error, but it does
-not. The system is hanging....
-
-Do you have any idea?
-
-Thanks a lot
-
-Olli
+Ansgar Knappheide
