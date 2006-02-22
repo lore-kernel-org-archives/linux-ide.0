@@ -1,149 +1,75 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Tue, 21 Feb 2006 00:17:14 -0500
-Message-ID: <20060221051714.GA25302@havoc.gtf.org>
+From: Chisato Yamauchi <cyamauch@plamo.linet.gr.jp>
+Subject: PIO mode of sata_sil.c
+Date: Wed, 22 Feb 2006 09:25:38 +0900 (JST)
+Message-ID: <20060222.092538.74739539.cyamauch@plamo.linet.gr.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:4309 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1161374AbWBUFRS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Feb 2006 00:17:18 -0500
-Content-Disposition: inline
+Received: from PPPbf382.hyogo-ip.dti.ne.jp ([210.170.214.132]:7997 "EHLO
+	plamo.linet.gr.jp") by vger.kernel.org with ESMTP id S1161286AbWBVAZ4
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Feb 2006 19:25:56 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
 
-Please pull from 'upstream-fixes' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+  Hi,
 
-to receive the following updates:
+  I have a defective device, ARAID 99 2000 (RAID0 mode).  
+I want to use this RAID system connected with the Sil3112A PCI
+card.  However, this RAID system does not work on DMA mode.  
 
- drivers/scsi/libata-core.c |   15 +++++++++------
- drivers/scsi/sata_qstor.c  |    2 +-
- include/linux/libata.h     |   16 ++++++++++++++--
- 3 files changed, 24 insertions(+), 9 deletions(-)
+  So I modified the kernel code (sata_sil.c) to use the PIO 
+mode as follows. However, the kernel reports `kernel NULL pointer 
+dereference at virtual address 0000002c' in the dmesg.  The
+screen shot is here:
+  http://www.a.phys.nagoya-u.ac.jp/~cyamauch/p1030021.jpg
 
-Tejun Heo:
-      libata: fix WARN_ON() condition in *_fill_sg()
-      libata: fix qc->n_elem == 0 case handling in ata_qc_next_sg
-      libata: make ata_sg_setup_one() trim zero length sg
 
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 7ddd5a6..5f1d758 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -2514,7 +2514,7 @@ static void ata_sg_clean(struct ata_queu
- 	assert(sg != NULL);
- 
- 	if (qc->flags & ATA_QCFLAG_SINGLE)
--		assert(qc->n_elem == 1);
-+		assert(qc->n_elem <= 1);
- 
- 	VPRINTK("unmapping %u sg elements\n", qc->n_elem);
- 
-@@ -2537,7 +2537,7 @@ static void ata_sg_clean(struct ata_queu
- 			kunmap_atomic(addr, KM_IRQ0);
- 		}
- 	} else {
--		if (sg_dma_len(&sg[0]) > 0)
-+		if (qc->n_elem)
- 			dma_unmap_single(ap->host_set->dev,
- 				sg_dma_address(&sg[0]), sg_dma_len(&sg[0]),
- 				dir);
-@@ -2570,7 +2570,7 @@ static void ata_fill_sg(struct ata_queue
- 	unsigned int idx;
- 
- 	assert(qc->__sg != NULL);
--	assert(qc->n_elem > 0);
-+	assert(qc->n_elem > 0 || qc->pad_len > 0);
- 
- 	idx = 0;
- 	ata_for_each_sg(sg, qc) {
-@@ -2715,6 +2715,7 @@ static int ata_sg_setup_one(struct ata_q
- 	int dir = qc->dma_dir;
- 	struct scatterlist *sg = qc->__sg;
- 	dma_addr_t dma_address;
-+	int trim_sg = 0;
- 
- 	/* we must lengthen transfers to end on a 32-bit boundary */
- 	qc->pad_len = sg->length & 3;
-@@ -2734,13 +2735,15 @@ static int ata_sg_setup_one(struct ata_q
- 		sg_dma_len(psg) = ATA_DMA_PAD_SZ;
- 		/* trim sg */
- 		sg->length -= qc->pad_len;
-+		if (sg->length == 0)
-+			trim_sg = 1;
- 
- 		DPRINTK("padding done, sg->length=%u pad_len=%u\n",
- 			sg->length, qc->pad_len);
- 	}
- 
--	if (!sg->length) {
--		sg_dma_address(sg) = 0;
-+	if (trim_sg) {
-+		qc->n_elem--;
- 		goto skip_map;
- 	}
- 
-@@ -2753,9 +2756,9 @@ static int ata_sg_setup_one(struct ata_q
- 	}
- 
- 	sg_dma_address(sg) = dma_address;
--skip_map:
- 	sg_dma_len(sg) = sg->length;
- 
-+skip_map:
- 	DPRINTK("mapped buffer of %d bytes for %s\n", sg_dma_len(sg),
- 		qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
- 
-diff --git a/drivers/scsi/sata_qstor.c b/drivers/scsi/sata_qstor.c
-index de05e28..80480f0 100644
---- a/drivers/scsi/sata_qstor.c
-+++ b/drivers/scsi/sata_qstor.c
-@@ -277,7 +277,7 @@ static unsigned int qs_fill_sg(struct at
- 	u8 *prd = pp->pkt + QS_CPB_BYTES;
- 
- 	assert(qc->__sg != NULL);
--	assert(qc->n_elem > 0);
-+	assert(qc->n_elem > 0 || qc->pad_len > 0);
- 
- 	nelem = 0;
- 	ata_for_each_sg(sg, qc) {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 9e5db29..c91be5e 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -557,17 +557,29 @@ ata_sg_is_last(struct scatterlist *sg, s
- }
- 
- static inline struct scatterlist *
-+ata_qc_first_sg(struct ata_queued_cmd *qc)
-+{
-+	if (qc->n_elem)
-+		return qc->__sg;
-+	if (qc->pad_len)
-+		return &qc->pad_sgent;
-+	return NULL;
-+}
-+
-+static inline struct scatterlist *
- ata_qc_next_sg(struct scatterlist *sg, struct ata_queued_cmd *qc)
- {
- 	if (sg == &qc->pad_sgent)
- 		return NULL;
- 	if (++sg - qc->__sg < qc->n_elem)
- 		return sg;
--	return qc->pad_len ? &qc->pad_sgent : NULL;
-+	if (qc->pad_len)
-+		return &qc->pad_sgent;
-+	return NULL;
- }
- 
- #define ata_for_each_sg(sg, qc) \
--	for (sg = qc->__sg; sg; sg = ata_qc_next_sg(sg, qc))
-+	for (sg = ata_qc_first_sg(qc); sg; sg = ata_qc_next_sg(sg, qc))
- 
- static inline unsigned int ata_tag_valid(unsigned int tag)
- {
+  Doesn't Sil3112A support PIO mode?
+
+
+*** /usr/src/linux-2.4.31/drivers/scsi/sata_sil.c._orig_	Wed Jun  1 09:56:34 2005
+--- /usr/src/linux-2.4.31/drivers/scsi/sata_sil.c	Wed Feb 22 08:49:03 2006
+***************
+*** 67,72 ****
+--- 67,73 ----
+  	SIL_INTR_STEERING	= (1 << 1),
+  	SIL_QUIRK_MOD15WRITE	= (1 << 0),
+  	SIL_QUIRK_UDMA5MAX	= (1 << 1),
++ 	SIL_QUIRK_ARAID		= (1 << 2),
+  };
+  
+  static int sil_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
+***************
+*** 106,111 ****
+--- 107,113 ----
+  	{ "ST380011ASL",	SIL_QUIRK_MOD15WRITE },
+  	{ "ST3120022ASL",	SIL_QUIRK_MOD15WRITE },
+  	{ "ST3160021ASL",	SIL_QUIRK_MOD15WRITE },
++ 	{ "ASI ARAID99 2000",	SIL_QUIRK_ARAID },
+  	{ "Maxtor 4D060H3",	SIL_QUIRK_UDMA5MAX },
+  	{ }
+  };
+***************
+*** 345,350 ****
+--- 347,360 ----
+  		ap->udma_mask &= ATA_UDMA5;
+  		return;
+  	}
++ 
++ 	if (quirks & SIL_QUIRK_ARAID) {
++ 		printk(KERN_INFO "ata%u(%u): applying ASI ARAID99 errata fix %s\n",
++ 		       ap->id, dev->devno, s);
++ 		ap->udma_mask = 0;
++ 		ap->mwdma_mask = 0;
++ 		return;
++ 	}
+  }
+  
+  static int sil_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+
+
+==  Chisato Yamauchi  =================================
