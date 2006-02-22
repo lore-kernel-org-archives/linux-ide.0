@@ -1,73 +1,155 @@
 From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: [PATCH 10/13] ATA ACPI: do taskfile before mode commands
-Date: Wed, 22 Feb 2006 14:01:40 -0800
-Message-ID: <20060222140140.0d9e41b7.randy_d_dunlap@linux.intel.com>
+Subject: [PATCH 4/13] ATA ACPI: add params/docs.
+Date: Wed, 22 Feb 2006 13:54:03 -0800
+Message-ID: <20060222135403.55086107.randy_d_dunlap@linux.intel.com>
 References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751486AbWBVWLB@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fmr19.intel.com ([134.134.136.18]:59016 "EHLO
+	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1751517AbWBVWLm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Feb 2006 17:11:42 -0500
 In-Reply-To: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: lkml <linux-kernel@vger.kernel.org>
 Cc: linux-ide@vger.kernel.org, akpm@osdl.org, jgarzik@pobox.com
-List-Id: linux-ide@vger.kernel.org
 
 From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 
-Do drive/taskfile-specific commands before setting the drive mode.
-This allows the taskfile to unlock the drive before trying to
-set the drive mode.
+Add and use 'noacpi' parameter for libata-acpi.
+Add and use 'printk' parameter for libata (parts).
+Update Documentation/kernel-parameters.txt, including atapi_enabled.
 
 Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 ---
- drivers/scsi/libata-core.c |   13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ Documentation/kernel-parameters.txt |   13 +++++++++++++
+ drivers/scsi/libata-acpi.c          |   12 ++++++++++++
+ drivers/scsi/libata-core.c          |   10 ++++++++++
+ drivers/scsi/libata.h               |    2 ++
+ 4 files changed, 37 insertions(+)
 
 --- linux-2616-rc4-ata.orig/drivers/scsi/libata-core.c
 +++ linux-2616-rc4-ata/drivers/scsi/libata-core.c
-@@ -4297,13 +4297,17 @@ static int ata_start_drive(struct ata_po
-  */
- int ata_device_resume(struct ata_port *ap, struct ata_device *dev)
- {
-+	printk(KERN_DEBUG "ata%d: resume device\n", ap->id);
+@@ -82,6 +82,14 @@ int atapi_enabled = 0;
+ module_param(atapi_enabled, int, 0444);
+ MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
+ 
++int noacpi = 0;
++module_param(noacpi, int, 0444);
++MODULE_PARM_DESC(noacpi, "Disables use of ACPI in suspend/resume when set");
 +
-+	WARN_ON (irqs_disabled());
++int libata_printk = ATA_MSG_DRV;
++module_param_named(printk, libata_printk, int, 0644);
++MODULE_PARM_DESC(printk, "Set libata printk flags"); /* in linux/libata.h */
 +
-+	if (!ata_dev_present(dev))
+ MODULE_AUTHOR("Jeff Garzik");
+ MODULE_DESCRIPTION("Library module for ATA devices");
+ MODULE_LICENSE("GPL");
+@@ -4545,6 +4553,8 @@ int ata_device_add(const struct ata_prob
+ 				(ap->mwdma_mask << ATA_SHIFT_MWDMA) |
+ 				(ap->pio_mask << ATA_SHIFT_PIO);
+ 
++		ap->msg_enable = libata_printk;
++
+ 		/* print per-port info to dmesg */
+ 		printk(KERN_INFO "ata%u: %cATA max %s cmd 0x%lX ctl 0x%lX "
+ 				 "bmdma 0x%lX irq %lu\n",
+--- linux-2616-rc4-ata.orig/Documentation/kernel-parameters.txt
++++ linux-2616-rc4-ata/Documentation/kernel-parameters.txt
+@@ -41,6 +41,7 @@ restrictions referred to are that the re
+ 	ISAPNP	ISA PnP code is enabled.
+ 	ISDN	Appropriate ISDN support is enabled.
+ 	JOY	Appropriate joystick support is enabled.
++	LIBATA	libata driver is enabled.
+ 	LP	Printer support is enabled.
+ 	LOOP	Loopback device support is enabled.
+ 	M68k	M68k architecture is enabled.
+@@ -242,6 +243,9 @@ running once the system is up.
+ 
+ 	ataflop=	[HW,M68k]
+ 
++	atapi_enabled=	[LIBATA] Enable discovery & support of ATAPI devices
++			Format: <value> (0=off, 1=on)
++
+ 	atarimouse=	[HW,MOUSE] Atari Mouse
+ 
+ 	atascsi=	[HW,SCSI] Atari SCSI
+@@ -981,6 +985,10 @@ running once the system is up.
+ 			emulation library even if a 387 maths coprocessor
+ 			is present.
+ 
++	noacpi=		[LIBATA] Disables use of ACPI in libata suspend/resume
++			when set.
++			Format: <int>
++
+ 	noalign		[KNL,ARM]
+ 
+ 	noapic		[SMP,APIC] Tells the kernel to not make use of any
+@@ -1227,6 +1235,11 @@ running once the system is up.
+ 			autoconfiguration.
+ 			Ranges are in pairs (memory base and size).
+ 
++	printk=		[LIBATA] Set libata printk level (mask).
++			The values are defined in include/linux/libata.h.
++			The default value is 1 (ATA_MSG_DRV).
++			Format: <int>
++
+ 	profile=	[KNL] Enable kernel profiling via /proc/profile
+ 			Format: [schedule,]<number>
+ 			Param: "schedule" - profile schedule points.
+--- linux-2616-rc4-ata.orig/drivers/scsi/libata-acpi.c
++++ linux-2616-rc4-ata/drivers/scsi/libata-acpi.c
+@@ -212,6 +212,9 @@ int ata_acpi_push_id(struct ata_port *ap
+ 	struct acpi_object_list		input;
+ 	union acpi_object 		in_params[1];
+ 
++	if (noacpi)
 +		return 0;
-+	ata_acpi_exec_tfs(ap);
- 	if (ap->flags & ATA_FLAG_SUSPENDED) {
- 		ap->flags &= ~ATA_FLAG_SUSPENDED;
- 		ata_set_mode(ap);
- 	}
--	if (!ata_dev_present(dev))
--		return 0;
--	ata_acpi_exec_tfs(ap);
- 	if (dev->class == ATA_DEV_ATA)
- 		ata_start_drive(ap, dev);
++
+ 	if (ata_msg_probe(ap))
+ 		printk(KERN_DEBUG
+ 			"%s: ap->id: %d, ix = %d, port#: %d, hard_port#: %d\n",
+@@ -319,6 +322,9 @@ int do_drive_get_GTF(struct ata_port *ap
+ 	*gtf_length = 0;
+ 	*gtf_address = 0UL;
  
-@@ -4319,6 +4323,7 @@ int ata_device_resume(struct ata_port *a
-  */
- int ata_device_suspend(struct ata_port *ap, struct ata_device *dev)
- {
-+	printk(KERN_DEBUG "ata%d: suspend device\n", ap->id);
- 	if (!ata_dev_present(dev))
- 		return 0;
- 	if (dev->class == ATA_DEV_ATA)
-@@ -5099,6 +5104,7 @@ int pci_test_config_bits(struct pci_dev 
++	if (noacpi)
++		return 0;
++
+ 	if (!ata_dev_present(atadev) ||
+ 	    (ap->flags & ATA_FLAG_PORT_DISABLED)) {
+ 		if (ata_msg_probe(ap))
+@@ -493,6 +499,9 @@ int do_drive_set_taskfiles(struct ata_po
+ 			__FUNCTION__, ap->id,
+ 			ap->port_no, ap->hard_port_no);
  
- int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t state)
- {
-+	dev_printk(KERN_DEBUG, &pdev->dev, "suspend PCI device\n");
- 	pci_save_state(pdev);
- 	pci_disable_device(pdev);
- 	pci_set_power_state(pdev, PCI_D3hot);
-@@ -5107,6 +5113,7 @@ int ata_pci_device_suspend(struct pci_de
++	if (noacpi)
++		return 0;
++
+ 	if (!ata_dev_present(atadev) ||
+ 	    (ap->flags & ATA_FLAG_PORT_DISABLED))
+ 		goto out;
+@@ -540,6 +549,9 @@ int ata_acpi_exec_tfs(struct ata_port *a
+ 	if (ata_msg_probe(ap))
+ 		printk(KERN_DEBUG "%s: ENTER:\n", __FUNCTION__);
  
- int ata_pci_device_resume(struct pci_dev *pdev)
- {
-+	dev_printk(KERN_DEBUG, &pdev->dev, "resume PCI device\n");
- 	pci_set_power_state(pdev, PCI_D0);
- 	pci_restore_state(pdev);
- 	pci_enable_device(pdev);
++	if (noacpi)
++		return 0;
++
+ 	for (ix = 0; ix < ATA_MAX_DEVICES; ix++) {
+ 		printk(KERN_DEBUG "%s: call get_GTF, ix=%d\n",
+ 			__FUNCTION__, ix);
+--- linux-2616-rc4-ata.orig/drivers/scsi/libata.h
++++ linux-2616-rc4-ata/drivers/scsi/libata.h
+@@ -41,6 +41,8 @@ struct ata_scsi_args {
+ 
+ /* libata-core.c */
+ extern int atapi_enabled;
++extern int noacpi;
++extern int libata_printk;
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_port *ap,
+ 				      struct ata_device *dev);
+ extern int ata_rwcmd_protocol(struct ata_queued_cmd *qc);
