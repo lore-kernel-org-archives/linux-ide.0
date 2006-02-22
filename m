@@ -1,12 +1,12 @@
 From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: [PATCH 13/13] ATA ACPI: enable writing PATA taskfiles
-Date: Wed, 22 Feb 2006 14:07:14 -0800
-Message-ID: <20060222140714.46c572e7.randy_d_dunlap@linux.intel.com>
+Subject: [PATCH 10/13] ATA ACPI: do taskfile before mode commands
+Date: Wed, 22 Feb 2006 14:01:40 -0800
+Message-ID: <20060222140140.0d9e41b7.randy_d_dunlap@linux.intel.com>
 References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751511AbWBVWLd@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751486AbWBVWLB@vger.kernel.org>
 In-Reply-To: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: lkml <linux-kernel@vger.kernel.org>
@@ -15,58 +15,59 @@ List-Id: linux-ide@vger.kernel.org
 
 From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 
-Move 'noacpi' option handling to top of functions.
-Enable writing taskfiles for PATA drives.
+Do drive/taskfile-specific commands before setting the drive mode.
+This allows the taskfile to unlock the drive before trying to
+set the drive mode.
 
 Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 ---
- drivers/scsi/libata-acpi.c |   16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+ drivers/scsi/libata-core.c |   13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
---- linux-2616-rc4-ata.orig/drivers/scsi/libata-acpi.c
-+++ linux-2616-rc4-ata/drivers/scsi/libata-acpi.c
-@@ -303,13 +303,14 @@ int ata_acpi_push_id(struct ata_port *ap
- 	struct acpi_object_list		input;
- 	union acpi_object 		in_params[1];
- 
-+	if (noacpi)
+--- linux-2616-rc4-ata.orig/drivers/scsi/libata-core.c
++++ linux-2616-rc4-ata/drivers/scsi/libata-core.c
+@@ -4297,13 +4297,17 @@ static int ata_start_drive(struct ata_po
+  */
+ int ata_device_resume(struct ata_port *ap, struct ata_device *dev)
+ {
++	printk(KERN_DEBUG "ata%d: resume device\n", ap->id);
++
++	WARN_ON (irqs_disabled());
++
++	if (!ata_dev_present(dev))
 +		return 0;
-+
- 	if (ap->legacy_mode) {
- 		printk(KERN_DEBUG "%s: skipping for PATA mode\n",
- 			__FUNCTION__);
- 		return 0;
++	ata_acpi_exec_tfs(ap);
+ 	if (ap->flags & ATA_FLAG_SUSPENDED) {
+ 		ap->flags &= ~ATA_FLAG_SUSPENDED;
+ 		ata_set_mode(ap);
  	}
--	if (noacpi)
+-	if (!ata_dev_present(dev))
 -		return 0;
+-	ata_acpi_exec_tfs(ap);
+ 	if (dev->class == ATA_DEV_ATA)
+ 		ata_start_drive(ap, dev);
  
- 	if (ata_msg_probe(ap))
- 		printk(KERN_DEBUG
-@@ -655,11 +656,6 @@ int do_drive_set_taskfiles(struct ata_po
- 
- 	if (noacpi)
+@@ -4319,6 +4323,7 @@ int ata_device_resume(struct ata_port *a
+  */
+ int ata_device_suspend(struct ata_port *ap, struct ata_device *dev)
+ {
++	printk(KERN_DEBUG "ata%d: suspend device\n", ap->id);
+ 	if (!ata_dev_present(dev))
  		return 0;
--	if (ap->legacy_mode) {
--		printk(KERN_DEBUG "%s: skipping non-SATA drive\n",
--			__FUNCTION__);
--		return 0;
--	}
+ 	if (dev->class == ATA_DEV_ATA)
+@@ -5099,6 +5104,7 @@ int pci_test_config_bits(struct pci_dev 
  
- 	if (!ata_dev_present(atadev) ||
- 	    (ap->flags & ATA_FLAG_PORT_DISABLED))
-@@ -707,12 +703,12 @@ int ata_acpi_exec_tfs(struct ata_port *a
- 	unsigned long	gtf_address;
- 	unsigned long	obj_loc;
+ int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
++	dev_printk(KERN_DEBUG, &pdev->dev, "suspend PCI device\n");
+ 	pci_save_state(pdev);
+ 	pci_disable_device(pdev);
+ 	pci_set_power_state(pdev, PCI_D3hot);
+@@ -5107,6 +5113,7 @@ int ata_pci_device_suspend(struct pci_de
  
--	if (ata_msg_probe(ap))
--		printk(KERN_DEBUG "%s: ENTER:\n", __FUNCTION__);
--
- 	if (noacpi)
- 		return 0;
- 
-+	if (ata_msg_probe(ap))
-+		printk(KERN_DEBUG "%s: ENTER:\n", __FUNCTION__);
-+
- 	for (ix = 0; ix < ATA_MAX_DEVICES; ix++) {
- 		if (ata_msg_probe(ap))
- 			printk(KERN_DEBUG "%s: call get_GTF, ix=%d\n",
+ int ata_pci_device_resume(struct pci_dev *pdev)
+ {
++	dev_printk(KERN_DEBUG, &pdev->dev, "resume PCI device\n");
+ 	pci_set_power_state(pdev, PCI_D0);
+ 	pci_restore_state(pdev);
+ 	pci_enable_device(pdev);
