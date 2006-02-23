@@ -1,44 +1,35 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH 0/13] ACPI objects for SATA/PATA
-Date: Wed, 22 Feb 2006 16:28:31 -0800 (PST)
-Message-ID: <Pine.LNX.4.58.0602221627160.24281@shark.he.net>
-References: <20060222141238.4d2effa8.randy_d_dunlap@linux.intel.com>
- <20060222162654.31ef25ad.akpm@osdl.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] sata_sil24: add a new PCI ID for SiI 3124
+Date: Thu, 23 Feb 2006 10:46:47 +0900
+Message-ID: <20060223014647.GA31451@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:42219 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1751603AbWBWA2c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Feb 2006 19:28:32 -0500
-Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 16:28:31 -0800
-In-Reply-To: <20060222162654.31ef25ad.akpm@osdl.org>
+Received: from zproxy.gmail.com ([64.233.162.201]:43800 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750924AbWBWBpu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Feb 2006 20:45:50 -0500
+Received: by zproxy.gmail.com with SMTP id 9so1686482nzo
+        for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 17:45:50 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Randy Dunlap <randy_d_dunlap@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
-On Wed, 22 Feb 2006, Andrew Morton wrote:
+Add a new PCI ID for SiI 3124.  Reported by Silicon Image.
 
-> Randy Dunlap <randy_d_dunlap@linux.intel.com> wrote:
-> >
-> > This patch series is primarily ACPI objects support for SATA/PATA.
-> > It applies to 2.6.16-rc4.
->
-> I tried to get these on top of Jeff's current devel tree but gave up at
-> ata-acpi-pata-methods when things got really sticky.
->
-> So you're rather between a rock and a hard place here.  Perhaps it would be
-> better for you to continue development on top of Jeff's devel tree, and to
-> distribute a copy of git-libata-all.patch along with your patches to your
-> testers.
->
-> Of course, that puts them on the bleeding edge when all they want to do is
-> to get their power management working, so that's not really suitable
-> either.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
-OK, I'll think about how to attack that...
-Thanks for the info.  I didn't think about you using git-libata*.
-My bad.
-
--- 
-~Randy
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index a0e35a2..5c5822e 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -262,6 +262,7 @@ static int sil24_init_one(struct pci_dev
+ 
+ static const struct pci_device_id sil24_pci_tbl[] = {
+ 	{ 0x1095, 0x3124, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3124 },
++	{ 0x8086, 0x3124, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3124 },
+ 	{ 0x1095, 0x3132, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3132 },
+ 	{ 0x1095, 0x3131, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3131 },
+ 	{ 0x1095, 0x3531, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3131 },
