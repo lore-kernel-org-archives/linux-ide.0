@@ -1,32 +1,35 @@
-From: "James Olson" <big_spender12@lycos.com>
-Subject: driver for Promise FastTrak SX4000
-Date: Wed, 22 Feb 2006 17:20:16 -0500
-Message-ID: <20060222222016.E37F93384C@ws7-3.us4.outblaze.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 0/13] ACPI objects for SATA/PATA
+Date: Wed, 22 Feb 2006 16:26:54 -0800
+Message-ID: <20060222162654.31ef25ad.akpm@osdl.org>
+References: <20060222141238.4d2effa8.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from webmail-outgoing.us4.outblaze.com ([205.158.62.67]:44217 "EHLO
-	webmail-outgoing.us4.outblaze.com") by vger.kernel.org with ESMTP
-	id S1751527AbWBVWUf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Feb 2006 17:20:35 -0500
-Received: from unknown (unknown [192.168.9.180])
-	by webmail-outgoing.us4.outblaze.com (Postfix) with QMQP id 0C9551800318
-	for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 22:20:30 +0000 (GMT)
-Content-Disposition: inline
+Received: from smtp.osdl.org ([65.172.181.4]:9883 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751542AbWBWAYq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Feb 2006 19:24:46 -0500
+In-Reply-To: <20060222141238.4d2effa8.randy_d_dunlap@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-  Hi Jeff,
-The proprietary Promise driver for the FastTrak SX4100 sata also supported the FastTrak SX4000 pata and it used to compile and work with the 2.6 kernel but it compiles but does not work on kernel 2.6.14 and above.  Both controllers use the same controller chip the PDC20261 I believe, but the PCI device ID for the SX4000 is 0x6621 and for the SX4100 it is 0x6622.  What do you think about the possibility of modifying the sata_sx4 driver to support the pata version of this controller chip?  I tried it myself and it sees and identifies the parallel drives but I get command timeout errors with status drive ready seek complete.
-    -James
+Randy Dunlap <randy_d_dunlap@linux.intel.com> wrote:
+>
+> This patch series is primarily ACPI objects support for SATA/PATA.
+> It applies to 2.6.16-rc4.
 
--- 
-_______________________________________________
+I tried to get these on top of Jeff's current devel tree but gave up at
+ata-acpi-pata-methods when things got really sticky.
 
-Search for businesses by name, location, or phone number.  -Lycos Yellow Pages
+So you're rather between a rock and a hard place here.  Perhaps it would be
+better for you to continue development on top of Jeff's devel tree, and to
+distribute a copy of git-libata-all.patch along with your patches to your
+testers.
 
-http://r.lycos.com/r/yp_emailfooter/http://yellowpages.lycos.com/default.asp?SRC=lycos10
+Of course, that puts them on the bleeding edge when all they want to do is
+to get their power management working, so that's not really suitable
+either.
 
