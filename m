@@ -1,38 +1,44 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 9/13] ATA ACPI: check SATA/PATA more carefully
-Date: Thu, 23 Feb 2006 00:30:04 +0000
-Message-ID: <1140654604.8672.29.camel@localhost.localdomain>
-References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
-	 <20060222140008.3832951a.randy_d_dunlap@linux.intel.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: [PATCH 0/13] ACPI objects for SATA/PATA
+Date: Wed, 22 Feb 2006 16:28:31 -0800 (PST)
+Message-ID: <Pine.LNX.4.58.0602221627160.24281@shark.he.net>
+References: <20060222141238.4d2effa8.randy_d_dunlap@linux.intel.com>
+ <20060222162654.31ef25ad.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:21950 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751015AbWBWA0D (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Feb 2006 19:26:03 -0500
-In-Reply-To: <20060222140008.3832951a.randy_d_dunlap@linux.intel.com>
+Received: from xenotime.net ([66.160.160.81]:42219 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1751603AbWBWA2c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Feb 2006 19:28:32 -0500
+Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 16:28:31 -0800
+In-Reply-To: <20060222162654.31ef25ad.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, akpm@osdl.org, jgarzik@pobox.com
+To: Andrew Morton <akpm@osdl.org>
+Cc: Randy Dunlap <randy_d_dunlap@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On Mer, 2006-02-22 at 14:00 -0800, Randy Dunlap wrote:
-> +	if (ap->legacy_mode) {
->  		err = pata_get_dev_handle(dev, &dev_handle, &pcidevfn);
->  		if (err < 0) {
->  			if (ata_msg_probe(ap))
+On Wed, 22 Feb 2006, Andrew Morton wrote:
 
-ap->legacy mode tells you if one of a subset of PCI controllers is in
-native or legacy compatibility mode. It tells you nothing about whether
-the controller is SATA or PATA. In fact it may even be both at once as
-there may be a SATA bridge on one channel in some configurations. The
-field is also meaningless for PCI controllers that are not class IDE.
+> Randy Dunlap <randy_d_dunlap@linux.intel.com> wrote:
+> >
+> > This patch series is primarily ACPI objects support for SATA/PATA.
+> > It applies to 2.6.16-rc4.
+>
+> I tried to get these on top of Jeff's current devel tree but gave up at
+> ata-acpi-pata-methods when things got really sticky.
+>
+> So you're rather between a rock and a hard place here.  Perhaps it would be
+> better for you to continue development on top of Jeff's devel tree, and to
+> distribute a copy of git-libata-all.patch along with your patches to your
+> testers.
+>
+> Of course, that puts them on the bleeding edge when all they want to do is
+> to get their power management working, so that's not really suitable
+> either.
 
-The cable type field will tell you in some situations if we are PATA or
-SATA but we actually don't always know at the moment. We probably have
-the info for 99.9% of cases if needed it just isnt ap->legacy_mode, its
-cable type plus the PATA/SATA bridge knobbling check.
+OK, I'll think about how to attack that...
+Thanks for the info.  I didn't think about you using git-libata*.
+My bad.
 
-Alan
+-- 
+~Randy
