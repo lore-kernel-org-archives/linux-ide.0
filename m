@@ -1,25 +1,58 @@
-From: "Newton Allred" <HYZXJDRVW@hotmail.com>
-Subject: We SelIs all Medss WvJ
-Date: Fri, 30 Apr 2004 18:02:00 -0400
-Message-ID: <68PF87FE.0O24.HYZXJDRVW__31031.5636721954$1140706291$gmane$org@hotmail.com>
+From: Philip Langdale <philipl@mail.utexas.edu>
+Subject: CRC errors with sata drives connected to ULi M5281
+Date: Thu, 23 Feb 2006 08:25:58 -0800
+Message-ID: <43FDE216.9000802@mail.utexas.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [211.222.88.21] ([211.222.88.21]:52236 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S1751255AbWBWOux (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Feb 2006 09:50:53 -0500
+Received: from wb6-a.mail.utexas.edu ([128.83.126.144]:36623 "EHLO
+	wb6-a.mail.utexas.edu") by vger.kernel.org with ESMTP
+	id S1751695AbWBWQ0D (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Feb 2006 11:26:03 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Hi all,
 
+I happen to have a motherboard with an onboard M5281
+controller that provides extra sata and pata ports.
+Up until now, I've never had a use for it, but I've
+been trying to use it with some spare drives I now
+have, and it's been resulting in errors while reading
+from the drive, and the system locks up with a sufficiently
+long sustained transfer.
 
-The most complete Phar macy Online
-We carry all major medds at bargain price
-Viggra, Ci ialis, VaIium, Xa naax
-Phantermiine, Ulltraam and etc...
-SatiisfactIon Gua ranteeed
+I observe identical behaviour with 2.6.15.4 and 2.6.16-rc4,
+which doesn't really surprise me as the uli driver is basically
+unchanged between them.
 
-http://allyourmeds.info
+My symptoms appear identical to the ones described here:
 
+http://www.ussg.iu.edu/hypermail/linux/kernel/0503.2/1378.html
 
-Najsl8
+> ata13: translated ATA stat/err 0x51/84 to SCSI SK/ASC/ASCQ 0xb/47/00
+> ata13: status=0x51 { DriveReady SeekComplete Error }
+> ata13: error=0x84 { DriveStatusError BadCRC }
 
+In my case, I have a uniprocessor preempt kernel.
+
+I have tried with maxtor and hitachi drives which both work
+fine when connected to a via vt6421 controller card that I
+also have.
+
+Interestingly, the frequency of BadCRC errors seems to be
+inversely related to the transfer speed. I tried forcing
+it to use PIO for transfers and this caused a significant
+increase in the number of errors reported. In fact, it
+seemed to me that more errors were reported with the hitatchi
+vs. the maxtor and those report themselves as udma/100 and
+udma/133 respectively.
+
+I'm rather out of ideas for what to do next, and I'd really
+like to be able to take advantage of this controller if I can.
+
+Thanks,
+
+--phil
