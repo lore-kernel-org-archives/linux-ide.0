@@ -1,35 +1,85 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sata_sil24: add a new PCI ID for SiI 3124
-Date: Thu, 23 Feb 2006 10:46:47 +0900
-Message-ID: <20060223014647.GA31451@htj.dyndns.org>
+Subject: Re: sata_sil.c, 3512 and SIL_QUIRK_MOD15WRITE
+Date: Thu, 23 Feb 2006 11:07:49 +0900
+Message-ID: <43FD18F5.20002@gmail.com>
+References: <loom.20060222T182150-518@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.201]:43800 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750924AbWBWBpu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Feb 2006 20:45:50 -0500
-Received: by zproxy.gmail.com with SMTP id 9so1686482nzo
-        for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 17:45:50 -0800 (PST)
-Content-Disposition: inline
+Received: from pproxy.gmail.com ([64.233.166.179]:20778 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750754AbWBWCGp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Feb 2006 21:06:45 -0500
+Received: by pproxy.gmail.com with SMTP id i75so1899092pye
+        for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2006 18:06:43 -0800 (PST)
+In-Reply-To: <loom.20060222T182150-518@post.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-Cc: Carlos Pardo <Carlos.Pardo@siliconimage.com>
+To: =?UTF-8?B?Sm9uIEvDpXJlIEhlbGxhbg==?= <hellan@acm.org>
+Cc: linux-ide@vger.kernel.org, Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
-Add a new PCI ID for SiI 3124.  Reported by Silicon Image.
+Jon K=C3=A5re Hellan wrote:
+> My Shuttle SN85G4V2 with Silicon Image 3512 SATA controller has been =
+locking up
+> frequently for a while. Console message:
+>=20
+> ata1: command 0x35 timeout, stat 0x58 host_stat 0x61
+> ata1: status=3D0x58 { DriveReady SeekComplete DataRequest }
+> sd 0:0:0:0: SCSI error: return code =3D 0x8000002
+> sda: Current: sense key: Aborted Command
+>     Additional sense: Scsi parity error
+> end_request: I/O error, dev sda, sector 57582833
+> Buffer I/O error on device sda6, logical block 3097255
+> lost page write due to I/O error on sda6
+> ATA: abnormal status 0x58 on port 0xF8802087
+> ATA: abnormal status 0x58 on port 0xF8802087
+>=20
+> I have a Seagate ST3200822AS disk, which is on the blacklist in sata_=
+sil.
+> In sil_pci_tbl in drivers/sata/sata_sil.c, I changed 3512 from sil_31=
+12 to
+> sil_3112_m15w, enabling SIL_QUIRK_MOD15WRITE for my controller. With =
+this, the
+> lockups are gone.
+>=20
+> Looks like MOD15WRITE was turned off for the 3512 between 2.6.13 and =
+2.6.14.
+> This may have been a mistake, or else my system is unusually flaky.=20
+>=20
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Carlos Pardo <Carlos.Pardo@siliconimage.com>
+Hello, Jon K=C3=A5re.
 
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index a0e35a2..5c5822e 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -262,6 +262,7 @@ static int sil24_init_one(struct pci_dev
- 
- static const struct pci_device_id sil24_pci_tbl[] = {
- 	{ 0x1095, 0x3124, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3124 },
-+	{ 0x8086, 0x3124, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3124 },
- 	{ 0x1095, 0x3132, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3132 },
- 	{ 0x1095, 0x3131, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3131 },
- 	{ 0x1095, 0x3531, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3131 },
+The m15w workaround is an extreme solution and tends to hide whatever=20
+bug/errata whether the problem actually is m15w or not. Unfortunately,=20
+in the past, we didn't have enough errata information and thus the m15w=
+=20
+blacklist kept growing (oh... something wrong with Seagate drives? It=20
+must be m15w!).
+
+Recently, Silicon Image has opened all the erratas and we're in the=20
+process of getting things done correctly. New errata workarounds are=20
+being implemented and devices not really affected by m15w are delisted,=
+=20
+etc... And, unfortunately, due to insufficient information, turning off=
+=20
+m15w for 3512 and 3114 was done before addind other needed workarounds=20
+causing problems for 3512 and 3114 users.
+
+According to the errata information from Silicon Image, SiI3512 does no=
+t=20
+have m15w bug, neither does ST3200822AS. So, this must be something els=
+e=20
+and you're not an isolated case. One of my friends reported the same=20
+problem but I currently can't test it as he sold his motherboard=20
+*really* fast. :-( So, it would be very nice if you can test fixes we'l=
+l=20
+be able to come up with.
+
+Carlos (Hi!), 3512 + some 7200.7 hangs. Can you think of any related er=
+rata?
+
+Thanks.
+
+--=20
+tejun
