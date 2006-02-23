@@ -1,183 +1,106 @@
-From: "Eric D. Mudama" <edmudama@gmail.com>
-Subject: Re: 2.6.16-rc3 - sata_mv - Assertion failed!
-Date: Thu, 23 Feb 2006 10:22:08 -0700
-Message-ID: <311601c90602230922i3a429d5cp98a4f4142a37ba1a@mail.gmail.com>
-References: <20060217093705.GA20320@favonius>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Thu, 23 Feb 2006 18:39:23 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0602231838420.3374@p34>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com>
+ <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932080AbWBWRWM@vger.kernel.org>
-In-Reply-To: <20060217093705.GA20320@favonius>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: sander@humilis.net
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from lucidpixels.com ([66.45.37.187]:37817 "EHLO lucidpixels.com")
+	by vger.kernel.org with ESMTP id S932128AbWBWXj1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Feb 2006 18:39:27 -0500
+In-Reply-To: <200602141300.37118.lkml@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <lkml@rtr.ca>
+Cc: David Greaves <david@dgreaves.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-50/01 is the reset signature FIS.  Is it possible that under load you
-aren't supplying enough power to the drives, your 5V or 12V droops too
-much, and the voltage protection circuitry on the drive causes it to
-power cycle?
+I have reproduced the error with the patched kernel!
 
---eric
+Here it is:
 
-(sorry if this got sent twice, I think VGER bounced my "richly
-formatted" gmail message)
+[263864.109854] ata3: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
+0xb/00/00
+[263864.109861] ata3: status=0x51 { DriveReady SeekComplete Error }
+[263864.109866] ata3: error=0x04 { DriveStatusError }
 
-On 2/17/06, Sander <sander@humilis.net> wrote:
-> Hi Jeff and others,
+Here is how I got it to error:
+
+$ for i in `seq 1 1000`; do dd if=/dev/zero of=file.$i bs=1M count=$i; 
+done
+
+Now, how to fix? :)
+
+On Tue, 14 Feb 2006, Mark Lord wrote:
+
+> On Tuesday 14 February 2006 12:12, Justin Piszcz wrote:
+>> I would like to try the patch too, if available.
 >
-> I get some error messages while using a raid5 over nine Maxtor 500GB
-> disks.
+> Something like this:  (for 2.6.16-rc3-git2, but should be okay on 2.6.15 also).
 >
-> The first three disks are connected to the onboard nForce4, and six to a
-> MV88SX6081 8-port SATA II PCI-X Controller (rev 09)
+> Untested:  include the original SCSI opcode in printk's for libata SCSI errors,
+> to help understand where the errors are coming from.
 >
-> I made a 25GB partition on each disk, and create raid5 over them:
+> Signed-Off-By:  Mark Lord <mlord@pobox.com>
 >
-> mdadm -C -l5 -n9 /dev/md1 /dev/sda2 /dev/sdb2 /dev/sdc2 \
-> /dev/sdd2 /dev/sde2 /dev/sdf2 /dev/sdg2 /dev/sdh2 /dev/sdi2
+> --- linux/drivers/scsi/libata-scsi.c.orig	2006-02-12 19:27:25.000000000 -0500
+> +++ linux/drivers/scsi/libata-scsi.c	2006-02-14 12:54:17.000000000 -0500
+> @@ -420,6 +420,7 @@
+>  *	@sk: the sense key we'll fill out
+>  *	@asc: the additional sense code we'll fill out
+>  *	@ascq: the additional sense code qualifier we'll fill out
+> + *	@opcode: the original SCSI command opcode byte
+>  *
+>  *	Converts an ATA error into a SCSI error.  Fill out pointers to
+>  *	SK, ASC, and ASCQ bytes for later use in fixed or descriptor
+> @@ -429,7 +430,7 @@
+>  *	spin_lock_irqsave(host_set lock)
+>  */
+> void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk, u8 *asc,
+> -			u8 *ascq)
+> +			u8 *ascq, u8 opcode)
+> {
+> 	int i;
 >
-> When the recovery is finished, I create an ext3 filesystem, and mount
-> it:
+> @@ -508,8 +509,8 @@
+> 		}
+> 	}
+> 	/* No error?  Undecoded? */
+> -	printk(KERN_WARNING "ata%u: no sense translation for status: 0x%02x\n",
+> -	       id, drv_stat);
+> +	printk(KERN_WARNING "ata%u: no sense translation for op=0x%02x status: 0x%02x\n",
+> +	       id, opcode, drv_stat);
 >
-> mke2fs -j -m1 /dev/md1
-> mount -o data=writeback /dev/md1 /mnt
+> 	/* For our last chance pick, use medium read error because
+> 	 * it's much more common than an ATA drive telling you a write
+> @@ -520,8 +521,8 @@
+> 	*ascq = 0x04; /*  "auto-reallocation failed" */
 >
-> Then I execute the following:
+>  translate_done:
+> -	printk(KERN_ERR "ata%u: translated ATA stat/err 0x%02x/%02x to "
+> -	       "SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n", id, drv_stat, drv_err,
+> +	printk(KERN_ERR "ata%u: translated op=0x%02x ATA stat/err 0x%02x/%02x to "
+> +	       "SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n", id, opcode, drv_stat, drv_err,
+> 	       *sk, *asc, *ascq);
+> 	return;
+> }
+> @@ -562,7 +563,7 @@
+> 	 */
+> 	if (tf->command & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
+> 		ata_to_sense_error(qc->ap->id, tf->command, tf->feature,
+> -				   &sb[1], &sb[2], &sb[3]);
+> +				   &sb[1], &sb[2], &sb[3], cmd->cmnd[0]);
+> 		sb[1] &= 0x0f;
+> 	}
 >
-> for i in `seq 10`
-> do dd if=/dev/zero of=bigfile.$i bs=1024k count=10000
-> done
-> md5sum bigfile.*
-> rm bigfile.*
+> @@ -637,7 +638,7 @@
+> 	 */
+> 	if (tf->command & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
+> 		ata_to_sense_error(qc->ap->id, tf->command, tf->feature,
+> -				   &sb[2], &sb[12], &sb[13]);
+> +				   &sb[2], &sb[12], &sb[13], cmd->cmnd[0]);
+> 		sb[2] &= 0x0f;
+> 	}
 >
-> This time, the system was building another raid5 on other partitions at
-> the same time, generating some extra load. The system spits out error
-> messages (via netconsole), and responds _very_ slow on disks activity.
->
-> I rebuilded 2.6.16-rc3 with ATA_DEBUG and ATA_VERBOSE_DEBUG defined, but
-> that kernel hangs when I try to create the raid5. I'll try again with
-> only ATA_DEBUG enabled.
->
-> I'll also have a look at the firmware version in the Marvell controller,
-> and upgrade it if it is not the latest.
->
-> Any more I can do? More info I can provide? Is this due to the sata_mv
-> driver being beta? If so, I love to test any patches. All disks passed
-> badblocks in write mode, fwiw.
->
->         Sander
->
->
-> [    0.000000] Linux version 2.6.16-rc3 (root@elisha) (gcc version 4.0.3 20060104 (prerelease) (Debian 4.0.2-6)) #1 SMP Wed Feb 15 17:07:29 CET 2006
->
-> [cut]
->
-> [   78.285313] ata2: SATA link down (SStatus 0)
-> [   78.285361] scsi1 : sata_nv
-> [   78.285495]   Vendor: ATA       Model: Maxtor 7H500F0    Rev: HA43
-> [   78.286242]   Type:   Direct-Access                      ANSI SCSI revision: 05
-> [   78.286795] ACPI: PCI Interrupt Link [LSI1] enabled at IRQ 22
-> [   78.286846] GSI 20 sharing vector 0xD1 and IRQ 20
-> [   78.286894] ACPI: PCI Interrupt 0000:00:08.0[A] -> Link [LSI1] -> GSI 22 (level, high) -> IRQ 20
-> [   78.287266] ata3: SATA max UDMA/133 cmd 0x1458 ctl 0x144E bmdma 0x1420 irq 20
-> [   78.287344] ata4: SATA max UDMA/133 cmd 0x1450 ctl 0x144A bmdma 0x1428 irq 20
-> [   78.505038] ata3: SATA link up 3.0 Gbps (SStatus 123)
-> [   78.704878] ata3: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
-> [   78.705922] nv_sata: Primary device added
-> [   78.705926] ata3: dev 0 configured for UDMA/133
-> [   78.705929] scsi2 : sata_nv
-> [   78.706065] nv_sata: Primary device removed
-> [   78.706110] nv_sata: Secondary device added
-> [   78.706154] nv_sata: Secondary device removed
-> [   78.924512] ata4: SATA link up 3.0 Gbps (SStatus 123)
-> [   79.114363] ata4: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
-> [   79.115391] nv_sata: Primary device added
-> [   79.115394] ata4: dev 0 configured for UDMA/133
-> [   79.115396] scsi3 : sata_nv
-> [   79.115520] nv_sata: Primary device removed
-> [   79.115564] nv_sata: Secondary device added
-> [   79.115609] nv_sata: Secondary device removed
-> [   79.115725]   Vendor: ATA[   80.033304] ata6: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
-> [   80.034353] ata6: dev 0 configured for UDMA/133
-> [   80.034397] scsi5 : sata_mv
-> [   80.492731] ata7: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
-> [   80.493771] ata7: dev 0 configured for UDMA/133
-> [   80.493815] scsi6 : sata_mv
-> [   80.952151] ata8: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
-> [   80.953186] ata8: dev 0 configured for UDMA/133
-> [   80.953231] scsi7 : sata_mv
-> [   81.411574] ata9: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
-> [   81.412605] ata9: dev 0 configured for UDMA/133
-> [   81.412650] scsi8 : sata_mv
-> [   81.880985] ata10: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
-> [   81.882022] ata10: dev 0 configured for UDMA/133
-> [   81.882066] scsi9 : sata_mv
-> [   81.940725] ata11: no device found (phy stat 00000000)
-> [   81.940773] scsi10 : sata_mv
-> [   81.990662] ata12: no device found (phy stat 00000000)
-> [   81.990709] scsi11 : sata_mv
-> [   81.990839]   Vendor: ATA       Model: Maxtor 7H500F0    Rev: HA43
-> [   81.991587]   Type:   Direct-Access                      ANSI SCSI revision: 05
-> [   81.991795]   Vendor: ATA       Model: Maxtor 7H[   82.879567] Driver 'w83627hf' needs updating - please use bus_type methods
->
-> [cut]
->
-> [ 2071.503963] ata5: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> [ 2071.504017] ata5: status=0xd0 { Busy }
-> [ 2101.475022] ata5: Entering mv_eng_timeout
-> [ 2101.475059] mmio_base ffffc20000080000 ap ffff81013b4a5480 qc ffff81013b4a59b8 scsi_cmnd ffff810116d70b40 &cmnd ffff810116d70bb0
-> [ 2101.538621] ata5: no device found (phy stat 00000100)
-> [ 2101.601492] ata5: status=0x50 { DriveReady SeekComplete }
-> [ 2101.601540] ata5: error=0x01 { AddrMarkNotFound }
-> [ 2101.601578] Assertion failed! qc->flags & ATA_QCFLAG_ACTIVE,drivers/scsi/libata-core.c,ata_qc_complete,line=3623
-> [ 2101.601637] ata5: status=0x50 { DriveReady SeekComplete }
-> [ 2101.601675] ata5: error=0x01 { AddrMarkNotFound }
-> [ 2101.601713] sdd: Current: sense key=0x0
-> [ 2101.601742]     ASC=0x0 ASCQ=0x0
-> [ 2101.601856] Assertion failed! ((in_ptr >> EDMA_REQ_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK) == ((readl(port_mmio + EDMA_REQ_Q_OUT_PTR_OFS) >> EDMA_REQ_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK),drivers/scsi/sata_mv.c,mv_qc_issue,line=1073
-> [ 2131.567227] ata5: Entering mv_eng_timeout
-> [ 2131.567259] mmio_base ffffc20000080000 ap ffff81013b4a5480 qc ffff81013b4a59b8 scsi_cmnd ffff81010b7489c0 &cmnd ffff81010b748a30
-> [ 2131.651702] ata5: no device found (phy stat 00000100)
-> [ 2131.693584] Assertion failed! qc->flags & ATA_QCFLAG_ACTIVE,drivers/scsi/libata-core.c,ata_qc_complete,line=3623
-> [ 2131.693640] ata5: status=0x50 { DriveReady SeekComplete }
-> [ 2131.693677] ata5: error=0x01 { AddrMarkNotFound }
-> [ 2131.693712] sdd: Current: sense key=0x0
-> [ 2131.693741]     ASC=0x0 ASCQ=0x0
-> [ 2131.693856] Assertion failed! ((in_ptr >> EDMA_REQ_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK) == ((readl(port_mmio + EDMA_REQ_Q_OUT_PTR_OFS) >> EDMA_REQ_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK),drivers/scsi/sata_mv.c,mv_qc_issue,line=1073
-> [ 2161.689415] ata5: Entering mv_eng_timeout
-> [ 2161.689447] mmio_base ffffc20000080000 ap ffff81013b4a5480 qc ffff81013b4a59b8 scsi_cmnd ffff81010b7489c0 &cmnd ffff81010b748a30
-> [ 2161.773886] ata5: no device found (phy stat 00000100)
-> [ 2161.815776] ata5: status=0x50 { DriveReady SeekComplete }
-> [ 2161.815823] ata5: error=0x01 { AddrMarkNotFound }
-> [ 2161.815859] Assertion failed! qc->flags & ATA_QCFLAG_ACTIVE,drivers/scsi/libata-core.c,ata_qc_complete,line=3623
-> [ 2161.815917] ata5: status=0x50 { DriveReady SeekComplete }
-> [ 2161.815954] ata5: error=0x01 { AddrMarkNotFound }
-> [ 2161.815989] sdd: Current: sense key=0x0
-> [ 2161.816018]     ASC=0x0 ASCQ=0x0
-> [ 2161.816122] Assertion failed! ((in_ptr >> EDMA_REQ_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK) == ((readl(port_mmio + EDMA_REQ_Q_OUT_PTR_OFS) >> EDMA_REQ_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK),drivers/scsi/sata_mv.c,mv_qc_issue,line=1073
-> [ 2191.781622] ata5: Entering mv_eng_timeout
-> [ 2191.781654] mmio_base ffffc20000080000 ap ffff81013b4a5480 qc ffff81013b4a59b8 scsi_cmnd ffff810116d70b40 &cmnd ffff810116d70bb0
-> [ 2191.866094] ata5: no device found (phy stat 00000100)
-> [ 2191.907980] ata5: status=0x50 { DriveReady SeekComplete }
-> [ 2191.908020] ata5: error=0x01 { AddrMarkNotFound }
-> [ 2191.908056] Assertion failed! qc->flags & ATA_QCFLAG_ACTIVE,drivers/scsi/libata-core.c,ata_qc_complete,line=3623
-> [ 2191.908115] ata5: status=0x50 { DriveReady SeekComplete }
-> [ 2191.908151] ata5: error=0x01 { AddrMarkNotFound }
-> [ 2191.908188] sdd: Current: sense key=0x0
-> [ 2191.908217]     ASC=0x0 ASCQ=0x0
-> [ 2191.908305] Assertion failed! ((in_ptr >> EDMA_REQ_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK) == ((readl(port_mmio + EDMA_REQ_Q_OUT_PTR_OFS) >> EDMA_REQ_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK),drivers/scsi/sata_mv.c,mv_qc_issue,line=1073
-> [ 2221.873842] ata5: Entering mv_eng_timeout
-> [ 2221.877167] mmio_base ffffc20000080000 ap ffff81013b4a5480 qc ffff81013b4a59b8 scsi_cmnd ffff81010b7489c0 &cmnd ffff81010b748a30
->
-> [cut the same over and over]
->
-> --
-> Humilis IT Services and Solutions
-> http://www.humilis.net
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
