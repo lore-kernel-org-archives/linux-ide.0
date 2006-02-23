@@ -1,106 +1,27 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Thu, 23 Feb 2006 18:39:23 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0602231838420.3374@p34>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com>
- <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca>
+From: "Paul Barber" <paulrbarber@gmail.com>
+Subject: Via vt8251 sata IDENTIFY DEVICE
+Date: Thu, 23 Feb 2006 23:40:53 +0000
+Message-ID: <78578fb70602231540p124ec941q95bdb114ec2b56dd@mail.gmail.com>
+Reply-To: paul@ninj.co.uk
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:37817 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S932128AbWBWXj1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Feb 2006 18:39:27 -0500
-In-Reply-To: <200602141300.37118.lkml@rtr.ca>
+Received: from nproxy.gmail.com ([64.233.182.204]:61395 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932129AbWBWXk5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Feb 2006 18:40:57 -0500
+Received: by nproxy.gmail.com with SMTP id c31so128806nfb
+        for <linux-ide@vger.kernel.org>; Thu, 23 Feb 2006 15:40:54 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: David Greaves <david@dgreaves.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-I have reproduced the error with the patched kernel!
+In SATA mode, it seems as though the vt8251 gives a correct response
+to an IDENTIFY DEVICE command for device 0, but an identical response
+for device 1 regardless of attached drive. Is it possible that the
+vt8251 does not check the device bit?
 
-Here it is:
-
-[263864.109854] ata3: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
-0xb/00/00
-[263864.109861] ata3: status=0x51 { DriveReady SeekComplete Error }
-[263864.109866] ata3: error=0x04 { DriveStatusError }
-
-Here is how I got it to error:
-
-$ for i in `seq 1 1000`; do dd if=/dev/zero of=file.$i bs=1M count=$i; 
-done
-
-Now, how to fix? :)
-
-On Tue, 14 Feb 2006, Mark Lord wrote:
-
-> On Tuesday 14 February 2006 12:12, Justin Piszcz wrote:
->> I would like to try the patch too, if available.
->
-> Something like this:  (for 2.6.16-rc3-git2, but should be okay on 2.6.15 also).
->
-> Untested:  include the original SCSI opcode in printk's for libata SCSI errors,
-> to help understand where the errors are coming from.
->
-> Signed-Off-By:  Mark Lord <mlord@pobox.com>
->
-> --- linux/drivers/scsi/libata-scsi.c.orig	2006-02-12 19:27:25.000000000 -0500
-> +++ linux/drivers/scsi/libata-scsi.c	2006-02-14 12:54:17.000000000 -0500
-> @@ -420,6 +420,7 @@
->  *	@sk: the sense key we'll fill out
->  *	@asc: the additional sense code we'll fill out
->  *	@ascq: the additional sense code qualifier we'll fill out
-> + *	@opcode: the original SCSI command opcode byte
->  *
->  *	Converts an ATA error into a SCSI error.  Fill out pointers to
->  *	SK, ASC, and ASCQ bytes for later use in fixed or descriptor
-> @@ -429,7 +430,7 @@
->  *	spin_lock_irqsave(host_set lock)
->  */
-> void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk, u8 *asc,
-> -			u8 *ascq)
-> +			u8 *ascq, u8 opcode)
-> {
-> 	int i;
->
-> @@ -508,8 +509,8 @@
-> 		}
-> 	}
-> 	/* No error?  Undecoded? */
-> -	printk(KERN_WARNING "ata%u: no sense translation for status: 0x%02x\n",
-> -	       id, drv_stat);
-> +	printk(KERN_WARNING "ata%u: no sense translation for op=0x%02x status: 0x%02x\n",
-> +	       id, opcode, drv_stat);
->
-> 	/* For our last chance pick, use medium read error because
-> 	 * it's much more common than an ATA drive telling you a write
-> @@ -520,8 +521,8 @@
-> 	*ascq = 0x04; /*  "auto-reallocation failed" */
->
->  translate_done:
-> -	printk(KERN_ERR "ata%u: translated ATA stat/err 0x%02x/%02x to "
-> -	       "SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n", id, drv_stat, drv_err,
-> +	printk(KERN_ERR "ata%u: translated op=0x%02x ATA stat/err 0x%02x/%02x to "
-> +	       "SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n", id, opcode, drv_stat, drv_err,
-> 	       *sk, *asc, *ascq);
-> 	return;
-> }
-> @@ -562,7 +563,7 @@
-> 	 */
-> 	if (tf->command & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
-> 		ata_to_sense_error(qc->ap->id, tf->command, tf->feature,
-> -				   &sb[1], &sb[2], &sb[3]);
-> +				   &sb[1], &sb[2], &sb[3], cmd->cmnd[0]);
-> 		sb[1] &= 0x0f;
-> 	}
->
-> @@ -637,7 +638,7 @@
-> 	 */
-> 	if (tf->command & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
-> 		ata_to_sense_error(qc->ap->id, tf->command, tf->feature,
-> -				   &sb[2], &sb[12], &sb[13]);
-> +				   &sb[2], &sb[12], &sb[13], cmd->cmnd[0]);
-> 		sb[2] &= 0x0f;
-> 	}
->
->
+This was tested using Via's sata_via.c.patch available here:
+http://www.viaarena.com/Driver/via%20fc4.0%20sata&pata%20controller%20for%20software%20raid%20appnote%20ver0.8.gz
