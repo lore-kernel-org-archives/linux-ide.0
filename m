@@ -1,33 +1,32 @@
-From: Kumar Gala <galak@kernel.crashing.org>
-Subject: IDE timing issue?
-Date: Fri, 24 Feb 2006 11:50:35 -0600 (CST)
-Message-ID: <Pine.LNX.4.44.0602241140570.2981-100000@gate.crashing.org>
+From: Jon K Hellan <hellan@acm.org>
+Subject: Re: sata_sil.c, 3512 and SIL_QUIRK_MOD15WRITE
+Date: Fri, 24 Feb 2006 19:07:19 +0100
+Message-ID: <1140804439.24729.0.camel@localhost>
+References: <loom.20060222T182150-518@post.gmane.org>
+	 <43FD18F5.20002@gmail.com> <1140677987.11943.16.camel@localhost>
+	 <20060223071921.GA24592@htj.dyndns.org>
+	 <1140764920.15855.9.camel@localhost>  <43FEB413.7060800@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:9368 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S932382AbWBXSAN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Feb 2006 13:00:13 -0500
+Received: from tyholt.uninett.no ([158.38.60.10]:46814 "EHLO tyholt.uninett.no")
+	by vger.kernel.org with ESMTP id S932410AbWBXSHg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Feb 2006 13:07:36 -0500
+In-Reply-To: <43FEB413.7060800@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
-I'm seeing a timing issue that I was hoping to get some help with.
+On Fri, 2006-02-24 at 16:21 +0900, Tejun Heo wrote:
 
-I've got a simple compact flash IDE device connected in True IDE mode.  
-I'm seeing "lost interrupt" messages when I try a simple "mount 
-/dev/hda1".
+> So, you're confirming that this workaround fixes your lockup on 3152 for
+> both ST3200822AS and SP2504C, right?
 
-If I had a small amount of delay in udelay(1) in OUTB things seem to work 
-ok.
+I've now tested both disks, and can confirm that lockups are fixed for
+both. Thanks.
 
-I was wondering about any idea's about what to look at next.  It would 
-seem that some control register writes are occuring two fast, is there 
-some setting to let the higher layer IDE control know to slow things down 
-a little?
+Jon
 
-thanks
-
- - kumar
 
