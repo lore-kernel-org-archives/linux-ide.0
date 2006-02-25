@@ -1,71 +1,80 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 3/3] sata_sil: clean up and add errata/workaround documentation
-Date: Sat, 25 Feb 2006 16:36:52 +0900
-Message-ID: <44000914.4050207@gmail.com>
-References: <11408431501105-git-send-email-htejun@gmail.com> <4400074F.3020005@pobox.com>
+From: "Christiaan den Besten" <chris@scorpion.nl>
+Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4, SATA 300 TX4
+Date: Sat, 25 Feb 2006 11:52:21 +0100
+Message-ID: <011f01c639f9$8dc86bc0$3d64880a@speedy>
+References: <43FFAE3D.7010002@physics.harvard.edu> <44000036.7070403@eyal.emu.id.au>
+Reply-To: "Christiaan den Besten" <chris@scorpion.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.204]:46553 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932446AbWBYHfr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Feb 2006 02:35:47 -0500
-Received: by zproxy.gmail.com with SMTP id 14so547407nzn
-        for <linux-ide@vger.kernel.org>; Fri, 24 Feb 2006 23:35:46 -0800 (PST)
-In-Reply-To: <4400074F.3020005@pobox.com>
+Received: from vmx03.prolocation.net ([81.23.230.33]:38080 "EHLO
+	vmx03.prolocation.net") by vger.kernel.org with ESMTP
+	id S1030204AbWBYK4o (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 25 Feb 2006 05:56:44 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, hellan@acm.org, Carlos.Pardo@siliconimage.com, Raymond.Liu@siliconimage.com
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>, Milan Kupcevic <milan@physics.harvard.edu>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@rustcorp.com.au, torvalds@osdl.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
-> 
->> This patch collects into one place/update errata documentattion and
->> adds description of 3114 R_ERR on DMA activate FIS errata.
+Hi !
+
+We have several of these boards in use [SATA 300 TX4] (bought over time .. not in one batch). All of them have the ordering as 
+described below. So another vote for "Please fix!" :)
+
+bye,
+Chris
+
+----- Original Message ----- 
+From: "Eyal Lebedinsky" <eyal@eyal.emu.id.au>
+To: "Milan Kupcevic" <milan@physics.harvard.edu>
+Cc: "Jeff Garzik" <jgarzik@pobox.com>; <linux-ide@vger.kernel.org>; <linux-scsi@vger.kernel.org>; <linux-kernel@vger.kernel.org>; 
+<trivial@rustcorp.com.au>; <torvalds@osdl.org>
+Sent: Saturday, February 25, 2006 7:59 AM
+Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4, SATA 300 TX4
+
+
+> Milan Kupcevic wrote:
+>> From: Milan Kupcevic <milan@physics.harvard.edu>
 >>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> Fix Promise SATAII 150 TX4 (PDC40518) and Promise SATA 300 TX4
+>> (PDC40718-GP) wrong port enumeration order that makes it (nearly)
+>> impossible to deal with boot problems using two or more drives.
 >>
+>> Signed-off-by: Milan Kupcevic <milan@physics.harvard.edu>
 >> ---
 >>
->>  drivers/scsi/sata_sil.c |   97 
->> ++++++++++++++++++++++++++++++++++++-----------
->>  1 files changed, 75 insertions(+), 22 deletions(-)
+>> The current kernel driver assumes:
 >>
->> 6b1cc9dff33ae20157946ae8b06f1a11079b4af6
->> diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
->> index 9face3c..75784cd 100644
->> --- a/drivers/scsi/sata_sil.c
->> +++ b/drivers/scsi/sata_sil.c
->> @@ -30,8 +30,79 @@
->>   *  Documentation for SiI 3112:
->>   *  
->> http://gkernel.sourceforge.net/specs/sii/3112A_SiI-DS-0095-B2.pdf.bz2
->>   *
->> + *  Documentation for SiI 3114:
->> + *  http://gkernel.sourceforge.net/specs/sii/sii-0680a-v1.31.pdf.bz2
->> + *
->>   *  Other errata and documentation available under NDA.
+>> port 1 - scsi3
+>> port 2 - scsi1
+>> port 3 - scsi0
+>> port 4 - scsi2
+>
+> I totally agree with the fact that the Linux driver gets the ports wrong
+> when compared to the BIOS, Windows and surely contradicts the port
+> numbers printed on the board. I doubt we all got samples on the one
+> bad batch...
+>
+> It *is* a real problem and if the solution is correct then I support it.
+>
+> Maybe we need a quick feedback from current users: do you guys find
+> that the ports are detected as they are labelled (white silk screen)
+> on the board or do they show up out of order (as listed above by
+> Milan)?
+>
+> -- 
+> Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+> attach .zip as .dat
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
+>
 > 
-> 
-> I'll apply patches 1-2.
-> 
-> For this patch #3, two comments:
-> 
-> * the above URL points to CMD680 docs, not 3114
 
-Oops. :-p
-
-> 
-> * I'm unconvinced that long exposition should be in the .c file.  I 
-> think its far better to put it into Documentation/DocBook/libata.tmpl. I 
-> have some long term plans to add more hardware details to the docbook 
-> docs, infact.
-
-Hmmm... I don't know. You know I'm not a big fan of docbook docs mainly 
-because of accessibility. It's your call. Anyways, it would be nice to 
-keep up-to-date information regarding libata hardware quirks in some 
-easily-accessible place (wiki?).
-
--- 
-tejun
