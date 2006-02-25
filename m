@@ -1,63 +1,33 @@
-From: "kacer" <kacerxy@seznam.cz>
-Subject: RE: Kernel driver for Sil 3112 (sata_sil.c) problems
-Date: Sat, 25 Feb 2006 14:31:15 +0100
-Message-ID: <20060225133317.A007B37B75@relay.netbox.cz>
-References: <44005696.9040705@gmail.com>
+From: Matthias Andree <matthias.andree@gmx.de>
+Subject: Re: [libata] CD on PATA: "ReadCD MMC 12"  command fails
+Date: Sat, 25 Feb 2006 16:13:16 +0100
+Message-ID: <20060225151315.GA21887@merlin.emma.line.org>
+References: <20060224074310.GA1311@pc11.op.pod.cz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay.netbox.cz ([83.240.0.201]:5600 "EHLO relay.netbox.cz")
-	by vger.kernel.org with ESMTP id S1030247AbWBYNdY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Feb 2006 08:33:24 -0500
-In-Reply-To: <44005696.9040705@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030266AbWBYPNV@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060224074310.GA1311@pc11.op.pod.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
-To: 'Tejun Heo' <htejun@gmail.com>, 'Jeff Garzik' <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
 
-Hi,
-the controller is Kouwell 571S-4 , it is based on 2 chips Sil 3112, each
-chip provides 2 ports. I don't think it's matter of power or heat, server is
-huge, but has good cooling and 550 W Enermax PSU. My friend has same
-problems and he tested it, problem persists no matter how many HDDs (1-4) or
-PCI cards in computer.
+On Fri, 24 Feb 2006, =?ISO-8859-2?Q?V=EDt=ECzslav?= Samel wrote:
 
-For Tejun: I will provide that list from lspci as soon as machine will be
-up, unfortunately machine's OS is stucked in error and I can't reset it now.
-
-For more info: there is Gentoo linux on box, most packages on latest builds,
-kernel is from vanilla sources with custom configuration, but I tried also
-several kernels from gentoo sources.
-
-Jiri Bartosik
-
-
------Original Message-----
-From: Tejun Heo [mailto:htejun@gmail.com] 
-Sent: Saturday, February 25, 2006 2:08 PM
-To: Jeff Garzik
-Cc: kacer; linux-ide@vger.kernel.org
-Subject: Re: Kernel driver for Sil 3112 (sata_sil.c) problems
-
-Jeff Garzik wrote:
-> kacer wrote:
+>   I'm trying to rip some music CD with cdda2wav, but that fails. I have "LG
+> GSA-4165B" (PATA drive) connected on 8086:24db (Intel ICH5 IDE controller)
+> using ata_piix.
 > 
->> Dear Jeff,
->> sorry for disturbing you, but I tried nearly everything to get this SATA
->> controller (Silicon Image Sil 3112) working, but it always crashes while
->> writing data (few hundred MBs or few GBs). In dmesg I can see 
->> something like
->> that:
+> cdda2wav first fails with ENOMEM (16 times) and then with EDOM till the end of
+> the track in response to the "ReadCD MMC 12" (code 0xbe) SG_IO command (see
+> attached output and strace). Ripping on plain SCSI CD drive works OK.
 > 
-> 
-> hrm, sounds like heat or power...
-> 
+> Tested on 2.6.16-rc4 and alans 2.6.16-rc4-ide2. I also applied your fix
+> mailed to LKML on Tue, 21 Feb 2006 00:17:14 -0500.
 
-He said he was using 2 out of 4 ports. Gotta be 3114. It *might* be 
-R_ERR on DMA activate FIS.
+Is cdda2wav installed setuid-root? If so, try removing that flag and
+running cdda2wav with sudo. The ENOMEM might be related to libscg
+making bogus assumptions about mlockall().
 
 -- 
-tejun
-
+Matthias Andree
