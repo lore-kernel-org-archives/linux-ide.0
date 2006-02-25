@@ -1,42 +1,48 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET, RESEND] sata_sil: R_ERR on DMA activate FIS errata workaround
-Date: Sat, 25 Feb 2006 13:52:29 +0900
-Message-ID: <11408431492856-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
+ SATA 300 TX4
+Date: Sat, 25 Feb 2006 17:59:02 +1100
+Message-ID: <44000036.7070403@eyal.emu.id.au>
+References: <43FFAE3D.7010002@physics.harvard.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.197]:57191 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932672AbWBYEvY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Feb 2006 23:51:24 -0500
-Received: by wproxy.gmail.com with SMTP id 58so766618wri
-        for <linux-ide@vger.kernel.org>; Fri, 24 Feb 2006 20:51:23 -0800 (PST)
-In-Reply-To: 
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932419AbWBYG7R@vger.kernel.org>
+In-Reply-To: <43FFAE3D.7010002@physics.harvard.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Milan Kupcevic <milan@physics.harvard.edu>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@rustcorp.com.au, torvalds@osdl.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org, hellan@acm.org, Carlos.Pardo@siliconimage.com, Raymond.Liu@siliconimage.com, htejun@gmail.com
 
-Hello, Jeff.
+Milan Kupcevic wrote:
+> From: Milan Kupcevic <milan@physics.harvard.edu>
+> 
+> Fix Promise SATAII 150 TX4 (PDC40518) and Promise SATA 300 TX4
+> (PDC40718-GP) wrong port enumeration order that makes it (nearly)
+> impossible to deal with boot problems using two or more drives.
+> 
+> Signed-off-by: Milan Kupcevic <milan@physics.harvard.edu>
+> ---
+> 
+> The current kernel driver assumes:
+> 
+> port 1 - scsi3
+> port 2 - scsi1
+> port 3 - scsi0
+> port 4 - scsi2
 
-This patchset implements workaround for 3512/3114 R_ERR on DMA
-activate FIS workaround.  I've confirmed the lockup and workaround on
-SiI3114 with ST3120026AS (FW 3.18) and Jon Kare confirmed it on 3512
-with ST3200822AS and SP2504C.  This is also consistent with a number
-of lock up reports from 3512/3114 users that I personally received and
-seen on linux-ide.
+I totally agree with the fact that the Linux driver gets the ports wrong
+when compared to the BIOS, Windows and surely contradicts the port
+numbers printed on the board. I doubt we all got samples on the one
+bad batch...
 
-Mod15Write workaround masks this errata and, without m15w workaround,
-this errata triggers for wider range of drives (including 7200.7's).
-This seems to be the main reason for overgrowth of m15w blacklist.
+It *is* a real problem and if the solution is correct then I support it.
 
-The m15w workaround was applied to 3512 and 3114 until 2.6.13.
-2.6.14-rc1 removed it causing lockups for 3512/3114.  I think this is
-a regression (and a very bothering one) and hope this fix can slip
-into 2.6.16.
+Maybe we need a quick feedback from current users: do you guys find
+that the ports are detected as they are labelled (white silk screen)
+on the board or do they show up out of order (as listed above by
+Milan)?
 
-Thanks.
-
---
-tejun
-
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+	attach .zip as .dat
