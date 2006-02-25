@@ -1,33 +1,36 @@
-From: Matthias Andree <matthias.andree@gmx.de>
-Subject: Re: [libata] CD on PATA: "ReadCD MMC 12"  command fails
-Date: Sat, 25 Feb 2006 16:13:16 +0100
-Message-ID: <20060225151315.GA21887@merlin.emma.line.org>
-References: <20060224074310.GA1311@pc11.op.pod.cz>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Sat, 25 Feb 2006 10:32:34 -0500
+Message-ID: <44007892.9090002@rtr.ca>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <Pine.LNX.4.64.0602231838420.3374@p34>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030266AbWBYPNV@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060224074310.GA1311@pc11.op.pod.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([64.26.128.89]:31944 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1161009AbWBYPcb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Feb 2006 10:32:31 -0500
+In-Reply-To: <Pine.LNX.4.64.0602231838420.3374@p34>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: David Greaves <david@dgreaves.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Fri, 24 Feb 2006, =?ISO-8859-2?Q?V=EDt=ECzslav?= Samel wrote:
-
->   I'm trying to rip some music CD with cdda2wav, but that fails. I have "LG
-> GSA-4165B" (PATA drive) connected on 8086:24db (Intel ICH5 IDE controller)
-> using ata_piix.
+Justin Piszcz wrote:
+> I have reproduced the error with the patched kernel!
 > 
-> cdda2wav first fails with ENOMEM (16 times) and then with EDOM till the end of
-> the track in response to the "ReadCD MMC 12" (code 0xbe) SG_IO command (see
-> attached output and strace). Ripping on plain SCSI CD drive works OK.
+> Here it is:
 > 
-> Tested on 2.6.16-rc4 and alans 2.6.16-rc4-ide2. I also applied your fix
-> mailed to LKML on Tue, 21 Feb 2006 00:17:14 -0500.
+> [263864.109854] ata3: translated ATA stat/err 0x51/04 to SCSI 
+> SK/ASC/ASCQ 0xb/00/00
+> [263864.109861] ata3: status=0x51 { DriveReady SeekComplete Error }
+> [263864.109866] ata3: error=0x04 { DriveStatusError }
 
-Is cdda2wav installed setuid-root? If so, try removing that flag and
-running cdda2wav with sudo. The ENOMEM might be related to libscg
-making bogus assumptions about mlockall().
+Nope.. patch not present, as otherwise the line above would have
+read something like this:
 
--- 
-Matthias Andree
+ > [263864.109854] ata3: translated op=0x21 ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+
+So we didn't get the extra info since the patch wasn't present.
+
+Cheers
