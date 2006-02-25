@@ -1,95 +1,79 @@
-From: Benjamin Livelsberger <livebe01@nist.gov>
-Subject: HDIO_DRIVE_TASKFILE questions
-Date: Fri, 24 Feb 2006 17:27:56 -0500
-Message-ID: <751C3194-99DB-40D7-84EA-E3D93F763197@nist.gov>
-Mime-Version: 1.0 (Apple Message framework v746.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Milan Kupcevic <milan@physics.harvard.edu>
+Subject: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4, SATA
+ 300 TX4
+Date: Fri, 24 Feb 2006 20:09:17 -0500
+Message-ID: <43FFAE3D.7010002@physics.harvard.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rimp2.nist.gov ([129.6.16.227]:45293 "EHLO smtp.nist.gov")
-	by vger.kernel.org with ESMTP id S932617AbWBXW20 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Feb 2006 17:28:26 -0500
-Received: from postmark.nist.gov (pushme.nist.gov [129.6.16.92])
-	by smtp.nist.gov (8.13.1/8.13.1) with ESMTP id k1OMSNbW030356
-	for <linux-ide@vger.kernel.org>; Fri, 24 Feb 2006 17:28:23 -0500
-Received: from [129.6.58.247] ([129.6.58.247])
-	by postmark.nist.gov (8.12.5/8.12.5) with ESMTP id k1OMRvfH027249
-	for <linux-ide@vger.kernel.org>; Fri, 24 Feb 2006 17:27:57 -0500 (EST)
+Received: from physics.harvard.edu ([128.103.101.20]:45495 "EHLO
+	physics.harvard.edu") by vger.kernel.org with ESMTP id S964832AbWBYBJT
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 24 Feb 2006 20:09:19 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@rustcorp.com.au, torvalds@osdl.org
 
-Hi,
+From: Milan Kupcevic <milan@physics.harvard.edu>
 
-I have a question about the HDIO_DRIVE_TASKFILE ioctl.  My goal is to  
-be able to send any command defined in the ATAPI-7 spec to a hard  
-drive.  I am starting by trying to get the IDENTIFY DEVICE command to  
-work and will move on to more advanced commands like READ DMA, READ  
-SECTORS, WRITE DMA and WRITE SECTORS.
+Fix Promise SATAII 150 TX4 (PDC40518) and Promise SATA 300 TX4 
+(PDC40718-GP) wrong port enumeration order that makes it (nearly) 
+impossible to deal with boot problems using two or more drives.
 
-Can anyone suggest good resources for this endeavor?  I've been  
-getting most of my information from  Documentation/ioctls/hdio.txt  
-and the hdparm and smartmontools source code.
+Signed-off-by: Milan Kupcevic <milan@physics.harvard.edu>
+---
 
-When I run my program the ioctl returns a -1 (indicating an error)  
-and errno = EFAULT (14).
+The current kernel driver assumes:
 
-dmesg looks like:
-Feb 24 16:54:29 kidd kernel: (in generic_ide_ioctl) IOCTL = 0x5325
-Feb 24 16:54:30 kidd kernel: (in generic_ide_ioctl) IOCTL = 0x301
-Feb 24 16:54:30 kidd kernel: (in generic_ide_ioctl) IOCTL = 0x30D
-Feb 24 16:54:30 kidd kernel: (in generic_ide_ioctl) IOCTL = 0x31D
-Feb 24 16:54:30 kidd kernel: hda: in/out command without data
-Feb 24 16:54:31 kidd kernel: (in generic_ide_ioctl) IOCTL = 0x5326
+port 1 - scsi3
+port 2 - scsi1
+port 3 - scsi0
+port 4 - scsi2
 
-I am running the 2.6.11-1.0 kernel.  Here's my code:
+Having 4 hard drives connected to the controller grub recognizes the 
+port 1 connected drive as "(hd0)" but kernel recognizes the port 3 
+connected drive as scsi0:0:0:0 (/dev/sda). There is no clean way to make 
+it boot correctly.
 
-struct {
-     ide_task_request_t req_task;
-     int outbuf[0];
-     int inbuf[512];
-   } task;
+ sata_promise.c |   16 ++++++++++------
+ 1 files changed, 10 insertions(+), 6 deletions(-)
 
-   memset(&task, 0, sizeof(task));
-   task_struct_t *taskfile = (task_struct_t *) task.req_task.io_ports;
+diff -uprN ./drivers/scsi/sata_promise.c 
+../linux/drivers/scsi/sata_promise.c
+--- ./drivers/scsi/sata_promise.c       2006-02-17 17:23:45.000000000 -0500
++++ ../linux/drivers/scsi/sata_promise.c        2006-02-24 
+19:35:16.000000000 -0500
+@@ -707,14 +707,18 @@ static int pdc_ata_init_one (struct pci_
+ 
+        /* notice 4-port boards */
+        switch (board_idx) {
+-       case board_20319:
++       case board_20319: /* tx4  */
+                        probe_ent->n_ports = 4;
+ 
+-               pdc_ata_setup_port(&probe_ent->port[2], base + 0x300);
+-               pdc_ata_setup_port(&probe_ent->port[3], base + 0x380);
+-
+-               probe_ent->port[2].scr_addr = base + 0x600;
+-               probe_ent->port[3].scr_addr = base + 0x700;
++               pdc_ata_setup_port(&probe_ent->port[0], base + 0x380);
++               pdc_ata_setup_port(&probe_ent->port[1], base + 0x280);
++               pdc_ata_setup_port(&probe_ent->port[2], base + 0x200);
++               pdc_ata_setup_port(&probe_ent->port[3], base + 0x300);
++
++               probe_ent->port[0].scr_addr = base + 0x700;
++               probe_ent->port[1].scr_addr = base + 0x500;
++               probe_ent->port[2].scr_addr = base + 0x400;
++               probe_ent->port[3].scr_addr = base + 0x600;
+                break;
+        case board_2037x:
+                probe_ent->n_ports = 2;
 
-   int code = 0;
-
-   taskfile->data           = 0;
-   taskfile->feature        = 0;
-   taskfile->sector_count   = 0;
-   taskfile->sector_number  = 0;
-   taskfile->low_cylinder   = 0;
-   taskfile->high_cylinder  = 0;
-   taskfile->device_head    = 0x10;
-   taskfile->command        = 0xEC;
-
-   task.req_task.data_phase  = TASKFILE_OUT; /*  data phase (see  
-hdio.txt for details)*/
-   task.req_task.req_cmd     = IDE_DRIVE_TASK_IN; /* command type */
-
-   task.req_task.out_size = sizeof(task.outbuf);
-   task.req_task.in_size  = sizeof(task.inbuf);
-
-   code = ioctl(dd->fd, HDIO_DRIVE_TASKFILE, &task);
-   if (code){
-     printf("ioctl(HDIO_DRIVE_TASKFILE) status\t= %d\nerrno\t= %d\n",  
-code, errno);
-     return 1;
-   }
-
-Ideas? Should I be using TASKFILE_IN and IDE_DRIVE_TASK_IN for the  
-data_phase and req_cmd fields since IDENTIFY DEVICE does not write to  
-the drive, but instead receives data from it?  When I tried this I  
-lost access to the drive and dmesg kept giving me: "kernel: hda: lost  
-interrupt."
-
-thanks,
-
-Benjamin Livelsberger
-Computer Scientist
-Information Technology Laboratory,
-National Institute of Standards and Technology
-301.975.4411
-
+-- 
+Milan Kupcevic
+System Administrator
+Harvard University
+Department of Physics
 
