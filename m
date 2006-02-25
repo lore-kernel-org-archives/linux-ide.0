@@ -1,163 +1,64 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Sat, 25 Feb 2006 11:34:12 +0000
-Message-ID: <440040B4.8030808@dgreaves.com>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Kernel driver for Sil 3112 (sata_sil.c) problems
+Date: Sat, 25 Feb 2006 21:25:43 +0900
+Message-ID: <44004CC7.8040207@gmail.com>
+References: <20060224194919.6B81F37B09@relay.netbox.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:59109 "EHLO mail.ukfsn.org")
-	by vger.kernel.org with ESMTP id S1030220AbWBYLeG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Feb 2006 06:34:06 -0500
-In-Reply-To: <200602141300.37118.lkml@rtr.ca>
+Received: from zproxy.gmail.com ([64.233.162.202]:18889 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932688AbWBYMZs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Feb 2006 07:25:48 -0500
+Received: by zproxy.gmail.com with SMTP id 16so581859nzp
+        for <linux-ide@vger.kernel.org>; Sat, 25 Feb 2006 04:25:47 -0800 (PST)
+In-Reply-To: <20060224194919.6B81F37B09@relay.netbox.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: kacer <kacerxy@seznam.cz>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
+kacer wrote:
+> Dear Jeff,
+> sorry for disturbing you, but I tried nearly everything to get this SATA
+> controller (Silicon Image Sil 3112) working, but it always crashes while
+> writing data (few hundred MBs or few GBs). In dmesg I can see something like
+> that:
+> 
+> end_request: I/O error, dev sdb, sector 459620760 
+> Buffer I/O error on device dm-3, logical block 155125763 
+> lost page write due to I/O error on dm-3 
+> ATA: abnormal status 0xD8 on port 0xE08180C7 
+> ATA: abnormal status 0xD8 on port 0xE08180C7 
+> ATA: abnormal status 0xD8 on port 0xE08180C7 
+> 
+> ata2: command 0x35 timeout, stat 0x58 host_stat 0x0 
+> ata2: status=0x58 { DriveReady SeekComplete DataRequest } 
+> SCSI error : <1 0 0 0> return code = 0x8000002 
+> sdb: Current: sense key=0xb 
+>     ASC=0x47 ASCQ=0x0 
+> end_request: I/O error, dev sdb, sector 459620744 
+> Buffer I/O error on device dm-3, logical block 155125761 
+> lost page write due to I/O error on dm-3 
+> ATA: abnormal status 0x58 on port 0xE08180C7 
+> ATA: abnormal status 0x58 on port 0xE08180C7 
+> ATA: abnormal status 0x58 on port 0xE08180C7
+> 
+> And same problems with /dev/sda. In this moment system is locked and nearly
+> not working, the only thing what I can do is HW reset...
+> 
+> I have Sil 3112 in Asus TUSL2-C (i815) motherboard, 2x256 MB RAM, there are
+> 2 WD Raid Edition 400 GB drives on controller (2 of 4 ports used), BIOS of
+> controller is 4.2.0, I tried several kernels from 2.6.12 up to 2.6.15.4.
+> Nothing changed and I'm still getting same error messages. If you need some
+> other additional info or cooperation, just write me, I'm feeling desperate,
+> I don't know that to do to get that working. I tried to search the internet
+> for some suggestions, but I was not able to fix the the problems.
+> 
 
->On Tuesday 14 February 2006 12:12, Justin Piszcz wrote:
->  
->
->>I would like to try the patch too, if available.
->>    
->>
->
->Something like this:  (for 2.6.16-rc3-git2, but should be okay on 2.6.15 also).
->
->Untested:  include the original SCSI opcode in printk's for libata SCSI errors,
->to help understand where the errors are coming from.
->
->Signed-Off-By:  Mark Lord <mlord@pobox.com>
->  
->
-Thanks Mark - I've finally gotten this patch applied.
+Hello, Jiri.
 
-With smartd disabled and no smart commands issued, a readonly badblocks
-scan of /dev/sdb2 shows no problems and now gives:
-Feb 25 10:38:31 haze kernel: ata2: status=0x51 { DriveReady SeekComplete
-Error }
-Feb 25 10:38:32 haze kernel: ata2: no sense translation for op=0x28
-status: 0x51
-Feb 25 10:38:32 haze kernel: ata2: status=0x51 { DriveReady SeekComplete
-Error }
-Feb 25 10:38:35 haze kernel: ata2: no sense translation for op=0x28
-status: 0x51
-hundreds of times.
-
-and during boot I can get:
-ata2: no sense translation for op=0x28 status: 0x51
-ata2: translated op=0x28 ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
-ata2: status=0x51 { DriveReady SeekComplete Error }
-Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
-ata2: no sense translation for op=0x28 status: 0x51
-ata2: translated op=0x28 ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
-ata2: status=0x51 { DriveReady SeekComplete Error }
-ata2: no sense translation for op=0x28 status: 0x51
-ata2: translated op=0x28 ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
-ata2: status=0x51 { DriveReady SeekComplete Error }
-
-Subsequently a
- smartclt -data -a /dev/sdb
-shows no errors.
-So could this be a faulty disk that smart shows is OK and shows no read
-or write errors?
-
-The other problem I noticed was that
- smartctl -o on -data /dev/sda
-still just gives:
-Feb 25 10:51:47 haze kernel: ata1: PIO error
-Feb 25 10:51:47 haze kernel: ata1: status=0x51 { DriveReady SeekComplete
-Error }
-Feb 25 10:51:47 haze kernel: ata1: error=0x04 { DriveStatusError }
-Feb 25 10:51:47 haze kernel: ata1: PIO error
-Feb 25 10:51:47 haze kernel: ata1: status=0x51 { DriveReady SeekComplete
-Error }
-Feb 25 10:51:47 haze kernel: ata1: error=0x04 { DriveStatusError }
-Feb 25 10:51:47 haze kernel: ata1: PIO error
-many times.
-
-I get similar problems for all the drives under both sata_sil and sata_via.
-
-
-Linux haze 2.6.15patchsata #6 PREEMPT Fri Feb 24 19:15:07 UTC 2006 i686
-GNU/Linux
-
-
-libata version 1.20 loaded.
-sata_sil 0000:00:0a.0: version 0.9
-ACPI: PCI Interrupt 0000:00:0a.0[A] -> GSI 16 (level, low) -> IRQ 17
-ata1: SATA max UDMA/100 cmd 0xF8804080 ctl 0xF880408A bmdma 0xF8804000
-irq 17
-ata2: SATA max UDMA/100 cmd 0xF88040C0 ctl 0xF88040CA bmdma 0xF8804008
-irq 17
-ata1: dev 0 cfg 49:2f00 82:7869 83:7d09 84:4043 85:7869 86:3c01 87:4043
-88:203f
-ata1: dev 0 ATA-7, max UDMA/100, 390721968 sectors: LBA48
-ata1: dev 0 configured for UDMA/100
-scsi0 : sata_sil
-ata2: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4063 85:7c69 86:3e01 87:4063
-88:007f
-ata2: dev 0 ATA-7, max UDMA/133, 398297088 sectors: LBA48
-ata2: dev 0 configured for UDMA/100
-scsi1 : sata_sil
-  Vendor: ATA       Model: Maxtor 6B200M0    Rev: BANC
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-  Vendor: ATA       Model: Maxtor 6B200M0    Rev: BANC
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-sata_via 0000:00:0f.0: version 1.1
-ACPI: PCI Interrupt 0000:00:0f.0[B] -> GSI 20 (level, low) -> IRQ 16
-sata_via 0000:00:0f.0: routed to hard irq line 0
-ata3: SATA max UDMA/133 cmd 0x9800 ctl 0x9402 bmdma 0x8400 irq 16
-ata4: SATA max UDMA/133 cmd 0x9000 ctl 0x8802 bmdma 0x8408 irq 16
-ata3: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3468 86:3c01 87:4003
-88:407f
-ata3: dev 0 ATA-6, max UDMA/133, 312581808 sectors: LBA48
-ata3: dev 0 configured for UDMA/133
-scsi2 : sata_via
-ata4: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4063 85:7c68 86:3e01 87:4063
-88:407f
-ata4: dev 0 ATA-7, max UDMA/133, 398297088 sectors: LBA48
-ata4: dev 0 configured for UDMA/133
-scsi3 : sata_via
-  Vendor: ATA       Model: ST3160023AS       Rev: 3.18
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-  Vendor: ATA       Model: Maxtor 6B200M0    Rev: BANC
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sda: 390721968 512-byte hdwr sectors (200050 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 390721968 512-byte hdwr sectors (200050 MB)
-SCSI device sda: drive cache: write back
- sda: sda1
-sd 0:0:0:0: Attached scsi disk sda
-SCSI device sdb: 398297088 512-byte hdwr sectors (203928 MB)
-SCSI device sdb: drive cache: write back
-SCSI device sdb: 398297088 512-byte hdwr sectors (203928 MB)
-SCSI device sdb: drive cache: write back
- sdb: sdb1 sdb2
-sd 1:0:0:0: Attached scsi disk sdb
-SCSI device sdc: 312581808 512-byte hdwr sectors (160042 MB)
-SCSI device sdc: drive cache: write back
-SCSI device sdc: 312581808 512-byte hdwr sectors (160042 MB)
-SCSI device sdc: drive cache: write back
- sdc: sdc1 sdc2 sdc3 sdc4
-sd 2:0:0:0: Attached scsi disk sdc
-SCSI device sdd: 398297088 512-byte hdwr sectors (203928 MB)
-SCSI device sdd: drive cache: write back
-SCSI device sdd: 398297088 512-byte hdwr sectors (203928 MB)
-SCSI device sdd: drive cache: write back
- sdd: sdd1 sdd2
-sd 3:0:0:0: Attached scsi disk sdd
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-sd 1:0:0:0: Attached scsi generic sg1 type 0
-sd 2:0:0:0: Attached scsi generic sg2 type 0
-sd 3:0:0:0: Attached scsi generic sg3 type 0
-
-
-
-David
+'lspci -n' please.
 
 -- 
-
+tejun
