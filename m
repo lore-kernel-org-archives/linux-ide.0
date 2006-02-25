@@ -1,22 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Kernel driver for Sil 3112 (sata_sil.c) problems
-Date: Sat, 25 Feb 2006 22:07:34 +0900
-Message-ID: <44005696.9040705@gmail.com>
-References: <20060224194919.6B81F37B09@relay.netbox.cz> <44005308.8030308@pobox.com>
+From: "kacer" <kacerxy@seznam.cz>
+Subject: RE: Kernel driver for Sil 3112 (sata_sil.c) problems
+Date: Sat, 25 Feb 2006 14:31:15 +0100
+Message-ID: <20060225133317.A007B37B75@relay.netbox.cz>
+References: <44005696.9040705@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.199]:24180 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932707AbWBYNHj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Feb 2006 08:07:39 -0500
-Received: by zproxy.gmail.com with SMTP id 14so585183nzn
-        for <linux-ide@vger.kernel.org>; Sat, 25 Feb 2006 05:07:38 -0800 (PST)
-In-Reply-To: <44005308.8030308@pobox.com>
+Received: from relay.netbox.cz ([83.240.0.201]:5600 "EHLO relay.netbox.cz")
+	by vger.kernel.org with ESMTP id S1030247AbWBYNdY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Feb 2006 08:33:24 -0500
+In-Reply-To: <44005696.9040705@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: kacer <kacerxy@seznam.cz>, linux-ide@vger.kernel.org
+To: 'Tejun Heo' <htejun@gmail.com>, 'Jeff Garzik' <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
+
+Hi,
+the controller is Kouwell 571S-4 , it is based on 2 chips Sil 3112, each
+chip provides 2 ports. I don't think it's matter of power or heat, server is
+huge, but has good cooling and 550 W Enermax PSU. My friend has same
+problems and he tested it, problem persists no matter how many HDDs (1-4) or
+PCI cards in computer.
+
+For Tejun: I will provide that list from lspci as soon as machine will be
+up, unfortunately machine's OS is stucked in error and I can't reset it now.
+
+For more info: there is Gentoo linux on box, most packages on latest builds,
+kernel is from vanilla sources with custom configuration, but I tried also
+several kernels from gentoo sources.
+
+Jiri Bartosik
+
+
+-----Original Message-----
+From: Tejun Heo [mailto:htejun@gmail.com] 
+Sent: Saturday, February 25, 2006 2:08 PM
+To: Jeff Garzik
+Cc: kacer; linux-ide@vger.kernel.org
+Subject: Re: Kernel driver for Sil 3112 (sata_sil.c) problems
 
 Jeff Garzik wrote:
 > kacer wrote:
@@ -37,3 +60,4 @@ R_ERR on DMA activate FIS.
 
 -- 
 tejun
+
