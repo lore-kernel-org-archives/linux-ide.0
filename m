@@ -1,98 +1,127 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: David Greaves <david@dgreaves.com>
 Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Sat, 25 Feb 2006 14:29:20 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0602251427001.7283@p34>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com>
- <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca>
- <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca>
- <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca>
+Date: Sat, 25 Feb 2006 19:47:05 +0000
+Message-ID: <4400B439.8050202@dgreaves.com>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:29609 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S1161084AbWBYT3W (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Feb 2006 14:29:22 -0500
+Received: from s2.ukfsn.org ([217.158.120.143]:40154 "EHLO mail.ukfsn.org")
+	by vger.kernel.org with ESMTP id S1161090AbWBYTqy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Feb 2006 14:46:54 -0500
 In-Reply-To: <4400A1BF.7020109@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: Mark Lord <lkml@rtr.ca>, David Greaves <david@dgreaves.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Which kernel did you run your patch against?
-
-With 2.6.16-rc4....
-
-First patch looks good..
-
-p34:/usr/src/linux# patch -p1 < /tmp/patch1
-patching file drivers/scsi/libata-scsi.c
-
-p34:/usr/src/linux# patch -p1 < /tmp/12_libata_ata_opcode.patch
-patching file drivers/scsi/libata-core.c
-Hunk #1 succeeded at 245 (offset -8 lines).
-Hunk #2 succeeded at 267 (offset -8 lines).
-Hunk #3 succeeded at 288 (offset -8 lines).
-Hunk #4 succeeded at 310 (offset -8 lines).
-Hunk #5 succeeded at 500 (offset -8 lines).
-Hunk #6 succeeded at 626 (offset -8 lines).
-patching file drivers/scsi/libata-scsi.c
-Hunk #1 succeeded at 430 (offset -8 lines).
-Hunk #2 succeeded at 509 (offset -8 lines).
-Hunk #3 FAILED at 521.
-Hunk #4 succeeded at 563 (offset -8 lines).
-Hunk #5 succeeded at 638 (offset -8 lines).
-Hunk #6 succeeded at 1329 (offset -8 lines).
-1 out of 6 hunks FAILED -- saving rejects to file 
-drivers/scsi/libata-scsi.c.rej
-patching file include/linux/ata.h
-patching file include/linux/libata.h
-Hunk #1 succeeded at 373 (offset -47 lines).
-Hunk #2 succeeded at 463 (offset -49 lines).
-p34:/usr/src/linux# ls -ld /usr/src/linux
-lrwxrwxrwx  1 root src 16 2006-02-25 14:24 /usr/src/linux -> 
-linux-2.6.16-rc4/
-p34:/usr/src/linux#
-
-Here is the *.rej file:
-
-# cat libata-scsi.c.rej
-***************
-*** 521,528 ****
-         *ascq = 0x04; /*  "auto-reallocation failed" */
-
-    translate_done:
--       DPRINTK(KERN_ERR "ata%u: translated op=0x%02x ATA stat/err 
-0x%02x/%02x to "
--              "SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n", id, opcode, drv_stat, 
-drv_err,
-                *sk, *asc, *ascq);
-         return;
-   }
---- 521,528 ----
-         *ascq = 0x04; /*  "auto-reallocation failed" */
-
-    translate_done:
-+       DPRINTK(KERN_ERR "ata%u: translated op=0x%02x cmd=0x%02x ATA 
-stat/err 0x%02x/%02x to "
-+              "SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n", id, opcode, cmd, 
-drv_stat, drv_err,
-                *sk, *asc, *ascq);
-         return;
-   }
-
-
-
-
-On Sat, 25 Feb 2006, Mark Lord wrote:
+Mark Lord wrote:
 
 > Justin Piszcz wrote:
->> Second patch fails for me.
-> ..
+>
 >> Should I be using 2.6.16-rcX?
+>
 >
 > Mmm... that's what I'm using (plus other patches),
 > so, yes.. give that a try.  2.6.16 does seem to
 > be shaping up to be a nice kernel.
->
-> Cheers
->
+
+OK, failed for me too - I updated to 2.6.16-rc4 and it still failed
+(despite -F) so I fixed by hand.
+(printk -> DPRINTK
+
+anyway:
+Linux haze 2.6.16-rc4patched #1 PREEMPT Sat Feb 25 19:29:11 UTC 2006
+i686 GNU/Linux
+
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata2: error=0x04 { DriveStatusError }
+ata2: no sense translation for op=0x2a cmd=0x3d status: 0x51
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata2: no sense translation for op=0x2a cmd=0x3d status: 0x51
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata2: no sense translation for op=0x2a cmd=0x3d status: 0x51
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata2: no sense translation for op=0x2a cmd=0x3d status: 0x51
+ata2: status=0x51 { DriveReady SeekComplete Error }
+sd 1:0:0:0: SCSI error: return code = 0x8000002
+sdb: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sdb, sector 398283329
+raid1: Disk failure on sdb2, disabling device.
+        Operation continuing on 1 devices
+
+
+and later...
+
+
+device-mapper: 4.5.0-ioctl (2005-10-04) initialised: dm-devel@redhat.com
+XFS mounting filesystem dm-0
+ata1: status=0x51 { DriveReady SeekComplete Error }
+ata1: error=0x04 { DriveStatusError }
+ata1: no sense translation for op=0x2a cmd=0x3d status: 0x51
+ata1: status=0x51 { DriveReady SeekComplete Error }
+ata2: no sense translation for op=0x2a cmd=0x3d status: 0x51
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata1: no sense translation for op=0x2a cmd=0x3d status: 0x51
+ata1: status=0x51 { DriveReady SeekComplete Error }
+ata2: no sense translation for op=0x2a cmd=0x3d status: 0x51
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata1: no sense translation for op=0x2a cmd=0x3d status: 0x51
+ata1: status=0x51 { DriveReady SeekComplete Error }
+ata2: no sense translation for op=0x2a cmd=0x3d status: 0x51
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata1: no sense translation for op=0x2a cmd=0x3d status: 0x51
+ata1: status=0x51 { DriveReady SeekComplete Error }
+ata2: no sense translation for op=0x2a cmd=0x3d status: 0x51
+ata2: status=0x51 { DriveReady SeekComplete Error }
+sd 0:0:0:0: SCSI error: return code = 0x8000002
+sda: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sda, sector 390716735
+raid5: Disk failure on sda1, disabling device. Operation continuing on 2
+devices
+ata2: no sense translation for op=0x2a cmd=0x3d status: 0x51
+ata2: status=0x51 { DriveReady SeekComplete Error }
+sd 1:0:0:0: SCSI error: return code = 0x8000002
+sdb: Current: sense key: Medium Error
+    Additional sense: Unrecovered read error - auto reallocate failed
+end_request: I/O error, dev sdb, sector 390716735
+raid5: Disk failure on sdb1, disabling device. Operation continuing on 1
+devices
+RAID5 conf printout:
+ --- rd:3 wd:1 fd:2
+ disk 0, o:1, dev:sdd1
+ disk 1, o:0, dev:sdb1
+ disk 2, o:0, dev:sda1
+xfs_force_shutdown(dm-0,0x1) called from line 338 of file
+fs/xfs/xfs_rw.c.  Return address = 0xc020c0e9
+Filesystem "dm-0": I/O Error Detected.  Shutting down filesystem: dm-0
+Please umount the filesystem, and rectify the problem(s)
+I/O error in filesystem ("dm-0") meta-data dev dm-0 block
+0x640884a       ("xlog_bwrite") error 5 buf count 262144
+XFS: failed to locate log tail
+XFS: log mount/recovery failed: error 5
+XFS: log mount failed
+RAID5 conf printout:
+ --- rd:3 wd:1 fd:2
+ disk 0, o:1, dev:sdd1
+ disk 1, o:0, dev:sdb1
+RAID5 conf printout:
+ --- rd:3 wd:1 fd:2
+ disk 0, o:1, dev:sdd1
+ disk 1, o:0, dev:sdb1
+RAID5 conf printout:
+ --- rd:3 wd:1 fd:2
+ disk 0, o:1, dev:sdd1
+
+
+So I guess my raid just blew up too... hope there's no corruption!
+
+David
+
+(PS Hi Mark, this is lbt from the Empeg BBS :) )
+
+-- 
+
