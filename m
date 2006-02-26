@@ -1,81 +1,38 @@
-From: "kacer" <kacerxy@seznam.cz>
-Subject: RE: Kernel driver for Sil 3112 (sata_sil.c) problems
-Date: Sun, 26 Feb 2006 20:42:08 +0100
-Message-ID: <20060226194220.D2D5937B93@relay.netbox.cz>
-References: <44004CC7.8040207@gmail.com>
+From: Oliver Joa <ojoa@gatrixx.com>
+Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
+ SATA 300 TX4
+Date: Sun, 26 Feb 2006 20:55:08 +0100 (CET)
+Message-ID: <Pine.LNX.4.63.0602262051110.2664@majestix.gallier.de>
+References: <43FFAE3D.7010002@physics.harvard.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay.netbox.cz ([83.240.0.201]:7855 "EHLO relay.netbox.cz")
-	by vger.kernel.org with ESMTP id S1751314AbWBZTm2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Feb 2006 14:42:28 -0500
-In-Reply-To: <44004CC7.8040207@gmail.com>
+Received: from mail.gatrixx.com ([217.111.11.44]:56236 "EHLO mail.gatrixx.com")
+	by vger.kernel.org with ESMTP id S1751395AbWBZTzZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Feb 2006 14:55:25 -0500
+In-Reply-To: <43FFAE3D.7010002@physics.harvard.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Tejun Heo' <htejun@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Milan Kupcevic <milan@physics.harvard.edu>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@rustcorp.com.au, torvalds@osdl.org
 
-Hi Tejun,
+Hi,
 
-here is lspci:
-00:00.0 Host bridge: Intel Corporation 82815 815 Chipset Host Bridge and
-Memory Controller Hub (rev 04)
-00:01.0 PCI bridge: Intel Corporation 82815 815 Chipset AGP Bridge (rev 04)
-00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 05)
-00:1f.0 ISA bridge: Intel Corporation 82801BA ISA Bridge (LPC) (rev 05)
-00:1f.1 IDE interface: Intel Corporation 82801BA IDE U100 (rev 05)
-00:1f.2 USB Controller: Intel Corporation 82801BA/BAM USB (Hub #1) (rev 05)
-00:1f.3 SMBus: Intel Corporation 82801BA/BAM SMBus (rev 05)
-00:1f.4 USB Controller: Intel Corporation 82801BA/BAM USB (Hub #2) (rev 05)
-01:00.0 VGA compatible controller: ATI Technologies Inc 3D Rage IIC AGP (rev
-3a)
-02:0a.0 Mass storage controller: Triones Technologies, Inc.
-HPT366/368/370/370A/372/372N (rev 04)
-02:0c.0 Mass storage controller: Triones Technologies, Inc.
-HPT366/368/370/370A/372/372N (rev 04)
-02:0d.0 PCI bridge: Tiger Jet Network Inc. Unknown device 0600 (rev 01)
-02:0e.0 Ethernet controller: Intel Corporation 82541GI/PI Gigabit Ethernet
-Controller
-03:04.0 Mass storage controller: Silicon Image, Inc. SiI 3112
-[SATALink/SATARaid] Serial ATA Controller (rev 02)
-03:05.0 Mass storage controller: Silicon Image, Inc. SiI 3112
-[SATALink/SATARaid] Serial ATA Controller (rev 02)
+On Fri, 24 Feb 2006, Milan Kupcevic wrote:
 
-lspci -n:
-00:00.0 0600: 8086:1130 (rev 04)
-00:01.0 0604: 8086:1131 (rev 04)
-00:1e.0 0604: 8086:244e (rev 05)
-00:1f.0 0601: 8086:2440 (rev 05)
-00:1f.1 0101: 8086:244b (rev 05)
-00:1f.2 0c03: 8086:2442 (rev 05)
-00:1f.3 0c05: 8086:2443 (rev 05)
-00:1f.4 0c03: 8086:2444 (rev 05)
-01:00.0 0300: 1002:475a (rev 3a)
-02:0a.0 0180: 1103:0004 (rev 04)
-02:0c.0 0180: 1103:0004 (rev 04)
-02:0d.0 0604: e159:0600 (rev 01)
-02:0e.0 0200: 8086:1076
-03:04.0 0180: 1095:3112 (rev 02)
-03:05.0 0180: 1095:3112 (rev 02)
+> From: Milan Kupcevic <milan@physics.harvard.edu>
+>
+> Fix Promise SATAII 150 TX4 (PDC40518) and Promise SATA 300 TX4 (PDC40718-GP) 
+> wrong port enumeration order that makes it (nearly) impossible to deal with 
+> boot problems using two or more drives.
 
-According tests I have found that problems are while writing data, not while
-reading.
+I wonder that a lot of people use promise sata 300 tx4. i have lots of 
+problems, i always get scsi-errors. now i changed to other harddisk. i use 
+seagate, which is on the compatibility-list of this card. so why is it not 
+working in my computer. i use kernel 2.6.15. what else can be wrong? I 
+have a intel serverboard with dual p3 with 440gx-chipset.
 
-Jiri Bartosik
+The driver from promise does not compile. Someone out there who got it 
+running? What to do?
 
------Original Message-----
-From: Tejun Heo [mailto:htejun@gmail.com] 
-Sent: Saturday, February 25, 2006 1:26 PM
-To: kacer
-Cc: jgarzik@pobox.com; linux-ide@vger.kernel.org
-Subject: Re: Kernel driver for Sil 3112 (sata_sil.c) problems
-
-Hello, Jiri.
-
-'lspci -n' please.
-
--- 
-tejun
-
+any idea?
