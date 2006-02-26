@@ -1,113 +1,87 @@
-From: James Courtier-Dutton <James@superbug.co.uk>
+From: David Greaves <david@dgreaves.com>
 Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Sun, 26 Feb 2006 12:27:02 +0000
-Message-ID: <44019E96.20804@superbug.co.uk>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca>
+Date: Sun, 26 Feb 2006 12:55:14 +0000
+Message-ID: <4401A532.4030602@dgreaves.com>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44019E96.20804@superbug.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anchor-post-31.mail.demon.net ([194.217.242.89]:30985 "EHLO
-	anchor-post-31.mail.demon.net") by vger.kernel.org with ESMTP
-	id S1751077AbWBZM1G (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Feb 2006 07:27:06 -0500
-In-Reply-To: <4401122A.3010908@rtr.ca>
+Received: from s2.ukfsn.org ([217.158.120.143]:36008 "EHLO mail.ukfsn.org")
+	by vger.kernel.org with ESMTP id S1750817AbWBZMzD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Feb 2006 07:55:03 -0500
+In-Reply-To: <44019E96.20804@superbug.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: David Greaves <david@dgreaves.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, htejun@gmail.com
+To: James Courtier-Dutton <James@superbug.co.uk>
+Cc: Mark Lord <lkml@rtr.ca>, Justin Piszcz <jpiszcz@lucidpixels.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, htejun@gmail.com
 
-Mark Lord wrote:
-> David Greaves wrote:
->>
->> Linux haze 2.6.16-rc4patched #1 PREEMPT Sat Feb 25 19:29:11 UTC 2006
->> i686 GNU/Linux
->>
->> ata2: status=0x51 { DriveReady SeekComplete Error }
->> ata2: error=0x04 { DriveStatusError }
->> ata2: no sense translation for op=0x2a cmd=0x3d status: 0x51
->> ata2: status=0x51 { DriveReady SeekComplete Error }
->> ata2: no sense translation for op=0x2a cmd=0x3d status: 0x51
->> ata2: status=0x51 { DriveReady SeekComplete Error }
->> ata2: no sense translation for op=0x2a cmd=0x3d status: 0x51
->> ata2: status=0x51 { DriveReady SeekComplete Error }
->> ata2: no sense translation for op=0x2a cmd=0x3d status: 0x51
->> ata2: status=0x51 { DriveReady SeekComplete Error }
->> sd 1:0:0:0: SCSI error: return code = 0x8000002
->> sdb: Current: sense key: Medium Error
->>     Additional sense: Unrecovered read error - auto reallocate failed
->> end_request: I/O error, dev sdb, sector 398283329
->> raid1: Disk failure on sdb2, disabling device.
->>         Operation continuing on 1 devices
->
-> Oh good, *now* we've gotten somewhere!!
->
-> Albert / Jens / Jeff:
->
-> The command failing above is SCSI WRITE_10, which is being
-> translated into ATA_CMD_WRITE_FUA_EXT by libata.
->
-> This command fails -- unrecognized by the drive in question.
-> But libata reports it (most incorrectly) as a "medium error",
-> and the drive is taken out of service from its RAID.
->
-> Bad, bad, and worse.
->
+James Courtier-Dutton wrote:
 
-I have what looks like similar problems. The issue I have is that I 
-don't think the problem is ONLY libata related.
-I have two linux PCs. One called "games", the other called "localhost".
-The problem happens quite quickly on the old "games" machine, but I can 
-run for days/weeks until I see the problem on the "localhost".
-It might be happening on the "localhost", but I am just not noticing. 
-The difference being that if reiserfs sees this error, it cannot 
-recover, and I have reiserfs on the "games" machine. The "localhost" 
-only uses ext3, and ext3 recovers gracefully from this problem.
-Can I use libata on this old "games" machine? It is an old Pentium 3 
-machine.
-In any case, The "games" machine is currently switched off until I can 
-find a kernel that works, so I will happily test different kernels and 
-patches, if people have suggestions.
+> I have two desktop linux machines. One is an old Pentium 3 which shows
+> the following errors(no libata involved):
+> Linux version 2.6.15-rc4 (root@games) (gcc version 4.0.3 20051111
+> (prerelease) (Debian 4.0.2-4)
+> ) #1 Sat Dec 3 18:47:19 GMT 2005
+> Dec 16 22:51:57 games kernel: hdc: dma_intr: status=0x51 { DriveReady
+> SeekComplete Error }
+> Dec 16 22:52:32 games kernel: hdc: dma_intr: error=0x40 {
+> UncorrectableError }, LBAsect=53058185, sector=53057951
+> Dec 16 22:52:32 games kernel: ide: failed opcode was: unknown
+> Dec 16 22:52:32 games kernel: end_request: I/O error, dev hdc, sector
+> 53057951
+> Dec 16 22:52:32 games kernel: hdc: dma_intr: status=0x51 { DriveReady
+> SeekComplete Error }
+> Dec 16 22:52:32 games kernel: hdc: dma_intr: error=0x10 {
+> SectorIdNotFound }, LBAsect=53058185, sector=53057959
+> Dec 16 22:52:32 games kernel: ide: failed opcode was: unknown
 
-I have two desktop linux machines. One is an old Pentium 3 which shows 
-the following errors(no libata involved):
-Linux version 2.6.15-rc4 (root@games) (gcc version 4.0.3 20051111 
-(prerelease) (Debian 4.0.2-4)
-) #1 Sat Dec 3 18:47:19 GMT 2005
-Dec 16 22:51:57 games kernel: hdc: dma_intr: status=0x51 { DriveReady 
-SeekComplete Error }
-Dec 16 22:52:32 games kernel: hdc: dma_intr: error=0x40 { 
-UncorrectableError }, LBAsect=53058185, sector=53057951
-Dec 16 22:52:32 games kernel: ide: failed opcode was: unknown
-Dec 16 22:52:32 games kernel: end_request: I/O error, dev hdc, sector 
-53057951
-Dec 16 22:52:32 games kernel: hdc: dma_intr: status=0x51 { DriveReady 
-SeekComplete Error }
-Dec 16 22:52:32 games kernel: hdc: dma_intr: error=0x10 { 
-SectorIdNotFound }, LBAsect=53058185, sector=53057959
-Dec 16 22:52:32 games kernel: ide: failed opcode was: unknown
+This looks like a simple bad disk drive. Notice that the sectors are
+quite close.
+If you like you can move the drive to a working machine and run a
+badblocks on it.
+do 'man badblocks' before you start.
+Is it SMART capable? What does
+  smartctl -a /dev/hdc
+show?
 
-The other has the following errors:
-Linux version 2.6.15.1 (root@localhost) (gcc version 3.4.5 (Gentoo 
-3.4.5, ssp-3.4.5-1.0, pi
-e-8.7.9)) #3 SMP PREEMPT Fri Feb 3 23:19:05 GMT 2006
-Feb 10 23:30:07 localhost kernel: ata3: command 0xb0 timeout, stat 0xd0 
-host_stat 0x0
-Feb 10 23:30:07 localhost kernel: ata3: translated ATA stat/err 0xd0/00 
-to SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 10 23:30:07 localhost kernel: ata3: status=0xd0 { Busy }
-Feb 10 23:30:07 localhost kernel: ATA: abnormal status 0xD0 on port 
-0xF880E087
-Feb 10 23:30:07 localhost last message repeated 3 times
-Feb 10 23:30:10 localhost kernel: ata3: PIO error
-Feb 10 23:30:10 localhost kernel: ata3: status=0x50 { DriveReady 
-SeekComplete }
-Feb 11 10:18:10 localhost kernel: ata2: command 0xb0 timeout, stat 0xd0 
-host_stat 0x0
-Feb 11 10:18:10 localhost kernel: ata2: translated ATA stat/err 0xd0/00 
-to SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 11 10:18:10 localhost kernel: ata2: status=0xd0 { Busy }
-Feb 11 10:18:10 localhost kernel: ATA: abnormal status 0xD0 on port 0x177
-Feb 11 10:18:10 localhost last message repeated 3 times
+ddrescue may be your friend if you need to recover data.
 
+Reply offlist if this is the case.
+
+> The other has the following errors:
+> Linux version 2.6.15.1 (root@localhost) (gcc version 3.4.5 (Gentoo
+> 3.4.5, ssp-3.4.5-1.0, pi
+> e-8.7.9)) #3 SMP PREEMPT Fri Feb 3 23:19:05 GMT 2006
+> Feb 10 23:30:07 localhost kernel: ata3: command 0xb0 timeout, stat
+> 0xd0 host_stat 0x0
+> Feb 10 23:30:07 localhost kernel: ata3: translated ATA stat/err
+> 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> Feb 10 23:30:07 localhost kernel: ata3: status=0xd0 { Busy }
+> Feb 10 23:30:07 localhost kernel: ATA: abnormal status 0xD0 on port
+> 0xF880E087
+> Feb 10 23:30:07 localhost last message repeated 3 times
+> Feb 10 23:30:10 localhost kernel: ata3: PIO error
+> Feb 10 23:30:10 localhost kernel: ata3: status=0x50 { DriveReady
+> SeekComplete }
+> Feb 11 10:18:10 localhost kernel: ata2: command 0xb0 timeout, stat
+> 0xd0 host_stat 0x0
+> Feb 11 10:18:10 localhost kernel: ata2: translated ATA stat/err
+> 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> Feb 11 10:18:10 localhost kernel: ata2: status=0xd0 { Busy }
+> Feb 11 10:18:10 localhost kernel: ATA: abnormal status 0xD0 on port 0x177
+> Feb 11 10:18:10 localhost last message repeated 3 times
+
+Have you got smartd running?
+I get a similar problem running some smartcl commands (-s on and -o on)
+I suspect this is a libata ata passthru problem - but I'm *guessing* :)
+
+check the last messages in dmesg then run
+smartctl -data -s on /dev/sd...
+smartctl -data -o on /dev/sd...
+See if there are new messages in dmesg
+
+David
+
+-- 
 
