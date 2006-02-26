@@ -1,64 +1,24 @@
-From: Duncan <1i5t5.duncan@cox.net>
-Subject: Re: 2.6.16-rc5: known regressions (ps2 mouse/keyboard issues)
-Date: Mon, 27 Feb 2006 02:14:48 -0700
-Message-ID: <200602270214.49281.1i5t5.duncan@cox.net>
-References: <Pine.LNX.4.64.0602262122000.22647@g5.osdl.org> <44029BA1.8030601@trolocsis.com> <20060227063930.GA8018@suse.cz>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20060227063930.GA8018@suse.cz>
-Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Vojtech Pavlik <vojtech@suse.cz>
-Cc: Ryan Phillips <ryan@trolocsis.com>, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>, Luming Yu <luming.yu@intel.com>, len.brown@intel.com, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>
+From: "Trae Mcdowell" <dianere@my.love.rin.ru>
+Subject: WOW
+Date: Sun, 26 Feb 2006 15:55:25 -0500
+Message-ID: <100118240459.XAA13898baerylee@tips.love.cityref.ru>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from zeus1.kernel.org ([204.152.191.4]:2743 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751082AbWB0Ktr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Feb 2006 05:49:47 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-tape@vger.kernel.org
+Cc: majordomo@vger.kernel.org, linux-tape-owner@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-net@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sunday 26 February 2006 23:39, Vojtech Pavlik wrote:
-> On Sun, Feb 26, 2006 at 10:26:41PM -0800, Ryan Phillips wrote:
-> > Adrian Bunk wrote:
-> > > This email lists some known regressions in 2.6.16-rc5 compared to
-> > > 2.6.15.
-[snip]
-> > > Subject    : usb_submit_urb(ctrl) failed on 2.6.16-rc4-git10 kernel
-> > > References : http://bugzilla.kernel.org/show_bug.cgi?id=6134
-> > > Submitter  : Ryan Phillips <rphillips@gentoo.org>
-> > > Status     : unknown
-[snip]
-> > > Subject    : total ps2 keyboard lockup from boot
-> > > References : http://bugzilla.kernel.org/show_bug.cgi?id=6130
-> > > Submitter  : Duncan <1i5t5.duncan@cox.net>
-> > > Handled-By : Dmitry Torokhov <dmitry.torokhov@gmail.com>
-> > >              Pavlik Vojtech <vojtech@suse.cz>
-> > > Status     : discussion and debugging in the bug logs
-> >
-> > It appears that Duncan's "total ps2 keyboard lockup from boot" is the
-> > same, or similar problem as mine.
-> > 2.6.15.1 kernel is working for me though.
->
-> Except one of the keyboards is USB and the other PS/2. Both are
-> Microsoft wireless, though.
+You have got to look at this. Its outstanding.   Its a major new business.
 
-As Ryan observes in his bug, the keyboard and mouse were both plugged into the 
-ps2 ports.  Same keyboard, both amd64, both with both the mouse and keyboard 
-plugged into the ps2 ports, both with a dead keyboard before rc1. As he says, 
-evidence suggests it is indeed the same bug.  Also, we're both on Gentoo, but 
-that could simply be due to the fact that Gentoo folks are probably more 
-likely to be running rc or even git kernels than most, due to the type of 
-distribution it is and GregKH's recently adding mainline git snapshots to the 
-package tree to encourage quicker testing.
+http://www.legalrevenueservice.com
 
-One discrepancy so far: Ryan mentions git10, implying it failed for him, while 
-git10 works here but git11 fails.  My guess is that the USB error he 
-originally keyed in on, that turned out to be happening with working kernels 
-too, sent him down the wrong path, and git10 will end up working for him.  
-Either that or the root issue is something that changed in git10, and then 
-again in git11, killing his one day and mine the next, due to the mobo 
-differences or something.
+Lucile   
 
--- 
-Duncan - Plain text mail please, HTML mail filtered as spam
-"They that can give up essential liberty to obtain a little
-temporary safety, deserve neither liberty nor safety."
-Benjamin Franklin
+Want to not receive info in the future?  queriana@my.lovebank.ru
+
+
+
+
