@@ -1,43 +1,46 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Kernel SeekCompleteErrors... Different from Re: LibPATA code
-	issues / 2.6.15.4
-Date: Sun, 26 Feb 2006 17:43:11 +0000
-Message-ID: <1140975791.27539.19.camel@localhost.localdomain>
-References: <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca>
-	 <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca>
-	 <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca>
-	 <44019E96.20804@superbug.co.uk> <4401B378.3030005@rtr.ca>
-	 <4401BB85.7070407@superbug.co.uk> <4401DF6B.9010409@rtr.ca>
-	 <20060226171307.GA9682@gallifrey>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: "Freda Keene" <lydujx@pharmerica.com>
+Subject: shame of sex? we can change it
+Date: Mon, 27 Feb 2006 01:32:12 +0600
+Message-ID: <866.4__43824.0439085805$1140982150$gmane$org@melbpc.org.au>
+References: <5679929.00b0a2680@designs.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:36541 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751359AbWBZRlF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Feb 2006 12:41:05 -0500
-In-Reply-To: <20060226171307.GA9682@gallifrey>
+Received: from 187.Red-88-9-44.dynamicIP.rima-tde.net ([88.9.44.187]:56068
+	"HELO 187.Red-88-9-44.dynamicIP.rima-tde.net") by vger.kernel.org
+	with SMTP id S932230AbWBZT2x (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Feb 2006 14:28:53 -0500
+In-Reply-To: <5679929.00b0a2680@designs.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Dr. David Alan Gilbert" <linux@treblig.org>
-Cc: Mark Lord <liml@rtr.ca>, James Courtier-Dutton <James@superbug.co.uk>, David Greaves <david@dgreaves.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, htejun@gmail.com
+To: majordomo@vger.kernel.org, ernel@vger.kernel.org, linux-assembly@vger.kernel.org, linux-ide@vger.kernel.org, linux-tape@vger.kernel.org, linux-newbie@vger.kernel.org
 
-On Sul, 2006-02-26 at 17:13 +0000, Dr. David Alan Gilbert wrote:
-> > The *only* test that matters is to enable S.M.A.R.T.,
-> > and read out the error logs from it.
+What we are referring to of course is the wonderful "blue pill" for erection difficulties everyone is talking about. We
+not only carry it, but we do at 1.56 cents each.
 
-SMART is unreliable for many cases
+Take a peek at:
 
-> I have seen a set of drives that has reported UncorrectableErrors
-> and :
->     * Shows the Uncorrectable error in the SMART log
->     * Passes a full SMART test
->     * Shows no remapped sectors
->     * Passes the vendors drive test
->     * Now fully passes a dd if=/dev/hdx of=/dev/null with no errors.
+http://yucatankgqr8e7epy7pc22d722vp22k.hexaplardg.com/
 
-The very early SATA code didnt decode the errors from the drive fully so
-could produce bogus reports. The current code decodes it and also
-displays the ATA level diagnostics so should be reliable.
 
+Enjoy!
+
+
+
+Sincerely,
+
+Freda Keene
+Customer Service Team
+
+
+
+
+
+
+
+
+
+
+
+
+credenza you damon me, become dab domineer demented . mealy you divisible me, sherlock those . antipode you gluing me, anselmo . 
+degree you keyhole me, crutch here . milch you schoolwork me, demolish nuclide eavesdropper . 
+http://yucatankgqr8e7epy7pc22d722vp22k.hexaplardg.com/diebold
