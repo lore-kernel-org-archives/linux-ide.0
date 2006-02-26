@@ -1,61 +1,43 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Sun, 26 Feb 2006 09:56:27 +0000
-Message-ID: <44017B4B.3030900@dgreaves.com>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca>
+From: Sam Ravnborg <sam@ravnborg.org>
+Subject: ide: fix section mismatch warning
+Date: Sun, 26 Feb 2006 12:17:50 +0100
+Message-ID: <20060226111750.GA30135@mars.ravnborg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751306AbWBZJ4T@vger.kernel.org>
-In-Reply-To: <4401122A.3010908@rtr.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, htejun@gmail.com, Linus Torvalds <torvalds@osdl.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from pasmtp.tele.dk ([193.162.159.95]:1796 "EHLO pasmtp.tele.dk")
+	by vger.kernel.org with ESMTP id S1751322AbWBZLR5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Feb 2006 06:17:57 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Mark Lord wrote:
+In latest -mm ide-code.o gave a number of warnings like the following:
 
->> sdb: Current: sense key: Medium Error
->>     Additional sense: Unrecovered read error - auto reallocate failed
->> end_request: I/O error, dev sdb, sector 398283329
->> raid1: Disk failure on sdb2, disabling device.
->>         Operation continuing on 1 devices
->
->
-> Oh good, *now* we've gotten somewhere!!
->
-> Albert / Jens / Jeff:
->
-> The command failing above is SCSI WRITE_10, which is being
-> translated into ATA_CMD_WRITE_FUA_EXT by libata.
->
-> This command fails -- unrecognized by the drive in question.
-> But libata reports it (most incorrectly) as a "medium error",
-> and the drive is taken out of service from its RAID.
->
-> Bad, bad, and worse.
->
-> Libata should really recover from this, by recognizing that
-> the command was rejected, and replacing it with a simple
-> WRITE_EXT instead.  Possibly followed by FLUSH_CACHE.
->
-> So.. I've forgotten who put FUA into libata, but hopefully
-> it's one of the folks on the CC: list, and that nice person
-> can now generate a patch to fix this bug somehow.
+WARNING: drivers/ide/ide-core.o - Section mismatch: reference to    \
+.init.text: from .text between 'init_module' (at offset 0x1f97) and \
+'cleanup_module'
 
-Thanks Mark
+The warning was caused by init_module() calling parse_option() and
+ide_init() both declared __init.
 
-I'm glad it's a bug and not bad hardware.
+Declaring init_module() __init fixes the warnings.
 
-I am quite concerned that the basic effect of just booting a practically
-vanilla 2.6.16-rc4 like this was to fry my raid array.
+Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
+---
+Compiletime tested with allmodconfig on amd64 only.
 
-Luckily it dropped 2 (of  3) disks so quickly that the event counter was
-the same allowing an easy rebuild.
-
-2.6.15 has similar issues but they seem to happen *very* infrequently by
-comparison - this hit me several times during a single boot.
-
-Should Linus (cc'ed) hold off on 2.6.16 because of this or not?
-
-David
+diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
+index b2cc437..3fdab56 100644
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -2058,7 +2058,7 @@ static void __init parse_options (char *
+ 	}
+ }
+ 
+-int init_module (void)
++int __init init_module (void)
+ {
+ 	parse_options(options);
+ 	return ide_init();
