@@ -1,45 +1,31 @@
-From: Oliver Joa <oliver@j-o-a.de>
-Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
- SATA 300 TX4
-Date: Sun, 26 Feb 2006 20:56:54 +0100 (CET)
-Message-ID: <Pine.LNX.4.63.0602262056120.2664@majestix.gallier.de>
-References: <43FFAE3D.7010002@physics.harvard.edu>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Kernel SeekCompleteErrors... Different from Re: LibPATA code
+ issues / 2.6.15.4
+Date: Sun, 26 Feb 2006 15:36:17 -0500
+Message-ID: <44021141.6000601@rtr.ca>
+References: <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca>	 <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca>	 <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca>	 <44019E96.20804@superbug.co.uk> <4401B378.3030005@rtr.ca>	 <4401BB85.7070407@superbug.co.uk> <4401DF6B.9010409@rtr.ca>	 <20060226171307.GA9682@gallifrey> <1140975791.27539.19.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gatrixx.com ([217.111.11.44]:685 "EHLO mail.gatrixx.com")
-	by vger.kernel.org with ESMTP id S1751352AbWBZT44 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Feb 2006 14:56:56 -0500
-In-Reply-To: <43FFAE3D.7010002@physics.harvard.edu>
+Received: from rtr.ca ([64.26.128.89]:57546 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751227AbWBZUgc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Feb 2006 15:36:32 -0500
+In-Reply-To: <1140975791.27539.19.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Milan Kupcevic <milan@physics.harvard.edu>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@rustcorp.com.au, torvalds@osdl.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "Dr. David Alan Gilbert" <linux@treblig.org>, James Courtier-Dutton <James@superbug.co.uk>, David Greaves <david@dgreaves.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, htejun@gmail.com
 
-Hi,
-
-On Fri, 24 Feb 2006, Milan Kupcevic wrote:
-
-> From: Milan Kupcevic <milan@physics.harvard.edu>
+Alan Cox wrote:
 >
-> Fix Promise SATAII 150 TX4 (PDC40518) and Promise SATA 300 TX4 (PDC40718-GP) 
-> wrong port enumeration order that makes it (nearly) impossible to deal with 
-> boot problems using two or more drives.
+> The very early SATA code didnt decode the errors from the drive fully so
+> could produce bogus reports. The current code decodes it and also
+> displays the ATA level diagnostics so should be reliable.
 
+It still is unreliable, as being discussed in another thread.
 
-I wonder that a lot of people use promise sata 300 tx4. i have lots of
-problems, i always get scsi-errors. now i changed to other harddisk. i use
-seagate, which is on the compatibility-list of this card. so why is it not
-working in my computer. i use kernel 2.6.15. what else can be wrong? I 
-have a
-intel serverboard with dual p3 with 440gx-chipset.
+libata wrongly says "medium error" any time it issues a command
+that the drive rejects (unsupported, invalid parameters, etc..).
 
-The driver from promise does not compile. Someone out there who got it 
-running?
-What to do?
-
-any idea?
-
-Thank you very much.
-
-Olli
+This is biting a few people in 2.6.16-rc*, due to the FUA stuff.
