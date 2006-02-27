@@ -1,24 +1,44 @@
-From: "Trae Mcdowell" <dianere@my.love.rin.ru>
-Subject: WOW
-Date: Sun, 26 Feb 2006 15:55:25 -0500
-Message-ID: <100118240459.XAA13898baerylee@tips.love.cityref.ru>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Kernel SeekCompleteErrors... Different from Re: LibPATA code
+	issues / 2.6.15.4
+Date: Mon, 27 Feb 2006 11:48:08 +0000
+Message-ID: <1141040889.27539.60.camel@localhost.localdomain>
+References: <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca>
+	 <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca>
+	 <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca>
+	 <44019E96.20804@superbug.co.uk> <4401B378.3030005@rtr.ca>
+	 <4401BB85.7070407@superbug.co.uk> <4401DF6B.9010409@rtr.ca>
+	 <20060226171307.GA9682@gallifrey>
+	 <1140975791.27539.19.camel@localhost.localdomain> <44021141.6000601@rtr.ca>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:2743 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751082AbWB0Ktr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Feb 2006 05:49:47 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37539 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1750940AbWB0LpF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Feb 2006 06:45:05 -0500
+In-Reply-To: <44021141.6000601@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-tape@vger.kernel.org
-Cc: majordomo@vger.kernel.org, linux-tape-owner@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-net@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: "Dr. David Alan Gilbert" <linux@treblig.org>, James Courtier-Dutton <James@superbug.co.uk>, David Greaves <david@dgreaves.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, htejun@gmail.com
 
-You have got to look at this. Its outstanding.   Its a major new business.
+On Sul, 2006-02-26 at 15:36 -0500, Mark Lord wrote:
+> It still is unreliable, as being discussed in another thread.
+> 
+> libata wrongly says "medium error" any time it issues a command
+> that the drive rejects (unsupported, invalid parameters, etc..).
 
-http://www.legalrevenueservice.com
+It seems to still get a single case wrong. But it does the report the
+ATA state correctly still.
 
-Lucile   
+> This is biting a few people in 2.6.16-rc*, due to the FUA stuff.
 
-Want to not receive info in the future?  queriana@my.lovebank.ru
+It is driven by a table in 
 
+libata-scsi.c:ata_to_sense_error()
 
-
+so if you can figure out the wrong entry and tweak the table that would
+be great
 
