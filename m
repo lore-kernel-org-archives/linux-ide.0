@@ -1,31 +1,93 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Kernel SeekCompleteErrors... Different from Re: LibPATA code
- issues / 2.6.15.4
-Date: Sun, 26 Feb 2006 15:36:17 -0500
-Message-ID: <44021141.6000601@rtr.ca>
-References: <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca>	 <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca>	 <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca>	 <44019E96.20804@superbug.co.uk> <4401B378.3030005@rtr.ca>	 <4401BB85.7070407@superbug.co.uk> <4401DF6B.9010409@rtr.ca>	 <20060226171307.GA9682@gallifrey> <1140975791.27539.19.camel@localhost.localdomain>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.16-rc5: known regressions
+Date: Mon, 27 Feb 2006 07:13:54 +0100
+Message-ID: <20060227061354.GO3674@stusta.de>
+References: <Pine.LNX.4.64.0602262122000.22647@g5.osdl.org>
+Reply-To: linux-kernel@vger.kernel.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:57546 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1751227AbWBZUgc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Feb 2006 15:36:32 -0500
-In-Reply-To: <1140975791.27539.19.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0602262122000.22647@g5.osdl.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>, Luming Yu <luming.yu@intel.com>, len.brown@intel.com, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "Dr. David Alan Gilbert" <linux@treblig.org>, James Courtier-Dutton <James@superbug.co.uk>, David Greaves <david@dgreaves.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, htejun@gmail.com
 
-Alan Cox wrote:
->
-> The very early SATA code didnt decode the errors from the drive fully so
-> could produce bogus reports. The current code decodes it and also
-> displays the ATA level diagnostics so should be reliable.
+This email lists some known regressions in 2.6.16-rc5 compared to 2.6.15.
 
-It still is unreliable, as being discussed in another thread.
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you was declared guilty for a breakage or I'm considering you in any
+other way possibly involved with one or more of these issues.
 
-libata wrongly says "medium error" any time it issues a command
-that the drive rejects (unsupported, invalid parameters, etc..).
+Due to the huge amount of recipients, this email has a Reply-To set.
+Please add the appropriate people to the Cc when replying regarding one 
+of these issues.
 
-This is biting a few people in 2.6.16-rc*, due to the FUA stuff.
+
+Subject    : usb_submit_urb(ctrl) failed on 2.6.16-rc4-git10 kernel
+References : http://bugzilla.kernel.org/show_bug.cgi?id=6134
+Submitter  : Ryan Phillips <rphillips@gentoo.org>
+Status     : unknown
+
+
+Subject    : Oops in Kernel 2.6.16-rc4 on Modprobe of saa7134.ko
+References : http://lkml.org/lkml/2006/2/20/122
+Submitter  : Brian Marete <bgmarete@gmail.com>
+Status     : unknown
+
+
+Subject    : saa7146: no devices created in /dev/dvb
+References : https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=181063
+             http://lkml.org/lkml/2006/2/18/204
+Submitter  : Tom Seeley <redhat@tomseeley.co.uk>
+             Dave Jones <davej@redhat.com>
+Handled-By : Jiri Slaby <jirislaby@gmail.com>
+Status     : unknown
+
+
+Subject    : S3 sleep hangs the second time - 600X
+References : http://bugzilla.kernel.org/show_bug.cgi?id=5989
+Submitter  : Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
+Handled-By : Luming Yu <luming.yu@intel.com>
+Status     : is being debugged,
+             we might want to change the default back for 2.6.16:
+             http://lkml.org/lkml/2006/2/25/101
+
+
+Subject    : 2.6.16-rc[34]: resume-from-RAM unreliable (SATA)
+References : http://lkml.org/lkml/2006/2/20/159
+Submitter  : Mark Lord <lkml@rtr.ca>
+Handled-By : Randy Dunlap <rdunlap@xenotime.net>
+Status     : one of Randy's patches seems to fix it
+
+
+Subject    : total ps2 keyboard lockup from boot
+References : http://bugzilla.kernel.org/show_bug.cgi?id=6130
+Submitter  : Duncan <1i5t5.duncan@cox.net>
+Handled-By : Dmitry Torokhov <dmitry.torokhov@gmail.com>
+             Pavlik Vojtech <vojtech@suse.cz>
+Status     : discussion and debugging in the bug logs
+
+
+Subject    : psmouse starts losing sync in 2.6.16-rc2
+References : http://lkml.org/lkml/2006/2/5/50
+Submitter  : Meelis Roos <mroos@linux.ee>
+Handled-By : Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Status     : Dmitry: Working on various manifestations of this one.
+                     At worst we will have to disable resync by default
+                     before 2.6.16 final is out and continue in 2.6.17 cycle.
+
+
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
