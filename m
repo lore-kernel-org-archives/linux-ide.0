@@ -1,49 +1,41 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Fixup ahci suspend / resume
-Date: Tue, 28 Feb 2006 15:59:14 +0100
-Message-ID: <44046542.9030209@suse.de>
-References: <44045FB1.5040408@suse.de> <44046222.4090008@rtr.ca>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Tue, 28 Feb 2006 10:07:09 -0500
+Message-ID: <4404671D.70506@pobox.com>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046074.4070201@rtr.ca> <Pine.LNX.4.64.0602280939280.16541@p34> <440462E1.2010909@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:16101 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1751179AbWB1O7P convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Feb 2006 09:59:15 -0500
-In-Reply-To: <44046222.4090008@rtr.ca>
+Received: from mail.dvmed.net ([216.237.124.58]:30346 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932216AbWB1PHP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 10:07:15 -0500
+In-Reply-To: <440462E1.2010909@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
 Mark Lord wrote:
-> Hannes Reinecke wrote:
->> Hi all,
->>
-[ .. ]
->> This patch rearranges the suspend / resume code to properly initiali=
-se
->> those registers after a resume. It also contains some initialisation
->> fixes to make the driver behave more spec-compliant.
-> ..
->=20
-> Is ahci the *only* interface afflicted with this problem?
-Good question.
+> Justin Piszcz wrote:
+> 
+>> Will your verbosity patch make it into 2.6.16-rcX?
+> 
+> 
+> I don't think so -- it was a bit of a hack to make the ATA opcode
+> visible at those points in the code.
+> 
+> The better approach might be to just have separate fields
+> for "command" and "status" in the ata tf.  With that, a much less
+> invasive patch could be prepared.
+> 
+> I can spin one quickly here if Jeff thinks it could
+> be gotten into 2.6.16.  Otherwise, I won't -- my code base
+> here is leagues behind the current libata-dev.
 
-Can't tell. So far this is ahci specific as the ahci requires the DMA
-addresses to be written in some register. One would have to look up the
-individual specs to check whether this is also true for other drivers.
+Nah we should really dump the full taskfile...
 
-AFAICS the SATA spec doesn't require you to implement it this way, thou=
-gh.
+	Jeff
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux Products GmbH		S390 & zSeries
-Maxfeldstra=DFe 5				+49 911 74053 688
-90409 N=FCrnberg				http://www.suse.de
 
