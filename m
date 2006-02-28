@@ -1,33 +1,38 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 2/13] ATA ACPI: debugging infrastructure
-Date: Tue, 28 Feb 2006 09:43:54 -0500
-Message-ID: <440461AA.1090907@rtr.ca>
-References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>	<20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com>	<20060228114500.GA4057@elf.ucw.cz>	<44043B4E.30907@pobox.com> <20060228041817.6fc444d2.akpm@osdl.org>
+Subject: Re: [PATCH] Fixup ahci suspend / resume
+Date: Tue, 28 Feb 2006 09:45:54 -0500
+Message-ID: <44046222.4090008@rtr.ca>
+References: <44045FB1.5040408@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:31420 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1751001AbWB1OoA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 09:44:00 -0500
-In-Reply-To: <20060228041817.6fc444d2.akpm@osdl.org>
+Received: from rtr.ca ([64.26.128.89]:31932 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751002AbWB1OqA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 09:46:00 -0500
+In-Reply-To: <44045FB1.5040408@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, pavel@ucw.cz, randy_d_dunlap@linux.intel.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Andrew Morton wrote:
-> Jeff Garzik <jgarzik@pobox.com> wrote:
->> Fine-grained 
->>  message selection allows one to turn on only the messages needed, and 
->>  only for the controller desired.
+Hannes Reinecke wrote:
+> Hi all,
 > 
-> Except
+> the current ahci doesn't handle suspend / resume cycles too well.
+> On certain machines the disk just locks up and refuses to work after a
+> resume.
 > 
-> - There's (presently) no way of making all the messages go away for a
->   non-debug build.
+> This is due to a initialisation error after resume; ahci has fo[u]r
+> registers containing DMA addresses (which are obviously allocated by the
+> kernel). Of course there is no guarantee that these addresses are
+> unchanged across reboots. So ahci loads the suspended image, and after
+> the suspended image is started the driver is presented with different
+> DMA addresses, whereas the chip still uses the original ones.
+> 
+> This patch rearranges the suspend / resume code to properly initialise
+> those registers after a resume. It also contains some initialisation
+> fixes to make the driver behave more spec-compliant.
+..
 
-Agreed.  We need a way to make them all really go away
-for embedded builds -- memory matters there.
-
-Cheers
+Is ahci the *only* interface afflicted with this problem?
