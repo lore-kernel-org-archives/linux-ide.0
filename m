@@ -1,60 +1,41 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: [PATCH 2/13] ATA ACPI: debugging infrastructure
-Date: Tue, 28 Feb 2006 12:10:04 -0500
-Message-ID: <440483EC.8070902@cfl.rr.com>
-References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com> <20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com> <20060228114500.GA4057@elf.ucw.cz> <44043B4E.30907@pobox.com> <20060228041817.6fc444d2.akpm@osdl.org>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] Fixup ahci suspend / resume
+Date: Tue, 28 Feb 2006 18:25:43 +0100
+Message-ID: <20060228172542.GF24981@suse.de>
+References: <44045FB1.5040408@suse.de> <440468DB.5060605@pobox.com> <20060228151928.GC24981@suse.de> <44046AC2.1060002@pobox.com> <20060228152847.GE24981@suse.de> <44046DC3.4060508@pobox.com> <440472F6.6090905@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iriserv.iradimed.com ([69.44.168.233]:21510 "EHLO iradimed.com")
-	by vger.kernel.org with ESMTP id S1751885AbWB1RL0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 12:11:26 -0500
-In-Reply-To: <20060228041817.6fc444d2.akpm@osdl.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:29980 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S932221AbWB1R0k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 12:26:40 -0500
+Content-Disposition: inline
+In-Reply-To: <440472F6.6090905@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, pavel@ucw.cz, randy_d_dunlap@linux.intel.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Andrew Morton wrote:
-> Except
+On Tue, Feb 28 2006, Hannes Reinecke wrote:
+> Jeff Garzik wrote:
+> > Jens Axboe wrote:
+> >> I'm sure Hannes will regenerate against upstream as well if necessary,
+> >> however that depends on when this should be applied.
+> > 
+> > It's far too late and too intrusive for 2.6.16-rc.
+> > 
+> > It's #upstream or <null>.
+> > 
+> Calm down. Of course I will regenerate is against #upstream.
+> In fact, I've done so initially but wasn't sure what the status of
+> libata-dev is. So I've diffed it against linux-git instead.
 > 
-> - There's (presently) no way of making all the messages go away for a
->   non-debug build.
-> 
+> Updated patch to follow.
 
-I agree, there should be a config option to build the kernel with the 
-debug support entirely shut off, though it's a good idea to leave it on 
-if you aren't really cramped for space.
+Thanks Hannes. I wasn't so much worried about it going directly in (I
+have no problem waiting), just that there seemed to be some disagreement
+on where suspend is at and what we can "support".
 
-> - The code is structured as
-> 
-> 	if (ata_msg_foo(p))
-> 		printk("something");
-> 
->   So if we later do
-> 
-> 	#define ata_msg_foo(p)	0
-> 
->   We'll still get copies of "something" in the kernel image (may be fixed
->   in later gcc, dunno).
-> 
-> - The new debug stuff isn't documented.  One has funble around in the
->   source to work out how to even turn it on.  Can it be altered at runtime?
->   Dunno - the changelogs are risible.  What effect do the various flags
->   have?
-> 
->   Having spent (and re-spent) time grovelling through the ALSA source
->   working out how to enable their debug stuff during a maintainer snooze
->   I'd prefer we didn't have to do that with libata as well.
-> 
-
-Would you prefer there not be any debug messages at all, rather than 
-ones you have to figure out how to turn on and interpret?  Documentation 
-is always a good thing, but if you are at least somewhat familiar with 
-the code, turning on the debug messages should be easy and rather helpful.
-
-BTW, didn't I see something recently in the kernel about a debug fs? 
-Sounded like that was intended for this sort of thing to provide a 
-standard interface to configuring fine grained debug message filtering.
+-- 
+Jens Axboe
 
