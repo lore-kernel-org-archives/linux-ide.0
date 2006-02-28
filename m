@@ -1,30 +1,54 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 10/13] ATA ACPI: do taskfile before mode commands
-Date: Tue, 28 Feb 2006 07:14:08 -0500
-Message-ID: <44043E90.8060602@pobox.com>
-References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com> <20060222140140.0d9e41b7.randy_d_dunlap@linux.intel.com> <20060228115715.GE4081@elf.ucw.cz> <44043C7D.5090207@pobox.com> <20060228120843.GC3695@elf.ucw.cz>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 2/13] ATA ACPI: debugging infrastructure
+Date: Tue, 28 Feb 2006 04:18:17 -0800
+Message-ID: <20060228041817.6fc444d2.akpm@osdl.org>
+References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
+	<20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com>
+	<20060228114500.GA4057@elf.ucw.cz>
+	<44043B4E.30907@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:28037 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932517AbWB1MOM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 07:14:12 -0500
-In-Reply-To: <20060228120843.GC3695@elf.ucw.cz>
+Received: from smtp.osdl.org ([65.172.181.4]:32693 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932207AbWB1MTZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 07:19:25 -0500
+In-Reply-To: <44043B4E.30907@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Randy Dunlap <randy_d_dunlap@linux.intel.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, akpm@osdl.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: pavel@ucw.cz, randy_d_dunlap@linux.intel.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Pavel Machek wrote:
-> Please, just remove them. Driver model core already has debugging that
-> can be enabled and prints what is called.
-> 
-> I do not think we want printk() at begining of every *_resume
-> function.
+Jeff Garzik <jgarzik@pobox.com> wrote:
+>
+> Fine-grained 
+>  message selection allows one to turn on only the messages needed, and 
+>  only for the controller desired.
 
-They will not be removed, but instead limited by a bit test as I stated.
+Except
 
-	Jeff
+- There's (presently) no way of making all the messages go away for a
+  non-debug build.
+
+- The code is structured as
+
+	if (ata_msg_foo(p))
+		printk("something");
+
+  So if we later do
+
+	#define ata_msg_foo(p)	0
+
+  We'll still get copies of "something" in the kernel image (may be fixed
+  in later gcc, dunno).
+
+- The new debug stuff isn't documented.  One has funble around in the
+  source to work out how to even turn it on.  Can it be altered at runtime?
+  Dunno - the changelogs are risible.  What effect do the various flags
+  have?
+
+  Having spent (and re-spent) time grovelling through the ALSA source
+  working out how to enable their debug stuff during a maintainer snooze
+  I'd prefer we didn't have to do that with libata as well.
 
 
