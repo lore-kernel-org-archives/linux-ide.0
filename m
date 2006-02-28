@@ -1,54 +1,69 @@
-From: Andrew Morton <akpm@osdl.org>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH 2/13] ATA ACPI: debugging infrastructure
-Date: Tue, 28 Feb 2006 04:18:17 -0800
-Message-ID: <20060228041817.6fc444d2.akpm@osdl.org>
-References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
-	<20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com>
-	<20060228114500.GA4057@elf.ucw.cz>
-	<44043B4E.30907@pobox.com>
+Date: Tue, 28 Feb 2006 07:31:32 -0500
+Message-ID: <440442A4.2090201@pobox.com>
+References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>	<20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com>	<20060228114500.GA4057@elf.ucw.cz>	<44043B4E.30907@pobox.com> <20060228041817.6fc444d2.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:32693 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932207AbWB1MTZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 07:19:25 -0500
-In-Reply-To: <44043B4E.30907@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:61061 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751751AbWB1Mbl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 07:31:41 -0500
+In-Reply-To: <20060228041817.6fc444d2.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Andrew Morton <akpm@osdl.org>
 Cc: pavel@ucw.cz, randy_d_dunlap@linux.intel.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Jeff Garzik <jgarzik@pobox.com> wrote:
->
-> Fine-grained 
->  message selection allows one to turn on only the messages needed, and 
->  only for the controller desired.
+Andrew Morton wrote:
+> Jeff Garzik <jgarzik@pobox.com> wrote:
+> 
+>>Fine-grained 
+>> message selection allows one to turn on only the messages needed, and 
+>> only for the controller desired.
+> 
+> 
+> Except
+> 
+> - There's (presently) no way of making all the messages go away for a
+>   non-debug build.
 
-Except
+They aren't supposed to go away.
 
-- There's (presently) no way of making all the messages go away for a
-  non-debug build.
 
-- The code is structured as
+> - The code is structured as
+> 
+> 	if (ata_msg_foo(p))
+> 		printk("something");
+> 
+>   So if we later do
+> 
+> 	#define ata_msg_foo(p)	0
+> 
+>   We'll still get copies of "something" in the kernel image (may be fixed
+>   in later gcc, dunno).
 
-	if (ata_msg_foo(p))
-		printk("something");
+We don't do that in net driver land, and I don't wish to do it for 
+libata either.  Its just a bit test, that jumps over code if the message 
+class isn't enabled (see link below).
 
-  So if we later do
+We want users to be able to enable specific messages for specific 
+controllers, without recompiling their kernel.
 
-	#define ata_msg_foo(p)	0
+grep for msg_enable in various net drivers.  ethtool(8) is used to 
+select specific controllers and messages to print.
 
-  We'll still get copies of "something" in the kernel image (may be fixed
-  in later gcc, dunno).
 
-- The new debug stuff isn't documented.  One has funble around in the
-  source to work out how to even turn it on.  Can it be altered at runtime?
-  Dunno - the changelogs are risible.  What effect do the various flags
-  have?
+> - The new debug stuff isn't documented.  One has funble around in the
+>   source to work out how to even turn it on.  Can it be altered at runtime?
+>   Dunno - the changelogs are risible.  What effect do the various flags
+>   have?
 
-  Having spent (and re-spent) time grovelling through the ALSA source
-  working out how to enable their debug stuff during a maintainer snooze
-  I'd prefer we didn't have to do that with libata as well.
+The model has always been documented:
+http://www.scyld.com/pipermail/vortex/2001-November/001426.html
+(scroll down a tad)
+
+	Jeff
 
 
