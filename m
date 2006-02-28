@@ -1,38 +1,33 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] Fixup ahci suspend / resume
-Date: Tue, 28 Feb 2006 09:45:54 -0500
-Message-ID: <44046222.4090008@rtr.ca>
-References: <44045FB1.5040408@suse.de>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Tue, 28 Feb 2006 09:49:05 -0500
+Message-ID: <440462E1.2010909@rtr.ca>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046074.4070201@rtr.ca> <Pine.LNX.4.64.0602280939280.16541@p34>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:31932 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1751002AbWB1OqA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 09:46:00 -0500
-In-Reply-To: <44045FB1.5040408@suse.de>
+Received: from rtr.ca ([64.26.128.89]:45227 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751025AbWB1OtM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 09:49:12 -0500
+In-Reply-To: <Pine.LNX.4.64.0602280939280.16541@p34>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>
 
-Hannes Reinecke wrote:
-> Hi all,
-> 
-> the current ahci doesn't handle suspend / resume cycles too well.
-> On certain machines the disk just locks up and refuses to work after a
-> resume.
-> 
-> This is due to a initialisation error after resume; ahci has fo[u]r
-> registers containing DMA addresses (which are obviously allocated by the
-> kernel). Of course there is no guarantee that these addresses are
-> unchanged across reboots. So ahci loads the suspended image, and after
-> the suspended image is started the driver is presented with different
-> DMA addresses, whereas the chip still uses the original ones.
-> 
-> This patch rearranges the suspend / resume code to properly initialise
-> those registers after a resume. It also contains some initialisation
-> fixes to make the driver behave more spec-compliant.
-..
+Justin Piszcz wrote:
+> Will your verbosity patch make it into 2.6.16-rcX?
 
-Is ahci the *only* interface afflicted with this problem?
+I don't think so -- it was a bit of a hack to make the ATA opcode
+visible at those points in the code.
+
+The better approach might be to just have separate fields
+for "command" and "status" in the ata tf.  With that, a much less
+invasive patch could be prepared.
+
+I can spin one quickly here if Jeff thinks it could
+be gotten into 2.6.16.  Otherwise, I won't -- my code base
+here is leagues behind the current libata-dev.
+
+Cheers
