@@ -1,45 +1,75 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH 2/13] ATA ACPI: debugging infrastructure
-Date: Tue, 28 Feb 2006 11:22:02 -0800
-Message-ID: <20060228112202.5355ca43.randy_d_dunlap@linux.intel.com>
-References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
-	<20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com>
-	<20060228114500.GA4057@elf.ucw.cz>
-	<44043B4E.30907@pobox.com>
-	<20060228041817.6fc444d2.akpm@osdl.org>
-	<440461AA.1090907@rtr.ca>
+Date: Tue, 28 Feb 2006 14:27:52 -0500
+Message-ID: <4404A438.8050409@pobox.com>
+References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>	<20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com>	<20060228114500.GA4057@elf.ucw.cz>	<44043B4E.30907@pobox.com>	<20060228041817.6fc444d2.akpm@osdl.org>	<440442A4.2090201@pobox.com> <20060228103519.20f9b277.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr20.intel.com ([134.134.136.19]:54690 "EHLO
-	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
-	id S932448AbWB1TTw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Feb 2006 14:19:52 -0500
-In-Reply-To: <440461AA.1090907@rtr.ca>
+Received: from mail.dvmed.net ([216.237.124.58]:18324 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932456AbWB1T2C (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 14:28:02 -0500
+In-Reply-To: <20060228103519.20f9b277.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: akpm@osdl.org, jgarzik@pobox.com, pavel@ucw.cz, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: pavel@ucw.cz, randy_d_dunlap@linux.intel.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, 28 Feb 2006 09:43:54 -0500
-Mark Lord <liml@rtr.ca> wrote:
-
-> Andrew Morton wrote:
-> > Jeff Garzik <jgarzik@pobox.com> wrote:
-> >> Fine-grained 
-> >>  message selection allows one to turn on only the messages needed, and 
-> >>  only for the controller desired.
-> > 
-> > Except
-> > 
-> > - There's (presently) no way of making all the messages go away for a
-> >   non-debug build.
+Andrew Morton wrote:
+> Jeff Garzik <jgarzik@pobox.com> wrote:
 > 
-> Agreed.  We need a way to make them all really go away
-> for embedded builds -- memory matters there.
+>>Andrew Morton wrote:
+>>
+>>>Jeff Garzik <jgarzik@pobox.com> wrote:
+>>>
+>>>
+>>>>Fine-grained 
+>>>>message selection allows one to turn on only the messages needed, and 
+>>>>only for the controller desired.
+>>>
+>>>
+>>>Except
+>>>
+>>>- There's (presently) no way of making all the messages go away for a
+>>>  non-debug build.
+>>
+>>They aren't supposed to go away.
+>>
+> 
+> 
+> It is legitimate to elect to waste memory on every machine so as to make
+> the system more easily debugged by remote maintainers.  But that's an
+> unusual choice in the kernel context.
 
-That's a libata infrastructure issue, not an ATA-ACPI issue.
-I'll go with whatever $maintainer decides.
+Not unusual, as I said, its done in a ton of net drivers.
 
-~Randy
+That said, I suppose its OK to do
+
+	#define ata_msg_foo() 0
+
+for wacky embedded situations.  But the default will be enabled for all 
+users, not just debug kernels.
+
+
+>>>- The new debug stuff isn't documented.  One has funble around in the
+>>>  source to work out how to even turn it on.  Can it be altered at runtime?
+>>>  Dunno - the changelogs are risible.  What effect do the various flags
+>>>  have?
+>>
+>>The model has always been documented:
+>>http://www.scyld.com/pipermail/vortex/2001-November/001426.html
+>>(scroll down a tad)
+> 
+> 
+> That's useless.
+
+Not useless at all:  It documents the model that is being implemented 
+quite well.  libata will use the same method of bitmasks, same method of 
+increasing verbosity as set by debug level, same method of masking the 
+more verbose messages by default, but always compiling the messages into 
+the driver.  Its highly similar.
+
+	Jeff
+
+
