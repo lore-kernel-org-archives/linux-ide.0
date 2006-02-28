@@ -1,56 +1,46 @@
 From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [PATCH 10/13] ATA ACPI: do taskfile before mode commands
-Date: Tue, 28 Feb 2006 13:08:43 +0100
-Message-ID: <20060228120843.GC3695@elf.ucw.cz>
-References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com> <20060222140140.0d9e41b7.randy_d_dunlap@linux.intel.com> <20060228115715.GE4081@elf.ucw.cz> <44043C7D.5090207@pobox.com>
+Subject: Re: [PATCH 2/13] ATA ACPI: debugging infrastructure
+Date: Tue, 28 Feb 2006 13:04:18 +0100
+Message-ID: <20060228120418.GB3695@elf.ucw.cz>
+References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com> <20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com> <20060228114500.GA4057@elf.ucw.cz> <44043B4E.30907@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932503AbWB1MJF@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:12717 "EHLO amd.ucw.cz")
+	by vger.kernel.org with ESMTP id S932377AbWB1MK3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 07:10:29 -0500
 Content-Disposition: inline
-In-Reply-To: <44043C7D.5090207@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <44043B4E.30907@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: Randy Dunlap <randy_d_dunlap@linux.intel.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, akpm@osdl.org
-List-Id: linux-ide@vger.kernel.org
 
-On =DAt 28-02-06 07:05:17, Jeff Garzik wrote:
+On =DAt 28-02-06 07:00:14, Jeff Garzik wrote:
 > Pavel Machek wrote:
-> >On St 22-02-06 14:01:40, Randy Dunlap wrote:
-> >
-> >>From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-> >>
-> >>Do drive/taskfile-specific commands before setting the drive mode.
-> >>This allows the taskfile to unlock the drive before trying to
-> >>set the drive mode.
-> >>
-> >>Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-> >>---
-> >>drivers/scsi/libata-core.c |   13 ++++++++++---
-> >>1 file changed, 10 insertions(+), 3 deletions(-)
-> >>
-> >>--- linux-2616-rc4-ata.orig/drivers/scsi/libata-core.c
-> >>+++ linux-2616-rc4-ata/drivers/scsi/libata-core.c
-> >>@@ -4297,13 +4297,17 @@ static int ata_start_drive(struct ata_po
-> >> */
-> >>int ata_device_resume(struct ata_port *ap, struct ata_device *dev)
-> >>{
-> >>+	printk(KERN_DEBUG "ata%d: resume device\n", ap->id);
-> >
-> >
-> >Yep, one more helpful printk. Not. Actually this is four more of the=
-m
-> >in this patch alone. Please remove your debugging code prior to merg=
-e.
+> >I hate to see debugging infrastructure like this. We already have it
+> >in ACPI and it is nasty/useless. It hides serious errors during norm=
+al
+> >run, while if you turn on the debugging, it floods logs so that
+> >it is unusable, too. I end up having to replace dprintks with
+> >printks... nasty.
 >=20
-> Agreed, with the modification s/remove/limit by ata_msg_xxx/
+> Then you clearly don't understand what the code is doing.
+> Fine-grained=20
 
-Please, just remove them. Driver model core already has debugging that
-can be enabled and prints what is called.
+No, I do not... code is so full of printk()s that it is unreadable.
 
-I do not think we want printk() at begining of every *_resume
-function.
+> message selection allows one to turn on only the messages needed, and=
+=20
+> only for the controller desired.  Otherwise, it is nearly impossible =
+to=20
+> debug one SATA controller while booting off another.
+
+Now, maybe message selection is neccessary, but having printk at
+begining of each function is not way to go.
 								Pavel
+
 --=20
 Web maintainer for suspend.sf.net (www.sf.net/projects/suspend) wanted.=
 =2E.
