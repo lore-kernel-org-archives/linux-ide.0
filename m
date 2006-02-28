@@ -1,58 +1,60 @@
-From: "Eric D. Mudama" <edmudama@gmail.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Tue, 28 Feb 2006 09:57:31 -0700
-Message-ID: <311601c90602280857x3f102af5l31c9a0ac1a896b4e@mail.gmail.com>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <4401122A.3010908@rtr.ca>
-	 <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca>
-	 <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com>
-	 <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com>
-	 <44046CE6.60803@rtr.ca> <44046D86.7050809@pobox.com>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: [PATCH 2/13] ATA ACPI: debugging infrastructure
+Date: Tue, 28 Feb 2006 12:10:04 -0500
+Message-ID: <440483EC.8070902@cfl.rr.com>
+References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com> <20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com> <20060228114500.GA4057@elf.ucw.cz> <44043B4E.30907@pobox.com> <20060228041817.6fc444d2.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.177]:48200 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751820AbWB1Q5d convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Feb 2006 11:57:33 -0500
-Received: by pproxy.gmail.com with SMTP id s49so916897pyc
-        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 08:57:33 -0800 (PST)
-In-Reply-To: <44046D86.7050809@pobox.com>
-Content-Disposition: inline
+Received: from iriserv.iradimed.com ([69.44.168.233]:21510 "EHLO iradimed.com")
+	by vger.kernel.org with ESMTP id S1751885AbWB1RL0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 12:11:26 -0500
+In-Reply-To: <20060228041817.6fc444d2.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Mark Lord <liml@rtr.ca>, David Greaves <david@dgreaves.com>, Tejun Heo <htejun@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus Torvalds <torvalds@osdl.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, pavel@ucw.cz, randy_d_dunlap@linux.intel.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-those drives should support all FUA opcodes properly, both queued and unqueued
+Andrew Morton wrote:
+> Except
+> 
+> - There's (presently) no way of making all the messages go away for a
+>   non-debug build.
+> 
 
-On 2/28/06, Jeff Garzik <jgarzik@pobox.com> wrote:
-> Mark Lord wrote:
-> > David Greaves wrote:
-> >
-> >>
-> >> scsi1 : sata_sil
-> >>   Vendor: ATA       Model: Maxtor 6B200M0    Rev: BANC
-> >>   Type:   Direct-Access                      ANSI SCSI revision: 05
-> >>   Vendor: ATA       Model: Maxtor 6B200M0    Rev: BANC
-> >>   Type:   Direct-Access                      ANSI SCSI revision: 05
-> >
-> >
-> > I wonder if the non-FUA component here is the sata_sil,
-> > rather than the two Maxtor drives.
-> >
-> > Also, your drives have different firmware,
-> > but both have trouble with FUA here.
->
-> sata_sil is indeed a piece of hardware that needs to know the opcodes
-> ahead of time...
->
->         Jeff
->
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I agree, there should be a config option to build the kernel with the 
+debug support entirely shut off, though it's a good idea to leave it on 
+if you aren't really cramped for space.
+
+> - The code is structured as
+> 
+> 	if (ata_msg_foo(p))
+> 		printk("something");
+> 
+>   So if we later do
+> 
+> 	#define ata_msg_foo(p)	0
+> 
+>   We'll still get copies of "something" in the kernel image (may be fixed
+>   in later gcc, dunno).
+> 
+> - The new debug stuff isn't documented.  One has funble around in the
+>   source to work out how to even turn it on.  Can it be altered at runtime?
+>   Dunno - the changelogs are risible.  What effect do the various flags
+>   have?
+> 
+>   Having spent (and re-spent) time grovelling through the ALSA source
+>   working out how to enable their debug stuff during a maintainer snooze
+>   I'd prefer we didn't have to do that with libata as well.
+> 
+
+Would you prefer there not be any debug messages at all, rather than 
+ones you have to figure out how to turn on and interpret?  Documentation 
+is always a good thing, but if you are at least somewhat familiar with 
+the code, turning on the debug messages should be easy and rather helpful.
+
+BTW, didn't I see something recently in the kernel about a debug fs? 
+Sounded like that was intended for this sort of thing to provide a 
+standard interface to configuring fine grained debug message filtering.
+
