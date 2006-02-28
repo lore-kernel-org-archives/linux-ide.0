@@ -1,31 +1,37 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [PATCH 7/13] ATA ACPI: more Makefile/Kconfig
-Date: Tue, 28 Feb 2006 12:49:15 +0100
-Message-ID: <20060228114915.GC4081@elf.ucw.cz>
-References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com> <20060222135802.60ab42ab.randy_d_dunlap@linux.intel.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 4/13] ATA ACPI: add params/docs.
+Date: Tue, 28 Feb 2006 06:57:33 -0500
+Message-ID: <44043AAD.5050404@pobox.com>
+References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com> <20060222135403.55086107.randy_d_dunlap@linux.intel.com> <20060228114647.GA4081@elf.ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:50404 "EHLO amd.ucw.cz")
-	by vger.kernel.org with ESMTP id S1751591AbWB1LwI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 06:52:08 -0500
-Content-Disposition: inline
-In-Reply-To: <20060222135802.60ab42ab.randy_d_dunlap@linux.intel.com>
+Received: from mail.dvmed.net ([216.237.124.58]:56963 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751651AbWB1L5j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 06:57:39 -0500
+In-Reply-To: <20060228114647.GA4081@elf.ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, akpm@osdl.org, jgarzik@pobox.com
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Randy Dunlap <randy_d_dunlap@linux.intel.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, akpm@osdl.org
 
-On St 22-02-06 13:58:02, Randy Dunlap wrote:
-> From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Pavel Machek wrote:
+> Hi!
 > 
-> Simplify Makefile.
-> Add Kconfig help.
+> 
+>>From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+>>
+>>Add and use 'noacpi' parameter for libata-acpi.
+> 
+> 
+> Why is this option needed? Either the code works, or it does not. If
+> it does not, it is not suitable for merging...
 
-Could you fold this with patch 1 of series? Introducing too complex
-Makefile then fixing it makes review quite "interetsing". 
+Invalid logic.  It is needed for the same reasons that acpi=off is 
+supported in the generic ACPI code.
 
-Is the config option really neccessary?
-								Pavel
--- 
-Web maintainer for suspend.sf.net (www.sf.net/projects/suspend) wanted...
+	Jeff
+
+
+
