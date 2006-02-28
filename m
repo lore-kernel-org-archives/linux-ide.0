@@ -1,42 +1,56 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Mon, 27 Feb 2006 21:52:31 -0500
-Message-ID: <4403BAEF.1000908@pobox.com>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <Pine.LNX.4.64.0602271744470.22647@g5.osdl.org> <4403B04F.5090405@pobox.com> <Pine.LNX.4.64.0602271813120.22647@g5.osdl.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 1/6] libata: separate out ata_dev_read_id()
+Date: Tue, 28 Feb 2006 11:56:19 -0500
+Message-ID: <440480B3.8080609@gmail.com>
+References: <11404555313091-git-send-email-htejun@gmail.com> <43FA5845.1050800@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:63203 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751128AbWB1Cwl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Feb 2006 21:52:41 -0500
-In-Reply-To: <Pine.LNX.4.64.0602271813120.22647@g5.osdl.org>
+Received: from zproxy.gmail.com ([64.233.162.201]:14570 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751680AbWB1Cy6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Feb 2006 21:54:58 -0500
+Received: by zproxy.gmail.com with SMTP id 13so1061747nzn
+        for <linux-ide@vger.kernel.org>; Mon, 27 Feb 2006 18:54:57 -0800 (PST)
+In-Reply-To: <43FA5845.1050800@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Tejun Heo <htejun@gmail.com>, Mark Lord <lkml@rtr.ca>, David Greaves <david@dgreaves.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-Linus Torvalds wrote:
+Jeff Garzik wrote:
+> Tejun Heo wrote:
 > 
-> On Mon, 27 Feb 2006, Jeff Garzik wrote:
+>> Separate out ata_dev_read_id() from ata_dev_identify().  This is the
+>> first half of splitting ata_dev_identify().  ata_dev_read_id() will
+>> also be used for revalidation.  This patch does not make any behavior
+>> change.
+>>
+>> ata_dev_read_id() doesn't modify any of libata-internal data
+>> structures.  It simply reads IDENTIFY page and returns error code on
+>> failure.  INIT_DEV_PARAMS and EDD wrong class code are also handled by
+>> this function.
+>>
+>> Re-reading IDENTIFY after INIT_DEV_PARAMS is performed by jumping to
+>> retry: instead of calling ata_dev_reread_id().  This is done because
+>> 1. there's retry label anyway 2. ata_dev_reread_id() cannot be used
+>> anywhere else so there's no reason to keep it.
+>>
+>> This function is probably the place to set transfer mode to PIO0
+>> before IDENTIFY.  However, reset -> identify -> init_dev_params order
+>> should be kept for pre-ATA4 devices so we cannot set transfer mode
+>> before IDENTIFY for them.  How do we know if a device is post-ATA4
+>> before IDENTIFY?
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
 > 
->>I've had this waiting in the wings, in fact...  [see attached]
 > 
-> 
-> I really hate having a _global_ variable called "fua". That's just bad 
-> taste. I would suggest calling it "atapi_forced_unit_attention_enabled", 
-> but maybe that is going a bit overboard. It's definitely better than just 
-> "fua", though.
+> applied 1-2, will get to the rest a bit later, after other work and some 
+> testing of this work.
 
-<shrug>  It will go away when things are fixed, and only users who are 
-testing will even bother with it.
+Hello, Jeff.
 
-Looking over the module subsystem, it looks like one could use 
-module_param_named() to achieve proper namespace separation (C versus 
-module opt) -- then you could call it libata_fua -- but for a temporary 
-module option it seems like more trouble than its worth.
+How is this going? Just checking as it's been more than a week.
 
-	Jeff
-
-
-
+-- 
+tejun
