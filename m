@@ -1,42 +1,40 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Tue, 28 Feb 2006 10:26:55 -0500
-Message-ID: <44046BBF.1060204@rtr.ca>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046074.4070201@rtr.ca> <Pine.LNX.4.64.0602280939280.16541@p34> <440462E1.2010909@rtr.ca> <4404671D.70506@pobox.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: [PATCH 7/13] ATA ACPI: more Makefile/Kconfig
+Date: Tue, 28 Feb 2006 07:27:32 -0800 (PST)
+Message-ID: <Pine.LNX.4.58.0602280727090.30832@shark.he.net>
+References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
+ <20060222135802.60ab42ab.randy_d_dunlap@linux.intel.com> <20060228114915.GC4081@elf.ucw.cz>
+ <44043C18.2070502@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:61914 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S932121AbWB1P1C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 10:27:02 -0500
-In-Reply-To: <4404671D.70506@pobox.com>
+Received: from xenotime.net ([66.160.160.81]:43706 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S932198AbWB1P1f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 10:27:35 -0500
+Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 07:27:32 -0800
+In-Reply-To: <44043C18.2070502@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Pavel Machek <pavel@ucw.cz>, Randy Dunlap <randy_d_dunlap@linux.intel.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, akpm@osdl.org
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> Justin Piszcz wrote:
->>
->>> Will your verbosity patch make it into 2.6.16-rcX?
->>
->>
->> I don't think so -- it was a bit of a hack to make the ATA opcode
->> visible at those points in the code.
->>
->> The better approach might be to just have separate fields
->> for "command" and "status" in the ata tf.  With that, a much less
->> invasive patch could be prepared.
->>
->> I can spin one quickly here if Jeff thinks it could
->> be gotten into 2.6.16.  Otherwise, I won't -- my code base
->> here is leagues behind the current libata-dev.
-> 
-> Nah we should really dump the full taskfile...
+On Tue, 28 Feb 2006, Jeff Garzik wrote:
 
-Agreed.  But the original command byte is not stored anywhere
-for us to dump it from.
+> Pavel Machek wrote:
+> > On St 22-02-06 13:58:02, Randy Dunlap wrote:
+> >
+> >>From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+> >>
+> >>Simplify Makefile.
+> >>Add Kconfig help.
+> >
+> >
+> > Could you fold this with patch 1 of series? Introducing too complex
+> > Makefile then fixing it makes review quite "interetsing".
+>
+> Agreed.  Patches should be folded together...
 
-Cheers
+Agreed.  and I'll rename the config option as well....
+
+-- 
+~Randy
