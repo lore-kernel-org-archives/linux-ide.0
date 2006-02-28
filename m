@@ -1,52 +1,68 @@
-From: Jo Geraerts <jog@elex.be>
-Subject: libata CHS mapping
-Date: Tue, 28 Feb 2006 11:46:41 +0100
-Message-ID: <44042A11.1060801@elex.be>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH 2/13] ATA ACPI: debugging infrastructure
+Date: Tue, 28 Feb 2006 12:45:00 +0100
+Message-ID: <20060228114500.GA4057@elf.ucw.cz>
+References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com> <20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sarge.elex.be ([194.7.83.94]:52371 "EHLO mail.elex.be")
-	by vger.kernel.org with ESMTP id S1751452AbWB1KrD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 05:47:03 -0500
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:48091 "EHLO amd.ucw.cz")
+	by vger.kernel.org with ESMTP id S1751520AbWB1Lse (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 06:48:34 -0500
+Content-Disposition: inline
+In-Reply-To: <20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
-
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-Dear,
-
-Somewhere in the libata code (ata_std_bios_param) the CHS mapping is hardcoded
-to X/255/63. These values are incorrect on IBM thinkpad t43 (and probarly
-others). We use unattended.sf.net to install our laptops. With these values it
-resulted in a unbootable system.
-
-When i recompiled the kernel with hardcoded values X/240/63 things worked smoothly.
-
-Is it possible (probarly yes) or very timeconsuming to make these value
-configurable through kernel parameters or maybe even better to ask the BIOS
-about it's vision of the CHS mapping? My knowledge of kernel programming is not
-sufficient enough to do it myself. Changing hardcoded values was already a
-challenge ;)
-
-Best regards,
+To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, akpm@osdl.org, jgarzik@pobox.com
 
 
-jo
+> --- linux-2616-rc4-ata.orig/include/linux/libata.h
+> +++ linux-2616-rc4-ata/include/linux/libata.h
+> @@ -36,7 +36,8 @@
+>  #include <acpi/acpi.h>
+>  
+>  /*
+> - * compile-time options
+> + * compile-time options: to be removed as soon as all the drivers are
+> + * converted to the new debugging mechanism
+>   */
+>  #undef ATA_DEBUG		/* debugging output */
+>  #undef ATA_VERBOSE_DEBUG	/* yet more debugging output */
+> @@ -72,6 +73,38 @@
+>          }
+>  #endif
+>  
+> +/* NEW: debug levels */
+> +#define HAVE_LIBATA_MSG 1
 
+What is new with them?
 
+> +enum {
+> +	ATA_MSG_DRV	= 0x0001,
+> +	ATA_MSG_INFO	= 0x0002,
+> +	ATA_MSG_PROBE	= 0x0004,
+> +	ATA_MSG_WARN	= 0x0008,
+> +	ATA_MSG_MALLOC	= 0x0010,
+> +	ATA_MSG_CTL	= 0x0020,
+> +	ATA_MSG_INTR	= 0x0040,
+> +	ATA_MSG_ERR	= 0x0080,
+> +};
+> +
+> +#define ata_msg_drv(p)    ((p)->msg_enable & ATA_MSG_DRV)
+> +#define ata_msg_info(p)   ((p)->msg_enable & ATA_MSG_INFO)
+> +#define ata_msg_probe(p)  ((p)->msg_enable & ATA_MSG_PROBE)
+> +#define ata_msg_warn(p)   ((p)->msg_enable & ATA_MSG_WARN)
+> +#define ata_msg_malloc(p) ((p)->msg_enable & ATA_MSG_MALLOC)
+> +#define ata_msg_ctl(p)    ((p)->msg_enable & ATA_MSG_CTL)
+> +#define ata_msg_intr(p)   ((p)->msg_enable & ATA_MSG_INTR)
+> +#define ata_msg_err(p)    ((p)->msg_enable & ATA_MSG_ERR)
 
-
-- --
-Jo Geraerts
-Network/System Administrator
-jog@elex.be
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFEBCoREdXgl9N9FMARApa5AJwLS7C+TuxvkqcUSgUahwh5M/j54QCfTapR
-/TnUXEa2GvLIDNUTpDQwROU=
-=0TaU
------END PGP SIGNATURE-----
+I hate to see debugging infrastructure like this. We already have it
+in ACPI and it is nasty/useless. It hides serious errors during normal
+run, while if you turn on the debugging, it floods logs so that
+it is unusable, too. I end up having to replace dprintks with
+printks... nasty.
+								Pavel
+-- 
+Web maintainer for suspend.sf.net (www.sf.net/projects/suspend) wanted...
