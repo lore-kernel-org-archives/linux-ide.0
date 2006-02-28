@@ -1,75 +1,77 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2/13] ATA ACPI: debugging infrastructure
-Date: Tue, 28 Feb 2006 14:27:52 -0500
-Message-ID: <4404A438.8050409@pobox.com>
-References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>	<20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com>	<20060228114500.GA4057@elf.ucw.cz>	<44043B4E.30907@pobox.com>	<20060228041817.6fc444d2.akpm@osdl.org>	<440442A4.2090201@pobox.com> <20060228103519.20f9b277.akpm@osdl.org>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: Re: [PATCH 12/13] ATA ACPI: use scsi_bus_shutdown for SATA/PATA
+Date: Tue, 28 Feb 2006 11:44:24 -0800
+Message-ID: <20060228114424.0fb2d495.randy_d_dunlap@linux.intel.com>
+References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
+	<20060222140608.2de3fa24.randy_d_dunlap@linux.intel.com>
+	<20060228115858.GF4081@elf.ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:18324 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932456AbWB1T2C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 14:28:02 -0500
-In-Reply-To: <20060228103519.20f9b277.akpm@osdl.org>
+Received: from fmr17.intel.com ([134.134.136.16]:65237 "EHLO
+	orsfmr002.jf.intel.com") by vger.kernel.org with ESMTP
+	id S932475AbWB1TmO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Feb 2006 14:42:14 -0500
+In-Reply-To: <20060228115858.GF4081@elf.ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: pavel@ucw.cz, randy_d_dunlap@linux.intel.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Pavel Machek <pavel@ucw.cz>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, akpm@osdl.org, jgarzik@pobox.com, james.bottomley@steeleye.com
 
-Andrew Morton wrote:
-> Jeff Garzik <jgarzik@pobox.com> wrote:
+On Tue, 28 Feb 2006 12:58:58 +0100
+Pavel Machek <pavel@ucw.cz> wrote:
+
+> Hi!
 > 
->>Andrew Morton wrote:
->>
->>>Jeff Garzik <jgarzik@pobox.com> wrote:
->>>
->>>
->>>>Fine-grained 
->>>>message selection allows one to turn on only the messages needed, and 
->>>>only for the controller desired.
->>>
->>>
->>>Except
->>>
->>>- There's (presently) no way of making all the messages go away for a
->>>  non-debug build.
->>
->>They aren't supposed to go away.
->>
+> > From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+> > 
+> > Add ability for SCSI drivers to invoke a shutdown method.
+> > This allows drivers to make drives safe for shutdown/poweroff,
+> > for example.  Some drives need this to prevent possible problems.
+> > 
+> > Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 > 
+> > --- linux-2616-rc4-ata.orig/drivers/scsi/scsi_sysfs.c
+> > +++ linux-2616-rc4-ata/drivers/scsi/scsi_sysfs.c
+> > @@ -302,11 +302,27 @@ static int scsi_bus_resume(struct device
+> >  	return err;
+> >  }
+> >  
+> > +static void scsi_bus_shutdown(struct device * dev)
+> > +{
+> > +	struct scsi_device *sdev = to_scsi_device(dev);
+> > +	struct scsi_host_template *sht = sdev->host->hostt;
+> > +	int err;
+> > +
+> > +	err = scsi_device_quiesce(sdev);
 > 
-> It is legitimate to elect to waste memory on every machine so as to make
-> the system more easily debugged by remote maintainers.  But that's an
-> unusual choice in the kernel context.
+> int err = scsi_device_quiesce()?
 
-Not unusual, as I said, its done in a ton of net drivers.
+Shouldn't matter for the generated code, right?
 
-That said, I suppose its OK to do
-
-	#define ata_msg_foo() 0
-
-for wacky embedded situations.  But the default will be enabled for all 
-users, not just debug kernels.
-
-
->>>- The new debug stuff isn't documented.  One has funble around in the
->>>  source to work out how to even turn it on.  Can it be altered at runtime?
->>>  Dunno - the changelogs are risible.  What effect do the various flags
->>>  have?
->>
->>The model has always been documented:
->>http://www.scyld.com/pipermail/vortex/2001-November/001426.html
->>(scroll down a tad)
+> > +	if (err)
+> > +		printk(KERN_DEBUG "%s: error (0x%x) during shutdown\n",
+> > +			__FUNCTION__, err);
 > 
+> If you get an error, and then ignore it... that should not be DEBUG
+> message, right?
 > 
-> That's useless.
+> > +	if (sht->shutdown)
+> > +		sht->shutdown(sdev);
+> > +}
+> > +
+> >  struct bus_type scsi_bus_type = {
+> >          .name		= "scsi",
+> >          .match		= scsi_bus_match,
+> >  	.suspend	= scsi_bus_suspend,
+> >  	.resume		= scsi_bus_resume,
+> > +	.shutdown	= scsi_bus_shutdown,
+> >  };
+> 
+> Whitespace?
 
-Not useless at all:  It documents the model that is being implemented 
-quite well.  libata will use the same method of bitmasks, same method of 
-increasing verbosity as set by debug level, same method of masking the 
-more verbose messages by default, but always compiling the messages into 
-the driver.  Its highly similar.
+Not a problem in my addition.  Are you requesting me to fix
+the other lines?
 
-	Jeff
-
-
+~Randy
