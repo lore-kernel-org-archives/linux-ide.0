@@ -1,60 +1,58 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET] ata_piix: improve combined mode handling
-Date: Wed, 1 Mar 2006 01:25:38 +0900
-Message-ID: <11411439383398-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+From: "Eric D. Mudama" <edmudama@gmail.com>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Tue, 28 Feb 2006 09:57:31 -0700
+Message-ID: <311601c90602280857x3f102af5l31c9a0ac1a896b4e@mail.gmail.com>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <4401122A.3010908@rtr.ca>
+	 <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca>
+	 <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com>
+	 <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com>
+	 <44046CE6.60803@rtr.ca> <44046D86.7050809@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.199]:54770 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751869AbWB1QZw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 11:25:52 -0500
-Received: by wproxy.gmail.com with SMTP id i4so167334wra
-        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 08:25:51 -0800 (PST)
-In-Reply-To: 
+Received: from pproxy.gmail.com ([64.233.166.177]:48200 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751820AbWB1Q5d convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Feb 2006 11:57:33 -0500
+Received: by pproxy.gmail.com with SMTP id s49so916897pyc
+        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 08:57:33 -0800 (PST)
+In-Reply-To: <44046D86.7050809@pobox.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, jfs@keytradebank.com, 0602@eq.cz, linux-ide@vger.kernel.org, htejun@gmail.com
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <liml@rtr.ca>, David Greaves <david@dgreaves.com>, Tejun Heo <htejun@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus Torvalds <torvalds@osdl.org>
 
-Hello, all.
+those drives should support all FUA opcodes properly, both queued and unqueued
 
-This patchset is against the current upstream[1] + kill illegal
-kfree() patch[2].
-
-This patchset improves combined handling of ata_piix.  Proper port map
-is implemented such that ata_piix knows exactly how PIIX SATA ports
-are mapped to ATA devices.  This patchset also should fix device
-detection problem which seems to be caused by honoring present bits
-while the datasheet declares them reserved on 6300ESB.  (Jean & 0602,
-can you guys please test this patchset?)
-
-I couldn't find datasheets for ESB2 and ICH8, so I assumed ESB2 is
-similar to ICH6, ICH8 to ICH6 and ICH8M to ICH6M.  Is this correct?
-
-Jeff, I'm trying to implement SCR access on ICH6/7's on top of these
-changes and have a question about libata-bmdma.c::ata_pci_init_one().
-ata_piix needs its own version of this function as it should try to
-map ABAR for SCR (and fall back if it fails), so I'm trying to factor
-functions out of ata_pci_init_one() and call them from ata_piix.
-
-ata_pci_init_one() currently uses two separate probe_ent for each port
-if the controller is in legacy mode, which makes the ports use
-separate host_set and thus separate spin locks.  Do they need to use
-separate spinlocks?  Or are there other reasons legacy initialization
-is done this way?
-
-Oh.. Another question.  When you were talking about getting PCS bits
-wrong before [3], were you talking about port map (like port 1 and 3
-map to primary master/slave) or is there something else PCS + MAP
-doesn't cover?
-
-Thanks.
-
---
-tejun
-
-[1] cccc65a3b60edaf721cdee5a14f68ba009341822
-[2] http://article.gmane.org/gmane.linux.ide/8324
-
-
+On 2/28/06, Jeff Garzik <jgarzik@pobox.com> wrote:
+> Mark Lord wrote:
+> > David Greaves wrote:
+> >
+> >>
+> >> scsi1 : sata_sil
+> >>   Vendor: ATA       Model: Maxtor 6B200M0    Rev: BANC
+> >>   Type:   Direct-Access                      ANSI SCSI revision: 05
+> >>   Vendor: ATA       Model: Maxtor 6B200M0    Rev: BANC
+> >>   Type:   Direct-Access                      ANSI SCSI revision: 05
+> >
+> >
+> > I wonder if the non-FUA component here is the sata_sil,
+> > rather than the two Maxtor drives.
+> >
+> > Also, your drives have different firmware,
+> > but both have trouble with FUA here.
+>
+> sata_sil is indeed a piece of hardware that needs to know the opcodes
+> ahead of time...
+>
+>         Jeff
+>
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
