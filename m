@@ -1,43 +1,47 @@
-From: "Shem Multinymous" <multinymous@gmail.com>
-Subject: Re: [ltp] ICH6M legacy hotswap?
-Date: Tue, 28 Feb 2006 21:48:08 +0200
-Message-ID: <41840b750602281148t4856c226g5dc3623f0e725c40@mail.gmail.com>
-References: <41840b750602280135j511a7584m80b0b1f549780bf@mail.gmail.com>
-	 <dead81ad0602280541i38dcdb49n@mail.gmail.com>
-	 <41840b750602280731l3f2ee8a2l5b98c5905b3ea7be@mail.gmail.com>
-	 <dead81ad0602280853k5370b59bs@mail.gmail.com>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH 12/13] ATA ACPI: use scsi_bus_shutdown for SATA/PATA
+Date: Tue, 28 Feb 2006 21:22:19 +0100
+Message-ID: <20060228202219.GA5483@elf.ucw.cz>
+References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com> <20060222140608.2de3fa24.randy_d_dunlap@linux.intel.com> <20060228115858.GF4081@elf.ucw.cz> <20060228114424.0fb2d495.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.192]:59891 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932535AbWB1TsJ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Feb 2006 14:48:09 -0500
-Received: by wproxy.gmail.com with SMTP id i12so214945wra
-        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 11:48:09 -0800 (PST)
-In-Reply-To: <dead81ad0602280853k5370b59bs@mail.gmail.com>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:57737 "EHLO amd.ucw.cz")
+	by vger.kernel.org with ESMTP id S932551AbWB1UWp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 15:22:45 -0500
 Content-Disposition: inline
+In-Reply-To: <20060228114424.0fb2d495.randy_d_dunlap@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-thinkpad@linux-thinkpad.org
-Cc: linux-ide@vger.kernel.org
+To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, akpm@osdl.org, jgarzik@pobox.com, james.bottomley@steeleye.com
 
-On 2/28/06, Jim Duchek <jim.duchek@gmail.com> wrote:
-> On 28/02/06, Shem Multinymous <multinymous@gmail.com> wrote:
-> > On 2/28/06, Jim Duchek <jim.duchek@gmail.com> wrote:
-> > I tried switching this box from the ata_piix driver to the ahci
-> > driver. The ahci driver recognizes the ICH6M chip (it's on the
-> > whitelist of both drivers), but probing fails with error -12
-> > (-ENOMEM?! Does this make sense?).
-> >
-> > Anyway, the ICH6M is not initialized to AHCI mode by the BIOS (at
-> > least as judged by at ata_piix, since when using ata_piix,
-> > piix_disable_ahci() isn't called).
->
-> Hrm. I've seen a lot of traffic in that driver for the release candidates of
-> 2.6.16 -- perhaps you'll have better luck when .16 comes out.
+Hi!
 
-With 2.6.16-rc5-git2, ahci's probing still fails with error -12.
+> > > +	if (sht->shutdown)
+> > > +		sht->shutdown(sdev);
+> > > +}
+> > > +
+> > >  struct bus_type scsi_bus_type = {
+> > >          .name		= "scsi",
+> > >          .match		= scsi_bus_match,
+> > >  	.suspend	= scsi_bus_suspend,
+> > >  	.resume		= scsi_bus_resume,
+> > > +	.shutdown	= scsi_bus_shutdown,
+> > >  };
+> > 
+> > Whitespace?
+> 
+> Not a problem in my addition.  Are you requesting me to fix
+> the other lines?
 
-  Shem
+Ahha, sorry, I seen wrong whitespace, and did not realize it was there
+already. Yes, it would be nice to to fix whitespace around
+modifications.
+
+...and sorry about all the comments about added debugging. I did not
+realize Jeff actually wants it that way. (I seriously dislike
+excessive debugging in ACPI case.)
+								Pavel
+-- 
+Web maintainer for suspend.sf.net (www.sf.net/projects/suspend) wanted...
