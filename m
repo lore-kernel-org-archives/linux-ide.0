@@ -1,38 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] Fixup ahci suspend / resume
-Date: Tue, 28 Feb 2006 10:22:42 -0500
-Message-ID: <44046AC2.1060002@pobox.com>
-References: <44045FB1.5040408@suse.de> <440468DB.5060605@pobox.com> <20060228151928.GC24981@suse.de>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Tue, 28 Feb 2006 10:26:55 -0500
+Message-ID: <44046BBF.1060204@rtr.ca>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046074.4070201@rtr.ca> <Pine.LNX.4.64.0602280939280.16541@p34> <440462E1.2010909@rtr.ca> <4404671D.70506@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:8331 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751374AbWB1PWp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 10:22:45 -0500
-In-Reply-To: <20060228151928.GC24981@suse.de>
+Received: from rtr.ca ([64.26.128.89]:61914 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S932121AbWB1P1C (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 10:27:02 -0500
+In-Reply-To: <4404671D.70506@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Hannes Reinecke <hare@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Jens Axboe wrote:
-> Upstream 2.6.x certainly _does_ care about suspend/resume! To me, this
-> patch seems simple enough to be included. It's little more than
-> splitting the register init out form the port_stop/start functions and
-> calling them on resume/suspend appropriately.
+Jeff Garzik wrote:
+> Mark Lord wrote:
+>> Justin Piszcz wrote:
+>>
+>>> Will your verbosity patch make it into 2.6.16-rcX?
+>>
+>>
+>> I don't think so -- it was a bit of a hack to make the ATA opcode
+>> visible at those points in the code.
+>>
+>> The better approach might be to just have separate fields
+>> for "command" and "status" in the ata tf.  With that, a much less
+>> invasive patch could be prepared.
+>>
+>> I can spin one quickly here if Jeff thinks it could
+>> be gotten into 2.6.16.  Otherwise, I won't -- my code base
+>> here is leagues behind the current libata-dev.
+> 
+> Nah we should really dump the full taskfile...
 
-Upstream _libata_ doesn't care much about suspend/resume.  Officially, 
-its a work in progress with major pieces -- your patch and ACPI -- still 
-missing.
+Agreed.  But the original command byte is not stored anywhere
+for us to dump it from.
 
-Further, good improvements covering some of the changes in Hannes' patch 
-are already in #upstream.
-
-Thus, it's more work than its worth to care about the patch as-is.  It 
-should be redone against #upstream, which is where all suspend/resume 
-development is occurring.
-
-	Jeff
-
-
+Cheers
