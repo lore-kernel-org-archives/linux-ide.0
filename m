@@ -1,34 +1,44 @@
-From: "Shem Multinymous" <multinymous@gmail.com>
-Subject: ICH6M legacy hotswap?
-Date: Tue, 28 Feb 2006 11:35:45 +0200
-Message-ID: <41840b750602280135j511a7584m80b0b1f549780bf@mail.gmail.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: 2.6.16-rc5: known regressions
+Date: Tue, 28 Feb 2006 10:40:53 +0100
+Message-ID: <20060228094053.GT24981@suse.de>
+References: <Pine.LNX.4.64.0602262122000.22647@g5.osdl.org> <20060227061354.GO3674@stusta.de> <4402A219.8010501@pobox.com> <20060227070830.GQ3674@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.198]:18273 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932140AbWB1Jfq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Feb 2006 04:35:46 -0500
-Received: by wproxy.gmail.com with SMTP id i13so92123wra
-        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 01:35:45 -0800 (PST)
+Received: from ns.virtualhost.dk ([195.184.98.160]:4392 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1750819AbWB1Jod (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 04:44:33 -0500
 Content-Disposition: inline
+In-Reply-To: <20060227070830.GQ3674@stusta.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-thinkpad <linux-thinkpad@linux-thinkpad.org>
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, linux-ide@vger.kernel.org
 
-Hi,
+On Mon, Feb 27 2006, Adrian Bunk wrote:
+> On Mon, Feb 27, 2006 at 01:54:17AM -0500, Jeff Garzik wrote:
+> > Adrian Bunk wrote:
+> > >Subject    : 2.6.16-rc[34]: resume-from-RAM unreliable (SATA)
+> > >References : http://lkml.org/lkml/2006/2/20/159
+> > >Submitter  : Mark Lord <lkml@rtr.ca>
+> > >Handled-By : Randy Dunlap <rdunlap@xenotime.net>
+> > >Status     : one of Randy's patches seems to fix it
+> > 
+> > 
+> > This is not a regression, libata suspend/resume has always been crappy. 
+> >  It's under active development (by Randy, among others) to fix this.
+> 
+> It might have always been crappy, but it is a regression since
+> according to the submitter it is working with 2.6.15.
 
-Is there currently any kludge/patch/hack for hot/warm/cold swapping on
-the PATA port of ICH6M in legacy mode with ata_piix/libata? Or a way
-to switch the ICH6M to AHCI mode (in the absence of BIOS support) and
-then get AHCI hot/warm/coldwap?
+It might have worked under lucky circumstances with an idle disk and a
+goat sacrifice, so I agree with Jeff that this is definitely not a
+regression. To my knowledge, Mark always used my libata suspend patch on
+earlier kernels so it's not even an apples-apples comparison.
 
-I'm trying to get hot-swapping of the UltraBay DVD drive on a ThinkPad T43.
+So please scratch that entry.
 
-(There's a new kernel module, lt_hotswap, that provides IDE
-hotswapping on some PATA machines, such as older ThinkPads. It fiddles
-with ACPI and the legacy ide driver's internals, so it doesn't work
-with the ata_piix driver needed on the ThinkPad T43.)
+-- 
+Jens Axboe
 
-  Shem
