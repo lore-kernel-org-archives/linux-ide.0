@@ -1,41 +1,52 @@
-From: "Shem Multinymous" <multinymous@gmail.com>
-Subject: Re: [ltp] ICH6M legacy hotswap?
-Date: Wed, 1 Mar 2006 02:00:17 +0200
-Message-ID: <41840b750602281600x75ed7c6diced291d50b76582a@mail.gmail.com>
-References: <41840b750602280135j511a7584m80b0b1f549780bf@mail.gmail.com>
-	 <20060228202642.GA15624@srcf.ucam.org>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: 2.6.16-rc5: known regressions
+Date: Tue, 28 Feb 2006 16:17:25 -0800
+Message-ID: <20060228161725.8c731743.rdunlap@xenotime.net>
+References: <Pine.LNX.4.64.0602262122000.22647@g5.osdl.org>
+	<20060227061354.GO3674@stusta.de>
+	<4402A219.8010501@pobox.com>
+	<20060227070830.GQ3674@stusta.de>
+	<20060228094053.GT24981@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.193]:47979 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932725AbWCAAAS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Feb 2006 19:00:18 -0500
-Received: by zproxy.gmail.com with SMTP id l1so4125nzf
-        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 16:00:17 -0800 (PST)
-In-Reply-To: <20060228202642.GA15624@srcf.ucam.org>
-Content-Disposition: inline
+Received: from xenotime.net ([66.160.160.81]:3470 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S932725AbWCAAQH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 19:16:07 -0500
+Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 16:16:05 -0800
+In-Reply-To: <20060228094053.GT24981@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: linux-thinkpad@linux-thinkpad.org, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: bunk@stusta.de, jgarzik@pobox.com, linux-kernel@vger.kernel.org, torvalds@osdl.org, akpm@osdl.org, lkml@rtr.ca, linux-ide@vger.kernel.org
 
-On 2/28/06, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> To the best of my knowledge, there is no way to get an ICH6 into AHCI
-> mode if the BIOS has set it up in legacy mode.
+On Tue, 28 Feb 2006 10:40:53 +0100 Jens Axboe wrote:
 
-Yeah, I've just found Jeff's posts on that.
-It's a real shame, taking a perfectly good AHCI controller and using
-it in legacy mode... I hope someone finds a way to hack it out.
+> On Mon, Feb 27 2006, Adrian Bunk wrote:
+> > On Mon, Feb 27, 2006 at 01:54:17AM -0500, Jeff Garzik wrote:
+> > > Adrian Bunk wrote:
+> > > >Subject    : 2.6.16-rc[34]: resume-from-RAM unreliable (SATA)
+> > > >References : http://lkml.org/lkml/2006/2/20/159
+> > > >Submitter  : Mark Lord <lkml@rtr.ca>
+> > > >Handled-By : Randy Dunlap <rdunlap@xenotime.net>
+> > > >Status     : one of Randy's patches seems to fix it
+> > > 
+> > > 
+> > > This is not a regression, libata suspend/resume has always been crappy. 
+> > >  It's under active development (by Randy, among others) to fix this.
+> > 
+> > It might have always been crappy, but it is a regression since
+> > according to the submitter it is working with 2.6.15.
+> 
+> It might have worked under lucky circumstances with an idle disk and a
+> goat sacrifice, so I agree with Jeff that this is definitely not a
+> regression. To my knowledge, Mark always used my libata suspend patch on
+> earlier kernels so it's not even an apples-apples comparison.
+> 
+> So please scratch that entry.
 
+I'll third that request/comment.
 
-> I wrote some code that
-> basically does what lt_hotswap does for SATA devices that worked fine on
-> my ICH6 test machine (a Dell rather than a Thinkpad, but shouldn't
-> matter in this case), but it needs much more polish before it's
-> integratable.
-
-Eagerly awaited.
-
-  Shem
+---
+~Randy
