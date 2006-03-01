@@ -1,7 +1,7 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Wed, 1 Mar 2006 06:37:05 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0603010634180.15332@p34>
+Date: Wed, 1 Mar 2006 08:17:42 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0603010816370.15332@p34>
 References: <Pine.LNX.4.64.0602140439580.3567@p34> <4401122A.3010908@rtr.ca>
   <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca>  <4403704E.4090109@rtr.ca>
  <4403A84C.6010804@gmail.com>  <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com>
@@ -10,14 +10,16 @@ References: <Pine.LNX.4.64.0602140439580.3567@p34> <4401122A.3010908@rtr.ca>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:12934 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S1030187AbWCALhM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 06:37:12 -0500
+Received: from lucidpixels.com ([66.45.37.187]:9603 "EHLO lucidpixels.com")
+	by vger.kernel.org with ESMTP id S932241AbWCANRp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 08:17:45 -0500
 In-Reply-To: <4404F31D.90407@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
 Cc: "Eric D. Mudama" <edmudama@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, David Greaves <david@dgreaves.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus Torvalds <torvalds@osdl.org>
+
+
 
 On Tue, 28 Feb 2006, Mark Lord wrote:
 
@@ -33,22 +35,34 @@ On Tue, 28 Feb 2006, Mark Lord wrote:
 > cheers
 >
 
-To trust or not to trust?
+Could someone *PLEASE* produce a *unified* patch that is compatible with 
+2.6.16-rc5 or 2.6.15.4 so I can reproduce the error?
 
-I have a 400GB SATA drive: WDC WD4000KD-00N.  With these errors in dmesg 
-that have been mentioned throughout the thread, should I trust Linux using 
-this drive, or should I remove it/wait until a patch is released to 
-address this issue?
+Mark had two patches, I have had the most PIA time getting them to work, 
+patch properly, etc..
 
-Also, in the forums (storagereview.com I believe), it has been noted that 
-these drives do NOT work on the Intel ICH5 controller, and this turned out 
-to be true, when I put it on the Intel ICH5, the box stalls for 2-3 
-minutes and then it does not see the drive.  However, on the Silicon 
-Image, Inc. SiI 3112 chipset or Promise SATA/150 TX2 it works okay but it 
-has those errors in dmesg.
+With 2.6.16-rc5:
 
-My question is, performing long and short smart tests, everything is 
-physically ok with the drive; however, I probably should not use this 
-drive for anything important in Linux, comments?
+# make bzImage
+   CHK     include/linux/version.h
+scripts/kconfig/conf -s arch/i386/Kconfig
+#
+# using defaults found in .config
+#
+   SPLIT   include/linux/autoconf.h -> include/config/*
+   CHK     include/linux/compile.h
+   CHK     usr/initramfs_list
+   GEN     .version
+   CHK     include/linux/compile.h
+   UPD     include/linux/compile.h
+   CC      init/version.o
+   LD      init/built-in.o
+   LD      .tmp_vmlinux1
+drivers/built-in.o: In function `ata_to_sense_error': undefined reference 
+to `print'
+drivers/built-in.o: In function `ata_to_sense_error': undefined reference 
+to `print'
+make: *** [.tmp_vmlinux1] Error 1
+Command exited with non-zero status 2
 
-Justin.
+
