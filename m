@@ -1,75 +1,51 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Wed, 1 Mar 2006 13:33:00 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0603011332260.2708@p34>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com>
- <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca>
- <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca>
- <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca>
- <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com>
- <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com>
- <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046CE6.60803@rtr.ca>
- <44046D86.7050809@pobox.com> <4405DCAF.6030500@dgreaves.com> <4405DDEA.7020309@rtr.ca>
- <4405E42B.9040804@dgreaves.com> <4405E83D.9000906@rtr.ca>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: NCQ general question
+Date: Wed, 01 Mar 2006 13:34:38 -0500
+Message-ID: <4405E93E.3010307@rtr.ca>
+References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com> <440561CB.30201@yahoo.de> <4405A656.1030602@rtr.ca> <4405C41F.5060504@yahoo.de> <20060301160554.GD4816@suse.de> <4405D040.8000700@yahoo.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:62360 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S1750897AbWCASdC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 13:33:02 -0500
-In-Reply-To: <4405E83D.9000906@rtr.ca>
+Received: from rtr.ca ([64.26.128.89]:53156 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751074AbWCASeV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 13:34:21 -0500
+In-Reply-To: <4405D040.8000700@yahoo.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: David Greaves <david@dgreaves.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus Torvalds <torvalds@osdl.org>
+To: Gentoopower <gentoopower@yahoo.de>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
+Gentoopower wrote:
+> Jens Axboe wrote:
+>> On Wed, Mar 01 2006, Gentoopower wrote:
+..
+>>> I can defintely feel the speed difference between the two drives.
+>>>     
+>> Well that can't be because of NCQ, since it isn't active :-)   
+> 
+> Got ya:-)
+> 
+> Who said this box is running only linux?
 
+You did, by posting to the *Linux-IDE* kernel mailing list.
 
-On Wed, 1 Mar 2006, Mark Lord wrote:
+All bets are off for other OSs, especially those that really
+*need* NCQ for half-decent performance.
 
-> David Greaves wrote:
->> 
->> haze:/usr/src# smartctl -data -o off /dev/sdc
->> succeeds but gives me:
->> 
->> ata3: status=0x50 { DriveReady SeekComplete }
->> ata3: translated op=0x85 ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
->> ata3: status=0x51 { DriveReady SeekComplete Error }
->> ata3: error=0x04 { DriveStatusError }
->> ata3: translated op=0x85 ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
->> ata3: status=0x51 { DriveReady SeekComplete Error }
->> ata3: error=0x04 { DriveStatusError }
->> ata3: translated op=0x85 ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
->> ata3: status=0x51 { DriveReady SeekComplete Error }
->> ata3: error=0x04 { DriveStatusError }
->
-> "DriveStatusError" is "Command Aborted" in ac-speak.
-> From the man page for smartctl, we read:
->
->> -o VALUE  Enables or disables SMART automatic offline test ...
->> Note that the SMART automatic offline test command is listed as "Obsolete" 
-> in every
->> version  of  the  ATA  and ATA/ATAPI Specifications.  It was originally part 
-> of the
->> SFF-8035i Revision 2.0 specification, but was never part of any ATA 
-> specification.
->
-> There's a chance that your drives simply do not fully support this feature,
-> and are rejecting attempts to use it.
->
-> By the way, the latest 2.6.16-rc5-git4 is available,
-> and has FUA turned off by default now.  So it should
-> work with your drives, and *you* are expected to verify
-> that for us all now.
->
-> Cheers
->
-> -ml
->
+Linux doesn't, but it's definitely nice to wish for.
 
-Mark,
+I've implemented host-queuing support for NCQ and TCQ on
+several controllers (for Linux), and it almost always produces
+only a tiny *measureable* effect on desktop systems.
 
-After patching to 2.6.16-rc5-git4, we should no longer see these errors 
-right?  Then I can use my drive again without worrying about data loss? :)
+Busy servers, with lots of teensy random read requests,
+benefit most from it, as do benchmark programs that do a lot of seeking.
 
-Justin.
+But normal system use -- running OO.org, rebuilding kernels,
+etc.. no significant measurable difference.  Maybe by fiddling
+with the IO scheduler code (which defeats NCQ/TCQ to a degree)..
+
+But I'd happily enable it on my own systems anyway!
+
+Cheers
