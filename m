@@ -1,46 +1,55 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Wed, 01 Mar 2006 01:01:58 -0500
-Message-ID: <440538D6.3010803@pobox.com>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046074.4070201@rtr.ca> <Pine.LNX.4.64.0602280939280.16541@p34> <440462E1.2010909@rtr.ca> <4404671D.70506@pobox.com> <44046BBF.1060204@rtr.ca> <44046D65.90909@pobox.com> <4404EECE.3080304@rtr.ca>
+From: shogunx <shogunx@sleekfreak.ath.cx>
+Subject: Re: Feature request: HDD status
+Date: Wed, 1 Mar 2006 01:16:04 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0603010115560.4291-100000@sleekfreak.ath.cx>
+References: <E1FEESA-0002vG-00@porton.narod.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:50854 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932421AbWCAGCF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 01:02:05 -0500
-In-Reply-To: <4404EECE.3080304@rtr.ca>
+Received: from rrcs-24-227-114-150.se.biz.rr.com ([24.227.114.150]:44936 "EHLO
+	sleekfreak.ath.cx") by vger.kernel.org with ESMTP id S932364AbWCAGKC
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Mar 2006 01:10:02 -0500
+In-Reply-To: <E1FEESA-0002vG-00@porton.narod.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: "Victor Porton,,," <porton@ex-code.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
-> Jeff Garzik wrote:
-> 
->>
->>>> Nah we should really dump the full taskfile...
->>>
->>>
->>>
->>> Agreed.  But the original command byte is not stored anywhere
->>> for us to dump it from.
->>
->>
->> er eh?
->>
->> All callers of ata_to_sense_error() have the full taskfile available.
-> 
-> 
-> Yes, but the command byte gets overwritten by the read-back status byte,
-> since they share the same byte in the taskfile.
-> 
-> So once the command has failed, the command byte is no longer there.
-
-It's trivial to save it locally before stomping...
-
-	Jeff
+try gkrellm
 
 
+On Wed, 1 Mar 2006, Victor Porton,,, wrote:
+
+> Hi,
+>
+> I want the following feature:
+>
+> Linux would be able (if this is possible for software) to
+> deliver to the user the state of the HDD, whether it is
+> active.
+>
+> I mean that Linux would have a module which would export to
+> user space a boolean flag (probably a semaphore) which would
+> be true while the HDD red lamp is shining and false while it
+> is dark.
+>
+> That is I want sofrware to provide the same info as this
+> hadrware HDD indicator on the front panel of most PCs.
+>
+> (Then a Gnome applet would show it.)
+>
+> I just look under the table to check HDD status to often
+> and would instead like to see it on the monitor.
+>
+> Just a little wish.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
+
+sleekfreak pirate broadcast
+http://sleekfreak.ath.cx:81/
 
