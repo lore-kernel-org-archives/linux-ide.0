@@ -1,42 +1,41 @@
 From: "Shem Multinymous" <multinymous@gmail.com>
-Subject: Re: Feature request: HDD status
-Date: Wed, 1 Mar 2006 01:55:30 +0200
-Message-ID: <41840b750602281555q493323c1y37d3d3fb25e3d087@mail.gmail.com>
-References: <E1FEESA-0002vG-00@porton.narod.ru>
+Subject: Re: [ltp] ICH6M legacy hotswap?
+Date: Wed, 1 Mar 2006 02:00:17 +0200
+Message-ID: <41840b750602281600x75ed7c6diced291d50b76582a@mail.gmail.com>
+References: <41840b750602280135j511a7584m80b0b1f549780bf@mail.gmail.com>
+	 <20060228202642.GA15624@srcf.ucam.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.180]:51176 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932697AbWB1Xzb convert rfc822-to-8bit
+Received: from zproxy.gmail.com ([64.233.162.193]:47979 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932725AbWCAAAS convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Feb 2006 18:55:31 -0500
-Received: by pproxy.gmail.com with SMTP id i49so969059pye
-        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 15:55:30 -0800 (PST)
-In-Reply-To: <E1FEESA-0002vG-00@porton.narod.ru>
+	Tue, 28 Feb 2006 19:00:18 -0500
+Received: by zproxy.gmail.com with SMTP id l1so4125nzf
+        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 16:00:17 -0800 (PST)
+In-Reply-To: <20060228202642.GA15624@srcf.ucam.org>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Victor Porton,,," <porton@ex-code.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: linux-thinkpad@linux-thinkpad.org, linux-ide@vger.kernel.org
 
-On 3/1/06, Victor Porton,,, <porton@ex-code.com> wrote:
-> Linux would be able (if this is possible for software) to
-> deliver to the user the state of the HDD, whether it is
-> active.
->
-> I mean that Linux would have a module which would export to
-> user space a boolean flag (probably a semaphore) which would
-> be true while the HDD red lamp is shining and false while it
-> is dark.
+On 2/28/06, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> To the best of my knowledge, there is no way to get an ICH6 into AHCI
+> mode if the BIOS has set it up in legacy mode.
 
-You can get a fair approximation of that information by monitoring
-/proc/diskstats or the relevant counter files under /sys. Simply turn
-on the logical LED if the IO counter has been incremented in the last
-(say) 30ms. The only time this is likely to be noticable different
-than the physical LED is when the drive is in some initialization
-state or error condition.
+Yeah, I've just found Jeff's posts on that.
+It's a real shame, taking a perfectly good AHCI controller and using
+it in legacy mode... I hope someone finds a way to hack it out.
 
-For an amusing ready-made graphical version, try the gkhdplop plugin of gkrellm.
+
+> I wrote some code that
+> basically does what lt_hotswap does for SATA devices that worked fine on
+> my ICH6 test machine (a Dell rather than a Thinkpad, but shouldn't
+> matter in this case), but it needs much more polish before it's
+> integratable.
+
+Eagerly awaited.
 
   Shem
