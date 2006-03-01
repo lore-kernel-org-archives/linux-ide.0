@@ -1,49 +1,31 @@
-From: Sebastian Kuzminsky <seb@highlab.com>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: what is hdparm doing?
-Date: Tue, 28 Feb 2006 20:22:21 -0700
-Message-ID: <E1FEHuv-0004mb-VL@highlab.com>
-References: <E1FED6T-0004a4-LN@highlab.com> <4404F89C.8040008@rtr.ca>
+Date: Tue, 28 Feb 2006 23:18:29 -0500
+Message-ID: <44052095.8070607@rtr.ca>
+References: <E1FED6T-0004a4-LN@highlab.com> <4404F89C.8040008@rtr.ca> <E1FEHuv-0004mb-VL@highlab.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rwcrmhc14.comcast.net ([216.148.227.154]:14288 "EHLO
-	rwcrmhc14.comcast.net") by vger.kernel.org with ESMTP
-	id S932522AbWCADUW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Feb 2006 22:20:22 -0500
-Received: from seb (helo=highlab.com)
-	by highlab.com with local-esmtp (Exim 4.50)
-	id 1FEHuv-0004mb-VL
-	for linux-ide@vger.kernel.org; Tue, 28 Feb 2006 20:22:21 -0700
-In-reply-to: <4404F89C.8040008@rtr.ca> 
+Received: from rtr.ca ([64.26.128.89]:15337 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751491AbWCAESe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 23:18:34 -0500
+In-Reply-To: <E1FEHuv-0004mb-VL@highlab.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Sebastian Kuzminsky <seb@highlab.com>
+Cc: linux-ide@vger.kernel.org
 
-Mark Lord <liml@rtr.ca> wrote:
-> Sebastian Kuzminsky wrote:
-> > Hi folks, hdparm's got me confused.
-> ..
-> > "hdparm /dev/hda" says:
-> .
-> >             DMA: mdma0 mdma1 *mdma2
-> >                  Cycle time: min=120ns recommended=120ns
-> >             PIO: pio0 pio1 pio2 pio3 pio4
-> >                  Cycle time: no flow control=120ns  IORDY flow control=120ns
-> ..
+Sebastian Kuzminsky wrote:
+ >
+> So how do I know what PIO mode the drive wants to use?
 > 
-> The *mdma2 means, that if you were to issue a READ_DMA (or WRITE_DMA)
-> command to the drive, the drive is expecting the host to use
-> the multiword-dma-2 protocol and timings for it.
+> And how do I tell the HBA what PIO mode to use?
 > 
-> Meanwhile, the host may, at its option, simply use PIO commands (READ, WRITE)
-> instead of DMA, any time it chooses.
-> 
-> Drives have both a DMA mode, and a PIO mode, each of which is selected
-> and used independently of the other.
 
-Ok thanks!
+You don't do either of those.
+The device driver takes care of it, if needed.
 
-So how do I know what PIO mode the drive wants to use?
+In this case, they were both likely set up for PIO4.
 
-And how do I tell the HBA what PIO mode to use?
-
--- 
-Sebastian Kuzminsky
+Cheers
