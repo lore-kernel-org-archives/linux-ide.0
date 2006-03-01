@@ -1,46 +1,35 @@
-From: Gentoopower <gentoopower@yahoo.de>
-Subject: Re: NCQ general question
-Date: Wed, 01 Mar 2006 09:56:43 +0100
-Message-ID: <440561CB.30201@yahoo.de>
-References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] sata_sil: remove unneeded ATA_FLAG_SRST from 3512 port info
+Date: Wed, 1 Mar 2006 19:07:27 +0900
+Message-ID: <20060301100727.GA23124@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp108.plus.mail.mud.yahoo.com ([68.142.206.241]:16227 "HELO
-	smtp108.plus.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S932660AbWCAI4u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Mar 2006 03:56:50 -0500
-In-Reply-To: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com>
+Received: from pproxy.gmail.com ([64.233.166.182]:57567 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932163AbWCAKHe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 05:07:34 -0500
+Received: by pproxy.gmail.com with SMTP id o67so41373pye
+        for <linux-ide@vger.kernel.org>; Wed, 01 Mar 2006 02:07:32 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Raz Ben-Jehuda(caro) wrote:
-> i am thinking of buying a promise card sataII pcix.
-> they have two types, a card which support NCQ
-> and another that does not.
-> What is the bennifit of buying  a card with NCQ tagging ?
->   
-How about: http://en.wikipedia.org/wiki/Native_command_queueing
-> i would be thankfull for any answer .
-> thank you.
-> raz.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->   
+Now unneeded ATA_FLAG_SRST sneaked into sil_3512 port info while
+merging upstream-fixes.  Kill it.
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-
-	
-
-	
-		
-___________________________________________________________ 
-Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
-
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index 91ecf52..cdf800e 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -202,7 +202,7 @@ static const struct ata_port_info sil_po
+ 	{
+ 		.sht		= &sil_sht,
+ 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_SRST | ATA_FLAG_MMIO |
++				  ATA_FLAG_MMIO |
+ 				  SIL_FLAG_RERR_ON_DMA_ACT,
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
