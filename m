@@ -1,47 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET] libata: implement and use ata_dev_revalidate(), take #2
-Date: Wed, 1 Mar 2006 17:20:39 +0900
-Message-ID: <11412012393192-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+From: Gentoopower <gentoopower@yahoo.de>
+Subject: Re: NCQ general question
+Date: Wed, 01 Mar 2006 09:56:43 +0100
+Message-ID: <440561CB.30201@yahoo.de>
+References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.207]:34020 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751354AbWCAIUo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 03:20:44 -0500
-Received: by zproxy.gmail.com with SMTP id 16so82810nzp
-        for <linux-ide@vger.kernel.org>; Wed, 01 Mar 2006 00:20:43 -0800 (PST)
-In-Reply-To: 
+Received: from smtp108.plus.mail.mud.yahoo.com ([68.142.206.241]:16227 "HELO
+	smtp108.plus.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S932660AbWCAI4u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Mar 2006 03:56:50 -0500
+In-Reply-To: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org, htejun@gmail.com
+To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello, Jeff.
+Raz Ben-Jehuda(caro) wrote:
+> i am thinking of buying a promise card sataII pcix.
+> they have two types, a card which support NCQ
+> and another that does not.
+> What is the bennifit of buying  a card with NCQ tagging ?
+>   
+How about: http://en.wikipedia.org/wiki/Native_command_queueing
+> i would be thankfull for any answer .
+> thank you.
+> raz.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>   
 
-This is the second take of implement-and-use-ata_dev_revalidate
-patchset.  In the last take[1], out of four patches, %1 got ACK'ed, %2
-had some minor issues, %3 got no comment and %4 had some issue but got
-resolved.
 
-Changes from the last take are...
 
-* in #2, @verbose is renamed to @print_info as suggested
-* in #2, lba_desc change is described in the patch description
+	
 
-This patchset is against
-the current #upstream[2]
-+ kill-illegal-kfree patch[3]
-+ reorganize-ata_dev_identify patchset[4]
-
-Thanks.
-
---
-tejun
-
-[1] http://article.gmane.org/gmane.linux.ide/8050
-[2] cccc65a3b60edaf721cdee5a14f68ba009341822
-[3] http://article.gmane.org/gmane.linux.ide/8324
-[4] http://article.gmane.org/gmane.linux.ide/8412
-
+	
+		
+___________________________________________________________ 
+Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
 
