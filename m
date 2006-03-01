@@ -1,38 +1,41 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET] ata_piix: improve combined mode handling
-Date: Wed, 1 Mar 2006 14:16:04 +0900
-Message-ID: <20060301051604.GA20697@htj.dyndns.org>
-References: <11411439383398-git-send-email-htejun@gmail.com> <440493B7.7060109@pobox.com>
+Subject: regarding sata_sil errata
+Date: Wed, 1 Mar 2006 14:25:40 +0900
+Message-ID: <20060301052540.GA20926@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.193]:5720 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932322AbWCAFQK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 00:16:10 -0500
-Received: by zproxy.gmail.com with SMTP id n29so53554nzf
-        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 21:16:10 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.205]:52687 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932170AbWCAFZq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 00:25:46 -0500
+Received: by zproxy.gmail.com with SMTP id s18so56225nze
+        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 21:25:46 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <440493B7.7060109@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: jfs@keytradebank.com, 0602@eq.cz, linux-ide@vger.kernel.org
+To: Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-On Tue, Feb 28, 2006 at 01:17:27PM -0500, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> >Hello, all.
-> >
-> >This patchset is against the current upstream[1] + kill illegal
-> >kfree() patch[2].
-> 
-> 30-second review:  looks OK, though I worry about patch #6.  I'll answer 
-> your questions and review in-depth later on.
-> 
+Hello, all.
 
-I'm also a little bit about #6 (the reason why it's not part of #5).
-I also thought about masking with available ports but we are trusting
-PCS enable bits when both bits are off (early exit when present_mask
-is zero), so...
+Now that we have R_ERR on DMA activate FIS errata workaround in place,
+sata_sil driver seems to work much better now.  There are two things
+to do regarding sata_sil errata.
+
+1. removing non-affected drives from m15w blacklist.  I think we
+   should test this in -mm for some time before submitting to
+   upstream.  Will submit a patch soon.
+
+2. determining which are 3112 and which are 3512.
+
+   Carlos and Raymond, can you guys please let us know which are 3112
+   and which are 3512?  The PCI IDs in question are 0x1095/0x0240,
+   0x1002/0x436e, 0x1002/0x4379 and 0x1002/0x437a.  All these IDs are
+   currently treated as 3112 but it's a shame to apply m15w when a
+   controller can work happily with R_ERR on DMA activate FIS errata,
+   isn't it?
+
+Thanks.  :-)
 
 -- 
 tejun
