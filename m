@@ -1,46 +1,27 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sata_sil: remove unaffected drives from m15w blacklist
-Date: Wed, 1 Mar 2006 15:13:50 +0900
-Message-ID: <20060301061350.GA26900@htj.dyndns.org>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: NCQ general question
+Date: Wed, 1 Mar 2006 09:04:11 +0200
+Message-ID: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.201]:5590 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932440AbWCAGNz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 01:13:55 -0500
-Received: by zproxy.gmail.com with SMTP id n29so61883nzf
-        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 22:13:55 -0800 (PST)
+Received: from wproxy.gmail.com ([64.233.184.196]:32441 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932545AbWCAHEM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Mar 2006 02:04:12 -0500
+Received: by wproxy.gmail.com with SMTP id i34so69624wra
+        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 23:04:11 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-m15w blacklist overgrew by attributing unrelated problems to m15w
-including R_ERR on DMA activate FIS errata.  This patch shrinks
-sata_sil m15w blacklist such that it's as reported by Silicon Image.
+i am thinking of buying a promise card sataII pcix.
+they have two types, a card which support NCQ
+and another that does not.
+What is the bennifit of buying  a card with NCQ tagging ?
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Carlos Pardo <Carlos.Pardo@siliconimage.com>
-
----
-
-As said earlier, I think this patch needs testing in -mm for some
-time.  Maybe this should be merged only into #ALL.
-
-diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
-index 91ecf52..3d82b84 100644
---- a/drivers/scsi/sata_sil.c
-+++ b/drivers/scsi/sata_sil.c
-@@ -110,12 +110,8 @@ static const struct sil_drivelist {
- 	{ "ST330013AS",		SIL_QUIRK_MOD15WRITE },
- 	{ "ST340017AS",		SIL_QUIRK_MOD15WRITE },
- 	{ "ST360015AS",		SIL_QUIRK_MOD15WRITE },
--	{ "ST380013AS",		SIL_QUIRK_MOD15WRITE },
- 	{ "ST380023AS",		SIL_QUIRK_MOD15WRITE },
- 	{ "ST3120023AS",	SIL_QUIRK_MOD15WRITE },
--	{ "ST3160023AS",	SIL_QUIRK_MOD15WRITE },
--	{ "ST3120026AS",	SIL_QUIRK_MOD15WRITE },
--	{ "ST3200822AS",	SIL_QUIRK_MOD15WRITE },
- 	{ "ST340014ASL",	SIL_QUIRK_MOD15WRITE },
- 	{ "ST360014ASL",	SIL_QUIRK_MOD15WRITE },
- 	{ "ST380011ASL",	SIL_QUIRK_MOD15WRITE },
+i would be thankfull for any answer .
+thank you.
+raz.
