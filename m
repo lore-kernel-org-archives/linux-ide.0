@@ -1,41 +1,53 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: regarding sata_sil errata
-Date: Wed, 1 Mar 2006 14:25:40 +0900
-Message-ID: <20060301052540.GA20926@htj.dyndns.org>
+Subject: Re: [PATCH] ahci: add softreset
+Date: Wed, 1 Mar 2006 14:35:43 +0900
+Message-ID: <20060301053543.GB20926@htj.dyndns.org>
+References: <11396427632078-git-send-email-htejun@gmail.com> <43EE72D5.1050005@pobox.com> <20060215063659.GB9621@htj.dyndns.org> <44049296.10006@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.205]:52687 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932170AbWCAFZq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 00:25:46 -0500
-Received: by zproxy.gmail.com with SMTP id s18so56225nze
-        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 21:25:46 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.192]:8281 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932341AbWCAFft (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 00:35:49 -0500
+Received: by zproxy.gmail.com with SMTP id 13so59139nzn
+        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 21:35:48 -0800 (PST)
 Content-Disposition: inline
+In-Reply-To: <44049296.10006@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-Hello, all.
+On Tue, Feb 28, 2006 at 01:12:38PM -0500, Jeff Garzik wrote:
+> Tejun Heo wrote:
+> >Now that libata is smart enought to handle both soft and hard resets,
+> >add softreset method.
+> >
+> >Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> ACK, finally
+> 
+> (though I am dropping all your other pending patches as requested)
+> 
 
-Now that we have R_ERR on DMA activate FIS errata workaround in place,
-sata_sil driver seems to work much better now.  There are two things
-to do regarding sata_sil errata.
+Good, and I forgot to resend the regenerated patches after writing I
+would do that ASAP.  I was about to do that but then quilt2git didn't
+work and, after fixing it, I completely forgot why I fixed quilt2git
+in the first place.  Duh... Will send soon.
 
-1. removing non-affected drives from m15w blacklist.  I think we
-   should test this in -mm for some time before submitting to
-   upstream.  Will submit a patch soon.
+> 
+> >+	/* spec says at least 5us, but be generous and sleep for 1ms */
+> >+	msleep(1);
+> 
+> FWIW msleep simply guarantees a minimum delay.  Depending on the 
+> scheduler tick granularity, msleep(1) may delay 10-100ms.
+> 
+> This FWIW may or may not warrant updating the above comment, I leave it 
+> up to you.
+> 
 
-2. determining which are 3112 and which are 3512.
-
-   Carlos and Raymond, can you guys please let us know which are 3112
-   and which are 3512?  The PCI IDs in question are 0x1095/0x0240,
-   0x1002/0x436e, 0x1002/0x4379 and 0x1002/0x437a.  All these IDs are
-   currently treated as 3112 but it's a shame to apply m15w when a
-   controller can work happily with R_ERR on DMA activate FIS errata,
-   isn't it?
-
-Thanks.  :-)
+I think the comment is okay as it is and, more importantly, it
+wouldn't fit in one line with any more detail.  :-P
 
 -- 
 tejun
