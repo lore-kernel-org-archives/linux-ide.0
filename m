@@ -1,53 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] ahci: add softreset
-Date: Wed, 1 Mar 2006 14:35:43 +0900
-Message-ID: <20060301053543.GB20926@htj.dyndns.org>
-References: <11396427632078-git-send-email-htejun@gmail.com> <43EE72D5.1050005@pobox.com> <20060215063659.GB9621@htj.dyndns.org> <44049296.10006@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Wed, 01 Mar 2006 01:01:58 -0500
+Message-ID: <440538D6.3010803@pobox.com>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046074.4070201@rtr.ca> <Pine.LNX.4.64.0602280939280.16541@p34> <440462E1.2010909@rtr.ca> <4404671D.70506@pobox.com> <44046BBF.1060204@rtr.ca> <44046D65.90909@pobox.com> <4404EECE.3080304@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.192]:8281 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932341AbWCAFft (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 00:35:49 -0500
-Received: by zproxy.gmail.com with SMTP id 13so59139nzn
-        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 21:35:48 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <44049296.10006@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:50854 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932421AbWCAGCF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 01:02:05 -0500
+In-Reply-To: <4404EECE.3080304@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Tue, Feb 28, 2006 at 01:12:38PM -0500, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> >Now that libata is smart enought to handle both soft and hard resets,
-> >add softreset method.
-> >
-> >Signed-off-by: Tejun Heo <htejun@gmail.com>
+Mark Lord wrote:
+> Jeff Garzik wrote:
 > 
-> ACK, finally
+>>
+>>>> Nah we should really dump the full taskfile...
+>>>
+>>>
+>>>
+>>> Agreed.  But the original command byte is not stored anywhere
+>>> for us to dump it from.
+>>
+>>
+>> er eh?
+>>
+>> All callers of ata_to_sense_error() have the full taskfile available.
 > 
-> (though I am dropping all your other pending patches as requested)
 > 
+> Yes, but the command byte gets overwritten by the read-back status byte,
+> since they share the same byte in the taskfile.
+> 
+> So once the command has failed, the command byte is no longer there.
 
-Good, and I forgot to resend the regenerated patches after writing I
-would do that ASAP.  I was about to do that but then quilt2git didn't
-work and, after fixing it, I completely forgot why I fixed quilt2git
-in the first place.  Duh... Will send soon.
+It's trivial to save it locally before stomping...
 
-> 
-> >+	/* spec says at least 5us, but be generous and sleep for 1ms */
-> >+	msleep(1);
-> 
-> FWIW msleep simply guarantees a minimum delay.  Depending on the 
-> scheduler tick granularity, msleep(1) may delay 10-100ms.
-> 
-> This FWIW may or may not warrant updating the above comment, I leave it 
-> up to you.
-> 
+	Jeff
 
-I think the comment is okay as it is and, more importantly, it
-wouldn't fit in one line with any more detail.  :-P
 
--- 
-tejun
+
