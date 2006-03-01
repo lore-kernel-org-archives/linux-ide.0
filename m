@@ -1,76 +1,54 @@
-From: Joost Kraaijeveld <J.Kraaijeveld@Askesis.nl>
-Subject: Sil 3114 with 2 disks problem
-Date: Wed, 01 Mar 2006 11:50:30 +0100
-Message-ID: <1141210230.7288.34.camel@localhost>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Wed, 1 Mar 2006 06:37:05 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0603010634180.15332@p34>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <4401122A.3010908@rtr.ca>
+  <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca>  <4403704E.4090109@rtr.ca>
+ <4403A84C.6010804@gmail.com>  <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com>
+  <44046CE6.60803@rtr.ca> <44046D86.7050809@pobox.com>
+ <311601c90602280857x3f102af5l31c9a0ac1a896b4e@mail.gmail.com> <4404F31D.90407@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from laudanum.demon.nl ([82.161.125.16]:21946 "EHLO
-	obelix.askesis.nl") by vger.kernel.org with ESMTP id S1030185AbWCAKum
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Mar 2006 05:50:42 -0500
+Received: from lucidpixels.com ([66.45.37.187]:12934 "EHLO lucidpixels.com")
+	by vger.kernel.org with ESMTP id S1030187AbWCALhM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 06:37:12 -0500
+In-Reply-To: <4404F31D.90407@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: "Eric D. Mudama" <edmudama@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, David Greaves <david@dgreaves.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus Torvalds <torvalds@osdl.org>
 
-Hi Jeff,
+On Tue, 28 Feb 2006, Mark Lord wrote:
 
-As you are listed as the maintainer of the Sil 3114 (sata_sil.c) I
-direct my question to you. If you are not the right person (anymore) or
-if you know better person (or place) to ask this question, I would
-appreciate a pointer.
+> Eric D. Mudama wrote:
+>> those drives should support all FUA opcodes properly, both queued and 
+>> unqueued
+>
+> His first drive (sda) does not support queued commands at all,
+> but the newer firmware in his second drive (sdb) does support NCQ.
+>
+> Both drives support FUA.
+>
+> cheers
+>
 
-I experiencing (unworkable) performance problems after a change in my
-hardware configuration.  I added a second drive (SAMSUNG SP2504C) to my
-on-board Sil 3114 SATA controller). Largish I/O operations (e.g. start
-applications of moderate size (Openoffice,  Mozilla, Synaptic) , running
-bonnie, hdparm -t /dev/sda, copying large files) lock up my Gnome
-desktop and make my music stutter (the first one being the nastiest ;-).
-Running hdparm or bonnie do not show any performance problems in terms
-of actual throughput (see below) but the unresponsive machine is quit
-annoying. None of the perfomance problems appear if I do the same
-operations on my 3Ware 9500 RAID 5 array.
+To trust or not to trust?
 
-Do you recognize these problems and/or do you have a sollution? If not,
-could you give me an advise as to what I could do to diagnose the
-probleme better? 
+I have a 400GB SATA drive: WDC WD4000KD-00N.  With these errors in dmesg 
+that have been mentioned throughout the thread, should I trust Linux using 
+this drive, or should I remove it/wait until a patch is released to 
+address this issue?
 
-I have the following hard/software configuration:
+Also, in the forums (storagereview.com I believe), it has been noted that 
+these drives do NOT work on the Intel ICH5 controller, and this turned out 
+to be true, when I put it on the Intel ICH5, the box stalls for 2-3 
+minutes and then it does not see the drive.  However, on the Silicon 
+Image, Inc. SiI 3112 chipset or Promise SATA/150 TX2 it works okay but it 
+has those errors in dmesg.
 
-Stock Debian 2.6.15-1-amd64-k8-smp kernel
- - / and swap-partion  on /dev/sda1 (sil 3114)
- - /var on /dev/sdb1 (sil 3114)
- - /home on /dev/sdc1 (3ware)
+My question is, performing long and short smart tests, everything is 
+physically ok with the drive; however, I probably should not use this 
+drive for anything important in Linux, comments?
 
-Dual Opteron Tyan 2885 board with 2 prcs (248), 4 GB
-Sil 3114 on-board  SATA controler
- with 1 WDC WD2000JD-00H and 1 SAMSUNG SP2504C, no raid 
-3Ware 9500S-8 RAID5 with 5  WDC WD1200SD disks
-
-Performance hints:
-WDC WD2000JD-00H
-hdparm -t /dev/sda: Timing buffered disk reads:  170 MB in  3.02 seconds
-=  56.28 MB/sec
-
-SAMSUNG SP2504C
-hdparm -t /dev/sda: Timing buffered disk reads:  170 MB in  3.02 seconds
-=  56.28 MB/sec
-
-3Ware 9500S-8
-hdparm -t /dev/sdc: Timing buffered disk reads:  374 MB in  3.01 seconds
-= 124.11 MB/sec
-
--- 
-Groeten,
-
-Joost Kraaijeveld
-Askesis B.V.
-Molukkenstraat 14
-6524NB Nijmegen
-tel: 024-3888063 / 06-51855277
-fax: 024-3608416
-e-mail: J.Kraaijeveld@Askesis.nl
-web: www.askesis.nl
-
+Justin.
