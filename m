@@ -1,52 +1,38 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: 2.6.16-rc5: known regressions
-Date: Tue, 28 Feb 2006 16:17:25 -0800
-Message-ID: <20060228161725.8c731743.rdunlap@xenotime.net>
-References: <Pine.LNX.4.64.0602262122000.22647@g5.osdl.org>
-	<20060227061354.GO3674@stusta.de>
-	<4402A219.8010501@pobox.com>
-	<20060227070830.GQ3674@stusta.de>
-	<20060228094053.GT24981@suse.de>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Tue, 28 Feb 2006 19:46:06 -0500
+Message-ID: <4404EECE.3080304@rtr.ca>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046074.4070201@rtr.ca> <Pine.LNX.4.64.0602280939280.16541@p34> <440462E1.2010909@rtr.ca> <4404671D.70506@pobox.com> <44046BBF.1060204@rtr.ca> <44046D65.90909@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:3470 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S932725AbWCAAQH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 19:16:07 -0500
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 16:16:05 -0800
-In-Reply-To: <20060228094053.GT24981@suse.de>
+Received: from rtr.ca ([64.26.128.89]:33957 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S932734AbWCAAqM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 19:46:12 -0500
+In-Reply-To: <44046D65.90909@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: bunk@stusta.de, jgarzik@pobox.com, linux-kernel@vger.kernel.org, torvalds@osdl.org, akpm@osdl.org, lkml@rtr.ca, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Tue, 28 Feb 2006 10:40:53 +0100 Jens Axboe wrote:
-
-> On Mon, Feb 27 2006, Adrian Bunk wrote:
-> > On Mon, Feb 27, 2006 at 01:54:17AM -0500, Jeff Garzik wrote:
-> > > Adrian Bunk wrote:
-> > > >Subject    : 2.6.16-rc[34]: resume-from-RAM unreliable (SATA)
-> > > >References : http://lkml.org/lkml/2006/2/20/159
-> > > >Submitter  : Mark Lord <lkml@rtr.ca>
-> > > >Handled-By : Randy Dunlap <rdunlap@xenotime.net>
-> > > >Status     : one of Randy's patches seems to fix it
-> > > 
-> > > 
-> > > This is not a regression, libata suspend/resume has always been crappy. 
-> > >  It's under active development (by Randy, among others) to fix this.
-> > 
-> > It might have always been crappy, but it is a regression since
-> > according to the submitter it is working with 2.6.15.
+Jeff Garzik wrote:
+>
+>>> Nah we should really dump the full taskfile...
+>>
+>>
+>> Agreed.  But the original command byte is not stored anywhere
+>> for us to dump it from.
 > 
-> It might have worked under lucky circumstances with an idle disk and a
-> goat sacrifice, so I agree with Jeff that this is definitely not a
-> regression. To my knowledge, Mark always used my libata suspend patch on
-> earlier kernels so it's not even an apples-apples comparison.
+> er eh?
 > 
-> So please scratch that entry.
+> All callers of ata_to_sense_error() have the full taskfile available.
 
-I'll third that request/comment.
+Yes, but the command byte gets overwritten by the read-back status byte,
+since they share the same byte in the taskfile.
 
----
-~Randy
+So once the command has failed, the command byte is no longer there.
+
+Or is it?
+
+-ml
