@@ -1,200 +1,135 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/4] libata: separate out ata_dev_configure()
-Date: Wed, 1 Mar 2006 16:09:35 +0900
-Message-ID: <1141196975603-git-send-email-htejun@gmail.com>
+Subject: [PATCH 3/4] libata: fold ata_dev_config() into ata_dev_configure()
+Date: Wed, 1 Mar 2006 16:09:36 +0900
+Message-ID: <1141196976110-git-send-email-htejun@gmail.com>
 References: <11411969752304-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.202]:12504 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750711AbWCAHLk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 02:11:40 -0500
-Received: by wproxy.gmail.com with SMTP id i4so321799wra
-        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 23:11:39 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.201]:13447 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750769AbWCAHL5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 02:11:57 -0500
+Received: by zproxy.gmail.com with SMTP id 18so70347nzp
+        for <linux-ide@vger.kernel.org>; Tue, 28 Feb 2006 23:11:57 -0800 (PST)
 In-Reply-To: <11411969752304-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Separate out ata_dev_configure() from ata_dev_identify() such that
-ata_dev_configure() only configures @dev according to passed in @id.
-The function now does not disable device on failure, it just returns
-appropirate error code.
-
-As this change leaves ata_dev_identify() with only reading ID, calling
-configure and disabling devices according to the results, this patch
-also kills ata_dev_identify() and inlines the logic into
-ata_bus_probe().
+ata_dev_config() needs to be done everytime a device is configured.
+Fold it into ata_dev_configure().
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   78 ++++++++++++++++++++++----------------------
- 1 files changed, 39 insertions(+), 39 deletions(-)
+ drivers/scsi/libata-core.c |   48 ++++++++++++++++----------------------------
+ include/linux/libata.h     |    1 -
+ 2 files changed, 17 insertions(+), 32 deletions(-)
 
-9e8f99c18ddb9615403cdeca438a2d3c26b012fb
+8686b79624ba861834b6648a043c1ca95ea806dd
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index a630cda..dcc6b06 100644
+index dcc6b06..f9ab563 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -1050,45 +1050,31 @@ static int ata_dev_read_id(struct ata_po
+@@ -1049,6 +1049,12 @@ static int ata_dev_read_id(struct ata_po
+ 	return rc;
  }
  
++static inline u8 ata_dev_knobble(const struct ata_port *ap,
++				 struct ata_device *dev)
++{
++	return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev->id)));
++}
++
  /**
-- *	ata_dev_identify - obtain IDENTIFY x DEVICE page
-- *	@ap: port on which device we wish to probe resides
-- *	@device: device bus address, starting at zero
-+ *	ata_dev_configure - Configure the specified ATA/ATAPI device
-+ *	@ap: Port on which target device resides
-+ *	@dev: Target device to configure
-  *
-- *	Following bus reset, we issue the IDENTIFY [PACKET] DEVICE
-- *	command, and read back the 512-byte device information page.
-- *	The device information page is fed to us via the standard
-- *	PIO-IN protocol, but we hand-code it here. (TODO: investigate
-- *	using standard PIO-IN paths)
-- *
-- *	After reading the device information page, we use several
-- *	bits of information from it to initialize data structures
-- *	that will be used during the lifetime of the ata_device.
-- *	Other data from the info page is used to disqualify certain
-- *	older ATA devices we do not wish to support.
-+ *	Configure @dev according to @dev->id.  Generic and low-level
-+ *	driver specific fixups are also applied.
-  *
-  *	LOCKING:
-- *	Inherited from caller.  Some functions called by this function
-- *	obtain the host_set lock.
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise
-  */
--
--static void ata_dev_identify(struct ata_port *ap, unsigned int device)
-+static int ata_dev_configure(struct ata_port *ap, struct ata_device *dev)
- {
--	struct ata_device *dev = &ap->device[device];
- 	unsigned long xfer_modes;
- 	int i, rc;
- 
- 	if (!ata_dev_present(dev)) {
- 		DPRINTK("ENTER/EXIT (host %u, dev %u) -- nodev\n",
--			ap->id, device);
--		return;
-+			ap->id, dev->devno);
-+		return 0;
- 	}
- 
--	DPRINTK("ENTER, host %u, dev %u\n", ap->id, device);
--
--	WARN_ON(dev->id != NULL);
--	rc = ata_dev_read_id(ap, dev, &dev->class, 1, &dev->id);
--	if (rc)
--		goto err_out;
-+	DPRINTK("ENTER, host %u, dev %u\n", ap->id, dev->devno);
- 
- 	/*
- 	 * common ATA, ATAPI feature tests
-@@ -1097,6 +1083,7 @@ static void ata_dev_identify(struct ata_
- 	/* we require DMA support (bits 8 of word 49) */
- 	if (!ata_id_has_dma(dev->id)) {
- 		printk(KERN_DEBUG "ata%u: no dma\n", ap->id);
-+		rc = -EINVAL;
- 		goto err_out_nosup;
- 	}
- 
-@@ -1121,12 +1108,12 @@ static void ata_dev_identify(struct ata_
- 
- 			/* print device info to dmesg */
- 			printk(KERN_INFO "ata%u: dev %u ATA-%d, max %s, %Lu sectors:%s\n",
--			       ap->id, device,
-+			       ap->id, dev->devno,
- 			       ata_id_major_version(dev->id),
- 			       ata_mode_string(xfer_modes),
- 			       (unsigned long long)dev->n_sectors,
- 			       dev->flags & ATA_DFLAG_LBA48 ? " LBA48" : " LBA");
--		} else { 
-+		} else {
- 			/* CHS */
- 
- 			/* Default translation */
-@@ -1143,7 +1130,7 @@ static void ata_dev_identify(struct ata_
- 
- 			/* print device info to dmesg */
- 			printk(KERN_INFO "ata%u: dev %u ATA-%d, max %s, %Lu sectors: CHS %d/%d/%d\n",
--			       ap->id, device,
-+			       ap->id, dev->devno,
- 			       ata_id_major_version(dev->id),
- 			       ata_mode_string(xfer_modes),
- 			       (unsigned long long)dev->n_sectors,
-@@ -1159,13 +1146,14 @@ static void ata_dev_identify(struct ata_
- 		rc = atapi_cdb_len(dev->id);
- 		if ((rc < 12) || (rc > ATAPI_CDB_LEN)) {
- 			printk(KERN_WARNING "ata%u: unsupported CDB len\n", ap->id);
-+			rc = -EINVAL;
- 			goto err_out_nosup;
- 		}
- 		dev->cdb_len = (unsigned int) rc;
- 
- 		/* print device info to dmesg */
- 		printk(KERN_INFO "ata%u: dev %u ATAPI, max %s\n",
--		       ap->id, device,
-+		       ap->id, dev->devno,
- 		       ata_mode_string(xfer_modes));
- 	}
- 
-@@ -1176,14 +1164,13 @@ static void ata_dev_identify(struct ata_
+  *	ata_dev_configure - Configure the specified ATA/ATAPI device
+  *	@ap: Port on which target device resides
+@@ -1163,6 +1169,17 @@ static int ata_dev_configure(struct ata_
+ 					      ap->host->max_cmd_len,
  					      ap->device[i].cdb_len);
  
++	/* limit bridge transfers to udma5, 200 sectors */
++	if (ata_dev_knobble(ap, dev)) {
++		printk(KERN_INFO "ata%u(%u): applying bridge limits\n",
++		       ap->id, dev->devno);
++		ap->udma_mask &= ATA_UDMA5;
++		dev->max_sectors = ATA_MAX_SECTORS;
++	}
++
++	if (ap->ops->dev_config)
++		ap->ops->dev_config(ap, dev);
++
  	DPRINTK("EXIT, drv_stat = 0x%x\n", ata_chk_status(ap));
--	return;
-+	return 0;
+ 	return 0;
  
- err_out_nosup:
- 	printk(KERN_WARNING "ata%u: dev %u not supported, ignoring\n",
--	       ap->id, device);
--err_out:
--	dev->class++;	/* converts ATA_DEV_xxx into ATA_DEV_xxx_UNSUP */
-+	       ap->id, dev->devno);
- 	DPRINTK("EXIT, err\n");
-+	return rc;
+@@ -1173,35 +1190,6 @@ err_out_nosup:
+ 	return rc;
  }
  
- 
-@@ -1259,11 +1246,24 @@ static int ata_bus_probe(struct ata_port
- 		goto err_out;
- 
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
--		ata_dev_identify(ap, i);
--		if (ata_dev_present(&ap->device[i])) {
--			found = 1;
--			ata_dev_config(ap,i);
-+		struct ata_device *dev = &ap->device[i];
-+
-+		if (!ata_dev_present(dev))
-+			continue;
-+
-+		WARN_ON(dev->id != NULL);
-+		if (ata_dev_read_id(ap, dev, &dev->class, 1, &dev->id)) {
-+			dev->class = ATA_DEV_NONE;
-+			continue;
+-
+-static inline u8 ata_dev_knobble(const struct ata_port *ap,
+-				 struct ata_device *dev)
+-{
+-	return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev->id)));
+-}
+-
+-/**
+- * ata_dev_config - Run device specific handlers & check for SATA->PATA bridges
+- * @ap: Bus
+- * @i:  Device
+- *
+- * LOCKING:
+- */
+-
+-void ata_dev_config(struct ata_port *ap, unsigned int i)
+-{
+-	/* limit bridge transfers to udma5, 200 sectors */
+-	if (ata_dev_knobble(ap, &ap->device[i])) {
+-		printk(KERN_INFO "ata%u(%u): applying bridge limits\n",
+-		       ap->id, i);
+-		ap->udma_mask &= ATA_UDMA5;
+-		ap->device[i].max_sectors = ATA_MAX_SECTORS;
+-	}
+-
+-	if (ap->ops->dev_config)
+-		ap->ops->dev_config(ap, &ap->device[i]);
+-}
+-
+ /**
+  *	ata_bus_probe - Reset and probe ATA bus
+  *	@ap: Bus to probe
+@@ -1262,7 +1250,6 @@ static int ata_bus_probe(struct ata_port
+ 			continue;
  		}
-+
-+		if (ata_dev_configure(ap, dev)) {
-+			dev->class++;	/* disable device */
-+			continue;
-+		}
-+
-+		ata_dev_config(ap, i);
-+		found = 1;
+ 
+-		ata_dev_config(ap, i);
+ 		found = 1;
  	}
  
- 	if ((!found) || (ap->flags & ATA_FLAG_PORT_DISABLED))
+@@ -4963,7 +4950,6 @@ EXPORT_SYMBOL_GPL(ata_host_intr);
+ EXPORT_SYMBOL_GPL(ata_dev_classify);
+ EXPORT_SYMBOL_GPL(ata_id_string);
+ EXPORT_SYMBOL_GPL(ata_id_c_string);
+-EXPORT_SYMBOL_GPL(ata_dev_config);
+ EXPORT_SYMBOL_GPL(ata_scsi_simulate);
+ EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
+ EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 68666b9..1aab218 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -542,7 +542,6 @@ extern void ata_id_string(const u16 *id,
+ 			  unsigned int ofs, unsigned int len);
+ extern void ata_id_c_string(const u16 *id, unsigned char *s,
+ 			    unsigned int ofs, unsigned int len);
+-extern void ata_dev_config(struct ata_port *ap, unsigned int i);
+ extern void ata_bmdma_setup (struct ata_queued_cmd *qc);
+ extern void ata_bmdma_start (struct ata_queued_cmd *qc);
+ extern void ata_bmdma_stop(struct ata_queued_cmd *qc);
 -- 
 1.2.1
 
