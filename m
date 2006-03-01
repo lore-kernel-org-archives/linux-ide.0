@@ -1,49 +1,76 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 2/13] ATA ACPI: debugging infrastructure
-Date: Wed, 1 Mar 2006 02:45:59 -0800
-Message-ID: <20060301024559.2f36ecda.akpm@osdl.org>
-References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
-	<20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com>
-	<20060228114500.GA4057@elf.ucw.cz>
-	<44043B4E.30907@pobox.com>
-	<20060228041817.6fc444d2.akpm@osdl.org>
-	<4405778D.2030001@superbug.co.uk>
+From: Joost Kraaijeveld <J.Kraaijeveld@Askesis.nl>
+Subject: Sil 3114 with 2 disks problem
+Date: Wed, 01 Mar 2006 11:50:30 +0100
+Message-ID: <1141210230.7288.34.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964923AbWCAKrS@vger.kernel.org>
-In-Reply-To: <4405778D.2030001@superbug.co.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Courtier-Dutton <James@superbug.co.uk>
-Cc: jgarzik@pobox.com, pavel@ucw.cz, randy_d_dunlap@linux.intel.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from laudanum.demon.nl ([82.161.125.16]:21946 "EHLO
+	obelix.askesis.nl") by vger.kernel.org with ESMTP id S1030185AbWCAKum
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Mar 2006 05:50:42 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-James Courtier-Dutton <James@superbug.co.uk> wrote:
->
-> Is there a particular debugging coding style that we should adopt for
->  all the kernel code.
+Hi Jeff,
 
-Err, probably.  But we'd need to have a 1000-email argument first.
+As you are listed as the maintainer of the Sil 3114 (sata_sil.c) I
+direct my question to you. If you are not the right person (anymore) or
+if you know better person (or place) to ask this question, I would
+appreciate a pointer.
 
-Right now many subsystems and often many individual drivers go and
-implement their own set of debugging macros and knobs to twiddle.  This was
-a great source of fun for me in trying to support gcc-2.95.x - each time a
-new debug macro got implemented I had to go in there (again) and apply the
-gcc-2.95.x-macro-expansion-bug-workaround to it.
+I experiencing (unworkable) performance problems after a change in my
+hardware configuration.  I added a second drive (SAMSUNG SP2504C) to my
+on-board Sil 3114 SATA controller). Largish I/O operations (e.g. start
+applications of moderate size (Openoffice,  Mozilla, Synaptic) , running
+bonnie, hdparm -t /dev/sda, copying large files) lock up my Gnome
+desktop and make my music stutter (the first one being the nastiest ;-).
+Running hdparm or bonnie do not show any performance problems in terms
+of actual throughput (see below) but the unresponsive machine is quit
+annoying. None of the perfomance problems appear if I do the same
+operations on my 3Ware 9500 RAID 5 array.
 
-Yes, one common toolset with a common way of controlling it would be much
-more sensible than the present chaos.  I count 163 separate definitions of
-dprintk(), and that's excluding all the non-x86 arch and include dirs.
+Do you recognize these problems and/or do you have a sollution? If not,
+could you give me an advise as to what I could do to diagnose the
+probleme better? 
 
->  For example,
->  kconfig option in order to compile a module/section of core code for
->  debug work.
->  A sysfs file to then control the debug level for each module.
->  A debug module option, in the cases where a particular level of debug is
->  required at module load time, and before the sysfs entry exists.
->  If particularly fine grained debug control is needed, the module could
->  have multiple entries in the sysfs to control different classes of debug
->  output.
-> 
+I have the following hard/software configuration:
 
-Something like that..   Just don't cc me while you work it out ;)
+Stock Debian 2.6.15-1-amd64-k8-smp kernel
+ - / and swap-partion  on /dev/sda1 (sil 3114)
+ - /var on /dev/sdb1 (sil 3114)
+ - /home on /dev/sdc1 (3ware)
+
+Dual Opteron Tyan 2885 board with 2 prcs (248), 4 GB
+Sil 3114 on-board  SATA controler
+ with 1 WDC WD2000JD-00H and 1 SAMSUNG SP2504C, no raid 
+3Ware 9500S-8 RAID5 with 5  WDC WD1200SD disks
+
+Performance hints:
+WDC WD2000JD-00H
+hdparm -t /dev/sda: Timing buffered disk reads:  170 MB in  3.02 seconds
+=  56.28 MB/sec
+
+SAMSUNG SP2504C
+hdparm -t /dev/sda: Timing buffered disk reads:  170 MB in  3.02 seconds
+=  56.28 MB/sec
+
+3Ware 9500S-8
+hdparm -t /dev/sdc: Timing buffered disk reads:  374 MB in  3.01 seconds
+= 124.11 MB/sec
+
+-- 
+Groeten,
+
+Joost Kraaijeveld
+Askesis B.V.
+Molukkenstraat 14
+6524NB Nijmegen
+tel: 024-3888063 / 06-51855277
+fax: 024-3608416
+e-mail: J.Kraaijeveld@Askesis.nl
+web: www.askesis.nl
+
