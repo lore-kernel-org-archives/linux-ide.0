@@ -1,43 +1,51 @@
 From: David Greaves <david@dgreaves.com>
 Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Wed, 01 Mar 2006 17:33:18 +0000
-Message-ID: <4405DADE.10206@dgreaves.com>
-References: <Pine.LNX.4.64.0602140439580.3567@p34>	 <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34>	 <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com>	 <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34>	 <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com>	 <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com>	 <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca>	 <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca>	 <44042863.2050703@dgreaves.com>  <44046074.4070201@rtr.ca> <1141139776.3089.78.camel@localhost.localdomain>
+Date: Wed, 01 Mar 2006 17:41:03 +0000
+Message-ID: <4405DCAF.6030500@dgreaves.com>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046CE6.60803@rtr.ca> <44046D86.7050809@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:25534 "EHLO mail.ukfsn.org")
-	by vger.kernel.org with ESMTP id S1751493AbWCARdE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 12:33:04 -0500
-In-Reply-To: <1141139776.3089.78.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932477AbWCARkv@vger.kernel.org>
+In-Reply-To: <44046D86.7050809@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus Torvalds <torvalds@osdl.org>
 
-Alan Cox wrote:
+Jeff Garzik wrote:
 
->On Maw, 2006-02-28 at 09:38 -0500, Mark Lord wrote:
->  
+> Mark Lord wrote:
 >
->>The error handling still sucks, regardless of FUA.
->>All of this nonsense about "Medium Error" is pure bogosity here.
->>    
+>> David Greaves wrote:
 >>
+>>>
+>>> scsi1 : sata_sil
+>>>   Vendor: ATA       Model: Maxtor 6B200M0    Rev: BANC
+>>>   Type:   Direct-Access                      ANSI SCSI revision: 05
+>>>   Vendor: ATA       Model: Maxtor 6B200M0    Rev: BANC
+>>>   Type:   Direct-Access                      ANSI SCSI revision: 05
+>>
+>>
+>>
+>> I wonder if the non-FUA component here is the sata_sil,
+>> rather than the two Maxtor drives.
+>>
+>> Also, your drives have different firmware,
+>> but both have trouble with FUA here.
 >
->I've flipped my tree to report Aborted Command. Not sure there is a
->better scsi sense match for "it broke and I dont know why"
->  
 >
-As a user I prefer
-  It Broke And I Dont Know Why
-to
-  Aborted Command
+> sata_sil is indeed a piece of hardware that needs to know the opcodes
+> ahead of time...
+>
+>     Jeff
+>
+I actually have 3 of those drives - one runs through sata_via and
+doesn't have the same problem.
 
-(honesty is the best policy)
-
-I certainly hate Medium Error as modern hard disks seem to be flakier
-than ever.
+(the sata_via ones *do* have :
+ ata3: status=0x50 { DriveReady SeekComplete }
+ ata3: PIO error
+problems with SMART)
 
 David
