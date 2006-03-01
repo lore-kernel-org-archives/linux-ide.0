@@ -1,55 +1,71 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] rate-limit libata-scsi status/error message
-Date: Wed, 01 Mar 2006 15:43:07 -0500
-Message-ID: <4406075B.5050904@pobox.com>
-References: <20060217213733.36040150.rdunlap@xenotime.net> <43F72B70.5040107@rtr.ca>
+From: Nicolas Mailhot <nicolas.mailhot@laposte.net>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Thu, 02 Mar 2006 00:12:42 +0100
+Message-ID: <1141254762.11543.10.camel@rousalka.dyndns.org>
+References: <1141239617.23202.5.camel@rousalka.dyndns.org>
+	 <4405F471.8000602@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-L1x6wvIlvZb/A+XfyMMy"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:26599 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751176AbWCAUnK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 15:43:10 -0500
-In-Reply-To: <43F72B70.5040107@rtr.ca>
+Received: from mx.laposte.net ([81.255.54.11]:8527 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S1751116AbWCAXOE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 18:14:04 -0500
+In-Reply-To: <4405F471.8000602@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, ide <linux-ide@vger.kernel.org>
-
-Mark Lord wrote:
-> Randy.Dunlap wrote:
-> 
->> From: Randy Dunlap <rdunlap@xenotime.net>
->>
->> Rate-limit a translated ATA status/error message.
->> I have a kernel log that is 2/3 full of these messages
->> due to a CD/DVD drive being empty.
-> 
-> ...
-> 
->> -    printk(KERN_ERR "ata%u: translated ATA stat/err 0x%02x/%02x to "
->> -           "SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n", id, drv_stat, drv_err,
->> -           *sk, *asc, *ascq);
->> +    if (printk_ratelimit())
->> +        printk(KERN_ERR "ata%u: translated ATA stat/err 0x%02x/%02x to "
->> +            "SCSI SK/ASC/ASCQ 0x%x/%02x/%02x\n",
->> +            id, drv_stat, drv_err, *sk, *asc, *ascq);
-> 
-> 
-> That message shouldn't even be enabled for non DEBUG cases.
-> I suspect Jeff will remove it for 2.6.17..
-
-Kinda sorta:  ATAPI errors are still shaking out, in a big way.  Under 
-ATA, almost any error should be reported.  Under ATAPI, certain classes 
-of errors are quite normal, and should not fill the logs with spam.
-
-The proper fix is to avoid reporting errors for those few ATAPI cases 
-that occur in normal operation, rather than ratelimiting all libata 
-error messages.
-
-IOW don't report an error, when it isn't really an error...
-
-	Jeff
+Cc: edmudama@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
+--=-L1x6wvIlvZb/A+XfyMMy
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Le mercredi 01 mars 2006 =C3=A0 14:22 -0500, Mark Lord a =C3=A9crit :
+> Nicolas Mailhot wrote:
+> >>
+> > How about the drives that got blacklisted following :
+> > http://bugzilla.kernel.org/show_bug.cgi?id=3D5914 ?
+> > and
+> > https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=3D177951 ?
+> >=20
+> > Device Model:     Maxtor 6L300S0
+> > Firmware Version: BANC1G10
+> >=20
+> > on Silicon Image, Inc. SiI 3114 [SATALink/SATARaid] Serial ATA Controll=
+er (rev 02)
+>=20
+> Mmm.. somebody with one of those controllers should check
+> to see if *any* drives work with FUA, and blacklist the controller
+> instead of the drives if everything is failing.
+
+I'm a someone with such a controller (that's my boog here)
+But I only have these drives.
+So I can only confirm the combo it deadly.
+(I could possibly try to plug one on the nforce4 controller, not sure if
+extracting the box from the tangle of cables and hardware he's part of
+is worth it. sata_nv is rev-eng, while the siI docs are public, right?)
+
+I do suspect Eric D. Mudama knows if the problem is on the hard-drive
+side though
+
+Regards,
+
+--=20
+Nicolas Mailhot
+
+--=-L1x6wvIlvZb/A+XfyMMy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Ceci est une partie de message
+	=?ISO-8859-1?Q?num=E9riquement?= =?ISO-8859-1?Q?_sign=E9e?=
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2.1 (GNU/Linux)
+
+iEYEABECAAYFAkQGKmoACgkQI2bVKDsp8g0veQCggJkweq1nQn7YNSEIobOHitk0
+QXsAn0TnHI/6LBG9nezBnS0MTskLml0W
+=s1TM
+-----END PGP SIGNATURE-----
+
+--=-L1x6wvIlvZb/A+XfyMMy--
 
