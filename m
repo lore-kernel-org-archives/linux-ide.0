@@ -1,38 +1,27 @@
 From: Mark Lord <liml@rtr.ca>
 Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Tue, 28 Feb 2006 19:46:06 -0500
-Message-ID: <4404EECE.3080304@rtr.ca>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046074.4070201@rtr.ca> <Pine.LNX.4.64.0602280939280.16541@p34> <440462E1.2010909@rtr.ca> <4404671D.70506@pobox.com> <44046BBF.1060204@rtr.ca> <44046D65.90909@pobox.com>
+Date: Tue, 28 Feb 2006 20:04:29 -0500
+Message-ID: <4404F31D.90407@rtr.ca>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <4401122A.3010908@rtr.ca>	 <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca>	 <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com>	 <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com>	 <44046CE6.60803@rtr.ca> <44046D86.7050809@pobox.com> <311601c90602280857x3f102af5l31c9a0ac1a896b4e@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:33957 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S932734AbWCAAqM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 19:46:12 -0500
-In-Reply-To: <44046D65.90909@pobox.com>
+Received: from rtr.ca ([64.26.128.89]:48256 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751103AbWCABEe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2006 20:04:34 -0500
+In-Reply-To: <311601c90602280857x3f102af5l31c9a0ac1a896b4e@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: "Eric D. Mudama" <edmudama@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, David Greaves <david@dgreaves.com>, Tejun Heo <htejun@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus Torvalds <torvalds@osdl.org>
 
-Jeff Garzik wrote:
->
->>> Nah we should really dump the full taskfile...
->>
->>
->> Agreed.  But the original command byte is not stored anywhere
->> for us to dump it from.
-> 
-> er eh?
-> 
-> All callers of ata_to_sense_error() have the full taskfile available.
+Eric D. Mudama wrote:
+> those drives should support all FUA opcodes properly, both queued and unqueued
 
-Yes, but the command byte gets overwritten by the read-back status byte,
-since they share the same byte in the taskfile.
+His first drive (sda) does not support queued commands at all,
+but the newer firmware in his second drive (sdb) does support NCQ.
 
-So once the command has failed, the command byte is no longer there.
+Both drives support FUA.
 
-Or is it?
-
--ml
+cheers
