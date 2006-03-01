@@ -1,54 +1,49 @@
-From: James Courtier-Dutton <James@superbug.co.uk>
+From: Andrew Morton <akpm@osdl.org>
 Subject: Re: [PATCH 2/13] ATA ACPI: debugging infrastructure
-Date: Wed, 01 Mar 2006 10:29:33 +0000
-Message-ID: <4405778D.2030001@superbug.co.uk>
-References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>	<20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com>	<20060228114500.GA4057@elf.ucw.cz>	<44043B4E.30907@pobox.com> <20060228041817.6fc444d2.akpm@osdl.org>
+Date: Wed, 1 Mar 2006 02:45:59 -0800
+Message-ID: <20060301024559.2f36ecda.akpm@osdl.org>
+References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
+	<20060222135133.3f80fbf9.randy_d_dunlap@linux.intel.com>
+	<20060228114500.GA4057@elf.ucw.cz>
+	<44043B4E.30907@pobox.com>
+	<20060228041817.6fc444d2.akpm@osdl.org>
+	<4405778D.2030001@superbug.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cluster-e.mailcontrol.com ([217.79.216.190]:27860 "EHLO
-	cluster-e.mailcontrol.com") by vger.kernel.org with ESMTP
-	id S964899AbWCAKaq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Mar 2006 05:30:46 -0500
-In-Reply-To: <20060228041817.6fc444d2.akpm@osdl.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964923AbWCAKrS@vger.kernel.org>
+In-Reply-To: <4405778D.2030001@superbug.co.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Courtier-Dutton <James@superbug.co.uk>
+Cc: jgarzik@pobox.com, pavel@ucw.cz, randy_d_dunlap@linux.intel.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, pavel@ucw.cz, randy_d_dunlap@linux.intel.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Andrew Morton wrote:
-> - The new debug stuff isn't documented.  One has funble around in the
->   source to work out how to even turn it on.  Can it be altered at runtime?
->   Dunno - the changelogs are risible.  What effect do the various flags
->   have?
+James Courtier-Dutton <James@superbug.co.uk> wrote:
 >
->   Having spent (and re-spent) time grovelling through the ALSA source
->   working out how to enable their debug stuff during a maintainer snooze
->   I'd prefer we didn't have to do that with libata as well.
->
->   
+> Is there a particular debugging coding style that we should adopt for
+>  all the kernel code.
 
-Is there a particular debugging coding style that we should adopt for
-all the kernel code.
-For example,
-kconfig option in order to compile a module/section of core code for
-debug work.
-A sysfs file to then control the debug level for each module.
-A debug module option, in the cases where a particular level of debug is
-required at module load time, and before the sysfs entry exists.
-If particularly fine grained debug control is needed, the module could
-have multiple entries in the sysfs to control different classes of debug
-output.
+Err, probably.  But we'd need to have a 1000-email argument first.
 
-One then implements all this debug support code at a global level,
-making it easy for each kernel module to make use of it.
+Right now many subsystems and often many individual drivers go and
+implement their own set of debugging macros and knobs to twiddle.  This was
+a great source of fun for me in trying to support gcc-2.95.x - each time a
+new debug macro got implemented I had to go in there (again) and apply the
+gcc-2.95.x-macro-expansion-bug-workaround to it.
 
-With regard to ALSA, we can make it fit in with the kernel preferred method.
+Yes, one common toolset with a common way of controlling it would be much
+more sensible than the present chaos.  I count 163 separate definitions of
+dprintk(), and that's excluding all the non-x86 arch and include dirs.
 
-James
+>  For example,
+>  kconfig option in order to compile a module/section of core code for
+>  debug work.
+>  A sysfs file to then control the debug level for each module.
+>  A debug module option, in the cases where a particular level of debug is
+>  required at module load time, and before the sysfs entry exists.
+>  If particularly fine grained debug control is needed, the module could
+>  have multiple entries in the sysfs to control different classes of debug
+>  output.
+> 
 
-
-
-
-This e-mail and any attachment is for authorised use by the intended recipient(s) only. It may contain proprietary material, confidential information and/or be subject to legal privilege. It should not be copied, disclosed to, retained or used by, any other party. If you are not an intended recipient then please promptly delete this e-mail and any attachment and all copies and inform the sender. Thank you.
+Something like that..   Just don't cc me while you work it out ;)
