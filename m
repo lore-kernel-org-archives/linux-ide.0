@@ -1,52 +1,64 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: NCQ general question
-Date: Wed, 1 Mar 2006 19:53:13 +0100
-Message-ID: <20060301185312.GI4816@suse.de>
-References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com> <440561CB.30201@yahoo.de> <4405A656.1030602@rtr.ca> <4405C41F.5060504@yahoo.de> <20060301160554.GD4816@suse.de> <4405C9CA.9020500@pobox.com>
+From: Nicolas Mailhot <nicolas.mailhot@laposte.net>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Wed, 01 Mar 2006 20:00:16 +0100
+Message-ID: <1141239617.23202.5.camel@rousalka.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:39284 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932096AbWCASxk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 13:53:40 -0500
-Content-Disposition: inline
-In-Reply-To: <4405C9CA.9020500@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bd/DHLecUGJAzjJnvX5E"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932410AbWCATCb@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: edmudama@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Gentoopower <gentoopower@yahoo.de>, Mark Lord <liml@rtr.ca>, "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Wed, Mar 01 2006, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >On Wed, Mar 01 2006, Gentoopower wrote:
-> >>P.S. Just waiting to see NCQ support for my nforce system in libata:-)
-> >
-> >
-> >Don't hold your breath, it's unlikely to get supported as nvidia wont
-> >open the specs. ahci is a really really nice controller, if you want ncq
-> >I suggest going with that. sil is probably the next in line for ncq
-> >support.
-> 
-> 
-> Actually.....
-> 
-> * Old-nvidia is ADMA, and I have docs under NDA
-> 
-> * nvidia themselves say they are uninterested in NCQ support for their 
-> older ADMA controllers, though they don't mind if I implement it
 
-So it's up to you if it'll happen or not. I'm sure people would
-appreciate nforce NCQ support :-)
+--=-bd/DHLecUGJAzjJnvX5E
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> * New-nvidia is AHCI, and thus will support NCQ when AHCI does
 
-Great! The sane choice, for both producer and consumer.
+> those drives should support all FUA opcodes properly, both queued and unq=
+ueued
+>=20
+> On 2/28/06, Jeff Garzik <jgarzik@pobox.com> wrote:
+> > Mark Lord wrote:
+> > > David Greaves wrote:
+> > >
+> > >>
+> > >> scsi1 : sata_sil
+> > >>   Vendor: ATA       Model: Maxtor 6B200M0    Rev: BANC
+> > >>   Type:   Direct-Access                      ANSI SCSI revision: 05
+> > >>   Vendor: ATA       Model: Maxtor 6B200M0    Rev: BANC
+> > >>   Type:   Direct-Access                      ANSI SCSI revision: 05
 
-> * slight correction to the above:  sil24 will do NCQ, I don't think sil does
+How about the drives that got blacklisted following :
+http://bugzilla.kernel.org/show_bug.cgi?id=3D5914 ?
+and
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=3D177951 ?
 
-Ok, it was more of an umbrella sil label, I haven't looked into specific
-models.
+Device Model:     Maxtor 6L300S0
+Firmware Version: BANC1G10
 
--- 
-Jens Axboe
+on
 
+Silicon Image, Inc. SiI 3114 [SATALink/SATARaid] Serial ATA Controller (rev=
+ 02)
+
+Regards,
+
+--=20
+Nicolas Mailhot
+
+--=-bd/DHLecUGJAzjJnvX5E
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Ceci est une partie de message
+	=?ISO-8859-1?Q?num=E9riquement?= =?ISO-8859-1?Q?_sign=E9e?=
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2.1 (GNU/Linux)
+
+iEYEABECAAYFAkQF70AACgkQI2bVKDsp8g1V2gCdHxLLMS7Dyt0YcZ4lVLS6TzH6
+1/cAoMO3bnWEIDLPAzmWcg5b2HPTC2c4
+=SwOE
+-----END PGP SIGNATURE-----
+
+--=-bd/DHLecUGJAzjJnvX5E--
