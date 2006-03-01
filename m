@@ -1,53 +1,47 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 4/4] libata: revalidate after transfer mode configuration
+Subject: [PATCHSET] libata: implement and use ata_dev_revalidate(), take #2
 Date: Wed, 1 Mar 2006 17:20:39 +0900
-Message-ID: <11412012393687-git-send-email-htejun@gmail.com>
-References: <11412012393192-git-send-email-htejun@gmail.com>
+Message-ID: <11412012393192-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.198]:57821 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751762AbWCAIUo (ORCPT
+Received: from zproxy.gmail.com ([64.233.162.207]:34020 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751354AbWCAIUo (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 03:20:44 -0500
-Received: by zproxy.gmail.com with SMTP id v1so83602nzb
-        for <linux-ide@vger.kernel.org>; Wed, 01 Mar 2006 00:20:44 -0800 (PST)
-In-Reply-To: <11412012393192-git-send-email-htejun@gmail.com>
+Received: by zproxy.gmail.com with SMTP id 16so82810nzp
+        for <linux-ide@vger.kernel.org>; Wed, 01 Mar 2006 00:20:43 -0800 (PST)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org, htejun@gmail.com
 
-Revalidate device after transfer mode configuration.  This also makes
-dev->id up-to-date.
+Hello, Jeff.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+This is the second take of implement-and-use-ata_dev_revalidate
+patchset.  In the last take[1], out of four patches, %1 got ACK'ed, %2
+had some minor issues, %3 got no comment and %4 had some issue but got
+resolved.
 
----
+Changes from the last take are...
 
- drivers/scsi/libata-core.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+* in #2, @verbose is renamed to @print_info as suggested
+* in #2, lba_desc change is described in the patch description
 
-05f0163669d505077e04f114027bea39083320bc
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index d599e8f..d73109e 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -1621,6 +1621,12 @@ static void ata_dev_set_mode(struct ata_
- 	idx = ofs + dev->xfer_shift;
- 	WARN_ON(idx >= ARRAY_SIZE(xfer_mode_str));
- 
-+	if (ata_dev_revalidate(ap, dev, 0)) {
-+		printk(KERN_ERR "ata%u: failed to revalidate after set "
-+		       "xfermode, disabled\n", ap->id);
-+		ata_port_disable(ap);
-+	}
-+
- 	DPRINTK("idx=%d xfer_shift=%u, xfer_mode=0x%x, base=0x%x, offset=%d\n",
- 		idx, dev->xfer_shift, (int)dev->xfer_mode, (int)base, ofs);
- 
--- 
-1.2.1
+This patchset is against
+the current #upstream[2]
++ kill-illegal-kfree patch[3]
++ reorganize-ata_dev_identify patchset[4]
+
+Thanks.
+
+--
+tejun
+
+[1] http://article.gmane.org/gmane.linux.ide/8050
+[2] cccc65a3b60edaf721cdee5a14f68ba009341822
+[3] http://article.gmane.org/gmane.linux.ide/8324
+[4] http://article.gmane.org/gmane.linux.ide/8412
 
 
