@@ -1,27 +1,28 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: NCQ general question
-Date: Thu, 02 Mar 2006 08:37:59 -0500
-Message-ID: <4406F537.1070605@pobox.com>
-References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com>	 <440561CB.30201@yahoo.de> <4405A656.1030602@rtr.ca>	 <4405C41F.5060504@yahoo.de> <20060301160554.GD4816@suse.de>	 <4405C9CA.9020500@pobox.com> <20060301185312.GI4816@suse.de>	 <5d96567b0603020014p62d73dc3uc3e67c300110f373@mail.gmail.com>	 <20060302081834.GY4816@suse.de> <4406D4E0.3010800@pobox.com> <5d96567b0603020534l3fa2f0f5m6b513e4ca3fe8de@mail.gmail.com>
+From: Mauro Carvalho Chehab <mchehab@infradead.org>
+Subject: Re: [v4l-dvb-maintainer] 2.6.16-rc5: known regressions
+Date: Thu, 02 Mar 2006 11:00:11 -0300
+Message-ID: <1141308011.5884.5.camel@localhost>
+References: <Pine.LNX.4.64.0602262122000.22647@g5.osdl.org>
+	 <20060227061354.GO3674@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:46265 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750820AbWCBNiH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Mar 2006 08:38:07 -0500
-In-Reply-To: <5d96567b0603020534l3fa2f0f5m6b513e4ca3fe8de@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20060227061354.GO3674@stusta.de>
+Sender: linux-acpi-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, video4linux-list@redhat.com, Jiri Slaby <jirislaby@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-input@atrey.karlin.mff.cuni.cz, linux-usb-devel@lists.sourceforge.net, Meelis Roos <mroos@linux.ee>, Luming Yu <luming.yu@intel.com>, linux-acpi@vger.kernel.org, Pavlik Vojtech <vojtech@suse.cz>, Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>, jgarzik@pobox.com, len.brown@intel.com, Brian Marete <bgmarete@gmail.com>, Dave Jones <davej@redhat.com>, v4l-dvb-maintainer@linuxtv.org, Duncan <1i5t5.duncan@cox.net>, Tom Seeley <redhat@tomseeley.co.uk>, michael@mihu.de, gregkh@suse.de, Mark Lord <lkml@rtr.ca>
 List-Id: linux-ide@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, Gentoopower <gentoopower@yahoo.de>, Mark Lord <liml@rtr.ca>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Raz Ben-Jehuda(caro) wrote:
-> Thank you Mr Garzik.
-> Is there a list of all drivers and there features they give ?
 
-Yes: http://linux-ata.org/sata-status.html
+> Subject    : Oops in Kernel 2.6.16-rc4 on Modprobe of saa7134.ko
+> References : http://lkml.org/lkml/2006/2/20/122
+> Submitter  : Brian Marete <bgmarete@gmail.com>
+> Status     : unknown
 
-	Jeff
+This is not a regression, since the user is not configuring saa7134 with
+the right card. 
 
+Cheers, 
+Mauro.
 
