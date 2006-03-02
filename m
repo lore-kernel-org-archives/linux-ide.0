@@ -1,53 +1,49 @@
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Subject: Re: sx8 driver
-Date: Thu, 2 Mar 2006 17:08:24 +0200
-Message-ID: <5d96567b0603020708w4ec17f78m89f43541a12c1547@mail.gmail.com>
-References: <5d96567b0603020622v5c846b0br6b634188bc14e68b@mail.gmail.com>
-	 <440702BB.2000707@pobox.com>
-	 <5d96567b0603020640w4a93a67bt7c5c8c3aaeb2c637@mail.gmail.com>
-	 <440704D9.5080502@pobox.com>
+From: "Nicolas Mailhot" <nicolas.mailhot@laposte.net>
+Subject: Re: FUA and 311x (was Re: LibPATA code issues / 2.6.15.4)
+Date: Thu, 2 Mar 2006 16:59:43 +0100 (CET)
+Message-ID: <65320.192.54.193.25.1141315183.squirrel@rousalka.dyndns.org>
+References: <1141239617.23202.5.camel@rousalka.dyndns.org>	
+    <4405F471.8000602@rtr.ca>	
+    <1141254762.11543.10.camel@rousalka.dyndns.org>
+    <311601c90603011719k43af0fbbg889f47d798e22839@mail.gmail.com>
+    <440650BC.5090501@pobox.com> <4406512A.9080708@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.203]:37646 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751183AbWCBPIZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Mar 2006 10:08:25 -0500
-Received: by wproxy.gmail.com with SMTP id 69so426394wra
-        for <linux-ide@vger.kernel.org>; Thu, 02 Mar 2006 07:08:24 -0800 (PST)
-In-Reply-To: <440704D9.5080502@pobox.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751992AbWCBQGc@vger.kernel.org>
+In-Reply-To: <4406512A.9080708@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-
-I looked at the promise spec for SataII 150 sx8 .
-i must confess i am a bit confused.
-you say it has ncq support in your list,
-they say they support only tcq.
-
-Am i worng ?
-
-thanks
-raz
-
-On 3/2/06, Jeff Garzik <jgarzik@pobox.com> wrote:
-> Raz Ben-Jehuda(caro) wrote:
-> > it is in the promise we site. just google for it.
-> > http://www.promise.com/support/download/download2_eng.asp?productID=125&category=all&os=100
->
-> Well poke Promise to fix...  The kernel has a driver that isn't broken
-> and works on all architectures.  One grep of the Promise driver for
-> VIRT_TO_BUS() tells me they haven't fixed any of the bugs in there.
->
->         Jeff
->
->
->
->
+Cc: Jens Axboe <axboe@suse.de>, "Eric D. Mudama" <edmudama@gmail.com>, Tejun Heo <htejun@gmail.com>, Nicolas Mailhot <nicolas.mailhot@gmail.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Carlos Pardo <carlos.pardo@siliconimage.com>
+List-Id: linux-ide@vger.kernel.org
 
 
---
-Raz
+Le Jeu 2 mars 2006 02:58, Jeff Garzik a =C3=A9crit :
+> Jeff Garzik wrote:
+>> For libata, I think an ATA_FLAG_NO_FUA would be appropriate for
+>> situations like this...  assume FUA is supported in the controller, =
+and
+>> set a flag where it is not.  Most chips will support FUA, either by
+>> design or by sheer luck.  The ones that do not support FUA are the
+>> controllers that snoop the ATA command opcode, and internally choose=
+ the
+>> protocol based on that opcode.  For such hardware, unknown opcodes w=
+ill
+>> inevitably cause problems.
+>
+> This also begs the question... what controller was being used, when t=
+he
+> single Maxtor device listed in the blacklist was added?  Perhaps it w=
+as
+> a problem with the controller, not the device.
+
+The controller in the bugzilla entry ie a SiI 3114.
+It was a quick fix and I did expect more thorough investigation later
+(probably 2.6.17 frame). Though it seems FUA-related problems are so
+numerous FUA itself will be blacklisted for 2.6.16, so the limited
+blacklist is no longer needed.
+
+The thread leading to the blacklist is referenced in the bugzilla entry
+
+--=20
+Nicolas Mailhot
