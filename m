@@ -1,44 +1,45 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata queue contents
-Date: Wed, 01 Mar 2006 22:31:40 -0500
-Message-ID: <4406671C.2060209@pobox.com>
-References: <20060301203901.GA6915@havoc.gtf.org>	<44063E09.1060303@rtr.ca> <20060301192740.1172e579.rdunlap@xenotime.net>
+From: "Eric D. Mudama" <edmudama@gmail.com>
+Subject: Re: FUA and 311x (was Re: LibPATA code issues / 2.6.15.4)
+Date: Wed, 1 Mar 2006 23:23:37 -0700
+Message-ID: <311601c90603012223j10aef3e0s3158567594bb9791@mail.gmail.com>
+References: <1141239617.23202.5.camel@rousalka.dyndns.org>
+	 <311601c90603011719k43af0fbbg889f47d798e22839@mail.gmail.com>
+	 <440650BC.5090501@pobox.com> <4406512A.9080708@pobox.com>
+	 <311601c90603011820u4fc89b04te1be39b9ed2ef35b@mail.gmail.com>
+	 <44065C7C.6090509@pobox.com>
+	 <311601c90603011900q7fe21fbx1020e4ba4062dc24@mail.gmail.com>
+	 <44066132.4010205@pobox.com> <44066378.1080408@rtr.ca>
+	 <44066400.6070503@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:64151 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932201AbWCBDbn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2006 22:31:43 -0500
-In-Reply-To: <20060301192740.1172e579.rdunlap@xenotime.net>
+Received: from wproxy.gmail.com ([64.233.184.197]:50132 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751397AbWCBGXj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Mar 2006 01:23:39 -0500
+Received: by wproxy.gmail.com with SMTP id i27so334517wra
+        for <linux-ide@vger.kernel.org>; Wed, 01 Mar 2006 22:23:38 -0800 (PST)
+In-Reply-To: <44066400.6070503@pobox.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: Mark Lord <liml@rtr.ca>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <lkml@rtr.ca>, Jens Axboe <axboe@suse.de>, Tejun Heo <htejun@gmail.com>, Nicolas Mailhot <nicolas.mailhot@gmail.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
-Randy.Dunlap wrote:
-> On Wed, 01 Mar 2006 19:36:25 -0500 Mark Lord wrote:
-> 
-> 
->>Jeff Garzik wrote:
->>
->>>Here's the stuff that's pending for 2.6.17, in the
->>>libata-dev.git#upstream branch.  These changes are also auto-propagated
->>>to Andrew Morton's -mm via the #ALL meta-branch.
->>
->>Where are Randy's ACPI patches ?
-> 
-> 
-> I haven't generated them against #upstream.  I'll try to do that
-> in the next couple of days (assuming that I can git along with git).
-> or can I use the git-rollup patch in -mm to diff against?
+On 3/1/06, Jeff Garzik <jgarzik@pobox.com> wrote:
+> Mark Lord wrote:
+> > Jeff Garzik wrote:
+> > ..
+> >
+> >> Sounds like un-blacklisting the drive, and adding ATA_FLAG_NO_FUA is
+> >> the way to go...
+> >
+> >
+> > Might as well add sata_mv to that blacklist as well.
+>
+> Have you confirmed that it doesn't work with FUA?
 
-git-libata-all.patch in -mm is #upstream plus other stuff.  For the time 
-being, for testing and current deployment, diffing against 
-git-libata-all.patch, and sending the result to akpm, is probably the 
-best route, and will get you quite close to #upstream.
-
-	Jeff
-
-
-
+I'll see if I can find one of these around the lab tomorrow and test
+the raw command support.  If that's fine at a basic level, it might be
+a bug in the driver?
