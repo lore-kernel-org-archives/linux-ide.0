@@ -1,28 +1,110 @@
-From: Mauro Carvalho Chehab <mchehab@infradead.org>
-Subject: Re: [v4l-dvb-maintainer] 2.6.16-rc5: known regressions
-Date: Thu, 02 Mar 2006 11:00:11 -0300
-Message-ID: <1141308011.5884.5.camel@localhost>
-References: <Pine.LNX.4.64.0602262122000.22647@g5.osdl.org>
-	 <20060227061354.GO3674@stusta.de>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: sx8 driver
+Date: Thu, 2 Mar 2006 16:22:25 +0200
+Message-ID: <5d96567b0603020622v5c846b0br6b634188bc14e68b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20060227061354.GO3674@stusta.de>
-Sender: linux-acpi-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, video4linux-list@redhat.com, Jiri Slaby <jirislaby@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-input@atrey.karlin.mff.cuni.cz, linux-usb-devel@lists.sourceforge.net, Meelis Roos <mroos@linux.ee>, Luming Yu <luming.yu@intel.com>, linux-acpi@vger.kernel.org, Pavlik Vojtech <vojtech@suse.cz>, Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>, jgarzik@pobox.com, len.brown@intel.com, Brian Marete <bgmarete@gmail.com>, Dave Jones <davej@redhat.com>, v4l-dvb-maintainer@linuxtv.org, Duncan <1i5t5.duncan@cox.net>, Tom Seeley <redhat@tomseeley.co.uk>, michael@mihu.de, gregkh@suse.de, Mark Lord <lkml@rtr.ca>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wproxy.gmail.com ([64.233.184.195]:24294 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751360AbWCBOW0 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Mar 2006 09:22:26 -0500
+Received: by wproxy.gmail.com with SMTP id 50so415638wri
+        for <linux-ide@vger.kernel.org>; Thu, 02 Mar 2006 06:22:25 -0800 (PST)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+
+had anyone here managed to compile sx8 ( carmel ) driver ?
+i am failing to do so in  2.6.15 .
+
+make  -C /usr/kernels/linux-2.6.15 SUBDIRS=`pwd` modules
 
 
-> Subject    : Oops in Kernel 2.6.16-rc4 on Modprobe of saa7134.ko
-> References : http://lkml.org/lkml/2006/2/20/122
-> Submitter  : Brian Marete <bgmarete@gmail.com>
-> Status     : unknown
+/usr/kernels/linux-2.6.15/drivers/scsi/hosts.h:1:2: warning: #warning
+"This file is obsolete, please use <scsi/scsi_host.h> instead"
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:255: error: syntax
+error before '*' token
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:255: warning: function
+declaration isn't a prototype
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:262: error: syntax
+error before '*' token
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:262: warning: function
+declaration isn't a prototype
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:346: error: syntax
+error before "driver_template"
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:346: warning: type
+defaults to `int' in declaration of `driver_template'
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:347: error: field name
+not in record or union initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:347: error: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:347: warning:
+initialization makes integer from pointer without a cast
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:348: error: field name
+not in record or union initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:348: error: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:348: warning: excess
+elements in scalar initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:348: warning: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:349: error: field name
+not in record or union initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:349: error: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:349: warning: excess
+elements in scalar initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:349: warning: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:350: error: field name
+not in record or union initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:350: error: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:350: warning: excess
+elements in scalar initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:350: warning: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:351: error: field name
+not in record or union initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:351: error: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:351: warning: excess
+elements in scalar initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:351: warning: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:352: error: field name
+not in record or union initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:352: error: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:352: warning: excess
+elements in scalar initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:352: warning: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:353: error: field name
+not in record or union initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:353: error: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:353: warning: excess
+elements in scalar initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:353: warning: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:354: error: field name
+not in record or union initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:354: error: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:354: warning: excess
+elements in scalar initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:354: warning: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:355: error: field name
+not in record or union initializer
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:355: error: (near
+initialization for `driver_template')
+/usr/download/cml26x20050104_1.1.0.18/carmel.c:355: warning: excess
+elements in scalar initializer
 
-This is not a regression, since the user is not configuring saa7134 with
-the right card. 
-
-Cheers, 
-Mauro.
-
+--
+Raz
