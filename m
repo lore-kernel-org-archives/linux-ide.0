@@ -1,52 +1,42 @@
-From: Sander <sander@humilis.net>
-Subject: Re: FUA and 311x (was Re: LibPATA code issues / 2.6.15.4)
-Date: Thu, 2 Mar 2006 10:00:57 +0100
-Message-ID: <20060302090057.GC8570@favonius>
-References: <311601c90603011719k43af0fbbg889f47d798e22839@mail.gmail.com> <440650BC.5090501@pobox.com> <4406512A.9080708@pobox.com> <311601c90603011820u4fc89b04te1be39b9ed2ef35b@mail.gmail.com> <44065C7C.6090509@pobox.com> <311601c90603011900q7fe21fbx1020e4ba4062dc24@mail.gmail.com> <44066132.4010205@pobox.com> <44066378.1080408@rtr.ca> <44066400.6070503@pobox.com> <311601c90603012223j10aef3e0s3158567594bb9791@mail.gmail.com>
-Reply-To: sander@humilis.net
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: NCQ general question
+Date: Thu, 02 Mar 2006 06:20:00 -0500
+Message-ID: <4406D4E0.3010800@pobox.com>
+References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com> <440561CB.30201@yahoo.de> <4405A656.1030602@rtr.ca> <4405C41F.5060504@yahoo.de> <20060301160554.GD4816@suse.de> <4405C9CA.9020500@pobox.com> <20060301185312.GI4816@suse.de> <5d96567b0603020014p62d73dc3uc3e67c300110f373@mail.gmail.com> <20060302081834.GY4816@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ookhoi.xs4all.nl ([213.84.114.66]:43234 "EHLO
-	favonius.humilis.net") by vger.kernel.org with ESMTP
-	id S1751977AbWCBJA7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Mar 2006 04:00:59 -0500
-Content-Disposition: inline
-In-Reply-To: <311601c90603012223j10aef3e0s3158567594bb9791@mail.gmail.com>
+Received: from mail.dvmed.net ([216.237.124.58]:43444 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750923AbWCBLUG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Mar 2006 06:20:06 -0500
+In-Reply-To: <20060302081834.GY4816@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lkml@rtr.ca>, Jens Axboe <axboe@suse.de>, Tejun Heo <htejun@gmail.com>, Nicolas Mailhot <nicolas.mailhot@gmail.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Carlos Pardo <Carlos.Pardo@siliconimage.com>
+To: Jens Axboe <axboe@suse.de>
+Cc: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Gentoopower <gentoopower@yahoo.de>, Mark Lord <liml@rtr.ca>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Eric D. Mudama wrote (ao):
-> On 3/1/06, Jeff Garzik <jgarzik@pobox.com> wrote:
-> > Mark Lord wrote:
-> > > Jeff Garzik wrote:
-> > > ..
-> > >
-> > >> Sounds like un-blacklisting the drive, and adding ATA_FLAG_NO_FUA is
-> > >> the way to go...
-> > >
-> > >
-> > > Might as well add sata_mv to that blacklist as well.
-> >
-> > Have you confirmed that it doesn't work with FUA?
+Jens Axboe wrote:
+> (don't top post)
 > 
-> I'll see if I can find one of these around the lab tomorrow and test
-> the raw command support. If that's fine at a basic level, it might be
-> a bug in the driver?
+> On Thu, Mar 02 2006, Raz Ben-Jehuda(caro) wrote:
+> 
+>>i can see the NCQ realy bother people.
+>>
+>>i am using a promise card sata TX4 150.
+>>does any of you has a patch for the driver
+>>so it would support NCQ ?
+> 
+> 
+> I don't know of any documentation for the promise cards (or whether they
+> support NCQ). Does the binary promise driver support NCQ?
+> 
+> Jeff likely knows a lot more.
 
-If you tell me what to do (what to type in etc) I can save you from
-looking for one. I have a:
+The "sata2 tx4 150" supports NCQ, and I have docs.  "sata tx4 150" does 
+not support NCQ.
 
-Marvell Technology Group Ltd. MV88SX6081 8-port SATA II PCI-X Controller
-(rev 09)
+	Jeff
 
-I can connect a Maxtor MaXLine Pro 500, a Maxtor DiamondMax11 and a WD
-Raptor 74GB to test if necessary.
 
-	Sander
 
--- 
-Humilis IT Services and Solutions
-http://www.humilis.net
