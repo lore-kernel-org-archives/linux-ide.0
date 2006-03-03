@@ -1,61 +1,30 @@
-From: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
-Subject: Re: 2.6.16-rc5: known regressions [600X S3 sleep]
-Date: Fri, 03 Mar 2006 05:58:50 +0000
-Message-ID: <E1FF3JS-0003qn-00@skye.ra.phy.cam.ac.uk>
-References: <3ACA40606221794F80A5670F0AF15F840B172CC2@pdsmsx403>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751889AbWCCF6z@vger.kernel.org>
-In-Reply-To: Your message of "Fri, 03 Mar 2006 12:46:06 +0800."
-             <3ACA40606221794F80A5670F0AF15F840B172CC2@pdsmsx403>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Yu, Luming" <luming.yu@intel.com>
-Cc: linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] libata-dev: recognize WRITE_MULTI_FUA_EXT for r/w multiple
+Date: Fri, 03 Mar 2006 09:26:35 -0500
+Message-ID: <4408521B.9000905@rtr.ca>
+References: <4407AB1D.2080506@tw.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([64.26.128.89]:18412 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751180AbWCCO0m (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Mar 2006 09:26:42 -0500
+In-Reply-To: <4407AB1D.2080506@tw.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>
 
->>>> Subject    : S3 sleep hangs the second time - 600X
->>>> References : http://bugzilla.kernel.org/show_bug.cgi?id=5989
+Albert Lee wrote:
+> Jeff,
+> 
+> Changes:
+> Recognize ATA_CMD_WRITE_MULTI_FUA_EXT as r/w multiple commands.
 
->>From: "Yu, Luming" <luming.yu@intel.com>
->>> According to bug report, the BIOS DSDT is modified.  I don't know
->>> how these changes affect the results of suspend/resume. But, it is
->>> clear this is NOT right approach to fix problem. Hence, I need the
->>> testing report with un-modified DSDT on TP 600X, bios 1.11.
+This one will require exhaustive testing on various controllers.
+There are quite a few PIO boards with FIFOs that "recognize"
+opcodes for READs and WRITEs.  And practically all of them predate
+any concept of FUA commands.
 
->>I'll try it, although I don't think I'll get any data on the problem.
->>The unmodified DSDT (bios 1.11) lacks an S3 sleep object, so I had to
->>modify the DSDT even to get S3 to sleep at all.  See
->><http://bugzilla.kernel.org/show_bug.cgi?id=3534> for that discussion.
-
-I just tried the first failing commit
-(02b28a33aae93a3b53068e0858d62f8bcaef60a3):
-
-Author: Len Brown <len.brown@intel.com>
-Date:   Mon Dec 5 16:46:36 2005 -0500
-
-    [ACPI] Enable Embedded Controller (EC) interrupt mode by default
-    
-    "ec_intr=0" reverts to polling
-    "ec_burst=" no longer exists.
-    
-    Signed-off-by: Len Brown <len.brown@intel.com>
-    Acked-by: Luming Yu <luming.yu@intel.com>
-
-but with the vanilla (BIOS 1.11) DSDT.  And not only did S3 sleep
-happen, but the thermal+processor bug didn't show up: i.e. it did two
-(actually) many S3 sleep-wake cycles.  So the problem is due to
-something in the modified DSDT, which is either a problem itself or it
-exposes another problem.
-
-[Picture of me hanging head in shame for putting people to the trouble.]
-
-My only excuse is that long ago (2.6.11), the machine wouldn't S3
-sleep at all with the vanilla DSDT, and I patched it as recommended by
-the ACPI experts.  However, the current ACPI interpreter seems to
-handle the 600X's mangy DSDT.
-
-Now I agree 100% with Len Brown that it's best to have ACPI handle
-marginal DSDT's, not hack the DSDT.
-
--Sanjoy
-
-`Never underestimate the evil of which men of power are capable.'
-         --Bertrand Russell, _War Crimes in Vietnam_, chapter 1.
+Very VERY risky.
