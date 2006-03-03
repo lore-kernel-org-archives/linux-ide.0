@@ -1,89 +1,74 @@
-From: "East-West Australia lotteries" <felicialanza@netscape.net>
-Subject: CLAIM YOUR WINNING PRIZE
-Date: Sat, 04 Mar 2006 05:52:18 +0800
-Message-ID: <CB485FA1.DCF00C8@netscape.net>
-Reply-To: "East-West Australia lotteries" <felicialanza@netscape.net>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+From: Steve Byan <smb@egenera.com>
+Subject: Re: NCQ general question
+Date: Fri, 3 Mar 2006 16:55:10 -0500
+Message-ID: <C6838977-5411-400F-9548-2F22598DC2AE@egenera.com>
+References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com> <440561CB.30201@yahoo.de> <4405A656.1030602@rtr.ca> <20060301135547.GV4816@suse.de>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [211.119.137.200] ([211.119.137.200]:43780 "HELO netscape.net")
-	by vger.kernel.org with SMTP id S932269AbWCCVGT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Mar 2006 16:06:19 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20060301135547.GV4816@suse.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Mark Lord <liml@rtr.ca>, Gentoopower <gentoopower@yahoo.de>, "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-East-West Australia Lotteries,
-1022 Kingsway Ave., Osborne,
-Western Australia, 6018.
-Head office: Maliebaan 38-40, 3581CR,
-Utrecht, The Netherlands.
 
-Dear Sir/Madam,
+On Mar 1, 2006, at 8:55 AM, Jens Axboe wrote:
 
-YOU WON: €1,000,000.00!euros
-With utmost joy, we are pleased to inform you of the result of the
-East-West Australia Lotteries  International programs held on the 1st of
-March 2006 drew cash Prize of €1,000,000.00. Your e-mail address attached
-to Code number 370011672387-290-02 with claim
-Number 12093782/42 drew these lucky numbers 894-4563-001-764-64-2911, which
-consequently won in the 2nd category. You have been approved to receive a
-cash prize of €1,000,000.00 (One Million Euros).
-Be advised that due to incessant mix up in cash prize transfer to previous
-winners, we advise that you Keep your winning information confidential
-until
-your claims is been processed and your funds (€1,000,000.00) Transferred to
-you. This security measure is important; its protocol meant to avoid double
-claims, transfer and unwarranted abuse of this program by other
-participants.
-METHOD OF SELECTING WINNERS:
-Participants were selected anonymously through a private ballot system
-(computer ballot) from over 35,000 Companies and 70,000 individual e-mail
-addresses all over the world. At the final draw your e-mail address Emerged
-as the winner of our last jackpot.This is promotional program takes place
-bi-annually, and it is promoted and sponsored Orient software Corporation
-(Orient Networks). It is met to reward some individuals and corporations
-who
-have devote Their time and resources surfing the world wide web (www) with
-their email addresses. Remember, all winning must be claimed not later than
-5 working days from today. After the expiration of that time frame, if your
-funds are unclaimed, it will be refunded to us and included in our next
-draws.We hope you will use part of your cash prize to participate in our
-next €18million draws in November 2006. Lastly, in order to avoid
-unnecessary
-delays/complications with the transfer of your funds to you, please
-Always remember to quote your Code number in all correspondence with our
-paying bank (Deutsche Bank-Amsterdam). Furthermore, should there be any
-change of your present
-address, please notify us Immediately so to make the appropriate
-adjustment.
+> On Wed, Mar 01 2006, Mark Lord wrote:
+>> NCQ vs. TCQ:  NCQ has a much more efficient low-level protocol,
+>> making the host-side (controller, operating-system) quite a bit
+>> simpler than with NCQ.
+>
+> Or in laymens terms - TCQ sucks and NCQ doesn't :-)
+> NCQ has many more advantages than TCQ, apart from both a more  
+> efficient
+> low level protocol and ease of implementation. TCQ basically just  
+> allows
+> the drive to do some reordering, it still serializes everything and
+> requires too many interrupts.
 
-Congratulations from the management and staffs of East-West Australia
-Lotteries. 
+The problem with TCQ is that the host can't disconnect on writes  
+after sending the data to the drive but before receiving the status.  
+The host can only disconnect between sending the command and moving  
+the data. Consequently TCQ is useless for writes, which is where you  
+really need it. It works OK for reads. TCQ was really invented as a  
+way to allow CD-ROM drives to play nice on the same ATA bus as disks.
 
-Kindly, immediately, contact our Paying Bank (Deutsche Bank-Amsterdam) for
-your payment advice.
-Send them following e-mail:
-I……………(your names)…….., with e-mail address………..(your e-mail address)…..,
-contact address………..(postal address)…….and code number:……….(quote your code
-number)…….is the winner of the last East-West Astralia lotteries draws,
-with a cash prize of €1,000,000.00. Kindly advise me with details of the
-process of the transfer of my cash prize.
+The reason you need write queuing is for data integrity reasons, not  
+for performance. ATA disks effectively get command-queuing on writes  
+even without TCQ and NCQ - they simply park the data in a volatile  
+RAM cache, tell the host that the data is saved on persistent  
+storage, and then asynchronously write the queued data to the  
+physical media. The drive reorders those writes and will gather  
+sequential writes.
 
-Contact details of our Paying Bank:
-Contact person:  Mr. Powell Green.
-Department of Private Banking,
-Deutsche Bank, Amsterdam, the Netherlands.
-E-mail: srvcscust@netscape.net
-Tel: 31 647-494-395
-Fax 31-84-752-0508
-Congratulations.
-Yours in sincerely
-Felicia Lanza.(Lottery Coordinator)
-Note: Participants below 21 years are automatically disqualified.
-All e-mail transmission/correspondence are 100% protected by our Secure
-Socket Layer (SSL) server.
+However, note that all filesystems that make even a pretense of  
+trying to maintain filesystem integrity after a power failure (note  
+that the Windows NT implementation of FAT32 does not attempt to  
+maintain filesystem integrity after a power failure) depend on  
+knowing when data makes it to persistent storage, so they can order  
+their writes correctly. ATA disk write caching breaks this guarantee.  
+To restore filesystem integrity on a careful-write filesystem like  
+most unix filesystems, you have to disable write-caching in the  
+drive. This causes such a drastic loss of performance (you basically  
+get only one sequential write per disk revolution), that you must  
+then implement command-queuing to allow the drive to gather  
+sequential writes to make the system usable.
+
+As an alternative, if you have a journalling filesystem, you can  
+leave the disk cache enabled but selectively write-through your  
+metadata using force-unit-access (FUA).
+
+Regards,
+-Steve
+-- 
+Steve Byan <smb@egenera.com>
+Software Architect
+Egenera, Inc.
+165 Forest Street
+Marlboro, MA 01752
+(508) 858-3125
 
 
