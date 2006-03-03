@@ -1,101 +1,52 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: PATA failure with piix, works with libata
-Date: Fri, 3 Mar 2006 18:39:37 +0000
-Message-ID: <20060303183937.GA30840@srcf.ucam.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ATA Pass-Through support
+Date: Sat, 4 Mar 2006 03:39:40 +0900
+Message-ID: <20060303183940.GA31100@htj.dyndns.org>
+References: <DF9C50EF9E8CDA45A06FE8735C68F85E5692E5@earthex2.power.com> <440736A3.8090207@pobox.com> <440873C5.8050403@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([217.147.92.49]:3270 "EHLO
-	vavatch.codon.org.uk") by vger.kernel.org with ESMTP
-	id S1161019AbWCCSjm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 3 Mar 2006 13:39:42 -0500
+Received: from pproxy.gmail.com ([64.233.166.181]:13432 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1161023AbWCCSjq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Mar 2006 13:39:46 -0500
+Received: by pproxy.gmail.com with SMTP id i49so338291pyi
+        for <linux-ide@vger.kernel.org>; Fri, 03 Mar 2006 10:39:45 -0800 (PST)
 Content-Disposition: inline
+In-Reply-To: <440873C5.8050403@us.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Quat Le <Quat.Le@dothill.com>, "Moore, Eric" <Eric.Moore@lsil.com>, dougg@torque.net, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi,
+On Fri, Mar 03, 2006 at 10:50:13AM -0600, Brian King wrote:
+> Jeff Garzik wrote:
+> >Quat Le wrote:
+> >>Does anyone know of any SAS HBA vendor whose driver either uses libata
+> >>or supports SATA Pass-Through SCSI commands in their own layer? 
+> >
+> >Brian King, maintainer of the ipr driver, has posted patches which 
+> >integrate libata SATA support into his driver.  Merging those is on my 
+> >todo list, though I'm currently waiting on Tejun Heo's error handling 
+> >work before tackling that (and NCQ and hotplug...).
+> 
+> Tejen,
+> 
+> Is there anything I can do to help with the error handling work Jeff
+> is referring to?
+> 
 
-I'm playing with an Intel Mac. Pretty much everything works to some 
-extent (though it seems very unhappy with MSI), but I'm having some 
-trouble with the built-in PATA controller. Using ata_piix (with PATA 
-mode enabled), I get the following:
+Hello, Brian.
 
-[4294851.590000] ata_piix 0000:00:1f.1: version 1.05
-[4294851.590000] ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, low) -> IRQ 201
-[4294851.590000] PCI: Setting latency timer of device 0000:00:1f.1 to 64
-[4294851.590000] ata7: PATA max UDMA/100 cmd 0x30E8 ctl 0x30FE bmdma 0x30C0 irq 201
-[4294851.590000] ata8: PATA max UDMA/100 cmd 0x30E0 ctl 0x30FA bmdma 0x30C8 irq 201
-[4294851.898000] ata7: dev 0 cfg 49:0f00 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:101f
-[4294851.898000] ata7: dev 0 ATAPI, max UDMA/66
-[4294851.898000] ata7: dev 0 configured for UDMA/66
-[4294851.898000] scsi7 : ata_piix
-[4294852.057000] ATA: abnormal status 0x7F on port 0x30E7
-[4294852.057000] ata8: disabling port
-[4294852.058000] scsi8 : ata_piix
-[4294852.062000]   Vendor: MATSHITA  Model: DVD-R   UJ-846    Rev: FB2U
-[4294852.062000]   Type:   CD-ROM                             ANSI SCSI revision: 05
-[4294852.094000] sr0: scsi3-mmc drive: 24x/24x writer cd/rw xa/form2 cdda tray
-[4294852.094000] sr 7:0:0:0: Attached scsi CD-ROM sr0
-[4294852.094000] sr 7:0:0:0: Attached scsi generic sg2 type 5
+The EH work is in the process of being merged into libata-dev
+#upstream branch.  The merge process has slowed down a bit lately due
+to bug fixes for 2.6.16 but it's still progressing pretty fast.  I
+think/hope whole EH stuff can be merged during 2.6.17 process or
+post-2.6.17 #upstream.  It shouldn't take too long.  We're just two or
+three patchsets away (and all changes are living in my repository
+happily although they are a bit rough).  So, please give it a few more
+weeks.  We will be there.
 
-and everything is fine, including CD access. Loading piix gives me the 
-following:
-
-[4294929.054000] ICH7: IDE controller at PCI slot 0000:00:1f.1
-[4294929.054000] ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, low) -> IRQ 201
-[4294929.054000] ICH7: chipset revision 2
-[4294929.054000] ICH7: 100% native mode on irq 201
-[4294929.054000] PCI: Setting latency timer of device 0000:00:1f.1 to 64
-[4294929.054000]     ide0: BM-DMA at 0x30c0-0x30c7, BIOS settings: hda:DMA, hdb:pio
-[4294929.054000]     ide1: BM-DMA at 0x30c8-0x30cf, BIOS settings: hdc:pio, hdd:pio
-[4294929.054000] Probing IDE interface ide0...
-[4294929.722000] hda: MATSHITADVD-R UJ-846, ATAPI CD/DVD-ROM drive
-[4294930.057000] ide0 at 0x30e8-0x30ef,0x30fe on irq 201
-[4294930.057000] Probing IDE interface ide1...
-
-which seems ok. However, loading ide-cd gives:
-
-[4294983.732000] hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-[4294983.732000] ide: failed opcode was: unknown
-[4294983.732000] hda: drive not ready for command
-[4294983.735000] hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-[4294983.735000] ide: failed opcode was: unknown
-[4294983.735000] hda: drive not ready for command
-[4294983.738000] hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-[4294983.738000] ide: failed opcode was: unknown
-[4294983.738000] hda: drive not ready for command
-[4294983.741000] hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-[4294983.741000] ide: failed opcode was: unknown
-[4294983.741000] hda: DMA disabled
-[4294983.741000] hda: drive not ready for command
-[4294983.791000] hda: ATAPI reset complete
-[4294983.793000] hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-[4294983.793000] ide: failed opcode was: unknown
-[4294983.793000] hda: drive not ready for command
-[4294983.796000] hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-[4294983.796000] ide: failed opcode was: unknown
-[4294983.796000] hda: drive not ready for command
-[4294983.799000] hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-[4294983.799000] ide: failed opcode was: unknown
-[4294983.799000] hda: drive not ready for command
-[4294983.802000] hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-[4294983.802000] ide: failed opcode was: unknown
-[4294983.802000] hda: drive not ready for command
-[4294983.852000] hda: ATAPI reset complete
-[4294983.852000] hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-[4294983.852000] ide: failed opcode was: unknown
-[4294983.852000] hda: drive not ready for command
-[4294983.852000] hda: ATAPI CD-ROM drive, 0kB Cache
-[4294983.853000] hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-[4294983.853000] ide: failed opcode was: unknown
-[4294983.853000] hda: drive not ready for command
-
-and insmod never returns. After this, the IDE interrupt is firing about 
-80000 times a second. This is 2.6.15 - nothing jumps out at me in the 
-changes since then. Anyone have any ideas? I'm not entirely convinced 
-that interrupts are being set up correctly on this hardware, but it 
-works fine with ata_piix...
+Thanks.
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+tejun
