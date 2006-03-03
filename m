@@ -1,31 +1,37 @@
 From: Brian King <brking@us.ibm.com>
 Subject: Re: ATA Pass-Through support
-Date: Fri, 03 Mar 2006 10:38:17 -0600
-Message-ID: <440870F9.20505@us.ibm.com>
-References: <DF9C50EF9E8CDA45A06FE8735C68F85E569309@earthex2.power.com>
+Date: Fri, 03 Mar 2006 10:50:13 -0600
+Message-ID: <440873C5.8050403@us.ibm.com>
+References: <DF9C50EF9E8CDA45A06FE8735C68F85E5692E5@earthex2.power.com> <440736A3.8090207@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <DF9C50EF9E8CDA45A06FE8735C68F85E569309@earthex2.power.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Quat Le <Quat.Le@dothill.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "Moore, Eric" <Eric.Moore@lsil.com>, dougg@torque.net, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:21719 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1030231AbWCCQur (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Mar 2006 11:50:47 -0500
+In-Reply-To: <440736A3.8090207@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Quat Le <Quat.Le@dothill.com>, "Moore, Eric" <Eric.Moore@lsil.com>, dougg@torque.net, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, htejun@gmail.com
 
-Quat Le wrote:
-> I'm not familiar with the ipr driver. Is this for IBM PowerPC RAID? How
-> will this work for me? I don't really need RAID. What I have is a
-> Pentium-based machine.  I want to be able to talk to SATA drives on a
-> SAS expander.
+Jeff Garzik wrote:
+> Quat Le wrote:
+>> Does anyone know of any SAS HBA vendor whose driver either uses libata
+>> or supports SATA Pass-Through SCSI commands in their own layer? 
+> 
+> Brian King, maintainer of the ipr driver, has posted patches which 
+> integrate libata SATA support into his driver.  Merging those is on my 
+> todo list, though I'm currently waiting on Tejun Heo's error handling 
+> work before tackling that (and NCQ and hotplug...).
 
-There is really two parts to my patchset. One is some general libata changes
-needed for any SAS HBA that wants to use libata to attach SATA devices, and
-the second part is the changes to ipr to use that function.
+Tejen,
 
-Doug had mentioned a while back that he might look into using libata to attach
-SATA devices to aic94xx adapters. Doug, are you still planning to look
-at this, or is someone else working on this?
+Is there anything I can do to help with the error handling work Jeff
+is referring to?
+
+Brian
 
 -- 
 Brian King
