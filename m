@@ -1,90 +1,61 @@
-From: "Yu, Luming" <luming.yu@intel.com>
-Subject: RE: 2.6.16-rc5: known regressions
-Date: Fri, 3 Mar 2006 12:46:06 +0800
-Message-ID: <3ACA40606221794F80A5670F0AF15F840B172CC2@pdsmsx403>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: linux-acpi-owner@vger.kernel.org
-To: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
+From: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
+Subject: Re: 2.6.16-rc5: known regressions [600X S3 sleep]
+Date: Fri, 03 Mar 2006 05:58:50 +0000
+Message-ID: <E1FF3JS-0003qn-00@skye.ra.phy.cam.ac.uk>
+References: <3ACA40606221794F80A5670F0AF15F840B172CC2@pdsmsx403>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751889AbWCCF6z@vger.kernel.org>
+In-Reply-To: Your message of "Fri, 03 Mar 2006 12:46:06 +0800."
+             <3ACA40606221794F80A5670F0AF15F840B172CC2@pdsmsx403>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Yu, Luming" <luming.yu@intel.com>
 Cc: linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>
 List-Id: linux-ide@vger.kernel.org
 
+>>>> Subject    : S3 sleep hangs the second time - 600X
+>>>> References : http://bugzilla.kernel.org/show_bug.cgi?id=5989
 
->
->>> Subject    : S3 sleep hangs the second time - 600X
->>> References : http://bugzilla.kernel.org/show_bug.cgi?id=5989
->
->From: "Yu, Luming" <luming.yu@intel.com>
->> According to bug report, the BIOS DSDT is modified.  I don't know
->> how these changes affect the results of suspend/resume. But, it is
->> clear this is NOT right approach to fix problem. Hence, I need the
->> testing report with un-modified DSDT on TP 600X, bios 1.11.
->
->I'll try it, although I don't think I'll get any data on the problem.
->The unmodified DSDT (bios 1.11) lacks an S3 sleep object, so I had to
->modify the DSDT even to get S3 to sleep at all.  See
-><http://bugzilla.kernel.org/show_bug.cgi?id=3534> for that discussion.
->In additional comment #4 there (2004-10-14), you said:
->
->  The root cause of [the missing S3 object] failure is that linux is
->  using element in
->
->  const char      *acpi_gbl_sleep_state_names[ACPI_S_STATE_COUNT] =
->  {
->	  "\_S0_",
->	  "\_S1_",
->	  "\_S2_",
->	  "\_S3_",
->	  "\_S4_",
->	  "\_S5_"
->  };
->
->  to call acpi_get_sleep_type_data, but your box define _S3 under the
->  device PNP0A03. So, the evaluating \_S3 will fail.
->
->  The workaround in DSDT is to change _S3 to \_S3_ .
->  We can fix it in acpi driver soon.
+>>From: "Yu, Luming" <luming.yu@intel.com>
+>>> According to bug report, the BIOS DSDT is modified.  I don't know
+>>> how these changes affect the results of suspend/resume. But, it is
+>>> clear this is NOT right approach to fix problem. Hence, I need the
+>>> testing report with un-modified DSDT on TP 600X, bios 1.11.
 
-Hmm, this conclusion seems to be wrong. at that time, I said it too
-early.  The real problem is this, if your box support S3, the _S3 method
-should return from ELSE-statement which return package
-{0x01,0x01,0x00,0x00}.
+>>I'll try it, although I don't think I'll get any data on the problem.
+>>The unmodified DSDT (bios 1.11) lacks an S3 sleep object, so I had to
+>>modify the DSDT even to get S3 to sleep at all.  See
+>><http://bugzilla.kernel.org/show_bug.cgi?id=3534> for that discussion.
 
-If you still use this
-http://bugzilla.kernel.org/show_bug.cgi?id=3534#c10 to
-override your DSDT, which bypass the testing and blindly assume BIOS or
-platform
-do support S3, then I suggest you to retest, and post dmesg with
-UN-modified BIOS.
+I just tried the first failing commit
+(02b28a33aae93a3b53068e0858d62f8bcaef60a3):
 
-Thanks,
-Luming
+Author: Len Brown <len.brown@intel.com>
+Date:   Mon Dec 5 16:46:36 2005 -0500
 
+    [ACPI] Enable Embedded Controller (EC) interrupt mode by default
+    
+    "ec_intr=0" reverts to polling
+    "ec_burst=" no longer exists.
+    
+    Signed-off-by: Len Brown <len.brown@intel.com>
+    Acked-by: Luming Yu <luming.yu@intel.com>
 
-    Method (_S3, 0, NotSerialized)
-    {
-        If (BXPT)
-        {
-            Return (Package (0x04)
-            {
-                0x06,
-                0x06,
-                0x00,
-                0x00
-            })
-        }
-        Else
-        {
-            Return (Package (0x04)
-            {
-                0x01,
-                0x01,
-                0x00,
-                0x00
-            })
-        }
-    }
+but with the vanilla (BIOS 1.11) DSDT.  And not only did S3 sleep
+happen, but the thermal+processor bug didn't show up: i.e. it did two
+(actually) many S3 sleep-wake cycles.  So the problem is due to
+something in the modified DSDT, which is either a problem itself or it
+exposes another problem.
+
+[Picture of me hanging head in shame for putting people to the trouble.]
+
+My only excuse is that long ago (2.6.11), the machine wouldn't S3
+sleep at all with the vanilla DSDT, and I patched it as recommended by
+the ACPI experts.  However, the current ACPI interpreter seems to
+handle the 600X's mangy DSDT.
+
+Now I agree 100% with Len Brown that it's best to have ACPI handle
+marginal DSDT's, not hack the DSDT.
+
+-Sanjoy
+
+`Never underestimate the evil of which men of power are capable.'
+         --Bertrand Russell, _War Crimes in Vietnam_, chapter 1.
