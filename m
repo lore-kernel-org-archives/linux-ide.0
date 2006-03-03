@@ -1,42 +1,89 @@
-From: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
-Subject: Re: 2.6.16-rc5: known regressions
-Date: Fri, 03 Mar 2006 21:04:18 +0000
-Message-ID: <E1FFHRi-000451-00@skye.ra.phy.cam.ac.uk>
-References: <20060303165119.GA30228@srcf.ucam.org>
+From: "East-West Australia lotteries" <felicialanza@netscape.net>
+Subject: CLAIM YOUR WINNING PRIZE
+Date: Sat, 04 Mar 2006 05:52:18 +0800
+Message-ID: <CB485FA1.DCF00C8@netscape.net>
+Reply-To: "East-West Australia lotteries" <felicialanza@netscape.net>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mraos.ra.phy.cam.ac.uk ([131.111.48.8]:38351 "EHLO
-	mraos.ra.phy.cam.ac.uk") by vger.kernel.org with ESMTP
-	id S932220AbWCCVEV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 3 Mar 2006 16:04:21 -0500
-In-Reply-To: Your message of "Fri, 03 Mar 2006 16:51:19 GMT."
-             <20060303165119.GA30228@srcf.ucam.org>
+Received: from [211.119.137.200] ([211.119.137.200]:43780 "HELO netscape.net")
+	by vger.kernel.org with SMTP id S932269AbWCCVGT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Mar 2006 16:06:19 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: "Yu, Luming" <luming.yu@intel.com>, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>
+To: linux-ide@vger.kernel.org
 
->> I'll try it, although I don't think I'll get any data on the problem.
->> The unmodified DSDT (bios 1.11) lacks an S3 sleep object, so I had to
->> modify the DSDT even to get S3 to sleep at all.  See
->> <http://bugzilla.kernel.org/show_bug.cgi?id=3534> for that discussion.
+East-West Australia Lotteries,
+1022 Kingsway Ave., Osborne,
+Western Australia, 6018.
+Head office: Maliebaan 38-40, 3581CR,
+Utrecht, The Netherlands.
 
-> I think it's arguably a bit extreme to describe "My setup is so 
-> unsupported that I had to modify my firmware to enable sleep and then 
-> override the kernel's sanity checks and it's stopped working with 
-> 2.6.16" as a regression.
+Dear Sir/Madam,
 
-I agree, and that was the point of 'picture of me hanging head in
-shame', so there's no need to rub it in.
+YOU WON: €1,000,000.00!euros
+With utmost joy, we are pleased to inform you of the result of the
+East-West Australia Lotteries  International programs held on the 1st of
+March 2006 drew cash Prize of €1,000,000.00. Your e-mail address attached
+to Code number 370011672387-290-02 with claim
+Number 12093782/42 drew these lucky numbers 894-4563-001-764-64-2911, which
+consequently won in the 2nd category. You have been approved to receive a
+cash prize of €1,000,000.00 (One Million Euros).
+Be advised that due to incessant mix up in cash prize transfer to previous
+winners, we advise that you Keep your winning information confidential
+until
+your claims is been processed and your funds (€1,000,000.00) Transferred to
+you. This security measure is important; its protocol meant to avoid double
+claims, transfer and unwarranted abuse of this program by other
+participants.
+METHOD OF SELECTING WINNERS:
+Participants were selected anonymously through a private ballot system
+(computer ballot) from over 35,000 Companies and 70,000 individual e-mail
+addresses all over the world. At the final draw your e-mail address Emerged
+as the winner of our last jackpot.This is promotional program takes place
+bi-annually, and it is promoted and sponsored Orient software Corporation
+(Orient Networks). It is met to reward some individuals and corporations
+who
+have devote Their time and resources surfing the world wide web (www) with
+their email addresses. Remember, all winning must be claimed not later than
+5 working days from today. After the expiration of that time frame, if your
+funds are unclaimed, it will be refunded to us and included in our next
+draws.We hope you will use part of your cash prize to participate in our
+next €18million draws in November 2006. Lastly, in order to avoid
+unnecessary
+delays/complications with the transfer of your funds to you, please
+Always remember to quote your Code number in all correspondence with our
+paying bank (Deutsche Bank-Amsterdam). Furthermore, should there be any
+change of your present
+address, please notify us Immediately so to make the appropriate
+adjustment.
 
-Anyway, the TP600X w/ vanilla DSDT *was* unsupported (circa 2.6.11),
-but now the ACPI interpreter can interpret the vanilla DSDT and go
-into S3 sleep (before, it would complain about a missing S3 sleep
-object because the DSDT used a funny syntax).  There were other
-problems in the vanilla DSDT (e.g. probably using fn-F7 to switch to
-an external display doesn't work) but I'll investigate them one at a
-time.
+Congratulations from the management and staffs of East-West Australia
+Lotteries. 
 
--Sanjoy
+Kindly, immediately, contact our Paying Bank (Deutsche Bank-Amsterdam) for
+your payment advice.
+Send them following e-mail:
+I……………(your names)…….., with e-mail address………..(your e-mail address)…..,
+contact address………..(postal address)…….and code number:……….(quote your code
+number)…….is the winner of the last East-West Astralia lotteries draws,
+with a cash prize of €1,000,000.00. Kindly advise me with details of the
+process of the transfer of my cash prize.
 
-`Never underestimate the evil of which men of power are capable.'
-         --Bertrand Russell, _War Crimes in Vietnam_, chapter 1.
+Contact details of our Paying Bank:
+Contact person:  Mr. Powell Green.
+Department of Private Banking,
+Deutsche Bank, Amsterdam, the Netherlands.
+E-mail: srvcscust@netscape.net
+Tel: 31 647-494-395
+Fax 31-84-752-0508
+Congratulations.
+Yours in sincerely
+Felicia Lanza.(Lottery Coordinator)
+Note: Participants below 21 years are automatically disqualified.
+All e-mail transmission/correspondence are 100% protected by our Secure
+Socket Layer (SSL) server.
+
+
