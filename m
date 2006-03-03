@@ -1,33 +1,67 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: 2.6.16-rc5: known regressions
-Date: Fri, 3 Mar 2006 16:51:19 +0000
-Message-ID: <20060303165119.GA30228@srcf.ucam.org>
-References: <3ACA40606221794F80A5670F0AF15F840B0CE273@pdsmsx403> <E1FF0Vm-0002Fl-00@skye.ra.phy.cam.ac.uk>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata-dev: recognize WRITE_MULTI_FUA_EXT for r/w multiple
+Date: Fri, 03 Mar 2006 12:22:35 -0500
+Message-ID: <44087B5B.9030909@pobox.com>
+References: <4407AB1D.2080506@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([217.147.92.49]:55184 "EHLO
-	vavatch.codon.org.uk") by vger.kernel.org with ESMTP
-	id S932273AbWCCQxB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 3 Mar 2006 11:53:01 -0500
-Content-Disposition: inline
-In-Reply-To: <E1FF0Vm-0002Fl-00@skye.ra.phy.cam.ac.uk>
+Received: from mail.dvmed.net ([216.237.124.58]:23693 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751019AbWCCRWi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Mar 2006 12:22:38 -0500
+In-Reply-To: <4407AB1D.2080506@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
-Cc: "Yu, Luming" <luming.yu@intel.com>, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>
+To: albertl@mail.com
+Cc: Linux IDE <linux-ide@vger.kernel.org>
 
-On Fri, Mar 03, 2006 at 02:59:22AM +0000, Sanjoy Mahajan wrote:
+Albert Lee wrote:
+> Jeff,
+> 
+> Changes:
+> Recognize ATA_CMD_WRITE_MULTI_FUA_EXT as r/w multiple commands.
+> 
+> Patch against the irq-pio branch
+> (1ed82ae3df3882bfcb5bfe5e9f97e4e8e23af299).
+> 
+> For your review, thanks.
+> 
+> Albert
+> 
+> Signed-off-by: Albert Lee <albertcc@tw.ibm.com> 
 
-> I'll try it, although I don't think I'll get any data on the problem.
-> The unmodified DSDT (bios 1.11) lacks an S3 sleep object, so I had to
-> modify the DSDT even to get S3 to sleep at all.  See
-> <http://bugzilla.kernel.org/show_bug.cgi?id=3534> for that discussion.
+I would request that you adjust your patch submission slightly.  Stuff 
+like "Jeff," "Changes:", "Patch against...", "For your review", "Albert" 
+all must be hand-edited out before applying the patch.  Everything 
+before the "---" terminator is copied directly into the kernel changelog.
 
-I think it's arguably a bit extreme to describe "My setup is so 
-unsupported that I had to modify my firmware to enable sleep and then 
-override the kernel's sanity checks and it's stopped working with 
-2.6.16" as a regression.
+Take a look at Tejun's recent patches for an example.  The message body 
+of his emailed submissions look like:
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+	[change description]
+	[signed-off-by]
+	---
+	[notes, comments, insults, etc.  :)]
+
+
+> --- irq-pio/include/linux/ata.h	2006-03-02 15:22:58.000000000 +0800
+> +++ irq-pio-catchup/include/linux/ata.h	2006-03-02 17:05:17.000000000 +0800
+> @@ -314,7 +314,8 @@ static inline int is_multi_taskfile(stru
+>  	return (tf->command == ATA_CMD_READ_MULTI) ||
+>  	       (tf->command == ATA_CMD_WRITE_MULTI) ||
+>  	       (tf->command == ATA_CMD_READ_MULTI_EXT) ||
+> -	       (tf->command == ATA_CMD_WRITE_MULTI_EXT);
+> +	       (tf->command == ATA_CMD_WRITE_MULTI_EXT) ||
+> +	       (tf->command == ATA_CMD_WRITE_MULTI_FUA_EXT);
+
+Applied to irq-pio branch, though Mark Lord makes a correct point.  We 
+may have to create a whitelist for PATA devices that support FUA, rather 
+than a blacklist.  Something to think about...
+
+Thanks,
+
+	Jeff
+
+
+
