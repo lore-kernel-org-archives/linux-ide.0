@@ -1,39 +1,41 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata-dev: recognize WRITE_MULTI_FUA_EXT for r/w multiple
-Date: Fri, 3 Mar 2006 15:28:23 +0100
-Message-ID: <20060303142823.GQ4329@suse.de>
-References: <4407AB1D.2080506@tw.ibm.com> <4408521B.9000905@rtr.ca>
+From: "Peter Millerchip" <peter.millerchip@gmail.com>
+Subject: Patch: ide noprobe fix
+Date: Fri, 3 Mar 2006 15:06:49 +0000
+Message-ID: <ccd4c3e80603030706t681f0870t@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:43012 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1751223AbWCCO2s (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Mar 2006 09:28:48 -0500
+Received: from xproxy.gmail.com ([66.249.82.192]:26029 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751477AbWCCPGu convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 3 Mar 2006 10:06:50 -0500
+Received: by xproxy.gmail.com with SMTP id t13so466820wxc
+        for <linux-ide@vger.kernel.org>; Fri, 03 Mar 2006 07:06:49 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <4408521B.9000905@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: albertl@mail.com, Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Fri, Mar 03 2006, Mark Lord wrote:
-> Albert Lee wrote:
-> >Jeff,
-> >
-> >Changes:
-> >Recognize ATA_CMD_WRITE_MULTI_FUA_EXT as r/w multiple commands.
-> 
-> This one will require exhaustive testing on various controllers.
-> There are quite a few PIO boards with FIFOs that "recognize"
-> opcodes for READs and WRITEs.  And practically all of them predate
-> any concept of FUA commands.
-> 
-> Very VERY risky.
+Hi,
 
-Which is why it's so annoying and seemingly idiotic that t13 keeps
-making up new opcodes for the exact same thing instead of allowing
-options bits.
+With 2.6.15.5 I am using ide2=noprobe on the command line but
+drivers/ide/setup-pci.c overwrites the hwif->noprobe flag back to zero
+on line 442. The following patch fixes it:
 
--- 
-Jens Axboe
+442c442
+<               hwif->noprobe = !hwif->io_ports[IDE_DATA_OFFSET];
+---
+>               hwif->noprobe = hwif->noprobe || !hwif->io_ports[IDE_DATA_OFFSET];
 
+This allows ide2=noprobe to work correctly. Without the patch the
+kernel takes around a minute to determine that ide2 is not there, but
+with the patch it is instant.
+
+Is this patch the correct way to do it? How do I get it merged into
+the main code if it is correct? Sorry for the obvious questions but
+I'm a bit of a newbie at this.
+
+Regards,
+
+Pete.
