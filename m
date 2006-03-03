@@ -1,104 +1,30 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Fri, 3 Mar 2006 14:38:24 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0603031437370.9331@p34>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com>
- <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca>
- <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca>
- <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca>
- <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com>
- <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com>
- <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046CE6.60803@rtr.ca>
- <44046D86.7050809@pobox.com> <4405DCAF.6030500@dgreaves.com> <4405DDEA.7020309@rtr.ca>
- <4405E42B.9040804@dgreaves.com> <4405E83D.9000906@rtr.ca> <4405EC94.2030202@dgreaves.com>
- <4405FAAE.3080705@dgreaves.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 3/6] ata_piix: add a couple of flags
+Date: Fri, 03 Mar 2006 15:33:45 -0500
+Message-ID: <4408A829.6090805@pobox.com>
+References: <11411439393863-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:7136 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S1750712AbWCCTie (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Mar 2006 14:38:34 -0500
-In-Reply-To: <4405FAAE.3080705@dgreaves.com>
+Received: from mail.dvmed.net ([216.237.124.58]:11666 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932359AbWCCUdw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Mar 2006 15:33:52 -0500
+In-Reply-To: <11411439393863-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Mark Lord <lkml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus Torvalds <torvalds@osdl.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jfs@keytradebank.com, 0602@eq.cz, linux-ide@vger.kernel.org
+
+Tejun Heo wrote:
+> Add PIIX_FLAG_IGN_PRESENT and SCR flags.  Thi patch doesn't cause any
+> functional change.  To be used by later init/scr updates.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+
+Please rename PIIX_FLAG_IGN_PRESENT to PIIX_FLAG_IGNORE_PCS or 
+PIIX_FLAG_IGN_PCS in an update patch.
+
+	Jeff
 
 
-
-On Wed, 1 Mar 2006, David Greaves wrote:
-
-> David Greaves wrote:
->
->> Mark Lord wrote:
->>
->>
->>
->>> By the way, the latest 2.6.16-rc5-git4 is available,
->>> and has FUA turned off by default now.  So it should
->>> work with your drives, and *you* are expected to verify
->>> that for us all now.
->>>
->>>
->> Yeah, I know - I've got it on the machine... but it's my wife's machine.
->> I've asked nicely but she's editing a Hercule Poirot video so I'm not
->> allowed to reboot it for a while...
->>
->> I've told her I'm not making pancakes until I've tested it so expect a
->> report Real Soon Now...
->>
->>
-> OK that worked (the pancakes - the kernel's not doing so well...)
->
-> haze:~# uname -a
-> Linux haze 2.6.16-rc5-git4 #2 PREEMPT Wed Mar 1 19:07:58 UTC 2006 i686
-> GNU/Linux
->
-> The boot is pretty clean.
-> I ran an xfs_repair -n on the lvm volume and got the following errors.
-> The repair reported a clean filesystem and the drive was not booted from
-> the raid so that's a big improvement.
->
-> I was not able to trigger similar messages on ata1 but a simple dd
-> doesn't trigger the messages on ata2 either (and for various reasons,
-> xfs_repair wouldn't run on ata1 - I thought I'd leave it and report this
-> first)
->
-> ata2: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
-> ata2: status=0x51 { DriveReady SeekComplete Error }
-> ata2: error=0x04 { DriveStatusError }
-> ata2: no sense translation for status: 0x51
-> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
-> ata2: status=0x51 { DriveReady SeekComplete Error }
-> ata2: no sense translation for status: 0x51
-> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
-> ata2: status=0x51 { DriveReady SeekComplete Error }
-> ata2: no sense translation for status: 0x51
-> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
-> ata2: status=0x51 { DriveReady SeekComplete Error }
-> ata2: no sense translation for status: 0x51
-> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
-> ata2: status=0x51 { DriveReady SeekComplete Error }
-> ata2: no sense translation for status: 0x51
-> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
-> ata2: status=0x51 { DriveReady SeekComplete Error }
-> ata2: no sense translation for status: 0x51
-> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
-> ata2: status=0x51 { DriveReady SeekComplete Error }
-> ata2: no sense translation for status: 0x51
-> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
-> ata2: status=0x51 { DriveReady SeekComplete Error }
->
-> David
->
-> -- 
->
-
-As of 2.6.16-rc5-git4, I have written 281GB so far over a period of 48+ 
-hours with no errors yet :)
-
-Will keep you updated if I see any errors, but so far, so good!
-
-Thanks,
-
-Justin.
