@@ -1,39 +1,37 @@
-From: "Quat Le" <Quat.Le@dothill.com>
-Subject: RE: ATA Pass-Through support
-Date: Thu, 2 Mar 2006 10:41:47 -0800
-Message-ID: <DF9C50EF9E8CDA45A06FE8735C68F85E569309@earthex2.power.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: FUA and 311x (was Re: LibPATA code issues / 2.6.15.4)
+Date: Thu, 02 Mar 2006 19:34:25 -0500
+Message-ID: <44078F11.1010904@rtr.ca>
+References: <1141239617.23202.5.camel@rousalka.dyndns.org>	 <4405F471.8000602@rtr.ca>	 <1141254762.11543.10.camel@rousalka.dyndns.org>	 <311601c90603011719k43af0fbbg889f47d798e22839@mail.gmail.com>	 <440650BC.5090501@pobox.com> <4406512A.9080708@pobox.com>	 <311601c90603011820u4fc89b04te1be39b9ed2ef35b@mail.gmail.com>	 <44065C7C.6090509@pobox.com> <311601c90603011900q7fe21fbx1020e4ba4062dc24@mail.gmail.com> <44066132.4010205@pobox.com> <44066378.1080408@rtr.ca> <44066400.6070503@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "Moore, Eric" <Eric.Moore@lsil.com>, dougg@torque.net, linux-scsi@vger.kernel.org, Brian King <brking@us.ibm.com>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([64.26.128.89]:63407 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1752094AbWCCAe1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Mar 2006 19:34:27 -0500
+In-Reply-To: <44066400.6070503@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <lkml@rtr.ca>, "Eric D. Mudama" <edmudama@gmail.com>, Jens Axboe <axboe@suse.de>, Tejun Heo <htejun@gmail.com>, Nicolas Mailhot <nicolas.mailhot@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
-> -----Original Message-----
-> From: Jeff Garzik [mailto:jgarzik@pobox.com]
-> Sent: Thursday, March 02, 2006 10:17 AM
-> To: Quat Le
-> Cc: Moore, Eric; dougg@torque.net; linux-scsi@vger.kernel.org; Brian
-King;
-> linux-ide@vger.kernel.org
-> Subject: Re: ATA Pass-Through support
+Jeff Garzik wrote:
+> Mark Lord wrote:
+>> Jeff Garzik wrote:
+>> ..
+>>
+>>> Sounds like un-blacklisting the drive, and adding ATA_FLAG_NO_FUA is 
+>>> the way to go...
+>>
+>>
+>> Might as well add sata_mv to that blacklist as well.
 > 
-> Brian King, maintainer of the ipr driver, has posted patches which
-> integrate libata SATA support into his driver.  Merging those is on my
-> todo list, though I'm currently waiting on Tejun Heo's error handling
-> work before tackling that (and NCQ and hotplug...).
-> 
-> 	Jeff
->
+> Have you confirmed that it doesn't work with FUA?
 
-Jeff,
-I'm not familiar with the ipr driver. Is this for IBM PowerPC RAID? How
-will this work for me? I don't really need RAID. What I have is a
-Pentium-based machine.  I want to be able to talk to SATA drives on a
-SAS expander.
- 
+Ooops.  Defective memory here.
 
+The Marvell documentation for the 6081/6041 does indeed state
+that the FUA DMA commands *are* supported (queued or non-queued).
+
+So it should be okay, at least for those two specific chips.
