@@ -1,41 +1,33 @@
-From: "Peter Millerchip" <peter.millerchip@gmail.com>
-Subject: Patch: ide noprobe fix
-Date: Fri, 3 Mar 2006 15:06:49 +0000
-Message-ID: <ccd4c3e80603030706t681f0870t@mail.gmail.com>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: ATA Pass-Through support
+Date: Fri, 03 Mar 2006 10:38:17 -0600
+Message-ID: <440870F9.20505@us.ibm.com>
+References: <DF9C50EF9E8CDA45A06FE8735C68F85E569309@earthex2.power.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.192]:26029 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751477AbWCCPGu convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 3 Mar 2006 10:06:50 -0500
-Received: by xproxy.gmail.com with SMTP id t13so466820wxc
-        for <linux-ide@vger.kernel.org>; Fri, 03 Mar 2006 07:06:49 -0800 (PST)
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <DF9C50EF9E8CDA45A06FE8735C68F85E569309@earthex2.power.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Quat Le <Quat.Le@dothill.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "Moore, Eric" <Eric.Moore@lsil.com>, dougg@torque.net, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Hi,
+Quat Le wrote:
+> I'm not familiar with the ipr driver. Is this for IBM PowerPC RAID? How
+> will this work for me? I don't really need RAID. What I have is a
+> Pentium-based machine.  I want to be able to talk to SATA drives on a
+> SAS expander.
 
-With 2.6.15.5 I am using ide2=noprobe on the command line but
-drivers/ide/setup-pci.c overwrites the hwif->noprobe flag back to zero
-on line 442. The following patch fixes it:
+There is really two parts to my patchset. One is some general libata changes
+needed for any SAS HBA that wants to use libata to attach SATA devices, and
+the second part is the changes to ipr to use that function.
 
-442c442
-<               hwif->noprobe = !hwif->io_ports[IDE_DATA_OFFSET];
----
->               hwif->noprobe = hwif->noprobe || !hwif->io_ports[IDE_DATA_OFFSET];
+Doug had mentioned a while back that he might look into using libata to attach
+SATA devices to aic94xx adapters. Doug, are you still planning to look
+at this, or is someone else working on this?
 
-This allows ide2=noprobe to work correctly. Without the patch the
-kernel takes around a minute to determine that ide2 is not there, but
-with the patch it is instant.
-
-Is this patch the correct way to do it? How do I get it merged into
-the main code if it is correct? Sorry for the obvious questions but
-I'm a bit of a newbie at this.
-
-Regards,
-
-Pete.
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
