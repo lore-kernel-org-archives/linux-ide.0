@@ -1,47 +1,67 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] AHCI prefetch
-Date: Sat, 4 Mar 2006 12:35:05 -0500
-Message-ID: <20060304173505.GA28643@havoc.gtf.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:53644 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S932243AbWCDRfG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Mar 2006 12:35:06 -0500
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+From: Steve Byan <smb@egenera.com>
+Subject: Re: NCQ general question
+Date: Sat, 4 Mar 2006 13:56:04 -0500
+Message-ID: <98B59AFC-2781-4A8A-82E4-C923B4A48F9E@egenera.com>
+References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com> <440561CB.30201@yahoo.de> <4405A656.1030602@rtr.ca> <20060301135547.GV4816@suse.de> <C6838977-5411-400F-9548-2F22598DC2AE@egenera.com> <4408C0D9.4010202@garzik.org>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4408C0D9.4010202@garzik.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Jens Axboe <axboe@suse.de>, Mark Lord <liml@rtr.ca>, Gentoopower <gentoopower@yahoo.de>, "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 
 
-This patch has been sitting in my tmp directory for ages.
+On Mar 3, 2006, at 5:19 PM, Jeff Garzik wrote:
 
-We should probably turn this on, though the practical difference is
-probably minimal.
+> Steve Byan wrote:
+>> it. It works OK for reads. TCQ was really invented as a  way to  
+>> allow CD-ROM drives to play nice on the same ATA bus as disks.
+>
+> Disagree, you are probably thinking about bus disconnect associated  
+> with the overlapped command set?
+
+Yep, I had the two concepts confused. Thanks for the clarification.  
+Isn't the same bus disconnect used for TCQ, though?
+
+> Data integrity -and- performance.  Performance increases for all  
+> the standard reasons that an asynchronous pipeline increases  
+> performance over a synchronous one.
+>
+> The write cache means that requests on the device can be processed  
+> asynchronously, but without NCQ there is still a synchronous  
+> bottleneck:  the device<->controller pipe.
+
+True, but I think that is fairly small compared to no-write-cache-and- 
+no-queuing case. Write-caching is the major win; optimizing the data  
+transfer is only a second-order effect.
+
+>> correctly. ATA disk write caching breaks this guarantee.  To  
+>> restore filesystem integrity on a careful-write filesystem like   
+>> most unix filesystems, you have to disable write-caching in the   
+>> drive. This
+>
+> False, as Linux has proven:  barriers can be implemented with flush- 
+> cache commands.
+>
+> Disabling write cache is not your only choice, and using flush- 
+> cache gives you better performance than flat-out disabling the  
+> write cache.
+
+Yes, you're correct; I neglected to include that option. It's not as  
+good as real FUA because it flushes the entire cache, not just the  
+metadata which needs to be written through to the media.
+
+Regards,
+-Steve
+-- 
+Steve Byan <smb@egenera.com>
+Software Architect
+Egenera, Inc.
+165 Forest Street
+Marlboro, MA 01752
+(508) 858-3125
 
 
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 4e96ec5..973a794 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -64,8 +64,10 @@ enum {
- 	AHCI_PORT_PRIV_DMA_SZ	= AHCI_CMD_SLOT_SZ + AHCI_CMD_TBL_SZ +
- 				  AHCI_RX_FIS_SZ,
- 	AHCI_IRQ_ON_SG		= (1 << 31),
-+
- 	AHCI_CMD_ATAPI		= (1 << 5),
- 	AHCI_CMD_WRITE		= (1 << 6),
-+	AHCI_CMD_PREFETCH	= (1 << 7),
- 
- 	RX_FIS_D2H_REG		= 0x40,	/* offset of D2H Register FIS data */
- 
-@@ -533,7 +535,7 @@ static void ahci_qc_prep(struct ata_queu
- 	if (qc->tf.flags & ATA_TFLAG_WRITE)
- 		opts |= AHCI_CMD_WRITE;
- 	if (is_atapi_taskfile(&qc->tf))
--		opts |= AHCI_CMD_ATAPI;
-+		opts |= AHCI_CMD_ATAPI | AHCI_CMD_PREFETCH;
- 
- 	pp->cmd_slot[0].opts = cpu_to_le32(opts);
- 	pp->cmd_slot[0].status = 0;
