@@ -1,43 +1,56 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] updated sata_promise.c with new device id
-Date: Fri, 03 Mar 2006 21:27:06 -0500
-Message-ID: <4408FAFA.9090704@pobox.com>
-References: <43E7A0B4.4050908@novator.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: [PATCH] Fixup ahci suspend / resume
+Date: Fri, 3 Mar 2006 23:37:16 -0800
+Message-ID: <20060303233716.67ffaff6.rdunlap@xenotime.net>
+References: <44045FB1.5040408@suse.de>
+	<440468DB.5060605@pobox.com>
+	<20060228151928.GC24981@suse.de>
+	<44046AC2.1060002@pobox.com>
+	<20060228152847.GE24981@suse.de>
+	<44046DC3.4060508@pobox.com>
+	<440472F6.6090905@suse.de>
+	<20060228172542.GF24981@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:17053 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750717AbWCDC1I (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Mar 2006 21:27:08 -0500
-In-Reply-To: <43E7A0B4.4050908@novator.com>
+Received: from xenotime.net ([66.160.160.81]:38587 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1751470AbWCDHfz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Mar 2006 02:35:55 -0500
+Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Fri, 3 Mar 2006 23:35:53 -0800
+In-Reply-To: <20060228172542.GF24981@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Borkowski <rborkows@novator.com>
-Cc: linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: hare@suse.de, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Robert Borkowski wrote:
-> patch is against kernel 2.4.32
-> card is a Promise SATAII 300 TX4, PDC40718-GP printed on the main chip
+On Tue, 28 Feb 2006 18:25:43 +0100 Jens Axboe wrote:
+
+> On Tue, Feb 28 2006, Hannes Reinecke wrote:
+> > Jeff Garzik wrote:
+> > > Jens Axboe wrote:
+> > >> I'm sure Hannes will regenerate against upstream as well if necessary,
+> > >> however that depends on when this should be applied.
+> > > 
+> > > It's far too late and too intrusive for 2.6.16-rc.
+> > > 
+> > > It's #upstream or <null>.
+> > > 
+> > Calm down. Of course I will regenerate is against #upstream.
+> > In fact, I've done so initially but wasn't sure what the status of
+> > libata-dev is. So I've diffed it against linux-git instead.
+> > 
+> > Updated patch to follow.
 > 
-> Tested by making md raid5 on four drives and stressing with bonnie++.
-> Any other tests I should run?
-> 
-> Signed-off-by: Robert Borkowski <rborkows@novator.com>
-> --- drivers/scsi/sata_promise.c.orig    Mon Feb  6 11:45:06 2006
-> +++ drivers/scsi/sata_promise.c Mon Feb  6 11:45:39 2006
-> @@ -181,6 +181,8 @@
->           board_20319 },
->         { PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
->           board_20319 },
-> +       { PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-> +         board_20319 },
->         { PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
->           board_20319 },
-> 
+> Thanks Hannes. I wasn't so much worried about it going directly in (I
+> have no problem waiting), just that there seemed to be some disagreement
+> on where suspend is at and what we can "support".
 
-Can you resend against 2.6.x?
+Hi Hannes,
 
-	Jeff
+Did you ever send the updated patch?  I need it to use with the
+rest of the ata-acpi objects patchset for #upstream (actually for -mm).
 
-
+Thanks,
+---
+~Randy
