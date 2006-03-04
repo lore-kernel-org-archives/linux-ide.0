@@ -1,56 +1,61 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH] Fixup ahci suspend / resume
-Date: Fri, 3 Mar 2006 23:37:16 -0800
-Message-ID: <20060303233716.67ffaff6.rdunlap@xenotime.net>
-References: <44045FB1.5040408@suse.de>
-	<440468DB.5060605@pobox.com>
-	<20060228151928.GC24981@suse.de>
-	<44046AC2.1060002@pobox.com>
-	<20060228152847.GE24981@suse.de>
-	<44046DC3.4060508@pobox.com>
-	<440472F6.6090905@suse.de>
-	<20060228172542.GF24981@suse.de>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: 2.6.16-rc5: known regressions
+Date: Sat, 4 Mar 2006 14:18:18 +0100
+Message-ID: <20060304131818.GV9295@stusta.de>
+References: <Pine.LNX.4.64.0602262122000.22647@g5.osdl.org> <20060227061354.GO3674@stusta.de> <4402A219.8010501@pobox.com> <20060227070830.GQ3674@stusta.de> <20060228094053.GT24981@suse.de> <20060228161725.8c731743.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:38587 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1751470AbWCDHfz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Mar 2006 02:35:55 -0500
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Fri, 3 Mar 2006 23:35:53 -0800
-In-Reply-To: <20060228172542.GF24981@suse.de>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:51984 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1751865AbWCDNSV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 4 Mar 2006 08:18:21 -0500
+Content-Disposition: inline
+In-Reply-To: <20060228161725.8c731743.rdunlap@xenotime.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: hare@suse.de, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: Jens Axboe <axboe@suse.de>, jgarzik@pobox.com, linux-kernel@vger.kernel.org, torvalds@osdl.org, akpm@osdl.org, lkml@rtr.ca, linux-ide@vger.kernel.org
 
-On Tue, 28 Feb 2006 18:25:43 +0100 Jens Axboe wrote:
-
-> On Tue, Feb 28 2006, Hannes Reinecke wrote:
-> > Jeff Garzik wrote:
-> > > Jens Axboe wrote:
-> > >> I'm sure Hannes will regenerate against upstream as well if necessary,
-> > >> however that depends on when this should be applied.
-> > > 
-> > > It's far too late and too intrusive for 2.6.16-rc.
-> > > 
-> > > It's #upstream or <null>.
-> > > 
-> > Calm down. Of course I will regenerate is against #upstream.
-> > In fact, I've done so initially but wasn't sure what the status of
-> > libata-dev is. So I've diffed it against linux-git instead.
-> > 
-> > Updated patch to follow.
+On Tue, Feb 28, 2006 at 04:17:25PM -0800, Randy.Dunlap wrote:
+> On Tue, 28 Feb 2006 10:40:53 +0100 Jens Axboe wrote:
 > 
-> Thanks Hannes. I wasn't so much worried about it going directly in (I
-> have no problem waiting), just that there seemed to be some disagreement
-> on where suspend is at and what we can "support".
+> > On Mon, Feb 27 2006, Adrian Bunk wrote:
+> > > On Mon, Feb 27, 2006 at 01:54:17AM -0500, Jeff Garzik wrote:
+> > > > Adrian Bunk wrote:
+> > > > >Subject    : 2.6.16-rc[34]: resume-from-RAM unreliable (SATA)
+> > > > >References : http://lkml.org/lkml/2006/2/20/159
+> > > > >Submitter  : Mark Lord <lkml@rtr.ca>
+> > > > >Handled-By : Randy Dunlap <rdunlap@xenotime.net>
+> > > > >Status     : one of Randy's patches seems to fix it
+> > > > 
+> > > > 
+> > > > This is not a regression, libata suspend/resume has always been crappy. 
+> > > >  It's under active development (by Randy, among others) to fix this.
+> > > 
+> > > It might have always been crappy, but it is a regression since
+> > > according to the submitter it is working with 2.6.15.
+> > 
+> > It might have worked under lucky circumstances with an idle disk and a
+> > goat sacrifice, so I agree with Jeff that this is definitely not a
+> > regression. To my knowledge, Mark always used my libata suspend patch on
+> > earlier kernels so it's not even an apples-apples comparison.
+> > 
+> > So please scratch that entry.
+> 
+> I'll third that request/comment.
 
-Hi Hannes,
+OK, done.
 
-Did you ever send the updated patch?  I need it to use with the
-rest of the ata-acpi objects patchset for #upstream (actually for -mm).
+> ~Randy
 
-Thanks,
----
-~Randy
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
