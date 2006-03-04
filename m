@@ -1,48 +1,45 @@
-From: Steve Byan <smb@egenera.com>
-Subject: Re: NCQ general question
-Date: Sat, 4 Mar 2006 15:23:01 -0500
-Message-ID: <C7155197-3E90-4EDF-9D1A-5A5210248938@egenera.com>
-References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com> <440561CB.30201@yahoo.de> <4405A656.1030602@rtr.ca> <20060301135547.GV4816@suse.de> <C6838977-5411-400F-9548-2F22598DC2AE@egenera.com> <4408C0D9.4010202@garzik.org> <98B59AFC-2781-4A8A-82E4-C923B4A48F9E@egenera.com> <4409E623.5070707@garzik.org>
-Mime-Version: 1.0 (Apple Message framework v746.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Glenn English <ghe@slsware.com>
+Subject: terminal SATA troubles
+Date: Sat, 4 Mar 2006 13:46:18 -0700
+Message-ID: <200603041346.18449.ghe@slsware.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4409E623.5070707@garzik.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Jens Axboe <axboe@suse.de>, Mark Lord <liml@rtr.ca>, Gentoopower <gentoopower@yahoo.de>, "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from server.slsware.com ([207.189.192.218]:52386 "EHLO
+	server.slsware.dmz") by vger.kernel.org with ESMTP id S1752015AbWCDUq3
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 4 Mar 2006 15:46:29 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
+I see from the source that you are the maintainer of the Silicon Graphics SATA 
+driver. I don't think my prob really has anything to do with that driver, but 
+I'm hoping you might be able to answer a couple questions for me.
 
-On Mar 4, 2006, at 2:10 PM, Jeff Garzik wrote:
+Situation:
+Debian distro, 2.6.15 kernel, one P4 system, one AMD64
 
-> Steve Byan wrote:
+Problem:
+These machines have a SCSI drive and a SATA. I want the SCSI to be the system 
+drive and use the SATA for mass storage. My BIOS has the SCSI as the first in 
+the list of bootable hard drives; grub installed on (hd0); the boot partition 
+is #1 on the SCSI. Grub hits the SCSI for the initial stage, but when it goes 
+to the line in menu.lst that says the kernel is on sda, sda is the SATA. 
+Things degenerate quickly from there.
 
->>> Data integrity -and- performance.  Performance increases for all   
->>> the standard reasons that an asynchronous pipeline increases   
->>> performance over a synchronous one.
->>>
->>> The write cache means that requests on the device can be  
->>> processed  asynchronously, but without NCQ there is still a  
->>> synchronous  bottleneck:  the device<->controller pipe.
->> True, but I think that is fairly small compared to no-write-cache- 
->> and- no-queuing case. Write-caching is the major win; optimizing  
->> the data  transfer is only a second-order effect.
->
-> Measurements on NCQ in the field show a distinct performance  
-> improvement...  30% has been measured on Linux.  Nothing to sneeze at.
+Is there an way to control the assignment in /dev? What is doing this? 
 
-Wow! 30% is amazing. I'd be interested in knowing how the costs break  
-down; are these measurements published anywhere?
+And most important, where in the source does this assignment happen, and where 
+is it documented? I can read (English and C), but I can't find it (i've tried 
+google and grep'ed the source as best I know how).
 
-Regards,
--Steve
 -- 
-Steve Byan <smb@egenera.com>
-Software Architect
-Egenera, Inc.
-165 Forest Street
-Marlboro, MA 01752
-(508) 858-3125
-
-
+Glenn English
+ghe@slsware.com
+GPG ID: D0D7FF20
+  
