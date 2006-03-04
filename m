@@ -1,30 +1,47 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Random libata notes
-Date: Sat, 04 Mar 2006 12:33:40 -0500
-Message-ID: <4409CF74.7030808@garzik.org>
+Subject: [PATCH] AHCI prefetch
+Date: Sat, 4 Mar 2006 12:35:05 -0500
+Message-ID: <20060304173505.GA28643@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:34735 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932249AbWCDRdn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Mar 2006 12:33:43 -0500
+Received: from havoc.gtf.org ([69.61.125.42]:53644 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S932243AbWCDRfG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Mar 2006 12:35:06 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Tejun Heo <htejun@gmail.com>, Jens Axboe <axboe@suse.de>, Mark Lord <liml@rtr.ca>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-These are small TODO bits that I didn't want to forget...  Patches welcome.
 
-1) ATAPI edge case.  Due to adding the padding s/g entry, we must adjust 
-sg_tablesize to include ' - 1' for each driver
+This patch has been sitting in my tmp directory for ages.
 
-2) ata_scsi_slave_config() hardcodes a call to
-blk_queue_max_phys_segments(, LIBATA_MAX_PRD), when the value passed
-should not be so limited on nice hardware like AHCI.
+We should probably turn this on, though the practical difference is
+probably minimal.
 
-3) sata_mv: add back SCR_ERR clear?
-         mv_scr_write(ap, SCR_ERROR, mv_scr_read(ap, SCR_ERROR));
 
-4) sata_mv: set DMA mask
-
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index 4e96ec5..973a794 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -64,8 +64,10 @@ enum {
+ 	AHCI_PORT_PRIV_DMA_SZ	= AHCI_CMD_SLOT_SZ + AHCI_CMD_TBL_SZ +
+ 				  AHCI_RX_FIS_SZ,
+ 	AHCI_IRQ_ON_SG		= (1 << 31),
++
+ 	AHCI_CMD_ATAPI		= (1 << 5),
+ 	AHCI_CMD_WRITE		= (1 << 6),
++	AHCI_CMD_PREFETCH	= (1 << 7),
+ 
+ 	RX_FIS_D2H_REG		= 0x40,	/* offset of D2H Register FIS data */
+ 
+@@ -533,7 +535,7 @@ static void ahci_qc_prep(struct ata_queu
+ 	if (qc->tf.flags & ATA_TFLAG_WRITE)
+ 		opts |= AHCI_CMD_WRITE;
+ 	if (is_atapi_taskfile(&qc->tf))
+-		opts |= AHCI_CMD_ATAPI;
++		opts |= AHCI_CMD_ATAPI | AHCI_CMD_PREFETCH;
+ 
+ 	pp->cmd_slot[0].opts = cpu_to_le32(opts);
+ 	pp->cmd_slot[0].status = 0;
