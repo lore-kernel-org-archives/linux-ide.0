@@ -1,115 +1,41 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Sun, 5 Mar 2006 07:41:29 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0603050740500.3116@p34>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com>
- <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca>
- <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca>
- <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca>
- <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com>
- <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com>
- <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046CE6.60803@rtr.ca>
- <44046D86.7050809@pobox.com> <4405DCAF.6030500@dgreaves.com> <4405DDEA.7020309@rtr.ca>
- <4405E42B.9040804@dgreaves.com> <4405E83D.9000906@rtr.ca> <4405EC94.2030202@dgreaves.com>
- <4405FAAE.3080705@dgreaves.com> <Pine.LNX.4.64.0603050637110.30164@p34>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] sata_sil24: fix mwdma_mask setting
+Date: Sun, 5 Mar 2006 23:03:42 +0900
+Message-ID: <20060305140342.GA7702@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:64969 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S1750798AbWCEMlb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Mar 2006 07:41:31 -0500
-In-Reply-To: <Pine.LNX.4.64.0603050637110.30164@p34>
+Received: from pproxy.gmail.com ([64.233.166.177]:37704 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932093AbWCEODr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Mar 2006 09:03:47 -0500
+Received: by pproxy.gmail.com with SMTP id e30so636552pya
+        for <linux-ide@vger.kernel.org>; Sun, 05 Mar 2006 06:03:46 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Mark Lord <lkml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus Torvalds <torvalds@osdl.org>
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
+mwdma_mask was not copied from port_info to probe_ent.  Fix it.
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-On Sun, 5 Mar 2006, Justin Piszcz wrote:
+---
 
-> On Wed, 1 Mar 2006, David Greaves wrote:
->
->> David Greaves wrote:
->> 
->>> Mark Lord wrote:
->>> 
->>> 
->>> 
->>>> By the way, the latest 2.6.16-rc5-git4 is available,
->>>> and has FUA turned off by default now.  So it should
->>>> work with your drives, and *you* are expected to verify
->>>> that for us all now.
->>>> 
->>>> 
->>> Yeah, I know - I've got it on the machine... but it's my wife's machine.
->>> I've asked nicely but she's editing a Hercule Poirot video so I'm not
->>> allowed to reboot it for a while...
->>> 
->>> I've told her I'm not making pancakes until I've tested it so expect a
->>> report Real Soon Now...
->>> 
->>> 
->> OK that worked (the pancakes - the kernel's not doing so well...)
->> 
->> haze:~# uname -a
->> Linux haze 2.6.16-rc5-git4 #2 PREEMPT Wed Mar 1 19:07:58 UTC 2006 i686
->> GNU/Linux
->> 
->> The boot is pretty clean.
->> I ran an xfs_repair -n on the lvm volume and got the following errors.
->> The repair reported a clean filesystem and the drive was not booted from
->> the raid so that's a big improvement.
->> 
->> I was not able to trigger similar messages on ata1 but a simple dd
->> doesn't trigger the messages on ata2 either (and for various reasons,
->> xfs_repair wouldn't run on ata1 - I thought I'd leave it and report this
->> first)
->> 
->> ata2: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
->> ata2: status=0x51 { DriveReady SeekComplete Error }
->> ata2: error=0x04 { DriveStatusError }
->> ata2: no sense translation for status: 0x51
->> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
->> ata2: status=0x51 { DriveReady SeekComplete Error }
->> ata2: no sense translation for status: 0x51
->> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
->> ata2: status=0x51 { DriveReady SeekComplete Error }
->> ata2: no sense translation for status: 0x51
->> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
->> ata2: status=0x51 { DriveReady SeekComplete Error }
->> ata2: no sense translation for status: 0x51
->> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
->> ata2: status=0x51 { DriveReady SeekComplete Error }
->> ata2: no sense translation for status: 0x51
->> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
->> ata2: status=0x51 { DriveReady SeekComplete Error }
->> ata2: no sense translation for status: 0x51
->> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
->> ata2: status=0x51 { DriveReady SeekComplete Error }
->> ata2: no sense translation for status: 0x51
->> ata2: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 0x3/11/04
->> ata2: status=0x51 { DriveReady SeekComplete Error }
->> 
->> David
->> 
->> -- 
->> 
->
-> Using 2.6.16-rc5-git4 and removing a directory of around 5.0GB of files while 
-> streaming a 1MB/s video stream on another (SATA disk), the I/O seemed to 
-> freeze up for a moment and I got this error:
->
-> [4342671.839000] ata1: command 0x35 timeout, stat 0x50 host_stat 0x22
->
-> Only 1 in dmesg, any idea what causes this error?
->
->
+This bug is probably introduced by following ahci.c without thinking
+(by me).
 
-The drive it occured on was a 74GB raptor on an ICH5 controller.
+ drivers/scsi/sata_sil24.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-[4294673.245000]   Vendor: ATA       Model: WDC WD740GD-00FL  Rev: 33.0
-0000:00:1f.2 IDE interface: Intel Corporation 82801EB (ICH5) SATA 
-Controller (rev 02)
-
-
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 5c5822e..8fb6242 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -892,6 +892,7 @@ static int sil24_init_one(struct pci_dev
+ 	probe_ent->sht		= pinfo->sht;
+ 	probe_ent->host_flags	= pinfo->host_flags;
+ 	probe_ent->pio_mask	= pinfo->pio_mask;
++	probe_ent->mwdma_mask	= pinfo->mwdma_mask;
+ 	probe_ent->udma_mask	= pinfo->udma_mask;
+ 	probe_ent->port_ops	= pinfo->port_ops;
+ 	probe_ent->n_ports	= SIL24_FLAG2NPORTS(pinfo->host_flags);
