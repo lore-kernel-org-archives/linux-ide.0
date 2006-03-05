@@ -1,47 +1,53 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET] libata: implement and use ata_dev_revalidate(), take #3
-Date: Mon, 6 Mar 2006 01:33:45 +0900
-Message-ID: <20060305163345.GB1156@htj.dyndns.org>
-References: <11415489584127-git-send-email-htejun@gmail.com> <440B0D90.2080005@pobox.com>
+Subject: [PATCHSET] libata: improve transfer mode handling
+Date: Mon, 6 Mar 2006 04:31:56 +0900
+Message-ID: <11415871161709-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.193]:39527 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932206AbWCEQdt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Mar 2006 11:33:49 -0500
-Received: by zproxy.gmail.com with SMTP id 13so1059279nzn
-        for <linux-ide@vger.kernel.org>; Sun, 05 Mar 2006 08:33:48 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <440B0D90.2080005@pobox.com>
+Received: from pproxy.gmail.com ([64.233.166.177]:11619 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750733AbWCETcA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Mar 2006 14:32:00 -0500
+Received: by pproxy.gmail.com with SMTP id o67so616044pye
+        for <linux-ide@vger.kernel.org>; Sun, 05 Mar 2006 11:32:00 -0800 (PST)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, htejun@gmail.com
 
-On Sun, Mar 05, 2006 at 11:10:56AM -0500, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> >Hello, Jeff.
-> >
-> >This is the third take of implement-and-use-ata_dev_revalidate
-> >patchset.  In the last take[1], out of four patches, %1, %2 and %4 got
-> >ACK'ed while %3 had some minor issues.
-> >
-> >Changes from the last take are...
-> >
-> >* in #3, ata_dev_same_device() tags mismatch messages with KERN_INFO
-> >  instead of KERN_WARNING.
-> >
-> >* in #3, ata_dev_revalidate() returns -ENODEV instead of 0 if device
-> >  isn't present
-> 
-> I thought this was take #4?  Anyway...
-> 
+Hello, Jeff, Alan and Albert.
 
-The first take was on Feb 15, the second on Mar 1, and this one.
-Although the first take wan't really first (it was chopped off part of
-previously posted larger patchset), it's the third take, technically.
+This is the second take of improve-transfer-mode-handling patchset.
+The last take[1] made low level driver API uglier and Alan rejected
+the API changes.  Changes from the last take are...
 
-Thanks.  :-)
+* No low level driver API change.  All changes are confined tolibata
+  core layer proper.
 
--- 
+* Fewer/simpler xfer_mask helpers.
+
+* Better splitted patches.
+
+This patchset makes transfer mode determination done in
+ata_dev_xfermask() before any of actual configuration happens.  This
+should help integrating Alan's changes easier.
+
+This patchset is against the current upstream[2] + port_task
+patchset[3].  However, all the patches except the last one applies
+against upstream with offsets and the reject of the last patch is
+trivial.  I'll post two versions of the last patch - one against
+upstream + port_task, the other against upstream.
+
+Thanks.
+
+--
 tejun
+
+[1] http://marc.theaimsgroup.com/?l=linux-ide&m=114009896413075&w=2
+[2] fbfda6e71bbdd3b4d41a56c3f20f31762c455a5e
+[3] http://marc.theaimsgroup.com/?l=linux-ide&m=114154013813744&w=2
+(dang, gmane still down.)
+
+
