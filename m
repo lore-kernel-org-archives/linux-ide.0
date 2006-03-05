@@ -1,336 +1,198 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 5/6] libata: reimplement ata_set_mode() using xfer_mask helpers
-Date: Mon, 6 Mar 2006 04:31:57 +0900
-Message-ID: <11415871172433-git-send-email-htejun@gmail.com>
-References: <11415871161709-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 6/6] libata: kill unused xfer_mode functions
+Date: Mon, 6 Mar 2006 04:35:00 +0900
+Message-ID: <20060305193500.GA6419@htj.dyndns.org>
+References: <11415871161709-git-send-email-htejun@gmail.com> <11415871174010-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.201]:19286 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751804AbWCETcF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Mar 2006 14:32:05 -0500
-Received: by zproxy.gmail.com with SMTP id 16so587600nzp
-        for <linux-ide@vger.kernel.org>; Sun, 05 Mar 2006 11:32:05 -0800 (PST)
-In-Reply-To: <11415871161709-git-send-email-htejun@gmail.com>
+Received: from zproxy.gmail.com ([64.233.162.199]:17046 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750710AbWCETfE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Mar 2006 14:35:04 -0500
+Received: by zproxy.gmail.com with SMTP id 13so1079496nzn
+        for <linux-ide@vger.kernel.org>; Sun, 05 Mar 2006 11:35:03 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <11415871174010-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
 
-Use xfer_mask helpers to determine transfer mode.  This rewrite also
-makes transfer mode determination done before any actual
-configuration.  This patch doesn't result in any functional changes.
+Preceding xfer_mask changes make the following functions unused.
+
+  ata_pio_modes(), base_from_shift(), ata_pr_blacklisted(), fgb()
+
+Kill them.  Also, as xfer_mode_str[] is now only used by
+ata_mode_string(), move it into the function.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |  233 +++++++++++++++-----------------------------
- 1 files changed, 79 insertions(+), 154 deletions(-)
+This patch is against upstream.
 
-d06b4f9f33fd7a5ffbb93837f5b4a69d4fa91dbc
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 8849512..d211f0b 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -65,11 +65,9 @@ static unsigned int ata_dev_init_params(
- 					struct ata_device *dev);
- static void ata_set_mode(struct ata_port *ap);
+ drivers/scsi/libata-core.c |  108 +++++++-------------------------------------
+ 1 files changed, 18 insertions(+), 90 deletions(-)
+
+Index: work/drivers/scsi/libata-core.c
+===================================================================
+--- work.orig/drivers/scsi/libata-core.c	2006-03-06 04:14:11.000000000 +0900
++++ work/drivers/scsi/libata-core.c	2006-03-06 04:14:30.000000000 +0900
+@@ -67,7 +67,6 @@ static void ata_set_mode(struct ata_port
  static void ata_dev_set_xfermode(struct ata_port *ap, struct ata_device *dev);
--static unsigned int ata_get_mode_mask(const struct ata_port *ap, int shift);
-+static unsigned int ata_dev_xfermask(struct ata_port *ap,
-+				     struct ata_device *dev);
- static int fgb(u32 bitmap);
--static int ata_choose_xfer_mode(const struct ata_port *ap,
--				u8 *xfer_mode_out,
--				unsigned int *xfer_shift_out);
+ static unsigned int ata_dev_xfermask(struct ata_port *ap,
+ 				     struct ata_device *dev);
+-static int fgb(u32 bitmap);
  
  static unsigned int ata_unique_id = 1;
  static struct workqueue_struct *ata_wq;
-@@ -1776,51 +1774,42 @@ static void ata_dev_set_mode(struct ata_
+@@ -331,25 +330,6 @@ static int ata_xfer_mode2shift(unsigned 
+ 	return -1;
+ }
  
- static int ata_host_set_pio(struct ata_port *ap)
- {
--	unsigned int mask;
--	int x, i;
--	u8 base, xfer_mode;
+-static const char * const xfer_mode_str[] = {
+-	"PIO0",
+-	"PIO1",
+-	"PIO2",
+-	"PIO3",
+-	"PIO4",
+-	"MWDMA0",
+-	"MWDMA1",
+-	"MWDMA2",
+-	"UDMA/16",
+-	"UDMA/25",
+-	"UDMA/33",
+-	"UDMA/44",
+-	"UDMA/66",
+-	"UDMA/100",
+-	"UDMA/133",
+-	"UDMA7",
+-};
 -
--	mask = ata_get_mode_mask(ap, ATA_SHIFT_PIO);
--	x = fgb(mask);
--	if (x < 0) {
--		printk(KERN_WARNING "ata%u: no PIO support\n", ap->id);
--		return -1;
--	}
--
--	base = base_from_shift(ATA_SHIFT_PIO);
--	xfer_mode = base + x;
--
--	DPRINTK("base 0x%x xfer_mode 0x%x mask 0x%x x %d\n",
--		(int)base, (int)xfer_mode, mask, x);
-+	int i;
- 
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *dev = &ap->device[i];
--		if (ata_dev_present(dev)) {
--			dev->pio_mode = xfer_mode;
--			dev->xfer_mode = xfer_mode;
--			dev->xfer_shift = ATA_SHIFT_PIO;
--			if (ap->ops->set_piomode)
--				ap->ops->set_piomode(ap, dev);
-+
-+		if (!ata_dev_present(dev))
-+			continue;
-+
-+		if (!dev->pio_mode) {
-+			printk(KERN_WARNING "ata%u: no PIO support\n", ap->id);
-+			return -1;
- 		}
-+
-+		dev->xfer_mode = dev->pio_mode;
-+		dev->xfer_shift = ATA_SHIFT_PIO;
-+		if (ap->ops->set_piomode)
-+			ap->ops->set_piomode(ap, dev);
- 	}
- 
- 	return 0;
- }
- 
--static void ata_host_set_dma(struct ata_port *ap, u8 xfer_mode,
--			    unsigned int xfer_shift)
-+static void ata_host_set_dma(struct ata_port *ap)
- {
- 	int i;
- 
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *dev = &ap->device[i];
--		if (ata_dev_present(dev)) {
--			dev->dma_mode = xfer_mode;
--			dev->xfer_mode = xfer_mode;
--			dev->xfer_shift = xfer_shift;
--			if (ap->ops->set_dmamode)
--				ap->ops->set_dmamode(ap, dev);
--		}
-+
-+		if (!ata_dev_present(dev) || !dev->dma_mode)
-+			continue;
-+
-+		dev->xfer_mode = dev->dma_mode;
-+		dev->xfer_shift = ata_xfer_mode2shift(dev->dma_mode);
-+		if (ap->ops->set_dmamode)
-+			ap->ops->set_dmamode(ap, dev);
- 	}
- }
- 
-@@ -1835,28 +1824,34 @@ static void ata_host_set_dma(struct ata_
-  */
- static void ata_set_mode(struct ata_port *ap)
- {
--	unsigned int xfer_shift;
--	u8 xfer_mode;
--	int rc;
-+	int i, rc;
- 
--	/* step 1: always set host PIO timings */
--	rc = ata_host_set_pio(ap);
--	if (rc)
--		goto err_out;
-+	/* step 1: calculate xfer_mask */
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *dev = &ap->device[i];
-+		unsigned int xfer_mask;
-+
-+		if (!ata_dev_present(dev))
-+			continue;
- 
--	/* step 2: choose the best data xfer mode */
--	xfer_mode = xfer_shift = 0;
--	rc = ata_choose_xfer_mode(ap, &xfer_mode, &xfer_shift);
-+		xfer_mask = ata_dev_xfermask(ap, dev);
-+
-+		dev->pio_mode = ata_xfer_mask2mode(xfer_mask & ATA_MASK_PIO);
-+		dev->dma_mode = ata_xfer_mask2mode(xfer_mask & (ATA_MASK_MWDMA |
-+								ATA_MASK_UDMA));
-+	}
-+
-+	/* step 2: always set host PIO timings */
-+	rc = ata_host_set_pio(ap);
- 	if (rc)
- 		goto err_out;
- 
--	/* step 3: if that xfer mode isn't PIO, set host DMA timings */
--	if (xfer_shift != ATA_SHIFT_PIO)
--		ata_host_set_dma(ap, xfer_mode, xfer_shift);
-+	/* step 3: set host DMA timings */
-+	ata_host_set_dma(ap);
- 
- 	/* step 4: update devices' xfer mode */
--	ata_dev_set_mode(ap, &ap->device[0]);
--	ata_dev_set_mode(ap, &ap->device[1]);
-+	for (i = 0; i < ATA_MAX_DEVICES; i++)
-+		ata_dev_set_mode(ap, &ap->device[i]);
- 
- 	if (ap->flags & ATA_FLAG_PORT_DISABLED)
- 		return;
-@@ -2654,77 +2649,45 @@ static int ata_dma_blacklisted(const str
- 	return 0;
- }
- 
--static unsigned int ata_get_mode_mask(const struct ata_port *ap, int shift)
-+/**
-+ *	ata_dev_xfermask - Compute supported xfermask of the given device
-+ *	@ap: Port on which the device to compute xfermask for resides
-+ *	@dev: Device to compute xfermask for
-+ *
-+ *	Compute supported xfermask of @dev.  This function is
-+ *	responsible for applying all known limits including host
-+ *	controller limits, device blacklist, etc...
-+ *
-+ *	LOCKING:
-+ *	None.
-+ *
-+ *	RETURNS:
-+ *	Computed xfermask.
-+ */
-+static unsigned int ata_dev_xfermask(struct ata_port *ap,
-+				     struct ata_device *dev)
- {
--	const struct ata_device *master, *slave;
--	unsigned int mask;
-+	unsigned long xfer_mask;
-+	int i;
- 
--	master = &ap->device[0];
--	slave = &ap->device[1];
-+	xfer_mask = ata_pack_xfermask(ap->pio_mask, ap->mwdma_mask,
-+				      ap->udma_mask);
- 
--	WARN_ON(!ata_dev_present(master) && !ata_dev_present(slave));
--
--	if (shift == ATA_SHIFT_UDMA) {
--		mask = ap->udma_mask;
--		if (ata_dev_present(master)) {
--			mask &= (master->id[ATA_ID_UDMA_MODES] & 0xff);
--			if (ata_dma_blacklisted(master)) {
--				mask = 0;
--				ata_pr_blacklisted(ap, master);
--			}
--		}
--		if (ata_dev_present(slave)) {
--			mask &= (slave->id[ATA_ID_UDMA_MODES] & 0xff);
--			if (ata_dma_blacklisted(slave)) {
--				mask = 0;
--				ata_pr_blacklisted(ap, slave);
--			}
--		}
--	}
--	else if (shift == ATA_SHIFT_MWDMA) {
--		mask = ap->mwdma_mask;
--		if (ata_dev_present(master)) {
--			mask &= (master->id[ATA_ID_MWDMA_MODES] & 0x07);
--			if (ata_dma_blacklisted(master)) {
--				mask = 0;
--				ata_pr_blacklisted(ap, master);
--			}
--		}
--		if (ata_dev_present(slave)) {
--			mask &= (slave->id[ATA_ID_MWDMA_MODES] & 0x07);
--			if (ata_dma_blacklisted(slave)) {
--				mask = 0;
--				ata_pr_blacklisted(ap, slave);
--			}
--		}
--	}
--	else if (shift == ATA_SHIFT_PIO) {
--		mask = ap->pio_mask;
--		if (ata_dev_present(master)) {
--			/* spec doesn't return explicit support for
--			 * PIO0-2, so we fake it
--			 */
--			u16 tmp_mode = master->id[ATA_ID_PIO_MODES] & 0x03;
--			tmp_mode <<= 3;
--			tmp_mode |= 0x7;
--			mask &= tmp_mode;
--		}
--		if (ata_dev_present(slave)) {
--			/* spec doesn't return explicit support for
--			 * PIO0-2, so we fake it
--			 */
--			u16 tmp_mode = slave->id[ATA_ID_PIO_MODES] & 0x03;
--			tmp_mode <<= 3;
--			tmp_mode |= 0x7;
--			mask &= tmp_mode;
--		}
--	}
--	else {
--		mask = 0xffffffff; /* shut up compiler warning */
--		BUG();
-+	/* use port-wide xfermask for now */
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *d = &ap->device[i];
-+		if (!ata_dev_present(d))
-+			continue;
-+		xfer_mask &= ata_id_xfermask(d->id);
-+		if (ata_dma_blacklisted(d))
-+			xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
- 	}
- 
--	return mask;
-+	if (ata_dma_blacklisted(dev))
-+		printk(KERN_WARNING "ata%u: dev %u is on DMA blacklist, "
-+		       "disabling DMA\n", ap->id, dev->devno);
-+
-+	return xfer_mask;
- }
- 
- /* find greatest bit */
-@@ -2741,44 +2704,6 @@ static int fgb(u32 bitmap)
- }
- 
  /**
-- *	ata_choose_xfer_mode - attempt to find best transfer mode
-- *	@ap: Port for which an xfer mode will be selected
-- *	@xfer_mode_out: (output) SET FEATURES - XFER MODE code
-- *	@xfer_shift_out: (output) bit shift that selects this mode
+  *	ata_mode_string - convert xfer_mask to string
+  *	@xfer_mask: mask of bits supported; only highest bit counts.
+@@ -364,9 +344,26 @@ static const char * const xfer_mode_str[
+  *	Constant C string representing highest speed listed in
+  *	@mode_mask, or the constant C string "<n/a>".
+  */
+-
+ static const char *ata_mode_string(unsigned int xfer_mask)
+ {
++	static const char * const xfer_mode_str[] = {
++		"PIO0",
++		"PIO1",
++		"PIO2",
++		"PIO3",
++		"PIO4",
++		"MWDMA0",
++		"MWDMA1",
++		"MWDMA2",
++		"UDMA/16",
++		"UDMA/25",
++		"UDMA/33",
++		"UDMA/44",
++		"UDMA/66",
++		"UDMA/100",
++		"UDMA/133",
++		"UDMA7",
++	};
+ 	int highbit;
+ 
+ 	highbit = fls(xfer_mask) - 1;
+@@ -827,35 +824,6 @@ static unsigned int ata_id_xfermask(cons
+ 	return ata_pack_xfermask(pio_mask, mwdma_mask, udma_mask);
+ }
+ 
+-/*
+- *	Compute the PIO modes available for this device. This is not as
+- *	trivial as it seems if we must consider early devices correctly.
 - *
-- *	Based on host and device capabilities, determine the
-- *	maximum transfer mode that is amenable to all.
-- *
-- *	LOCKING:
-- *	PCI/etc. bus probe sem.
-- *
-- *	RETURNS:
-- *	Zero on success, negative on error.
+- *	FIXME: pre IDE drive timing (do we care ?). 
 - */
 -
--static int ata_choose_xfer_mode(const struct ata_port *ap,
--				u8 *xfer_mode_out,
--				unsigned int *xfer_shift_out)
+-static unsigned int ata_pio_modes(const struct ata_device *adev)
 -{
--	unsigned int mask, shift;
--	int x, i;
+-	u16 modes;
 -
--	for (i = 0; i < ARRAY_SIZE(xfer_mode_classes); i++) {
--		shift = xfer_mode_classes[i].shift;
--		mask = ata_get_mode_mask(ap, shift);
--
--		x = fgb(mask);
--		if (x >= 0) {
--			*xfer_mode_out = xfer_mode_classes[i].base + x;
--			*xfer_shift_out = shift;
--			return 0;
--		}
+-	/* Usual case. Word 53 indicates word 64 is valid */
+-	if (adev->id[ATA_ID_FIELD_VALID] & (1 << 1)) {
+-		modes = adev->id[ATA_ID_PIO_MODES] & 0x03;
+-		modes <<= 3;
+-		modes |= 0x7;
+-		return modes;
 -	}
 -
--	return -1;
+-	/* If word 64 isn't valid then Word 51 high byte holds the PIO timing
+-	   number for the maximum. Turn it into a mask and return it */
+-	modes = (2 << ((adev->id[ATA_ID_OLD_PIO_MODES] >> 8) & 0xFF)) - 1 ;
+-	return modes;
+-	/* But wait.. there's more. Design your standards by committee and
+-	   you too can get a free iordy field to process. However its the 
+-	   speeds not the modes that are supported... Note drivers using the
+-	   timing API will get this right anyway */
 -}
 -
--/**
+ static inline void
+ ata_queue_packet_task(struct ata_port *ap)
+ {
+@@ -1718,26 +1686,6 @@ int ata_timing_compute(struct ata_device
+ 	return 0;
+ }
+ 
+-static const struct {
+-	unsigned int shift;
+-	u8 base;
+-} xfer_mode_classes[] = {
+-	{ ATA_SHIFT_UDMA,	XFER_UDMA_0 },
+-	{ ATA_SHIFT_MWDMA,	XFER_MW_DMA_0 },
+-	{ ATA_SHIFT_PIO,	XFER_PIO_0 },
+-};
+-
+-static u8 base_from_shift(unsigned int shift)
+-{
+-	int i;
+-
+-	for (i = 0; i < ARRAY_SIZE(xfer_mode_classes); i++)
+-		if (xfer_mode_classes[i].shift == shift)
+-			return xfer_mode_classes[i].base;
+-
+-	return 0xff;
+-}
+-
+ static void ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
+ {
+ 	if (!ata_dev_present(dev) || (ap->flags & ATA_FLAG_PORT_DISABLED))
+@@ -2586,13 +2534,6 @@ int ata_dev_revalidate(struct ata_port *
+ 	return rc;
+ }
+ 
+-static void ata_pr_blacklisted(const struct ata_port *ap,
+-			       const struct ata_device *dev)
+-{
+-	printk(KERN_WARNING "ata%u: dev %u is on DMA blacklist, disabling DMA\n",
+-		ap->id, dev->devno);
+-}
+-
+ static const char * const ata_dma_blacklist [] = {
+ 	"WDC AC11000H",
+ 	"WDC AC22100H",
+@@ -2680,19 +2621,6 @@ static unsigned int ata_dev_xfermask(str
+ 	return xfer_mask;
+ }
+ 
+-/* find greatest bit */
+-static int fgb(u32 bitmap)
+-{
+-	unsigned int i;
+-	int x = -1;
+-
+-	for (i = 0; i < 32; i++)
+-		if (bitmap & (1 << i))
+-			x = i;
+-
+-	return x;
+-}
+-
+ /**
   *	ata_dev_set_xfermode - Issue SET FEATURES - XFER MODE command
   *	@ap: Port associated with device @dev
-  *	@dev: Device to which command will be sent
--- 
-1.2.4
-
-
