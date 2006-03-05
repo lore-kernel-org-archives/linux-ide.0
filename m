@@ -1,142 +1,237 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 3/4] libata: kill unused pio_task and packet_task
+Subject: [PATCH 2/4] libata: convert pio_task and packet_task to port_task
 Date: Sun, 5 Mar 2006 15:29:09 +0900
-Message-ID: <11415401491126-git-send-email-htejun@gmail.com>
+Message-ID: <114154014972-git-send-email-htejun@gmail.com>
 References: <1141540149886-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.177]:10736 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1752008AbWCEG3P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Mar 2006 01:29:15 -0500
-Received: by pproxy.gmail.com with SMTP id o67so539049pye
-        for <linux-ide@vger.kernel.org>; Sat, 04 Mar 2006 22:29:12 -0800 (PST)
+Received: from pproxy.gmail.com ([64.233.166.181]:10992 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1752066AbWCEG3Q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Mar 2006 01:29:16 -0500
+Received: by pproxy.gmail.com with SMTP id e30so582267pya
+        for <linux-ide@vger.kernel.org>; Sat, 04 Mar 2006 22:29:13 -0800 (PST)
 In-Reply-To: <1141540149886-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Kill unused pio_task and packet_task.
+Make pio_task and atapi_packet_task use port_task.
+atapi_packet_task() is moved upward such that it's right after
+ata_pio_task().  This position is more natural and makes adding
+prototype for ata_qc_issue_prot() unnecessary.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   68 --------------------------------------------
- include/linux/libata.h     |    3 --
- 2 files changed, 0 insertions(+), 71 deletions(-)
+ drivers/scsi/libata-core.c |  154 ++++++++++++++++++++++----------------------
+ 1 files changed, 77 insertions(+), 77 deletions(-)
 
-aaf1bca7a373df0a4e301da177d6c71329b98196
+b5b1469010fc9cd99e149f0503cbf6e6f1ac17b2
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index ebd4072..657b196 100644
+index 3575d68..ebd4072 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -796,71 +796,6 @@ void ata_port_flush_task(struct ata_port
- 	DPRINTK("EXIT\n");
+@@ -3570,12 +3570,84 @@ fsm_start:
+ 	}
+ 
+ 	if (timeout)
+-		ata_queue_delayed_pio_task(ap, timeout);
++		ata_port_queue_task(ap, ata_pio_task, ap, timeout);
+ 	else if (!qc_completed)
+ 		goto fsm_start;
  }
  
--static inline void
--ata_queue_packet_task(struct ata_port *ap)
--{
--	if (!(ap->flags & ATA_FLAG_FLUSH_PIO_TASK))
--		queue_work(ata_wq, &ap->packet_task);
--}
--
--static inline void
--ata_queue_pio_task(struct ata_port *ap)
--{
--	if (!(ap->flags & ATA_FLAG_FLUSH_PIO_TASK))
--		queue_work(ata_wq, &ap->pio_task);
--}
--
--static inline void
--ata_queue_delayed_pio_task(struct ata_port *ap, unsigned long delay)
--{
--	if (!(ap->flags & ATA_FLAG_FLUSH_PIO_TASK))
--		queue_delayed_work(ata_wq, &ap->pio_task, delay);
--}
--
+ /**
++ *	atapi_packet_task - Write CDB bytes to hardware
++ *	@_data: Port to which ATAPI device is attached.
++ *
++ *	When device has indicated its readiness to accept
++ *	a CDB, this function is called.  Send the CDB.
++ *	If DMA is to be performed, exit immediately.
++ *	Otherwise, we are in polling mode, so poll
++ *	status under operation succeeds or fails.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep)
++ */
++
++static void atapi_packet_task(void *_data)
++{
++	struct ata_port *ap = _data;
++	struct ata_queued_cmd *qc;
++	u8 status;
++
++	qc = ata_qc_from_tag(ap, ap->active_tag);
++	WARN_ON(qc == NULL);
++	WARN_ON(!(qc->flags & ATA_QCFLAG_ACTIVE));
++
++	/* sleep-wait for BSY to clear */
++	DPRINTK("busy wait\n");
++	if (ata_busy_sleep(ap, ATA_TMOUT_CDB_QUICK, ATA_TMOUT_CDB)) {
++		qc->err_mask |= AC_ERR_TIMEOUT;
++		goto err_out;
++	}
++
++	/* make sure DRQ is set */
++	status = ata_chk_status(ap);
++	if ((status & (ATA_BUSY | ATA_DRQ)) != ATA_DRQ) {
++		qc->err_mask |= AC_ERR_HSM;
++		goto err_out;
++	}
++
++	/* send SCSI cdb */
++	DPRINTK("send cdb\n");
++	WARN_ON(qc->dev->cdb_len < 12);
++
++	if (qc->tf.protocol == ATA_PROT_ATAPI_DMA ||
++	    qc->tf.protocol == ATA_PROT_ATAPI_NODATA) {
++		unsigned long flags;
++
++		/* Once we're done issuing command and kicking bmdma,
++		 * irq handler takes over.  To not lose irq, we need
++		 * to clear NOINTR flag before sending cdb, but
++		 * interrupt handler shouldn't be invoked before we're
++		 * finished.  Hence, the following locking.
++		 */
++		spin_lock_irqsave(&ap->host_set->lock, flags);
++		ap->flags &= ~ATA_FLAG_NOINTR;
++		ata_data_xfer(ap, qc->cdb, qc->dev->cdb_len, 1);
++		if (qc->tf.protocol == ATA_PROT_ATAPI_DMA)
++			ap->ops->bmdma_start(qc);	/* initiate bmdma */
++		spin_unlock_irqrestore(&ap->host_set->lock, flags);
++	} else {
++		ata_data_xfer(ap, qc->cdb, qc->dev->cdb_len, 1);
++
++		/* PIO commands are handled by polling */
++		ap->hsm_task_state = HSM_ST;
++		ata_port_queue_task(ap, ata_pio_task, ap, 0);
++	}
++
++	return;
++
++err_out:
++	ata_poll_qc_complete(qc);
++}
++
++/**
+  *	ata_qc_timeout - Handle timeout of queued command
+  *	@qc: Command that timed out
+  *
+@@ -3874,26 +3946,26 @@ unsigned int ata_qc_issue_prot(struct at
+ 		ata_qc_set_polling(qc);
+ 		ata_tf_to_host(ap, &qc->tf);
+ 		ap->hsm_task_state = HSM_ST;
+-		ata_queue_pio_task(ap);
++		ata_port_queue_task(ap, ata_pio_task, ap, 0);
+ 		break;
+ 
+ 	case ATA_PROT_ATAPI:
+ 		ata_qc_set_polling(qc);
+ 		ata_tf_to_host(ap, &qc->tf);
+-		ata_queue_packet_task(ap);
++		ata_port_queue_task(ap, atapi_packet_task, ap, 0);
+ 		break;
+ 
+ 	case ATA_PROT_ATAPI_NODATA:
+ 		ap->flags |= ATA_FLAG_NOINTR;
+ 		ata_tf_to_host(ap, &qc->tf);
+-		ata_queue_packet_task(ap);
++		ata_port_queue_task(ap, atapi_packet_task, ap, 0);
+ 		break;
+ 
+ 	case ATA_PROT_ATAPI_DMA:
+ 		ap->flags |= ATA_FLAG_NOINTR;
+ 		ap->ops->tf_load(ap, &qc->tf);	 /* load tf registers */
+ 		ap->ops->bmdma_setup(qc);	    /* set up bmdma */
+-		ata_queue_packet_task(ap);
++		ata_port_queue_task(ap, atapi_packet_task, ap, 0);
+ 		break;
+ 
+ 	default:
+@@ -4261,78 +4333,6 @@ irqreturn_t ata_interrupt (int irq, void
+ 	return IRQ_RETVAL(handled);
+ }
+ 
 -/**
-- *	ata_flush_pio_tasks - Flush pio_task and packet_task
-- *	@ap: the target ata_port
+- *	atapi_packet_task - Write CDB bytes to hardware
+- *	@_data: Port to which ATAPI device is attached.
 - *
-- *	After this function completes, pio_task and packet_task are
-- *	guranteed not to be running or scheduled.
+- *	When device has indicated its readiness to accept
+- *	a CDB, this function is called.  Send the CDB.
+- *	If DMA is to be performed, exit immediately.
+- *	Otherwise, we are in polling mode, so poll
+- *	status under operation succeeds or fails.
 - *
 - *	LOCKING:
 - *	Kernel thread context (may sleep)
 - */
 -
--static void ata_flush_pio_tasks(struct ata_port *ap)
+-static void atapi_packet_task(void *_data)
 -{
--	int tmp = 0;
--	unsigned long flags;
+-	struct ata_port *ap = _data;
+-	struct ata_queued_cmd *qc;
+-	u8 status;
 -
--	DPRINTK("ENTER\n");
+-	qc = ata_qc_from_tag(ap, ap->active_tag);
+-	WARN_ON(qc == NULL);
+-	WARN_ON(!(qc->flags & ATA_QCFLAG_ACTIVE));
 -
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	ap->flags |= ATA_FLAG_FLUSH_PIO_TASK;
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
--
--	DPRINTK("flush #1\n");
--	flush_workqueue(ata_wq);
--
--	/*
--	 * At this point, if a task is running, it's guaranteed to see
--	 * the FLUSH flag; thus, it will never queue pio tasks again.
--	 * Cancel and flush.
--	 */
--	tmp |= cancel_delayed_work(&ap->pio_task);
--	tmp |= cancel_delayed_work(&ap->packet_task);
--	if (!tmp) {
--		DPRINTK("flush #2\n");
--		flush_workqueue(ata_wq);
+-	/* sleep-wait for BSY to clear */
+-	DPRINTK("busy wait\n");
+-	if (ata_busy_sleep(ap, ATA_TMOUT_CDB_QUICK, ATA_TMOUT_CDB)) {
+-		qc->err_mask |= AC_ERR_TIMEOUT;
+-		goto err_out;
 -	}
 -
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	ap->flags &= ~ATA_FLAG_FLUSH_PIO_TASK;
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+-	/* make sure DRQ is set */
+-	status = ata_chk_status(ap);
+-	if ((status & (ATA_BUSY | ATA_DRQ)) != ATA_DRQ) {
+-		qc->err_mask |= AC_ERR_HSM;
+-		goto err_out;
+-	}
 -
--	DPRINTK("EXIT\n");
+-	/* send SCSI cdb */
+-	DPRINTK("send cdb\n");
+-	WARN_ON(qc->dev->cdb_len < 12);
+-
+-	if (qc->tf.protocol == ATA_PROT_ATAPI_DMA ||
+-	    qc->tf.protocol == ATA_PROT_ATAPI_NODATA) {
+-		unsigned long flags;
+-
+-		/* Once we're done issuing command and kicking bmdma,
+-		 * irq handler takes over.  To not lose irq, we need
+-		 * to clear NOINTR flag before sending cdb, but
+-		 * interrupt handler shouldn't be invoked before we're
+-		 * finished.  Hence, the following locking.
+-		 */
+-		spin_lock_irqsave(&ap->host_set->lock, flags);
+-		ap->flags &= ~ATA_FLAG_NOINTR;
+-		ata_data_xfer(ap, qc->cdb, qc->dev->cdb_len, 1);
+-		if (qc->tf.protocol == ATA_PROT_ATAPI_DMA)
+-			ap->ops->bmdma_start(qc);	/* initiate bmdma */
+-		spin_unlock_irqrestore(&ap->host_set->lock, flags);
+-	} else {
+-		ata_data_xfer(ap, qc->cdb, qc->dev->cdb_len, 1);
+-
+-		/* PIO commands are handled by polling */
+-		ap->hsm_task_state = HSM_ST;
+-		ata_queue_pio_task(ap);
+-	}
+-
+-	return;
+-
+-err_out:
+-	ata_poll_qc_complete(qc);
 -}
 -
- void ata_qc_complete_internal(struct ata_queued_cmd *qc)
- {
- 	struct completion *waiting = qc->private_data;
-@@ -3675,7 +3610,6 @@ static void ata_qc_timeout(struct ata_qu
  
- 	DPRINTK("ENTER\n");
- 
--	ata_flush_pio_tasks(ap);
- 	ap->hsm_task_state = HSM_ST_IDLE;
- 
- 	spin_lock_irqsave(&host_set->lock, flags);
-@@ -4554,8 +4488,6 @@ static void ata_host_init(struct ata_por
- 	ap->last_ctl = 0xFF;
- 
- 	INIT_WORK(&ap->port_task, NULL, NULL);
--	INIT_WORK(&ap->packet_task, atapi_packet_task, ap);
--	INIT_WORK(&ap->pio_task, ata_pio_task, ap);
- 	INIT_LIST_HEAD(&ap->eh_done_q);
- 
- 	for (i = 0; i < ATA_MAX_DEVICES; i++)
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index abc5c6e..d856660 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -390,9 +390,6 @@ struct ata_port {
- 
- 	struct work_struct	port_task;
- 
--	struct work_struct	packet_task;
--
--	struct work_struct	pio_task;
- 	unsigned int		hsm_task_state;
- 	unsigned long		pio_task_timeout;
- 
+ /*
+  * Execute a 'simple' command, that only consists of the opcode 'cmd' itself,
 -- 
 1.2.1
 
