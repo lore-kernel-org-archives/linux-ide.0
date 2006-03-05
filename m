@@ -1,198 +1,166 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 6/6] libata: kill unused xfer_mode functions
-Date: Mon, 6 Mar 2006 04:35:00 +0900
-Message-ID: <20060305193500.GA6419@htj.dyndns.org>
-References: <11415871161709-git-send-email-htejun@gmail.com> <11415871174010-git-send-email-htejun@gmail.com>
+From: "Stefan-W. Hahn" <stefan.hahn@s-hahn.de>
+Subject: promise 300 tx4 does not recognize 4 drives
+Date: Sun, 5 Mar 2006 22:45:47 +0100
+Message-ID: <20060305214547.GC6949@scotty.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.199]:17046 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750710AbWCETfE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Mar 2006 14:35:04 -0500
-Received: by zproxy.gmail.com with SMTP id 13so1079496nzn
-        for <linux-ide@vger.kernel.org>; Sun, 05 Mar 2006 11:35:03 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.126.187]:24313 "EHLO
+	moutng.kundenserver.de") by vger.kernel.org with ESMTP
+	id S1751835AbWCEVpu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 5 Mar 2006 16:45:50 -0500
+Received: from scotty.home (localhost [127.0.0.1])
+	by scotty.home (8.13.4/8.13.4/Debian-3) with ESMTP id k25Ljlh5001520
+	for <linux-ide@vger.kernel.org>; Sun, 5 Mar 2006 22:45:47 +0100
+Received: (from hs@localhost)
+	by scotty.home (8.13.4/8.13.4/Submit) id k25LjlxY001517
+	for linux-ide@vger.kernel.org; Sun, 5 Mar 2006 22:45:47 +0100
 Content-Disposition: inline
-In-Reply-To: <11415871174010-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Preceding xfer_mask changes make the following functions unused.
+Hello,
 
-  ata_pio_modes(), base_from_shift(), ata_pr_blacklisted(), fgb()
+I have a strange problem and after googling the hole sunday without success, I
+hope anybody on this list can help me.
 
-Kill them.  Also, as xfer_mode_str[] is now only used by
-ata_mode_string(), move it into the function.
+Using an ASUS P5GD1 board with an onboard ICH6 controller a attached 
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+      1 HD at ide0 (PATA)
+      1 CDROM at ide0 (PATA)
 
----
+      4 HDs at ide1 (SATA)
 
-This patch is against upstream.
+I configured the IDE controller as AHCI, S-ATA mode.
 
- drivers/scsi/libata-core.c |  108 +++++++-------------------------------------
- 1 files changed, 18 insertions(+), 90 deletions(-)
+Running on Linux 2.4.32 and 2.4.33-pre2 is ok.
 
-Index: work/drivers/scsi/libata-core.c
-===================================================================
---- work.orig/drivers/scsi/libata-core.c	2006-03-06 04:14:11.000000000 +0900
-+++ work/drivers/scsi/libata-core.c	2006-03-06 04:14:30.000000000 +0900
-@@ -67,7 +67,6 @@ static void ata_set_mode(struct ata_port
- static void ata_dev_set_xfermode(struct ata_port *ap, struct ata_device *dev);
- static unsigned int ata_dev_xfermask(struct ata_port *ap,
- 				     struct ata_device *dev);
--static int fgb(u32 bitmap);
- 
- static unsigned int ata_unique_id = 1;
- static struct workqueue_struct *ata_wq;
-@@ -331,25 +330,6 @@ static int ata_xfer_mode2shift(unsigned 
- 	return -1;
- }
- 
--static const char * const xfer_mode_str[] = {
--	"PIO0",
--	"PIO1",
--	"PIO2",
--	"PIO3",
--	"PIO4",
--	"MWDMA0",
--	"MWDMA1",
--	"MWDMA2",
--	"UDMA/16",
--	"UDMA/25",
--	"UDMA/33",
--	"UDMA/44",
--	"UDMA/66",
--	"UDMA/100",
--	"UDMA/133",
--	"UDMA7",
--};
--
- /**
-  *	ata_mode_string - convert xfer_mask to string
-  *	@xfer_mask: mask of bits supported; only highest bit counts.
-@@ -364,9 +344,26 @@ static const char * const xfer_mode_str[
-  *	Constant C string representing highest speed listed in
-  *	@mode_mask, or the constant C string "<n/a>".
-  */
--
- static const char *ata_mode_string(unsigned int xfer_mask)
- {
-+	static const char * const xfer_mode_str[] = {
-+		"PIO0",
-+		"PIO1",
-+		"PIO2",
-+		"PIO3",
-+		"PIO4",
-+		"MWDMA0",
-+		"MWDMA1",
-+		"MWDMA2",
-+		"UDMA/16",
-+		"UDMA/25",
-+		"UDMA/33",
-+		"UDMA/44",
-+		"UDMA/66",
-+		"UDMA/100",
-+		"UDMA/133",
-+		"UDMA7",
-+	};
- 	int highbit;
- 
- 	highbit = fls(xfer_mask) - 1;
-@@ -827,35 +824,6 @@ static unsigned int ata_id_xfermask(cons
- 	return ata_pack_xfermask(pio_mask, mwdma_mask, udma_mask);
- }
- 
--/*
-- *	Compute the PIO modes available for this device. This is not as
-- *	trivial as it seems if we must consider early devices correctly.
-- *
-- *	FIXME: pre IDE drive timing (do we care ?). 
-- */
--
--static unsigned int ata_pio_modes(const struct ata_device *adev)
--{
--	u16 modes;
--
--	/* Usual case. Word 53 indicates word 64 is valid */
--	if (adev->id[ATA_ID_FIELD_VALID] & (1 << 1)) {
--		modes = adev->id[ATA_ID_PIO_MODES] & 0x03;
--		modes <<= 3;
--		modes |= 0x7;
--		return modes;
--	}
--
--	/* If word 64 isn't valid then Word 51 high byte holds the PIO timing
--	   number for the maximum. Turn it into a mask and return it */
--	modes = (2 << ((adev->id[ATA_ID_OLD_PIO_MODES] >> 8) & 0xFF)) - 1 ;
--	return modes;
--	/* But wait.. there's more. Design your standards by committee and
--	   you too can get a free iordy field to process. However its the 
--	   speeds not the modes that are supported... Note drivers using the
--	   timing API will get this right anyway */
--}
--
- static inline void
- ata_queue_packet_task(struct ata_port *ap)
- {
-@@ -1718,26 +1686,6 @@ int ata_timing_compute(struct ata_device
- 	return 0;
- }
- 
--static const struct {
--	unsigned int shift;
--	u8 base;
--} xfer_mode_classes[] = {
--	{ ATA_SHIFT_UDMA,	XFER_UDMA_0 },
--	{ ATA_SHIFT_MWDMA,	XFER_MW_DMA_0 },
--	{ ATA_SHIFT_PIO,	XFER_PIO_0 },
--};
--
--static u8 base_from_shift(unsigned int shift)
--{
--	int i;
--
--	for (i = 0; i < ARRAY_SIZE(xfer_mode_classes); i++)
--		if (xfer_mode_classes[i].shift == shift)
--			return xfer_mode_classes[i].base;
--
--	return 0xff;
--}
--
- static void ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
- {
- 	if (!ata_dev_present(dev) || (ap->flags & ATA_FLAG_PORT_DISABLED))
-@@ -2586,13 +2534,6 @@ int ata_dev_revalidate(struct ata_port *
- 	return rc;
- }
- 
--static void ata_pr_blacklisted(const struct ata_port *ap,
--			       const struct ata_device *dev)
--{
--	printk(KERN_WARNING "ata%u: dev %u is on DMA blacklist, disabling DMA\n",
--		ap->id, dev->devno);
--}
--
- static const char * const ata_dma_blacklist [] = {
- 	"WDC AC11000H",
- 	"WDC AC22100H",
-@@ -2680,19 +2621,6 @@ static unsigned int ata_dev_xfermask(str
- 	return xfer_mask;
- }
- 
--/* find greatest bit */
--static int fgb(u32 bitmap)
--{
--	unsigned int i;
--	int x = -1;
--
--	for (i = 0; i < 32; i++)
--		if (bitmap & (1 << i))
--			x = i;
--
--	return x;
--}
--
- /**
-  *	ata_dev_set_xfermode - Issue SET FEATURES - XFER MODE command
-  *	@ap: Port associated with device @dev
+Now I attached a PROMISE 300 TX4 (S-ATA) as PCI device with
+
+    4 HDs attached.
+
+When booting following happened:
+
+1. The bios switched the internal controller to standard mode, so it recognizes
+   just 2 of the 4 s-ata drives. (Why? I don't know.)
+
+   The promise controller recognizes all 4 HDs.
+
+   After loading ata_piix and sata_promise I get 2 drives from the internal
+   controller and 4 from the promise controller.
+
+
+2. After switching the bios back to AHCI mode it recognizes correct the 4
+   internal s-ata drives.
+
+   But now the promise controller just recognizes 2 of the 4 attached drives and
+   that drives me crazy.
+
+   How can I get the 4 drives in this situation working? Any advice?
+
+
+lspci says:
+0000:00:00.0 Host bridge: Intel Corp. 915G/P/GV Processor to I/O Controller (rev 04)
+0000:00:01.0 PCI bridge: Intel Corp. 915G/P/GV PCI Express Root Port (rev 04)
+0000:00:1b.0 0403: Intel Corp. 82801FB/FBM/FR/FW/FRW (ICH6 Family) High Definition Audio Controller (rev 03)
+0000:00:1c.0 PCI bridge: Intel Corp. 82801FB/FBM/FR/FW/FRW (ICH6 Family) PCI Express Port 1 (rev 03)
+0000:00:1c.1 PCI bridge: Intel Corp. 82801FB/FBM/FR/FW/FRW (ICH6 Family) PCI Express Port 2 (rev 03)
+0000:00:1d.0 USB Controller: Intel Corp. 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #1 (rev 03)
+0000:00:1d.1 USB Controller: Intel Corp. 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #2 (rev 03)
+0000:00:1d.2 USB Controller: Intel Corp. 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #3 (rev 03)
+0000:00:1d.3 USB Controller: Intel Corp. 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #4 (rev 03)
+0000:00:1d.7 USB Controller: Intel Corp. 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB2 EHCI Controller (rev 03)
+0000:00:1e.0 PCI bridge: Intel Corp. 82801 PCI Bridge (rev d3)
+0000:00:1f.0 ISA bridge: Intel Corp. 82801FB/FR (ICH6/ICH6R) LPC Interface Bridge (rev 03)
+0000:00:1f.1 IDE interface: Intel Corp. 82801FB/FBM/FR/FW/FRW (ICH6 Family) IDE Controller (rev 03)
+0000:00:1f.2 0106: Intel Corp. 82801FR/FRW (ICH6R/ICH6RW) SATA Controller (rev 03)
+0000:00:1f.3 SMBus: Intel Corp. 82801FB/FBM/FR/FW/FRW (ICH6 Family) SMBus Controller (rev 03)
+0000:01:09.0 Network controller: AVM Audiovisuelles MKTG & Computer System GmbH A1 ISDN [Fritz] (rev 02)
+0000:01:0a.0 Unknown mass storage controller: Promise Technology, Inc.: Unknown device 3d17 (rev 02)
+0000:02:00.0 Ethernet controller: Marvell Technology Group Ltd.: Unknown device 4362 (rev 19)
+0000:04:00.0 VGA compatible controller: nVidia Corporation: Unknown device 0161 (rev a1)
+
+For situation 1 syslog says while loading sata_promise:
+
+Mar  5 12:58:12 waldorf kernel: PCI(01:0a.0): version 1.03
+Mar  5 12:58:12 waldorf kernel: ata3: SATA max UDMA/133 cmd 0xE09FF200 ctl 0xE09FF238 bmdma 0x0 irq 5
+Mar  5 12:58:12 waldorf kernel: ata4: SATA max UDMA/133 cmd 0xE09FF280 ctl 0xE09FF2B8 bmdma 0x0 irq 5
+Mar  5 12:58:12 waldorf kernel: ata5: SATA max UDMA/133 cmd 0xE09FF300 ctl 0xE09FF338 bmdma 0x0 irq 5
+Mar  5 12:58:12 waldorf kernel: ata6: SATA max UDMA/133 cmd 0xE09FF380 ctl 0xE09FF3B8 bmdma 0x0 irq 5
+Mar  5 12:58:13 waldorf kernel: ata3: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023 88:407f
+Mar  5 12:58:13 waldorf kernel: ata3: dev 0 ATA-7, max UDMA/133, 390721968 sectors: LBA48
+Mar  5 12:58:13 waldorf kernel: ata3: dev 0 configured for UDMA/133
+Mar  5 12:58:13 waldorf kernel: ata4: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023 88:407f
+Mar  5 12:58:13 waldorf kernel: ata4: dev 0 ATA-7, max UDMA/133, 390721968 sectors: LBA48
+Mar  5 12:58:13 waldorf kernel: ata4: dev 0 configured for UDMA/133
+Mar  5 12:58:13 waldorf kernel: ata5: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023 88:407f
+Mar  5 12:58:13 waldorf kernel: ata5: dev 0 ATA-7, max UDMA/133, 390721968 sectors: LBA48
+Mar  5 12:58:13 waldorf kernel: ata5: dev 0 configured for UDMA/133
+Mar  5 12:58:14 waldorf kernel: ata6: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023 88:407f
+Mar  5 12:58:14 waldorf kernel: ata6: dev 0 ATA-7, max UDMA/133, 390721968 sectors: LBA48
+Mar  5 12:58:14 waldorf kernel: ata6: dev 0 configured for UDMA/133
+Mar  5 12:58:14 waldorf kernel: scsi3 : sata_promise
+Mar  5 12:58:14 waldorf kernel: scsi4 : sata_promise
+Mar  5 12:58:14 waldorf kernel: scsi5 : sata_promise
+Mar  5 12:58:14 waldorf kernel: scsi6 : sata_promise
+Mar  5 12:58:14 waldorf kernel:   Vendor: ATA       Model: WDC WD2000JS-00M  Rev: 02.0
+Mar  5 12:58:14 waldorf kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Mar  5 12:58:14 waldorf kernel:   Vendor: ATA       Model: WDC WD2000JS-00M  Rev: 02.0
+Mar  5 12:58:14 waldorf kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Mar  5 12:58:14 waldorf kernel:   Vendor: ATA       Model: WDC WD2000JS-00M  Rev: 02.0
+Mar  5 12:58:14 waldorf kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Mar  5 12:58:14 waldorf kernel:   Vendor: ATA       Model: WDC WD2000JS-00M  Rev: 02.0
+Mar  5 12:58:14 waldorf kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Mar  5 12:58:14 waldorf kernel: Attached scsi disk sdc at scsi3, channel 0, id 0, lun 0
+Mar  5 12:58:14 waldorf kernel: Attached scsi disk sdd at scsi4, channel 0, id 0, lun 0
+Mar  5 12:58:14 waldorf kernel: Attached scsi disk sde at scsi5, channel 0, id 0, lun 0
+Mar  5 12:58:14 waldorf kernel: Attached scsi disk sdf at scsi6, channel 0, id 0, lun 0
+Mar  5 12:58:14 waldorf kernel: SCSI device sdc: 390721968 512-byte hdwr sectors (200050 MB)
+Mar  5 12:58:14 waldorf kernel:  sdc: unknown partition table
+Mar  5 12:58:14 waldorf kernel: SCSI device sdd: 390721968 512-byte hdwr sectors (200050 MB)
+Mar  5 12:58:14 waldorf kernel:  sdd: unknown partition table
+Mar  5 12:58:14 waldorf kernel: SCSI device sde: 390721968 512-byte hdwr sectors (200050 MB)
+Mar  5 12:58:14 waldorf kernel:  sde: unknown partition table
+Mar  5 12:58:14 waldorf kernel: SCSI device sdf: 390721968 512-byte hdwr sectors (200050 MB)
+Mar  5 12:58:14 waldorf kernel:  sdf: sdf1
+
+
+For situation 2 syslog says while loading sata_promise:
+
+Mar  5 17:44:22 waldorf kernel: PCI(01:0a.0): version 1.03
+Mar  5 17:44:22 waldorf kernel: ata7: SATA max UDMA/133 cmd 0xE09F9200 ctl 0xE09F9238 bmdma 0x0 irq 5
+Mar  5 17:44:22 waldorf kernel: ata8: SATA max UDMA/133 cmd 0xE09F9280 ctl 0xE09F92B8 bmdma 0x0 irq 5
+Mar  5 17:44:22 waldorf kernel: ata9: SATA max UDMA/133 cmd 0xE09F9300 ctl 0xE09F9338 bmdma 0x0 irq 5
+Mar  5 17:44:22 waldorf kernel: ata10: SATA max UDMA/133 cmd 0xE09F9380 ctl 0xE09F93B8 bmdma 0x0 irq 5
+Mar  5 17:44:22 waldorf kernel: ata7: no device found (phy stat 00000000)
+Mar  5 17:44:22 waldorf kernel: ata8: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023 88:407f
+Mar  5 17:44:22 waldorf kernel: ata8: dev 0 ATA-7, max UDMA/133, 390721968 sectors: LBA48
+Mar  5 17:44:22 waldorf kernel: ata8: dev 0 configured for UDMA/133
+Mar  5 17:44:23 waldorf kernel: ata9: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023 88:407f
+Mar  5 17:44:23 waldorf kernel: ata9: dev 0 ATA-7, max UDMA/133, 390721968 sectors: LBA48
+Mar  5 17:44:23 waldorf kernel: ata9: dev 0 configured for UDMA/133
+Mar  5 17:44:23 waldorf kernel: ata10: no device found (phy stat 00000000)
+Mar  5 17:44:23 waldorf kernel: scsi4 : sata_promise
+Mar  5 17:44:23 waldorf kernel: scsi5 : sata_promise
+Mar  5 17:44:23 waldorf kernel: scsi6 : sata_promise
+Mar  5 17:44:23 waldorf kernel: scsi7 : sata_promise
+Mar  5 17:44:23 waldorf kernel:   Vendor: ATA       Model: WDC WD2000JS-00M  Rev: 02.0
+Mar  5 17:44:23 waldorf kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Mar  5 17:44:23 waldorf kernel:   Vendor: ATA       Model: WDC WD2000JS-00M  Rev: 02.0
+Mar  5 17:44:23 waldorf kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
+Mar  5 17:44:23 waldorf kernel: Attached scsi disk sde at scsi5, channel 0, id 0, lun 0
+Mar  5 17:44:23 waldorf kernel: Attached scsi disk sdf at scsi6, channel 0, id 0, lun 0
+Mar  5 17:44:23 waldorf kernel: SCSI device sde: 390721968 512-byte hdwr sectors (200050 MB)
+Mar  5 17:44:23 waldorf kernel:  sde: unknown partition table
+Mar  5 17:44:23 waldorf kernel: SCSI device sdf: 390721968 512-byte hdwr sectors (200050 MB)
+Mar  5 17:44:23 waldorf kernel:  sdf: unknown partition table
+
+
+
+Thanks,
+Stefan
+-- 
+Stefan-W. Hahn                          It is easy to make things.
+/ mailto:stefan.hahn@s-hahn.de /        It is hard to make things simple.			
+
