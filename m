@@ -1,53 +1,29 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 4/4] libata: revalidate after transfer mode configuration
-Date: Sun, 5 Mar 2006 17:55:58 +0900
-Message-ID: <11415489581651-git-send-email-htejun@gmail.com>
-References: <11415489584127-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: nvidia 2200/2050
+Date: Sun, 5 Mar 2006 13:34:15 +0200
+Message-ID: <5d96567b0603050334l38b38e3bo34325b49297a839f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.194]:42333 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1752151AbWCEI4E (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Mar 2006 03:56:04 -0500
-Received: by zproxy.gmail.com with SMTP id 13so1017524nzn
-        for <linux-ide@vger.kernel.org>; Sun, 05 Mar 2006 00:56:03 -0800 (PST)
-In-Reply-To: <11415489584127-git-send-email-htejun@gmail.com>
+Received: from wproxy.gmail.com ([64.233.184.192]:64677 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751211AbWCELeQ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 5 Mar 2006 06:34:16 -0500
+Received: by wproxy.gmail.com with SMTP id 70so954276wra
+        for <linux-ide@vger.kernel.org>; Sun, 05 Mar 2006 03:34:15 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Revalidate device after transfer mode configuration.  This also makes
-dev->id up-to-date.
+hello.
+i have read the update from "http://linux-ata.org/sata-status.html".
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-
----
-
- drivers/scsi/libata-core.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-09956f0e1eb537c8324f402dc1588c3405c10b42
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 5d0adfa..5dbcf0c 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -1625,6 +1625,12 @@ static void ata_dev_set_mode(struct ata_
- 	idx = ofs + dev->xfer_shift;
- 	WARN_ON(idx >= ARRAY_SIZE(xfer_mode_str));
- 
-+	if (ata_dev_revalidate(ap, dev, 0)) {
-+		printk(KERN_ERR "ata%u: failed to revalidate after set "
-+		       "xfermode, disabled\n", ap->id);
-+		ata_port_disable(ap);
-+	}
-+
- 	DPRINTK("idx=%d xfer_shift=%u, xfer_mode=0x%x, base=0x%x, offset=%d\n",
- 		idx, dev->xfer_shift, (int)dev->xfer_mode, (int)base, ofs);
- 
--- 
-1.2.1
+So, just be sure !
+Am i correct to assume that currently nvidia driver ( sata_nv.c )
+   does not support NCQ ?
 
 
+thank you.
+Raz
