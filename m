@@ -1,60 +1,38 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Fixup ahci suspend / resume
-Date: Mon, 06 Mar 2006 09:36:47 +0100
-Message-ID: <440BF49F.7020809@suse.de>
-References: <44045FB1.5040408@suse.de>	<440468DB.5060605@pobox.com>	<20060228151928.GC24981@suse.de>	<44046AC2.1060002@pobox.com>	<20060228152847.GE24981@suse.de>	<44046DC3.4060508@pobox.com>	<440472F6.6090905@suse.de>	<20060228172542.GF24981@suse.de> <20060303233716.67ffaff6.rdunlap@xenotime.net>
+Subject: [PATCH] ACPI support for IDE drives
+Date: Mon, 06 Mar 2006 12:33:27 +0100
+Message-ID: <440C1E07.4050303@suse.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------010407040807000103060009"
+ boundary="------------020803010408080907070105"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:60834 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S1752263AbWCFIgx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Mar 2006 03:36:53 -0500
-In-Reply-To: <20060303233716.67ffaff6.rdunlap@xenotime.net>
+Received: from mail.suse.de ([195.135.220.2]:26822 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1750819AbWCFLd3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Mar 2006 06:33:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: Jens Axboe <axboe@suse.de>, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------010407040807000103060009
+--------------020803010408080907070105
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-Randy.Dunlap wrote:
-> On Tue, 28 Feb 2006 18:25:43 +0100 Jens Axboe wrote:
->=20
->> On Tue, Feb 28 2006, Hannes Reinecke wrote:
->>> Jeff Garzik wrote:
->>>> Jens Axboe wrote:
->>>>> I'm sure Hannes will regenerate against upstream as well if necessa=
-ry,
->>>>> however that depends on when this should be applied.
->>>> It's far too late and too intrusive for 2.6.16-rc.
->>>>
->>>> It's #upstream or <null>.
->>>>
->>> Calm down. Of course I will regenerate is against #upstream.
->>> In fact, I've done so initially but wasn't sure what the status of
->>> libata-dev is. So I've diffed it against linux-git instead.
->>>
->>> Updated patch to follow.
->> Thanks Hannes. I wasn't so much worried about it going directly in (I
->> have no problem waiting), just that there seemed to be some disagreeme=
-nt
->> on where suspend is at and what we can "support".
->=20
-> Hi Hannes,
->=20
-> Did you ever send the updated patch?  I need it to use with the
-> rest of the ata-acpi objects patchset for #upstream (actually for -mm).=
+Hi all,
 
->=20
-Oh, sorry. I got tangled up with other issues (namely ACPI integration
-for IDE drives :-).
-Patch against libata-dev is attached.
+This patch is adds ACPI support for IDE drives. It is basically a rework
+of Randy Dunlaps patch for libata. And as such it has exactly the same
+issues (namely it breaks layering).
 
-Please apply.
+But, however, there are machines out there who do require ACPI support
+even for standard IDE controllers. So we need to implement something
+here; just telling the users "we're not doing it" is hardly gaining us
+anything.
+And I'm told that Ubuntu has something like this for ages; but of course
+this one is far superior :-).
+
+As usual, comments etc. welcome.
 
 Cheers,
 
@@ -65,474 +43,855 @@ SuSE Linux Products GmbH		S390 & zSeries
 Maxfeldstra=DFe 5				+49 911 74053 688
 90409 N=FCrnberg				http://www.suse.de
 
---------------010407040807000103060009
-Content-Type: text/plain;
- name="libata-ahci-update"
-Content-Transfer-Encoding: quoted-printable
+--------------020803010408080907070105
+Content-Type: text/x-patch;
+ name="ide-acpi-support.patch"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="libata-ahci-update"
+ filename="ide-acpi-support.patch"
 
-ahci: Fixup ahci suspend / resume
+IDE: Add ACPI support
 
-The current ahci driver has the problem that it doesn't resume properly.
-Or rather, that resuming is unstable.
-Reason being that AHCI has 4 registers containing the DMA address it
-should write things to. Of course there is no guarantee that Linux has
-assigned the same address to the DMA area across reboots.
-So we should better re-initialize those registers after resume.
-
-The patch also improves the port_start / port_stop routines to be more
-closely modelled after the spec. This also avoids a nasty msleep(500)
-during initialisation.
-
-And as we now have the individual routines split off we can as well
-use them during startup and not rely on any hardcoded values here.
+This patch adds ACPI support for IDE drives. It is based on Randy Dunlaps 
+earlier patch for libata with some modifications to make it work with generic
+IDE drives.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 1c2ab3d..e0dc933 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -30,6 +30,12 @@
-  * http://www.intel.com/technology/serialata/pdf/rev1_0.pdf
-  * http://www.intel.com/technology/serialata/pdf/rev1_1.pdf
-  *
-+ * TODO:
-+ * - Error handling; some routines might fail (eg port_suspend / _resume=
-)
-+ *   upon which a port reset should be done
-+ * - Proper handling of additional features: cold-presence detection,
-+ *   staggered spin-up, power modes. Currently we're calling those comma=
-nds
-+ *   as we pleas.
-  */
-=20
- #include <linux/kernel.h>
-@@ -44,6 +50,7 @@
- #include <linux/device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_device.h>
- #include <linux/libata.h>
- #include <asm/io.h>
-=20
-@@ -194,11 +201,21 @@ static int ahci_probe_reset(struct ata_p
- static void ahci_irq_clear(struct ata_port *ap);
- static void ahci_eng_timeout(struct ata_port *ap);
- static int ahci_port_start(struct ata_port *ap);
-+static int ahci_port_resume(struct ata_port *ap);
-+static int ahci_port_suspend(struct ata_port *ap);
- static void ahci_port_stop(struct ata_port *ap);
-+static int ahci_start_engine(void __iomem *port_mmio);
-+static int ahci_stop_engine(void __iomem *port_mmio);
-+static void ahci_start_fis_rx(void __iomem *port_mmio,=20
-+			      struct ahci_port_priv *pp,
-+			      struct ahci_host_priv *hpriv);
-+static int ahci_stop_fis_rx(void __iomem *port_mmio);
- static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
- static void ahci_qc_prep(struct ata_queued_cmd *qc);
- static u8 ahci_check_status(struct ata_port *ap);
- static inline int ahci_host_intr(struct ata_port *ap, struct ata_queued_=
-cmd *qc);
-+static int ahci_scsi_device_suspend(struct scsi_device *sdev);
-+static int ahci_scsi_device_resume(struct scsi_device *sdev);
- static void ahci_remove_one (struct pci_dev *pdev);
-=20
- static struct scsi_host_template ahci_sht =3D {
-@@ -218,6 +235,8 @@ static struct scsi_host_template ahci_sh
- 	.dma_boundary		=3D AHCI_DMA_BOUNDARY,
- 	.slave_configure	=3D ata_scsi_slave_config,
- 	.bios_param		=3D ata_std_bios_param,
-+	.resume			=3D ahci_scsi_device_resume,
-+	.suspend		=3D ahci_scsi_device_suspend,
- };
-=20
- static const struct ata_port_operations ahci_ops =3D {
-@@ -302,6 +321,8 @@ static struct pci_driver ahci_pci_driver
- 	.id_table		=3D ahci_pci_tbl,
- 	.probe			=3D ahci_init_one,
- 	.remove			=3D ahci_remove_one,
-+	.suspend		=3D ata_pci_device_suspend,
-+	.resume			=3D ata_pci_device_resume,      =20
- };
-=20
-=20
-@@ -375,42 +396,24 @@ static int ahci_port_start(struct ata_po
-=20
- 	ap->private_data =3D pp;
-=20
--	if (hpriv->cap & HOST_CAP_64)
--		writel((pp->cmd_slot_dma >> 16) >> 16, port_mmio + PORT_LST_ADDR_HI);
--	writel(pp->cmd_slot_dma & 0xffffffff, port_mmio + PORT_LST_ADDR);
--	readl(port_mmio + PORT_LST_ADDR); /* flush */
--
--	if (hpriv->cap & HOST_CAP_64)
--		writel((pp->rx_fis_dma >> 16) >> 16, port_mmio + PORT_FIS_ADDR_HI);
--	writel(pp->rx_fis_dma & 0xffffffff, port_mmio + PORT_FIS_ADDR);
--	readl(port_mmio + PORT_FIS_ADDR); /* flush */
--
--	writel(PORT_CMD_ICC_ACTIVE | PORT_CMD_FIS_RX |
--	       PORT_CMD_POWER_ON | PORT_CMD_SPIN_UP |
--	       PORT_CMD_START, port_mmio + PORT_CMD);
--	readl(port_mmio + PORT_CMD); /* flush */
--
--	return 0;
-+	/*
-+	 * Driver is setup, now initialize the HBA
-+	 */
-+	ahci_start_fis_rx(port_mmio, pp, hpriv);
-+=09
-+	rc =3D ahci_start_engine(port_mmio);
-+	if (rc)
-+		printk(KERN_WARNING "ata%u: could not start DMA engine\n",=20
-+		       ap->id);
-+	return rc;
- }
-=20
--
- static void ahci_port_stop(struct ata_port *ap)
- {
- 	struct device *dev =3D ap->host_set->dev;
- 	struct ahci_port_priv *pp =3D ap->private_data;
--	void __iomem *mmio =3D ap->host_set->mmio_base;
--	void __iomem *port_mmio =3D ahci_port_base(mmio, ap->port_no);
--	u32 tmp;
-=20
--	tmp =3D readl(port_mmio + PORT_CMD);
--	tmp &=3D ~(PORT_CMD_START | PORT_CMD_FIS_RX);
--	writel(tmp, port_mmio + PORT_CMD);
--	readl(port_mmio + PORT_CMD); /* flush */
--
--	/* spec says 500 msecs for each PORT_CMD_{START,FIS_RX} bit, so
--	 * this is slightly incorrect.
--	 */
--	msleep(500);
-+	ahci_port_suspend(ap);
-=20
- 	ap->private_data =3D NULL;
- 	dma_free_coherent(dev, AHCI_PORT_PRIV_DMA_SZ,
-@@ -419,6 +422,45 @@ static void ahci_port_stop(struct ata_po
- 	kfree(pp);
- }
-=20
-+static int ahci_port_resume(struct ata_port *ap)
+--- linux-2.6.15/drivers/ide/ide-acpi.c.orig	2006-03-03 14:08:24.000000000 +0100
++++ linux-2.6.15/drivers/ide/ide-acpi.c	2006-03-06 12:24:06.356874120 +0100
+@@ -0,0 +1,680 @@
++/*
++ * ide-acpi.c
++ * Provides ACPI support for IDE drives.
++ *
++ * Copyright (C) 2005 Intel Corp.
++ * Copyright (C) 2005 Randy Dunlap
++ * Copyright (C) 2006 SUSE Linux Products GmbH
++ * Copyright (C) 2006 Hannes Reinecke
++ */
++
++#include <linux/ata.h>
++#include <linux/delay.h>
++#include <linux/device.h>
++#include <linux/errno.h>
++#include <linux/kernel.h>
++#include <acpi/acpi.h>
++#include <linux/ide.h>
++#include <linux/pci.h>
++
++#include <acpi/acpi_bus.h>
++#include <acpi/acnames.h>
++#include <acpi/acnamesp.h>
++#include <acpi/acparser.h>
++#include <acpi/acexcep.h>
++#include <acpi/acmacros.h>
++#include <acpi/actypes.h>
++
++#define REGS_PER_GTF		7
++struct taskfile_array {
++	u8	tfa[REGS_PER_GTF];	/* regs. 0x1f1 - 0x1f7 */
++};
++
++struct GTM_buffer {
++	__u32	PIO_speed0;
++	__u32	DMA_speed0;
++	__u32	PIO_speed1;
++	__u32	DMA_speed1;
++	__u32	GTM_flags;
++};
++
++struct ide_acpi_drive_link {
++	ide_drive_t	*drive;
++	acpi_handle	 obj_handle;
++	u8		 idbuff[512];
++};
++
++struct ide_acpi_hwif_link {
++	ide_hwif_t			*hwif;
++	acpi_handle			 obj_handle;
++	struct GTM_buffer		 gtm;
++	struct ide_acpi_drive_link	 master;
++	struct ide_acpi_drive_link	 slave;
++};
++	
++#define DEBUGGING	1
++/* note: adds function name and KERN_DEBUG */
++#ifdef DEBUGGING
++#define DEBPRINT(fmt, args...)	\
++		printk(KERN_DEBUG "%s: " fmt, __FUNCTION__, ## args)
++#else
++#define DEBPRINT(fmt, args...)	do {} while (0)
++#endif	/* DEBUGGING */
++
++extern int ide_noacpi;
++extern int ide_noacpitfs;
++
++/**
++ * pata_get_dev_handle - finds acpi_handle and PCI device.function
++ * @dev: device to locate
++ * @handle: returned acpi_handle for @dev
++ * @pcidevfn: return PCI device.func for @dev
++ *
++ * Returns the ACPI object handle to the corresponding PCI device.
++ *
++ * Returns 0 on success, <0 on error.
++ */
++static int pata_get_dev_handle(struct device *dev, acpi_handle *handle,
++			       acpi_integer *pcidevfn)
 +{
-+	void __iomem *mmio =3D ap->host_set->mmio_base;
-+	void __iomem *port_mmio =3D ahci_port_base(mmio, ap->port_no);
-+	struct ahci_host_priv *hpriv =3D ap->host_set->private_data;
-+	struct ahci_port_priv *pp =3D ap->private_data;
++	unsigned int domain, bus, devnum, func;
++	acpi_integer addr;
++	acpi_handle dev_handle, parent_handle;
++	int scanned;
++	struct acpi_buffer buffer = {.length = ACPI_ALLOCATE_BUFFER,
++					.pointer = NULL};
++	acpi_status status;
++	struct acpi_device_info	*dinfo = NULL;
++	int ret = -ENODEV;
 +
-+	/*
-+	 * Enable FIS reception
-+	 */
-+	ahci_start_fis_rx(port_mmio, pp, hpriv);
++	DEBPRINT("ENTER: dev->bus_id='%s'\n", dev->bus_id);
 +
-+	/*
-+	 * Enable DMA
-+	 */
-+	return ahci_start_engine(port_mmio);
-+}
-+
-+static int ahci_port_suspend(struct ata_port *ap)
-+{
-+	void __iomem *mmio =3D ap->host_set->mmio_base;
-+	void __iomem *port_mmio =3D ahci_port_base(mmio, ap->port_no);
-+	int rc;
-+
-+	/*
-+	 * Disable DMA
-+	 */
-+	rc =3D ahci_stop_engine(port_mmio);
-+	if (rc) {
-+		printk(KERN_WARNING "ata%u: DMA engine busy\n", ap->id);
-+		return rc;
++	if ((scanned = sscanf(dev->bus_id, "%x:%x:%x.%x",
++			&domain, &bus, &devnum, &func)) != 4) {
++		DEBPRINT("sscanf ret. %d\n", scanned);
++		goto err;
 +	}
 +
-+	/*
-+	 * Disable FIS reception
-+	 */
-+	return ahci_stop_fis_rx(port_mmio);
++	dev_handle = DEVICE_ACPI_HANDLE(dev);
++	parent_handle = DEVICE_ACPI_HANDLE(dev->parent);
++
++	status = acpi_get_object_info(parent_handle, &buffer);
++	if (ACPI_FAILURE(status)) {
++		DEBPRINT("get_object_info for parent failed\n");
++		goto err;
++	}
++	dinfo = buffer.pointer;
++	if (dinfo && (dinfo->valid & ACPI_VALID_ADR) &&
++	    dinfo->address == bus) {
++		/* ACPI spec for _ADR for PCI bus: */
++		addr = (acpi_integer)(devnum << 16 | func);
++		*pcidevfn = addr;
++		*handle = dev_handle;
++	} else {
++		DEBPRINT("get_object_info for parent has wrong "
++			" bus: %llu, should be %d\n",
++			dinfo ? (unsigned long long)dinfo->address : -1ULL,
++			bus);
++		goto err;
++	}
++
++	DEBPRINT("for dev=0x%x.%x, addr=0x%llx, parent=0x%p, *handle=0x%p\n",
++		 devnum, func, (unsigned long long)addr,
++		 dev->parent, *handle);
++	if (!*handle)
++		goto err;
++	ret = 0;
++err:
++	acpi_os_free(dinfo);
++	return ret;
 +}
 +
- static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg_in)
- {
- 	unsigned int sc_reg;
-@@ -453,19 +495,23 @@ static void ahci_scr_write (struct ata_p
- 	writel(val, (void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
- }
-=20
--static int ahci_stop_engine(struct ata_port *ap)
-+static int ahci_stop_engine(void __iomem *port_mmio)
- {
--	void __iomem *mmio =3D ap->host_set->mmio_base;
--	void __iomem *port_mmio =3D ahci_port_base(mmio, ap->port_no);
- 	int work;
- 	u32 tmp;
-=20
- 	tmp =3D readl(port_mmio + PORT_CMD);
-+	/* Check if the HBA is idle */
-+	if ((tmp & (PORT_CMD_START | PORT_CMD_LIST_ON)) =3D=3D 0)
++/**
++ * ide_acpi_hwif_get_handle - Get ACPI object handle for a given hwif
++ * @hwif: device to locate
++ *
++ * Retrieves the object handle of a given hwif. According to the ACPI
++ * spec is the hwif a child of the PCI device.
++ *
++ * Returns handle on success, 0 on error.
++ */
++acpi_handle ide_acpi_hwif_get_handle(ide_hwif_t *hwif)
++{
++	struct device		*dev = hwif->gendev.parent;
++	acpi_handle		dev_handle;
++	acpi_integer		pcidevfn;
++	acpi_handle		chan_handle;
++	int			err;
++
++	DEBPRINT("ENTER: device %s\n", hwif->name);
++
++	if (!dev) {
++		DEBPRINT("no PCI device for %s\n", hwif->name);
++		return NULL;
++	}
++
++	err = pata_get_dev_handle(dev, &dev_handle, &pcidevfn);
++	if (err < 0) {
++		DEBPRINT("pata_get_dev_handle failed (%d)\n", err);
++		return NULL;
++	}
++
++	/* get child objects of dev_handle == channel objects,
++	 * + _their_ children == drive objects */
++	/* channel is ap->hard_port_no */
++	chan_handle = acpi_get_child(dev_handle, hwif->channel);
++	DEBPRINT("chan adr=%d: handle=0x%p\n",
++		 hwif->channel, chan_handle);
++
++	return chan_handle;
++}
++
++/**
++ * ide_acpi_drive_get_handle - Get ACPI object handle for a given drive
++ * @drive: device to locate
++ *
++ * Retrieves the object handle of a given drive. According to the ACPI
++ * spec the drive is a child of the hwif.
++ *
++ * Returns handle on success, 0 on error.
++ */
++acpi_handle ide_acpi_drive_get_handle(ide_drive_t *drive)
++{
++	ide_hwif_t	*hwif = HWIF(drive);
++	int		 port;
++	acpi_handle	 drive_handle;
++
++	if (!hwif->acpidata)
++		return NULL;
++
++	if (!hwif->acpidata->obj_handle)
++		return NULL;
++
++	port = hwif->channel ? drive->dn - 2: drive->dn;
++
++	DEBPRINT("ENTER: %s at channel#: %d port#: %d\n",
++		 drive->name, hwif->channel, port);
++
++
++	/* TBD: could also check ACPI object VALID bits */
++	drive_handle = acpi_get_child(hwif->acpidata->obj_handle, port);
++	DEBPRINT("drive %s handle 0x%p\n", drive->name, drive_handle);
++
++	return drive_handle;
++}
++
++/**
++ * do_drive_get_GTF - get the drive bootup default taskfile settings
++ * @drive: the drive for which the taskfile settings should be retrieved
++ * @gtf_length: number of bytes of _GTF data returned at @gtf_address
++ * @gtf_address: buffer containing _GTF taskfile arrays
++ *
++ * The _GTF method has no input parameters.
++ * It returns a variable number of register set values (registers
++ * hex 1F1..1F7, taskfiles).
++ * The <variable number> is not known in advance, so have ACPI-CA
++ * allocate the buffer as needed and return it, then free it later.
++ *
++ * The returned @gtf_length and @gtf_address are only valid if the
++ * function return value is 0.
++ */
++int do_drive_get_GTF(ide_drive_t *drive,
++		     unsigned int *gtf_length, unsigned long *gtf_address,
++		     unsigned long *obj_loc)
++{
++	acpi_status			status;
++	struct acpi_buffer		output;
++	union acpi_object 		*out_obj;
++	ide_hwif_t			*hwif = HWIF(drive);
++	struct device			*dev = hwif->gendev.parent;
++	int				err = -ENODEV;
++	int				port;
++
++	*gtf_length = 0;
++	*gtf_address = 0UL;
++	*obj_loc = 0UL;
++
++	if (ide_noacpi)
 +		return 0;
 +
-+	/* Setting HBA to idle */
- 	tmp &=3D ~PORT_CMD_START;
- 	writel(tmp, port_mmio + PORT_CMD);
-=20
--	/* wait for engine to stop.  TODO: this could be
--	 * as long as 500 msec
-+	/*=20
-+	 * wait for engine to stop.
-+	 * This could be as long as 500 msec
- 	 */
- 	work =3D 1000;
- 	while (work-- > 0) {
-@@ -478,16 +524,120 @@ static int ahci_stop_engine(struct ata_p
- 	return -EIO;
- }
-=20
--static void ahci_start_engine(struct ata_port *ap)
-+static int ahci_start_engine(void __iomem *port_mmio)
- {
--	void __iomem *mmio =3D ap->host_set->mmio_base;
--	void __iomem *port_mmio =3D ahci_port_base(mmio, ap->port_no);
- 	u32 tmp;
-+	int work =3D 1000;
-=20
-+	/*
-+	 * Get current status
-+	 */
- 	tmp =3D readl(port_mmio + PORT_CMD);
-+
-+	/*
-+	 * AHCI rev 1.1 section 10.3.1:
-+	 * Software shall not set PxCMD.ST to =E2=80=981=E2=80=99 until it veri=
-fies
-+	 * that PxCMD.CR is =E2=80=980=E2=80=99 and has set PxCMD.FRE to =E2=80=
-=981=E2=80=99.
-+	 */
-+	if ((tmp & PORT_CMD_FIS_RX) =3D=3D 0) {
-+		return -EIO;
++	if (!dev) {
++		DEBPRINT("no PCI device for %s\n", hwif->name);
++		goto out;
 +	}
 +
-+	/*=20
-+	 * wait for DMA engine to become idle.
-+	 */
-+	if (tmp & PORT_CMD_LIST_ON) {
-+		while (work-- > 0) {
-+			tmp =3D readl(port_mmio + PORT_CMD);
-+			if ((tmp & PORT_CMD_LIST_ON) =3D=3D 0)
-+				break;
-+			udelay(10);
++	if (!hwif->acpidata) {
++		DEBPRINT("no ACPI data for %s\n", hwif->name);
++		goto out;
++	}
++
++	port = hwif->channel ? drive->dn - 2: drive->dn;
++
++	if (!drive->acpidata) {
++		if (port == 0) {
++			drive->acpidata = &hwif->acpidata->master;
++			hwif->acpidata->master.drive = drive;
++		} else {
++			drive->acpidata = &hwif->acpidata->slave;
++			hwif->acpidata->slave.drive = drive;
 +		}
 +	}
 +
-+	if (!work) {
-+		/*
-+		 * We need to do a port reset / HBA reset here.
-+		 */
-+		return -EIO;
++	DEBPRINT("ENTER: %s at %s, port#: %d, hard_port#: %d\n",
++		 hwif->name, dev->bus_id, port, hwif->channel);
++
++	if (!drive->present) {
++		DEBPRINT("%s drive %d:%d not present\n",
++			 hwif->name, hwif->channel, port);
++		goto out;
 +	}
 +
-+	/*
-+	 * Start DMA
-+	 */
- 	tmp |=3D PORT_CMD_START;
- 	writel(tmp, port_mmio + PORT_CMD);
- 	readl(port_mmio + PORT_CMD); /* flush */
-+
-+	return 0;
-+}
-+
-+static int ahci_stop_fis_rx(void __iomem *port_mmio)
-+{
-+	u32 tmp;
-+	int work =3D 1000;
-+
-+	/*
-+	 * Get current status
-+	 */
-+	tmp =3D readl(port_mmio + PORT_CMD);
-+
-+	/*
-+	 * Disable FIS reception
-+	 */
-+	if (tmp & PORT_CMD_FIS_RX) {
-+		tmp &=3D ~(PORT_CMD_FIS_RX);
-+		writel(tmp, port_mmio + PORT_CMD);
-+		tmp =3D readl(port_mmio + PORT_CMD); /* flush */
-+	}
-+
-+	/*
-+	 * Wait for HBA to become idle.
-+	 * This could be as long as 500 msec
-+	 */
-+	if (tmp & PORT_CMD_FIS_ON) {
-+		work =3D 1000;
-+		while (work-- > 0) {
-+			tmp =3D readl(port_mmio + PORT_CMD);
-+			if ((tmp & PORT_CMD_FIS_ON) =3D=3D 0)
-+				return 0;
-+			udelay(10);
++	/* Get this drive's _ADR info. if not already known. */
++	if (!drive->acpidata->obj_handle) {
++		drive->acpidata->obj_handle = ide_acpi_drive_get_handle(drive);
++		if (!drive->acpidata->obj_handle) {
++			DEBPRINT("No ACPI object found for %s\n",
++				 drive->name);
++			goto out;
 +		}
 +	}
-+=09
-+	return -EIO;
++
++	/* Setting up output buffer */
++	output.length = ACPI_ALLOCATE_BUFFER;
++	output.pointer = NULL;	/* ACPI-CA sets this; save/free it later */
++
++	/* _GTF has no input parameters */
++	err = -EIO;
++	status = acpi_evaluate_object(drive->acpidata->obj_handle, "_GTF",
++				      NULL, &output);
++	if (ACPI_FAILURE(status)) {
++		printk(KERN_DEBUG
++		       "%s: Run _GTF error: status = 0x%x\n",
++		       __FUNCTION__, status);
++		goto out_free;
++	}
++
++	if (!output.length || !output.pointer) {
++		DEBPRINT("Run _GTF: "
++		       "length or ptr is NULL (0x%llx, 0x%p)\n",
++		       (unsigned long long)output.length,
++		       output.pointer);
++		goto out_free;
++	}
++
++	out_obj = output.pointer;
++	if (out_obj->type != ACPI_TYPE_BUFFER) {
++		DEBPRINT("Run _GTF: error: "
++		       "expected object type of ACPI_TYPE_BUFFER, "
++		       "got 0x%x\n", out_obj->type);
++		err = -ENOENT;
++		goto out_free;
++	}
++
++	if (!out_obj->buffer.length || !out_obj->buffer.pointer ||
++	    out_obj->buffer.length % REGS_PER_GTF) {
++		printk(KERN_ERR
++		       "%s: unexpected GTF length (%d) or addr (0x%p)\n",
++		       __FUNCTION__, out_obj->buffer.length,
++		       out_obj->buffer.pointer);
++		err = -ENOENT;
++		goto out_free;
++	}
++
++	*gtf_length = out_obj->buffer.length;
++	*gtf_address = (unsigned long)out_obj->buffer.pointer;
++	*obj_loc = (unsigned long)out_obj;
++	DEBPRINT("returning gtf_length=%d, gtf_address=0x%lx, obj_loc=0x%lx\n",
++		 *gtf_length, *gtf_address, *obj_loc);
++	err = 0;
++out_free:
++	acpi_os_free(output.pointer);
++out:
++	return err;
 +}
 +
-+static void ahci_start_fis_rx(void __iomem *port_mmio,=20
-+			      struct ahci_port_priv *pp,
-+			      struct ahci_host_priv *hpriv)
++/**
++ * taskfile_load_raw - send taskfile registers to drive
++ * @drive: drive to which output is sent
++ * @gtf: raw ATA taskfile register set (0x1f1 - 0x1f7)
++ *
++ * Outputs IDE taskfile to the drive.
++ */
++static int taskfile_load_raw(ide_drive_t *drive,
++			      const struct taskfile_array *gtf)
 +{
-+	/*
-+	 * Enable FIS reception
-+	 */
-+	if (hpriv->cap & HOST_CAP_64)
-+		writel((pp->cmd_slot_dma >> 16) >> 16, port_mmio + PORT_LST_ADDR_HI);
-+	writel(pp->cmd_slot_dma & 0xffffffff, port_mmio + PORT_LST_ADDR);
-+	readl(port_mmio + PORT_LST_ADDR); /* flush */
++	ide_task_t args;
++	int err = 0;
 +
-+	if (hpriv->cap & HOST_CAP_64)
-+		writel((pp->rx_fis_dma >> 16) >> 16, port_mmio + PORT_FIS_ADDR_HI);
-+	writel(pp->rx_fis_dma & 0xffffffff, port_mmio + PORT_FIS_ADDR);
-+	readl(port_mmio + PORT_FIS_ADDR); /* flush */
++	DEBPRINT("(0x1f1-1f7): hex: "
++	       "%02x %02x %02x %02x %02x %02x %02x\n",
++	       gtf->tfa[0], gtf->tfa[1], gtf->tfa[2],
++	       gtf->tfa[3], gtf->tfa[4], gtf->tfa[5], gtf->tfa[6]);
++
++	memset(&args, 0, sizeof(ide_task_t));
++	args.command_type = IDE_DRIVE_TASK_NO_DATA;
++	args.data_phase   = TASKFILE_IN;
++	args.handler      = &task_no_data_intr;
++
++	/* convert gtf to IDE Taskfile */
++	args.tfRegister[1] = gtf->tfa[0];	/* 0x1f1 */
++	args.tfRegister[2] = gtf->tfa[1];	/* 0x1f2 */
++	args.tfRegister[3] = gtf->tfa[2];	/* 0x1f3 */
++	args.tfRegister[4] = gtf->tfa[3];	/* 0x1f4 */
++	args.tfRegister[5] = gtf->tfa[4];	/* 0x1f5 */
++	args.tfRegister[6] = gtf->tfa[5];	/* 0x1f6 */
++	args.tfRegister[7] = gtf->tfa[6];	/* 0x1f7 */
++
++	if (ide_noacpitfs)
++		return err;
++
++	err = ide_raw_taskfile(drive, &args, NULL);
++	if (err)
++		printk(KERN_ERR "%s: ide_raw_taskfile failed: %u\n",
++		       __FUNCTION__, err);
++
++	return err;
++}
++
++/**
++ * do_drive_set_taskfiles - write the drive taskfile settings from _GTF
++ * @drive: the drive to which the taskfile command should be sent
++ * @gtf_length: total number of bytes of _GTF taskfiles
++ * @gtf_address: location of _GTF taskfile arrays
++ *
++ * Write {gtf_address, length gtf_length} in groups of
++ * REGS_PER_GTF bytes.
++ */
++static int do_drive_set_taskfiles(ide_drive_t *drive,
++				  unsigned int gtf_length,
++				  unsigned long gtf_address)
++{
++	int			err = -ENODEV;
++	int			gtf_count = gtf_length / REGS_PER_GTF;
++	int			ix;
++	struct taskfile_array	*gtf;
++
++	if (ide_noacpi)
++		return 0;
++
++	DEBPRINT("ENTER: %s, hard_port#: %d\n", drive->name, drive->dn);
++
++	if (!drive->present)
++		goto out;
++	if (!gtf_count)		/* shouldn't be here */
++		goto out;
++
++	DEBPRINT("total GTF bytes=%u (0x%x), gtf_count=%d, addr=0x%lx\n",
++		 gtf_length, gtf_length, gtf_count, gtf_address);
++
++	if (gtf_length % REGS_PER_GTF) {
++		printk(KERN_ERR "%s: unexpected GTF length (%d)\n",
++		       __FUNCTION__, gtf_length);
++		goto out;
++	}
++
++	for (ix = 0; ix < gtf_count; ix++) {
++		gtf = (struct taskfile_array *)
++			(gtf_address + ix * REGS_PER_GTF);
++
++		/* send all TaskFile registers (0x1f1-0x1f7) *in*that*order* */
++		err = taskfile_load_raw(drive, gtf);
++		if (err)
++			break;
++	}
++
++out:
++	return err;
++}
++
++/**
++ * ide_acpi_exec_tfs - get then write drive taskfile settings
++ * @drive: the drive for which the taskfile settings should be
++ *         written.
++ *
++ * According to the ACPI spec this should be called after _STM
++ * has been evaluated for the interface. Some ACPI vendors interpret
++ * that as a hard requirement and modify the taskfile according
++ * to the Identify Drive information passed down with _STM.
++ * So one should really make sure to call this only after _STM has
++ * been executed.
++ */
++int ide_acpi_exec_tfs(ide_drive_t *drive)
++{
++	int		ret;
++	unsigned int	gtf_length;
++	unsigned long	gtf_address;
++	unsigned long	obj_loc;
++
++	if (ide_noacpi)
++		return 0;
++
++	DEBPRINT("call get_GTF, drive=%s port=%d\n", drive->name, drive->dn);
++
++	ret = do_drive_get_GTF(drive, &gtf_length, &gtf_address, &obj_loc);
++	if (ret < 0) {
++		DEBPRINT("get_GTF error (%d)\n", ret);
++		return ret;
++	}
++
++	DEBPRINT("call set_taskfiles, drive=%s\n", drive->name);
++
++	ret = do_drive_set_taskfiles(drive, gtf_length, gtf_address);
++	acpi_os_free((void *)obj_loc);
++	if (ret < 0) {
++		DEBPRINT("set_taskfiles error (%d)\n", ret);
++	}
++
++	DEBPRINT("ret=%d\n", ret);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(ide_acpi_exec_tfs);
++
++/**
++ * ide_acpi_get_timing - get the channel (controller) timings
++ * @hwif: target IDE interface (channel)
++ *
++ * This function executes the _GTM ACPI method for the target channel.
++ *
++ */
++void ide_acpi_get_timing(ide_hwif_t *hwif)
++{
++	acpi_status		status;
++	struct acpi_buffer	output;
++	union acpi_object 	*out_obj;
++
++	if (ide_noacpi)
++		return;
++
++	DEBPRINT("ENTER:\n");
++
++	if (!hwif->acpidata) {
++		DEBPRINT("no ACPI data for %s\n", hwif->name);
++		return;
++	}
++
++	/* Setting up output buffer for _GTM */
++	output.length = ACPI_ALLOCATE_BUFFER;
++	output.pointer = NULL;	/* ACPI-CA sets this; save/free it later */
++
++	/* _GTM has no input parameters */
++	status = acpi_evaluate_object(hwif->acpidata->obj_handle, "_GTM",
++				      NULL, &output);
++
++	DEBPRINT("_GTM status: %d, outptr: 0x%p, outlen: 0x%llx\n",
++		 status, output.pointer,
++		 (unsigned long long)output.length);
++
++	if (ACPI_FAILURE(status)) {
++		DEBPRINT("Run _GTM error: status = 0x%x\n", status);
++		return;
++	}
++
++	if (!output.length || !output.pointer) {
++		DEBPRINT("Run _GTM: length or ptr is NULL (0x%llx, 0x%p)\n",
++		       (unsigned long long)output.length,
++		       output.pointer);
++		acpi_os_free(output.pointer);
++		return;
++	}
++
++	out_obj = output.pointer;
++	if (out_obj->type != ACPI_TYPE_BUFFER) {
++		acpi_os_free(output.pointer);
++		DEBPRINT("Run _GTM: error: "
++		       "expected object type of ACPI_TYPE_BUFFER, "
++		       "got 0x%x\n", out_obj->type);
++		return;
++	}
++
++	if (!out_obj->buffer.length || !out_obj->buffer.pointer ||
++	    out_obj->buffer.length != sizeof(struct GTM_buffer)) {
++		acpi_os_free(output.pointer);
++		printk(KERN_ERR
++		       "%s: unexpected _GTM length (0x%x)[should be 0x%x] or addr (0x%p)\n",
++		       __FUNCTION__, out_obj->buffer.length,
++		       sizeof(struct GTM_buffer), out_obj->buffer.pointer);
++		return;
++	}
++
++	memcpy(&hwif->acpidata->gtm, out_obj->buffer.pointer,
++	       sizeof(struct GTM_buffer));
++
++	DEBPRINT("_GTM info: ptr: 0x%p, len: 0x%x, exp.len: 0x%Zx\n",
++		 out_obj->buffer.pointer, out_obj->buffer.length, 
++		 sizeof(struct GTM_buffer));
++
++	DEBPRINT("_GTM fields: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n",
++		 hwif->acpidata->gtm.PIO_speed0,
++		 hwif->acpidata->gtm.DMA_speed0,
++		 hwif->acpidata->gtm.PIO_speed1,
++		 hwif->acpidata->gtm.DMA_speed1,
++		 hwif->acpidata->gtm.GTM_flags);
++
++	acpi_os_free(output.pointer);
++}
++EXPORT_SYMBOL_GPL(ide_acpi_get_timing);
++
++/**
++ * ide_acpi_push_timing - set the channel (controller) timings
++ * @hwif: target IDE interface (channel)
++ *
++ * This function executes the _STM ACPI method for the target channel.
++ *
++ * _STM requires Identify Drive data, which has to passed as an argument.
++ * Unfortunately hd_driveid is a mangled version which we can't readily
++ * use; hence we'll get the information afresh.
++ */
++void ide_acpi_push_timing(ide_hwif_t *hwif)
++{
++	int			err;
++	acpi_status		status;
++	struct acpi_object_list	input;
++	union acpi_object 	in_params[3];
++	struct ide_acpi_drive_link	*master = &hwif->acpidata->master;
++	struct ide_acpi_drive_link	*slave = &hwif->acpidata->slave;
++
++	if (ide_noacpi)
++		return;
++
++	DEBPRINT("ENTER:\n");
++
++	if (!hwif->acpidata) {
++		DEBPRINT("no ACPI data for %s\n", hwif->name);
++		return;
++	}
++
++	if (!master->drive)
++		master->drive = &hwif->drives[0];
++
++	if (!slave->drive)
++		slave->drive = &hwif->drives[1];
++
++	if (master->drive->present) {
++		err = taskfile_lib_get_identify(master->drive, master->idbuff);
++		if (err) {
++			DEBPRINT("identify device %s failed (%d)\n",
++				 master->drive->name, err);
++			return;
++		}
++	}
++		
++	if (slave->drive->present) {
++		err = taskfile_lib_get_identify(slave->drive, slave->idbuff);
++		if (err) {
++			DEBPRINT("identify device %s failed (%d)\n",
++				 slave->drive->name, err);
++			return;
++		}
++	}
++
++	/* Give the GTM buffer + drive Identify data to the channel via the
++	 * _STM method: */
++	/* setup input parameters buffer for _STM */
++	input.count = 3;
++	input.pointer = in_params;
++	in_params[0].type = ACPI_TYPE_BUFFER;
++	in_params[0].buffer.length = sizeof(struct GTM_buffer);
++	in_params[0].buffer.pointer = (u8 *)&hwif->acpidata->gtm;
++	in_params[1].type = ACPI_TYPE_BUFFER;
++	in_params[1].buffer.length = sizeof(struct hd_driveid);
++	in_params[1].buffer.pointer = (u8 *)&master->idbuff;
++	in_params[2].type = ACPI_TYPE_BUFFER;
++	in_params[2].buffer.length = sizeof(struct hd_driveid);
++	in_params[2].buffer.pointer = (u8 *)&slave->idbuff;
++	/* Output buffer: _STM has no output */
++
++	status = acpi_evaluate_object(hwif->acpidata->obj_handle, "_STM",
++				      &input, NULL);
++
++	if (ACPI_FAILURE(status)) {
++		DEBPRINT("Run _STM error: status = 0x%x\n", status);
++	}
++	DEBPRINT("_STM status: %d\n", status);
++}
++EXPORT_SYMBOL_GPL(ide_acpi_push_timing);
++
++void ide_acpi_init(ide_hwif_t *hwif)
++{
++	int unit;
++
++	hwif->acpidata = kzalloc(sizeof(struct ide_acpi_hwif_link), GFP_KERNEL);
++	if (!hwif->acpidata)
++		return;
++
++	hwif->acpidata->obj_handle = ide_acpi_hwif_get_handle(hwif);
++	if (!hwif->acpidata->obj_handle) {
++		DEBPRINT("no ACPI object for %s found\n", hwif->name);
++		kfree(hwif->acpidata);
++		hwif->acpidata = NULL;
++		return;
++	}
++
++	if (hwif->drives[0].present) {
++		hwif->acpidata->master.drive = &hwif->drives[0];
++		hwif->drives[0].acpidata = &hwif->acpidata->master;
++	}
++
++	if (hwif->drives[1].present) {
++		hwif->acpidata->slave.drive = &hwif->drives[1];
++		hwif->drives[1].acpidata = &hwif->acpidata->slave;
++	}
 +
 +	/*
-+	 * This is wrong. We should only activate
-+	 * FIX_RX here; everything else should be handled
-+	 * separately.
-+	 * Some bits might not even be settable here
-+	 * as they depend on the respective feature to be
-+	 * implemented (Staggered Spin-up,=20
-+	 * Cold-presence detection etc.)
++	 * ACPI requires us to call _STM on startup
 +	 */
-+	writel(PORT_CMD_ICC_ACTIVE | PORT_CMD_FIS_RX |
-+	       PORT_CMD_POWER_ON | PORT_CMD_SPIN_UP,
-+	       port_mmio + PORT_CMD);
-+	readl(port_mmio + PORT_CMD); /* flush */
- }
-=20
- static unsigned int ahci_dev_classify(struct ata_port *ap)
-@@ -515,13 +665,16 @@ static void ahci_fill_cmd_slot(struct ah
-=20
- static int ahci_hardreset(struct ata_port *ap, int verbose, unsigned int=
- *class)
++	ide_acpi_get_timing(hwif);
++	ide_acpi_push_timing(hwif);
++
++	for (unit = 0; unit < MAX_DRIVES; ++unit) {
++		ide_drive_t *drive = &hwif->drives[unit];
++
++		if (drive->present) {
++
++			/* Execute ACPI startup code */
++			ide_acpi_exec_tfs(drive);
++		}
++			
++	}
++}
++EXPORT_SYMBOL_GPL(ide_acpi_init);
+--- linux-2.6.15/drivers/ide/Makefile.orig	2006-01-03 04:21:10.000000000 +0100
++++ linux-2.6.15/drivers/ide/Makefile	2006-03-03 11:10:30.929469393 +0100
+@@ -22,6 +22,7 @@ ide-core-$(CONFIG_BLK_DEV_IDEPCI)	+= set
+ ide-core-$(CONFIG_BLK_DEV_IDEDMA)	+= ide-dma.o
+ ide-core-$(CONFIG_PROC_FS)		+= ide-proc.o
+ ide-core-$(CONFIG_BLK_DEV_IDEPNP)	+= ide-pnp.o
++ide-core-$(CONFIG_BLK_DEV_IDEACPI)	+= ide-acpi.o
+ 
+ # built-in only drivers from arm/
+ ide-core-$(CONFIG_IDE_ARM)		+= arm/ide_arm.o
+--- linux-2.6.15/drivers/ide/ide-probe.c.orig	2006-03-02 13:07:05.674022475 +0100
++++ linux-2.6.15/drivers/ide/ide-probe.c	2006-03-06 12:11:01.037087319 +0100
+@@ -1387,6 +1387,9 @@ static int hwif_init(ide_hwif_t *hwif)
+ 
+ done:
+ 	init_gendisk(hwif);
++
++	ide_acpi_init(hwif);
++
+ 	hwif->present = 1;	/* success */
+ 	return 1;
+ 
+--- linux-2.6.15/drivers/ide/ide.c.orig	2006-03-02 13:07:05.714017794 +0100
++++ linux-2.6.15/drivers/ide/ide.c	2006-03-06 11:48:56.120690401 +0100
+@@ -189,6 +189,11 @@ int noautodma = 1;
+ 
+ EXPORT_SYMBOL(noautodma);
+ 
++#ifdef CONFIG_BLK_DEV_IDEACPI
++int ide_noacpi = 0;
++int ide_noacpitfs = 0;
++#endif
++
+ /*
+  * This is declared extern in ide.h, for access by other IDE modules:
+  */
+@@ -1222,10 +1227,15 @@ EXPORT_SYMBOL(system_bus_clock);
+ static int generic_ide_suspend(struct device *dev, pm_message_t state)
  {
-+	void __iomem *mmio =3D ap->host_set->mmio_base;
-+	void __iomem *port_mmio =3D ahci_port_base(mmio, ap->port_no);
- 	int rc;
-=20
- 	DPRINTK("ENTER\n");
-=20
--	ahci_stop_engine(ap);
-+	ahci_stop_engine(port_mmio);
- 	rc =3D sata_std_hardreset(ap, verbose, class);
--	ahci_start_engine(ap);
-+	if (!rc)
-+		rc =3D ahci_start_engine(port_mmio);
-=20
- 	if (rc =3D=3D 0)
- 		*class =3D ahci_dev_classify(ap);
-@@ -641,6 +794,7 @@ static void ahci_restart_port(struct ata
- 	void __iomem *mmio =3D ap->host_set->mmio_base;
- 	void __iomem *port_mmio =3D ahci_port_base(mmio, ap->port_no);
- 	u32 tmp;
-+	int rc;
-=20
- 	if ((ap->device[0].class !=3D ATA_DEV_ATAPI) ||
- 	    ((irq_stat & PORT_IRQ_TF_ERR) =3D=3D 0))
-@@ -656,7 +810,7 @@ static void ahci_restart_port(struct ata
- 			readl(port_mmio + PORT_SCR_ERR));
-=20
- 	/* stop DMA */
--	ahci_stop_engine(ap);
-+	rc =3D ahci_stop_engine(port_mmio);
-=20
- 	/* clear SATA phy error, if any */
- 	tmp =3D readl(port_mmio + PORT_SCR_ERR);
-@@ -666,7 +820,7 @@ static void ahci_restart_port(struct ata
- 	 * if so, issue COMRESET
- 	 */
- 	tmp =3D readl(port_mmio + PORT_TFDATA);
--	if (tmp & (ATA_BUSY | ATA_DRQ)) {
-+	if (rc || (tmp & (ATA_BUSY | ATA_DRQ))) {
- 		writel(0x301, port_mmio + PORT_SCR_CTL);
- 		readl(port_mmio + PORT_SCR_CTL); /* flush */
- 		udelay(10);
-@@ -675,7 +829,7 @@ static void ahci_restart_port(struct ata
+ 	ide_drive_t *drive = dev->driver_data;
++	ide_hwif_t *hwif = HWIF(drive);
+ 	struct request rq;
+ 	struct request_pm_state rqpm;
+ 	ide_task_t args;
+ 
++	/* Call ACPI _GTM only once */
++	if (!(drive->dn % 2))
++		ide_acpi_get_timing(hwif);	
++
+ 	memset(&rq, 0, sizeof(rq));
+ 	memset(&rqpm, 0, sizeof(rqpm));
+ 	memset(&args, 0, sizeof(args));
+@@ -1241,10 +1251,17 @@ static int generic_ide_suspend(struct de
+ static int generic_ide_resume(struct device *dev)
+ {
+ 	ide_drive_t *drive = dev->driver_data;
++	ide_hwif_t *hwif = HWIF(drive);
+ 	struct request rq;
+ 	struct request_pm_state rqpm;
+ 	ide_task_t args;
+ 
++	/* Call ACPI _STM only once */
++	if (!(drive->dn % 2))
++		ide_acpi_push_timing(hwif);	
++
++	ide_acpi_exec_tfs(drive);
++
+ 	memset(&rq, 0, sizeof(rq));
+ 	memset(&rqpm, 0, sizeof(rqpm));
+ 	memset(&args, 0, sizeof(args));
+@@ -1545,6 +1562,19 @@ static int __init ide_setup(char *s)
  	}
-=20
- 	/* re-start DMA */
--	ahci_start_engine(ap);
-+	rc =3D ahci_start_engine(port_mmio);
- }
-=20
- static void ahci_eng_timeout(struct ata_port *ap)
-@@ -823,6 +977,31 @@ static unsigned int ahci_qc_issue(struct
- 	return 0;
- }
-=20
-+int ahci_scsi_device_suspend(struct scsi_device *sdev)
-+{
-+	struct ata_port *ap =3D (struct ata_port *) &sdev->host->hostdata[0];
-+	struct ata_device *dev =3D &ap->device[sdev->id];
-+	int rc;
-+
-+	rc =3D ata_device_suspend(ap, dev);
-+
-+	if (!rc) {
-+		rc =3D ahci_port_suspend(ap);
+ #endif /* CONFIG_BLK_DEV_IDEPCI */
+ 
++#ifdef CONFIG_BLK_DEV_IDEACPI
++	if (!strcmp(s, "ide=noacpi")) {
++		printk(" : Disable IDE ACPI support.\n");
++		ide_noacpi = 1;
++		return 1;
 +	}
++	if (!strcmp(s, "ide=nogtf")) {
++		printk(" : Disable IDE ACPI _GTF support.\n");
++		ide_noacpitfs = 1;
++		return 1;
++	}
++#endif /* CONFIG_BLK_DEV_IDEACPI */
 +
-+	return rc;
-+}
+ 	if (!strncmp(s, "idewait=", 8)) {
+ 		char *dummy;
+ 		ide_wait_ms = simple_strtol(s+8, &dummy, 10);
+--- linux-2.6.15/include/linux/ide.h.orig	2006-03-02 13:07:05.714017794 +0100
++++ linux-2.6.15/include/linux/ide.h	2006-03-06 09:53:46.056810348 +0100
+@@ -19,6 +19,7 @@
+ #include <linux/device.h>
+ #include <linux/pci.h>
+ #include <linux/completion.h>
++#include <acpi/acpi.h>
+ #include <asm/byteorder.h>
+ #include <asm/system.h>
+ #include <asm/io.h>
+@@ -541,6 +542,11 @@ typedef enum {
+ struct ide_driver_s;
+ struct ide_settings_s;
+ 
++#ifdef CONFIG_BLK_DEV_IDEACPI
++struct ide_acpi_drive_link;
++struct ide_acpi_hwif_link;
++#endif
 +
-+int ahci_scsi_device_resume(struct scsi_device *sdev)
-+{
-+	struct ata_port *ap =3D (struct ata_port *) &sdev->host->hostdata[0];
-+	struct ata_device *dev =3D &ap->device[sdev->id];
+ typedef struct ide_drive_s {
+ 	char		name[4];	/* drive name, such as "hda" */
+         char            driver_req[10];	/* requests specific driver */
+@@ -637,6 +643,9 @@ typedef struct ide_drive_s {
+ 
+ 	int		lun;		/* logical unit */
+ 	int		crc_count;	/* crc counter to reduce drive speed */
++#ifdef CONFIG_BLK_DEV_IDEACPI
++	struct ide_acpi_drive_link *acpidata;
++#endif
+ 	struct list_head list;
+ 	struct device	gendev;
+ 	struct completion gendev_rel_comp;	/* to deal with device release() */
+@@ -802,6 +811,10 @@ typedef struct hwif_s {
+ 	unsigned dma;
+ 
+ 	void (*led_act)(void *data, int rw);
 +
-+	ahci_port_resume(ap);
++#ifdef CONFIG_BLK_DEV_IDEACPI
++	struct ide_acpi_hwif_link *acpidata;
++#endif
+ } ____cacheline_internodealigned_in_smp ide_hwif_t;
+ 
+ /*
+@@ -1293,6 +1306,18 @@ static inline void ide_dma_verbose(ide_d
+ static inline void ide_release_dma(ide_hwif_t *drive) {;}
+ #endif
+ 
++#ifdef CONFIG_BLK_DEV_IDEACPI
++extern int ide_acpi_exec_tfs(ide_drive_t *drive);
++extern void ide_acpi_get_timing(ide_hwif_t *hwif);
++extern void ide_acpi_push_timing(ide_hwif_t *hwif);
++extern void ide_acpi_init(ide_hwif_t *hwif);
++#else
++static inline int ide_acpi_exec_tfs(ide_drive_t *drive) { return 0; }
++static inline void ide_acpi_get_timing(ide_hwif_t *hwif) { ; }
++static inline void ide_acpi_push_timing(ide_hwif_t *hwif) { ; }
++static inline void ide_acpi_init(ide_hwif_t *hwif) { ; }
++#endif
 +
-+	return ata_device_resume(ap, dev);
-+}
-+
- static void ahci_setup_port(struct ata_ioports *port, unsigned long base=
-,
- 			    unsigned int port_idx)
- {
-@@ -930,23 +1109,18 @@ static int ahci_host_init(struct ata_pro
- 				(unsigned long) mmio, i);
-=20
- 		/* make sure port is not active */
--		tmp =3D readl(port_mmio + PORT_CMD);
--		VPRINTK("PORT_CMD 0x%x\n", tmp);
--		if (tmp & (PORT_CMD_LIST_ON | PORT_CMD_FIS_ON |
--			   PORT_CMD_FIS_RX | PORT_CMD_START)) {
--			tmp &=3D ~(PORT_CMD_LIST_ON | PORT_CMD_FIS_ON |
--				 PORT_CMD_FIS_RX | PORT_CMD_START);
--			writel(tmp, port_mmio + PORT_CMD);
--			readl(port_mmio + PORT_CMD); /* flush */
--
--			/* spec says 500 msecs for each bit, so
--			 * this is slightly incorrect.
--			 */
--			msleep(500);
--		}
-+		ahci_stop_engine(port_mmio);
-+		ahci_stop_fis_rx(port_mmio);
-+
-+		/*
-+		 * TODO: port / HBA reset if the above fails
-+		 */
-=20
- 		writel(PORT_CMD_SPIN_UP, port_mmio + PORT_CMD);
-=20
-+		/*
-+		 * Wait for communications link to establish
-+		 */
- 		j =3D 0;
- 		while (j < 100) {
- 			msleep(10);
+ extern int ide_hwif_request_regions(ide_hwif_t *hwif);
+ extern void ide_hwif_release_regions(ide_hwif_t* hwif);
+ extern void ide_unregister (unsigned int index);
 
---------------010407040807000103060009--
+--------------020803010408080907070105--
