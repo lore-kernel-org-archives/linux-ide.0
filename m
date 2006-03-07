@@ -1,38 +1,61 @@
-From: Ravikiran G Thirumalai <kiran@scalex86.org>
-Subject: Re: libata: why do we need to define ATA_ENABLE_PATA instead of a CONFIG option?
-Date: Mon, 6 Mar 2006 22:00:01 -0800
-Message-ID: <20060307060001.GA4629@localhost.localdomain>
-References: <20060307010444.GA6799@localhost.localdomain> <440D17C2.60200@garzik.org>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [PATCHSET] implement and use port_task
+Date: Tue, 07 Mar 2006 14:13:43 +0800
+Message-ID: <440D2497.7050504@tw.ibm.com>
+References: <11415401073423-git-send-email-htejun@gmail.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns1.siteground.net ([207.218.208.2]:48874 "EHLO
-	serv01.siteground.net") by vger.kernel.org with ESMTP
-	id S1751278AbWCGF7X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Mar 2006 00:59:23 -0500
-Content-Disposition: inline
-In-Reply-To: <440D17C2.60200@garzik.org>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:55704 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751688AbWCGGNp
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Mar 2006 01:13:45 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e34.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k276DeuN010588
+	for <linux-ide@vger.kernel.org>; Tue, 7 Mar 2006 01:13:40 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k276GS13186024
+	for <linux-ide@vger.kernel.org>; Mon, 6 Mar 2006 23:16:28 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k276DcVv008100
+	for <linux-ide@vger.kernel.org>; Mon, 6 Mar 2006 23:13:39 -0700
+In-Reply-To: <11415401073423-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-On Tue, Mar 07, 2006 at 12:18:58AM -0500, Jeff Garzik wrote:
-> Ravikiran G Thirumalai wrote:
-> >Currently, we can use the piix ide driver for Intel ICH5 IDE controllers, 
-> >or
-> >use ata_piix (libata) by #defining ATA_ENABLE_PATA manually at
-> >inclulde/linux/libata.h.  Why not have a CONFIG option to enable libata 
-> >for such
-> >drivers instead of a #define in the code? I was wondering if there is any
-> >reason it is done this way.
+Hi Jeff,
 > 
-> ATA_ENABLE_PATA is there because PATA was highly experimental for a 
-> while, and only developers and power users should be enabling it.
+> This patchset implements port_task and replace pio_task and
+> packet_task with it.  port_task isn't very different from pio_task or
+> packet_task - it's straight forward generalization.  The port_task is
+> a per-port task avaliable to low level drivers which is managed by
+> libata core layer.
+> 
+> Differences from pio/packet task.
+> 
+> * Not limited to PIO HSM implementation.  Other drivers can use it.
+> 
+> * Synchronization against EH core layer is done within libata core
+>   layer, not in PIO HSM implementation (ata_qc_timeout()).
+> 
+> Thanks.
+> 
+> --
+> tejun
+> 
 
-Is ata_piix still considered higly experimental? Its been around for
-sometime I guess. Would this be time for a CONFIG option (atleast with
-'experimental')?
+Something related to the PIO HSM.
+After the task renaming by this patchset, the task name is changed from pio_task to port_task.
+Should we add polling DMA support to the polling HSM?
+It could make the polling HSM more complete.
 
-Thanks,
-Kiran
+Polling DMA does no performance gain. However, DMA has crc check,
+so it won't be worse than PIO when irq is not working.
+
+Albert
+
+
