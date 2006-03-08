@@ -1,45 +1,39 @@
-From: Bill Davidsen <tmrbill@tmr.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Wed, 8 Mar 2006 10:37:04 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0603081034540.31895-100000@firewall2.tmr.com>
-References: <440E4803.7070808@rtr.ca>
-Reply-To: davidsen@tmr.com
+Date: Wed, 08 Mar 2006 16:46:55 +0000
+Message-ID: <1141836415.7605.50.camel@localhost.localdomain>
+References: <Pine.LNX.4.64.0602140439580.3567@p34>
+	 <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34>
+	 <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com>
+	 <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34>
+	 <4400A1B <1141238277.23170.2.camel@localhost.localdomain>
+	 <4406003A.1070606@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tmr.com ([64.65.253.246]:55050 "EHLO firewall2.tmr.com")
-	by vger.kernel.org with ESMTP id S1750883AbWCHPhs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Mar 2006 10:37:48 -0500
-In-Reply-To: <440E4803.7070808@rtr.ca>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:33502 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932098AbWCHQnF
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Mar 2006 11:43:05 -0500
+In-Reply-To: <4406003A.1070606@cfl.rr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Bill Davidsen <davidsen@tmr.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, axboe@suse.de, albertcc@tw.ibm.com
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: David Greaves <david@dgreaves.com>, Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus@lxorguk.ukuu.org.uk
 
-On Tue, 7 Mar 2006, Mark Lord wrote:
-
-> Bill Davidsen wrote:
-> >
-> > Is there a version of that which will build on x86? I grabbed the 
-> > version offered at freshmeat, but it won't compile on any x86 distro or 
-> > gcc version to which I have access. RH8, RH9, FC1, FC3, FC4, ubuntu... 
-> > with or without using the suggested alternate header.
+On Mer, 2006-03-01 at 15:12 -0500, Phillip Susi wrote:
+> >>   It Broke And I Dont Know Why
+> >> to
+> >>   Aborted Command
+> > 
+> > So whats the SCSI sense encoding for that ?
+> > 
 > 
-> hdparm-6.5 is the current version now.  Both it, and 6.4,
-> build/install/run cleanly on Ubunutu-5.10, Debian-Sarge,
-> and SLES9-SP3.
-> 
-> You seem to be having trouble on only Redhat distros..
-> I guess they've done something unfriendly again.
-> 
-> Care to be more specific about what Redhat is doing?
+> Wouldn't that just be 0/0/0?  IIRC the standard defines that as "NO 
+> ADDITIONAL SENSE DATA" which sounds to me like another way of saying "I 
+> don't know what went wrong, but that didn't work".
 
-I'll mail you the first few hundred errors from the compiler after I go 
-find 6.5 and try that. My ubuntu tester reported similar results, so I'm 
-not sure what we are doing.
-
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-Doing interesting things with little computers since 1979
+The 0/0/0 sense is already used. The question is what error do you use
+with that sense. At the moment I'm using aborted command.
 
