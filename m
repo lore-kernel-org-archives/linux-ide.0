@@ -1,37 +1,49 @@
-From: Canon Online Store <order_85693258A@canon.es>
-Subject: Su orden #85693258A a total de  729 fue aceptado
-Date: Tue, 07 Mar 2006 23:11:00 -0500
-Message-ID: <7495607558.20060307231100@canon.es>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: FW: Kernel driver for Sil 3112 (sata_sil.c) problems
+Date: Wed, 08 Mar 2006 10:59:00 +0900
+Message-ID: <440E3A64.9090303@gmail.com>
+References: <20060307140437.C18DB37B09@relay.netbox.cz>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:50561 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751636AbWCGXKn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Mar 2006 18:10:43 -0500
-Received: from -1244205880 (bzq-88-152-100-139.red.bezeqint.net [88.152.100.139])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id k27NAL7x004648
-	for <linux-ide@vger.kernel.org>; Tue, 7 Mar 2006 23:10:36 GMT
-Received: from canon.es (-1245045448 [-1216069784])
-	by bzq-88-152-100-139.red.bezeqint.net (Qmailv1) with ESMTP id 0E058440CA
-	for <linux-ide@vger.kernel.org>; Tue, 07 Mar 2006 23:11:00 -0500
+Received: from pproxy.gmail.com ([64.233.166.179]:34767 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964873AbWCHB7P (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Mar 2006 20:59:15 -0500
+Received: by pproxy.gmail.com with SMTP id i75so1122719pye
+        for <linux-ide@vger.kernel.org>; Tue, 07 Mar 2006 17:59:14 -0800 (PST)
+In-Reply-To: <20060307140437.C18DB37B09@relay.netbox.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux <linux-ide@vger.kernel.org>
+To: kacer <kacerxy@seznam.cz>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Le agradecemos a Ud una compra con nuestra empresa.
+kacer wrote:
+>  Hi Tejun, have you received my email? Any suggestion? Are you working on
+> it?
+> 
 
-Su orden No 85693258A para Canon EOS 350 D Digital Camera a total de ˆ 729 fue aceptado.
+Hello, Kacer.
 
-Su carta bancaria se incluira en aquel importe.
+Yeap, I did received your message and forgot to reply. :-p Anyways, 
+currently there isn't any sil3112 errata applicable to your case. 
+Hardware problem (cabling, power fluctation, whatever) is also a 
+possibility.
 
-Le agradecemos su compra.
+The problem is that currently libata EH doesn't do whole lot of recovery 
+actions. libata is likely to fail to recover device after a transitional 
+transmission error. EH work is in progress and hopefully it will see the 
+light of day soon.
 
-Ud puede comprobar su orden en sus Parametros del Usuario
+One way to confirm that your machine is experiencing transitional 
+transmission errors is to test your drive under Windows. Put drives 
+under heavy IO in Windows and watch the transfer rate (Windows has 
+system monitoring utility which shows disk activities as graph. I don't 
+remember what it was though.) and if your machine suffers the same 
+problem under Windows driver, it will show occasional drops (transfer 
+rate stalls to zero for quite some seconds) when such problems occur.
 
-http://deagtea.com Apriete aqui para ver su orden
+Hope it helped.
 
-Muy atentamente,
-Canon Online Store
-
-
+-- 
+tejun
