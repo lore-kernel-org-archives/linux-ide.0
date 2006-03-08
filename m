@@ -1,45 +1,33 @@
-From: Dave Jones <davej@redhat.com>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Tue, 7 Mar 2006 22:18:34 -0500
-Message-ID: <20060308031829.GB5411@redhat.com>
-References: <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046013.7070503@rtr.ca> <4404BAD6.3060009@tmr.com> <440E4803.7070808@rtr.ca>
+Date: Tue, 07 Mar 2006 22:23:28 -0500
+Message-ID: <440E4E30.409@rtr.ca>
+References: <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046013.7070503@rtr.ca> <4404BAD6.3060009@tmr.com> <440E4803.7070808@rtr.ca> <20060308031829.GB5411@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:7100 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S932405AbWCHDTK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Mar 2006 22:19:10 -0500
-Content-Disposition: inline
-In-Reply-To: <440E4803.7070808@rtr.ca>
+Received: from rtr.ca ([64.26.128.89]:53135 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S932422AbWCHDXe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Mar 2006 22:23:34 -0500
+In-Reply-To: <20060308031829.GB5411@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Bill Davidsen <davidsen@tmr.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, axboe@suse.de, albertcc@tw.ibm.com
+To: Dave Jones <davej@redhat.com>, Mark Lord <liml@rtr.ca>, Bill Davidsen <davidsen@tmr.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, axboe@suse.de, albertcc@tw.ibm.com
 
-On Tue, Mar 07, 2006 at 09:57:07PM -0500, Mark Lord wrote:
- > Bill Davidsen wrote:
- > >
- > >Is there a version of that which will build on x86? I grabbed the 
- > >version offered at freshmeat, but it won't compile on any x86 distro or 
- > >gcc version to which I have access. RH8, RH9, FC1, FC3, FC4, ubuntu... 
- > >with or without using the suggested alternate header.
- > 
- > hdparm-6.5 is the current version now.  Both it, and 6.4,
- > build/install/run cleanly on Ubunutu-5.10, Debian-Sarge,
- > and SLES9-SP3.
- > 
- > You seem to be having trouble on only Redhat distros..
- > I guess they've done something unfriendly again.
- > 
- > Care to be more specific about what Redhat is doing?
+Dave Jones wrote:
+>
+> looks like our userspace includes aren't up to date with some of the kernel
+> changes, so currently they're lacking the ide_task_request_t and related
+> taskfile bits.
+> 
+> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=184349
 
-looks like our userspace includes aren't up to date with some of the kernel
-changes, so currently they're lacking the ide_task_request_t and related
-taskfile bits.
+Ahh.. Thanks, Dave.
 
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=184349
+hdparm-6.6 being released *now*, with that stuff #ifdef'd out when
+the necessary header structs are missing.
 
-		Dave
+It builds/runs for me, on RHEL4 at least.
 
--- 
-http://www.codemonkey.org.uk
+Cheers
