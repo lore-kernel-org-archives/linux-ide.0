@@ -1,61 +1,44 @@
 From: "Dan Williams" <dan.j.williams@gmail.com>
 Subject: Re: drivers/scsi/sata_vsc.c: inconsistent NULL checking
-Date: Thu, 9 Mar 2006 12:44:43 -0700
-Message-ID: <e9c3a7c20603091144sb078d92tcc232db66492e6c9@mail.gmail.com>
+Date: Thu, 9 Mar 2006 13:41:40 -0700
+Message-ID: <e9c3a7c20603091241y571e552p82c5c8091095c421@mail.gmail.com>
 References: <20060309110207.GA4006@stusta.de>
+	 <e9c3a7c20603091144sb078d92tcc232db66492e6c9@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_Part_161_11399007.1141933483309"
+	boundary="----=_Part_1182_2108023.1141936900460"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.195]:28811 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751367AbWCIToo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Mar 2006 14:44:44 -0500
-Received: by wproxy.gmail.com with SMTP id i12so721165wra
-        for <linux-ide@vger.kernel.org>; Thu, 09 Mar 2006 11:44:43 -0800 (PST)
-In-Reply-To: <20060309110207.GA4006@stusta.de>
+Received: from zproxy.gmail.com ([64.233.162.203]:44509 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751452AbWCIUll (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Mar 2006 15:41:41 -0500
+Received: by zproxy.gmail.com with SMTP id 13so536605nzp
+        for <linux-ide@vger.kernel.org>; Thu, 09 Mar 2006 12:41:40 -0800 (PST)
+In-Reply-To: <e9c3a7c20603091144sb078d92tcc232db66492e6c9@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Adrian Bunk <bunk@stusta.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-------=_Part_161_11399007.1141933483309
+------=_Part_1182_2108023.1141936900460
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
 
-On 3/9/06, Adrian Bunk <bunk@stusta.de> wrote:
-> The Coverity checker found this inconsistent NULL checking recently
-> introduced by the following commit:
 >
->   2ae5b30ff08cee422c7f6388a759f7
->   Author: Dan Williams <dan.j.williams@intel.com>
->   [PATCH] Necessary evil to get sata_vsc to initialize with Intel iq3124h=
- hba
->
->
-> In function vsc_sata_interrupt():
->
->         err_status =3D ap ? vsc_sata_scr_read(ap, SCR_ERROR) : 0;
->         vsc_sata_scr_write(ap, SCR_ERROR, err_status);
->
->
-> vsc_sata_scr_write() always dereferences ap
-> (since SCR_ERROR < SCR_CONTROL).
->
-> Checking for NULL in one line and unconditionally dereferencing the
-> variable in the next line can't be right.
+> The attached patch cleans up the code, and adds GD31244 to the driver
+> description in drivers/scsi/Kconfig.
 >
 
-The attached patch cleans up the code, and adds GD31244 to the driver
-description in drivers/scsi/Kconfig.
+Joe Perches suggested some coding style changes.  Here is version 2.
 
 Dan
 
-------=_Part_161_11399007.1141933483309
-Content-Type: text/x-patch; name=sata_vsc_clean_up.patch; charset=us-ascii
+------=_Part_1182_2108023.1141936900460
+Content-Type: text/x-patch; name=sata_vsc_clean_up-v2.patch;
+	charset=us-ascii
 Content-Transfer-Encoding: 7bit
-X-Attachment-Id: f_eklhq3ic
-Content-Disposition: attachment; filename="sata_vsc_clean_up.patch"
+X-Attachment-Id: f_ekljrf27
+Content-Disposition: attachment; filename="sata_vsc_clean_up-v2.patch"
 
 diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
 index 3c606cf..d01edc3 100644
@@ -75,7 +58,7 @@ index 3c606cf..d01edc3 100644
  	  If unsure, say N.
  
 diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
-index e484e8d..5b65fc7 100644
+index e484e8d..b4e0a46 100644
 --- a/drivers/scsi/sata_vsc.c
 +++ b/drivers/scsi/sata_vsc.c
 @@ -82,17 +82,20 @@
@@ -86,16 +69,16 @@ index e484e8d..5b65fc7 100644
 -#define VSC_SATA_INT_ERROR_P_OFFSET	4
 -#define VSC_SATA_INT_ERROR_T_OFFSET	5
 -#define VSC_SATA_INT_ERROR_M_OFFSET	1
-+#define VSC_SATA_INT_ERROR_CRC		(1 << 6)
-+#define VSC_SATA_INT_ERROR_T		(1 << 5)
-+#define VSC_SATA_INT_ERROR_P		(1 << 4)
-+#define VSC_SATA_INT_ERROR_R		(1 << 3)
-+#define VSC_SATA_INT_ERROR_E		(1 << 2)
-+#define VSC_SATA_INT_ERROR_M		(1 << 1)
-+#define VSC_SATA_INT_PHY_CHANGE	(1 << 0)
-+#define VSC_SATA_INT_ERROR (VSC_SATA_INT_ERROR_CRC  + VSC_SATA_INT_ERROR_T + \
-+			     VSC_SATA_INT_ERROR_P    + VSC_SATA_INT_ERROR_R + \
-+			     VSC_SATA_INT_ERROR_E    + VSC_SATA_INT_ERROR_M + \
++#define VSC_SATA_INT_ERROR_CRC		0x40
++#define VSC_SATA_INT_ERROR_T		0x20
++#define VSC_SATA_INT_ERROR_P		0x10
++#define VSC_SATA_INT_ERROR_R		0x8
++#define VSC_SATA_INT_ERROR_E		0x4
++#define VSC_SATA_INT_ERROR_M		0x2
++#define VSC_SATA_INT_PHY_CHANGE	0x1
++#define VSC_SATA_INT_ERROR (VSC_SATA_INT_ERROR_CRC  | VSC_SATA_INT_ERROR_T | \
++			     VSC_SATA_INT_ERROR_P    | VSC_SATA_INT_ERROR_R | \
++			     VSC_SATA_INT_ERROR_E    | VSC_SATA_INT_ERROR_M | \
 +			     VSC_SATA_INT_PHY_CHANGE)
 +
  #define is_vsc_sata_int_err(port_idx, int_status) \
@@ -155,5 +138,4 @@ index e484e8d..5b65fc7 100644
  		}
  	}
 
-
-------=_Part_161_11399007.1141933483309--
+------=_Part_1182_2108023.1141936900460--
