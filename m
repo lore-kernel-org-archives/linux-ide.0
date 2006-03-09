@@ -1,52 +1,43 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCHSET] implement and use port_task
-Date: Thu, 09 Mar 2006 16:39:50 +0800
-Message-ID: <440FE9D6.9040006@tw.ibm.com>
-References: <11415401073423-git-send-email-htejun@gmail.com> <440D2497.7050504@tw.ibm.com> <440D3465.1040203@pobox.com>
+Subject: [PATCH/RFC 0/5] libata-dev: integrate polling pio with irq-pio
+Date: Thu, 09 Mar 2006 16:41:47 +0800
+Message-ID: <440FEA4B.10500@tw.ibm.com>
 Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:29589 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750740AbWCIIkC
+Received: from e32.co.us.ibm.com ([32.97.110.150]:63120 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750786AbWCIIlq
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Mar 2006 03:40:02 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k298duBr014302
-	for <linux-ide@vger.kernel.org>; Thu, 9 Mar 2006 03:39:56 -0500
+	Thu, 9 Mar 2006 03:41:46 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e32.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k298feC5024877
+	for <linux-ide@vger.kernel.org>; Thu, 9 Mar 2006 03:41:40 -0500
 Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k298gkR7178706
-	for <linux-ide@vger.kernel.org>; Thu, 9 Mar 2006 01:42:46 -0700
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k298cuAE265758
+	for <linux-ide@vger.kernel.org>; Thu, 9 Mar 2006 01:38:56 -0700
 Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k298dtdE024499
-	for <linux-ide@vger.kernel.org>; Thu, 9 Mar 2006 01:39:55 -0700
-In-Reply-To: <440D3465.1040203@pobox.com>
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k298fd3n026427
+	for <linux-ide@vger.kernel.org>; Thu, 9 Mar 2006 01:41:40 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: albertl@mail.com, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-Jeff Garzik wrote:
-> 
-> 
-> Polling DMA support with nIEN=1 is theoretically invalid.  You are not
-> supposed to touch the ATA shadow register set until after receiving an
-> irq event.
-> 
-> On chipsets where nIEN=0 and the chip's IntrMask is also zero, its doable.
-> 
-> I'm satisfied with simply never doing polling DMA, and change our mind
-> only if a critical need arises.
-> 
-> 
+This patch set integrates polling pio with irq-pio.
 
-Understand. After checking the code, polling DMA looks bad idea.
-Thanks for the advice.
+Changes:
+1/5: Move out the HSM code from ata_host_intr() to the new ata_hsm_move() function.
+2/5: Minor fix for ata_hsm_move() to work with ata_host_intr()
+3/5: Let ata_hsm_move() work with both irq-pio and polling pio
+4/5: Convert ata_pio_task() to use the new ata_hsm_move()
+5/5: Cleanup unused enums/functions.
 
-BTW, Tejun's proposal of pseudo periodic interrupts reminds me
-of some patches to integrate the polling pio with irq-pio.
-Will submit the patches for your review later.
+Patch against irq-pio branch (c2956a3b0d1c17b38da369811a6ce93eb7a01a04). 
+Minimally tested ok on x86. 
+
+For your review, thanks,
 
 Albert
 
