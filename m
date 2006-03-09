@@ -1,47 +1,159 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: drivers/scsi/sata_vsc.c: inconsistent NULL checking
-Date: Thu, 9 Mar 2006 12:02:07 +0100
-Message-ID: <20060309110207.GA4006@stusta.de>
+From: "Dan Williams" <dan.j.williams@gmail.com>
+Subject: Re: drivers/scsi/sata_vsc.c: inconsistent NULL checking
+Date: Thu, 9 Mar 2006 12:44:43 -0700
+Message-ID: <e9c3a7c20603091144sb078d92tcc232db66492e6c9@mail.gmail.com>
+References: <20060309110207.GA4006@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----=_Part_161_11399007.1141933483309"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:51474 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1751813AbWCILCI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Mar 2006 06:02:08 -0500
-Content-Disposition: inline
+Received: from wproxy.gmail.com ([64.233.184.195]:28811 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751367AbWCIToo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Mar 2006 14:44:44 -0500
+Received: by wproxy.gmail.com with SMTP id i12so721165wra
+        for <linux-ide@vger.kernel.org>; Thu, 09 Mar 2006 11:44:43 -0800 (PST)
+In-Reply-To: <20060309110207.GA4006@stusta.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Dan Williams <dan.j.williams@intel.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>
 
-The Coverity checker found this inconsistent NULL checking recently 
-introduced by the following commit:
+------=_Part_161_11399007.1141933483309
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-  2ae5b30ff08cee422c7f6388a759f7
-  Author: Dan Williams <dan.j.williams@intel.com>
-  [PATCH] Necessary evil to get sata_vsc to initialize with Intel iq3124h hba
+On 3/9/06, Adrian Bunk <bunk@stusta.de> wrote:
+> The Coverity checker found this inconsistent NULL checking recently
+> introduced by the following commit:
+>
+>   2ae5b30ff08cee422c7f6388a759f7
+>   Author: Dan Williams <dan.j.williams@intel.com>
+>   [PATCH] Necessary evil to get sata_vsc to initialize with Intel iq3124h=
+ hba
+>
+>
+> In function vsc_sata_interrupt():
+>
+>         err_status =3D ap ? vsc_sata_scr_read(ap, SCR_ERROR) : 0;
+>         vsc_sata_scr_write(ap, SCR_ERROR, err_status);
+>
+>
+> vsc_sata_scr_write() always dereferences ap
+> (since SCR_ERROR < SCR_CONTROL).
+>
+> Checking for NULL in one line and unconditionally dereferencing the
+> variable in the next line can't be right.
+>
+
+The attached patch cleans up the code, and adds GD31244 to the driver
+description in drivers/scsi/Kconfig.
+
+Dan
+
+------=_Part_161_11399007.1141933483309
+Content-Type: text/x-patch; name=sata_vsc_clean_up.patch; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Attachment-Id: f_eklhq3ic
+Content-Disposition: attachment; filename="sata_vsc_clean_up.patch"
+
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 3c606cf..d01edc3 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -587,10 +587,10 @@ config SCSI_SATA_VIA
+ 	  If unsure, say N.
+ 
+ config SCSI_SATA_VITESSE
+-	tristate "VITESSE VSC-7174 SATA support"
++	tristate "VITESSE VSC-7174 / INTEL 31244 SATA support"
+ 	depends on SCSI_SATA && PCI
+ 	help
+-	  This option enables support for Vitesse VSC7174 Serial ATA.
++	  This option enables support for Vitesse VSC7174 and Intel 31244 Serial ATA.
+ 
+ 	  If unsure, say N.
+ 
+diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
+index e484e8d..5b65fc7 100644
+--- a/drivers/scsi/sata_vsc.c
++++ b/drivers/scsi/sata_vsc.c
+@@ -82,17 +82,20 @@
+ #define VSC_SATA_PORT_OFFSET		0x200
+ 
+ /* Error interrupt status bit offsets */
+-#define VSC_SATA_INT_ERROR_E_OFFSET	2
+-#define VSC_SATA_INT_ERROR_P_OFFSET	4
+-#define VSC_SATA_INT_ERROR_T_OFFSET	5
+-#define VSC_SATA_INT_ERROR_M_OFFSET	1
++#define VSC_SATA_INT_ERROR_CRC		(1 << 6)
++#define VSC_SATA_INT_ERROR_T		(1 << 5)
++#define VSC_SATA_INT_ERROR_P		(1 << 4)
++#define VSC_SATA_INT_ERROR_R		(1 << 3)
++#define VSC_SATA_INT_ERROR_E		(1 << 2)
++#define VSC_SATA_INT_ERROR_M		(1 << 1)
++#define VSC_SATA_INT_PHY_CHANGE	(1 << 0)
++#define VSC_SATA_INT_ERROR (VSC_SATA_INT_ERROR_CRC  + VSC_SATA_INT_ERROR_T + \
++			     VSC_SATA_INT_ERROR_P    + VSC_SATA_INT_ERROR_R + \
++			     VSC_SATA_INT_ERROR_E    + VSC_SATA_INT_ERROR_M + \
++			     VSC_SATA_INT_PHY_CHANGE)
++
+ #define is_vsc_sata_int_err(port_idx, int_status) \
+-	 (int_status & ((1 << (VSC_SATA_INT_ERROR_E_OFFSET + (8 * port_idx))) | \
+-		        (1 << (VSC_SATA_INT_ERROR_P_OFFSET + (8 * port_idx))) | \
+-		        (1 << (VSC_SATA_INT_ERROR_T_OFFSET + (8 * port_idx))) | \
+-		        (1 << (VSC_SATA_INT_ERROR_M_OFFSET + (8 * port_idx)))   \
+-		       )\
+- 	 )
++	 (int_status & (VSC_SATA_INT_ERROR << (8 * port_idx)))
+ 
+ 
+ static u32 vsc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
+@@ -215,14 +218,6 @@ static irqreturn_t vsc_sata_interrupt (i
+ 
+ 			ap = host_set->ports[i];
+ 
+-			if (is_vsc_sata_int_err(i, int_status)) {
+-				u32 err_status;
+-				printk(KERN_DEBUG "%s: ignoring interrupt(s)\n", __FUNCTION__);
+-				err_status = ap ? vsc_sata_scr_read(ap, SCR_ERROR) : 0;
+-				vsc_sata_scr_write(ap, SCR_ERROR, err_status);
+-				handled++;
+-			}
+-
+ 			if (ap && !(ap->flags &
+ 				    (ATA_FLAG_PORT_DISABLED|ATA_FLAG_NOINTR))) {
+ 				struct ata_queued_cmd *qc;
+@@ -230,12 +225,26 @@ static irqreturn_t vsc_sata_interrupt (i
+ 				qc = ata_qc_from_tag(ap, ap->active_tag);
+ 				if (qc && (!(qc->tf.ctl & ATA_NIEN))) {
+ 					handled += ata_host_intr(ap, qc);
+-				} else {
+-					printk(KERN_DEBUG "%s: ignoring interrupt(s)\n", __FUNCTION__);
++				} else if (is_vsc_sata_int_err(i, int_status)) {
++					/*
++					 * On some chips (i.e. Intel 31244), an error 
++					 * interrupt will sneak in at initialization
++					 * time (phy state changes).  Clearing the SCR
++					 * error register is not required, but it prevents
++					 * the phy state change interrupts from recurring 
++					 * later.
++					 */
++					u32 err_status;
++					err_status = vsc_sata_scr_read(ap, SCR_ERROR);
++					printk(KERN_DEBUG "%s: clearing interrupt, "
++					       "status %x; sata err status %x\n",
++					       __FUNCTION__,
++					       int_status, err_status);
++					vsc_sata_scr_write(ap, SCR_ERROR, err_status);
++					/* Clear interrupt status */
+ 					ata_chk_status(ap);
+ 					handled++;
+ 				}
+-
+ 			}
+ 		}
+ 	}
 
 
-In function vsc_sata_interrupt():
-
-	err_status = ap ? vsc_sata_scr_read(ap, SCR_ERROR) : 0;
-	vsc_sata_scr_write(ap, SCR_ERROR, err_status);
-
-
-vsc_sata_scr_write() always dereferences ap
-(since SCR_ERROR < SCR_CONTROL).
-
-Checking for NULL in one line and unconditionally dereferencing the 
-variable in the next line can't be right.
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+------=_Part_161_11399007.1141933483309--
