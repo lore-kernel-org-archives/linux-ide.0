@@ -1,57 +1,139 @@
-From: "Yu, Luming" <luming.yu@intel.com>
-Subject: RE: 2.6.16-rc5: known regressions [TP 600X S3, vanilla DSDT]
-Date: Fri, 10 Mar 2006 14:46:29 +0800
-Message-ID: <3ACA40606221794F80A5670F0AF15F840B280323@pdsmsx403>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH/RFC 1/5] libata-dev: Move out the HSM code from ata_host_intr()
+Date: Fri, 10 Mar 2006 18:18:39 +0900
+Message-ID: <20060310091839.GA20207@htj.dyndns.org>
+References: <440FEA4B.10500@tw.ibm.com> <440FEB0C.5070106@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: linux-acpi-owner@vger.kernel.org
-To: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
-Cc: linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from pproxy.gmail.com ([64.233.166.179]:48653 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751083AbWCJJTV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Mar 2006 04:19:21 -0500
+Received: by pproxy.gmail.com with SMTP id d42so350521pyd
+        for <linux-ide@vger.kernel.org>; Fri, 10 Mar 2006 01:19:20 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <440FEB0C.5070106@tw.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: Jeff Garzik <jgarzik@pobox.com>, Doug Maxey <dwm@maxeymade.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-> exregion-0290 [36] ex_system_io_space_han: system_iO 1 (8 
->>> width) Address=00000000000000B2
->>>
->>> repeated endlessly.
->
->> I need calltrace for this 
->
->Looking at /proc/acpi/debug_level, I see several debugging choices
->that might give the calltrace you want.  Let me know which ones are
->essential (I'd turn all of them on; however, I found when trying to
->track this down earlier that the bug would slither away if I had too
->much debugging turned on):
+The patch contains three trailing whitespaces which are probably just
+carried over from the original code.  Please kill the whitespaces.
 
-What do you mean of "slither away" ? 
-bug go away?
+On Thu, Mar 09, 2006 at 04:45:00PM +0800, Albert Lee wrote:
+> Move out the irq-pio HSM code from ata_host_intr() to the new ata_hsm_move() function verbatim.
+> 
+> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+> 
+> ---
+> 
+> --- irq-pio/drivers/scsi/libata-core.c	2006-03-08 14:24:54.000000000 +0800
+> +++ 01_move_out/drivers/scsi/libata-core.c	2006-03-08 18:10:21.000000000 +0800
+> @@ -3628,6 +3628,111 @@ static void ata_pio_error(struct ata_por
+>  	ata_poll_qc_complete(qc);
+>  }
+>  
+> +static void ata_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
+> +			u8 status)
+> +{
+> +	/* check error */
+> +	if (unlikely(status & (ATA_ERR | ATA_DF))) {
+> +		qc->err_mask |= AC_ERR_DEV;
+> +		ap->hsm_task_state = HSM_ST_ERR;
+> +	}
+> +
+> +fsm_start:
+> +	switch (ap->hsm_task_state) {
+> +	case HSM_ST_FIRST:
+> +		/* Some pre-ATAPI-4 devices assert INTRQ 
 
->
->ACPI_LV_DISPATCH	       0x00000100 [ ]
->ACPI_LV_EXEC		       0x00000200 [ ]
->ACPI_LV_NAMES		       0x00000400 [ ]
->ACPI_LV_FUNCTIONS	       0x00200000 [ ]
->
->By the way, a long standing buglet for me is that 'cat
->/proc/acpi/debug_level' truncates the output to 1024 bytes.  So I have
->to do 'cat /proc/acpi/debug_level | cat' so that the first cat doesn't
->find that its stdout is a tty and try to reduce its buffer size from
->4096 (big enough) to 1024.  A patch is available at
-><http://bugzilla.kernel.org/show_bug.cgi?id=5076>
+Here.
 
-let's start from:
+> +		 * at this state when ready to receive CDB.
+> +		 */
+> +
+> +		/* check device status */
+> +		if (unlikely((status & (ATA_BUSY | ATA_DRQ)) != ATA_DRQ)) {
+> +			/* Wrong status. Let EH handle this */
+> +			qc->err_mask |= AC_ERR_HSM;
+> +			ap->hsm_task_state = HSM_ST_ERR;
+> +			goto fsm_start;
+> +		}
+> +
+> +		atapi_send_cdb(ap, qc);
+> +
+> +		break;
+> +
+> +	case HSM_ST:
+> +		/* complete command or read/write the data register */
+> +		if (qc->tf.protocol == ATA_PROT_ATAPI) {
+> +			/* ATAPI PIO protocol */
+> +			if ((status & ATA_DRQ) == 0) {
+> +				/* no more data to transfer */
+> +				ap->hsm_task_state = HSM_ST_LAST;
+> +				goto fsm_start;
+> +			}
+> +			
 
-echo -n 0x10 > /proc/acpi/debug_layer
-echo -n 0x10 > /proc/acpi/debug_level
+Here.
 
->
->> BTW, do you still think this is a regression?
->
->I'm 95% sure, because booting with ec_intr=0 avoids the problem, so
->the commit that made ec_intr=1 the default almost certainly also makes
->this bug appear.
+> +			atapi_pio_bytes(qc);
+> +
+> +			if (unlikely(ap->hsm_task_state == HSM_ST_ERR))
+> +				/* bad ireason reported by device */
+> +				goto fsm_start;
+> +
+> +		} else {
+> +			/* ATA PIO protocol */
+> +			if (unlikely((status & ATA_DRQ) == 0)) {
+> +				/* handle BSY=0, DRQ=0 as error */
+> +				qc->err_mask |= AC_ERR_HSM;
+> +				ap->hsm_task_state = HSM_ST_ERR;
+> +				goto fsm_start;
+> +			}
+> +
+> +			ata_pio_sectors(qc);
+> +
+> +			if (ap->hsm_task_state == HSM_ST_LAST &&
+> +			    (!(qc->tf.flags & ATA_TFLAG_WRITE))) {
+> +				/* all data read */
+> +				ata_altstatus(ap);
+> +				status = ata_chk_status(ap);
+> +				goto fsm_start;
+> +			}
+> +		}
+> +
+> +		ata_altstatus(ap); /* flush */
+> +		break;
+> +
+> +	case HSM_ST_LAST:
+> +		if (unlikely(status & ATA_DRQ)) {
+> +			/* handle DRQ=1 as error */
+> +			qc->err_mask |= AC_ERR_HSM;
+> +			ap->hsm_task_state = HSM_ST_ERR;
+> +			goto fsm_start;
+> +		}
+> +
+> +		/* no more data to transfer */
+> +		DPRINTK("ata%u: command complete, drv_stat 0x%x\n",
+> +			ap->id, status);
+> +
+> +		ap->hsm_task_state = HSM_ST_IDLE;
+> +
+> +		/* complete taskfile transaction */
+> +		qc->err_mask |= ac_err_mask(status);
+> +		ata_qc_complete(qc);
+> +		break;
+> +
+> +	case HSM_ST_ERR:
+> +		if (qc->tf.command != ATA_CMD_PACKET)
+> +			printk(KERN_ERR "ata%u: command error, drv_stat 0x%x host_stat 0x%x\n",
+> +			       ap->id, status, host_stat);
+> +
+> +		/* make sure qc->err_mask is available to 
 
-why NOT 100% sure? :-)
+And here.
+
+-- 
+tejun
