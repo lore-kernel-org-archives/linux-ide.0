@@ -1,76 +1,38 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sata_sil24: lengthen softreset timeout
-Date: Fri, 10 Mar 2006 16:25:27 +0900
-Message-ID: <20060310072527.GB7510@htj.dyndns.org>
-References: <20060308.143306.74747174.cyamauch@plamo.linet.gr.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
+Subject: Re: 2.6.16-rc5: known regressions [TP 600X S3, vanilla DSDT]
+Date: Fri, 10 Mar 2006 13:27:20 +0000
+Message-ID: <E1FHheK-0002iN-00@skye.ra.phy.cam.ac.uk>
+References: <3ACA40606221794F80A5670F0AF15F840B280323@pdsmsx403>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.198]:38667 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751565AbWCJKMn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Mar 2006 05:12:43 -0500
-Received: by zproxy.gmail.com with SMTP id 13so714003nzn
-        for <linux-ide@vger.kernel.org>; Fri, 10 Mar 2006 02:12:42 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <20060308.143306.74747174.cyamauch@plamo.linet.gr.jp>
+Received: from mraos.ra.phy.cam.ac.uk ([131.111.48.8]:1760 "EHLO
+	mraos.ra.phy.cam.ac.uk") by vger.kernel.org with ESMTP
+	id S1750806AbWCJN1X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Mar 2006 08:27:23 -0500
+In-Reply-To: Your message of "Fri, 10 Mar 2006 14:46:29 +0800."
+             <3ACA40606221794F80A5670F0AF15F840B280323@pdsmsx403>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chisato Yamauchi <cyamauch@plamo.linet.gr.jp>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: "Yu, Luming" <luming.yu@intel.com>
+Cc: linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>
 
-sil24 softreset timeout was > 100ms (100 loops with msleep(1)), which
-turned out to be too short for some devices (ASI ARAID99 2000).  This
-patch converts sil24 softreset waiting loop to use proper timeout
-condition and lengthen the timeout to 5 secs and check interval to
-100ms.  Chisato Yamauchi discovered the problem and supplied initial
-patch.
+> What do you mean of "slither away" ? 
+> bug go away?
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Chisato Yamauchi <cyamauch@plamo.linet.gr.jp>
+I can no longer trigger it, at least not with the usual procedure.  I
+doubt that it goes away (i.e. that it is solved), only that it
+slithers into hiding, like bugs that disappear when compiling a C
+program with -g but show up when compiling without -g.
 
----
+> echo -n 0x10 > /proc/acpi/debug_layer
+> echo -n 0x10 > /proc/acpi/debug_level
 
-Jeff, this patch is against the current #linus-git.  This doesn't
-really count as regression but I think this should go upstream ASAP.
-However, if that's not an option, this patch also applies to #upstream
-with some offsets.
+Oh, I always have more info turned on in my sleep.sh script
+(debug_layer = 0xFFFF3FFF to begin with, and the script sets
+debug_level to 0x1F).  I'll attach the slightly trimmed log file to
+the bugme report.  If it's too much information, let me know and I'll
+retest with just the above settings.
 
-Chisato, thanks a lot for spotting it and sending fix.  :-)
+-Sanjoy
 
- drivers/scsi/sata_sil24.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index 9231301..13cdd22 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -433,8 +433,8 @@ static int sil24_issue_SRST(struct ata_p
- 	struct sil24_port_priv *pp = ap->private_data;
- 	struct sil24_prb *prb = &pp->cmd_block[0].ata.prb;
- 	dma_addr_t paddr = pp->cmd_block_dma;
-+	unsigned long timeout = jiffies + 5 * HZ;
- 	u32 irq_enable, irq_stat;
--	int cnt;
- 
- 	/* temporarily turn off IRQs during SRST */
- 	irq_enable = readl(port + PORT_IRQ_ENABLE_SET);
-@@ -451,7 +451,7 @@ static int sil24_issue_SRST(struct ata_p
- 
- 	writel((u32)paddr, port + PORT_CMD_ACTIVATE);
- 
--	for (cnt = 0; cnt < 100; cnt++) {
-+	do {
- 		irq_stat = readl(port + PORT_IRQ_STAT);
- 		writel(irq_stat, port + PORT_IRQ_STAT);		/* clear irq */
- 
-@@ -459,8 +459,8 @@ static int sil24_issue_SRST(struct ata_p
- 		if (irq_stat & (PORT_IRQ_COMPLETE | PORT_IRQ_ERROR))
- 			break;
- 
--		msleep(1);
--	}
-+		msleep(100);
-+	} while (time_before(jiffies, timeout));
- 
- 	/* restore IRQs */
- 	writel(irq_enable, port + PORT_IRQ_ENABLE_SET);
+`Never underestimate the evil of which men of power are capable.'
+         --Bertrand Russell, _War Crimes in Vietnam_, chapter 1.
