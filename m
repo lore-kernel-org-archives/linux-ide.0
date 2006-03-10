@@ -1,89 +1,50 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 5/5] libata-dev: Add back irq-pio patches, etc.
-Date: Fri, 10 Mar 2006 23:55:59 +0800
-Message-ID: <4411A18F.8010009@tw.ibm.com>
-References: <44119BC9.8080502@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: gigabyte iRam not seen by linux
+Date: Sat, 11 Mar 2006 02:51:50 +0900
+Message-ID: <4411BCB6.5080108@gmail.com>
+References: <20060310013604.1acac722.pegasus@nerv.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:51154 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751676AbWCJP4F
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Mar 2006 10:56:05 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k2AFtrb1013998
-	for <linux-ide@vger.kernel.org>; Fri, 10 Mar 2006 10:55:53 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2AFwjQP165558
-	for <linux-ide@vger.kernel.org>; Fri, 10 Mar 2006 08:58:45 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2AFtqgq027287
-	for <linux-ide@vger.kernel.org>; Fri, 10 Mar 2006 08:55:53 -0700
-In-Reply-To: <44119BC9.8080502@tw.ibm.com>
+Received: from pproxy.gmail.com ([64.233.166.176]:19061 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751170AbWCJRvz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Mar 2006 12:51:55 -0500
+Received: by pproxy.gmail.com with SMTP id d42so428739pyd
+        for <linux-ide@vger.kernel.org>; Fri, 10 Mar 2006 09:51:54 -0800 (PST)
+In-Reply-To: <20060310013604.1acac722.pegasus@nerv.eu.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Doug Maxey <dwm@maxeymade.com>
+To: =?UTF-8?B?SnVyZSBQZcSNYXI=?= <pegasus@nerv.eu.org>
+Cc: linux-ide@vger.kernel.org
 
-Add back irq-pio patches, etc.
+Jure Pe=C4=8Dar wrote:
+> Hi all,
+>=20
+> I just got a gigabyte solid state disk on a test. However, it is not =
+seen by linux. The problem is described well here:
+> http://www.linuxquestions.org/questions/showthread.php?t=3D411600
+>=20
+> What can one do when there *is* something on the sata port but the dr=
+iver doesn't recognize it? It's not even in the /sys/block/ or /sys/bus=
+/scsi/ ...  If I don't have the device, I can't use sg utils to ask it =
+how it feels ...=20
+>=20
+> I'd really want to use this ssd under linux, but I don't know how to =
+debug the problem from here.
+>=20
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+Please set up either a vanialla kernel (preferably the latestet one,=20
+2.6.16-rc5) or, if you can use git, #upstream branch of libata-dev=20
+repository. Before compiling the kernel, change #undef ATA_DEBUG in=20
+include/linux/libata.h to #define ATA_DEBUG. You might also need to=20
+increase the size of printk buffer size (kernel hacking -> kernel log=20
+buffer size).
 
----
+After booting with such kernel, please post the result of dmesg.
 
-Changes:
-- add back irq-pio patches removed in patch 3/5.
-- ata_dev_revalidate() by Tejun
-- remove redundant ap->hsm_task_state = HSM_ST_IDLE in ata_qc_timeout().
+Thanks.
 
---- catchup3/drivers/scsi/libata-core.c	2006-03-10 18:04:35.000000000 +0800
-+++ catchup4/drivers/scsi/libata-core.c	2006-03-10 18:11:56.000000000 +0800
-@@ -1159,6 +1159,12 @@ static int ata_dev_configure(struct ata_
- 				       dev->cylinders, dev->heads, dev->sectors);
- 		}
- 
-+		if (dev->id[59] & 0x100) {
-+			dev->multi_count = dev->id[59] & 0xff;
-+			DPRINTK("ata%u: dev %u multi count %u\n",
-+				ap->id, device, dev->multi_count);
-+		}
-+
- 		dev->cdb_len = 16;
- 	}
- 
-@@ -1172,6 +1178,9 @@ static int ata_dev_configure(struct ata_
- 		}
- 		dev->cdb_len = (unsigned int) rc;
- 
-+		if (ata_id_cdb_intr(dev->id))
-+			dev->flags |= ATA_DFLAG_CDB_INTR;
-+
- 		/* print device info to dmesg */
- 		if (print_info)
- 			printk(KERN_INFO "ata%u: dev %u ATAPI, max %s\n",
-@@ -1618,6 +1627,12 @@ static void ata_dev_set_mode(struct ata_
- 	idx = ofs + dev->xfer_shift;
- 	WARN_ON(idx >= ARRAY_SIZE(xfer_mode_str));
- 
-+	if (ata_dev_revalidate(ap, dev, 0)) {
-+		printk(KERN_ERR "ata%u: failed to revalidate after set "
-+		       "xfermode, disabled\n", ap->id);
-+		ata_port_disable(ap);
-+	}
-+
- 	DPRINTK("idx=%d xfer_shift=%u, xfer_mode=0x%x, base=0x%x, offset=%d\n",
- 		idx, dev->xfer_shift, (int)dev->xfer_mode, (int)base, ofs);
- 
-@@ -3853,8 +3868,6 @@ static void ata_qc_timeout(struct ata_qu
- 		printk(KERN_ERR "ata%u: command 0x%x timeout, stat 0x%x host_stat 0x%x\n",
- 		       ap->id, qc->tf.command, drv_stat, host_stat);
- 
--		ap->hsm_task_state = HSM_ST_IDLE;
--
- 		/* complete taskfile transaction */
- 		qc->err_mask |= AC_ERR_TIMEOUT;
- 		break;
-
-
+--=20
+tejun
