@@ -1,54 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Random libata notes
-Date: Fri, 10 Mar 2006 23:33:47 +0900
-Message-ID: <44118E4B.9050401@gmail.com>
-References: <4409CF74.7030808@garzik.org> <44118B3D.9040103@gmail.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH 0/5] libata-dev: irq-pio minor fixes
+Date: Fri, 10 Mar 2006 23:31:21 +0800
+Message-ID: <44119BC9.8080502@tw.ibm.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.199]:57071 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751317AbWCJO4G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Mar 2006 09:56:06 -0500
-Received: by zproxy.gmail.com with SMTP id 14so771088nzn
-        for <linux-ide@vger.kernel.org>; Fri, 10 Mar 2006 06:56:06 -0800 (PST)
-In-Reply-To: <44118B3D.9040103@gmail.com>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:18341 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751383AbWCJPbv
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Mar 2006 10:31:51 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e33.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k2AFVLDV004826
+	for <linux-ide@vger.kernel.org>; Fri, 10 Mar 2006 10:31:21 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2AFSava209868
+	for <linux-ide@vger.kernel.org>; Fri, 10 Mar 2006 08:28:36 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2AFVKG0004081
+	for <linux-ide@vger.kernel.org>; Fri, 10 Mar 2006 08:31:21 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jens Axboe <axboe@suse.de>, Mark Lord <liml@rtr.ca>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: IDE Linux <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Doug Maxey <dwm@maxeymade.com>
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
-> 
->> These are small TODO bits that I didn't want to forget...  Patches 
->> welcome.
->>
->> 1) ATAPI edge case.  Due to adding the padding s/g entry, we must 
->> adjust sg_tablesize to include ' - 1' for each driver
-> 
-> 
-> Isn't this handled by ata_scsi_slave_config()? If the attached device is 
-> ATAPI, ata_scsi_slave_config() reduces max_hw_segments by 1. We'll need 
-> to increment it back when detaching the device though.
-> 
->>
->> 2) ata_scsi_slave_config() hardcodes a call to
->> blk_queue_max_phys_segments(, LIBATA_MAX_PRD), when the value passed
->> should not be so limited on nice hardware like AHCI.
+Minor fixes for irq-pio to catch up with upstream.
 
-And, AFAICS, we can increase max_phys_segments all we want. This limits 
-the number of segments before IOMMU mapping. The only part that's 
-affected is the driver (software) and I don't see any limitation in 
-libata PIO implementation that puts limitation on the number of sg 
-entries. Simply changing LIBATA_MAX_PRD to 65535 should do it.
+Changes:
+1/5: Add back missing dev->cdb_len = 16
+2/5: Make dev->id dynamically allocated
+3/5: Remove ata_dev_identify(), ata_dev_config() and ata_bus_probe().
+4/5: Add back ata_dev_configure(), ata_bus_probe(), ata_dev_same_device() and ata_dev_revalidate().
+5/5: Add back irq-pio patches, etc.
 
->>
->> 3) sata_mv: add back SCR_ERR clear?
->>         mv_scr_write(ap, SCR_ERROR, mv_scr_read(ap, SCR_ERROR));
->>
->> 4) sata_mv: set DMA mask
->>
+Patch against the irq-pio branch (c2956a3b0d1c17b38da369811a6ce93eb7a01a04). 
 
--- 
-tejun
+For your review, thanks,
+
+Albert
+
