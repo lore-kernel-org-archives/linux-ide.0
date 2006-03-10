@@ -1,13 +1,13 @@
 From: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
 Subject: Re: 2.6.16-rc5: known regressions [TP 600X S3, vanilla DSDT]
-Date: Fri, 10 Mar 2006 13:27:20 +0000
-Message-ID: <E1FHheK-0002iN-00@skye.ra.phy.cam.ac.uk>
+Date: Fri, 10 Mar 2006 13:36:40 +0000
+Message-ID: <E1FHhnM-0002kR-00@skye.ra.phy.cam.ac.uk>
 References: <3ACA40606221794F80A5670F0AF15F840B280323@pdsmsx403>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mraos.ra.phy.cam.ac.uk ([131.111.48.8]:1760 "EHLO
+Received: from mraos.ra.phy.cam.ac.uk ([131.111.48.8]:6625 "EHLO
 	mraos.ra.phy.cam.ac.uk") by vger.kernel.org with ESMTP
-	id S1750806AbWCJN1X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Mar 2006 08:27:23 -0500
+	id S1751017AbWCJNgn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Mar 2006 08:36:43 -0500
 In-Reply-To: Your message of "Fri, 10 Mar 2006 14:46:29 +0800."
              <3ACA40606221794F80A5670F0AF15F840B280323@pdsmsx403>
 Sender: linux-ide-owner@vger.kernel.org
@@ -15,22 +15,40 @@ List-Id: linux-ide@vger.kernel.org
 To: "Yu, Luming" <luming.yu@intel.com>
 Cc: linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>
 
-> What do you mean of "slither away" ? 
-> bug go away?
+Actually, there's no point only attaching it at bugzilla, since the
+relevant output is shorter than I thought:
 
-I can no longer trigger it, at least not with the usual procedure.  I
-doubt that it goes away (i.e. that it is solved), only that it
-slithers into hiding, like bugs that disappear when compiling a C
-program with -g but show up when compiling without -g.
+/proc/cmdline: auto BOOT_IMAGE=16-rc5 ro root=305 idebus=66 apm=off acpi=force pci=noacpi console=ttyS0,115200 console=tty0 acpi_sleep=s3_bios cpufreq.debug=7 acpi_debug=0xffffffff
 
-> echo -n 0x10 > /proc/acpi/debug_layer
-> echo -n 0x10 > /proc/acpi/debug_level
+where 16-rc5 is my LILO label for 2.6.16-rc5
 
-Oh, I always have more info turned on in my sleep.sh script
-(debug_layer = 0xFFFF3FFF to begin with, and the script sets
-debug_level to 0x1F).  I'll attach the slightly trimmed log file to
-the bugme report.  If it's too much information, let me know and I'll
-retest with just the above settings.
+The extract from the dmesgs:
+
+Stopping tasks: ========================================================|
+Execute Method: [\_SB_.LID0._PSW] (Node c1564808)
+exregion-0185 [35] ex_system_memory_space: system_memory 0 (32 width) Address=0000000023FDFF40
+ acpi_ec-0458 [37] ec_intr_read          : Read [02] from address [32]
+ acpi_ec-0508 [37] ec_intr_write         : Wrote [06] to address [32]
+Execute Method: [\_SB_.SLPB._PSW] (Node c1564708)
+Execute Method: [\_S3_] (Node c157a988)
+exregion-0185 [35] ex_system_memory_space: system_memory 0 (32 width) Address=0000000023FDFF40
+Execute Method: [\_PTS] (Node c157ab48)
+exregion-0185 [35] ex_system_memory_space: system_memory 0 (32 width) Address=0000000023FDFF40
+exregion-0185 [35] ex_system_memory_space: system_memory 0 (32 width) Address=0000000023FDFF40
+exregion-0185 [35] ex_system_memory_space: system_memory 0 (32 width) Address=0000000023FDFF40
+exregion-0185 [36] ex_system_memory_space: system_memory 0 (32 width) Address=0000000023FDFFC0
+exregion-0185 [36] ex_system_memory_space: system_memory 1 (32 width) Address=0000000023FDFFC0
+exregion-0185 [36] ex_system_memory_space: system_memory 0 (32 width) Address=0000000023FDFFC4
+exregion-0185 [36] ex_system_memory_space: system_memory 1 (32 width) Address=0000000023FDFFC4
+exregion-0185 [35] ex_system_memory_space: system_memory 0 (32 width) Address=0000000023FDFFC0
+exregion-0290 [36] ex_system_io_space_han: system_iO 1 (8 width) Address=00000000000000B2
+exregion-0185 [35] ex_system_memory_space: system_memory 0 (32 width) Address=0000000023FDFFC0
+exregion-0185 [36] ex_system_memory_space: system_memory 0 (32 width) Address=0000000023FDFFC0
+exregion-0185 [36] ex_system_memory_space: system_memory 1 (32 width) Address=0000000023FDFFC0
+exregion-0290 [36] ex_system_io_space_han: system_iO 1 (8 width) Address=00000000000000B2
+
+And then these above four lines (exregion-0185, -0185, -0185, -0290)
+repeat until I reboot.
 
 -Sanjoy
 
