@@ -1,64 +1,38 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH] ACPI support for IDE drives
-Date: Thu, 9 Mar 2006 15:33:23 -0800
-Message-ID: <20060309153323.6be4d1a4.rdunlap@xenotime.net>
-References: <440C1E07.4050303@suse.de>
+From: Jure =?UTF-8?Q?Pe=C4=8Dar?= <pegasus@nerv.eu.org>
+Subject: gigabyte iRam not seen by linux
+Date: Fri, 10 Mar 2006 01:36:04 +0100
+Message-ID: <20060310013604.1acac722.pegasus@nerv.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:59329 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1752008AbWCIXbf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Mar 2006 18:31:35 -0500
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Thu, 9 Mar 2006 15:31:34 -0800
-In-Reply-To: <440C1E07.4050303@suse.de>
+Received: from mail.pecar.org ([193.95.219.68]:30243 "EHLO mail.pecar.org")
+	by vger.kernel.org with ESMTP id S1752162AbWCJAfx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Mar 2006 19:35:53 -0500
+Received: from localhost.localdomain (unknown [192.168.0.13])
+	by mail.pecar.org (Postfix) with ESMTP id CF74816094
+	for <linux-ide@vger.kernel.org>; Fri, 10 Mar 2006 01:35:55 +0100 (CET)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: axboe@suse.de, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Mon, 06 Mar 2006 12:33:27 +0100 Hannes Reinecke wrote:
 
-> Hi all,
-> 
-> This patch is adds ACPI support for IDE drives. It is basically a rework
-> of Randy Dunlaps patch for libata. And as such it has exactly the same
-> issues (namely it breaks layering).
-> 
-> But, however, there are machines out there who do require ACPI support
-> even for standard IDE controllers. So we need to implement something
-> here; just telling the users "we're not doing it" is hardly gaining us
-> anything.
-> And I'm told that Ubuntu has something like this for ages; but of course
-> this one is far superior :-).
-> 
-> As usual, comments etc. welcome.
+Hi all,
 
-attachments are difficult to review/comment on.  anyway:
+I just got a gigabyte solid state disk on a test. However, it is not se=
+en by linux. The problem is described well here:
+http://www.linuxquestions.org/questions/showthread.php?t=3D411600
 
-For struct GTM_buffer, I changed __u32 to u32 on request from
-Jeff G. and Pavel (in the libata patch).
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-I don't understand this (latter) comment:
+What can one do when there *is* something on the sata port but the driv=
+er doesn't recognize it? It's not even in the /sys/block/ or /sys/bus/s=
+csi/ ...  If I don't have the device, I can't use sg utils to ask it ho=
+w it feels ...=20
 
-+ * ide_acpi_hwif_get_handle - Get ACPI object handle for a given hwif
-+ * @hwif: device to locate
-+ *
-+ * Retrieves the object handle of a given hwif. According to the ACPI
-+ * spec is the hwif a child of the PCI device.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Jeff and Pavel also disagreed with using sscanf(dev->bus_id)
-to get the PCI bus:dev.func, so I used their suggestions to modify
-the libata code to use the following:
+I'd really want to use this ssd under linux, but I don't know how to de=
+bug the problem from here.
 
-	struct pci_dev *pdev = to_pci_dev(dev);
 
-	bus = pdev->bus->number;
-	devnum = PCI_SLOT(pdev->devfn);
-	func = PCI_FUNC(pdev->devfn);
+--=20
 
-HTH and thanks for doing this.
----
-~Randy
-Please use an email client that implements proper (compliant) threading.
-(You know who you are.)
+Jure Pe=C4=8Dar
+http://jure.pecar.org/
