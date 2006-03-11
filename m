@@ -1,72 +1,60 @@
-From: Chisato Yamauchi <cyamauch@plamo.linet.gr.jp>
-Subject: Re: [PATCH] sata_sil24: lengthen softreset timeout
-Date: Sat, 11 Mar 2006 15:21:21 +0900 (JST)
-Message-ID: <20060311.152121.74747632.cyamauch@plamo.linet.gr.jp>
-References: <20060308.143306.74747174.cyamauch@plamo.linet.gr.jp>
-	<20060310072527.GB7510@htj.dyndns.org>
+From: Jure =?UTF-8?Q?Pe=C4=8Dar?= <pegasus@nerv.eu.org>
+Subject: Re: gigabyte iRam not seen by linux
+Date: Sat, 11 Mar 2006 09:20:13 +0100
+Message-ID: <20060311092013.487c1263.pegasus@nerv.eu.org>
+References: <20060310013604.1acac722.pegasus@nerv.eu.org>
+	<4411BCB6.5080108@gmail.com>
+	<44122FBD.9000909@tw.ibm.com>
+	<20060311034630.4c12cf83.pegasus@nerv.eu.org>
+	<20060311033143.GA12866@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from PPPbf446.hyogo-ip.dti.ne.jp ([210.170.214.196]:38274 "EHLO
-	plamo.linet.gr.jp") by vger.kernel.org with ESMTP id S1752342AbWCKGVh
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 11 Mar 2006 01:21:37 -0500
-In-Reply-To: <20060310072527.GB7510@htj.dyndns.org>
+Received: from mail.pecar.org ([193.95.219.68]:54711 "EHLO mail.pecar.org")
+	by vger.kernel.org with ESMTP id S1752373AbWCKIT4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Mar 2006 03:19:56 -0500
+In-Reply-To: <20060311033143.GA12866@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, albertl@mail.com
+
+On Sat, 11 Mar 2006 12:31:43 +0900
+Tejun Heo <htejun@gmail.com> wrote:
+
+> Can you apply the following patch and try again?
+
+OK, now we have this:
+
+SCSI subsystem initialized
+libata version 1.20 loaded.
+sata_nv 0000:00:0e.0: version 0.8
+ACPI: PCI Interrupt 0000:00:0e.0[A] -> Link [LSA0] -> GSI 23 (level, lo=
+w) -> IRQ 16
+PCI: Setting latency timer of device 0000:00:0e.0 to 64
+ata_device_add: ENTER
+ata_host_add: ENTER
+ata_port_start: prd alloc, virt ffff810076c7e000, dma 76c7e000
+ata1: SATA max UDMA/133 cmd 0xE800 ctl 0xE482 bmdma 0xE000 irq 16
+ata_host_add: ENTER
+ata_port_start: prd alloc, virt ffff810074551000, dma 74551000
+ata2: SATA max UDMA/133 cmd 0xE400 ctl 0xE082 bmdma 0xE008 irq 16
+ata_device_add: probe begin
+ata_device_add: ata1: probe begin
+ata1: SATA link up 1.5 Gbps (SStatus 113)
+ata_bus_reset: ENTER, host 1, port 0
+ata_bus_reset: devmask=3D0x1
+ata_bus_softreset: ata1: bus reset via SRST
+ata_dev_try_classify: dev=3D0, TF 00 00:01:01:00:00 a0 50
+ata_bus_reset: EXIT
+ata_dev_identify: ENTER/EXIT (host 1, dev 0) -- nodev
+ata_dev_identify: ENTER/EXIT (host 1, dev 1) -- nodev
+ata_device_add: ata1: probe end
+scsi0 : sata_nv
 
 
-  Hi, Tejun
+--=20
 
-  Your patch also works fine with my ARAID99!
-  Thanks!!
-
-> Jeff, this patch is against the current #linus-git.  This doesn't
-> really count as regression but I think this should go upstream ASAP.
-> However, if that's not an option, this patch also applies to #upstream
-> with some offsets.
-> 
-> Chisato, thanks a lot for spotting it and sending fix.  :-)
-> 
->  drivers/scsi/sata_sil24.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-> index 9231301..13cdd22 100644
-> --- a/drivers/scsi/sata_sil24.c
-> +++ b/drivers/scsi/sata_sil24.c
-> @@ -433,8 +433,8 @@ static int sil24_issue_SRST(struct ata_p
->  	struct sil24_port_priv *pp = ap->private_data;
->  	struct sil24_prb *prb = &pp->cmd_block[0].ata.prb;
->  	dma_addr_t paddr = pp->cmd_block_dma;
-> +	unsigned long timeout = jiffies + 5 * HZ;
->  	u32 irq_enable, irq_stat;
-> -	int cnt;
->  
->  	/* temporarily turn off IRQs during SRST */
->  	irq_enable = readl(port + PORT_IRQ_ENABLE_SET);
-> @@ -451,7 +451,7 @@ static int sil24_issue_SRST(struct ata_p
->  
->  	writel((u32)paddr, port + PORT_CMD_ACTIVATE);
->  
-> -	for (cnt = 0; cnt < 100; cnt++) {
-> +	do {
->  		irq_stat = readl(port + PORT_IRQ_STAT);
->  		writel(irq_stat, port + PORT_IRQ_STAT);		/* clear irq */
->  
-> @@ -459,8 +459,8 @@ static int sil24_issue_SRST(struct ata_p
->  		if (irq_stat & (PORT_IRQ_COMPLETE | PORT_IRQ_ERROR))
->  			break;
->  
-> -		msleep(1);
-> -	}
-> +		msleep(100);
-> +	} while (time_before(jiffies, timeout));
->  
->  	/* restore IRQs */
->  	writel(irq_enable, port + PORT_IRQ_ENABLE_SET);
-
-==  Chisato Yamauchi  =================================
+Jure Pe=C4=8Dar
+http://jure.pecar.org/
