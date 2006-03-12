@@ -1,29 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: fix class handling in ata_bus_probe()
-Date: Sun, 12 Mar 2006 12:50:30 -0500
-Message-ID: <44145F66.7050104@garzik.org>
-References: <44144172.9040304@garzik.org> <20060312165701.GA9051@htj.dyndns.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: IDE CDROM - No DMA
+Date: Sun, 12 Mar 2006 18:03:00 +0000
+Message-ID: <1142186580.20056.5.camel@localhost.localdomain>
+References: <200603101842.09251.kernel-stuff@comcast.net>
+	 <200603120128.44469.kernel-stuff@comcast.net> <441443F5.1060603@bootc.net>
+	 <200603121209.33218.kernel-stuff@comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:28362 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751300AbWCLRud (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Mar 2006 12:50:33 -0500
-In-Reply-To: <20060312165701.GA9051@htj.dyndns.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:27367 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751430AbWCLR5I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 12 Mar 2006 12:57:08 -0500
+In-Reply-To: <200603121209.33218.kernel-stuff@comcast.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Parag Warudkar <kernel-stuff@comcast.net>
+Cc: Chris Boot <bootc@bootc.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> ata_bus_probe() didn't set classes[] properly for port disabled case
-> of ->phy_reset() compatibility path.  This patch moves classes[]
-> initialization and normalization out of ->probe_reset block such that
-> it applies to both ->probe_reset and ->phy_reset paths.
+On Sul, 2006-03-12 at 12:09 -0500, Parag Warudkar wrote:
+> Some one pointed out offline -
+> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=163418 
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Looks like it's a SATA combined mode problem as outlined in the above bug 
+> report. NONE of the options provided in the bug report worked for me though -
+> :(
 
-applied
-
+If you feel adventurous then apply the libata PATA patch from my web
+page and compile a kernel with CONFIG_IDE=n and most stuff should work.
+Folks are still reporting some problems with libata and CD burning
+however.
 
