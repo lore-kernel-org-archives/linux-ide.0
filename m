@@ -1,42 +1,37 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH/RFC 0/5] libata-dev: integrate polling pio with irq-pio
-Date: Sat, 11 Mar 2006 19:37:53 -0500
-Message-ID: <44136D61.4020007@pobox.com>
-References: <440FEA4B.10500@tw.ibm.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Random libata notes
+Date: Sat, 11 Mar 2006 20:35:08 -0500
+Message-ID: <44137ACC.4020508@garzik.org>
+References: <4409CF74.7030808@garzik.org> <44118B3D.9040103@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:8376 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751377AbWCLAh6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Mar 2006 19:37:58 -0500
-In-Reply-To: <440FEA4B.10500@tw.ibm.com>
+Received: from mail.dvmed.net ([216.237.124.58]:43449 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751417AbWCLBfK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Mar 2006 20:35:10 -0500
+In-Reply-To: <44118B3D.9040103@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Tejun Heo <htejun@gmail.com>, Doug Maxey <dwm@maxeymade.com>, Linux IDE <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jens Axboe <axboe@suse.de>, Mark Lord <liml@rtr.ca>
 
-Albert Lee wrote:
-> This patch set integrates polling pio with irq-pio.
+Tejun Heo wrote:
+> Jeff Garzik wrote:
 > 
-> Changes:
-> 1/5: Move out the HSM code from ata_host_intr() to the new ata_hsm_move() function.
-> 2/5: Minor fix for ata_hsm_move() to work with ata_host_intr()
-> 3/5: Let ata_hsm_move() work with both irq-pio and polling pio
-> 4/5: Convert ata_pio_task() to use the new ata_hsm_move()
-> 5/5: Cleanup unused enums/functions.
+>> These are small TODO bits that I didn't want to forget...  Patches 
+>> welcome.
+>>
+>> 1) ATAPI edge case.  Due to adding the padding s/g entry, we must 
+>> adjust sg_tablesize to include ' - 1' for each driver
 > 
-> Patch against irq-pio branch (c2956a3b0d1c17b38da369811a6ce93eb7a01a04). 
-> Minimally tested ok on x86. 
+> 
+> Isn't this handled by ata_scsi_slave_config()? If the attached device is 
+> ATAPI, ata_scsi_slave_config() reduces max_hw_segments by 1. We'll need 
+> to increment it back when detaching the device though.
 
-What can I say?  :)
-
-I agree with this patchset, once its revised with (a) Tejun's comments 
-and (b) the newly merged-with-upstream irq-pio branch.
-
-So I'll wait for your resend of any irq-pio patches.
+Yes, you're right.
 
 	Jeff
-
 
 
