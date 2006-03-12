@@ -1,44 +1,40 @@
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Subject: nvidia status
-Date: Sun, 12 Mar 2006 12:52:44 +0200
-Message-ID: <5d96567b0603120252t2c007d4ay2af62012dec81ab5@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCHSET] libata: implement per-dev xfer masks
+Date: Sun, 12 Mar 2006 13:37:26 +0000
+Message-ID: <1142170646.18565.3.camel@localhost.localdomain>
+References: <11421469551948-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.201]:36850 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932115AbWCLKwp convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 12 Mar 2006 05:52:45 -0500
-Received: by wproxy.gmail.com with SMTP id i5so1141385wra
-        for <linux-ide@vger.kernel.org>; Sun, 12 Mar 2006 02:52:45 -0800 (PST)
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51646 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1750863AbWCLNcP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 12 Mar 2006 08:32:15 -0500
+In-Reply-To: <11421469551948-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-I know Nvidia chipset for sata is well,,,"somewhat problematic".
-but why do i fail to write to the disks , while reading is OK.
-i keep on getting write errors.
-I am using AMD Opetron 248 , my motheboard is SuperMicro
-H8DCE.
+On Sul, 2006-03-12 at 16:02 +0900, Tejun Heo wrote:
+> I marked with comment where the mode filtering for low level drivers
+> should be done but I'm not sure how the interface should look like.
 
-anyone ?
-....
-ATA: abnormal status 0xD0 on port 0xB407
-ATA: abnormal status 0xD0 on port 0xB407
-ata3: command 0x35 timeout, stat 0xd0 host_stat 0x21
-ata3: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata3: status=0xd0 { Busy }
-sd 2:0:0:0: SCSI error: return code = 0x8000002
-sda: Current: sense key=0xb
-    ASC=0x47 ASCQ=0x0
-end_request: I/O error, dev sda, sector 328
-Buffer I/O error on device sda, logical block 41
-lost page write due to I/O error on sda
-ATA: abnormal status 0xD0 on port 0xB407
-ATA: abnormal status 0xD0 on port 0xB407
-ATA: abnormal status 0xD0 on port 0xB407
-....
---
-Raz
+Currently the libata pata patch code calls a filter function if present
+which returns an updated bitmap for the mode type. I did that because we
+need to combine the cable, bridge, core and chip specific rules neatly
+and not have one forcing a mode the other cannot do.
+
+> ->pre_set_mode(ap) is okay but then the LLDD should iterate over all
+> devices.  Maybe ->pre_set_mode(ap, dev) or ->filter_xfer_mask(ap, dev)?
+
+Providing
+
+1.	The proposed speeds are set for both devices on the cable before the
+call.
+2.	We reselect the speed of both devices on changedown or hotplug
+
+then we should be just fine.
+
+
