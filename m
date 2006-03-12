@@ -1,33 +1,29 @@
-From: Parag Warudkar <kernel-stuff@comcast.net>
-Subject: Re: IDE CDROM - No DMA
-Date: Sun, 12 Mar 2006 12:09:33 -0500
-Message-ID: <200603121209.33218.kernel-stuff@comcast.net>
-References: <200603101842.09251.kernel-stuff@comcast.net> <200603120128.44469.kernel-stuff@comcast.net> <441443F5.1060603@bootc.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: fix class handling in ata_bus_probe()
+Date: Sun, 12 Mar 2006 12:50:30 -0500
+Message-ID: <44145F66.7050104@garzik.org>
+References: <44144172.9040304@garzik.org> <20060312165701.GA9051@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751592AbWCLRJe@vger.kernel.org>
-In-Reply-To: <441443F5.1060603@bootc.net>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Chris Boot <bootc@bootc.net>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:28362 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751300AbWCLRud (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Mar 2006 12:50:33 -0500
+In-Reply-To: <20060312165701.GA9051@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Sunday 12 March 2006 10:53, Chris Boot wrote:
->
-> You're using the generic ATA driver, not the one specific for your chipset,
-> thus it's unlikely you'll get DMA on it at all. Judging by the fact you're
-> using ata_piix for your SATA hard disk, try using the piix ATA driver for
-> your on-board IDE. I assume you built your own kernel and forgot to enable
-> this driver.
->
-Some one pointed out offline -
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=163418 
+Tejun Heo wrote:
+> ata_bus_probe() didn't set classes[] properly for port disabled case
+> of ->phy_reset() compatibility path.  This patch moves classes[]
+> initialization and normalization out of ->probe_reset block such that
+> it applies to both ->probe_reset and ->phy_reset paths.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Looks like it's a SATA combined mode problem as outlined in the above bug 
-report. NONE of the options provided in the bug report worked for me though -
-:(
+applied
 
-Parag
+
