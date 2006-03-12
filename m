@@ -1,29 +1,28 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/6] libata: improve xfer mask constants and update ata_mode_string()
-Date: Sat, 11 Mar 2006 19:03:58 -0500
-Message-ID: <4413656E.1040008@pobox.com>
-References: <11415871161551-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH] ahci: fix NULL pointer dereference detected by Coverity
+Date: Sat, 11 Mar 2006 19:10:18 -0500
+Message-ID: <441366EA.1090403@pobox.com>
+References: <20060310193414.GT21864@stusta.de> <20060311034754.GA31198@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:62390 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751311AbWCLAEG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Mar 2006 19:04:06 -0500
-In-Reply-To: <11415871161551-git-send-email-htejun@gmail.com>
+Received: from mail.dvmed.net ([216.237.124.58]:27063 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751265AbWCLAKX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Mar 2006 19:10:23 -0500
+In-Reply-To: <20060311034754.GA31198@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: Adrian Bunk <bunk@stusta.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Tejun Heo wrote:
-> Add ATA_BITS_*, ATA_MASK_* macros and reorder xfer_mask fields such
-> that higher transfer mode is placed at higher order bit.  As thie
-> reordering breaks ata_mode_string(), this patch also rewrites
-> ata_mode_string().
+> Fix NULL pointer dereference detected by the Coverity checker.  Kill
+> dev -> pdev -> dev conversion while at it.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Adrian Bunk <bunk@stusta.de>
 
-applied 1-6, please send follow-up patch per comments on patch #2
+applied to #upstream-fixes
 
 
