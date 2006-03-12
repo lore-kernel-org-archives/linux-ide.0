@@ -1,76 +1,164 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: fix class handling in ata_bus_probe()
-Date: Mon, 13 Mar 2006 03:34:00 +0900
-Message-ID: <44146998.6070203@gmail.com>
-References: <44144172.9040304@garzik.org> <20060312165701.GA9051@htj.dyndns.org> <44146758.6090006@garzik.org>
+From: Paul Blazejowski <paulb@blazebox.homeip.net>
+Subject: Re: Linux v2.6.16-rc6
+Date: Sun, 12 Mar 2006 13:45:54 -0500
+Message-ID: <1142189154.21274.20.camel@blaze.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.201]:4703 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751582AbWCLSeQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Mar 2006 13:34:16 -0500
-Received: by xproxy.gmail.com with SMTP id i30so209489wxd
-        for <linux-ide@vger.kernel.org>; Sun, 12 Mar 2006 10:34:15 -0800 (PST)
-In-Reply-To: <44146758.6090006@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oKVyBeRSTI7cmmHIM8vM"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751174AbWCLSpk@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
-> 
->> ata_bus_probe() didn't set classes[] properly for port disabled case
->> of ->phy_reset() compatibility path.  This patch moves classes[]
->> initialization and normalization out of ->probe_reset block such that
->> it applies to both ->probe_reset and ->phy_reset paths.
->>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>
->> ---
->>
->> Jeff, the sata_nv case is similar bug as what Jiri reported, except
->> that this one is affecting ->phy_reset path.
->>
->> This patch should fix sata_nv.  For sata_mv, I have no idea at all.
-> 
-> 
-> 
-> Yep, that solves that bug.  I spotted another minor one:
-> 
->> libata version 1.20 loaded.
->> sata_nv 0000:00:07.0: version 0.8
->> ACPI: PCI Interrupt Link [LSA0] enabled at IRQ 23
->> GSI 18 sharing vector 0xC1 and IRQ 18
->> ACPI: PCI Interrupt 0000:00:07.0[A] -> Link [LSA0] -> GSI 23 (level, 
->> high) -> IRQ 193
->> PCI: Setting latency timer of device 0000:00:07.0 to 64
->> ata1: SATA max UDMA/133 cmd 0x28D0 ctl 0x28FA bmdma 0x28B0 irq 193
->> ata2: SATA max UDMA/133 cmd 0x28D8 ctl 0x28FE bmdma 0x28B8 irq 193
->> ata1: SATA link up 1.5 Gbps (SStatus 113)
->> ata1: dev 0 cfg 49:2f00 82:3469 83:7f61 84:4003 85:3469 86:3e41 
->> 87:4003 88:407f
->> ata1: dev 0 ATA-6, max UDMA/133, 488281250 sectors: LBA48
->> nv_sata: Primary device added
->> nv_sata: Primary device removed
->> nv_sata: Secondary device added
->> nv_sata: Secondary device removed
->> ata1: dev 0 cfg 49:2f00 82:3469 83:7f61 84:4003 85:3469 86:3e41 
->> 87:4003 88:407f
->> ata1: dev 0 configured for UDMA/133
-> 
-> 
-> The dev 0 id words are printed twice, but should not be.  Or, the second 
-> one should only be printed if something relevant changed.
-> 
 
-The duplicated messages are KERN_DEBUG messages which usually won't show 
-up on the console. Still, yeah, annonying. I'll send a patch which 
-changes the code such that the message isn't printed the second time 
-(during revalidation) tomorrow. I gotta sleep now.
+--=-oKVyBeRSTI7cmmHIM8vM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Good night.
+On recent kernel 2.6.15.6 (or any 2.6.15.x) and latest testing
+2.6.16-rc6 libata detects and sets wrong UDMA modes for one of the
+SATA-1 drives. This seems to be a bug.
 
--- 
-tejun
+My setup is as follows:
+
+ASUS A8N-SLI-Premium Nforce4 mainboard
+AMD Athlon X2 CPU running SMP
+GCC 3.3.6
+Slackware 10.2 Linux
+
+The drives are used in RAID1 array (dmraid), they are WDC-WD2000JD
+series purchased few months apart. Sata is compiled in the kernel as
+module sata_nv and functions properly, no errors or any other anomalies
+were noticed but the UDMA mode detection seem wrong on the second drive.
+
+Drive one reports ata3: dev 0 configured for UDMA/100 while drive two
+ata4: dev 0 configured for UDMA/133
+
+Below is the full snippet of libata detection from dmesg:
+
+libata version 1.20 loaded.
+sata_nv 0000:00:07.0: version 0.8
+ACPI: PCI Interrupt Link [APSI] enabled at IRQ 22
+ACPI: PCI Interrupt 0000:00:07.0[A] -> Link [APSI] -> GSI 22 (level,
+low) -> IRQ 20
+PCI: Setting latency timer of device 0000:00:07.0 to 64
+ata1: SATA max UDMA/133 cmd 0x9F0 ctl 0xBF2 bmdma 0xD800 irq 20
+ata2: SATA max UDMA/133 cmd 0x970 ctl 0xB72 bmdma 0xD808 irq 20
+ata1: no device found (phy stat 00000000)
+scsi1 : sata_nv
+ata2: no device found (phy stat 00000000)
+scsi2 : sata_nv
+ACPI: PCI Interrupt Link [APSJ] enabled at IRQ 21
+ACPI: PCI Interrupt 0000:00:08.0[A] -> Link [APSJ] -> GSI 21 (level,
+low) -> IRQ 21
+PCI: Setting latency timer of device 0000:00:08.0 to 64
+ata3: SATA max UDMA/133 cmd 0x9E0 ctl 0xBE2 bmdma 0xC400 irq 21
+ata4: SATA max UDMA/133 cmd 0x960 ctl 0xB62 bmdma 0xC408 irq 21
+eth0: link up.
+ieee1394: Host added: ID:BUS[0-00:1023]  GUID[00023c0091065c55]
+ata3: dev 0 cfg 49:2f00 82:306b 83:7e01 84:4003 85:3068 86:3c01 87:4003
+88:203f
+ata3: dev 0 ATA-6, max UDMA/100, 390721968 sectors: LBA48
+nv_sata: Primary device added
+nv_sata: Primary device removed
+nv_sata: Secondary device added
+nv_sata: Secondary device removed
+ata3: dev 0 configured for UDMA/100
+scsi3 : sata_nv
+ieee1394: Host added: ID:BUS[1-00:1023]  GUID[0011d800004f6359]
+ata4: dev 0 cfg 49:2f00 82:346b 83:7f61 84:4003 85:3468 86:3c41 87:4003
+88:407f
+ata4: dev 0 ATA-6, max UDMA/133, 390721968 sectors: LBA48
+nv_sata: Primary device added
+nv_sata: Primary device removed
+nv_sata: Secondary device added
+nv_sata: Secondary device removed
+ata4: dev 0 configured for UDMA/133
+scsi4 : sata_nv
+  Vendor: ATA       Model: WDC WD2000JD-60K  Rev: 08.0
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
+SCSI device sdb: drive cache: write back
+SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
+SCSI device sdb: drive cache: write back
+ sdb:<4>nv_sata: Primary device added
+nv_sata: Primary device removed
+nv_sata: Secondary device added
+nv_sata: Secondary device removed
+ sdb1 sdb2 sdb3 sdb4
+sd 3:0:0:0: Attached scsi disk sdb
+  Vendor: ATA       Model: WDC WD2000JD-00H  Rev: 08.0
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdc: 390721968 512-byte hdwr sectors (200050 MB)
+SCSI device sdc: drive cache: write back
+SCSI device sdc: 390721968 512-byte hdwr sectors (200050 MB)
+SCSI device sdc: drive cache: write back
+ sdc:<4>nv_sata: Primary device added
+nv_sata: Primary device removed
+nv_sata: Secondary device added
+nv_sata: Secondary device removed
+ sdc1 sdc2 sdc3 sdc4
+sd 4:0:0:0: Attached scsi disk sdc
+
+lspci -vvv=20
+
+00:07.0 RAID bus controller: nVidia Corporation CK804 Serial ATA
+Controller (rev f3) (prog-if 85)
+        Subsystem: ASUSTeK Computer Inc.: Unknown device 815a
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR- FastB2B-
+        Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=3Dfast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR-
+        Latency: 0 (750ns min, 250ns max)
+        Interrupt: pin A routed to IRQ 20
+        Region 0: I/O ports at 09f0 [size=3D8]
+        Region 1: I/O ports at 0bf0 [size=3D4]
+        Region 2: I/O ports at 0970 [size=3D8]
+        Region 3: I/O ports at 0b70 [size=3D4]
+        Region 4: I/O ports at d800 [size=3D16]
+        Region 5: Memory at d2002000 (32-bit, non-prefetchable)
+[size=3D4K]
+        Capabilities: [44] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=3D0 DScale=3D0 PME-
+
+00:08.0 RAID bus controller: nVidia Corporation CK804 Serial ATA
+Controller (rev f3) (prog-if 85)
+        Subsystem: ASUSTeK Computer Inc. K8N4-E Mainboard
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR- FastB2B-
+        Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=3Dfast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR-
+        Latency: 0 (750ns min, 250ns max)
+        Interrupt: pin A routed to IRQ 21
+        Region 0: I/O ports at 09e0 [size=3D8]
+        Region 1: I/O ports at 0be0 [size=3D4]
+        Region 2: I/O ports at 0960 [size=3D8]
+        Region 3: I/O ports at 0b60 [size=3D4]
+        Region 4: I/O ports at c400 [size=3D16]
+        Region 5: Memory at d2001000 (32-bit, non-prefetchable)
+[size=3D4K]
+        Capabilities: [44] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=3D0 DScale=3D0 PME-
+
+
+Cheers!
+
+Paul B.
+
+--=-oKVyBeRSTI7cmmHIM8vM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2.2 (GNU/Linux)
+
+iD8DBQBEFGxiwu5Nmh3PsiMRAkb6AJ4n+W0OkoW+UeDTEtR9fYVsV4qeMgCeMc1N
+UylXyNCygkRBi+nDscX+0KY=
+=WjIV
+-----END PGP SIGNATURE-----
+
+--=-oKVyBeRSTI7cmmHIM8vM--
