@@ -1,186 +1,76 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH] libata: fix class handling in ata_bus_probe()
-Date: Sun, 12 Mar 2006 13:24:24 -0500
-Message-ID: <44146758.6090006@garzik.org>
-References: <44144172.9040304@garzik.org> <20060312165701.GA9051@htj.dyndns.org>
+Date: Mon, 13 Mar 2006 03:34:00 +0900
+Message-ID: <44146998.6070203@gmail.com>
+References: <44144172.9040304@garzik.org> <20060312165701.GA9051@htj.dyndns.org> <44146758.6090006@garzik.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040009050506020903050801"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:8907 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751682AbWCLSYa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Mar 2006 13:24:30 -0500
-In-Reply-To: <20060312165701.GA9051@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------040009050506020903050801
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from xproxy.gmail.com ([66.249.82.201]:4703 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751582AbWCLSeQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Mar 2006 13:34:16 -0500
+Received: by xproxy.gmail.com with SMTP id i30so209489wxd
+        for <linux-ide@vger.kernel.org>; Sun, 12 Mar 2006 10:34:15 -0800 (PST)
+In-Reply-To: <44146758.6090006@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> ata_bus_probe() didn't set classes[] properly for port disabled case
-> of ->phy_reset() compatibility path.  This patch moves classes[]
-> initialization and normalization out of ->probe_reset block such that
-> it applies to both ->probe_reset and ->phy_reset paths.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> ata_bus_probe() didn't set classes[] properly for port disabled case
+>> of ->phy_reset() compatibility path.  This patch moves classes[]
+>> initialization and normalization out of ->probe_reset block such that
+>> it applies to both ->probe_reset and ->phy_reset paths.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>
+>> ---
+>>
+>> Jeff, the sata_nv case is similar bug as what Jiri reported, except
+>> that this one is affecting ->phy_reset path.
+>>
+>> This patch should fix sata_nv.  For sata_mv, I have no idea at all.
 > 
-> ---
 > 
-> Jeff, the sata_nv case is similar bug as what Jiri reported, except
-> that this one is affecting ->phy_reset path.
 > 
-> This patch should fix sata_nv.  For sata_mv, I have no idea at all.
+> Yep, that solves that bug.  I spotted another minor one:
+> 
+>> libata version 1.20 loaded.
+>> sata_nv 0000:00:07.0: version 0.8
+>> ACPI: PCI Interrupt Link [LSA0] enabled at IRQ 23
+>> GSI 18 sharing vector 0xC1 and IRQ 18
+>> ACPI: PCI Interrupt 0000:00:07.0[A] -> Link [LSA0] -> GSI 23 (level, 
+>> high) -> IRQ 193
+>> PCI: Setting latency timer of device 0000:00:07.0 to 64
+>> ata1: SATA max UDMA/133 cmd 0x28D0 ctl 0x28FA bmdma 0x28B0 irq 193
+>> ata2: SATA max UDMA/133 cmd 0x28D8 ctl 0x28FE bmdma 0x28B8 irq 193
+>> ata1: SATA link up 1.5 Gbps (SStatus 113)
+>> ata1: dev 0 cfg 49:2f00 82:3469 83:7f61 84:4003 85:3469 86:3e41 
+>> 87:4003 88:407f
+>> ata1: dev 0 ATA-6, max UDMA/133, 488281250 sectors: LBA48
+>> nv_sata: Primary device added
+>> nv_sata: Primary device removed
+>> nv_sata: Secondary device added
+>> nv_sata: Secondary device removed
+>> ata1: dev 0 cfg 49:2f00 82:3469 83:7f61 84:4003 85:3469 86:3e41 
+>> 87:4003 88:407f
+>> ata1: dev 0 configured for UDMA/133
+> 
+> 
+> The dev 0 id words are printed twice, but should not be.  Or, the second 
+> one should only be printed if something relevant changed.
+> 
 
+The duplicated messages are KERN_DEBUG messages which usually won't show 
+up on the console. Still, yeah, annonying. I'll send a patch which 
+changes the code such that the message isn't printed the second time 
+(during revalidation) tomorrow. I gotta sleep now.
 
-Yep, that solves that bug.  I spotted another minor one:
+Good night.
 
-> libata version 1.20 loaded.
-> sata_nv 0000:00:07.0: version 0.8
-> ACPI: PCI Interrupt Link [LSA0] enabled at IRQ 23
-> GSI 18 sharing vector 0xC1 and IRQ 18
-> ACPI: PCI Interrupt 0000:00:07.0[A] -> Link [LSA0] -> GSI 23 (level, high) -> IRQ 193
-> PCI: Setting latency timer of device 0000:00:07.0 to 64
-> ata1: SATA max UDMA/133 cmd 0x28D0 ctl 0x28FA bmdma 0x28B0 irq 193
-> ata2: SATA max UDMA/133 cmd 0x28D8 ctl 0x28FE bmdma 0x28B8 irq 193
-> ata1: SATA link up 1.5 Gbps (SStatus 113)
-> ata1: dev 0 cfg 49:2f00 82:3469 83:7f61 84:4003 85:3469 86:3e41 87:4003 88:407f
-> ata1: dev 0 ATA-6, max UDMA/133, 488281250 sectors: LBA48
-> nv_sata: Primary device added
-> nv_sata: Primary device removed
-> nv_sata: Secondary device added
-> nv_sata: Secondary device removed
-> ata1: dev 0 cfg 49:2f00 82:3469 83:7f61 84:4003 85:3469 86:3e41 87:4003 88:407f
-> ata1: dev 0 configured for UDMA/133
-
-The dev 0 id words are printed twice, but should not be.  Or, the second 
-one should only be printed if something relevant changed.
-
-	Jeff
-
-
-
---------------040009050506020903050801
-Content-Type: application/x-bzip;
- name="dmesg.txt.bz2"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="dmesg.txt.bz2"
-
-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
---------------040009050506020903050801--
+-- 
+tejun
