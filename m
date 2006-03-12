@@ -1,164 +1,40 @@
-From: Paul Blazejowski <paulb@blazebox.homeip.net>
-Subject: Re: Linux v2.6.16-rc6
-Date: Sun, 12 Mar 2006 13:45:54 -0500
-Message-ID: <1142189154.21274.20.camel@blaze.homeip.net>
+From: Parag Warudkar <kernel-stuff@comcast.net>
+Subject: Re: IDE CDROM - No DMA
+Date: Sun, 12 Mar 2006 14:29:06 -0500
+Message-ID: <200603121429.06372.kernel-stuff@comcast.net>
+References: <200603101842.09251.kernel-stuff@comcast.net> <200603121209.33218.kernel-stuff@comcast.net> <1142186580.20056.5.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oKVyBeRSTI7cmmHIM8vM"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751174AbWCLSpk@vger.kernel.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751742AbWCLT3H@vger.kernel.org>
+In-Reply-To: <1142186580.20056.5.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Chris Boot <bootc@bootc.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
+On Sunday 12 March 2006 13:03, Alan Cox wrote:
 
---=-oKVyBeRSTI7cmmHIM8vM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> If you feel adventurous then apply the libata PATA patch from my web
+> page and compile a kernel with CONFIG_IDE=n and most stuff should work.
+> Folks are still reporting some problems with libata and CD burning
+> however.
 
-On recent kernel 2.6.15.6 (or any 2.6.15.x) and latest testing
-2.6.16-rc6 libata detects and sets wrong UDMA modes for one of the
-SATA-1 drives. This seems to be a bug.
+Ok, I tried the ide2 patch on your website against -rc5 - Disabled CONFIG_IDE 
+and kept rest of the configuration same as earlier. 
 
-My setup is as follows:
+Funny situation - I cannot figure what my root device is. Earlier without the 
+patch it was /dev/sda3 and now I try everything (hda3, hdb3, hdc3, hdd3, 
+sda3, sdb3...) but it panics - not able to mount rootfs. 
+I have -
+00:1f.2 IDE interface: Intel Corporation 82801GBM/GHM (ICH7 Family) Serial ATA 
+Storage Controller IDE (rev 01) (prog-if 80 [Master]) 
 
-ASUS A8N-SLI-Premium Nforce4 mainboard
-AMD Athlon X2 CPU running SMP
-GCC 3.3.6
-Slackware 10.2 Linux
+It prints some ata_piix message while booting  but I cannot read that since it 
+scrolls fast and post panic obviously I can't scroll up!
 
-The drives are used in RAID1 array (dmraid), they are WDC-WD2000JD
-series purchased few months apart. Sata is compiled in the kernel as
-module sata_nv and functions properly, no errors or any other anomalies
-were noticed but the UDMA mode detection seem wrong on the second drive.
-
-Drive one reports ata3: dev 0 configured for UDMA/100 while drive two
-ata4: dev 0 configured for UDMA/133
-
-Below is the full snippet of libata detection from dmesg:
-
-libata version 1.20 loaded.
-sata_nv 0000:00:07.0: version 0.8
-ACPI: PCI Interrupt Link [APSI] enabled at IRQ 22
-ACPI: PCI Interrupt 0000:00:07.0[A] -> Link [APSI] -> GSI 22 (level,
-low) -> IRQ 20
-PCI: Setting latency timer of device 0000:00:07.0 to 64
-ata1: SATA max UDMA/133 cmd 0x9F0 ctl 0xBF2 bmdma 0xD800 irq 20
-ata2: SATA max UDMA/133 cmd 0x970 ctl 0xB72 bmdma 0xD808 irq 20
-ata1: no device found (phy stat 00000000)
-scsi1 : sata_nv
-ata2: no device found (phy stat 00000000)
-scsi2 : sata_nv
-ACPI: PCI Interrupt Link [APSJ] enabled at IRQ 21
-ACPI: PCI Interrupt 0000:00:08.0[A] -> Link [APSJ] -> GSI 21 (level,
-low) -> IRQ 21
-PCI: Setting latency timer of device 0000:00:08.0 to 64
-ata3: SATA max UDMA/133 cmd 0x9E0 ctl 0xBE2 bmdma 0xC400 irq 21
-ata4: SATA max UDMA/133 cmd 0x960 ctl 0xB62 bmdma 0xC408 irq 21
-eth0: link up.
-ieee1394: Host added: ID:BUS[0-00:1023]  GUID[00023c0091065c55]
-ata3: dev 0 cfg 49:2f00 82:306b 83:7e01 84:4003 85:3068 86:3c01 87:4003
-88:203f
-ata3: dev 0 ATA-6, max UDMA/100, 390721968 sectors: LBA48
-nv_sata: Primary device added
-nv_sata: Primary device removed
-nv_sata: Secondary device added
-nv_sata: Secondary device removed
-ata3: dev 0 configured for UDMA/100
-scsi3 : sata_nv
-ieee1394: Host added: ID:BUS[1-00:1023]  GUID[0011d800004f6359]
-ata4: dev 0 cfg 49:2f00 82:346b 83:7f61 84:4003 85:3468 86:3c41 87:4003
-88:407f
-ata4: dev 0 ATA-6, max UDMA/133, 390721968 sectors: LBA48
-nv_sata: Primary device added
-nv_sata: Primary device removed
-nv_sata: Secondary device added
-nv_sata: Secondary device removed
-ata4: dev 0 configured for UDMA/133
-scsi4 : sata_nv
-  Vendor: ATA       Model: WDC WD2000JD-60K  Rev: 08.0
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
-SCSI device sdb: drive cache: write back
-SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
-SCSI device sdb: drive cache: write back
- sdb:<4>nv_sata: Primary device added
-nv_sata: Primary device removed
-nv_sata: Secondary device added
-nv_sata: Secondary device removed
- sdb1 sdb2 sdb3 sdb4
-sd 3:0:0:0: Attached scsi disk sdb
-  Vendor: ATA       Model: WDC WD2000JD-00H  Rev: 08.0
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sdc: 390721968 512-byte hdwr sectors (200050 MB)
-SCSI device sdc: drive cache: write back
-SCSI device sdc: 390721968 512-byte hdwr sectors (200050 MB)
-SCSI device sdc: drive cache: write back
- sdc:<4>nv_sata: Primary device added
-nv_sata: Primary device removed
-nv_sata: Secondary device added
-nv_sata: Secondary device removed
- sdc1 sdc2 sdc3 sdc4
-sd 4:0:0:0: Attached scsi disk sdc
-
-lspci -vvv=20
-
-00:07.0 RAID bus controller: nVidia Corporation CK804 Serial ATA
-Controller (rev f3) (prog-if 85)
-        Subsystem: ASUSTeK Computer Inc.: Unknown device 815a
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B-
-        Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=3Dfast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 0 (750ns min, 250ns max)
-        Interrupt: pin A routed to IRQ 20
-        Region 0: I/O ports at 09f0 [size=3D8]
-        Region 1: I/O ports at 0bf0 [size=3D4]
-        Region 2: I/O ports at 0970 [size=3D8]
-        Region 3: I/O ports at 0b70 [size=3D4]
-        Region 4: I/O ports at d800 [size=3D16]
-        Region 5: Memory at d2002000 (32-bit, non-prefetchable)
-[size=3D4K]
-        Capabilities: [44] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=3D0 DScale=3D0 PME-
-
-00:08.0 RAID bus controller: nVidia Corporation CK804 Serial ATA
-Controller (rev f3) (prog-if 85)
-        Subsystem: ASUSTeK Computer Inc. K8N4-E Mainboard
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B-
-        Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=3Dfast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 0 (750ns min, 250ns max)
-        Interrupt: pin A routed to IRQ 21
-        Region 0: I/O ports at 09e0 [size=3D8]
-        Region 1: I/O ports at 0be0 [size=3D4]
-        Region 2: I/O ports at 0960 [size=3D8]
-        Region 3: I/O ports at 0b60 [size=3D4]
-        Region 4: I/O ports at c400 [size=3D16]
-        Region 5: Memory at d2001000 (32-bit, non-prefetchable)
-[size=3D4K]
-        Capabilities: [44] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=3D0 DScale=3D0 PME-
-
-
-Cheers!
-
-Paul B.
-
---=-oKVyBeRSTI7cmmHIM8vM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2.2 (GNU/Linux)
-
-iD8DBQBEFGxiwu5Nmh3PsiMRAkb6AJ4n+W0OkoW+UeDTEtR9fYVsV4qeMgCeMc1N
-UylXyNCygkRBi+nDscX+0KY=
-=WjIV
------END PGP SIGNATURE-----
-
---=-oKVyBeRSTI7cmmHIM8vM--
+Any default for the only one HDD and CDROM that I can try?
+Thanks
+Parag
