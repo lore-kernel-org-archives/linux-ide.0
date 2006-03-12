@@ -1,43 +1,44 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: Linux v2.6.16-rc6
-Date: Sun, 12 Mar 2006 17:54:55 -0500
-Message-ID: <4414A6BF.3030604@garzik.org>
-References: <1142189154.21274.20.camel@blaze.homeip.net>
+Date: Sun, 12 Mar 2006 17:57:46 -0500
+Message-ID: <4414A76A.4090109@garzik.org>
+References: <1142189154.21274.20.camel@blaze.homeip.net>	 <1142199970.25358.173.camel@mindpipe> <1142202089.9934.13.camel@blaze.homeip.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:20946 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751349AbWCLWy6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Mar 2006 17:54:58 -0500
-In-Reply-To: <1142189154.21274.20.camel@blaze.homeip.net>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751833AbWCLW5u@vger.kernel.org>
+In-Reply-To: <1142202089.9934.13.camel@blaze.homeip.net>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Paul Blazejowski <paulb@blazebox.homeip.net>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: Lee Revell <rlrevell@joe-job.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 Paul Blazejowski wrote:
-> sata_nv 0000:00:07.0: version 0.8
+> sata_sil 0000:05:0a.0: Applying R_ERR on DMA activate FIS errata fix
 
-sata_nv
+sata_sil
 
-> ata3: SATA max UDMA/133 cmd 0x9E0 ctl 0xBE2 bmdma 0xC400 irq 21
-> ata4: SATA max UDMA/133 cmd 0x960 ctl 0xB62 bmdma 0xC408 irq 21
+> ata5: SATA max UDMA/100 cmd 0xF9402080 ctl 0xF940208A bmdma 0xF9402000
+> irq 23
+> ata6: SATA max UDMA/100 cmd 0xF94020C0 ctl 0xF94020CA bmdma 0xF9402008
+> irq 23
+> ata7: SATA max UDMA/100 cmd 0xF9402280 ctl 0xF940228A bmdma 0xF9402200
+> irq 23
+> ata8: SATA max UDMA/100 cmd 0xF94022C0 ctl 0xF94022CA bmdma 0xF9402208
+> irq 23
 
-host max udma6
+host max udma5
 
-> ata3: dev 0 ATA-6, max UDMA/100, 390721968 sectors: LBA48
-> ata3: dev 0 configured for UDMA/100
+> ata5: dev 0 ATA-6, max UDMA/100, 390721968 sectors: LBA48
+> ata5: dev 0 configured for UDMA/100
 
-dev max udma5, configured for max speed
+dev max udma5, configured for udma5
 
-> ata4: dev 0 ATA-6, max UDMA/133, 390721968 sectors: LBA48
-> ata4: dev 0 configured for UDMA/133
+> ata6: dev 0 ATA-6, max UDMA/133, 390721968 sectors: LBA48
+> ata6: dev 0 configured for UDMA/100
 
-dev max udma6, configured for max speed
+dev max udma6, configured for host maximum udma5
 
-Everything is correct.
+Everything looks correct.
 
 	Jeff
-
-
