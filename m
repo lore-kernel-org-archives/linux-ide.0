@@ -1,57 +1,48 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] ahci: enable prefetching
-Date: Sun, 12 Mar 2006 11:30:03 +0900
-Message-ID: <20060312023003.GB29870@htj.dyndns.org>
-References: <20060304173505.GA28643@havoc.gtf.org> <20060310043717.GA7510@htj.dyndns.org> <44136C13.4020002@garzik.org>
+Subject: [PATCH] libata: check Word 88 validity in ata_id_xfer_mask()
+Date: Sun, 12 Mar 2006 12:34:35 +0900
+Message-ID: <20060312033435.GC29870@htj.dyndns.org>
+References: <11415871161635-git-send-email-htejun@gmail.com> <441364C1.1000007@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.177]:27264 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750868AbWCLCaJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Mar 2006 21:30:09 -0500
-Received: by pproxy.gmail.com with SMTP id d42so656667pyd
-        for <linux-ide@vger.kernel.org>; Sat, 11 Mar 2006 18:30:08 -0800 (PST)
+Received: from pproxy.gmail.com ([64.233.166.176]:55983 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750868AbWCLDel (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Mar 2006 22:34:41 -0500
+Received: by pproxy.gmail.com with SMTP id d42so662399pyd
+        for <linux-ide@vger.kernel.org>; Sat, 11 Mar 2006 19:34:40 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <44136C13.4020002@garzik.org>
+In-Reply-To: <441364C1.1000007@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-Enable prefetching.  This hints AHCI controller that it can prefetch
-PRT entries and CDB (for PACKET commands).  This is a hint.  AHCI
-controller is free to ignore it or prefetch regardless of this bit.
-
-Note that prefetching bit should be turned off for NCQ commands or
-FIS-based switching PM support.
+Check bit 2 of Word 53 for Word 88 validity before using Word 88 to
+determine UDMA mask.  Note that the original xfer mask implementation
+using ata_get_mode_mask() didn't consider bit 2 of Word 53.  This
+patch introduces different (correct) behavior.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
-And this is the second version.
+ libata-core.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
- ahci.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 00dfdef..454a393 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -66,6 +66,7 @@ enum {
- 	AHCI_IRQ_ON_SG		= (1 << 31),
- 	AHCI_CMD_ATAPI		= (1 << 5),
- 	AHCI_CMD_WRITE		= (1 << 6),
-+	AHCI_CMD_PREFETCH	= (1 << 7),
- 	AHCI_CMD_RESET		= (1 << 8),
- 	AHCI_CMD_CLR_BUSY	= (1 << 10),
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 42d43b5..e2529e9 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -819,7 +819,10 @@ static unsigned int ata_id_xfermask(cons
+ 	}
  
-@@ -627,7 +628,7 @@ static void ahci_qc_prep(struct ata_queu
- 	/*
- 	 * Fill in command slot information.
- 	 */
--	opts = cmd_fis_len | n_elem << 16;
-+	opts = AHCI_CMD_PREFETCH | cmd_fis_len | n_elem << 16;
- 	if (qc->tf.flags & ATA_TFLAG_WRITE)
- 		opts |= AHCI_CMD_WRITE;
- 	if (is_atapi)
+ 	mwdma_mask = id[ATA_ID_MWDMA_MODES] & 0x07;
+-	udma_mask = id[ATA_ID_UDMA_MODES] & 0xff;
++
++	udma_mask = 0;
++	if (id[ATA_ID_FIELD_VALID] & (1 << 2))
++		udma_mask = id[ATA_ID_UDMA_MODES] & 0xff;
+ 
+ 	return ata_pack_xfermask(pio_mask, mwdma_mask, udma_mask);
+ }
