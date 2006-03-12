@@ -1,78 +1,69 @@
-From: Parag Warudkar <kernel-stuff@comcast.net>
-Subject: Re: IDE CDROM - No DMA
-Date: Sun, 12 Mar 2006 01:28:44 -0500
-Message-ID: <200603120128.44469.kernel-stuff@comcast.net>
-References: <200603101842.09251.kernel-stuff@comcast.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 1/4] libata: implement ata_unpack_xfermask()
+Date: Sun, 12 Mar 2006 16:02:35 +0900
+Message-ID: <114214695594-git-send-email-htejun@gmail.com>
+References: <11421469551948-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rwcrmhc11.comcast.net ([204.127.192.81]:49282 "EHLO
-	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S1750839AbWCLG2o convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Mar 2006 01:28:44 -0500
-In-Reply-To: <200603101842.09251.kernel-stuff@comcast.net>
-Content-Disposition: inline
+Received: from pproxy.gmail.com ([64.233.166.183]:30025 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751451AbWCLHCk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Mar 2006 02:02:40 -0500
+Received: by pproxy.gmail.com with SMTP id d42so679701pyd
+        for <linux-ide@vger.kernel.org>; Sat, 11 Mar 2006 23:02:40 -0800 (PST)
+In-Reply-To: <11421469551948-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: jgarzik@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-On Friday 10 March 2006 18:42, Parag Warudkar wrote:
-> I have a "TSSTCorp"  CD-RW/DVD Drive in my laptop
-> which is IDE1. =A0DMA is not enabled on this drive. (Copying from CDR=
-OM
-> stalls the machine - conforming that DMA is not really in use.)
->
-Hmm.. Interestingly this seems to be a IDE layer problem not specific t=
-o the=20
-drive in question. No matter what CD / DVD drive I put into my lapatop =
-DMA is=20
-not enabled. (I tried replacing this TSSTCorp drive with a  Pioneer dri=
-ve=20
-which was doing DMA fine with Linux on another machine, but with this l=
-aptop,=20
-I can't set DMA on it.)
+Implement ata_unpack_xfermask().
 
-Any clues, workarounds, hint of a place to start debugging this?
-Some relevant snippets from dmesg -
------------------------------------------------------------------------=
--
-PCI: Ignoring BAR0-3 of IDE controller 0000:00:1f.2
-Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebu=
-s=3Dxx
-ide0: I/O resource 0x1F0-0x1F7 not free.
-ide0: ports already in use, skipping probe
-Probing IDE interface ide1...
-ide1 at 0x170-0x177,0x376 on irq 15
-ata: 0x170 IDE port busy
-hdc: PIONEER DVD-RW DVR-K05, ATAPI CD/DVD-ROM drive
-ide1 at 0x170-0x177,0x376 on irq 15
-hdc: ATAPI 24X DVD-ROM DVD-R CD-R/RW drive, 2000kB Cache
-Uniform CD-ROM driver Revision: 3.20
-libata version 1.20 loaded.
-ata_piix 0000:00:1f.2: version 1.05
-ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 17 (level, low) -> IRQ 177
-ata: 0x170 IDE port busy
-PCI: Setting latency timer of device 0000:00:1f.2 to 64
-ata1: SATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0xBFA0 irq 14
-ata1: dev 0 cfg 49:2f00 82:746b 83:7f09 84:6023 85:7469 86:3e09 87:6023=
-=20
-88:203f
-ata1: dev 0 ATA-6, max UDMA/100, 153356490 sectors: LBA48
-ata1: dev 0 configured for UDMA/100
-scsi0 : ata_piix
-  Vendor: ATA       Model: TOSHIBA MK8032GS  Rev: AS11
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sda: 153356490 512-byte hdwr sectors (78519 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 153356490 512-byte hdwr sectors (78519 MB)
-SCSI device sda: drive cache: write back
- sda: sda1 sda2 sda3 sda4
-sd 0:0:0:0: Attached scsi disk sda
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-ieee1394: Initialized config rom entry `ip1394'
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Thanks
-Parag=20
+---
+
+ drivers/scsi/libata-core.c |   23 +++++++++++++++++++++++
+ 1 files changed, 23 insertions(+), 0 deletions(-)
+
+70ca1eb15f59fa81dc3dd8b8eaff40f7b4e07c95
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 42d43b5..96954c7 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -252,6 +252,29 @@ static unsigned int ata_pack_xfermask(un
+ 		((udma_mask << ATA_SHIFT_UDMA) & ATA_MASK_UDMA);
+ }
+ 
++/**
++ *	ata_unpack_xfermask - Unpack xfer_mask into pio, mwdma and udma masks
++ *	@xfer_mask: xfer_mask to unpack
++ *	@pio_mask: resulting pio_mask
++ *	@mwdma_mask: resulting mwdma_mask
++ *	@udma_mask: resulting udma_mask
++ *
++ *	Unpack @xfer_mask into @pio_mask, @mwdma_mask and @udma_mask.
++ *	Any NULL distination masks will be ignored.
++ */
++static void ata_unpack_xfermask(unsigned int xfer_mask,
++				unsigned int *pio_mask,
++				unsigned int *mwdma_mask,
++				unsigned int *udma_mask)
++{
++	if (pio_mask)
++		*pio_mask = (xfer_mask & ATA_MASK_PIO) >> ATA_SHIFT_PIO;
++	if (mwdma_mask)
++		*mwdma_mask = (xfer_mask & ATA_MASK_MWDMA) >> ATA_SHIFT_MWDMA;
++	if (udma_mask)
++		*udma_mask = (xfer_mask & ATA_MASK_UDMA) >> ATA_SHIFT_UDMA;
++}
++
+ static const struct ata_xfer_ent {
+ 	unsigned int shift, bits;
+ 	u8 base;
+-- 
+1.2.4
+
+
