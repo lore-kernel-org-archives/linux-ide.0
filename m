@@ -1,44 +1,68 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Paul Blazejowski <paulb@blazebox.homeip.net>
 Subject: Re: Linux v2.6.16-rc6
-Date: Sun, 12 Mar 2006 17:57:46 -0500
-Message-ID: <4414A76A.4090109@garzik.org>
-References: <1142189154.21274.20.camel@blaze.homeip.net>	 <1142199970.25358.173.camel@mindpipe> <1142202089.9934.13.camel@blaze.homeip.net>
+Date: Sun, 12 Mar 2006 18:19:31 -0500
+Message-ID: <1142205571.10354.1.camel@blaze.homeip.net>
+References: <1142189154.21274.20.camel@blaze.homeip.net>
+	 <4414A6BF.3030604@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751833AbWCLW5u@vger.kernel.org>
-In-Reply-To: <1142202089.9934.13.camel@blaze.homeip.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9pxbLJH0t+4dbyFKjE5I"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932167AbWCLXTR@vger.kernel.org>
+In-Reply-To: <4414A6BF.3030604@garzik.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Blazejowski <paulb@blazebox.homeip.net>
-Cc: Lee Revell <rlrevell@joe-job.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Paul Blazejowski wrote:
-> sata_sil 0000:05:0a.0: Applying R_ERR on DMA activate FIS errata fix
 
-sata_sil
+--=-9pxbLJH0t+4dbyFKjE5I
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> ata5: SATA max UDMA/100 cmd 0xF9402080 ctl 0xF940208A bmdma 0xF9402000
-> irq 23
-> ata6: SATA max UDMA/100 cmd 0xF94020C0 ctl 0xF94020CA bmdma 0xF9402008
-> irq 23
-> ata7: SATA max UDMA/100 cmd 0xF9402280 ctl 0xF940228A bmdma 0xF9402200
-> irq 23
-> ata8: SATA max UDMA/100 cmd 0xF94022C0 ctl 0xF94022CA bmdma 0xF9402208
-> irq 23
+On Sun, 2006-03-12 at 17:54 -0500, Jeff Garzik wrote:
+> Paul Blazejowski wrote:
+> > sata_nv 0000:00:07.0: version 0.8
+>=20
+> sata_nv
+>=20
+> > ata3: SATA max UDMA/133 cmd 0x9E0 ctl 0xBE2 bmdma 0xC400 irq 21
+> > ata4: SATA max UDMA/133 cmd 0x960 ctl 0xB62 bmdma 0xC408 irq 21
+>=20
+> host max udma6
+>=20
+> > ata3: dev 0 ATA-6, max UDMA/100, 390721968 sectors: LBA48
+> > ata3: dev 0 configured for UDMA/100
+>=20
+> dev max udma5, configured for max speed
+>=20
+> > ata4: dev 0 ATA-6, max UDMA/133, 390721968 sectors: LBA48
+> > ata4: dev 0 configured for UDMA/133
+>=20
+> dev max udma6, configured for max speed
+>=20
+> Everything is correct.
+>=20
+> 	Jeff
+>=20
+>=20
+>=20
 
-host max udma5
+Jeff, thank you for confirming that everything looks correct. Next time
+i will be buying matching drives at the same time :-).
 
-> ata5: dev 0 ATA-6, max UDMA/100, 390721968 sectors: LBA48
-> ata5: dev 0 configured for UDMA/100
+Cheers!
 
-dev max udma5, configured for udma5
+Paul B.
 
-> ata6: dev 0 ATA-6, max UDMA/133, 390721968 sectors: LBA48
-> ata6: dev 0 configured for UDMA/100
+--=-9pxbLJH0t+4dbyFKjE5I
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-dev max udma6, configured for host maximum udma5
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2.2 (GNU/Linux)
 
-Everything looks correct.
+iD8DBQBEFKyDwu5Nmh3PsiMRAhaQAJ9UAK99Z8MFc84h7ef5yVpeblLHlACaAnin
+45jSd0ayjpeLoy+SzdqI8Ks=
+=lz7f
+-----END PGP SIGNATURE-----
 
-	Jeff
+--=-9pxbLJH0t+4dbyFKjE5I--
