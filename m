@@ -1,46 +1,54 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 4/4] libata: make per-dev transfer mode limits per-dev
-Date: Mon, 13 Mar 2006 18:33:39 +0900
-Message-ID: <20060313093339.GC2091@htj.dyndns.org>
-References: <11421469561848-git-send-email-htejun@gmail.com> <44152DB1.1020502@pobox.com>
+Subject: Re: [PATCH 3/4] libata: make ata_set_mode() responsible for failure handling
+Date: Mon, 13 Mar 2006 18:44:01 +0900
+Message-ID: <20060313094401.GD2091@htj.dyndns.org>
+References: <11422375531645-git-send-email-htejun@gmail.com> <44152F3D.50307@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.194]:47034 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932394AbWCMJdo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 04:33:44 -0500
-Received: by zproxy.gmail.com with SMTP id 14so1241188nzn
-        for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 01:33:43 -0800 (PST)
+Received: from pproxy.gmail.com ([64.233.166.180]:46872 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751206AbWCMJoH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 04:44:07 -0500
+Received: by pproxy.gmail.com with SMTP id d42so844882pyd
+        for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 01:44:06 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <44152DB1.1020502@pobox.com>
+In-Reply-To: <44152F3D.50307@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-On Mon, Mar 13, 2006 at 03:30:41AM -0500, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> >Now that each ata_device has xfer masks, per-dev limits can be made
-> >per-dev instead of per-port.  Make per-dev limits per-dev.
-> >
-> >Signed-off-by: Tejun Heo <htejun@gmail.com>
+On Mon, Mar 13, 2006 at 03:37:17AM -0500, Jeff Garzik wrote:
 > 
-> Doesn't this patch break stuff?  As you said in a previous patch, the 
-> per-dev masks aren't used yet?
+> I have the following concern with this patch (#3) however:
+> 
+> >-static void ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
+> >+static int ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
+> > {
+> >-	if (!ata_dev_present(dev) || (ap->flags & ATA_FLAG_PORT_DISABLED))
+> >-		return;
+> 
+> I think you drop too many ATA_FLAG_PORT_DISABLED tests in this patch, 
+> leading the code to potentially miss a previously-flagged PORT_DISABLED 
+> (perhaps by an LLDD).
 > 
 
-No, it doesn't break stuff.  per-dev masks are applied in
-ata_dev_xfermask().
+Hmmm... the plan is to disallow LLDD's take ports or devices offline
+from low level callbacks.  They should just let upper layer know by
+returning failure code.
 
-@@ -2667,6 +2670,8 @@ static unsigned int ata_dev_xfermask(str
- 		struct ata_device *d = &ap->device[i];
- 		if (!ata_dev_present(d))
- 			continue;
-+		xfer_mask &= ata_pack_xfermask(d->pio_mask, d->mwdma_mask,
-+					       d->udma_mask);
- 		xfer_mask &= ata_id_xfermask(d->id);
- 		if (ata_dma_blacklisted(d))
- 			xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
+Currently, during probing, the only place where disabling a port is
+allowed is ->phy_reset (for compatibility), which ata_bus_probe()
+interprets as no active device and reenables the port.  Later,
+->error_handler() would have that power too but I don't think any
+other callback should be allowed to do that.  Also, no current
+in-kernel LLDD does that during probing process.
+
+If we're gonna allow some callbacks to disable ports or devices.  I
+think we need to come up with clear rules such that checks can be
+performed exactly where needed.
+
+Thanks.
 
 -- 
 tejun
