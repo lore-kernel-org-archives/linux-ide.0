@@ -1,48 +1,34 @@
-From: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
-Subject: Re: 2.6.16-rc5: known regressions [TP 600X S3, vanilla DSDT]
-Date: Mon, 13 Mar 2006 15:21:10 +0000
-Message-ID: <E1FIor8-0002Rj-00@skye.ra.phy.cam.ac.uk>
-References: <3ACA40606221794F80A5670F0AF15F840B2DB21B@pdsmsx403>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Re: Linux v2.6.16-rc6
+Date: Mon, 13 Mar 2006 21:17:42 +0100 (MET)
+Message-ID: <Pine.LNX.4.61.0603132115540.7510@yvahk01.tjqt.qr>
+References: <1142189154.21274.20.camel@blaze.homeip.net>
+ <1142199970.25358.173.camel@mindpipe> <1142202089.9934.13.camel@blaze.homeip.net>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mraos.ra.phy.cam.ac.uk ([131.111.48.8]:25809 "EHLO
-	mraos.ra.phy.cam.ac.uk") by vger.kernel.org with ESMTP
-	id S932114AbWCMPVN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Mar 2006 10:21:13 -0500
-In-Reply-To: Your message of "Mon, 13 Mar 2006 16:35:45 +0800."
-             <3ACA40606221794F80A5670F0AF15F840B2DB21B@pdsmsx403>
+Received: from linux01.gwdg.de ([134.76.13.21]:28902 "EHLO linux01.gwdg.de")
+	by vger.kernel.org with ESMTP id S932426AbWCMURp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 15:17:45 -0500
+In-Reply-To: <1142202089.9934.13.camel@blaze.homeip.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Yu, Luming" <luming.yu@intel.com>
-Cc: linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>
+To: Paul Blazejowski <paulb@blazebox.homeip.net>
+Cc: Lee Revell <rlrevell@joe-job.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-> Hmm, could you file dmesgs with thermal module loaded and unloaded?
+>
+>I belive the modes should say DMA100 because UDMA133 would be mode ATA-7
+>and DMA100 ATA-6 mode. This is the info i get from hdparm -I on the ata3
+>drive: DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
+>
 
-Filed at bugzilla.
+  UDMA4 = 66
+  UDMA5 = 100
+  UDMA6 = 133
 
-> I saw this acpi_debug=0xffffffff.
+Has afaics nothing to do with "ATA-5" or -6 or -7 as reported by smartctl 
+"ATA version".
 
-Sorry, it's a legacy from trying to debug #5112, and I've removed it
-for getting the above dmesgs.  I'm not even sure what that option does
-since it's not documented in the kernel-parameters.txt, but it does
-increase the amount of debugging info.
 
-> I used to used to use acpi_debug_layer=0x10 acpi_debug_level=0x10
-> Could you try that?
-
-For the above dmesgs I booted with acpi_dbg_level=0x10
-acpi_dbg_layer=0x10 and then did two sleep-wake cycles with no thermal
-module (both went fine), then one cycle with the thermal module loaded
-(went fine), and then the usual failing second sleep with the thermal
-module still loaded.  The sleep-wake cycles themselves (i.e. once the
-system booted) were done with acpi_debug_level=0x1F rather than the
-0x10 boot value.
-
-Let me know if there's a different permutation of debug options that I
-should try.  I wasn't sure whether you meant that I should leave all
-the debug values at 0x10.  Or whether I should still include
-acpi_debug=0xffffffff on top of the other options.
-
--Sanjoy
-
-`Never underestimate the evil of which men of power are capable.'
-         --Bertrand Russell, _War Crimes in Vietnam_, chapter 1.
+Jan Engelhardt
+-- 
