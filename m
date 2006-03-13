@@ -1,68 +1,60 @@
-From: Paul Blazejowski <paulb@blazebox.homeip.net>
-Subject: Re: Linux v2.6.16-rc6
-Date: Sun, 12 Mar 2006 18:19:31 -0500
-Message-ID: <1142205571.10354.1.camel@blaze.homeip.net>
-References: <1142189154.21274.20.camel@blaze.homeip.net>
-	 <4414A6BF.3030604@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patch] libata fix
+Date: Sun, 12 Mar 2006 19:29:10 -0500
+Message-ID: <20060313002910.GA1840@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9pxbLJH0t+4dbyFKjE5I"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932167AbWCLXTR@vger.kernel.org>
-In-Reply-To: <4414A6BF.3030604@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from havoc.gtf.org ([69.61.125.42]:10467 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1751940AbWCMA3O (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Mar 2006 19:29:14 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
---=-9pxbLJH0t+4dbyFKjE5I
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Please pull from 'upstream-fixes' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-On Sun, 2006-03-12 at 17:54 -0500, Jeff Garzik wrote:
-> Paul Blazejowski wrote:
-> > sata_nv 0000:00:07.0: version 0.8
->=20
-> sata_nv
->=20
-> > ata3: SATA max UDMA/133 cmd 0x9E0 ctl 0xBE2 bmdma 0xC400 irq 21
-> > ata4: SATA max UDMA/133 cmd 0x960 ctl 0xB62 bmdma 0xC408 irq 21
->=20
-> host max udma6
->=20
-> > ata3: dev 0 ATA-6, max UDMA/100, 390721968 sectors: LBA48
-> > ata3: dev 0 configured for UDMA/100
->=20
-> dev max udma5, configured for max speed
->=20
-> > ata4: dev 0 ATA-6, max UDMA/133, 390721968 sectors: LBA48
-> > ata4: dev 0 configured for UDMA/133
->=20
-> dev max udma6, configured for max speed
->=20
-> Everything is correct.
->=20
-> 	Jeff
->=20
->=20
->=20
+to receive the following updates:
 
-Jeff, thank you for confirming that everything looks correct. Next time
-i will be buying matching drives at the same time :-).
+ drivers/scsi/ahci.c |   14 ++++----------
+ 1 files changed, 4 insertions(+), 10 deletions(-)
 
-Cheers!
+Tejun Heo:
+      ahci: fix NULL pointer dereference detected by Coverity
 
-Paul B.
-
---=-9pxbLJH0t+4dbyFKjE5I
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2.2 (GNU/Linux)
-
-iD8DBQBEFKyDwu5Nmh3PsiMRAhaQAJ9UAK99Z8MFc84h7ef5yVpeblLHlACaAnin
-45jSd0ayjpeLoy+SzdqI8Ks=
-=lz7f
------END PGP SIGNATURE-----
-
---=-9pxbLJH0t+4dbyFKjE5I--
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index a800fb5..559ff7a 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -742,23 +742,17 @@ static irqreturn_t ahci_interrupt (int i
+ 			struct ata_queued_cmd *qc;
+ 			qc = ata_qc_from_tag(ap, ap->active_tag);
+ 			if (!ahci_host_intr(ap, qc))
+-				if (ata_ratelimit()) {
+-					struct pci_dev *pdev =
+-						to_pci_dev(ap->host_set->dev);
+-					dev_printk(KERN_WARNING, &pdev->dev,
++				if (ata_ratelimit())
++					dev_printk(KERN_WARNING, host_set->dev,
+ 					  "unhandled interrupt on port %u\n",
+ 					  i);
+-				}
+ 
+ 			VPRINTK("port %u\n", i);
+ 		} else {
+ 			VPRINTK("port %u (no irq)\n", i);
+-			if (ata_ratelimit()) {
+-				struct pci_dev *pdev =
+-					to_pci_dev(ap->host_set->dev);
+-				dev_printk(KERN_WARNING, &pdev->dev,
++			if (ata_ratelimit())
++				dev_printk(KERN_WARNING, host_set->dev,
+ 					"interrupt on disabled port %u\n", i);
+-			}
+ 		}
+ 
+ 		irq_ack |= (1 << i);
