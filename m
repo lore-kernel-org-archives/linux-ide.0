@@ -1,94 +1,66 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 3/4] libata: add per-dev pio/mwdma/udma_mask
-Date: Mon, 13 Mar 2006 19:24:12 +0900
-Message-ID: <20060313102412.GA25706@htj.dyndns.org>
-References: <11421469551000-git-send-email-htejun@gmail.com> <44152D64.6000903@pobox.com> <20060313093052.GB2091@htj.dyndns.org> <441540DC.2050001@pobox.com> <20060313100927.GE2091@htj.dyndns.org> <441545D0.4010100@pobox.com>
+Subject: [PATCH 2/2] libata: move IDENTIFY info printing from ata_dev_read_id() to ata_dev_configure()
+Date: Mon, 13 Mar 2006 19:51:19 +0900
+Message-ID: <20060313105119.GB29996@htj.dyndns.org>
+References: <44144172.9040304@garzik.org> <20060312165701.GA9051@htj.dyndns.org> <44146758.6090006@garzik.org> <20060313053350.GD29870@htj.dyndns.org> <20060313054807.GA24419@htj.dyndns.org> <44150897.1060602@garzik.org> <20060313064016.GA26732@htj.dyndns.org> <44152261.2080203@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.177]:56388 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750730AbWCMKYR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 05:24:17 -0500
-Received: by pproxy.gmail.com with SMTP id d42so851047pyd
-        for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 02:24:17 -0800 (PST)
+Received: from pproxy.gmail.com ([64.233.166.180]:22370 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932130AbWCMKvY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 05:51:24 -0500
+Received: by pproxy.gmail.com with SMTP id d42so855255pyd
+        for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 02:51:23 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <441545D0.4010100@pobox.com>
+In-Reply-To: <44152261.2080203@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Mon, Mar 13, 2006 at 05:13:36AM -0500, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> >On Mon, Mar 13, 2006 at 04:52:28AM -0500, Jeff Garzik wrote:
-> >
-> >>Tejun Heo wrote:
-> >>
-> >>>On Mon, Mar 13, 2006 at 03:29:24AM -0500, Jeff Garzik wrote:
-> >>>
-> >>>
-> >>>>Tejun Heo wrote:
-> >>>>
-> >>>>
-> >>>>>Add per-dev pio/mwdma/udma_mask.  All transfer mode limits used to be
-> >>>>>applied to ap->*_mask which unnecessarily restricted other devices
-> >>>>>sharing the port.  This change will also benefit later EH speed down
-> >>>>>and hotplug.
-> >>>>>
-> >>>>>Signed-off-by: Tejun Heo <htejun@gmail.com>
-> >>>>
-> >>>>I don't see much value in the separation.  Rather than 3 separate 
-> >>>>masks, it seems like this patch would be simplified if you simply added 
-> >>>>dev->xfer_mask.
-> >>>>
-> >>>
-> >>>
-> >>>The thing is that ap->*_mask's are separated the same way and all
-> >>>masking constants are defined as such.  e.g.
-> >>>
-> >>>	ap->udma_mask &= ATA_UDMA5;
-> >>>or
-> >>>	ap->udma_mask &= ATA_UDMA_MASK_40C;
-> >>>
-> >>>Making dev->*_mask's the same enables share those constants and code
-> >>>convention.  So, things to consider here are...
-> >>>
-> >>>1. Port xfer masks are defined as three separate masks.
-> >>>
-> >>>2. All the constants are defined according to that.
-> >>>
-> >>>3. Three separate masks are easier to deal with for LLDD's.
-> >>
-> >>Separate masks is better for the LLDD interface, but the packed version 
-> >>seems superior for internal libata use.
-> >
-> >
-> >Yeah, dev->*_mask's will be used by LLDD's.  Actually, in patch #4 of
-> >this series, sata_sil's ->dev_config() does exactly that.  Also, mode
-> >mask filtering can be done by diddling dev->*_mask's.
-> >
-> >
-> >>No reason why ATA_UDMA_MASK_40C can't simply operate on a packed 
-> >>xfer_mask variable, for example.
-> >
-> >
-> >Because it's used to filter ap->*_mask and to allow LLDD's use the
-> >same constants on dev->*_mask's.
-> >
-> >Do you think LLDD's shouldn't access dev->*_mask's?
-> 
-> When I spoke of "LLDD API", I largely meant the pio_mask/etc. in 
-> ata_port_info.  That's the easiest way to present such information to 
-> driver maintainers.
-> 
-> OTOH, at runtime ->dev_config() and friends should probably just 
-> manipulate dev->xfer_mask.
+Move IDENTIFY info printing from ata_dev_read_id() to
+ata_dev_configure() and print only if @print_info is non-zero.  This
+kills duplicate IDENTIFY info printing during probing.
 
-I see.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-So, ata_port_info uses pio/mwdma/udma_mask and ata_port and ata_device
-use single xfer_mask and all the masking constants are converted to
-mask single xfer_mask.  Sounds good to you?
+---
 
--- 
-tejun
+Jeff, I think ap->msg_enable conversion should happen as bombing
+raids.  Such that we have either ATA_DEBUG or msg_enable.  I'll leave
+ata_dump_id() alone for the time being.
+
+ libata-core.c |   13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 6fe41fb..714b42b 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -1120,12 +1120,6 @@ static int ata_dev_read_id(struct ata_po
+ 
+ 	swap_buf_le16(id, ATA_ID_WORDS);
+ 
+-	/* print device capabilities */
+-	printk(KERN_DEBUG "ata%u: dev %u cfg "
+-	       "49:%04x 82:%04x 83:%04x 84:%04x 85:%04x 86:%04x 87:%04x 88:%04x\n",
+-	       ap->id, dev->devno,
+-	       id[49], id[82], id[83], id[84], id[85], id[86], id[87], id[88]);
+-
+ 	/* sanity check */
+ 	if ((class == ATA_DEV_ATA) != ata_id_is_ata(id)) {
+ 		rc = -EINVAL;
+@@ -1205,6 +1199,13 @@ static int ata_dev_configure(struct ata_
+ 
+ 	DPRINTK("ENTER, host %u, dev %u\n", ap->id, dev->devno);
+ 
++	/* print device capabilities */
++	if (print_info)
++		printk(KERN_DEBUG "ata%u: dev %u cfg 49:%04x 82:%04x 83:%04x "
++		       "84:%04x 85:%04x 86:%04x 87:%04x 88:%04x\n",
++		       ap->id, dev->devno, id[49], id[82], id[83],
++		       id[84], id[85], id[86], id[87], id[88]);
++
+ 	/* initialize to-be-configured parameters */
+ 	dev->flags = 0;
+ 	dev->max_sectors = 0;
