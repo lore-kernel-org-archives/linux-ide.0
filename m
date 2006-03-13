@@ -1,72 +1,62 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 3/4] libata: add per-dev pio/mwdma/udma_mask
-Date: Mon, 13 Mar 2006 19:09:27 +0900
-Message-ID: <20060313100927.GE2091@htj.dyndns.org>
-References: <11421469551000-git-send-email-htejun@gmail.com> <44152D64.6000903@pobox.com> <20060313093052.GB2091@htj.dyndns.org> <441540DC.2050001@pobox.com>
+Subject: Re: [PATCH 3/4] libata: make ata_set_mode() responsible for failure handling
+Date: Mon, 13 Mar 2006 19:14:34 +0900
+Message-ID: <20060313101434.GF2091@htj.dyndns.org>
+References: <11422375531645-git-send-email-htejun@gmail.com> <44152F3D.50307@pobox.com> <20060313094401.GD2091@htj.dyndns.org> <441541BE.80505@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.197]:989 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932397AbWCMKJc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 05:09:32 -0500
-Received: by zproxy.gmail.com with SMTP id 13so1287732nzn
-        for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 02:09:31 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.194]:50202 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750730AbWCMKOj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 05:14:39 -0500
+Received: by zproxy.gmail.com with SMTP id 13so1288578nzn
+        for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 02:14:38 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <441540DC.2050001@pobox.com>
+In-Reply-To: <441541BE.80505@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-On Mon, Mar 13, 2006 at 04:52:28AM -0500, Jeff Garzik wrote:
+On Mon, Mar 13, 2006 at 04:56:14AM -0500, Jeff Garzik wrote:
 > Tejun Heo wrote:
-> >On Mon, Mar 13, 2006 at 03:29:24AM -0500, Jeff Garzik wrote:
+> >On Mon, Mar 13, 2006 at 03:37:17AM -0500, Jeff Garzik wrote:
 > >
-> >>Tejun Heo wrote:
+> >>I have the following concern with this patch (#3) however:
 > >>
-> >>>Add per-dev pio/mwdma/udma_mask.  All transfer mode limits used to be
-> >>>applied to ap->*_mask which unnecessarily restricted other devices
-> >>>sharing the port.  This change will also benefit later EH speed down
-> >>>and hotplug.
-> >>>
-> >>>Signed-off-by: Tejun Heo <htejun@gmail.com>
 > >>
-> >>I don't see much value in the separation.  Rather than 3 separate masks, 
-> >>it seems like this patch would be simplified if you simply added 
-> >>dev->xfer_mask.
+> >>>-static void ata_dev_set_mode(struct ata_port *ap, struct ata_device 
+> >>>*dev)
+> >>>+static int ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
+> >>>{
+> >>>-	if (!ata_dev_present(dev) || (ap->flags & ATA_FLAG_PORT_DISABLED))
+> >>>-		return;
+> >>
+> >>I think you drop too many ATA_FLAG_PORT_DISABLED tests in this patch, 
+> >>leading the code to potentially miss a previously-flagged PORT_DISABLED 
+> >>(perhaps by an LLDD).
 > >>
 > >
 > >
-> >The thing is that ap->*_mask's are separated the same way and all
-> >masking constants are defined as such.  e.g.
-> >
-> >	ap->udma_mask &= ATA_UDMA5;
-> >or
-> >	ap->udma_mask &= ATA_UDMA_MASK_40C;
-> >
-> >Making dev->*_mask's the same enables share those constants and code
-> >convention.  So, things to consider here are...
-> >
-> >1. Port xfer masks are defined as three separate masks.
-> >
-> >2. All the constants are defined according to that.
-> >
-> >3. Three separate masks are easier to deal with for LLDD's.
+> >Hmmm... the plan is to disallow LLDD's take ports or devices offline
+> >from low level callbacks.  They should just let upper layer know by
+> >returning failure code.
 > 
-> Separate masks is better for the LLDD interface, but the packed version 
-> seems superior for internal libata use.
+> Long term that plan is fine, but you still have to deal with the 
+> existing API one way or another.  ata_port_disable() is called directly 
+> by a bunch of Alan's PATA drivers, and by ata_piix and sata_mv.
+> 
+> Thus you would either need to keep the PORT_DISABLED checks or convert 
+> the drivers in question to a better API.
+> 
+> So just check those ata_port_disable() cases...
+> 
 
-Yeah, dev->*_mask's will be used by LLDD's.  Actually, in patch #4 of
-this series, sata_sil's ->dev_config() does exactly that.  Also, mode
-mask filtering can be done by diddling dev->*_mask's.
-
-> No reason why ATA_UDMA_MASK_40C can't simply operate on a packed 
-> xfer_mask variable, for example.
-
-Because it's used to filter ap->*_mask and to allow LLDD's use the
-same constants on dev->*_mask's.
-
-Do you think LLDD's shouldn't access dev->*_mask's?
+AFAICS, ata_piix doesn't call ata_port_disable() directly, but
+sata_mv() does, through mv_host_intr() -> mv_err_intr()
+->mv_stop_and_reset() -> __mv_phy_reset().  I'll check the code path
+such that disabled ports are handled properly.  Thanks for pointing
+out.
 
 -- 
 tejun
