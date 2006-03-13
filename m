@@ -1,41 +1,49 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET] libata: add @disable_on_err to ata_set_mode()
-Date: Mon, 13 Mar 2006 17:09:00 +0900
-Message-ID: <11422373402858-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/1] libata-dev: ata_check_atapi_dma() fix for ATA_FLAG_PIO_POLLING
+ LLDDs
+Date: Mon, 13 Mar 2006 03:09:33 -0500
+Message-ID: <441528BD.8070708@pobox.com>
+References: <441525DB.40905@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.207]:3486 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932340AbWCMIJI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 03:09:08 -0500
-Received: by zproxy.gmail.com with SMTP id 14so1228123nzn
-        for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 00:09:05 -0800 (PST)
-In-Reply-To: 
+Received: from mail.dvmed.net ([216.237.124.58]:43744 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932345AbWCMIJg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 03:09:36 -0500
+In-Reply-To: <441525DB.40905@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, htejun@gmail.com
+To: albertl@mail.com
+Cc: IDE Linux <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Doug Maxey <dwm@maxeymade.com>
 
-Hello.
+Albert Lee wrote:
+> ata_check_atapi_dma() fix for LLDDs with the ATA_FLAG_PIO_POLLING flag.
+> 
+> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+> ---
+> 
+> We don't support polling DMA.
+> If the LLDD handles only interrupts in the HSM_ST_LAST state 
+> (indicated by the ATA_FLAG_PIO_POLLING flag) and the ATAPI device
+> generates CDB interrupts, we have to use the polling PIO protocol.
+> (Otherwise, the CDB interrupts might confuse the LLDD.)
+> 
+> We just set the protocol to PIO here in ata_check_atapi_dma().
+> Later in ata_qc_issue_prot(), the PIO protocol will be set as "polling"
+> for those LLDDs.
+> 
+> Patch against the irq-pio branch +
+> (1) irq-pio minor fixes (respin) +
+> (2) integrate polling pio with irq-pio (respin)
 
-This patchset adds @disable_on_err to ata_set_mode().  If zero,
-ata_set_mode() returns error code on failure; otherwise, only the
-failing devices get disabled.  Note that the approach is slightly
-different here because ATA xfer mode configuration is port-wide, so
-ata_set_mode() acts as the final decision maker regarding device
-offlining advised by @disable_on_err.
+Applied, though I think its an open question what happens with 
+CDB-interrupt ATAPI devices want to do DMA.  Perhaps we just get an 
+interrupt event that we clear, then life proceeds as normal.
 
-This patchset is against
-  [1] the current upstream
-+ [2] implement-per-dev-xfermask patchset
+Does anybody actually have such a device anywhere?  :)
 
-Thanks.
+	Jeff
 
---
-tejun
-
-[1] fb21f0d0ec7e31cc814165e1a9d2662d9c9dd980
-[2] http://article.gmane.org/gmane.linux.ide/8705
 
 
