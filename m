@@ -1,47 +1,54 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: clean up IDENTIFY printing
-Date: Mon, 13 Mar 2006 00:52:23 -0500
-Message-ID: <44150897.1060602@garzik.org>
-References: <44144172.9040304@garzik.org> <20060312165701.GA9051@htj.dyndns.org> <44146758.6090006@garzik.org> <20060313053350.GD29870@htj.dyndns.org> <20060313054807.GA24419@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCHSET] libata: implement per-dev xfer masks
+Date: Mon, 13 Mar 2006 15:12:21 +0900
+Message-ID: <20060313061221.GA29476@htj.dyndns.org>
+References: <11421469551948-git-send-email-htejun@gmail.com> <1142170646.18565.3.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:3293 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932321AbWCMFwZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 00:52:25 -0500
-In-Reply-To: <20060313054807.GA24419@htj.dyndns.org>
+Received: from pproxy.gmail.com ([64.233.166.183]:32761 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751638AbWCMGM0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 01:12:26 -0500
+Received: by pproxy.gmail.com with SMTP id d42so814082pyd
+        for <linux-ide@vger.kernel.org>; Sun, 12 Mar 2006 22:12:25 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <1142170646.18565.3.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> @@ -1120,12 +1114,6 @@ static int ata_dev_read_id(struct ata_po
->  
->  	swap_buf_le16(id, ATA_ID_WORDS);
->  
-> -	/* print device capabilities */
-> -	printk(KERN_DEBUG "ata%u: dev %u cfg "
-> -	       "49:%04x 82:%04x 83:%04x 84:%04x 85:%04x 86:%04x 87:%04x 88:%04x\n",
-> -	       ap->id, dev->devno,
-> -	       id[49], id[82], id[83], id[84], id[85], id[86], id[87], id[88]);
-> -
->  	/* sanity check */
->  	if ((class == ATA_DEV_ATA) != ata_id_is_ata(id)) {
->  		rc = -EINVAL;
-> @@ -1204,6 +1192,10 @@ static int ata_dev_configure(struct ata_
->  
->  	DPRINTK("ENTER, host %u, dev %u\n", ap->id, dev->devno);
->  
-> +	if (print_info)
-> +		ata_dump_id(dev->id, KERN_DEBUG, "ata%u: dev %u cfg ",
-> +			    ap->id, dev->devno);
-> +
+On Sun, Mar 12, 2006 at 01:37:26PM +0000, Alan Cox wrote:
+> On Sul, 2006-03-12 at 16:02 +0900, Tejun Heo wrote:
+> > I marked with comment where the mode filtering for low level drivers
+> > should be done but I'm not sure how the interface should look like.
+> 
+> Currently the libata pata patch code calls a filter function if present
+> which returns an updated bitmap for the mode type. I did that because we
+> need to combine the cable, bridge, core and chip specific rules neatly
+> and not have one forcing a mode the other cannot do.
 
-Also, the use of vscnprintf() feels like overengineering.  How many 
-places really need to print out this stuff?  Just one?
+Understood.
 
-	Jeff
+> > ->pre_set_mode(ap) is okay but then the LLDD should iterate over all
+> > devices.  Maybe ->pre_set_mode(ap, dev) or ->filter_xfer_mask(ap, dev)?
+> 
+> Providing
+> 
+> 1.	The proposed speeds are set for both devices on the cable before the
+> call.
+> 2.	We reselect the speed of both devices on changedown or hotplug
+> 
+> then we should be just fine.
 
+Yeap, both will hold.  I'll just leave it as it is such that filtering
+callback can be added later when merging PATA code.  One concern I
+have about the originally proposed ->mode_filter(ap, dev, mask, shift)
+interface is that if a LLDD wants to reject all UDMA and limit some of
+MWDMA, there is no way to do so.  I think it's better and easier to
+filter all mode masks at once.
 
+Thanks.
+
+-- 
+tejun
