@@ -1,70 +1,45 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 3/4] libata: make ata_set_mode() responsible for failure
- handling
-Date: Mon, 13 Mar 2006 03:37:17 -0500
-Message-ID: <44152F3D.50307@pobox.com>
-References: <11422375531645-git-send-email-htejun@gmail.com>
+From: "Yu, Luming" <luming.yu@intel.com>
+Subject: RE: 2.6.16-rc5: known regressions [TP 600X S3, vanilla DSDT]
+Date: Mon, 13 Mar 2006 16:35:45 +0800
+Message-ID: <3ACA40606221794F80A5670F0AF15F840B2DB21B@pdsmsx403>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:49633 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932123AbWCMIhZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 03:37:25 -0500
-In-Reply-To: <11422375531645-git-send-email-htejun@gmail.com>
+Received: from fmr20.intel.com ([134.134.136.19]:43910 "EHLO
+	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
+	id S932354AbWCMIkh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 03:40:37 -0500
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
+Cc: linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>
 
-Tejun Heo wrote:
-> Make ata_set_mode() responsible for determining whether to take port
-> or device offline on failure.  ata_dev_set_xfermode() and
-> ata_dev_set_mode() indicate error to the caller instead of disabling
-> port directly on failure.  Also, for consistency, ata_dev_present()
-> check is done in ata_set_mode() instead of ata_dev_set_mode().
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> ---
-> 
->  drivers/scsi/libata-core.c |   56 ++++++++++++++++++++++++++++----------------
->  1 files changed, 36 insertions(+), 20 deletions(-)
-> 
-> 07934616ecb83d7bac2adfe9eb32f5173feb32ff
-> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-> index b7595bf..6826181 100644
-> --- a/drivers/scsi/libata-core.c
-> +++ b/drivers/scsi/libata-core.c
-> @@ -64,7 +64,8 @@
->  static unsigned int ata_dev_init_params(struct ata_port *ap,
->  					struct ata_device *dev);
->  static void ata_set_mode(struct ata_port *ap);
-> -static void ata_dev_set_xfermode(struct ata_port *ap, struct ata_device *dev);
-> +static unsigned int ata_dev_set_xfermode(struct ata_port *ap,
-> +					 struct ata_device *dev);
->  static void ata_dev_xfermask(struct ata_port *ap, struct ata_device *dev);
->  
->  static unsigned int ata_unique_id = 1;
-> @@ -1754,20 +1755,28 @@ int ata_timing_compute(struct ata_device
->  	return 0;
->  }
 
-ACK 1-4 in this patchset, but dropping due to dropped patches in 
-previous patchset.
+Thanks for your debug information.
 
-I have the following concern with this patch (#3) however:
+>
+>> Could you try to mute thermal poll?
+>
+>Done.  The sleep.sh script now has
+>
+>echo 0 > /proc/acpi/thermal_zone/THM2/polling_frequency
+>echo 0 > /proc/acpi/thermal_zone/THM0/polling_frequency
+>sleep 1
 
-> -static void ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
-> +static int ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
->  {
-> -	if (!ata_dev_present(dev) || (ap->flags & ATA_FLAG_PORT_DISABLED))
-> -		return;
+Hmm,  could you file dmesges with tmermal module loaded and
+unloaded?
 
-I think you drop too many ATA_FLAG_PORT_DISABLED tests in this patch, 
-leading the code to potentially miss a previously-flagged PORT_DISABLED 
-(perhaps by an LLDD).
+>
+>> I need the full log  for S3 suspend failure not just snippets.
+>> Please attach it on bugzilla.kernel.org
+>
+>Done.
 
-	Jeff
+I saw this acpi_debug=0xffffffff.
 
+I used to used to use acpi_debug_layer=0x10 acpi_debug_level=0x10
+Could you try that?
 
