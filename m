@@ -1,87 +1,39 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata crashes on incorrectly initialised ports
-Date: Mon, 13 Mar 2006 04:26:03 -0500
-Message-ID: <44153AAB.1000201@garzik.org>
-References: <44153810.10702@suse.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2/4] libata: implement ata_dev_init()
+Date: Mon, 13 Mar 2006 18:25:21 +0900
+Message-ID: <20060313092521.GA2091@htj.dyndns.org>
+References: <11421469551948-git-send-email-htejun@gmail.com> <11421469552851-git-send-email-htejun@gmail.com> <20060313061926.GA30429@htj.dyndns.org> <44152CBD.3010405@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:31205 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932373AbWCMJ0G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 04:26:06 -0500
-In-Reply-To: <44153810.10702@suse.de>
+Received: from zproxy.gmail.com ([64.233.162.203]:64570 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932389AbWCMJZ0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 04:25:26 -0500
+Received: by zproxy.gmail.com with SMTP id 13so1280024nzn
+        for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 01:25:25 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <44152CBD.3010405@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-Hannes Reinecke wrote:
-> Hi all,
+On Mon, Mar 13, 2006 at 03:26:37AM -0500, Jeff Garzik wrote:
+> NAK:
 > 
-> Randy found an interesting usage of the label 'err_out' in
-> libata-core.c:ata_device_add().
-> 
-> 'err_out' is meant to be called to teardown existing sysfs entries.
-> As such is it clearly wrong to call it if the sysfs registration fails.
-> 
-> Please apply.
-> 
-> Cheers,
-> 
-> Hannes
-> 
-> 
-> ------------------------------------------------------------------------
-> 
-> From: Hannes Reinecke <hare@suse.de>
-> Subject: libata crashes on incorrectly initialized ports
-> 
-> Randy Dunlap noted:
-> With the update ahci I am getting these messages (typed by
-> me, no serial port for console), but ata2 drive is not present (!?):
-> 
-> ata2: could not start DMA engine
-> BUG: unable to handle kernel NULL pointer dereference at virtual address 00000000
-> 
-> plus a Call Trace like so (names only transcribed here):
-> class_device_del
-> class_device_unregister
-> scsi_remove_host
-> ata_host_remove
-> ata_device_add
-> ahci_init_one
-> ... normal pci driver init/register functions ...
-> 
-> 
-> The label 'err_out' is used twice; the first usage of which is wrong
-> as there is not host registered in sysfs which we could deregister.
-> In fact, we haven't done anything (yet) so we might as well return
-> here.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> 
-> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-> index ab3257a..42e5c40 100644
-> --- a/drivers/scsi/libata-core.c
-> +++ b/drivers/scsi/libata-core.c
-> @@ -4578,7 +4578,7 @@ int ata_device_add(const struct ata_prob
->  
->  		ap = ata_host_add(ent, host_set, i);
->  		if (!ap)
-> -			goto err_out;
-> +			return 0;
+> 1) the devices are embedded with ata_port, and so all static 
+> initialization should be done in ata_host_init().  It's only called once 
+> for each device, as you say, anyway...  no need to separate it from the 
+> rest of the struct ata_port initialization AFAICS.
 
-NAK: This patch adds memory leaks.
+I was mainly thinking of hotplug cases.  dev liftime becomes different
+form ap lifetime in hotplug cases, so it needs reinitialization before
+recycling.  I guess it can wait till we actually do hotplug.  I'll
+drop this patch.
 
-The clear intent of the error handling was to clean up host_set and the 
-ports allocated so far.  'return 0' just leaks all that stuff, rather 
-than performing the incorrect error handling ;-)
+> 2) there is no need to memset() [unless you are re-initializing, I suppose]
 
-AFAICT, all the error handling at the err_out label is correct, save for 
-one detail:  do_unregister argument passed to ata_host_remove() should 
-be zero for the err_out callsite we are discussing.
+ditto.
 
-	Jeff
-
-
+-- 
+tejun
