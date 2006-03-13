@@ -1,122 +1,72 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata crashes on incorrectly initialised ports
-Date: Mon, 13 Mar 2006 05:09:11 -0500
-Message-ID: <441544C7.3050406@garzik.org>
-References: <44153810.10702@suse.de> <44153AAB.1000201@garzik.org> <441542C3.50205@suse.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 3/4] libata: add per-dev pio/mwdma/udma_mask
+Date: Mon, 13 Mar 2006 19:09:27 +0900
+Message-ID: <20060313100927.GE2091@htj.dyndns.org>
+References: <11421469551000-git-send-email-htejun@gmail.com> <44152D64.6000903@pobox.com> <20060313093052.GB2091@htj.dyndns.org> <441540DC.2050001@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:48103 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932333AbWCMKJN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 05:09:13 -0500
-In-Reply-To: <441542C3.50205@suse.de>
+Received: from zproxy.gmail.com ([64.233.162.197]:989 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932397AbWCMKJc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 05:09:32 -0500
+Received: by zproxy.gmail.com with SMTP id 13so1287732nzn
+        for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 02:09:31 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <441540DC.2050001@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-Hannes Reinecke wrote:
-> Jeff Garzik wrote:
+On Mon, Mar 13, 2006 at 04:52:28AM -0500, Jeff Garzik wrote:
+> Tejun Heo wrote:
+> >On Mon, Mar 13, 2006 at 03:29:24AM -0500, Jeff Garzik wrote:
+> >
+> >>Tejun Heo wrote:
+> >>
+> >>>Add per-dev pio/mwdma/udma_mask.  All transfer mode limits used to be
+> >>>applied to ap->*_mask which unnecessarily restricted other devices
+> >>>sharing the port.  This change will also benefit later EH speed down
+> >>>and hotplug.
+> >>>
+> >>>Signed-off-by: Tejun Heo <htejun@gmail.com>
+> >>
+> >>I don't see much value in the separation.  Rather than 3 separate masks, 
+> >>it seems like this patch would be simplified if you simply added 
+> >>dev->xfer_mask.
+> >>
+> >
+> >
+> >The thing is that ap->*_mask's are separated the same way and all
+> >masking constants are defined as such.  e.g.
+> >
+> >	ap->udma_mask &= ATA_UDMA5;
+> >or
+> >	ap->udma_mask &= ATA_UDMA_MASK_40C;
+> >
+> >Making dev->*_mask's the same enables share those constants and code
+> >convention.  So, things to consider here are...
+> >
+> >1. Port xfer masks are defined as three separate masks.
+> >
+> >2. All the constants are defined according to that.
+> >
+> >3. Three separate masks are easier to deal with for LLDD's.
 > 
->>Hannes Reinecke wrote:
->>
->>>Hi all,
->>>
->>>Randy found an interesting usage of the label 'err_out' in
->>>libata-core.c:ata_device_add().
->>>
->>>'err_out' is meant to be called to teardown existing sysfs entries.
->>>As such is it clearly wrong to call it if the sysfs registration fails.
->>>
->>>Please apply.
->>>
->>>Cheers,
->>>
->>>Hannes
->>>
->>>
->>>------------------------------------------------------------------------
->>>
->>>From: Hannes Reinecke <hare@suse.de>
->>>Subject: libata crashes on incorrectly initialized ports
->>>
->>>Randy Dunlap noted:
->>>With the update ahci I am getting these messages (typed by
->>>me, no serial port for console), but ata2 drive is not present (!?):
->>>
->>>ata2: could not start DMA engine
->>>BUG: unable to handle kernel NULL pointer dereference at virtual
->>>address 00000000
->>>
->>>plus a Call Trace like so (names only transcribed here):
->>>class_device_del
->>>class_device_unregister
->>>scsi_remove_host
->>>ata_host_remove
->>>ata_device_add
->>>ahci_init_one
->>>... normal pci driver init/register functions ...
->>>
->>>
->>>The label 'err_out' is used twice; the first usage of which is wrong
->>>as there is not host registered in sysfs which we could deregister.
->>>In fact, we haven't done anything (yet) so we might as well return
->>>here.
->>>
->>>Signed-off-by: Hannes Reinecke <hare@suse.de>
->>>
->>>diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
->>>index ab3257a..42e5c40 100644
->>>--- a/drivers/scsi/libata-core.c
->>>+++ b/drivers/scsi/libata-core.c
->>>@@ -4578,7 +4578,7 @@ int ata_device_add(const struct ata_prob
->>> 
->>>         ap = ata_host_add(ent, host_set, i);
->>>         if (!ap)
->>>-            goto err_out;
->>>+            return 0;
->>
->>NAK: This patch adds memory leaks.
->>
->>The clear intent of the error handling was to clean up host_set and the
->>ports allocated so far.  'return 0' just leaks all that stuff, rather
->>than performing the incorrect error handling ;-)
->>
-> 
-> Hmm. Okay.
-> 
->>AFAICT, all the error handling at the err_out label is correct, save for
->>one detail:  do_unregister argument passed to ata_host_remove() should
->>be zero for the err_out callsite we are discussing.
->>
-> 
-> Not quite: ata_host_remove can _not_ be called with the first argument
-> being NULL.
-> 
-> This leads to another interesting question:
-> Do we allow for non-consecutive ports?
-> Ie should it be possible for host_ent->port[1] to fail, but
-> host_ent->port[2] to be present and useable?
-> 
-> The current code doesn't allow for that either; but if it's disallowed
-> we can just tear down all ports after the first failed one.
-> Which isn't handled currently, too :-)
-> The current code will fail if not all ports found in host_ent->ports are
-> useable. Which seems to be the case here.
+> Separate masks is better for the LLDD interface, but the packed version 
+> seems superior for internal libata use.
 
-Currently, that's intentional.  ata_host_add() failure indicates a 
-serious error such as OOM or failure to get DMA memory, and as such 
-everything should be torn down.
+Yeah, dev->*_mask's will be used by LLDD's.  Actually, in patch #4 of
+this series, sata_sil's ->dev_config() does exactly that.  Also, mode
+mask filtering can be done by diddling dev->*_mask's.
 
-Most problems are not so serious, and fall into the category of "mark 
-port disabled".  That "not so serious" category includes everything from 
-malfunctioning hardware to ports disabled in BIOS to ports without 
-attached devices.
+> No reason why ATA_UDMA_MASK_40C can't simply operate on a packed 
+> xfer_mask variable, for example.
 
-So the current code already supports port[1] failing, but port[2] being 
-usable.
+Because it's used to filter ap->*_mask and to allow LLDD's use the
+same constants on dev->*_mask's.
 
-	Jeff
+Do you think LLDD's shouldn't access dev->*_mask's?
 
-
+-- 
+tejun
