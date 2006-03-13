@@ -1,17 +1,17 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 3/4] libata: make ata_set_mode() responsible for failure handling
+Subject: [PATCH 4/4] libata: add @disable_on_err argument to ata_set_mode()
 Date: Mon, 13 Mar 2006 17:12:33 +0900
-Message-ID: <11422375531645-git-send-email-htejun@gmail.com>
+Message-ID: <11422375531192-git-send-email-htejun@gmail.com>
 References: <11422373402858-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.176]:58526 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932349AbWCMIMk (ORCPT
+Received: from wproxy.gmail.com ([64.233.184.192]:23539 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932348AbWCMIMk (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 03:12:40 -0500
-Received: by pproxy.gmail.com with SMTP id d42so830368pyd
+Received: by wproxy.gmail.com with SMTP id 69so1342043wri
         for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 00:12:39 -0800 (PST)
 In-Reply-To: <11422373402858-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -19,134 +19,157 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Make ata_set_mode() responsible for determining whether to take port
-or device offline on failure.  ata_dev_set_xfermode() and
-ata_dev_set_mode() indicate error to the caller instead of disabling
-port directly on failure.  Also, for consistency, ata_dev_present()
-check is done in ata_set_mode() instead of ata_dev_set_mode().
+ata_set_mode() used to disable whole port on failure.  This patch adds
+@disable_on_err which makes ata_set_mode() disable failing devices
+when non-zero, and simply return when zero.  Due to the port-wide
+characteristic of ATA xfer mode configuration, ata_mode_set() is the
+final place to determine device offlining; thus, the @disable_on_err
+mechanism to tell it which action to take on failure.
+
+Now port is disabled only if all devices on the port is disabled.
+This behavior change is intentional.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   56 ++++++++++++++++++++++++++++----------------
- 1 files changed, 36 insertions(+), 20 deletions(-)
+ drivers/scsi/libata-core.c |   61 +++++++++++++++++++++++++++-----------------
+ 1 files changed, 37 insertions(+), 24 deletions(-)
 
-07934616ecb83d7bac2adfe9eb32f5173feb32ff
+4eb4d225ccfc6b5401b338c92c142f30b761db2e
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index b7595bf..6826181 100644
+index 6826181..f620595 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -64,7 +64,8 @@
+@@ -63,7 +63,7 @@
+ 
  static unsigned int ata_dev_init_params(struct ata_port *ap,
  					struct ata_device *dev);
- static void ata_set_mode(struct ata_port *ap);
--static void ata_dev_set_xfermode(struct ata_port *ap, struct ata_device *dev);
-+static unsigned int ata_dev_set_xfermode(struct ata_port *ap,
-+					 struct ata_device *dev);
+-static void ata_set_mode(struct ata_port *ap);
++static int ata_set_mode(struct ata_port *ap, int disable_on_err);
+ static unsigned int ata_dev_set_xfermode(struct ata_port *ap,
+ 					 struct ata_device *dev);
  static void ata_dev_xfermask(struct ata_port *ap, struct ata_device *dev);
+@@ -1449,16 +1449,16 @@ static int ata_bus_probe(struct ata_port
+ 		found = 1;
+ 	}
  
- static unsigned int ata_unique_id = 1;
-@@ -1754,20 +1755,28 @@ int ata_timing_compute(struct ata_device
+-	if (!found)
+-		goto err_out_disable;
+-
+-	ata_set_mode(ap);
+-	if (ap->flags & ATA_FLAG_PORT_DISABLED)
+-		goto err_out_disable;
+-
+-	return 0;
++	/* configure transfer mode */
++	if (found) {
++		ata_set_mode(ap, 1);
++		for (i = 0; i < ATA_MAX_DEVICES; i++)
++			if (ata_dev_present(&ap->device[i]))
++				return 0;
++	}
+ 
+-err_out_disable:
++	/* no device present, disable port */
++	ata_port_disable(ap);
+ 	ap->ops->port_disable(ap);
+ 	return -1;
+ }
+@@ -1788,7 +1788,7 @@ static int ata_dev_set_mode(struct ata_p
  	return 0;
  }
  
--static void ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
-+static int ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
+-static int ata_host_set_pio(struct ata_port *ap)
++static int ata_host_set_pio(struct ata_port *ap, int disable_on_err)
  {
--	if (!ata_dev_present(dev) || (ap->flags & ATA_FLAG_PORT_DISABLED))
--		return;
-+	unsigned int err_mask;
-+	int rc;
+ 	int i;
  
- 	if (dev->xfer_shift == ATA_SHIFT_PIO)
- 		dev->flags |= ATA_DFLAG_PIO;
+@@ -1799,8 +1799,13 @@ static int ata_host_set_pio(struct ata_p
+ 			continue;
  
--	ata_dev_set_xfermode(ap, dev);
-+	err_mask = ata_dev_set_xfermode(ap, dev);
-+	if (err_mask) {
-+		printk(KERN_ERR
-+		       "ata%u: failed to set xfermode (err_mask=0x%x)\n",
-+		       ap->id, err_mask);
-+		return -EIO;
-+	}
+ 		if (!dev->pio_mode) {
+-			printk(KERN_WARNING "ata%u: no PIO support\n", ap->id);
+-			return -1;
++			printk(KERN_WARNING "ata%u: dev %u no PIO support\n",
++			       ap->id, dev->devno);
++			if (disable_on_err) {
++				ata_dev_disable(ap, dev);
++				continue;
++			} else
++				return -EINVAL;
+ 		}
  
--	if (ata_dev_revalidate(ap, dev, 0)) {
--		printk(KERN_ERR "ata%u: failed to revalidate after set "
--		       "xfermode, disabled\n", ap->id);
--		ata_port_disable(ap);
-+	rc = ata_dev_revalidate(ap, dev, 0);
-+	if (rc) {
-+		printk(KERN_ERR
-+		       "ata%u: failed to revalidate after set xfermode\n",
-+		       ap->id);
-+		return rc;
- 	}
- 
- 	DPRINTK("xfer_shift=%u, xfer_mode=0x%x\n",
-@@ -1776,6 +1785,7 @@ static void ata_dev_set_mode(struct ata_
- 	printk(KERN_INFO "ata%u: dev %u configured for %s\n",
- 	       ap->id, dev->devno,
- 	       ata_mode_string(ata_xfer_mode2mask(dev->xfer_mode)));
-+	return 0;
- }
- 
- static int ata_host_set_pio(struct ata_port *ap)
-@@ -1859,11 +1869,15 @@ static void ata_set_mode(struct ata_port
- 	ata_host_set_dma(ap);
- 
- 	/* step 4: update devices' xfer mode */
--	for (i = 0; i < ATA_MAX_DEVICES; i++)
--		ata_dev_set_mode(ap, &ap->device[i]);
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *dev = &ap->device[i];
- 
--	if (ap->flags & ATA_FLAG_PORT_DISABLED)
--		return;
-+		if (!ata_dev_present(dev))
-+			continue;
-+
-+		if (ata_dev_set_mode(ap, dev))
-+			goto err_out;
-+	}
- 
- 	if (ap->ops->post_set_mode)
- 		ap->ops->post_set_mode(ap);
-@@ -2702,11 +2716,16 @@ static void ata_dev_xfermask(struct ata_
+ 		dev->xfer_mode = dev->pio_mode;
+@@ -1832,13 +1837,19 @@ static void ata_host_set_dma(struct ata_
+ /**
+  *	ata_set_mode - Program timings and issue SET FEATURES - XFER
+  *	@ap: port on which timings will be programmed
++ *	@disable_on_err: disable device on error
+  *
+- *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).
++ *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
++ *	@disable_on_err is non-zero, devices which fail to configure
++ *	are taken offline and this function always succeeds.
   *
   *	LOCKING:
   *	PCI/etc. bus probe sem.
 + *
 + *	RETURNS:
-+ *	0 on success, AC_ERR_* mask otherwise.
++ *	0 on success, negative errno otherwise
   */
- 
--static void ata_dev_set_xfermode(struct ata_port *ap, struct ata_device *dev)
-+static unsigned int ata_dev_set_xfermode(struct ata_port *ap,
-+					 struct ata_device *dev)
+-static void ata_set_mode(struct ata_port *ap)
++static int ata_set_mode(struct ata_port *ap, int disable_on_err)
  {
- 	struct ata_taskfile tf;
-+	unsigned int err_mask;
+ 	int i, rc;
  
- 	/* set up set-features taskfile */
- 	DPRINTK("set features - xfer mode\n");
-@@ -2718,13 +2737,10 @@ static void ata_dev_set_xfermode(struct 
- 	tf.protocol = ATA_PROT_NODATA;
- 	tf.nsect = dev->xfer_mode;
+@@ -1861,9 +1872,9 @@ static void ata_set_mode(struct ata_port
+ 	}
  
--	if (ata_exec_internal(ap, dev, &tf, DMA_NONE, NULL, 0)) {
--		printk(KERN_ERR "ata%u: failed to set xfermode, disabled\n",
--		       ap->id);
--		ata_port_disable(ap);
--	}
-+	err_mask = ata_exec_internal(ap, dev, &tf, DMA_NONE, NULL, 0);
+ 	/* step 2: always set host PIO timings */
+-	rc = ata_host_set_pio(ap);
++	rc = ata_host_set_pio(ap, disable_on_err);
+ 	if (rc)
+-		goto err_out;
++		return rc;
  
--	DPRINTK("EXIT\n");
-+	DPRINTK("EXIT, err_mask=%x\n", err_mask);
-+	return err_mask;
+ 	/* step 3: set host DMA timings */
+ 	ata_host_set_dma(ap);
+@@ -1875,17 +1886,19 @@ static void ata_set_mode(struct ata_port
+ 		if (!ata_dev_present(dev))
+ 			continue;
+ 
+-		if (ata_dev_set_mode(ap, dev))
+-			goto err_out;
++		rc = ata_dev_set_mode(ap, dev);
++		if (rc) {
++			if (disable_on_err)
++				ata_dev_disable(ap, dev);
++			else
++				return rc;
++		}
+ 	}
+ 
+ 	if (ap->ops->post_set_mode)
+ 		ap->ops->post_set_mode(ap);
+ 
+-	return;
+-
+-err_out:
+-	ata_port_disable(ap);
++	return 0;
  }
  
  /**
+@@ -4526,7 +4539,7 @@ int ata_device_resume(struct ata_port *a
+ {
+ 	if (ap->flags & ATA_FLAG_SUSPENDED) {
+ 		ap->flags &= ~ATA_FLAG_SUSPENDED;
+-		ata_set_mode(ap);
++		ata_set_mode(ap, 1);
+ 	}
+ 	if (!ata_dev_present(dev))
+ 		return 0;
 -- 
 1.2.4
 
