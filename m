@@ -1,53 +1,56 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 1/1] libata-dev: add flush task to ata_exec_internal()
-Date: Tue, 14 Mar 2006 11:19:04 +0800
-Message-ID: <44163628.2000001@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: "MR. ANDRE AMOUSSOU" <aa2006bj@katamail.com>
+Subject: Good Morning,
+Date: Mon, 13 Mar 2006 14:53:20 +0100
+Message-ID: <1142258000.4415795088d9d__5381.64963149956$1142308056$gmane$org@imp.online.net>
+Reply-To: amoussou_10@yahoo.fr
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:32413 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751793AbWCNDTW
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Mar 2006 22:19:22 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e31.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k2E3JG0r011648
-	for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 22:19:16 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2E3MAbx157340
-	for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 20:22:10 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2E3JDw5005853
-	for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 20:19:14 -0700
+Received: from imp2-j.online.net ([212.27.37.65]:11448 "EHLO imp2-j.online.net")
+	by vger.kernel.org with ESMTP id S932545AbWCNDqw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 22:46:52 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, IDE Linux <linux-ide@vger.kernel.org>
 
-Add ata_port_flush_task() to ata_exec_internal().
+Good Morning,
+I am Mr.Amoussou Andre, a credit officer in First National Bank Cotonou Benin,
+and personal account manager to an expartriate who used to work with Benin
+Total Oil Company(B.T.O.C). On the 2nd of January 2005, I recieved a call that
+my client died in the Tsunami Disaster with his wife and two kids while on
+vacation at Phuket Island in Thailand.
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
----
+Since then I have made several enquiries to locate any of my client's extended
+relatives. This has proved unsuccessful. I have contacted you to assist in
+repartriating the money left behind by my client before it gets confiscated or
+declared unserviceable by the bank.
 
-It seems we also need ata_port_flush_task() in ata_exec_internal().
+Particularly, the bank where the deceased had an account valued at
+US$19,500,000.00 (Nineteen Million, Five Hundred Th! ousand United States
+Dollars). The bank has issued me a notice to provide the next-of-kin or have
+the account confiscated. Since I have been unsuccessful in locating the
+biological relatives of my late client, I hereby seek your consent to present
+you to the bank as next-of-kin of the deceased since you
+are a
+foreigner, so that the proceeds of this account valued at US$19.5M can be
+transfered to you as inheritance and thereafter, you and me can share the
+money; 50% to me and 35% to you, while 5% will be donated to the Tsunami
+Disaster Charity Fund, and 10% for expenditures.
 
-Patch against the upstream branch
-(fb21f0d0ec7e31cc814165e1a9d2662d9c9dd980).
+I have original copy of Certificate of Deposit of the funds, which will be
+used to substantiate our inherittance claims. All I require is your consent
+and honest co-operation to enable us see the deal through.
 
-For your review, thanks,
+Furthermore, I guarantee that the transaction will be executed under a
+legitimate arrangement that will protect you from any breach of the law.
+Please contact me via ! email to enable us discuss further.
 
-Albert
+Thank you.
+Yours faithfully,
+Mr.Amoussou Andre,
+(Credit Officer)
+Email:amoussou_10@yahoo.fr
 
---- upstream0/drivers/scsi/libata-core.c	2006-03-14 10:31:01.000000000 +0800
-+++ exec_internal/drivers/scsi/libata-core.c	2006-03-14 10:55:24.000000000 +0800
-@@ -962,6 +962,8 @@ ata_exec_internal(struct ata_port *ap, s
- 	spin_unlock_irqrestore(&ap->host_set->lock, flags);
- 
- 	if (!wait_for_completion_timeout(&wait, ATA_TMOUT_INTERNAL)) {
-+		ata_port_flush_task(ap);
-+
- 		spin_lock_irqsave(&ap->host_set->lock, flags);
- 
- 		/* We're racing with irq here.  If we lose, the
+
+
 
