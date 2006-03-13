@@ -1,54 +1,62 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 3/4] libata: make ata_set_mode() responsible for failure handling
-Date: Mon, 13 Mar 2006 18:44:01 +0900
-Message-ID: <20060313094401.GD2091@htj.dyndns.org>
-References: <11422375531645-git-send-email-htejun@gmail.com> <44152F3D.50307@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 3/4] libata: add per-dev pio/mwdma/udma_mask
+Date: Mon, 13 Mar 2006 04:52:28 -0500
+Message-ID: <441540DC.2050001@pobox.com>
+References: <11421469551000-git-send-email-htejun@gmail.com> <44152D64.6000903@pobox.com> <20060313093052.GB2091@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.180]:46872 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751206AbWCMJoH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 04:44:07 -0500
-Received: by pproxy.gmail.com with SMTP id d42so844882pyd
-        for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 01:44:06 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <44152F3D.50307@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:17638 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751977AbWCMJwh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 04:52:37 -0500
+In-Reply-To: <20060313093052.GB2091@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-On Mon, Mar 13, 2006 at 03:37:17AM -0500, Jeff Garzik wrote:
+Tejun Heo wrote:
+> On Mon, Mar 13, 2006 at 03:29:24AM -0500, Jeff Garzik wrote:
 > 
-> I have the following concern with this patch (#3) however:
+>>Tejun Heo wrote:
+>>
+>>>Add per-dev pio/mwdma/udma_mask.  All transfer mode limits used to be
+>>>applied to ap->*_mask which unnecessarily restricted other devices
+>>>sharing the port.  This change will also benefit later EH speed down
+>>>and hotplug.
+>>>
+>>>Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>
+>>I don't see much value in the separation.  Rather than 3 separate masks, 
+>>it seems like this patch would be simplified if you simply added 
+>>dev->xfer_mask.
+>>
 > 
-> >-static void ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
-> >+static int ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
-> > {
-> >-	if (!ata_dev_present(dev) || (ap->flags & ATA_FLAG_PORT_DISABLED))
-> >-		return;
 > 
-> I think you drop too many ATA_FLAG_PORT_DISABLED tests in this patch, 
-> leading the code to potentially miss a previously-flagged PORT_DISABLED 
-> (perhaps by an LLDD).
+> The thing is that ap->*_mask's are separated the same way and all
+> masking constants are defined as such.  e.g.
 > 
+> 	ap->udma_mask &= ATA_UDMA5;
+> or
+> 	ap->udma_mask &= ATA_UDMA_MASK_40C;
+> 
+> Making dev->*_mask's the same enables share those constants and code
+> convention.  So, things to consider here are...
+> 
+> 1. Port xfer masks are defined as three separate masks.
+> 
+> 2. All the constants are defined according to that.
+> 
+> 3. Three separate masks are easier to deal with for LLDD's.
 
-Hmmm... the plan is to disallow LLDD's take ports or devices offline
-from low level callbacks.  They should just let upper layer know by
-returning failure code.
+Separate masks is better for the LLDD interface, but the packed version 
+seems superior for internal libata use.
 
-Currently, during probing, the only place where disabling a port is
-allowed is ->phy_reset (for compatibility), which ata_bus_probe()
-interprets as no active device and reenables the port.  Later,
-->error_handler() would have that power too but I don't think any
-other callback should be allowed to do that.  Also, no current
-in-kernel LLDD does that during probing process.
+No reason why ATA_UDMA_MASK_40C can't simply operate on a packed 
+xfer_mask variable, for example.
 
-If we're gonna allow some callbacks to disable ports or devices.  I
-think we need to come up with clear rules such that checks can be
-performed exactly where needed.
+	Jeff
 
-Thanks.
 
--- 
-tejun
+
