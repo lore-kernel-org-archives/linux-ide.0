@@ -1,47 +1,138 @@
-From: "Yu, Luming" <luming.yu@intel.com>
-Subject: RE: 2.6.16-rc5: known regressions [TP 600X S3, vanilla DSDT]
-Date: Mon, 13 Mar 2006 12:51:57 +0800
-Message-ID: <3ACA40606221794F80A5670F0AF15F840B2DAF0C@pdsmsx403>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: clean up IDENTIFY printing
+Date: Mon, 13 Mar 2006 14:33:50 +0900
+Message-ID: <20060313053350.GD29870@htj.dyndns.org>
+References: <44144172.9040304@garzik.org> <20060312165701.GA9051@htj.dyndns.org> <44146758.6090006@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmr20.intel.com ([134.134.136.19]:13020 "EHLO
-	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
-	id S932302AbWCMExm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Mar 2006 23:53:42 -0500
-Content-class: urn:content-classes:message
+Received: from pproxy.gmail.com ([64.233.166.183]:32203 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751243AbWCMFd4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 00:33:56 -0500
+Received: by pproxy.gmail.com with SMTP id d42so809295pyd
+        for <linux-ide@vger.kernel.org>; Sun, 12 Mar 2006 21:33:55 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <44146758.6090006@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
-Cc: linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
->> I need the acpi trace log before _PTS to see what kind of thermal
->> related methods got called.
->
->Alas, I've included all the dmesg's.  
+Printing info about IDENTIFY page used to be the responsibility of
+ata_dev_read_id().  As all devices are revalidated after xfer mode
+configuration, this resulted in two info messages about one device.
+This patch improves ata_dump_id() such that it can be generally
+useable and makes printing the responsibility of ata_dev_configure()
+which has better understanding of what's going on.
 
-I need the full log  for S3 suspend failure not just snippets.
-Please attach it on bugzilla.kernel.org
+The IDENTIFY info printing now looks like the following.
 
-The log for S3 suspend success cannot help me to track down.
+ata2: dev 1 cfg 49:2f00 53:0007 63:0007 64:0003 75:001f 80:00fe 81:0000 82:346b
+                83:7d01 84:4023 85:3469 86:3c01 87:4023 88:207f 93:0000
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
->
->Below is the script that I use to enter S3 sleep.  It unloads rid of
->troublesome modules and stop services that don't sleep well.  Then
->(for debugging) it sends the kernel version and boot parameters across
->the serial console (the @@@@ SLEEP line), raises the debug level to
->0x1F, does a sync (in case the sleep hangs, since this is my
->production machine), and then enters mem sleep.
->
->So nothing in it should trigger any thermal methods; except that I
->usually have the THM2 trip point raised to 45C with a polling time of
->100 seconds.  So once in a while a thermal poll will happen sleep is
->being set up.  I am not sure whether it would be reported in the
->dmesgs if it happened; but the S3 failure happens much more often than
->such a thermal polling would happen, so I doubt the S3 failure
->requires a thermal poll.
+---
 
-Could you try to mute thermal poll?
+ libata-core.c |   61 +++++++++++++++++++++++-----------------------------------
+ 1 file changed, 25 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 439b6db..7e9cb70 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -743,40 +743,33 @@ void ata_dev_select(struct ata_port *ap,
+ /**
+  *	ata_dump_id - IDENTIFY DEVICE info debugging output
+  *	@id: IDENTIFY DEVICE page to dump
++ *	@level: KERN_* message level
++ *	@fmt: header format string
++ *	@...: header string arguments
+  *
+- *	Dump selected 16-bit words from the given IDENTIFY DEVICE
+- *	page.
++ *	Dump selected 16-bit words from the given IDENTIFY DEVICE page
++ *	with the specified header.
+  *
+  *	LOCKING:
+  *	caller.
+  */
+-
+-static inline void ata_dump_id(const u16 *id)
++static void ata_dump_id(const u16 *id, const char *level, const char *fmt, ...)
+ {
+-	DPRINTK("49==0x%04x  "
+-		"53==0x%04x  "
+-		"63==0x%04x  "
+-		"64==0x%04x  "
+-		"75==0x%04x  \n",
+-		id[49],
+-		id[53],
+-		id[63],
+-		id[64],
+-		id[75]);
+-	DPRINTK("80==0x%04x  "
+-		"81==0x%04x  "
+-		"82==0x%04x  "
+-		"83==0x%04x  "
+-		"84==0x%04x  \n",
+-		id[80],
+-		id[81],
+-		id[82],
+-		id[83],
+-		id[84]);
+-	DPRINTK("88==0x%04x  "
+-		"93==0x%04x\n",
+-		id[88],
+-		id[93]);
++	va_list ap;
++	char buf[24];
++
++	va_start(ap, fmt);
++	vscnprintf(buf, sizeof(buf), fmt, ap);
++	va_end(ap);
++
++	printk("%s%s49:%04x 53:%04x 63:%04x 64:%04x 75:%04x 80:%04x 81:%04x 82:%04x\n",
++	       level, buf,
++	       id[49], id[53], id[63], id[64], id[75], id[80], id[81], id[82]);
++
++	memset(buf, ' ', strlen(buf));
++	printk("%s%s83:%04x 84:%04x 85:%04x 86:%04x 87:%04x 88:%04x 93:%04x\n",
++	       level, buf,
++	       id[83], id[84], id[85], id[86], id[87], id[88], id[93]);
+ }
+ 
+ /**
+@@ -1120,12 +1113,6 @@ static int ata_dev_read_id(struct ata_po
+ 
+ 	swap_buf_le16(id, ATA_ID_WORDS);
+ 
+-	/* print device capabilities */
+-	printk(KERN_DEBUG "ata%u: dev %u cfg "
+-	       "49:%04x 82:%04x 83:%04x 84:%04x 85:%04x 86:%04x 87:%04x 88:%04x\n",
+-	       ap->id, dev->devno,
+-	       id[49], id[82], id[83], id[84], id[85], id[86], id[87], id[88]);
+-
+ 	/* sanity check */
+ 	if ((class == ATA_DEV_ATA) != ata_id_is_ata(id)) {
+ 		rc = -EINVAL;
+@@ -1204,6 +1191,10 @@ static int ata_dev_configure(struct ata_
+ 
+ 	DPRINTK("ENTER, host %u, dev %u\n", ap->id, dev->devno);
+ 
++	if (print_info)
++		ata_dump_id(dev->id, KERN_DEBUG, "ata%u: dev %u cfg ",
++			    ap->id, dev->devno);
++
+ 	/* initialize to-be-configured parameters */
+ 	dev->flags = 0;
+ 	dev->max_sectors = 0;
+@@ -1227,8 +1218,6 @@ static int ata_dev_configure(struct ata_
+ 	/* find max transfer mode; for printk only */
+ 	xfer_mask = ata_id_xfermask(dev->id);
+ 
+-	ata_dump_id(dev->id);
+-
+ 	/* ATA-specific feature tests */
+ 	if (dev->class == ATA_DEV_ATA) {
+ 		dev->n_sectors = ata_id_n_sectors(dev->id);
