@@ -1,56 +1,72 @@
-From: "MR. ANDRE AMOUSSOU" <aa2006bj@katamail.com>
-Subject: Good Morning,
-Date: Mon, 13 Mar 2006 14:53:20 +0100
-Message-ID: <1142258000.4415795088d9d__5381.64963149956$1142308056$gmane$org@imp.online.net>
-Reply-To: amoussou_10@yahoo.fr
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [PATCH 1/1] libata-dev: ata_check_atapi_dma() fix for ATA_FLAG_PIO_POLLING
+ LLDDs
+Date: Tue, 14 Mar 2006 12:52:53 +0800
+Message-ID: <44164C25.10106@tw.ibm.com>
+References: <441525DB.40905@tw.ibm.com> <441528BD.8070708@pobox.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imp2-j.online.net ([212.27.37.65]:11448 "EHLO imp2-j.online.net")
-	by vger.kernel.org with ESMTP id S932545AbWCNDqw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2006 22:46:52 -0500
+Received: from e36.co.us.ibm.com ([32.97.110.154]:57772 "EHLO
+	e36.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750717AbWCNExL
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Mar 2006 23:53:11 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e36.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k2E4r5if003507
+	for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 23:53:05 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2E4oFIS224400
+	for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 21:50:15 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2E4r4Ot011432
+	for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2006 21:53:04 -0700
+In-Reply-To: <441528BD.8070708@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: IDE Linux <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Doug Maxey <dwm@maxeymade.com>
 
-Good Morning,
-I am Mr.Amoussou Andre, a credit officer in First National Bank Cotonou Benin,
-and personal account manager to an expartriate who used to work with Benin
-Total Oil Company(B.T.O.C). On the 2nd of January 2005, I recieved a call that
-my client died in the Tsunami Disaster with his wife and two kids while on
-vacation at Phuket Island in Thailand.
+Jeff Garzik wrote:
 
-Since then I have made several enquiries to locate any of my client's extended
-relatives. This has proved unsuccessful. I have contacted you to assist in
-repartriating the money left behind by my client before it gets confiscated or
-declared unserviceable by the bank.
+> 
+> Applied, though I think its an open question what happens with
+> CDB-interrupt ATAPI devices want to do DMA.  Perhaps we just get an
+> interrupt event that we clear, then life proceeds as normal.
 
-Particularly, the bank where the deceased had an account valued at
-US$19,500,000.00 (Nineteen Million, Five Hundred Th! ousand United States
-Dollars). The bank has issued me a notice to provide the next-of-kin or have
-the account confiscated. Since I have been unsuccessful in locating the
-biological relatives of my late client, I hereby seek your consent to present
-you to the bank as next-of-kin of the deceased since you
-are a
-foreigner, so that the proceeds of this account valued at US$19.5M can be
-transfered to you as inheritance and thereafter, you and me can share the
-money; 50% to me and 35% to you, while 5% will be donated to the Tsunami
-Disaster Charity Fund, and 10% for expenditures.
+Not sure. I have no such device at hand for test; currently relying
+on the SFF-8020i spec (http://www.bswd.com/sff8020i.pdf) as reference.
+According to p.31, we have to send out the CDB after receiving
+the CDB interrupt. So, just clearing the irq looks not enough.
 
-I have original copy of Certificate of Deposit of the funds, which will be
-used to substantiate our inherittance claims. All I require is your consent
-and honest co-operation to enable us see the deal through.
+> 
+> Does anybody actually have such a device anywhere?  :)
+> 
 
-Furthermore, I guarantee that the transaction will be executed under a
-legitimate arrangement that will protect you from any breach of the law.
-Please contact me via ! email to enable us discuss further.
+Maybe Alan or Mark knows? 
 
-Thank you.
-Yours faithfully,
-Mr.Amoussou Andre,
-(Credit Officer)
-Email:amoussou_10@yahoo.fr
+We really need tester for such device.
+How about the attached patch?
 
+---
+Albert
 
+--- 07_followup/drivers/scsi/libata-core.c	2006-03-13 16:25:52.000000000 +0800
++++ 08_need_tester/drivers/scsi/libata-core.c	2006-03-14 12:45:09.000000000 +0800
+@@ -1294,8 +1294,12 @@ static int ata_dev_configure(struct ata_
+ 		}
+ 		dev->cdb_len = (unsigned int) rc;
+ 
+-		if (ata_id_cdb_intr(dev->id))
++		if (ata_id_cdb_intr(dev->id)) {
+ 			dev->flags |= ATA_DFLAG_CDB_INTR;
++			printk(KERN_INFO "This ATAPI device generates CDB intr.\n"
++			       "Please send an email to linux-ide@vger.kernel.org\n"
++			       "if you are interested to help testing such device.\n");
++		}
+ 
+ 		/* print device info to dmesg */
+ 		if (print_info)
 
 
