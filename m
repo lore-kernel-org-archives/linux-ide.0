@@ -1,149 +1,120 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 1/1] libata-dev: ata_check_atapi_dma() fix for ATA_FLAG_PIO_POLLING
- LLDDs
-Date: Wed, 15 Mar 2006 11:12:10 -0500
-Message-ID: <44183CDA.5010407@rtr.ca>
-References: <441525DB.40905@tw.ibm.com> <441528BD.8070708@pobox.com> <44164C25.10106@tw.ibm.com> <441838B6.8060900@rtr.ca>
+From: Sergey Vlasov <vsu@altlinux.ru>
+Subject: Re: [PATCH] AHCI SATA vendor update from VIA
+Date: Wed, 15 Mar 2006 19:17:36 +0300
+Message-ID: <20060315191736.231a2894.vsu@altlinux.ru>
+References: <439CF812.8010107@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040401070903070708070808"
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="pgp-sha1";
+ boundary="Signature=_Wed__15_Mar_2006_19_17_36_+0300_H9QNEzWKW1A8n0ku"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:22429 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1750944AbWCOQMP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Mar 2006 11:12:15 -0500
-In-Reply-To: <441838B6.8060900@rtr.ca>
+Received: from mivlgu.ru ([81.18.140.87]:52449 "EHLO mail.mivlgu.ru")
+	by vger.kernel.org with ESMTP id S1751023AbWCOQR4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Mar 2006 11:17:56 -0500
+In-Reply-To: <439CF812.8010107@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE Linux <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Doug Maxey <dwm@maxeymade.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Geoff Rivell <grivell@comcast.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040401070903070708070808
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+--Signature=_Wed__15_Mar_2006_19_17_36_+0300_H9QNEzWKW1A8n0ku
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 
-Albert Lee wrote:
-> Jeff Garzik wrote:
+On Sun, 11 Dec 2005 23:09:54 -0500 Jeff Garzik wrote:
+
+> I received this ahci.c patch from VIA, and pass it on for review, 
+> comment, and testing.
 > 
->> Applied, though I think its an open question what happens with
->> CDB-interrupt ATAPI devices want to do DMA.  Perhaps we just get an
->> interrupt event that we clear, then life proceeds as normal.
+> This patch won't go in as-is, because it does too much special casing. 
+> But until we get around to that, people with VIA controllers probably 
+> want this...
 > 
-> Not sure. I have no such device at hand for test; currently relying
-> on the SFF-8020i spec (http://www.bswd.com/sff8020i.pdf) as reference.
-> According to p.31, we have to send out the CDB after receiving
-> the CDB interrupt. So, just clearing the irq looks not enough.
-> 
->> Does anybody actually have such a device anywhere?  :)
+> 	Jeff
 
-Yup, I have two such drives here.
+What is needed to get the VT8251 support into the kernel tree?
 
-One of them has a grease-pencil "NFG" marking on it,
-and other other one doesn't.  They both powered up and
-worked just now, and their identify blobs are attached
-(you can interpret them with "hdparm --Istdin <blob").
+I have looked at the patch, and it basically does three things:
 
-I'm late paying attention on this thread, so what is it
-that we wanted done with them?
+1) Apparently the VT8251 hardware does not like the standard reset
+   sequence performed by __sata_phy_reset() - the phy seems to become
+   ready, but the ATA_BUSY bit never goes off.  So the patch authors
+   just duplicated ahci_phy_reset(), inserted the whole code of
+   __sata_phy_reset() in there, and added this part before the
+   ata_busy_sleep() call:
 
-Or even better, who wants one of them?  Albert, Jeff, or Tejun?
++	/*Fix the VIA busy bug by a software reset*/
++	for (i = 0; i < 100; i++) {
++		tmp_status = ap->ops->check_status(ap);
++		if ((tmp_status & ATA_BUSY) == 0) break;
++		msleep(10);
++	}
++
++	if ((tmp_status & ATA_BUSY)) {
++		DPRINTK("Busy after CommReset, do softreset...\n"); 
++		/*set the PxCMD.CLO bit to clear BUSY and DRQ, to make the reset command sent out*/
++		tmp = readl(port_mmio + PORT_CMD);
++		tmp |= PORT_CMD_CLO;
++		writel(tmp, port_mmio + PORT_CMD);
++		readl(port_mmio + PORT_CMD); /* flush */
++
++		if (via_ahci_softreset(ap)) {
++			printk(KERN_WARNING "softreset failed\n");
++			return;
++		}
++	}
 
-Cheers
+   Now, if this is really a chip bug, we don't have any choice except
+   adding this workaround, but obviously not in this way.  What do you
+   think about splitting __sata_phy_reset() in two parts -
+   __sata_phy_reset_start() (everything up to the point where
+   ata_busy_sleep() is called) and __sata_phy_reset_end()
+   (ata_busy_sleep() and the rest), so that the low-level driver could
+   insert its own code between these parts?  Or should a hook for this
+   be added to ->ops instead?
 
---------------040401070903070708070808
-Content-Type: text/plain;
- name="aopen_936e_aku.identify"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="aopen_936e_aku.identify"
+2) via_ahci_qc_issue really just filters out the SETFEATURES_XFER
+   command; only VIA can tell why this is needed, and is there a better
+   way to do this.  However, at least some duplicated code could be
+   removed easily:
 
+static int via_ahci_qc_issue(struct ata_queued_cmd *qc)
+{
+	if (qc && qc->tf.command == ATA_CMD_SET_FEATURES &&
+	    qc->tf.feature == SETFEATURES_XFER) {
+		/* skip set xfer mode process */
+		ata_qc_complete(qc);
+		return 0;
+	}
+	return ahci_qc_issue(qc);
+}
 
-/dev/hdd:
- IO_support   =  0 (default 16-bit)
- unmaskirq    =  0 (off)
- using_dma    =  1 (on)
- keepsettings =  0 (off)
- readonly     =  0 (off)
- readahead    = 256 (on)
-85a0 0000 0000 0000 0000 0000 0000 0000
-0000 0000 2020 2020 2020 2020 2020 2020
-2020 2020 2020 2020 0000 0000 0000 5531
-3049 2020 2020 4344 2d52 4f4d 2033 3658
-2f41 4b55 2020 2020 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 0000
-0000 0f00 0000 0400 0200 0006 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0107
-0003 0078 0096 00e3 0078 0000 0000 0000
-0000 0002 0009 3030 3120 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0107 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
+   Would this be acceptable?
 
---------------040401070903070708070808
-Content-Type: text/plain;
- name="aopen_940e_aku.identify"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="aopen_940e_aku.identify"
+3) What via_ahci_port_stop() does, I just don't understand - it is
+   basically a copy of ahci_port_stop() at that time, but with clearing
+   of the PORT_CMD bits removed - so nothing is stopped actually.
+   Again, only VIA can tell why is this needed, but this part of the
+   patch looks like a bug.
 
+Geoff Rivell (CC'ed) tried to update the patch for 2.6.15:
 
-/dev/hdc:
- IO_support   =  0 (default 16-bit)
- unmaskirq    =  0 (off)
- using_dma    =  1 (on)
- keepsettings =  0 (off)
- readonly     =  0 (off)
- readahead    = 256 (on)
-85a0 0000 0000 0000 0000 0000 0000 0000
-0000 0000 2020 2020 2020 2020 2020 2020
-2020 2020 2020 2020 0000 0000 0000 5533
-3120 2020 2020 4344 2d52 4f4d 2034 3058
-2f41 4b55 2020 2020 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 0000
-0000 0f00 0000 0400 0200 0006 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0107
-0003 0078 0096 00e3 0078 0000 0000 0000
-0000 0002 0009 3030 3330 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0107 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0041
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
+http://grivell.home.comcast.net/via_ahci.patch
 
---------------040401070903070708070808--
+However, that patch does some things in a different order from the VIA
+code - it calls via_ahci_softreset() before __sata_phy_reset(), which
+does not seem safe to me.  Geoff, does this really work?
+
+--Signature=_Wed__15_Mar_2006_19_17_36_+0300_H9QNEzWKW1A8n0ku
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFEGD4jW82GfkQfsqIRAo3PAJ0euP/7MgHDbBRQcAYR+Pm9kuLyCACfYV3e
+ImpJLywsjZRq+Nl645oO/lE=
+=CL7c
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__15_Mar_2006_19_17_36_+0300_H9QNEzWKW1A8n0ku--
