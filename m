@@ -1,120 +1,38 @@
-From: Sergey Vlasov <vsu@altlinux.ru>
-Subject: Re: [PATCH] AHCI SATA vendor update from VIA
-Date: Wed, 15 Mar 2006 19:17:36 +0300
-Message-ID: <20060315191736.231a2894.vsu@altlinux.ru>
-References: <439CF812.8010107@pobox.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 1/1] libata-dev: ata_check_atapi_dma() fix for ATA_FLAG_PIO_POLLING
+ LLDDs
+Date: Wed, 15 Mar 2006 11:24:39 -0500
+Message-ID: <44183FC7.3020401@rtr.ca>
+References: <441525DB.40905@tw.ibm.com> <441528BD.8070708@pobox.com> <44164C25.10106@tw.ibm.com> <441838B6.8060900@rtr.ca> <44183CDA.5010407@rtr.ca>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="pgp-sha1";
- boundary="Signature=_Wed__15_Mar_2006_19_17_36_+0300_H9QNEzWKW1A8n0ku"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mivlgu.ru ([81.18.140.87]:52449 "EHLO mail.mivlgu.ru")
-	by vger.kernel.org with ESMTP id S1751023AbWCOQR4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Mar 2006 11:17:56 -0500
-In-Reply-To: <439CF812.8010107@pobox.com>
+Received: from rtr.ca ([64.26.128.89]:15312 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1752127AbWCOQYo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Mar 2006 11:24:44 -0500
+In-Reply-To: <44183CDA.5010407@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Geoff Rivell <grivell@comcast.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: albertl@mail.com
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE Linux <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Doug Maxey <dwm@maxeymade.com>
 
---Signature=_Wed__15_Mar_2006_19_17_36_+0300_H9QNEzWKW1A8n0ku
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+Mark Lord wrote:
+> Albert Lee wrote:
+>> Jeff Garzik wrote:
+>>
+>>> Applied, though I think its an open question what happens with
+>>> CDB-interrupt ATAPI devices want to do DMA.  Perhaps we just get an
+>>> interrupt event that we clear, then life proceeds as normal.
 
-On Sun, 11 Dec 2005 23:09:54 -0500 Jeff Garzik wrote:
+Oh yeah, from experience I know that the interrupt and DRQ bit
+are *NOT* synchronized with these devices.. I believe that the IRQ
+sometimes arrives early, and sometimes late.
 
-> I received this ahci.c patch from VIA, and pass it on for review, 
-> comment, and testing.
-> 
-> This patch won't go in as-is, because it does too much special casing. 
-> But until we get around to that, people with VIA controllers probably 
-> want this...
-> 
-> 	Jeff
+Reading the ATA status reg after the IRQ always clears the IRQ,
+and is usually necessary for the transfer to continue.
 
-What is needed to get the VT8251 support into the kernel tree?
+The last time I did a full ATAPI driver, it used both periodic polling
+and an IRQ handler to wait for (DRQ && !BUSY).
 
-I have looked at the patch, and it basically does three things:
-
-1) Apparently the VT8251 hardware does not like the standard reset
-   sequence performed by __sata_phy_reset() - the phy seems to become
-   ready, but the ATA_BUSY bit never goes off.  So the patch authors
-   just duplicated ahci_phy_reset(), inserted the whole code of
-   __sata_phy_reset() in there, and added this part before the
-   ata_busy_sleep() call:
-
-+	/*Fix the VIA busy bug by a software reset*/
-+	for (i = 0; i < 100; i++) {
-+		tmp_status = ap->ops->check_status(ap);
-+		if ((tmp_status & ATA_BUSY) == 0) break;
-+		msleep(10);
-+	}
-+
-+	if ((tmp_status & ATA_BUSY)) {
-+		DPRINTK("Busy after CommReset, do softreset...\n"); 
-+		/*set the PxCMD.CLO bit to clear BUSY and DRQ, to make the reset command sent out*/
-+		tmp = readl(port_mmio + PORT_CMD);
-+		tmp |= PORT_CMD_CLO;
-+		writel(tmp, port_mmio + PORT_CMD);
-+		readl(port_mmio + PORT_CMD); /* flush */
-+
-+		if (via_ahci_softreset(ap)) {
-+			printk(KERN_WARNING "softreset failed\n");
-+			return;
-+		}
-+	}
-
-   Now, if this is really a chip bug, we don't have any choice except
-   adding this workaround, but obviously not in this way.  What do you
-   think about splitting __sata_phy_reset() in two parts -
-   __sata_phy_reset_start() (everything up to the point where
-   ata_busy_sleep() is called) and __sata_phy_reset_end()
-   (ata_busy_sleep() and the rest), so that the low-level driver could
-   insert its own code between these parts?  Or should a hook for this
-   be added to ->ops instead?
-
-2) via_ahci_qc_issue really just filters out the SETFEATURES_XFER
-   command; only VIA can tell why this is needed, and is there a better
-   way to do this.  However, at least some duplicated code could be
-   removed easily:
-
-static int via_ahci_qc_issue(struct ata_queued_cmd *qc)
-{
-	if (qc && qc->tf.command == ATA_CMD_SET_FEATURES &&
-	    qc->tf.feature == SETFEATURES_XFER) {
-		/* skip set xfer mode process */
-		ata_qc_complete(qc);
-		return 0;
-	}
-	return ahci_qc_issue(qc);
-}
-
-   Would this be acceptable?
-
-3) What via_ahci_port_stop() does, I just don't understand - it is
-   basically a copy of ahci_port_stop() at that time, but with clearing
-   of the PORT_CMD bits removed - so nothing is stopped actually.
-   Again, only VIA can tell why is this needed, but this part of the
-   patch looks like a bug.
-
-Geoff Rivell (CC'ed) tried to update the patch for 2.6.15:
-
-http://grivell.home.comcast.net/via_ahci.patch
-
-However, that patch does some things in a different order from the VIA
-code - it calls via_ahci_softreset() before __sata_phy_reset(), which
-does not seem safe to me.  Geoff, does this really work?
-
---Signature=_Wed__15_Mar_2006_19_17_36_+0300_H9QNEzWKW1A8n0ku
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFEGD4jW82GfkQfsqIRAo3PAJ0euP/7MgHDbBRQcAYR+Pm9kuLyCACfYV3e
-ImpJLywsjZRq+Nl645oO/lE=
-=CL7c
------END PGP SIGNATURE-----
-
---Signature=_Wed__15_Mar_2006_19_17_36_+0300_H9QNEzWKW1A8n0ku--
+Cheers
