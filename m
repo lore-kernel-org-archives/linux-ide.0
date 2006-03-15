@@ -1,35 +1,47 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 1/1] libata-dev: ata_check_atapi_dma() fix for ATA_FLAG_PIO_POLLING
- LLDDs
-Date: Wed, 15 Mar 2006 11:49:58 -0500
-Message-ID: <441845B6.2070200@rtr.ca>
-References: <441525DB.40905@tw.ibm.com> <441528BD.8070708@pobox.com> <44164C25.10106@tw.ibm.com> <441838B6.8060900@rtr.ca> <44183CDA.5010407@rtr.ca>
+From: Bryan Fink <bfink@eventmonitor.com>
+Subject: Re: gigabyte iRam not seen by linux
+Date: Wed, 15 Mar 2006 14:34:45 -0500
+Message-ID: <44186C55.5060702@eventmonitor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:40590 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1752145AbWCOQuC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Mar 2006 11:50:02 -0500
-In-Reply-To: <44183CDA.5010407@rtr.ca>
+Received: from rs27.luxsci.com ([66.216.127.24]:25537 "EHLO rs27.luxsci.com")
+	by vger.kernel.org with ESMTP id S1750910AbWCOTeH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Mar 2006 14:34:07 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE Linux <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Doug Maxey <dwm@maxeymade.com>
+To: linux-ide@vger.kernel.org, pegasus@nerv.eu.org, htejun@gmail.com, edmudama@gmail.com, albertcc@tw.ibm.com
 
-Mark Lord wrote:
->
-> Yup, I have two such drives here.
+> The patch at the tail of this mail makes ata_dev_try_classify() ignore
+> diagnostic code in FEATURE.  If the iRam successfully gets attached
+> with the patch, can you please post 'hdparm -I /dev/sdX' and 'hdparm
+> --Istdout /dev/sdX' of the iRam?  
 > 
-> One of them has a grease-pencil "NFG" marking on it,
-> and other other one doesn't.  They both powered up and
-> worked just now, and their identify blobs are attached
-> (you can interpret them with "hdparm --Istdin <blob").
-..
+> --- a/drivers/scsi/libata-core.c
+> +++ b/drivers/scsi/libata-core.c
+> @@ -477,7 +477,7 @@ ata_dev_try_classify(struct ata_port *ap
+>  	else if ((device == 0) && (err == 0x81))
+>  		/* do nothing */ ;
+>  	else
+> -		return ATA_DEV_NONE;
+> +		/*return ATA_DEV_NONE*/;
+>  
+>  	/* determine if device is ATA or ATAPI */
+>  	class = ata_dev_classify(&tf);
 
-Oh, another note:  neither of these two drives works
-with DMA enabled, at least not in 2.6.12 using the IDE driver.
 
-PIO mode appears to be functioning fine on both of them.
+Hi, I'm having the same trouble with this card as everyone else. I'm 
+wondering if anyone would care to comment about what the above patch may 
+break.  Is it going to disable safeguards, such that if a disk in my 
+system actually does crash, I won't know it?  Or, is it simply going to 
+mean that I should be careful to only plug things into the system that I 
+know are supported?
 
-Cheers
+I'm in contact with Gigabyte, trying to get their opinion on the 
+matter.  I know others have said that they are very unhelpful when it 
+comes to linux support, but I'm hoping that if we can show them what's 
+wrong, they could roll up a fix in a firmware release.
+
+-Bryan
+
