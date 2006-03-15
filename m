@@ -1,47 +1,63 @@
-From: Bryan Fink <bfink@eventmonitor.com>
-Subject: Re: gigabyte iRam not seen by linux
-Date: Wed, 15 Mar 2006 14:34:45 -0500
-Message-ID: <44186C55.5060702@eventmonitor.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Warning - Maxtor SATA II and Nvidia nforce4
+Date: Wed, 15 Mar 2006 17:47:10 -0500
+Message-ID: <4418996E.6010808@garzik.org>
+References: <1142461887.2521.44.camel@station14.example.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rs27.luxsci.com ([66.216.127.24]:25537 "EHLO rs27.luxsci.com")
-	by vger.kernel.org with ESMTP id S1750910AbWCOTeH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Mar 2006 14:34:07 -0500
+Received: from mail.dvmed.net ([216.237.124.58]:34955 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751656AbWCOWrT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Mar 2006 17:47:19 -0500
+In-Reply-To: <1142461887.2521.44.camel@station14.example.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, pegasus@nerv.eu.org, htejun@gmail.com, edmudama@gmail.com, albertcc@tw.ibm.com
-
-> The patch at the tail of this mail makes ata_dev_try_classify() ignore
-> diagnostic code in FEATURE.  If the iRam successfully gets attached
-> with the patch, can you please post 'hdparm -I /dev/sdX' and 'hdparm
-> --Istdout /dev/sdX' of the iRam?  
-> 
-> --- a/drivers/scsi/libata-core.c
-> +++ b/drivers/scsi/libata-core.c
-> @@ -477,7 +477,7 @@ ata_dev_try_classify(struct ata_port *ap
->  	else if ((device == 0) && (err == 0x81))
->  		/* do nothing */ ;
->  	else
-> -		return ATA_DEV_NONE;
-> +		/*return ATA_DEV_NONE*/;
->  
->  	/* determine if device is ATA or ATAPI */
->  	class = ata_dev_classify(&tf);
+To: Dax Kelson <dax@gurulabs.com>
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 
-Hi, I'm having the same trouble with this card as everyone else. I'm 
-wondering if anyone would care to comment about what the above patch may 
-break.  Is it going to disable safeguards, such that if a disk in my 
-system actually does crash, I won't know it?  Or, is it simply going to 
-mean that I should be careful to only plug things into the system that I 
-know are supported?
+Ah, I see this made it to LKML :)
 
-I'm in contact with Gigabyte, trying to get their opinion on the 
-matter.  I know others have said that they are very unhelpful when it 
-comes to linux support, but I'm hoping that if we can show them what's 
-wrong, they could roll up a fix in a firmware release.
+Dax Kelson wrote:
+> Short version
+> ==============
+> Nvidia Nforce4 chipset with Maxtor SATA II drives with certain firmware
+> revisions cause data corruption and system instability when under
+> moderate to heavy I/O load.
 
--Bryan
+I'm a bit suspicious of this.
+
+Looking at the link, there are three problem areas and two problem blame 
+targets implied:
+
+	Data corruption	-> blame nvidia driver
+	NCQ		-> blame nvidia driver
+	Detection	-> blame maxtor firmware
+
+The first one likely applies to the Windows driver not Linux's sata_nv, 
+and thus irrelevant here.  The second one OBVIOUSLY applies only to 
+Windows, since sata_nv (and libata itself) don't yet enable NCQ.  The 
+third one could potentially apply to Linux.  Lastly, your mention of 
+"nforce fake raid" almost certainly indicates Windows or proprietary 
+drivers.
+
+Therefore, I ask:
+* are you reporting a only drive detection problem?
+* why are you reporting unrelated Windows problems to a Linux list?
+* if you are indeed reporting a problem on Linux, where is the kernel 
+and driver version info, as requested in REPORTING-BUGS?
+* and can you provide such info *and reproduce the problems* without 
+proprietary drivers loaded?
+
+Your email is just a list of highly general symptoms.  Your link seems 
+to indicate two NV driver bugs on Windows, and a Maxtor firmware upgrade 
+for undescribed detection problems.
+
+My recommended action for users is:
+1) Avoid Windows.
+2) Don't panic.
+
+	Jeff
+
 
