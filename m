@@ -1,63 +1,103 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Dax Kelson <dax@gurulabs.com>
 Subject: Re: Warning - Maxtor SATA II and Nvidia nforce4
-Date: Wed, 15 Mar 2006 17:47:10 -0500
-Message-ID: <4418996E.6010808@garzik.org>
+Date: Wed, 15 Mar 2006 16:23:18 -0700
+Message-ID: <1142464998.5578.17.camel@station14.example.com>
 References: <1142461887.2521.44.camel@station14.example.com>
+	 <4418996E.6010808@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:34955 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751656AbWCOWrT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Mar 2006 17:47:19 -0500
-In-Reply-To: <1142461887.2521.44.camel@station14.example.com>
+Received: from mail.gurulabs.com ([67.137.148.7]:28826 "EHLO mail.gurulabs.com")
+	by vger.kernel.org with ESMTP id S1752160AbWCOXWt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Mar 2006 18:22:49 -0500
+In-Reply-To: <4418996E.6010808@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dax Kelson <dax@gurulabs.com>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
+On Wed, 2006-03-15 at 17:47 -0500, Jeff Garzik wrote:
+> Ah, I see this made it to LKML :)
+> 
+> Dax Kelson wrote:
+> > Short version
+> > ==============
+> > Nvidia Nforce4 chipset with Maxtor SATA II drives with certain firmware
+> > revisions cause data corruption and system instability when under
+> > moderate to heavy I/O load.
+> 
+> I'm a bit suspicious of this.
+> 
+> Looking at the link, there are three problem areas and two problem blame 
+> targets implied:
+> 
+> 	Data corruption	-> blame nvidia driver
+> 	NCQ		-> blame nvidia driver
+> 	Detection	-> blame maxtor firmware
+> 
+> The first one likely applies to the Windows driver not Linux's sata_nv, 
+> and thus irrelevant here.
 
-Ah, I see this made it to LKML :)
+No.
 
-Dax Kelson wrote:
-> Short version
-> ==============
-> Nvidia Nforce4 chipset with Maxtor SATA II drives with certain firmware
-> revisions cause data corruption and system instability when under
-> moderate to heavy I/O load.
+Take a big file (5-10gb)
 
-I'm a bit suspicious of this.
+$ cp bigfile newfile
+$ cp bigfile newfile2
+$ cp bigfile newfile3
+$ cp bigfile newfile4
+$ md5sum bigfile newfile*
+[results are all different, assuming kernel doesn't panic during test]
 
-Looking at the link, there are three problem areas and two problem blame 
-targets implied:
+When I use the "stress" utility from
+http://weather.ou.edu/~apw/projects/stress/
 
-	Data corruption	-> blame nvidia driver
-	NCQ		-> blame nvidia driver
-	Detection	-> blame maxtor firmware
+The box usually makes it an an hour or two before a kernel panic or I/O
+errors wedge the box.
 
-The first one likely applies to the Windows driver not Linux's sata_nv, 
-and thus irrelevant here.  The second one OBVIOUSLY applies only to 
-Windows, since sata_nv (and libata itself) don't yet enable NCQ.  The 
-third one could potentially apply to Linux.  Lastly, your mention of 
-"nforce fake raid" almost certainly indicates Windows or proprietary 
-drivers.
+I setup a netdump/netconsole server on my network and I have several
+crashes captured. If you are interested I can send them on to you. I
+filed most them under the Red Hat bugzilla, but closed them after I
+discovered they were a hardware problem.
 
-Therefore, I ask:
-* are you reporting a only drive detection problem?
-* why are you reporting unrelated Windows problems to a Linux list?
-* if you are indeed reporting a problem on Linux, where is the kernel 
-and driver version info, as requested in REPORTING-BUGS?
-* and can you provide such info *and reproduce the problems* without 
-proprietary drivers loaded?
+> The second one OBVIOUSLY applies only to 
+> Windows, since sata_nv (and libata itself) don't yet enable NCQ.  The 
+> third one could potentially apply to Linux.  Lastly, your mention of 
+> "nforce fake raid" almost certainly indicates Windows or proprietary 
+> drivers.
 
-Your email is just a list of highly general symptoms.  Your link seems 
-to indicate two NV driver bugs on Windows, and a Maxtor firmware upgrade 
-for undescribed detection problems.
+Linux device mapper is proprietary? :)
 
-My recommended action for users is:
-1) Avoid Windows.
-2) Don't panic.
+The corruption occurs with a single disk or when using a device mapper
+"nvraid".
 
-	Jeff
+> Therefore, I ask:
+> * are you reporting a only drive detection problem?
+
+No. Detection was never a problem for me.
+
+> * why are you reporting unrelated Windows problems to a Linux list?
+
+I'm not, see above.
+
+> * if you are indeed reporting a problem on Linux, where is the kernel 
+> and driver version info, as requested in REPORTING-BUGS?
+
+Well, what can Linux do about this hardware problem? Maybe there is a
+workaround that can be done, but I'm not counting on it. A warning would
+be nice if it possible to detect the conditions where this can occur.
+This way others can troubleshoot and identify this problem quicker.
+
+I used mostly late model FC5 rawhide kernels which I believe are based
+off of 2.6.16rc5-git12/git13 or therebouts.
+
+> * and can you provide such info *and reproduce the problems* without 
+> proprietary drivers loaded?
+
+Sorry for the misunderstanding. Again, no proprietary drivers ever
+loaded. Problem is 100% reproducible. See above, etc.
+
+Dax Kelson
 
 
