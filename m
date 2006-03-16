@@ -1,93 +1,54 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 1/1] libata-dev: Remove ATA_PROT_PIO_MULT
-Date: Thu, 16 Mar 2006 17:59:22 +0800
-Message-ID: <441936FA.6060501@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Thu, 16 Mar 2006 11:08:38 +0100
+Message-ID: <20060316100838.GF3595@suse.de>
+References: <1142344212.4416ca14a26b4@webmail.aon.at> <44182CD7.9070401@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:12949 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751998AbWCPJ7h
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Mar 2006 04:59:37 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e32.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k2G9xV8O020766
-	for <linux-ide@vger.kernel.org>; Thu, 16 Mar 2006 04:59:31 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2G9uc4l250492
-	for <linux-ide@vger.kernel.org>; Thu, 16 Mar 2006 02:56:38 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2G9xUNq013766
-	for <linux-ide@vger.kernel.org>; Thu, 16 Mar 2006 02:59:31 -0700
+Received: from ns.virtualhost.dk ([195.184.98.160]:14121 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1752016AbWCPKJW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Mar 2006 05:09:22 -0500
+Content-Disposition: inline
+In-Reply-To: <44182CD7.9070401@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>
+To: Mark Lord <lkml@rtr.ca>
+Cc: me_trash1@aon.at, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-Remove the ATA_PROT_PIO_MULT protocol.
+On Wed, Mar 15 2006, Mark Lord wrote:
+> me_trash1@aon.at wrote:
+> >Hi!
+> >
+> >short:
+> >system with 2.6.15.4 with Mark Lord's opcode info patches
+> >sata_mv (Adaptec 1420SA Marvell 88SX6541)
+> >e.g. postgres:insert&delete gives: ata3: translated op=0x2a cmd=0x35 ATA 
+> >stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> >or sometimes (unknown cause):
+> >ata4: translated op=0x28 cmd=0x25 ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 
+> >0xb/47/00
+> >ata4: status=0xd0 { Busy }
+> >Assertion failed! ((readl(port_mmio + EDMA_RSP_Q_IN_PTR_OFS) >> 
+> >EDMA_RSP_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK) == pp->rsp_c
+> >onsumer,drivers/scsi/sata_mv.c,mv_get_crpb_status,line=1112
+> >
+> >
+> >long:
+> >I wanted to post this to the the thread "LibPATA code issues / 2.6.15.4".
+> >But right now my system is a bit down and so I sent this via webmail.
+> ...
+> 
+> fyi:
+> 
+> ATA cmd=0x35 is ATA_CMD_WRITE_EXT, and 0x25 (lower down in the logs)
+> is ATA_CMD_READ_EXT.
+> 
+> Those are the bog-standard (and slow!) PIO R/W commands,
+> which generate one interrupt per 512-bytes transferred.
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
----
+Eh no they are not, 0x35 is WRITEDMA_EXT and 0x25 is READMA_EXT.
 
-The ATA_PROT_PIO_MULT can be handled as ATA_PROT_PIO.
-Remove it.
-
-Changes:
-  - Remove the ATA_PROT_PIO_MULT protocol
-  - Filter out the PIO multi commands in ATA pass through
-
-Patch against the upstream branch
-(fb21f0d0ec7e31cc814165e1a9d2662d9c9dd980).
-
-For your review, thanks,
-
-Albert
-
---- upstream/include/linux/ata.h	2006-03-16 17:23:56.000000000 +0800
-+++ upstream2/include/linux/ata.h	2006-03-16 17:25:25.000000000 +0800
-@@ -204,7 +204,6 @@ enum ata_tf_protocols {
- 	ATA_PROT_UNKNOWN,	/* unknown/invalid */
- 	ATA_PROT_NODATA,	/* no data */
- 	ATA_PROT_PIO,		/* PIO single sector */
--	ATA_PROT_PIO_MULT,	/* PIO multiple sector */
- 	ATA_PROT_DMA,		/* DMA */
- 	ATA_PROT_ATAPI,		/* packet command, PIO data xfer*/
- 	ATA_PROT_ATAPI_NODATA,	/* packet command, no data */
---- upstream/drivers/scsi/libata-scsi.c	2006-03-16 17:23:51.000000000 +0800
-+++ upstream2/drivers/scsi/libata-scsi.c	2006-03-16 17:42:00.000000000 +0800
-@@ -2356,9 +2356,6 @@ ata_scsi_map_proto(u8 byte1)
- 
- 		case 4:		/* PIO Data-in */
- 		case 5:		/* PIO Data-out */
--			if (byte1 & 0xe0) {
--				return ATA_PROT_PIO_MULT;
--			}
- 			return ATA_PROT_PIO;
- 
- 		case 10:	/* Device Reset */
-@@ -2397,6 +2394,10 @@ ata_scsi_pass_thru(struct ata_queued_cmd
- 	if ((tf->protocol = ata_scsi_map_proto(scsicmd[1])) == ATA_PROT_UNKNOWN)
- 		goto invalid_fld;
- 
-+	if (scsicmd[1] & 0xe0)
-+		/* PIO multi not supported yet */
-+		goto invalid_fld;
-+
- 	/*
- 	 * 12 and 16 byte CDBs use different offsets to
- 	 * provide the various register values.
---- upstream/drivers/scsi/libata-core.c	2006-03-16 17:23:51.000000000 +0800
-+++ upstream2/drivers/scsi/libata-core.c	2006-03-16 17:25:25.000000000 +0800
-@@ -3905,7 +3905,6 @@ static inline int ata_should_dma_map(str
- 
- 	case ATA_PROT_ATAPI:
- 	case ATA_PROT_PIO:
--	case ATA_PROT_PIO_MULT:
- 		if (ap->flags & ATA_FLAG_PIO_DMA)
- 			return 1;
- 
-
-
-
+-- 
+Jens Axboe
 
