@@ -1,54 +1,54 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Thu, 16 Mar 2006 11:08:38 +0100
-Message-ID: <20060316100838.GF3595@suse.de>
-References: <1142344212.4416ca14a26b4@webmail.aon.at> <44182CD7.9070401@rtr.ca>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Linux v2.6.16-rc6
+Date: Thu, 16 Mar 2006 16:58:04 -0500
+Message-ID: <4419DF6C.7000103@tmr.com>
+References: <1142189154.21274.20.camel@blaze.homeip.net>	 <4414A6BF.3030604@garzik.org> <1142205571.10354.1.camel@blaze.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:14121 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1752016AbWCPKJW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Mar 2006 05:09:22 -0500
-Content-Disposition: inline
-In-Reply-To: <44182CD7.9070401@rtr.ca>
+Received: from prgy-npn2.prodigy.com ([207.115.54.38]:50967 "EHLO
+	oddball.prodigy.com") by vger.kernel.org with ESMTP id S964857AbWCPV4P
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Mar 2006 16:56:15 -0500
+In-Reply-To: <1142205571.10354.1.camel@blaze.homeip.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: me_trash1@aon.at, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: Paul Blazejowski <paulb@blazebox.homeip.net>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Wed, Mar 15 2006, Mark Lord wrote:
-> me_trash1@aon.at wrote:
-> >Hi!
-> >
-> >short:
-> >system with 2.6.15.4 with Mark Lord's opcode info patches
-> >sata_mv (Adaptec 1420SA Marvell 88SX6541)
-> >e.g. postgres:insert&delete gives: ata3: translated op=0x2a cmd=0x35 ATA 
-> >stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> >or sometimes (unknown cause):
-> >ata4: translated op=0x28 cmd=0x25 ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 
-> >0xb/47/00
-> >ata4: status=0xd0 { Busy }
-> >Assertion failed! ((readl(port_mmio + EDMA_RSP_Q_IN_PTR_OFS) >> 
-> >EDMA_RSP_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK) == pp->rsp_c
-> >onsumer,drivers/scsi/sata_mv.c,mv_get_crpb_status,line=1112
-> >
-> >
-> >long:
-> >I wanted to post this to the the thread "LibPATA code issues / 2.6.15.4".
-> >But right now my system is a bit down and so I sent this via webmail.
-> ...
+Paul Blazejowski wrote:
+> On Sun, 2006-03-12 at 17:54 -0500, Jeff Garzik wrote:
+>> Paul Blazejowski wrote:
+>>> sata_nv 0000:00:07.0: version 0.8
+>> sata_nv
+>>
+>>> ata3: SATA max UDMA/133 cmd 0x9E0 ctl 0xBE2 bmdma 0xC400 irq 21
+>>> ata4: SATA max UDMA/133 cmd 0x960 ctl 0xB62 bmdma 0xC408 irq 21
+>> host max udma6
+>>
+>>> ata3: dev 0 ATA-6, max UDMA/100, 390721968 sectors: LBA48
+>>> ata3: dev 0 configured for UDMA/100
+>> dev max udma5, configured for max speed
+>>
+>>> ata4: dev 0 ATA-6, max UDMA/133, 390721968 sectors: LBA48
+>>> ata4: dev 0 configured for UDMA/133
+>> dev max udma6, configured for max speed
+>>
+>> Everything is correct.
+>>
+>> 	Jeff
+>>
+>>
+>>
 > 
-> fyi:
-> 
-> ATA cmd=0x35 is ATA_CMD_WRITE_EXT, and 0x25 (lower down in the logs)
-> is ATA_CMD_READ_EXT.
-> 
-> Those are the bog-standard (and slow!) PIO R/W commands,
-> which generate one interrupt per 512-bytes transferred.
+> Jeff, thank you for confirming that everything looks correct. Next time
+> i will be buying matching drives at the same time :-).
 
-Eh no they are not, 0x35 is WRITEDMA_EXT and 0x25 is READMA_EXT.
-
+Since they are the same drive modulo firmware, you might contemplate 
+upgrading all to the same level. NOTE: that's just a comment, not a 
+recommendation.
 -- 
-Jens Axboe
-
+    -bill davidsen (davidsen@tmr.com)
+"The secret to procrastination is to put things off until the
+  last possible moment - but no longer"  -me
