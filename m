@@ -1,35 +1,35 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Fri, 17 Mar 2006 00:26:11 -0500
-Message-ID: <441A4873.3030102@rtr.ca>
-References: <1142344212.4416ca14a26b4@webmail.aon.at> <44182CD7.9070401@rtr.ca> <20060316100838.GF3595@suse.de>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 1/1] libata-dev: ata_check_atapi_dma() fix for ATA_FLAG_PIO_POLLING
+ LLDDs
+Date: Fri, 17 Mar 2006 00:51:30 -0500
+Message-ID: <441A4E62.5010906@rtr.ca>
+References: <441525DB.40905@tw.ibm.com> <441528BD.8070708@pobox.com> <44164C25.10106@tw.ibm.com> <441838B6.8060900@rtr.ca> <44183CDA.5010407@rtr.ca> <44183FC7.3020401@rtr.ca> <44191222.6000609@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:42190 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1751272AbWCQF0O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Mar 2006 00:26:14 -0500
-In-Reply-To: <20060316100838.GF3595@suse.de>
+Received: from rtr.ca ([64.26.128.89]:49117 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751398AbWCQFve (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Mar 2006 00:51:34 -0500
+In-Reply-To: <44191222.6000609@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: me_trash1@aon.at, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: albertl@mail.com
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE Linux <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Doug Maxey <dwm@maxeymade.com>
 
-Jens Axboe wrote:
-> On Wed, Mar 15 2006, Mark Lord wrote:
+Albert Lee wrote:
+>
+> Thanks for the valuable AOpen CD-936E/CD-940E information.
+> Will try to get some of the drives from the computer components
+> store this weekend. More test to follow and see how current mainline
+> and irq-pio branch work with these drives.
 ..
->> ATA cmd=0x35 is ATA_CMD_WRITE_EXT, and 0x25 (lower down in the logs)
->> is ATA_CMD_READ_EXT.
->>
->> Those are the bog-standard (and slow!) PIO R/W commands,
->> which generate one interrupt per 512-bytes transferred.
-> 
-> Eh no they are not, 0x35 is WRITEDMA_EXT and 0x25 is READMA_EXT.
 
-We're both correct, in that 0x35 is ATA_CMD_WRITE_EXT as I said.
-But the naming had me fooled -- they really are DMA commands,
-even if the linux/ata.h names are incomplete.
+Albert,
+
+What continent are you on?  If you're in Canada or the USA,
+then email me privately (mlord@pobox.com) and I'll just post
+you one of these units.  They're pretty ancient, and not
+exactly available in stores nowadays.
 
 Cheers
-
