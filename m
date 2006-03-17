@@ -1,53 +1,36 @@
-From: Geoff Rivell <grivell@comcast.net>
-Subject: Re: [PATCH] AHCI SATA vendor update from VIA
-Date: Fri, 17 Mar 2006 08:03:16 -0500
-Message-ID: <200603170803.23595.grivell@comcast.net>
-References: <200603160707.40986.philipp.marek@bmlv.gv.at> <200603171308.19191.philipp.marek@bmlv.gv.at>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Fri, 17 Mar 2006 10:20:14 -0500
+Message-ID: <441AD3AE.1030301@rtr.ca>
+References: <1142344212.4416ca14a26b4@webmail.aon.at> <44182CD7.9070401@rtr.ca> <20060316100838.GF3595@suse.de> <441A4873.3030102@rtr.ca> <441A80CA.6080407@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2734362.PmPjabKdq8";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sccrmhc13.comcast.net ([204.127.200.83]:60362 "EHLO
-	sccrmhc13.comcast.net") by vger.kernel.org with ESMTP
-	id S932447AbWCQNVr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Mar 2006 08:21:47 -0500
-In-Reply-To: <200603171308.19191.philipp.marek@bmlv.gv.at>
+Received: from rtr.ca ([64.26.128.89]:13547 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1750803AbWCQPUQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Mar 2006 10:20:16 -0500
+In-Reply-To: <441A80CA.6080407@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Ph. Marek" <philipp.marek@bmlv.gv.at>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: albertl@mail.com
+Cc: Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@suse.de>, me_trash1@aon.at, linux-ide@vger.kernel.org
 
---nextPart2734362.PmPjabKdq8
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Albert Lee wrote:
+> Mark Lord wrote:
+..
+>> We're both correct, in that 0x35 is ATA_CMD_WRITE_EXT as I said.
+>> But the naming had me fooled -- they really are DMA commands,
+>> even if the linux/ata.h names are incomplete.
+>>
+>  
+> How about the attached renaming patch?
+> It could make the command names more consistent to what's in the ATA/ATAPI spec.
+..
 
-On Friday 17 March 2006 07:08, Ph. Marek wrote:
-> On Thursday 16 March 2006 07:07, Ph. Marek wrote:
-> > I'd like to confirm that the patch in your email from 2005-12-11 does
-> > indeed work for my vt8251 on an K8M800 motherboard.
->
-> I should probably have given the URL for the patch, too:
-> 	http://lkml.org/lkml/2005/12/11/204
+Hey, that's a great idea.  And the patch is quite small, too.
 
-Or go to http://grivell.home.comcast.net/ and get the 2.6.15 version.
+Stick a Signed-Off-By line on it, and we'll see what our
+benevolent overJeff says for it.  ;)
 
-=2D-=20
-=2E..."Have you mooed today?"...
-
---nextPart2734362.PmPjabKdq8
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQBEGrObSP1WOObttzQRAmZhAJ0dQ4KMDxpVXcvY1JOpNoWKfQXEsACdECyB
-eXGSF9cByfVJqMLNJALc024=
-=4539
------END PGP SIGNATURE-----
-
---nextPart2734362.PmPjabKdq8--
+Cheers
