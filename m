@@ -1,15 +1,53 @@
-From: www-data@furyweb.org (www-data)
-Subject: sata_sx4 for sx4060
-Date: Fri, 17 Mar 2006 13:58:10 +0100 (CET)
-Message-ID: <20060317125810.8192A30089@linux.bureau.home>
+From: Geoff Rivell <grivell@comcast.net>
+Subject: Re: [PATCH] AHCI SATA vendor update from VIA
+Date: Fri, 17 Mar 2006 08:03:16 -0500
+Message-ID: <200603170803.23595.grivell@comcast.net>
+References: <200603160707.40986.philipp.marek@bmlv.gv.at> <200603171308.19191.philipp.marek@bmlv.gv.at>
+Mime-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2734362.PmPjabKdq8";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from por31-1-82-236-245-224.fbx.proxad.net ([82.236.245.224]:56528
-	"EHLO linux.bureau.home") by vger.kernel.org with ESMTP
-	id S932237AbWCQM6Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Mar 2006 07:58:25 -0500
+Received: from sccrmhc13.comcast.net ([204.127.200.83]:60362 "EHLO
+	sccrmhc13.comcast.net") by vger.kernel.org with ESMTP
+	id S932447AbWCQNVr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Mar 2006 08:21:47 -0500
+In-Reply-To: <200603171308.19191.philipp.marek@bmlv.gv.at>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: "Ph. Marek" <philipp.marek@bmlv.gv.at>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,nnI've tried the sata_sx4 driver for a FastTrak sx4060 that have the same PDC20621 chipset but this is not Ok. The board isn't recognized.nDo you know any source code updates or patches that work with this board ?nnThanks
+--nextPart2734362.PmPjabKdq8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+On Friday 17 March 2006 07:08, Ph. Marek wrote:
+> On Thursday 16 March 2006 07:07, Ph. Marek wrote:
+> > I'd like to confirm that the patch in your email from 2005-12-11 does
+> > indeed work for my vt8251 on an K8M800 motherboard.
+>
+> I should probably have given the URL for the patch, too:
+> 	http://lkml.org/lkml/2005/12/11/204
+
+Or go to http://grivell.home.comcast.net/ and get the 2.6.15 version.
+
+=2D-=20
+=2E..."Have you mooed today?"...
+
+--nextPart2734362.PmPjabKdq8
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQBEGrObSP1WOObttzQRAmZhAJ0dQ4KMDxpVXcvY1JOpNoWKfQXEsACdECyB
+eXGSF9cByfVJqMLNJALc024=
+=4539
+-----END PGP SIGNATURE-----
+
+--nextPart2734362.PmPjabKdq8--
