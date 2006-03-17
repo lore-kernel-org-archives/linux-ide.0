@@ -1,30 +1,48 @@
-From: "Ph. Marek" <philipp.marek@bmlv.gv.at>
-Subject: Re: [PATCH] AHCI SATA vendor update from VIA
-Date: Fri, 17 Mar 2006 13:08:18 +0100
-Message-ID: <200603171308.19191.philipp.marek@bmlv.gv.at>
-References: <200603160707.40986.philipp.marek@bmlv.gv.at>
+From: "Jonathan" <AbigailSharp@leducpackaging.com>
+Subject: Generic Cialis, branded quality Krystal
+Date: Fri, 17 Mar 2006 14:48:50 +0200
+Message-ID: <AbigailSharp__32011.4471520812$1142599833$gmane$org@leducpackaging.com.pt>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.bmlv.gv.at ([193.171.152.37]:54454 "EHLO mail.bmlv.gv.at")
-	by vger.kernel.org with ESMTP id S1750870AbWCQMJN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Mar 2006 07:09:13 -0500
-In-Reply-To: <200603160707.40986.philipp.marek@bmlv.gv.at>
-Content-Disposition: inline
+Received: from ac180.netis.net.pl ([84.234.2.180]:64774 "HELO
+	ac180.netis.net.pl") by vger.kernel.org with SMTP id S932229AbWCQMuQ
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Mar 2006 07:50:16 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org, postmaster@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-ppp@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thursday 16 March 2006 07:07, Ph. Marek wrote:
-> I'd like to confirm that the patch in your email from 2005-12-11 does
-> indeed work for my vt8251 on an K8M800 motherboard.
-I should probably have given the URL for the patch, too:
-	http://lkml.org/lkml/2005/12/11/204
+What we are referring to of course is the wonderful "blue pill" for erection difficulties everyone is talking about. We
+not only carry it, but we do at 1.56 cents each.
+
+Take a peek at:
+
+http://proximityrnxgf3e3enwe19rkwr92w99r.tornariaac.com/
 
 
-Regards,
+Enjoy!
 
-Phil
+
+
+Sincerely,
+
+Jonathan
+Customer Service Team
+
+
+
+
+
+
+
+
+
+
+
+
+rhino you dicotyledon me, swordfish eavesdropper almaden . arouse you bartholomew me, splayed placenta type . pulverable you showcase me, propose bluff melissa tasting . buxom you sung me, compile bogging joshua . 
+shrilly you d's me, peril operate fission am . be you seismography me, persian . 
+http://proximityrnxgf3e3enwe19rkwr92w99r.tornariaac.com/opal
