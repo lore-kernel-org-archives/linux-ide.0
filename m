@@ -1,45 +1,30 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Fri, 17 Mar 2006 04:57:35 -0500
-Message-ID: <441A880F.7010204@pobox.com>
-References: <1142344212.4416ca14a26b4@webmail.aon.at> <44182CD7.9070401@rtr.ca> <20060316100838.GF3595@suse.de> <441A4873.3030102@rtr.ca> <441A80CA.6080407@tw.ibm.com>
+From: "Ph. Marek" <philipp.marek@bmlv.gv.at>
+Subject: Re: [PATCH] AHCI SATA vendor update from VIA
+Date: Fri, 17 Mar 2006 13:08:18 +0100
+Message-ID: <200603171308.19191.philipp.marek@bmlv.gv.at>
+References: <200603160707.40986.philipp.marek@bmlv.gv.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:36803 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751201AbWCQJ6J (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Mar 2006 04:58:09 -0500
-In-Reply-To: <441A80CA.6080407@tw.ibm.com>
+Received: from mail.bmlv.gv.at ([193.171.152.37]:54454 "EHLO mail.bmlv.gv.at")
+	by vger.kernel.org with ESMTP id S1750870AbWCQMJN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Mar 2006 07:09:13 -0500
+In-Reply-To: <200603160707.40986.philipp.marek@bmlv.gv.at>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Mark Lord <lkml@rtr.ca>, Jens Axboe <axboe@suse.de>, me_trash1@aon.at, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Albert Lee wrote:
-> How about the attached renaming patch?
-> It could make the command names more consistent to what's in the ATA/ATAPI spec.
-> 
-> ---
-> Albert
-> 
-> 
-> Changes:
-> 
-> ATA_CMD_READ        => ATA_CMD_READ_DMA
-> ATA_CMD_WRITE       => ATA_CMD_WRITE_DMA
-> ...
-> ATA_CMD_PIO_READ    => ATA_CMD_READ_PIO
-> ATA_CMD_PIO_WRITE   => ATA_CMD_WRITE_PIO
-> ...
-> ATA_CMD_FPDMA_READ  => ATA_CMD_READ_FPDMA_QUEUED
-> ATA_CMD_FPDMA_WRITE => ATA_CMD_WRITE_FPDMA_QUEUED
+On Thursday 16 March 2006 07:07, Ph. Marek wrote:
+> I'd like to confirm that the patch in your email from 2005-12-11 does
+> indeed work for my vt8251 on an K8M800 motherboard.
+I should probably have given the URL for the patch, too:
+	http://lkml.org/lkml/2005/12/11/204
 
 
-Even given the current thread's confusion, I rather like the existing 
-names.  Everybody does DMA these days, so ATA_CMD_WRITE being of DMA 
-protocol seems the most natural to me.
+Regards,
 
-	Jeff
-
-
+Phil
