@@ -1,48 +1,61 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Sat, 18 Mar 2006 00:29:26 +0900
-Message-ID: <441AD5D6.10109@gmail.com>
-References: <1142344212.4416ca14a26b4@webmail.aon.at> <44182CD7.9070401@rtr.ca> <20060316100838.GF3595@suse.de> <441A4873.3030102@rtr.ca> <441A80CA.6080407@tw.ibm.com> <441AD3AE.1030301@rtr.ca>
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 0/15] libata: Add support for SATA attachment to SAS adapters
+Date: Fri, 17 Mar 2006 17:03:28 -0600
+Message-ID: <441B4040.4070600@us.ibm.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.177]:28562 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932501AbWCQP3k (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Mar 2006 10:29:40 -0500
-Received: by pproxy.gmail.com with SMTP id w49so34429pyg
-        for <linux-ide@vger.kernel.org>; Fri, 17 Mar 2006 07:29:39 -0800 (PST)
-In-Reply-To: <441AD3AE.1030301@rtr.ca>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:34995 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932818AbWCQXDe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Mar 2006 18:03:34 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: albertl@mail.com, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@suse.de>, me_trash1@aon.at, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Mark Lord wrote:
-> Albert Lee wrote:
-> 
->> Mark Lord wrote:
-> 
-> ..
-> 
->>> We're both correct, in that 0x35 is ATA_CMD_WRITE_EXT as I said.
->>> But the naming had me fooled -- they really are DMA commands,
->>> even if the linux/ata.h names are incomplete.
->>>
->>  
->> How about the attached renaming patch?
->> It could make the command names more consistent to what's in the 
->> ATA/ATAPI spec.
-> 
-> ..
-> 
-> Hey, that's a great idea.  And the patch is quite small, too.
-> 
-> Stick a Signed-Off-By line on it, and we'll see what our
-> benevolent overJeff says for it.  ;)
-> 
+This is a repost of the patchset I have been carrying. No
+real feature changes here, mainly just a refresh against Jeff's
+#upstream libata git tree. I've been running with these patches
+for a while now without problems.
 
-One more Signed-off-by here. :-)
+The following patchset enhances libata to allow SAS device drivers
+to utilize libata to talk to SATA devices. It introduces some
+new APIs which allow libata to be used without allocating a
+virtual scsi host.
+
+New APIs:
+
+ata_sas_port_alloc - Allocate an ata_port 
+ata_sas_port_init - Initialize an ata_port (probe device, etc)
+ata_sas_port_destroy - Free an ata_port allocated by ata_sas_port_alloc
+ata_sas_slave_configure - configure scsi device
+ata_sas_queuecmd - queue a scsi command, similar to ata_scsi_queuecomand
+
+These new APIs can be used either directly by a SAS LLDD or could be used
+by the SAS transport class. 
+
+Possible usage for a SAS LLDD would be:
+
+scsi_scan_host
+	target_alloc
+		ata_sas_port_alloc
+	slave_alloc
+		ata_sas_port_init
+	slave_configure
+		ata_sas_slave_configure
+
+Commands received by the LLDD for SATA devices would call ata_sas_queuecmd.
+
+Device teardown would occur with:
+
+slave_destroy
+	port_disable
+target_destroy
+	ata_sas_port_destroy
 
 -- 
-tejun
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
