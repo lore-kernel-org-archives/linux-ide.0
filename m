@@ -1,54 +1,27 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Linux v2.6.16-rc6
-Date: Thu, 16 Mar 2006 16:58:04 -0500
-Message-ID: <4419DF6C.7000103@tmr.com>
-References: <1142189154.21274.20.camel@blaze.homeip.net>	 <4414A6BF.3030604@garzik.org> <1142205571.10354.1.camel@blaze.homeip.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/2] libata: use local *id instead of dev->id in ata_dev_configure()
+Date: Thu, 16 Mar 2006 19:23:55 -0500
+Message-ID: <441A019B.3000401@garzik.org>
+References: <44144172.9040304@garzik.org> <20060312165701.GA9051@htj.dyndns.org> <44146758.6090006@garzik.org> <20060313053350.GD29870@htj.dyndns.org> <20060313054807.GA24419@htj.dyndns.org> <44150897.1060602@garzik.org> <20060313064016.GA26732@htj.dyndns.org> <44152261.2080203@garzik.org> <20060313104804.GA29996@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from prgy-npn2.prodigy.com ([207.115.54.38]:50967 "EHLO
-	oddball.prodigy.com") by vger.kernel.org with ESMTP id S964857AbWCPV4P
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Mar 2006 16:56:15 -0500
-In-Reply-To: <1142205571.10354.1.camel@blaze.homeip.net>
+Received: from mail.dvmed.net ([216.237.124.58]:7605 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1752451AbWCQAYQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Mar 2006 19:24:16 -0500
+In-Reply-To: <20060313104804.GA29996@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Blazejowski <paulb@blazebox.homeip.net>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Paul Blazejowski wrote:
-> On Sun, 2006-03-12 at 17:54 -0500, Jeff Garzik wrote:
->> Paul Blazejowski wrote:
->>> sata_nv 0000:00:07.0: version 0.8
->> sata_nv
->>
->>> ata3: SATA max UDMA/133 cmd 0x9E0 ctl 0xBE2 bmdma 0xC400 irq 21
->>> ata4: SATA max UDMA/133 cmd 0x960 ctl 0xB62 bmdma 0xC408 irq 21
->> host max udma6
->>
->>> ata3: dev 0 ATA-6, max UDMA/100, 390721968 sectors: LBA48
->>> ata3: dev 0 configured for UDMA/100
->> dev max udma5, configured for max speed
->>
->>> ata4: dev 0 ATA-6, max UDMA/133, 390721968 sectors: LBA48
->>> ata4: dev 0 configured for UDMA/133
->> dev max udma6, configured for max speed
->>
->> Everything is correct.
->>
->> 	Jeff
->>
->>
->>
+Tejun Heo wrote:
+> dev->id is used many times in ata_dev_configure().  Use local variable
+> id instead for shorter notation.
 > 
-> Jeff, thank you for confirming that everything looks correct. Next time
-> i will be buying matching drives at the same time :-).
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Since they are the same drive modulo firmware, you might contemplate 
-upgrading all to the same level. NOTE: that's just a comment, not a 
-recommendation.
--- 
-    -bill davidsen (davidsen@tmr.com)
-"The secret to procrastination is to put things off until the
-  last possible moment - but no longer"  -me
+applied 1-2
+
+
