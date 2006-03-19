@@ -1,44 +1,36 @@
-From: Komuro <komurojun-mbn@nifty.com>
-Subject: [PATCH: kernel 2.6.16-rc6] CMD643 does not support DMA
-Date: Sun, 19 Mar 2006 10:58:51 +0900
-Message-ID: <20060319105851.3c1414ee.komurojun-mbn@nifty.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: "Marta Andrews" <wsmczusnluig@msn.com>
+Subject: Degree or Diploma of Your Choice xgEc
+Date: Sun, 19 Mar 2006 12:14:54 -0300
+Message-ID: <68QI87FE.0R24.wsmczusnluig__31884.9489362494$1142781797$gmane$org@msn.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userg503.nifty.com ([202.248.238.83]:43697 "EHLO
-	userg503.nifty.com") by vger.kernel.org with ESMTP id S1751223AbWCSCIS
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 18 Mar 2006 21:08:18 -0500
-Received: from asus.host.name (eaoska170162.adsl.ppp.infoweb.ne.jp [219.116.19.162])by userg503.nifty.com with SMTP id k2J28Cil017283
-	for <linux-ide@vger.kernel.org>; Sun, 19 Mar 2006 11:08:12 +0900
+Received: from [222.33.82.217] ([222.33.82.217]:35083 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S932118AbWCSPXG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Mar 2006 10:23:06 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: autoanswer@vger.kernel.org
 
 
-Hello,
 
-cmd64x.c :CMD643 does not support DMA.
+Sorry to drop in on you, but you were referred to us by a friend / working associate.
 
-Signed-off-by: komurojun-mbn@nifty.com
+As of January 2006 our University has started a work experience degree program.  
+We can offer you 3 of the following choices:
 
---- linux-2.6.16-rc6/drivers/ide/pci/cmd64x.c.orig	2006-03-18 20:24:04.000000000 +0900
-+++ linux-2.6.16-rc6/drivers/ide/pci/cmd64x.c	2006-03-18 20:26:49.000000000 +0900
-@@ -725,8 +725,11 @@
- 	hwif->mwdma_mask = 0x07;
- 	hwif->swdma_mask = 0x07;
- 
--	if (dev->device == PCI_DEVICE_ID_CMD_643)
-+	if (dev->device == PCI_DEVICE_ID_CMD_643) {
- 		hwif->ultra_mask = 0x80;
-+		hwif->mwdma_mask = 0x80;
-+		hwif->swdma_mask = 0x80;
-+	}
- 	if (dev->device == PCI_DEVICE_ID_CMD_646)
- 		hwif->ultra_mask = (class_rev > 0x04) ? 0x07 : 0x80;
- 	if (dev->device == PCI_DEVICE_ID_CMD_648)
+- Associate Degree 
+- Bachelor's Degree 
+- Master's Degree
+
+Our work experience / life experience degrees are the same degrees we give our full time students,
+but we base them upon your past knowledge and therefore require no studying.
+
+Due to back logs we will need 1-2 weeks to verify your information and send your degree with transcripts in the mail.
+
+Our Education office has someone available 24 hours a day, 7 Days a week.
+
+If you are still interested then call us at:
+1-484-693-8861
 
 
-Best Regards
-Komuro
+
+yVu21h
