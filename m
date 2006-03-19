@@ -1,41 +1,62 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: libata+SGIO:  is .dma_boundary respected?
-Date: Sun, 19 Mar 2006 16:54:08 -0500
-Message-ID: <441DD300.9050702@rtr.ca>
-References: <441DC397.9040504@rtr.ca> <441DC9CB.7030203@pobox.com> <441DCAC9.5090603@rtr.ca> <441DCF73.2080600@pobox.com> <441DD101.5050202@rtr.ca>
+From: "Bill Rugolsky Jr." <brugolsky@telemetry-investments.com>
+Subject: Re: [PATCH][INCOMPLETE] sata_nv: merge ADMA support
+Date: Sun, 19 Mar 2006 18:23:17 -0500
+Message-ID: <20060319232317.GA25578@ti64.telemetry-investments.com>
+References: <20060317232339.GA5674@ti64.telemetry-investments.com> <441B5AD5.5020809@garzik.org> <20060318080618.GA19929@ti64.telemetry-investments.com> <441BCB3C.6060202@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:36529 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1750834AbWCSVyT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Mar 2006 16:54:19 -0500
-In-Reply-To: <441DD101.5050202@rtr.ca>
+Received: from 209-166-240-202.cust.walrus.com ([209.166.240.202]:49860 "EHLO
+	mail1.telemetry-investments.com") by vger.kernel.org with ESMTP
+	id S1751224AbWCSXXT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 19 Mar 2006 18:23:19 -0500
+Content-Disposition: inline
+In-Reply-To: <441BCB3C.6060202@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Jens Axboe <axboe@suse.de>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Mark Lord wrote:
-> Jeff Garzik wrote:
->
->> The idiot IOMMU layer may merge too aggressively, which is the reason 
->> for this code and similar code in ata_fill_sg().  The IOMMU stuff 
->> always happens at pci_map_sg() time, after the block layer gets out of 
->> the way.
-> 
-> Ahh.. then how does the low-level driver know what to use for 
-> ".sg_tablesize"?
-> 
-> It cannot use the real hardware/driver value, because it may need to do
-> request splitting.  I wonder what the worst case number of splits required
-> is, for each sg[] entry?
+On Sat, Mar 18, 2006 at 03:56:28AM -0500, Jeff Garzik wrote:
+> OK, can you try the attached sata_nv.c?  Does it perform to the level 
+> that yours does?
+ 
+Yes, the results are approximately the same.  Booting from port 0 (sda)
+with ADMA enabled still results in timeouts on port 3 (sdc) while
+running tars on the RAID1 array on ports 2&3.
 
-Mmmm.  I suppose the answer is that the block layer guarantees
-no more than .sg_tablesize entries, and the IOMMU layer may reduce
-the segment count, but never increase it.
+ata4: command 0x25 timeout, stat 0x50
+ata4: command 0x25 timeout, stat 0x50
+(           xterm-3349 |#0): new 355 us maximum-latency wakeup.
+(      watchdog/0-4    |#0): new 468 us maximum-latency wakeup.
+ata4: command 0x35 timeout, stat 0x50
+ata4: command 0x35 timeout, stat 0x50
+ata4: command 0x35 timeout, stat 0x50
+ata4: command 0x35 timeout, stat 0x50
+ata4: command 0x35 timeout, stat 0x50
+ata4: command 0x35 timeout, stat 0x50
 
-So the low-level driver should be able to safely use it's own internal
-hardware/driver limit when registering .sg_tablesize.
+After a while, syncing the filesystems hangs the sync process, though
+the system continues to function, and I can log in on another VC.
 
-Mmm..  sata_mv.c currently divides by two.
+The good news: no long latencies from the status inb() during the
+period that it is functional! :-p
+
+Booting without ADMA gives the usual stable behavior, with the long
+latencies from the status inb().
+
+I was a little disconcerted when I saw this this in the trace with ADMA
+disabled,
+
+   tar-21466 0dnh. 3979us : nv_check_hotplug_adma (nv_interrupt)
+
+until I realized that this
+
+        if (!adma_enabled && host_desc->host_type == ADMA)
+                host_desc->host_type--;
+
+only alters the outcome of the "host_desc->host_type == ADMA" test, but
+still uses the ADMA-based hotplug functions.
+
+   -Bill
+
