@@ -1,62 +1,38 @@
-From: "Bill Rugolsky Jr." <brugolsky@telemetry-investments.com>
-Subject: Re: [PATCH][INCOMPLETE] sata_nv: merge ADMA support
-Date: Sun, 19 Mar 2006 18:23:17 -0500
-Message-ID: <20060319232317.GA25578@ti64.telemetry-investments.com>
-References: <20060317232339.GA5674@ti64.telemetry-investments.com> <441B5AD5.5020809@garzik.org> <20060318080618.GA19929@ti64.telemetry-investments.com> <441BCB3C.6060202@garzik.org>
+From: Martin Michlmayr <tbm@cyrius.com>
+Subject: [PATCH 7/12] [IDE] Set CFLAGS only for au1xxx-ide
+Date: Mon, 20 Mar 2006 04:40:17 +0000
+Message-ID: <20060320044017.GG20416@deprecation.cyrius.com>
+References: <20060320043802.GA20389@deprecation.cyrius.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 209-166-240-202.cust.walrus.com ([209.166.240.202]:49860 "EHLO
-	mail1.telemetry-investments.com") by vger.kernel.org with ESMTP
-	id S1751224AbWCSXXT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 19 Mar 2006 18:23:19 -0500
+Received: from sorrow.cyrius.com ([65.19.161.204]:55311 "EHLO
+	sorrow.cyrius.com") by vger.kernel.org with ESMTP id S1751497AbWCTEks
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 19 Mar 2006 23:40:48 -0500
 Content-Disposition: inline
-In-Reply-To: <441BCB3C.6060202@garzik.org>
+In-Reply-To: <20060320043802.GA20389@deprecation.cyrius.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: akpm@osdl.org
+Cc: linux-kernel@vger.kernel.org, linux-mips@linux-mips.org, linux-ide@vger.kernel.org
 
-On Sat, Mar 18, 2006 at 03:56:28AM -0500, Jeff Garzik wrote:
-> OK, can you try the attached sata_nv.c?  Does it perform to the level 
-> that yours does?
+Set CFLAGS only for au1xxx-ide since swarm does not reference any
+include files from drivers/ide.  This brings drivers/ide/mips/Makefile
+in sync with the linux-mips tree.
+
+Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
+
+
+--- linux-2.6/drivers/ide/mips/Makefile	2006-03-05 19:35:03.000000000 +0000
++++ mips.git/drivers/ide/mips/Makefile	2006-03-05 18:51:15.000000000 +0000
+@@ -1,4 +1,4 @@
+ obj-$(CONFIG_BLK_DEV_IDE_SWARM)		+= swarm.o
+ obj-$(CONFIG_BLK_DEV_IDE_AU1XXX)	+= au1xxx-ide.o
  
-Yes, the results are approximately the same.  Booting from port 0 (sda)
-with ADMA enabled still results in timeouts on port 3 (sdc) while
-running tars on the RAID1 array on ports 2&3.
+-EXTRA_CFLAGS    := -Idrivers/ide
++CFLAGS_au1xxx-ide.o := -Idrivers/ide
 
-ata4: command 0x25 timeout, stat 0x50
-ata4: command 0x25 timeout, stat 0x50
-(           xterm-3349 |#0): new 355 us maximum-latency wakeup.
-(      watchdog/0-4    |#0): new 468 us maximum-latency wakeup.
-ata4: command 0x35 timeout, stat 0x50
-ata4: command 0x35 timeout, stat 0x50
-ata4: command 0x35 timeout, stat 0x50
-ata4: command 0x35 timeout, stat 0x50
-ata4: command 0x35 timeout, stat 0x50
-ata4: command 0x35 timeout, stat 0x50
-
-After a while, syncing the filesystems hangs the sync process, though
-the system continues to function, and I can log in on another VC.
-
-The good news: no long latencies from the status inb() during the
-period that it is functional! :-p
-
-Booting without ADMA gives the usual stable behavior, with the long
-latencies from the status inb().
-
-I was a little disconcerted when I saw this this in the trace with ADMA
-disabled,
-
-   tar-21466 0dnh. 3979us : nv_check_hotplug_adma (nv_interrupt)
-
-until I realized that this
-
-        if (!adma_enabled && host_desc->host_type == ADMA)
-                host_desc->host_type--;
-
-only alters the outcome of the "host_desc->host_type == ADMA" test, but
-still uses the ADMA-based hotplug functions.
-
-   -Bill
-
+-- 
+Martin Michlmayr
+http://www.cyrius.com/
