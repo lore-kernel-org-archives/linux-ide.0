@@ -1,33 +1,50 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [git patches] libata updates
-Date: Mon, 20 Mar 2006 16:35:56 +0000
-Message-ID: <1142872556.21455.7.camel@localhost.localdomain>
-References: <20060320111658.GA16172@havoc.gtf.org>
+From: Michael Schierl <schierlm@gmx.de>
+Subject: Re: Resume problems on Fujitsu-Siemens AMILO M7440G -- SATA
+Date: Mon, 20 Mar 2006 19:43:04 +0100
+Message-ID: <441EF7B8.4040901@gmx.de>
+References: <44076762.404@gmx.de> <1141349791.19013.1.camel@sli10-desk.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:28832 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751146AbWCTQ3N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Mar 2006 11:29:13 -0500
-In-Reply-To: <20060320111658.GA16172@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1141349791.19013.1.camel@sli10-desk.sh.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Shaohua Li <shaohua.li@intel.com>
+Cc: linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Llu, 2006-03-20 at 06:16 -0500, Jeff Garzik wrote:
-> Jeff Garzik:
->       [libata] Move PCI IDE BMDMA-related code to new file libata-bmdma.c.
+[added linux-ide to CC]
 
-This is a most confusing choice as 80% of the file has nothing to do
-with bus mastering DMA, and a large amount of it has nothing to do with
-PCI either. Also lots of DMA stuff is in the drivers so all the new bus
-mastering drivers don't use bmdma.c
+Shaohua Li schrieb:
 
-The split makes sense, the choice of name is peculiar, if not completely
-broken 8)
+> If the video is dark, please try the boot options listed in
+> documentation/power/video.txt.
 
-Alan
+Okay, I got video working on vanilla 2.6.16 by using "vbetool post" and
+"vbetool vbestate restore" directly after "echo mem >/sys/power/state".
 
+I copy all stuff need into tmpfs to ensure that it can restore the video
+without hard disk access.
+
+when accessing hard disks first time after resume, I get (wrote it by
+hand so maybe this is not 100% correct)
+
+ata1: handling error / timeout
+ata1: port reset  p_ is 400000 is 0 pis 400000 cmd 8007
+                          tf 80 ss 113 se 405000
+ata1: status = 0x50 {DriveReady SeekComplete}
+sda: current: senseKey 0x0 ASC  0x0 ASCQ 0x0
+
+Sometimes there is "cmd 6" instead of "cmd 8007".
+
+What to do, what to test?
+
+I don't have any way of getting information out of my machine after
+resume except on display (hard disks do not work after resume, the
+notebook does not have a serial port and network does not work after
+resume either) and by flashing keyboard LEDs, so transcribing huge dmesg
+output would be a pain...
+
+Please CC me since I am not on the list(s). Thank you.
+
+Michael
