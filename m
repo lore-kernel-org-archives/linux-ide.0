@@ -1,37 +1,36 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: libata+SGIO:  is .dma_boundary respected?
-Date: Tue, 21 Mar 2006 14:36:58 -0500
-Message-ID: <442055DA.3090500@rtr.ca>
-References: <441DCAC9.5090603@rtr.ca> <441DCF73.2080600@pobox.com> <441DD101.5050202@rtr.ca> <441DD300.9050702@rtr.ca> <441F544A.6080301@pobox.com> <441F8478.50806@rtr.ca> <441F99AC.4000200@pobox.com> <442006BC.8020100@rtr.ca> <20060321184215.GJ4285@suse.de> <442051A0.1050200@rtr.ca> <20060321193143.GN4285@suse.de>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Some sata_mv error messages
+Date: Tue, 21 Mar 2006 14:37:13 -0500
+Message-ID: <442055E9.4010708@pobox.com>
+References: <20060318044056.350a2931.akpm@osdl.org> <20060320133318.GB32762@favonius> <441F508E.1030008@pobox.com> <441F8599.7080703@rtr.ca> <44205513.8030109@poolshark.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:25252 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S964852AbWCUThB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 14:37:01 -0500
-In-Reply-To: <20060321193143.GN4285@suse.de>
+Received: from srv5.dvmed.net ([207.36.208.214]:4013 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S965059AbWCUThS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 14:37:18 -0500
+In-Reply-To: <44205513.8030109@poolshark.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Denis Leroy <denis@poolshark.org>
+Cc: Mark Lord <liml@rtr.ca>, sander@humilis.net, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, lkml@rtr.ca
 
-Jens Axboe wrote:
-> On Tue, Mar 21 2006, Mark Lord wrote:
->> Jens Axboe wrote:
-..
->>> It would be much nicer if the iommu actually had some more knowledge,
->>> ideally the same requirements that the block layer is faced with. No
->>> driver should have to check the mapped sg list.
->> Yup.  Absolutely.  So long as they continue to never *add* new sg entries
->> (only doing merges instead), then I believe they just need to know the
->> device's .dma_boundary parameter.  We could pass this to them as an extra
->> parameters, or perhaps embed it into the sg_list data structure somehow.
-> 
-> You want max size as well, so boundary and max size should be enough.
+Denis Leroy wrote:
+> This is great news. Is there any relationship between the development of
+> this driver and the one maintained by Marvell that's available from
+> their web site ? Their latest version (3.6.1) is released under the GPL,
+> and is a very solid driver based our experience with it over the past
+> few years, though it's targeted at older versions of the linux kernel
+> and needs some porting to 2.6.16 (and contains redundant stuff like its
+> own scsi-ata layer).
 
-Oh, now there's a thought.  How do we specify "max segment size" today?
-I'll need to make sure that sata_mv still does that (64KB), even though
-it doesn't care about crossing 64KB boundaries.
+There is a we-use-that-driver-as-documentation-sometimes relationship.
 
-Thanks
+It's quite un-Linux for a Linux driver, and others have reported that 
+sata_mv in its current state is more stable for them than the Marvell 
+behemoth GPL driver.
+
+	Jeff
+
+
