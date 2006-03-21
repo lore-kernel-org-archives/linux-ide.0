@@ -1,80 +1,60 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patch append] sata_mv fix
-Date: Mon, 20 Mar 2006 19:57:57 -0500
-Message-ID: <441F4F95.4070203@garzik.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Some sata_mv error messages
+Date: Mon, 20 Mar 2006 20:02:06 -0500
+Message-ID: <441F508E.1030008@pobox.com>
+References: <20060318044056.350a2931.akpm@osdl.org> <20060320133318.GB32762@favonius>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050703040104090804020601"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47332 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751409AbWCUA57 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Mar 2006 19:57:59 -0500
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------050703040104090804020601
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:54500 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751377AbWCUBCL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Mar 2006 20:02:11 -0500
+In-Reply-To: <20060320133318.GB32762@favonius>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: sander@humilis.net
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, lkml@rtr.ca
 
+Sander wrote:
+> Hi all,
+> 
+> While sata_mv in 2.6.16-rc6-mm2 seems stable (yah!) compared to
+> 2.6.16-rc6 (no crashes, no data corruption), I still get these messages:
+> 
+> [ 3962.139906] ata5: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 3962.139959] ata5: status=0xd0 { Busy }
+> 
+> [ 6105.948045] ata6: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 6105.948097] ata6: status=0xd0 { Busy }
+> 
+> [ 7981.164936] ata5: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 7981.164991] ata5: status=0xd0 { Busy }
+> 
+> [ 8273.951019] ata7: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 8273.951072] ata7: status=0xd0 { Busy }
+> 
+> [ 9903.032350] ata8: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 9903.032402] ata8: status=0xd0 { Busy }
+> 
+> 
+> I'm not entirely sure this is only happens on sata_mv (Marvell
+> MV88SX6081) as out of eight disks only one is connected to the onboard
+> sata_nv (nVidia) and the error doesn't happen very often. But I'll keep
+> an eye on it.
+> 
+> Are these messages somehow dangerous or otherwise indicating a
+> potentional serious problem? A google search came up with a few links,
+> but none of them helped me understand the messages.
 
-FWIW, I appended the attached changeset to the 'upstream-linus' branch 
-of libata-dev.git (and also forwarded it to stable@kernel.org).
+Without answering your specific question, just remember that sata_mv is 
+considerly "highly experimental" right now, and still needs some 
+workarounds for hardware errata.
 
-FWIW 2, except for fixes like the attached, 'upstream-linus' is a frozen 
-branch, and normally isn't touched until you pull.  Development 
-continues in the separate 'upstream' branch, which ensures there are no 
-surprise csets when 'upstream-linus' is pulled.  'upstream-linus' is a 
-branch that behaves like a tag. Most of the time.
+For now, the goal is a system that doesn't crash and doesn't corrupt 
+data.  If its occasionally slow or spits out a few errors, but otherwise 
+still works, that's pretty darned good :)
 
 	Jeff
 
 
-
-
---------------050703040104090804020601
-Content-Type: text/plain;
- name="libata.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata.txt"
-
-commit cd85f6e2f58282186ad720fc18482be228f0b972
-Author: Jeff Garzik <jeff@garzik.org>
-Date:   Mon Mar 20 19:49:54 2006 -0500
-
-    [libata] sata_mv: fix irq port status usage
-
-    Interrupt handler did not properly initialize a variable on a per-port
-    basis, leading to incorrect behavior on ports other than port 0.
-
-    Bug caught and fixed by Mark Lord.
-
-    Signed-off-by: Jeff Garzik <jeff@garzik.org>
-
-
-cd85f6e2f58282186ad720fc18482be228f0b972
-diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
-index aceaf56..e561281 100644
---- a/drivers/scsi/sata_mv.c
-+++ b/drivers/scsi/sata_mv.c
-@@ -1353,7 +1353,6 @@ static void mv_host_intr(struct ata_host
- 	u32 hc_irq_cause;
- 	int shift, port, port0, hard_port, handled;
- 	unsigned int err_mask;
--	u8 ata_status = 0;
- 
- 	if (hc == 0) {
- 		port0 = 0;
-@@ -1371,6 +1370,7 @@ static void mv_host_intr(struct ata_host
- 		hc,relevant,hc_irq_cause);
- 
- 	for (port = port0; port < port0 + MV_PORTS_PER_HC; port++) {
-+		u8 ata_status = 0;
- 		ap = host_set->ports[port];
- 		hard_port = port & MV_PORT_MASK;	/* range 0-3 */
- 		handled = 0;	/* ensure ata_status is set if handled++ */
-
---------------050703040104090804020601--
