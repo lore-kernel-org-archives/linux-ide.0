@@ -1,46 +1,36 @@
-From: Sander <sander@humilis.net>
-Subject: Re: Some sata_mv error messages
-Date: Tue, 21 Mar 2006 08:28:59 +0100
-Message-ID: <20060321072859.GB4089@favonius>
-References: <20060318044056.350a2931.akpm@osdl.org> <20060320133318.GB32762@favonius> <441F508E.1030008@pobox.com> <441F8599.7080703@rtr.ca>
-Reply-To: sander@humilis.net
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [git patches] libata updates
+Date: Tue, 21 Mar 2006 10:20:20 +0000
+Message-ID: <1142936420.21455.26.camel@localhost.localdomain>
+References: <20060320111658.GA16172@havoc.gtf.org>
+	 <1142872556.21455.7.camel@localhost.localdomain>
+	 <441F52F7.8030309@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ookhoi.xs4all.nl ([213.84.114.66]:15574 "EHLO
-	favonius.humilis.net") by vger.kernel.org with ESMTP
-	id S932196AbWCUH3B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Mar 2006 02:29:01 -0500
-Content-Disposition: inline
-In-Reply-To: <441F8599.7080703@rtr.ca>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:62626 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932383AbWCUKNd
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Mar 2006 05:13:33 -0500
+In-Reply-To: <441F52F7.8030309@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, sander@humilis.net, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, lkml@rtr.ca
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote (ao):
-> Jeff Garzik wrote:
-> >For now, the goal is a system that doesn't crash and doesn't corrupt 
-> >data. If its occasionally slow or spits out a few errors, but
-> >otherwise still works, that's pretty darned good :)
-> 
-> I'm currently working with the original authors of sata_mv, and have
-> taken over maintenance of it for now. It should progress from "highly
-> experimental" to "production quality" over the next month or so.
+On Llu, 2006-03-20 at 20:12 -0500, Jeff Garzik wrote:
+> In my [no doubt warped] brain, I equate the SFF-8038 interface to "PCI 
+> IDE BMDMA", and from there, view most hardware as a subset of PCI IDE 
+> BMDMA.  It might not do DMA, might not be PCI, might not do irqs, but 
+> most PATA hardware seems able to be driven by a "bmdma driver".  Thus, 
+> the name :)
 
-Thanks a lot :-)
+Most of that file is ST-506 type register interfaces, only a tiny bit is
+SFF PCI IDE with DMA.
 
-> The (mucho) updated driver I'm using here now is already much improved
-> in many ways. At some point, I'll break it out into patches for Jeff.
-> 
-> But there's one MAJOR bugfix patch that I'll release here shortly, to
-> go with the interrupt handler fix already posted.
+Expect some patches soon. I've got my tree merged against the git tree
+now, just needs some testing.
 
-I've actually a patched kernel ready to test your patch. Only need to
-boot the server, so will do that this afternoon and report back.
+Alan
 
-	Sander
-
--- 
-Humilis IT Services and Solutions
-http://www.humilis.net
