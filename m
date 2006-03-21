@@ -1,52 +1,51 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: libata+SGIO:  is .dma_boundary respected?
-Date: Tue, 21 Mar 2006 08:59:24 -0500
-Message-ID: <442006BC.8020100@rtr.ca>
-References: <441DC397.9040504@rtr.ca> <441DC9CB.7030203@pobox.com> <441DCAC9.5090603@rtr.ca> <441DCF73.2080600@pobox.com> <441DD101.5050202@rtr.ca> <441DD300.9050702@rtr.ca> <441F544A.6080301@pobox.com> <441F8478.50806@rtr.ca> <441F99AC.4000200@pobox.com>
+From: Michael Schierl <schierlm@gmx.de>
+Subject: Re: Resume problems on Fujitsu-Siemens AMILO M7440G -- SATA
+Date: Tue, 21 Mar 2006 16:37:03 +0100
+Message-ID: <44201D9F.7090701@gmx.de>
+References: <44076762.404@gmx.de> <1141349791.19013.1.camel@sli10-desk.sh.intel.com> <441EF7B8.4040901@gmx.de> <441F04D6.4070404@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:28651 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1030390AbWCUN7U (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 08:59:20 -0500
-In-Reply-To: <441F99AC.4000200@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <441F04D6.4070404@rtr.ca>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Shaohua Li <shaohua.li@intel.com>, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Jens Axboe <axboe@suse.de>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> But (as I replied to myself earlier), I think it is a non issue,
->> because the IOMMU merging cannot produce more SG entries than
->> there were originally.  It may produce less, and the driver may then
->> end up splitting them apart again, but it will never exceed what
->> the block layer permitted in the first place.
-> 
-> That says nothing about the boundaries upon which the IOMMU layer will 
-> or will not merge.  Without the fix, the problem case happens when (for 
-> example) the IOMMU output produces sg_tablesize segments, but some of 
-> those segments cross a 64k boundary and need to be split.
+Mark Lord wrote:
 
-Yes, but the merging happens *after* the block layer has already
-guaranteed an sg list that respects what the driver told it.
+>> I copy all stuff need into tmpfs to ensure that it can restore the video
+>> without hard disk access.
+>
+> OOhh.. clever, wish I'd thought of that,
 
-So worst case, the IOMMU merges the entire sg list into a single
-multi-megabyte segment, and then the driver's fill_sg() function
-splits it all apart again while making up it's PRD list.
+One should not forget to disable swap first :)
 
-Even in that worst case, the number of segments for the PRD list
-will *always* be less than or equal to the size of the original
-block layer sg list.
+> as all of my (now solved) suspend/resume issues
+> were *all* libata related.
 
-So no need for hocus-pocus divide by 2.
-Good thing, too, because "divide by 2" would also fail
-if the above stuff were not true.
+So I guess it is a good idea to get SATA working first, isn't it?
 
-Think about it some more.
+>> What to do, what to test?
+>
+> Randy Dunlop's libata-acpi patch might work for you.
+> http://www.xenotime.net/linux/SATA/
 
-Jens, you know more about this stuff than most folks:
-What am I missing?
+I tried the 2.6.16-rc4 patches on 2.6.16 (one hunk did not apply in
+libata.h, but I think I was able to fix it manually). Before suspend it
+works well, after suspend it does not work. Seems that the timeout is
+longer with the patch, though. I tried it several times; once it seemed
+to have worked, but it was not reproducible (and it did not work any
+longer after the next suspend), so I guess it could be just that I only
+tried files already in cache. (Or alternatively, the patch has a success
+rate of maybe 5%...)
 
-Thanks.
+"Just for fun" i tried the 2.6.15 patches on 2.6.15, but it did not even
+boot.
+
+BTW: It is an Intel AHCI controller.
+
+Any other ideas/patches?
+
+Michael
