@@ -1,67 +1,50 @@
-From: Sander <sander@humilis.net>
-Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
-Date: Tue, 21 Mar 2006 20:15:47 +0100
-Message-ID: <20060321191547.GC20426@favonius>
-References: <441F4F95.4070203@garzik.org> <200603210000.36552.lkml@rtr.ca> <20060321121354.GB24977@favonius> <442004E4.7010002@rtr.ca> <20060321153708.GA11703@favonius> <Pine.LNX.4.64.0603211028380.3622@g5.osdl.org>
-Reply-To: sander@humilis.net
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: libata+SGIO:  is .dma_boundary respected?
+Date: Tue, 21 Mar 2006 14:18:56 -0500
+Message-ID: <442051A0.1050200@rtr.ca>
+References: <441DC397.9040504@rtr.ca> <441DC9CB.7030203@pobox.com> <441DCAC9.5090603@rtr.ca> <441DCF73.2080600@pobox.com> <441DD101.5050202@rtr.ca> <441DD300.9050702@rtr.ca> <441F544A.6080301@pobox.com> <441F8478.50806@rtr.ca> <441F99AC.4000200@pobox.com> <442006BC.8020100@rtr.ca> <20060321184215.GJ4285@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ookhoi.xs4all.nl ([213.84.114.66]:7611 "EHLO
-	favonius.humilis.net") by vger.kernel.org with ESMTP
-	id S965067AbWCUTPv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Mar 2006 14:15:51 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0603211028380.3622@g5.osdl.org>
+Received: from rtr.ca ([64.26.128.89]:33679 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S965078AbWCUTTA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 14:19:00 -0500
+In-Reply-To: <20060321184215.GJ4285@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Sander <sander@humilis.net>, Mark Lord <liml@rtr.ca>, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Linus Torvalds wrote (ao):
-> On Tue, 21 Mar 2006, Sander wrote:
-> > The system just freezes. Rock solid. No sysrq, no ctrl-alt-del, nothing.
-> 
-> Can you enable the NMI watchdog? It could be a PCI bus lockup (in which 
-> case nothing will help), but if it's some interrupts-off busy loop 
-> (whether due to a spinlock deadlock or due to the driver just spinning) 
-> then nmi-watchdog should help.
-> 
-> Of course, that requires that you have support for local/io-APIC (ie if 
-> UP, please select CONFIG_X86_UP_.*APIC)
+Jens Axboe wrote:
+..
+> Seems to me that your reasoning is correct. It's a fact that the
+> original block mapped sg lists satisfies all requirements of the device
+> driver and/or hardware, otherwise would be a bug. The iommu may go nuts
+> of course, but logically that new sg list should be choppable into the
+> same requirements.
 
-The kernel is compiled for x86-64 and SMP (dual core opteron), so if I
-understand the NMI watchdog documentation correctly, it is automagically
-enabled.
+I just finished going through all of the arch implementations and,
+as near as I can tell, they only ever *merge* sg list items,
+and never create additional sg entries.
 
-# dmesg | grep -i nmi
-[    0.000000] ACPI: LAPIC_NMI (acpi_id[0x00] high edge lint[0x1])
-[    0.000000] ACPI: LAPIC_NMI (acpi_id[0x01] high edge lint[0x1])
-[   75.280604] testing NMI watchdog ... OK.
+So low-level drivers (at present) can safely report their real limits,
+and then in their fill_sg() routines they can run around and split up
+any IOMMU merges that their hardware cannot tolerate.
 
-# grep -i nmi /proc/interrupts 
-NMI:         52         43 
+> It would be much nicer if the iommu actually had some more knowledge,
+> ideally the same requirements that the block layer is faced with. No
+> driver should have to check the mapped sg list.
 
-(seems to increment _very_ slowly).
+Yup.  Absolutely.  So long as they continue to never *add* new sg entries
+(only doing merges instead), then I believe they just need to know the
+device's .dma_boundary parameter.  We could pass this to them as an extra
+parameters, or perhaps embed it into the sg_list data structure somehow.
 
-Is there anything else I can do to see some crash info?
+In the case of sata_mv on the Marvell 6081 (which I'm looking at this week)
+it's hardware limit is actually 0xffffffff rather than 0xffff.
 
-Btw, it always seems to crash during the md5sum of this test:
+I wonder how well Linux drivers in general deal with that on a 64-bit machine?
 
-for i in `seq 4`
-do dd if=/dev/zero of=bigfile.$i bs=1024k count=10000
-dd if=bigfile.$i of=/dev/null bs=1024k count=10000
-done
-time md5sum bigfile.*
-time rm bigfile.*
+Cheers
 
-One time during many tests I needed to run this twice before it went
-bellyup.
-
-I was not able to let 2.6.16-rc6-mm2 crash yet.
-
-I'll test 2.6.16-rc6-mm1 now.
-
--- 
-Humilis IT Services and Solutions
-http://www.humilis.net
