@@ -1,101 +1,52 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH/RFC] libata-dev: handle ERR=1 DRQ=1
-Date: Tue, 21 Mar 2006 19:39:49 +0800
-Message-ID: <441FE605.8010202@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: Sander <sander@humilis.net>
+Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
+Date: Tue, 21 Mar 2006 13:13:54 +0100
+Message-ID: <20060321121354.GB24977@favonius>
+References: <441F4F95.4070203@garzik.org> <200603210000.36552.lkml@rtr.ca>
+Reply-To: sander@humilis.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:18101 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030351AbWCULkN
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Mar 2006 06:40:13 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k2LBe7JD012941
-	for <linux-ide@vger.kernel.org>; Tue, 21 Mar 2006 06:40:07 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2LBh8wu167970
-	for <linux-ide@vger.kernel.org>; Tue, 21 Mar 2006 04:43:08 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2LBe76I001259
-	for <linux-ide@vger.kernel.org>; Tue, 21 Mar 2006 04:40:07 -0700
+Received: from ookhoi.xs4all.nl ([213.84.114.66]:19080 "EHLO
+	favonius.humilis.net") by vger.kernel.org with ESMTP
+	id S1751507AbWCUMN6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Mar 2006 07:13:58 -0500
+Content-Disposition: inline
+In-Reply-To: <200603210000.36552.lkml@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
+To: Mark Lord <lkml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-handle ERR=1 DRQ=1 for PIO protocol
+Mark Lord wrote (ao):
+> This patch addresses a number of weird behaviours observed
+> for the sata_mv driver, by fixing an "off by one" bug in processing
+> of the EDMA response queue.
+> 
+> Basically, sata_mv was looking in the wrong place for
+> command results, and this produced a lot of unpredictable behaviour.
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
----
+2.6.16 with this patch and your former patch applied, crashes during
+stressing a raid5 connected to a MV88SX6081.
 
-Some PIO read commands might set DRQ=1 alone with ERR=1.
-Under such situation, the data block should be transferred even if err=1.
+2.6.16-rc6 crashes too.
 
-This patch adds extra logic to HSM_ST_ERR to handle the required
-data transfer.
+2.6.16-rc6-mm2 is rock solid wrt sata_mv.
 
-BTW, also found the following work in progress:
-"Disable Data Transfer after Error Detection"
-http://t13.org/docs2006/dt1825Lr3-DDT_TR.pdf
-If this feature is turned on, then DRQ will be guaranteed 0 when ERR=1
-which would simplify the PIO error handling.
+I get no output of the crash on netconsole. Would it help if I get the
+output of the crash (if any)? In that case I'll connect a screen and see
+what it produces.
 
-Patch against the irq-pio branch.
-Need your review and advice, thanks.
+I'll test 2.6.16-rc6-mm2 with your patches now.
 
-Albert
+I'll also try 2.6.16-rc6-mm1 to see if it is fixed between -rc6 and
+-rc6-mm1, or between -rc6-mm1 and -rc6-mm2.
 
+As soon as 2.6.16-mm1 comes out, I'll check to see if sata_mv still
+works for me. Whatever fixes it should stay in :-)
 
---- irq-pio-printk/drivers/scsi/libata-core.c	2006-03-21 17:55:35.000000000 +0800
-+++ irq-pio-err/drivers/scsi/libata-core.c	2006-03-21 19:09:38.000000000 +0800
-@@ -3684,6 +3684,46 @@ fsm_start:
- 			printk(KERN_ERR "ata%u: command error, drv_stat 0x%x\n",
- 			       ap->id, status);
- 
-+		/* handle ERR=1 DRQ=1 */
-+		if ((status & ATA_ERR) && (status & ATA_DRQ)) {
-+			/* ERR=1 DRQ=1 is only possible for reads (READ PIO
-+			 * and READ MULTI, etc). For writes, DRQ=1 doesn't
-+			 * make sense since the data block has been
-+			 * transferred to the device.
-+			 */
-+			if ((qc->tf.protocol == ATA_PROT_PIO) &&
-+			    !(qc->tf.flags & ATA_TFLAG_WRITE)) {
-+				/* Transfer the corrupted data */
-+				ata_pio_sectors(qc);
-+
-+				/* FIXME: contents of taskfile registers
-+				 * undefined after the data xfer.
-+				 * Maybe we should call ->tf_read()
-+				 * and backup the taskfile somewhere?
-+				 * Otherwise ata_gen_fixed_sense() won't
-+				 * get needed information.
-+				 */
-+
-+				/* FIXME: The spec said if "correctable"
-+				 * data error, subsequent blocks will
-+				 * be transferred. Isn't the command
-+				 * stopped if ERR is set?
-+				 */
-+
-+				ata_altstatus(ap); /* flush */
-+				status = ata_chk_status(ap);
-+
-+				printk(KERN_ERR "ata%u: ERR=1 DRQ=1 error"
-+				       " block transferred, drv_stat 0x%x\n",
-+				       ap->id, status);
-+			} else
-+				/* Low possibility for other protocols
-+				 * being ERR=1 DRQ=1. Maybe device error?
-+				 */
-+				printk(KERN_ERR "ata%u: ERR=1 DRQ=1\n",
-+				       ap->id);
-+		}
-+
- 		/* make sure qc->err_mask is available to
- 		 * know what's wrong and recover
- 		 */
+	Sander
 
-
+-- 
+Humilis IT Services and Solutions
+http://www.humilis.net
