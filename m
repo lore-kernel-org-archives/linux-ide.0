@@ -1,52 +1,81 @@
-From: Sander <sander@humilis.net>
-Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
-Date: Tue, 21 Mar 2006 13:13:54 +0100
-Message-ID: <20060321121354.GB24977@favonius>
-References: <441F4F95.4070203@garzik.org> <200603210000.36552.lkml@rtr.ca>
-Reply-To: sander@humilis.net
+From: Leopold Palomo Avellaneda <lepalom@wol.es>
+Subject: Marvell SATA Support ... problem
+Date: Tue, 21 Mar 2006 13:14:00 +0100
+Message-ID: <200603211314.06315.lepalom@wol.es>
+Reply-To: lepalom@wol.es
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart190506366.IdemK8KUm4";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ookhoi.xs4all.nl ([213.84.114.66]:19080 "EHLO
-	favonius.humilis.net") by vger.kernel.org with ESMTP
-	id S1751507AbWCUMN6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Mar 2006 07:13:58 -0500
-Content-Disposition: inline
-In-Reply-To: <200603210000.36552.lkml@rtr.ca>
+Received: from violet.upc.es ([147.83.2.51]:50136 "EHLO violet.upc.es")
+	by vger.kernel.org with ESMTP id S1751501AbWCUMPf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 07:15:35 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Brett Russ <russb@emc.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Mark Lord wrote (ao):
-> This patch addresses a number of weird behaviours observed
-> for the sata_mv driver, by fixing an "off by one" bug in processing
-> of the EDMA response queue.
-> 
-> Basically, sata_mv was looking in the wrong place for
-> command results, and this produced a lot of unpredictable behaviour.
+--nextPart190506366.IdemK8KUm4
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-2.6.16 with this patch and your former patch applied, crashes during
-stressing a raid5 connected to a MV88SX6081.
+Hi people,
 
-2.6.16-rc6 crashes too.
+I'm trying to install a Debian testing to a Proliant ML150 G2 box. This=20
+hardware has a Adaptec HostRaid 8130 SATA Galileo/SATA II PI-X.=20
 
-2.6.16-rc6-mm2 is rock solid wrt sata_mv.
+However, this card has the Marvell Chip, and the lspci give:
 
-I get no output of the crash on netconsole. Would it help if I get the
-output of the crash (if any)? In that case I'll connect a screen and see
-what it produces.
+0000:03:04.0 SCSI storage controller: Marvell Technology Group Ltd.
+MV88SX6041 4-port SATA II PCI-X Controller (rev 07)
 
-I'll test 2.6.16-rc6-mm2 with your patches now.
+I have used the debian-installer from March 18th that comes with the 2.6.15=
+=20
+version. The installer uses your sata_mv module. The module detects the=20
+controller and the hd, however all is very slow and I'm having a lot of of=
+=20
+timeouts during the access to the hard disk. The device is unusable.
 
-I'll also try 2.6.16-rc6-mm1 to see if it is fixed between -rc6 and
--rc6-mm1, or between -rc6-mm1 and -rc6-mm2.
+I have not tried yet to test the Marvell driver [1], however, I have found=
+=20
+that this driver have been moved to a GPLv2 version [2].
 
-As soon as 2.6.16-mm1 comes out, I'll check to see if sata_mv still
-works for me. Whatever fixes it should stay in :-)
+Otherwise, talking about the sata_mv, I would like to know what I have to d=
+o=20
+to help to improve the driver because it doesn't work with my hardware?
 
-	Sander
+Regards,
 
--- 
-Humilis IT Services and Solutions
-http://www.humilis.net
+Leo
+
+
+Pd. If Marvell have a GPL v2 driver, maybe it could be a good idea to inclu=
+de=20
+it in the kernel tree?
+
+
+[1] ftp://ftp.abit.com.tw/pub/download/drivers/linux/marvell/mvsata340.zip
+[2] http://www.keffective.com/mvsata/
+
+
+=2D-=20
+Linux User 152692=20
+Catalonia
+
+--nextPart190506366.IdemK8KUm4
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2.2 (GNU/Linux)
+
+iD8DBQBEH+4OaC7AnPlEgH4RAvxbAJ9ZESR7DGwlfAHXL4aBO2Gb2F4ABgCfZRO5
+6T71WhXEJ53Kx1LU3zOCMtU=
+=ZxzN
+-----END PGP SIGNATURE-----
+
+--nextPart190506366.IdemK8KUm4--
