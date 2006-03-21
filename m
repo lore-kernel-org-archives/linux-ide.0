@@ -1,34 +1,40 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: libata+SGIO:  is .dma_boundary respected?
-Date: Tue, 21 Mar 2006 15:51:10 -0500
-Message-ID: <4420673E.3090003@rtr.ca>
-References: <441DCAC9.5090603@rtr.ca> <441DCF73.2080600@pobox.com> <441DD101.5050202@rtr.ca> <441DD300.9050702@rtr.ca> <441F544A.6080301@pobox.com> <441F8478.50806@rtr.ca> <441F99AC.4000200@pobox.com> <442006BC.8020100@rtr.ca> <20060321184215.GJ4285@suse.de> <442051A0.1050200@rtr.ca> <20060321193143.GN4285@suse.de> <442055DA.3090500@rtr.ca> <4420576F.80304@pobox.com>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
+Date: Tue, 21 Mar 2006 12:59:02 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0603211249270.3622@g5.osdl.org>
+References: <441F4F95.4070203@garzik.org> <200603210000.36552.lkml@rtr.ca>
+ <20060321121354.GB24977@favonius> <442004E4.7010002@rtr.ca>
+ <20060321153708.GA11703@favonius> <Pine.LNX.4.64.0603211028380.3622@g5.osdl.org>
+ <20060321191547.GC20426@favonius> <Pine.LNX.4.64.0603211132340.3622@g5.osdl.org>
+ <20060321204435.GE25066@favonius>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:50325 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S965099AbWCUUvP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 15:51:15 -0500
-In-Reply-To: <4420576F.80304@pobox.com>
+Received: from smtp.osdl.org ([65.172.181.4]:55442 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965110AbWCUU7L (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 15:59:11 -0500
+In-Reply-To: <20060321204435.GE25066@favonius>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Jens Axboe <axboe@suse.de>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Sander <sander@humilis.net>
+Cc: Mark Lord <liml@rtr.ca>, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> Oh, now there's a thought.  How do we specify "max segment size" today?
->> I'll need to make sure that sata_mv still does that (64KB), even though
->> it doesn't care about crossing 64KB boundaries.
+
+
+On Tue, 21 Mar 2006, Sander wrote:
 > 
-> Agreed.  50xx is the same:  64k segment size limit, dma boundary is 
-> really 0xffffffff.  Good catch, I had made the mistaken assumption that 
-> there was the standard IDE 64k boundary as well.
+> Is there a quick patch to suspect, or should I narrow down some more per
+> Andrew's instructions?
 
-Okay, good.  I can do this with a scsi slave config function,
-or we could (longer term) add it to libata somewhere.
+Well, the only thing that changes the sata_mv driver in the -mm1 patchset 
+is the "git-libata-all.patch" patch, so you might start out just applying 
+that one broken-out patch and verifying that it fixes things for you.
 
-Short term, I've already added a mv_slave_config() SCSI function here.
+That's git commit 2086a4aa2b41846801fad01f0fb1723134865ebb from Jeff's 
+libata tree.
 
-Cheers
+At that point, if that fixes it for you, you'd be best off bisecting it in 
+Jeff's libata tree using git, to figure out what it is that fixed things. 
+Jeff?
+
+		Linus
