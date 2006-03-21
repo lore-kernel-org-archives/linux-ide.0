@@ -1,72 +1,107 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 3/4] libata: make ata_set_mode() responsible for failure
- handling
-Date: Mon, 20 Mar 2006 20:54:58 -0500
-Message-ID: <441F5CF2.4080108@pobox.com>
-References: <11422375531645-git-send-email-htejun@gmail.com> <44152F3D.50307@pobox.com> <20060313094401.GD2091@htj.dyndns.org> <441541BE.80505@pobox.com> <20060313101434.GF2091@htj.dyndns.org>
+Subject: Re: [PATCH 3/4] libata: add per-dev pio/mwdma/udma_mask
+Date: Mon, 20 Mar 2006 20:56:39 -0500
+Message-ID: <441F5D57.4050906@pobox.com>
+References: <11421469551000-git-send-email-htejun@gmail.com> <44152D64.6000903@pobox.com> <20060313093052.GB2091@htj.dyndns.org> <441540DC.2050001@pobox.com> <20060313100927.GE2091@htj.dyndns.org> <441545D0.4010100@pobox.com> <20060313102412.GA25706@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:29670 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030221AbWCUBzF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Mar 2006 20:55:05 -0500
-In-Reply-To: <20060313101434.GF2091@htj.dyndns.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:37094 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030265AbWCUB4q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Mar 2006 20:56:46 -0500
+In-Reply-To: <20060313102412.GA25706@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+Cc: albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> On Mon, Mar 13, 2006 at 04:56:14AM -0500, Jeff Garzik wrote:
+> On Mon, Mar 13, 2006 at 05:13:36AM -0500, Jeff Garzik wrote:
 > 
 >>Tejun Heo wrote:
 >>
->>>On Mon, Mar 13, 2006 at 03:37:17AM -0500, Jeff Garzik wrote:
+>>>On Mon, Mar 13, 2006 at 04:52:28AM -0500, Jeff Garzik wrote:
 >>>
 >>>
->>>>I have the following concern with this patch (#3) however:
+>>>>Tejun Heo wrote:
 >>>>
 >>>>
+>>>>>On Mon, Mar 13, 2006 at 03:29:24AM -0500, Jeff Garzik wrote:
+>>>>>
+>>>>>
+>>>>>
+>>>>>>Tejun Heo wrote:
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>>>Add per-dev pio/mwdma/udma_mask.  All transfer mode limits used to be
+>>>>>>>applied to ap->*_mask which unnecessarily restricted other devices
+>>>>>>>sharing the port.  This change will also benefit later EH speed down
+>>>>>>>and hotplug.
+>>>>>>>
+>>>>>>>Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>>>>>
+>>>>>>I don't see much value in the separation.  Rather than 3 separate 
+>>>>>>masks, it seems like this patch would be simplified if you simply added 
+>>>>>>dev->xfer_mask.
+>>>>>>
+>>>>>
+>>>>>
+>>>>>The thing is that ap->*_mask's are separated the same way and all
+>>>>>masking constants are defined as such.  e.g.
+>>>>>
+>>>>>	ap->udma_mask &= ATA_UDMA5;
+>>>>>or
+>>>>>	ap->udma_mask &= ATA_UDMA_MASK_40C;
+>>>>>
+>>>>>Making dev->*_mask's the same enables share those constants and code
+>>>>>convention.  So, things to consider here are...
+>>>>>
+>>>>>1. Port xfer masks are defined as three separate masks.
+>>>>>
+>>>>>2. All the constants are defined according to that.
+>>>>>
+>>>>>3. Three separate masks are easier to deal with for LLDD's.
 >>>>
->>>>>-static void ata_dev_set_mode(struct ata_port *ap, struct ata_device 
->>>>>*dev)
->>>>>+static int ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
->>>>>{
->>>>>-	if (!ata_dev_present(dev) || (ap->flags & ATA_FLAG_PORT_DISABLED))
->>>>>-		return;
->>>>
->>>>I think you drop too many ATA_FLAG_PORT_DISABLED tests in this patch, 
->>>>leading the code to potentially miss a previously-flagged PORT_DISABLED 
->>>>(perhaps by an LLDD).
->>>>
+>>>>Separate masks is better for the LLDD interface, but the packed version 
+>>>>seems superior for internal libata use.
 >>>
 >>>
->>>Hmmm... the plan is to disallow LLDD's take ports or devices offline
+>>>Yeah, dev->*_mask's will be used by LLDD's.  Actually, in patch #4 of
+>>>this series, sata_sil's ->dev_config() does exactly that.  Also, mode
+>>>mask filtering can be done by diddling dev->*_mask's.
+>>>
+>>>
+>>>
+>>>>No reason why ATA_UDMA_MASK_40C can't simply operate on a packed 
+>>>>xfer_mask variable, for example.
+>>>
+>>>
+>>>Because it's used to filter ap->*_mask and to allow LLDD's use the
+>>>same constants on dev->*_mask's.
+>>>
+>>>Do you think LLDD's shouldn't access dev->*_mask's?
 >>
->>>from low level callbacks.  They should just let upper layer know by
+>>When I spoke of "LLDD API", I largely meant the pio_mask/etc. in 
+>>ata_port_info.  That's the easiest way to present such information to 
+>>driver maintainers.
 >>
->>>returning failure code.
->>
->>Long term that plan is fine, but you still have to deal with the 
->>existing API one way or another.  ata_port_disable() is called directly 
->>by a bunch of Alan's PATA drivers, and by ata_piix and sata_mv.
->>
->>Thus you would either need to keep the PORT_DISABLED checks or convert 
->>the drivers in question to a better API.
->>
->>So just check those ata_port_disable() cases...
->>
+>>OTOH, at runtime ->dev_config() and friends should probably just 
+>>manipulate dev->xfer_mask.
 > 
 > 
-> AFAICS, ata_piix doesn't call ata_port_disable() directly, but
-> sata_mv() does, through mv_host_intr() -> mv_err_intr()
-> ->mv_stop_and_reset() -> __mv_phy_reset().  I'll check the code path
-> such that disabled ports are handled properly.  Thanks for pointing
-> out.
+> I see.
+> 
+> So, ata_port_info uses pio/mwdma/udma_mask and ata_port and ata_device
+> use single xfer_mask and all the masking constants are converted to
+> mask single xfer_mask.  Sounds good to you?
 
-Yeah, sorry, for ata_piix I was looking at vanilla linux-2.6.git rather 
-than libata-dev.git#upstream... :)
+Well, if I read him correctly, Alan seems to have weighted in on the 
+side of pio/mwdma/udma_mask.
+
+Maybe we could go with your original patches' direction for now, and 
+then move to a consolidated xfer_mask internally later.
 
 	Jeff
 
