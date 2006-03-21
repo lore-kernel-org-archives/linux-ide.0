@@ -1,69 +1,47 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Tue, 21 Mar 2006 18:11:59 +0000
-Message-ID: <442041EF.7030107@dgreaves.com>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046CE6.60803@rtr.ca> <44046D86.7050809@pobox.com> <4405DCAF.6030500@dgreaves.com> <4405DDEA.7020309@rtr.ca> <4405E42B.9040804@dgreaves.com> <4405E83D.9000906@rtr.ca> <4405EC94.2030202@dgreaves.com> <4405FAAE.3080705@dgreaves.com> <Pine.LNX.4.64.0603031437370.9331@p34> <4408C729.50401@dgreaves.com> <4409A369.1040607@rtr.ca> <440BD31C.9090801@dgreaves.com>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: sata_promise does not see hardware RAID arrays on Fasttrak TX4000
+Date: Tue, 21 Mar 2006 13:30:27 -0500
+Message-ID: <44204643.5040802@cfl.rr.com>
+References: <20060320194728.GA17279@cs.ualberta.ca> <441F0932.1080001@pobox.com> <20060321180118.GK17279@cs.ualberta.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:39082 "EHLO mail.ukfsn.org")
-	by vger.kernel.org with ESMTP id S932407AbWCUSLf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 13:11:35 -0500
-In-Reply-To: <440BD31C.9090801@dgreaves.com>
+Received: from iriserv.iradimed.com ([69.44.168.233]:53481 "EHLO iradimed.com")
+	by vger.kernel.org with ESMTP id S1422967AbWCUSaW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 13:30:22 -0500
+In-Reply-To: <20060321180118.GK17279@cs.ualberta.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus Torvalds <torvalds@osdl.org>
+To: Gordon Atwood <gordon@cs.ualberta.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 
-David Greaves wrote:
+Gordon Atwood wrote:
+> Why should I bother with dmraid when I should just go be able to go directly
+> to sda-d, format them and then layer software RAID or LVM on top of that.
+> I can set up the four disks as individual single-disk arrays in the Promise
+> BIOS and away we go.
+> 
 
-> Mark Lord wrote:
->
->> David Greaves wrote:
->>
->>> Just FYI - I'm away (in Canada) for 2 weeks so can't do any additional
->>> testing until I return.
->>
->>
->> Am I correct, in that your last test on rc5-git4 was a failure?
->
-> It was *much* better than rc4 but it did have an error.
-> I *think* the problem I'm seeing is likely to be similar to the one I
-> orginally reported (on 2.6.15 IIRC)
-> Same sporadic warning/error which didn't usually trigger the
-> raid-boot-the-disk behaviour that the FUA code seemed to.
->
->> But without the "opcode" display in the error messages,
->> so we have no idea exactly what caused the errors (again!)?
->
-> Yes. I thought the/a opcode-verbose patch was in  there but I  guess not.
-> I don't have remote console access to the machine so wouldn't be able
-> to carry out reliable kernel tests - sorry.
-> Of course I'll do this as soon as I return.
+The advantage to dmraid over mdraid or lvm is that with dmraid you can 
+use the bios support to boot directly from the raid.  Another advantage 
+is you can dual boot with windows on the array.  With lvm or dmraid you 
+have to have a plain single disk boot partition to bring the system up.
 
-Hi
+> If the Promise card has overhead for processing I/O it will be there
+> regardless of whether I go thru dmraid or mdadm or LVM.  At least in the
+> latter configuration, I can always go out and get a real 4 port ide
+> card and just hook up the disks to it.  Then this card can go in the
+> trash.
+> 
 
-Back now :)
+You can do this in either configuration.  If you configure the drives as 
+a raid array using the bios/dmraid, then you can still plug them into 
+another controller and dmraid will happily recognize them exactly the 
+same way; you just won't be able to boot from the array.
 
-I've upgraded to 2.6.16 and applied your verbosity patches.
-
-I've persuaded my array to re-assemble and during the resync I got these
-messages
-
-dmesg:
-ata1: translated op=0x28 cmd=0x25 ATA stat/err 0x51/04 to SCSI
-SK/ASC/ASCQ 0xb/00/00
-ata1: status=0x51 { DriveReady SeekComplete Error }
-ata1: error=0x04 { DriveStatusError }
-...(18mins later)
-ata1: no sense translation for op=0x28 cmd=0x25 status: 0x51
-ata1: translated op=0x28 cmd=0x25 ATA stat/err 0x51/00 to SCSI
-SK/ASC/ASCQ 0x3/11/04
-ata1: status=0x51 { DriveReady SeekComplete Error }
-
-smartd is not running
-This did not cause the raid subsystem to boot the disk (thank goodness!)
-
-David
+> Thanks much for the pointer.  Interesting how no matter how hard you search,
+> there is always a direct thread to the info that you want that you'll
+> completely miss :-)
+> 
 
