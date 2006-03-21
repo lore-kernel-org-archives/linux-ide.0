@@ -1,41 +1,60 @@
-From: "Eric D. Mudama" <edmudama@gmail.com>
-Subject: Re: Gigabyte i-Ram cards
-Date: Mon, 20 Mar 2006 20:09:58 -0700
-Message-ID: <311601c90603201909m313b7d84hf51cb7a7e056fcb@mail.gmail.com>
-References: <441F63E6.2090204@garzik.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: libata+SGIO:  is .dma_boundary respected?
+Date: Mon, 20 Mar 2006 23:43:36 -0500
+Message-ID: <441F8478.50806@rtr.ca>
+References: <441DC397.9040504@rtr.ca> <441DC9CB.7030203@pobox.com> <441DCAC9.5090603@rtr.ca> <441DCF73.2080600@pobox.com> <441DD101.5050202@rtr.ca> <441DD300.9050702@rtr.ca> <441F544A.6080301@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.207]:8926 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751471AbWCUDJ7 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Mar 2006 22:09:59 -0500
-Received: by zproxy.gmail.com with SMTP id 34so1237830nzf
-        for <linux-ide@vger.kernel.org>; Mon, 20 Mar 2006 19:09:59 -0800 (PST)
-In-Reply-To: <441F63E6.2090204@garzik.org>
-Content-Disposition: inline
+Received: from rtr.ca ([64.26.128.89]:6024 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1030287AbWCUEni (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Mar 2006 23:43:38 -0500
+In-Reply-To: <441F544A.6080301@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Jens Axboe <axboe@suse.de>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On 3/20/06, Jeff Garzik <jeff@garzik.org> wrote:
->
-> While responding to email related to Bugzilla# 6163 [1], I took a look
-> at the Gigabyte i-Ram[2]:  PCI card, where PCI only provides power to
-> some DIMMs.  Data xfer to/from DIMMs via SATA cable.  So, at current
-> prices[3] one can get a 1GB Solid State Disk for US$206:  US$153 for the
-> card, and US$53 for 1GB pc2700 ddr.
->
-> I'm impressed.  I ordered one to help debug BZ#6163, but I think these
-> cards will help expose bugs in libata due to their high speed.  With
-> these cards, we can push more data through libata than would normally be
-> possible with a standard disk drive.
->
-> I've seen these for PATA before, but this is the first inexpensive SATA
-> SSD that I've seen.  Let's hope its not riddled with hardware bugs
-> <crosses fingers>.
+Jeff Garzik wrote:
+> Mark Lord wrote:
+..
+>>> Ahh.. then how does the low-level driver know what to use for 
+>>> ".sg_tablesize"?
+>>>
+>>> It cannot use the real hardware/driver value, because it may need to do
+>>> request splitting.  I wonder what the worst case number of splits 
+>>> required
+>>> is, for each sg[] entry?
+>>
+>>
+>> Mmmm.  I suppose the answer is that the block layer guarantees
+>> no more than .sg_tablesize entries, and the IOMMU layer may reduce
+>> the segment count, but never increase it.
+>>
+>> So the low-level driver should be able to safely use it's own internal
+>> hardware/driver limit when registering .sg_tablesize.
+> 
+> The IOMMU layer can merge across 64k boundaries, yet still produce a 
+> worst case s/g entry count.  Thus, you wind up with sg_tablesize 
+> entries, and splits still to be done.
+> 
+> That's why drivers that worry about 64k boundary have to give a false 
+> sg_tablesize to the SCSI layer: to reserve sufficient "true" s/g entries 
+> for the worst case IOMMU split.
 
-I'll see if I can get Maxtor to buy one for me, then I'll be able to
-hook it up to a bus analyzer.
+But what is the worst case?  What's to stop the IOMMU layer from merging,
+say, thirty 64KB segments into a single SG entry.  And then doing that
+several times..  nothing.
+
+But (as I replied to myself earlier), I think it is a non issue,
+because the IOMMU merging cannot produce more SG entries than
+there were originally.  It may produce less, and the driver may then
+end up splitting them apart again, but it will never exceed what
+the block layer permitted in the first place.
+
+So, I think that means the driver can report the real SG tablesize,
+and not worry about divide-by-??? margins.
+
+Cheers
+
