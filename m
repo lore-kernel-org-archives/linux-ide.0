@@ -1,35 +1,42 @@
-From: Sander <sander@humilis.net>
-Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
-Date: Tue, 21 Mar 2006 21:44:35 +0100
-Message-ID: <20060321204435.GE25066@favonius>
-References: <441F4F95.4070203@garzik.org> <200603210000.36552.lkml@rtr.ca> <20060321121354.GB24977@favonius> <442004E4.7010002@rtr.ca> <20060321153708.GA11703@favonius> <Pine.LNX.4.64.0603211028380.3622@g5.osdl.org> <20060321191547.GC20426@favonius> <Pine.LNX.4.64.0603211132340.3622@g5.osdl.org>
-Reply-To: sander@humilis.net
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: libata+SGIO:  is .dma_boundary respected?
+Date: Tue, 21 Mar 2006 14:44:04 -0600
+Message-ID: <1142973844.3428.22.camel@mulgrave.il.steeleye.com>
+References: <441F99AC.4000200@pobox.com> <442006BC.8020100@rtr.ca>
+	 <20060321184215.GJ4285@suse.de> <442051A0.1050200@rtr.ca>
+	 <4420541E.3070303@pobox.com> <44205484.9000702@rtr.ca>
+	 <44205525.20306@rtr.ca> <20060321193538.GO4285@suse.de>
+	 <44205642.7070302@pobox.com>
+	 <1142970206.3428.12.camel@mulgrave.il.steeleye.com>
+	 <20060321194649.GR4285@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ookhoi.xs4all.nl ([213.84.114.66]:59276 "EHLO
-	favonius.humilis.net") by vger.kernel.org with ESMTP
-	id S932367AbWCUUoi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Mar 2006 15:44:38 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0603211132340.3622@g5.osdl.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:4271 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932445AbWCUUp3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Mar 2006 15:45:29 -0500
+In-Reply-To: <20060321194649.GR4285@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Sander <sander@humilis.net>, Mark Lord <liml@rtr.ca>, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <liml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-Linus Torvalds wrote (ao):
-> > I was not able to let 2.6.16-rc6-mm2 crash yet.
-> > 
-> > I'll test 2.6.16-rc6-mm1 now.
-> 
-> Yup, narrowing down where exactly things go south is the way to do it.
+On Tue, 2006-03-21 at 20:46 +0100, Jens Axboe wrote:
+> Do <insert random device here> really never have segment or boundary
+> restrictions outside of IDE? Seems to me that supporting that would be
+> the conservative and sane thing to do.
 
-2.6.16-rc6-mm1 is as stable as 2.6.16-rc6-mm2 with my simple testcase.
+Well the only machines that actually turn on virtual merging are sparc
+and parisc.  They have a small list of "certified" devices for them,
+none of which seems to have aribtrary segment boundary restrictions
+(although most of them have the standard 4GB one).
 
-Is there a quick patch to suspect, or should I narrow down some more per
-Andrew's instructions?
+When I brought this up the last time it degenerated into a slanging
+match over the value of virtual merging (which no-one can seem to
+provide a definitive answer to).
 
--- 
-Humilis IT Services and Solutions
-http://www.humilis.net
+James
+
+
