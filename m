@@ -1,103 +1,72 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] AHCI SATA vendor update from VIA
-Date: Mon, 20 Mar 2006 20:53:01 -0500
-Message-ID: <441F5C7D.2050600@pobox.com>
-References: <439CF812.8010107@pobox.com> <20060315191736.231a2894.vsu@altlinux.ru>
+Subject: Re: [PATCH 3/4] libata: make ata_set_mode() responsible for failure
+ handling
+Date: Mon, 20 Mar 2006 20:54:58 -0500
+Message-ID: <441F5CF2.4080108@pobox.com>
+References: <11422375531645-git-send-email-htejun@gmail.com> <44152F3D.50307@pobox.com> <20060313094401.GD2091@htj.dyndns.org> <441541BE.80505@pobox.com> <20060313101434.GF2091@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:21222 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751444AbWCUBxH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Mar 2006 20:53:07 -0500
-In-Reply-To: <20060315191736.231a2894.vsu@altlinux.ru>
+Received: from srv5.dvmed.net ([207.36.208.214]:29670 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030221AbWCUBzF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Mar 2006 20:55:05 -0500
+In-Reply-To: <20060313101434.GF2091@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergey Vlasov <vsu@altlinux.ru>
-Cc: Geoff Rivell <grivell@comcast.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-Sergey Vlasov wrote:
-> What is needed to get the VT8251 support into the kernel tree?
-
-1) Doing what you are doing:  asking questions like this.  :)
-
-2) Watching Tejun Heo's reset work.  He already has an AHCI soft reset 
-patch, and the VIA AHCI work really depends on this.
-
-
-> I have looked at the patch, and it basically does three things:
+Tejun Heo wrote:
+> On Mon, Mar 13, 2006 at 04:56:14AM -0500, Jeff Garzik wrote:
 > 
-> 1) Apparently the VT8251 hardware does not like the standard reset
->    sequence performed by __sata_phy_reset() - the phy seems to become
->    ready, but the ATA_BUSY bit never goes off.  So the patch authors
->    just duplicated ahci_phy_reset(), inserted the whole code of
->    __sata_phy_reset() in there, and added this part before the
->    ata_busy_sleep() call:
+>>Tejun Heo wrote:
+>>
+>>>On Mon, Mar 13, 2006 at 03:37:17AM -0500, Jeff Garzik wrote:
+>>>
+>>>
+>>>>I have the following concern with this patch (#3) however:
+>>>>
+>>>>
+>>>>
+>>>>>-static void ata_dev_set_mode(struct ata_port *ap, struct ata_device 
+>>>>>*dev)
+>>>>>+static int ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
+>>>>>{
+>>>>>-	if (!ata_dev_present(dev) || (ap->flags & ATA_FLAG_PORT_DISABLED))
+>>>>>-		return;
+>>>>
+>>>>I think you drop too many ATA_FLAG_PORT_DISABLED tests in this patch, 
+>>>>leading the code to potentially miss a previously-flagged PORT_DISABLED 
+>>>>(perhaps by an LLDD).
+>>>>
+>>>
+>>>
+>>>Hmmm... the plan is to disallow LLDD's take ports or devices offline
+>>
+>>>from low level callbacks.  They should just let upper layer know by
+>>
+>>>returning failure code.
+>>
+>>Long term that plan is fine, but you still have to deal with the 
+>>existing API one way or another.  ata_port_disable() is called directly 
+>>by a bunch of Alan's PATA drivers, and by ata_piix and sata_mv.
+>>
+>>Thus you would either need to keep the PORT_DISABLED checks or convert 
+>>the drivers in question to a better API.
+>>
+>>So just check those ata_port_disable() cases...
+>>
 > 
-> +	/*Fix the VIA busy bug by a software reset*/
-> +	for (i = 0; i < 100; i++) {
-> +		tmp_status = ap->ops->check_status(ap);
-> +		if ((tmp_status & ATA_BUSY) == 0) break;
-> +		msleep(10);
-> +	}
-> +
-> +	if ((tmp_status & ATA_BUSY)) {
-> +		DPRINTK("Busy after CommReset, do softreset...\n"); 
-> +		/*set the PxCMD.CLO bit to clear BUSY and DRQ, to make the reset command sent out*/
-> +		tmp = readl(port_mmio + PORT_CMD);
-> +		tmp |= PORT_CMD_CLO;
-> +		writel(tmp, port_mmio + PORT_CMD);
-> +		readl(port_mmio + PORT_CMD); /* flush */
-> +
-> +		if (via_ahci_softreset(ap)) {
-> +			printk(KERN_WARNING "softreset failed\n");
-> +			return;
-> +		}
-> +	}
 > 
->    Now, if this is really a chip bug, we don't have any choice except
->    adding this workaround, but obviously not in this way.  What do you
->    think about splitting __sata_phy_reset() in two parts -
->    __sata_phy_reset_start() (everything up to the point where
->    ata_busy_sleep() is called) and __sata_phy_reset_end()
->    (ata_busy_sleep() and the rest), so that the low-level driver could
->    insert its own code between these parts?  Or should a hook for this
->    be added to ->ops instead?
+> AFAICS, ata_piix doesn't call ata_port_disable() directly, but
+> sata_mv() does, through mv_host_intr() -> mv_err_intr()
+> ->mv_stop_and_reset() -> __mv_phy_reset().  I'll check the code path
+> such that disabled ports are handled properly.  Thanks for pointing
+> out.
 
-Tejun's stuff broke up this sequence, so it should be much easier to 
-utilize his new reset code (in libata-dev.git#upstream, queued for 2.6.17).
-
-
-> 2) via_ahci_qc_issue really just filters out the SETFEATURES_XFER
->    command; only VIA can tell why this is needed, and is there a better
->    way to do this.  However, at least some duplicated code could be
->    removed easily:
-> 
-> static int via_ahci_qc_issue(struct ata_queued_cmd *qc)
-> {
-> 	if (qc && qc->tf.command == ATA_CMD_SET_FEATURES &&
-> 	    qc->tf.feature == SETFEATURES_XFER) {
-> 		/* skip set xfer mode process */
-> 		ata_qc_complete(qc);
-> 		return 0;
-> 	}
-> 	return ahci_qc_issue(qc);
-> }
-> 
->    Would this be acceptable?
-
-I wonder first if this actually solves some problems.  I would prefer to 
--not- do this, and see what happens.
-
-
-> 3) What via_ahci_port_stop() does, I just don't understand - it is
->    basically a copy of ahci_port_stop() at that time, but with clearing
->    of the PORT_CMD bits removed - so nothing is stopped actually.
->    Again, only VIA can tell why is this needed, but this part of the
->    patch looks like a bug.
-
-As your instinct seems to be, I would prefer to avoid this change if 
-possible.
+Yeah, sorry, for ata_piix I was looking at vanilla linux-2.6.git rather 
+than libata-dev.git#upstream... :)
 
 	Jeff
 
