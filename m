@@ -1,55 +1,96 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata+SGIO:  is .dma_boundary respected?
-Date: Mon, 20 Mar 2006 20:18:02 -0500
-Message-ID: <441F544A.6080301@pobox.com>
-References: <441DC397.9040504@rtr.ca> <441DC9CB.7030203@pobox.com> <441DCAC9.5090603@rtr.ca> <441DCF73.2080600@pobox.com> <441DD101.5050202@rtr.ca> <441DD300.9050702@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH][INCOMPLETE] sata_nv: merge ADMA support
+Date: Mon, 20 Mar 2006 20:28:13 -0500
+Message-ID: <441F56AD.8020001@garzik.org>
+References: <20060317232339.GA5674@ti64.telemetry-investments.com> <441B5AD5.5020809@garzik.org> <20060318080618.GA19929@ti64.telemetry-investments.com> <441BCB3C.6060202@garzik.org> <20060319232317.GA25578@ti64.telemetry-investments.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:27877 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964771AbWCUBSF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Mar 2006 20:18:05 -0500
-In-Reply-To: <441DD300.9050702@rtr.ca>
+Received: from srv5.dvmed.net ([207.36.208.214]:47333 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964928AbWCUB2Q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Mar 2006 20:28:16 -0500
+In-Reply-To: <20060319232317.GA25578@ti64.telemetry-investments.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jens Axboe <axboe@suse.de>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: "Bill Rugolsky Jr." <brugolsky@telemetry-investments.com>
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Mark Lord wrote:
-> Mark Lord wrote:
+Bill Rugolsky Jr. wrote:
+> On Sat, Mar 18, 2006 at 03:56:28AM -0500, Jeff Garzik wrote:
 > 
->> Jeff Garzik wrote:
->>
->>> The idiot IOMMU layer may merge too aggressively, which is the reason 
->>> for this code and similar code in ata_fill_sg().  The IOMMU stuff 
->>> always happens at pci_map_sg() time, after the block layer gets out 
->>> of the way.
->>
->>
->> Ahh.. then how does the low-level driver know what to use for 
->> ".sg_tablesize"?
->>
->> It cannot use the real hardware/driver value, because it may need to do
->> request splitting.  I wonder what the worst case number of splits 
->> required
->> is, for each sg[] entry?
+>>OK, can you try the attached sata_nv.c?  Does it perform to the level 
+>>that yours does?
 > 
-> 
-> Mmmm.  I suppose the answer is that the block layer guarantees
-> no more than .sg_tablesize entries, and the IOMMU layer may reduce
-> the segment count, but never increase it.
-> 
-> So the low-level driver should be able to safely use it's own internal
-> hardware/driver limit when registering .sg_tablesize.
+>  
+> Yes, the results are approximately the same.  Booting from port 0 (sda)
+> with ADMA enabled still results in timeouts on port 3 (sdc) while
+> running tars on the RAID1 array on ports 2&3.
 
-The IOMMU layer can merge across 64k boundaries, yet still produce a 
-worst case s/g entry count.  Thus, you wind up with sg_tablesize 
-entries, and splits still to be done.
+Thanks a lot for testing.
 
-That's why drivers that worry about 64k boundary have to give a false 
-sg_tablesize to the SCSI layer: to reserve sufficient "true" s/g entries 
-for the worst case IOMMU split.
+I've stored the sata_nv updates I sent you in the 'nv-adma' branch of
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+
+
+> ata4: command 0x25 timeout, stat 0x50
+> ata4: command 0x25 timeout, stat 0x50
+> (           xterm-3349 |#0): new 355 us maximum-latency wakeup.
+> (      watchdog/0-4    |#0): new 468 us maximum-latency wakeup.
+> ata4: command 0x35 timeout, stat 0x50
+> ata4: command 0x35 timeout, stat 0x50
+> ata4: command 0x35 timeout, stat 0x50
+> ata4: command 0x35 timeout, stat 0x50
+> ata4: command 0x35 timeout, stat 0x50
+> ata4: command 0x35 timeout, stat 0x50
+> 
+> After a while, syncing the filesystems hangs the sync process, though
+> the system continues to function, and I can log in on another VC.
+
+hmmm.  Sounds like some attention should be paid to the error handling 
+portion of the code.
+
+
+> The good news: no long latencies from the status inb() during the
+> period that it is functional! :-p
+
+heh :)
+
+Dumb question, to be certain that I understood your first paragraph: 
+you do indeed see at least -some- success talking to devices on port 1, 
+2, 3... ?  i.e. not just port 0 works?
+
+
+> Booting without ADMA gives the usual stable behavior, with the long
+> latencies from the status inb().
+
+Weird.  Well, now that we appear to have narrowed the non-ADMA case down 
+to inb(), I'm going to punt this one as not-my-problem ;-)
+
+
+> I was a little disconcerted when I saw this this in the trace with ADMA
+> disabled,
+> 
+>    tar-21466 0dnh. 3979us : nv_check_hotplug_adma (nv_interrupt)
+> 
+> until I realized that this
+> 
+>         if (!adma_enabled && host_desc->host_type == ADMA)
+>                 host_desc->host_type--;
+> 
+> only alters the outcome of the "host_desc->host_type == ADMA" test, but
+> still uses the ADMA-based hotplug functions.
+
+Yep.  That's part of my general plan to eliminate all the
+
+	if (adma)
+		foo
+	else
+		bar
+
+type code in favor to create separate ADMA and non-ADMA hooks. 
+Particularly in the key hot paths, sata_nv should avoid asking "are we 
+ADMA?" all the time.
 
 	Jeff
 
