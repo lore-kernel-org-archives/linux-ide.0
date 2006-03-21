@@ -1,97 +1,105 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH][INCOMPLETE] sata_nv: merge ADMA support
-Date: Mon, 20 Mar 2006 20:28:13 -0500
-Message-ID: <441F56AD.8020001@garzik.org>
-References: <20060317232339.GA5674@ti64.telemetry-investments.com> <441B5AD5.5020809@garzik.org> <20060318080618.GA19929@ti64.telemetry-investments.com> <441BCB3C.6060202@garzik.org> <20060319232317.GA25578@ti64.telemetry-investments.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] AHCI SATA vendor update from VIA
+Date: Mon, 20 Mar 2006 20:53:01 -0500
+Message-ID: <441F5C7D.2050600@pobox.com>
+References: <439CF812.8010107@pobox.com> <20060315191736.231a2894.vsu@altlinux.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47333 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964928AbWCUB2Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Mar 2006 20:28:16 -0500
-In-Reply-To: <20060319232317.GA25578@ti64.telemetry-investments.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:21222 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751444AbWCUBxH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Mar 2006 20:53:07 -0500
+In-Reply-To: <20060315191736.231a2894.vsu@altlinux.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Bill Rugolsky Jr." <brugolsky@telemetry-investments.com>
-Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Sergey Vlasov <vsu@altlinux.ru>
+Cc: Geoff Rivell <grivell@comcast.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-Bill Rugolsky Jr. wrote:
-> On Sat, Mar 18, 2006 at 03:56:28AM -0500, Jeff Garzik wrote:
+Sergey Vlasov wrote:
+> What is needed to get the VT8251 support into the kernel tree?
+
+1) Doing what you are doing:  asking questions like this.  :)
+
+2) Watching Tejun Heo's reset work.  He already has an AHCI soft reset 
+patch, and the VIA AHCI work really depends on this.
+
+
+> I have looked at the patch, and it basically does three things:
 > 
->>OK, can you try the attached sata_nv.c?  Does it perform to the level 
->>that yours does?
+> 1) Apparently the VT8251 hardware does not like the standard reset
+>    sequence performed by __sata_phy_reset() - the phy seems to become
+>    ready, but the ATA_BUSY bit never goes off.  So the patch authors
+>    just duplicated ahci_phy_reset(), inserted the whole code of
+>    __sata_phy_reset() in there, and added this part before the
+>    ata_busy_sleep() call:
 > 
->  
-> Yes, the results are approximately the same.  Booting from port 0 (sda)
-> with ADMA enabled still results in timeouts on port 3 (sdc) while
-> running tars on the RAID1 array on ports 2&3.
-
-Thanks a lot for testing.
-
-I've stored the sata_nv updates I sent you in the 'nv-adma' branch of
-git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-
-
-> ata4: command 0x25 timeout, stat 0x50
-> ata4: command 0x25 timeout, stat 0x50
-> (           xterm-3349 |#0): new 355 us maximum-latency wakeup.
-> (      watchdog/0-4    |#0): new 468 us maximum-latency wakeup.
-> ata4: command 0x35 timeout, stat 0x50
-> ata4: command 0x35 timeout, stat 0x50
-> ata4: command 0x35 timeout, stat 0x50
-> ata4: command 0x35 timeout, stat 0x50
-> ata4: command 0x35 timeout, stat 0x50
-> ata4: command 0x35 timeout, stat 0x50
+> +	/*Fix the VIA busy bug by a software reset*/
+> +	for (i = 0; i < 100; i++) {
+> +		tmp_status = ap->ops->check_status(ap);
+> +		if ((tmp_status & ATA_BUSY) == 0) break;
+> +		msleep(10);
+> +	}
+> +
+> +	if ((tmp_status & ATA_BUSY)) {
+> +		DPRINTK("Busy after CommReset, do softreset...\n"); 
+> +		/*set the PxCMD.CLO bit to clear BUSY and DRQ, to make the reset command sent out*/
+> +		tmp = readl(port_mmio + PORT_CMD);
+> +		tmp |= PORT_CMD_CLO;
+> +		writel(tmp, port_mmio + PORT_CMD);
+> +		readl(port_mmio + PORT_CMD); /* flush */
+> +
+> +		if (via_ahci_softreset(ap)) {
+> +			printk(KERN_WARNING "softreset failed\n");
+> +			return;
+> +		}
+> +	}
 > 
-> After a while, syncing the filesystems hangs the sync process, though
-> the system continues to function, and I can log in on another VC.
+>    Now, if this is really a chip bug, we don't have any choice except
+>    adding this workaround, but obviously not in this way.  What do you
+>    think about splitting __sata_phy_reset() in two parts -
+>    __sata_phy_reset_start() (everything up to the point where
+>    ata_busy_sleep() is called) and __sata_phy_reset_end()
+>    (ata_busy_sleep() and the rest), so that the low-level driver could
+>    insert its own code between these parts?  Or should a hook for this
+>    be added to ->ops instead?
 
-hmmm.  Sounds like some attention should be paid to the error handling 
-portion of the code.
-
-
-> The good news: no long latencies from the status inb() during the
-> period that it is functional! :-p
-
-heh :)
-
-Dumb question, to be certain that I understood your first paragraph: 
-you do indeed see at least -some- success talking to devices on port 1, 
-2, 3... ?  i.e. not just port 0 works?
+Tejun's stuff broke up this sequence, so it should be much easier to 
+utilize his new reset code (in libata-dev.git#upstream, queued for 2.6.17).
 
 
-> Booting without ADMA gives the usual stable behavior, with the long
-> latencies from the status inb().
-
-Weird.  Well, now that we appear to have narrowed the non-ADMA case down 
-to inb(), I'm going to punt this one as not-my-problem ;-)
-
-
-> I was a little disconcerted when I saw this this in the trace with ADMA
-> disabled,
+> 2) via_ahci_qc_issue really just filters out the SETFEATURES_XFER
+>    command; only VIA can tell why this is needed, and is there a better
+>    way to do this.  However, at least some duplicated code could be
+>    removed easily:
 > 
->    tar-21466 0dnh. 3979us : nv_check_hotplug_adma (nv_interrupt)
+> static int via_ahci_qc_issue(struct ata_queued_cmd *qc)
+> {
+> 	if (qc && qc->tf.command == ATA_CMD_SET_FEATURES &&
+> 	    qc->tf.feature == SETFEATURES_XFER) {
+> 		/* skip set xfer mode process */
+> 		ata_qc_complete(qc);
+> 		return 0;
+> 	}
+> 	return ahci_qc_issue(qc);
+> }
 > 
-> until I realized that this
-> 
->         if (!adma_enabled && host_desc->host_type == ADMA)
->                 host_desc->host_type--;
-> 
-> only alters the outcome of the "host_desc->host_type == ADMA" test, but
-> still uses the ADMA-based hotplug functions.
+>    Would this be acceptable?
 
-Yep.  That's part of my general plan to eliminate all the
+I wonder first if this actually solves some problems.  I would prefer to 
+-not- do this, and see what happens.
 
-	if (adma)
-		foo
-	else
-		bar
 
-type code in favor to create separate ADMA and non-ADMA hooks. 
-Particularly in the key hot paths, sata_nv should avoid asking "are we 
-ADMA?" all the time.
+> 3) What via_ahci_port_stop() does, I just don't understand - it is
+>    basically a copy of ahci_port_stop() at that time, but with clearing
+>    of the PORT_CMD bits removed - so nothing is stopped actually.
+>    Again, only VIA can tell why is this needed, but this part of the
+>    patch looks like a bug.
+
+As your instinct seems to be, I would prefer to avoid this change if 
+possible.
 
 	Jeff
+
 
 
