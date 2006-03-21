@@ -1,53 +1,46 @@
-From: "martin schneebacher" <masc@operamail.com>
-Subject: Re: Resume problems on Fujitsu-Siemens AMILO M7440G -- SATA
-Date: Tue, 21 Mar 2006 17:25:47 +0100
-Message-ID: <20060321162547.D6F51CA0A4@ws5-11.us4.outblaze.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] AHCI SATA vendor update from VIA
+Date: Tue, 21 Mar 2006 11:39:38 -0500
+Message-ID: <44202C4A.8030508@pobox.com>
+References: <439CF812.8010107@pobox.com> <20060315191736.231a2894.vsu@altlinux.ru> <441F5C7D.2050600@pobox.com> <441FE146.3050406@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Michael Schierl <schierlm@gmx.de>, Mark Lord <liml@rtr.ca>
-Cc: Shaohua Li <shaohua.li@intel.com>, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:2705 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751660AbWCUQjo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 11:39:44 -0500
+In-Reply-To: <441FE146.3050406@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Sergey Vlasov <vsu@altlinux.ru>, Geoff Rivell <grivell@comcast.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-hi!
-
-> ----- Original Message -----
-> From: "Michael Schierl" <schierlm@gmx.de>
-> To: "Mark Lord" <liml@rtr.ca>
-> Subject: Re: Resume problems on Fujitsu-Siemens AMILO M7440G -- SATA
-> Date: 	Tue, 21 Mar 2006 16:37:03 +0100
-> > Randy Dunlop's libata-acpi patch might work for you.
-> > http://www.xenotime.net/linux/SATA/
+Tejun Heo wrote:
+> Hello,
 > 
-> I tried the 2.6.16-rc4 patches on 2.6.16 (one hunk did not apply in
-> libata.h, but I think I was able to fix it manually). Before suspend it
-> works well, after suspend it does not work. Seems that the timeout is
-> longer with the patch, though. I tried it several times; once it seemed
-> to have worked, but it was not reproducible (and it did not work any
-> longer after the next suspend), so I guess it could be just that I only
-> tried files already in cache. (Or alternatively, the patch has a success
-> rate of maybe 5%...)
+> Jeff Garzik wrote:
 > 
-> "Just for fun" i tried the 2.6.15 patches on 2.6.15, but it did not even
-> boot.
+>> Sergey Vlasov wrote:
+>>
+>>> What is needed to get the VT8251 support into the kernel tree?
+>>
+>>
+>> 1) Doing what you are doing:  asking questions like this.  :)
+>>
+>> 2) Watching Tejun Heo's reset work.  He already has an AHCI soft reset 
+>> patch, and the VIA AHCI work really depends on this.
+>>
 > 
-> BTW: It is an Intel AHCI controller.
-> 
-> Any other ideas/patches?
+> BTW, what happened to AHCI softreset patch. It got acked[1], but it has 
+> not made into the tree yet. Do you want me to regenerate it against the 
+> current tree? Or is there anything holding it from going into the tree?
 
-have you ever tried the sata_pm patch from http://tpctl.sourceforge.net/tmp/sata_pm.2.6.15-rc6.patch ?
-i have a intel SATA ICH6M interface and it works fine with this patch.
+Please resend, the only pending patch I have from you is the ATA 
+transport class patch (thanks for doing that BTW), which is on hold 
+waiting for SCSI updates.
 
-bye...masc.
+	Jeff
 
 
 
--- 
-_______________________________________________
-Surf the Web in a faster, safer and easier way:
-Download Opera 8 at http://www.opera.com
-
-Powered by Outblaze
