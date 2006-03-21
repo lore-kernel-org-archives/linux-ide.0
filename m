@@ -1,89 +1,101 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] AHCI SATA vendor update from VIA
-Date: Tue, 21 Mar 2006 20:19:34 +0900
-Message-ID: <441FE146.3050406@gmail.com>
-References: <439CF812.8010107@pobox.com> <20060315191736.231a2894.vsu@altlinux.ru> <441F5C7D.2050600@pobox.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH/RFC] libata-dev: handle ERR=1 DRQ=1
+Date: Tue, 21 Mar 2006 19:39:49 +0800
+Message-ID: <441FE605.8010202@tw.ibm.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.203]:6269 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030294AbWCULTx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 06:19:53 -0500
-Received: by zproxy.gmail.com with SMTP id o37so1526554nzf
-        for <linux-ide@vger.kernel.org>; Tue, 21 Mar 2006 03:19:52 -0800 (PST)
-In-Reply-To: <441F5C7D.2050600@pobox.com>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:18101 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030351AbWCULkN
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Mar 2006 06:40:13 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k2LBe7JD012941
+	for <linux-ide@vger.kernel.org>; Tue, 21 Mar 2006 06:40:07 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2LBh8wu167970
+	for <linux-ide@vger.kernel.org>; Tue, 21 Mar 2006 04:43:08 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2LBe76I001259
+	for <linux-ide@vger.kernel.org>; Tue, 21 Mar 2006 04:40:07 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Sergey Vlasov <vsu@altlinux.ru>, Geoff Rivell <grivell@comcast.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
-Hello,
+handle ERR=1 DRQ=1 for PIO protocol
 
-Jeff Garzik wrote:
-> Sergey Vlasov wrote:
->> What is needed to get the VT8251 support into the kernel tree?
-> 
-> 1) Doing what you are doing:  asking questions like this.  :)
-> 
-> 2) Watching Tejun Heo's reset work.  He already has an AHCI soft reset 
-> patch, and the VIA AHCI work really depends on this.
-> 
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+---
 
-BTW, what happened to AHCI softreset patch. It got acked[1], but it has 
-not made into the tree yet. Do you want me to regenerate it against the 
-current tree? Or is there anything holding it from going into the tree?
+Some PIO read commands might set DRQ=1 alone with ERR=1.
+Under such situation, the data block should be transferred even if err=1.
 
-> 
->> I have looked at the patch, and it basically does three things:
->>
->> 1) Apparently the VT8251 hardware does not like the standard reset
->>    sequence performed by __sata_phy_reset() - the phy seems to become
->>    ready, but the ATA_BUSY bit never goes off.  So the patch authors
->>    just duplicated ahci_phy_reset(), inserted the whole code of
->>    __sata_phy_reset() in there, and added this part before the
->>    ata_busy_sleep() call:
->>
->> +    /*Fix the VIA busy bug by a software reset*/
->> +    for (i = 0; i < 100; i++) {
->> +        tmp_status = ap->ops->check_status(ap);
->> +        if ((tmp_status & ATA_BUSY) == 0) break;
->> +        msleep(10);
->> +    }
->> +
->> +    if ((tmp_status & ATA_BUSY)) {
->> +        DPRINTK("Busy after CommReset, do softreset...\n"); +        
->> /*set the PxCMD.CLO bit to clear BUSY and DRQ, to make the reset 
->> command sent out*/
->> +        tmp = readl(port_mmio + PORT_CMD);
->> +        tmp |= PORT_CMD_CLO;
->> +        writel(tmp, port_mmio + PORT_CMD);
->> +        readl(port_mmio + PORT_CMD); /* flush */
->> +
->> +        if (via_ahci_softreset(ap)) {
->> +            printk(KERN_WARNING "softreset failed\n");
->> +            return;
->> +        }
->> +    }
->>
->>    Now, if this is really a chip bug, we don't have any choice except
->>    adding this workaround, but obviously not in this way.  What do you
->>    think about splitting __sata_phy_reset() in two parts -
->>    __sata_phy_reset_start() (everything up to the point where
->>    ata_busy_sleep() is called) and __sata_phy_reset_end()
->>    (ata_busy_sleep() and the rest), so that the low-level driver could
->>    insert its own code between these parts?  Or should a hook for this
->>    be added to ->ops instead?
-> 
-> Tejun's stuff broke up this sequence, so it should be much easier to 
-> utilize his new reset code (in libata-dev.git#upstream, queued for 2.6.17).
-> 
+This patch adds extra logic to HSM_ST_ERR to handle the required
+data transfer.
 
-If hardreset never works on via ahci, simply omitting hardreset in 
-ahci_probe_reset() routine for that controller should do the job (with 
-the AHCI softreset patch applied of course).
+BTW, also found the following work in progress:
+"Disable Data Transfer after Error Detection"
+http://t13.org/docs2006/dt1825Lr3-DDT_TR.pdf
+If this feature is turned on, then DRQ will be guaranteed 0 when ERR=1
+which would simplify the PIO error handling.
 
--- 
-tejun
+Patch against the irq-pio branch.
+Need your review and advice, thanks.
 
-[1] http://thread.gmane.org/gmane.linux.ide/7952
+Albert
+
+
+--- irq-pio-printk/drivers/scsi/libata-core.c	2006-03-21 17:55:35.000000000 +0800
++++ irq-pio-err/drivers/scsi/libata-core.c	2006-03-21 19:09:38.000000000 +0800
+@@ -3684,6 +3684,46 @@ fsm_start:
+ 			printk(KERN_ERR "ata%u: command error, drv_stat 0x%x\n",
+ 			       ap->id, status);
+ 
++		/* handle ERR=1 DRQ=1 */
++		if ((status & ATA_ERR) && (status & ATA_DRQ)) {
++			/* ERR=1 DRQ=1 is only possible for reads (READ PIO
++			 * and READ MULTI, etc). For writes, DRQ=1 doesn't
++			 * make sense since the data block has been
++			 * transferred to the device.
++			 */
++			if ((qc->tf.protocol == ATA_PROT_PIO) &&
++			    !(qc->tf.flags & ATA_TFLAG_WRITE)) {
++				/* Transfer the corrupted data */
++				ata_pio_sectors(qc);
++
++				/* FIXME: contents of taskfile registers
++				 * undefined after the data xfer.
++				 * Maybe we should call ->tf_read()
++				 * and backup the taskfile somewhere?
++				 * Otherwise ata_gen_fixed_sense() won't
++				 * get needed information.
++				 */
++
++				/* FIXME: The spec said if "correctable"
++				 * data error, subsequent blocks will
++				 * be transferred. Isn't the command
++				 * stopped if ERR is set?
++				 */
++
++				ata_altstatus(ap); /* flush */
++				status = ata_chk_status(ap);
++
++				printk(KERN_ERR "ata%u: ERR=1 DRQ=1 error"
++				       " block transferred, drv_stat 0x%x\n",
++				       ap->id, status);
++			} else
++				/* Low possibility for other protocols
++				 * being ERR=1 DRQ=1. Maybe device error?
++				 */
++				printk(KERN_ERR "ata%u: ERR=1 DRQ=1\n",
++				       ap->id);
++		}
++
+ 		/* make sure qc->err_mask is available to
+ 		 * know what's wrong and recover
+ 		 */
+
+
