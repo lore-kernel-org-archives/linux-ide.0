@@ -1,33 +1,53 @@
-From: Peter Jones <pjones@redhat.com>
-Subject: Re: Some sata_mv error messages
-Date: Tue, 21 Mar 2006 11:06:31 -0500
-Message-ID: <1142957192.11485.0.camel@vroomfondel.internal.datastacks.com>
-References: <20060318044056.350a2931.akpm@osdl.org>
-	 <20060320133318.GB32762@favonius> <441F508E.1030008@pobox.com>
-	 <20060321022515.GI29589@redhat.com>  <441F6684.609@pobox.com>
+From: "martin schneebacher" <masc@operamail.com>
+Subject: Re: Resume problems on Fujitsu-Siemens AMILO M7440G -- SATA
+Date: Tue, 21 Mar 2006 17:25:47 +0100
+Message-ID: <20060321162547.D6F51CA0A4@ws5-11.us4.outblaze.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:16034 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S1750871AbWCUQGs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 11:06:48 -0500
-In-Reply-To: <441F6684.609@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-acpi-owner@vger.kernel.org
+To: Michael Schierl <schierlm@gmx.de>, Mark Lord <liml@rtr.ca>
+Cc: Shaohua Li <shaohua.li@intel.com>, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Dave Jones <davej@redhat.com>, sander@humilis.net, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, lkml@rtr.ca
 
-On Mon, 2006-03-20 at 21:35 -0500, Jeff Garzik wrote:
-> Dave Jones wrote:
+hi!
 
-> > This wasn't occasional, this was every few seconds, making the box
-> > pretty much unusable.
+> ----- Original Message -----
+> From: "Michael Schierl" <schierlm@gmx.de>
+> To: "Mark Lord" <liml@rtr.ca>
+> Subject: Re: Resume problems on Fujitsu-Siemens AMILO M7440G -- SATA
+> Date: 	Tue, 21 Mar 2006 16:37:03 +0100
+> > Randy Dunlop's libata-acpi patch might work for you.
+> > http://www.xenotime.net/linux/SATA/
 > 
-> The entire box or just the console?
+> I tried the 2.6.16-rc4 patches on 2.6.16 (one hunk did not apply in
+> libata.h, but I think I was able to fix it manually). Before suspend it
+> works well, after suspend it does not work. Seems that the timeout is
+> longer with the patch, though. I tried it several times; once it seemed
+> to have worked, but it was not reproducible (and it did not work any
+> longer after the next suspend), so I guess it could be just that I only
+> tried files already in cache. (Or alternatively, the patch has a success
+> rate of maybe 5%...)
+> 
+> "Just for fun" i tried the 2.6.15 patches on 2.6.15, but it did not even
+> boot.
+> 
+> BTW: It is an Intel AHCI controller.
+> 
+> Any other ideas/patches?
 
-Just the console.
+have you ever tried the sata_pm patch from http://tpctl.sourceforge.net/tmp/sata_pm.2.6.15-rc6.patch ?
+i have a intel SATA ICH6M interface and it works fine with this patch.
+
+bye...masc.
+
+
 
 -- 
-  Peter
+_______________________________________________
+Surf the Web in a faster, safer and easier way:
+Download Opera 8 at http://www.opera.com
 
+Powered by Outblaze
