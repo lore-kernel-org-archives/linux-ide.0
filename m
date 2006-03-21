@@ -1,69 +1,33 @@
-From: Sander <sander@humilis.net>
-Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
-Date: Tue, 21 Mar 2006 16:37:08 +0100
-Message-ID: <20060321153708.GA11703@favonius>
-References: <441F4F95.4070203@garzik.org> <200603210000.36552.lkml@rtr.ca> <20060321121354.GB24977@favonius> <442004E4.7010002@rtr.ca>
-Reply-To: sander@humilis.net
+From: Peter Jones <pjones@redhat.com>
+Subject: Re: Some sata_mv error messages
+Date: Tue, 21 Mar 2006 11:06:31 -0500
+Message-ID: <1142957192.11485.0.camel@vroomfondel.internal.datastacks.com>
+References: <20060318044056.350a2931.akpm@osdl.org>
+	 <20060320133318.GB32762@favonius> <441F508E.1030008@pobox.com>
+	 <20060321022515.GI29589@redhat.com>  <441F6684.609@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ookhoi.xs4all.nl ([213.84.114.66]:43143 "EHLO
-	favonius.humilis.net") by vger.kernel.org with ESMTP
-	id S1751778AbWCUPhK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Mar 2006 10:37:10 -0500
-Content-Disposition: inline
-In-Reply-To: <442004E4.7010002@rtr.ca>
+Received: from mx1.redhat.com ([66.187.233.31]:16034 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1750871AbWCUQGs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 11:06:48 -0500
+In-Reply-To: <441F6684.609@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: sander@humilis.net, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Dave Jones <davej@redhat.com>, sander@humilis.net, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, lkml@rtr.ca
 
-Mark Lord wrote (ao):
-> Sander wrote:
-> >2.6.16 with this patch and your former patch applied, crashes during
-> >stressing a raid5 connected to a MV88SX6081.
-> >
-> >2.6.16-rc6 crashes too.
-> >
-> >2.6.16-rc6-mm2 is rock solid wrt sata_mv.
-> >
-> >I get no output of the crash on netconsole. Would it help if I get the
-> >output of the crash (if any)? In that case I'll connect a screen and see
-> >what it produces.
+On Mon, 2006-03-20 at 21:35 -0500, Jeff Garzik wrote:
+> Dave Jones wrote:
+
+> > This wasn't occasional, this was every few seconds, making the box
+> > pretty much unusable.
 > 
-> Yes, most helpful, please.
-> Even a digital camera snapshot of the oops would be handy to see.
+> The entire box or just the console?
 
-Euh, it seems there is no output on the screen at all at during the
-crash..
-
-The system just freezes. Rock solid. No sysrq, no ctrl-alt-del, nothing.
-
-I'm sorry.
-
-Would setting some debug options help? I currently have:
-
-CONFIG_PRINTK_TIME=y
-CONFIG_MAGIC_SYSRQ=y
-CONFIG_DEBUG_KERNEL=y
-CONFIG_LOG_BUF_SHIFT=17
-CONFIG_DETECT_SOFTLOCKUP=y
-# CONFIG_SCHEDSTATS is not set
-# CONFIG_DEBUG_SLAB is not set
-# CONFIG_DEBUG_MUTEXES is not set
-# CONFIG_DEBUG_SPINLOCK is not set
-# CONFIG_DEBUG_SPINLOCK_SLEEP is not set
-# CONFIG_DEBUG_KOBJECT is not set
-# CONFIG_DEBUG_INFO is not set
-# CONFIG_DEBUG_FS is not set
-# CONFIG_DEBUG_VM is not set
-# CONFIG_FRAME_POINTER is not set
-# CONFIG_FORCED_INLINING is not set
-# CONFIG_RCU_TORTURE_TEST is not set
-# CONFIG_DEBUG_RODATA is not set
-# CONFIG_IOMMU_DEBUG is not set
-
+Just the console.
 
 -- 
-Humilis IT Services and Solutions
-http://www.humilis.net
+  Peter
+
