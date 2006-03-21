@@ -1,39 +1,69 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
-Date: Tue, 21 Mar 2006 14:22:39 -0500
-Message-ID: <4420527F.5060703@rtr.ca>
-References: <441F4F95.4070203@garzik.org> <200603210000.36552.lkml@rtr.ca> <20060321121354.GB24977@favonius> <442004E4.7010002@rtr.ca> <20060321153708.GA11703@favonius> <Pine.LNX.4.64.0603211028380.3622@g5.osdl.org> <20060321191547.GC20426@favonius>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: libata+SGIO:  is .dma_boundary respected?
+Date: Tue, 21 Mar 2006 14:29:34 -0500
+Message-ID: <4420541E.3070303@pobox.com>
+References: <441DC397.9040504@rtr.ca> <441DC9CB.7030203@pobox.com> <441DCAC9.5090603@rtr.ca> <441DCF73.2080600@pobox.com> <441DD101.5050202@rtr.ca> <441DD300.9050702@rtr.ca> <441F544A.6080301@pobox.com> <441F8478.50806@rtr.ca> <441F99AC.4000200@pobox.com> <442006BC.8020100@rtr.ca> <20060321184215.GJ4285@suse.de> <442051A0.1050200@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:35215 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S965075AbWCUTWm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 14:22:42 -0500
-In-Reply-To: <20060321191547.GC20426@favonius>
+Received: from srv5.dvmed.net ([207.36.208.214]:26028 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932429AbWCUT3j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 14:29:39 -0500
+In-Reply-To: <442051A0.1050200@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sander@humilis.net
-Cc: Linus Torvalds <torvalds@osdl.org>, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Jens Axboe <axboe@suse.de>, IDE/ATA development list <linux-ide@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-Sander wrote:
-..
-> Btw, it always seems to crash during the md5sum of this test:
+Mark Lord wrote:
+> Jens Axboe wrote:
+> ..
 > 
-> for i in `seq 4`
-> do dd if=/dev/zero of=bigfile.$i bs=1024k count=10000
-> dd if=bigfile.$i of=/dev/null bs=1024k count=10000
-> done
-> time md5sum bigfile.*
-> time rm bigfile.*
+>> Seems to me that your reasoning is correct. It's a fact that the
+>> original block mapped sg lists satisfies all requirements of the device
+>> driver and/or hardware, otherwise would be a bug. The iommu may go nuts
+>> of course, but logically that new sg list should be choppable into the
+>> same requirements.
 > 
-> One time during many tests I needed to run this twice before it went
-> bellyup.
+> 
+> I just finished going through all of the arch implementations and,
+> as near as I can tell, they only ever *merge* sg list items,
+> and never create additional sg entries.
+> 
+> So low-level drivers (at present) can safely report their real limits,
+> and then in their fill_sg() routines they can run around and split up
+> any IOMMU merges that their hardware cannot tolerate.
 
-The Fed-Ex guy just dropped off a 6081 PCI-X card for me,
-so testing here have now gotten a lot easier, as I can now test
-drivers on something other than the root filesystem drive.
+I remain highly skeptical, and would be interested to see James and Ben 
+weight in on the subject, as they were the key iommu vmerge people 
+around the time libata ata_fill_sg() was originally written (and fixed 
+by BenH).
 
-I'll set things up and try to reproduce those failures here, eventually.
 
-Cheers
+>> It would be much nicer if the iommu actually had some more knowledge,
+>> ideally the same requirements that the block layer is faced with. No
+>> driver should have to check the mapped sg list.
+
+
+> Yup.  Absolutely.  So long as they continue to never *add* new sg entries
+> (only doing merges instead), then I believe they just need to know the
+> device's .dma_boundary parameter.  We could pass this to them as an extra
+> parameters, or perhaps embed it into the sg_list data structure somehow.
+> 
+> In the case of sata_mv on the Marvell 6081 (which I'm looking at this week)
+> it's hardware limit is actually 0xffffffff rather than 0xffff.
+
+If the limit is not 0xffff, then there's no need for any of this 
+limitation junk.  No s/g entry splitting after pci_map_sg(), no 
+artificial sg_tablesize limitation, etc.
+
+
+> I wonder how well Linux drivers in general deal with that on a 64-bit 
+> machine?
+
+Works just fine.
+
+	Jeff
+
+
