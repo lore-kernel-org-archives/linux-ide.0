@@ -1,50 +1,63 @@
-From: Denis Leroy <denis@poolshark.org>
-Subject: Re: Some sata_mv error messages
-Date: Tue, 21 Mar 2006 11:33:39 -0800
-Message-ID: <44205513.8030109@poolshark.org>
-References: <20060318044056.350a2931.akpm@osdl.org> <20060320133318.GB32762@favonius> <441F508E.1030008@pobox.com> <441F8599.7080703@rtr.ca>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: libata+SGIO:  is .dma_boundary respected?
+Date: Tue, 21 Mar 2006 20:31:44 +0100
+Message-ID: <20060321193143.GN4285@suse.de>
+References: <441DCAC9.5090603@rtr.ca> <441DCF73.2080600@pobox.com> <441DD101.5050202@rtr.ca> <441DD300.9050702@rtr.ca> <441F544A.6080301@pobox.com> <441F8478.50806@rtr.ca> <441F99AC.4000200@pobox.com> <442006BC.8020100@rtr.ca> <20060321184215.GJ4285@suse.de> <442051A0.1050200@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from customer-reverse-entry.64.151.106.180 ([64.151.106.180]:40658
-	"EHLO charlie.albator.org") by vger.kernel.org with ESMTP
-	id S932349AbWCUTdv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Mar 2006 14:33:51 -0500
-In-Reply-To: <441F8599.7080703@rtr.ca>
+Received: from ns.virtualhost.dk ([195.184.98.160]:60679 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S964844AbWCUTeC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 14:34:02 -0500
+Content-Disposition: inline
+In-Reply-To: <442051A0.1050200@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, sander@humilis.net, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, lkml@rtr.ca
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Mark Lord wrote:
-> Jeff Garzik wrote:
->>
->> Without answering your specific question, just remember that sata_mv
->> is considerly "highly experimental" right now, and still needs some
->> workarounds for hardware errata.
->>
->> For now, the goal is a system that doesn't crash and doesn't corrupt
->> data.  If its occasionally slow or spits out a few errors, but
->> otherwise still works, that's pretty darned good :)
+On Tue, Mar 21 2006, Mark Lord wrote:
+> Jens Axboe wrote:
+> ..
+> >Seems to me that your reasoning is correct. It's a fact that the
+> >original block mapped sg lists satisfies all requirements of the device
+> >driver and/or hardware, otherwise would be a bug. The iommu may go nuts
+> >of course, but logically that new sg list should be choppable into the
+> >same requirements.
 > 
-> I'm currently working with the original authors of sata_mv, and have taken
-> over maintenance of it for now.  It should progress from "highly
-> experimental"
-> to "production quality" over the next month or so.
+> I just finished going through all of the arch implementations and,
+> as near as I can tell, they only ever *merge* sg list items,
+> and never create additional sg entries.
 > 
-> The (mucho) updated driver I'm using here now is already much improved
-> in many ways.  At some point, I'll break it out into patches for Jeff.
-> 
-> But there's one MAJOR bugfix patch that I'll release here shortly,
-> to go with the interrupt handler fix already posted.
+> So low-level drivers (at present) can safely report their real limits,
+> and then in their fill_sg() routines they can run around and split up
+> any IOMMU merges that their hardware cannot tolerate.
 
-This is great news. Is there any relationship between the development of
-this driver and the one maintained by Marvell that's available from
-their web site ? Their latest version (3.6.1) is released under the GPL,
-and is a very solid driver based our experience with it over the past
-few years, though it's targeted at older versions of the linux kernel
-and needs some porting to 2.6.16 (and contains redundant stuff like its
-own scsi-ata layer).
+Definitely, it would be highly illegal for the iommu code to do that.
+And pretty odd, too :-)
 
-Denis Leroy
+> >It would be much nicer if the iommu actually had some more knowledge,
+> >ideally the same requirements that the block layer is faced with. No
+> >driver should have to check the mapped sg list.
+> 
+> Yup.  Absolutely.  So long as they continue to never *add* new sg entries
+> (only doing merges instead), then I believe they just need to know the
+> device's .dma_boundary parameter.  We could pass this to them as an extra
+> parameters, or perhaps embed it into the sg_list data structure somehow.
+
+You want max size as well, so boundary and max size should be enough.
+
+> In the case of sata_mv on the Marvell 6081 (which I'm looking at this 
+> week)
+> it's hardware limit is actually 0xffffffff rather than 0xffff.
+> 
+> I wonder how well Linux drivers in general deal with that on a 64-bit 
+> machine?
+
+0xffffffff is the default boundary exactly because we assume (based on
+experience and real hardware, aic7xxx springs to mind) that most
+hardware cannot deal with a 4GB wrap.
+
+-- 
+Jens Axboe
+
