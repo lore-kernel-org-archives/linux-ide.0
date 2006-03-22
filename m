@@ -1,72 +1,79 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Wed, 22 Mar 2006 15:23:59 +0000
-Message-ID: <44216C0F.1070306@dgreaves.com>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046CE6.60803@rtr.ca> <44046D86.7050809@pobox.com> <4405DCAF.6030500@dgreaves.com> <4405DDEA.7020309@rtr.ca> <4405E42B.9040804@dgreaves.com> <4405E83D.9000906@rtr.ca> <4405EC94.2030202@dgreaves.com> <4405FAAE.3080705@dgreaves.com> <Pine.LNX.4.64.0603031437370.9331@p34> <4408C729.50401@dgreaves.com> <4409A369.1040607@rtr.ca> <440BD31C.9090801@dgreaves.com> <442041EF.7030107@dgreaves.com>
+From: Sander <sander@humilis.net>
+Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
+Date: Wed, 22 Mar 2006 18:09:59 +0100
+Message-ID: <20060322170959.GA3222@favonius>
+References: <20060321121354.GB24977@favonius> <Pine.LNX.4.64.0603211316580.3622@g5.osdl.org> <20060322090006.GA8462@favonius> <200603220950.11922.lkml@rtr.ca>
+Reply-To: sander@humilis.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:53980 "EHLO mail.ukfsn.org")
-	by vger.kernel.org with ESMTP id S1751291AbWCVPXf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Mar 2006 10:23:35 -0500
-In-Reply-To: <442041EF.7030107@dgreaves.com>
+Received: from ookhoi.xs4all.nl ([213.84.114.66]:33960 "EHLO
+	favonius.humilis.net") by vger.kernel.org with ESMTP
+	id S1750968AbWCVRKB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Mar 2006 12:10:01 -0500
+Content-Disposition: inline
+In-Reply-To: <200603220950.11922.lkml@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus Torvalds <torvalds@osdl.org>
+To: Mark Lord <lkml@rtr.ca>
+Cc: sander@humilis.net, Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-David Greaves wrote:
+Mark Lord wrote (ao):
+> > The 2.6.16-git3 snapshot is stable for me like -rc6-mm1 and -rc6-mm2
+> > are :-)
+> ..
+> > Btw, I do still get these (any kernel), but with no visible effect:
+> > 
+> > [ 2306.952183] ata6: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 
+> 0xb/47/00
+> > [ 2306.952246] ata6: status=0xd0 { Busy }
+> > [ 2891.892225] ata5: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 
+> 0xb/47/00
+> > [ 2891.892277] ata5: status=0xd0 { Busy }
+> > [ 4550.013582] ata6: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 
+> 0xb/47/00
+> > [ 4550.013637] ata6: status=0xd0 { Busy }
+> > [ 4864.850340] ata9: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 
+> 0xb/47/00
+> > [ 4864.850393] ata9: status=0xd0 { Busy }
+> > [ 4968.681651] ata9: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 
+> 0xb/47/00
+> > [ 4968.681711] ata9: status=0xd0 { Busy }
+> 
+> The 2.6.16-git3 (and -git4) drivers are still missing the latest
+> critical fix that started this thread. Could you apply that also, and
+> see if the messages above go away?
 
->I've upgraded to 2.6.16 and applied your verbosity patches.
->
->I've persuaded my array to re-assemble and during the resync I got these
->messages
->
->dmesg:
->ata1: translated op=0x28 cmd=0x25 ATA stat/err 0x51/04 to SCSI
->SK/ASC/ASCQ 0xb/00/00
->ata1: status=0x51 { DriveReady SeekComplete Error }
->ata1: error=0x04 { DriveStatusError }
->...(18mins later)
->ata1: no sense translation for op=0x28 cmd=0x25 status: 0x51
->ata1: translated op=0x28 cmd=0x25 ATA stat/err 0x51/00 to SCSI
->SK/ASC/ASCQ 0x3/11/04
->ata1: status=0x51 { DriveReady SeekComplete Error }
->
->smartd is not running
->This did not cause the raid subsystem to boot the disk (thank goodness!)
->  
->
-Just providing a little more followon information...
+I've applied the patch against 2.6.16-git4. I'm sorry to say the
+messages are still there:
 
-I have had a further 52 of these messages over the last day. No obvious
-cause.
-Mar 22 13:14:55 haze kernel: ata2: no sense translation for op=0x28
-cmd=0x25 status: 0x51
-Mar 22 13:14:55 haze kernel: ata2: status=0x51 { DriveReady SeekComplete
-Error }
+[ 1038.536894] kjournald starting.  Commit interval 5 seconds
+[ 1038.555040] EXT3 FS on md0, internal journal
+[ 1038.555072] EXT3-fs: mounted filesystem with writeback data mode.
+[ 1418.639290] ata11: status=0x50 { DriveReady SeekComplete }
+[ 1418.639356] ata11: error=0x50 { UncorrectableError SectorIdNotFound }
+[ 1418.639418] sdh: Current: sense key=0x0
+[ 1418.639448]     ASC=0x0 ASCQ=0x0
+[ 1418.639481] Info fld=0x505050
+[ 1684.727367] ata9: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+[ 1684.727420] ata9: status=0xd0 { Busy }
+[ 2223.664107] ata6: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+[ 2223.664162] ata6: status=0xd0 { Busy }
+[ 2381.589354] ata11: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+[ 2381.589416] ata11: status=0xd0 { Busy }
+[ 2511.238690] ata9: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+[ 2511.238753] ata9: status=0xd0 { Busy }
+[ 2990.792908] ata7: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+[ 2990.792960] ata7: status=0xd0 { Busy }
+[ 4672.691569] ata8: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+[ 4672.691623] ata8: status=0xd0 { Busy }
+[ 4988.884663] ata6: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+[ 4988.884717] ata6: status=0xd0 { Busy }
 
-Most recently this happened:
 
-Mar 22 13:47:09 haze kernel: ata2: no sense translation for op=0x28
-cmd=0x25 status: 0x51
-Mar 22 13:47:09 haze kernel: ata2: status=0x51 { DriveReady SeekComplete
-Error }
-Mar 22 13:47:09 haze kernel: sd 1:0:0:0: SCSI error: return code = 0x8000002
-Mar 22 13:47:09 haze kernel: sdb: Current: sense key: Medium Error
-Mar 22 13:47:09 haze kernel:     Additional sense: Unrecovered read
-error - auto reallocate failed
-Mar 22 13:47:09 haze kernel: end_request: I/O error, dev sdb, sector
-396518289
-
-with dmesg piping up with:
-raid1: sdb2: rescheduling sector 5801424
-raid1: sdd2: redirecting sector 5801424 to another mirror
-
-no drives were kicked from the array.
-
-David
+Could the ata11/sdh message be bogus? I re-create the raid5 and fs every
+reboot.
 
 -- 
-
+Humilis IT Services and Solutions
+http://www.humilis.net
