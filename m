@@ -1,32 +1,29 @@
-From: "Eric D. Mudama" <edmudama@gmail.com>
+From: Mark Lord <lkml@rtr.ca>
 Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
-Date: Wed, 22 Mar 2006 10:53:07 -0700
-Message-ID: <311601c90603220953t291fdb85w9f6d0fb299a00ab2@mail.gmail.com>
-References: <20060321121354.GB24977@favonius>
-	 <Pine.LNX.4.64.0603211316580.3622@g5.osdl.org>
-	 <20060322090006.GA8462@favonius> <200603220950.11922.lkml@rtr.ca>
-	 <20060322170959.GA3222@favonius>
+Date: Wed, 22 Mar 2006 12:55:33 -0500
+Message-ID: <44218F95.9070301@rtr.ca>
+References: <20060321121354.GB24977@favonius> <Pine.LNX.4.64.0603211316580.3622@g5.osdl.org> <20060322090006.GA8462@favonius> <200603220950.11922.lkml@rtr.ca> <20060322170959.GA3222@favonius>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.206]:55427 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932244AbWCVRxM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Mar 2006 12:53:12 -0500
-Received: by wproxy.gmail.com with SMTP id i27so220272wra
-        for <linux-ide@vger.kernel.org>; Wed, 22 Mar 2006 09:53:08 -0800 (PST)
+Received: from rtr.ca ([64.26.128.89]:40345 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S932260AbWCVRzp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Mar 2006 12:55:45 -0500
 In-Reply-To: <20060322170959.GA3222@favonius>
-Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: sander@humilis.net
-Cc: Mark Lord <lkml@rtr.ca>, Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On 3/22/06, Sander <sander@humilis.net> wrote:
+Sander wrote:
+>
 > I've applied the patch against 2.6.16-git4. I'm sorry to say the
 > messages are still there:
->
+
+That's okay.  I have an alternate theory about those messages,
+to be addressed in a later patch.
+
 > [ 1038.536894] kjournald starting.  Commit interval 5 seconds
 > [ 1038.555040] EXT3 FS on md0, internal journal
 > [ 1038.555072] EXT3-fs: mounted filesystem with writeback data mode.
@@ -49,10 +46,11 @@ On 3/22/06, Sander <sander@humilis.net> wrote:
 > [ 4672.691623] ata8: status=0xd0 { Busy }
 > [ 4988.884663] ata6: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
 > [ 4988.884717] ata6: status=0xd0 { Busy }
->
->
+> 
 > Could the ata11/sdh message be bogus? I re-create the raid5 and fs every
 > reboot.
 
-What, exactly, is timing out?  How long is the timeout period?  The
-ata11 seems bogus, 50/50/50 doesn't seem right.
+Hard to tell.  It would be far more helpful if those messages included
+info as to what was going on at the time.
+
+Cheers
