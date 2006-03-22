@@ -1,72 +1,113 @@
-From: Sander <sander@humilis.net>
-Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
-Date: Wed, 22 Mar 2006 19:01:27 +0100
-Message-ID: <20060322180127.GB3222@favonius>
-References: <20060321121354.GB24977@favonius> <Pine.LNX.4.64.0603211316580.3622@g5.osdl.org> <20060322090006.GA8462@favonius> <200603220950.11922.lkml@rtr.ca> <20060322170959.GA3222@favonius> <311601c90603220953t291fdb85w9f6d0fb299a00ab2@mail.gmail.com>
-Reply-To: sander@humilis.net
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH 04/15] libata: ata_scsi_queuecmd cleanup
+Date: Wed, 22 Mar 2006 17:20:24 -0600
+Message-ID: <4421DBB8.1030908@us.ibm.com>
+References: <200603172304.k2HN4LDp014215@d03av03.boulder.ibm.com> <4420ADB0.10904@pobox.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------060203030901080204030501"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ookhoi.xs4all.nl ([213.84.114.66]:12223 "EHLO
-	favonius.humilis.net") by vger.kernel.org with ESMTP
-	id S932265AbWCVSB3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Mar 2006 13:01:29 -0500
-Content-Disposition: inline
-In-Reply-To: <311601c90603220953t291fdb85w9f6d0fb299a00ab2@mail.gmail.com>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:14550 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932465AbWCVXUr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Mar 2006 18:20:47 -0500
+In-Reply-To: <4420ADB0.10904@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@gmail.com>
-Cc: sander@humilis.net, Mark Lord <lkml@rtr.ca>, Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Eric D. Mudama wrote (ao):
-> On 3/22/06, Sander <sander@humilis.net> wrote:
-> > I've applied the patch against 2.6.16-git4. I'm sorry to say the
-> > messages are still there:
-> >
-> > [ 1038.536894] kjournald starting.  Commit interval 5 seconds
-> > [ 1038.555040] EXT3 FS on md0, internal journal
-> > [ 1038.555072] EXT3-fs: mounted filesystem with writeback data mode.
-> > [ 1418.639290] ata11: status=0x50 { DriveReady SeekComplete }
-> > [ 1418.639356] ata11: error=0x50 { UncorrectableError SectorIdNotFound }
-> > [ 1418.639418] sdh: Current: sense key=0x0
-> > [ 1418.639448]     ASC=0x0 ASCQ=0x0
-> > [ 1418.639481] Info fld=0x505050
-> > [ 1684.727367] ata9: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> > [ 1684.727420] ata9: status=0xd0 { Busy }
-> > [ 2223.664107] ata6: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> > [ 2223.664162] ata6: status=0xd0 { Busy }
-> > [ 2381.589354] ata11: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> > [ 2381.589416] ata11: status=0xd0 { Busy }
-> > [ 2511.238690] ata9: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> > [ 2511.238753] ata9: status=0xd0 { Busy }
-> > [ 2990.792908] ata7: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> > [ 2990.792960] ata7: status=0xd0 { Busy }
-> > [ 4672.691569] ata8: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> > [ 4672.691623] ata8: status=0xd0 { Busy }
-> > [ 4988.884663] ata6: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> > [ 4988.884717] ata6: status=0xd0 { Busy }
-> >
-> >
-> > Could the ata11/sdh message be bogus? I re-create the raid5 and fs every
-> > reboot.
+This is a multi-part message in MIME format.
+--------------060203030901080204030501
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+Jeff Garzik wrote:
+> Brian King wrote:
+>> Encapsulate part of ata_scsi_queuecmd so that it can be
+>> reused by future SAS patches.
+>>
+>> +static void __ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *),
 > 
-> What, exactly, is timing out? How long is the timeout period?
+> static inline, please
 
-I don't know to be honest. I just run the test and only afterwards check
-if it doesn't fail and if the md5sums match:
+ok.
 
-for i in `seq 4`
-do dd if=/dev/zero of=bigfile.$i bs=1024k count=10000
-dd if=bigfile.$i of=/dev/null bs=1024k count=10000
-done
-time md5sum bigfile.*
-time rm bigfile.*
 
-I'm not aware of any delay or timeout. Of course the dd output differs
-each run.
+>>  /**
+>>   *	ata_scsi_queuecmd - Issue SCSI cdb to libata-managed device
+>>   *	@cmd: SCSI command to be sent
+>> @@ -2605,16 +2620,7 @@ int ata_scsi_queuecmd(struct scsi_cmnd *
+>>  		goto out_unlock;
+>>  	}
+>>  
+>> -	if (dev->class == ATA_DEV_ATA) {
+>> -		ata_xlat_func_t xlat_func = ata_get_xlat_func(dev,
+>> -							      cmd->cmnd[0]);
+>> -
+>> -		if (xlat_func)
+>> -			ata_scsi_translate(ap, dev, cmd, done, xlat_func);
+>> -		else
+>> -			ata_scsi_simulate(ap, dev, cmd, done);
+>> -	} else
+>> -		ata_scsi_translate(ap, dev, cmd, done, atapi_xlat);
+>> +	__ata_scsi_queuecmd(cmd, done, ap, dev);
+> 
+> might as well kill the out_unlock goto target, and do something like
+> 
+> 	if (likely(dev))
+> 		__ata_scsi_queuecmd()
+> 	else
+> 		BAD TARGET
 
-> The ata11 seems bogus, 50/50/50 doesn't seem right.
+ok. How about the following patch?
 
 -- 
-Humilis IT Services and Solutions
-http://www.humilis.net
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
+
+--------------060203030901080204030501
+Content-Type: text/x-patch;
+ name="libata_scsi_queuecmd.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="libata_scsi_queuecmd.patch"
+
+CkVuY2Fwc3VsYXRlIHBhcnQgb2YgYXRhX3Njc2lfcXVldWVjbWQgc28gdGhhdCBpdCBjYW4g
+YmUKcmV1c2VkIGJ5IGZ1dHVyZSBTQVMgcGF0Y2hlcy4KClNpZ25lZC1vZmYtYnk6IEJyaWFu
+IEtpbmcgPGJya2luZ0B1cy5pYm0uY29tPgotLS0KCiBsaWJhdGEtZGV2LWJqa2luZzEvZHJp
+dmVycy9zY3NpL2xpYmF0YS1zY3NpLmMgfCAgIDMyICsrKysrKysrKysrKysrLS0tLS0tLS0t
+LS0tCiAxIGZpbGVzIGNoYW5nZWQsIDE4IGluc2VydGlvbnMoKyksIDE0IGRlbGV0aW9ucygt
+KQoKZGlmZiAtcHVOIGRyaXZlcnMvc2NzaS9saWJhdGEtc2NzaS5jfmxpYmF0YV9zY3NpX3F1
+ZXVlY21kIGRyaXZlcnMvc2NzaS9saWJhdGEtc2NzaS5jCi0tLSBsaWJhdGEtZGV2L2RyaXZl
+cnMvc2NzaS9saWJhdGEtc2NzaS5jfmxpYmF0YV9zY3NpX3F1ZXVlY21kCTIwMDYtMDMtMjIg
+MDg6NTg6NDYuMDAwMDAwMDAwIC0wNjAwCisrKyBsaWJhdGEtZGV2LWJqa2luZzEvZHJpdmVy
+cy9zY3NpL2xpYmF0YS1zY3NpLmMJMjAwNi0wMy0yMiAwOTowMDoxNS4wMDAwMDAwMDAgLTA2
+MDAKQEAgLTI1ODcsNiArMjU4NywyMSBAQCBzdGF0aWMgaW5saW5lIHZvaWQgYXRhX3Njc2lf
+ZHVtcF9jZGIoc3RyCiAjZW5kaWYKIH0KIAorc3RhdGljIGlubGluZSB2b2lkIF9fYXRhX3Nj
+c2lfcXVldWVjbWQoc3RydWN0IHNjc2lfY21uZCAqY21kLCB2b2lkICgqZG9uZSkoc3RydWN0
+IHNjc2lfY21uZCAqKSwKKwkJCQkgICAgICAgc3RydWN0IGF0YV9wb3J0ICphcCwgc3RydWN0
+IGF0YV9kZXZpY2UgKmRldikKK3sKKwlpZiAoZGV2LT5jbGFzcyA9PSBBVEFfREVWX0FUQSkg
+eworCQlhdGFfeGxhdF9mdW5jX3QgeGxhdF9mdW5jID0gYXRhX2dldF94bGF0X2Z1bmMoZGV2
+LAorCQkJCQkJCSAgICAgIGNtZC0+Y21uZFswXSk7CisKKwkJaWYgKHhsYXRfZnVuYykKKwkJ
+CWF0YV9zY3NpX3RyYW5zbGF0ZShhcCwgZGV2LCBjbWQsIGRvbmUsIHhsYXRfZnVuYyk7CisJ
+CWVsc2UKKwkJCWF0YV9zY3NpX3NpbXVsYXRlKGFwLCBkZXYsIGNtZCwgZG9uZSk7CisJfSBl
+bHNlCisJCWF0YV9zY3NpX3RyYW5zbGF0ZShhcCwgZGV2LCBjbWQsIGRvbmUsIGF0YXBpX3hs
+YXQpOworfQorCiAvKioKICAqCWF0YV9zY3NpX3F1ZXVlY21kIC0gSXNzdWUgU0NTSSBjZGIg
+dG8gbGliYXRhLW1hbmFnZWQgZGV2aWNlCiAgKglAY21kOiBTQ1NJIGNvbW1hbmQgdG8gYmUg
+c2VudApAQCAtMjYyMSwyNCArMjYzNiwxMyBAQCBpbnQgYXRhX3Njc2lfcXVldWVjbWQoc3Ry
+dWN0IHNjc2lfY21uZCAqCiAJYXRhX3Njc2lfZHVtcF9jZGIoYXAsIGNtZCk7CiAKIAlkZXYg
+PSBhdGFfc2NzaV9maW5kX2RldihhcCwgc2NzaWRldik7Ci0JaWYgKHVubGlrZWx5KCFkZXYp
+KSB7CisJaWYgKGxpa2VseShkZXYpKQorCQlfX2F0YV9zY3NpX3F1ZXVlY21kKGNtZCwgZG9u
+ZSwgYXAsIGRldik7CisJZWxzZSB7CiAJCWNtZC0+cmVzdWx0ID0gKERJRF9CQURfVEFSR0VU
+IDw8IDE2KTsKIAkJZG9uZShjbWQpOwotCQlnb3RvIG91dF91bmxvY2s7CiAJfQogCi0JaWYg
+KGRldi0+Y2xhc3MgPT0gQVRBX0RFVl9BVEEpIHsKLQkJYXRhX3hsYXRfZnVuY190IHhsYXRf
+ZnVuYyA9IGF0YV9nZXRfeGxhdF9mdW5jKGRldiwKLQkJCQkJCQkgICAgICBjbWQtPmNtbmRb
+MF0pOwotCi0JCWlmICh4bGF0X2Z1bmMpCi0JCQlhdGFfc2NzaV90cmFuc2xhdGUoYXAsIGRl
+diwgY21kLCBkb25lLCB4bGF0X2Z1bmMpOwotCQllbHNlCi0JCQlhdGFfc2NzaV9zaW11bGF0
+ZShhcCwgZGV2LCBjbWQsIGRvbmUpOwotCX0gZWxzZQotCQlhdGFfc2NzaV90cmFuc2xhdGUo
+YXAsIGRldiwgY21kLCBkb25lLCBhdGFwaV94bGF0KTsKLQotb3V0X3VubG9jazoKIAlzcGlu
+X3VubG9jaygmYXAtPmhvc3Rfc2V0LT5sb2NrKTsKIAlzcGluX2xvY2soc2hvc3QtPmhvc3Rf
+bG9jayk7CiAJcmV0dXJuIDA7Cl8K
+--------------060203030901080204030501--
