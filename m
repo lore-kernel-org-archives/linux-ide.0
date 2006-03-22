@@ -1,33 +1,60 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: drivers/scsi/sata_vsc.c: inconsistent NULL checking
-Date: Tue, 21 Mar 2006 22:08:44 -0500
-Message-ID: <4420BFBC.7080804@pobox.com>
-References: <20060309110207.GA4006@stusta.de>	 <e9c3a7c20603091144sb078d92tcc232db66492e6c9@mail.gmail.com> <e9c3a7c20603091241y571e552p82c5c8091095c421@mail.gmail.com>
+From: Sander <sander@humilis.net>
+Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
+Date: Wed, 22 Mar 2006 06:48:20 +0100
+Message-ID: <20060322054820.GA5081@favonius>
+References: <442004E4.7010002@rtr.ca> <20060321153708.GA11703@favonius> <Pine.LNX.4.64.0603211028380.3622@g5.osdl.org> <20060321191547.GC20426@favonius> <Pine.LNX.4.64.0603211132340.3622@g5.osdl.org> <20060321204435.GE25066@favonius> <Pine.LNX.4.64.0603211249270.3622@g5.osdl.org> <44206B81.1030309@garzik.org> <Pine.LNX.4.64.0603211316580.3622@g5.osdl.org> <44207210.9080903@garzik.org>
+Reply-To: sander@humilis.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:65469 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750705AbWCVDI5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 22:08:57 -0500
-In-Reply-To: <e9c3a7c20603091241y571e552p82c5c8091095c421@mail.gmail.com>
+Received: from ookhoi.xs4all.nl ([213.84.114.66]:42429 "EHLO
+	favonius.humilis.net") by vger.kernel.org with ESMTP
+	id S1750784AbWCVFsX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Mar 2006 00:48:23 -0500
+Content-Disposition: inline
+In-Reply-To: <44207210.9080903@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@gmail.com>
-Cc: Adrian Bunk <bunk@stusta.de>, Dan Williams <dan.j.williams@intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linus Torvalds <torvalds@osdl.org>, Sander <sander@humilis.net>, Mark Lord <liml@rtr.ca>, Mark Lord <lkml@rtr.ca>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Dan Williams wrote:
->>The attached patch cleans up the code, and adds GD31244 to the driver
->>description in drivers/scsi/Kconfig.
+Jeff Garzik wrote (ao):
+> Linus Torvalds wrote:
+> >Maybe back-porting any critical sata_mv fixes to 2.6.16.x is appropriate, 
+> >considering that I don't think RH or SuSE will necessarily want to pull 
+> >the whole thing.
 
-> Joe Perches suggested some coding style changes.  Here is version 2.
+I'll try the 2.6.16-git3 snapshot.
 
-Applied.  When resending patches, please continue to follow the standard 
-patch submission format, particularly #2, #5 and #6:
-	http://linux.yyz.us/patch-format.html
+> Agreed -- in theory -- but I'll let Mark Lord or somebody else do that, 
+> if they are motivated. sata_mv is labelled "HIGHLY EXPERIMENTAL" for a 
+> reason :)  Its a known bug report generator, with bugs far outpacing 
+> fixes at present.
+> 
+> Key patches to backport or test, in priority order, would be:
+> 
+> [libata sata_mv] do not enable PCI MSI by default
 
-Regards,
+Is this in -rc6-mm2 already? Because just for fun I enabled
+CONFIG_PCI_MSI=y in my -rc6-mm2 .config and it still is rock stable.
 
-	Jeff
+> After that, you're at the mercy of not-yet-worked-around hardware bugs, 
+> and (as Mark Lord appears to be finding) some driver bugs as well.
+> 
+> sata_mv development slowed to a trickle for a long time, after the 
+> original developer disappeared, and I didn't have time to dig deep into 
+> the hardware details. Mark Lord recently started picking up the pieces, 
+> so things are looking much better already. I have another patch from 
+> Mark to forward to you and 2.6.16.x (stable@), coming to you today.
 
+Things indeed look much, much better. I'll try and find some more
+serious fs tests and hit -rc6-mm2.
 
+Thank you all for your work on this driver! I'll order two more of these
+fine controllers.
+
+	Sander
+
+-- 
+Humilis IT Services and Solutions
+http://www.humilis.net
