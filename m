@@ -1,41 +1,43 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/1] libata-dev: Remove ATA_PROT_PIO_MULT
-Date: Tue, 21 Mar 2006 20:42:16 -0500
-Message-ID: <4420AB78.5090305@pobox.com>
-References: <441936FA.6060501@tw.ibm.com>
+Subject: Re: [PATCH 01/15] libata: Setup nbytes in ata_sg_init_one
+Date: Tue, 21 Mar 2006 20:46:57 -0500
+Message-ID: <4420AC91.4070007@pobox.com>
+References: <200603172303.k2HN3voJ028508@d01av02.pok.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:7355 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751964AbWCVBmR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 20:42:17 -0500
-In-Reply-To: <441936FA.6060501@tw.ibm.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:18619 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751966AbWCVBrA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2006 20:47:00 -0500
+In-Reply-To: <200603172303.k2HN3voJ028508@d01av02.pok.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: IDE Linux <linux-ide@vger.kernel.org>
+To: Brian King <brking@us.ibm.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Albert Lee wrote:
-> Remove the ATA_PROT_PIO_MULT protocol.
+Brian King wrote:
+> Setup nbytes in ata_sg_init_one to the total transfer length
+> of the command.
 > 
-> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+> Signed-off-by: Brian King <brking@us.ibm.com>
 > ---
 > 
-> The ATA_PROT_PIO_MULT can be handled as ATA_PROT_PIO.
-> Remove it.
+>  libata-dev-bjking1/drivers/scsi/libata-core.c |    1 +
+>  1 files changed, 1 insertion(+)
 > 
-> Changes:
->   - Remove the ATA_PROT_PIO_MULT protocol
->   - Filter out the PIO multi commands in ATA pass through
+> diff -puN drivers/scsi/libata-core.c~libata_setup_nbytes drivers/scsi/libata-core.c
+> --- libata-dev/drivers/scsi/libata-core.c~libata_setup_nbytes	2006-03-17 15:35:26.000000000 -0600
+> +++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-03-17 15:35:26.000000000 -0600
+> @@ -2887,6 +2887,7 @@ void ata_sg_init_one(struct ata_queued_c
+>  	qc->n_elem = 1;
+>  	qc->orig_n_elem = 1;
+>  	qc->buf_virt = buf;
+> +	qc->nbytes = buflen;
 
-applied.  it would be nice if you would move the text following 
-"Changes:" from the Albert-comments section to the actual patch 
-description.  Anything that can help describe the rationale behind the 
-patch belongs in the main patch description.
+Why?
 
-The section after the "---" is for related comments, questions, worries, 
-insults, etc.  :)
+This is largely an internal variable used by the ATAPI code.
 
 	Jeff
 
