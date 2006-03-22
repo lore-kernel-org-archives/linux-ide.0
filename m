@@ -1,52 +1,51 @@
-From: Bryan Fink <bfink@eventmonitor.com>
-Subject: Re: Gigabyte i-Ram cards
-Date: Wed, 22 Mar 2006 08:22:26 -0500
-Message-ID: <44214F92.1080901@eventmonitor.com>
-References: <441F63E6.2090204@garzik.org>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH 01/15] libata: Setup nbytes in ata_sg_init_one
+Date: Wed, 22 Mar 2006 08:36:48 -0600
+Message-ID: <44216100.6050107@us.ibm.com>
+References: <200603172303.k2HN3voJ028508@d01av02.pok.ibm.com> <4420AC91.4070007@pobox.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rs27.luxsci.com ([66.216.127.24]:36799 "EHLO rs27.luxsci.com")
-	by vger.kernel.org with ESMTP id S1751225AbWCVNWi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Mar 2006 08:22:38 -0500
-In-Reply-To: <441F63E6.2090204@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4420AC91.4070007@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
 
 Jeff Garzik wrote:
+> Brian King wrote:
+>> Setup nbytes in ata_sg_init_one to the total transfer length
+>> of the command.
+>>
+>> Signed-off-by: Brian King <brking@us.ibm.com>
+>> ---
+>>
+>>  libata-dev-bjking1/drivers/scsi/libata-core.c |    1 +
+>>  1 files changed, 1 insertion(+)
+>>
+>> diff -puN drivers/scsi/libata-core.c~libata_setup_nbytes drivers/scsi/libata-core.c
+>> --- libata-dev/drivers/scsi/libata-core.c~libata_setup_nbytes	2006-03-17 15:35:26.000000000 -0600
+>> +++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-03-17 15:35:26.000000000 -0600
+>> @@ -2887,6 +2887,7 @@ void ata_sg_init_one(struct ata_queued_c
+>>  	qc->n_elem = 1;
+>>  	qc->orig_n_elem = 1;
+>>  	qc->buf_virt = buf;
+>> +	qc->nbytes = buflen;
+> 
+> Why?
+> 
+> This is largely an internal variable used by the ATAPI code.
 
-> I'm impressed.  I ordered one to help debug BZ#6163, but I think these 
-> cards will help expose bugs in libata due to their high speed.  With 
-> these cards, we can push more data through libata than would normally 
-> be possible with a standard disk drive.
+The ipr driver needs to know the total transfer length of the command
+in bytes to setup the command to the adapter properly, since the adapter
+firmware interface requires it. I didn't see anywhere else to get this
+information, the only other option would be to compute it based on the
+scatterlist.
 
 
-Hi.  I tried to respond on this topic about a week ago, but I haven't 
-seen my response show up on any of the mirrors, so I think it must have 
-not made it through.
-
-Anyway, I just wanted to add that I am also fiddling with the Gigabyte 
-i-Ram.  I haven't tried modifying and recompiling the kernel yet, but I 
-did have some success another way:
-
-My desktop is a Dell Dimension 5150.  In the BIOS, I can set the "SATA 
-Operation" to either "SATA" or "RAID".  If I set it to RAID, linux will 
-see the i-RAM just fine (under Ubuntu 5.10 Live CD).  It loads ahci, and 
-just takes off.  If I have the setting on SATA, then linux does not load 
-ahci, and does not talk to the i-RAM.
-
-Of note is also the fact that Windows has no issue with talking to the 
-i-RAM when my system is in SATA-mode.
-
-So, I guess the question is, are Windows and my BIOS ignoring this 
-"invalid" feature query reply, or are the prodding the card in some way 
-other than how linux does, which makes the card respond properly?
-
-Good luck to those who are working on this problem, and please let me 
-know if there is any way I can help.
-
--Bryan
-
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
