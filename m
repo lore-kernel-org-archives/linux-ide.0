@@ -1,36 +1,58 @@
-From: Ian Oliver <lists@foxhill.co.uk>
-Subject: Re: Problems with multiple Promise SATA150 TX4 cards
-Date: Wed, 22 Mar 2006 17:26:35 GMT
-Message-ID: <VA.00001c03.000fc5fe@foxhill.co.uk>
-References: <43D66681.708@dgreaves.com>
-Reply-To: linux-ide@vger.kernel.org
+From: "Eric D. Mudama" <edmudama@gmail.com>
+Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
+Date: Wed, 22 Mar 2006 10:53:07 -0700
+Message-ID: <311601c90603220953t291fdb85w9f6d0fb299a00ab2@mail.gmail.com>
+References: <20060321121354.GB24977@favonius>
+	 <Pine.LNX.4.64.0603211316580.3622@g5.osdl.org>
+	 <20060322090006.GA8462@favonius> <200603220950.11922.lkml@rtr.ca>
+	 <20060322170959.GA3222@favonius>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay2.tidymail.co.uk ([217.146.107.7]:54963 "EHLO
-	relay2.tidymail.co.uk") by vger.kernel.org with ESMTP
-	id S1751022AbWCVR0i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Mar 2006 12:26:38 -0500
-Received: from ioliver.adsl.wizards.co.uk ([217.146.109.248] helo=foxhill.co.uk)
-	(from_AS 16353)
-	by relay2.tidymail.co.uk with esmtpa
-	(Exim 4.52)
-	id 1FM76R-0007vf-5d
-	for linux-ide@vger.kernel.org
-	(return-path <lists@foxhill.co.uk>); Wed, 22 Mar 2006 17:26:35 +0000
-In-Reply-To: <43D66681.708@dgreaves.com>
+Received: from wproxy.gmail.com ([64.233.184.206]:55427 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932244AbWCVRxM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Mar 2006 12:53:12 -0500
+Received: by wproxy.gmail.com with SMTP id i27so220272wra
+        for <linux-ide@vger.kernel.org>; Wed, 22 Mar 2006 09:53:08 -0800 (PST)
+In-Reply-To: <20060322170959.GA3222@favonius>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: sander@humilis.net
+Cc: Mark Lord <lkml@rtr.ca>, Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-In article <43D66681.708@dgreaves.com>, David Greaves wrote:
-> PS Of course it may just be a slew of people with PSU problems...
+On 3/22/06, Sander <sander@humilis.net> wrote:
+> I've applied the patch against 2.6.16-git4. I'm sorry to say the
+> messages are still there:
+>
+> [ 1038.536894] kjournald starting.  Commit interval 5 seconds
+> [ 1038.555040] EXT3 FS on md0, internal journal
+> [ 1038.555072] EXT3-fs: mounted filesystem with writeback data mode.
+> [ 1418.639290] ata11: status=0x50 { DriveReady SeekComplete }
+> [ 1418.639356] ata11: error=0x50 { UncorrectableError SectorIdNotFound }
+> [ 1418.639418] sdh: Current: sense key=0x0
+> [ 1418.639448]     ASC=0x0 ASCQ=0x0
+> [ 1418.639481] Info fld=0x505050
+> [ 1684.727367] ata9: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 1684.727420] ata9: status=0xd0 { Busy }
+> [ 2223.664107] ata6: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 2223.664162] ata6: status=0xd0 { Busy }
+> [ 2381.589354] ata11: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 2381.589416] ata11: status=0xd0 { Busy }
+> [ 2511.238690] ata9: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 2511.238753] ata9: status=0xd0 { Busy }
+> [ 2990.792908] ata7: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 2990.792960] ata7: status=0xd0 { Busy }
+> [ 4672.691569] ata8: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 4672.691623] ata8: status=0xd0 { Busy }
+> [ 4988.884663] ata6: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 4988.884717] ata6: status=0xd0 { Busy }
+>
+>
+> Could the ata11/sdh message be bogus? I re-create the raid5 and fs every
+> reboot.
 
-I fixed my Promise lockup problems (DriveStatusError when hammering the 
-drivers and the odd lock solid) by ditching the 4x two-port Promise 
-SATA  cards and fitting 2x four-port SiL cards. Same PSUs.
-
-Regards
-
-Ian
-
-
-
+What, exactly, is timing out?  How long is the timeout period?  The
+ata11 seems bogus, 50/50/50 doesn't seem right.
