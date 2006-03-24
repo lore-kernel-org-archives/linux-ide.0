@@ -1,31 +1,28 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/2] libata-dev: irq-pio minor fixes
-Date: Fri, 24 Mar 2006 12:28:05 -0500
-Message-ID: <44242C25.3020002@pobox.com>
-References: <441FE605.8010202@tw.ibm.com> <44203953.3080803@pobox.com> <311601c90603210943v132a369aya443a073c11ee2bf@mail.gmail.com> <4422567C.5000008@tw.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: kill E.D.D.
+Date: Fri, 24 Mar 2006 18:04:30 +0000
+Message-ID: <1143223470.20904.3.camel@localhost.localdomain>
+References: <20060324034556.GF25706@htj.dyndns.org>
+	 <44240337.8030509@pobox.com>  <20060324163334.GC5288@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:62852 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751280AbWCXR2I (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Mar 2006 12:28:08 -0500
-In-Reply-To: <4422567C.5000008@tw.ibm.com>
+Received: from [81.2.110.250] ([81.2.110.250]:24767 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S1751330AbWCXR5Z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Mar 2006 12:57:25 -0500
+In-Reply-To: <20060324163334.GC5288@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Albert Lee wrote:
-> irq-pio minor fixes for printk() and comments.
-> 
-> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+On Sad, 2006-03-25 at 01:33 +0900, Tejun Heo wrote:
+> E.D.D. has no user in-tree and mostly useless.  Kill it.  For possible
+> out-of-tree users, add a nice warning message and error handling if
+> LLDD doesn't report any useable reset mechanism (and thus tries to use
+> E.D.D.).
 
-ACK patches 1-2, but patch #1 didn't apply.
-
-I'll delete these, and wait for you to resend.
-
-	Jeff
-
-
+We made need this for some ISAPnP, M68K and embedded devices but its
+easy enough to put back when actual hardware is found.
 
