@@ -1,125 +1,153 @@
-From: Uwe Hermann <uwe@hermann-uwe.de>
-Subject: [PATCH] Support for DMA on ICH6M / piix.
-Date: Fri, 24 Mar 2006 05:17:06 +0100
-Message-ID: <20060324041706.GA1337@aragorn>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 2/3] libata: add per-dev pio/mwdma/udma_mask
+Date: Fri, 24 Mar 2006 14:07:50 +0900
+Message-ID: <11431768704184-git-send-email-htejun@gmail.com>
+References: <11431768691564-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="0OAP2g/MAC+5xKAE"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wp050.webpack.hosteurope.de ([80.237.132.57]:61629 "EHLO
-	wp050.webpack.hosteurope.de") by vger.kernel.org with ESMTP
-	id S1423001AbWCXERR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Mar 2006 23:17:17 -0500
-Content-Disposition: inline
+Received: from xproxy.gmail.com ([66.249.82.202]:38359 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932441AbWCXFHz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Mar 2006 00:07:55 -0500
+Received: by xproxy.gmail.com with SMTP id t10so445377wxc
+        for <linux-ide@vger.kernel.org>; Thu, 23 Mar 2006 21:07:54 -0800 (PST)
+In-Reply-To: <11431768691564-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
+Add per-dev pio/mwdma/udma_mask.  All transfer mode limits used to be
+applied to ap->*_mask which unnecessarily restricted other devices
+sharing the port.  This change will also benefit later EH speed down
+and hotplug.
 
---0OAP2g/MAC+5xKAE
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Hi,
+---
 
-the disk drive in my laptop cannot enable DMA with "hdparm -d1 /dev/hda",
-unless I use a kernel with the supplied patch.
+ drivers/scsi/libata-core.c |   43 +++++++++++++++++++++++++------------------
+ include/linux/libata.h     |    5 +++++
+ 2 files changed, 30 insertions(+), 18 deletions(-)
 
-The patch was originally written by Erik Slagter for 2.6.12
-(see http://marc.theaimsgroup.com/?l=3Dlinux-ide&m=3D112030174904055&w=3D2)=
- and
-I have successfully used it until 2.6.14. I want to upgrade to 2.6.16 ASAP,
-so I adapted the patch for vanilla 2.6.16.
-
-It works for me, but you might want to check whether it messes up things...
-
-More info on my hardware:
-
-$ dmesg | grep SAMSUNG
-hda: SAMSUNG MP0804H, ATA DISK drive
-
-$ lspci | grep ICH6M
-0000:00:1f.2 IDE interface: Intel Corporation 82801FBM (ICH6M) SATA Control=
-ler (rev 03)
-
-The patch:
-
-diff -Naurp linux-2.6.16.orig/drivers/ide/pci/piix.c linux-2.6.16/drivers/i=
-de/pci/piix.c
---- linux-2.6.16.orig/drivers/ide/pci/piix.c	2006-03-20 06:53:29.000000000 =
-+0100
-+++ linux-2.6.16/drivers/ide/pci/piix.c	2006-03-24 00:29:34.000000000 +0100
-@@ -132,6 +132,7 @@ static u8 piix_ratemask (ide_drive_t *dr
- 		case PCI_DEVICE_ID_INTEL_82801DB_11:
- 		case PCI_DEVICE_ID_INTEL_82801EB_11:
- 		case PCI_DEVICE_ID_INTEL_ESB_2:
-+		case PCI_DEVICE_ID_INTEL_ICH6_5:
- 		case PCI_DEVICE_ID_INTEL_ICH6_19:
- 		case PCI_DEVICE_ID_INTEL_ICH7_21:
- 		case PCI_DEVICE_ID_INTEL_ESB2_18:
-@@ -447,6 +448,7 @@ static unsigned int __devinit init_chips
- 		case PCI_DEVICE_ID_INTEL_82801EB_11:
- 		case PCI_DEVICE_ID_INTEL_82801E_11:
- 		case PCI_DEVICE_ID_INTEL_ESB_2:
-+		case PCI_DEVICE_ID_INTEL_ICH6_5:
- 		case PCI_DEVICE_ID_INTEL_ICH6_19:
- 		case PCI_DEVICE_ID_INTEL_ICH7_21:
- 		case PCI_DEVICE_ID_INTEL_ESB2_18:
-@@ -578,6 +580,7 @@ static ide_pci_device_t piix_pci_info[]=20
- 	/* 22 */ DECLARE_PIIX_DEV("ICH4"),
- 	/* 23 */ DECLARE_PIIX_DEV("ESB2"),
- 	/* 24 */ DECLARE_PIIX_DEV("ICH8M"),
-+	/* 25 */ DECLARE_PIIX_DEV("ICH6M"),
- };
-=20
+31c02ad0eeb7c73243a109a75e41b09511c1576f
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 1514cb5..a87748b 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -65,8 +65,7 @@ static unsigned int ata_dev_init_params(
+ 					struct ata_device *dev);
+ static void ata_set_mode(struct ata_port *ap);
+ static void ata_dev_set_xfermode(struct ata_port *ap, struct ata_device *dev);
+-static unsigned int ata_dev_xfermask(struct ata_port *ap,
+-				     struct ata_device *dev);
++static void ata_dev_xfermask(struct ata_port *ap, struct ata_device *dev);
+ 
+ static unsigned int ata_unique_id = 1;
+ static struct workqueue_struct *ata_wq;
+@@ -1801,16 +1800,19 @@ static void ata_set_mode(struct ata_port
+ 	/* step 1: calculate xfer_mask */
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->device[i];
+-		unsigned int xfer_mask;
++		unsigned int pio_mask, dma_mask;
+ 
+ 		if (!ata_dev_present(dev))
+ 			continue;
+ 
+-		xfer_mask = ata_dev_xfermask(ap, dev);
++		ata_dev_xfermask(ap, dev);
+ 
+-		dev->pio_mode = ata_xfer_mask2mode(xfer_mask & ATA_MASK_PIO);
+-		dev->dma_mode = ata_xfer_mask2mode(xfer_mask & (ATA_MASK_MWDMA |
+-								ATA_MASK_UDMA));
++		/* TODO: let LLDD filter dev->*_mask here */
++
++		pio_mask = ata_pack_xfermask(dev->pio_mask, 0, 0);
++		dma_mask = ata_pack_xfermask(0, dev->mwdma_mask, dev->udma_mask);
++		dev->pio_mode = ata_xfer_mask2mode(pio_mask);
++		dev->dma_mode = ata_xfer_mask2mode(dma_mask);
+ 	}
+ 
+ 	/* step 2: always set host PIO timings */
+@@ -2653,18 +2655,15 @@ static int ata_dma_blacklisted(const str
+  *	@ap: Port on which the device to compute xfermask for resides
+  *	@dev: Device to compute xfermask for
+  *
+- *	Compute supported xfermask of @dev.  This function is
+- *	responsible for applying all known limits including host
+- *	controller limits, device blacklist, etc...
++ *	Compute supported xfermask of @dev and store it in
++ *	dev->*_mask.  This function is responsible for applying all
++ *	known limits including host controller limits, device
++ *	blacklist, etc...
+  *
+  *	LOCKING:
+  *	None.
+- *
+- *	RETURNS:
+- *	Computed xfermask.
+  */
+-static unsigned int ata_dev_xfermask(struct ata_port *ap,
+-				     struct ata_device *dev)
++static void ata_dev_xfermask(struct ata_port *ap, struct ata_device *dev)
+ {
+ 	unsigned long xfer_mask;
+ 	int i;
+@@ -2677,6 +2676,8 @@ static unsigned int ata_dev_xfermask(str
+ 		struct ata_device *d = &ap->device[i];
+ 		if (!ata_dev_present(d))
+ 			continue;
++		xfer_mask &= ata_pack_xfermask(d->pio_mask, d->mwdma_mask,
++					       d->udma_mask);
+ 		xfer_mask &= ata_id_xfermask(d->id);
+ 		if (ata_dma_blacklisted(d))
+ 			xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
+@@ -2686,7 +2687,8 @@ static unsigned int ata_dev_xfermask(str
+ 		printk(KERN_WARNING "ata%u: dev %u is on DMA blacklist, "
+ 		       "disabling DMA\n", ap->id, dev->devno);
+ 
+-	return xfer_mask;
++	ata_unpack_xfermask(xfer_mask, &dev->pio_mask, &dev->mwdma_mask,
++			    &dev->udma_mask);
+ }
+ 
  /**
-@@ -655,6 +658,7 @@ static struct pci_device_id piix_pci_tbl
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801DB_1, PCI_ANY_ID, PCI_ANY=
-_ID, 0, 0, 22},
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ESB2_18, PCI_ANY_ID, PCI_ANY_I=
-D, 0, 0, 23},
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH8_6, PCI_ANY_ID, PCI_ANY_ID=
-, 0, 0, 24},
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_5, PCI_ANY_ID, PCI_ANY_ID=
-, 0, 0, 25},
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, piix_pci_tbl);
-diff -Naurp linux-2.6.16.orig/include/linux/pci_ids.h linux-2.6.16/include/=
-linux/pci_ids.h
---- linux-2.6.16.orig/include/linux/pci_ids.h	2006-03-20 06:53:29.000000000=
- +0100
-+++ linux-2.6.16/include/linux/pci_ids.h	2006-03-24 00:28:35.000000000 +0100
-@@ -2092,6 +2092,7 @@
- #define PCI_DEVICE_ID_INTEL_ICH6_0	0x2640
- #define PCI_DEVICE_ID_INTEL_ICH6_1	0x2641
- #define PCI_DEVICE_ID_INTEL_ICH6_2	0x2642
-+#define PCI_DEVICE_ID_INTEL_ICH6_5	0x2653
- #define PCI_DEVICE_ID_INTEL_ICH6_16	0x266a
- #define PCI_DEVICE_ID_INTEL_ICH6_17	0x266d
- #define PCI_DEVICE_ID_INTEL_ICH6_18	0x266e
+@@ -4436,8 +4438,13 @@ static void ata_host_init(struct ata_por
+ 	INIT_WORK(&ap->port_task, NULL, NULL);
+ 	INIT_LIST_HEAD(&ap->eh_done_q);
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		ap->device[i].devno = i;
++	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++		struct ata_device *dev = &ap->device[i];
++		dev->devno = i;
++		dev->pio_mask = UINT_MAX;
++		dev->mwdma_mask = UINT_MAX;
++		dev->udma_mask = UINT_MAX;
++	}
+ 
+ #ifdef ATA_IRQ_TRAP
+ 	ap->stats.unhandled_irq = 1;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 7a54244..fbe8ba2 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -358,6 +358,11 @@ struct ata_device {
+ 	unsigned int		max_sectors;	/* per-device max sectors */
+ 	unsigned int		cdb_len;
+ 
++	/* per-dev xfer mask */
++	unsigned int		pio_mask;
++	unsigned int		mwdma_mask;
++	unsigned int		udma_mask;
++
+ 	/* for CHS addressing */
+ 	u16			cylinders;	/* Number of cylinders */
+ 	u16			heads;		/* Number of heads */
+-- 
+1.2.4
 
 
-HTH, Uwe.
---=20
-Uwe Hermann=20
-http://www.hermann-uwe.de
-http://www.it-services-uh.de  | http://www.crazy-hacks.org=20
-http://www.holsham-traders.de | http://www.unmaintained-free-software.org
-
---0OAP2g/MAC+5xKAE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2.2 (GNU/Linux)
-
-iD8DBQFEI3LCXdVoV3jWIbQRArx1AJ4/WEdCV1Yr+nqubu6adLZFszimAACZAd4E
-7+arvb85BJq91KZtBODrjyI=
-=6HKc
------END PGP SIGNATURE-----
-
---0OAP2g/MAC+5xKAE--
