@@ -1,52 +1,69 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET] libata: implement per-dev xfer masks, take#2
+Subject: [PATCH 1/3] libata: implement ata_unpack_xfermask()
 Date: Fri, 24 Mar 2006 14:07:49 +0900
-Message-ID: <11431768691564-git-send-email-htejun@gmail.com>
+Message-ID: <11431768693233-git-send-email-htejun@gmail.com>
+References: <11431768691564-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.233]:4767 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932401AbWCXFHz (ORCPT
+Received: from xproxy.gmail.com ([66.249.82.200]:9188 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932192AbWCXFHz (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Mar 2006 00:07:55 -0500
-Received: by wproxy.gmail.com with SMTP id 58so842709wri
+Received: by xproxy.gmail.com with SMTP id t10so445375wxc
         for <linux-ide@vger.kernel.org>; Thu, 23 Mar 2006 21:07:54 -0800 (PST)
-In-Reply-To: 
+In-Reply-To: <11431768691564-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, htejun@gmail.com
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello, all.
+Implement ata_unpack_xfermask().
 
-This is the second take of add-per-dev-pio-mwdma-udma_mask patchset.
-Changes from the last take[1] are...
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-* %02 implement-ata_dev_init patch is removed and %03 is updated
-  accordingly.
+---
 
-The patchset is against the current #upstream[2].
+ drivers/scsi/libata-core.c |   23 +++++++++++++++++++++++
+ 1 files changed, 23 insertions(+), 0 deletions(-)
 
-I tried to think of a simple way to use single xfer_mask for all
-masks, but couldn't.  The problem is that the masks are used in
-several different ways affecting specific parts of the mask.  When
-composing transfer xfer_mask, it's best if they can be simply bit-wise
-or'ed, but we can't use the same mask values when trying to limit
-trasnfer mode because bits for other transfer modes will be turned
-off.  We're gonna have to use different masks for different purposes
-or use mask manipulating wrappers.
-
-So, for the time being, LLDD's are left with three separate masks.  If
-anyone can think of a pretty way to convert them, please, go ahead.
-We also need to sort out transfer mask constants, the naming is
-somewhat inconsistent.
-
-Thanks.
-
---
-tejun
-
-[1] http://article.gmane.org/gmane.linux.ide/8705
-[2] 2cc432eed0491df66e14b578139bba2c75fb3f9a
+6ff994d5a30bdaef8a055301f569b781307801a7
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index f3c115b..1514cb5 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -252,6 +252,29 @@ static unsigned int ata_pack_xfermask(un
+ 		((udma_mask << ATA_SHIFT_UDMA) & ATA_MASK_UDMA);
+ }
+ 
++/**
++ *	ata_unpack_xfermask - Unpack xfer_mask into pio, mwdma and udma masks
++ *	@xfer_mask: xfer_mask to unpack
++ *	@pio_mask: resulting pio_mask
++ *	@mwdma_mask: resulting mwdma_mask
++ *	@udma_mask: resulting udma_mask
++ *
++ *	Unpack @xfer_mask into @pio_mask, @mwdma_mask and @udma_mask.
++ *	Any NULL distination masks will be ignored.
++ */
++static void ata_unpack_xfermask(unsigned int xfer_mask,
++				unsigned int *pio_mask,
++				unsigned int *mwdma_mask,
++				unsigned int *udma_mask)
++{
++	if (pio_mask)
++		*pio_mask = (xfer_mask & ATA_MASK_PIO) >> ATA_SHIFT_PIO;
++	if (mwdma_mask)
++		*mwdma_mask = (xfer_mask & ATA_MASK_MWDMA) >> ATA_SHIFT_MWDMA;
++	if (udma_mask)
++		*udma_mask = (xfer_mask & ATA_MASK_UDMA) >> ATA_SHIFT_UDMA;
++}
++
+ static const struct ata_xfer_ent {
+ 	unsigned int shift, bits;
+ 	u8 base;
+-- 
+1.2.4
 
 
