@@ -1,16 +1,16 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/2] libata: implement ata_dev_enabled, disabled and present()
-Date: Sat, 25 Mar 2006 09:53:05 +0900
-Message-ID: <20060325005305.GD5288@htj.dyndns.org>
+Subject: [PATCH 2/2] libata: add @disable_on_err argument to ata_set_mode()
+Date: Sat, 25 Mar 2006 10:14:32 +0900
+Message-ID: <20060325011432.GE5288@htj.dyndns.org>
 References: <11431815313764-git-send-email-htejun@gmail.com> <44240A67.7030001@pobox.com> <1143215493.18986.11.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.178]:27951 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751248AbWCYAxL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Mar 2006 19:53:11 -0500
-Received: by pproxy.gmail.com with SMTP id w49so841807pyg
-        for <linux-ide@vger.kernel.org>; Fri, 24 Mar 2006 16:53:11 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.192]:65240 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751352AbWCYBOj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Mar 2006 20:14:39 -0500
+Received: by zproxy.gmail.com with SMTP id o37so976731nzf
+        for <linux-ide@vger.kernel.org>; Fri, 24 Mar 2006 17:14:39 -0800 (PST)
 Content-Disposition: inline
 In-Reply-To: <1143215493.18986.11.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
@@ -18,220 +18,199 @@ List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: Jeff Garzik <jgarzik@pobox.com>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-This patch renames ata_dev_present() to ata_dev_enabled() and adds
-ata_dev_disabled() and ata_dev_present().  This is to discern the
-state where a device is present but disabled from not-present state.
-This disctinction is necessary when configuring transfer mode because
-device selection timing must not be violated even if a device fails to
-configures.
+ata_set_mode() used to disable whole port on failure.  This patch adds
+@disable_on_err which makes ata_set_mode() disable failing devices
+when non-zero, and simply return when zero.  Due to the port-wide
+characteristic of ATA xfer mode configuration, ata_mode_set() is the
+final place to determine device offlining; thus, the @disable_on_err
+mechanism to tell it which action to take on failure.
+
+With this patch, only failing devices are disabled not the whole port.
+Transfer mode configuration must consider all devices on the port
+regardless of failure status; otherwise, device selection timing can
+be violoated resulting in malfunction.  This patch makes
+ata_dev_xfermask() consider disabled but present devices such that
+device timing selection timing is honored.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
-More explanation in the next patch.
+As said in the above comment, this patch makes sure that present but
+disabled devices are taken into account when determining transfer
+mode.  If IDENTIFY data is present, it is used; otherwise, PIO0 is
+forced.  I think this should be enough.
 
- drivers/scsi/libata-core.c |   24 ++++++++++++------------
- drivers/scsi/libata-scsi.c |    4 ++--
- drivers/scsi/sata_mv.c     |    2 +-
- drivers/scsi/sata_sil.c    |    2 +-
- include/linux/libata.h     |   22 +++++++++++++++++++++-
- 5 files changed, 37 insertions(+), 17 deletions(-)
+Thanks.
+
+ libata-core.c |   79 ++++++++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 50 insertions(+), 29 deletions(-)
 
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 516b1a6..f3277f8 100644
+index 3e0c4b1..121c201 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -397,7 +397,7 @@ static const char *ata_mode_string(unsig
+@@ -63,7 +63,7 @@
  
- static void ata_dev_disable(struct ata_port *ap, struct ata_device *dev)
- {
--	if (ata_dev_present(dev)) {
-+	if (ata_dev_enabled(dev)) {
- 		printk(KERN_WARNING "ata%u: dev %u disabled\n",
- 		       ap->id, dev->devno);
- 		dev->class++;
-@@ -1210,7 +1210,7 @@ static int ata_dev_configure(struct ata_
- 	unsigned int xfer_mask;
- 	int i, rc;
- 
--	if (!ata_dev_present(dev)) {
-+	if (!ata_dev_enabled(dev)) {
- 		DPRINTK("ENTER/EXIT (host %u, dev %u) -- nodev\n",
- 			ap->id, dev->devno);
- 		return 0;
-@@ -1389,7 +1389,7 @@ static int ata_bus_probe(struct ata_port
- 
- 		dev->class = classes[i];
- 
--		if (!ata_dev_present(dev))
-+		if (!ata_dev_enabled(dev))
- 			continue;
+ static unsigned int ata_dev_init_params(struct ata_port *ap,
+ 					struct ata_device *dev);
+-static void ata_set_mode(struct ata_port *ap);
++static int ata_set_mode(struct ata_port *ap, int disable_on_err);
+ static unsigned int ata_dev_set_xfermode(struct ata_port *ap,
+ 					 struct ata_device *dev);
+ static void ata_dev_xfermask(struct ata_port *ap, struct ata_device *dev);
+@@ -1394,7 +1394,7 @@ static int ata_bus_probe(struct ata_port
  
  		WARN_ON(dev->id != NULL);
-@@ -1556,7 +1556,7 @@ void sata_phy_reset(struct ata_port *ap)
- struct ata_device *ata_dev_pair(struct ata_port *ap, struct ata_device *adev)
- {
- 	struct ata_device *pair = &ap->device[1 - adev->devno];
--	if (!ata_dev_present(pair))
-+	if (!ata_dev_enabled(pair))
- 		return NULL;
- 	return pair;
- }
-@@ -1769,7 +1769,7 @@ static int ata_host_set_pio(struct ata_p
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *dev = &ap->device[i];
+ 		if (ata_dev_read_id(ap, dev, &dev->class, 1, &dev->id)) {
+-			dev->class = ATA_DEV_NONE;
++			ata_dev_disable(ap, dev);
+ 			continue;
+ 		}
  
--		if (!ata_dev_present(dev))
-+		if (!ata_dev_enabled(dev))
+@@ -1406,16 +1406,16 @@ static int ata_bus_probe(struct ata_port
+ 		found = 1;
+ 	}
+ 
+-	if (!found)
+-		goto err_out_disable;
+-
+-	ata_set_mode(ap);
+-	if (ap->flags & ATA_FLAG_PORT_DISABLED)
+-		goto err_out_disable;
+-
+-	return 0;
++	/* configure transfer mode */
++	if (found) {
++		ata_set_mode(ap, 1);
++		for (i = 0; i < ATA_MAX_DEVICES; i++)
++			if (ata_dev_present(&ap->device[i]))
++				return 0;
++	}
+ 
+-err_out_disable:
++	/* no device present, disable port */
++	ata_port_disable(ap);
+ 	ap->ops->port_disable(ap);
+ 	return -1;
+ }
+@@ -1762,7 +1762,7 @@ static int ata_dev_set_mode(struct ata_p
+ 	return 0;
+ }
+ 
+-static int ata_host_set_pio(struct ata_port *ap)
++static int ata_host_set_pio(struct ata_port *ap, int disable_on_err)
+ {
+ 	int i;
+ 
+@@ -1773,8 +1773,13 @@ static int ata_host_set_pio(struct ata_p
  			continue;
  
  		if (!dev->pio_mode) {
-@@ -1793,7 +1793,7 @@ static void ata_host_set_dma(struct ata_
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *dev = &ap->device[i];
+-			printk(KERN_WARNING "ata%u: no PIO support for device %d.\n", ap->id, i);
+-			return -1;
++			printk(KERN_WARNING "ata%u: dev %u no PIO support\n",
++			       ap->id, dev->devno);
++			if (disable_on_err) {
++				ata_dev_disable(ap, dev);
++				continue;
++			} else
++				return -EINVAL;
+ 		}
  
--		if (!ata_dev_present(dev) || !dev->dma_mode)
-+		if (!ata_dev_enabled(dev) || !dev->dma_mode)
+ 		dev->xfer_mode = dev->pio_mode;
+@@ -1806,13 +1811,19 @@ static void ata_host_set_dma(struct ata_
+ /**
+  *	ata_set_mode - Program timings and issue SET FEATURES - XFER
+  *	@ap: port on which timings will be programmed
++ *	@disable_on_err: disable device on error
+  *
+- *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).
++ *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
++ *	@disable_on_err is non-zero, devices which fail to configure
++ *	are taken offline and this function always succeeds.
+  *
+  *	LOCKING:
+  *	PCI/etc. bus probe sem.
++ *
++ *	RETURNS:
++ *	0 on success, negative errno otherwise
+  */
+-static void ata_set_mode(struct ata_port *ap)
++static int ata_set_mode(struct ata_port *ap, int disable_on_err)
+ {
+ 	int i, rc;
+ 
+@@ -1835,9 +1846,9 @@ static void ata_set_mode(struct ata_port
+ 	}
+ 
+ 	/* step 2: always set host PIO timings */
+-	rc = ata_host_set_pio(ap);
++	rc = ata_host_set_pio(ap, disable_on_err);
+ 	if (rc)
+-		goto err_out;
++		return rc;
+ 
+ 	/* step 3: set host DMA timings */
+ 	ata_host_set_dma(ap);
+@@ -1849,17 +1860,19 @@ static void ata_set_mode(struct ata_port
+ 		if (!ata_dev_enabled(dev))
  			continue;
  
- 		dev->xfer_mode = dev->dma_mode;
-@@ -1821,7 +1821,7 @@ static void ata_set_mode(struct ata_port
- 		struct ata_device *dev = &ap->device[i];
- 		unsigned int pio_mask, dma_mask;
+-		if (ata_dev_set_mode(ap, dev))
+-			goto err_out;
++		rc = ata_dev_set_mode(ap, dev);
++		if (rc) {
++			if (disable_on_err)
++				ata_dev_disable(ap, dev);
++			else
++				return rc;
++		}
+ 	}
  
--		if (!ata_dev_present(dev))
-+		if (!ata_dev_enabled(dev))
- 			continue;
+ 	if (ap->ops->post_set_mode)
+ 		ap->ops->post_set_mode(ap);
  
- 		ata_dev_xfermask(ap, dev);
-@@ -1846,7 +1846,7 @@ static void ata_set_mode(struct ata_port
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *dev = &ap->device[i];
+-	return;
+-
+-err_out:
+-	ata_port_disable(ap);
++	return 0;
+ }
  
--		if (!ata_dev_present(dev))
-+		if (!ata_dev_enabled(dev))
- 			continue;
- 
- 		if (ata_dev_set_mode(ap, dev))
-@@ -2523,7 +2523,7 @@ int ata_dev_revalidate(struct ata_port *
- 	u16 *id;
- 	int rc;
- 
--	if (!ata_dev_present(dev))
-+	if (!ata_dev_enabled(dev))
- 		return -ENODEV;
- 
- 	class = dev->class;
-@@ -2647,7 +2647,7 @@ static void ata_dev_xfermask(struct ata_
+ /**
+@@ -2647,13 +2660,21 @@ static void ata_dev_xfermask(struct ata_
  	/* use port-wide xfermask for now */
  	for (i = 0; i < ATA_MAX_DEVICES; i++) {
  		struct ata_device *d = &ap->device[i];
--		if (!ata_dev_present(d))
-+		if (!ata_dev_enabled(d))
+-		if (!ata_dev_enabled(d))
++		if (!ata_dev_present(d))
  			continue;
  		xfer_mask &= ata_pack_xfermask(d->pio_mask, d->mwdma_mask,
  					       d->udma_mask);
-@@ -4256,7 +4256,7 @@ int ata_device_resume(struct ata_port *a
+-		xfer_mask &= ata_id_xfermask(d->id);
+-		if (ata_dma_blacklisted(d))
+-			xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
++		if (d->id) {
++			xfer_mask &= ata_id_xfermask(d->id);
++			if (ata_dma_blacklisted(d))
++				xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
++		} else {
++			/* We have no idea what this device is capable
++			 * of.  Force PIO0 to avoid violating address
++			 * setup timing.
++			 */
++			xfer_mask &= ata_pack_xfermask(1, UINT_MAX, UINT_MAX);
++		}
+ 	}
+ 
+ 	if (ata_dma_blacklisted(dev))
+@@ -4254,7 +4275,7 @@ int ata_device_resume(struct ata_port *a
+ {
+ 	if (ap->flags & ATA_FLAG_SUSPENDED) {
  		ap->flags &= ~ATA_FLAG_SUSPENDED;
- 		ata_set_mode(ap);
+-		ata_set_mode(ap);
++		ata_set_mode(ap, 1);
  	}
--	if (!ata_dev_present(dev))
-+	if (!ata_dev_enabled(dev))
+ 	if (!ata_dev_enabled(dev))
  		return 0;
- 	if (dev->class == ATA_DEV_ATA)
- 		ata_start_drive(ap, dev);
-@@ -4274,7 +4274,7 @@ int ata_device_resume(struct ata_port *a
-  */
- int ata_device_suspend(struct ata_port *ap, struct ata_device *dev, pm_message_t state)
- {
--	if (!ata_dev_present(dev))
-+	if (!ata_dev_enabled(dev))
- 		return 0;
- 	if (dev->class == ATA_DEV_ATA)
- 		ata_flush_cache(ap, dev);
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 628191b..a117f98 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -2353,7 +2353,7 @@ ata_scsi_find_dev(struct ata_port *ap, c
- 		     (scsidev->lun != 0)))
- 		return NULL;
- 
--	if (unlikely(!ata_dev_present(dev)))
-+	if (unlikely(!ata_dev_enabled(dev)))
- 		return NULL;
- 
- 	if (!atapi_enabled || (ap->flags & ATA_FLAG_NO_ATAPI)) {
-@@ -2747,7 +2747,7 @@ void ata_scsi_scan_host(struct ata_port 
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		dev = &ap->device[i];
- 
--		if (ata_dev_present(dev))
-+		if (ata_dev_enabled(dev))
- 			scsi_scan_target(&ap->host->shost_gendev, 0, i, 0, 0);
- 	}
- }
-diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
-index 275ed9b..bbe4ddc 100644
---- a/drivers/scsi/sata_mv.c
-+++ b/drivers/scsi/sata_mv.c
-@@ -1985,7 +1985,7 @@ comreset_retry:
- 	tf.nsect = readb((void __iomem *) ap->ioaddr.nsect_addr);
- 
- 	dev->class = ata_dev_classify(&tf);
--	if (!ata_dev_present(dev)) {
-+	if (!ata_dev_enabled(dev)) {
- 		VPRINTK("Port disabled post-sig: No device present.\n");
- 		ata_port_disable(ap);
- 	}
-diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
-index 18c296c..d6c7086 100644
---- a/drivers/scsi/sata_sil.c
-+++ b/drivers/scsi/sata_sil.c
-@@ -264,7 +264,7 @@ static void sil_post_set_mode (struct at
- 
- 	for (i = 0; i < 2; i++) {
- 		dev = &ap->device[i];
--		if (!ata_dev_present(dev))
-+		if (!ata_dev_enabled(dev))
- 			dev_mode[i] = 0;	/* PIO0/1/2 */
- 		else if (dev->flags & ATA_DFLAG_PIO)
- 			dev_mode[i] = 1;	/* PIO3/4 */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 9fcc061..1d16293 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -663,11 +663,31 @@ static inline unsigned int ata_tag_valid
- 	return (tag < ATA_MAX_QUEUE) ? 1 : 0;
- }
- 
--static inline unsigned int ata_class_present(unsigned int class)
-+static inline unsigned int ata_class_enabled(unsigned int class)
- {
- 	return class == ATA_DEV_ATA || class == ATA_DEV_ATAPI;
- }
- 
-+static inline unsigned int ata_class_disabled(unsigned int class)
-+{
-+	return class == ATA_DEV_ATA_UNSUP || class == ATA_DEV_ATAPI_UNSUP;
-+}
-+
-+static inline unsigned int ata_class_present(unsigned int class)
-+{
-+	return ata_class_enabled(class) || ata_class_disabled(class);
-+}
-+
-+static inline unsigned int ata_dev_enabled(const struct ata_device *dev)
-+{
-+	return ata_class_enabled(dev->class);
-+}
-+
-+static inline unsigned int ata_dev_disabled(const struct ata_device *dev)
-+{
-+	return ata_class_disabled(dev->class);
-+}
-+
- static inline unsigned int ata_dev_present(const struct ata_device *dev)
- {
- 	return ata_class_present(dev->class);
