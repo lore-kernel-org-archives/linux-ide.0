@@ -1,50 +1,57 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: add FIXME above ata_dev_xfermask()
-Date: Fri, 24 Mar 2006 23:09:31 -0500
-Message-ID: <4424C27B.1090000@pobox.com>
-References: <11431768704184-git-send-email-htejun@gmail.com> <4424026A.1080504@pobox.com> <20060325021407.GF5288@htj.dyndns.org>
+From: Greg KH <gregkh@suse.de>
+Subject: [patch 01/20] sata_mv: fix irq port status usage
+Date: Fri, 24 Mar 2006 20:26:13 -0800
+Message-ID: <20060325042613.GB21260@kroah.com>
+References: <20060325041355.180237000@quad.kroah.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:14230 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750765AbWCYEJh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Mar 2006 23:09:37 -0500
-In-Reply-To: <20060325021407.GF5288@htj.dyndns.org>
+Received: from dsl093-040-174.pdx1.dsl.speakeasy.net ([66.93.40.174]:24508
+	"EHLO aria.kroah.org") by vger.kernel.org with ESMTP
+	id S1750796AbWCYE0e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 24 Mar 2006 23:26:34 -0500
+Content-Disposition: inline; filename="sata_mv-fix-irq-port-status-usage.patch"
+In-Reply-To: <20060325042556.GA21260@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@kernel.org, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, alan@lxorguk.ukuu.org.uk, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Chris Wright <chrisw@sous-sol.org>, Greg Kroah-Hartman <gregkh@suse.de>
 
-Tejun Heo wrote:
-> Add FIXME above ata_dev_xfermask noting that the current
-> implementation limits all transfer modes to the fastest of the slowest
-> device on a port which isn't necessary.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-> index 0aff888..e4bd673 100644
-> --- a/drivers/scsi/libata-core.c
-> +++ b/drivers/scsi/libata-core.c
-> @@ -2634,6 +2634,10 @@ static int ata_dma_blacklisted(const str
->   *	known limits including host controller limits, device
->   *	blacklist, etc...
->   *
-> + *	FIXME: The current implementation limits all transfer modes to
-> + *	the fastest of the lowested device on the port.  This is not
-> + *	required on most controllers. 
+-stable review patch.  If anyone has any objections, please let us know.
 
-applied, though git complained about...
+------------------
+From: Jeff Garzik <jeff@garzik.org>
 
-[jgarzik@pretzel libata-dev]$ git-applymbox /g/tmp/mbox ~/info/signoff.txt
-1 patch(es) to process.
+Interrupt handler did not properly initialize a variable on a per-port
+basis, leading to incorrect behavior on ports other than port 0.
 
-Applying 'libata: add FIXME above ata_dev_xfermask()'
+Bug caught and fixed by Mark Lord.
 
-Adds trailing whitespace.
-.dotest/patch:11: *     required on most controllers.
-warning: 1 line adds trailing whitespaces.
-Wrote tree 0fc6b51c6ddfb5d3f759bb88a34d8003386a50d7
-Committed: 600511e86babe3727264a0883a3a264f6fb6caf5
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
+Signed-off-by: Chris Wright <chrisw@sous-sol.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+---
 
+ drivers/scsi/sata_mv.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- linux-2.6.16.orig/drivers/scsi/sata_mv.c
++++ linux-2.6.16/drivers/scsi/sata_mv.c
+@@ -1192,7 +1192,6 @@ static void mv_host_intr(struct ata_host
+ 	u32 hc_irq_cause;
+ 	int shift, port, port0, hard_port, handled;
+ 	unsigned int err_mask;
+-	u8 ata_status = 0;
+ 
+ 	if (hc == 0) {
+ 		port0 = 0;
+@@ -1210,6 +1209,7 @@ static void mv_host_intr(struct ata_host
+ 		hc,relevant,hc_irq_cause);
+ 
+ 	for (port = port0; port < port0 + MV_PORTS_PER_HC; port++) {
++		u8 ata_status = 0;
+ 		ap = host_set->ports[port];
+ 		hard_port = port & MV_PORT_MASK;	/* range 0-3 */
+ 		handled = 0;	/* ensure ata_status is set if handled++ */
+
+--
