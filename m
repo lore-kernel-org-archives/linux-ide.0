@@ -1,41 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: add FIXME above ata_dev_xfermask()
-Date: Sat, 25 Mar 2006 11:14:07 +0900
-Message-ID: <20060325021407.GF5288@htj.dyndns.org>
-References: <11431768704184-git-send-email-htejun@gmail.com> <4424026A.1080504@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/2] libata: implement ata_dev_enabled, disabled and present()
+Date: Fri, 24 Mar 2006 22:50:55 -0500
+Message-ID: <4424BE1F.7090305@pobox.com>
+References: <11431815313764-git-send-email-htejun@gmail.com> <44240A67.7030001@pobox.com> <1143215493.18986.11.camel@localhost.localdomain> <20060325005305.GD5288@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.201]:65136 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751439AbWCYCOO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Mar 2006 21:14:14 -0500
-Received: by xproxy.gmail.com with SMTP id t10so599355wxc
-        for <linux-ide@vger.kernel.org>; Fri, 24 Mar 2006 18:14:13 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <4424026A.1080504@pobox.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:50837 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750750AbWCYDvD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Mar 2006 22:51:03 -0500
+In-Reply-To: <20060325005305.GD5288@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-Add FIXME above ata_dev_xfermask noting that the current
-implementation limits all transfer modes to the fastest of the slowest
-device on a port which isn't necessary.
+Tejun Heo wrote:
+> This patch renames ata_dev_present() to ata_dev_enabled() and adds
+> ata_dev_disabled() and ata_dev_present().  This is to discern the
+> state where a device is present but disabled from not-present state.
+> This disctinction is necessary when configuring transfer mode because
+> device selection timing must not be violated even if a device fails to
+> configures.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+OK in general, but NAK for transition reasons:  this invites silent 
+breakage of code not yet in #upstream, because ata_dev_present() 
+implementation changes but the function signature does not.  If a new 
+ata_dev_present() is to be introduced, either a different name should be 
+chosen, or the function signature should change such that an older user 
+of the API will see a compiler warning or error.
 
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 0aff888..e4bd673 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -2634,6 +2634,10 @@ static int ata_dma_blacklisted(const str
-  *	known limits including host controller limits, device
-  *	blacklist, etc...
-  *
-+ *	FIXME: The current implementation limits all transfer modes to
-+ *	the fastest of the lowested device on the port.  This is not
-+ *	required on most controllers. 
-+ *
-  *	LOCKING:
-  *	None.
-  */
+	Jeff
+
+
+
