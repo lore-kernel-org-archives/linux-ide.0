@@ -1,70 +1,83 @@
-From: Greg KH <gregkh@suse.de>
-Subject: [patch 04/20] 2.6.xx: sata_mv: another critical fix
-Date: Fri, 24 Mar 2006 20:26:27 -0800
-Message-ID: <20060325042627.GE21260@kroah.com>
-References: <20060325041355.180237000@quad.kroah.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2/2] libata: add @disable_on_err argument to ata_set_mode()
+Date: Sat, 25 Mar 2006 14:40:08 +0900
+Message-ID: <20060325054008.GG5288@htj.dyndns.org>
+References: <11431815313764-git-send-email-htejun@gmail.com> <44240A67.7030001@pobox.com> <1143215493.18986.11.camel@localhost.localdomain> <20060325011432.GE5288@htj.dyndns.org> <4424C12B.7070106@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsl093-040-174.pdx1.dsl.speakeasy.net ([66.93.40.174]:28348
-	"EHLO aria.kroah.org") by vger.kernel.org with ESMTP
-	id S1750809AbWCYE0t (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 24 Mar 2006 23:26:49 -0500
-Content-Disposition: inline; filename="2.6.xx-sata_mv-another-critical-fix.patch"
-In-Reply-To: <20060325042556.GA21260@kroah.com>
+Received: from wproxy.gmail.com ([64.233.184.236]:54703 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751049AbWCYFkP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Mar 2006 00:40:15 -0500
+Received: by wproxy.gmail.com with SMTP id i5so1103632wra
+        for <linux-ide@vger.kernel.org>; Fri, 24 Mar 2006 21:40:14 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <4424C12B.7070106@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, torvalds@osdl.org, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <mlord@pobox.com>, Chris Wright <chrisw@sous-sol.org>, Greg Kroah-Hartman <gregkh@suse.de>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
--stable review patch.  If anyone has any objections, please let us know.
+On Fri, Mar 24, 2006 at 11:03:55PM -0500, Jeff Garzik wrote:
+> Tejun Heo wrote:
+> >ata_set_mode() used to disable whole port on failure.  This patch adds
+> >@disable_on_err which makes ata_set_mode() disable failing devices
+> >when non-zero, and simply return when zero.  Due to the port-wide
+> >characteristic of ATA xfer mode configuration, ata_mode_set() is the
+> >final place to determine device offlining; thus, the @disable_on_err
+> >mechanism to tell it which action to take on failure.
+> >
+> >With this patch, only failing devices are disabled not the whole port.
+> >Transfer mode configuration must consider all devices on the port
+> >regardless of failure status; otherwise, device selection timing can
+> >be violoated resulting in malfunction.  This patch makes
+> >ata_dev_xfermask() consider disabled but present devices such that
+> >device timing selection timing is honored.
+> >
+> >Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> ACK, but dropped due to dropping patch #1
+> 
 
-------------------
+I'll remove ata_dev_present() for the time being.  It's used in only
+one place anyway.  We can do with ata_dev_enabled() ||
+ata_dev_disabled() for the time being and resurrect ata_dev_present()
+after one or two releases, I think.
 
-From: Mark Lord <lkml@rtr.ca>
+> 
+> >As said in the above comment, this patch makes sure that present but
+> >disabled devices are taken into account when determining transfer
+> >mode.  If IDENTIFY data is present, it is used; otherwise, PIO0 is
+> >forced.  I think this should be enough.
+> 
+> Several follow-up comments:
+> 
+> * Ideally, I think libata should re-read the identify data from the 
+> device.  This (a) makes sure PIO is working, and (b) tells us for 
+> certain what mode the device is.  That's fine for a follow-up patch 
+> though, since few will exercise this code anyway.
 
-This patch addresses a number of weird behaviours observed
-for the sata_mv driver, by fixing an "off by one" bug in processing
-of the EDMA response queue.
+Agreed, we can revalidate the device and then try to configure the
+next lower transfer mode until we succeed.  For the time being, I just
+wanna move forward with the current code so that EH changes can be
+submitted sooner than later.
 
-Basically, sata_mv was looking in the wrong place for
-command results, and this produced a lot of unpredictable behaviour.
+> * skipping ->post_set_mode() in this error case being discussing is 
+> probably unwise.
 
-Signed-off-by: Mark Lord <mlord@pobox.com>
-Signed-off-by: Chris Wright <chrisw@sous-sol.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
----
+We don't skip ->post_set_mode() unless @disable_on_err is zero, in
+which case the upper layer is responsible for handling the error
+condition.  Upper layer will usually reset and reconfigure the whole
+thing again, so omitting ->post_set_mode() should be fine there (we
+need to force PIO0 before IDENTIFY'ing though).
 
- drivers/scsi/sata_mv.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+> BTW, got any PATA hardware lying about?  Since you're wandering into 
+> xfer mode territory, it would better to test PATA than SATA, as xfer 
+> mode matters more in the PATA realm.  Intel PATA should be fairly easy 
+> to find, covered by ata_piix, and all the docs are on developer.intel.com.
 
---- linux-2.6.16.orig/drivers/scsi/sata_mv.c
-+++ linux-2.6.16/drivers/scsi/sata_mv.c
-@@ -1102,6 +1102,7 @@ static u8 mv_get_crpb_status(struct ata_
- 	void __iomem *port_mmio = mv_ap_base(ap);
- 	struct mv_port_priv *pp = ap->private_data;
- 	u32 out_ptr;
-+	u8 ata_status;
- 
- 	out_ptr = readl(port_mmio + EDMA_RSP_Q_OUT_PTR_OFS);
- 
-@@ -1109,6 +1110,8 @@ static u8 mv_get_crpb_status(struct ata_
- 	assert(((out_ptr >> EDMA_RSP_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK) ==
- 	       pp->rsp_consumer);
- 
-+	ata_status = pp->crpb[pp->rsp_consumer].flags >> CRPB_FLAG_STATUS_SHIFT;
-+
- 	/* increment our consumer index... */
- 	pp->rsp_consumer = mv_inc_q_index(&pp->rsp_consumer);
- 
-@@ -1123,7 +1126,7 @@ static u8 mv_get_crpb_status(struct ata_
- 	writelfl(out_ptr, port_mmio + EDMA_RSP_Q_OUT_PTR_OFS);
- 
- 	/* Return ATA status register for completed CRPB */
--	return (pp->crpb[pp->rsp_consumer].flags >> CRPB_FLAG_STATUS_SHIFT);
-+	return ata_status;
- }
- 
- /**
+Yeap, my test machine's ICH7 can do ata_piix and my notebook has
+ICH6M.
 
---
+-- 
+tejun
