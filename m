@@ -1,85 +1,37 @@
-From: paulo-buenacho.poa.virtua.com.br@zeus1.kernel.org
-Subject: VOIP News
-Date: Sat, 25 Mar 2006 17:55:26 +0000 (UTC)
-Message-ID: <6926990811.20060325175443@004.com>
-Reply-To: paulo-buenacho.poa.virtua.com.br@zeus1.kernel.org
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/2] libata: implement ata_dev_enabled and disabled()
+Date: Sat, 25 Mar 2006 23:54:55 +0000
+Message-ID: <1143330895.28134.14.camel@localhost.localdomain>
+References: <11431815313764-git-send-email-htejun@gmail.com>
+	 <44240A67.7030001@pobox.com>
+	 <1143215493.18986.11.camel@localhost.localdomain>
+	 <20060325011432.GE5288@htj.dyndns.org> <4424C12B.7070106@pobox.com>
+	 <20060325054008.GG5288@htj.dyndns.org>
+	 <20060325061215.GH5288@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:38301 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751508AbWCYRzG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Mar 2006 12:55:06 -0500
-Received: from paulo-buenacho.poa.virtua.com.br (C915E28C.poa.virtua.com.br [201.21.226.140] (may be forged))
-	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id k2PHsm0V000477
-	for <linux-ide@vger.kernel.org>; Sat, 25 Mar 2006 17:54:51 GMT
-Date: Sat, 25 Mar 2006 17:54:43 +0180
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:52435 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751975AbWCYXsG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 25 Mar 2006 18:48:06 -0500
+In-Reply-To: <20060325061215.GH5288@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-IZON Price Climbs Another 27% Since Thursday, After Recent Announcements
+On Sad, 2006-03-25 at 15:12 +0900, Tejun Heo wrote:
+> This patch renames ata_dev_present() to ata_dev_enabled() and adds
+> ata_dev_disabled().  This is to discern the state where a device is
+> present but disabled from not-present state.  This disctinction is
+> necessary when configuring transfer mode because device selection
+> timing must not be violated even if a device fails to configure.
 
-InZon Corp Revolutionizes Online Media Broadcasting
-New Technology Reduces cost and Increases Performance
-
-
-InZon Corporation
-Trading As: IZON
-Last: $0.70
-Price Up: over 27% Since Thursday
-7 Day Proj: $1.35-$1.45
-30 Day Proj: $1.75-$2.00
-
-Members,
-
-InZon Corp. is the new stock on our watch.
-
-After recently acquiring SAE Group in Aug 2005 including all assets 
-and technologies, IZON has been laying quite while developing a new 
-technology that will revolutionize the Online Media Broadcasting market. 
-
-Two Announcements this month have sparked our understandable interest. On 
-March 6, 2006 IZON announced the expansion of its network by 400% which 
-has paved the way for the announcement that has brought this Alert to you.
-
-IZON released at end of day yesterday that they have completed their 
-development of a new software that allows Online Broadcast Companies to 
-better utilize their networks thus reducing their highest expense while 
-at the same time increasing the quality of broadcasts allowing them to 
-offer more HD (High definition) broadcasts over the Internet.
-
-Said inZon's CEO, David F. Levy, "our DBA technology provides media 
-organizations with significantly greater network utilization..... to offer 
-more content in a high-definition format, we expect to capture a significant 
-number of Tier 1 and Tier 2 Video Broadcasting customers for this product." 
-
-This technology will completely change what Tier 1 and Tier 2 providers 
-are able to offer to the clients in service and quality, and over all continue 
-advance the technology that has made the internet the most powerful information 
-medium on the planet.
-
-Members make no mistake, this company is going places and fast. Once this news 
-hits the market we believe IZON is going to take off. make sure you read the 
-recent news releases and review the website. Most important, don’t let this one 
-pass you buy. IZON is set to BUY.
-
-Just read about this great company and see for yourself why we are so excited.
-
-ABOUT THE COMPANY 
-
-inZon Corporation is a global communications corporation with three distinct 
-divisions; VoIP Telecom, Digital Media and Wireless. The Company utilizes VoIP 
-technologies to provide complete voice, fax, data and conference call services 
-on an ASP platform using its own worldwide hybrid VoIP/TDM network, which uses 
-leading edge monitoring and management software to thoroughly evaluate 
-profitability in real-time and employs dynamic routing that enables the system 
-to immediately react to changing network conditions and reroute based on 
-predefined criteria. Its Digital Media division was established to leverage 
-inZon's VoIP network platform and infrastructure to provide transport for 
-broadcast video content. inZon's Wireless division utilizes software developed 
-by its VoIP division to provide VoIP services to wireless applications. 
-
-For more information, go to www.inzon.net.
-
+This breaks the expected behaviour of ata_dev_pair(). I'd rather kept
+the existing behaviour of ata_dev_present for the moment until we can
+figure out what we need to do for "present but not enabled". That should
+also fit the scsi layer expectations so we can correctly "offline" a
+device.
 
