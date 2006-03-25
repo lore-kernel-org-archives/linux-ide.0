@@ -1,47 +1,47 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2/2] libata: add @disable_on_err argument to
-	ata_set_mode()
-Date: Sat, 25 Mar 2006 23:58:14 +0000
-Message-ID: <1143331095.28134.18.camel@localhost.localdomain>
-References: <11431815313764-git-send-email-htejun@gmail.com>
-	 <44240A67.7030001@pobox.com>
-	 <1143215493.18986.11.camel@localhost.localdomain>
-	 <20060325011432.GE5288@htj.dyndns.org>  <4424C12B.7070106@pobox.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 1/2] libata: implement ata_dev_enabled and disabled()
+Date: Sun, 26 Mar 2006 08:57:32 +0900
+Message-ID: <20060325235732.GA23222@htj.dyndns.org>
+References: <11431815313764-git-send-email-htejun@gmail.com> <44240A67.7030001@pobox.com> <1143215493.18986.11.camel@localhost.localdomain> <20060325011432.GE5288@htj.dyndns.org> <4424C12B.7070106@pobox.com> <20060325054008.GG5288@htj.dyndns.org> <20060325061215.GH5288@htj.dyndns.org> <1143330895.28134.14.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39834 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751979AbWCYXvW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 25 Mar 2006 18:51:22 -0500
-In-Reply-To: <4424C12B.7070106@pobox.com>
+Received: from wproxy.gmail.com ([64.233.184.239]:49795 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751078AbWCYX5l (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Mar 2006 18:57:41 -0500
+Received: by wproxy.gmail.com with SMTP id 37so1216501wra
+        for <linux-ide@vger.kernel.org>; Sat, 25 Mar 2006 15:57:40 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <1143330895.28134.14.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-On Gwe, 2006-03-24 at 23:03 -0500, Jeff Garzik wrote:
-> BTW, got any PATA hardware lying about?  Since you're wandering into 
-> xfer mode territory, it would better to test PATA than SATA, as xfer 
-> mode matters more in the PATA realm.  Intel PATA should be fairly easy 
-> to find, covered by ata_piix, and all the docs are on developer.intel.com.
+On Sat, Mar 25, 2006 at 11:54:55PM +0000, Alan Cox wrote:
+> On Sad, 2006-03-25 at 15:12 +0900, Tejun Heo wrote:
+> > This patch renames ata_dev_present() to ata_dev_enabled() and adds
+> > ata_dev_disabled().  This is to discern the state where a device is
+> > present but disabled from not-present state.  This disctinction is
+> > necessary when configuring transfer mode because device selection
+> > timing must not be violated even if a device fails to configure.
+> 
+> This breaks the expected behaviour of ata_dev_pair(). I'd rather kept
+> the existing behaviour of ata_dev_present for the moment until we can
+> figure out what we need to do for "present but not enabled". That should
+> also fit the scsi layer expectations so we can correctly "offline" a
+> device.
+> 
 
-I've got a fair amount of PATA stuff. If you want to play with failed
-devices I'd suggest the best test device to work with is actually
-something like the SIL680 with shared address setup. 
+Hello, Alan.
 
-I've been watching the changes so far and the overall direction looks
-right to me. As far as I can see from the PATA side of things the "we
-care about another horked device on the bus" situation is
+Can you elaborate how ata_dev_pair() is broken by this patch?
+ata_dev_present() is simply renamed to ata_dev_enabled().
+ata_dev_disabled() only differenciates the conditions where
+ata_dev_present() used to think there was no device.  There should be
+no behavior change to existing code. 
 
-a) Extremely rare (I've almost never seen it on drivers/ide reports)
-b) Usually a controller programming screwup (so wants fixing there)
-c) With very few exceptions needs no special handling.
+Thanks.
 
-I can find no case where a set mode failure followed by a switch to PIO
-0 on the controller for that device (which is right - the device didnt
-switch so its in the old mode....), doesn't do the right thing.
-
-Alan
-
+-- 
+tejun
