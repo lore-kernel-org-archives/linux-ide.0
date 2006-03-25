@@ -1,48 +1,41 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 3/3] libata-dev: wait idle after reading the last data block
-Date: Sat, 25 Mar 2006 18:18:15 +0800
-Message-ID: <442518E7.8020607@tw.ibm.com>
-References: <441FE605.8010202@tw.ibm.com> <44203953.3080803@pobox.com> <311601c90603210943v132a369aya443a073c11ee2bf@mail.gmail.com> <4422567C.5000008@tw.ibm.com> <44242C25.3020002@pobox.com>
-Reply-To: albertl@mail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: kill trailing whitespace
+Date: Sat, 25 Mar 2006 14:28:57 +0900
+Message-ID: <20060325052857.GA25030@htj.dyndns.org>
+References: <11431768704184-git-send-email-htejun@gmail.com> <4424026A.1080504@pobox.com> <20060325021407.GF5288@htj.dyndns.org> <4424C27B.1090000@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:12257 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751152AbWCYKSV
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 25 Mar 2006 05:18:21 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k2PAIFWQ026157
-	for <linux-ide@vger.kernel.org>; Sat, 25 Mar 2006 05:18:15 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2PALI1r156364
-	for <linux-ide@vger.kernel.org>; Sat, 25 Mar 2006 03:21:18 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2PAIEFJ019208
-	for <linux-ide@vger.kernel.org>; Sat, 25 Mar 2006 03:18:14 -0700
-In-Reply-To: <44242C25.3020002@pobox.com>
+Received: from wproxy.gmail.com ([64.233.184.234]:3160 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751410AbWCYNy3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Mar 2006 08:54:29 -0500
+Received: by wproxy.gmail.com with SMTP id 69so1122374wri
+        for <linux-ide@vger.kernel.org>; Sat, 25 Mar 2006 05:54:28 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <4424C27B.1090000@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-Some CD-ROM drives are slow to clear DRQ, after the last data block
-is read by PIO. Use ata_wait_idle() after reading the last data block.
+Kill trailing whitespace.
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
 ---
 
---- c2/drivers/scsi/libata-core.c	2006-03-25 16:59:26.000000000 +0800
-+++ c3/drivers/scsi/libata-core.c	2006-03-25 17:01:29.000000000 +0800
-@@ -3710,7 +3710,7 @@ fsm_start:
- 			    (!(qc->tf.flags & ATA_TFLAG_WRITE))) {
- 				/* all data read */
- 				ata_altstatus(ap);
--				status = ata_chk_status(ap);
-+				status = ata_wait_idle(ap);
- 				goto fsm_start;
- 			}
- 		}
+Sorry about that.
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 1cb9813..8631056 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -2635,7 +2635,7 @@ static int ata_dma_blacklisted(const str
+  *
+  *	FIXME: The current implementation limits all transfer modes to
+  *	the fastest of the lowested device on the port.  This is not
+- *	required on most controllers. 
++ *	required on most controllers.
+  *
+  *	LOCKING:
+  *	None.
