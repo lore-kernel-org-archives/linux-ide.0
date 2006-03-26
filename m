@@ -1,30 +1,45 @@
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Subject: satapii vs ahci
-Date: Sun, 26 Mar 2006 23:05:33 +0200
-Message-ID: <5d96567b0603261305l5a745a6x786bea846e6902ed@mail.gmail.com>
+From: "Clem Taylor" <clem.taylor@gmail.com>
+Subject: sata_sil qc timeout on 2.6.15 & 2.6.16, 2.6.14 is fine...
+Date: Sun, 26 Mar 2006 16:28:44 -0500
+Message-ID: <ecb4efd10603261328y45d14ab4h1606d70abdab056a@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.229]:55381 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751547AbWCZVFg convert rfc822-to-8bit
+Received: from nproxy.gmail.com ([64.233.182.187]:58419 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932127AbWCZV2q convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Mar 2006 16:05:36 -0500
-Received: by wproxy.gmail.com with SMTP id i20so1252504wra
-        for <linux-ide@vger.kernel.org>; Sun, 26 Mar 2006 13:05:33 -0800 (PST)
+	Sun, 26 Mar 2006 16:28:46 -0500
+Received: by nproxy.gmail.com with SMTP id d4so724988nfe
+        for <linux-ide@vger.kernel.org>; Sun, 26 Mar 2006 13:28:44 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello guys.
-I have been testing performance of 4 maxtor disks combined as
-raid0 . the test was of reading random 1M ios all over the raid
-in asynchrnous IO mode.
-ahci bits satapii by 50% . while satapii gives 80MB/s ahci gives
-over 120 MB/s .
+Hi,
 
-Why is that ? what is the difference between the two ?
+I have a Silicon Image 3114 controller on a dual opteron box with 4
+ST3160023AS drives. The root is a software RAID5 with xfs. I have not
+been able to get 2.6.15 or 2.6.16 to boot on this machine. 2.6.14
+boots up just fine.
 
---
-Raz
+With 2.6.16 the sata probing process is very slow and I get the
+following output:
+ata1: SATA link up 1.5 Gbps (SStatus 113)
+ata1: dev 0 ATA-6, max UDMA/133, 312581808 sectors: LBA48
+ata1: qc timeout (cmd 0xef)
+ata1: failed to set xfermode, disabled
+ata1: dev 0 configured for UDMA/100
+scsi0 : sata_sil
+... repeats for ata[234] and then fails to find the root device ...
+
+With 2.6.14:
+ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003 88:207f
+ata1: dev 0 ATA, max UDMA/133, 312581808 sectors: lba48
+ata1: dev 0 configured for UDMA/100
+scsi0 : sata_sil
+... ata[234] output, boots just fine ...
+
+                                      Any ideas?
+                                      Clem
