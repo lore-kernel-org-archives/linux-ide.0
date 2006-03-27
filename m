@@ -1,88 +1,181 @@
-From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
-Subject: Re: + fix-ide-dma-resource-managment.patch added to -mm tree
-Date: Mon, 27 Mar 2006 15:08:35 +0200
-Message-ID: <58cb370e0603270508k50290122tbded991de23d42b6@mail.gmail.com>
-References: <200603212323.k2LNNSnJ006228@shell0.pdx.osdl.net>
-	 <58cb370e0603261309p126fdc64j1140bbf437ffe06e@mail.gmail.com>
-	 <4427C467.5030300@ru.mvista.com>
-	 <58cb370e0603270407v3329fa74n8148638a331b8419@mail.gmail.com>
-	 <4427D8DF.5000905@ru.mvista.com>
-	 <58cb370e0603270433q4f23f08andfc39b3f85ab4d5e@mail.gmail.com>
-	 <4427E134.5040802@ru.mvista.com>
+From: "Tobias Oed" <tobiasoed@hotmail.com>
+Subject: [PATCH]: Allow atapi dma with pdc202xx_old
+Date: Mon, 27 Mar 2006 08:25:18 -0500
+Message-ID: <BAY105-F3145ACB23DF123E7AFF118A3D20@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.180]:33844 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751003AbWC0NIg convert rfc822-to-8bit
+Received: from bay105-f31.bay105.hotmail.com ([65.54.224.41]:53843 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S1750734AbWC0NZV
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Mar 2006 08:08:36 -0500
-Received: by pproxy.gmail.com with SMTP id w49so1283195pyg
-        for <linux-ide@vger.kernel.org>; Mon, 27 Mar 2006 05:08:35 -0800 (PST)
-In-Reply-To: <4427E134.5040802@ru.mvista.com>
-Content-Disposition: inline
+	Mon, 27 Mar 2006 08:25:21 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylylov <sshtylyov@ru.mvista.com>
-Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: tobiasoed@hotmail.com
 
-On 3/27/06, Sergei Shtylylov <sshtylyov@ru.mvista.com> wrote:
-> Hello.
->
-> Bartlomiej Zolnierkiewicz wrote:
->
-> >>>On 3/27/06, Sergei Shtylylov <sshtylyov@ru.mvista.com> wrote:
->
-> [skipped]
->
-> >>>>>>- release the same number of DMA I/O ports that was requested by a driver
->
-> >>>>>please fix trm290.c to use ->mmio == 2 instead
->
-> >>>>   It's a _really_ old chipset (pre SFF-8038i) and has _no_ memory mapped
-> >>>>regs AFAIK...
->
-> >>>->mmio == 2 means _only_ that host driver is responsible
-> >>>for reserving/releasing resources - it doesn't mean that host driver
-> >>>is using MMIO (a bit confusing but this is what the current code does)
->
-> >>    So, your point is that ide_setup_dma() should _never_ do anything for the
-> >>(mmio == 2) case? Maybe it shouldn't even be called? I guess we surely need
->
-> > No, my point is that for ->mmio == 2 core code may not try to manage
-> > IO or MMIO resources, only that.
->
->     Note that I didn't try to. :-)
->     Your 1st NAK was because I moved ide_release_dma_engine() above that
+Hello,
+I need the following patch to get atapi dma to work with my on board
+promise pdc20265 controller. It works for udma but not mdma.
+Comment?
+Tobias
 
-Yes.
+--- drivers/ide/pci/pdc202xx_old.c.orig	2006-03-16 00:44:01.000000000 +0100
++++ drivers/ide/pci/pdc202xx_old.c	2006-03-27 14:42:32.000000000 +0200
+@@ -181,7 +181,7 @@
+	u8			TA = 0, TB = 0, TC = 0;
 
-> (mmio == 2) check in ide_release_dma() -- which as we've now concluded is
-> perfectly correct, isn't it?
+	if ((drive->media != ide_disk) && (speed < XFER_SW_DMA_0))
+-		return -1;
++		//return -1;
 
-Hmm, yes... Stupid me, sorry for that.
+	pci_read_config_dword(dev, drive_pci, &drive_conf);
+	pci_read_config_byte(dev, (drive_pci), &AP);
+@@ -270,12 +270,14 @@
+  */
+static void config_chipset_for_pio (ide_drive_t *drive, u8 pio)
+{
++	ide_hwif_t *hwif	= HWIF(drive);
+	u8 speed = 0;
 
-> > ide_setup_dma() call is still needed for calling ide_allocate_dma_engine()
->
->     Er, looking at sgiioc4.c, I somewhat doubt it -- since that driver
-> allocates DMA engine of the _different_ size all by itself...
->     However, the driver cleanup function might be called just before releasing
-> the engine in ide-dma.c, so this approach sounds reasonable. :-)
->
-> > and setting up ->dma_* / ->ide_dma_* fields.
->
->     Yeah, it seems I've forgotten about them a bit... :-)
->
-> [skipped]
->
->     Another question: ide_setup_dma() is not supposed to be called by non-PCI
-> driver, yes?
+-	if (pio == 5) pio = 4;
++	if (pio == 5)
++                pio = 4;
+	speed = XFER_PIO_0 + ide_get_best_pio_mode(drive, 255, pio, NULL);
 
-Yes, this was discussed some time ago on linux-ide.
+-	pdc202xx_tune_chipset(drive, speed);
++	hwif->speedproc(drive, speed);
+}
 
-> It's just I know one (not in the community yet) that does... :-/
+static u8 pdc202xx_old_cable_detect (ide_hwif_t *hwif)
+@@ -356,21 +358,21 @@
 
-AFAIR there was one mips specific driver,
-but not in the tree => not mine problem... 8)
+chipset_is_set:
 
-Bartlomiej
+-	if (drive->media == ide_disk) {
+-		pci_read_config_byte(dev, (drive_pci), &AP);
+-		if (id->capability & 4)	/* IORDY_EN */
+-			pci_write_config_byte(dev, (drive_pci), AP|IORDY_EN);
+-		pci_read_config_byte(dev, (drive_pci), &AP);
+-		if (drive->media == ide_disk)	/* PREFETCH_EN */
+-			pci_write_config_byte(dev, (drive_pci), AP|PREFETCH_EN);
+-	}
++	pci_read_config_byte(dev, (drive_pci), &AP);
++	if (id->capability & 4) {	/* IORDY_EN */
++		printk(KERN_ERR "TOBIAS: %s IORDY_EN\n", drive->name);
++                pci_write_config_byte(dev, (drive_pci), AP|IORDY_EN);
++        }
++	pci_read_config_byte(dev, (drive_pci), &AP);
++	if (drive->media == ide_disk)	/* PREFETCH_EN */
++		pci_write_config_byte(dev, (drive_pci), AP|PREFETCH_EN);
+
+	speed = ide_dma_speed(drive, pdc202xx_ratemask(drive));
+
+	if (!(speed)) {
+		/* restore original pci-config space */
+		pci_write_config_dword(dev, drive_pci, drive_conf);
+-		hwif->tuneproc(drive, 5);
++		//hwif->tuneproc(drive, 5); /* pdc202xx_config_drive_xfer_rate will do 
+this */
+		return 0;
+	}
+
+@@ -412,12 +414,20 @@
+{
+	if (drive->current_speed > XFER_UDMA_2)
+		pdc_old_enable_66MHz_clock(drive->hwif);
+-	if (drive->addressing == 1) {
++	if (drive->media != ide_disk || drive->addressing == 1) {
+		struct request *rq	= HWGROUP(drive)->rq;
+		ide_hwif_t *hwif	= HWIF(drive);
+//		struct pci_dev *dev	= hwif->pci_dev;
+-//		unsgned long high_16	= pci_resource_start(dev, 4);
+-		unsigned long high_16   = hwif->dma_master;
++//		unsigned long high_16	= pci_resource_start(dev, 4);
++//		unsigned long high_16   = hwif->dma_master;
++
++#ifdef CONFIG_BLK_DEV_IDEDMA
++//	unsigned long high_16	= hwif->dma_base - (8*(hwif->channel));
++	unsigned long high_16	= hwif->dma_master;
++#else /* !CONFIG_BLK_DEV_IDEDMA */
++	unsigned long high_16	= pci_resource_start(hwif->pci_dev, 4);
++#endif /* CONFIG_BLK_DEV_IDEDMA */
++
+		unsigned long atapi_reg	= high_16 + (hwif->channel ? 0x24 : 0x20);
+		u32 word_count	= 0;
+		u8 clock = hwif->INB(high_16 + 0x11);
+@@ -434,10 +444,18 @@
+
+static int pdc202xx_old_ide_dma_end(ide_drive_t *drive)
+{
+-	if (drive->addressing == 1) {
++	if (drive->media != ide_disk || drive->addressing == 1) {
+		ide_hwif_t *hwif	= HWIF(drive);
+//		unsigned long high_16	= pci_resource_start(hwif->pci_dev, 4);
+-		unsigned long high_16	= hwif->dma_master;
++//		unsigned long high_16	= hwif->dma_master;
++
++#ifdef CONFIG_BLK_DEV_IDEDMA
++//	unsigned long high_16	= hwif->dma_base - (8*(hwif->channel));
++	unsigned long high_16	= hwif->dma_master;
++#else /* !CONFIG_BLK_DEV_IDEDMA */
++	unsigned long high_16	= pci_resource_start(hwif->pci_dev, 4);
++#endif /* CONFIG_BLK_DEV_IDEDMA */
++
+		unsigned long atapi_reg	= high_16 + (hwif->channel ? 0x24 : 0x20);
+		u8 clock		= 0;
+
+@@ -455,7 +473,15 @@
+	ide_hwif_t *hwif	= HWIF(drive);
+//	struct pci_dev *dev	= hwif->pci_dev;
+//	unsigned long high_16	= pci_resource_start(dev, 4);
++//	unsigned long high_16	= hwif->dma_master;
++
++#ifdef CONFIG_BLK_DEV_IDEDMA
++//	unsigned long high_16	= hwif->dma_base - (8*(hwif->channel));
+	unsigned long high_16	= hwif->dma_master;
++#else /* !CONFIG_BLK_DEV_IDEDMA */
++	unsigned long high_16	= pci_resource_start(hwif->pci_dev, 4);
++#endif /* CONFIG_BLK_DEV_IDEDMA */
++
+	u8 dma_stat		= hwif->INB(hwif->dma_status);
+	u8 sc1d			= hwif->INB((high_16 + 0x001d));
+
+@@ -559,7 +585,15 @@
+{
+	ide_hwif_t *hwif	= HWIF(drive);
+//	unsigned long high_16	= hwif->dma_base - (8*(hwif->channel));
++//	unsigned long high_16	= hwif->dma_master;
++
++#ifdef CONFIG_BLK_DEV_IDEDMA
++//	unsigned long high_16	= hwif->dma_base - (8*(hwif->channel));
+	unsigned long high_16	= hwif->dma_master;
++#else /* !CONFIG_BLK_DEV_IDEDMA */
++	unsigned long high_16	= pci_resource_start(hwif->pci_dev, 4);
++#endif /* CONFIG_BLK_DEV_IDEDMA */
++
+	u8 sc1f			= hwif->INB(high_16|0x001f);
+
+	if (!hwif)
+@@ -636,6 +670,7 @@
+	hwif->ultra_mask = 0x3f;
+	hwif->mwdma_mask = 0x07;
+	hwif->swdma_mask = 0x07;
++        hwif->atapi_dma = 1;
+
+	hwif->ide_dma_check = &pdc202xx_config_drive_xfer_rate;
+	hwif->ide_dma_lostirq = &pdc202xx_ide_dma_lostirq;
+@@ -646,7 +681,7 @@
+			hwif->udma_four = (pdc202xx_old_cable_detect(hwif)) ? 0 : 1;
+		hwif->dma_start = &pdc202xx_old_ide_dma_start;
+		hwif->ide_dma_end = &pdc202xx_old_ide_dma_end;
+-	}
++	}
+	hwif->ide_dma_test_irq = &pdc202xx_old_ide_dma_test_irq;
+
+	if (!noautodma)
+
+_________________________________________________________________
+Don’t just search. Find. Check out the new MSN Search! 
+http://search.msn.click-url.com/go/onm00200636ave/direct/01/
+
