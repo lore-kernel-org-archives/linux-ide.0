@@ -1,34 +1,43 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: Re: buffer size in the elevator
-Date: Mon, 27 Mar 2006 14:25:52 +0200
-Message-ID: <20060327122551.GJ8186@suse.de>
-References: <5d96567b0603261341g35192532r165ca38ddb8c3a3d@mail.gmail.com>
+Subject: Re: raid and elevator
+Date: Mon, 27 Mar 2006 14:27:47 +0200
+Message-ID: <20060327122747.GK8186@suse.de>
+References: <5d96567b0603261329o39a5e777w5bc39ad5251b4ecb@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:58632 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1750960AbWC0MZm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Mar 2006 07:25:42 -0500
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5d96567b0603261341g35192532r165ca38ddb8c3a3d@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <5d96567b0603261329o39a5e777w5bc39ad5251b4ecb@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
 To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
+List-Id: linux-ide@vger.kernel.org
 
 On Sun, Mar 26 2006, Raz Ben-Jehuda(caro) wrote:
-> Hello guys.
-> first, since there is no mailing lists for the linux elevators i posting
-> this mailing lists.
+> It is my belief that the linux elevators are not optimized for
+> raid throughout.
 > 
-> I am testing the deadline elevator ( 2.6.15 ). i am sending
-> buffer sizes of 1M to the target but it seems that buffer no bigger than
-> 1/2 MB are reaching the elevator and sometimes page sized buffers.
+> Basically when IO initiator generates IO over a single disk he can control
+> the amount of IOs and this way control IOs latencies.
 > 
-> Why is that ? Does the bio vector size caueses it?
+> This is not the case in raided volumes.
+> 
+> Example:
+> 
+> An IO initiator intiates bulks of asynchronous IOs over a raided
+> volume. since the user does not know the target destination of each IO
+> he
+> might cause imbalance over the disks. one disk may become overflooded
+> with IOs while the other is may starve. So eventually we are ending with
+> a non balaned raided volume in terms of bad latencies.
+> 
+> I am trying to deal with this problem by fixing the deadline elevator code
+> to batch IOs , meaning , when n IOs are reaching the disk, each m deadlined
+> IOs are sorted and then dispatced.
 
-Hardware inflicted limits, probably. As you don't mention what you are
-testing on, one can only guess.
+You do realize that the io scheduler resides _below_ the raid
+personality? So if you want to balance what goes to what io scheduler
+(and thus, disk), you'd want to mess with the raid personality.
 
 -- 
 Jens Axboe
