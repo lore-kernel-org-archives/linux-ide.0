@@ -1,73 +1,67 @@
-From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
-Subject: Re: [2.6 patch] always enable CONFIG_PDC202XX_FORCE
-Date: Mon, 27 Mar 2006 16:40:20 +0200
-Message-ID: <58cb370e0603270640v7c6070a9gb7dbd2aa5fcbbf98@mail.gmail.com>
-References: <20060122171239.GD10003@stusta.de> <4427F5E7.1000108@ru.mvista.com>
+From: "Bill Rugolsky Jr." <bill@rugolsky.com>
+Subject: Re: [PATCH][INCOMPLETE] sata_nv: merge ADMA support
+Date: Mon, 27 Mar 2006 11:08:45 -0500
+Message-ID: <20060327160845.GG9411@ti64.telemetry-investments.com>
+References: <20060317232339.GA5674@ti64.telemetry-investments.com> <20060319232317.GA25578@ti64.telemetry-investments.com> <441F56AD.8020001@garzik.org> <200603262014.35466.lkml@lpbproductions.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.180]:50219 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751046AbWC0Ok2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Mar 2006 09:40:28 -0500
-Received: by pproxy.gmail.com with SMTP id w49so1327019pyg
-        for <linux-ide@vger.kernel.org>; Mon, 27 Mar 2006 06:40:27 -0800 (PST)
-In-Reply-To: <4427F5E7.1000108@ru.mvista.com>
+Received: from 209-166-240-202.cust.walrus.com ([209.166.240.202]:58758 "EHLO
+	mail1.telemetry-investments.com") by vger.kernel.org with ESMTP
+	id S1750909AbWC0QIx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Mar 2006 11:08:53 -0500
 Content-Disposition: inline
+In-Reply-To: <200603262014.35466.lkml@lpbproductions.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylylov <sshtylyov@ru.mvista.com>
-Cc: Adrian Bunk <bunk@stusta.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Matt Heler <lkml@lpbproductions.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On 3/27/06, Sergei Shtylylov <sshtylyov@ru.mvista.com> wrote:
-> Hello.
->
-> Adrian Bunk wrote:
->
-> > This patch removes the CONFIG_PDC202XX_FORCE=n case.
->
-> > Signed-off-by: Adrian Bunk <bunk@stusta.de>
->
-> > ---
-> >
-> > This patch was already sent on:
-> > - 14 Jan 2006
-> >
-> >  drivers/ide/Kconfig            |    7 -------
-> >  drivers/ide/pci/pdc202xx_new.c |    6 ------
-> >  drivers/ide/pci/pdc202xx_old.c |   15 ---------------
-> >  3 files changed, 28 deletions(-)
->
-> [skipped]
->
-> > --- linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_old.c.old  2006-01-14 20:44:01.000000000 +0100
-> > +++ linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_old.c      2006-01-14 20:44:21.000000000 +0100
-> > @@ -786,9 +786,6 @@
-> >               .init_dma       = init_dma_pdc202xx,
-> >               .channels       = 2,
-> >               .autodma        = AUTODMA,
-> > -#ifndef CONFIG_PDC202XX_FORCE
-> > -             .enablebits     = {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
-> > -#endif
-> >               .bootable       = OFF_BOARD,
-> >               .extra          = 16,
-> >       },{     /* 1 */
-> > @@ -799,9 +796,6 @@
-> >               .init_dma       = init_dma_pdc202xx,
-> >               .channels       = 2,
-> >               .autodma        = AUTODMA,
-> > -#ifndef CONFIG_PDC202XX_FORCE
-> > -             .enablebits     = {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
-> > -#endif
-> >               .bootable       = OFF_BOARD,
-> >               .extra          = 48,
-> >               .flags          = IDEPCI_FLAG_FORCE_PDC,
->
->     A late question: wasn't that IDEPCI_FLAG_FORCE_PDC flag there for the same
-> purpose -- to bypass enablebits check? Wasn't it enough?
+On Sun, Mar 26, 2006 at 08:14:35PM -0500, Matt Heler wrote:
+> Using Bill's original patch I was able to boot up perfectly with adma support 
+> enabled on my workstation. Even after several stress tests ( 
+> tar -cf /dev/null . , and dd if=/dev/sda of=/dev/null ), everything seems to 
+> be a-ok. However when I tried the sata_nv.c file that you sent to Bill, I 
+> kept on getting hardlocks, and thus was unable to stress test your version. 
+> 
+> Also for note, I heve not received any of the timeout problems reported by 
+> Bill. Nor have I had any latency problems with adma enabled.
+ 
+Matt,
 
-It was for the same purpose but it wasn't enough,
-now this flag can die...
+Nice to see some value falling out of this sata_nv thread.  Did you see
+latency problems before enabling ADMA?
 
-Bartlomiej
+Would you provide some specifics on your setup?
+
+Which motherboard, #CPUs, BIOS revision, kernel, MD/LVM2/fs?
+
+On two of my Tyan S2895 machines, including the one that I'm using for testing,
+lspci says:
+
+00:06.0 IDE interface: nVidia Corporation CK804 IDE (rev f2)
+00:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev f3)
+00:08.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev f3)
+
+and dmidecode says:
+
+BIOS Information
+        Vendor: Phoenix Technologies Ltd.
+        Version: 2004Q3
+        Release Date: 10/12/2005
+
+The other, where I first had lost tick problems, says:
+
+00:06.0 IDE interface: nVidia Corporation CK804 IDE (rev a2)
+00:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev a3)
+00:08.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev a3)
+
+BIOS Information
+	Vendor: Phoenix Technologies Ltd.
+	Version: 2004Q3
+	Release Date: 06/07/2005
+
+
+Thanks,
+
+	Bill
