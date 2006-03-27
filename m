@@ -1,17 +1,17 @@
 From: Sergei Shtylylov <sshtylyov@ru.mvista.com>
 Subject: Re: + fix-ide-dma-resource-managment.patch added to -mm tree
-Date: Mon, 27 Mar 2006 14:54:31 +0400
-Message-ID: <4427C467.5030300@ru.mvista.com>
-References: <200603212323.k2LNNSnJ006228@shell0.pdx.osdl.net> <58cb370e0603261309p126fdc64j1140bbf437ffe06e@mail.gmail.com>
+Date: Mon, 27 Mar 2006 15:38:01 +0400
+Message-ID: <4427CE99.6000004@ru.mvista.com>
+References: <200603212323.k2LNNSnJ006228@shell0.pdx.osdl.net> <58cb370e0603261309p126fdc64j1140bbf437ffe06e@mail.gmail.com> <4427C467.5030300@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:62142 "HELO
-	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S1750726AbWC0K41
+Received: from rtsoft2.corbina.net ([85.21.88.2]:35550 "HELO
+	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S1750907AbWC0Ljz
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Mar 2006 05:56:27 -0500
-In-Reply-To: <58cb370e0603261309p126fdc64j1140bbf437ffe06e@mail.gmail.com>
+	Mon, 27 Mar 2006 06:39:55 -0500
+In-Reply-To: <4427C467.5030300@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
@@ -19,90 +19,62 @@ Cc: alan@lxorguk.ukuu.org.uk, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.ke
 
 Hello.
 
-Bartlomiej Zolnierkiewicz wrote:
+Sergei Shtylylov wrote:
 
->>The patch titled
+> Bartlomiej Zolnierkiewicz wrote:
 
->>     Fix IDE DMA resource managment
+[skipped]
 
->>has been added to the -mm tree.  Its filename is
+>>> Resolve several IDE DMA resource management issues:
 
->>     fix-ide-dma-resource-managment.patch
+>>> - release DMA engine for memory mapped DMA as well
 
->>See http://www.zip.com.au/~akpm/linux/patches/stuff/added-to-mm.txt to find
->>out what to do about this
+>> NAK - this won't work, see siimage.c how these resources were
+>> really reserved in the first place [ request_mem_region() ]
 
->>From: Sergei Shtylylov <sshtylyov@ru.mvista.com>
+    NB: it's reserved this way only when available -- this driver can work 
+with both I/O and memory mapped regs...
 
->>Resolve several IDE DMA resource management issues:
+>    Oops, looks like I missed that missing ide_setup_dma() call in that 
+> driver...
 
->>- release DMA engine for memory mapped DMA as well
+    No, I've just forgotten that it's called implicitly from setup-pci.c since 
+init_dma() "method" in not defined in that driver. So, looks like you're wrong 
+here -- it should work currently BUT the DMA engine is not released since 
+(mmio == 2) check and return precedes call to ide_release_dma_engine() in 
+ide_release_dma().
+    And as I said, there's no provision to release any driver-specific 
+resources on a call to ide_release_dma()...
 
-> NAK - this won't work, see siimage.c how these resources were
-> really reserved in the first place [ request_mem_region() ]
+[skipped]
 
-    Oops, looks like I missed that missing ide_setup_dma() call in that driver...
-    Is there any point at all in handling mmio == 2 case in ide-dma.c then? 
-The only function that should handle this seems ide_release_dma() but in case 
-of MMIO there's _no_ provision for the proper driver cleanup (assuming it 
-allocates everything it needs by itself)... and, if the driver allocates the 
-engine of the different size that PDC_BYTES * PRD_ENTRIES (the case with 
-sgiioc3.c), the engine release doesn't look consitent...
+>> hwif->mmio == 2 means that host driver is responsible
+>> for reserving/releasing resources (this is _preferred_ way
+>> of handling resources)
 
-> hwif->mmio == 2 means that host driver is responsible
-> for reserving/releasing resources (this is _preferred_ way
-> of handling resources)
+>    Hm, didn't know that...
 
-    Hm, didn't know that...
+    ... and this was hard to guess from the current code. ;-)
 
-> please fix siimage.c and core code instead
-> (please see libata-core.c and ata_host_stop() etc.)
+>> please fix trm290.c to use ->mmio == 2 instead
 
->>- release the same number of DMA I/O ports that was requested by a driver
+>    It's a _really_ old chipset (pre SFF-8038i) and has _no_ memory 
+> mapped regs AFAIK...
 
-> NAK, it should be always 8 - the only driver which does something different
-> is trm290.c and now looking at it, it seems broken since early 2.5.x
+    The only thing that can be done is not to call ide_setup_dma() from it...
 
-    Why then the argument to ide_setup_dma() is needed at all?
+>>> - release the channel's secondary DMA I/O ports for real
 
-> please fix trm290.c to use ->mmio == 2 instead
+>> NAK, looking and the code - secondary DMA base is only used
+>> by siimage.c and sgiioc4.c (both use ->mmio == 2, for siimage ->dma_base2
+>> is unused, for sgiioc4 it is used for some weird DMA transfer ending 
+>> stuff)
 
-    It's a _really_ old chipset (pre SFF-8038i) and has _no_ memory mapped 
-regs AFAIK...
+>    Yes, I have sgioc4.c patch that deals with this (almost) ready...
 
->>- release the channel's secondary DMA I/O ports for real
+    ... and for siimage, this seems a no-brainer. :-)
 
-> NAK, looking and the code - secondary DMA base is only used
-> by siimage.c and sgiioc4.c (both use ->mmio == 2, for siimage ->dma_base2
-> is unused, for sgiioc4 it is used for some weird DMA transfer ending stuff)
-
-    Yes, I have sgioc4.c patch that deals with this (almost) ready...
-
-> so all of ->dma_base2 handling code in ide-dma.c is just a dead code
-> and should be removed
-
-    OK...
-
->>- claim extra DMA I/O ports regardless of what IDE channels are present/enabled
-> 
-> NAK, this change makes extra DMA I/O ports being reserved twice
-
-    No. Please review the patch carefully. This was tested OK on both channels 
-and secondary only channel.
-
->>- merge the duplicate code into ide_dma_iobase()
-
-> NAK, some of this code is irrelevant for MMIO (ie. ->dma_extra)
-
-    But it was duplicated anyway...
-
-> Please rework your changes and split them on separate patches
-> (IDE code is quite difficult - making changes in small steps really
-> helps).
-
-    Er... I'll try to.
-
-> Thanks,
-> Bartlomiej
+[skipped]
 
 WBR, Sergei
+
