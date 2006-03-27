@@ -1,50 +1,35 @@
-From: Sergei Shtylylov <sshtylyov@ru.mvista.com>
-Subject: Re: + fix-ide-dma-resource-managment.patch added to -mm tree
-Date: Mon, 27 Mar 2006 16:21:51 +0400
-Message-ID: <4427D8DF.5000905@ru.mvista.com>
-References: <200603212323.k2LNNSnJ006228@shell0.pdx.osdl.net>	 <58cb370e0603261309p126fdc64j1140bbf437ffe06e@mail.gmail.com>	 <4427C467.5030300@ru.mvista.com> <58cb370e0603270407v3329fa74n8148638a331b8419@mail.gmail.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: buffer size in the elevator
+Date: Mon, 27 Mar 2006 14:25:52 +0200
+Message-ID: <20060327122551.GJ8186@suse.de>
+References: <5d96567b0603261341g35192532r165ca38ddb8c3a3d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:36230 "HELO
-	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S1750954AbWC0MXi
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Mar 2006 07:23:38 -0500
-In-Reply-To: <58cb370e0603270407v3329fa74n8148638a331b8419@mail.gmail.com>
+Received: from ns.virtualhost.dk ([195.184.98.160]:58632 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1750960AbWC0MZm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Mar 2006 07:25:42 -0500
+Content-Disposition: inline
+In-Reply-To: <5d96567b0603261341g35192532r165ca38ddb8c3a3d@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: alan@lxorguk.ukuu.org.uk, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
+To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello.
+On Sun, Mar 26 2006, Raz Ben-Jehuda(caro) wrote:
+> Hello guys.
+> first, since there is no mailing lists for the linux elevators i posting
+> this mailing lists.
+> 
+> I am testing the deadline elevator ( 2.6.15 ). i am sending
+> buffer sizes of 1M to the target but it seems that buffer no bigger than
+> 1/2 MB are reaching the elevator and sometimes page sized buffers.
+> 
+> Why is that ? Does the bio vector size caueses it?
 
-Bartlomiej Zolnierkiewicz wrote:
-> On 3/27/06, Sergei Shtylylov <sshtylyov@ru.mvista.com> wrote:
+Hardware inflicted limits, probably. As you don't mention what you are
+testing on, one can only guess.
 
-[skipped]
+-- 
+Jens Axboe
 
->>>please fix siimage.c and core code instead
->>>(please see libata-core.c and ata_host_stop() etc.)
-
->>>>- release the same number of DMA I/O ports that was requested by a driver
-
->>>please fix trm290.c to use ->mmio == 2 instead
-
->>    It's a _really_ old chipset (pre SFF-8038i) and has _no_ memory mapped
->>regs AFAIK...
-
-> ->mmio == 2 means _only_ that host driver is responsible
-> for reserving/releasing resources - it doesn't mean that host driver
-> is using MMIO (a bit confusing but this is what the current code does)
-
-    So, your point is that ide_setup_dma() should _never_ do anything for the 
-(mmio == 2) case? Maybe it shouldn't even be called? I guess we surely need 
-some driver cleanup hook to call ftom ide_release_dma()...
-
-[skipped]
-
-> Thanks,
-> Bartlomiej
-
-WBR, Sergei
