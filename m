@@ -1,66 +1,71 @@
-From: Sergei Shtylylov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] IDE: claim extra DMA ports regardless of channel
-Date: Wed, 29 Mar 2006 00:42:21 +0400
-Message-ID: <44299FAD.7080006@ru.mvista.com>
-References: <44298947.5090600@ru.mvista.com> <20060328124146.52dbe446.akpm@osdl.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:36773 "HELO
-	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S932163AbWC1UoM
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Mar 2006 15:44:12 -0500
-In-Reply-To: <20060328124146.52dbe446.akpm@osdl.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 2/2] libata: Use scsi_device max_cmd_len
+Date: Tue, 28 Mar 2006 16:17:26 -0600
+Message-ID: <200603282217.k2SMHQBu002257@d03av03.boulder.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-Hello.
 
-Andrew Morton wrote:
+Use the newly added max_cmd_len in the scsi_device
+struct instead of the field by the same name in
+the scsi_host struct. This allows for better
+granularity of control of the max allowed command
+length and simplifies supporting libata controlled
+SATA devices attached to SAS HBAs.
 
->> static int ide_iomio_dma(ide_hwif_t *hwif, unsigned long base, unsigned int ports)
->>  {
->>  	printk(KERN_INFO "    %s: BM-DMA at 0x%04lx-0x%04lx",
->> -		hwif->name, base, base + ports - 1);
->> +	       hwif->name, base, base + ports - 1);
->> +
->>  	if (!request_region(base, ports, hwif->name)) {
->>  		printk(" -- Error, ports in use.\n");
->>  		return 1;
->>  	}
->> +
->>  	hwif->dma_base = base;
->> -	if ((hwif->cds->extra) && (hwif->channel == 0)) {
->> -		request_region(base+16, hwif->cds->extra, hwif->cds->name);
->> -		hwif->dma_extra = hwif->cds->extra;
->> -	}
->> -	
->> +
->> +	if (hwif->cds->extra) {
->> +		hwif->extra_base = base + (hwif->channel ? 8 : 16);
->> +
->> +		if (!hwif->mate || !hwif->mate->extra_ports) {
->> +			if (!request_region(hwif->extra_base,
->> +					    hwif->cds->extra, hwif->cds->name)) {
->> +				printk(" -- Error, extra ports in use.\n");
->> +				release_region(base, ports);
->> +				return 1;
->> +			}
->> +			hwif->extra_ports = hwif->cds->extra;
->> +		}
->> +	}
-> 
-> 
-> The printks in this function are odd.  Note how it will print a
-> non-newline-terminated string and then will print a newline-terminated
-> string only if there was an error.
-> 
-> Does it all come out right both when errors occur and when they do not?
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
 
-     Sure it does. :-)
+ libata-dev-bjking1/drivers/scsi/libata-core.c |   10 ++--------
+ libata-dev-bjking1/drivers/scsi/libata-scsi.c |    1 +
+ 2 files changed, 3 insertions(+), 8 deletions(-)
 
-WBR, Sergei
-
+diff -puN drivers/scsi/libata-core.c~libata_sd_cdb_len drivers/scsi/libata-core.c
+--- libata-dev/drivers/scsi/libata-core.c~libata_sd_cdb_len	2006-03-28 16:09:14.000000000 -0600
++++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-03-28 16:09:14.000000000 -0600
+@@ -1208,7 +1208,7 @@ static int ata_dev_configure(struct ata_
+ {
+ 	const u16 *id = dev->id;
+ 	unsigned int xfer_mask;
+-	int i, rc;
++	int rc;
+ 
+ 	if (!ata_dev_present(dev)) {
+ 		DPRINTK("ENTER/EXIT (host %u, dev %u) -- nodev\n",
+@@ -1311,12 +1311,6 @@ static int ata_dev_configure(struct ata_
+ 			       ap->id, dev->devno, ata_mode_string(xfer_mask));
+ 	}
+ 
+-	ap->host->max_cmd_len = 0;
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		ap->host->max_cmd_len = max_t(unsigned int,
+-					      ap->host->max_cmd_len,
+-					      ap->device[i].cdb_len);
+-
+ 	/* limit bridge transfers to udma5, 200 sectors */
+ 	if (ata_dev_knobble(ap, dev)) {
+ 		if (print_info)
+@@ -4396,7 +4390,7 @@ static void ata_host_init(struct ata_por
+ 	host->max_lun = 1;
+ 	host->max_channel = 1;
+ 	host->unique_id = ata_unique_id++;
+-	host->max_cmd_len = 12;
++	host->max_cmd_len = ATAPI_CDB_LEN;
+ 
+ 	ap->flags = ATA_FLAG_PORT_DISABLED;
+ 	ap->id = host->unique_id;
+diff -puN drivers/scsi/libata-scsi.c~libata_sd_cdb_len drivers/scsi/libata-scsi.c
+--- libata-dev/drivers/scsi/libata-scsi.c~libata_sd_cdb_len	2006-03-28 16:09:14.000000000 -0600
++++ libata-dev-bjking1/drivers/scsi/libata-scsi.c	2006-03-28 16:09:14.000000000 -0600
+@@ -680,6 +680,7 @@ static void ata_scsi_dev_config(struct s
+ 		max_sectors = dev->max_sectors;
+ 
+ 	blk_queue_max_sectors(sdev->request_queue, max_sectors);
++	sdev->max_cmd_len = dev->cdb_len;
+ 
+ 	/*
+ 	 * SATA DMA transfers must be multiples of 4 byte, so
+_
