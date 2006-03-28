@@ -1,106 +1,62 @@
-From: Matt Heler <lkml@lpbproductions.com>
-Subject: Re: [PATCH][INCOMPLETE] sata_nv: merge ADMA support
-Date: Mon, 27 Mar 2006 17:00:53 -0500
-Message-ID: <200603271700.53641.lkml@lpbproductions.com>
-References: <20060317232339.GA5674@ti64.telemetry-investments.com> <20060327160845.GG9411@ti64.telemetry-investments.com> <200603271646.55317.lkml@lpbproductions.com>
-Reply-To: lkml@lpbproductions.com
+From: Mark Lord <mlord@pobox.com>
+Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
+Date: Mon, 27 Mar 2006 23:34:07 -0500
+Message-ID: <4428BCBF.2050000@pobox.com>
+References: <20060321121354.GB24977@favonius> <Pine.LNX.4.64.0603211316580.3622@g5.osdl.org> <20060322090006.GA8462@favonius> <200603220950.11922.lkml@rtr.ca> <20060322170959.GA3222@favonius>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anubis.pendulus.net ([38.119.36.60]:14212 "EHLO
-	anubis.pendulus.net") by vger.kernel.org with ESMTP
-	id S1751499AbWC0WAz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Mar 2006 17:00:55 -0500
-In-Reply-To: <200603271646.55317.lkml@lpbproductions.com>
-Content-Disposition: inline
+Received: from mx1.magmacom.com ([206.191.0.217]:3480 "EHLO mx1.magmacom.com")
+	by vger.kernel.org with ESMTP id S1751224AbWC1EeU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Mar 2006 23:34:20 -0500
+In-Reply-To: <20060322170959.GA3222@favonius>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Bill Rugolsky Jr." <bill@rugolsky.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: sander@humilis.net
+Cc: Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-I forgot to include this.. but here's my bios version 
+Sander wrote:
+..
+> I've applied the patch against 2.6.16-git4. I'm sorry to say the
+> messages are still there:
+..
+> [ 2511.238690] ata9: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 2511.238753] ata9: status=0xd0 { Busy }
+> [ 2990.792908] ata7: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 2990.792960] ata7: status=0xd0 { Busy }
+> [ 4672.691569] ata8: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 4672.691623] ata8: status=0xd0 { Busy }
+> [ 4988.884663] ata6: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> [ 4988.884717] ata6: status=0xd0 { Busy }
 
-        Vendor: Phoenix Technologies, LTD
-        Version: 6.00 PG
-        Release Date: 06/23/2005
+Okay, I've tracked these messages down now, and they appear to be due
+to the Marvell 6081 interrupting us before CACHE_FLUSH commands
+have completed.
 
-On Monday 27 March 2006 4:46 pm, Matt Heler wrote:
-> Hey Bill,
->
-> I spoke abit to soon though regarding that stability.. After booting up X
-> and running Azerues and kde, my system stalled and locked. However it
-> lasted much longer then Jeff's version.
->
-> I'm running the DFI Lanparty with an Athlon 4400. I also have the following
-> setup
->
-> 2x300gb seagate drives 7200.8 in a raid0 format with ext3
-> 2x400gb seagate drives 7200.9 again in a raid0 format with ext3
->
-> and lspci gives me the following ::
->
-> 00:06.0 IDE interface: nVidia Corporation CK804 IDE (rev a2)
-> 00:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev
-> a3) 00:08.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller
-> (rev a3)
->
-> On Monday 27 March 2006 11:08 am, Bill Rugolsky Jr. wrote:
-> > On Sun, Mar 26, 2006 at 08:14:35PM -0500, Matt Heler wrote:
-> > > Using Bill's original patch I was able to boot up perfectly with adma
-> > > support enabled on my workstation. Even after several stress tests (
-> > > tar -cf /dev/null . , and dd if=/dev/sda of=/dev/null ), everything
-> > > seems to be a-ok. However when I tried the sata_nv.c file that you sent
-> > > to Bill, I kept on getting hardlocks, and thus was unable to stress
-> > > test your version.
-> > >
-> > > Also for note, I heve not received any of the timeout problems reported
-> > > by Bill. Nor have I had any latency problems with adma enabled.
-> >
-> > Matt,
-> >
-> > Nice to see some value falling out of this sata_nv thread.  Did you see
-> > latency problems before enabling ADMA?
-> >
-> > Would you provide some specifics on your setup?
-> >
-> > Which motherboard, #CPUs, BIOS revision, kernel, MD/LVM2/fs?
-> >
-> > On two of my Tyan S2895 machines, including the one that I'm using for
-> > testing, lspci says:
-> >
-> > 00:06.0 IDE interface: nVidia Corporation CK804 IDE (rev f2)
-> > 00:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller
-> > (rev f3) 00:08.0 IDE interface: nVidia Corporation CK804 Serial ATA
-> > Controller (rev f3)
-> >
-> > and dmidecode says:
-> >
-> > BIOS Information
-> >         Vendor: Phoenix Technologies Ltd.
-> >         Version: 2004Q3
-> >         Release Date: 10/12/2005
-> >
-> > The other, where I first had lost tick problems, says:
-> >
-> > 00:06.0 IDE interface: nVidia Corporation CK804 IDE (rev a2)
-> > 00:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller
-> > (rev a3) 00:08.0 IDE interface: nVidia Corporation CK804 Serial ATA
-> > Controller (rev a3)
-> >
-> > BIOS Information
-> > 	Vendor: Phoenix Technologies Ltd.
-> > 	Version: 2004Q3
-> > 	Release Date: 06/07/2005
-> >
-> >
-> > Thanks,
-> >
-> > 	Bill
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+These errors only occur for PIO commands during heavy write activity,
+which pretty much narrows it down to CACHE_FLUSH.
+
+So I added code to the sata_mv interrupt handler, to have it poll/wait
+for non-busy status.  And sure enough, it takes from 0 to 300 microseconds
+or so for the ATA status to change from BUSY to 0x50 for many of these commands.
+*After* receipt of the interrupt.
+
+Most peculiar.
+
+Doing a quick "read and discard ATA status" before issuing new commands
+makes no difference, so the interrupt does seem to be related to this
+command, as opposed to being "left over" from something before.
+
+I don't know yet whether *every* CACHE_FLUSH results in this condition,
+nor whether this requires that other channels on the chip be busy
+(or non-busy) for it to happen.  Just that it does happen.
+
+Peculiar.  I'll probably submit the IRQ poll-busy code as a patch
+within a few days, unless something new comes to light.
+
+Cheers
+-- 
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
