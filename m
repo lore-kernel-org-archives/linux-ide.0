@@ -1,62 +1,45 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
-Date: Mon, 27 Mar 2006 23:34:07 -0500
-Message-ID: <4428BCBF.2050000@pobox.com>
-References: <20060321121354.GB24977@favonius> <Pine.LNX.4.64.0603211316580.3622@g5.osdl.org> <20060322090006.GA8462@favonius> <200603220950.11922.lkml@rtr.ca> <20060322170959.GA3222@favonius>
+From: Sergei Shtylylov <sshtylyov@ru.mvista.com>
+Subject: Re: + fix-ide-dma-resource-managment.patch added to -mm tree
+Date: Tue, 28 Mar 2006 17:12:08 +0400
+Message-ID: <44293628.3030103@ru.mvista.com>
+References: <200603212323.k2LNNSnJ006228@shell0.pdx.osdl.net> <58cb370e0603261309p126fdc64j1140bbf437ffe06e@mail.gmail.com> <4427C467.5030300@ru.mvista.com> <4427CE99.6000004@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.magmacom.com ([206.191.0.217]:3480 "EHLO mx1.magmacom.com")
-	by vger.kernel.org with ESMTP id S1751224AbWC1EeU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Mar 2006 23:34:20 -0500
-In-Reply-To: <20060322170959.GA3222@favonius>
+Received: from rtsoft2.corbina.net ([85.21.88.2]:19104 "HELO
+	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S1751138AbWC1NOG
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Mar 2006 08:14:06 -0500
+In-Reply-To: <4427CE99.6000004@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sander@humilis.net
-Cc: Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-Sander wrote:
-..
-> I've applied the patch against 2.6.16-git4. I'm sorry to say the
-> messages are still there:
-..
-> [ 2511.238690] ata9: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> [ 2511.238753] ata9: status=0xd0 { Busy }
-> [ 2990.792908] ata7: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> [ 2990.792960] ata7: status=0xd0 { Busy }
-> [ 4672.691569] ata8: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> [ 4672.691623] ata8: status=0xd0 { Busy }
-> [ 4988.884663] ata6: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> [ 4988.884717] ata6: status=0xd0 { Busy }
+Hello.
 
-Okay, I've tracked these messages down now, and they appear to be due
-to the Marvell 6081 interrupting us before CACHE_FLUSH commands
-have completed.
+Sergei Shtylylov wrote:
 
-These errors only occur for PIO commands during heavy write activity,
-which pretty much narrows it down to CACHE_FLUSH.
+>> Bartlomiej Zolnierkiewicz wrote:
 
-So I added code to the sata_mv interrupt handler, to have it poll/wait
-for non-busy status.  And sure enough, it takes from 0 to 300 microseconds
-or so for the ATA status to change from BUSY to 0x50 for many of these commands.
-*After* receipt of the interrupt.
+[skipped]
 
-Most peculiar.
+>>>> - release the channel's secondary DMA I/O ports for real
 
-Doing a quick "read and discard ATA status" before issuing new commands
-makes no difference, so the interrupt does seem to be related to this
-command, as opposed to being "left over" from something before.
+>>> NAK, looking and the code - secondary DMA base is only used
+>>> by siimage.c and sgiioc4.c (both use ->mmio == 2, for siimage 
+>>> ->dma_base2
+>>> is unused, for sgiioc4 it is used for some weird DMA transfer ending 
+>>> stuff)
 
-I don't know yet whether *every* CACHE_FLUSH results in this condition,
-nor whether this requires that other channels on the chip be busy
-(or non-busy) for it to happen.  Just that it does happen.
+    Hm, concerning the other field of ide_hwif_t, dma_master: I currently see 
+no users to it but pdc202xx_old.c. The way it's computed makes it dependent on 
+what channels are enabled (though all channels are forced present in that 
+driver by the most recent patch) which makes it invalid if the primary channel 
+happens to be disabled. I'd like to replace it with extra_base fields which 
+would point to the extra DMA ports regardless of the channels present/enabled, 
+is this OK?
 
-Peculiar.  I'll probably submit the IRQ poll-busy code as a patch
-within a few days, unless something new comes to light.
+WBR, Sergei
 
-Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
