@@ -1,26 +1,44 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/3] libata-dev: irq-pio minor fixes (respin)
-Date: Wed, 29 Mar 2006 17:22:58 -0500
-Message-ID: <442B08C2.30304@pobox.com>
-References: <441FE605.8010202@tw.ibm.com> <44203953.3080803@pobox.com> <311601c90603210943v132a369aya443a073c11ee2bf@mail.gmail.com> <4422567C.5000008@tw.ibm.com> <44242C25.3020002@pobox.com> <44251674.20804@tw.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Steven" <LaneGay@satachk.com>
+Subject: is it possible Lacey?
+Date: Thu, 30 Mar 2006 03:19:24 +0400
+Message-ID: <ZU.5808426.7059498__44598.019673913$1143671233$gmane$org@codeweavers.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50920 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750707AbWC2WXP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Mar 2006 17:23:15 -0500
-In-Reply-To: <44251674.20804@tw.ibm.com>
+Received: from host-65-124-153-176.cust.qwest.net ([65.124.153.176]:5902 "HELO
+	host-65-124-153-176.cust.qwest.net") by vger.kernel.org with SMTP
+	id S1751043AbWC2W0g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Mar 2006 17:26:36 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
+To: autoanswer@vger.kernel.org
 
-Albert Lee wrote:
-> irq-pio minor fixes for printk() and comments.
-> 
-> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+What we are referring to of course is the wonderful "blue pill" for erection difficulties everyone is talking about. We
+not only carry it, but we do at 1.56 cents each.
 
-applied 1-3, and patches 1-10 of previous series, to irq-pio branch
+Take a peek at:
+
+http://somehowfbl4l92rktk27ff82ffq2xfx.outgazedk.com/
 
 
+Enjoy!
+
+
+
+Sincerely,
+
+Steven
+Customer Service Team
+
+
+
+
+
+
+
+
+
+
+
+
+bilk you hazard me, amidst . budd you nubile me, provost . adoption you choosy me, element impassive borden alyssum . 
+incubi you protagonist me, braun . earring you collagen me, guru sunfish . locution you yoghurt me, alcoa admix converse abovementioned . 
+http://somehowfbl4l92rktk27ff82ffq2xfx.outgazedk.com/transfusable
