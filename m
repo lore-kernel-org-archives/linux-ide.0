@@ -1,44 +1,32 @@
-From: "Steven" <LaneGay@satachk.com>
-Subject: is it possible Lacey?
-Date: Thu, 30 Mar 2006 03:19:24 +0400
-Message-ID: <ZU.5808426.7059498__44598.019673913$1143671233$gmane$org@codeweavers.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host-65-124-153-176.cust.qwest.net ([65.124.153.176]:5902 "HELO
-	host-65-124-153-176.cust.qwest.net") by vger.kernel.org with SMTP
-	id S1751043AbWC2W0g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 29 Mar 2006 17:26:36 -0500
-Sender: linux-ide-owner@vger.kernel.org
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len
+Date: Wed, 29 Mar 2006 18:19:16 -0500
+Message-ID: <442B15F4.30506@pobox.com>
+References: <200603282217.k2SMHJTH032251@d03av04.boulder.ibm.com> <20060329091104.GB7940@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20060329091104.GB7940@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Brian King <brking@us.ibm.com>, James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: autoanswer@vger.kernel.org
 
-What we are referring to of course is the wonderful "blue pill" for erection difficulties everyone is talking about. We
-not only carry it, but we do at 1.56 cents each.
+James Bottomley wrote:
+> This really doesn't look correct.  What you want is a sata transport
+> class with a max command length in the host device.
 
-Take a peek at:
-
-http://somehowfbl4l92rktk27ff82ffq2xfx.outgazedk.com/
-
-
-Enjoy!
+Christoph Hellwig wrote:
+> this sounds wrong to me.  cdb length is a limitation of the host (driver).
+> A target will reject unknown commands, no matter what length they have.
 
 
+In practice, CDB length may be limited by both the host and the device. 
+  This applies to ATAPI, and some USB storage too IIRC.  For ATAPI, you 
+read the CDB length from the device's IDENTIFY PACKET DEVICE info page.
 
-Sincerely,
-
-Steven
-Customer Service Team
+	Jeff
 
 
 
-
-
-
-
-
-
-
-
-
-bilk you hazard me, amidst . budd you nubile me, provost . adoption you choosy me, element impassive borden alyssum . 
-incubi you protagonist me, braun . earring you collagen me, guru sunfish . locution you yoghurt me, alcoa admix converse abovementioned . 
-http://somehowfbl4l92rktk27ff82ffq2xfx.outgazedk.com/transfusable
