@@ -1,25 +1,41 @@
-From: "Guadalupe Bernal" <keozlakqoukw@yahoo.com>
-Subject: Biggest Pharmacy nS1
-Date: Fri, 31 Mar 2006 11:36:54 -0200
-Message-ID: <121.47e558d5.2a9TST44__23493.2675296024$1143751585$gmane$org@sol.com>
+From: "Anatoli Antonovitch" <antonovi@ati.com>
+Subject: [PATCH 2.6.16-g6ac37e95-dirty]  scsi: ATI SB600 SATA support
+Date: Thu, 30 Mar 2006 16:49:15 -0500
+Message-ID: <CAB45F03F8EF5B4992E343DBFC52032803076EB1@torcaexmb1.atitech.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:52194 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1750801AbWC3Upu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Mar 2006 15:45:50 -0500
+Received: from outbound-kan.frontbridge.com ([63.161.60.23]:28266 "EHLO
+	outbound2-kan-R.bigfish.com") by vger.kernel.org with ESMTP
+	id S1750853AbWC3Vta convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Mar 2006 16:49:30 -0500
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: autoanswer@vger.kernel.org
-Cc: linux-assembly@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-gcc@vger.kernel.org, linux-hams@vger.kernel.org, linux-ia64@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl, jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, akpm@osdl.org
 
+Description
+This patch adds support for the SATA devices on ATI SB600.
 
-The most complete Phar macy Online
-We carry all major medds at bargain price
-Viggra, Ci ialis, VaIium, Xa naax
-Phantermiine, Ulltraam and etc...
-SatiisfactIon Gua ranteeed
+Patch
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c index
+ffba656..1bd82c4 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -293,6 +293,10 @@ static const struct pci_device_id ahci_p
+        board_ahci }, /* JMicron JMB360 */
+      { 0x197b, 0x2363, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+        board_ahci }, /* JMicron JMB363 */
++     { PCI_VENDOR_ID_ATI, 0x4380, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++       board_ahci }, /* ATI SB600 non-raid */
++     { PCI_VENDOR_ID_ATI, 0x4381, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++       board_ahci }, /* ATI SB600 raid */
+      { }   /* terminate list */
+ };
 
-http://murloo.com/?aid=10
+Signed-off-by: Felix Kuehling <fkuehlin@ati.com>
 
-
-zA8j
 
