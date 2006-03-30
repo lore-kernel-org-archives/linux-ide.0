@@ -1,40 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: IDE CDROM tail read errors
-Date: Thu, 30 Mar 2006 12:18:09 +0100
-Message-ID: <1143717489.29388.32.camel@localhost.localdomain>
-References: <m3wtedrrpf.fsf@defiant.localdomain>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len
+Date: Thu, 30 Mar 2006 10:39:04 -0600
+Message-ID: <442C09A8.50200@us.ibm.com>
+References: <200603282217.k2SMHJTH032251@d03av04.boulder.ibm.com> <20060329091104.GB7940@infradead.org> <442B15F4.30506@pobox.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932176AbWC3LKa@vger.kernel.org>
-In-Reply-To: <m3wtedrrpf.fsf@defiant.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Krzysztof Halasa <khc@pm.waw.pl>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <442B15F4.30506@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Mer, 2006-03-29 at 21:11 +0200, Krzysztof Halasa wrote:
-> # ls -l
-> -rw-r--r-- 1 root root 687177728 Mar 29 15:51 img-15.iso
-> -rw-r--r-- 1 root root 687177728 Mar 29 15:58 img-15a.iso
+Jeff Garzik wrote:
+> James Bottomley wrote:
+>> This really doesn't look correct.  What you want is a sata transport
+>> class with a max command length in the host device.
 > 
-> The files are just truncated FC5d1 images (57344 bytes missing).
-
-The final partial read is dropped rather than partially completed.
-
-> # cat /sys/block/sr0/size
-> 1342264 (i.e., the same as with 2.6.15 + drivers/ide)
+> Christoph Hellwig wrote:
+>> this sounds wrong to me.  cdb length is a limitation of the host (driver).
+>> A target will reject unknown commands, no matter what length they have.
 > 
-> # cat /dev/cdrw > img-16a.iso
-> cat: /dev/cdrw: Input/output error
 > 
-> # cat /sys/block/sr0/size
-> 1342256 (looks like it has been adjusted to .iso image size / 512 when
->          the first I/O error occured)
+> In practice, CDB length may be limited by both the host and the device. 
+>   This applies to ATAPI, and some USB storage too IIRC.  For ATAPI, you 
+> read the CDB length from the device's IDENTIFY PACKET DEVICE info page.
 
-The SCSI layer does this bit for everyone. Its actually not libata or
-the PATA drivers that have done the work here. You should find ide-scsi
-does the same.
+So the question remains, do we need to police the CDB length on a per device
+basis, or is a per host basis ok? Will we have ATAPI devices falling on the
+floor if they get sent too large of a cdb?
 
-I patched the old IDE driver a bit to try and deal with this and if you
-want the patch to hack on and tidy up further feel free. 
+Brian
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
