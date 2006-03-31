@@ -1,7 +1,7 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 09/15] libata: implement ata_down_xfermask_limit()
-Date: Sat, 1 Apr 2006 01:38:18 +0900
-Message-ID: <11438230983159-git-send-email-htejun@gmail.com>
+Subject: [PATCH 12/15] libata: use SATA speeding down in ata_drive_probe_reset()
+Date: Sat, 1 Apr 2006 01:38:19 +0900
+Message-ID: <11438230992911-git-send-email-htejun@gmail.com>
 References: <1143823097579-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
@@ -9,99 +9,64 @@ Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from zproxy.gmail.com ([64.233.162.193]:30179 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751409AbWCaQi2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Mar 2006 11:38:28 -0500
+	by vger.kernel.org with ESMTP id S1751414AbWCaQil (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Mar 2006 11:38:41 -0500
 Received: by zproxy.gmail.com with SMTP id o37so955016nzf
-        for <linux-ide@vger.kernel.org>; Fri, 31 Mar 2006 08:38:28 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Fri, 31 Mar 2006 08:38:41 -0800 (PST)
 In-Reply-To: <1143823097579-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement ata_down_xfermask_limit().  This function manipulates
-@dev->pio/mwdma/udma_mask such that the next lower transfer mode is
-selected.  This will be used by ata_bus_probe() rewrite and later by
-EH speeding down.
+Make ata_drive_probe_reset() use SATA SPD configuration.  Hardreset
+will be force if speed renegotiation is necessary.  Also, if a
+hardreset fails, PHY speed is stepped down and hardreset is retried
+until the lowest speed is reached.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   52 ++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 52 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-core.c |   17 +++++++++++++----
+ 1 files changed, 13 insertions(+), 4 deletions(-)
 
-8360efb5b24dfe6b4cc63f00cec3648f14b105a0
+c927e2f9d4688d9d34e7d1d5f7f2e34e86e93827
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 061b0b6..5dee649 100644
+index 16095d8..30ee203 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -65,6 +65,8 @@ static unsigned int ata_dev_init_params(
- 					struct ata_device *dev,
- 					u16 heads,
- 					u16 sectors);
-+static int ata_down_xfermask_limit(struct ata_port *ap, struct ata_device *dev,
-+				   int force_pio0);
- static int ata_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev);
- static unsigned int ata_dev_set_xfermode(struct ata_port *ap,
- 					 struct ata_device *dev);
-@@ -1744,6 +1746,56 @@ int ata_timing_compute(struct ata_device
- 	return 0;
- }
+@@ -2629,7 +2629,7 @@ int ata_drive_probe_reset(struct ata_por
+ 	if (probeinit)
+ 		probeinit(ap);
  
-+/**
-+ *	ata_down_xfermask_limit - adjust dev xfer masks downward
-+ *	@ap: Port associated with device @dev
-+ *	@dev: Device to adjust xfer masks
-+ *	@force_pio0: Force PIO0
-+ *
-+ *	Adjust xfer masks of @dev downward.  Note that this function
-+ *	does not apply the change.  Invoking ata_set_mode() afterwards
-+ *	will apply the limit.
-+ *
-+ *	LOCKING:
-+ *	Inherited from caller.
-+ *
-+ *	RETURNS:
-+ *	0 on success, negative errno on failure
-+ */
-+static int ata_down_xfermask_limit(struct ata_port *ap, struct ata_device *dev,
-+				   int force_pio0)
-+{
-+	unsigned long xfer_mask;
-+	int highbit;
+-	if (softreset) {
++	if (softreset && !ata_set_sata_spd_needed(ap, &ap->device[0])) {
+ 		rc = ata_do_reset(ap, softreset, postreset, 0, classes);
+ 		if (rc == 0 && classes[0] != ATA_DEV_UNKNOWN)
+ 			goto done;
+@@ -2638,9 +2638,18 @@ int ata_drive_probe_reset(struct ata_por
+ 	if (!hardreset)
+ 		goto done;
+ 
+-	rc = ata_do_reset(ap, hardreset, postreset, 0, classes);
+-	if (rc || classes[0] != ATA_DEV_UNKNOWN)
+-		goto done;
++	while (1) {
++		ata_set_sata_spd(ap, &ap->device[0]);
++		rc = ata_do_reset(ap, hardreset, postreset, 0, classes);
++		if (rc == 0) {
++			if (classes[0] != ATA_DEV_UNKNOWN)
++				goto done;
++			break;
++		}
 +
-+	xfer_mask = ata_pack_xfermask(dev->pio_mask, dev->mwdma_mask,
-+				      dev->udma_mask);
-+
-+	if (!xfer_mask)
-+		goto fail;
-+	/* don't gear down to MWDMA from UDMA, go directly to PIO */
-+	if (xfer_mask & ATA_MASK_UDMA)
-+		xfer_mask &= ~ATA_MASK_MWDMA;
-+
-+	highbit = fls(xfer_mask) - 1;
-+	xfer_mask &= ~(1 << highbit);
-+	if (force_pio0)
-+		xfer_mask &= 1 << ATA_SHIFT_PIO;
-+	if (!xfer_mask)
-+		goto fail;
-+
-+	ata_unpack_xfermask(xfer_mask, &dev->pio_mask, &dev->mwdma_mask,
-+			    &dev->udma_mask);
-+
-+	printk(KERN_WARNING "ata%u: dev %u limiting speed to %s\n",
-+	       ap->id, dev->devno, ata_mode_string(xfer_mask));
-+
-+	return 0;
-+
-+ fail:
-+	return -EINVAL;
-+}
-+
- static int ata_dev_set_mode(struct ata_port *ap, struct ata_device *dev)
- {
- 	unsigned int err_mask;
++		if (ata_down_sata_spd_limit(ap, &ap->device[0]))
++			goto done;
++	}
+ 
+ 	if (softreset)
+ 		rc = ata_do_reset(ap, softreset, postreset, 0, classes);
 -- 
 1.2.4
 
