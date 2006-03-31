@@ -1,55 +1,234 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 13/15] libata: add 1s sleep between resets
-Date: Sat, 1 Apr 2006 01:38:19 +0900
-Message-ID: <1143823099305-git-send-email-htejun@gmail.com>
+Subject: [PATCH 05/15] libata: implement ata_dev_enabled and disabled()
+Date: Sat, 1 Apr 2006 01:38:18 +0900
+Message-ID: <11438230983412-git-send-email-htejun@gmail.com>
 References: <1143823097579-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.193]:30179 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751413AbWCaQib (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Mar 2006 11:38:31 -0500
-Received: by zproxy.gmail.com with SMTP id o37so955016nzf
-        for <linux-ide@vger.kernel.org>; Fri, 31 Mar 2006 08:38:31 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.202]:42854 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751415AbWCaQia (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Mar 2006 11:38:30 -0500
+Received: by zproxy.gmail.com with SMTP id o37so955013nzf
+        for <linux-ide@vger.kernel.org>; Fri, 31 Mar 2006 08:38:30 -0800 (PST)
 In-Reply-To: <1143823097579-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Some devices react badly if resets are performed back-to-back.  Give
-devices some time to breath.
+This patch renames ata_dev_present() to ata_dev_enabled() and adds
+ata_dev_disabled().  This is to discern the state where a device is
+present but disabled from not-present state.  This disctinction is
+necessary when configuring transfer mode because device selection
+timing must not be violated even if a device fails to configure.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-core.c |   24 ++++++++++++------------
+ drivers/scsi/libata-scsi.c |    4 ++--
+ drivers/scsi/sata_mv.c     |    2 +-
+ drivers/scsi/sata_sil.c    |    2 +-
+ include/linux/libata.h     |   16 +++++++++++++---
+ 5 files changed, 29 insertions(+), 19 deletions(-)
 
-e7f505c001fd4cb43b8123387285a7694790b4ae
+cdce7bff674e9bcccb20e278bfe371c221ef2433
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 30ee203..bd9ca3b 100644
+index 559abe4..c10c550 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -2633,6 +2633,7 @@ int ata_drive_probe_reset(struct ata_por
- 		rc = ata_do_reset(ap, softreset, postreset, 0, classes);
- 		if (rc == 0 && classes[0] != ATA_DEV_UNKNOWN)
- 			goto done;
-+		ssleep(1);
+@@ -411,7 +411,7 @@ static const char *sata_spd_string(unsig
+ 
+ static void ata_dev_disable(struct ata_port *ap, struct ata_device *dev)
+ {
+-	if (ata_dev_present(dev)) {
++	if (ata_dev_enabled(dev)) {
+ 		printk(KERN_WARNING "ata%u: dev %u disabled\n",
+ 		       ap->id, dev->devno);
+ 		dev->class++;
+@@ -1222,7 +1222,7 @@ static int ata_dev_configure(struct ata_
+ 	unsigned int xfer_mask;
+ 	int i, rc;
+ 
+-	if (!ata_dev_present(dev)) {
++	if (!ata_dev_enabled(dev)) {
+ 		DPRINTK("ENTER/EXIT (host %u, dev %u) -- nodev\n",
+ 			ap->id, dev->devno);
+ 		return 0;
+@@ -1401,7 +1401,7 @@ static int ata_bus_probe(struct ata_port
+ 
+ 		dev->class = classes[i];
+ 
+-		if (!ata_dev_present(dev))
++		if (!ata_dev_enabled(dev))
+ 			continue;
+ 
+ 		WARN_ON(dev->id != NULL);
+@@ -1565,7 +1565,7 @@ void sata_phy_reset(struct ata_port *ap)
+ struct ata_device *ata_dev_pair(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct ata_device *pair = &ap->device[1 - adev->devno];
+-	if (!ata_dev_present(pair))
++	if (!ata_dev_enabled(pair))
+ 		return NULL;
+ 	return pair;
+ }
+@@ -1778,7 +1778,7 @@ static int ata_host_set_pio(struct ata_p
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->device[i];
+ 
+-		if (!ata_dev_present(dev))
++		if (!ata_dev_enabled(dev))
+ 			continue;
+ 
+ 		if (!dev->pio_mode) {
+@@ -1802,7 +1802,7 @@ static void ata_host_set_dma(struct ata_
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->device[i];
+ 
+-		if (!ata_dev_present(dev) || !dev->dma_mode)
++		if (!ata_dev_enabled(dev) || !dev->dma_mode)
+ 			continue;
+ 
+ 		dev->xfer_mode = dev->dma_mode;
+@@ -1830,7 +1830,7 @@ static void ata_set_mode(struct ata_port
+ 		struct ata_device *dev = &ap->device[i];
+ 		unsigned int pio_mask, dma_mask;
+ 
+-		if (!ata_dev_present(dev))
++		if (!ata_dev_enabled(dev))
+ 			continue;
+ 
+ 		ata_dev_xfermask(ap, dev);
+@@ -1858,7 +1858,7 @@ static void ata_set_mode(struct ata_port
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->device[i];
+ 
+-		if (!ata_dev_present(dev))
++		if (!ata_dev_enabled(dev))
+ 			continue;
+ 
+ 		rc = ata_dev_set_mode(ap, dev);
+@@ -2550,7 +2550,7 @@ int ata_dev_revalidate(struct ata_port *
+ 	u16 *id;
+ 	int rc;
+ 
+-	if (!ata_dev_present(dev))
++	if (!ata_dev_enabled(dev))
+ 		return -ENODEV;
+ 
+ 	class = dev->class;
+@@ -2679,7 +2679,7 @@ static void ata_dev_xfermask(struct ata_
+ 	/* FIXME: Use port-wide xfermask for now */
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *d = &ap->device[i];
+-		if (!ata_dev_present(d))
++		if (!ata_dev_enabled(d))
+ 			continue;
+ 		xfer_mask &= ata_pack_xfermask(d->pio_mask, d->mwdma_mask,
+ 					       d->udma_mask);
+@@ -4299,7 +4299,7 @@ int ata_device_resume(struct ata_port *a
+ 		ap->flags &= ~ATA_FLAG_SUSPENDED;
+ 		ata_set_mode(ap);
  	}
+-	if (!ata_dev_present(dev))
++	if (!ata_dev_enabled(dev))
+ 		return 0;
+ 	if (dev->class == ATA_DEV_ATA)
+ 		ata_start_drive(ap, dev);
+@@ -4317,7 +4317,7 @@ int ata_device_resume(struct ata_port *a
+  */
+ int ata_device_suspend(struct ata_port *ap, struct ata_device *dev, pm_message_t state)
+ {
+-	if (!ata_dev_present(dev))
++	if (!ata_dev_enabled(dev))
+ 		return 0;
+ 	if (dev->class == ATA_DEV_ATA)
+ 		ata_flush_cache(ap, dev);
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index 53f5b0d..c1a4b29 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -2349,7 +2349,7 @@ ata_scsi_find_dev(struct ata_port *ap, c
+ 		     (scsidev->lun != 0)))
+ 		return NULL;
  
- 	if (!hardreset)
-@@ -2649,6 +2650,7 @@ int ata_drive_probe_reset(struct ata_por
+-	if (unlikely(!ata_dev_present(dev)))
++	if (unlikely(!ata_dev_enabled(dev)))
+ 		return NULL;
  
- 		if (ata_down_sata_spd_limit(ap, &ap->device[0]))
- 			goto done;
-+		ssleep(1);
+ 	if (!atapi_enabled || (ap->flags & ATA_FLAG_NO_ATAPI)) {
+@@ -2743,7 +2743,7 @@ void ata_scsi_scan_host(struct ata_port 
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		dev = &ap->device[i];
+ 
+-		if (ata_dev_present(dev))
++		if (ata_dev_enabled(dev))
+ 			scsi_scan_target(&ap->host->shost_gendev, 0, i, 0, 0);
  	}
+ }
+diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
+index fa901fd..0f7d334 100644
+--- a/drivers/scsi/sata_mv.c
++++ b/drivers/scsi/sata_mv.c
+@@ -1991,7 +1991,7 @@ comreset_retry:
+ 	tf.nsect = readb((void __iomem *) ap->ioaddr.nsect_addr);
  
- 	if (softreset)
+ 	dev->class = ata_dev_classify(&tf);
+-	if (!ata_dev_present(dev)) {
++	if (!ata_dev_enabled(dev)) {
+ 		VPRINTK("Port disabled post-sig: No device present.\n");
+ 		ata_port_disable(ap);
+ 	}
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index 18c296c..d6c7086 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -264,7 +264,7 @@ static void sil_post_set_mode (struct at
+ 
+ 	for (i = 0; i < 2; i++) {
+ 		dev = &ap->device[i];
+-		if (!ata_dev_present(dev))
++		if (!ata_dev_enabled(dev))
+ 			dev_mode[i] = 0;	/* PIO0/1/2 */
+ 		else if (dev->flags & ATA_DFLAG_PIO)
+ 			dev_mode[i] = 1;	/* PIO3/4 */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 0d61357..c6883ba 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -672,14 +672,24 @@ static inline unsigned int ata_tag_valid
+ 	return (tag < ATA_MAX_QUEUE) ? 1 : 0;
+ }
+ 
+-static inline unsigned int ata_class_present(unsigned int class)
++static inline unsigned int ata_class_enabled(unsigned int class)
+ {
+ 	return class == ATA_DEV_ATA || class == ATA_DEV_ATAPI;
+ }
+ 
+-static inline unsigned int ata_dev_present(const struct ata_device *dev)
++static inline unsigned int ata_class_disabled(unsigned int class)
+ {
+-	return ata_class_present(dev->class);
++	return class == ATA_DEV_ATA_UNSUP || class == ATA_DEV_ATAPI_UNSUP;
++}
++
++static inline unsigned int ata_dev_enabled(const struct ata_device *dev)
++{
++	return ata_class_enabled(dev->class);
++}
++
++static inline unsigned int ata_dev_disabled(const struct ata_device *dev)
++{
++	return ata_class_disabled(dev->class);
+ }
+ 
+ static inline u8 ata_chk_status(struct ata_port *ap)
 -- 
 1.2.4
 
