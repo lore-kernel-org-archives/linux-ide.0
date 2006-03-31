@@ -1,53 +1,48 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] ata_piix: fix ich6/m_map_db
-Date: Fri, 31 Mar 2006 20:01:50 +0900
-Message-ID: <20060331110150.GC13172@htj.dyndns.org>
+Subject: [PATCH 1/2] libata: fix ata_qc_issue failure path
+Date: Fri, 31 Mar 2006 20:36:47 +0900
+Message-ID: <20060331113647.GD13172@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.197]:59890 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751318AbWCaLBz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Mar 2006 06:01:55 -0500
-Received: by zproxy.gmail.com with SMTP id o37so828241nzf
-        for <linux-ide@vger.kernel.org>; Fri, 31 Mar 2006 03:01:54 -0800 (PST)
+Received: from wproxy.gmail.com ([64.233.184.232]:12280 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751326AbWCaLgx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Mar 2006 06:36:53 -0500
+Received: by wproxy.gmail.com with SMTP id i22so901137wra
+        for <linux-ide@vger.kernel.org>; Fri, 31 Mar 2006 03:36:52 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-MAP tables of ich6 and ich6m are wrong.  Depending on port usage,
-ata_piix may fail to initialize attached devices.
+On sg_err failure path, ata_qc_issue() doesn't mark the qc active
+before returning.  This triggers WARN_ON() in __ata_qc_complete() when
+the qc gets completed.  This patch moves ap->active_tag and
+QCFLAG_ACTIVE setting to the top of the function.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
----
-
-Jeff, this one is critical.  I compiled all port allocation tables
-correctly on my notebook, yet I succeeded to screw up.  Dang.  Sorry
-about the trouble.
-
- ata_piix.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-Index: work/drivers/scsi/ata_piix.c
+Index: work/drivers/scsi/libata-core.c
 ===================================================================
---- work.orig/drivers/scsi/ata_piix.c	2006-03-31 19:50:49.000000000 +0900
-+++ work/drivers/scsi/ata_piix.c	2006-03-31 19:54:09.000000000 +0900
-@@ -301,7 +301,7 @@ static struct piix_map_db ich6_map_db = 
- 	.mask = 0x3,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP */
--		{  P0,  P1,  P2,  P3 }, /* 00b */
-+		{  P0,  P2,  P1,  P3 }, /* 00b */
- 		{ IDE, IDE,  P1,  P3 }, /* 01b */
- 		{  P0,  P2, IDE, IDE }, /* 10b */
- 		{  RV,  RV,  RV,  RV },
-@@ -312,7 +312,7 @@ static struct piix_map_db ich6m_map_db =
- 	.mask = 0x3,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP */
--		{  P0,  P1,  P2,  P3 }, /* 00b */
-+		{  P0,  P2,  RV,  RV }, /* 00b */
- 		{  RV,  RV,  RV,  RV },
- 		{  P0,  P2, IDE, IDE }, /* 10b */
- 		{  RV,  RV,  RV,  RV },
+--- work.orig/drivers/scsi/libata-core.c	2006-03-31 20:28:47.000000000 +0900
++++ work/drivers/scsi/libata-core.c	2006-03-31 20:34:02.000000000 +0900
+@@ -4006,6 +4006,9 @@ unsigned int ata_qc_issue(struct ata_que
+ {
+ 	struct ata_port *ap = qc->ap;
+ 
++	qc->ap->active_tag = qc->tag;
++	qc->flags |= ATA_QCFLAG_ACTIVE;
++
+ 	if (ata_should_dma_map(qc)) {
+ 		if (qc->flags & ATA_QCFLAG_SG) {
+ 			if (ata_sg_setup(qc))
+@@ -4020,9 +4023,6 @@ unsigned int ata_qc_issue(struct ata_que
+ 
+ 	ap->ops->qc_prep(qc);
+ 
+-	qc->ap->active_tag = qc->tag;
+-	qc->flags |= ATA_QCFLAG_ACTIVE;
+-
+ 	return ap->ops->qc_issue(qc);
+ 
+ sg_err:
