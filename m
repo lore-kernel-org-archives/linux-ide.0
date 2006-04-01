@@ -1,58 +1,256 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 12/14] libata: dec scmd->retries for qcs with zero err_mask
-Date: Sat, 1 Apr 2006 19:48:37 +0900
-Message-ID: <11438885172983-git-send-email-htejun@gmail.com>
+Subject: [PATCH 08/14] libata: pass qc around intead of ap during PIO
+Date: Sat, 1 Apr 2006 19:48:36 +0900
+Message-ID: <11438885162531-git-send-email-htejun@gmail.com>
 References: <11438885151530-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.197]:39690 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751506AbWDAKsr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 05:48:47 -0500
-Received: by zproxy.gmail.com with SMTP id o37so1210249nzf
-        for <linux-ide@vger.kernel.org>; Sat, 01 Apr 2006 02:48:46 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.196]:25460 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751515AbWDAKsv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 05:48:51 -0500
+Received: by zproxy.gmail.com with SMTP id o37so1210250nzf
+        for <linux-ide@vger.kernel.org>; Sat, 01 Apr 2006 02:48:50 -0800 (PST)
 In-Reply-To: <11438885151530-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-qcs might get retried because of unrelated failure.  e.g. NCQ command
-failure causes the whole command set to be aborted.  Decrement
-scmd->retries for such retrials to avoid unnecessarily failing
-commands.  Note that scmd->retries will be incremented the first time.
+The current code passes pointer to ap around and repeatedly performs
+ata_qc_from_tag() to access the ongoing qc.  This is unnatural and
+makes EH synchronization cumbersome.  Make PIO codes deal with qc
+instead of ap.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-scsi.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/libata-core.c |   71 ++++++++++++++++----------------------------
+ 1 files changed, 26 insertions(+), 45 deletions(-)
 
-712ea26a9289746c7887ef8878ea6b32c16d85c9
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 2870652..4400815 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -831,11 +831,14 @@ void ata_eh_qc_complete(struct ata_queue
-  *	should be retried.  To be used from EH.
+2a820c9abd25983f2776412030a5ff67f842590e
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index fe66e04..ab7a654 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -3405,7 +3405,7 @@ void ata_poll_qc_complete(struct ata_que
+ 
+ /**
+  *	ata_pio_poll - poll using PIO, depending on current state
+- *	@ap: the target ata_port
++ *	@qc: qc in progress
   *
-  *	SCSI midlayer limits the number of retries to scmd->allowed.
-- *	This function might need to adjust scmd->retries for commands
-- *	which get retried due to unrelated NCQ failures.
-+ *	scmd->retries is decremented for commands which get retried
-+ *	due to unrelated failures (qc->err_mask is zero).
+  *	LOCKING:
+  *	None.  (executing in kernel thread context)
+@@ -3413,17 +3413,13 @@ void ata_poll_qc_complete(struct ata_que
+  *	RETURNS:
+  *	timeout value to use
   */
- void ata_eh_qc_retry(struct ata_queued_cmd *qc)
+-
+-static unsigned long ata_pio_poll(struct ata_port *ap)
++static unsigned long ata_pio_poll(struct ata_queued_cmd *qc)
  {
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	if (!qc->err_mask && scmd->retries)
-+		scmd->retries--;
- 	__ata_eh_qc_complete(qc);
+-	struct ata_queued_cmd *qc;
++	struct ata_port *ap = qc->ap;
+ 	u8 status;
+ 	unsigned int poll_state = HSM_ST_UNKNOWN;
+ 	unsigned int reg_state = HSM_ST_UNKNOWN;
+ 
+-	qc = ata_qc_from_tag(ap, ap->active_tag);
+-	WARN_ON(qc == NULL);
+-
+ 	switch (ap->hsm_task_state) {
+ 	case HSM_ST:
+ 	case HSM_ST_POLL:
+@@ -3457,7 +3453,7 @@ static unsigned long ata_pio_poll(struct
+ 
+ /**
+  *	ata_pio_complete - check if drive is busy or idle
+- *	@ap: the target ata_port
++ *	@qc: qc to complete
+  *
+  *	LOCKING:
+  *	None.  (executing in kernel thread context)
+@@ -3465,10 +3461,9 @@ static unsigned long ata_pio_poll(struct
+  *	RETURNS:
+  *	Non-zero if qc completed, zero otherwise.
+  */
+-
+-static int ata_pio_complete (struct ata_port *ap)
++static int ata_pio_complete(struct ata_queued_cmd *qc)
+ {
+-	struct ata_queued_cmd *qc;
++	struct ata_port *ap = qc->ap;
+ 	u8 drv_stat;
+ 
+ 	/*
+@@ -3489,9 +3484,6 @@ static int ata_pio_complete (struct ata_
+ 		}
+ 	}
+ 
+-	qc = ata_qc_from_tag(ap, ap->active_tag);
+-	WARN_ON(qc == NULL);
+-
+ 	drv_stat = ata_wait_idle(ap);
+ 	if (!ata_ok(drv_stat)) {
+ 		qc->err_mask |= __ac_err_mask(drv_stat);
+@@ -3827,15 +3819,14 @@ err_out:
+ 
+ /**
+  *	ata_pio_block - start PIO on a block
+- *	@ap: the target ata_port
++ *	@qc: qc to transfer block for
+  *
+  *	LOCKING:
+  *	None.  (executing in kernel thread context)
+  */
+-
+-static void ata_pio_block(struct ata_port *ap)
++static void ata_pio_block(struct ata_queued_cmd *qc)
+ {
+-	struct ata_queued_cmd *qc;
++	struct ata_port *ap = qc->ap;
+ 	u8 status;
+ 
+ 	/*
+@@ -3857,9 +3848,6 @@ static void ata_pio_block(struct ata_por
+ 		}
+ 	}
+ 
+-	qc = ata_qc_from_tag(ap, ap->active_tag);
+-	WARN_ON(qc == NULL);
+-
+ 	/* check error */
+ 	if (status & (ATA_ERR | ATA_DF)) {
+ 		qc->err_mask |= AC_ERR_DEV;
+@@ -3888,12 +3876,9 @@ static void ata_pio_block(struct ata_por
+ 	}
  }
  
+-static void ata_pio_error(struct ata_port *ap)
++static void ata_pio_error(struct ata_queued_cmd *qc)
+ {
+-	struct ata_queued_cmd *qc;
+-
+-	qc = ata_qc_from_tag(ap, ap->active_tag);
+-	WARN_ON(qc == NULL);
++	struct ata_port *ap = qc->ap;
+ 
+ 	if (qc->tf.command != ATA_CMD_PACKET)
+ 		printk(KERN_WARNING "ata%u: dev %u PIO error\n",
+@@ -3911,7 +3896,8 @@ static void ata_pio_error(struct ata_por
+ 
+ static void ata_pio_task(void *_data)
+ {
+-	struct ata_port *ap = _data;
++	struct ata_queued_cmd *qc = _data;
++	struct ata_port *ap = qc->ap;
+ 	unsigned long timeout;
+ 	int qc_completed;
+ 
+@@ -3924,33 +3910,33 @@ fsm_start:
+ 		return;
+ 
+ 	case HSM_ST:
+-		ata_pio_block(ap);
++		ata_pio_block(qc);
+ 		break;
+ 
+ 	case HSM_ST_LAST:
+-		qc_completed = ata_pio_complete(ap);
++		qc_completed = ata_pio_complete(qc);
+ 		break;
+ 
+ 	case HSM_ST_POLL:
+ 	case HSM_ST_LAST_POLL:
+-		timeout = ata_pio_poll(ap);
++		timeout = ata_pio_poll(qc);
+ 		break;
+ 
+ 	case HSM_ST_TMOUT:
+ 	case HSM_ST_ERR:
+-		ata_pio_error(ap);
++		ata_pio_error(qc);
+ 		return;
+ 	}
+ 
+ 	if (timeout)
+-		ata_port_queue_task(ap, ata_pio_task, ap, timeout);
++		ata_port_queue_task(ap, ata_pio_task, qc, timeout);
+ 	else if (!qc_completed)
+ 		goto fsm_start;
+ }
+ 
+ /**
+  *	atapi_packet_task - Write CDB bytes to hardware
+- *	@_data: Port to which ATAPI device is attached.
++ *	@_data: qc in progress
+  *
+  *	When device has indicated its readiness to accept
+  *	a CDB, this function is called.  Send the CDB.
+@@ -3961,17 +3947,12 @@ fsm_start:
+  *	LOCKING:
+  *	Kernel thread context (may sleep)
+  */
+-
+ static void atapi_packet_task(void *_data)
+ {
+-	struct ata_port *ap = _data;
+-	struct ata_queued_cmd *qc;
++	struct ata_queued_cmd *qc = _data;
++	struct ata_port *ap = qc->ap;
+ 	u8 status;
+ 
+-	qc = ata_qc_from_tag(ap, ap->active_tag);
+-	WARN_ON(qc == NULL);
+-	WARN_ON(!(qc->flags & ATA_QCFLAG_ACTIVE));
+-
+ 	/* sleep-wait for BSY to clear */
+ 	DPRINTK("busy wait\n");
+ 	if (ata_busy_sleep(ap, ATA_TMOUT_CDB_QUICK, ATA_TMOUT_CDB)) {
+@@ -4011,7 +3992,7 @@ static void atapi_packet_task(void *_dat
+ 
+ 		/* PIO commands are handled by polling */
+ 		ap->hsm_task_state = HSM_ST;
+-		ata_port_queue_task(ap, ata_pio_task, ap, 0);
++		ata_port_queue_task(ap, ata_pio_task, qc, 0);
+ 	}
+ 
+ 	return;
+@@ -4317,26 +4298,26 @@ unsigned int ata_qc_issue_prot(struct at
+ 		ata_qc_set_polling(qc);
+ 		ata_tf_to_host(ap, &qc->tf);
+ 		ap->hsm_task_state = HSM_ST;
+-		ata_port_queue_task(ap, ata_pio_task, ap, 0);
++		ata_port_queue_task(ap, ata_pio_task, qc, 0);
+ 		break;
+ 
+ 	case ATA_PROT_ATAPI:
+ 		ata_qc_set_polling(qc);
+ 		ata_tf_to_host(ap, &qc->tf);
+-		ata_port_queue_task(ap, atapi_packet_task, ap, 0);
++		ata_port_queue_task(ap, atapi_packet_task, qc, 0);
+ 		break;
+ 
+ 	case ATA_PROT_ATAPI_NODATA:
+ 		ap->flags |= ATA_FLAG_NOINTR;
+ 		ata_tf_to_host(ap, &qc->tf);
+-		ata_port_queue_task(ap, atapi_packet_task, ap, 0);
++		ata_port_queue_task(ap, atapi_packet_task, qc, 0);
+ 		break;
+ 
+ 	case ATA_PROT_ATAPI_DMA:
+ 		ap->flags |= ATA_FLAG_NOINTR;
+ 		ap->ops->tf_load(ap, &qc->tf);	 /* load tf registers */
+ 		ap->ops->bmdma_setup(qc);	    /* set up bmdma */
+-		ata_port_queue_task(ap, atapi_packet_task, ap, 0);
++		ata_port_queue_task(ap, atapi_packet_task, qc, 0);
+ 		break;
+ 
+ 	default:
 -- 
 1.2.4
 
