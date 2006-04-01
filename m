@@ -1,32 +1,49 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 10/14] libata: don't read TF directly from sense generation
- functions
-Date: Sat, 01 Apr 2006 15:05:55 -0500
-Message-ID: <442EDD23.9070206@pobox.com>
-References: <11438885171262-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH] SCSI: implement scsi_eh_schedule()
+Date: Sat, 01 Apr 2006 15:14:23 -0500
+Message-ID: <442EDF1F.6000001@pobox.com>
+References: <20060401103857.GG13172@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56541 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751618AbWDAUF7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 15:05:59 -0500
-In-Reply-To: <11438885171262-git-send-email-htejun@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:734 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751623AbWDAUOa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 15:14:30 -0500
+In-Reply-To: <20060401103857.GG13172@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+Cc: hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
 Tejun Heo wrote:
-> TF register might not be directly accessible depending on errors.
-> e.g. TF of failed NCQ command is in log page 10h.  Make reading TF
-> responsibility of error handlers.  For the current EH, simply push TF
-> reading into qc completion functions as they are practically part of
-> EH.  New EH will fill qc->tf with status registers before complting
-> qcs.
+> [PATCH] SCSI: implement scsi_eh_schedule()
+> 
+> This patch implements scsi_eh_schedule() which provides a way to
+> directly invoke SCSI EH from drivers which implement EH using
+> ->eh_strategy_handler.  Combined with scsi_eh_flush_done_q(), this
+> gives such drivers complete control over when and how to invoke EH and
+> handle failed commands.
+> 
+> scsi_eh_schedule() can also be invoked without a scmd.  This is useful
+> for handling exception conditions occurring while no command is in
+> progress.  New Scsi_Host field host_eh_invoked is added for this.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-ACK patches 10-14
+Not so sure about this one:
+
+1) Rather than creating the scmd==NULL special case path, just create a 
+new function scsi_kick_eh() or somesuch.  I presume such an 
+implementation would be quite tiny:  satisfy the condition 
+'shost->host_busy == shost->host_failed', then call scsi_eh_wakeup().
+
+2) Looks almost exactly like scsi_eh_scmd_add().  Minus the code deleted 
+via suggestion #1, you really just add a timer check.  Why not add a 
+SCSI EH flag which says "check timer", then just call scsi_eh_scmd_add()?
+
+3) I would think that host_eh_invoked could be deduced.
+
+	Jeff
 
 
