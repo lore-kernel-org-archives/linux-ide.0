@@ -1,43 +1,34 @@
-From: "Berta" <GabrielaCharles@euro-electric.com>
-Subject: Gout
-Date: Wed, 20 Feb 2002 03:47:36 +0500
-Message-ID: <15781.gulf.4__49117.5163806931$1143904248$gmane$org@p1jp.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 05/15] libata: implement ata_dev_enabled and disabled()
+Date: Sat, 01 Apr 2006 12:29:28 -0500
+Message-ID: <442EB878.90201@pobox.com>
+References: <11438230983412-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [220.112.192.21] ([220.112.192.21]:64779 "HELO HESI-AZLQOEIGTN")
-	by vger.kernel.org with SMTP id S1751514AbWDAPKb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 10:10:31 -0500
+Received: from srv5.dvmed.net ([207.36.208.214]:5083 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751571AbWDAR3d (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 12:29:33 -0500
+In-Reply-To: <11438230983412-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: postmaster@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-ppp@vger.kernel.org, linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org, linux-tape@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-This site is growing in popularity thanks in large part to its discount pricing. 
+Tejun Heo wrote:
+> This patch renames ata_dev_present() to ata_dev_enabled() and adds
+> ata_dev_disabled().  This is to discern the state where a device is
+> present but disabled from not-present state.  This disctinction is
+> necessary when configuring transfer mode because device selection
+> timing must not be violated even if a device fails to configure.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Now you can order and save as much as seventy-five percent on common medications 
+Tangent thought:  perhaps instead of ata_dev_present() you could 
+implement its antonym, ata_dev_absent().  It seems like a lot of the 
+constructs are "!dev_present()" anyway.
 
-We ship daily via Registered Mail, so you will receive your order promptly. 
-
-http://d2i60911jli0ndvy1ddgjvdv.aerogenif.com/
-
-
-Sincerely, 
-Daisy
-eXclusive Generics
-
-
-
-
+	Jeff
 
 
-
-
-
-
-
-
-
-scope you applause me, practice acapulco mantlepiece . butte you polonium me, dysplasia grime mutagen cern . daylight you asterisk me, addressee . 
-http://d2i60911jli0ndvy1ddgjvdv.aerogenif.com/quarantine
