@@ -1,61 +1,38 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 15/15] libata: consider disabled devices in ata_dev_xfermask()
-Date: Sat, 01 Apr 2006 15:00:10 -0500
-Message-ID: <442EDBCA.7050600@pobox.com>
-References: <11438230993538-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH 04/14] libata: clean up constants
+Date: Sat, 01 Apr 2006 15:02:05 -0500
+Message-ID: <442EDC3D.7000302@pobox.com>
+References: <11438885161447-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43229 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751614AbWDAUAO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 15:00:14 -0500
-In-Reply-To: <11438230993538-git-send-email-htejun@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:47325 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751613AbWDAUCJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 15:02:09 -0500
+In-Reply-To: <11438885161447-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> ata_bus_probe() now marks failed devices properly and leaves
-> meaningful transfer mode masks.  This patch makes ata_dev_xfermask()
-> consider disable devices when determining PIO mode to avoid violating
-> device selection timing.
+> * Reorder ATA_DFLAG_* such that feature flags determined by
+>   ata_dev_configure() are on lower bits.  Reserve lower eight bits
+>   for this purpose and allocate dynamic flags from bit 8.
 > 
-> While at it, move port-wide resttriction out of device iteration loop
-> and try to make the function look a bit prettier.
+> * Reorder ATA_FLAG_* such that feature flags determined during driver
+>   initiailization are on bits 0:15, dynamic flags on 16:23 and LLDD
+>   specific flags on 24:31.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> * Rename ATA_FLAG_PORT_DISABLED to ATA_FLAG_DISABLED for consistency.
+>   (ATA_FLAG_* are always about ports).
 > 
-> ---
-> 
->  drivers/scsi/libata-core.c |   34 +++++++++++++++++++++++-----------
->  1 files changed, 23 insertions(+), 11 deletions(-)
-> 
-> 523b496b7614981773c2c14259bbca4a7ba3a3e8
-> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-> index ac2ca31..0d72792 100644
-> --- a/drivers/scsi/libata-core.c
-> +++ b/drivers/scsi/libata-core.c
-> @@ -2902,23 +2902,34 @@ static void ata_dev_xfermask(struct ata_
->  	unsigned long xfer_mask;
->  	int i;
->  
-> -	xfer_mask = ata_pack_xfermask(ap->pio_mask, ap->mwdma_mask,
-> -				      ap->udma_mask);
-> +	xfer_mask = ata_pack_xfermask(ap->pio_mask,
-> +				      ap->mwdma_mask, ap->udma_mask);
-> +
-> +	/* Apply cable rule here.  Don't apply it early because when
-> +	 * we handle hot plug the cable type can itself change.
-> +	 */
-> +	if (ap->cbl == ATA_CBL_PATA40)
-> +		xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
+> * Kill trailing white space and lower-case an one line comment for
+>   consistency.
 
-ACK, though I wonder if moving the above code to its current position 
-violates "early" described in the comment.
+Separate cleanups and new flags/constants into separate patches, please.
 
-	Jeff
-
+ACK patches 1-4, modulo the above comment.
 
 
