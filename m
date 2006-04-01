@@ -1,42 +1,32 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH/RFC] libata-dev: handle DRQ=1 ERR=1 (revised)
-Date: Sat, 01 Apr 2006 14:29:43 -0500
-Message-ID: <442ED4A7.1050509@garzik.org>
-References: <442DC9E7.5000203@garzik.org> <442E4444.1050806@tw.ibm.com> <442E4A23.8000409@tw.ibm.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 08/15] libata: don't disable devices from ata_set_mode()
+Date: Sat, 01 Apr 2006 14:46:23 -0500
+Message-ID: <442ED88F.6050301@pobox.com>
+References: <11438230982787-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55260 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751423AbWDAT3p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 14:29:45 -0500
-In-Reply-To: <442E4A23.8000409@tw.ibm.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:6877 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751441AbWDATq3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 14:46:29 -0500
+In-Reply-To: <11438230982787-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-Albert Lee wrote:
-> Handle DRQ=1 ERR=1 situation. Revised according to what IDE try_to_flush_leftover_data() does.
+Tejun Heo wrote:
+> When ata_set_mode() fails on a device, make ata_set_mode() return
+> error code and pointer to the device instead of disabling it directly.
+> This gives more control to higher level driving logic.
 > 
-> Changes:
->  - For ATA PIO writes and ATAPI devices, just stop the HSM and let EH handle it.
->  - For ATA PIO reads, read only one block of junk data and then let EH handle it.
+> This patch does not change the end result (configured transfer mode)
+> although it may make libata repeat mode configuration to the peer of a
+> failing device.  Later ata_bus_probe() rewrite will make full use of
+> this change.
 > 
-> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-> ---
-> Thanks for the IDE try_to_flush_leftover_data() pointer.
-> The difference between IDE and irq-pio (before this patch):
->  1. IDE only does the data transfer for PIO reads.
->     For PIO writes and ATAPI, it just stops and abort/reset.
->  2. For PIO reads, only one block of data is transferred. EH then takes over if DRQ is still set after that.
->     The behavior of irq-pio before this patch is: let HSM go on, until the device set DRQ=0 or all data read.
-> 
-> Te IDE behavior looks safer. (When the device is in bad status, we really should not
-> write any data to it.)
-> 
-> Patch against irq-pio branch (08a556db919f67e1e4d33ae8d40f7222da34d994).
-> For your review, thanks.
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 applied
 
