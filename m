@@ -1,47 +1,122 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 06/14] libata: clear ATA_DFLAG_PIO before setting it
-Date: Sat, 1 Apr 2006 19:48:36 +0900
-Message-ID: <11438885163134-git-send-email-htejun@gmail.com>
+Subject: [PATCH 10/14] libata: don't read TF directly from sense generation functions
+Date: Sat, 1 Apr 2006 19:48:37 +0900
+Message-ID: <11438885171262-git-send-email-htejun@gmail.com>
 References: <11438885151530-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.197]:39690 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751395AbWDAKso (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 05:48:44 -0500
-Received: by zproxy.gmail.com with SMTP id o37so1210249nzf
-        for <linux-ide@vger.kernel.org>; Sat, 01 Apr 2006 02:48:44 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.196]:25460 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751435AbWDAKsq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 05:48:46 -0500
+Received: by zproxy.gmail.com with SMTP id o37so1210250nzf
+        for <linux-ide@vger.kernel.org>; Sat, 01 Apr 2006 02:48:46 -0800 (PST)
 In-Reply-To: <11438885151530-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-ata_dev_set_mode() is now responsible for managing ATA_DFLAG_PIO.
-Clear it before setting it.
+TF register might not be directly accessible depending on errors.
+e.g. TF of failed NCQ command is in log page 10h.  Make reading TF
+responsibility of error handlers.  For the current EH, simply push TF
+reading into qc completion functions as they are practically part of
+EH.  New EH will fill qc->tf with status registers before complting
+qcs.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-scsi.c |   27 +++++++++------------------
+ 1 files changed, 9 insertions(+), 18 deletions(-)
 
-24040601836bac07896b6be91011b217e7eb8083
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 0bc81c3..fe66e04 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -1960,6 +1960,7 @@ static int ata_dev_set_mode(struct ata_p
- 	unsigned int err_mask;
- 	int rc;
+d7387c910d1b6c1e9019e71e014758e77aff18e6
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index ec628ce..2870652 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -546,12 +546,6 @@ void ata_gen_ata_desc_sense(struct ata_q
+ 	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
  
-+	dev->flags &= ~ATA_DFLAG_PIO;
- 	if (dev->xfer_shift == ATA_SHIFT_PIO)
- 		dev->flags |= ATA_DFLAG_PIO;
+ 	/*
+-	 * Read the controller registers.
+-	 */
+-	WARN_ON(qc->ap->ops->tf_read == NULL);
+-	qc->ap->ops->tf_read(qc->ap, tf);
+-
+-	/*
+ 	 * Use ata_to_sense_error() to map status register bits
+ 	 * onto sense key, asc & ascq.
+ 	 */
+@@ -622,12 +616,6 @@ void ata_gen_fixed_sense(struct ata_queu
+ 	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
  
+ 	/*
+-	 * Read the controller registers.
+-	 */
+-	WARN_ON(qc->ap->ops->tf_read == NULL);
+-	qc->ap->ops->tf_read(qc->ap, tf);
+-
+-	/*
+ 	 * Use ata_to_sense_error() to map status register bits
+ 	 * onto sense key, asc & ascq.
+ 	 */
+@@ -1337,11 +1325,14 @@ static void ata_scsi_qc_complete(struct 
+ 	 */
+ 	if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
+  	    ((cdb[2] & 0x20) || need_sense)) {
++		qc->ap->ops->tf_read(qc->ap, &qc->tf);
+  		ata_gen_ata_desc_sense(qc);
+ 	} else {
+ 		if (!need_sense) {
+ 			cmd->result = SAM_STAT_GOOD;
+ 		} else {
++			qc->ap->ops->tf_read(qc->ap, &qc->tf);
++
+ 			/* TODO: decide which descriptor format to use
+ 			 * for 48b LBA devices and call that here
+ 			 * instead of the fixed desc, which is only
+@@ -2133,13 +2124,15 @@ void ata_scsi_badcmd(struct scsi_cmnd *c
+ 
+ static void atapi_sense_complete(struct ata_queued_cmd *qc)
+ {
+-	if (qc->err_mask && ((qc->err_mask & AC_ERR_DEV) == 0))
++	if (qc->err_mask && ((qc->err_mask & AC_ERR_DEV) == 0)) {
+ 		/* FIXME: not quite right; we don't want the
+ 		 * translation of taskfile registers into
+ 		 * a sense descriptors, since that's only
+ 		 * correct for ATA, not ATAPI
+ 		 */
++		qc->ap->ops->tf_read(qc->ap, &qc->tf);
+ 		ata_gen_ata_desc_sense(qc);
++	}
+ 
+ 	qc->scsidone(qc->scsicmd);
+ 	ata_qc_free(qc);
+@@ -2207,17 +2200,15 @@ static void atapi_qc_complete(struct ata
+ 		cmd->result = SAM_STAT_CHECK_CONDITION;
+ 		atapi_request_sense(qc);
+ 		return;
+-	}
+-
+-	else if (unlikely(err_mask))
++	} else if (unlikely(err_mask)) {
+ 		/* FIXME: not quite right; we don't want the
+ 		 * translation of taskfile registers into
+ 		 * a sense descriptors, since that's only
+ 		 * correct for ATA, not ATAPI
+ 		 */
++		qc->ap->ops->tf_read(qc->ap, &qc->tf);
+ 		ata_gen_ata_desc_sense(qc);
+-
+-	else {
++	} else {
+ 		u8 *scsicmd = cmd->cmnd;
+ 
+ 		if ((scsicmd[0] == INQUIRY) && ((scsicmd[1] & 0x03) == 0)) {
 -- 
 1.2.4
 
