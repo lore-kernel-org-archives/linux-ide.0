@@ -1,53 +1,74 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH/RFC] libata: disable interrupts before soft reset
-Date: Sat, 01 Apr 2006 21:36:58 +0800
-Message-ID: <442E81FA.9020300@tw.ibm.com>
-References: <442CFE96.1040203@tw.ibm.com> <20060331103210.GB13172@htj.dyndns.org>
-Reply-To: albertl@mail.com
+From: Dan Aloni <da-x@monatomic.org>
+Subject: Spradic device disconnections
+Date: Sat, 1 Apr 2006 17:50:06 +0300
+Message-ID: <20060401145006.GA6504@localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:36770 "EHLO
-	e36.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751518AbWDANhP
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 1 Apr 2006 08:37:15 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k31Db9JT031396
-	for <linux-ide@vger.kernel.org>; Sat, 1 Apr 2006 08:37:09 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k31DeG3O179048
-	for <linux-ide@vger.kernel.org>; Sat, 1 Apr 2006 06:40:18 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k31Db66T012309
-	for <linux-ide@vger.kernel.org>; Sat, 1 Apr 2006 06:37:07 -0700
-In-Reply-To: <20060331103210.GB13172@htj.dyndns.org>
+Received: from noname.neutralserver.com ([70.84.186.210]:38725 "EHLO
+	noname.neutralserver.com") by vger.kernel.org with ESMTP
+	id S1751536AbWDAOs7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 1 Apr 2006 09:48:59 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Doug Maxey <dwm@maxeymade.com>, IDE Linux <linux-ide@vger.kernel.org>
+To: Linux Kernel List <linux-kernel@vger.kernel.org>
+Cc: Mark Lord <lkml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jens Axboe <axboe@suse.de>, Jeff Garzik <jgarzik@pobox.com>, sander@humilis.net, dror@xiv.co.il
 
-Tejun Heo wrote:
+Hello,
 
-> 
-> Please hold this off.  This issue is handled by new EH.
-> 
-> This problem is bigger than just during reset.  Any error condition
-> which leaves the device and/or controller has potential to cause
-> similar problems or worse (e.g. data corruption, screaming
-> interrupts).  New EH handles this by freezing ports when
-> device/controller enters unknown state.  The controller is thawed
-> after EH reset is complete.  The same mechanism applies to probing.
-> All ports are started frozen.  Only after initial reset is complete,
-> ports get thawed.
-> 
-> It's been a loooooong week but I'm splitting the patches now.  :)
-> 
+There's a weird behavior we are experiencing with the Marvell
+6081 controller, which I though you might have also experienced
+or might find interesting.
 
-Great. :)
-Will test the drive again when the new EH is out.
+Basically, the problem involves sporadic device disconnection 
+during driver load time and sometimes during continuous use. It
+was seen both with sata_mv and the driver provided by Marvell 
+(version 3.6.1), so I have a reason to believe it's an hardware 
+problem (to which we can find good software-based workarounds, 
+hopefully).
 
-Thanks,
+The system seen below has 2 Marvell 6081 controllers harboring
+a total of 14 hard-drives.
 
-Albert
+Once in every a few hundreds-or-so insmods of sata_mv the 
+controller "misses" one of the drives, as seen below:
 
+Mar 31 10:41:10 14.10.240.6 kernel: ata10: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48  
+Mar 31 10:41:10 14.10.240.6 kernel: ata10: dev 0 configured for UDMA/133 
+Mar 31 10:41:10 14.10.240.6 kernel: scsi9 : sata_mv 
+Mar 31 10:41:11 14.10.240.6 kernel: ata11: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48  
+Mar 31 10:41:11 14.10.240.6 kernel: ata11: dev 0 configured for UDMA/133 
+Mar 31 10:41:11 14.10.240.6 kernel: scsi10 : sata_mv 
+Mar 31 10:41:12 14.10.240.6 kernel: ata12: no device found (phy stat 00000000) 
+Mar 31 10:41:12 14.10.240.6 kernel: ata12: no device found (phy stat 00000101) 
+Mar 31 10:41:12 14.10.240.6 kernel: ATA: abnormal status 0x7F on port 0xFFFFC200106A811C 
+Mar 31 10:41:12 14.10.240.6 kernel: ata12: dev 0 failed to IDENTIFY (I/O error) 
+Mar 31 10:41:12 14.10.240.6 kernel: ATA: abnormal status 0x7F on port 0xFFFFC200106A811C 
+Mar 31 10:41:12 14.10.240.6 kernel: ata12: dev 0 failed to IDENTIFY (I/O error) 
+Mar 31 10:41:12 14.10.240.6 kernel: ATA: abnormal status 0x7F on port 0xFFFFC200106A811C 
+Mar 31 10:41:12 14.10.240.6 kernel: ata12: dev 0 failed to IDENTIFY (I/O error) 
+Mar 31 10:41:12 14.10.240.6 kernel: scsi11 : sata_mv 
+Mar 31 10:41:13 14.10.240.6 kernel: ata13: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48  
+Mar 31 10:41:13 14.10.240.6 kernel: ata13: dev 0 configured for UDMA/133 
+Mar 31 10:41:13 14.10.240.6 kernel: scsi12 : sata_mv 
+Mar 31 10:41:14 14.10.240.6 kernel: ata14: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48  
+Mar 31 10:41:14 14.10.240.6 kernel: ata14: dev 0 configured for UDMA/133 
+Mar 31 10:41:14 14.10.240.6 kernel: scsi13 : sata_mv 
+
+Rest assured that drive is there, we haven't pulled it out. 
+
+On Linux 2.4.27 with the Marvell driver (3.6.1), using the 
+add-single-device command on the (now depricated) /proc/scsi/scsi 
+interface, we managed to bring the drive back to life...
+
+The drives are the 500GB from Maxtor. This problem has occured 
+with drives from a different manufacturer.
+
+Mar 31 10:41:09 14.10.240.6 kernel:   Vendor: ATA       Model: Maxtor 7H500F0    Rev: HA43 
+Mar 31 10:41:09 14.10.240.6 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05 
+
+-- 
+Dan Aloni, Linux specialist
+XIV LTD, http://www.xivstorage.com
+da-x@monatomic.org, da-x@colinux.org, da-x@gmx.net, dan@xiv.co.il
