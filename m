@@ -1,46 +1,41 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: sata_mv: module reloading doesn't work
-Date: Sun, 02 Apr 2006 12:21:34 -0400
-Message-ID: <442FFA0E.4070101@rtr.ca>
-References: <20060402155647.GB20270@localdomain> <442FF65A.6020209@rtr.ca> <20060402161449.GA21822@localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: New probe code causes boot delay on empty ports
+Date: Mon, 3 Apr 2006 01:49:36 +0900
+Message-ID: <20060402164936.GA20570@htj.dyndns.org>
+References: <442FF8C2.40201@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:53958 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S932385AbWDBQVz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 12:21:55 -0400
-In-Reply-To: <20060402161449.GA21822@localdomain>
+Received: from wproxy.gmail.com ([64.233.184.224]:887 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932396AbWDBQtm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 12:49:42 -0400
+Received: by wproxy.gmail.com with SMTP id i22so1167646wra
+        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 09:49:41 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <442FF8C2.40201@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Aloni <da-x@monatomic.org>
-Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Dan Aloni wrote:
-> On Sun, Apr 02, 2006 at 12:05:46PM -0400, Mark Lord wrote:
->
->> What kernel?  Any patches applied to sata_mv.c ??
+On Sun, Apr 02, 2006 at 12:16:02PM -0400, Jeff Garzik wrote:
 > 
-> 2.6.16 + ncq branch. sata_mv.c was modified by me - I'll retry
-> with a cleaner configuration, sorry.
+> A previously fast-booting EM64T ICH6 AHCI box now pauses for 5 seconds, 
+> when probing hits an empty port.
 
-The NCQ stuff is *unsafe* with the existing sata_mv.c,
-as there are known (to me, at least) bugs that prevent it
-from working reliably after the first I/O error of any kind.
+Yeap, aware of the problem.  Choices we have are...
 
-The 2.6.16.1 branch is slightly better,
-and there is also the "three bug fixes" update
-that's in upstream to help things further.
+1. don't delay too much between the softreset and the first hardreset
+2. update AHCI softreset such that it succeeds if there's no device as
+   other softresets do.
+3. update reset mechanism such that reset methods return -ENODEV if
+   it fails due to missing device such that we can skip retrying
+   during probing and keep retrying during EH.
 
-With all of those fixes, the module loads/unloads/reloads fine for me.
+> Additionally, the probe code should IMO take into account the fact that 
+> AHCI reset includes a COMRESET.
 
-If you want to use NCQ more safely, then you'll need to modify
-the mv_start_dma() routine to reinitialize the queue pointers
-each time, as they can get out of sync after an error.
+Hmmm....
 
-There are still other bugs to be worked out and fixed, though.
-
-I'll have a patch or two this week for the ones I know about.
-
-Cheers
-
+-- 
+tejun
