@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 13/15] libata: add 1s sleep between resets
-Date: Sun, 02 Apr 2006 10:07:34 +0900
-Message-ID: <442F23D6.6030703@gmail.com>
-References: <1143823099305-git-send-email-htejun@gmail.com> <442EDB0C.4030103@pobox.com>
+Subject: Re: [PATCH 15/15] libata: consider disabled devices in ata_dev_xfermask()
+Date: Sun, 02 Apr 2006 10:09:28 +0900
+Message-ID: <442F2448.8060608@gmail.com>
+References: <11438230993538-git-send-email-htejun@gmail.com> <442EDBCA.7050600@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.201]:20626 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932361AbWDBBHm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 20:07:42 -0500
-Received: by zproxy.gmail.com with SMTP id o37so1361838nzf
-        for <linux-ide@vger.kernel.org>; Sat, 01 Apr 2006 17:07:42 -0800 (PST)
-In-Reply-To: <442EDB0C.4030103@pobox.com>
+Received: from zproxy.gmail.com ([64.233.162.202]:47517 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932362AbWDBBJf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 20:09:35 -0500
+Received: by zproxy.gmail.com with SMTP id o37so1362153nzf
+        for <linux-ide@vger.kernel.org>; Sat, 01 Apr 2006 17:09:35 -0800 (PST)
+In-Reply-To: <442EDBCA.7050600@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
@@ -20,40 +20,49 @@ Cc: alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
 Jeff Garzik wrote:
 > Tejun Heo wrote:
->> Some devices react badly if resets are performed back-to-back.  Give
->> devices some time to breath.
+>> ata_bus_probe() now marks failed devices properly and leaves
+>> meaningful transfer mode masks.  This patch makes ata_dev_xfermask()
+>> consider disable devices when determining PIO mode to avoid violating
+>> device selection timing.
+>>
+>> While at it, move port-wide resttriction out of device iteration loop
+>> and try to make the function look a bit prettier.
 >>
 >> Signed-off-by: Tejun Heo <htejun@gmail.com>
 >>
 >> ---
 >>
->>  drivers/scsi/libata-core.c |    2 ++
->>  1 files changed, 2 insertions(+), 0 deletions(-)
+>>  drivers/scsi/libata-core.c |   34 +++++++++++++++++++++++-----------
+>>  1 files changed, 23 insertions(+), 11 deletions(-)
 >>
->> e7f505c001fd4cb43b8123387285a7694790b4ae
+>> 523b496b7614981773c2c14259bbca4a7ba3a3e8
 >> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
->> index 30ee203..bd9ca3b 100644
+>> index ac2ca31..0d72792 100644
 >> --- a/drivers/scsi/libata-core.c
 >> +++ b/drivers/scsi/libata-core.c
->> @@ -2633,6 +2633,7 @@ int ata_drive_probe_reset(struct ata_por
->>          rc = ata_do_reset(ap, softreset, postreset, 0, classes);
->>          if (rc == 0 && classes[0] != ATA_DEV_UNKNOWN)
->>              goto done;
->> +        ssleep(1);
->>      }
+>> @@ -2902,23 +2902,34 @@ static void ata_dev_xfermask(struct ata_
+>>      unsigned long xfer_mask;
+>>      int i;
 >>  
->>      if (!hardreset)
->> @@ -2649,6 +2650,7 @@ int ata_drive_probe_reset(struct ata_por
->>  
->>          if (ata_down_sata_spd_limit(ap, &ap->device[0]))
->>              goto done;
->> +        ssleep(1);
+>> -    xfer_mask = ata_pack_xfermask(ap->pio_mask, ap->mwdma_mask,
+>> -                      ap->udma_mask);
+>> +    xfer_mask = ata_pack_xfermask(ap->pio_mask,
+>> +                      ap->mwdma_mask, ap->udma_mask);
+>> +
+>> +    /* Apply cable rule here.  Don't apply it early because when
+>> +     * we handle hot plug the cable type can itself change.
+>> +     */
+>> +    if (ap->cbl == ATA_CBL_PATA40)
+>> +        xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
 > 
-> My gut says it should be at least 5 seconds...
+> ACK, though I wonder if moving the above code to its current position 
+> violates "early" described in the comment.
 > 
 
-Okay. And I'll add a little message such that the user staring at the 
-console doesn't get bored during that 5 secs.
+I think not. AFAICS the 'early' in the comment points ata_dev_xfermask() 
+function itself.
+
+Alan?
 
 -- 
 tejun
