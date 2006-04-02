@@ -1,669 +1,91 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 14/15] libata: separate out libata-eh.c
-Date: Sun, 2 Apr 2006 18:51:53 +0900
-Message-ID: <11439715132299-git-send-email-htejun@gmail.com>
-References: <11439715124131-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Oops after assertion in drivers/scsi/libata-core.c
+Date: Sun, 02 Apr 2006 11:15:11 +0100
+Message-ID: <442FA42F.5030603@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.202]:5252 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932308AbWDBJwJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 05:52:09 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1447008nzf
-        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 01:52:08 -0800 (PST)
-In-Reply-To: <11439715124131-git-send-email-htejun@gmail.com>
+Received: from s2.ukfsn.org ([217.158.120.143]:64659 "EHLO mail.ukfsn.org")
+	by vger.kernel.org with ESMTP id S932272AbWDBKOj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 06:14:39 -0400
+Received: from localhost.localdomain (i-83-67-36-194.freedom2surf.net [83.67.36.194])
+	by mail.ukfsn.org (Postfix) with ESMTP id 30A54E6F31
+	for <linux-ide@vger.kernel.org>; Sun,  2 Apr 2006 11:12:15 +0100 (BST)
+Received: from [10.0.0.90] (helo=[10.0.0.90])
+	by localhost.localdomain with esmtp (Exim 4.50)
+	id 1FPzbR-0006QX-Gu
+	for linux-ide@vger.kernel.org; Sun, 02 Apr 2006 11:14:37 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: linux-ide@vger.kernel.org
 
-A lot of EH codes are about to be added to libata.  Separate out
-libata-eh.c.  ata_scsi_timed_out(), ata_scsi_error(),
-ata_qc_timeout(), ata_eng_timeout(), ata_eh_qc_complete() and
-ata_eh_qc_retry() are moved.  No code is changed by this patch.
+I was doing a mdadm --examine /dev/sda trying to get some data to
+followup my last posts.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+I got this in dmesg
+ata1: command 0x25 timeout, stat 0xd0 host_stat 0x1
+ata1: translated op=0x28 cmd=0x25 ATA stat/err 0xd0/00 to SCSI
+SK/ASC/ASCQ 0xb/47/00
+ata1: status=0xd0 { Busy }
+sd 0:0:0:0: SCSI error: return code = 0x8000002
+sda: Current: sense key: Aborted Command
+    Additional sense: Scsi parity error
+end_request: I/O error, dev sda, sector 390716735
+Buffer I/O error on device sda1, logical block 195358336
+ATA: abnormal status 0xD0 on port 0xF0804087
 
----
+and then this:
 
- drivers/scsi/Makefile      |    2 
- drivers/scsi/libata-core.c |  102 +----------------
- drivers/scsi/libata-eh.c   |  264 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/libata-scsi.c |  130 ----------------------
- drivers/scsi/libata.h      |    4 +
- include/linux/libata.h     |   12 +-
- 6 files changed, 281 insertions(+), 233 deletions(-)
- create mode 100644 drivers/scsi/libata-eh.c
+Assertion failed! qc !=
+NULL,drivers/scsi/libata-core.c,ata_pio_poll,line=2901
+<repeated hundreds of times>
+Assertion failed! qc !=
+NULL,drivers/scsi/libata-core.c,ata_pio_poll,line=2901
+Assertion failed! qc !=
+NULL,drivers/scsi/libata-core.c,ata_pio_poll,line=2901
+Unable to handle kernel NULL pointer dereference at virtual address 0000008c
+ printing eip:
+b02a6292
+*pde = 00000000
+Oops: 0002 [#1]
+PREEMPT
+Modules linked in: nfs nfsd lockd sunrpc af_packet dm_mod ide_disk
+snd_seq_midi snd_seq_midi_event snd_seq sk98lin snd_via82xx
+snd_ac97_codec snd_ac97_bus snd_pcm_oss snd_mixer_oss snd_pcm snd_timer
+snd_page_alloc snd_mpu401_uart snd_rawmidi snd_seq_device snd evdev skge
+via_agp agpgart crc32 soundcore uhci_hcd ehci_hcd usbcore i2c_viapro
+i2c_core
+CPU:    0
+EIP:    0060:[<b02a6292>]    Tainted: G   M  VLI
+EFLAGS: 00010297   (2.6.16libataverbose #6)
+EIP is at ata_pio_task+0x582/0x800
+eax: 0dfbaa1c   ebx: 00000004   ecx: b038405c   edx: 00000002
+esi: 00000002   edi: 00000000   ebp: efb1f280   esp: efcfdef8
+ds: 007b   es: 007b   ss: 0068
+Process ata/0 (pid: 730, threadinfo=efcfc000 task=efedf590)
+Stack: <0>efb1f280 b035bfd3 b035bf6f b033da0d 00000b55 efcfdf68 00000002
+b012caff
+       efcfdf34 00000082 00000000 00000000 efb1f830 efb1f82c efcfc000
+efb24e20
+       b012c830 efb1f280 efedf6b8 b0381300 efb24e28 efb24e38 00000286
+b02a5d10
+Call Trace:
+ [<b012caff>] worker_thread+0x14f/0x160
+ [<b012c830>] run_workqueue+0x90/0x130
+ [<b02a5d10>] ata_pio_task+0x0/0x800
+ [<b012cad0>] worker_thread+0x120/0x160
+ [<b01186d0>] default_wake_function+0x0/0x20
+ [<b012ffda>] kthread+0xea/0xf0
+ [<b012c9b0>] worker_thread+0x0/0x160
+ [<b012fef0>] kthread+0x0/0xf0
+ [<b0101005>] kernel_thread_helper+0x5/0x10
+Code: 36 b0 89 44 24 04 e8 ae 66 e7 ff 8b 4c 24 20 83 89 8c 00 00 00 04
+c7 86 dc 05 00 00 07 00 00 00 8b 95 dc 05 00 00 e9 8f fa ffff <83> 8f 8c
+00 00 00 04 ba 03 00 00 00 c7 85 dc 05 00 00 03 00 00
 
-54c87b2c238b530350be7b7d2edaa7b0edcb99fd
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index e513c31..503f189 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -165,7 +165,7 @@ ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
- CFLAGS_ncr53c8xx.o	:= $(ncr53c8xx-flags-y) $(ncr53c8xx-flags-m)
- zalon7xx-objs	:= zalon.o ncr53c8xx.o
- NCR_Q720_mod-objs	:= NCR_Q720.o ncr53c8xx.o
--libata-objs	:= libata-core.o libata-scsi.o libata-bmdma.o
-+libata-objs	:= libata-core.o libata-scsi.o libata-bmdma.o libata-eh.o
- oktagon_esp_mod-objs	:= oktagon_esp.o oktagon_io.o
- 
- # Files generated that shall be removed upon make clean
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 999fe08..44bdfa6 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -4011,99 +4011,6 @@ err_out:
- }
- 
- /**
-- *	ata_qc_timeout - Handle timeout of queued command
-- *	@qc: Command that timed out
-- *
-- *	Some part of the kernel (currently, only the SCSI layer)
-- *	has noticed that the active command on port @ap has not
-- *	completed after a specified length of time.  Handle this
-- *	condition by disabling DMA (if necessary) and completing
-- *	transactions, with error if necessary.
-- *
-- *	This also handles the case of the "lost interrupt", where
-- *	for some reason (possibly hardware bug, possibly driver bug)
-- *	an interrupt was not delivered to the driver, even though the
-- *	transaction completed successfully.
-- *
-- *	LOCKING:
-- *	Inherited from SCSI layer (none, can sleep)
-- */
--
--static void ata_qc_timeout(struct ata_queued_cmd *qc)
--{
--	struct ata_port *ap = qc->ap;
--	struct ata_host_set *host_set = ap->host_set;
--	u8 host_stat = 0, drv_stat;
--	unsigned long flags;
--
--	DPRINTK("ENTER\n");
--
--	ap->hsm_task_state = HSM_ST_IDLE;
--
--	spin_lock_irqsave(&host_set->lock, flags);
--
--	switch (qc->tf.protocol) {
--
--	case ATA_PROT_DMA:
--	case ATA_PROT_ATAPI_DMA:
--		host_stat = ap->ops->bmdma_status(ap);
--
--		/* before we do anything else, clear DMA-Start bit */
--		ap->ops->bmdma_stop(qc);
--
--		/* fall through */
--
--	default:
--		ata_altstatus(ap);
--		drv_stat = ata_chk_status(ap);
--
--		/* ack bmdma irq events */
--		ap->ops->irq_clear(ap);
--
--		printk(KERN_ERR "ata%u: command 0x%x timeout, stat 0x%x host_stat 0x%x\n",
--		       ap->id, qc->tf.command, drv_stat, host_stat);
--
--		/* complete taskfile transaction */
--		qc->err_mask |= ac_err_mask(drv_stat);
--		break;
--	}
--
--	spin_unlock_irqrestore(&host_set->lock, flags);
--
--	ata_eh_qc_complete(qc);
--
--	DPRINTK("EXIT\n");
--}
--
--/**
-- *	ata_eng_timeout - Handle timeout of queued command
-- *	@ap: Port on which timed-out command is active
-- *
-- *	Some part of the kernel (currently, only the SCSI layer)
-- *	has noticed that the active command on port @ap has not
-- *	completed after a specified length of time.  Handle this
-- *	condition by disabling DMA (if necessary) and completing
-- *	transactions, with error if necessary.
-- *
-- *	This also handles the case of the "lost interrupt", where
-- *	for some reason (possibly hardware bug, possibly driver bug)
-- *	an interrupt was not delivered to the driver, even though the
-- *	transaction completed successfully.
-- *
-- *	LOCKING:
-- *	Inherited from SCSI layer (none, can sleep)
-- */
--
--void ata_eng_timeout(struct ata_port *ap)
--{
--	DPRINTK("ENTER\n");
--
--	ata_qc_timeout(ata_qc_from_tag(ap, ap->active_tag));
--
--	DPRINTK("EXIT\n");
--}
--
--/**
-  *	ata_qc_new - Request an available ATA command, for queueing
-  *	@ap: Port associated with device @dev
-  *	@dev: Device from whom we request an available command structure
-@@ -5140,7 +5047,6 @@ EXPORT_SYMBOL_GPL(ata_sg_init);
- EXPORT_SYMBOL_GPL(ata_sg_init_one);
- EXPORT_SYMBOL_GPL(__ata_qc_complete);
- EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
--EXPORT_SYMBOL_GPL(ata_eng_timeout);
- EXPORT_SYMBOL_GPL(ata_tf_load);
- EXPORT_SYMBOL_GPL(ata_tf_read);
- EXPORT_SYMBOL_GPL(ata_noop_dev_select);
-@@ -5180,15 +5086,12 @@ EXPORT_SYMBOL_GPL(ata_busy_sleep);
- EXPORT_SYMBOL_GPL(ata_port_queue_task);
- EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
- EXPORT_SYMBOL_GPL(ata_scsi_queuecmd);
--EXPORT_SYMBOL_GPL(ata_scsi_error);
- EXPORT_SYMBOL_GPL(ata_scsi_slave_config);
- EXPORT_SYMBOL_GPL(ata_scsi_release);
- EXPORT_SYMBOL_GPL(ata_host_intr);
- EXPORT_SYMBOL_GPL(ata_id_string);
- EXPORT_SYMBOL_GPL(ata_id_c_string);
- EXPORT_SYMBOL_GPL(ata_scsi_simulate);
--EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
--EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
- 
- EXPORT_SYMBOL_GPL(ata_pio_need_iordy);
- EXPORT_SYMBOL_GPL(ata_timing_compute);
-@@ -5210,3 +5113,8 @@ EXPORT_SYMBOL_GPL(ata_device_suspend);
- EXPORT_SYMBOL_GPL(ata_device_resume);
- EXPORT_SYMBOL_GPL(ata_scsi_device_suspend);
- EXPORT_SYMBOL_GPL(ata_scsi_device_resume);
-+
-+EXPORT_SYMBOL_GPL(ata_scsi_error);
-+EXPORT_SYMBOL_GPL(ata_eng_timeout);
-+EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
-+EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-new file mode 100644
-index 0000000..e73f561
---- /dev/null
-+++ b/drivers/scsi/libata-eh.c
-@@ -0,0 +1,264 @@
-+/*
-+ *  libata-eh.c - libata error handling
-+ *
-+ *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
-+ *    		    Please ALWAYS copy linux-ide@vger.kernel.org
-+ *		    on emails.
-+ *
-+ *  Copyright 2006 Tejun Heo <htejun@gmail.com>
-+ *
-+ *
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License as
-+ *  published by the Free Software Foundation; either version 2, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ *  General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; see the file COPYING.  If not, write to
-+ *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139,
-+ *  USA.
-+ *
-+ *
-+ *  libata documentation is available via 'make {ps|pdf}docs',
-+ *  as Documentation/DocBook/libata.*
-+ *
-+ *  Hardware documentation available from http://www.t13.org/ and
-+ *  http://www.sata-io.org/
-+ *
-+ */
-+
-+#include <linux/config.h>
-+#include <linux/kernel.h>
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi_eh.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_cmnd.h>
-+
-+#include <linux/libata.h>
-+
-+#include "libata.h"
-+
-+/**
-+ *	ata_scsi_timed_out - SCSI layer time out callback
-+ *	@cmd: timed out SCSI command
-+ *
-+ *	Handles SCSI layer timeout.  We race with normal completion of
-+ *	the qc for @cmd.  If the qc is already gone, we lose and let
-+ *	the scsi command finish (EH_HANDLED).  Otherwise, the qc has
-+ *	timed out and EH should be invoked.  Prevent ata_qc_complete()
-+ *	from finishing it by setting EH_SCHEDULED and return
-+ *	EH_NOT_HANDLED.
-+ *
-+ *	LOCKING:
-+ *	Called from timer context
-+ *
-+ *	RETURNS:
-+ *	EH_HANDLED or EH_NOT_HANDLED
-+ */
-+enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd)
-+{
-+	struct Scsi_Host *host = cmd->device->host;
-+	struct ata_port *ap = (struct ata_port *) &host->hostdata[0];
-+	unsigned long flags;
-+	struct ata_queued_cmd *qc;
-+	enum scsi_eh_timer_return ret = EH_HANDLED;
-+
-+	DPRINTK("ENTER\n");
-+
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	qc = ata_qc_from_tag(ap, ap->active_tag);
-+	if (qc) {
-+		WARN_ON(qc->scsicmd != cmd);
-+		qc->flags |= ATA_QCFLAG_EH_SCHEDULED;
-+		qc->err_mask |= AC_ERR_TIMEOUT;
-+		ret = EH_NOT_HANDLED;
-+	}
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+	DPRINTK("EXIT, ret=%d\n", ret);
-+	return ret;
-+}
-+
-+/**
-+ *	ata_scsi_error - SCSI layer error handler callback
-+ *	@host: SCSI host on which error occurred
-+ *
-+ *	Handles SCSI-layer-thrown error events.
-+ *
-+ *	LOCKING:
-+ *	Inherited from SCSI layer (none, can sleep)
-+ *
-+ *	RETURNS:
-+ *	Zero.
-+ */
-+int ata_scsi_error(struct Scsi_Host *host)
-+{
-+	struct ata_port *ap = (struct ata_port *)&host->hostdata[0];
-+
-+	DPRINTK("ENTER\n");
-+
-+	/* synchronize with IRQ handler and port task */
-+	spin_unlock_wait(&ap->host_set->lock);
-+	ata_port_flush_task(ap);
-+
-+	WARN_ON(ata_qc_from_tag(ap, ap->active_tag) == NULL);
-+
-+	ap->ops->eng_timeout(ap);
-+
-+	WARN_ON(host->host_failed || !list_empty(&host->eh_cmd_q));
-+
-+	scsi_eh_flush_done_q(&ap->eh_done_q);
-+
-+	DPRINTK("EXIT\n");
-+	return 0;
-+}
-+
-+/**
-+ *	ata_qc_timeout - Handle timeout of queued command
-+ *	@qc: Command that timed out
-+ *
-+ *	Some part of the kernel (currently, only the SCSI layer)
-+ *	has noticed that the active command on port @ap has not
-+ *	completed after a specified length of time.  Handle this
-+ *	condition by disabling DMA (if necessary) and completing
-+ *	transactions, with error if necessary.
-+ *
-+ *	This also handles the case of the "lost interrupt", where
-+ *	for some reason (possibly hardware bug, possibly driver bug)
-+ *	an interrupt was not delivered to the driver, even though the
-+ *	transaction completed successfully.
-+ *
-+ *	LOCKING:
-+ *	Inherited from SCSI layer (none, can sleep)
-+ */
-+static void ata_qc_timeout(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	struct ata_host_set *host_set = ap->host_set;
-+	u8 host_stat = 0, drv_stat;
-+	unsigned long flags;
-+
-+	DPRINTK("ENTER\n");
-+
-+	ap->hsm_task_state = HSM_ST_IDLE;
-+
-+	spin_lock_irqsave(&host_set->lock, flags);
-+
-+	switch (qc->tf.protocol) {
-+
-+	case ATA_PROT_DMA:
-+	case ATA_PROT_ATAPI_DMA:
-+		host_stat = ap->ops->bmdma_status(ap);
-+
-+		/* before we do anything else, clear DMA-Start bit */
-+		ap->ops->bmdma_stop(qc);
-+
-+		/* fall through */
-+
-+	default:
-+		ata_altstatus(ap);
-+		drv_stat = ata_chk_status(ap);
-+
-+		/* ack bmdma irq events */
-+		ap->ops->irq_clear(ap);
-+
-+		printk(KERN_ERR "ata%u: command 0x%x timeout, stat 0x%x host_stat 0x%x\n",
-+		       ap->id, qc->tf.command, drv_stat, host_stat);
-+
-+		/* complete taskfile transaction */
-+		qc->err_mask |= ac_err_mask(drv_stat);
-+		break;
-+	}
-+
-+	spin_unlock_irqrestore(&host_set->lock, flags);
-+
-+	ata_eh_qc_complete(qc);
-+
-+	DPRINTK("EXIT\n");
-+}
-+
-+/**
-+ *	ata_eng_timeout - Handle timeout of queued command
-+ *	@ap: Port on which timed-out command is active
-+ *
-+ *	Some part of the kernel (currently, only the SCSI layer)
-+ *	has noticed that the active command on port @ap has not
-+ *	completed after a specified length of time.  Handle this
-+ *	condition by disabling DMA (if necessary) and completing
-+ *	transactions, with error if necessary.
-+ *
-+ *	This also handles the case of the "lost interrupt", where
-+ *	for some reason (possibly hardware bug, possibly driver bug)
-+ *	an interrupt was not delivered to the driver, even though the
-+ *	transaction completed successfully.
-+ *
-+ *	LOCKING:
-+ *	Inherited from SCSI layer (none, can sleep)
-+ */
-+void ata_eng_timeout(struct ata_port *ap)
-+{
-+	DPRINTK("ENTER\n");
-+
-+	ata_qc_timeout(ata_qc_from_tag(ap, ap->active_tag));
-+
-+	DPRINTK("EXIT\n");
-+}
-+
-+static void ata_eh_scsidone(struct scsi_cmnd *scmd)
-+{
-+	/* nada */
-+}
-+
-+static void __ata_eh_qc_complete(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	qc->scsidone = ata_eh_scsidone;
-+	__ata_qc_complete(qc);
-+	WARN_ON(ata_tag_valid(qc->tag));
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+	scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
-+}
-+
-+/**
-+ *	ata_eh_qc_complete - Complete an active ATA command from EH
-+ *	@qc: Command to complete
-+ *
-+ *	Indicate to the mid and upper layers that an ATA command has
-+ *	completed.  To be used from EH.
-+ */
-+void ata_eh_qc_complete(struct ata_queued_cmd *qc)
-+{
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	scmd->retries = scmd->allowed;
-+	__ata_eh_qc_complete(qc);
-+}
-+
-+/**
-+ *	ata_eh_qc_retry - Tell midlayer to retry an ATA command after EH
-+ *	@qc: Command to retry
-+ *
-+ *	Indicate to the mid and upper layers that an ATA command
-+ *	should be retried.  To be used from EH.
-+ *
-+ *	SCSI midlayer limits the number of retries to scmd->allowed.
-+ *	scmd->retries is decremented for commands which get retried
-+ *	due to unrelated failures (qc->err_mask is zero).
-+ */
-+void ata_eh_qc_retry(struct ata_queued_cmd *qc)
-+{
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	if (!qc->err_mask && scmd->retries)
-+		scmd->retries--;
-+	__ata_eh_qc_complete(qc);
-+}
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 4400815..745fc26 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -53,7 +53,6 @@
- typedef unsigned int (*ata_xlat_func_t)(struct ata_queued_cmd *qc, const u8 *scsicmd);
- static struct ata_device *
- ata_scsi_find_dev(struct ata_port *ap, const struct scsi_device *scsidev);
--enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
- 
- #define RW_RECOVERY_MPAGE 0x1
- #define RW_RECOVERY_MPAGE_LEN 12
-@@ -714,135 +713,6 @@ int ata_scsi_slave_config(struct scsi_de
- }
- 
- /**
-- *	ata_scsi_timed_out - SCSI layer time out callback
-- *	@cmd: timed out SCSI command
-- *
-- *	Handles SCSI layer timeout.  We race with normal completion of
-- *	the qc for @cmd.  If the qc is already gone, we lose and let
-- *	the scsi command finish (EH_HANDLED).  Otherwise, the qc has
-- *	timed out and EH should be invoked.  Prevent ata_qc_complete()
-- *	from finishing it by setting EH_SCHEDULED and return
-- *	EH_NOT_HANDLED.
-- *
-- *	LOCKING:
-- *	Called from timer context
-- *
-- *	RETURNS:
-- *	EH_HANDLED or EH_NOT_HANDLED
-- */
--enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd)
--{
--	struct Scsi_Host *host = cmd->device->host;
--	struct ata_port *ap = (struct ata_port *) &host->hostdata[0];
--	unsigned long flags;
--	struct ata_queued_cmd *qc;
--	enum scsi_eh_timer_return ret = EH_HANDLED;
--
--	DPRINTK("ENTER\n");
--
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	qc = ata_qc_from_tag(ap, ap->active_tag);
--	if (qc) {
--		WARN_ON(qc->scsicmd != cmd);
--		qc->flags |= ATA_QCFLAG_EH_SCHEDULED;
--		qc->err_mask |= AC_ERR_TIMEOUT;
--		ret = EH_NOT_HANDLED;
--	}
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
--
--	DPRINTK("EXIT, ret=%d\n", ret);
--	return ret;
--}
--
--/**
-- *	ata_scsi_error - SCSI layer error handler callback
-- *	@host: SCSI host on which error occurred
-- *
-- *	Handles SCSI-layer-thrown error events.
-- *
-- *	LOCKING:
-- *	Inherited from SCSI layer (none, can sleep)
-- *
-- *	RETURNS:
-- *	Zero.
-- */
--
--int ata_scsi_error(struct Scsi_Host *host)
--{
--	struct ata_port *ap = (struct ata_port *)&host->hostdata[0];
--
--	DPRINTK("ENTER\n");
--
--	/* synchronize with IRQ handler and port task */
--	spin_unlock_wait(&ap->host_set->lock);
--	ata_port_flush_task(ap);
--
--	WARN_ON(ata_qc_from_tag(ap, ap->active_tag) == NULL);
--
--	ap->ops->eng_timeout(ap);
--
--	WARN_ON(host->host_failed || !list_empty(&host->eh_cmd_q));
--
--	scsi_eh_flush_done_q(&ap->eh_done_q);
--
--	DPRINTK("EXIT\n");
--	return 0;
--}
--
--static void ata_eh_scsidone(struct scsi_cmnd *scmd)
--{
--	/* nada */
--}
--
--static void __ata_eh_qc_complete(struct ata_queued_cmd *qc)
--{
--	struct ata_port *ap = qc->ap;
--	struct scsi_cmnd *scmd = qc->scsicmd;
--	unsigned long flags;
--
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	qc->scsidone = ata_eh_scsidone;
--	__ata_qc_complete(qc);
--	WARN_ON(ata_tag_valid(qc->tag));
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
--
--	scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
--}
--
--/**
-- *	ata_eh_qc_complete - Complete an active ATA command from EH
-- *	@qc: Command to complete
-- *
-- *	Indicate to the mid and upper layers that an ATA command has
-- *	completed.  To be used from EH.
-- */
--void ata_eh_qc_complete(struct ata_queued_cmd *qc)
--{
--	struct scsi_cmnd *scmd = qc->scsicmd;
--	scmd->retries = scmd->allowed;
--	__ata_eh_qc_complete(qc);
--}
--
--/**
-- *	ata_eh_qc_retry - Tell midlayer to retry an ATA command after EH
-- *	@qc: Command to retry
-- *
-- *	Indicate to the mid and upper layers that an ATA command
-- *	should be retried.  To be used from EH.
-- *
-- *	SCSI midlayer limits the number of retries to scmd->allowed.
-- *	scmd->retries is decremented for commands which get retried
-- *	due to unrelated failures (qc->err_mask is zero).
-- */
--void ata_eh_qc_retry(struct ata_queued_cmd *qc)
--{
--	struct scsi_cmnd *scmd = qc->scsicmd;
--	if (!qc->err_mask && scmd->retries)
--		scmd->retries--;
--	__ata_eh_qc_complete(qc);
--}
--
--/**
-  *	ata_scsi_start_stop_xlat - Translate SCSI START STOP UNIT command
-  *	@qc: Storage for translated ATA taskfile
-  *	@scsicmd: SCSI command to translate
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index 1c755b1..75e9bd5 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -60,7 +60,6 @@ extern int ata_cmd_ioctl(struct scsi_dev
- extern struct scsi_transport_template ata_scsi_transport_template;
- 
- extern void ata_scsi_scan_host(struct ata_port *ap);
--extern int ata_scsi_error(struct Scsi_Host *host);
- extern unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf,
- 			       unsigned int buflen);
- 
-@@ -90,4 +89,7 @@ extern void ata_scsi_rbuf_fill(struct at
-                         unsigned int (*actor) (struct ata_scsi_args *args,
-                                            u8 *rbuf, unsigned int buflen));
- 
-+/* libata-eh.c */
-+extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
-+
- #endif /* __LIBATA_H__ */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a6d829c..75bdee0 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -531,9 +531,6 @@ extern void ata_host_set_remove(struct a
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
--extern int ata_scsi_error(struct Scsi_Host *host);
--extern void ata_eh_qc_complete(struct ata_queued_cmd *qc);
--extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
- extern int ata_scsi_release(struct Scsi_Host *host);
- extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
- extern int ata_scsi_device_resume(struct scsi_device *);
-@@ -582,7 +579,6 @@ extern void ata_bmdma_stop(struct ata_qu
- extern u8   ata_bmdma_status(struct ata_port *ap);
- extern void ata_bmdma_irq_clear(struct ata_port *ap);
- extern void __ata_qc_complete(struct ata_queued_cmd *qc);
--extern void ata_eng_timeout(struct ata_port *ap);
- extern void ata_scsi_simulate(struct ata_port *ap, struct ata_device *dev,
- 			      struct scsi_cmnd *cmd,
- 			      void (*done)(struct scsi_cmnd *));
-@@ -637,6 +633,14 @@ extern int pci_test_config_bits(struct p
- extern unsigned long ata_pci_default_filter(const struct ata_port *, struct ata_device *, unsigned long);
- #endif /* CONFIG_PCI */
- 
-+/*
-+ * EH
-+ */
-+extern int ata_scsi_error(struct Scsi_Host *host);
-+extern void ata_eng_timeout(struct ata_port *ap);
-+extern void ata_eh_qc_complete(struct ata_queued_cmd *qc);
-+extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
-+
- 
- static inline int
- ata_sg_is_last(struct scatterlist *sg, struct ata_queued_cmd *qc)
+
+David
+
 -- 
-1.2.4
-
 
