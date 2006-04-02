@@ -1,59 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] SCSI: implement scsi_eh_schedule()
-Date: Sun, 02 Apr 2006 10:15:41 +0900
-Message-ID: <442F25BD.8040000@gmail.com>
-References: <20060401103857.GG13172@htj.dyndns.org> <442EDF1F.6000001@pobox.com>
+From: "Wesley Lim" <wesleylim@gmail.com>
+Subject: Re: sata_sil or libata?
+Date: Sat, 1 Apr 2006 17:52:26 -0800
+Message-ID: <a8b98fc60604011752m67727f9chf2f5e11d6ed2a3eb@mail.gmail.com>
+References: <442F0CB5.9020004@dgreaves.com>
+	 <Pine.LNX.4.44.0604011902330.7527-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.199]:272 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932363AbWDBBPu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 20:15:50 -0500
-Received: by zproxy.gmail.com with SMTP id o37so1363193nzf
-        for <linux-ide@vger.kernel.org>; Sat, 01 Apr 2006 17:15:49 -0800 (PST)
-In-Reply-To: <442EDF1F.6000001@pobox.com>
+Received: from wproxy.gmail.com ([64.233.184.233]:8054 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932366AbWDBBw2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 1 Apr 2006 20:52:28 -0500
+Received: by wproxy.gmail.com with SMTP id i22so1114753wra
+        for <linux-ide@vger.kernel.org>; Sat, 01 Apr 2006 17:52:27 -0800 (PST)
+In-Reply-To: <Pine.LNX.4.44.0604011902330.7527-100000@coffee.psychology.mcmaster.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Mark Hahn <hahn@physics.mcmaster.ca>
+Cc: David Greaves <david@dgreaves.com>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> [PATCH] SCSI: implement scsi_eh_schedule()
->>
->> This patch implements scsi_eh_schedule() which provides a way to
->> directly invoke SCSI EH from drivers which implement EH using
->> ->eh_strategy_handler.  Combined with scsi_eh_flush_done_q(), this
->> gives such drivers complete control over when and how to invoke EH and
->> handle failed commands.
->>
->> scsi_eh_schedule() can also be invoked without a scmd.  This is useful
->> for handling exception conditions occurring while no command is in
->> progress.  New Scsi_Host field host_eh_invoked is added for this.
->>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> Not so sure about this one:
-> 
-> 1) Rather than creating the scmd==NULL special case path, just create a 
-> new function scsi_kick_eh() or somesuch.  I presume such an 
-> implementation would be quite tiny:  satisfy the condition 
-> 'shost->host_busy == shost->host_failed', then call scsi_eh_wakeup().
+On 4/1/06, Mark Hahn <hahn@physics.mcmaster.ca> wrote:
+> >     Additional sense: Unrecovered read error - auto reallocate failed
+> > end_request: I/O error, dev sdb, sector 393692817
+>
+> this sort of thing would make me want to sanity-check the drives,
+> since it certainly sounds like a media/heat/vibration/power problem.
+>
+> have you run a SMART selftest on these drives?
 
-I see.
-
-> 2) Looks almost exactly like scsi_eh_scmd_add().  Minus the code deleted 
-> via suggestion #1, you really just add a timer check.  Why not add a 
-> SCSI EH flag which says "check timer", then just call scsi_eh_scmd_add()?
-
-I didn't want to add stuff to SCSI main EH path which isn't necessary to 
-main EH. But you're right, they are almost identical. Maybe a wrapper 
-around scsi_eh_scmd_add() should work.
-
-> 3) I would think that host_eh_invoked could be deduced.
-
-Okay, I'll try to cook something prettier.
-
--- 
-tejun
+I've done badblocks on the drive and it's fine. I haven't tried
+smartctl as I read -d ata can cause problems because of some SCSI
+queuing thing? Can I safely use smartd yet?
