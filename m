@@ -1,72 +1,31 @@
-From: Dan Aloni <da-x@monatomic.org>
-Subject: Re: sata_mv: module reloading doesn't work
-Date: Sun, 2 Apr 2006 22:05:20 +0300
-Message-ID: <20060402190520.GA29946@localdomain>
-References: <20060402155647.GB20270@localdomain> <442FF65A.6020209@rtr.ca> <20060402161449.GA21822@localdomain> <442FFA0E.4070101@rtr.ca>
+From: "Allyson Doherty" <xjlzqbyxeyzf@yahoo.com>
+Subject: Everyone Require This MRz
+Date: Sun, 02 Apr 2006 23:30:45 +0300
+Message-ID: <3A837EE3.7684.9815C2D5__24244.8128913113$1144006338$gmane$org@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from noname.neutralserver.com ([70.84.186.210]:39326 "EHLO
-	noname.neutralserver.com") by vger.kernel.org with ESMTP
-	id S1751445AbWDBTEB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Apr 2006 15:04:01 -0400
-Content-Disposition: inline
-In-Reply-To: <442FFA0E.4070101@rtr.ca>
+Received: from host19-93.pool876.interbusiness.it ([87.6.93.19]:10244 "HELO
+	host19-93.pool876.interbusiness.it") by vger.kernel.org with SMTP
+	id S1751491AbWDBTbb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 2 Apr 2006 15:31:31 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-hams@vger.kernel.org
 
-On Sun, Apr 02, 2006 at 12:21:34PM -0400, Mark Lord wrote:
-> Dan Aloni wrote:
-> >On Sun, Apr 02, 2006 at 12:05:46PM -0400, Mark Lord wrote:
-> >
-> >>What kernel?  Any patches applied to sata_mv.c ??
-> >
-> >2.6.16 + ncq branch. sata_mv.c was modified by me - I'll retry
-> >with a cleaner configuration, sorry.
-> 
-> The NCQ stuff is *unsafe* with the existing sata_mv.c,
-> as there are known (to me, at least) bugs that prevent it
-> from working reliably after the first I/O error of any kind.
 
-Thanks for alerting me about that, I'll take that into consideration.
- 
-> The 2.6.16.1 branch is slightly better,
-> and there is also the "three bug fixes" update
-> that's in upstream to help things further.
->
-> With all of those fixes, the module loads/unloads/reloads fine for me.
 
-The fixes you've posted in the last weeks are merged in my tree.
 
-However, I don't think that this particular problem has anything
-to do with NCQ. In the last 2 hours I've tested a few different 
-versions:
+Lazy to attend exam or classes?
 
- * 2.6.16.1 with its sata_mv and the "three bug fixes" update. 
- * 2.6.16.1 + sata_mv 0.6 from 2.6.16-git back-ported.
- * 2.6.16 + ncq + modified sata_mv 0.6 (includes some changes
-   I've posted before along with your fixes).
+We have Diplomas, Degrees, Masters' or Doctorate
+to choose from any field of your interest.
 
-All versions show the same problem. The system in question has
-two 6081 controllers and 14 disks.
+Only 2 weeks require to delivers the prestigious non-accredited
+universities paper to your doorstep.
 
-My guess it that sata_mv leaves the controllers in a unclean
-state and I'm now looking into this problem to see how it can
-be fixed.
+Do not hesitate to give us a call today!
+1-484-693-8861
 
-> If you want to use NCQ more safely, then you'll need to modify
-> the mv_start_dma() routine to reinitialize the queue pointers
-> each time, as they can get out of sync after an error.
-> 
-> There are still other bugs to be worked out and fixed, though.
-> 
-> I'll have a patch or two this week for the ones I know about.
 
-I'll look forward to these patches, thanks.
-
--- 
-Dan Aloni, Linux specialist
-XIV LTD, http://www.xivstorage.com
-da-x@monatomic.org, da-x@colinux.org, da-x@gmx.net, dan@xiv.co.il
+6jSxTb
