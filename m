@@ -1,30 +1,34 @@
-From: "Eric D. Mudama" <edmudama@gmail.com>
-Subject: Re: sata_mv: module reloading doesn't work
-Date: Sun, 2 Apr 2006 11:59:45 -0600
-Message-ID: <311601c90604021059jcdf56e4ja35e3507ab291179@mail.gmail.com>
-References: <20060402155647.GB20270@localdomain>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Re: IDE CDROM tail read errors
+Date: Sun, 2 Apr 2006 20:13:29 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0604022011430.12603@yvahk01.tjqt.qr>
+References: <m3wtedrrpf.fsf@defiant.localdomain> <Pine.LNX.4.61.0603301016290.30783@yvahk01.tjqt.qr>
+ <m3hd5ctffo.fsf@defiant.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932402AbWDBR7r@vger.kernel.org>
-In-Reply-To: <20060402155647.GB20270@localdomain>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Aloni <da-x@monatomic.org>
-Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lkml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from linux01.gwdg.de ([134.76.13.21]:59055 "EHLO linux01.gwdg.de")
+	by vger.kernel.org with ESMTP id S1750722AbWDBSNe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 14:13:34 -0400
+In-Reply-To: <m3hd5ctffo.fsf@defiant.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On 4/2/06, Dan Aloni <da-x@monatomic.org> wrote:
-> Hello,
+>>
+>> I have heard from friends that this is due to how readahead works. It 
+>> reads beyond the end of the track, and logically, the hardware signals an 
+>> error (leading to missing bytes at the end). It is said to be solved using 
+>> the -pad option when writing CDs.
 >
-> I'm testing the sata_mv driver to see whether reloading (rmmod
-> - insmod) works, and it seems something is broken there. The
-> first insmod goes okay - however all the insmods that follow
-> emit error=0x01 { AddrMarkNotFound } and status=0x50 { DriveReady
-> SeekComplete } from all the drives.
+>You mean the read error and not TOC <> .iso track length differences?
 
-More to Jeff/Mark etc... wouldn't this be expected?  0x50/0x01 is the
-contents of a reset signature FIS.  If the module was removed, and
-upon insmod the bus came back up, the drive would complete ASR or
-COMRESET processing and post a signature FIS.  Is the phy disabled
-when sata_mv is removed?
+Maps to
+
+  if(toc_len >= iso + pad)
+      ok;
+  else
+      b0rk on last sectors;
+
+
