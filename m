@@ -1,52 +1,66 @@
-From: Dan Aloni <da-x@monatomic.org>
-Subject: Re: sata_mv: module reloading doesn't work
-Date: Mon, 3 Apr 2006 01:44:16 +0300
-Message-ID: <20060402224416.GA9639@localdomain>
-References: <20060402155647.GB20270@localdomain> <311601c90604021059jcdf56e4ja35e3507ab291179@mail.gmail.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
+Date: Sun, 2 Apr 2006 16:49:32 -0700 (PDT)
+Message-ID: <20060402234932.96444.qmail@web31810.mail.mud.yahoo.com>
+References: <20060402160414.GM13172@htj.dyndns.org>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from noname.neutralserver.com ([70.84.186.210]:29670 "EHLO
-	noname.neutralserver.com") by vger.kernel.org with ESMTP
-	id S1751479AbWDBWmy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Apr 2006 18:42:54 -0400
-Content-Disposition: inline
-In-Reply-To: <311601c90604021059jcdf56e4ja35e3507ab291179@mail.gmail.com>
+Received: from web31810.mail.mud.yahoo.com ([68.142.207.73]:50818 "HELO
+	web31810.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1750930AbWDBXtf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 2 Apr 2006 19:49:35 -0400
+In-Reply-To: <20060402160414.GM13172@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@gmail.com>
-Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lkml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, Apr 02, 2006 at 11:59:45AM -0600, Eric D. Mudama wrote:
-> On 4/2/06, Dan Aloni <da-x@monatomic.org> wrote:
-> > Hello,
-> >
-> > I'm testing the sata_mv driver to see whether reloading (rmmod
-> > - insmod) works, and it seems something is broken there. The
-> > first insmod goes okay - however all the insmods that follow
-> > emit error=0x01 { AddrMarkNotFound } and status=0x50 { DriveReady
-> > SeekComplete } from all the drives.
-> 
-> More to Jeff/Mark etc... wouldn't this be expected?  0x50/0x01 is the
-> contents of a reset signature FIS.  If the module was removed, and
-> upon insmod the bus came back up, the drive would complete ASR or
-> COMRESET processing and post a signature FIS.  Is the phy disabled
-> when sata_mv is removed?
+--- Tejun Heo <htejun@gmail.com> wrote:
+> This patch implements scsi_eh_schedule_cmd() which provides a way to
+> directly invoke SCSI EH from drivers implementing
+> ->eh_strategy_handler.  Combined with scsi_eh_flush_done_q(), this
+> gives such drivers complete control over when and how to invoke EH and
+> handle failed commands.
 
-Should it be disabled or enabled? BTW it seems that the Marvell 3.6.1
-propriety controller driver doesn't exhibit this problem so we can 
-exclude hardware faults.
+Hi Tejun,
 
-It looks more like a problem between the controller and the driver. 
-I'm not an expert in PCI, but according to my observation so far, 
-the PCI_STATUS_SIG_TARGET_ABORT bit is turned on in the config space 
-after the driver is unloaded and that might indicate something bad.
+I sent an almost identical patch, albeit much more general, see this:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113833937421677&w=2
 
- kernel: PCI config space regs: 
--kernel: 00: 608111ab 02b00317 01000009 00002008  
-+kernel: 00: 608111ab 02b80713 01000009 00002008  
+Here is the core of it:
+--start-quote--
+This function requests that SCSI Core start recovery for the
+command by deleting the timer and adding the command to the eh
+queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
+implement their own error recovery MAY ignore the timeout event if
+they generated scsi_req_abort_cmd.
 
--- 
-Dan Aloni, Linux specialist
-XIV LTD, http://www.xivstorage.com
-da-x@monatomic.org, da-x@colinux.org, da-x@gmx.net, dan@xiv.co.il
+void scsi_req_abort_cmd(struct scsi_cmnd *cmd)
+{
+	if (!scsi_delete_timer(cmd))
+		return;
+	scsi_times_out(cmd);
+}
+--end-quote---
+
+To have a consistent and complete error recovery solution, given
+the current SCSI Core infrastructure, as is requred for your SATA effort,
+and other (protocol) work, this is what one needs to implement:
+
+1. eh_timed_out(),
+2. eh_strategy_handler(),
+3. scsi_req_abort_cmd()  (as shown above), and finally,
+4. scsi_req_dev_reset().
+
+I keep those in my own git trees. (Had 3 been accepted, I would've sent 4.)
+
+Beware, Bottomley will most likely have his own ideas on error recovery,
+as he did when I posted my patch above.  I didn't bother to explain, from a
+protocol point of view, why it is needed.
+
+Good luck!
+     Luben
+
