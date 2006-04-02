@@ -1,68 +1,59 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 15/15] libata: consider disabled devices in ata_dev_xfermask()
-Date: Sun, 02 Apr 2006 10:09:28 +0900
-Message-ID: <442F2448.8060608@gmail.com>
-References: <11438230993538-git-send-email-htejun@gmail.com> <442EDBCA.7050600@pobox.com>
+Subject: Re: [PATCH] SCSI: implement scsi_eh_schedule()
+Date: Sun, 02 Apr 2006 10:15:41 +0900
+Message-ID: <442F25BD.8040000@gmail.com>
+References: <20060401103857.GG13172@htj.dyndns.org> <442EDF1F.6000001@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.202]:47517 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932362AbWDBBJf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 20:09:35 -0500
-Received: by zproxy.gmail.com with SMTP id o37so1362153nzf
-        for <linux-ide@vger.kernel.org>; Sat, 01 Apr 2006 17:09:35 -0800 (PST)
-In-Reply-To: <442EDBCA.7050600@pobox.com>
+Received: from zproxy.gmail.com ([64.233.162.199]:272 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932363AbWDBBPu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Apr 2006 20:15:50 -0500
+Received: by zproxy.gmail.com with SMTP id o37so1363193nzf
+        for <linux-ide@vger.kernel.org>; Sat, 01 Apr 2006 17:15:49 -0800 (PST)
+In-Reply-To: <442EDF1F.6000001@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+Cc: hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
 Jeff Garzik wrote:
 > Tejun Heo wrote:
->> ata_bus_probe() now marks failed devices properly and leaves
->> meaningful transfer mode masks.  This patch makes ata_dev_xfermask()
->> consider disable devices when determining PIO mode to avoid violating
->> device selection timing.
+>> [PATCH] SCSI: implement scsi_eh_schedule()
 >>
->> While at it, move port-wide resttriction out of device iteration loop
->> and try to make the function look a bit prettier.
+>> This patch implements scsi_eh_schedule() which provides a way to
+>> directly invoke SCSI EH from drivers which implement EH using
+>> ->eh_strategy_handler.  Combined with scsi_eh_flush_done_q(), this
+>> gives such drivers complete control over when and how to invoke EH and
+>> handle failed commands.
+>>
+>> scsi_eh_schedule() can also be invoked without a scmd.  This is useful
+>> for handling exception conditions occurring while no command is in
+>> progress.  New Scsi_Host field host_eh_invoked is added for this.
 >>
 >> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>
->> ---
->>
->>  drivers/scsi/libata-core.c |   34 +++++++++++++++++++++++-----------
->>  1 files changed, 23 insertions(+), 11 deletions(-)
->>
->> 523b496b7614981773c2c14259bbca4a7ba3a3e8
->> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
->> index ac2ca31..0d72792 100644
->> --- a/drivers/scsi/libata-core.c
->> +++ b/drivers/scsi/libata-core.c
->> @@ -2902,23 +2902,34 @@ static void ata_dev_xfermask(struct ata_
->>      unsigned long xfer_mask;
->>      int i;
->>  
->> -    xfer_mask = ata_pack_xfermask(ap->pio_mask, ap->mwdma_mask,
->> -                      ap->udma_mask);
->> +    xfer_mask = ata_pack_xfermask(ap->pio_mask,
->> +                      ap->mwdma_mask, ap->udma_mask);
->> +
->> +    /* Apply cable rule here.  Don't apply it early because when
->> +     * we handle hot plug the cable type can itself change.
->> +     */
->> +    if (ap->cbl == ATA_CBL_PATA40)
->> +        xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
 > 
-> ACK, though I wonder if moving the above code to its current position 
-> violates "early" described in the comment.
+> Not so sure about this one:
 > 
+> 1) Rather than creating the scmd==NULL special case path, just create a 
+> new function scsi_kick_eh() or somesuch.  I presume such an 
+> implementation would be quite tiny:  satisfy the condition 
+> 'shost->host_busy == shost->host_failed', then call scsi_eh_wakeup().
 
-I think not. AFAICS the 'early' in the comment points ata_dev_xfermask() 
-function itself.
+I see.
 
-Alan?
+> 2) Looks almost exactly like scsi_eh_scmd_add().  Minus the code deleted 
+> via suggestion #1, you really just add a timer check.  Why not add a 
+> SCSI EH flag which says "check timer", then just call scsi_eh_scmd_add()?
+
+I didn't want to add stuff to SCSI main EH path which isn't necessary to 
+main EH. But you're right, they are almost identical. Maybe a wrapper 
+around scsi_eh_scmd_add() should work.
+
+> 3) I would think that host_eh_invoked could be deduced.
+
+Okay, I'll try to cook something prettier.
 
 -- 
 tejun
