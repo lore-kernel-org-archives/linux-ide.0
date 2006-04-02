@@ -1,137 +1,224 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 03/13] libata: use special reserved tag and qc for internal commands
+Subject: [PATCH 06/13] libata: implement new EH scheduling via error completion
 Date: Mon, 3 Apr 2006 03:31:09 +0900
-Message-ID: <1144002669360-git-send-email-htejun@gmail.com>
+Message-ID: <11440026692557-git-send-email-htejun@gmail.com>
 References: <1144002668278-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.203]:25247 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750892AbWDBSbO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 14:31:14 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1550555nzf
-        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 11:31:14 -0700 (PDT)
+Received: from zproxy.gmail.com ([64.233.162.203]:32415 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751102AbWDBSbT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 14:31:19 -0400
+Received: by zproxy.gmail.com with SMTP id o37so1550556nzf
+        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 11:31:19 -0700 (PDT)
 In-Reply-To: <1144002668278-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-New EH may issue internal commands to recover from error while failed
-qc's are still hanging around.  To allow such usage, reserve tag
-ATA_MAX_QUEUE-1 for internal command.  This also makes it easy to tell
-whether a qc is for internal command or not.  ata_tag_internal() test
-implements this test.
+There are several ways a qc can get schedule for EH in new EH.  This
+patch implements one of them - completing qc with non-zero
+qc->err_mask.  ALL normal qc's with set err_mask are to be examined by
+EH.  There's no sideway.
 
-To avoid breaking existing drivers, ata_exec_internal() uses
-ATA_TAG_INTERNAL only for drivers which implement ->error_handler.
-For drivers on old EH, tag 0 is used as before.  Note that this makes
-ata_tag_internal() test valid only when ->error_handler is
-implemented.  This is okay as drivers on old EH should not and does
-not have any reason to use ata_tag_internal().
+New EH schedules a qc for EH from completion iff ->error_handler is
+implemented, qc->err_mask is non-zero and the command is not an
+internal command (internal cmd is handled via ->post_internal_cmd).
+The EH scheduling itself is performed by asking SCSI midlayer to
+schedule EH for the specified scmd.
+
+Note that in the new EH, there is no way a qc can hit
+ata_qc_complete() twice or normal path completes a qc which has been
+scheduled for EH by other entities.  The ownership is clear and must
+be followed.  Violation will trigger WARN_ON().
+
+For drivers implementing old-EH, nothing changes.  As this change
+makes ata_qc_complete() rather large, it's not inlined anymore and
+__ata_qc_complete() is exported to other parts of libata for later
+use.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   32 +++++++++++++++++++++++++++++---
- include/linux/libata.h     |    9 ++++++++-
- 2 files changed, 37 insertions(+), 4 deletions(-)
+ drivers/scsi/libata-core.c |   52 +++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/libata-eh.c   |   29 +++++++++++++++++++++++++
+ drivers/scsi/libata.h      |    2 ++
+ include/linux/libata.h     |   21 +-----------------
+ 4 files changed, 83 insertions(+), 21 deletions(-)
 
-80ff3bcf9ab141553bfc5adbf2783c8e4cdf6375
+c0e01e524e5e8ea9924efafea8ec72fe8ea12782
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 966be30..446ab53 100644
+index 884f771..600b323 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -981,15 +981,39 @@ unsigned ata_exec_internal(struct ata_po
- {
- 	u8 command = tf->command;
- 	struct ata_queued_cmd *qc;
-+	unsigned int tag, preempted_tag;
- 	DECLARE_COMPLETION(wait);
- 	unsigned long flags;
- 	unsigned int err_mask;
- 
- 	spin_lock_irqsave(&ap->host_set->lock, flags);
- 
--	qc = ata_qc_new_init(ap, dev);
--	BUG_ON(qc == NULL);
-+	/* initialize internal qc */
- 
-+	/* XXX: Tag 0 is used for drivers with legacy EH as some
-+	 * drivers choke if any other tag is given.  This breaks
-+	 * ata_tag_internal() test for those drivers.  Don't use new
-+	 * EH stuff without converting to it.
-+	 */
-+	if (ap->ops->error_handler)
-+		tag = ATA_TAG_INTERNAL;
-+	else
-+		tag = 0;
-+
-+	if (test_and_set_bit(tag, &ap->qactive))
-+		BUG();
-+	qc = ata_qc_from_tag(ap, tag);
-+
-+	qc->tag = tag;
-+	qc->scsicmd = NULL;
-+	qc->ap = ap;
-+	qc->dev = dev;
-+	ata_qc_reinit(qc);
-+
-+	preempted_tag = ap->active_tag;
-+	ap->active_tag = ATA_TAG_POISON;
-+
-+	/* prepare & issue qc */
- 	qc->tf = *tf;
- 	if (cdb)
- 		memcpy(qc->cdb, cdb, ATAPI_CDB_LEN);
-@@ -1031,6 +1055,7 @@ unsigned ata_exec_internal(struct ata_po
- 	err_mask = qc->err_mask;
- 
- 	ata_qc_free(qc);
-+	ap->active_tag = preempted_tag;
- 
- 	/* XXX - Some LLDDs (sata_mv) disable port on command failure.
- 	 * Until those drivers are fixed, we detect the condition
-@@ -4027,7 +4052,8 @@ static struct ata_queued_cmd *ata_qc_new
- 	struct ata_queued_cmd *qc = NULL;
- 	unsigned int i;
- 
--	for (i = 0; i < ATA_MAX_QUEUE; i++)
-+	/* the last tag is reserved for internal command. */
-+	for (i = 0; i < ATA_MAX_QUEUE - 1; i++)
- 		if (!test_and_set_bit(i, &ap->qactive)) {
- 			qc = ata_qc_from_tag(ap, i);
- 			break;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 0858788..ccd8846 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -108,7 +108,9 @@ enum {
- 	LIBATA_MAX_PRD		= ATA_MAX_PRD / 2,
- 	ATA_MAX_PORTS		= 8,
- 	ATA_DEF_QUEUE		= 1,
--	ATA_MAX_QUEUE		= 1,
-+	/* tag ATA_MAX_QUEUE - 1 is reserved for internal commands */
-+	ATA_MAX_QUEUE		= 2,
-+	ATA_TAG_INTERNAL	= ATA_MAX_QUEUE - 1,
- 	ATA_MAX_SECTORS		= 200,	/* FIXME */
- 	ATA_MAX_BUS		= 2,
- 	ATA_DEF_BUSY_WAIT	= 10000,
-@@ -696,6 +698,11 @@ static inline unsigned int ata_tag_valid
- 	return (tag < ATA_MAX_QUEUE) ? 1 : 0;
+@@ -4185,6 +4185,56 @@ void __ata_qc_complete(struct ata_queued
+ 	qc->complete_fn(qc);
  }
  
-+static inline unsigned int ata_tag_internal(unsigned int tag)
++/**
++ *	ata_qc_complete - Complete an active ATA command
++ *	@qc: Command to complete
++ *	@err_mask: ATA Status register contents
++ *
++ *	Indicate to the mid and upper layers that an ATA
++ *	command has completed, with either an ok or not-ok status.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ */
++void ata_qc_complete(struct ata_queued_cmd *qc)
 +{
-+	return tag == ATA_MAX_QUEUE - 1;
++	struct ata_port *ap = qc->ap;
++
++	/* XXX: New EH and old EH use different mechanisms to
++	 * synchronize EH with regular execution path.
++	 *
++	 * When a qc fails, it's marked with EH_SCHEDULED.  In new EH,
++	 * regular execution path is responsible for not accessing a
++	 * failed qc.  libata core enforces the rule by returning NULL
++	 * from ata_qc_from_tag() for failed qcs.
++	 *
++	 * Old EH depends on ata_qc_complete() nullifying completion
++	 * requests if EH_SCHEDULED is set.  Old EH does not
++	 * synchronize with interrupt handler.  Only PIO task is taken
++	 * care of.
++	 */
++	if (ap->ops->error_handler) {
++		WARN_ON(qc->flags & ATA_QCFLAG_EH_SCHEDULED ||
++			ap->flags & ATA_FLAG_FROZEN);
++
++		if (unlikely(qc->err_mask)) {
++			/* ATA_QCFLAG_FAILED is set for all failed
++			 * qc's including internal qc.
++			 */
++			qc->flags |= ATA_QCFLAG_FAILED;
++			if (!ata_tag_internal(qc->tag)) {
++				ata_eh_schedule_qc(qc);
++				return;
++			}
++		}
++		__ata_qc_complete(qc);
++	} else {
++		if (qc->flags & ATA_QCFLAG_EH_SCHEDULED)
++			return;
++		__ata_qc_complete(qc);
++	}
 +}
 +
- static inline unsigned int ata_class_enabled(unsigned int class)
+ static inline int ata_should_dma_map(struct ata_queued_cmd *qc)
  {
- 	return class == ATA_DEV_ATA || class == ATA_DEV_ATAPI;
+ 	struct ata_port *ap = qc->ap;
+@@ -5124,7 +5174,7 @@ EXPORT_SYMBOL_GPL(ata_device_add);
+ EXPORT_SYMBOL_GPL(ata_host_set_remove);
+ EXPORT_SYMBOL_GPL(ata_sg_init);
+ EXPORT_SYMBOL_GPL(ata_sg_init_one);
+-EXPORT_SYMBOL_GPL(__ata_qc_complete);
++EXPORT_SYMBOL_GPL(ata_qc_complete);
+ EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
+ EXPORT_SYMBOL_GPL(ata_tf_load);
+ EXPORT_SYMBOL_GPL(ata_tf_read);
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index e73f561..a1fe14f 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -210,6 +210,35 @@ void ata_eng_timeout(struct ata_port *ap
+ 	DPRINTK("EXIT\n");
+ }
+ 
++/**
++ *	ata_eh_schedule_qc - schedule qc for error handling
++ *	@qc: command to schedule error handling for
++ *
++ *	Schedule error handling for the specified qc.  EH will kick in
++ *	as soon as other commands are drained.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ */
++void ata_eh_schedule_qc(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++
++	WARN_ON(!ap->ops->error_handler);
++	WARN_ON(qc->flags & ATA_QCFLAG_EH_SCHEDULED ||
++		ap->flags & ATA_FLAG_FROZEN);
++
++	qc->flags |= ATA_QCFLAG_FAILED | ATA_QCFLAG_EH_SCHEDULED;
++	qc->dev->flags |= ATA_DFLAG_FAILED;
++
++	/* The following will fail if timeout has already expired.
++	 * ata_scsi_timed_out() will put @qc onto EH.  Note that
++	 * EH_SCHEDULED flag is unconditionally set after this
++	 * function completes.
++	 */
++	scsi_eh_schedule_cmd(qc->scsicmd);
++}
++
+ static void ata_eh_scsidone(struct scsi_cmnd *scmd)
+ {
+ 	/* nada */
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index 681b203..826010c 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -62,6 +62,7 @@ extern int ata_do_reset(struct ata_port 
+ 			int verbose, unsigned int *classes);
+ extern void ata_qc_free(struct ata_queued_cmd *qc);
+ extern void ata_qc_issue(struct ata_queued_cmd *qc);
++extern void __ata_qc_complete(struct ata_queued_cmd *qc);
+ extern int ata_check_atapi_dma(struct ata_queued_cmd *qc);
+ extern void ata_dev_select(struct ata_port *ap, unsigned int device,
+                            unsigned int wait, unsigned int can_sleep);
+@@ -105,5 +106,6 @@ extern void ata_scsi_rbuf_fill(struct at
+ 
+ /* libata-eh.c */
+ extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
++extern void ata_eh_schedule_qc(struct ata_queued_cmd *qc);
+ 
+ #endif /* __LIBATA_H__ */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 289ec2e..13bcb3c 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -592,7 +592,7 @@ extern void ata_bmdma_start (struct ata_
+ extern void ata_bmdma_stop(struct ata_queued_cmd *qc);
+ extern u8   ata_bmdma_status(struct ata_port *ap);
+ extern void ata_bmdma_irq_clear(struct ata_port *ap);
+-extern void __ata_qc_complete(struct ata_queued_cmd *qc);
++extern void ata_qc_complete(struct ata_queued_cmd *qc);
+ extern void ata_scsi_simulate(struct ata_port *ap, struct ata_device *dev,
+ 			      struct scsi_cmnd *cmd,
+ 			      void (*done)(struct scsi_cmnd *));
+@@ -858,25 +858,6 @@ static inline void ata_qc_reinit(struct 
+ }
+ 
+ /**
+- *	ata_qc_complete - Complete an active ATA command
+- *	@qc: Command to complete
+- *	@err_mask: ATA Status register contents
+- *
+- *	Indicate to the mid and upper layers that an ATA
+- *	command has completed, with either an ok or not-ok status.
+- *
+- *	LOCKING:
+- *	spin_lock_irqsave(host_set lock)
+- */
+-static inline void ata_qc_complete(struct ata_queued_cmd *qc)
+-{
+-	if (unlikely(qc->flags & ATA_QCFLAG_EH_SCHEDULED))
+-		return;
+-
+-	__ata_qc_complete(qc);
+-}
+-
+-/**
+  *	ata_irq_on - Enable interrupts on a port.
+  *	@ap: Port on which interrupts are enabled.
+  *
 -- 
 1.2.4
 
