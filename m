@@ -1,68 +1,146 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 01/13] libata: add flags for new EH
+Subject: [PATCH 07/13] libata: implement ata_eh_schedule_port()
 Date: Mon, 3 Apr 2006 03:31:09 +0900
-Message-ID: <11440026693365-git-send-email-htejun@gmail.com>
+Message-ID: <11440026693828-git-send-email-htejun@gmail.com>
 References: <1144002668278-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.202]:27419 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750866AbWDBSbO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 14:31:14 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1550553nzf
-        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 11:31:14 -0700 (PDT)
+Received: from zproxy.gmail.com ([64.233.162.203]:32415 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751395AbWDBSbV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 14:31:21 -0400
+Received: by zproxy.gmail.com with SMTP id o37so1550556nzf
+        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 11:31:21 -0700 (PDT)
 In-Reply-To: <1144002668278-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add new device, port and ac flags to be used for new EH.
+ata_eh_schedule_port() is the gateway to EH and does one of the
+followings depending on how it's invoked.
+
+* Without any flag: It simply schedules EH.  EH will kick in after all
+  commands are drained (unless another event occurs, of course).
+
+* ATA_EH_ABORT: EH is scheduled and all currently active qc's get
+  aborted.  The caller is responsible for making sure the controller
+  and devices are in stable state in this case.
+
+* ATA_EH_FREEZE: It does everything ATA_EH_ABORT does and then freezes
+  the port; thus, making the port inaccessible until it gets reset.
+  This can be used to safely schedule EH when an HSM violation event
+  occurs.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- include/linux/libata.h |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/libata-core.c |    1 +
+ drivers/scsi/libata-eh.c   |   52 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/libata.h     |    5 ++++
+ 3 files changed, 58 insertions(+), 0 deletions(-)
 
-de9fe3323707d4395862b90fa728f310c18f80c8
+c31b07c28393b6a586dc1e1bcb5809f5c8e3be79
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 600b323..735f328 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -5245,5 +5245,6 @@ EXPORT_SYMBOL_GPL(ata_scsi_device_resume
+ 
+ EXPORT_SYMBOL_GPL(ata_scsi_error);
+ EXPORT_SYMBOL_GPL(ata_eng_timeout);
++EXPORT_SYMBOL_GPL(ata_eh_schedule_port);
+ EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
+ EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index a1fe14f..d443ef2 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -239,6 +239,58 @@ void ata_eh_schedule_qc(struct ata_queue
+ 	scsi_eh_schedule_cmd(qc->scsicmd);
+ }
+ 
++/**
++ *	ata_eh_schedule_port - schedule error handling without a qc
++ *	@ap: ATA port to schedule EH for
++ *	@flags: ATA_EH_* flags
++ *
++ *	Schedule error hanlding for the speficied ATA port.  EH will
++ *	kick in as soon as all commands are drained.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ */
++void ata_eh_schedule_port(struct ata_port *ap, unsigned int flags)
++{
++	int internal_cmd = ata_tag_internal(ap->active_tag);
++	int i;
++
++	WARN_ON(!ap->ops->error_handler);
++
++	if (!internal_cmd)
++		scsi_eh_schedule_host(ap->host);
++
++	if (!(flags & (ATA_EH_ABORT | ATA_EH_FREEZE)))
++		return;
++
++	for (i = 0; i < ATA_MAX_QUEUE; i++) {
++		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, i);
++		if (qc) {
++			if (!internal_cmd)
++				ata_eh_schedule_qc(qc);
++			else {
++				qc->flags |= ATA_QCFLAG_FAILED;
++				__ata_qc_complete(qc);
++			}
++		}
++	}
++
++	if (!(flags & ATA_EH_FREEZE))
++		return;
++
++	/* Timeout handler might try to freeze an already frozen port
++	 * if it races against interrupt handler or another timeout.
++	 * Such races should be _very_ rare.  Whine and ignore.
++	 */
++	if (ap->flags & ATA_FLAG_FROZEN) {
++		printk(KERN_INFO "ata%u: ata_eh_schedule_port invoked on "
++		       "a frozen port\n", ap->id);
++		return;
++	}
++
++	ata_port_freeze(ap);
++}
++
+ static void ata_eh_scsidone(struct scsi_cmnd *scmd)
+ {
+ 	/* nada */
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 75bdee0..cc57c4d 100644
+index 13bcb3c..c65cda9 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -125,6 +125,7 @@ enum {
- 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
+@@ -223,6 +223,10 @@ enum {
+ 	ATA_PORT_PRIMARY	= (1 << 0),
+ 	ATA_PORT_SECONDARY	= (1 << 1),
  
- 	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
-+	ATA_DFLAG_FAILED	= (1 << 9), /* device has failed */
++	/* flags for ata_eh_shduled_port */
++	ATA_EH_ABORT		= (1 << 0), /* abort all active commands */
++	ATA_EH_FREEZE		= (1 << 1), /* freeze port (implies ABORT) */
++
+ 	/* how hard are we gonna try to probe/recover devices */
+ 	ATA_PROBE_MAX_TRIES	= 3,
+ };
+@@ -652,6 +656,7 @@ extern unsigned long ata_pci_default_fil
+  */
+ extern int ata_scsi_error(struct Scsi_Host *host);
+ extern void ata_eng_timeout(struct ata_port *ap);
++extern void ata_eh_schedule_port(struct ata_port *ap, unsigned int flags);
+ extern void ata_eh_qc_complete(struct ata_queued_cmd *qc);
+ extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
  
- 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
- 	ATA_DEV_ATA		= 1,	/* ATA device */
-@@ -152,7 +153,8 @@ enum {
- 	ATA_FLAG_FLUSH_PORT_TASK = (1 << 18), /* flush port task */
- 
- 	ATA_FLAG_DISABLED	= (1 << 19), /* port is disabled, ignore it */
--	ATA_FLAG_SUSPENDED	= (1 << 20), /* port is suspended */
-+	ATA_FLAG_FROZEN		= (1 << 20), /* port is frozen */
-+	ATA_FLAG_SUSPENDED	= (1 << 21), /* port is suspended (power) */
- 
- 	/* bits 24:31 of ap->flags are reserved for LLDD specific flags */
- 
-@@ -162,7 +164,10 @@ enum {
- 	ATA_QCFLAG_SINGLE	= (1 << 2), /* no s/g, just a single buffer */
- 	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG | ATA_QCFLAG_SINGLE,
- 	ATA_QCFLAG_IO		= (1 << 3), /* standard IO command */
--	ATA_QCFLAG_EH_SCHEDULED = (1 << 4), /* EH scheduled */
-+	ATA_QCFLAG_TIMEOUT	= (1 << 4), /* cmd has timed out */
-+	ATA_QCFLAG_FAILED	= (1 << 5), /* cmd has failed */
-+	ATA_QCFLAG_EH_SCHEDULED	= (1 << 6), /* EH scheduled */
-+	ATA_QCFLAG_SENSE_VALID	= (1 << 7), /* sense data valid */
- 
- 	/* host set flags */
- 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host_set only */
 -- 
 1.2.4
 
