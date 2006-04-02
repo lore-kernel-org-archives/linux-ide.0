@@ -1,36 +1,48 @@
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Subject: Re: IDE CDROM tail read errors
-Date: Sun, 02 Apr 2006 12:55:23 +0200
-Message-ID: <m3hd5ctffo.fsf@defiant.localdomain>
-References: <m3wtedrrpf.fsf@defiant.localdomain>
-	<Pine.LNX.4.61.0603301016290.30783@yvahk01.tjqt.qr>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2/7] libata: implement ap->sata_spd_limit and helpers
+Date: Sun, 2 Apr 2006 20:04:52 +0900
+Message-ID: <20060402110452.GJ13172@htj.dyndns.org>
+References: <11439680862635-git-send-email-htejun@gmail.com> <442FAAB5.30501@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:42255 "EHLO khc.piap.pl")
-	by vger.kernel.org with ESMTP id S932314AbWDBKzZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 06:55:25 -0400
-In-Reply-To: <Pine.LNX.4.61.0603301016290.30783@yvahk01.tjqt.qr> (Jan Engelhardt's message of "Thu, 30 Mar 2006 10:19:48 +0200 (MEST)")
+Received: from zproxy.gmail.com ([64.233.162.199]:21542 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932325AbWDBLE6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 07:04:58 -0400
+Received: by zproxy.gmail.com with SMTP id o37so1458120nzf
+        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 04:04:57 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <442FAAB5.30501@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 
-Jan Engelhardt <jengelh@linux01.gwdg.de> writes:
+On Sun, Apr 02, 2006 at 06:43:01AM -0400, Jeff Garzik wrote:
+> Tejun Heo wrote:
+> >-	/* Issue phy wake/reset */
+> >+	/* SATA spec says nothing about how to reconfigure spd.
+> >+	 * Configuring before starting hardreset works for both of my
+> >+	 * test cases - ICH7 AHCI and sil3124.  Configuring while phy
+> >+	 * is off sounds nice but ICH7 chokes on that.  It preserves
+> >+	 * configured value but does not apply it.
+> >+	 */
+> >+	ata_set_sata_spd(ap);
+> >+
+> >+	/* issue phy wake/reset */
+> > 	scontrol = scr_read(ap, SCR_CONTROL);
+> > 	scontrol = (scontrol & 0x0f0) | 0x301;
+> > 	scr_write_flush(ap, SCR_CONTROL, scontrol);
+> 
+> This code is an example of configuring the phy while its off...  You put 
+> the speed setting before the phy wake.
+> 
+> Everything else looks OK.
+> 
 
->>first: 1 last 1
->>track:   1 lba:         0 (        0) 00:02:00 adr: 1 control: 4 mode: 1
->>track:lout lba:    335566 (  1342264) 74:36:16 adr: 1 control: 4 mode: -1
->>
->>FC-5-i386-disc1.iso size = 335564 * 2048 bytes, not sure why TOC has
->>2 more sectors (8 512B sectors) but I'm not a CD expert.
->>
->
-> I have heard from friends that this is due to how readahead works. It 
-> reads beyond the end of the track, and logically, the hardware signals an 
-> error (leading to missing bytes at the end). It is said to be solved using 
-> the -pad option when writing CDs.
+This is embarrasing. :( I was being delusional.  I somehow thought
+DET=1 was PHY off and DET=0 was wake.  I'll test with actual PHY off
+(DET=2) and redo this patch.  Sorry about the confusion.
 
-You mean the read error and not TOC <> .iso track length differences?
 -- 
-Krzysztof Halasa
+tejun
