@@ -1,85 +1,34 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
-Date: Mon, 3 Apr 2006 01:04:14 +0900
-Message-ID: <20060402160414.GM13172@htj.dyndns.org>
-References: <20060401103857.GG13172@htj.dyndns.org> <442EDF1F.6000001@pobox.com> <442F25BD.8040000@gmail.com>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: sata_mv: module reloading doesn't work
+Date: Sun, 02 Apr 2006 12:05:46 -0400
+Message-ID: <442FF65A.6020209@rtr.ca>
+References: <20060402155647.GB20270@localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.204]:60556 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751480AbWDBQEX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 12:04:23 -0400
-Received: by xproxy.gmail.com with SMTP id t10so690797wxc
-        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 09:04:23 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <442F25BD.8040000@gmail.com>
+Received: from rtr.ca ([64.26.128.89]:50606 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751481AbWDBQGG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 12:06:06 -0400
+In-Reply-To: <20060402155647.GB20270@localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Dan Aloni <da-x@monatomic.org>
+Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-This patch implements scsi_eh_schedule_cmd() which provides a way to
-directly invoke SCSI EH from drivers implementing
-->eh_strategy_handler.  Combined with scsi_eh_flush_done_q(), this
-gives such drivers complete control over when and how to invoke EH and
-handle failed commands.
+Dan Aloni wrote:
+> Hello,
+> 
+> I'm testing the sata_mv driver to see whether reloading (rmmod 
+> - insmod) works, and it seems something is broken there. The
+> first insmod goes okay - however all the insmods that follow
+> emit error=0x01 { AddrMarkNotFound } and status=0x50 { DriveReady 
+> SeekComplete } from all the drives.
+> 
+> I've enabled DPRINTK and fixed a crash involved with register
+> dumping (posted in my previous mail).
+> 
+> I hope these messages are sufficient, I can provide more 
+> information if needed.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-
----
-
- drivers/scsi/scsi_error.c |   24 ++++++++++++++++++++++++
- include/scsi/scsi_eh.h    |    1 +
- 2 files changed, 25 insertions(+), 0 deletions(-)
-
-caaed524eab41fab88be717d06627bd50cf66ee2
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 5f0fdfb..c314095 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -90,6 +90,30 @@ int scsi_eh_scmd_add(struct scsi_cmnd *s
- }
- 
- /**
-+ * scsi_eh_schedule_cmd - schedule scsi cmd for error handling.
-+ * @scmd:	scmd to run eh on.
-+ *
-+ * Description:
-+ *	This function is used by LLDDs which don't use standard SCSI
-+ *	EH to schedule scmd for EH.
-+ *
-+ * Return value:
-+ *	0 on failure.
-+ **/
-+int scsi_eh_schedule_cmd(struct scsi_cmnd *scmd)
-+{
-+	struct Scsi_Host *shost = scmd->device->host;
-+
-+	WARN_ON(!shost->hostt->eh_strategy_handler);
-+
-+	if (!scsi_delete_timer(scmd))
-+		return 0;	/* timeout won */
-+
-+	return scsi_eh_scmd_add(scmd, 0);
-+}
-+EXPORT_SYMBOL_GPL(scsi_eh_schedule_cmd);
-+
-+/**
-  * scsi_add_timer - Start timeout timer for a single scsi command.
-  * @scmd:	scsi command that is about to start running.
-  * @timeout:	amount of time to allow this command to run.
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index d160880..dd0a50e 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -35,6 +35,7 @@ static inline int scsi_sense_valid(struc
- }
- 
- 
-+extern int scsi_eh_schedule_cmd(struct scsi_cmnd *scmd);
- extern void scsi_eh_finish_cmd(struct scsi_cmnd *scmd,
- 			       struct list_head *done_q);
- extern void scsi_eh_flush_done_q(struct list_head *done_q);
--- 
-1.2.4
-
+What kernel?  Any patches applied to sata_mv.c ??
