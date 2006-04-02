@@ -1,165 +1,87 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 6/7] libata: improve ata_bus_probe()
-Date: Sun, 2 Apr 2006 17:54:46 +0900
-Message-ID: <11439680863401-git-send-email-htejun@gmail.com>
-References: <11439680863256-git-send-email-htejun@gmail.com>
+Subject: [PATCH 03/15] libata: ATA_FLAG_IN_EH is not used, kill it
+Date: Sun, 2 Apr 2006 18:51:52 +0900
+Message-ID: <11439715122600-git-send-email-htejun@gmail.com>
+References: <11439715124131-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.203]:17521 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932278AbWDBIzB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 04:55:01 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1438215nzf
-        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 00:55:01 -0800 (PST)
-In-Reply-To: <11439680863256-git-send-email-htejun@gmail.com>
+Received: from zproxy.gmail.com ([64.233.162.197]:48058 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932278AbWDBJv6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 05:51:58 -0400
+Received: by zproxy.gmail.com with SMTP id o37so1447005nzf
+        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 01:51:58 -0800 (PST)
+In-Reply-To: <11439715124131-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Improve ata_bus_probe() such that configuration failures are handled
-better.  Each device is given ATA_PROBE_MAX_TRIES chances, but any
-non-transient error (revalidation failure with -ENODEV, configuration
-failure with -EINVAL...) disables the device directly.  Any IO error
-results in SATA PHY speed down and ata_set_mode() failure lowers
-transfer mode.  The last try always puts a device into PIO-0.
-
-After each failure, the whole port is reset to make sure that the
-controller and all the devices are in a known and stable state.  The
-reset also applies SATA SPD configuration if necessary.
+Kill unused flag ATA_FLAG_IN_EH.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   65 +++++++++++++++++++++++++++++++++-----------
- include/linux/libata.h     |    3 ++
- 2 files changed, 52 insertions(+), 16 deletions(-)
+ drivers/scsi/libata-scsi.c |   17 ++++-------------
+ include/linux/libata.h     |    1 -
+ 2 files changed, 4 insertions(+), 14 deletions(-)
 
-5dfcc0a5314aa0524b389503fe12a7ee4446ea99
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 42a3147..1460cb3 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -1370,11 +1370,18 @@ err_out_nosup:
- static int ata_bus_probe(struct ata_port *ap)
+ba36d3e3f4b1dba269a1c09f48f3131d287181ca
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index c1a4b29..bcbf71e 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -779,20 +779,15 @@ enum scsi_eh_timer_return ata_scsi_timed
+ 
+ int ata_scsi_error(struct Scsi_Host *host)
  {
- 	unsigned int classes[ATA_MAX_DEVICES];
--	int i, rc, found = 0;
-+	int tries[ATA_MAX_DEVICES];
-+	int i, rc, down_xfermask;
- 	struct ata_device *dev;
+-	struct ata_port *ap;
+-	unsigned long flags;
++	struct ata_port *ap = (struct ata_port *)&host->hostdata[0];
  
- 	ata_port_probe(ap);
+ 	DPRINTK("ENTER\n");
  
-+	for (i = 0; i < ATA_MAX_DEVICES; i++)
-+		tries[i] = ATA_PROBE_MAX_TRIES;
-+
-+ retry:
-+	down_xfermask = 0;
-+
- 	/* reset and determine device classes */
- 	for (i = 0; i < ATA_MAX_DEVICES; i++)
- 		classes[i] = ATA_DEV_UNKNOWN;
-@@ -1404,21 +1411,23 @@ static int ata_bus_probe(struct ata_port
- 		dev = &ap->device[i];
- 		dev->class = classes[i];
+-	ap = (struct ata_port *) &host->hostdata[0];
++	/* synchronize with IRQ handler and port task */
++	spin_unlock_wait(&ap->host_set->lock);
++	ata_port_flush_task(ap);
  
--		if (!ata_dev_enabled(dev))
--			continue;
+-	spin_lock_irqsave(&ap->host_set->lock, flags);
+-	WARN_ON(ap->flags & ATA_FLAG_IN_EH);
+-	ap->flags |= ATA_FLAG_IN_EH;
+ 	WARN_ON(ata_qc_from_tag(ap, ap->active_tag) == NULL);
+-	spin_unlock_irqrestore(&ap->host_set->lock, flags);
 -
--		WARN_ON(dev->id != NULL);
--		if (ata_dev_read_id(ap, dev, &dev->class, 1, &dev->id)) {
--			dev->class = ATA_DEV_NONE;
--			continue;
-+		if (!tries[i]) {
-+			ata_down_xfermask_limit(ap, dev, 1);
-+			ata_dev_disable(ap, dev);
- 		}
+-	ata_port_flush_task(ap);
  
--		if (ata_dev_configure(ap, dev, 1)) {
--			ata_dev_disable(ap, dev);
-+		if (!ata_dev_enabled(dev))
- 			continue;
--		}
+ 	ap->ops->eng_timeout(ap);
  
--		found = 1;
-+		kfree(dev->id);
-+		dev->id = NULL;
-+		rc = ata_dev_read_id(ap, dev, &dev->class, 1, &dev->id);
-+		if (rc)
-+			goto fail;
-+
-+		rc = ata_dev_configure(ap, dev, 1);
-+		if (rc)
-+			goto fail;
- 	}
+@@ -800,10 +795,6 @@ int ata_scsi_error(struct Scsi_Host *hos
  
- 	/* configure transfer mode */
-@@ -1427,12 +1436,18 @@ static int ata_bus_probe(struct ata_port
- 		 * return error code and failing device on failure as
- 		 * ata_set_mode() does.
- 		 */
--		if (found)
--			ap->ops->set_mode(ap);
-+		for (i = 0; i < ATA_MAX_DEVICES; i++)
-+			if (ata_dev_enabled(&ap->device[i])) {
-+				ap->ops->set_mode(ap);
-+				break;
-+			}
- 		rc = 0;
- 	} else {
--		while (ata_set_mode(ap, &dev))
--			ata_dev_disable(ap, dev);
-+		rc = ata_set_mode(ap, &dev);
-+		if (rc) {
-+			down_xfermask = 1;
-+			goto fail;
-+		}
- 	}
+ 	scsi_eh_flush_done_q(&ap->eh_done_q);
  
- 	for (i = 0; i < ATA_MAX_DEVICES; i++)
-@@ -1443,6 +1458,24 @@ static int ata_bus_probe(struct ata_port
- 	ata_port_disable(ap);
- 	ap->ops->port_disable(ap);
- 	return -ENODEV;
-+
-+ fail:
-+	switch (rc) {
-+	case -EINVAL:
-+	case -ENODEV:
-+		tries[dev->devno] = 0;
-+		break;
-+	case -EIO:
-+		ata_down_sata_spd_limit(ap);
-+		/* fall through */
-+	default:
-+		tries[dev->devno]--;
-+		if (down_xfermask &&
-+		    ata_down_xfermask_limit(ap, dev, tries[dev->devno] == 1))
-+			tries[dev->devno] = 0;
-+	}
-+
-+	goto retry;
+-	spin_lock_irqsave(&ap->host_set->lock, flags);
+-	ap->flags &= ~ATA_FLAG_IN_EH;
+-	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+-
+ 	DPRINTK("EXIT\n");
+ 	return 0;
  }
- 
- /**
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a5207e6..a4a1e63 100644
+index a4a1e63..e20b0bf 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -211,6 +211,9 @@ enum {
- 	/* Masks for port functions */
- 	ATA_PORT_PRIMARY	= (1 << 0),
- 	ATA_PORT_SECONDARY	= (1 << 1),
-+
-+	/* how hard are we gonna try to probe/recover devices */
-+	ATA_PROBE_MAX_TRIES	= 3,
- };
+@@ -152,7 +152,6 @@ enum {
+ 	ATA_FLAG_IRQ_MASK	= (1 << 14), /* Mask IRQ in PIO xfers */
  
- enum hsm_task_states {
+ 	ATA_FLAG_FLUSH_PORT_TASK = (1 << 15), /* Flush port task */
+-	ATA_FLAG_IN_EH		= (1 << 16), /* EH in progress */
+ 
+ 	ATA_QCFLAG_ACTIVE	= (1 << 1), /* cmd not yet ack'd to scsi lyer */
+ 	ATA_QCFLAG_SG		= (1 << 3), /* have s/g table? */
 -- 
 1.2.4
 
