@@ -1,44 +1,72 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET] new EH framework
-Date: Mon, 3 Apr 2006 03:34:19 +0900
-Message-ID: <20060402183419.GP13172@htj.dyndns.org>
-References: <1144002668278-git-send-email-htejun@gmail.com>
+From: Dan Aloni <da-x@monatomic.org>
+Subject: Re: sata_mv: module reloading doesn't work
+Date: Sun, 2 Apr 2006 22:05:20 +0300
+Message-ID: <20060402190520.GA29946@localdomain>
+References: <20060402155647.GB20270@localdomain> <442FF65A.6020209@rtr.ca> <20060402161449.GA21822@localdomain> <442FFA0E.4070101@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.203]:13551 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751102AbWDBSeX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 14:34:23 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1551166nzf
-        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 11:34:23 -0700 (PDT)
+Received: from noname.neutralserver.com ([70.84.186.210]:39326 "EHLO
+	noname.neutralserver.com") by vger.kernel.org with ESMTP
+	id S1751445AbWDBTEB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 2 Apr 2006 15:04:01 -0400
 Content-Disposition: inline
-In-Reply-To: <1144002668278-git-send-email-htejun@gmail.com>
+In-Reply-To: <442FFA0E.4070101@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: Mark Lord <lkml@rtr.ca>
+Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Mon, Apr 03, 2006 at 03:31:08AM +0900, Tejun Heo wrote:
-> Hello, all.
+On Sun, Apr 02, 2006 at 12:21:34PM -0400, Mark Lord wrote:
+> Dan Aloni wrote:
+> >On Sun, Apr 02, 2006 at 12:05:46PM -0400, Mark Lord wrote:
+> >
+> >>What kernel?  Any patches applied to sata_mv.c ??
+> >
+> >2.6.16 + ncq branch. sata_mv.c was modified by me - I'll retry
+> >with a cleaner configuration, sorry.
 > 
-> New EH, finally.  New EH will be posted as two patchsets -
-> eh-framework and eh.  As the name suggests, the first one implements
-> EH framework in libata core layer and the second one implements
-> helpers, drivers, stock routines for bmdma controllers and converts
-> several drivers (ata_piix, ahci, sata_sil) to new EH.
-> 
-> This is the first take of eh-framework patchset.  This patchset
-> contains 13 patches and against
-> 
->   upstream [1]
->   + scsi_eh_schedule patchset, take 2 [2][3]
->   + ahci softreset presence detection patch [4]
-> 
-> Brief description of new EH framework follows.
-> 
+> The NCQ stuff is *unsafe* with the existing sata_mv.c,
+> as there are known (to me, at least) bugs that prevent it
+> from working reliably after the first I/O error of any kind.
 
-Will post eh patchset tomorrow.  Still gotta write patch descriptions
-for those patches and just cannot stay awake anymore.  See ya
-tomorrow.  Good ngiht.
+Thanks for alerting me about that, I'll take that into consideration.
+ 
+> The 2.6.16.1 branch is slightly better,
+> and there is also the "three bug fixes" update
+> that's in upstream to help things further.
+>
+> With all of those fixes, the module loads/unloads/reloads fine for me.
+
+The fixes you've posted in the last weeks are merged in my tree.
+
+However, I don't think that this particular problem has anything
+to do with NCQ. In the last 2 hours I've tested a few different 
+versions:
+
+ * 2.6.16.1 with its sata_mv and the "three bug fixes" update. 
+ * 2.6.16.1 + sata_mv 0.6 from 2.6.16-git back-ported.
+ * 2.6.16 + ncq + modified sata_mv 0.6 (includes some changes
+   I've posted before along with your fixes).
+
+All versions show the same problem. The system in question has
+two 6081 controllers and 14 disks.
+
+My guess it that sata_mv leaves the controllers in a unclean
+state and I'm now looking into this problem to see how it can
+be fixed.
+
+> If you want to use NCQ more safely, then you'll need to modify
+> the mv_start_dma() routine to reinitialize the queue pointers
+> each time, as they can get out of sync after an error.
+> 
+> There are still other bugs to be worked out and fixed, though.
+> 
+> I'll have a patch or two this week for the ones I know about.
+
+I'll look forward to these patches, thanks.
 
 -- 
-tejun
+Dan Aloni, Linux specialist
+XIV LTD, http://www.xivstorage.com
+da-x@monatomic.org, da-x@colinux.org, da-x@gmx.net, dan@xiv.co.il
