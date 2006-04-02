@@ -1,87 +1,100 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 03/15] libata: ATA_FLAG_IN_EH is not used, kill it
-Date: Sun, 2 Apr 2006 18:51:52 +0900
-Message-ID: <11439715122600-git-send-email-htejun@gmail.com>
+Subject: [PATCH 12/15] libata: add @cdb to ata_exec_internal()
+Date: Sun, 2 Apr 2006 18:51:53 +0900
+Message-ID: <11439715131615-git-send-email-htejun@gmail.com>
 References: <11439715124131-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.197]:48058 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932278AbWDBJv6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 05:51:58 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1447005nzf
-        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 01:51:58 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.200]:11846 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932308AbWDBJwC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 05:52:02 -0400
+Received: by zproxy.gmail.com with SMTP id o37so1447006nzf
+        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 01:52:02 -0800 (PST)
 In-Reply-To: <11439715124131-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Kill unused flag ATA_FLAG_IN_EH.
+Add @cdb to ata_exec_internal().  It will be used by new EH.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-scsi.c |   17 ++++-------------
- include/linux/libata.h     |    1 -
- 2 files changed, 4 insertions(+), 14 deletions(-)
+ drivers/scsi/libata-core.c |   13 ++++++++-----
+ 1 files changed, 8 insertions(+), 5 deletions(-)
 
-ba36d3e3f4b1dba269a1c09f48f3131d287181ca
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index c1a4b29..bcbf71e 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -779,20 +779,15 @@ enum scsi_eh_timer_return ata_scsi_timed
+d73daad1db8fa577219cdcf734046018d9ad45a9
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 551f078..999fe08 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -964,6 +964,7 @@ void ata_qc_complete_internal(struct ata
+  *	@ap: Port to which the command is sent
+  *	@dev: Device to which the command is sent
+  *	@tf: Taskfile registers for the command and the result
++ *	@cdb: CDB for packet command
+  *	@dma_dir: Data tranfer direction of the command
+  *	@buf: Data buffer of the command
+  *	@buflen: Length of data buffer
+@@ -980,7 +981,7 @@ void ata_qc_complete_internal(struct ata
  
- int ata_scsi_error(struct Scsi_Host *host)
+ static unsigned
+ ata_exec_internal(struct ata_port *ap, struct ata_device *dev,
+-		  struct ata_taskfile *tf,
++		  struct ata_taskfile *tf, const u8 *cdb,
+ 		  int dma_dir, void *buf, unsigned int buflen)
  {
--	struct ata_port *ap;
--	unsigned long flags;
-+	struct ata_port *ap = (struct ata_port *)&host->hostdata[0];
+ 	u8 command = tf->command;
+@@ -995,6 +996,8 @@ ata_exec_internal(struct ata_port *ap, s
+ 	BUG_ON(qc == NULL);
  
- 	DPRINTK("ENTER\n");
+ 	qc->tf = *tf;
++	if (cdb)
++		memcpy(qc->cdb, cdb, ATAPI_CDB_LEN);
+ 	qc->dma_dir = dma_dir;
+ 	if (dma_dir != DMA_NONE) {
+ 		ata_sg_init_one(qc, buf, buflen);
+@@ -1144,7 +1147,7 @@ static int ata_dev_read_id(struct ata_po
  
--	ap = (struct ata_port *) &host->hostdata[0];
-+	/* synchronize with IRQ handler and port task */
-+	spin_unlock_wait(&ap->host_set->lock);
-+	ata_port_flush_task(ap);
+ 	tf.protocol = ATA_PROT_PIO;
  
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	WARN_ON(ap->flags & ATA_FLAG_IN_EH);
--	ap->flags |= ATA_FLAG_IN_EH;
- 	WARN_ON(ata_qc_from_tag(ap, ap->active_tag) == NULL);
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
--
--	ata_port_flush_task(ap);
+-	err_mask = ata_exec_internal(ap, dev, &tf, DMA_FROM_DEVICE,
++	err_mask = ata_exec_internal(ap, dev, &tf, NULL, DMA_FROM_DEVICE,
+ 				     id, sizeof(id[0]) * ATA_ID_WORDS);
+ 	if (err_mask) {
+ 		rc = -EIO;
+@@ -2983,7 +2986,7 @@ static unsigned int ata_dev_set_xfermode
+ 	tf.protocol = ATA_PROT_NODATA;
+ 	tf.nsect = dev->xfer_mode;
  
- 	ap->ops->eng_timeout(ap);
+-	err_mask = ata_exec_internal(ap, dev, &tf, DMA_NONE, NULL, 0);
++	err_mask = ata_exec_internal(ap, dev, &tf, NULL, DMA_NONE, NULL, 0);
  
-@@ -800,10 +795,6 @@ int ata_scsi_error(struct Scsi_Host *hos
+ 	DPRINTK("EXIT, err_mask=%x\n", err_mask);
+ 	return err_mask;
+@@ -3023,7 +3026,7 @@ static unsigned int ata_dev_init_params(
+ 	tf.nsect = sectors;
+ 	tf.device |= (heads - 1) & 0x0f; /* max head = num. of heads - 1 */
  
- 	scsi_eh_flush_done_q(&ap->eh_done_q);
+-	err_mask = ata_exec_internal(ap, dev, &tf, DMA_NONE, NULL, 0);
++	err_mask = ata_exec_internal(ap, dev, &tf, NULL, DMA_NONE, NULL, 0);
  
--	spin_lock_irqsave(&ap->host_set->lock, flags);
--	ap->flags &= ~ATA_FLAG_IN_EH;
--	spin_unlock_irqrestore(&ap->host_set->lock, flags);
--
- 	DPRINTK("EXIT\n");
- 	return 0;
- }
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a4a1e63..e20b0bf 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -152,7 +152,6 @@ enum {
- 	ATA_FLAG_IRQ_MASK	= (1 << 14), /* Mask IRQ in PIO xfers */
+ 	DPRINTK("EXIT, err_mask=%x\n", err_mask);
+ 	return err_mask;
+@@ -4477,7 +4480,7 @@ static int ata_do_simple_cmd(struct ata_
+ 	tf.flags |= ATA_TFLAG_DEVICE;
+ 	tf.protocol = ATA_PROT_NODATA;
  
- 	ATA_FLAG_FLUSH_PORT_TASK = (1 << 15), /* Flush port task */
--	ATA_FLAG_IN_EH		= (1 << 16), /* EH in progress */
- 
- 	ATA_QCFLAG_ACTIVE	= (1 << 1), /* cmd not yet ack'd to scsi lyer */
- 	ATA_QCFLAG_SG		= (1 << 3), /* have s/g table? */
+-	err = ata_exec_internal(ap, dev, &tf, DMA_NONE, NULL, 0);
++	err = ata_exec_internal(ap, dev, &tf, NULL, DMA_NONE, NULL, 0);
+ 	if (err)
+ 		printk(KERN_ERR "%s: ata command failed: %d\n",
+ 				__FUNCTION__, err);
 -- 
 1.2.4
 
