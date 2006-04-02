@@ -1,38 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 6/7] libata: improve ata_bus_probe()
-Date: Sun, 02 Apr 2006 06:47:23 -0400
-Message-ID: <442FABBB.80203@pobox.com>
-References: <11439680863401-git-send-email-htejun@gmail.com>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: IDE CDROM tail read errors
+Date: Sun, 02 Apr 2006 12:50:48 +0200
+Message-ID: <m3lkuotfnb.fsf@defiant.localdomain>
+References: <m3wtedrrpf.fsf@defiant.localdomain>
+	<1143717489.29388.32.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:3054 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932310AbWDBKr1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 06:47:27 -0400
-In-Reply-To: <11439680863401-git-send-email-htejun@gmail.com>
+Received: from khc.piap.pl ([195.187.100.11]:54538 "EHLO khc.piap.pl")
+	by vger.kernel.org with ESMTP id S932313AbWDBKux (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 06:50:53 -0400
+In-Reply-To: <1143717489.29388.32.camel@localhost.localdomain> (Alan Cox's message of "Thu, 30 Mar 2006 12:18:09 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> +
-> + fail:
-> +	switch (rc) {
-> +	case -EINVAL:
-> +	case -ENODEV:
-> +		tries[dev->devno] = 0;
-> +		break;
-> +	case -EIO:
-> +		ata_down_sata_spd_limit(ap);
+Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
 
+>> 1342256 (looks like it has been adjusted to .iso image size / 512 when
+>>          the first I/O error occured)
+>
+> The SCSI layer does this bit for everyone. Its actually not libata or
+> the PATA drivers that have done the work here. You should find ide-scsi
+> does the same.
 
-I starting to think that separating ata_down_sata_spd_limit() from the 
-actual phy programming is a bad idea.
+I see. I wonder if TOC track (in 2KB sectors) longer than ISO image
+is a (recording) bug.
 
-However, I'm not going to NAK it just yet, we'll see where this goes.
+> I patched the old IDE driver a bit to try and deal with this and if you
+> want the patch to hack on and tidy up further feel free. 
 
-	Jeff
+Thanks but... now I've converted my last machine to PATA-libata and
+drivers/ide are dead for me:
 
-
+- no way to hot-swap (permanent modules)
+- IRQ timeouts on my EPIA-M (never seen with libata)
+- now the "end of medium" problems
+- code duplication and different device names
+-- 
+Krzysztof Halasa
