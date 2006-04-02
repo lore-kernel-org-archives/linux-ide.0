@@ -1,103 +1,165 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 7/7] libata: consider disabled devices in ata_dev_xfermask()
-Date: Sun, 2 Apr 2006 17:54:47 +0900
-Message-ID: <11439680873666-git-send-email-htejun@gmail.com>
+Subject: [PATCH 6/7] libata: improve ata_bus_probe()
+Date: Sun, 2 Apr 2006 17:54:46 +0900
+Message-ID: <11439680863401-git-send-email-htejun@gmail.com>
 References: <11439680863256-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.192]:54046 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932269AbWDBIy4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 04:54:56 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1438213nzf
-        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 00:54:56 -0800 (PST)
+Received: from zproxy.gmail.com ([64.233.162.203]:17521 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932278AbWDBIzB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 04:55:01 -0400
+Received: by zproxy.gmail.com with SMTP id o37so1438215nzf
+        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 00:55:01 -0800 (PST)
 In-Reply-To: <11439680863256-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-ata_bus_probe() now marks failed devices properly and leaves
-meaningful transfer mode masks.  This patch makes ata_dev_xfermask()
-consider disable devices when determining PIO mode to avoid violating
-device selection timing.
+Improve ata_bus_probe() such that configuration failures are handled
+better.  Each device is given ATA_PROBE_MAX_TRIES chances, but any
+non-transient error (revalidation failure with -ENODEV, configuration
+failure with -EINVAL...) disables the device directly.  Any IO error
+results in SATA PHY speed down and ata_set_mode() failure lowers
+transfer mode.  The last try always puts a device into PIO-0.
 
-While at it, move port-wide resttriction out of device iteration loop
-and try to make the function look a bit prettier.
+After each failure, the whole port is reset to make sure that the
+controller and all the devices are in a known and stable state.  The
+reset also applies SATA SPD configuration if necessary.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   34 +++++++++++++++++++++++-----------
- 1 files changed, 23 insertions(+), 11 deletions(-)
+ drivers/scsi/libata-core.c |   65 +++++++++++++++++++++++++++++++++-----------
+ include/linux/libata.h     |    3 ++
+ 2 files changed, 52 insertions(+), 16 deletions(-)
 
-5d1704cd08f45e1d66415eb0ad45e61793b385ef
+5dfcc0a5314aa0524b389503fe12a7ee4446ea99
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 1460cb3..b058602 100644
+index 42a3147..1460cb3 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -2908,23 +2908,34 @@ static void ata_dev_xfermask(struct ata_
- 	unsigned long xfer_mask;
- 	int i;
+@@ -1370,11 +1370,18 @@ err_out_nosup:
+ static int ata_bus_probe(struct ata_port *ap)
+ {
+ 	unsigned int classes[ATA_MAX_DEVICES];
+-	int i, rc, found = 0;
++	int tries[ATA_MAX_DEVICES];
++	int i, rc, down_xfermask;
+ 	struct ata_device *dev;
  
--	xfer_mask = ata_pack_xfermask(ap->pio_mask, ap->mwdma_mask,
--				      ap->udma_mask);
-+	xfer_mask = ata_pack_xfermask(ap->pio_mask,
-+				      ap->mwdma_mask, ap->udma_mask);
-+
-+	/* Apply cable rule here.  Don't apply it early because when
-+	 * we handle hot plug the cable type can itself change.
-+	 */
-+	if (ap->cbl == ATA_CBL_PATA40)
-+		xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
+ 	ata_port_probe(ap);
  
- 	/* FIXME: Use port-wide xfermask for now */
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *d = &ap->device[i];
--		if (!ata_dev_enabled(d))
++	for (i = 0; i < ATA_MAX_DEVICES; i++)
++		tries[i] = ATA_PROBE_MAX_TRIES;
 +
-+		if (ata_dev_absent(d))
-+			continue;
++ retry:
++	down_xfermask = 0;
 +
-+		if (ata_dev_disabled(d)) {
-+			/* to avoid violating device selection timing */
-+			xfer_mask &= ata_pack_xfermask(d->pio_mask,
-+						       UINT_MAX, UINT_MAX);
+ 	/* reset and determine device classes */
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++)
+ 		classes[i] = ATA_DEV_UNKNOWN;
+@@ -1404,21 +1411,23 @@ static int ata_bus_probe(struct ata_port
+ 		dev = &ap->device[i];
+ 		dev->class = classes[i];
+ 
+-		if (!ata_dev_enabled(dev))
+-			continue;
+-
+-		WARN_ON(dev->id != NULL);
+-		if (ata_dev_read_id(ap, dev, &dev->class, 1, &dev->id)) {
+-			dev->class = ATA_DEV_NONE;
+-			continue;
++		if (!tries[i]) {
++			ata_down_xfermask_limit(ap, dev, 1);
++			ata_dev_disable(ap, dev);
+ 		}
+ 
+-		if (ata_dev_configure(ap, dev, 1)) {
+-			ata_dev_disable(ap, dev);
++		if (!ata_dev_enabled(dev))
  			continue;
--		xfer_mask &= ata_pack_xfermask(d->pio_mask, d->mwdma_mask,
--					       d->udma_mask);
+-		}
+ 
+-		found = 1;
++		kfree(dev->id);
++		dev->id = NULL;
++		rc = ata_dev_read_id(ap, dev, &dev->class, 1, &dev->id);
++		if (rc)
++			goto fail;
++
++		rc = ata_dev_configure(ap, dev, 1);
++		if (rc)
++			goto fail;
+ 	}
+ 
+ 	/* configure transfer mode */
+@@ -1427,12 +1436,18 @@ static int ata_bus_probe(struct ata_port
+ 		 * return error code and failing device on failure as
+ 		 * ata_set_mode() does.
+ 		 */
+-		if (found)
+-			ap->ops->set_mode(ap);
++		for (i = 0; i < ATA_MAX_DEVICES; i++)
++			if (ata_dev_enabled(&ap->device[i])) {
++				ap->ops->set_mode(ap);
++				break;
++			}
+ 		rc = 0;
+ 	} else {
+-		while (ata_set_mode(ap, &dev))
+-			ata_dev_disable(ap, dev);
++		rc = ata_set_mode(ap, &dev);
++		if (rc) {
++			down_xfermask = 1;
++			goto fail;
 +		}
-+
-+		xfer_mask &= ata_pack_xfermask(d->pio_mask,
-+					       d->mwdma_mask, d->udma_mask);
- 		xfer_mask &= ata_id_xfermask(d->id);
- 		if (ata_dma_blacklisted(d))
- 			xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
--		/* Apply cable rule here. Don't apply it early because when
--		   we handle hot plug the cable type can itself change */
--		if (ap->cbl == ATA_CBL_PATA40)
--			xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
  	}
  
- 	if (ata_dma_blacklisted(dev))
-@@ -2935,11 +2946,12 @@ static void ata_dev_xfermask(struct ata_
- 		if (hs->simplex_claimed)
- 			xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
- 	}
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++)
+@@ -1443,6 +1458,24 @@ static int ata_bus_probe(struct ata_port
+ 	ata_port_disable(ap);
+ 	ap->ops->port_disable(ap);
+ 	return -ENODEV;
 +
- 	if (ap->ops->mode_filter)
- 		xfer_mask = ap->ops->mode_filter(ap, dev, xfer_mask);
- 
--	ata_unpack_xfermask(xfer_mask, &dev->pio_mask, &dev->mwdma_mask,
--			    &dev->udma_mask);
-+	ata_unpack_xfermask(xfer_mask, &dev->pio_mask,
-+			    &dev->mwdma_mask, &dev->udma_mask);
++ fail:
++	switch (rc) {
++	case -EINVAL:
++	case -ENODEV:
++		tries[dev->devno] = 0;
++		break;
++	case -EIO:
++		ata_down_sata_spd_limit(ap);
++		/* fall through */
++	default:
++		tries[dev->devno]--;
++		if (down_xfermask &&
++		    ata_down_xfermask_limit(ap, dev, tries[dev->devno] == 1))
++			tries[dev->devno] = 0;
++	}
++
++	goto retry;
  }
  
  /**
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index a5207e6..a4a1e63 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -211,6 +211,9 @@ enum {
+ 	/* Masks for port functions */
+ 	ATA_PORT_PRIMARY	= (1 << 0),
+ 	ATA_PORT_SECONDARY	= (1 << 1),
++
++	/* how hard are we gonna try to probe/recover devices */
++	ATA_PROBE_MAX_TRIES	= 3,
+ };
+ 
+ enum hsm_task_states {
 -- 
 1.2.4
 
