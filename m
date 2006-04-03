@@ -1,241 +1,76 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 08/13] libata: implement ata_eh_revive()
-Date: Mon, 3 Apr 2006 16:42:43 +0900
-Message-ID: <20060403074243.GA31998@htj.dyndns.org>
-References: <11440358783861-git-send-email-htejun@gmail.com> <11440358791209-git-send-email-htejun@gmail.com>
+Subject: [PATCH 01/14] libata: add NCQ related ATA constants and id macros
+Date: Mon, 3 Apr 2006 17:32:39 +0900
+Message-ID: <11440531593535-git-send-email-htejun@gmail.com>
+References: <1144053158183-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.230]:58814 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932325AbWDCHmt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Apr 2006 03:42:49 -0400
-Received: by wproxy.gmail.com with SMTP id i22so1243133wra
-        for <linux-ide@vger.kernel.org>; Mon, 03 Apr 2006 00:42:49 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <11440358791209-git-send-email-htejun@gmail.com>
+Received: from wproxy.gmail.com ([64.233.184.238]:54756 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751527AbWDCIco (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Apr 2006 04:32:44 -0400
+Received: by wproxy.gmail.com with SMTP id 68so1223805wra
+        for <linux-ide@vger.kernel.org>; Mon, 03 Apr 2006 01:32:43 -0700 (PDT)
+In-Reply-To: <1144053158183-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, axboe@suse.de, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Implement EH helper function ata_eh_revive().  This function executes
-what ata_eh_autopsy() and other parts of EH determined necessary to
-resurrect the port.  As in ata_bus_probe(), each device is given fixed
-number (ATA_EH_MAX_TRIES) of chances.  If a device uses up all its
-chances and still fail to recover, it gets disabled.
+Add NCQ related ATA constants and id macros.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
-In the original patch, ap->ops->set_mode() wasn't handled and also was
-missing a new line in the comment.  This patch fixes both.
+ include/linux/ata.h |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-Thanks.
+48e08259332120710872ee5dce6d2051324f5d46
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 283138f..0509340 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -133,6 +133,8 @@ enum {
+ 	ATA_CMD_WRITE		= 0xCA,
+ 	ATA_CMD_WRITE_EXT	= 0x35,
+ 	ATA_CMD_WRITE_FUA_EXT	= 0x3D,
++	ATA_CMD_FPDMA_READ	= 0x60,
++	ATA_CMD_FPDMA_WRITE	= 0x61,
+ 	ATA_CMD_PIO_READ	= 0x20,
+ 	ATA_CMD_PIO_READ_EXT	= 0x24,
+ 	ATA_CMD_PIO_WRITE	= 0x30,
+@@ -151,6 +153,10 @@ enum {
+ 	ATA_CMD_INIT_DEV_PARAMS	= 0x91,
+ 	ATA_CMD_READ_NATIVE_MAX	= 0xF8,
+ 	ATA_CMD_READ_NATIVE_MAX_EXT = 0x27,
++	ATA_CMD_READ_LOG_EXT	= 0x2f,
++
++	/* READ_LOG_EXT pages */
++	ATA_LOG_SATA_NCQ	= 0x10,
+ 
+ 	/* SETFEATURES stuff */
+ 	SETFEATURES_XFER	= 0x03,
+@@ -218,6 +224,7 @@ enum ata_tf_protocols {
+ 	ATA_PROT_NODATA,	/* no data */
+ 	ATA_PROT_PIO,		/* PIO single sector */
+ 	ATA_PROT_DMA,		/* DMA */
++	ATA_PROT_NCQ,		/* NCQ */
+ 	ATA_PROT_ATAPI,		/* packet command, PIO data xfer*/
+ 	ATA_PROT_ATAPI_NODATA,	/* packet command, no data */
+ 	ATA_PROT_ATAPI_DMA,	/* packet command with special DMA sauce */
+@@ -273,6 +280,8 @@ struct ata_taskfile {
+ #define ata_id_has_pm(id)	((id)[82] & (1 << 3))
+ #define ata_id_has_lba(id)	((id)[49] & (1 << 9))
+ #define ata_id_has_dma(id)	((id)[49] & (1 << 8))
++#define ata_id_has_ncq(id)	((id)[76] & (1 << 8))
++#define ata_id_queue_depth(id)	(((id)[75] & 0x1f) + 1)
+ #define ata_id_removeable(id)	((id)[0] & (1 << 7))
+ #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
+ #define ata_id_u32(id,n)	\
+-- 
+1.2.4
 
- drivers/scsi/libata-core.c |    1
- drivers/scsi/libata-eh.c   |  163 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h     |    4 +
- 3 files changed, 168 insertions(+)
 
-Index: work/drivers/scsi/libata-core.c
-===================================================================
---- work.orig/drivers/scsi/libata-core.c	2006-04-03 16:37:20.000000000 +0900
-+++ work/drivers/scsi/libata-core.c	2006-04-03 16:37:32.000000000 +0900
-@@ -5282,3 +5282,4 @@ EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
- EXPORT_SYMBOL_GPL(ata_eh_determine_qc);
- EXPORT_SYMBOL_GPL(ata_eh_autopsy);
- EXPORT_SYMBOL_GPL(ata_eh_report);
-+EXPORT_SYMBOL_GPL(ata_eh_revive);
-Index: work/drivers/scsi/libata-eh.c
-===================================================================
---- work.orig/drivers/scsi/libata-eh.c	2006-04-03 16:37:20.000000000 +0900
-+++ work/drivers/scsi/libata-eh.c	2006-04-03 16:38:14.000000000 +0900
-@@ -880,3 +880,166 @@ void ata_eh_report(struct ata_port *ap, 
- 	       tf->command, tf->feature, serror, action,
- 	       desc_head, desc, desc_tail);
- }
-+
-+/**
-+ *	ata_eh_revive - revive host port after error
-+ *	@ap: host port to revive
-+ *	@action: action to perform to revive @ap
-+ *	@softreset: softreset method (can be NULL)
-+ *	@hardreset: hardreset method (can be NULL)
-+ *	@postreset: postreset method (can be NULL)
-+ *
-+ *	Perform action specified by @action to revive host port @ap
-+ *	after error.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep).
-+ */
-+int ata_eh_revive(struct ata_port *ap, unsigned int action,
-+		  ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
-+		  ata_postreset_fn_t postreset)
-+{
-+	unsigned int classes[ATA_MAX_DEVICES];
-+	int tries[ATA_MAX_DEVICES], reset_tries;
-+	int scr_valid = ap->flags & ATA_FLAG_SATA && ap->ops->scr_read;
-+	struct ata_device *dev;
-+	ata_reset_fn_t reset;
-+	int i, down_xfermask, rc = 0;
-+
-+	if (!action)
-+		goto out;
-+
-+	reset_tries = ATA_EH_MAX_TRIES;
-+	for (i = 0; i < ATA_MAX_DEVICES; i++)
-+		tries[i] = ATA_EH_MAX_TRIES;
-+
-+	/* revalidate */
-+	if (action == ATA_PORT_REVALIDATE) {
-+		for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+			struct ata_device *dev = &ap->device[i];
-+			if (!ata_dev_enabled(dev) ||
-+			    !(dev->flags & ATA_DFLAG_FAILED))
-+				continue;
-+			if (ata_dev_revalidate(ap, dev, 0))
-+				break;
-+		}
-+		if (i == ATA_MAX_DEVICES) {
-+			rc = 0;
-+			goto out;
-+		}
-+
-+		action |= ATA_PORT_SOFTRESET;
-+	}
-+	action &= ~ATA_PORT_REVALIDATE;
-+
-+	/* Give devices time to get ready before trying the first
-+	 * reset.  Without this, devices tend to fail the first reset
-+	 * under certain circumstances and cause much longer delay.
-+	 */
-+	if (scr_valid && sata_dev_present(ap)) {
-+		unsigned long timeout = jiffies + 5 * HZ;
-+		while (time_before(jiffies, timeout) &&
-+		       ata_chk_status(ap) & ATA_BUSY)
-+			ssleep(1);
-+	}
-+
-+	if (softreset && (!hardreset || (!ata_set_sata_spd_needed(ap) &&
-+					 action == ATA_PORT_SOFTRESET)))
-+		reset = softreset;
-+	else
-+		reset = hardreset;
-+
-+ retry:
-+	down_xfermask = 0;
-+
-+	/* reset.  postreset is responsible for thawing the port. */
-+	printk("ata%u: %s resetting channel for error handling\n",
-+	       ap->id, reset == softreset ? "soft" : "hard");
-+
-+	rc = ata_do_reset(ap, reset, postreset, 1, classes);
-+	if (rc)
-+		goto fail_reset;
-+
-+	/* revalidate and reconfigure devices */
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		dev = &ap->device[i];
-+
-+		if (!tries[i])
-+			ata_dev_disable(ap, dev);
-+
-+		if (!ata_dev_enabled(dev))
-+			continue;
-+
-+		rc = ata_dev_revalidate(ap, dev, 1);
-+		if (rc)
-+			goto fail;
-+	}
-+
-+	/* configure transfer mode */
-+	if (ap->ops->set_mode) {
-+		/* FIXME: make ->set_mode handle no device case and
-+		 * return error code and failing device on failure as
-+		 * ata_set_mode() does.
-+		 */
-+		for (i = 0; i < ATA_MAX_DEVICES; i++)
-+			if (ata_dev_enabled(&ap->device[i])) {
-+				ap->ops->set_mode(ap);
-+				break;
-+			}
-+		rc = 0;
-+	} else {
-+		rc = ata_set_mode(ap, &dev);
-+		if (rc) {
-+			down_xfermask = 1;
-+			goto fail;
-+		}
-+	}
-+
-+	goto out;
-+
-+ fail_reset:
-+	if (!--reset_tries)
-+		goto out;
-+	if (reset == hardreset)
-+		ata_down_sata_spd_limit(ap);
-+	if (hardreset)
-+		reset = hardreset;
-+
-+	printk(KERN_WARNING "ata%u: reset failed, will retry in 5 secs\n",
-+	       ap->id);
-+	ssleep(5);
-+	goto retry;
-+
-+ fail:
-+	switch (rc) {
-+	case -EINVAL:
-+	case -ENODEV:
-+		tries[dev->devno] = 0;
-+		break;
-+	case -EIO:
-+		ata_down_sata_spd_limit(ap);
-+	default:
-+		tries[dev->devno]--;
-+		if (down_xfermask &&
-+		    ata_down_xfermask_limit(ap, dev, tries[dev->devno] == 1))
-+			tries[dev->devno] = 0;
-+	}
-+
-+	if (hardreset)
-+		reset = hardreset;
-+
-+	printk(KERN_WARNING "ata%u: some devices seem to be offline, will "
-+	       "retry in 5 secs\n", ap->id);
-+	ssleep(5);
-+	goto retry;
-+
-+ out:
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		dev = &ap->device[i];
-+		dev->flags &= ~ATA_DFLAG_FAILED;
-+		if (rc)
-+			ata_dev_disable(ap, dev);
-+	}
-+
-+	return rc;
-+}
-Index: work/include/linux/libata.h
-===================================================================
---- work.orig/include/linux/libata.h	2006-04-03 16:37:20.000000000 +0900
-+++ work/include/linux/libata.h	2006-04-03 16:37:32.000000000 +0900
-@@ -236,6 +236,7 @@ enum {
- 
- 	/* how hard are we gonna try to probe/recover devices */
- 	ATA_PROBE_MAX_TRIES	= 3,
-+	ATA_EH_MAX_TRIES	= 3,
- };
- 
- enum hsm_task_states {
-@@ -692,6 +693,9 @@ extern unsigned int ata_eh_autopsy(struc
- extern void ata_eh_report(struct ata_port *ap, struct ata_queued_cmd *qc,
- 			  const struct ata_taskfile *tf, u32 serror,
- 			  unsigned int action, const char *desc);
-+extern int ata_eh_revive(struct ata_port *ap, unsigned int action,
-+			 ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
-+			 ata_postreset_fn_t postreset);
- 
- 
- static inline int
