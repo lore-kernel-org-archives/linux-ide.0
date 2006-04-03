@@ -1,50 +1,45 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCHSET] libata: improve ata_bus_probe failure handling, take
- 2
-Date: Mon, 03 Apr 2006 12:20:02 -0400
-Message-ID: <44314B32.1070004@pobox.com>
-References: <11439680863256-git-send-email-htejun@gmail.com>	 <442FE142.7030304@pobox.com> <4430ECEF.30307@tw.ibm.com>	 <4430FB37.6040600@pobox.com> <87f94c370604030737y7ef96ed8g5d887ff768845956@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: hpt366 driver oops or panic with HighPoint RocketRAID 1520	SATA
+ (HPT372N)
+Date: Mon, 03 Apr 2006 20:58:17 +0400
+Message-ID: <44315429.5090602@ru.mvista.com>
+References: <436FB350.6020309@inap.se> <1131467876.25192.51.camel@localhost.localdomain> <43750851.1080306@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:28079 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751766AbWDCQUN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Apr 2006 12:20:13 -0400
-In-Reply-To: <87f94c370604030737y7ef96ed8g5d887ff768845956@mail.gmail.com>
+Received: from rtsoft2.corbina.net ([85.21.88.2]:6365 "HELO mail.dev.rtsoft.ru")
+	by vger.kernel.org with SMTP id S932310AbWDCQ75 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Apr 2006 12:59:57 -0400
+In-Reply-To: <43750851.1080306@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: albertl@mail.com, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Greg Freemyer wrote:
-> On 4/3/06, Jeff Garzik <jgarzik@pobox.com> wrote:
-> 
->> For the record, I do consider irq-pio upstream ready.  It still needs to
->> wait for Tejun's EH work to make it upstream, to give upstream people
->> the test sets of
->>
->>         - prep EH (2.6.17-rc1)
->>         - EH
->>         - NCQ
->>         - irq-pio
->>
->> Since each of these sets is staged, upstream testers will be able to say
->> "2.6.17-rc1 works, but 2.6.18-git1 doesn't", which gives us a lot of
->> good info.
->>
->>         Jeff
-> 
-> So for those of us anxiously waiting for the above great enhancements
-> it looks like it will be 5 months or so before it is in a released
-> vanilla kernel?  ie. assuming 2 1/2 months per kernel release.
+Hello.
 
-Heavens no :)
+Sergei Shtylylov wrote:
 
-The stages above just need to be separated out by a few 2.6.X-gitX or 
-2.6.X-rcX releases.
+> Alan Cox wrote:
 
-	Jeff
+>> I've got the correct timing tables and PLL tune information for the 302N
+>> now which appears to be very similar if not identical for these needs so
+>> if someone wants to hack the old drivers/ide/pci driver a bit I can
+>> provide reasonably accurate chip id and chip pll base information to
+>> enable a fix.
 
+>    I'm currently working on the old driver to bring in the HPT371N 
+> support and fix HPT371 clock setup (and make the other chip's clock 
+> setups correct along the way). Unfortunately I can test only on 371N and 
+> 370A, the board with 371 soldered in has PCI contreoller fried.
 
+    The driver rewrite is almost complete (after being preempted several 
+times), I'm awaiting it to also be tested on HPT302. The changes are HUGE, the 
+patch is about 70 KB in size...
+    Meanwhile, I've noticed (just now :-) a bug in HPT372N clock turnaround 
+code (it accesses extra DMA ports relative to dma_base, not dma_master which 
+would make it do BAD things if called on a secondary channel) -- guess I 
+should post them in a separate patch?
+
+WBR, Sergei
 
