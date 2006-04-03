@@ -1,17 +1,17 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: implement EH utility functions
-Date: Mon, 3 Apr 2006 12:40:58 +0900
-Message-ID: <11440356581563-git-send-email-htejun@gmail.com>
+Subject: [PATCH] libata: implement ata_ering
+Date: Mon, 3 Apr 2006 12:40:57 +0900
+Message-ID: <11440356573533-git-send-email-htejun@gmail.com>
 References: <11440356574107-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.193]:45617 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964815AbWDCDlE (ORCPT
+Received: from zproxy.gmail.com ([64.233.162.198]:8023 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964814AbWDCDlE (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 23:41:04 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1664771nzf
+Received: by zproxy.gmail.com with SMTP id o37so1664766nzf
         for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 20:41:03 -0700 (PDT)
 In-Reply-To: <11440356574107-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -19,117 +19,121 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement two utility functions ata_err_string() and
-atapi_eh_request_sense().  They will be used by EH.
+ata_ering is a ring buffer which records libata errors - whether a
+command was for normar IO request, err_mask and timestamp.  This will
+be used by EH to determine recovery actions.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-eh.c |   92 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 92 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-eh.c |   51 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/libata.h    |    1 +
+ include/linux/libata.h   |   16 ++++++++++++++
+ 3 files changed, 68 insertions(+), 0 deletions(-)
 
-59bc14437422f5faeddf7c6a3a745738b0f51202
+b92a795c5b84f3840388da95e2d4675d976c9e66
 diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index b5825b7..c4ef2dd 100644
+index dfbb8c4..b5825b7 100644
 --- a/drivers/scsi/libata-eh.c
 +++ b/drivers/scsi/libata-eh.c
-@@ -434,3 +434,95 @@ void ata_eh_qc_retry(struct ata_queued_c
- 		scmd->retries--;
- 	__ata_eh_qc_complete(qc);
- }
-+
-+/**
-+ *	ata_err_string - convert err_mask to descriptive string
-+ *	@err_mask: error mask to convert to string
-+ *
-+ *	Convert @err_mask to descriptive string.  Errors are
-+ *	prioritized according to severity and only the most severe
-+ *	error is reported.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ *
-+ *	RETURNS:
-+ *	Descriptive string for @err_mask
-+ */
-+static const char * ata_err_string(unsigned int err_mask)
+@@ -44,6 +44,57 @@
+ 
+ #include "libata.h"
+ 
++void ata_ering_init(struct ata_ering *ering, int size)
 +{
-+	if (err_mask & AC_ERR_HOST_BUS)
-+		return "host bus error";
-+	if (err_mask & AC_ERR_ATA_BUS)
-+		return "ATA bus error";
-+	if (err_mask & AC_ERR_TIMEOUT)
-+		return "timeout";
-+	if (err_mask & AC_ERR_HSM)
-+		return "host state machine violation";
-+	if (err_mask & AC_ERR_SYSTEM)
-+		return "host internal error";
-+	if (err_mask & AC_ERR_MEDIA)
-+		return "media error";
-+	if (err_mask & AC_ERR_INVALID)
-+		return "invalid argument error";
-+	if (err_mask & AC_ERR_DEV)
-+		return "unclassified device error";
-+	return "unknown error";
++	memset(ering, 0, sizeof(*ering) + sizeof(ering->ring[0]) * size);
++	ering->size = size;
 +}
 +
-+/**
-+ *	atapi_eh_request_sense - perform ATAPI REQUEST_SENSE
-+ *	@ap: port associated with device @dev
-+ *	@dev: device to perform REQUEST_SENSE to
-+ *	@sense_buf: result sense data buffer (SCSI_SENSE_BUFFERSIZE bytes long)
-+ *
-+ *	Perform ATAPI REQUEST_SENSE after the device reported CHECK
-+ *	SENSE.  This function is EH helper.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, AC_ERR_* mask on failure
-+ */
-+static unsigned int atapi_eh_request_sense(struct ata_port *ap,
-+					   struct ata_device *dev,
-+					   unsigned char *sense_buf)
++static void ata_ering_record(struct ata_ering *ering, int is_io,
++			     unsigned int err_mask)
 +{
-+	struct ata_taskfile tf;
-+	u8 cdb[ATAPI_CDB_LEN];
++	struct ata_ering_entry *ent;
 +
-+	DPRINTK("ATAPI request sense\n");
++	WARN_ON(!err_mask);
 +
-+	ata_tf_init(ap, &tf, dev->devno);
++	ering->cursor++;
++	ering->cursor %= ering->size;
 +
-+	/* FIXME: is this needed? */
-+	memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
-+
-+	/* XXX: why tf_read here? */
-+	ap->ops->tf_read(ap, &tf);
-+
-+	/* fill these in, for the case where they are -not- overwritten */
-+	sense_buf[0] = 0x70;
-+	sense_buf[2] = tf.feature >> 4;
-+
-+	memset(cdb, 0, ATAPI_CDB_LEN);
-+	cdb[0] = REQUEST_SENSE;
-+	cdb[4] = SCSI_SENSE_BUFFERSIZE;
-+
-+	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-+	tf.command = ATA_CMD_PACKET;
-+
-+	/* is it pointless to prefer PIO for "safety reasons"? */
-+	if (ap->flags & ATA_FLAG_PIO_DMA) {
-+		tf.protocol = ATA_PROT_ATAPI_DMA;
-+		tf.feature |= ATAPI_PKT_DMA;
-+	} else {
-+		tf.protocol = ATA_PROT_ATAPI;
-+		tf.lbam = (8 * 1024) & 0xff;
-+		tf.lbah = (8 * 1024) >> 8;
-+	}
-+
-+	return ata_exec_internal(ap, dev, &tf, cdb, DMA_FROM_DEVICE,
-+				 sense_buf, SCSI_SENSE_BUFFERSIZE);
++	ent = &ering->ring[ering->cursor];
++	ent->is_io = is_io;
++	ent->err_mask = err_mask;
++	ent->timestamp = get_jiffies_64();
 +}
++
++static struct ata_ering_entry * ata_ering_top(struct ata_ering *ering)
++{
++	struct ata_ering_entry *ent = &ering->ring[ering->cursor];
++	if (!ent->err_mask)
++		return NULL;
++	return ent;
++}
++
++static int ata_ering_map(struct ata_ering *ering,
++			 int (*map_fn)(struct ata_ering_entry *, void *),
++			 void *arg)
++{
++	int idx, rc = 0;
++	struct ata_ering_entry *ent;
++
++	idx = ering->cursor;
++	do {
++		ent = &ering->ring[idx];
++		if (!ent->err_mask)
++			break;
++		rc = map_fn(ent, arg);
++		if (rc)
++			break;
++		idx = (idx - 1 + ering->size) % ering->size;
++	} while (idx != ering->cursor);
++
++	return rc;
++}
++
+ /**
+  *	ata_scsi_timed_out - SCSI layer time out callback
+  *	@cmd: timed out SCSI command
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index 826010c..97eeacb 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -105,6 +105,7 @@ extern void ata_scsi_rbuf_fill(struct at
+                                            u8 *rbuf, unsigned int buflen));
+ 
+ /* libata-eh.c */
++extern void ata_ering_init(struct ata_ering *ering, int size);
+ extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
+ extern void ata_eh_schedule_qc(struct ata_queued_cmd *qc);
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 19d3ecc..e4480f2 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -371,6 +371,22 @@ struct ata_host_stats {
+ 	unsigned long		rw_reqbuf;
+ };
+ 
++struct ata_ering_entry {
++	int			is_io;
++	unsigned int		err_mask;
++	u64			timestamp;
++};
++
++struct ata_ering {
++	int			cursor;
++	int			size;
++	struct ata_ering_entry	ring[];
++};
++
++#define DEFINE_ATA_ERING(name, size)	\
++	struct ata_ering	name;	\
++	struct ata_ering_entry	name_entries[size];
++
+ struct ata_device {
+ 	u64			n_sectors;	/* size of device, if ATA */
+ 	unsigned long		flags;		/* ATA_DFLAG_xxx */
 -- 
 1.2.4
 
