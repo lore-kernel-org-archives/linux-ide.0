@@ -1,82 +1,81 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
-Date: Mon, 03 Apr 2006 10:24:47 +0900
-Message-ID: <4430795F.8000703@gmail.com>
-References: <20060402234932.96444.qmail@web31810.mail.mud.yahoo.com>
+Subject: [PATCH] libata: add constants and flags to be used by EH
+Date: Mon, 3 Apr 2006 12:40:57 +0900
+Message-ID: <11440356571647-git-send-email-htejun@gmail.com>
+References: <11440356574107-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.205]:50061 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964804AbWDCBY5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 21:24:57 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1628871nzf
-        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 18:24:54 -0700 (PDT)
-In-Reply-To: <20060402234932.96444.qmail@web31810.mail.mud.yahoo.com>
+Received: from zproxy.gmail.com ([64.233.162.198]:8023 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964808AbWDCDlD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 23:41:03 -0400
+Received: by zproxy.gmail.com with SMTP id o37so1664766nzf
+        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 20:41:02 -0700 (PDT)
+In-Reply-To: <11440356574107-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: Jeff Garzik <jgarzik@pobox.com>, hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello, Luben.
+Add constants and flags to be used by EH.
 
-Luben Tuikov wrote:
-> --- Tejun Heo <htejun@gmail.com> wrote:
->> This patch implements scsi_eh_schedule_cmd() which provides a way to
->> directly invoke SCSI EH from drivers implementing
->> ->eh_strategy_handler.  Combined with scsi_eh_flush_done_q(), this
->> gives such drivers complete control over when and how to invoke EH and
->> handle failed commands.
-> 
-> Hi Tejun,
-> 
-> I sent an almost identical patch, albeit much more general, see this:
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=113833937421677&w=2
-> 
-> Here is the core of it:
-> --start-quote--
-> This function requests that SCSI Core start recovery for the
-> command by deleting the timer and adding the command to the eh
-> queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
-> implement their own error recovery MAY ignore the timeout event if
-> they generated scsi_req_abort_cmd.
-> 
-> void scsi_req_abort_cmd(struct scsi_cmnd *cmd)
-> {
-> 	if (!scsi_delete_timer(cmd))
-> 		return;
-> 	scsi_times_out(cmd);
-> }
-> --end-quote---
-> 
-> To have a consistent and complete error recovery solution, given
-> the current SCSI Core infrastructure, as is requred for your SATA effort,
-> and other (protocol) work, this is what one needs to implement:
-> 
-> 1. eh_timed_out(),
-> 2. eh_strategy_handler(),
-> 3. scsi_req_abort_cmd()  (as shown above), and finally,
-> 4. scsi_req_dev_reset().
-> 
-> I keep those in my own git trees. (Had 3 been accepted, I would've sent 4.)
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Hmmm... Is scsi_req_dev_reset() similar to scsi_eh_schedule_host()?  ie. 
-Does it request EH without scmd?  If so, can you post the patch?  I'm 
-okay with anything that works.  All that I need are...
+---
 
-* Non-hackish way to invoke EH on scmd from drivers implementing its own 
-EH.  DID_TIME_OUT solution James talked about in the thread isn't 
-enough.  It needs to invoke EH whatever the command is.
+ include/linux/ata.h    |   11 +++++++++++
+ include/linux/libata.h |    5 +++++
+ 2 files changed, 16 insertions(+), 0 deletions(-)
 
-* Invoking EH without scmd.
-
-IMHO, it's better to allow such driver to tap directly into EH rather 
-than making it pass through normal SCSI EH decision making process 
-(scsi_device_disposition).  It's much simpler that way.
-
-James, can you tell us what you're thinking about this matter?
-
-Thanks.
-
+4aea2da11e6a1d39b417af71e881601cbb19387f
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 312a2c0..283138f 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -97,6 +97,9 @@ enum {
+ 	ATA_DRQ			= (1 << 3),	/* data request i/o */
+ 	ATA_ERR			= (1 << 0),	/* have an error */
+ 	ATA_SRST		= (1 << 2),	/* software reset */
++	ATA_ICRC		= (1 << 7),	/* interface CRC error */
++	ATA_UNC			= (1 << 6),	/* uncorrectable media error */
++	ATA_IDNF		= (1 << 4),	/* ID not found */
+ 	ATA_ABORTED		= (1 << 2),	/* command aborted */
+ 
+ 	/* ATA command block registers */
+@@ -192,6 +195,14 @@ enum {
+ 	SCR_ACTIVE		= 3,
+ 	SCR_NOTIFICATION	= 4,
+ 
++	/* SError bits */
++	SERR_DATA_RECOVERED	= (1 << 0), /* recovered data error */
++	SERR_COMM_RECOVERED	= (1 << 1), /* recovered comm failure */
++	SERR_DATA		= (1 << 8), /* unrecovered data error */
++	SERR_PERSISTENT		= (1 << 9), /* persistent data/comm error */
++	SERR_PROTOCOL		= (1 << 10), /* protocol violation */
++	SERR_INTERNAL		= (1 << 11), /* host internal error */
++
+ 	/* struct ata_taskfile flags */
+ 	ATA_TFLAG_LBA48		= (1 << 0), /* enable 48-bit LBA and "HOB" */
+ 	ATA_TFLAG_ISADDR	= (1 << 1), /* enable r/w to nsect/lba regs */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index c65cda9..19d3ecc 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -223,6 +223,11 @@ enum {
+ 	ATA_PORT_PRIMARY	= (1 << 0),
+ 	ATA_PORT_SECONDARY	= (1 << 1),
+ 
++	/* reset / recovery action types */
++	ATA_PORT_REVALIDATE	= (1 << 0),
++	ATA_PORT_SOFTRESET	= (1 << 1),
++	ATA_PORT_HARDRESET	= (1 << 2),
++
+ 	/* flags for ata_eh_shduled_port */
+ 	ATA_EH_ABORT		= (1 << 0), /* abort all active commands */
+ 	ATA_EH_FREEZE		= (1 << 1), /* freeze port (implies ABORT) */
 -- 
-tejun
+1.2.4
+
+
