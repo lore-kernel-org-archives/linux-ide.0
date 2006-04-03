@@ -1,110 +1,114 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 04/14] libata: implement ap->sactive
+Subject: [PATCH 05/14] libata: implement command exclusion
 Date: Mon, 3 Apr 2006 17:32:39 +0900
-Message-ID: <11440531591231-git-send-email-htejun@gmail.com>
+Message-ID: <11440531591703-git-send-email-htejun@gmail.com>
 References: <1144053158183-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.233]:59876 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751611AbWDCIct (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Apr 2006 04:32:49 -0400
-Received: by wproxy.gmail.com with SMTP id i22so1247733wra
-        for <linux-ide@vger.kernel.org>; Mon, 03 Apr 2006 01:32:49 -0700 (PDT)
+Received: from wproxy.gmail.com ([64.233.184.224]:59876 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751643AbWDCIcw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Apr 2006 04:32:52 -0400
+Received: by wproxy.gmail.com with SMTP id i22so1247732wra
+        for <linux-ide@vger.kernel.org>; Mon, 03 Apr 2006 01:32:52 -0700 (PDT)
 In-Reply-To: <1144053158183-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, axboe@suse.de, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement ap->sactive.  This is libata's view of SActive register.
-This will be used to track NCQ commands and complete them.
+NCQ enabled device will have queue depth larger than one but no two
+non-NCQ commands can be issued simultaneously, neither can a non-NCQ
+command and NCQ commands.  This patch makes ata_scsi_translate()
+return SCSI_MLQUEUE_DEVICE_BUSY if such exclusion is necessary.  SCSI
+midlayer will retry the command later.
+
+As SCSI midlayer always retries once a command completes, this doesn't
+incur unnecessary delays and as most commands will be NCQ ones for NCQ
+device, so the overhead should be negligible.
+
+Initial implementation is from Jens Axboe and using
+SCSI_MLQUEUE_DEVICE_BUSY for exclusion is suggested by Jeff Garzik.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   22 +++++++++++++++++++++-
- include/linux/libata.h     |    1 +
- 2 files changed, 22 insertions(+), 1 deletions(-)
+ drivers/scsi/libata-scsi.c |   41 +++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 41 insertions(+), 0 deletions(-)
 
-60995c11803d5d1844b6998ae373ba2d8d01be6d
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 5491afb..b4eeb4b 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -982,6 +982,7 @@ unsigned ata_exec_internal(struct ata_po
- 	u8 command = tf->command;
- 	struct ata_queued_cmd *qc;
- 	unsigned int tag, preempted_tag;
-+	u32 preempted_sactive;
- 	DECLARE_COMPLETION(wait);
- 	unsigned long flags;
- 	unsigned int err_mask;
-@@ -1017,7 +1018,9 @@ unsigned ata_exec_internal(struct ata_po
- 	ata_qc_reinit(qc);
+a5ceff438d7136a71a11fa1a6fcd0b4d3061a867
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index a1a4307..f3a73c4 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -1229,6 +1229,39 @@ static void ata_scsi_qc_complete(struct 
+ }
  
- 	preempted_tag = ap->active_tag;
-+	preempted_sactive = ap->sactive;
- 	ap->active_tag = ATA_TAG_POISON;
-+	ap->sactive = 0;
- 
- 	/* prepare & issue qc */
- 	qc->tf = *tf;
-@@ -1069,6 +1072,7 @@ unsigned ata_exec_internal(struct ata_po
- 
- 	ata_qc_free(qc);
- 	ap->active_tag = preempted_tag;
-+	ap->sactive = preempted_sactive;
- 
- 	/* XXX - Some LLDDs (sata_mv) disable port on command failure.
- 	 * Until those drivers are fixed, we detect the condition
-@@ -4197,6 +4201,12 @@ void __ata_qc_complete(struct ata_queued
- 	if (likely(qc->flags & ATA_QCFLAG_DMAMAP))
- 		ata_sg_clean(qc);
- 
-+	/* sactive bit must be turned atomically w.r.t. command
-+	 * completion, so it cannot be turned off in ata_qc_free().
-+	 */
-+	if (qc->tf.protocol == ATA_PROT_NCQ)
-+		qc->ap->sactive &= ~(1 << qc->tag);
+ /**
++ *	ata_scmd_need_defer - Check whether we need to defer scmd
++ *	@ap: ATA port to which the command is addressed
++ *	@dev: ATA device to which the command is addressed
++ *	@is_io: Is the command IO (and thus possibly NCQ)?
++ *
++ *	NCQ and non-NCQ commands cannot run together.  As upper layer
++ *	only knows the queue depth, we are responsible for maintaining
++ *	exclusion.  This function checks whether a new command can be
++ *	issued to @dev.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ *
++ *	RETURNS:
++ *	1 if deferring is needed, 0 otherwise.
++ */
++static int ata_scmd_need_defer(struct ata_port *ap, struct ata_device *dev,
++			       int is_io)
++{
++	if (!(dev->flags & ATA_DFLAG_NCQ))
++		return 0;
 +
- 	/* atapi: mark qc as inactive to prevent the interrupt handler
- 	 * from completing the command twice later, before the error handler
- 	 * is called. (when rc != 0 and atapi request sense is needed)
-@@ -4296,7 +4306,17 @@ void ata_qc_issue(struct ata_queued_cmd 
- {
- 	struct ata_port *ap = qc->ap;
- 
--	qc->ap->active_tag = qc->tag;
-+	/* old EH reuses active qc to request ATAPI sense */
-+	WARN_ON(ap->ops->error_handler && ata_tag_valid(ap->active_tag));
-+
-+	if (qc->tf.protocol == ATA_PROT_NCQ) {
-+		WARN_ON(ap->sactive & (1 << qc->tag));
-+		ap->sactive |= 1 << qc->tag;
++	if (is_io) {
++		if (!ata_tag_valid(ap->active_tag))
++			return 0;
 +	} else {
-+		WARN_ON(ap->sactive);
-+		ap->active_tag = qc->tag;
++		if (!ata_tag_valid(ap->active_tag) && !ap->sactive)
++			return 0;
 +	}
++	return 1;
++}
 +
- 	qc->flags |= ATA_QCFLAG_ACTIVE;
++/**
+  *	ata_scsi_translate - Translate then issue SCSI command to ATA device
+  *	@ap: ATA port to which the command is addressed
+  *	@dev: ATA device to which the command is addressed
+@@ -1263,9 +1296,13 @@ static int ata_scsi_translate(struct ata
+ {
+ 	struct ata_queued_cmd *qc;
+ 	u8 *scsicmd = cmd->cmnd;
++	int is_io = xlat_func == ata_scsi_rw_xlat;
  
- 	if (ata_should_dma_map(qc)) {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index c3a3cc0..7175191 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -450,6 +450,7 @@ struct ata_port {
- 	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE];
- 	unsigned long		qactive;
- 	unsigned int		active_tag;
-+	u32			sactive;
+ 	VPRINTK("ENTER\n");
  
- 	struct ata_host_stats	stats;
- 	struct ata_host_set	*host_set;
++	if (unlikely(ata_scmd_need_defer(ap, dev, is_io)))
++		goto defer;
++
+ 	qc = ata_scsi_qc_new(ap, dev, cmd, done);
+ 	if (!qc)
+ 		goto err_mem;
+@@ -1312,6 +1349,10 @@ err_mem:
+ 	done(cmd);
+ 	DPRINTK("EXIT - internal\n");
+ 	return 0;
++
++defer:
++	DPRINTK("EXIT - defer\n");
++	return SCSI_MLQUEUE_DEVICE_BUSY;
+ }
+ 
+ /**
 -- 
 1.2.4
 
