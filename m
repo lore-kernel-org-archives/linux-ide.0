@@ -1,124 +1,80 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 07/13] libata: implement ata_eh_report()
-Date: Mon, 3 Apr 2006 12:44:39 +0900
-Message-ID: <11440358791370-git-send-email-htejun@gmail.com>
+Subject: [PATCH 01/13] libata: add constants and flags to be used by EH
+Date: Mon, 3 Apr 2006 12:44:38 +0900
+Message-ID: <11440358783451-git-send-email-htejun@gmail.com>
 References: <11440358783861-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.197]:44129 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932271AbWDCDor (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 23:44:47 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1665768nzf
-        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 20:44:47 -0700 (PDT)
+Received: from zproxy.gmail.com ([64.233.162.200]:64990 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932189AbWDCDoo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Apr 2006 23:44:44 -0400
+Received: by zproxy.gmail.com with SMTP id o37so1665770nzf
+        for <linux-ide@vger.kernel.org>; Sun, 02 Apr 2006 20:44:43 -0700 (PDT)
 In-Reply-To: <11440358783861-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement EH helper function ata_eh_report().  This function reports
-to user which command caused what kind of error on which device.
-Detailed EH status is also printed to help tracking down the problem.
-LLDDs may supply LLDD specific message to ata_eh_report().  It will
-format them and print it together with other error information.
-
-Using this function standardizes error messages over different drivers
-helping both the users and developers.
+Add constants and flags to be used by EH.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    1 +
- drivers/scsi/libata-eh.c   |   50 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h     |    3 +++
- 3 files changed, 54 insertions(+), 0 deletions(-)
+ include/linux/ata.h    |   11 +++++++++++
+ include/linux/libata.h |    5 +++++
+ 2 files changed, 16 insertions(+), 0 deletions(-)
 
-2480239bcc13b4fa02bdfc5b70140cf4d46a50ff
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index ea5335b..dbf6815 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5281,3 +5281,4 @@ EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
- EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
- EXPORT_SYMBOL_GPL(ata_eh_determine_qc);
- EXPORT_SYMBOL_GPL(ata_eh_autopsy);
-+EXPORT_SYMBOL_GPL(ata_eh_report);
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 5224fe4..7b8b2d8 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -830,3 +830,53 @@ unsigned int ata_eh_autopsy(struct ata_p
- 	return action;
- }
+4aea2da11e6a1d39b417af71e881601cbb19387f
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 312a2c0..283138f 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -97,6 +97,9 @@ enum {
+ 	ATA_DRQ			= (1 << 3),	/* data request i/o */
+ 	ATA_ERR			= (1 << 0),	/* have an error */
+ 	ATA_SRST		= (1 << 2),	/* software reset */
++	ATA_ICRC		= (1 << 7),	/* interface CRC error */
++	ATA_UNC			= (1 << 6),	/* uncorrectable media error */
++	ATA_IDNF		= (1 << 4),	/* ID not found */
+ 	ATA_ABORTED		= (1 << 2),	/* command aborted */
  
-+/**
-+ *	ata_eh_report - report error handling to user
-+ *	@ap: host port EH is going on
-+ *	@qc: failed qc (could be NULL)
-+ *	@tf: current taskfile register values
-+ *	@serror: SError register value
-+ *	@action: determined recovery action
-+ *	@desc: extra description
-+ *
-+ *	Report EH to user.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ */
-+void ata_eh_report(struct ata_port *ap, struct ata_queued_cmd *qc,
-+		   const struct ata_taskfile *tf, u32 serror,
-+		   unsigned int action, const char *desc)
-+{
-+	const char *desc_head, *desc_tail;
+ 	/* ATA command block registers */
+@@ -192,6 +195,14 @@ enum {
+ 	SCR_ACTIVE		= 3,
+ 	SCR_NOTIFICATION	= 4,
+ 
++	/* SError bits */
++	SERR_DATA_RECOVERED	= (1 << 0), /* recovered data error */
++	SERR_COMM_RECOVERED	= (1 << 1), /* recovered comm failure */
++	SERR_DATA		= (1 << 8), /* unrecovered data error */
++	SERR_PERSISTENT		= (1 << 9), /* persistent data/comm error */
++	SERR_PROTOCOL		= (1 << 10), /* protocol violation */
++	SERR_INTERNAL		= (1 << 11), /* host internal error */
 +
-+	if (desc && desc[0] != '\0') {
-+		desc_head = "      (";
-+		desc_tail = ")\n";
-+	} else {
-+		desc_head = "";
-+		desc = "";
-+		desc_tail = "";
-+	}
-+
-+	if (!qc) {
-+		printk(KERN_ERR
-+		       "ata%u: stat 0x%x err 0x%x SError 0x%x action 0x%x\n"
-+		       "%s%s%s",
-+		       ap->id, tf->command, tf->feature, serror,
-+		       action, desc_head, desc, desc_tail);
-+		return;
-+	}
-+
-+	if (!qc->err_mask)
-+		return;
-+
-+	printk(KERN_ERR
-+	       "ata%u: dev %u command 0x%x tag %u failed with %s\n"
-+	       "      Emask 0x%x stat 0x%x err 0x%x SErr 0x%x action 0x%x\n"
-+	       "%s%s%s",
-+	       ap->id, qc->dev->devno, qc->tf.command, qc->tag,
-+	       ata_err_string(qc->err_mask), qc->err_mask,
-+	       tf->command, tf->feature, serror, action,
-+	       desc_head, desc, desc_tail);
-+}
+ 	/* struct ata_taskfile flags */
+ 	ATA_TFLAG_LBA48		= (1 << 0), /* enable 48-bit LBA and "HOB" */
+ 	ATA_TFLAG_ISADDR	= (1 << 1), /* enable r/w to nsect/lba regs */
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index f65bde5..437c5ad 100644
+index c65cda9..19d3ecc 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -689,6 +689,9 @@ extern struct ata_queued_cmd * ata_eh_de
- extern unsigned int ata_eh_autopsy(struct ata_port *ap,
- 				   struct ata_queued_cmd *qc,
- 				   const struct ata_taskfile *tf, u32 serror);
-+extern void ata_eh_report(struct ata_port *ap, struct ata_queued_cmd *qc,
-+			  const struct ata_taskfile *tf, u32 serror,
-+			  unsigned int action, const char *desc);
+@@ -223,6 +223,11 @@ enum {
+ 	ATA_PORT_PRIMARY	= (1 << 0),
+ 	ATA_PORT_SECONDARY	= (1 << 1),
  
- 
- static inline int
++	/* reset / recovery action types */
++	ATA_PORT_REVALIDATE	= (1 << 0),
++	ATA_PORT_SOFTRESET	= (1 << 1),
++	ATA_PORT_HARDRESET	= (1 << 2),
++
+ 	/* flags for ata_eh_shduled_port */
+ 	ATA_EH_ABORT		= (1 << 0), /* abort all active commands */
+ 	ATA_EH_FREEZE		= (1 << 1), /* freeze port (implies ABORT) */
 -- 
 1.2.4
 
