@@ -1,46 +1,52 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] move ->eh_strategy_handler to the transport class
-Date: Mon, 03 Apr 2006 06:44:50 -0400
-Message-ID: <4430FCA2.4070008@garzik.org>
-References: <20060401172104.GA16921@lst.de>  <442EC214.1040303@garzik.org> <1143919437.3368.12.camel@mulgrave.il.steeleye.com>
+From: "Greg Freemyer" <greg.freemyer@gmail.com>
+Subject: Re: [PATCHSET] libata: improve ata_bus_probe failure handling, take 2
+Date: Mon, 3 Apr 2006 10:37:23 -0400
+Message-ID: <87f94c370604030737y7ef96ed8g5d887ff768845956@mail.gmail.com>
+References: <11439680863256-git-send-email-htejun@gmail.com>
+	 <442FE142.7030304@pobox.com> <4430ECEF.30307@tw.ibm.com>
+	 <4430FB37.6040600@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34726 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751717AbWDCKoy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Apr 2006 06:44:54 -0400
-In-Reply-To: <1143919437.3368.12.camel@mulgrave.il.steeleye.com>
+Received: from uproxy.gmail.com ([66.249.92.199]:34773 "EHLO uproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751608AbWDCOhY convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Apr 2006 10:37:24 -0400
+Received: by uproxy.gmail.com with SMTP id c2so690964ugf
+        for <linux-ide@vger.kernel.org>; Mon, 03 Apr 2006 07:37:23 -0700 (PDT)
+In-Reply-To: <4430FB37.6040600@pobox.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@lst.de>, jejb@SteelEye.com, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: albertl@mail.com, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-James Bottomley wrote:
-> On Sat, 2006-04-01 at 13:10 -0500, Jeff Garzik wrote:
->> I would prefer to merge it through the libata-dev queue, since -- as a 
->> glance through the recent kernel changelog shows -- Tejun Heo has been 
->> ripping through this part of libata as well.
-> 
-> I'm afraid we can't do that since we have the sas class to convert as
-> well ... what I could do is take it through a separate tree and pull
-> that into scsi-misc and you can pull it into libata.  That will
-> (hopefully) ensure we both get it right.
+On 4/3/06, Jeff Garzik <jgarzik@pobox.com> wrote:
 
-Grumble!!  The following is why I wanted to merge it through libata:
+> For the record, I do consider irq-pio upstream ready.  It still needs to
+> wait for Tejun's EH work to make it upstream, to give upstream people
+> the test sets of
+>
+>         - prep EH (2.6.17-rc1)
+>         - EH
+>         - NCQ
+>         - irq-pio
+>
+> Since each of these sets is staged, upstream testers will be able to say
+> "2.6.17-rc1 works, but 2.6.18-git1 doesn't", which gives us a lot of
+> good info.
+>
+>         Jeff
 
-Linus writes:
-> Ok, 
->  it's two weeks since 2.6.16, and the merge window is closed.
+So for those of us anxiously waiting for the above great enhancements
+it looks like it will be 5 months or so before it is in a released
+vanilla kernel?  ie. assuming 2 1/2 months per kernel release.
 
-This is precisely why I grumbled last time libata and scsi-misc needed 
-some synchronization.  scsi-misc just isn't pushed as often as libata, 
-and I'm stuck behind a slow-moving car.
+Not as good as I hoped, but not horrible either.
 
-I think Christoph's patch can still go into 2.6.17-rc I think.  I'll get 
-that separate repository together if I don't hear from you soon.
-
-	Jeff
-
-
-
+Greg
+--
+Greg Freemyer
+The Norcross Group
+Forensics for the 21st Century
