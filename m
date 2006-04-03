@@ -1,7 +1,7 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 14/14] ahci: implement NCQ suppport
-Date: Mon, 3 Apr 2006 17:32:40 +0900
-Message-ID: <11440531604004-git-send-email-htejun@gmail.com>
+Subject: [PATCH 09/14] libata: implement NCQ device configuration
+Date: Mon, 3 Apr 2006 17:32:39 +0900
+Message-ID: <11440531594000-git-send-email-htejun@gmail.com>
 References: <1144053158183-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
@@ -9,251 +9,196 @@ Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from xproxy.gmail.com ([66.249.82.203]:7526 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751661AbWDCIc6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Apr 2006 04:32:58 -0400
+	by vger.kernel.org with ESMTP id S1751635AbWDCIcx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Apr 2006 04:32:53 -0400
 Received: by xproxy.gmail.com with SMTP id t10so764247wxc
-        for <linux-ide@vger.kernel.org>; Mon, 03 Apr 2006 01:32:58 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Mon, 03 Apr 2006 01:32:52 -0700 (PDT)
 In-Reply-To: <1144053158183-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, axboe@suse.de, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement NCQ support.
+Now that all NCQ related issue, processing and EH stuff are in place,
+implement NCQ device configuration and bump ATA_MAX_QUEUE to 32 thus
+activating NCQ support.
 
-Original implementation is from Jens Axboe.
+Original implementation if from Jens Axboe.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/ahci.c |   82 ++++++++++++++++++++++++++++++++++-----------------
- 1 files changed, 54 insertions(+), 28 deletions(-)
+ drivers/scsi/libata-core.c |   30 ++++++++++++++++++++++++++--
+ drivers/scsi/libata-scsi.c |   48 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/libata.h     |    4 +++-
+ 3 files changed, 79 insertions(+), 3 deletions(-)
 
-4d81afc6685879024602ce293215a70a3fe0a441
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 8201a06..fb89fca 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -56,9 +56,9 @@ enum {
- 	AHCI_MAX_SG		= 168, /* hardware max is 64K */
- 	AHCI_DMA_BOUNDARY	= 0xffffffff,
- 	AHCI_USE_CLUSTERING	= 0,
--	AHCI_MAX_CMDS		= 1,
-+	AHCI_MAX_CMDS		= 32,
- 	AHCI_CMD_SZ		= 32,
--	AHCI_CMD_SLOT_SZ	= 32 * AHCI_CMD_SZ,
-+	AHCI_CMD_SLOT_SZ	= AHCI_MAX_CMDS * AHCI_CMD_SZ,
- 	AHCI_RX_FIS_SZ		= 256,
- 	AHCI_CMD_TBL_CDB	= 0x40,
- 	AHCI_CMD_TBL_HDR_SZ	= 0x80,
-@@ -216,7 +216,8 @@ static struct scsi_host_template ahci_sh
- 	.ioctl			= ata_scsi_ioctl,
- 	.queuecommand		= ata_scsi_queuecmd,
- 	.eh_strategy_handler	= ata_scsi_error,
--	.can_queue		= ATA_DEF_QUEUE,
-+	.change_queue_depth	= ata_scsi_change_queue_depth,
-+	.can_queue		= AHCI_MAX_CMDS - 1,
- 	.this_id		= ATA_SHT_THIS_ID,
- 	.sg_tablesize		= AHCI_MAX_SG,
- 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
-@@ -516,12 +517,17 @@ static unsigned int ahci_dev_classify(st
- 	return ata_dev_classify(&tf);
+c8155294899ef8ed64d845a08ad6da4219ac9561
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index cc45cfc..56637f0 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -1243,6 +1243,27 @@ static inline u8 ata_dev_knobble(const s
+ 	return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev->id)));
  }
  
--static void ahci_fill_cmd_slot(struct ahci_port_priv *pp, u32 opts)
-+static void ahci_fill_cmd_slot(struct ahci_port_priv *pp, unsigned int tag,
-+			       u32 opts)
- {
--	pp->cmd_slot[0].opts = cpu_to_le32(opts);
--	pp->cmd_slot[0].status = 0;
--	pp->cmd_slot[0].tbl_addr = cpu_to_le32(pp->cmd_tbl_dma & 0xffffffff);
--	pp->cmd_slot[0].tbl_addr_hi = cpu_to_le32((pp->cmd_tbl_dma >> 16) >> 16);
-+	dma_addr_t cmd_tbl_dma;
++static void ata_dev_config_ncq(struct ata_port *ap, struct ata_device *dev,
++			       char *desc, size_t desc_sz)
++{
++	int hdepth = 0, ddepth = ata_id_queue_depth(dev->id);
 +
-+	cmd_tbl_dma = pp->cmd_tbl_dma + tag * AHCI_CMD_TBL_SZ;
++	if (!ata_id_has_ncq(dev->id)) {
++		desc[0] = '\0';
++		return;
++	}
 +
-+	pp->cmd_slot[tag].opts = cpu_to_le32(opts);
-+	pp->cmd_slot[tag].status = 0;
-+	pp->cmd_slot[tag].tbl_addr = cpu_to_le32(cmd_tbl_dma & 0xffffffff);
-+	pp->cmd_slot[tag].tbl_addr_hi = cpu_to_le32((cmd_tbl_dma >> 16) >> 16);
- }
- 
- static int ahci_poll_register(void __iomem *reg, u32 mask, u32 val,
-@@ -600,7 +606,8 @@ static int ahci_softreset(struct ata_por
- 	fis = pp->cmd_tbl;
- 
- 	/* issue the first D2H Register FIS */
--	ahci_fill_cmd_slot(pp, cmd_fis_len | AHCI_CMD_RESET | AHCI_CMD_CLR_BUSY);
-+	ahci_fill_cmd_slot(pp, 0,
-+			   cmd_fis_len | AHCI_CMD_RESET | AHCI_CMD_CLR_BUSY);
- 
- 	tf.ctl |= ATA_SRST;
- 	ata_tf_to_fis(&tf, fis, 0);
-@@ -619,7 +626,7 @@ static int ahci_softreset(struct ata_por
- 	msleep(1);
- 
- 	/* issue the second D2H Register FIS */
--	ahci_fill_cmd_slot(pp, cmd_fis_len);
-+	ahci_fill_cmd_slot(pp, 0, cmd_fis_len);
- 
- 	tf.ctl &= ~ATA_SRST;
- 	ata_tf_to_fis(&tf, fis, 0);
-@@ -722,9 +729,8 @@ static void ahci_tf_read(struct ata_port
- 	ata_tf_from_fis(d2h_fis, tf);
- }
- 
--static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc)
-+static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
- {
--	struct ahci_port_priv *pp = qc->ap->private_data;
- 	struct scatterlist *sg;
- 	struct ahci_sg *ahci_sg;
- 	unsigned int n_sg = 0;
-@@ -734,7 +740,7 @@ static unsigned int ahci_fill_sg(struct 
- 	/*
- 	 * Next, the S/G list.
- 	 */
--	ahci_sg = pp->cmd_tbl + AHCI_CMD_TBL_HDR_SZ;
-+	ahci_sg = cmd_tbl + AHCI_CMD_TBL_HDR_SZ;
- 	ata_for_each_sg(sg, qc) {
- 		dma_addr_t addr = sg_dma_address(sg);
- 		u32 sg_len = sg_dma_len(sg);
-@@ -755,6 +761,7 @@ static void ahci_qc_prep(struct ata_queu
- 	struct ata_port *ap = qc->ap;
- 	struct ahci_port_priv *pp = ap->private_data;
- 	int is_atapi = is_atapi_taskfile(&qc->tf);
-+	void *cmd_tbl;
- 	u32 opts;
- 	const u32 cmd_fis_len = 5; /* five dwords */
- 	unsigned int n_elem;
-@@ -763,16 +770,17 @@ static void ahci_qc_prep(struct ata_queu
- 	 * Fill in command table information.  First, the header,
- 	 * a SATA Register - Host to Device command FIS.
- 	 */
--	ata_tf_to_fis(&qc->tf, pp->cmd_tbl, 0);
-+	cmd_tbl = pp->cmd_tbl + qc->tag * AHCI_CMD_TBL_SZ;
++	if (ap->flags & ATA_FLAG_NCQ) {
++		hdepth = min(ap->host->can_queue, ATA_MAX_QUEUE - 1);
++		dev->flags |= ATA_DFLAG_NCQ;
++	}
 +
-+	ata_tf_to_fis(&qc->tf, cmd_tbl, 0);
- 	if (is_atapi) {
--		memset(pp->cmd_tbl + AHCI_CMD_TBL_CDB, 0, 32);
--		memcpy(pp->cmd_tbl + AHCI_CMD_TBL_CDB, qc->cdb,
--		       qc->dev->cdb_len);
-+		memset(cmd_tbl + AHCI_CMD_TBL_CDB, 0, 32);
-+		memcpy(cmd_tbl + AHCI_CMD_TBL_CDB, qc->cdb, qc->dev->cdb_len);
- 	}
++	if (hdepth >= ddepth)
++		snprintf(desc, desc_sz, "NCQ (depth %d)", ddepth);
++	else
++		snprintf(desc, desc_sz, "NCQ (depth %d/%d)", hdepth, ddepth);
++}
++
+ /**
+  *	ata_dev_configure - Configure the specified ATA/ATAPI device
+  *	@ap: Port on which target device resides
+@@ -1304,6 +1325,7 @@ static int ata_dev_configure(struct ata_
  
- 	n_elem = 0;
- 	if (qc->flags & ATA_QCFLAG_DMAMAP)
--		n_elem = ahci_fill_sg(qc);
-+		n_elem = ahci_fill_sg(qc, cmd_tbl);
+ 		if (ata_id_has_lba(id)) {
+ 			const char *lba_desc;
++			char ncq_desc[20];
  
- 	/*
- 	 * Fill in command slot information.
-@@ -783,7 +791,7 @@ static void ahci_qc_prep(struct ata_queu
- 	if (is_atapi)
- 		opts |= AHCI_CMD_ATAPI | AHCI_CMD_PREFETCH;
- 
--	ahci_fill_cmd_slot(pp, opts);
-+	ahci_fill_cmd_slot(pp, qc->tag, opts);
- }
- 
- static unsigned int ahci_eh_autopsy(struct ata_port *ap,
-@@ -863,7 +871,7 @@ static void ahci_error_handler(struct at
- 	}
- 
- 	/* perform recovery */
--	qc = ata_eh_determine_qc(ap, 0, &tf);
-+	qc = ata_eh_determine_qc(ap, irq_stat & PORT_IRQ_TF_ERR, &tf);
- 
- 	action |= ahci_eh_autopsy(ap, qc, irq_stat, desc, sizeof(desc));
- 	action |= ata_eh_autopsy(ap, qc, &tf, serror);
-@@ -893,10 +901,11 @@ static void ahci_post_internal_cmd(struc
- 
- static inline int ahci_host_intr(struct ata_port *ap)
- {
-+	static int spurious_cnt = 10;
- 	struct ahci_port_priv *pp = ap->private_data;
- 	void __iomem *mmio = ap->host_set->mmio_base;
- 	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
--	u32 status, serror, ci;
-+	u32 status, sactive, serror, ci;
- 	unsigned int eh_flags;
- 
- 	status = readl(port_mmio + PORT_IRQ_STAT);
-@@ -914,18 +923,28 @@ static inline int ahci_host_intr(struct 
- 	if (!(status & PORT_IRQ_ERROR)) {
- 		struct ata_queued_cmd *qc;
- 
--		if ((qc = ata_qc_from_tag(ap, ap->active_tag))) {
-+		if (ap->sactive) {
-+			sactive = readl(port_mmio + PORT_SCR_ACT);
-+			if (ata_ncq_complete(ap, sactive))
-+				return 1;
-+		} else if ((qc = ata_qc_from_tag(ap, ap->active_tag))) {
- 			ci = readl(port_mmio + PORT_CMD_ISSUE);
--			if ((ci & 0x1) == 0) {
-+			if ((ci & (1 << qc->tag)) == 0) {
- 				ata_qc_complete(qc);
- 				return 1;
+ 			lba_desc = "LBA";
+ 			dev->flags |= ATA_DFLAG_LBA;
+@@ -1312,15 +1334,18 @@ static int ata_dev_configure(struct ata_
+ 				lba_desc = "LBA48";
  			}
- 		}
  
--		if (ata_ratelimit())
-+		/* Some drives spuriously generate D2H FISes w/ I bit
-+		 * set during NCQ command phase.
-+		 */
-+		if (spurious_cnt && ata_ratelimit()) {
-+			spurious_cnt--;
- 			printk(KERN_INFO "ata%u: spurious interrupt "
--			       "(irq_stat 0x%x active_tag %d)\n",
--			       ap->id, status, ap->active_tag);
-+			       "(irq_stat 0x%x active_tag %d sactive 0x%x%s)\n",
-+			       ap->id, status, ap->active_tag, ap->sactive,
-+			       spurious_cnt ? "" : ", shutting up");
-+		}
++			/* config NCQ */
++			ata_dev_config_ncq(ap, dev, ncq_desc, sizeof(ncq_desc));
++
+ 			/* print device info to dmesg */
+ 			if (print_info)
+ 				printk(KERN_INFO "ata%u: dev %u ATA-%d, "
+-				       "max %s, %Lu sectors: %s\n",
++				       "max %s, %Lu sectors: %s %s\n",
+ 				       ap->id, dev->devno,
+ 				       ata_id_major_version(id),
+ 				       ata_mode_string(xfer_mask),
+ 				       (unsigned long long)dev->n_sectors,
+-				       lba_desc);
++				       lba_desc, ncq_desc);
+ 		} else {
+ 			/* CHS */
  
- 		return 1;
+@@ -5272,6 +5297,7 @@ EXPORT_SYMBOL_GPL(ata_port_queue_task);
+ EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
+ EXPORT_SYMBOL_GPL(ata_scsi_queuecmd);
+ EXPORT_SYMBOL_GPL(ata_scsi_slave_config);
++EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
+ EXPORT_SYMBOL_GPL(ata_scsi_release);
+ EXPORT_SYMBOL_GPL(ata_host_intr);
+ EXPORT_SYMBOL_GPL(ata_id_string);
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index d5748b1..b19fc74 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -41,6 +41,7 @@
+ #include <scsi/scsi_eh.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_request.h>
++#include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_transport.h>
+ #include <linux/libata.h>
+ #include <linux/hdreg.h>
+@@ -679,6 +680,14 @@ static void ata_scsi_dev_config(struct s
+ 		request_queue_t *q = sdev->request_queue;
+ 		blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
  	}
-@@ -951,7 +970,7 @@ static void ahci_irq_clear(struct ata_po
- 	/* TODO */
++
++	if (dev->flags & ATA_DFLAG_NCQ) {
++		int depth;
++
++		depth = min(sdev->host->can_queue, ata_id_queue_depth(dev->id));
++		depth = min(ATA_MAX_QUEUE - 1, depth);
++		scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, depth);
++	}
  }
  
--static irqreturn_t ahci_interrupt (int irq, void *dev_instance, struct pt_regs *regs)
-+static irqreturn_t ahci_interrupt(int irq, void *dev_instance, struct pt_regs *regs)
- {
- 	struct ata_host_set *host_set = dev_instance;
- 	struct ahci_host_priv *hpriv;
-@@ -1014,7 +1033,9 @@ static unsigned int ahci_qc_issue(struct
- 	struct ata_port *ap = qc->ap;
- 	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
+ /**
+@@ -713,6 +722,45 @@ int ata_scsi_slave_config(struct scsi_de
+ }
  
--	writel(1, port_mmio + PORT_CMD_ISSUE);
-+	if (qc->tf.protocol == ATA_PROT_NCQ)
-+		writel(1 << qc->tag, port_mmio + PORT_SCR_ACT);
-+	writel(1 << qc->tag, port_mmio + PORT_CMD_ISSUE);
- 	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
- 
- 	return 0;
-@@ -1264,6 +1285,8 @@ static int ahci_init_one (struct pci_dev
- 
- 	VPRINTK("ENTER\n");
- 
-+	WARN_ON(ATA_MAX_QUEUE > AHCI_MAX_CMDS);
+ /**
++ *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
++ *	@sdev: SCSI device to configure queue depth for
++ *	@queue_depth: new queue depth
++ *
++ *	This is libata standard hostt->change_queue_depth callback.
++ *	SCSI will call into this callback when user tries to set queue
++ *	depth via sysfs.
++ *
++ *	LOCKING:
++ *	SCSI layer (we don't care)
++ *
++ *	RETURNS:
++ *	Newly configured queue depth.
++ */
++int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
++{
++	struct ata_port *ap;
++	struct ata_device *dev;
++	int max_depth;
 +
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
- 
-@@ -1331,6 +1354,9 @@ static int ahci_init_one (struct pci_dev
- 	if (rc)
- 		goto err_out_hpriv;
- 
-+	if (hpriv->cap & HOST_CAP_NCQ)
-+		probe_ent->host_flags |= ATA_FLAG_NCQ;
++	if (sdev->id >= ATA_MAX_DEVICES || queue_depth < 1)
++		return sdev->queue_depth;
 +
- 	ahci_print_info(probe_ent);
++	ap = (struct ata_port *) &sdev->host->hostdata[0];
++	dev = &ap->device[sdev->id];
++
++	if (!ata_dev_enabled(dev))
++		return sdev->queue_depth;
++
++	max_depth = min(sdev->host->can_queue, ata_id_queue_depth(dev->id));
++	max_depth = min(ATA_MAX_QUEUE - 1, max_depth);
++	if (queue_depth > max_depth)
++		queue_depth = max_depth;
++
++	scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, queue_depth);
++	return queue_depth;
++}
++
++/**
+  *	ata_scsi_start_stop_xlat - Translate SCSI START STOP UNIT command
+  *	@qc: Storage for translated ATA taskfile
+  *	@scsicmd: SCSI command to translate
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index f3f6f50..9ae1f03 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -109,7 +109,7 @@ enum {
+ 	ATA_MAX_PORTS		= 8,
+ 	ATA_DEF_QUEUE		= 1,
+ 	/* tag ATA_MAX_QUEUE - 1 is reserved for internal commands */
+-	ATA_MAX_QUEUE		= 2,
++	ATA_MAX_QUEUE		= 32,
+ 	ATA_TAG_INTERNAL	= ATA_MAX_QUEUE - 1,
+ 	ATA_MAX_SECTORS		= 200,	/* FIXME */
+ 	ATA_MAX_BUS		= 2,
+@@ -640,6 +640,8 @@ extern int ata_std_bios_param(struct scs
+ 			      struct block_device *bdev,
+ 			      sector_t capacity, int geom[]);
+ extern int ata_scsi_slave_config(struct scsi_device *sdev);
++extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
++				       int queue_depth);
+ extern struct ata_device *ata_dev_pair(struct ata_port *ap, 
+ 				       struct ata_device *adev);
  
- 	/* FIXME: check ata_device_add return value */
 -- 
 1.2.4
 
