@@ -1,34 +1,40 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: EH merge
-Date: Tue, 04 Apr 2006 19:08:22 +0900
-Message-ID: <44324596.9000803@gmail.com>
-References: <44324265.806@garzik.org>
+Subject: Re: libata/sata status on ich[?]
+Date: Tue, 04 Apr 2006 19:56:17 +0900
+Message-ID: <443250D1.3020403@gmail.com>
+References: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAA//gP36uv0hG9NQDAJogAp8KAAAAQAAAAyTp2U2YnGEW3ub1INE9nAAEAAAAA@cmanet.it> <44323C24.4010402@garzik.org> <44323DE9.7030106@gmail.com> <443241F4.7080801@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.193]:17024 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751337AbWDDKI3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Apr 2006 06:08:29 -0400
-Received: by zproxy.gmail.com with SMTP id o37so2129369nzf
-        for <linux-ide@vger.kernel.org>; Tue, 04 Apr 2006 03:08:28 -0700 (PDT)
-In-Reply-To: <44324265.806@garzik.org>
+Received: from xproxy.gmail.com ([66.249.82.192]:50374 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751851AbWDDK4X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Apr 2006 06:56:23 -0400
+Received: by xproxy.gmail.com with SMTP id t10so958518wxc
+        for <linux-ide@vger.kernel.org>; Tue, 04 Apr 2006 03:56:22 -0700 (PDT)
+In-Reply-To: <443241F4.7080801@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Mauro Tassinari <mtassinari@cmanet.it>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 Jeff Garzik wrote:
-> Due to the merge window closing, the three pending patchsets will be in 
-> 2.6.18.
+> Tejun Heo wrote:
+>> This should be fixed by the ata_piix map patch I've submitted and is 
+>> currently in #upstream. [ P0 P1 P2 P3 ] should be [ P0 P2 P1 P3 ].
 > 
-> I'll try to push what's already in #upstream, but it may or may not 
-> stick :)
+> If you are referring to this fix:
+> 
+>> commit 79ea24e72e59b5f0951483cc4f357afe9bf7ff89
+>> Author: Tejun Heo <htejun@gmail.com>
+>> Date:   Fri Mar 31 20:01:50 2006 +0900
+>>
+>>     [PATCH] ata_piix: fix ich6/m_map_db
+> 
+> then its already in linux-2.6.git, and 2.6.17-rc1.
 > 
 
-Dang...  Is there any way to push EH thing into 2.6.17?  We're getting 
-handful of ATA IO error reports which can be either mitigated or at 
-least better reported with new EH.
+Yeap, that one.  I'm very sure 2.6.17-rc1 fixes the problem then.
 
 -- 
 tejun
