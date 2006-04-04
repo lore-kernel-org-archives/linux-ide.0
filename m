@@ -1,49 +1,63 @@
-From: Dan Aloni <da-x@monatomic.org>
-Subject: Re: sata_mv: module reloading doesn't work
-Date: Tue, 4 Apr 2006 09:08:28 +0300
-Message-ID: <20060404060828.GA11996@localdomain>
-References: <20060402155647.GB20270@localdomain> <311601c90604021059jcdf56e4ja35e3507ab291179@mail.gmail.com> <20060403215729.GA17731@localdomain> <4431DE2B.1020306@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: libata machine check on Alpha
+Date: Tue, 04 Apr 2006 04:24:16 -0400
+Message-ID: <44322D30.9070804@garzik.org>
+References: <1br232p2g092l611qrqvmvpuus2bqp7bc2@4ax.com> <4431CF4D.6000806@gmail.com> <4431D5F5.4010905@tw.ibm.com> <4431D6D1.9020206@gmail.com> <4431DEA3.5040202@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from noname.neutralserver.com ([70.84.186.210]:32360 "EHLO
-	noname.neutralserver.com") by vger.kernel.org with ESMTP
-	id S1751290AbWDDGHC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Apr 2006 02:07:02 -0400
-Content-Disposition: inline
-In-Reply-To: <4431DE2B.1020306@rtr.ca>
+Received: from srv5.dvmed.net ([207.36.208.214]:22214 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751844AbWDDIYX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Apr 2006 04:24:23 -0400
+In-Reply-To: <4431DEA3.5040202@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: "Eric D. Mudama" <edmudama@gmail.com>, Linux Kernel List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lkml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: albertl@mail.com
+Cc: Tejun Heo <htejun@gmail.com>, Jonathan Blake Benson <airbatica@verizon.net>, linux-ide@vger.kernel.org
 
-On Mon, Apr 03, 2006 at 10:47:07PM -0400, Mark Lord wrote:
-> Dan Aloni wrote:
-> >
-> > * Normal boot
-> > * insmod sata_mv
-> > * all is okay, as expected
-> > * rmmod sata_mv
-> > * insmod sata_mv 
-> > * all is bad, as expected
-> > * kexec
-> > * insmod sata_mv
-> > * all is bad!
-> >
-> >Conclusion: sata_mv's shutdown does something bad.
+Albert Lee wrote:
+> Tejun Heo wrote:
+>> Albert Lee wrote:
+>>
+>>> Tejun Heo wrote:
+>>>
+>>>> Jonathan Blake Benson wrote:
+>>>>
+>>>>> I posted a couple of months ago regarding enabling libata.atapi on a
+>>>>> Digital Alpha 164LX, equipped with a Silicon Image 3114 controller.  I
+>>>>> decied to give kernel 2.6.16 (release, was previously using rc-1) a
+>>>>> shot, and it no longer longer panics.  I still have a Lite-ON DVD ROM
+>>>>> drive connected via a sil3611 bridge to port number 4, hoping that I
+>>>>> can avoid using the onboard CMD646.
+>>>>>
+>>>>> No panic this time, though it appears to throw a machine check.  The
+>>>>> system continues all the way to multi-user, and the Maxtor drives are
+>>>>> usable.  Hope the attached dmesg helps.  Let me know if I can be of
+>>>>> any assitance.
+>>>>>
+>>>> Can you build your kernel with ATA_DEBUG set and post dmesg?  Just
+>>>> change #undef ATA_DEBUG to #define ATA_DEBUG at the top of
+>>>> include/linux/libata.h
+>>>>
+>>> For the SiI 3611 bridge + ATAPI devices, maybe the ATAPI_ENABLE_DMADIR
+>>> workaround should also be turned on as well. (in linux/libata.h)
+>>>
+>>> My JMicron 20330 bridge + SiI 3112 can handle ATAPI DMA without
+>>> the ATAPI_ENABLE_DMADIR workaround. However, the SiI 3611 bridge seems
+>>> need it.
+>>
+>> Is there any way to make this thing automatic?  'Recompile with #define
+>> tweak if you have some invisible bridge chip' doesn't sound too hot.
+>>
 > 
-> sata_mv seems to just use the default libata shutdown sequence,
-> so perhaps it's leaving the device in EDMA mode with interrupt
-> coalescing still on (from the BIOS), and interrupts are still
-> coming in or something..
-> 
-> I suppose it really ought to shut down the device before exiting,
-> and maybe the default of pci_disable_device() is not enough.. ?
+> The bridge is transparent to the software. So, it's hard to detect the chip
+> used. Maybe the SiImage developers know how to detect the chip?
 
-BTW, can you tell what firmware version are you using? I'm 
-using rev 9, perhaps it also plays some role in this problem.
+There's a spec for DMADIR on t13.org, with IDENTIFY DEVICE bits to 
+recognize, etc.
 
--- 
-Dan Aloni, Linux specialist
-XIV LTD, http://www.xivstorage.com
-da-x@monatomic.org, da-x@colinux.org, da-x@gmx.net, dan@xiv.co.il
+	Jeff
+
+
+
