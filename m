@@ -1,53 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata machine check on Alpha
-Date: Tue, 04 Apr 2006 11:15:45 +0900
-Message-ID: <4431D6D1.9020206@gmail.com>
-References: <1br232p2g092l611qrqvmvpuus2bqp7bc2@4ax.com> <4431CF4D.6000806@gmail.com> <4431D5F5.4010905@tw.ibm.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: sata_mv: module reloading doesn't work
+Date: Mon, 03 Apr 2006 22:47:07 -0400
+Message-ID: <4431DE2B.1020306@rtr.ca>
+References: <20060402155647.GB20270@localdomain> <311601c90604021059jcdf56e4ja35e3507ab291179@mail.gmail.com> <20060403215729.GA17731@localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.205]:45242 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964957AbWDDCPw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Apr 2006 22:15:52 -0400
-Received: by zproxy.gmail.com with SMTP id o37so2060891nzf
-        for <linux-ide@vger.kernel.org>; Mon, 03 Apr 2006 19:15:49 -0700 (PDT)
-In-Reply-To: <4431D5F5.4010905@tw.ibm.com>
+Received: from rtr.ca ([64.26.128.89]:30597 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S964963AbWDDCrt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Apr 2006 22:47:49 -0400
+In-Reply-To: <20060403215729.GA17731@localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Jonathan Blake Benson <airbatica@verizon.net>, linux-ide@vger.kernel.org
+To: Dan Aloni <da-x@monatomic.org>
+Cc: "Eric D. Mudama" <edmudama@gmail.com>, Linux Kernel List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lkml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Albert Lee wrote:
-> Tejun Heo wrote:
->> Jonathan Blake Benson wrote:
->>
->>> I posted a couple of months ago regarding enabling libata.atapi on a
->>> Digital Alpha 164LX, equipped with a Silicon Image 3114 controller.  I
->>> decied to give kernel 2.6.16 (release, was previously using rc-1) a
->>> shot, and it no longer longer panics.  I still have a Lite-ON DVD ROM
->>> drive connected via a sil3611 bridge to port number 4, hoping that I
->>> can avoid using the onboard CMD646.
->>>
->>> No panic this time, though it appears to throw a machine check.  The
->>> system continues all the way to multi-user, and the Maxtor drives are
->>> usable.  Hope the attached dmesg helps.  Let me know if I can be of
->>> any assitance.
->>>
->> Can you build your kernel with ATA_DEBUG set and post dmesg?  Just
->> change #undef ATA_DEBUG to #define ATA_DEBUG at the top of
->> include/linux/libata.h
->>
+Dan Aloni wrote:
+>
+>  * Normal boot
+>  * insmod sata_mv
+>  * all is okay, as expected
+>  * rmmod sata_mv
+>  * insmod sata_mv 
+>  * all is bad, as expected
+>  * kexec
+>  * insmod sata_mv
+>  * all is bad!
 > 
-> For the SiI 3611 bridge + ATAPI devices, maybe the ATAPI_ENABLE_DMADIR
-> workaround should also be turned on as well. (in linux/libata.h)
-> 
-> My JMicron 20330 bridge + SiI 3112 can handle ATAPI DMA without
-> the ATAPI_ENABLE_DMADIR workaround. However, the SiI 3611 bridge seems
-> need it.
+> Conclusion: sata_mv's shutdown does something bad.
 
-Is there any way to make this thing automatic?  'Recompile with #define 
-tweak if you have some invisible bridge chip' doesn't sound too hot.
+sata_mv seems to just use the default libata shutdown sequence,
+so perhaps it's leaving the device in EDMA mode with interrupt
+coalescing still on (from the BIOS), and interrupts are still
+coming in or something..
 
--- 
-tejun
+I suppose it really ought to shut down the device before exiting,
+and maybe the default of pci_disable_device() is not enough.. ?
+
+Cheers
+
